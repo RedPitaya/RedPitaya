@@ -132,7 +132,7 @@ FPGA_AXI4LITE=
 FPGA_BAREBONE=
 
 # project fpga for build uboot
-FPGA_UBOOT=c533ffd4f6f9c749f40c740cc0b48867c1279663
+FPGA_UBOOT=db19fe97c96fb5769aae0563456b06fbdea62e6c
 
 
 ifeq ($(STREAMING),MASTER)
@@ -411,6 +411,8 @@ $(DEVICETREE_UB): devicetree_ub_download $(DTREE_DIR) $(TMP) $(INSTALL_DIR) dtc_
 	gcc -E -nostdinc -undef -D__DTS__ -x assembler-with-cpp -o $(DEVICETREE_UB_PATH)/system-top.dts.tmp $(DEVICETREE_UB_PATH)/system-top.dts
 	$(TMP)/dtc -@ -I dts -O dtb -o $(DEVICETREE_UB) $(DEVICETREE_UB_PATH)/system-top.dts.tmp
 
+
+
 ################################################################################
 # FSBL for uboot processing
 ################################################################################
@@ -427,16 +429,33 @@ $(FSBL): $(DEVICETREE_UB)
 	cp  fpga/uboot/prj/fsbl/sdk/fsbl/executable.elf $@
 
 ################################################################################
+# FSBL for uboot 1Gb RAM processing
+################################################################################
+
+FSBL_1Gb_ram = $(TMP)/fsbl_1Gb_ram.elf
+
+.PHONY: fsbl_ub_1Gb_ram
+
+fsbl_ub_1Gb_ram: $(FSBL_1Gb_ram)
+
+$(FSBL_1Gb_ram):
+	echo $@
+	./download_fpga.sh all fsbl_1Gb_ram $(GIT_MODE) $(FPGA_UBOOT) $(GITLAB_TOKEN) fsbl_1Gb_ram
+	make -C fpga/fsbl_1Gb_ram PRJ=fsbl MODEL=Z20_250 DEFINES= HWID= DTS_VER=2022.1
+	cp  fpga/fsbl_1Gb_ram/prj/fsbl/sdk/fsbl/executable.elf $@
+
+################################################################################
 # U-Boot build provides: $(UBOOT)
 ################################################################################
 
 UBOOT           = $(TMP)/u-boot.elf
 
-UBOOT_SCRIPT    = $(INSTALL_DIR)/u-boot.scr
+UBOOT_SCRIPT    		= $(INSTALL_DIR)/u-boot.scr
+UBOOT_SCRIPT_1Gb_ram    = $(INSTALL_DIR)/u-boot_1Gb_ram.scr
 
 .PHONY: u-boot $(UBOOT_TAR) $(UBOOT_DIR) $(UBOOT)
 
-u-boot: $(UBOOT) $(UBOOT_SCRIPT)
+u-boot: $(UBOOT) $(UBOOT_SCRIPT) $(UBOOT_SCRIPT_1Gb_ram)
 
 $(UBOOT_TAR): | $(DL)
 	curl -L $(UBOOT_URL) -o $@
@@ -458,6 +477,9 @@ $(UBOOT): $(UBOOT_DIR) $(TMP) devicetree_ub
 
 $(UBOOT_SCRIPT): $(INSTALL_DIR) $(UBOOT_DIR) $(UBOOT)
 	$(UBOOT_DIR)/tools/mkimage -A ARM -O linux -T script -C none -a 0 -e 0 -n "boot Debian" -d patches/u-boot/u-boot.script $@
+
+$(UBOOT_SCRIPT_1Gb_ram): $(INSTALL_DIR) $(UBOOT_DIR) $(UBOOT)
+	$(UBOOT_DIR)/tools/mkimage -A ARM -O linux -T script -C none -a 0 -e 0 -n "boot Debian" -d patches/u-boot/u-boot_1Gb_ram.script $@
 
 ################################################################################
 # Linux build provides: $(LINUX)
@@ -501,15 +523,19 @@ dtc_compiler: linux_scripts
 ################################################################################
 
 BOOT = $(INSTALL_DIR)/boot.bin
+BOOT_1Gb_ram = $(INSTALL_DIR)/boot_1Gb_ram.bin
 
 .PHONY: boot
 
-boot: $(BOOT)
+boot: $(BOOT_1Gb_ram) $(UBOOT_SCRIPT) $(UBOOT_SCRIPT_1Gb_ram)
 
-$(BOOT): $(UBOOT) $(FSBL) $(INSTALL_DIR)
+$(BOOT): $(UBOOT) $(FSBL) $(FSBL_1Gb_ram) $(INSTALL_DIR)
 	@echo the_ROM_image:{[bootloader] $(FSBL) $(UBOOT) } > boot_uboot.bif
 	bootgen -image boot_uboot.bif -arch zynq -o $@ -w on -log
 
+$(BOOT_1Gb_ram): $(BOOT)
+	@echo the_ROM_image:{[bootloader] $(FSBL_1Gb_ram) $(UBOOT) } > boot_uboot_1Gb_ram.bif
+	bootgen -image boot_uboot_1Gb_ram.bif -arch zynq -o $@ -w on -log
 
 ################################################################################
 # tarball

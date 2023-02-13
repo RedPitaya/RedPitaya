@@ -81,22 +81,22 @@ fi
 
 if test ${hw_rev} = 'STEM_250-12_v1.1'
 then
-  setenv bootargs ${bootargs} mem=1024M
-  setenv high     0x40000000
+  setenv bootargs ${bootargs} mem=512M
+  setenv high     0x20000000
   setenv dts_path z20_250
 fi
 
 if test ${hw_rev} = 'STEM_250-12_v1.2'
 then
-  setenv bootargs ${bootargs} mem=1024M
-  setenv high     0x40000000
+  setenv bootargs ${bootargs} mem=512M
+  setenv high     0x20000000
   setenv dts_path z20_250
 fi
 
 if test ${hw_rev} = 'STEM_250-12_120'
 then
-  setenv bootargs ${bootargs} mem=1024M
-  setenv high     0x40000000
+  setenv bootargs ${bootargs} mem=512M
+  setenv high     0x20000000
   setenv dts_path z20_250
 fi
 

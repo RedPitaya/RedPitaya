@@ -1,0 +1,40 @@
+# load extra enviroment form eeprom
+i2c dev 0
+eeprom read  0 0x50 0 0x1800 0x400
+env import -b 0 0x400 hw_rev serial ethaddr
+
+# set main memory address table
+setenv addr_script 0x02000000
+setenv addr_eeprom 0x02003000
+setenv addr_linux  0x02004000
+setenv addr_dtb    0x04000000
+
+# set default Linux kernel boot parameters
+setenv bootargs console=ttyPS0,115200 root=/dev/mmcblk0p2 ro rootfstype=ext4 earlyprintk rootwait uio_pdrv_genirq.of_id="generic-uio"
+
+# Worked only with 250 12 (1Gb Ram)
+
+setenv dts_path z20_250
+setenv high     0x40000000
+
+echo Set devicetree and ramdisk high loading address to ${high}
+
+setenv fdt_high    ${high}
+setenv initrd_high ${high}
+
+# set additional Linux kernel boot parameters, mostly debug options
+# setenv bootargs ${bootargs} loglevel=7 dyndbg="file axidmatest.c +p"
+# additional systemd logging
+# setenv bootargs ${bootargs} systemd.log_level=debug systemd.log_target=console  log_buf_len=1M loglevel=3
+
+echo Loading from SD card (FAT file system) to memory
+mmcinfo
+echo Load uImage
+fatload mmc 0 ${addr_linux} uImage
+echo Load dts/${dts_path}/devicetree.dtb
+fatload mmc 0 ${addr_dtb}   dts/${dts_path}/devicetree.dtb
+
+echo Booting Linux kernel with ramdisk and devicetree
+setenv sdboot bootm ${addr_linux} - ${addr_dtb}
+setenv bootdelay 0
+bootd
