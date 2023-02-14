@@ -321,6 +321,48 @@
             $.get('/poweroff');
             setTimeout(function() { window.close(); }, 1000);
         });
+
+        $("#delete_settings_id").click(function(event) {
+            $.ajax({
+                method: "GET",
+                url: '/delete_settings'
+            })
+            .done(function(result) {
+                $("#sysinfo_dialog").modal("hide");
+            });
+        });
+
+        $("#up_boot_id").click(function(event) {
+            $.ajax({
+                method: "GET",
+                url: '/check_bootbin'
+            })
+            .done(function(result) {
+                console.log("/check_bootbin: res" + result);
+                if (result.trim().length === 0){
+                    $.ajax({
+                        method: "GET",
+                        url: '/copy_bootbin_1G'
+                    })
+                    .done(function(result) {
+                        console.log("/copy_bootbin_1G: res" + result);
+                        $('#up_boot_id a').text("Make Unify")
+                        $('#UBOOT_MODE_ID').text("BOOT mode: SIGNALlab");
+                    });
+                }else{
+                    $.ajax({
+                        method: "GET",
+                        url: '/copy_bootbin_512'
+                    })
+                    .done(function(result) {
+                        console.log("/copy_bootbin_512: res" + result);
+                        $('#up_boot_id a').text("Up to 1Gb RAM")
+                        $('#UBOOT_MODE_ID').text("BOOT mode: Unify");
+                    });
+                }
+            });
+        });
+
         $("#info").click(function(event) {
 
 
@@ -346,6 +388,21 @@
                         $('#SI_DNA').text(obj['dna']);
                         $('#SI_ECOSYSTEM').text(obj['ecosystem']['version'] + '-' + obj['ecosystem']['revision']);
                         $('#SI_LINUX').text(obj['linux']);
+                        $('#RAM_SIZE_ID').text(obj['mem_size']+"Mb");
+                        $('#UBOOT_MODE_ID').text(obj['boot_512'] == "1"?"BOOT mode: Unify":"BOOT mode: SIGNALlab");
+
+                        if (obj['mem_upgrade'] == "1"){
+                            $('#up_boot_id a').text(obj['boot_512'] == "1"?"Up to 1Gb RAM":"Make Unify")
+                            $('#up_boot_id').show()
+                        }else{
+                            $('#up_boot_id').hide()
+                        }
+
+                        var fpga_list = obj['fpga']
+                        $("#FPGA_LIST_TABLE_ID tr").remove();
+                        Object.keys(obj['fpga']).forEach(element => {
+                            $('#FPGA_LIST_TABLE_ID tbody').append('<tr style="height:40px;"><td>'+ element +'</td><td>'+ fpga_list[element] +'</td></tr>');
+                        });
                     } catch (error) {
                         console.error(error);
                     }

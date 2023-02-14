@@ -397,8 +397,8 @@ $(document).ready(function() {
         })
         .done(function(result) {
             stem_ver = result['stem_ver'];
-            UPD.type = "common/ecosystems";
-            UPD.path_fw = "common";
+            UPD.type = "Unify/ecosystems";
+            UPD.path_fw = "Unify";
             $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md");
         });
 

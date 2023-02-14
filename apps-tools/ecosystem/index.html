@@ -116,16 +116,16 @@
         </div>
     </div>
     <div class="modal fade" id="sysinfo_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog" style="width: 900px;">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                     <h4 class="modal-title" id="bazaar_naLabel">System Info</h4>
                 </div>
-                <div class="modal-body">
-                    <div style="text-align: left;margin-left: 10%;">
+                <div class="modal-body" style="display: flex;">
+                    <div style="text-align: left;margin-left: 5%;">
                         <table>
-                            <col width="130px">
+                            <col width="180px">
                             <col width="700px">
                             <tr style="height:40px;">
                                 <td>Board model:</td>
@@ -147,18 +147,38 @@
                                 <td>Linux:</td>
                                 <td><a id="SI_LINUX">-</a></td>
                             </tr>
+                            <tr style="height:40px;">
+                                <td>RAM size:</td>
+                                <td><a id="RAM_SIZE_ID">-</a></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div style="text-align: left;margin-left: 5%;">
+                        <table>
+                            <col width="880px">
+                            <tr style="height:40px;">
+                                <td colspan="2" style="text-align: center;">FPGA</td>
+                            </tr>
+                        </table>
+                        <table id="FPGA_LIST_TABLE_ID">
+                            <col width="180px">
+                            <col width="700px">
+                            <tr style="height:40px;">
+                                <td>MAC:</td>
+                                <td><a id="SI_MAC">-</a></td>
+                            </tr>
                         </table>
                     </div>
                 </div>
                 <div class="modal-header">
                     <h4 class="modal-title" id="bazaar_naLabel">System settings</h4>
                 </div>
-                <div class="modal-body">
-                    <div style="text-align: left;margin-left: 10%;">
+                <div class="modal-body" style="display: flex;">
+                    <div style="text-align: left;margin-left: 5%;">
                         <table>
                             <col width="250px">
                             <col width="200px">
-                            <tr style="height:40px;">
+                            <tr style="height:60px;">
                                 <td>Enable File System Consistency Check after boot:</td>
                                 <td>
                                     <label class="control control-checkbox">Enable<input id="fsck_chbox" type="checkbox" checked="checked" style=" margin-left: 10px; " />
@@ -166,12 +186,34 @@
                                     </label>
                                 </td>
                             </tr>
-                            <tr style="height:40px;">
+                            <tr style="height:60px;">
                                 <td>Turn on LED:</td>
                                 <td>
                                     <label  class="control control-checkbox">Enable<input id="led_chbox" type="checkbox" checked="checked" style=" margin-left: 10px; " />
                                         <div class="control_indicator"></div>
                                     </label>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div style="text-align: left;margin-left: 5%;">
+                        <table>
+                            <col width="250px">
+                            <col width="200px">
+                            <tr style="height:60px;">
+                                <td id ="UBOOT_MODE_ID">-</td>
+                                <td>
+                                    <div id="up_boot_id" class="bazaar-link">
+                                        <a class="list-group-item btn" style="margin-left: 25px;">Up to 1Gb</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr style="height:60px;">
+                                <td>Remove stored settings for Web Apps:</td>
+                                <td>
+                                        <div id="delete_settings_id" class="bazaar-link">
+                                            <a class="list-group-item btn" style="margin-left: 25px;">DELETE</a>
+                                        </div>
                                 </td>
                             </tr>
                         </table>
