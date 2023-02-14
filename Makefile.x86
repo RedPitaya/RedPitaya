@@ -451,11 +451,12 @@ $(FSBL_1Gb_ram):
 UBOOT           = $(TMP)/u-boot.elf
 
 UBOOT_SCRIPT    		= $(INSTALL_DIR)/u-boot.scr
-UBOOT_SCRIPT_1Gb_ram    = $(INSTALL_DIR)/u-boot_1Gb_ram.scr
+UBOOT_SCRIPT_512Mb_ram	= $(INSTALL_DIR)/uboot/u-boot_512Mb_ram.scr
+UBOOT_SCRIPT_1Gb_ram    = $(INSTALL_DIR)/uboot/u-boot_1Gb_ram.scr
 
 .PHONY: u-boot $(UBOOT_TAR) $(UBOOT_DIR) $(UBOOT)
 
-u-boot: $(UBOOT) $(UBOOT_SCRIPT) $(UBOOT_SCRIPT_1Gb_ram)
+u-boot: $(UBOOT) $(UBOOT_SCRIPT_512Mb_ram) $(UBOOT_SCRIPT_1Gb_ram)
 
 $(UBOOT_TAR): | $(DL)
 	curl -L $(UBOOT_URL) -o $@
@@ -475,10 +476,13 @@ $(UBOOT): $(UBOOT_DIR) $(TMP) devicetree_ub
 	make -C $< -j $(shell grep -c ^processor /proc/cpuinfo) DEVICE_TREE="red-pitaya"
 	cp $(UBOOT_DIR)/u-boot.elf $@
 
-$(UBOOT_SCRIPT): $(INSTALL_DIR) $(UBOOT_DIR) $(UBOOT)
+$(UBOOT_SCRIPT_512Mb_ram): $(INSTALL_DIR) $(UBOOT_DIR) $(UBOOT)
+	mkdir -p $(INSTALL_DIR)/uboot
 	$(UBOOT_DIR)/tools/mkimage -A ARM -O linux -T script -C none -a 0 -e 0 -n "boot Debian" -d patches/u-boot/u-boot.script $@
+	cp $(UBOOT_SCRIPT_512Mb_ram) $(UBOOT_SCRIPT)
 
-$(UBOOT_SCRIPT_1Gb_ram): $(INSTALL_DIR) $(UBOOT_DIR) $(UBOOT)
+$(UBOOT_SCRIPT_1Gb_ram): $(UBOOT_SCRIPT_512Mb_ram)
+	mkdir -p $(INSTALL_DIR)/uboot
 	$(UBOOT_DIR)/tools/mkimage -A ARM -O linux -T script -C none -a 0 -e 0 -n "boot Debian" -d patches/u-boot/u-boot_1Gb_ram.script $@
 
 ################################################################################
@@ -523,19 +527,26 @@ dtc_compiler: linux_scripts
 ################################################################################
 
 BOOT = $(INSTALL_DIR)/boot.bin
-BOOT_1Gb_ram = $(INSTALL_DIR)/boot_1Gb_ram.bin
+BOOT_512Mb_ram = $(INSTALL_DIR)/uboot/boot_512Mb_ram.bin
+BOOT_1Gb_ram = $(INSTALL_DIR)/uboot/boot_1Gb_ram.bin
 
 .PHONY: boot
 
-boot: $(BOOT_1Gb_ram) $(UBOOT_SCRIPT) $(UBOOT_SCRIPT_1Gb_ram)
+boot: boot_copy $(UBOOT_SCRIPT) $(UBOOT_SCRIPT_1Gb_ram)
 
-$(BOOT): $(UBOOT) $(FSBL) $(FSBL_1Gb_ram) $(INSTALL_DIR)
-	@echo the_ROM_image:{[bootloader] $(FSBL) $(UBOOT) } > boot_uboot.bif
-	bootgen -image boot_uboot.bif -arch zynq -o $@ -w on -log
+$(BOOT_512Mb_ram): $(UBOOT) $(FSBL) $(FSBL_1Gb_ram) $(INSTALL_DIR)
+	mkdir -p $(INSTALL_DIR)/uboot
+	@echo the_ROM_image:{[bootloader] $(FSBL) $(UBOOT) } > boot_uboot_512Mb_ram.bif
+	bootgen -image boot_uboot_512Mb_ram.bif -arch zynq -o $@ -w on -log
 
-$(BOOT_1Gb_ram): $(BOOT)
+$(BOOT_1Gb_ram): $(BOOT_512Mb_ram)
+	mkdir -p $(INSTALL_DIR)/uboot
 	@echo the_ROM_image:{[bootloader] $(FSBL_1Gb_ram) $(UBOOT) } > boot_uboot_1Gb_ram.bif
 	bootgen -image boot_uboot_1Gb_ram.bif -arch zynq -o $@ -w on -log
+
+boot_copy: $(BOOT_1Gb_ram)
+	cp $(BOOT_512Mb_ram) $(BOOT)
+
 
 ################################################################################
 # tarball
