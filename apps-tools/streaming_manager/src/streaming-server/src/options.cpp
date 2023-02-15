@@ -244,13 +244,13 @@ auto ClientOpt::usage(char const* progName) -> void{
                 "\n"
                 "\t--background          -b        Run service in background.\n"
                 "\t--file=PATH           -f FILE   Path to configuration file.\n"
-                "\t                                By default uses the config file /root/.streaming_config.\n"
+                "\t                                By default uses the config file /root/.config/redpitaya/apps/streaming/streaming_config.json.\n"
                 "\t--port=PORT           -p PORT   Port for configuration server (Default: 8901).\n"
                 "\t--search_port=PORT    -s PORT   Port for broadcast (Default: 8902).\n"
                 "\t--verbose             -v        Displays information.\n"
                 "\n"
                 "\t Example:\n"
-                "\t\t%s -b -f /root/.streaming_config_new\n";
+                "\t\t%s -b -f /root/.streaming_config_new.json\n";
 
     auto n = name.c_str();
     printWithLog(LOG_INFO,stdout,format, n ,n);

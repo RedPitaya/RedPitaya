@@ -14,7 +14,7 @@ void setConfig(bool _force);
 void updateUI();
 
 static std::mutex g_adc_mutex;
-static constexpr char config_file[] = "/root/.streaming_config";
+static constexpr char config_file[] = "/root/.config/redpitaya/apps/streaming/streaming_config.json";
 
 
 #define SS_NET		0
