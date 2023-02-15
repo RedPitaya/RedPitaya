@@ -34,6 +34,11 @@ then
   setenv dts_path z10_125
 fi
 
+if test ${hw_rev} = 'STEM_14_B_v1.0'
+then
+  setenv dts_path z10_125
+fi
+
 if test ${hw_rev} = 'STEM_125-14_v1.0'
 then
   setenv dts_path z10_125

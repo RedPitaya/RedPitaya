@@ -143,7 +143,7 @@ echo  "users=root"               | sudo tee -a $SCHROOT_CONF_PATH
 echo  "root-users=root"          | sudo tee -a $SCHROOT_CONF_PATH
 echo  "root-groups=root"         | sudo tee -a $SCHROOT_CONF_PATH
 echo  "personality=linux"        | sudo tee -a $SCHROOT_CONF_PATH
-echo  "preserve-enviroment=true" | sudo tee -a $SCHROOT_CONF_PATH
+echo  "preserve-environment=true"| sudo tee -a $SCHROOT_CONF_PATH
 if [[ $? = 0 ]]
 then
 echo

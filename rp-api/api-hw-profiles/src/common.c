@@ -46,6 +46,7 @@
 profiles_t *g_profile = NULL;
 
 // "STEM_125-10_v1.0"
+// "STEM_14_B_v1.0"
 // "STEM_125-14_v1.0"
 // "STEM_125-14_v1.1"
 // "STEM_125-14_LN_v1.1"
@@ -79,13 +80,22 @@ void hp_checkModel(char *model,char *eth_mac){
 	strcpy(modelOrig,model);
 	convertToLowerCase(model);
 	if (!model) return;
+
 	if (strcmp(model,"stem_125-10_v1.0") == 0){
 		g_profile = getProfile_STEM_125_10_v1_0();
 		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);
 	}
+
 	if (strcmp(model,"stem_125-14_v1.0") == 0){
+		g_profile = getProfile_STEM_125_14_v1_0();
+		strcpy(g_profile->boardModelEEPROM,modelOrig);
+		if (eth_mac)
+			strcpy(g_profile->boardETH_MAC,eth_mac);
+	}
+
+	if (strcmp(model,"stem_14_b_v1.0") == 0){
 		g_profile = getProfile_STEM_125_14_v1_0();
 		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
