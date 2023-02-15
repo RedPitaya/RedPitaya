@@ -651,14 +651,14 @@ int calib_GetFastADCCalibValue(rp_channel_calib_t channel,rp_acq_ac_dc_mode_cali
         case RP_DC_CALIB:{
             *gain = g_calib.fast_adc_1_1[channel].gainCalc;
             *offset = g_calib.fast_adc_1_1[channel].offset;
-            *calib = convertFloatToInt(&g_calib.fast_adc_1_1[channel],5);
+            *calib = convertFloatToInt(&g_calib.fast_adc_1_1[channel],15);
             break;
         }
 
         case RP_AC_CALIB:{
             *gain = g_calib.fast_adc_1_1_ac[channel].gainCalc;
             *offset = g_calib.fast_adc_1_1_ac[channel].offset;
-            *calib = convertFloatToInt(&g_calib.fast_adc_1_1_ac[channel],5);
+            *calib = convertFloatToInt(&g_calib.fast_adc_1_1_ac[channel],15);
             break;
         }
 
@@ -692,14 +692,14 @@ int calib_GetFastADCCalibValue_1_20(rp_channel_calib_t channel,rp_acq_ac_dc_mode
         case RP_DC_CALIB:{
             *gain = g_calib.fast_adc_1_20[channel].gainCalc;
             *offset = g_calib.fast_adc_1_20[channel].offset;
-            *calib = convertFloatToInt(&g_calib.fast_adc_1_20[channel],5);
+            *calib = convertFloatToInt(&g_calib.fast_adc_1_20[channel],15);
             break;
         }
 
         case RP_AC_CALIB:{
             *gain = g_calib.fast_adc_1_20_ac[channel].gainCalc;
             *offset = g_calib.fast_adc_1_20_ac[channel].offset;
-            *calib = convertFloatToInt(&g_calib.fast_adc_1_20_ac[channel],5);
+            *calib = convertFloatToInt(&g_calib.fast_adc_1_20_ac[channel],15);
             break;
         }
 
@@ -735,14 +735,14 @@ int calib_GetFastDACCalibValue(rp_channel_calib_t channel,rp_gen_gain_calib_t mo
         case RP_GAIN_CALIB_1X:{
             *gain = g_calib.fast_dac_x1[channel].gainCalc;
             *offset = g_calib.fast_dac_x1[channel].offset;
-            *calib = convertFloatToInt(&g_calib.fast_dac_x1[channel],5);
+            *calib = convertFloatToInt(&g_calib.fast_dac_x1[channel],15);
             break;
         }
 
         case RP_GAIN_CALIB_5X:{
             *gain = g_calib.fast_dac_x5[channel].gainCalc;
             *offset = g_calib.fast_dac_x5[channel].offset;
-            *calib = convertFloatToInt(&g_calib.fast_dac_x5[channel],5);
+            *calib = convertFloatToInt(&g_calib.fast_dac_x5[channel],15);
             break;
         }
 

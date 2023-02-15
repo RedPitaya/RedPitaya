@@ -18,7 +18,7 @@ uint32_t calibBaseScaleFromVoltage(float voltageScale) {
 uint_gain_calib_t convertFloatToInt(channel_calib_t *param,uint8_t precision){
     uint_gain_calib_t calib;
     calib.precision = precision;
-    calib.base = pow(10,precision);
+    calib.base = pow(2,precision);
     calib.gain = param->gainCalc * calib.base;
     calib.offset = param->offset;
     return calib;
@@ -726,36 +726,42 @@ bool recalculateGain(rp_calib_params_t *param){
     for(int i = 0 ; i < param->fast_adc_count_1_1; ++i){
         double baseValue = calibBaseScaleFromVoltage(param->fast_adc_1_1[i].baseScale);
         param->fast_adc_1_1[i].gainCalc = (double)param->fast_adc_1_1[i].calibValue / baseValue;
+        param->fast_adc_1_1[i].gainCalc = CHEK_GAIN_LIMIT(param->fast_adc_1_1[i].gainCalc);
     }
 
     if (param->fast_adc_count_1_20 > 4) return false;
     for(int i = 0 ; i < param->fast_adc_count_1_20; ++i){
         double baseValue = calibBaseScaleFromVoltage(param->fast_adc_1_20[i].baseScale);
         param->fast_adc_1_20[i].gainCalc = (double)param->fast_adc_1_20[i].calibValue / baseValue;
+        param->fast_adc_1_20[i].gainCalc = CHEK_GAIN_LIMIT(param->fast_adc_1_20[i].gainCalc);
     }
 
     if (param->fast_adc_count_1_1_ac > 4) return false;
     for(int i = 0 ; i < param->fast_adc_count_1_1_ac; ++i){
         double baseValue = calibBaseScaleFromVoltage(param->fast_adc_1_1_ac[i].baseScale);
         param->fast_adc_1_1_ac[i].gainCalc = (double)param->fast_adc_1_1_ac[i].calibValue / baseValue;
+        param->fast_adc_1_1_ac[i].gainCalc = CHEK_GAIN_LIMIT(param->fast_adc_1_1_ac[i].gainCalc);
     }
 
     if (param->fast_adc_count_1_20_ac > 4) return false;
     for(int i = 0 ; i < param->fast_adc_count_1_20_ac; ++i){
         double baseValue = calibBaseScaleFromVoltage(param->fast_adc_1_20_ac[i].baseScale);
         param->fast_adc_1_20_ac[i].gainCalc = (double)param->fast_adc_1_20_ac[i].calibValue / baseValue;
+        param->fast_adc_1_20_ac[i].gainCalc = CHEK_GAIN_LIMIT(param->fast_adc_1_20_ac[i].gainCalc);
     }
 
     if (param->fast_dac_count_x1 > 4) return false;
     for(int i = 0 ; i < param->fast_dac_count_x1; ++i){
         double baseValue = calibBaseScaleFromVoltage(param->fast_dac_x1[i].baseScale);
         param->fast_dac_x1[i].gainCalc = (double)param->fast_dac_x1[i].calibValue / baseValue;
+        param->fast_dac_x1[i].gainCalc = CHEK_GAIN_LIMIT(param->fast_dac_x1[i].gainCalc);
     }
 
     if (param->fast_dac_count_x5 > 4) return false;
     for(int i = 0 ; i < param->fast_dac_count_x5; ++i){
         double baseValue = calibBaseScaleFromVoltage(param->fast_dac_x5[i].baseScale);
         param->fast_dac_x5[i].gainCalc = (double)param->fast_dac_x5[i].calibValue / baseValue;
+        param->fast_dac_x5[i].gainCalc = CHEK_GAIN_LIMIT(param->fast_dac_x5[i].gainCalc);
     }
 
     return true;
@@ -766,37 +772,37 @@ bool recalculateCalibValue(rp_calib_params_t *param){
     if (param->fast_adc_count_1_1 > 4) return false;
     for(int i = 0 ; i < param->fast_adc_count_1_1; ++i){
         double baseValue = calibBaseScaleFromVoltage(param->fast_adc_1_1[i].baseScale);
-        param->fast_adc_1_1[i].calibValue = param->fast_adc_1_1[i].gainCalc * (double)baseValue;
+        param->fast_adc_1_1[i].calibValue = CHEK_GAIN_LIMIT(param->fast_adc_1_1[i].gainCalc) * (double)baseValue;
     }
 
     if (param->fast_adc_count_1_20 > 4) return false;
     for(int i = 0 ; i < param->fast_adc_count_1_20; ++i){
         double baseValue = calibBaseScaleFromVoltage(param->fast_adc_1_20[i].baseScale);
-        param->fast_adc_1_20[i].calibValue = param->fast_adc_1_20[i].gainCalc * (double)baseValue;
+        param->fast_adc_1_20[i].calibValue = CHEK_GAIN_LIMIT(param->fast_adc_1_20[i].gainCalc) * (double)baseValue;
     }
 
     if (param->fast_adc_count_1_1_ac > 4) return false;
     for(int i = 0 ; i < param->fast_adc_count_1_1_ac; ++i){
         double baseValue = calibBaseScaleFromVoltage(param->fast_adc_1_1_ac[i].baseScale);
-        param->fast_adc_1_1_ac[i].calibValue = param->fast_adc_1_1_ac[i].gainCalc * (double)baseValue;
+        param->fast_adc_1_1_ac[i].calibValue = CHEK_GAIN_LIMIT(param->fast_adc_1_1_ac[i].gainCalc) * (double)baseValue;
     }
 
     if (param->fast_adc_count_1_20_ac > 4) return false;
     for(int i = 0 ; i < param->fast_adc_count_1_20_ac; ++i){
         double baseValue = calibBaseScaleFromVoltage(param->fast_adc_1_20_ac[i].baseScale);
-        param->fast_adc_1_20_ac[i].calibValue = param->fast_adc_1_20_ac[i].gainCalc * (double)baseValue;
+        param->fast_adc_1_20_ac[i].calibValue = CHEK_GAIN_LIMIT(param->fast_adc_1_20_ac[i].gainCalc) * (double)baseValue;
     }
 
     if (param->fast_dac_count_x1 > 4) return false;
     for(int i = 0 ; i < param->fast_dac_count_x1; ++i){
         double baseValue = calibBaseScaleFromVoltage(param->fast_dac_x1[i].baseScale);
-        param->fast_dac_x1[i].calibValue = param->fast_dac_x1[i].gainCalc * (double)baseValue;
+        param->fast_dac_x1[i].calibValue = CHEK_GAIN_LIMIT(param->fast_dac_x1[i].gainCalc) * (double)baseValue;
     }
 
     if (param->fast_dac_count_x5 > 4) return false;
     for(int i = 0 ; i < param->fast_dac_count_x5; ++i){
         double baseValue = calibBaseScaleFromVoltage(param->fast_dac_x5[i].baseScale);
-        param->fast_dac_x5[i].calibValue = param->fast_dac_x5[i].gainCalc * (double)baseValue;
+        param->fast_dac_x5[i].calibValue = CHEK_GAIN_LIMIT(param->fast_dac_x5[i].gainCalc) * (double)baseValue;
     }
 
     return true;

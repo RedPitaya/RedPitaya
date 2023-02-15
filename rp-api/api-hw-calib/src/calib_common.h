@@ -34,6 +34,8 @@
 #define DEFAULT_1_20_FILT_PP 0x2666
 #define DEFAULT_1_20_FILT_KK 0xd9999a
 
+#define CHEK_GAIN_LIMIT(X) (X < 0 ? 0 : (X > 2 ? 1.999999 : X))
+
 uint8_t* readFromEpprom(uint16_t *size);
 uint8_t* readFromFactoryEpprom(uint16_t *size);
 
