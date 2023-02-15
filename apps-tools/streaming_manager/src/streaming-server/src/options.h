@@ -41,7 +41,7 @@ namespace ClientOpt {
             background = false;
             config_port = std::string("8901");
             broadcast_port = std::string("8902");
-            conf_file = std::string("/root/.streaming_config");
+            conf_file = std::string("/root/.config/redpitaya/apps/streaming/streaming_config.json");
         };
     };
     auto split(const std::string& s, char seperator) ->  std::vector<std::string>;
