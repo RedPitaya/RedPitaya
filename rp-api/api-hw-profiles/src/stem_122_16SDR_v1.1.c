@@ -23,10 +23,10 @@ profiles_t stem_122_16SDR_v1_1 = {
     .fast_dac_count_channels = 2,
     .fast_dac[0].is_signed = true,
     .fast_dac[0].bits = 14,
-    .fast_dac[0].fullScale = 1,
+    .fast_dac[0].fullScale = 0.5,
     .fast_dac[1].is_signed = true,
     .fast_dac[1].bits = 14,
-    .fast_dac[1].fullScale = 1,
+    .fast_dac[1].fullScale = 0.5,
 
     .is_LV_HV_mode = false,
     .is_AC_DC_mode = false,

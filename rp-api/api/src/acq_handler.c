@@ -593,7 +593,6 @@ int acq_SetChannelThreshold(rp_channel_t channel, float voltage){
             voltage = 0;
         }
     }
-
     uint32_t cnt = cmn_convertToCnt(voltage,bits,fullScale,is_sign,gain,offset);
     ch_trash[channel] = voltage;
 

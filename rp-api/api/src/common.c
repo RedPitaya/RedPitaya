@@ -314,6 +314,7 @@ int32_t cmn_CalibCntsSigned(uint32_t cnts, uint8_t bits, uint32_t gain, uint32_t
     m -= offset;
 
     m = ((int32_t)gain * m) / (int32_t)base;
+
     /* check limits */
     if(m < -(1 << (bits - 1)))
         m = -(1 << (bits - 1));
