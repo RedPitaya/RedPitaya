@@ -20,7 +20,7 @@ then
   echo Set default board values
 fi
 
-if test ${hw_rev} = 'STEM_125-10_v1.0'
+if test ${hw_rev} == 'STEM_125-10_v1.0'
 then
   setenv high     0x10000000
   setenv bootargs ${bootargs} mem=256M
@@ -29,93 +29,93 @@ else
   setenv high     0x20000000
 fi
 
-if test ${hw_rev} = 'STEM_125-10_v1.0'
+if test ${hw_rev} == 'STEM_125-10_v1.0'
 then
   setenv dts_path z10_125
 fi
 
-if test ${hw_rev} = 'STEM_14_B_v1.0'
+if test ${hw_rev} == 'STEM_14_B_v1.0'
 then
   setenv dts_path z10_125
 fi
 
-if test ${hw_rev} = 'STEM_125-14_v1.0'
+if test ${hw_rev} == 'STEM_125-14_v1.0'
 then
   setenv dts_path z10_125
 fi
 
-if test ${hw_rev} = 'STEM_125-14_v1.1'
+if test ${hw_rev} == 'STEM_125-14_v1.1'
 then
   setenv dts_path z10_125
 fi
 
-if test ${hw_rev} = 'STEM_125-14_LN_v1.1'
+if test ${hw_rev} == 'STEM_125-14_LN_v1.1'
 then
   setenv dts_path z10_125
 fi
 
-if test ${hw_rev} = 'STEM_125-14_Z7020_v1.0'
+if test ${hw_rev} == 'STEM_125-14_Z7020_v1.0'
 then
   setenv dts_path z20_125
 fi
 
-if test ${hw_rev} = 'STEM_125-14_Z7020_LN_v1.1'
+if test ${hw_rev} == 'STEM_125-14_Z7020_LN_v1.1'
 then
   setenv dts_path z20_125
 fi
 
-if test ${hw_rev} = 'STEM_122-16SDR_v1.0'
+if test ${hw_rev} == 'STEM_122-16SDR_v1.0'
 then
   setenv dts_path z20_122
 fi
 
-if test ${hw_rev} = 'STEM_125-14_Z7020_4IN_v1.0'
+if test ${hw_rev} == 'STEM_125-14_Z7020_4IN_v1.0'
 then
   setenv dts_path z20_125_4ch
 fi
 
-if test ${hw_rev} = 'STEM_125-14_Z7020_4IN_v1.2'
+if test ${hw_rev} == 'STEM_125-14_Z7020_4IN_v1.2'
 then
   setenv dts_path z20_125_4ch
 fi
 
-if test ${hw_rev} = 'STEM_125-14_Z7020_4IN_v1.3'
+if test ${hw_rev} == 'STEM_125-14_Z7020_4IN_v1.3'
 then
   setenv dts_path z20_125_4ch
 fi
 
-if test ${hw_rev} = 'STEM_250-12_v1.1'
+if test ${hw_rev} == 'STEM_250-12_v1.1'
 then
   setenv bootargs ${bootargs} mem=512M
   setenv high     0x20000000
   setenv dts_path z20_250
 fi
 
-if test ${hw_rev} = 'STEM_250-12_v1.2'
+if test ${hw_rev} == 'STEM_250-12_v1.2'
 then
   setenv bootargs ${bootargs} mem=512M
   setenv high     0x20000000
   setenv dts_path z20_250
 fi
 
-if test ${hw_rev} = 'STEM_250-12_120'
+if test ${hw_rev} == 'STEM_250-12_120'
 then
   setenv bootargs ${bootargs} mem=512M
   setenv high     0x20000000
   setenv dts_path z20_250
 fi
 
-if test ${hw_rev} = 'STEM_125-14_LN_BO_v1.1'
+if test ${hw_rev} == 'STEM_125-14_LN_BO_v1.1'
 then
   setenv dts_path z10_125
 fi
 
-if test ${hw_rev} = 'STEM_125-14_LN_CE1_v1.1'
+if test ${hw_rev} == 'STEM_125-14_LN_CE1_v1.1'
 then
   setenv dts_path z10_125
 fi
 
-if test ${hw_rev} = 'STEM_125-14_LN_CE2_v1.1'
+if test ${hw_rev} == 'STEM_125-14_LN_CE2_v1.1'
 then
   setenv dts_path z10_125
 fi
