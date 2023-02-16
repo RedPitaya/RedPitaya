@@ -1,13 +1,18 @@
 #include <iostream>
 #include <fstream>
-#include <sys/stat.h>
 #include "stream_settings.h"
 #include "json/json.h"
 #include "data_lib/thread_cout.h"
 
+#ifndef _WIN32
+#include <sys/stat.h>
+#endif
+
 #define UNUSED(x) [&x]{}()
 
 using namespace std;
+
+#ifndef _WIN32
 
 auto createDir(const std::string dir) -> bool
 {
@@ -30,6 +35,8 @@ auto createDirTree(const std::string full_path) -> bool
 
     return ret_val;
 }
+
+#endif
 
 CStreamSettings::CStreamSettings(){
     m_port = "";
@@ -233,9 +240,13 @@ bool CStreamSettings::writeToFile(string _filename){
 
         Json::StreamWriterBuilder builder;
         const std::string json_file = Json::writeString(builder, root);
+
+#ifndef _WIN32
         auto found = _filename.find_last_of("/\\");
         auto dirPath = _filename.substr(0, found);
         createDirTree(dirPath);
+#endif
+
         ofstream file(_filename , 	ios::out | ios::trunc);
         if (!file.is_open()) {
             aprintf(stderr, "file write failed %d\n",std::strerror(errno));
