@@ -19,6 +19,8 @@
     UPD.SdLinuxVer = undefined;
     UPD.type = 'stemlab';
     UPD.path_fw = '';
+    UPD.timerCheck = undefined;
+
 
     UPD.startStep = function(step) {
         UPD.currentStep = step;
@@ -225,45 +227,51 @@
         }, 500);
     }
 
+
     UPD.downloadEcosystem = function() {
         if (!UPD.isApply) {
             --UPD.currentStep; // FIXME
             return;
         }
-        setTimeout(function() {
+
+        console.log("Check download");
+        $('#step_' + UPD.currentStep).find('.step_icon').find('img').hide();
+
+        UPD.timerCheck = setInterval(function() {
             $.ajax({
-                url: '/update_download?ecosystem=' + UPD.type + '/' + UPD.ecosystems[UPD.chosen_eco],
+                url: '/update_check',
                 type: 'GET',
-            }).always(function() {
-                $('#step_' + UPD.currentStep).find('.step_icon').find('img').hide();
-                var check_progress = setInterval(function() {
-                    $.ajax({
-                        url: '/update_check',
-                        type: 'GET',
-                    }).done(function(msg) {
-                        var res = msg;
-                        var s = res.split(" ")[0];
-                        var size = parseInt(s) * 1;
-                        if (isNaN(size)) {
-                            $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
-                            $('#step_' + UPD.currentStep).find('.error_msg').show();
-                            clearInterval(check_progress);
-                        } else {
-                            var percent = ((size / UPD.ecosystems_sizes[UPD.chosen_eco]) * 100).toFixed(2);
-                            $('#percent').text(percent + "%");
-                            $('#percent').show();
+            }).done(function(msg) {
+                var res = msg;
+                var s = res.split(" ")[0];
+                var size = parseInt(s) * 1;
+                if (isNaN(size)) {
+                    $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                    $('#step_' + UPD.currentStep).find('.error_msg').show();
+                    clearInterval(check_progress);
+                } else {
+                    var percent = ((size / UPD.ecosystems_sizes[UPD.chosen_eco]) * 100).toFixed(2);
+                    $('#percent').text(percent + "%");
+                    $('#percent').show();
+                }
 
-                            if (size >= UPD.ecosystems_sizes[UPD.chosen_eco]) {
-                                $('#percent').hide();
-                                UPD.nextStep();
-                                clearInterval(check_progress);
-                            }
-                        }
-
-                    });
-                }, 1000)
             });
         }, 1000);
+
+        $.ajax({
+            url: '/update_download?ecosystem=' + UPD.type + '/' + UPD.ecosystems[UPD.chosen_eco],
+            type: 'GET',
+        }).always(function(res) {
+            console.log(res);
+            clearInterval(UPD.timerCheck);
+            if (res.includes("OK")){
+                $('#percent').hide();
+                UPD.nextStep();
+            }else{
+                $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                $('#step_' + UPD.currentStep).find('.error_msg').show();
+            }
+        });
 
     }
 
