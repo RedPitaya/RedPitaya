@@ -108,30 +108,6 @@
             }
         };
 
-        // Special slave boards for multi streaming
-        if (model.includes("SLAVE")) {
-            for (i = listOfapplications.length - 1; i >= 0; i -= 1) {
-                if (listOfapplications[i]["id"] === 'marketplace' ||
-                    listOfapplications[i]["id"] === 'ba_pro' ||
-                    listOfapplications[i]["id"] === 'lcr_meter' ||
-                    listOfapplications[i]["id"] === 'fpgaexamples' ||
-                    listOfapplications[i]["id"] === 'jupyter' ||
-                    listOfapplications[i]["id"] === 'scpi' ||
-                    listOfapplications[i]["id"] === 'Development' ||
-                    listOfapplications[i]["id"] === 'sdr_receiver_hpsdr' ||
-                    listOfapplications[i]["id"] === 'sdr_receiver_hpsdr_z20' ||
-                    listOfapplications[i]["id"] === 'sdr_receiver_hpsdr_z20_122_88' ||
-                    listOfapplications[i]["id"] === 'sdr_transceiver_hpsdr' ||
-                    listOfapplications[i]["id"] === 'sdr_transceiver_hpsdr_z20' ||
-                    listOfapplications[i]["id"] === 'sdr_transceiver_hpsdr_z20_122_88' ||
-                    listOfapplications[i]["id"] === 'vna' ||
-                    listOfapplications[i]["id"] === 'vna_z20' ||
-                    listOfapplications[i]["id"] === 'vna_z20_122_88' ||
-                    listOfapplications[i]["id"] === 'activelearning') {
-                    listOfapplications.splice(i, 1);
-                }
-            }
-        };
         return listOfapplications;
     }
 

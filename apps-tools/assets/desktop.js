@@ -108,7 +108,6 @@
             .done(function(result) {
                 applications = [];
                 $.extend(true, applications, listOfapplications);
-                applications = Desktop.filterApps(applications,Desktop.convertModel(result['stem_ver']));
                 var url_arr = window.location.href.split("/");
                 var url = url_arr[0] + '//' + url_arr[2] + '/';
 
@@ -124,6 +123,8 @@
                     applications[i].group = checkApplicationInGroup(applications[i].id);
                     applications[i].is_group = false;
                 }
+
+                applications = Desktop.filterApps(applications,Desktop.convertModel(result['stem_ver']));
 
                 for (var i = 0; i < groups.length; i++) {
                     var gr = {
