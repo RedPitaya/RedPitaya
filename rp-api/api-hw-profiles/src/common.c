@@ -348,6 +348,7 @@ int hp_cmn_Print(profiles_t *p){
 	fprintf(stdout,"FAST ADC/DAC calibration: %d\n",p->is_fast_calibration);
 	fprintf(stdout,"FAST ADC attenuator controller: %d\n",p->is_attenuator_controller_present);
 	fprintf(stdout,"FAST ADC External trigger level available: %d\n",p->is_ext_trigger_level_available);
+	fprintf(stdout,"FAST ADC External trigger level full scale: %d\n",p->external_trigger_full_scale);
 
 	fprintf(stdout,"***********************************************************************\n");
 	return RP_HP_OK;

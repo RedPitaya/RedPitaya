@@ -84,7 +84,8 @@ profiles_t stem_250_12_v1_2 = {
 
     .is_attenuator_controller_present = true,
 
-    .is_ext_trigger_level_available = true
+    .is_ext_trigger_level_available = true,
+    .external_trigger_full_scale = 10
 };
 
 profiles_t* getProfile_STEM_250_12_v1_2(){

@@ -65,7 +65,8 @@ profiles_t stem_special = {
 
     .is_attenuator_controller_present = false,
 
-    .is_ext_trigger_level_available = false
+    .is_ext_trigger_level_available = false,
+    .external_trigger_full_scale = 0
 };
 
 profiles_t* getProfile_STEM_SPECIAL(){

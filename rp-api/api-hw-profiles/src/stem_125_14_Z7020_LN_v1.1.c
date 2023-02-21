@@ -84,7 +84,8 @@ profiles_t stem_125_14_Z7020_LN_v1_1 = {
 
     .is_attenuator_controller_present = false,
 
-    .is_ext_trigger_level_available = false
+    .is_ext_trigger_level_available = false,
+    .external_trigger_full_scale = 0
 };
 
 profiles_t* getProfile_STEM_125_14_Z7020_LN_v1_1(){

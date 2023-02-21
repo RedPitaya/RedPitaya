@@ -58,6 +58,8 @@ typedef struct {
     bool                is_fast_dac_temp_protection;
     bool                is_attenuator_controller_present;
     bool                is_ext_trigger_level_available;
+    uint8_t             external_trigger_full_scale;
+
 } profiles_t;
 
 

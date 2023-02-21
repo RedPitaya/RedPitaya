@@ -415,6 +415,15 @@ int rp_HPGetIsExternalTriggerLevelPresent(bool *value);
 bool rp_HPGetIsExternalTriggerLevelPresentOrDefault();
 
 /**
+* Returns the full scale for external trigger
+* Function rp_HPGetIsExternalTriggerFullScalePresentOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+*/
+int rp_HPGetIsExternalTriggerFullScale(float *value);
+float rp_HPGetIsExternalTriggerFullScalePresentOrDefault();
+
+/**
  * Print all parameters for current profile
  */
 int rp_HPPrint();

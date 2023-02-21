@@ -693,3 +693,18 @@ bool rp_HPGetIsExternalTriggerLevelPresentOrDefault(){
     profiles_t* p = getProfileDefualt();
     return p->is_ext_trigger_level_available;
 }
+
+int rp_HPGetIsExternalTriggerFullScale(float *value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->external_trigger_full_scale;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+float rp_HPGetIsExternalTriggerFullScalePresentOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->external_trigger_full_scale;
+}
