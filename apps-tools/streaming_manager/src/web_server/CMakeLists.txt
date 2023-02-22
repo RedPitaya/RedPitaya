@@ -3,12 +3,7 @@ project(web_server)
 
 set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY true)
 
-if(NOT DEFINED MODEL)
-  set(MODEL Z10)
-endif()
-
 message(STATUS "Project=${PROJECT_NAME}")
-message(STATUS "RedPitaya model=${MODEL}")
 message(STATUS "RedPitaya platform=${RP_PLATFORM}")
 message(STATUS "Is install ${IS_INSTALL}")
 message(STATUS "Install path ${INSTALL_DIR}")
@@ -50,7 +45,7 @@ if (RP_PLATFORM)
 endif()
 
 target_compile_options(${PROJECT_NAME}
-    PRIVATE -Wall -fpermissive -D${MODEL} -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os -s>  -ffunction-sections -fdata-sections)
+    PRIVATE -Wall -fpermissive -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os -s>  -ffunction-sections -fdata-sections)
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC  ${PROJECT_SOURCE_DIR}
