@@ -170,6 +170,7 @@ auto ClientOpt::getADCRate() -> uint32_t{
         case STEM_125_14_Z7020_4IN_v1_3:
             return RP_125_14_4CH;
 
+        case STEM_250_12_v1_0:
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
             return RP_250_12;
@@ -210,6 +211,7 @@ auto ClientOpt::getBroadcastModel() -> broadcast_lib::EModel{
         case STEM_125_14_Z7020_4IN_v1_3:
             return broadcast_lib::EModel::RP_125_4CH;
 
+        case STEM_250_12_v1_0:
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
             return broadcast_lib::EModel::RP_250_12;

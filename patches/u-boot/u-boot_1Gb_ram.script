@@ -14,7 +14,26 @@ setenv bootargs console=ttyPS0,115200 root=/dev/mmcblk0p2 ro rootfstype=ext4 ear
 
 # Worked only with 250 12 (1Gb Ram)
 
-setenv dts_path z20_250
+if test ${hw_rev} == 'STEM_250-12_v1.0'
+then
+  setenv dts_path z20_250_1_0
+fi
+
+if test ${hw_rev} == 'STEM_250-12_v1.1'
+then
+  setenv dts_path z20_250
+fi
+
+if test ${hw_rev} == 'STEM_250-12_v1.2'
+then
+  setenv dts_path z20_250
+fi
+
+if test ${hw_rev} == 'STEM_250-12_120'
+then
+  setenv dts_path z20_250
+fi
+
 setenv high     0x40000000
 
 echo Set devicetree and ramdisk high loading address to ${high}

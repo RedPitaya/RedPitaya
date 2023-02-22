@@ -422,6 +422,7 @@ rp_calib_params_t getDefault(rp_HPeModels_t model){
         }
         break;
 
+    case STEM_250_12_v1_0:
     case STEM_250_12_v1_1:
     case STEM_250_12_v1_2:
     case STEM_250_12_120:

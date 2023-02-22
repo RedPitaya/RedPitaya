@@ -49,9 +49,10 @@
                 STEM_125_14_Z7020_4IN_v1_0  = 8,
                 STEM_125_14_Z7020_4IN_v1_2  = 9,
                 STEM_125_14_Z7020_4IN_v1_3  = 10,
-                STEM_250_12_v1_1            = 11,
-                STEM_250_12_v1_2            = 12,
-                STEM_250_12_120             = 13
+                STEM_250_12_v1_0            = 11,
+                STEM_250_12_v1_1            = 12,
+                STEM_250_12_v1_2            = 13,
+                STEM_250_12_120             = 14
             }  rp_HPeModels_t;
         */
         if (model == 0){
@@ -94,6 +95,9 @@
             return "STEM 250 12"
         }
         if (model == 13){
+            return "STEM 250 12"
+        }
+        if (model == 14){
             return "STEM 250 12"
         }
         console.log("[FATAL ERROR] Unknown model: " + model)

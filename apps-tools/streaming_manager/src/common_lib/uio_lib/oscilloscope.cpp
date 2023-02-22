@@ -18,7 +18,7 @@ void * MmapNumber(int _fd, size_t _size, size_t _number) {
 
 void setRegister(volatile OscilloscopeMapT * baseOsc_addr,volatile uint32_t *reg, int32_t value){
     (void)(baseOsc_addr);
-//    fprintf(stderr,"\tSet register 0x%X <- 0x%X\n",(uint32_t)reg-(uint32_t)baseOsc_addr,value);
+    //fprintf(stderr,"\tSet register 0x%X <- 0x%X\n",(uint32_t)reg-(uint32_t)baseOsc_addr,value);
     *reg = value;
 }
 
@@ -168,7 +168,6 @@ auto COscilloscope::setReg(volatile OscilloscopeMapT *_OscMap) -> void{
 
         setRegister(_OscMap,&(_OscMap->calib_gain_ch2),m_calib_gain_ch2);
 
-#ifndef Z20_250_12
         setRegister(_OscMap,&(_OscMap->filt_coeff_aa_ch1),m_AA_ch1);
 
         setRegister(_OscMap,&(_OscMap->filt_coeff_bb_ch1),m_BB_ch1);
@@ -184,7 +183,6 @@ auto COscilloscope::setReg(volatile OscilloscopeMapT *_OscMap) -> void{
         setRegister(_OscMap,&(_OscMap->filt_coeff_kk_ch2),m_KK_ch2);
 
         setRegister(_OscMap,&(_OscMap->filt_coeff_pp_ch2),m_PP_ch2);
-#endif
 }
 
 auto COscilloscope::setFilterCalibrationCh1(int32_t _aa,int32_t _bb, int32_t _kk, int32_t _pp) -> void {
@@ -313,9 +311,6 @@ auto COscilloscope::getOSCRate() -> uint32_t{
 
 
 auto COscilloscope::printReg() -> void{
-    #ifdef Z20_250_12
-        fprintf(stderr,"not implemented\n");
-    #else
         fprintf(stderr,"printReg\n");
         fprintf(stderr,"0x00 event_sts = 0x%X\n", m_OscMap->event_sts);
         fprintf(stderr,"0x04 event_sel = 0x%X\n", m_OscMap->event_sel);
@@ -361,6 +356,6 @@ auto COscilloscope::printReg() -> void{
         fprintf(stderr,"0xD4 filt_coeff_bb_ch2 = 0x%X\n", m_OscMap->filt_coeff_bb_ch2);
         fprintf(stderr,"0xD8 filt_coeff_kk_ch2 = 0x%X\n", m_OscMap->filt_coeff_kk_ch2);
         fprintf(stderr,"0xDC filt_coeff_pp_ch2 = 0x%X\n", m_OscMap->filt_coeff_pp_ch2);
+        fprintf(stderr,"0x100 mode_slave_sts = 0x%X\n", m_OscMap->mode_slave_sts);
 
-    #endif
 }

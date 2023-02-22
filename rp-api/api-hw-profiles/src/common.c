@@ -35,6 +35,7 @@
 #include "stem_125_14_Z7020_4IN_v1.0.h"
 #include "stem_125_14_Z7020_4IN_v1.2.h"
 #include "stem_125_14_Z7020_4IN_v1.3.h"
+#include "stem_250_12_v1.0.h"
 #include "stem_250_12_v1.1.h"
 #include "stem_250_12_v1.2.h"
 #include "stem_250_12_120.h"
@@ -58,6 +59,7 @@ profiles_t *g_profile = NULL;
 // "STEM_125-14_Z7020_4IN_v1.3"
 // "STEM_250-12_v1.2"
 // "STEM_250-12_v1.1"
+// "STEM_250-12_v1.0"
 // "STEM_250-12_120"
 
 // special boards
@@ -160,6 +162,13 @@ void hp_checkModel(char *model,char *eth_mac){
 
 	if (strcmp(model,"stem_125-14_z7020_4in_v1.3") == 0){
 		g_profile = getProfile_STEM_125_14_Z7020_4IN_v1_3();
+		strcpy(g_profile->boardModelEEPROM,modelOrig);
+		if (eth_mac)
+			strcpy(g_profile->boardETH_MAC,eth_mac);
+	}
+
+	if (strcmp(model,"stem_250-12_v1.0") == 0){
+		g_profile = getProfile_STEM_250_12_v1_0();
 		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);

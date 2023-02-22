@@ -65,6 +65,8 @@ struct OscilloscopeMapT
     uint32_t filt_coeff_bb_ch2;       // 212  - offset 0xD4
     uint32_t filt_coeff_kk_ch2;       // 216  - offset 0xD8
     uint32_t filt_coeff_pp_ch2;       // 220  - offset 0xDC
+    uint32_t reserv4[9];
+    uint32_t mode_slave_sts;          // 256  - offset 0x100
 };
 
 

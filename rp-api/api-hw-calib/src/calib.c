@@ -85,6 +85,7 @@ int calib_InitModel(rp_HPeModels_t model,bool use_factory_zone){
             break;
         }
 
+        case STEM_250_12_v1_0:
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
         case STEM_250_12_120:{
@@ -223,6 +224,7 @@ int calib_WriteParams(rp_HPeModels_t model, rp_calib_params_t *calib_params,bool
             break;
         }
 
+        case STEM_250_12_v1_0:
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
         case STEM_250_12_120:{
@@ -348,6 +350,7 @@ int calib_LoadFromFactoryZone(){
             break;
         }
 
+        case STEM_250_12_v1_0:
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
         case STEM_250_12_120:{
@@ -438,6 +441,7 @@ int calib_GetEEPROM(rp_eepromWpData_t *calib_params,bool use_factory_zone){
             return RP_HW_CALIB_OK;
         }
 
+        case STEM_250_12_v1_0:
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
         case STEM_250_12_120:{
@@ -499,6 +503,7 @@ int calib_ConvertEEPROM(rp_eepromWpData_t *calib_params,rp_calib_params_t *out){
                 return RP_HW_CALIB_OK;
             }
 
+            case STEM_250_12_v1_0:
             case STEM_250_12_v1_1:
             case STEM_250_12_v1_2:
             case STEM_250_12_120:{

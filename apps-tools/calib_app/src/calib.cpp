@@ -70,6 +70,7 @@ int CCalib::calib(uint16_t _step,float _refdc){
         case STEM_125_14_Z7020_4IN_v1_3:
             return calib_board_z20_4ch(_step,_refdc);
 
+        case STEM_250_12_v1_0:
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
         case STEM_250_12_120:
