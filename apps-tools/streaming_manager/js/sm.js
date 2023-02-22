@@ -331,7 +331,7 @@
                         rateFocusOutValue();
                     }else{
                         field.val(new_params[param_name].value)
-                    }                 
+                    }
                 } else if (field.is('button')) {
                     field[new_params[param_name].value === true ? 'addClass' : 'removeClass']('active');
                 } else if (field.is('input:radio')) {
@@ -441,12 +441,31 @@
         });
     }
 
+    SM.setBoardMode = function(param) {
+        var str = ""
+
+        if (param["SS_IS_MASTER"].value === 0) {
+            str = "(Unknown mode)"
+        }
+
+        if (param["SS_IS_MASTER"].value === 1) {
+            str = "(Master mode)"
+        }
+
+        if (param["SS_IS_MASTER"].value === 2) {
+            str = "(Slave mode)"
+        }
+
+        $("#TITLE_ID").text("Stream server application " + str)
+    }
+
     //Set handlers timers
     //    setInterval(signalsHandler, 40);
     //    setInterval(parametersHandler, 50);
 
     SM.param_callbacks["SS_STATUS"] = SM.change_status;
     SM.param_callbacks["SS_ADC_DATA_PASS"] = SM.change_adc_data_pass;
+    SM.param_callbacks["SS_IS_MASTER"] = SM.setBoardMode;
 
 
 }(window.SM = window.SM || {}, jQuery));

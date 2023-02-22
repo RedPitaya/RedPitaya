@@ -45,6 +45,8 @@
 #include "dac_streaming.h"
 #include "streaming_lib/streaming_file.h"
 #include "streaming.h"
+#include "uio_lib/oscilloscope.h"
+
 
 std::mutex g_print_mtx;
 std::shared_ptr<ServerNetConfigManager> con_server = nullptr;
@@ -105,12 +107,8 @@ std::string exec(const char* cmd) {
 
 int main(int argc, char *argv[])
 {
-    #ifdef STREAMING_MASTER
-		auto isMaster = true;
-    #endif
-    #ifdef STREAMING_SLAVE
-        auto isMaster = false;
-    #endif
+    uio_lib::BoardMode isMaster = uio_lib::BoardMode::UNKNOWN;
+
     g_argv0 = argv[0];
     auto opt = ClientOpt::parse(argc,argv);
     bool verbMode = opt.verbose;
@@ -177,10 +175,19 @@ int main(int argc, char *argv[])
                 }
             }
         }
+        auto uioList = uio_lib::GetUioList();
+        for (auto &uio : uioList){
+            if (uio.nodeName == "rp_oscilloscope"){
+                auto osc = uio_lib::COscilloscope::create(uio,1,true,ClientOpt::getADCRate(),false);
+                isMaster = osc->isMaster();
+                printWithLog(LOG_INFO,stdout,"Detected %s mode\n",isMaster == uio_lib::BoardMode::MASTER ? "Master" : (isMaster == uio_lib::BoardMode::SLAVE ? "Slave" : "Unknown"));
+                break;
+            }
+        }
 #else
         auto brchost = "127.0.0.1";
 #endif
-        auto mode = isMaster ? broadcast_lib::EMode::AB_SERVER_MASTER : broadcast_lib::EMode::AB_SERVER_SLAVE;
+        auto mode = isMaster != uio_lib::BoardMode::SLAVE ? broadcast_lib::EMode::AB_SERVER_MASTER : broadcast_lib::EMode::AB_SERVER_SLAVE;
         auto model = ClientOpt::getBroadcastModel();
 
 		con_server = std::make_shared<ServerNetConfigManager>(opt.conf_file,mode,"127.0.0.1",opt.config_port);
@@ -199,17 +206,17 @@ int main(int argc, char *argv[])
 //            aprintf(stderr, "clientConnectedNofiy\n");
 //        });
 
-        con_server->startStreamingNofiy.connect([verbMode](){
+        con_server->startStreamingNofiy.connect([verbMode,isMaster](){
             aprintf(stderr, "startStreamingNofiy\n");
-            startServer(verbMode,false);
+            startServer(verbMode,false,isMaster != uio_lib::BoardMode::SLAVE);
         });
 
         con_server->startDacStreamingNofiy.connect([verbMode](){
             startDACServer(verbMode,false);
         });
 
-        con_server->startStreamingTestNofiy.connect([verbMode](){
-            startServer(verbMode,true);
+        con_server->startStreamingTestNofiy.connect([verbMode,isMaster](){
+            startServer(verbMode,true,isMaster != uio_lib::BoardMode::SLAVE);
         });
 
         con_server->startDacStreamingTestNofiy.connect([verbMode](){
@@ -235,7 +242,7 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
     if (verbMode){
-        printWithLog(LOG_NOTICE,stdout,"streaming-server started %s\n", isMaster ? "[MASTER]" : "[SLAVE]");
+        printWithLog(LOG_NOTICE,stdout,"streaming-server started %s\n", isMaster != uio_lib::BoardMode::SLAVE ? "[Master]" : "[Slave]");
     }
 
     installTermSignalHandler();

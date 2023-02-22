@@ -61,6 +61,8 @@ CBooleanParameter 	ss_dac_start(		"SS_DAC_START", 		CBaseParameter::RW, false,0)
 
 
 CBooleanParameter 	ss_use_localfile(	"SS_USE_FILE", 	        CBaseParameter::RW, false,0);
+CIntParameter 		ss_is_master(		"SS_IS_MASTER",	        CBaseParameter::RO, 0, 0, 0, 2);
+
 CIntParameter		ss_port(  			"SS_PORT_NUMBER", 		CBaseParameter::RW, 8900,0,	1,65535);
 CStringParameter    ss_ip_addr(			"SS_IP_ADDR",			CBaseParameter::RW, "127.0.0.1",0);
 CIntParameter		ss_protocol(  		"SS_PROTOCOL", 			CBaseParameter::RW, 1 ,0,	1,2);
@@ -107,6 +109,8 @@ streaming_lib::CStreamingFile::Ptr   		g_s_file = nullptr;
 dac_streaming_lib::CDACStreamingApplication::Ptr g_dac_app = nullptr;
 dac_streaming_lib::CDACStreamingManager::Ptr     g_dac_manger = nullptr;
 ServerNetConfigManager::Ptr                     g_serverNetConfig = nullptr;
+
+uio_lib::BoardMode g_isMaster = uio_lib::BoardMode::UNKNOWN;
 
 std::atomic_bool g_serverRun(false);
 std::atomic_bool g_dac_serverRun(false);
@@ -246,8 +250,22 @@ auto rp_app_init(void) -> int {
 	g_serverRun = false;
 	try {
 		try {
+	        auto uioList = uio_lib::GetUioList();
+			for (auto &uio : uioList){
+				if (uio.nodeName == "rp_oscilloscope")
+				{
+					fprintf(stderr,"rp_app_init::Check master/slave\n");
+					auto osc = uio_lib::COscilloscope::create(uio,1,true,getADCRate(),false);
+					g_isMaster = osc->isMaster();
+					fprintf(stderr,"rp_app_init::Detected %s mode\n",g_isMaster == uio_lib::BoardMode::MASTER ? "Master" : (g_isMaster == uio_lib::BoardMode::SLAVE ? "Slave" : "Unknown"));
+					break;
+				}
+			}
 
-			g_serverNetConfig = std::make_shared<ServerNetConfigManager>(config_file,broadcast_lib::EMode::AB_SERVER_MASTER,ss_ip_addr.Value(),SERVER_CONFIG_PORT);
+			g_serverNetConfig = std::make_shared<ServerNetConfigManager>(config_file,g_isMaster != uio_lib::BoardMode::SLAVE ? broadcast_lib::EMode::AB_SERVER_MASTER
+																							    : broadcast_lib::EMode::AB_SERVER_SLAVE,
+																								ss_ip_addr.Value(),
+																								SERVER_CONFIG_PORT);
             g_serverNetConfig->getNewSettingsNofiy.connect([](){
 				updateUI();
 			});
@@ -289,7 +307,7 @@ auto rp_app_init(void) -> int {
 			{
 				fprintf(stderr, "Error: Init ServerNetConfigManager() %s\n",e.what());
 			}
-
+		ss_is_master.SendValue(g_isMaster);
 		ss_status.SendValue(0);
 		ss_adc_data_pass.SendValue(0);
 		ss_acd_max.SendValue(getADCRate());
@@ -488,7 +506,7 @@ void updateUI(){
 
 void setConfig(bool _force){
 	bool needUpdate = false;
-	g_serverNetConfig->getSettingsRef().setBoardMode(CStreamSettings::MASTER);
+
 	if (ss_port.IsNewValue() || _force)
 	{
 		ss_port.Update();
@@ -803,7 +821,6 @@ void startServer(bool testMode) {
 		auto attenuator   = settings.getAttenuator();
 		auto ac_dc        = settings.getAC_DC();
  		auto channels     = getADCChannels();
-		auto is_master    = settings.getBoardMode();
 
 		if (rp_CalibInit() != RP_HW_CALIB_OK){
 	        fprintf(stderr,"Error init calibration\n");
@@ -873,7 +890,7 @@ void startServer(bool testMode) {
 			if (uio.nodeName == "rp_oscilloscope")
 			{
 				fprintf(stderr,"COscilloscope::Create rate %d\n",rate);
-                g_osc = uio_lib::COscilloscope::create(uio,rate,is_master == CStreamSettings::MASTER,getADCRate(),!filterBypass);
+                g_osc = uio_lib::COscilloscope::create(uio,rate,g_isMaster != uio_lib::BoardMode::SLAVE,getADCRate(),!filterBypass);
                 g_osc->setCalibration(ch_off[0],ch_gain[0],ch_off[1],ch_gain[1]);
                 g_osc->setFilterCalibrationCh1(aa_ch[0],bb_ch[0],kk_ch[0],pp_ch[0]);
                 g_osc->setFilterCalibrationCh2(aa_ch[1],bb_ch[1],kk_ch[1],pp_ch[1]);

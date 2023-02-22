@@ -433,10 +433,10 @@ updater: ecosystem $(NGINX)
 scpi_manager: ecosystem api $(NGINX)
 	$(MAKE) -C $(APP_SCPIMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-streaming_manager: api $(NGINX)
-	$(MAKE) -i -C $(APP_STREAMINGMANAGER_DIR) clean
-	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL) STREAMING_MODE=$(STREAMING)
-	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL) STREAMING_MODE=$(STREAMING)
+streaming_manager: api
+#	$(MAKE) -i -C $(APP_STREAMINGMANAGER_DIR) clean
+	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 calib_app: api $(NGINX)
 	$(MAKE) -i -C $(APP_CALIB_DIR) clean

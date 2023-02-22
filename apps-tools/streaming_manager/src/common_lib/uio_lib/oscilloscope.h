@@ -69,6 +69,12 @@ struct OscilloscopeMapT
     uint32_t mode_slave_sts;          // 256  - offset 0x100
 };
 
+enum BoardMode {
+    UNKNOWN,
+    MASTER,
+    SLAVE
+};
+
 
 class COscilloscope
 {
@@ -94,6 +100,7 @@ public:
     auto printReg() -> void;
     auto getDecimation() -> uint32_t;
     auto getOSCRate() -> uint32_t;
+    auto isMaster() -> BoardMode;
 
 private:
 

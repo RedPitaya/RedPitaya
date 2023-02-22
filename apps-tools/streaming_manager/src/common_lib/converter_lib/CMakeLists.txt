@@ -3,12 +3,8 @@ cmake_minimum_required(VERSION 3.18)
 project(converter_lib)
 
 
-if(NOT DEFINED MODEL)
-  set(MODEL Z10)
-endif()
 
 message(STATUS "Project=${PROJECT_NAME}")
-message(STATUS "RedPitaya model=${MODEL}")
 message(STATUS "RedPitaya platform=${RP_PLATFORM}")
 message(STATUS "VERSION=${VERSION}")
 message(STATUS "REVISION=${REVISION}")
@@ -48,7 +44,7 @@ endif()
 
 
 target_compile_options(${PROJECT_NAME}
-    PRIVATE -std=c++17 -Wall -pedantic -Wextra -fpermissive -D${MODEL} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+    PRIVATE -std=c++17 -Wall -pedantic -Wextra -fpermissive $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 
 target_include_directories(${PROJECT_NAME}

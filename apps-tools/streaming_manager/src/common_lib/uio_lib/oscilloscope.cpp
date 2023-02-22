@@ -309,6 +309,23 @@ auto COscilloscope::getOSCRate() -> uint32_t{
     return m_adcMaxSpeed / m_dec_factor;
 }
 
+auto COscilloscope::isMaster() -> BoardMode{
+    if (m_OscMap != nullptr){
+        usleep(100);
+        BoardMode mode = BoardMode::UNKNOWN;
+
+        if (m_OscMap->mode_slave_sts == 0x1){
+            mode = BoardMode::MASTER;
+        }
+
+        if (m_OscMap->mode_slave_sts == 0x3){
+            mode = BoardMode::SLAVE;
+        }
+        return mode;
+    }else{
+        return BoardMode::UNKNOWN;
+    }
+}
 
 auto COscilloscope::printReg() -> void{
         fprintf(stderr,"printReg\n");

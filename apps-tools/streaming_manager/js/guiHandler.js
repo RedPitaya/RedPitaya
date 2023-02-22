@@ -147,7 +147,7 @@ var formatСhange = function(event) {
 
 var rateFocusOut = function(event) {
     SM.calcRateHz($("#SS_RATE").val());
-    rateFocusOutValue();    
+    rateFocusOutValue();
 }
 
 var rateFocusOutValue = function() {
@@ -168,6 +168,10 @@ var rateFocusOutValue = function() {
     $("#SS_RATE").val(text);
 }
 
+var setBoardMode = function() {
+    $("#TITLE_ID").text("Stream server application")
+}
+
 
 //Create callback
 var changeCallbacks = {}
@@ -185,6 +189,7 @@ changeCallbacks["SS_USE_CALIB"] = useCalibChange;
 changeCallbacks["SS_SAVE_MODE"] = saveModeChange;
 changeCallbacks["SS_ATTENUATOR"] = attenuatorChange;
 changeCallbacks["SS_AC_DC"] = acdcChange;
+changeCallbacks["SS_IS_MASTER"] = acdcChange;
 
 var clickCallbacks = {}
 

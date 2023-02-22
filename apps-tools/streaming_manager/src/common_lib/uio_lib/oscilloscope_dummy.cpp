@@ -82,6 +82,10 @@ auto COscilloscope::clearInterrupt() -> bool{
     return true;
 }
 
+auto isMaster() -> BoardMode{
+    return BoardMode::UNKNOWN;
+}
+
 auto COscilloscope::stop() -> void{}
 
 auto COscilloscope::printReg() -> void{}

@@ -67,8 +67,6 @@ CStreamSettings::CStreamSettings(){
     m_loopback_mode = LOOPBACKMode::DD;
     m_loopback_channels = LOOPBACKChannels::TWO;
 
-    m_rp_board_mode = MASTER;
-
     reset();
 }
 
@@ -100,9 +98,8 @@ void CStreamSettings::reset(){
                       {"m_loopback_timeout",  false},
                       {"m_loopback_speed_Hz", false},
                       {"m_loopback_mode",     false},
-                      {"m_loopback_channels", false},
+                      {"m_loopback_channels", false}
 
-                      {"m_rp_board_mode", false}
                       };
 }
 
@@ -136,7 +133,6 @@ auto CStreamSettings::resetDefault() -> void{
     setLoopbackMode(LOOPBACKMode::DD);
     setLoopbackChannels(LOOPBACKChannels::TWO);
 
-    setBoardMode(MASTER);
 }
 
 CStreamSettings::~CStreamSettings(){
@@ -183,7 +179,6 @@ auto CStreamSettings::copy(const CStreamSettings &src) -> void{
 
     m_var_changed  = src.m_var_changed;
 
-    m_rp_board_mode = src.m_rp_board_mode;
 }
 
 
@@ -197,12 +192,9 @@ bool CStreamSettings::isSetted(){
 bool CStreamSettings::writeToFile(string _filename){
     if (isSetted()){
         Json::Value root;
-        Json::Value board_config;
         Json::Value adc_config;
         Json::Value dac_config;
         Json::Value loopback_config;
-
-        board_config["board_mode"] = getBoardMode();
 
         adc_config["port"] = getPort();
         adc_config["protocol"] = getProtocol();
@@ -233,7 +225,6 @@ bool CStreamSettings::writeToFile(string _filename){
         loopback_config["channels"] = getLoopbackChannels();
 
 
-        root["board"] = board_config;
         root["adc_streaming"] = adc_config;
         root["dac_streaming"] = dac_config;
         root["loopback"] = loopback_config;
@@ -262,12 +253,9 @@ auto CStreamSettings::getJson()-> std::string{
     if (isSetted()){
 
         Json::Value root;
-        Json::Value board_config;
         Json::Value adc_config;
         Json::Value dac_config;
         Json::Value loopback_config;
-
-        board_config["board_mode"] = getBoardMode();
 
         adc_config["port"] = getPort();
         adc_config["protocol"] = getProtocol();
@@ -297,7 +285,6 @@ auto CStreamSettings::getJson()-> std::string{
         loopback_config["mode"] = getLoopbackMode();
         loopback_config["channels"] = getLoopbackChannels();
 
-        root["board"] = board_config;
         root["adc_streaming"] = adc_config;
         root["dac_streaming"] = dac_config;
         root["loopback"] = loopback_config;
@@ -312,17 +299,6 @@ auto CStreamSettings::getJson()-> std::string{
 auto CStreamSettings::String()-> std::string{
     if (isSetted()){
         std::string  str = "";
-
-        std::string  board_mode = "ERROR";
-        switch (getBoardMode()) {
-            case MASTER:
-                board_mode = "MASTER";
-                break;
-            case SLAVE:
-                board_mode = "SLAVE";
-                break;
-        }
-        str = str + "Baord Mode:\t\t" + board_mode  +"\n";
 
         str = str + "Port:\t\t\t"+getPort()+"\n";
 
@@ -655,13 +631,6 @@ auto CStreamSettings::readFromFile(string _filename) -> bool {
         return false;
     }
 
-    if (root.isMember("board")){
-        board_config = root["board"];
-    }else{
-        std::cerr << "[CStreamSettings] Error parse json. Invalid file" << std::endl;
-        return false;
-    }
-
     if (root.isMember("adc_streaming")){
         adc_config = root["adc_streaming"];
     }else{
@@ -682,9 +651,6 @@ auto CStreamSettings::readFromFile(string _filename) -> bool {
         std::cerr << "[CStreamSettings] Error parse json. Invalid file" << std::endl;
         return false;
     }
-
-    if (board_config.isMember("board_mode"))
-        setBoardMode(static_cast<RPBoardMode>(board_config["board_mode"].asInt()));
 
     if (adc_config.isMember("port"))
         setPort(adc_config["port"].asString());
@@ -826,15 +792,6 @@ uint32_t CStreamSettings::getDecimation() const{
     return m_decimation;
 }
 
-auto CStreamSettings::setBoardMode(RPBoardMode _mode) -> void{
-    m_rp_board_mode = _mode;
-    m_var_changed["m_rp_board_mode"] = true;
-}
-
-auto CStreamSettings::getBoardMode() const -> RPBoardMode{
-    return m_rp_board_mode;
-}
-
 auto CStreamSettings::setValue(std::string key,std::string value) -> bool{
     if (key == "port") {
         setPort(value);
@@ -962,10 +919,6 @@ auto CStreamSettings::setValue(std::string key,int64_t value) -> bool{
         return true;
     }
 
-    if (key == "board_mode") {
-        setBoardMode(static_cast<RPBoardMode>(value));
-        return true;
-    }
     return false;
 }
 

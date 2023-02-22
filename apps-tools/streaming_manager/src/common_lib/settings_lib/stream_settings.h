@@ -75,12 +75,6 @@ public:
         DD  = 0
     };
 
-    enum RPBoardMode{
-        MASTER = 0,
-        SLAVE = 1
-    };
-
-
     CStreamSettings();
     ~CStreamSettings();
     CStreamSettings (const CStreamSettings&);
@@ -117,8 +111,6 @@ public:
     auto getResolution() const -> Resolution;
     auto setDecimation(uint32_t _decimation) -> void;
     auto getDecimation() const -> uint32_t;
-    auto setBoardMode(RPBoardMode _mode) -> void;
-    auto getBoardMode() const -> RPBoardMode;
 
     auto setAttenuator(Attenuator _attenuator) -> void;
     auto getAttenuator() const -> Attenuator;
@@ -188,8 +180,6 @@ private:
     int32_t          m_loopback_speed_Hz;
     LOOPBACKMode     m_loopback_mode;
     LOOPBACKChannels m_loopback_channels;
-
-    RPBoardMode      m_rp_board_mode;
 
     std::map<std::string, bool> m_var_changed;
 };

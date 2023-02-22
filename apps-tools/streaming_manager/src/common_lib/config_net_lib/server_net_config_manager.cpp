@@ -393,8 +393,6 @@ auto ServerNetConfigManager::sendConfig(bool sendTest,bool _async) -> bool{
         if (!m_pNetConfManager->sendData("loopback_mode",static_cast<uint32_t>(s.getLoopbackMode()),_async)) return false;
         if (!m_pNetConfManager->sendData("loopback_channels",static_cast<uint32_t>(s.getLoopbackChannels()),_async)) return false;
 
-        if (!m_pNetConfManager->sendData("board_mode",static_cast<uint32_t>(s.getBoardMode()),_async)) return false;
-
         if (!m_pNetConfManager->sendData(sendTest ? CNetConfigManager::ECommands::END_SEND_TEST_SETTING : CNetConfigManager::ECommands::END_SEND_SETTING,_async)) return false;
         return true;
     }
