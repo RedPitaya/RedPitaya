@@ -150,7 +150,7 @@ endif()
 
 if(BUILD_TEST)
     add_executable(rp_i2c_test ${CMAKE_SOURCE_DIR}/test/main.cpp)
-    target_link_libraries(rp_i2c_test PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-xml> $<TARGET_OBJECTS:${PROJECT_NAME}-i2c> $<TARGET_OBJECTS:${PROJECT_NAME}-spi>  $<TARGET_OBJECTS:${PROJECT_NAME}-gpio>)
+    target_link_libraries(rp_i2c_test PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-xml> $<TARGET_OBJECTS:${PROJECT_NAME}-i2c> $<TARGET_OBJECTS:${PROJECT_NAME}-spi>  $<TARGET_OBJECTS:${PROJECT_NAME}-gpio> i2c)
 endif()
 
 if(BUILD_TOOL)
