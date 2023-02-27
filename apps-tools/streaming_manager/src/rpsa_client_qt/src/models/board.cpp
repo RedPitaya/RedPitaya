@@ -324,7 +324,6 @@ void CBoard::sendConfig(){
         addLog(msg);
         return;
     }
-    m_configManager->setBoardMode(CStreamSettings::MASTER);
     m_configManager->sendConfig(m_ip.toStdString());
 }
 
