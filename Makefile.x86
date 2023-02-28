@@ -580,9 +580,17 @@ clean:
 ################################################################################
 
 
-gen_report:
+gen_report_fpga:
 
-	./gen_fpga_report.sh $(FPGA_VERSION) $(FPGA_VERSION).xml
+	./gen_fpga_report.sh $(FPGA_VERSION) $(FPGA_VERSION).xml FPGA
+
+gen_report_kernel:
+
+	./gen_fpga_report.sh KERNEL kernel.xml KERNEL
+
+gen_report_eco:
+
+	./gen_fpga_report.sh ECO ecosystem.xml ECO
 
 
 ################################################################################
