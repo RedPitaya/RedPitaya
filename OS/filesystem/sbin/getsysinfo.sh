@@ -64,7 +64,7 @@ FPGALIST_EX=0
 for f in /opt/redpitaya/fpga/$FPGA_VER/*; do
     if [ -d "$f" ]; then
         DIR_NAME=$(basename $f)
-        COMMIT=$(head -c 9 $f/git_info.txt)
+        COMMIT=$(awk 'NR==2 {print substr($2,0,9)}' $f/git_info.txt)
         echo \"$DIR_NAME\":\"$COMMIT\", >> /tmp/sysinfo.json
         FPGALIST_EX=1
     fi
