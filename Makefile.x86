@@ -581,45 +581,7 @@ clean:
 
 gen_report:
 
-	./gen_fpga_report.sh BRANCH_KERNEL
-
-ifneq "$(FPGA_STREAM_APP)" ""
-	./gen_fpga_report.sh GEN stream_app $(FPGA_STREAM_APP) $(FPGA_VERSION)
-endif
-
-ifneq "$(FPGA_STREAM_APP_250)" ""
-	./gen_fpga_report.sh GEN stream_app_250 $(FPGA_STREAM_APP_250) $(FPGA_VERSION)
-endif
-
-ifneq "$(FPGA_CLASSIC)" ""
-	./gen_fpga_report.sh GEN classic $(FPGA_CLASSIC) $(FPGA_VERSION)
-endif
-
-ifneq "$(FPGA_LOGIC)" ""
-	./gen_fpga_report.sh GEN logic $(FPGA_LOGIC) $(FPGA_VERSION)
-endif
-
-ifneq "$(FPGA_LOGIC_250)" ""
-	./gen_fpga_report.sh GEN logic_250 $(FPGA_LOGIC_250) $(FPGA_VERSION)
-endif
-
-ifneq "$(FPGA_0_94)" ""
-	./gen_fpga_report.sh GEN v0.94 $(FPGA_0_94) $(FPGA_VERSION)
-endif
-
-ifneq "$(FPGA_0_94_250)" ""
-	./gen_fpga_report.sh GEN v0.94_250 $(FPGA_0_94_250) $(FPGA_VERSION)
-endif
-
-ifneq "$(FPGA_MERCURY)" ""
-	./gen_fpga_report.sh GEN mercury $(FPGA_MERCURY) $(FPGA_VERSION)
-endif
-
-ifneq "$(FPGA_AXI4LITE)" ""
-	./gen_fpga_report.sh GEN axi4lite $(FPGA_AXI4LITE) $(FPGA_VERSION)
-endif
-
-	./gen_fpga_report.sh PACK
+	./gen_fpga_report.sh $(FPGA_VERSION) $(FPGA_VERSION).xml
 
 
 ################################################################################
