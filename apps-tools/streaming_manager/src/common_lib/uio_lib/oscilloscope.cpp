@@ -313,7 +313,6 @@ auto COscilloscope::isMaster() -> BoardMode{
     if (m_OscMap != nullptr){
         usleep(100);
         BoardMode mode = BoardMode::UNKNOWN;
-
         if (m_OscMap->mode_slave_sts == 0x1){
             mode = BoardMode::MASTER;
         }

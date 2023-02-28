@@ -238,8 +238,10 @@
         $('#step_' + UPD.currentStep).find('.step_icon').find('img').hide();
 
         UPD.timerCheck = setInterval(function() {
+            var url_arr = window.location.href.split("/");;
+            var url = url_arr[0] + '//' + url_arr[2];
             $.ajax({
-                url: '/update_check',
+                url:  url + ':81/update_check',
                 type: 'GET',
             }).done(function(msg) {
                 var res = msg;
