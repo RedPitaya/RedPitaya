@@ -149,6 +149,15 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "ANALOG:PIN", .callback                 = RP_AnalogPinValue,},
     {.pattern = "ANALOG:PIN?", .callback                = RP_AnalogPinValueQ,},
 
+    {.pattern = "DAISY:ENable", .callback               = RP_EnableDaisyChainSync,},
+    {.pattern = "DAISY:ENable?", .callback              = RP_EnableDaisyChainSyncQ,},
+
+    {.pattern = "DAISY:TRIG_O:ENable", .callback        = RP_DpinEnableTrigOutput,},
+    {.pattern = "DAISY:TRIG_O:ENable?", .callback       = RP_DpinEnableTrigOutputQ,},
+
+    {.pattern = "DAISY:TRIG_O:SOUR", .callback          = RP_SourceTrigOutput,},
+    {.pattern = "DAISY:TRIG_O:SOUR?", .callback         = RP_SourceTrigOutputQ,},
+
     /* Acquire */
     {.pattern = "ACQ:START", .callback                  = RP_AcqStart,},
     {.pattern = "ACQ:STOP", .callback                   = RP_AcqStop,},
@@ -188,6 +197,9 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "ACQ:TRIG:EXT:LEV", .callback           = RP_AcqExtTriggerLevel,},
     {.pattern = "ACQ:TRIG:EXT:LEV?", .callback          = RP_AcqExtTriggerLevelQ,},
 
+    {.pattern = "ACQ:TRIG:EXT:DEBouncerUs", .callback   = RP_AcqExtTriggerDebouncerUs,},
+    {.pattern = "ACQ:TRIG:EXT:DEBouncerUs?", .callback  = RP_AcqExtTriggerDebouncerUsQ,},
+
     /* Generate */
     {.pattern = "GEN:RST", .callback                    = RP_GenReset,},
     {.pattern = "PHAS:ALIGN", .callback                 = RP_GenSync,},
@@ -220,6 +232,9 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "SOUR#:TRIG:SOUR", .callback            = RP_GenTriggerSource,},
     {.pattern = "SOUR#:TRIG:SOUR?", .callback           = RP_GenTriggerSourceQ,},
     {.pattern = "SOUR#:TRIG:INT", .callback             = RP_GenTrigger,},
+
+    {.pattern = "SOUR:TRIG:EXT:DEBouncerUs", .callback  = RP_GenExtTriggerDebouncerUs,},
+    {.pattern = "SOUR:TRIG:EXT:DEBouncerUs?", .callback = RP_GenExtTriggerDebouncerUsQ,},
 
     /* uart */
     {.pattern = "UART:INIT", .callback                  = RP_Uart_Init,},

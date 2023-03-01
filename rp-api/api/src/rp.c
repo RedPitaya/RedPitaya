@@ -128,14 +128,56 @@ const char* rp_GetError(int errorCode) {
  */
 
 int rp_IdGetID(uint32_t *id) {
-    *id = ioread32(&hk->id);
-    return RP_OK;
+    hk_version_t ver = house_getHKVersion();
+    switch (ver)
+    {
+        case HK_V1:{
+            housekeeping_control_v1_t *hk_v1 = (housekeeping_control_v1_t*)hk;
+            *id = ioread32(&hk_v1->id);
+            return RP_OK;
+        }
+        case HK_V2:{
+            housekeeping_control_v2_t *hk_v2 = (housekeeping_control_v2_t*)hk;
+            *id = ioread32(&hk_v2->id);
+            return RP_OK;
+        }
+        case HK_V3:{
+            housekeeping_control_v3_t *hk_v3 = (housekeeping_control_v3_t*)hk;
+            *id = ioread32(&hk_v3->id);
+            return RP_OK;
+        }
+        default:
+            return RP_NOTS;
+    }
+    return RP_NOTS;
 }
 
 int rp_IdGetDNA(uint64_t *dna) {
-    *dna = ((uint64_t) ioread32(&hk->dna_hi) << 32)
-         | ((uint64_t) ioread32(&hk->dna_lo) <<  0);
-    return RP_OK;
+    hk_version_t ver = house_getHKVersion();
+    switch (ver)
+    {
+        case HK_V1:{
+            housekeeping_control_v1_t *hk_v1 = (housekeeping_control_v1_t*)hk;
+            *dna = ((uint64_t) ioread32(&hk_v1->dna_hi) << 32)
+                 | ((uint64_t) ioread32(&hk_v1->dna_lo) <<  0);
+            return RP_OK;
+        }
+        case HK_V2:{
+            housekeeping_control_v2_t *hk_v2 = (housekeeping_control_v2_t*)hk;
+            *dna = ((uint64_t) ioread32(&hk_v2->dna_hi) << 32)
+                 | ((uint64_t) ioread32(&hk_v2->dna_lo) <<  0);
+            return RP_OK;
+        }
+        case HK_V3:{
+            housekeeping_control_v3_t *hk_v3 = (housekeeping_control_v3_t*)hk;
+            *dna = ((uint64_t) ioread32(&hk_v3->dna_hi) << 32)
+                 | ((uint64_t) ioread32(&hk_v3->dna_lo) <<  0);
+            return RP_OK;
+        }
+        default:
+            return RP_NOTS;
+    }
+    return RP_NOTS;
 }
 
 /**
@@ -143,13 +185,53 @@ int rp_IdGetDNA(uint64_t *dna) {
  */
 
 int rp_LEDSetState(uint32_t state) {
-    iowrite32(state, &hk->led_control);
-    return RP_OK;
+    hk_version_t ver = house_getHKVersion();
+    switch (ver)
+    {
+        case HK_V1:{
+            housekeeping_control_v1_t *hk_v1 = (housekeeping_control_v1_t*)hk;
+            iowrite32(state, &hk_v1->led_control);
+            return RP_OK;
+        }
+        case HK_V2:{
+            housekeeping_control_v2_t *hk_v2 = (housekeeping_control_v2_t*)hk;
+            iowrite32(state, &hk_v2->led_control);
+            return RP_OK;
+        }
+        case HK_V3:{
+            housekeeping_control_v3_t *hk_v3 = (housekeeping_control_v3_t*)hk;
+            iowrite32(state, &hk_v3->led_control);
+            return RP_OK;
+        }
+        default:
+            return RP_NOTS;
+    }
+    return RP_NOTS;
 }
 
 int rp_LEDGetState(uint32_t *state) {
-    *state = ioread32(&hk->led_control);
-    return RP_OK;
+    hk_version_t ver = house_getHKVersion();
+    switch (ver)
+    {
+        case HK_V1:{
+            housekeeping_control_v1_t *hk_v1 = (housekeeping_control_v1_t*)hk;
+            *state = ioread32(&hk_v1->led_control);
+            return RP_OK;
+        }
+        case HK_V2:{
+            housekeeping_control_v2_t *hk_v2 = (housekeeping_control_v2_t*)hk;
+            *state = ioread32(&hk_v2->led_control);
+            return RP_OK;
+        }
+        case HK_V3:{
+            housekeeping_control_v3_t *hk_v3 = (housekeeping_control_v3_t*)hk;
+            *state = ioread32(&hk_v3->led_control);
+            return RP_OK;
+        }
+        default:
+            return RP_NOTS;
+    }
+    return RP_NOTS;
 }
 
 /**
@@ -157,43 +239,203 @@ int rp_LEDGetState(uint32_t *state) {
  */
 
 int rp_GPIOnSetDirection(uint32_t direction) {
-    iowrite32(direction, &hk->ex_cd_n);
-    return RP_OK;
+    hk_version_t ver = house_getHKVersion();
+    switch (ver)
+    {
+        case HK_V1:{
+            housekeeping_control_v1_t *hk_v1 = (housekeeping_control_v1_t*)hk;
+            iowrite32(direction, &hk_v1->ex_cd_n);
+            return RP_OK;
+        }
+        case HK_V2:{
+            housekeeping_control_v2_t *hk_v2 = (housekeeping_control_v2_t*)hk;
+            iowrite32(direction, &hk_v2->ex_cd_n);
+            return RP_OK;
+        }
+        case HK_V3:{
+            housekeeping_control_v3_t *hk_v3 = (housekeeping_control_v3_t*)hk;
+            iowrite32(direction, &hk_v3->ex_cd_n);
+            return RP_OK;
+        }
+        default:
+            return RP_NOTS;
+    }
+    return RP_NOTS;
 }
 
 int rp_GPIOnGetDirection(uint32_t *direction) {
-    *direction = ioread32(&hk->ex_cd_n);
-    return RP_OK;
+    hk_version_t ver = house_getHKVersion();
+    switch (ver)
+    {
+        case HK_V1:{
+            housekeeping_control_v1_t *hk_v1 = (housekeeping_control_v1_t*)hk;
+            *direction = ioread32(&hk_v1->ex_cd_n);
+            return RP_OK;
+        }
+        case HK_V2:{
+            housekeeping_control_v2_t *hk_v2 = (housekeeping_control_v2_t*)hk;
+            *direction = ioread32(&hk_v2->ex_cd_n);
+            return RP_OK;
+        }
+        case HK_V3:{
+            housekeeping_control_v3_t *hk_v3 = (housekeeping_control_v3_t*)hk;
+            *direction = ioread32(&hk_v3->ex_cd_n);
+            return RP_OK;
+        }
+        default:
+            return RP_NOTS;
+    }
+    return RP_NOTS;
 }
 
 int rp_GPIOnSetState(uint32_t state) {
-    iowrite32(state, &hk->ex_co_n);
-    return RP_OK;
+    hk_version_t ver = house_getHKVersion();
+    switch (ver)
+    {
+        case HK_V1:{
+            housekeeping_control_v1_t *hk_v1 = (housekeeping_control_v1_t*)hk;
+            iowrite32(state, &hk_v1->ex_co_n);
+            return RP_OK;
+        }
+        case HK_V2:{
+            housekeeping_control_v2_t *hk_v2 = (housekeeping_control_v2_t*)hk;
+            iowrite32(state, &hk_v2->ex_co_n);
+            return RP_OK;
+        }
+        case HK_V3:{
+            housekeeping_control_v3_t *hk_v3 = (housekeeping_control_v3_t*)hk;
+            iowrite32(state, &hk_v3->ex_co_n);
+            return RP_OK;
+        }
+        default:
+            return RP_NOTS;
+    }
+    return RP_NOTS;
 }
 
 int rp_GPIOnGetState(uint32_t *state) {
-    *state = ioread32(&hk->ex_ci_n);
-    return RP_OK;
+    hk_version_t ver = house_getHKVersion();
+    switch (ver)
+    {
+        case HK_V1:{
+            housekeeping_control_v1_t *hk_v1 = (housekeeping_control_v1_t*)hk;
+            *state = ioread32(&hk_v1->ex_ci_n);
+            return RP_OK;
+        }
+        case HK_V2:{
+            housekeeping_control_v2_t *hk_v2 = (housekeeping_control_v2_t*)hk;
+            *state = ioread32(&hk_v2->ex_ci_n);
+            return RP_OK;
+        }
+        case HK_V3:{
+            housekeeping_control_v3_t *hk_v3 = (housekeeping_control_v3_t*)hk;
+            *state = ioread32(&hk_v3->ex_ci_n);
+            return RP_OK;
+        }
+        default:
+            return RP_NOTS;
+    }
+    return RP_NOTS;
 }
 
 int rp_GPIOpSetDirection(uint32_t direction) {
-    iowrite32(direction, &hk->ex_cd_p);
-    return RP_OK;
+    hk_version_t ver = house_getHKVersion();
+    switch (ver)
+    {
+        case HK_V1:{
+            housekeeping_control_v1_t *hk_v1 = (housekeeping_control_v1_t*)hk;
+            iowrite32(direction, &hk_v1->ex_cd_p);
+            return RP_OK;
+        }
+        case HK_V2:{
+            housekeeping_control_v2_t *hk_v2 = (housekeeping_control_v2_t*)hk;
+            iowrite32(direction, &hk_v2->ex_cd_p);
+            return RP_OK;
+        }
+        case HK_V3:{
+            housekeeping_control_v3_t *hk_v3 = (housekeeping_control_v3_t*)hk;
+            iowrite32(direction, &hk_v3->ex_cd_p);
+            return RP_OK;
+        }
+        default:
+            return RP_NOTS;
+    }
+    return RP_NOTS;
 }
 
 int rp_GPIOpGetDirection(uint32_t *direction) {
-    *direction = ioread32(&hk->ex_cd_p);
-    return RP_OK;
+    hk_version_t ver = house_getHKVersion();
+    switch (ver)
+    {
+        case HK_V1:{
+            housekeeping_control_v1_t *hk_v1 = (housekeeping_control_v1_t*)hk;
+            *direction = ioread32(&hk_v1->ex_cd_p);
+            return RP_OK;
+        }
+        case HK_V2:{
+            housekeeping_control_v2_t *hk_v2 = (housekeeping_control_v2_t*)hk;
+            *direction = ioread32(&hk_v2->ex_cd_p);
+            return RP_OK;
+        }
+        case HK_V3:{
+            housekeeping_control_v3_t *hk_v3 = (housekeeping_control_v3_t*)hk;
+            *direction = ioread32(&hk_v3->ex_cd_p);
+            return RP_OK;
+        }
+        default:
+            return RP_NOTS;
+    }
+    return RP_NOTS;
 }
 
 int rp_GPIOpSetState(uint32_t state) {
-    iowrite32(state, &hk->ex_co_p);
-    return RP_OK;
+    hk_version_t ver = house_getHKVersion();
+    switch (ver)
+    {
+        case HK_V1:{
+            housekeeping_control_v1_t *hk_v1 = (housekeeping_control_v1_t*)hk;
+            iowrite32(state, &hk_v1->ex_co_p);
+            return RP_OK;
+        }
+        case HK_V2:{
+            housekeeping_control_v2_t *hk_v2 = (housekeeping_control_v2_t*)hk;
+            iowrite32(state, &hk_v2->ex_co_p);
+            return RP_OK;
+        }
+        case HK_V3:{
+            housekeeping_control_v3_t *hk_v3 = (housekeeping_control_v3_t*)hk;
+            iowrite32(state, &hk_v3->ex_co_p);
+            return RP_OK;
+        }
+        default:
+            return RP_NOTS;
+    }
+    return RP_NOTS;
 }
 
 int rp_GPIOpGetState(uint32_t *state) {
-    *state = ioread32(&hk->ex_ci_p);
-    return RP_OK;
+    hk_version_t ver = house_getHKVersion();
+    switch (ver)
+    {
+        case HK_V1:{
+            housekeeping_control_v1_t *hk_v1 = (housekeeping_control_v1_t*)hk;
+            *state = ioread32(&hk_v1->ex_ci_p);
+            return RP_OK;
+        }
+        case HK_V2:{
+            housekeeping_control_v2_t *hk_v2 = (housekeeping_control_v2_t*)hk;
+            *state = ioread32(&hk_v2->ex_ci_p);
+            return RP_OK;
+        }
+        case HK_V3:{
+            housekeeping_control_v3_t *hk_v3 = (housekeeping_control_v3_t*)hk;
+            *state = ioread32(&hk_v3->ex_ci_p);
+            return RP_OK;
+        }
+        default:
+            return RP_NOTS;
+    }
+    return RP_NOTS;
 }
 
 /**
@@ -201,13 +443,43 @@ int rp_GPIOpGetState(uint32_t *state) {
  */
 
 int rp_DpinReset() {
-    iowrite32(0, &hk->ex_cd_p);
-    iowrite32(0, &hk->ex_cd_n);
-    iowrite32(0, &hk->ex_co_p);
-    iowrite32(0, &hk->ex_co_n);
-    iowrite32(0, &hk->led_control);
-    iowrite32(0, &hk->digital_loop);
-    return RP_OK;
+    hk_version_t ver = house_getHKVersion();
+    switch (ver)
+    {
+        case HK_V1:{
+            housekeeping_control_v1_t *hk_v1 = (housekeeping_control_v1_t*)hk;
+            iowrite32(0, &hk_v1->ex_cd_p);
+            iowrite32(0, &hk_v1->ex_cd_n);
+            iowrite32(0, &hk_v1->ex_co_p);
+            iowrite32(0, &hk_v1->ex_co_n);
+            iowrite32(0, &hk_v1->led_control);
+            iowrite32(0, &hk_v1->digital_loop);
+            return RP_OK;
+        }
+        case HK_V2:{
+            housekeeping_control_v2_t *hk_v2 = (housekeeping_control_v2_t*)hk;
+            iowrite32(0, &hk_v2->ex_cd_p);
+            iowrite32(0, &hk_v2->ex_cd_n);
+            iowrite32(0, &hk_v2->ex_co_p);
+            iowrite32(0, &hk_v2->ex_co_n);
+            iowrite32(0, &hk_v2->led_control);
+            iowrite32(0, &hk_v2->digital_loop);
+            return RP_OK;
+        }
+        case HK_V3:{
+            housekeeping_control_v3_t *hk_v3 = (housekeeping_control_v3_t*)hk;
+            iowrite32(0, &hk_v3->ex_cd_p);
+            iowrite32(0, &hk_v3->ex_cd_n);
+            iowrite32(0, &hk_v3->ex_co_p);
+            iowrite32(0, &hk_v3->ex_co_n);
+            iowrite32(0, &hk_v3->led_control);
+            iowrite32(0, &hk_v3->digital_loop);
+            return RP_OK;
+        }
+        default:
+            return RP_NOTS;
+    }
+    return RP_NOTS;
 }
 
 int rp_DpinSetDirection(rp_dpin_t pin, rp_pinDirection_t direction) {
@@ -219,29 +491,32 @@ int rp_DpinSetDirection(rp_dpin_t pin, rp_pinDirection_t direction) {
     } else if (pin < RP_DIO0_N) {
         // DIO_P
         pin -= RP_DIO0_P;
-        tmp = ioread32(&hk->ex_cd_p);
-        iowrite32((tmp & ~(1 << pin)) | ((direction << pin) & (1 << pin)), &hk->ex_cd_p);
+        rp_GPIOpGetDirection(&tmp);
+        rp_GPIOpSetDirection((tmp & ~(1 << pin)) | ((direction << pin) & (1 << pin)));
     } else {
         // DIO_N
         pin -= RP_DIO0_N;
-        tmp = ioread32(&hk->ex_cd_n);
-        iowrite32((tmp & ~(1 << pin)) | ((direction << pin) & (1 << pin)), &hk->ex_cd_n);
-    }
+        rp_GPIOnGetDirection(&tmp);
+        rp_GPIOnSetDirection((tmp & ~(1 << pin)) | ((direction << pin) & (1 << pin)));
+   }
     return RP_OK;
 }
 
 int rp_DpinGetDirection(rp_dpin_t pin, rp_pinDirection_t* direction) {
+    uint32_t tmp;
     if (pin < RP_DIO0_P) {
         // LEDS
         *direction = RP_OUT;
     } else if (pin < RP_DIO0_N) {
         // DIO_P
         pin -= RP_DIO0_P;
-        *direction = (ioread32(&hk->ex_cd_p) >> pin) & 0x1;
+        rp_GPIOpGetDirection(&tmp);
+        *direction = (tmp >> pin) & 0x1;
     } else {
         // DIO_N
         pin -= RP_DIO0_N;
-        *direction = (ioread32(&hk->ex_cd_n) >> pin) & 0x1;
+        rp_GPIOnGetDirection(&tmp);
+        *direction = (tmp >> pin) & 0x1;
     }
     return RP_OK;
 }
@@ -255,34 +530,38 @@ int rp_DpinSetState(rp_dpin_t pin, rp_pinState_t state) {
     }
     if (pin < RP_DIO0_P) {
         // LEDS
-        tmp = ioread32(&hk->led_control);
-        iowrite32((tmp & ~(1 << pin)) | ((state << pin) & (1 << pin)), &hk->led_control);
+        rp_LEDGetState(&tmp);
+        rp_LEDSetState((tmp & ~(1 << pin)) | ((state << pin) & (1 << pin)));
     } else if (pin < RP_DIO0_N) {
         // DIO_P
         pin -= RP_DIO0_P;
-        tmp = ioread32(&hk->ex_co_p);
-        iowrite32((tmp & ~(1 << pin)) | ((state << pin) & (1 << pin)), &hk->ex_co_p);
+        rp_GPIOpGetState(&tmp);
+        rp_GPIOpSetState((tmp & ~(1 << pin)) | ((state << pin) & (1 << pin)));
     } else {
         // DIO_N
         pin -= RP_DIO0_N;
-        tmp = ioread32(&hk->ex_co_n);
-        iowrite32((tmp & ~(1 << pin)) | ((state << pin) & (1 << pin)), &hk->ex_co_n);
+        rp_GPIOnGetState(&tmp);
+        rp_GPIOnSetState((tmp & ~(1 << pin)) | ((state << pin) & (1 << pin)));
     }
     return RP_OK;
 }
 
 int rp_DpinGetState(rp_dpin_t pin, rp_pinState_t* state) {
+    uint32_t tmp;
     if (pin < RP_DIO0_P) {
         // LEDS
-        *state = (ioread32(&hk->led_control) >> pin) & 0x1;
+        rp_LEDGetState(&tmp);
+        *state = (tmp >> pin) & 0x1;
     } else if (pin < RP_DIO0_N) {
         // DIO_P
         pin -= RP_DIO0_P;
-        *state = (ioread32(&hk->ex_ci_p) >> pin) & 0x1;
+        rp_GPIOpGetState(&tmp);
+        *state = (tmp >> pin) & 0x1;
     } else {
         // DIO_N
         pin -= RP_DIO0_N;
-        *state = (ioread32(&hk->ex_ci_n) >> pin) & 0x1;
+        rp_GPIOnGetState(&tmp);
+        *state = (tmp >> pin) & 0x1;
     }
     return RP_OK;
 }
@@ -293,8 +572,28 @@ int rp_DpinGetState(rp_dpin_t pin, rp_pinState_t* state) {
  */
 
 int rp_EnableDigitalLoop(bool enable) {
-    iowrite32((uint32_t) enable, &hk->digital_loop);
-    return RP_OK;
+    hk_version_t ver = house_getHKVersion();
+    switch (ver)
+    {
+        case HK_V1:{
+            housekeeping_control_v1_t *hk_v1 = (housekeeping_control_v1_t*)hk;
+            iowrite32((uint32_t) enable, &hk_v1->digital_loop);
+            return RP_OK;
+        }
+        case HK_V2:{
+            housekeeping_control_v2_t *hk_v2 = (housekeeping_control_v2_t*)hk;
+            iowrite32((uint32_t) enable, &hk_v2->digital_loop);
+            return RP_OK;
+        }
+        case HK_V3:{
+            housekeeping_control_v3_t *hk_v3 = (housekeeping_control_v3_t*)hk;
+            iowrite32((uint32_t) enable, &hk_v3->digital_loop);
+            return RP_OK;
+        }
+        default:
+            return RP_NOTS;
+    }
+    return RP_NOTS;
 }
 
 
@@ -1109,4 +1408,49 @@ int rp_GenSetGainOut(rp_channel_t channel,rp_gen_gain_t mode){
 
 int rp_GenGetGainOut(rp_channel_t channel,rp_gen_gain_t *status){
     return gen_getGainOut(channel,status);
+}
+
+
+int rp_SetEnableDaisyChainSync(bool enable){
+    return house_SetEnableDaisyChainSync(enable);
+}
+
+int rp_GetEnableDaisyChainSync(bool *status){
+    return house_GetEnableDaisyChainSync(status);
+}
+
+int rp_SetDpinEnableTrigOutput(bool enable){
+    return house_SetDpinEnableTrigOutput(enable);
+}
+
+int rp_GetDpinEnableTrigOutput(bool *state){
+    return house_GetDpinEnableTrigOutput(state);
+}
+
+int rp_SetSourceTrigOutput(rp_outTiggerMode_t mode){
+    return house_SetSourceTrigOutput(mode);
+}
+
+int rp_GetSourceTrigOutput(rp_outTiggerMode_t *mode){
+    return house_GetSourceTrigOutput(mode);
+}
+
+int rp_AcqSetExtTriggerDebouncerUs(double value){
+    return acq_SetExtTriggerDebouncerUs(value);
+}
+
+int rp_AcqGetExtTriggerDebouncerUs(double *value){
+    return acq_GetExtTriggerDebouncerUs(value);
+}
+
+int rp_GenSetExtTriggerDebouncerUs(double value){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
+    return gen_SetExtTriggerDebouncerUs(value);
+}
+
+int rp_GenGetExtTriggerDebouncerUs(double *value){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
+    return gen_GetExtTriggerDebouncerUs(value);
 }

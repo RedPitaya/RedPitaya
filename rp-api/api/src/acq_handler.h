@@ -87,4 +87,8 @@ int acq_GetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t *status);
 int acq_UpdateAcqFilter(rp_channel_t channel);
 int acq_GetFilterCalibValue(rp_channel_t channel,uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
 
+
+int acq_SetExtTriggerDebouncerUs(double value);
+int acq_GetExtTriggerDebouncerUs(double *value);
+
 #endif /* SRC_ACQ_HANDLER_H_ */

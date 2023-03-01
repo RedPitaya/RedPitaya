@@ -27,17 +27,6 @@ typedef struct analog_mixed_signals_control_s {
     uint32_t dac [4];
 } analog_mixed_signals_control_t;
 
-// static const uint32_t ANALOG_OUT_MASK            = 0xFF;
-// static const uint32_t ANALOG_OUT_BITS            = 16;
-// static const uint32_t ANALOG_IN_MASK             = 0xFFF;
-
-// static const float    ANALOG_IN_MAX_VAL          = 7.0;
-// static const float    ANALOG_IN_MIN_VAL          = 0.0;
-// static const uint32_t ANALOG_IN_MAX_VAL_INTEGER  = 0xFFF;
-// static const float    ANALOG_OUT_MAX_VAL         = 1.8;
-// static const float    ANALOG_OUT_MIN_VAL         = 0.0;
-// static const uint32_t ANALOG_OUT_MAX_VAL_INTEGER = 255;
-
 static volatile analog_mixed_signals_control_t *ams = NULL;
 
 static int ams_Init() {

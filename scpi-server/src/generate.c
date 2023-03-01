@@ -934,3 +934,39 @@ scpi_result_t RP_GenOffsetQ(scpi_t *context) {
     RP_LOG(LOG_INFO, "*SOUR#:VOLT:OFFS? Successfully returned offset to the client.\n");
     return SCPI_RES_OK;
 }
+
+scpi_result_t RP_GenExtTriggerDebouncerUs(scpi_t *context) {
+    scpi_number_t value;
+
+    if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &value, true)) {
+        RP_LOG(LOG_ERR, "*SOUR:TRIG:EXT:DEBouncerUs is missing first parameter.\n");
+        return SCPI_RES_ERR;
+    }
+
+    // Now set threshold
+    int result = 0;
+    result = rp_GenSetExtTriggerDebouncerUs((double) value.value);
+    if (RP_OK != result) {
+        RP_LOG(LOG_ERR, "*SOUR:TRIG:EXT:DEBouncerUs Failed to set: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+
+    RP_LOG(LOG_INFO, "*SOUR:TRIG:EXT:DEBouncerUs Successfully set value.\n");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_GenExtTriggerDebouncerUsQ(scpi_t *context) {
+    double value;
+    int result = rp_GenGetExtTriggerDebouncerUs(&value);
+
+    if (RP_OK != result) {
+        RP_LOG(LOG_ERR, "*SOUR:TRIG:EXT:DEBouncerUs? Failed to get: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    // Return back result
+    SCPI_ResultDouble(context, value);
+
+    RP_LOG(LOG_INFO, "*SOUR:TRIG:EXT:DEBouncerUs? Successfully returned value.\n");
+    return SCPI_RES_OK;
+}

@@ -128,6 +128,14 @@ typedef enum {
 } rp_pinState_t;
 
 /**
+ * Type representing pin's high or low state (on/off).
+ */
+typedef enum {
+    OUT_TR_ADC = 0,//!< ADC trigger
+    OUT_TR_DAC = 1 //!< DAC trigger
+} rp_outTiggerMode_t;
+
+/**
  * Type representing pin's input or output direction.
  */
 typedef enum {
@@ -226,30 +234,6 @@ typedef struct
     double   *ch_d[4];
     float    *ch_f[4];
 } buffers_t;
-
-
-// /**
-//  * Type representing acquire signal sampling rate.
-//  */
-// typedef enum {
-//     RP_SMP_125M     = 1,       //!< Sample rate 125Msps; Buffer time length 131us; Decimation 1
-//     RP_SMP_62_500M  = 2,       //!< Sample rate 62.5Msps; Buffer time length 262us; Decimation 2
-//     RP_SMP_31_250M  = 4,       //!< Sample rate 31.25Msps; Buffer time length 524us; Decimation 4
-//     RP_SMP_15_625M  = 8,       //!< Sample rate 15.625Msps; Buffer time length 1.048ms; Decimation 8
-//     RP_SMP_7_812M   = 16,      //!< Sample rate 7.8125Msps; Buffer time length 2.096ms; Decimation 16
-//     RP_SMP_3_906M   = 32,      //!< Sample rate 3.906Msps; Buffer time length 4.192ms; Decimation 32
-//     RP_SMP_1_953M   = 64,      //!< Sample rate 1.953Msps; Buffer time length 8.388ms; Decimation 64
-//     RP_SMP_976_562K = 128,     //!< Sample rate 976ksps; Buffer time length 16.768ms; Decimation 128
-//     RP_SMP_448_281K = 256,     //!< Sample rate 488ksps; Buffer time length 33.798ms; Decimation 256
-//     RP_SMP_244_140K = 512,     //!< Sample rate 244ksps; Buffer time length 67.07ms; Decimation 512
-//     RP_SMP_122_070K = 1024,    //!< Sample rate 122.070ksps; Buffer time length 134.2ms; Decimation 1024
-//     RP_SMP_61_035K  = 2048,    //!< Sample rate 61.035ksps; Buffer time length 268.288ms; Decimation 2048
-//     RP_SMP_30_517K  = 4096,    //!< Sample rate 30.517ksps; Buffer time length 536.5ms; Decimation 4096
-//     RP_SMP_15_258K  = 8192,    //!< Sample rate 15.258ksps; Buffer time length 1.073s; Decimation 8192
-//     RP_SMP_7_629K   = 16384,   //!< Sample rate 7.629ksps; Buffer time length 2.146s; Decimation 16384
-//     RP_SMP_3_814K   = 32768,   //!< Sample rate 3.814ksps; Buffer time length 4.292s; Decimation 32768
-//     RP_SMP_1_907K   = 65536    //!< Sample rate 1.907ksps; Buffer time length 8.589s; Decimation 65536
-// } rp_acq_sampling_rate_t;
 
 
 /**
@@ -463,6 +447,67 @@ int rp_DpinSetDirection(rp_dpin_t pin, rp_pinDirection_t direction);
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 int rp_DpinGetDirection(rp_dpin_t pin, rp_pinDirection_t* direction);
+
+///@}
+
+
+/** @name Daisy chain clocks and triggers
+ */
+///@{
+
+/**
+ * Enables clock and trigger sync over SATA daisy chain connectors.
+ * Once the primary board will be triggered, the trigger will be forwarded to the secondary board over
+ * the SATA connector where the trigger can be detected using rp_GenTriggerSource with EXT_NE selector.
+ * Noticed that the trigger that is received over SATA is ORed with the external trigger from GPIO.
+ *
+ * @param enable  Turns on the mode.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_SetEnableDaisyChainSync(bool enable);
+
+/**
+ * Returns the current state of the SATA daisy chain mode.
+ * @param status  Current state.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_GetEnableDaisyChainSync(bool *status);
+
+/**
+ * Function turns GPION_0 into trigger output for selected source - acquisition or generation
+ *
+ * @param enable  Turns on the mode.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_SetDpinEnableTrigOutput(bool enable);
+
+/**
+ * Returns the current mode state for GPION_0. If true, then the pin mode works as a source
+ * @param status  Current state.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_GetDpinEnableTrigOutput(bool *state);
+
+/**
+ * Sets the trigger source mode. ADC/DAC
+ *
+ * @param mode  Sets the mode.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_SetSourceTrigOutput(rp_outTiggerMode_t mode);
+
+/**
+ * Returns the trigger source mode. ADC/DAC
+ * @param mode  Returns the current mode.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_GetSourceTrigOutput(rp_outTiggerMode_t *mode);
 
 ///@}
 
@@ -1040,6 +1085,42 @@ int rp_AcqUpdateAcqFilter(rp_channel_t channel);
 */
 int rp_AcqGetFilterCalibValue(rp_channel_t channel,uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
 
+/**
+ * Sets ext. trigger debouncer for acquisition in Us (Value must be positive).
+ * @param value Value in microseconds.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqSetExtTriggerDebouncerUs(double value);
+
+/**
+ * Gets ext. trigger debouncer for acquisition in Us
+ * @param value Return value in microseconds.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetExtTriggerDebouncerUs(double *value);
+
+/**
+* Sets the AC / DC modes for input.
+* Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param channel Channel A or B.
+* @param mode Set current state.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_AcqSetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t mode);
+
+/**
+* Get the AC / DC modes for input.
+* Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param channel Channel A or B.
+* @param status Set current state.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_AcqGetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t *status);
+
 ///@}
 /** @name Generate
 */
@@ -1493,26 +1574,6 @@ int rp_GetLatchTempAlarm(rp_channel_t channel, bool *status);
 int rp_GetRuntimeTempAlarm(rp_channel_t channel, bool *status);
 
 /**
-* Sets the AC / DC modes for input.
-* Only works with Redpitaya 250-12 otherwise returns RP_NOTS
-* @param channel Channel A or B.
-* @param mode Set current state.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_AcqSetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t mode);
-
-/**
-* Get the AC / DC modes for input.
-* Only works with Redpitaya 250-12 otherwise returns RP_NOTS
-* @param channel Channel A or B.
-* @param status Set current state.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_AcqGetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t *status);
-
-/**
 * Sets the gain modes for output.
 * Only works with Redpitaya 250-12 otherwise returns RP_NOTS
 * @param channel Channel A or B.
@@ -1531,6 +1592,22 @@ int rp_GenSetGainOut(rp_channel_t channel,rp_gen_gain_t mode);
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_GenGetGainOut(rp_channel_t channel,rp_gen_gain_t *status);
+
+/**
+ * Sets ext. trigger debouncer for generation in Us (Value must be positive).
+ * @param value Value in microseconds.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_GenSetExtTriggerDebouncerUs(double value);
+
+/**
+ * Gets ext. trigger debouncer for generation in Us
+ * @param value Return value in microseconds.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_GenGetExtTriggerDebouncerUs(double *value);
 
 ///@}
 

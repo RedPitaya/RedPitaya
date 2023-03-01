@@ -50,5 +50,7 @@ scpi_result_t RP_GenTriggerSourceQ(scpi_t * context);
 scpi_result_t RP_GenTrigger(scpi_t *context);
 scpi_result_t RP_GenTriggerBoth(scpi_t *context);
 
+scpi_result_t RP_GenExtTriggerDebouncerUs(scpi_t *context);
+scpi_result_t RP_GenExtTriggerDebouncerUsQ(scpi_t *context);
 
 #endif /* GENERATE_H_ */

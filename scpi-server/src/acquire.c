@@ -940,10 +940,45 @@ scpi_result_t RP_AcqExtTriggerLevelQ(scpi_t *context) {
             "trigger level: %s\n", rp_GetError(result));
         return SCPI_RES_ERR;
     }
-    value = value;
     // Return back result
     SCPI_ResultDouble(context, value);
 
     RP_LOG(LOG_INFO, "*ACQ:TRIG:EXT:LEV? Successfully returned trigger level.\n");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqExtTriggerDebouncerUs(scpi_t *context) {
+    scpi_number_t value;
+
+    if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &value, true)) {
+        RP_LOG(LOG_ERR, "*ACQ:TRIG:EXT:DEBouncerUs is missing first parameter.\n");
+        return SCPI_RES_ERR;
+    }
+
+    // Now set threshold
+    int result = 0;
+    result = rp_AcqSetExtTriggerDebouncerUs((double) value.value);
+    if (RP_OK != result) {
+        RP_LOG(LOG_ERR, "*ACQ:TRIG:EXT:DEBouncerUs Failed to set: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+
+    RP_LOG(LOG_INFO, "*ACQ:TRIG:EXT:DEBouncerUs Successfully set value.\n");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqExtTriggerDebouncerUsQ(scpi_t *context) {
+    double value;
+    int result = rp_AcqGetExtTriggerDebouncerUs(&value);
+
+    if (RP_OK != result) {
+        RP_LOG(LOG_ERR, "*ACQ:TRIG:EXT:DEBouncerUs? Failed to get: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    // Return back result
+    SCPI_ResultDouble(context, value);
+
+    RP_LOG(LOG_INFO, "*ACQ:TRIG:EXT:DEBouncerUs? Successfully returned value.\n");
     return SCPI_RES_OK;
 }

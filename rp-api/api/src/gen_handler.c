@@ -114,6 +114,16 @@ int gen_SetDefaultValues() {
     return RP_OK;
 }
 
+int gen_GetDACSamplePeriod(double *value){
+    *value = 0;
+    uint32_t speed = 0;
+    int ret = rp_HPGetBaseFastDACSpeedHz(&speed);
+    if (ret == RP_HP_OK){
+        *value = (double)1e9/speed;
+    }
+    return ret;
+}
+
 int gen_Disable(rp_channel_t channel) {
 
     CHECK_CHANNEL("gen_Disable")
@@ -1028,5 +1038,28 @@ int gen_getGainOut(rp_channel_t channel,rp_gen_gain_t *status){
     CHECK_CHANNEL("gen_getGainOut")
 
     *status = ch_gain[channel];
+    return RP_OK;
+}
+
+int gen_SetExtTriggerDebouncerUs(double value){
+    if (value < 0)
+        return RP_EIPV;
+
+    double sp = 0;
+    int ret = gen_GetDACSamplePeriod(&sp);
+    if (ret != RP_OK){
+        return ret;
+    }
+    uint32_t samples = (value * 1000.0) / sp;
+    return RP_OK;
+}
+
+int gen_GetExtTriggerDebouncerUs(double *value){
+    double sp = 0;
+    int ret = gen_GetDACSamplePeriod(&sp);
+    if (ret != RP_OK){
+        return ret;
+    }
+    *value = (0 * sp) / 1000.0;
     return RP_OK;
 }
