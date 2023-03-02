@@ -6,8 +6,6 @@
 
 APP=$(notdir $(CURDIR:%/=%))
 
-MODEL ?= Z10
-
 # Versioning system
 BUILD_NUMBER ?= 0
 REVISION ?= devbuild
@@ -27,7 +25,7 @@ export CFLAGS
 all: $(CONTROLLER)
 
 $(CONTROLLER):
-	$(MAKE) -C src MODEL=$(MODEL)
+	$(MAKE) -C src
 
 $(ZIP): $(CONTROLLER)
 	-$(RM) target -rf

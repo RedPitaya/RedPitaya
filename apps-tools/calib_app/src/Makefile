@@ -1,5 +1,3 @@
-MODEL ?= Z10
-
 CXX=$(CROSS_COMPILE)g++
 RM=rm
 
@@ -22,7 +20,7 @@ LIBS += -L$(INSTALL_DIR)/rp_sdk
 
 COMMON_FLAGS+=-Wall -fPIC -pedantic -Os -s -w -DASIO_STANDALONE
 CFLAGS += $(COMMON_FLAGS) $(INCLUDE)
-CXXFLAGS+=$(COMMON_FLAGS) -std=c++14 $(INCLUDE) -D$(MODEL)
+CXXFLAGS+=$(COMMON_FLAGS) -std=c++14 $(INCLUDE)
 LDFLAGS = $(COMMON_FLAGS) $(LIBS)
 LDWFLAGS+= -Wl,--whole-archive
 LDWFLAGS+= -lrp_sdk -lrp -lrp-hw -lrp-hw-calib -lrp-hw-profiles
