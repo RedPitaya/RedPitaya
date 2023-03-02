@@ -1051,7 +1051,7 @@ int gen_SetExtTriggerDebouncerUs(double value){
         return ret;
     }
     uint32_t samples = (value * 1000.0) / sp;
-    return RP_OK;
+    return generate_SetTriggerDebouncer(samples);
 }
 
 int gen_GetExtTriggerDebouncerUs(double *value){
@@ -1060,6 +1060,8 @@ int gen_GetExtTriggerDebouncerUs(double *value){
     if (ret != RP_OK){
         return ret;
     }
-    *value = (0 * sp) / 1000.0;
+    uint32_t samples = 0;
+    generate_GetTriggerDebouncer(&samples);
+    *value = (samples * sp) / 1000.0;
     return RP_OK;
 }

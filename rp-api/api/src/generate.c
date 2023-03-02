@@ -650,3 +650,20 @@ int generate_getBurstLastValue(rp_channel_t channel, float *amplitude){
     //     , AMPLITUDE_MAX , amp_max, dc_offs, 0.0 , 1.0);
     return RP_OK;
 }
+
+int generate_SetTriggerDebouncer(uint32_t value){
+    if (DEBAUNCER_MASK < value) {
+        cmn_Debug("[generate_SetTriggerDebouncer] Error: osc_reg.trig_dbc_t <- ",value);
+        return RP_EIPV;
+    }
+    cmn_Debug("[generate_SetTriggerDebouncer] osc_reg.trig_dbc_t <- ",value);
+    generate->trig_dbc_t = value;
+
+    return RP_OK;
+}
+
+int generate_GetTriggerDebouncer(uint32_t *value){
+    *value = generate->trig_dbc_t;
+    cmn_Debug("[generate_GetTriggerDebouncer] osc_reg.trig_dbc_t ->",*value);
+    return RP_OK;
+}

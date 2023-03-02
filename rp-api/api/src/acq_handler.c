@@ -1331,13 +1331,16 @@ int acq_GetFilterCalibValue(rp_channel_t channel,uint32_t* coef_aa, uint32_t* co
 
 
 int acq_SetExtTriggerDebouncerUs(double value){
+    if (value < 0)
+        return RP_EIPV;
+
     double sp = 0;
     int ret = acq_GetADCSamplePeriod(&sp);
     if (ret != RP_OK){
         return ret;
     }
     uint32_t samples = (value * 1000.0) / sp;
-    return RP_OK;
+    return osc_SetTriggerDebouncer(samples);
 }
 
 int acq_GetExtTriggerDebouncerUs(double *value){
@@ -1346,6 +1349,8 @@ int acq_GetExtTriggerDebouncerUs(double *value){
     if (ret != RP_OK){
         return ret;
     }
-    *value = (0 * sp) / 1000.0;
+    uint32_t samples = 0;
+    osc_GetTriggerDebouncer(&samples);
+    *value = (samples * sp) / 1000.0;
     return RP_OK;
 }

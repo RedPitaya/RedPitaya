@@ -425,6 +425,27 @@ int osc_GetWritePointerAtTrig(uint32_t* pos)
     return cmn_GetValue(&osc_reg->wr_ptr_trigger, pos, WRITE_POINTER_MASK);
 }
 
+int osc_SetTriggerDebouncer(uint32_t value){
+    if (DEBAUNCER_MASK < value) {
+        cmn_Debug("[osc_SetTriggerDebouncer] Error: osc_reg.trig_dbc_t <- ",value);
+        return RP_EIPV;
+    }
+    cmn_Debug("[osc_SetTriggerDebouncer] osc_reg.trig_dbc_t <- ",value);
+    osc_reg->trig_dbc_t = value;
+
+    if (osc_reg_4ch){
+        cmn_Debug("[osc_SetTriggerDebouncer] osc_reg_4ch.trig_dbc_t <- ",value);
+        osc_reg_4ch->trig_dbc_t = value;
+    }
+    return RP_OK;
+}
+
+int osc_GetTriggerDebouncer(uint32_t *value){
+    *value = osc_reg->trig_dbc_t;
+    cmn_Debug("[osc_SetTriggerDebouncer] osc_reg.trig_dbc_t ->",*value);
+    return RP_OK;
+}
+
 /**
  * Raw buffers
  */

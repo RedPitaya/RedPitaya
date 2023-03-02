@@ -4,15 +4,6 @@
 #include "rp.h"
 #include "rp_hw-profiles.h"
 
-// #if defined Z10 || defined Z20 || defined Z20_125 || defined Z20_250_12
-// #define CHANNELS 2
-// #endif
-
-// #if defined Z20_125_4CH
-//#define CHANNELS 4
-// #endif
-
-
 typedef enum {
     RP_125_14,
     RP_250_12,

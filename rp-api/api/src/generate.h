@@ -38,6 +38,9 @@
 #define GENERATE_BASE_ADDR      0x00200000
 #define GENERATE_BASE_SIZE      0x00030000
 
+#define DEBAUNCER_MASK          0xFFFFF     // (20 bit)
+
+
 typedef struct ch_properties {
     unsigned int amplitudeScale     :14;
     unsigned int                    :2;
@@ -53,6 +56,8 @@ typedef struct ch_properties {
     uint32_t burstRepetitions;
     uint32_t delayBetweenBurstRepetitions;
 } ch_properties_t;
+
+
 
 typedef struct generate_control_s {
     unsigned int AtriggerSelector   :4;
@@ -84,8 +89,17 @@ typedef struct generate_control_s {
     ch_properties_t properties_chA;
     ch_properties_t properties_chB;
     // NOT WORK with 250-12
-    uint32_t     BurstFinalValue_chA;
-    uint32_t     BurstFinalValue_chB;
+    uint32_t     BurstFinalValue_chA; // 0x44
+    uint32_t     BurstFinalValue_chB; // 0x48
+    uint32_t     cunterStepChA;       // 0x4C
+    uint32_t     cunterStepChB;       // 0x50
+    /**@brief Trigger debuncer time
+    * bits [19:0] Number of ADC clock periods
+    * trigger is disabled after activation
+    * reset value is decimal 62500
+    * or equivalent to 0.5ms
+    */
+    uint32_t trig_dbc_t:20,:12; // 0x54
 
 } generate_control_t;
 
@@ -128,5 +142,9 @@ int generate_getRuntimeTempAlarm(rp_channel_t channel, bool *state);
 
 int generate_setBurstLastValue(rp_channel_t channel, float amplitude);
 int generate_getBurstLastValue(rp_channel_t channel, float *amplitude);
+
+
+int generate_SetTriggerDebouncer(uint32_t value);
+int generate_GetTriggerDebouncer(uint32_t *value);
 
 #endif

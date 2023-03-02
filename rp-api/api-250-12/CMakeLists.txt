@@ -18,16 +18,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 
 project(rp)
 
-if(NOT DEFINED MODEL)
-  set(MODEL ANY)
-endif()
-
 if(NOT DEFINED INSTALL_DIR)
     message(WARNING,"Installation path not set. Installation will be skipped")
     set(IS_INSTALL OFF)
 endif()
 
-message(STATUS "RedPitaya model=${MODEL}")
 message(STATUS "VERSION=${VERSION}")
 message(STATUS "REVISION=${REVISION}")
 message(STATUS "Install path ${INSTALL_DIR}")
@@ -67,7 +62,7 @@ file(GLOB RP_HEADERS "include/*.h")
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
-add_compile_options(-Wall -pedantic -Wextra -D${MODEL} -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+add_compile_options(-Wall -pedantic -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 link_libraries(-L${INSTALL_DIR}/lib librp-hw.a)
 
 add_library(${PROJECT_NAME}-xml OBJECT ${PR_XML_SOURCES})
@@ -168,5 +163,4 @@ if(BUILD_TOOL)
     endif()
 endif()
 
-unset(MODEL CACHE)
 unset(INSTALL_DIR CACHE)

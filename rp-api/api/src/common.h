@@ -58,13 +58,8 @@ else { \
     return RP_EPN; \
 }
 
-#ifdef DEBUG_REG
 #define cmn_Debug(X,Y) cmn_DebugReg(X,Y);
 #define cmn_DebugCh(X,Y,Z) cmn_DebugRegCh(X,Y,Z);
-#else
-#define cmn_Debug(X,Y) ;
-#define cmn_DebugCh(X,Y,Z) ;
-#endif
 
 // unmasked IO read/write (p - pointer, v - value)
 #define ioread32(p) (*(volatile uint32_t *)(p))
@@ -92,7 +87,7 @@ int cmn_Release();
 
 void cmn_DebugReg(const char* msg,uint32_t value);
 void cmn_DebugRegCh(const char* msg,int ch,uint32_t value);
-
+void cmn_enableDebugReg();
 
 int cmn_Map(size_t size, size_t offset, void** mapped);
 int cmn_Unmap(size_t size, void** mapped);

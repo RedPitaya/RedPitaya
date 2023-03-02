@@ -9,10 +9,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 
 project(acquire)
 
-if(NOT DEFINED MODEL)
-  set(MODEL Z10)
-endif()
-
 if(NOT DEFINED INSTALL_DIR)
     message(FATAL_ERROR,"Installation path not set.")
 endif()
@@ -26,7 +22,6 @@ if(NOT DEFINED REVISION)
 endif()
 
 
-message(STATUS "RedPitaya model=${MODEL}")
 message(STATUS "Install path ${INSTALL_DIR}")
 message(STATUS "VERSION=${VERSION}")
 message(STATUS "REVISION=${REVISION}")
@@ -49,7 +44,7 @@ file(GLOB RP_HEADERS "src/*.h")
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
-add_compile_options(-Wall -pedantic -Wextra -D${MODEL} -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os>  -ffunction-sections -fdata-sections)
+add_compile_options(-Wall -pedantic -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os>  -ffunction-sections -fdata-sections)
 
 
 add_executable(${PROJECT_NAME} ${SOURCES})
@@ -67,5 +62,4 @@ target_link_libraries(${PROJECT_NAME} PRIVATE pthread)
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${INSTALL_DIR}/bin)
 
-unset(MODEL CACHE)
 unset(INSTALL_DIR CACHE)

@@ -23,6 +23,8 @@
 
 static int fd = 0;
 
+bool g_DebugReg = false;
+
 int cmn_Init()
 {
     if (!fd) {
@@ -82,11 +84,18 @@ int cmn_Unmap(size_t size, void** mapped)
     return RP_OK;
 }
 
+void cmn_enableDebugReg(){
+    g_DebugReg = true;
+}
+
+
 void cmn_DebugReg(const char* msg,uint32_t value){
+    if (!g_DebugReg) return;
     fprintf(stderr,"\tSet %s 0x%X\n",msg,value);
 }
 
 void cmn_DebugRegCh(const char* msg,int ch,uint32_t value){
+    if (!g_DebugReg) return;
     rp_channel_t chV = (rp_channel_t)ch;
     switch(chV){
         case RP_CH_1:

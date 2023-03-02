@@ -400,6 +400,7 @@ int rp_GPIOpGetDirection(uint32_t *direction);
 int rp_GPIOpSetState(uint32_t state);
 int rp_GPIOpGetState(uint32_t *state);
 
+int rp_EnableDebugReg();
 
 /** @name Digital Input/Output
  */

@@ -4,9 +4,10 @@ set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
 set(CMAKE_CXX_STANDARD 11)
 set(C_STANDARD 11)
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 
-project(calib)
+project(daisy_tool)
 
 if(NOT DEFINED INSTALL_DIR)
     message(FATAL_ERROR,"Installation path not set.")
@@ -38,18 +39,26 @@ message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
 include_directories(${INSTALL_DIR}/include)
 
-file(GLOB SOURCES "src/*.c")
+file(GLOB SOURCES "src/*.cpp")
 file(GLOB RP_HEADERS "src/*.h")
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
-add_compile_options(-Wall -pedantic -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os>)
+add_compile_options(-Wall -pedantic -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os>  -ffunction-sections -fdata-sections)
+
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 
-
 target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib)
-target_link_libraries(${PROJECT_NAME} PRIVATE -static rp-hw-calib rp-hw-profiles m)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE -static rp rp-hw rp-hw-calib rp-hw-profiles)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE -static rp-i2c rp-spi rp-gpio)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE -static rp-hw i2c)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE pthread)
+
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${INSTALL_DIR}/bin)
 

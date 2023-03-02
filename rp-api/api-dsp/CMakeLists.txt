@@ -15,10 +15,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(C_STANDARD 17)
 
 
-if(NOT DEFINED MODEL)
-  set(MODEL Z10)
-endif()
-
 if(NOT DEFINED INSTALL_DIR)
     message(WARNING,"Installation path not set. Installation will be skipped")
     set(IS_INSTALL OFF)
@@ -38,7 +34,6 @@ if(NOT DEFINED REVISION)
 endif()
 
 
-message(STATUS "RedPitaya model=${MODEL}")
 message(STATUS "VERSION=${VERSION}")
 message(STATUS "REVISION=${REVISION}")
 message(STATUS "Install path ${INSTALL_DIR}")
@@ -62,7 +57,7 @@ list(APPEND src
             ${CMAKE_SOURCE_DIR}/src/kiss_fft/kiss_fft.c
             ${CMAKE_SOURCE_DIR}/src/kiss_fft/kiss_fftr.c
             ${CMAKE_SOURCE_DIR}/src/rp_math.cpp
-            ${CMAKE_SOURCE_DIR}/src/rp_dsp.cpp            
+            ${CMAKE_SOURCE_DIR}/src/rp_dsp.cpp
         )
 
 list(APPEND header
@@ -71,7 +66,7 @@ list(APPEND header
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
-add_compile_options(-Wall -pedantic -Wextra -Wno-unused-parameter -D${MODEL} -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+add_compile_options(-Wall -pedantic -Wextra -Wno-unused-parameter -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 add_library(${PROJECT_NAME}-obj OBJECT ${src})
 
@@ -86,10 +81,10 @@ if(BUILD_SHARED)
         install(TARGETS ${PROJECT_NAME}-shared
             LIBRARY DESTINATION ${INSTALL_DIR}/lib
             ARCHIVE DESTINATION ${INSTALL_DIR}/lib)
-       
+
         install(FILES ${header}
             DESTINATION ${INSTALL_DIR}/include)
-    endif()         
+    endif()
 endif()
 
 
@@ -102,12 +97,11 @@ if(BUILD_STATIC)
     if(IS_INSTALL)
         install(TARGETS ${PROJECT_NAME}-static
             LIBRARY DESTINATION ${INSTALL_DIR}/lib
-            ARCHIVE DESTINATION ${INSTALL_DIR}/lib)       
-       
+            ARCHIVE DESTINATION ${INSTALL_DIR}/lib)
+
         install(FILES ${header}
             DESTINATION ${INSTALL_DIR}/include)
-    endif()  
+    endif()
 endif()
 
-unset(MODEL CACHE)
 unset(INSTALL_DIR CACHE)

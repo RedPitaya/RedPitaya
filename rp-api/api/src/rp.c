@@ -1454,3 +1454,8 @@ int rp_GenGetExtTriggerDebouncerUs(double *value){
         return RP_NOTS;
     return gen_GetExtTriggerDebouncerUs(value);
 }
+
+int rp_EnableDebugReg(){
+    cmn_enableDebugReg();
+    return RP_OK;
+}

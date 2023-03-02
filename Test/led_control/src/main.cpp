@@ -3,8 +3,6 @@
  *
  * @brief Red Pitaya led_control utility.
  *
- * @Author Ales Bardorfer <ales.bardorfer@redpitaya.com>
- *         Jure Menart <juremenart@gmail.com>
  *
  * (c) Red Pitaya  http://www.redpitaya.com
  *

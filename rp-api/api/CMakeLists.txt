@@ -17,10 +17,6 @@ set(CMAKE_CXX_STANDARD 11)
 set(C_STANDARD 11)
 
 
-if(NOT DEFINED MODEL)
-  set(MODEL Z10)
-endif()
-
 if(NOT DEFINED INSTALL_DIR)
     message(FATAL_ERROR,"Installation path not set. Installation will be skipped")
 endif()
@@ -39,7 +35,6 @@ if(NOT DEFINED REVISION)
 endif()
 
 
-message(STATUS "RedPitaya model=${MODEL}")
 message(STATUS "VERSION=${VERSION}")
 message(STATUS "REVISION=${REVISION}")
 message(STATUS "Install path ${INSTALL_DIR}")
@@ -78,7 +73,7 @@ list(APPEND header_rp
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
-add_compile_options(-Wall -pedantic -Wextra -Wno-unused-parameter -D${MODEL} -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+add_compile_options(-Wall -pedantic -Wextra -Wno-unused-parameter -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 if(DEBUG_REG)
 add_compile_options(-DDEBUG_REG)
@@ -140,5 +135,4 @@ set(DOXY_INPUT ${header_rp})
 ADD_DOCUMENTATION(doc Doxyfile)
 endif()
 
-unset(MODEL CACHE)
 unset(INSTALL_DIR CACHE)

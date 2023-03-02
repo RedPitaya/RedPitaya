@@ -24,16 +24,6 @@ BUILD_MODE ?= Release
 #
 ################################################################################
 
-# MODEL USE FOR determine kind of assembly
-# USED parameters:
-# Z10 - for Redpitaya 125-14
-# Z10_SLAVE - for Rediptaya 125-14 in slave streamig mode
-# Z20 - for Redpitaya 122-16
-# Z20_125 - for Redpitaya Z20 125-14
-# Z20_125_4CH - for Redpitaya Z20 125-14 4CH ADC
-# Z20_250_12 - for RepPitaya 250-12
-# Production test script
-MODEL ?= Z10
 CUR_DIR = $(PWD)
 
 all: api nginx examples  apps-tools apps-pro startupsh scpi rp_communication sdr
@@ -67,31 +57,31 @@ api: librp librp_hw librp_dsp
 api2: librp2
 
 librp: librp250_12 librp_hw_calibration librp_hw_profiles
-	cmake -B$(abspath $(LIBRP_DIR)/build) -S$(abspath $(LIBRP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE) -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(LIBRP_DIR)/build) -S$(abspath $(LIBRP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)  -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(LIBRP_DIR)/build install
 
 librp_hw:
-	cmake -B$(abspath $(LIBRP_HW_DIR)/build) -S$(abspath $(LIBRP_HW_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE) -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(LIBRP_HW_DIR)/build) -S$(abspath $(LIBRP_HW_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(LIBRP_HW_DIR)/build install
 
 librp_hw_calibration: librp_hw_profiles
-	cmake -B$(abspath $(LIBRP_HW_CALIB_DIR)/build) -S$(abspath $(LIBRP_HW_CALIB_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE) -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(LIBRP_HW_CALIB_DIR)/build) -S$(abspath $(LIBRP_HW_CALIB_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(LIBRP_HW_CALIB_DIR)/build install
 
 librp_hw_profiles:
-	cmake -B$(abspath $(LIBRP_HW_PROFILES_DIR)/build) -S$(abspath $(LIBRP_HW_PROFILES_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE) -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(LIBRP_HW_PROFILES_DIR)/build) -S$(abspath $(LIBRP_HW_PROFILES_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(LIBRP_HW_PROFILES_DIR)/build install
 
 librp_dsp:
-	cmake -B$(abspath $(LIBRP_DSP_DIR)/build) -S$(abspath $(LIBRP_DSP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE) -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(LIBRP_DSP_DIR)/build) -S$(abspath $(LIBRP_DSP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(LIBRP_DSP_DIR)/build install
 
 librp2:
-	cmake -B$(abspath $(LIBRP2_DIR)/build) -S$(abspath $(LIBRP2_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE) -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(LIBRP2_DIR)/build) -S$(abspath $(LIBRP2_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(LIBRP2_DIR)/build install
 
 librp250_12: librp_hw
-	cmake -B$(LIBRP250_12_DIR)/build -S$(LIBRP250_12_DIR) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE) -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(LIBRP250_12_DIR)/build -S$(LIBRP250_12_DIR) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(LIBRP250_12_DIR)/build install
 
 
@@ -100,7 +90,7 @@ ifeq ($(ENABLE_LICENSING),1)
 api: librpapp
 
 librpapp: librp
-	cmake -B$(abspath $(LIBRPAPP_DIR)/build) -S$(abspath $(LIBRPAPP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE) -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(LIBRPAPP_DIR)/build) -S$(abspath $(LIBRPAPP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(LIBRPAPP_DIR)/build install
 
 endif
@@ -306,11 +296,12 @@ LED_CONTROL_DIR    = Test/led_control
 COMM_DIR           = Examples/Communication/C
 XADC_DIR           = Test/xadc
 LA_TEST_DIR        = rp-api/api2/test
+DAISY_TOOL_DIR     = Test/daisy_tool
 
 .PHONY: examples rp_communication fpgautils
-.PHONY: lcr bode monitor generator acquire calib spectrum laboardtest led_control
+.PHONY: lcr bode monitor generator acquire calib spectrum laboardtest led_control daisy_tool
 
-examples: lcr bode monitor calib spectrum acquire generator led_control fpgautils
+examples: lcr bode monitor calib spectrum acquire generator led_control fpgautils daisy_tool
 
 # calibrate laboardtest
 
@@ -321,32 +312,37 @@ examples: lcr bode monitor calib spectrum acquire generator led_control fpgautil
 
 bode: api
 	rm -rf $(abspath $(BODE_DIR)/build)
-	cmake -B$(abspath $(BODE_DIR)/build) -S$(abspath $(BODE_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE) -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(BODE_DIR)/build) -S$(abspath $(BODE_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(BODE_DIR)/build install
 
 monitor: api
 	rm -rf $(abspath $(MONITOR_DIR)/build)
-	cmake -B$(abspath $(MONITOR_DIR)/build) -S$(abspath $(MONITOR_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE) -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(MONITOR_DIR)/build) -S$(abspath $(MONITOR_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(MONITOR_DIR)/build install
 
 generator: api
 	rm -rf $(abspath $(GENERATOR_DIR)/build)
-	cmake -B$(abspath $(GENERATOR_DIR)/build) -S$(abspath $(GENERATOR_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE) -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(GENERATOR_DIR)/build) -S$(abspath $(GENERATOR_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(GENERATOR_DIR)/build install
 
 acquire: api
 	rm -rf $(abspath $(ACQUIRE_DIR)/build)
-	cmake -B$(abspath $(ACQUIRE_DIR)/build) -S$(abspath $(ACQUIRE_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE) -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(ACQUIRE_DIR)/build) -S$(abspath $(ACQUIRE_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(ACQUIRE_DIR)/build install
 
 calib: api
 	rm -rf $(abspath $(CALIB_DIR)/build)
-	cmake -B$(abspath $(CALIB_DIR)/build) -S$(abspath $(CALIB_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE) -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(CALIB_DIR)/build) -S$(abspath $(CALIB_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(CALIB_DIR)/build install
+
+daisy_tool: api
+	rm -rf $(abspath $(DAISY_TOOL_DIR)/build)
+	cmake -B$(abspath $(DAISY_TOOL_DIR)/build) -S$(abspath $(DAISY_TOOL_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(DAISY_TOOL_DIR)/build install
 
 spectrum: api
 	rm -rf $(abspath $(SPECTRUM_DIR)/build)
-	cmake -B$(abspath $(SPECTRUM_DIR)/build) -S$(abspath $(SPECTRUM_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE) -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(SPECTRUM_DIR)/build) -S$(abspath $(SPECTRUM_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(SPECTRUM_DIR)/build install
 
 # calibrate: api
@@ -356,7 +352,7 @@ spectrum: api
 
 led_control: api
 	rm -rf $(abspath $(LED_CONTROL_DIR)/build)
-	cmake -B$(abspath $(LED_CONTROL_DIR)/build) -S$(abspath $(LED_CONTROL_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE) -DMODEL=$(MODEL) -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(LED_CONTROL_DIR)/build) -S$(abspath $(LED_CONTROL_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(LED_CONTROL_DIR)/build install
 
 laboardtest: api2
@@ -542,6 +538,7 @@ clean:
 	rm -rf $(abspath $(CALIB_DIR)/build)
 	rm -rf $(abspath $(BODE_DIR)/build)
 	rm -rf $(abspath $(ACQUIRE_DIR)/build)
+	rm -rf $(abspath $(DAISY_TOOL_DIR)/build)
 	rm -rf $(abspath $(GENERATOR_DIR)/build)
 	rm -rf $(abspath $(LED_CONTROL_DIR)/build)
 	rm -rf $(abspath $(MONITOR_DIR)/build)
