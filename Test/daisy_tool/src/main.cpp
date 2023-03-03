@@ -239,7 +239,7 @@ int main(int argc, char *argv[])
             if (rp_GetSourceTrigOutput(&mode) == RP_OK){
                 if (mode == OUT_TR_ADC){
                     printf("Trigger source mode = ADC\n");
-                } else if (mode == OUT_TR_ADC){
+                } else if (mode == OUT_TR_DAC){
                     printf("Trigger source mode = DAC\n");
                 } else {
                     printf("Trigger source mode = [ERROR]\n");
