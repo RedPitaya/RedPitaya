@@ -27,7 +27,6 @@ OBJECTS_DIR = ../obj
 OUTPUT_DIR  = ../
 SOURCE_DIR  = .
 INSTALL_DIR ?= .
-MODEL ?= Z10
 
 # Library name
 TARGET=$(OUTPUT_DIR)/scpi-server
@@ -50,7 +49,7 @@ OBJECTS =	scpi-commands.o \
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 
 # GCC compiling & linking flags
-CFLAGS += -g -std=gnu99 -Wall -Werror -fPIC -D$(MODEL)
+CFLAGS += -g -std=gnu99 -Wall -Werror -fPIC
 CFLAGS += -I$(INSTALL_DIR)/include
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 LDFLAGS=
