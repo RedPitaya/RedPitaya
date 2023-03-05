@@ -31,6 +31,7 @@ fprintf(tcpipObj,'SOUR2:BURS:NCYC 2'); % Set 2 pulses of sine wave
 fprintf(tcpipObj,'SOUR2:BURS:NOR 1'); % 1 number of sine wave pulses
 fprintf(tcpipObj,'SOUR2:BURS:INT:PER 5000'); % Set time of burst period in microseconds = 5 * 1/Frequency * 1000000
 fprintf(tcpipObj,'OUTPUT:STATE ON'); % Set output to ON
+fprintf(tcpipObj,'SOUR:TRIG:INT');
 pause(2)
 fprintf(tcpipObj,'SOUR1:TRIG:INT');
 pause(2)

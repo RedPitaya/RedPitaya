@@ -304,7 +304,7 @@ auto readCSV(std::iostream *buffer, int64_t *_position,int *_channels,uint64_t *
 
             for(auto i = 0u ;i < max_size; i++){
                 (*samplePos)++;
-                *memory << *samplePos << "\t";
+                *memory << *samplePos << ",";
                 bool needPrintComma = false;
                 if (i < sample_ch1){
                     needPrintComma = true;
@@ -318,13 +318,13 @@ auto readCSV(std::iostream *buffer, int64_t *_position,int *_channels,uint64_t *
 
                 if (i < sample_ch2){
                     if (needPrintComma)
-                        *memory << "\t";
+                        *memory << ",";
                     needPrintComma = true;
                     print(buffer_ch2,i,resolutionCh2);
                 }else{
                     if (sample_ch2 > 0 || lost_ch2 > 0){
                         if (needPrintComma)
-                            *memory << "\t";
+                            *memory << ",";
                         needPrintComma = true;
                         *memory << "-";
                     }
@@ -332,13 +332,13 @@ auto readCSV(std::iostream *buffer, int64_t *_position,int *_channels,uint64_t *
 
                 if (i < sample_ch3){
                     if (needPrintComma)
-                        *memory << "\t";
+                        *memory << ",";
                     needPrintComma = true;
                     print(buffer_ch3,i,resolutionCh3);
                 }else{
                     if (sample_ch3 > 0 || lost_ch3 > 0){
                         if (needPrintComma)
-                            *memory << "\t";
+                            *memory << ",";
                         needPrintComma = true;
                         *memory << "-";
                     }
@@ -346,12 +346,12 @@ auto readCSV(std::iostream *buffer, int64_t *_position,int *_channels,uint64_t *
 
                 if (i < sample_ch4){
                     if (needPrintComma)
-                        *memory << "\t";
+                        *memory << ",";
                     print(buffer_ch4,i,resolutionCh4);
                 }else{
                     if (sample_ch4 > 0 || lost_ch4 > 0){
                         if (needPrintComma)
-                            *memory << "\t";
+                            *memory << ",";
                         *memory << "-";
                     }
                 }
@@ -413,6 +413,3 @@ auto readBinInfo(std::iostream *buffer) -> CBinInfo{
     bi.lastSegState = position == -2;
     return bi;
 }
-
-
-

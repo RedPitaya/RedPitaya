@@ -39,7 +39,7 @@
                     SM.max_SD_rate_2chs = [max_possible_rate / SM.max_SD_rate_devider_2chs[0], max_possible_rate / SM.max_SD_rate_devider_2chs[1]];
                 }
 
-                if (model.value === "Z20_250_12") {
+                if (model.value === "Z20_250_12" || model.value === "Z20_250_12_120") {
                     SM.rp_model = model.value;
                     var max_possible_rate = 250e6;
                     SM.ss_full_rate = max_possible_rate;
@@ -137,7 +137,7 @@
             });
         }
 
-        if (SM.rp_model === "Z20_250_12") {
+        if (SM.rp_model === "Z20_250_12" || SM.rp_model === "Z20_250_12_120") {
             var rate = 250e6;
             if (use_net) {
                 if (channel_mode != 3) {
@@ -171,7 +171,7 @@
         SM.ss_max_rate = rate;
         SM.ss_max_rate_devider = rate_devider;
         if (SM.ss_rate != -1) {
-            SM.calcRateHz(SM.ss_full_rate / SM.ss_rate);            
+            SM.calcRateHz(SM.ss_full_rate / SM.ss_rate);
         }
         rateFocusOutValue();
     };

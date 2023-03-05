@@ -1,43 +1,44 @@
 #!/bin/bash
 
-MODE=$1
-FPGA_NAME=$2
-COMMIT=$3
-REPORT_FILE=report.xml
+PROJECT_FPGA=$1
+REPORT_FILE=$2
+MODE=$3
 
-if [[ "$MODE" == "BRANCH_KERNEL" ]]
+if [[ "$MODE" == "FPGA" ]]
 then
-BRANCH=$(git show -s --pretty=%D HEAD | awk '{gsub("origin/",""); print $2}')
-LOG=$(git log -n 1)
-echo "<field name=\"Kernel\" titlecolor=\"blue\" value=\"$BRANCH\" detailcolor=\"black\" href=\"$BRANCH\"> <![CDATA[ $LOG ]]> </field>" >> $REPORT_FILE
-fi
 
-if [[ "$MODE" == "BRANCH_ECOSYSTEM" ]]
-then
-BRANCH=$(git branch --contains HEAD)
-LOG=$(git log -n 1)
-echo "<field name=\"Ecosystem\" titlecolor=\"blue\" value=\"$BRANCH\" detailcolor=\"black\" href=\"$BRANCH\"> <![CDATA[ $LOG ]]> </field>" >> $REPORT_FILE
-fi
+echo "<section name=\"FPGA/$PROJECT_FPGA\" fontcolor=\"\">" > $REPORT_FILE
 
-if [[ "$MODE" == "GEN" ]]
-then
-cd fpga/$FPGA_NAME
-BRANCH=$(git name-rev $COMMIT)
-LOG=$(git log -n 1)
-cd ../..
-echo "<field name=\"$FPGA_NAME\" titlecolor=\"blue\" value=\"$BRANCH\" detailcolor=\"black\" href=\"$BRANCH\"> <![CDATA[ $LOG ]]> </field>" >> $REPORT_FILE
-fi
+for f in build/fpga/$PROJECT_FPGA/*; do
+    if [ -d "$f" ]; then
+        DIR_NAME=$(basename $f)
+        INFO=$(cat $f/git_info.txt)
+        COMMIT=$(awk 'NR==2 {print $2}' $f/git_info.txt)
+        echo "<field name=\"$DIR_NAME\" titlecolor=\"blue\" value=\"$COMMIT\" detailcolor=\"black\" href=\"https://gitlab.redpitaya.com/redpitaya-3.0/redpitaya-fpga/-/commit/$COMMIT\"> <![CDATA[ $INFO ]]> </field>" >> $REPORT_FILE
+    fi
+done
 
-if [[ "$MODE" == "PACK" ]]
-then
-mv $REPORT_FILE $REPORT_FILE.fpga.sub.tmp
-
-echo "<section name=\"FPGA\" fontcolor=\"\">" > $REPORT_FILE
-
-cat $REPORT_FILE.fpga.sub.tmp >> $REPORT_FILE
- 
 echo "</section>" >> $REPORT_FILE
+fi
 
-rm $REPORT_FILE.fpga.sub.tmp
+if [[ "$MODE" == "KERNEL" ]]
+then
+    echo "<section name=\"Kernel\" fontcolor=\"\">" > $REPORT_FILE
+    BRANCH=$(git show -s --pretty=%D HEAD | awk '{gsub("origin/",""); print $2}')
+    LOG=$(git log -n 1)
+    COMMIT=$(git log -n -1 | awk 'NR==1 {print $2}')
+    echo "<field name=\"$BRANCH\" titlecolor=\"blue\" value=\"https://gitlab.redpitaya.com/redpitaya-3.0/redpitaya-public/-/commit/$COMMIT\" detailcolor=\"black\" href=\"https://gitlab.redpitaya.com/redpitaya-3.0/redpitaya-public/-/commit/$COMMIT\"> <![CDATA[ $LOG ]]> </field>" >> $REPORT_FILE
+    echo "</section>" >> $REPORT_FILE
 
+fi
+
+
+if [[ "$MODE" == "ECO" ]]
+then
+    echo "<section name=\"Ecosystem\" fontcolor=\"\">" > $REPORT_FILE
+    BRANCH=$(git branch --contains HEAD)
+    LOG=$(git log -n 1)
+    COMMIT=$(git log -n -1 | awk 'NR==1 {print $2}')
+    echo "<field name=\"$BRANCH\" titlecolor=\"blue\" value=\"https://gitlab.redpitaya.com/redpitaya-3.0/redpitaya-public/-/commit/$COMMIT\" detailcolor=\"black\" href=\"https://gitlab.redpitaya.com/redpitaya-3.0/redpitaya-public/-/commit/$COMMIT\"> <![CDATA[ $LOG ]]> </field>" >> $REPORT_FILE
+    echo "</section>" >> $REPORT_FILE
 fi

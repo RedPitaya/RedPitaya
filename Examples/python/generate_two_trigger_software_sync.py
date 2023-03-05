@@ -3,7 +3,7 @@
 import sys
 import redpitaya_scpi as scpi
 
-rp_s = scpi.scpi("192.168.1.17")
+rp_s = scpi.scpi(sys.argv[1])
 
 wave_form = 'sine'
 freq = 2000

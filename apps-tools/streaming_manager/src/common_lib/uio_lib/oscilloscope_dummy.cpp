@@ -8,11 +8,11 @@
 
 using namespace uio_lib;
 
-auto COscilloscope::create(const UioT &,uint32_t _dec_factor,bool _isMaster,uint32_t _adcMaxSpeed) -> COscilloscope::Ptr {
-    return std::make_shared<COscilloscope>(0, nullptr, 0, nullptr, 0, 0,_dec_factor,_isMaster,_adcMaxSpeed);
+auto COscilloscope::create(const UioT &,uint32_t _dec_factor,bool _isMaster,uint32_t _adcMaxSpeed,bool _isADCFilterPresent) -> COscilloscope::Ptr {
+    return std::make_shared<COscilloscope>(0, nullptr, 0, nullptr, 0, 0,_dec_factor,_isMaster,_adcMaxSpeed,_isADCFilterPresent);
 }
 
-COscilloscope::COscilloscope(int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr,uint32_t _dec_factor,bool _isMaster,uint32_t _adcMaxSpeed) :
+COscilloscope::COscilloscope(int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr,uint32_t _dec_factor,bool _isMaster,uint32_t _adcMaxSpeed,bool _isADCFilterPresent) :
     m_Fd(_fd),
     m_Regset(_regset),
     m_RegsetSize(_regsetSize),
@@ -26,8 +26,9 @@ COscilloscope::COscilloscope(int _fd, void *_regset, size_t _regsetSize, void *_
     m_dec_factor(_dec_factor),
     m_filterBypass(true),
     m_isMaster(_isMaster),
-    m_adcMaxSpeed(_adcMaxSpeed)
-{    
+    m_adcMaxSpeed(_adcMaxSpeed),
+    m_isADCFilterPresent(_isADCFilterPresent)
+{
     m_OscBuffer1 = new uint8_t[osc_buf_size];
     m_OscBuffer2 = new uint8_t[osc_buf_size];
     for(auto i = 0u ; i < osc_buf_size; i++){
@@ -79,6 +80,10 @@ auto COscilloscope::wait() -> bool{
 
 auto COscilloscope::clearInterrupt() -> bool{
     return true;
+}
+
+auto isMaster() -> BoardMode{
+    return BoardMode::UNKNOWN;
 }
 
 auto COscilloscope::stop() -> void{}

@@ -23,7 +23,7 @@
 #include "spi.h"
 #include "spi-helper.h"
 
-spi_config_t g_settings;
+static spi_config_t g_settings;
 
 /* File descriptor definition */
 int spi_fd = -1;

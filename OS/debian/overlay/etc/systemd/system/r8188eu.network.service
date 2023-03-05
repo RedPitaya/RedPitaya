@@ -1,7 +1,0 @@
-[Unit]
-Description=Inserts new id's in r8188eu
-Before=network.target
-
-[Service]
-Type=oneshot
-ExecStart=/bin/bash -c "echo 7392 b811 >> /sys/module/r8188eu/drivers/usb:r8188eu/new_id"

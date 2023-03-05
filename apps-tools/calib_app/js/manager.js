@@ -53,6 +53,10 @@
 
             }
 
+            if (OBJ.model === "Z20_250_12_120") {
+
+            }
+
             if (_visible) {
                 $("#adc_mode_body").show();
                 $("#B_APPLY_CONT").show();
@@ -71,6 +75,10 @@
             }
 
             if (OBJ.model === "Z20_250_12") {
+
+            }
+
+            if (OBJ.model === "Z20_250_12_120") {
 
             }
 
@@ -137,29 +145,38 @@
 
     OBJ.setModel = function(_value) {
         if (OBJ.model === undefined) {
+            console.log("Model",_value.value)
             OBJ.model = _value.value;
-            if (OBJ.model !== "Z20_250_12") {
-                $("#manual_x1_x5_mode").remove();
-                $("#manual_ac_dc_mode").remove();
-            } else {
-                $("#b_auto_menu").text("AUTO AC/DC");
-                $("#b_manual_menu").text("MANUAL AC/DC");
-            }
-            if (OBJ.model !== "Z10" && OBJ.model !== "Z20_125" && OBJ.model !== "Z20_125_4CH") {
-                $("#filter_calib_button").remove();
-                $("#afilter_calib_button").remove();
-            }
 
-            if (OBJ.model === "Z10" || OBJ.model === "Z20_125" || OBJ.model === "Z20_125_4CH") {
-                $("#filter_calib_button").show();
-                $("#afilter_calib_button").show();
-            }
+            $('#BODY').load((OBJ.model === "Z20_125_4CH" ? "4ch_adc.html" : "2ch_adc.html"), function() {
+                console.log( "Load was performed." );
+                $('body').addClass('loaded');
+                $('#main').removeAttr("style");
+                OBJ.connectCallbacks();
+                if (OBJ.model !== "Z20_250_12" && OBJ.model !== "Z20_250_12_120") {
+                    $("#manual_x1_x5_mode").remove();
+                    $("#manual_ac_dc_mode").remove();
+                } else {
+                    $("#b_auto_menu").text("AUTO AC/DC");
+                    $("#b_manual_menu").text("MANUAL AC/DC");
+                }
+                if (OBJ.model !== "Z10" && OBJ.model !== "Z20_125" && OBJ.model !== "Z20_125_4CH") {
+                    $("#filter_calib_button").remove();
+                    $("#afilter_calib_button").remove();
+                }
 
+                if (OBJ.model === "Z10" || OBJ.model === "Z20_125" || OBJ.model === "Z20_125_4CH") {
+                    $("#filter_calib_button").show();
+                    $("#afilter_calib_button").show();
+                }
+                OBJ.amSetModel(_value);
+                OBJ.adcSetModel(_value);
+                OBJ.famSetModel(_value);
+                OBJ.filterSetModel(_value);
+                SM.sendParameters();
+            });
         }
-        OBJ.amSetModel(_value);
-        OBJ.adcSetModel(_value);
-        OBJ.famSetModel(_value);
-        OBJ.filterSetModel(_value);
+
     }
 
     OBJ.closeManualMode = function() {
@@ -179,172 +196,180 @@
     }
 
 
+    OBJ.connectCallbacks = function() {
+        $('#B_AUTO_MODE').on('click', function(ev) {
+            SM.param_callbacks["ch1_avg"] = OBJ.setCH1Awg;
+            SM.param_callbacks["ch1_max"] = OBJ.setCH1Max;
+            SM.param_callbacks["ch2_avg"] = OBJ.setCH2Awg;
+            SM.param_callbacks["ch2_max"] = OBJ.setCH2Max;
+            SM.param_callbacks["ch3_avg"] = OBJ.setCH3Awg;
+            SM.param_callbacks["ch3_max"] = OBJ.setCH3Max;
+            SM.param_callbacks["ch4_avg"] = OBJ.setCH4Awg;
+            SM.param_callbacks["ch4_max"] = OBJ.setCH4Max;
+
+            SM.param_callbacks["ch1_min"] = undefined;
+            SM.param_callbacks["ch2_min"] = undefined;
+            OBJ.setMainMenu(false);
+            OBJ.setAutoMode(true);
+            OBJ.amClearTable();
+            OBJ.amStartCalibration();
+        });
+
+        $('#B_ADC_MODE').on('click', function(ev) {
+            SM.param_callbacks["ch1_avg"] = OBJ.adcSetCH1Avg;
+            SM.param_callbacks["ch1_max"] = OBJ.adcSetCH1Max;
+            SM.param_callbacks["ch1_min"] = OBJ.adcSetCH1Min;
+            SM.param_callbacks["ch2_avg"] = OBJ.adcSetCH2Avg;
+            SM.param_callbacks["ch2_max"] = OBJ.adcSetCH2Max;
+            SM.param_callbacks["ch2_min"] = OBJ.adcSetCH2Min;
+            SM.param_callbacks["ch3_avg"] = OBJ.adcSetCH3Avg;
+            SM.param_callbacks["ch3_max"] = OBJ.adcSetCH3Max;
+            SM.param_callbacks["ch3_min"] = OBJ.adcSetCH3Min;
+            SM.param_callbacks["ch4_avg"] = OBJ.adcSetCH4Avg;
+            SM.param_callbacks["ch4_max"] = OBJ.adcSetCH4Max;
+            SM.param_callbacks["ch4_min"] = OBJ.adcSetCH4Min;
+
+            OBJ.adcInitData();
+            OBJ.adcInitRequest();
+            OBJ.adcInitPlotCH(true,1);
+            OBJ.adcInitPlotCH(true,2);
+            if (OBJ.model === "Z20_125_4CH"){
+                OBJ.adcInitPlotCH(true,3);
+                OBJ.adcInitPlotCH(true,4);
+            }
+            OBJ.setMainMenu(false);
+            OBJ.setADCMode(true);
+        });
+
+        $('#B_AUTO_FILTER_MODE').on('click', function(ev) {
+            //  OBJ.filterInitRequest();
+            OBJ.setMainMenu(false);
+            OBJ.setFAutoMode(true);
+            OBJ.famClearTable();
+            OBJ.famStartCalibration();
+        });
+
+        $('#B_FILTER_MODE').on('click', function(ev) {
+            OBJ.filterInitRequest();
+            OBJ.setMainMenu(false);
+            OBJ.setFILTERMode(true);
+        });
+
+        $('#B_APPLY').on('click', function(ev) {
+            $("#dialog_reset_text").text("Apply new calibration?");
+            $("#reset_ok_btn").off('click');
+            $('#reset_cancel_btn').off('click');
+            $('#reset_ok_btn').on('click', function() {
+                SM.parametersCache["calib_sig"] = { value: 5 };
+                SM.sendParameters();
+                OBJ.adcCalibChange = false;
+                OBJ.filterCalibChange = false;
+            });
+            $('#reset_cancel_btn').on('click', function() {});
+            $("#dialog_reset").modal('show');
+        });
+
+        $('#B_RESET_DEFAULT').on('click', function(ev) {
+            $("#dialog_reset_text").text("Reset to default?");
+            $("#reset_ok_btn").off('click');
+            $('#reset_cancel_btn').off('click');
+            $('#reset_ok_btn').on('click', function() {
+                SM.parametersCache["calib_sig"] = { value: 3 };
+                SM.sendParameters();
+                OBJ.adcCalibChange = false;
+            });
+            $('#reset_cancel_btn').on('click', function() {});
+            $("#dialog_reset").modal('show');
+        });
+
+        $('#B_RESET_FACTORY').on('click', function(ev) {
+            $("#dialog_reset_text").text("Reset to factory calibration?");
+            $("#reset_ok_btn").off('click');
+            $('#reset_cancel_btn').off('click');
+            $('#reset_ok_btn').on('click', function() {
+                SM.parametersCache["calib_sig"] = { value: 4 };
+                SM.sendParameters();
+                OBJ.adcCalibChange = false;
+            });
+            $('#reset_cancel_btn').on('click', function() {});
+            $("#dialog_reset").modal('show');
+        });
+
+        $('#B_CANCEL_CALIB').on('click', function(ev) {
+            SM.param_callbacks["ch1_avg"] = undefined;
+            SM.param_callbacks["ch1_max"] = undefined;
+            SM.param_callbacks["ch1_min"] = undefined;
+
+            SM.param_callbacks["ch2_avg"] = undefined;
+            SM.param_callbacks["ch2_max"] = undefined;
+            SM.param_callbacks["ch2_min"] = undefined;
+
+            SM.param_callbacks["ch3_avg"] = undefined;
+            SM.param_callbacks["ch3_max"] = undefined;
+            SM.param_callbacks["ch3_min"] = undefined;
+
+            SM.param_callbacks["ch4_avg"] = undefined;
+            SM.param_callbacks["ch4_max"] = undefined;
+            SM.param_callbacks["ch4_min"] = undefined;
+
+            OBJ.showMainMenu();
+            SM.parametersCache["SS_NEXTSTEP"] = { value: -2 };
+            SM.parametersCache["F_SS_NEXTSTEP"] = { value: -2};
+            SM.parametersCache["ref_volt"] = { value: 0 }; // SS_NEXTSTEP work only in pair ref_volt
+            SM.sendParameters();
+        });
+
+        $('#B_CLOSE_ADC_CALIB').on('click', function(ev) {
+            if (OBJ.adcCalibChange || OBJ.filterCalibChange) {
+                $("#dialog_reset_text").text("Save new parameters?");
+                $("#reset_ok_btn").off('click');
+                $('#reset_cancel_btn').off('click');
+                $('#reset_ok_btn').on('click', function() {
+                    SM.parametersCache["calib_sig"] = { value: 5 };
+                    OBJ.filterCalibChange = false;
+                    OBJ.adcCalibChange = false;
+                    SM.sendParameters();
+                    OBJ.closeManualMode();
+                });
+                $('#reset_cancel_btn').on('click', function() {
+                    OBJ.filterCalibChange = false;
+                    OBJ.adcCalibChange = false;
+                    OBJ.closeManualMode();
+                });
+
+                $("#dialog_reset").modal('show');
+            } else {
+                OBJ.closeManualMode();
+            }
+        });
+
+        $('#B_DEFAULT').on('click', function(ev) {
+
+            $("#dialog_reset_text").text("Set default parameters for current channel?");
+            $("#reset_ok_btn").off('click');
+            $('#reset_cancel_btn').off('click');
+            $('#reset_ok_btn').on('click', function() {
+                SM.parametersCache["calib_sig"] = { value: 6 };
+                SM.sendParameters();
+            });
+
+            $('#reset_cancel_btn').on('click', function() {});
+            $("#dialog_reset").modal('show');
+        });
+
+            //Crash buttons
+        $('#send_report_btn').on('click', function() { SM.formEmail() });
+        $('#restart_app_btn').on('click', function() { location.reload() });
+        connectHandlers();
+    }
 
 
 }(window.OBJ = window.OBJ || {}, jQuery));
 
 
+
+
 // Page onload event handler
 $(function() {
-
-    $('#B_AUTO_MODE').on('click', function(ev) {
-        SM.param_callbacks["ch1_avg"] = OBJ.setCH1Awg;
-        SM.param_callbacks["ch1_max"] = OBJ.setCH1Max;
-        SM.param_callbacks["ch2_avg"] = OBJ.setCH2Awg;
-        SM.param_callbacks["ch2_max"] = OBJ.setCH2Max;
-        SM.param_callbacks["ch3_avg"] = OBJ.setCH3Awg;
-        SM.param_callbacks["ch3_max"] = OBJ.setCH3Max;
-        SM.param_callbacks["ch4_avg"] = OBJ.setCH4Awg;
-        SM.param_callbacks["ch4_max"] = OBJ.setCH4Max;
-        
-        SM.param_callbacks["ch1_min"] = undefined;
-        SM.param_callbacks["ch2_min"] = undefined;
-        OBJ.setMainMenu(false);
-        OBJ.setAutoMode(true);
-        OBJ.amClearTable();
-        OBJ.amStartCalibration();
-    });
-
-    $('#B_ADC_MODE').on('click', function(ev) {
-        SM.param_callbacks["ch1_avg"] = OBJ.adcSetCH1Avg;
-        SM.param_callbacks["ch1_max"] = OBJ.adcSetCH1Max;
-        SM.param_callbacks["ch1_min"] = OBJ.adcSetCH1Min;
-        SM.param_callbacks["ch2_avg"] = OBJ.adcSetCH2Avg;
-        SM.param_callbacks["ch2_max"] = OBJ.adcSetCH2Max;
-        SM.param_callbacks["ch2_min"] = OBJ.adcSetCH2Min;
-        SM.param_callbacks["ch3_avg"] = OBJ.adcSetCH3Avg;
-        SM.param_callbacks["ch3_max"] = OBJ.adcSetCH3Max;
-        SM.param_callbacks["ch3_min"] = OBJ.adcSetCH3Min;
-        SM.param_callbacks["ch4_avg"] = OBJ.adcSetCH4Avg;
-        SM.param_callbacks["ch4_max"] = OBJ.adcSetCH4Max;
-        SM.param_callbacks["ch4_min"] = OBJ.adcSetCH4Min;
-
-        OBJ.adcInitData();
-        OBJ.adcInitRequest();
-        OBJ.adcInitPlotCH(true,1);
-        OBJ.adcInitPlotCH(true,2);
-        if (OBJ.model === "Z20_125_4CH"){
-            OBJ.adcInitPlotCH(true,3);
-            OBJ.adcInitPlotCH(true,4);
-        }
-        OBJ.setMainMenu(false);
-        OBJ.setADCMode(true);
-    });
-
-    $('#B_AUTO_FILTER_MODE').on('click', function(ev) {
-        //  OBJ.filterInitRequest();
-        OBJ.setMainMenu(false);
-        OBJ.setFAutoMode(true);
-        OBJ.famClearTable();
-        OBJ.famStartCalibration();
-    });
-
-    $('#B_FILTER_MODE').on('click', function(ev) {
-        OBJ.filterInitRequest();
-        OBJ.setMainMenu(false);
-        OBJ.setFILTERMode(true);
-    });
-
-    $('#B_APPLY').on('click', function(ev) {
-        $("#dialog_reset_text").text("Apply new calibration?");
-        $("#reset_ok_btn").off('click');
-        $('#reset_cancel_btn').off('click');
-        $('#reset_ok_btn').on('click', function() {
-            SM.parametersCache["calib_sig"] = { value: 5 };
-            SM.sendParameters();
-            OBJ.adcCalibChange = false;
-            OBJ.filterCalibChange = false;
-        });
-        $('#reset_cancel_btn').on('click', function() {});
-        $("#dialog_reset").modal('show');
-    });
-
-    $('#B_RESET_DEFAULT').on('click', function(ev) {
-        $("#dialog_reset_text").text("Reset to default?");
-        $("#reset_ok_btn").off('click');
-        $('#reset_cancel_btn').off('click');
-        $('#reset_ok_btn').on('click', function() {
-            SM.parametersCache["calib_sig"] = { value: 3 };
-            SM.sendParameters();
-            OBJ.adcCalibChange = false;
-        });
-        $('#reset_cancel_btn').on('click', function() {});
-        $("#dialog_reset").modal('show');
-    });
-
-    $('#B_RESET_FACTORY').on('click', function(ev) {
-        $("#dialog_reset_text").text("Reset to factory calibration?");
-        $("#reset_ok_btn").off('click');
-        $('#reset_cancel_btn').off('click');
-        $('#reset_ok_btn').on('click', function() {
-            SM.parametersCache["calib_sig"] = { value: 4 };
-            SM.sendParameters();
-            OBJ.adcCalibChange = false;
-        });
-        $('#reset_cancel_btn').on('click', function() {});
-        $("#dialog_reset").modal('show');
-    });
-
-    $('#B_CANCEL_CALIB').on('click', function(ev) {
-        SM.param_callbacks["ch1_avg"] = undefined;
-        SM.param_callbacks["ch1_max"] = undefined;
-        SM.param_callbacks["ch1_min"] = undefined;
-
-        SM.param_callbacks["ch2_avg"] = undefined;
-        SM.param_callbacks["ch2_max"] = undefined;
-        SM.param_callbacks["ch2_min"] = undefined;
-
-        SM.param_callbacks["ch3_avg"] = undefined;
-        SM.param_callbacks["ch3_max"] = undefined;
-        SM.param_callbacks["ch3_min"] = undefined;
-
-        SM.param_callbacks["ch4_avg"] = undefined;
-        SM.param_callbacks["ch4_max"] = undefined;
-        SM.param_callbacks["ch4_min"] = undefined;
-
-        OBJ.showMainMenu();
-        SM.parametersCache["SS_NEXTSTEP"] = { value: -2 };
-        SM.parametersCache["ref_volt"] = { value: 0 }; // SS_NEXTSTEP work only in pair ref_volt
-        SM.sendParameters();
-    });
-
-    $('#B_CLOSE_ADC_CALIB').on('click', function(ev) {
-        if (OBJ.adcCalibChange || OBJ.filterCalibChange) {
-            $("#dialog_reset_text").text("Save new parameters?");
-            $("#reset_ok_btn").off('click');
-            $('#reset_cancel_btn').off('click');
-            $('#reset_ok_btn').on('click', function() {
-                SM.parametersCache["calib_sig"] = { value: 5 };
-                OBJ.filterCalibChange = false;
-                OBJ.adcCalibChange = false;
-                SM.sendParameters();
-                OBJ.closeManualMode();
-            });
-            $('#reset_cancel_btn').on('click', function() {
-                OBJ.filterCalibChange = false;
-                OBJ.adcCalibChange = false;
-                OBJ.closeManualMode();
-            });
-
-            $("#dialog_reset").modal('show');
-        } else {
-            OBJ.closeManualMode();
-        }
-    });
-
-    $('#B_DEFAULT').on('click', function(ev) {
-
-        $("#dialog_reset_text").text("Set default parameters for current channel?");
-        $("#reset_ok_btn").off('click');
-        $('#reset_cancel_btn').off('click');
-        $('#reset_ok_btn').on('click', function() {
-            SM.parametersCache["calib_sig"] = { value: 6 };
-            SM.sendParameters();
-        });
-
-        $('#reset_cancel_btn').on('click', function() {});
-        $("#dialog_reset").modal('show');
-    });
-
     SM.param_callbacks["RP_MODEL_STR"] = OBJ.setModel;
 });

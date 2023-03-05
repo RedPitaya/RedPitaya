@@ -18,16 +18,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 
 project(rp)
 
-if(NOT DEFINED MODEL)
-  set(MODEL ANY)
-endif()
-
 if(NOT DEFINED INSTALL_DIR)
     message(WARNING,"Installation path not set. Installation will be skipped")
     set(IS_INSTALL OFF)
 endif()
 
-message(STATUS "RedPitaya model=${MODEL}")
 message(STATUS "VERSION=${VERSION}")
 message(STATUS "REVISION=${REVISION}")
 message(STATUS "Install path ${INSTALL_DIR}")
@@ -67,7 +62,7 @@ file(GLOB RP_HEADERS "include/*.h")
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
-add_compile_options(-Wall -pedantic -Wextra -D${MODEL} -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+add_compile_options(-Wall -pedantic -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 link_libraries(-L${INSTALL_DIR}/lib librp-hw.a)
 
 add_library(${PROJECT_NAME}-xml OBJECT ${PR_XML_SOURCES})
@@ -80,6 +75,7 @@ if(BUILD_SHARED)
     add_library(${PROJECT_NAME}-i2c-shared SHARED)
     set_property(TARGET ${PROJECT_NAME}-i2c-shared PROPERTY OUTPUT_NAME ${PROJECT_NAME}-i2c)
     target_sources(${PROJECT_NAME}-i2c-shared PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-xml> $<TARGET_OBJECTS:${PROJECT_NAME}-i2c>)
+    target_link_libraries(${PROJECT_NAME}-i2c-shared i2c)
 
     add_library(${PROJECT_NAME}-spi-shared SHARED)
     set_property(TARGET ${PROJECT_NAME}-spi-shared PROPERTY OUTPUT_NAME ${PROJECT_NAME}-spi)
@@ -93,7 +89,7 @@ if(BUILD_SHARED)
         install(TARGETS ${PROJECT_NAME}-i2c-shared
             LIBRARY DESTINATION ${INSTALL_DIR}/lib
             ARCHIVE DESTINATION ${INSTALL_DIR}/lib)
-            
+
         install(TARGETS ${PROJECT_NAME}-spi-shared
             LIBRARY DESTINATION ${INSTALL_DIR}/lib
             ARCHIVE DESTINATION ${INSTALL_DIR}/lib)
@@ -104,10 +100,10 @@ if(BUILD_SHARED)
 
         install(FILES ${RP_HEADERS}
             DESTINATION ${INSTALL_DIR}/include/api250-12)
-        
+
         install(DIRECTORY ${CMAKE_SOURCE_DIR}/configs
             DESTINATION ${INSTALL_DIR}/lib FILES_MATCHING PATTERN "*.xml")
-    endif()         
+    endif()
 endif()
 
 
@@ -130,7 +126,7 @@ if(BUILD_STATIC)
         install(TARGETS ${PROJECT_NAME}-i2c-static
             LIBRARY DESTINATION ${INSTALL_DIR}/lib
             ARCHIVE DESTINATION ${INSTALL_DIR}/lib)
-        
+
         install(TARGETS ${PROJECT_NAME}-spi-static
             LIBRARY DESTINATION ${INSTALL_DIR}/lib
             ARCHIVE DESTINATION ${INSTALL_DIR}/lib)
@@ -149,23 +145,22 @@ endif()
 
 if(BUILD_TEST)
     add_executable(rp_i2c_test ${CMAKE_SOURCE_DIR}/test/main.cpp)
-    target_link_libraries(rp_i2c_test PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-xml> $<TARGET_OBJECTS:${PROJECT_NAME}-i2c> $<TARGET_OBJECTS:${PROJECT_NAME}-spi>  $<TARGET_OBJECTS:${PROJECT_NAME}-gpio>)
+    target_link_libraries(rp_i2c_test PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-xml> $<TARGET_OBJECTS:${PROJECT_NAME}-i2c> $<TARGET_OBJECTS:${PROJECT_NAME}-spi>  $<TARGET_OBJECTS:${PROJECT_NAME}-gpio> i2c)
 endif()
 
 if(BUILD_TOOL)
     add_executable(rp_i2c_tool ${CMAKE_SOURCE_DIR}/src/tool/main.cpp)
-    target_link_libraries(rp_i2c_tool PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-xml> $<TARGET_OBJECTS:${PROJECT_NAME}-i2c>)
-    
+    target_link_libraries(rp_i2c_tool PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-xml> $<TARGET_OBJECTS:${PROJECT_NAME}-i2c> -li2c)
+
     add_executable(rp_power_on ${CMAKE_SOURCE_DIR}/src/power_on/main.cpp)
-    target_link_libraries(rp_power_on PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-xml> $<TARGET_OBJECTS:${PROJECT_NAME}-spi> $<TARGET_OBJECTS:${PROJECT_NAME}-gpio> $<TARGET_OBJECTS:${PROJECT_NAME}-i2c>)
-    
+    target_link_libraries(rp_power_on PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-xml> $<TARGET_OBJECTS:${PROJECT_NAME}-spi> $<TARGET_OBJECTS:${PROJECT_NAME}-gpio> $<TARGET_OBJECTS:${PROJECT_NAME}-i2c> -li2c)
+
     if(IS_INSTALL)
         install(TARGETS rp_i2c_tool
             RUNTIME DESTINATION ${INSTALL_DIR}/bin)
         install(TARGETS rp_power_on
-            RUNTIME DESTINATION ${INSTALL_DIR}/bin)         
+            RUNTIME DESTINATION ${INSTALL_DIR}/bin)
     endif()
 endif()
 
-unset(MODEL CACHE)
 unset(INSTALL_DIR CACHE)

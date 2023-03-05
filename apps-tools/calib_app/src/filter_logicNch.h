@@ -13,7 +13,7 @@ public:
     CFilter_logicNch(CCalibMan::Ptr _calib_man);
     CFilter_logicNch(const CFilter_logic &) = delete;
     CFilter_logicNch(CFilter_logic &&) = delete;
-        
+
     auto init() -> void;
     auto print() -> void;
     auto setCalibParameters() -> int;
@@ -23,13 +23,13 @@ public:
     auto removeHalfCalib() -> void;
     auto nextSetupCalibParameters() -> int;
     auto calcProgress() -> int;
-    auto setGoodCalibParameterCh(rp_channel_t ch) -> void;    
-    auto calibPPCh(rp_channel_t ch, COscilloscope::DataPassAutoFilterSync item,float _nominal) -> int;    
+    auto setGoodCalibParameterCh(rp_channel_t ch) -> void;
+    auto calibPPCh(rp_channel_t ch, COscilloscope::DataPassAutoFilterSync item,float _nominal) -> int;
     auto setCalibRef(float _value) -> void;
     auto setCalibMode(int _mode) -> void;
 
 private:
 
-    CFilter_logic::Ptr m_fl[ADC_CHANNELS];        
+    CFilter_logic::Ptr m_fl[MAX_ADC_CHANNELS];
     CCalibMan::Ptr     m_calib_man;
 };

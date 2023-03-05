@@ -5,26 +5,26 @@
 #include "rp.h"
 
 
-int16_t convertCnts(int16_t cnts)
-{
-    int16_t m;
+// int16_t convertCnts(int16_t cnts)
+// {
+//     int16_t m;
 
-    /* check sign */
-    if(cnts & (1 << (ADC_BITS - 1))) {
-        /* negative number */
-        m = -1 *((cnts ^ ((1 << ADC_BITS) - 1)) + 1);
-    } else {
-        /* positive number */
-        m = cnts;
-    }
-    /* check limits */
-    if(m < (-1 * (1 << (ADC_BITS - 1))))
-        m = (-1 * (1 << (ADC_BITS - 1)));
-    else if(m > (1 << (ADC_BITS - 1)))
-        m = (1 << (ADC_BITS - 1));
+//     /* check sign */
+//     if(cnts & (1 << (ADC_BITS - 1))) {
+//         /* negative number */
+//         m = -1 *((cnts ^ ((1 << ADC_BITS) - 1)) + 1);
+//     } else {
+//         /* positive number */
+//         m = cnts;
+//     }
+//     /* check limits */
+//     if(m < (-1 * (1 << (ADC_BITS - 1))))
+//         m = (-1 * (1 << (ADC_BITS - 1)));
+//     else if(m > (1 << (ADC_BITS - 1)))
+//         m = (1 << (ADC_BITS - 1));
 
-    return m;
-}
+//     return m;
+// }
 
 std::vector<int> calcCountCrossZero(float *_buffer, int _size){
     std::vector<int> cross;
@@ -32,15 +32,15 @@ std::vector<int> calcCountCrossZero(float *_buffer, int _size){
     for(int i = 0 ; i < _size - 1 ; i ++){
         if ((_buffer[i] < 0 && _buffer[i+1] > 0) || (_buffer[i] > 0 && _buffer[i+1] < 0)){
             cross.push_back(i);
-        //    std::cout <<  "\nI = " << i <<  " B[I] " << _buffer[i] << " B[i+1] " << _buffer[i+1] << std::endl;  
-        }       
-    }    
+        //    std::cout <<  "\nI = " << i <<  " B[I] " << _buffer[i] << " B[i+1] " << _buffer[i+1] << std::endl;
+        }
+    }
     return cross;
 }
 
 float* filterBuffer(float *_buffer,int _size){
     float *new_buffer = new float[_size];
-    std::memcpy(new_buffer,_buffer,_size);    
+    std::memcpy(new_buffer,_buffer,_size);
     float core[] = { 1.0 / 8.0 , 1.0 / 4.0 , 1.0 / 4.0 , 1.0 / 4.0 , 1.0 / 8.0};
     for(int i = 2 ; i < _size - 2 ; i++ ){
         float sum = 0;
@@ -64,7 +64,7 @@ int findLastMax(float *_buffer,int _size,int _cross){
             delete f;
             return -1;
         }
-    } 
+    }
     delete f;
     return left_pos;
 }
@@ -81,7 +81,7 @@ double calculate(float *_buffer, int _size,float _last_max, int _cross1,int _cro
     float w = 10;
     for(int i = _cross1 ; i < _cross2-1 ; i++){
         if (fabs(sin(1.0/(ch[i] - ch[i+1])) - 1) > 0.05) {
-            sum  += fabs(ch[i] * coff - 1)  * w; 
+            sum  += fabs(ch[i] * coff - 1)  * w;
             count ++;
             w--;
             if (w < 1) w =1;
@@ -92,8 +92,8 @@ double calculate(float *_buffer, int _size,float _last_max, int _cross1,int _cro
         if (fabs(sin(1.0/(ch[i] - ch[i+1])) - 1) > 0.03) {
             auto z= fabs(ch[i] * coff - ch[i+1] * coff);
              _deviation  +=  z;
-        } 
-    }    
+        }
+    }
     _deviation /= 1000.0;
     return sum;
 }

@@ -147,7 +147,7 @@ var formatСhange = function(event) {
 
 var rateFocusOut = function(event) {
     SM.calcRateHz($("#SS_RATE").val());
-    rateFocusOutValue();    
+    rateFocusOutValue();
 }
 
 var rateFocusOutValue = function() {

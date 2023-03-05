@@ -3,8 +3,11 @@
 
 #ifdef RP_PLATFORM
 #include "rp.h"
-#else
-#define ADC_SAMPLE_RATE 100000000
+#include "rp_hw-calib.h"
+#include "rp_hw-profiles.h"
+#include "api250-12/rp-spi.h"
+#include "api250-12/rp-gpio-power.h"
+#include "api250-12/rp-i2c-max7311.h"
 #endif
 
 #ifndef _WIN32
@@ -20,12 +23,6 @@
 #include "streaming_fpga.h"
 #include "streaming_buffer.h"
 #include "streaming.h"
-
-#ifdef Z20_250_12
-#include "api250-12/rp-spi.h"
-#include "api250-12/rp-gpio-power.h"
-#include "api250-12/rp-i2c-max7311.h"
-#endif
 
 using namespace streaming_lib;
 using namespace uio_lib;
@@ -53,7 +50,7 @@ auto setServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig) -> void{
 
 }
 
-auto startServer(bool verbMode,bool testMode) -> void{
+auto startServer(bool verbMode,bool testMode,bool is_master) -> void{
 	// Search oscilloscope
     if (!g_serverNetConfig) return;
 
@@ -86,135 +83,96 @@ auto startServer(bool verbMode,bool testMode) -> void{
 		auto samples      = settings.getSamples();
 		auto save_mode    = settings.getType();
 
-#ifdef Z20
-		auto use_calib    = false;
-		auto attenuator   = 0;
-#else
 		auto use_calib    = settings.getCalibration();
 		auto attenuator   = settings.getAttenuator();
+        auto ac_dc        = CStreamSettings::DC;
+        auto channels = ClientOpt::getADCChannels();
+
 #ifdef RP_PLATFORM
-		rp_CalibInit();
-		auto osc_calib_params = rp_GetCalibrationSettings();
-#endif
+        use_calib    = settings.getCalibration();
+		if (rp_CalibInit() != RP_HW_CALIB_OK){
+	        fprintf(stderr,"Error init calibration\n");
+    	}
+		ac_dc = settings.getAC_DC();
 #endif
 
-#ifdef Z20_250_12
-		auto ac_dc = settings.getAC_DC();
-#endif
 
         auto uioList = uio_lib::GetUioList();
-		uint32_t ch1_off = 0;
-		uint32_t ch2_off = 0;
-		float ch1_gain = 1;
-		float ch2_gain = 1;
+		int32_t ch_off[MAX_ADC_CHANNELS] = {0,0,0,0};
+		double  ch_gain[MAX_ADC_CHANNELS] = {1,1,1,1};
 		bool  filterBypass = true;
-		uint32_t aa_ch1 = 0;
-		uint32_t bb_ch1 = 0;
-		uint32_t kk_ch1 = 0xFFFFFF;
-		uint32_t pp_ch1 = 0;
-		uint32_t aa_ch2 = 0;
-		uint32_t bb_ch2 = 0;
-		uint32_t kk_ch2 = 0xFFFFFF;
-		uint32_t pp_ch2 = 0;
+		uint32_t aa_ch[MAX_ADC_CHANNELS] = {0,0,0,0};
+		uint32_t bb_ch[MAX_ADC_CHANNELS] = {0,0,0,0};
+		uint32_t kk_ch[MAX_ADC_CHANNELS] = {0xFFFFFF,0xFFFFFF,0xFFFFFF,0xFFFFFF};
+		uint32_t pp_ch[MAX_ADC_CHANNELS] = {0,0,0,0};
+
 #ifdef RP_PLATFORM
+        filterBypass = !rp_HPGetFastADCIsFilterPresentOrDefault();
 		if (use_calib) {
-#ifdef Z20_250_12
-			if (attenuator == CStreamSettings::A_1_1) {
-				if (ac_dc == CStreamSettings::AC) {
-					ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_1_ac) / 20.0;  // 1:1
-					ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_1_ac) / 20.0;  // 1:1
-					ch1_off  = osc_calib_params.osc_ch1_off_1_ac;
-					ch2_off  = osc_calib_params.osc_ch2_off_1_ac;
-				}
-				else {
-					ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_1_dc) / 20.0;  // 1:1
-					ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_1_dc) / 20.0;  // 1:1
-					ch1_off  = osc_calib_params.osc_ch1_off_1_dc;
-					ch2_off  = osc_calib_params.osc_ch2_off_1_dc;
-				}
-			}else{
-				if (ac_dc == CStreamSettings::AC) {
-					ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_20_ac);  // 1:20
-					ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_20_ac);  // 1:20
-					ch1_off  = osc_calib_params.osc_ch1_off_20_ac;
-					ch2_off  = osc_calib_params.osc_ch2_off_20_ac;
-				} else {
-					ch1_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch1_g_20_dc);  // 1:20
-					ch2_gain = calibFullScaleToVoltage(osc_calib_params.osc_ch2_g_20_dc);  // 1:20
-					ch1_off  = osc_calib_params.osc_ch1_off_20_dc;
-					ch2_off  = osc_calib_params.osc_ch2_off_20_dc;
-				}
-			}
-#endif
+            for(uint8_t ch = 0; ch < channels; ++ch){
+				rp_acq_ac_dc_mode_calib_t  mode = ac_dc == CStreamSettings::AC ? RP_AC_CALIB : RP_DC_CALIB;
+                if (attenuator == CStreamSettings::A_1_1){
+                    if (rp_CalibGetFastADCCalibValue((rp_channel_calib_t)ch,mode,&ch_gain[ch],&ch_off[ch]) != RP_HW_CALIB_OK){
+                        fprintf(stderr,"Error get calibration channel: %d\n",ch);
+                    }
 
-#if defined Z10 || defined Z20_125
-			filterBypass = false;
-			if (attenuator == CStreamSettings::A_1_1) {
-				ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_lo) / 20.0;
-				ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_lo) / 20.0;
-				ch1_off  = osc_calib_params.fe_ch1_lo_offs;
-				ch2_off  = osc_calib_params.fe_ch2_lo_offs;
-				aa_ch1 = osc_calib_params.low_filter_aa_ch1;
-				bb_ch1 = osc_calib_params.low_filter_bb_ch1;
-				pp_ch1 = osc_calib_params.low_filter_pp_ch1;
-				kk_ch1 = osc_calib_params.low_filter_kk_ch1;
-				aa_ch2 = osc_calib_params.low_filter_aa_ch2;
-				bb_ch2 = osc_calib_params.low_filter_bb_ch2;
-				pp_ch2 = osc_calib_params.low_filter_pp_ch2;
-				kk_ch2 = osc_calib_params.low_filter_kk_ch2;
+                    if (!filterBypass){
+                        channel_filter_t f;
+                        if (rp_CalibGetFastADCFilter((rp_channel_calib_t)ch,&f) != RP_HW_CALIB_OK){
+                            fprintf(stderr,"Error get filter value: %d\n",ch);
+                        }
+                        aa_ch[ch] = f.aa;
+                        bb_ch[ch] = f.bb;
+                        kk_ch[ch] = f.kk;
+                        pp_ch[ch] = f.pp;
+                    }
+                }
 
-			}else{
-				ch1_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch1_fs_g_hi);
-				ch2_gain = calibFullScaleToVoltage(osc_calib_params.fe_ch2_fs_g_hi);
-				ch1_off  = osc_calib_params.fe_ch1_hi_offs;
-				ch2_off  = osc_calib_params.fe_ch2_hi_offs;
-				aa_ch1 = osc_calib_params.hi_filter_aa_ch1;
-				bb_ch1 = osc_calib_params.hi_filter_bb_ch1;
-				pp_ch1 = osc_calib_params.hi_filter_pp_ch1;
-				kk_ch1 = osc_calib_params.hi_filter_kk_ch1;
-				aa_ch2 = osc_calib_params.hi_filter_aa_ch2;
-				bb_ch2 = osc_calib_params.hi_filter_bb_ch2;
-				pp_ch2 = osc_calib_params.hi_filter_pp_ch2;
-				kk_ch2 = osc_calib_params.hi_filter_kk_ch2;
+                if (attenuator == CStreamSettings::A_1_20){
+                    if (rp_CalibGetFastADCCalibValue_1_20((rp_channel_calib_t)ch,mode,&ch_gain[ch],&ch_off[ch]) != RP_HW_CALIB_OK){
+                        fprintf(stderr,"Error get calibration channel: %d\n",ch);
+                    }
+
+                    if (!filterBypass){
+                        channel_filter_t f;
+                        if (rp_CalibGetFastADCFilter_1_20((rp_channel_calib_t)ch,&f) != RP_HW_CALIB_OK){
+                            fprintf(stderr,"Error get filter value: %d\n",ch);
+                        }
+                        aa_ch[ch] = f.aa;
+                        bb_ch[ch] = f.bb;
+                        kk_ch[ch] = f.kk;
+                        pp_ch[ch] = f.pp;
+                    }
+                }
 			}
-#endif
 		}
 
-#ifdef Z20_250_12
-		rp_max7311::rp_setAttenuator(RP_MAX7311_IN1, attenuator == CStreamSettings::A_1_1  ? RP_ATTENUATOR_1_1 : RP_ATTENUATOR_1_20);
-		rp_max7311::rp_setAttenuator(RP_MAX7311_IN2, attenuator == CStreamSettings::A_1_1  ? RP_ATTENUATOR_1_1 : RP_ATTENUATOR_1_20);
-		rp_max7311::rp_setAC_DC(RP_MAX7311_IN1, ac_dc == CStreamSettings::AC ? RP_AC_MODE : RP_DC_MODE);
-		rp_max7311::rp_setAC_DC(RP_MAX7311_IN2, ac_dc == CStreamSettings::AC ? RP_AC_MODE : RP_DC_MODE);
-#endif
+        if (rp_HPGetIsAttenuatorControllerPresentOrDefault()){
+		    rp_max7311::rp_setAttenuator(RP_MAX7311_IN1, attenuator == CStreamSettings::A_1_1  ? RP_ATTENUATOR_1_1 : RP_ATTENUATOR_1_20);
+		    rp_max7311::rp_setAttenuator(RP_MAX7311_IN2, attenuator == CStreamSettings::A_1_1  ? RP_ATTENUATOR_1_1 : RP_ATTENUATOR_1_20);
+        }
+
+        if (rp_HPGetFastADCIsAC_DCOrDefault()){
+	    	rp_max7311::rp_setAC_DC(RP_MAX7311_IN1, ac_dc == CStreamSettings::AC ? RP_AC_MODE : RP_DC_MODE);
+    		rp_max7311::rp_setAC_DC(RP_MAX7311_IN2, ac_dc == CStreamSettings::AC ? RP_AC_MODE : RP_DC_MODE);
+        }
 
         for (auto &uio : uioList)
 		{
 			if (uio.nodeName == "rp_oscilloscope")
 			{
-				#ifdef STREAMING_MASTER
-					auto isMaster = true;
-				#endif
-				#ifdef STREAMING_SLAVE
-					auto isMaster = false;
-				#endif
-                g_osc = COscilloscope::create(uio,rate, isMaster,ADC_SAMPLE_RATE);
-                g_osc->setCalibration(ch1_off,ch1_gain,ch2_off,ch2_gain);
-                g_osc->setFilterCalibrationCh1(aa_ch1,bb_ch1,kk_ch1,pp_ch1);
-                g_osc->setFilterCalibrationCh2(aa_ch2,bb_ch2,kk_ch2,pp_ch2);
+                g_osc = COscilloscope::create(uio,rate, is_master,ClientOpt::getADCRate(),!filterBypass);
+                g_osc->setCalibration(ch_off[0],ch_gain[0],ch_off[1],ch_gain[1]);
+                g_osc->setFilterCalibrationCh1(aa_ch[0],bb_ch[0],kk_ch[0],pp_ch[0]);
+                g_osc->setFilterCalibrationCh2(aa_ch[1],bb_ch[1],kk_ch[1],pp_ch[1]);
                 g_osc->setFilterBypass(filterBypass);
                 g_osc->set8BitMode(resolution == CStreamSettings::BIT_8);
 				break;
 			}
 		}
 #else
-#ifdef STREAMING_MASTER
-        auto isMaster = true;
-#endif
-#ifdef STREAMING_SLAVE
-        auto isMaster = false;
-#endif
         uio_lib::UioT uio_t;
-        g_osc = COscilloscope::create(uio_t,rate, isMaster,ADC_SAMPLE_RATE);
+        g_osc = COscilloscope::create(uio_t,rate, is_master,ClientOpt::getADCRate(),!filterBypass);
 #endif
 
         g_s_buffer = streaming_lib::CStreamingBufferCached::create();
@@ -223,7 +181,7 @@ auto startServer(bool verbMode,bool testMode) -> void{
 		if (use_file == CStreamSettings::NET) {
             auto proto = protocol == CStreamSettings::TCP ? net_lib::EProtocol::P_TCP : net_lib::EProtocol::P_UDP;
             g_s_net = streaming_lib::CStreamingNet::create(ip_addr_host,sock_port,proto);
-            
+
             g_s_net->getBuffer = [g_s_buffer_w]() -> DataLib::CDataBuffersPack::Ptr{
                 auto obj = g_s_buffer_w.lock();
                 if (obj) {

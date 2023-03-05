@@ -18,6 +18,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include "redpitaya/rp.h"
+#include "rp_hw-calib.h"
 
 
 #define ECHECK(x) { \
@@ -56,13 +58,8 @@ else { \
     return RP_EPN; \
 }
 
-#ifdef DEBUG_REG
 #define cmn_Debug(X,Y) cmn_DebugReg(X,Y);
 #define cmn_DebugCh(X,Y,Z) cmn_DebugRegCh(X,Y,Z);
-#else
-#define cmn_Debug(X,Y) ;
-#define cmn_DebugCh(X,Y,Z) ;
-#endif
 
 // unmasked IO read/write (p - pointer, v - value)
 #define ioread32(p) (*(volatile uint32_t *)(p))
@@ -90,7 +87,7 @@ int cmn_Release();
 
 void cmn_DebugReg(const char* msg,uint32_t value);
 void cmn_DebugRegCh(const char* msg,int ch,uint32_t value);
-
+void cmn_enableDebugReg();
 
 int cmn_Map(size_t size, size_t offset, void** mapped);
 int cmn_Unmap(size_t size, void** mapped);
@@ -107,18 +104,15 @@ int intcmp(const void *a, const void *b);
 int int16cmp(const void *aa, const void *bb);
 int floatCmp(const void *a, const void *b);
 
-float cmn_CalibFullScaleToVoltage(uint32_t fullScaleGain);
-uint32_t cmn_CalibFullScaleFromVoltage(float voltageScale);
+rp_channel_calib_t convertCh(rp_channel_t ch);
+rp_channel_t convertChFromIndex(uint8_t index);
+rp_channel_calib_t convertPINCh(rp_apin_t pin);
+rp_acq_ac_dc_mode_calib_t convertPower(rp_acq_ac_dc_mode_t ch);
 
-int32_t cmn_CalibCnts(uint32_t field_len, uint32_t cnts, int calib_dc_off);
-float cmn_CnvCalibCntToV(uint32_t field_len, int32_t calib_cnts, float adc_max_v, float calibScale, float user_dc_off,double full_scale_norm);
-float cmn_CnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off);
-float cmn_CnvNormCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off,double full_scale_norm);
-uint32_t cmn_CnvVToCnt(uint32_t field_len, float voltage, float adc_max_v, bool calibFS_LO, uint32_t calib_scale, int calib_dc_off, float user_dc_off);
-
-float rp_cmn_CalibFullScaleToVoltage(uint32_t fullScaleGain);
-uint32_t rp_cmn_CalibFullScaleFromVoltage(float voltageScale);
-float rp_cmn_CnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off);
-uint32_t rp_cmn_CnvVToCnt(uint32_t field_len, float voltage, float adc_max_v, bool calibFS_LO, uint32_t calib_scale, int calib_dc_off, float user_dc_off);
+uint32_t cmn_convertToCnt(float voltage, uint8_t bits, float fullScale, bool is_signed, double gain, int32_t offset);
+float cmn_convertToVoltSigned(uint32_t cnts, uint8_t bits, float fullScale, uint32_t gain, uint32_t base, int32_t offset);
+float cmn_convertToVoltUnsigned(uint32_t cnts, uint8_t bits, float fullScale, uint32_t gain, uint32_t base, int32_t offset);
+int32_t cmn_CalibCntsSigned(uint32_t cnts, uint8_t bits, uint32_t gain, uint32_t base, int32_t offset);
+uint32_t cmn_CalibCntsUnsigned(uint32_t cnts, uint8_t bits, uint32_t gain, uint32_t base, int32_t offset);
 
 #endif /* COMMON_H_ */

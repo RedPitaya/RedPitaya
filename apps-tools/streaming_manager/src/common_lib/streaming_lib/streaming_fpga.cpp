@@ -48,13 +48,13 @@ auto CStreamingFPGA::setPrintDebugBuffer(bool mode) -> void {
 }
 
 auto CStreamingFPGA::runNonBlock() -> void {
-    std::lock_guard<std::mutex> lock(mtx);   
+    std::lock_guard<std::mutex> lock(mtx);
     try {
         m_OscThreadRun = true;
         setIsRun(true);
         m_OscThread = std::thread(&CStreamingFPGA::oscWorker, this);
 
-#ifdef RP_PLATFORM                
+#ifdef RP_PLATFORM
         pthread_attr_t thAttr;
         int policy = 0;
         int max_prio_for_policy = 0;
@@ -63,7 +63,7 @@ auto CStreamingFPGA::runNonBlock() -> void {
         max_prio_for_policy = sched_get_priority_max(policy);
         pthread_setschedprio(m_OscThread.native_handle(), max_prio_for_policy);
         pthread_attr_destroy(&thAttr);
-#endif    
+#endif
 
     }
     catch (const std::system_error &e)
@@ -118,7 +118,7 @@ void CStreamingFPGA::oscWorker(){
     m_Osc_ch->prepare();
 
     try{
-        
+
         uint64_t dataSize = 0;
         uint64_t lostSize = 0;
         while (m_OscThreadRun)
@@ -128,7 +128,7 @@ void CStreamingFPGA::oscWorker(){
             DataLib::CDataBuffersPack::Ptr pack(nullptr);
 
             state = m_Osc_ch->wait();
-            // auto timeNowW = std::chrono::system_clock::now();    
+            // auto timeNowW = std::chrono::system_clock::now();
             if (state){
                 pack = this->passCh();
                 m_passRate++;
@@ -136,9 +136,9 @@ void CStreamingFPGA::oscWorker(){
             // auto timeNowP = std::chrono::system_clock::now();
             if (state){
 
-#ifndef RP_PLATFORM                
+#ifndef RP_PLATFORM
                  usleep(3000);
-#endif                                 
+#endif
                 oscNotify(pack);
                 if (pack){
                     dataSize += pack->getLenghtAllBuffers();
@@ -167,7 +167,7 @@ void CStreamingFPGA::oscWorker(){
                 //     ,pW.count() - p1.count()
                 //     ,pP.count() - pW.count()
                 //     ,pS.count() - pP.count());
-                    
+
                 // }
             }
         }
@@ -175,7 +175,7 @@ void CStreamingFPGA::oscWorker(){
         auto p1 = std::chrono::time_point_cast<std::chrono::milliseconds>(timeNow).time_since_epoch();
         auto p2 = std::chrono::time_point_cast<std::chrono::milliseconds>(timeNowEnd).time_since_epoch();
         aprintf(stderr,"Loop %lld size %lld lost: %lld\n",p2.count() - p1.count(),dataSize,lostSize);
-                
+
     }
     catch (std::exception& e)
     {
@@ -205,10 +205,10 @@ void CStreamingFPGA::oscWorker(){
 
     if (m_printDebugBuffer){
         std::ofstream outfile2;
-        outfile2.open("/tmp/test.txt", std::ios_base::app);  
+        outfile2.open("/tmp/test.txt", std::ios_base::app);
         short *wb2_1 = (short*)buffer_ch1;
         short *wb2_2 = (short*)buffer_ch2;
-        for(int i = 0 ;i < 16 ;i ++){            
+        for(int i = 0 ;i < 16 ;i ++){
             aprintf(stdout,"%X - %X \n",(wb2_1 ? (static_cast<int>(wb2_1[i]/ 4)) : 0) , (wb2_2 ?  (static_cast<int>(wb2_2[i]/ 4)) : 0));
         }
         exit(1);

@@ -6,6 +6,8 @@
 #include <condition_variable>
 #include <chrono>
 #include "rp.h"
+#include "common.h"
+
 #define SCREEN_BUFF_SIZE 2048
 
 #define TIME_ANIMATION  1000000.0
@@ -17,13 +19,13 @@ public:
 
     struct DataPass
     {
-        float   ch_min[ADC_CHANNELS];
-        float   ch_max[ADC_CHANNELS];
-        float   ch_avg[ADC_CHANNELS];
-        int32_t ch_min_raw[ADC_CHANNELS];
-        int32_t ch_max_raw[ADC_CHANNELS];
-        int32_t ch_avg_raw[ADC_CHANNELS];
-        uint64_t index; 
+        float   ch_min[MAX_ADC_CHANNELS];
+        float   ch_max[MAX_ADC_CHANNELS];
+        float   ch_avg[MAX_ADC_CHANNELS];
+        int32_t ch_min_raw[MAX_ADC_CHANNELS];
+        int32_t ch_max_raw[MAX_ADC_CHANNELS];
+        int32_t ch_avg_raw[MAX_ADC_CHANNELS];
+        uint64_t index;
     };
 
     struct DataPassSq
@@ -31,12 +33,17 @@ public:
         float    wave[SCREEN_BUFF_SIZE];
         int      wave_size;
         rp_channel_t cur_channel;
-        uint64_t index; 
+        uint64_t index;
+        DataPassSq(){
+            wave_size = 0;
+            cur_channel = RP_CH_1;
+            index = 0;
+        }
     };
 
     struct DataPassAutoFilter
     {
-        double   ampl; 
+        double   ampl;
         double   calib_value; // Calib value for AA and BB coff
         double   calib_value_raw;
         double   deviation;
@@ -60,7 +67,7 @@ public:
 
     struct DataPassAutoFilterSync
     {
-        DataPassAutoFilter valueCH[ADC_CHANNELS];            
+        DataPassAutoFilter valueCH[MAX_ADC_CHANNELS];
     };
 
     using Ptr = std::shared_ptr<COscilloscope>;
@@ -76,6 +83,7 @@ public:
     auto startSquare(uint32_t _decimation) -> void;
     auto startAutoFilter(uint32_t _decimation) -> void;
     auto startAutoFilterNCh(uint32_t _decimation) -> void;
+    auto cancel() -> void;
     auto stop() -> void;
     auto getData() -> DataPass;
     auto getDataSq() -> DataPassSq;
@@ -90,14 +98,11 @@ public:
     auto setAcquireChannel(rp_channel_t _ch) -> void;
     auto updateAcqFilter(rp_channel_t _ch) -> void;
 
-#ifdef Z20_250_12
     auto setDC() -> void;
     auto setAC() -> void;
     auto setGenGainx1() -> void;
     auto setGenGainx5() -> void;
-#endif
 
-#if defined Z20_250_12 || defined Z10 || defined Z20 || defined Z20_125
     auto setGEN_DISABLE() -> void;
     auto setGEN0() -> void;
     auto setGEN0_5() -> void;
@@ -109,7 +114,6 @@ public:
     auto setAmp(rp_channel_t _ch,float _ampl) -> int;
     auto setOffset(rp_channel_t _ch,float _offset) -> int;
     auto setGenType(rp_channel_t _ch,int _type) -> int;
-#endif
 
 private:
     auto startThread() -> void;
@@ -135,8 +139,9 @@ private:
             microseconds m_startTimeAni;
             microseconds m_lastTimeAni;
         std::atomic_bool m_zoomMode;
-        float            m_buffer[ADC_CHANNELS][ADC_BUFFER_SIZE];
-        uint16_t         m_buffer_raw[ADC_CHANNELS][ADC_BUFFER_SIZE];
+        buffers_t        m_buffer;
+        // float            m_buffer[MAX_ADC_CHANNELS][ADC_BUFFER_SIZE];
+        // uint16_t         m_buffer_raw[ADC_CHANNELS][ADC_BUFFER_SIZE];
         DataPass         m_crossData;
         DataPassSq       m_crossDataSq;
       DataPassAutoFilter m_crossDataAutoFilter;
@@ -144,4 +149,5 @@ private:
         uint64_t         m_index;
         char             m_mode;
         rp_channel_t     m_channel;
+        uint8_t          m_channels;
 };

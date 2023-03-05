@@ -45,6 +45,8 @@
 #include "dac_streaming.h"
 #include "streaming_lib/streaming_file.h"
 #include "streaming.h"
+#include "uio_lib/oscilloscope.h"
+
 
 std::mutex g_print_mtx;
 std::shared_ptr<ServerNetConfigManager> con_server = nullptr;
@@ -64,7 +66,7 @@ static void handleCloseChildEvents()
     signal(SIGINT, termSignalHandler);
     signal(SIGTERM, termSignalHandler);
 #else
-    struct sigaction sigchld_action; 
+    struct sigaction sigchld_action;
     sigchld_action.sa_handler = SIG_DFL,
     sigchld_action.sa_flags = SA_NOCLDWAIT;
     sigaction(SIGCHLD, &sigchld_action, NULL);
@@ -105,12 +107,8 @@ std::string exec(const char* cmd) {
 
 int main(int argc, char *argv[])
 {
-    #ifdef STREAMING_MASTER
-		auto isMaster = true;
-    #endif
-    #ifdef STREAMING_SLAVE
-        auto isMaster = false;
-    #endif
+    uio_lib::BoardMode isMaster = uio_lib::BoardMode::UNKNOWN;
+
     g_argv0 = argv[0];
     auto opt = ClientOpt::parse(argc,argv);
     bool verbMode = opt.verbose;
@@ -167,7 +165,7 @@ int main(int argc, char *argv[])
         auto v_hosts = ClientOpt::split(hosts,'\n');
         auto v_whosts = ClientOpt::split(whosts,'\n');
         v_hosts.insert(std::end(v_hosts), std::begin(v_whosts), std::end(v_whosts));
-        std::string brchost; 
+        std::string brchost;
         for(auto h: v_hosts){
             std::smatch match;
             if(std::regex_search(h, match, pattern)) {
@@ -177,30 +175,20 @@ int main(int argc, char *argv[])
                 }
             }
         }
+        auto uioList = uio_lib::GetUioList();
+        for (auto &uio : uioList){
+            if (uio.nodeName == "rp_oscilloscope"){
+                auto osc = uio_lib::COscilloscope::create(uio,1,true,ClientOpt::getADCRate(),false);
+                isMaster = osc->isMaster();
+                printWithLog(LOG_INFO,stdout,"Detected %s mode\n",isMaster == uio_lib::BoardMode::MASTER ? "Master" : (isMaster == uio_lib::BoardMode::SLAVE ? "Slave" : "Unknown"));
+                break;
+            }
+        }
 #else
         auto brchost = "127.0.0.1";
 #endif
-        auto mode = isMaster ? broadcast_lib::EMode::AB_SERVER_MASTER : broadcast_lib::EMode::AB_SERVER_SLAVE;
-
-        #ifdef Z10
-        auto model = broadcast_lib::EModel::RP_125_14;
-		#endif
-
-		#ifdef Z20
-        auto model = broadcast_lib::EModel::RP_122_16;
-		#endif
-
-		#ifdef Z20_125
-        auto model = broadcast_lib::EModel::RP_125_14_Z20;
-		#endif
-
-		#ifdef Z20_250_12
-        auto model = broadcast_lib::EModel::RP_250_12;
-        #endif
-
-        #ifdef Z20_125_4CH
-        auto model = broadcast_lib::EModel::RP_125_4CH;
-        #endif
+        auto mode = isMaster != uio_lib::BoardMode::SLAVE ? broadcast_lib::EMode::AB_SERVER_MASTER : broadcast_lib::EMode::AB_SERVER_SLAVE;
+        auto model = ClientOpt::getBroadcastModel();
 
 		con_server = std::make_shared<ServerNetConfigManager>(opt.conf_file,mode,"127.0.0.1",opt.config_port);
         setServer(con_server);
@@ -218,17 +206,17 @@ int main(int argc, char *argv[])
 //            aprintf(stderr, "clientConnectedNofiy\n");
 //        });
 
-        con_server->startStreamingNofiy.connect([verbMode](){
+        con_server->startStreamingNofiy.connect([verbMode,isMaster](){
             aprintf(stderr, "startStreamingNofiy\n");
-            startServer(verbMode,false);
+            startServer(verbMode,false,isMaster != uio_lib::BoardMode::SLAVE);
         });
 
         con_server->startDacStreamingNofiy.connect([verbMode](){
             startDACServer(verbMode,false);
         });
 
-        con_server->startStreamingTestNofiy.connect([verbMode](){
-            startServer(verbMode,true);
+        con_server->startStreamingTestNofiy.connect([verbMode,isMaster](){
+            startServer(verbMode,true,isMaster != uio_lib::BoardMode::SLAVE);
         });
 
         con_server->startDacStreamingTestNofiy.connect([verbMode](){
@@ -247,14 +235,14 @@ int main(int argc, char *argv[])
             startADC();
             con_server->sendADCStarted();
         });
-        
+
     }catch (std::exception& e)
     {
         printWithLog(LOG_ERR,stderr,"Error: Init ServerNetConfigManager() %s\n",e.what());
         exit(EXIT_FAILURE);
     }
     if (verbMode){
-        printWithLog(LOG_NOTICE,stdout,"streaming-server started %s\n", isMaster ? "[MASTER]" : "[SLAVE]");
+        printWithLog(LOG_NOTICE,stdout,"streaming-server started %s\n", isMaster != uio_lib::BoardMode::SLAVE ? "[Master]" : "[Slave]");
     }
 
     installTermSignalHandler();

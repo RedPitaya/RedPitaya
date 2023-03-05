@@ -21,12 +21,9 @@
 #include "oscilloscope.h"
 #include "acq_handler.h"
 #include "analog_mixed_signals.h"
-#include "calib.h"
-
-#if defined Z10 || defined Z20 || defined Z20_125 || defined Z20_250_12
+#include "rp_hw-calib.h"
 #include "generate.h"
 #include "gen_handler.h"
-#endif
 
 static char version[50];
 int g_api_state = 0;
@@ -44,15 +41,16 @@ int rp_InitReset(bool reset)
 {
     cmn_Init();
 
-    calib_Init();
+    rp_CalibInit();
     hk_Init(reset);
     ams_Init();
 
-#if defined Z10 || defined Z20 || defined Z20_125 || defined Z20_250_12
-    generate_Init();
-#endif
+    if (rp_HPIsFastDAC_PresentOrDefault()){
+        generate_Init();
+    }
 
-    osc_Init();
+    osc_Init(rp_HPGetFastADCChannelsCountOrDefault());
+
     // Set default configuration per handler
     if (reset){
         rp_Reset();
@@ -65,21 +63,12 @@ int rp_IsApiInit(){
     return g_api_state;
 }
 
-int rp_CalibInit()
-{
-    calib_Init();
-    return RP_OK;
-}
-
 int rp_Release()
 {
     osc_Release();
-#if defined Z10 || defined Z20 || defined Z20_125 || defined Z20_250_12
     generate_Release();
-#endif    
     ams_Release();
     hk_Release();
-    calib_Release();
     cmn_Release();
     g_api_state = false;
     return RP_OK;
@@ -89,9 +78,11 @@ int rp_Reset()
 {
     rp_DpinReset();
     rp_AOpinReset();
-#if defined Z10 || defined Z20 || defined Z20_125 || defined Z20_250_12
-    rp_GenReset();
-#endif
+
+    if (rp_HPIsFastDAC_PresentOrDefault()){
+        rp_GenReset();
+    }
+
     rp_AcqReset();
     return 0;
 }
@@ -131,85 +122,62 @@ const char* rp_GetError(int errorCode) {
     }
 }
 
-/**
- * Calibrate methods
- */
-
-rp_calib_params_t rp_GetCalibrationSettings()
-{
-    return calib_GetParams();
-}
-
-int rp_CalibrateFrontEndOffset(rp_channel_t channel, rp_pinState_t gain, rp_calib_params_t* out_params) {
-    return calib_SetFrontEndOffset(channel, gain, out_params);
-}
-
-int rp_CalibrateFrontEndScaleLV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params) {
-    return calib_SetFrontEndScaleLV(channel, referentialVoltage, out_params);
-}
-
-int rp_CalibrateFrontEndScaleHV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params) {
-    return calib_SetFrontEndScaleHV(channel, referentialVoltage, out_params);
-}
-
-#if defined Z10 || defined Z20 || defined Z20_125 || defined Z20_250_12
-
-int rp_CalibrateBackEndOffset(rp_channel_t channel) {
-    return calib_SetBackEndOffset(channel);
-}
-
-int rp_CalibrateBackEndScale(rp_channel_t channel) {
-    return calib_SetBackEndScale(channel);
-}
-
-int rp_CalibrateBackEnd(rp_channel_t channel, rp_calib_params_t* out_params) {
-    return calib_CalibrateBackEnd(channel, out_params);
-}
-
-#endif
-
-int rp_CalibrationReset() {
-    return calib_Reset();
-}
-
-int rp_CalibrationFactoryReset() {
-    return calib_LoadFromFactoryZone();
-}
-
-int rp_CalibrationSetCachedParams() {
-    return calib_setCachedParams();
-}
-
-int rp_CalibrationWriteParams(rp_calib_params_t calib_params) {
-    return calib_WriteParams(calib_params,false);
-}
-
-int rp_CalibrationSetParams(rp_calib_params_t calib_params){
-    return calib_SetParams(calib_params);
-}
-
-rp_calib_params_t rp_GetDefaultCalibrationSettings(){
-    return calib_GetDefaultCalib();
-}
-
-float rp_CmnCnvCntToV(uint32_t field_len, uint32_t cnts, float adc_max_v, uint32_t calibScale, int calib_dc_off, float user_dc_off)
-{
-	return cmn_CnvCntToV(field_len, cnts, adc_max_v, calibScale, calib_dc_off, user_dc_off);
-}
 
 /**
  * Identification
  */
 
 int rp_IdGetID(uint32_t *id) {
-    *id = ioread32(&hk->id);
-    return RP_OK;
+    hk_version_t ver = house_getHKVersion();
+    switch (ver)
+    {
+        case HK_V1:{
+            housekeeping_control_v1_t *hk_v1 = (housekeeping_control_v1_t*)hk;
+            *id = ioread32(&hk_v1->id);
+            return RP_OK;
+        }
+        case HK_V2:{
+            housekeeping_control_v2_t *hk_v2 = (housekeeping_control_v2_t*)hk;
+            *id = ioread32(&hk_v2->id);
+            return RP_OK;
+        }
+        case HK_V3:{
+            housekeeping_control_v3_t *hk_v3 = (housekeeping_control_v3_t*)hk;
+            *id = ioread32(&hk_v3->id);
+            return RP_OK;
+        }
+        default:
+            return RP_NOTS;
+    }
+    return RP_NOTS;
 }
 
 int rp_IdGetDNA(uint64_t *dna) {
-    *dna = ((uint64_t) ioread32(&hk->dna_hi) << 32)
-         | ((uint64_t) ioread32(&hk->dna_lo) <<  0);
-    return RP_OK;
+    hk_version_t ver = house_getHKVersion();
+    switch (ver)
+    {
+        case HK_V1:{
+            housekeeping_control_v1_t *hk_v1 = (housekeeping_control_v1_t*)hk;
+            *dna = ((uint64_t) ioread32(&hk_v1->dna_hi) << 32)
+                 | ((uint64_t) ioread32(&hk_v1->dna_lo) <<  0);
+            return RP_OK;
+        }
+        case HK_V2:{
+            housekeeping_control_v2_t *hk_v2 = (housekeeping_control_v2_t*)hk;
+            *dna = ((uint64_t) ioread32(&hk_v2->dna_hi) << 32)
+                 | ((uint64_t) ioread32(&hk_v2->dna_lo) <<  0);
+            return RP_OK;
+        }
+        case HK_V3:{
+            housekeeping_control_v3_t *hk_v3 = (housekeeping_control_v3_t*)hk;
+            *dna = ((uint64_t) ioread32(&hk_v3->dna_hi) << 32)
+                 | ((uint64_t) ioread32(&hk_v3->dna_lo) <<  0);
+            return RP_OK;
+        }
+        default:
+            return RP_NOTS;
+    }
+    return RP_NOTS;
 }
 
 /**
@@ -217,13 +185,53 @@ int rp_IdGetDNA(uint64_t *dna) {
  */
 
 int rp_LEDSetState(uint32_t state) {
-    iowrite32(state, &hk->led_control);
-    return RP_OK;
+    hk_version_t ver = house_getHKVersion();
+    switch (ver)
+    {
+        case HK_V1:{
+            housekeeping_control_v1_t *hk_v1 = (housekeeping_control_v1_t*)hk;
+            iowrite32(state, &hk_v1->led_control);
+            return RP_OK;
+        }
+        case HK_V2:{
+            housekeeping_control_v2_t *hk_v2 = (housekeeping_control_v2_t*)hk;
+            iowrite32(state, &hk_v2->led_control);
+            return RP_OK;
+        }
+        case HK_V3:{
+            housekeeping_control_v3_t *hk_v3 = (housekeeping_control_v3_t*)hk;
+            iowrite32(state, &hk_v3->led_control);
+            return RP_OK;
+        }
+        default:
+            return RP_NOTS;
+    }
+    return RP_NOTS;
 }
 
 int rp_LEDGetState(uint32_t *state) {
-    *state = ioread32(&hk->led_control);
-    return RP_OK;
+    hk_version_t ver = house_getHKVersion();
+    switch (ver)
+    {
+        case HK_V1:{
+            housekeeping_control_v1_t *hk_v1 = (housekeeping_control_v1_t*)hk;
+            *state = ioread32(&hk_v1->led_control);
+            return RP_OK;
+        }
+        case HK_V2:{
+            housekeeping_control_v2_t *hk_v2 = (housekeeping_control_v2_t*)hk;
+            *state = ioread32(&hk_v2->led_control);
+            return RP_OK;
+        }
+        case HK_V3:{
+            housekeeping_control_v3_t *hk_v3 = (housekeeping_control_v3_t*)hk;
+            *state = ioread32(&hk_v3->led_control);
+            return RP_OK;
+        }
+        default:
+            return RP_NOTS;
+    }
+    return RP_NOTS;
 }
 
 /**
@@ -231,43 +239,203 @@ int rp_LEDGetState(uint32_t *state) {
  */
 
 int rp_GPIOnSetDirection(uint32_t direction) {
-    iowrite32(direction, &hk->ex_cd_n);
-    return RP_OK;
+    hk_version_t ver = house_getHKVersion();
+    switch (ver)
+    {
+        case HK_V1:{
+            housekeeping_control_v1_t *hk_v1 = (housekeeping_control_v1_t*)hk;
+            iowrite32(direction, &hk_v1->ex_cd_n);
+            return RP_OK;
+        }
+        case HK_V2:{
+            housekeeping_control_v2_t *hk_v2 = (housekeeping_control_v2_t*)hk;
+            iowrite32(direction, &hk_v2->ex_cd_n);
+            return RP_OK;
+        }
+        case HK_V3:{
+            housekeeping_control_v3_t *hk_v3 = (housekeeping_control_v3_t*)hk;
+            iowrite32(direction, &hk_v3->ex_cd_n);
+            return RP_OK;
+        }
+        default:
+            return RP_NOTS;
+    }
+    return RP_NOTS;
 }
 
 int rp_GPIOnGetDirection(uint32_t *direction) {
-    *direction = ioread32(&hk->ex_cd_n);
-    return RP_OK;
+    hk_version_t ver = house_getHKVersion();
+    switch (ver)
+    {
+        case HK_V1:{
+            housekeeping_control_v1_t *hk_v1 = (housekeeping_control_v1_t*)hk;
+            *direction = ioread32(&hk_v1->ex_cd_n);
+            return RP_OK;
+        }
+        case HK_V2:{
+            housekeeping_control_v2_t *hk_v2 = (housekeeping_control_v2_t*)hk;
+            *direction = ioread32(&hk_v2->ex_cd_n);
+            return RP_OK;
+        }
+        case HK_V3:{
+            housekeeping_control_v3_t *hk_v3 = (housekeeping_control_v3_t*)hk;
+            *direction = ioread32(&hk_v3->ex_cd_n);
+            return RP_OK;
+        }
+        default:
+            return RP_NOTS;
+    }
+    return RP_NOTS;
 }
 
 int rp_GPIOnSetState(uint32_t state) {
-    iowrite32(state, &hk->ex_co_n);
-    return RP_OK;
+    hk_version_t ver = house_getHKVersion();
+    switch (ver)
+    {
+        case HK_V1:{
+            housekeeping_control_v1_t *hk_v1 = (housekeeping_control_v1_t*)hk;
+            iowrite32(state, &hk_v1->ex_co_n);
+            return RP_OK;
+        }
+        case HK_V2:{
+            housekeeping_control_v2_t *hk_v2 = (housekeeping_control_v2_t*)hk;
+            iowrite32(state, &hk_v2->ex_co_n);
+            return RP_OK;
+        }
+        case HK_V3:{
+            housekeeping_control_v3_t *hk_v3 = (housekeeping_control_v3_t*)hk;
+            iowrite32(state, &hk_v3->ex_co_n);
+            return RP_OK;
+        }
+        default:
+            return RP_NOTS;
+    }
+    return RP_NOTS;
 }
 
 int rp_GPIOnGetState(uint32_t *state) {
-    *state = ioread32(&hk->ex_ci_n);
-    return RP_OK;
+    hk_version_t ver = house_getHKVersion();
+    switch (ver)
+    {
+        case HK_V1:{
+            housekeeping_control_v1_t *hk_v1 = (housekeeping_control_v1_t*)hk;
+            *state = ioread32(&hk_v1->ex_ci_n);
+            return RP_OK;
+        }
+        case HK_V2:{
+            housekeeping_control_v2_t *hk_v2 = (housekeeping_control_v2_t*)hk;
+            *state = ioread32(&hk_v2->ex_ci_n);
+            return RP_OK;
+        }
+        case HK_V3:{
+            housekeeping_control_v3_t *hk_v3 = (housekeeping_control_v3_t*)hk;
+            *state = ioread32(&hk_v3->ex_ci_n);
+            return RP_OK;
+        }
+        default:
+            return RP_NOTS;
+    }
+    return RP_NOTS;
 }
 
 int rp_GPIOpSetDirection(uint32_t direction) {
-    iowrite32(direction, &hk->ex_cd_p);
-    return RP_OK;
+    hk_version_t ver = house_getHKVersion();
+    switch (ver)
+    {
+        case HK_V1:{
+            housekeeping_control_v1_t *hk_v1 = (housekeeping_control_v1_t*)hk;
+            iowrite32(direction, &hk_v1->ex_cd_p);
+            return RP_OK;
+        }
+        case HK_V2:{
+            housekeeping_control_v2_t *hk_v2 = (housekeeping_control_v2_t*)hk;
+            iowrite32(direction, &hk_v2->ex_cd_p);
+            return RP_OK;
+        }
+        case HK_V3:{
+            housekeeping_control_v3_t *hk_v3 = (housekeeping_control_v3_t*)hk;
+            iowrite32(direction, &hk_v3->ex_cd_p);
+            return RP_OK;
+        }
+        default:
+            return RP_NOTS;
+    }
+    return RP_NOTS;
 }
 
 int rp_GPIOpGetDirection(uint32_t *direction) {
-    *direction = ioread32(&hk->ex_cd_p);
-    return RP_OK;
+    hk_version_t ver = house_getHKVersion();
+    switch (ver)
+    {
+        case HK_V1:{
+            housekeeping_control_v1_t *hk_v1 = (housekeeping_control_v1_t*)hk;
+            *direction = ioread32(&hk_v1->ex_cd_p);
+            return RP_OK;
+        }
+        case HK_V2:{
+            housekeeping_control_v2_t *hk_v2 = (housekeeping_control_v2_t*)hk;
+            *direction = ioread32(&hk_v2->ex_cd_p);
+            return RP_OK;
+        }
+        case HK_V3:{
+            housekeeping_control_v3_t *hk_v3 = (housekeeping_control_v3_t*)hk;
+            *direction = ioread32(&hk_v3->ex_cd_p);
+            return RP_OK;
+        }
+        default:
+            return RP_NOTS;
+    }
+    return RP_NOTS;
 }
 
 int rp_GPIOpSetState(uint32_t state) {
-    iowrite32(state, &hk->ex_co_p);
-    return RP_OK;
+    hk_version_t ver = house_getHKVersion();
+    switch (ver)
+    {
+        case HK_V1:{
+            housekeeping_control_v1_t *hk_v1 = (housekeeping_control_v1_t*)hk;
+            iowrite32(state, &hk_v1->ex_co_p);
+            return RP_OK;
+        }
+        case HK_V2:{
+            housekeeping_control_v2_t *hk_v2 = (housekeeping_control_v2_t*)hk;
+            iowrite32(state, &hk_v2->ex_co_p);
+            return RP_OK;
+        }
+        case HK_V3:{
+            housekeeping_control_v3_t *hk_v3 = (housekeeping_control_v3_t*)hk;
+            iowrite32(state, &hk_v3->ex_co_p);
+            return RP_OK;
+        }
+        default:
+            return RP_NOTS;
+    }
+    return RP_NOTS;
 }
 
 int rp_GPIOpGetState(uint32_t *state) {
-    *state = ioread32(&hk->ex_ci_p);
-    return RP_OK;
+    hk_version_t ver = house_getHKVersion();
+    switch (ver)
+    {
+        case HK_V1:{
+            housekeeping_control_v1_t *hk_v1 = (housekeeping_control_v1_t*)hk;
+            *state = ioread32(&hk_v1->ex_ci_p);
+            return RP_OK;
+        }
+        case HK_V2:{
+            housekeeping_control_v2_t *hk_v2 = (housekeeping_control_v2_t*)hk;
+            *state = ioread32(&hk_v2->ex_ci_p);
+            return RP_OK;
+        }
+        case HK_V3:{
+            housekeeping_control_v3_t *hk_v3 = (housekeeping_control_v3_t*)hk;
+            *state = ioread32(&hk_v3->ex_ci_p);
+            return RP_OK;
+        }
+        default:
+            return RP_NOTS;
+    }
+    return RP_NOTS;
 }
 
 /**
@@ -275,13 +443,43 @@ int rp_GPIOpGetState(uint32_t *state) {
  */
 
 int rp_DpinReset() {
-    iowrite32(0, &hk->ex_cd_p);
-    iowrite32(0, &hk->ex_cd_n);
-    iowrite32(0, &hk->ex_co_p);
-    iowrite32(0, &hk->ex_co_n);
-    iowrite32(0, &hk->led_control);
-    iowrite32(0, &hk->digital_loop);
-    return RP_OK;
+    hk_version_t ver = house_getHKVersion();
+    switch (ver)
+    {
+        case HK_V1:{
+            housekeeping_control_v1_t *hk_v1 = (housekeeping_control_v1_t*)hk;
+            iowrite32(0, &hk_v1->ex_cd_p);
+            iowrite32(0, &hk_v1->ex_cd_n);
+            iowrite32(0, &hk_v1->ex_co_p);
+            iowrite32(0, &hk_v1->ex_co_n);
+            iowrite32(0, &hk_v1->led_control);
+            iowrite32(0, &hk_v1->digital_loop);
+            return RP_OK;
+        }
+        case HK_V2:{
+            housekeeping_control_v2_t *hk_v2 = (housekeeping_control_v2_t*)hk;
+            iowrite32(0, &hk_v2->ex_cd_p);
+            iowrite32(0, &hk_v2->ex_cd_n);
+            iowrite32(0, &hk_v2->ex_co_p);
+            iowrite32(0, &hk_v2->ex_co_n);
+            iowrite32(0, &hk_v2->led_control);
+            iowrite32(0, &hk_v2->digital_loop);
+            return RP_OK;
+        }
+        case HK_V3:{
+            housekeeping_control_v3_t *hk_v3 = (housekeeping_control_v3_t*)hk;
+            iowrite32(0, &hk_v3->ex_cd_p);
+            iowrite32(0, &hk_v3->ex_cd_n);
+            iowrite32(0, &hk_v3->ex_co_p);
+            iowrite32(0, &hk_v3->ex_co_n);
+            iowrite32(0, &hk_v3->led_control);
+            iowrite32(0, &hk_v3->digital_loop);
+            return RP_OK;
+        }
+        default:
+            return RP_NOTS;
+    }
+    return RP_NOTS;
 }
 
 int rp_DpinSetDirection(rp_dpin_t pin, rp_pinDirection_t direction) {
@@ -293,29 +491,32 @@ int rp_DpinSetDirection(rp_dpin_t pin, rp_pinDirection_t direction) {
     } else if (pin < RP_DIO0_N) {
         // DIO_P
         pin -= RP_DIO0_P;
-        tmp = ioread32(&hk->ex_cd_p);
-        iowrite32((tmp & ~(1 << pin)) | ((direction << pin) & (1 << pin)), &hk->ex_cd_p);
+        rp_GPIOpGetDirection(&tmp);
+        rp_GPIOpSetDirection((tmp & ~(1 << pin)) | ((direction << pin) & (1 << pin)));
     } else {
         // DIO_N
         pin -= RP_DIO0_N;
-        tmp = ioread32(&hk->ex_cd_n);
-        iowrite32((tmp & ~(1 << pin)) | ((direction << pin) & (1 << pin)), &hk->ex_cd_n);
-    }
+        rp_GPIOnGetDirection(&tmp);
+        rp_GPIOnSetDirection((tmp & ~(1 << pin)) | ((direction << pin) & (1 << pin)));
+   }
     return RP_OK;
 }
 
 int rp_DpinGetDirection(rp_dpin_t pin, rp_pinDirection_t* direction) {
+    uint32_t tmp;
     if (pin < RP_DIO0_P) {
         // LEDS
         *direction = RP_OUT;
     } else if (pin < RP_DIO0_N) {
         // DIO_P
         pin -= RP_DIO0_P;
-        *direction = (ioread32(&hk->ex_cd_p) >> pin) & 0x1;
+        rp_GPIOpGetDirection(&tmp);
+        *direction = (tmp >> pin) & 0x1;
     } else {
         // DIO_N
         pin -= RP_DIO0_N;
-        *direction = (ioread32(&hk->ex_cd_n) >> pin) & 0x1;
+        rp_GPIOnGetDirection(&tmp);
+        *direction = (tmp >> pin) & 0x1;
     }
     return RP_OK;
 }
@@ -329,34 +530,38 @@ int rp_DpinSetState(rp_dpin_t pin, rp_pinState_t state) {
     }
     if (pin < RP_DIO0_P) {
         // LEDS
-        tmp = ioread32(&hk->led_control);
-        iowrite32((tmp & ~(1 << pin)) | ((state << pin) & (1 << pin)), &hk->led_control);
+        rp_LEDGetState(&tmp);
+        rp_LEDSetState((tmp & ~(1 << pin)) | ((state << pin) & (1 << pin)));
     } else if (pin < RP_DIO0_N) {
         // DIO_P
         pin -= RP_DIO0_P;
-        tmp = ioread32(&hk->ex_co_p);
-        iowrite32((tmp & ~(1 << pin)) | ((state << pin) & (1 << pin)), &hk->ex_co_p);
+        rp_GPIOpGetState(&tmp);
+        rp_GPIOpSetState((tmp & ~(1 << pin)) | ((state << pin) & (1 << pin)));
     } else {
         // DIO_N
         pin -= RP_DIO0_N;
-        tmp = ioread32(&hk->ex_co_n);
-        iowrite32((tmp & ~(1 << pin)) | ((state << pin) & (1 << pin)), &hk->ex_co_n);
+        rp_GPIOnGetState(&tmp);
+        rp_GPIOnSetState((tmp & ~(1 << pin)) | ((state << pin) & (1 << pin)));
     }
     return RP_OK;
 }
 
 int rp_DpinGetState(rp_dpin_t pin, rp_pinState_t* state) {
+    uint32_t tmp;
     if (pin < RP_DIO0_P) {
         // LEDS
-        *state = (ioread32(&hk->led_control) >> pin) & 0x1;
+        rp_LEDGetState(&tmp);
+        *state = (tmp >> pin) & 0x1;
     } else if (pin < RP_DIO0_N) {
         // DIO_P
         pin -= RP_DIO0_P;
-        *state = (ioread32(&hk->ex_ci_p) >> pin) & 0x1;
+        rp_GPIOpGetState(&tmp);
+        *state = (tmp >> pin) & 0x1;
     } else {
         // DIO_N
         pin -= RP_DIO0_N;
-        *state = (ioread32(&hk->ex_ci_n) >> pin) & 0x1;
+        rp_GPIOnGetState(&tmp);
+        *state = (tmp >> pin) & 0x1;
     }
     return RP_OK;
 }
@@ -367,8 +572,28 @@ int rp_DpinGetState(rp_dpin_t pin, rp_pinState_t* state) {
  */
 
 int rp_EnableDigitalLoop(bool enable) {
-    iowrite32((uint32_t) enable, &hk->digital_loop);
-    return RP_OK;
+    hk_version_t ver = house_getHKVersion();
+    switch (ver)
+    {
+        case HK_V1:{
+            housekeeping_control_v1_t *hk_v1 = (housekeeping_control_v1_t*)hk;
+            iowrite32((uint32_t) enable, &hk_v1->digital_loop);
+            return RP_OK;
+        }
+        case HK_V2:{
+            housekeeping_control_v2_t *hk_v2 = (housekeeping_control_v2_t*)hk;
+            iowrite32((uint32_t) enable, &hk_v2->digital_loop);
+            return RP_OK;
+        }
+        case HK_V3:{
+            housekeeping_control_v3_t *hk_v3 = (housekeeping_control_v3_t*)hk;
+            iowrite32((uint32_t) enable, &hk_v3->digital_loop);
+            return RP_OK;
+        }
+        default:
+            return RP_NOTS;
+    }
+    return RP_NOTS;
 }
 
 
@@ -425,16 +650,21 @@ int rp_ApinSetValueRaw(rp_apin_t pin, uint32_t value) {
 }
 
 int rp_ApinGetRange(rp_apin_t pin, float* min_val, float* max_val) {
+    rp_channel_calib_t ch = convertPINCh(pin);
     if (pin <= RP_AOUT3) {
-        *min_val = ANALOG_OUT_MIN_VAL;
-        *max_val = ANALOG_OUT_MAX_VAL;
-    } else if (pin <= RP_AIN3) {
-        *min_val = ANALOG_IN_MIN_VAL;
-        *max_val = ANALOG_IN_MAX_VAL;
-    } else {
-        return RP_EPN;
+        float fs = rp_HPGetSlowDACFullScaleOrDefault(ch);
+        *min_val = rp_HPGetSlowDACIsSignedOrDefault(ch) ? -fs: 0;
+        *max_val = fs;
+        return RP_OK;
     }
-    return RP_OK;
+
+    if (pin <= RP_AIN3) {
+        float fs = rp_HPGetSlowADCFullScaleOrDefault(ch);
+        *min_val = rp_HPGetSlowADCIsSignedOrDefault(ch) ? -fs: 0;
+        *max_val = fs;
+        return RP_OK;
+    }
+    return RP_EPN;
 }
 
 
@@ -445,10 +675,11 @@ int rp_ApinGetRange(rp_apin_t pin, float* min_val, float* max_val) {
 int rp_AIpinGetValueRaw(int unsigned pin, uint32_t* value) {
     FILE *fp;
     switch (pin) {
-        case 0:  fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage11_vaux8_raw", "r");  break;
-        case 1:  fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage9_vaux0_raw" , "r");  break;
-        case 2:  fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage10_vaux1_raw", "r");  break;
-        case 3:  fp = fopen ("/sys/devices/soc0/amba_pl/83c00000.xadc_wiz/iio:device1/in_voltage12_vaux9_raw", "r");  break;
+        case 0:  fp = fopen ("/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_voltage9_raw", "r");  break;
+        case 1:  fp = fopen ("/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_voltage11_raw" , "r");  break;
+        case 2:  fp = fopen ("/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_voltage10_raw", "r");  break;
+        case 3:  fp = fopen ("/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_voltage8_raw", "r");  break;
+        case 4:  fp = fopen ("/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_voltage12_raw", "r");  break;
         default:
             return RP_EPN;
     }
@@ -460,10 +691,33 @@ int rp_AIpinGetValueRaw(int unsigned pin, uint32_t* value) {
 int rp_AIpinGetValue(int unsigned pin, float* value) {
     uint32_t value_raw;
     int result = rp_AIpinGetValueRaw(pin, &value_raw);
-    *value = (((float)value_raw / ANALOG_IN_MAX_VAL_INTEGER) * (ANALOG_IN_MAX_VAL - ANALOG_IN_MIN_VAL)) + ANALOG_IN_MIN_VAL;
+    rp_channel_calib_t ch = convertPINCh(pin);
+
+    float fs = 0;
+    if (rp_HPGetSlowADCFullScale(ch,&fs) != RP_HP_OK){
+        fprintf(stderr,"[Error:rp_AIpinGetValue] Can't get slow ADC full scale\n");
+        return RP_EOOR;
+    }
+
+    bool is_signed = false;
+    if (rp_HPGetSlowADCIsSigned(ch,&is_signed) != RP_HP_OK){
+        fprintf(stderr,"[Error:rp_AIpinGetValue] Can't get slow ADC sign state\n");
+        return RP_EOOR;
+    }
+
+    uint8_t bits = 0;
+    if (rp_HPGetSlowADCBits(ch,&bits) != RP_HP_OK){
+        fprintf(stderr,"[Error:rp_AIpinGetValue] Can't get slow ADC bits\n");
+        return RP_EOOR;
+    }
+    if (is_signed){
+        *value = cmn_convertToVoltSigned(value_raw,bits,fs,1000,1000,0);
+    }
+    else{
+        *value = cmn_convertToVoltUnsigned(value_raw,bits,fs,1000,1000,0);
+    }
     return result;
 }
-
 
 /**
  * Analog Outputs
@@ -480,15 +734,45 @@ int rp_AOpinSetValueRaw(int unsigned pin, uint32_t value) {
     if (pin >= 4) {
         return RP_EPN;
     }
-    if (value > ANALOG_OUT_MAX_VAL_INTEGER) {
+
+    rp_channel_calib_t ch = convertPINCh(pin);
+
+    uint8_t bits = 0;
+    if (rp_HPGetSlowADCBits(ch,&bits) != RP_HP_OK){
+        fprintf(stderr,"[Error:rp_AOpinSetValueRaw] Can't get slow DAC bits\n");
         return RP_EOOR;
     }
-    iowrite32((value & ANALOG_OUT_MASK) << ANALOG_OUT_BITS, &ams->dac[pin]);
+    uint32_t max_value = (1 << bits);
+    uint32_t mask = max_value - 1;
+    if (value >= max_value) {
+        return RP_EOOR;
+    }
+    iowrite32((value & mask) << 16, &ams->dac[pin]);
     return RP_OK;
 }
 
 int rp_AOpinSetValue(int unsigned pin, float value) {
-    uint32_t value_raw = (uint32_t) (((value - ANALOG_OUT_MIN_VAL) / (ANALOG_OUT_MAX_VAL - ANALOG_OUT_MIN_VAL)) * ANALOG_OUT_MAX_VAL_INTEGER);
+    rp_channel_calib_t ch = convertPINCh(pin);
+
+    float fs = 0;
+    if (rp_HPGetSlowDACFullScale(ch,&fs) != RP_HP_OK){
+        fprintf(stderr,"[Error:rp_AOpinSetValue] Can't get slow ADC full scale\n");
+        return RP_EOOR;
+    }
+
+    bool is_signed = false;
+    if (rp_HPGetSlowDACIsSigned(ch,&is_signed) != RP_HP_OK){
+        fprintf(stderr,"[Error:rp_AOpinSetValue] Can't get slow ADC sign state\n");
+        return RP_EOOR;
+    }
+
+    uint8_t bits = 0;
+    if (rp_HPGetSlowDACBits(ch,&bits) != RP_HP_OK){
+        fprintf(stderr,"[Error:rp_AOpinSetValue] Can't get slow ADC bits\n");
+        return RP_EOOR;
+    }
+
+    uint32_t value_raw = cmn_convertToCnt(value,bits,fs,is_signed,1,0);
     return rp_AOpinSetValueRaw(pin, value_raw);
 }
 
@@ -496,22 +780,62 @@ int rp_AOpinGetValueRaw(int unsigned pin, uint32_t* value) {
     if (pin >= 4) {
         return RP_EPN;
     }
-    *value = (ioread32(&ams->dac[pin]) >> ANALOG_OUT_BITS) & ANALOG_OUT_MASK;
+
+    rp_channel_calib_t ch = convertPINCh(pin);
+
+    uint8_t bits = 0;
+    if (rp_HPGetSlowADCBits(ch,&bits) != RP_HP_OK){
+        fprintf(stderr,"[Error:rp_AOpinSetValueRaw] Can't get slow DAC bits\n");
+        return RP_EOOR;
+    }
+    uint32_t max_value = (1 << bits);
+    uint32_t mask = max_value - 1;
+
+    *value = (ioread32(&ams->dac[pin]) >> 16) & mask;
     return RP_OK;
 }
 
 int rp_AOpinGetValue(int unsigned pin, float* value) {
+
     uint32_t value_raw;
     int result = rp_AOpinGetValueRaw(pin, &value_raw);
-    *value = (((float)value_raw / ANALOG_OUT_MAX_VAL_INTEGER) * (ANALOG_OUT_MAX_VAL - ANALOG_OUT_MIN_VAL)) + ANALOG_OUT_MIN_VAL;
+    rp_channel_calib_t ch = convertPINCh(pin);
+
+    float fs = 0;
+    if (rp_HPGetSlowDACFullScale(ch,&fs) != RP_HP_OK){
+        fprintf(stderr,"[Error:rp_AIpinGetValue] Can't get slow ADC full scale\n");
+        return RP_EOOR;
+    }
+
+    bool is_signed = false;
+    if (rp_HPGetSlowDACIsSigned(ch,&is_signed) != RP_HP_OK){
+        fprintf(stderr,"[Error:rp_AIpinGetValue] Can't get slow ADC sign state\n");
+        return RP_EOOR;
+    }
+
+    uint8_t bits = 0;
+    if (rp_HPGetSlowDACBits(ch,&bits) != RP_HP_OK){
+        fprintf(stderr,"[Error:rp_AIpinGetValue] Can't get slow ADC bits\n");
+        return RP_EOOR;
+    }
+    if (is_signed){
+        *value = cmn_convertToVoltSigned(value_raw,bits,fs,1000,1000,0);
+    }
+    else{
+        *value = cmn_convertToVoltUnsigned(value_raw,bits,fs,1000,1000,0);
+    }
     return result;
 }
 
 int rp_AOpinGetRange(int unsigned pin, float* min_val,  float* max_val) {
-    (void)(pin);
-    *min_val = ANALOG_OUT_MIN_VAL;
-    *max_val = ANALOG_OUT_MAX_VAL;
-    return RP_OK;
+    rp_channel_calib_t ch = convertPINCh(pin);
+    if (pin <= RP_AOUT3) {
+        float fs = rp_HPGetSlowDACFullScaleOrDefault(ch);
+        *min_val = rp_HPGetSlowDACIsSignedOrDefault(ch) ? -fs: 0;
+        *max_val = fs;
+        return RP_OK;
+    }
+    return RP_EPN;
 }
 
 
@@ -554,16 +878,6 @@ int rp_AcqGetDecimationFactor(uint32_t* decimation)
 
 int rp_AcqConvertFactorToDecimation(uint32_t factor,rp_acq_decimation_t* decimation){
     return acq_ConvertFactorToDecimation(factor,decimation);
-}
-
-int rp_AcqSetSamplingRate(rp_acq_sampling_rate_t sampling_rate)
-{
-    return acq_SetSamplingRate(sampling_rate);
-}
-
-int rp_AcqGetSamplingRate(rp_acq_sampling_rate_t* sampling_rate)
-{
-    return acq_GetSamplingRate(sampling_rate);
 }
 
 int rp_AcqGetSamplingRateHz(float* sampling_rate)
@@ -700,44 +1014,23 @@ int rp_AcqGetDataPosV(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos
 }
 
 int rp_AcqGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_t* buffer)
-{    
+{
     return acq_GetDataRaw(channel, pos, size, buffer);
 }
 
-#if defined Z10 || defined Z20_125 || defined Z20 || defined Z20_250_12
-int rp_AcqGetDataRawV2(uint32_t pos, uint32_t* size, uint16_t* buffer, uint16_t* buffer2)
+int rp_AcqGetDataRawV2(uint32_t pos, buffers_t *out)
 {
-    return acq_GetDataRawV2(pos, size, buffer, buffer2);
+    return acq_GetDataRawV2(pos, out);
 }
 
-int rp_AcqGetDataV2(uint32_t pos, uint32_t* size, float* buffer1, float* buffer2)
+int rp_AcqGetDataV2(uint32_t pos, buffers_t *out)
 {
-    return acq_GetDataV2(pos, size, buffer1, buffer2);
+    return acq_GetDataV2(pos, out);
 }
 
-int rp_AcqGetDataV2D(uint32_t pos, uint32_t* size, double* buffer1, double* buffer2){
-    return acq_GetDataV2D(pos, size, buffer1, buffer2);
+int rp_AcqGetDataV2D(uint32_t pos, buffers_t *out){
+    return acq_GetDataV2D(pos, out);
 }
-
-#endif
-
-#if defined Z20_125_4CH
-int rp_AcqGetDataRawV2(uint32_t pos, uint32_t* size, uint16_t* buffer, uint16_t* buffer2, uint16_t* buffer3, uint16_t* buffer4)
-{
-    return acq_GetDataRawV2(pos, size, buffer, buffer2, buffer3, buffer4);
-}
-
-int rp_AcqGetDataV2(uint32_t pos, uint32_t* size, float* buffer1, float* buffer2, float* buffer3, float* buffer4)
-{
-    return acq_GetDataV2(pos, size, buffer1, buffer2, buffer3, buffer4);
-}
-
-int rp_AcqGetDataV2D(uint32_t pos, uint32_t* size, double* buffer1, double* buffer2, double* buffer3, double* buffer4)
-{
-    return acq_GetDataV2D(pos, size, buffer1, buffer2, buffer3, buffer4);
-}
-
-#endif
 
 int rp_AcqGetOldestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer)
 {
@@ -768,224 +1061,313 @@ int rp_AcqGetBufSize(uint32_t *size) {
     return acq_GetBufferSize(size);
 }
 
-#ifdef Z20_250_12
 int rp_AcqSetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t mode){
+    if (!rp_HPGetFastADCIsAC_DCOrDefault())
+        return RP_NOTS;
     return acq_SetAC_DC(channel,mode);
 }
 
 int rp_AcqGetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t *status){
+    if (!rp_HPGetFastADCIsAC_DCOrDefault())
+        return RP_NOTS;
     return acq_GetAC_DC(channel,status);
 }
-#endif
 
-#if defined Z10 || defined Z20_125 || defined Z20_125_4CH
 int rp_AcqUpdateAcqFilter(rp_channel_t channel){
+    if (!rp_HPGetFastADCIsFilterPresentOrDefault())
+        return RP_NOTS;
     return acq_UpdateAcqFilter(channel);
 }
 
 int rp_AcqGetFilterCalibValue(rp_channel_t channel,uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp){
+    if (!rp_HPGetFastADCIsFilterPresentOrDefault())
+        return RP_NOTS;
     return acq_GetFilterCalibValue( channel,coef_aa, coef_bb, coef_kk, coef_pp);
 }
-#endif
-
 
 /**
 * Generate methods
 */
 
-#if defined Z10 || defined Z20 || defined Z20_125
-
 int rp_GenBurstLastValue(rp_channel_t channel, float amlitude){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
+    rp_HPeModels_t model;
+    if (rp_HPGetModel(&model) != RP_HP_OK){
+        fprintf(stderr,"[Error:rp_GenBurstLastValue] Can't get board model\n");
+        return RP_NOTS;
+    }
+    if (model == STEM_250_12_v1_0 || model == STEM_250_12_v1_1 || model == STEM_250_12_v1_2 || model == STEM_250_12_120){
+        return RP_NOTS;
+    }
     return gen_setBurstLastValue(channel,amlitude);
 }
 
 int rp_GenGetBurstLastValue(rp_channel_t channel, float *amlitude){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getBurstLastValue(channel,amlitude);
 }
 
-#endif
-
-#if defined Z10 || defined Z20 || defined Z20_125 || defined Z20_250_12
 
 int rp_GenReset() {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_SetDefaultValues();
 }
 
 int rp_GenOutDisable(rp_channel_t channel) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_Disable(channel);
 }
 
 int rp_GenOutEnable(rp_channel_t channel) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_Enable(channel);
 }
 
 int rp_GenOutIsEnabled(rp_channel_t channel, bool *value) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_IsEnable(channel, value);
 }
 
 int rp_GenAmp(rp_channel_t channel, float amplitude) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setAmplitude(channel, amplitude);
 }
 
 int rp_GenGetAmp(rp_channel_t channel, float *amplitude) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getAmplitude(channel, amplitude);
 }
 
 int rp_GenOffset(rp_channel_t channel, float offset) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setOffset(channel, offset);
 }
 
 int rp_GenGetOffset(rp_channel_t channel, float *offset) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getOffset(channel, offset);
 }
 
 int rp_GenFreq(rp_channel_t channel, float frequency) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setFrequency(channel, frequency);
 }
 
 int rp_GenFreqDirect(rp_channel_t channel, float frequency){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setFrequencyDirect(channel, frequency);
 }
 
 int rp_GenGetFreq(rp_channel_t channel, float *frequency) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getFrequency(channel, frequency);
 }
 
 int rp_GenSweepStartFreq(rp_channel_t channel, float frequency){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setSweepStartFrequency(channel,frequency);
 }
 
 int rp_GenGetSweepStartFreq(rp_channel_t channel, float *frequency){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getSweepStartFrequency(channel,frequency);
 }
 
 int rp_GenSweepEndFreq(rp_channel_t channel, float frequency){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setSweepEndFrequency(channel,frequency);
 }
 
 int rp_GenGetSweepEndFreq(rp_channel_t channel, float *frequency){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getSweepEndFrequency(channel,frequency);
 }
 
 int rp_GenPhase(rp_channel_t channel, float phase) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setPhase(channel, phase);
 }
 
 int rp_GenGetPhase(rp_channel_t channel, float *phase) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getPhase(channel, phase);
 }
 
 int rp_GenWaveform(rp_channel_t channel, rp_waveform_t type) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setWaveform(channel, type);
 }
 
 int rp_GenGetWaveform(rp_channel_t channel, rp_waveform_t *type) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getWaveform(channel, type);
 }
 
 int rp_GenSweepMode(rp_channel_t channel, rp_gen_sweep_mode_t mode){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setSweepMode(channel,mode);
 }
 
 int rp_GenGetSweepMode(rp_channel_t channel, rp_gen_sweep_mode_t *mode){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getSweepMode(channel,mode);
 }
 
 int rp_GenSweepDir(rp_channel_t channel, rp_gen_sweep_dir_t mode){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setSweepDir(channel,mode);
 }
 
 int rp_GenGetSweepDir(rp_channel_t channel, rp_gen_sweep_dir_t *mode){
-    return gen_getSweepDir(channel,mode);    
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
+    return gen_getSweepDir(channel,mode);
 }
 
 int rp_GenArbWaveform(rp_channel_t channel, float *waveform, uint32_t length) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setArbWaveform(channel, waveform, length);
 }
 
 int rp_GenGetArbWaveform(rp_channel_t channel, float *waveform, uint32_t *length) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getArbWaveform(channel, waveform, length);
 }
 
 int rp_GenDutyCycle(rp_channel_t channel, float ratio) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setDutyCycle(channel, ratio);
 }
 
 int rp_GenRiseTime(rp_channel_t channel, float time) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setRiseTime(channel, time);
 }
 
 int rp_GenFallTime(rp_channel_t channel, float time) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setFallTime(channel, time);
 }
 
 int rp_GenGetDutyCycle(rp_channel_t channel, float *ratio) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getDutyCycle(channel, ratio);
 }
 
 int rp_GenMode(rp_channel_t channel, rp_gen_mode_t mode) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setGenMode(channel, mode);
 }
 
 int rp_GenGetMode(rp_channel_t channel, rp_gen_mode_t *mode) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getGenMode(channel, mode);
 }
 
 int rp_GenBurstCount(rp_channel_t channel, int num) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setBurstCount(channel, num);
 }
 
 int rp_GenGetBurstCount(rp_channel_t channel, int *num) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getBurstCount(channel, num);
 }
 
 int rp_GenBurstRepetitions(rp_channel_t channel, int repetitions) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setBurstRepetitions(channel, repetitions);
 }
 
 int rp_GenGetBurstRepetitions(rp_channel_t channel, int *repetitions) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getBurstRepetitions(channel, repetitions);
 }
 
 int rp_GenBurstPeriod(rp_channel_t channel, uint32_t period) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setBurstPeriod(channel, period);
 }
 
 int rp_GenGetBurstPeriod(rp_channel_t channel, uint32_t *period) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getBurstPeriod(channel, period);
 }
 
 int rp_GenTriggerSource(rp_channel_t channel, rp_trig_src_t src) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_setTriggerSource(channel, src);
 }
 
 int rp_GenGetTriggerSource(rp_channel_t channel, rp_trig_src_t *src) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_getTriggerSource(channel, src);
 }
 
-// int rp_GenTrigger(uint32_t channel) {
-//     return gen_Trigger(channel);
-// }
-
 int rp_GenTriggerOnly(rp_channel_t channel){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_TriggerOnly(channel);
 }
 
 int rp_GenSynchronise() {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_TriggerSync();
 }
 
 int rp_GenResetTrigger(rp_channel_t channel){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_Trigger(channel);
 }
 
 int rp_GenOutEnableSync(bool enable){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
     return gen_EnableSync(enable);
 }
 
-#endif
-
-#ifdef Z20_250_12
 
 int rp_SetEnableTempProtection(rp_channel_t channel, bool enable){
     return gen_setEnableTempProtection(channel,enable);
@@ -1012,6 +1394,7 @@ int rp_GetPllControlEnable(bool *enable){
 }
 
 int rp_SetPllControlEnable(bool enable){
+
     return house_SetPllControlEnable(enable);
 }
 
@@ -1026,5 +1409,53 @@ int rp_GenSetGainOut(rp_channel_t channel,rp_gen_gain_t mode){
 int rp_GenGetGainOut(rp_channel_t channel,rp_gen_gain_t *status){
     return gen_getGainOut(channel,status);
 }
-#endif
 
+
+int rp_SetEnableDaisyChainSync(bool enable){
+    return house_SetEnableDaisyChainSync(enable);
+}
+
+int rp_GetEnableDaisyChainSync(bool *status){
+    return house_GetEnableDaisyChainSync(status);
+}
+
+int rp_SetDpinEnableTrigOutput(bool enable){
+    return house_SetDpinEnableTrigOutput(enable);
+}
+
+int rp_GetDpinEnableTrigOutput(bool *state){
+    return house_GetDpinEnableTrigOutput(state);
+}
+
+int rp_SetSourceTrigOutput(rp_outTiggerMode_t mode){
+    return house_SetSourceTrigOutput(mode);
+}
+
+int rp_GetSourceTrigOutput(rp_outTiggerMode_t *mode){
+    return house_GetSourceTrigOutput(mode);
+}
+
+int rp_AcqSetExtTriggerDebouncerUs(double value){
+    return acq_SetExtTriggerDebouncerUs(value);
+}
+
+int rp_AcqGetExtTriggerDebouncerUs(double *value){
+    return acq_GetExtTriggerDebouncerUs(value);
+}
+
+int rp_GenSetExtTriggerDebouncerUs(double value){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
+    return gen_SetExtTriggerDebouncerUs(value);
+}
+
+int rp_GenGetExtTriggerDebouncerUs(double *value){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
+    return gen_GetExtTriggerDebouncerUs(value);
+}
+
+int rp_EnableDebugReg(){
+    cmn_enableDebugReg();
+    return RP_OK;
+}

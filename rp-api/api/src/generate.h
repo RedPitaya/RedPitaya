@@ -14,16 +14,10 @@
 #ifndef __GENERATE_H
 #define __GENERATE_H
 
-#include "rp_cross.h"
+#include "redpitaya/rp.h"
+#include "rp_hw-profiles.h"
 
 
-#define AMPLITUDE_MAX           1.0 // V
-#define LEVEL_MAX               1.0 // V
-#define ARBITRARY_MIN          -1.0         // V
-#define ARBITRARY_MAX           1.0         // V
-#define OFFSET_MAX              2.0         // V
-#define FREQUENCY_MIN           0           // Hz
-#define FREQUENCY_MAX           DAC_FREQUENCY/2.0
 #define PHASE_MIN              -360         // deg
 #define PHASE_MAX               360         // deg
 #define DUTY_CYCLE_MIN          0           // %
@@ -37,12 +31,15 @@
 
 #define CHA_DATA_OFFSET         0x10000
 #define CHB_DATA_OFFSET         0x20000
-#define DATA_BIT_LENGTH         14
+// #define DATA_BIT_LENGTH         14
 #define MICRO                   1e6
 
 // Base Generate address
 #define GENERATE_BASE_ADDR      0x00200000
 #define GENERATE_BASE_SIZE      0x00030000
+
+#define DEBAUNCER_MASK          0xFFFFF     // (20 bit)
+
 
 typedef struct ch_properties {
     unsigned int amplitudeScale     :14;
@@ -60,6 +57,8 @@ typedef struct ch_properties {
     uint32_t delayBetweenBurstRepetitions;
 } ch_properties_t;
 
+
+
 typedef struct generate_control_s {
     unsigned int AtriggerSelector   :4;
     unsigned int ASM_WrapPointer    :1;
@@ -71,7 +70,7 @@ typedef struct generate_control_s {
     unsigned int AtempProtected     :1;
     unsigned int AlatchedTempAlarm  :1;
     unsigned int AruntimeTempAlarm  :1;
-    // 
+    //
     unsigned int                    :4;
 
     unsigned int BtriggerSelector   :4;
@@ -84,15 +83,24 @@ typedef struct generate_control_s {
     unsigned int BtempProtected     :1;
     unsigned int BlatchedTempAlarm  :1;
     unsigned int BruntimeTempAlarm  :1;
-    // 
+    //
     unsigned int                    :4;
 
     ch_properties_t properties_chA;
     ch_properties_t properties_chB;
-#ifndef Z20_250_12
-    uint32_t     BurstFinalValue_chA;
-    uint32_t     BurstFinalValue_chB;
-#endif
+    // NOT WORK with 250-12
+    uint32_t     BurstFinalValue_chA; // 0x44
+    uint32_t     BurstFinalValue_chB; // 0x48
+    uint32_t     cunterStepChA;       // 0x4C
+    uint32_t     cunterStepChB;       // 0x50
+    /**@brief Trigger debuncer time
+    * bits [19:0] Number of ADC clock periods
+    * trigger is disabled after activation
+    * reset value is decimal 62500
+    * or equivalent to 0.5ms
+    */
+    uint32_t trig_dbc_t:20,:12; // 0x54
+
 } generate_control_t;
 
 int generate_Init();
@@ -102,8 +110,8 @@ int generate_setOutputDisable(rp_channel_t channel, bool disable);
 int generate_getOutputEnabled(rp_channel_t channel, bool *disabled);
 int generate_setOutputEnableSync(bool enable);
 
-int generate_setFrequency(rp_channel_t channel, float frequency);
-int generate_getFrequency(rp_channel_t channel, float *frequency);
+int generate_setFrequency(rp_channel_t channel, float frequency,float baseFreq);
+int generate_getFrequency(rp_channel_t channel, float *frequency,float baseFreq);
 int generate_setWrapCounter(rp_channel_t channel, uint32_t size);
 int generate_setTriggerSource(rp_channel_t channel, unsigned short value);
 int generate_getTriggerSource(rp_channel_t channel, uint32_t *value);
@@ -122,17 +130,6 @@ int generate_ResetChannelSM(rp_channel_t channel);
 
 int generate_writeData(rp_channel_t channel, float *data, int32_t start, uint32_t length);
 
-
-#if defined Z10 || defined Z20_125 || defined Z20
-int generate_setAmplitude(rp_channel_t channel, float amplitude);
-int generate_getAmplitude(rp_channel_t channel, float *amplitude);
-int generate_setDCOffset(rp_channel_t channel, float offset);
-int generate_getDCOffset(rp_channel_t channel, float *offset);
-int generate_setBurstLastValue(rp_channel_t channel, float amplitude);
-int generate_getBurstLastValue(rp_channel_t channel, float *amplitude);
-#endif
-
-#ifdef Z20_250_12
 int generate_setAmplitude(rp_channel_t channel, rp_gen_gain_t gain,  float amplitude);
 int generate_getAmplitude(rp_channel_t channel, rp_gen_gain_t gain, float *amplitude);
 int generate_setDCOffset(rp_channel_t channel, rp_gen_gain_t gain, float offset);
@@ -142,6 +139,12 @@ int generate_setEnableTempProtection(rp_channel_t channel, bool enable);
 int generate_getLatchTempAlarm(rp_channel_t channel, bool *state);
 int generate_setLatchTempAlarm(rp_channel_t channel, bool  state);
 int generate_getRuntimeTempAlarm(rp_channel_t channel, bool *state);
-#endif
 
-#endif //__GENERATE_H
+int generate_setBurstLastValue(rp_channel_t channel, float amplitude);
+int generate_getBurstLastValue(rp_channel_t channel, float *amplitude);
+
+
+int generate_SetTriggerDebouncer(uint32_t value);
+int generate_GetTriggerDebouncer(uint32_t *value);
+
+#endif

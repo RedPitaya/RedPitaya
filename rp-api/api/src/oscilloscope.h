@@ -22,11 +22,7 @@
 // Base Oscilloscope address
 static const int OSC_BASE_ADDR = 0x00100000;
 static const int OSC_BASE_SIZE = 0x30000;
-
-
-#if defined Z20_125_4CH
 static const int OSC_BASE_ADDR_4CH = 0x00200000;
-#endif
 
 // Oscilloscope Channel A input signal buffer offset
 #define OSC_CHA_OFFSET 0x10000
@@ -209,7 +205,7 @@ typedef struct osc_control_s {
     * reset value is decimal 62500
     * or equivalent to 0.5ms
     */
-    uint32_t trig_dbc_t;
+    uint32_t trig_dbc_t:20,:12; // 0x90
 
     /* ChA & ChB data - 14 LSB bits valid starts from 0x10000 and
      * 0x20000 and are each 16k samples long */
@@ -220,13 +216,8 @@ static const uint32_t DATA_DEC_MASK         = 0x1FFFF;      // (17 bits)
 static const uint32_t DATA_AVG_MASK         = 0x1;          // (1 bit)
 static const uint32_t TRIG_SRC_MASK         = 0xF;          // (4 bits)
 static const uint32_t START_DATA_WRITE_MASK = 0x1;          // (1 bit)
-#ifdef Z20
 static const uint32_t THRESHOLD_MASK        = 0xFFFF;       // (16 bits)
 static const uint32_t HYSTERESIS_MASK       = 0xFFFF;       // (16 bits)
-#else
-static const uint32_t THRESHOLD_MASK        = 0x3FFF;       // (14 bits)
-static const uint32_t HYSTERESIS_MASK       = 0x3FFF;       // (14 bits)
-#endif
 static const uint32_t TRIG_DELAY_MASK       = 0xFFFFFFFF;   // (32 bits)
 static const uint32_t WRITE_POINTER_MASK    = 0x3FFF;       // (14 bits)
 static const uint32_t EQ_FILTER_AA          = 0x3FFFF;      // (18 bits)
@@ -235,9 +226,11 @@ static const uint32_t RST_WR_ST_MCH_MASK    = 0x2;          // (1st bit)
 static const uint32_t TRIG_ST_MCH_MASK      = 0x4;          // (2st bit)
 static const uint32_t PRE_TRIGGER_COUNTER   = 0xFFFFFFFF;   // (32 bit)
 static const uint32_t ARM_KEEP_MASK         = 0x8;          // (4 bit)
-static const uint32_t FILL_STATE_MASK       = 0x10;          // (1 bit)
+static const uint32_t FILL_STATE_MASK       = 0x10;         // (1 bit)
+static const uint32_t DEBAUNCER_MASK        = 0xFFFFF;      // (20 bit)
 
-int osc_Init();
+
+int osc_Init(int channels);
 int osc_Release();
 
 int osc_SetDecimation(uint32_t decimation);
@@ -281,6 +274,9 @@ int osc_SetEqFiltersChC(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, ui
 int osc_GetEqFiltersChC(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
 int osc_SetEqFiltersChD(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp);
 int osc_GetEqFiltersChD(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
+
+int osc_SetTriggerDebouncer(uint32_t value);
+int osc_GetTriggerDebouncer(uint32_t *value);
 
 const volatile uint32_t* osc_GetDataBufferChA();
 const volatile uint32_t* osc_GetDataBufferChB();

@@ -63,10 +63,10 @@ private:
     std::mutex mtx;
     std::atomic_bool m_OscThreadRun;
     std::atomic_bool m_isRun;
-    
+
     uint64_t         m_passRate;
     uint8_t          m_adc_bits;
-  
+
     uintmax_t        m_BytesCount;
     bool             m_testMode;
     bool             m_verbMode;
