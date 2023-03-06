@@ -61,11 +61,13 @@ scpi_result_t RP_AcqBufferSizeQ(scpi_t * context);
 
 scpi_result_t RP_AcqGetLatestData(rp_channel_t channel, scpi_t * context);
 
-#ifdef Z20_250_12
+
 scpi_result_t RP_AcqAC_DC(scpi_t * context);
 scpi_result_t RP_AcqAC_DCQ(scpi_t * context);
 scpi_result_t RP_AcqExtTriggerLevel(scpi_t *context);
 scpi_result_t RP_AcqExtTriggerLevelQ(scpi_t *context);
-#endif
+
+scpi_result_t RP_AcqExtTriggerDebouncerUs(scpi_t *context);
+scpi_result_t RP_AcqExtTriggerDebouncerUsQ(scpi_t *context);
 
 #endif /* ACQUIRE_H_ */

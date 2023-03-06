@@ -1,17 +1,13 @@
-MODEL ?= Z10
-
 CXX=$(CROSS_COMPILE)g++
 RM=rm
 
 PROJECT_ROOT=../..
 
-CXXSOURCES=acq.cpp calib.cpp calib_man.cpp acq_math.cpp filter_logicNch.cpp
+CXXSOURCES=acq.cpp calib.cpp calib_man.cpp acq_math.cpp filter_logicNch.cpp common.cpp
 CXXSOURCES_WEB=main.cpp
 CXXSOURCES_TEST=test.cpp
 
-ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20_125 Z20_125_4CH))
 CXXSOURCES += filter_logic.cpp
-endif
 
 INCLUDE =  -I$(INSTALL_DIR)/include
 INCLUDE += -I$(INSTALL_DIR)/include/api2
@@ -24,15 +20,15 @@ LIBS += -L$(INSTALL_DIR)/rp_sdk
 
 COMMON_FLAGS+=-Wall -fPIC -pedantic -Os -s -w -DASIO_STANDALONE
 CFLAGS += $(COMMON_FLAGS) $(INCLUDE)
-CXXFLAGS+=$(COMMON_FLAGS) -std=c++14 $(INCLUDE) -D$(MODEL)
+CXXFLAGS+=$(COMMON_FLAGS) -std=c++14 $(INCLUDE)
 LDFLAGS = $(COMMON_FLAGS) $(LIBS)
 LDWFLAGS+= -Wl,--whole-archive
-LDWFLAGS+= -lrp_sdk -lrp -lrp-hw
+LDWFLAGS+= -lrp_sdk -lrp -lrp-hw -lrp-hw-calib -lrp-hw-profiles
 LDWFLAGS+= -Wl,--no-whole-archive
 LDWFLAGS+= -shared
 
 LDWFLAGS_TEST+= -Wl,--whole-archive
-LDWFLAGS_TEST+=  -static -lpthread -lrp -lrp-hw
+LDWFLAGS_TEST+=  -static -lpthread -lrp -lrp-hw -lrp-hw-calib -lrp-hw-profiles
 LDWFLAGS_TEST+= -Wl,--no-whole-archive
 
 
@@ -42,10 +38,9 @@ CXXOBJECTS_WEB=$(CXXSOURCES_WEB:.cpp=.o)
 CXXOBJECTS_TEST=$(CXXSOURCES_TEST:.cpp=.o)
 OBJECTS=$(COBJECTS) $(CXXOBJECTS)
 
-ifeq ($(MODEL),Z20_250_12)
 INCLUDE += -I$(INSTALL_DIR)/include/api250-12
 LDWFLAGS += -lrp-gpio -lrp-i2c -lrp-spi
-endif 
+
 
 
 OUT_DIR=../

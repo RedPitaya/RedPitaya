@@ -128,31 +128,65 @@
         version = info['version'];
         revision = info['revision'];
         stem_ver = info['stem_ver'];
-        if (stem_ver === "STEM 10") {
-            stem_ver = "STEMlab 125-10"
-        } else if (stem_ver === "STEM 14") {
-            stem_ver = "STEMlab 125-14"
-        } else if (stem_ver === "STEM 14-Z20") {
-            stem_ver = "STEMlab 125-14-Z7020"
-        } else if (stem_ver === "STEM 14-Z20-4CH") {
-            stem_ver = "STEMlab 125-14-Z7020 4-ch"
-        } else if (stem_ver === "STEM 16") {
-            stem_ver = "SDRlab 122-16"
-        } else if (stem_ver === "STEM 250 12") {
-            stem_ver = "SIGNALlab 250-12"
-        } else if (stem_ver === "STEM 10 SLAVE") {
-            stem_ver = "STEMlab 125-10 (Streaming slave)"
-        } else if (stem_ver === "STEM 14 SLAVE") {
-            stem_ver = "STEMlab 125-14 (Streaming slave)"
-        } else if (stem_ver === "STEM 14-Z20 SLAVE") {
-            stem_ver = "STEMlab 125-14-Z7020 (Streaming slave)"
-        } else if (stem_ver === "STEM 16 SLAVE") {
-            stem_ver = "SDRlab 122-16 (Streaming slave)"
-        } else if (stem_ver === "STEM 250 12 SLAVE") {
-            stem_ver = "SIGNALlab 250-12 (Streaming slave)"
-        } else
-        {
-            stem_ver = "unknown"
+        switch(stem_ver){
+            case 0:{
+                stem_ver = "STEMlab 125-10"
+                break;
+            }
+            case 1:{
+                stem_ver = "STEMlab 125-14 v1.1"
+                break;
+            }
+            case 2:{
+                stem_ver = "STEMlab 125-14 v1.1"
+                break;
+            }
+            case 3:{
+                stem_ver = "SDRlab 122-16 v1.0"
+                break;
+            }
+            case 4:{
+                stem_ver = "SDRlab 122-16 v1.1"
+                break;
+            }
+            case 5:{
+                stem_ver = "STEMlab 125-14 LN v1.1"
+                break;
+            }
+            case 6:{
+                stem_ver = "STEMlab 125-14-Z7020 v1.0"
+                break;
+            }
+            case 7:{
+                stem_ver = "STEMlab 125-14-Z7020 LN v1.1"
+                break;
+            }
+            case 8:{
+                stem_ver = "STEMlab 125-14-Z7020 4-ch v1.0"
+                break;
+            }
+            case 9:{
+                stem_ver = "STEMlab 125-14-Z7020 4-ch v1.2"
+                break;
+            }
+            case 10:{
+                stem_ver = "STEMlab 125-14-Z7020 4-ch v1.3"
+                break;
+            }
+            case 11:{
+                stem_ver = "SIGNALlab 250-12 v1.1"
+                break;
+            }
+            case 12:{
+                stem_ver = "SIGNALlab 250-12 v1.2"
+                break;
+            }
+            case 13:{
+                sstem_ver = "SIGNALlab 250-12/120"
+                break;
+            }
+            default:
+                stem_ver = "unknown"
         }
 
 
@@ -176,43 +210,8 @@
             .done(function(msg) {
                 setTimeout(printRpVersion(msg),2000);
                 stem_ver = msg['stem_ver'];
-                var board_type = "";
+                var board_type = "Unify/ecosystems";
                 var linux_path = "LinuxOS";
-                if (stem_ver == "STEM 16") {
-                    board_type = "SDRlab-122-16/ecosystems";
-                }
-
-                if (stem_ver == "STEM 250 12") {
-                    board_type = "SIGNALlab-250-12/ecosystems";
-                }
-
-                if (stem_ver == "STEM 14") {
-                    board_type = "STEMlab-125-1x/ecosystems";
-                }
-
-                if (stem_ver == "STEM 14-Z20") {
-                    board_type = "STEMlab-125-14-Z7020/ecosystems";
-                }
-
-                if (stem_ver == "STEM 16 SLAVE") {
-                    board_type = "Streaming slave boards/SDRlab-122-16/ecosystems";
-                }
-
-                if (stem_ver == "STEM 250 12 SLAVE") {
-                    board_type = "Streaming slave boards/SIGNALlab-250-12/ecosystems";
-                }
-
-                if (stem_ver == "STEM 14 SLAVE") {
-                    board_type = "Streaming slave boards/STEMlab-125-1x/ecosystems";
-                }
-
-                if (stem_ver == "STEM 14-Z20 SLAVE") {
-                    board_type = "Streaming slave boards/STEMlab-125-14-Z7020/ecosystems";
-                }
-
-                if (stem_ver == "STEM 14-Z20-4CH") {
-                    board_type = "STEMlab-125-14-Z7020-4CH/ecosystems";
-                }
 
                 if (parseFloat(msg["linux_ver"]) !== parseFloat(msg["sd_linux_ver"])) {
                     $("#CUR_VER").text(msg["sd_linux_ver"]);
@@ -280,6 +279,7 @@
             else
                 $('#ic_missing').modal('hide');
         });
+
 
     });
 

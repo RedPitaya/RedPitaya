@@ -6,9 +6,9 @@
 # scpi-server project file. To build the server run:
 # 'make all'
 #
-# This project file is written for GNU/Make software. For more details please 
+# This project file is written for GNU/Make software. For more details please
 # visit: http://www.gnu.org/software/make/manual/make.html
-# GNU Compiler Collection (GCC) tools are used for the compilation and linkage. 
+# GNU Compiler Collection (GCC) tools are used for the compilation and linkage.
 # For the details about the usage and building please visit:
 # http://gcc.gnu.org/onlinedocs/gcc/
 #
@@ -27,7 +27,6 @@ OBJECTS_DIR = ../obj
 OUTPUT_DIR  = ../
 SOURCE_DIR  = .
 INSTALL_DIR ?= .
-MODEL ?= Z10
 
 # Library name
 TARGET=$(OUTPUT_DIR)/scpi-server
@@ -43,16 +42,14 @@ OBJECTS =	scpi-commands.o \
 		uart.o \
 		led.o \
 		spi.o \
-		i2c.o
+		i2c.o \
+		generate.o
 
-ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20 Z20_250_12 Z20_125))
-OBJECTS += generate.o
-endif
 
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 
 # GCC compiling & linking flags
-CFLAGS += -g -std=gnu99 -Wall -Werror -fPIC -D$(MODEL)
+CFLAGS += -g -std=gnu99 -Wall -Werror -fPIC
 CFLAGS += -I$(INSTALL_DIR)/include
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 LDFLAGS=
@@ -60,14 +57,11 @@ LDFLAGS=
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
 LIBPATH= -L ../scpi-parser/libscpi/dist -L $(INSTALL_DIR)/lib
-LIBS=  -lm  -lrp -l:libscpi.a -l:librp-hw.a -lpthread
+LIBS=  -lm  -lrp -l:libscpi.a -lrp-hw  -lrp-hw-calib -lrp-hw-profiles -li2c -lpthread
+LIBS += -lrp-gpio -lrp-i2c -lrp-spi
 
 INC= -I../scpi-parser/libscpi/inc -I$(INSTALL_DIR)/include
-
-ifeq ($(MODEL),Z20_250_12)
 INC += -I$(INSTALL_DIR)/include/api250-12
-LIBS += -lrp-gpio -lrp-i2c -lrp-spi
-endif
 
 # Main GCC executable (used for compiling and linking)
 CC=$(CROSS_COMPILE)gcc
@@ -78,7 +72,7 @@ all: $(TARGET)
 
 # Target with compilation rules to compile object from source files.
 # It applies to all files ending with .o. During partial building only new object
-# files are created for the source files (.c) which have newer timestamp then 
+# files are created for the source files (.c) which have newer timestamp then
 # objects (.o) files.
 $(OBJECTS_DIR)/%.o:$(SOURCE_DIR)/%.c
 	@mkdir -p $(@D)

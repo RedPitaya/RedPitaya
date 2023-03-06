@@ -17,10 +17,12 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "rp_cross.h"
-#include "calib.h"
+#include "rp_hw-calib.h"
+#include "redpitaya/rp.h"
 
-#define ADC_SAMPLE_PERIOD_DEF ((double)1e9/(double)ADC_SAMPLE_RATE)
+//#define ADC_SAMPLE_PERIOD_DEF ((double)1e9/(double)ADC_SAMPLE_RATE)
+/* @brief Sampling period (non-decimated) - 8 [ns]. */
+//static const uint64_t ADC_SAMPLE_PERIOD = ADC_SAMPLE_PERIOD_DEF;
 
 int acq_SetArmKeep(bool enable);
 int acq_GetArmKeep(bool* state);
@@ -33,8 +35,6 @@ int acq_GetDecimation(rp_acq_decimation_t* decimation);
 int acq_SetDecimationFactor(uint32_t decimation);
 int acq_GetDecimationFactor(uint32_t* decimation);
 int acq_ConvertFactorToDecimation(uint32_t factor,rp_acq_decimation_t* decimation);
-int acq_SetSamplingRate(rp_acq_sampling_rate_t sampling_rate);
-int acq_GetSamplingRate(rp_acq_sampling_rate_t* sampling_rate);
 int acq_GetSamplingRateHz(float* sampling_rate);
 int acq_SetAveraging(bool enable);
 int acq_GetAveraging(bool* enable);
@@ -60,6 +60,7 @@ int acq_Start();
 int acq_Stop();
 int acq_Reset();
 int acq_ResetFpga();
+int acq_GetADCSamplePeriod(double *value);
 
 int acq_GetDataPosRaw(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, int16_t* buffer, uint32_t *buffer_size);
 int acq_GetDataPosV(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, float* buffer, uint32_t *buffer_size);
@@ -75,26 +76,19 @@ int acq_SetDefault();
 
 uint32_t acq_GetNormalizedDataPos(uint32_t pos);
 
-#if defined Z10 || defined Z20_125 || defined Z20 || defined Z20_250_12
-int acq_GetDataRawV2(uint32_t pos, uint32_t* size, uint16_t* buffer, uint16_t* buffer2);
-int acq_GetDataV2(uint32_t pos, uint32_t* size, float* buffer1, float* buffer2);
-int acq_GetDataV2D(uint32_t pos, uint32_t* size, double* buffer1, double* buffer2);
-#endif
 
-#if defined Z20_125_4CH
-int acq_GetDataRawV2(uint32_t pos, uint32_t* size, uint16_t* buffer, uint16_t* buffer2, uint16_t* buffer3, uint16_t* buffer4);
-int acq_GetDataV2(uint32_t pos, uint32_t* size, float* buffer1, float* buffer2, float* buffer3, float* buffer4);
-int acq_GetDataV2D(uint32_t pos, uint32_t* size, double* buffer1, double* buffer2, double* buffer3, double* buffer4);
-#endif
+int acq_GetDataRawV2(uint32_t pos,buffers_t *out);
+int acq_GetDataV2(uint32_t pos,buffers_t *out);
+int acq_GetDataV2D(uint32_t pos,buffers_t *out);
 
-#if defined Z20_250_12
 int acq_SetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t mode);
 int acq_GetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t *status);
-#endif
 
-#if defined Z10 || defined Z20_125 || defined Z20_125_4CH
 int acq_UpdateAcqFilter(rp_channel_t channel);
 int acq_GetFilterCalibValue(rp_channel_t channel,uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
-#endif
+
+
+int acq_SetExtTriggerDebouncerUs(double value);
+int acq_GetExtTriggerDebouncerUs(double *value);
 
 #endif /* SRC_ACQ_HANDLER_H_ */

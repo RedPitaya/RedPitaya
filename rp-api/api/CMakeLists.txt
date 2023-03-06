@@ -17,13 +17,8 @@ set(CMAKE_CXX_STANDARD 11)
 set(C_STANDARD 11)
 
 
-if(NOT DEFINED MODEL)
-  set(MODEL Z10)
-endif()
-
 if(NOT DEFINED INSTALL_DIR)
-    message(WARNING,"Installation path not set. Installation will be skipped")
-    set(IS_INSTALL OFF)
+    message(FATAL_ERROR,"Installation path not set. Installation will be skipped")
 endif()
 
 if(NOT DEFINED DEBUG_REG)
@@ -40,7 +35,6 @@ if(NOT DEFINED REVISION)
 endif()
 
 
-message(STATUS "RedPitaya model=${MODEL}")
 message(STATUS "VERSION=${VERSION}")
 message(STATUS "REVISION=${REVISION}")
 message(STATUS "Install path ${INSTALL_DIR}")
@@ -59,6 +53,8 @@ message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 include_directories("include")
 include_directories("src")
 include_directories("src/kiss_fft")
+include_directories(${INSTALL_DIR}/include)
+
 
 list(APPEND src
             ${CMAKE_SOURCE_DIR}/src/common.c
@@ -66,60 +62,18 @@ list(APPEND src
             ${CMAKE_SOURCE_DIR}/src/acq_handler.c
             ${CMAKE_SOURCE_DIR}/src/rp.c
             ${CMAKE_SOURCE_DIR}/src/neon_asm.cpp
+            ${CMAKE_SOURCE_DIR}/src/generate.c
+            ${CMAKE_SOURCE_DIR}/src/gen_handler.c
         )
 
 
-if ("${MODEL}" STREQUAL "Z20_250_12")
-    list(APPEND src
-        ${CMAKE_SOURCE_DIR}/src/calib_250_12.c
-        ${CMAKE_SOURCE_DIR}/src/generate.c
-        ${CMAKE_SOURCE_DIR}/src/gen_handler.c
-    )
-elseif("${MODEL}" STREQUAL "Z20_125_4CH")
-    list(APPEND src
-        ${CMAKE_SOURCE_DIR}/src/calib_125_4ch.c
-    )
-else()
-    list(APPEND src
-        ${CMAKE_SOURCE_DIR}/src/calib.c
-        ${CMAKE_SOURCE_DIR}/src/generate.c
-        ${CMAKE_SOURCE_DIR}/src/gen_handler.c
-    )
-endif()
-
-if ("${MODEL}" STREQUAL "Z10")
-    list(APPEND header_rp
-        ${CMAKE_SOURCE_DIR}/include/redpitaya/rp.h
-    )
-endif()
-
-if ("${MODEL}" STREQUAL "Z20")
-    list(APPEND header_rp
-        ${CMAKE_SOURCE_DIR}/include/redpitaya/rp_Z20.h
-    )
-endif()
-
-if ("${MODEL}" STREQUAL "Z20_125")
-    list(APPEND header_rp
-        ${CMAKE_SOURCE_DIR}/include/redpitaya/rp_Z20_125.h
-    )
-endif()
-
-if ("${MODEL}" STREQUAL "Z20_125_4CH")
-    list(APPEND header_rp
-        ${CMAKE_SOURCE_DIR}/include/redpitaya/rp_Z20_125_4CH.h
-    )
-endif()
-
-if ("${MODEL}" STREQUAL "Z20_250_12")
-    list(APPEND header_rp
-        ${CMAKE_SOURCE_DIR}/include/redpitaya/rp_Z20_250_12.h
-    )
-endif()
+list(APPEND header_rp
+    ${CMAKE_SOURCE_DIR}/include/redpitaya/rp.h
+)
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
-add_compile_options(-Wall -pedantic -Wextra -Wno-unused-parameter -D${MODEL} -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+add_compile_options(-Wall -pedantic -Wextra -Wno-unused-parameter -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 if(DEBUG_REG)
 add_compile_options(-DDEBUG_REG)
@@ -127,14 +81,12 @@ endif()
 
 add_library(${PROJECT_NAME}-obj OBJECT ${src})
 
-if ("${MODEL}" STREQUAL "Z20_250_12")
-    if(NOT DEFINED INSTALL_DIR)
-        message(FATAL_ERROR "You must specify the path to the libraries api-250-12")
-    endif()
-    include_directories(${INSTALL_DIR}/include/api250-12)
-    link_directories(${INSTALL_DIR}/lib)
-    target_link_libraries(${PROJECT_NAME}-obj rp-i2c)
+if(NOT DEFINED INSTALL_DIR)
+    message(FATAL_ERROR "You must specify the path to the libraries api-250-12 api-hw-calib api-hw-profiles")
 endif()
+include_directories(${INSTALL_DIR}/include/api250-12)
+link_directories(${INSTALL_DIR}/lib)
+target_link_libraries(${PROJECT_NAME}-obj rp-i2c)
 
 if(BUILD_SHARED)
     add_library(${PROJECT_NAME}-shared SHARED)
@@ -142,7 +94,7 @@ if(BUILD_SHARED)
     target_link_options(${PROJECT_NAME}-shared PRIVATE -shared -Wl,--version-script=${CMAKE_SOURCE_DIR}/src/exportmap)
     target_sources(${PROJECT_NAME}-shared PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-obj>)
     target_link_libraries(${PROJECT_NAME}-shared -lm -lpthread)
-
+    target_link_libraries(${PROJECT_NAME}-shared rp-hw-calib rp-hw-profiles)
     if(IS_INSTALL)
         install(TARGETS ${PROJECT_NAME}-shared
             LIBRARY DESTINATION ${INSTALL_DIR}/lib
@@ -183,5 +135,4 @@ set(DOXY_INPUT ${header_rp})
 ADD_DOCUMENTATION(doc Doxyfile)
 endif()
 
-unset(MODEL CACHE)
 unset(INSTALL_DIR CACHE)

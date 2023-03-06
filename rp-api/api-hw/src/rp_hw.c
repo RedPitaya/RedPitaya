@@ -19,6 +19,7 @@
 #include "spi.h"
 #include "led_system.h"
 #include "i2c.h"
+#include "sensors.h"
 
 int rp_UartInit(){
     return uart_Init();
@@ -189,7 +190,7 @@ int rp_SPI_GetMessageLen(size_t *len){
 }
 
 int rp_SPI_GetRxBuffer(size_t msg,const uint8_t **buffer,size_t *len){
-    return spi_GetRxBuffer(msg,buffer,len);    
+    return spi_GetRxBuffer(msg,buffer,len);
 }
 
 int rp_SPI_GetTxBuffer(size_t msg,const uint8_t **buffer,size_t *len){
@@ -264,4 +265,36 @@ int rp_I2C_IOCTL_ReadBuffer(uint8_t *buffer, int len){
 
 int rp_I2C_IOCTL_WriteBuffer(uint8_t *buffer, int len){
     return i2c_IOCTL_WriteBuffer(buffer,len);
+}
+
+float rp_GetCPUTemperature(uint32_t *raw){
+    return sens_GetCPUTemp(raw);
+}
+
+int rp_GetPowerI4(uint32_t *raw,float* value){
+    return sens_GetPowerI4(raw,value);
+}
+
+int rp_GetPowerVCCPINT(uint32_t *raw,float* value){
+    return sens_GetPowerVCCPINT(raw,value);
+}
+
+int rp_GetPowerVCCPAUX(uint32_t *raw,float* value){
+    return sens_GetPowerVCCPAUX(raw,value);
+}
+
+int rp_GetPowerVCCBRAM(uint32_t *raw,float* value){
+    return sens_GetPowerVCCBRAM(raw,value);
+}
+
+int rp_GetPowerVCCINT(uint32_t *raw,float* value){
+    return sens_GetPowerVCCINT(raw,value);
+}
+
+int rp_GetPowerVCCAUX(uint32_t *raw,float* value){
+    return sens_GetPowerVCCAUX(raw,value);
+}
+
+int rp_GetPowerVCCDDR(uint32_t *raw,float* value){
+    return sens_GetPowerVCCDDR(raw,value);
 }

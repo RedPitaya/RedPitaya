@@ -166,7 +166,7 @@ auto ServerNetConfigManager::receiveCommand(uint32_t command) -> void{
             }
         }
     }
-    
+
     if (c == CNetConfigManager::ECommands::LOAD_SETTING_FROM_FILE){
         if (m_settings.readFromFile(m_file_settings)){
             getNewSettingsNofiy();
@@ -363,7 +363,7 @@ auto ServerNetConfigManager::sendStreamServerBusy() -> bool{
 auto ServerNetConfigManager::sendConfig(bool sendTest,bool _async) -> bool{
     if (m_pNetConfManager->isConnected()) {
         CStreamSettings s = sendTest ? m_testSettings : m_settings;
-        
+
         if (!m_pNetConfManager->sendData(sendTest ? CNetConfigManager::ECommands::BEGIN_SEND_TEST_SETTING : CNetConfigManager::ECommands::BEGIN_SEND_SETTING,_async)) return false;
         if (!m_pNetConfManager->sendData("port",s.getPort(),_async)) return false;
         if (!m_pNetConfManager->sendData("protocol",static_cast<uint32_t>(s.getProtocol()),_async)) return false;
@@ -414,4 +414,8 @@ auto ServerNetConfigManager::getTempSettings() -> const CStreamSettings{
     }
     m_testSettings = m_settings;
     return m_testSettings;
+}
+
+auto ServerNetConfigManager::setMode(broadcast_lib::EMode mode) -> void{
+    m_mode = mode;
 }

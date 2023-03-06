@@ -4,27 +4,17 @@ project(rpsa_client_qt VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY true)
 
-if(NOT DEFINED MODEL)
-  set(MODEL Z10)
-endif()
-
-if(NOT DEFINED STREAMING_MODE)
-  set(STREAMING_MODE STREAMING_MASTER)
-endif()
-
 if(NOT DEFINED RP_PLATFORM)
   set(RP_PLATFORM OFF)
 endif()
 
 
 message(STATUS "Project=${PROJECT_NAME}")
-message(STATUS "RedPitaya model=${MODEL}")
 message(STATUS "RedPitaya platform=${RP_PLATFORM}")
 message(STATUS "Is install ${IS_INSTALL}")
 message(STATUS "Install path ${INSTALL_DIR}")
 message(STATUS "VERSION=${VERSION}")
 message(STATUS "REVISION=${REVISION}")
-message(STATUS "BOARD TYPE=${STREAMING_MODE}")
 
 message(STATUS "Compiler С path: ${CMAKE_C_COMPILER}")
 message(STATUS "Compiler С ID: ${CMAKE_C_COMPILER_ID}")
@@ -105,8 +95,8 @@ target_include_directories(${PROJECT_NAME}
             )
 
 target_compile_options(${PROJECT_NAME}
-            PRIVATE -D${MODEL} -D${STREAMING_MODE} -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
-        
+            PRIVATE -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+
 target_link_directories(${PROJECT_NAME}
             PRIVATE
             ${CMAKE_BINARY_DIR}/bin/

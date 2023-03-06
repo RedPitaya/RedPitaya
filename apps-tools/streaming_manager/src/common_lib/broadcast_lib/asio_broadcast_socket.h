@@ -12,7 +12,6 @@
 #include <deque>
 
 #include "data_lib/neon_asm.h"
-//#include "net_lib/event_handlers.h"
 #include "data_lib/signal.hpp"
 
 namespace  broadcast_lib {
@@ -87,4 +86,3 @@ private:
 }
 
 #endif
-

@@ -151,7 +151,7 @@ std::vector<UioT> GetUioList()
         while ((next = readdir(dir)))
         {
             const std::string name = next->d_name;
-
+//            printf("name %s\n",name.c_str());
             if ((name == ".") || (name == ".."))
             {
                 continue;

@@ -5,7 +5,7 @@
  *
  * @Author Crt Valentincic <crt.valentincic@redpitaya.com>
  *         Ales Bardorfer <ales.bardorfer@redpitaya.com>
- *         
+ *
  * (c) Red Pitaya  http://www.redpitaya.com
  *
  * This part of code is written in C programming language.
@@ -21,54 +21,9 @@
 
 #include "rp_eeprom.h"
 
-#define EEPROM_DEVICE "/sys/bus/i2c/devices/0-0050/eeprom"
 
-const int c_wpCalParAddrOffset =  0x0000;
-const int c_wpFactoryAddrOffset = 0x1c00;
 
-#ifdef Z20_250_12
-const char * c_wpCalParDesc[eCalParEnd][20]={
-    {"GEN_CH1_G_1"},
-    {"GEN_CH2_G_1"},
-    {"GEN_CH1_OFF_1"},
-    {"GEN_CH2_OFF_1"},
-    {"GEN_CH1_G_5"},
-    {"GEN_CH2_G_5"},
-    {"GEN_CH1_OFF_5"},
-    {"GEN_CH2_OFF_5"},
-    {"OSC_CH1_G_1_AC"},
-    {"OSC_CH2_G_1_AC"},
-    {"OSC_CH1_OFF_1_AC"},
-    {"OSC_CH2_OFF_1_AC"},
-    {"OSC_CH1_G_1_DC"},
-    {"OSC_CH2_G_1_DC"},
-    {"OSC_CH1_OFF_1_DC"},
-    {"OSC_CH2_OFF_1_DC"},
-    {"OSC_CH1_G_20_AC"},
-    {"OSC_CH2_G_20_AC"},
-    {"OSC_CH1_OFF_20_AC"},
-    {"OSC_CH2_OFF_20_AC"},
-    {"OSC_CH1_G_20_DC"},
-    {"OSC_CH2_G_20_DC"},
-    {"OSC_CH1_OFF_20_DC"},
-    {"OSC_CH2_OFF_20_DC"}
-};
-#endif
-
-#if defined Z10 || defined Z20_125
-#define CALIB_MAGIC 0xAABBCCDD
-#define CALIB_MAGIC_FILTER 0xDDCCBBAA
-// Default values
-#define GAIN_LO_FILT_AA 0x7D93
-#define GAIN_LO_FILT_BB 0x437C7
-#define GAIN_LO_FILT_PP 0x2666
-#define GAIN_LO_FILT_KK 0xd9999a
-#define GAIN_HI_FILT_AA 0x4C5F
-#define GAIN_HI_FILT_BB 0x2F38B
-#define GAIN_HI_FILT_PP 0x2666
-#define GAIN_HI_FILT_KK 0xd9999a
-
-const char * c_wpCalParDesc[eCalParEnd][20]={
+const char * c_wpCalParDesc_v1[eCalParEnd_v1][20]={
     {"FE_CH1_FS_G_HI"},
     {"FE_CH2_FS_G_HI"},
     {"FE_CH1_FS_G_LO"},
@@ -99,41 +54,8 @@ const char * c_wpCalParDesc[eCalParEnd][20]={
     {"HI_FILTER_PP_CH2"},
     {"HI_FILTER_KK_CH2"}
 };
-#endif
 
-#ifdef Z20
-#define CALIB_MAGIC 0xAABBCCDD
-const char * c_wpCalParDesc[eCalParEnd][20]={
-    {"FE_CH1_FS_G_HI"},
-    {"FE_CH2_FS_G_HI"},
-    {"FE_CH1_FS_G_LO"},
-    {"FE_CH2_FS_G_LO"},
-    {"FE_CH1_DC_offs"},
-    {"FE_CH2_DC_offs"},
-    {"BE_CH1_FS"},
-    {"BE_CH2_FS"},
-    {"BE_CH1_DC_offs"},
-    {"BE_CH2_DC_offs"},
-    {"Magic"},
-    {"FE_CH1_DC_offs_HI"},
-    {"FE_CH2_DC_offs_HI"},
-};
-#endif
-
-
-#if defined Z20_125_4CH
-
-// Default values
-#define GAIN_LO_FILT_AA 0x7D93
-#define GAIN_LO_FILT_BB 0x437C7
-#define GAIN_LO_FILT_PP 0x2666
-#define GAIN_LO_FILT_KK 0xd9999a
-#define GAIN_HI_FILT_AA 0x4C5F
-#define GAIN_HI_FILT_BB 0x2F38B
-#define GAIN_HI_FILT_PP 0x2666
-#define GAIN_HI_FILT_KK 0xd9999a
-
-const char * c_wpCalParDesc[eCalParEnd][20]={
+const char * c_wpCalParDesc_v2[eCalParEnd_v2][20]={
     {"OSC_CH1_HIGH"},
     {"OSC_CH2_HIGH"},
     {"OSC_CH3_HIGH"},
@@ -188,125 +110,185 @@ const char * c_wpCalParDesc[eCalParEnd][20]={
     {"OSC_CH4_LOW_KK"}
 
 };
-#endif
 
+const char * c_wpCalParDesc_v3[eCalParEnd_v3][20]={
+    {"GEN_CH1_G_1"},
+    {"GEN_CH2_G_1"},
+    {"GEN_CH1_OFF_1"},
+    {"GEN_CH2_OFF_1"},
+    {"GEN_CH1_G_5"},
+    {"GEN_CH2_G_5"},
+    {"GEN_CH1_OFF_5"},
+    {"GEN_CH2_OFF_5"},
+    {"OSC_CH1_G_1_AC"},
+    {"OSC_CH2_G_1_AC"},
+    {"OSC_CH1_OFF_1_AC"},
+    {"OSC_CH2_OFF_1_AC"},
+    {"OSC_CH1_G_1_DC"},
+    {"OSC_CH2_G_1_DC"},
+    {"OSC_CH1_OFF_1_DC"},
+    {"OSC_CH2_OFF_1_DC"},
+    {"OSC_CH1_G_20_AC"},
+    {"OSC_CH2_G_20_AC"},
+    {"OSC_CH1_OFF_20_AC"},
+    {"OSC_CH2_OFF_20_AC"},
+    {"OSC_CH1_G_20_DC"},
+    {"OSC_CH2_G_20_DC"},
+    {"OSC_CH1_OFF_20_DC"},
+    {"OSC_CH2_OFF_20_DC"}
+};
 
-int RpEepromCalDataRead(eepromWpData_t * eepromData, bool factory)
+int getCalibSize(rp_HPeModels_t model){
+    switch (model)
+    {
+        case STEM_125_10_v1_0:
+        case STEM_125_14_v1_0:
+        case STEM_125_14_v1_1:
+        case STEM_125_14_LN_v1_1:
+        case STEM_125_14_Z7020_v1_0:
+        case STEM_125_14_Z7020_LN_v1_1:
+            return eCalParEnd_v1;
+        case STEM_122_16SDR_v1_0:
+        case STEM_122_16SDR_v1_1:
+            return eCalPar_F_LOW_AA_CH1;
+        case STEM_125_14_Z7020_4IN_v1_0:
+        case STEM_125_14_Z7020_4IN_v1_2:
+        case STEM_125_14_Z7020_4IN_v1_3:
+            return eCalParEnd_v2;
+
+        case STEM_250_12_v1_0:
+        case STEM_250_12_v1_1:
+        case STEM_250_12_v1_2:
+        case STEM_250_12_120:
+            return eCalParEnd_v3;
+        default:{
+            fprintf(stderr,"[Error:getCalibSize] Unknown model: %d.\n",model);
+            return -1;
+        }
+    }
+}
+
+void RpPrintEepromCalData(rp_HPeModels_t model,rp_eepromWpData_t *_eepromData,bool verb,bool hex)
 {
+    int size = 0;
 
-    FILE *fp;
-    size_t size;
+    switch (model)
+    {
+        case STEM_125_10_v1_0:
+        case STEM_125_14_v1_0:
+        case STEM_125_14_v1_1:
+        case STEM_125_14_LN_v1_1:
+        case STEM_125_14_Z7020_v1_0:
+        case STEM_125_14_Z7020_LN_v1_1:
+        case STEM_122_16SDR_v1_0:
+        case STEM_122_16SDR_v1_1:{
+            size = eCalParEnd_v1;
+            if (_eepromData->feCalPar[eCalParMagic] == (int32_t)CALIB_MAGIC){
+                size = eCalPar_F_LOW_AA_CH1;
+            }
+            if (verb){
+               printf(hex ? "dataStructureId = 0x%X\n" : "dataStructureId = %d\n",_eepromData->dataStructureId);
+               printf(hex ? "wpCheck = 0x%X\n" : "wpCheck = %d\n",_eepromData->wpCheck);
+               for(int i = 0; i < size; ++i) {
+                    printf( hex ? "%s = 0x%X\n" : "%s = %d\n", c_wpCalParDesc_v1[i][0], _eepromData->feCalPar[i]);
+                }
+                return;
+            }
+            break;
+        }
 
-    /* Open device */
-    fp = fopen(EEPROM_DEVICE, "rw+");
-    if(fp == NULL) {
-        fprintf(stderr, "Cannot open eeprom device!\n");
-        return -1;
+        case STEM_125_14_Z7020_4IN_v1_0:
+        case STEM_125_14_Z7020_4IN_v1_2:
+        case STEM_125_14_Z7020_4IN_v1_3:{
+            size = eCalParEnd_v2;
+            if (verb){
+               printf(hex ? "dataStructureId = 0x%X\n" : "dataStructureId = %d\n",_eepromData->dataStructureId);
+               printf(hex ? "wpCheck = 0x%X\n" : "wpCheck = %d\n",_eepromData->wpCheck);
+               for(int i = 0; i < size; ++i) {
+                    printf( hex ? "%s = 0x%X\n" : "%s = %d\n", c_wpCalParDesc_v2[i][0], _eepromData->feCalPar[i]);
+                }
+                return;
+            }
+            break;
+        }
+        case STEM_250_12_v1_0:
+        case STEM_250_12_v1_1:
+        case STEM_250_12_v1_2:
+        case STEM_250_12_120:{
+            size = eCalParEnd_v3;
+            if (verb){
+                printf(hex ? "dataStructureId = 0x%X\n" : "dataStructureId = %d\n",_eepromData->dataStructureId);
+                printf(hex ? "wpCheck = 0x%X\n" : "wpCheck = %d\n",_eepromData->wpCheck);
+                for(int i = 0; i < size; ++i) {
+                    printf( hex ? "%s = 0x%X\n" : "%s = %d\n", c_wpCalParDesc_v3[i][0], _eepromData->feCalPar[i]);
+                }
+                return;
+            }
+            break;
+        }
+
+        default:{
+            fprintf(stderr,"[Error:calib_LoadFromFactoryZone] Unknown model: %d.\n",model);
+            return;
+        }
     }
 
-    /* Read eeprom content */
-    int offset = factory ? c_wpFactoryAddrOffset : c_wpCalParAddrOffset;
-    fseek(fp, offset, SEEK_SET);
-
-    size = fread(eepromData, sizeof(char), sizeof(eepromWpData_t), fp);
-    if(size != sizeof(eepromWpData_t)) {
-        fprintf(stderr, "Eeprom read failed\n");
-        fclose(fp);
-        return -1;
+    for(int i = 0; i < size; ++i) {
+        fprintf(stdout, hex ? "0x%X\t" : "%20d", _eepromData->feCalPar[i]);
     }
-#if defined Z10 || defined Z20_125
-if (eepromData->feCalPar[eCalParMagic] != CALIB_MAGIC_FILTER){
-    eepromData->feCalPar[eCalPar_F_LOW_AA_CH1] = GAIN_LO_FILT_AA;
-    eepromData->feCalPar[eCalPar_F_LOW_BB_CH1] = GAIN_LO_FILT_BB;
-    eepromData->feCalPar[eCalPar_F_LOW_PP_CH1] = GAIN_LO_FILT_PP;
-    eepromData->feCalPar[eCalPar_F_LOW_KK_CH1] = GAIN_LO_FILT_KK;
-    eepromData->feCalPar[eCalPar_F_LOW_AA_CH2] = GAIN_LO_FILT_AA;
-    eepromData->feCalPar[eCalPar_F_LOW_BB_CH2] = GAIN_LO_FILT_BB;
-    eepromData->feCalPar[eCalPar_F_LOW_PP_CH2] = GAIN_LO_FILT_PP;
-    eepromData->feCalPar[eCalPar_F_LOW_KK_CH2] = GAIN_LO_FILT_KK;
-
-    eepromData->feCalPar[eCalPar_F_HI_AA_CH1] = GAIN_HI_FILT_AA;
-    eepromData->feCalPar[eCalPar_F_HI_BB_CH1] = GAIN_HI_FILT_BB;
-    eepromData->feCalPar[eCalPar_F_HI_PP_CH1] = GAIN_HI_FILT_PP;
-    eepromData->feCalPar[eCalPar_F_HI_KK_CH1] = GAIN_HI_FILT_KK;
-    eepromData->feCalPar[eCalPar_F_HI_AA_CH2] = GAIN_HI_FILT_AA;
-    eepromData->feCalPar[eCalPar_F_HI_BB_CH2] = GAIN_HI_FILT_BB;
-    eepromData->feCalPar[eCalPar_F_HI_PP_CH2] = GAIN_HI_FILT_PP;
-    eepromData->feCalPar[eCalPar_F_HI_KK_CH2] = GAIN_HI_FILT_KK;
-}
-#endif
-
-    fclose(fp);
-    return 0;
-}
-
-int RpEepromCalDataWrite(eepromWpData_t * eepromData, bool factory)
-{
-    FILE *fp;
-    size_t size;
-
-    /* Fix ID and set reserved data */
-    eepromData->dataStructureId = PACK_ID;
-    eepromData->wpCheck += 1;
-#ifdef Z20
-    eepromData->feCalPar[eCalParMagic]=CALIB_MAGIC;
-#endif
-    memset((char*)&eepromData->reserved[0], 0, 6);
-
-    /* Open device */
-    fp = fopen(EEPROM_DEVICE, "rw+");
-    if(fp == NULL){
-    	fprintf(stderr, "Cannot open eeprom device!\n");
-        fclose(fp);
-        return -1;
-    }
-
-    /* Write to eeprom */
-    int offset = factory ? c_wpFactoryAddrOffset : c_wpCalParAddrOffset;
-    fseek(fp, offset, SEEK_SET);
-
-    size = fwrite(eepromData, sizeof(char), sizeof(eepromWpData_t), fp);
-    if(size != sizeof(eepromWpData_t)) {
-        fprintf(stderr, "Eeprom write failed\n");
-        fclose(fp);
-        return -1;
-    }
-
-    fclose(fp);
-
-    if(RpEepromCalDataVerify(eepromData, factory)) {
-        fprintf(stderr, "Eeprom verify failed\n");
-        return -1;
-    }
-
-    return 0;
+    fprintf(stdout, "\n");
 }
 
-int RpEepromCalDataVerify(eepromWpData_t * a_eepromData, bool factory)
-{
-    eepromWpData_t data;
-    if(RpEepromCalDataRead(&data, factory)) {
-        return -1;
-    }
+void print_eeprom(rp_HPeModels_t model,rp_eepromWpData_t *data,int mode){
+    /* Print */
+    if (mode & WANT_VERBOSE ) {
+        RpPrintEepromCalData(model, data,true,mode & WANT_HEX);
+    } else {
+        if (!(mode & WANT_Z_MODE)) {
+            RpPrintEepromCalData(model, data,false,mode & WANT_HEX);
+        }else{
+            switch (model)
+            {
+                case STEM_125_10_v1_0:
+                case STEM_125_14_v1_0:
+                case STEM_125_14_v1_1:
+                case STEM_125_14_LN_v1_1:
+                case STEM_125_14_Z7020_v1_0:
+                case STEM_125_14_Z7020_LN_v1_1:
+                case STEM_122_16SDR_v1_0:
+                case STEM_122_16SDR_v1_1:{
+                   fprintf(stdout, "%20d %20d %20d %20d %20d %20d %20d %20d %20d %20d %20d %20d\n",
+                            data->feCalPar[eCalPar_FE_CH1_DC_offs],
+                            data->feCalPar[eCalPar_FE_CH2_DC_offs],
+                            data->feCalPar[eCalPar_FE_CH1_FS_G_LO],
+                            data->feCalPar[eCalPar_FE_CH2_FS_G_LO],
+                            data->feCalPar[eCalPar_FE_CH1_DC_offs_HI],
+                            data->feCalPar[eCalPar_FE_CH2_DC_offs_HI],
+                            data->feCalPar[eCalPar_FE_CH1_FS_G_HI],
+                            data->feCalPar[eCalPar_FE_CH2_FS_G_HI],
+                            data->feCalPar[eCalPar_BE_CH1_DC_offs],
+                            data->feCalPar[eCalPar_BE_CH2_DC_offs],
+                            data->feCalPar[eCalPar_BE_CH1_FS],
+                            data->feCalPar[eCalPar_BE_CH2_FS]);
+                    break;
+                }
 
-    if(memcmp((char*)&data, a_eepromData, sizeof(eepromWpData_t))) {
-        return -1;
+                case STEM_125_14_Z7020_4IN_v1_0:
+                case STEM_125_14_Z7020_4IN_v1_2:
+                case STEM_125_14_Z7020_4IN_v1_3:
+                case STEM_250_12_v1_0:
+                case STEM_250_12_v1_1:
+                case STEM_250_12_v1_2:
+                case STEM_250_12_120:{
+                    fprintf(stdout, "Unsupport mode\n");
+                    break;
+                }
+
+                default:{
+                    fprintf(stderr,"[Error:print_eeprom] Unknown model: %d.\n",model);
+                    break;
+                }
+            }
+        }
     }
-    return 0;
 }
-
-void RpPrintEepromCalData(eepromWpData_t a_eepromData)
-{
-    int i;
-    int size = eCalParEnd;
-#if defined Z10 || defined Z20_125
-    if (a_eepromData.feCalPar[eCalParMagic] == CALIB_MAGIC){
-        size = eCalPar_F_LOW_AA_CH1;
-    }
-#endif
-    for(i=0; i < size; i++) {
-        printf("%s = %d\n", c_wpCalParDesc[i][0], a_eepromData.feCalPar[i]);
-    }
-}
-
-

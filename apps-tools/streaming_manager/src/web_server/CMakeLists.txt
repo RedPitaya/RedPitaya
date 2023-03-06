@@ -3,22 +3,12 @@ project(web_server)
 
 set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY true)
 
-if(NOT DEFINED MODEL)
-  set(MODEL Z10)
-endif()
-
-if(NOT DEFINED STREAMING_MODE)
-  set(STREAMING_MODE STREAMING_MASTER)
-endif()
-
 message(STATUS "Project=${PROJECT_NAME}")
-message(STATUS "RedPitaya model=${MODEL}")
 message(STATUS "RedPitaya platform=${RP_PLATFORM}")
 message(STATUS "Is install ${IS_INSTALL}")
 message(STATUS "Install path ${INSTALL_DIR}")
 message(STATUS "VERSION=${VERSION}")
 message(STATUS "REVISION=${REVISION}")
-message(STATUS "BOARD TYPE=${STREAMING_MODE}")
 message(STATUS "CMAKE_SYSTEM_PROCESSOR=${CMAKE_SYSTEM_PROCESSOR}")
 
 message(STATUS "Compiler С path: ${CMAKE_C_COMPILER}")
@@ -50,11 +40,12 @@ if (RP_PLATFORM)
     target_compile_options(${PROJECT_NAME} PRIVATE -DRP_PLATFORM)
     target_include_directories(${PROJECT_NAME} PUBLIC ${INSTALL_DIR}/include ${INSTALL_DIR}/rp_sdk ${INSTALL_DIR}/rp_sdk/libjson)
     target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib/ ${INSTALL_DIR}/rp_sdk)
-    target_link_libraries(${PROJECT_NAME} PUBLIC -Wl,--as-needed rp rp-hw rp_sdk -Wl,--no-as-needed)
+    target_link_libraries(${PROJECT_NAME} PUBLIC -Wl,--as-needed rp rp-hw rp_sdk rp-hw rp-hw-calib rp-hw-profiles -Wl,--no-as-needed)
+    target_link_libraries(${PROJECT_NAME} PRIVATE rp-i2c rp-spi rp-gpio i2c)
 endif()
 
 target_compile_options(${PROJECT_NAME}
-    PRIVATE -Wall -fpermissive -D${MODEL} -D${STREAMING_MODE} -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os -s>  -ffunction-sections -fdata-sections)
+    PRIVATE -Wall -fpermissive -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os -s>  -ffunction-sections -fdata-sections)
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC  ${PROJECT_SOURCE_DIR}
@@ -79,10 +70,6 @@ target_link_directories(${PROJECT_NAME}
 
 
 target_link_libraries(${PROJECT_NAME} PUBLIC config_net_lib dac_streaming_lib streaming_lib settings_lib pthread stdc++)
-
-if ("${MODEL}" STREQUAL "Z20_250_12")
-    target_link_libraries(${PROJECT_NAME} PRIVATE rp-i2c rp-spi rp-gpio)
-endif()
 
 if(IS_INSTALL)
        install(TARGETS ${PROJECT_NAME}

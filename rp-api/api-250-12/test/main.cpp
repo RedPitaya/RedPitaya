@@ -34,15 +34,15 @@ int main()
     MSG("set AC/DC 1",rp_max7311::rp_setAC_DC(RP_MAX7311_IN1,RP_DC_MODE));
     max7311::setPIN_GROUP(PIN_K1,RP_AC_MODE);
     MSG("set AC/DC 2",rp_max7311::rp_setAC_DC(RP_MAX7311_IN2,RP_AC_MODE));
-   
+
     MSG("set Attenuator 1",rp_max7311::rp_setAttenuator(RP_MAX7311_IN1,RP_ATTENUATOR_1_20));
- 
+
     MSG("set Attenuator 2",rp_max7311::rp_setAttenuator(RP_MAX7311_IN2,RP_ATTENUATOR_1_20));
- 
+
     MSG("set Gain 1",rp_max7311::rp_setGainOut(RP_MAX7311_OUT1,RP_GAIN_10V));
- 
+
      MSG("set Gain 2",rp_max7311::rp_setGainOut(RP_MAX7311_OUT2,RP_GAIN_10V));
- 
+
     MSG("Init",rp_max7311::rp_initController());
 
     // rp_i2c_enable_verbous();
@@ -67,6 +67,9 @@ int main()
     printf ("0x16 = %d\n",x);
     rp_spi_fpga::rp_read_from_spi_fpga("/dev/mem/",0x40000000,0x50,0x18,x);
     printf ("0x18 = %d\n",x);
-   rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9746BCPZ-250.xml");
+    rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9746BCPZ-250.xml");
+    rp_spi_fpga::rp_read_from_spi_fpga("/dev/mem/",0x40000000,0x60,0x00,x);
+    printf ("0x00 = %d\n",x);
+
     return 0;
 }

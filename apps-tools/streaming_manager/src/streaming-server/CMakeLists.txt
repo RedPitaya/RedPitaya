@@ -3,22 +3,12 @@ project(streaming-server)
 
 set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY true)
 
-if(NOT DEFINED MODEL)
-  set(MODEL Z10)
-endif()
-
-if(NOT DEFINED STREAMING_MODE)
-  set(STREAMING_MODE STREAMING_MASTER)
-endif()
-
 message(STATUS "Project=${PROJECT_NAME}")
-message(STATUS "RedPitaya model=${MODEL}")
 message(STATUS "RedPitaya platform=${RP_PLATFORM}")
 message(STATUS "Is install ${IS_INSTALL}")
 message(STATUS "Install path ${INSTALL_DIR}")
 message(STATUS "VERSION=${VERSION}")
 message(STATUS "REVISION=${REVISION}")
-message(STATUS "BOARD TYPE=${STREAMING_MODE}")
 
 message(STATUS "Compiler С path: ${CMAKE_C_COMPILER}")
 message(STATUS "Compiler С ID: ${CMAKE_C_COMPILER_ID}")
@@ -49,11 +39,12 @@ if (RP_PLATFORM)
     target_compile_options(${PROJECT_NAME} PRIVATE -DRP_PLATFORM)
     target_include_directories(${PROJECT_NAME} PUBLIC ${INSTALL_DIR}/include)
     target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib/)
-    target_link_libraries(${PROJECT_NAME} PUBLIC rp rp-hw)
+    target_link_libraries(${PROJECT_NAME} PUBLIC rp rp-hw rp-hw-calib rp-hw-profiles)
+    target_link_libraries(${PROJECT_NAME} PUBLIC rp-i2c rp-spi rp-gpio i2c)
 endif()
 
 target_compile_options(${PROJECT_NAME}
-    PRIVATE -Wall -Wextra -fpermissive -D${MODEL} -D${STREAMING_MODE} -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os -s> -ffunction-sections -fdata-sections)
+    PRIVATE -Wall -Wextra -fpermissive -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os -s> -ffunction-sections -fdata-sections)
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC  ${PROJECT_SOURCE_DIR}
@@ -82,10 +73,6 @@ target_link_directories(${PROJECT_NAME}
     )
 
 target_link_libraries(${PROJECT_NAME} PUBLIC config_net_lib dac_streaming_lib streaming_lib settings_lib)
-
-if ("${MODEL}" STREQUAL "Z20_250_12")
-    target_link_libraries(${PROJECT_NAME} PRIVATE rp-i2c rp-spi rp-gpio)
-endif()
 
 if(NOT WIN32 )
     target_link_libraries(${PROJECT_NAME} PRIVATE pthread stdc++)

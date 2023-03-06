@@ -6,6 +6,9 @@
 
 NAME=redpitaya-nginx
 
+export LUAJIT_LIB=/usr/lib/arm-linux-gnueabihf
+export LUAJIT_INC=/usr/include/luajit-2.1
+
 # Versioning system
 BUILD_NUMBER ?= 0
 REVISION ?= devbuild
@@ -30,13 +33,16 @@ configuration += --add-module=../ngx_ext_modules/lua-nginx-module
 configuration += --error-log-path=/var/log/redpitaya_nginx/error.log
 configuration += --with-ipv6
 configuration += --with-http_dav_module
+configuration += --with-ld-opt="-Wl,-rpath,/usr/lib/arm-linux-gnueabihf"
 
 VERSION=$(VER)-$(BUILD_NUMBER)
+
+.PHONY: $(NGINX)
 
 all: $(NGINX)
 
 $(NGINX): $(RP_MANAGER_LIB) $(WS_SERVER_LIB)
-	cd $(NGINX_DIR); ./configure `cat ../configure_withouts.txt` $(configuration);	
+	cd $(NGINX_DIR); ./configure `cat ../configure_withouts.txt` $(configuration);
 	$(MAKE) -j $(JOBS) -C $(NGINX_DIR) CC=$(CROSS_COMPILE)gcc LINK=$(CROSS_COMPILE)g++
 
 $(WS_SERVER_LIB):
@@ -50,6 +56,7 @@ install:
 	test -d '$(DESTDIR)/sbin'                 || mkdir -p '$(DESTDIR)/sbin'
 	test -d '$(DESTDIR)/lib'                  || mkdir -p '$(DESTDIR)/lib'
 	test -d '$(DESTDIR)/www/conf'             || mkdir -p '$(DESTDIR)/www/conf'
+	test -d '$(DESTDIR)/www/conf/lib/lua'     || mkdir -p '$(DESTDIR)/www/conf/lib/lua'
 	test -d '$(DESTDIR)/www/apps'             || mkdir -p '$(DESTDIR)/www/apps'
 	test -d '$(DESTDIR)/www/client_body_temp' || mkdir -p '$(DESTDIR)/www/client_body_temp'
 	test -d '$(DESTDIR)/rp_sdk' 		 	  || mkdir -p '$(DESTDIR)/rp_sdk'
@@ -61,6 +68,9 @@ install:
 	cp -r $(WS_SERVER_DIR)/rp_sdk/*.a '$(DESTDIR)/rp_sdk/'
 	cp -r $(LIBJSON_DIR)/*.h '$(DESTDIR)/rp_sdk/libjson/'
 	cp -r $(LIBJSON_DIR)/_internal '$(DESTDIR)/rp_sdk/libjson/'
+	make -C ngx_ext_modules/lua-resty-module install  PREFIX=/www/conf
+	make -C ngx_ext_modules/lua-resty-lrucache-module install  PREFIX=/www/conf
+
 
 
 clean:

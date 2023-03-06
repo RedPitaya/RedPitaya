@@ -1,9 +1,10 @@
-#include "i2c-helper.h"
-
 #include <stdint.h>
 #include <stdio.h>
 
 #include <linux/i2c-dev.h>
+#include <linux/i2c.h>
+#include <i2c/smbus.h>
+
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -12,6 +13,9 @@
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
+
+#include "i2c-helper.h"
+
 
 pthread_mutex_t i2c_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -52,7 +56,7 @@ int i2c_SBMUS_write_byte(const char* i2c_dev_node_path,uint8_t i2c_dev_address,u
 		pthread_mutex_unlock(&i2c_mutex);
 		return ret_val;
 	}
-	
+
 	ret_val = i2c_smbus_write_byte_data(i2c_dev_node,
 					i2c_dev_reg_addr,
 					i2c_val_to_write);
@@ -63,8 +67,8 @@ int i2c_SBMUS_write_byte(const char* i2c_dev_node_path,uint8_t i2c_dev_address,u
 		pthread_mutex_unlock(&i2c_mutex);
         return RP_HW_EWIIC;
 	}
-    close(i2c_dev_node);                 
-	pthread_mutex_unlock(&i2c_mutex); 
+	close(i2c_dev_node);
+	pthread_mutex_unlock(&i2c_mutex);
 	return RP_HW_OK;
 }
 
@@ -90,8 +94,8 @@ int i2c_SBMUS_write_word(const char* i2c_dev_node_path,uint8_t i2c_dev_address,u
 		pthread_mutex_unlock(&i2c_mutex);
         return RP_HW_EWIIC;
 	}
-    close(i2c_dev_node);      
-	pthread_mutex_unlock(&i2c_mutex);            
+	close(i2c_dev_node);
+	pthread_mutex_unlock(&i2c_mutex);
 	return RP_HW_OK;
 }
 
@@ -117,11 +121,11 @@ int i2c_SBMUS_write_command(const char* i2c_dev_node_path,uint8_t i2c_dev_addres
 		pthread_mutex_unlock(&i2c_mutex);
         return RP_HW_EWIIC;
 	}
-    close(i2c_dev_node);     
-	pthread_mutex_unlock(&i2c_mutex);             
+    close(i2c_dev_node);
+	pthread_mutex_unlock(&i2c_mutex);
 	return RP_HW_OK;
 }
- 
+
 int i2c_SBMUS_write_buffer(const char* i2c_dev_node_path,uint8_t i2c_dev_address,uint8_t i2c_dev_reg_addr,const uint8_t *buffer,int len, bool force){
  	if (!buffer) {
 		return RP_HW_EBIIC;
@@ -138,7 +142,7 @@ int i2c_SBMUS_write_buffer(const char* i2c_dev_node_path,uint8_t i2c_dev_address
 	}
 
 	ret_val = i2c_smbus_write_block_data(i2c_dev_node,i2c_dev_reg_addr,len,buffer);
-	
+
 	if (ret_val < 0) {
         fprintf(stderr,"[rp_i2c] I2C Write Operation failed - %d.\n",errno);
         close(i2c_dev_node);
@@ -146,7 +150,7 @@ int i2c_SBMUS_write_buffer(const char* i2c_dev_node_path,uint8_t i2c_dev_address
         return RP_HW_EWIIC;
 	}
     close(i2c_dev_node);
-	pthread_mutex_unlock(&i2c_mutex);                  
+	pthread_mutex_unlock(&i2c_mutex);
 	return RP_HW_OK;
 }
 
@@ -173,8 +177,8 @@ int i2c_SBMUS_read_byte(const char* i2c_dev_node_path,uint8_t i2c_dev_address,ui
         return RP_HW_ERIIC;
 	}
 	close(i2c_dev_node);
-    *value = (uint8_t)read_value;      
-	pthread_mutex_unlock(&i2c_mutex);              
+    *value = (uint8_t)read_value;
+	pthread_mutex_unlock(&i2c_mutex);
 	return RP_HW_OK;
 }
 
@@ -200,8 +204,8 @@ int i2c_SBMUS_read_word(const char* i2c_dev_node_path,uint8_t i2c_dev_address,ui
         return RP_HW_ERIIC;
 	}
 	close(i2c_dev_node);
-    *value = (uint16_t)read_value;      
-	pthread_mutex_unlock(&i2c_mutex);              
+    *value = (uint16_t)read_value;
+	pthread_mutex_unlock(&i2c_mutex);
 	return RP_HW_OK;
 }
 
@@ -228,8 +232,8 @@ int i2c_SBMUS_read_command(const char* i2c_dev_node_path,uint8_t i2c_dev_address
         return RP_HW_ERIIC;
 	}
 	close(i2c_dev_node);
-    *value = (char)read_value;  
-	pthread_mutex_unlock(&i2c_mutex);                  
+    *value = (char)read_value;
+	pthread_mutex_unlock(&i2c_mutex);
 	return RP_HW_OK;
 }
 
@@ -259,9 +263,9 @@ int i2c_SBMUS_read_buffer(const char* i2c_dev_node_path,uint8_t i2c_dev_address,
 		pthread_mutex_unlock(&i2c_mutex);
         return RP_HW_ERIIC;
 	}
-	
-	close(i2c_dev_node);                 
-	pthread_mutex_unlock(&i2c_mutex); 
+
+	close(i2c_dev_node);
+	pthread_mutex_unlock(&i2c_mutex);
 	*len = read_value;
 	return RP_HW_OK;
 }
@@ -285,7 +289,7 @@ int i2c_IOCTL_read_buffer(const char* i2c_dev_node_path,uint8_t i2c_dev_address,
 
 	struct i2c_rdwr_ioctl_data data;
 	struct i2c_msg message;
-	/* 
+	/*
 		* .addr - address on bus
 		* .flags - (0 - w, 1 - r)
 		* .len - lenght of read/write
@@ -294,7 +298,7 @@ int i2c_IOCTL_read_buffer(const char* i2c_dev_node_path,uint8_t i2c_dev_address,
 	message.addr = i2c_dev_address;
 	message.flags = 1;
 	message.len = len;
-	message.buf = (char*)buffer;
+	message.buf = (unsigned char*)buffer;
 
 	data.msgs = &message;
 	data.nmsgs = 1;
@@ -327,7 +331,7 @@ int i2c_IOCTL_write_buffer(const char* i2c_dev_node_path,uint8_t i2c_dev_address
 
 	struct i2c_rdwr_ioctl_data data;
 	struct i2c_msg message;
-	/* 
+	/*
 		* .addr - address on bus
 		* .flags - (0 - w, 1 - r)
 		* .len - lenght of read/write
@@ -336,7 +340,7 @@ int i2c_IOCTL_write_buffer(const char* i2c_dev_node_path,uint8_t i2c_dev_address
 	message.addr = i2c_dev_address;
 	message.flags = 0;
 	message.len = len;
-	message.buf = (char*)buffer;
+	message.buf = (unsigned char*)buffer;
 
 	data.msgs = &message;
 	data.nmsgs = 1;

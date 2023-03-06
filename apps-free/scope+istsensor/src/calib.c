@@ -4,7 +4,7 @@
  * @brief Red Pitaya Oscilloscope Calibration Module.
  *
  * @Author Jure Menart <juremenart@gmail.com>
- *         
+ *
  * (c) Red Pitaya  http://www.redpitaya.com
  *
  * This part of code is written in C programming language.
@@ -60,7 +60,7 @@ int rp_read_calib_params(rp_calib_params_t *calib_params)
     /* ...and seek to the appropriate storage offset */
     if(fseek(fp, eeprom_calib_off, SEEK_SET) < 0) {
         fclose(fp);
-        fprintf(stderr, "rp_read_calib_params(): fseek() failed: %s\n", 
+        fprintf(stderr, "rp_read_calib_params(): fseek() failed: %s\n",
                 strerror(errno));
         return -1;
     }
@@ -70,7 +70,7 @@ int rp_read_calib_params(rp_calib_params_t *calib_params)
     if(size != sizeof(rp_calib_params_t)) {
         fclose(fp);
         fprintf(stderr, "rp_read_calib_params(): fread() failed, "
-                "returned bytes: %d (should be :%d)\n", size, 
+                "returned bytes: %d (should be :%d)\n", size,
                 sizeof(rp_calib_params_t));
         return -1;
     }

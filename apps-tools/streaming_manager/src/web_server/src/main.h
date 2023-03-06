@@ -2,9 +2,50 @@
 
 #include <sys/syslog.h> //Add custom RP_LCR LOG system
 
+#include <DataManager.h>
+#include <CustomParameters.h>
 
-#define CH_SIGNAL_SIZE_DEFAULT      1024
-#define SAMPLING_RATE_DIV_MILLION   125
+#include <fstream>
+#include <limits.h>
+#include <math.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/syslog.h>
+#include <complex.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <ctime>
+#include <stdlib.h>
+
+#include <vector>
+#include <algorithm>
+#include <thread>
+#include <mutex>
+
+#include <unistd.h>
+#include <signal.h>
+
+#include "rp.h"
+#include "rp_hw-calib.h"
+#include "rp_hw-profiles.h"
+#include "api250-12/rp-spi.h"
+#include "api250-12/rp-gpio-power.h"
+#include "api250-12/rp-i2c-max7311.h"
+
+#include "version.h"
+
+#include "uio_lib/oscilloscope.h"
+#include "uio_lib/generator.h"
+#include "data_lib/thread_cout.h"
+#include "streaming_lib/streaming_net.h"
+#include "streaming_lib/streaming_fpga.h"
+#include "streaming_lib/streaming_buffer_cached.h"
+#include "streaming_lib/streaming_file.h"
+#include "dac_streaming_lib/dac_streaming_application.h"
+#include "dac_streaming_lib/dac_net_controller.h"
+#include "dac_streaming_lib/dac_streaming_manager.h"
+#include "config_net_lib/server_net_config_manager.h"
 
 #define EXEC_CHECK_MUTEX(x, mutex){ \
  		int retval = (x); \
@@ -35,8 +76,6 @@ if (X.Value() != X.NewValue()) { \
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-
 
 
 /* Parameters description structure - must be the same for all RP controllers */
@@ -70,6 +109,13 @@ int rp_app_exit(void);
 int rp_set_params(rp_app_params_t *p, int len);
 int rp_get_params(rp_app_params_t **p);
 int rp_get_signals(float ***s, int *sig_num, int *sig_len);
+
+auto getADCChannels() -> uint8_t;
+auto getDACChannels() -> uint8_t;
+auto getDACRate() -> uint32_t;
+auto getADCRate() -> uint32_t;
+auto getModel() -> broadcast_lib::EModel;
+auto getModelS() -> std::string;
 
 #ifdef __cplusplus
 }

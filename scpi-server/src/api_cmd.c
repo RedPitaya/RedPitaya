@@ -25,9 +25,20 @@
 #include "dpin.h"
 #include "apin.h"
 
-#ifndef Z20_125_4CH
 #include "generate.h"
-#endif
+
+
+const scpi_choice_def_t scpi_TRIG_O_mode[] = {
+    {"ADC", 0},
+    {"DAC", 1},
+    SCPI_CHOICE_LIST_END
+};
+
+const scpi_choice_def_t scpi_DAISY_state[] = {
+    {"OFF", 0},
+    {"ON", 1},
+    SCPI_CHOICE_LIST_END
+};
 
 scpi_result_t RP_InitAll(scpi_t *context){
 
@@ -69,7 +80,6 @@ scpi_result_t RP_ResetAll(scpi_t *context){
         return SCPI_RES_ERR;
     }
 
-#ifndef Z20_125_4CH
     result = RP_GenReset(context);
 
     if(result != RP_OK){
@@ -77,7 +87,6 @@ scpi_result_t RP_ResetAll(scpi_t *context){
             "Pitaya modules: %s\n", rp_GetError(result));
         return SCPI_RES_ERR;
     }
-#endif
 
     RP_LOG(LOG_INFO, "*RP:RST Successfully reset Red Pitaya modules.\n");
     return SCPI_RES_OK;
@@ -97,71 +106,6 @@ scpi_result_t RP_ReleaseAll(scpi_t *context){
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_FpgaBitStream(scpi_t *context){
-
-    const char *fpga_dir = "/opt/redpitaya/fpga/fpga_";
-    const char *param;
-    size_t param_len;
-
-    int fo, fi, fpga_s, fpga_dir_s;
-    struct stat st;
-
-    /* Read first param(fpga bit file typ (0.93, 0.94)) fom context */
-    if(!SCPI_ParamCharacters(context, &param, &param_len, true)){
-        RP_LOG(LOG_ERR, "*RP:FPGA:BITSTR Failed to parse first parameter.\n");
-        return SCPI_RES_ERR;
-    }
-
-    fpga_dir_s = strlen(fpga_dir) + param_len + strlen(".bit") + 2;
-
-    /* Get fpga image path */
-    char fpga_file[fpga_dir_s];
-    char delim_param[param_len];
-    strncpy(delim_param, param, param_len);
-    delim_param[param_len] = '\0';
-
-    snprintf(fpga_file, fpga_dir_s, "%s%s.bit", &fpga_dir[0], &delim_param[0]);
-    fpga_file[fpga_dir_s - 1] = '\0';
-    
-
-    /* Load new fpga image into /dev/xdevcfg */
-    fo = open("/dev/xdevcfg", O_WRONLY);
-    if(fo < 0){
-        RP_LOG(LOG_ERR, "*RP:FPGA:BITstr Failed to open output file.\n");
-        return SCPI_RES_ERR;
-    }
-
-    fi = open(fpga_file, O_RDONLY);
-    if(fi < 0){
-        RP_LOG(LOG_ERR, "*RP:FPGA:BITstr Failed to open input file: %d\n", fi);
-        return SCPI_RES_ERR;
-    }
-
-    /* Get FPGA size */
-    stat(fpga_file, &st);
-    fpga_s = st.st_size;
-    char fi_buff[fpga_s];
-
-    /* Read FPGA file into fi_buff */
-    if(read(fi, &fi_buff, fpga_s) < 0){
-        RP_LOG(LOG_ERR, "*RP:FPGA:BITstr Unable to read "
-            "fpga bit stream into buffer: %d\n", fo);
-        return SCPI_RES_ERR;
-    }
-
-    if(write(fo, &fi_buff, fpga_s) < 0){
-        RP_LOG(LOG_ERR, "*RP:FPGA:BITstr Unable to write fpga "
-            "bit stream: %d\n", fo);
-        return SCPI_RES_ERR;
-    }
-
-    /* Close resources */
-    close(fi);
-    close(fo);
-
-    RP_LOG(LOG_INFO, "*RP:FPGA:BITstr Successfully loaded FPGA bit stream.\n");
-    return SCPI_RES_OK;
-}
 
 scpi_result_t RP_EnableDigLoop(scpi_t *context){
 
@@ -176,5 +120,132 @@ scpi_result_t RP_EnableDigLoop(scpi_t *context){
     RP_LOG(LOG_INFO, "*RP:DIG:LOop Successfully initialize Red Pitaya"
         " digital loop.\n");
 
+    return SCPI_RES_OK;
+}
+
+
+scpi_result_t RP_EnableDaisyChainSync(scpi_t *context){
+    int32_t value;
+
+    if (!SCPI_ParamChoice(context, scpi_DAISY_state, &value, true)) {
+        RP_LOG(LOG_ERR, "*DAISY:ENable is missing first parameter.\n");
+        return SCPI_RES_ERR;
+    }
+
+    int result = rp_SetEnableDaisyChainSync((bool)value);
+    if (RP_OK != result) {
+        RP_LOG(LOG_ERR, "*DAISY:ENable Failed to enabled mode: %d\n", result);
+        return SCPI_RES_ERR;
+    }
+
+    RP_LOG(LOG_INFO, "*DAISY:ENable Successfully enabled mode.\n");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_EnableDaisyChainSyncQ(scpi_t *context){
+    const char *_name;
+
+    bool value;
+    int result = rp_GetEnableDaisyChainSync(&value);
+
+    if (RP_OK != result) {
+        RP_LOG(LOG_ERR, "*DAISY:ENable? Failed get state: %d", result);
+        return SCPI_RES_ERR;
+    }
+
+    if(!SCPI_ChoiceToName(scpi_DAISY_state, (int32_t)value, &_name)){
+        RP_LOG(LOG_ERR, "*DAISY:ENable? Failed to parse state.\n");
+        return SCPI_RES_ERR;
+    }
+
+    // Return back result
+    SCPI_ResultMnemonic(context, _name);
+
+
+    RP_LOG(LOG_INFO, "*DAISY:ENable? Successfully returned state.\n");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_DpinEnableTrigOutput(scpi_t *context){
+    int32_t value;
+
+    if (!SCPI_ParamChoice(context, scpi_DAISY_state, &value, true)) {
+        RP_LOG(LOG_ERR, "*DAISY:TRIG_O:ENable is missing first parameter.\n");
+        return SCPI_RES_ERR;
+    }
+
+    int result = rp_SetDpinEnableTrigOutput((bool)value);
+    if (RP_OK != result) {
+        RP_LOG(LOG_ERR, "*DAISY:TRIG_O:ENable Failed to enabled mode: %d\n", result);
+        return SCPI_RES_ERR;
+    }
+
+    RP_LOG(LOG_INFO, "*DAISY:TRIG_O:ENable Successfully enabled mode.\n");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_DpinEnableTrigOutputQ(scpi_t *context){
+    const char *_name;
+
+    bool value;
+    int result = rp_GetDpinEnableTrigOutput(&value);
+
+    if (RP_OK != result) {
+        RP_LOG(LOG_ERR, "*DAISY:TRIG_O:ENable? Failed get state: %d", result);
+        return SCPI_RES_ERR;
+    }
+
+    if(!SCPI_ChoiceToName(scpi_DAISY_state, (int32_t)value, &_name)){
+        RP_LOG(LOG_ERR, "*DAISY:TRIG_O:ENable? Failed to parse state.\n");
+        return SCPI_RES_ERR;
+    }
+
+    // Return back result
+    SCPI_ResultMnemonic(context, _name);
+
+
+    RP_LOG(LOG_INFO, "*DAISY:TRIG_O:ENable? Successfully returned state.\n");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_SourceTrigOutput(scpi_t *context){
+    int32_t value;
+
+    if (!SCPI_ParamChoice(context, scpi_TRIG_O_mode, &value, true)) {
+        RP_LOG(LOG_ERR, "*DAISY:TRIG_O:SOUR is missing first parameter.\n");
+        return SCPI_RES_ERR;
+    }
+
+    int result = rp_SetSourceTrigOutput((rp_outTiggerMode_t)value);
+    if (RP_OK != result) {
+        RP_LOG(LOG_ERR, "*DAISY:TRIG_O:SOUR Failed to set mode: %d\n", result);
+        return SCPI_RES_ERR;
+    }
+
+    RP_LOG(LOG_INFO, "*DAISY:TRIG_O:SOUR Successfully set mode.\n");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_SourceTrigOutputQ(scpi_t *context){
+    const char *_name;
+
+    rp_outTiggerMode_t value;
+    int result = rp_GetSourceTrigOutput(&value);
+
+    if (RP_OK != result) {
+        RP_LOG(LOG_ERR, "*DAISY:TRIG_O:SOUR? Failed get state: %d", result);
+        return SCPI_RES_ERR;
+    }
+
+    if(!SCPI_ChoiceToName(scpi_TRIG_O_mode, (int32_t)value, &_name)){
+        RP_LOG(LOG_ERR, "*DAISY:TRIG_O:SOUR? Failed to parse state.\n");
+        return SCPI_RES_ERR;
+    }
+
+    // Return back result
+    SCPI_ResultMnemonic(context, _name);
+
+
+    RP_LOG(LOG_INFO, "*DAISY:TRIG_O:SOUR? Successfully returned mode.\n");
     return SCPI_RES_OK;
 }

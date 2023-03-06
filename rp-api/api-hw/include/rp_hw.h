@@ -344,7 +344,7 @@ int rp_SPI_GetSettings();
 int rp_SPI_SetSettings();
 
 /**
-* Closes spi device 
+* Closes spi device
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
 */
@@ -634,6 +634,64 @@ int rp_I2C_IOCTL_ReadBuffer(uint8_t *buffer, int len);
  * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
  */
 int rp_I2C_IOCTL_WriteBuffer(uint8_t *buffer, int len);
+
+/**
+ * Returns the current CPU temperature
+ * @return If the function is successful, the return non
+ * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+ */
+float rp_GetCPUTemperature(uint32_t *raw);
+
+/**
+ * Returns the value from analog input AI4. Used to test 5V line power
+ * @return If the function is successful, the return non
+ * If the function fails, then a non-zero value is returned.
+ */
+int rp_GetPowerI4(uint32_t *raw,float* value);
+
+
+/**
+ * Returns the value from VCCPINT(1.0V).
+ * @return If the function is successful, the return non
+ * If the function fails, then a non-zero value is returned.
+ */
+int rp_GetPowerVCCPINT(uint32_t *raw,float* value);
+
+/**
+ * Returns the value from VCCPAUX(1.8V).
+ * @return If the function is successful, the return non
+ * If the function fails, then a non-zero value is returned.
+ */
+int rp_GetPowerVCCPAUX(uint32_t *raw,float* value);
+
+/**
+ * Returns the value from VCCBRAM(1.0V).
+ * @return If the function is successful, the return non
+ * If the function fails, then a non-zero value is returned.
+ */
+int rp_GetPowerVCCBRAM(uint32_t *raw,float* value);
+
+/**
+ * Returns the value from VCCINT(1.0V).
+ * @return If the function is successful, the return non
+ * If the function fails, then a non-zero value is returned.
+ */
+int rp_GetPowerVCCINT(uint32_t *raw,float* value);
+
+/**
+ * Returns the value from VCCAUX(1.8V).
+ * @return If the function is successful, the return non
+ * If the function fails, then a non-zero value is returned.
+ */
+int rp_GetPowerVCCAUX(uint32_t *raw,float* value);
+
+/**
+ * Returns the value from VCCDDR(1.5V).
+ * @return If the function is successful, the return non
+ * If the function fails, then a non-zero value is returned.
+ */
+int rp_GetPowerVCCDDR(uint32_t *raw,float* value);
+
 
 #ifdef __cplusplus
 }

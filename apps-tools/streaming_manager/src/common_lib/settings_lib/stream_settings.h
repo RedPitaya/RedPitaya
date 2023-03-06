@@ -181,7 +181,6 @@ private:
     LOOPBACKMode     m_loopback_mode;
     LOOPBACKChannels m_loopback_channels;
 
-
     std::map<std::string, bool> m_var_changed;
 };
 
