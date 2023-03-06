@@ -55,7 +55,7 @@ int main(int argc, char *argv[]){
 
     const uint8_t *rx_buffer = 0;
     size_t rx_size = 0;
-    res = rp_SPI_GetRxBuffer(0,&rx_buffer,&rx_size); // Get pointer to rx buffer. No need free buffer. Api itself destroy buffer. 
+    res = rp_SPI_GetRxBuffer(0,&rx_buffer,&rx_size); // Get pointer to rx buffer. No need free buffer. Api itself destroy buffer.
 
     if (rx_buffer)
         printf("Read message: %s (res %d)\n",rx_buffer,res);
