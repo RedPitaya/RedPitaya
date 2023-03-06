@@ -8,7 +8,7 @@
 - Burst generation mode added to WEB oscilloscope app
 - SCPI now supports commands to communicate over I2C, UART and SPI bus available on - Red Pitaya ext. connector
 - Added support for RTL8188EU chipset wifi dongles (e.g. Edimax EW-7811Un V2)
-- Other bug fixes and improvements
+- Other bug fixes and improvements 
     - SA cursors step issues fixed
     - burst mode issues fixed
     - SCPI examples and doc. updates
