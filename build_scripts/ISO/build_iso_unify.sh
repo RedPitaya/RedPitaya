@@ -6,4 +6,4 @@ then
     exit 1
 fi
 
-./build_iso.sh $1 STEMlab_125-xx
+./build_iso.sh $1 Unify
