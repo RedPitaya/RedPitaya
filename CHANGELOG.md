@@ -1,4 +1,19 @@
-# Beta version (1.04-11)
+# Beta version (1.04-28)
+
+- Streaming application now supports X-channel system
+- Bode analyzer bug fixes
+
+# Stable version (1.04-18)
+
+- Burst generation mode added to WEB oscilloscope app
+- SCPI now supports commands to communicate over I2C, UART and SPI bus available on - Red Pitaya ext. connector
+- Added support for RTL8188EU chipset wifi dongles (e.g. Edimax EW-7811Un V2)
+- Other bug fixes and improvements
+    - SA cursors step issues fixed
+    - burst mode issues fixed
+    - SCPI examples and doc. updates
+
+# Stable version (1.04-11)
 
 - Spectrum analyzer got new features (improved spectrum resolution, added more windowing functions, units, scaling's and more)
 - SCPI server speed was improved
@@ -16,7 +31,7 @@
 
 - Freq. calibration feature was added to the calibration utility that enables users to improve and flatten freq. response of 125-xx devices
 - CAN decoding was added to Logic analyzer app
-- STEMlab 125-10 now supports use of Logic analyzer extension module 
+- STEMlab 125-10 now supports use of Logic analyzer extension module
 - Logic analyzer app now stores all settings
 - Burst generator bug at higher frequencies was fixed
 - Ripple on slow analog outputs is fixed
@@ -27,7 +42,7 @@
 # Stable version (1.04-7)
 
 - The streaming application was improved. One of the main features is that users can now exactly know when and which samples are lost due to throughput problems or limitation
-- Watchdog was implemented for Linux and WEB applications. In case of fatal error or lost connection device will always return to its previous operation state. 
+- Watchdog was implemented for Linux and WEB applications. In case of fatal error or lost connection device will always return to its previous operation state.
 - Open source FPGA code can now be compiled with Vivado 2020.1
 - New OS available notification was implemented into WEB interface
 other general improvements and updates
