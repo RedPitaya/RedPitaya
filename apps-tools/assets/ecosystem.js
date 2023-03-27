@@ -239,7 +239,7 @@
 
                             if (list.length == 0) return;
                             list.sort();
-                            var es_distro_vers = { vers_as_str: '', build: 0, ver_full: '' };
+                            var es_distro_vers = { vers_as_str: '0.00', build: 0, ver_full: '' };
                             // example of list entry: ecosystem-0.97-13-f9094af.zip-12.23M
                             for (var i = list.length - 1; i >= 0; i--) {
                                 var item = list[i].split('-');
