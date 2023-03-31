@@ -636,7 +636,7 @@ scpi_result_t RP_AcqDataPosQ(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    uint32_t size = end - start;
+    uint32_t size = end - start + 1;
     if(unit == RP_SCPI_VOLTS){
         float buffer[size];
         result = rp_AcqGetDataPosV(channel, start, end, buffer, &size);
