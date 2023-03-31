@@ -16,7 +16,7 @@
 #include <stdio.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
-#include <unistd.h> 
+#include <unistd.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,7 +40,7 @@ int spi_InitDevice(const char *_device){
             return RP_HW_EIS;
         }
     }
-    
+
     spi_DestoryMessage();
 
     spi_fd = open(_device, O_RDONLY);
@@ -53,19 +53,21 @@ int spi_InitDevice(const char *_device){
 }
 
 int spi_SetDefaultSettings(){
-    
+
     if(spi_fd == -1){
         MSG("Failed SPI not init\n");
         return RP_HW_EIS;
     }
 
     spi_config_t defConfig;
+    defConfig.raw_value = 0;
+    defConfig.cs_mode = RP_SPI_CS_NORMAL;
     defConfig.spi_mode = RP_SPI_MODE_LISL;
     defConfig.spi_ready = RP_SPI_STATE_NOT;
     defConfig.lsb_first = RP_SPI_ORDER_BIT_MSB;
     defConfig.bits_per_word = 8;
     defConfig.spi_speed = 50000000;
-        
+
     int ret =  write_spi_configuration(spi_fd,&defConfig);
     if (ret != 0) {
         return ret;
@@ -81,7 +83,7 @@ int spi_GetSettings(){
     return read_spi_configuration(spi_fd,&g_settings);
 }
 
-int spi_SetSettings(){    
+int spi_SetSettings(){
     if(spi_fd == -1){
         MSG("Failed SPI not init\n");
         return RP_HW_EIS;
@@ -106,14 +108,14 @@ int spi_CreateMessage(size_t len){
     spi_DestoryMessage();
    	pthread_mutex_lock(&spi_mutex);
     g_spi_data = malloc(sizeof(spi_data_t));
-    
+
     if (!g_spi_data){
 		MSG("[Error] Can't allocate memory for spi_data_t\n");
 		return RP_HW_EAL;
 	}
 
     g_spi_data->messages = calloc(len,sizeof(spi_message_t));
-    
+
     if (!g_spi_data){
 		MSG("[Error] Can't allocate memory for spi_message_t\n");
         free(g_spi_data);
@@ -282,6 +284,26 @@ int spi_SetState(rp_spi_state_t state){
     }
 
     g_settings.spi_ready = state;
+    return RP_HW_OK;
+}
+
+int spi_GetCSMode(rp_spi_cs_mode_t  *mode){
+    if(spi_fd == -1){
+        MSG("Failed SPI not init\n");
+        return RP_HW_EIS;
+    }
+
+    *mode = g_settings.cs_mode;
+    return RP_HW_OK;
+}
+
+int spi_SetCSMode(rp_spi_cs_mode_t mode){
+    if(spi_fd == -1){
+        MSG("Failed SPI not init\n");
+        return RP_HW_EIS;
+    }
+
+    g_settings.cs_mode = mode;
     return RP_HW_OK;
 }
 

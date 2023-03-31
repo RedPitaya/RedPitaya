@@ -29,8 +29,20 @@ int main(int argc, char *argv[]){
     res = rp_SPI_GetSettings(); // Get uart speed.
     printf("Get current settings of spi: %d\n",res);
 
+    rp_spi_mode_t mode;
+    res = rp_SPI_GetMode(&mode);
+    printf("Get mode: %d ret: %d\n",mode,res);
+
     res = rp_SPI_SetMode(RP_SPI_MODE_LIST); // Set SPI mode: Low idle level, sample on trailing edge.
     printf("Set mode: %d\n",res);
+
+    rp_spi_cs_mode_t cs_mode;
+    res = rp_SPI_GetCSMode(&cs_mode);
+    printf("Get CS mode: %d ret: %d\n",cs_mode,res);
+
+    int speed;
+    res = rp_SPI_GetSpeed(&speed);
+    printf("Get speed: %d ret: %d\n",speed,res);
 
     res = rp_SPI_SetSpeed(50000000); // Set SPI speed.
     printf("Set speed: %d\n",res);
@@ -55,7 +67,7 @@ int main(int argc, char *argv[]){
 
     const uint8_t *rx_buffer = 0;
     size_t rx_size = 0;
-    res = rp_SPI_GetRxBuffer(0,&rx_buffer,&rx_size); // Get pointer to rx buffer. No need free buffer. Api itself destroy buffer. 
+    res = rp_SPI_GetRxBuffer(0,&rx_buffer,&rx_size); // Get pointer to rx buffer. No need free buffer. Api itself destroy buffer.
 
     if (rx_buffer)
         printf("Read message: %s (res %d)\n",rx_buffer,res);

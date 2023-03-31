@@ -20,12 +20,13 @@
 #define MSG(...) fprintf(stderr,__VA_ARGS__);
 
 typedef struct spi_config {
-
+    uint8_t  raw_value;
     rp_spi_mode_t       spi_mode;
     rp_spi_order_bit_t  lsb_first;
     int                 bits_per_word; // [7...]
     int                 spi_speed;
     rp_spi_state_t      spi_ready;
+    rp_spi_cs_mode_t    cs_mode;
 
 } spi_config_t;
 

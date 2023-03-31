@@ -36,6 +36,12 @@ const scpi_choice_def_t scpi_order_bit[] = {
     SCPI_CHOICE_LIST_END
 };
 
+const scpi_choice_def_t scpi_cs_mode[] = {
+    {"NORMAL", RP_SPI_ORDER_BIT_MSB},
+    {"LSB", RP_SPI_ORDER_BIT_LSB},
+    SCPI_CHOICE_LIST_END
+};
+
 
 scpi_result_t RP_SPI_Init(scpi_t * context){
     int result = rp_SPI_Init();
@@ -170,12 +176,12 @@ scpi_result_t RP_SPI_GetRXBuffer(scpi_t * context){
     size_t size = 0;
     int result;
     int32_t cmd[1] = {0};
-    
+
     if (!SCPI_CommandNumbers(context,cmd,1,-1)){
         RP_LOG(LOG_ERR, "*SPI:MGS#:RX? Failed to get parameters.\n");
         return SCPI_RES_ERR;
     }
-    
+
     if (cmd[0] == -1){
         RP_LOG(LOG_ERR, "*SPI:MGS#:RX? Failed to get index of message.\n");
         return SCPI_RES_ERR;
@@ -205,12 +211,12 @@ scpi_result_t RP_SPI_GetTXBuffer(scpi_t * context){
     size_t size = 0;
     int result;
     int32_t cmd[1] = {0};
-    
+
     if (!SCPI_CommandNumbers(context,cmd,1,-1)){
         RP_LOG(LOG_ERR, "*SPI:MGS#:TX? Failed to get parameters.\n");
         return SCPI_RES_ERR;
     }
-    
+
     if (cmd[0] == -1){
         RP_LOG(LOG_ERR, "*SPI:MGS#:TX? Failed to get index of message.\n");
         return SCPI_RES_ERR;
@@ -238,12 +244,12 @@ scpi_result_t RP_SPI_GetCSChangeState(scpi_t * context){
     size_t index = 0;
     bool cs_state = false;
     int32_t cmd[1] = {0};
-    
+
     if (!SCPI_CommandNumbers(context,cmd,1,-1)){
         RP_LOG(LOG_ERR, "*SPI:MSG#:CS? Failed to get parameters.\n");
         return SCPI_RES_ERR;
     }
-    
+
     if (cmd[0] == -1){
         RP_LOG(LOG_ERR, "*SPI:MSG#:CS? Failed to get index of message.\n");
         return SCPI_RES_ERR;
@@ -270,12 +276,12 @@ scpi_result_t RP_SPI_Set(scpi_t * context,bool cs_state,bool init_rx,const char 
     uint8_t *buffer = NULL;
     int32_t cmd[2] = {0,0};
 
-    
+
     if (!SCPI_CommandNumbers(context,cmd,2,-1)){
         RP_LOG(LOG_ERR, "*%s Failed to get parameters.\n",func);
         return SCPI_RES_ERR;
     }
-    
+
     if (cmd[0] == -1){
         RP_LOG(LOG_ERR, "*%s Failed to get index of message.\n",func);
         return SCPI_RES_ERR;
@@ -306,7 +312,7 @@ scpi_result_t RP_SPI_Set(scpi_t * context,bool cs_state,bool init_rx,const char 
         free(buffer);
         return SCPI_RES_ERR;
     }
-    
+
     int result = rp_SPI_SetBufferForMessage(index,buffer,init_rx,buf_size,cs_state);
     if (RP_OK != result) {
         RP_LOG(LOG_ERR, "*%s Failed to set TX buffer: %d",func, result);
@@ -335,7 +341,7 @@ scpi_result_t RP_SPI_SetTXRX(scpi_t * context){
 
 scpi_result_t RP_SPI_SetTXRXCS(scpi_t * context){
     const char func[] = "SPI:MSG#:TX#:RX:CS";
-    return RP_SPI_Set(context,true,true,func);  
+    return RP_SPI_Set(context,true,true,func);
 }
 
 scpi_result_t RP_SPI_SetRX2(scpi_t * context,bool cs_state,const char func[]){
@@ -343,12 +349,12 @@ scpi_result_t RP_SPI_SetRX2(scpi_t * context,bool cs_state,const char func[]){
     size_t size = 0;
     int32_t cmd[2] = {0,0};
 
-    
+
     if (!SCPI_CommandNumbers(context,cmd,2,-1)){
         RP_LOG(LOG_ERR, "*%s Failed to get parameters.\n",func);
         return SCPI_RES_ERR;
     }
-    
+
     if (cmd[0] == -1){
         RP_LOG(LOG_ERR, "*%s Failed to get index of message.\n",func);
         return SCPI_RES_ERR;
@@ -368,7 +374,7 @@ scpi_result_t RP_SPI_SetRX2(scpi_t * context,bool cs_state,const char func[]){
         return SCPI_RES_ERR;
     }
     RP_LOG(LOG_INFO, "*%s Successfully set RX buffer.\n",func);
-    return SCPI_RES_OK;    
+    return SCPI_RES_OK;
 }
 
 scpi_result_t RP_SPI_SetRX(scpi_t * context){
@@ -378,7 +384,7 @@ scpi_result_t RP_SPI_SetRX(scpi_t * context){
 
 scpi_result_t RP_SPI_SetRXCS(scpi_t * context){
     const char func[] = "SPI:MSG#:RX#:CS";
-    return RP_SPI_SetRX2(context,true,func);  
+    return RP_SPI_SetRX2(context,true,func);
 }
 
 scpi_result_t RP_SPI_SetMode(scpi_t * context){
@@ -420,8 +426,52 @@ scpi_result_t RP_SPI_GetMode(scpi_t * context){
     // Return back result
     SCPI_ResultMnemonic(context, _name);
 
-    
+
     RP_LOG(LOG_INFO, "*SPI:SETtings:MODE? Successfully returned character size.\n");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_SPI_SetCSMode(scpi_t * context){
+    int32_t value;
+
+    if (!SCPI_ParamChoice(context, scpi_cs_mode, &value, true)) {
+        RP_LOG(LOG_ERR, "*SPI:SETtings:CSMODE is missing first parameter.\n");
+        return SCPI_RES_ERR;
+    }
+
+    rp_spi_cs_mode_t par = (rp_spi_cs_mode_t)value;
+
+    int result = rp_SPI_SetCSMode(par);
+    if (RP_HW_OK != result) {
+        RP_LOG(LOG_ERR, "*SPI:SETtings:CSMODE Failed to set cs mode: %d\n", result);
+        return SCPI_RES_ERR;
+    }
+
+    RP_LOG(LOG_INFO, "*SPI:SETtings:CSMODE Successfully set spi cs mode.\n");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_SPI_GetCSMode(scpi_t * context){
+    const char *_name;
+
+    rp_spi_cs_mode_t value;
+    int result = rp_SPI_GetCSMode(&value);
+
+    if (RP_OK != result) {
+        RP_LOG(LOG_ERR, "*SPI:SETtings:CSMODE? Failed to get spi cs mode: %d", result);
+        return SCPI_RES_ERR;
+    }
+
+    if(!SCPI_ChoiceToName(scpi_mode, value, &_name)){
+        RP_LOG(LOG_ERR, "*SPI:SETtings:CSMODE? Failed to parse cs mode.\n");
+        return SCPI_RES_ERR;
+    }
+
+    // Return back result
+    SCPI_ResultMnemonic(context, _name);
+
+
+    RP_LOG(LOG_INFO, "*SPI:SETtings:CSMODE? Successfully returned character size.\n");
     return SCPI_RES_OK;
 }
 
@@ -490,7 +540,7 @@ scpi_result_t RP_SPI_GetWord(scpi_t * context){
     SCPI_ResultUInt32Base(context, len, 10);
 
     RP_LOG(LOG_INFO, "*SPI:SETtings:WORD? Successfully returned speed.\n");
-    return SCPI_RES_OK;   
+    return SCPI_RES_OK;
 }
 
 scpi_result_t RP_SPI_Pass(scpi_t * context){

@@ -271,11 +271,13 @@ static const scpi_command_t scpi_commands[] = {
 
     {.pattern = "SPI:SETtings:MODE", .callback          = RP_SPI_SetMode,},
     {.pattern = "SPI:SETtings:MODE?", .callback         = RP_SPI_GetMode,},
+    {.pattern = "SPI:SETtings:CSMODE", .callback        = RP_SPI_SetCSMode,},
+    {.pattern = "SPI:SETtings:CSMODE?", .callback       = RP_SPI_GetCSMode,},
     {.pattern = "SPI:SETtings:SPEED", .callback         = RP_SPI_SetSpeed,},
     {.pattern = "SPI:SETtings:SPEED?", .callback        = RP_SPI_GetSpeed,},
 
-    {.pattern = "SPI:SETtings:WORD", .callback         = RP_SPI_SetWord,},
-    {.pattern = "SPI:SETtings:WORD?", .callback        = RP_SPI_GetWord,},
+    {.pattern = "SPI:SETtings:WORD", .callback          = RP_SPI_SetWord,},
+    {.pattern = "SPI:SETtings:WORD?", .callback         = RP_SPI_GetWord,},
 
 
     {.pattern = "SPI:MSG:CREATE", .callback             = RP_SPI_CreateMessage,},

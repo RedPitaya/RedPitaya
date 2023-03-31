@@ -110,10 +110,10 @@ typedef enum {
  */
 
 typedef enum {
-    RP_SPI_MODE_LISL = 0,   //!< Low idle level, Sample on leading edge
-    RP_SPI_MODE_LIST = 1,   //!< Low idle level, sample on trailing edge
-    RP_SPI_MODE_HISL = 2,   //!< High idle level, sample on leading edge
-    RP_SPI_MODE_HIST = 3    //!< High idle level, sample on trailing edge
+    RP_SPI_MODE_LISL = 0,   //!< Clock low idle level, Sample on leading edge
+    RP_SPI_MODE_LIST = 1,   //!< Clock low idle level, sample on trailing edge
+    RP_SPI_MODE_HISL = 2,   //!< Clock high idle level, sample on leading edge
+    RP_SPI_MODE_HIST = 3    //!< Clock high idle level, sample on trailing edge
 } rp_spi_mode_t;
 
 /**
@@ -133,6 +133,15 @@ typedef enum {
     RP_SPI_STATE_NOT   = 0,  //!< Not ready
     RP_SPI_STATE_READY = 1   //!< Ready state bit setted (Not supported)
 } rp_spi_state_t;
+
+/**
+ * SPI CS mode
+ */
+
+typedef enum {
+    RP_SPI_CS_NORMAL   = 0,  //!< Work by default. Active Low state, Idle - high state
+    RP_SPI_CS_HIGH     = 1   //!< Active High state, Idle - low state
+} rp_spi_cs_mode_t;
 
 
 /** @name General
@@ -454,6 +463,22 @@ int rp_SPI_GetState(rp_spi_state_t *state);
 * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
 */
 int rp_SPI_SetState(rp_spi_state_t state);
+
+/**
+* Get current settings for CS mode
+* @param mode return mode value
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+*/
+int rp_SPI_GetCSMode(rp_spi_cs_mode_t *mode);
+
+/**
+* Set CS mode in settings.
+* @param mode mode value
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+*/
+int rp_SPI_SetCSMode(rp_spi_cs_mode_t mode);
 
 /**
 * Get byte order of the SPI.

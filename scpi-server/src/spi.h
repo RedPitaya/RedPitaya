@@ -43,6 +43,9 @@ scpi_result_t RP_SPI_SetRXCS(scpi_t * context);
 scpi_result_t RP_SPI_SetMode(scpi_t * context);
 scpi_result_t RP_SPI_GetMode(scpi_t * context);
 
+scpi_result_t RP_SPI_SetCSMode(scpi_t * context);
+scpi_result_t RP_SPI_GetCSMode(scpi_t * context);
+
 scpi_result_t RP_SPI_SetSpeed(scpi_t * context);
 scpi_result_t RP_SPI_GetSpeed(scpi_t * context);
 
