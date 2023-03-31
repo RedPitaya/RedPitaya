@@ -37,8 +37,8 @@ const scpi_choice_def_t scpi_order_bit[] = {
 };
 
 const scpi_choice_def_t scpi_cs_mode[] = {
-    {"NORMAL", RP_SPI_ORDER_BIT_MSB},
-    {"LSB", RP_SPI_ORDER_BIT_LSB},
+    {"NORMAL", RP_SPI_CS_NORMAL},
+    {"HIGH", RP_SPI_CS_HIGH},
     SCPI_CHOICE_LIST_END
 };
 
