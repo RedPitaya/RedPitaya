@@ -69,6 +69,11 @@ then
   setenv dts_path z20_122
 fi
 
+if test ${hw_rev} == 'STEM_122-16SDR_v1.1'
+then
+  setenv dts_path z20_122
+fi
+
 if test ${hw_rev} == 'STEM_125-14_Z7020_4IN_v1.0'
 then
   setenv dts_path z20_125_4ch
