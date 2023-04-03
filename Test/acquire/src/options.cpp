@@ -14,7 +14,7 @@
 static constexpr uint32_t g_dec[DEC_MAX] = { 1,  2,  4,  8,  16 };
 
 
-static constexpr char optstring_250_12[64] = "esx1:2:d:vht:l:orck";
+static constexpr char optstring_250_12[64] = "esx1:2:d:vht:l:orcka";
 static struct option long_options_250_12[32] = {
         /* These options set a flag. */
         {"equalization", no_argument,       0, 'e'},
@@ -31,6 +31,7 @@ static struct option long_options_250_12[32] = {
         {"no_reg",       no_argument,       0, 'r'},
         {"calib",        no_argument,       0, 'c'},
         {"hk",           no_argument,       0, 'k'},
+        {"axi",          no_argument,       0, 'a'},
         {0, 0, 0, 0}
 };
 
@@ -54,12 +55,13 @@ static constexpr char g_format_250_12[2048] =
         "  --no_reg        -r    Disable load registers config (XML) for DAC and ADC.\n"
         "  --calib         -c    Disable calibration parameters\n"
         "  --hk            -k    Reset houskeeping (Reset state for GPIO). Default: disabled\n"
+        "  --axi           -a    Enable AXI interface. Also enable housekeeping reset. Default: disabled\n"
         "    SIZE                Number of samples to acquire [0 - %u].\n"
         "    DEC                 Decimation [%u,%u,%u,%u,%u,...] (default: 1). Valid values are from 1 to 65536\n"
         "\n";
 
 
-static constexpr char optstring_125_14[64] = "esx1:2:vht:l:ock";
+static constexpr char optstring_125_14[64] = "esx1:2:vht:l:ocka";
 static struct option long_options_125_14[32] = {
         /* These options set a flag. */
         {"equalization", no_argument,       0, 'e'},
@@ -74,6 +76,7 @@ static struct option long_options_125_14[32] = {
         {"volt",         no_argument,       0, 'o'},
         {"calib",        no_argument,       0, 'c'},
         {"hk",           no_argument,       0, 'k'},
+        {"axi",          no_argument,       0, 'a'},
         {0, 0, 0, 0}
 };
 
@@ -94,6 +97,7 @@ static constexpr char g_format_125_14[2048] =
         "  --volt          -o    Print value in volt.\n"
         "  --calib         -c    Disable calibration parameters\n"
         "  --hk            -k    Reset houskeeping (Reset state for GPIO). Default: disabled\n"
+        "  --axi           -a    Enable AXI interface. Also enable housekeeping reset. Default: disabled\n"
         "    SIZE                Number of samples to acquire [0 - %u].\n"
         "    DEC                 Decimation [%u,%u,%u,%u,%u,...] (default: 1). Valid values are from 1 to 65536\n"
         "\n";
@@ -431,6 +435,12 @@ auto parse(int argc, char* argv[]) -> Options{
 
             case 'c': {
                 opt.disableCalibration = true;
+                break;
+            }
+
+            case 'a': {
+                opt.enableAXI = true;
+                opt.reset_hk = true;
                 break;
             }
 

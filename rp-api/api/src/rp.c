@@ -856,6 +856,10 @@ int rp_AcqGetBufferFillState(bool* state){
     return acq_GetBufferFillState(state);
 }
 
+int rp_AcqAxiGetBufferFillState(rp_channel_t channel, bool* state){
+    return acq_axi_GetBufferFillState(channel, state);
+}
+
 int rp_AcqSetDecimation(rp_acq_decimation_t decimation)
 {
     return acq_SetDecimation(decimation);
@@ -869,6 +873,11 @@ int rp_AcqGetDecimation(rp_acq_decimation_t* decimation)
 int rp_AcqSetDecimationFactor(uint32_t decimation)
 {
     return acq_SetDecimationFactor(decimation);
+}
+
+int rp_AcqAxiSetDecimationFactor(rp_channel_t channel, uint32_t decimation)
+{
+    return acq_axi_SetDecimationFactor(channel, decimation);
 }
 
 int rp_AcqGetDecimationFactor(uint32_t* decimation)
@@ -913,6 +922,11 @@ int rp_AcqGetTriggerState(rp_acq_trig_state_t* state)
 int rp_AcqSetTriggerDelay(int32_t decimated_data_num)
 {
     return acq_SetTriggerDelay(decimated_data_num, false);
+}
+
+int rp_AcqAxiSetTriggerDelay(rp_channel_t channel, int32_t decimated_data_num)
+{
+    return acq_axi_SetTriggerDelay(channel, decimated_data_num, false);
 }
 
 int rp_AcqGetTriggerDelay(int32_t* decimated_data_num)
@@ -974,9 +988,19 @@ int rp_AcqGetWritePointer(uint32_t* pos)
     return acq_GetWritePointer(pos);
 }
 
+int rp_AcqAxiGetWritePointer(rp_channel_t channel, uint32_t* pos)
+{
+    return acq_axi_GetWritePointer(channel, pos);
+}
+
 int rp_AcqGetWritePointerAtTrig(uint32_t* pos)
 {
     return acq_GetWritePointerAtTrig(pos);
+}
+
+int rp_AcqAxiGetWritePointerAtTrig(rp_channel_t channel, uint32_t* pos)
+{
+    return acq_axi_GetWritePointerAtTrig(channel, pos);
 }
 
 int rp_AcqStart()
@@ -1013,9 +1037,19 @@ int rp_AcqGetDataPosV(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos
     return acq_GetDataPosV(channel, start_pos, end_pos, buffer, buffer_size);
 }
 
+int rp_AcqAxiEnable(rp_channel_t channel, bool enable)
+{
+    return acq_axi_Enable(channel, enable);
+}
+
 int rp_AcqGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_t* buffer)
 {
     return acq_GetDataRaw(channel, pos, size, buffer);
+}
+
+int rp_AcqAxiGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_t* buffer)
+{
+    return acq_axi_GetDataRaw(channel, pos, size, buffer);
 }
 
 int rp_AcqGetDataRawV2(uint32_t pos, buffers_t *out)
@@ -1047,6 +1081,11 @@ int rp_AcqGetDataV(rp_channel_t channel, uint32_t pos, uint32_t* size, float* bu
     return acq_GetDataV(channel, pos, size, buffer);
 }
 
+int rp_AcqAxiGetDataV(rp_channel_t channel, uint32_t pos, uint32_t* size, float* buffer)
+{
+    return acq_axi_GetDataV(channel, pos, size, buffer);
+}
+
 int rp_AcqGetOldestDataV(rp_channel_t channel, uint32_t* size, float* buffer)
 {
     return acq_GetOldestDataV(channel, size, buffer);
@@ -1059,6 +1098,10 @@ int rp_AcqGetLatestDataV(rp_channel_t channel, uint32_t* size, float* buffer)
 
 int rp_AcqGetBufSize(uint32_t *size) {
     return acq_GetBufferSize(size);
+}
+
+int rp_AcqAxiSetBuffer(rp_channel_t channel, uint32_t address, uint32_t size) {
+    return acq_axi_SetBuffer(channel, address, size);
 }
 
 int rp_AcqSetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t mode){

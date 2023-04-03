@@ -35,6 +35,7 @@ struct Options {
     bool                 enableShaping;
     bool                 error;
     bool                 reset_hk;
+    bool                 enableAXI;
 
 
     Options(){
@@ -59,6 +60,7 @@ struct Options {
         enableShaping = false;
         error = true;
         reset_hk = false;
+        enableAXI = false;
     };
 };
 
