@@ -775,11 +775,12 @@ scpi_result_t RP_GenAmplitude(scpi_t *context) {
         RP_LOG(LOG_ERR, "*SOUR#:VOLT Failed to set offset: %s\n", rp_GetError(result));
         return SCPI_RES_ERR;
     }
-
-    result = rp_GenSetGainOut(channel, gain);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:VOLT Failed to set gain out: %s\n", rp_GetError(result));
-        return SCPI_RES_ERR;
+    if (rp_HPGetIsGainDACx5OrDefault()){
+        result = rp_GenSetGainOut(channel, gain);
+        if(result != RP_OK){
+            RP_LOG(LOG_ERR, "*SOUR#:VOLT Failed to set gain out: %s\n", rp_GetError(result));
+            return SCPI_RES_ERR;
+        }
     }
 
     RP_LOG(LOG_INFO, "*SOUR#:VOLT Successfully set amplitude.\n");
@@ -885,11 +886,12 @@ scpi_result_t RP_GenOffset(scpi_t *context) {
         RP_LOG(LOG_ERR, "*SOUR#:VOLT:OFFS Failed to set offset: %s\n", rp_GetError(result));
         return SCPI_RES_ERR;
     }
-
-    result = rp_GenSetGainOut(channel, gain);
-    if(result != RP_OK){
-        RP_LOG(LOG_ERR, "*SOUR#:VOLT:OFFS Failed to set gain out: %s\n", rp_GetError(result));
-        return SCPI_RES_ERR;
+    if (rp_HPGetIsGainDACx5OrDefault()){
+        result = rp_GenSetGainOut(channel, gain);
+        if(result != RP_OK){
+            RP_LOG(LOG_ERR, "*SOUR#:VOLT:OFFS Failed to set gain out: %s\n", rp_GetError(result));
+            return SCPI_RES_ERR;
+        }
     }
 
     RP_LOG(LOG_INFO, "*SOUR#:VOLT:OFFS Successfully set generate offset value.\n");
