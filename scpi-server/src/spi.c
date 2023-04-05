@@ -462,7 +462,7 @@ scpi_result_t RP_SPI_GetCSMode(scpi_t * context){
         return SCPI_RES_ERR;
     }
 
-    if(!SCPI_ChoiceToName(scpi_mode, value, &_name)){
+    if(!SCPI_ChoiceToName(scpi_cs_mode, value, &_name)){
         RP_LOG(LOG_ERR, "*SPI:SETtings:CSMODE? Failed to parse cs mode.\n");
         return SCPI_RES_ERR;
     }
