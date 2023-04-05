@@ -10,6 +10,7 @@ struct cli_args_t {
     bool csv = false;
     bool csv_limit = false;
     bool help = false;
+    bool test = false;
 };
 
 std::string cli_help_string();

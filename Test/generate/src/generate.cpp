@@ -82,6 +82,8 @@ int gen(config_t &conf)
         return -1;
     }
 
+    rp_GenOutDisable(ch);
+
     uint8_t channels = 0;
     if (rp_HPGetFastADCChannelsCount(&channels) != RP_HP_OK){
         fprintf(stderr,"[Error:getRawBuffer] Can't get fast ADC channels count\n");
@@ -99,6 +101,7 @@ int gen(config_t &conf)
     rp_GenOffset(ch,0);
     rp_GenAmp(ch,conf.amp / 2.0);
     rp_GenFreq(ch,conf.freq);
+    rp_GenTriggerSource(ch,RP_GEN_TRIG_SRC_INTERNAL);
 
     if (conf.type == RP_WAVEFORM_SINE){
         rp_GenWaveform(ch, RP_WAVEFORM_SINE);

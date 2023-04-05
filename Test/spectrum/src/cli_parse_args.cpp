@@ -13,7 +13,8 @@ std::string cli_help_string() {
     "-a, --average: average the measurement from 10 times (default: enabled)\n"
     "-n, --no-average: disable average the measurement from 10 times\n"
     "-C, --csv: print values by columns Frequency (Hz), ch0 (dB), ch1 (dB)\n"
-    "-L, --csv-limit: print values by columns Frequency (Hz), ch0 min (dB), ch0 max (dB), ch1 min (dB), ch1 max (dB)\n";
+    "-L, --csv-limit: print values by columns Frequency (Hz), ch0 min (dB), ch0 max (dB), ch1 min (dB), ch1 max (dB)\n"
+    "-t, --test: test mode avoids the initiating/resetting/releasing FPGA";
 }
 
 const struct option long_opt[] = {
@@ -25,17 +26,18 @@ const struct option long_opt[] = {
         { "no-average", no_argument,        0, 'n' },
         { "csv",        no_argument,        0, 'C' },
         { "csv-limit",  no_argument,        0, 'L' },
+        { "test",       no_argument,        0, 't' },
         { 0,            0,                  0,  0  }
     };
 
 bool cli_parse_args(int argc, char * const argv[], cli_args_t &out_args) {
     cli_args_t args;
-    
+
     bool success = true;
     try {
         int short_opt;
         int option_index = 0;
-        while ((short_opt = getopt_long(argc, argv, "hm:M:c:anCLt", long_opt, &option_index)) != -1) {            
+        while ((short_opt = getopt_long(argc, argv, "hm:M:c:anCLt", long_opt, &option_index)) != -1) {
             switch (short_opt) {
             case 'h':
                 args.help = true;
@@ -77,6 +79,10 @@ bool cli_parse_args(int argc, char * const argv[], cli_args_t &out_args) {
 
             case 'L':
                 args.csv_limit = true;
+                break;
+
+            case 't':
+                args.test = true;
                 break;
 
             // case '?':

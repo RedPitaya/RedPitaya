@@ -263,20 +263,12 @@ int main(int argc, char *argv[]) {
     // Init
     int error_code = RP_OK;
 
-    error_code = rp_Init();
+    error_code = rp_InitReset(!args.test);
 
     if (error_code != RP_OK) {
         std::cerr << "Error: rp_Init, code: " << error_code << std::endl;
         return 1;
     }
-
-    error_code = rp_Reset();
-
-    if (error_code != RP_OK) {
-        std::cerr << "Error: rp_Reset, code: " << error_code << std::endl;
-        return 1;
-    }
-
 
     error_code = g_dsp.window_init(rp_dsp_api::CDSP::HANNING);
 
