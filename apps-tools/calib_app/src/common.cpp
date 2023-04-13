@@ -80,6 +80,7 @@ auto getModelName() -> std::string{
         case STEM_250_12_v1_0:
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
+        case STEM_250_12_v1_2a:
             return "Z20_250_12";
         case STEM_250_12_120:
             return "Z20_250_12_120";

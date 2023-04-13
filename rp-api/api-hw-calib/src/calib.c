@@ -88,6 +88,7 @@ int calib_InitModel(rp_HPeModels_t model,bool use_factory_zone){
         case STEM_250_12_v1_0:
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
+        case STEM_250_12_v1_2a:
         case STEM_250_12_120:{
             uint16_t size = sizeof(rp_calib_params_v3_t);
             uint8_t* buffer = use_factory_zone ? readFromFactoryEpprom(&size) : readFromEpprom(&size);
@@ -227,6 +228,7 @@ int calib_WriteParams(rp_HPeModels_t model, rp_calib_params_t *calib_params,bool
         case STEM_250_12_v1_0:
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
+        case STEM_250_12_v1_2a:
         case STEM_250_12_120:{
 
             uint16_t size = sizeof(rp_calib_params_v3_t);
@@ -353,6 +355,7 @@ int calib_LoadFromFactoryZone(){
         case STEM_250_12_v1_0:
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
+        case STEM_250_12_v1_2a:
         case STEM_250_12_120:{
             size = sizeof(rp_calib_params_v3_t);
             break;
@@ -444,6 +447,7 @@ int calib_GetEEPROM(rp_eepromWpData_t *calib_params,bool use_factory_zone){
         case STEM_250_12_v1_0:
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
+        case STEM_250_12_v1_2a:
         case STEM_250_12_120:{
             size = sizeof(rp_calib_params_v3_t);
             rp_calib_params_v3_t p_v3;
@@ -506,6 +510,7 @@ int calib_ConvertEEPROM(rp_eepromWpData_t *calib_params,rp_calib_params_t *out){
             case STEM_250_12_v1_0:
             case STEM_250_12_v1_1:
             case STEM_250_12_v1_2:
+            case STEM_250_12_v1_2a:
             case STEM_250_12_120:{
                 size = sizeof(rp_calib_params_v3_t);
                 rp_calib_params_v3_t p_v3;

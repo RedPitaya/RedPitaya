@@ -47,43 +47,4 @@ int calib_GetFastADCCalibValue_1_20(rp_channel_calib_t channel,rp_acq_ac_dc_mode
 
 int calib_GetFastDACCalibValue(rp_channel_calib_t channel,rp_gen_gain_calib_t mode, double *gain,int32_t *offset, uint_gain_calib_t *calib);
 
-              // int calib_SetFrontEndOffset(rp_channel_t channel, rp_pinState_t gain, rp_calib_params_t* out_params);
-              // int calib_SetFrontEndScaleLV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params);
-              // int calib_SetFrontEndScaleHV(rp_channel_t channel, float referentialVoltage, rp_calib_params_t* out_params);
-
-
-          // int32_t calib_GetDataMedian(rp_channel_t channel, rp_pinState_t gain);
-          //   float calib_GetDataMedianFloat(rp_channel_t channel, rp_pinState_t gain);
-          //     int calib_GetDataMinMaxFloat(rp_channel_t channel, rp_pinState_t gain, float* min, float* max);
-
-              // int calib_setCachedParams();
-
-// #if defined Z10 || defined Z20_125 || defined Z20_250_12 || defined Z20
-//               int calib_SetBackEndOffset(rp_channel_t channel);
-//               int calib_SetBackEndScale(rp_channel_t channel);
-//               int calib_CalibrateBackEnd(rp_channel_t channel, rp_calib_params_t* out_params);
-// #endif
-
-// #if defined Z10 || defined Z20_125 || defined Z20
-//           int32_t calib_getGenOffset(rp_channel_t channel);
-//          uint32_t calib_getGenScale(rp_channel_t channel);
-// #endif
-
-// #if defined Z10 || defined Z20_125 || defined Z20_125_4CH
-//               int calib_SetFilterCoff(rp_channel_t channel, rp_pinState_t gain, rp_eq_filter_cof_t coff , uint32_t value);
-//          uint32_t calib_GetFilterCoff(rp_channel_t channel, rp_pinState_t gain, rp_eq_filter_cof_t coff);
-// #endif
-
-// #if defined Z10 || defined Z20_125 || defined Z20_125_4CH || defined Z20
-//          uint32_t calib_GetFrontEndScale(rp_channel_t channel, rp_pinState_t gain);
-//           int32_t calib_getOffset(rp_channel_t channel, rp_pinState_t gain);
-// #endif
-
-// #if defined Z20_250_12
-//          uint32_t calib_GetFrontEndScale(rp_channel_t channel, rp_pinState_t gain, rp_acq_ac_dc_mode_t power_mode);
-//           int32_t calib_getOffset(rp_channel_t channel, rp_pinState_t gain, rp_acq_ac_dc_mode_t power_mode);
-//           int32_t calib_getGenOffset(rp_channel_t channel, rp_gen_gain_t gain);
-//          uint32_t calib_getGenScale(rp_channel_t channel, rp_gen_gain_t gain);
-// #endif
-
 #endif //__CALIB_H

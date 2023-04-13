@@ -149,6 +149,9 @@ int main(int argc, char **argv) {
 			case STEM_250_12_v1_2:
 				printf("z20_250");
 				break;
+			case STEM_250_12_v1_2a:
+				printf("z20_250");
+				break;
 			case STEM_250_12_120:
 				printf("z20_250");
 				break;

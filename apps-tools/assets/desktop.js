@@ -52,7 +52,8 @@
                 STEM_250_12_v1_0            = 11,
                 STEM_250_12_v1_1            = 12,
                 STEM_250_12_v1_2            = 13,
-                STEM_250_12_120             = 14
+                STEM_250_12_120             = 14,
+                STEM_250_12_v1_2a           = 15
             }  rp_HPeModels_t;
         */
         if (model == 0){
@@ -98,6 +99,9 @@
             return "STEM 250 12"
         }
         if (model == 14){
+            return "STEM 250 12"
+        }
+        if (model == 15){
             return "STEM 250 12"
         }
         console.log("[FATAL ERROR] Unknown model: " + model)
@@ -385,6 +389,7 @@
                         if (obj['model'].startsWith('STEM_125-14_Z7020_v1.0')) model = 'STEMlab 125-14-Z7020 v1.0';
                         if (obj['model'].startsWith('STEM_250-12_V1.1')) model = 'SIGNALlab 250-12 v1.1';
                         if (obj['model'].startsWith('STEM_250-12_V1.2')) model = 'SIGNALlab 250-12 v1.2';
+                        if (obj['model'].startsWith('STEM_250-12_V1.2a')) model = 'SIGNALlab 250-12 v1.2a';
                         if (obj['model'].startsWith('STEM_122-16SDR_v1.0')) model = 'SDRlab 122-16 v1.0';
                         if (obj['model'].startsWith('STEM_122-16SDR_v1.1')) model = 'SDRlab 122-16 v1.1';
                         if (obj['model'].startsWith('STEM_125-14_Z7020_4IN_v1.0')) model = 'STEMlab 125-14 4-Input v1.0';

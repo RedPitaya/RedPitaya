@@ -64,7 +64,8 @@ typedef enum {
     STEM_250_12_v1_0            = 11,
     STEM_250_12_v1_1            = 12,
     STEM_250_12_v1_2            = 13,
-    STEM_250_12_120             = 14
+    STEM_250_12_120             = 14,
+    STEM_250_12_v1_2a           = 15
 }  rp_HPeModels_t;
 
 /**

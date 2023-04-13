@@ -1140,7 +1140,7 @@ int rp_GenBurstLastValue(rp_channel_t channel, float amlitude){
         fprintf(stderr,"[Error:rp_GenBurstLastValue] Can't get board model\n");
         return RP_NOTS;
     }
-    if (model == STEM_250_12_v1_0 || model == STEM_250_12_v1_1 || model == STEM_250_12_v1_2 || model == STEM_250_12_120){
+    if (model == STEM_250_12_v1_0 || model == STEM_250_12_v1_1 || model == STEM_250_12_v1_2 || model == STEM_250_12_v1_2a || model == STEM_250_12_120){
         return RP_NOTS;
     }
     return gen_setBurstLastValue(channel,amlitude);

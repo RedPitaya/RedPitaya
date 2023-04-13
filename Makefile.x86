@@ -97,7 +97,6 @@ DEF_PARAM ?=
 FPGA_PRJ ?=
 FPGA_VERSION ?=
 FPGA_MODEL ?=
-DTS_PATH ?=
 
 # stream_app
 FPGA_STREAM_APP=
@@ -148,7 +147,6 @@ ifeq ($(MODEL),Z10)
 	FPGA_BAREBONE = unify/bugfixes042023
 
 	FPGA_MODEL = Z10
-	DTS_PATH = dts
 	FPGA_VERSION = z10_125
 endif
 
@@ -162,7 +160,6 @@ ifeq ($(MODEL),Z20)
 	FPGA_LOGIC	= unify/bugfixes042023
 
 	FPGA_MODEL = Z20
-	DTS_PATH = dts
 	FPGA_VERSION = z20_122
 
 endif
@@ -180,7 +177,6 @@ ifeq ($(MODEL),Z20_125)
 	FPGA_BAREBONE = unify/bugfixes042023
 
 	FPGA_MODEL = Z20_14
-	DTS_PATH = dts
 	FPGA_VERSION = z20_125
 
 endif
@@ -193,7 +189,6 @@ ifeq ($(MODEL),Z20_125_4CH)
 	FPGA_BAREBONE = unify/bugfixes042023
 
 	FPGA_MODEL = Z20_4
-	DTS_PATH = dts
 	FPGA_VERSION = z20_125_4ch
 
 endif
@@ -206,7 +201,6 @@ ifeq ($(MODEL),Z10_125_4CH_TEST)
 	FPGA_BAREBONE = unify/bugfixes042023
 
 	FPGA_MODEL = Z10_4_test
-	DTS_PATH = dts
 	FPGA_VERSION = z20_125_4ch
 
 endif
@@ -222,7 +216,6 @@ ifeq ($(MODEL),Z20_250_12_1_0)
 
 
 	FPGA_MODEL = Z20_250
-	DTS_PATH = dts_250
 	FPGA_VERSION = z20_250_1_0
 	HWID=v1r0
 
@@ -239,8 +232,19 @@ ifeq ($(MODEL),Z20_250_12)
 
 
 	FPGA_MODEL = Z20_250
-	DTS_PATH = dts_250
 	FPGA_VERSION = z20_250
+
+endif
+
+ifeq ($(MODEL),Z20_250_12a)
+
+	# Used FPGA bitstream from Z20_250_12 model
+	# need rebuild only barebone for new dts
+
+	FPGA_BAREBONE_250_A = unify/bugfixes042023
+
+	FPGA_MODEL = Z20_250
+	FPGA_VERSION = z20_250a
 
 endif
 
@@ -290,6 +294,13 @@ ifneq "$(FPGA_BAREBONE_250)" ""
 	mv $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones_250 $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones
 	mkdir -p $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
 	cp -r fpga/$(FPGA_VERSION)/barebones_250/dts_250/*  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
+endif
+
+ifneq "$(FPGA_BAREBONE_250_A)" ""
+	$(call build_fpga,barebones_250,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_BAREBONE_250_A))
+	mv $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones_250 $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones
+	mkdir -p $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
+	cp -r fpga/$(FPGA_VERSION)/barebones_250/dts_250a/*  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
 endif
 
 ifneq "$(FPGA_STREAM_APP)" ""
