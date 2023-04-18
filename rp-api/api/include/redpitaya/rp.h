@@ -674,7 +674,7 @@ int rp_AcqGetArmKeep(bool* state);
 int rp_AcqGetBufferFillState(bool* state);
 
 /**
- * Indicates whether the ADC AXI buffer was full of data. The length of the buffer is determined by the delay. By default, the delay is half the buffer.
+ * Indicates whether the ADC AXI buffer was full of data.
  * @param channel Channel index
  * @param state Returns status
  * @return If the function is successful, the return value is RP_OK.
