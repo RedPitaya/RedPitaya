@@ -45,10 +45,12 @@ uint16_t writeToFactoryEpprom(uint8_t* buffer,uint16_t size);
 bool convertV1(rp_calib_params_t *param,rp_calib_params_v1_t *out);
 bool convertV2(rp_calib_params_t *param,rp_calib_params_v2_t *out);
 bool convertV3(rp_calib_params_t *param,rp_calib_params_v3_t *out);
+bool convertV4(rp_calib_params_t *param,rp_calib_params_v1_t *out);
 
 rp_calib_params_t convertV1toCommon(rp_calib_params_v1_t *param);
 rp_calib_params_t convertV2toCommon(rp_calib_params_v2_t *param);
 rp_calib_params_t convertV3toCommon(rp_calib_params_v3_t *param);
+rp_calib_params_t convertV4toCommon(rp_calib_params_v1_t *param);
 
 rp_calib_params_t getDefault(rp_HPeModels_t model);
 

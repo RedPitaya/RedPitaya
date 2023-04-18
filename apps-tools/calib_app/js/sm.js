@@ -166,12 +166,11 @@
                     }
 
                     if (receive.signals) {
-                        if (receive.signals.wave.size > 0) {
+                        if (receive.signals.wave != undefined && receive.signals.wave.size > 0) {
                             SM.signalStack.push(receive.signals);
                             signalsHandler();
                         }
                     }
-
 
                 } catch (e) {
                     //BA.state.processing = false;

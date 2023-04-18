@@ -49,9 +49,17 @@ extern "C" {
 
 ///@}
 
-#define RP_HW_PACK_ID_V1 1
-#define RP_HW_PACK_ID_V2 2
-#define RP_HW_PACK_ID_V3 3
+// 125-14 ...
+#define RP_HW_PACK_ID_V1        1
+
+// 250-12 ...
+#define RP_HW_PACK_ID_V2        2
+
+// 125-14 4Ch ...
+#define RP_HW_PACK_ID_V3        3
+
+// 122-16 ...
+#define RP_HW_PACK_ID_V4        4
 
 /**
  * Type representing Input/Output channels.

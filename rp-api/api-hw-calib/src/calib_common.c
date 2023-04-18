@@ -318,6 +318,58 @@ bool convertV3(rp_calib_params_t *param,rp_calib_params_v3_t *out){
     return true;
 }
 
+bool convertV4(rp_calib_params_t *param,rp_calib_params_v1_t *out){
+    if (param->fast_adc_count_1_1 != 2){
+        return false;
+    }
+
+    if (param->fast_adc_count_1_20 != 0){
+        return false;
+    }
+
+    if (param->fast_adc_count_1_1_ac != 0){
+        return false;
+    }
+
+    if (param->fast_adc_count_1_20_ac != 0){
+        return false;
+    }
+
+    if (param->fast_dac_count_x1 != 2){
+        return false;
+    }
+
+    if (param->fast_dac_count_x5 != 0){
+        return false;
+    }
+    out->dataStructureId = param->dataStructureId;
+    out->wpCheck = param->wpCheck;
+
+    out->fe_ch1_fs_g_lo = param->fast_adc_1_1[0].calibValue;
+    out->fe_ch2_fs_g_lo = param->fast_adc_1_1[1].calibValue;
+    out->fe_ch1_lo_offs = param->fast_adc_1_1[0].offset;
+    out->fe_ch2_lo_offs = param->fast_adc_1_1[1].offset;
+
+    out->low_filter_aa_ch1 = param->fast_adc_filter_1_1[0].aa;
+    out->low_filter_bb_ch1 = param->fast_adc_filter_1_1[0].bb;
+    out->low_filter_pp_ch1 = param->fast_adc_filter_1_1[0].pp;
+    out->low_filter_kk_ch1 = param->fast_adc_filter_1_1[0].kk;
+
+    out->low_filter_aa_ch2 = param->fast_adc_filter_1_1[1].aa;
+    out->low_filter_bb_ch2 = param->fast_adc_filter_1_1[1].bb;
+    out->low_filter_pp_ch2 = param->fast_adc_filter_1_1[1].pp;
+    out->low_filter_kk_ch2 = param->fast_adc_filter_1_1[1].kk;
+
+    out->be_ch1_fs = param->fast_dac_x1[0].calibValue;
+    out->be_ch2_fs = param->fast_dac_x1[1].calibValue;
+    out->be_ch1_dc_offs = param->fast_dac_x1[0].offset;
+    out->be_ch2_dc_offs = param->fast_dac_x1[1].offset;
+
+    out->magic = CALIB_MAGIC_FILTER;
+
+    return true;
+}
+
 rp_calib_params_t getDefault(rp_HPeModels_t model){
     rp_calib_params_t calib;
     memset(&calib,0,sizeof(rp_calib_params_t));
@@ -367,12 +419,12 @@ rp_calib_params_t getDefault(rp_HPeModels_t model){
     case STEM_122_16SDR_v1_1:
         calib.fast_adc_count_1_1 = 2;
         calib.fast_dac_count_x1 = 2;
-        calib.dataStructureId = RP_HW_PACK_ID_V1;
+        calib.dataStructureId = RP_HW_PACK_ID_V4;
 
         for(int i = 0; i < 2; ++i){
-            calib.fast_adc_1_1[i].calibValue = calibBaseScaleFromVoltage(0.5);
+            calib.fast_adc_1_1[i].calibValue = calibBaseScaleFromVoltage(20);
             calib.fast_adc_1_1[i].offset = 0;
-            calib.fast_adc_1_1[i].baseScale = 0.5;
+            calib.fast_adc_1_1[i].baseScale = 20;
             calib.fast_adc_1_1[i].gainCalc = 1.0;
 
             calib.fast_dac_x1[i].calibValue = calibBaseScaleFromVoltage(1.0);
@@ -384,11 +436,6 @@ rp_calib_params_t getDefault(rp_HPeModels_t model){
             calib.fast_adc_filter_1_1[i].bb = DEFAULT_1_1_FILT_BB;
             calib.fast_adc_filter_1_1[i].kk = DEFAULT_1_1_FILT_KK;
             calib.fast_adc_filter_1_1[i].pp = DEFAULT_1_1_FILT_PP;
-
-            calib.fast_adc_filter_1_20[i].aa = DEFAULT_1_20_FILT_AA;
-            calib.fast_adc_filter_1_20[i].bb = DEFAULT_1_20_FILT_BB;
-            calib.fast_adc_filter_1_20[i].kk = DEFAULT_1_20_FILT_KK;
-            calib.fast_adc_filter_1_20[i].pp = DEFAULT_1_20_FILT_PP;
         }
         break;
 
@@ -717,6 +764,57 @@ rp_calib_params_t convertV3toCommon(rp_calib_params_v3_t *param){
     calib.fast_dac_x5[1].calibValue = param->gen_ch2_g_5;
     calib.fast_dac_x5[1].offset = param->gen_ch2_off_5;
 
+    return calib;
+}
+
+rp_calib_params_t convertV4toCommon(rp_calib_params_v1_t *param){
+    rp_calib_params_t calib;
+    memset(&calib,0,sizeof(rp_calib_params_t));
+    calib.fast_adc_count_1_1 = 2;
+    calib.fast_dac_count_x1 = 2;
+    calib.dataStructureId = param->dataStructureId;
+    calib.wpCheck = param->wpCheck;
+
+    calib.fast_adc_1_1[0].baseScale = 20.0;
+    calib.fast_adc_1_1[0].calibValue = param->fe_ch1_fs_g_lo;
+    calib.fast_adc_1_1[0].offset = param->fe_ch1_lo_offs;
+
+    calib.fast_adc_1_1[1].baseScale = 20.0;
+    calib.fast_adc_1_1[1].calibValue = param->fe_ch2_fs_g_lo;
+    calib.fast_adc_1_1[1].offset = param->fe_ch2_lo_offs;
+
+    calib.fast_dac_x1[0].baseScale = 1.0;
+    calib.fast_dac_x1[0].calibValue = param->be_ch1_fs;
+    calib.fast_dac_x1[0].offset = param->be_ch1_dc_offs;
+
+    calib.fast_dac_x1[1].baseScale = 1.0;
+    calib.fast_dac_x1[1].calibValue = param->be_ch2_fs;
+    calib.fast_dac_x1[1].offset = param->be_ch2_dc_offs;
+
+    // For very old boards
+    if (param->magic != CALIB_MAGIC && param->magic != CALIB_MAGIC_FILTER) {
+		calib.fast_adc_1_1[0].offset = param->fe_ch1_lo_offs;
+		calib.fast_adc_1_1[1].offset = param->fe_ch2_lo_offs;
+	}
+
+    if (param->magic != CALIB_MAGIC_FILTER){
+        for(int i = 0 ;i < 2 ; ++i) {
+            calib.fast_adc_filter_1_1[i].aa = DEFAULT_1_1_FILT_AA;
+            calib.fast_adc_filter_1_1[i].bb = DEFAULT_1_1_FILT_BB;
+            calib.fast_adc_filter_1_1[i].pp = DEFAULT_1_1_FILT_PP;
+            calib.fast_adc_filter_1_1[i].kk = DEFAULT_1_1_FILT_KK;
+        }
+    }else{
+        calib.fast_adc_filter_1_1[0].aa = param->low_filter_aa_ch1;
+        calib.fast_adc_filter_1_1[0].bb = param->low_filter_bb_ch1;
+        calib.fast_adc_filter_1_1[0].pp = param->low_filter_pp_ch1;
+        calib.fast_adc_filter_1_1[0].kk = param->low_filter_kk_ch1;
+
+        calib.fast_adc_filter_1_1[1].aa = param->low_filter_aa_ch2;
+        calib.fast_adc_filter_1_1[1].bb = param->low_filter_bb_ch2;
+        calib.fast_adc_filter_1_1[1].pp = param->low_filter_pp_ch2;
+        calib.fast_adc_filter_1_1[1].kk = param->low_filter_kk_ch2;
+    }
     return calib;
 }
 

@@ -148,7 +148,11 @@ int rp_app_init(void)
 	fprintf(stderr, "Loading calibraton app version %s-%s.\n", VERSION_STR, REVISION_STR);
 	CDataManager::GetInstance()->SetParamInterval(100);
 	rp_Init();
-	g_acq = COscilloscope::Create(64);
+	auto dec = 64;
+	if (getModelName() == "Z20"){
+		dec = 1;
+	}
+	g_acq = COscilloscope::Create(dec);
 	g_calib = CCalib::Create(g_acq);
 	g_calib_man = CCalibMan::Create(g_acq);
 
@@ -880,14 +884,29 @@ void UpdateParams(void)
 			if (sig == 1){
 				g_calib_man->init();
 				if (getDACChannels() >= 2){
-					gen_freq[0].SendValue(1000);
-					gen_freq[1].SendValue(1000);
-					gen_offset[0].SendValue(0);
-					gen_offset[1].SendValue(0);
-					gen_type[0].SendValue(0);
-					gen_type[1].SendValue(0);
-					gen_amp[0].SendValue(0.9);
-					gen_amp[1].SendValue(0.9);
+					if (getModelName() == "Z20"){
+						gen_freq[0].SendValue(1000000);
+						gen_freq[1].SendValue(1000000);
+						gen_offset[0].SendValue(0);
+						gen_offset[1].SendValue(0);
+						gen_type[0].SendValue(0);
+						gen_type[1].SendValue(0);
+						gen_amp[0].SendValue(0.4);
+						gen_amp[1].SendValue(0.4);
+						g_calib_man->setFreq(RP_CH_1,1000000);
+						g_calib_man->setFreq(RP_CH_2,1000000);
+						g_calib_man->setAmp(RP_CH_1,0.4);
+						g_calib_man->setAmp(RP_CH_2,0.4);
+					}else{
+						gen_freq[0].SendValue(1000);
+						gen_freq[1].SendValue(1000);
+						gen_offset[0].SendValue(0);
+						gen_offset[1].SendValue(0);
+						gen_type[0].SendValue(0);
+						gen_type[1].SendValue(0);
+						gen_amp[0].SendValue(0.9);
+						gen_amp[1].SendValue(0.9);
+					}
 				}
 
 				g_calib_man->readCalibEpprom();

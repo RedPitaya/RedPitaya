@@ -42,6 +42,13 @@ $(function() {
                 setInterval(OBJ.drawSignalsCH4, 100);
             }
             OBJ.amConnectCallbacks();
+
+            if(OBJ.adcModel === "Z20"){
+                $("#manual_lv_hv_mode").remove();
+                $("#dac_type_1").remove();
+                $("#dac_type_2").remove();
+            }
+
         }
     }
 

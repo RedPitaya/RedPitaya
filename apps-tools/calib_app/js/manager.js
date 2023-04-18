@@ -169,6 +169,11 @@
                     $("#filter_calib_button").show();
                     $("#afilter_calib_button").show();
                 }
+
+                if (OBJ.model == "Z20"){
+                    $('#a_mode').remove();
+                }
+
                 OBJ.amSetModel(_value);
                 OBJ.adcSetModel(_value);
                 OBJ.famSetModel(_value);
