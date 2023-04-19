@@ -249,14 +249,14 @@ int main(int argc, char *argv[]) {
     cli_args_t args;
     if (!cli_parse_args(argc, argv, args)) {
         fprintf(stderr,"%s Version: %s-%s\n",argv[0],VERSION_STR, REVISION_STR);
-        std::cerr << cli_help_string() << std::endl;
+        fprintf(stderr,cli_help_string().c_str(),F_MAX);
         return 1;
     }
 
     if (args.help) {
         // std::cout has used only for the measurement results
         fprintf(stderr,"%s Version: %s-%s\n",argv[0],VERSION_STR, REVISION_STR);
-        std::cerr << cli_help_string() << std::endl;
+        fprintf(stderr,cli_help_string().c_str(),F_MAX);
         return 0;
     }
 

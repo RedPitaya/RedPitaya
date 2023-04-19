@@ -8,7 +8,7 @@ std::string cli_help_string() {
     return "usage:\n"
     "-h, --help: help\n"
     "-m, --min: minimum frequency (default: 0)\n"
-    "-M, --max: maximum frequency (default: 62500000)\n"
+    "-M, --max: maximum frequency (default: %d)\n"
     "-c, --count: iteration count (default: 1, negative: infinity)\n"
     "-a, --average: average the measurement from 10 times (default: enabled)\n"
     "-n, --no-average: disable average the measurement from 10 times\n"
@@ -30,6 +30,14 @@ const struct option long_opt[] = {
         { 0,            0,                  0,  0  }
     };
 
+uint32_t getMaxFreqRate() {
+    uint32_t c = 0;
+    if (rp_HPGetSpectrumFastADCSpeedHz(&c) != RP_HP_OK){
+        fprintf(stderr,"[Error] Can't get fast ADC spectrum resolution\n");
+    }
+    return c;
+}
+
 bool cli_parse_args(int argc, char * const argv[], cli_args_t &out_args) {
     cli_args_t args;
 
@@ -46,7 +54,7 @@ bool cli_parse_args(int argc, char * const argv[], cli_args_t &out_args) {
             case 'm':
                 args.freq_min = std::stof(optarg);
 
-                if (args.freq_min < 0. || args.freq_min > 62500000.) {
+                if (args.freq_min < 0. || args.freq_min > F_MAX) {
                     throw std::out_of_range("freq_min");
                 }
 
@@ -59,7 +67,7 @@ bool cli_parse_args(int argc, char * const argv[], cli_args_t &out_args) {
             case 'M':
                 args.freq_max = std::stof(optarg);
 
-                if (args.freq_max < 0. || args.freq_max > 62500000.) {
+                if (args.freq_max < 0. || args.freq_max > F_MAX) {
                     throw std::out_of_range("freq_max");
                 }
 

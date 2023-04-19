@@ -309,10 +309,13 @@ int hp_cmn_Print(profiles_t *p){
 	fprintf(stdout,"\t* Board MAC address from eeprom: %s\n",p->boardETH_MAC);
 	fprintf(stdout,"\t* Zynq model (rp_HPeZynqModels_t) %d\n",p->zynqCPUModel);
 	fprintf(stdout,"\t* Oscillator Rate: %u\n",p->oscillator_rate);
+	fprintf(stdout,"\t* ADC chip Full Scale: %f\n",p->fast_adc_full_scale);
+	fprintf(stdout,"\t* DAC chip Full Scale: %f\n",p->fast_dac_full_scale);
 
 	fprintf(stdout,"FAST ADC\n");
 	fprintf(stdout,"\t* Rate: %u\n",p->fast_adc_rate);
 	fprintf(stdout,"\t* Filter present: %u\n",p->is_fast_adc_filter_present);
+	fprintf(stdout,"\t* Spectrum resolution: %u\n",p->fast_adc_spectrum_resolution);
 	fprintf(stdout,"\t* Count: %u\n",p->fast_adc_count_channels);
 
 	for(int i = 0 ; i < p->fast_adc_count_channels; i++){
@@ -320,7 +323,6 @@ int hp_cmn_Print(profiles_t *p){
 		fprintf(stdout,"\t\t- Bits: %u\n",p->fast_adc[i].bits);
 		fprintf(stdout,"\t\t- Full scale: %f\n",p->fast_adc[i].fullScale);
 	}
-
 
 	fprintf(stdout,"FAST DAC\n");
 	fprintf(stdout,"\t* Is present: %u\n",p->is_dac_present);

@@ -272,6 +272,38 @@ int CDSP::window_init(CDSP::window_mode_t mode){
     return 0;
 }
 
+auto CDSP::remoteDCCount() -> uint8_t{
+    switch(m_pimpl->m_window_mode) {
+        case HANNING:{
+            return 2;
+        }
+        case RECTANGULAR:{
+            return 2;
+        }
+        case HAMMING:{
+            return 2;
+        }
+        case BLACKMAN_HARRIS:{
+            return 5;
+        }
+        case FLAT_TOP:{
+            return 5;
+        }
+        case KAISER_4:{
+            return 5;
+        }
+
+        case KAISER_8:{
+            return 4;
+        }
+        default:
+            fprintf(stderr,"[Error] remoteDCCount: Unknown window window mode\n");
+            return 0;
+    }
+    return 0;
+}
+
+
 auto CDSP::window_clean() -> int {
     delete m_pimpl->m_window;
     m_pimpl->m_window = NULL;
@@ -467,8 +499,11 @@ auto CDSP::cnvToDBM(data_t *data,uint32_t  decimation) -> int {
     float freq_smpl = (float)m_pimpl->m_adc_max_speed / (float)decimation;
    
     if (m_pimpl->m_remove_DC) {
+        int8_t count = remoteDCCount();
         for(uint32_t c = 0; c < m_pimpl->m_max_channels; c++) {
-            data->converted[c][0] = data->converted[c][1] = data->decimated[c][2];
+            for(int8_t x = 0 ; x < count; x++){
+                data->decimated[c][x] = data->decimated[c][count];
+            }
         }
     }
 
@@ -517,10 +552,13 @@ auto CDSP::cnvToDBMMaxValueRanged(data_t *data,uint32_t  decimation,uint32_t min
     int *max_pw_idx = new int[m_pimpl->m_max_channels];
     float freq_smpl = (float)m_pimpl->m_adc_max_speed / (float)decimation;
     if (m_pimpl->m_remove_DC) {
+        int8_t count = remoteDCCount();
         for(uint32_t c = 0; c < m_pimpl->m_max_channels; c++) {
-            data->converted[c][0] = data->converted[c][1] = data->decimated[c][2];
+            for(int8_t x = 0 ; x < count; x++){
+                data->decimated[c][x] = data->decimated[c][count];
+            }
         }
-    }    
+    }  
     for(uint32_t c = 0; c < m_pimpl->m_max_channels; c++) {
         if (!m_pimpl->m_channelState[c]) continue;
         max_pw[c] =  -1e5;
@@ -570,8 +608,11 @@ auto CDSP::cnvToMetric(data_t *data,uint32_t  decimation) -> int{
     float  freq_smpl = (float)m_pimpl->m_adc_max_speed / (float)decimation;
 
     if (m_pimpl->m_remove_DC) {
+        int8_t count = remoteDCCount();
         for(uint32_t c = 0; c < m_pimpl->m_max_channels; c++) {
-            data->converted[c][0] = data->converted[c][1] = data->decimated[c][2];
+            for(int8_t x = 0 ; x < count; x++){
+                data->decimated[c][x] = data->decimated[c][count];
+            }
         }
     }
 

@@ -1,10 +1,15 @@
 #pragma once
 
 #include <string>
+#include "rp_hw-profiles.h"
+
+uint32_t getMaxFreqRate();
+
+#define F_MAX (getMaxFreqRate())
 
 struct cli_args_t {
     float freq_min = 0.;
-    float freq_max = 62500000.;
+    float freq_max = F_MAX;
     int count = 1;
     bool average_for_10 = true;
     bool csv = false;

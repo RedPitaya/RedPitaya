@@ -59,7 +59,9 @@ typedef struct {
     bool                is_attenuator_controller_present;
     bool                is_ext_trigger_level_available;
     uint8_t             external_trigger_full_scale;
-
+    uint32_t            fast_adc_spectrum_resolution;
+    float               fast_adc_full_scale;
+    float               fast_dac_full_scale;
 } profiles_t;
 
 

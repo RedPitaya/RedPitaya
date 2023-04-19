@@ -85,7 +85,12 @@ profiles_t stem_250_12_v1_1 = {
     .is_attenuator_controller_present = true,
 
     .is_ext_trigger_level_available = true,
-    .external_trigger_full_scale = 10
+    .external_trigger_full_scale = 10,
+
+    .fast_adc_spectrum_resolution = 62500000,
+
+    .fast_adc_full_scale = 1,
+    .fast_dac_full_scale = 1
 };
 
 profiles_t* getProfile_STEM_250_12_v1_1(){

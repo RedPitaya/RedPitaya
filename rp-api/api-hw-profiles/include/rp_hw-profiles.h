@@ -135,6 +135,25 @@ rp_HPeZynqModels_t rp_HPGetZynqModelOrDefault();
 int rp_HPGetBaseSpeedHz(uint32_t *value);
 uint32_t rp_HPGetBaseSpeedHzOrDefault();
 
+
+/**
+* Returns Full Scale of ADC chip
+* Function rp_HPGetHWADCFullScaleOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+*/
+int rp_HPGetHWADCFullScale(float *value);
+float rp_HPGetHWADCFullScaleOrDefault();
+
+/**
+* Returns Full Scale of DAC chip
+* Function rp_HPGetHWDACFullScaleOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+*/
+int rp_HPGetHWDACFullScale(float *value);
+float rp_HPGetHWDACFullScaleOrDefault();
+
 /**
 * Returns the clock frequency for ADC
 * Function rp_HPGetBaseFastADCSpeedHzOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
@@ -143,6 +162,15 @@ uint32_t rp_HPGetBaseSpeedHzOrDefault();
 */
 int rp_HPGetBaseFastADCSpeedHz(uint32_t *value);
 uint32_t rp_HPGetBaseFastADCSpeedHzOrDefault();
+
+/**
+* Returns the maximum value for the spectrum analyzer in hz
+* Function rp_HPGetSpectrumFastADCSpeedHzOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+*/
+int rp_HPGetSpectrumFastADCSpeedHz(uint32_t *value);
+uint32_t rp_HPGetSpectrumFastADCSpeedHzOrDefault();
 
 /**
 * Returns the number of channels for ADC

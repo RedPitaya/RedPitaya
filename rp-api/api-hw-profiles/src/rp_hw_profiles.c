@@ -152,9 +152,54 @@ int rp_HPGetBaseFastADCSpeedHz(uint32_t *value){
     return state;
 }
 
+float rp_HPGetHWADCFullScaleOrDefault(){
+     profiles_t* p = getProfileDefualt();
+    return p->fast_adc_full_scale;
+}
+
+int rp_HPGetHWADCFullScale(float *value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->fast_adc_full_scale;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+float rp_HPGetHWDACFullScaleOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->fast_dac_full_scale;
+}
+
+int rp_HPGetHWDACFullScale(float *value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->fast_dac_full_scale;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
 uint32_t rp_HPGetBaseFastADCSpeedHzOrDefault(){
     profiles_t* p = getProfileDefualt();
     return p->fast_adc_rate;
+}
+
+int rp_HPGetSpectrumFastADCSpeedHz(uint32_t *value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->fast_adc_spectrum_resolution;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+uint32_t rp_HPGetSpectrumFastADCSpeedHzOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->fast_adc_spectrum_resolution;
 }
 
 int rp_HPGetFastADCChannelsCount(uint8_t *value){

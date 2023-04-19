@@ -92,6 +92,7 @@ public:
     auto cnvToDBM(data_t *data,uint32_t  decimation) -> int;
     auto cnvToDBMMaxValueRanged(data_t *data,uint32_t  decimation,uint32_t minFreq,uint32_t maxFreq) -> int;
     auto cnvToMetric(data_t *data,uint32_t  decimation) -> int;
+    auto remoteDCCount() -> uint8_t;
 
 private:
 

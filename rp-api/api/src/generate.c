@@ -238,7 +238,7 @@ int generate_ResetChannelSM(rp_channel_t channel){
 int generate_writeData(rp_channel_t channel, float *data, int32_t start, uint32_t length) {
 
     float fs = 0;
-    if (rp_HPGetFastDACFullScale(convertCh(channel), &fs) != RP_HP_OK){
+    if (rp_HPGetHWDACFullScale(&fs) != RP_HP_OK){
         fprintf(stderr,"[Error:generate_writeData] Can't get fast DAC full scale\n");
         return RP_NOTS;
     }
@@ -263,7 +263,7 @@ int generate_writeData(rp_channel_t channel, float *data, int32_t start, uint32_
 
     if (start < 0) start += DAC_BUFFER_SIZE;
     for(int i = start; i < start + DAC_BUFFER_SIZE; i++) {
-        dataOut[i % DAC_BUFFER_SIZE] =  cmn_convertToCnt(data[i-start],bits,1,is_sign,1,0);
+        dataOut[i % DAC_BUFFER_SIZE] =  cmn_convertToCnt(data[i-start],bits,fs,is_sign,1,0);
     }
     return RP_OK;
 }

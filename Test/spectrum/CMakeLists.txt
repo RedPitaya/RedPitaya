@@ -50,16 +50,14 @@ add_compile_options(-Wall -pedantic -Wextra -DVERSION=${VERSION} -DREVISION=${RE
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib)
-target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib)
 
+target_link_libraries(${PROJECT_NAME} PRIVATE -static rp-dsp rp)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE rp-dsp rp)
+target_link_libraries(${PROJECT_NAME} PRIVATE -static rp rp-hw rp-hw-calib rp-hw-profiles)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE rp rp-hw rp-hw-calib rp-hw-profiles)
+target_link_libraries(${PROJECT_NAME} PRIVATE -static rp-i2c rp-spi rp-gpio)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE rp-i2c rp-spi rp-gpio)
-
-target_link_libraries(${PROJECT_NAME} PRIVATE rp-hw i2c)
+target_link_libraries(${PROJECT_NAME} PRIVATE -static rp-hw i2c)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE pthread)
 
