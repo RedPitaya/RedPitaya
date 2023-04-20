@@ -152,7 +152,10 @@
                 }
                 applications.unshift(backButton);
                 Desktop.selectGroup();
-            });
+                setTimeout(function() {
+                    $('body').addClass('loaded');
+                }, 666);
+            }).fail(function(msg) { setApplications(listOfapplications); });
     }
 
     var checkApplicationInGroup = function(app_id) {

@@ -47,10 +47,6 @@
             });
 
             Desktop.setApplications(apps);
-            setTimeout(function() {
-                $('body').addClass('loaded');
-            }, 666);
-
         }).fail(function(msg) { getListOfApps(); });
     }
 
