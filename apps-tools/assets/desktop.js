@@ -155,7 +155,7 @@
                 setTimeout(function() {
                     $('body').addClass('loaded');
                 }, 666);
-            }).fail(function(msg) { setApplications(listOfapplications); });
+            }).fail(function(msg) { Desktop.setApplications(listOfapplications); });
     }
 
     var checkApplicationInGroup = function(app_id) {
