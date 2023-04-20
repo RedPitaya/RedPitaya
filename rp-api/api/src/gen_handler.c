@@ -625,14 +625,28 @@ int gen_setBurstLastValue(rp_channel_t channel, float amplitude){
 
     CHECK_CHANNEL("gen_setBurstLastValue")
 
-    return generate_setBurstLastValue(channel,  amplitude);
+    return generate_setBurstLastValue(channel,ch_gain[channel],  amplitude);
 }
 
 int gen_getBurstLastValue(rp_channel_t channel, float *amplitude){
 
     CHECK_CHANNEL("gen_getBurstLastValue")
 
-    return generate_getBurstLastValue(channel, amplitude);
+    return generate_getBurstLastValue(channel,ch_gain[channel], amplitude);
+}
+
+int gen_setInitGenValue(rp_channel_t channel, float amplitude){
+
+    CHECK_CHANNEL("gen_setInitGenValue")
+
+    return generate_setInitGenValue(channel,ch_gain[channel],  amplitude);
+}
+
+int gen_getInitGenValue(rp_channel_t channel, float *amplitude){
+
+    CHECK_CHANNEL("gen_getInitGenValue")
+
+    return generate_getInitGenValue(channel,ch_gain[channel], amplitude);
 }
 
 int gen_setBurstRepetitions(rp_channel_t channel, int repetitions) {

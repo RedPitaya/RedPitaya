@@ -1135,14 +1135,6 @@ int rp_AcqGetFilterCalibValue(rp_channel_t channel,uint32_t* coef_aa, uint32_t* 
 int rp_GenBurstLastValue(rp_channel_t channel, float amlitude){
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    rp_HPeModels_t model;
-    if (rp_HPGetModel(&model) != RP_HP_OK){
-        fprintf(stderr,"[Error:rp_GenBurstLastValue] Can't get board model\n");
-        return RP_NOTS;
-    }
-    if (model == STEM_250_12_v1_0 || model == STEM_250_12_v1_1 || model == STEM_250_12_v1_2 || model == STEM_250_12_v1_2a || model == STEM_250_12_120){
-        return RP_NOTS;
-    }
     return gen_setBurstLastValue(channel,amlitude);
 }
 
@@ -1152,6 +1144,17 @@ int rp_GenGetBurstLastValue(rp_channel_t channel, float *amlitude){
     return gen_getBurstLastValue(channel,amlitude);
 }
 
+int rp_GenSetInitGenValue(rp_channel_t channel, float amlitude){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
+    return gen_setInitGenValue(channel,amlitude);
+}
+
+int rp_GenGetInitGenValue(rp_channel_t channel, float *amlitude){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
+    return gen_getInitGenValue(channel,amlitude);
+}
 
 int rp_GenReset() {
     if (!rp_HPIsFastDAC_PresentOrDefault())

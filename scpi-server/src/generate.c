@@ -575,6 +575,7 @@ scpi_result_t RP_GenBurstRepetitionsQ(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+
 scpi_result_t RP_GenBurstPeriod(scpi_t *context) {
 
     rp_channel_t channel;
@@ -623,6 +624,108 @@ scpi_result_t RP_GenBurstPeriodQ(scpi_t *context) {
 
     RP_LOG(LOG_INFO, "*SOUR#:BURS:INT:PER Successfully returned "
         "generate burst period value to client.\n");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_GenBurstLastValue(scpi_t *context) {
+
+    rp_channel_t channel;
+    int result;
+    float value;
+
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    if(!SCPI_ParamFloat(context, &value, true)){
+        RP_LOG(LOG_ERR,"*SOUR#:BURS:LastValue Failed to "
+            "parse first parameter.\n");
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenBurstLastValue(channel, value);
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*SOUR#:BURS:LastValue Failed to set "
+            "generate burst last value: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    RP_LOG(LOG_INFO, "*SOUR#:BURS:LastValue Successfully set generate burst last value.\n");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_GenBurstLastValueQ(scpi_t *context) {
+
+    rp_channel_t channel;
+    int result;
+    float value;
+
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenGetBurstLastValue(channel, &value);
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*SOUR#:BURS:LastValue? Failed to get "
+            "generate burst period: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultFloat(context, value);
+
+    RP_LOG(LOG_INFO, "*SOUR#:BURS:LastValue? Successfully returned "
+        "generate burst last value to client.\n");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_GenInitValue(scpi_t *context) {
+
+    rp_channel_t channel;
+    int result;
+    float value;
+
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    if(!SCPI_ParamFloat(context, &value, true)){
+        RP_LOG(LOG_ERR,"*SOUR#:InitValue Failed to "
+            "parse first parameter.\n");
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenSetInitGenValue(channel, value);
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*SOUR#:InitValue Failed to set "
+            "generate burst last value: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    RP_LOG(LOG_INFO, "*SOUR#:InitValue Successfully set generate burst last value.\n");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_GenInitValueQ(scpi_t *context) {
+
+    rp_channel_t channel;
+    int result;
+    float value;
+
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    result = rp_GenGetInitGenValue(channel, &value);
+    if(result != RP_OK){
+        RP_LOG(LOG_ERR, "*SOUR#:InitValue? Failed to get "
+            "generate burst period: %s\n", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultFloat(context, value);
+
+    RP_LOG(LOG_INFO, "*SOUR#:InitValue? Successfully returned "
+        "generate burst last value to client.\n");
     return SCPI_RES_OK;
 }
 

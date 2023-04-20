@@ -720,7 +720,7 @@ int rp_AcqConvertFactorToDecimation(uint32_t factor,rp_acq_decimation_t* decimat
 int rp_AcqSetDecimationFactor(uint32_t decimation);
 
 /**
- * Sets the decimation used at acquiring signal for AXI. 
+ * Sets the decimation used at acquiring signal for AXI.
  * You can specify values in the range (1,2,4,8,16-65536)
  * @param channel Channel index
  * @param decimation Decimation values
@@ -1148,16 +1148,16 @@ int rp_AcqGetLatestDataV(rp_channel_t channel, uint32_t* size, float* buffer);
 
 /**
  * Returns the ADC buffer size in samples.
- * 
+ *
  * @param size Size of the ADC buffer in samples.
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 int rp_AcqGetBufSize(uint32_t* size);
 
-/** 
+/**
  * Sets the AXI ADC buffer address and size in samples.
- * 
+ *
  * @param channel Channel A or B for which we want to set the ADC buffer size.
  * @param address Address of the ADC buffer.
  * @param size Size of the ADC buffer in samples.
@@ -1548,6 +1548,24 @@ int rp_GenBurstLastValue(rp_channel_t channel, float amlitude);
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_GenGetBurstLastValue(rp_channel_t channel, float *amlitude);
+
+/**
+* The level of which is set by the generator after the outputs are turned on before the signal is generated.
+* @param channel Channel A or B for witch we want to set number of generated waveforms in a burst.
+* @param amplitude Amplitude level at the end of the signal (Volt).
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenSetInitGenValue(rp_channel_t channel, float amlitude);
+
+/**
+* Gets the value of the initial signal level.
+* @param channel Channel A or B for witch we want to get number of generated waveforms in a burst.
+* @param amplitude Amplitude where value will be returned (Volt).
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenGetInitGenValue(rp_channel_t channel, float *amlitude);
 
 /**
 * Sets number of burst repetitions. This determines how many bursts will be generated.

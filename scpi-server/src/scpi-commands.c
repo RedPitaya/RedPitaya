@@ -229,6 +229,13 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "SOUR#:BURS:NOR?", .callback            = RP_GenBurstRepetitionsQ,},
     {.pattern = "SOUR#:BURS:INT:PER", .callback         = RP_GenBurstPeriod,},
     {.pattern = "SOUR#:BURS:INT:PER?", .callback        = RP_GenBurstPeriodQ,},
+
+    {.pattern = "SOUR#:BURS:LastValue", .callback       = RP_GenBurstLastValue,},
+    {.pattern = "SOUR#:BURS:LastValue?", .callback      = RP_GenBurstLastValueQ,},
+
+    {.pattern = "SOUR#:InitValue", .callback            = RP_GenInitValue,},
+    {.pattern = "SOUR#:InitValue?", .callback           = RP_GenInitValueQ,},
+
     {.pattern = "SOUR#:TRIG:SOUR", .callback            = RP_GenTriggerSource,},
     {.pattern = "SOUR#:TRIG:SOUR?", .callback           = RP_GenTriggerSourceQ,},
     {.pattern = "SOUR#:TRIG:INT", .callback             = RP_GenTrigger,},

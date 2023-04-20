@@ -91,6 +91,9 @@ int synthesis_PWM(float scale,float ratio, float *data_out,uint16_t buffSize);
 int gen_setBurstLastValue(rp_channel_t channel, float amplitude);
 int gen_getBurstLastValue(rp_channel_t channel, float *amplitude);
 
+int gen_setInitGenValue(rp_channel_t channel, float amplitude);
+int gen_getInitGenValue(rp_channel_t channel, float *amplitude);
+
 int gen_setGainOut(rp_channel_t channel,rp_gen_gain_t mode);
 int gen_getGainOut(rp_channel_t channel,rp_gen_gain_t *status);
 int gen_setEnableTempProtection(rp_channel_t channel, bool enable);
