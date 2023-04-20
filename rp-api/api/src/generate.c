@@ -334,65 +334,65 @@ int generate_setAmplitude(rp_channel_t channel,rp_gen_gain_t gain, float amplitu
     return RP_OK;
 }
 
-int generate_getAmplitude(rp_channel_t channel,rp_gen_gain_t gain, float *amplitude) {
+// int generate_getAmplitude(rp_channel_t channel,rp_gen_gain_t gain, float *amplitude) {
 
-    float fs = 0;
-    if (rp_HPGetFastDACFullScale(convertCh(channel), &fs) != RP_HP_OK){
-        fprintf(stderr,"[Error:generate_getAmplitude] Can't get fast DAC full scale\n");
-        return RP_NOTS;
-    }
+//     float fs = 0;
+//     if (rp_HPGetFastDACFullScale(convertCh(channel), &fs) != RP_HP_OK){
+//         fprintf(stderr,"[Error:generate_getAmplitude] Can't get fast DAC full scale\n");
+//         return RP_NOTS;
+//     }
 
-    uint8_t bits = 0;
-    if (rp_HPGetFastDACBits(convertCh(channel), &bits) != RP_HP_OK){
-        fprintf(stderr,"[Error:generate_getAmplitude] Can't get fast DAC bits\n");
-        return RP_NOTS;
-    }
+//     uint8_t bits = 0;
+//     if (rp_HPGetFastDACBits(convertCh(channel), &bits) != RP_HP_OK){
+//         fprintf(stderr,"[Error:generate_getAmplitude] Can't get fast DAC bits\n");
+//         return RP_NOTS;
+//     }
 
-    bool is_sign = false;
-    if (rp_HPGetFastDACIsSigned(convertCh(channel),&is_sign) != RP_HP_OK){
-        fprintf(stderr,"[Error:generate_getAmplitude] Can't get fast DAC sign value\n");
-        return RP_NOTS;
-    }
+//     bool is_sign = false;
+//     if (rp_HPGetFastDACIsSigned(convertCh(channel),&is_sign) != RP_HP_OK){
+//         fprintf(stderr,"[Error:generate_getAmplitude] Can't get fast DAC sign value\n");
+//         return RP_NOTS;
+//     }
 
-    bool x5_gain = false;
-    if (rp_HPGetIsGainDACx5(&x5_gain) != RP_HP_OK) {
-        fprintf(stderr,"[Error:generate_getAmplitude] Can't get fast DAC x5 gain\n");
-        return RP_NOTS;
-    }
+//     bool x5_gain = false;
+//     if (rp_HPGetIsGainDACx5(&x5_gain) != RP_HP_OK) {
+//         fprintf(stderr,"[Error:generate_getAmplitude] Can't get fast DAC x5 gain\n");
+//         return RP_NOTS;
+//     }
 
-    if (!x5_gain && gain == RP_GAIN_5X){
-        fprintf(stderr,"[Error:generate_getAmplitude] Can't set gain on unsupported board\n");
-        return RP_NOTS;
-    }
+//     if (!x5_gain && gain == RP_GAIN_5X){
+//         fprintf(stderr,"[Error:generate_getAmplitude] Can't set gain on unsupported board\n");
+//         return RP_NOTS;
+//     }
 
-    double gain_calib;
-    int32_t offset;
-    int ret = 0;
-    switch (gain)
-    {
-        case RP_GAIN_1X:
-            ret = rp_CalibGetFastDACCalibValue(convertCh(channel),RP_GAIN_CALIB_1X,&gain_calib,&offset);
-        break;
-        case RP_GAIN_5X:
-            ret = rp_CalibGetFastDACCalibValue(convertCh(channel),RP_GAIN_CALIB_5X,&gain_calib,&offset);
-        break;
-        default:
-            fprintf(stderr,"[Error:generate_getAmplitude] Unknown gain: %d\n",gain);
-            return RP_EOOR;
-            break;
-    }
+//     double gain_calib;
+//     int32_t offset;
+//     int ret = 0;
+//     switch (gain)
+//     {
+//         case RP_GAIN_1X:
+//             ret = rp_CalibGetFastDACCalibValue(convertCh(channel),RP_GAIN_CALIB_1X,&gain_calib,&offset);
+//         break;
+//         case RP_GAIN_5X:
+//             ret = rp_CalibGetFastDACCalibValue(convertCh(channel),RP_GAIN_CALIB_5X,&gain_calib,&offset);
+//         break;
+//         default:
+//             fprintf(stderr,"[Error:generate_getAmplitude] Unknown gain: %d\n",gain);
+//             return RP_EOOR;
+//             break;
+//     }
 
-    if (ret != RP_HW_CALIB_OK){
-        fprintf(stderr,"[Error:generate_getAmplitude] Error get calibaration: %d\n",ret);
-        return RP_EOOR;
-    }
+//     if (ret != RP_HW_CALIB_OK){
+//         fprintf(stderr,"[Error:generate_getAmplitude] Error get calibaration: %d\n",ret);
+//         return RP_EOOR;
+//     }
 
-    volatile ch_properties_t *ch_properties;
-    // uint32_t amp_max = calib_getGenScale(channel,gain);
-    getChannelPropertiesAddress(&ch_properties, channel);
-    *amplitude = cmn_convertToCnt(ch_properties->amplitudeScale,bits,fs,is_sign,gain_calib,0);
-    return RP_OK;
-}
+//     volatile ch_properties_t *ch_properties;
+//     // uint32_t amp_max = calib_getGenScale(channel,gain);
+//     getChannelPropertiesAddress(&ch_properties, channel);
+//     *amplitude = cmn_convertToCnt(ch_properties->amplitudeScale,bits,fs,is_sign,gain_calib,0);
+//     return RP_OK;
+// }
 
 int generate_setDCOffset(rp_channel_t channel,rp_gen_gain_t gain, float offset) {
 
@@ -458,67 +458,67 @@ int generate_setDCOffset(rp_channel_t channel,rp_gen_gain_t gain, float offset) 
     return RP_OK;
 }
 
-int generate_getDCOffset(rp_channel_t channel,rp_gen_gain_t gain, float *offset) {
+// int generate_getDCOffset(rp_channel_t channel,rp_gen_gain_t gain, float *offset) {
 
-    float fs = 0;
-    if (rp_HPGetFastDACFullScale(convertCh(channel), &fs) != RP_HP_OK){
-        fprintf(stderr,"[Error:generate_getDCOffset] Can't get fast DAC full scale\n");
-        return RP_NOTS;
-    }
+//     float fs = 0;
+//     if (rp_HPGetFastDACFullScale(convertCh(channel), &fs) != RP_HP_OK){
+//         fprintf(stderr,"[Error:generate_getDCOffset] Can't get fast DAC full scale\n");
+//         return RP_NOTS;
+//     }
 
-    uint8_t bits = 0;
-    if (rp_HPGetFastDACBits(convertCh(channel), &bits) != RP_HP_OK){
-        fprintf(stderr,"[Error:generate_getDCOffset] Can't get fast DAC bits\n");
-        return RP_NOTS;
-    }
+//     uint8_t bits = 0;
+//     if (rp_HPGetFastDACBits(convertCh(channel), &bits) != RP_HP_OK){
+//         fprintf(stderr,"[Error:generate_getDCOffset] Can't get fast DAC bits\n");
+//         return RP_NOTS;
+//     }
 
-    bool is_sign = false;
-    if (rp_HPGetFastDACIsSigned(convertCh(channel),&is_sign) != RP_HP_OK){
-        fprintf(stderr,"[Error:generate_getDCOffset] Can't get fast DAC sign value\n");
-        return RP_NOTS;
-    }
+//     bool is_sign = false;
+//     if (rp_HPGetFastDACIsSigned(convertCh(channel),&is_sign) != RP_HP_OK){
+//         fprintf(stderr,"[Error:generate_getDCOffset] Can't get fast DAC sign value\n");
+//         return RP_NOTS;
+//     }
 
-    bool x5_gain = false;
-    if (rp_HPGetIsGainDACx5(&x5_gain) != RP_HP_OK) {
-        fprintf(stderr,"[Error:generate_getDCOffset] Can't get fast DAC x5 gain\n");
-        return RP_NOTS;
-    }
+//     bool x5_gain = false;
+//     if (rp_HPGetIsGainDACx5(&x5_gain) != RP_HP_OK) {
+//         fprintf(stderr,"[Error:generate_getDCOffset] Can't get fast DAC x5 gain\n");
+//         return RP_NOTS;
+//     }
 
-    if (!x5_gain && gain == RP_GAIN_5X){
-        fprintf(stderr,"[Error:generate_getDCOffset] Can't set gain on unsupported board\n");
-        return RP_NOTS;
-    }
+//     if (!x5_gain && gain == RP_GAIN_5X){
+//         fprintf(stderr,"[Error:generate_getDCOffset] Can't set gain on unsupported board\n");
+//         return RP_NOTS;
+//     }
 
-    double gain_calib;
-    int32_t offset_calib;
-    int ret = 0;
-    switch (gain)
-    {
-        case RP_GAIN_1X:
-            ret = rp_CalibGetFastDACCalibValue(convertCh(channel),RP_GAIN_CALIB_1X,&gain_calib,&offset_calib);
-        break;
-        case RP_GAIN_5X:
-            ret = rp_CalibGetFastDACCalibValue(convertCh(channel),RP_GAIN_CALIB_5X,&gain_calib,&offset_calib);
-        break;
-        default:
-            fprintf(stderr,"[Error:generate_getDCOffset] Unknown gain: %d\n",gain);
-            return RP_EOOR;
-            break;
-    }
+//     double gain_calib;
+//     int32_t offset_calib;
+//     int ret = 0;
+//     switch (gain)
+//     {
+//         case RP_GAIN_1X:
+//             ret = rp_CalibGetFastDACCalibValue(convertCh(channel),RP_GAIN_CALIB_1X,&gain_calib,&offset_calib);
+//         break;
+//         case RP_GAIN_5X:
+//             ret = rp_CalibGetFastDACCalibValue(convertCh(channel),RP_GAIN_CALIB_5X,&gain_calib,&offset_calib);
+//         break;
+//         default:
+//             fprintf(stderr,"[Error:generate_getDCOffset] Unknown gain: %d\n",gain);
+//             return RP_EOOR;
+//             break;
+//     }
 
-    if (ret != RP_HW_CALIB_OK){
-        fprintf(stderr,"[Error:generate_getDCOffset] Error get calibaration: %d\n",ret);
-        return RP_EOOR;
-    }
+//     if (ret != RP_HW_CALIB_OK){
+//         fprintf(stderr,"[Error:generate_getDCOffset] Error get calibaration: %d\n",ret);
+//         return RP_EOOR;
+//     }
 
-    volatile ch_properties_t *ch_properties;
-    // uint32_t amp_max = calib_getGenScale(channel,gain);
-    getChannelPropertiesAddress(&ch_properties, channel);
-    *offset = cmn_convertToCnt(ch_properties->amplitudeScale,bits,fs,is_sign,gain_calib,offset_calib);
+//     volatile ch_properties_t *ch_properties;
+//     // uint32_t amp_max = calib_getGenScale(channel,gain);
+//     getChannelPropertiesAddress(&ch_properties, channel);
+//     *offset = cmn_convertToCnt(ch_properties->amplitudeScale,bits,fs,is_sign,gain_calib,offset_calib);
 
-    //*offset = cmn_CnvNormCntToV(DATA_BIT_LENGTH, ch_properties->amplitudeOffset, (float) (OFFSET_MAX/2.f), amp_max, dc_offs, 0 , 1.0);
-    return RP_OK;
-}
+//     //*offset = cmn_CnvNormCntToV(DATA_BIT_LENGTH, ch_properties->amplitudeOffset, (float) (OFFSET_MAX/2.f), amp_max, dc_offs, 0 , 1.0);
+//     return RP_OK;
+// }
 
 int generate_getEnableTempProtection(rp_channel_t channel, bool *enable){
     bool value;
@@ -637,63 +637,63 @@ int generate_setBurstLastValue(rp_channel_t channel,rp_gen_gain_t gain, float am
     return RP_OK;
 }
 
-int generate_getBurstLastValue(rp_channel_t channel,rp_gen_gain_t gain, float *amplitude){
+// int generate_getBurstLastValue(rp_channel_t channel,rp_gen_gain_t gain, float *amplitude){
 
-    float fs = 0;
-    if (rp_HPGetFastDACFullScale(convertCh(channel), &fs) != RP_HP_OK){
-        fprintf(stderr,"[Error:generate_getBurstLastValue] Can't get fast DAC full scale\n");
-        return RP_NOTS;
-    }
+//     float fs = 0;
+//     if (rp_HPGetFastDACFullScale(convertCh(channel), &fs) != RP_HP_OK){
+//         fprintf(stderr,"[Error:generate_getBurstLastValue] Can't get fast DAC full scale\n");
+//         return RP_NOTS;
+//     }
 
-    uint8_t bits = 0;
-    if (rp_HPGetFastDACBits(convertCh(channel), &bits) != RP_HP_OK){
-        fprintf(stderr,"[Error:generate_getBurstLastValue] Can't get fast DAC bits\n");
-        return RP_NOTS;
-    }
+//     uint8_t bits = 0;
+//     if (rp_HPGetFastDACBits(convertCh(channel), &bits) != RP_HP_OK){
+//         fprintf(stderr,"[Error:generate_getBurstLastValue] Can't get fast DAC bits\n");
+//         return RP_NOTS;
+//     }
 
-    bool is_sign = false;
-    if (rp_HPGetFastDACIsSigned(convertCh(channel),&is_sign) != RP_HP_OK){
-        fprintf(stderr,"[Error:generate_getBurstLastValue] Can't get fast DAC sign value\n");
-        return RP_NOTS;
-    }
+//     bool is_sign = false;
+//     if (rp_HPGetFastDACIsSigned(convertCh(channel),&is_sign) != RP_HP_OK){
+//         fprintf(stderr,"[Error:generate_getBurstLastValue] Can't get fast DAC sign value\n");
+//         return RP_NOTS;
+//     }
 
-    bool x5_gain = false;
-    if (rp_HPGetIsGainDACx5(&x5_gain) != RP_HP_OK) {
-        fprintf(stderr,"[Error:generate_getBurstLastValue] Can't get fast DAC x5 gain\n");
-        return RP_NOTS;
-    }
+//     bool x5_gain = false;
+//     if (rp_HPGetIsGainDACx5(&x5_gain) != RP_HP_OK) {
+//         fprintf(stderr,"[Error:generate_getBurstLastValue] Can't get fast DAC x5 gain\n");
+//         return RP_NOTS;
+//     }
 
-    if (!x5_gain && gain == RP_GAIN_5X){
-        fprintf(stderr,"[Error:generate_getBurstLastValue] Can't set gain on unsupported board\n");
-        return RP_NOTS;
-    }
+//     if (!x5_gain && gain == RP_GAIN_5X){
+//         fprintf(stderr,"[Error:generate_getBurstLastValue] Can't set gain on unsupported board\n");
+//         return RP_NOTS;
+//     }
 
-    double gain_calib;
-    int32_t offset_calib;
-    int ret = 0;
-    switch (gain)
-    {
-        case RP_GAIN_1X:
-            ret = rp_CalibGetFastDACCalibValue(convertCh(channel),RP_GAIN_CALIB_1X,&gain_calib,&offset_calib);
-        break;
-        case RP_GAIN_5X:
-            ret = rp_CalibGetFastDACCalibValue(convertCh(channel),RP_GAIN_CALIB_5X,&gain_calib,&offset_calib);
-        break;
-        default:
-            fprintf(stderr,"[Error:generate_getBurstLastValue] Unknown gain: %d\n",gain);
-            return RP_EOOR;
-            break;
-    }
+//     double gain_calib;
+//     int32_t offset_calib;
+//     int ret = 0;
+//     switch (gain)
+//     {
+//         case RP_GAIN_1X:
+//             ret = rp_CalibGetFastDACCalibValue(convertCh(channel),RP_GAIN_CALIB_1X,&gain_calib,&offset_calib);
+//         break;
+//         case RP_GAIN_5X:
+//             ret = rp_CalibGetFastDACCalibValue(convertCh(channel),RP_GAIN_CALIB_5X,&gain_calib,&offset_calib);
+//         break;
+//         default:
+//             fprintf(stderr,"[Error:generate_getBurstLastValue] Unknown gain: %d\n",gain);
+//             return RP_EOOR;
+//             break;
+//     }
 
-    if (ret != RP_HW_CALIB_OK){
-        fprintf(stderr,"[Error:generate_getBurstLastValue] Error get calibaration: %d\n",ret);
-        return RP_EOOR;
-    }
+//     if (ret != RP_HW_CALIB_OK){
+//         fprintf(stderr,"[Error:generate_getBurstLastValue] Error get calibaration: %d\n",ret);
+//         return RP_EOOR;
+//     }
 
-    *amplitude = cmn_convertToCnt(channel == RP_CH_1 ? (generate->BurstFinalValue_chA) : (generate->BurstFinalValue_chB),bits,fs,is_sign,gain_calib,offset_calib);
+//     *amplitude = cmn_convertToCnt(channel == RP_CH_1 ? (generate->BurstFinalValue_chA) : (generate->BurstFinalValue_chB),bits,fs,is_sign,gain_calib,offset_calib);
 
-    return RP_OK;
-}
+//     return RP_OK;
+// }
 
 int generate_setInitGenValue(rp_channel_t channel,rp_gen_gain_t gain, float amplitude){
     float fs = 0;
@@ -744,62 +744,62 @@ int generate_setInitGenValue(rp_channel_t channel,rp_gen_gain_t gain, float ampl
     return RP_OK;
 }
 
-int generate_getInitGenValue(rp_channel_t channel,rp_gen_gain_t gain, float *amplitude){
-    float fs = 0;
-    if (rp_HPGetFastDACFullScale(convertCh(channel), &fs) != RP_HP_OK){
-        fprintf(stderr,"[Error:generate_getInitGenValue] Can't get fast DAC full scale\n");
-        return RP_NOTS;
-    }
+// int generate_getInitGenValue(rp_channel_t channel,rp_gen_gain_t gain, float *amplitude){
+//     float fs = 0;
+//     if (rp_HPGetFastDACFullScale(convertCh(channel), &fs) != RP_HP_OK){
+//         fprintf(stderr,"[Error:generate_getInitGenValue] Can't get fast DAC full scale\n");
+//         return RP_NOTS;
+//     }
 
-    uint8_t bits = 0;
-    if (rp_HPGetFastDACBits(convertCh(channel), &bits) != RP_HP_OK){
-        fprintf(stderr,"[Error:generate_getInitGenValue] Can't get fast DAC bits\n");
-        return RP_NOTS;
-    }
+//     uint8_t bits = 0;
+//     if (rp_HPGetFastDACBits(convertCh(channel), &bits) != RP_HP_OK){
+//         fprintf(stderr,"[Error:generate_getInitGenValue] Can't get fast DAC bits\n");
+//         return RP_NOTS;
+//     }
 
-    bool is_sign = false;
-    if (rp_HPGetFastDACIsSigned(convertCh(channel),&is_sign) != RP_HP_OK){
-        fprintf(stderr,"[Error:generate_getInitGenValue] Can't get fast DAC sign value\n");
-        return RP_NOTS;
-    }
+//     bool is_sign = false;
+//     if (rp_HPGetFastDACIsSigned(convertCh(channel),&is_sign) != RP_HP_OK){
+//         fprintf(stderr,"[Error:generate_getInitGenValue] Can't get fast DAC sign value\n");
+//         return RP_NOTS;
+//     }
 
-    bool x5_gain = false;
-    if (rp_HPGetIsGainDACx5(&x5_gain) != RP_HP_OK) {
-        fprintf(stderr,"[Error:generate_getInitGenValue] Can't get fast DAC x5 gain\n");
-        return RP_NOTS;
-    }
+//     bool x5_gain = false;
+//     if (rp_HPGetIsGainDACx5(&x5_gain) != RP_HP_OK) {
+//         fprintf(stderr,"[Error:generate_getInitGenValue] Can't get fast DAC x5 gain\n");
+//         return RP_NOTS;
+//     }
 
-    if (!x5_gain && gain == RP_GAIN_5X){
-        fprintf(stderr,"[Error:generate_getInitGenValue] Can't set gain on unsupported board\n");
-        return RP_NOTS;
-    }
+//     if (!x5_gain && gain == RP_GAIN_5X){
+//         fprintf(stderr,"[Error:generate_getInitGenValue] Can't set gain on unsupported board\n");
+//         return RP_NOTS;
+//     }
 
-    double gain_calib;
-    int32_t offset_calib;
-    int ret = 0;
-    switch (gain)
-    {
-        case RP_GAIN_1X:
-            ret = rp_CalibGetFastDACCalibValue(convertCh(channel),RP_GAIN_CALIB_1X,&gain_calib,&offset_calib);
-        break;
-        case RP_GAIN_5X:
-            ret = rp_CalibGetFastDACCalibValue(convertCh(channel),RP_GAIN_CALIB_5X,&gain_calib,&offset_calib);
-        break;
-        default:
-            fprintf(stderr,"[Error:generate_getInitGenValue] Unknown gain: %d\n",gain);
-            return RP_EOOR;
-            break;
-    }
+//     double gain_calib;
+//     int32_t offset_calib;
+//     int ret = 0;
+//     switch (gain)
+//     {
+//         case RP_GAIN_1X:
+//             ret = rp_CalibGetFastDACCalibValue(convertCh(channel),RP_GAIN_CALIB_1X,&gain_calib,&offset_calib);
+//         break;
+//         case RP_GAIN_5X:
+//             ret = rp_CalibGetFastDACCalibValue(convertCh(channel),RP_GAIN_CALIB_5X,&gain_calib,&offset_calib);
+//         break;
+//         default:
+//             fprintf(stderr,"[Error:generate_getInitGenValue] Unknown gain: %d\n",gain);
+//             return RP_EOOR;
+//             break;
+//     }
 
-    if (ret != RP_HW_CALIB_OK){
-        fprintf(stderr,"[Error:generate_getInitGenValue] Error get calibaration: %d\n",ret);
-        return RP_EOOR;
-    }
+//     if (ret != RP_HW_CALIB_OK){
+//         fprintf(stderr,"[Error:generate_getInitGenValue] Error get calibaration: %d\n",ret);
+//         return RP_EOOR;
+//     }
 
-    *amplitude = cmn_convertToCnt(channel == RP_CH_1 ? (generate->initGenValue_chA) : (generate->initGenValue_chB),bits,fs,is_sign,gain_calib,offset_calib);
+//     *amplitude = cmn_convertToCnt(channel == RP_CH_1 ? (generate->initGenValue_chA) : (generate->initGenValue_chB),bits,fs,is_sign,gain_calib,offset_calib);
 
-    return RP_OK;
-}
+//     return RP_OK;
+// }
 
 int generate_SetTriggerDebouncer(uint32_t value){
     if (DEBAUNCER_MASK < value) {

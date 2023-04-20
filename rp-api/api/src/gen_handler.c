@@ -48,6 +48,9 @@ float         ch_phase[2] = {0 , 0};
 int           ch_burstCount[2] = {1 , 1};
 int           ch_burstRepetition[2] = {1 , 1};
 uint32_t      ch_burstPeriod[2] = {0 , 0};
+float         ch_burstLastValue[2] = {0 , 0};
+float         ch_initValue[2] = {0 , 0};
+
 rp_waveform_t ch_waveform[2];
 rp_gen_sweep_mode_t  ch_sweepMode[2];
 rp_gen_sweep_dir_t   ch_sweepDir[2];
@@ -102,9 +105,11 @@ int gen_SetDefaultValues() {
         gen_setDutyCycle(ch, 0.5);
         gen_setBurstCount(ch, 1);
         gen_setBurstPeriod(ch, 1);
+        gen_setBurstLastValue(ch,0);
         gen_setTriggerSource(ch, RP_GEN_TRIG_SRC_INTERNAL);
         gen_setPhase(ch, 0.0);
         gen_setGenMode(ch, RP_GEN_MODE_CONTINUOUS);
+        gen_setInitGenValue(ch,0);
         if (x5_gain)
             gen_setGainOut(ch,RP_GAIN_1X);
 
@@ -625,28 +630,38 @@ int gen_setBurstLastValue(rp_channel_t channel, float amplitude){
 
     CHECK_CHANNEL("gen_setBurstLastValue")
 
-    return generate_setBurstLastValue(channel,ch_gain[channel],  amplitude);
+    int ret = generate_setBurstLastValue(channel,ch_gain[channel],  amplitude);
+    if (ret == RP_OK){
+        ch_burstLastValue[channel] = amplitude;
+    }
+    return ret;
 }
 
 int gen_getBurstLastValue(rp_channel_t channel, float *amplitude){
 
     CHECK_CHANNEL("gen_getBurstLastValue")
 
-    return generate_getBurstLastValue(channel,ch_gain[channel], amplitude);
+    *amplitude = ch_burstLastValue[channel];
+    return RP_OK;
 }
 
 int gen_setInitGenValue(rp_channel_t channel, float amplitude){
 
     CHECK_CHANNEL("gen_setInitGenValue")
 
-    return generate_setInitGenValue(channel,ch_gain[channel],  amplitude);
+    int ret = generate_setInitGenValue(channel,ch_gain[channel],  amplitude);
+    if (ret == RP_OK){
+        ch_initValue[channel] = amplitude;
+    }
+    return ret;
 }
 
 int gen_getInitGenValue(rp_channel_t channel, float *amplitude){
 
     CHECK_CHANNEL("gen_getInitGenValue")
 
-    return generate_getInitGenValue(channel,ch_gain[channel], amplitude);
+    *amplitude = ch_initValue[channel];
+    return RP_OK;
 }
 
 int gen_setBurstRepetitions(rp_channel_t channel, int repetitions) {
