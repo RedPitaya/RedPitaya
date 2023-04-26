@@ -30,6 +30,8 @@ const char format_125_14[] =
         "\ttype            Signal type [sine, sqr, tri, sweep].\n"
         "\tend frequency   Sweep-to frequency in Hz [%d - %d].\n"
         "\tcalib           Disable calibration [-c]. By default calibration enabled.\n"
+        "\n"
+        "Setting the frequency to 0 will disable the generator completely.\n"
         "\n";
 
 const char format_250_12[] =
@@ -44,6 +46,8 @@ const char format_250_12[] =
         "\ttype            Signal type [sine, sqr, tri, sweep].\n"
         "\tend frequency   Sweep-to frequency in Hz [%d - %d].\n"
         "\tcalib           Disable calibration [-c]. By default calibration enabled.\n"
+        "\n"
+        "Setting the frequency to 0 will disable the generator completely.\n"
         "\n";
 
 

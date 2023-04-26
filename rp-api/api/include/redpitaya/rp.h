@@ -243,23 +243,23 @@ typedef struct
  * Type representing decimation used at acquiring signal.
  */
 typedef enum {
-    RP_DEC_1     = 1,       //!< Sample rate 125Msps; Buffer time length 131us; Decimation 1
-    RP_DEC_2     = 2,       //!< Sample rate 62.5Msps; Buffer time length 262us; Decimation 2
-    RP_DEC_4     = 4,       //!< Sample rate 31.25Msps; Buffer time length 524us; Decimation 4
-    RP_DEC_8     = 8,       //!< Sample rate 15.625Msps; Buffer time length 1.048ms; Decimation 8
-    RP_DEC_16    = 16,      //!< Sample rate 7.8125Msps; Buffer time length 2.096ms; Decimation 16
-    RP_DEC_32    = 32,      //!< Sample rate 3.906Msps; Buffer time length 4.192ms; Decimation 32
-    RP_DEC_64    = 64,      //!< Sample rate 1.953Msps; Buffer time length 8.388ms; Decimation 64
-    RP_DEC_128   = 128,     //!< Sample rate 976ksps; Buffer time length 16.768ms; Decimation 128
-    RP_DEC_256   = 256,     //!< Sample rate 488ksps; Buffer time length 33.798ms; Decimation 256
-    RP_DEC_512   = 512,     //!< Sample rate 244ksps; Buffer time length 67.07ms; Decimation 512
-    RP_DEC_1024  = 1024,    //!< Sample rate 122.070ksps; Buffer time length 134.2ms; Decimation 1024
-    RP_DEC_2048  = 2048,    //!< Sample rate 61.035ksps; Buffer time length 268.288ms; Decimation 2048
-    RP_DEC_4096  = 4096,    //!< Sample rate 30.517ksps; Buffer time length 536.5ms; Decimation 4096
-    RP_DEC_8192  = 8192,    //!< Sample rate 15.258ksps; Buffer time length 1.073s; Decimation 8192
-    RP_DEC_16384 = 16384,   //!< Sample rate 7.629ksps; Buffer time length 2.146s; Decimation 16384
-    RP_DEC_32768 = 32768,   //!< Sample rate 3.814ksps; Buffer time length 4.292s; Decimation 32768
-    RP_DEC_65536 = 65536    //!< Sample rate 1.907ksps; Buffer time length 8.589s; Decimation 65536
+    RP_DEC_1     = 1,       //!< Decimation 1
+    RP_DEC_2     = 2,       //!< Decimation 2
+    RP_DEC_4     = 4,       //!< Decimation 4
+    RP_DEC_8     = 8,       //!< Decimation 8
+    RP_DEC_16    = 16,      //!< Decimation 16
+    RP_DEC_32    = 32,      //!< Decimation 32
+    RP_DEC_64    = 64,      //!< Decimation 64
+    RP_DEC_128   = 128,     //!< Decimation 128
+    RP_DEC_256   = 256,     //!< Decimation 256
+    RP_DEC_512   = 512,     //!< Decimation 512
+    RP_DEC_1024  = 1024,    //!< Decimation 1024
+    RP_DEC_2048  = 2048,    //!< Decimation 2048
+    RP_DEC_4096  = 4096,    //!< Decimation 4096
+    RP_DEC_8192  = 8192,    //!< Decimation 8192
+    RP_DEC_16384 = 16384,   //!< Decimation 16384
+    RP_DEC_32768 = 32768,   //!< Decimation 32768
+    RP_DEC_65536 = 65536    //!< Decimation 65536
 } rp_acq_decimation_t;
 
 typedef enum {
