@@ -90,6 +90,7 @@ void hp_checkModel(char *model,char *eth_mac){
 		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);
+		return;
 	}
 
 	if (strcmp(model,"stem_125-14_v1.0") == 0){
@@ -97,6 +98,7 @@ void hp_checkModel(char *model,char *eth_mac){
 		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);
+		return;
 	}
 
 	if (strcmp(model,"stem_14_b_v1.0") == 0){
@@ -104,6 +106,7 @@ void hp_checkModel(char *model,char *eth_mac){
 		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);
+		return;
 	}
 
 	if (strcmp(model,"stem_125-14_v1.1") == 0){
@@ -111,6 +114,7 @@ void hp_checkModel(char *model,char *eth_mac){
 		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);
+		return;
 	}
 
 	if (strcmp(model,"stem_122-16sdr_v1.0") == 0){
@@ -118,6 +122,7 @@ void hp_checkModel(char *model,char *eth_mac){
 		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);
+		return;
 	}
 
 	if (strcmp(model,"stem_122-16sdr_v1.1") == 0){
@@ -125,6 +130,7 @@ void hp_checkModel(char *model,char *eth_mac){
 		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);
+		return;
 	}
 
 	if (strcmp(model,"stem_125-14_ln_v1.1") == 0){
@@ -132,6 +138,7 @@ void hp_checkModel(char *model,char *eth_mac){
 		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);
+		return;
 	}
 
 	if (strcmp(model,"stem_125-14_z7020_v1.0") == 0){
@@ -139,6 +146,7 @@ void hp_checkModel(char *model,char *eth_mac){
 		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);
+		return;
 	}
 
 	if (strcmp(model,"stem_125-14_z7020_ln_v1.1") == 0){
@@ -146,6 +154,7 @@ void hp_checkModel(char *model,char *eth_mac){
 		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);
+		return;
 	}
 
 	if (strcmp(model,"stem_125-14_z7020_4in_v1.0") == 0){
@@ -153,6 +162,7 @@ void hp_checkModel(char *model,char *eth_mac){
 		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);
+		return;
 	}
 
 	if (strcmp(model,"stem_125-14_z7020_4in_v1.2") == 0){
@@ -160,6 +170,7 @@ void hp_checkModel(char *model,char *eth_mac){
 		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);
+		return;
 	}
 
 	if (strcmp(model,"stem_125-14_z7020_4in_v1.3") == 0){
@@ -167,6 +178,7 @@ void hp_checkModel(char *model,char *eth_mac){
 		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);
+		return;
 	}
 
 	if (strcmp(model,"stem_250-12_v1.0") == 0){
@@ -174,6 +186,7 @@ void hp_checkModel(char *model,char *eth_mac){
 		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);
+		return;
 	}
 
 	if (strcmp(model,"stem_250-12_v1.1") == 0){
@@ -181,6 +194,7 @@ void hp_checkModel(char *model,char *eth_mac){
 		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);
+		return;
 	}
 
 	if (strcmp(model,"stem_250-12_v1.2") == 0){
@@ -188,6 +202,7 @@ void hp_checkModel(char *model,char *eth_mac){
 		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);
+		return;
 	}
 
 	if (strcmp(model,"stem_250-12_v1.2a") == 0){
@@ -195,6 +210,7 @@ void hp_checkModel(char *model,char *eth_mac){
 		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);
+		return;
 	}
 
 	if (strcmp(model,"stem_250-12_120") == 0){
@@ -202,6 +218,7 @@ void hp_checkModel(char *model,char *eth_mac){
 		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);
+		return;
 	}
 
 	if (strcmp(model,"stem_125-14_ln_bo_v1.1") == 0){
@@ -209,6 +226,7 @@ void hp_checkModel(char *model,char *eth_mac){
 		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);
+		return;
 	}
 
 	if (strcmp(model,"stem_125-14_ln_ce1_v1.1") == 0){
@@ -216,6 +234,7 @@ void hp_checkModel(char *model,char *eth_mac){
 		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);
+		return;
 	}
 
 	if (strcmp(model,"stem_125-14_ln_ce2_v1.1") == 0){
@@ -223,8 +242,10 @@ void hp_checkModel(char *model,char *eth_mac){
 		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);
+		return;
 	}
 
+	fprintf(stderr,"[Fatal error] Unknown model \"%s\"",model);
 }
 
 int hp_cmn_Init(){
