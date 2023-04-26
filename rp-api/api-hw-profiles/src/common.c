@@ -272,13 +272,16 @@ int hp_cmn_Init(){
 
 	int size = fread(buf, sizeof(char), LINE_LENGTH, fp);
 	int position = 0;
+
 	while(position <  size){
 		int slen = strlen(&buf[position]);
 		if (!slen) break;
 		name = &buf[position];
 		value = strchr(name, '=');
-	 	if (!value)
-	 		break;
+	 	if (!value){
+			position += slen + 1;
+	 		continue;
+		}
 		*value++ = '\0';
 		if (!strlen(value))
 			value = NULL;
