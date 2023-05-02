@@ -13,9 +13,6 @@
 #include "net_lib/asio_common.h"
 #include "net_lib/asio_net.h"
 
-//#define FILE_PATH "/opt/redpitaya/www/apps/streaming_manager/upload"
-//#define FILE_PATH "/tmp/stream_files"
-
 #define UDP_BUFFER_LIMIT 1024
 #define TCP_BUFFER_LIMIT 32 * 1024
 //#define ZERO_BUFFER_SIZE 1048576
@@ -39,7 +36,7 @@ public:
 
     CStreamingNet(std::string &_host, std::string &_port, net_lib::EProtocol _protocol);
     ~CStreamingNet();
-    
+
 
     auto run() -> void;
     auto runNonThread() -> void;
