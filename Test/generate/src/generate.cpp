@@ -24,11 +24,18 @@ uint32_t getMaxSpeed(){
 }
 
 float fullScale(){
+
+    float fs = 0;
+    if (rp_HPGetHWDACFullScale(&fs) != RP_HP_OK){
+        fprintf(stderr,"[Error:generate_writeData] Can't get fast DAC full scale\n");
+        return RP_NOTS;
+    }
+
     float c = 0;
-    if (rp_HPGetFastDACFullScale(0,&c) != RP_HP_OK){
+    if (rp_HPGetFastDACGain(0,&c) != RP_HP_OK){
         fprintf(stderr,"[Error] Can't get fast DAC full scale\n");
     }
-    return c;
+    return c * fs;
 }
 
 models_t getModel(){

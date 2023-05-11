@@ -97,11 +97,19 @@ int gen_SetDefaultValues() {
         gen_setOffset(ch, 0);
 
         float fs = 0;
-        if (rp_HPGetFastDACFullScale(convertCh(ch), &fs) != RP_HP_OK){
-            fprintf(stderr,"[Error:gen_SetDefaultValues] Can't get fast DAC full scale\n");
+        if (rp_HPGetFastDACGain(convertCh(ch), &fs) != RP_HP_OK){
+            fprintf(stderr,"[Error:gen_SetDefaultValues] Can't get fast DAC gain\n");
             return RP_NOTS;
         }
-        gen_setAmplitude(ch, fs);
+
+        float fsBase = 0;
+        if (rp_HPGetHWDACFullScale(&fsBase) != RP_HP_OK){
+            fprintf(stderr,"[Error:gen_SetDefaultValues] Can't get fast HW DAC full scale\n");
+            return RP_NOTS;
+        }
+
+
+        gen_setAmplitude(ch, fs * fsBase * 0.8);
         gen_setDutyCycle(ch, 0.5);
         gen_setBurstCount(ch, 1);
         gen_setBurstPeriod(ch, 1);
@@ -153,7 +161,7 @@ int gen_IsEnable(rp_channel_t channel, bool *value) {
 
 int gen_checkAmplitudeAndOffset(rp_channel_t channel,float amplitude, float offset) {
     float fs = 0;
-    if (rp_HPGetFastDACFullScale(convertCh(channel), &fs) != RP_HP_OK){
+    if (rp_HPGetFastDACGain(convertCh(channel), &fs) != RP_HP_OK){
         fprintf(stderr,"[Error:gen_checkAmplitudeAndOffset] Can't get fast DAC full scale\n");
         return RP_NOTS;
     }
@@ -441,13 +449,13 @@ int gen_setArbWaveform(rp_channel_t channel, float *data, uint32_t length) {
     CHECK_CHANNEL("gen_setArbWaveform")
 
     float fs = 0;
-    if (rp_HPGetFastDACFullScale(channel,&fs) != RP_HP_OK){
+    if (rp_HPGetFastDACGain(channel,&fs) != RP_HP_OK){
         fprintf(stderr,"[Error:gen_setArbWaveform] Can't get fast DAC full scale\n");
         return RP_NOTS;
     }
 
     bool is_sign = false;
-    if (rp_HPGetFastDACIsSigned(channel,&is_sign) != RP_HP_OK){
+    if (rp_HPGetFastDACIsSigned(&is_sign) != RP_HP_OK){
         fprintf(stderr,"[Error:gen_setArbWaveform] Can't get fast DAC sign value\n");
         return RP_NOTS;
     }
@@ -819,7 +827,7 @@ int synthesize_signal(rp_channel_t channel) {
     if(waveform == RP_WAVEFORM_SWEEP) phase = 0;
 
     float fs = 0;
-    if (rp_HPGetFastDACFullScale(convertCh(channel), &fs) != RP_HP_OK){
+    if (rp_HPGetFastDACGain(convertCh(channel), &fs) != RP_HP_OK){
         fprintf(stderr,"[Error:synthesize_signal] Can't get fast DAC full scale\n");
         return RP_NOTS;
     }

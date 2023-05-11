@@ -274,11 +274,14 @@ int acq_GetGainV(rp_channel_t channel, float* voltage){
     CHECK_CHANNEL("acq_GetGainV")
 
     if (gain_ch[channel] == RP_LOW) {
-        return rp_HPGetFastADCFullScale(channel,voltage);
+        return rp_HPGetFastADCGain(channel,RP_HP_ADC_GAIN_NORMAL,voltage);
     }
-    else {
-        return rp_HPGetFastADCFullScale_1_20(channel,voltage);
+
+    if (gain_ch[channel] == RP_HIGH) {
+        return rp_HPGetFastADCGain(channel,RP_HP_ADC_GAIN_HIGH, voltage);
     }
+
+    return 0;
 }
 
 int acq_SetDecimation(rp_acq_decimation_t decimation){
@@ -684,10 +687,15 @@ int acq_SetChannelThreshold(rp_channel_t channel, float voltage){
 
     CHECK_CHANNEL("acq_SetChannelThreshold")
 
+    float gainValue;
     float fullScale;
     rp_pinState_t mode;
 
-    if (acq_GetGainV(channel, &fullScale) != RP_OK){
+    if (acq_GetGainV(channel, &gainValue) != RP_OK){
+        return RP_EOOR;
+    }
+
+    if (rp_HPGetHWADCFullScale(&fullScale) != RP_OK){
         return RP_EOOR;
     }
 
@@ -706,19 +714,17 @@ int acq_SetChannelThreshold(rp_channel_t channel, float voltage){
     bool is_sign = true;
 
     int ret = 0;
+    ret |= rp_HPGetFastADCBits(&bits);
+    ret |= rp_HPGetFastADCIsSigned(&is_sign);
 
     switch (mode)
     {
         case RP_LOW:
             ret = rp_CalibGetFastADCCalibValue(convertCh(channel),convertPower(power_mode),&gain,&offset);
-            ret |= rp_HPGetFastADCBits(channel,&bits);
-            ret |= rp_HPGetFastADCIsSigned(channel,&is_sign);
             break;
 
         case RP_HIGH:
             ret = rp_CalibGetFastADCCalibValue_1_20(convertCh(channel),convertPower(power_mode),&gain,&offset);
-            ret |= rp_HPGetFastADCBits_1_20(channel,&bits);
-            ret |= rp_HPGetFastADCIsSigned_1_20(channel,&is_sign);
             break;
 
         default:
@@ -732,11 +738,11 @@ int acq_SetChannelThreshold(rp_channel_t channel, float voltage){
         return RP_EOOR;
     }
 
-    if (voltage > fullScale) {
+    if (voltage * gainValue > fullScale) {
         voltage = fullScale;
     }
     if (is_sign){
-        if (voltage < -fullScale) {
+        if (voltage * gainValue < -fullScale) {
             voltage = -fullScale;
         }
     }else{
@@ -744,7 +750,7 @@ int acq_SetChannelThreshold(rp_channel_t channel, float voltage){
             voltage = 0;
         }
     }
-    uint32_t cnt = cmn_convertToCnt(voltage,bits,fullScale,is_sign,gain,offset);
+    uint32_t cnt = cmn_convertToCnt(voltage * gainValue,bits,fullScale,is_sign,gain,offset);
     ch_trash[channel] = voltage;
 
     if (channel == RP_CH_1) {
@@ -801,9 +807,10 @@ int acq_SetChannelThresholdHyst(rp_channel_t channel, float voltage){
     CHECK_CHANNEL("acq_SetChannelThresholdHyst")
 
     float fullScale;
+    float gainValue;
     rp_pinState_t mode;
 
-    if (acq_GetGainV(channel, &fullScale) != RP_OK){
+    if (acq_GetGainV(channel, &gainValue) != RP_OK){
         return RP_EOOR;
     }
 
@@ -811,7 +818,11 @@ int acq_SetChannelThresholdHyst(rp_channel_t channel, float voltage){
         return RP_EOOR;
     }
 
-    if (fabs(voltage) - fabs(fullScale) > FLOAT_EPS) {
+    if (rp_HPGetHWADCFullScale(&fullScale) != RP_OK){
+        return RP_EOOR;
+    }
+
+    if (fabs(voltage * gainValue) - fabs(fullScale) > FLOAT_EPS) {
         return RP_EOOR;
     }
 
@@ -825,20 +836,17 @@ int acq_SetChannelThresholdHyst(rp_channel_t channel, float voltage){
     uint8_t bits = 0;
     bool is_sign = true;
 
-    int ret = 0;
+    int ret = rp_HPGetFastADCBits(&bits);
+    ret |= rp_HPGetFastADCIsSigned(&is_sign);
 
     switch (mode)
     {
         case RP_LOW:
             ret = rp_CalibGetFastADCCalibValue(convertCh(channel),convertPower(power_mode),&gain,&offset);
-            ret |= rp_HPGetFastADCBits(channel,&bits);
-            ret |= rp_HPGetFastADCIsSigned(channel,&is_sign);
             break;
 
         case RP_HIGH:
             ret = rp_CalibGetFastADCCalibValue_1_20(convertCh(channel),convertPower(power_mode),&gain,&offset);
-            ret |= rp_HPGetFastADCBits_1_20(channel,&bits);
-            ret |= rp_HPGetFastADCIsSigned_1_20(channel,&is_sign);
             break;
 
         default:
@@ -998,25 +1006,9 @@ int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* 
     }
 
     uint8_t bits = 0;
-    int ret = 0;
     bool is_sign = false;
-    switch (mode)
-    {
-        case RP_LOW:
-            ret = rp_HPGetFastADCBits(channel,&bits);
-            ret |= rp_HPGetFastADCIsSigned(channel,&is_sign);
-            break;
-
-        case RP_HIGH:
-            ret = rp_HPGetFastADCBits_1_20(channel,&bits);
-            ret |= rp_HPGetFastADCIsSigned_1_20(channel,&is_sign);
-            break;
-
-        default:
-            fprintf(stderr,"[Error:acq_GetDataRaw] Unknown mode: %d\n",mode);
-            return RP_EOOR;
-            break;
-    }
+    int ret = rp_HPGetFastADCBits(&bits);
+    ret |= rp_HPGetFastADCIsSigned(&is_sign);
 
     if (ret != RP_HW_CALIB_OK){
         fprintf(stderr,"[Error:acq_GetDataRaw] Error get calibaration: %d\n",ret);
@@ -1067,25 +1059,9 @@ int acq_axi_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16
     }
 
     uint8_t bits = 0;
-    int ret = 0;
     bool is_sign = false;
-    switch (mode)
-    {
-        case RP_LOW:
-            ret = rp_HPGetFastADCBits(channel,&bits);
-            ret |= rp_HPGetFastADCIsSigned(channel,&is_sign);
-            break;
-
-        case RP_HIGH:
-            ret = rp_HPGetFastADCBits_1_20(channel,&bits);
-            ret |= rp_HPGetFastADCIsSigned_1_20(channel,&is_sign);
-            break;
-
-        default:
-            fprintf(stderr,"[Error:acq_axi_GetDataRaw] Unknown mode: %d\n",mode);
-            return RP_EOOR;
-            break;
-    }
+    int ret = rp_HPGetFastADCBits(&bits);
+    ret |= rp_HPGetFastADCIsSigned(&is_sign);
 
     if (ret != RP_HW_CALIB_OK){
         fprintf(stderr,"[Error:acq_axi_GetDataRaw] Error get calibaration: %d\n",ret);
@@ -1237,9 +1213,14 @@ int acq_GetDataVEx(rp_channel_t channel,  uint32_t pos, uint32_t* size, void* in
     const volatile uint32_t* raw_buffer = getRawBuffer(channel);
 
     float fullScale;
+    float gainValue;
     rp_pinState_t mode;
 
-    if (acq_GetGainV(channel, &fullScale) != RP_OK){
+    if (acq_GetGainV(channel, &gainValue) != RP_OK){
+        return RP_EOOR;
+    }
+
+    if (rp_HPGetHWADCFullScale(&fullScale) != RP_OK){
         return RP_EOOR;
     }
 
@@ -1256,19 +1237,17 @@ int acq_GetDataVEx(rp_channel_t channel,  uint32_t pos, uint32_t* size, void* in
     uint_gain_calib_t calib;
     bool is_sign = true;
 
-    int ret = 0;
+    int ret = rp_HPGetFastADCBits(&bits);
+    ret |= rp_HPGetFastADCIsSigned(&is_sign);
+
     switch (mode)
     {
         case RP_LOW:
-            ret = rp_CalibGetFastADCCalibValueI(convertCh(channel),convertPower(power_mode),&calib);
-            ret |= rp_HPGetFastADCBits(channel,&bits);
-            ret |= rp_HPGetFastADCIsSigned(channel,&is_sign);
+            ret |= rp_CalibGetFastADCCalibValueI(convertCh(channel),convertPower(power_mode),&calib);
             break;
 
         case RP_HIGH:
-            ret = rp_CalibGetFastADCCalibValue_1_20I(convertCh(channel),convertPower(power_mode),&calib);
-            ret |= rp_HPGetFastADCBits_1_20(channel,&bits);
-            ret |= rp_HPGetFastADCIsSigned_1_20(channel,&is_sign);
+            ret |= rp_CalibGetFastADCCalibValue_1_20I(convertCh(channel),convertPower(power_mode),&calib);
             break;
 
         default:
@@ -1287,7 +1266,7 @@ int acq_GetDataVEx(rp_channel_t channel,  uint32_t pos, uint32_t* size, void* in
     uint32_t cnts;
     for (uint32_t i = 0; i < (*size); ++i) {
         cnts = raw_buffer[(pos + i) % ADC_BUFFER_SIZE];
-        float value = cmn_convertToVoltSigned(cnts,bits,fullScale,calib.gain,calib.base,calib.offset);
+        float value = cmn_convertToVoltSigned(cnts,bits,fullScale,calib.gain,calib.base,calib.offset) * gainValue;
         if (buffer_f) buffer_f[i] = value;
         if (buffer_d) buffer_d[i] = value;
     }
@@ -1314,9 +1293,14 @@ int acq_axi_GetDataVEx(rp_channel_t channel,  uint32_t pos, uint32_t* size, void
     }
 
     float fullScale;
+    float gainValue;
     rp_pinState_t mode;
 
-    if (acq_GetGainV(channel, &fullScale) != RP_OK){
+    if (acq_GetGainV(channel, &gainValue) != RP_OK){
+        return RP_EOOR;
+    }
+
+    if (rp_HPGetHWADCFullScale(&fullScale) != RP_OK){
         return RP_EOOR;
     }
 
@@ -1333,19 +1317,17 @@ int acq_axi_GetDataVEx(rp_channel_t channel,  uint32_t pos, uint32_t* size, void
     uint_gain_calib_t calib;
     bool is_sign = true;
 
-    int ret = 0;
+    int ret = rp_HPGetFastADCBits(&bits);
+    ret |= rp_HPGetFastADCIsSigned(&is_sign);
+
     switch (mode)
     {
         case RP_LOW:
-            ret = rp_CalibGetFastADCCalibValueI(convertCh(channel),convertPower(power_mode),&calib);
-            ret |= rp_HPGetFastADCBits(channel,&bits);
-            ret |= rp_HPGetFastADCIsSigned(channel,&is_sign);
+            ret |= rp_CalibGetFastADCCalibValueI(convertCh(channel),convertPower(power_mode),&calib);
             break;
 
         case RP_HIGH:
-            ret = rp_CalibGetFastADCCalibValue_1_20I(convertCh(channel),convertPower(power_mode),&calib);
-            ret |= rp_HPGetFastADCBits_1_20(channel,&bits);
-            ret |= rp_HPGetFastADCIsSigned_1_20(channel,&is_sign);
+            ret |= rp_CalibGetFastADCCalibValue_1_20I(convertCh(channel),convertPower(power_mode),&calib);
             break;
 
         default:
@@ -1364,7 +1346,7 @@ int acq_axi_GetDataVEx(rp_channel_t channel,  uint32_t pos, uint32_t* size, void
     uint32_t cnts;
     for (uint32_t i = 0; i < (*size); ++i) {
         cnts = raw_buffer[(pos + i) % buffer_size];
-        float value = cmn_convertToVoltSigned(cnts,bits,fullScale,calib.gain,calib.base,calib.offset);
+        float value = cmn_convertToVoltSigned(cnts,bits,fullScale,calib.gain,calib.base,calib.offset) * gainValue;
         if (buffer_f) buffer_f[i] = value;
         if (buffer_d) buffer_d[i] = value;
     }
