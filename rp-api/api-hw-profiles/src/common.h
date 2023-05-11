@@ -15,6 +15,7 @@
 #ifndef RP_HW_PROFILES_COMMON_H
 #define RP_HW_PROFILES_COMMON_H
 
+#define MAX_CHANNELS 4
 
 #include "rp_hw-profiles.h"
 
@@ -35,16 +36,25 @@ typedef struct {
     char                boardETH_MAC[20];
     rp_HPeZynqModels_t  zynqCPUModel;
     uint32_t            oscillator_rate;
+
+    float               fast_adc_full_scale;
     uint32_t            fast_adc_rate;
+    bool                fast_adc_is_sign;
+    uint8_t             fast_adc_bits;
     uint8_t             fast_adc_count_channels;
-    ADC_DAC_t           fast_adc[4];
+    float               fast_adc_gain[RP_HP_ADC_GAIN_HIGH + 1][MAX_CHANNELS];
+
+
     bool                is_dac_present;
+    float               fast_dac_full_scale;
     uint32_t            fast_dac_rate;
+    bool                fast_dac_is_sign;
+    uint8_t             fast_dac_bits;
     uint8_t             fast_dac_count_channels;
-    ADC_DAC_t           fast_dac[4];
+    float               fast_dac_gain[MAX_CHANNELS];
+
     bool                is_LV_HV_mode; // Mode 1:1 and 1:20
     bool                is_AC_DC_mode; // Support for AC and DC modes
-    ADC_DAC_t           fast_adc_1_20[4];
 
     uint8_t             slow_adc_count_channels;
     ADC_DAC_t           slow_adc[4];
@@ -60,8 +70,8 @@ typedef struct {
     bool                is_ext_trigger_level_available;
     uint8_t             external_trigger_full_scale;
     uint32_t            fast_adc_spectrum_resolution;
-    float               fast_adc_full_scale;
-    float               fast_dac_full_scale;
+
+
 } profiles_t;
 
 

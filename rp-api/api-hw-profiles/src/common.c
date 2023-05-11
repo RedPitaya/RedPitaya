@@ -321,6 +321,19 @@ profiles_t* hp_cmn_GetLoadedProfile(){
     return g_profile;
 }
 
+const char* getGainName(rp_HPADCGainMode_t mode){
+	switch (mode)
+	{
+	case RP_HP_ADC_GAIN_NORMAL:
+		return "NORMAL (LV)";
+	case RP_HP_ADC_GAIN_HIGH:
+		return "HIGH";
+	default:
+		return "ERROR GAIN MODE";
+		break;
+	}
+}
+
 int hp_cmn_Print(profiles_t *p){
 	if (!p) {
 		return RP_HP_EU;
@@ -341,33 +354,28 @@ int hp_cmn_Print(profiles_t *p){
 	fprintf(stdout,"\t* Filter present: %u\n",p->is_fast_adc_filter_present);
 	fprintf(stdout,"\t* Spectrum resolution: %u\n",p->fast_adc_spectrum_resolution);
 	fprintf(stdout,"\t* Count: %u\n",p->fast_adc_count_channels);
+	fprintf(stdout,"\t* Is signed: %u\n",p->fast_adc_is_sign);
+	fprintf(stdout,"\t* Bits: %u\n",p->fast_adc_bits);
+	fprintf(stdout,"\t* HV mode (1:20): %d\n",p->is_LV_HV_mode);
+	fprintf(stdout,"\t* AD/DC mode: %d\n",p->is_AC_DC_mode);
 
 	for(int i = 0 ; i < p->fast_adc_count_channels; i++){
-		fprintf(stdout,"\t\t- Is signed: %u\n",p->fast_adc[i].is_signed);
-		fprintf(stdout,"\t\t- Bits: %u\n",p->fast_adc[i].bits);
-		fprintf(stdout,"\t\t- Full scale: %f\n",p->fast_adc[i].fullScale);
+		for(int g = 0 ; g <= RP_HP_ADC_GAIN_HIGH; g++){
+			fprintf(stdout,"\t\t- Channel: %d Gain %s = %f\n",i + 1, getGainName(g),p->fast_adc_gain[g][i]);
+		}
+		fprintf(stdout,"\n");
 	}
 
 	fprintf(stdout,"FAST DAC\n");
 	fprintf(stdout,"\t* Is present: %u\n",p->is_dac_present);
 	fprintf(stdout,"\t* Rate: %u\n",p->fast_dac_rate);
 	fprintf(stdout,"\t* Count: %u\n",p->fast_dac_count_channels);
+	fprintf(stdout,"\t* Is signed: %u\n",p->fast_dac_is_sign);
+	fprintf(stdout,"\t* Bits: %u\n",p->fast_dac_bits);
 
 	for(int i = 0 ; i < p->fast_dac_count_channels; i++){
-		fprintf(stdout,"\t\t- Is signed: %u\n",p->fast_dac[i].is_signed);
-		fprintf(stdout,"\t\t- Bits: %u\n",p->fast_dac[i].bits);
-		fprintf(stdout,"\t\t- Full scale: %f\n",p->fast_dac[i].fullScale);
+		fprintf(stdout,"\t\t- Channel: %d Gain %f\n",i + 1, p->fast_dac_gain[i]);
 	}
-
-	fprintf(stdout,"FAST ADC HV mode (1:20): %d\n",p->is_LV_HV_mode);
-
-	for(int i = 0 ; i < p->fast_adc_count_channels && p->is_LV_HV_mode; i++){
-		fprintf(stdout,"\t\t- Is signed: %u\n",p->fast_adc_1_20[i].is_signed);
-		fprintf(stdout,"\t\t- Bits: %u\n",p->fast_adc_1_20[i].bits);
-		fprintf(stdout,"\t\t- Full scale: %f\n",p->fast_adc_1_20[i].fullScale);
-	}
-
-	fprintf(stdout,"FAST ADC AD/DC mode: %d\n",p->is_AC_DC_mode);
 
 	fprintf(stdout,"SLOW ADC\n");
 	fprintf(stdout,"\t* Count: %u\n",p->slow_adc_count_channels);

@@ -76,6 +76,14 @@ typedef enum {
     Z7020
 }  rp_HPeZynqModels_t;
 
+/**
+ * List of gain mode
+ */
+typedef enum {
+    RP_HP_ADC_GAIN_NORMAL  = 0, // LV mode, used by default
+    RP_HP_ADC_GAIN_HIGH    = 1
+}  rp_HPADCGainMode_t;
+
 /** @name General
  */
 ///@{
@@ -187,8 +195,8 @@ uint8_t rp_HPGetFastADCChannelsCountOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
 */
-int rp_HPGetFastADCIsSigned(uint8_t channel,bool *value);
-bool rp_HPGetFastADCIsSignedOrDefault(uint8_t channel);
+int rp_HPGetFastADCIsSigned(bool *value);
+bool rp_HPGetFastADCIsSignedOrDefault();
 
 /**
 * Returns the bit depth for each channel
@@ -196,17 +204,17 @@ bool rp_HPGetFastADCIsSignedOrDefault(uint8_t channel);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
 */
-int rp_HPGetFastADCBits(uint8_t channel,uint8_t *value);
-uint8_t rp_HPGetFastADCBitsOrDefault(uint8_t channel);
+int rp_HPGetFastADCBits(uint8_t *value);
+uint8_t rp_HPGetFastADCBitsOrDefault();
 
 /**
-* Returns the full scale for each channel in Volt
-* Function rp_HPGetFastADCBitsOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* Returns the gain for each channel
+* Function rp_HPGetFastADCGainLV. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
 */
-int rp_HPGetFastADCFullScale(uint8_t channel,float *value);
-float rp_HPGetFastADCFullScaleOrDefault(uint8_t channel);
+int rp_HPGetFastADCGain(uint8_t channel,rp_HPADCGainMode_t mode,float *value);
+float rp_HPGetFastADCGainOrDefault(uint8_t channel,rp_HPADCGainMode_t mode);
 
 /**
 * Returns the generator presence flag
@@ -250,8 +258,8 @@ uint8_t rp_HPGetFastDACChannelsCountOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
 */
-int rp_HPGetFastDACIsSigned(uint8_t channel,bool *value);
-bool rp_HPGetFastDACIsSignedOrDefault(uint8_t channel);
+int rp_HPGetFastDACIsSigned(bool *value);
+bool rp_HPGetFastDACIsSignedOrDefault();
 
 /**
 * Returns the bit depth for each channel
@@ -259,17 +267,17 @@ bool rp_HPGetFastDACIsSignedOrDefault(uint8_t channel);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
 */
-int rp_HPGetFastDACBits(uint8_t channel,uint8_t *value);
-uint8_t rp_HPGetFastDACBitsOrDefault(uint8_t channel);
+int rp_HPGetFastDACBits(uint8_t *value);
+uint8_t rp_HPGetFastDACBitsOrDefault();
 
 /**
-* Returns the full scale for each channel in Volt
-* Function rp_HPGetFastDACFullScaleOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* Returns the gain for each channel in Volt
+* Function rp_HPGetFastDACGainOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
 */
-int rp_HPGetFastDACFullScale(uint8_t channel,float *value);
-float rp_HPGetFastDACFullScaleOrDefault(uint8_t channel);
+int rp_HPGetFastDACGain(uint8_t channel,float *value);
+float rp_HPGetFastDACGainOrDefault(uint8_t channel);
 
 
 /**
@@ -299,32 +307,6 @@ bool rp_HPGetFastADCIsAC_DCOrDefault();
 int rp_HPGetFastADCIsFilterPresent(bool *value);
 bool rp_HPGetFastADCIsFilterPresentOrDefault();
 
-/**
-* Returns whether the ADC has a signed value in HV mode (1:20)
-* Function rp_HPGetFastADCIsSignedOrDefault_1_20. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
-*/
-int rp_HPGetFastADCIsSigned_1_20(uint8_t channel,bool *value);
-bool rp_HPGetFastADCIsSignedOrDefault_1_20(uint8_t channel);
-
-/**
-* Returns the bit depth for each channel in HV mode (1:20)
-* Function rp_HPGetFastADCBitsOrDefault_1_20. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
-*/
-int rp_HPGetFastADCBits_1_20(uint8_t channel,uint8_t *value);
-uint8_t rp_HPGetFastADCBitsOrDefault_1_20(uint8_t channel);
-
-/**
-* Returns the full scale for each channel in Volt in HV mode (1:20)
-* Function rp_HPGetFastADCFullScaleOrDefault_1_20. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
-*/
-int rp_HPGetFastADCFullScale_1_20(uint8_t channel,float *value);
-float rp_HPGetFastADCFullScaleOrDefault_1_20(uint8_t channel);
 
 /**
 * Returns the number of channels for slow ADC

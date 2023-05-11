@@ -217,67 +217,56 @@ uint8_t rp_HPGetFastADCChannelsCountOrDefault(){
     return p->fast_adc_count_channels;
 }
 
-int rp_HPGetFastADCIsSigned(uint8_t channel,bool *value){
+int rp_HPGetFastADCIsSigned(bool *value){
     int state;
     profiles_t* p = getProfile(&state);
     if (p){
-        if (p->fast_adc_count_channels < channel || channel > 3){
-            return RP_HP_ECI;
-        }
-        *value = p->fast_adc[channel].is_signed;
+        *value = p->fast_adc_is_sign;
         return RP_HP_OK;
     }
     return state;
 }
 
-bool rp_HPGetFastADCIsSignedOrDefault(uint8_t channel){
+bool rp_HPGetFastADCIsSignedOrDefault(){
     profiles_t* p = getProfileDefualt();
-    if (p->fast_adc_count_channels < channel || channel > 3){
-        return p->fast_adc[0].is_signed;
-    }
-    return p->fast_adc[channel].is_signed;
+    return p->fast_adc_is_sign;
 }
 
-int rp_HPGetFastADCBits(uint8_t channel,uint8_t *value){
+int rp_HPGetFastADCBits(uint8_t *value){
     int state;
     profiles_t* p = getProfile(&state);
     if (p){
-        if (p->fast_adc_count_channels < channel || channel > 3){
-            return RP_HP_ECI;
-        }
-        *value = p->fast_adc[channel].bits;
+        *value = p->fast_adc_bits;
         return RP_HP_OK;
     }
     return state;
 }
 
-uint8_t rp_HPGetFastADCBitsOrDefault(uint8_t channel){
+uint8_t rp_HPGetFastADCBitsOrDefault(){
     profiles_t* p = getProfileDefualt();
-    if (p->fast_adc_count_channels < channel || channel > 3){
-        return p->fast_adc[0].bits;
-    }
-    return p->fast_adc[channel].bits;
+    return p->fast_adc_bits;
 }
 
-int rp_HPGetFastADCFullScale(uint8_t channel,float *value){
+int rp_HPGetFastADCGain(uint8_t channel,rp_HPADCGainMode_t mode,float *value){
     int state;
     profiles_t* p = getProfile(&state);
     if (p){
-        if (p->fast_adc_count_channels < channel || channel > 3){
+        if (p->fast_adc_count_channels < channel || channel >= MAX_CHANNELS){
+            *value = 0;
             return RP_HP_ECI;
         }
-        *value = p->fast_adc[channel].fullScale;
+        *value = p->fast_adc_gain[mode][channel];
         return RP_HP_OK;
     }
     return state;
 }
 
-float rp_HPGetFastADCFullScaleOrDefault(uint8_t channel){
+float rp_HPGetFastADCGainOrDefault(uint8_t channel,rp_HPADCGainMode_t mode){
     profiles_t* p = getProfileDefualt();
-    if (p->fast_adc_count_channels < channel || channel > 3){
-        return p->fast_adc[0].fullScale;
+    if (p->fast_adc_count_channels < channel || channel >= MAX_CHANNELS){
+        return 0;
     }
-    return p->fast_adc[channel].fullScale;
+    return p->fast_adc_gain[mode][channel];
 }
 
 int rp_HPIsFastDAC_Present(bool *value){
@@ -341,67 +330,55 @@ uint8_t rp_HPGetFastDACChannelsCountOrDefault(){
     return p->fast_dac_count_channels;
 }
 
-int rp_HPGetFastDACIsSigned(uint8_t channel,bool *value){
+int rp_HPGetFastDACIsSigned(bool *value){
     int state;
     profiles_t* p = getProfile(&state);
     if (p){
-        if (p->fast_dac_count_channels < channel || channel > 3){
-            return RP_HP_ECI;
-        }
-        *value = p->fast_dac[channel].is_signed;
+        *value = p->fast_dac_is_sign;
         return RP_HP_OK;
     }
     return state;
 }
 
-bool rp_HPGetFastDACIsSignedOrDefault(uint8_t channel){
+bool rp_HPGetFastDACIsSignedOrDefault(){
     profiles_t* p = getProfileDefualt();
-    if (p->fast_dac_count_channels < channel || channel > 3){
-        return p->fast_dac[0].is_signed;
-    }
-    return p->fast_dac[channel].is_signed;
+    return p->fast_dac_is_sign;
 }
 
-int rp_HPGetFastDACBits(uint8_t channel,uint8_t *value){
+int rp_HPGetFastDACBits(uint8_t *value){
     int state;
     profiles_t* p = getProfile(&state);
     if (p){
-        if (p->fast_dac_count_channels < channel || channel > 3){
-            return RP_HP_ECI;
-        }
-        *value = p->fast_dac[channel].bits;
+        *value = p->fast_dac_bits;
         return RP_HP_OK;
     }
     return state;
 }
 
-uint8_t rp_HPGetFastDACBitsOrDefault(uint8_t channel){
+uint8_t rp_HPGetFastDACBitsOrDefault(){
     profiles_t* p = getProfileDefualt();
-    if (p->fast_dac_count_channels < channel || channel > 3){
-        return p->fast_dac[0].bits;
-    }
-    return p->fast_dac[channel].bits;
+    return p->fast_dac_bits;
 }
 
-int rp_HPGetFastDACFullScale(uint8_t channel,float *value){
+int rp_HPGetFastDACGain(uint8_t channel,float *value){
     int state;
     profiles_t* p = getProfile(&state);
     if (p){
-        if (p->fast_dac_count_channels < channel || channel > 3){
+        if (p->fast_dac_count_channels < channel || channel >= MAX_CHANNELS){
             return RP_HP_ECI;
         }
-        *value = p->fast_dac[channel].fullScale;
+        *value = p->fast_dac_gain[channel];
         return RP_HP_OK;
     }
     return state;
 }
 
-float rp_HPGetFastDACFullScaleOrDefault(uint8_t channel){
+float rp_HPGetFastDACGainOrDefault(uint8_t channel){
     profiles_t* p = getProfileDefualt();
-    if (p->fast_dac_count_channels < channel || channel > 3){
-        return p->fast_dac[0].fullScale;
+    if (p->fast_dac_count_channels < channel || channel >= MAX_CHANNELS){
+        return 0;
     }
-    return p->fast_dac[channel].fullScale;
+    return p->fast_dac_gain[channel];
 }
 
 int rp_HPGetFastADCIsLV_HV(bool *value){
@@ -447,69 +424,6 @@ int rp_HPGetFastADCIsFilterPresent(bool *value){
 bool rp_HPGetFastADCIsFilterPresentOrDefault(){
     profiles_t* p = getProfileDefualt();
     return p->is_fast_adc_filter_present;
-}
-
-int rp_HPGetFastADCIsSigned_1_20(uint8_t channel,bool *value){
-    int state;
-    profiles_t* p = getProfile(&state);
-    if (p){
-        if (p->fast_adc_count_channels < channel || channel > 3){
-            return RP_HP_ECI;
-        }
-        *value = p->fast_adc_1_20[channel].is_signed;
-        return RP_HP_OK;
-    }
-    return state;
-}
-
-bool rp_HPGetFastADCIsSignedOrDefault_1_20(uint8_t channel){
-    profiles_t* p = getProfileDefualt();
-    if (p->fast_adc_count_channels < channel || channel > 3){
-        return p->fast_adc_1_20[0].is_signed;
-    }
-    return p->fast_adc_1_20[channel].is_signed;
-}
-
-int rp_HPGetFastADCBits_1_20(uint8_t channel,uint8_t *value){
-    int state;
-    profiles_t* p = getProfile(&state);
-    if (p){
-        if (p->fast_adc_count_channels < channel || channel > 3){
-            return RP_HP_ECI;
-        }
-        *value = p->fast_adc_1_20[channel].bits;
-        return RP_HP_OK;
-    }
-    return state;
-}
-
-uint8_t rp_HPGetFastADCBitsOrDefault_1_20(uint8_t channel){
-    profiles_t* p = getProfileDefualt();
-    if (p->fast_adc_count_channels < channel || channel > 3){
-        return p->fast_adc_1_20[0].bits;
-    }
-    return p->fast_adc_1_20[channel].bits;
-}
-
-int rp_HPGetFastADCFullScale_1_20(uint8_t channel,float *value){
-    int state;
-    profiles_t* p = getProfile(&state);
-    if (p){
-        if (p->fast_adc_count_channels < channel || channel > 3){
-            return RP_HP_ECI;
-        }
-        *value = p->fast_adc_1_20[channel].fullScale;
-        return RP_HP_OK;
-    }
-    return state;
-}
-
-float rp_HPGetFastADCFullScaleOrDefault_1_20(uint8_t channel){
-    profiles_t* p = getProfileDefualt();
-    if (p->fast_adc_count_channels < channel || channel > 3){
-        return p->fast_adc_1_20[0].fullScale;
-    }
-    return p->fast_adc_1_20[channel].fullScale;
 }
 
 int rp_HPGetSlowADCChannelsCount(uint8_t *value){
