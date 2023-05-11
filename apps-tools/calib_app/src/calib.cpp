@@ -175,11 +175,10 @@ int CCalib::calib_board_z10(uint16_t _step,float _refdc){
             m_acq->setLV();
             auto x = getData(30);
 
-            auto ch1_bits = rp_HPGetFastADCBitsOrDefault(RP_CH_1);
-            auto ch2_bits = rp_HPGetFastADCBitsOrDefault(RP_CH_2);
+            auto bits = rp_HPGetFastADCBitsOrDefault();
 
-            m_calib_parameters.fast_dac_x1[0].offset = x.ch_avg[0] * -(1 << ch1_bits-1);
-            m_calib_parameters.fast_dac_x1[1].offset = x.ch_avg[1] * -(1 << ch2_bits-1);
+            m_calib_parameters.fast_dac_x1[0].offset = x.ch_avg[0] * -(1 << bits-1);
+            m_calib_parameters.fast_dac_x1[1].offset = x.ch_avg[1] * -(1 << bits-1);
             rp_CalibrationWriteParams(m_calib_parameters,false);
             rp_CalibInit();
             m_calib_parameters = rp_GetCalibrationSettings();
@@ -410,11 +409,10 @@ int CCalib::calib_board_z20_250_12(uint16_t _step,float _refdc){
             m_acq->setDC();
             m_acq->setGenGainx1();
             auto x = getData(30);
-            auto ch1_bits = rp_HPGetFastADCBitsOrDefault(RP_CH_1);
-            auto ch2_bits = rp_HPGetFastADCBitsOrDefault(RP_CH_2);
+            auto bits = rp_HPGetFastADCBitsOrDefault();
 
-            m_calib_parameters.fast_dac_x1[0].offset = x.ch_avg[0] * -(1 << ch1_bits-1);
-            m_calib_parameters.fast_dac_x1[1].offset = x.ch_avg[1] * -(1 << ch2_bits-1);
+            m_calib_parameters.fast_dac_x1[0].offset = x.ch_avg[0] * -(1 << bits-1);
+            m_calib_parameters.fast_dac_x1[1].offset = x.ch_avg[1] * -(1 << bits-1);
             rp_CalibrationWriteParams(m_calib_parameters,false);
             rp_CalibInit();
             m_calib_parameters = rp_GetCalibrationSettings();
@@ -466,11 +464,10 @@ int CCalib::calib_board_z20_250_12(uint16_t _step,float _refdc){
             m_acq->setDC();
             m_acq->setGenGainx5();
             auto x = getData(30);
-            auto ch1_bits = rp_HPGetFastADCBitsOrDefault(RP_CH_1);
-            auto ch2_bits = rp_HPGetFastADCBitsOrDefault(RP_CH_2);
+            auto bits = rp_HPGetFastADCBitsOrDefault();
 
-            m_calib_parameters.fast_dac_x5[0].offset = x.ch_avg[0] * -(1 << ch1_bits-1);
-            m_calib_parameters.fast_dac_x5[1].offset = x.ch_avg[1] * -(1 << ch2_bits-1);
+            m_calib_parameters.fast_dac_x5[0].offset = x.ch_avg[0] * -(1 << bits-1);
+            m_calib_parameters.fast_dac_x5[1].offset = x.ch_avg[1] * -(1 << bits-1);
             rp_CalibrationWriteParams(m_calib_parameters,false);
             rp_CalibInit();
             m_calib_parameters = rp_GetCalibrationSettings();
