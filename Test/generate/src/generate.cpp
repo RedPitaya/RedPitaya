@@ -123,6 +123,10 @@ int gen(config_t &conf)
             rp_GenWaveform(ch, RP_WAVEFORM_TRIANGLE);
         }
 
+        if (conf.type == RP_WAVEFORM_DC){
+            rp_GenWaveform(ch, RP_WAVEFORM_DC);
+        }
+
         if (conf.type == RP_WAVEFORM_SWEEP){
             rp_GenSweepDir(ch,RP_GEN_SWEEP_DIR_UP_DOWN);
             rp_GenSweepMode(ch,RP_GEN_SWEEP_MODE_LOG);
