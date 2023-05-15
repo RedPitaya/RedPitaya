@@ -37,7 +37,7 @@ int RP_ParseChArgvADC(scpi_t *context, rp_channel_t *channel){
         RP_LOG(LOG_ERR, "ERROR: Invalid channel number: %.*s\n", 50, context->param_list.cmd_raw.data);
         return RP_EOOR;
     }
-    *channel = ch_usr[0] - 1;
+    *channel = (rp_channel_t)(ch_usr[0] - 1);
 
     return RP_OK;
 }
@@ -50,7 +50,7 @@ int RP_ParseChArgvDAC(scpi_t *context, rp_channel_t *channel){
         RP_LOG(LOG_ERR, "ERROR: Invalid channel number: %.*s\n", 50, context->param_list.cmd_raw.data);
         return RP_EOOR;
     }
-    *channel = ch_usr[0] - 1;
+    *channel = (rp_channel_t)(ch_usr[0] - 1);
 
     return RP_OK;
 }
@@ -66,7 +66,7 @@ scpi_result_t RP_SetLogMode(scpi_t *context) {
     }
 
     /* Set global units for acq scpi */
-    g_logMode = choice;
+    g_logMode = (rp_scpi_log)choice;
 
     RP_LOG(LOG_INFO, "*RP:LOGmode Successfully set scpi units.\n");
     return SCPI_RES_OK;
@@ -282,7 +282,7 @@ scpi_result_t RP_DateQ(scpi_t *context){
 
     struct tm *time = gmtime(&t_time.tv_sec);
 
-    char buff[10];
+    char buff[40];
     sprintf(buff,"%d,%d,%d",time->tm_year + 1900,time->tm_mon + 1,time->tm_mday);
     // Return back result
     SCPI_ResultMnemonic(context, buff);

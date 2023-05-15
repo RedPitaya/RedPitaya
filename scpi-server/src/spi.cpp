@@ -295,7 +295,7 @@ scpi_result_t RP_SPI_Set(scpi_t * context,bool cs_state,bool init_rx,const char 
     index = cmd[0];
     size = cmd[1];
 
-    buffer = malloc(size * sizeof(uint8_t));
+    buffer = (uint8_t*)malloc(size * sizeof(uint8_t));
     if (!buffer){
         RP_LOG(LOG_ERR, "*%s Failed allocate buffer with size: %d.\n",func,size);
         return SCPI_RES_ERR;

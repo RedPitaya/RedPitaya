@@ -27,10 +27,7 @@
 #include "spi.h"
 #include "i2c.h"
 #include "acquire.h"
-
-#ifndef Z20_125_4CH
 #include "generate.h"
-#endif
 
 #include "scpi/error.h"
 #include "scpi/ieee488.h"
@@ -70,9 +67,9 @@ scpi_result_t SCPI_Flush(scpi_t * context) {
 }
 
 int SCPI_Error(scpi_t * context, int_fast16_t err) {
-    const char error[] = "ERR!\r\n";
+//    const char error[] = "ERR!\r\n";
     syslog(LOG_ERR, "**ERROR: %d, \"%s\"", (int32_t) err, SCPI_ErrorTranslate(err));
-    SCPI_Write(context, error, strlen(error));
+//    SCPI_Write(context, error, strlen(error));
     return 0;
 }
 

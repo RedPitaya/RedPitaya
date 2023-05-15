@@ -49,7 +49,7 @@ OBJECTS =	scpi-commands.o \
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 
 # GCC compiling & linking flags
-CFLAGS += -g -std=gnu99 -Wall -Werror -fPIC
+CFLAGS += -Wall -Werror -fPIC -O3
 CFLAGS += -I$(INSTALL_DIR)/include
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 LDFLAGS=
@@ -74,9 +74,10 @@ all: $(TARGET)
 # It applies to all files ending with .o. During partial building only new object
 # files are created for the source files (.c) which have newer timestamp then
 # objects (.o) files.
-$(OBJECTS_DIR)/%.o:$(SOURCE_DIR)/%.c
+$(OBJECTS_DIR)/%.o:$(SOURCE_DIR)/%.cpp
 	@mkdir -p $(@D)
 	$(CC) -c $(CFLAGS) $(INC) $< -o $@
+
 
 # Makefile target with rules how to link executable for each target from $(TARGET)
 # list.

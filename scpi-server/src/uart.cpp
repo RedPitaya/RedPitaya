@@ -296,7 +296,7 @@ scpi_result_t RP_Uart_SendBuffer(scpi_t * context){
 
     size = cmd[0];
 
-    buffer = malloc(size * sizeof(uint8_t));
+    buffer = (uint8_t*)malloc(size * sizeof(uint8_t));
     if (!buffer){
         RP_LOG(LOG_ERR, "*UART:WRITE Failed allocate buffer with size: %d.\n",size);
         return SCPI_RES_ERR;
@@ -344,7 +344,7 @@ scpi_result_t RP_Uart_ReadBuffer(scpi_t * context){
 
     size = cmd[0];
 
-    buffer = malloc(size * sizeof(uint8_t));
+    buffer = (uint8_t*)malloc(size * sizeof(uint8_t));
     if (!buffer){
         RP_LOG(LOG_ERR,"*UART:READ# Failed allocate buffer with size: %d.\n",size);
         return SCPI_RES_ERR;

@@ -45,10 +45,10 @@ static char delimiter[] = "\r\n";
 
 static void handleCloseChildEvents()
 {
-    struct sigaction sigchld_action = {
-            .sa_handler = SIG_DFL,
-            .sa_flags = SA_NOCLDWAIT
-    };
+    struct sigaction sigchld_action;
+    memset(&sigchld_action, 0, sizeof(struct sigaction));
+    sigchld_action.sa_handler = SIG_DFL;
+    sigchld_action.sa_flags = SA_NOCLDWAIT;
     sigaction(SIGCHLD, &sigchld_action, NULL);
 }
 
@@ -100,7 +100,7 @@ static size_t getNextCommand(const char* buffer, size_t bufferLen)
     }
 
     // No match found
-    return -1;
+    return 0;
 }
 
 void LogMessage(char *m, size_t len) {
@@ -123,7 +123,7 @@ static int handleConnection(int connfd) {
     int read_size;
 
     size_t message_len = MAX_BUFF_SIZE;
-    char *message_buff = malloc(message_len);
+    char *message_buff = (char *)malloc(message_len);
     char buffer[MAX_BUFF_SIZE];
     size_t msg_end = 0;
 
@@ -151,7 +151,7 @@ static int handleConnection(int connfd) {
         // First make sure that message buffer is large enough
         while (msg_end + read_size >= message_len) {
             message_len *= 2;
-            message_buff = realloc(message_buff, message_len);
+            message_buff = (char *)realloc(message_buff, message_len);
         }
 
         // Copy read buffer into message buffer
@@ -160,8 +160,8 @@ static int handleConnection(int connfd) {
 
         // Now try to parse each command out
         char *m = message_buff;
-        size_t pos = -1;
-        while ((pos = getNextCommand(m, msg_end)) != -1) {
+        size_t pos = 0;
+        while ((pos = getNextCommand(m, msg_end)) != 0) {
 
             // Log out message
             LogMessage(m, pos);

@@ -225,7 +225,7 @@ scpi_result_t RP_GenWaveForm(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    rp_waveform_t wf = wave_form;
+    rp_waveform_t wf = (rp_waveform_t)wave_form;
     result = rp_GenWaveform(channel, wf);
 
     if(result != RP_OK){
@@ -432,7 +432,7 @@ scpi_result_t RP_GenGenerateMode(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    rp_gen_mode_t mode = usr_mode;
+    rp_gen_mode_t mode = (rp_gen_mode_t)usr_mode;
     result = rp_GenMode(channel, mode);
     if(result != RP_OK){
         RP_LOG(LOG_ERR, "*SOUR#:BURS:STAT Failed to get generate "
@@ -744,7 +744,7 @@ scpi_result_t RP_GenTriggerSource(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    rp_trig_src_t trig_src = trig_choice;
+    rp_trig_src_t trig_src = (rp_trig_src_t)trig_choice;
 
     result = rp_GenTriggerSource(channel, trig_src);
     if(result != RP_OK){

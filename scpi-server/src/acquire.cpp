@@ -273,7 +273,7 @@ scpi_result_t RP_AcqTriggerSrc(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    rp_acq_trig_src_t source = trig_src;
+    rp_acq_trig_src_t source = (rp_acq_trig_src_t)trig_src;
 
     // Now set the trigger source
     int result = rp_AcqSetTriggerSrc(source);
@@ -471,7 +471,7 @@ scpi_result_t RP_AcqGain(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    rp_pinState_t state = param;
+    rp_pinState_t state = (rp_pinState_t)param;
 
     if(rp_AcqSetGain(channel, state)){
         RP_LOG(LOG_ERR, "ACQ:SOUR#:GAIN Failed to set gain: %s\n", &name[0]);
@@ -514,12 +514,12 @@ scpi_result_t RP_AcqTriggerLevel(scpi_t *context) {
 
     // Now set threshold
     int result = 0;
-    result = rp_AcqSetTriggerLevel(RP_CH_1, (float) value.value);
+    result = rp_AcqSetTriggerLevel(RP_T_CH_1, (float) value.value);
     if (RP_OK != result) {
         RP_LOG(LOG_ERR, "*ACQ:TRIG:LEV1 Failed to set trigger level: %s\n", rp_GetError(result));
         return SCPI_RES_ERR;
     }
-    result = rp_AcqSetTriggerLevel(RP_CH_2, (float) value.value);
+    result = rp_AcqSetTriggerLevel(RP_T_CH_2, (float) value.value);
     if (RP_OK != result) {
         RP_LOG(LOG_ERR, "*ACQ:TRIG:LEV2 Failed to set trigger level: %s\n", rp_GetError(result));
         return SCPI_RES_ERR;
@@ -532,7 +532,7 @@ scpi_result_t RP_AcqTriggerLevel(scpi_t *context) {
 
 scpi_result_t RP_AcqTriggerLevelQ(scpi_t *context) {
     float value;
-    int result = rp_AcqGetTriggerLevel(RP_CH_1,&value);
+    int result = rp_AcqGetTriggerLevel(RP_T_CH_1,&value);
 
     if (RP_OK != result) {
         RP_LOG(LOG_ERR, "*ACQ:TRIG:LEV? Failed to get "
@@ -593,7 +593,7 @@ scpi_result_t RP_AcqScpiDataUnits(scpi_t *context) {
     }
 
     /* Set global units for acq scpi */
-    unit = choice;
+    unit = (rp_scpi_acq_unit_t)choice;
 
     RP_LOG(LOG_INFO, "*ACQ:DATA:UNITS Successfully set scpi units.\n");
     return SCPI_RES_OK;
@@ -878,7 +878,7 @@ scpi_result_t RP_AcqAC_DC(scpi_t * context){
         return SCPI_RES_ERR;
     }
 
-    rp_acq_ac_dc_mode_t state = param;
+    rp_acq_ac_dc_mode_t state = (rp_acq_ac_dc_mode_t)param;
 
     if(rp_AcqSetAC_DC(channel, state)){
         RP_LOG(LOG_ERR, "ACQ:SOUR#:COUP Failed to set AC/DC mode: %s\n", &name[0]);

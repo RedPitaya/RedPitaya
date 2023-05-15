@@ -52,7 +52,7 @@ scpi_result_t RP_AnalogPinReset(scpi_t *context) {
  * @return success or failure
  */
 scpi_result_t RP_AnalogPinValueQ(scpi_t * context) {
-    
+
     int32_t choice;
 
     /* Read first parameter - APIN */
@@ -62,7 +62,7 @@ scpi_result_t RP_AnalogPinValueQ(scpi_t * context) {
     }
 
     // Convert port into pin id
-    rp_apin_t pin = choice;
+    rp_apin_t pin = (rp_apin_t)choice;
 
     // Now get the pin value
     float value;
@@ -86,7 +86,7 @@ scpi_result_t RP_AnalogPinValueQ(scpi_t * context) {
  * @return success or failure
  */
 scpi_result_t RP_AnalogPinValue(scpi_t * context) {
-    
+
     int32_t choice;
     double value;
 
@@ -103,7 +103,7 @@ scpi_result_t RP_AnalogPinValue(scpi_t * context) {
         return SCPI_RES_ERR;
     }
     // Convert port into pin id
-    rp_apin_t pin = choice;
+    rp_apin_t pin = (rp_apin_t)choice;
 
     /* Set pin value */
     int result = rp_ApinSetValue(pin, (float) value);

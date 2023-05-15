@@ -75,7 +75,7 @@ scpi_result_t RP_DigitalPinReset(scpi_t *context) {
  * @return success or failure
  */
 scpi_result_t RP_DigitalPinState(scpi_t * context) {
-    
+
     int32_t pin_choice;
     uint32_t bit;
 
@@ -91,10 +91,10 @@ scpi_result_t RP_DigitalPinState(scpi_t * context) {
         return SCPI_RES_ERR;
     }
 
-    rp_dpin_t pin = pin_choice;
+    rp_dpin_t pin = (rp_dpin_t)pin_choice;
 
     /* Set API pin state */
-    int result = rp_DpinSetState(pin, bit);
+    int result = rp_DpinSetState(pin, (rp_pinState_t)bit);
 
     if (RP_OK != result){
 		RP_LOG(LOG_ERR, "*DIG:PIN Failed to set pin state: %s", rp_GetError(result));
@@ -111,7 +111,7 @@ scpi_result_t RP_DigitalPinState(scpi_t * context) {
  * @return success or failure
  */
 scpi_result_t RP_DigitalPinStateQ(scpi_t * context) {
-    
+
     int32_t pin_choice;
 
     /* Read PIN parameter */
@@ -120,7 +120,7 @@ scpi_result_t RP_DigitalPinStateQ(scpi_t * context) {
         return SCPI_RES_ERR;
     }
 
-    rp_dpin_t pin = pin_choice;
+    rp_dpin_t pin = (rp_dpin_t)pin_choice;
 
     /* Get pin state */
     rp_pinState_t state;
@@ -144,7 +144,7 @@ scpi_result_t RP_DigitalPinStateQ(scpi_t * context) {
 * @return success or failure
 */
 scpi_result_t RP_DigitalPinDirection(scpi_t * context) {
-    
+
     int32_t dir_choice, pin_choice;
 
     /* Read first, DIRECTION parameter */
@@ -161,8 +161,8 @@ scpi_result_t RP_DigitalPinDirection(scpi_t * context) {
     }
 
     /* Set api values */
-    rp_pinDirection_t direction = dir_choice;
-    rp_dpin_t pin               = pin_choice;
+    rp_pinDirection_t direction = (rp_pinDirection_t)dir_choice;
+    rp_dpin_t pin               = (rp_dpin_t)pin_choice;
 
     RP_LOG(LOG_INFO, "DIRECTION: %d", direction);
 
@@ -189,9 +189,9 @@ scpi_result_t RP_DigitalPinDirectionQ(scpi_t *context){
         return SCPI_RES_ERR;
     }
 
-    rp_dpin_t pin = usr_pin;
+    rp_dpin_t pin = (rp_dpin_t)usr_pin;
     rp_pinDirection_t direction;
-    
+
     result = rp_DpinGetDirection(pin, &direction);
     if(result != RP_OK){
         RP_LOG(LOG_ERR, "*DIG:PIN:DIR? Failed to returned pin direction");

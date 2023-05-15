@@ -79,7 +79,7 @@ scpi_result_t RP_I2C_DevQ(scpi_t * context){
 }
 
 scpi_result_t RP_I2C_ForceMode(scpi_t * context){
-    RP_F_NAME(const char func[] = "I2C:FMODE";)   
+    RP_F_NAME(const char func[] = "I2C:FMODE";)
     scpi_bool_t value;
 
     if (!SCPI_ParamBool(context, &value, true)) {
@@ -118,7 +118,7 @@ scpi_result_t RP_I2C_SMBUS_Read(scpi_t * context){
     RP_F_NAME(const char func[] = "I2C:Smbus:Read#";)
     int32_t cmd[1] = {0};
     uint8_t reg = 0;
-    
+
     if (!SCPI_CommandNumbers(context,cmd,1,-1)){
         RP_LOG(LOG_ERR, "*%s Failed to get parameters.\n",func);
         return SCPI_RES_ERR;
@@ -148,7 +148,7 @@ scpi_result_t RP_I2C_SMBUS_ReadWord(scpi_t * context){
     RP_F_NAME(const char func[] = "I2C:Smbus:Read#:Word";)
     int32_t cmd[1] = {0};
     uint8_t reg = 0;
-    
+
     if (!SCPI_CommandNumbers(context,cmd,1,-1)){
         RP_LOG(LOG_ERR, "*%s Failed to get parameters.\n",func);
         return SCPI_RES_ERR;
@@ -181,12 +181,12 @@ scpi_result_t RP_I2C_SMBUS_ReadBuffer(scpi_t * context){
     uint8_t *buffer = NULL;
     int32_t cmd[2] = {0,0};
 
-    
+
     if (!SCPI_CommandNumbers(context,cmd,2,-1)){
         RP_LOG(LOG_ERR, "*%s Failed to get parameters.\n",func);
         return SCPI_RES_ERR;
     }
-    
+
     if (cmd[0] == -1){
         RP_LOG(LOG_ERR, "*%s Failed to get register for read.\n",func);
         return SCPI_RES_ERR;
@@ -200,7 +200,7 @@ scpi_result_t RP_I2C_SMBUS_ReadBuffer(scpi_t * context){
     reg = cmd[0];
     size = cmd[1];
 
-    buffer = malloc(size * sizeof(uint8_t));
+    buffer = (uint8_t*)malloc(size * sizeof(uint8_t));
     if (!buffer){
         RP_LOG(LOG_ERR, "*%s Failed allocate buffer with size: %d.\n",func,size);
         return SCPI_RES_ERR;
@@ -210,7 +210,7 @@ scpi_result_t RP_I2C_SMBUS_ReadBuffer(scpi_t * context){
     int result = rp_I2C_SMBUS_ReadBuffer(reg,buffer, &read_size);
     if(result != RP_HW_OK){
         RP_LOG(LOG_ERR, "*%s Failed read buffer: %d\n", func, result);
-        free(buffer);        
+        free(buffer);
         return SCPI_RES_ERR;
     }
 
@@ -225,12 +225,12 @@ scpi_result_t RP_I2C_IOCTL_ReadBuffer(scpi_t * context){
     size_t size = 0;
     uint8_t *buffer = NULL;
     int32_t cmd[1] = {0};
-    
+
     if (!SCPI_CommandNumbers(context,cmd,1,-1)){
         RP_LOG(LOG_ERR, "*%s Failed to get parameters.\n",func);
         return SCPI_RES_ERR;
     }
-    
+
     if (cmd[0] == -1){
         RP_LOG(LOG_ERR, "*%s Failed to get size of buffer.\n",func);
         return SCPI_RES_ERR;
@@ -238,7 +238,7 @@ scpi_result_t RP_I2C_IOCTL_ReadBuffer(scpi_t * context){
 
     size = cmd[0];
 
-    buffer = malloc(size * sizeof(uint8_t));
+    buffer = (uint8_t*)malloc(size * sizeof(uint8_t));
     if (!buffer){
         RP_LOG(LOG_ERR, "*%s Failed allocate buffer with size: %d.\n",func,size);
         return SCPI_RES_ERR;
@@ -248,10 +248,10 @@ scpi_result_t RP_I2C_IOCTL_ReadBuffer(scpi_t * context){
     int result = rp_I2C_IOCTL_ReadBuffer(buffer, read_size);
     if(result != RP_HW_OK){
         RP_LOG(LOG_ERR, "*%s Failed read buffer: %d\n", func, result);
-        free(buffer);        
+        free(buffer);
         return SCPI_RES_ERR;
     }
-    
+
     SCPI_ResultBufferUInt8(context, buffer, read_size);
     free(buffer);
     RP_LOG(LOG_INFO, "*%s Successfully returned i2c buffer.\n",func);
@@ -263,7 +263,7 @@ scpi_result_t RP_I2C_SMBUS_Write(scpi_t * context){
     RP_F_NAME(const char func[] = "I2C:Smbus:Write#";)
     int32_t cmd[1] = {0};
     uint8_t reg = 0;
-    
+
     if (!SCPI_CommandNumbers(context,cmd,1,-1)){
         RP_LOG(LOG_ERR, "*%s Failed to get parameters.\n",func);
         return SCPI_RES_ERR;
@@ -296,7 +296,7 @@ scpi_result_t RP_I2C_SMBUS_WriteWord(scpi_t * context){
     RP_F_NAME(const char func[] = "I2C:Smbus:Write#:Word";)
     int32_t cmd[1] = {0};
     uint8_t reg = 0;
-    
+
     if (!SCPI_CommandNumbers(context,cmd,1,-1)){
         RP_LOG(LOG_ERR, "*%s Failed to get parameters.\n",func);
         return SCPI_RES_ERR;
@@ -332,12 +332,12 @@ scpi_result_t RP_I2C_SMBUS_WriteBuffer(scpi_t * context){
     uint8_t *buffer = NULL;
     int32_t cmd[2] = {0,0};
 
-    
+
     if (!SCPI_CommandNumbers(context,cmd,2,-1)){
         RP_LOG(LOG_ERR, "*%s Failed to get parameters.\n",func);
         return SCPI_RES_ERR;
     }
-    
+
     if (cmd[0] == -1){
         RP_LOG(LOG_ERR, "*%s Failed to get register for read.\n",func);
         return SCPI_RES_ERR;
@@ -351,7 +351,7 @@ scpi_result_t RP_I2C_SMBUS_WriteBuffer(scpi_t * context){
     reg = cmd[0];
     size = cmd[1];
 
-    buffer = malloc(size * sizeof(uint8_t));
+    buffer = (uint8_t*)malloc(size * sizeof(uint8_t));
     if (!buffer){
         RP_LOG(LOG_ERR, "*%s Failed allocate buffer with size: %d.\n",func,size);
         return SCPI_RES_ERR;
@@ -369,11 +369,11 @@ scpi_result_t RP_I2C_SMBUS_WriteBuffer(scpi_t * context){
         free(buffer);
         return SCPI_RES_ERR;
     }
-    
+
     int result = rp_I2C_SMBUS_WriteBuffer(reg,buffer, buf_size);
     if(result != RP_HW_OK){
         RP_LOG(LOG_ERR, "*%s Failed write buffer: %d\n", func, result);
-        free(buffer);        
+        free(buffer);
         return SCPI_RES_ERR;
     }
 
@@ -388,12 +388,12 @@ scpi_result_t RP_I2C_IOCTL_WriteBuffer(scpi_t * context){
     uint8_t *buffer = NULL;
     int32_t cmd[1] = {0};
 
-    
+
     if (!SCPI_CommandNumbers(context,cmd,1,-1)){
         RP_LOG(LOG_ERR, "*%s Failed to get parameters.\n",func);
         return SCPI_RES_ERR;
     }
-    
+
     if (cmd[0] == -1){
         RP_LOG(LOG_ERR, "*%s Failed to get size of buffer.\n",func);
         return SCPI_RES_ERR;
@@ -401,7 +401,7 @@ scpi_result_t RP_I2C_IOCTL_WriteBuffer(scpi_t * context){
 
     size = cmd[0];
 
-    buffer = malloc(size * sizeof(uint8_t));
+    buffer = (uint8_t*)malloc(size * sizeof(uint8_t));
     if (!buffer){
         RP_LOG(LOG_ERR, "*%s Failed allocate buffer with size: %d.\n",func,size);
         return SCPI_RES_ERR;
@@ -419,11 +419,11 @@ scpi_result_t RP_I2C_IOCTL_WriteBuffer(scpi_t * context){
         free(buffer);
         return SCPI_RES_ERR;
     }
-    
+
     int result = rp_I2C_IOCTL_WriteBuffer(buffer, buf_size);
     if(result != RP_HW_OK){
         RP_LOG(LOG_ERR, "*%s Failed write buffer: %d\n", func, result);
-        free(buffer);        
+        free(buffer);
         return SCPI_RES_ERR;
     }
 
@@ -432,5 +432,3 @@ scpi_result_t RP_I2C_IOCTL_WriteBuffer(scpi_t * context){
     return SCPI_RES_OK;
 
 }
-
-

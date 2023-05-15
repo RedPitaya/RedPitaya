@@ -695,6 +695,10 @@ int acq_SetChannelThreshold(rp_channel_t channel, float voltage){
         return RP_EOOR;
     }
 
+    if (!gainValue){
+        return RP_EOOR;
+    }
+
     if (rp_HPGetHWADCFullScale(&fullScale) != RP_OK){
         return RP_EOOR;
     }
@@ -738,11 +742,11 @@ int acq_SetChannelThreshold(rp_channel_t channel, float voltage){
         return RP_EOOR;
     }
 
-    if (voltage * gainValue > fullScale) {
+    if (voltage / gainValue > fullScale) {
         voltage = fullScale;
     }
     if (is_sign){
-        if (voltage * gainValue < -fullScale) {
+        if (voltage / gainValue < -fullScale) {
             voltage = -fullScale;
         }
     }else{
@@ -750,7 +754,7 @@ int acq_SetChannelThreshold(rp_channel_t channel, float voltage){
             voltage = 0;
         }
     }
-    uint32_t cnt = cmn_convertToCnt(voltage * gainValue,bits,fullScale,is_sign,gain,offset);
+    uint32_t cnt = cmn_convertToCnt(voltage / gainValue,bits,fullScale,is_sign,gain,offset);
     ch_trash[channel] = voltage;
 
     if (channel == RP_CH_1) {
