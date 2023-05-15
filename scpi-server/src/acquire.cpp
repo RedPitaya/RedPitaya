@@ -512,17 +512,39 @@ scpi_result_t RP_AcqTriggerLevel(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
+    uint8_t channels = getADCChannels();
     // Now set threshold
     int result = 0;
-    result = rp_AcqSetTriggerLevel(RP_T_CH_1, (float) value.value);
-    if (RP_OK != result) {
-        RP_LOG(LOG_ERR, "*ACQ:TRIG:LEV1 Failed to set trigger level: %s\n", rp_GetError(result));
-        return SCPI_RES_ERR;
+    if (channels >= 1){
+        result = rp_AcqSetTriggerLevel(RP_T_CH_1, (float) value.value);
+        if (RP_OK != result) {
+            RP_LOG(LOG_ERR, "*ACQ:TRIG:LEV [Ch1] Failed to set trigger level: %s\n", rp_GetError(result));
+            return SCPI_RES_ERR;
+        }
     }
-    result = rp_AcqSetTriggerLevel(RP_T_CH_2, (float) value.value);
-    if (RP_OK != result) {
-        RP_LOG(LOG_ERR, "*ACQ:TRIG:LEV2 Failed to set trigger level: %s\n", rp_GetError(result));
-        return SCPI_RES_ERR;
+
+    if (channels >= 2){
+        result = rp_AcqSetTriggerLevel(RP_T_CH_2, (float) value.value);
+        if (RP_OK != result) {
+            RP_LOG(LOG_ERR, "*ACQ:TRIG:LEV [Ch2] Failed to set trigger level: %s\n", rp_GetError(result));
+            return SCPI_RES_ERR;
+        }
+    }
+
+    if (channels >= 3){
+        result = rp_AcqSetTriggerLevel(RP_T_CH_3, (float) value.value);
+        if (RP_OK != result) {
+            RP_LOG(LOG_ERR, "*ACQ:TRIG:LEV [Ch3] Failed to set trigger level: %s\n", rp_GetError(result));
+            return SCPI_RES_ERR;
+        }
+    }
+
+    if (channels >= 4){
+        result = rp_AcqSetTriggerLevel(RP_T_CH_4, (float) value.value);
+        if (RP_OK != result) {
+            RP_LOG(LOG_ERR, "*ACQ:TRIG:LEV [Ch4] Failed to set trigger level: %s\n", rp_GetError(result));
+            return SCPI_RES_ERR;
+        }
     }
 
 
