@@ -21,6 +21,7 @@
 #include "api_cmd.h"
 #include "common.h"
 #include "dpin.h"
+#include "error.h"
 #include "apin.h"
 #include "uart.h"
 #include "led.h"
@@ -67,9 +68,7 @@ scpi_result_t SCPI_Flush(scpi_t * context) {
 }
 
 int SCPI_Error(scpi_t * context, int_fast16_t err) {
-//    const char error[] = "ERR!\r\n";
     syslog(LOG_ERR, "**ERROR: %d, \"%s\"", (int32_t) err, SCPI_ErrorTranslate(err));
-//    SCPI_Write(context, error, strlen(error));
     return 0;
 }
 
@@ -85,8 +84,7 @@ scpi_result_t SCPI_Control(scpi_t * context, scpi_ctrl_name_t ctrl, scpi_reg_val
 
 scpi_result_t SCPI_Reset(scpi_t * context) {
     /* Terminating all scpi operations */
-    (void) context;
-    RP_LOG(LOG_INFO, "*RST Sucsessfuly reset scpi server.");
+    RP_LOG(context, LOG_INFO, "*RST Sucsessfuly reset scpi server.");
     return SCPI_RES_OK;
 }
 
@@ -95,13 +93,34 @@ scpi_result_t SCPI_SystemCommTcpipControlQ(scpi_t * context) {
     return SCPI_RES_ERR;
 }
 
+scpi_result_t SCPI_SystemErrorNextQEx(scpi_t * context) {
+    if (rp_errorCount(context)){
+        auto str = rp_popError(context);
+        SCPI_ResultInt32(context, RP_ERR_CODE);
+        SCPI_ResultText(context, str.c_str());
+        return SCPI_RES_OK;
+    }
+
+    return SCPI_SystemErrorNextQ(context);
+}
+
+scpi_result_t SCPI_SystemErrorCountQEx(scpi_t * context) {
+    SCPI_ResultInt32(context, SCPI_ErrorCount(context) + rp_errorCount(context));
+    return SCPI_RES_OK;
+}
+
+scpi_result_t SCPI_CoreClsEx(scpi_t * context) {
+    rp_resetErrorList(context);
+    return SCPI_CoreCls(context);
+}
+
 /**
  * SCPI Configuration
  */
 
 static const scpi_command_t scpi_commands[] = {
     /* IEEE Mandated Commands (SCPI std V1999.0 4.1.1) */
-    { .pattern = "*CLS" , .callback = SCPI_CoreCls,},
+    { .pattern = "*CLS" , .callback = SCPI_CoreClsEx,},
     { .pattern = "*ESE" , .callback = SCPI_CoreEse,},
     { .pattern = "*ESE?", .callback = SCPI_CoreEseQ,},
     { .pattern = "*ESR?", .callback = SCPI_CoreEsrQ,},
@@ -116,8 +135,8 @@ static const scpi_command_t scpi_commands[] = {
     { .pattern = "*WAI" , .callback = SCPI_CoreWai,},
 
     /* Required SCPI commands (SCPI std V1999.0 4.2.1) */
-    {.pattern = "SYSTem:ERRor[:NEXT]?", .callback = SCPI_SystemErrorNextQ,},
-    {.pattern = "SYSTem:ERRor:COUNt?",  .callback = SCPI_SystemErrorCountQ,},
+    {.pattern = "SYSTem:ERRor[:NEXT]?", .callback = SCPI_SystemErrorNextQEx,},
+    {.pattern = "SYSTem:ERRor:COUNt?",  .callback = SCPI_SystemErrorCountQEx,},
     {.pattern = "SYSTem:VERSion?",      .callback = SCPI_SystemVersionQ,},
 
     {.pattern = "STATus:QUEStionable[:EVENt]?", .callback = SCPI_StatusQuestionableEventQ,},

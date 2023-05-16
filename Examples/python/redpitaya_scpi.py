@@ -79,6 +79,16 @@ class scpi (object):
         self.tx_txt(msg)
         return self.rx_txt()
 
+    def check_error(self):
+        res = int(self.stb_q())
+        if (res & 0x4):
+            while 1:
+                err = self.err_c()
+                if (err.startswith('0,')):
+                    break
+                print(err)
+
+
 # IEEE Mandated Commands
 
     def cls(self):
@@ -129,8 +139,8 @@ class scpi (object):
 
     def err_c(self):
         """Error count."""
-        return rp.txrx_txt('SYST:ERR:COUN?')
+        return self.txrx_txt('SYST:ERR:COUN?')
 
     def err_c(self):
         """Error next."""
-        return rp.txrx_txt('SYST:ERR:NEXT?')
+        return self.txrx_txt('SYST:ERR:NEXT?')

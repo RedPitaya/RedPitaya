@@ -46,34 +46,34 @@ const scpi_choice_def_t scpi_PARITY[] = {
 scpi_result_t RP_Uart_Init(scpi_t * context){
     int result = rp_UartInit();
     if (RP_HW_OK != result) {
-        RP_LOG(LOG_ERR, "UART:INIT Failed to init Red "
-            "Pitaya uart: %d\n" , result);
+        RP_LOG(context,LOG_ERR, "UART:INIT Failed to init Red "
+            "Pitaya uart: %d" , result);
         return SCPI_RES_ERR;
     }
 
-    RP_LOG(LOG_INFO, "*UART:INIT Successfully init uart.\n");
+    RP_LOG(context,LOG_INFO, "*UART:INIT Successfully init uart.");
     return SCPI_RES_OK;
 }
 
 scpi_result_t RP_Uart_Release(scpi_t * context){
     int result = rp_UartRelease();
     if (RP_HW_OK != result) {
-        RP_LOG(LOG_ERR, "UART:RELEASE Failed to release uart: %d\n" , result);
+        RP_LOG(context,LOG_ERR, "UART:RELEASE Failed to release uart: %d" , result);
         return SCPI_RES_ERR;
     }
 
-    RP_LOG(LOG_INFO, "*UART:RELEASE Successfully release uart.\n");
+    RP_LOG(context,LOG_INFO, "*UART:RELEASE Successfully release uart.");
     return SCPI_RES_OK;
 }
 
 scpi_result_t RP_Uart_SetSettings(scpi_t * context){
     int result = rp_UartSetSettings();
     if (RP_HW_OK != result) {
-        RP_LOG(LOG_ERR, "UART:SETUP Failed set settings uart: %d\n" , result);
+        RP_LOG(context,LOG_ERR, "UART:SETUP Failed set settings uart: %d" , result);
         return SCPI_RES_ERR;
     }
 
-    RP_LOG(LOG_INFO, "*UART:SETUP Successfully set settings uart.\n");
+    RP_LOG(context,LOG_INFO, "*UART:SETUP Successfully set settings uart.");
     return SCPI_RES_OK;
 }
 
@@ -82,7 +82,7 @@ scpi_result_t RP_Uart_BIT_Size(scpi_t *context) {
     int32_t value;
 
     if (!SCPI_ParamChoice(context, scpi_BIT_Size, &value, true)) {
-        RP_LOG(LOG_ERR, "*UART:BITS is missing first parameter.\n");
+        RP_LOG(context,LOG_ERR, "*UART:BITS is missing first parameter.");
         return SCPI_RES_ERR;
     }
 
@@ -90,11 +90,11 @@ scpi_result_t RP_Uart_BIT_Size(scpi_t *context) {
 
     int result = rp_UartSetBits(par);
     if (RP_HW_OK != result) {
-        RP_LOG(LOG_ERR, "*UART:BITS Failed to set character size: %d\n", result);
+        RP_LOG(context,LOG_ERR, "*UART:BITS Failed to set character size: %d", result);
         return SCPI_RES_ERR;
     }
 
-    RP_LOG(LOG_INFO, "*UART:BITS Successfully set character size.\n");
+    RP_LOG(context,LOG_INFO, "*UART:BITS Successfully set character size.");
     return SCPI_RES_OK;
 }
 
@@ -105,12 +105,12 @@ scpi_result_t RP_Uart_BIT_SizeQ(scpi_t *context) {
     int result = rp_UartGetBits(&value);
 
     if (RP_OK != result) {
-        RP_LOG(LOG_ERR, "*UART:BITS? Failed to get character size: %d", result);
+        RP_LOG(context,LOG_ERR, "*UART:BITS? Failed to get character size: %d", result);
         return SCPI_RES_ERR;
     }
 
     if(!SCPI_ChoiceToName(scpi_BIT_Size, value, &_name)){
-        RP_LOG(LOG_ERR, "*UART:BITS? Failed to parse character size.\n");
+        RP_LOG(context,LOG_ERR, "*UART:BITS? Failed to parse character size.");
         return SCPI_RES_ERR;
     }
 
@@ -118,7 +118,7 @@ scpi_result_t RP_Uart_BIT_SizeQ(scpi_t *context) {
     SCPI_ResultMnemonic(context, _name);
 
 
-    RP_LOG(LOG_INFO, "*UART:BITS? Successfully returned character size.\n");
+    RP_LOG(context,LOG_INFO, "*UART:BITS? Successfully returned character size.");
     return SCPI_RES_OK;
 }
 
@@ -126,17 +126,17 @@ scpi_result_t RP_Uart_Speed(scpi_t *context){
     uint32_t value;
 
     if (!SCPI_ParamUInt32(context, &value, true)) {
-        RP_LOG(LOG_ERR, "*UART:SPEED is missing first parameter.\n");
+        RP_LOG(context,LOG_ERR, "*UART:SPEED is missing first parameter.");
         return SCPI_RES_ERR;
     }
 
     int result = rp_UartSetSpeed(value);
     if (RP_HW_OK != result) {
-        RP_LOG(LOG_ERR, "*UART:SPEED Failed to set uart speed: %d\n", result);
+        RP_LOG(context,LOG_ERR, "*UART:SPEED Failed to set uart speed: %d", result);
         return SCPI_RES_ERR;
     }
 
-    RP_LOG(LOG_INFO, "*UART:SPEED Successfully set uart speed.\n");
+    RP_LOG(context,LOG_INFO, "*UART:SPEED Successfully set uart speed.");
     return SCPI_RES_OK;
 }
 
@@ -145,14 +145,14 @@ scpi_result_t RP_Uart_SpeedQ(scpi_t *context){
     int result = rp_UartGetSpeed(&speed);
 
     if (RP_OK != result) {
-        RP_LOG(LOG_ERR, "*UART:SPEED? Failed to get uart speed: %d", result);
+        RP_LOG(context,LOG_ERR, "*UART:SPEED? Failed to get uart speed: %d", result);
         return SCPI_RES_ERR;
     }
 
     // Return back result
     SCPI_ResultUInt32Base(context, speed, 10);
 
-    RP_LOG(LOG_INFO, "*UART:SPEED? Successfully returned speed.\n");
+    RP_LOG(context,LOG_INFO, "*UART:SPEED? Successfully returned speed.");
     return SCPI_RES_OK;
 }
 
@@ -160,7 +160,7 @@ scpi_result_t RP_Uart_STOP_Bit(scpi_t *context) {
     int32_t value;
 
     if (!SCPI_ParamChoice(context, scpi_STOP_bit, &value, true)) {
-        RP_LOG(LOG_ERR, "*UART:STOPB is missing first parameter.\n");
+        RP_LOG(context,LOG_ERR, "*UART:STOPB is missing first parameter.");
         return SCPI_RES_ERR;
     }
 
@@ -168,11 +168,11 @@ scpi_result_t RP_Uart_STOP_Bit(scpi_t *context) {
 
     int result = rp_UartSetStopBits(par);
     if (RP_HW_OK != result) {
-        RP_LOG(LOG_ERR, "*UART:STOPB Failed to set stop bit size: %d\n", result);
+        RP_LOG(context,LOG_ERR, "*UART:STOPB Failed to set stop bit size: %d", result);
         return SCPI_RES_ERR;
     }
 
-    RP_LOG(LOG_INFO, "*UART:STOPB Successfully set stop bit size.\n");
+    RP_LOG(context,LOG_INFO, "*UART:STOPB Successfully set stop bit size.");
     return SCPI_RES_OK;
 }
 
@@ -183,12 +183,12 @@ scpi_result_t RP_Uart_STOP_BitQ(scpi_t *context) {
     int result = rp_UartGetStopBits(&value);
 
     if (RP_HW_OK != result) {
-        RP_LOG(LOG_ERR, "*UART:STOPB? Failed to get stop bit size: %d", result);
+        RP_LOG(context,LOG_ERR, "*UART:STOPB? Failed to get stop bit size: %d", result);
         return SCPI_RES_ERR;
     }
 
     if(!SCPI_ChoiceToName(scpi_STOP_bit, value, &_name)){
-        RP_LOG(LOG_ERR, "*UART:STOPB? Failed to get stop bit size.\n");
+        RP_LOG(context,LOG_ERR, "*UART:STOPB? Failed to get stop bit size.");
         return SCPI_RES_ERR;
     }
 
@@ -196,7 +196,7 @@ scpi_result_t RP_Uart_STOP_BitQ(scpi_t *context) {
     SCPI_ResultMnemonic(context, _name);
 
 
-    RP_LOG(LOG_INFO, "*UART:STOPB? Successfully returned stop bit size.\n");
+    RP_LOG(context,LOG_INFO, "*UART:STOPB? Successfully returned stop bit size.");
     return SCPI_RES_OK;
 }
 
@@ -204,7 +204,7 @@ scpi_result_t RP_Uart_PARITY(scpi_t *context) {
     int32_t value;
 
     if (!SCPI_ParamChoice(context, scpi_PARITY, &value, true)) {
-        RP_LOG(LOG_ERR, "*UART:PARITY is missing first parameter.\n");
+        RP_LOG(context,LOG_ERR, "*UART:PARITY is missing first parameter.");
         return SCPI_RES_ERR;
     }
 
@@ -212,11 +212,11 @@ scpi_result_t RP_Uart_PARITY(scpi_t *context) {
 
     int result = rp_UartSetParityMode(par);
     if (RP_HW_OK != result) {
-        RP_LOG(LOG_ERR, "*UART:PARITY Failed to set parity mode: %d\n", result);
+        RP_LOG(context,LOG_ERR, "*UART:PARITY Failed to set parity mode: %d", result);
         return SCPI_RES_ERR;
     }
 
-    RP_LOG(LOG_INFO, "*UART:PARITY Successfully set parity mode.\n");
+    RP_LOG(context,LOG_INFO, "*UART:PARITY Successfully set parity mode.");
     return SCPI_RES_OK;
 }
 
@@ -227,12 +227,12 @@ scpi_result_t RP_Uart_PARITYQ(scpi_t *context) {
     int result = rp_UartGetParityMode(&value);
 
     if (RP_HW_OK != result) {
-        RP_LOG(LOG_ERR, "*UART:PARITY? Failed to get parity mode: %d", result);
+        RP_LOG(context,LOG_ERR, "*UART:PARITY? Failed to get parity mode: %d", result);
         return SCPI_RES_ERR;
     }
 
     if(!SCPI_ChoiceToName(scpi_PARITY, value, &_name)){
-        RP_LOG(LOG_ERR, "*UART:PARITY? Failed to get parity mode.\n");
+        RP_LOG(context,LOG_ERR, "*UART:PARITY? Failed to get parity mode.");
         return SCPI_RES_ERR;
     }
 
@@ -240,24 +240,24 @@ scpi_result_t RP_Uart_PARITYQ(scpi_t *context) {
     SCPI_ResultMnemonic(context, _name);
 
 
-    RP_LOG(LOG_INFO, "*UART:PARITY? Successfully returned parity mode.\n");
+    RP_LOG(context,LOG_INFO, "*UART:PARITY? Successfully returned parity mode.");
     return SCPI_RES_OK;
 }
 
 scpi_result_t RP_Uart_Timeout(scpi_t *context){
     uint8_t value;
     if (!SCPI_ParamUInt8(context, &value, true)) {
-        RP_LOG(LOG_ERR, "*UART:TIMEOUT is missing first parameter.\n");
+        RP_LOG(context,LOG_ERR, "*UART:TIMEOUT is missing first parameter.");
         return SCPI_RES_ERR;
     }
 
     int result = rp_UartSetTimeout(value);
     if (RP_HW_OK != result) {
-        RP_LOG(LOG_ERR, "*UART:TIMEOUT Failed to set uart timeout: %d\n", result);
+        RP_LOG(context,LOG_ERR, "*UART:TIMEOUT Failed to set uart timeout: %d", result);
         return SCPI_RES_ERR;
     }
 
-    RP_LOG(LOG_INFO, "*UART:TIMEOUT Successfully set uart timeout.\n");
+    RP_LOG(context,LOG_INFO, "*UART:TIMEOUT Successfully set uart timeout.");
     return SCPI_RES_OK;
 }
 
@@ -266,13 +266,13 @@ scpi_result_t RP_Uart_TimeoutQ(scpi_t *context){
     int result = rp_UartGetTimeout(&speed);
 
     if (RP_OK != result) {
-        RP_LOG(LOG_ERR, "*UART:TIMEOUT? Failed to get uart timeout: %d", result);
+        RP_LOG(context,LOG_ERR, "*UART:TIMEOUT? Failed to get uart timeout: %d", result);
         return SCPI_RES_ERR;
     }
     // Return back result
     SCPI_ResultUInt32Base(context, speed, 10);
 
-    RP_LOG(LOG_INFO, "*UART:TIMEOUT? Successfully returned timeout.\n");
+    RP_LOG(context,LOG_INFO, "*UART:TIMEOUT? Successfully returned timeout.");
     return SCPI_RES_OK;
 }
 
@@ -285,12 +285,12 @@ scpi_result_t RP_Uart_SendBuffer(scpi_t * context){
     int32_t cmd[1] = {0};
 
     if (!SCPI_CommandNumbers(context,cmd,1,-1)){
-        RP_LOG(LOG_ERR, "*UART:WRITE Failed to get parameters.\n");
+        RP_LOG(context,LOG_ERR, "*UART:WRITE Failed to get parameters.");
         return SCPI_RES_ERR;
     }
 
     if (cmd[0] == -1){
-        RP_LOG(LOG_ERR, "*UART:WRITE Failed to get size.\n");
+        RP_LOG(context,LOG_ERR, "*UART:WRITE Failed to get size.");
         return SCPI_RES_ERR;
     }
 
@@ -298,30 +298,30 @@ scpi_result_t RP_Uart_SendBuffer(scpi_t * context){
 
     buffer = (uint8_t*)malloc(size * sizeof(uint8_t));
     if (!buffer){
-        RP_LOG(LOG_ERR, "*UART:WRITE Failed allocate buffer with size: %d.\n",size);
+        RP_LOG(context,LOG_ERR, "*UART:WRITE Failed allocate buffer with size: %d.",size);
         return SCPI_RES_ERR;
     }
     buf_size = size;
     if(!SCPI_ParamBufferUInt8(context, buffer, &buf_size, true)){
-        RP_LOG(LOG_ERR, "*UART:WRITE Failed get data for buffer.\n");
+        RP_LOG(context,LOG_ERR, "*UART:WRITE Failed get data for buffer.");
         free(buffer);
         return SCPI_RES_ERR;
     }
 
     if (buf_size != size){
-        RP_LOG(LOG_ERR, "*UART:WRITE Wrong data length.\n");
+        RP_LOG(context,LOG_ERR, "*UART:WRITE Wrong data length.");
         free(buffer);
         return SCPI_RES_ERR;
     }
 
     result = rp_UartWrite(buffer, buf_size);
     if(result != RP_HW_OK){
-        RP_LOG(LOG_ERR, "*UART:WRITE Failed send data: %d\n", result);
+        RP_LOG(context,LOG_ERR, "*UART:WRITE Failed send data: %d", result);
         free(buffer);
         return SCPI_RES_ERR;
     }
     free(buffer);
-    RP_LOG(LOG_INFO, "*UART:WRITE Successfully send data to uart.\n");
+    RP_LOG(context,LOG_INFO, "*UART:WRITE Successfully send data to uart.");
     return SCPI_RES_OK;
 }
 
@@ -333,12 +333,12 @@ scpi_result_t RP_Uart_ReadBuffer(scpi_t * context){
     int32_t cmd[1] = {0};
 
     if (!SCPI_CommandNumbers(context,cmd,1,-1)){
-        RP_LOG(LOG_ERR, "*UART:READ# Failed to get parameters.\n");
+        RP_LOG(context,LOG_ERR, "*UART:READ# Failed to get parameters.");
         return SCPI_RES_ERR;
     }
 
     if (cmd[0] == -1){
-        RP_LOG(LOG_ERR, "*UART:READ# Failed to get size.\n");
+        RP_LOG(context,LOG_ERR, "*UART:READ# Failed to get size.");
         return SCPI_RES_ERR;
     }
 
@@ -346,19 +346,19 @@ scpi_result_t RP_Uart_ReadBuffer(scpi_t * context){
 
     buffer = (uint8_t*)malloc(size * sizeof(uint8_t));
     if (!buffer){
-        RP_LOG(LOG_ERR,"*UART:READ# Failed allocate buffer with size: %d.\n",size);
+        RP_LOG(context,LOG_ERR,"*UART:READ# Failed allocate buffer with size: %d.",size);
         return SCPI_RES_ERR;
     }
     read_size = size;
     result = rp_UartRead(buffer, &read_size);
     if(result != RP_HW_OK){
-        RP_LOG(LOG_ERR, "*UART:READ# Failed read data: %d\n", result);
+        RP_LOG(context,LOG_ERR, "*UART:READ# Failed read data: %d", result);
         free(buffer);
         return SCPI_RES_ERR;
     }
 
     SCPI_ResultBufferUInt8(context, buffer, read_size);
     free(buffer);
-    RP_LOG(LOG_INFO, "*UART:READ# Successfully returned uart data to client.\n");
+    RP_LOG(context,LOG_INFO, "*UART:READ# Successfully returned uart data to client.");
     return SCPI_RES_OK;
 }

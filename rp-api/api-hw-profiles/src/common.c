@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <string.h>
+#include <errno.h>
 #include <stdbool.h>
 #include <sys/queue.h>
 #include <mtd/mtd-user.h>
@@ -255,11 +256,14 @@ int hp_cmn_Init(){
     char *eth_mac = NULL;
 
 	FILE *fp = fopen("/sys/bus/i2c/devices/0-0050/eeprom", "r");
-	if (!fp)
+	if (!fp){
+		fprintf(stderr,"[hp_cmn_Init] Error open eeprom: %d\n",errno);
 		return RP_HP_ERE;
+	}
 
 	if(fseek(fp, 0x1800	, SEEK_SET) < 0) {
         fclose(fp);
+		fprintf(stderr,"[hp_cmn_Init] Error open eeprom\n");
         return RP_HP_ERE;
     }
 

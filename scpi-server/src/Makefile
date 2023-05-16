@@ -43,7 +43,8 @@ OBJECTS =	scpi-commands.o \
 		led.o \
 		spi.o \
 		i2c.o \
-		generate.o
+		generate.o \
+		error.o
 
 
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
@@ -64,7 +65,7 @@ INC= -I../scpi-parser/libscpi/inc -I$(INSTALL_DIR)/include
 INC += -I$(INSTALL_DIR)/include/api250-12
 
 # Main GCC executable (used for compiling and linking)
-CC=$(CROSS_COMPILE)gcc
+CC=$(CROSS_COMPILE)g++
 
 # Main Makefile target 'all' - it iterates over all targets listed in $(TARGET)
 # variable.

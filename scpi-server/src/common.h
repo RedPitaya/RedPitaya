@@ -7,9 +7,6 @@
  *
  * (c) Red Pitaya  http://www.redpitaya.com
  *
- * This part of code is written in C programming language.
- * Please visit http://en.wikipedia.org/wiki/C_(programming_language)
- * for more details on the language used herein.
  */
 
 #ifndef COMMON_H_
@@ -39,13 +36,13 @@ int RP_ParseChArgvDAC(scpi_t *context, rp_channel_t *channel);
 rp_scpi_log getLogMode();
 scpi_result_t RP_SetLogMode(scpi_t *context);
 
-void RP_LOG(int mode,const char * format, ...);
+void RP_LOG(scpi_t *context,int mode, const char * format, ...);
 
-uint8_t getADCChannels();
-uint8_t getDACChannels();
-uint32_t getDACRate();
-uint32_t getADCRate();
-rp_HPeModels_t getModel();
+uint8_t getADCChannels(scpi_t *context);
+uint8_t getDACChannels(scpi_t *context);
+uint32_t getDACRate(scpi_t *context);
+uint32_t getADCRate(scpi_t *context);
+rp_HPeModels_t getModel(scpi_t *context);
 
 
 scpi_result_t RP_Time(scpi_t *context);
