@@ -66,7 +66,8 @@ scpi_result_t RP_AnalogPinValueQ(scpi_t * context) {
 
     // Now get the pin value
     float value;
-    int result = rp_ApinGetValue(pin, &value);
+    uint32_t raw;
+    int result = rp_ApinGetValue(pin, &value,&raw);
 
     if (RP_OK != result){
         RP_LOG(context,LOG_ERR, "*ANALOG:PIN? Failed to get pin value: %s", rp_GetError(result));

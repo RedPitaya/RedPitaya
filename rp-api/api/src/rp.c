@@ -605,11 +605,11 @@ int rp_ApinReset() {
     return rp_AOpinReset();
 }
 
-int rp_ApinGetValue(rp_apin_t pin, float* value) {
+int rp_ApinGetValue(rp_apin_t pin, float* value, uint32_t* raw) {
     if (pin <= RP_AOUT3) {
-        rp_AOpinGetValue(pin-RP_AOUT0, value);
+        rp_AOpinGetValue(pin-RP_AOUT0, value, raw);
     } else if (pin <= RP_AIN3) {
-        rp_AIpinGetValue(pin-RP_AIN0, value);
+        rp_AIpinGetValue(pin-RP_AIN0, value, raw);
     } else {
         return RP_EPN;
     }
@@ -688,7 +688,7 @@ int rp_AIpinGetValueRaw(int unsigned pin, uint32_t* value) {
     return r;
 }
 
-int rp_AIpinGetValue(int unsigned pin, float* value) {
+int rp_AIpinGetValue(int unsigned pin, float* value, uint32_t* raw) {
     uint32_t value_raw;
     int result = rp_AIpinGetValueRaw(pin, &value_raw);
     rp_channel_calib_t ch = convertPINCh(pin);
@@ -716,6 +716,7 @@ int rp_AIpinGetValue(int unsigned pin, float* value) {
     else{
         *value = cmn_convertToVoltUnsigned(value_raw,bits,fs,1000,1000,0);
     }
+    *raw = value_raw;
     return result;
 }
 
@@ -795,7 +796,7 @@ int rp_AOpinGetValueRaw(int unsigned pin, uint32_t* value) {
     return RP_OK;
 }
 
-int rp_AOpinGetValue(int unsigned pin, float* value) {
+int rp_AOpinGetValue(int unsigned pin, float* value, uint32_t* raw) {
 
     uint32_t value_raw;
     int result = rp_AOpinGetValueRaw(pin, &value_raw);
@@ -824,6 +825,7 @@ int rp_AOpinGetValue(int unsigned pin, float* value) {
     else{
         *value = cmn_convertToVoltUnsigned(value_raw,bits,fs,1000,1000,0);
     }
+    *raw = value_raw;
     return result;
 }
 

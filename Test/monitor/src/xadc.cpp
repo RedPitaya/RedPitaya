@@ -61,20 +61,16 @@ static void AmsList()
 			    val = rp_GetCPUTemperature(&raw);
 			break;
 			case eAmsAI0:
-				rp_ApinGetValue(RP_AIN0,&val);
-				rp_ApinGetValueRaw(RP_AIN0,&raw);
+				rp_ApinGetValue(RP_AIN0,&val,&raw);
 			break;
 			case eAmsAI1:
-				rp_ApinGetValue(RP_AIN1,&val);
-				rp_ApinGetValueRaw(RP_AIN1,&raw);
+				rp_ApinGetValue(RP_AIN1,&val,&raw);
 			break;
 			case eAmsAI2:
-				rp_ApinGetValue(RP_AIN2,&val);
-				rp_ApinGetValueRaw(RP_AIN2,&raw);
+				rp_ApinGetValue(RP_AIN2,&val,&raw);
 			break;
 			case eAmsAI3:
-				rp_ApinGetValue(RP_AIN3,&val);
-				rp_ApinGetValueRaw(RP_AIN3,&raw);
+				rp_ApinGetValue(RP_AIN3,&val,&raw);
 				break;
 			case eAmsAI4:
 				rp_GetPowerI4(&raw,&val);
@@ -98,20 +94,16 @@ static void AmsList()
 				rp_GetPowerVCCDDR(&raw,&val);
 				break;
 			case eAmsAO0:
-				rp_ApinGetValue(RP_AOUT0,&val);
-				rp_ApinGetValueRaw(RP_AOUT0,&raw);
+				rp_ApinGetValue(RP_AOUT0,&val,&raw);
 				break;
 			case eAmsAO1:
-				rp_ApinGetValue(RP_AOUT1,&val);
-				rp_ApinGetValueRaw(RP_AOUT1,&raw);
+				rp_ApinGetValue(RP_AOUT1,&val,&raw);
 				break;
 			case eAmsAO2:
-				rp_ApinGetValue(RP_AOUT2,&val);
-				rp_ApinGetValueRaw(RP_AOUT2,&raw);
+				rp_ApinGetValue(RP_AOUT2,&val,&raw);
 				break;
 			case eAmsAO3:
-				rp_ApinGetValue(RP_AOUT3,&val);
-				rp_ApinGetValueRaw(RP_AOUT3,&raw);
+				rp_ApinGetValue(RP_AOUT3,&val,&raw);
 				break;
 			case eSendNum:
 				break;

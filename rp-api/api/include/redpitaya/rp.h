@@ -529,10 +529,11 @@ int rp_ApinReset();
  * Gets value from analog pin in volts.
  * @param pin    Analog pin.
  * @param value  Value on analog pin in volts
+ * @param raw    raw value
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_ApinGetValue(rp_apin_t pin, float* value);
+int rp_ApinGetValue(rp_apin_t pin, float* value, uint32_t* raw);
 
 /**
  * Gets raw value from analog pin.
@@ -580,9 +581,10 @@ int rp_ApinGetRange(rp_apin_t pin, float* min_val,  float* max_val);
  * Gets value from analog pin in volts.
  * @param pin    pin index
  * @param value  voltage
+ * @param raw    raw value
  * @return       RP_OK - successful, RP_E* - failure
  */
-int rp_AIpinGetValue(int unsigned pin, float* value);
+int rp_AIpinGetValue(int unsigned pin, float* value, uint32_t* raw);
 
 /**
  * Gets raw value from analog pin.
@@ -606,9 +608,10 @@ int rp_AOpinReset();
  * Gets value from analog pin in volts.
  * @param pin    Analog output pin index.
  * @param value  Value on analog pin in volts
+ * @param raw  Value on analog pin in raw
  * @return       RP_OK - successful, RP_E* - failure
  */
-int rp_AOpinGetValue(int unsigned pin, float* value);
+int rp_AOpinGetValue(int unsigned pin, float* value, uint32_t* raw);
 
 /**
  * Gets raw value from analog pin.
