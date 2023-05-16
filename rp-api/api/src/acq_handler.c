@@ -818,6 +818,10 @@ int acq_SetChannelThresholdHyst(rp_channel_t channel, float voltage){
         return RP_EOOR;
     }
 
+    if (!gainValue){
+        return RP_EOOR;
+    }
+
     if (acq_GetGain(channel, &mode) != RP_OK){
         return RP_EOOR;
     }
@@ -826,7 +830,7 @@ int acq_SetChannelThresholdHyst(rp_channel_t channel, float voltage){
         return RP_EOOR;
     }
 
-    if (fabs(voltage * gainValue) - fabs(fullScale) > FLOAT_EPS) {
+    if (fabs(voltage / gainValue) - fabs(fullScale) > FLOAT_EPS) {
         return RP_EOOR;
     }
 
@@ -865,7 +869,7 @@ int acq_SetChannelThresholdHyst(rp_channel_t channel, float voltage){
     }
 
 
-    uint32_t cnt = cmn_convertToCnt(voltage,bits,fullScale,is_sign,gain,offset);
+    uint32_t cnt = cmn_convertToCnt(voltage/gainValue,bits,fullScale,is_sign,gain,offset);
     ch_hyst[channel] = voltage;
 
     if (channel == RP_CH_1) {
