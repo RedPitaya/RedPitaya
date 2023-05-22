@@ -513,6 +513,14 @@ int rp_SetSourceTrigOutput(rp_outTiggerMode_t mode);
  */
 int rp_GetSourceTrigOutput(rp_outTiggerMode_t *mode);
 
+int rp_DaisySetTXEnable(bool enable);
+
+int rp_DaisyGetTXEnable(bool *state);
+
+int rp_DaisySetRXEnable(bool enable);
+
+int rp_DaisyGetRXEnable(bool *state);
+
 ///@}
 
 

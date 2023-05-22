@@ -64,7 +64,8 @@ list(APPEND src
             ${CMAKE_SOURCE_DIR}/src/neon_asm.cpp
             ${CMAKE_SOURCE_DIR}/src/generate.c
             ${CMAKE_SOURCE_DIR}/src/gen_handler.c
-        )
+            ${CMAKE_SOURCE_DIR}/src/daisy.c
+    )
 
 
 list(APPEND header_rp

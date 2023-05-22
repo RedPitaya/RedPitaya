@@ -24,6 +24,7 @@
 #include "rp_hw-calib.h"
 #include "generate.h"
 #include "gen_handler.h"
+#include "daisy.h"
 
 static char version[50];
 int g_api_state = 0;
@@ -44,6 +45,7 @@ int rp_InitReset(bool reset)
     rp_CalibInit();
     hk_Init(reset);
     ams_Init();
+    daisy_Init();
 
     if (rp_HPIsFastDAC_PresentOrDefault()){
         generate_Init();
@@ -70,6 +72,7 @@ int rp_Release()
     ams_Release();
     hk_Release();
     cmn_Release();
+    daisy_Release();
     g_api_state = false;
     return RP_OK;
 }
@@ -1461,6 +1464,22 @@ int rp_GenGetGainOut(rp_channel_t channel,rp_gen_gain_t *status){
 
 int rp_SetEnableDaisyChainSync(bool enable){
     return house_SetEnableDaisyChainSync(enable);
+}
+
+int rp_DaisySetTXEnable(bool enable){
+    return daisy_SetTXEnable(enable);
+}
+
+int rp_DaisyGetTXEnable(bool *state){
+    return daisy_GetTXEnable(state);
+}
+
+int rp_DaisySetRXEnable(bool enable){
+    return daisy_SetRXEnable(enable);
+}
+
+int rp_DaisyGetRXEnable(bool *state){
+    return daisy_GetRXEnable(state);
 }
 
 int rp_GetEnableDaisyChainSync(bool *status){
