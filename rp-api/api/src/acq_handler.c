@@ -868,8 +868,8 @@ int acq_SetChannelThresholdHyst(rp_channel_t channel, float voltage){
         return RP_EOOR;
     }
 
-
-    uint32_t cnt = cmn_convertToCnt(voltage/gainValue,bits,fullScale,is_sign,gain,offset);
+    // No need calib with offeset!!!
+    uint32_t cnt = cmn_convertToCnt(voltage/gainValue,bits,fullScale,is_sign,gain,0);
     ch_hyst[channel] = voltage;
 
     if (channel == RP_CH_1) {

@@ -70,6 +70,7 @@ typedef struct {
     bool                is_ext_trigger_level_available;
     uint8_t             external_trigger_full_scale;
     uint32_t            fast_adc_spectrum_resolution;
+    bool                is_daisy_chain_clock_sync;
 
 
 } profiles_t;

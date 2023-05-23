@@ -460,7 +460,7 @@ int rp_DpinGetDirection(rp_dpin_t pin, rp_pinDirection_t* direction);
 ///@{
 
 /**
- * Enables clock and trigger sync over SATA daisy chain connectors.
+ * Enables trigger sync over SATA daisy chain connectors.
  * Once the primary board will be triggered, the trigger will be forwarded to the secondary board over
  * the SATA connector where the trigger can be detected using rp_GenTriggerSource with EXT_NE selector.
  * Noticed that the trigger that is received over SATA is ORed with the external trigger from GPIO.
@@ -469,7 +469,7 @@ int rp_DpinGetDirection(rp_dpin_t pin, rp_pinDirection_t* direction);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_SetEnableDaisyChainSync(bool enable);
+int rp_SetEnableDaisyChainTrigSync(bool enable);
 
 /**
  * Returns the current state of the SATA daisy chain mode.
@@ -477,7 +477,7 @@ int rp_SetEnableDaisyChainSync(bool enable);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_GetEnableDaisyChainSync(bool *status);
+int rp_GetEnableDaisyChainTrigSync(bool *status);
 
 /**
  * Function turns GPION_0 into trigger output for selected source - acquisition or generation
@@ -513,13 +513,23 @@ int rp_SetSourceTrigOutput(rp_outTiggerMode_t mode);
  */
 int rp_GetSourceTrigOutput(rp_outTiggerMode_t *mode);
 
-int rp_DaisySetTXEnable(bool enable);
+/**
+ * Enables clock sync over SATA daisy chain connectors. Primary board will start generating clock for secondary unit and so on.
+ *
+ * @param enable  Turns on the mode.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_SetEnableDiasyChainClockSync(bool enable);
 
-int rp_DaisyGetTXEnable(bool *state);
+/*
+ * Returns the current state of the SATA daisy chain mode.
+ * @param status  Current state.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_GetEnableDiasyChainClockSync(bool *state);
 
-int rp_DaisySetRXEnable(bool enable);
-
-int rp_DaisyGetRXEnable(bool *state);
 
 ///@}
 

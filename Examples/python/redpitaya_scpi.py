@@ -83,7 +83,7 @@ class scpi (object):
         res = int(self.stb_q())
         if (res & 0x4):
             while 1:
-                err = self.err_c()
+                err = self.err_n()
                 if (err.startswith('0,')):
                     break
                 print(err)
@@ -141,6 +141,6 @@ class scpi (object):
         """Error count."""
         return self.txrx_txt('SYST:ERR:COUN?')
 
-    def err_c(self):
+    def err_n(self):
         """Error next."""
         return self.txrx_txt('SYST:ERR:NEXT?')

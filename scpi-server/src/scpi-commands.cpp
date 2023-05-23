@@ -171,8 +171,11 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "ANALOG:PIN", .callback                 = RP_AnalogPinValue,},
     {.pattern = "ANALOG:PIN?", .callback                = RP_AnalogPinValueQ,},
 
-    {.pattern = "DAISY:ENable", .callback               = RP_EnableDaisyChainSync,},
-    {.pattern = "DAISY:ENable?", .callback              = RP_EnableDaisyChainSyncQ,},
+    {.pattern = "DAISY:SYNC:TRIG", .callback            = RP_EnableDaisyChainTrigSync,},
+    {.pattern = "DAISY:SYNC:TRIG?", .callback           = RP_EnableDaisyChainTrigSyncQ,},
+
+    {.pattern = "DAISY:SYNC:CLK", .callback             = RP_EnableDaisyChainClockSync,},
+    {.pattern = "DAISY:SYNC:CLK?", .callback            = RP_EnableDaisyChainClockSyncQ,},
 
     {.pattern = "DAISY:TRIG_O:ENable", .callback        = RP_DpinEnableTrigOutput,},
     {.pattern = "DAISY:TRIG_O:ENable?", .callback       = RP_DpinEnableTrigOutputQ,},

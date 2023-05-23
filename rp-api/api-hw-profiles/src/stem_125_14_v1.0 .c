@@ -89,7 +89,9 @@ profiles_t stem_125_14_v1_0 = {
     .fast_adc_spectrum_resolution = 62500000,
 
     .fast_adc_full_scale = 1,
-    .fast_dac_full_scale = 1
+    .fast_dac_full_scale = 1,
+
+    .is_daisy_chain_clock_sync = true
 };
 
 profiles_t* getProfile_STEM_125_14_v1_0(){

@@ -15,8 +15,8 @@
 #include "daisy.h"
 #include "common.h"
 
-#define CHECK_REGSET(X)    if (!g_daisy_regset){ \
-                            fprintf(stderr,"%s %s",X,"regset not init"); \
+#define CHECK_REGSET(X)    if (g_daisy_regset == -1 || g_daisy_regset == NULL){ \
+                            fprintf(stderr,"%s %s",X,"regset not init\n"); \
                             return RP_EMMD; \
                         }
 
@@ -27,7 +27,8 @@ int daisy_Init() {
 }
 
 int daisy_Release(){
-    return cmn_Unmap(DAISY_BASE_SIZE, (void**)&g_daisy_regset);
+    if (g_daisy_regset)
+        cmn_Unmap(DAISY_BASE_SIZE, (void**)&g_daisy_regset);
     g_daisy_regset = NULL;
 }
 

@@ -23,7 +23,7 @@
 #include "rp_hw-profiles.h"
 
 // Base daisy address
-static const int DAISY_BASE_ADDR = 0x05000000;
+static const int DAISY_BASE_ADDR = 0x00500000;
 static const int DAISY_BASE_SIZE = 0x20;
 
 typedef enum {
@@ -86,7 +86,6 @@ typedef struct daisy_regset_s {
 
 int daisy_Init();
 int daisy_Release();
-
 
 int daisy_SetTXEnable(bool enable);
 int daisy_GetTXEnable(bool *state);

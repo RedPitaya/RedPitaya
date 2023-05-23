@@ -406,6 +406,8 @@ int hp_cmn_Print(profiles_t *p){
 	fprintf(stdout,"FAST ADC External trigger level available: %d\n",p->is_ext_trigger_level_available);
 	fprintf(stdout,"FAST ADC External trigger level full scale: %d\n",p->external_trigger_full_scale);
 
+	fprintf(stdout,"\nDaisy chain clock sync support: %u\n", p->is_daisy_chain_clock_sync);
+
 	fprintf(stdout,"***********************************************************************\n");
 	return RP_HP_OK;
 }

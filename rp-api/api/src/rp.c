@@ -1462,28 +1462,54 @@ int rp_GenGetGainOut(rp_channel_t channel,rp_gen_gain_t *status){
 }
 
 
-int rp_SetEnableDaisyChainSync(bool enable){
+int rp_SetEnableDaisyChainTrigSync(bool enable){
     return house_SetEnableDaisyChainSync(enable);
 }
 
-int rp_DaisySetTXEnable(bool enable){
-    return daisy_SetTXEnable(enable);
-}
-
-int rp_DaisyGetTXEnable(bool *state){
-    return daisy_GetTXEnable(state);
-}
-
-int rp_DaisySetRXEnable(bool enable){
-    return daisy_SetRXEnable(enable);
-}
-
-int rp_DaisyGetRXEnable(bool *state){
-    return daisy_GetRXEnable(state);
-}
-
-int rp_GetEnableDaisyChainSync(bool *status){
+int rp_GetEnableDaisyChainTrigSync(bool *status){
     return house_GetEnableDaisyChainSync(status);
+}
+
+int rp_SetEnableDiasyChainClockSync(bool enable){
+
+    if (!rp_HPGetIsDaisyChainClockAvailableOrDefault())
+        return RP_NOTS;
+
+    int ret = daisy_SetTXEnable(enable);
+    if (ret != RP_OK){
+        return ret;
+    }
+
+    ret = daisy_SetRXEnable(enable);
+
+    if (ret != RP_OK){
+        return ret;
+    }
+
+    return ret;
+}
+
+int rp_GetEnableDiasyChainClockSync(bool *state){
+
+    if (!rp_HPGetIsDaisyChainClockAvailableOrDefault())
+        return RP_NOTS;
+
+    bool stx,srx;
+
+    int ret = daisy_GetTXEnable(&stx);
+    if (ret != RP_OK){
+        return ret;
+    }
+
+    ret = daisy_GetRXEnable(&srx);
+
+    if (ret != RP_OK){
+        return ret;
+    }
+
+    *state = stx & srx;
+
+    return ret;
 }
 
 int rp_SetDpinEnableTrigOutput(bool enable){

@@ -88,7 +88,7 @@ void RP_LOG(scpi_t *context, int mode, const char * format,...){
     if (getLogMode() == RP_SCPI_LOG_SYSLOG)
         syslog(mode, "%s", logMsg);
     if (getLogMode() == RP_SCPI_LOG_CONSOLE)
-        fprintf(stdout, "%s", logMsg);
+        fprintf(stdout, "%s\n", logMsg);
 
     if (mode == LOG_ERR && context){
         rp_errorPush(context,logMsg);

@@ -124,37 +124,37 @@ scpi_result_t RP_EnableDigLoop(scpi_t *context){
 }
 
 
-scpi_result_t RP_EnableDaisyChainSync(scpi_t *context){
+scpi_result_t RP_EnableDaisyChainTrigSync(scpi_t *context){
     int32_t value;
 
     if (!SCPI_ParamChoice(context, scpi_DAISY_state, &value, true)) {
-        RP_LOG(context,LOG_ERR, "*DAISY:ENable is missing first parameter.");
+        RP_LOG(context,LOG_ERR, "*DAISY:SYNC:TRIG is missing first parameter.");
         return SCPI_RES_ERR;
     }
 
-    int result = rp_SetEnableDaisyChainSync((bool)value);
+    int result = rp_SetEnableDaisyChainTrigSync((bool)value);
     if (RP_OK != result) {
-        RP_LOG(context,LOG_ERR, "*DAISY:ENable Failed to enabled mode: %d", result);
+        RP_LOG(context,LOG_ERR, "*DAISY:SYNC:TRIG Failed to enabled mode: %d", result);
         return SCPI_RES_ERR;
     }
 
-    RP_LOG(context,LOG_INFO, "*DAISY:ENable Successfully enabled mode.");
+    RP_LOG(context,LOG_INFO, "*DAISY:SYNC:TRIG Successfully enabled mode.");
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_EnableDaisyChainSyncQ(scpi_t *context){
+scpi_result_t RP_EnableDaisyChainTrigSyncQ(scpi_t *context){
     const char *_name;
 
     bool value;
-    int result = rp_GetEnableDaisyChainSync(&value);
+    int result = rp_GetEnableDaisyChainTrigSync(&value);
 
     if (RP_OK != result) {
-        RP_LOG(context,LOG_ERR, "*DAISY:ENable? Failed get state: %d", result);
+        RP_LOG(context,LOG_ERR, "*DAISY:SYNC:TRIG? Failed get state: %d", result);
         return SCPI_RES_ERR;
     }
 
     if(!SCPI_ChoiceToName(scpi_DAISY_state, (int32_t)value, &_name)){
-        RP_LOG(context,LOG_ERR, "*DAISY:ENable? Failed to parse state.");
+        RP_LOG(context,LOG_ERR, "*DAISY:SYNC:TRIG? Failed to parse state.");
         return SCPI_RES_ERR;
     }
 
@@ -162,7 +162,49 @@ scpi_result_t RP_EnableDaisyChainSyncQ(scpi_t *context){
     SCPI_ResultMnemonic(context, _name);
 
 
-    RP_LOG(context,LOG_INFO, "*DAISY:ENable? Successfully returned state.");
+    RP_LOG(context,LOG_INFO, "*DAISY:SYNC:TRIG? Successfully returned state.");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_EnableDaisyChainClockSync(scpi_t *context){
+    int32_t value;
+
+    if (!SCPI_ParamChoice(context, scpi_DAISY_state, &value, true)) {
+        RP_LOG(context,LOG_ERR, "*DAISY:SYNC:CLK is missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+
+    int result = rp_SetEnableDiasyChainClockSync((bool)value);
+    if (RP_OK != result) {
+        RP_LOG(context,LOG_ERR, "*DAISY:SYNC:CLK Failed to enabled mode: %d", result);
+        return SCPI_RES_ERR;
+    }
+
+    RP_LOG(context,LOG_INFO, "*DAISY:SYNC:CLK Successfully enabled mode.");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_EnableDaisyChainClockSyncQ(scpi_t *context){
+    const char *_name;
+
+    bool value;
+    int result = rp_GetEnableDiasyChainClockSync(&value);
+
+    if (RP_OK != result) {
+        RP_LOG(context,LOG_ERR, "*DAISY:SYNC:CLK Failed get state: %d", result);
+        return SCPI_RES_ERR;
+    }
+
+    if(!SCPI_ChoiceToName(scpi_DAISY_state, (int32_t)value, &_name)){
+        RP_LOG(context,LOG_ERR, "*DAISY:SYNC:CLK? Failed to parse state.");
+        return SCPI_RES_ERR;
+    }
+
+    // Return back result
+    SCPI_ResultMnemonic(context, _name);
+
+
+    RP_LOG(context,LOG_INFO, "*DAISY:SYNC:CLK? Successfully returned state.");
     return SCPI_RES_OK;
 }
 
