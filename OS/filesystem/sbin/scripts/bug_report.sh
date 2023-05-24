@@ -45,6 +45,7 @@ cp /root/.version $TEST_TMP_DIR/OS_Ver.log
 cp -r /var/log $TEST_TMP_DIR/logs
 
 calib -rv > $TEST_TMP_DIR/ecosystem/calib_rv.log
+calib -rvf > $TEST_TMP_DIR/ecosystem/calib_rvf.log
 calib -rvx > $TEST_TMP_DIR/ecosystem/calib_rvx.log
 calib -u > $TEST_TMP_DIR/ecosystem/calib_u.log
 
