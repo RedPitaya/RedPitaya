@@ -467,6 +467,19 @@
             $('#sysinfo_dialog').modal("show");
         });
 
+
+        $("#bug_report").click(function(event) {
+            fetch('/get_bug_report')
+                .then(response => response.blob())
+                .then(blob => {
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = new Date().toJSON().slice(0,22) + ".zip";
+                link.click();
+            })
+            .catch(console.error);
+        });
+
         $.ajax({
                 method: "GET",
                 url: '/get_sysinfo'

@@ -4,6 +4,11 @@ if [ -z "$(dpkg -l | grep ' tree ')" ]; then
     apt install tree -y
 fi
 
+DEST_FILE=$1
+if [ "$DEST_FILE" = "" ]; then
+    DEST_FILE=/opt/redpitaya
+fi
+
 TEST_TMP_DIR=$(mktemp -d)
 ZIP_FILE=$(date +'%F_%H-%M-%S').zip
 
@@ -59,7 +64,7 @@ rw
 # pack report
 cd $TEST_TMP_DIR
 zip -9 -r $ZIP_FILE *
-cp $ZIP_FILE /opt/redpitaya
+cp -f $ZIP_FILE $DEST_FILE
 cd $CURDIR
 ro
 
