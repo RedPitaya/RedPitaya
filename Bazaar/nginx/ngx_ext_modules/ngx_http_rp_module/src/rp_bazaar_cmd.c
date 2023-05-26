@@ -507,9 +507,11 @@ int rp_bazaar_start(ngx_http_request_t *r,
     fprintf(stderr, "Loading application: '%s'\n", app_name);
     int ret = rp_bazaar_app_load_module(&app_name[0], &rp_module_ctx.app);
     if(ret < 0) {
+        char err[250];
+        sprintf(err,"Can not load application. Error: %d",ret);
         rp_bazaar_app_unload_module(&rp_module_ctx.app);
-        return rp_module_cmd_error(json_root, "Can not load application. Error: %d",
-                                   NULL, r->pool,ret);
+        return rp_module_cmd_error(json_root, err,
+                                   NULL, r->pool);
     }
 
     if(rp_module_ctx.app.init_func() < 0) {
