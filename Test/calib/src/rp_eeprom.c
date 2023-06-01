@@ -241,6 +241,26 @@ void RpPrintEepromCalData(rp_HPeModels_t model,rp_eepromWpData_t *_eepromData,bo
     fprintf(stdout, "\n");
 }
 
+void RpPrintEepromCalDataUni(rp_eepromUniData_t *_eepromData,bool verb,bool hex){
+    if (verb){
+        printf(hex ? "dataStructureId = 0x%X\n" : "dataStructureId = %d\n",_eepromData->dataStructureId);
+        printf(hex ? "wpCheck = 0x%X\n" : "wpCheck = %d\n",_eepromData->wpCheck);
+        printf(hex ? "count = 0x%X\n" : "count = %d\n",_eepromData->count);
+        for(int i = 0; i < _eepromData->count; ++i) {
+            char *name = NULL;
+            rp_GetNameOfUniversalId(_eepromData->item[i].id,&name);
+            printf( hex ? "%s (%d) = 0x%X\n" : "%s (%d) = %d\n", name, _eepromData->item[i].id, _eepromData->item[i].value);
+        }
+        return;
+    }
+    for(int i = 0; i < _eepromData->count; ++i) {
+        fprintf(stdout, hex ? "0x%X\t0x%X\t" : "%20d%20d", _eepromData->item[i].id,_eepromData->item[i].value);
+    }
+    fprintf(stdout, "\n");
+
+}
+
+
 void print_eeprom(rp_HPeModels_t model,rp_eepromWpData_t *data,int mode){
     /* Print */
     if (mode & WANT_VERBOSE ) {
@@ -294,4 +314,8 @@ void print_eeprom(rp_HPeModels_t model,rp_eepromWpData_t *data,int mode){
             }
         }
     }
+}
+
+void print_eepromUni(rp_eepromUniData_t *data,int mode){
+    RpPrintEepromCalDataUni(data,mode & WANT_VERBOSE ,mode & WANT_HEX);
 }

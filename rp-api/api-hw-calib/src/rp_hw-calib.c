@@ -17,14 +17,15 @@
 
 #include "rp_hw-calib.h"
 #include "calib.h"
+#include "calib_universal.h"
 
 
-int rp_CalibInit(){
+rp_calib_error rp_CalibInit(){
     return calib_Init(false);
 }
 
-int rp_CalibInitSpecific(rp_HPeModels_t model){
-    return calib_InitModel(model,false);
+rp_calib_error rp_CalibInitSpecific(rp_HPeModels_t model){
+    return calib_InitModel(model,false,false);
 }
 
 rp_calib_params_t rp_GetCalibrationSettings(){
@@ -35,68 +36,73 @@ rp_calib_params_t rp_GetDefaultCalibrationSettings(){
     return calib_GetDefaultCalib();
 }
 
-int rp_CalibrationReset(bool use_factory_zone){
-    return calib_Reset(use_factory_zone);
+rp_calib_error rp_CalibrationReset(bool use_factory_zone,bool is_new_format){
+    return calib_Reset(use_factory_zone,is_new_format);
 }
 
-int rp_CalibrationFactoryReset(){
-    return calib_LoadFromFactoryZone();
+rp_calib_error rp_CalibrationFactoryReset(bool convert_to_new){
+    return calib_LoadFromFactoryZone(convert_to_new);
 }
 
-int rp_CalibrationWriteParams(rp_calib_params_t calib_params,bool use_factory_zone){
+rp_calib_error rp_CalibrationWriteParams(rp_calib_params_t calib_params,bool use_factory_zone){
     return calib_WriteDirectlyParams(&calib_params,use_factory_zone);
 }
 
-int rp_CalibrationSetParams(rp_calib_params_t calib_params){
+rp_calib_error rp_CalibrationSetParams(rp_calib_params_t calib_params){
     return calib_SetParams(&calib_params);
 }
 
-int rp_CalibGetEEPROM(rp_eepromWpData_t *calib_params,bool use_factory_zone){
-    return calib_GetEEPROM(calib_params,use_factory_zone);
+rp_calib_error rp_CalibGetEEPROM(uint8_t **data,uint16_t *size,bool use_factory_zone){
+    return calib_GetEEPROM(data,size,use_factory_zone);
 }
 
-int rp_CalibConvertEEPROM(rp_eepromWpData_t *calib_params,rp_calib_params_t *out){
-    return calib_ConvertEEPROM(calib_params,out);
+rp_calib_error rp_CalibConvertEEPROM(uint8_t *data,uint16_t size,rp_calib_params_t *out){
+    return calib_ConvertEEPROM(data,size,out);
 }
 
-int rp_CalibPrint(rp_calib_params_t *calib){
+rp_calib_error rp_CalibPrint(rp_calib_params_t *calib){
     return calib_Print(calib);
 }
 
-int rp_CalibGetFastADCFilter(rp_channel_calib_t channel,channel_filter_t *out){
+rp_calib_error rp_CalibGetFastADCFilter(rp_channel_calib_t channel,channel_filter_t *out){
     return calib_GetFastADCFilter(channel,out);
 }
 
-int rp_CalibGetFastADCFilter_1_20(rp_channel_calib_t channel,channel_filter_t *out){
+rp_calib_error rp_CalibGetFastADCFilter_1_20(rp_channel_calib_t channel,channel_filter_t *out){
     return calib_GetFastADCFilter_1_20(channel,out);
 }
 
-int rp_CalibGetFastADCCalibValue(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, double *gain,int32_t *offset){
+rp_calib_error rp_CalibGetFastADCCalibValue(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, double *gain,int32_t *offset){
     uint_gain_calib_t c;
     return calib_GetFastADCCalibValue(channel,mode,gain,offset,&c);
 }
 
-int rp_CalibGetFastADCCalibValue_1_20(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, double *gain,int32_t *offset){
+rp_calib_error rp_CalibGetFastADCCalibValue_1_20(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, double *gain,int32_t *offset){
     uint_gain_calib_t c;
     return calib_GetFastADCCalibValue_1_20(channel,mode,gain,offset,&c);
 }
 
-int rp_CalibGetFastADCCalibValueI(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, uint_gain_calib_t *calib){
+rp_calib_error rp_CalibGetFastADCCalibValueI(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, uint_gain_calib_t *calib){
     double gain;
     return calib_GetFastADCCalibValue(channel,mode,&gain,&calib->offset,calib);
 }
 
-int rp_CalibGetFastADCCalibValue_1_20I(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, uint_gain_calib_t *calib){
+rp_calib_error rp_CalibGetFastADCCalibValue_1_20I(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, uint_gain_calib_t *calib){
     double gain;
     return calib_GetFastADCCalibValue_1_20(channel,mode,&gain,&calib->offset,calib);
 }
 
-int rp_CalibGetFastDACCalibValue(rp_channel_calib_t channel,rp_gen_gain_calib_t mode, double *gain,int32_t *offset){
+rp_calib_error rp_CalibGetFastDACCalibValue(rp_channel_calib_t channel,rp_gen_gain_calib_t mode, double *gain,int32_t *offset){
     uint_gain_calib_t c;
     return calib_GetFastDACCalibValue(channel,mode,gain,offset,&c);
 }
 
-int rp_CalibGetFastDACCalibValueI(rp_channel_calib_t channel,rp_gen_gain_calib_t mode, uint_gain_calib_t *calib){
+rp_calib_error rp_CalibGetFastDACCalibValueI(rp_channel_calib_t channel,rp_gen_gain_calib_t mode, uint_gain_calib_t *calib){
     double gain;
     return calib_GetFastDACCalibValue(channel,mode,&gain,&calib->offset,calib);
+}
+
+rp_calib_error rp_GetNameOfUniversalId(uint16_t id, char** name){
+    *name = getNameOfUniversalId(id);
+    return name ? RP_HP_OK : RP_HW_CALIB_EIP;
 }

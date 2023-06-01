@@ -2,15 +2,6 @@
 #include <ctime>
 #include "calib.h"
 
-// float calibFullScaleToVoltage(uint32_t fullScaleGain) {
-//     if (fullScaleGain == 0) return 1;
-//     return (float) ((float)fullScaleGain  * 100.0 / ((uint64_t)1<<32));
-// }
-
-// uint32_t calibFullScaleFromVoltage(float voltageScale) {
-//     return (uint32_t) (voltageScale / 100.0 * ((uint64_t)1<<32));
-// }
-
 
 CCalib::Ptr CCalib::Create(COscilloscope::Ptr _acq)
 {
@@ -35,11 +26,11 @@ CCalib::~CCalib()
 }
 
 int CCalib::resetCalibToZero(){
-    return rp_CalibrationReset(false);
+    return rp_CalibrationReset(false,true);
 }
 
 int CCalib::resetCalibToFactory(){
-    return rp_CalibrationFactoryReset();
+    return rp_CalibrationFactoryReset(true);
 }
 
 void CCalib::restoreCalib(){

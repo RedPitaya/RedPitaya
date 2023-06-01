@@ -24,14 +24,15 @@
 
 /** Bit flags to represent options on the command-line. */
 typedef enum {
-	WANT_READ     = 0x01,
-	WANT_WRITE    = 0x02,
-	WANT_DEFAULTS = 0x04,
-	WANT_VERBOSE  = 0x08,
-	WANT_Z_MODE   = 0x10,
-    WANT_HEX      = 0x20,
-    WANT_INIT     = 0x40,
-    WANT_PRINT    = 0x80
+	WANT_READ       = 0x01,
+	WANT_WRITE      = 0x02,
+	WANT_DEFAULTS   = 0x04,
+	WANT_VERBOSE    = 0x08,
+	WANT_Z_MODE     = 0x10,
+    WANT_HEX        = 0x20,
+    WANT_INIT       = 0x40,
+    WANT_PRINT      = 0x80,
+    WANT_NEW_FORMAT = 0x100
 } WANT_FLAGS;
 
 typedef enum {
@@ -154,6 +155,7 @@ typedef enum {
 } calPar_v3_t;
 
 void print_eeprom(rp_HPeModels_t model, rp_eepromWpData_t *data,int mode);
+void print_eepromUni(rp_eepromUniData_t *data,int mode);
 int getCalibSize(rp_HPeModels_t model);
 
 #endif

@@ -34,10 +34,13 @@
 #define DEFAULT_1_20_FILT_PP 0x2666
 #define DEFAULT_1_20_FILT_KK 0xd9999a
 
-#define CHEK_GAIN_LIMIT(X) (X < 0 ? 0 : (X > 2 ? 1.999999 : X))
+#define CHECK_GAIN_LIMIT(X) (X < 0 ? 0 : (X > 50 ? 50 : X))
+
+#define CHECK_VALID_GAIN_LIMIT(X) (X > 0.8 && X < 1.2)
 
 uint8_t* readFromEpprom(uint16_t *size);
 uint8_t* readFromFactoryEpprom(uint16_t *size);
+uint8_t* readHeader(uint16_t *size, bool use_factory_zone);
 
 uint16_t writeToEpprom(uint8_t* buffer,uint16_t size);
 uint16_t writeToFactoryEpprom(uint8_t* buffer,uint16_t size);
@@ -47,10 +50,10 @@ bool convertV2(rp_calib_params_t *param,rp_calib_params_v2_t *out);
 bool convertV3(rp_calib_params_t *param,rp_calib_params_v3_t *out);
 bool convertV4(rp_calib_params_t *param,rp_calib_params_v1_t *out);
 
-rp_calib_params_t convertV1toCommon(rp_calib_params_v1_t *param);
-rp_calib_params_t convertV2toCommon(rp_calib_params_v2_t *param);
-rp_calib_params_t convertV3toCommon(rp_calib_params_v3_t *param);
-rp_calib_params_t convertV4toCommon(rp_calib_params_v1_t *param);
+rp_calib_params_t convertV1toCommon(rp_calib_params_v1_t *param, bool adjust);
+rp_calib_params_t convertV2toCommon(rp_calib_params_v2_t *param, bool adjust);
+rp_calib_params_t convertV3toCommon(rp_calib_params_v3_t *param, bool adjust);
+rp_calib_params_t convertV4toCommon(rp_calib_params_v1_t *param, bool adjust);
 
 rp_calib_params_t getDefault(rp_HPeModels_t model);
 
@@ -58,5 +61,10 @@ uint_gain_calib_t convertFloatToInt(channel_calib_t *param,uint8_t precision);
 
 bool recalculateGain(rp_calib_params_t *param);
 bool recalculateCalibValue(rp_calib_params_t *param);
+
+rp_calib_error adjustingBaseScaleEx(float *baseScale,int32_t *offset,bool adjust,uint32_t *calibValue);
+rp_calib_error adjustingBaseScale(channel_calib_t * calib,bool adjust);
+
+uint32_t calibBaseScaleFromVoltage(float voltageScale,bool uni_is_calib);
 
 #endif //__CALIB_H
