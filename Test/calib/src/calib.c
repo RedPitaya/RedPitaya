@@ -45,7 +45,7 @@ void usage()
         "       The -n flag has no effect. The system automatically determines the type of stored data.\n"
         "\n"
         " -w    Write calibration values to eeprom (from stdin).\n"
-        "       Possible combination of flags: -wn, -wf, -wfn\n"
+        "       Possible combination of flags: -wn, -wf, -wfn, -wmn, -wfmn\n"
         "\n"
         " -f    Use factory address space.\n"
         " -d    Reset calibration values in eeprom from factory zone.\n"
@@ -58,6 +58,7 @@ void usage()
         " -h    Print this info.\n"
         " -x    Print in hex.\n"
         " -u    Print stored calibration in unified format.\n"
+        " -m    Modify specific parameter in universal calibration\n"
         " -n    Flag for working with the new calibration storage format.\n"
         "\n";
 
@@ -65,7 +66,7 @@ void usage()
 }
 
 /** Write calibration data, obtained from stdin, to eeprom */
-int WriteCalib(rp_HPeModels_t model, bool factory,bool is_new)
+int WriteCalib(rp_HPeModels_t model, bool factory,bool is_new,bool is_modify)
 {
     const char delimiters[] = " ,:;\t";
     char buf[2048];
@@ -81,7 +82,7 @@ int WriteCalib(rp_HPeModels_t model, bool factory,bool is_new)
     }
     uint8_t dataStruct = buff[0];
     uint8_t wp = buff[1];
-    free(buff);
+
 
     rp_eepromWpData_t eeprom;
     rp_eepromUniData_t new_eeprom;
@@ -91,28 +92,69 @@ int WriteCalib(rp_HPeModels_t model, bool factory,bool is_new)
         return -1;
     }
 
-    const char *p = strtok( buf, delimiters );
-    int i = 0;
-    int calibSize = is_new ? MAX_UNIVERSAL_ITEMS_COUNT : getCalibSize(model);
-    if (calibSize < 0) return -1;
-    while ( p && i < calibSize ) {
-        long int x = strtol(p, NULL, 0);
-        if (is_new){
-            new_eeprom.item[i].id = x;
+    if (is_modify && !is_new){
+        free(buff);
+        fprintf(stderr, "ERROR: Invalid flag combination!\n");
+        return -1;
+    }
+    if (!is_modify){
+        const char *p = strtok( buf, delimiters );
+        int i = 0;
+        int calibSize = is_new ? MAX_UNIVERSAL_ITEMS_COUNT : getCalibSize(model);
+        if (calibSize < 0) return -1;
+        while ( p && i < calibSize ) {
+            long int x = strtol(p, NULL, 0);
+            if (is_new){
+                new_eeprom.item[i].id = x;
+                p = strtok( 0, delimiters );
+                if (!p){
+                    free(buff);
+                    fprintf(stderr, "ERROR: Read calib value failed!\n");
+                    return -1;
+                }
+                long int val = strtol(p, NULL, 0);
+                new_eeprom.item[i].value = val;
+            }else{
+                eeprom.feCalPar[i] = x;
+            }
+            p = strtok( 0, delimiters );
+            i++;
+        }
+        new_eeprom.count = i;
+    }else{
+        memcpy(&new_eeprom,buff,size);
+        const char *p = strtok( buf, delimiters );
+        int i = 0;
+        int calibSize = is_new ? MAX_UNIVERSAL_ITEMS_COUNT : getCalibSize(model);
+        if (calibSize < 0) return -1;
+        while ( p && i < calibSize ) {
+            long int x = strtol(p, NULL, 0);
+            int idx = -1;
+            for(int z = 0; z < new_eeprom.count; z++){
+                if (new_eeprom.item[z].id == x){
+                    idx = z;
+                    break;
+                }
+            }
+            if (idx == -1){
+                free(buff);
+                fprintf(stderr, "ERROR: Can't find calibration parameter!\n");
+                return -1;
+            }
+            new_eeprom.item[idx].id = x;
             p = strtok( 0, delimiters );
             if (!p){
+                free(buff);
                 fprintf(stderr, "ERROR: Read calib value failed!\n");
                 return -1;
             }
             long int val = strtol(p, NULL, 0);
-            new_eeprom.item[i].value = val;
-        }else{
-            eeprom.feCalPar[i] = x;
+            new_eeprom.item[idx].value = val;
+
+            p = strtok( 0, delimiters );
+            i++;
         }
-        p = strtok( 0, delimiters );
-        i++;
     }
-    new_eeprom.count = i;
 #ifdef DEBUG
     // Debug output
     if (is_new){
@@ -132,14 +174,14 @@ int WriteCalib(rp_HPeModels_t model, bool factory,bool is_new)
     new_eeprom.wpCheck = wp + 1;
 
     rp_calib_params_t calib;
-    buff = is_new ? (uint8_t*)&new_eeprom : (uint8_t*)&eeprom;
+    uint8_t *wbuff = is_new ? (uint8_t*)&new_eeprom : (uint8_t*)&eeprom;
     size = is_new ? sizeof(rp_eepromUniData_t) : sizeof(rp_eepromWpData_t);
-    ret =  rp_CalibConvertEEPROM(buff,size,&calib);
+    ret =  rp_CalibConvertEEPROM(wbuff,size,&calib);
     if (ret) {
         fprintf(stderr, "ERROR: Convert data failed!\n");
         return ret;
     }
-
+    free(buff);
     return rp_CalibrationWriteParams(calib,factory);
 }
 
@@ -154,7 +196,7 @@ int main(int argc, char **argv)
     }
 
     /* Parse options */
-    const char *optstring = "rwfdvhzxiun";
+    const char *optstring = "rwfdvhzxiunm";
     unsigned int want_bits = 0;
     bool factory = false;
 
@@ -203,6 +245,10 @@ int main(int argc, char **argv)
                 want_bits |= WANT_NEW_FORMAT;
             break;
 
+        case 'm':
+                want_bits |= WANT_MODIFY;
+            break;
+
         case 'h':
             usage();
             exit ( EXIT_SUCCESS );
@@ -229,7 +275,7 @@ int main(int argc, char **argv)
 
     /* Write */
     if (want_bits & WANT_WRITE) {
-        ret = WriteCalib(model,factory, want_bits & WANT_NEW_FORMAT);
+        ret = WriteCalib(model,factory, want_bits & WANT_NEW_FORMAT,want_bits & WANT_MODIFY);
         if (ret) {
             fprintf(stderr, "ERROR: Write failed!\n");
             return ret;
@@ -262,7 +308,7 @@ int main(int argc, char **argv)
         rp_CalibPrint(&calib);
     }
 
-    /* Reset to factory defaults */
+    /* Reset to defaults */
     if (want_bits & WANT_INIT) {
         ret= rp_CalibInit();
         if (ret) {
