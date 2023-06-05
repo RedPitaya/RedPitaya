@@ -189,6 +189,28 @@ int get_float(float *value, const char *str,const char *message,int min_value, i
     return 0;
 }
 
+int get_dc_mode(int *value, const char *str)
+{
+    if  (strncmp(str, "1", 1) == 0) {
+        *value = 1;
+        return 0;
+    }
+
+    if  (strncmp(str, "2", 1) == 0)  {
+        *value = 2;
+        return 0;
+    }
+
+    if  ((strncmp(str, "B", 1) == 0) || (strncmp(str, "b", 1) == 0))  {
+        *value = 3;
+        return 0;
+    }
+
+    fprintf(stderr, "Unknown DC channel value: %s\n", str);
+    return -1;
+}
+
+
 /** Print usage information */
 auto usage(char const* progName) -> void{
 
@@ -320,6 +342,24 @@ auto parse(int argc, char* argv[]) -> Options{
                         opt.error = true;
                         return opt;
                     }
+                }
+                break;
+            }
+
+            /* DC mode */
+            case 'd':
+            {
+                int dc_mode;
+                if (get_dc_mode(&dc_mode, optarg) != 0) {
+                    fprintf(stderr, "Error key --get: %s\n", optarg);
+                    opt.error = true;
+                    return opt;
+                }
+                if (dc_mode == 1 || dc_mode == 3) {
+                    opt.ac_dc_mode[0] = RP_DC;
+                }
+                if (dc_mode == 2 || dc_mode == 3) {
+                    opt.ac_dc_mode[1] = RP_DC;
                 }
                 break;
             }
