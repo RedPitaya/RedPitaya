@@ -826,24 +826,7 @@ int synthesize_signal(rp_channel_t channel) {
     uint16_t buf_size = DAC_BUFFER_SIZE;
     if(waveform == RP_WAVEFORM_SWEEP) phase = 0;
 
-    float fs = 0;
-    if (rp_HPGetFastDACGain(convertCh(channel), &fs) != RP_HP_OK){
-        fprintf(stderr,"[Error:synthesize_signal] Can't get fast DAC full scale\n");
-        return RP_NOTS;
-    }
-
-    float fsBase = 0;
-    if (rp_HPGetHWDACFullScale(&fsBase) != RP_HP_OK){
-        fprintf(stderr,"[Error:synthesize_signal] Can't get fast HW DAC full scale\n");
-        return RP_NOTS;
-    }
-
-    if (fsBase == 0){
-        fprintf(stderr,"[Error:synthesize_signal] HW DAC Full Scale is zero\n");
-        return RP_NOTS;
-    }
-
-    float scale = fs / fsBase;
+    float scale = 1;
 
     switch (waveform) {
         case RP_WAVEFORM_SINE     : synthesis_sin      (scale,data,buf_size);                 break;

@@ -89,7 +89,7 @@ profiles_t stem_250_12_v1_2 = {
     .fast_adc_spectrum_resolution = 62500000,
 
     .fast_adc_full_scale = 1,
-    .fast_dac_full_scale = 1,
+    .fast_dac_full_scale = 2,
 
     .is_daisy_chain_clock_sync = false
 };
