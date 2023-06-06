@@ -1073,6 +1073,10 @@ int gen_setGainOut(rp_channel_t channel,rp_gen_gain_t mode){
     }else{
         return status;
     }
+    int ret = gen_setAmplitude(channel,ch_amplitude[channel]);
+    if (ret != RP_OK){
+        return ret;
+    }
     return gen_setOffset(channel,ch_offset[channel]);
 }
 
