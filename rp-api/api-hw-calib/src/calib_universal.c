@@ -364,7 +364,7 @@ rp_calib_params_t convertUniversaltoCommon(rp_HPeModels_t model,rp_calib_params_
 
             calib.fast_dac_x5[1].baseScale = 1.0;
             GET_PARAMETER(calib.fast_dac_x5[1].calibValue,UC_DAC_CH2_GAIN_X5,param)
-            GET_PARAMETER(calib.fast_dac_x5[1].offset,UC_DAC_CH2_GAIN_X5,param)
+            GET_PARAMETER(calib.fast_dac_x5[1].offset,UC_DAC_CH2_OFFSET_X5,param)
             break;
         }
 

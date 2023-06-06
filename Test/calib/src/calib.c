@@ -97,10 +97,11 @@ int WriteCalib(rp_HPeModels_t model, bool factory,bool is_new,bool is_modify)
         fprintf(stderr, "ERROR: Invalid flag combination!\n");
         return -1;
     }
+    int calibSize = 0;
     if (!is_modify){
         const char *p = strtok( buf, delimiters );
         int i = 0;
-        int calibSize = is_new ? MAX_UNIVERSAL_ITEMS_COUNT : getCalibSize(model);
+        calibSize = is_new ? MAX_UNIVERSAL_ITEMS_COUNT : getCalibSize(model);
         if (calibSize < 0) return -1;
         while ( p && i < calibSize ) {
             long int x = strtol(p, NULL, 0);
@@ -125,7 +126,7 @@ int WriteCalib(rp_HPeModels_t model, bool factory,bool is_new,bool is_modify)
         memcpy(&new_eeprom,buff,size);
         const char *p = strtok( buf, delimiters );
         int i = 0;
-        int calibSize = is_new ? MAX_UNIVERSAL_ITEMS_COUNT : getCalibSize(model);
+        calibSize = is_new ? MAX_UNIVERSAL_ITEMS_COUNT : getCalibSize(model);
         if (calibSize < 0) return -1;
         while ( p && i < calibSize ) {
             long int x = strtol(p, NULL, 0);
@@ -158,11 +159,11 @@ int WriteCalib(rp_HPeModels_t model, bool factory,bool is_new,bool is_modify)
 #ifdef DEBUG
     // Debug output
     if (is_new){
-        for(i = 0; i < new_eeprom.count; i++) {
+        for(int i = 0; i < new_eeprom.count; i++) {
             fprintf(stdout, "(%20d,%20d)", new_eeprom.item[i].id,new_eeprom.item[i].value);
         }
     }else{
-        for(i = 0; i < calibSize; i++) {
+        for(int i = 0; i < calibSize; i++) {
             fprintf(stdout, "%20d", eeprom.feCalPar[i]);
         }
         fprintf(stdout, "\n");
