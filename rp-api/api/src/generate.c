@@ -336,12 +336,6 @@ int generate_setAmplitude(rp_channel_t channel,rp_gen_gain_t gain, float amplitu
 
 int generate_setDCOffset(rp_channel_t channel,rp_gen_gain_t gain, float offset) {
 
-    float fs = 0;
-    if (rp_HPGetFastDACGain(convertCh(channel), &fs) != RP_HP_OK){
-        fprintf(stderr,"[Error:generate_setDCOffset] Can't get fast DAC full scale\n");
-        return RP_NOTS;
-    }
-
     float fsBase = 0;
     if (rp_HPGetHWDACFullScale(&fsBase) != RP_HP_OK){
         fprintf(stderr,"[Error:generate_setDCOffset] Can't get fast HW DAC full scale\n");
@@ -352,8 +346,6 @@ int generate_setDCOffset(rp_channel_t channel,rp_gen_gain_t gain, float offset) 
         fprintf(stderr,"[Error:generate_setDCOffset] HW DAC Full Scale is zero\n");
         return RP_NOTS;
     }
-
-    float scale = fs / fsBase;
 
     uint8_t bits = 0;
     if (rp_HPGetFastDACBits(&bits) != RP_HP_OK){
@@ -405,7 +397,7 @@ int generate_setDCOffset(rp_channel_t channel,rp_gen_gain_t gain, float offset) 
     // uint32_t amp_max = calib_getGenScale(channel,gain);
     getChannelPropertiesAddress(&ch_properties, channel);
     // uint32_t value = cmn_CnvVToCnt(DATA_BIT_LENGTH, offset, (float) (OFFSET_MAX/2.f), false, amp_max, dc_offs, 0);
-    int32_t value = cmn_convertToCnt(offset,bits,fsBase,is_sign,gain_calib,offset_calib) / scale;
+    int32_t value = cmn_convertToCnt(offset,bits,fsBase,is_sign,gain_calib,offset_calib);
     cmn_DebugCh("ch_properties->amplitudeOffset",channel,value);
     ch_properties->amplitudeOffset = value;
     return RP_OK;
