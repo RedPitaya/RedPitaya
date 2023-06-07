@@ -291,7 +291,6 @@ uint32_t cmn_convertToCnt(float voltage,uint8_t bits,float fullScale,bool is_sig
     /* if negative remove higher bits that represent negative number */
     if (cnts < 0)
         cnts = cnts & mask;
-
     return (uint32_t)cnts;
 }
 
