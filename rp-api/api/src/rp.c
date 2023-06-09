@@ -1049,7 +1049,11 @@ int rp_AcqAxiEnable(rp_channel_t channel, bool enable)
 
 int rp_AcqGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_t* buffer)
 {
-    return acq_GetDataRaw(channel, pos, size, buffer);
+    return acq_GetDataRaw(channel, pos, size, buffer,false);
+}
+
+int rp_AcqGetDataRawWithCalib(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_t* buffer){
+    return acq_GetDataRaw(channel, pos, size, buffer,true);
 }
 
 int rp_AcqAxiGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_t* buffer)

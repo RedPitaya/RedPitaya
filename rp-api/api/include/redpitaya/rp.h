@@ -1047,6 +1047,19 @@ int rp_AcqAxiEnable(rp_channel_t channel, bool enable);
  */
 int rp_AcqGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_t* buffer);
 
+
+/**
+ * Returns the ADC buffer in calibrated raw units from specified position and desired size.
+ * Output buffer must be at least 'size' long.
+ * @param channel Channel A or B for which we want to retrieve the ADC buffer.
+ * @param pos Starting position of the ADC buffer to retrieve.
+ * @param size Length of the ADC buffer to retrieve. Returns length of filled buffer. In case of too small buffer, required size is returned.
+ * @param buffer The output buffer gets filled with the selected part of the ADC buffer.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetDataRawWithCalib(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_t* buffer);
+
 /**
  * Returns the AXI ADC buffer in raw units from specified position and desired size.
  * Output buffer must be at least 'size' long.

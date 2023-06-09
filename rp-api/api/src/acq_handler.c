@@ -995,7 +995,7 @@ uint32_t acq_GetNormalizedDataPos(uint32_t pos){
     return (pos % ADC_BUFFER_SIZE);
 }
 
-int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* buffer){
+int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* buffer,bool use_calib){
 
     CHECK_CHANNEL("acq_GetDataRaw")
 
@@ -1013,25 +1013,50 @@ int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* 
         return RP_EOOR;
     }
 
+    rp_acq_ac_dc_mode_t power_mode;
+    if (acq_GetAC_DC(channel,&power_mode) != RP_OK){
+        return RP_EOOR;
+    }
+
+    uint_gain_calib_t calib;
     uint8_t bits = 0;
     bool is_sign = false;
     int ret = rp_HPGetFastADCBits(&bits);
     ret |= rp_HPGetFastADCIsSigned(&is_sign);
+
+    switch (mode)
+    {
+        case RP_LOW:
+            ret |= rp_CalibGetFastADCCalibValueI(convertCh(channel),convertPower(power_mode),&calib);
+            break;
+
+        case RP_HIGH:
+            ret |= rp_CalibGetFastADCCalibValue_1_20I(convertCh(channel),convertPower(power_mode),&calib);
+            break;
+
+        default:
+            fprintf(stderr,"[Error:acq_GetDataRaw] Unknown mode: %d\n",mode);
+            return RP_EOOR;
+            break;
+    }
 
     if (ret != RP_HW_CALIB_OK){
         fprintf(stderr,"[Error:acq_GetDataRaw] Error get calibaration: %d\n",ret);
         return RP_EOOR;
     }
 
+    uint32_t gain  = use_calib ?  calib.gain : 1;
+    uint32_t g_base = use_calib ? calib.base : 1;
+    int32_t offset  = use_calib ? calib.offset  : 0;
 
     uint32_t mask = ((uint64_t)1 << bits) - 1;
 
     for (uint32_t i = 0; i < (*size); ++i) {
         uint32_t cnts = (raw_buffer[(pos + i) % ADC_BUFFER_SIZE]) & mask;
         if (is_sign)
-            buffer[i] = cmn_CalibCntsSigned(cnts,bits,1,1,0);
+            buffer[i] = cmn_CalibCntsSigned(cnts,bits,gain,g_base,offset);
         else
-            buffer[i] = cmn_CalibCntsUnsigned(cnts,bits,1,1,0);
+            buffer[i] = cmn_CalibCntsUnsigned(cnts,bits,gain,g_base,offset);
     }
 
     return RP_OK;
@@ -1107,7 +1132,7 @@ int acq_GetDataRawV2(uint32_t pos,buffers_t *out)
             fprintf(stderr,"[FATAL ERROR] Buffer[0] for fill is NULL\n");
             assert(false);
         }
-        int ret = acq_GetDataRaw(RP_CH_1,pos,&size,out->ch_i[0]);
+        int ret = acq_GetDataRaw(RP_CH_1,pos,&size,out->ch_i[0],false);
         if (ret != RP_OK){
             return ret;
         }
@@ -1120,7 +1145,7 @@ int acq_GetDataRawV2(uint32_t pos,buffers_t *out)
             fprintf(stderr,"[FATAL ERROR] Buffer[1] for fill is NULL\n");
             assert(false);
         }
-        int ret = acq_GetDataRaw(RP_CH_2,pos,&size,out->ch_i[1]);
+        int ret = acq_GetDataRaw(RP_CH_2,pos,&size,out->ch_i[1],false);
         if (ret != RP_OK){
             return ret;
         }
@@ -1133,7 +1158,7 @@ int acq_GetDataRawV2(uint32_t pos,buffers_t *out)
             fprintf(stderr,"[FATAL ERROR] Buffer[2] for fill is NULL\n");
             assert(false);
         }
-        int ret = acq_GetDataRaw(RP_CH_3,pos,&size,out->ch_i[2]);
+        int ret = acq_GetDataRaw(RP_CH_3,pos,&size,out->ch_i[2],false);
         if (ret != RP_OK){
             return ret;
         }
@@ -1146,7 +1171,7 @@ int acq_GetDataRawV2(uint32_t pos,buffers_t *out)
             fprintf(stderr,"[FATAL ERROR] Buffer[3] for fill is NULL\n");
             assert(false);
         }
-        int ret = acq_GetDataRaw(RP_CH_4,pos,&size,out->ch_i[3]);
+        int ret = acq_GetDataRaw(RP_CH_4,pos,&size,out->ch_i[3],false);
         if (ret != RP_OK){
             return ret;
         }
@@ -1172,7 +1197,7 @@ int acq_GetDataPosRaw(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos
     }
 
     *buffer_size = size;
-    return acq_GetDataRaw(channel, start_pos, buffer_size, buffer);
+    return acq_GetDataRaw(channel, start_pos, buffer_size, buffer,false);
 }
 
 /**
@@ -1188,7 +1213,7 @@ int acq_GetOldestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer)
     acq_GetWritePointer(&pos);
     pos++;
 
-    return acq_GetDataRaw(channel, pos, size, buffer);
+    return acq_GetDataRaw(channel, pos, size, buffer,false);
 }
 
 int acq_GetLatestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer)
@@ -1208,7 +1233,7 @@ int acq_GetLatestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer)
     }
     pos -= (*size);
 
-    return acq_GetDataRaw(channel, pos, size, buffer);
+    return acq_GetDataRaw(channel, pos, size, buffer,false);
 }
 
 

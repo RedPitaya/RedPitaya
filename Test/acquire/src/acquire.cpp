@@ -252,7 +252,10 @@ int main(int argc, char *argv[])
             if (option.enableAXI) {
                 rp_AcqAxiGetDataRaw(ch, pos, &acq_u_size, buffers[i]);
             } else {
-                rp_AcqGetDataRaw(ch, pos, &acq_u_size, buffers[i]);
+                if (option.disableCalibration)
+                    rp_AcqGetDataRaw(ch, pos, &acq_u_size, buffers[i]);
+                else
+                    rp_AcqGetDataRawWithCalib(ch, pos, &acq_u_size, buffers[i]);
             }
         }
 
@@ -273,7 +276,7 @@ int main(int argc, char *argv[])
     if (option.enableAXI) {
         rp_AcqAxiEnable(RP_CH_1, false);
         rp_AcqAxiEnable(RP_CH_2, false);
-    } 
+    }
 
 
     if (rp_Release() != RP_OK){

@@ -74,7 +74,7 @@ int acq_GetADCSamplePeriod(double *value);
 
 int acq_GetDataPosRaw(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, int16_t* buffer, uint32_t *buffer_size);
 int acq_GetDataPosV(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, float* buffer, uint32_t *buffer_size);
-int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* buffer);
+int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* buffer,bool use_calib);
 int acq_axi_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* buffer);
 int acq_GetOldestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer);
 int acq_GetLatestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer);
