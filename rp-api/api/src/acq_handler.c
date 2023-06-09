@@ -617,8 +617,6 @@ int acq_axi_GetWritePointerAtTrig(rp_channel_t channel, uint32_t* pos)
 
 int acq_SetTriggerLevel(rp_channel_trigger_t channel, float voltage){
 
-    CHECK_CHANNEL("acq_SetTriggerLevel")
-
     switch(channel){
         case RP_T_CH_1: return acq_SetChannelThreshold(RP_CH_1, voltage);
         case RP_T_CH_2: return acq_SetChannelThreshold(RP_CH_2, voltage);
@@ -650,8 +648,6 @@ int acq_SetTriggerLevel(rp_channel_trigger_t channel, float voltage){
 }
 
 int acq_GetTriggerLevel(rp_channel_trigger_t channel,float *voltage){
-
-    CHECK_CHANNEL("acq_GetTriggerLevel")
 
     switch(channel){
         case RP_T_CH_1: return acq_GetChannelThreshold(RP_CH_1, voltage);
