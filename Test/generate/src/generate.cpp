@@ -104,43 +104,44 @@ int gen(config_t &conf)
     }else{
         calib = rp_GetDefaultCalibrationSettings();
     }
-    if (conf.freq != 0) {
-        rp_CalibrationSetParams(calib);
-        rp_GenOffset(ch,0);
-        rp_GenAmp(ch,conf.amp / 2.0);
-        rp_GenFreq(ch,conf.freq);
-        rp_GenTriggerSource(ch,RP_GEN_TRIG_SRC_INTERNAL);
 
-        if (conf.type == RP_WAVEFORM_SINE){
-            rp_GenWaveform(ch, RP_WAVEFORM_SINE);
-        }
+    rp_CalibrationSetParams(calib);
+    rp_GenOffset(ch,0);
+    rp_GenAmp(ch,conf.amp / 2.0);
+    rp_GenFreq(ch,conf.freq);
+    rp_GenTriggerSource(ch,RP_GEN_TRIG_SRC_INTERNAL);
 
-        if (conf.type == RP_WAVEFORM_SQUARE){
-            rp_GenWaveform(ch, RP_WAVEFORM_SQUARE);
-        }
-
-        if (conf.type == RP_WAVEFORM_TRIANGLE){
-            rp_GenWaveform(ch, RP_WAVEFORM_TRIANGLE);
-        }
-
-        if (conf.type == RP_WAVEFORM_DC){
-            rp_GenWaveform(ch, RP_WAVEFORM_DC);
-        }
-
-        if (conf.type == RP_WAVEFORM_SWEEP){
-            rp_GenSweepDir(ch,RP_GEN_SWEEP_DIR_UP_DOWN);
-            rp_GenSweepMode(ch,RP_GEN_SWEEP_MODE_LOG);
-            rp_GenSweepStartFreq(ch,conf.freq);
-            rp_GenSweepEndFreq(ch,conf.end_freq);
-            rp_GenWaveform(ch, RP_WAVEFORM_SWEEP);
-        }
-        if (rp_HPGetIsGainDACx5OrDefault()){
-            rp_GenSetGainOut(ch,conf.gain);
-        }
-        rp_GenOutEnable(ch);
-        rp_GenSynchronise();
-        rp_Release();
+    if (conf.type == RP_WAVEFORM_SINE){
+        rp_GenWaveform(ch, RP_WAVEFORM_SINE);
     }
 
+    if (conf.type == RP_WAVEFORM_SQUARE){
+        rp_GenWaveform(ch, RP_WAVEFORM_SQUARE);
+    }
+
+    if (conf.type == RP_WAVEFORM_TRIANGLE){
+        rp_GenWaveform(ch, RP_WAVEFORM_TRIANGLE);
+    }
+
+    if (conf.type == RP_WAVEFORM_DC){
+        rp_GenWaveform(ch, RP_WAVEFORM_DC);
+    }
+
+    if (conf.type == RP_WAVEFORM_SWEEP){
+        rp_GenSweepDir(ch,RP_GEN_SWEEP_DIR_UP_DOWN);
+        rp_GenSweepMode(ch,RP_GEN_SWEEP_MODE_LOG);
+        rp_GenSweepStartFreq(ch,conf.freq);
+        rp_GenSweepEndFreq(ch,conf.end_freq);
+        rp_GenWaveform(ch, RP_WAVEFORM_SWEEP);
+    }
+    if (rp_HPGetIsGainDACx5OrDefault()){
+        rp_GenSetGainOut(ch,conf.gain);
+    }
+
+    if (conf.freq != 0) {
+        rp_GenOutEnable(ch);
+        rp_GenSynchronise();
+    }
+    rp_Release();
     return 0;
 }
