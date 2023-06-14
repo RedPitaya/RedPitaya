@@ -36,7 +36,7 @@
 
 #define CHECK_GAIN_LIMIT(X) (X < 0 ? 0 : (X > 50 ? 50 : X))
 
-#define CHECK_VALID_GAIN_LIMIT(X) (X > 0.8 && X < 1.2)
+#define CHECK_VALID_GAIN_LIMIT(X) (X >= 0.8 && X <= 1.2)
 
 uint8_t* readFromEpprom(uint16_t *size);
 uint8_t* readFromFactoryEpprom(uint16_t *size);

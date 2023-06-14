@@ -326,7 +326,8 @@ int generate_setAmplitude(rp_channel_t channel,rp_gen_gain_t gain, float amplitu
 
     //uint32_t value = cmn_CnvVToCnt(DATA_BIT_LENGTH, amplitude, AMPLITUDE_MAX , false, amp_max, 0, 0.0);
     // Spechal convert from Volt to RAW. 0x2000 = 1x
-    int32_t value = cmn_convertToCnt(amplitude, bits, fsBase,is_sign,1/gain_calib, 0);
+    int32_t value = cmn_convertToCnt(amplitude * gain_calib, bits, fsBase,is_sign,1, 0);
+    //  fprintf(stderr,"Gain %f amplitude  %f ofcalb %d res %d bits %d fsBase %f\n",gain_calib,amplitude,0,value,bits,fsBase);
     cmn_DebugCh("ch_properties->amplitudeScale",channel,value);
     ch_properties->amplitudeScale = value;
     return RP_OK;
@@ -393,7 +394,7 @@ int generate_setDCOffset(rp_channel_t channel,rp_gen_gain_t gain, float offset) 
 
     volatile ch_properties_t *ch_properties;
     getChannelPropertiesAddress(&ch_properties, channel);
-    int32_t value = cmn_convertToCnt(offset,bits,fsBase,is_sign,1/gain_calib,offset_calib);
+    int32_t value = cmn_convertToCnt(offset * gain_calib,bits,fsBase,is_sign,1,offset_calib);
 //    fprintf(stderr,"Gain %f offset  %f ofcalb %d res %d bits %d fsBase %f\n",gain_calib,offset,offset_calib,value,bits,fsBase);
     cmn_DebugCh("ch_properties->amplitudeOffset",channel,value);
     ch_properties->amplitudeOffset = value;

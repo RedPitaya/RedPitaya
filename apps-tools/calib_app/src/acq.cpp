@@ -22,10 +22,14 @@ m_mode(0),
 m_channel(RP_CH_1),
 m_mutex(),
 m_funcSelector(),
+m_avgFilter(),
 m_cursor1(0),
 m_cursor2(1),
 m_hyst(0.01),
-m_channels(0)
+m_channels(0),
+m_avg_filter(false),
+m_avg_filter_size(30),
+m_avg_filter_cur(0)
 {
     m_OscThreadRunState = false;
     m_zoomMode = false;
@@ -37,16 +41,24 @@ m_channels(0)
     for(uint8_t ch = 0; ch < m_channels; ch++){
         m_buffer.ch_i[ch] = new int16_t[ADC_BUFFER_SIZE];
         m_buffer.ch_f[ch] = new float[ADC_BUFFER_SIZE];
-    }
+        m_avg_filter_buffer_max[ch] = new float[m_avg_filter_size];
+        m_avg_filter_buffer_min[ch] = new float[m_avg_filter_size];
+        m_avg_filter_buffer_mean[ch] = new float[m_avg_filter_size];
+        m_avg_filter_buffer_p_p[ch] = new float[m_avg_filter_size];
 
+    }
+    resetAvgFilter();
 }
 
-COscilloscope::~COscilloscope()
-{
+COscilloscope::~COscilloscope(){
     stop();
     for(uint8_t ch = 0; ch < m_channels; ch++){
         delete[] m_buffer.ch_i[ch];
         delete[] m_buffer.ch_f[ch];
+        delete[] m_avg_filter_buffer_max[ch];
+        delete[] m_avg_filter_buffer_min[ch];
+        delete[] m_avg_filter_buffer_mean[ch];
+        delete[] m_avg_filter_buffer_p_p[ch];
     }
 }
 
@@ -129,6 +141,30 @@ void COscilloscope::updateAcqFilter(rp_channel_t _ch){
     }
 }
 
+auto COscilloscope::setAvgFilter(bool enable) -> void{
+    pthread_mutex_lock(&m_avgFilter);
+    m_avg_filter = enable;
+    pthread_mutex_unlock(&m_avgFilter);
+}
+
+auto COscilloscope::getAvgFilter() -> bool{
+    return m_avg_filter;
+}
+
+auto COscilloscope::resetAvgFilter() -> void{
+    pthread_mutex_lock(&m_avgFilter);
+    m_avg_filter_cur = 0;
+    for(uint32_t i = 0; i < m_avg_filter_size;i++){
+        for(uint8_t ch = 0; ch < m_channels; ch++){
+            m_avg_filter_buffer_max[ch][i] = INVALID_VALUE;
+            m_avg_filter_buffer_min[ch][i] = INVALID_VALUE;
+            m_avg_filter_buffer_p_p[ch][i] = INVALID_VALUE;
+            m_avg_filter_buffer_mean[ch][i] = INVALID_VALUE;
+        }
+    }
+    pthread_mutex_unlock(&m_avgFilter);
+}
+
 void COscilloscope::setCursor1(float value){
     m_cursor1 = value;
 }
@@ -163,6 +199,15 @@ void COscilloscope::oscWorker(){
     }
 }
 
+auto COscilloscope::setDeciamtion(uint32_t _decimation) -> void{
+    pthread_mutex_lock(&m_funcSelector);
+    m_decimation = _decimation;
+    pthread_mutex_unlock(&m_funcSelector);
+}
+
+auto COscilloscope::getDecimation() -> uint32_t{
+    return m_decimation;
+}
 
 void COscilloscope::acquire(){
     uint32_t pos = 0;
@@ -200,6 +245,7 @@ void COscilloscope::acquire(){
     if (acq_u_size > 0) {
         DataPass localDP;
         localDP.index = m_index++;
+        pthread_mutex_lock(&m_avgFilter);
         for(auto i = 0u; i < m_channels; i++){
             localDP.ch_avg[i] = 0;
             localDP.ch_max[i] = m_buffer.ch_f[i][0];
@@ -211,10 +257,9 @@ void COscilloscope::acquire(){
             for(auto j = 0u; j < acq_u_size ; ++j){
                 if (localDP.ch_max[i] < m_buffer.ch_f[i][j]) localDP.ch_max[i] = m_buffer.ch_f[i][j];
                 if (localDP.ch_min[i] > m_buffer.ch_f[i][j]) localDP.ch_min[i] = m_buffer.ch_f[i][j];
-                localDP.ch_avg[i] += m_buffer.ch_f[i][j];
-
             }
-            localDP.ch_avg[i] /= (float)acq_u_size;
+            localDP.ch_p_p[i] = localDP.ch_max[i] - localDP.ch_min[i];
+            localDP.ch_avg[i] = (localDP.ch_max[i] + localDP.ch_min[i]) / 2.0;
 
             for(auto j = 0u ; j < acq_u_size_raw; ++j){
                 auto ch = m_buffer.ch_i[i][j];
@@ -222,8 +267,55 @@ void COscilloscope::acquire(){
                 if (localDP.ch_min_raw[i] > ch) localDP.ch_min_raw[i] = ch;
                 localDP.ch_avg_raw[i] += ch;
             }
-            localDP.ch_avg_raw[i] /= (int32_t)acq_u_size_raw;
+            localDP.ch_avg_raw[i] = (localDP.ch_max_raw[i] + localDP.ch_min_raw[i]) / 2.0;
+
+            if (m_avg_filter){
+                m_avg_filter_buffer_max[i][m_avg_filter_cur] = localDP.ch_max[i];
+                m_avg_filter_buffer_min[i][m_avg_filter_cur] = localDP.ch_min[i];
+                m_avg_filter_buffer_p_p[i][m_avg_filter_cur] = localDP.ch_p_p[i];
+                m_avg_filter_buffer_mean[i][m_avg_filter_cur] = localDP.ch_avg[i];
+            }
         }
+        if (m_avg_filter){
+            m_avg_filter_cur++;
+            for(auto ch = 0u; ch < m_channels; ch++){
+                float real_data_count_min = 0;
+                float sum_min = 0;
+                float real_data_count_max = 0;
+                float sum_max = 0;
+                float real_data_count_p_p = 0;
+                float sum_p_p = 0;
+                float real_data_count_mean = 0;
+                float sum_mean = 0;
+
+                for(auto i = 0u; i < m_avg_filter_size;i++){
+                    if (m_avg_filter_buffer_max[ch][i]!= INVALID_VALUE){
+                        real_data_count_max++;
+                        sum_max += m_avg_filter_buffer_max[ch][i];
+                    }
+                    if (m_avg_filter_buffer_min[ch][i]!= INVALID_VALUE){
+                        real_data_count_min++;
+                        sum_min += m_avg_filter_buffer_min[ch][i];
+                    }
+                    if (m_avg_filter_buffer_mean[ch][i]!= INVALID_VALUE){
+                        real_data_count_mean++;
+                        sum_mean += m_avg_filter_buffer_mean[ch][i];
+                    }
+                    if (m_avg_filter_buffer_p_p[ch][i]!= INVALID_VALUE){
+                        real_data_count_p_p++;
+                        sum_p_p += m_avg_filter_buffer_p_p[ch][i];
+                    }
+                }
+                localDP.ch_max[ch] = sum_max / real_data_count_max;
+                localDP.ch_min[ch] = sum_min / real_data_count_min;
+                localDP.ch_p_p[ch] = sum_p_p / real_data_count_p_p;
+                localDP.ch_avg[ch] = sum_mean / real_data_count_mean;
+            }
+            if (m_avg_filter_cur > m_avg_filter_size){
+                m_avg_filter_cur = 0;
+            }
+        }
+        pthread_mutex_unlock(&m_avgFilter);
         pthread_mutex_lock(&m_mutex);
         m_crossData = localDP;
         pthread_mutex_unlock(&m_mutex);

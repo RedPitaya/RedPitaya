@@ -20,15 +20,19 @@ $(function() {
     OBJ.adcSig1ArrayAVG = [];
     OBJ.adcSig1ArrayMIN = [];
     OBJ.adcSig1ArrayMAX = [];
+
     OBJ.adcSig2ArrayAVG = [];
     OBJ.adcSig2ArrayMIN = [];
     OBJ.adcSig2ArrayMAX = [];
+
     OBJ.adcSig3ArrayAVG = [];
     OBJ.adcSig3ArrayMIN = [];
     OBJ.adcSig3ArrayMAX = [];
+
     OBJ.adcSig4ArrayAVG = [];
     OBJ.adcSig4ArrayMIN = [];
     OBJ.adcSig4ArrayMAX = [];
+
     OBJ.adcGraphCacheCh = [];
     OBJ.adcCalibChange = false;
 
@@ -76,6 +80,10 @@ $(function() {
         OBJ.adcPush(OBJ.adcSig1ArrayMIN, _value.value);
     }
 
+    OBJ.adcSetCH1PP = function(_value) {
+        $("#CH1_P_P").val(_value.value.toFixed(4) + " V");
+    }
+
     OBJ.adcSetCH2Avg = function(_value) {
         $("#CH2_AVG").val(_value.value.toFixed(4) + " V");
         OBJ.adcPush(OBJ.adcSig2ArrayAVG, _value.value);
@@ -91,6 +99,10 @@ $(function() {
         OBJ.adcPush(OBJ.adcSig2ArrayMIN, _value.value);
     }
 
+    OBJ.adcSetCH2PP = function(_value) {
+        $("#CH2_P_P").val(_value.value.toFixed(4) + " V");
+    }
+
     OBJ.adcSetCH3Avg = function(_value) {
         $("#CH3_AVG").val(_value.value.toFixed(4) + " V");
         OBJ.adcPush(OBJ.adcSig3ArrayAVG, _value.value);
@@ -99,6 +111,10 @@ $(function() {
     OBJ.adcSetCH3Max = function(_value) {
         $("#CH3_MAX").val(_value.value.toFixed(4) + " V");
         OBJ.adcPush(OBJ.adcSig3ArrayMAX, _value.value);
+    }
+
+    OBJ.adcSetCH3PP = function(_value) {
+        $("#CH3_P_P").val(_value.value.toFixed(4) + " V");
     }
 
     OBJ.adcSetCH3Min = function(_value) {
@@ -121,16 +137,24 @@ $(function() {
         OBJ.adcPush(OBJ.adcSig4ArrayMIN, _value.value);
     }
 
+    OBJ.adcSetCH4PP = function(_value) {
+        $("#CH4_P_P").val(_value.value.toFixed(4) + " V");
+    }
+
+
     OBJ.adcInitData = function() {
         OBJ.adcSig1ArrayAVG = [];
         OBJ.adcSig1ArrayMIN = [];
         OBJ.adcSig1ArrayMAX = [];
+
         OBJ.adcSig2ArrayAVG = [];
         OBJ.adcSig2ArrayMIN = [];
         OBJ.adcSig2ArrayMAX = [];
+
         OBJ.adcSig3ArrayAVG = [];
         OBJ.adcSig3ArrayMIN = [];
         OBJ.adcSig3ArrayMAX = [];
+
         OBJ.adcSig4ArrayAVG = [];
         OBJ.adcSig4ArrayMIN = [];
         OBJ.adcSig4ArrayMAX = [];
@@ -363,24 +387,35 @@ $(function() {
         }
         if (_mode == "ch1_dac_enable") {
             SM.parametersCache["gen1_enable"] = { value: _state };
+            SM.parametersCache["request_reset_avg_filter"] = {value: true};
             SM.sendParameters2("gen1_enable");
             setTimeout(OBJ.adcInitData, 1000);
         }
         if (_mode == "ch2_dac_enable") {
             SM.parametersCache["gen2_enable"] = { value: _state };
+            SM.parametersCache["request_reset_avg_filter"] = {value: true};
             SM.sendParameters2("gen2_enable");
             setTimeout(OBJ.adcInitData, 1000);
         }
         if (_mode == "HV_LV_MODE") {
             SM.parametersCache["hv_lv_mode"] = { value: _state };
+            SM.parametersCache["request_reset_avg_filter"] = {value: true};
             SM.sendParameters2("hv_lv_mode");
             setTimeout(OBJ.adcInitData, 1000);
         }
         if (_mode == "AC_DC_MODE") {
             SM.parametersCache["ac_dc_mode"] = { value: _state };
+            SM.parametersCache["request_reset_avg_filter"] = {value: true};
             SM.sendParameters2("ac_dc_mode");
             setTimeout(OBJ.adcInitData, 1000);
         }
+        if (_mode == "AVG_LAST_MODE") {
+            SM.parametersCache["avg_last_mode"] = { value: _state };
+            SM.parametersCache["request_reset_avg_filter"] = {value: true};
+            SM.sendParameters2("avg_last_mode");
+            setTimeout(OBJ.adcInitData, 1000);
+        }
+
     }
 
     OBJ.amSetNewCalib = function(_mode, _new_val) {
@@ -487,6 +522,14 @@ $(function() {
 
     OBJ.amSetCh2GenOffset = function(_value) {
         $("#CH2_DAC_OFF").val(_value.value);
+    }
+
+    OBJ.amSetLastMode = function(_value) {
+        $("#AVG_LAST_MODE").val(_value.value);
+    }
+
+    OBJ.amSetDecimation = function(_value) {
+        $("#B_DEC_SELECTOR").val(_value.value);
     }
 
     OBJ.amConnectCallbacks = function() {
@@ -605,6 +648,9 @@ $(function() {
     SM.param_callbacks["gen1_offset"] = OBJ.amSetCh1GenOffset;
     SM.param_callbacks["gen1_amp"] = OBJ.amSetCh1GenAmp;
     SM.param_callbacks["gen1_freq"] = OBJ.amSetCh1GenFreq;
+    SM.param_callbacks["manual_decimation"] = OBJ.amSetDecimation;
+    SM.param_callbacks["avg_last_mode"] = OBJ.amSetLastMode;
+
 
     SM.param_callbacks["gen2_type"] = OBJ.amSetCh2GenType;
     SM.param_callbacks["gen2_offset"] = OBJ.amSetCh2GenOffset;

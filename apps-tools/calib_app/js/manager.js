@@ -224,15 +224,22 @@
             SM.param_callbacks["ch1_avg"] = OBJ.adcSetCH1Avg;
             SM.param_callbacks["ch1_max"] = OBJ.adcSetCH1Max;
             SM.param_callbacks["ch1_min"] = OBJ.adcSetCH1Min;
+            SM.param_callbacks["ch1_p_p"] = OBJ.adcSetCH1PP;
+
             SM.param_callbacks["ch2_avg"] = OBJ.adcSetCH2Avg;
             SM.param_callbacks["ch2_max"] = OBJ.adcSetCH2Max;
             SM.param_callbacks["ch2_min"] = OBJ.adcSetCH2Min;
+            SM.param_callbacks["ch2_p_p"] = OBJ.adcSetCH2PP;
+
             SM.param_callbacks["ch3_avg"] = OBJ.adcSetCH3Avg;
             SM.param_callbacks["ch3_max"] = OBJ.adcSetCH3Max;
             SM.param_callbacks["ch3_min"] = OBJ.adcSetCH3Min;
+            SM.param_callbacks["ch3_p_p"] = OBJ.adcSetCH3PP;
+
             SM.param_callbacks["ch4_avg"] = OBJ.adcSetCH4Avg;
             SM.param_callbacks["ch4_max"] = OBJ.adcSetCH4Max;
             SM.param_callbacks["ch4_min"] = OBJ.adcSetCH4Min;
+            SM.param_callbacks["ch4_p_p"] = OBJ.adcSetCH4PP;
 
             OBJ.adcInitData();
             OBJ.adcInitRequest();

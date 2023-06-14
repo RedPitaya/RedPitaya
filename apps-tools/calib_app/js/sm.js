@@ -215,9 +215,9 @@
             console.log('ERROR: Cannot save changes, socket not opened');
             return false;
         }
-
         SM.parametersCache["in_command"] = { value: _key };
         SM.ws.send(JSON.stringify({ parameters: SM.parametersCache }));
+        // console.log(SM.parametersCache)
         SM.parametersCache = {};
         return true;
     };

@@ -59,6 +59,7 @@ CStringParameter 	redpitaya_model("RP_MODEL_STR", 	CBaseParameter::RO, getModelN
 CFloatParameter 	ch_min[MAX_ADC_CHANNELS] 		= INIT("ch","_min",	CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
 CFloatParameter 	ch_max[MAX_ADC_CHANNELS] 		= INIT("ch","_max",	CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
 CFloatParameter 	ch_avg[MAX_ADC_CHANNELS] 		= INIT("ch","_avg",	CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
+CFloatParameter 	ch_p_p[MAX_ADC_CHANNELS] 		= INIT("ch","_p_p",	CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
 CIntParameter		ch_calib_pass[MAX_ADC_CHANNELS] = INIT("ch","_calib_pass", CBaseParameter::RW,   0 ,0,	-2147483647, 2147483647);
 
 CFloatParameter 	ref_volt("ref_volt",				CBaseParameter::RW,   1, 0, 0.001, 20);
@@ -66,17 +67,17 @@ CIntParameter       ss_state("SS_STATE", 			CBaseParameter::RW,  -1, 0, -1,100);
 CIntParameter       ss_next_step("SS_NEXTSTEP",		CBaseParameter::RW,  -1, 0, -2,100);
 
 // Parameters for MANUAL mode
-CFloatParameter		ch_gain_dac[MAX_DAC_CHANNELS]	= INIT2("ch","_gain_dac", 	CBaseParameter::RW,   0 ,0,	0, 2147483647);
-CIntParameter		ch_off_dac[MAX_DAC_CHANNELS]	= INIT2("ch","_off_dac", 	CBaseParameter::RW,   0 ,0,	-2147483647, 2147483647);
+CFloatParameter		ch_gain_dac[MAX_DAC_CHANNELS]	= INIT2("ch","_gain_dac", 	CBaseParameter::RW,   1.0 ,0,	0.8, 1.2);
+CIntParameter		ch_off_dac[MAX_DAC_CHANNELS]	= INIT2("ch","_off_dac", 	CBaseParameter::RW,   0 ,0,	-16382, 16382);
 
-CFloatParameter		ch_gain_adc[MAX_ADC_CHANNELS]	= INIT("ch","_gain_adc", 	CBaseParameter::RW,   0 ,0,	0, 2147483647);
-CIntParameter		ch_off_adc[MAX_ADC_CHANNELS] 	= INIT("ch","_off_adc", 	CBaseParameter::RW,   0 ,0,	-2147483647, 2147483647);
+CFloatParameter		ch_gain_adc[MAX_ADC_CHANNELS]	= INIT("ch","_gain_adc", 	CBaseParameter::RW,   1.0 ,0,	0.8, 1.2);
+CIntParameter		ch_off_adc[MAX_ADC_CHANNELS] 	= INIT("ch","_off_adc", 	CBaseParameter::RW,   0 ,0,	-16382, 16382);
 
-CFloatParameter		ch_gain_dac_new[MAX_DAC_CHANNELS] = INIT2("ch","_gain_dac_new", 	CBaseParameter::RW,   0 ,0,	0, 2147483647);
-CIntParameter		ch_off_dac_new[MAX_DAC_CHANNELS]  = INIT2("ch","_off_dac_new", 	CBaseParameter::RW,   0 ,0,	-2147483647, 2147483647);
+CFloatParameter		ch_gain_dac_new[MAX_DAC_CHANNELS] = INIT2("ch","_gain_dac_new", 	CBaseParameter::RW,   1.0 ,0,	0.8, 1.2);
+CIntParameter		ch_off_dac_new[MAX_DAC_CHANNELS]  = INIT2("ch","_off_dac_new", 	CBaseParameter::RW,   0 ,0,	-16382, 16382);
 
-CFloatParameter		ch_gain_adc_new[MAX_ADC_CHANNELS]	= INIT("ch","_gain_adc_new", 	CBaseParameter::RW,   0 ,0,	0, 2147483647);
-CIntParameter		ch_off_adc_new[MAX_ADC_CHANNELS] 	= INIT("ch","_off_adc_new", 	CBaseParameter::RW,   0 ,0,	-2147483647, 2147483647);
+CFloatParameter		ch_gain_adc_new[MAX_ADC_CHANNELS]	= INIT("ch","_gain_adc_new", 	CBaseParameter::RW,   1.0 ,0,	0.8, 1.2);
+CIntParameter		ch_off_adc_new[MAX_ADC_CHANNELS] 	= INIT("ch","_off_adc_new", 	CBaseParameter::RW,   0 ,0,	-16382, 16382);
 
 CIntParameter		calib_sig(    "calib_sig", 	CBaseParameter::RW,   0 ,0,	-2147483647, 2147483647);
 CBooleanParameter 	hv_lv_mode(	  "hv_lv_mode", 	        CBaseParameter::RW, false,0);
@@ -91,6 +92,10 @@ CIntParameter		gen_freq[MAX_DAC_CHANNELS]		= INIT2( "gen","_freq",				CBaseParam
 
 CBooleanParameter 	gen_gain(	  "gen_gain", 		        CBaseParameter::RW, false,0);
 CBooleanParameter 	ac_dc_mode(	  "ac_dc_mode", 	        CBaseParameter::RW, false,0);
+CBooleanParameter 	avg_last_mode(	  "avg_last_mode", 	        CBaseParameter::RW, true,0);
+CBooleanParameter 	request_reset(	  "request_reset_avg_filter", 	        CBaseParameter::RW, false,0);
+
+CIntParameter		man_decimation( "manual_decimation", 				CBaseParameter::RW,   64 ,0,	1, 4096);
 
 
 CIntParameter		adc_mode(     		 "adc_acquire_mode", 		CBaseParameter::RW,   0 ,0,	0, 10);
@@ -149,10 +154,8 @@ int rp_app_init(void)
 	CDataManager::GetInstance()->SetParamInterval(100);
 	rp_Init();
 	auto dec = 64;
-	if (getModelName() == "Z20"){
-		dec = 1;
-	}
 	g_acq = COscilloscope::Create(dec);
+	g_acq->setAvgFilter(avg_last_mode.Value());
 	g_calib = CCalib::Create(g_acq);
 	g_calib_man = CCalibMan::Create(g_acq);
 
@@ -845,6 +848,7 @@ void UpdateParams(void)
 			ch_max[i].Value() = x.ch_max[i];
 			ch_min[i].Value() = x.ch_min[i];
 			ch_avg[i].Value() = x.ch_avg[i];
+			ch_p_p[i].Value() = x.ch_p_p[i];
 		}
 
 // AUTO MODE
@@ -881,6 +885,7 @@ void UpdateParams(void)
 			calib_sig.Update();
 			int sig = calib_sig.Value();
 			calib_sig.Value() = 0; // reset signal
+			g_acq->resetAvgFilter();
 			if (sig == 1){
 				g_calib_man->init();
 				if (getDACChannels() >= 2){
@@ -979,6 +984,25 @@ void UpdateParams(void)
 			}
 			sendCalibInManualMode(true);
 		}
+
+		if (man_decimation.IsNewValue()){
+			man_decimation.Update();
+			g_acq->setDeciamtion(man_decimation.Value());
+		}
+
+		if (avg_last_mode.IsNewValue()){
+			avg_last_mode.Update();
+			g_acq->setAvgFilter(avg_last_mode.Value());
+			g_acq->resetAvgFilter();
+			avg_last_mode.SendValue(g_acq->getAvgFilter());
+		}
+
+		if (request_reset.IsNewValue()){
+			request_reset.Update();
+			request_reset.Value() = false;
+			g_acq->resetAvgFilter();
+		}
+
 		if (rp_HPGetFastADCIsAC_DCOrDefault()){
 			if (ac_dc_mode.IsNewValue()){
 				ac_dc_mode.Update();
