@@ -189,12 +189,12 @@
             </div>
             <div id="adc_mode_body" style="display: none;">
                 <div align="center">
-                    <div style="width:650px;height: 580px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295);display: inline-block;margin-top: 10px;">
+                    <div style="width:650px;height: 610px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295);display: inline-block;margin-top: 10px;">
                         <div class="container_inline">
                             <label style="font-size: 18pt; color: lightgray;">ADC</label>
                         </div>
                         <div class="container_inline" style="display: inline-block; margin-right: 10px; width: 300px;vertical-align: bottom;">
-                            <div style="width:300px;height: 475px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
+                            <div style="width:300px;height: 500px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
                                 <label>CH 1</label>
                                 <div style="margin-top: 17px;">
                                     <div style="display: flex;">
@@ -226,12 +226,17 @@
                                     </div>
                                     </div>
                                 </div>
-                                <div style="width:280px;height: 80px;margin-top: 23px ;padding: 0px;  border: 1px solid rgba(153, 153, 153, 0.295)">
+                                <div class="container_inline" style="width:280px;height: 110px;margin-top: 23px ;padding: 0px;  border: 1px solid rgba(153, 153, 153, 0.295)">
                                     <div id="graphs_holder" class="graphs_holder" style="width: 100%;margin-top: 0px;height: 80px;">
                                         <div style="clear: both; position: relative; padding: 0px; width: 100%;margin-top: 0px;height: 80px;">
                                             <div id="graph_bode_ch1" class="graphs" style="width: 100%;margin-top: 0px;height: 100%;">
                                                 <canvas id="graph_bode_grid_ch1" class="graph_grid" style="width: 100%;height: 100%;"></canvas>
                                             </div>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex;justify-self: start;margin: 0;">
+                                        <img id="CH1_IS_SINE" src = "img/SIN_R.png" alt="-" style="display: block;width: 20px;height: 10px;margin: 2px;margin-left: 15px;"/>
+                                        <div id="CH1_PER_COUNT" style="height: 15px;font-size: 10px;margin: 0;margin-left: 5px;">
                                         </div>
                                     </div>
                                 </div>
@@ -274,7 +279,7 @@
                                         <div class="container_inline">
                                             <div class="label-text-size" style="width: 50px;text-align: right;margin-top: 5px;">Gain:</div>
                                             <div style="width: 200px;margin-top: 5px;">
-                                                <input id="CH1_GAIN" type="text" size="5" style="width: 185px;margin-left: 10px;" value="0">
+                                                <input id="CH1_GAIN" type="text" size="5" style="width: 185px;margin-left: 9.5px;" value="0">
                                             </div>
                                         </div>
                                         <div class="container_inline" style="margin-top: 5px;">
@@ -303,7 +308,7 @@
                             </div>
                         </div>
                         <div class="container_inline" style="display: inline-block; width: 300px;vertical-align: bottom;">
-                            <div style="width:300px;height: 475px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
+                            <div style="width:300px;height: 500px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
                                 <label>CH 2</label>
                                 <div style="margin-top: 17px;">
                                     <div style="display: flex;">
@@ -335,12 +340,17 @@
                                     </div>
                                     </div>
                                 </div>
-                                <div style="width:280px;height: 80px;padding: 0px;margin-top: 23px;  border: 1px solid rgba(153, 153, 153, 0.295)">
+                                <div  class="container_inline" style="width:280px;height: 110px;padding: 0px;margin-top: 23px;  border: 1px solid rgba(153, 153, 153, 0.295)">
                                     <div id="graphs_holder" class="graphs_holder" style="width: 100%;margin-top: 0px;height: 80px;">
                                         <div style="clear: both; position: relative; padding: 0px; width: 100%;margin-top: 0px;height: 80px;">
                                             <div id="graph_bode_ch2" class="graphs" style="width: 100%;margin-top: 0px;height: 100%;">
                                                 <canvas id="graph_bode_grid_ch2" class="graph_grid" style="width: 100%;height: 100%;"></canvas>
                                             </div>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex;justify-self: start;margin: 0;">
+                                        <img id="CH2_IS_SINE" src = "img/SIN_R.png" alt="-" style="display: block;width: 20px;height: 10px;margin: 2px;margin-left: 15px;"/>
+                                        <div id="CH2_PER_COUNT" style="height: 15px;font-size: 10px;margin: 0;margin-left: 5px;">
                                         </div>
                                     </div>
                                 </div>
@@ -443,12 +453,12 @@
                             </div>
                         </div>
                     </div>
-                    <div style="width:650px;height: 580px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295);display: inline-block;vertical-align: bottom;margin-top: 10px;">
+                    <div style="width:650px;height: 610px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295);display: inline-block;vertical-align: bottom;margin-top: 10px;">
                         <div class="container_inline">
                             <label style="font-size: 18pt; color: lightgray;">DAC</label>
                         </div>
                         <div class="container_inline" style="display: inline-block; margin-right: 10px; width: 300px;vertical-align: bottom;">
-                            <div style="width:300px;height: 475px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
+                            <div style="width:300px;height: 500px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
                                 <label>CH 1</label>
                                 <div class="container_inline" style="height: 205px;">
                                     <div style="margin-top: 0px;">
@@ -490,7 +500,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div style="width:280px;height: 210px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
+                                <div style="width:280px;height: 210px;padding-top: 5px;margin-top: 35px;border: 1px solid rgba(153, 153, 153, 0.295)">
                                     <label>Calib parameters</label>
                                     <div class="ch_setting">
                                         <div class="container_inline">
@@ -558,7 +568,7 @@
                             </div>
                         </div>
                         <div class="container_inline" style="display: inline-block; width: 300px;vertical-align: bottom;">
-                            <div style="width:300px;height: 475px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
+                            <div style="width:300px;height: 500px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
                                 <label>CH 2</label>
                                 <div class="container_inline" style="height: 205px;">
                                     <div style="margin-top: 0px;">
@@ -600,7 +610,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div style="width:280px;height: 210px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
+                                <div style="width:280px;height: 210px;padding-top: 5px;margin-top: 35px;border: 1px solid rgba(153, 153, 153, 0.295)">
                                     <label>Calib parameters</label>
                                     <div class="ch_setting">
                                         <div class="container_inline">

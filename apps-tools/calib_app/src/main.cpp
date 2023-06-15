@@ -60,6 +60,9 @@ CFloatParameter 	ch_min[MAX_ADC_CHANNELS] 		= INIT("ch","_min",	CBaseParameter::
 CFloatParameter 	ch_max[MAX_ADC_CHANNELS] 		= INIT("ch","_max",	CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
 CFloatParameter 	ch_avg[MAX_ADC_CHANNELS] 		= INIT("ch","_avg",	CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
 CFloatParameter 	ch_p_p[MAX_ADC_CHANNELS] 		= INIT("ch","_p_p",	CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
+CFloatParameter 	ch_per_buff[MAX_ADC_CHANNELS] 	= INIT("ch","_perBuff",	CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
+CBooleanParameter 	ch_is_sine[MAX_ADC_CHANNELS] 	= INIT("ch","_issine",	CBaseParameter::ROSA, false, 0);
+
 CIntParameter		ch_calib_pass[MAX_ADC_CHANNELS] = INIT("ch","_calib_pass", CBaseParameter::RW,   0 ,0,	-2147483647, 2147483647);
 
 CFloatParameter 	ref_volt("ref_volt",				CBaseParameter::RW,   1, 0, 0.001, 20);
@@ -67,16 +70,16 @@ CIntParameter       ss_state("SS_STATE", 			CBaseParameter::RW,  -1, 0, -1,100);
 CIntParameter       ss_next_step("SS_NEXTSTEP",		CBaseParameter::RW,  -1, 0, -2,100);
 
 // Parameters for MANUAL mode
-CFloatParameter		ch_gain_dac[MAX_DAC_CHANNELS]	= INIT2("ch","_gain_dac", 	CBaseParameter::RW,   1.0 ,0,	0.8, 1.2);
+CFloatParameter		ch_gain_dac[MAX_DAC_CHANNELS]	= INIT2("ch","_gain_dac", 	CBaseParameter::RW,   1.0 ,0,	0.5, 1.5);
 CIntParameter		ch_off_dac[MAX_DAC_CHANNELS]	= INIT2("ch","_off_dac", 	CBaseParameter::RW,   0 ,0,	-16382, 16382);
 
-CFloatParameter		ch_gain_adc[MAX_ADC_CHANNELS]	= INIT("ch","_gain_adc", 	CBaseParameter::RW,   1.0 ,0,	0.8, 1.2);
+CFloatParameter		ch_gain_adc[MAX_ADC_CHANNELS]	= INIT("ch","_gain_adc", 	CBaseParameter::RW,   1.0 ,0,	0.5, 1.5);
 CIntParameter		ch_off_adc[MAX_ADC_CHANNELS] 	= INIT("ch","_off_adc", 	CBaseParameter::RW,   0 ,0,	-16382, 16382);
 
-CFloatParameter		ch_gain_dac_new[MAX_DAC_CHANNELS] = INIT2("ch","_gain_dac_new", 	CBaseParameter::RW,   1.0 ,0,	0.8, 1.2);
+CFloatParameter		ch_gain_dac_new[MAX_DAC_CHANNELS] = INIT2("ch","_gain_dac_new", 	CBaseParameter::RW,   1.0 ,0,	0.5, 1.5);
 CIntParameter		ch_off_dac_new[MAX_DAC_CHANNELS]  = INIT2("ch","_off_dac_new", 	CBaseParameter::RW,   0 ,0,	-16382, 16382);
 
-CFloatParameter		ch_gain_adc_new[MAX_ADC_CHANNELS]	= INIT("ch","_gain_adc_new", 	CBaseParameter::RW,   1.0 ,0,	0.8, 1.2);
+CFloatParameter		ch_gain_adc_new[MAX_ADC_CHANNELS]	= INIT("ch","_gain_adc_new", 	CBaseParameter::RW,   1.0 ,0,	0.5, 1.5);
 CIntParameter		ch_off_adc_new[MAX_ADC_CHANNELS] 	= INIT("ch","_off_adc_new", 	CBaseParameter::RW,   0 ,0,	-16382, 16382);
 
 CIntParameter		calib_sig(    "calib_sig", 	CBaseParameter::RW,   0 ,0,	-2147483647, 2147483647);
@@ -849,6 +852,8 @@ void UpdateParams(void)
 			ch_min[i].Value() = x.ch_min[i];
 			ch_avg[i].Value() = x.ch_avg[i];
 			ch_p_p[i].Value() = x.ch_p_p[i];
+			ch_per_buff[i].Value() = x.periodsByBuffer[i];
+			ch_is_sine[i].Value() = x.isSineSignal[i];
 		}
 
 // AUTO MODE

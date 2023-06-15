@@ -35,6 +35,7 @@ $(function() {
 
     OBJ.adcGraphCacheCh = [];
     OBJ.adcCalibChange = false;
+    OBJ.adcPPerBufLastValue = new Map();
 
     OBJ.adcSetModel = function(_model) {
         if (OBJ.adcModel === undefined) {
@@ -84,6 +85,20 @@ $(function() {
         $("#CH1_P_P").val(_value.value.toFixed(4) + " V");
     }
 
+    OBJ.adcSetCH1IsSin = function(_value) {
+        if (_value.value){
+            $("#CH1_IS_SINE").attr("src","img/SIN_G.png");
+            $("#CH1_PER_COUNT").text('x'+OBJ.adcPPerBufLastValue.get(1));
+        }else{
+            $("#CH1_IS_SINE").attr("src","img/SIN_R.png");
+            $("#CH1_PER_COUNT").text('');
+        }
+    }
+
+    OBJ.adcSetCH1PPerBuf = function(_value) {
+        OBJ.adcPPerBufLastValue.set(1,_value.value);
+    }
+
     OBJ.adcSetCH2Avg = function(_value) {
         $("#CH2_AVG").val(_value.value.toFixed(4) + " V");
         OBJ.adcPush(OBJ.adcSig2ArrayAVG, _value.value);
@@ -101,6 +116,20 @@ $(function() {
 
     OBJ.adcSetCH2PP = function(_value) {
         $("#CH2_P_P").val(_value.value.toFixed(4) + " V");
+    }
+
+    OBJ.adcSetCH2IsSin = function(_value) {
+        if (_value.value){
+            $("#CH2_IS_SINE").attr("src","img/SIN_G.png");
+            $("#CH2_PER_COUNT").text('x'+OBJ.adcPPerBufLastValue.get(2));
+        }else{
+            $("#CH2_IS_SINE").attr("src","img/SIN_R.png");
+            $("#CH2_PER_COUNT").text('');
+        }
+    }
+
+    OBJ.adcSetCH2PPerBuf = function(_value) {
+        OBJ.adcPPerBufLastValue.set(2,_value.value);
     }
 
     OBJ.adcSetCH3Avg = function(_value) {
@@ -122,6 +151,20 @@ $(function() {
         OBJ.adcPush(OBJ.adcSig3ArrayMIN, _value.value);
     }
 
+    OBJ.adcSetCH3IsSin = function(_value) {
+        if (_value.value){
+            $("#CH3_IS_SINE").attr("src","img/SIN_G.png");
+            $("#CH3_PER_COUNT").text('x'+ OBJ.adcPPerBufLastValue.get(3));
+        }else{
+            $("#CH3_IS_SINE").attr("src","img/SIN_R.png");
+            $("#CH3_PER_COUNT").text('');
+        }
+    }
+
+    OBJ.adcSetCH3PPerBuf = function(_value) {
+        OBJ.adcPPerBufLastValue.set(3,_value.value);
+    }
+
     OBJ.adcSetCH4Avg = function(_value) {
         $("#CH4_AVG").val(_value.value.toFixed(4) + " V");
         OBJ.adcPush(OBJ.adcSig4ArrayAVG, _value.value);
@@ -141,6 +184,19 @@ $(function() {
         $("#CH4_P_P").val(_value.value.toFixed(4) + " V");
     }
 
+    OBJ.adcSetCH4IsSin = function(_value) {
+        if (_value.value){
+            $("#CH4_IS_SINE").attr("src","img/SIN_G.png");
+            $("#CH4_PER_COUNT").text('x'+OBJ.adcPPerBufLastValue.get(4));
+        }else{
+            $("#CH4_IS_SINE").attr("src","img/SIN_R.png");
+            $("#CH4_PER_COUNT").text('');
+        }
+    }
+
+    OBJ.adcSetCH4PPerBuf = function(_value) {
+        OBJ.adcPPerBufLastValue.set(4,_value.value);
+    }
 
     OBJ.adcInitData = function() {
         OBJ.adcSig1ArrayAVG = [];

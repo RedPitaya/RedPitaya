@@ -4,12 +4,36 @@
 #include <cassert>
 #include <cstring>
 #include <vector>
+#include <math.h>
 #include "acq.h"
 #include "acq_math.h"
 
 // Use (void) to silent unused warnings.
 #define assertm(exp, msg) assert(((void)msg, exp))
 #define ACQ_COUNT 5
+
+const float g_adc_smpl_freq = getADCRate();
+
+auto trapezoidalApprox(double *data, float T, int size) -> float{
+    double result = 0;
+    for(int i = 0; i < size - 1; i++){
+        result += data[i] + data[i+1];
+    }
+    result = ((T / 2.0) * result);
+    return result;
+}
+
+auto isSineTester(float *data, uint32_t size,uint32_t dec) -> bool{
+        double T = (dec / g_adc_smpl_freq);
+        double ch_rms[size];
+        double ch_avr[size];
+        for(int i = 0; i < size; i++) {
+                ch_rms[i] = data[i] * data[i];
+                ch_avr[i] = fabs(data[i]);
+        }
+        double K0 = sqrtf(T * size * trapezoidalApprox(ch_rms, T, size)) / trapezoidalApprox(ch_avr, T, size);
+        return ((K0 > 1.10) && (K0 < 1.12));
+}
 
 COscilloscope::Ptr COscilloscope::Create(uint32_t _decimation){
     return std::make_shared<COscilloscope>(_decimation);
@@ -29,13 +53,15 @@ m_hyst(0.01),
 m_channels(0),
 m_avg_filter(false),
 m_avg_filter_size(30),
-m_avg_filter_cur(0)
+m_avg_filter_cur(0),
+m_adc_sample_per(0)
 {
     m_OscThreadRunState = false;
     m_zoomMode = false;
     m_curCursor1 = m_cursor1;
     m_curCursor2 = m_cursor2;
     m_channels = getADCChannels();
+    getADCSamplePeriod(&m_adc_sample_per);
     memset(&m_buffer,0,sizeof(buffers_t));
 
     for(uint8_t ch = 0; ch < m_channels; ch++){
@@ -209,6 +235,75 @@ auto COscilloscope::getDecimation() -> uint32_t{
     return m_decimation;
 }
 
+
+void COscilloscope::measurePeriod(int16_t *_data,uint32_t _size, double *period,uint32_t _decimation) {
+    double sample_per = m_adc_sample_per;
+    const float c_meas_freq_thr = 100;
+    int size = _size;
+
+    const int c_meas_time_thr = size / sample_per;
+    const float c_min_period = 19.6e-9; // 51 MHz
+
+    float thr1, thr2, cen;
+    int state = 0;
+    int trig_t[2] = { 0, 0 };
+    int trig_cnt = 0;
+    int ix;
+    int16_t *data_i = _data;
+
+
+    float meas_max, meas_min;
+
+    meas_max = data_i[0] ;
+    meas_min = data_i[0] ;
+    for(int i = 0; i < size; i++)
+    {
+        meas_max = (meas_max > data_i[i] )? meas_max : data_i[i] ;
+        meas_min = (meas_min < data_i[i] )? meas_min : data_i[i] ;
+    }
+
+	uint32_t dec_factor = _decimation;
+
+    float acq_dur= (float)(size)/((float) g_adc_smpl_freq) * (float) dec_factor;
+    cen = (meas_max + meas_min) / 2;
+    thr1 = cen + 0.2 * (meas_min - cen);
+    thr2 = cen + 0.2 * (meas_max - cen);
+    double res_period = 0;
+    for(ix = 0; ix < (size); ix++) {
+        auto sa = data_i[ix];
+
+        /* Lower transitions */
+        if((state == 0) && (sa < thr1)) {
+            state = 1;
+        }
+        /* Upper transitions - count them & store edge times. */
+        if((state == 1) && (sa >= thr2) ) {
+            state = 0;
+            if (trig_cnt++ == 0) {
+                trig_t[0] = ix;
+            } else {
+                trig_t[1] = ix;
+            }
+        }
+        if ((trig_t[1] - trig_t[0]) > c_meas_time_thr) {
+            break;
+        }
+    }
+    /* Period calculation - taking into account at least meas_time_thr samples */
+    if(trig_cnt >= 2) {
+       res_period = (float)(trig_t[1] - trig_t[0]) /
+            ((float)g_adc_smpl_freq * (trig_cnt - 1)) * dec_factor;
+    }
+
+    if( ((thr2 - thr1) < c_meas_freq_thr) ||
+         (res_period * 3 >= acq_dur)    ||
+         (res_period < c_min_period) )
+    {
+        res_period = 0;
+    }
+    *period = res_period * 1000.0 * 1000.0;
+}
+
 void COscilloscope::acquire(){
     uint32_t pos = 0;
     int16_t             timeout = 10000;
@@ -245,6 +340,16 @@ void COscilloscope::acquire(){
     if (acq_u_size > 0) {
         DataPass localDP;
         localDP.index = m_index++;
+        double time_of_buffer = m_adc_sample_per * m_buffer.size * m_decimation / 1000.0;
+        for(auto i = 0u; i < m_channels; i++){
+            double per = 0;
+            measurePeriod(m_buffer.ch_i[i],m_buffer.size,&per,m_decimation);
+            localDP.periodsByBuffer[i] = (per == 0.f ? 0.0 : time_of_buffer / ((double)per));
+            localDP.isSineSignal[i] = isSineTester(m_buffer.ch_f[i],m_buffer.size,m_decimation);
+            // if (i == 0)
+            //     fprintf(stderr,"CH %d Per %lf (ms) dec %d tb %lf (us) isSine %d\n",i+1,per,m_decimation,time_of_buffer,localDP.isSineSignal[i]);
+        }
+
         pthread_mutex_lock(&m_avgFilter);
         for(auto i = 0u; i < m_channels; i++){
             localDP.ch_avg[i] = 0;

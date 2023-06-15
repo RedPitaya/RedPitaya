@@ -27,10 +27,13 @@ public:
         int32_t ch_min_raw[MAX_ADC_CHANNELS];
         int32_t ch_max_raw[MAX_ADC_CHANNELS];
         int32_t ch_avg_raw[MAX_ADC_CHANNELS];
+        int32_t periodsByBuffer[MAX_ADC_CHANNELS];
+        bool    isSineSignal[MAX_ADC_CHANNELS];
         uint64_t index;
         DataPass(){
             for(auto i = 0u; i  < MAX_ADC_CHANNELS; i++){
-                ch_min[i] = ch_max[i] = ch_avg[i] = ch_p_p[i] = ch_min_raw[i] = ch_max_raw[i] = ch_avg_raw[i] = 0;
+                ch_min[i] = ch_max[i] = ch_avg[i] = ch_p_p[i] = ch_min_raw[i] = ch_max_raw[i] = ch_avg_raw[i] = periodsByBuffer[i] = 0;
+                isSineSignal[i] = false;
             }
             index = 0;
         }
@@ -136,6 +139,7 @@ private:
     auto acquireAutoFilter() -> void;
     auto acquireAutoFilterSync() -> void;
     auto selectRange(float *buffer,double _start,double _stop) -> COscilloscope::DataPassSq;
+    auto measurePeriod(int16_t *_data, uint32_t _size, double *period,uint32_t _decimation) -> void;
 
         std::atomic_flag m_OscThreadRun = ATOMIC_FLAG_INIT;
         std::atomic_bool m_OscThreadRunState;
@@ -171,5 +175,6 @@ private:
         float*           m_avg_filter_buffer_min[MAX_ADC_CHANNELS];
         float*           m_avg_filter_buffer_max[MAX_ADC_CHANNELS];
         float*           m_avg_filter_buffer_mean[MAX_ADC_CHANNELS];
+        double           m_adc_sample_per;
 
 };
