@@ -239,6 +239,14 @@
         var old_params = $.extend(true, {}, SM.params.orig);
         var send_all_params = Object.keys(new_params).indexOf('send_all_params') != -1;
 
+        if (!new_params['RP_MODEL_STR']){
+            if (SM.rp_model === ""){
+                SM.sendParameters();
+                return;
+            }
+        }
+
+
         for (var param_name in new_params) {
             SM.params.orig[param_name] = new_params[param_name];
             if (SM.param_callbacks[param_name] !== undefined)
