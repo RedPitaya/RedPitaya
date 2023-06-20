@@ -29,8 +29,8 @@ profiles_t stem_250_12_120 = {
     .fast_dac_count_channels = 2,
     .fast_dac_is_sign = true,
     .fast_dac_bits = 14,
-    .fast_dac_gain[0] = 1,
-    .fast_dac_gain[1] = 1,
+    .fast_dac_gain[0] = 2,
+    .fast_dac_gain[1] = 2,
     .fast_dac_gain[2] = 0,
     .fast_dac_gain[3] = 0,
 
