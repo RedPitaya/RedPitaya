@@ -441,13 +441,13 @@ rp_calib_error calib_GetEEPROM(uint8_t **data,uint16_t *size,bool use_factory_zo
             return RP_HW_CALIB_OK;
         }
 
-        case RP_HW_PACK_ID_V2:{
+        case RP_HW_PACK_ID_V3:{
             *size = sizeof(rp_calib_params_v2_t);
             *data = use_factory_zone ? readFromFactoryEpprom(size) : readFromEpprom(size);
             return RP_HW_CALIB_OK;
         }
 
-        case RP_HW_PACK_ID_V3:{
+        case RP_HW_PACK_ID_V2:{
             *size = sizeof(rp_calib_params_v3_t);
             *data = use_factory_zone ? readFromFactoryEpprom(size) : readFromEpprom(size);
             return RP_HW_CALIB_OK;
@@ -491,7 +491,7 @@ rp_calib_error calib_ConvertEEPROM(uint8_t *data,uint16_t size,rp_calib_params_t
             return RP_HW_CALIB_OK;
         }
 
-        case RP_HW_PACK_ID_V2:{
+        case RP_HW_PACK_ID_V3:{
             uint16_t ssize = sizeof(rp_calib_params_v2_t);
             if (ssize > size){
                 fprintf(stderr,"[Error:calib_ConvertEEPROM] Invalid data size: %d required %d.\n",size,ssize);
@@ -505,7 +505,7 @@ rp_calib_error calib_ConvertEEPROM(uint8_t *data,uint16_t size,rp_calib_params_t
         }
 
 
-        case RP_HW_PACK_ID_V3:{
+        case RP_HW_PACK_ID_V2:{
             uint16_t ssize = sizeof(rp_calib_params_v3_t);
             if (ssize > size){
                 fprintf(stderr,"[Error:calib_ConvertEEPROM] Invalid data size: %d required %d.\n",size,ssize);

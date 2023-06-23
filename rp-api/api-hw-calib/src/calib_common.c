@@ -650,22 +650,22 @@ rp_calib_params_t convertV2toCommon(rp_calib_params_v2_t *param, bool adjust){
     calib.dataStructureId = param->dataStructureId;
     calib.wpCheck = param->wpCheck;
 
-    calib.fast_adc_1_1[0].baseScale = 1.0;
+    calib.fast_adc_1_1[0].baseScale = 20.0;
     calib.fast_adc_1_1[0].calibValue = param->chA_g_low;
     calib.fast_adc_1_1[0].offset = param->chA_low_offs;
     adjustingBaseScale(&calib.fast_adc_1_1[0],adjust);
 
-    calib.fast_adc_1_1[1].baseScale = 1.0;
+    calib.fast_adc_1_1[1].baseScale = 20.0;
     calib.fast_adc_1_1[1].calibValue = param->chB_g_low;
     calib.fast_adc_1_1[1].offset = param->chB_low_offs;
     adjustingBaseScale(&calib.fast_adc_1_1[1],adjust);
 
-    calib.fast_adc_1_1[2].baseScale = 1.0;
+    calib.fast_adc_1_1[2].baseScale = 20.0;
     calib.fast_adc_1_1[2].calibValue = param->chC_g_low;
     calib.fast_adc_1_1[2].offset = param->chC_low_offs;
     adjustingBaseScale(&calib.fast_adc_1_1[2],adjust);
 
-    calib.fast_adc_1_1[3].baseScale = 1.0;
+    calib.fast_adc_1_1[3].baseScale = 20.0;
     calib.fast_adc_1_1[3].calibValue = param->chD_g_low;
     calib.fast_adc_1_1[3].offset = param->chD_low_offs;
     adjustingBaseScale(&calib.fast_adc_1_1[3],adjust);
@@ -691,22 +691,22 @@ rp_calib_params_t convertV2toCommon(rp_calib_params_v2_t *param, bool adjust){
     calib.fast_adc_filter_1_1[3].kk = param->chD_low_kk;
 
 
-    calib.fast_adc_1_20[0].baseScale = 20.0;
+    calib.fast_adc_1_20[0].baseScale = 1.0;
     calib.fast_adc_1_20[0].calibValue = param->chA_g_hi;
     calib.fast_adc_1_20[0].offset = param->chA_hi_offs;
     adjustingBaseScale(&calib.fast_adc_1_20[0],adjust);
 
-    calib.fast_adc_1_20[1].baseScale = 20.0;
+    calib.fast_adc_1_20[1].baseScale = 1.0;
     calib.fast_adc_1_20[1].calibValue = param->chB_g_hi;
     calib.fast_adc_1_20[1].offset = param->chB_hi_offs;
     adjustingBaseScale(&calib.fast_adc_1_20[1],adjust);
 
-    calib.fast_adc_1_20[2].baseScale = 20.0;
+    calib.fast_adc_1_20[2].baseScale = 1.0;
     calib.fast_adc_1_20[2].calibValue = param->chC_g_hi;
     calib.fast_adc_1_20[2].offset = param->chC_hi_offs;
     adjustingBaseScale(&calib.fast_adc_1_20[2],adjust);
 
-    calib.fast_adc_1_20[3].baseScale = 20.0;
+    calib.fast_adc_1_20[3].baseScale = 1.0;
     calib.fast_adc_1_20[3].calibValue = param->chD_g_hi;
     calib.fast_adc_1_20[3].offset = param->chD_hi_offs;
     adjustingBaseScale(&calib.fast_adc_1_20[3],adjust);
