@@ -701,6 +701,11 @@
         $("#SS_FORMAT").val(value)
     }
 
+    SM.setResolution = function(param) {
+        var value = param["SS_RESOLUTION"].value;
+        $("#SS_RESOLUTION").prop('checked', value);
+    }
+
     SM.setChannel = function(param) {
         var value = param["SS_CHANNEL"].value;
         $("#SS_CH1_ENABLE").prop('checked', value & 0x1);
@@ -779,6 +784,9 @@
     SM.param_callbacks["SS_ADC_CHANNELS"] = SM.setADCChannel;
     SM.param_callbacks["SS_DAC_CHANNELS"] = SM.setDACChannel;
     SM.param_callbacks["SS_IS_AC_DC"] = SM.setISACDC;
+    SM.param_callbacks["SS_RESOLUTION"] = SM.setResolution;
+    
+
     
 }(window.SM = window.SM || {}, jQuery));
 
