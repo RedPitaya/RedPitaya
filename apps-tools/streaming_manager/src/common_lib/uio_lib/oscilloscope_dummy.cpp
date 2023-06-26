@@ -8,11 +8,11 @@
 
 using namespace uio_lib;
 
-auto COscilloscope::create(const UioT &,uint32_t _dec_factor,bool _isMaster,uint32_t _adcMaxSpeed,bool _isADCFilterPresent) -> COscilloscope::Ptr {
-    return std::make_shared<COscilloscope>(0, nullptr, 0, nullptr, 0, 0,_dec_factor,_isMaster,_adcMaxSpeed,_isADCFilterPresent);
+auto COscilloscope::create(const UioT &,uint32_t _dec_factor,bool _isMaster,uint32_t _adcMaxSpeed,bool _isADCFilterPresent,uint8_t _fpgaBits,uint8_t _maxChannels) -> COscilloscope::Ptr {
+    return std::make_shared<COscilloscope>(0, nullptr, 0, nullptr, 0, 0,_dec_factor,_isMaster,_adcMaxSpeed,_isADCFilterPresent,_fpgaBits,_maxChannels);
 }
 
-COscilloscope::COscilloscope(int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr,uint32_t _dec_factor,bool _isMaster,uint32_t _adcMaxSpeed,bool _isADCFilterPresent) :
+COscilloscope::COscilloscope(int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr,uint32_t _dec_factor,bool _isMaster,uint32_t _adcMaxSpeed,bool _isADCFilterPresent,uint8_t _fpgaBits,uint8_t _maxChannels) :
     m_Fd(_fd),
     m_Regset(_regset),
     m_RegsetSize(_regsetSize),
@@ -27,7 +27,9 @@ COscilloscope::COscilloscope(int _fd, void *_regset, size_t _regsetSize, void *_
     m_filterBypass(true),
     m_isMaster(_isMaster),
     m_adcMaxSpeed(_adcMaxSpeed),
-    m_isADCFilterPresent(_isADCFilterPresent)
+    m_isADCFilterPresent(_isADCFilterPresent),
+    m_fpgaBits(_fpgaBits),
+    m_maxChannels(_maxChannels)
 {
     m_OscBuffer1 = new uint8_t[osc_buf_size];
     m_OscBuffer2 = new uint8_t[osc_buf_size];
@@ -44,15 +46,13 @@ COscilloscope::~COscilloscope(){
 
 void COscilloscope::setReg(volatile OscilloscopeMapT *){}
 
-void COscilloscope::setFilterCalibrationCh1(int32_t ,int32_t , int32_t , int32_t ){}
-
-void COscilloscope::setFilterCalibrationCh2(int32_t ,int32_t , int32_t , int32_t ){}
+void COscilloscope::setFilterCalibration(uint8_t,int32_t ,int32_t , int32_t , int32_t ){}
 
 void COscilloscope::setFilterBypass(bool){}
 
 auto COscilloscope::prepare() -> void{}
 
-auto COscilloscope::setCalibration(int32_t,float, int32_t, float) -> void{}
+auto COscilloscope::setCalibration(uint8_t,int32_t,float) -> void{}
 
 auto COscilloscope::next(uint8_t *&_buffer1,uint8_t *&_buffer2, size_t &_size,uint32_t &_overFlow) -> bool {
     _buffer1 = m_OscBuffer1;

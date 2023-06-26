@@ -100,11 +100,19 @@ auto runClient(std::string  host,StateRunnedHosts state) -> void{
             if (g_soption.testmode == ClientOpt::TestMode::ENABLE || g_soption.verbous){
                 uint64_t sempCh1 = 0;
                 uint64_t sempCh2 = 0;
+                uint64_t sempCh3 = 0;
+                uint64_t sempCh4 = 0;
                 uint64_t sizeCh1 = 0;
                 uint64_t sizeCh2 = 0;
+                uint64_t sizeCh3 = 0;
+                uint64_t sizeCh4 = 0;
+
                 uint64_t lostRate = 0;
                 auto ch1 = pack->getBuffer(DataLib::CH1);
                 auto ch2 = pack->getBuffer(DataLib::CH2);
+                auto ch3 = pack->getBuffer(DataLib::CH3);
+                auto ch4 = pack->getBuffer(DataLib::CH4);
+
                 if (ch1){
                     sempCh1 = ch1->getSamplesCount();
                     sizeCh1 = ch1->getBufferLenght();
@@ -117,14 +125,26 @@ auto runClient(std::string  host,StateRunnedHosts state) -> void{
                     lostRate += ch2->getLostSamplesAll();
                 }
 
+                if (ch3){
+                    sempCh3 = ch3->getSamplesCount();
+                    sizeCh3 = ch3->getBufferLenght();
+                    lostRate += ch3->getLostSamplesAll();
+                }
+
+                if (ch4){
+                    sempCh4 = ch4->getSamplesCount();
+                    sizeCh4 = ch4->getBufferLenght();
+                    lostRate += ch4->getLostSamplesAll();
+                }
+
                 auto net   = obj->getNetworkLost();
                 auto flost = obj->getFileLost();
                 int  brokenBuffer = -1;
                 if (g_soption.testStreamingMode == ClientOpt::TestSteamingMode::WITH_TEST_DATA){
-                    brokenBuffer = testBuffer(ch1 ? ch1->getBuffer().get() : nullptr,ch2 ? ch2->getBuffer().get() : nullptr,sizeCh1,sizeCh2) ? 0 : 1;
+                    brokenBuffer = testBuffer(ch1 ? ch1->getBuffer().get() : nullptr,ch2 ? ch2->getBuffer().get() : nullptr,ch3 ? ch3->getBuffer().get() : nullptr,ch4 ? ch4->getBuffer().get() : nullptr,sizeCh1,sizeCh2,sizeCh3,sizeCh4) ? 0 : 1;
                 }
                 auto h = host;
-                addStatisticSteaming(h,sizeCh1 + sizeCh2,sempCh1,sempCh2,lostRate, net, flost,brokenBuffer);
+                addStatisticSteaming(h,sizeCh1 + sizeCh2,sempCh1,sempCh2,sempCh3,sempCh4,lostRate, net, flost,brokenBuffer);
             }
           obj->passBuffers(pack);
         }
