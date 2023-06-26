@@ -87,8 +87,8 @@ auto startDACServer(bool verbMode,bool testMode) -> void{
 		}
 
 		if (rp_HPGetIsGainDACx5OrDefault()){
-        	rp_max7311::rp_setGainOut(RP_MAX7311_OUT1, dac_gain == CStreamSettings::X1 ? RP_GAIN_2V : RP_GAIN_10V);
-        	rp_max7311::rp_setGainOut(RP_MAX7311_OUT2, dac_gain == CStreamSettings::X1 ? RP_GAIN_2V : RP_GAIN_10V);
+        	rp_max7311::rp_setGainOut(RP_MAX7311_OUT1, dac_gain & CStreamSettings::CH1 ? RP_GAIN_10V : RP_GAIN_2V);
+        	rp_max7311::rp_setGainOut(RP_MAX7311_OUT2, dac_gain & CStreamSettings::CH2 ? RP_GAIN_10V : RP_GAIN_2V);
 		}
 
 		for (const UioT &uio : uioList)

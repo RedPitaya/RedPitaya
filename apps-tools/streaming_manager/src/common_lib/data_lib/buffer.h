@@ -17,8 +17,8 @@ class CDataBuffer final{
 public:
 
     enum ADC_MODE{
-        ATT_1_1  = 1,
-        ATT_1_20 = 2
+        ATT_1_1  = 0,
+        ATT_1_20 = 1
     };
 
     using Ptr = std::shared_ptr<DataLib::CDataBuffer>;
@@ -41,7 +41,7 @@ public:
     auto getSamplesCount() const -> size_t;
     auto getSamplesWithLost() const -> uint64_t;
 
-    
+
     auto setADCMode(ADC_MODE mode) -> void;
     auto getADCMode() -> ADC_MODE;
 

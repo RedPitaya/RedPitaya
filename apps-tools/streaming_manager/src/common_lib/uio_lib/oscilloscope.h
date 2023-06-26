@@ -81,16 +81,15 @@ class COscilloscope
 public:
     using Ptr = std::shared_ptr<COscilloscope>;
 
-    static Ptr create(const UioT &_uio, uint32_t _dec_factor,bool _isMaster,uint32_t _adcMaxSpeed,bool _isADCFilterPresent);
+    static Ptr create(const UioT &_uio, uint32_t _dec_factor,bool _isMaster,uint32_t _adcMaxSpeed,bool _isADCFilterPresent,uint8_t _fpgaBits,uint8_t _maxChannels);
 
-    COscilloscope(int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr,uint32_t _dec_factor,bool _isMaster,uint32_t _adcMaxSpeed,bool _isADCFilterPresent);
+    COscilloscope(int _fd, void *_regset, size_t _regsetSize, void *_buffer, size_t _bufferSize, uintptr_t _bufferPhysAddr,uint32_t _dec_factor,bool _isMaster,uint32_t _adcMaxSpeed,bool _isADCFilterPresent,uint8_t _fpgaBits,uint8_t _maxChannels);
     ~COscilloscope();
 
     auto prepare() -> void;
     auto next(uint8_t *&_buffer1,uint8_t *&_buffer2, size_t &_size,uint32_t &_overFlow) -> bool;
-    auto setCalibration(int32_t ch1_offset,float ch1_gain, int32_t ch2_offset, float ch2_gain) -> void;
-    auto setFilterCalibrationCh1(int32_t _aa,int32_t _bb, int32_t _pp, int32_t _kk) -> void;
-    auto setFilterCalibrationCh2(int32_t _aa,int32_t _bb, int32_t _pp, int32_t _kk) -> void;
+    auto setCalibration(uint8_t ch,int32_t _offset,float _gain) -> void;
+    auto setFilterCalibration(uint8_t ch,int32_t _aa,int32_t _bb, int32_t _pp, int32_t _kk) -> void;
     auto setFilterBypass(bool _state) -> void;
     auto set8BitMode(bool mode) -> void;
     auto clearBuffer() -> bool;
@@ -123,23 +122,19 @@ private:
     unsigned     m_OscBufferNumber;
     uint32_t     m_dec_factor;
     std::mutex   m_waitLock;
-    int32_t      m_calib_offset_ch1;
-    uint32_t     m_calib_gain_ch1;
-    int32_t      m_calib_offset_ch2;
-    uint32_t     m_calib_gain_ch2;
-    int32_t      m_AA_ch1;
-    int32_t      m_BB_ch1;
-    int32_t      m_PP_ch1;
-    int32_t      m_KK_ch1;
-    int32_t      m_AA_ch2;
-    int32_t      m_BB_ch2;
-    int32_t      m_PP_ch2;
-    int32_t      m_KK_ch2;
+    int32_t      m_calib_offset_ch[4];
+    uint32_t     m_calib_gain_ch[4];
+    int32_t      m_AA_ch[4];
+    int32_t      m_BB_ch[4];
+    int32_t      m_PP_ch[4];
+    int32_t      m_KK_ch[4];
     bool         m_filterBypass;
     bool         m_isMaster;
     bool         m_is8BitMode;
     uint32_t     m_adcMaxSpeed;
     bool         m_isADCFilterPresent;
+    uint8_t      m_fpgaBits;
+    uint8_t      m_maxChannels;
 };
 
 }

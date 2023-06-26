@@ -49,6 +49,7 @@ namespace ClientOpt {
     auto parse(int argc, char* argv[]) -> Options;
 
     auto getADCChannels() -> uint8_t;
+    auto getADCBits() -> uint8_t;
     auto getDACChannels() -> uint8_t;
     auto getDACRate() -> uint32_t;
     auto getADCRate() -> uint32_t;
