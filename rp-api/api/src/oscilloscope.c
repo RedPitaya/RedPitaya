@@ -497,15 +497,6 @@ int osc_GetWritePointerAtTrig(uint32_t* pos)
     uint32_t dec = 0;
     osc_GetDecimation(&dec);
     cmn_GetValue(&osc_reg->wr_ptr_trigger, pos, WRITE_POINTER_MASK);
-
-    // Trigger delay compensation. Maybe in the future it will be implemented on the FPGA side
-    if (dec == RP_DEC_1){
-        *pos = (ADC_BUFFER_SIZE + *pos - 2) % ADC_BUFFER_SIZE;
-    }
-    if (dec == RP_DEC_2){
-        *pos = (ADC_BUFFER_SIZE + *pos - 1) % ADC_BUFFER_SIZE;
-    }
-
     return RP_OK;
 }
 
