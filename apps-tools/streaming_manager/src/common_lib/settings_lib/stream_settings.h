@@ -20,29 +20,30 @@ public:
     };
 
     enum DataType{
-        RAW  = 1,
-        VOLT = 2
+        RAW  = 0,
+        VOLT = 1
     };
 
     enum Channel{
-        CH1  = 1,
-        CH2  = 2,
-        BOTH = 3
+        CH1  = 0x1,
+        CH2  = 0x2,
+        CH3  = 0x4,
+        CH4  = 0x8
     };
 
     enum Resolution{
-        BIT_8 = 1,
-        BIT_16 = 2
+        BIT_8 = 0,
+        BIT_16 = 1
     };
 
     enum Attenuator{
-        A_1_1  = 1,
-        A_1_20 = 2
+        A_1_1  = 0,
+        A_1_20 = 1
     };
 
     enum AC_DC{
-        AC = 1,
-        DC = 2
+        AC = 0,
+        DC = 1
     };
 
     enum SaveType{
@@ -91,7 +92,7 @@ public:
     auto readFromFile(std::string _filename) -> bool;
     auto getJson()-> std::string;
     auto String()-> std::string;
-    auto StringStreaming()-> std::string;
+    // auto StringStreaming()-> std::string;
 
     auto setPort(std::string _port) -> void;
     auto getPort() const -> std::string;
@@ -105,26 +106,41 @@ public:
     auto getType() const -> DataType;
     auto setSaveType(SaveType _type) -> void;
     auto getSaveType() const -> SaveType;
-    auto setChannels(Channel _channels) -> void;
-    auto getChannels() const -> Channel;
+
+    auto setChannels(uint8_t _value) -> void;
+    auto setChannels(Channel _channel,bool _enable) -> void;
+    auto getChannels() const -> uint8_t;
+    auto getChannels(Channel _channel) const -> bool;
+
     auto setResolution(Resolution _resolution) -> void;
     auto getResolution() const -> Resolution;
+
     auto setDecimation(uint32_t _decimation) -> void;
     auto getDecimation() const -> uint32_t;
 
-    auto setAttenuator(Attenuator _attenuator) -> void;
-    auto getAttenuator() const -> Attenuator;
+    auto setAttenuator(uint8_t _value) -> void;
+    auto setAttenuator(Channel _channel,Attenuator _attenuator) -> void;
+    auto getAttenuator() const -> uint8_t;
+    auto getAttenuator(Channel _channel) const -> Attenuator;
+
     auto setCalibration(bool _calibration) -> void;
     auto getCalibration() const -> bool;
-    auto setAC_DC(AC_DC _value) -> void;
-    auto getAC_DC() const -> AC_DC;
+
+    auto setAC_DC(uint8_t _value) -> void;
+    auto setAC_DC(Channel _channel,AC_DC _value) -> void;
+    auto getAC_DC() const -> uint8_t;
+    auto getAC_DC(Channel _channel) const -> AC_DC;
 
     auto setDACFile(std::string _value) -> void;
     auto getDACFile() const -> std::string;
     auto setDACFileType(DataFormat _value) -> void;
     auto getDACFileType() const -> DataFormat;
-    auto setDACGain(DACGain _value) -> void;
-    auto getDACGain() const -> DACGain;
+
+    auto setDACGain(uint8_t _value) -> void;
+    auto setDACGain(Channel _channel,DACGain _value) -> void;
+    auto getDACGain() const -> uint8_t;
+    auto getDACGain(Channel _channel) const -> DACGain;
+
     auto setDACMode(DACType _value) -> void;
     auto getDACMode() const -> DACType;
     auto setDACRepeat(DACRepeat _value) -> void;
@@ -160,14 +176,14 @@ private:
     DataFormat      m_format;
     DataType        m_type;
     SaveType        m_saveType;
-    Channel         m_channels;
+    uint8_t         m_channels;
     Resolution      m_res;
     uint32_t        m_decimation;
-    Attenuator      m_attenuator;
+    uint8_t         m_attenuator;
     bool            m_calib;
-    AC_DC           m_ac_dc;
+    uint8_t         m_ac_dc;
 
-    DACGain         m_dac_gain;
+    uint8_t         m_dac_gain;
     DataFormat      m_dac_file_type;
     DACType         m_dac_mode;
     DACRepeat       m_dac_repeat;

@@ -104,6 +104,23 @@ auto ClientOpt::getADCChannels() -> uint8_t{
     return c;
 }
 
+auto ClientOpt::getADCBits() -> uint8_t{
+    uint8_t c = 0;
+#ifdef RP_PLATFORM
+    if (rp_HPGetFastADCBits(&c) != RP_HP_OK){
+        fprintf(stderr,"[Error] Can't get fast ADC channels count\n");
+    }
+    if (c > 16){
+        fprintf(stderr,"[Error] The number of bits is more than allowed\n");
+        exit(-1);
+    }
+#else
+    c = 16; // Emulation
+#endif
+    return c;
+}
+
+
 auto ClientOpt::getDACChannels() -> uint8_t{
     uint8_t c = 0;
 #ifdef RP_PLATFORM

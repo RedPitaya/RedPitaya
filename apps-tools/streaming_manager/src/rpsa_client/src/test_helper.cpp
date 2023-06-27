@@ -21,8 +21,12 @@ std::map<std::string,uint64_t>        g_lostFileRateTotal;
 
 std::map<std::string,uint64_t>        g_packCounter_ch1;
 std::map<std::string,uint64_t>        g_packCounter_ch2;
+std::map<std::string,uint64_t>        g_packCounter_ch3;
+std::map<std::string,uint64_t>        g_packCounter_ch4;
 std::map<std::string,uint64_t>        g_packCounterTotal_ch1;
 std::map<std::string,uint64_t>        g_packCounterTotal_ch2;
+std::map<std::string,uint64_t>        g_packCounterTotal_ch3;
+std::map<std::string,uint64_t>        g_packCounterTotal_ch4;
 
 std::map<std::string,int64_t>         g_brokenBuffer;
 
@@ -44,8 +48,12 @@ auto resetStreamingCounter() -> void{
     g_BytesCountTotal.clear();
     g_packCounter_ch1.clear();
     g_packCounter_ch2.clear();
+    g_packCounter_ch3.clear();
+    g_packCounter_ch4.clear();
     g_packCounterTotal_ch1.clear();
     g_packCounterTotal_ch2.clear();
+    g_packCounterTotal_ch3.clear();
+    g_packCounterTotal_ch4.clear();
     g_lostNetRate.clear();
     g_lostNetRateTotal.clear();
     g_lostFileRate.clear();
@@ -53,7 +61,7 @@ auto resetStreamingCounter() -> void{
     g_brokenBuffer.clear();
 }
 
-auto addStatisticSteaming(std::string &host,uint64_t bytesCount,uint64_t samp_ch1,uint64_t samp_ch2,uint64_t lost,uint64_t networkLost,uint64_t fileLost,int64_t brokenBuff) -> void{
+auto addStatisticSteaming(std::string &host,uint64_t bytesCount,uint64_t samp_ch1,uint64_t samp_ch2,uint64_t samp_ch3,uint64_t samp_ch4,uint64_t lost,uint64_t networkLost,uint64_t fileLost,int64_t brokenBuff) -> void{
     const std::lock_guard<std::mutex> lock(g_statMutex);
 
     if (g_timeHostBegin.count(host) == 0){
@@ -73,9 +81,13 @@ auto addStatisticSteaming(std::string &host,uint64_t bytesCount,uint64_t samp_ch
 
     g_packCounter_ch1[host] += samp_ch1;
     g_packCounter_ch2[host] += samp_ch2;
+    g_packCounter_ch3[host] += samp_ch3;
+    g_packCounter_ch4[host] += samp_ch4;
 
     g_packCounterTotal_ch1[host] += samp_ch1;
     g_packCounterTotal_ch2[host] += samp_ch2;
+    g_packCounterTotal_ch3[host] += samp_ch3;
+    g_packCounterTotal_ch4[host] += samp_ch4;
 
     g_lostNetRate[host] += networkLost;
     g_lostNetRateTotal[host] += networkLost;
@@ -159,14 +171,15 @@ auto printStatisitc(bool force) -> void{
         if (keys.size() > 0){
             std::stringstream ss;
             ss << "\n" << getTS() << "\n";
-            ss << "=====================================================================================================================\n";
-            ss << "Host              | Bytes all         | Bandwidth         |    Samples CH1    |    Samples CH2    |      Lost        |\n";
+
+            ss << "=============================================================================================================================================================\n";
+            ss << "Host              | Bytes all         | Bandwidth         |    Samples CH1    |    Samples CH2    |    Samples CH1    |    Samples CH2    |      Lost        |\n";
 
             bool first = true;
             for(auto const& host: keys){
                 if (first){
                     first = false;
-                    ss << "---------------------------------------------------------------------------------------------------------------------|\n";
+                    ss << "-------------------------------------------------------------------------------------------------------------------------------------------------------------|\n";
                 }
                 auto bw = convertBtoSpeed(g_BytesCount[host],value.count() - g_timeHostBegin[host]);
                 ss << createStr(host,18) << "|";
@@ -174,14 +187,16 @@ auto printStatisitc(bool force) -> void{
                 ss << " " << createStr(bw,18) << "|";
                 ss << " " << createStr(std::to_string(g_packCounter_ch1[host]),18) << "|";
                 ss << " " << createStr(std::to_string(g_packCounter_ch2[host]),18) << "|";
+                ss << " " << createStr(std::to_string(g_packCounter_ch3[host]),18) << "|";
+                ss << " " << createStr(std::to_string(g_packCounter_ch4[host]),18) << "|";
                 ss << "                  |\n";
-                ss << "                  +...................+...................+...................+...................+";
+                ss << "                  +...................+...................+...................+...................+...................+...................+";
                 ss << " " + createStr(std::to_string(g_lostRate[host]),17) << "|\n";
                 ss << "                  |";
                 ss << "Lost in UDP: " << createStr(std::to_string(g_lostNetRate[host]),26) << "|";
                 ss << "Lost in file: " << createStr(std::to_string(g_lostFileRate[host]),25) << "|";
                 ss << "                  |\n";
-                ss << "                  +...................+...................+...................+...................+";
+                ss << "                  +...................+...................+...................+...................+...................+...................+";
                 ss << "                  |\n";
                 g_BytesCount[host] = 0;
                 g_timeHostBegin[host] = value.count();
@@ -191,7 +206,7 @@ auto printStatisitc(bool force) -> void{
                 g_lostFileRate[host] = 0;
                 g_lostRate[host] = 0;
             }
-            ss << "=====================================================================================================================\n";
+            ss << "=============================================================================================================================================================\n";
             aprintf(stdout,"%s",ss.str().c_str());
         }        
 
@@ -214,14 +229,14 @@ auto printFinalStatisitc() -> void{
     if (keys.size() > 0){
         std::stringstream ss;
         ss << "\n" << getTS() << " Total time: " << convertBtoST(value.count() - g_timeBeginTotal)  << "\n";
-        ss << "=====================================================================================================================\n";
-        ss << "Host              | Bytes all         | Bandwidth         |    Samples CH1    |    Samples CH2    |      Lost        |\n";
+        ss << "=============================================================================================================================================================\n";
+        ss << "Host              | Bytes all         | Bandwidth         |    Samples CH1    |    Samples CH2    |    Samples CH1    |    Samples CH2    |      Lost        |\n";
 
         bool first = true;
         for(auto const& host: keys){
             if (first){
                 first = false;
-                ss << "---------------------------------------------------------------------------------------------------------------------|\n";
+                ss << "-------------------------------------------------------------------------------------------------------------------------------------------------------------|\n";
             }
             auto bw = convertBtoSpeed(g_BytesCountTotal[host],value.count() - g_timeBeginTotal);
             ss << createStr(host,18) << "|";
@@ -229,14 +244,16 @@ auto printFinalStatisitc() -> void{
             ss << " " << createStr(bw,18) << "|";
             ss << " " << createStr(std::to_string(g_packCounterTotal_ch1[host]),18) << "|";
             ss << " " << createStr(std::to_string(g_packCounterTotal_ch2[host]),18) << "|";
+            ss << " " << createStr(std::to_string(g_packCounterTotal_ch3[host]),18) << "|";
+            ss << " " << createStr(std::to_string(g_packCounterTotal_ch4[host]),18) << "|";
             ss << "                  |\n";
-            ss << "                  +...................+...................+...................+...................+";
+            ss << "                  +...................+...................+...................+...................+...................+...................+";
             ss << " " + createStr(std::to_string(g_lostRateTotal[host]),17) << "|\n";
             ss << "                  |";
             ss << "Lost in UDP: " << createStr(std::to_string(g_lostNetRateTotal[host]),26) << "|";
             ss << "Lost in file: " << createStr(std::to_string(g_lostFileRateTotal[host]),25) << "|";
             ss << "                  |\n";
-            ss << "                  +...................+...................+...................+...................+";
+            ss << "                  +...................+...................+...................+...................+...................+...................+";
             ss << "                  |\n";
             if (g_brokenBuffer.size() > 0 && g_brokenBuffer[host] != -1){
                 ss << "                  |";
@@ -244,12 +261,12 @@ auto printFinalStatisitc() -> void{
                 ss << "                                       |                  |\n";
             }
         }
-        ss << "=====================================================================================================================\n";
+        ss << "=============================================================================================================================================================\n";
         aprintf(stdout,"%s",ss.str().c_str());
     }
 }
 
-auto testBuffer(uint8_t *buff_c1,uint8_t *buff_c2,size_t size_ch1,size_t size_ch2) -> bool{
+auto testBuffer(uint8_t *buff_c1,uint8_t *buff_c2,uint8_t *buff_c3,uint8_t *buff_c4,size_t size_ch1,size_t size_ch2,size_t ,size_t ) -> bool{
     if (size_ch1 > 0 && size_ch2 > 0 && size_ch1 != size_ch2)
         return false;
 
@@ -275,8 +292,10 @@ auto testBuffer(uint8_t *buff_c1,uint8_t *buff_c2,size_t size_ch1,size_t size_ch
         value++;
         uint8_t v1 = buff_c1 ?  buff_c1[i] : value;
         uint8_t v2 = buff_c2 ?  buff_c2[i] : value;
+        uint8_t v3 = buff_c3 ?  buff_c3[i] : value;
+        uint8_t v4 = buff_c4 ?  buff_c4[i] : value;
 
-        if (value != v1 && value != v2){
+        if (value != v1 && value != v2 && value != v3 && value != v4){
             return false;
         }
     }

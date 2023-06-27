@@ -85,7 +85,7 @@ auto startServer(bool verbMode,bool testMode,bool is_master) -> void{
 
 		auto use_calib    = settings.getCalibration();
 		auto attenuator   = settings.getAttenuator();
-        auto ac_dc        = CStreamSettings::DC;
+        auto ac_dc        = 0xF;
         auto channels = ClientOpt::getADCChannels();
 
 #ifdef RP_PLATFORM
@@ -110,8 +110,8 @@ auto startServer(bool verbMode,bool testMode,bool is_master) -> void{
         filterBypass = !rp_HPGetFastADCIsFilterPresentOrDefault();
 		if (use_calib) {
             for(uint8_t ch = 0; ch < channels; ++ch){
-				rp_acq_ac_dc_mode_calib_t  mode = ac_dc == CStreamSettings::AC ? RP_AC_CALIB : RP_DC_CALIB;
-                if (attenuator == CStreamSettings::A_1_1){
+   				rp_acq_ac_dc_mode_calib_t  mode = (ac_dc & (ch + 1) ? RP_DC_CALIB : RP_AC_CALIB);
+                if ((attenuator & (ch + 1)) == 0){
                     if (rp_CalibGetFastADCCalibValue((rp_channel_calib_t)ch,mode,&ch_gain[ch],&ch_off[ch]) != RP_HW_CALIB_OK){
                         fprintf(stderr,"Error get calibration channel: %d\n",ch);
                     }
@@ -126,9 +126,7 @@ auto startServer(bool verbMode,bool testMode,bool is_master) -> void{
                         kk_ch[ch] = f.kk;
                         pp_ch[ch] = f.pp;
                     }
-                }
-
-                if (attenuator == CStreamSettings::A_1_20){
+                } else {
                     if (rp_CalibGetFastADCCalibValue_1_20((rp_channel_calib_t)ch,mode,&ch_gain[ch],&ch_off[ch]) != RP_HW_CALIB_OK){
                         fprintf(stderr,"Error get calibration channel: %d\n",ch);
                     }
@@ -148,23 +146,24 @@ auto startServer(bool verbMode,bool testMode,bool is_master) -> void{
 		}
 
         if (rp_HPGetIsAttenuatorControllerPresentOrDefault()){
-		    rp_max7311::rp_setAttenuator(RP_MAX7311_IN1, attenuator == CStreamSettings::A_1_1  ? RP_ATTENUATOR_1_1 : RP_ATTENUATOR_1_20);
-		    rp_max7311::rp_setAttenuator(RP_MAX7311_IN2, attenuator == CStreamSettings::A_1_1  ? RP_ATTENUATOR_1_1 : RP_ATTENUATOR_1_20);
+		    rp_max7311::rp_setAttenuator(RP_MAX7311_IN1, attenuator & CStreamSettings::CH1 ? RP_ATTENUATOR_1_20 : RP_ATTENUATOR_1_1);
+		    rp_max7311::rp_setAttenuator(RP_MAX7311_IN2, attenuator & CStreamSettings::CH2 ? RP_ATTENUATOR_1_20 : RP_ATTENUATOR_1_1);
         }
 
         if (rp_HPGetFastADCIsAC_DCOrDefault()){
-	    	rp_max7311::rp_setAC_DC(RP_MAX7311_IN1, ac_dc == CStreamSettings::AC ? RP_AC_MODE : RP_DC_MODE);
-    		rp_max7311::rp_setAC_DC(RP_MAX7311_IN2, ac_dc == CStreamSettings::AC ? RP_AC_MODE : RP_DC_MODE);
+	    	rp_max7311::rp_setAC_DC(RP_MAX7311_IN1, ac_dc & CStreamSettings::CH1 ? RP_DC_MODE : RP_AC_MODE);
+	    	rp_max7311::rp_setAC_DC(RP_MAX7311_IN2, ac_dc & CStreamSettings::CH2 ? RP_DC_MODE : RP_AC_MODE);
         }
 
         for (auto &uio : uioList)
 		{
 			if (uio.nodeName == "rp_oscilloscope")
 			{
-                g_osc = COscilloscope::create(uio,rate, is_master,ClientOpt::getADCRate(),!filterBypass);
-                g_osc->setCalibration(ch_off[0],ch_gain[0],ch_off[1],ch_gain[1]);
-                g_osc->setFilterCalibrationCh1(aa_ch[0],bb_ch[0],kk_ch[0],pp_ch[0]);
-                g_osc->setFilterCalibrationCh2(aa_ch[1],bb_ch[1],kk_ch[1],pp_ch[1]);
+                g_osc = COscilloscope::create(uio,rate, is_master,ClientOpt::getADCRate(),!filterBypass,ClientOpt::getADCBits(),channels);
+				for(uint8_t ch = 0; ch < channels; ++ch){
+					g_osc->setCalibration(ch,ch_off[ch],ch_gain[ch]);
+                	g_osc->setFilterCalibration(ch,aa_ch[ch],bb_ch[ch],kk_ch[ch],pp_ch[ch]);
+				}
                 g_osc->setFilterBypass(filterBypass);
                 g_osc->set8BitMode(resolution == CStreamSettings::BIT_8);
 				break;
@@ -172,7 +171,7 @@ auto startServer(bool verbMode,bool testMode,bool is_master) -> void{
 		}
 #else
         uio_lib::UioT uio_t;
-        g_osc = COscilloscope::create(uio_t,rate, is_master,ClientOpt::getADCRate(),!filterBypass);
+        g_osc = COscilloscope::create(uio_t,rate, is_master,ClientOpt::getADCRate(),!filterBypass,16, 2);
 #endif
 
         g_s_buffer = streaming_lib::CStreamingBufferCached::create();
@@ -224,15 +223,14 @@ auto startServer(bool verbMode,bool testMode,bool is_master) -> void{
 
         g_s_fpga = std::make_shared<streaming_lib::CStreamingFPGA>(g_osc,16);
         uint8_t resolution_val = (resolution == CStreamSettings::BIT_8 ? 8 : 16);
-        auto att = attenuator == CStreamSettings::A_1_1 ? DataLib::CDataBuffer::ATT_1_1 :  DataLib::CDataBuffer::ATT_1_20;
-        if(channel == CStreamSettings::CH1 || channel == CStreamSettings::BOTH){
-            g_s_fpga->addChannel(DataLib::CH1,att,resolution_val);
-            g_s_buffer->addChannel(DataLib::CH1,uio_lib::osc_buf_size,resolution_val);
+
+        for(int i = 0; i < channels; i++){
+            if(channel & (i + 1)){
+                g_s_fpga->addChannel((DataLib::EDataBuffersPackChannel)i, attenuator & (i + 1) ? DataLib::CDataBuffer::ATT_1_20 : DataLib::CDataBuffer::ATT_1_1,resolution_val);
+                g_s_buffer->addChannel((DataLib::EDataBuffersPackChannel)i,uio_lib::osc_buf_size,resolution_val);
+            }
         }
-        if(channel == CStreamSettings::CH2 || channel == CStreamSettings::BOTH){
-            g_s_fpga->addChannel(DataLib::CH2,att,resolution_val);
-            g_s_buffer->addChannel(DataLib::CH2,uio_lib::osc_buf_size,resolution_val);
-        }
+
         g_s_buffer->generateBuffers();
         g_s_fpga->setVerbousMode(g_verbMode);
         g_s_fpga->setTestMode(testMode);
