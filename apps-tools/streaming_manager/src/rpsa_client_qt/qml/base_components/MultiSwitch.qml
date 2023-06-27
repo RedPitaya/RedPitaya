@@ -80,16 +80,16 @@ Item {
                     anchors.fill: parent
 
                     fontSizeMode: Text.Fit
-                    font.pointSize: fontSizeValue
+                    font.pixelSize: fontSizeValue
                     font.family: fontFamaly
                     font.weight: Font.Normal
                     verticalAlignment: Text.AlignVCenter
                     horizontalAlignment: Text.AlignHCenter
                     color: inactiveTextColor
-                    minimumPointSize: 2
+                    minimumPixelSize: 2
                     font.bold: true
                     lineHeight: 1
-
+                    clip:false
                     onTextChanged: {
                         calcFont()
                     }
@@ -103,19 +103,26 @@ Item {
                         var currFontSize = 300;
                         var minFontSize  = 300;
                         for(var i = 0 ; i < buttonNames.length ; i++){
-                            t_metrics.font.pointSize = currFontSize;
+                            t_metrics.font.pixelSize = currFontSize;
                             t_metrics.text = buttonNames[i];
                             if (t_metrics.width !== 0){
                                 var x = backTextId.width / t_metrics.boundingRect.width;
                                 if (minFontSize > currFontSize * x){
                                     minFontSize = currFontSize * x;
                                 }
+
+                                var y = backTextId.height / t_metrics.boundingRect.height;
+                                if (minFontSize > currFontSize * y){
+                                    minFontSize = currFontSize * y;
+                                }
                             }
                         }
                         if (maxTextHeight > 0)
-                            font.pointSize = Math.min(maxTextHeight,minFontSize)
+                            font.pixelSize = Math.min(maxTextHeight,minFontSize)
                         else
-                            font.pointSize = minFontSize
+                            font.pixelSize = minFontSize
+
+
                     }
 
                     onMaxTextHChanged: {
@@ -167,16 +174,17 @@ Item {
             property real  maxTextH: rootElement.maxTextHeight
             anchors.margins: buttonTextMargins
             anchors.fill: parent
-            font.pointSize: fontSizeValue
+            font.pixelSize: fontSizeValue
             color: activeTextColor
             fontSizeMode: Text.Fit
             font.family: fontFamaly
             font.weight: Font.Normal
             verticalAlignment: Text.AlignVCenter
             horizontalAlignment: Text.AlignHCenter
-            minimumPointSize: 2
+            minimumPixelSize: 2
             font.bold: true
             lineHeight: 1
+            clip:false
 
             onTextChanged: {
                 calcFont()
@@ -191,19 +199,24 @@ Item {
                 var currFontSize = 300;
                 var minFontSize  = 300;
                 for(var i = 0 ; i < buttonNames.length ; i++){
-                    t_metrics.font.pointSize = currFontSize;
+                    t_metrics.font.pixelSize = currFontSize;
                     t_metrics.text = buttonNames[i];
                     if (t_metrics.width !== 0){
                         var x = buttonLabel.width / t_metrics.boundingRect.width;
                         if (minFontSize > currFontSize * x){
                             minFontSize = currFontSize * x;
                         }
+
+                        var y = buttonLabel.height / t_metrics.boundingRect.height;
+                        if (minFontSize > currFontSize * y){
+                            minFontSize = currFontSize * y;
+                        }
                     }
                 }
                 if (maxTextHeight > 0)
-                    font.pointSize = Math.min(maxTextHeight,minFontSize)
+                    font.pixelSize = Math.min(maxTextHeight,minFontSize)
                 else
-                    font.pointSize = minFontSize
+                    font.pixelSize = minFontSize
             }
             Component.onCompleted: {
                 calcFont()

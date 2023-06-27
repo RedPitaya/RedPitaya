@@ -61,17 +61,17 @@ auto startDACServer(bool verbMode,bool testMode) -> void{
 		auto dac_speed    =  settings.getDACHz();
 		auto ip_addr_host = "127.0.0.1";
 
-		auto use_calib    = false;
 
 #ifdef RP_PLATFORM
+        auto use_calib    = false;
         use_calib    = settings.getCalibration();
 		if (rp_CalibInit() != RP_HW_CALIB_OK){
 	        fprintf(stderr,"Error init calibration\n");
     	}
 		auto dac_gain = settings.getDACGain();
+        auto channels = ClientOpt::getDACChannels();
 #endif
 
-		auto channels = ClientOpt::getDACChannels();
 		std::vector<UioT> uioList = GetUioList();
 		int32_t ch_off[MAX_DAC_CHANNELS] = { 0 , 0 };
 		double  ch_gain[MAX_DAC_CHANNELS] = { 1 , 1 };
@@ -87,8 +87,8 @@ auto startDACServer(bool verbMode,bool testMode) -> void{
 		}
 
 		if (rp_HPGetIsGainDACx5OrDefault()){
-        	rp_max7311::rp_setGainOut(RP_MAX7311_OUT1, dac_gain == CStreamSettings::X1 ? RP_GAIN_2V : RP_GAIN_10V);
-        	rp_max7311::rp_setGainOut(RP_MAX7311_OUT2, dac_gain == CStreamSettings::X1 ? RP_GAIN_2V : RP_GAIN_10V);
+        	rp_max7311::rp_setGainOut(RP_MAX7311_OUT1, dac_gain & CStreamSettings::CH1 ? RP_GAIN_10V : RP_GAIN_2V);
+        	rp_max7311::rp_setGainOut(RP_MAX7311_OUT2, dac_gain & CStreamSettings::CH2 ? RP_GAIN_10V : RP_GAIN_2V);
 		}
 
 		for (const UioT &uio : uioList)

@@ -69,6 +69,9 @@ CBoard::CBoard(QString ip)
     ,m_chartEnable(false)
     ,m_isADCStarted(false)
     ,m_testMode(false)
+    ,m_adcChannels(2)
+    ,m_IsACDC(false)
+    ,m_IsAttenuator(false)
 {
 
     QSettings setting("RedPitaya","rpsa_cient_qt_"+m_ip);
@@ -182,11 +185,18 @@ auto CBoard::createStreaming(net_lib::EProtocol protocol) -> void{
 
                 uint64_t sempCh1 = 0;
                 uint64_t sempCh2 = 0;
+                uint64_t sempCh3 = 0;
+                uint64_t sempCh4 = 0;
                 uint64_t sizeCh1 = 0;
                 uint64_t sizeCh2 = 0;
+                uint64_t sizeCh3 = 0;
+                uint64_t sizeCh4 = 0;
                 uint64_t lostRate = 0;
                 auto ch1 = pack->getBuffer(DataLib::CH1);
                 auto ch2 = pack->getBuffer(DataLib::CH2);
+                auto ch3 = pack->getBuffer(DataLib::CH3);
+                auto ch4 = pack->getBuffer(DataLib::CH4);
+
                 if (ch1){
                     sempCh1 = ch1->getSamplesCount();
                     sizeCh1 = ch1->getBufferLenght();
@@ -199,13 +209,29 @@ auto CBoard::createStreaming(net_lib::EProtocol protocol) -> void{
                     lostRate += ch2->getLostSamplesAll();
                 }
 
+                if (ch3){
+                    sempCh3 = ch3->getSamplesCount();
+                    sizeCh3 = ch3->getBufferLenght();
+                    lostRate += ch3->getLostSamplesAll();
+                }
+
+
+                if (ch4){
+                    sempCh4 = ch4->getSamplesCount();
+                    sizeCh4 = ch4->getBufferLenght();
+                    lostRate += ch4->getLostSamplesAll();
+                }
+
                 auto net   = obj->getNetworkLost();
                 auto flost = obj->getFileLost();
 
-                m_stat.bytes += sizeCh1 + sizeCh2;
+                m_stat.bytes += sizeCh1 + sizeCh2 + sizeCh3 + sizeCh4;
                 m_stat.bw = convertBtoSpeed(m_stat.bytes,QDateTime::currentMSecsSinceEpoch() - startTime);
                 m_stat.samples1 += sempCh1;
                 m_stat.samples2 += sempCh2;
+                m_stat.samples3 += sempCh3;
+                m_stat.samples4 += sempCh4;
+
                 m_stat.lost += lostRate;
                 m_stat.flost += flost;
                 m_stat.broken_b = 0;
@@ -266,12 +292,44 @@ auto CBoard::getIP() -> QString{
     return m_ip;
 }
 
-auto CBoard::setMode(broadcast_lib::EMode mode) -> void{
+auto CBoard::setMode(broadcast_lib::EMode mode) -> void {
     m_mode = mode;
     Q_EMIT isMasterChanged();
 }
 
-auto CBoard::setModel(broadcast_lib::EModel model) -> void{
+auto CBoard::setModel(broadcast_lib::EModel model) -> void {
+    switch(model){
+        case broadcast_lib::EModel::RP_125_14_Z20:
+        case broadcast_lib::EModel::RP_125_14: {
+            m_adcChannels = 2;
+            m_IsACDC = false;
+            m_IsAttenuator = true;
+            break;
+        }
+        case broadcast_lib::EModel::RP_122_16: {
+            m_adcChannels = 2;
+            m_IsACDC = false;
+            m_IsAttenuator = false;
+            break;
+        }
+        case broadcast_lib::EModel::RP_125_4CH: {
+            m_adcChannels = 4;
+            m_IsACDC = false;
+            m_IsAttenuator = true;
+            break;
+        }
+        case broadcast_lib::EModel::RP_250_12: {
+            m_adcChannels = 2;
+            m_IsACDC = true;
+            m_IsAttenuator = true;
+            break;
+        }
+
+        default:
+            m_IsAttenuator = false;
+            m_adcChannels = 0;
+            m_IsACDC = false;
+    }
     m_model = model;
     Q_EMIT modelChanged();
 }
@@ -381,8 +439,10 @@ auto CBoard::getDecimation() -> int{
 }
 
 void CBoard::setDecimation(int dec){
-    m_configManager->setDecimation(dec);
-    m_configManager->getLocalSettingsOfHost(m_ip.toStdString())->setDecimation(dec);
+    if ((dec >= 16 && dec <= 65535) || (dec == 1) || (dec == 2) || (dec == 4) || (dec == 8)){
+        m_configManager->setDecimation(dec);
+        m_configManager->getLocalSettingsOfHost(m_ip.toStdString())->setDecimation(dec);
+    }
 }
 
 auto CBoard::getSampleLimit() -> int{
@@ -503,6 +563,14 @@ QString CBoard::getSamplesCH1(){
 
 QString CBoard::getSamplesCH2(){
     return QString::number(m_stat.samples2);
+}
+
+QString CBoard::getSamplesCH3(){
+    return QString::number(m_stat.samples3);
+}
+
+QString CBoard::getSamplesCH4(){
+    return QString::number(m_stat.samples4);
 }
 
 QString CBoard::getLostCount(){

@@ -14,7 +14,7 @@ Row {
     }
 
     Item {
-        width: parent.width * 0.4
+        width: parent.width * (board.maxChannels === 2 ? 0.4 : 0.5)
         height: parent.height
 
         Column {
@@ -37,7 +37,6 @@ Row {
             Item {
                 width: parent.width
                 height: parent.height - 60 * mainVisibleRootWindowId.scaleFactor
-
                 RPSettings {
                     anchors.fill: parent
                 }
@@ -146,7 +145,7 @@ Row {
     }
 
     Item {
-        width: parent.width * 0.6
+        width: parent.width *  (board.maxChannels === 2 ? 0.6 : 0.5)
         height: parent.height
         Column {
             anchors.fill: parent
@@ -324,8 +323,10 @@ Row {
             }
 
             Item {
+                id:statRootId
                 width: parent.width
                 height: 30 * mainVisibleRootWindowId.scaleFactor
+                property real rowStatCount: 3 + board.maxChannels
                 Row {
                     Connections{
                         target:board
@@ -342,7 +343,7 @@ Row {
                     anchors.fill: parent
                     Item {
                         height: parent.height
-                        width: parent.width / 5.0
+                        width: parent.width / statRootId.rowStatCount
                         Row {
                             anchors.fill: parent
                             Item {
@@ -353,6 +354,8 @@ Row {
                                     verticalAlignment: Text.AlignVCenter
                                     horizontalAlignment: Text.AlignHCenter
                                     color: baseTextColor
+                                    minimumPixelSize: 5
+                                    fontSizeMode: Text.Fit
                                     font.pixelSize: height * 0.6
                                     font.family: applicationFont.name
                                     text: qsTr("Bytes:")
@@ -379,7 +382,7 @@ Row {
                     }
                     Item {
                         height: parent.height
-                        width: parent.width / 5.0
+                        width: parent.width / statRootId.rowStatCount
                         Row {
                             anchors.fill: parent
                             Item {
@@ -391,8 +394,10 @@ Row {
                                     horizontalAlignment: Text.AlignHCenter
                                     color: baseTextColor
                                     font.pixelSize: height * 0.6
+                                    minimumPixelSize: 5
+                                    fontSizeMode: Text.Fit
                                     font.family: applicationFont.name
-                                    text: qsTr("Bandwidth:")
+                                    text: qsTr("Speed:")
                                 }
                             }
 
@@ -415,8 +420,9 @@ Row {
                         }
                     }
                     Item {
+                        visible: board.maxChannels >= 1
                         height: parent.height
-                        width: parent.width / 5.0
+                        width: parent.width / statRootId.rowStatCount
                         Row {
                             anchors.fill: parent
                             Item {
@@ -428,8 +434,10 @@ Row {
                                     horizontalAlignment: Text.AlignHCenter
                                     color: baseTextColor
                                     font.pixelSize: height * 0.6
+                                    minimumPixelSize: 5
+                                    fontSizeMode: Text.Fit
                                     font.family: applicationFont.name
-                                    text: qsTr("CH1:")
+                                    text: qsTr("Ch1:")
                                 }
                             }
 
@@ -452,8 +460,9 @@ Row {
                         }
                     }
                     Item {
+                        visible: board.maxChannels >= 2
                         height: parent.height
-                        width: parent.width / 5.0
+                        width: parent.width / statRootId.rowStatCount
                         Row {
                             anchors.fill: parent
                             Item {
@@ -465,8 +474,10 @@ Row {
                                     horizontalAlignment: Text.AlignHCenter
                                     color: baseTextColor
                                     font.pixelSize: height * 0.6
+                                    minimumPixelSize: 5
+                                    fontSizeMode: Text.Fit
                                     font.family: applicationFont.name
-                                    text: qsTr("CH2:")
+                                    text: qsTr("Ch2:")
                                 }
                             }
 
@@ -489,8 +500,88 @@ Row {
                         }
                     }
                     Item {
+                        visible: board.maxChannels >= 3
                         height: parent.height
-                        width: parent.width / 5.0
+                        width: parent.width / statRootId.rowStatCount
+                        Row {
+                            anchors.fill: parent
+                            Item {
+                                height: parent.height
+                                width: parent.width * 0.3
+                                Text {
+                                    anchors.fill: parent
+                                    verticalAlignment: Text.AlignVCenter
+                                    horizontalAlignment: Text.AlignHCenter
+                                    color: baseTextColor
+                                    font.pixelSize: height * 0.6
+                                    minimumPixelSize: 5
+                                    fontSizeMode: Text.Fit
+                                    font.family: applicationFont.name
+                                    text: qsTr("Ch3:")
+                                }
+                            }
+
+                            Item {
+                                height: parent.height
+                                width: parent.width * 0.7
+                                Text {
+                                    id:sampCH3
+                                    anchors.fill: parent
+                                    verticalAlignment: Text.AlignVCenter
+                                    horizontalAlignment: Text.AlignHCenter
+                                    color: baseTextColor
+                                    font.pixelSize: height * 0.5
+                                    minimumPixelSize: 5
+                                    fontSizeMode: Text.Fit
+                                    font.family: applicationFontBold.name
+                                    text: "0"
+                                }
+                            }
+                        }
+                    }
+                    Item {
+                        visible: board.maxChannels >= 4
+                        height: parent.height
+                        width: parent.width / statRootId.rowStatCount
+                        Row {
+                            anchors.fill: parent
+                            Item {
+                                height: parent.height
+                                width: parent.width * 0.3
+                                Text {
+                                    anchors.fill: parent
+                                    verticalAlignment: Text.AlignVCenter
+                                    horizontalAlignment: Text.AlignHCenter
+                                    color: baseTextColor
+                                    font.pixelSize: height * 0.6
+                                    minimumPixelSize: 5
+                                    fontSizeMode: Text.Fit
+                                    font.family: applicationFont.name
+                                    text: qsTr("Ch4:")
+                                }
+                            }
+
+                            Item {
+                                height: parent.height
+                                width: parent.width * 0.7
+                                Text {
+                                    id:sampCH4
+                                    anchors.fill: parent
+                                    verticalAlignment: Text.AlignVCenter
+                                    horizontalAlignment: Text.AlignHCenter
+                                    color: baseTextColor
+                                    font.pixelSize: height * 0.5
+                                    minimumPixelSize: 5
+                                    fontSizeMode: Text.Fit
+                                    font.family: applicationFontBold.name
+                                    text: "0"
+                                }
+                            }
+                        }
+                    }
+                    Item {
+                        height: parent.height
+                        width: parent.width / statRootId.rowStatCount
                         Row {
                             anchors.fill: parent
                             Item {
@@ -502,6 +593,8 @@ Row {
                                     horizontalAlignment: Text.AlignHCenter
                                     color: baseTextColor
                                     font.pixelSize: height * 0.6
+                                    minimumPixelSize: 5
+                                    fontSizeMode: Text.Fit
                                     font.family: applicationFont.name
                                     text: qsTr("Lost:")
                                 }

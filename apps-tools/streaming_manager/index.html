@@ -70,9 +70,289 @@
                     </div>
                 </div>
             </div>
-            <div id="">
+            <div>
                 <div id="main" style="visibility: hidden;">
-                    <div>
+                    <div style="display: flex;">
+                        <div class="panels" style="width: 400px;">
+                            <div style="height: 100%;display: flex;flex-flow: column;">
+                                <label style="width: 100%;text-align: center;height: 30px;font-size: 14pt">Configuration</label>
+                                <div style="height: 100%;display: flex;flex-wrap: wrap;align-content: flex-start; overflow-x: auto;">
+                                    <div class="configcell">
+                                        <div>
+                                            <label style="width: 100%;">Mode</label>
+                                        </div>
+                                        <div class="flipswitch_div" style="width: 100%;height: 50%;">
+                                            <input id="SS_MODE" type="checkbox" style="margin: 0;" class="man_flipswitch flipswitch" data-on="Local" data-off="Network" value="true"/>
+                                        </div>
+                                    </div>
+                                    <div class="configcell net_use">
+                                        <div>
+                                            <label style="width: 100%;">Protocol</label>
+                                        </div>
+                                        <div class="flipswitch_div" style="width: 100%;height: 50%;">
+                                            <input id="SS_PROTOCOL" type="checkbox" style="margin: 0;" class="man_flipswitch flipswitch" data-on="UDP" data-off="TCP" value="true"/>
+                                        </div>
+                                    </div>
+                                    <div class="configcell net_use">
+                                        <div>
+                                            <label style="width: 100%;">IP</label>
+                                        </div>
+                                        <div class="flipswitch_div" style="width: 100%;height: 50%;">
+                                            <input id="SS_IP_ADDR" class="ipaddress" type="text" minlength="7" maxlength="15" size="15" placeholder="xxx.xxx.xxx.xxx" pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$">
+                                        </div>
+                                    </div>
+                                    <div class="configcell net_use">
+                                        <div>
+                                            <label style="width: 100%;">Port</label>
+                                        </div>
+                                        <div class="flipswitch_div" style="width: 100%;height: 50%;">
+                                            <input id="SS_PORT_NUMBER" type="text" size="5" style="width: 100%;" value="8900" step="1" min="1" max="65535">
+                                        </div>
+                                    </div>
+                                    <div class="configcell file_use">
+                                        <div>
+                                            <label style="width: 100%;">Samples</label>
+                                        </div>
+                                        <div class="flipswitch_div" style="width: 100%;height: 50%;">
+                                            <input id="SS_SAMPLES"  type="text" size="15" style="width: 100%;" value="20000000" step="1" min="1" max="20000000">
+                                        </div>
+                                    </div>
+                                    <div class="configcell">
+                                        <div>
+                                            <label style="width: 100%;">Rate</label>
+                                        </div>
+                                        <div class="flipswitch_div" style="width: 100%;height: 50%;">
+                                            <input id="SS_RATE" type="text" size="5" style="width: 100%;" value="" step="1" min="1" max="65535">
+                                        </div>
+                                    </div>
+                                    <div class="configcell">
+                                        <div>
+                                            <label style="width: 100%;">Resolution</label>
+                                        </div>
+                                        <div class="flipswitch_div" style="width: 100%;height: 50%;">
+                                            <input id="SS_RESOLUTION" type="checkbox" style="margin: 0;" class="man_flipswitch flipswitch" data-on="16 Bit" data-off="8 Bit" value="true"/>
+                                        </div>
+                                    </div>
+
+                                    <div class="configcell">
+                                        <div>
+                                            <label style="width: 100%;">Use calibration</label>
+                                        </div>
+                                        <div class="flipswitch_div" style="width: 100%;height: 50%;">
+                                            <input id="SS_USE_CALIB" type="checkbox" style="margin: 0;" class="man_flipswitch flipswitch" data-on="ON" data-off="OFF" value="true"/>
+                                        </div>
+                                    </div>
+                                    <div class="configcell">
+                                        <div>
+                                            <label style="width: 100%;">Type of file saved</label>
+                                        </div>
+                                        <div class="flipswitch_div" style="width: 100%;height: 50%;">
+                                            <select id="SS_FORMAT" style="width: 100%;" name="rate">
+                                                <option value="0">wav</option>
+                                                <option value="1">tdms</option>
+                                                <option value="2">bin</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="configcell file_use">
+                                        <div>
+                                            <label style="width: 100%;">Save mode</label>
+                                        </div>
+                                        <div class="flipswitch_div" style="width: 100%;height: 50%;">
+                                            <input id="SS_SAVE_MODE" type="checkbox" style="margin: 0;" class="man_flipswitch flipswitch" data-on="Volt" data-off="Raw" value="true"/>
+                                        </div>
+                                    </div>
+                                    <div class="configcell_long" style="display: flex; justify-content: space-evenly;">
+                                        <div style="width: 25%" class="ch1">
+                                            <div>
+                                                <label style="width: 100%;text-align: center;">CH 1</label>
+                                            </div>
+                                            <div style="width: 100%;height: 50%;padding-left: 5px;padding-right: 5px;">
+                                                <div class="flipswitch_div" style="width: 100%;height: 100%;">
+                                                    <input id="SS_CH1_ENABLE" type="checkbox" style="margin: 0;" class="man_flipswitch flipswitch" data-on="On" data-off="Off" value="true"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style="width: 25%;" class="ch2">
+                                            <div>
+                                                <label style="width: 100%;text-align: center;">CH 2</label>
+                                            </div>
+                                            <div style="width: 100%;height: 50%;padding-left: 5px;padding-right: 5px;">
+                                                <div class="flipswitch_div" style="width: 100%;height: 100%;">
+                                                    <input id="SS_CH2_ENABLE" type="checkbox" style="margin: 0;" class="man_flipswitch flipswitch" data-on="On" data-off="Off" value="true"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style="width: 25%;" class="ch3">
+                                            <div>
+                                                <label style="width: 100%;text-align: center;">CH 3</label>
+                                            </div>
+                                            <div style="width: 100%;height: 50%;padding-left: 5px;padding-right: 5px;">
+                                                <div class="flipswitch_div" style="width: 100%;height: 100%;">
+                                                    <input id="SS_CH3_ENABLE" type="checkbox" style="margin: 0;" class="man_flipswitch flipswitch" data-on="On" data-off="Off" value="true"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style="width: 25%;" class="ch4">
+                                            <div>
+                                                <label style="width: 100%;text-align: center;">CH 4</label>
+                                            </div>
+                                            <div style="width: 100%;height: 50%;padding-left: 5px;padding-right: 5px;">
+                                                <div class="flipswitch_div" style="width: 100%;height: 100%;">
+                                                    <input id="SS_CH4_ENABLE" type="checkbox" style="margin: 0;" class="man_flipswitch flipswitch" data-on="On" data-off="Off" value="true"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>                                 
+                                    <div class="configcell_long" style="display: flex; justify-content: space-evenly; height: 48px;">
+                                        <div style="width: 25%" class="ch1">
+                                            <div style="width: 100%;height: 100%;padding-left: 5px;padding-right: 5px;">
+                                                <div class="flipswitch_div" style="width: 100%;height: 100%;">
+                                                    <input id="SS_CH1_ATTENUATOR" type="checkbox" style="margin: 0;" class="man_flipswitch flipswitch" data-on="1:20" data-off="1:1" value="true"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style="width: 25%;" class="ch2">
+                                            <div style="width: 100%;height: 100%;padding-left: 5px;padding-right: 5px;">
+                                                <div class="flipswitch_div" style="width: 100%;height: 100%;">
+                                                    <input id="SS_CH2_ATTENUATOR" type="checkbox" style="margin: 0;" class="man_flipswitch flipswitch" data-on="1:20" data-off="1:1" value="true"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style="width: 25%;" class="ch3">
+                                            <div style="width: 100%;height: 100%;padding-left: 5px;padding-right: 5px;">
+                                                <div class="flipswitch_div" style="width: 100%;height: 100%;">
+                                                    <input id="SS_CH3_ATTENUATOR" type="checkbox" style="margin: 0;" class="man_flipswitch flipswitch" data-on="1:20" data-off="1:1" value="true"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style="width: 25%;" class="ch4">
+                                            <div style="width: 100%;height: 100%;padding-left: 5px;padding-right: 5px;">
+                                                <div class="flipswitch_div" style="width: 100%;height: 100%;">
+                                                    <input id="SS_CH4_ATTENUATOR" type="checkbox" style="margin: 0;" class="man_flipswitch flipswitch" data-on="1:20" data-off="1:1" value="true"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="configcell_long ac_dc" style="display: flex; justify-content: space-evenly; height: 48px;">
+                                        <div style="width: 25%" class="ch1">
+                                            <div style="width: 100%;height: 100%;padding-left: 5px;padding-right: 5px;">
+                                                <div class="flipswitch_div" style="width: 100%;height: 100%;">
+                                                    <input id="SS_CH1_AC_DC" type="checkbox" style="margin: 0;" class="man_flipswitch flipswitch" data-on="DC" data-off="AC" value="true"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style="width: 25%;" class="ch2">
+                                            <div style="width: 100%;height: 100%;padding-left: 5px;padding-right: 5px;">
+                                                <div class="flipswitch_div" style="width: 100%;height: 100%;">
+                                                    <input id="SS_CH2_AC_DC" type="checkbox" style="margin: 0;" class="man_flipswitch flipswitch" data-on="DC" data-off="AC" value="true"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style="width: 25%;" class="ch3">
+                                            <div style="width: 100%;height: 100%;padding-left: 5px;padding-right: 5px;">
+                                                <div class="flipswitch_div" style="width: 100%;height: 100%;">
+                                                    <input id="SS_CH3_AC_DC" type="checkbox" style="margin: 0;" class="man_flipswitch flipswitch" data-on="DC" data-off="AC" value="true"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style="width: 25%;" class="ch4">
+                                            <div style="width: 100%;height: 100%;padding-left: 5px;padding-right: 5px;">
+                                                <div class="flipswitch_div" style="width: 100%;height: 100%;">
+                                                    <input id="SS_CH4_AC_DC" type="checkbox" style="margin: 0;" class="man_flipswitch flipswitch" data-on="DC" data-off="AC" value="true"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div style="width: 100%;height: 40px;display: flex;padding-top: 5px;padding-bottom: 5px;">
+                                    <a href="https://redpitaya.readthedocs.io/en/latest/appsFeatures/applications/streaming/appStreaming.html" target="_blank">
+                                        <img class="image_button" src="./img/help_icon.png" width="30px" height="30px" style="margin-right: 10px;">
+                                    </a>
+                                    <label style="width:80px;height:30px;margin-right:10px;font-size: 12pt;line-height: 30px;">PC Clients</label>
+                                    <a id="PC_DESK_WIN" target="_top">
+                                        <img class="image_button" src="./img/DeskWinGreen.png" loading="lazy" width="30px" height="30px" style="margin-right: 10px;">
+                                    </a>
+                                    <a id="PC_CON_WIN" target="_top">
+                                        <img class="image_button" src="./img/ConWinGreen.png" loading="lazy" width="30px" height="30px" style="margin-right: 10px;">
+                                    </a>
+                                    <a id="PC_DESK_LIN" target="_top">
+                                        <img class="image_button" src="./img/DeskLinGreen.png" loading="lazy" width="30px" height="30px" style="margin-right: 10px;">
+                                    </a>
+                                    <a id="PC_CON_LIN" target="_top">
+                                        <img class="image_button" src="./img/ConLinGreen.png" loading="lazy" width="30px" height="30px" style="margin-right: 10px;">
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panels" style="width: 100%;">
+                            <div style="height: 100%;display: flex;flex-flow: column;">
+                                <div style="width: 100%;height: 40px;display: flex;padding-top: 5px;padding-bottom: 5px;">
+                                    <div>
+                                        <img id="svg-is-runnung" src="./img/red_led.png" width="30px" height="30px" style="margin-right: 10px;">
+                                    </div>
+                                    <div style="width: 100px; margin-left: 10px">
+                                        <li class="run_buttons2" id="SM_RUN" style="width: 100%">
+                                            <a style="display: block;">Start</a>
+                                        </li>
+                                    </div>
+                                    <div style="width: 100px; margin-left: 10px">
+                                        <li class="run_buttons2" id="SM_STOP" style="width: 100%">
+                                            <a style="display: block;">Stop</a>
+                                        </li>
+                                    </div>
+                                    <label id="svg-is-data-pass"  style="width: 100px;line-height: 2; text-align: center;height: 30px;font-size: 12pt;color: green;">Data pass</label>
+                                </div>
+                                <label style="width: 100%;text-align: center;height: 30px;font-size: 14pt;">Files on SD card</label>
+                                <div id="files_table" style="height: 100%;display: flex;flex-wrap: wrap;align-content: flex-start; overflow-x: auto;">
+                                    <div class="filecell">
+                                        <div>
+                                            <div>
+                                                <label>File name</label>
+                                            </div>
+                                            <span>
+                                                <item>
+                                                    <subitem>
+                                                        <label>TDMS</label>
+                                                    </subitem>
+                                                </item>
+                                                <item2>
+                                                    <label>14322313 Mb</label>
+                                                </item2>
+                                                <item3/>
+                                                <item4>
+                                                    <li class="run_buttons2">
+                                                        <a>LOG</a>
+                                                    </li>
+                                                    <li class="run_buttons2" style="width: 30%;height: 22px;">
+                                                        <a>LOST</a>
+                                                    </li>
+                                                    <li class="run_buttons2" style="width: 30%;height: 22px;">
+                                                        <a>🡇</a>
+                                                    </li>
+                                                </item4>
+                                            </span>
+                                        </div>
+                                    </div>
+                                   
+                                </div>
+                                <div style="width: 100%;height: 40px;display: flex;padding-top: 5px;padding-bottom: 5px;justify-content: flex-end;">
+                                    <div style="width: 150px; margin-left: 10px">
+                                        <li class="run_buttons2" id="B_REFRESH" style="width: 100%">
+                                            <a style="display: block;">Refresh</a>
+                                        </li>
+                                    </div>
+                                    <div style="width: 150px; margin-left: 10px">
+                                        <li class="run_buttons2" id="B_DELETE_ALL" style="width: 100%">
+                                            <a style="display: block;">Delete all</a>
+                                        </li>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- <div>
                         <div>
                             <div align="center">
 
@@ -221,15 +501,6 @@
                                     </div>
                                 </div>
                             </div>
-                            <!--
-                            <div id="label-is-runnung" align=center style="font-size: 16pt; color: red;">
-                                Stream server is not running, press RUN button to start it
-                            </div>
-                            <div id="label-is-not-runnung" align=center style="font-size: 16pt; color: green; display: none;">
-                                Stream server is running... (IP="<span id="ip-addr">127.0.0.1</span>", port="5000")
-                                    </div>
-                                    -->
-
 
                             <div class="container_inline" align=center>
 
@@ -252,18 +523,6 @@
                             </div>
 
                             <div id="svg-is-runnung" class="container_inline" align=center style="display:none;">
-
-                                <!-- <div style="height: 30px;margin: 0px;">
-                                        <svg width="30px" height="30px">
-                                                    <svg>
-                                                      <circle cx="14px" cy="14px" r="4px" style="stroke: lightgray; stroke-width:18; fill:transparent"/>
-                                                      <circle cx="14px" cy="14px" r="6px" style="fill:#2c3e50"/>
-                                                      <path style="stroke: #2c3e50; stroke-dasharray:48; stroke-dashoffset:48; stroke-width:4; fill:transparent" d="M14,14 m0,-10 a 10,10 0 0,1 0,20 a 10,10 0 0,1 0,-20">
-                                                        <animate attributeName="stroke-dashoffset" dur="12s" to="-48" repeatCount="indefinite"/>
-                                                      </path>
-                                                    </svg>
-                                        </svg>
-                                </div> -->
                                 <div style="font-size: 16pt; color: green;">
                                     Stream server is running
                                 </div>
@@ -277,7 +536,7 @@
                             </div>
 
                         </div>
-                    </div>
+                    </div> -->
                 </div>
             </div>
         </div>
