@@ -1692,6 +1692,9 @@ int acq_GetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t *status){
     return RP_OK;
 }
 
+int acq_axi_GetMemoryRegion(uint32_t *_start,uint32_t *_size){
+    return osc_axi_GetMemoryRegion(_start,_size);
+}
 
 int acq_UpdateAcqFilter(rp_channel_t channel){
 

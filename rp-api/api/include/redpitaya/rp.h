@@ -26,9 +26,6 @@ extern "C" {
 #define ADC_BUFFER_SIZE         (16 * 1024)
 #define DAC_BUFFER_SIZE         (16 * 1024)
 
-#define ADC_AXI_START           0x1000000
-#define ADC_AXI_END             0x1180000
-
 #define RISE_FALL_MIN_RATIO     0.0001      // ratio of rise/fall time to period
 #define RISE_FALL_MAX_RATIO     0.1
 
@@ -1025,6 +1022,15 @@ int rp_AcqGetDataPosRaw(rp_channel_t channel, uint32_t start_pos, uint32_t end_p
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 int rp_AcqGetDataPosV(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, float* buffer, uint32_t *buffer_size);
+
+/**
+ * Get reserved memory for DMA mode
+ * @param channel Channel index
+ * @param enable Enable state
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqAxiGetMemoryRegion(uint32_t *_start,uint32_t *_size);
 
 /**
  * Sets the AXI enable state.

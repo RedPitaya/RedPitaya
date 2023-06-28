@@ -16,6 +16,10 @@ int main(int argc, char **argv)
         return -1;
     }
 
+    uint32_t g_adc_axi_start,g_adc_axi_size;
+    rp_AcqAxiGetMemoryRegion(&g_adc_axi_start,&g_adc_axi_size);
+
+    printf("Reserved memory start 0x%X size 0x%X\n",g_adc_axi_start,g_adc_axi_size);
 //    rp_AcqResetFpga();
 
     if (rp_AcqAxiSetDecimationFactor(RP_CH_1, RP_DEC_1) != RP_OK) {
@@ -34,11 +38,11 @@ int main(int argc, char **argv)
         fprintf(stderr, "rp_AcqAxiSetTriggerDelay RP_CH_2 failed!\n");
         return -1;
     }
-    if (rp_AcqAxiSetBuffer(RP_CH_1, ADC_AXI_START, DATA_SIZE) != RP_OK) {
+    if (rp_AcqAxiSetBuffer(RP_CH_1, g_adc_axi_start, DATA_SIZE) != RP_OK) {
         fprintf(stderr, "rp_AcqAxiSetBuffer RP_CH_1 failed!\n");
         return -1;
     }
-    if (rp_AcqAxiSetBuffer(RP_CH_2, (ADC_AXI_END + ADC_AXI_START) / 2, DATA_SIZE) != RP_OK) {
+    if (rp_AcqAxiSetBuffer(RP_CH_2, g_adc_axi_start + g_adc_axi_size / 2, DATA_SIZE) != RP_OK) {
         fprintf(stderr, "rp_AcqAxiSetBuffer RP_CH_2 failed!\n");
         return -1;
     }

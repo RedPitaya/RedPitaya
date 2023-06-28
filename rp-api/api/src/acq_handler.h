@@ -66,6 +66,7 @@ int acq_axi_GetWritePointer(rp_channel_t channel, uint32_t* pos);
 int acq_axi_GetWritePointerAtTrig(rp_channel_t channel, uint32_t* pos);
 int acq_axi_SetBuffer(rp_channel_t channel, uint32_t address, uint32_t size);
 int acq_axi_Enable(rp_channel_t channel, bool enable);
+int acq_axi_GetMemoryRegion(uint32_t *_start,uint32_t *_size);
 int acq_Start();
 int acq_Stop();
 int acq_Reset();

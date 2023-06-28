@@ -1042,6 +1042,11 @@ int rp_AcqGetDataPosV(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos
     return acq_GetDataPosV(channel, start_pos, end_pos, buffer, buffer_size);
 }
 
+int rp_AcqAxiGetMemoryRegion(uint32_t *_start,uint32_t *_size)
+{
+    return acq_axi_GetMemoryRegion(_start,_size);
+}
+
 int rp_AcqAxiEnable(rp_channel_t channel, bool enable)
 {
     return acq_axi_Enable(channel, enable);

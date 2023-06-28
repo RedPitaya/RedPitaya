@@ -77,19 +77,6 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    if (option.enableAXI){
-        if (option.dataSize > ((ADC_AXI_END-ADC_AXI_START)/4)){
-            fprintf(stderr,"[Error] Data size must be less than %i\n", ((ADC_AXI_END-ADC_AXI_START)/4) ); // /2 because of 16bit data /2 because of 2 channels
-            usage(g_argv0);
-            return -1;
-        }
-    }else{
-        if (option.dataSize > ADC_BUFFER_SIZE){
-            fprintf(stderr,"[Error] Data size must be less than %i\n", ADC_BUFFER_SIZE);
-            usage(g_argv0);
-            return -1;
-        }
-    }
     auto model = getModel();
     if (model == RP_250_12){
         if (!option.disableReset) {
@@ -100,6 +87,23 @@ int main(int argc, char *argv[])
     if (rp_InitReset(option.reset_hk) != RP_OK){
         fprintf(stderr,"Error init rp api\n");
         return -1;
+    }
+    uint32_t axi_start,axi_size;
+    
+    rp_AcqAxiGetMemoryRegion(&axi_start,&axi_size);
+
+    if (option.enableAXI){
+        if (option.dataSize > (axi_size/4)){
+            fprintf(stderr,"[Error] Data size must be less than %i\n", (axi_size/4) ); // /2 because of 16bit data /2 because of 2 channels
+            usage(g_argv0);
+            return -1;
+        }
+    }else{
+        if (option.dataSize > ADC_BUFFER_SIZE){
+            fprintf(stderr,"[Error] Data size must be less than %i\n", ADC_BUFFER_SIZE);
+            usage(g_argv0);
+            return -1;
+        }
     }
 
     if (option.enableAXI){
@@ -169,8 +173,8 @@ int main(int argc, char *argv[])
         rp_AcqAxiSetDecimationFactor(RP_CH_2, option.decimation);
         rp_AcqAxiSetTriggerDelay(RP_CH_1, option.dataSize);
         rp_AcqAxiSetTriggerDelay(RP_CH_2, option.dataSize);
-        rp_AcqAxiSetBuffer(RP_CH_1, ADC_AXI_START, option.dataSize);
-        rp_AcqAxiSetBuffer(RP_CH_2, (ADC_AXI_END + ADC_AXI_START) / 2, option.dataSize);
+        rp_AcqAxiSetBuffer(RP_CH_1, axi_start, option.dataSize);
+        rp_AcqAxiSetBuffer(RP_CH_2, axi_start + axi_size / 2, option.dataSize);
         if (rp_AcqAxiEnable(RP_CH_1, true) != RP_OK){
             fprintf(stderr,"Error: Can't enable AXI for channel 1");
             return -1;

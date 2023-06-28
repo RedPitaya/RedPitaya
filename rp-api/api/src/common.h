@@ -100,6 +100,8 @@ int cmn_GetValue(volatile uint32_t* field, uint32_t* value, uint32_t mask);
 int cmn_GetShiftedValue(volatile uint32_t* field, uint32_t* value, uint32_t mask, uint32_t bitsToSetShift);
 int cmn_AreBitsSet(volatile uint32_t field, uint32_t bits, uint32_t mask, bool* result);
 
+int cmn_GetReservedMemory(uint32_t *_startAddress,uint32_t *_size);
+
 int intcmp(const void *a, const void *b);
 int int16cmp(const void *aa, const void *bb);
 int floatCmp(const void *a, const void *b);
