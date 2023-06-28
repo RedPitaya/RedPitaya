@@ -41,8 +41,8 @@ struct OscilloscopeMapT
     uint32_t dma_ctrl;              // 80  - offset 0x50
     uint32_t dma_sts_addr;          // 84  - offset 0x54
     uint32_t dma_buf_size;          // 88  - offset 0x58
-    uint32_t lost_samples_buf1;     // 92  - offset 0x5C
-    uint32_t lost_samples_buf2;     // 96  - offset 0x60
+    uint32_t lost_samples_buf1_ch1; // 92  - offset 0x5C
+    uint32_t lost_samples_buf2_ch1; // 96  - offset 0x60
     uint32_t dma_dst_addr1_ch1;     // 100 - offset 0x64
     uint32_t dma_dst_addr2_ch1;     // 104 - offset 0x68
     uint32_t dma_dst_addr1_ch2;     // 108 - offset 0x6C
@@ -52,10 +52,10 @@ struct OscilloscopeMapT
     uint32_t calib_offset_ch2;      // 124 - offset 0x7C
     uint32_t calib_gain_ch2;        // 128 - offset 0x80
     uint32_t reserv2[6];
-    uint32_t lost_samples_buf1_ch2;  // 156 - offset 0x9C
-    uint32_t lost_samples_buf2_ch2;  // 160 - offset 0xA0
-    uint32_t write_pointer_ch1;     // 164 - offset 0xA4
-    uint32_t write_pointer_ch2;     // 168 - offset 0xA8
+    uint32_t lost_samples_buf1_ch2;   // 156 - offset 0x9C
+    uint32_t lost_samples_buf2_ch2;   // 160 - offset 0xA0
+    uint32_t write_pointer_ch1;       // 164 - offset 0xA4
+    uint32_t write_pointer_ch2;       // 168 - offset 0xA8
     uint32_t reserv3[5];
     uint32_t filt_coeff_aa_ch1;       // 192  - offset 0xC0
     uint32_t filt_coeff_bb_ch1;       // 196  - offset 0xC4
@@ -67,6 +67,35 @@ struct OscilloscopeMapT
     uint32_t filt_coeff_pp_ch2;       // 220  - offset 0xDC
     uint32_t reserv4[8];
     uint32_t mode_slave_sts;          // 256  - offset 0x100
+
+    // Extended regset for stream_app_4ch project
+    uint32_t reserv5[22];
+    uint32_t lost_samples_buf1_ch3;   // 348 - offset 0x15C
+    uint32_t lost_samples_buf2_ch3;   // 352 - offset 0x160
+    uint32_t dma_dst_addr1_ch3;       // 356 - offset 0x164
+    uint32_t dma_dst_addr2_ch3;       // 360 - offset 0x168
+    uint32_t dma_dst_addr1_ch4;       // 364 - offset 0x16C
+    uint32_t dma_dst_addr2_ch4;       // 368 - offset 0x170
+    uint32_t calib_offset_ch3;        // 372 - offset 0x174
+    uint32_t calib_gain_ch3;          // 376 - offset 0x178
+    uint32_t calib_offset_ch4;        // 380 - offset 0x17C
+    uint32_t calib_gain_ch4;          // 384 - offset 0x180
+    uint32_t reserv6[6];
+    uint32_t lost_samples_buf1_ch4;   // 412 - offset 0x19C
+    uint32_t lost_samples_buf2_ch4;   // 416 - offset 0x1A0
+    uint32_t write_pointer_ch3;       // 420 - offset 0x1A4
+    uint32_t write_pointer_ch4;       // 424 - offset 0x1A8
+    uint32_t reserv7[5];
+    uint32_t filt_coeff_aa_ch3;       // 448  - offset 0x1C0
+    uint32_t filt_coeff_bb_ch3;       // 452  - offset 0x1C4
+    uint32_t filt_coeff_kk_ch3;       // 456  - offset 0x1C8
+    uint32_t filt_coeff_pp_ch3;       // 460  - offset 0x1CC
+    uint32_t filt_coeff_aa_ch4;       // 464  - offset 0x1D0
+    uint32_t filt_coeff_bb_ch4;       // 468  - offset 0x1D4
+    uint32_t filt_coeff_kk_ch4;       // 472  - offset 0x1D8
+    uint32_t filt_coeff_pp_ch4;       // 476  - offset 0x1DC
+
+
 };
 
 enum BoardMode {
@@ -87,7 +116,7 @@ public:
     ~COscilloscope();
 
     auto prepare() -> void;
-    auto next(uint8_t *&_buffer1,uint8_t *&_buffer2, size_t &_size,uint32_t &_overFlow) -> bool;
+    auto next(uint8_t *&_buffer1,uint8_t *&_buffer2,uint8_t *&_buffer3,uint8_t *&_buffer4, size_t &_size,uint32_t &_overFlow) -> bool;
     auto setCalibration(uint8_t ch,int32_t _offset,float _gain) -> void;
     auto setFilterCalibration(uint8_t ch,int32_t _aa,int32_t _bb, int32_t _pp, int32_t _kk) -> void;
     auto setFilterBypass(bool _state) -> void;
@@ -117,8 +146,7 @@ private:
     size_t       m_BufferSize;
     uintptr_t    m_BufferPhysAddr;
     volatile     OscilloscopeMapT *m_OscMap;
-    uint8_t     *m_OscBuffer1;
-    uint8_t     *m_OscBuffer2;
+    uint8_t     *m_OscBuffer[4];
     unsigned     m_OscBufferNumber;
     uint32_t     m_dec_factor;
     std::mutex   m_waitLock;
