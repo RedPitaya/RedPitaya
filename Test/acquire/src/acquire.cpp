@@ -169,12 +169,11 @@ int main(int argc, char *argv[])
     rp_channel_t axi_trig_ch = (rp_channel_t) getTrigChByTrigSource(option.trigger_mode);
 
     if (option.enableAXI){
-        rp_AcqAxiSetDecimationFactor(RP_CH_1, option.decimation);
-        rp_AcqAxiSetDecimationFactor(RP_CH_2, option.decimation);
+        rp_AcqAxiSetDecimationFactor(option.decimation);
         rp_AcqAxiSetTriggerDelay(RP_CH_1, option.dataSize);
         rp_AcqAxiSetTriggerDelay(RP_CH_2, option.dataSize);
-        rp_AcqAxiSetBuffer(RP_CH_1, axi_start, option.dataSize);
-        rp_AcqAxiSetBuffer(RP_CH_2, axi_start + axi_size / 2, option.dataSize);
+        rp_AcqAxiSetBufferSamples(RP_CH_1, axi_start, option.dataSize);
+        rp_AcqAxiSetBufferSamples(RP_CH_2, axi_start + axi_size / 2, option.dataSize);
         if (rp_AcqAxiEnable(RP_CH_1, true) != RP_OK){
             fprintf(stderr,"Error: Can't enable AXI for channel 1");
             return -1;

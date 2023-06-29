@@ -28,6 +28,7 @@
 #include "spi.h"
 #include "i2c.h"
 #include "acquire.h"
+#include "acquire_axi.h"
 #include "generate.h"
 
 #include "scpi/error.h"
@@ -210,12 +211,29 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "ACQ:DATA:UNITS", .callback             = RP_AcqScpiDataUnits,},
     {.pattern = "ACQ:DATA:UNITS?", .callback            = RP_AcqScpiDataUnitsQ,},
     {.pattern = "ACQ:DATA:FORMAT", .callback            = RP_AcqSetDataFormat,},
-    {.pattern = "ACQ:SOUR#:DATA:STA:END?", .callback    = RP_AcqDataPosQ,},
-    {.pattern = "ACQ:SOUR#:DATA:STA:N?", .callback      = RP_AcqDataQ,},
+    {.pattern = "ACQ:SOUR#:DATA:STArt:END?", .callback  = RP_AcqDataPosQ,},
+    {.pattern = "ACQ:SOUR#:DATA:STArt:N?", .callback    = RP_AcqDataQ,},
     {.pattern = "ACQ:SOUR#:DATA:OLD:N?", .callback      = RP_AcqOldestDataQ,},
     {.pattern = "ACQ:SOUR#:DATA?", .callback            = RP_AcqDataOldestAllQ,},
     {.pattern = "ACQ:SOUR#:DATA:LAT:N?", .callback      = RP_AcqLatestDataQ,},
     {.pattern = "ACQ:BUF:SIZE?", .callback              = RP_AcqBufferSizeQ,},
+
+    // DMA mode for ACQ
+    {.pattern = "ACQ:AXI:DATA:UNITS", .callback         = RP_AcqAxiScpiDataUnits,},
+    {.pattern = "ACQ:AXI:DATA:UNITS?", .callback        = RP_AcqAxiScpiDataUnitsQ,},
+    {.pattern = "ACQ:AXI:DEC", .callback                = RP_AcqAxiDecimation,},
+    {.pattern = "ACQ:AXI:DEC?", .callback               = RP_AcqAxiDecimationQ,},
+    {.pattern = "ACQ:AXI:START?", .callback             = RP_AcqAxiStartQ,},
+    {.pattern = "ACQ:AXI:SIZE?", .callback              = RP_AcqAxiEndQ,},
+    {.pattern = "ACQ:AXI:SOUR#:TRIG:FILL?", .callback   = RP_AcqAxiTriggerFillQ,},
+    {.pattern = "ACQ:AXI:SOUR#:Trig:Dly", .callback     = RP_AcqAxiTriggerDelay,},
+    {.pattern = "ACQ:AXI:SOUR#:Trig:Dly?", .callback    = RP_AcqAxiTriggerDelayQ,},
+    {.pattern = "ACQ:AXI:SOUR#:Write:Pos?", .callback   = RP_AcqAxiWritePointerQ,},
+    {.pattern = "ACQ:AXI:SOUR#:Trig:Pos?", .callback    = RP_AcqAxiWritePointerAtTrigQ,},
+    {.pattern = "ACQ:AXI:SOUR#:ENable", .callback       = RP_AcqAxiEnable,},
+    {.pattern = "ACQ:AXI:SOUR#:DATA:Start:N?",.callback = RP_AcqAxiDataQ,},
+    {.pattern = "ACQ:AXI:SOUR#:SET:Buffer", .callback   = RP_AcqAxiSetAddres,},
+    
 
     {.pattern = "ACQ:SOUR#:COUP", .callback             = RP_AcqAC_DC,},
     {.pattern = "ACQ:SOUR#:COUP?", .callback            = RP_AcqAC_DCQ,},

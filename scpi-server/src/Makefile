@@ -38,6 +38,7 @@ OBJECTS =	scpi-commands.o \
 		dpin.o \
 		apin.o \
 		acquire.o \
+		acquire_axi.o \
 		common.o \
 		uart.o \
 		led.o \

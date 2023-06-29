@@ -36,13 +36,19 @@ int rp_AcqAxiGetBufferFillState(rp_channel_t channel, bool* state);
 /**
  * Sets the decimation used at acquiring signal for AXI.
  * You can specify values in the range (1,2,4,8,16-65536)
- * @param channel Channel index
  * @param decimation Decimation values
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqAxiSetDecimationFactor(rp_channel_t channel, uint32_t decimation);
+int rp_AcqAxiSetDecimationFactor(uint32_t decimation);
 
+/**
+ * Gets the decimation used at acquiring signal.
+ * @param decimation Decimation values
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqAxiGetDecimationFactor(uint32_t *decimation);
 /**
  * Sets the number of decimated data after trigger written into memory.
  * @param channel Channel index
@@ -51,6 +57,15 @@ int rp_AcqAxiSetDecimationFactor(rp_channel_t channel, uint32_t decimation);
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 int rp_AcqAxiSetTriggerDelay(rp_channel_t channel, int32_t decimated_data_num);
+
+/**
+ * Gets the number of decimated data after trigger written into memory.
+ * @param channel Channel index
+ * @param decimated_data_num Number of decimated data. It must not be higher than the ADC buffer size.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqAxiGetTriggerDelay(rp_channel_t channel, int32_t *decimated_data_num);
 
 /**
  * Returns current position of AXI ADC write pointer.
@@ -121,7 +136,19 @@ int rp_AcqAxiGetDataV(rp_channel_t channel, uint32_t pos, uint32_t* size, float*
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqAxiSetBuffer(rp_channel_t channel, uint32_t address, uint32_t size);
+int rp_AcqAxiSetBufferSamples(rp_channel_t channel, uint32_t address, uint32_t samples);
+
+/**
+ * Sets the AXI ADC buffer address and size in bytes.
+ * Buffer size must be a multiple of 2.
+ *
+ * @param channel Channel A or B for which we want to set the ADC buffer bytes.
+ * @param address Address of the ADC buffer.
+ * @param size Size of the ADC buffer in samples.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqAxiSetBufferBytes(rp_channel_t channel, uint32_t address, uint32_t size);
 
 ///@}
 
