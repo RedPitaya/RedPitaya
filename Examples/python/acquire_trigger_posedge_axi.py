@@ -4,7 +4,7 @@ import sys
 import redpitaya_scpi as scpi
 import matplotlib.pyplot as plot
 
-rp_s = scpi.scpi("200.0.0.56")
+rp_s = scpi.scpi(sys.argv[1])
 
 rp_s.tx_txt('ACQ:RST')
 rp_s.tx_txt('ACQ:DATA:FORMAT ASCII')
