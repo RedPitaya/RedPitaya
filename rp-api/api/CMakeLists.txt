@@ -70,6 +70,11 @@ list(APPEND src
 
 list(APPEND header_rp
     ${CMAKE_SOURCE_DIR}/include/redpitaya/rp.h
+    ${CMAKE_SOURCE_DIR}/include/redpitaya/rp_acq.h
+    ${CMAKE_SOURCE_DIR}/include/redpitaya/rp_acq_axi.h
+    ${CMAKE_SOURCE_DIR}/include/redpitaya/rp_enums.h
+    ${CMAKE_SOURCE_DIR}/include/redpitaya/rp_gen.h
+    ${CMAKE_SOURCE_DIR}/include/redpitaya/version.h
 )
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
@@ -101,11 +106,9 @@ if(BUILD_SHARED)
             LIBRARY DESTINATION ${INSTALL_DIR}/lib
             ARCHIVE DESTINATION ${INSTALL_DIR}/lib)
 
-        install(FILES ${CMAKE_SOURCE_DIR}/include/redpitaya/version.h
+        install(FILES ${header_rp}
             DESTINATION ${INSTALL_DIR}/include)
 
-        install(FILES ${header_rp}
-            DESTINATION ${INSTALL_DIR}/include RENAME "rp.h")
     endif()
 endif()
 
@@ -121,11 +124,9 @@ if(BUILD_STATIC)
             LIBRARY DESTINATION ${INSTALL_DIR}/lib
             ARCHIVE DESTINATION ${INSTALL_DIR}/lib)
 
-        install(FILES ${CMAKE_SOURCE_DIR}/include/redpitaya/version.h
+        install(FILES ${header_rp}
             DESTINATION ${INSTALL_DIR}/include)
 
-        install(FILES ${header_rp}
-            DESTINATION ${INSTALL_DIR}/include RENAME "rp.h")
     endif()
 endif()
 
