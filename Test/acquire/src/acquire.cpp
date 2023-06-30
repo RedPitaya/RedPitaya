@@ -89,12 +89,11 @@ int main(int argc, char *argv[])
         return -1;
     }
     uint32_t axi_start,axi_size;
-    
     rp_AcqAxiGetMemoryRegion(&axi_start,&axi_size);
 
     if (option.enableAXI){
-        if (option.dataSize > (axi_size/4)){
-            fprintf(stderr,"[Error] Data size must be less than %i\n", (axi_size/4) ); // /2 because of 16bit data /2 because of 2 channels
+        if (option.dataSize > (axi_size / (2 * getChannels()) )){
+            fprintf(stderr,"[Error] Data size must be less than %i\n", (axi_size / (2 * getChannels()) ) ); // /2 because of 16bit data /2 because of 2 channels
             usage(g_argv0);
             return -1;
         }

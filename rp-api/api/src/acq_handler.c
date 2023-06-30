@@ -1292,8 +1292,11 @@ int acq_GetDataVEx(rp_channel_t channel,  uint32_t pos, uint32_t* size, void* in
     float *buffer_f = is_float ? (float*)in_buffer: NULL;
     double *buffer_d = !is_float ? (double*)in_buffer: NULL;
     uint32_t cnts;
+
+    uint32_t mask = ((uint64_t)1 << bits) - 1;
+
     for (uint32_t i = 0; i < (*size); ++i) {
-        cnts = raw_buffer[(pos + i) % ADC_BUFFER_SIZE];
+        cnts = raw_buffer[(pos + i) % ADC_BUFFER_SIZE] & mask;
         float value = cmn_convertToVoltSigned(cnts,bits,fullScale,calib.gain,calib.base,calib.offset) * gainValue;
         if (buffer_f) buffer_f[i] = value;
         if (buffer_d) buffer_d[i] = value;
@@ -1376,8 +1379,10 @@ int acq_axi_GetDataVEx(rp_channel_t channel,  uint32_t pos, uint32_t* size, void
     float *buffer_f = is_float ? (float*)in_buffer: NULL;
     double *buffer_d = !is_float ? (double*)in_buffer: NULL;
     uint32_t cnts;
+    uint32_t mask = ((uint64_t)1 << bits) - 1;
+
     for (uint32_t i = 0; i < (*size); ++i) {
-        cnts = raw_buffer[(pos + i) % buffer_size];
+        cnts = raw_buffer[(pos + i) % buffer_size] & mask;
         float value = cmn_convertToVoltSigned(cnts,bits,fullScale,calib.gain,calib.base,calib.offset) * gainValue;
         if (buffer_f) buffer_f[i] = value;
         if (buffer_d) buffer_d[i] = value;
@@ -1630,6 +1635,9 @@ int acq_axi_SetBufferBytes(rp_channel_t channel, uint32_t address, uint32_t _siz
  * @return
  */
 int acq_SetDefault() {
+    uint32_t start,size;
+    osc_axi_GetMemoryRegion(&start,&size);
+
     acq_SetChannelThreshold(RP_CH_1, 0.0);
     acq_SetChannelThreshold(RP_CH_2, 0.0);
     acq_SetChannelThresholdHyst(RP_CH_1, 0.005);
@@ -1645,8 +1653,8 @@ int acq_SetDefault() {
 
     acq_axi_Enable(RP_CH_1, false);
     acq_axi_Enable(RP_CH_2, false);
-    acq_axi_SetBufferBytes(RP_CH_1, 0, 0);
-    acq_axi_SetBufferBytes(RP_CH_2, 0, 0);
+    acq_axi_SetBufferBytes(RP_CH_1, start, 0);
+    acq_axi_SetBufferBytes(RP_CH_2, start, 0);
     acq_axi_SetTriggerDelay(RP_CH_1, 0);
     acq_axi_SetTriggerDelay(RP_CH_2, 0);
     acq_axi_SetTriggerDelayNs(RP_CH_1, 0);

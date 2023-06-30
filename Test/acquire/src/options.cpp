@@ -480,7 +480,6 @@ auto parse(int argc, char* argv[]) -> Options{
 
             case 'a': {
                 opt.enableAXI = true;
-                opt.reset_hk = true;
                 break;
             }
 
