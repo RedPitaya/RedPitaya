@@ -97,7 +97,7 @@ scpi_result_t RP_AcqAxiDecimation(scpi_t *context) {
     }
 
     // Now set the decimation
-    int result = rp_AcqSetDecimationFactor(value);
+    int result = rp_AcqAxiSetDecimationFactor(value);
     if (RP_OK != result) {
         RP_LOG(context,LOG_ERR, "*ACQ:AXI:DEC Failed to set decimation: %s", rp_GetError(result));
         return SCPI_RES_ERR;
@@ -109,7 +109,7 @@ scpi_result_t RP_AcqAxiDecimation(scpi_t *context) {
 
 scpi_result_t RP_AcqAxiDecimationQ(scpi_t *context) {
     uint32_t decimation;
-    int result = rp_AcqGetDecimationFactor(&decimation);
+    int result = rp_AcqAxiGetDecimationFactor(&decimation);
 
     if (RP_OK != result) {
         RP_LOG(context,LOG_ERR, "*ACQ:AXI:DEC? Failed to get decimation: %s", rp_GetError(result));
