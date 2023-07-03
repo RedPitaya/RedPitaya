@@ -319,10 +319,10 @@ int rp_data_parse_and_set_params(cJSON *params_root)
     /* count the number of specified parameters to be set */
     j_params = params_root->child;
     while(j_params != NULL) {
-        if(j_params->type != cJSON_Number)
-            continue;
+        if(j_params->type == cJSON_Number){
+            rp_params_cnt++;
+        }
         j_params = j_params->next;
-        rp_params_cnt++;
     }
 
     /* allocate temporary storage as an array of sequential parameters */
