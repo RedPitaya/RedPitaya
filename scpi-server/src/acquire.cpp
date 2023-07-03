@@ -148,18 +148,18 @@ scpi_result_t RP_AcqSamplingRateHzQ(scpi_t *context) {
     int result = rp_AcqGetSamplingRateHz(&samplingRate);
 
     if (RP_OK != result) {
-        RP_LOG(context,LOG_ERR, "*ACQ:SRA:HZ? Failed to get sampling rate in Hz: %s", rp_GetError(result));
+        RP_LOG(context,LOG_ERR, "*ACQ:SRATe? Failed to get sampling rate in Hz: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
     // Return back string result
-    char samplingRateString[13];
+    char samplingRateString[20];
     sprintf(samplingRateString, "%9.0f Hz", samplingRate);
 
     //Return string in form "<Value> Hz"
     SCPI_ResultMnemonic(context, samplingRateString);
 
-    RP_LOG(context,LOG_INFO, "*ACQ:SRA:HZ? Successfully returned sampling rate in Hz.");
+    RP_LOG(context,LOG_INFO, "*ACQ:SRATe? Successfully returned sampling rate in Hz.");
 
     return SCPI_RES_OK;
 }

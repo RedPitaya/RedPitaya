@@ -190,7 +190,7 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "ACQ:RST", .callback                    = RP_AcqReset,},
     {.pattern = "ACQ:DEC", .callback                    = RP_AcqDecimation,},
     {.pattern = "ACQ:DEC?", .callback                   = RP_AcqDecimationQ,},
-    {.pattern = "ACQ:SRAT?", .callback                  = RP_AcqSamplingRateHzQ,},
+    {.pattern = "ACQ:SRATe?", .callback                 = RP_AcqSamplingRateHzQ,},
     {.pattern = "ACQ:AVG", .callback                    = RP_AcqAveraging,},
     {.pattern = "ACQ:AVG?", .callback                   = RP_AcqAveragingQ,},
     {.pattern = "ACQ:TRIG", .callback                   = RP_AcqTriggerSrc,},
