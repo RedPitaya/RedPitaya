@@ -456,7 +456,7 @@ scpi_result_t RP_AcqTriggerLevel(scpi_t *context) {
     // Now set threshold
     int result = 0;
     if (channels >= 1){
-        result = rp_AcqSetTriggerLevel(RP_T_CH_1, (float) value.value);
+        result = rp_AcqSetTriggerLevel(RP_T_CH_1, (float) value.content.value);
         if (RP_OK != result) {
             RP_LOG(context,LOG_ERR, "*ACQ:TRIG:LEV [Ch1] Failed to set trigger level: %s", rp_GetError(result));
             return SCPI_RES_ERR;
@@ -464,7 +464,7 @@ scpi_result_t RP_AcqTriggerLevel(scpi_t *context) {
     }
 
     if (channels >= 2){
-        result = rp_AcqSetTriggerLevel(RP_T_CH_2, (float) value.value);
+        result = rp_AcqSetTriggerLevel(RP_T_CH_2, (float) value.content.value);
         if (RP_OK != result) {
             RP_LOG(context,LOG_ERR, "*ACQ:TRIG:LEV [Ch2] Failed to set trigger level: %s", rp_GetError(result));
             return SCPI_RES_ERR;
@@ -472,7 +472,7 @@ scpi_result_t RP_AcqTriggerLevel(scpi_t *context) {
     }
 
     if (channels >= 3){
-        result = rp_AcqSetTriggerLevel(RP_T_CH_3, (float) value.value);
+        result = rp_AcqSetTriggerLevel(RP_T_CH_3, (float) value.content.value);
         if (RP_OK != result) {
             RP_LOG(context,LOG_ERR, "*ACQ:TRIG:LEV [Ch3] Failed to set trigger level: %s", rp_GetError(result));
             return SCPI_RES_ERR;
@@ -480,7 +480,7 @@ scpi_result_t RP_AcqTriggerLevel(scpi_t *context) {
     }
 
     if (channels >= 4){
-        result = rp_AcqSetTriggerLevel(RP_T_CH_4, (float) value.value);
+        result = rp_AcqSetTriggerLevel(RP_T_CH_4, (float) value.content.value);
         if (RP_OK != result) {
             RP_LOG(context,LOG_ERR, "*ACQ:TRIG:LEV [Ch4] Failed to set trigger level: %s", rp_GetError(result));
             return SCPI_RES_ERR;
@@ -918,7 +918,7 @@ scpi_result_t RP_AcqExtTriggerLevel(scpi_t *context) {
 
     // Now set threshold
     int result = 0;
-    result = rp_AcqSetTriggerLevel(RP_T_CH_EXT, (float) value.value);
+    result = rp_AcqSetTriggerLevel(RP_T_CH_EXT, (float) value.content.value);
     if (RP_OK != result) {
         RP_LOG(context,LOG_ERR, "*ACQ:TRIG:EXT:LEV Failed to set trigger level: %s", rp_GetError(result));
         return SCPI_RES_ERR;
@@ -955,7 +955,7 @@ scpi_result_t RP_AcqExtTriggerDebouncerUs(scpi_t *context) {
 
     // Now set threshold
     int result = 0;
-    result = rp_AcqSetExtTriggerDebouncerUs((double) value.value);
+    result = rp_AcqSetExtTriggerDebouncerUs((double) value.content.value);
     if (RP_OK != result) {
         RP_LOG(context,LOG_ERR, "*ACQ:TRIG:EXT:DEBouncerUs Failed to set: %s", rp_GetError(result));
         return SCPI_RES_ERR;

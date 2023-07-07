@@ -176,7 +176,7 @@ scpi_result_t RP_GenFrequency(scpi_t *context){
         return SCPI_RES_ERR;
     }
 
-    result = rp_GenFreq(channel, frequency.value);
+    result = rp_GenFreq(channel, frequency.content.value);
     if(result != RP_OK){
         RP_LOG(context,LOG_ERR, "*SOUR#:FREQ:FIX Failed to set frequency: %s", rp_GetError(result));
         return SCPI_RES_ERR;
@@ -282,7 +282,7 @@ scpi_result_t RP_GenPhase(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    result = rp_GenPhase(channel, phase.value);
+    result = rp_GenPhase(channel, phase.content.value);
     if(result != RP_OK){
         RP_LOG(context,LOG_ERR, "*SOUR#:PHAS Failed to set generate "
             "phase: %s", rp_GetError(result));
@@ -849,7 +849,7 @@ scpi_result_t RP_GenAmplitude(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    amp = amplitude.value;
+    amp = amplitude.content.value;
 
     if (rp_HPGetIsGainDACx5OrDefault()){
         if (gain == RP_GAIN_5X)
@@ -960,7 +960,7 @@ scpi_result_t RP_GenOffset(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    offs = offset.value;
+    offs = offset.content.value;
 
     if (rp_HPGetIsGainDACx5OrDefault()){
         if (gain == RP_GAIN_5X) amp *= 5;
@@ -1050,7 +1050,7 @@ scpi_result_t RP_GenExtTriggerDebouncerUs(scpi_t *context) {
 
     // Now set threshold
     int result = 0;
-    result = rp_GenSetExtTriggerDebouncerUs((double) value.value);
+    result = rp_GenSetExtTriggerDebouncerUs((double) value.content.value);
     if (RP_OK != result) {
         RP_LOG(context,LOG_ERR, "*SOUR:TRIG:EXT:DEBouncerUs Failed to set: %s", rp_GetError(result));
         return SCPI_RES_ERR;

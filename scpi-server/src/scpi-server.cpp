@@ -39,6 +39,9 @@
 #define LISTEN_PORT 5000
 #define MAX_BUFF_SIZE 1024
 
+#define SCPI_ERROR_QUEUE_SIZE 16
+
+
 static bool app_exit = false;
 static char delimiter[] = "\r\n";
 
@@ -242,7 +245,23 @@ int main(int argc, char *argv[])
     // user_context will be pointer to socket
     scpi_context.user_context = NULL;
     scpi_context.binary_output = false;
-    SCPI_Init(&scpi_context);
+
+    static scpi_error_t scpi_error_queue_data[SCPI_ERROR_QUEUE_SIZE];
+    
+    SCPI_Init(&scpi_context,
+              scpi_context.cmdlist,
+              scpi_context.interface,
+              scpi_context.units,
+              scpi_context.idn[0],
+              scpi_context.idn[1],
+              scpi_context.idn[2],
+              scpi_context.idn[3],
+              scpi_context.buffer.data,
+              scpi_context.buffer.length,
+              scpi_error_queue_data,
+              SCPI_ERROR_QUEUE_SIZE);
+             
+
     RP_ResetAll(&scpi_context); // need for set default values of scpi
 
     // Create a socket
