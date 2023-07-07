@@ -139,6 +139,9 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "SYSTem:ERRor[:NEXT]?", .callback = SCPI_SystemErrorNextQEx,},
     {.pattern = "SYSTem:ERRor:COUNt?",  .callback = SCPI_SystemErrorCountQEx,},
     {.pattern = "SYSTem:VERSion?",      .callback = SCPI_SystemVersionQ,},
+    {.pattern = "SYSTem:BRD:ID?",       .callback = RP_BoardID,},
+    {.pattern = "SYSTem:BRD:Name?",     .callback = RP_BoardName,},
+    {.pattern = "SYSTem:VERSion?",      .callback = SCPI_SystemVersionQ,},
 
     {.pattern = "STATus:QUEStionable[:EVENt]?", .callback = SCPI_StatusQuestionableEventQ,},
     {.pattern = "STATus:QUEStionable:ENABle",   .callback = SCPI_StatusQuestionableEnable,},
