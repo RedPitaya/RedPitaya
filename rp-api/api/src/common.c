@@ -348,3 +348,26 @@ uint32_t cmn_CalibCntsUnsigned(uint32_t cnts, uint8_t bits, uint32_t gain, uint3
 
     return m;
 }
+
+int cmn_GetReservedMemory(uint32_t *_startAddress,uint32_t *_size){
+    *_startAddress = 0;
+    *_size = 0;
+    int fd = 0;
+    if((fd = open("/sys/firmware/devicetree/base/reserved-memory/buffer@1000000/reg", O_RDONLY)) == -1) {
+        fprintf(stderr,"[FATAL ERROR] Error open: /sys/firmware/devicetree/base/reserved-memory/buffer@1000000/reg\n");
+        return RP_EOMD;
+    }
+    char data[8];
+    int sz = read(fd, &data, 8);
+
+    if (close(fd) < 0) {
+        return RP_EOMD;
+    }
+    if (sz == 8){
+        *_startAddress = data[0] << 24 | data[1] << 16 | data[2] << 8 | data[3];
+        *_size = data[4] << 24 | data[5] << 16 | data[6] << 8 | data[7];
+    }else{
+        return RP_EOMD;
+    }
+    return RP_OK;
+}

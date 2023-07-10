@@ -241,7 +241,9 @@ streaming_slave:
 # SCPI server
 ################################################################################
 
-SCPI_PARSER_TAG = 26aaabc20ef93754efe3ed43674e94c7cc444373
+#SCPI_PARSER_TAG = 26aaabc20ef93754efe3ed43674e94c7cc444373
+SCPI_PARSER_TAG = redpitaya
+
 #SCPI_PARSER_URL = https://github.com/j123b567/scpi-parser/archive/$(SCPI_PARSER_TAG).tar.gz
 SCPI_PARSER_URL = https://github.com/RedPitaya/scpi-parser/archive/$(SCPI_PARSER_TAG).tar.gz
 SCPI_PARSER_TAR = $(DL)/scpi-parser-$(SCPI_PARSER_TAG).tar.gz

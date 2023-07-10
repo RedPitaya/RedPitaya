@@ -48,6 +48,9 @@ static volatile uint32_t *osc_chd = NULL;
 
 bool emulate4Ch = false;
 
+static uint32_t g_adc_axi_start = 0;
+
+static uint32_t g_adc_axi_size = 0;
 
 /**
  * general
@@ -77,6 +80,8 @@ int osc_Init(int channels)
         osc_chd = (uint32_t*)((char*)osc_reg_4ch + OSC_CHB_OFFSET);
     }
 
+    cmn_GetReservedMemory(&g_adc_axi_start,&g_adc_axi_size);
+
     return RP_OK;
 }
 
@@ -100,6 +105,11 @@ int osc_Release()
     return RP_OK;
 }
 
+int osc_axi_GetMemoryRegion(uint32_t *_start,uint32_t *_size){
+    *_start = g_adc_axi_start;
+    *_size = g_adc_axi_size;
+    return RP_OK;
+}
 
 /**
  * decimation
@@ -497,15 +507,6 @@ int osc_GetWritePointerAtTrig(uint32_t* pos)
     uint32_t dec = 0;
     osc_GetDecimation(&dec);
     cmn_GetValue(&osc_reg->wr_ptr_trigger, pos, WRITE_POINTER_MASK);
-
-    // Trigger delay compensation. Maybe in the future it will be implemented on the FPGA side
-    if (dec == RP_DEC_1){
-        *pos = (ADC_BUFFER_SIZE + *pos - 2) % ADC_BUFFER_SIZE;
-    }
-    if (dec == RP_DEC_2){
-        *pos = (ADC_BUFFER_SIZE + *pos - 1) % ADC_BUFFER_SIZE;
-    }
-
     return RP_OK;
 }
 
@@ -569,11 +570,11 @@ int osc_axi_map(size_t size, size_t offset, void** mapped)
         return RP_EMMD;
     }
 
-    if (offset < ADC_AXI_START) {
+    if (offset < g_adc_axi_start) {
         return RP_EOOR;
     }
 
-    if (offset + size > ADC_AXI_END) {
+    if (offset + size > (g_adc_axi_start + g_adc_axi_size)) {
         return RP_EOOR;
     }
 
@@ -644,11 +645,11 @@ int osc_axi_EnableChA(bool enable)
         {
             return RP_EOOR;
         }
-        if (cha_addr_low < ADC_AXI_START)
+        if (cha_addr_low < g_adc_axi_start)
         {
             return RP_EOOR;
         }
-        if (cha_addr_high > ADC_AXI_END)
+        if (cha_addr_high > (g_adc_axi_start + g_adc_axi_size))
         {
             return RP_EOOR;
         }
@@ -715,11 +716,11 @@ int osc_axi_EnableChB(bool enable)
         {
             return RP_EOOR;
         }
-        if (chb_addr_low < ADC_AXI_START)
+        if (chb_addr_low < g_adc_axi_start)
         {
             return RP_EOOR;
         }
-        if (chb_addr_high > ADC_AXI_END)
+        if (chb_addr_high > (g_adc_axi_start + g_adc_axi_size))
         {
             return RP_EOOR;
         }

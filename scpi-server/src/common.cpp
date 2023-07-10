@@ -302,3 +302,31 @@ scpi_result_t RP_DateQ(scpi_t *context){
     RP_LOG(context,LOG_INFO, "*SYSTem:DATE? Successfully returned date.");
     return SCPI_RES_OK;
 }
+
+scpi_result_t RP_BoardID(scpi_t *context){
+    rp_HPeModels_t model;
+    int result = rp_HPGetModel(&model);
+
+    if (RP_OK != result) {
+        RP_LOG(context,LOG_ERR, "*SYSTem:BoaRD:ID? Failed to get board model: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    SCPI_ResultUInt32Base(context, (uint32_t)model, 10);
+
+    RP_LOG(context,LOG_INFO, "*SYSTem:BoaRD:ID? Successfully returned board model.");
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_BoardName(scpi_t *context){
+    char *boardName;
+    int result = rp_HPGetModelName(&boardName);
+
+    if (RP_OK != result) {
+        RP_LOG(context,LOG_ERR, "*SYSTem:BoaRD:Name? Failed to get board name: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    SCPI_ResultMnemonic(context, boardName);
+
+    RP_LOG(context,LOG_INFO, "*SYSTem:BoaRD:Name? Successfully returned board name.");
+    return SCPI_RES_OK;
+}

@@ -686,3 +686,18 @@ bool rp_HPGetIsDaisyChainClockAvailableOrDefault(){
     profiles_t* p = getProfileDefualt();
     return p->is_daisy_chain_clock_sync;
 }
+
+int rp_HPGetIsDMAinv0_94(bool *value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->is_dma_mode_v0_94;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+bool rp_HPGetIsDMAinv0_94OrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->is_dma_mode_v0_94;
+}
