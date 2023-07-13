@@ -292,20 +292,22 @@ Row {
                                 }
 
                             LineSeries {
-                                    id: lineSeries2
+                                    id: lineSeries3
                                     axisX: axisX
                                     axisY: axisY1
                                     useOpenGL: chartView.openGL
                                     color: "#b47331"
+                                    visible: board.maxChannels >= 3
                                 }
 
 
                             LineSeries {
-                                    id: lineSeries2
+                                    id: lineSeries4
                                     axisX: axisX
                                     axisY: axisY1
                                     useOpenGL: chartView.openGL
                                     color: "#b431b0"
+                                    visible: board.maxChannels >= 4
                                 }
 
                             Timer {
@@ -327,6 +329,18 @@ Row {
                                                 let points2 = cdh.getChartSignal(board.ip,1);
                                                 for(var k2 in points2){
                                                     lineSeries2.append(k2,points2[k2])
+                                                }
+
+                                                lineSeries3.clear();
+                                                let points3 = cdh.getChartSignal(board.ip,2);
+                                                for(var k3 in points3){
+                                                    lineSeries3.append(k3,points3[k3])
+                                                }
+
+                                                lineSeries4.clear();
+                                                let points4 = cdh.getChartSignal(board.ip,3);
+                                                for(var k4 in points4){
+                                                    lineSeries4.append(k4,points4[k4])
                                                 }
                                             }
                                             needreset = true
@@ -357,6 +371,8 @@ Row {
                             bwId.text = board.getBandwidth()
                             sampCH1.text = board.getSamplesCH1()
                             sampCH2.text = board.getSamplesCH2()
+                            sampCH3.text = board.getSamplesCH3()
+                            sampCH4.text = board.getSamplesCH4()
                             lostId.text = board.getLostCount()
                         }
                     }

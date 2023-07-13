@@ -32,6 +32,8 @@ auto ChartDataHolder::regRP(const QString &ip) -> void{
     m_packId[ip] = 0;
     m_chartPoints[0][ip].clear();
     m_chartPoints[1][ip].clear();
+    m_chartPoints[2][ip].clear();
+    m_chartPoints[3][ip].clear();
 }
 
 auto ChartDataHolder::removeRP(const QString &ip) -> void{

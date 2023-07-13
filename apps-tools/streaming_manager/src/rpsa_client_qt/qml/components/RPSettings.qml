@@ -88,7 +88,7 @@ Item {
                                         anchors.rightMargin: 10 * mainVisibleRootWindowId.scaleFactor
                                         stateIndex: board.getSaveType()
                                         buttonNames: ["Network", "SD card"]
-                                        inactiveTextColor: baseGrayColor
+                                        inactiveTextColor: baseTextColor
                                         activeTextColor: "#303030"
                                         buttonColor: baseRedSwitchColor
                                         fontFamaly: applicationFont.name
@@ -134,7 +134,7 @@ Item {
                                         anchors.rightMargin: 10 * mainVisibleRootWindowId.scaleFactor
                                         stateIndex: board.getProtocol()
                                         buttonNames: ["TCP", "UDP"]
-                                        inactiveTextColor: baseGrayColor
+                                        inactiveTextColor: baseTextColor
                                         activeTextColor: "#303030"
                                         buttonColor: baseRedSwitchColor
                                         fontFamaly: applicationFont.name
@@ -716,7 +716,7 @@ Item {
                     Row {
                         width: parent.width
                         height: parent.height / 4.0
-                        visible: board.isACDC
+                        visible: board.isAttenuator
                         Item {
                             visible: board.maxChannels >= 1
                             height: parent.height
@@ -923,6 +923,7 @@ Item {
                     Row {
                         width: parent.width
                         height: parent.height / 4.0
+                        visible: board.isACDC
                         Item {
                             visible: board.maxChannels >= 1
                             height: parent.height
