@@ -177,6 +177,17 @@ auto COscilloscope::setReg(volatile OscilloscopeMapT *_OscMap) -> void {
 
         setRegister(_OscMap,&(_OscMap->calib_gain_ch2),m_calib_gain_ch[1]);
 
+
+        setRegister(_OscMap,&(_OscMap->filt_coeff_aa_ch1),m_AA_ch[0]);
+        setRegister(_OscMap,&(_OscMap->filt_coeff_bb_ch1),m_BB_ch[0]);
+        setRegister(_OscMap,&(_OscMap->filt_coeff_kk_ch1),m_KK_ch[0]);
+        setRegister(_OscMap,&(_OscMap->filt_coeff_pp_ch1),m_PP_ch[0]);
+
+        setRegister(_OscMap,&(_OscMap->filt_coeff_aa_ch2),m_AA_ch[1]);
+        setRegister(_OscMap,&(_OscMap->filt_coeff_bb_ch2),m_BB_ch[1]);
+        setRegister(_OscMap,&(_OscMap->filt_coeff_kk_ch2),m_KK_ch[1]);
+        setRegister(_OscMap,&(_OscMap->filt_coeff_pp_ch2),m_PP_ch[1]);
+        
         if (m_maxChannels >= 3){
             setRegister(_OscMap,&(_OscMap->calib_offset_ch3),m_calib_offset_ch[2]);
             setRegister(_OscMap,&(_OscMap->calib_gain_ch3),m_calib_gain_ch[2]);
@@ -194,6 +205,7 @@ auto COscilloscope::setReg(volatile OscilloscopeMapT *_OscMap) -> void {
             setRegister(_OscMap,&(_OscMap->filt_coeff_kk_ch4),m_KK_ch[3]);
             setRegister(_OscMap,&(_OscMap->filt_coeff_pp_ch4),m_PP_ch[3]);
         }
+        // printReg();
 }
 
 

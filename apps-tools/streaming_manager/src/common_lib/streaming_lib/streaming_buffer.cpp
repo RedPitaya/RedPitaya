@@ -90,7 +90,7 @@ auto CStreamingBuffer::addNewBuffer(DataLib::CDataBuffersPack::Ptr pack) -> void
     if (isBufferFull()){
 
         if (m_dropedPack){
-            for(int i = (int)DataLib::CH1; i < (int)DataLib::CH4; i++){
+            for(int i = (int)DataLib::CH1; i <= (int)DataLib::CH4; i++){
                 auto buff = pack->getBuffer((DataLib::EDataBuffersPackChannel)i);
                 auto buffDest = m_dropedPack->getBuffer((DataLib::EDataBuffersPackChannel)i);
                 if (buff && buffDest){

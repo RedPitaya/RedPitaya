@@ -203,17 +203,18 @@ void CStreamingFPGA::oscWorker(){
     if (m_testMode) {
         buffer_ch1 = m_testBuffer;
         buffer_ch2 = m_testBuffer;
-        buffer_ch2 = m_testBuffer;
-        buffer_ch2 = m_testBuffer;
+        buffer_ch3 = m_testBuffer;
+        buffer_ch4 = m_testBuffer;
     }
 
     if (m_printDebugBuffer){
-        std::ofstream outfile2;
-        outfile2.open("/tmp/test.txt", std::ios_base::app);
         short *wb2_1 = (short*)buffer_ch1;
         short *wb2_2 = (short*)buffer_ch2;
+        short *wb2_3 = (short*)buffer_ch3;
+        short *wb2_4 = (short*)buffer_ch4;
+
         for(int i = 0 ;i < 16 ;i ++){
-            aprintf(stdout,"%X - %X \n",(wb2_1 ? (static_cast<int>(wb2_1[i]/ 4)) : 0) , (wb2_2 ?  (static_cast<int>(wb2_2[i]/ 4)) : 0));
+            aprintf(stdout,"%X - %X - %X - %X \n",(wb2_1 ? (static_cast<int>(wb2_1[i]/ 4)) : 0) , (wb2_2 ?  (static_cast<int>(wb2_2[i]/ 4)) : 0), (wb2_3 ?  (static_cast<int>(wb2_3[i]/ 4)) : 0), (wb2_4 ?  (static_cast<int>(wb2_4[i]/ 4)) : 0));
         }
         exit(1);
     }

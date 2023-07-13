@@ -133,6 +133,8 @@ auto ChartDataHolder::chartPackThread() -> void{
                     if (packForWork[i]){
                         pack(i,0,packForWork[i]->getBuffer(DataLib::CH1));
                         pack(i,1,packForWork[i]->getBuffer(DataLib::CH2));
+                        pack(i,2,packForWork[i]->getBuffer(DataLib::CH3));
+                        pack(i,3,packForWork[i]->getBuffer(DataLib::CH4));
                         m_chartNeedDraw.append(i);
                     }
                 }

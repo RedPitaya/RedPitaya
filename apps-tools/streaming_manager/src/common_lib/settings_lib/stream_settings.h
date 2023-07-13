@@ -163,6 +163,7 @@ public:
     auto getLoopbackChannels() const -> LOOPBACKChannels;
     auto setLoopbackChannels(LOOPBACKChannels channels) -> void;
 
+    static auto checkChannel(uint32_t _value, uint32_t _channel_index) -> bool;
 
 private:
 

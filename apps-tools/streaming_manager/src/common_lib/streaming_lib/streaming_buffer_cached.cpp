@@ -44,6 +44,9 @@ auto CStreamingBufferCached::generateBuffers() -> void{
     for(auto s:m_channelsSize){
         allSize += s.second.first;
     }
+    if (allSize == 0){
+        return;
+    }
 
     for(auto curSize = 0u; curSize < m_maxRamSize; curSize += allSize){
         auto pack = DataLib::CDataBuffersPack::Create();
@@ -89,11 +92,14 @@ auto CStreamingBufferCached::fullPercent() -> float{
 
 auto CStreamingBufferCached::getFreeBuffer(uint64_t fpga_lost) -> DataLib::CDataBuffersPack::Ptr{
     std::lock_guard<std::mutex> lock(m_mtx);
+    if (m_ringSize == 0){
+        return nullptr;
+    }
     if (((m_ringEnd + 1) % m_ringSize) != m_ringStart){
         auto pack = m_buffers[m_ringEnd];
         return pack;
     }else{
-        for(int i = (int)DataLib::CH1; i < (int)DataLib::CH4; i++){
+        for(int i = (int)DataLib::CH1; i <= (int)DataLib::CH4; i++){
             auto pack = m_buffers[m_ringEnd];
             auto buff = pack->getBuffer((DataLib::EDataBuffersPackChannel)i);
             if (buff){

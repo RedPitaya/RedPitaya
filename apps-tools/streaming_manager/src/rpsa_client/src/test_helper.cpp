@@ -173,7 +173,7 @@ auto printStatisitc(bool force) -> void{
             ss << "\n" << getTS() << "\n";
 
             ss << "=============================================================================================================================================================\n";
-            ss << "Host              | Bytes all         | Bandwidth         |    Samples CH1    |    Samples CH2    |    Samples CH1    |    Samples CH2    |      Lost        |\n";
+            ss << "Host              | Bytes all         | Bandwidth         |    Samples CH1    |    Samples CH2    |    Samples CH3    |    Samples CH4    |      Lost        |\n";
 
             bool first = true;
             for(auto const& host: keys){
@@ -202,6 +202,8 @@ auto printStatisitc(bool force) -> void{
                 g_timeHostBegin[host] = value.count();
                 g_packCounter_ch1[host] = 0;
                 g_packCounter_ch2[host] = 0;
+                g_packCounter_ch3[host] = 0;
+                g_packCounter_ch4[host] = 0;
                 g_lostNetRate[host] = 0;
                 g_lostFileRate[host] = 0;
                 g_lostRate[host] = 0;
@@ -230,7 +232,7 @@ auto printFinalStatisitc() -> void{
         std::stringstream ss;
         ss << "\n" << getTS() << " Total time: " << convertBtoST(value.count() - g_timeBeginTotal)  << "\n";
         ss << "=============================================================================================================================================================\n";
-        ss << "Host              | Bytes all         | Bandwidth         |    Samples CH1    |    Samples CH2    |    Samples CH1    |    Samples CH2    |      Lost        |\n";
+        ss << "Host              | Bytes all         | Bandwidth         |    Samples CH1    |    Samples CH2    |    Samples CH3    |    Samples CH4    |      Lost        |\n";
 
         bool first = true;
         for(auto const& host: keys){

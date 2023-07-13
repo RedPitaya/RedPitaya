@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <math.h>
 #include "stream_settings.h"
 #include "json/json.h"
 #include "data_lib/thread_cout.h"
@@ -1216,4 +1217,8 @@ auto CStreamSettings::getLoopbackChannels() const -> LOOPBACKChannels{
 auto CStreamSettings::setLoopbackChannels(LOOPBACKChannels channels) -> void{
     m_loopback_channels = channels;
     m_var_changed["m_loopback_channels"] = true;
+}
+
+auto CStreamSettings::checkChannel(uint32_t _value, uint32_t _channel_index) -> bool{
+    return _value & (uint32_t)pow(2,_channel_index);
 }

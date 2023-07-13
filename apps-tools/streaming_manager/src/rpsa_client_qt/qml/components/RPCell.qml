@@ -251,6 +251,10 @@ Row {
                             onOpenGLChanged: {
                                 series("signal 1").useOpenGL = openGL;
                                 series("signal 2").useOpenGL = openGL;
+                                if (board.maxChannels >= 3)
+                                    series("signal 3").useOpenGL = openGL;
+                                if (board.maxChannels >= 4)
+                                    series("signal 4").useOpenGL = openGL;
                             }
 
                             backgroundColor: baseBackGroundColor
@@ -285,6 +289,23 @@ Row {
                                     axisY: axisY1
                                     useOpenGL: chartView.openGL
                                     color: "#31b44b"
+                                }
+
+                            LineSeries {
+                                    id: lineSeries2
+                                    axisX: axisX
+                                    axisY: axisY1
+                                    useOpenGL: chartView.openGL
+                                    color: "#b47331"
+                                }
+
+
+                            LineSeries {
+                                    id: lineSeries2
+                                    axisX: axisX
+                                    axisY: axisY1
+                                    useOpenGL: chartView.openGL
+                                    color: "#b431b0"
                                 }
 
                             Timer {

@@ -662,7 +662,7 @@ void startServer(bool testMode) {
 		auto use_calib    = settings.getCalibration();
 		auto attenuator   = settings.getAttenuator();
 		auto ac_dc        = settings.getAC_DC();
- 		auto channels     = getADCChannels();
+ 		auto max_channels = getADCChannels();
 
 		if (rp_CalibInit() != RP_HW_CALIB_OK){
 	        fprintf(stderr,"Error init calibration\n");
@@ -679,9 +679,9 @@ void startServer(bool testMode) {
 
 		filterBypass = !rp_HPGetFastADCIsFilterPresentOrDefault();
 		if (use_calib) {
-            for(uint8_t ch = 0; ch < channels; ++ch){
-				rp_acq_ac_dc_mode_calib_t  mode = (ac_dc & (ch + 1) ? RP_DC_CALIB : RP_AC_CALIB);
-                if ((attenuator & (ch + 1)) == 0){
+            for(uint8_t ch = 0; ch < max_channels; ++ch){
+				rp_acq_ac_dc_mode_calib_t  mode = ( CStreamSettings::checkChannel(ac_dc, ch) ? RP_DC_CALIB : RP_AC_CALIB);
+                if (CStreamSettings::checkChannel(attenuator,ch) == false){
                     if (rp_CalibGetFastADCCalibValue((rp_channel_calib_t)ch,mode,&ch_gain[ch],&ch_off[ch]) != RP_HW_CALIB_OK){
                         fprintf(stderr,"Error get calibration channel: %d\n",ch);
                     }
@@ -731,8 +731,8 @@ void startServer(bool testMode) {
 			if (uio.nodeName == "rp_oscilloscope")
 			{
 				fprintf(stderr,"COscilloscope::Create rate %d\n",rate);
-                g_osc = uio_lib::COscilloscope::create(uio,rate,g_isMaster != uio_lib::BoardMode::SLAVE,getADCRate(),!filterBypass,getADCBits(),channels);
-				for(uint8_t ch = 0; ch < channels; ++ch){
+                g_osc = uio_lib::COscilloscope::create(uio,rate,g_isMaster != uio_lib::BoardMode::SLAVE,getADCRate(),!filterBypass,getADCBits(),max_channels);
+				for(uint8_t ch = 0; ch < max_channels; ++ch){
 					g_osc->setCalibration(ch,ch_off[ch],ch_gain[ch]);
                 	g_osc->setFilterCalibration(ch,aa_ch[ch],bb_ch[ch],kk_ch[ch],pp_ch[ch]);
 				}
@@ -794,9 +794,9 @@ void startServer(bool testMode) {
         uint8_t resolution_val = (resolution == CStreamSettings::BIT_8 ? 8 : 16);
 		aprintf(stderr,"[Streaming] Set channels resolution %d\n",resolution_val);
 
-        for(int i = 0; i < channels; i++){
-            if(channel & (i + 1)){
-                g_s_fpga->addChannel((DataLib::EDataBuffersPackChannel)i, attenuator & (i + 1) ? DataLib::CDataBuffer::ATT_1_20 : DataLib::CDataBuffer::ATT_1_1,resolution_val);
+        for(int i = 0; i < max_channels; i++){
+            if(CStreamSettings::checkChannel(channel,i)){ 
+                g_s_fpga->addChannel((DataLib::EDataBuffersPackChannel)i, CStreamSettings::checkChannel(attenuator,i) ? DataLib::CDataBuffer::ATT_1_20 : DataLib::CDataBuffer::ATT_1_1,resolution_val);
                 g_s_buffer->addChannel((DataLib::EDataBuffersPackChannel)i,uio_lib::osc_buf_size,resolution_val);
             }
         }
@@ -950,14 +950,14 @@ auto startDACServer(bool testMode) -> void{
 	        fprintf(stderr,"Error init calibration\n");
     	}
 		auto dac_gain = settings.getDACGain();
-		auto channels = getDACChannels();
+		auto max_channels = getDACChannels();
 
         auto uioList = uio_lib::GetUioList();
 		int32_t ch_off[4] = { 0 , 0 , 0 , 0 };
 		double  ch_gain[4] = { 1 , 1 , 1 ,1 };
 
 		if (use_calib) {
-			for(uint8_t ch = 0; ch < channels; ++ch){
+			for(uint8_t ch = 0; ch < max_channels; ++ch){
 				rp_gen_gain_calib_t  mode = dac_gain == CStreamSettings::X1 ? RP_GAIN_CALIB_1X : RP_GAIN_CALIB_5X;
 				if (rp_CalibGetFastDACCalibValue((rp_channel_calib_t)ch,mode,&ch_gain[ch],&ch_off[ch]) != RP_HW_CALIB_OK){
 					fprintf(stderr,"Error get calibration channel: %d\n",ch);
