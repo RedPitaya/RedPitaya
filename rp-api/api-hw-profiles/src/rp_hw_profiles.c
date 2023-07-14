@@ -131,7 +131,7 @@ int rp_HPGetBaseSpeedHz(uint32_t *value){
     int state;
     profiles_t* p = getProfile(&state);
     if (p){
-        *value = p->zynqCPUModel;
+        *value = p->oscillator_rate;
         return RP_HP_OK;
     }
     return state;
@@ -139,7 +139,7 @@ int rp_HPGetBaseSpeedHz(uint32_t *value){
 
 uint32_t rp_HPGetBaseSpeedHzOrDefault(){
     profiles_t* p = getProfileDefualt();
-    return p->zynqCPUModel;
+    return p->oscillator_rate;
 }
 
 int rp_HPGetBaseFastADCSpeedHz(uint32_t *value){

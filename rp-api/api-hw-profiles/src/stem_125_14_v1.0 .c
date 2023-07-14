@@ -40,36 +40,36 @@ profiles_t stem_125_14_v1_0 = {
     .slow_adc_count_channels = 4,
     .slow_adc[0].is_signed = false,
     .slow_adc[0].bits = 11, // Real 12 bits, but we need to exclude the sign
-    .slow_adc[0].fullScale = 3.5,
+    .slow_adc[0].fullScale = 3.5f,
 
     .slow_adc[1].is_signed = false,
     .slow_adc[1].bits = 11, // Real 12 bits, but we need to exclude the sign
-    .slow_adc[1].fullScale = 3.5,
+    .slow_adc[1].fullScale = 3.5f,
 
     .slow_adc[2].is_signed = false,
     .slow_adc[2].bits = 11, // Real 12 bits, but we need to exclude the sign
-    .slow_adc[2].fullScale = 3.5,
+    .slow_adc[2].fullScale = 3.5f,
 
     .slow_adc[3].is_signed = false,
     .slow_adc[3].bits = 11,
-    .slow_adc[3].fullScale = 3.5,
+    .slow_adc[3].fullScale = 3.5f,
 
     .slow_dac_count_channels = 4,
     .slow_dac[0].is_signed = false,
     .slow_dac[0].bits = 8,
-    .slow_dac[0].fullScale = 1.8,
+    .slow_dac[0].fullScale = 1.8f,
 
     .slow_dac[1].is_signed = false,
     .slow_dac[1].bits = 8,
-    .slow_dac[1].fullScale = 1.8,
+    .slow_dac[1].fullScale = 1.8f,
 
     .slow_dac[2].is_signed = false,
     .slow_dac[2].bits = 8,
-    .slow_dac[2].fullScale = 1.8,
+    .slow_dac[2].fullScale = 1.8f,
 
     .slow_dac[3].is_signed = false,
     .slow_dac[3].bits = 8,
-    .slow_dac[3].fullScale = 1.8,
+    .slow_dac[3].fullScale = 1.8f,
 
     .is_DAC_gain_x5 = false,
 
