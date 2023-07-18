@@ -61,23 +61,23 @@ print("rp_hw_calib.rp_CalibGetEEPROM(false)")
 raw_data = rp_hw_calib.rp_CalibGetEEPROM(False)
 print(raw_data)
 
-data_arr = rp_hw_calib.uint8Arr_frompointer(raw_data[0])
+data_arr = rp_hw_calib.uint8Arr_frompointer(raw_data[1])
 
-for n in range(raw_data[1]):
+for n in range(raw_data[2]):
     print(hex(data_arr[n]), end=",")
 print("")
 
 t = rp_hw_calib.new_p_rp_calib_params_t()
 
-print("rp_hw_calib.rp_CalibConvertEEPROM(res[0],res[1],t)")
-res = rp_hw_calib.rp_CalibConvertEEPROM(raw_data[0],raw_data[1],t)
+print("rp_hw_calib.rp_CalibConvertEEPROM(raw_data[1],raw_data[2],t)")
+res = rp_hw_calib.rp_CalibConvertEEPROM(raw_data[1],raw_data[2],t)
 print(res)
 
 print("rp_hw_calib.rp_CalibPrint(t)")
 res = rp_hw_calib.rp_CalibPrint(t)
 print(res)
 
-rp_hw_calib.delete_puint8(raw_data[0])
+rp_hw_calib.delete_puint8(raw_data[1])
 
 # IDs defined in calib_universal.h
 print("rp_hw_calib.rp_GetNameOfUniversalId(1)")
