@@ -240,21 +240,21 @@ rp_calib_error rp_CalibrationSetParams(rp_calib_params_t calib_params);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-rp_calib_error rp_CalibGetEEPROM(uint8_t **data,uint16_t *size,bool use_factory_zone);
+rp_calib_error rp_CalibGetEEPROM(uint8_t **_out_data,uint16_t *_out_size,bool use_factory_zone);
 
 /**
 * The function converts the data to a common format
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-rp_calib_error rp_CalibConvertEEPROM(uint8_t *data,uint16_t size,rp_calib_params_t *out);
+rp_calib_error rp_CalibConvertEEPROM(uint8_t *data,uint16_t size,rp_calib_params_t *_out_calib);
 
 /**
 * The function return name of universal parameter
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-rp_calib_error rp_GetNameOfUniversalId(uint16_t id, char** name);
+rp_calib_error rp_GetNameOfUniversalId(uint16_t id, char** _out_no_free);
 
 /**
 * Displays calibration information
@@ -268,45 +268,38 @@ rp_calib_error rp_CalibPrint(rp_calib_params_t *calib);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-rp_calib_error rp_CalibGetFastADCFilter(rp_channel_calib_t channel,channel_filter_t *out);
+rp_calib_error rp_CalibGetFastADCFilter(rp_channel_calib_t channel,channel_filter_t *_out_value);
 
 /**
 * Gets the calibration settings for the filter (HIGH mode 1:20)
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-rp_calib_error rp_CalibGetFastADCFilter_1_20(rp_channel_calib_t channel,channel_filter_t *out);
-
-/**
-* Gets the calibration settings for the filter (HIGH mode 1:20)
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-rp_calib_error rp_CalibGetFastADCFilter_1_20(rp_channel_calib_t channel,channel_filter_t *out);
+rp_calib_error rp_CalibGetFastADCFilter_1_20(rp_channel_calib_t channel,channel_filter_t *_out_value);
 
 /**
 * Returns the calibration values for the selected channel and mode
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-rp_calib_error rp_CalibGetFastADCCalibValue(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, double *gain,int32_t *offset);
-rp_calib_error rp_CalibGetFastADCCalibValueI(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, uint_gain_calib_t *calib);
+rp_calib_error rp_CalibGetFastADCCalibValue(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, double *_out_gain,int32_t *_out_offset);
+rp_calib_error rp_CalibGetFastADCCalibValueI(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, uint_gain_calib_t *_out_calib);
 
 /**
 * Returns the calibration values for the selected channel and mode (HIGH mode 1:20)
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-rp_calib_error rp_CalibGetFastADCCalibValue_1_20(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, double *gain,int32_t *offset);
-rp_calib_error rp_CalibGetFastADCCalibValue_1_20I(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, uint_gain_calib_t *calib);
+rp_calib_error rp_CalibGetFastADCCalibValue_1_20(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, double *_out_gain,int32_t *_out_offset);
+rp_calib_error rp_CalibGetFastADCCalibValue_1_20I(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, uint_gain_calib_t *_out_calib);
 
 /**
 * Returns the calibration values for the selected channel and mode
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-rp_calib_error rp_CalibGetFastDACCalibValue(rp_channel_calib_t channel,rp_gen_gain_calib_t mode, double *gain,int32_t *offset);
-rp_calib_error rp_CalibGetFastDACCalibValueI(rp_channel_calib_t channel,rp_gen_gain_calib_t mode, uint_gain_calib_t *calib);
+rp_calib_error rp_CalibGetFastDACCalibValue(rp_channel_calib_t channel,rp_gen_gain_calib_t mode, double *_out_gain,int32_t *_out_offset);
+rp_calib_error rp_CalibGetFastDACCalibValueI(rp_channel_calib_t channel,rp_gen_gain_calib_t mode, uint_gain_calib_t *_out_calib);
 
 
 ///@}
