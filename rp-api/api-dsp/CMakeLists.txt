@@ -3,13 +3,15 @@ project(rp-dsp)
 
 option(BUILD_SHARED "Builds shared library" ON)
 option(BUILD_STATIC "Builds static library" ON)
+option(BUILD_PYTHON_MODULE "Builds python module" ON)
+
 option(IS_INSTALL "Install library" ON)
 option(BUILD_DOC "Build documentation" ON)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
-set(CMAKE_C_COMPILER "gcc")
+set(CMAKE_C_COMPILER "g++")
 set(CMAKE_CXX_COMPILER "g++")
 set(CMAKE_CXX_STANDARD 17)
 set(C_STANDARD 17)
@@ -72,6 +74,23 @@ add_library(${PROJECT_NAME}-obj OBJECT ${src})
 
 
 if(BUILD_SHARED)
+
+    if (BUILD_PYTHON_MODULE)
+        find_package(SWIG REQUIRED)
+        INCLUDE(${SWIG_USE_FILE})
+
+        find_package(PythonLibs)
+        include_directories(${PYTHON_INCLUDE_PATH})
+
+        set(CMAKE_SWIG_FLAGS "-c++")
+        set(src/rp_dsp.i PROPERTIES CPLUSPLUS ON)
+        # SET_SOURCE_FILES_PROPERTIES(src/rp_dsp.i PROPERTIES SWIG_FLAGS "-includeall")
+        SET_SOURCE_FILES_PROPERTIES(src/rp_dsp.i PROPERTIES SWIG_FLAGS "-c++")
+
+        SWIG_ADD_LIBRARY(rp_dsp_py LANGUAGE python SOURCES src/rp_dsp.i ${src})
+        SWIG_LINK_LIBRARIES(rp_dsp_py ${PYTHON_LIBRARIES} -lm -lpthread)
+     endif()
+
     add_library(${PROJECT_NAME}-shared SHARED)
     set_property(TARGET ${PROJECT_NAME}-shared PROPERTY OUTPUT_NAME ${PROJECT_NAME})
     target_sources(${PROJECT_NAME}-shared PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-obj>)
@@ -84,6 +103,16 @@ if(BUILD_SHARED)
 
         install(FILES ${header}
             DESTINATION ${INSTALL_DIR}/include)
+
+        if (BUILD_PYTHON_MODULE)
+            install(FILES $<TARGET_PROPERTY:rp_dsp_py,SWIG_SUPPORT_FILES> DESTINATION ${INSTALL_DIR}/lib/python)
+            install(TARGETS rp_dsp_py
+                LIBRARY DESTINATION ${INSTALL_DIR}/lib/python
+                ARCHIVE DESTINATION ${INSTALL_DIR}/lib/python)
+            install(FILES tests/rp_dsp_test.py
+                DESTINATION ${INSTALL_DIR}/lib/python PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+                GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_WRITE WORLD_EXECUTE)
+        endif()
     endif()
 endif()
 

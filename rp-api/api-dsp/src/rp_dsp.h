@@ -17,12 +17,6 @@
 
 namespace rp_dsp_api{
 
-
-
-class CDSP{
-
-public:
-
     typedef enum{
         RECTANGULAR     = 0,
         HANNING         = 1,
@@ -40,59 +34,65 @@ public:
     } mode_t;
 
     typedef struct{
-        double **in = nullptr;
-        double **filtred = nullptr;
-        bool is_data_filtred = false;
-        double **fft = nullptr;
-        float  *freq_vector = nullptr;
-        float  **decimated = nullptr;
-        float  **converted = nullptr;
-        float  *peak_power = nullptr;
-        float  *peak_freq = nullptr;
-        uint8_t channels = 0;
+        double **m_in = nullptr;
+        double **m_filtred = nullptr;
+        bool m_is_data_filtred = false;
+        double **m_fft = nullptr;
+        float  *m_freq_vector = nullptr;
+        float  **m_decimated = nullptr;
+        float  **m_converted = nullptr;
+        float  *m_peak_power = nullptr;
+        float  *m_peak_freq = nullptr;
+        uint8_t m_channels = 0;
         auto reset() -> void{
-            is_data_filtred = false;
+            m_is_data_filtred = false;
         }
     } data_t;
+
+
+class CDSP{
+
+public:
+
 
     CDSP(uint8_t max_channels,uint32_t adc_buffer,uint32_t adc_max_speed);
     ~CDSP();
 
-    auto createData() -> data_t *;
-    auto deleteData(data_t *data) -> void;
+    data_t * createData();
+    void deleteData(data_t *data);
 
-    auto setChannel(uint8_t ch, bool enable) -> void;
-    auto setSignalLength(uint32_t len) -> int;
-    auto getSignalLength() -> uint32_t;
-    auto getSignalMaxLength() -> uint32_t;
-    auto getOutSignalLength() -> uint32_t;
-    auto getOutSignalMaxLength() -> uint32_t;
+    void setChannel(uint8_t ch, bool enable);
+    int setSignalLength(uint32_t len);
+    uint32_t getSignalLength();
+    uint32_t getSignalMaxLength();
+    uint32_t getOutSignalLength();
+    uint32_t getOutSignalMaxLength();
 
-    auto window_init(window_mode_t mode) -> int;
-    auto window_clean() -> int;
-    auto getCurrentWindowMode() -> CDSP::window_mode_t;
+    int window_init(window_mode_t mode);
+    int window_clean();
+    window_mode_t getCurrentWindowMode();
 
-    auto setImpedance(double value) -> void;
-    auto getImpedance() -> double;
+    void setImpedance(double value);
+    double getImpedance();
 
-    auto setRemoveDC(bool enable) -> void;
-    auto getRemoveDC() -> bool;
+    void setRemoveDC(bool enable);
+    bool getRemoveDC();
 
-    auto setMode(CDSP::mode_t mode) -> void;
-    auto getMode() -> CDSP::mode_t;
+    void setMode(mode_t mode);
+    mode_t getMode();
 
     
-    auto prepareFreqVector(data_t *data, double f_s, float decimation) -> int;
+    int prepareFreqVector(data_t *data, double adc_rate_f_s, float decimation);
 
-    auto windowFilter(data_t *data) -> int;
-    auto fftInit() -> int;
-    auto fftClean() -> int;
-    auto fft(data_t *data) -> int;
-    auto decimate(data_t *data,uint32_t in_len, uint32_t out_len) -> int;
-    auto cnvToDBM(data_t *data,uint32_t  decimation) -> int;
-    auto cnvToDBMMaxValueRanged(data_t *data,uint32_t  decimation,uint32_t minFreq,uint32_t maxFreq) -> int;
-    auto cnvToMetric(data_t *data,uint32_t  decimation) -> int;
-    auto remoteDCCount() -> uint8_t;
+    int windowFilter(data_t *data);
+    int fftInit();
+    int fftClean();
+    int fft(data_t *data);
+    int decimate(data_t *data,uint32_t in_len, uint32_t out_len);
+    int cnvToDBM(data_t *data,uint32_t  decimation);
+    int cnvToDBMMaxValueRanged(data_t *data,uint32_t  decimation,uint32_t minFreq,uint32_t maxFreq);
+    int cnvToMetric(data_t *data,uint32_t  decimation);
+    uint8_t remoteDCCount();
 
 private:
 
