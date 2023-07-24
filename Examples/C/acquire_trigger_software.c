@@ -19,7 +19,7 @@ int main(int argc, char **argv){
         rp_GenAmp(RP_CH_1, 1.0);
         rp_GenWaveform(RP_CH_1, RP_WAVEFORM_SINE);
         rp_GenOutEnable(RP_CH_1);
-
+        rp_GenTriggerOnly(RP_CH_1);
 
         uint32_t buff_size = 16384;
         float *buff = (float *)malloc(buff_size * sizeof(float));
