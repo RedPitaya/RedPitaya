@@ -11,32 +11,31 @@ profiles_t stem_125_14_Z7020_v1_0 = {
 
     .fast_adc_rate = 125000000,
     .fast_adc_count_channels = 2,
-    .fast_adc[0].is_signed = true,
-    .fast_adc[0].bits = 14,
-    .fast_adc[0].fullScale = 1,
-    .fast_adc[1].is_signed = true,
-    .fast_adc[1].bits = 14,
-    .fast_adc[1].fullScale = 1,
+    .fast_adc_is_sign = true,
+    .fast_adc_bits = 14,
+
+    .fast_adc_gain[RP_HP_ADC_GAIN_NORMAL][0] = 1,
+    .fast_adc_gain[RP_HP_ADC_GAIN_NORMAL][1] = 1,
+    .fast_adc_gain[RP_HP_ADC_GAIN_NORMAL][2] = 0,
+    .fast_adc_gain[RP_HP_ADC_GAIN_NORMAL][3] = 0,
+
+    .fast_adc_gain[RP_HP_ADC_GAIN_HIGH][0] = 20,
+    .fast_adc_gain[RP_HP_ADC_GAIN_HIGH][1] = 20,
+    .fast_adc_gain[RP_HP_ADC_GAIN_HIGH][2] = 0,
+    .fast_adc_gain[RP_HP_ADC_GAIN_HIGH][3] = 0,
 
     .is_dac_present = true,
     .fast_dac_rate = 125000000,
     .fast_dac_count_channels = 2,
-    .fast_dac[0].is_signed = true,
-    .fast_dac[0].bits = 14,
-    .fast_dac[0].fullScale = 1,
-    .fast_dac[1].is_signed = true,
-    .fast_dac[1].bits = 14,
-    .fast_dac[1].fullScale = 1,
+    .fast_dac_is_sign = true,
+    .fast_dac_bits = 14,
+    .fast_dac_gain[0] = 1,
+    .fast_dac_gain[1] = 1,
+    .fast_dac_gain[2] = 0,
+    .fast_dac_gain[3] = 0,
 
     .is_LV_HV_mode = true,
     .is_AC_DC_mode = false,
-
-    .fast_adc_1_20[0].is_signed = true,
-    .fast_adc_1_20[0].bits = 14,
-    .fast_adc_1_20[0].fullScale = 20,
-    .fast_adc_1_20[1].is_signed = true,
-    .fast_adc_1_20[1].bits = 14,
-    .fast_adc_1_20[1].fullScale = 20,
 
     .slow_adc_count_channels = 4,
     .slow_adc[0].is_signed = false,
@@ -85,7 +84,16 @@ profiles_t stem_125_14_Z7020_v1_0 = {
     .is_attenuator_controller_present = false,
 
     .is_ext_trigger_level_available = false,
-    .external_trigger_full_scale = 0
+    .external_trigger_full_scale = 0,
+
+    .fast_adc_spectrum_resolution = 62500000,
+
+    .fast_adc_full_scale = 1,
+    .fast_dac_full_scale = 1,
+
+    .is_daisy_chain_clock_sync = false,
+
+    .is_dma_mode_v0_94 = true
 };
 
 profiles_t* getProfile_STEM_125_14_Z7020_v1_0(){

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <math.h>
 #include "stream_settings.h"
 #include "json/json.h"
 #include "data_lib/thread_cout.h"
@@ -46,14 +47,14 @@ CStreamSettings::CStreamSettings(){
     m_format = WAV;
     m_type = RAW;
     m_saveType = NET;
-    m_channels = CH1;
+    m_channels = 0;
     m_res = BIT_8;
     m_decimation = 1;
-    m_attenuator = A_1_1;
+    m_attenuator = 0;
     m_calib = false;
-    m_ac_dc = DC;
+    m_ac_dc = 0xF;
 
-    m_dac_gain = X1;
+    m_dac_gain = 0;
     m_dac_file_type = WAV;
     m_dac_mode = DAC_NET;
     m_dac_repeat = DAC_REP_OFF;
@@ -112,14 +113,14 @@ auto CStreamSettings::resetDefault() -> void{
     setFormat(BIN);
     setType(RAW);
     setSaveType(NET);
-    setChannels(BOTH);
-    setResolution(BIT_16);
-    setAttenuator(A_1_1);
+    setChannels(0);
+    setResolution(BIT_8);
+    setAttenuator(0);
     setDecimation(1);
     setCalibration(false);
-    setAC_DC(DC);
+    setAC_DC(0xF);
 
-    setDACGain(X1);
+    setDACGain(0);
     setDACFileType(WAV);
     setDACMode(DAC_NET);
     setDACRepeat(DAC_REP_OFF);
@@ -313,18 +314,26 @@ auto CStreamSettings::String()-> std::string{
         }
         str = str + "Protocol:\t\t" + protocol  +"\n";
 
-        std::string  channels = "ERROR";
-        switch (getChannels()) {
-            case CH1:
-                channels = "Channel 1";
-                break;
-            case CH2:
-                channels = "Channel 2";
-                break;
-            case BOTH:
-                channels = "Both channel";
-                break;
+        std::string  channels = "";
+        auto ch = getChannels();
+        if (ch & CH1){
+            channels = "Ch 1";
         }
+        if (ch & CH2){
+            if (channels.length()) channels += " + ";
+            channels += "Ch 2";
+        }
+        if (ch & CH3){
+            if (channels.length()) channels += " + ";
+            channels += "Ch 3";
+        }
+        if (ch & CH4){
+            if (channels.length()) channels += " + ";
+            channels += "Ch 4";
+        }
+
+        if (!channels.length()) channels = "ERROR!";
+
         str = str + "Channels:\t\t" + channels  +"\n";
 
         str = str + "Decimation:\t\t" + std::to_string(getDecimation())  +"\n";
@@ -340,27 +349,65 @@ auto CStreamSettings::String()-> std::string{
         }
         str = str + "Resolution:\t\t" + resolution  +"\n";
 
-        std::string  attenuator = "ERROR";
-        switch (getAttenuator()) {
-            case A_1_1:
-                attenuator = "1:1";
-                break;
-            case A_1_20:
-                attenuator = "1:20";
-                break;
-        }
-        str = str + "Attenuator:\t\t" + attenuator  +" (125-14 and 250-12 only)\n";
-        str = str + "Calibration:\t\t" + (getCalibration() ? "Enable" : "Disable")  +" (125-14 and 250-12 only)\n";
+        std::string  attenuator = "";
 
-        std::string  coupling = "ERROR";
-        switch (getAC_DC()) {
-            case AC:
-                coupling = "AC";
-                break;
-            case DC:
-                coupling = "DC";
-                break;
+        auto att = getAttenuator();
+
+        if (att & CH1){
+            attenuator = "Ch 1 (1:20)";
+        }else{
+            attenuator = "Ch 1 (1:1)";
         }
+
+        if (att & CH2){
+            attenuator += " + Ch 2 (1:20)";
+        }else{
+            attenuator += " + Ch 2 (1:1)";
+        }
+
+        if (att & CH3){
+            attenuator += " + Ch 3 (1:20)";
+        }else{
+            attenuator += " + Ch 3 (1:1)";
+        }
+
+        if (att & CH4){
+            attenuator += " + Ch 4 (1:20)";
+        }else{
+            attenuator += " + Ch 4 (1:1)";
+        }
+
+        str = str + "Attenuator:\t\t" + attenuator  +"\n";
+        str = str + "Calibration:\t\t" + (getCalibration() ? "Enable" : "Disable")  +"\n";
+
+        std::string  coupling = "";
+
+        auto ac_dc = getAC_DC();
+
+        if (ac_dc & CH1){
+            coupling = "Ch 1 (DC)";
+        }else{
+            coupling = "Ch 1 (AC)";
+        }
+
+        if (ac_dc & CH2){
+            coupling += " + Ch 2 (DC)";
+        }else{
+            coupling += " + Ch 2 (AC)";
+        }
+
+        if (ac_dc & CH3){
+            coupling += " + Ch 3 (DC)";
+        }else{
+            coupling += " + Ch 3 (AC)";
+        }
+
+        if (ac_dc & CH4){
+            coupling += " + Ch 4 (DC)";
+        }else{
+            coupling += " + Ch 4 (AC)";
+        }
+
         str = str + "AC/DC mode:\t\t" + coupling  +" (250-12 only)\n";
 
         std::string  savetype = "ERROR";
@@ -447,15 +494,34 @@ auto CStreamSettings::String()-> std::string{
         str = str + "DAC speed (Hz):\t\t" + std::to_string(getDACHz())  +"\n";
 
 
-        std::string  dac_gain = "ERROR";
-        switch (getDACGain()) {
-            case DACGain::X1:
-                dac_gain = "X1";
-                break;
-            case DACGain::X5:
-                dac_gain = "X5";
-                break;
+        std::string  dac_gain = "";
+
+        auto dac_g = getDACGain();
+
+        if (dac_g & CH1){
+            dac_gain = "Ch 1 (x5)";
+        }else{
+            dac_gain = "Ch 1 (x1)";
         }
+
+        if (dac_g & CH2){
+            dac_gain += " + Ch 2 (x5)";
+        }else{
+            dac_gain += " + Ch 2 (x1)";
+        }
+
+        if (dac_g & CH3){
+            dac_gain += " + Ch 3 (x5)";
+        }else{
+            dac_gain += " + Ch 3 (x1)";
+        }
+
+        if (dac_g & CH4){
+            dac_gain += " + Ch 4 (x5)";
+        }else{
+            dac_gain += " + Ch 4 (x1)";
+        }
+
         str = str + "DAC Gain:\t\t" + dac_gain  +" (250-12 only)\n";
 
 
@@ -498,115 +564,159 @@ auto CStreamSettings::String()-> std::string{
     return "INCOMPLETE SETTING";
 }
 
-auto CStreamSettings::StringStreaming()-> std::string{
-    if (isSetted()){
-        std::string  str = "";
-        str = str + "Port:\t\t\t"+getPort()+"\n";
+// auto CStreamSettings::StringStreaming()-> std::string{
+//     if (isSetted()){
+//         std::string  str = "";
+//         str = str + "Port:\t\t\t"+getPort()+"\n";
 
-        std::string  protocol = "ERROR";
-        switch (getProtocol()) {
-            case TCP:
-                protocol = "TCP";
-                break;
-            case UDP:
-                protocol = "UDP";
-                break;
-        }
-        str = str + "Protocol:\t\t" + protocol  +"\n";
+//         std::string  protocol = "ERROR";
+//         switch (getProtocol()) {
+//             case TCP:
+//                 protocol = "TCP";
+//                 break;
+//             case UDP:
+//                 protocol = "UDP";
+//                 break;
+//         }
+//         str = str + "Protocol:\t\t" + protocol  +"\n";
 
-        std::string  channels = "ERROR";
-        switch (getChannels()) {
-            case CH1:
-                channels = "Channel 1";
-                break;
-            case CH2:
-                channels = "Channel 2";
-                break;
-            case BOTH:
-                channels = "Both channel";
-                break;
-        }
-        str = str + "Channels:\t\t" + channels  +"\n";
+//         std::string  channels = "";
+//         auto ch = getChannels();
+//         if (ch & CH1){
+//             channels = "Ch 1";
+//         }
+//         if (ch & CH2){
+//             if (channels.length()) channels += " + ";
+//             channels += "Ch 2";
+//         }
+//         if (ch & CH3){
+//             if (channels.length()) channels += " + ";
+//             channels += "Ch 3";
+//         }
+//         if (ch & CH4){
+//             if (channels.length()) channels += " + ";
+//             channels += "Ch 4";
+//         }
 
-        str = str + "Decimation:\t\t" + std::to_string(getDecimation())  +"\n";
+//         if (!channels.length()) channels = "ERROR!";
 
-        std::string  resolution = "ERROR";
-        switch (getResolution()) {
-            case BIT_8:
-                resolution = "8 Bit";
-                break;
-            case BIT_16:
-                resolution = "16 Bit";
-                break;
-        }
-        str = str + "Resolution:\t\t" + resolution  +"\n";
+//         str = str + "Channels:\t\t" + channels  +"\n";
 
-        std::string  attenuator = "ERROR";
-        switch (getAttenuator()) {
-            case A_1_1:
-                attenuator = "1:1";
-                break;
-            case A_1_20:
-                attenuator = "1:20";
-                break;
-        }
-        str = str + "Attenuator:\t\t" + attenuator  +" (125-14 and 250-12 only)\n";
-        str = str + "Calibration:\t\t" + (getCalibration() ? "Enable" : "Disable")  +" (125-14 and 250-12 only)\n";
+//         str = str + "Decimation:\t\t" + std::to_string(getDecimation())  +"\n";
 
-        std::string  coupling = "ERROR";
-        switch (getAC_DC()) {
-            case AC:
-                coupling = "AC";
-                break;
-            case DC:
-                coupling = "DC";
-                break;
-        }
-        str = str + "AC/DC mode:\t\t" + coupling  +" (250-12 only)\n";
+//         std::string  resolution = "";
 
-        std::string  savetype = "ERROR";
-        switch (getSaveType()) {
-            case SaveType::NET:
-                savetype = "Network";
-                break;
-            case SaveType::FILE:
-                savetype = "Local file";
-        }
-        str = str + "Mode:\t\t\t" + savetype  + "\n";
+//         auto res = getResolution();
 
-        str = str + "Samples:\t\t" + (getSamples() == -1 ? "Unlimited" : std::to_string(getSamples()))  +" (In file mode)\n";
+//         if (res & CH1){
+//             resolution = "Ch 1 (16Bit)";
+//         }else{
+//             resolution = "Ch 1 (8Bit)";
+//         }
 
-        std::string  format = "ERROR";
-        switch (getFormat()) {
-            case DataFormat::WAV:
-                format = "WAV";
-                break;
-            case DataFormat::TDMS:
-                format = "TDMS";
-                break;
-            case DataFormat::BIN:
-                format = "BIN";
-                break;
-            default:
-                break;
-        }
-        str = str + "Data format:\t\t" + format  +" (In file mode)\n";
+//         if (res & CH2){
+//             resolution += " + Ch 2 (16Bit)";
+//         }else{
+//             resolution += " + Ch 2 (8Bit)";
+//         }
 
-        std::string  type = "ERROR";
-        switch (getType()) {
-            case DataType::RAW:
-                type = "RAW";
-                break;
-            case DataType::VOLT:
-                type = "Voltage";
-        }
-        str = str + "Data type:\t\t" + type  +" (In file mode)\n";
-        return str;
-    }
-    return "INCOMPLETE SETTING";
-}
+//         if (res & CH3){
+//             resolution += " + Ch 3 (16Bit)";
+//         }else{
+//             resolution += " + Ch 3 (8Bit)";
+//         }
 
+//         if (res & CH4){
+//             resolution += " + Ch 4 (16Bit)";
+//         }else{
+//             resolution += " + Ch 4 (8Bit)";
+//         }
 
+//         str = str + "Resolution:\t\t" + resolution  +"\n";
+
+//         std::string  attenuator = "";
+
+//         auto att = getAttenuator();
+
+//         if (att & CH1){
+//             attenuator = "Ch 1 (1:20)";
+//         }else{
+//             attenuator = "Ch 1 (1:1)";
+//         }
+
+//         if (att & CH2){
+//             attenuator += " + Ch 2 (1:20)";
+//         }else{
+//             attenuator += " + Ch 2 (1:1)";
+//         }
+
+//         if (att & CH3){
+//             attenuator += " + Ch 3 (1:20)";
+//         }else{
+//             attenuator += " + Ch 3 (1:1)";
+//         }
+
+//         if (att & CH4){
+//             attenuator += " + Ch 4 (1:20)";
+//         }else{
+//             attenuator += " + Ch 4 (1:1)";
+//         }
+
+//         str = str + "Attenuator:\t\t" + attenuator  +"\n";
+//         str = str + "Calibration:\t\t" + (getCalibration() ? "Enable" : "Disable")  +"\n";
+
+//         std::string  coupling = "ERROR";
+//         switch (getAC_DC()) {
+//             case AC:
+//                 coupling = "AC";
+//                 break;
+//             case DC:
+//                 coupling = "DC";
+//                 break;
+//         }
+//         str = str + "AC/DC mode:\t\t" + coupling  +" (250-12 only)\n";
+
+//         std::string  savetype = "ERROR";
+//         switch (getSaveType()) {
+//             case SaveType::NET:
+//                 savetype = "Network";
+//                 break;
+//             case SaveType::FILE:
+//                 savetype = "Local file";
+//         }
+//         str = str + "Mode:\t\t\t" + savetype  + "\n";
+
+//         str = str + "Samples:\t\t" + (getSamples() == -1 ? "Unlimited" : std::to_string(getSamples()))  +" (In file mode)\n";
+
+//         std::string  format = "ERROR";
+//         switch (getFormat()) {
+//             case DataFormat::WAV:
+//                 format = "WAV";
+//                 break;
+//             case DataFormat::TDMS:
+//                 format = "TDMS";
+//                 break;
+//             case DataFormat::BIN:
+//                 format = "BIN";
+//                 break;
+//             default:
+//                 break;
+//         }
+//         str = str + "Data format:\t\t" + format  +" (In file mode)\n";
+
+//         std::string  type = "ERROR";
+//         switch (getType()) {
+//             case DataType::RAW:
+//                 type = "RAW";
+//                 break;
+//             case DataType::VOLT:
+//                 type = "Voltage";
+//         }
+//         str = str + "Data type:\t\t" + type  +" (In file mode)\n";
+//         return str;
+//     }
+//     return "INCOMPLETE SETTING";
+// }
 
 auto CStreamSettings::readFromFile(string _filename) -> bool {
 
@@ -665,25 +775,23 @@ auto CStreamSettings::readFromFile(string _filename) -> bool {
     if (adc_config.isMember("save_type"))
         setSaveType(static_cast<SaveType>(adc_config["save_type"].asInt()));
     if (adc_config.isMember("channels"))
-        setChannels(static_cast<Channel>(adc_config["channels"].asInt()));
+        setChannels(static_cast<uint8_t>(adc_config["channels"].asInt()));
     if (adc_config.isMember("resolution"))
         setResolution(static_cast<Resolution>(adc_config["resolution"].asInt()));
     if (adc_config.isMember("decimation"))
         setDecimation(adc_config["decimation"].asUInt());
     if (adc_config.isMember("attenuator"))
-        setAttenuator(static_cast<Attenuator>(adc_config["attenuator"].asInt()));
+        setAttenuator(static_cast<uint8_t>(adc_config["attenuator"].asInt()));
     if (adc_config.isMember("calibration"))
         setCalibration(adc_config["calibration"].asBool());
     if (adc_config.isMember("coupling"))
-        setAC_DC(static_cast<AC_DC>(adc_config["coupling"].asInt()));
-    if (adc_config.isMember("resolution"))
-        setResolution(static_cast<Resolution>(adc_config["resolution"].asInt()));
+        setAC_DC(static_cast<uint8_t>(adc_config["coupling"].asInt()));
 
 
     if (dac_config.isMember("dac_file_type"))
         setDACFileType(static_cast<DataFormat>(dac_config["dac_file_type"].asInt()));
     if (dac_config.isMember("dac_gain"))
-        setDACGain(static_cast<DACGain>(dac_config["dac_gain"].asInt()));
+        setDACGain(static_cast<uint8_t>(dac_config["dac_gain"].asInt()));
     if (dac_config.isMember("dac_file"))
         setDACFile(dac_config["dac_file"].asString());
     if (dac_config.isMember("dac_mode"))
@@ -765,21 +873,30 @@ auto CStreamSettings::getSaveType() const -> CStreamSettings::SaveType{
     return m_saveType;
 }
 
-void CStreamSettings::setChannels(CStreamSettings::Channel _channels){
-    m_channels = _channels;
+auto CStreamSettings::setChannels(uint8_t _value) -> void{
+    m_channels = _value;
     m_var_changed["m_channels"] = true;
 }
 
-CStreamSettings::Channel CStreamSettings::getChannels() const{
+auto CStreamSettings::setChannels(Channel _channel,bool _enable) -> void{
+    m_channels = (m_channels & ~_channel) | (_enable ? _channel : 0);
+    m_var_changed["m_channels"] = true;
+}
+
+auto CStreamSettings::getChannels() const -> uint8_t{
     return m_channels;
 }
 
-void CStreamSettings::setResolution(Resolution _resolution){
-    m_res = _resolution;
+auto CStreamSettings::getChannels(Channel _channel) const -> bool{
+    return m_channels & _channel;
+}
+
+auto CStreamSettings::setResolution(Resolution _value) -> void{
+    m_res = _value;
     m_var_changed["m_res"] = true;
 }
 
-CStreamSettings::Resolution CStreamSettings::getResolution() const{
+auto CStreamSettings::getResolution() const -> Resolution{
     return m_res;
 }
 
@@ -835,7 +952,7 @@ auto CStreamSettings::setValue(std::string key,int64_t value) -> bool{
     }
 
     if (key == "channels") {
-        setChannels(static_cast<Channel>(value));
+        setChannels(static_cast<uint8_t>(value));
         return true;
     }
 
@@ -850,7 +967,7 @@ auto CStreamSettings::setValue(std::string key,int64_t value) -> bool{
     }
 
     if (key == "attenuator") {
-        setAttenuator(static_cast<Attenuator>(value));
+        setAttenuator(static_cast<uint8_t>(value));
         return true;
     }
 
@@ -860,7 +977,7 @@ auto CStreamSettings::setValue(std::string key,int64_t value) -> bool{
     }
 
     if (key == "coupling") {
-        setAC_DC(static_cast<AC_DC>(value));
+        setAC_DC(static_cast<uint8_t>(value));
         return true;
     }
 
@@ -870,7 +987,7 @@ auto CStreamSettings::setValue(std::string key,int64_t value) -> bool{
     }
 
     if (key == "dac_gain") {
-        setDACGain(static_cast<DACGain>(value));
+        setDACGain(static_cast<uint8_t>(value));
         return true;
     }
 
@@ -926,32 +1043,49 @@ auto CStreamSettings::setValue(std::string,double) -> bool{
     return false;
 }
 
-
-void CStreamSettings::setAttenuator(CStreamSettings::Attenuator _attenuator){
-    m_attenuator = _attenuator;
+auto CStreamSettings::setAttenuator(uint8_t _value) -> void{
+    m_attenuator = _value;
     m_var_changed["m_attenuator"] = true;
 }
 
-CStreamSettings::Attenuator CStreamSettings::getAttenuator() const{
+auto CStreamSettings::setAttenuator(Channel _channel,Attenuator _attenuator) -> void{
+    m_attenuator = (m_attenuator & ~_channel) | (_attenuator == A_1_20 ? _channel : 0);
+    m_var_changed["m_attenuator"] = true;
+}
+
+auto CStreamSettings::getAttenuator() const -> uint8_t{
     return m_attenuator;
 }
 
-void CStreamSettings::setCalibration(bool _calibration){
+auto CStreamSettings::getAttenuator(Channel _channel) const -> Attenuator{
+    return m_attenuator & _channel ? A_1_20 : A_1_1;
+}
+
+auto CStreamSettings::setCalibration(bool _calibration) -> void{
     m_calib = _calibration;
     m_var_changed["m_calib"] = true;
 }
 
-bool CStreamSettings::getCalibration() const{
+auto CStreamSettings::getCalibration() const -> bool{
     return m_calib;
 }
 
-void CStreamSettings::setAC_DC(CStreamSettings::AC_DC _value){
+auto CStreamSettings::setAC_DC(uint8_t _value) -> void{
     m_ac_dc = _value;
     m_var_changed["m_ac_dc"] = true;
 }
 
-CStreamSettings::AC_DC CStreamSettings::getAC_DC() const{
+auto CStreamSettings::setAC_DC(Channel _channel,AC_DC _value) -> void{
+    m_ac_dc = (m_ac_dc & ~_channel) | (_value == DC ? _channel : 0);
+    m_var_changed["m_ac_dc"] = true;
+}
+
+auto CStreamSettings::getAC_DC() const -> uint8_t{
     return m_ac_dc;
+}
+
+auto CStreamSettings::getAC_DC(Channel _channel) const -> AC_DC{
+    return m_ac_dc & _channel ? DC : AC;
 }
 
 auto CStreamSettings::setDACFile(std::string _value) -> void{
@@ -976,13 +1110,22 @@ auto CStreamSettings::getDACFileType() const -> CStreamSettings::DataFormat{
     return m_dac_file_type;
 }
 
-auto CStreamSettings::setDACGain(CStreamSettings::DACGain _value) -> void{
+auto CStreamSettings::setDACGain(uint8_t _value) -> void{
     m_dac_gain = _value;
     m_var_changed["m_dac_gain"] = true;
 }
 
-auto CStreamSettings::getDACGain() const -> CStreamSettings::DACGain{
+auto CStreamSettings::setDACGain(Channel _channel,DACGain _value) -> void{
+    m_dac_gain = (m_dac_gain & ~_channel) | (_value == X5 ? _channel : 0);
+    m_var_changed["m_dac_gain"] = true;
+}
+
+auto CStreamSettings::getDACGain() const -> uint8_t{
     return m_dac_gain;
+}
+
+auto CStreamSettings::getDACGain(Channel _channel) const -> DACGain{
+    return m_ac_dc & _channel ? X5 : X1;
 }
 
 auto CStreamSettings::setDACMode(CStreamSettings::DACType _value) -> void{
@@ -1074,4 +1217,8 @@ auto CStreamSettings::getLoopbackChannels() const -> LOOPBACKChannels{
 auto CStreamSettings::setLoopbackChannels(LOOPBACKChannels channels) -> void{
     m_loopback_channels = channels;
     m_var_changed["m_loopback_channels"] = true;
+}
+
+auto CStreamSettings::checkChannel(uint32_t _value, uint32_t _channel_index) -> bool{
+    return _value & (uint32_t)pow(2,_channel_index);
 }

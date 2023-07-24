@@ -24,6 +24,7 @@
 #include "rp_hw-calib.h"
 #include "generate.h"
 #include "gen_handler.h"
+#include "daisy.h"
 
 static char version[50];
 int g_api_state = 0;
@@ -44,6 +45,7 @@ int rp_InitReset(bool reset)
     rp_CalibInit();
     hk_Init(reset);
     ams_Init();
+    daisy_Init();
 
     if (rp_HPIsFastDAC_PresentOrDefault()){
         generate_Init();
@@ -70,6 +72,7 @@ int rp_Release()
     ams_Release();
     hk_Release();
     cmn_Release();
+    daisy_Release();
     g_api_state = false;
     return RP_OK;
 }
@@ -605,11 +608,11 @@ int rp_ApinReset() {
     return rp_AOpinReset();
 }
 
-int rp_ApinGetValue(rp_apin_t pin, float* value) {
+int rp_ApinGetValue(rp_apin_t pin, float* value, uint32_t* raw) {
     if (pin <= RP_AOUT3) {
-        rp_AOpinGetValue(pin-RP_AOUT0, value);
+        rp_AOpinGetValue(pin-RP_AOUT0, value, raw);
     } else if (pin <= RP_AIN3) {
-        rp_AIpinGetValue(pin-RP_AIN0, value);
+        rp_AIpinGetValue(pin-RP_AIN0, value, raw);
     } else {
         return RP_EPN;
     }
@@ -688,7 +691,7 @@ int rp_AIpinGetValueRaw(int unsigned pin, uint32_t* value) {
     return r;
 }
 
-int rp_AIpinGetValue(int unsigned pin, float* value) {
+int rp_AIpinGetValue(int unsigned pin, float* value, uint32_t* raw) {
     uint32_t value_raw;
     int result = rp_AIpinGetValueRaw(pin, &value_raw);
     rp_channel_calib_t ch = convertPINCh(pin);
@@ -716,6 +719,7 @@ int rp_AIpinGetValue(int unsigned pin, float* value) {
     else{
         *value = cmn_convertToVoltUnsigned(value_raw,bits,fs,1000,1000,0);
     }
+    *raw = value_raw;
     return result;
 }
 
@@ -795,7 +799,7 @@ int rp_AOpinGetValueRaw(int unsigned pin, uint32_t* value) {
     return RP_OK;
 }
 
-int rp_AOpinGetValue(int unsigned pin, float* value) {
+int rp_AOpinGetValue(int unsigned pin, float* value, uint32_t* raw) {
 
     uint32_t value_raw;
     int result = rp_AOpinGetValueRaw(pin, &value_raw);
@@ -824,6 +828,7 @@ int rp_AOpinGetValue(int unsigned pin, float* value) {
     else{
         *value = cmn_convertToVoltUnsigned(value_raw,bits,fs,1000,1000,0);
     }
+    *raw = value_raw;
     return result;
 }
 
@@ -856,6 +861,12 @@ int rp_AcqGetBufferFillState(bool* state){
     return acq_GetBufferFillState(state);
 }
 
+int rp_AcqAxiGetBufferFillState(rp_channel_t channel, bool* state){
+    if (!rp_HPGetIsDMAinv0_94OrDefault())
+        return RP_NOTS;
+    return acq_axi_GetBufferFillState(channel, state);
+}
+
 int rp_AcqSetDecimation(rp_acq_decimation_t decimation)
 {
     return acq_SetDecimation(decimation);
@@ -869,6 +880,18 @@ int rp_AcqGetDecimation(rp_acq_decimation_t* decimation)
 int rp_AcqSetDecimationFactor(uint32_t decimation)
 {
     return acq_SetDecimationFactor(decimation);
+}
+
+int rp_AcqAxiSetDecimationFactor(uint32_t decimation){
+    if (!rp_HPGetIsDMAinv0_94OrDefault())
+        return RP_NOTS;
+    return acq_axi_SetDecimationFactor(decimation);
+}
+
+int rp_AcqAxiGetDecimationFactor(uint32_t *decimation){
+    if (!rp_HPGetIsDMAinv0_94OrDefault())
+        return RP_NOTS;
+    return acq_axi_GetDecimationFactor(decimation);
 }
 
 int rp_AcqGetDecimationFactor(uint32_t* decimation)
@@ -912,7 +935,19 @@ int rp_AcqGetTriggerState(rp_acq_trig_state_t* state)
 
 int rp_AcqSetTriggerDelay(int32_t decimated_data_num)
 {
-    return acq_SetTriggerDelay(decimated_data_num, false);
+    return acq_SetTriggerDelay(decimated_data_num);
+}
+
+int rp_AcqAxiSetTriggerDelay(rp_channel_t channel, int32_t decimated_data_num){
+    if (!rp_HPGetIsDMAinv0_94OrDefault())
+        return RP_NOTS;
+    return acq_axi_SetTriggerDelay(channel, decimated_data_num);
+}
+
+int rp_AcqAxiGetTriggerDelay(rp_channel_t channel, int32_t *decimated_data_num){
+    if (!rp_HPGetIsDMAinv0_94OrDefault())
+        return RP_NOTS;
+    return acq_axi_GetTriggerDelay(channel, decimated_data_num);
 }
 
 int rp_AcqGetTriggerDelay(int32_t* decimated_data_num)
@@ -922,7 +957,7 @@ int rp_AcqGetTriggerDelay(int32_t* decimated_data_num)
 
 int rp_AcqSetTriggerDelayNs(int64_t time_ns)
 {
-    return acq_SetTriggerDelayNs(time_ns, false);
+    return acq_SetTriggerDelayNs(time_ns);
 }
 
 int rp_AcqGetTriggerDelayNs(int64_t* time_ns)
@@ -974,9 +1009,21 @@ int rp_AcqGetWritePointer(uint32_t* pos)
     return acq_GetWritePointer(pos);
 }
 
+int rp_AcqAxiGetWritePointer(rp_channel_t channel, uint32_t* pos){
+    if (!rp_HPGetIsDMAinv0_94OrDefault())
+        return RP_NOTS;
+    return acq_axi_GetWritePointer(channel, pos);
+}
+
 int rp_AcqGetWritePointerAtTrig(uint32_t* pos)
 {
     return acq_GetWritePointerAtTrig(pos);
+}
+
+int rp_AcqAxiGetWritePointerAtTrig(rp_channel_t channel, uint32_t* pos){
+    if (!rp_HPGetIsDMAinv0_94OrDefault())
+        return RP_NOTS;
+    return acq_axi_GetWritePointerAtTrig(channel, pos);
 }
 
 int rp_AcqStart()
@@ -1013,9 +1060,31 @@ int rp_AcqGetDataPosV(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos
     return acq_GetDataPosV(channel, start_pos, end_pos, buffer, buffer_size);
 }
 
+int rp_AcqAxiGetMemoryRegion(uint32_t *_start,uint32_t *_size){
+    if (!rp_HPGetIsDMAinv0_94OrDefault())
+        return RP_NOTS;
+    return acq_axi_GetMemoryRegion(_start,_size);
+}
+
+int rp_AcqAxiEnable(rp_channel_t channel, bool enable){
+    if (!rp_HPGetIsDMAinv0_94OrDefault())
+        return RP_NOTS;
+    return acq_axi_Enable(channel, enable);
+}
+
 int rp_AcqGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_t* buffer)
 {
-    return acq_GetDataRaw(channel, pos, size, buffer);
+    return acq_GetDataRaw(channel, pos, size, buffer,false);
+}
+
+int rp_AcqGetDataRawWithCalib(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_t* buffer){
+    return acq_GetDataRaw(channel, pos, size, buffer,true);
+}
+
+int rp_AcqAxiGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_t* buffer){
+    if (!rp_HPGetIsDMAinv0_94OrDefault())
+        return RP_NOTS;
+    return acq_axi_GetDataRaw(channel, pos, size, buffer);
 }
 
 int rp_AcqGetDataRawV2(uint32_t pos, buffers_t *out)
@@ -1047,6 +1116,12 @@ int rp_AcqGetDataV(rp_channel_t channel, uint32_t pos, uint32_t* size, float* bu
     return acq_GetDataV(channel, pos, size, buffer);
 }
 
+int rp_AcqAxiGetDataV(rp_channel_t channel, uint32_t pos, uint32_t* size, float* buffer){
+    if (!rp_HPGetIsDMAinv0_94OrDefault())
+        return RP_NOTS;
+    return acq_axi_GetDataV(channel, pos, size, buffer);
+}
+
 int rp_AcqGetOldestDataV(rp_channel_t channel, uint32_t* size, float* buffer)
 {
     return acq_GetOldestDataV(channel, size, buffer);
@@ -1059,6 +1134,18 @@ int rp_AcqGetLatestDataV(rp_channel_t channel, uint32_t* size, float* buffer)
 
 int rp_AcqGetBufSize(uint32_t *size) {
     return acq_GetBufferSize(size);
+}
+
+int rp_AcqAxiSetBufferSamples(rp_channel_t channel, uint32_t address, uint32_t samples) {
+    if (!rp_HPGetIsDMAinv0_94OrDefault())
+        return RP_NOTS;
+    return acq_axi_SetBufferSamples(channel, address, samples);
+}
+
+int rp_AcqAxiSetBufferBytes(rp_channel_t channel, uint32_t address, uint32_t size) {
+    if (!rp_HPGetIsDMAinv0_94OrDefault())
+        return RP_NOTS;
+    return acq_axi_SetBufferBytes(channel, address, size);
 }
 
 int rp_AcqSetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t mode){
@@ -1092,14 +1179,6 @@ int rp_AcqGetFilterCalibValue(rp_channel_t channel,uint32_t* coef_aa, uint32_t* 
 int rp_GenBurstLastValue(rp_channel_t channel, float amlitude){
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    rp_HPeModels_t model;
-    if (rp_HPGetModel(&model) != RP_HP_OK){
-        fprintf(stderr,"[Error:rp_GenBurstLastValue] Can't get board model\n");
-        return RP_NOTS;
-    }
-    if (model == STEM_250_12_v1_0 || model == STEM_250_12_v1_1 || model == STEM_250_12_v1_2 || model == STEM_250_12_120){
-        return RP_NOTS;
-    }
     return gen_setBurstLastValue(channel,amlitude);
 }
 
@@ -1109,6 +1188,17 @@ int rp_GenGetBurstLastValue(rp_channel_t channel, float *amlitude){
     return gen_getBurstLastValue(channel,amlitude);
 }
 
+int rp_GenSetInitGenValue(rp_channel_t channel, float amlitude){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
+    return gen_setInitGenValue(channel,amlitude);
+}
+
+int rp_GenGetInitGenValue(rp_channel_t channel, float *amlitude){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
+    return gen_getInitGenValue(channel,amlitude);
+}
 
 int rp_GenReset() {
     if (!rp_HPIsFastDAC_PresentOrDefault())
@@ -1411,12 +1501,54 @@ int rp_GenGetGainOut(rp_channel_t channel,rp_gen_gain_t *status){
 }
 
 
-int rp_SetEnableDaisyChainSync(bool enable){
+int rp_SetEnableDaisyChainTrigSync(bool enable){
     return house_SetEnableDaisyChainSync(enable);
 }
 
-int rp_GetEnableDaisyChainSync(bool *status){
+int rp_GetEnableDaisyChainTrigSync(bool *status){
     return house_GetEnableDaisyChainSync(status);
+}
+
+int rp_SetEnableDiasyChainClockSync(bool enable){
+
+    if (!rp_HPGetIsDaisyChainClockAvailableOrDefault())
+        return RP_NOTS;
+
+    int ret = daisy_SetTXEnable(enable);
+    if (ret != RP_OK){
+        return ret;
+    }
+
+    ret = daisy_SetRXEnable(enable);
+
+    if (ret != RP_OK){
+        return ret;
+    }
+
+    return ret;
+}
+
+int rp_GetEnableDiasyChainClockSync(bool *state){
+
+    if (!rp_HPGetIsDaisyChainClockAvailableOrDefault())
+        return RP_NOTS;
+
+    bool stx,srx;
+
+    int ret = daisy_GetTXEnable(&stx);
+    if (ret != RP_OK){
+        return ret;
+    }
+
+    ret = daisy_GetRXEnable(&srx);
+
+    if (ret != RP_OK){
+        return ret;
+    }
+
+    *state = stx & srx;
+
+    return ret;
 }
 
 int rp_SetDpinEnableTrigOutput(bool enable){

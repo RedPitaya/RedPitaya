@@ -11,10 +11,28 @@ profiles_t stem_special = {
 
     .fast_adc_rate = 125000000,
     .fast_adc_count_channels = 0,
+    .fast_adc_is_sign = true,
+    .fast_adc_bits = 0,
+
+    .fast_adc_gain[RP_HP_ADC_GAIN_NORMAL][0] = 0,
+    .fast_adc_gain[RP_HP_ADC_GAIN_NORMAL][1] = 0,
+    .fast_adc_gain[RP_HP_ADC_GAIN_NORMAL][2] = 0,
+    .fast_adc_gain[RP_HP_ADC_GAIN_NORMAL][3] = 0,
+
+    .fast_adc_gain[RP_HP_ADC_GAIN_HIGH][0] = 0,
+    .fast_adc_gain[RP_HP_ADC_GAIN_HIGH][1] = 0,
+    .fast_adc_gain[RP_HP_ADC_GAIN_HIGH][2] = 0,
+    .fast_adc_gain[RP_HP_ADC_GAIN_HIGH][3] = 0,
 
     .is_dac_present = false,
     .fast_dac_rate = 125000000,
     .fast_dac_count_channels = 0,
+    .fast_dac_is_sign = true,
+    .fast_dac_bits = 0,
+    .fast_dac_gain[0] = 0,
+    .fast_dac_gain[1] = 0,
+    .fast_dac_gain[2] = 0,
+    .fast_dac_gain[3] = 0,
 
     .is_LV_HV_mode = false,
     .is_AC_DC_mode = false,
@@ -66,7 +84,16 @@ profiles_t stem_special = {
     .is_attenuator_controller_present = false,
 
     .is_ext_trigger_level_available = false,
-    .external_trigger_full_scale = 0
+    .external_trigger_full_scale = 0,
+
+    .fast_adc_spectrum_resolution = 62500000,
+
+    .fast_adc_full_scale = 0,
+    .fast_dac_full_scale = 0,
+
+    .is_daisy_chain_clock_sync = false,
+
+    .is_dma_mode_v0_94 = false
 };
 
 profiles_t* getProfile_STEM_SPECIAL(){

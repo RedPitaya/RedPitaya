@@ -111,9 +111,13 @@ inline void CParameter<T, ValueT>::Update()
 template <typename T, typename ValueT>
 inline void CParameter<T, ValueT>::SetValueFromJSON(JSONNode _node)
 {
-	ValueT value = GetValueFromJSON<ValueT>(_node, "value");
 	m_TmpValue.reset(new TParam<T, ValueT>);
-	m_TmpValue.get()->value = value;
+	try{
+		ValueT value = GetValueFromJSON<ValueT>(_node, "value");
+		m_TmpValue.get()->value = value;
+	}catch (std::exception& e){
+		fprintf(stderr, "[Fatal Frror]: In SetValueFromJSON (%s) Error: %s\n",GetName(),e.what());
+	}
 }
 
 template <typename T, typename ValueT>

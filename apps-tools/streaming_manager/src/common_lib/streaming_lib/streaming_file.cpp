@@ -262,7 +262,7 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPack::Ptr pack) -> int {
         map[DataLib::CH3] = bufferCh3;
         map[DataLib::CH4] = bufferCh4;
         bool noMemoryException = false;
-        for(auto i = (int)DataLib::CH1; i < (int)DataLib::CH4; i++){
+        for(auto i = (int)DataLib::CH1; i <= (int)DataLib::CH4; i++){
             DataLib::EDataBuffersPackChannel ch = (DataLib::EDataBuffersPackChannel)i;
             if (map[ch].buffer == nullptr && map[ch].bufferLen){
                 noMemoryException = true;
@@ -270,7 +270,7 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPack::Ptr pack) -> int {
         }
         if (!noMemoryException){
             if (m_samples != 0){
-                for(auto i = (int)DataLib::CH1; i < (int)DataLib::CH4; i++){
+                for(auto i = (int)DataLib::CH1; i <= (int)DataLib::CH4; i++){
                     DataLib::EDataBuffersPackChannel ch = (DataLib::EDataBuffersPackChannel)i;
                     if (map[ch].samplesCount + m_passSizeSamples[ch] > m_samples){
                         map[ch].samplesCount = m_samples - m_passSizeSamples[ch];
@@ -308,7 +308,7 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPack::Ptr pack) -> int {
         map[DataLib::CH4] = bufferCh4;
 
         bool noMemoryException = false;
-        for(auto i = (int)DataLib::CH1; i < (int)DataLib::CH4; i++){
+        for(auto i = (int)DataLib::CH1; i <= (int)DataLib::CH4; i++){
             DataLib::EDataBuffersPackChannel ch = (DataLib::EDataBuffersPackChannel)i;
             if (map[ch].buffer == nullptr && map[ch].bufferLen){
                 noMemoryException = true;
@@ -317,7 +317,7 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPack::Ptr pack) -> int {
 
         if (!noMemoryException){
             if (m_samples != 0){
-                for(auto i = (int)DataLib::CH1; i < (int)DataLib::CH4; i++){
+                for(auto i = (int)DataLib::CH1; i <= (int)DataLib::CH4; i++){
                     DataLib::EDataBuffersPackChannel ch = (DataLib::EDataBuffersPackChannel)i;
                     if (map[ch].samplesCount + m_passSizeSamples[ch] > m_samples){
                         map[ch].samplesCount = m_samples - m_passSizeSamples[ch];
@@ -343,13 +343,14 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPack::Ptr pack) -> int {
     if (m_fileType == CStreamSettings::BIN){
 
         if (m_samples != 0){
-            for(auto i = (int)DataLib::CH1; i < (int)DataLib::CH4; i++){
+            for(auto i = (int)DataLib::CH1; i <= (int)DataLib::CH4; i++){
                 DataLib::EDataBuffersPackChannel ch = (DataLib::EDataBuffersPackChannel)i;
-                if (pack->getBuffer(ch)){
+                auto buff = pack->getBuffer(ch);
+                if (buff){
                     if (m_passSizeSamples[ch] > m_samples){
-                        pack->getBuffer(ch)->reset();
+                        buff->reset();
                     }else{
-                        m_passSizeSamples[ch] += pack->getBuffer(ch)->getSamplesWithLost();
+                        m_passSizeSamples[ch] += buff->getSamplesWithLost();
                     }
                 }
             }
@@ -364,7 +365,7 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPack::Ptr pack) -> int {
         }
     }
 
-    for(auto i = (int)DataLib::CH1; i < (int)DataLib::CH4; i++){
+    for(auto i = (int)DataLib::CH1; i <= (int)DataLib::CH4; i++){
         DataLib::EDataBuffersPackChannel ch = (DataLib::EDataBuffersPackChannel)i;
         auto buff = pack->getBuffer(ch);
         if (buff){
@@ -377,7 +378,7 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPack::Ptr pack) -> int {
 
     if (m_samples){
         bool reachLimits = true;
-        for(auto i = (int)DataLib::CH1; i < (int)DataLib::CH4; i++){
+        for(auto i = (int)DataLib::CH1; i <= (int)DataLib::CH4; i++){
             DataLib::EDataBuffersPackChannel ch = (DataLib::EDataBuffersPackChannel)i;
             if (pack->isChannelPresent(ch)){
                 if (m_passSizeSamples[ch] < m_samples){

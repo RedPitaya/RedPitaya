@@ -26,32 +26,48 @@ extern "C" {
 #include <stddef.h>
 #include "rp_hw-profiles.h"
 
-
 /** @name Error codes
  *  Various error codes returned by the API.
  */
 ///@{
 
-/** Success */
-#define RP_HW_CALIB_OK     0
-/** Error read from eeprom */
-#define RP_HW_CALIB_ERE    1
-/** Error write to eeprom */
-#define RP_HW_CALIB_EWE    2
-/** Error Calibration values are not initialized. */
-#define RP_HW_CALIB_ENI    3
-/** Board Model Detection Error. */
-#define RP_HW_CALIB_EDM    4
-/** Invalid channel parameter. */
-#define RP_HW_CALIB_ECH    5
-/** Invalid parameter. */
-#define RP_HW_CALIB_EIP    6
+typedef enum {
+    /** Success */
+    RP_HW_CALIB_OK  =   0,
+    /** Error read from eeprom */
+    RP_HW_CALIB_ERE =   1,
+    /** Error write to eeprom */
+    RP_HW_CALIB_EWE =   2,
+    /** Error Calibration values are not initialized. */
+    RP_HW_CALIB_ENI =   3,
+    /** Board Model Detection Error. */
+    RP_HW_CALIB_EDM =   4,
+    /** Invalid channel parameter. */
+    RP_HW_CALIB_ECH =   5,
+    /** Invalid parameter. */
+    RP_HW_CALIB_EIP =   6,
+    /** Adjust error. */
+    RP_HW_CALIB_EA =    7
+} rp_calib_error;
 
 ///@}
 
-#define RP_HW_PACK_ID_V1 1
-#define RP_HW_PACK_ID_V2 2
-#define RP_HW_PACK_ID_V3 3
+// 125-14 ...
+#define RP_HW_PACK_ID_V1        1
+
+// 250-12 ...
+#define RP_HW_PACK_ID_V2        2
+
+// 125-14 4Ch ...
+#define RP_HW_PACK_ID_V3        3
+
+// 122-16 ...
+#define RP_HW_PACK_ID_V4        4
+
+// Universal calibration
+#define RP_HW_PACK_ID_V5        5
+
+#define MAX_UNIVERSAL_ITEMS_COUNT 512
 
 /**
  * Type representing Input/Output channels.
@@ -122,6 +138,10 @@ typedef struct {
     channel_calib_t fast_dac_x5[2];
 } rp_calib_params_t;
 
+/**
+ * Old calibration parameters
+ */
+
 typedef struct {
     uint8_t  dataStructureId;
     uint8_t  wpCheck;
@@ -129,6 +149,26 @@ typedef struct {
     int32_t  feCalPar[100];
 } rp_eepromWpData_t;
 
+/**
+ * Universal calibration parameters
+ */
+
+typedef struct {
+    uint16_t id;
+    int32_t value;
+} __attribute__((__packed__)) rp_eepromUniData_item_t;
+
+typedef struct  {
+    uint8_t dataStructureId;
+    uint8_t wpCheck;
+    uint16_t count;
+    uint8_t reserved[4];
+
+    rp_eepromUniData_item_t item[MAX_UNIVERSAL_ITEMS_COUNT];
+
+} __attribute__((__packed__)) rp_eepromUniData_t;
+
+typedef rp_eepromUniData_t rp_calib_params_universal_t;
 
 /** @name General
  */
@@ -139,14 +179,14 @@ typedef struct {
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_HW_CALIB_E* values that indicate an error.
  */
-int rp_CalibInit();
+rp_calib_error rp_CalibInit();
 
 /**
  * Initializes a library card with calibration for specific model
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_HW_CALIB_E* values that indicate an error.
  */
-int rp_CalibInitSpecific(rp_HPeModels_t model);
+rp_calib_error rp_CalibInitSpecific(rp_HPeModels_t model);
 
 
 /**
@@ -170,14 +210,14 @@ rp_calib_params_t rp_GetDefaultCalibrationSettings();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_CalibrationReset(bool use_factory_zone);
+rp_calib_error rp_CalibrationReset(bool use_factory_zone,bool is_new_format);
 
 /**
 * Copy factory calibration values into user eeprom.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_CalibrationFactoryReset();
+rp_calib_error rp_CalibrationFactoryReset(bool convert_to_new);
 
 /**
 * Write calibration values.
@@ -185,7 +225,7 @@ int rp_CalibrationFactoryReset();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_CalibrationWriteParams(rp_calib_params_t calib_params,bool use_factory_zone);
+rp_calib_error rp_CalibrationWriteParams(rp_calib_params_t calib_params,bool use_factory_zone);
 
 /**
 * Set calibration values in memory.
@@ -193,73 +233,73 @@ int rp_CalibrationWriteParams(rp_calib_params_t calib_params,bool use_factory_zo
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_CalibrationSetParams(rp_calib_params_t calib_params);
+rp_calib_error rp_CalibrationSetParams(rp_calib_params_t calib_params);
 
 /**
 * Returns the calibration as it is presented in the eeprom.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_CalibGetEEPROM(rp_eepromWpData_t *calib_params,bool use_factory_zone);
+rp_calib_error rp_CalibGetEEPROM(uint8_t **_out_data,uint16_t *_out_size,bool use_factory_zone);
 
 /**
 * The function converts the data to a common format
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_CalibConvertEEPROM(rp_eepromWpData_t *calib_params,rp_calib_params_t *out);
+rp_calib_error rp_CalibConvertEEPROM(uint8_t *data,uint16_t size,rp_calib_params_t *_out_calib);
+
+/**
+* The function return name of universal parameter
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+rp_calib_error rp_GetNameOfUniversalId(uint16_t id, char** _out_no_free);
 
 /**
 * Displays calibration information
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_CalibPrint(rp_calib_params_t *calib);
+rp_calib_error rp_CalibPrint(rp_calib_params_t *calib);
 
 /**
 * Gets the calibration settings for the filter
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_CalibGetFastADCFilter(rp_channel_calib_t channel,channel_filter_t *out);
+rp_calib_error rp_CalibGetFastADCFilter(rp_channel_calib_t channel,channel_filter_t *_out_value);
 
 /**
 * Gets the calibration settings for the filter (HIGH mode 1:20)
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_CalibGetFastADCFilter_1_20(rp_channel_calib_t channel,channel_filter_t *out);
-
-/**
-* Gets the calibration settings for the filter (HIGH mode 1:20)
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_CalibGetFastADCFilter_1_20(rp_channel_calib_t channel,channel_filter_t *out);
+rp_calib_error rp_CalibGetFastADCFilter_1_20(rp_channel_calib_t channel,channel_filter_t *_out_value);
 
 /**
 * Returns the calibration values for the selected channel and mode
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_CalibGetFastADCCalibValue(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, double *gain,int32_t *offset);
-int rp_CalibGetFastADCCalibValueI(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, uint_gain_calib_t *calib);
+rp_calib_error rp_CalibGetFastADCCalibValue(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, double *_out_gain,int32_t *_out_offset);
+rp_calib_error rp_CalibGetFastADCCalibValueI(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, uint_gain_calib_t *_out_calib);
 
 /**
 * Returns the calibration values for the selected channel and mode (HIGH mode 1:20)
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_CalibGetFastADCCalibValue_1_20(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, double *gain,int32_t *offset);
-int rp_CalibGetFastADCCalibValue_1_20I(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, uint_gain_calib_t *calib);
+rp_calib_error rp_CalibGetFastADCCalibValue_1_20(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, double *_out_gain,int32_t *_out_offset);
+rp_calib_error rp_CalibGetFastADCCalibValue_1_20I(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, uint_gain_calib_t *_out_calib);
 
 /**
 * Returns the calibration values for the selected channel and mode
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_CalibGetFastDACCalibValue(rp_channel_calib_t channel,rp_gen_gain_calib_t mode, double *gain,int32_t *offset);
-int rp_CalibGetFastDACCalibValueI(rp_channel_calib_t channel,rp_gen_gain_calib_t mode, uint_gain_calib_t *calib);
+rp_calib_error rp_CalibGetFastDACCalibValue(rp_channel_calib_t channel,rp_gen_gain_calib_t mode, double *_out_gain,int32_t *_out_offset);
+rp_calib_error rp_CalibGetFastDACCalibValueI(rp_channel_calib_t channel,rp_gen_gain_calib_t mode, uint_gain_calib_t *_out_calib);
 
 
 ///@}

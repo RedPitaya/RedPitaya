@@ -110,10 +110,10 @@ typedef enum {
  */
 
 typedef enum {
-    RP_SPI_MODE_LISL = 0,   //!< Low idle level, Sample on leading edge
-    RP_SPI_MODE_LIST = 1,   //!< Low idle level, sample on trailing edge
-    RP_SPI_MODE_HISL = 2,   //!< High idle level, sample on leading edge
-    RP_SPI_MODE_HIST = 3    //!< High idle level, sample on trailing edge
+    RP_SPI_MODE_LISL = 0,   //!< Clock low idle level, Sample on leading edge
+    RP_SPI_MODE_LIST = 1,   //!< Clock low idle level, sample on trailing edge
+    RP_SPI_MODE_HISL = 2,   //!< Clock high idle level, sample on leading edge
+    RP_SPI_MODE_HIST = 3    //!< Clock high idle level, sample on trailing edge
 } rp_spi_mode_t;
 
 /**
@@ -133,6 +133,15 @@ typedef enum {
     RP_SPI_STATE_NOT   = 0,  //!< Not ready
     RP_SPI_STATE_READY = 1   //!< Ready state bit setted (Not supported)
 } rp_spi_state_t;
+
+/**
+ * SPI CS mode
+ */
+
+typedef enum {
+    RP_SPI_CS_NORMAL   = 0,  //!< Work by default. Active Low state, Idle - high state
+    RP_SPI_CS_HIGH     = 1   //!< Active High state, Idle - low state
+} rp_spi_cs_mode_t;
 
 
 /** @name General
@@ -170,20 +179,20 @@ int rp_UartSetTimeout(uint8_t deca_sec);
 
 /**
 * Get timeout value.
-* @param value return value
+* @param _out_value return value
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
 */
-int rp_UartGetTimeout(uint8_t *value);
+int rp_UartGetTimeout(uint8_t *_out_value);
 
 /**
 * Reading values into the buffer from the UART device
 * @param buffer Non-zero buffer for writing data.
-* @param size Buffer size. Returns the amount of data read.
+* @param _in_out_size Buffer size. Returns the amount of data read.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
 */
-int rp_UartRead(unsigned char *buffer, int *size);
+int rp_UartRead(unsigned char *buffer, int *_in_out_size);
 
 /**
 * Writes data to UART
@@ -204,11 +213,11 @@ int rp_UartSetSpeed(int speed);
 
 /**
 * Get current setted speed.
-* @param value return value
+* @param _out_value return value
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
 */
-int rp_UartGetSpeed(int *value);
+int rp_UartGetSpeed(int *_out_value);
 
 /**
 * Set character size for the UART.
@@ -220,11 +229,11 @@ int rp_UartSetBits(rp_uart_bits_size_t size);
 
 /**
 * Get character size of the UART.
-* @param value return value
+* @param _out_value return value
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
 */
-int rp_UartGetBits(rp_uart_bits_size_t *value);
+int rp_UartGetBits(rp_uart_bits_size_t *_out_value);
 
 /**
 * Set stop bits size for the UART.
@@ -236,11 +245,11 @@ int rp_UartSetStopBits(rp_uart_stop_bits_t mode);
 
 /**
 * Get stop bits size of the UART.
-* @param value return value
+* @param _out_value return value
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
 */
-int rp_UartGetStopBits(rp_uart_stop_bits_t *value);
+int rp_UartGetStopBits(rp_uart_stop_bits_t *_out_value);
 
 /**
 * Set parity check mode for the UART.
@@ -256,16 +265,16 @@ int rp_UartSetParityMode(rp_uart_parity_t mode);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
 */
-int rp_UartGetParityMode(rp_uart_parity_t *value);
+int rp_UartGetParityMode(rp_uart_parity_t *_out_value);
 
 
 /**
 * The function returns the on state of the 9 yellow LED indicator.
-* @param enable return current state.
+* @param _out_value return current state.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
 */
-int rp_GetLEDMMCState(bool *_enable);
+int rp_GetLEDMMCState(bool *_out_value);
 
 /**
 * The function enables or disables the 9 yellow LED indicator
@@ -277,11 +286,11 @@ int rp_SetLEDMMCState(bool _enable);
 
 /**
 * The function returns the on state of the red LED indicator.
-* @param enable return current state.
+* @param _out_value return current state.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
 */
-int rp_GetLEDHeartBeatState(bool *_enable);
+int rp_GetLEDHeartBeatState(bool *_out_value);
 
 /**
 * The function enables or disables the red LED indicator
@@ -293,11 +302,11 @@ int rp_SetLEDHeartBeatState(bool _enable);
 
 /**
 * The function returns the status of indicators on the Ethernet connector.
-* @param enable return current state.
+* @param _out_value return current state.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
 */
-int rp_GetLEDEthState(bool *_state);
+int rp_GetLEDEthState(bool *_out_value);
 
 /**
 * The function enables or disables indicators on the the Ethernet connector.
@@ -360,40 +369,40 @@ int rp_SPI_CreateMessage(size_t len);
 
 /**
  * Gets the current number of messages
- * @param len Return number of messages in a batch
+ * @param _out_value Return number of messages in a batch
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
  */
-int rp_SPI_GetMessageLen(size_t *len);
+int rp_SPI_GetMessageLen(size_t *_out_value);
 
 /**
  * Gets a read buffer from the specified messages
  * @param msg Index of msg. Must be less than message length
- * @param buffer Pointer to the data buffer to read. If the buffer was not set in the current message, then the pointer is equal to zero
- * @param len Returns the length of the buffer
+ * @param _out_buffer Pointer to the data buffer to read. If the buffer was not set in the current message, then the pointer is equal to zero
+ * @param _out_len Returns the length of the buffer
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
  */
-int rp_SPI_GetRxBuffer(size_t msg,const uint8_t **buffer,size_t *len);
+int rp_SPI_GetRxBuffer(size_t msg,const uint8_t **_out_buffer,size_t *_out_len);
 
 /**
  * Gets a write buffer from the specified messages
  * @param msg Index of msg. Must be less than message length
- * @param buffer Pointer to the data buffer to write. If the buffer was not set in the current message, then the pointer is equal to zero
- * @param len Returns the length of the buffer
+ * @param _out_buffer Pointer to the data buffer to write. If the buffer was not set in the current message, then the pointer is equal to zero
+ * @param _out_len Returns the length of the buffer
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
  */
-int rp_SPI_GetTxBuffer(size_t msg,const uint8_t **buffer,size_t *len);
+int rp_SPI_GetTxBuffer(size_t msg,const uint8_t **_out_buffer,size_t *_out_len);
 
 /**
  * Returns chip select reset states. If the value is not set, then within the transmission of the message packet, the state of the chip selection will not be reset.
  * @param msg Index of msg. Must be less than message length
- * @param cs_change Returns the chip select state
+ * @param _out_value Returns the chip select state
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
  */
-int rp_SPI_GetCSChangeState(size_t msg,bool *cs_change);
+int rp_SPI_GetCSChangeState(size_t msg,bool *_out_value);
 
 /**
  * Sets the data for the message.
@@ -416,7 +425,7 @@ int rp_SPI_DestoryMessage();
 
 /**
 * Get mode of the SPI.
-* @param mode mode:
+* @param _out_value mode:
 * RP_SPI_MODE_LISL = 0 - Low idle level, Sample on leading edge
 * RP_SPI_MODE_LIST = 1 - Low idle level, sample on trailing edge
 * RP_SPI_MODE_HISL = 2 - High idle level, sample on leading edge
@@ -425,7 +434,7 @@ int rp_SPI_DestoryMessage();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
 */
-int rp_SPI_GetMode(rp_spi_mode_t *mode);
+int rp_SPI_GetMode(rp_spi_mode_t *_out_value);
 
 /**
 * Set mode for the SPI.
@@ -441,11 +450,11 @@ int rp_SPI_SetMode(rp_spi_mode_t mode);
 
 /**
 * Get READY state of the SPI.
-* @param state state value
+* @param _out_value state value
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
 */
-int rp_SPI_GetState(rp_spi_state_t *state);
+int rp_SPI_GetState(rp_spi_state_t *_out_value);
 
 /**
 * Set READY state for the SPI.
@@ -456,12 +465,28 @@ int rp_SPI_GetState(rp_spi_state_t *state);
 int rp_SPI_SetState(rp_spi_state_t state);
 
 /**
-* Get byte order of the SPI.
-* @param order return speed value (Hz)
+* Get current settings for CS mode
+* @param _out_value return mode value
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
 */
-int rp_SPI_GetOrderBit(rp_spi_order_bit_t *order);
+int rp_SPI_GetCSMode(rp_spi_cs_mode_t *_out_value);
+
+/**
+* Set CS mode in settings.
+* @param mode mode value
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+*/
+int rp_SPI_SetCSMode(rp_spi_cs_mode_t mode);
+
+/**
+* Get byte order of the SPI.
+* @param _out_value return speed value (Hz)
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+*/
+int rp_SPI_GetOrderBit(rp_spi_order_bit_t *_out_value);
 
 /**
 * Set byte order LSB/MSB for the SPI.
@@ -473,11 +498,11 @@ int rp_SPI_SetOrderBit(rp_spi_order_bit_t order);
 
 /**
 * Get speed of the SPI.
-* @param speed return speed value (Hz)
+* @param _out_value return speed value (Hz)
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
 */
-int rp_SPI_GetSpeed(int *speed);
+int rp_SPI_GetSpeed(int * _out_value);
 
 /**
 * Set speed for the SPI.
@@ -489,11 +514,11 @@ int rp_SPI_SetSpeed(int speed);
 
 /**
 * Get "bit per word" of the SPI.
-* @param len size of word
+* @param _out_value size of word
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
 */
-int rp_SPI_GetWordLen(int *len);
+int rp_SPI_GetWordLen(int * _out_value);
 
 /**
 * Set "bit per word" for the SPI.
@@ -530,55 +555,55 @@ int rp_I2C_setForceMode(bool force);
 
 /**
  * Gets the current forced mode setting.
- * @param value Return current mode
+ * @param _out_value Return current mode
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
  */
-int rp_I2C_getForceMode(bool *value);
+int rp_I2C_getForceMode(bool *_out_value);
 
 /**
  * Gets the current device address.
- * @param value Return current device address
+ * @param _out_value Return current device address
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
  */
-int rp_I2C_getDevAddress(int * address);
+int rp_I2C_getDevAddress(int * _out_value);
 
 /**
  * Read byte from I2C. Used smbus.
  * @param reg Address of register
- * @param value Returns the read value
+ * @param _out_value Returns the read value
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
  */
-int rp_I2C_SMBUS_Read(uint8_t reg,uint8_t *value);
+int rp_I2C_SMBUS_Read(uint8_t reg,uint8_t *_out_value);
 
 /**
  * Read word from I2C. Used smbus.
  * @param reg Address of register
- * @param value Returns the read value
+ * @param _out_value Returns the read value
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
  */
-int rp_I2C_SMBUS_ReadWord(uint8_t reg,uint16_t *value);
+int rp_I2C_SMBUS_ReadWord(uint8_t reg,uint16_t *_out_value);
 
 /**
  * Read command from I2C. Used smbus.
- * @param value Returns the read value
+ * @param _out_value Returns the read value
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
  */
-int rp_I2C_SMBUS_ReadCommand(uint8_t *value);
+int rp_I2C_SMBUS_ReadCommand(uint8_t *_out_value);
 
 /**
  * Read buffer from I2C. Used smbus.
  * @param reg Address of register
  * @param buffer Buffer pointer
- * @param len Indicates how much data to read, and returns the number of bytes read
+ * @param _in_out_size Indicates how much data to read, and returns the number of bytes read
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
  */
-int rp_I2C_SMBUS_ReadBuffer(uint8_t reg, uint8_t *buffer, int *len);
+int rp_I2C_SMBUS_ReadBuffer(uint8_t reg, uint8_t *buffer, int *_in_out_size);
 
 /**
  * Write byte to I2C. Used smbus.

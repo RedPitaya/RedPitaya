@@ -17,35 +17,6 @@ static std::mutex g_adc_mutex;
 static constexpr char config_file[] = "/root/.config/redpitaya/apps/streaming/streaming_config.json";
 
 
-#define SS_NET		0
-#define SS_FILE  	1
-
-#define SS_TCP		1
-#define SS_UDP  	2
-
-#define SS_CH1  	1
-#define SS_CH2  	2
-#define SS_BOTH 	3
-
-#define SS_8BIT		1
-#define SS_16BIT	2
-
-#define SS_RAW		1
-#define SS_VOLT  	2
-
-#define SS_WAV		0
-#define SS_TDMS  	1
-#define SS_BIN  	2
-
-#define SS_A_1_1  	1
-#define SS_A_1_20  	2
-
-#define SS_DAC_GAIN_1   0
-#define SS_DAC_GAIN_5  	1
-
-#define SS_CALIB_OFF    1
-#define SS_CALIB_ON     2
-
 #define SERVER_CONFIG_PORT "8901"
 #define SERVER_BROADCAST_PORT "8902"
 
@@ -65,24 +36,24 @@ CIntParameter 		ss_is_master(		"SS_IS_MASTER",	        CBaseParameter::RO, 0, 0,
 
 CIntParameter		ss_port(  			"SS_PORT_NUMBER", 		CBaseParameter::RW, 8900,0,	1,65535);
 CStringParameter    ss_ip_addr(			"SS_IP_ADDR",			CBaseParameter::RW, "127.0.0.1",0);
-CIntParameter		ss_protocol(  		"SS_PROTOCOL", 			CBaseParameter::RW, 1 ,0,	1,2);
+CIntParameter		ss_protocol(  		"SS_PROTOCOL", 			CBaseParameter::RW, 0 ,0,	0,1);
 CIntParameter		ss_samples(  		"SS_SAMPLES", 			CBaseParameter::RW, 20000000 ,0,	-1,2000000000);
-CIntParameter		ss_channels(  		"SS_CHANNEL", 			CBaseParameter::RW, 1 ,0,	1,3);
-CIntParameter		ss_resolution(  	"SS_RESOLUTION", 		CBaseParameter::RW, 1 ,0,	1,2);
-CIntParameter		ss_calib( 	 		"SS_USE_CALIB", 		CBaseParameter::RW, 2 ,0,	1,2);
-CIntParameter		ss_save_mode(  		"SS_SAVE_MODE", 		CBaseParameter::RW, 1 ,0,	1,2);
+CIntParameter		ss_channels(  		"SS_CHANNEL", 			CBaseParameter::RW, 0 ,0,	0, 256);
+CIntParameter		ss_resolution(  	"SS_RESOLUTION", 		CBaseParameter::RW, 0 ,0,	0, 256);
+CIntParameter		ss_calib( 	 		"SS_USE_CALIB", 		CBaseParameter::RW, 1 ,0,	0,1);
+CIntParameter		ss_save_mode(  		"SS_SAVE_MODE", 		CBaseParameter::RW, 0 ,0,	0,1);
 CIntParameter		ss_rate(  			"SS_RATE", 				CBaseParameter::RW, 4 ,0,	1,65536);
 CIntParameter		ss_format( 			"SS_FORMAT", 			CBaseParameter::RW, 0 ,0,	0, 2);
 CIntParameter		ss_status( 			"SS_STATUS", 			CBaseParameter::RW, 1 ,0,	0,100);
 CBooleanParameter 	ss_adc_data_pass(	"SS_ADC_DATA_PASS",		CBaseParameter::RW, false,0);
 CIntParameter		ss_acd_max(			"SS_ACD_MAX", 			CBaseParameter::RO, getADCRate() ,0,	0, getADCRate());
-CIntParameter		ss_attenuator( 		"SS_ATTENUATOR",		CBaseParameter::RW, 1 ,0,	1, 2);
-CIntParameter		ss_ac_dc( 			"SS_AC_DC",				CBaseParameter::RW, 1 ,0,	1, 2);
-CStringParameter 	redpitaya_model(	"RP_MODEL_STR", 		CBaseParameter::ROSA, getModelS(), 10);
+CIntParameter		ss_attenuator( 		"SS_ATTENUATOR",		CBaseParameter::RW, 0 ,0,	0, 256);
+CIntParameter		ss_ac_dc( 			"SS_AC_DC",				CBaseParameter::RW, 0 ,0,	0, 256);
+CStringParameter 	redpitaya_model(	"RP_MODEL_STR", 		CBaseParameter::RO, getModelS(), 10);
 
 CStringParameter    ss_dac_file(		"SS_DAC_FILE",			CBaseParameter::RW, "", 0);
 CIntParameter    	ss_dac_file_type(	"SS_DAC_FILE_TYPE",		CBaseParameter::RW,  0 ,0, 0, 1);
-CIntParameter    	ss_dac_gain(		"SS_DAC_GAIN",			CBaseParameter::RW,  0 ,0, 0, 1);
+CIntParameter    	ss_dac_gain(		"SS_DAC_GAIN",			CBaseParameter::RW,  0 ,0, 0, 256);
 CIntParameter    	ss_dac_mode(		"SS_DAC_MODE",			CBaseParameter::RW,  0 ,0, 0, 1);
 CIntParameter		ss_dac_speed(		"SS_DAC_HZ", 			CBaseParameter::RW, getDACRate() ,0,	1.0 / (65536.0 /getDACRate()) + 1.0, getDACRate());
 CIntParameter		ss_dac_max_speed(	"SS_DAC_MAX_HZ",		CBaseParameter::RO, getDACRate() ,0,	0, getDACRate());
@@ -96,6 +67,10 @@ CIntParameter    	ss_lb_mode(			"SS_LB_MODE",		    CBaseParameter::RW,  0,0,   0
 CIntParameter		ss_lb_speed(		"SS_LB_SPEED", 			CBaseParameter::RW, -1,0,	-1,getDACRate());
 CIntParameter		ss_lb_timeout(		"SS_LB_TIMEOUT",	 	CBaseParameter::RW,  1,0,	0,1);
 CIntParameter		ss_lb_channels(		"SS_LB_CHANNELS",		CBaseParameter::RW,  1,0,	0,1);
+
+CIntParameter		ss_adc_channels(	"SS_ADC_CHANNELS", 		CBaseParameter::RO, getADCChannels() ,0,	0,10);
+CIntParameter		ss_dac_channels(  	"SS_DAC_CHANNELS", 		CBaseParameter::RO, getDACChannels() ,0,	0,10);
+CBooleanParameter   ss_ac_dc_enable(  	"SS_IS_AC_DC", 			CBaseParameter::RO, getAC_DC() ,0);
 
 
 uio_lib::COscilloscope::Ptr g_osc = nullptr;
@@ -131,6 +106,14 @@ auto getDACChannels() -> uint8_t{
     return c;
 }
 
+auto getAC_DC() -> bool{
+    bool c = false;
+    if (rp_HPGetFastADCIsAC_DC(&c) != RP_HP_OK){
+        fprintf(stderr,"[Error] Can't get fast AC/DC mode\n");
+    }
+    return c;
+}
+
 auto getDACRate() -> uint32_t{
     uint32_t c = 0;
     if (rp_HPGetBaseFastDACSpeedHz(&c) != RP_HP_OK){
@@ -144,6 +127,14 @@ auto getADCRate() -> uint32_t{
     uint32_t c = 0;
     if (rp_HPGetBaseFastADCSpeedHz(&c) != RP_HP_OK){
         fprintf(stderr,"[Error] Can't get fast ADC channels count\n");
+    }
+    return c;
+}
+
+auto getADCBits() -> uint8_t{
+    uint8_t c = 0;
+    if (rp_HPGetFastADCBits(&c) != RP_HP_OK){
+        fprintf(stderr,"[Error] Can't get fast ADC bits\n");
     }
     return c;
 }
@@ -177,6 +168,7 @@ auto getModel() -> broadcast_lib::EModel{
         case STEM_250_12_v1_0:
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
+		case STEM_250_12_v1_2a:
             return broadcast_lib::EModel::RP_250_12;
 		case STEM_250_12_120:
 			return broadcast_lib::EModel::RP_250_12;
@@ -215,6 +207,7 @@ auto getModel() -> broadcast_lib::EModel{
         case STEM_250_12_v1_0:
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
+		case STEM_250_12_v1_2a:
             return "Z20_250_12";
 		case STEM_250_12_120:
             return "Z20_250_12_120";
@@ -255,13 +248,13 @@ auto rp_app_init(void) -> int {
 				if (uio.nodeName == "rp_oscilloscope")
 				{
 					fprintf(stderr,"rp_app_init::Check master/slave\n");
-					auto osc = uio_lib::COscilloscope::create(uio,1,true,getADCRate(),false);
+					auto osc = uio_lib::COscilloscope::create(uio,1,true,getADCRate(),false,getADCBits(),getADCChannels());
 					g_isMaster = osc->isMaster();
 					fprintf(stderr,"rp_app_init::Detected %s mode\n",g_isMaster == uio_lib::BoardMode::MASTER ? "Master" : (g_isMaster == uio_lib::BoardMode::SLAVE ? "Slave" : "Unknown"));
 					break;
 				}
 			}
-
+			fprintf(stderr,"ss_ip_addr %s\n",ss_ip_addr.Value().c_str());
 			g_serverNetConfig = std::make_shared<ServerNetConfigManager>(config_file,g_isMaster != uio_lib::BoardMode::SLAVE ? broadcast_lib::EMode::AB_SERVER_MASTER
 																							    : broadcast_lib::EMode::AB_SERVER_SLAVE,
 																								ss_ip_addr.Value(),
@@ -310,13 +303,12 @@ auto rp_app_init(void) -> int {
 		ss_is_master.SendValue(g_isMaster);
 		ss_status.SendValue(0);
 		ss_adc_data_pass.SendValue(0);
-		ss_acd_max.SendValue(getADCRate());
-		ss_dac_max_speed.SendValue(getDACRate());
 		if (g_serverNetConfig->getSettingsRef().isSetted()){
 			updateUI();
 		}else{
 			setConfig(true);
 		}
+
         streaming_lib::CStreamingFile::makeEmptyDir(FILE_PATH);
 		if (rp_HPGetIsAttenuatorControllerPresentOrDefault() && rp_HPGetFastADCIsAC_DCOrDefault() && rp_HPGetIsGainDACx5OrDefault()){
 	    	rp_max7311::rp_initController();
@@ -368,126 +360,17 @@ void updateUI(){
 	ss_dac_file.SendValue(g_serverNetConfig->getSettingsRef().getDACFile());
 	ss_dac_port.SendValue(std::atoi(g_serverNetConfig->getSettingsRef().getDACPort().c_str()));
 
-	switch (g_serverNetConfig->getSettingsRef().getSaveType())
-	{
-		case CStreamSettings::NET:
-            ss_use_localfile.SendValue(SS_NET);
-			break;
-		case CStreamSettings::FILE:
-            ss_use_localfile.SendValue(SS_FILE);
-			break;
-	}
-
-	switch (g_serverNetConfig->getSettingsRef().getProtocol())
-	{
-		case CStreamSettings::TCP:
-			ss_protocol.SendValue(SS_TCP);
-			break;
-		case CStreamSettings::UDP:
-			ss_protocol.SendValue(SS_UDP);
-			break;
-	}
-
-	switch (g_serverNetConfig->getSettingsRef().getChannels())
-	{
-		case CStreamSettings::CH1:
-            ss_channels.SendValue(SS_CH1);
-			break;
-		case CStreamSettings::CH2:
-            ss_channels.SendValue(SS_CH2);
-			break;
-		case CStreamSettings::BOTH:
-            ss_channels.SendValue(SS_BOTH);
-			break;
-	}
-
-	switch (g_serverNetConfig->getSettingsRef().getResolution())
-	{
-		case CStreamSettings::BIT_8:
-			ss_resolution.SendValue(SS_8BIT);
-			break;
-		case CStreamSettings::BIT_16:
-			ss_resolution.SendValue(SS_16BIT);
-			break;
-	}
-
-	switch (g_serverNetConfig->getSettingsRef().getType())
-	{
-		case CStreamSettings::RAW:
-            ss_save_mode.SendValue(SS_RAW);
-			break;
-		case CStreamSettings::VOLT:
-            ss_save_mode.SendValue(SS_VOLT);
-			break;
-	}
-
-	switch (g_serverNetConfig->getSettingsRef().getFormat())
-	{
-		case CStreamSettings::WAV:
-            ss_format.SendValue(SS_WAV);
-			break;
-		case CStreamSettings::TDMS:
-            ss_format.SendValue(SS_TDMS);
-			break;
-        case CStreamSettings::BIN:
-            ss_format.SendValue(SS_BIN);
-        default:
-            aprintf(stderr,"Error format type in settings\n");
-			break;
-	}
-
-	switch (g_serverNetConfig->getSettingsRef().getAttenuator())
-	{
-		case CStreamSettings::A_1_1:
-            ss_attenuator.SendValue(SS_A_1_1);
-			break;
-		case CStreamSettings::A_1_20:
-            ss_attenuator.SendValue(SS_A_1_20);
-			break;
-	}
-
-	switch (g_serverNetConfig->getSettingsRef().getAC_DC())
-	{
-		case CStreamSettings::AC:
-			ss_ac_dc.SendValue(1);
-			break;
-		case CStreamSettings::DC:
-			ss_ac_dc.SendValue(2);
-			break;
-	}
-
-	switch (g_serverNetConfig->getSettingsRef().getDACFileType())
-	{
-		case CStreamSettings::WAV:
-            ss_dac_file_type.SendValue(SS_WAV);
-			break;
-		case CStreamSettings::TDMS:
-            ss_dac_file_type.SendValue(SS_TDMS);
-			break;
-        default:
-            aprintf(stderr,"Error format type for dac in settings\n");
-	}
-
-	switch (g_serverNetConfig->getSettingsRef().getDACGain())
-	{
-		case CStreamSettings::X1:
-            ss_dac_gain.SendValue(SS_DAC_GAIN_1);
-			break;
-		case CStreamSettings::X5:
-            ss_dac_gain.SendValue(SS_DAC_GAIN_5);
-			break;
-	}
-
-	switch (g_serverNetConfig->getSettingsRef().getDACMode())
-	{
-		case CStreamSettings::DAC_NET:
-            ss_dac_mode.SendValue(SS_NET);
-			break;
-		case CStreamSettings::DAC_FILE:
-            ss_dac_mode.SendValue(SS_FILE);
-			break;
-	}
-
+    ss_use_localfile.SendValue(g_serverNetConfig->getSettingsRef().getSaveType());
+	ss_protocol.SendValue(g_serverNetConfig->getSettingsRef().getProtocol());
+	ss_channels.SendValue(g_serverNetConfig->getSettingsRef().getChannels());
+	ss_resolution.SendValue(g_serverNetConfig->getSettingsRef().getResolution());
+    ss_save_mode.SendValue(g_serverNetConfig->getSettingsRef().getType());
+    ss_format.SendValue(g_serverNetConfig->getSettingsRef().getFormat());
+    ss_attenuator.SendValue(g_serverNetConfig->getSettingsRef().getAttenuator());
+	ss_ac_dc.SendValue(g_serverNetConfig->getSettingsRef().getAC_DC());
+    ss_dac_file_type.SendValue(g_serverNetConfig->getSettingsRef().getDACFileType());
+    ss_dac_gain.SendValue(g_serverNetConfig->getSettingsRef().getDACGain());
+    ss_dac_mode.SendValue(g_serverNetConfig->getSettingsRef().getDACMode());
 
 	ss_dac_repeat.SendValue(g_serverNetConfig->getSettingsRef().getDACRepeat());
 	ss_dac_rep_count.SendValue(g_serverNetConfig->getSettingsRef().getDACRepeatCount());
@@ -495,13 +378,12 @@ void updateUI(){
 	ss_dac_speed.SendValue(g_serverNetConfig->getSettingsRef().getDACHz());
 	ss_rate.SendValue(g_serverNetConfig->getSettingsRef().getDecimation());
 	ss_samples.SendValue(g_serverNetConfig->getSettingsRef().getSamples());
-    ss_calib.SendValue(g_serverNetConfig->getSettingsRef().getCalibration() ? SS_CALIB_ON : SS_CALIB_OFF);
+    ss_calib.SendValue(g_serverNetConfig->getSettingsRef().getCalibration());
 
 	ss_lb_channels.SendValue(g_serverNetConfig->getSettingsRef().getLoopbackChannels());
 	ss_lb_mode.SendValue(g_serverNetConfig->getSettingsRef().getLoopbackMode());
 	ss_lb_timeout.SendValue(g_serverNetConfig->getSettingsRef().getLoopbackTimeout());
 	ss_lb_speed.SendValue(g_serverNetConfig->getSettingsRef().getLoopbackSpeed());
-
 }
 
 void setConfig(bool _force){
@@ -538,52 +420,35 @@ void setConfig(bool _force){
 	if (ss_use_localfile.IsNewValue() || _force)
 	{
 		ss_use_localfile.Update();
-        if (ss_use_localfile.Value() == SS_FILE)
-			g_serverNetConfig->getSettingsRef().setSaveType(CStreamSettings::FILE);
-        if (ss_use_localfile.Value() == SS_NET)
-			g_serverNetConfig->getSettingsRef().setSaveType(CStreamSettings::NET);
+		g_serverNetConfig->getSettingsRef().setSaveType((CStreamSettings::SaveType)ss_use_localfile.Value());
 		needUpdate = true;
 	}
 
 	if (ss_protocol.IsNewValue() || _force)
 	{
 		ss_protocol.Update();
-		if (ss_protocol.Value() == SS_TCP)
-			g_serverNetConfig->getSettingsRef().setProtocol(CStreamSettings::TCP);
-		if (ss_protocol.Value() == SS_UDP)
-			g_serverNetConfig->getSettingsRef().setProtocol(CStreamSettings::UDP);
+		g_serverNetConfig->getSettingsRef().setProtocol((CStreamSettings::Protocol)ss_protocol.Value());
 		needUpdate = true;
 	}
 
 	if (ss_channels.IsNewValue() || _force)
 	{
 		ss_channels.Update();
-        if (ss_channels.Value() == SS_CH1)
-			g_serverNetConfig->getSettingsRef().setChannels(CStreamSettings::CH1);
-        if (ss_channels.Value() == SS_CH2)
-			g_serverNetConfig->getSettingsRef().setChannels(CStreamSettings::CH2);
-        if (ss_channels.Value() == SS_BOTH)
-			g_serverNetConfig->getSettingsRef().setChannels(CStreamSettings::BOTH);
+		g_serverNetConfig->getSettingsRef().setChannels(ss_channels.Value());
 		needUpdate = true;
 	}
 
 	if (ss_resolution.IsNewValue() || _force)
 	{
 		ss_resolution.Update();
-		if (ss_resolution.Value() == SS_8BIT)
-			g_serverNetConfig->getSettingsRef().setResolution(CStreamSettings::BIT_8);
-		if (ss_resolution.Value() == SS_16BIT)
-			g_serverNetConfig->getSettingsRef().setResolution(CStreamSettings::BIT_16);
+		g_serverNetConfig->getSettingsRef().setResolution((CStreamSettings::Resolution)ss_resolution.Value());
 		needUpdate = true;
 	}
 
 	if (ss_save_mode.IsNewValue() || _force)
 	{
 		ss_save_mode.Update();
-        if (ss_save_mode.Value() == SS_RAW)
-			g_serverNetConfig->getSettingsRef().setType(CStreamSettings::RAW);
-        if (ss_save_mode.Value() == SS_VOLT)
-			g_serverNetConfig->getSettingsRef().setType(CStreamSettings::VOLT);
+		g_serverNetConfig->getSettingsRef().setType((CStreamSettings::DataType)ss_save_mode.Value());
 		needUpdate = true;
 	}
 
@@ -597,12 +462,7 @@ void setConfig(bool _force){
 	if (ss_format.IsNewValue() || _force)
 	{
 		ss_format.Update();
-        if (ss_format.Value() == SS_WAV)
-			g_serverNetConfig->getSettingsRef().setFormat(CStreamSettings::WAV);
-        if (ss_format.Value() == SS_TDMS)
-			g_serverNetConfig->getSettingsRef().setFormat(CStreamSettings::TDMS);
-        if (ss_format.Value() == SS_BIN)
-            g_serverNetConfig->getSettingsRef().setFormat(CStreamSettings::BIN);
+		g_serverNetConfig->getSettingsRef().setFormat((CStreamSettings::DataFormat)ss_format.Value());
 		needUpdate = true;
 	}
 
@@ -617,46 +477,36 @@ void setConfig(bool _force){
 		if (ss_attenuator.IsNewValue() || _force)
 		{
 			ss_attenuator.Update();
-			if (ss_attenuator.Value() == 1)
-				g_serverNetConfig->getSettingsRef().setAttenuator(CStreamSettings::A_1_1);
-			if (ss_attenuator.Value() == 2)
-				g_serverNetConfig->getSettingsRef().setAttenuator(CStreamSettings::A_1_20);
-			needUpdate = true;
-		}
-
-		if (ss_calib.IsNewValue() || _force)
-		{
-			ss_calib.Update();
-			g_serverNetConfig->getSettingsRef().setCalibration(ss_calib.Value() == SS_CALIB_ON);
+			g_serverNetConfig->getSettingsRef().setAttenuator(ss_attenuator.Value());
 			needUpdate = true;
 		}
 	}else{
-		g_serverNetConfig->getSettingsRef().setAttenuator(CStreamSettings::A_1_1);
-		g_serverNetConfig->getSettingsRef().setCalibration(false);
+		g_serverNetConfig->getSettingsRef().setAttenuator(0);
+	}
+
+	if (ss_calib.IsNewValue() || _force)
+	{
+		ss_calib.Update();
+		g_serverNetConfig->getSettingsRef().setCalibration(ss_calib.Value());
+		needUpdate = true;
 	}
 
 	if (rp_HPGetFastADCIsAC_DCOrDefault()){
 		if (ss_ac_dc.IsNewValue() || _force)
 		{
 			ss_ac_dc.Update();
-			if (ss_ac_dc.Value() == 1)
-				g_serverNetConfig->getSettingsRef().setAC_DC(CStreamSettings::AC);
-			if (ss_ac_dc.Value() == 2)
-				g_serverNetConfig->getSettingsRef().setAC_DC(CStreamSettings::DC);
+			g_serverNetConfig->getSettingsRef().setAC_DC(ss_ac_dc.Value());
 			needUpdate = true;
 		}
 	}
 	else
-		g_serverNetConfig->getSettingsRef().setAC_DC(CStreamSettings::DC);
+		g_serverNetConfig->getSettingsRef().setAC_DC(0xF);
 
 
 	if (ss_dac_file_type.IsNewValue() || _force)
 	{
 		ss_dac_file_type.Update();
-        if (ss_dac_file_type.Value() == SS_WAV)
-			g_serverNetConfig->getSettingsRef().setDACFileType(CStreamSettings::WAV);
-        if (ss_dac_file_type.Value() == SS_TDMS)
-			g_serverNetConfig->getSettingsRef().setDACFileType(CStreamSettings::TDMS);
+		g_serverNetConfig->getSettingsRef().setDACFileType((CStreamSettings::DataFormat)ss_dac_file_type.Value());
 		needUpdate = true;
 	}
 
@@ -664,24 +514,18 @@ void setConfig(bool _force){
 		if (ss_dac_gain.IsNewValue() || _force)
 		{
 			ss_dac_gain.Update();
-			if (ss_dac_gain.Value() == SS_DAC_GAIN_1)
-				g_serverNetConfig->getSettingsRef().setDACGain(CStreamSettings::X1);
-			if (ss_dac_gain.Value() == SS_DAC_GAIN_5)
-				g_serverNetConfig->getSettingsRef().setDACGain(CStreamSettings::X5);
+			g_serverNetConfig->getSettingsRef().setDACGain(ss_dac_gain.Value());
 			needUpdate = true;
 		}
 	}
 	else
-		g_serverNetConfig->getSettingsRef().setDACGain(CStreamSettings::X1);
+		g_serverNetConfig->getSettingsRef().setDACGain(0);
 
 
 	if (ss_dac_mode.IsNewValue() || _force)
 	{
 		ss_dac_mode.Update();
-        if (ss_dac_mode.Value() == SS_NET)
-			g_serverNetConfig->getSettingsRef().setDACMode(CStreamSettings::DAC_NET);
-        if (ss_dac_mode.Value() == SS_FILE)
-			g_serverNetConfig->getSettingsRef().setDACMode(CStreamSettings::DAC_FILE);
+		g_serverNetConfig->getSettingsRef().setDACMode((CStreamSettings::DACType)ss_dac_mode.Value());
 		needUpdate = true;
 	}
 
@@ -749,9 +593,7 @@ void setConfig(bool _force){
 //Update parameters
 void UpdateParams(void) {
 	try{
-
 		setConfig(false);
-
 		if (ss_start.IsNewValue())
 		{
 			ss_start.Update();
@@ -820,7 +662,7 @@ void startServer(bool testMode) {
 		auto use_calib    = settings.getCalibration();
 		auto attenuator   = settings.getAttenuator();
 		auto ac_dc        = settings.getAC_DC();
- 		auto channels     = getADCChannels();
+ 		auto max_channels = getADCChannels();
 
 		if (rp_CalibInit() != RP_HW_CALIB_OK){
 	        fprintf(stderr,"Error init calibration\n");
@@ -837,9 +679,9 @@ void startServer(bool testMode) {
 
 		filterBypass = !rp_HPGetFastADCIsFilterPresentOrDefault();
 		if (use_calib) {
-            for(uint8_t ch = 0; ch < channels; ++ch){
-				rp_acq_ac_dc_mode_calib_t  mode = ac_dc == CStreamSettings::AC ? RP_AC_CALIB : RP_DC_CALIB;
-                if (attenuator == CStreamSettings::A_1_1){
+            for(uint8_t ch = 0; ch < max_channels; ++ch){
+				rp_acq_ac_dc_mode_calib_t  mode = ( CStreamSettings::checkChannel(ac_dc, ch) ? RP_DC_CALIB : RP_AC_CALIB);
+                if (CStreamSettings::checkChannel(attenuator,ch) == false){
                     if (rp_CalibGetFastADCCalibValue((rp_channel_calib_t)ch,mode,&ch_gain[ch],&ch_off[ch]) != RP_HW_CALIB_OK){
                         fprintf(stderr,"Error get calibration channel: %d\n",ch);
                     }
@@ -855,8 +697,7 @@ void startServer(bool testMode) {
                         pp_ch[ch] = f.pp;
                     }
                 }
-
-                if (attenuator == CStreamSettings::A_1_20){
+				else{
                     if (rp_CalibGetFastADCCalibValue_1_20((rp_channel_calib_t)ch,mode,&ch_gain[ch],&ch_off[ch]) != RP_HW_CALIB_OK){
                         fprintf(stderr,"Error get calibration channel: %d\n",ch);
                     }
@@ -876,13 +717,13 @@ void startServer(bool testMode) {
 		}
 
         if (rp_HPGetIsAttenuatorControllerPresentOrDefault()){
-		    rp_max7311::rp_setAttenuator(RP_MAX7311_IN1, attenuator == CStreamSettings::A_1_1  ? RP_ATTENUATOR_1_1 : RP_ATTENUATOR_1_20);
-		    rp_max7311::rp_setAttenuator(RP_MAX7311_IN2, attenuator == CStreamSettings::A_1_1  ? RP_ATTENUATOR_1_1 : RP_ATTENUATOR_1_20);
+		    rp_max7311::rp_setAttenuator(RP_MAX7311_IN1, attenuator & CStreamSettings::CH1 ? RP_ATTENUATOR_1_20 : RP_ATTENUATOR_1_1);
+		    rp_max7311::rp_setAttenuator(RP_MAX7311_IN2, attenuator & CStreamSettings::CH2 ? RP_ATTENUATOR_1_20 : RP_ATTENUATOR_1_1);
         }
 
         if (rp_HPGetFastADCIsAC_DCOrDefault()){
-	    	rp_max7311::rp_setAC_DC(RP_MAX7311_IN1, ac_dc == CStreamSettings::AC ? RP_AC_MODE : RP_DC_MODE);
-    		rp_max7311::rp_setAC_DC(RP_MAX7311_IN2, ac_dc == CStreamSettings::AC ? RP_AC_MODE : RP_DC_MODE);
+	    	rp_max7311::rp_setAC_DC(RP_MAX7311_IN1, ac_dc & CStreamSettings::CH1 ? RP_DC_MODE : RP_AC_MODE);
+	    	rp_max7311::rp_setAC_DC(RP_MAX7311_IN2, ac_dc & CStreamSettings::CH2 ? RP_DC_MODE : RP_AC_MODE);
         }
 
         for (auto &uio : uioList)
@@ -890,10 +731,11 @@ void startServer(bool testMode) {
 			if (uio.nodeName == "rp_oscilloscope")
 			{
 				fprintf(stderr,"COscilloscope::Create rate %d\n",rate);
-                g_osc = uio_lib::COscilloscope::create(uio,rate,g_isMaster != uio_lib::BoardMode::SLAVE,getADCRate(),!filterBypass);
-                g_osc->setCalibration(ch_off[0],ch_gain[0],ch_off[1],ch_gain[1]);
-                g_osc->setFilterCalibrationCh1(aa_ch[0],bb_ch[0],kk_ch[0],pp_ch[0]);
-                g_osc->setFilterCalibrationCh2(aa_ch[1],bb_ch[1],kk_ch[1],pp_ch[1]);
+                g_osc = uio_lib::COscilloscope::create(uio,rate,g_isMaster != uio_lib::BoardMode::SLAVE,getADCRate(),!filterBypass,getADCBits(),max_channels);
+				for(uint8_t ch = 0; ch < max_channels; ++ch){
+					g_osc->setCalibration(ch,ch_off[ch],ch_gain[ch]);
+                	g_osc->setFilterCalibration(ch,aa_ch[ch],bb_ch[ch],kk_ch[ch],pp_ch[ch]);
+				}
                 g_osc->setFilterBypass(filterBypass);
 				g_osc->set8BitMode(resolution == CStreamSettings::BIT_8);
 				break;
@@ -951,15 +793,14 @@ void startServer(bool testMode) {
         g_s_fpga = std::make_shared<streaming_lib::CStreamingFPGA>(g_osc,16);
         uint8_t resolution_val = (resolution == CStreamSettings::BIT_8 ? 8 : 16);
 		aprintf(stderr,"[Streaming] Set channels resolution %d\n",resolution_val);
-        auto att = attenuator == CStreamSettings::A_1_1 ? DataLib::CDataBuffer::ATT_1_1 :  DataLib::CDataBuffer::ATT_1_20;
-        if(channel == CStreamSettings::CH1 || channel == CStreamSettings::BOTH){
-            g_s_fpga->addChannel(DataLib::CH1,att,resolution_val);
-			g_s_buffer->addChannel(DataLib::CH1,uio_lib::osc_buf_size, resolution_val);
+
+        for(int i = 0; i < max_channels; i++){
+            if(CStreamSettings::checkChannel(channel,i)){ 
+                g_s_fpga->addChannel((DataLib::EDataBuffersPackChannel)i, CStreamSettings::checkChannel(attenuator,i) ? DataLib::CDataBuffer::ATT_1_20 : DataLib::CDataBuffer::ATT_1_1,resolution_val);
+                g_s_buffer->addChannel((DataLib::EDataBuffersPackChannel)i,uio_lib::osc_buf_size,resolution_val);
+            }
         }
-        if(channel == CStreamSettings::CH2 || channel == CStreamSettings::BOTH){
-            g_s_fpga->addChannel(DataLib::CH2,att,resolution_val);
-			g_s_buffer->addChannel(DataLib::CH2,uio_lib::osc_buf_size, resolution_val);
-        }
+
 		g_s_buffer->generateBuffers();
         g_s_fpga->setTestMode(testMode);
 
@@ -1109,14 +950,14 @@ auto startDACServer(bool testMode) -> void{
 	        fprintf(stderr,"Error init calibration\n");
     	}
 		auto dac_gain = settings.getDACGain();
-		auto channels = getDACChannels();
+		auto max_channels = getDACChannels();
 
         auto uioList = uio_lib::GetUioList();
 		int32_t ch_off[4] = { 0 , 0 , 0 , 0 };
 		double  ch_gain[4] = { 1 , 1 , 1 ,1 };
 
 		if (use_calib) {
-			for(uint8_t ch = 0; ch < channels; ++ch){
+			for(uint8_t ch = 0; ch < max_channels; ++ch){
 				rp_gen_gain_calib_t  mode = dac_gain == CStreamSettings::X1 ? RP_GAIN_CALIB_1X : RP_GAIN_CALIB_5X;
 				if (rp_CalibGetFastDACCalibValue((rp_channel_calib_t)ch,mode,&ch_gain[ch],&ch_off[ch]) != RP_HW_CALIB_OK){
 					fprintf(stderr,"Error get calibration channel: %d\n",ch);

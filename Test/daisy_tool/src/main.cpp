@@ -62,11 +62,13 @@ int get_mode(rp_outTiggerMode_t *state, const char *str)
 void usage() {
     const char *format =
             "\n"
-            "Usage: %s -e[=State] | -o[=State] | -t[=Mode] | -a[1.0] | -g[1.0] |-d   \n"
+            "Usage: %s -e[=State] | -o[=State] | -t[=Mode] | -c[=Mode] | -a[1.0] | -g[1.0] |-d   \n"
             "\n"
-            "   -e    Enables clock and trigger sync over SATA daisy chain connectors.\n"
+            "   -e    Enables trigger sync over SATA daisy chain connectors.\n"
+            "   -c    Enables clock sync over SATA daisy chain connectors.\n"
             "   -o    Turns GPION_0 into trigger output for selected source - acquisition or generation.\n"
             "   -t    Sets the trigger source mode. ADC/DAC.\n"
+            "   -e    Enables clock and trigger sync over SATA daisy chain connectors.\n"
             "   -a    Sets ext. trigger debouncer for acquisition in Us (Value must be positive).\n"
             "   -g    Sets ext. trigger debouncer for generation in Us (Value must be positive).\n"
             "   -d    Register debug mode.\n"
@@ -93,6 +95,7 @@ int main(int argc, char *argv[])
 {
     g_argv0 = argv[0];
     bool e_flag = false;
+    bool c_flag = false;
     bool o_flag = false;
     bool t_flag = false;
     bool a_flag = false;
@@ -106,6 +109,9 @@ int main(int argc, char *argv[])
     bool set_t_state = false;
     rp_outTiggerMode_t t_state  = OUT_TR_ADC;
 
+    bool set_c_state = false;
+    bool c_state  = false;
+
     bool set_a_state = false;
     double a_value = 1;
     bool set_g_state = false;
@@ -117,7 +123,7 @@ int main(int argc, char *argv[])
         exit ( EXIT_FAILURE );
     }
 
-    const char *optstring = "e::o::t::da::g::";
+    const char *optstring = "e::o::t::c::da::g::";
 
     int ch = -1;
     while ( (ch = getopt( argc, argv, optstring )) != -1 ) {
@@ -153,6 +159,17 @@ int main(int argc, char *argv[])
                 if (optarg){
                     set_t_state = true;
                     if (get_mode(&t_state,optarg) != 0){
+                        usage();
+                        exit ( EXIT_FAILURE );
+                    }
+                }
+                break;
+
+            case 'c':
+                c_flag = true;
+                if (optarg){
+                    set_c_state = true;
+                    if (get_state(&c_state,optarg) != 0){
                         usage();
                         exit ( EXIT_FAILURE );
                     }
@@ -199,15 +216,31 @@ int main(int argc, char *argv[])
 
     if (e_flag) {
         if (set_e_state){
-            if (rp_SetEnableDaisyChainSync(e_state) != RP_OK){
-                fprintf(stderr,"[Error] Can't enable daisy chain mode\n");
+            if (rp_SetEnableDaisyChainTrigSync(e_state) != RP_OK){
+                fprintf(stderr,"[Error] Can't enable daisy chain trig sync mode\n");
             }
         }else{
             bool state = false;
-            if (rp_GetEnableDaisyChainSync(&state) == RP_OK){
-                printf("SATA daisy chain mode = %d\n",state);
+            if (rp_GetEnableDaisyChainTrigSync(&state) == RP_OK){
+                printf("SATA daisy chain trig sync mode = %d\n",state);
             }else{
-                fprintf(stderr,"[Error] Can't get daisy chain mode\n");
+                fprintf(stderr,"[Error] Can't get daisy chain trig sync mode\n");
+                return -1;
+            }
+        }
+    }
+
+    if (c_flag) {
+        if (set_c_state){
+            if (rp_SetEnableDiasyChainClockSync(c_state) != RP_OK){
+                fprintf(stderr,"[Error] Can't enable daisy chain clock sync mode\n");
+            }
+        }else{
+            bool state = false;
+            if (rp_GetEnableDiasyChainClockSync(&state) == RP_OK){
+                printf("SATA daisy chain clock sync mode = %d\n",state);
+            }else{
+                fprintf(stderr,"[Error] Can't get daisy chain clock sync mode\n");
                 return -1;
             }
         }

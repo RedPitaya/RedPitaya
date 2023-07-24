@@ -42,7 +42,7 @@ private:
     std::thread *m_chartThread;
     bool         m_IsWorkThread;
     uint32_t     m_chartWidth;
-    QMap<QString,QVector<qreal>>  m_chartPoints[2];
+    QMap<QString,QVector<qreal>>  m_chartPoints[4];
     QList<QString>  m_chartNeedDraw;
 
 

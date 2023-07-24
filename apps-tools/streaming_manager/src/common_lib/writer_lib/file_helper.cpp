@@ -191,22 +191,22 @@ auto buildBINStream(DataLib::CDataBuffersPack::Ptr buff_pack) -> std::iostream *
     if (ch2.get()){
         header.dataFormatSize[1] = ch2->getBitBySample() / 8;
         header.sizeCh[1] = ch2->getBufferLenght();
-        header.sampleCh[1] = ch1->getSamplesCount();
-        header.lostCount[1] = ch1->getLostSamples(DataLib::FPGA) + ch1->getLostSamples(DataLib::RP_INTERNAL_BUFFER);
+        header.sampleCh[1] = ch2->getSamplesCount();
+        header.lostCount[1] = ch2->getLostSamples(DataLib::FPGA) + ch2->getLostSamples(DataLib::RP_INTERNAL_BUFFER);
     }
 
     if (ch3.get()){
         header.dataFormatSize[2] = ch3->getBitBySample() / 8;
         header.sizeCh[2] = ch3->getBufferLenght();
-        header.sampleCh[2] = ch1->getSamplesCount();
-        header.lostCount[2] = ch1->getLostSamples(DataLib::FPGA) + ch1->getLostSamples(DataLib::RP_INTERNAL_BUFFER);
+        header.sampleCh[2] = ch3->getSamplesCount();
+        header.lostCount[2] = ch3->getLostSamples(DataLib::FPGA) + ch3->getLostSamples(DataLib::RP_INTERNAL_BUFFER);
     }
 
     if (ch4.get()){
         header.dataFormatSize[3] = ch4->getBitBySample() / 8;
         header.sizeCh[3] = ch4->getBufferLenght();
-        header.sampleCh[3] = ch1->getSamplesCount();
-        header.lostCount[3] = ch1->getLostSamples(DataLib::FPGA) + ch1->getLostSamples(DataLib::RP_INTERNAL_BUFFER);
+        header.sampleCh[3] = ch4->getSamplesCount();
+        header.lostCount[3] = ch4->getLostSamples(DataLib::FPGA) + ch4->getLostSamples(DataLib::RP_INTERNAL_BUFFER);
     }
 
     header.sigmentLength = header.sizeCh[0] + header.sizeCh[1] + header.sizeCh[2] + header.sizeCh[3];

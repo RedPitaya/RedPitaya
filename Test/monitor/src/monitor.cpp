@@ -31,6 +31,7 @@
 
 #include "version.h"
 #include "rp_hw-profiles.h"
+#include "rp.h"
 
 #define FATAL do { fprintf(stderr, "Error at line %d, file %s (%d) [%s]\n", \
   __LINE__, __FILE__, errno, strerror(errno)); exit(1); } while(0)
@@ -62,7 +63,8 @@ int main(int argc, char **argv) {
 			"\tShow all profiles: -pa\n"
 			"\tPrint fpga version: -f\n"
 			"\tPrint model name: -n\n"
-			"\tPrint model id: -i\n",
+			"\tPrint model id: -i\n"
+			"\tReserved memory for DMA: -r\n",
 
                         argv[0], VERSION_STR, REVISION_STR);
 		return EXIT_FAILURE;
@@ -100,6 +102,22 @@ int main(int argc, char **argv) {
 
 	if (strncmp(argv[1], "-p", 2) == 0) {
 		return rp_HPPrint();
+	}
+
+	if (strncmp(argv[1], "-r", 2) == 0) {
+		auto ret = rp_InitReset(false);
+		if (ret != RP_OK){
+			fprintf(stderr,"Error init rp api\n");
+			return -1;
+		}
+		uint32_t start,size;
+		rp_AcqAxiGetMemoryRegion(&start,&size);
+		printf("Reserved memory:\n");
+		printf("\tstart:\t0x%X (%d)\n",start,start);
+		printf("\tend:\t0x%X (%d)\n",start + size,start + size);
+		printf("\tsize:\t0x%X (%d) %d kB\n", size,size,size/1024);				
+		rp_Release();
+		return 0;
 	}
 
 	if (strncmp(argv[1], "-f", 2) == 0) {
@@ -147,6 +165,9 @@ int main(int argc, char **argv) {
 				printf("z20_250");
 				break;
 			case STEM_250_12_v1_2:
+				printf("z20_250");
+				break;
+			case STEM_250_12_v1_2a:
 				printf("z20_250");
 				break;
 			case STEM_250_12_120:

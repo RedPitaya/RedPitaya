@@ -188,11 +188,13 @@ void CStreamingFPGA::oscWorker(){
  auto CStreamingFPGA::passCh() -> DataLib::CDataBuffersPack::Ptr {
     uint8_t *buffer_ch1 = nullptr;
     uint8_t *buffer_ch2 = nullptr;
+    uint8_t *buffer_ch3 = nullptr;
+    uint8_t *buffer_ch4 = nullptr;
     size_t   size = 0;
     bool success = false;
     uint32_t overFlow = 0;
 
-    success = m_Osc_ch->next(buffer_ch1, buffer_ch2, size , overFlow );
+    success = m_Osc_ch->next(buffer_ch1, buffer_ch2, buffer_ch3,buffer_ch4, size , overFlow );
 
     if (!success) {
         return nullptr;
@@ -201,15 +203,18 @@ void CStreamingFPGA::oscWorker(){
     if (m_testMode) {
         buffer_ch1 = m_testBuffer;
         buffer_ch2 = m_testBuffer;
+        buffer_ch3 = m_testBuffer;
+        buffer_ch4 = m_testBuffer;
     }
 
     if (m_printDebugBuffer){
-        std::ofstream outfile2;
-        outfile2.open("/tmp/test.txt", std::ios_base::app);
         short *wb2_1 = (short*)buffer_ch1;
         short *wb2_2 = (short*)buffer_ch2;
+        short *wb2_3 = (short*)buffer_ch3;
+        short *wb2_4 = (short*)buffer_ch4;
+
         for(int i = 0 ;i < 16 ;i ++){
-            aprintf(stdout,"%X - %X \n",(wb2_1 ? (static_cast<int>(wb2_1[i]/ 4)) : 0) , (wb2_2 ?  (static_cast<int>(wb2_2[i]/ 4)) : 0));
+            aprintf(stdout,"%X - %X - %X - %X \n",(wb2_1 ? (static_cast<int>(wb2_1[i]/ 4)) : 0) , (wb2_2 ?  (static_cast<int>(wb2_2[i]/ 4)) : 0), (wb2_3 ?  (static_cast<int>(wb2_3[i]/ 4)) : 0), (wb2_4 ?  (static_cast<int>(wb2_4[i]/ 4)) : 0));
         }
         exit(1);
     }
@@ -244,6 +249,27 @@ void CStreamingFPGA::oscWorker(){
                 memcpy_neon(bCh2->getBuffer().get(),buffer_ch2,size);
             }
         }
+
+        if (m_adcSettings.find(DataLib::EDataBuffersPackChannel::CH3) != m_adcSettings.end()){
+            auto settings = m_adcSettings.at(DataLib::EDataBuffersPackChannel::CH3);
+            auto bCh3 = pack->getBuffer(DataLib::CH3);
+            if (bCh3){
+                bCh3->setADCMode(settings.m_mode);
+                bCh3->setLostSamples(DataLib::FPGA,overFlow);
+                memcpy_neon(bCh3->getBuffer().get(),buffer_ch3,size);
+            }
+        }
+
+        if (m_adcSettings.find(DataLib::EDataBuffersPackChannel::CH4) != m_adcSettings.end()){
+            auto settings = m_adcSettings.at(DataLib::EDataBuffersPackChannel::CH4);
+            auto bCh4 = pack->getBuffer(DataLib::CH4);
+            if (bCh4){
+                bCh4->setADCMode(settings.m_mode);
+                bCh4->setLostSamples(DataLib::FPGA,overFlow);
+                memcpy_neon(bCh4->getBuffer().get(),buffer_ch4,size);
+            }
+        }
+
         unlockBuffF();
     }
     m_Osc_ch->clearBuffer();

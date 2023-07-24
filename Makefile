@@ -241,7 +241,9 @@ streaming_slave:
 # SCPI server
 ################################################################################
 
-SCPI_PARSER_TAG = 26aaabc20ef93754efe3ed43674e94c7cc444373
+#SCPI_PARSER_TAG = 26aaabc20ef93754efe3ed43674e94c7cc444373
+SCPI_PARSER_TAG = redpitaya
+
 #SCPI_PARSER_URL = https://github.com/j123b567/scpi-parser/archive/$(SCPI_PARSER_TAG).tar.gz
 SCPI_PARSER_URL = https://github.com/RedPitaya/scpi-parser/archive/$(SCPI_PARSER_TAG).tar.gz
 SCPI_PARSER_TAR = $(DL)/scpi-parser-$(SCPI_PARSER_TAG).tar.gz
@@ -270,7 +272,7 @@ scpi: api $(INSTALL_DIR) $(SCPI_PARSER_DIR)
 
 # git clone https://github.com/RedPitaya/red-pitaya-notes.git -b charly25ab
 # ZIP file name should be updated for each new build
-SDR_ZIP = SDR-bundle-23-73ea1331.zip
+SDR_ZIP = SDR-bundle-25-9253aa5e.zip
 SDR_URL = https://downloads.redpitaya.com/hamlab/sdr-bundle/$(SDR_ZIP)
 
 sdr: | $(DL)
@@ -405,17 +407,12 @@ APP_UPDATER_DIR          = apps-tools/updater
 APP_JUPYTERMANAGER_DIR   = apps-tools/jupyter_manager
 APP_STREAMINGMANAGER_DIR = apps-tools/streaming_manager
 APP_CALIB_DIR			 = apps-tools/calib_app
+APP_MAIN_MENU_DIR        = apps-tools/main_menu
 
-.PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager streaming_manager calib_app
+.PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager streaming_manager calib_app main_menu
 
-apps-tools: ecosystem updater network_manager scpi_manager streaming_manager jupyter_manager calib_app
+apps-tools: ecosystem updater network_manager scpi_manager streaming_manager jupyter_manager calib_app main_menu
 
-
-ifeq ($(MODEL),$(filter $(MODEL),Z10))
-ifeq ($(STREAMING),SLAVE)
-apps-tools: ecosystem updater network_manager streaming_manager
-endif
-endif
 
 ecosystem:
 	$(MAKE) -C $(APP_ECOSYSTEM_DIR) clean
@@ -426,6 +423,11 @@ updater: ecosystem $(NGINX)
 	$(MAKE) -C $(APP_UPDATER_DIR)
 	$(MAKE) -C $(APP_UPDATER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
+main_menu: ecosystem api $(NGINX)
+	$(MAKE) -C $(APP_MAIN_MENU_DIR) clean
+	$(MAKE) -C $(APP_MAIN_MENU_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(APP_MAIN_MENU_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
 scpi_manager: ecosystem api $(NGINX)
 	$(MAKE) -C $(APP_SCPIMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
@@ -434,7 +436,7 @@ streaming_manager: api $(NGINX)
 	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-calib_app: api $(NGINX)
+calib_app: api  $(NGINX)
 	$(MAKE) -i -C $(APP_CALIB_DIR) clean
 	$(MAKE) -C $(APP_CALIB_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
 	$(MAKE) -C $(APP_CALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
@@ -549,3 +551,4 @@ clean:
 	$(MAKE) -C $(SCPI_SERVER_DIR) clean
 	$(MAKE) -C $(COMM_DIR) clean
 	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) clean
+	$(MAKE) -C $(APP_MAIN_MENU_DIR) clean

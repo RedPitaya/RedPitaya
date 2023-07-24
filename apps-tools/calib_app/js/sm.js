@@ -166,12 +166,11 @@
                     }
 
                     if (receive.signals) {
-                        if (receive.signals.wave.size > 0) {
+                        if (receive.signals.wave != undefined && receive.signals.wave.size > 0) {
                             SM.signalStack.push(receive.signals);
                             signalsHandler();
                         }
                     }
-
 
                 } catch (e) {
                     //BA.state.processing = false;
@@ -216,9 +215,9 @@
             console.log('ERROR: Cannot save changes, socket not opened');
             return false;
         }
-
         SM.parametersCache["in_command"] = { value: _key };
         SM.ws.send(JSON.stringify({ parameters: SM.parametersCache }));
+        // console.log(SM.parametersCache)
         SM.parametersCache = {};
         return true;
     };
@@ -239,6 +238,14 @@
     SM.processParameters = function(new_params) {
         var old_params = $.extend(true, {}, SM.params.orig);
         var send_all_params = Object.keys(new_params).indexOf('send_all_params') != -1;
+
+        if (!new_params['RP_MODEL_STR']){
+            if (SM.rp_model === ""){
+                SM.sendParameters();
+                return;
+            }
+        }
+
 
         for (var param_name in new_params) {
             SM.params.orig[param_name] = new_params[param_name];

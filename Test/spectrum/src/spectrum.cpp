@@ -145,7 +145,7 @@ static void spectrum_worker(cli_args_t args) {
         buffers_t buff;
         buff.size = buffer_size;
         for(int i = 0; i < MAX_CHANNELS; i++){
-            buff.ch_d[i] = data->in[i];
+            buff.ch_d[i] = data->m_in[i];
         }
 
         rp_AcqGetDataV2D(trig_pos,&buff);
@@ -165,8 +165,8 @@ static void spectrum_worker(cli_args_t args) {
             if (args.csv_limit) {
                 for(uint32_t ch = 0; ch < MAX_CHANNELS; ch++){
                     for (uint32_t i = 0; i < g_dsp.getOutSignalMaxLength(); ++i) {
-                        min_signals[ch][i] = std::min(min_signals[ch][i],data->converted[ch][i]);
-                        max_signals[ch][i] = std::max(max_signals[ch][i],data->converted[ch][i]);
+                        min_signals[ch][i] = std::min(min_signals[ch][i],data->m_converted[ch][i]);
+                        max_signals[ch][i] = std::max(max_signals[ch][i],data->m_converted[ch][i]);
                     }
                 }
             }
@@ -174,8 +174,8 @@ static void spectrum_worker(cli_args_t args) {
             if (args.csv_limit) {
                 for(uint32_t ch = 0; ch < MAX_CHANNELS; ch++){
                     for (uint32_t i = 0; i < g_dsp.getOutSignalMaxLength(); ++i) {
-                        min_signals[ch][i] = data->converted[ch][i];
-                        max_signals[ch][i] = data->converted[ch][i];
+                        min_signals[ch][i] = data->m_converted[ch][i];
+                        max_signals[ch][i] = data->m_converted[ch][i];
                     }
                 }
             }
@@ -183,15 +183,15 @@ static void spectrum_worker(cli_args_t args) {
         }
 
         for(uint32_t ch = 0; ch < MAX_CHANNELS; ch++){
-            if (data->peak_power[ch] >= peak_pw_max[ch]){
-                peak_pw_max[ch] = data->peak_power[ch];
-                peak_pw_freq_max[ch] = data->peak_freq[ch];
+            if (data->m_peak_power[ch] >= peak_pw_max[ch]){
+                peak_pw_max[ch] = data->m_peak_power[ch];
+                peak_pw_freq_max[ch] = data->m_peak_freq[ch];
             }
         }
 
         if (!args.csv && !args.csv_limit) {
             for(uint32_t i = 0; i < MAX_CHANNELS; i++){
-                std::cout << "ch" << i << " peak: " << data->peak_freq[i] << " Hz, " << data->peak_power[i] << " dB\n";
+                std::cout << "ch" << i << " peak: " << data->m_peak_freq[i] << " Hz, " << data->m_peak_power[i] << " dB\n";
             }
         }
 
@@ -213,7 +213,7 @@ static void spectrum_worker(cli_args_t args) {
             for (size_t i = 0; i < (freq_index_max - freq_index_min + 1); ++i) {
                 std::cout << (freq_step * (freq_index_min + i));
                 for(uint32_t ch = 0; ch < MAX_CHANNELS; ch++){
-                    std::cout << ", " << data->converted[ch][i + freq_index_min];
+                    std::cout << ", " << data->m_converted[ch][i + freq_index_min];
                 }
                 std::cout << "\n";
             }
@@ -249,36 +249,28 @@ int main(int argc, char *argv[]) {
     cli_args_t args;
     if (!cli_parse_args(argc, argv, args)) {
         fprintf(stderr,"%s Version: %s-%s\n",argv[0],VERSION_STR, REVISION_STR);
-        std::cerr << cli_help_string() << std::endl;
+        fprintf(stderr,cli_help_string().c_str(),F_MAX);
         return 1;
     }
 
     if (args.help) {
         // std::cout has used only for the measurement results
         fprintf(stderr,"%s Version: %s-%s\n",argv[0],VERSION_STR, REVISION_STR);
-        std::cerr << cli_help_string() << std::endl;
+        fprintf(stderr,cli_help_string().c_str(),F_MAX);
         return 0;
     }
 
     // Init
     int error_code = RP_OK;
 
-    error_code = rp_Init();
+    error_code = rp_InitReset(!args.test);
 
     if (error_code != RP_OK) {
         std::cerr << "Error: rp_Init, code: " << error_code << std::endl;
         return 1;
     }
 
-    error_code = rp_Reset();
-
-    if (error_code != RP_OK) {
-        std::cerr << "Error: rp_Reset, code: " << error_code << std::endl;
-        return 1;
-    }
-
-
-    error_code = g_dsp.window_init(rp_dsp_api::CDSP::HANNING);
+    error_code = g_dsp.window_init(rp_dsp_api::HANNING);
 
     if (error_code != 0) {
         std::cerr << "Error: rp_spectr_init, code: " << error_code << std::endl;

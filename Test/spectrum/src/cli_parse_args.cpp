@@ -8,12 +8,13 @@ std::string cli_help_string() {
     return "usage:\n"
     "-h, --help: help\n"
     "-m, --min: minimum frequency (default: 0)\n"
-    "-M, --max: maximum frequency (default: 62500000)\n"
+    "-M, --max: maximum frequency (default: %d)\n"
     "-c, --count: iteration count (default: 1, negative: infinity)\n"
     "-a, --average: average the measurement from 10 times (default: enabled)\n"
     "-n, --no-average: disable average the measurement from 10 times\n"
     "-C, --csv: print values by columns Frequency (Hz), ch0 (dB), ch1 (dB)\n"
-    "-L, --csv-limit: print values by columns Frequency (Hz), ch0 min (dB), ch0 max (dB), ch1 min (dB), ch1 max (dB)\n";
+    "-L, --csv-limit: print values by columns Frequency (Hz), ch0 min (dB), ch0 max (dB), ch1 min (dB), ch1 max (dB)\n"
+    "-t, --test: test mode avoids the initiating/resetting/releasing FPGA";
 }
 
 const struct option long_opt[] = {
@@ -25,17 +26,26 @@ const struct option long_opt[] = {
         { "no-average", no_argument,        0, 'n' },
         { "csv",        no_argument,        0, 'C' },
         { "csv-limit",  no_argument,        0, 'L' },
+        { "test",       no_argument,        0, 't' },
         { 0,            0,                  0,  0  }
     };
 
+uint32_t getMaxFreqRate() {
+    uint32_t c = 0;
+    if (rp_HPGetSpectrumFastADCSpeedHz(&c) != RP_HP_OK){
+        fprintf(stderr,"[Error] Can't get fast ADC spectrum resolution\n");
+    }
+    return c;
+}
+
 bool cli_parse_args(int argc, char * const argv[], cli_args_t &out_args) {
     cli_args_t args;
-    
+
     bool success = true;
     try {
         int short_opt;
         int option_index = 0;
-        while ((short_opt = getopt_long(argc, argv, "hm:M:c:anCLt", long_opt, &option_index)) != -1) {            
+        while ((short_opt = getopt_long(argc, argv, "hm:M:c:anCLt", long_opt, &option_index)) != -1) {
             switch (short_opt) {
             case 'h':
                 args.help = true;
@@ -44,7 +54,7 @@ bool cli_parse_args(int argc, char * const argv[], cli_args_t &out_args) {
             case 'm':
                 args.freq_min = std::stof(optarg);
 
-                if (args.freq_min < 0. || args.freq_min > 62500000.) {
+                if (args.freq_min < 0. || args.freq_min > F_MAX) {
                     throw std::out_of_range("freq_min");
                 }
 
@@ -57,7 +67,7 @@ bool cli_parse_args(int argc, char * const argv[], cli_args_t &out_args) {
             case 'M':
                 args.freq_max = std::stof(optarg);
 
-                if (args.freq_max < 0. || args.freq_max > 62500000.) {
+                if (args.freq_max < 0. || args.freq_max > F_MAX) {
                     throw std::out_of_range("freq_max");
                 }
 
@@ -77,6 +87,10 @@ bool cli_parse_args(int argc, char * const argv[], cli_args_t &out_args) {
 
             case 'L':
                 args.csv_limit = true;
+                break;
+
+            case 't':
+                args.test = true;
                 break;
 
             // case '?':

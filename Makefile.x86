@@ -92,12 +92,13 @@ KERNEL_HEADERS ?= YES
 
 # HWID=v1r0 - this value for 250-12 rev 1.0. In all other cases, this parameter is empty.
 
+FPGA_COMMIT ?= c822622082e63ce943c3b22e706e0c35dbe8d2f5
+
 HWID ?=
 DEF_PARAM ?=
 FPGA_PRJ ?=
 FPGA_VERSION ?=
 FPGA_MODEL ?=
-DTS_PATH ?=
 
 # stream_app
 FPGA_STREAM_APP=
@@ -132,23 +133,22 @@ FPGA_BAREBONE=
 # project fpga for build uboot
 # Used with commit number or branch name
 # FPGA_UBOOT=c822622082e63ce943c3b22e706e0c35dbe8d2f5
-FPGA_UBOOT=Release-2023.1
+FPGA_UBOOT=$(FPGA_COMMIT)
 
 
 ifeq ($(MODEL),Z10)
 
 	# Used in board: stream_app classic logic v0.94 mercury axi4lite barebones
 
-	FPGA_STREAM_APP = Release-2023.1
-	FPGA_CLASSIC 	= Release-2023.1
-	FPGA_LOGIC	= Release-2023.1
-	FPGA_0_94	= Release-2023.1
-	FPGA_MERCURY	= Release-2023.1
-	FPGA_AXI4LITE	= Release-2023.1
-	FPGA_BAREBONE = Release-2023.1
+	FPGA_STREAM_APP = $(FPGA_COMMIT)
+	FPGA_CLASSIC 	= $(FPGA_COMMIT)
+	FPGA_LOGIC	= $(FPGA_COMMIT)
+	FPGA_0_94	= $(FPGA_COMMIT)
+	FPGA_MERCURY	= $(FPGA_COMMIT)
+	FPGA_AXI4LITE	= $(FPGA_COMMIT)
+	FPGA_BAREBONE = $(FPGA_COMMIT)
 
 	FPGA_MODEL = Z10
-	DTS_PATH = dts
 	FPGA_VERSION = z10_125
 endif
 
@@ -156,13 +156,12 @@ ifeq ($(MODEL),Z20)
 
 	# Used in board: v0.94 stream_app
 
-	FPGA_STREAM_APP = Release-2023.1
-	FPGA_0_94	= Release-2023.1
-	FPGA_BAREBONE = Release-2023.1
-	FPGA_LOGIC	= Release-2023.1
+	FPGA_STREAM_APP = $(FPGA_COMMIT)
+	FPGA_0_94	= $(FPGA_COMMIT)
+	FPGA_BAREBONE = $(FPGA_COMMIT)
+	FPGA_LOGIC	= $(FPGA_COMMIT)
 
 	FPGA_MODEL = Z20
-	DTS_PATH = dts
 	FPGA_VERSION = z20_122
 
 endif
@@ -171,16 +170,15 @@ ifeq ($(MODEL),Z20_125)
 
 	# Used in board: stream_app classic logic v0.94 mercury axi4lite
 
-	FPGA_STREAM_APP = Release-2023.1
-	FPGA_CLASSIC 	= Release-2023.1
-	FPGA_LOGIC	= Release-2023.1
-	FPGA_0_94	= Release-2023.1
-	FPGA_MERCURY	= Release-2023.1
-	FPGA_AXI4LITE	= Release-2023.1
-	FPGA_BAREBONE = Release-2023.1
+	FPGA_STREAM_APP = $(FPGA_COMMIT)
+	FPGA_CLASSIC 	= $(FPGA_COMMIT)
+	FPGA_LOGIC	= $(FPGA_COMMIT)
+	FPGA_0_94	= $(FPGA_COMMIT)
+	FPGA_MERCURY	= $(FPGA_COMMIT)
+	FPGA_AXI4LITE	= $(FPGA_COMMIT)
+	FPGA_BAREBONE = $(FPGA_COMMIT)
 
 	FPGA_MODEL = Z20_14
-	DTS_PATH = dts
 	FPGA_VERSION = z20_125
 
 endif
@@ -189,11 +187,12 @@ ifeq ($(MODEL),Z20_125_4CH)
 
 	# Used in board: v0.94
 
-	FPGA_0_94	= Release-2023.1
-	FPGA_BAREBONE = Release-2023.1
+	FPGA_0_94	= $(FPGA_COMMIT)
+	FPGA_BAREBONE = $(FPGA_COMMIT)
+	FPGA_LOGIC	= $(FPGA_COMMIT)
+	FPGA_STREAM_APP_4CH = $(FPGA_COMMIT)
 
 	FPGA_MODEL = Z20_4
-	DTS_PATH = dts
 	FPGA_VERSION = z20_125_4ch
 
 endif
@@ -202,11 +201,10 @@ ifeq ($(MODEL),Z10_125_4CH_TEST)
 
 	# Used in board: v0.94
 
-	FPGA_0_94	= Release-2023.1
-	FPGA_BAREBONE = Release-2023.1
+	FPGA_0_94	= $(FPGA_COMMIT)
+	FPGA_BAREBONE = $(FPGA_COMMIT)
 
 	FPGA_MODEL = Z10_4_test
-	DTS_PATH = dts
 	FPGA_VERSION = z20_125_4ch
 
 endif
@@ -215,14 +213,13 @@ ifeq ($(MODEL),Z20_250_12_1_0)
 
 	# Used in board: stream_app_250 v0.94_250 logic_250
 
-	FPGA_STREAM_APP_250 = Release-2023.1
-	FPGA_0_94_250	= Release-2023.1
-	FPGA_LOGIC_250	= Release-2023.1
-	FPGA_BAREBONE_250 = Release-2023.1
+	FPGA_STREAM_APP_250 = $(FPGA_COMMIT)
+	FPGA_0_94_250	= $(FPGA_COMMIT)
+	FPGA_LOGIC_250	= $(FPGA_COMMIT)
+	FPGA_BAREBONE_250 = $(FPGA_COMMIT)
 
 
 	FPGA_MODEL = Z20_250
-	DTS_PATH = dts_250
 	FPGA_VERSION = z20_250_1_0
 	HWID=v1r0
 
@@ -232,15 +229,26 @@ ifeq ($(MODEL),Z20_250_12)
 
 	# Used in board: stream_app_250 v0.94_250 logic_250
 
-	FPGA_STREAM_APP_250 = Release-2023.1
-	FPGA_0_94_250	= Release-2023.1
-	FPGA_LOGIC_250	= Release-2023.1
-	FPGA_BAREBONE_250 = Release-2023.1
+	FPGA_STREAM_APP_250 = $(FPGA_COMMIT)
+	FPGA_0_94_250	= $(FPGA_COMMIT)
+	FPGA_LOGIC_250	= $(FPGA_COMMIT)
+	FPGA_BAREBONE_250 = $(FPGA_COMMIT)
 
 
 	FPGA_MODEL = Z20_250
-	DTS_PATH = dts_250
 	FPGA_VERSION = z20_250
+
+endif
+
+ifeq ($(MODEL),Z20_250_12a)
+
+	# Used FPGA bitstream from Z20_250_12 model
+	# need rebuild only barebone for new dts
+
+	FPGA_BAREBONE_250_A = $(FPGA_COMMIT)
+
+	FPGA_MODEL = Z20_250
+	FPGA_VERSION = z20_250a
 
 endif
 
@@ -292,10 +300,24 @@ ifneq "$(FPGA_BAREBONE_250)" ""
 	cp -r fpga/$(FPGA_VERSION)/barebones_250/dts_250/*  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
 endif
 
+ifneq "$(FPGA_BAREBONE_250_A)" ""
+	$(call build_fpga,barebones_250,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_BAREBONE_250_A))
+	mv $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones_250 $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones
+	mkdir -p $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
+	cp -r fpga/$(FPGA_VERSION)/barebones_250/dts_250a/*  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
+endif
+
 ifneq "$(FPGA_STREAM_APP)" ""
 	$(call build_fpga,stream_app,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_STREAM_APP))
 	mkdir -p $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/stream_app/dts_rp/
 	cp -r fpga/$(FPGA_VERSION)/stream_app/dts/*  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/stream_app/dts_rp/
+endif
+
+ifneq "$(FPGA_STREAM_APP_4CH)" ""
+	$(call build_fpga,stream_app_4ch,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_STREAM_APP_4CH))
+	mv $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/stream_app_4ch $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/stream_app
+	mkdir -p $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/stream_app/dts_rp/
+	cp -r fpga/$(FPGA_VERSION)/stream_app_4ch/dts/*  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/stream_app/dts_rp/
 endif
 
 ifneq "$(FPGA_STREAM_APP_250)" ""

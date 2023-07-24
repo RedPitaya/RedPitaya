@@ -7,9 +7,6 @@
  *
  * (c) Red Pitaya  http://www.redpitaya.com
  *
- * This part of code is written in C programming language.
- * Please visit http://en.wikipedia.org/wiki/C_(programming_language)
- * for more details on the language used herein.
  */
 
 
@@ -45,6 +42,12 @@ scpi_result_t RP_GenBurstRepetitions(scpi_t * context);
 scpi_result_t RP_GenBurstRepetitionsQ(scpi_t * context);
 scpi_result_t RP_GenBurstPeriod(scpi_t * context);
 scpi_result_t RP_GenBurstPeriodQ(scpi_t * context);
+scpi_result_t RP_GenBurstLastValue(scpi_t * context);
+scpi_result_t RP_GenBurstLastValueQ(scpi_t * context);
+
+scpi_result_t RP_GenInitValue(scpi_t * context);
+scpi_result_t RP_GenInitValueQ(scpi_t * context);
+
 scpi_result_t RP_GenTriggerSource(scpi_t * context);
 scpi_result_t RP_GenTriggerSourceQ(scpi_t * context);
 scpi_result_t RP_GenTrigger(scpi_t *context);

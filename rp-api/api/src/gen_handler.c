@@ -48,6 +48,9 @@ float         ch_phase[2] = {0 , 0};
 int           ch_burstCount[2] = {1 , 1};
 int           ch_burstRepetition[2] = {1 , 1};
 uint32_t      ch_burstPeriod[2] = {0 , 0};
+float         ch_burstLastValue[2] = {0 , 0};
+float         ch_initValue[2] = {0 , 0};
+
 rp_waveform_t ch_waveform[2];
 rp_gen_sweep_mode_t  ch_sweepMode[2];
 rp_gen_sweep_dir_t   ch_sweepDir[2];
@@ -94,17 +97,27 @@ int gen_SetDefaultValues() {
         gen_setOffset(ch, 0);
 
         float fs = 0;
-        if (rp_HPGetFastDACFullScale(convertCh(ch), &fs) != RP_HP_OK){
-            fprintf(stderr,"[Error:gen_SetDefaultValues] Can't get fast DAC full scale\n");
+        if (rp_HPGetFastDACGain(convertCh(ch), &fs) != RP_HP_OK){
+            fprintf(stderr,"[Error:gen_SetDefaultValues] Can't get fast DAC gain\n");
             return RP_NOTS;
         }
-        gen_setAmplitude(ch, fs);
+
+        float fsBase = 0;
+        if (rp_HPGetHWDACFullScale(&fsBase) != RP_HP_OK){
+            fprintf(stderr,"[Error:gen_SetDefaultValues] Can't get fast HW DAC full scale\n");
+            return RP_NOTS;
+        }
+
+
+        gen_setAmplitude(ch, fs * fsBase * 0.8);
         gen_setDutyCycle(ch, 0.5);
         gen_setBurstCount(ch, 1);
         gen_setBurstPeriod(ch, 1);
+        gen_setBurstLastValue(ch,0);
         gen_setTriggerSource(ch, RP_GEN_TRIG_SRC_INTERNAL);
         gen_setPhase(ch, 0.0);
         gen_setGenMode(ch, RP_GEN_MODE_CONTINUOUS);
+        gen_setInitGenValue(ch,0);
         if (x5_gain)
             gen_setGainOut(ch,RP_GAIN_1X);
 
@@ -148,7 +161,7 @@ int gen_IsEnable(rp_channel_t channel, bool *value) {
 
 int gen_checkAmplitudeAndOffset(rp_channel_t channel,float amplitude, float offset) {
     float fs = 0;
-    if (rp_HPGetFastDACFullScale(convertCh(channel), &fs) != RP_HP_OK){
+    if (rp_HPGetFastDACGain(convertCh(channel), &fs) != RP_HP_OK){
         fprintf(stderr,"[Error:gen_checkAmplitudeAndOffset] Can't get fast DAC full scale\n");
         return RP_NOTS;
     }
@@ -436,13 +449,13 @@ int gen_setArbWaveform(rp_channel_t channel, float *data, uint32_t length) {
     CHECK_CHANNEL("gen_setArbWaveform")
 
     float fs = 0;
-    if (rp_HPGetFastDACFullScale(channel,&fs) != RP_HP_OK){
+    if (rp_HPGetFastDACGain(channel,&fs) != RP_HP_OK){
         fprintf(stderr,"[Error:gen_setArbWaveform] Can't get fast DAC full scale\n");
         return RP_NOTS;
     }
 
     bool is_sign = false;
-    if (rp_HPGetFastDACIsSigned(channel,&is_sign) != RP_HP_OK){
+    if (rp_HPGetFastDACIsSigned(&is_sign) != RP_HP_OK){
         fprintf(stderr,"[Error:gen_setArbWaveform] Can't get fast DAC sign value\n");
         return RP_NOTS;
     }
@@ -625,14 +638,38 @@ int gen_setBurstLastValue(rp_channel_t channel, float amplitude){
 
     CHECK_CHANNEL("gen_setBurstLastValue")
 
-    return generate_setBurstLastValue(channel,  amplitude);
+    int ret = generate_setBurstLastValue(channel,ch_gain[channel],  amplitude);
+    if (ret == RP_OK){
+        ch_burstLastValue[channel] = amplitude;
+    }
+    return ret;
 }
 
 int gen_getBurstLastValue(rp_channel_t channel, float *amplitude){
 
     CHECK_CHANNEL("gen_getBurstLastValue")
 
-    return generate_getBurstLastValue(channel, amplitude);
+    *amplitude = ch_burstLastValue[channel];
+    return RP_OK;
+}
+
+int gen_setInitGenValue(rp_channel_t channel, float amplitude){
+
+    CHECK_CHANNEL("gen_setInitGenValue")
+
+    int ret = generate_setInitGenValue(channel,ch_gain[channel],  amplitude);
+    if (ret == RP_OK){
+        ch_initValue[channel] = amplitude;
+    }
+    return ret;
+}
+
+int gen_getInitGenValue(rp_channel_t channel, float *amplitude){
+
+    CHECK_CHANNEL("gen_getInitGenValue")
+
+    *amplitude = ch_initValue[channel];
+    return RP_OK;
 }
 
 int gen_setBurstRepetitions(rp_channel_t channel, int repetitions) {
@@ -789,67 +826,69 @@ int synthesize_signal(rp_channel_t channel) {
     uint16_t buf_size = DAC_BUFFER_SIZE;
     if(waveform == RP_WAVEFORM_SWEEP) phase = 0;
 
+    float scale = 1;
+
     switch (waveform) {
-        case RP_WAVEFORM_SINE     : synthesis_sin      (data,buf_size);                 break;
-        case RP_WAVEFORM_TRIANGLE : synthesis_triangle (data,buf_size);                 break;
-        case RP_WAVEFORM_SQUARE   : synthesis_square   (frequency, riseTime, fallTime, data,buf_size);      break;
-        case RP_WAVEFORM_RAMP_UP  : synthesis_rampUp   (data,buf_size);                 break;
-        case RP_WAVEFORM_RAMP_DOWN: synthesis_rampDown (data,buf_size);                 break;
-        case RP_WAVEFORM_DC       : synthesis_DC       (data,buf_size);                 break;
-        case RP_WAVEFORM_DC_NEG   : synthesis_DC_NEG   (data,buf_size);                 break;
-        case RP_WAVEFORM_PWM      : synthesis_PWM      (dutyCycle, data,buf_size);      break;
-        case RP_WAVEFORM_ARBITRARY: synthesis_arbitrary(channel, data, &size);          break;
-        case RP_WAVEFORM_SWEEP    : synthesis_sweep(frequency,sweepStartFreq,sweepEndFreq,phaseRad,sweep_mode,sweep_dir, data, buf_size);break;
+        case RP_WAVEFORM_SINE     : synthesis_sin      (scale,data,buf_size);                 break;
+        case RP_WAVEFORM_TRIANGLE : synthesis_triangle (scale,data,buf_size);                 break;
+        case RP_WAVEFORM_SQUARE   : synthesis_square   (scale,frequency, riseTime, fallTime, data,buf_size);      break;
+        case RP_WAVEFORM_RAMP_UP  : synthesis_rampUp   (scale,data,buf_size);                 break;
+        case RP_WAVEFORM_RAMP_DOWN: synthesis_rampDown (scale,data,buf_size);                 break;
+        case RP_WAVEFORM_DC       : synthesis_DC       (scale,data,buf_size);                 break;
+        case RP_WAVEFORM_DC_NEG   : synthesis_DC_NEG   (scale,data,buf_size);                 break;
+        case RP_WAVEFORM_PWM      : synthesis_PWM      (scale,dutyCycle, data,buf_size);      break;
+        case RP_WAVEFORM_ARBITRARY: synthesis_arbitrary(scale,channel, data, &size);          break;
+        case RP_WAVEFORM_SWEEP    : synthesis_sweep(scale,frequency,sweepStartFreq,sweepEndFreq,phaseRad,sweep_mode,sweep_dir, data, buf_size);break;
         default:                    return RP_EIPV;
     }
     if (waveform != RP_WAVEFORM_ARBITRARY) size = buf_size;
     return generate_writeData(channel, data, phase, size);
 }
 
-int synthesis_sin(float *data_out,uint16_t buffSize) {
+int synthesis_sin(float scale,float *data_out,uint16_t buffSize) {
     for(int unsigned i = 0; i < DAC_BUFFER_SIZE; i++) {
-        data_out[i] = (float) (sin(2 * M_PI * (float) i / (float) buffSize));
+        data_out[i] = (float) (sin(2 * M_PI * (float) i / (float) buffSize)) * scale;
     }
     return RP_OK;
 }
 
-int synthesis_triangle(float *data_out,uint16_t buffSize) {
+int synthesis_triangle(float scale,float *data_out,uint16_t buffSize) {
     for(int unsigned i = 0; i < DAC_BUFFER_SIZE; i++) {
-        data_out[i] = (float) ((asin(sin(2 * M_PI * (float) i / (float) buffSize)) / M_PI * 2));
+        data_out[i] = (float) ((asin(sin(2 * M_PI * (float) i / (float) buffSize)) / M_PI * 2)) * scale;
     }
     return RP_OK;
 }
 
-int synthesis_rampUp(float *data_out,uint16_t buffSize) {
+int synthesis_rampUp(float scale,float *data_out,uint16_t buffSize) {
     data_out[DAC_BUFFER_SIZE -1] = 0;
     for(int unsigned i = 0; i < DAC_BUFFER_SIZE-1; i++) {
-        data_out[DAC_BUFFER_SIZE - i-2] = (float) (-1.0 * (acos(cos(M_PI * (float) i / (float) buffSize)) / M_PI - 1));
+        data_out[DAC_BUFFER_SIZE - i-2] = (float) (-1.0 * (acos(cos(M_PI * (float) i / (float) buffSize)) / M_PI - 1)) * scale;
     }
     return RP_OK;
 }
 
-int synthesis_rampDown(float *data_out,uint16_t buffSize) {
+int synthesis_rampDown(float scale,float *data_out,uint16_t buffSize) {
     for(int unsigned i = 0; i < DAC_BUFFER_SIZE; i++) {
-        data_out[i] = (float) (-1.0 * (acos(cos(M_PI * (float) i / (float) buffSize)) / M_PI - 1));
+        data_out[i] = (float) (-1.0 * (acos(cos(M_PI * (float) i / (float) buffSize)) / M_PI - 1)) * scale;
     }
     return RP_OK;
 }
 
-int synthesis_DC(float *data_out,uint16_t buffSize) {
+int synthesis_DC(float scale,float *data_out,uint16_t buffSize) {
     for(int unsigned i = 0; i < buffSize; i++) {
-        data_out[i] = 1.0;
+        data_out[i] = 1.0 * scale;
     }
     return RP_OK;
 }
 
-int synthesis_DC_NEG(float *data_out,uint16_t buffSize) {
+int synthesis_DC_NEG(float scale,float *data_out,uint16_t buffSize) {
     for(int unsigned i = 0; i < buffSize; i++) {
-        data_out[i] = -1.0;
+        data_out[i] = -1.0 * scale;
     }
     return RP_OK;
 }
 
-int synthesis_PWM(float ratio, float *data_out,uint16_t buffSize) {
+int synthesis_PWM(float scale,float ratio, float *data_out,uint16_t buffSize) {
     // calculate number of samples that need to be high
     int h = (int) (buffSize * ratio);
 
@@ -860,24 +899,25 @@ int synthesis_PWM(float ratio, float *data_out,uint16_t buffSize) {
         else {
             data_out[i] = (float) -1.0;
         }
+        data_out[i] *= scale;
     }
     return RP_OK;
 }
 
-int synthesis_arbitrary(rp_channel_t channel, float *data_out, uint32_t * size) {
+int synthesis_arbitrary(float scale,rp_channel_t channel, float *data_out, uint32_t * size) {
 
     CHECK_CHANNEL("synthesis_arbitrary")
 
     float *pointer = ch_arbitraryData[channel];
 
     for (int unsigned i = 0; i < DAC_BUFFER_SIZE; i++) {
-        data_out[i] = pointer[i];
+        data_out[i] = pointer[i] * scale;
     }
     *size = ch_arb_size[channel];
     return RP_OK;
 }
 
-int synthesis_square(float frequency, float riseTime, float fallTime, float *data_out, uint16_t buffSize) {
+int synthesis_square(float scale,float frequency, float riseTime, float fallTime, float *data_out, uint16_t buffSize) {
 
     float period_us = 1000000.0 / frequency;
     uint16_t riseTimeSamples = (uint16_t) (riseTime / period_us * buffSize);
@@ -905,24 +945,26 @@ int synthesis_square(float frequency, float riseTime, float fallTime, float *dat
         } else {
             data_out[i] = - 1.0f + (float) (x - (buffSize - (riseTimeSamples / 2.0f))) / ((float) riseTimeSamples / 2.0f);
         }
+        data_out[i] *= scale;
     }
 
     return RP_OK;
 }
 
-int synthesis_square_Z20_250(float frequency, float *data_out,uint16_t buffSize) {
+int synthesis_square_Z20_250(float scale,float frequency, float *data_out,uint16_t buffSize) {
     (void)(frequency);
     for(int unsigned i = 0; i < DAC_BUFFER_SIZE; i++) {
         if ((i % buffSize) <  buffSize / 2.0)
             data_out[i] =  1.0f;
         else
             data_out[i] = -1.0f;
+        data_out[i] *= scale;
     }
 
     return RP_OK;
 }
 
-int synthesis_sweep(float frequency,float frequency_start,float frequency_end,float phaseRad,rp_gen_sweep_mode_t mode,rp_gen_sweep_dir_t dir, float *data_out,uint16_t buffSize) {
+int synthesis_sweep(float scale,float frequency,float frequency_start,float frequency_end,float phaseRad,rp_gen_sweep_mode_t mode,rp_gen_sweep_dir_t dir, float *data_out,uint16_t buffSize) {
 
     bool inverDir = false;
     float sign = 1;
@@ -948,6 +990,7 @@ int synthesis_sweep(float frequency,float frequency_start,float frequency_end,fl
         }
         if (inverDir) x = 1 - x;
         data_out[i] = sin(freq * 2 * M_PI * (x)/frequency + phaseRad) * sign;
+        data_out[i] *= scale;
     }
     return RP_OK;
 }
@@ -1029,6 +1072,10 @@ int gen_setGainOut(rp_channel_t channel,rp_gen_gain_t mode){
         *gain = mode;
     }else{
         return status;
+    }
+    int ret = gen_setAmplitude(channel,ch_amplitude[channel]);
+    if (ret != RP_OK){
+        return ret;
     }
     return gen_setOffset(channel,ch_offset[channel]);
 }

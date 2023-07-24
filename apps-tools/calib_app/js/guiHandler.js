@@ -275,6 +275,11 @@ var ch4OffChange = function(event) {
     }
 }
 
+var manualDecimationSelector = function(event) {
+    SM.parametersCache["manual_decimation"] = { value: $("#B_DEC_SELECTOR").val() };
+    SM.sendParameters2("manual_decimation");
+}
+
 var ch1DacGainChange = function(event) {
     if (checkGainParameters("#CH1_DAC_GAIN") !== 0) {
         SM.parametersCache["ch1_gain_dac_new"] = { value: $("#CH1_DAC_GAIN").val() };
@@ -477,6 +482,8 @@ changeCallbacks["CH1_OFFSET"] = ch1OffChange;
 changeCallbacks["CH2_OFFSET"] = ch2OffChange;
 changeCallbacks["CH3_OFFSET"] = ch3OffChange;
 changeCallbacks["CH4_OFFSET"] = ch4OffChange;
+
+changeCallbacks["B_DEC_SELECTOR"] = manualDecimationSelector;
 
 changeCallbacks["CH1_DAC_GAIN"] = ch1DacGainChange;
 changeCallbacks["CH2_DAC_GAIN"] = ch2DacGainChange;

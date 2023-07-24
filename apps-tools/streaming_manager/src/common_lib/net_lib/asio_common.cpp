@@ -287,7 +287,7 @@ auto net_lib::buildPack(uint64_t _id,DataLib::CDataBuffersPack::Ptr pack,size_t 
     auto end = createEndPack(_id);
     list.push_front(begin);
 
-    for(auto i = (int)DataLib::EDataBuffersPackChannel::CH1; i < (int)DataLib::EDataBuffersPackChannel::CH4 ;i++){
+    for(auto i = (int)DataLib::EDataBuffersPackChannel::CH1; i <= (int)DataLib::EDataBuffersPackChannel::CH4 ;i++){
         auto buff = pack->getBuffer((DataLib::EDataBuffersPackChannel)i);
         if (buff){
             if (buff->getBufferLenght()){
