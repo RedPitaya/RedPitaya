@@ -38,18 +38,20 @@ OBJECTS =	scpi-commands.o \
 		dpin.o \
 		apin.o \
 		acquire.o \
+		acquire_axi.o \
 		common.o \
 		uart.o \
 		led.o \
 		spi.o \
 		i2c.o \
-		generate.o
+		generate.o \
+		error.o
 
 
 OBJS = $(patsubst %$(OBJEXT), $(OBJECTS_DIR)/%$(OBJEXT), $(OBJECTS))
 
 # GCC compiling & linking flags
-CFLAGS += -g -std=gnu99 -Wall -Werror -fPIC
+CFLAGS += -Wall -Werror -fPIC -O3
 CFLAGS += -I$(INSTALL_DIR)/include
 CFLAGS += -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 LDFLAGS=
@@ -64,7 +66,7 @@ INC= -I../scpi-parser/libscpi/inc -I$(INSTALL_DIR)/include
 INC += -I$(INSTALL_DIR)/include/api250-12
 
 # Main GCC executable (used for compiling and linking)
-CC=$(CROSS_COMPILE)gcc
+CC=$(CROSS_COMPILE)g++
 
 # Main Makefile target 'all' - it iterates over all targets listed in $(TARGET)
 # variable.
@@ -74,9 +76,10 @@ all: $(TARGET)
 # It applies to all files ending with .o. During partial building only new object
 # files are created for the source files (.c) which have newer timestamp then
 # objects (.o) files.
-$(OBJECTS_DIR)/%.o:$(SOURCE_DIR)/%.c
+$(OBJECTS_DIR)/%.o:$(SOURCE_DIR)/%.cpp
 	@mkdir -p $(@D)
 	$(CC) -c $(CFLAGS) $(INC) $< -o $@
+
 
 # Makefile target with rules how to link executable for each target from $(TARGET)
 # list.

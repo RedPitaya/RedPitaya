@@ -88,6 +88,26 @@ int main(int argc, char *argv[])
         fprintf(stderr,"Error init rp api\n");
         return -1;
     }
+    uint32_t axi_start,axi_size;
+    rp_AcqAxiGetMemoryRegion(&axi_start,&axi_size);
+
+    if (option.enableAXI){
+        if (option.dataSize > (axi_size / (2 * getChannels()) )){
+            fprintf(stderr,"[Error] Data size must be less than %i\n", (axi_size / (2 * getChannels()) ) ); // /2 because of 16bit data /2 because of 2 channels
+            usage(g_argv0);
+            return -1;
+        }
+    }else{
+        if (option.dataSize > ADC_BUFFER_SIZE){
+            fprintf(stderr,"[Error] Data size must be less than %i\n", ADC_BUFFER_SIZE);
+            usage(g_argv0);
+            return -1;
+        }
+    }
+
+    if (option.enableAXI){
+        rp_AcqResetFpga();
+    }
 
     if (rp_CalibInit() != RP_HW_CALIB_OK){
         fprintf(stderr,"Error init calibration\n");
@@ -145,6 +165,24 @@ int main(int argc, char *argv[])
     for(int i = 0 ; i < channels; i++)
         rp_AcqSetGain((rp_channel_t)i,option.attenuator_mode[i]);
 
+    rp_channel_t axi_trig_ch = (rp_channel_t) getTrigChByTrigSource(option.trigger_mode);
+
+    if (option.enableAXI){
+        rp_AcqAxiSetDecimationFactor(option.decimation);
+        rp_AcqAxiSetTriggerDelay(RP_CH_1, option.dataSize);
+        rp_AcqAxiSetTriggerDelay(RP_CH_2, option.dataSize);
+        rp_AcqAxiSetBufferSamples(RP_CH_1, axi_start, option.dataSize);
+        rp_AcqAxiSetBufferSamples(RP_CH_2, axi_start + axi_size / 2, option.dataSize);
+        if (rp_AcqAxiEnable(RP_CH_1, true) != RP_OK){
+            fprintf(stderr,"Error: Can't enable AXI for channel 1");
+            return -1;
+        }
+        if (rp_AcqAxiEnable(RP_CH_2, true) != RP_OK){
+            fprintf(stderr,"Error: Can't enable AXI for channel 2");
+            return -1;
+        }
+    }
+
     rp_AcqSetDecimationFactor(option.decimation);
 
     // Default trigger delay 0 and equal ADC_BUUFER / 2
@@ -167,23 +205,34 @@ int main(int argc, char *argv[])
 	}
 
 	while(!fillState){
-		rp_AcqGetBufferFillState(&fillState);
+        if (option.enableAXI) {
+            rp_AcqAxiGetBufferFillState(axi_trig_ch, &fillState);
+        } else {
+            rp_AcqGetBufferFillState(&fillState);
+        }
 	}
 	rp_AcqStop();
 
   	uint32_t pos = 0;
     uint32_t acq_u_size = option.dataSize;
-	rp_AcqGetWritePointerAtTrig(&pos);
+    if (option.enableAXI) {
+        rp_AcqAxiGetWritePointerAtTrig(axi_trig_ch, &pos);
+    } else {
+        rp_AcqGetWritePointerAtTrig(&pos);
+    }
 
     int start_ch = 0;
     int end_ch = channels - 1;
 
     if (option.showInVolt){
-        float buffers[4][ADC_BUFFER_SIZE];
+        float buffers[4][MAX(ADC_BUFFER_SIZE, option.dataSize)];
         for(auto i = start_ch; i <= end_ch; i++){
             auto ch = (rp_channel_t)i;
-            rp_AcqGetDataV(ch,pos, &acq_u_size, buffers[i]);
-
+            if (option.enableAXI) {
+                rp_AcqAxiGetDataV(ch, pos, &acq_u_size, buffers[i]);
+            } else {
+                rp_AcqGetDataV(ch, pos, &acq_u_size, buffers[i]);
+            }
         }
         for(uint32_t i = 0; i< option.dataSize; i++){
             bool printSeparator = false;
@@ -198,11 +247,18 @@ int main(int argc, char *argv[])
         }
 
     }else{
-        int16_t buffers[4][ADC_BUFFER_SIZE];
+        int16_t buffers[4][MAX(ADC_BUFFER_SIZE, option.dataSize)];
 
         for(auto i = start_ch; i <= end_ch; i++){
             auto ch = (rp_channel_t)i;
-            rp_AcqGetDataRaw(ch,pos, &acq_u_size, buffers[i]);
+            if (option.enableAXI) {
+                rp_AcqAxiGetDataRaw(ch, pos, &acq_u_size, buffers[i]);
+            } else {
+                if (option.disableCalibration)
+                    rp_AcqGetDataRaw(ch, pos, &acq_u_size, buffers[i]);
+                else
+                    rp_AcqGetDataRawWithCalib(ch, pos, &acq_u_size, buffers[i]);
+            }
         }
 
         const char *format_str = (option.showInHex == false) ? "%7d" : "0x%08X";
@@ -218,6 +274,12 @@ int main(int argc, char *argv[])
             fprintf(stdout,"\n");
         }
     }
+
+    if (option.enableAXI) {
+        rp_AcqAxiEnable(RP_CH_1, false);
+        rp_AcqAxiEnable(RP_CH_2, false);
+    }
+
 
     if (rp_Release() != RP_OK){
         fprintf(stderr,"Error release rp api\n");

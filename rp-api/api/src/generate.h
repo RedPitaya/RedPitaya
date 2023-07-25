@@ -100,6 +100,13 @@ typedef struct generate_control_s {
     * or equivalent to 0.5ms
     */
     uint32_t trig_dbc_t:20,:12; // 0x54
+    uint32_t reserv1; // 0x58
+    uint32_t reserv2; // 0x5C
+    uint32_t reserv3; // 0x60
+    uint32_t reserv4; // 0x64
+    uint32_t initGenValue_chA; // 0x68
+    uint32_t initGenValue_chB; // 0x6C
+
 
 } generate_control_t;
 
@@ -131,18 +138,17 @@ int generate_ResetChannelSM(rp_channel_t channel);
 int generate_writeData(rp_channel_t channel, float *data, int32_t start, uint32_t length);
 
 int generate_setAmplitude(rp_channel_t channel, rp_gen_gain_t gain,  float amplitude);
-int generate_getAmplitude(rp_channel_t channel, rp_gen_gain_t gain, float *amplitude);
+// int generate_getAmplitude(rp_channel_t channel, rp_gen_gain_t gain, float *amplitude);
 int generate_setDCOffset(rp_channel_t channel, rp_gen_gain_t gain, float offset);
-int generate_getDCOffset(rp_channel_t channel, rp_gen_gain_t gain, float *offset);
+// int generate_getDCOffset(rp_channel_t channel, rp_gen_gain_t gain, float *offset);
 int generate_getEnableTempProtection(rp_channel_t channel, bool *enable);
 int generate_setEnableTempProtection(rp_channel_t channel, bool enable);
 int generate_getLatchTempAlarm(rp_channel_t channel, bool *state);
 int generate_setLatchTempAlarm(rp_channel_t channel, bool  state);
 int generate_getRuntimeTempAlarm(rp_channel_t channel, bool *state);
 
-int generate_setBurstLastValue(rp_channel_t channel, float amplitude);
-int generate_getBurstLastValue(rp_channel_t channel, float *amplitude);
-
+int generate_setBurstLastValue(rp_channel_t channel,rp_gen_gain_t gain, float amplitude);
+int generate_setInitGenValue(rp_channel_t channel,rp_gen_gain_t gain, float amplitude);
 
 int generate_SetTriggerDebouncer(uint32_t value);
 int generate_GetTriggerDebouncer(uint32_t *value);

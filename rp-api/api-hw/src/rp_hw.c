@@ -153,6 +153,14 @@ int rp_SPI_SetState(rp_spi_state_t state){
     return spi_SetState(state);
 }
 
+int rp_SPI_GetCSMode(rp_spi_cs_mode_t *mode){
+    return spi_GetCSMode(mode);
+}
+
+int rp_SPI_SetCSMode(rp_spi_cs_mode_t mode){
+    return spi_SetCSMode(mode);
+}
+
 int rp_SPI_GetOrderBit(rp_spi_order_bit_t *order){
     return spi_GetOrderBit(order);
 }

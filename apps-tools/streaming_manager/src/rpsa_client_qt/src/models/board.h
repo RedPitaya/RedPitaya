@@ -26,6 +26,9 @@ class CBoard : public QObject
     Q_PROPERTY(QString model READ getModel NOTIFY modelChanged)
     Q_PROPERTY(bool isConfigConnected READ getConfigManagerConnected NOTIFY configManagerConnectedChanged)
     Q_PROPERTY(QString ip READ getIP CONSTANT)
+    Q_PROPERTY(int maxChannels MEMBER m_adcChannels NOTIFY modelChanged)
+    Q_PROPERTY(bool isACDC MEMBER m_IsACDC NOTIFY modelChanged)
+    Q_PROPERTY(bool isAttenuator MEMBER m_IsAttenuator NOTIFY modelChanged)
 
 
 public:
@@ -90,6 +93,8 @@ public:
     Q_INVOKABLE QString getBandwidth();
     Q_INVOKABLE QString getSamplesCH1();
     Q_INVOKABLE QString getSamplesCH2();
+    Q_INVOKABLE QString getSamplesCH3();
+    Q_INVOKABLE QString getSamplesCH4();
     Q_INVOKABLE QString getLostCount();
     Q_INVOKABLE QString getFLostCount();
     Q_INVOKABLE QString getSaveFileName();
@@ -116,6 +121,8 @@ private:
         std::string  bw = "";
         uint64_t samples1 = 0;
         uint64_t samples2 = 0;
+        uint64_t samples3 = 0;
+        uint64_t samples4 = 0;
         uint64_t lost = 0;
         uint64_t flost = 0;
         uint64_t broken_b = 0;
@@ -149,6 +156,9 @@ private:
     SStat m_stat;
 
     bool m_testMode;
+    uint8_t m_adcChannels;
+    bool   m_IsACDC;
+    bool m_IsAttenuator;
 };
 
 #endif // BOARD_H

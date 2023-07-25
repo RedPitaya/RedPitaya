@@ -58,6 +58,13 @@ a:visited {
     cursor: pointer;
 }
 
+#bug_report {
+    float: left;
+    width: 5%;
+    text-align: left;
+    cursor: pointer;
+}
+
 #description {
     padding-top: 4px;
     overflow: hidden;

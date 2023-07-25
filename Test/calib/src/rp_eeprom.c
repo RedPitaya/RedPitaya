@@ -159,6 +159,7 @@ int getCalibSize(rp_HPeModels_t model){
         case STEM_250_12_v1_0:
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
+        case STEM_250_12_v1_2a:
         case STEM_250_12_120:
             return eCalParEnd_v3;
         default:{
@@ -214,6 +215,7 @@ void RpPrintEepromCalData(rp_HPeModels_t model,rp_eepromWpData_t *_eepromData,bo
         case STEM_250_12_v1_0:
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
+        case STEM_250_12_v1_2a:
         case STEM_250_12_120:{
             size = eCalParEnd_v3;
             if (verb){
@@ -238,6 +240,26 @@ void RpPrintEepromCalData(rp_HPeModels_t model,rp_eepromWpData_t *_eepromData,bo
     }
     fprintf(stdout, "\n");
 }
+
+void RpPrintEepromCalDataUni(rp_eepromUniData_t *_eepromData,bool verb,bool hex){
+    if (verb){
+        printf(hex ? "dataStructureId = 0x%X\n" : "dataStructureId = %d\n",_eepromData->dataStructureId);
+        printf(hex ? "wpCheck = 0x%X\n" : "wpCheck = %d\n",_eepromData->wpCheck);
+        printf(hex ? "count = 0x%X\n" : "count = %d\n",_eepromData->count);
+        for(int i = 0; i < _eepromData->count; ++i) {
+            char *name = NULL;
+            rp_GetNameOfUniversalId(_eepromData->item[i].id,&name);
+            printf( hex ? "%s (%d) = 0x%X\n" : "%s (%d) = %d\n", name, _eepromData->item[i].id, _eepromData->item[i].value);
+        }
+        return;
+    }
+    for(int i = 0; i < _eepromData->count; ++i) {
+        fprintf(stdout, hex ? "0x%X\t0x%X\t" : "%20d%20d", _eepromData->item[i].id,_eepromData->item[i].value);
+    }
+    fprintf(stdout, "\n");
+
+}
+
 
 void print_eeprom(rp_HPeModels_t model,rp_eepromWpData_t *data,int mode){
     /* Print */
@@ -279,6 +301,7 @@ void print_eeprom(rp_HPeModels_t model,rp_eepromWpData_t *data,int mode){
                 case STEM_250_12_v1_0:
                 case STEM_250_12_v1_1:
                 case STEM_250_12_v1_2:
+                case STEM_250_12_v1_2a:
                 case STEM_250_12_120:{
                     fprintf(stdout, "Unsupport mode\n");
                     break;
@@ -291,4 +314,8 @@ void print_eeprom(rp_HPeModels_t model,rp_eepromWpData_t *data,int mode){
             }
         }
     }
+}
+
+void print_eepromUni(rp_eepromUniData_t *data,int mode){
+    RpPrintEepromCalDataUni(data,mode & WANT_VERBOSE ,mode & WANT_HEX);
 }

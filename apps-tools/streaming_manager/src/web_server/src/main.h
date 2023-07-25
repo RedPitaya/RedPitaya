@@ -116,6 +116,7 @@ auto getDACRate() -> uint32_t;
 auto getADCRate() -> uint32_t;
 auto getModel() -> broadcast_lib::EModel;
 auto getModelS() -> std::string;
+auto getAC_DC() -> bool;
 
 #ifdef __cplusplus
 }

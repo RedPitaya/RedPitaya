@@ -80,6 +80,7 @@ auto getModelName() -> std::string{
         case STEM_250_12_v1_0:
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
+        case STEM_250_12_v1_2a:
             return "Z20_250_12";
         case STEM_250_12_120:
             return "Z20_250_12_120";
@@ -89,4 +90,16 @@ auto getModelName() -> std::string{
         }
     }
     return "";
+}
+
+auto getADCSamplePeriod(double *value) -> int{
+    *value = 0;
+    uint32_t speed = 0;
+    int ret = rp_HPGetBaseFastADCSpeedHz(&speed);
+    if (ret == RP_HP_OK){
+        *value = (double)1e9/speed;
+    }else{
+        fprintf(stderr,"[Error:getADCSamplePeriod] Can't get FAST ADC Rate\n");
+    }
+    return ret;
 }

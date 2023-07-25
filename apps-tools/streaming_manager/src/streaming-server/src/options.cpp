@@ -104,6 +104,23 @@ auto ClientOpt::getADCChannels() -> uint8_t{
     return c;
 }
 
+auto ClientOpt::getADCBits() -> uint8_t{
+    uint8_t c = 0;
+#ifdef RP_PLATFORM
+    if (rp_HPGetFastADCBits(&c) != RP_HP_OK){
+        fprintf(stderr,"[Error] Can't get fast ADC channels count\n");
+    }
+    if (c > 16){
+        fprintf(stderr,"[Error] The number of bits is more than allowed\n");
+        exit(-1);
+    }
+#else
+    c = 16; // Emulation
+#endif
+    return c;
+}
+
+
 auto ClientOpt::getDACChannels() -> uint8_t{
     uint8_t c = 0;
 #ifdef RP_PLATFORM
@@ -173,6 +190,7 @@ auto ClientOpt::getADCRate() -> uint32_t{
         case STEM_250_12_v1_0:
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
+        case STEM_250_12_v1_2a:
             return RP_250_12;
         case STEM_250_12_120:
             return RP_250_12;
@@ -214,6 +232,7 @@ auto ClientOpt::getBroadcastModel() -> broadcast_lib::EModel{
         case STEM_250_12_v1_0:
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
+        case STEM_250_12_v1_2a:
             return broadcast_lib::EModel::RP_250_12;
         case STEM_250_12_120:
             return broadcast_lib::EModel::RP_250_12;

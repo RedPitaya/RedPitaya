@@ -24,11 +24,18 @@ uint32_t getMaxSpeed(){
 }
 
 float fullScale(){
+
+    float fs = 0;
+    if (rp_HPGetHWDACFullScale(&fs) != RP_HP_OK){
+        fprintf(stderr,"[Error:generate_writeData] Can't get fast DAC full scale\n");
+        return RP_NOTS;
+    }
+
     float c = 0;
-    if (rp_HPGetFastDACFullScale(0,&c) != RP_HP_OK){
+    if (rp_HPGetFastDACGain(0,&c) != RP_HP_OK){
         fprintf(stderr,"[Error] Can't get fast DAC full scale\n");
     }
-    return c;
+    return c * fs;
 }
 
 models_t getModel(){
@@ -59,6 +66,7 @@ models_t getModel(){
         case STEM_250_12_v1_0:
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
+        case STEM_250_12_v1_2a:
         case STEM_250_12_120:
             return RP_250_12;
         default:
@@ -82,6 +90,8 @@ int gen(config_t &conf)
         return -1;
     }
 
+    rp_GenOutDisable(ch);
+
     uint8_t channels = 0;
     if (rp_HPGetFastADCChannelsCount(&channels) != RP_HP_OK){
         fprintf(stderr,"[Error:getRawBuffer] Can't get fast ADC channels count\n");
@@ -99,6 +109,7 @@ int gen(config_t &conf)
     rp_GenOffset(ch,0);
     rp_GenAmp(ch,conf.amp / 2.0);
     rp_GenFreq(ch,conf.freq);
+    rp_GenTriggerSource(ch,RP_GEN_TRIG_SRC_INTERNAL);
 
     if (conf.type == RP_WAVEFORM_SINE){
         rp_GenWaveform(ch, RP_WAVEFORM_SINE);
@@ -112,6 +123,10 @@ int gen(config_t &conf)
         rp_GenWaveform(ch, RP_WAVEFORM_TRIANGLE);
     }
 
+    if (conf.type == RP_WAVEFORM_DC){
+        rp_GenWaveform(ch, RP_WAVEFORM_DC);
+    }
+
     if (conf.type == RP_WAVEFORM_SWEEP){
         rp_GenSweepDir(ch,RP_GEN_SWEEP_DIR_UP_DOWN);
         rp_GenSweepMode(ch,RP_GEN_SWEEP_MODE_LOG);
@@ -122,15 +137,11 @@ int gen(config_t &conf)
     if (rp_HPGetIsGainDACx5OrDefault()){
         rp_GenSetGainOut(ch,conf.gain);
     }
-    rp_GenOutEnable(ch);
-    rp_GenSynchronise();
+
+    if (conf.freq != 0) {
+        rp_GenOutEnable(ch);
+        rp_GenSynchronise();
+    }
     rp_Release();
-
-    // awg_param_t params;
-    // /* Prepare data buffer (calculate from input arguments) */
-
-    // synthesize_signal(conf, data, &params);
-    // /* Write the data to the FPGA and set FPGA AWG state machine */
-    // write_data_fpga(conf.ch, data, &params);
     return 0;
 }

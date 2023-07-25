@@ -39,6 +39,9 @@ int spi_SetMode(rp_spi_mode_t mode);
 int spi_GetState(rp_spi_state_t *state);
 int spi_SetState(rp_spi_state_t state);
 
+int spi_GetCSMode(rp_spi_cs_mode_t  *mode);
+int spi_SetCSMode(rp_spi_cs_mode_t mode);
+
 int spi_GetOrderBit(rp_spi_order_bit_t *order);
 int spi_SetOrderBit(rp_spi_order_bit_t order);
 

@@ -39,7 +39,7 @@ int rp_app_init(void)
     fprintf(stderr, "Loading read voltage application\n");
 
     // Initialization of API
-    if (rpApp_Init() != RP_OK) 
+    if (rpApp_Init() != RP_OK)
     {
         fprintf(stderr, "Red Pitaya API init failed!\n");
         return EXIT_FAILURE;
@@ -97,9 +97,10 @@ void OnNewParams(void)
     if (READ_VALUE.Value() == true)
     {
         float val;
-    
+        uint32_t raw;
+
         //Read data from pin
-        rp_AIpinGetValue(0, &val);
+        rp_AIpinGetValue(0, &val,&raw);
 
         //Write data to signal
         VOLTAGE[0] = val;

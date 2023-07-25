@@ -32,6 +32,8 @@ auto ChartDataHolder::regRP(const QString &ip) -> void{
     m_packId[ip] = 0;
     m_chartPoints[0][ip].clear();
     m_chartPoints[1][ip].clear();
+    m_chartPoints[2][ip].clear();
+    m_chartPoints[3][ip].clear();
 }
 
 auto ChartDataHolder::removeRP(const QString &ip) -> void{
@@ -133,6 +135,8 @@ auto ChartDataHolder::chartPackThread() -> void{
                     if (packForWork[i]){
                         pack(i,0,packForWork[i]->getBuffer(DataLib::CH1));
                         pack(i,1,packForWork[i]->getBuffer(DataLib::CH2));
+                        pack(i,2,packForWork[i]->getBuffer(DataLib::CH3));
+                        pack(i,3,packForWork[i]->getBuffer(DataLib::CH4));
                         m_chartNeedDraw.append(i);
                     }
                 }

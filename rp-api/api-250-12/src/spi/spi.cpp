@@ -39,7 +39,7 @@ int write_to_fpga_spi(const char* _path,unsigned int fpga_address,unsigned short
 	void* virt_addr = map_base + (dev_address & MAP_MASK);
 	*((unsigned long *) virt_addr) = (unsigned long)a_addr;
 	virt_addr = map_base	   + ((dev_address + 0x0004) & MAP_MASK);
-	usleep(200);
+	usleep(1000);
 	*((unsigned long *) virt_addr) = (unsigned long)spi_val_to_write;
 	if (map_base != (char*)(-1)) {
 		if(munmap(map_base, MAP_SIZE) == -1) retval = -1;
@@ -62,11 +62,11 @@ int read_from_fpga_spi(const char* _path,unsigned int fpga_address,unsigned shor
 	map_base = (char*)mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, fpga_address);
 	if(map_base == (char *) -1) retval = -1;
 	void* virt_addr = map_base + (dev_address & MAP_MASK);
-	*((unsigned long *) virt_addr) = (unsigned long)a_addr + 0x80;
+	*((unsigned long *) virt_addr) = (unsigned long)a_addr + 0x8000;
 	virt_addr = map_base	   + ((dev_address + 0x0004) & MAP_MASK);
 	*((unsigned long *) virt_addr) = (unsigned long)0x44;
 	virt_addr = map_base	   + ((dev_address + 0x0008) & MAP_MASK);
-	usleep(200);
+	usleep(1000);
 	value = (char)(*((uint32_t *) virt_addr));
 
 	if (map_base != (char*)(-1)) {

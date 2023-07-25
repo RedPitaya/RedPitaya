@@ -14,7 +14,7 @@ Row {
     }
 
     Item {
-        width: parent.width * 0.4
+        width: parent.width * (board.maxChannels === 2 ? 0.4 : 0.5)
         height: parent.height
 
         Column {
@@ -37,7 +37,6 @@ Row {
             Item {
                 width: parent.width
                 height: parent.height - 60 * mainVisibleRootWindowId.scaleFactor
-
                 RPSettings {
                     anchors.fill: parent
                 }
@@ -146,7 +145,7 @@ Row {
     }
 
     Item {
-        width: parent.width * 0.6
+        width: parent.width *  (board.maxChannels === 2 ? 0.6 : 0.5)
         height: parent.height
         Column {
             anchors.fill: parent
@@ -252,6 +251,10 @@ Row {
                             onOpenGLChanged: {
                                 series("signal 1").useOpenGL = openGL;
                                 series("signal 2").useOpenGL = openGL;
+                                if (board.maxChannels >= 3)
+                                    series("signal 3").useOpenGL = openGL;
+                                if (board.maxChannels >= 4)
+                                    series("signal 4").useOpenGL = openGL;
                             }
 
                             backgroundColor: baseBackGroundColor
@@ -288,6 +291,25 @@ Row {
                                     color: "#31b44b"
                                 }
 
+                            LineSeries {
+                                    id: lineSeries3
+                                    axisX: axisX
+                                    axisY: axisY1
+                                    useOpenGL: chartView.openGL
+                                    color: "#b47331"
+                                    visible: board.maxChannels >= 3
+                                }
+
+
+                            LineSeries {
+                                    id: lineSeries4
+                                    axisX: axisX
+                                    axisY: axisY1
+                                    useOpenGL: chartView.openGL
+                                    color: "#b431b0"
+                                    visible: board.maxChannels >= 4
+                                }
+
                             Timer {
                                     id: refreshTimer
                                     interval: 1 / 60 * 1000 // 60 Hz
@@ -308,6 +330,18 @@ Row {
                                                 for(var k2 in points2){
                                                     lineSeries2.append(k2,points2[k2])
                                                 }
+
+                                                lineSeries3.clear();
+                                                let points3 = cdh.getChartSignal(board.ip,2);
+                                                for(var k3 in points3){
+                                                    lineSeries3.append(k3,points3[k3])
+                                                }
+
+                                                lineSeries4.clear();
+                                                let points4 = cdh.getChartSignal(board.ip,3);
+                                                for(var k4 in points4){
+                                                    lineSeries4.append(k4,points4[k4])
+                                                }
                                             }
                                             needreset = true
                                         }
@@ -324,8 +358,10 @@ Row {
             }
 
             Item {
+                id:statRootId
                 width: parent.width
                 height: 30 * mainVisibleRootWindowId.scaleFactor
+                property real rowStatCount: 3 + board.maxChannels
                 Row {
                     Connections{
                         target:board
@@ -335,6 +371,8 @@ Row {
                             bwId.text = board.getBandwidth()
                             sampCH1.text = board.getSamplesCH1()
                             sampCH2.text = board.getSamplesCH2()
+                            sampCH3.text = board.getSamplesCH3()
+                            sampCH4.text = board.getSamplesCH4()
                             lostId.text = board.getLostCount()
                         }
                     }
@@ -342,7 +380,7 @@ Row {
                     anchors.fill: parent
                     Item {
                         height: parent.height
-                        width: parent.width / 5.0
+                        width: parent.width / statRootId.rowStatCount
                         Row {
                             anchors.fill: parent
                             Item {
@@ -353,6 +391,8 @@ Row {
                                     verticalAlignment: Text.AlignVCenter
                                     horizontalAlignment: Text.AlignHCenter
                                     color: baseTextColor
+                                    minimumPixelSize: 5
+                                    fontSizeMode: Text.Fit
                                     font.pixelSize: height * 0.6
                                     font.family: applicationFont.name
                                     text: qsTr("Bytes:")
@@ -379,7 +419,7 @@ Row {
                     }
                     Item {
                         height: parent.height
-                        width: parent.width / 5.0
+                        width: parent.width / statRootId.rowStatCount
                         Row {
                             anchors.fill: parent
                             Item {
@@ -391,8 +431,10 @@ Row {
                                     horizontalAlignment: Text.AlignHCenter
                                     color: baseTextColor
                                     font.pixelSize: height * 0.6
+                                    minimumPixelSize: 5
+                                    fontSizeMode: Text.Fit
                                     font.family: applicationFont.name
-                                    text: qsTr("Bandwidth:")
+                                    text: qsTr("Speed:")
                                 }
                             }
 
@@ -415,8 +457,9 @@ Row {
                         }
                     }
                     Item {
+                        visible: board.maxChannels >= 1
                         height: parent.height
-                        width: parent.width / 5.0
+                        width: parent.width / statRootId.rowStatCount
                         Row {
                             anchors.fill: parent
                             Item {
@@ -428,8 +471,10 @@ Row {
                                     horizontalAlignment: Text.AlignHCenter
                                     color: baseTextColor
                                     font.pixelSize: height * 0.6
+                                    minimumPixelSize: 5
+                                    fontSizeMode: Text.Fit
                                     font.family: applicationFont.name
-                                    text: qsTr("CH1:")
+                                    text: qsTr("Ch1:")
                                 }
                             }
 
@@ -452,8 +497,9 @@ Row {
                         }
                     }
                     Item {
+                        visible: board.maxChannels >= 2
                         height: parent.height
-                        width: parent.width / 5.0
+                        width: parent.width / statRootId.rowStatCount
                         Row {
                             anchors.fill: parent
                             Item {
@@ -465,8 +511,10 @@ Row {
                                     horizontalAlignment: Text.AlignHCenter
                                     color: baseTextColor
                                     font.pixelSize: height * 0.6
+                                    minimumPixelSize: 5
+                                    fontSizeMode: Text.Fit
                                     font.family: applicationFont.name
-                                    text: qsTr("CH2:")
+                                    text: qsTr("Ch2:")
                                 }
                             }
 
@@ -489,8 +537,88 @@ Row {
                         }
                     }
                     Item {
+                        visible: board.maxChannels >= 3
                         height: parent.height
-                        width: parent.width / 5.0
+                        width: parent.width / statRootId.rowStatCount
+                        Row {
+                            anchors.fill: parent
+                            Item {
+                                height: parent.height
+                                width: parent.width * 0.3
+                                Text {
+                                    anchors.fill: parent
+                                    verticalAlignment: Text.AlignVCenter
+                                    horizontalAlignment: Text.AlignHCenter
+                                    color: baseTextColor
+                                    font.pixelSize: height * 0.6
+                                    minimumPixelSize: 5
+                                    fontSizeMode: Text.Fit
+                                    font.family: applicationFont.name
+                                    text: qsTr("Ch3:")
+                                }
+                            }
+
+                            Item {
+                                height: parent.height
+                                width: parent.width * 0.7
+                                Text {
+                                    id:sampCH3
+                                    anchors.fill: parent
+                                    verticalAlignment: Text.AlignVCenter
+                                    horizontalAlignment: Text.AlignHCenter
+                                    color: baseTextColor
+                                    font.pixelSize: height * 0.5
+                                    minimumPixelSize: 5
+                                    fontSizeMode: Text.Fit
+                                    font.family: applicationFontBold.name
+                                    text: "0"
+                                }
+                            }
+                        }
+                    }
+                    Item {
+                        visible: board.maxChannels >= 4
+                        height: parent.height
+                        width: parent.width / statRootId.rowStatCount
+                        Row {
+                            anchors.fill: parent
+                            Item {
+                                height: parent.height
+                                width: parent.width * 0.3
+                                Text {
+                                    anchors.fill: parent
+                                    verticalAlignment: Text.AlignVCenter
+                                    horizontalAlignment: Text.AlignHCenter
+                                    color: baseTextColor
+                                    font.pixelSize: height * 0.6
+                                    minimumPixelSize: 5
+                                    fontSizeMode: Text.Fit
+                                    font.family: applicationFont.name
+                                    text: qsTr("Ch4:")
+                                }
+                            }
+
+                            Item {
+                                height: parent.height
+                                width: parent.width * 0.7
+                                Text {
+                                    id:sampCH4
+                                    anchors.fill: parent
+                                    verticalAlignment: Text.AlignVCenter
+                                    horizontalAlignment: Text.AlignHCenter
+                                    color: baseTextColor
+                                    font.pixelSize: height * 0.5
+                                    minimumPixelSize: 5
+                                    fontSizeMode: Text.Fit
+                                    font.family: applicationFontBold.name
+                                    text: "0"
+                                }
+                            }
+                        }
+                    }
+                    Item {
+                        height: parent.height
+                        width: parent.width / statRootId.rowStatCount
                         Row {
                             anchors.fill: parent
                             Item {
@@ -502,6 +630,8 @@ Row {
                                     horizontalAlignment: Text.AlignHCenter
                                     color: baseTextColor
                                     font.pixelSize: height * 0.6
+                                    minimumPixelSize: 5
+                                    fontSizeMode: Text.Fit
                                     font.family: applicationFont.name
                                     text: qsTr("Lost:")
                                 }

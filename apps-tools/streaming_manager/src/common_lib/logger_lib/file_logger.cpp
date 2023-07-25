@@ -42,7 +42,7 @@ void CFileLogger::resetCounters(){
     m_fileSystemLostRate = 0;
     m_reciveData = 0;
     m_oscRate = 0;
-    for(auto i = (int)DataLib::CH1; i < (int)DataLib::CH4; i++){
+    for(auto i = (int)DataLib::CH1; i <= (int)DataLib::CH4; i++){
         DataLib::EDataBuffersPackChannel ch = (DataLib::EDataBuffersPackChannel)i;
         m_current_sample[ch] = 0;
     }
@@ -88,7 +88,7 @@ auto CFileLogger::getFileLost() -> uint64_t {
 auto CFileLogger::addMetric(DataLib::CDataBuffersPack::Ptr pack) -> void {
     const std::lock_guard<std::mutex> lock(m_mtx);
     if (m_file_open && m_fileLost.is_open()){
-        for(auto i = (int)DataLib::CH1; i < (int)DataLib::CH4; i++){
+        for(auto i = (int)DataLib::CH1; i <= (int)DataLib::CH4; i++){
             DataLib::EDataBuffersPackChannel ch = (DataLib::EDataBuffersPackChannel)i;
             auto buff = pack->getBuffer(ch);
             if (buff){                

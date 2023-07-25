@@ -79,7 +79,7 @@ int rp_app_init(void)
     fprintf(stderr, "Loading generator application\n");
 
     // Initialization of API
-    if (rpApp_Init() != RP_OK) 
+    if (rpApp_Init() != RP_OK)
     {
         fprintf(stderr, "Red Pitaya API init failed!\n");
         return EXIT_FAILURE;
@@ -137,16 +137,17 @@ int rp_get_signals(float ***s, int *sig_num, int *sig_len)
 void UpdateSignals(void)
 {
     float val;
-    
+    uint32_t raw;
+
     //Read data from pin
-    rp_AIpinGetValue(0, &val);
+    rp_AIpinGetValue(0, &val,&raw);
 
     //Push it to vector
     g_data.erase(g_data.begin());
     g_data.push_back(val * GAIN.Value());
 
     //Write data to signal
-    for(int i = 0; i < SIGNAL_SIZE_DEFAULT; i++) 
+    for(int i = 0; i < SIGNAL_SIZE_DEFAULT; i++)
     {
         VOLTAGE[i] = g_data[i];
     }

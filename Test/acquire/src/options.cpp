@@ -14,7 +14,7 @@
 static constexpr uint32_t g_dec[DEC_MAX] = { 1,  2,  4,  8,  16 };
 
 
-static constexpr char optstring_250_12[64] = "esx1:2:d:vht:l:orck";
+static constexpr char optstring_250_12[64] = "esx1:2:d:vht:l:orcka";
 static struct option long_options_250_12[32] = {
         /* These options set a flag. */
         {"equalization", no_argument,       0, 'e'},
@@ -31,6 +31,7 @@ static struct option long_options_250_12[32] = {
         {"no_reg",       no_argument,       0, 'r'},
         {"calib",        no_argument,       0, 'c'},
         {"hk",           no_argument,       0, 'k'},
+        {"axi",          no_argument,       0, 'a'},
         {0, 0, 0, 0}
 };
 
@@ -54,12 +55,13 @@ static constexpr char g_format_250_12[2048] =
         "  --no_reg        -r    Disable load registers config (XML) for DAC and ADC.\n"
         "  --calib         -c    Disable calibration parameters\n"
         "  --hk            -k    Reset houskeeping (Reset state for GPIO). Default: disabled\n"
+        "  --axi           -a    Enable AXI interface. Also enable housekeeping reset. Default: disabled\n"
         "    SIZE                Number of samples to acquire [0 - %u].\n"
         "    DEC                 Decimation [%u,%u,%u,%u,%u,...] (default: 1). Valid values are from 1 to 65536\n"
         "\n";
 
 
-static constexpr char optstring_125_14[64] = "esx1:2:vht:l:ock";
+static constexpr char optstring_125_14[64] = "esx1:2:vht:l:ocka";
 static struct option long_options_125_14[32] = {
         /* These options set a flag. */
         {"equalization", no_argument,       0, 'e'},
@@ -74,6 +76,7 @@ static struct option long_options_125_14[32] = {
         {"volt",         no_argument,       0, 'o'},
         {"calib",        no_argument,       0, 'c'},
         {"hk",           no_argument,       0, 'k'},
+        {"axi",          no_argument,       0, 'a'},
         {0, 0, 0, 0}
 };
 
@@ -94,6 +97,7 @@ static constexpr char g_format_125_14[2048] =
         "  --volt          -o    Print value in volt.\n"
         "  --calib         -c    Disable calibration parameters\n"
         "  --hk            -k    Reset houskeeping (Reset state for GPIO). Default: disabled\n"
+        "  --axi           -a    Enable AXI interface. Also enable housekeeping reset. Default: disabled\n"
         "    SIZE                Number of samples to acquire [0 - %u].\n"
         "    DEC                 Decimation [%u,%u,%u,%u,%u,...] (default: 1). Valid values are from 1 to 65536\n"
         "\n";
@@ -184,6 +188,28 @@ int get_float(float *value, const char *str,const char *message,int min_value, i
     }
     return 0;
 }
+
+int get_dc_mode(int *value, const char *str)
+{
+    if  (strncmp(str, "1", 1) == 0) {
+        *value = 1;
+        return 0;
+    }
+
+    if  (strncmp(str, "2", 1) == 0)  {
+        *value = 2;
+        return 0;
+    }
+
+    if  ((strncmp(str, "B", 1) == 0) || (strncmp(str, "b", 1) == 0))  {
+        *value = 3;
+        return 0;
+    }
+
+    fprintf(stderr, "Unknown DC channel value: %s\n", str);
+    return -1;
+}
+
 
 /** Print usage information */
 auto usage(char const* progName) -> void{
@@ -320,6 +346,24 @@ auto parse(int argc, char* argv[]) -> Options{
                 break;
             }
 
+            /* DC mode */
+            case 'd':
+            {
+                int dc_mode;
+                if (get_dc_mode(&dc_mode, optarg) != 0) {
+                    fprintf(stderr, "Error key --get: %s\n", optarg);
+                    opt.error = true;
+                    return opt;
+                }
+                if (dc_mode == 1 || dc_mode == 3) {
+                    opt.ac_dc_mode[0] = RP_DC;
+                }
+                if (dc_mode == 2 || dc_mode == 3) {
+                    opt.ac_dc_mode[1] = RP_DC;
+                }
+                break;
+            }
+
             case 'r': {
                 opt.disableReset = true;
                 break;
@@ -434,6 +478,11 @@ auto parse(int argc, char* argv[]) -> Options{
                 break;
             }
 
+            case 'a': {
+                opt.enableAXI = true;
+                break;
+            }
+
 
             default: {
                 fprintf(stderr, "[ERROR] Unknown parameter\n");
@@ -525,6 +574,7 @@ models_t getModel(){
         case STEM_250_12_v1_0:
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
+        case STEM_250_12_v1_2a:
             return RP_250_12;
         default:
             fprintf(stderr,"[Error] Can't get board model\n");

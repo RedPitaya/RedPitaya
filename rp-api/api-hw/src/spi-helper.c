@@ -17,15 +17,16 @@ int read_spi_configuration(int fd, spi_config_t *config)
 		MSG("[Error] SPI_IOC_RD_MODE\n");
 		return RP_HW_ESGS;
 	}
-	config->spi_mode = (rp_spi_mode_t)(u8 & 0x03);
-	config->spi_ready = ((config->spi_mode & SPI_READY) ? RP_SPI_STATE_READY 
-														: RP_SPI_STATE_NOT);
+	config->raw_value = u8;
+	config->spi_mode = (rp_spi_mode_t)(u8 & SPI_MODE_X_MASK);
+	config->spi_ready = ((u8 & SPI_READY) ? RP_SPI_STATE_READY : RP_SPI_STATE_NOT);
+	config->cs_mode = ((u8 & SPI_CS_HIGH) ? RP_SPI_CS_HIGH : RP_SPI_CS_NORMAL);
 
 	if (ioctl(fd, SPI_IOC_RD_LSB_FIRST, &u8) < 0) {
 		MSG("[Error] SPI_IOC_RD_LSB_FIRST\n");
 		return RP_HW_ESGS;
 	}
-	config->lsb_first = (u8 == SPI_LSB_FIRST ? RP_SPI_ORDER_BIT_LSB 
+	config->lsb_first = (u8 == SPI_LSB_FIRST ? RP_SPI_ORDER_BIT_LSB
 											 : RP_SPI_ORDER_BIT_MSB);
 
 	if (ioctl(fd, SPI_IOC_RD_BITS_PER_WORD, &u8) < 0) {
@@ -49,8 +50,10 @@ int write_spi_configuration(int fd, spi_config_t *config)
 {
 	uint8_t  u8;
 	uint32_t u32;
-	
-	u8 = (uint8_t)config->spi_mode | (config->spi_ready == RP_SPI_STATE_READY ? SPI_READY : 0);	
+	u8 = config->raw_value;
+	u8 = (u8 & ~SPI_MODE_X_MASK) | (uint8_t)config->spi_mode;
+	u8 = (u8 & ~SPI_READY) | (config->spi_ready == RP_SPI_STATE_READY ? SPI_READY : 0);
+	u8 = (u8 & ~SPI_CS_HIGH) | (config->cs_mode == RP_SPI_CS_HIGH ? SPI_CS_HIGH : 0);
 
 	if (ioctl(fd, SPI_IOC_WR_MODE, &u8) < 0) {
 		MSG("[Error] SPI_IOC_WR_MODE\n");
@@ -74,7 +77,7 @@ int write_spi_configuration(int fd, spi_config_t *config)
 		MSG("[Error] SPI_IOC_WR_MAX_SPEED_HZ\n");
 		return RP_HW_ESSS;
 	}
-	
+
 	return RP_HW_OK;
 }
 
@@ -106,10 +109,10 @@ int read_write_spi_buffers(int fd, spi_data_t *data)
 		messages[i].rx_buf = (unsigned long)data->messages[i].rx_buffer;
 		messages[i].tx_buf = (unsigned long)data->messages[i].tx_buffer;
 		messages[i].len = data->messages[i].size;
-		messages[i].cs_change = (i == data->size - 1 || data->messages[i].cs_change ? 1 : 0);	
+		messages[i].cs_change = (data->messages[i].cs_change ? 1 : 0);
 	}
 
-	
+
 	if (ioctl(fd, SPI_IOC_MESSAGE(data->size), messages) < 0)
 		return RP_HW_EST;
 

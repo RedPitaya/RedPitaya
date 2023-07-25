@@ -116,3 +116,11 @@ X=$(monitor 0x40200048)
 hexToDec $X
 echo "Ch B last value after burst 0x40200048 : $X ($RET)"
 
+
+X=$(monitor 0x40200068)
+hexToDec $X
+echo "Ch A Init value 0x40200068 : $X ($RET)"
+
+X=$(monitor 0x4020006c)
+hexToDec $X
+echo "Ch B Init value 0x4020006c : $X ($RET)"

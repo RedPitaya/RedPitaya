@@ -9,21 +9,26 @@ rp_s = scpi.scpi(sys.argv[1])
 
 rp_s.tx_txt('I2C:DEV80 "/dev/i2c-0"')
 print("Init I2C")
+rp_s.check_error()
 
 rp_s.tx_txt('I2C:FMODE ON')
 print("Set force mode")
+rp_s.check_error()
 
 # Eeprom 24c64 supports reading only 32 bytes of data at a time and only works through IOCTL
 
 # set read address = 0
 rp_s.tx_txt('I2C:IO:W:B2 0,0')
 print("Write address for read")
+rp_s.check_error()
 
 rp_s.tx_txt('I2C:IO:R:B32')
 b1 = rp_s.rx_txt().strip('{').strip('}')
+rp_s.check_error()
 
 rp_s.tx_txt('I2C:IO:R:B16')
 b2 = rp_s.rx_txt().strip('{').strip('}')
+rp_s.check_error()
 
 buff = (b1 + "," + b2).split(",")
 byte_array = bytearray(b'')
@@ -41,4 +46,4 @@ print("DAC Ch1",calib[8])
 print("DAC Ch2",calib[9])
 print("DAC Ch1 offset",calib[10])
 print("DAC Ch2 offset",calib[11])
-
+rp_s.check_error()

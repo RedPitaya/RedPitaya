@@ -4,12 +4,36 @@
 #include <cassert>
 #include <cstring>
 #include <vector>
+#include <math.h>
 #include "acq.h"
 #include "acq_math.h"
 
 // Use (void) to silent unused warnings.
 #define assertm(exp, msg) assert(((void)msg, exp))
 #define ACQ_COUNT 5
+
+const float g_adc_smpl_freq = getADCRate();
+
+auto trapezoidalApprox(double *data, float T, int size) -> float{
+    double result = 0;
+    for(int i = 0; i < size - 1; i++){
+        result += data[i] + data[i+1];
+    }
+    result = ((T / 2.0) * result);
+    return result;
+}
+
+auto isSineTester(float *data, uint32_t size,uint32_t dec) -> bool{
+        double T = (dec / g_adc_smpl_freq);
+        double ch_rms[size];
+        double ch_avr[size];
+        for(int i = 0; i < size; i++) {
+                ch_rms[i] = data[i] * data[i];
+                ch_avr[i] = fabs(data[i]);
+        }
+        double K0 = sqrtf(T * size * trapezoidalApprox(ch_rms, T, size)) / trapezoidalApprox(ch_avr, T, size);
+        return ((K0 > 1.10) && (K0 < 1.12));
+}
 
 COscilloscope::Ptr COscilloscope::Create(uint32_t _decimation){
     return std::make_shared<COscilloscope>(_decimation);
@@ -22,31 +46,45 @@ m_mode(0),
 m_channel(RP_CH_1),
 m_mutex(),
 m_funcSelector(),
+m_avgFilter(),
 m_cursor1(0),
 m_cursor2(1),
 m_hyst(0.01),
-m_channels(0)
+m_channels(0),
+m_avg_filter(false),
+m_avg_filter_size(30),
+m_avg_filter_cur(0),
+m_adc_sample_per(0)
 {
     m_OscThreadRunState = false;
     m_zoomMode = false;
     m_curCursor1 = m_cursor1;
     m_curCursor2 = m_cursor2;
     m_channels = getADCChannels();
+    getADCSamplePeriod(&m_adc_sample_per);
     memset(&m_buffer,0,sizeof(buffers_t));
 
     for(uint8_t ch = 0; ch < m_channels; ch++){
         m_buffer.ch_i[ch] = new int16_t[ADC_BUFFER_SIZE];
         m_buffer.ch_f[ch] = new float[ADC_BUFFER_SIZE];
-    }
+        m_avg_filter_buffer_max[ch] = new float[m_avg_filter_size];
+        m_avg_filter_buffer_min[ch] = new float[m_avg_filter_size];
+        m_avg_filter_buffer_mean[ch] = new float[m_avg_filter_size];
+        m_avg_filter_buffer_p_p[ch] = new float[m_avg_filter_size];
 
+    }
+    resetAvgFilter();
 }
 
-COscilloscope::~COscilloscope()
-{
+COscilloscope::~COscilloscope(){
     stop();
     for(uint8_t ch = 0; ch < m_channels; ch++){
         delete[] m_buffer.ch_i[ch];
         delete[] m_buffer.ch_f[ch];
+        delete[] m_avg_filter_buffer_max[ch];
+        delete[] m_avg_filter_buffer_min[ch];
+        delete[] m_avg_filter_buffer_mean[ch];
+        delete[] m_avg_filter_buffer_p_p[ch];
     }
 }
 
@@ -129,6 +167,30 @@ void COscilloscope::updateAcqFilter(rp_channel_t _ch){
     }
 }
 
+auto COscilloscope::setAvgFilter(bool enable) -> void{
+    pthread_mutex_lock(&m_avgFilter);
+    m_avg_filter = enable;
+    pthread_mutex_unlock(&m_avgFilter);
+}
+
+auto COscilloscope::getAvgFilter() -> bool{
+    return m_avg_filter;
+}
+
+auto COscilloscope::resetAvgFilter() -> void{
+    pthread_mutex_lock(&m_avgFilter);
+    m_avg_filter_cur = 0;
+    for(uint32_t i = 0; i < m_avg_filter_size;i++){
+        for(uint8_t ch = 0; ch < m_channels; ch++){
+            m_avg_filter_buffer_max[ch][i] = INVALID_VALUE;
+            m_avg_filter_buffer_min[ch][i] = INVALID_VALUE;
+            m_avg_filter_buffer_p_p[ch][i] = INVALID_VALUE;
+            m_avg_filter_buffer_mean[ch][i] = INVALID_VALUE;
+        }
+    }
+    pthread_mutex_unlock(&m_avgFilter);
+}
+
 void COscilloscope::setCursor1(float value){
     m_cursor1 = value;
 }
@@ -163,6 +225,84 @@ void COscilloscope::oscWorker(){
     }
 }
 
+auto COscilloscope::setDeciamtion(uint32_t _decimation) -> void{
+    pthread_mutex_lock(&m_funcSelector);
+    m_decimation = _decimation;
+    pthread_mutex_unlock(&m_funcSelector);
+}
+
+auto COscilloscope::getDecimation() -> uint32_t{
+    return m_decimation;
+}
+
+
+void COscilloscope::measurePeriod(int16_t *_data,uint32_t _size, double *period,uint32_t _decimation) {
+    double sample_per = m_adc_sample_per;
+    const float c_meas_freq_thr = 100;
+    int size = _size;
+
+    const int c_meas_time_thr = size / sample_per;
+    const float c_min_period = 19.6e-9; // 51 MHz
+
+    float thr1, thr2, cen;
+    int state = 0;
+    int trig_t[2] = { 0, 0 };
+    int trig_cnt = 0;
+    int ix;
+    int16_t *data_i = _data;
+
+
+    float meas_max, meas_min;
+
+    meas_max = data_i[0] ;
+    meas_min = data_i[0] ;
+    for(int i = 0; i < size; i++)
+    {
+        meas_max = (meas_max > data_i[i] )? meas_max : data_i[i] ;
+        meas_min = (meas_min < data_i[i] )? meas_min : data_i[i] ;
+    }
+
+	uint32_t dec_factor = _decimation;
+
+    float acq_dur= (float)(size)/((float) g_adc_smpl_freq) * (float) dec_factor;
+    cen = (meas_max + meas_min) / 2;
+    thr1 = cen + 0.2 * (meas_min - cen);
+    thr2 = cen + 0.2 * (meas_max - cen);
+    double res_period = 0;
+    for(ix = 0; ix < (size); ix++) {
+        auto sa = data_i[ix];
+
+        /* Lower transitions */
+        if((state == 0) && (sa < thr1)) {
+            state = 1;
+        }
+        /* Upper transitions - count them & store edge times. */
+        if((state == 1) && (sa >= thr2) ) {
+            state = 0;
+            if (trig_cnt++ == 0) {
+                trig_t[0] = ix;
+            } else {
+                trig_t[1] = ix;
+            }
+        }
+        if ((trig_t[1] - trig_t[0]) > c_meas_time_thr) {
+            break;
+        }
+    }
+    /* Period calculation - taking into account at least meas_time_thr samples */
+    if(trig_cnt >= 2) {
+       res_period = (float)(trig_t[1] - trig_t[0]) /
+            ((float)g_adc_smpl_freq * (trig_cnt - 1)) * dec_factor;
+    }
+
+    if( ((thr2 - thr1) < c_meas_freq_thr) ||
+         (res_period * 3 >= acq_dur)    ||
+         (res_period < c_min_period) )
+    {
+        res_period = 0;
+    }
+    *period = res_period * 1000.0 * 1000.0;
+}
 
 void COscilloscope::acquire(){
     uint32_t pos = 0;
@@ -200,6 +340,17 @@ void COscilloscope::acquire(){
     if (acq_u_size > 0) {
         DataPass localDP;
         localDP.index = m_index++;
+        double time_of_buffer = m_adc_sample_per * m_buffer.size * m_decimation / 1000.0;
+        for(auto i = 0u; i < m_channels; i++){
+            double per = 0;
+            measurePeriod(m_buffer.ch_i[i],m_buffer.size,&per,m_decimation);
+            localDP.periodsByBuffer[i] = (per == 0.f ? 0.0 : time_of_buffer / ((double)per));
+            localDP.isSineSignal[i] = isSineTester(m_buffer.ch_f[i],m_buffer.size,m_decimation);
+            // if (i == 0)
+            //     fprintf(stderr,"CH %d Per %lf (ms) dec %d tb %lf (us) isSine %d\n",i+1,per,m_decimation,time_of_buffer,localDP.isSineSignal[i]);
+        }
+
+        pthread_mutex_lock(&m_avgFilter);
         for(auto i = 0u; i < m_channels; i++){
             localDP.ch_avg[i] = 0;
             localDP.ch_max[i] = m_buffer.ch_f[i][0];
@@ -211,10 +362,9 @@ void COscilloscope::acquire(){
             for(auto j = 0u; j < acq_u_size ; ++j){
                 if (localDP.ch_max[i] < m_buffer.ch_f[i][j]) localDP.ch_max[i] = m_buffer.ch_f[i][j];
                 if (localDP.ch_min[i] > m_buffer.ch_f[i][j]) localDP.ch_min[i] = m_buffer.ch_f[i][j];
-                localDP.ch_avg[i] += m_buffer.ch_f[i][j];
-
             }
-            localDP.ch_avg[i] /= (float)acq_u_size;
+            localDP.ch_p_p[i] = localDP.ch_max[i] - localDP.ch_min[i];
+            localDP.ch_avg[i] = (localDP.ch_max[i] + localDP.ch_min[i]) / 2.0;
 
             for(auto j = 0u ; j < acq_u_size_raw; ++j){
                 auto ch = m_buffer.ch_i[i][j];
@@ -222,8 +372,55 @@ void COscilloscope::acquire(){
                 if (localDP.ch_min_raw[i] > ch) localDP.ch_min_raw[i] = ch;
                 localDP.ch_avg_raw[i] += ch;
             }
-            localDP.ch_avg_raw[i] /= (int32_t)acq_u_size_raw;
+            localDP.ch_avg_raw[i] = (localDP.ch_max_raw[i] + localDP.ch_min_raw[i]) / 2.0;
+
+            if (m_avg_filter){
+                m_avg_filter_buffer_max[i][m_avg_filter_cur] = localDP.ch_max[i];
+                m_avg_filter_buffer_min[i][m_avg_filter_cur] = localDP.ch_min[i];
+                m_avg_filter_buffer_p_p[i][m_avg_filter_cur] = localDP.ch_p_p[i];
+                m_avg_filter_buffer_mean[i][m_avg_filter_cur] = localDP.ch_avg[i];
+            }
         }
+        if (m_avg_filter){
+            m_avg_filter_cur++;
+            for(auto ch = 0u; ch < m_channels; ch++){
+                float real_data_count_min = 0;
+                float sum_min = 0;
+                float real_data_count_max = 0;
+                float sum_max = 0;
+                float real_data_count_p_p = 0;
+                float sum_p_p = 0;
+                float real_data_count_mean = 0;
+                float sum_mean = 0;
+
+                for(auto i = 0u; i < m_avg_filter_size;i++){
+                    if (m_avg_filter_buffer_max[ch][i]!= INVALID_VALUE){
+                        real_data_count_max++;
+                        sum_max += m_avg_filter_buffer_max[ch][i];
+                    }
+                    if (m_avg_filter_buffer_min[ch][i]!= INVALID_VALUE){
+                        real_data_count_min++;
+                        sum_min += m_avg_filter_buffer_min[ch][i];
+                    }
+                    if (m_avg_filter_buffer_mean[ch][i]!= INVALID_VALUE){
+                        real_data_count_mean++;
+                        sum_mean += m_avg_filter_buffer_mean[ch][i];
+                    }
+                    if (m_avg_filter_buffer_p_p[ch][i]!= INVALID_VALUE){
+                        real_data_count_p_p++;
+                        sum_p_p += m_avg_filter_buffer_p_p[ch][i];
+                    }
+                }
+                localDP.ch_max[ch] = sum_max / real_data_count_max;
+                localDP.ch_min[ch] = sum_min / real_data_count_min;
+                localDP.ch_p_p[ch] = sum_p_p / real_data_count_p_p;
+                localDP.ch_avg[ch] = sum_mean / real_data_count_mean;
+            }
+            if (m_avg_filter_cur > m_avg_filter_size){
+                m_avg_filter_cur = 0;
+            }
+        }
+        pthread_mutex_unlock(&m_avgFilter);
         pthread_mutex_lock(&m_mutex);
         m_crossData = localDP;
         pthread_mutex_unlock(&m_mutex);

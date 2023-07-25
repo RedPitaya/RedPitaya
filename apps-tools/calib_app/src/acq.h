@@ -11,6 +11,7 @@
 #define SCREEN_BUFF_SIZE 2048
 
 #define TIME_ANIMATION  1000000.0
+#define INVALID_VALUE -999999
 
 using namespace std::chrono;
 
@@ -22,10 +23,20 @@ public:
         float   ch_min[MAX_ADC_CHANNELS];
         float   ch_max[MAX_ADC_CHANNELS];
         float   ch_avg[MAX_ADC_CHANNELS];
+        float   ch_p_p[MAX_ADC_CHANNELS];
         int32_t ch_min_raw[MAX_ADC_CHANNELS];
         int32_t ch_max_raw[MAX_ADC_CHANNELS];
         int32_t ch_avg_raw[MAX_ADC_CHANNELS];
+        int32_t periodsByBuffer[MAX_ADC_CHANNELS];
+        bool    isSineSignal[MAX_ADC_CHANNELS];
         uint64_t index;
+        DataPass(){
+            for(auto i = 0u; i  < MAX_ADC_CHANNELS; i++){
+                ch_min[i] = ch_max[i] = ch_avg[i] = ch_p_p[i] = ch_min_raw[i] = ch_max_raw[i] = ch_avg_raw[i] = periodsByBuffer[i] = 0;
+                isSineSignal[i] = false;
+            }
+            index = 0;
+        }
     };
 
     struct DataPassSq
@@ -97,6 +108,8 @@ public:
     auto setHV() -> void; // 1:20
     auto setAcquireChannel(rp_channel_t _ch) -> void;
     auto updateAcqFilter(rp_channel_t _ch) -> void;
+    auto setDeciamtion(uint32_t _decimation) -> void;
+    auto getDecimation() -> uint32_t;
 
     auto setDC() -> void;
     auto setAC() -> void;
@@ -115,6 +128,9 @@ public:
     auto setOffset(rp_channel_t _ch,float _offset) -> int;
     auto setGenType(rp_channel_t _ch,int _type) -> int;
 
+    auto setAvgFilter(bool _enable) -> void;
+    auto getAvgFilter() -> bool;
+    auto resetAvgFilter() -> void;
 private:
     auto startThread() -> void;
     auto oscWorker() -> void;
@@ -123,12 +139,14 @@ private:
     auto acquireAutoFilter() -> void;
     auto acquireAutoFilterSync() -> void;
     auto selectRange(float *buffer,double _start,double _stop) -> COscilloscope::DataPassSq;
+    auto measurePeriod(int16_t *_data, uint32_t _size, double *period,uint32_t _decimation) -> void;
 
         std::atomic_flag m_OscThreadRun = ATOMIC_FLAG_INIT;
         std::atomic_bool m_OscThreadRunState;
         std::thread      m_OscThread;
         pthread_mutex_t  m_mutex;
         pthread_mutex_t  m_funcSelector;
+        pthread_mutex_t  m_avgFilter;
         uint32_t         m_decimation;
         uint32_t         m_decimationSq;
         double           m_curCursor1;
@@ -150,4 +168,13 @@ private:
         char             m_mode;
         rp_channel_t     m_channel;
         uint8_t          m_channels;
+        bool             m_avg_filter;
+        uint32_t         m_avg_filter_size;
+        uint32_t         m_avg_filter_cur;
+        float*           m_avg_filter_buffer_p_p[MAX_ADC_CHANNELS];
+        float*           m_avg_filter_buffer_min[MAX_ADC_CHANNELS];
+        float*           m_avg_filter_buffer_max[MAX_ADC_CHANNELS];
+        float*           m_avg_filter_buffer_mean[MAX_ADC_CHANNELS];
+        double           m_adc_sample_per;
+
 };

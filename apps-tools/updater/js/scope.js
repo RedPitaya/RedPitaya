@@ -184,7 +184,7 @@
                     }
                     var distro_desc = es_distro_vers.vers_as_str + '-' + es_distro_vers.build + '(' + es_distro_size + ')';
                     var distro_desc_short = es_distro_vers.vers_as_str + '-' + es_distro_vers.build;
-                    if (distro_desc_short === UPD.currentVer) {
+                    if (UPD.compareVersions(distro_desc_short,UPD.currentVer) === 1) {
                         $('#used_last_version').show();
                         $('#select_ver').hide();
                         $('#step_4').hide();
@@ -237,42 +237,59 @@
         console.log("Check download");
         $('#step_' + UPD.currentStep).find('.step_icon').find('img').hide();
 
-        UPD.timerCheck = setInterval(function() {
-            var url_arr = window.location.href.split("/");;
-            var url = url_arr[0] + '//' + url_arr[2];
-            $.ajax({
-                url:  url + ':81/update_check',
-                type: 'GET',
-            }).done(function(msg) {
-                var res = msg;
-                var s = res.split(" ")[0];
-                var size = parseInt(s) * 1;
-                if (isNaN(size)) {
-                    $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
-                    $('#step_' + UPD.currentStep).find('.error_msg').show();
-                    clearInterval(check_progress);
-                } else {
-                    var percent = ((size / UPD.ecosystems_sizes[UPD.chosen_eco]) * 100).toFixed(2);
-                    $('#percent').text(percent + "%");
-                    $('#percent').show();
-                }
 
-            });
-        }, 1000);
 
         $.ajax({
             url: '/update_download?ecosystem=' + UPD.type + '/' + UPD.ecosystems[UPD.chosen_eco],
             type: 'GET',
-        }).always(function(res) {
+        }).done(function(res) {
             console.log(res);
+            $('#percent').text("0%");
+
+            UPD.timerCheck = setInterval(function() {
+                var url_arr = window.location.href.split("/");;
+                var url = url_arr[0] + '//' + url_arr[2];
+                $.ajax({
+                    url:  url + ':81/update_check',
+                    type: 'GET',
+                }).done(function(msg) {
+                    if (msg.includes("NONE")) {
+                        $('#percent').text("0%");
+                        $('#percent').show();
+                        return;
+                    }
+                    var res = msg;
+                    var s = res.split(" ")[0];
+                    var size = parseInt(s) * 1;
+                    if (isNaN(size)) {
+                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                        $('#step_' + UPD.currentStep).find('.error_msg').show();
+                        clearInterval(UPD.timerCheck);
+                    } else {
+                        var percent = ((size / UPD.ecosystems_sizes[UPD.chosen_eco]) * 100).toFixed(2);
+                        $('#percent').text(percent + "%");
+                        $('#percent').show();
+                    }
+
+                    if (msg.includes("OK")){
+                        clearInterval(UPD.timerCheck);
+                        $('#percent').hide();
+                       UPD.nextStep();
+                    }
+
+                    if (msg.includes("FAIL")){
+                        clearInterval(UPD.timerCheck);
+                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                        $('#step_' + UPD.currentStep).find('.error_msg').show();
+                    }
+                });
+            }, 1000);
+
+
+        }).fail(function(msg) {
+            $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+            $('#step_' + UPD.currentStep).find('.error_msg').show();
             clearInterval(UPD.timerCheck);
-            if (res.includes("OK")){
-                $('#percent').hide();
-                UPD.nextStep();
-            }else{
-                $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
-                $('#step_' + UPD.currentStep).find('.error_msg').show();
-            }
         });
 
     }
