@@ -58,17 +58,17 @@ int main()
     rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9613BCPZ-250.xml");
     rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9613BCPZ-250_default.xml");
     rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9613BCPZ-250_streaming.xml");
-    char x = 0;
-    rp_spi_fpga::rp_read_from_spi_fpga("/dev/mem/",0x40000000,0x50,0x14,x);
+    uint8_t x = 0;
+    rp_spi_fpga::rp_read_from_spi_fpga("/dev/mem",0x40000000,0x50,0x14,&x);
     printf ("0x14 = %d\n",x);
-    rp_spi_fpga::rp_read_from_spi_fpga("/dev/mem/",0x40000000,0x50,0xFF,x);
+    rp_spi_fpga::rp_read_from_spi_fpga("/dev/mem",0x40000000,0x50,0xFF,&x);
     printf ("0xFF = %d\n",x);
-    rp_spi_fpga::rp_read_from_spi_fpga("/dev/mem/",0x40000000,0x50,0x16,x);
+    rp_spi_fpga::rp_read_from_spi_fpga("/dev/mem",0x40000000,0x50,0x16,&x);
     printf ("0x16 = %d\n",x);
-    rp_spi_fpga::rp_read_from_spi_fpga("/dev/mem/",0x40000000,0x50,0x18,x);
+    rp_spi_fpga::rp_read_from_spi_fpga("/dev/mem",0x40000000,0x50,0x18,&x);
     printf ("0x18 = %d\n",x);
     rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9746BCPZ-250.xml");
-    rp_spi_fpga::rp_read_from_spi_fpga("/dev/mem/",0x40000000,0x60,0x00,x);
+    rp_spi_fpga::rp_read_from_spi_fpga("/dev/mem",0x40000000,0x60,0x00,&x);
     printf ("0x00 = %d\n",x);
 
     return 0;

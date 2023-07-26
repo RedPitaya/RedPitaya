@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdint.h>
 
 #ifdef  __cplusplus
 extern "C" {
@@ -123,7 +124,7 @@ namespace rp_max7311{
     If the board revision is 1.2 then the function always returns zero.
     If the revision of the board is less than 1.2, then the value from register 0x8 is returned
     */
-    char rp_check();
+    uint8_t rp_check();
 }
 
 #ifdef  __cplusplus
