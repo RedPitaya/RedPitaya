@@ -1,4 +1,13 @@
-# Beta version (2.00-15)
+# Beta version (2.00-18)    
+- Added python wrapper for api (v0.94) (Not for all libs)
+- Updated streaming app for 4-ch boards (Streaming to 4 channels in beta. There are known bugs with calibration parameters.)
+- Fixed bug in calibration for 4-ch boards
+- Added new coammds in SCPI
+- Improved UI in spectrumpro and scopegenpro
+- There is a known bug in 0.94 for boards 250-12 (Amplitude at decimation 4 and 8 is much less than the input signal)
+
+
+# Stable version (2.00-15)
 
 - Added support for sdr_receiver_hpsdr, sdr_transceiver_hpsdr, vna (not for all boards)
 - Completely redesigned API for all boards.
