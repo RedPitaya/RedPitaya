@@ -25,26 +25,35 @@
 %apply int { rp_acq_ac_dc_mode_t }
 %apply int { rp_acq_trig_src_t }
 %apply int { rp_acq_trig_state_t }
-
+%apply int { rp_gen_gain_t }
 
 %apply int *OUTPUT { rp_pinState_t * state }
 %apply int *OUTPUT { rp_pinDirection_t * direction }
 %apply int *OUTPUT { rp_outTiggerMode_t * mode }
-
-// %apply int *OUTPUT { rp_uart_stop_bits_t * _out_value }
-// %apply int *OUTPUT { rp_uart_parity_t * _out_value }
-// %apply int *OUTPUT { rp_spi_mode_t * _out_value }
-// %apply int *OUTPUT { rp_spi_state_t * _out_value }
-// %apply int *OUTPUT { rp_spi_cs_mode_t * _out_value }
-// %apply int *OUTPUT { rp_spi_order_bit_t * _out_value }
+%apply int *OUTPUT { rp_waveform_t * type }
+%apply int *OUTPUT { rp_gen_sweep_mode_t * mode }
+%apply int *OUTPUT { rp_gen_sweep_dir_t * mode }
+%apply int *OUTPUT { rp_gen_mode_t * mode }
+%apply int *OUTPUT { rp_trig_src_t * src }
+%apply int *OUTPUT { rp_gen_gain_t * status }
 
 %apply bool *OUTPUT { bool * status };
 %apply bool *OUTPUT { bool * state };
 %apply bool *OUTPUT { bool * enable };
+%apply bool *OUTPUT { bool * value };
 
 %apply float *OUTPUT { float *value };
 %apply float *OUTPUT { float *min_val };
 %apply float *OUTPUT { float *max_val };
+%apply float *OUTPUT { float *amplitude };
+%apply float *OUTPUT { float *offset };
+%apply float *OUTPUT { float *frequency };
+%apply float *OUTPUT { float *phase };
+%apply float *OUTPUT { float *ratio };
+%apply float *OUTPUT { float *time };
+%apply float *INOUT { float *waveform };
+
+%apply double *OUTPUT { double *value };
 
 // %apply unsigned char *OUTPUT { uint8_t *_out_value };
 // %apply unsigned short *OUTPUT { uint16_t *_out_value };
@@ -54,7 +63,14 @@
 %apply unsigned int *OUTPUT { uint32_t *id };
 %apply unsigned int *OUTPUT { uint32_t *raw };
 %apply unsigned int *OUTPUT { uint32_t *value };
+%apply unsigned int *OUTPUT { uint32_t *period };
+%apply unsigned int *OUTPUT { uint32_t *length };
 %apply unsigned long long *OUTPUT { uint64_t *dna };
+
+%apply int *OUTPUT { int * num };
+%apply int *OUTPUT { int * repetitions };
+
+%array_class(float, arbBuffer);
 
 // %apply unsigned int *OUTPUT { size_t *_out_value };
 // %apply unsigned int *OUTPUT { size_t *_out_len };
@@ -70,9 +86,7 @@
 
 %{
 /* Includes the header in the wrapper code */
-#include "rp_enums.h"
 #include "rp.h"
-
 %}
 
 
@@ -80,3 +94,4 @@
 /* Parse the header file to generate wrappers */
 %include "rp_enums.h"
 %include "rp.h"
+%include "rp_gen.h"

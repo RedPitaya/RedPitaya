@@ -1362,10 +1362,22 @@ int rp_GenRiseTime(rp_channel_t channel, float time) {
     return gen_setRiseTime(channel, time);
 }
 
+int rp_GenGetRiseTime(rp_channel_t channel, float *time){
+if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
+    return gen_getRiseTime(channel, time);
+}
+
 int rp_GenFallTime(rp_channel_t channel, float time) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
     return gen_setFallTime(channel, time);
+}
+
+int rp_GenGetFallTime(rp_channel_t channel, float *time){
+if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
+    return gen_getFallTime(channel, time);
 }
 
 int rp_GenGetDutyCycle(rp_channel_t channel, float *ratio) {
