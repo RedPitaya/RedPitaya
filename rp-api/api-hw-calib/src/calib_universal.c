@@ -727,7 +727,7 @@ rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model){
         for(int i = 0; i < 2; ++i){
             calib.fast_adc_1_1[i].calibValue = calibBaseScaleFromVoltage(1.0,true);
             calib.fast_adc_1_1[i].offset = 0;
-            calib.fast_adc_1_1[i].baseScale = 20;
+            calib.fast_adc_1_1[i].baseScale = 1.0;
             calib.fast_adc_1_1[i].gainCalc = 1.0;
 
             calib.fast_dac_x1[i].calibValue = calibBaseScaleFromVoltage(1.0,true);
