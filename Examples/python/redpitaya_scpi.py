@@ -46,8 +46,10 @@ class scpi (object):
             chunk = self._socket.recv(chunksize).decode('utf-8') # Receive chunk size of 2^n preferably
             msg += chunk
             if (len(msg) and msg[-2:] == self.delimiter):
-                break
-        return msg[:-2]
+                return msg[:-2]
+            if (len(msg) and msg[-1:] == '}'):
+                return msg
+
 
     def rx_arb(self):
         """ Recieve binary data from scpi server"""
@@ -81,6 +83,14 @@ class scpi (object):
         self.tx_txt(msg)
         return self.rx_txt()
 
+    def check_error(self):
+        res = int(self.stb_q())
+        if (res & 0x4):
+            while 1:
+                err = self.err_n()
+                if (err.startswith('0,')):
+                    break
+                print(err)
 
 # SCPI command functions
 

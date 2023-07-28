@@ -5,6 +5,8 @@ import redpitaya_scpi as scpi
 
 rp_s = scpi.scpi(sys.argv[1])
 
+# Before test please connect UART RX <> TX. Otherwise the test will hang.
+
 rp_s.tx_txt('UART:INIT')
 print("Init UART")
 rp_s.check_error()
