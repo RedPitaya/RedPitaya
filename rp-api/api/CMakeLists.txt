@@ -52,6 +52,7 @@ message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
 
 include_directories("include")
+include_directories("include/redpitaya")
 include_directories("src")
 include_directories(${INSTALL_DIR}/include)
 
