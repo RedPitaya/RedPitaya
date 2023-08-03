@@ -2,7 +2,6 @@
 DL ?= dl
 
 INSTALL_DIR ?= build
-ENABLE_LICENSING ?= 0
 STREAMING ?= MASTER
 CPU_CORES=$($(shell grep '^processor' /proc/cpuinfo | sort -u | wc -l) + 1)
 
@@ -14,7 +13,7 @@ VER := $(shell cat apps-tools/ecosystem/info/info.json | grep version | sed -e '
 BUILD_NUMBER ?= 0
 REVISION ?= $(shell git rev-parse --short HEAD)
 VERSION = $(VER)-$(BUILD_NUMBER)
-LINUX_VER = 2.0
+LINUX_VER = 2.01
 export BUILD_NUMBER
 export REVISION
 export VERSION
@@ -46,13 +45,13 @@ LIBRP_HW_CALIB_DIR		= rp-api/api-hw-calib
 LIBRP2_DIR      		= rp-api/api2
 LIBRP250_12_DIR 		= rp-api/api-250-12
 LIBRP_DSP_DIR   		= rp-api/api-dsp
-LIBRPAPP_DIR    		= Applications/api/rpApplications
+LIBRPAPP_DIR    		= rp-api/api-app
 ECOSYSTEM_DIR   		= Applications/ecosystem
 
 .PHONY: api api2 librp librp250_12 librp_hw librp_dsp librp_hw_profiles librp_hw_calibration
 .PHONY: librpapp liblcr_meter
 
-api: librp librp_hw librp_dsp
+api: librp librp_hw librp_dsp librpapp
 
 api2: librp2
 
@@ -84,16 +83,10 @@ librp250_12: librp_hw
 	cmake -B$(LIBRP250_12_DIR)/build -S$(LIBRP250_12_DIR) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(LIBRP250_12_DIR)/build install
 
-
-ifeq ($(ENABLE_LICENSING),1)
-
-api: librpapp
-
 librpapp: librp
 	cmake -B$(abspath $(LIBRPAPP_DIR)/build) -S$(abspath $(LIBRPAPP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(LIBRPAPP_DIR)/build install
 
-endif
 
 
 ################################################################################
@@ -206,21 +199,13 @@ $(NGINX): $(CRYPTOPP_DIR) $(WEBSOCKETPP_DIR) $(LIBJSON_DIR) $(LUARESTY_DIR) $(LU
 	mkdir -p $(INSTALL_DIR)/www/conf/lua
 	cp -fr $(NGINX_DIR)/nginx/conf/lua/* $(abspath $(INSTALL_DIR))/www/conf/lua
 
-ifeq ($(ENABLE_LICENSING),1)
 
-IDGEN_DIR = Applications/idgen
+IDGEN_DIR = apps-tools/idgen
 
 $(IDGEN):
 	$(MAKE) -C $(IDGEN_DIR) clean
 	$(MAKE) -C $(IDGEN_DIR)
 	$(MAKE) -C $(IDGEN_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
-
-else
-
-$(IDGEN):
-	touch $(IDGEN)
-
-endif
 
 $(SOCKPROC): $(SOCKPROC_DIR)
 	$(MAKE) -C $<
@@ -477,13 +462,11 @@ apps-free-clean:
 # Red Pitaya PRO applications
 ################################################################################
 
-ifeq ($(ENABLE_LICENSING),1)
-
-APP_SCOPEGENPRO_DIR = Applications/scopegenpro
-APP_SPECTRUMPRO_DIR = Applications/spectrumpro
-APP_LCRMETER_DIR    = Applications/lcr_meter
-APP_LA_PRO_DIR 		= Applications/la_pro
-APP_BA_PRO_DIR 		= Applications/ba_pro
+APP_SCOPEGENPRO_DIR = apps-tools/scopegenpro
+APP_SPECTRUMPRO_DIR = apps-tools/spectrumpro
+APP_LCRMETER_DIR    = apps-tools/lcr_meter
+APP_LA_PRO_DIR 		= apps-tools/la_pro
+APP_BA_PRO_DIR 		= apps-tools/ba_pro
 
 .PHONY: apps-pro scopegenpro spectrumpro lcr_meter la_pro ba_pro lcr_meter
 
@@ -514,11 +497,6 @@ ba_pro: api $(NGINX)
 	$(MAKE) -C $(APP_BA_PRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_BA_PRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-else
-
-apps-pro:
-
-endif
 
 
 ################################################################################
@@ -552,3 +530,11 @@ clean:
 	$(MAKE) -C $(COMM_DIR) clean
 	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) clean
 	$(MAKE) -C $(APP_MAIN_MENU_DIR) clean
+
+
+	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) clean
+	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) clean
+	$(MAKE) -C $(APP_LCRMETER_DIR) clean
+	$(MAKE) -C $(APP_LA_PRO_DIR) clean
+	$(MAKE) -C $(APP_BA_PRO_DIR) clean
+	$(MAKE) -C $(IDGEN_DIR) clean
