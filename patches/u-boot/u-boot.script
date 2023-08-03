@@ -8,6 +8,8 @@ setenv addr_script 0x02000000
 setenv addr_eeprom 0x02003000
 setenv addr_linux  0x02004000
 setenv addr_dtb    0x04000000
+setenv addr_fpga   0x10000000
+setenv zynq        z7010
 
 # set default Linux kernel boot parameters
 setenv bootargs console=ttyPS0,115200 root=/dev/mmcblk0p2 ro rootfstype=ext4 earlyprintk rootwait uio_pdrv_genirq.of_id="generic-uio"
@@ -17,6 +19,7 @@ if test ${hw_rev} = '0'
 then
   setenv bootargs ${bootargs} mem=256M
   setenv dts_path z10_125
+  setenv zynq '0'
   echo Set default board values
 fi
 
@@ -25,68 +28,82 @@ then
   setenv high     0x10000000
   setenv bootargs ${bootargs} mem=256M
   setenv dts_path z10_125
+  setenv zynq z7010
 else
   setenv high     0x20000000
+  setenv zynq z7010
 fi
 
 if test ${hw_rev} == 'STEM_125-10_v1.0'
 then
   setenv dts_path z10_125
+  setenv zynq z7010
 fi
 
 if test ${hw_rev} == 'STEM_14_B_v1.0'
 then
   setenv dts_path z10_125
+  setenv zynq z7010
 fi
 
 if test ${hw_rev} == 'STEM_125-14_v1.0'
 then
   setenv dts_path z10_125
+  setenv zynq z7010
 fi
 
 if test ${hw_rev} == 'STEM_125-14_v1.1'
 then
   setenv dts_path z10_125
+  setenv zynq z7010
 fi
 
 if test ${hw_rev} == 'STEM_125-14_LN_v1.1'
 then
   setenv dts_path z10_125
+  setenv zynq z7010
 fi
 
 if test ${hw_rev} == 'STEM_125-14_Z7020_v1.0'
 then
   setenv dts_path z20_125
+  setenv zynq z7020
 fi
 
 if test ${hw_rev} == 'STEM_125-14_Z7020_LN_v1.1'
 then
   setenv dts_path z20_125
+  setenv zynq z7020
 fi
 
 if test ${hw_rev} == 'STEM_122-16SDR_v1.0'
 then
   setenv dts_path z20_122
+  setenv zynq z7020
 fi
 
 if test ${hw_rev} == 'STEM_122-16SDR_v1.1'
 then
   setenv dts_path z20_122
+  setenv zynq z7020
 fi
 
 if test ${hw_rev} == 'STEM_125-14_Z7020_4IN_v1.0'
 then
   setenv dts_path z20_125_4ch
+  setenv zynq z7020
 fi
 
 if test ${hw_rev} == 'STEM_125-14_Z7020_4IN_v1.2'
 then
   setenv dts_path z20_125_4ch
+  setenv zynq z7020
 fi
 
 if test ${hw_rev} == 'STEM_125-14_Z7020_4IN_v1.3'
 then
   setenv dts_path z20_125_4ch
+  setenv zynq z7020
 fi
 
 if test ${hw_rev} == 'STEM_250-12_v1.0'
@@ -94,6 +111,7 @@ then
   setenv bootargs ${bootargs} mem=512M
   setenv high     0x20000000
   setenv dts_path z20_250_1_0
+  setenv zynq z7020
 fi
 
 if test ${hw_rev} == 'STEM_250-12_v1.1'
@@ -101,6 +119,7 @@ then
   setenv bootargs ${bootargs} mem=512M
   setenv high     0x20000000
   setenv dts_path z20_250
+  setenv zynq z7020
 fi
 
 if test ${hw_rev} == 'STEM_250-12_v1.2'
@@ -108,6 +127,7 @@ then
   setenv bootargs ${bootargs} mem=512M
   setenv high     0x20000000
   setenv dts_path z20_250
+  setenv zynq z7020
 fi
 
 if test ${hw_rev} == 'STEM_250-12_v1.2a'
@@ -115,6 +135,7 @@ then
   setenv bootargs ${bootargs} mem=512M
   setenv high     0x20000000
   setenv dts_path z20_250a
+  setenv zynq z7020
 fi
 
 if test ${hw_rev} == 'STEM_250-12_120'
@@ -122,23 +143,32 @@ then
   setenv bootargs ${bootargs} mem=512M
   setenv high     0x20000000
   setenv dts_path z20_250
+  setenv zynq z7020
 fi
 
 if test ${hw_rev} == 'STEM_125-14_LN_BO_v1.1'
 then
   setenv dts_path z10_125
+  setenv zynq z7010
 fi
 
 if test ${hw_rev} == 'STEM_125-14_LN_CE1_v1.1'
 then
   setenv dts_path z10_125
+  setenv zynq z7010
 fi
 
 if test ${hw_rev} == 'STEM_125-14_LN_CE2_v1.1'
 then
   setenv dts_path z10_125
+  setenv zynq z7010
 fi
 
+if test ${zynq} != '0'
+then
+  fatload mmc 0 ${addr_fpga} fpga/${dts_path}/barebones/fpga.bit
+  fpga loadb ${zynq} $addr_fpga $filesize
+fi
 
 echo Set devicetree and ramdisk high loading address to ${high}
 
