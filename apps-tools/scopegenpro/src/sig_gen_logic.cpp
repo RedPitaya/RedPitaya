@@ -208,27 +208,16 @@ auto setBurstParameters(bool force) -> void{
 
     for(int i = 0; i < g_dac_channels; i++){
         auto ch = (rp_channel_t)i;
-        if (IS_NEW(outBurstDelay[ch]) || force){
-            if (rp_GenBurstPeriod(ch, outBurstDelay[ch].NewValue()) == RP_OK){
-                outBurstDelay[ch].Update();
-                checkBurstDelayChanged(ch);
-            }
-        }
 
-        if (IS_NEW(outBurstState[ch]) || force){
-            rp_GenMode(ch, outBurstState[ch].NewValue() ? RP_GEN_MODE_BURST : RP_GEN_MODE_CONTINUOUS);
-            outBurstState[ch].Update();
-            if (outBurstState[ch].Value()){
-                outSweepState[ch].SendValue(false);
-                g_sweepController->genSweep(ch,outSweepState[ch].Value());
-            }
-            checkBurstDelayChanged(ch);
-        }
+        // The order of initialization must be followed exactly.
 
-        if (IS_NEW(outBurstCount[ch]) || force){
-            if (rp_GenBurstCount(ch, outBurstCount[ch].NewValue()) == RP_OK){
-                outBurstCount[ch].Update();
-                checkBurstDelayChanged(ch);
+        if (IS_NEW(outBurstRepetitions[ch]) || force){
+            if (!outBurstRepInf[ch].Value()){
+                if (rp_GenBurstRepetitions(ch, outBurstRepetitions[ch].NewValue()) == RP_OK){
+                    outBurstRepetitions[ch].Update();
+                }
+            }else{
+                outBurstRepetitions[ch].Update();
             }
         }
 
@@ -242,15 +231,34 @@ auto setBurstParameters(bool force) -> void{
             }
         }
 
-        if (IS_NEW(outBurstRepetitions[ch]) || force){
-            if (!outBurstRepInf[ch].Value()){
-                if (rp_GenBurstRepetitions(ch, outBurstRepetitions[ch].NewValue()) == RP_OK){
-                    outBurstRepetitions[ch].Update();
-                }
-            }else{
-                outBurstRepetitions[ch].Update();
+        if (IS_NEW(outBurstCount[ch]) || force){
+            if (rp_GenBurstCount(ch, outBurstCount[ch].NewValue()) == RP_OK){
+                outBurstCount[ch].Update();
+                if (!force)
+                    checkBurstDelayChanged(ch);
             }
         }
+
+        if (IS_NEW(outBurstDelay[ch]) || force){
+            if (rp_GenBurstPeriod(ch, outBurstDelay[ch].NewValue()) == RP_OK){
+                outBurstDelay[ch].Update();
+                if (!force)
+                    checkBurstDelayChanged(ch);
+            }
+        }
+
+        if (IS_NEW(outBurstState[ch]) || force){
+            rp_GenMode(ch, outBurstState[ch].NewValue() ? RP_GEN_MODE_BURST : RP_GEN_MODE_CONTINUOUS);
+            outBurstState[ch].Update();
+            if (!force){
+                if (outBurstState[ch].Value()){
+                    outSweepState[ch].SendValue(false);
+                    g_sweepController->genSweep(ch,outSweepState[ch].Value());
+                }
+                checkBurstDelayChanged(ch);
+            }
+        }
+
     }
 
     if (IS_NEW(outGenSyncReset)){
@@ -351,10 +359,11 @@ auto updateGeneratorParameters(bool force) -> void{
                     }
 
                     rp_GenOutEnable(ch);
-                    rp_GenResetTrigger(ch);
+                    if (!force)
+                        rp_GenResetTrigger(ch);
                 } else {
                     rp_GenOutDisable(ch);
-                    }
+                }
             }
             outState[i].Update();
 
@@ -458,7 +467,8 @@ auto updateGeneratorParameters(bool force) -> void{
             if (IS_NEW(outTriggerSource[i]) || force){
                 rp_GenTriggerSource(ch, (rp_trig_src_t) outTriggerSource[i].NewValue());
                 outTriggerSource[i].Update();
-                rp_GenResetTrigger(ch);
+                if (!force)
+                    rp_GenResetTrigger(ch);
             }
         }
 
@@ -479,7 +489,8 @@ auto updateGeneratorParameters(bool force) -> void{
             outFallTime[ch].Update();
             rp_GenFreq(ch, outFrequancy[i].NewValue());
             outFrequancy[i].Update();
-            checkBurstDelayChanged(ch);
+            if (!force)
+                checkBurstDelayChanged(ch);
         }
 
 
