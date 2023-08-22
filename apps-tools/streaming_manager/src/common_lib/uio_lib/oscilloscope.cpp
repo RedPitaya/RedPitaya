@@ -209,7 +209,7 @@ auto COscilloscope::setReg(volatile OscilloscopeMapT *_OscMap) -> void {
 }
 
 
-auto COscilloscope::setFilterCalibration(uint8_t ch,int32_t _aa,int32_t _bb, int32_t _pp, int32_t _kk) -> void {
+auto COscilloscope::setFilterCalibration(uint8_t ch,int32_t _aa,int32_t _bb, int32_t _kk, int32_t _pp) -> void {
     m_AA_ch[ch] = _aa;
     m_BB_ch[ch] = _bb;
     m_KK_ch[ch] = _kk;
