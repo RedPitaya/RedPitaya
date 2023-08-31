@@ -100,12 +100,17 @@ CFloatParameter memoryTotal("TOTAL_RAM", CBaseParameter::RW, 0, 0, 0, 1e15);
 CFloatParameter memoryFree ("FREE_RAM", CBaseParameter::RW, 0, 0, 0, 1e15);
 CStringParameter redpitaya_model("RP_MODEL_STR", CBaseParameter::RO, getModelName(), 0);
 
+CIntParameter resetSettings("RESET_CONFIG_SETTINGS", CBaseParameter::RW, 0, 0, 0, 10);
+
 
 bool g_config_changed = false;
 uint16_t g_save_counter = 0; // By default, a save check every 40 ticks. One tick 50 ms.
 
+const std::vector<std::string> g_savedParams = {"OSC_CH1_IN_GAIN","OSC_CH2_IN_GAIN","OSC_CH3_IN_GAIN","OSC_CH4_IN_GAIN",
+                                                "OSC_CH1_IN_AC_DC","OSC_CH2_IN_AC_DC","OSC_CH3_IN_AC_DC","OSC_CH4_IN_AC_DC"};
+
 void updateParametersByConfig(){
-    config_get(get_home_directory() + "/.config/redpitaya/apps/scopegenpro/config.json");
+    configGet(getHomeDirectory() + "/.config/redpitaya/apps/scopegenpro/config.json");
 
     initOscAfterLoad();
 
@@ -219,7 +224,7 @@ void UpdateParams(void) {
     if (g_config_changed && (g_save_counter++ % 40 == 0)){
         g_config_changed = false;
         // Save the configuration file
-        config_set(get_home_directory() + "/.config/redpitaya/apps/scopegenpro", "config.json");
+        configSet(getHomeDirectory() + "/.config/redpitaya/apps/scopegenpro", "config.json");
     }
 }
 
@@ -234,6 +239,16 @@ void UpdateSignals(void) {
 
 void OnNewParams(void) {
 
+    if (resetSettings.IsNewValue()){
+        if (resetSettings.NewValue() == 1){
+            deleteConfig(getHomeDirectory() + "/.config/redpitaya/apps/scopegenpro/config.json");
+            configSetWithList(getHomeDirectory() + "/.config/redpitaya/apps/scopegenpro", "config.json",g_savedParams);
+            resetSettings.Update();
+            resetSettings.SendValue(2);
+            return;
+        }
+    }
+
     // fprintf(stderr,"OnNewParams \n");
     g_config_changed = isChanged();
 
@@ -241,6 +256,7 @@ void OnNewParams(void) {
     updateGeneratorParameters(false);
     updateOscParams(false);
     updateMathParams(false);
+   
 
 /* ------ UPDATE DEBUG PARAMETERS ------*/
 
