@@ -771,12 +771,8 @@
         });
 
         $('#reset_settings').click(function() {
-            $.ajax({
-                method: "GET",
-                url: '/delete_scopegenpro_settings'
-            }).done(function(msg) {
-                location.reload();
-            });
+            OSC.params.local['RESET_CONFIG_SETTINGS'] = { value: 1 };
+            OSC.sendParams();
         });
 
         // $(".btn").mouseup(function() {

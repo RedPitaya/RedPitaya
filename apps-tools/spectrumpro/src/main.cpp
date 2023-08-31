@@ -113,7 +113,12 @@ CIntParameter   outSweepTime[2]             = INIT2("SOUR","_SWEEP_TIME", CBaseP
 CBooleanParameter outSweepState[2]          = INIT2("SOUR","_SWEEP_STATE", CBaseParameter::RW, false, 0,CONFIG_VAR);
 
 CBooleanParameter outSweepReset         ("SWEEP_RESET", CBaseParameter::RW, false, 0);
+
 /////////////////////////////
+
+CIntParameter resetSettings("RESET_CONFIG_SETTINGS", CBaseParameter::RW, 0, 0, 0, 10);
+const std::vector<std::string> g_savedParams = {"OSC_CH1_IN_GAIN","OSC_CH2_IN_GAIN","OSC_CH3_IN_GAIN","OSC_CH4_IN_GAIN",
+                                                "OSC_CH1_IN_AC_DC","OSC_CH2_IN_AC_DC","OSC_CH3_IN_AC_DC","OSC_CH4_IN_AC_DC"};
 
 CSweepController *g_sweepController;
 
@@ -737,6 +742,17 @@ void resetAllMinMax(){
 
 void OnNewParams(void)
 {
+
+    if (resetSettings.IsNewValue()){
+        if (resetSettings.NewValue() == 1){
+            deleteConfig(getHomeDirectory() + "/.config/redpitaya/apps/scopegenpro/config.json");
+            configSetWithList(getHomeDirectory() + "/.config/redpitaya/apps/scopegenpro", "config.json",g_savedParams);
+            resetSettings.Update();
+            resetSettings.SendValue(2);
+            return;
+        }
+    }
+
     bool config_changed = isChanged();
 
     if (rp_HPIsFastDAC_PresentOrDefault())
@@ -851,9 +867,10 @@ void OnNewParams(void)
     }
 
     if (bufferSize.IsNewValue()) {
-        if (rpApp_SpecSetADCBufferSize(bufferSize.NewValue()) == RP_OK)
+        if (rpApp_SpecSetADCBufferSize(bufferSize.NewValue()) == RP_OK){
             bufferSize.Update();
             resetAllMinMax();
+        }
     }
 
     if (cutDC.IsNewValue()) {
@@ -889,7 +906,7 @@ void OnNewParams(void)
     }
        // Save the configuration file
     if (config_changed) {
-        config_set(get_home_directory() + "/.config/redpitaya/apps/spectrumpro", "config.json");
+        configSet(getHomeDirectory() + "/.config/redpitaya/apps/spectrumpro", "config.json");
     }
 
 }
@@ -987,7 +1004,7 @@ void updateGen(void) {
 void PostUpdateSignals(void){}
 
 void updateParametersByConfig(){
-    config_get(get_home_directory() + "/.config/redpitaya/apps/spectrumpro/config.json");
+    configGet(getHomeDirectory() + "/.config/redpitaya/apps/spectrumpro/config.json");
 
     if (rp_HPGetFastADCIsAC_DCOrDefault()){
         for(auto ch = 0u; ch < g_adc_count ; ch++){

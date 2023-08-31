@@ -495,8 +495,13 @@
 
 
     OSC.mathOffset = function(new_params) {
-        // вернуть
         // OSC.chOffset("MATH", new_params);
+    }
+
+    OSC.resetSettingsRequest = function(new_params){
+        if (new_params['RESET_CONFIG_SETTINGS'].value === 2) {
+            location.reload();
+        }
     }
 
 
@@ -669,7 +674,7 @@
     OSC.param_callbacks["TOTAL_RAM"] = OSC.setRamTotal;
     OSC.param_callbacks["FREE_RAM"] = OSC.setFreeRam;
 
-
+    OSC.param_callbacks["RESET_CONFIG_SETTINGS"] = OSC.resetSettingsRequest;
 
     // Processes newly received values for parameters
     OSC.processParameters = function(new_params) {

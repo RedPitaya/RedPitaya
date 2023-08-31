@@ -688,6 +688,12 @@
             }
         }
 
+        SPEC.resetSettingsRequest = function(new_params){
+            if (new_params['RESET_CONFIG_SETTINGS'].value === 2) {
+                location.reload();
+            }
+        }
+
         SPEC.param_callbacks["CH1_SHOW"] = SPEC.ch1Visile;
         SPEC.param_callbacks["CH2_SHOW"] = SPEC.ch2Visile;
         SPEC.param_callbacks["CH3_SHOW"] = SPEC.ch3Visile;
@@ -720,6 +726,7 @@
         SPEC.param_callbacks["SOUR2_FALL"] = SPEC.riseFallTime;
         SPEC.param_callbacks["RP_MODEL_STR"] = SPEC.setModel;
         SPEC.param_callbacks["ADC_COUNT"] = SPEC.setADCCount;
+        SPEC.param_callbacks["RESET_CONFIG_SETTINGS"] = SPEC.resetSettingsRequest;
 
         SPEC.param_callbacks["SOUR1_TEMP_RUNTIME"] = function(new_params){
             if ('SOUR1_TEMP_RUNTIME' in new_params && new_params['SOUR1_TEMP_RUNTIME'].value != undefined) {

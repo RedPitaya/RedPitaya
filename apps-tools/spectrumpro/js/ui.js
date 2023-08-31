@@ -69,12 +69,8 @@
         });
 
         $('#reset_settings').click(function() {
-            $.ajax({
-                method: "GET",
-                url: '/delete_spectrumpro_settings'
-            }).done(function(msg) {
-                location.reload();
-            });
+            SPEC.params.local['RESET_CONFIG_SETTINGS'] = { value: 1 };
+            SPEC.sendParams();           
         });
 
         $(moreVal + ', ' + lessVal).on("mouseup mouseout", function() {

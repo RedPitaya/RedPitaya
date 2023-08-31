@@ -15,7 +15,7 @@
 
 
 // Check the path is a directory.
-bool is_directory(const std::string &_path) {
+auto isDirectory(const std::string &_path) -> bool {
     struct stat st;
 
     if (stat(_path.c_str(), &st) == 0) {
@@ -26,7 +26,7 @@ bool is_directory(const std::string &_path) {
 }
 
 // Creates the directory and subdirectories if needed.
-bool create_directory(const std::string &_path) {
+auto createDirectory(const std::string &_path) -> bool {
     size_t pos = 0;
 
     for (;;) {
@@ -34,7 +34,7 @@ bool create_directory(const std::string &_path) {
 
         if (pos == std::string::npos) {
             // Create the last directory
-            if (!is_directory(_path.c_str())) {
+            if (!isDirectory(_path.c_str())) {
                 int mkdir_err = mkdir(_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
                 return (mkdir_err == 0) || (mkdir_err == EEXIST);
             } else {
@@ -45,7 +45,7 @@ bool create_directory(const std::string &_path) {
             std::string sub_path = _path.substr(0, pos);
 
             // Create subdirectory
-            if (!is_directory(sub_path.c_str())) {
+            if (!isDirectory(sub_path.c_str())) {
                 int mkdir_err = mkdir(sub_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
                 if (!((mkdir_err == 0) || (mkdir_err == EEXIST))) {
@@ -62,7 +62,7 @@ bool create_directory(const std::string &_path) {
     return false;
 }
 
-std::string get_home_directory() {
+auto getHomeDirectory() -> std::string {
     // Use getpwuid
     char buf[1024];
     passwd pw;
@@ -76,7 +76,7 @@ std::string get_home_directory() {
 }
 
 // Reads the configuration file
-void config_get(const std::string &_path) {
+auto configGet(const std::string &_path) -> void {
     std::ifstream stream(_path.c_str(), std::ios_base::in | std::ios_base::binary);
 
     if (stream.is_open()) {
@@ -131,9 +131,90 @@ void config_get(const std::string &_path) {
     }
 }
 
+
+auto configSetWithList(const std::string &_directory, const std::string &_filename,const std::vector<std::string> &_parameters) -> bool {
+    if (createDirectory(_directory)) {
+        std::ofstream stream(_directory + "/" + _filename, std::ios_base::out | std::ios_base::trunc | std::ios_base::binary);
+
+        if (stream.is_open()) {
+            JSONNode root_node(JSON_NODE);
+            int out1Imp = NO_INIT;
+            int out2Imp = NO_INIT;
+            float out1A = NO_INIT;
+            float out2A = NO_INIT;
+
+            auto x = CDataManager::GetInstance()->GetParametersList();
+            for(CBaseParameter* i : *x){
+                if (!(std::find(_parameters.begin(), _parameters.end(), i->GetName()) != _parameters.end())) continue;
+
+                CIntParameter* intPar = dynamic_cast<CIntParameter*>(i);
+                if (intPar != nullptr && intPar->Tag() == CONFIG_VAR){
+
+                    if (strcmp("SOUR1_IMPEDANCE",i ->GetName())==0){
+                        out1Imp = intPar->Value();
+                        continue;
+                    }
+                    if (strcmp("SOUR2_IMPEDANCE",i ->GetName())==0){
+                        out2Imp = intPar->Value();
+                        continue;
+                    }
+                    root_node.push_back(JSONNode(i->GetName(), intPar->Value()));
+                }
+                CFloatParameter* intParF = dynamic_cast<CFloatParameter*>(i);
+                if (intParF != nullptr  && intParF->Tag() == CONFIG_VAR){
+
+                    if (strcmp("SOUR1_VOLT",i ->GetName())==0){
+                        out1A = intParF->Value();
+                        continue;
+                    }
+                    if (strcmp("SOUR2_VOLT",i ->GetName())==0){
+                        out2A = intParF->Value();
+                        continue;
+                    }
+                    root_node.push_back(JSONNode(i->GetName(), intParF->Value()));
+                }
+
+                CDoubleParameter* intParD = dynamic_cast<CDoubleParameter*>(i);
+                if (intParD != nullptr  && intParD->Tag() == CONFIG_VAR){
+                    root_node.push_back(JSONNode(i->GetName(), (float)intParD->Value()));
+                }
+
+                CBooleanParameter* intParB = dynamic_cast<CBooleanParameter*>(i);
+                if (intParB != nullptr  && intParB->Tag() == CONFIG_VAR){
+                    root_node.push_back(JSONNode(i->GetName(), intParB->Value()));
+                }
+                CStringParameter* intParS = dynamic_cast<CStringParameter*>(i);
+                if (intParS != nullptr  && intParS->Tag() == CONFIG_VAR){
+                    root_node.push_back(JSONNode(i->GetName(), intParS->Value()));
+                }
+            }
+
+            if (out1A != NO_INIT && out1Imp != NO_INIT){
+                root_node.push_back(JSONNode("SOUR1_VOLT", out1A * (out1Imp == 1 ? 2.0 : 1.0)));
+                root_node.push_back(JSONNode("SOUR1_IMPEDANCE", out1Imp));
+            }else{
+                root_node.push_back(JSONNode("SOUR1_VOLT", out1A));
+            }
+
+            if (out2A != NO_INIT && out2Imp != NO_INIT){
+                root_node.push_back(JSONNode("SOUR2_VOLT", out2A * (out2Imp == 1 ? 2.0 : 1.0)));
+                root_node.push_back(JSONNode("SOUR2_IMPEDANCE", out2Imp));
+            }else{
+                root_node.push_back(JSONNode("SOUR2_VOLT", out2A));
+            }
+
+            stream << root_node.write();
+            stream.close();
+            return true;
+        }
+    }
+    return false;
+}
+
+
 // Writes the configuration file
-bool config_set(const std::string &_directory, const std::string &_filename) {
-    if (create_directory(_directory)) {
+auto configSet(const std::string &_directory, const std::string &_filename) -> bool {
+    if (createDirectory(_directory)) {
         std::ofstream stream(_directory + "/" + _filename, std::ios_base::out | std::ios_base::trunc | std::ios_base::binary);
 
         if (stream.is_open()) {
@@ -209,7 +290,7 @@ bool config_set(const std::string &_directory, const std::string &_filename) {
     return false;
 }
 
-bool isChanged(){
+auto isChanged() -> bool {
     auto x = CDataManager::GetInstance()->GetParametersList();
     for(CBaseParameter* i : *x){
         CIntParameter* intPar = dynamic_cast<CIntParameter*>(i);
