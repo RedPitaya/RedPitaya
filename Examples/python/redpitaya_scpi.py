@@ -45,9 +45,9 @@ class scpi (object):
         while 1:
             chunk = self._socket.recv(chunksize).decode('utf-8') # Receive chunk size of 2^n preferably
             msg += chunk
-            if (len(msg) and msg[-2:] == self.delimiter):
+            if (len(msg) > 2 and msg[-2:] == self.delimiter):
                 return msg[:-2]
-            if (len(msg) and msg[-1:] == '}'):
+            if (len(msg) > 2 and msg[-1:] == '}'):
                 return msg
 
 
@@ -60,18 +60,22 @@ class scpi (object):
         if data != b'#':
             return False
         data=b''
+
         while len(data) != 1:
             data = self._socket.recv(1)
         numOfNumBytes = int(data)
         if numOfNumBytes <= 0:
             return False
         data=b''
+
         while len(data) != numOfNumBytes:
             data += (self._socket.recv(1))
         numOfBytes = int(data)
         data=b''
-        while len(data) != numOfBytes:
-            data += (self._socket.recv(4096))
+
+        while len(data) < numOfBytes:
+            r_size = min(numOfBytes - len(data),4096)
+            data += (self._socket.recv(r_size))
         return data
 
     def tx_txt(self, msg):
