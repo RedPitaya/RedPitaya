@@ -47,8 +47,6 @@ class scpi (object):
             msg += chunk
             if (len(msg) > 2 and msg[-2:] == self.delimiter):
                 return msg[:-2]
-            if (len(msg) > 2 and msg[-1:] == '}'):
-                return msg
 
 
     def rx_arb(self):
