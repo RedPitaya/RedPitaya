@@ -68,7 +68,7 @@ CBooleanParameter inAutoscale       ("SPEC_AUTOSCALE", CBaseParameter::RW, false
 CBooleanParameter inSingle          ("SPEC_SINGLE", CBaseParameter::RW, false, 0);
 CIntParameter     xAxisLogMode      ("xAxisLogMode", CBaseParameter::RW, 0, 0 , 0, 1,CONFIG_VAR) ;
 
-CBooleanParameter inShow[MAX_ADC_CHANNELS]      = INIT("CH","_SHOW", CBaseParameter::RW, true, 0,CONFIG_VAR);
+CBooleanParameter inShow[MAX_ADC_CHANNELS]      = INIT("CH","_SHOW", CBaseParameter::RW, false, 0,CONFIG_VAR);
 CBooleanParameter inFreeze[MAX_ADC_CHANNELS]    = INIT("CH","_FREEZE", CBaseParameter::RW, false, 0,CONFIG_VAR);
 CBooleanParameter inShowMin[MAX_ADC_CHANNELS]   = INIT("CH","_SHOW_MIN", CBaseParameter::RW, false, 0,CONFIG_VAR);
 CBooleanParameter inShowMax[MAX_ADC_CHANNELS]   = INIT("CH","_SHOW_MAX", CBaseParameter::RW, false, 0,CONFIG_VAR);

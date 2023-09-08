@@ -41,19 +41,19 @@
 
     SPEC.visibleCount = function() {
         var count = 0;
-        if ('CH1_SHOW' in SPEC.params.orig && SPEC.params.orig['CH1_SHOW'].value){
+        if ('CH1_SHOW' in SPEC.params.orig && SPEC.params.orig['CH1_SHOW'].value && SPEC.channelsCount >= 1){
             count += 1;
         }
 
-        if ('CH2_SHOW' in SPEC.params.orig && SPEC.params.orig['CH2_SHOW'].value){
+        if ('CH2_SHOW' in SPEC.params.orig && SPEC.params.orig['CH2_SHOW'].value && SPEC.channelsCount >= 2){
             count += 1;
         }
 
-        if ('CH3_SHOW' in SPEC.params.orig && SPEC.params.orig['CH3_SHOW'].value){
+        if ('CH3_SHOW' in SPEC.params.orig && SPEC.params.orig['CH3_SHOW'].value && SPEC.channelsCount >= 3){
             count += 1;
         }
 
-        if ('CH4_SHOW' in SPEC.params.orig && SPEC.params.orig['CH4_SHOW'].value){
+        if ('CH4_SHOW' in SPEC.params.orig && SPEC.params.orig['CH4_SHOW'].value && SPEC.channelsCount >= 4){
             count += 1;
         }
         return count;

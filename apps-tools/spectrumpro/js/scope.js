@@ -200,11 +200,16 @@
 
                 $('#BODY').load((SPEC.rp_model === "Z20_125_4CH" ? "4ch_adc.html" : "2ch_adc.html"), function() {
                     console.log( "Load was performed." );
+
                     const ob = new ResizeObserver(function(entries) {
                         SPEC.updateJoystickPosition();
                     });
-
                     ob.observe(document.querySelector("#menu-root"));
+
+                    const ob_plot_root = new ResizeObserver(function(entries) {
+                        $(window).resize();
+                    });
+                    ob_plot_root.observe(document.querySelector("#root_plot"));
 
                     UI.initHandlers();
                     SPEC.initHandlers();
@@ -265,11 +270,9 @@
 
         SPEC.updateJoystickPosition = function(){
             let height = $("#menu-root").height();
-            let g_height = $("#graphs").height() - 150;
-            let limit = Math.min(g_height,400)
-            height = Math.max(height,g_height);
-            height = height > limit ? height : limit;
-            $("#joystick").css('top',height + 10);
+            let g_height = $("#main_block").height() - 340 - height;
+            let xpos = Math.max(g_height,0)
+            $("#joystick").css('top',xpos);
         };
 
         SPEC.reloadPage = function() {
@@ -984,17 +987,17 @@
                 bufferDataset.push({ color: color, data: points });
 
                 // Update watefalls
-                if (SPEC.waterfalls.length > 0){
+                if (SPEC.waterfalls.length > 0 && SPEC.isVisibleChannels()){
                     if (sig_name == 'ch1_view') {
                         SPEC.waterfalls[0].setSize($('.waterfall-graph').width(), 60);
-                        if (!$('#CH1_FREEZE').hasClass('active') && $('#SPEC_STOP').is(':visible')) {
+                        if (!$('#CH1_FREEZE').hasClass('active')) {
                             SPEC.waterfalls[0].addData2(water_fall_point);
                         }
                         SPEC.waterfalls[0].draw();
                     }
                     if (sig_name == 'ch2_view') {
                         SPEC.waterfalls[1].setSize($('.waterfall-graph').width(), 60);
-                        if (!$('#CH2_FREEZE').hasClass('active') && $('#SPEC_STOP').is(':visible')) {
+                        if (!$('#CH2_FREEZE').hasClass('active')) {
                             SPEC.waterfalls[1].addData2(water_fall_point);
                         }
                         SPEC.waterfalls[1].draw();
@@ -1002,7 +1005,7 @@
 
                     if (sig_name == 'ch3_view') {
                         SPEC.waterfalls[2].setSize($('.waterfall-graph').width(), 60);
-                        if (!$('#CH3_FREEZE').hasClass('active') && $('#SPEC_STOP').is(':visible')) {
+                        if (!$('#CH3_FREEZE').hasClass('active')) {
                             SPEC.waterfalls[2].addData2(water_fall_point);
                         }
                         SPEC.waterfalls[2].draw();
@@ -1011,7 +1014,7 @@
 
                     if (sig_name == 'ch4_view') {
                         SPEC.waterfalls[3].setSize($('.waterfall-graph').width(), 60);
-                        if (!$('#CH3_FREEZE').hasClass('active') && $('#SPEC_STOP').is(':visible')) {
+                        if (!$('#CH3_FREEZE').hasClass('active')) {
                             SPEC.waterfalls[3].addData2(water_fall_point);
                         }
                         SPEC.waterfalls[3].draw();
@@ -1029,71 +1032,74 @@
                 if (SPEC.graphs && SPEC.graphs.elem) {
 
                     SPEC.graphs.elem.show();
-
+                    SPEC.graphs.plot.setData(bufferDataset);
                     if (SPEC.state.resized) {
                         SPEC.graphs.plot.resize();
                         SPEC.graphs.plot.setupGrid();
+                        SPEC.updateCursors();
                     }
-                    SPEC.graphs.plot.setData(bufferDataset);
                     SPEC.graphs.plot.draw();
                     SPEC.initCursors();
                     $('.harrow').css('left', 'inherit');
                     $('.varrow').css('top', 'inherit');
+                    $('#main_block').css('visibility', 'visible');
 
                 } else {
-                    SPEC.graphs.elem = $('<div class="plot" />').css($('#graph_grid').css(['height', 'width'])).appendTo('#graphs');
-                    SPEC.graphs.plot = $.plot(SPEC.graphs.elem, bufferDataset, {
-                        // colors: [SPEC.config.graph_colors['ch1_view'], SPEC.config.graph_colors['ch2_view']], // channel1, channel2
-                        series: {
-                            shadowSize: 0, // Drawing is faster without shadows
-                            lineWidth: 1,
-                            lines: {
-                                lineWidth: 1
-                            }
-                        },
-                        yaxis: {
-                            labelWidth: 30,
-                            autSPECaleMargin: 1,
-                            min: -120,
-                            max: 20,
-                            tickFormatter: function (val, axis) {
-                                return Number.parseFloat(val).toFixed(2);
-                            }
-                        },
-                        xaxis: {
-                            min: 0,
-                        //    ticks:xaxisTicks
-                            tickFormatter: function (v, axis) {
-                                if (UI_GRAPH.x_axis_mode === 1)
-                                    v = UI_GRAPH.convertLog(v);
-                                var scale = Math.pow(1000,SPEC.config.unit);
-                                var roundValue = 100;
-                                if (SPEC.config.xmin / scale < 1 && SPEC.config.xmax / scale < 1){
-                                    roundValue = 1000;
+                    if ($('#graph_grid').length){
+                        SPEC.graphs.elem = $('<div class="plot" />').css($('#graph_grid').css(['width', 'height'])).appendTo('#graphs');
+                        SPEC.graphs.plot = $.plot(SPEC.graphs.elem, bufferDataset, {
+                            // colors: [SPEC.config.graph_colors['ch1_view'], SPEC.config.graph_colors['ch2_view']], // channel1, channel2
+                            series: {
+                                shadowSize: 0, // Drawing is faster without shadows
+                                lineWidth: 1,
+                                lines: {
+                                    lineWidth: 1
                                 }
-                                return Math.round(v * roundValue) / roundValue;
+                            },
+                            yaxis: {
+                                labelWidth: 30,
+                                autSPECaleMargin: 1,
+                                min: -120,
+                                max: 20,
+                                tickFormatter: function (val, axis) {
+                                    return Number.parseFloat(val).toFixed(2);
+                                }
+                            },
+                            xaxis: {
+                                min: 0,
+                            //    ticks:xaxisTicks
+                                tickFormatter: function (v, axis) {
+                                    if (UI_GRAPH.x_axis_mode === 1)
+                                        v = UI_GRAPH.convertLog(v);
+                                    var scale = Math.pow(1000,SPEC.config.unit);
+                                    var roundValue = 100;
+                                    if (SPEC.config.xmin / scale < 1 && SPEC.config.xmax / scale < 1){
+                                        roundValue = 1000;
+                                    }
+                                    return Math.round(v * roundValue) / roundValue;
+                                }
+                            },
+                            yaxes: [
+                                { font: { color: "#888888" } }
+                            ],
+                            xaxes: [
+                                { font: { color: "#888888" } }
+                            ],
+                            grid: {
+                                show: true,
+                                borderColor: '#888888',
+                                tickColor: '#888888',
                             }
-                        },
-                        yaxes: [
-                            { font: { color: "#888888" } }
-                        ],
-                        xaxes: [
-                            { font: { color: "#888888" } }
-                        ],
-                        grid: {
-                            show: true,
-                            borderColor: '#888888',
-                            tickColor: '#888888',
-                        }
-                    });
-                    UI_GRAPH.updateZoom();
+                        });
+                        UI_GRAPH.updateZoom();
 
-                    SPEC.updateWaterfallWidth();
-                    var offset = SPEC.graphs.plot.getPlotOffset();
-                    SPEC.sendParameters({ 'view_port_width': $('.plot').width()- offset.left - offset.right});
-                    reset_zoom_flag = true;
-                    SPEC.drawGraphGrid();
-                    SPEC.requestParameters();
+                        SPEC.updateWaterfallWidth();
+                        var offset = SPEC.graphs.plot.getPlotOffset();
+                        SPEC.sendParameters({ 'view_port_width': $('.plot').width()- offset.left - offset.right});
+                        reset_zoom_flag = true;
+                        SPEC.drawGraphGrid();
+                        SPEC.requestParameters();
+                    }
                 }
                 $('.pull-right').show();
                 // Reset resize flag
@@ -1169,6 +1175,7 @@
                 }
 
                 if (value !== undefined && value != SPEC.params.orig[key].value) {
+                    console.log(key + ' changed from ' + SPEC.params.orig[key].value + ' to ' + ($.type(SPEC.params.orig[key].value) == 'boolean' ? !!value : value));
                     SPEC.params.local[key] = { value: ($.type(SPEC.params.orig[key].value) == 'boolean' ? !!value : value) };
                 }
 
@@ -1275,22 +1282,27 @@
 
     // Draws the grid on the lowest canvas layer
     SPEC.drawGraphGrid = function() {
-        var grid = $('#graph_grid')
+        var grid = $('#root_plot')
         if (grid.length === 0) return
-        var canvas_width = $('#graphs').width() - 2;
-        var canvas_height = window.innerHeight - 250 - 80 * SPEC.visibleCount();
+        // var graph_holder_width = $('#main_block').width();
+        // var graph_holder_height = $('#main_block').height() - 80 * SPEC.visibleCount() - 50;
+
+        // grid.css('width',graph_holder_width)
+        // grid.css('height',graph_holder_height)
+
+        var canvas_width = grid.width();
+        var canvas_height = grid.height();
 
         var center_x = canvas_width / 2;
         var center_y = canvas_height / 2;
-
         var ctx = $('#graph_grid')[0].getContext('2d');
 
         var x_offset = 0;
         var y_offset = 0;
 
-        // Set canvas size
-        ctx.canvas.width = canvas_width;
-        ctx.canvas.height = canvas_height;
+        // // Set canvas size
+        // ctx.canvas.width = canvas_width;
+        // ctx.canvas.height = canvas_height;
 
         // Set draw options
         ctx.beginPath();
@@ -1349,7 +1361,7 @@
     };
 
     SPEC.isVisibleChannels = function() {
-        for(let i = 1; i <= 4 ; i++){
+        for(let i = 1; i <= SPEC.channelsCount ; i++){
             if (SPEC.params.orig['CH'+i+'_SHOW'] && SPEC.params.orig['CH'+i+'_SHOW'].value == true)
                 return true;
         }
@@ -1369,7 +1381,12 @@
         SPEC.updateWaterfallWidth();
     }
 
-    SPEC.updateWaterfallWidth = function() {
+    SPEC.updateWaterfallWidth = function(needDraw) {
+        var newh  = 80 * SPEC.visibleCount() + 20;
+        if ($('#root_waterfall').height() !== newh){
+            $('#root_waterfall').css('height',80 * SPEC.visibleCount() + 20);
+        }
+        
         var plot = SPEC.getPlot();
         if (!(SPEC.isVisibleChannels() && plot)) {
             return;
@@ -1382,6 +1399,10 @@
         $('.waterfall-holder').css(margins);
         $('.waterfall-graph').css('width', $('.plot').width()- offset.left - offset.right);
 
+        SPEC.updateWaterfallLabels()
+    };
+
+    SPEC.updateWaterfallLabels = function(needDraw) {
         //var options = SPEC.graphs.plot.getOptions();
         var axes = SPEC.graphs.plot.getAxes();
         var countTicks = axes.xaxis.ticks.length;
@@ -1461,15 +1482,7 @@
                 c4.css('left', i / (countTicks - 1) * w - cWidth / 2);
             }
         }
-
-        for(let ch = 0 ;i < SPEC.channelsCount ; ch++){
-            if (SPEC.waterfalls[ch]){
-                SPEC.waterfalls[ch].setSize($('.waterfall-graph').width(), 60);
-                SPEC.waterfalls[ch].draw();
-            }
-        }
-
-    };
+    }
 
 
     SPEC.hideCursors = function() {
@@ -1673,49 +1686,36 @@ $(function() {
     $.preloadImages('node_up.png', 'node_left.png', 'node_right.png', 'node_down.png');
     SPEC.drawGraphGrid();
 
-
     // Bind to the window resize event to redraw the graph; trigger that event to do the first drawing
     $(window).resize(function() {
-        if ($('#global_container').children().length === 0) return
-        var window_width = window.innerWidth * 0.95;
-        var window_height = window.innerHeight * 0.95;
-        //if (window_width > 768 && window_height > 580) {
-        var global_width = window_width - 30,
-            global_height = window_height - 250 - 80 * SPEC.visibleCount();
+        SPEC.updateWaterfallWidth(false);
 
-        $('#global_container').css('width', global_width);
-        $('#global_container').css('height', global_height);
+        var root_plot = $('#root_plot');
+        var graph_grid = $('#graph_grid');
+        var css = root_plot.css(['width', 'height']);
 
+        if (css){
+            graph_grid.css(css);
 
-        SPEC.drawGraphGrid();
-        main_width = $('#main').outerWidth(true);
-        main_height = $('#main').outerHeight(true);
-        window_width = window.innerWidth;
-        window_height = window.innerHeight;
-        console.log("window_width = " + window_width);
-        console.log("window_height = " + window_height);
+            var plot = SPEC.getPlot();
+            if (plot){
+                var css = root_plot.css(['width', 'height']);
+                $('.plot').css(css);
+                var offset = plot.getPlotOffset();
+                SPEC.sendParameters({ 'view_port_width': $('.plot').width()- offset.left - offset.right});
+            }
 
 
-        $('#global_container').offset({ left: (window_width - $('#global_container').width()) / 2 });
-        // Resize the graph holders
-        $('.plot').css($('#graph_grid').css(['height', 'width']));
-        var plot = SPEC.getPlot();
-        if (plot){
-            var offset = plot.getPlotOffset();
-            SPEC.sendParameters({ 'view_port_width': $('.plot').width()- offset.left - offset.right});
+            $('#main_block').css('visibility', 'hidden');
+
+            SPEC.drawGraphGrid();
+            SPEC.initCursors();
+
+            // // Set the resized flag
+            SPEC.state.resized = true;
+            SPEC.updateJoystickPosition();
+            
         }
-        // Hide all graphs, they will be shown next time signal data is received
-        $('#graphs .plot').hide();
-
-        // Hide all offset arrows
-        $('.y-offset-arrow, #time_offset_arrow').hide();
-
-        SPEC.initCursors();
-
-        // Set the resized flag
-        SPEC.state.resized = true;
-        SPEC.updateWaterfallWidth();
-        SPEC.updateJoystickPosition();
     }).resize();
 
 

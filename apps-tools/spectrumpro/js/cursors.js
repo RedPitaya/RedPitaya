@@ -9,7 +9,7 @@
         var left = offset.left + 1 + 'px';
         var right = offset.right + 1 + 'px';
         var top = offset.top + 1 + 'px';
-        var bottom = offset.bottom + 9 + 'px';
+        var bottom = offset.bottom + 1 + 'px';
 
         //update lines length
         $('.hline').css('left', left);
@@ -52,6 +52,11 @@
         if ('SPEC_CURSOR_Y2' in new_params && 'SPEC_CUR2_V' in new_params) {
             SPEC.cursorYUpdate('y2',new_params['SPEC_CURSOR_Y2'].value, new_params['SPEC_CUR2_V'].value);
         }
+    }
+
+    SPEC.updateCursors = function(){
+        SPEC.cursorX(SPEC.params.orig)
+        SPEC.cursorY(SPEC.params.orig)
     }
 
     SPEC.cursorYUpdate = function(cursor,visible,value) {

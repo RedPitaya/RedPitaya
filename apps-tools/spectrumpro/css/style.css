@@ -2,6 +2,11 @@ body {
   color: #cdcccc;
   overflow-y: auto;
   padding-right: 0 !important;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  min-height: 100vh;
+  width: 100%;
 }
 
 * {
@@ -76,12 +81,28 @@ area:hover {
 }
 
 .full-content {
-/*
-  min-width: 1024px;
-*/
-  margin: 0 auto;
-  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: row;
 }
+
+#main_block {
+  flex:1;
+  display: flex;
+  flex-direction: column;
+} 
+
+#root_plot {
+  flex: 1;
+  margin-top: 0;
+  margin-left: 50px;
+  margin-right: 20px;
+  margin-bottom: 50px;
+}
+
+#menu_block {
+  width: 230px;
+} 
 
 .container-fluid {
   margin-top: 20px;
@@ -107,6 +128,12 @@ area:hover {
 
 .navbar-collapse {
   float: right;
+}
+
+.navbar{
+  margin-left: 15px;
+  margin-right: 15px;
+  margin-top: 10px;
 }
 
 .navbar-nav li {
@@ -254,8 +281,7 @@ area:hover {
 }
 
 .menu-content {
-  width: 160px;
-  float: right;
+  width: 200px;
 }
 
 .right-menu-option {
@@ -489,12 +515,11 @@ area:hover {
 }
 
 #joystick {
-  position: absolute;
-  margin-left: 8px;
-  right: 10px;
-  top: 500px;
+  margin-left: 25px;
+  margin-top: 25px;
   width: 150px;
   height: auto;
+  position: relative;
 }
 
 #jtk_btns {
@@ -518,19 +543,11 @@ area:hover {
 }
 
 #graphs {
-  margin-top: 20px;
-  position: relative;
+  position: absolute;
 }
 
 #graph_grid {
-  border: 1px solid #343433;
-  margin-bottom: 2px;
-}
-
-.plot {
   position: absolute;
-  top: 0px;
-  left: 0px;
 }
 
 .y-offset-arrow, #time_offset_arrow {
@@ -548,9 +565,9 @@ area:hover {
 }
 
 #power {
-    position: absolute;
-    top: 45%;
-    left: -16px;
+    position: relative;
+    top: 50%;
+    left: -30px;
     transform: rotate(-90deg);
     transform-origin: 0px 0px 0px;
 }
@@ -567,7 +584,7 @@ area:hover {
   margin: 0px 11px 10px 29px;
   position: relative;
   left: 0px;
-  width: 97%;
+  /* width: 97%; */
 
   min-height: 80px;
   max-height: 80px;
@@ -690,7 +707,7 @@ area:hover {
 .varrow {
   position: absolute;
   left: 0;
-  bottom: 29px;
+  bottom: 20px;
   margin-left: -7px;
   display: none;
   z-index: 12;

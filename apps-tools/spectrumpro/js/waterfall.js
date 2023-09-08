@@ -16,7 +16,9 @@ Javascript waterfall library, version 0.1.
         // Variables
         var newCanvas = $('<canvas/>',{'class':'waterfall_canvas'});
         placeholder.append(newCanvas);
-
+        if (width === 0){
+            width = 100
+        }
         waterfall.canvas = newCanvas[0];
         waterfall.canvas_context = waterfall.canvas.getContext('2d');
         waterfall.canvas_context.canvas.width = width;
@@ -92,8 +94,6 @@ Javascript waterfall library, version 0.1.
             var range = 0;
             var value = 0;
             var percent = 0;
-
-
             // Draw new data
             if (this.data.length === 0){
                 this.updateCanvas();
