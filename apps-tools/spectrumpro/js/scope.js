@@ -654,6 +654,7 @@
         }
 
         SPEC.ch1Visile = function(value){
+            console.log(value)
             SPEC.chVisible(1,value);
             $(window).resize();
         }
@@ -799,8 +800,6 @@
             for (var param_name in new_params) {
                 // Save new parameter value
 
-
-
                 SPEC.params.orig[param_name] = new_params[param_name];
                 var field = $('#' + param_name);
 
@@ -858,10 +857,10 @@
 
                             var value = new_params[param_name].value === true ? 1 : 0;
                             if (value == 1) {
-                                $('#' + param_name + '_ON').show();
+                                $('#' + param_name + '_ON').css("display","inline");
                                 $('#' + param_name + '_ON').closest('.menu-btn').addClass('state-on');
                             } else {
-                                $('#' + param_name + '_ON').hide();
+                                $('#' + param_name + '_ON').css("display","none");
                                 $('#' + param_name + '_ON').closest('.menu-btn').removeClass('state-on');
                             }
                         }
@@ -1059,7 +1058,7 @@
                             yaxis: {
                                 labelWidth: 30,
                                 autSPECaleMargin: 1,
-                                min: -120,
+                                min: -130,
                                 max: 20,
                                 tickFormatter: function (val, axis) {
                                     return Number.parseFloat(val).toFixed(2);
@@ -1091,6 +1090,11 @@
                                 tickColor: '#888888',
                             }
                         });
+
+                        $('.x1Axis').bind("DOMSubtreeModified", function() {
+                            SPEC.updateWaterfallLabels();
+                        });
+
                         UI_GRAPH.updateZoom();
 
                         SPEC.updateWaterfallWidth();
@@ -1384,7 +1388,7 @@
     SPEC.updateWaterfallWidth = function(needDraw) {
         var newh  = 80 * SPEC.visibleCount() + 20;
         if ($('#root_waterfall').height() !== newh){
-            $('#root_waterfall').css('height',80 * SPEC.visibleCount() + 20);
+            $('#root_waterfall').css('height', newh);
         }
         
         var plot = SPEC.getPlot();
@@ -1398,90 +1402,37 @@
 
         $('.waterfall-holder').css(margins);
         $('.waterfall-graph').css('width', $('.plot').width()- offset.left - offset.right);
-
-        SPEC.updateWaterfallLabels()
     };
 
     SPEC.updateWaterfallLabels = function(needDraw) {
-        //var options = SPEC.graphs.plot.getOptions();
-        var axes = SPEC.graphs.plot.getAxes();
-        var countTicks = axes.xaxis.ticks.length;
-
         $("#waterfall-label_ch1").empty();
         $("#waterfall-label_ch2").empty();
         if (SPEC.channelsCount > 2){
             $("#waterfall-label_ch3").empty();
             $("#waterfall-label_ch4").empty();
         }
-
-        function label_formatter(v) {
-            if (UI_GRAPH.x_axis_mode === 1)
-                v = UI_GRAPH.convertLog(v);
-            var scale = Math.pow(1000,SPEC.config.unit);
-            var roundValue = 100;
-            if (SPEC.config.xmin / scale < 1 && SPEC.config.xmax / scale < 1){
-                roundValue = 1000;
+        $('.x1Axis').children().each(function () {
+            if (this === undefined) return;
+            var modifynode = $(this).clone();
+            modifynode.css("top","20px")
+            if (SPEC.channelsCount >= 1){
+                var newnode = $(modifynode).clone();
+                $("#waterfall-label_ch1").append(newnode);
             }
-            return Math.round(v * roundValue) / roundValue;
-        }
-
-        var w = $('.waterfall-graph').width();
-        for(var i = 0; i < countTicks && countTicks > 1;i ++){
-            var c = $("<div style=\"position: absolute; top: 25px; font: 400 11px / 13px 'Helvetica Neue', Helvetica, Arial, sans-serif; color: rgb(136, 136, 136); left: 0px; text-align: center;\">0</div>")
-	        var c2 = $("<div style=\"position: absolute; top: 25px; font: 400 11px / 13px 'Helvetica Neue', Helvetica, Arial, sans-serif; color: rgb(136, 136, 136); left: 0px; text-align: center;\">0</div>")
-            var c3 = undefined
-            var c4 = undefined
-            $("#waterfall-label_ch1").append(c);
-            $("#waterfall-label_ch2").append(c2);
-            if (SPEC.channelsCount > 2){
-                c3 = $("<div style=\"position: absolute; top: 25px; font: 400 11px / 13px 'Helvetica Neue', Helvetica, Arial, sans-serif; color: rgb(136, 136, 136); left: 0px; text-align: center;\">0</div>")
-	            c4 = $("<div style=\"position: absolute; top: 25px; font: 400 11px / 13px 'Helvetica Neue', Helvetica, Arial, sans-serif; color: rgb(136, 136, 136); left: 0px; text-align: center;\">0</div>")
-                $("#waterfall-label_ch3").append(c3);
-                $("#waterfall-label_ch4").append(c4);
+            if (SPEC.channelsCount >= 2){
+                var newnode = $(modifynode).clone();
+                $("#waterfall-label_ch2").append(newnode);
             }
-            //var c = $('.wl_'+(i+1));
-            // var minx = SPEC.config.xmin
-            // var maxx = SPEC.config.xmax
-            var minx = axes.xaxis.min;
-            var maxx = axes.xaxis.max;
-
-            var t = minx + (maxx - minx) * (i/ (countTicks-1));
-            // t = t / Math.pow(1000,SPEC.config.unit);
-            var scale = Math.pow(1000,SPEC.config.unit);
-            var roundValue = 100;
-            if (minx < 1 && maxx < 1){
-                roundValue = 1000;
+            if (SPEC.channelsCount >= 3){
+                var newnode = $(modifynode).clone();
+                $("#waterfall-label_ch3").append(newnode);
             }
-            //return Math.round(v * roundValue) / roundValue;
-            //c.text(t.toFixed(roundValue));
-            if (UI_GRAPH.x_axis_mode === 1)
-                t = UI_GRAPH.convertLog(t);
-            var lab_text = Math.round(t * roundValue) / roundValue;
-            lab_text = isNaN(lab_text) ? "-" : lab_text
-            c.text(lab_text)
-            var cWidth =  c.textWidth();
-            c.css('width' , cWidth)
-            c.css('left', i / (countTicks - 1) * w - cWidth / 2);
-
-	        c2.text(lab_text)
-            cWidth =  c2.textWidth();
-            c2.css('width' , cWidth)
-            c2.css('left', i / (countTicks - 1) * w - cWidth / 2);
-
-            if (c3 !== undefined){
-                c3.text(lab_text)
-                cWidth =  c3.textWidth();
-                c3.css('width' , cWidth)
-                c3.css('left', i / (countTicks - 1) * w - cWidth / 2);
+            if (SPEC.channelsCount >= 4){
+                var newnode = $(modifynode).clone();
+                $("#waterfall-label_ch4").append(newnode);
             }
 
-            if (c4 !== undefined){
-                c4.text(lab_text)
-                cWidth =  c4.textWidth();
-                c4.css('width' , cWidth)
-                c4.css('left', i / (countTicks - 1) * w - cWidth / 2);
-            }
-        }
+        });
     }
 
 

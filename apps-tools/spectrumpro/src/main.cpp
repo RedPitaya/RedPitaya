@@ -18,6 +18,7 @@
 
 #define INIT2(PREF,SUFF,args...) {{PREF "1" SUFF,args},{PREF "2" SUFF,args}}
 #define INIT(PREF,SUFF,args...) {{PREF "1" SUFF,args},{PREF "2" SUFF,args},{PREF "3" SUFF,args},{PREF "4" SUFF,args}}
+#define RESEND(X) X.SendValue(X.Value());
 
 static uint8_t g_adc_count = getADCChannels();
 static uint8_t g_dac_count = getDACChannels();
@@ -237,8 +238,6 @@ int* prepareIndexArray(int start,int stop,int view_size,int log_mode){
     }
     return idx;
 }
-
-
 
 void decimateDataMinMax(CFloatSignal &dest, float *src,int start,int stop,int view_size,int log_mode,int *indexArray){
 
@@ -602,6 +601,7 @@ static void UpdateGeneratorParameters(bool force)
                 rp_GenOutDisable((rp_channel_t)ch);
             }
             outState[ch].Update();
+            RESEND(outState[ch])
         }
 
 
@@ -629,6 +629,8 @@ static void UpdateGeneratorParameters(bool force)
             }
             outOffset[ch].Update();
             outAmplitude[ch].Update();
+            RESEND(outOffset[ch])
+            RESEND(outAmplitude[ch])
         }
 
         if (outFrequancy[ch].IsNewValue() || force) {
@@ -641,31 +643,39 @@ static void UpdateGeneratorParameters(bool force)
             outFallTime[ch].Update();
             rp_GenFreq((rp_channel_t)ch, outFrequancy[ch].NewValue());
             outFrequancy[ch].Update();
+            RESEND(outFrequancy[ch])
+            RESEND(outRiseTime[ch])
+            RESEND(outFallTime[ch])
         }
 
         if (outPhase[ch].IsNewValue() || force) {
             rp_GenPhase((rp_channel_t)ch, outPhase[ch].NewValue());
             outPhase[ch].Update();
+            RESEND(outPhase[ch])
         }
 
         if (outDCYC[ch].IsNewValue() || force) {
             rp_GenDutyCycle((rp_channel_t)ch, outDCYC[ch].NewValue() / 100);
             outDCYC[ch].Update();
+            RESEND(outDCYC[ch])
         }
 
         if (outRiseTime[ch].IsNewValue() || force) {
             rp_GenRiseTime((rp_channel_t)ch, outRiseTime[ch].NewValue());
             outRiseTime[ch].Update();
+            RESEND(outRiseTime[ch])
         }
 
         if (outFallTime[ch].IsNewValue() || force) {
             rp_GenFallTime((rp_channel_t)ch, outFallTime[ch].NewValue());
             outFallTime[ch].Update();
+            RESEND(outFallTime[ch])
         }
 
         if (outWAveform[ch].IsNewValue() || force) {
             rp_GenWaveform((rp_channel_t)ch, (rp_waveform_t) outWAveform[ch].NewValue());
             outWAveform[ch].Update();
+            RESEND(outWAveform[ch])
         }
     }
 
@@ -761,6 +771,8 @@ void OnNewParams(void)
     for(auto ch = 0u; ch < g_adc_count; ch++){
         if (inShow[ch].IsNewValue()) {
             inShow[ch].Update();
+            inShow[ch].SendValue(inShow[ch].Value());
+            RESEND(inShow[ch])
         }
     }
 
@@ -776,7 +788,7 @@ void OnNewParams(void)
         if (xmax.Value()  <= xmin.Value()){
             xmin.Value() = xmax.Value() * 0.95;
         }
-		rpApp_SpecSetFreqRange(xmin.Value(), xmax.Value());
+ 		rpApp_SpecSetFreqRange(xmin.Value(), xmax.Value());
         resetAllMinMax();
 	}
 
@@ -787,6 +799,7 @@ void OnNewParams(void)
                 if (!inFreeze[ch].Value())
                     resetMinMax(ch,0);
             }
+            RESEND(inShowMin[ch])
         }
 
         if (inShowMax[ch].IsNewValue()){
@@ -795,10 +808,12 @@ void OnNewParams(void)
                 if (!inFreeze[ch].Value())
                     resetMinMax(ch,1);
             }
+            RESEND(inShowMax[ch])
         }
 
         if (inFreeze[ch].IsNewValue()){
             inFreeze[ch].Update();
+            RESEND(inFreeze[ch])
         }
     }
 
@@ -832,6 +847,7 @@ void OnNewParams(void)
 
     if (xAxisLogMode.IsNewValue()){
         xAxisLogMode.Update();
+        xAxisLogMode.SendValue(xAxisLogMode.Value());
     }
 
     if (view_port_width.IsNewValue()){
@@ -874,23 +890,29 @@ void OnNewParams(void)
     }
 
     if (cutDC.IsNewValue()) {
-        if (rpApp_SpecSetRemoveDC(cutDC.NewValue()) == RP_OK)
+        if (rpApp_SpecSetRemoveDC(cutDC.NewValue()) == RP_OK){
             cutDC.Update();
+            RESEND(cutDC)
+        }
     }
 
     if (rp_HPGetFastADCIsAC_DCOrDefault()){
         for(auto ch = 0u; ch < g_adc_count; ch++){
             if (inAC_DC[ch].IsNewValue()) {
-                if (rp_AcqSetAC_DC((rp_channel_t)ch,inAC_DC[ch].NewValue() == 0 ? RP_AC:RP_DC) == RP_OK)
+                if (rp_AcqSetAC_DC((rp_channel_t)ch,inAC_DC[ch].NewValue() == 0 ? RP_AC:RP_DC) == RP_OK){
                     inAC_DC[ch].Update();
+                    RESEND(inAC_DC[ch])
+                }
             }
         }
     }
 
     if (rp_HPGetIsPLLControlEnableOrDefault()){
         if(pllControlEnable.IsNewValue()) {
-            if (rp_SetPllControlEnable(pllControlEnable.NewValue()) == RP_OK)
+            if (rp_SetPllControlEnable(pllControlEnable.NewValue()) == RP_OK){
                 pllControlEnable.Update();
+                RESEND(pllControlEnable)
+            }
         }
     }
 
@@ -900,6 +922,7 @@ void OnNewParams(void)
                 if (rp_AcqSetGain((rp_channel_t)ch, inGain[ch].NewValue() == 0 ? RP_LOW : RP_HIGH) == 0){
                     inGain[ch].Update();
                     rpApp_SpecReset();
+                    RESEND(inGain[ch])
                 }
             }
         }

@@ -1,7 +1,7 @@
 (function(UI_GRAPH, $, undefined) {
     // Origin Y min and max. Need for reset
     UI_GRAPH.ymax = 20.0;
-    UI_GRAPH.ymin = -120.0;
+    UI_GRAPH.ymin = -130.0;
     UI_GRAPH.lock_limit_change = 0;
 
     UI_GRAPH.move_mode = undefined;
@@ -29,114 +29,144 @@
         1 / 100, 1 / 20, 1 / 10, 2 / 10, 5 / 10, 1, 2, 5, 10, 20, 50, 100
     ];
 
+    UI_GRAPH.getPoltRect = function(){
+        var plot = SPEC.getPlot();
+        if (!plot) {
+            return {l:0,t:0,w:0,h:0};
+        }
+        var gPosition = $('#graph_grid').offset();
+        var gLeft = gPosition.left;
+        var gTop = gPosition.top;
+        var gWidth = $('#graph_grid').width();
+        var gHeight = $('#graph_grid').height();
+        var plotOffset = plot.getPlotOffset();
+
+        gLeft += plotOffset.left
+        gTop += plotOffset.top
+        gWidth = gWidth - plotOffset.left - plotOffset.right
+        gHeight = gHeight - plotOffset.top - plotOffset.bottom
+        return {l:gLeft,t:gTop,w:gWidth,h:gHeight}
+    }
+
+    UI_GRAPH.boundCursor = function(rect,pos){
+        if (pos.x < rect.l){
+            pos.x = rect.l
+        }
+        if (pos.x > (rect.l + rect.w)){
+            pos.x = (rect.l + rect.w)
+        }
+        if (pos.y < rect.t){
+            pos.y = rect.t
+        }
+        if (pos.y > (rect.t + rect.h)){
+            pos.y = (rect.t + rect.h)
+        }
+        return pos
+    }
+
      // Touch events
      $(document).on('mousedown', '.plot', function(ev) {
         ev.preventDefault();
         if (!UI_GRAPH.zoom_used_x && !UI_GRAPH.zoom_used_y){
-            UI_GRAPH.rect_mode = { x: ev.offsetX, y: ev.offsetY };
-            UI_GRAPH.rect_mode_last  = { x: ev.offsetX, y: ev.offsetY };
-            // $("#cur_rectangle").css("left",Math.min(UI_GRAPH.rect_mode.x,ev.offsetX) + (ev.clientX - ev.offsetX))
-            // $("#cur_rectangle").css("right",Math.min(UI_GRAPH.rect_mode.y,ev.offsetY) + (ev.clientY - ev.offsetY))
-            // $("#cur_rectangle").css("width",Math.max(UI_GRAPH.rect_mode.x,ev.offsetX) - Math.min(UI_GRAPH.rect_mode.x,ev.offsetX))
-            // $("#cur_rectangle").css("height",Math.max(UI_GRAPH.rect_mode.y,ev.offsetY) - Math.min(UI_GRAPH.rect_mode.y,ev.offsetY))
-
+            var rect = UI_GRAPH.getPoltRect()
+            var newPos = UI_GRAPH.boundCursor(rect,{ x: ev.clientX, y: ev.clientY })
+            console.log(newPos)
+            UI_GRAPH.rect_mode = newPos;
+            UI_GRAPH.rect_mode_last  = newPos;
             return;
         }
 
         if (!UI_GRAPH.move_mode) {
-            UI_GRAPH.move_mode = { x: ev.clientX, y: ev.clientY };
+            var rect = UI_GRAPH.getPoltRect()
+            var newPos = UI_GRAPH.boundCursor(rect,{ x: ev.clientX, y: ev.clientY })
+            UI_GRAPH.move_mode = newPos;
         }
     });
 
     $(document).on('mousemove', '.plot', function(ev) {
         ev.preventDefault();
-        if (!UI_GRAPH.zoom_used_x && !UI_GRAPH.zoom_used_y && UI_GRAPH.rect_mode != undefined){
-            var plot = SPEC.getPlot();
-            if (!plot) {
-                return;
-            }
-            var offset = plot.getPlotOffset();
-            var left = offset.left;
-            var width = $('#graph_grid').width() - offset.left - offset.right;
-            var top = offset.top;
-            var height = $('#graph_grid').height() - offset.top - offset.bottom;
-            var x = Math.min(UI_GRAPH.rect_mode.x,ev.offsetX);
-            var y = Math.min(UI_GRAPH.rect_mode.y,ev.offsetY);
-            var w = Math.max(UI_GRAPH.rect_mode.x,ev.offsetX) - Math.min(UI_GRAPH.rect_mode.x,ev.offsetX);
-            var h = Math.max(UI_GRAPH.rect_mode.y,ev.offsetY) - Math.min(UI_GRAPH.rect_mode.y,ev.offsetY);
-            if (!((x >= left)  && ((w+(x-left)) <= width) && (y >= top) && ((h+(y-top)) <= height))) {
-                UI_GRAPH.rect_mode = undefined;
-                UI_GRAPH.rect_mode_last  =  undefined;
-                $("#cur_rectangle").hide();
-                return;
-            }
-            UI_GRAPH.rect_mode_last  = { x: ev.offsetX, y: ev.offsetY };
-            $("#cur_rectangle").show();
-            $("#cur_rectangle").css("left",x + (ev.clientX - ev.offsetX))
-            $("#cur_rectangle").css("top",y + (ev.clientY - ev.offsetY))
-            $("#cur_rectangle").css("width",w)
-            $("#cur_rectangle").css("height",h)
-            return;
-        }
 
         if (!UI_GRAPH.move_mode) {
             return;
         }
 
-        var x = UI_GRAPH.move_mode.x - ev.clientX;
-        var y = UI_GRAPH.move_mode.y - ev.clientY;
+        var rect = UI_GRAPH.getPoltRect()
+        var newPos = UI_GRAPH.boundCursor(rect,{ x: ev.clientX, y: ev.clientY })
+
+        var x = UI_GRAPH.move_mode.x - newPos.x;
+        var y = UI_GRAPH.move_mode.y - newPos.y;
         var options = SPEC.graphs.plot.getOptions();
         var range_x   = options.xaxes[0].max - options.xaxes[0].min;
         var range_y   = options.yaxes[0].max - options.yaxes[0].min;
-        UI_GRAPH.move_mode  = { x: ev.clientX, y: ev.clientY };
+        UI_GRAPH.move_mode  = newPos;
         UI_GRAPH.changeX(x * range_x / $(this).width());
         UI_GRAPH.changeY(y * range_y / $(this).height());
     });
 
-    $(document).on('mouseup mouseleave', '.plot', function(ev) {
+    $(document).on('mousemove',  function(ev) {
         ev.preventDefault();
-        UI_GRAPH.move_mode = undefined;
 
+        var rect = UI_GRAPH.getPoltRect()
+        var newPos = UI_GRAPH.boundCursor(rect,{ x: ev.clientX, y: ev.clientY })
+
+        if (!UI_GRAPH.zoom_used_x && !UI_GRAPH.zoom_used_y && UI_GRAPH.rect_mode != undefined){
+
+            var x = Math.min(UI_GRAPH.rect_mode.x,newPos.x);
+            var y = Math.min(UI_GRAPH.rect_mode.y,newPos.y);
+            var w = Math.max(UI_GRAPH.rect_mode.x,newPos.x) - x;
+            var h = Math.max(UI_GRAPH.rect_mode.y,newPos.y) - y;
+
+            UI_GRAPH.rect_mode_last  = newPos;
+
+            $("#cur_rectangle").show();
+            $("#cur_rectangle").css("left",x)
+            $("#cur_rectangle").css("top",y)
+            $("#cur_rectangle").css("width",w)
+            $("#cur_rectangle").css("height",h)
+            return;
+        }
     });
 
     $(document).on('mouseup', '.plot', function(ev) {
         ev.preventDefault();
-        if (UI_GRAPH.rect_mode && UI_GRAPH.rect_mode_last)
-            UI_GRAPH.setMouseZoom({p:UI_GRAPH.rect_mode,p2:UI_GRAPH.rect_mode_last})
+        UI_GRAPH.move_mode = undefined;
+        if (UI_GRAPH.rect_mode && UI_GRAPH.rect_mode_last){
+            var rect = UI_GRAPH.getPoltRect()
+            var p1 =  {x:UI_GRAPH.rect_mode.x - rect.l,y:UI_GRAPH.rect_mode.y - rect.t}
+            var p2 =  {x:UI_GRAPH.rect_mode_last.x - rect.l,y:UI_GRAPH.rect_mode_last.y - rect.t}
+            UI_GRAPH.setMouseZoom(p1,p2,rect)
+        }
         UI_GRAPH.rect_mode_last = undefined;
         UI_GRAPH.rect_mode = undefined;
         $("#cur_rectangle").hide();
     });
 
-    UI_GRAPH.setMouseZoom = function(value) {
+    $(document).on('mouseup', function(ev) {
+        console.log("mouseup")
+        ev.preventDefault();
+        UI_GRAPH.rect_mode_last = undefined;
+        UI_GRAPH.rect_mode = undefined;
+        $("#cur_rectangle").hide();
+    });
+
+    UI_GRAPH.setMouseZoom = function(p1,p2,rect) {
         var plot = SPEC.getPlot();
         if (!plot) {
             return;
         }
-
-        var min_x = Math.min(value.p.x,value.p2.x);
-        var max_x = Math.max(value.p.x,value.p2.x);
-        var min_y = Math.min(value.p.y,value.p2.y);
-        var max_y = Math.max(value.p.y,value.p2.y);
-        var options = SPEC.graphs.plot.getOptions();
+        console.log(p1,p2)
+        var min_x = Math.min(p1.x,p2.x);
+        var max_x = Math.max(p1.x,p2.x);
+        var min_y = Math.min(p1.y,p2.y);
+        var max_y = Math.max(p1.y,p2.y);
+        var options = plot.getOptions();
         var range_x   = options.xaxes[0].max - options.xaxes[0].min;
         var range_y   = options.yaxes[0].max - options.yaxes[0].min;
 
-
-        var offset = plot.getPlotOffset();
-        var left = offset.left;
-        var width = $('#graph_grid').width() - offset.left - offset.right;
-        var top = offset.top;
-        var height = $('#graph_grid').height() - offset.top - offset.bottom;
-        min_y -= top;
-        max_y -= top;
-        min_x -= left;
-        max_x -= left;
-
-        var new_y_axis_min = (1 - min_y / height) * range_y + options.yaxes[0].min;
-        var new_y_axis_max = (1 - max_y / height) * range_y + options.yaxes[0].min;
-        var new_x_axis_min = min_x / width * range_x + options.xaxes[0].min;
-        var new_x_axis_max = max_x / width * range_x + options.xaxes[0].min;
+        var new_y_axis_min = (1 - min_y / rect.h) * range_y + options.yaxes[0].min;
+        var new_y_axis_max = (1 - max_y / rect.h) * range_y + options.yaxes[0].min;
+        var new_x_axis_min = min_x / rect.w * range_x + options.xaxes[0].min;
+        var new_x_axis_max = max_x / rect.w * range_x + options.xaxes[0].min;
         if (UI_GRAPH.x_axis_mode === 1) {
             new_x_axis_min = UI_GRAPH.convertLog(new_x_axis_min);
             new_x_axis_max = UI_GRAPH.convertLog(new_x_axis_max);
@@ -152,11 +182,13 @@
             'view_port_start': options.xaxes[0].min * Math.pow(1000,SPEC.config.unit),
             'view_port_end': options.xaxes[0].max * Math.pow(1000,SPEC.config.unit),
         });
+        UI_GRAPH.lockUpdateYLimit();
         UI_GRAPH.zoom_used_x = true;
         UI_GRAPH.zoom_used_y = true;
-        SPEC.graphs.plot.setupGrid();
-        SPEC.graphs.plot.draw();
+        plot.setupGrid();
+        plot.draw();
         SPEC.updateWaterfallWidth();
+        SPEC.updateXInfo();
         SPEC.updateYInfo();
         if (UI_GRAPH.minMaxChange !== undefined){
             UI_GRAPH.minMaxChange(options.xaxes[0].min,options.xaxes[0].max)
@@ -222,6 +254,7 @@
 
         SPEC.graphs.plot.setupGrid();
         SPEC.graphs.plot.draw();
+        SPEC.updateWaterfallWidth();
         SPEC.updateYInfo();
     };
 
@@ -254,6 +287,7 @@
         });
         SPEC.graphs.plot.setupGrid();
         SPEC.graphs.plot.draw();
+        SPEC.updateWaterfallWidth();
         SPEC.updateXInfo();
         if (UI_GRAPH.minMaxChange !== undefined){
             UI_GRAPH.minMaxChange(options.xaxes[0].min,options.xaxes[0].max)
@@ -317,6 +351,7 @@
         SPEC.updateWaterfallWidth();
         SPEC.updateYInfo();
         SPEC.updateXInfo();
+        SPEC.update
         UI_GRAPH.zoom_used_x = false;
         UI_GRAPH.zoom_used_y = false;
         if (UI_GRAPH.minMaxChange !== undefined){
@@ -347,6 +382,7 @@
                 });
                 plot.setupGrid();
                 plot.draw();
+                SPEC.updateWaterfallWidth();
                 SPEC.updateYInfo();
                 SPEC.updateXInfo();
                 if (UI_GRAPH.minMaxChange !== undefined){
@@ -413,12 +449,12 @@
         var mode = $("#BDM_DBU_FUNC option:selected").val();
         if (mode === "dbm") {
             UI_GRAPH.ymax = 20.0;
-            UI_GRAPH.ymin = -120.0;
+            UI_GRAPH.ymin = -130.0;
         }
 
         if (mode === "dbu") {
             UI_GRAPH.ymax = 10.0;
-            UI_GRAPH.ymin = -120.0;
+            UI_GRAPH.ymin = -130.0;
         }
 
         if (mode === "v") {
@@ -437,13 +473,16 @@
             i++;
         }
         if (i >= values.length) return;
-        if (values[i] !== UI_GRAPH.x_axis_min) {
-            UI_GRAPH.x_axis_min = values[i] / Math.pow(1000,SPEC.config.unit);
+        var start = values[i] / Math.pow(1000,SPEC.config.unit);
+
+        if (start !== UI_GRAPH.x_axis_min) {
+            UI_GRAPH.x_axis_min = start;
             needSetup = true;
         }
 
-        if (values[values.length - 1] !== UI_GRAPH.x_axis_max) {
-            UI_GRAPH.x_axis_max = values[values.length - 1] / Math.pow(1000,SPEC.config.unit);
+        var end = values[values.length - 1] / Math.pow(1000,SPEC.config.unit);
+        if (end !== UI_GRAPH.x_axis_max) {
+            UI_GRAPH.x_axis_max = end
             needSetup = true;
         }
         if (needSetup) {
@@ -455,6 +494,7 @@
         if (UI_GRAPH.x_axis_min === 0) return v;
         var a = UI_GRAPH.x_axis_min;
         var b = UI_GRAPH.x_axis_max;
+        v = v > b ? b : v
         var x = Math.log10(b/a)/(b-a);
         var y = b / Math.pow(10,x * b);
         v =  y * Math.pow(10, x * v);

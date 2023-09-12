@@ -189,7 +189,6 @@
         if (UI_GRAPH.x_axis_mode === 1){
             new_value = UI_GRAPH.convertLog(new_value);
         }
-        console.log(new_value)
         $('#cur_' + x + '_info')
             .html((new_value.toFixed(tickDec) + ' ' + unit))
             .css('margin-left', (left + msg_width > graph_width - 2 ? -msg_width - 1 : ''));
