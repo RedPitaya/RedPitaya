@@ -337,9 +337,6 @@ auto updateOscParams(bool force) -> void{
 	inAutoscale.Update();
 
     if (inAutoscale.Value()) {
-        // rpApp_OscSetMathOperation((rpApp_osc_math_oper_t) mathOperation.NewValue());
-		// mathOperation.Update();
-
         if (rp_HPGetIsAttenuatorControllerPresentOrDefault()){
             for(int i = 0; i < g_adc_channels; i++){
                 rpApp_OscSetInputGain((rp_channel_t)i, (rpApp_osc_in_gain_t)RPAPP_OSC_IN_GAIN_HV);
@@ -348,31 +345,7 @@ auto updateOscParams(bool force) -> void{
             }
             sleep(1);
         }
-
         rpApp_OscAutoScale();
-        // for(int i = 0; i < g_adc_channels; i++){
-        //     double dvalue;
-        //     rpApp_OscGetAmplitudeScale((rpApp_osc_source)i, &dvalue);
-        //     inScale[i].Update();
-        //     inScale[i].SendValue(dvalue);
-        //     rpApp_OscGetAmplitudeOffset((rpApp_osc_source)i, &dvalue);
-        //     inOffset[i].Update();
-        //     inOffset[i].SendValue(dvalue);
-        // }
-
-        // float fvalue;
-        // rp_AcqGetTriggerHyst(&fvalue);
-        // inTrigHyst.SendValue(fvalue);
-
-        // float value;
-        // rpApp_OscGetTimeOffset(&value);
-        // inTimeOffset.SendValue(value);
-        // rpApp_OscGetTimeScale(&value);
-        // inTimeScale.SendValue(std::to_string(value));
-
-        // rpApp_osc_trig_sweep_t sweep;
-        // rpApp_OscGetTriggerSweep(&sweep);
-        // inTrigSweep.Value() = sweep;
         return;
     }
 

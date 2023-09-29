@@ -406,8 +406,14 @@ int osc_getTriggerLevel(float *_level) {
 }
 
 int osc_setTriggerSweep(rpApp_osc_trig_sweep_t sweep) {
-    g_viewController.requestUpdateViewFromADC();
     g_adcController.setTriggerSweep(sweep);
+     if (g_viewController.getTimeScale() < CONTIOUS_MODE_SCALE_THRESHOLD){
+        ECHECK_APP(g_adcController.setContinuousMode(false))
+    } else {
+        ECHECK_APP(g_adcController.setContinuousMode(true))
+    }
+    g_viewController.requestUpdateViewFromADC();
+    g_adcController.requestResetWaitTrigger();
     return RP_OK;
 }
 

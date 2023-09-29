@@ -1,6 +1,7 @@
 #include <DataManager.h>
 #include <CustomParameters.h>
 #include <math.h>
+#include <unistd.h>
 #include <mutex>
 
 #include "sweepController.h"
@@ -357,10 +358,13 @@ auto updateGeneratorParameters(bool force) -> void{
                     if (rp_HPGetFastDACIsTempProtectionOrDefault()){
                         rp_SetLatchTempAlarm(ch,false);
                     }
-
+                    if (!force){
+                        rp_GenResetChannelSM(ch);
+                        usleep(1000);
+                    }
                     rp_GenOutEnable(ch);
                     if (!force)
-                        rp_GenResetTrigger(ch);
+                        rp_GenTriggerOnly(ch);
                 } else {
                     rp_GenOutDisable(ch);
                 }
