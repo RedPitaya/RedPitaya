@@ -20,9 +20,6 @@
 #define SPECTR_ADC_SAMPLE_RATE ADC_SAMPLE_RATE
 #define SPECTR_ADC_BITS ADC_BITS
 
-#define VIEW_SIZE_DEFAULT             1024
-#define DIVISIONS_COUNT_X             10
-#define DIVISIONS_COUNT_Y             10
 
 #define SIGNAL_EXISTENCE              0.01    // V
 #define AUTO_SCALE_PERIOD_COUNT       2
@@ -31,12 +28,8 @@
 #define AUTO_SCALE_PERIOD_ERROR       0.08
 #define AUTO_SCALE_VMEAN_ERROR        0.08
 #define AUTO_SCALE_NUM_OF_SCALE       20
-#define MAX_UINT                      4294967296
 #define MIN_TIME_TO_DRAW_BEFORE_TIG   100
 
-#define PERIOD_EXISTS_MIN_THRESHOLD       0.75  // ratio
-#define PERIOD_EXISTS_MAX_THRESHOLD       0.92  // ratio
-#define PERIOD_EXISTS_PEAK_THRESHOLD      0.99  // ratio
 #define PERIOD_REP_COUNT_MIN          3
 #define VMEAN_REP_COUNT_MIN           3
 
@@ -49,6 +42,7 @@ int osc_stop();
 int osc_reset();
 int osc_single();
 int osc_autoScale();
+int osc_getAutoScale(bool *_state);
 int osc_isRunning(bool *running);
 int osc_isTriggered();
 int osc_setTimeScale(float scale);
@@ -81,7 +75,7 @@ int osc_measureMinVoltage(rpApp_osc_source source, float *Vmin);
 int osc_measureFrequency(rpApp_osc_source source, float *frequency);
 int osc_measurePeriod(rpApp_osc_source source, float *period);
 int osc_measurePeriodCh(rpApp_osc_source source, float *period);
-int osc_measurePeriodMath(rpApp_osc_source source, float *period);
+int osc_measurePeriodMath(float *period);
 int osc_measureDutyCycle(rpApp_osc_source source, float *dutyCycle);
 int osc_measureRootMeanSquare(rpApp_osc_source source, float *rms);
 int osc_getCursorVoltage(rpApp_osc_source source, uint32_t cursor, float *value);
@@ -100,6 +94,11 @@ int osc_setViewSize(uint32_t size);
 int osc_getViewSize(uint32_t *size);
 int osc_getViewLimits(uint32_t* start, uint32_t* end);
 int osc_scaleMath();
+int osc_refreshViewData();
+
+
+int osc_SetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode _mode);
+int osc_GetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode *_mode);
 
 int threadSafe_acqStart();
 int threadSafe_acqStop();
@@ -109,7 +108,6 @@ double unscaleAmplitude(double value, double ampScale, double probeAtt, double a
 int unscaleAmplitudeChannel(rpApp_osc_source source, float value, float *res);
 int attenuateAmplitudeChannel(rpApp_osc_source source, float value, float *res);
 int unattenuateAmplitudeChannel(rpApp_osc_source source, float value, float *res);
-float viewIndexToTime(int index);
 double roundUpTo125(double data);
 double roundUpTo25(double data);
 
@@ -120,10 +118,8 @@ double unOffsetAmplitude(double value, double ampScale, double ampOffset);
 int unscaleAmplitudeChannel(rpApp_osc_source source, float value, float *res);
 int unOffsetAmplitudeChannel(rpApp_osc_source source, float value, float *res);
 
-void clearView();
-void clearMath();
-int waitToFillPreTriggerBuffer(bool testcancel);
-int waitToFillAfterTriggerBuffer(bool testcancel);
+// void clearView();
+// void clearMath();
 
 int osc_measureMax(rpApp_osc_source source, float *Max);
 int osc_measureMin(rpApp_osc_source source, float *Min);

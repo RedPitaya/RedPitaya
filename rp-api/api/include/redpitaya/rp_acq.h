@@ -169,6 +169,22 @@ int rp_AcqSetTriggerDelay(int32_t decimated_data_num);
 int rp_AcqGetTriggerDelay(int32_t* decimated_data_num);
 
 /**
+ * Sets the number of decimated data after trigger written into memory.
+ * @param decimated_data_num Number of decimated data. It must not be higher than the ADC buffer size.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqSetTriggerDelayDirect(uint32_t decimated_data_num);
+
+/**
+ * Returns current number of decimated data after trigger written into memory.
+ * @param decimated_data_num Number of decimated data.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetTriggerDelayDirect(uint32_t* decimated_data_num);
+
+/**
  * Sets the amount of decimated data in nanoseconds after trigger written into memory.
  * @param time_ns Time in nanoseconds. Number of ADC samples within the specified
  * time must not be higher than the ADC buffer size.
@@ -184,6 +200,23 @@ int rp_AcqSetTriggerDelayNs(int64_t time_ns);
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 int rp_AcqGetTriggerDelayNs(int64_t* time_ns);
+
+/**
+ * Sets the amount of decimated data in nanoseconds after trigger written into memory.
+ * @param time_ns Time in nanoseconds. Number of ADC samples within the specified
+ * time must not be higher than the ADC buffer size.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqSetTriggerDelayNsDirect(uint64_t time_ns);
+
+/**
+ * Returns the current amount of decimated data in nanoseconds after trigger written into memory.
+ * @param time_ns Time in nanoseconds.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetTriggerDelayNsDirect(uint64_t* time_ns);
 
 /**
  * Returns the number of valid data ponts before trigger.

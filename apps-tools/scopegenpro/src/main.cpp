@@ -23,66 +23,6 @@
 #include "osc_logic.h"
 #include "math_logic.h"
 
-
-// #ifdef Z20_250_12
-// //  #include "rp-gpio-power.h"
-// //  #include "rp-i2c-max7311.h"
-//     #include "rp-spi.h"
-//     #include "sweepController.h"
-//     #include "sig_gen.h"
-
-//     #define LEVEL_AMPS_MAX      5.0
-//     #define MAX_TRIGGER_LEVEL   5000
-//     #define LEVEL_AMPS_DEF      0.9
-//     #define ADC_CHANNELS 2
-//     #define RP_WITH_GEN
-//     #define MAX_CHANNEL RP_CH_2
-// #else
-//     #define MAX_TRIGGER_LEVEL   2000
-// #endif
-
-// #ifdef Z10
-//     #include "sweepController.h"
-//     #include "sig_gen.h"
-
-//     #define LEVEL_AMPS_MAX      1.0
-//     #define LEVEL_AMPS_DEF      0.9
-//     #define ADC_CHANNELS 2
-//     #define RP_WITH_GEN
-//     #define MAX_CHANNEL RP_CH_2
-// #endif
-
-// #ifdef Z20_125
-//     #include "sweepController.h"
-//     #include "sig_gen.h"
-
-//     #define LEVEL_AMPS_MAX      1.0
-//     #define LEVEL_AMPS_DEF      0.9
-//     #define ADC_CHANNELS 2
-//     #define RP_WITH_GEN
-//     #define MAX_CHANNEL RP_CH_2
-// #endif
-
-// #ifdef Z20_125_4CH
-//     #define LEVEL_AMPS_MAX      1.0
-//     #define LEVEL_AMPS_DEF      0.9
-//     #define ADC_CHANNELS 4
-//     #define MAX_CHANNEL RP_CH_4
-// #endif
-
-// #ifdef Z20
-//     #include "sweepController.h"
-//     #include "sig_gen.h"
-
-//     #define LEVEL_AMPS_MAX     0.5
-//     #define LEVEL_AMPS_DEF    0.4
-//     #define ADC_CHANNELS 2
-//     #define RP_WITH_GEN
-//     #define MAX_CHANNEL RP_CH_2
-// #endif
-
-
-
 /* -------------------------  debug parameter  --------------------------------- */
 CIntParameter signalPeriod("DEBUG_SIGNAL_PERIOD", CBaseParameter::RW, 20, 0, 1, 10000);
 CIntParameter parameterPeriod("DEBUG_PARAM_PERIOD", CBaseParameter::RW, 50, 0, 1, 10000);

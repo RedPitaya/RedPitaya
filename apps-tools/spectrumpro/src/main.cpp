@@ -436,20 +436,20 @@ void UpdateSignals(void)
 
     size_t signal_size = 0;
     rpApp_SpecGetViewSize(&signal_size);
-    bool isShow = false;
+    bool isShow = true;
     for(auto i = 0u; i < g_adc_count; i++){
         isShow |= inShow[i].Value();
     }
-    if (isShow){
-        int ret = rpApp_SpecGetViewData(data, signal_size);
-        if (ret != 0) {
-            return;
-        }
 
-        auto mode = rp_dsp_api::mode_t::DBM;
-        rpApp_SpecGetMode(&mode);
-        signal_mode[0] = mode;
+    int ret = rpApp_SpecGetViewData(data, signal_size);
+    if (ret != 0) {
+        return;
     }
+
+    auto mode = rp_dsp_api::mode_t::DBM;
+    rpApp_SpecGetMode(&mode);
+    signal_mode[0] = mode;
+
     for(auto i = 0u; i < g_adc_count; i++){
         if (inFreeze[i].Value() && g_old_signalSize == signal_size) {
             memcpy_neon(data[i + 1],data_freeze[i],signal_size * sizeof(float));
@@ -504,11 +504,7 @@ void UpdateSignals(void)
 
     auto indexArray = prepareIndexArray(i_start,i_stop,width,xAxisLogMode.Value());
 
-    if (isShow) {
-        decimateData(s_xaxis,data[0],i_start,i_stop,width,xAxisLogMode.Value(),indexArray);
-    }else{
-        s_xaxis.Resize(0);
-    }
+    decimateData(s_xaxis,data[0],i_start,i_stop,width,xAxisLogMode.Value(),indexArray);
     // End resize
 
     if (requestFullData.Value()){

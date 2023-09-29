@@ -100,6 +100,12 @@ typedef enum {
     RPAPP_OSC_MATH_INT,         //!< Math operation integrate
 } rpApp_osc_math_oper_t;
 
+typedef enum{
+    DISABLED    = 0,
+    BSPLINE     = 1,
+    CATMULLROM  = 2,
+    LANCZOS     = 3
+} rpApp_osc_interpolationMode;
 
 /** @name General
 */
@@ -181,6 +187,14 @@ int rpApp_OscSingle();
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rpApp_OscAutoScale();
+
+/**
+* Check if the auto-stabilization algorithm is running
+* @param _state is auto scale enable
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscGetAutoScale(bool *_state);
 
 /**
  * Gets oscilloscope state. If running is true then oscilloscope is acquiring new data else data is not refreshed.
@@ -593,6 +607,17 @@ int rpApp_OscGetViewLimits(uint32_t* start, uint32_t* end);
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rpApp_OscScaleMath();
+
+/**
+* Requests a data update from the ADC, if possible.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscRefreshViewData();
+
+int rpApp_OscSetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode _mode);
+
+int rpApp_OscGetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode *_mode);
 
 ///@}
 

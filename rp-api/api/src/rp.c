@@ -939,6 +939,11 @@ int rp_AcqSetTriggerDelay(int32_t decimated_data_num)
     return acq_SetTriggerDelay(decimated_data_num);
 }
 
+int rp_AcqSetTriggerDelayDirect(uint32_t decimated_data_num)
+{
+    return acq_SetTriggerDelayDirect(decimated_data_num);
+}
+
 int rp_AcqAxiSetTriggerDelay(rp_channel_t channel, int32_t decimated_data_num){
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
@@ -956,6 +961,11 @@ int rp_AcqGetTriggerDelay(int32_t* decimated_data_num)
     return acq_GetTriggerDelay(decimated_data_num);
 }
 
+int rp_AcqGetTriggerDelayDirect(uint32_t* decimated_data_num)
+{
+    return acq_GetTriggerDelayDirect(decimated_data_num);
+}
+
 int rp_AcqSetTriggerDelayNs(int64_t time_ns)
 {
     return acq_SetTriggerDelayNs(time_ns);
@@ -964,6 +974,16 @@ int rp_AcqSetTriggerDelayNs(int64_t time_ns)
 int rp_AcqGetTriggerDelayNs(int64_t* time_ns)
 {
     return acq_GetTriggerDelayNs(time_ns);
+}
+
+int rp_AcqSetTriggerDelayNsDirect(uint64_t time_ns)
+{
+    return acq_SetTriggerDelayNsDirect(time_ns);
+}
+
+int rp_AcqGetTriggerDelayNsDirect(uint64_t* time_ns)
+{
+    return acq_GetTriggerDelayNsDirect(time_ns);
 }
 
 int rp_AcqGetPreTriggerCounter(uint32_t* value) {
@@ -1463,6 +1483,12 @@ int rp_GenResetTrigger(rp_channel_t channel){
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
     return gen_Trigger(channel);
+}
+
+int rp_GenResetChannelSM(rp_channel_t channel){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
+    return gen_ResetChannelSM(channel);
 }
 
 int rp_GenOutEnableSync(bool enable){
