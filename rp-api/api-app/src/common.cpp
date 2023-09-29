@@ -41,10 +41,16 @@ auto indexToTime(int64_t index) -> float {
 }
 
 // Parameter time is in milliseconds
-auto timeToIndex(float time) -> int64_t {
+auto timeToIndexI(float time) -> int64_t {
     float samplingRate;
     ECHECK_APP(rp_AcqGetSamplingRateHz(&samplingRate));
     return (int64_t) round(samplingRate * time / 1000.0);
+}
+
+auto timeToIndexD(float time) -> double {
+    float samplingRate;
+    ECHECK_APP(rp_AcqGetSamplingRateHz(&samplingRate));
+    return (double)samplingRate * time / 1000.0;
 }
 
 
@@ -223,4 +229,36 @@ auto convertPower(rp_acq_ac_dc_mode_t ch) -> rp_acq_ac_dc_mode_calib_t{
         assert(false);
     }
     return RP_DC_CALIB;
+}
+
+auto osc_adc_sign(uint32_t cnts, uint8_t bits) -> int32_t{
+    int32_t m;
+    cnts &= ((1 << bits) - 1);
+    /* check sign */
+    if(cnts & (1 << (bits - 1))) {
+        /* negative number */
+        m = -1 *((cnts ^ ((1 << bits) - 1)) + 1);
+    } else {
+        /* positive number */
+        m = cnts;
+    }
+    return m;
+}
+
+auto convertCh(rpApp_osc_trig_source_t ts) -> int{
+    switch (ts)
+    {
+    case RPAPP_OSC_TRIG_SRC_CH1:
+        return RP_CH_1;
+    case RPAPP_OSC_TRIG_SRC_CH2:
+        return RP_CH_2;
+    case RPAPP_OSC_TRIG_SRC_CH3:
+        return RP_CH_3;
+    case RPAPP_OSC_TRIG_SRC_CH4:
+        return RP_CH_4;
+    
+    default:
+        break;
+    }
+    return -1;
 }

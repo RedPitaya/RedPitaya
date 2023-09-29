@@ -20,6 +20,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string>
+#include <cstring>
 
 #include "rpApp.h"
 #include "rp_hw-calib.h"
@@ -29,10 +30,23 @@
 #define MAX_ADC_CHANNELS 4
 #define MAX_DAC_CHANNELS 2
 
+#define __SHORT_FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+
+#define FATAL(X)  {fprintf(stderr, "Error at line %d, file %s errno %d [%s] %s\n", __LINE__, __SHORT_FILENAME__, errno, strerror(errno),X); exit(1);}
+#define WARNING(...) { char error_msg[512]; snprintf(error_msg,512,__VA_ARGS__);fprintf(stderr,"[W] %s:%d %s\n",__SHORT_FILENAME__,__LINE__,error_msg);}
+
+#ifdef TRACE_ENABLE
+#define TRACE(...) { char error_msg[512]; snprintf(error_msg,512,__VA_ARGS__);fprintf(stderr,"[T] %s:%d %s\n",__SHORT_FILENAME__,__LINE__,error_msg);}
+#define TRACE_SHORT(...) { char error_msg[512]; snprintf(error_msg,512,__VA_ARGS__);fprintf(stderr,"[T] %s\n",error_msg);}
+#else
+#define TRACE(...)
+#define TRACE_SHORT(...)
+#endif
+
 #define ECHECK_APP(x) { \
     int retval = (x); \
     if (retval != RP_OK) { \
-        fprintf(stderr, "Runtime error: %s returned \"%s\" at %s:%d\n", #x, rpApp_GetError(retval), __FILE__, __LINE__); \
+        WARNING("Runtime error: %s returned \"%s\"", #x, rpApp_GetError(retval)); \
         return retval; \
     } \
 }
@@ -41,7 +55,7 @@
 #define ECHECK_APP_NO_RET(x) { \
     int retval = (x); \
     if (retval != RP_OK) { \
-         fprintf(stderr, "Runtime error: %s returned \"%s\" at %s:%d\n", #x, rpApp_GetError(retval), __FILE__, __LINE__); \
+        WARNING("Runtime error: %s returned \"%s\"", #x, rpApp_GetError(retval)); \
     } \
 }
 
@@ -111,29 +125,15 @@ switch ((SOURCE)) { \
         break; \
 }
 
-#define STOP_THREAD(THREAD_X) \
-if ((THREAD_X) != (pthread_t)-1) { \
-	pthread_cancel(THREAD_X); \
-	int ret = pthread_join(THREAD_X, NULL); \
-	if(ret != 0){ fprintf(stderr, "pthread_join() failed: thread id: %d", (unsigned int)THREAD_X); fflush(stderr);} \
-    (THREAD_X) = (pthread_t) -1; \
-}
 
-#define START_THREAD(THREAD_X, THREAD_FUN) \
-if ((THREAD_X) == (pthread_t)-1) { \
-    if (pthread_create(&(THREAD_X), NULL, &(THREAD_FUN), NULL)) { \
-        return RP_APP_EST; \
-    } \
-}
-
-#define CHECK_CHANNEL(X) \
+#define CHECK_CHANNEL() \
     uint8_t channels_rp_HPGetFastADCChannelsCount = 0; \
     if (rp_HPGetFastADCChannelsCount(&channels_rp_HPGetFastADCChannelsCount) != RP_HP_OK){ \
-        fprintf(stderr,"[Error:%s] Can't get fast ADC channels count\n",X); \
+        WARNING("Can't get fast ADC channels count"); \
         return RP_NOTS; \
     } \
     if (channel >= channels_rp_HPGetFastADCChannelsCount){ \
-        fprintf(stderr,"[Error:%s] Channel is larger than allowed\n",X); \
+        WARNING("Channel is larger than allowed"); \
         return RP_NOTS; \
     }
 
@@ -142,15 +142,20 @@ if ((THREAD_X) == (pthread_t)-1) { \
     (ACTION); \
     (MUTEX).unlock();
 
+#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
+#define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
 
 int cmn_Init();
 int cmn_Release();
 
 int intCmp(const void *a, const void *b);
 
-float indexToTime(int64_t index);
-int64_t timeToIndex(float time);
+auto indexToTime(int64_t index) -> float;
 
+auto timeToIndexD(float time) -> double;
+auto timeToIndexI(float time) -> int64_t;
+
+auto osc_adc_sign(uint32_t cnts, uint8_t bits) -> int32_t;
 
 auto getADCChannels() -> uint8_t;
 auto getDACChannels() -> uint8_t;
@@ -167,5 +172,6 @@ auto getADCSamplePeriod(double *value) -> int;
 auto convertCh(rp_channel_t ch) -> rp_channel_calib_t;
 auto convertChFromIndex(uint8_t index) -> rp_channel_t;
 auto convertPower(rp_acq_ac_dc_mode_t ch) -> rp_acq_ac_dc_mode_calib_t;
+auto convertCh(rpApp_osc_trig_source_t ts) -> int;
 
 #endif /* COMMON_APP_H_ */

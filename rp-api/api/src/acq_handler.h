@@ -45,13 +45,19 @@ int acq_SetTriggerSrc(rp_acq_trig_src_t source);
 int acq_GetTriggerSrc(rp_acq_trig_src_t* source);
 int acq_GetTriggerState(rp_acq_trig_state_t* state);
 int acq_SetTriggerDelay(int32_t decimated_data_num);
-int acq_axi_SetTriggerDelay(rp_channel_t channel, int32_t decimated_data_num);
 int acq_GetTriggerDelay(int32_t* decimated_data_num);
-int acq_axi_GetTriggerDelay(rp_channel_t channel, int32_t* decimated_data_num);
 int acq_SetTriggerDelayNs(int64_t time_ns);
-int acq_axi_SetTriggerDelayNs(rp_channel_t channel, int64_t time_ns);
 int acq_GetTriggerDelayNs(int64_t* time_ns);
+int acq_SetTriggerDelayDirect(uint32_t decimated_data_num);
+int acq_GetTriggerDelayDirect(uint32_t* decimated_data_num);
+int acq_SetTriggerDelayNsDirect(uint64_t time_ns);
+int acq_GetTriggerDelayNsDirect(uint64_t* time_ns);
+
+int acq_axi_SetTriggerDelay(rp_channel_t channel, int32_t decimated_data_num);
+int acq_axi_GetTriggerDelay(rp_channel_t channel, int32_t* decimated_data_num);
+int acq_axi_SetTriggerDelayNs(rp_channel_t channel, int64_t time_ns);
 int acq_axi_GetTriggerDelayNs(rp_channel_t channel, int64_t* time_ns);
+
 int acq_SetTriggerLevel(rp_channel_trigger_t channel, float voltage);
 int acq_GetTriggerLevel(rp_channel_trigger_t channel, float *voltage);
 int acq_GetPreTriggerCounter(uint32_t* value);

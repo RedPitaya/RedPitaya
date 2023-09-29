@@ -485,6 +485,12 @@ int acq_SetTriggerDelay(int32_t decimated_data_num){
     return RP_OK;
 }
 
+int acq_SetTriggerDelayDirect(uint32_t decimated_data_num){
+    osc_SetTriggerDelay(decimated_data_num);
+    triggerDelayInNs = false;
+    return RP_OK;
+}
+
 int acq_axi_SetTriggerDelay(rp_channel_t channel, int32_t decimated_data_num)
 {
 
@@ -512,6 +518,13 @@ int acq_SetTriggerDelayNs(int64_t time_ns){
     return RP_OK;
 }
 
+int acq_SetTriggerDelayNsDirect(uint64_t time_ns){
+    int32_t samples = cnvTimeToSmpls(time_ns);
+    acq_SetTriggerDelayDirect(samples);
+    triggerDelayInNs = true;
+    return RP_OK;
+}
+
 int acq_axi_SetTriggerDelayNs(rp_channel_t channel, int64_t time_ns)
 {
 
@@ -527,6 +540,13 @@ int acq_GetTriggerDelay(int32_t* decimated_data_num){
     uint32_t trig_dly;
     int r=osc_GetTriggerDelay(&trig_dly);
     *decimated_data_num=(int32_t)trig_dly - TRIG_DELAY_ZERO_OFFSET;
+    return r;
+}
+
+int acq_GetTriggerDelayDirect(uint32_t* decimated_data_num){
+    uint32_t trig_dly;
+    int r=osc_GetTriggerDelay(&trig_dly);
+    *decimated_data_num=trig_dly;
     return r;
 }
 
@@ -555,6 +575,13 @@ int acq_axi_GetTriggerDelay(rp_channel_t channel, int32_t* decimated_data_num)
 int acq_GetTriggerDelayNs(int64_t* time_ns){
     int32_t samples;
     acq_GetTriggerDelay(&samples);
+    *time_ns = cnvSmplsToTime(samples);
+    return RP_OK;
+}
+
+int acq_GetTriggerDelayNsDirect(uint64_t* time_ns){
+    uint32_t samples;
+    acq_GetTriggerDelayDirect(&samples);
     *time_ns = cnvSmplsToTime(samples);
     return RP_OK;
 }

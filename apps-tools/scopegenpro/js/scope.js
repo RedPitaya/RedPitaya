@@ -761,6 +761,15 @@
         }
     };
 
+    function sleep(milliseconds) {
+        var start = new Date().getTime();
+        for (var i = 0; i < 1e7; i++) {
+          if ((new Date().getTime() - start) > milliseconds){
+            break;
+          }
+        }
+    }
+
     // Processes newly received data for signals
     OSC.iterCnt = 0;
     OSC.processSignals = function(new_signals) {

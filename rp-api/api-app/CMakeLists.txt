@@ -44,22 +44,27 @@ message(STATUS "Compiler C++version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
 include_directories(${INSTALL_DIR}/include)
+include_directories(${CMAKE_SOURCE_DIR}/src)
 link_directories(${INSTALL_DIR}/lib)
 
 list(APPEND src_rpapp
+        ${CMAKE_SOURCE_DIR}/src/rpApp.cpp
         ${CMAKE_SOURCE_DIR}/src/common.cpp
         ${CMAKE_SOURCE_DIR}/src/osciloscopeApp.cpp
-        ${CMAKE_SOURCE_DIR}/src/rpApp.cpp
         ${CMAKE_SOURCE_DIR}/src/spectrometerApp.cpp
+        ${CMAKE_SOURCE_DIR}/src/osciloscope_logic/data_decimator.cpp
+        ${CMAKE_SOURCE_DIR}/src/osciloscope_logic/view_controller.cpp
+        ${CMAKE_SOURCE_DIR}/src/osciloscope_logic/measure_controller.cpp
+        ${CMAKE_SOURCE_DIR}/src/osciloscope_logic/adc_controller.cpp
         )
 
 list(APPEND header_rpapp
+        ${CMAKE_SOURCE_DIR}/src/rpApp.h
+        ${CMAKE_SOURCE_DIR}/src/version.h
         ${CMAKE_SOURCE_DIR}/src/common.h
         ${CMAKE_SOURCE_DIR}/src/osciloscopeApp.h
-        ${CMAKE_SOURCE_DIR}/src/rpApp.h
         ${CMAKE_SOURCE_DIR}/src/spectrometerApp.h
-        ${CMAKE_SOURCE_DIR}/src/version.h
-)
+        )
 
 list(APPEND src_rpapp_lcr
         ${CMAKE_SOURCE_DIR}/lcr_meter/src/calib.c
@@ -73,11 +78,11 @@ list(APPEND header_rpapp_lcr
         ${CMAKE_SOURCE_DIR}/lcr_meter/src/lcr_meter.h
         ${CMAKE_SOURCE_DIR}/lcr_meter/src/lcrApp.h
         ${CMAKE_SOURCE_DIR}/lcr_meter/src/utils.h
-)
+        )
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
-add_compile_options(-Wall -pedantic -Wextra -Wno-unused-parameter -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+add_compile_options(-Wall -pedantic -Wextra -Wno-unused-parameter -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 add_library(rpapp-obj OBJECT ${src_rpapp})
 

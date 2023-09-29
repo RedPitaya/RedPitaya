@@ -926,7 +926,7 @@ int synthesis_square(float scale,float frequency, float riseTime, float fallTime
     if (fallTimeSamples == 0) fallTimeSamples = 1;
 
     for(int unsigned i = 0; i < DAC_BUFFER_SIZE; i++) {
-        int unsigned x = (i % buffSize);
+        int x = (i % buffSize);
         if ( x < riseTimeSamples / 2) {
             data_out[i] = (float) x / ((float) riseTimeSamples / 2.0f);
         } else if (x < (buffSize - fallTimeSamples) / 2) {

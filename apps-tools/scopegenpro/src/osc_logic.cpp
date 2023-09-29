@@ -17,7 +17,7 @@ bool g_need_update_sig_gen = false;
 std::mutex g_need_update_sig_gen_mtx;
 
 CFloatParameter     inTimeOffset("OSC_TIME_OFFSET", CBaseParameter::RW, 0, 0, -100000, 100000,CONFIG_VAR);
-CDoubleParameter    inTimeScale("OSC_TIME_SCALE", CBaseParameter::RW, 1, 0,0,100000,CONFIG_VAR);
+CDoubleParameter    inTimeScale("OSC_TIME_SCALE", CBaseParameter::RW, 1, 0,0,100000000,CONFIG_VAR);
 CIntParameter       inViewStartPos("OSC_VIEW_START_POS", CBaseParameter::RO, 0, 0, 0, 16384,CONFIG_VAR);
 CIntParameter       inViewEndPos("OSC_VIEW_END_POS", CBaseParameter::RO, 0, 0, 0, 16384,CONFIG_VAR);
 CIntParameter       adc_count("ADC_COUNT", CBaseParameter::RO, getADCChannels(), 0, 0, 4,0);
@@ -56,6 +56,8 @@ CFloatParameter     inProbe[MAX_ADC_CHANNELS] = INIT("OSC_CH","_PROBE", CBasePar
 
 CIntParameter       inGain[MAX_ADC_CHANNELS] = INIT("OSC_CH","_IN_GAIN", CBaseParameter::RW, RP_LOW, 0, 0, 1,CONFIG_VAR);
 CIntParameter       inAC_DC[MAX_ADC_CHANNELS] = INIT("OSC_CH","_IN_AC_DC", CBaseParameter::RW, RP_DC, 0, 0, 1,CONFIG_VAR);
+
+CIntParameter       inSmoothMode[MAX_ADC_CHANNELS] = INIT("OSC_CH","_SMOOTH", CBaseParameter::RW, RP_DC, 0, 0, 3,CONFIG_VAR);
 
 
 /* --------------------------------  TRIGGER PARAMETERS --------------------------- */
@@ -214,22 +216,9 @@ auto updateOscParametersToWEB() -> void{
     }
 
     if (inAutoscale.NewValue()){
-
-
-		uint32_t start, end;
-		rpApp_OscGetViewLimits(&start, &end);
-        // check autoscale state
-		if (start || end){
-			inAutoscale.SendValue(false);
-        }
-        // else{
-        //     inViewStartPos.SendValue(start);
-        //     inViewEndPos.SendValue(end);
-        // }
-
-
-
-
+        bool as = false;
+        rpApp_OscGetAutoScale(&as);
+    	inAutoscale.SendValue(as);
     }else{
         uint32_t start, end;
 		rpApp_OscGetViewLimits(&start, &end);
@@ -301,6 +290,7 @@ auto updateOscSignal() -> void{
             outCh[i].Resize(0);
         }
     }
+    rpApp_OscRefreshViewData();
 }
 
 
@@ -391,7 +381,7 @@ auto updateOscParams(bool force) -> void{
     IF_VALUE_CHANGED_FORCE(inTrigHyst, rp_AcqSetTriggerHyst(inTrigHyst.NewValue()),force)
 
     if (IS_NEW(inTimeScale) || force){
-        if (rpApp_OscSetTimeScale(inTimeScale.NewValue() / 1000) == RP_OK){
+        if (rpApp_OscSetTimeScale(inTimeScale.NewValue() / 1000.0) == RP_OK){
             inTimeScale.Update();
             std::lock_guard<std::mutex> lock(g_need_update_sig_gen_mtx);
             g_need_update_sig_gen = true;
@@ -443,6 +433,8 @@ auto updateOscParams(bool force) -> void{
         }
 
         IF_VALUE_CHANGED_FORCE(inProbe[i], rpApp_OscSetProbeAtt((rp_channel_t)i, inProbe[i].NewValue()),force)
+
+        IF_VALUE_CHANGED_FORCE(inSmoothMode[i], rpApp_OscSetSmoothMode((rp_channel_t)i, (rpApp_osc_interpolationMode)inSmoothMode[i].NewValue()),force)
 
         if (rp_HPGetFastADCIsAC_DCOrDefault()){
             IF_VALUE_CHANGED_FORCE(inAC_DC[i], rp_AcqSetAC_DC((rp_channel_t)i, inAC_DC[i].NewValue() == 0 ? RP_AC:RP_DC),force)

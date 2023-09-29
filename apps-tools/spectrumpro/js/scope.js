@@ -924,13 +924,16 @@
             const start1 = performance.now();
 
             var pointsX = [];
+            var pointsXAxis = [];
             for (var i = 0; i < new_signals['ch_xaxis'].size; i++) {
                 var x = new_signals['ch_xaxis'].value[i] / Math.pow(1000,SPEC.config.unit);
                 if (UI_GRAPH.x_axis_mode === 1) {
                     x = UI_GRAPH.convertXLog(x);
                 }
                 pointsX.push(x);
+                pointsXAxis.push([x,undefined]);
             }
+            bufferDataset.push({ color: "#000000", data: pointsXAxis });
 
             for (sig_name in new_signals) {
                 // Ignore empty signals
@@ -1026,7 +1029,7 @@
             }
 
             UI_GRAPH.unlockUpdateYLimit();
-            if (SPEC.isVisibleChannels() && bufferDataset.length > 0) {
+            if (bufferDataset.length > 0) {
 
                 if (SPEC.graphs && SPEC.graphs.elem) {
 
