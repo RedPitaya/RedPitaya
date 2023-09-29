@@ -1626,8 +1626,8 @@ int acq_axi_SetBufferSamples(rp_channel_t channel, uint32_t address, uint32_t _s
         return RP_EOOR;
     }
 
-    if (address + _samples * 2 > start + res_size){
-        fprintf(stderr,"[Error:acq_axi_SetBuffer] The specified buffer size is greater than the reserved memory. End address: 0x%X End reserved 0x%X\n",address + _samples * 2,start + res_size);
+    if (address + (_samples - 4) * 2 > start + res_size){
+        fprintf(stderr,"[Error:acq_axi_SetBuffer] The specified buffer size is greater than the reserved memory - 8 bytes. End address: 0x%X End reserved 0x%X\n",address + _samples * 2,start + res_size);
         return RP_EOOR;
     }
 
