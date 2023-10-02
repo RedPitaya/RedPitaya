@@ -253,7 +253,7 @@ int rp_i2c_print(const char *configuration_file, bool force){
         }
         reg_description = attr->ValueString();
         
-        if (rp_read_from_i2c(bus_name.c_str(),device_addr, reg_addr, data ,force) != 0) {
+        if (rp_read_from_i2c(bus_name.c_str(),device_addr, reg_addr, data ,force) != RP_HW_OK) {
             /* Error process */
             MSG_A("[rp_i2c] ERROR read value of %s to i2c\n",reg_description.c_str());
         }

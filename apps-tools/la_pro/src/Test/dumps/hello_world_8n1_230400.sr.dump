@@ -1,0 +1,628 @@
+Start bit
+Start bit
+0
+0
+0
+0
+0
+0
+0
+1
+0
+0
+0
+0
+0
+1
+0
+00
+0
+48
+Frame error
+Stop bit
+Stop bit
+Start bit
+1
+0
+1
+0
+0
+1
+1
+0
+65
+Stop bit
+Start bit
+0
+0
+1
+1
+0
+1
+1
+0
+6C
+Stop bit
+Start bit
+0
+0
+1
+1
+0
+1
+1
+0
+6C
+Stop bit
+Start bit
+1
+1
+1
+1
+0
+1
+1
+0
+6F
+Stop bit
+Start bit
+0
+0
+0
+0
+0
+1
+0
+0
+20
+Stop bit
+Start bit
+1
+1
+1
+0
+1
+0
+1
+0
+57
+Stop bit
+Start bit
+1
+1
+1
+1
+0
+1
+1
+0
+6F
+Stop bit
+Start bit
+0
+1
+0
+0
+1
+1
+1
+0
+72
+Stop bit
+Start bit
+0
+0
+1
+1
+0
+1
+1
+0
+6C
+Stop bit
+Start bit
+0
+0
+1
+0
+0
+1
+1
+0
+64
+Stop bit
+Start bit
+1
+0
+0
+0
+0
+1
+0
+0
+21
+Stop bit
+Start bit
+1
+0
+1
+1
+0
+0
+0
+0
+0D
+Stop bit
+Start bit
+0
+1
+0
+1
+0
+0
+0
+0
+0A
+Stop bit
+Start bit
+0
+0
+0
+1
+0
+0
+1
+0
+48
+Stop bit
+Start bit
+1
+0
+1
+0
+0
+1
+1
+0
+65
+Stop bit
+Start bit
+0
+0
+1
+1
+0
+1
+1
+0
+6C
+Stop bit
+Start bit
+0
+0
+1
+1
+0
+1
+1
+0
+6C
+Stop bit
+Start bit
+1
+1
+1
+1
+0
+1
+1
+0
+6F
+Stop bit
+Start bit
+0
+0
+0
+0
+0
+1
+0
+0
+20
+Stop bit
+Start bit
+1
+1
+1
+0
+1
+0
+1
+0
+57
+Stop bit
+Start bit
+1
+1
+1
+1
+0
+1
+1
+0
+6F
+Stop bit
+Start bit
+0
+1
+0
+0
+1
+1
+1
+0
+72
+Stop bit
+Start bit
+0
+0
+1
+1
+0
+1
+1
+0
+6C
+Stop bit
+Start bit
+0
+0
+1
+0
+0
+1
+1
+0
+64
+Stop bit
+Start bit
+1
+0
+0
+0
+0
+1
+0
+0
+21
+Stop bit
+Start bit
+1
+0
+1
+1
+0
+0
+0
+0
+0D
+Stop bit
+Start bit
+0
+1
+0
+1
+0
+0
+0
+0
+0A
+Stop bit
+Start bit
+0
+0
+0
+1
+0
+0
+1
+0
+48
+Stop bit
+Start bit
+1
+0
+1
+0
+0
+1
+1
+0
+65
+Stop bit
+Start bit
+0
+0
+1
+1
+0
+1
+1
+0
+6C
+Stop bit
+Start bit
+0
+0
+1
+1
+0
+1
+1
+0
+6C
+Stop bit
+Start bit
+1
+1
+1
+1
+0
+1
+1
+0
+6F
+Stop bit
+Start bit
+0
+0
+0
+0
+0
+1
+0
+0
+20
+Stop bit
+Start bit
+1
+1
+1
+0
+1
+0
+1
+0
+57
+Stop bit
+Start bit
+1
+1
+1
+1
+0
+1
+1
+0
+6F
+Stop bit
+Start bit
+0
+1
+0
+0
+1
+1
+1
+0
+72
+Stop bit
+Start bit
+0
+0
+1
+1
+0
+1
+1
+0
+6C
+Stop bit
+Start bit
+0
+0
+1
+0
+0
+1
+1
+0
+64
+Stop bit
+Start bit
+1
+0
+0
+0
+0
+1
+0
+0
+21
+Stop bit
+Start bit
+1
+0
+1
+1
+0
+0
+0
+0
+0D
+Stop bit
+Start bit
+0
+1
+0
+1
+0
+0
+0
+0
+0A
+Stop bit
+Start bit
+0
+0
+0
+1
+0
+0
+1
+0
+48
+Stop bit
+Start bit
+1
+0
+1
+0
+0
+1
+1
+0
+65
+Stop bit
+Start bit
+0
+0
+1
+1
+0
+1
+1
+0
+6C
+Stop bit
+Start bit
+0
+0
+1
+1
+0
+1
+1
+0
+6C
+Stop bit
+Start bit
+1
+1
+1
+1
+0
+1
+1
+0
+6F
+Stop bit
+Start bit
+0
+0
+0
+0
+0
+1
+0
+0
+20
+Stop bit
+Start bit
+1
+1
+1
+0
+1
+0
+1
+0
+57
+Stop bit
+Start bit
+1
+1
+1
+1
+0
+1
+1
+0
+6F
+Stop bit
+Start bit
+0
+1
+0
+0
+1
+1
+1
+0
+72
+Stop bit
+Start bit
+0
+0
+1
+1
+0
+1
+1
+0
+6C
+Stop bit
+Start bit
+0
+0
+1
+0
+0
+1
+1
+0
+64
+Stop bit
+Start bit
+1
+0
+0
+0
+0
+1
+0
+0
+21
+Stop bit
+Start bit
+1
+0
+1
+1
+0
+0
+0
+0
+0D
+Stop bit
+Start bit
+0
+1
+0
+1
+0
+0
+0
+0
+0A
+Stop bit

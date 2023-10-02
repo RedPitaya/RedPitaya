@@ -8,6 +8,8 @@ setenv addr_script 0x02000000
 setenv addr_eeprom 0x02003000
 setenv addr_linux  0x02004000
 setenv addr_dtb    0x04000000
+setenv addr_fpga   0x10000000
+setenv zynq        z7020
 
 # set default Linux kernel boot parameters
 setenv bootargs console=ttyPS0,115200 root=/dev/mmcblk0p2 ro rootfstype=ext4 earlyprintk rootwait uio_pdrv_genirq.of_id="generic-uio"
@@ -40,6 +42,9 @@ if test ${hw_rev} == 'STEM_250-12_120'
 then
   setenv dts_path z20_250
 fi
+
+fatload mmc 0 ${addr_fpga} fpga/${dts_path}/barebones/fpga.bit
+fpga loadb ${zynq} $addr_fpga $filesize
 
 setenv high     0x40000000
 

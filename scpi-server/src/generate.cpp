@@ -203,7 +203,7 @@ scpi_result_t RP_GenFrequencyQ(scpi_t *context) {
     }
 
     /* Return data to client */
-    SCPI_ResultDouble(context, frequency);
+    SCPI_ResultFloat(context, frequency);
 
     RP_LOG(context,LOG_INFO, "*OUTPUT#:STATE Successfully returned frequency value to client.");
     return SCPI_RES_OK;

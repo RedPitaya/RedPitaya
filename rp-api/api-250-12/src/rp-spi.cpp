@@ -106,11 +106,11 @@ int prepareHeader(bool read_flag,char data_size,unsigned short address,char *buf
     return -1;
 }
 
-int rp_write_to_spi_fpga(const char* spi_dev_path,unsigned int fpga_address,unsigned short dev_address,int reg_addr, unsigned char spi_val_to_write){
+int rp_write_to_spi_fpga(const char *spi_dev_path,unsigned int fpga_address,unsigned short dev_address,int reg_addr, uint8_t spi_val_to_write){
     return write_to_fpga_spi(spi_dev_path,fpga_address,dev_address, reg_addr , spi_val_to_write);
 }
 
-int rp_read_from_spi_fpga(const char* spi_dev_path,unsigned int fpga_address,unsigned short dev_address,int reg_addr, char &value){
+int rp_read_from_spi_fpga(const char *spi_dev_path,unsigned int fpga_address,unsigned short dev_address,int reg_addr, uint8_t *value){
     return read_from_fpga_spi(spi_dev_path,fpga_address,dev_address, reg_addr , value);
 }
 
@@ -451,8 +451,9 @@ int rp_spi_load_via_fpga(const char *configuration_file){
             if (rp_spi_fpga::rp_write_to_spi_fpga(bus_name.c_str(),fpga_device_addr ,device_addr , reg_addr , data) != 0) {
                 /* Error process */
                 MSG_A("[rp_spi] ERROR write value of %s to spi\n",reg_description.c_str());
+            }else{
+                MSG("[rp_spi] Success write %s value 0x%.2X by address 0x%.2X \n",reg_description.c_str(),data,reg_addr);
             }
-            MSG("[rp_spi] Success write %s value 0x%.2X by address 0x%.2X \n",reg_description.c_str(),data,reg_addr);
         }else{
             MSG("[rp_spi] Skip write %s to i2c\n",reg_description.c_str());
         }

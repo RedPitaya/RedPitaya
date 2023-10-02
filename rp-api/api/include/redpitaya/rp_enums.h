@@ -156,6 +156,7 @@ typedef enum {
 
 typedef struct
 {
+    uint8_t channels;
     uint32_t size;
     int16_t  *ch_i[4];
     double   *ch_d[4];

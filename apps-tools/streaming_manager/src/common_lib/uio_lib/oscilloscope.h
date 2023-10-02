@@ -118,7 +118,7 @@ public:
     auto prepare() -> void;
     auto next(uint8_t *&_buffer1,uint8_t *&_buffer2,uint8_t *&_buffer3,uint8_t *&_buffer4, size_t &_size,uint32_t &_overFlow) -> bool;
     auto setCalibration(uint8_t ch,int32_t _offset,float _gain) -> void;
-    auto setFilterCalibration(uint8_t ch,int32_t _aa,int32_t _bb, int32_t _pp, int32_t _kk) -> void;
+    auto setFilterCalibration(uint8_t ch,int32_t _aa,int32_t _bb, int32_t _kk, int32_t _pp) -> void;
     auto setFilterBypass(bool _state) -> void;
     auto set8BitMode(bool mode) -> void;
     auto clearBuffer() -> bool;

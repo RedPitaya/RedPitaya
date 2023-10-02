@@ -1,0 +1,1172 @@
+<div id="user-wrapper">
+    <div id="user"></div>
+    <div id="user-desc">Device is already in use by another user.</div>
+</div>
+<div id="pulse-wrapper">
+    <div id="pulse"></div>
+    <div id="pulse-desc">Connection with device is lost.</div>
+</div>
+<div id="loader-wrapper">
+    <div id="loader"></div>
+</div>
+<div id="header">
+    <div id="connection_meter" title="It seems like your connection is ok"><img src="../assets/images/good_net.png" id="connection_icon" width="20px"><span id="throughput_view2">0 kB/s</span></div>
+</div>
+<div id="img_loading" class="img-container">
+    <div class="centerer"></div>
+    <img src="img/loader_auto_scale.gif" width="90">
+</div>
+<div class="full-content">
+    <div class="container-fluid">
+        <div class="navbar navbar-inverse" role="navigation">
+            <div class="container">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                        <span class="sr-only">T</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="/">
+                        <img class="back-btn" src="../assets/images/navigation_arrow_left.png">
+                    </a>
+                    <img class="logo" width=110 src="../assets/images/navigation_logo.png">
+                </div>
+                <div class="collapse navbar-collapse">
+                    <ul class="nav navbar-nav">
+                        <li style="width: 60px">
+                            <a href="https://redpitaya.readthedocs.io/en/latest/appsFeatures/applications/oscSigGen/osc.html" target="_blank" style="padding-left: 0; padding-right: 0;">
+                                <img src="../assets/images/help.png" width=20px>
+                            </a>
+                        </li>
+                        <li class="dropdown">
+                            <a class="btn btn-default dropdown-toggle" type="button" id="menu1" data-toggle="dropdown">SETTINGS<span class="caret"></span></a>
+                            <ul class="dropdown-menu" role="menu" aria-labelledby="menu1" style="background: #cdcccc; min-width: 0px;">
+                                <li><a id="sys_info" href="#">SYS INFO</a></li>
+                                <li class="250_12_block"><a id="ext_clock_enable" href="#">EXT. CLOCK</a></li>
+                                <li><a id="reset_settings" href="#">RESET</a></li>
+                            </ul>
+                        </li>
+                        <li class="dropdown">
+                            <a class="btn btn-default dropdown-toggle" type="button" id="dd_menu" data-toggle="dropdown" style="padding-left: 20px;">EXPORT<span class="caret"></span></a>
+                            <ul class="dropdown-menu" role="menu" aria-labelledby="menu1" style="background: #cdcccc; min-width: 0px;">
+                                <li><a id="OSC_SAVEGRAPH" href="#">Graph</a></li>
+                                <li><a id="OSC_SAVECSV" download="scopeData.csv" href="#">Data in CSV</a></li>
+                            </ul>
+                        </li>
+                        <li><a id="OSC_AUTOSCALE" href="#" style="padding-left: 23px; white-space: nowrap;">AUTO SCALE</a></li>
+                        <li>
+                            <a id="OSC_RUN" href="#" style="">RUN</a>
+                            <a id="OSC_STOP" href="#" style="display:none;">STOP</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <!-- Modal export-->
+        <div class="modal" id="export" tabindex="-1" role="dialog" aria-labelledby="export" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                        <h4 class="modal-title">Export</h4>
+                    </div>
+                    <div class="modal-body">
+                        Content
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Modal settings-->
+        <div class="modal" id="settings" tabindex="-1" role="dialog" aria-labelledby="export" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                        <h4 class="modal-title">Settings</h4>
+                    </div>
+                    <div class="modal-body">
+                        Content settings
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="global_container" style="position: relative;">
+            <div id="menu-root" class="menu-content">
+                <div id="right_menu" class="row right-menu-cont">
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option">
+                            <button type="button" class="btn menu-btn ch1 dbl active" data-signal="ch1" data-toggle="button" aria-pressed="false" autocomplete="off" disabled>IN1</button>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div id="in1" class="right-menu-option edit-mode" data-signal="ch1"><img src="img/gear.png"></div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option">
+                            <button type="button" class="btn menu-btn ch2 dbl" data-signal="ch2" data-toggle="button" aria-pressed="false" autocomplete="off" disabled>IN2</button>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div id="in2" class="right-menu-option edit-mode" data-signal="ch2"><img src="img/gear.png"></div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option">
+                            <button type="button" class="btn menu-btn output1 dbl" id="OUTPUT1_BUTTON" data-signal="output1" data-toggle="button" aria-pressed="false" autocomplete="off" disabled>
+                                <img id="OUTPUT1_STATE_ON" src="img/green_led.png"> OUT1
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div id="out1" class="right-menu-option edit-mode" data-signal="output1"><img src="img/gear.png"></div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option">
+                            <button type="button" class="btn menu-btn output2 dbl" id="OUTPUT2_BUTTON" data-signal="output2" data-toggle="button" aria-pressed="false" autocomplete="off" disabled>
+                                <img id="OUTPUT2_STATE_ON" src="img/green_led.png"> OUT2
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div id="out2" class="right-menu-option edit-mode" data-signal="output2"><img src="img/gear.png"></div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option">
+                            <button type="button" class="btn menu-btn math dbl" data-signal="math" data-toggle="button" aria-pressed="false" autocomplete="off" disabled>MATH</button>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div id="math" class="right-menu-option edit-mode" data-signal="math"><img src="img/gear.png"></div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option">
+                            <button type="button" class="btn menu-btn trig not-signal dbl" data-toggle="button" aria-pressed="false" autocomplete="off" disabled>TRIG</button>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div id="trig" class="right-menu-option edit-mode"><img src="img/gear.png"></div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div id="cursor" class="right-menu-option edit-mode">CURSOR</div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div id="meas" class="right-menu-option edit-mode">MEAS</div>
+                    </div>
+                    <div class="col-xs-12 option-content sweep_button" hidden>
+                        <div id="SWEEP_RESET" class="right-menu-option sweep_reset">SWEEP RESET</div>
+                    </div>
+                </div>
+                <div id="in1_dialog" class="dialog row right-menu-cont">
+                    <div class="col-xs-12 option-content">
+                        <div class="ch1 right-menu-option close-dialog">
+                            <img src="../assets/images/navigation_arrow_left.png"> Input 1
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option">
+                            <button id="CH1_SHOW" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">SHOW</button>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option">
+                            <button id="CH1_SHOW_INVERTED" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">INVERT</button>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <span class="col-info" style="margin-top: -11px;">Probe attenuation</span>
+                        <div class="right-menu-option" style="margin-top: 10px;">
+                            <select id="OSC_CH1_PROBE" class="form-control styled-select">
+                                <option>1</option>
+                                <option selected>10</option>
+                                <option>100</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- div class="col-xs-12 option-content output2">
+    <span class="col-info">Measurement range</span>
+    <div class="right-menu-option" id="ch1_meas_range">- V</div>
+    </div -->
+                    <div class="col-xs-12 option-content">
+                        <div class="col-info" style="margin-top: -11px;">Vertical offset / <span id="OSC_CH1_OFFSET_UNIT">V</span></div>
+                        <div class="right-menu-option" style="margin-top: 10px;">
+                            <input id="OSC_CH1_OFFSET" class="setfield input-number" type="text" value="0.0000" step="0.0010" min="-40.0000" max="40.0000">
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content 122_16_block_remove">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Input attenuation</span>
+                            <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                <label id="ch1_lvhv_btn1" class="btn">
+                                    <input type="radio" value="0" name="OSC_CH1_IN_GAIN" id="OSC_CH1_IN_GAIN" autocomplete="off">
+                                    <div id="OSC_CH1_IN_GAIN_L">LV</div>
+                                </label>
+                                <label id="ch1_lvhv_btn2" class="btn">
+                                    <input type="radio" value="1" name="OSC_CH1_IN_GAIN" id="OSC_CH1_IN_GAIN1" autocomplete="off">
+                                    <div id="OSC_CH1_IN_GAIN2_L">HV</div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content 250_12_block">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Coupling</span>
+                            <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                <label class="btn">
+                                <input type="radio" value="0" id="OSC_CH1_IN_AC_DC" name="OSC_CH1_IN_AC_DC" autocomplete="off">AC
+                            </label>
+                                <label class="btn">
+                                <input type="radio" value="1" id="OSC_CH1_IN_AC_DC1" name="OSC_CH1_IN_AC_DC" autocomplete="off">DC
+                            </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="in2_dialog" class="dialog row right-menu-cont">
+                    <div class="col-xs-12 option-content">
+                        <div class="ch2 right-menu-option close-dialog">
+                            <img src="../assets/images/navigation_arrow_left.png"> Input 2
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option">
+                            <button id="CH2_SHOW" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">SHOW</button>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option">
+                            <button id="CH2_SHOW_INVERTED" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">INVERT</button>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Probe attenuation</span>
+                            <select id="OSC_CH2_PROBE" class="form-control styled-select" style="margin-top: 10px;">
+                                <option>1</option>
+                                <option selected>10</option>
+                                <option>100</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- div class="col-xs-12 option-content output2">
+    <span class="col-info">Measurement range</span>
+    <div class="right-menu-option" id="ch2_meas_range">- V</div>
+    </div -->
+                    <div class="col-xs-12 option-content">
+                        <div class="col-info">Vertical offset / <span id="OSC_CH2_OFFSET_UNIT">V</span></div>
+                        <div class="right-menu-option" style="margin-top: 10px;">
+                            <input id="OSC_CH2_OFFSET" class="setfield input-number" type="text" value="0.0000" step="0.0010" min="-40.0000" max="40.0000">
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content 122_16_block_remove">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Input attenuation</span>
+                            <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                <label class="btn">
+                                    <input type="radio" value="0" id="OSC_CH2_IN_GAIN" name="OSC_CH2_IN_GAIN" autocomplete="off">
+                                    <div id="OSC_CH2_IN_GAIN_L">LV</div>
+                                </label>
+                                <label class="btn">
+                                    <input type="radio" value="1" id="OSC_CH2_IN_GAIN1" name="OSC_CH2_IN_GAIN" autocomplete="off">
+                                    <div id="OSC_CH2_IN_GAIN2_L">HV</div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content 250_12_block">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Coupling</span>
+                            <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                <label class="btn">
+                                    <input type="radio" value="0" id="OSC_CH2_IN_AC_DC" name="OSC_CH2_IN_AC_DC" autocomplete="off">AC
+                                </label>
+                                <label class="btn">
+                                    <input type="radio" value="1" id="OSC_CH2_IN_AC_DC1" name="OSC_CH2_IN_AC_DC" autocomplete="off">DC
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="out2_sweep_dialog" class="dialog row right-menu-cont">
+                    <div class="col-xs-6 option-content">
+                        <div id="out2" class="right-menu-option output2 close-sweep-dialog">
+                            <img src="../assets/images/navigation_arrow_left.png"> Output2
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option">
+                            <button id="SOUR2_SWEEP_STATE" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off" style="padding-left: 0px;">
+                                    ON</button>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info out_freq" style="margin-top: -21px;">Start Freq (Hz)</span>
+                            <div style="margin-top: 10px;">
+                                <input class="setfield input-number" id="SOUR2_SWEEP_FREQ_START" type="text" value="0" min="1" max="50000000" step="1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info out_freq" style="margin-top: -21px;">End Freq (Hz)</span>
+                            <div style="margin-top: 10px;">
+                                <input class="setfield input-number" id="SOUR2_SWEEP_FREQ_END" type="text" value="0" min="1" max="50000000" step="1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info out_freq" style="margin-top: -21px;">Duration (µs)</span>
+                            <div style="margin-top: 10px;">
+                                <input class="setfield input-number no-arrows" id="SOUR2_SWEEP_TIME" type="text" value="1000000" min="0" max="2000000000" step="1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Sweep/Mode</span>
+                            <select id="SOUR2_SWEEP_MODE" class="form-control styled-select" style="margin-top: 10px;">
+                                <option value="0">LINEAR</option>
+                                <option value="1">LOGARITHMIC</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Sweep/Dir</span>
+                            <select id="SOUR2_SWEEP_DIR" class="form-control styled-select" style="margin-top: 10px;">
+                                <option value="0">NORMAL</option>
+                                <option value="1">UP-DOWN</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div id="out2_dialog" class="dialog row right-menu-cont">
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option output2 close-dialog">
+                            <img src="../assets/images/navigation_arrow_left.png"> Output2
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option">
+                            <button id="OUTPUT2_STATE" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off" style="padding-left: 0px;">
+                                    <img id="OUTPUT2_STATE_ON2" src=""  style="width: 20px;padding-right: 2px;">ON</button>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option">
+                            <button id="OUTPUT2_SHOW" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">SHOW</button>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info">Type</span>
+                            <select id="SOUR2_FUNC" class="form-control styled-select 122_16_gen_sel">
+                                <option value="0">SINE</option>
+                                <option value="1" class="122_16_block_remove">SQUARE</option>
+                                <option value="2" class="122_16_block_remove">TRIANGLE</option>
+                                <option value="3" class="122_16_block_remove">SAWU</option>
+                                <option value="4" class="122_16_block_remove">SAWD</option>
+                                <option value="5" class="122_16_block_remove">DC</option>
+                                <option value="8" class="122_16_block_remove">DC NEG</option>
+                                <option value="6" class="122_16_block_remove">PWM</option>
+                                <!--option value="7">ARB</option-->
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div id="out2" class="right-menu-option edit-mode-sweep">SWEEP MODE</div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div id="out2" class="right-menu-option edit-mode-burst">BURST MODE</div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Trigger</span>
+                            <select id="SOUR2_TRIG_SOUR" class="form-control styled-select" style="margin-top: 10px;">
+                                <option value="1">Internal</option>
+                                <option value="2">External Positive edge</option>
+                                <option value="3">External Negative edge</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info out_freq" style="margin-top: -21px;">Frequency / Hz</span>
+                            <div style="margin-top: 10px;">
+                                <input class="setfield input-number" id="SOUR2_FREQ_FIX" type="text" value="0" min="0" max="50000000" step="1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content" name="AMPLITUDE_NODE">
+                        <div class="right-menu-option">
+                            <span class="col-info out_ampl" style="margin-top: -21px;">Amplitude / V</span>
+                            <div style="margin-top: 10px;">
+                                <input class="setfield input-number" id="SOUR2_VOLT" type="text" value="0.000" min="0.001" max="1" step="0.001">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content 250_12_block">
+                        <div class="right-menu-option">
+                            <span class="col-info out_ampl" style="margin-top: -21px;">Gain</span>
+                            <div style="margin-top: 10px;" id="OSC_CH2_OUT_GAIN_L">
+                                x1
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content 122_16_block_remove">
+                        <div class="right-menu-option">
+                            <span class="col-info out_offset" style="margin-top: -21px;">Offset / V</span>
+                            <div style="margin-top: 10px;">
+                                <input class="setfield input-number" id="SOUR2_VOLT_OFFS" type="text" value="0.000" min="-1" max="1" step="0.001">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content out_phase">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Phase / deg</span>
+                            <div style="margin-top: 10px;">
+                                <input class="setfield input-number" id="SOUR2_PHAS" type="text" value="0" min="-360" max="360" step="1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content out_duty 122_16_block_remove">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Duty cycle / %</span>
+                            <div style="margin-top: 10px;">
+                                <input class="setfield input-number" id="SOUR2_DCYC" type="text" value="0.0" min="0.0" max="100.0" step="0.1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content 122_16_block_remove">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Rise time / μs</span>
+                            <div style="margin-top: 10px;">
+                                <input class="setfield input-number" id="SOUR2_RISE" type="text" value="1.0" min="0.1" max="100" step="0.1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content 122_16_block_remove">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Fall time / μs</span>
+                            <div style="margin-top: 10px;">
+                                <input class="setfield input-number" id="SOUR2_FALL" type="text" value="1.0" min="0.1" max="100" step="0.1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content 250_12_block">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Load</span>
+                            <select id="SOUR2_IMPEDANCE" class="form-control styled-select" style="margin-top: 10px;">
+                                <option value="0">Hi-Z</option>
+                                <option value="1">50 ohm</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content sweep_button" hidden>
+                            <div id="SWEEP_RESET" class="right-menu-option sweep_reset">SWEEP RESET</div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <div id="GEN_RESET" class="right-menu-option gen_reset">TRIG GEN</div>
+                        </div>
+                    </div>
+                </div>
+                <div id="out1_dialog" class="dialog row right-menu-cont">
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option output1 close-dialog">
+                            <img src="../assets/images/navigation_arrow_left.png"> Output1
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option">
+                            <button id="OUTPUT1_STATE" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off" style="padding-left: 0px;">
+                                    <img id="OUTPUT1_STATE_ON2" src="" style="width: 20px;padding-right: 2px" >ON</button>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option">
+                            <button id="OUTPUT1_SHOW" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">SHOW</button>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info">Type</span>
+                            <select id="SOUR1_FUNC" class="form-control styled-select 122_16_gen_sel">
+                                <option value="0">SINE</option>
+                                <option value="1" class="122_16_block_remove">SQUARE</option>
+                                <option value="2" class="122_16_block_remove">TRIANGLE</option>
+                                <option value="3" class="122_16_block_remove">SAWU</option>
+                                <option value="4" class="122_16_block_remove">SAWD</option>
+                                <option value="5" class="122_16_block_remove">DC</option>
+                                <option value="8" class="122_16_block_remove">DC NEG</option>
+                                <option value="6" class="122_16_block_remove">PWM</option>
+                                <!--option value="7">ARB</option-->
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div id="out1" class="right-menu-option edit-mode-sweep">SWEEP MODE</div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div id="out1" class="right-menu-option edit-mode-burst">BURST MODE</div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Trigger</span>
+                            <select id="SOUR1_TRIG_SOUR" class="form-control styled-select" style="margin-top: 10px;">
+                                <option value="1">Internal</option>
+                                <option value="2">External Positive edge</option>
+                                <option value="3">External Negative edge</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info out_freq" style="margin-top: -21px;">Frequency / Hz</span>
+                            <div style="margin-top: 10px;">
+                                <input class="setfield input-number" id="SOUR1_FREQ_FIX" type="text" value="0" min="1" max="50000000" step="1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content" name="AMPLITUDE_NODE">
+                        <div class="right-menu-option">
+                            <span class="col-info out_ampl" style="margin-top: -21px;">Amplitude / V</span>
+                            <div style="margin-top: 10px;">
+                                <input class="setfield input-number" id="SOUR1_VOLT" type="text" value="0.000" min="0.001" max="1" step="0.001">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content 250_12_block">
+                        <div class="right-menu-option">
+                            <span class="col-info out_ampl" style="margin-top: -21px;">Gain</span>
+                            <div style="margin-top: 10px;" id="OSC_CH1_OUT_GAIN_L">
+                                x1
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content 122_16_block_remove">
+                        <div class="right-menu-option">
+                            <span class="col-info out_offset" style="margin-top: -21px;">Offset / V</span>
+                            <div style="margin-top: 10px;">
+                                <input class="setfield input-number" id="SOUR1_VOLT_OFFS" type="text" value="0.000" min="-1" max="1" step="0.001">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content out_phase">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Phase / deg</span>
+                            <div style="margin-top: 10px;">
+                                <input class="setfield input-number" id="SOUR1_PHAS" type="text" value="0" min="-360" max="360" step="1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content out_duty 122_16_block_remove">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Duty cycle / %</span>
+                            <div style="margin-top: 10px;">
+                                <input class="setfield input-number" id="SOUR1_DCYC" type="text" value="0.0" min="0.0" max="100.0" step="0.1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content 122_16_block_remove">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Rise time / μs</span>
+                            <div style="margin-top: 10px;">
+                                <input class="setfield input-number" id="SOUR1_RISE" type="text" value="1.0" min="0.1" max="100" step="0.1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content 122_16_block_remove">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Fall time / μs</span>
+                            <div style="margin-top: 10px;">
+                                <input class="setfield input-number" id="SOUR1_FALL" type="text" value="1.0" min="0.1" max="100" step="0.1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content 250_12_block">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Load</span>
+                            <select id="SOUR1_IMPEDANCE" class="form-control styled-select" style="margin-top: 10px;">
+                                <option value="0">Hi-Z</option>
+                                <option value="1">50 ohm</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content sweep_button" hidden>
+                            <div id="SWEEP_RESET" class="right-menu-option sweep_reset">SWEEP RESET</div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <div id="GEN_RESET" class="right-menu-option gen_reset">TRIG GEN</div>
+                        </div>
+                    </div>
+                </div>
+                <div id="out1_sweep_dialog" class="dialog row right-menu-cont">
+                    <div class="col-xs-6 option-content">
+                        <div id="out1" class="right-menu-option output1 close-sweep-dialog">
+                            <img src="../assets/images/navigation_arrow_left.png"> Output1
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option">
+                            <button id="SOUR1_SWEEP_STATE" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off" style="padding-left: 0px;">
+                                    ON</button>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info out_freq" style="margin-top: -21px;">Start Freq (Hz)</span>
+                            <div style="margin-top: 10px;">
+                                <input class="setfield input-number" id="SOUR1_SWEEP_FREQ_START" type="text" value="0" min="1" max="50000000" step="1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info out_freq" style="margin-top: -21px;">End Freq (Hz)</span>
+                            <div style="margin-top: 10px;">
+                                <input class="setfield input-number" id="SOUR1_SWEEP_FREQ_END" type="text" value="0" min="1" max="50000000" step="1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info out_freq" style="margin-top: -21px;">Duration (µs)</span>
+                            <div style="margin-top: 10px;">
+                                <input class="setfield input-number no-arrows" id="SOUR1_SWEEP_TIME" type="text" value="1000000" min="0" max="2000000000" step="1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Sweep/Mode</span>
+                            <select id="SOUR1_SWEEP_MODE" class="form-control styled-select" style="margin-top: 10px;">
+                                <option value="0">LINEAR</option>
+                                <option value="1">LOGARITHMIC</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Sweep/Dir</span>
+                            <select id="SOUR1_SWEEP_DIR" class="form-control styled-select" style="margin-top: 10px;">
+                                <option value="0">NORMAL</option>
+                                <option value="1">UP-DOWN</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div id="out1_burst_dialog" class="dialog row right-menu-cont">
+                    <div class="col-xs-6 option-content">
+                        <div id="out1" class="right-menu-option output1 close-burst-dialog">
+                            <img src="../assets/images/navigation_arrow_left.png"> Output1
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option">
+                            <button id="SOUR1_BURST_STATE" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off" style="padding-left: 0px;">
+                                    ON</button>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info out_freq" style="margin-top: -21px;">Number of periods</span>
+                            <div style="margin-top: 10px;">
+                                <input class="setfield input-number" id="SOUR1_BURST_COUNT" type="text" value="1" min="1" max="50000" step="1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info out_freq" style="margin-top: -21px;">Repetitions</span>
+                            <div style="margin-top: 10px;">
+                                <input class="setfield input-number" id="SOUR1_BURST_REP" type="text" value="1" min="1" max="50000" step="1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <button id="SOUR1_BURST_INF" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off" style="padding-left: 0px;">
+                                    REPETITIONS INF</button>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info out_freq" style="margin-top: -21px;">Period (µs)</span>
+                            <div style="margin-top: 10px;">
+                                <input class="setfield input-number" id="SOUR1_BURST_DELAY" type="text" value="1" min="1" max="500000000" step="1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div id="GEN_RESET" class="right-menu-option gen_reset">TRIG GEN</div>
+                    </div>
+                </div>
+                <div id="out2_burst_dialog" class="dialog row right-menu-cont">
+                    <div class="col-xs-6 option-content">
+                        <div id="out2" class="right-menu-option output2 close-burst-dialog">
+                            <img src="../assets/images/navigation_arrow_left.png"> Output2
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option">
+                            <button id="SOUR2_BURST_STATE" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off" style="padding-left: 0px;">
+                                    ON</button>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info out_freq" style="margin-top: -21px;">Number of periods</span>
+                            <div style="margin-top: 10px;">
+                                <input class="setfield input-number" id="SOUR2_BURST_COUNT" type="text" value="1" min="1" max="50000" step="1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info out_freq" style="margin-top: -21px;">Repetitions</span>
+                            <div style="margin-top: 10px;">
+                                <input class="setfield input-number" id="SOUR2_BURST_REP" type="text" value="1" min="1" max="50000" step="1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <button id="SOUR2_BURST_INF" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off" style="padding-left: 0px;">
+                                REPETITIONS INF</button>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info out_freq" style="margin-top: -21px;">Period (µs)</span>
+                            <div style="margin-top: 10px;">
+                                <input class="setfield input-number" id="SOUR2_BURST_DELAY" type="text" value="1" min="1" max="500000000" step="1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div id="GEN_RESET" class="right-menu-option gen_reset">TRIG GEN</div>
+                    </div>
+                </div>
+                <div id="math_dialog" class="dialog row right-menu-cont">
+                    <div class="col-xs-12 option-content close-dialog">
+                        <div class="right-menu-option math">
+                            <img src="../assets/images/navigation_arrow_left.png"> MATH
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option">
+                            <button id="MATH_SHOW" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">ENABLE</button>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option">
+                            <button id="MATH_SHOW_INVERTED" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">INVERT</button>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Signal1</span>
+                            <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                <label class="btn">
+                                    <input type="radio" value="0" name="OSC_MATH_SRC1" id="OSC_MATH_SRC1" autocomplete="off">IN1
+                                </label>
+                                <label class="btn">
+                                    <input type="radio" value="1" name="OSC_MATH_SRC1" id="OSC_MATH_SRC12" autocomplete="off">IN2
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Operator</span>
+                            <select class="form-control styled-select" id="OSC_MATH_OP" style="margin-top: 10px;">
+                                <option value="1">+</option>
+                                <option value="2">-</option>
+                                <option value="3">*</option>
+                                <option value="5">abs</option>
+                                <option value="6">dy/dt</option>
+                                <option value="7">ydt</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Signal2</span>
+                            <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                <label class="btn math-radio-btn">
+                                    <input type="radio" value="0" name="OSC_MATH_SRC2" id="OSC_MATH_SRC2" autocomplete="off">IN1
+                                </label>
+                                <label class="btn math-radio-btn">
+                                    <input type="radio" value="1" name="OSC_MATH_SRC2" id="OSC_MATH_SRC22" autocomplete="off">IN2
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <div class="col-info" style="margin-top: -21px;">Vertical offset / <span id="OSC_MATH_OFFSET_UNIT">V</span></div>
+                            <div style="margin-top: 10px;">
+                                <input class="setfield input-number" id="OSC_MATH_OFFSET" type="text" value="0.000" step="0.001">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="trig_dialog" class="dialog row right-menu-cont">
+                    <div class="col-xs-12 option-content close-dialog">
+                        <div class="right-menu-option trig">
+                            <img src="../assets/images/navigation_arrow_left.png"> TRIGGER
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Source</span>
+                            <select id="OSC_TRIG_SOURCE" class="form-control styled-select" style="margin-top: 10px;">
+                                <option value="0">IN1</option>
+                                <option value="1">IN2</option>
+                                <option value="4">EXT</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Source</span>
+                            <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                <label class="btn">
+                                    <input type="radio" value="0" name="OSC_TRIG_SOURCE" id="OSC_TRIG_SOURCE" autocomplete="off">IN1
+                                </label>
+                                <label class="btn">
+                                    <input type="radio" value="1" name="OSC_TRIG_SOURCE" id="OSC_TRIG_SOURCE2" autocomplete="off">IN2
+                                </label>
+                                <label class="btn">
+                                    <input type="radio" value="2" name="OSC_TRIG_SOURCE" id="OSC_TRIG_SOURCE3" autocomplete="off">EXT
+                                </label>
+                            </div>
+                        </div>
+                    </div> -->
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Edge</span>
+                            <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                <label id="edge1" class="btn active">
+                                    <input type="radio" value="1" name="OSC_TRIG_SLOPE" id="OSC_TRIG_SLOPE" autocomplete="off" checked>
+                                    <img src="img/edge1_active.png">
+                                </label>
+                                <label id="edge2" class="btn">
+                                    <input type="radio" value="0" name="OSC_TRIG_SLOPE" id="OSC_TRIG_SLOPE1" autocomplete="off">
+                                    <img src="img/edge2.png">
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Level / V</span>
+                            <div style="margin-top: 10px;">
+                                <input id="OSC_TRIG_LEVEL" class="setfield input-number" type="text" value="0.000" step="0.001" min="-1" max="1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div class="col-info">Hysteresis</span>
+                        </div>
+                        <div class="right-menu-option" style="margin-top: 10px;">
+                            <input id="OSC_TRIG_HYST" class="setfield input-number" type="text" value="0.005" step="0.001" min="0" max="1">
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <span class="col-info">Mode</span>
+                        <div class="btn-group btn-group-vertical" data-toggle="buttons">
+                            <label class="btn active" style="box-shadow: 0px 0px 0px;">
+                                <input type="radio" value="0" name="OSC_TRIG_SWEEP" id="OSC_TRIG_SWEEP" autocomplete="off" checked>AUTO
+                            </label>
+                            <label class="btn" style="box-shadow: 0px 0px 0px;">
+                                <input type="radio" value="1" name="OSC_TRIG_SWEEP" id="OSC_TRIG_SWEEP1" autocomplete="off">NORMAL
+                            </label>
+                            <label class="btn" style="border-radius: 0px;box-shadow: 0px 0px 0px;">
+                                <input type="radio" value="2" name="OSC_TRIG_SWEEP" id="OSC_TRIG_SWEEP2" autocomplete="off">SINGLE
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Time offset / ms</span>
+                                <!-- <input type="number" class="form-control no-up-down" maxlength="4" placeholder="DIN0" id=""> -->
+                                <!-- <input type="number" class="form-control no-up-down" min="1" maxlength="20" placeholder="1" value="1" id="time_offset_additional_label"> -->
+                                <div style="margin-top: 10px;">
+                                    <input type="number" class="form-control no-up-down input-number no-lr-padding" step="0.001" id="time_offset_additional_label">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <div style="margin-top: 10px;">
+                                    <div id="reset_time_offset_button" class="right-menu-option no-lr-padding">RESET</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="meas_dialog" class="dialog row right-menu-cont">
+                    <div class="col-xs-12 option-content close-dialog">
+                        <div class="right-menu-option">
+                            <img src="../assets/images/navigation_arrow_left.png"> Measurement
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Operator</span>
+                            <select id="meas_operator" class="form-control styled-select" style="margin-top: 10px;">
+                                <option value="0">P2P</option>
+                                <option value="1">MEAN</option>
+                                <option value="2">MAX</option>
+                                <option value="3">MIN</option>
+                                <option value="4">RMS</option>
+                                <option value="5">DUTY CYCLE</option>
+                                <option value="6">PERIOD</option>
+                                <option value="7">FREQ</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Signal</span>
+                            <select id = "meas_signal" class="form-control styled-select" style="margin-top: 10px;">
+                                <option name="meas_signal" value="CH1">IN1</option>
+                                <option name="meas_signal" value="CH2">IN2</option>
+                                <option name="meas_signal" value="MATH">MATH</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Signal</span>
+                            <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                <label class="btn">
+                                    <input type="radio" name="meas_signal" value="CH1" autocomplete="off">IN1
+                                </label>
+                                <label class="btn">
+                                    <input type="radio" name="meas_signal" value="CH2" autocomplete="off">IN2
+                                </label>
+                                <label class="btn">
+                                    <input type="radio" name="meas_signal" value="MATH" autocomplete="off">MATH
+                                </label>
+                            </div>
+                        </div>
+                    </div> -->
+                    <div class="col-xs-12 option-content">
+                        <button id="meas_done" type="button" class="btn">DONE</button>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <span class="col-info">List (click to clear meas.)</span>
+                        <div id="meas_list"></div>
+                    </div>
+                </div>
+                <div id="cursor_dialog" class="dialog row right-menu-cont">
+                    <div class="col-xs-12 option-content close-dialog">
+                        <div class="right-menu-option">
+                            <img src="../assets/images/navigation_arrow_left.png"> Cursor
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option">
+                            <button id="OSC_CURSOR_X1" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">X1</button>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option">
+                            <button id="OSC_CURSOR_X2" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">X2</button>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option">
+                            <button id="OSC_CURSOR_Y1" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">Y1</button>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option">
+                            <button id="OSC_CURSOR_Y2" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">Y2</button>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div style="margin: 3px; height: 20px; line-height: 20px;">
+                            Source
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <select id="OSC_CURSOR_SRC" class="form-control styled-select">
+                                <option value="0">IN1</option>
+                                <option value="1">IN2</option>
+                                <option value="2">MATH</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <div class="btn-group btn-group-justified" data-toggle="buttons">
+                                <label class="btn">
+                                    <input type="radio" name="OSC_CURSOR_SRC" id="OSC_CURSOR_SRC" value="0" autocomplete="off">IN1
+                                </label>
+                                <label class="btn">
+                                    <input type="radio" name="OSC_CURSOR_SRC" id="OSC_CURSOR_SRC1" value="1" autocomplete="off">IN2
+                                </label>
+                                <label class="btn">
+                                    <input type="radio" name="OSC_CURSOR_SRC" id="OSC_CURSOR_SRC2" value="2" autocomplete="off">MATH
+                                </label>
+                            </div>
+                        </div>
+                    </div> -->
+                </div>
+                <div id="ext_clock_enable_view" style="display:none">
+                    REF CLOCK <img id="EXT_CLOCK" src="img/green_led.png">
+                </div>
+            </div>
+            <div id="main">
+                <div id="buffer">
+                    <div class="buf-red-line-holder">
+                        <div class="buf-red-line"></div>
+                    </div>
+                    <div id="buf_time_offset"></div>
+                    <div class="buf-main-line"></div>
+                </div>
+                <div id="graphs_holder">
+                    <div id="graphs">
+                        <!-- <div id="trig_out_right" style="margin-top: 15px; float: right; display: none;"><img src="img/trig_out_right.png" /></div>
+                        <div id="trig_out_left" style="margin-top: 15px; float: left; display: none;"><img src="img/trig_out_left.png" /></div> -->
+                        <canvas id="graph_grid"></canvas>
+                        <div id="info_box"></div>
+                        <img id="cur_x1_arrow" class="varrow" src="img/cursor-arrow-up.png">
+                        <div id="cur_x1" class="vline"></div>
+                        <div id="cur_x1_info" class="cur_info"></div>
+                        <img id="cur_x2_arrow" class="varrow" src="img/cursor-arrow-up.png">
+                        <div id="cur_x2" class="vline"></div>
+                        <div id="cur_x2_info" class="cur_info"></div>
+                        <img id="cur_y1_arrow" class="harrow" src="img/cursor-arrow-left.png">
+                        <div id="cur_y1" class="hline"></div>
+                        <div id="cur_y1_info" class="cur_info"></div>
+                        <img id="cur_y2_arrow" class="harrow" src="img/cursor-arrow-left.png">
+                        <div id="cur_y2" class="hline"></div>
+                        <div id="cur_y2_info" class="cur_info"></div>
+                        <div id="cur_y_diff"></div>
+                        <div id="cur_y_diff_info" class="cur_info"></div>
+                        <div id="cur_x_diff"></div>
+                        <div id="cur_x_diff_info" class="cur_info"></div>
+                        <img id="time_offset_arrow" src="img/time-offset-arrow.png">
+                        <img id="math_offset_arrow" class="y-offset-arrow" src="img/math-offset-arrow.png">
+                        <img id="output2_offset_arrow" class="y-offset-arrow" src="img/out2-offset-arrow.png">
+                        <img id="output1_offset_arrow" class="y-offset-arrow" src="img/out1-offset-arrow.png">
+                        <img id="ch2_offset_arrow" class="y-offset-arrow" src="img/ch2-offset-arrow.png">
+                        <img id="ch1_offset_arrow" class="y-offset-arrow" src="img/ch1-offset-arrow.png">
+                        <img id="trig_level_arrow" class="harrow" src="img/trigger-arrow.png">
+                        <div id="trigger_level" class="hline"></div>
+                        <div id="kostyl_footer"></div>
+                    </div>
+                </div>
+                <div id="info" class="clear">
+                    <div class="left-info">
+                        <div class="info-title">
+                            <div class="ch1">IN1</div>
+                            <div class="ch2">IN2</div>
+                            <div class="output1">OUT1</div>
+                            <div class="output2">OUT2</div>
+                            <div class="math">MATH</div>
+                        </div>
+                        <div class="info-value">
+                            <div class="ch1"><span id="OSC_CH1_SCALE">-</span>/div</div>
+                            <div class="ch2"><span id="OSC_CH2_SCALE">-</span>/div</div>
+                            <div class="output1"><span id="SOUR1_VOLT_info">-</span>/div</div>
+                            <div class="output2"><span id="SOUR2_VOLT_info">-</span>/div</div>
+                            <div class="math">
+                                <span id="OSC_MATH_SCALE">1</span>
+                                <span id="munit">/div</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="info-meas" style="position: absolute; left: 200px;"></div>
+                    <div class="pull-right">
+                        Time <span id="OSC_TIME_SCALE">-</span>/div
+                        <br /> Trig
+                        <img id="osc_trig_edge_img" src="img/dummy.png">
+                        <span id="osc_trig_source_ch"></span>
+                        <span id="osc_trig_level_info">-</span>
+                        <br />
+                        <img id="time_offset_static_img" src="img/time-offset-info.png"> <span id="OSC_TIME_OFFSET">-</span>
+                        <br />
+                        <span id="OSC_SAMPL_RATE"></span>
+                    </div>
+                    <div id="triginfo" style="color: green; display:none;">TEXT</div>
+                </div>
+            </div>
+            <div id="joystick">
+                <img id="jtk_fine" src="img/fine.png" />
+                <img id="jtk_btns" src="img/node_fine.png" usemap="#jtk_btns_map" />
+                <map name="jtk_btns_map">
+                    <area id="jtk_left" shape="poly" coords="19,28,37,45,32,56,28,69,29,84,36,101,30,112,18,122,11,114,8,104,4,91,1,77,3,59,9,41,19,27" />
+                    <area id="jtk_up" shape="poly" coords="27,17,42,7,61,3,78,3,89,4,102,7,116,13,124,20,105,37,87,29,64,29,56,33,46,37" />
+                    <area id="jtk_right" shape="poly" coords="111,44,132,27,143,42,147,56,149,76,148,93,141,107,132,123,112,104,119,94,122,76,119,58" />
+                    <area id="jtk_down" shape="poly" coords="46,112,27,130,38,141,51,145,72,148,92,148,106,142,126,132,104,111,90,118,79,120,71,121,62,119,57,117" />
+                </map>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="get_lic" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="bazaar_naLabel">Licence missing</h4>
+            </div>
+            <div class="modal-body" style="text-align: center; font-size: 18px;">
+                <p id="lic_failed">Application is running in demo mode! </p>
+                <p> Please visit <a style="color: #dd0020" href="http://store.redpitaya.com/scopegenpro.html" target="_blank">Red Pitaya store</a> to get the licence.
+            </div>
+            <div class="modal-footer">
+                <div class="bazaar-link" style="float: left; width: 50%;">
+                    <a href="#" style="border: 1px solid;" id="get_license" class="list-group-item btn">Get licence</a>
+                </div>
+                <div class="bazaar-link" style="float: left; width: 50%;">
+                    <a href="#" style="border: 1px solid;" data-dismiss="modal" class="list-group-item btn">Close</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="feedback_error" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="oops_label">Oops, something went wrong</h4>
+            </div>
+            <div class="modal-body" style="text-align: center; font-size: 18px;">
+                <p>Please send us the report and help us to fix this issue</p>
+                <p>Thank you!</p>
+            </div>
+            <div class="modal-footer">
+                <div class="bazaar-link" style="float: left; width: 50%;">
+                    <a href="#" style="border: 1px solid; width: 100%" id="send_report_btn" data-dismiss="modal" class="list-group-item btn">Send report</a>
+                </div>
+                <div class="bazaar-link" style="float: left; width: 50%;">
+                    <a href="#" style="border: 1px solid; width: 100%" id="restart_app_btn" data-dismiss="modal" class="list-group-item btn">Restart Application</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div>
+    <div id="sys_info_view" style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white;">
+        FPS:<span id="fps_view">0</span> Throughput:<span id="throughput_view">0</span> CPU Load:<span id="cpu_load">0</span>
+        <br/> Memory total:<span id="totalmem_view">0</span> Free:<span id="freemem_view">0</span> Usage:<span id="usagemem_view">0</span>
+    </div>
+    <div id="weak_conn_msg" style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(34, 34, 34, 1); text-align:center; padding: 10px; font-size:18px; color:white;">
+        <span id="delay">Performance problem has occurred</span>
+    </div>
+    <div id="demo_label" style="display:none; position:fixed; bottom:0; right: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white; cursor: pointer;">
+        You are working in demo mode. Click here to see details.
+    </div>
+</div>

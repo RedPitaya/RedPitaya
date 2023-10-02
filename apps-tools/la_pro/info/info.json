@@ -1,0 +1,6 @@
+{
+    "name": "Logic analyser",
+    "version": "2.00-BUILD_NUMBER",
+    "revision": "REVISION",
+    "description": "Logic analyser with SPI, I2C & UART protocol decoder"
+}

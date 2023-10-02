@@ -265,6 +265,15 @@ int rp_GenGetArbWaveform(rp_channel_t channel, float *waveform, uint32_t *length
 int rp_GenDutyCycle(rp_channel_t channel, float ratio);
 
 /**
+* Gets duty cycle of PWM signal.
+* @param channel Channel A or B for witch we want to get duty cycle.
+* @param ratio Pointer where value will be returned.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenGetDutyCycle(rp_channel_t channel, float *ratio);
+
+/**
 * Sets rise time of square signal.
 * @param channel Channel A or B for witch we want to set rise time.
 * @param time Rise time in microseconds.
@@ -273,6 +282,16 @@ int rp_GenDutyCycle(rp_channel_t channel, float ratio);
 */
 
 int rp_GenRiseTime(rp_channel_t channel, float time);
+
+/**
+* Gets rise time of square signal.
+* @param channel Channel A or B for witch we want to set rise time.
+* @param time Rise time in microseconds.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+
+int rp_GenGetRiseTime(rp_channel_t channel, float *time);
 
 /**
  * Sets fall time of square signal.
@@ -285,13 +304,14 @@ int rp_GenRiseTime(rp_channel_t channel, float time);
 int rp_GenFallTime(rp_channel_t channel, float time);
 
 /**
-* Gets duty cycle of PWM signal.
-* @param channel Channel A or B for witch we want to get duty cycle.
-* @param ratio Pointer where value will be returned.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rp_GenGetDutyCycle(rp_channel_t channel, float *ratio);
+ * Gets fall time of square signal.
+ * @param channel Channel A or B for witch we want to set fall time.
+ * @param time Fall time in microseconds.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+
+int rp_GenGetFallTime(rp_channel_t channel, float *time);
 
 /**
 * Sets generation mode.
@@ -336,7 +356,7 @@ int rp_GenGetBurstCount(rp_channel_t channel, int *num);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenBurstLastValue(rp_channel_t channel, float amlitude);
+int rp_GenBurstLastValue(rp_channel_t channel, float amplitude);
 
 /**
 * Gets the value to be set at the end of the generated signal in burst mode.
@@ -345,7 +365,7 @@ int rp_GenBurstLastValue(rp_channel_t channel, float amlitude);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetBurstLastValue(rp_channel_t channel, float *amlitude);
+int rp_GenGetBurstLastValue(rp_channel_t channel, float *amplitude);
 
 /**
 * The level of which is set by the generator after the outputs are turned on before the signal is generated.
@@ -354,7 +374,7 @@ int rp_GenGetBurstLastValue(rp_channel_t channel, float *amlitude);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenSetInitGenValue(rp_channel_t channel, float amlitude);
+int rp_GenSetInitGenValue(rp_channel_t channel, float amplitude);
 
 /**
 * Gets the value of the initial signal level.
@@ -363,7 +383,7 @@ int rp_GenSetInitGenValue(rp_channel_t channel, float amlitude);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetInitGenValue(rp_channel_t channel, float *amlitude);
+int rp_GenGetInitGenValue(rp_channel_t channel, float *amplitude);
 
 /**
 * Sets number of burst repetitions. This determines how many bursts will be generated.

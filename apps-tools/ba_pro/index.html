@@ -1,0 +1,737 @@
+<!-- $Id$
+ *
+ * Red Pitaya Oscilloscope client
+ *
+ * Author: Dakus <info@eskala.eu>
+ *
+ * (c) Red Pitaya  http://www.redpitaya.com
+ *
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"></meta>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="cache-control" content="max-age=0" />
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta http-equiv="expires" content="0" />
+    <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
+    <meta http-equiv="pragma" content="no-cache" />
+    <title>Red Pitaya</title>
+
+    <link href="../assets/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../assets/loader.css?1" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="../assets/lpulse.css?1" type="text/css">
+    <link rel="stylesheet" href="../assets/usermis.css" type="text/css">
+    <link href="../assets/popupstack.css" rel="stylesheet" type="text/css" />
+    <link href="../assets/help-system/help-system.css" rel="stylesheet" type="text/css" />
+    <link href="css/style.css?2" rel="stylesheet">
+
+    <script src="../assets/jquery/jquery-2.1.3.min.js"></script>
+    <script src="../assets/jquery/jquery-ui.min.js"></script>
+    <script src="../assets/jquery/jquery.ui.touch-punch.min.js"></script>
+    <script src="../assets/jquery/jquery.flot.js"></script>
+    <script src="../assets/jquery/jquery.mousewheel.min.js"></script>
+    <script src="../assets/jquery/jquery.simulate.js"></script>
+    <script src="../assets/jquery/jquery.cookie.js"></script>
+    <script src="../assets/jquery/jquery.browser.js"></script>
+    <script src="../assets/bootstrap/js/bootstrap.min.js"></script>
+    <script src="../assets/fastclick.min.js"></script>
+    <script src="../assets/browsercheck.js?1"></script>
+    <script src="../assets/pako.js"></script>
+    <script src="../assets/offline.min.js?1"></script>
+    <script src="../assets/ui.js"></script>
+    <script src="../assets/onlinecheck.js?1"></script>
+    <script src="../assets/popupstack.js?1"></script>
+    <script src="../assets/help-system/help-system.js"></script>
+    <script src="js/html2canvas.min.js?1" onerror="location.reload()"></script>
+    <script src="js/help-ba.js?1" onerror="location.reload()"></script>
+    <script src="js/ba.js?1" onerror="location.reload()"></script>
+    <script src="js/guiHandler.js?1" onerror="location.reload()"></script>
+</head>
+
+<body class="user_lost connection_lost">
+    <div id="user-wrapper">
+        <div id="user"></div>
+        <div id="user-desc">Device is already in use by another user.</div>
+    </div>
+    <div id="pulse-wrapper">
+        <div id="pulse"></div>
+        <div id="pulse-desc">Connection with device is lost.</div>
+    </div>
+    <div id="loader-wrapper">
+        <div id="loader"></div>
+        <div id="calibration">Calibrating...</div>
+    </div>
+    <div id="header">
+        <div id="connection_meter" title="It seems like your connection is ok"><img src="../assets/images/good_net.png" id="connection_icon" width="20px"><span id="throughput_view2">0 kB/s</span></div>
+    </div>
+    <div id="img_loading" class="img-container">
+        <div class="centerer"></div>
+        <img src="img/loader_auto_scale.gif" width="90">
+    </div>
+    <div class="full-content">
+        <div class="container-fluid">
+            <div class="navbar navbar-inverse" role="navigation">
+                <div class="container">
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                            <span class="sr-only">T</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a class="navbar-brand" href="/">
+                            <img class="back-btn" src="../assets/images/navigation_arrow_left.png">
+                        </a>
+                        <img class="logo" width=110 src="../assets/images/navigation_logo.png">
+                    </div>
+                    <div class="collapse navbar-collapse">
+                        <ul class="nav navbar-nav">
+                            <li style="width: 60px">
+                                <a href="https://redpitaya.readthedocs.io/en/latest/appsFeatures/applications/bode/bode.html" target="_blank" style="padding-left: 0; padding-right: 0;">
+                                    <img src="../assets/images/help.png" width=20px>
+                                </a>
+                            </li>
+                            <li class="dropdown">
+                                <a class="btn btn-default dropdown-toggle" type="button" id="dd_menu" data-toggle="dropdown" style="padding-left: 20px;">EXPORT<span class="caret"></span></a>
+                                <ul class="dropdown-menu" role="menu" aria-labelledby="menu1" style="background: #cdcccc; min-width: 0px;">
+                                    <li><a id="downl_graph" href="#">Graph</a></li>
+                                    <li><a id="downl_csv" href="#">Data in CSV</a></li>
+                                </ul>
+                            </li>
+                            <li><a id="BA_CALIBRATE" href="#" style="padding-left: 23px; white-space: nowrap;">CALIBRATE</a></li>
+                            <li>
+                                <a id="BA_RUN" href="#" style="">RUN</a>
+                                <a id="BA_STOP" href="#" style="display:none;">STOP</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <!-- Modal export-->
+            <div class="modal" id="export" tabindex="-1" role="dialog" aria-labelledby="export" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                            <h4 class="modal-title">Export</h4>
+                        </div>
+                        <div class="modal-body">
+                            Content
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Modal settings-->
+            <div class="modal" id="settings" tabindex="-1" role="dialog" aria-labelledby="export" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                            <h4 class="modal-title">Settings</h4>
+                        </div>
+                        <div class="modal-body">
+                            Content settings
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="global_container" style="position: relative;">
+                <!-- Menu container -->
+                <div class="menu-content">
+                    <!-- Main menu -->
+                    <div id="right_menu" class="row right-menu-cont">
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                Settings
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div id="setting_button" class="right-menu-option edit-mode">
+                                <img src="img/gear.png">
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                Plot settings
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div id="plot_setting_button" class="right-menu-option edit-mode">
+                                <img src="img/gear.png">
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <div id="cursor" class="right-menu-option edit-mode">
+                                CURSORS
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <div class="right-menu-option">
+                                <img id="BA_CALIB_STATE" src="img/green_led.png" style="width: 20px;height: 20px;">CALIBRATION
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Settings menu -->
+                    <div id="setting_button_dialog" class="dialog row right-menu-cont">
+                        <div class="col-xs-12 option-content">
+                            <div class="set_dialog right-menu-option close-dialog">
+                                <img src="../assets/images/navigation_arrow_left.png"> Settings
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <span class="col-info">Start frequency [Hz]</span>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <input id="BA_START_FREQ" class="setfield input-number" type="text" value="1000" step="1" min="0" max="62500000">
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <span class="col-info">End frequency [Hz]</span>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <input id="BA_END_FREQ" class="setfield input-number" type="text" value="10000" step="1" min="1" max="62500000">
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <span class="col-info">Steps</span>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <input id="BA_STEPS" class="setfield input-number" type="text" value="25" step="1" min="1" max="62500000">
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <span class="col-info">Scale</span>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <div class="btn-group btn-group-justified" data-toggle="buttons">
+                                    <label id="BA_SCALE0" class="btn">
+                                        <input type="radio" value="0" name="BA_SCALE" autocomplete="off">Lin
+                                    </label>
+                                    <label id="BA_SCALE1" class="btn active">
+                                        <input type="radio" value="1" name="BA_SCALE" autocomplete="off">Log
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <span class="col-info">Periods number</span>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <input id="BA_PERIODS_NUMBER" class="setfield input-number" type="text" value="8" step="1" min="1" max="8">
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <span class="col-info">Averaging</span>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <input id="BA_AVERAGING" class="setfield input-number" type="text" value="1" step="1" min="1" max="10">
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <span class="col-info">Amplitude [V]</span>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <input id="BA_AMPLITUDE" class="setfield input-number" type="text" value="1" step="0.01" min="0" max="1">
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <span class="col-info">DC bias [V]</span>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <input id="BA_DC_BIAS" class="setfield input-number" type="text" value="0" step="0.01" min="-1" max="1">
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <span class="col-info">Invalid input data</span>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <a id="BA_SHOWALL_BTN" class="btn active">SHOW</a>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <div class="col-info" style="margin-top: -21px;">Analysis input threshold ppV</span>
+                                </div>
+                                <input class="setfield input-number" id="BA_INPUT_THRESHOLD" type="text" value="0.000" step="0.001" min="0" max="1">
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Plot settings menu -->
+                    <div id="plot_setting_button_dialog" class="dialog row right-menu-cont">
+                        <div class="col-xs-12 option-content">
+                            <div class="set_dialog right-menu-option close-dialog">
+                                <img src="../assets/images/navigation_arrow_left.png"> Plot settings
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <span class="col-info">Gain min [dB]</span>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <input id="BA_SIGNAL_1_MIN" class="setfield input-number" type="text" value="-80" step="1" min="-1000" max="1000">
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <span class="col-info">Gain max [dB]</span>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <input id="BA_SIGNAL_1_MAX" class="setfield input-number" type="text" value="10" step="1" min="-1000" max="1000">
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <span class="col-info">Phase min [deg]</span>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <input id="BA_SIGNAL_2_MIN" class="setfield input-number" type="text" value="-90" step="1" min="-1000" max="100">
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <span class="col-info">Phase max [deg]</span>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <input id="BA_SIGNAL_2_MAX" class="setfield input-number" type="text" value="90" step="1" min="-1000" max="1000">
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <div class="right-menu-option">
+                                <a id="BA_AUTOSCALE_BTN" class="btn active">AUTOSCALE</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="cursor_dialog" class="dialog row right-menu-cont">
+                        <div class="col-xs-12 option-content close-dialog">
+                            <div class="right-menu-option">
+                                <img src="../assets/images/navigation_arrow_left.png"> Cursor
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="BA_CURSOR_X1" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">F1</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="BA_CURSOR_X2" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">F2</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="BA_CURSOR_Y1" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">G1</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="BA_CURSOR_Y2" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">G2</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="BA_CURSOR_Z1" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">P1</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="BA_CURSOR_Z2" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">P2</button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Measurement loader -->
+                    <div id="measuring-status">
+                        <div id="measuring-loader">
+
+                        </div>
+                        Measuring...
+                    </div>
+                </div>
+
+                <!-- Main container -->
+                <div id="main">
+                    <div id="graphs_holder">
+                        <div id="BA_CUR_INFO">Current step: <span id="BA_CUR_STEP" style="margin-right: 40px">1</span>Current freq: <span id="BA_CUR_FREQ">1Hz</span></div>
+                        <img id="cur_x1_arrow" class="varrow" src="img/cursor-arrow-up.png">
+                        <div id="cur_x1" class="vline"></div>
+                        <div id="cur_x1_info" class="cur_info"></div>
+                        <img id="cur_x2_arrow" class="varrow" src="img/cursor-arrow-up.png">
+                        <div id="cur_x2" class="vline"></div>
+                        <div id="cur_x2_info" class="cur_info"></div>
+                        <div id="cur_x_diff"></div>
+                        <div id="cur_x_diff_info" class="cur_info"></div>
+                        <div style="clear: both; position: relative; padding: 0px; margin: 0px;">
+                            <div id="graph_bode" class="graphs">
+
+                                <img id="cur_y1_arrow" class="harrow" src="img/cursor-arrow-left.png">
+                                <div id="cur_y1" class="hline"></div>
+                                <div id="cur_y1_info" class="cur_info"></div>
+                                <img id="cur_y2_arrow" class="harrow" src="img/cursor-arrow-left.png">
+                                <div id="cur_y2" class="hline"></div>
+                                <div id="cur_y2_info" class="cur_info"></div>
+                                <div id="cur_y_diff"></div>
+                                <div id="cur_y_diff_info" class="cur_info"></div>
+
+                                <img id="cur_z1_arrow" class="harrow" src="img/cursor-arrow-right.png">
+                                <div id="cur_z1" class="hline"></div>
+                                <div id="cur_z1_info" class="cur_info"></div>
+                                <img id="cur_z2_arrow" class="harrow" src="img/cursor-arrow-right.png">
+                                <div id="cur_z2" class="hline"></div>
+                                <div id="cur_z2_info" class="cur_info"></div>
+                                <div id="cur_z_diff"></div>
+                                <div id="cur_z_diff_info" class="cur_info"></div>
+
+                                <canvas id="graph_bode_grid" class="graph_grid"></canvas>
+                            </div>
+
+                            <div class="clear info-graph">
+                                <div id="amplitude-info" class="left-info">Amplitude [dB]</div>
+                                <div id="phase-info" class="right-info">Phase [deg]</div>
+                                <div id="freq-info" class="text-center">Frequency [Hz]</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="calibration_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="bazaar_naLabel">Calibration</h4>
+                </div>
+                <div class="modal-body" style="text-align: center; font-size: 18px;">
+                    <p> To calibrate your setup connect IN2 to IN1 (bypass DUT) and press CALIBRATE. </p>
+                    <img id="CALIB_BODE_IMG" width="540" src="img/Bode_cal.png">
+                </div>
+                <div class="modal-footer">
+                    <div class="bazaar-link" style="float: right; width: 50%;" id="calib_btn">
+                        <div href="#" style="border: 1px solid;" class="list-group-item btn" id="calibration-button">Calibrate</div>
+                    </div>
+                    <div class="bazaar-link" style="float: right; width: 50%;" id="calib_reset_btn">
+                        <div href="#" style="border: 1px solid;" class="list-group-item btn" id="reset-calibration-button">Reset Calibration</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="get_lic" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="bazaar_naLabel">Licence missing</h4>
+                </div>
+                <div class="modal-body" style="text-align: center; font-size: 18px;">
+                    <p id="lic_failed">Application is running in demo mode! </p>
+                    <p> Please visit <a style="color: #dd0020" href="http://store.redpitaya.com/scopegenpro.html" target="_blank">Red Pitaya store</a> to get the licence.
+                </div>
+                <div class="modal-footer">
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="#" style="border: 1px solid;" id="get_license" class="list-group-item btn">Get licence</a>
+                    </div>
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="#" style="border: 1px solid;" data-dismiss="modal" class="list-group-item btn">Close</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="feedback_error" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="oops_label">Oops, something went wrong</h4>
+                </div>
+                <div class="modal-body" style="text-align: center; font-size: 18px;">
+                    <p>Please send us the report and help us to fix this issue</p>
+                    <p>Thank you!</p>
+                </div>
+                <div class="modal-footer">
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="#" style="border: 1px solid;  width: 100%" id="send_report_btn" data-dismiss="modal" class="list-group-item btn">Send report</a>
+                    </div>
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="#" style="border: 1px solid;  width: 100%" id="restart_app_btn" data-dismiss="modal" class="list-group-item btn">Restart Application</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div>
+        <div id="sys_info_view" style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white; ">
+            FPS:<span id="fps_view">0</span> Throughput:<span id="throughput_view">0</span> CPU Load:<span id="cpu_load">0</span>
+            <br/> Memory total:<span id="totalmem_view">0</span> Free:<span id="freemem_view">0</span> Usage:<span id="usagemem_view">0</span>
+        </div>
+        <div id="weak_conn_msg" style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(34, 34, 34, 1); text-align:center; padding: 10px; font-size:18px; color:white; ">
+            <span id="delay">Performance problem has occurred</span>
+        </div>
+        <div id="demo_label" style="display:none; position:fixed; bottom:0; right: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white; cursor: pointer; ">
+            You are working in demo mode. Click here to see details.
+        </div>
+    </div>
+</body>
+<script type="text/javascript">
+    $('#demo_label').click(function() {
+        $('#get_lic').modal('show');
+    });
+    $('#get_license').click(function() {
+        window.open('http://store.redpitaya.com/scopegenpro.html', '_blank');
+        $('#get_lic').modal('hide');
+    });
+    $('#BA_CALIBRATE').click(function() {
+        $('#calibration_dialog').modal('show');
+    });
+</script>
+<script language="javascript" type="text/javascript">
+    $(".limits").change(function() {
+        if (['SOUR1_PHAS', 'SOUR1_DCYC', 'SOUR2_PHAS', 'SOUR2_DCYC'].indexOf($(this).attr('id')) != -1) {
+            var min = 0;
+            var max = $(this).attr('id').indexOf('DCYC') > 0 ? 100 : 180;
+
+            if (isNaN($(this).val()) || $(this).val() < min)
+                $(this).val(min);
+            else if ($(this).val() > max)
+                $(this).val(max);
+        } else {
+            var min = $(this).attr('id').indexOf('OFFS') > 0 ? -1 : 0;
+            var max = 1;
+            if (isNaN($(this).val()) || $(this).val() < min)
+                $(this).val(min == -1 ? 0 : 1);
+            else if (isNaN($(this).val()) || $(this).val() > max)
+                $(this).val(min == -1 ? 0 : 1);
+        }
+    }).change();
+
+    $('#calib-input').change(function() {
+        if (isNaN($(this).val()))
+            $(this).val($(this).attr('min'));
+        else if ($(this).val() > +$(this).attr('max'))
+            $(this).val($(this).attr('max'));
+        else if ($(this).val() <= 0)
+            $(this).val($(this).attr('min'));
+    }).change();
+</script>
+<script language="javascript" type="text/javascript">
+    ;
+    (function($) {
+
+        $.fn.iLightInputNumber = function(options) {
+
+            var inBox = '.input-number-box',
+                newInput = '.input-number',
+                moreVal = '.input-number-more',
+                lessVal = '.input-number-less';
+
+            this.each(function() {
+
+                var el = $(this);
+                $('<div class="' + inBox.substr(1) + '"></div>').insertAfter(el);
+                var parent = el.find('+ ' + inBox);
+                parent.append(el);
+                var classes = el.attr('class');
+
+                el.addClass(classes);
+                var attrValue;
+
+
+                parent.append('<div class=' + moreVal.substr(1) + '></div>');
+                parent.append('<div class=' + lessVal.substr(1) + '></div>');
+
+            }); //end each
+
+            var value,
+                step;
+
+            var interval = null,
+                timeout = null;
+
+            function ToggleValue(input) {
+                input.val(parseInt(input.val(), 10) + d);
+                console.log(input);
+            }
+
+            $('body').on('mousedown', moreVal, function() {
+                var el = $(this);
+                var input = el.siblings(newInput);
+                moreValFn(input);
+                timeout = setTimeout(function() {
+                    interval = setInterval(function() {
+                        moreValFn(input);
+                    }, 50);
+                }, 200);
+
+            });
+
+            $('body').on('mousedown', lessVal, function() {
+                var el = $(this);
+                var input = el.siblings(newInput);
+                lessValFn(input);
+                timeout = setTimeout(function() {
+                    interval = setInterval(function() {
+                        lessValFn(input);
+                    }, 50);
+                }, 200);
+            });
+
+            $(moreVal + ', ' + lessVal).on("mouseup mouseout", function() {
+                clearTimeout(timeout);
+                clearInterval(interval);
+            });
+
+            function moreValFn(input) {
+                var max;
+                var limits = getLimits(input);
+                max = limits.max;
+                checkInputAttr(input);
+
+                var newValue = value + step;
+                var parts = step.toString().split('.');
+                var signs = parts.length < 2 ? 0 : parts[1].length;
+                newValue = parseFloat(newValue.toFixed(signs));
+
+                if (newValue > max) {
+                    newValue = max;
+                }
+                changeInputsVal(input, newValue);
+            }
+
+            function getLimits(input) {
+                var min = parseFloat(input.attr('min'));
+                var max = parseFloat(input.attr('max'));
+                return {
+                    'min': min,
+                    'max': max
+                };
+            }
+
+            function lessValFn(input) {
+
+                var min;
+                var limits = getLimits(input);
+                min = limits.min;
+
+                checkInputAttr(input);
+
+                var newValue = value - step;
+                var parts = step.toString().split('.');
+                var signs = parts.length < 2 ? 0 : parts[1].length;
+                newValue = parseFloat(newValue.toFixed(signs));
+                if (newValue < min) {
+                    newValue = min;
+                }
+                changeInputsVal(input, newValue);
+            }
+
+            function changeInputsVal(input, newValue) {
+                input.val(newValue);
+                input.change();
+            }
+
+            function checkInputAttr(input) {
+
+                value = parseFloat(input.val());
+
+
+                if (!($.isNumeric(value))) {
+                    value = 0;
+                }
+                if (input.attr('step')) {
+                    step = parseFloat(input.attr('step'));
+                    if (['OSC_CH1_OFFSET', 'OSC_CH2_OFFSET'].indexOf(input.attr('id')) != -1) {
+
+                        var ch = "";
+                        if (input.attr('id') == "OSC_CH1_OFFSET")
+                            ch = "CH1";
+                        else
+                            ch = "CH2";
+
+                        var probeAttenuation = parseInt($("#OSC_" + ch + "_PROBE option:selected").text());
+                        var jumperSettings = $("#OSC_" + ch + "_IN_GAIN").parent().hasClass("active") ? 1 : 20;
+                        var units = $('#OSC_' + ch + '_OFFSET_UNIT').html();
+                        var multiplier = units == "mV" ? 1000 : 1;
+
+                        if (multiplier == 1000) {
+                            step = 1;
+                            return;
+                        }
+                        if (jumperSettings == 20) {
+                            switch (probeAttenuation) {
+                                case 1:
+                                    step = 0.01;
+                                    return;
+                                case 10:
+                                    step = 0.1;
+                                    return;
+                                case 100:
+                                    step = 1;
+                                    return;
+                            }
+                        } else {
+                            switch (probeAttenuation) {
+                                case 1:
+                                    step = 0.001;
+                                    return;
+                                case 10:
+                                    step = 0.01;
+                                    return;
+                                case 100:
+                                    step = 0.1;
+                            }
+                        }
+                    }
+                    if (['OSC_MATH_OFFSET'].indexOf(input.attr('id')) != -1) {
+
+                        var unit_holder = $('#OSC_MATH_OFFSET_UNIT');
+                        var unit = unit_holder.html().charAt(0);
+                        var scale_val = $("#OSC_MATH_SCALE").text();
+                        var math_vdiv = parseFloat(scale_val);
+                        step = math_vdiv / 100;
+                    }
+
+                } else {
+                    step = 1;
+                }
+            }
+
+            $(newInput).change(function() {
+
+                var input = $(this);
+
+                checkInputAttr(input);
+                var limits = getLimits(input);
+                var min = limits.min;
+                var max = limits.max;
+
+                var parts = step.toString().split('.');
+                var signs = parts.length < 2 ? 0 : parts[1].length;
+                value = parseFloat(value.toFixed(signs));
+
+                if (value < min) {
+                    value = min;
+                } else if (value > max) {
+                    value = max;
+                }
+                if (!($.isNumeric(value))) {
+                    value = 0;
+                }
+                input.val(value);
+            });
+
+            $(newInput).keydown(function(e) {
+                var input = $(this);
+                var k = e.keyCode;
+                if (k == 38) {
+                    moreValFn(input);
+                } else if (k == 40) {
+                    lessValFn(input);
+                }
+            });
+        };
+    })(jQuery);
+
+    $('input[type=text]').iLightInputNumber({
+        mobile: false
+    });
+
+    $('#sys_info').click(function() {
+        var elem = $(this);
+        if (elem.text() == 'SYS INFO') {
+            elem.html('&check; SYS INFO');
+            $('#sys_info_view').show();
+        } else {
+            elem.text('SYS INFO');
+            $('#sys_info_view').hide();
+        }
+    });
+</script>
+
+</html>

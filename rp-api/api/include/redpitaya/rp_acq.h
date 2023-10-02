@@ -112,7 +112,7 @@ int rp_AcqGetSamplingRateHz(float* sampling_rate);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqSetAveraging(bool enabled);
+int rp_AcqSetAveraging(bool enable);
 
 /**
  * Returns information if averaging of data between samples is enabled or disabled.
@@ -121,7 +121,7 @@ int rp_AcqSetAveraging(bool enabled);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetAveraging(bool *enabled);
+int rp_AcqGetAveraging(bool *enable);
 
 /**
  * Sets the trigger source used at acquiring signal. When acquiring is started,
@@ -518,6 +518,23 @@ int rp_AcqSetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t mode);
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_AcqGetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t *status);
+
+/**
+* Initializes buffers to the specified length.
+* @param maxChannels Number of channels.
+* @param length Buffer length.
+* @param initInt16 Initializes an integer type buffer.
+* @param initDouble Initializes a double type buffer.
+* @param initFloat Initializes a floating point buffer.
+* @return Returns null if memory allocation fails.
+*/
+buffers_t* rp_createBuffer(uint8_t maxChannels,uint32_t length,bool initInt16, bool initDouble, bool initFloat);
+
+/**
+* Removes initialized buffers. The structure itself is not deleted. Only internal content.
+* @param _in_buffer Buffer pointer.
+*/
+void rp_deleteBuffer(buffers_t *_in_buffer);
 
 ///@}
 

@@ -1,0 +1,1360 @@
+Start
+0
+0
+0
+0
+0
+1
+0
+1
+Write
+Address write: 50
+ACK
+0
+0
+0
+0
+0
+0
+0
+0
+Data write: 00
+ACK
+Start repeat
+1
+0
+0
+0
+0
+1
+0
+1
+Read
+Address read: 50
+ACK
+0
+0
+0
+0
+0
+0
+0
+0
+Data read: 00
+NACK
+Stop
+Start
+0
+0
+0
+0
+0
+1
+0
+1
+Write
+Address write: 50
+ACK
+0
+0
+0
+0
+0
+0
+0
+0
+Data write: 00
+ACK
+Start repeat
+1
+0
+0
+0
+0
+1
+0
+1
+Read
+Address read: 50
+ACK
+0
+0
+0
+0
+0
+0
+0
+0
+Data read: 00
+ACK
+1
+1
+1
+1
+1
+1
+1
+1
+Data read: FF
+ACK
+1
+1
+1
+1
+1
+1
+1
+1
+Data read: FF
+ACK
+1
+1
+1
+1
+1
+1
+1
+1
+Data read: FF
+ACK
+1
+1
+1
+1
+1
+1
+1
+1
+Data read: FF
+ACK
+1
+1
+1
+1
+1
+1
+1
+1
+Data read: FF
+ACK
+1
+1
+1
+1
+1
+1
+1
+1
+Data read: FF
+ACK
+0
+0
+0
+0
+0
+0
+0
+0
+Data read: 00
+ACK
+0
+0
+1
+1
+0
+0
+1
+0
+Data read: 4C
+ACK
+1
+0
+1
+1
+0
+1
+0
+0
+Data read: 2D
+ACK
+1
+0
+1
+0
+1
+1
+0
+1
+Data read: B5
+ACK
+0
+1
+0
+0
+0
+0
+0
+0
+Data read: 02
+ACK
+0
+0
+1
+0
+1
+1
+0
+0
+Data read: 34
+ACK
+0
+1
+0
+0
+1
+1
+0
+0
+Data read: 32
+ACK
+1
+0
+1
+0
+1
+0
+1
+0
+Data read: 55
+ACK
+0
+0
+0
+1
+0
+0
+1
+0
+Data read: 48
+ACK
+1
+0
+0
+0
+0
+0
+0
+0
+Data read: 01
+ACK
+0
+1
+0
+0
+1
+0
+0
+0
+Data read: 12
+ACK
+1
+0
+0
+0
+0
+0
+0
+0
+Data read: 01
+ACK
+1
+1
+0
+0
+0
+0
+0
+0
+Data read: 03
+ACK
+0
+1
+1
+1
+0
+0
+0
+0
+Data read: 0E
+ACK
+0
+0
+1
+0
+1
+1
+0
+0
+Data read: 34
+ACK
+0
+0
+0
+0
+0
+1
+0
+0
+Data read: 20
+ACK
+0
+0
+0
+0
+0
+1
+0
+1
+Data read: A0
+ACK
+0
+1
+0
+1
+0
+1
+0
+0
+Data read: 2A
+ACK
+0
+1
+0
+1
+1
+0
+1
+0
+Data read: 5A
+ACK
+1
+0
+0
+0
+1
+0
+1
+1
+Data read: D1
+ACK
+1
+1
+1
+0
+0
+1
+0
+1
+Data read: A7
+ACK
+0
+1
+1
+0
+1
+0
+1
+0
+Data read: 56
+ACK
+1
+1
+0
+1
+0
+0
+1
+0
+Data read: 4B
+ACK
+1
+1
+0
+1
+1
+0
+0
+1
+Data read: 9B
+ACK
+0
+0
+1
+0
+0
+1
+0
+0
+Data read: 24
+ACK
+1
+1
+0
+0
+1
+0
+0
+0
+Data read: 13
+ACK
+0
+0
+0
+0
+1
+0
+1
+0
+Data read: 50
+ACK
+0
+0
+1
+0
+1
+0
+1
+0
+Data read: 54
+ACK
+1
+1
+1
+1
+1
+1
+0
+1
+Data read: BF
+ACK
+1
+1
+1
+1
+0
+1
+1
+1
+Data read: EF
+ACK
+0
+0
+0
+0
+0
+0
+0
+1
+Data read: 80
+ACK
+1
+0
+0
+1
+0
+1
+0
+1
+Data read: A9
+ACK
+0
+0
+0
+0
+0
+0
+1
+0
+Data read: 40
+ACK
+1
+0
+0
+0
+0
+0
+0
+1
+Data read: 81
+ACK
+0
+0
+0
+0
+0
+0
+0
+1
+Data read: 80
+ACK
+1
+0
+0
+0
+0
+0
+0
+1
+Data read: 81
+ACK
+0
+0
+0
+0
+0
+0
+1
+0
+Data read: 40
+ACK
+1
+0
+0
+0
+1
+1
+1
+0
+Data read: 71
+ACK
+1
+1
+1
+1
+0
+0
+1
+0
+Data read: 4F
+ACK
+1
+0
+0
+0
+0
+0
+0
+0
+Data read: 01
+ACK
+1
+0
+0
+0
+0
+0
+0
+0
+Data read: 01
+ACK
+1
+0
+0
+0
+0
+0
+0
+0
+Data read: 01
+ACK
+1
+0
+0
+0
+0
+0
+0
+0
+Data read: 01
+ACK
+1
+0
+0
+0
+0
+0
+0
+0
+Data read: 01
+ACK
+1
+0
+0
+0
+0
+0
+0
+0
+Data read: 01
+ACK
+1
+0
+0
+0
+0
+0
+0
+0
+Data read: 01
+ACK
+1
+0
+0
+0
+0
+0
+0
+0
+Data read: 01
+ACK
+0
+0
+0
+1
+0
+1
+0
+0
+Data read: 28
+ACK
+0
+0
+1
+1
+1
+1
+0
+0
+Data read: 3C
+ACK
+0
+0
+0
+0
+0
+0
+0
+1
+Data read: 80
+ACK
+0
+0
+0
+0
+0
+1
+0
+1
+Data read: A0
+ACK
+0
+0
+0
+0
+1
+1
+1
+0
+Data read: 70
+ACK
+0
+0
+0
+0
+1
+1
+0
+1
+Data read: B0
+ACK
+1
+1
+0
+0
+0
+1
+0
+0
+Data read: 23
+ACK
+0
+0
+0
+0
+0
+0
+1
+0
+Data read: 40
+ACK
+0
+0
+0
+0
+1
+1
+0
+0
+Data read: 30
+ACK
+0
+0
+0
+0
+0
+1
+0
+0
+Data read: 20
+ACK
+0
+1
+1
+0
+1
+1
+0
+0
+Data read: 36
+ACK
+0
+0
+0
+0
+0
+0
+0
+0
+Data read: 00
+ACK
+0
+1
+1
+0
+0
+0
+0
+0
+Data read: 06
+ACK
+0
+0
+1
+0
+0
+0
+1
+0
+Data read: 44
+ACK
+1
+0
+0
+0
+0
+1
+0
+0
+Data read: 21
+ACK
+0
+0
+0
+0
+0
+0
+0
+0
+Data read: 00
+ACK
+0
+0
+0
+0
+0
+0
+0
+0
+Data read: 00
+ACK
+0
+1
+0
+1
+1
+0
+0
+0
+Data read: 1A
+ACK
+0
+0
+0
+0
+0
+0
+0
+0
+Data read: 00
+ACK
+0
+0
+0
+0
+0
+0
+0
+0
+Data read: 00
+ACK
+0
+0
+0
+0
+0
+0
+0
+0
+Data read: 00
+ACK
+1
+0
+1
+1
+1
+1
+1
+1
+Data read: FD
+ACK
+0
+0
+0
+0
+0
+0
+0
+0
+Data read: 00
+ACK
+0
+0
+0
+1
+1
+1
+0
+0
+Data read: 38
+ACK
+1
+1
+0
+1
+0
+0
+1
+0
+Data read: 4B
+ACK
+0
+1
+1
+1
+1
+0
+0
+0
+Data read: 1E
+ACK
+1
+0
+0
+0
+1
+0
+1
+0
+Data read: 51
+ACK
+1
+0
+0
+0
+1
+0
+0
+0
+Data read: 11
+ACK
+0
+0
+0
+0
+0
+0
+0
+0
+Data read: 00
+ACK
+0
+1
+0
+1
+0
+0
+0
+0
+Data read: 0A
+ACK
+0
+0
+0
+0
+0
+1
+0
+0
+Data read: 20
+ACK
+0
+0
+0
+0
+0
+1
+0
+0
+Data read: 20
+ACK
+0
+0
+0
+0
+0
+1
+0
+0
+Data read: 20
+ACK
+0
+0
+0
+0
+0
+1
+0
+0
+Data read: 20
+ACK
+0
+0
+0
+0
+0
+1
+0
+0
+Data read: 20
+ACK
+0
+0
+0
+0
+0
+1
+0
+0
+Data read: 20
+ACK
+0
+0
+0
+0
+0
+0
+0
+0
+Data read: 00
+ACK
+0
+0
+0
+0
+0
+0
+0
+0
+Data read: 00
+ACK
+0
+0
+0
+0
+0
+0
+0
+0
+Data read: 00
+ACK
+0
+0
+1
+1
+1
+1
+1
+1
+Data read: FC
+ACK
+0
+0
+0
+0
+0
+0
+0
+0
+Data read: 00
+ACK
+1
+1
+0
+0
+1
+0
+1
+0
+Data read: 53
+ACK
+1
+0
+0
+1
+1
+1
+1
+0
+Data read: 79
+ACK
+0
+1
+1
+1
+0
+1
+1
+0
+Data read: 6E
+ACK
+1
+1
+0
+0
+0
+1
+1
+0
+Data read: 63
+ACK
+1
+0
+1
+1
+0
+0
+1
+0
+Data read: 4D
+ACK
+1
+0
+0
+0
+0
+1
+1
+0
+Data read: 61
+ACK
+1
+1
+0
+0
+1
+1
+1
+0
+Data read: 73
+ACK
+0
+0
+1
+0
+1
+1
+1
+0
+Data read: 74
+ACK
+1
+0
+1
+0
+0
+1
+1
+0
+Data read: 65
+ACK
+0
+1
+0
+0
+1
+1
+1
+0
+Data read: 72
+ACK
+0
+1
+0
+1
+0
+0
+0
+0
+Data read: 0A
+ACK
+0
+0
+0
+0
+0
+1
+0
+0
+Data read: 20
+ACK
+0
+0
+0
+0
+0
+1
+0
+0
+Data read: 20
+ACK
+0
+0
+0
+0
+0
+0
+0
+0
+Data read: 00
+ACK
+0
+0
+0
+0
+0
+0
+0
+0
+Data read: 00
+ACK
+0
+0
+0
+0
+0
+0
+0
+0
+Data read: 00
+ACK
+1
+1
+1
+1
+1
+1
+1
+1
+Data read: FF
+ACK
+0
+0
+0
+0
+0
+0
+0
+0
+Data read: 00
+ACK
+0
+0
+0
+1
+0
+0
+1
+0
+Data read: 48
+ACK
+1
+1
+0
+0
+1
+0
+1
+0
+Data read: 53
+ACK
+1
+0
+0
+0
+1
+1
+0
+0
+Data read: 31
+ACK
+1
+0
+0
+0
+1
+0
+1
+0
+Data read: 51
+ACK
+1
+0
+0
+0
+1
+1
+0
+0
+Data read: 31
+ACK
+0
+0
+0
+0
+1
+1
+0
+0
+Data read: 30
+ACK
+0
+1
+0
+0
+1
+1
+0
+0
+Data read: 32
+ACK
+1
+0
+0
+1
+1
+1
+0
+0
+Data read: 39
+ACK
+1
+1
+0
+0
+1
+1
+0
+0
+Data read: 33
+ACK
+0
+1
+1
+0
+1
+1
+0
+0
+Data read: 36
+ACK
+0
+1
+0
+1
+0
+0
+0
+0
+Data read: 0A
+ACK
+0
+0
+0
+0
+0
+1
+0
+0
+Data read: 20
+ACK
+0
+0
+0
+0
+0
+1
+0
+0
+Data read: 20
+ACK
+0
+0
+0
+0
+0
+0
+0
+0
+Data read: 00
+ACK
+0
+0
+0
+0
+0
+0
+1
+0
+Data read: 40
+NACK
+Stop

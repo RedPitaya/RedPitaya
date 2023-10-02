@@ -1,0 +1,33 @@
+-------------------------------------------------------------------------------
+Microchip MCP2515DM-BM CAN bus demo board
+-------------------------------------------------------------------------------
+
+This is a set of example captures of the CAN signal on a Microchip
+MCP2515DM-BM CAN bus demo board.
+
+The signal grabbed is the (digital) CAN_RX pin of the MCP2515 chip.
+
+Details:
+http://www.microchip.com/stellent/idcplg?IdcService=SS_GET_PAGE&nodeId=1406&dDocName=en537141
+
+
+Logic analyzer setup
+--------------------
+
+The logic analyzer used was a Saleae Logic (at 4MHz):
+
+  Probe       MCP2515 pin
+  -----------------------
+  4 (orange)  CAN_RX
+
+
+Data
+----
+
+The data contains various CAN sample frames at various CAN bitrates.
+
+The sigrok command line used was:
+
+  sigrok-cli --driver fx2lafw -d samplerate=4mhz \
+             -p 3=CAN_RX,1,2,4-7 --time 3s -o <file>
+

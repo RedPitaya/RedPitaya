@@ -2,6 +2,7 @@
 #include "rp_hw.h"
 #include <iostream>
 #include <pthread.h>
+#include <string.h>
 
 pthread_mutex_t g_mcp_i2c_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -13,12 +14,13 @@ using namespace RP_MCP47X6;
  */
 mcp47x6::mcp47x6(mcp47x6_model model, const char* i2c_dev_path) {
     m_devAddr = MCP47X6_DEFAULT_ADDRESS;
-    m_i2c_dev_path = i2c_dev_path;
     m_config = 0;
     m_config_eeprom = 0;
     m_level = 0;
     m_level_eeprom = 0;
     m_model = model;
+    m_i2c_dev_path = new char[strlen(i2c_dev_path)+1];
+    strcpy(m_i2c_dev_path,i2c_dev_path);
 }
 
 /******************************************
@@ -28,12 +30,17 @@ mcp47x6::mcp47x6(mcp47x6_model model, const char* i2c_dev_path) {
  */
 mcp47x6::mcp47x6(mcp47x6_model model, const char* i2c_dev_path, uint8_t address) {
     m_devAddr = address;
-    m_i2c_dev_path = i2c_dev_path;
     m_config = 0;
     m_config_eeprom = 0;
     m_level = 0;
     m_level_eeprom = 0;
     m_model = model;
+    m_i2c_dev_path = new char[strlen(i2c_dev_path)+1];
+    strcpy(m_i2c_dev_path,i2c_dev_path);
+}
+
+mcp47x6::~mcp47x6(){
+    delete m_i2c_dev_path;
 }
 
 bool mcp47x6::readConfig() {
@@ -158,11 +165,11 @@ void mcp47x6::setGain(uint8_t gain) {
     m_config = (m_config & MCP47X6_GAIN_MASK) | (gain & ~MCP47X6_GAIN_MASK);
 }
 
-char mcp47x6::getGain(){
+uint8_t mcp47x6::getGain(){
     return m_config & ~MCP47X6_GAIN_MASK; 
 }
 
-char mcp47x6::getGainEeprom(){
+uint8_t mcp47x6::getGainEeprom(){
     return m_config_eeprom & ~MCP47X6_GAIN_MASK; 
 }
 
@@ -214,19 +221,19 @@ void mcp47x6::setPowerDown(uint8_t pdOutR){
     m_config = (m_config & MCP47X6_PWRDN_MASK) | (pdOutR & ~MCP47X6_PWRDN_MASK);
 }
 
-char mcp47x6::getPowerDown(){
+uint8_t mcp47x6::getPowerDown(){
     return m_config & ~MCP47X6_PWRDN_MASK; 
 }
 
-char mcp47x6::getPowerDownEeprom(){
+uint8_t mcp47x6::getPowerDownEeprom(){
     return m_config_eeprom & ~MCP47X6_PWRDN_MASK; 
 }
 
-char mcp47x6::getVReferenc(){
+uint8_t mcp47x6::getVReferenc(){
     return m_config & ~MCP47X6_VREF_MASK; 
 }
 
-char mcp47x6::getVReferencEeprom(){
+uint8_t mcp47x6::getVReferencEeprom(){
     return m_config_eeprom & ~MCP47X6_VREF_MASK;
 }
 

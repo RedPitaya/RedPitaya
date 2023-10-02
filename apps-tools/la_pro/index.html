@@ -1,0 +1,1607 @@
+<!-- $Id$
+ *
+ * Red Pitaya Oscilloscope client
+ *
+ * Author: Dakus <info@eskala.eu>
+ *
+ * (c) Red Pitaya  http://www.redpitaya.com
+ *
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"></meta>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="cache-control" content="max-age=0" />
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta http-equiv="expires" content="0" />
+    <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
+    <meta http-equiv="pragma" content="no-cache" />
+    <title>Red Pitaya</title>
+    <link rel="stylesheet" href="../assets/bootstrap/css/bootstrap.min.css?1" onerror="location.reload()">
+    <link rel="stylesheet" href="../assets/loader.css?1" type="text/css" onerror="location.reload()">
+    <link rel="stylesheet" href="../assets/lpulse.css?1" type="text/css" onerror="location.reload()">
+    <link rel="stylesheet" href="../assets/usermis.css?1" type="text/css" onerror="location.reload()">
+    <link rel="stylesheet" href="../assets/popupstack.css?1" type="text/css" onerror="location.reload()" />
+    <link rel="stylesheet" href="../assets/help-system/help-system.css?1" type="text/css" onerror="location.reload()" />
+    <link rel="stylesheet" href="css/style.css?2" onerror="location.reload()">
+    <script src="../assets/jquery/jquery-2.1.3.min.js?1" onerror="location.reload()"></script>
+    <script src="../assets/jquery/jquery-ui.min.js?1" onerror="location.reload()"></script>
+    <script src="../assets/jquery/jquery.ui.touch-punch.min.js?1" onerror="location.reload()"></script>
+    <script src="../assets/jquery/jquery.flot.js?1" onerror="location.reload()"></script>
+    <script src="../assets/jquery/jquery.flot.symbol.js?1" onerror="location.reload()"></script>
+    <script src="../assets/jquery/jquery.mousewheel.min.js?1" onerror="location.reload()"></script>
+    <script src="../assets/jquery/jquery.cookie.js?1" onerror="location.reload()"></script>
+    <script src="../assets/jquery/jquery.simulate.js?1" onerror="location.reload()"></script>
+    <script src="../assets/jquery/jquery.browser.js?1" onerror="location.reload()"></script>
+    <script src="../assets/bootstrap/js/bootstrap.min.js?1" onerror="location.reload()"></script>
+    <script src="../assets/fastclick.min.js?1" onerror="location.reload()"></script>
+    <script src="../assets/browsercheck.js?1" onerror="location.reload()"></script>
+    <script src="../assets/zlib_and_gzip.min.js?1" onerror="location.reload()"></script>
+    <script src="../assets/popupstack.js?1" onerror="location.reload()"></script>
+    <script src="../assets/help-system/help-system.js?1" onerror="location.reload()"></script>
+    <script src="js/html2canvas.min.js?1" onerror="location.reload()"></script>
+    <script src="js/baseConverter.js?3" onerror="location.reload()"></script>
+    <script src="js/FileSaver.min.js?1" onerror="location.reload()"></script>
+    <script src="js/help-la.js?1" onerror="location.reload()"></script>
+    <script src="js/rp250.js?2" onerror="location.reload()"></script>
+    <script src="js/rpZ20.js?2" onerror="location.reload()"></script>
+    <script src="js/scope.js?4" onerror="location.reload()"></script>
+    <script src="js/scope.decoder.js?3" onerror="location.reload()"></script>
+    <script src="js/scope.spi.js?3" onerror="location.reload()"></script>
+    <script src="js/scope.i2c.js?3" onerror="location.reload()"></script>
+    <script src="js/scope.can.js?3" onerror="location.reload()"></script>
+    <script src="js/scope.uart.js?3" onerror="location.reload()"></script>
+</head>
+
+<body class="user_lost connection_lost">
+    <div id="user-wrapper">
+        <div id="user"></div>
+        <div id="user-desc">Device is already in use by another user.</div>
+    </div>
+    <div id="pulse-wrapper">
+        <div id="pulse"></div>
+        <div id="pulse-desc">Connection with device is lost.</div>
+    </div>
+    <div id="loader-wrapper">
+        <div id="loader"></div>
+    </div>
+    <div id="header">
+        <div id="connection_meter" title="It seems like your connection is ok"></div>
+    </div>
+
+    <!-- <div class="modal fade" id="modal_module_disconnected" role="dialog" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Logic Analyser mode</h4>
+                </div>
+                <div class="modal-body" style="padding: 15px 0 15px 0px">
+                    <div class="modal-body">
+                        <div>
+                            <h5 style="text-align: center;">Select mode</h5>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="width: 100%;">
+                        <a href="/" style="border: 1px solid; width: 40%; float:left;" id="stem10_btn" data-dismiss="modal" class="list-group-item btn">Basic</a>
+                        <a href="/" style="border: 1px solid; width: 40%; float:right;" id="stem14_btn" data-dismiss="modal" class="list-group-item btn">Pro</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> -->
+
+    <div class="full-content">
+        <div class="container-fluid">
+            <div class="navbar navbar-inverse" role="navigation">
+                <div class="container">
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                            <span class="sr-only">T</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a class="navbar-brand" href="/">
+                            <img class="back-btn" src="../assets/images/navigation_arrow_left.png">
+                        </a>
+                        <img class="logo" width=110 src="../assets/images/navigation_logo.png">
+                    </div>
+                    <div class="collapse navbar-collapse">
+                        <ul class="nav navbar-nav">
+                            <li style="width: 60px">
+                                <a href="https://redpitaya.readthedocs.io/en/latest/appsFeatures/applications/logic/logic.html" target="_blank" style="padding-left: 0; padding-right: 0;">
+                                    <img src="../assets/images/help.png" width=20px>
+                                </a>
+                            </li>
+                            <li class="dropdown">
+                                <a class="btn btn-default dropdown-toggle" type="button" id="dd_menu" data-toggle="dropdown" style="padding-left: 20px;">EXPORT<span class="caret"></span></a>
+                                <ul class="dropdown-menu" role="menu" aria-labelledby="menu1" style="background: #cdcccc; min-width: 0px;">
+                                    <li><a id="downl_graph" href="#">Graph</a></li>
+                                    <li><a id="downl_csv" href="#">Data in CSV</a></li>
+                                </ul>
+                            </li>
+                            <li class="dropdown">
+                                <a class="btn btn-default dropdown-toggle" type="button" id="menu1" data-toggle="dropdown">SETTINGS<span class="caret"></span></a>
+                                <ul class="dropdown-menu" role="menu" aria-labelledby="menu1" style="background: #cdcccc; min-width: 0px;">
+                                    <li><a id="reset_to_default" href="#" data-toggle="modal" data-target="#areusure">DEFAULT</a></li>
+                                    <li><a id="sys_info" href="#">SYS INFO</a></li>
+                                    <li><a id="select_mode" href="#">Ext. module used</a></li>
+                                </ul>
+                            </li>
+                            <li>
+                                <a class="btn btn-default" type="button" id="AUTO_BUTTON" href="#">AUTO</a>
+                            </li>
+                            <li>
+                                <a id="OSC_STOP" href="#" style="display:none;">STOP</a>
+                                <a id="OSC_RUN" href="#">RUN</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <!-- Modal export-->
+            <div class="modal" id="export" tabindex="-1" role="dialog" aria-labelledby="export" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                            <h4 class="modal-title">Export</h4>
+                        </div>
+                        <div class="modal-body">
+                            Content
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Modal settings-->
+            <div class="modal" id="settings" tabindex="-1" role="dialog" aria-labelledby="export" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                            <h4 class="modal-title">Settings</h4>
+                        </div>
+                        <div class="modal-body">
+                            Content settings
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="global_container" style="position: relative;">
+                <div class="menu-content">
+                    <div id="right_menu" class="row right-menu-cont">
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button type="button" class="btn menu-btn ch1 dbl" data-signal="ch1" data-toggle="button" aria-pressed="false" autocomplete="off" disabled>DIGITAL</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div id="in1" class="right-menu-option edit-mode" data-signal="ch1"><img src="img/gear.png"></div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button type="button" class="btn menu-btn trig not-signal dbl" data-toggle="button" aria-pressed="false" autocomplete="off" disabled>TRIG</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div id="trig" class="right-menu-option edit-mode"><img src="img/gear.png"></div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <div id="cursor" class="right-menu-option edit-mode">CURSOR</div>
+                        </div>
+                    </div>
+                    <div id="in1_dialog" class="dialog row right-menu-cont">
+                        <div class="col-xs-12 option-content">
+                            <div class="ch1 right-menu-option close-dialog">
+                                <img src="../assets/images/navigation_arrow_left.png"> DIGITAL
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <div class="right-menu-option">
+                                <div class="btn-group btn-group-justified" data-toggle="buttons">
+                                    <label class="btn btn-less active">
+                                        <input type="radio" value="0" class="decoder-tab-btn" name="OSC_TRIG_SOURCE" data-attr="#lines_tab" autocomplete="off">LINES
+                                    </label>
+                                    <label class="btn btn-less">
+                                        <input type="radio" value="1" class="decoder-tab-btn" name="OSC_TRIG_SOURCE" data-attr="#bus_tab" autocomplete="off">BUS
+                                    </label>
+                                    <label class="btn btn-less">
+                                        <input type="radio" value="2" class="decoder-tab-btn" name="OSC_TRIG_SOURCE" data-attr="#data_tab" autocomplete="off">DATA
+                                    </label>
+                                    <label class="btn btn-less">
+                                        <input type="radio" value="2" class="decoder-tab-btn" name="OSC_TRIG_SOURCE" data-attr="#acq_tab" autocomplete="off">ACQ
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="lines_tab" class="decoder-tab">
+                            <div class="col-xs-12 option-content">
+                                <div class="col-xs-3 option-content no-lr-padding">
+                                    <div class="right-menu-option enable-ch" id="CH1_ENABLED"><img src="img/check.png" /></div>
+                                </div>
+                                <div class="col-xs-9 option-content no-lr-padding">
+                                    <div class="right-menu-option">
+                                        <input type="text" class="ch-name-inp form-control no-up-down dropdown-menu-decoder" maxlength="4" placeholder="DIN0" id="CH1_NAME" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-12 option-content">
+                                <div class="col-xs-3 option-content no-lr-padding">
+                                    <div class="right-menu-option enable-ch" id="CH2_ENABLED"><img src="img/check.png" /></div>
+                                </div>
+                                <div class="col-xs-9 option-content no-lr-padding">
+                                    <div class="right-menu-option">
+                                        <input type="text" class="ch-name-inp form-control no-up-down dropdown-menu-decoder" maxlength="4" placeholder="DIN1" id="CH2_NAME" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-12 option-content">
+                                <div class="col-xs-3 option-content no-lr-padding">
+                                    <div class="right-menu-option enable-ch" id="CH3_ENABLED"><img src="img/check.png" /></div>
+                                </div>
+                                <div class="col-xs-9 option-content no-lr-padding">
+                                    <div class="right-menu-option">
+                                        <input type="text" class="ch-name-inp form-control no-up-down dropdown-menu-decoder" maxlength="4" placeholder="DIN2" id="CH3_NAME" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-12 option-content">
+                                <div class="col-xs-3 option-content no-lr-padding">
+                                    <div class="right-menu-option enable-ch" id="CH4_ENABLED"><img src="img/check.png" /></div>
+                                </div>
+                                <div class="col-xs-9 option-content no-lr-padding">
+                                    <div class="right-menu-option">
+                                        <input type="text" class="ch-name-inp form-control no-up-down dropdown-menu-decoder" maxlength="4" placeholder="DIN3" id="CH4_NAME" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-12 option-content">
+                                <div class="col-xs-3 option-content no-lr-padding">
+                                    <div class="right-menu-option enable-ch" id="CH5_ENABLED"><img src="img/check.png" /></div>
+                                </div>
+                                <div class="col-xs-9 option-content no-lr-padding">
+                                    <div class="right-menu-option">
+                                        <input type="text" class="ch-name-inp form-control no-up-down dropdown-menu-decoder" maxlength="4" placeholder="DIN4" id="CH5_NAME" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-12 option-content">
+                                <div class="col-xs-3 option-content no-lr-padding">
+                                    <div class="right-menu-option enable-ch" id="CH6_ENABLED"><img src="img/check.png" /></div>
+                                </div>
+                                <div class="col-xs-9 option-content no-lr-padding">
+                                    <div class="right-menu-option">
+                                        <input type="text" class="ch-name-inp form-control no-up-down dropdown-menu-decoder" maxlength="4" placeholder="DIN5" id="CH6_NAME" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-12 option-content">
+                                <div class="col-xs-3 option-content no-lr-padding">
+                                    <div class="right-menu-option enable-ch" id="CH7_ENABLED"><img src="img/check.png" /></div>
+                                </div>
+                                <div class="col-xs-9 option-content no-lr-padding">
+                                    <div class="right-menu-option">
+                                        <input type="text" class="ch-name-inp form-control no-up-down dropdown-menu-decoder" maxlength="4" placeholder="DIN6" id="CH7_NAME" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-12 option-content">
+                                <div class="col-xs-3 option-content no-lr-padding">
+                                    <div class="right-menu-option enable-ch" id="CH8_ENABLED"><img src="img/check.png" /></div>
+                                </div>
+                                <div class="col-xs-9 option-content no-lr-padding">
+                                    <div class="right-menu-option">
+                                        <input type="text" class="ch-name-inp form-control no-up-down dropdown-menu-decoder" maxlength="4" placeholder="DIN7" id="CH8_NAME" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="bus_tab" class="decoder-tab" style="display:none">
+                            <div class="col-xs-12 option-content">
+                                <div class="col-xs-3 option-content no-lr-padding">
+                                    <div class="right-menu-option enable-ch" id="BUS1_ENABLED"><img style="display:none" src="img/check.png" /></div>
+                                </div>
+                                <div class="col-xs-6 no-lr-padding">
+                                    <div class="right-menu-option" id="BUS1_NAME">BUS0</div>
+                                </div>
+                                <div class="col-xs-3 option-content no-lr-padding">
+                                    <div class="right-menu-option bus-settings-btn" id="BUS1_SETTINGS"><img src="img/gear.png" /></div>
+                                </div>
+                            </div>
+                            <div class="col-xs-12 option-content">
+                                <div class="col-xs-3 option-content no-lr-padding">
+                                    <div class="right-menu-option enable-ch" id="BUS2_ENABLED"><img style="display:none" src="img/check.png" /></div>
+                                </div>
+                                <div class="col-xs-6 no-lr-padding">
+                                    <div class="right-menu-option" id="BUS2_NAME">BUS1</div>
+                                </div>
+                                <div class="col-xs-3 option-content no-lr-padding">
+                                    <div class="right-menu-option bus-settings-btn" id="BUS2_SETTINGS"><img src="img/gear.png" /></div>
+                                </div>
+                            </div>
+                            <div class="col-xs-12 option-content">
+                                <div class="col-xs-3 option-content no-lr-padding">
+                                    <div class="right-menu-option enable-ch" id="BUS3_ENABLED"><img style="display:none" src="img/check.png" /></div>
+                                </div>
+                                <div class="col-xs-6 no-lr-padding">
+                                    <div class="right-menu-option" id="BUS3_NAME">BUS2</div>
+                                </div>
+                                <div class="col-xs-3 option-content no-lr-padding">
+                                    <div class="right-menu-option bus-settings-btn" id="BUS3_SETTINGS"><img src="img/gear.png" /></div>
+                                </div>
+                            </div>
+                            <div class="col-xs-12 option-content">
+                                <div class="col-xs-3 option-content no-lr-padding">
+                                    <div class="right-menu-option enable-ch" id="BUS4_ENABLED"><img style="display:none" src="img/check.png" /></div>
+                                </div>
+                                <div class="col-xs-6 no-lr-padding">
+                                    <div class="right-menu-option" id="BUS4_NAME">BUS3</div>
+                                </div>
+                                <div class="col-xs-3 option-content no-lr-padding">
+                                    <div class="right-menu-option bus-settings-btn" id="BUS4_SETTINGS"><img src="img/gear.png" /></div>
+                                </div>
+                            </div>
+                            <div class="col-xs-12 option-content">
+                                <span class="col-info" style="z-index: 1000;">Display radix</span>
+                                <div class="right-menu-option">
+                                    <select id="DISPLAY_RADIX" class="form-control styled-select">
+                                        <option value="1">ASCII</option>
+                                        <option value="17" selected="">ASCII & HEX</option>
+                                        <option value="2">BIN</option>
+                                        <option value="10">DEC</option>
+                                        <option value="16">HEX</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="data_tab" class="decoder-tab" style="display:none">
+                            <div class="col-xs-3 option-content no-lr-padding">
+                                <div class="right-menu-option no-lr-padding">
+                                    <button id="DATA_BUS0" type="button" class="btn no-lr-padding font12 data-bus" data-toggle="button" aria-pressed="false" autocomplete="off">BUS0</button>
+                                </div>
+                            </div>
+                            <div class="col-xs-3 option-content no-lr-padding">
+                                <div class="right-menu-option no-lr-padding">
+                                    <button id="DATA_BUS1" type="button" class="btn no-lr-padding font12 data-bus" data-toggle="button" aria-pressed="false" autocomplete="off">BUS1</button>
+                                </div>
+                            </div>
+                            <div class="col-xs-3 option-content no-lr-padding">
+                                <div class="right-menu-option no-lr-padding">
+                                    <button id="DATA_BUS2" type="button" class="btn no-lr-padding font12 data-bus" data-toggle="button" aria-pressed="false" autocomplete="off">BUS2</button>
+                                </div>
+                            </div>
+                            <div class="col-xs-3 option-content no-lr-padding">
+                                <div class="right-menu-option no-lr-padding">
+                                    <button id="DATA_BUS3" type="button" class="btn no-lr-padding font12 data-bus" data-toggle="button" aria-pressed="false" autocomplete="off">BUS3</button>
+                                </div>
+                            </div>
+                            <div class="col-xs-12 option-content log-container" id="log-container">
+                            </div>
+                            <div id="hidden-log-container" style="display: none;"></div>
+                            <div class="col-xs-12 option-content">
+                                <button id="export-data" type="button" class="btn">EXPORT</button>
+                            </div>
+                            <div class="col-xs-12 option-content">
+                                <span class="col-info" style="z-index: 1000;">Display</span>
+                                <div class="right-menu-option">
+                                    <select id="EXPORT_RADIX" class="form-control styled-select">
+                                        <option value="1">ASCII</option>
+                                        <option value="17" selected="">ASCII & HEX</option>
+                                        <option value="2">BIN</option>
+                                        <option value="10">DEC</option>
+                                        <option value="16" selected="">HEX</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="acq_tab" class="decoder-tab" style="display:none">
+                            <div class="col-xs-12 option-content">
+                                <span class="col-info" style="z-index: 1000;">Sample speed</span>
+                                <div class="right-menu-option">
+                                    <select id="ACQ_SPEED" class="form-control styled-select">
+                                        <option class="speed_val" value="1" selected="">125 MS/s</option>
+                                        <option class="speed_val" value="2">64 MS/s</option>
+                                        <option class="speed_val" value="4">32 MS/s</option>
+                                        <option class="speed_val" value="8">16 MS/s</option>
+                                        <option class="speed_val" value="16">8 MS/s</option>
+                                        <option class="speed_val" value="32">4 MS/s</option>
+                                        <option class="speed_val" value="64">2 MS/s</option>
+                                        <option class="speed_val" value="128">1 MS/s</option>
+                                    </select>
+                                </div>
+                                <!-- Pre-sample buffer settings -->
+                                <span class="col-info" style="z-index: 5000;">Pre-sample data buffer, ms</span>
+                                <div class="right-menu-option">
+                                    <div>
+                                        <input type="number" class="form-control no-up-down" min="1" maxlength="20" placeholder="1" value="1" id="pre-sample-buf-val">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="trig_dialog" class="dialog row right-menu-cont">
+                        <div class="col-xs-12 option-content close-dialog">
+                            <div class="right-menu-option trig">
+                                <img src="../assets/images/navigation_arrow_left.png"> TRIGGER
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <!-- DIN0 -->
+                            <div class="col-xs-4 option-content no-lr-padding">
+                                <div class="right-menu-option">
+                                    <!-- <select id="TRIGGER_CHANNEL" class="form-control styled-select no-lr-padding">
+                                    </select> -->
+                                    DIN0
+                                </div>
+                            </div>
+                            <div class="col-xs-8 option-content no-lr-padding">
+                                <div class="right-menu-option">
+                                    <select id="" name="din0" class="form-control styled-select no-lr-padding trigger_type">
+                                        <option value="-1">X - Ignore</option>
+                                        <option value="0">0 - Low</option>
+                                        <option value="1">1 - High</option>
+                                        <option value="2">R - Rising</option>
+                                        <option value="3">F - Falling</option>
+                                        <option value="4">E - Either</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <!-- DIN1 -->
+                            <div class="col-xs-4 option-content no-lr-padding">
+                                <div class="right-menu-option">
+                                    DIN1
+                                </div>
+                            </div>
+                            <div class="col-xs-8 option-content no-lr-padding">
+                                <div class="right-menu-option">
+                                    <select id="" name="din1" class="form-control styled-select no-lr-padding trigger_type">
+                                        <option value="-1">X - Ignore</option>
+                                        <option value="0">0 - Low</option>
+                                        <option value="1">1 - High</option>
+                                        <option value="2">R - Rising</option>
+                                        <option value="3">F - Falling</option>
+                                        <option value="4">E - Either</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <!-- DIN2 -->
+                            <div class="col-xs-4 option-content no-lr-padding">
+                                <div class="right-menu-option">
+                                    DIN2
+                                </div>
+                            </div>
+                            <div class="col-xs-8 option-content no-lr-padding">
+                                <div class="right-menu-option">
+                                    <select id="" name="din2" class="form-control styled-select no-lr-padding trigger_type">
+                                        <option value="-1">X - Ignore</option>
+                                        <option value="0">0 - Low</option>
+                                        <option value="1">1 - High</option>
+                                        <option value="2">R - Rising</option>
+                                        <option value="3">F - Falling</option>
+                                        <option value="4">E - Either</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <!-- DIN3 -->
+                            <div class="col-xs-4 option-content no-lr-padding">
+                                <div class="right-menu-option">
+                                    DIN3
+                                </div>
+                            </div>
+                            <div class="col-xs-8 option-content no-lr-padding">
+                                <div class="right-menu-option">
+                                    <select id="" name="din3" class="form-control styled-select no-lr-padding trigger_type">
+                                        <option value="-1">X - Ignore</option>
+                                        <option value="0">0 - Low</option>
+                                        <option value="1">1 - High</option>
+                                        <option value="2">R - Rising</option>
+                                        <option value="3">F - Falling</option>
+                                        <option value="4">E - Either</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <!-- DIN4 -->
+                            <div class="col-xs-4 option-content no-lr-padding">
+                                <div class="right-menu-option">
+                                    DIN4
+                                </div>
+                            </div>
+                            <div class="col-xs-8 option-content no-lr-padding">
+                                <div class="right-menu-option">
+                                    <select id="" name="din4" class="form-control styled-select no-lr-padding trigger_type">
+                                        <option value="-1">X - Ignore</option>
+                                        <option value="0">0 - Low</option>
+                                        <option value="1">1 - High</option>
+                                        <option value="2">R - Rising</option>
+                                        <option value="3">F - Falling</option>
+                                        <option value="4">E - Either</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <!-- DIN5 -->
+                            <div class="col-xs-4 option-content no-lr-padding">
+                                <div class="right-menu-option">
+                                    DIN5
+                                </div>
+                            </div>
+                            <div class="col-xs-8 option-content no-lr-padding">
+                                <div class="right-menu-option">
+                                    <select id="" name="din5" class="form-control styled-select no-lr-padding trigger_type">
+                                        <option value="-1">X - Ignore</option>
+                                        <option value="0">0 - Low</option>
+                                        <option value="1">1 - High</option>
+                                        <option value="2">R - Rising</option>
+                                        <option value="3">F - Falling</option>
+                                        <option value="4">E - Either</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <!-- DIN6 -->
+                            <div class="col-xs-4 option-content no-lr-padding">
+                                <div class="right-menu-option">
+                                    DIN6
+                                </div>
+                            </div>
+                            <div class="col-xs-8 option-content no-lr-padding">
+                                <div class="right-menu-option">
+                                    <select id="" name="din6" class="form-control styled-select no-lr-padding trigger_type">
+                                        <option value="-1">X - Ignore</option>
+                                        <option value="0">0 - Low</option>
+                                        <option value="1">1 - High</option>
+                                        <option value="2">R - Rising</option>
+                                        <option value="3">F - Falling</option>
+                                        <option value="4">E - Either</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <!-- DIN7 -->
+                            <div class="col-xs-4 option-content no-lr-padding">
+                                <div class="right-menu-option">
+                                    DIN7
+                                </div>
+                            </div>
+                            <div class="col-xs-8 option-content no-lr-padding">
+                                <div class="right-menu-option">
+                                    <select id="" name="din7" class="form-control styled-select no-lr-padding trigger_type">
+                                        <option value="-1">X - Ignore</option>
+                                        <option value="0">0 - Low</option>
+                                        <option value="1">1 - High</option>
+                                        <option value="2">R - Rising</option>
+                                        <option value="3">F - Falling</option>
+                                        <option value="4">E - Either</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <!-- <div class="col-xs-12 option-content">
+                                <button id="add_trigger" type="button" class="btn">ADD</button>
+                            </div>
+                            <div class="col-xs-12 option-content">
+                                <span class="col-info">List (click to clear meas.)</span>
+                                <div id="meas_list"></div>
+                            </div> -->
+                        </div>
+                    </div>
+                    <div id="cursor_dialog" class="dialog row right-menu-cont">
+                        <div class="col-xs-12 option-content close-dialog">
+                            <div class="right-menu-option">
+                                <img src="../assets/images/navigation_arrow_left.png"> Cursor
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="OSC_CURSOR_X1" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">X1</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="OSC_CURSOR_X2" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">X2</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="main">
+                    <div id="buffer">
+                        <div class="buf-red-line-holder">
+                            <div class="buf-red-line"></div>
+                        </div>
+                        <div id="buf_time_offset"></div>
+                        <div class="buf-main-line"></div>
+                    </div>
+                    <div id="graphs_holder">
+                        <div id="graphs">
+                            <canvas id="graph_grid"></canvas>
+                            <div id="info_box"></div>
+                            <img id="cur_x1_arrow" class="varrow" src="img/cursor-arrow-up.png">
+                            <div id="cur_x1" class="vline"></div>
+                            <div id="cur_x1_info" class="cur_info"></div>
+                            <img id="cur_x2_arrow" class="varrow" src="img/cursor-arrow-up.png">
+                            <div id="cur_x2" class="vline"></div>
+                            <div id="cur_x2_info" class="cur_info"></div>
+                            <div id="cur_x_diff"></div>
+                            <div id="cur_x_diff_info" class="cur_info"></div>
+                            <img id="time_offset_arrow" src="img/time-offset-arrow.png">
+                            <img id="math_offset_arrow" class="y-offset-arrow" src="img/math-offset-arrow.png">
+                            <img id="output2_offset_arrow" class="y-offset-arrow" src="img/out2-offset-arrow.png">
+                            <img id="output1_offset_arrow" class="y-offset-arrow" src="img/out1-offset-arrow.png">
+                            <div id="ch8_offset_arrow" class="y-offset-arrow"><img class="ch_arrow" src="img/ch8-offset-arrow.png"><span class="ch_name" id="CH8_LABEL">DIN7</span><span id="ch8_tooltip" class="tooltips"></span><img id="img_info_arrow8" class="ch_info_arrow" src="img/ch8-offset-arrow2.png"
+                                    style="display: none;"><span id="ch8_info" class="ch_name ch_info"></span></div>
+                            <div id="ch7_offset_arrow" class="y-offset-arrow"><img class="ch_arrow" src="img/ch7-offset-arrow.png"><span class="ch_name" id="CH7_LABEL">DIN6</span><span id="ch7_tooltip" class="tooltips"></span><img id="img_info_arrow7" class="ch_info_arrow" src="img/ch7-offset-arrow2.png"
+                                    style="display: none;"><span id="ch7_info" class="ch_name ch_info"></span></div>
+                            <div id="ch6_offset_arrow" class="y-offset-arrow"><img class="ch_arrow" src="img/ch6-offset-arrow.png"><span class="ch_name" id="CH6_LABEL">DIN5</span><span id="ch6_tooltip" class="tooltips"></span><img id="img_info_arrow6" class="ch_info_arrow" src="img/ch6-offset-arrow2.png"
+                                    style="display: none;"><span id="ch6_info" class="ch_name ch_info"></span></div>
+                            <div id="ch5_offset_arrow" class="y-offset-arrow"><img class="ch_arrow" src="img/ch5-offset-arrow.png"><span class="ch_name" id="CH5_LABEL">DIN4</span><span id="ch5_tooltip" class="tooltips"></span><img id="img_info_arrow5" class="ch_info_arrow" src="img/ch5-offset-arrow2.png"
+                                    style="display: none;"><span id="ch5_info" class="ch_name ch_info"></span></div>
+                            <div id="ch4_offset_arrow" class="y-offset-arrow"><img class="ch_arrow" src="img/ch4-offset-arrow.png"><span class="ch_name" id="CH4_LABEL">DIN3</span><span id="ch4_tooltip" class="tooltips"></span><img id="img_info_arrow4" class="ch_info_arrow" src="img/ch4-offset-arrow2.png"
+                                    style="display: none;"><span id="ch4_info" class="ch_name ch_info"></span></div>
+                            <div id="ch3_offset_arrow" class="y-offset-arrow"><img class="ch_arrow" src="img/ch3-offset-arrow.png"><span class="ch_name" id="CH3_LABEL">DIN2</span><span id="ch3_tooltip" class="tooltips"></span><img id="img_info_arrow3" class="ch_info_arrow" src="img/ch3-offset-arrow2.png"
+                                    style="display: none;"><span id="ch3_info" class="ch_name ch_info"></span></div>
+                            <div id="ch2_offset_arrow" class="y-offset-arrow"><img class="ch_arrow" src="img/ch2-offset-arrow.png"><span class="ch_name" id="CH2_LABEL">DIN1</span><span id="ch2_tooltip" class="tooltips"></span><img id="img_info_arrow2" class="ch_info_arrow" src="img/ch2-offset-arrow2.png"
+                                    style="display: none;"><span id="ch2_info" class="ch_name ch_info"></span></div>
+                            <div id="ch1_offset_arrow" class="y-offset-arrow"><img class="ch_arrow" src="img/ch1-offset-arrow.png"><span class="ch_name" id="CH1_LABEL">DIN0</span><span id="ch1_tooltip" class="tooltips"></span><img id="img_info_arrow1" class="ch_info_arrow" src="img/ch1-offset-arrow2.png"
+                                    style="display: none;"><span id="ch1_info" class="ch_name ch_info"></span></div>
+                            <img id="trig_level_arrow" class="harrow" src="img/trigger-arrow.png">
+                            <div id="trigger_level" class="hline"></div>
+                            <div id="kostyl_footer"></div>
+                        </div>
+                    </div>
+                    <div id="info" class="clear">
+                        <div style="text-align:center;" id="STATUS_MSG"></div>
+                        <div class="left-info">
+                            <div class="info-title">
+                            </div>
+                            <div class="info-value">
+                            </div>
+                        </div>
+                        <div id="info-meas" style="position: absolute; left: 200px;"></div>
+                        <div class="pull-right">
+                            Time <span id="OSC_TIME_SCALE">-</span>/div
+                            <br /> <img src="img/time-offset-info.png"> <span id="OSC_TIME_OFFSET">0 ns</span>
+                            <br />
+                            <span id="OSC_SAMPL_RATE"></span>
+                        </div>
+                        <div id="triginfo" style="color: green; display:none;">TEXT</div>
+                    </div>
+                </div>
+                <div id="joystick">
+                    <img id="jtk_fine" src="img/fine.png" />
+                    <img id="jtk_btns" src="img/node_fine.png" usemap="#jtk_btns_map" />
+                    <map name="jtk_btns_map">
+                        <area id="jtk_left" shape="poly" coords="19,28,37,45,32,56,28,69,29,84,36,101,30,112,18,122,11,114,8,104,4,91,1,77,3,59,9,41,19,27" />
+                        <area id="jtk_up" shape="poly" coords="27,17,42,7,61,3,78,3,89,4,102,7,116,13,124,20,105,37,87,29,64,29,56,33,46,37" />
+                        <area id="jtk_right" shape="poly" coords="111,44,132,27,143,42,147,56,149,76,148,93,141,107,132,123,112,104,119,94,122,76,119,58" />
+                        <area id="jtk_down" shape="poly" coords="46,112,27,130,38,141,51,145,72,148,92,148,106,142,126,132,104,111,90,118,79,120,71,121,62,119,57,117" />
+                    </map>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="stem" style="float:right;padding-right:100px;color:green;"></div>
+    <!-- Modal -->
+    <div class="modal" id="get_lic" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="bazaar_naLabel">Licence missing</h4>
+                </div>
+                <div class="modal-body" style="text-align: center; font-size: 18px;">
+                    <p id="lic_failed">Application is running in demo mode! </p>
+                    <p> Please visit <a style="color: #dd0020;" href="http://store.redpitaya.com/logic-analyzer.html" target="_blank">Red Pitaya store</a> to get the licence.
+                </div>
+                <div class="modal-footer">
+                    <div class="bazaar-link" style="float: left; width: 33%;">
+                        <a href="#" style="border: 1px solid;  width: 100%" id="get_key" class="list-group-item btn">Get unlock key</a>
+                    </div>
+                    <div class="bazaar-link" style="float: left; width: 33%;">
+                        <a href="#" style="border: 1px solid;  width: 100%" id="apply_key" class="list-group-item btn">Apply unlock key</a>
+                    </div>
+                    <div class="bazaar-link" style="float: left; width: 33%;">
+                        <a href="#" style="border: 1px solid;  width: 100%" data-dismiss="modal" class="list-group-item btn">Close</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="decoder_dialog" tabindex="-1" role="dialog" aria-labelledby="spi_dialogLabel" aria-hidden="true">
+        <div class="modal-dialog" style="width: 570px;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="spi_dialogLabel">Encoder settings</h4>
+                </div>
+                <div id="decSetDiv" class="modal-body">
+                    <div style="width: 100%; height: 50px">
+                        <div class="protocol-label">Protocol:</div>
+                        <div class="protocol-dropdown dropdown decoder-drop">
+                            <select class="form-control" id="protocol_selector">
+                                <option value="#i2c_decoder">I2C</option>
+                                <option value="#spi_decoder">SPI</option>
+                                <option value="#uart_decoder">UART</option>
+                                <option id="can_option" value="#can_decoder">CAN</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display:none;" class="decoder-window" id="spi_decoder">
+                        <div class="row">
+                            <div class="col-sm-3 padding-top-5">MISO</div>
+                            <div class="col-sm-9 decoder-drop">
+                                <div class="dropdown decoder-option-dropdown ">
+                                    <select class="form-control channels_selector" id="spi_miso">
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-3 padding-top-5">MOSI</div>
+                            <div class="col-sm-9 decoder-drop">
+                                <div class="dropdown decoder-option-dropdown ">
+                                    <select class="form-control channels_selector" id="spi_mosi">
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-3 padding-top-5">CLK</div>
+                            <div class="col-sm-9 decoder-drop">
+                                <div class="dropdown decoder-option-dropdown ">
+                                    <select class="form-control channels_selector" id="spi_clk">
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-3 padding-top-5">CS</div>
+                            <div class="col-sm-9 decoder-drop">
+                                <div class="dropdown decoder-option-dropdown ">
+                                    <select class="form-control channels_selector" id="spi_cs">
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-3 padding-top-5"></div>
+                            <div class="col-sm-9 decoder-drop">
+                                <div class="dropdown decoder-option-dropdown ">
+                                    <select class="form-control" id="spi_order">
+                                        <option value="0">Most significant bit first (standard)</option>
+                                        <option value="1">Least significant bit first</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-3 padding-top-5"></div>
+                            <div class="col-sm-9 decoder-drop">
+                                <div class="dropdown decoder-option-dropdown ">
+                                    <select class="form-control" id="spi_length">
+                                        <option value="8">8 bits per transfer (standard)</option>
+                                        <option value="7">7 bits per transfer </option>
+                                        <option value="9">9 bits per transfer </option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-3 padding-top-5"></div>
+                            <div class="col-sm-9 decoder-drop">
+                                <div class="dropdown decoder-option-dropdown ">
+                                    <select class="form-control" id="spi_cpol">
+                                        <option value="0">CPOL=0</option>
+                                        <option value="1">CPOL=1</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-3 padding-top-5"></div>
+                            <div class="col-sm-9 decoder-drop">
+                                <div class="dropdown decoder-option-dropdown ">
+                                    <select class="form-control" id="spi_cpha">
+                                        <option value="1">CPHA=0</option>
+                                        <option value="0">CPHA=1</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-3 padding-top-5"></div>
+                            <div class="col-sm-9 decoder-drop">
+                                <div class="dropdown decoder-option-dropdown ">
+                                    <select class="form-control" id="spi_state">
+                                        <option value="0">Enable line is Active Low</option>
+                                        <option value="1">Enable line is Active High</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-3 padding-top-5">Input signals</div>
+                            <div class="col-sm-9 decoder-drop">
+                                <div class="dropdown decoder-option-dropdown ">
+                                    <select class="form-control" id="spi_invert">
+                                        <option value="0">Non inverted (standard)</option>
+                                        <option value="1">Inverted</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display:block;" class="decoder-window" id="i2c_decoder">
+                        <div class="row">
+                            <div class="col-sm-3 padding-top-5">SDA</div>
+                            <div class="col-sm-9 decoder-drop">
+                                <div class="dropdown decoder-option-dropdown ">
+                                    <select class="form-control channels_selector" id="i2c_sda">
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-3 padding-top-5">SCL</div>
+                            <div class="col-sm-9 decoder-drop">
+                                <div class="dropdown decoder-option-dropdown ">
+                                    <select class="form-control channels_selector" id="i2c_scl">
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-3 padding-top-5">Address display</div>
+                            <div class="col-sm-9 decoder-drop">
+                                <div class="dropdown decoder-option-dropdown ">
+                                    <select class="form-control" id="i2c_addr">
+                                        <option value="0">Shifted</option>
+                                        <option value="1">Unshifted</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-3 padding-top-5">Input signals</div>
+                            <div class="col-sm-9 decoder-drop">
+                                <div class="dropdown decoder-option-dropdown ">
+                                    <select class="form-control" id="i2c_invert">
+                                        <option value="0">Non inverted (standard)</option>
+                                        <option value="1">Inverted</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display:none;" class="decoder-window" id="uart_decoder">
+                        <div class="row">
+                            <div class="col-sm-3 padding-top-5">Serial</div>
+                            <div class="col-sm-2 decoder-drop">
+                                <div class="dropdown decoder-option-dropdown ">
+                                    <select class="form-control" id="uart_rxtx">
+                                        <option value="RX">RX</option>
+                                        <option value="TX">TX</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-sm-7 decoder-drop">
+                                <div class="dropdown decoder-option-dropdown ">
+                                    <select class="form-control channels_selector" id="uart_serial">
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-3 padding-top-5">Baudrate</div>
+                            <div class="col-sm-9  decoder-drop">
+                                <input type="number" class="form-control" id="uart_baudrate" list="baudrates" autocomplete="off" spellcheck="off" min="0" max="921600" />
+                                <datalist id="baudrates">
+                                    <option value="110">110</option>
+                                    <option value="150">150</option>
+                                    <option value="300">300</option>
+                                    <option value="1200">1200</option>
+                                    <option value="2400">2400</option>
+                                    <option value="4800">4800</option>
+                                    <option value="9600">9600</option>
+                                    <option value="19200">19200</option>
+                                    <option value="38400">38400</option>
+                                    <option value="57600">57600</option>
+                                    <option value="115200">115200</option>
+                                    <option value="230400">230400</option>
+                                    <option value="460800">460800</option>
+                                    <option value="921600">921600</option>
+                                </datalist>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-3 padding-top-5"></div>
+                            <div class="col-sm-9 decoder-drop">
+                                <div class="dropdown decoder-option-dropdown ">
+                                    <select class="form-control" id="uart_data_length">
+                                        <option value="5">5 bits per transfer</option>
+                                        <option value="6">6 bits per transfer</option>
+                                        <option value="7">7 bits per transfer</option>
+                                        <option value="8" selected>8 bits per transfer (standard)</option>
+                                        <option value="9">9 bits per transfer</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-3 padding-top-5"></div>
+                            <div class="col-sm-9 decoder-drop">
+                                <div class="dropdown decoder-option-dropdown ">
+                                    <select class="form-control" id="uart_stop_bits">
+                                        <option value="-1">No stop bits</option>
+                                        <option value="0">0.5 stop bits</option>
+                                        <option value="1" selected>1 stop bit (standard)</option>
+                                        <option value="2">1.5 stop bits</option>
+                                        <option value="3">2 stop bits</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-3 padding-top-5"></div>
+                            <div class="col-sm-9 decoder-drop">
+                                <div class="dropdown decoder-option-dropdown ">
+                                    <select class="form-control" id="uart_parity">
+                                        <option value="0" selected>No parity check</option>
+                                        <option value="1">Even</option>
+                                        <option value="2">Odd</option>
+                                        <option value="3">Always 0</option>
+                                        <option value="4">Always 1</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-3 padding-top-5"></div>
+                            <div class="col-sm-9 decoder-drop">
+                                <div class="dropdown decoder-option-dropdown ">
+                                    <select class="form-control" id="uart_order">
+                                        <option value="0" selected>Least significant bit first (standard)</option>
+                                        <option value="1">Most significant bit first</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-3 padding-top-5"></div>
+                            <div class="col-sm-9 decoder-drop">
+                                <div class="dropdown decoder-option-dropdown ">
+                                    <select class="form-control" id="uart_invert">
+                                        <option value="0">Non inverted (standard)</option>
+                                        <option value="1">Inverted</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display:none;" class="decoder-window" id="can_decoder">
+                        <div class="row">
+                            <div class="col-sm-3 padding-top-5">CAN_RX</div>
+                            <div class="col-sm-9 decoder-drop">
+                                <div class="dropdown decoder-option-dropdown ">
+                                    <select class="form-control channels_selector" id="can_rx">
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-3 padding-top-5">Nominal bitrate</div>
+                            <div class="col-sm-9  decoder-drop">
+                                <input type="number" class="form-control" id="can_nom_bitrate" list="bitrates" autocomplete="off" spellcheck="off" min="1" />
+                                <datalist id="bitrates">
+                                    <option value="110">110</option>
+                                    <option value="150">150</option>
+                                    <option value="300">300</option>
+                                    <option value="1200">1200</option>
+                                    <option value="2400">2400</option>
+                                    <option value="4800">4800</option>
+                                    <option value="9600">9600</option>
+                                    <option value="19200">19200</option>
+                                    <option value="38400">38400</option>
+                                    <option value="57600">57600</option>
+                                    <option value="100000">100000</option>
+                                    <option value="250000">250000</option>
+                                    <option value="500000">500000</option>
+                                    <option value="750000">750000</option>
+                                    <option value="850000">850000</option>
+                                    <option value="1000000">1000000</option>
+                                </datalist>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-3 padding-top-5">Fast bitrate</div>
+                            <div class="col-sm-9  decoder-drop">
+                                <input type="number" class="form-control" id="can_fast_bitrate" list="fbitrates" autocomplete="off" spellcheck="off" min="1" />
+                                <datalist id="fbitrates">
+                                    <option value="110">110</option>
+                                    <option value="150">150</option>
+                                    <option value="300">300</option>
+                                    <option value="1200">1200</option>
+                                    <option value="2400">2400</option>
+                                    <option value="4800">4800</option>
+                                    <option value="9600">9600</option>
+                                    <option value="19200">19200</option>
+                                    <option value="38400">38400</option>
+                                    <option value="57600">57600</option>
+                                    <option value="100000">100000</option>
+                                    <option value="250000">250000</option>
+                                    <option value="500000">500000</option>
+                                    <option value="750000">750000</option>
+                                    <option value="850000">850000</option>
+                                    <option value="1000000">1000000</option>
+                                    <option value="1250000">1250000</option>
+                                    <option value="1500000">1500000</option>
+                                    <option value="1750000">1750000</option>
+                                    <option value="2000000">2000000</option>
+                                </datalist>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-3 padding-top-5">Sample point</div>
+                                <div class="col-sm-9  decoder-drop">
+                                    <input type="number" class="form-control" id="sample_point" list="s_points" autocomplete="off" spellcheck="off" min="0" max="99.99" step="0.01" />
+                                    <datalist id="s_points">
+                                        <option value="0">0</option>
+                                        <option value="10">10</option>
+                                        <option value="20">20</option>
+                                        <option value="30">30</option>
+                                        <option value="40">40</option>
+                                        <option value="50">50</option>
+                                        <option value="60">60</option>
+                                        <option value="70">70</option>
+                                        <option value="80">80</option>
+                                        <option value="87.5">87.5</option>
+                                        <option value="90">90</option>
+                                        <option value="99.99">99.99</option>
+                                    </datalist>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-3 padding-top-5">Input signal</div>
+                            <div class="col-sm-9 decoder-drop">
+                                <div class="dropdown decoder-option-dropdown ">
+                                    <select class="form-control" id="can_invert">
+                                        <option value="0">Non inverted (standard)</option>
+                                        <option value="1">Inverted</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-3 padding-top-5">Max detected frames</div>
+                            <div class="col-sm-9  decoder-drop">
+                                <input type="number" class="form-control" id="can_frame_limit" list="frame_limits" autocomplete="off" spellcheck="off" min="1" />
+                                <datalist id="frame_limits">
+                                    <option value="10">10</option>
+                                    <option value="50">50</option>
+                                    <option value="150">150</option>
+                                    <option value="250">250</option>
+                                    <option value="500">500</option>
+                                </datalist>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Link for dialog -->
+                    <div id="porblemsLink">
+                        <a id="porblemsLinkHref" href="#">Can't decode your logic data? Click here</a>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div id="warning-dialog" class="alert alert-error" style="display:none;">
+                        <p id="warn-message">Best check yo self, you're not...</p>
+                    </div>
+                    <div id="decoder-footer-wrapper">
+                        <div class="decoder-button">
+                            <button type="button" class="btn" onclick='' data-dismiss="modal">Cancel</button>
+                        </div>
+                        <div class="decoder-button">
+                            <button type="button" class="btn" id="apply_decoder">OK</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal -->
+    <div class="modal" id="decodehelp_dialog" tabindex="-1" role="dialog" aria-labelledby="spi_dialogLabel" aria-hidden="true">
+        <div class="modal-dialog" style="width: 570px;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="spi_dialogLabel">Decode help</h4>
+                </div>
+                <div id="decSetDiv" class="modal-body">
+                    <div>
+                        <p>
+                            If you need help for decoding, please follow this instruction:
+                            <br>
+                            <br> 1. </a>Download file with your logic data;
+                            <br>
+                            <div id="help_buttons">
+                                <div class="decoder-button">
+                                    <button type="button" class="btn" id="download_logicdata">Download</button>
+                                </div>
+                            </div>
+                            <br>
+                            <a id="hidden_link_logicdata" href="logicData.bin" style="display: none;"></a>
+                            2. Attach this file to auto-generated E-mail.
+                            <br>
+                            <div id="help_buttons">
+                                <div class="decoder-button">
+                                    <button type="button" class="btn" id="generate_help_email">Generate</button>
+                                </div>
+                            </div>
+                        </p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div id="decoder-footer-wrapper">
+                        <div class="decoder-button">
+                            <button type="button" class="btn" onclick='' data-dismiss="modal">OK</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div>
+        <div id="sys_info_view" class="sys-info-box">
+            FPS:<span id="fps_view">0</span> Throughput:<span id="throughput_view">0</span> CPU Load:<span id="cpu_load">0</span>
+            <br/> Memory total:<span id="totalmem_view">0</span> Free:<span id="freemem_view">0</span> Usage:<span id="usagemem_view">0</span>
+        </div>
+        <div id="weak_conn_msg" class="perfomance-problem-box">
+            <span id="delay">Performance problem has occurred</span>
+        </div>
+    </div>
+    <div class="modal fade" id="feedback_error" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="oops_label">Oops, something went wrong</h4>
+                </div>
+                <div class="modal-body" style="text-align: center; font-size: 18px;">
+                    <p>Please, contact us for more support or restart the application</p>
+                </div>
+                <div class="modal-footer">
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="#" style="border: 1px solid;  width: 100%" id="send_report_btn" data-dismiss="modal" class="list-group-item btn">Send report</a>
+                    </div>
+                    <div class="bazaar-link" style="float: left; width: 50%;">
+                        <a href="#" style="border: 1px solid;  width: 100%" id="restart_app_btn" data-dismiss="modal" class="list-group-item btn">Restart Application</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script language="javascript" type="text/javascript">
+    $(".limits").change(function() {
+        if (['SOUR1_PHAS', 'SOUR1_DCYC', 'SOUR2_PHAS', 'SOUR2_DCYC'].indexOf($(this).attr('id')) != -1) {
+            var min = 0;
+            var max = $(this).attr('id').indexOf('DCYC') > 0 ? 100 : 180;
+
+            if (isNaN($(this).val()) || $(this).val() < min)
+                $(this).val(min);
+            else if ($(this).val() > max)
+                $(this).val(max);
+        } else {
+            var min = $(this).attr('id').indexOf('OFFS') > 0 ? -1 : 0;
+            var max = 1;
+            if (isNaN($(this).val()) || $(this).val() < min)
+                $(this).val(min == -1 ? 0 : 1);
+            else if (isNaN($(this).val()) || $(this).val() > max)
+                $(this).val(min == -1 ? 0 : 1);
+        }
+    }).change();
+
+    $('#calib-input').change(function() {
+        if (isNaN($(this).val()))
+            $(this).val($(this).attr('min'));
+        else if ($(this).val() > +$(this).attr('max'))
+            $(this).val($(this).attr('max'));
+        else if ($(this).val() <= 0)
+            $(this).val($(this).attr('min'));
+    }).change();
+</script>
+<script>
+    function updateLimits() {
+        { // OSC_CH1_OFFSET limits
+            var probeAttenuation = parseInt($("#OSC_CH1_PROBE option:selected").text());
+            var jumperSettings = $("#OSC_CH1_IN_GAIN").parent().hasClass("active") ? 1 : 20;
+            var units = $('#OSC_CH1_OFFSET_UNIT').html();
+            var multiplier = units == "mV" ? 1000 : 1;
+            var newMin = -1 * 10 * jumperSettings * probeAttenuation * multiplier;
+            var newMax = 1 * 10 * jumperSettings * probeAttenuation * multiplier;
+            $("#OSC_CH1_OFFSET").attr("min", newMin);
+            $("#OSC_CH1_OFFSET").attr("max", newMax);
+        }
+
+        { // OSC_CH2_OFFSET limits
+            var probeAtt1 = parseInt($("#OSC_CH2_PROBE option:selected").text());
+            var jumperSettings1 = $("#OSC_CH2_IN_GAIN").parent().hasClass("active") ? 1 : 20;
+            var units = $('#OSC_CH2_OFFSET_UNIT').html();
+            var multiplier = units == "mV" ? 1000 : 1;
+            var newMin = -1 * 10 * jumperSettings1 * probeAtt1 * multiplier;
+            var newMax = 1 * 10 * jumperSettings1 * probeAtt1 * multiplier;
+            $("#OSC_CH2_OFFSET").attr("min", newMin);
+            $("#OSC_CH2_OFFSET").attr("max", newMax);
+        }
+
+        { // OSC_MATH_OFFSET limits
+            var scale_val = $("#OSC_MATH_SCALE").text();
+            var math_vdiv = parseFloat(scale_val);
+            var newMin = -1 * 5 * math_vdiv;
+            var newMax = 1 * 5 * math_vdiv;
+            $("#OSC_MATH_OFFSET").attr("min", newMin);
+            $("#OSC_MATH_OFFSET").attr("max", newMax);
+        }
+
+        { // OSC_TRIG_LEVEL_OFFSET limits
+            var ch = "";
+            if ($("#OSC_TRIG_SOURCE").parent().hasClass("active"))
+                ch = "CH1";
+            else if ($("#OSC_TRIG_SOURCE2").parent().hasClass("active"))
+                ch = "CH2";
+            else {
+                $("#OSC_TRIG_LEVEL").attr("min", -3.3);
+                $("#OSC_TRIG_LEVEL").attr("max", 3.3);
+                return;
+            }
+
+            var probeAttenuation = parseInt($("#OSC_" + ch + "_PROBE option:selected").text());
+            var jumperSettings = $("#OSC_" + ch + "_IN_GAIN").parent().hasClass("active") ? 1 : 20;
+
+            var newMin = -1 * jumperSettings * probeAttenuation;
+            var newMax = 1 * jumperSettings * probeAttenuation;
+
+            var trig_lvl = $("#OSC_TRIG_LEVEL");
+            trig_lvl.attr("min", newMin);
+            trig_lvl.attr("max", newMax);
+        }
+    }
+
+    function formatInputValue(oldValue, attenuation, is_milis, is_hv) {
+        var z = oldValue;
+        if (is_milis)
+            return z.toFixed(0);
+        if (is_hv) {
+            switch (attenuation) {
+                case 1:
+                    return z.toFixed(2);
+                    break;
+                case 10:
+                    return z.toFixed(1);
+                    break;
+                case 100:
+                    return z.toFixed(0);
+                    break;
+            }
+        } else {
+            switch (attenuation) {
+                case 1:
+                    return z.toFixed(3);
+                    break;
+                case 10:
+                    return z.toFixed(2);
+                    break;
+                case 100:
+                    return z.toFixed(1);
+                    break;
+            }
+        }
+        return z;
+    }
+
+    $(".btn").mouseup(function() {
+        setTimeout(function() {
+            updateLimits();
+        }, 20);
+    });
+    $("#OSC_CH1_PROBE").change(function() {
+        updateLimits();
+    });
+
+    -
+    $(document).ready(function() {
+        updateLimits();
+    });
+</script>
+<script language="javascript" type="text/javascript">
+    ;
+    (function($) {
+
+        $.fn.iLightInputNumber = function(options) {
+
+            var inBox = '.input-number-box',
+                newInput = '.input-number',
+                moreVal = '.input-number-more',
+                lessVal = '.input-number-less';
+
+            this.each(function() {
+
+                var el = $(this);
+                if (el.hasClass("no-up-down"))
+                    return;
+                $('<div class="' + inBox.substr(1) + '"></div>').insertAfter(el);
+                var parent = el.find('+ ' + inBox);
+                parent.append(el);
+                var classes = el.attr('class');
+
+                el.addClass(classes);
+                var attrValue;
+
+
+                parent.append('<div class=' + moreVal.substr(1) + '></div>');
+                parent.append('<div class=' + lessVal.substr(1) + '></div>');
+
+            }); //end each
+
+            var value,
+                step;
+
+            var interval = null,
+                timeout = null;
+
+            function ToggleValue(input) {
+                input.val(parseInt(input.val(), 10) + d);
+                console.log(input);
+            }
+
+            $('body').on('mousedown', moreVal, function() {
+                var el = $(this);
+                var input = el.siblings(newInput);
+                moreValFn(input);
+                timeout = setTimeout(function() {
+                    interval = setInterval(function() {
+                        moreValFn(input);
+                    }, 50);
+                }, 200);
+
+            });
+
+            $('body').on('mousedown', lessVal, function() {
+                var el = $(this);
+                var input = el.siblings(newInput);
+                lessValFn(input);
+                timeout = setTimeout(function() {
+                    interval = setInterval(function() {
+                        lessValFn(input);
+                    }, 50);
+                }, 200);
+            });
+
+            $(moreVal + ', ' + lessVal).on("mouseup mouseout", function() {
+                clearTimeout(timeout);
+                clearInterval(interval);
+            });
+
+            function moreValFn(input) {
+                var max;
+                var limits = getLimits(input);
+                max = limits.max;
+                checkInputAttr(input);
+
+                var newValue = value + step;
+                var parts = step.toString().split('.');
+                var signs = parts.length < 2 ? 0 : parts[1].length;
+                newValue = parseFloat(newValue.toFixed(signs));
+
+                if (newValue > max) {
+                    newValue = max;
+                }
+                changeInputsVal(input, newValue);
+            }
+
+            function getLimits(input) {
+                var min = parseFloat(input.attr('min'));
+                var max = parseFloat(input.attr('max'));
+                return {
+                    'min': min,
+                    'max': max
+                };
+            }
+
+            function lessValFn(input) {
+
+                var min;
+                var limits = getLimits(input);
+                min = limits.min;
+
+                checkInputAttr(input);
+
+                var newValue = value - step;
+                var parts = step.toString().split('.');
+                var signs = parts.length < 2 ? 0 : parts[1].length;
+                newValue = parseFloat(newValue.toFixed(signs));
+                if (newValue < min) {
+                    newValue = min;
+                }
+                changeInputsVal(input, newValue);
+            }
+
+            function changeInputsVal(input, newValue) {
+                input.val(newValue);
+                OSC.exitEditing(true);
+            }
+
+            function checkInputAttr(input) {
+
+                value = parseFloat(input.val());
+
+
+                if (!($.isNumeric(value))) {
+                    value = 0;
+                }
+                if (input.attr('step')) {
+                    step = parseFloat(input.attr('step'));
+                    if (['OSC_CH1_OFFSET', 'OSC_CH2_OFFSET'].indexOf(input.attr('id')) != -1) {
+
+                        var ch = "";
+                        if (input.attr('id') == "OSC_CH1_OFFSET")
+                            ch = "CH1";
+                        else
+                            ch = "CH2";
+
+                        var probeAttenuation = parseInt($("#OSC_" + ch + "_PROBE option:selected").text());
+                        var jumperSettings = $("#OSC_" + ch + "_IN_GAIN").parent().hasClass("active") ? 1 : 20;
+                        var units = $('#OSC_' + ch + '_OFFSET_UNIT').html();
+                        var multiplier = units == "mV" ? 1000 : 1;
+
+                        if (multiplier == 1000) {
+                            step = 1;
+                            return;
+                        }
+                        if (jumperSettings == 20) {
+                            switch (probeAttenuation) {
+                                case 1:
+                                    step = 0.01;
+                                    return;
+                                case 10:
+                                    step = 0.1;
+                                    return;
+                                case 100:
+                                    step = 1;
+                                    return;
+                            }
+                        } else {
+                            switch (probeAttenuation) {
+                                case 1:
+                                    step = 0.001;
+                                    return;
+                                case 10:
+                                    step = 0.01;
+                                    return;
+                                case 100:
+                                    step = 0.1;
+                            }
+                        }
+                    }
+                    if (['OSC_MATH_OFFSET'].indexOf(input.attr('id')) != -1) {
+
+                        var unit_holder = $('#OSC_MATH_OFFSET_UNIT');
+                        var unit = unit_holder.html().charAt(0);
+                        var scale_val = $("#OSC_MATH_SCALE").text();
+                        var math_vdiv = parseFloat(scale_val);
+                        step = math_vdiv / 100;
+                    }
+
+                } else {
+                    step = 1;
+                }
+            }
+
+            $(newInput).change(function() {
+
+                var input = $(this);
+
+                checkInputAttr(input);
+                var limits = getLimits(input);
+                var min = limits.min;
+                var max = limits.max;
+
+                var parts = step.toString().split('.');
+                var signs = parts.length < 2 ? 0 : parts[1].length;
+                value = parseFloat(value.toFixed(signs));
+
+                if (value < min) {
+                    value = min;
+                } else if (value > max) {
+                    value = max;
+                }
+                if (!($.isNumeric(value))) {
+                    value = 0;
+                }
+                input.val(value);
+            });
+
+            $(newInput).keydown(function(e) {
+                var input = $(this);
+                var k = e.keyCode;
+                if (k == 38) {
+                    moreValFn(input);
+                } else if (k == 40) {
+                    lessValFn(input);
+                }
+            });
+        };
+    })(jQuery);
+
+    $('input[type=text]').iLightInputNumber({
+        mobile: false
+    });
+
+    $('#sys_info').click(function() {
+        var elem = $(this);
+        if (elem.text() == 'SYS INFO') {
+            elem.html('&check; SYS INFO');
+            $('#sys_info_view').show();
+        } else {
+            elem.text('SYS INFO');
+            $('#sys_info_view').hide();
+        }
+    });
+</script>
+<script>
+    $(function() {
+
+        $(".dropdown-menu").on('click', 'li a', function() {
+            $($(this).attr('parent')).text($(this).text());
+            $($(this).attr('parent')).val($(this).text());
+        });
+
+    });
+</script>
+<script type="text/javascript">
+    var fileName = 'bus.txt';
+
+    function downloadInnerHtml(filename, elId, mimeType) {
+        var fname = "";
+        var names = [];
+        for (var i = 0; i < 4; i++) {
+            if (OSC.log_buses[i])
+                names.push($('#DATA_BUS' + i).text());
+        }
+
+        if (names.length > 0) {
+            for (var i = 0; i < names.length; i++) {
+                if (i + 1 == names.length)
+                    fname += names[i]
+                else
+                    fname += names[i] + "_";
+            }
+            fname += ".csv";
+        } else
+            return;
+
+        var elHtml = document.getElementById(elId).innerHTML;
+        var link = document.createElement('a');
+        mimeType = mimeType || 'text/plain';
+        elHtml = elHtml.replace(/[<]br[^>]*[>]/gi, "");
+
+        link.setAttribute('download', fname);
+        link.setAttribute('href', 'data:' + mimeType + ';charset=utf-8,' + encodeURIComponent(elHtml));
+        link.click();
+    }
+    $('#export-data').click(function() {
+        downloadInnerHtml(fileName, 'hidden-log-container', 'text/html');
+    });
+
+    $('#get_key').click(function() {
+        window.open('http://store.redpitaya.com/logic-analyzer.html', '_blank');
+        $('#get_lic').modal('hide');
+    });
+    $('#apply_key').click(function() {
+        window.open('http://store.redpitaya.com/myequipment/list/', '_blank');
+        $('#get_lic').modal('hide');
+    });
+    $('#uart_baudrate').on("change", function() {
+        var min_br = 9;
+        var max_br = 4000000;
+        if ($('#uart_baudrate').val() < min_br) $('#uart_baudrate').val(min_br);
+        else if ($('#uart_baudrate').val() > max_br) $('#uart_baudrate').val(max_br);
+    });
+</script>
+
+</html>
