@@ -1,4 +1,47 @@
-# Beta version (1.04-28)
+# Beta version (2.00-18)    
+- Added python wrapper for api (v0.94) (Not for all libs)
+- Updated streaming app for 4-ch boards (Streaming to 4 channels in beta. There are known bugs with calibration parameters.)
+- Fixed bug in calibration for 4-ch boards
+- Added new coammds in SCPI
+- Improved UI in spectrumpro and scopegenpro
+- There is a known bug in 0.94 for boards 250-12 (Amplitude at decimation 4 and 8 is much less than the input signal)
+
+
+# Stable version (2.00-15)
+
+- Added support for sdr_receiver_hpsdr, sdr_transceiver_hpsdr, vna (not for all boards)
+- Completely redesigned API for all boards.
+- Added board profile API
+- Added calibration API (changed the calibration mechanism, but kept backward compatibility)
+- Streaming unified (one image for master and slave boards)
+- Improved console applications for the new api
+- Upgrading to Uboot 2022.1
+- Transition to the Xilinx 2022.1 kernel (5.15.0)
+- Unification of the image. One image for all boards
+    - STEM 125-10 v1.0
+    - STEM 125-14 v1.0
+    - STEM 125-14 v1.1
+    - STEM 125-14 LN v1.1
+    - STEM 125-14 Z7020 v1.0
+    - STEM 125-14 Z7020 LN v1.1
+    - STEM 122-16 SDR v1.0
+    - STEM 125-14 Z7020 4IN v1.0
+    - STEM 125-14 Z7020 4IN v1.2
+    - STEM 125-14 Z7020 4IN v1.3
+    - STEM 250-12 v1.1
+    - STEM 250-12 v1.2
+    - STEM 250-12-120
+
+Requred a Linux OS upgrade to 22.04 (minimum SD card requirement is 8 GB)
+Changes in Linux OS:
+
+- Upgrading to python 3.10.6
+- Switch from Jupyter to JupyterLab
+- Added WebConsole
+- Added support for modules for the system kernel
+
+
+# Stable version (1.04-28)
 
 - Streaming application now supports X-channel system
 - Bode analyzer bug fixes
