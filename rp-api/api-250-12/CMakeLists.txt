@@ -3,11 +3,14 @@ cmake_minimum_required(VERSION 3.14)
 
 option(BUILD_SHARED "Builds shared library" ON)
 option(BUILD_STATIC "Builds static library" ON)
+option(BUILD_PYTHON_MODULE "Builds python module" ON)
+
 option(BUILD_TEST   "Build test" OFF)
 option(BUILD_TOOL   "Build tool" ON)
 
 option(IS_INSTALL "Install library" ON)
 
+set(CMAKE_VERBOSE_MAKEFILE OFF)
 set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
 set(CMAKE_CXX_STANDARD 11)
@@ -72,6 +75,19 @@ add_library(${PROJECT_NAME}-gpio OBJECT ${PR_GPIO_SOURCES})
 
 if(BUILD_SHARED)
 
+    if (BUILD_PYTHON_MODULE)
+        find_package(SWIG REQUIRED)
+        INCLUDE(${SWIG_USE_FILE})
+
+        find_package(PythonLibs)
+        include_directories(${PYTHON_INCLUDE_PATH})
+
+        set_property(SOURCE src/rp_api_250.i PROPERTY CPLUSPLUS ON)
+
+        SWIG_ADD_LIBRARY(rp_api_250_py LANGUAGE python SOURCES src/rp_api_250.i ${PR_XML_SOURCES} ${PR_I2C_SOURCES} ${PR_SPI_SOURCES} ${PR_GPIO_SOURCES})
+        SWIG_LINK_LIBRARIES(rp_api_250_py ${PYTHON_LIBRARIES} i2c)
+    endif()
+
     add_library(${PROJECT_NAME}-i2c-shared SHARED)
     set_property(TARGET ${PROJECT_NAME}-i2c-shared PROPERTY OUTPUT_NAME ${PROJECT_NAME}-i2c)
     target_sources(${PROJECT_NAME}-i2c-shared PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-xml> $<TARGET_OBJECTS:${PROJECT_NAME}-i2c>)
@@ -103,6 +119,16 @@ if(BUILD_SHARED)
 
         install(DIRECTORY ${CMAKE_SOURCE_DIR}/configs
             DESTINATION ${INSTALL_DIR}/lib FILES_MATCHING PATTERN "*.xml")
+
+        if (BUILD_PYTHON_MODULE)
+            install(FILES $<TARGET_PROPERTY:rp_api_250_py,SWIG_SUPPORT_FILES> DESTINATION ${INSTALL_DIR}/lib/python)
+            install(TARGETS rp_api_250_py
+                LIBRARY DESTINATION ${INSTALL_DIR}/lib/python
+                ARCHIVE DESTINATION ${INSTALL_DIR}/lib/python)
+            install(FILES test/rp_api_250_test.py
+                DESTINATION ${INSTALL_DIR}/lib/python PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+                GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_WRITE WORLD_EXECUTE)
+        endif()
     endif()
 endif()
 

@@ -501,9 +501,8 @@ scpi_result_t RP_AcqTriggerLevelQ(scpi_t *context) {
             "trigger level: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
-    value = value;
     // Return back result
-    SCPI_ResultDouble(context, value);
+    SCPI_ResultFloat(context, value);
 
     RP_LOG(context,LOG_INFO, "*ACQ:TRIG:LEV? Successfully returned trigger level.");
     return SCPI_RES_OK;
@@ -734,7 +733,7 @@ scpi_result_t RP_AcqDataOldestAllQ(scpi_t *context) {
             RP_LOG(context,LOG_ERR, "*ACQ:SOUR#:DATA? Failed to get data in volt: %s", rp_GetError(result));
             return SCPI_RES_ERR;
         }
-
+        printf("size %d\n",size);
         SCPI_ResultBufferFloat(context, buffer, size);
 
     }else{
@@ -939,7 +938,7 @@ scpi_result_t RP_AcqExtTriggerLevelQ(scpi_t *context) {
         return SCPI_RES_ERR;
     }
     // Return back result
-    SCPI_ResultDouble(context, value);
+    SCPI_ResultFloat(context, value);
 
     RP_LOG(context,LOG_INFO, "*ACQ:TRIG:EXT:LEV? Successfully returned trigger level.");
     return SCPI_RES_OK;

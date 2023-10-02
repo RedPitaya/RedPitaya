@@ -7,6 +7,7 @@ option(BUILD_SHARED "Builds shared library" ON)
 option(BUILD_STATIC "Builds static library" ON)
 option(IS_INSTALL "Install library" ON)
 option(BUILD_DOC "Build documentation" ON)
+option(BUILD_PYTHON_MODULE "Builds python module" ON)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
@@ -51,8 +52,8 @@ message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
 
 include_directories("include")
+include_directories("include/redpitaya")
 include_directories("src")
-include_directories("src/kiss_fft")
 include_directories(${INSTALL_DIR}/include)
 
 
@@ -91,10 +92,28 @@ if(NOT DEFINED INSTALL_DIR)
     message(FATAL_ERROR "You must specify the path to the libraries api-250-12 api-hw-calib api-hw-profiles")
 endif()
 include_directories(${INSTALL_DIR}/include/api250-12)
+
 link_directories(${INSTALL_DIR}/lib)
+link_directories(${INSTALL_DIR}/lib/python)
+
 target_link_libraries(${PROJECT_NAME}-obj rp-i2c)
 
 if(BUILD_SHARED)
+
+    if (BUILD_PYTHON_MODULE)
+        find_package(SWIG REQUIRED)
+        INCLUDE(${SWIG_USE_FILE})
+
+        find_package(PythonLibs)
+        include_directories(${PYTHON_INCLUDE_PATH})
+
+        set(CMAKE_SWIG_FLAGS "")
+        set_property(SOURCE src/rp.i PROPERTY CPLUSPLUS ON)
+
+        SWIG_ADD_LIBRARY(rp_py LANGUAGE python SOURCES src/rp.i ${src})
+        SWIG_LINK_LIBRARIES(rp_py ${PYTHON_LIBRARIES} -lm -lpthread rp-hw-calib.a rp-hw-profiles.a rp-i2c.a rp-spi.a rp-gpio.a rp-hw.a i2c)
+    endif()
+
     add_library(${PROJECT_NAME}-shared SHARED)
     set_property(TARGET ${PROJECT_NAME}-shared PROPERTY OUTPUT_NAME ${PROJECT_NAME})
     target_link_options(${PROJECT_NAME}-shared PRIVATE -shared -Wl,--version-script=${CMAKE_SOURCE_DIR}/src/exportmap)
@@ -109,6 +128,15 @@ if(BUILD_SHARED)
         install(FILES ${header_rp}
             DESTINATION ${INSTALL_DIR}/include)
 
+        if (BUILD_PYTHON_MODULE)
+            install(FILES $<TARGET_PROPERTY:rp_py,SWIG_SUPPORT_FILES> DESTINATION ${INSTALL_DIR}/lib/python)
+            install(TARGETS rp_py
+                LIBRARY DESTINATION ${INSTALL_DIR}/lib/python
+                ARCHIVE DESTINATION ${INSTALL_DIR}/lib/python)
+            install(FILES tests/rp_test.py
+                DESTINATION ${INSTALL_DIR}/lib/python PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+                GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_WRITE WORLD_EXECUTE)
+        endif()
     endif()
 endif()
 

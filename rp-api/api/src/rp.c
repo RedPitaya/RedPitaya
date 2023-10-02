@@ -14,6 +14,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #include "redpitaya/version.h"
 #include "common.h"
@@ -1362,10 +1363,22 @@ int rp_GenRiseTime(rp_channel_t channel, float time) {
     return gen_setRiseTime(channel, time);
 }
 
+int rp_GenGetRiseTime(rp_channel_t channel, float *time){
+if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
+    return gen_getRiseTime(channel, time);
+}
+
 int rp_GenFallTime(rp_channel_t channel, float time) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
     return gen_setFallTime(channel, time);
+}
+
+int rp_GenGetFallTime(rp_channel_t channel, float *time){
+if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
+    return gen_getFallTime(channel, time);
 }
 
 int rp_GenGetDutyCycle(rp_channel_t channel, float *ratio) {
@@ -1590,4 +1603,60 @@ int rp_GenGetExtTriggerDebouncerUs(double *value){
 int rp_EnableDebugReg(){
     cmn_enableDebugReg();
     return RP_OK;
+}
+
+buffers_t* rp_createBuffer(uint8_t maxChannels,uint32_t length,bool initInt16, bool initDouble, bool initFloat){
+    if (maxChannels > 4) {
+        fprintf(stderr,"[Error:rp_createBuffer] The number of channels is more than allowed");
+        return NULL;
+    }
+
+    buffers_t * b = malloc(sizeof(buffers_t));
+    if (b == NULL) return NULL;
+    b->channels = maxChannels;
+    b->size = length;
+
+    bool NeedFree = false;
+    for(int i = 0 ; i < 4; i++){
+        b->ch_d[i] = NULL;
+        b->ch_f[i] = NULL;
+        b->ch_i[i] = NULL;
+        if (initInt16 && i < maxChannels){
+            b->ch_i[i] = malloc(length * sizeof(int16_t));
+            if (b->ch_i[i] == NULL){
+                NeedFree = true;
+                break;
+            }
+        }
+        if (initDouble && i < maxChannels){
+            b->ch_d[i] = malloc(length * sizeof(double));
+            if (b->ch_d[i] == NULL){
+                NeedFree = true;
+                break;
+            }
+        }
+        if (initFloat && i < maxChannels){
+            b->ch_f[i] = malloc(length * sizeof(float));
+            if (b->ch_f[i] == NULL){
+                NeedFree = true;
+                break;
+            }
+        }
+    }
+
+    if (NeedFree){
+        rp_deleteBuffer(b);
+        free(b);
+        return NULL;
+    }
+    return b;
+}
+
+void rp_deleteBuffer(buffers_t *_in_buffer){
+    for(int i = 0 ; i < 4; i++){
+        free(_in_buffer->ch_d[i]);
+        free(_in_buffer->ch_f[i]);
+        free(_in_buffer->ch_i[i]);
+    }
+    _in_buffer->size = 0;
 }

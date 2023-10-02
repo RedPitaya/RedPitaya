@@ -1,4 +1,5 @@
 #pragma once
+#include <stdint.h>
 
 #ifdef  __cplusplus
 extern "C" {
@@ -46,27 +47,25 @@ namespace RP_MCP47X6{
     };
 
     class mcp47x6 {
-        typedef unsigned char  uint8_t; 
-        typedef unsigned short uint16_t; 
         public:
             mcp47x6(mcp47x6_model model, const char* i2c_dev_path);
             mcp47x6(mcp47x6_model model, const char* i2c_dev_path, uint8_t address);
-            
+            ~mcp47x6();
 
             bool    readConfig();
             bool    writeConfig();
             bool    writeConfigAll();
             void    setGain(uint8_t gain);
-            char    getGain();
-            char    getGainEeprom();
+            uint8_t getGain();
+            uint8_t getGainEeprom();
                
             void    setPowerDown(uint8_t pdOutR);
-            char    getPowerDown();
-            char    getPowerDownEeprom();
+            uint8_t getPowerDown();
+            uint8_t getPowerDownEeprom();
 
             void    setVReference(uint8_t ref);
-            char    getVReferenc();
-            char    getVReferencEeprom();
+            uint8_t getVReferenc();
+            uint8_t getVReferencEeprom();
 
             void    setOutputLevel(unsigned short level);
             short   getOutputLevel();
@@ -76,7 +75,7 @@ namespace RP_MCP47X6{
         private:
             mcp47x6_model m_model;
             char          m_devAddr;
-            const char*   m_i2c_dev_path;
+            char*         m_i2c_dev_path;
 
             char          m_config;
             char          m_config_eeprom;

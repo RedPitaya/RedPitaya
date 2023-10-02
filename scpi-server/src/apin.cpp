@@ -75,7 +75,7 @@ scpi_result_t RP_AnalogPinValueQ(scpi_t * context) {
     }
 
     // Return back result
-    SCPI_ResultDouble(context, value);
+    SCPI_ResultFloat(context, value);
 
     RP_LOG(context,LOG_INFO, "*ANALOG:PIN? Successfully returned port value.");
     return SCPI_RES_OK;

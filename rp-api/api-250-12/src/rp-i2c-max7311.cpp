@@ -253,7 +253,7 @@ void rp_max7311::rp_setSleepTime(unsigned long time){
     max7311::setSleepTime(time);
 }
 
-char rp_max7311::rp_check(){
+uint8_t rp_max7311::rp_check(){
     if (max7311::getDefaultAddress() == MAX7311_DEFAULT_ADDRESS_1_2) return 0;
   	pthread_mutex_lock(&g_max_i2c_mutex);    
     if (rp_I2C_InitDevice(MAX7311_DEFAULT_DEV, max7311::getDefaultAddress()) != RP_HW_OK){

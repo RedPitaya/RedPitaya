@@ -1,0 +1,42 @@
+-------------------------------------------------------------------------------
+NMEA 2000 / CAN traffic (fuel flow sensor and GPS receiver)
+-------------------------------------------------------------------------------
+
+This is a set of example captures of the CAN / NMEA 2000 signals via an
+SK Pang CAN bus breakout board (using a Microchip MCP2551 transceiver).
+
+The data contains CAN / NMEA 2000 sample frames at 250kbps, the NMEA 2000
+bus/network has the following equipment connected:
+
+ - Lowrance EP 60R (fuel flow sensor)
+ - Garmin GPS 17x NMEA 2000 (GPS receiver / antenna)
+
+The signal grabbed is the (digital) CAN_RX pin of the MCP2551 chip.
+
+Details:
+http://www.skpang.co.uk/catalog/canbus-breakout-board-p-754.html
+http://www.microchip.com/wwwproducts/Devices.aspx?dDocName=en010405
+http://www.lowrance.com/en-US/Products/NMEA-2000/EP-60R-Fuel-Flow-en-us.aspx
+http://static.garmincdn.com/pumac/GPS17xNMEA2000_InstallationInstructions_Multilingual_.pdf
+
+
+Logic analyzer setup
+--------------------
+
+The logic analyzer used was an EE Electronics ESLA100 (at 500kHz):
+
+  Probe       MCP2551 pin
+  -----------------------
+  0           CAN_RX
+
+
+Data
+----
+
+The sigrok command line used was:
+
+  sigrok-cli --driver fx2lafw --config samplerate=500000 --probes 0 \
+             --continuous -o <file>
+
+Capturing was stopped after 172554240 samples.
+
