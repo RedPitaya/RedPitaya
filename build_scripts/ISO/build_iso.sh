@@ -106,6 +106,9 @@ sudo losetup -d "$LOOP_DEV"
 sleep 2
 
 mv redpitaya.img $(echo $PREFIX'_OS_'$REV'-'$NUM$SUFFIX'_beta.img')
-zip $(echo $PREFIX'_OS_'$REV'-'$NUM$SUFFIX'_beta.img.zip') $(echo $PREFIX'_OS_'$REV'-'$NUM$SUFFIX'_beta.img') 
+md5sum $(echo $PREFIX'_OS_'$REV'-'$NUM$SUFFIX'_beta.img') > md5.txt
+zip $(echo $PREFIX'_OS_'$REV'-'$NUM$SUFFIX'_beta.img.zip') $(echo $PREFIX'_OS_'$REV'-'$NUM$SUFFIX'_beta.img') md5.txt
 rm -f $(echo $PREFIX'_OS_'$REV'-'$NUM'_beta.img')
+rm md5.txt
 echo "ALL DONE"
+
