@@ -1,4 +1,27 @@
-# Beta version (2.00-18)    
+# Beta version (2.00-21)
+General 
+- Support for old board models
+
+
+APIs & SCPI 
+- Possibility to acquire >256MB of ADC data into DDR
+- Multi-channel acquisition/generation synchronization through SATA connectors or external triggers 
+- New SCPI commands added (SCPI time, board identifier, synchronization and DDR acquisition)
+- SCPI server updated to the latest version
+- Added python wrapper for RP API
+- Other bug fixes and general improvements 
+
+
+WEB apps 
+- 125-14 4 Input oscilloscope traces and trigger issues are fixed
+- Fixed waterfall and zoom mode in SA app
+- Refactoring UI of oscilloscope app
+- Released WEB apps source code 
+- Logic analyzer bug fixes
+- Other bug fixes and general improvements 
+
+
+# Stable version (2.00-18)    
 - Added python wrapper for api (v0.94) (Not for all libs)
 - Updated streaming app for 4-ch boards (Streaming to 4 channels in beta. There are known bugs with calibration parameters.)
 - Fixed bug in calibration for 4-ch boards
