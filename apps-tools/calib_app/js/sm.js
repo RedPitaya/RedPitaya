@@ -244,6 +244,8 @@
                 SM.sendParameters();
                 return;
             }
+        }else{
+            SM.rp_model = new_params['RP_MODEL_STR'].value;
         }
 
 
