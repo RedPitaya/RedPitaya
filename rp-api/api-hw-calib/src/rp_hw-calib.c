@@ -60,6 +60,11 @@ rp_calib_error rp_CalibConvertEEPROM(uint8_t *data,uint16_t size,rp_calib_params
     return calib_ConvertEEPROM(data,size,out);
 }
 
+rp_calib_error rp_CalibConvertToOld(rp_calib_params_t *out){
+    return calib_ConvertToOld(out);
+}
+
+
 rp_calib_error rp_CalibPrint(rp_calib_params_t *calib){
     return calib_Print(calib);
 }

@@ -553,12 +553,108 @@ rp_calib_error calib_ConvertEEPROM(uint8_t *data,uint16_t size,rp_calib_params_t
 
         default:{
             fprintf(stderr,"[Error:calib_ConvertEEPROM] Unknown calibration: %d.\n",dataStructureId);
-            return RP_HW_CALIB_EDM;
+            return RP_HW_CALIB_UC;
             break;
         }
     }
 
     return RP_HW_CALIB_EDM;
+}
+
+rp_calib_error calib_ConvertToOld(rp_calib_params_t *out){
+    if (out->dataStructureId != RP_HW_PACK_ID_V5){
+        fprintf(stderr,"[Error:calib_ConvertToOld] Calibration should only be in the new format: %d.\n",out->dataStructureId);
+        return RP_HW_CALIB_EIP;
+    }
+    rp_HPeModels_t model;
+    if (!g_model_loaded){
+        int res = rp_HPGetModel(&model);
+        if (res != RP_HP_OK){
+            fprintf(stderr,"[Error:calib_ConvertToOld] Can't load RP model version. Err: %d\n",res);
+            return RP_HW_CALIB_EDM;
+        }
+
+    }else{
+        model = g_model;
+    }
+
+    switch (model)
+    {
+        case STEM_125_10_v1_0:
+        case STEM_125_14_v1_0:
+        case STEM_125_14_v1_1:
+        case STEM_125_14_LN_v1_1:
+        case STEM_125_14_Z7020_v1_0:
+        case STEM_125_14_Z7020_LN_v1_1:{
+            out->dataStructureId = RP_HW_PACK_ID_V1;
+            for(int i = 0; i < 2; ++i){
+                out->fast_adc_1_1[i].baseScale = 20.0;
+                out->fast_adc_1_1[i].calibValue = calibBaseScaleFromVoltage(20.0,false) * out->fast_adc_1_1[i].gainCalc;
+
+                out->fast_adc_1_20[i].baseScale = 1.0;
+                out->fast_adc_1_20[i].calibValue = calibBaseScaleFromVoltage(1.0,false) * out->fast_adc_1_20[i].gainCalc;
+
+                out->fast_dac_x1[i].baseScale = 1.0;
+                out->fast_dac_x1[i].calibValue = calibBaseScaleFromVoltage(1.0,false) * out->fast_dac_x1[i].gainCalc;
+            }
+            break;
+        }
+
+        case STEM_122_16SDR_v1_0:
+        case STEM_122_16SDR_v1_1:{
+            out->dataStructureId = RP_HW_PACK_ID_V4;
+            for(int i = 0; i < 2; ++i){
+                out->fast_adc_1_1[i].baseScale = 20.0;
+                out->fast_adc_1_1[i].calibValue = calibBaseScaleFromVoltage(20.0,false) * out->fast_adc_1_1[i].gainCalc;
+
+                out->fast_dac_x1[i].baseScale = 1.0;
+                out->fast_dac_x1[i].calibValue = calibBaseScaleFromVoltage(1.0,false) * out->fast_dac_x1[i].gainCalc;
+            }
+            break;
+        }
+
+        case STEM_125_14_Z7020_4IN_v1_0:
+        case STEM_125_14_Z7020_4IN_v1_2:
+        case STEM_125_14_Z7020_4IN_v1_3:{
+            out->dataStructureId = RP_HW_PACK_ID_V3;
+            for(int i = 0; i < 4; ++i){
+                out->fast_adc_1_1[i].baseScale = 20.0;
+                out->fast_adc_1_1[i].calibValue = calibBaseScaleFromVoltage(20.0,false) * out->fast_adc_1_1[i].gainCalc;
+
+                out->fast_adc_1_20[i].baseScale = 1.0;
+                out->fast_adc_1_20[i].calibValue = calibBaseScaleFromVoltage(1.0,false) * out->fast_adc_1_20[i].gainCalc;
+            }
+
+            break;
+        }
+
+        case STEM_250_12_v1_0:
+        case STEM_250_12_v1_1:
+        case STEM_250_12_v1_2:
+        case STEM_250_12_v1_2a:
+        case STEM_250_12_120:{
+            out->dataStructureId = RP_HW_PACK_ID_V2;
+            for(int i = 0; i < 2; ++i){
+                out->fast_adc_1_1[i].baseScale = 20.0;
+                out->fast_adc_1_1[i].calibValue = calibBaseScaleFromVoltage(20.0,false) * out->fast_adc_1_1[i].gainCalc;
+
+                out->fast_adc_1_20[i].baseScale = 1.0;
+                out->fast_adc_1_20[i].calibValue = calibBaseScaleFromVoltage(1.0,false) * out->fast_adc_1_20[i].gainCalc;
+
+                out->fast_dac_x1[i].baseScale = 1.0;
+                out->fast_dac_x1[i].calibValue = calibBaseScaleFromVoltage(1.0,false) * out->fast_dac_x1[i].gainCalc;
+
+                out->fast_dac_x5[i].baseScale = 2.0;
+                out->fast_dac_x5[i].calibValue = calibBaseScaleFromVoltage(2.0,false) * out->fast_dac_x5[i].gainCalc;
+            }
+            break;
+        }
+
+        default:
+            fprintf(stderr,"[Error:calib_ConvertToOld] Unknown model: %d.\n",model);
+            return RP_HW_CALIB_ENI;
+    }
+    return RP_HW_CALIB_OK;
 }
 
 

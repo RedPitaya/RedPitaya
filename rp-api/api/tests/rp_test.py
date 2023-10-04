@@ -221,6 +221,10 @@ print("rp.rp_GenOutEnable(rp.RP_CH_1)")
 res = rp.rp_GenOutEnable(rp.RP_CH_1)
 print(res)
 
+print("rp.rp_GenResetChannelSM(rp.RP_CH_1)")
+res = rp.rp_GenResetChannelSM(rp.RP_CH_1)
+print(res)
+
 print("rp.rp_GenOutEnableSync(True)")
 res = rp.rp_GenOutEnableSync(True)
 print(res)
@@ -534,6 +538,14 @@ print(res)
 
 print("rp.rp_AcqGetTriggerDelayNs()")
 res = rp.rp_AcqGetTriggerDelayNs()
+print(res)
+
+print("rp.rp_AcqSetTriggerDelayNsDirect(1000)")
+res = rp.rp_AcqSetTriggerDelayNsDirect(1000)
+print(res)
+
+print("rp.rp_AcqGetTriggerDelayNsDirect()")
+res = rp.rp_AcqGetTriggerDelayNsDirect()
 print(res)
 
 print("rp.rp_AcqGetPreTriggerCounter()")

@@ -77,6 +77,14 @@ print("rp_hw_calib.rp_CalibPrint(t)")
 res = rp_hw_calib.rp_CalibPrint(t)
 print(res)
 
+print("rp_hw_calib.rp_CalibConvertToOld(t)")
+res = rp_hw_calib.rp_CalibConvertToOld(t)
+print(res)
+
+print("rp_hw_calib.rp_CalibPrint(t)")
+res = rp_hw_calib.rp_CalibPrint(t)
+print(res)
+
 rp_hw_calib.delete_puint8(raw_data[1])
 
 # IDs defined in calib_universal.h
