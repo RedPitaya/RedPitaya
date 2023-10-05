@@ -89,6 +89,10 @@ const scpi_choice_def_t scpi_RpTrigStat[] = {
     {"WAIT", 7},
     {"WAIT", 8},
     {"WAIT", 9},
+    {"WAIT", 10},
+    {"WAIT", 11},
+    {"WAIT", 12},
+    {"WAIT", 13},
     SCPI_CHOICE_LIST_END
 };
 
