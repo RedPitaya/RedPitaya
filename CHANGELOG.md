@@ -1,4 +1,4 @@
-# Beta version (2.00-21)
+# Beta version (2.00-23)
 General 
 - Support for old board models
 
