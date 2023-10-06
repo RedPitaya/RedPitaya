@@ -92,7 +92,7 @@ KERNEL_HEADERS ?= YES
 
 # HWID=v1r0 - this value for 250-12 rev 1.0. In all other cases, this parameter is empty.
 
-FPGA_COMMIT ?= c822622082e63ce943c3b22e706e0c35dbe8d2f5
+FPGA_COMMIT ?= unify/dev
 
 HWID ?=
 DEF_PARAM ?=
