@@ -154,7 +154,7 @@ static const uint32_t EX_CI_N_MASK = 0xFF;
 int hk_EnableDigitalLoop(bool enable);
 int house_SetPllControlEnable(bool enable);
 
-static volatile housekeeping_control_t *hk = NULL;
+volatile housekeeping_control_t *hk = NULL;
 
 static int hk_Init(bool reset) {
     cmn_Map(HOUSEKEEPING_BASE_SIZE, HOUSEKEEPING_BASE_ADDR, (void**)&hk);
@@ -206,6 +206,7 @@ static hk_version_t house_getHKVersion() {
 
 static int hk_Release() {
     cmn_Unmap(HOUSEKEEPING_BASE_SIZE, (void**)&hk);
+    hk = NULL;
     return RP_OK;
 }
 

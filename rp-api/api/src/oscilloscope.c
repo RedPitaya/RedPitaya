@@ -103,6 +103,7 @@ int osc_Release()
             return RP_ECMD;
         }
     }
+    mem_fd = 0;
     return RP_OK;
 }
 

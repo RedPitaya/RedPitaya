@@ -68,12 +68,12 @@ int rp_IsApiInit(){
 
 int rp_Release()
 {
-    osc_Release();
-    generate_Release();
-    ams_Release();
-    hk_Release();
-    cmn_Release();
-    daisy_Release();
+    ECHECK(osc_Release())
+    ECHECK(generate_Release())
+    ECHECK(ams_Release())
+    ECHECK(hk_Release())
+    ECHECK(daisy_Release())
+    ECHECK(cmn_Release())
     g_api_state = false;
     return RP_OK;
 }
@@ -122,6 +122,8 @@ const char* rp_GetError(int errorCode) {
         case RP_EABA:  return "Failed to acquire bus access";
         case RP_EFRB:  return "Failed to read from the bus";
         case RP_EFWB:  return "Failed to write to the bus";
+        case RP_EMNC:  return "Extension module not connected";
+        case RP_NOTS:  return "Command not supported ";
         default:       return "Unknown error";
     }
 }

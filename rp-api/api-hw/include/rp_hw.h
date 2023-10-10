@@ -144,10 +144,6 @@ typedef enum {
 } rp_spi_cs_mode_t;
 
 
-/** @name General
- */
-///@{
-
 /**
  * Opens the UART device (/dev/ttyPS1). Initializes the default settings.
  * @return If the function is successful, the return value is RP_OK.
