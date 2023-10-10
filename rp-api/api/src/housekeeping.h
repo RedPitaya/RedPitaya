@@ -38,6 +38,11 @@ typedef struct ext_trigger_s {
     uint32_t :29;
 } ext_trigger_t;
 
+typedef struct can_control_s {
+    uint32_t enable: 1;
+    uint32_t :31;
+} can_control_t;
+
 typedef enum {
     HK_V1,
     HK_V2,
@@ -63,7 +68,8 @@ typedef struct housekeeping_control_s_v1 {
     uint32_t reserved_2;                    // 0x28
     uint32_t reserved_3;                    // 0x2C
     uint32_t led_control;                   // 0x30 **LED control**
-    uint32_t reserved_4[51];                // 0x34 - 0x100
+    can_control_t can_control;              // 0x34 **CAN control**
+    uint32_t reserved_4[50];                // 0x38 - 0x100
     uint32_t fpga_ready;                    // 0x100 **FPGA ready**
     uint32_t reserved_5[959];               // 0x104 - 0x1000
     ext_trigger_t ext_trigger;              // 0x1000 **External trigger override**
@@ -84,18 +90,18 @@ typedef struct housekeeping_control_s_v2 {
     uint32_t reserved_2;                    // 0x28
     uint32_t reserved_3;                    // 0x2C
     uint32_t led_control;                   // 0x30 **LED control**
-    uint32_t reserved_4;                    // 0x34
-    uint32_t reserved_5;                    // 0x38
-    uint32_t reserved_6;                    // 0x3C
+    can_control_t can_control;              // 0x34 **CAN control**
+    uint32_t reserved_4;                    // 0x38
+    uint32_t reserved_5;                    // 0x3C
     pll_control_t pll_control;              // 0x40
     uint32_t idelay_reset;                  // 0x44 **IDELAY reset**
     uint32_t idelay_cha;                    // 0x48 **IDELAY CHA**
     uint32_t idelay_chb;                    // 0x4C **IDELAY CHB**
     uint32_t idelay_chc;                    // 0x50 **IDELAY CHC**
     uint32_t idelay_chd;                    // 0x54 **IDELAY CHD**
-    uint32_t reserved_7[42];                // 0x58 - 0x100
+    uint32_t reserved_6[42];                // 0x58 - 0x100
     uint32_t fpga_ready;                    // 0x100 **FPGA ready**
-    uint32_t reserved_8[959];               // 0x104 - 0x1000
+    uint32_t reserved_7[959];               // 0x104 - 0x1000
     ext_trigger_t ext_trigger;              // 0x1000 **External trigger override**
 
 } housekeeping_control_v2_t;
@@ -115,9 +121,9 @@ typedef struct housekeeping_control_s_v3 {
     uint32_t reserved_2;                    // 0x28
     uint32_t reserved_3;                    // 0x2C
     uint32_t led_control;                   // 0x30 **LED control**
-    uint32_t reserved_4;                    // 0x34
-    uint32_t reserved_5;                    // 0x38
-    uint32_t reserved_6;                    // 0x3C
+    can_control_t can_control;              // 0x34 **CAN control**
+    uint32_t reserved_4;                    // 0x38
+    uint32_t reserved_5;                    // 0x3C
     pll_control_t pll_control;              // 0x40
     uint32_t idelay_reset;                  // 0x44 **IDELAY reset**
     uint32_t idelay_cha;                    // 0x48 **IDELAY CHA**
@@ -125,13 +131,13 @@ typedef struct housekeeping_control_s_v3 {
     uint32_t adc_spi_cw;                    // 0x50 **ADC SPI Control word**
     uint32_t adc_spi_wd;                    // 0x54 **ADC SPI Write data / start transfer**
     uint32_t adc_spi_rd;                    // 0x58 **ADC SPI Read data / Transfer busy**
-    uint32_t reserved_7;                    // 0x5C
+    uint32_t reserved_6;                    // 0x5C
     uint32_t dac_spi_cw;                    // 0x60 **DAC SPI Control word**
     uint32_t dac_spi_wd;                    // 0x64 **DAC SPI Write data / start transfer**
     uint32_t dac_spi_rd;                    // 0x68 **DAC SPI Read data / Transfer busy**
-    uint32_t reserved_8[37];                // 0x6C - 0x100
+    uint32_t reserved_7[37];                // 0x6C - 0x100
     uint32_t fpga_ready;                    // 0x100 **FPGA ready**
-    uint32_t reserved_9[959];               // 0x104 - 0x1000
+    uint32_t reserved_8[959];               // 0x104 - 0x1000
     ext_trigger_t ext_trigger;              // 0x1000 **External trigger override**
 
 } housekeeping_control_v3_t;
@@ -407,6 +413,54 @@ int house_GetSourceTrigOutput(rp_outTiggerMode_t *mode){
         case HK_V3:{
             volatile housekeeping_control_v3_t *hk_v3 = (volatile housekeeping_control_v3_t*)hk;
             *mode = hk_v3->ext_trigger.out_selector;
+            return RP_OK;
+        }
+        default:
+            return RP_NOTS;
+    }
+}
+
+int house_SetCANModeEnable(bool _enable){
+    hk_version_t ver = house_getHKVersion();
+    switch (ver)
+    {
+        case HK_V1:{
+            volatile housekeeping_control_v1_t *hk_v1 = (volatile housekeeping_control_v1_t*)hk;
+            hk_v1->can_control.enable = _enable;
+            return RP_OK;
+        }
+        case HK_V2:{
+            volatile housekeeping_control_v2_t *hk_v2 = (volatile housekeeping_control_v2_t*)hk;
+            hk_v2->can_control.enable = _enable;
+            return RP_OK;
+        }
+        case HK_V3:{
+            volatile housekeeping_control_v3_t *hk_v3 = (volatile housekeeping_control_v3_t*)hk;
+            hk_v3->can_control.enable = _enable;
+            return RP_OK;
+        }
+        default:
+            return RP_NOTS;
+    }
+}
+
+int house_GetCANModeEnable(bool *_enable){
+    hk_version_t ver = house_getHKVersion();
+    switch (ver)
+    {
+        case HK_V1:{
+            volatile housekeeping_control_v1_t *hk_v1 = (volatile housekeeping_control_v1_t*)hk;
+            *_enable = hk_v1->can_control.enable;
+            return RP_OK;
+        }
+        case HK_V2:{
+            volatile housekeeping_control_v2_t *hk_v2 = (volatile housekeeping_control_v2_t*)hk;
+            *_enable = hk_v2->can_control.enable;
+            return RP_OK;
+        }
+        case HK_V3:{
+            volatile housekeeping_control_v3_t *hk_v3 = (volatile housekeeping_control_v3_t*)hk;
+            *_enable = hk_v3->can_control.enable;
             return RP_OK;
         }
         default:

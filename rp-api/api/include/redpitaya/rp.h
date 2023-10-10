@@ -157,8 +157,7 @@ const char* rp_GetError(int errorCode);
 /**
 * Enable or disables digital loop. This internally connect output to input
 * @param enable True if you want to enable this feature or false if you want to disable it
-* Each rp_GetCalibrationSettings call returns the same cached setting values.
-* @return Calibration settings
+* @return If the function is successful, the return value is RP_OK.
 */
 int rp_EnableDigitalLoop(bool enable);
 
@@ -204,6 +203,25 @@ int rp_GPIOpSetState(uint32_t state);
 int rp_GPIOpGetState(uint32_t *state);
 
 int rp_EnableDebugReg();
+
+/** @name CAN control
+ */
+///@{
+
+/**
+* Enables or disables the output of the CAN controller on pins CAN0_tx: GPIO_P 7 and CAN0_rx: GPIO_N 7
+* @param enable True if you want to enable this feature or false if you want to disable it
+* @return If the function is successful, the return value is RP_OK.
+*/
+int rp_SetCANModeEnable(bool enable);
+
+/**
+* Returns the current state of GPIO outputs
+* @param state True if this mode is enabled
+* @return If the function is successful, the return value is RP_OK.
+*/
+int rp_GetCANModeEnable(bool *state);
+///@}
 
 /** @name Digital Input/Output
  */

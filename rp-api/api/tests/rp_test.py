@@ -118,6 +118,14 @@ print("rp.rp_SetDpinEnableTrigOutput(False)")
 res = rp.rp_SetDpinEnableTrigOutput(False)
 print(res)
 
+print("rp.rp_GetCANModeEnable()")
+res = rp.rp_GetCANModeEnable()
+print(res)
+
+print("rp.rp_SetCANModeEnable(False)")
+res = rp.rp_SetCANModeEnable(False)
+print(res)
+
 print("rp.rp_GetSourceTrigOutput()")
 res = rp.rp_GetSourceTrigOutput()
 print(res)

@@ -1606,6 +1606,14 @@ int rp_GetSourceTrigOutput(rp_outTiggerMode_t *mode){
     return house_GetSourceTrigOutput(mode);
 }
 
+int rp_SetCANModeEnable(bool _enable){
+    return house_SetCANModeEnable(_enable);
+}
+
+int rp_GetCANModeEnable(bool *_enable){
+    return house_GetCANModeEnable(_enable);
+}
+
 int rp_AcqSetExtTriggerDebouncerUs(double value){
     return acq_SetExtTriggerDebouncerUs(value);
 }
