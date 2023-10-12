@@ -13,7 +13,7 @@ VER := $(shell cat apps-tools/ecosystem/info/info.json | grep version | sed -e '
 BUILD_NUMBER ?= 0
 REVISION ?= $(shell git rev-parse --short HEAD)
 VERSION = $(VER)-$(BUILD_NUMBER)
-LINUX_VER = 2.01
+LINUX_VER = 2.02
 export BUILD_NUMBER
 export REVISION
 export VERSION
@@ -40,6 +40,7 @@ $(INSTALL_DIR):
 
 LIBRP_DIR       		= rp-api/api
 LIBRP_HW_DIR    		= rp-api/api-hw
+LIBRP_HW_CAN_DIR  		= rp-api/api-hw-can
 LIBRP_HW_PROFILES_DIR	= rp-api/api-hw-profiles
 LIBRP_HW_CALIB_DIR		= rp-api/api-hw-calib
 LIBRP2_DIR      		= rp-api/api2
@@ -48,10 +49,10 @@ LIBRP_DSP_DIR   		= rp-api/api-dsp
 LIBRPAPP_DIR    		= rp-api/api-app
 ECOSYSTEM_DIR   		= Applications/ecosystem
 
-.PHONY: api api2 librp librp250_12 librp_hw librp_dsp librp_hw_profiles librp_hw_calibration
+.PHONY: api api2 librp librp250_12 librp_hw librp_dsp librp_hw_profiles librp_hw_calibration librp_hw_can
 .PHONY: librpapp liblcr_meter
 
-api: librp librp_hw librp_dsp librpapp
+api: librp librp_hw librp_hw_can librp_dsp librpapp
 
 api2: librp2
 
@@ -62,6 +63,10 @@ librp: librp250_12 librp_hw_calibration librp_hw_profiles
 librp_hw:
 	cmake -B$(abspath $(LIBRP_HW_DIR)/build) -S$(abspath $(LIBRP_HW_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(LIBRP_HW_DIR)/build install
+
+librp_hw_can: librp
+	cmake -B$(abspath $(LIBRP_HW_CAN_DIR)/build) -S$(abspath $(LIBRP_HW_CAN_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRP_HW_CAN_DIR)/build install
 
 librp_hw_calibration: librp_hw_profiles
 	cmake -B$(abspath $(LIBRP_HW_CALIB_DIR)/build) -S$(abspath $(LIBRP_HW_CALIB_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
@@ -509,6 +514,7 @@ clean:
 	rm -rf $(abspath $(LIBRP_DIR)/build)
 	rm -rf $(abspath $(LIBRP2_DIR)/build)
 	rm -rf $(abspath $(LIBRP_HW_DIR)/build)
+	rm -rf $(abspath $(LIBRP_HW_CAN_DIR)/build)
 	rm -rf $(abspath $(LIBRP_HW_PROFILES_DIR)/build)
 	rm -rf $(abspath $(LIBRP250_12_DIR)/build)
 	rm -rf $(abspath $(LIBRP_DSP_DIR)/build)
