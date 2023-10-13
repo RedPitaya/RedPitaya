@@ -27,6 +27,7 @@
 #include "led.h"
 #include "spi.h"
 #include "i2c.h"
+#include "can.h"
 #include "acquire.h"
 #include "acquire_axi.h"
 #include "generate.h"
@@ -365,6 +366,42 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "I2C:Smbus:Write#:Buffer#", .callback  = RP_I2C_SMBUS_WriteBuffer,},
     {.pattern = "I2C:IOctl:Write:Buffer#", .callback   = RP_I2C_IOCTL_WriteBuffer,},
 
+    /* can */
+    {.pattern = "CAN:FPGA", .callback                   = RP_CAN_FpgaEnable,},
+    {.pattern = "CAN:FPGA?", .callback                  = RP_CAN_FpgaEnableQ,},
+    {.pattern = "CAN#:START", .callback                 = RP_CAN_Start,},
+    {.pattern = "CAN#:STOP", .callback                  = RP_CAN_Stop,},
+    {.pattern = "CAN#:RESTART", .callback               = RP_CAN_Restart,},
+    {.pattern = "CAN#:STATE?", .callback                = RP_CAN_StateQ,},
+    {.pattern = "CAN#:BitRate", .callback               = RP_CAN_Bitrate,},
+    {.pattern = "CAN#:BitRate:SamplePoint", .callback   = RP_CAN_BitrateSamplePoint,},
+    {.pattern = "CAN#:BitRate:SamplePoint?", .callback  = RP_CAN_BitrateSamplePointQ,},
+    {.pattern = "CAN#:BitTiming", .callback             = RP_CAN_BitTiming,},
+    {.pattern = "CAN#:BitTiming?", .callback            = RP_CAN_BitTimingQ,},
+    {.pattern = "CAN#:BitTimingLimits?", .callback      = RP_CAN_BitTimingLimitsQ,},
+    {.pattern = "CAN#:CLOCK?", .callback                = RP_CAN_ClockFreqQ,},
+    {.pattern = "CAN#:BUS:ERROR?", .callback            = RP_CAN_BusErrorCountersQ,},
+    {.pattern = "CAN#:RestartTime", .callback           = RP_CAN_RestartTime,},
+    {.pattern = "CAN#:RestartTime?", .callback          = RP_CAN_RestartTimeQ,},
+    {.pattern = "CAN#:MODE", .callback                  = RP_CAN_ControllerMode,},
+    {.pattern = "CAN#:MODE?", .callback                 = RP_CAN_ControllerModeQ,},
+    {.pattern = "CAN#:OPEN", .callback                  = RP_CAN_Open,},
+    {.pattern = "CAN#:CLOSE", .callback                 = RP_CAN_Close,},
+    {.pattern = "CAN#:Send#", .callback                 = RP_CAN_Send,},
+    {.pattern = "CAN#:Send#:Timeout#", .callback        = RP_CAN_SendTimeout,},
+    {.pattern = "CAN#:Send#:E", .callback               = RP_CAN_SendExtended,},
+    {.pattern = "CAN#:Send#:Timeout#:E", .callback      = RP_CAN_SendExtendedTimeout,},
+    {.pattern = "CAN#:Send#:RTR", .callback             = RP_CAN_SendRTR,},
+    {.pattern = "CAN#:Send#:Timeout#:RTR", .callback    = RP_CAN_SendTimeoutRTR,},
+    {.pattern = "CAN#:Send#:E:RTR", .callback           = RP_CAN_SendExtendedRTR,},
+    {.pattern = "CAN#:Send#:Timeout#:E:RTR", .callback  = RP_CAN_SendExtendedTimeoutRTR,},
+    {.pattern = "CAN#:Read", .callback                  = RP_CAN_Read,},
+    {.pattern = "CAN#:Read:Timeout#", .callback         = RP_CAN_ReadTimeout,},
+    {.pattern = "CAN#:Filter:Add", .callback            = RP_CAN_AddFilter,},
+    {.pattern = "CAN#:Filter:Remove", .callback         = RP_CAN_RemoveFilter,},
+    {.pattern = "CAN#:Filter:Clear", .callback          = RP_CAN_ClearFilter,},
+    {.pattern = "CAN#:Filter:Set", .callback            = RP_CAN_SetFilter,},
+    {.pattern = "CAN#:SHOW:ERROR", .callback            = RP_CAN_ShowErrorFrames,},
 
     SCPI_CMD_LIST_END
 };
