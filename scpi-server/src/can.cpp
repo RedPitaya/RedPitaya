@@ -39,9 +39,6 @@ const scpi_choice_def_t scpi_CAN_State[] = {
 
 const scpi_choice_def_t scpi_CAN_Mode[] = {
     {"LOOPBACK", RP_CAN_MODE_LOOPBACK},
-    {"LISTENONLY", RP_CAN_MODE_LISTENONLY},
-    {"3_SAMPLES", RP_CAN_MODE_3_SAMPLES},
-    {"ONE_SHOT", RP_CAN_MODE_ONE_SHOT},
     {"BERR_REPORTING", RP_CAN_MODE_BERR_REPORTING},
     SCPI_CHOICE_LIST_END
 };
@@ -749,7 +746,7 @@ scpi_result_t RP_CAN_ReadTimeout(scpi_t * context){
     RP_F_NAME(const char func[] = "CAN#:Read:Timeout#";)
     int32_t cmd[2] = {0,0};
     
-    if (!SCPI_CommandNumbers(context,cmd,1,-1)){
+    if (!SCPI_CommandNumbers(context,cmd,2,-1)){
         RP_LOG(context,LOG_ERR, "*%s Failed to get parameters.",func);
         return SCPI_RES_ERR;
     }
@@ -772,6 +769,7 @@ scpi_result_t RP_CAN_ReadTimeout(scpi_t * context){
 
     if (RP_HW_CAN_OK != result) {
         RP_LOG(context,LOG_ERR, "*%s %s (%d)",func, rp_CanGetError(result), result);
+        SCPI_ResultInt8(context, 0);
         return SCPI_RES_ERR;
     }
 
