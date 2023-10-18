@@ -143,6 +143,18 @@ typedef enum {
     RP_SPI_CS_HIGH     = 1   //!< Active High state, Idle - low state
 } rp_spi_cs_mode_t;
 
+/**
+ * Retrieves the library version number
+ * @return Library version
+ */
+const char* rp_HwGetVersion();
+
+/**
+ * Returns textual representation of error code.
+ * @param errorCode Error code returned from API.
+ * @return Textual representation of error given error code.
+ */
+const char* rp_HwGetError(int errorCode);
 
 /**
  * Opens the UART device (/dev/ttyPS1). Initializes the default settings.

@@ -86,7 +86,7 @@ scpi_result_t SCPI_Control(scpi_t * context, scpi_ctrl_name_t ctrl, scpi_reg_val
 
 scpi_result_t SCPI_Reset(scpi_t * context) {
     /* Terminating all scpi operations */
-    RP_LOG(context, LOG_INFO, "*RST Sucsessfuly reset scpi server.");
+    RP_LOG_INFO("Sucsessfuly reset scpi server.")
     return SCPI_RES_OK;
 }
 
@@ -97,9 +97,9 @@ scpi_result_t SCPI_SystemCommTcpipControlQ(scpi_t * context) {
 
 scpi_result_t SCPI_SystemErrorNextQEx(scpi_t * context) {
     if (rp_errorCount(context)){
-        auto str = rp_popError(context);
-        SCPI_ResultInt32(context, RP_ERR_CODE);
-        SCPI_ResultText(context, str.c_str());
+        auto err = rp_popError(context);
+        SCPI_ResultInt32(context, err.baseCode + err.errorCode);
+        SCPI_ResultText(context, err.msg.c_str());
         return SCPI_RES_OK;
     }
 
@@ -388,15 +388,15 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "CAN#:OPEN", .callback                  = RP_CAN_Open,},
     {.pattern = "CAN#:CLOSE", .callback                 = RP_CAN_Close,},
     {.pattern = "CAN#:Send#", .callback                 = RP_CAN_Send,},
-    {.pattern = "CAN#:Send#:Timeout#", .callback        = RP_CAN_SendTimeout,},
-    {.pattern = "CAN#:Send#:Ext", .callback             = RP_CAN_SendExtended,},
-    {.pattern = "CAN#:Send#:Timeout#:Ext", .callback    = RP_CAN_SendExtendedTimeout,},
-    {.pattern = "CAN#:Send#:RTR", .callback             = RP_CAN_SendRTR,},
-    {.pattern = "CAN#:Send#:Timeout#:RTR", .callback    = RP_CAN_SendTimeoutRTR,},
-    {.pattern = "CAN#:Send#:Ext:RTR", .callback         = RP_CAN_SendExtendedRTR,},
-    {.pattern = "CAN#:Send#:Timeout#:Ext:RTR", .callback= RP_CAN_SendExtendedTimeoutRTR,},
-    {.pattern = "CAN#:Read", .callback                  = RP_CAN_Read,},
-    {.pattern = "CAN#:Read:Timeout#", .callback         = RP_CAN_ReadTimeout,},
+    {.pattern = "CAN#:Send#:Timeout#", .callback        = RP_CAN_Send,},
+    {.pattern = "CAN#:Send#:Ext", .callback             = RP_CAN_Send,},
+    {.pattern = "CAN#:Send#:Timeout#:Ext", .callback    = RP_CAN_Send,},
+    {.pattern = "CAN#:Send#:RTR", .callback             = RP_CAN_Send,},
+    {.pattern = "CAN#:Send#:Timeout#:RTR", .callback    = RP_CAN_Send,},
+    {.pattern = "CAN#:Send#:Ext:RTR", .callback         = RP_CAN_Send,},
+    {.pattern = "CAN#:Send#:Timeout#:Ext:RTR", .callback= RP_CAN_Send,},
+    {.pattern = "CAN#:Read?", .callback                 = RP_CAN_Read,},
+    {.pattern = "CAN#:Read:Timeout#?", .callback        = RP_CAN_Read,},
     {.pattern = "CAN#:Filter:Add", .callback            = RP_CAN_AddFilter,},
     {.pattern = "CAN#:Filter:Remove", .callback         = RP_CAN_RemoveFilter,},
     {.pattern = "CAN#:Filter:Clear", .callback          = RP_CAN_ClearFilter,},

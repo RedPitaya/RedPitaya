@@ -4,29 +4,31 @@
 #include <queue>
 #include <map>
 
-std::map<scpi_t*, queue<string>> g_errorList;
+std::map<scpi_t*, queue<rp_error_t>> g_errorList;
 
 
-void rp_resetErrorList(scpi_t * context){
-    g_errorList[context] = queue<string>();
+auto rp_resetErrorList(scpi_t * context) -> void{
+    g_errorList[context] = queue<rp_error_t>();
 }
 
-void rp_addError(scpi_t * context,string &str){
-    g_errorList[context].push(str);
+auto rp_addError(scpi_t * context, rp_error_t &err) -> void{
+    g_errorList[context].push(err);
 }
 
-string rp_popError(scpi_t * context){
-    if (g_errorList[context].empty()) return "";
+auto rp_popError(scpi_t * context) -> rp_error_t{
+    if (g_errorList[context].empty()) return rp_error_t();
     auto err = g_errorList[context].front();
     g_errorList[context].pop();
     return err;
 }
 
-size_t rp_errorCount(scpi_t * context){
-    return g_errorList[context].size();
+auto rp_errorCount(scpi_t * context) -> size_t{
+    if (g_errorList.count(context) > 0)
+        return g_errorList[context].size();
+    return 0;
 }
 
-void rp_errorPush(scpi_t * context, string err) {
+auto rp_errorPush(scpi_t * context, rp_error_t &err) -> void {
     rp_addError(context,err);
 
     SCPI_RegSetBits(context, SCPI_REG_ESR, ESR_EER);

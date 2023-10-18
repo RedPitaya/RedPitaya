@@ -114,7 +114,7 @@ void LogMessage(char *m, size_t len) {
     strncpy(buff, m, len);
     buff[len - 1] = '\0';
 
-    RP_LOG(nullptr,LOG_INFO, "Processing command: %s", buff);
+    rp_Log(nullptr,LOG_INFO, 0, "Processing command: %s", buff);
 }
 
 /**
@@ -134,15 +134,15 @@ static int handleConnection(int connfd) {
 
     prctl( 1, SIGTERM );
 
-    RP_LOG(nullptr,LOG_INFO, "Waiting for first client request.");
+    rp_Log(nullptr,LOG_INFO, 0,  "Waiting for first client request.");
     int buf = 1024 * 16;
     if (setsockopt(connfd, SOL_SOCKET, SO_RCVBUF, &buf, sizeof(int)) == -1) {
-        RP_LOG(nullptr,LOG_ERR, "Error setting socket opts: %s", strerror(errno));
+        rp_Log(nullptr,LOG_ERR, 0, "Error setting socket opts: %s", strerror(errno));
     }
 
     buf = 1024 * 16;
     if (setsockopt(connfd, SOL_SOCKET, SO_SNDBUF, &buf, sizeof(int)) == -1) {
-        RP_LOG(nullptr,LOG_ERR, "Error setting socket opts: %s", strerror(errno));
+        rp_Log(nullptr,LOG_ERR, 0, "Error setting socket opts: %s", strerror(errno));
     }
     //Receive a message from client
     while( (read_size = recv(connfd , buffer , MAX_BUFF_SIZE , 0)) > 0 )
@@ -180,21 +180,21 @@ static int handleConnection(int connfd) {
             memmove(message_buff, m, msg_end);
         }
 
-        RP_LOG(nullptr,LOG_INFO, "Waiting for next client request.");
+        rp_Log(nullptr,LOG_INFO, 0, "Waiting for next client request.");
     }
 
     free(message_buff);
 
-    RP_LOG(nullptr,LOG_INFO, "Closing client connection...");
+    rp_Log(nullptr,LOG_INFO, 0, "Closing client connection...");
 
     if(read_size == 0)
     {
-        RP_LOG(nullptr,LOG_INFO, "Client is disconnected");
+        rp_Log(nullptr,LOG_INFO, 0, "Client is disconnected");
         return 0;
     }
     else if(read_size == -1)
     {
-        RP_LOG(nullptr,LOG_ERR, "Receive message failed (%s)", strerror(errno));
+        rp_Log(nullptr,LOG_ERR, 0, "Receive message failed (%s)", strerror(errno));
         perror("Receive message failed");
         return 1;
     }
@@ -217,7 +217,7 @@ int main(int argc, char *argv[])
     setlogmask (LOG_UPTO (LOG_INFO));
     openlog ("scpi-server", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
 
-    RP_LOG (nullptr, LOG_NOTICE, "scpi-server started");
+    rp_Log (nullptr, LOG_NOTICE, 0, "scpi-server started");
 
     installTermSignalHandler();
 
@@ -230,13 +230,13 @@ int main(int argc, char *argv[])
 
     int result = rp_Init();
     if (result != RP_OK) {
-        RP_LOG(nullptr,LOG_ERR, "Failed to initialize RP APP library: %s", rp_GetError(result));
+        rp_Log(nullptr,LOG_ERR, result, "Failed to initialize RP APP library: %s", rp_GetError(result));
         return (EXIT_FAILURE);
     }
 
     result = rp_Reset();
     if (result != RP_OK) {
-        RP_LOG(nullptr,LOG_ERR, "Failed to reset RP APP: %s", rp_GetError(result));
+        rp_Log(nullptr,LOG_ERR, result, "Failed to reset RP APP: %s", rp_GetError(result));
         return (EXIT_FAILURE);
     }
 
@@ -268,7 +268,7 @@ int main(int argc, char *argv[])
     listenfd = socket(AF_INET, SOCK_STREAM, 0);
     if (listenfd == -1)
     {
-        RP_LOG(nullptr,LOG_ERR, "Failed to create a socket (%s)", strerror(errno));
+        rp_Log(nullptr,LOG_ERR, 0, "Failed to create a socket (%s)", strerror(errno));
         perror("Failed to create a socket");
         return (EXIT_FAILURE);
     }
@@ -280,29 +280,33 @@ int main(int argc, char *argv[])
     serv_addr.sin_port = htons(LISTEN_PORT);
     int buf = 1024 * 16;
     if (setsockopt(listenfd, SOL_SOCKET, SO_RCVBUF, &buf, sizeof(int)) == -1) {
-        RP_LOG(nullptr,LOG_ERR, "Error setting socket opts: %s", strerror(errno));
+        rp_Log(nullptr,LOG_ERR, 0, "Error setting socket opts: %s", strerror(errno));
     }
 
     buf = 1024 * 16;
     if (setsockopt(listenfd, SOL_SOCKET, SO_SNDBUF, &buf, sizeof(int)) == -1) {
-        RP_LOG(nullptr,LOG_ERR, "Error setting socket opts: %s", strerror(errno));
+        rp_Log(nullptr,LOG_ERR, 0, "Error setting socket opts: %s", strerror(errno));
+    }
+    int enable = 1;
+    if (setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable)) < 0){
+        rp_Log(nullptr,LOG_ERR, 0, "Error setting socket opts: %s", strerror(errno));
     }
 
     if (bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == -1)
     {
-        RP_LOG(nullptr,LOG_ERR, "Failed to bind the socket (%s)", strerror(errno));
+        rp_Log(nullptr,LOG_ERR, 0, "Failed to bind the socket (%s)", strerror(errno));
         perror("Failed to bind the socket");
         return (EXIT_FAILURE);
     }
 
     if (listen(listenfd, LISTEN_BACKLOG) == -1)
     {
-        RP_LOG(nullptr,LOG_ERR, "Failed to listen on the socket (%s)", strerror(errno));
+        rp_Log(nullptr,LOG_ERR, 0, "Failed to listen on the socket (%s)", strerror(errno));
         perror("Failed to listen on the socket");
         return (EXIT_FAILURE);
     }
 
-    RP_LOG(nullptr,LOG_INFO, "Server is listening on port %d", LISTEN_PORT);
+    rp_Log(nullptr,LOG_INFO, 0, "Server is listening on port %d", LISTEN_PORT);
 
     // Socket is opened and listening on port. Now we can accept connections
     while(1)
@@ -318,7 +322,7 @@ int main(int argc, char *argv[])
         }
 
         if (connfd == -1) {
-            RP_LOG(nullptr,LOG_ERR, "Failed to accept connection (%s)", strerror(errno));
+            rp_Log(nullptr,LOG_ERR, 0, "Failed to accept connection (%s)", strerror(errno));
             perror("Failed to accept connection\n");
             return (EXIT_FAILURE);
         }
@@ -326,7 +330,7 @@ int main(int argc, char *argv[])
         // Fork a child process, which will talk to the client
         if (!fork()) {
 
-            RP_LOG(nullptr,LOG_INFO, "Connection with client ip %s established.", inet_ntoa(cliaddr.sin_addr));
+            rp_Log(nullptr,LOG_INFO, 0, "Connection with client ip %s established.", inet_ntoa(cliaddr.sin_addr));
 
             // this is the child process
             close(listenfd); // child doesn't need the listener
@@ -337,7 +341,7 @@ int main(int argc, char *argv[])
 
             close(connfd);
 
-            RP_LOG(nullptr,LOG_INFO, "Closing connection with client ip %s.", inet_ntoa(cliaddr.sin_addr));
+            rp_Log(nullptr,LOG_INFO, 0, "Closing connection with client ip %s.", inet_ntoa(cliaddr.sin_addr));
 
             if (result == 0) {
                 return(EXIT_SUCCESS);
@@ -354,11 +358,11 @@ int main(int argc, char *argv[])
 
     result = rp_Release();
     if (result != RP_OK) {
-        RP_LOG(nullptr,LOG_ERR, "Failed to release RP App library: %s", rp_GetError(result));
+        rp_Log(nullptr,LOG_ERR, result, "Failed to release RP App library: %s", rp_GetError(result));
     }
 
 
-    RP_LOG(nullptr,LOG_INFO, "scpi-server stopped.");
+    rp_Log(nullptr,LOG_INFO, 0, "scpi-server stopped.");
 
     closelog ();
 

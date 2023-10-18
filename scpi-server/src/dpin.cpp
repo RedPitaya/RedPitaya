@@ -57,15 +57,13 @@ const scpi_choice_def_t scpi_RpDir[] = {
 };
 
 scpi_result_t RP_DigitalPinReset(scpi_t *context) {
-    int result = rp_DpinReset();
+    auto result = rp_DpinReset();
 
     if (RP_OK != result) {
-        RP_LOG(context,LOG_ERR, "DIG:RST Failed to reset Red"
-            " Pitaya digital pins: %s", rp_GetError(result));
+        RP_LOG_CRIT("Failed to reset Red Pitaya digital pins: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
-
-    RP_LOG(context,LOG_INFO, "*DIG:RST Successfully reset Red Pitaya digital pins.");
+    RP_LOG_INFO("%s",rp_GetError(result))
     return SCPI_RES_OK;
 }
 
@@ -81,27 +79,26 @@ scpi_result_t RP_DigitalPinState(scpi_t * context) {
 
     /* Parse first, PIN parameter */
     if(!SCPI_ParamChoice(context, scpi_RpDpin, &pin_choice, true)){
-        RP_LOG(context,LOG_ERR, "*DIG:PIN is missing first parameter.");
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Missing first parameter.");
         return SCPI_RES_ERR;
     }
 
     /* Parse second, BIT parameter */
     if(!SCPI_ParamUInt32(context, &bit, true)){
-        RP_LOG(context,LOG_ERR, "*DIG:PIN invalid second parameter");
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Invalid second parameter");
         return SCPI_RES_ERR;
     }
 
     rp_dpin_t pin = (rp_dpin_t)pin_choice;
 
     /* Set API pin state */
-    int result = rp_DpinSetState(pin, (rp_pinState_t)bit);
+    auto result = rp_DpinSetState(pin, (rp_pinState_t)bit);
 
     if (RP_OK != result){
-		RP_LOG(context,LOG_ERR, "*DIG:PIN Failed to set pin state: %s", rp_GetError(result));
+		RP_LOG_CRIT("Failed to set pin state: %s", rp_GetError(result));
 		return SCPI_RES_ERR;
 	}
-
-	RP_LOG(context,LOG_INFO, "*DIG:PIN Successfully set port value");
+    RP_LOG_INFO("%s",rp_GetError(result))
 	return SCPI_RES_OK;
 }
 
@@ -116,7 +113,7 @@ scpi_result_t RP_DigitalPinStateQ(scpi_t * context) {
 
     /* Read PIN parameter */
     if(!SCPI_ParamChoice(context, scpi_RpDpin, &pin_choice, true)){
-        RP_LOG(context,LOG_ERR, "*DIG:PIN? is missing first parameter.");
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Missing first parameter.");
         return SCPI_RES_ERR;
     }
 
@@ -124,17 +121,16 @@ scpi_result_t RP_DigitalPinStateQ(scpi_t * context) {
 
     /* Get pin state */
     rp_pinState_t state;
-    int result = rp_DpinGetState(pin, &state);
+    auto result = rp_DpinGetState(pin, &state);
 
     if (RP_OK != result){
-        RP_LOG(context,LOG_ERR, "*DIG:PIN? Failed to get pin state: %s", rp_GetError(result));
+        RP_LOG_CRIT("Failed to get pin state: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
     /* Return PIN state to the client */
     SCPI_ResultInt32(context, state);
-
-    RP_LOG(context,LOG_INFO, "*DIG:PIN? Successfully returned port value");
+    RP_LOG_INFO("%s",rp_GetError(result))
     return SCPI_RES_OK;
 }
 
@@ -149,14 +145,13 @@ scpi_result_t RP_DigitalPinDirection(scpi_t * context) {
 
     /* Read first, DIRECTION parameter */
     if(!SCPI_ParamChoice(context, scpi_RpDir, &dir_choice, true)){
-        RP_LOG(context,LOG_ERR, "*DIG:PIN:DIR is missing first parameter.");
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Missing first parameter.");
         return SCPI_RES_ERR;
     }
 
-    RP_LOG(context,LOG_INFO, "DIRECTION: %d", dir_choice);
     /* Read second, PIN parameter */
     if(!SCPI_ParamChoice(context, scpi_RpDpin, &pin_choice, true)){
-        RP_LOG(context,LOG_INFO, "*DIG:PIN:DIR is missing second parameter.");
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Invalid second parameter");
         return SCPI_RES_ERR;
     }
 
@@ -164,17 +159,14 @@ scpi_result_t RP_DigitalPinDirection(scpi_t * context) {
     rp_pinDirection_t direction = (rp_pinDirection_t)dir_choice;
     rp_dpin_t pin               = (rp_dpin_t)pin_choice;
 
-    RP_LOG(context,LOG_INFO, "DIRECTION: %d", direction);
-
     // Now set the pin state
-    int result = rp_DpinSetDirection(pin, direction);
+    auto result = rp_DpinSetDirection(pin, direction);
 
     if (RP_OK != result){
-        RP_LOG(context,LOG_INFO, "*DIG:PIN:DIR Failed to set pin direction: %s", rp_GetError(result));
+        RP_LOG_CRIT("Failed to set pin direction: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
-
-    RP_LOG(context,LOG_INFO, "*DIG:PIN:DIR Successfully set port direction.");
+    RP_LOG_INFO("%s",rp_GetError(result))
     return SCPI_RES_OK;
 }
 
@@ -185,7 +177,7 @@ scpi_result_t RP_DigitalPinDirectionQ(scpi_t *context){
     const char *dir_n;
 
     if(!SCPI_ParamChoice(context, scpi_RpDpin, &usr_pin, true)){
-        RP_LOG(context,LOG_ERR, "*DIG:PIN:DIR? Failed to parse first parameter.");
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Missing first parameter.");
         return SCPI_RES_ERR;
     }
 
@@ -194,19 +186,18 @@ scpi_result_t RP_DigitalPinDirectionQ(scpi_t *context){
 
     result = rp_DpinGetDirection(pin, &direction);
     if(result != RP_OK){
-        RP_LOG(context,LOG_ERR, "*DIG:PIN:DIR? Failed to returned pin direction");
+        RP_LOG_CRIT("Failed to returned pin direction");
         return SCPI_RES_ERR;
     }
 
-    RP_LOG(context,LOG_INFO, "GET DIRECTION: %d", direction);
+    RP_LOG_INFO("GET DIRECTION: %d", direction);
 
     if(!SCPI_ChoiceToName(scpi_RpDir, direction, &dir_n)){
-        RP_LOG(context,LOG_ERR, "*DIG:PIN:DIR? Failed to parse direction.");
+        RP_LOG_CRIT("Failed to parse direction.");
         return SCPI_RES_ERR;
     }
 
     SCPI_ResultMnemonic(context, dir_n);
-
-    RP_LOG(context,LOG_INFO, "*DIG:PIN:DIR? Successfully returned direction value to the client.");
+    RP_LOG_INFO("%s",rp_GetError(result))
     return SCPI_RES_OK;
 }

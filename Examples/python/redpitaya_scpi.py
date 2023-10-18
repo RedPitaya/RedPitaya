@@ -45,9 +45,13 @@ class scpi (object):
         while 1:
             chunk = self._socket.recv(chunksize).decode('utf-8') # Receive chunk size of 2^n preferably
             msg += chunk
-            if (len(msg) > 2 and msg[-2:] == self.delimiter):
+            if (len(msg) >= 2 and msg[-2:] == self.delimiter):
                 return msg[:-2]
 
+    def rx_txt_check_error(self, chunksize = 4096):
+        msg = self.rx_txt(chunksize)
+        self.check_error()
+        return msg
 
     def rx_arb(self):
         """ Recieve binary data from scpi server"""
@@ -76,9 +80,18 @@ class scpi (object):
             data += (self._socket.recv(r_size))
         return data
 
+    def rx_arb_check_error(self):
+        data = self.rx_arb()
+        self.check_error()
+        return data
+
     def tx_txt(self, msg):
         """Send text string ending and append delimiter."""
         return self._socket.sendall((msg + self.delimiter).encode('utf-8')) # was send(().encode('utf-8'))
+
+    def tx_txt_check_error(self, msg):
+        self.tx_txt(msg)
+        self.check_error()
 
     def txrx_txt(self, msg):
         """Send/receive text string."""
