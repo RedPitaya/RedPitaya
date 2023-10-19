@@ -29,6 +29,6 @@ scpi_result_t RP_Uart_PARITYQ(scpi_t *context);
 scpi_result_t RP_Uart_Timeout(scpi_t *context);
 scpi_result_t RP_Uart_TimeoutQ(scpi_t *context);
 scpi_result_t RP_Uart_SendBuffer(scpi_t * context);
-scpi_result_t RP_Uart_ReadBuffer(scpi_t * context);
+scpi_result_t RP_Uart_ReadBufferQ(scpi_t * context);
 
 #endif /* SCPI_UART_H_ */

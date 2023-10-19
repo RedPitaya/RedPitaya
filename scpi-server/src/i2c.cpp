@@ -106,7 +106,7 @@ scpi_result_t RP_I2C_ForceModeQ(scpi_t * context){
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_I2C_SMBUS_Read(scpi_t * context){
+scpi_result_t RP_I2C_SMBUS_ReadQ(scpi_t * context){
     int32_t cmd[1] = {0};
     uint8_t reg = 0;
 
@@ -134,7 +134,7 @@ scpi_result_t RP_I2C_SMBUS_Read(scpi_t * context){
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_I2C_SMBUS_ReadWord(scpi_t * context){
+scpi_result_t RP_I2C_SMBUS_ReadWordQ(scpi_t * context){
     int32_t cmd[1] = {0};
     uint8_t reg = 0;
 
@@ -162,7 +162,7 @@ scpi_result_t RP_I2C_SMBUS_ReadWord(scpi_t * context){
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_I2C_SMBUS_ReadBuffer(scpi_t * context){
+scpi_result_t RP_I2C_SMBUS_ReadBufferQ(scpi_t * context){
     size_t reg = 0;
     size_t size = 0;
     uint8_t *buffer = NULL;
@@ -207,7 +207,7 @@ scpi_result_t RP_I2C_SMBUS_ReadBuffer(scpi_t * context){
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_I2C_IOCTL_ReadBuffer(scpi_t * context){
+scpi_result_t RP_I2C_IOCTL_ReadBufferQ(scpi_t * context){
     size_t size = 0;
     uint8_t *buffer = NULL;
     int32_t cmd[1] = {0};

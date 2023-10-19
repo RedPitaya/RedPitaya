@@ -241,7 +241,7 @@ scpi_result_t RP_TimeQ(scpi_t *context){
     struct tm *time = gmtime(&t_time.tv_sec);
 
     char buff[10];
-    sprintf(buff,"%d,%d,%d",time->tm_hour,time->tm_min,time->tm_sec);
+    sprintf(buff,"%02d:%02d:%02d",time->tm_hour,time->tm_min,time->tm_sec);
     // Return back result
     SCPI_ResultMnemonic(context, buff);
     RP_LOG_INFO("Successfully returned time.");
@@ -322,7 +322,7 @@ scpi_result_t RP_DateQ(scpi_t *context){
     struct tm *time = gmtime(&t_time.tv_sec);
 
     char buff[40];
-    sprintf(buff,"%d,%d,%d",time->tm_year + 1900,time->tm_mon + 1,time->tm_mday);
+    sprintf(buff,"%d-%02d-%02d",time->tm_year + 1900,time->tm_mon + 1,time->tm_mday);
     // Return back result
     SCPI_ResultMnemonic(context, buff);
 

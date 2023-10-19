@@ -44,7 +44,7 @@ scpi_result_t RP_CAN_Open(scpi_t * context);
 scpi_result_t RP_CAN_Close(scpi_t * context);
 
 scpi_result_t RP_CAN_Send(scpi_t * context);
-scpi_result_t RP_CAN_Read(scpi_t * context);
+scpi_result_t RP_CAN_ReadQ(scpi_t * context);
 
 scpi_result_t RP_CAN_AddFilter(scpi_t * context);
 scpi_result_t RP_CAN_RemoveFilter(scpi_t * context);

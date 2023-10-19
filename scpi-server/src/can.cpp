@@ -590,7 +590,7 @@ scpi_result_t RP_CAN_Send(scpi_t * context){
     return SCPI_RES_OK;
 }
  
-scpi_result_t RP_CAN_Read(scpi_t * context){
+scpi_result_t RP_CAN_ReadQ(scpi_t * context){
     bool isTimeout = strstr(context->param_list.cmd_raw.data,":T") != NULL;
     int paramCount = isTimeout ? 2 : 1;
     int32_t cmd[2] = {0,0};

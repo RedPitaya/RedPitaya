@@ -305,7 +305,7 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "UART:TIMEOUT", .callback               = RP_Uart_Timeout,},
     {.pattern = "UART:TIMEOUT?", .callback              = RP_Uart_TimeoutQ,},
     {.pattern = "UART:WRITE#", .callback                = RP_Uart_SendBuffer,},
-    {.pattern = "UART:READ#", .callback                 = RP_Uart_ReadBuffer,},
+    {.pattern = "UART:READ#?", .callback                = RP_Uart_ReadBufferQ,},
 
     /* led */
     {.pattern = "LED:MMC", .callback                    = RP_LED_MMC,},
@@ -324,19 +324,19 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "SPI:SETtings:GET", .callback           = RP_SPI_GetSettings,},
 
     {.pattern = "SPI:SETtings:MODE", .callback          = RP_SPI_SetMode,},
-    {.pattern = "SPI:SETtings:MODE?", .callback         = RP_SPI_GetMode,},
+    {.pattern = "SPI:SETtings:MODE?", .callback         = RP_SPI_GetModeQ,},
     {.pattern = "SPI:SETtings:CSMODE", .callback        = RP_SPI_SetCSMode,},
-    {.pattern = "SPI:SETtings:CSMODE?", .callback       = RP_SPI_GetCSMode,},
+    {.pattern = "SPI:SETtings:CSMODE?", .callback       = RP_SPI_GetCSModeQ,},
     {.pattern = "SPI:SETtings:SPEED", .callback         = RP_SPI_SetSpeed,},
-    {.pattern = "SPI:SETtings:SPEED?", .callback        = RP_SPI_GetSpeed,},
+    {.pattern = "SPI:SETtings:SPEED?", .callback        = RP_SPI_GetSpeedQ,},
 
     {.pattern = "SPI:SETtings:WORD", .callback          = RP_SPI_SetWord,},
-    {.pattern = "SPI:SETtings:WORD?", .callback         = RP_SPI_GetWord,},
+    {.pattern = "SPI:SETtings:WORD?", .callback         = RP_SPI_GetWordQ,},
 
 
     {.pattern = "SPI:MSG:CREATE", .callback             = RP_SPI_CreateMessage,},
     {.pattern = "SPI:MSG:DEL", .callback                = RP_SPI_DestroyMessage,},
-    {.pattern = "SPI:MSG:SIZE?", .callback              = RP_SPI_GetMessageLen,},
+    {.pattern = "SPI:MSG:SIZE?", .callback              = RP_SPI_GetMessageLenQ,},
 
     {.pattern = "SPI:MSG#:TX#", .callback               = RP_SPI_SetTX,},
     {.pattern = "SPI:MSG#:TX#:RX", .callback            = RP_SPI_SetTXRX,},
@@ -344,9 +344,9 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "SPI:MSG#:TX#:CS", .callback            = RP_SPI_SetTXCS,},
     {.pattern = "SPI:MSG#:TX#:RX:CS", .callback         = RP_SPI_SetTXRXCS,},
     {.pattern = "SPI:MSG#:RX#:CS", .callback            = RP_SPI_SetRXCS,},
-    {.pattern = "SPI:MSG#:RX?", .callback               = RP_SPI_GetRXBuffer,},
-    {.pattern = "SPI:MSG#:TX?", .callback               = RP_SPI_GetTXBuffer,},
-    {.pattern = "SPI:MSG#:CS?", .callback               = RP_SPI_GetCSChangeState,},
+    {.pattern = "SPI:MSG#:RX?", .callback               = RP_SPI_GetRXBufferQ,},
+    {.pattern = "SPI:MSG#:TX?", .callback               = RP_SPI_GetTXBufferQ,},
+    {.pattern = "SPI:MSG#:CS?", .callback               = RP_SPI_GetCSChangeStateQ,},
 
     {.pattern = "SPI:PASS", .callback                   = RP_SPI_Pass,},
 
@@ -356,10 +356,10 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "I2C:FMODE", .callback                 = RP_I2C_ForceMode,},
     {.pattern = "I2C:FMODE?", .callback                = RP_I2C_ForceModeQ,},
 
-    {.pattern = "I2C:Smbus:Read#", .callback           = RP_I2C_SMBUS_Read,},
-    {.pattern = "I2C:Smbus:Read#:Word", .callback      = RP_I2C_SMBUS_ReadWord,},
-    {.pattern = "I2C:Smbus:Read#:Buffer#", .callback   = RP_I2C_SMBUS_ReadBuffer,},
-    {.pattern = "I2C:IOctl:Read:Buffer#", .callback    = RP_I2C_IOCTL_ReadBuffer,},
+    {.pattern = "I2C:Smbus:Read#?", .callback          = RP_I2C_SMBUS_ReadQ,},
+    {.pattern = "I2C:Smbus:Read#:Word?", .callback     = RP_I2C_SMBUS_ReadWordQ,},
+    {.pattern = "I2C:Smbus:Read#:Buffer#?", .callback  = RP_I2C_SMBUS_ReadBufferQ,},
+    {.pattern = "I2C:IOctl:Read:Buffer#?", .callback   = RP_I2C_IOCTL_ReadBufferQ,},
 
     {.pattern = "I2C:Smbus:Write#", .callback          = RP_I2C_SMBUS_Write,},
     {.pattern = "I2C:Smbus:Write#:Word", .callback     = RP_I2C_SMBUS_WriteWord,},
@@ -395,8 +395,8 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "CAN#:Send#:Timeout#:RTR", .callback    = RP_CAN_Send,},
     {.pattern = "CAN#:Send#:Ext:RTR", .callback         = RP_CAN_Send,},
     {.pattern = "CAN#:Send#:Timeout#:Ext:RTR", .callback= RP_CAN_Send,},
-    {.pattern = "CAN#:Read?", .callback                 = RP_CAN_Read,},
-    {.pattern = "CAN#:Read:Timeout#?", .callback        = RP_CAN_Read,},
+    {.pattern = "CAN#:Read?", .callback                 = RP_CAN_ReadQ,},
+    {.pattern = "CAN#:Read:Timeout#?", .callback        = RP_CAN_ReadQ,},
     {.pattern = "CAN#:Filter:Add", .callback            = RP_CAN_AddFilter,},
     {.pattern = "CAN#:Filter:Remove", .callback         = RP_CAN_RemoveFilter,},
     {.pattern = "CAN#:Filter:Clear", .callback          = RP_CAN_ClearFilter,},

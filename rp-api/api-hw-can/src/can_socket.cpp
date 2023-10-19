@@ -82,7 +82,7 @@ auto socket_Send(rp_can_interface_t _interface, uint32_t _canId, unsigned char *
     }
 
     if (auto search = g_sockets.find(_interface); search == g_sockets.end()){
-        return RP_HW_CAN_ESA;
+        return RP_HW_CAN_ESN;
     }
     auto s = g_sockets[_interface];
     auto dlc =0u;
@@ -149,7 +149,7 @@ auto socket_Read(rp_can_interface_t _interface, uint32_t _timeout,rp_can_frame_t
     int nbytes;
 
     if (auto search = g_sockets.find(_interface); search == g_sockets.end()){
-        return RP_HW_CAN_ESA;
+        return RP_HW_CAN_ESN;
     }
 
     auto s = g_sockets[_interface];

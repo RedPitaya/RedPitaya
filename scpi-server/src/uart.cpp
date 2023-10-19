@@ -306,7 +306,7 @@ scpi_result_t RP_Uart_SendBuffer(scpi_t * context){
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_Uart_ReadBuffer(scpi_t * context){
+scpi_result_t RP_Uart_ReadBufferQ(scpi_t * context){
     uint8_t *buffer = 0;
     size_t size = 0;
     int32_t read_size = 0;

@@ -146,7 +146,7 @@ scpi_result_t RP_SPI_DestroyMessage(scpi_t * context){
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_SPI_GetMessageLen(scpi_t * context){
+scpi_result_t RP_SPI_GetMessageLenQ(scpi_t * context){
     size_t len;
     auto result = rp_SPI_GetMessageLen(&len);
 
@@ -161,7 +161,7 @@ scpi_result_t RP_SPI_GetMessageLen(scpi_t * context){
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_SPI_GetRXBuffer(scpi_t * context){
+scpi_result_t RP_SPI_GetRXBufferQ(scpi_t * context){
     const uint8_t *buffer = 0;
     size_t index = 0;
     size_t size = 0;
@@ -195,7 +195,7 @@ scpi_result_t RP_SPI_GetRXBuffer(scpi_t * context){
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_SPI_GetTXBuffer(scpi_t * context){
+scpi_result_t RP_SPI_GetTXBufferQ(scpi_t * context){
     const uint8_t *buffer = 0;
     size_t index = 0;
     size_t size = 0;
@@ -229,7 +229,7 @@ scpi_result_t RP_SPI_GetTXBuffer(scpi_t * context){
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_SPI_GetCSChangeState(scpi_t * context){
+scpi_result_t RP_SPI_GetCSChangeStateQ(scpi_t * context){
     size_t index = 0;
     bool cs_state = false;
     int32_t cmd[1] = {0};
@@ -388,7 +388,7 @@ scpi_result_t RP_SPI_SetMode(scpi_t * context){
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_SPI_GetMode(scpi_t * context){
+scpi_result_t RP_SPI_GetModeQ(scpi_t * context){
     const char *_name;
 
     rp_spi_mode_t value;
@@ -429,7 +429,7 @@ scpi_result_t RP_SPI_SetCSMode(scpi_t * context){
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_SPI_GetCSMode(scpi_t * context){
+scpi_result_t RP_SPI_GetCSModeQ(scpi_t * context){
     const char *_name;
 
     rp_spi_cs_mode_t value;
@@ -468,7 +468,7 @@ scpi_result_t RP_SPI_SetSpeed(scpi_t * context){
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_SPI_GetSpeed(scpi_t * context){
+scpi_result_t RP_SPI_GetSpeedQ(scpi_t * context){
     int32_t speed;
     auto result = rp_SPI_GetSpeed(&speed);
 
@@ -500,7 +500,7 @@ scpi_result_t RP_SPI_SetWord(scpi_t * context){
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_SPI_GetWord(scpi_t * context){
+scpi_result_t RP_SPI_GetWordQ(scpi_t * context){
     int32_t len;
     int result = rp_SPI_GetWordLen(&len);
 
