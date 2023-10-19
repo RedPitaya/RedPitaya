@@ -4,8 +4,7 @@ import sys
 import time
 import redpitaya_scpi as scpi
 
-#rp_s = scpi.scpi(sys.argv[1])
-rp_s = scpi.scpi("200.0.0.37")
+rp_s = scpi.scpi(sys.argv[1])
 
 rp_s.tx_txt('CAN:FPGA ON')
 print("CAN:FPGA ON")
