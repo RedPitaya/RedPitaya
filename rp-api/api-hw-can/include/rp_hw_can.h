@@ -165,7 +165,6 @@ int rp_CanStop(rp_can_interface_t interface);
 
 /**
 * Restarts the specified interface
-* Before starting the interface or restarting. Be sure to set the bitrate
 * @param interface  Selected interface
 * @return If the function is successful, the return value is RP_HW_CAN_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_CAN_E* values that indicate an error.
