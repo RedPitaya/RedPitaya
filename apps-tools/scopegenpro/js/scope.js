@@ -504,7 +504,38 @@
         }
     }
 
+    function download(url, filename) {
+        fetch(url)
+          .then(response => response.blob())
+          .then(blob => {
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+        })
+        .catch(console.error);
+      }
 
+    OSC.downloadFile = function(new_params){
+        var filename = new_params['DOWNLOAD_FILE'].value;
+        if (!filename.includes("error")) {
+            if (filename !== ""){
+                console.log(filename);
+                OSC.params.local['DOWNLOAD_FILE'] = { value: "" };
+                OSC.sendParams();
+
+                download("/scopegenpro/files/"+filename,filename);
+            }
+        }
+        else{
+            console.log("Error download file");
+        }
+    }
+
+
+
+
+    OSC.param_callbacks["DOWNLOAD_FILE"] = OSC.downloadFile;
 
     OSC.param_callbacks["OSC_RUN"] = OSC.processRun;
     OSC.param_callbacks["OSC_VIEV_PART"] = OSC.processViewPart;

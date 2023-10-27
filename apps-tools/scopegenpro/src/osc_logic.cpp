@@ -9,8 +9,21 @@
 #include "common.h"
 #include "main.h"
 
+#include "math_logic.h"
+#include "rp_formatter.h"
+
 #define MAX_FREQ getMaxFreqRate()
 #define MAX_TRIGGER_LEVEL getMaxTriggerLevel()
+
+enum request_mode{
+    NONE = 0,
+    WAV  = 1,
+    TDMS = 2,
+    CSV  = 3,
+    WAV_RAW = 4,
+    TDMS_RAW = 5,
+    CSV_RAW  = 6
+};
 
 static const uint8_t g_adc_channels = getADCChannels();
 bool g_need_update_sig_gen = false;
@@ -74,6 +87,8 @@ CIntParameter triggerInfo("OSC_TRIG_INFO", CBaseParameter::RW, 0, 0, 0, 3);
 CIntParameter pllControlEnable ("EXT_CLOCK_ENABLE", CBaseParameter::RW, 0, 0, 0, 1,rp_HPGetIsPLLControlEnableOrDefault() ? CONFIG_VAR : 0);
 CIntParameter pllControlLocked ("EXT_CLOCK_LOCKED", CBaseParameter::RO, 0, 0, 0, 1);
 
+CStringParameter 	download_file("DOWNLOAD_FILE", CBaseParameter::RW, "", 0);
+CIntParameter       request_data("REQUEST_DATA", CBaseParameter::RW, request_mode::NONE, 0, request_mode::NONE, request_mode::CSV_RAW);
 
 auto initOscAfterLoad() -> void{
 if (rp_HPGetFastADCIsAC_DCOrDefault()){
@@ -293,6 +308,92 @@ auto updateOscSignal() -> void{
     rpApp_OscRefreshViewData();
 }
 
+auto requestFile() -> void {
+    download_file.Update();
+
+    if (request_data.NewValue()){
+        request_data.Update();
+        request_mode mode = (request_mode)request_data.Value();
+        request_data.Value() = 0;
+        
+        rp_acq_decimation_t sampling_rate;
+        rp_AcqGetDecimation(&sampling_rate);
+        auto rate = getADCRate() / (uint32_t)sampling_rate;
+        auto f_mode = rp_formatter_api::RP_F_WAV;
+        auto is_raw = false;
+        auto suffix = std::string("error");
+        if (mode == WAV || mode == WAV_RAW){
+            f_mode = rp_formatter_api::RP_F_WAV;
+            is_raw = (mode == WAV_RAW);
+            suffix = ".wav";
+        }
+
+        if (mode == CSV || mode == CSV_RAW){
+            f_mode = rp_formatter_api::RP_F_CSV;
+            is_raw = (mode == CSV_RAW);
+            suffix = ".csv";
+        }
+
+        if (mode == TDMS || mode == TDMS_RAW){
+            f_mode = rp_formatter_api::RP_F_TDMS;
+            is_raw = (mode == TDMS_RAW);
+            suffix = ".tdms";
+        }
+
+        rp_formatter_api::CFormatter formatter(f_mode,rate);
+
+        float *buff[g_adc_channels + 1];
+        uint16_t *buff_i[g_adc_channels + 1];
+
+        for(int i = 0; i <= g_adc_channels; i++){
+            buff[i] = NULL;
+            buff_i[i] = NULL;
+        }
+
+        uint8_t allChannels = 0;
+
+        if (!is_raw){
+            for(int i = 0; i < g_adc_channels; i++){
+                if (inShow[i].Value()) {
+                    buff[i] = new float[CH_SIGNAL_SIZE_DEFAULT];
+                    rpApp_OscGetViewData((rpApp_osc_source)i, buff[i], (uint32_t) CH_SIGNAL_SIZE_DEFAULT);
+                    formatter.setChannel((rp_formatter_api::rp_channel_t)i, buff[i],CH_SIGNAL_SIZE_DEFAULT,std::string("Channel_") + std::to_string(i+1));
+                    allChannels++;
+                }
+            }
+
+            if (isMathShow()){
+                buff[g_adc_channels] = new float[CH_SIGNAL_SIZE_DEFAULT];
+                rpApp_OscGetViewData(RPAPP_OSC_SOUR_MATH, buff[g_adc_channels], (uint32_t) CH_SIGNAL_SIZE_DEFAULT);
+                formatter.setChannel((rp_formatter_api::rp_channel_t)allChannels, buff[g_adc_channels],CH_SIGNAL_SIZE_DEFAULT,std::string("Math"));
+            }
+        }else{
+            for(int i = 0; i < g_adc_channels; i++){
+                if (inShow[i].Value()) {
+                    const auto buff_size = 16384;
+                    buff_i[i] = new uint16_t[buff_size];
+                    rpApp_OscGetRawData((rp_channel_t)i, buff_i[i],buff_size);
+                    formatter.setChannel((rp_formatter_api::rp_channel_t)i, buff_i[i],buff_size,std::string("Channel_") + std::to_string(i+1));
+                }
+            }
+        }
+
+        std::string filename = std::string("scopegen_data") + (is_raw ? ".raw":"") + suffix;
+        formatter.openFile("/tmp/scopegenpro/" + filename);
+        if (formatter.isOpenFile()){
+            formatter.writeToFile();
+            formatter.closeFile();
+            download_file.Value() = filename;
+        }else{
+            download_file.Value() = std::string("error");            
+        }
+
+        for(int i = 0; i <= g_adc_channels; i++){
+            delete[] buff[i];
+        }
+    }
+}
+
 
 
 auto updateOscParams(bool force) -> void{
@@ -307,6 +408,8 @@ auto updateOscParams(bool force) -> void{
                 pllControlEnable.Update();
         }
     }
+
+    requestFile();
 
 /* ------ UPDATE OSCILLOSCOPE LOCAL PARAMETERS ------*/
 

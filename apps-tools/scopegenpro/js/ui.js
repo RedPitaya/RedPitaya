@@ -484,9 +484,36 @@
             setTimeout(OSC.SaveGraphsPNG, 30);
         });
 
-        $('#OSC_SAVECSV').on('click', function() {
-            $(this).attr('href', OSC.downloadDataAsCSV("scopeData.csv"));
+        $('#OSC_REQ_CSV').on('click', function() {
+            OSC.params.local['REQUEST_DATA'] = { value: 3 };
+            OSC.sendParams();
         });
+
+        $('#OSC_REQ_WAV').on('click', function() {
+            OSC.params.local['REQUEST_DATA'] = { value: 1 };
+            OSC.sendParams();
+        });
+
+        $('#OSC_REQ_TDMS').on('click', function() {
+            OSC.params.local['REQUEST_DATA'] = { value: 2 };
+            OSC.sendParams();
+        });
+
+        $('#OSC_REQ_CSV_RAW').on('click', function() {
+            OSC.params.local['REQUEST_DATA'] = { value: 6 };
+            OSC.sendParams();
+        });
+
+        $('#OSC_REQ_WAV_RAW').on('click', function() {
+            OSC.params.local['REQUEST_DATA'] = { value: 4 };
+            OSC.sendParams();
+        });
+
+        $('#OSC_REQ_TDMS_RAW').on('click', function() {
+            OSC.params.local['REQUEST_DATA'] = { value: 5 };
+            OSC.sendParams();
+         });
+
 
         $('#OSC_SINGLE').on('click', function(ev) {
             ev.preventDefault();

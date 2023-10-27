@@ -23,6 +23,7 @@
 #include "osc_logic.h"
 #include "math_logic.h"
 
+
 /* -------------------------  debug parameter  --------------------------------- */
 CIntParameter signalPeriod("DEBUG_SIGNAL_PERIOD", CBaseParameter::RW, 20, 0, 1, 10000);
 CIntParameter parameterPeriod("DEBUG_PARAM_PERIOD", CBaseParameter::RW, 50, 0, 1, 10000);
@@ -65,6 +66,28 @@ void updateParametersByConfig(){
     updateTriggerLimit(true);
 }
 
+auto createDir(const std::string dir) -> bool
+{
+    mkdir(dir.c_str(), 0777);
+    return true;
+}
+
+auto createDirTree(const std::string full_path) -> bool
+{
+    char ch = '/';
+
+    size_t pos = 0;
+    bool ret_val = true;
+
+    while(ret_val == true && pos != std::string::npos)
+    {
+        pos = full_path.find(ch, pos + 1);
+        ret_val = createDir(full_path.substr(0, pos));
+    }
+
+    return ret_val;
+}
+
 const char *rp_app_desc(void) {
     return (const char *)"Red Pitaya osciloscope application.\n";
 }
@@ -79,7 +102,7 @@ int rp_app_init(void) {
     rpApp_OscRun();
 
     updateParametersByConfig();
-
+    createDirTree("/tmp/scopegenpro");
     return 0;
 }
 

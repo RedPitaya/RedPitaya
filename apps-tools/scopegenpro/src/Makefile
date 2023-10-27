@@ -25,7 +25,7 @@ LDFLAGS = -shared $(COMMON_FLAGS) $(LIBS)
 LDFLAGS+= -lcryptopp -lrpapp -lrp -lrp_sdk  -lrp-hw -lrp-hw-calib -lrp-hw-profiles
 #LDFLAGS+= -Wl,--no-whole-archive
 
-LDFLAGS += -lrp-gpio -lrp-i2c -lrp-spi
+LDFLAGS += -lrp-gpio -lrp-i2c -lrp-spi -lrp-formatter
 
 
 CXXOBJECTS=$(CXXSOURCES:.cpp=.o)
