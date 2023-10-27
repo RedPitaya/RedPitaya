@@ -61,10 +61,10 @@ public:
     auto resetWriter() -> void;
 
     auto clearBuffer() -> void;
-    auto setChannel(rp_channel_t _channel,uint8_t* _buffer,size_t _samplesCount) -> void;
-    auto setChannel(rp_channel_t _channel,uint16_t* _buffer,size_t _samplesCount) -> void;
-    auto setChannel(rp_channel_t _channel,float* _buffer,size_t _samplesCount) -> void;
-    auto setChannel(rp_channel_t _channel,double* _buffer,size_t _samplesCount) -> void;
+    auto setChannel(rp_channel_t _channel,uint8_t* _buffer,size_t _samplesCount,std::string _name = "") -> void;
+    auto setChannel(rp_channel_t _channel,uint16_t* _buffer,size_t _samplesCount,std::string _name = "") -> void;
+    auto setChannel(rp_channel_t _channel,float* _buffer,size_t _samplesCount,std::string _name = "") -> void;
+    auto setChannel(rp_channel_t _channel,double* _buffer,size_t _samplesCount,std::string _name = "") -> void;
 
     auto openFile(std::string _path) -> bool;
     auto closeFile() -> bool;
@@ -81,7 +81,7 @@ private:
     CFormatter& operator=(const CFormatter&) =delete;
     CFormatter& operator=(CFormatter&&) =delete;
     
-    auto setChannelData(rp_channel_t _channel, void* _buffer, size_t _samplesCount, rp_bits_t _bits) -> void;
+    auto setChannelData(rp_channel_t _channel, void* _buffer, size_t _samplesCount, rp_bits_t _bits,std::string &_name) -> void;
 
     struct Impl;
     // Pointer to the internal implementation

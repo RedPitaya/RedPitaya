@@ -395,8 +395,8 @@ print("obj2.clearBuffer()")
 res = obj2.clearBuffer()
 print(obj2)
 
-print("obj2.setChannel(RP_F_CH1,ch1.cast(),1024)")
-res = obj2.setChannel(RP_F_CH1,ch1.cast(),1024)
+print("obj2.setChannel(RP_F_CH1,ch1.cast(),1024),\"MATH\"")
+res = obj2.setChannel(RP_F_CH1,ch1.cast(),1024,"MATH")
 print(res)
 
 print("obj2.setChannel(RP_F_CH2,ch2.cast(),1024)")
@@ -443,6 +443,67 @@ print("obj2.writeToFile()")
 res = obj2.writeToFile()
 res = obj2.writeToFile()
 res = obj2.writeToFile()
+res = obj2.writeToFile()
+print(res)
+
+print("obj2.closeFile()")
+res = obj2.closeFile()
+print(res)
+
+
+print("CFormatter(RP_F_CSV,44100)")
+obj2 = CFormatter(RP_F_CSV,44100)
+print(obj2)
+
+print("obj2.clearBuffer()")
+res = obj2.clearBuffer()
+print(obj2)
+
+print("obj2.setChannel(RP_F_CH1,ch1.cast(),1024),\"Channel 1\"")
+res = obj2.setChannel(RP_F_CH1,ch1.cast(),1024,"Channel 1")
+print(res)
+
+print("obj2.setChannel(RP_F_CH2,ch2.cast(),1024),\"Channel 2\"")
+res = obj2.setChannel(RP_F_CH2,ch2.cast(),1024,"Channel 2")
+print(res)
+
+print("obj2.setChannel(RP_F_CH3,ch1.cast(),1024),\"Channel 3\"")
+res = obj2.setChannel(RP_F_CH3,ch1.cast(),1024,"Channel 3")
+print(res)
+
+print("obj2.setChannel(RP_F_CH4,ch2.cast(),1024),\"Channel 4\"")
+res = obj2.setChannel(RP_F_CH4,ch2.cast(),1024,"Channel 4")
+print(res)
+
+print("obj2.setChannel(RP_F_CH5,ch1.cast(),1024),\"Channel 5\"")
+res = obj2.setChannel(RP_F_CH5,ch1.cast(),1024,"Channel 5")
+print(res)
+
+print("obj2.setChannel(RP_F_CH6,ch2.cast(),1024),\"Channel 6\"")
+res = obj2.setChannel(RP_F_CH6,ch2.cast(),1024,"Channel 6")
+print(res)
+
+print("obj2.setChannel(RP_F_CH7,ch1.cast(),1024),\"Channel 7\"")
+res = obj2.setChannel(RP_F_CH7,ch1.cast(),1024,"Channel 7")
+print(res)
+
+print("obj2.setChannel(RP_F_CH8,ch2.cast(),1024),\"Channel 8\"")
+res = obj2.setChannel(RP_F_CH8,ch2.cast(),1024,"Channel 8")
+print(res)
+
+print("obj2.setChannel(RP_F_CH9,ch1.cast(),1024),\"Channel 9\"")
+res = obj2.setChannel(RP_F_CH9,ch1.cast(),1024,"Channel 9")
+print(res)
+
+print("obj2.setChannel(RP_F_CH10,ch2.cast(),1024),\"Channel 10\"")
+res = obj2.setChannel(RP_F_CH10,ch2.cast(),1024,"Channel 10")
+print(res)
+
+print("obj2.openFile('test_10ch.csv')")
+res = obj2.openFile("test_10ch.csv")
+print(res)
+
+print("obj2.writeToFile()")
 res = obj2.writeToFile()
 print(res)
 

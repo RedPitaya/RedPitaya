@@ -90,7 +90,9 @@ auto CTDMSWriter::Impl::write(SBufferPack *_pack, std::iostream *_memory) -> boo
             auto sCount = _pack->m_samplesCount[ch];
             auto bits = _pack->m_bits[ch];
             auto buffer = _pack->m_buffer[ch];
-            string ch_name = std::string("ch") + std::to_string(ch + 1);
+            auto name = _pack->m_name[ch];
+
+            string ch_name = (name == "" ? (std::string("Ch_") + std::to_string(ch + 1)) : name);
 
             auto data_type = TDMS::TDMSType::Integer8;
             if (bits == RP_F_8_Bit) data_type = TDMS::TDMSType::Integer8;

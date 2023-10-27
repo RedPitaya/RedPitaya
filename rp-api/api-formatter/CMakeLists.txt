@@ -57,6 +57,7 @@ include_directories("src/writers")
 include_directories("src/tdms")
 
 list(APPEND src
+            ${CMAKE_SOURCE_DIR}/src/writers/rp_csv_writer.cpp
             ${CMAKE_SOURCE_DIR}/src/writers/rp_wav_writer.cpp
             ${CMAKE_SOURCE_DIR}/src/writers/rp_tdms_writer.cpp
             ${CMAKE_SOURCE_DIR}/src/tdms/binary_stream.cpp
