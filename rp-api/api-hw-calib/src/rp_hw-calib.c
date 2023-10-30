@@ -45,8 +45,13 @@ rp_calib_error rp_CalibrationFactoryReset(bool convert_to_new){
 }
 
 rp_calib_error rp_CalibrationWriteParams(rp_calib_params_t calib_params,bool use_factory_zone){
-    return calib_WriteDirectlyParams(&calib_params,use_factory_zone);
+    return calib_WriteDirectlyParams(&calib_params,use_factory_zone,false);
 }
+
+rp_calib_error rp_CalibrationWriteParamsEx(rp_calib_params_t calib_params,bool use_factory_zone){
+    return calib_WriteDirectlyParams(&calib_params,use_factory_zone,true);
+}
+
 
 rp_calib_error rp_CalibrationSetParams(rp_calib_params_t calib_params){
     return calib_SetParams(&calib_params);

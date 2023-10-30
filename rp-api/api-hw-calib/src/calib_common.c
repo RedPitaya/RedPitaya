@@ -187,7 +187,7 @@ bool convertV1(rp_calib_params_t *param,rp_calib_params_v1_t *out){
     out->be_ch1_dc_offs = param->fast_dac_x1[0].offset;
     out->be_ch2_dc_offs = param->fast_dac_x1[1].offset;
 
-    out->magic = CALIB_MAGIC_FILTER;
+    out->magic = CALIB_MAGIC;
 
     return true;
 }

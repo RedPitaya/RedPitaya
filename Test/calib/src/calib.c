@@ -378,7 +378,7 @@ int main(int argc, char **argv)
             fprintf(stderr, "ERROR: Can't convert data to the old version! (%d)\n",ret);
             return ret;
         }
-        ret = rp_CalibrationWriteParams(calib,false);
+        ret = rp_CalibrationWriteParamsEx(calib,false);
         if (ret) {
             fprintf(stderr, "ERROR: Write failed!\n");
             return ret;

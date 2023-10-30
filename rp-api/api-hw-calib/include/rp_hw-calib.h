@@ -222,6 +222,14 @@ rp_calib_error rp_CalibrationFactoryReset(bool convert_to_new);
 rp_calib_error rp_CalibrationWriteParams(rp_calib_params_t calib_params,bool use_factory_zone);
 
 /**
+* Write calibration values and skip recalculate calibration values
+* Calibration data is written to EEPROM and repopulated so that rp_GetCalibrationSettings works properly.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+rp_calib_error rp_CalibrationWriteParamsEx(rp_calib_params_t calib_params,bool use_factory_zone);
+
+/**
 * Set calibration values in memory.
 * Calibration values are written to temporary memory, but not permanently.
 * @return If the function is successful, the return value is RP_OK.
