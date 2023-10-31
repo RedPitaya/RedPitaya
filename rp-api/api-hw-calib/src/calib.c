@@ -588,13 +588,17 @@ rp_calib_error calib_ConvertToOld(rp_calib_params_t *out){
         case STEM_125_14_LN_v1_1:
         case STEM_125_14_Z7020_v1_0:
         case STEM_125_14_Z7020_LN_v1_1:{
+            // for ecosystem version 0.98
             out->dataStructureId = RP_HW_PACK_ID_V1;
             for(int i = 0; i < 2; ++i){
                 out->fast_adc_1_1[i].baseScale = 20.0;
-                out->fast_adc_1_1[i].calibValue = calibBaseScaleFromVoltage(20.0,false) * out->fast_adc_1_1[i].gainCalc;
+                out->fast_adc_1_1[i].calibValue = calibBaseScaleFromVoltage(20.0,false) * out->fast_adc_1_20[i].gainCalc;
+                int32_t off = out->fast_adc_1_1[i].offset;
+                out->fast_adc_1_1[i].offset = out->fast_adc_1_20[i].offset;
 
                 out->fast_adc_1_20[i].baseScale = 1.0;
-                out->fast_adc_1_20[i].calibValue = calibBaseScaleFromVoltage(1.0,false) * out->fast_adc_1_20[i].gainCalc;
+                out->fast_adc_1_20[i].calibValue = calibBaseScaleFromVoltage(1.0,false) * (((out->fast_adc_1_1[i].gainCalc - 1.0) * 4.0) + 1.0);
+                out->fast_adc_1_20[i].offset = off;
 
                 out->fast_dac_x1[i].baseScale = 1.0;
                 out->fast_dac_x1[i].calibValue = calibBaseScaleFromVoltage(1.0,false) * (1.0 / out->fast_dac_x1[i].gainCalc);

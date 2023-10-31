@@ -53,7 +53,7 @@ void usage()
         " -i    Reset calibration values in eeprom by default\n"
         "       Possible combination of flags: -in , -inf.\n"
         "\n"
-        " -o    Converts the calibration from the user zone to the old calibration format.\n"
+        " -o    Converts the calibration from the user zone to the old calibration format. For ecosystem version 0.98\n"
         "\n"
         " -v    Produce verbose output.\n"
         " -h    Print this info.\n"
