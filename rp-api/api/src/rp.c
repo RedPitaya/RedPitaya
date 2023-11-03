@@ -1110,18 +1110,9 @@ int rp_AcqAxiGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, int
     return acq_axi_GetDataRaw(channel, pos, size, buffer);
 }
 
-int rp_AcqGetDataRawV2(uint32_t pos, buffers_t *out)
+int rp_AcqGetData(uint32_t pos, buffers_t *out)
 {
-    return acq_GetDataRawV2(pos, out);
-}
-
-int rp_AcqGetDataV2(uint32_t pos, buffers_t *out)
-{
-    return acq_GetDataV2(pos, out);
-}
-
-int rp_AcqGetDataV2D(uint32_t pos, buffers_t *out){
-    return acq_GetDataV2D(pos, out);
+    return acq_GetData(pos, out);
 }
 
 int rp_AcqGetOldestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer)
@@ -1651,6 +1642,8 @@ buffers_t* rp_createBuffer(uint8_t maxChannels,uint32_t length,bool initInt16, b
     if (b == NULL) return NULL;
     b->channels = maxChannels;
     b->size = length;
+    b->use_calib_for_raw = false;
+    b->use_calib_for_volts = true;
 
     bool NeedFree = false;
     for(int i = 0 ; i < 4; i++){

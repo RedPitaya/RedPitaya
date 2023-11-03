@@ -6,6 +6,7 @@
 #include <sys/syslog.h> //Add custom RP_LCR LOG system
 
 #include "lcrApp.h"
+#include "rp.h"
 
 
 #define IF_VALUE_CHANGED(X, ACTION) \

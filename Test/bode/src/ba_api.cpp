@@ -562,9 +562,17 @@ int rp_BaSafeThreadAcqData(rp_ba_buffer_t &_buffer, int _decimation, int _acq_si
 	//pos++;
 	buffers_t buf;
 	buf.size = acq_u_size;
+	buf.use_calib_for_volts = true;
+	static uint8_t max_channels = rp_BaGetADCChannels();
+    for(uint8_t ch = 0; ch < max_channels; ch++){
+        buf.ch_f[ch] = NULL;
+        buf.ch_d[ch] = NULL;
+        buf.ch_i[ch] = NULL;
+    }
+
 	buf.ch_f[0] = _buffer.ch1.data();
 	buf.ch_f[1] = _buffer.ch2.data();
-	EXEC_CHECK_MUTEX(rp_AcqGetDataV2(pos, &buf), mutex);
+	EXEC_CHECK_MUTEX(rp_AcqGetData(pos, &buf), mutex);
 	pthread_mutex_unlock(&mutex);
 	return RP_OK;
 }

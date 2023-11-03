@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <mutex>
+#include <vector>
 #include <functional>
 #include "rpApp.h"
 #include "constants.h"
@@ -21,7 +22,7 @@ public:
 
     auto setViewSize(vsize_t _size) -> void;
     auto getViewSize() const -> vsize_t;
-    auto getView() const -> float*;
+    auto getView() -> std::vector<float>*;
 
     auto setDecimationFactor(float _factor) -> void;
     auto getDecimationFactor() const -> float;
@@ -39,7 +40,7 @@ public:
     auto resetOffest() -> void;
 
     auto decimate(rp_channel_t _channel, const float *_data,vsize_t _dataSize, int _triggerPointPos) -> bool;
-    auto decimate(rp_channel_t _channel, const float *_data,vsize_t _dataSize, int _triggerPointPos,float *_view,vsize_t _viewSize) -> bool;
+    auto decimate(rp_channel_t _channel, const float *_data,vsize_t _dataSize, int _triggerPointPos,std::vector<float> *_view, std::vector<float> *_originalData) -> bool;
 
 private:
     float m_decimationFactor;
@@ -47,7 +48,9 @@ private:
     rpApp_osc_interpolationMode m_mode[MAX_ADC_CHANNELS];
     func_t m_scaleFunc;
     std::mutex m_settingsMutex;
-    float *m_decimatedData;
+    std::vector<float> m_decimatedData;
+    std::vector<float> m_originalData;
+
     float m_triggerLevel;
     double m_dataOffset;
 };

@@ -15,6 +15,7 @@
 #include <stdio.h>
 
 #include "lcrApp.h"
+#include "lcr_meter.h"
 #include "utils.h"
 
 /* Resource managment functions */

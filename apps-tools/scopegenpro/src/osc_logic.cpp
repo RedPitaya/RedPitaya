@@ -16,13 +16,10 @@
 #define MAX_TRIGGER_LEVEL getMaxTriggerLevel()
 
 enum request_mode{
-    NONE = 0,
-    WAV  = 1,
-    TDMS = 2,
-    CSV  = 3,
-    WAV_RAW = 4,
-    TDMS_RAW = 5,
-    CSV_RAW  = 6
+    NONE = 0x0,
+    WAV  = 0x1,
+    TDMS = 0x2,
+    CSV  = 0x3
 };
 
 static const uint8_t g_adc_channels = getADCChannels();
@@ -88,7 +85,10 @@ CIntParameter pllControlEnable ("EXT_CLOCK_ENABLE", CBaseParameter::RW, 0, 0, 0,
 CIntParameter pllControlLocked ("EXT_CLOCK_LOCKED", CBaseParameter::RO, 0, 0, 0, 1);
 
 CStringParameter 	download_file("DOWNLOAD_FILE", CBaseParameter::RW, "", 0);
-CIntParameter       request_data("REQUEST_DATA", CBaseParameter::RW, request_mode::NONE, 0, request_mode::NONE, request_mode::CSV_RAW);
+CBooleanParameter   request_data("REQUEST_DATA", CBaseParameter::RW,false,0);
+CIntParameter       request_format ("REQUEST_FORMAT", CBaseParameter::RW, 1, 0, 1, 3,CONFIG_VAR);
+CBooleanParameter   request_normalize("REQUEST_NORMALIZE", CBaseParameter::RW,true,0,CONFIG_VAR);
+CBooleanParameter   request_view("REQUEST_VIEW", CBaseParameter::RW,true,0,CONFIG_VAR);
 
 auto initOscAfterLoad() -> void{
 if (rp_HPGetFastADCIsAC_DCOrDefault()){
@@ -311,74 +311,79 @@ auto updateOscSignal() -> void{
 auto requestFile() -> void {
     download_file.Update();
 
-    if (request_data.NewValue()){
+    if (request_normalize.IsNewValue()){
+        request_normalize.Update();
+    }
+
+    if (request_view.IsNewValue()){
+        request_view.Update();
+    }
+
+    if (request_format.IsNewValue()){
+        request_format.Update();
+        fprintf(stderr,"Export format %d\n",request_format.Value());
+    }
+
+    if (request_data.IsNewValue()){
         request_data.Update();
-        request_mode mode = (request_mode)request_data.Value();
-        request_data.Value() = 0;
-        
+        request_data.Value() = false;
+
+        request_mode mode = (request_mode)request_format.Value();
         rp_acq_decimation_t sampling_rate;
         rp_AcqGetDecimation(&sampling_rate);
         auto rate = getADCRate() / (uint32_t)sampling_rate;
-        auto f_mode = rp_formatter_api::RP_F_WAV;
-        auto is_raw = false;
+        auto f_mode = rp_formatter_api::rp_mode_t::RP_F_WAV;
+        auto is_view = request_view.Value()? RPAPP_VIEW_EXPORT : RPAPP_RAW_EXPORT;
+        auto is_normal = request_normalize.Value();
         auto suffix = std::string("error");
-        if (mode == WAV || mode == WAV_RAW){
-            f_mode = rp_formatter_api::RP_F_WAV;
-            is_raw = (mode == WAV_RAW);
+        auto file_format = mode & 0xF;
+        if (file_format == WAV){
             suffix = ".wav";
+            is_normal = true;
+            f_mode = rp_formatter_api::rp_mode_t::RP_F_WAV;
         }
 
-        if (mode == CSV || mode == CSV_RAW){
-            f_mode = rp_formatter_api::RP_F_CSV;
-            is_raw = (mode == CSV_RAW);
+        if (file_format == CSV){
             suffix = ".csv";
+            f_mode = rp_formatter_api::rp_mode_t::RP_F_CSV;
         }
 
-        if (mode == TDMS || mode == TDMS_RAW){
-            f_mode = rp_formatter_api::RP_F_TDMS;
-            is_raw = (mode == TDMS_RAW);
+        if (file_format == TDMS){
             suffix = ".tdms";
+            f_mode = rp_formatter_api::rp_mode_t::RP_F_TDMS;
         }
 
         rp_formatter_api::CFormatter formatter(f_mode,rate);
 
         float *buff[g_adc_channels + 1];
-        uint16_t *buff_i[g_adc_channels + 1];
 
         for(int i = 0; i <= g_adc_channels; i++){
             buff[i] = NULL;
-            buff_i[i] = NULL;
         }
 
         uint8_t allChannels = 0;
 
-        if (!is_raw){
-            for(int i = 0; i < g_adc_channels; i++){
-                if (inShow[i].Value()) {
-                    buff[i] = new float[CH_SIGNAL_SIZE_DEFAULT];
-                    rpApp_OscGetViewData((rpApp_osc_source)i, buff[i], (uint32_t) CH_SIGNAL_SIZE_DEFAULT);
-                    formatter.setChannel((rp_formatter_api::rp_channel_t)i, buff[i],CH_SIGNAL_SIZE_DEFAULT,std::string("Channel_") + std::to_string(i+1));
+        for(int i = 0; i < g_adc_channels; i++){
+            if (inShow[i].Value()) {
+                uint32_t size = is_view ? CH_SIGNAL_SIZE_DEFAULT: ADC_BUFFER_SIZE;
+                buff[i] = new float[size];
+                if (rpApp_OscGetExportedData((rpApp_osc_source)i,is_view,is_normal,buff[i],&size) == RP_OK){
+                    formatter.setChannel((rp_formatter_api::rp_channel_t)i, buff[i],size,std::string("Channel_") + std::to_string(i+1));
                     allChannels++;
-                }
-            }
-
-            if (isMathShow()){
-                buff[g_adc_channels] = new float[CH_SIGNAL_SIZE_DEFAULT];
-                rpApp_OscGetViewData(RPAPP_OSC_SOUR_MATH, buff[g_adc_channels], (uint32_t) CH_SIGNAL_SIZE_DEFAULT);
-                formatter.setChannel((rp_formatter_api::rp_channel_t)allChannels, buff[g_adc_channels],CH_SIGNAL_SIZE_DEFAULT,std::string("Math"));
-            }
-        }else{
-            for(int i = 0; i < g_adc_channels; i++){
-                if (inShow[i].Value()) {
-                    const auto buff_size = 16384;
-                    buff_i[i] = new uint16_t[buff_size];
-                    rpApp_OscGetRawData((rp_channel_t)i, buff_i[i],buff_size);
-                    formatter.setChannel((rp_formatter_api::rp_channel_t)i, buff_i[i],buff_size,std::string("Channel_") + std::to_string(i+1));
                 }
             }
         }
 
-        std::string filename = std::string("scopegen_data") + (is_raw ? ".raw":"") + suffix;
+        if (isMathShow()){
+            uint32_t size = is_view ? CH_SIGNAL_SIZE_DEFAULT: ADC_BUFFER_SIZE;
+            buff[g_adc_channels] = new float[size];
+            if (rpApp_OscGetExportedData(RPAPP_OSC_SOUR_MATH,is_view,is_normal,buff[g_adc_channels],&size) == RP_OK){
+                formatter.setChannel((rp_formatter_api::rp_channel_t)allChannels, buff[g_adc_channels],size,std::string("Math"));
+                allChannels++;
+            }
+        }
+
+        std::string filename = std::string("scopegen_data") + suffix;
         formatter.openFile("/tmp/scopegenpro/" + filename);
         if (formatter.isOpenFile()){
             formatter.writeToFile();

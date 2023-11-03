@@ -23,9 +23,18 @@
 	syslog(__VA_ARGS__); \
 }
 
+#ifndef MAX
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#endif
+
+#ifndef MIN
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
+#endif
+
+
+#ifndef ABS
 #define ABS(x) (((x) < 0) ? (-(x)) : (x))
+#endif
 
 #define EXEC_CHECK(x){ \
  		int retval = (x); \
@@ -52,6 +61,7 @@
     } \
     }
 
+#ifndef CHECK_CHANNEL
 #define CHECK_CHANNEL(X) \
     uint8_t channels_rp_HPGetFastADCChannelsCount = 0; \
     if (rp_HPGetFastADCChannelsCount(&channels_rp_HPGetFastADCChannelsCount) != RP_HP_OK){ \
@@ -62,6 +72,7 @@
         fprintf(stderr,"[Error:%s] Channel is larger than allowed\n",X); \
         return RP_NOTS; \
     }
+#endif
 
 float vectorMax(float *data, int size);
 float vectorApprox(float *data, int size, float approx_val, bool min);

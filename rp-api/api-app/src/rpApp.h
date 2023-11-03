@@ -107,6 +107,11 @@ typedef enum{
     LANCZOS     = 3
 } rpApp_osc_interpolationMode;
 
+typedef enum{
+    RPAPP_RAW_EXPORT = 0,
+    RPAPP_VIEW_EXPORT = 1
+} rpApp_osc_exportMode;
+
 /** @name General
 */
 ///@{
@@ -558,13 +563,25 @@ int rpApp_OscGetMathSources(rp_channel_t *source1, rp_channel_t *source2);
 
 /**
 * Gets source data.
-* @param source Source ch1, ch2 or math inticates with data we want toi get.
+* @param source Source ch1, ch2 or math inticates with data we want to get.
 * @param data View buffer.
 * @param size Number of values to be returned.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rpApp_OscGetViewData(rpApp_osc_source source, float *data, uint32_t size);
+
+/**
+* Gets data for export.
+* @param source Source ch1, ch2 or math inticates with data we want to get.
+* @param mode Export mode.
+* @param normalize Normalize data to 2V p-p.
+* @param data Buffer for values.
+* @param size Number of values to be returned.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscGetExportedData(rpApp_osc_source source, rpApp_osc_exportMode mode, bool normalize, float *data, uint32_t *size);
 
 /**
 * Gets raw data.

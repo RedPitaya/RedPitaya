@@ -73,17 +73,17 @@ auto CMeasureController::check(const void *_data, vsize_t _sizeView) -> int{
     return RP_OK;
 }
 
-auto CMeasureController::measureVpp(const rpApp_osc_source _channel, const float *_data, vsize_t _viewSize, float *_Vpp) -> int{
+auto CMeasureController::measureVpp(const rpApp_osc_source _channel, const std::vector<float> *_data, float *_Vpp) -> int{
     std::lock_guard<std::mutex> lock(m_settingsMutex);
     
-    auto ret = check(_data,_viewSize);
+    auto ret = check(_data,_data->size());
     if (ret != RP_OK)
         return ret;
 
     float resMax, resMin, max = -FLT_MAX, min = FLT_MAX;
 
-    for (vsize_t i = 0; i < _viewSize; ++i) {
-        auto z = _data[i];
+    for (vsize_t i = 0; i < _data->size(); ++i) {
+        auto z = (*_data)[i];
         max = MAX(z,max);
         min = MIN(z,min);
     }
@@ -96,18 +96,18 @@ auto CMeasureController::measureVpp(const rpApp_osc_source _channel, const float
     return RP_OK;
 }
 
-auto CMeasureController::measureMax(const rpApp_osc_source _channel, const float *_data, vsize_t _viewSize, float *_Max) -> int{
+auto CMeasureController::measureMax(const rpApp_osc_source _channel, const std::vector<float> *_data, float *_Max) -> int{
     std::lock_guard<std::mutex> lock(m_settingsMutex);
 
-    auto ret = check(_data,_viewSize);
+    auto ret = check(_data,_data->size());
     if (ret != RP_OK)
         return ret;
 
 
     float resMax, max = -FLT_MAX;
 
-    for (vsize_t i = 0; i < _viewSize; ++i) {
-        max = MAX(_data[i],max);
+    for (vsize_t i = 0; i < _data->size(); ++i) {
+        max = MAX((*_data)[i],max);
     }
 
     ECHECK_APP(m_unscaleFunc(_channel, max, &resMax));
@@ -115,17 +115,17 @@ auto CMeasureController::measureMax(const rpApp_osc_source _channel, const float
     return RP_OK;
 }
 
-auto CMeasureController::measureMin(const rpApp_osc_source _channel, const float *_data, vsize_t _viewSize, float *_Min) -> int{
+auto CMeasureController::measureMin(const rpApp_osc_source _channel, const std::vector<float> *_data, float *_Min) -> int{
     std::lock_guard<std::mutex> lock(m_settingsMutex);
 
-    auto ret = check(_data,_viewSize);
+    auto ret = check(_data,_data->size());
     if (ret != RP_OK)
         return ret;
 
     float resMax, min = FLT_MAX;
 
-    for (vsize_t i = 0; i < _viewSize; ++i) {
-        min = MIN(_data[i],min);
+    for (vsize_t i = 0; i < _data->size(); ++i) {
+        min = MIN((*_data)[i],min);
     }
 
     ECHECK_APP(m_unscaleFunc(_channel, min, &resMax));
@@ -133,35 +133,35 @@ auto CMeasureController::measureMin(const rpApp_osc_source _channel, const float
     return RP_OK;
 }
 
-auto CMeasureController::measureMeanVoltage(const rpApp_osc_source _channel, const float *_data, vsize_t _viewSize, float *_meanVoltage) -> int{
+auto CMeasureController::measureMeanVoltage(const rpApp_osc_source _channel, const std::vector<float> *_data, float *_meanVoltage) -> int{
     std::lock_guard<std::mutex> lock(m_settingsMutex);
 
-    auto ret = check(_data,_viewSize);
+    auto ret = check(_data,_data->size());
     if (ret != RP_OK)
         return ret;
 
     double sum = 0;
 
-    for (vsize_t i = 0; i < _viewSize; ++i) {
-        sum += _data[i];
+    for (vsize_t i = 0; i < _data->size(); ++i) {
+        sum += (*_data)[i];
     }
 
-    ECHECK_APP(m_unscaleFunc(_channel, sum / static_cast<double>(_viewSize), _meanVoltage));
+    ECHECK_APP(m_unscaleFunc(_channel, sum / static_cast<double>(_data->size()), _meanVoltage));
     ECHECK_APP(m_attAmplFunc(_channel, *_meanVoltage, _meanVoltage));
     return RP_OK;
 }
 
-auto CMeasureController::measureMaxVoltage(const rpApp_osc_source _channel, bool _inverted, const float *_data, vsize_t _viewSize, float *_Vmax) -> int{
+auto CMeasureController::measureMaxVoltage(const rpApp_osc_source _channel, bool _inverted, const std::vector<float> *_data, float *_Vmax) -> int{
     std::lock_guard<std::mutex> lock(m_settingsMutex);
 
-    auto ret = check(_data,_viewSize);
+    auto ret = check(_data,_data->size());
     if (ret != RP_OK)
         return ret;
 
-    float max = _data[0];
+    float max = (*_data)[0];
 
-    for (vsize_t i = 0; i < _viewSize; ++i) {
-        auto z = _data[i];
+    for (vsize_t i = 0; i < _data->size(); ++i) {
+        auto z = (*_data)[i];
         if (_inverted ? z < max : z > max) {
             max = z;
         }
@@ -172,17 +172,17 @@ auto CMeasureController::measureMaxVoltage(const rpApp_osc_source _channel, bool
     return RP_OK;
 }
 
-auto CMeasureController::measureMinVoltage(const rpApp_osc_source _channel, bool _inverted, const float *_data, vsize_t _viewSize, float *_Vmin) -> int{
+auto CMeasureController::measureMinVoltage(const rpApp_osc_source _channel, bool _inverted, const std::vector<float> *_data, float *_Vmin) -> int{
     std::lock_guard<std::mutex> lock(m_settingsMutex);
     
-    auto ret = check(_data,_viewSize);
+    auto ret = check(_data,_data->size());
     if (ret != RP_OK)
         return ret;
 
-    float min = _data[0];
+    float min = (*_data)[0];
 
-    for (vsize_t i = 0; i < _viewSize; ++i) {
-        auto z = _data[i];
+    for (vsize_t i = 0; i < _data->size(); ++i) {
+        auto z = (*_data)[i];
         if (_inverted ? z > min : z < min) {
             min = z;
         }
@@ -193,43 +193,43 @@ auto CMeasureController::measureMinVoltage(const rpApp_osc_source _channel, bool
     return RP_OK;
 }
 
-auto CMeasureController::measureDutyCycle(const rpApp_osc_source _channel, const float *_data, vsize_t _viewSize, float *_dutyCycle) -> int{
+auto CMeasureController::measureDutyCycle(const rpApp_osc_source _channel, const std::vector<float> *_data, float *_dutyCycle) -> int{
     int highTime = 0;
     float meanValue;
-    ECHECK_APP(measureMeanVoltage(_channel, _data, _viewSize, &meanValue));
+    ECHECK_APP(measureMeanVoltage(_channel, _data, &meanValue));
     ECHECK_APP(m_scaleFunc(_channel, meanValue, &meanValue))
 
     std::lock_guard<std::mutex> lock(m_settingsMutex);
-    auto ret = check(_data,_viewSize);
+    auto ret = check(_data,_data->size());
     if (ret != RP_OK)
         return ret;
     
-    for (vsize_t i = 0; i < _viewSize; ++i) {
-        if (_data[i] > meanValue) {
+    for (vsize_t i = 0; i < _data->size(); ++i) {
+        if ((*_data)[i] > meanValue) {
             ++highTime;
         }
     }
 
-    *_dutyCycle = (float)highTime / (float)(_viewSize);
+    *_dutyCycle = (float)highTime / (float)(_data->size());
     return RP_OK;
     
 }
 
-auto CMeasureController::measureRootMeanSquare(const rpApp_osc_source _channel, const float *_data, vsize_t _viewSize, float *_rms) -> int{
+auto CMeasureController::measureRootMeanSquare(const rpApp_osc_source _channel, const std::vector<float> *_data, float *_rms) -> int{
     std::lock_guard<std::mutex> lock(m_settingsMutex);
 
-    auto ret = check(_data,_viewSize);
+    auto ret = check(_data,_data->size());
     if (ret != RP_OK)
         return ret;
 
     double rmsValue = 0;
-    for (vsize_t i = 0; i < _viewSize; ++i) {
-        auto z = _data[i];
+    for (vsize_t i = 0; i < _data->size(); ++i) {
+        auto z = (*_data)[i];
         float tmp;
         ECHECK_APP(m_unscaleFunc(_channel, z, &tmp));
         rmsValue += tmp * tmp;
     }
-    *_rms = (double) sqrt(rmsValue / (double)(_viewSize));
+    *_rms = (double) sqrt(rmsValue / (double)(_data->size()));
     ECHECK_APP(m_attAmplFunc(_channel, *_rms, _rms));
     return RP_OK;
 }
@@ -308,15 +308,15 @@ auto CMeasureController::measurePeriodCh(const float *_dataRaw, vsize_t _dataSiz
     return RP_OK;
 }
 
-auto CMeasureController::measurePeriodMath(float _timeScale, float _sampPerDev, const float *_data, vsize_t _dataSize, float *period) -> int{
+auto CMeasureController::measurePeriodMath(float _timeScale, float _sampPerDev, const std::vector<float> *_data, float *period) -> int{
     float m_viewTmp[VIEW_SIZE_MAX];
     float xcorr[VIEW_SIZE_MAX];
     
-    auto ret = check(_data,_dataSize);
+    auto ret = check(_data,_data->size());
     if (ret != RP_OK)
         return ret;
     
-    auto size = _dataSize;
+    auto size = _data->size();
 
     if (size > VIEW_SIZE_MAX){
         FATAL("The view buffer is larger than the allocated memory")
@@ -325,8 +325,8 @@ auto CMeasureController::measurePeriodMath(float _timeScale, float _sampPerDev, 
 
     float mean = 0;
     for (vsize_t i = 0; i < size; ++i) {
-        m_viewTmp[i] = _data[i];
-        mean += _data[i];
+        m_viewTmp[i] = (*_data)[i];
+        mean += (*_data)[i];
     }
 
     mean = mean / size;

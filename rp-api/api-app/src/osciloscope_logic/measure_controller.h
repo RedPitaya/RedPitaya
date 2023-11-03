@@ -27,18 +27,18 @@ class CMeasureController{
     auto setAttenuateAmplitudeChannelFunction(func_t _func) -> void;
     auto getAttenuateAmplitudeChannelFunction() const -> func_t;
 
-    auto measureVpp(const rpApp_osc_source _channel, const float *_data, vsize_t _viewSize, float *_Vpp) -> int;
-    auto measureMax(const rpApp_osc_source _channel, const float *_data, vsize_t _viewSize, float *_Max) -> int;
-    auto measureMin(const rpApp_osc_source _channel, const float *_data, vsize_t _viewSize, float *_Min) -> int;
-    auto measureDutyCycle(const rpApp_osc_source _channel, const float *_data, vsize_t _viewSize, float *_dutyCycle) -> int;
-    auto measureRootMeanSquare(const rpApp_osc_source _channel, const float *_data, vsize_t _viewSize, float *_rms) -> int;
+    auto measureVpp(const rpApp_osc_source _channel, const std::vector<float> *_data, float *_Vpp) -> int;
+    auto measureMax(const rpApp_osc_source _channel, const std::vector<float> *_data, float *_Max) -> int;
+    auto measureMin(const rpApp_osc_source _channel, const std::vector<float> *_data, float *_Min) -> int;
+    auto measureDutyCycle(const rpApp_osc_source _channel, const std::vector<float> *_data, float *_dutyCycle) -> int;
+    auto measureRootMeanSquare(const rpApp_osc_source _channel, const std::vector<float> *_data, float *_rms) -> int;
     
-    auto measureMeanVoltage(const rpApp_osc_source _channel, const float *_data, vsize_t _viewSize, float *_meanVoltage) -> int;
-    auto measureMaxVoltage(const rpApp_osc_source _channel,bool _inverted, const float *_data, vsize_t _viewSize, float *_Vmax) -> int;
-    auto measureMinVoltage(const rpApp_osc_source _channel,bool _inverted, const float *_data, vsize_t _viewSize, float *_Vmin) -> int;
+    auto measureMeanVoltage(const rpApp_osc_source _channel, const std::vector<float> *_data, float *_meanVoltage) -> int;
+    auto measureMaxVoltage(const rpApp_osc_source _channel,bool _inverted, const std::vector<float> *_data, float *_Vmax) -> int;
+    auto measureMinVoltage(const rpApp_osc_source _channel,bool _inverted, const std::vector<float> *_data, float *_Vmin) -> int;
       
     auto measurePeriodCh(const float *_dataRaw, vsize_t _dataSize, float *period) -> int;
-    auto measurePeriodMath(float _timeScale, float _sampPerDev, const float *_data, vsize_t _dataSize, float *period) -> int;
+    auto measurePeriodMath(float _timeScale, float _sampPerDev, const std::vector<float> *_data, float *period) -> int;
 
 private:
 

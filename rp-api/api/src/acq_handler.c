@@ -1138,7 +1138,111 @@ int acq_axi_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16
     return RP_OK;
 }
 
-int acq_GetDataRawV2(uint32_t pos,buffers_t *out)
+int acq_GetDataInBuffer(rp_channel_t channel, uint32_t pos, uint32_t* size,buffers_t *out){
+
+    CHECK_CHANNEL("acq_GetDataInBuffer")
+
+    *size = MIN(*size, ADC_BUFFER_SIZE);
+
+    const volatile uint32_t* raw_buffer = getRawBuffer(channel);
+
+    if (!raw_buffer) {
+        return RP_EOOR;
+    }
+
+    rp_pinState_t mode;
+    float fullScale;
+    float gainValue;
+
+    if (acq_GetGainV(channel, &gainValue) != RP_OK){
+        return RP_EOOR;
+    }
+
+    if (acq_GetGain(channel, &mode) != RP_OK){
+        return RP_EOOR;
+    }
+
+    rp_acq_ac_dc_mode_t power_mode;
+    if (acq_GetAC_DC(channel,&power_mode) != RP_OK){
+        return RP_EOOR;
+    }
+
+    if (rp_HPGetHWADCFullScale(&fullScale) != RP_OK){
+        return RP_EOOR;
+    }
+
+    uint_gain_calib_t calib;
+    uint8_t bits = 0;
+
+    bool is_sign = false;
+    int ret = rp_HPGetFastADCBits(&bits);
+    ret |= rp_HPGetFastADCIsSigned(&is_sign);
+
+    
+    switch (mode)
+    {
+        case RP_LOW:
+            ret |= rp_CalibGetFastADCCalibValueI(convertCh(channel),convertPower(power_mode),&calib);
+            break;
+
+        case RP_HIGH:
+            ret |= rp_CalibGetFastADCCalibValue_1_20I(convertCh(channel),convertPower(power_mode),&calib);
+            break;
+
+        default:
+            fprintf(stderr,"[Error:acq_GetDataInBuffer] Unknown mode: %d\n",mode);
+            return RP_EOOR;
+            break;
+    }
+
+    if (ret != RP_HW_CALIB_OK){
+        fprintf(stderr,"[Error:acq_GetDataInBuffer] Error get calibaration: %d\n",ret);
+        return RP_EOOR;
+    }
+
+    uint32_t gain_raw  = out->use_calib_for_raw ?  calib.gain : 1;
+    uint32_t g_base_raw = out->use_calib_for_raw ? calib.base : 1;
+    int32_t offset_raw  = out->use_calib_for_raw ? calib.offset  : 0;
+
+    uint32_t gain_volt  = out->use_calib_for_raw ?  calib.gain : 1;
+    uint32_t g_base_volt = out->use_calib_for_raw ? calib.base : 1;
+    int32_t offset_volt  = out->use_calib_for_raw ? calib.offset  : 0;
+
+    uint32_t mask = ((uint64_t)1 << bits) - 1;
+
+    bool is_need_raw = out->ch_i[channel] != NULL;
+    bool is_need_vold_f = out->ch_f[channel] != NULL;
+    bool is_need_vold_d = out->ch_d[channel] != NULL;
+    int16_t* iPtr = out->ch_i[channel];
+    float* fPtr = out->ch_f[channel];
+    double* dPtr = out->ch_d[channel];
+
+    for (uint32_t i = 0; i < (*size); ++i) {
+
+        uint32_t cnts = (raw_buffer[(pos + i) % ADC_BUFFER_SIZE]) & mask;
+
+        if (is_need_raw){
+            if (is_sign)
+                iPtr[i] = cmn_CalibCntsSigned(cnts,bits,gain_raw,g_base_raw,offset_raw);
+            else
+                iPtr[i] = cmn_CalibCntsUnsigned(cnts,bits,gain_raw,g_base_raw,offset_raw);
+        }
+
+        if (is_need_vold_d || is_need_vold_f){
+            float value = 0;
+            if (is_sign)
+                value = cmn_convertToVoltSigned(cnts,bits,fullScale,gain_volt,g_base_volt,offset_volt) * gainValue;
+            else
+                value = cmn_convertToVoltUnsigned(cnts,bits,fullScale,gain_volt,g_base_volt,offset_volt) * gainValue;
+            if (is_need_vold_f) fPtr[i] = value;
+            if (is_need_vold_d) dPtr[i] = value;
+        }
+    }
+
+    return RP_OK;
+}
+
+int acq_GetData(uint32_t pos,buffers_t *out)
 {
     uint8_t channels = 0;
     if (rp_HPGetFastADCChannelsCount(&channels) != RP_HP_OK){
@@ -1154,7 +1258,7 @@ int acq_GetDataRawV2(uint32_t pos,buffers_t *out)
             fprintf(stderr,"[FATAL ERROR] Buffer[0] for fill is NULL\n");
             assert(false);
         }
-        int ret = acq_GetDataRaw(RP_CH_1,pos,&size,out->ch_i[0],false);
+        int ret = acq_GetDataInBuffer(RP_CH_1,pos,&size,out);
         if (ret != RP_OK){
             return ret;
         }
@@ -1167,7 +1271,7 @@ int acq_GetDataRawV2(uint32_t pos,buffers_t *out)
             fprintf(stderr,"[FATAL ERROR] Buffer[1] for fill is NULL\n");
             assert(false);
         }
-        int ret = acq_GetDataRaw(RP_CH_2,pos,&size,out->ch_i[1],false);
+        int ret = acq_GetDataInBuffer(RP_CH_2,pos,&size,out);
         if (ret != RP_OK){
             return ret;
         }
@@ -1180,7 +1284,7 @@ int acq_GetDataRawV2(uint32_t pos,buffers_t *out)
             fprintf(stderr,"[FATAL ERROR] Buffer[2] for fill is NULL\n");
             assert(false);
         }
-        int ret = acq_GetDataRaw(RP_CH_3,pos,&size,out->ch_i[2],false);
+        int ret = acq_GetDataInBuffer(RP_CH_3,pos,&size,out);
         if (ret != RP_OK){
             return ret;
         }
@@ -1193,7 +1297,7 @@ int acq_GetDataRawV2(uint32_t pos,buffers_t *out)
             fprintf(stderr,"[FATAL ERROR] Buffer[3] for fill is NULL\n");
             assert(false);
         }
-        int ret = acq_GetDataRaw(RP_CH_4,pos,&size,out->ch_i[3],false);
+        int ret = acq_GetDataInBuffer(RP_CH_4,pos,&size,out);
         if (ret != RP_OK){
             return ret;
         }
@@ -1426,143 +1530,143 @@ int acq_axi_GetDataV(rp_channel_t channel,  uint32_t pos, uint32_t* size, float*
     return acq_axi_GetDataVEx(channel,pos,size,buffer,true);
 }
 
-int acq_GetDataV2(uint32_t pos, buffers_t *out)
-{
-    uint8_t channels = 0;
-    if (rp_HPGetFastADCChannelsCount(&channels) != RP_HP_OK){
-        channels = 0;
-    }
+// int acq_GetDataV2(uint32_t pos, buffers_t *out)
+// {
+//     uint8_t channels = 0;
+//     if (rp_HPGetFastADCChannelsCount(&channels) != RP_HP_OK){
+//         channels = 0;
+//     }
 
-    bool fillData = false;
-    out->size = MIN(out->size, ADC_BUFFER_SIZE);
+//     bool fillData = false;
+//     out->size = MIN(out->size, ADC_BUFFER_SIZE);
 
-    if (channels > 0){
-        uint32_t size = out->size;
-        if (!out->ch_f[0]){
-            fprintf(stderr,"[FATAL ERROR] Buffer[0] for fill is NULL\n");
-            assert(false);
-        }
-        int ret = acq_GetDataV(RP_CH_1,pos,&size,out->ch_f[0]);
-        if (ret != RP_OK){
-            return ret;
-        }
-        fillData = true;
-    }
+//     if (channels > 0){
+//         uint32_t size = out->size;
+//         if (!out->ch_f[0]){
+//             fprintf(stderr,"[FATAL ERROR] Buffer[0] for fill is NULL\n");
+//             assert(false);
+//         }
+//         int ret = acq_GetDataV(RP_CH_1,pos,&size,out->ch_f[0]);
+//         if (ret != RP_OK){
+//             return ret;
+//         }
+//         fillData = true;
+//     }
 
-    if (channels > 1){
-        uint32_t size = out->size;
-        if (!out->ch_f[1]){
-            fprintf(stderr,"[FATAL ERROR] Buffer[1] for fill is NULL\n");
-            assert(false);
-        }
-        int ret = acq_GetDataV(RP_CH_2,pos,&size,out->ch_f[1]);
-        if (ret != RP_OK){
-            return ret;
-        }
-        fillData = true;
-    }
+//     if (channels > 1){
+//         uint32_t size = out->size;
+//         if (!out->ch_f[1]){
+//             fprintf(stderr,"[FATAL ERROR] Buffer[1] for fill is NULL\n");
+//             assert(false);
+//         }
+//         int ret = acq_GetDataV(RP_CH_2,pos,&size,out->ch_f[1]);
+//         if (ret != RP_OK){
+//             return ret;
+//         }
+//         fillData = true;
+//     }
 
-    if (channels > 2){
-        uint32_t size = out->size;
-        if (!out->ch_f[2]){
-            fprintf(stderr,"[FATAL ERROR] Buffer[2] for fill is NULL\n");
-            assert(false);
-        }
-        int ret = acq_GetDataV(RP_CH_3,pos,&size,out->ch_f[2]);
-        if (ret != RP_OK){
-            return ret;
-        }
-        fillData = true;
-    }
+//     if (channels > 2){
+//         uint32_t size = out->size;
+//         if (!out->ch_f[2]){
+//             fprintf(stderr,"[FATAL ERROR] Buffer[2] for fill is NULL\n");
+//             assert(false);
+//         }
+//         int ret = acq_GetDataV(RP_CH_3,pos,&size,out->ch_f[2]);
+//         if (ret != RP_OK){
+//             return ret;
+//         }
+//         fillData = true;
+//     }
 
-    if (channels > 3){
-        uint32_t size = out->size;
-        if (!out->ch_f[3]){
-            fprintf(stderr,"[FATAL ERROR] Buffer[3] for fill is NULL\n");
-            assert(false);
-        }
-        int ret = acq_GetDataV(RP_CH_4,pos,&size,out->ch_f[3]);
-        if (ret != RP_OK){
-            return ret;
-        }
-        fillData = true;
-    }
+//     if (channels > 3){
+//         uint32_t size = out->size;
+//         if (!out->ch_f[3]){
+//             fprintf(stderr,"[FATAL ERROR] Buffer[3] for fill is NULL\n");
+//             assert(false);
+//         }
+//         int ret = acq_GetDataV(RP_CH_4,pos,&size,out->ch_f[3]);
+//         if (ret != RP_OK){
+//             return ret;
+//         }
+//         fillData = true;
+//     }
 
-    if (!fillData){
-        return RP_EOOR;
-    }
+//     if (!fillData){
+//         return RP_EOOR;
+//     }
 
-    return RP_OK;
-}
+//     return RP_OK;
+// }
 
-int acq_GetDataV2D(uint32_t pos, buffers_t *out)
-{
-    uint8_t channels = 0;
-    if (rp_HPGetFastADCChannelsCount(&channels) != RP_HP_OK){
-        channels = 0;
-    }
+// int acq_GetDataV2D(uint32_t pos, buffers_t *out)
+// {
+//     uint8_t channels = 0;
+//     if (rp_HPGetFastADCChannelsCount(&channels) != RP_HP_OK){
+//         channels = 0;
+//     }
 
-    bool fillData = false;
-    out->size = MIN(out->size, ADC_BUFFER_SIZE);
+//     bool fillData = false;
+//     out->size = MIN(out->size, ADC_BUFFER_SIZE);
 
-    if (channels > 0){
-        uint32_t size = out->size;
-        if (!out->ch_d[0]){
-            fprintf(stderr,"[FATAL ERROR] Buffer[0] for fill is NULL\n");
-            assert(false);
-        }
-        int ret = acq_GetDataVEx(RP_CH_1,pos,&size,out->ch_d[0],false);
-        if (ret != RP_OK){
-            return ret;
-        }
-        fillData = true;
-    }
+//     if (channels > 0){
+//         uint32_t size = out->size;
+//         if (!out->ch_d[0]){
+//             fprintf(stderr,"[FATAL ERROR] Buffer[0] for fill is NULL\n");
+//             assert(false);
+//         }
+//         int ret = acq_GetDataVEx(RP_CH_1,pos,&size,out->ch_d[0],false);
+//         if (ret != RP_OK){
+//             return ret;
+//         }
+//         fillData = true;
+//     }
 
-    if (channels > 1){
-        uint32_t size = out->size;
-        if (!out->ch_d[1]){
-            fprintf(stderr,"[FATAL ERROR] Buffer[1] for fill is NULL\n");
-            assert(false);
-        }
-        int ret = acq_GetDataVEx(RP_CH_2,pos,&size,out->ch_d[1],false);
-        if (ret != RP_OK){
-            return ret;
-        }
-        fillData = true;
-    }
+//     if (channels > 1){
+//         uint32_t size = out->size;
+//         if (!out->ch_d[1]){
+//             fprintf(stderr,"[FATAL ERROR] Buffer[1] for fill is NULL\n");
+//             assert(false);
+//         }
+//         int ret = acq_GetDataVEx(RP_CH_2,pos,&size,out->ch_d[1],false);
+//         if (ret != RP_OK){
+//             return ret;
+//         }
+//         fillData = true;
+//     }
 
-    if (channels > 2){
-        uint32_t size = out->size;
-        if (!out->ch_d[2]){
-            fprintf(stderr,"[FATAL ERROR] Buffer[2] for fill is NULL\n");
-            assert(false);
-        }
-        int ret = acq_GetDataVEx(RP_CH_3,pos,&size,out->ch_d[2],false);
-        if (ret != RP_OK){
-            return ret;
-        }
-        fillData = true;
-    }
+//     if (channels > 2){
+//         uint32_t size = out->size;
+//         if (!out->ch_d[2]){
+//             fprintf(stderr,"[FATAL ERROR] Buffer[2] for fill is NULL\n");
+//             assert(false);
+//         }
+//         int ret = acq_GetDataVEx(RP_CH_3,pos,&size,out->ch_d[2],false);
+//         if (ret != RP_OK){
+//             return ret;
+//         }
+//         fillData = true;
+//     }
 
-    if (channels > 3){
-        uint32_t size = out->size;
-        if (!out->ch_d[3]){
-            fprintf(stderr,"[FATAL ERROR] Buffer[3] for fill is NULL\n");
-            assert(false);
-        }
-        int ret = acq_GetDataVEx(RP_CH_4,pos,&size,out->ch_d[3],false);
-        if (ret != RP_OK){
-            return ret;
-        }
-        fillData = true;
-    }
+//     if (channels > 3){
+//         uint32_t size = out->size;
+//         if (!out->ch_d[3]){
+//             fprintf(stderr,"[FATAL ERROR] Buffer[3] for fill is NULL\n");
+//             assert(false);
+//         }
+//         int ret = acq_GetDataVEx(RP_CH_4,pos,&size,out->ch_d[3],false);
+//         if (ret != RP_OK){
+//             return ret;
+//         }
+//         fillData = true;
+//     }
 
-    if (!fillData){
-        return RP_EOOR;
-    }
+//     if (!fillData){
+//         return RP_EOOR;
+//     }
 
-    return RP_OK;
-}
+//     return RP_OK;
+// }
 
 int acq_GetDataPosV(rp_channel_t channel,  uint32_t start_pos, uint32_t end_pos, float* buffer, uint32_t *buffer_size)
 {

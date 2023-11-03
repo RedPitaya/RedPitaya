@@ -213,6 +213,10 @@ int rpApp_OscGetRawData(rp_channel_t source, uint16_t *data, uint32_t size) {
     return osc_getRawData(source, data, size);
 }
 
+int rpApp_OscGetExportedData(rpApp_osc_source source, rpApp_osc_exportMode mode, bool normalize, float *data, uint32_t *size){
+    return osc_getExportedData(source,mode,normalize,data,size);
+}
+
 int rpApp_OscSetViewSize(uint32_t size) {
     return osc_setViewSize(size);
 }

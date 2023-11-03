@@ -158,6 +158,8 @@ typedef struct
 {
     uint8_t channels;
     uint32_t size;
+    bool     use_calib_for_raw;
+    bool     use_calib_for_volts;
     int16_t  *ch_i[4];
     double   *ch_d[4];
     float    *ch_f[4];

@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <mutex>
 #include <atomic>
+#include <vector>
+
 #include "rpApp.h"
 #include "constants.h"
 
@@ -33,12 +35,13 @@ public:
     auto lockView() -> void;
     auto unlockView() -> void;
 
-    auto getView(rpApp_osc_source _channel) -> float*;
+    auto getView(rpApp_osc_source _channel) -> std::vector<float>*;
+    auto getOriginalData(rpApp_osc_source _channel) -> std::vector<float>*;
     auto getAcqBuffers() -> buffers_t*;
 
     auto getClock() -> double;
 
-
+    auto isSine(rpApp_osc_source _channel) -> bool;
 
     auto requestUpdateViewFromADC() -> void;
     auto updateViewFromADCDone() -> void;
@@ -90,7 +93,9 @@ private:
     uint16_t m_viewGridXCount;
     uint16_t m_viewGridYCount;
     vsize_t  m_viewSizeInPoints;
-    float *m_view[MAX_VIEW_CHANNELS];
+    std::vector<float> m_view[MAX_VIEW_CHANNELS];
+    std::vector<float> m_origialData[MAX_VIEW_CHANNELS];
+
     std::mutex m_viewMutex;
 
     buffers_t *m_acqData;

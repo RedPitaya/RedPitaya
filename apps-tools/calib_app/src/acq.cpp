@@ -63,7 +63,8 @@ m_adc_sample_per(0)
     m_channels = getADCChannels();
     getADCSamplePeriod(&m_adc_sample_per);
     memset(&m_buffer,0,sizeof(buffers_t));
-
+    m_buffer.use_calib_for_raw = false;
+    m_buffer.use_calib_for_volts = true;
     for(uint8_t ch = 0; ch < m_channels; ch++){
         m_buffer.ch_i[ch] = new int16_t[ADC_BUFFER_SIZE];
         m_buffer.ch_f[ch] = new float[ADC_BUFFER_SIZE];
@@ -333,9 +334,7 @@ void COscilloscope::acquire(){
     rp_AcqStop();
     rp_AcqGetWritePointer(&pos);
     m_buffer.size = acq_u_size;
-    rp_AcqGetDataV2(pos, &m_buffer);
-    m_buffer.size = acq_u_size;
-    rp_AcqGetDataRawV2(pos, &m_buffer);
+    rp_AcqGetData(pos, &m_buffer);
 
     if (acq_u_size > 0) {
         DataPass localDP;
@@ -738,9 +737,7 @@ void COscilloscope::acquireAutoFilterSync(){
     //   rp_AcqGetWritePointerAtTrig(&pos);
         rp_AcqGetWritePointer(&pos);
         m_buffer.size = acq_u_size;
-        rp_AcqGetDataV2((pos + 1)  % ADC_BUFFER_SIZE , &m_buffer);
-        m_buffer.size = acq_u_size;
-        rp_AcqGetDataRawV2((pos + 1) % ADC_BUFFER_SIZE, &m_buffer);
+        rp_AcqGetData((pos + 1)  % ADC_BUFFER_SIZE , &m_buffer);
 
         bool exitFlag = true;
         for(auto i = 0u; i < m_channels; i++){

@@ -19,6 +19,7 @@ CViewController::CViewController():
     m_capturedDecimation(RP_DEC_1)
 {
     initView();
+    setViewSize(VIEW_SIZE_DEFAULT);
 }
 
 CViewController::~CViewController(){
@@ -38,7 +39,12 @@ auto CViewController::getViewSize() const -> vsize_t{
 }
 
 auto CViewController::setViewSize(vsize_t _size) -> void{
+    std::lock_guard<std::mutex> lock(m_viewMutex);
     m_viewSizeInPoints = _size;
+    for(int i = 0; i < MAX_VIEW_CHANNELS;i++){
+        m_view[i].resize(m_viewSizeInPoints);
+        m_origialData[i].reserve(ADC_BUFFER_SIZE);
+    }
 }
 
 auto CViewController::getSamplesPerDivision() const -> float{
@@ -47,11 +53,6 @@ auto CViewController::getSamplesPerDivision() const -> float{
 
 auto CViewController::initView() -> bool{
     std::lock_guard<std::mutex> lock(m_viewMutex);
-    for(int i = 0; i < MAX_VIEW_CHANNELS;i++){
-        m_view[i] = new float[VIEW_SIZE_MAX];
-        if (m_view[i] == NULL)
-            FATAL("Can't allocate enough memory")
-    }
 
     m_acqData = rp_createBuffer(MAX_ADC_CHANNELS,ADC_BUFFER_SIZE,true,false,true);
     if (m_acqData == NULL)
@@ -61,9 +62,6 @@ auto CViewController::initView() -> bool{
 
 auto CViewController::releaseView() -> void{
     std::lock_guard<std::mutex> lock(m_viewMutex);
-    for(int i = 0; i < MAX_VIEW_CHANNELS;i++){
-        delete[] m_view[i];
-    }
     rp_deleteBuffer(m_acqData);
 }
 
@@ -75,8 +73,12 @@ auto CViewController::unlockView() -> void{
     m_viewMutex.unlock();
 }
 
-auto CViewController::getView(rpApp_osc_source _channel) -> float*{
-    return m_view[_channel];
+auto CViewController::getView(rpApp_osc_source _channel) -> std::vector<float>*{
+    return &m_view[_channel];
+}
+
+auto CViewController::getOriginalData(rpApp_osc_source _channel) -> std::vector<float>*{
+    return &m_origialData[_channel];
 }
 
 auto CViewController::getAcqBuffers() -> buffers_t*{
@@ -203,7 +205,7 @@ auto CViewController::clearView() -> void{
     auto view = getView(RPAPP_OSC_SOUR_MATH);
     auto viewSize = getViewSize();
     for (vsize_t i = 0; i < viewSize; ++i) {
-        view[i] = 0;
+        (*view)[i] = 0;
     }
 }
 
@@ -240,7 +242,8 @@ auto CViewController::getSampledAfterTriggerInView() -> uint32_t{
     auto decFactor = timeToIndexD(m_timeScale) / (double)getSamplesPerDivision();
     int posInPoints = ((m_timeOffet / m_timeScale) * getSamplesPerDivision());
     auto x = m_viewSizeInPoints/2.0 + posInPoints;
-    return MIN(x * decFactor + 2,ADC_BUFFER_SIZE);
+    auto extraPoints = (float)ADC_BUFFER_SIZE / (float)getViewSize() * decFactor; 
+    return MIN(x * decFactor + extraPoints,ADC_BUFFER_SIZE);
 }
 
 auto CViewController::setCapturedDecimation(rp_acq_decimation_t _dec) -> void{
@@ -251,3 +254,34 @@ auto CViewController::getCapturedDecimation() -> rp_acq_decimation_t{
     return m_capturedDecimation;
 }
 
+
+auto CViewController::isSine(rpApp_osc_source _channel) -> bool{
+
+    auto trapezoidalApprox = [](double *data, float T, int size) -> float{
+        double result = 0;
+        for(int i = 0; i < size - 1; i++){
+            result += data[i] + data[i+1];
+        }
+        result = ((T / 2.0) * result);
+        return result;
+    };
+
+    auto isSineTester = [=](float *data, uint32_t size) -> bool{
+            static double rate = getADCRate();
+            double T = (m_capturedDecimation / rate);
+            double ch_rms[VIEW_SIZE_MAX];
+            double ch_avr[VIEW_SIZE_MAX];
+            for(uint32_t i = 0; i < size; i++) {
+                    ch_rms[i] = data[i] * data[i];
+                    ch_avr[i] = fabs(data[i]);
+            }
+            double K0 = sqrtf(T * size * trapezoidalApprox(ch_rms, T, size)) / trapezoidalApprox(ch_avr, T, size);
+            return ((K0 > 1.10) && (K0 < 1.12));
+    };
+
+    std::lock_guard<std::mutex> lock(m_viewMutex);
+    auto view = getView(_channel);
+    auto viewSize = getViewSize();
+
+    return isSineTester(view->data(),viewSize);
+}

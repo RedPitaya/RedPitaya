@@ -67,10 +67,10 @@ list(APPEND header_rpapp
         )
 
 list(APPEND src_rpapp_lcr
-        ${CMAKE_SOURCE_DIR}/lcr_meter/src/calib.c
-        ${CMAKE_SOURCE_DIR}/lcr_meter/src/lcr_meter.c
-        ${CMAKE_SOURCE_DIR}/lcr_meter/src/lcrApp.c
-        ${CMAKE_SOURCE_DIR}/lcr_meter/src/utils.c
+        ${CMAKE_SOURCE_DIR}/lcr_meter/src/calib.cpp
+        ${CMAKE_SOURCE_DIR}/lcr_meter/src/lcr_meter.cpp
+        ${CMAKE_SOURCE_DIR}/lcr_meter/src/lcrApp.cpp
+        ${CMAKE_SOURCE_DIR}/lcr_meter/src/utils.cpp
         )
 
 list(APPEND header_rpapp_lcr

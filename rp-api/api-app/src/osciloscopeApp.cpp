@@ -62,11 +62,11 @@ static inline float sign(float a) {
     return (a < 0.f) ? -1.f : 1.f;
 }
 
-static inline double linear(float x0, float y0, float x1, float y1, double x) {
-    double k = (y1 - y0) / (x1 - x0);
-    double b = y0 - (k * x0);
-    return (k * x) + b;
-}
+// static inline double linear(float x0, float y0, float x1, float y1, double x) {
+//     double k = (y1 - y0) / (x1 - x0);
+//     double b = y0 - (k * x0);
+//     return (k * x) + b;
+// }
 
 inline void update_view() {
     if(g_viewController.isOscRun()) {
@@ -466,8 +466,7 @@ int osc_getViewPart(float *ratio) {
 int osc_measureVpp(rpApp_osc_source _source, float *_Vpp) {
     g_viewController.lockView();
     auto *data = g_viewController.getView(_source);
-    auto size = g_viewController.getViewSize();
-    auto ret = g_measureController.measureVpp(_source,data,size,_Vpp);
+    auto ret = g_measureController.measureVpp(_source,data,_Vpp);
     g_viewController.unlockView();
     return ret;
 }
@@ -475,8 +474,7 @@ int osc_measureVpp(rpApp_osc_source _source, float *_Vpp) {
 int osc_measureMax(rpApp_osc_source _source, float *_Max) {
     g_viewController.lockView();
     auto *data = g_viewController.getView(_source);
-    auto size = g_viewController.getViewSize();
-    auto ret = g_measureController.measureMax(_source,data,size,_Max);
+    auto ret = g_measureController.measureMax(_source,data,_Max);
     g_viewController.unlockView();
     return ret;
 }
@@ -484,8 +482,7 @@ int osc_measureMax(rpApp_osc_source _source, float *_Max) {
 int osc_measureMin(rpApp_osc_source _source, float *_Min) {
     g_viewController.lockView();
     auto *data = g_viewController.getView(_source);
-    auto size = g_viewController.getViewSize();
-    auto ret = g_measureController.measureMin(_source,data,size,_Min);
+    auto ret = g_measureController.measureMin(_source,data,_Min);
     g_viewController.unlockView();
     return ret;
 }
@@ -493,8 +490,7 @@ int osc_measureMin(rpApp_osc_source _source, float *_Min) {
 int osc_measureMeanVoltage(rpApp_osc_source _source, float *_meanVoltage) {
     g_viewController.lockView();
     auto *data = g_viewController.getView(_source);
-    auto size = g_viewController.getViewSize();
-    auto ret = g_measureController.measureMeanVoltage(_source,data,size,_meanVoltage);
+    auto ret = g_measureController.measureMeanVoltage(_source,data,_meanVoltage);
     g_viewController.unlockView();
     return ret;
 }
@@ -503,8 +499,7 @@ int osc_measureMaxVoltage(rpApp_osc_source _source, float *_Vmax) {
     g_viewController.lockView();
     auto inverted = (_source != RPAPP_OSC_SOUR_MATH && ch_inverted[(int)_source]) || (_source == RPAPP_OSC_SOUR_MATH && math_inverted);
     auto *data = g_viewController.getView(_source);
-    auto size = g_viewController.getViewSize();
-    auto ret = g_measureController.measureMaxVoltage(_source,inverted,data,size,_Vmax);
+    auto ret = g_measureController.measureMaxVoltage(_source,inverted,data,_Vmax);
     g_viewController.unlockView();
     return ret;
 }
@@ -513,8 +508,7 @@ int osc_measureMinVoltage(rpApp_osc_source _source, float *_Vmin) {
     g_viewController.lockView();
     auto inverted = (_source != RPAPP_OSC_SOUR_MATH && ch_inverted[(int)_source]) || (_source == RPAPP_OSC_SOUR_MATH && math_inverted);
     auto *data = g_viewController.getView(_source);
-    auto size = g_viewController.getViewSize();
-    auto ret = g_measureController.measureMinVoltage(_source,inverted,data,size,_Vmin);
+    auto ret = g_measureController.measureMinVoltage(_source,inverted,data,_Vmin);
     g_viewController.unlockView();
     return ret;
 }
@@ -530,11 +524,10 @@ int osc_measureFrequency(rpApp_osc_source _source, float *_frequency) {
 int osc_measurePeriodMath(float *_period) {
     g_viewController.lockView();
     auto data = g_viewController.getView(RPAPP_OSC_SOUR_MATH);
-    auto dataSize = g_viewController.getViewSize();
     auto sampPerDiv = g_viewController.getSamplesPerDivision();
     float tSacale = 0;
     osc_getTimeScale(&tSacale);
-    auto ret = g_measureController.measurePeriodMath(tSacale,sampPerDiv,data,dataSize,_period);
+    auto ret = g_measureController.measurePeriodMath(tSacale,sampPerDiv,data,_period);
     g_viewController.unlockView();
     return ret;
     
@@ -569,8 +562,7 @@ int osc_measurePeriod(rpApp_osc_source _source, float *_period) {
 int osc_measureDutyCycle(rpApp_osc_source _source, float *_dutyCycle) {
     g_viewController.lockView();
     auto *data = g_viewController.getView(_source);
-    auto size = g_viewController.getViewSize();
-    auto ret = g_measureController.measureDutyCycle(_source,data,size,_dutyCycle);
+    auto ret = g_measureController.measureDutyCycle(_source,data,_dutyCycle);
     g_viewController.unlockView();
     return ret;
 }
@@ -578,8 +570,7 @@ int osc_measureDutyCycle(rpApp_osc_source _source, float *_dutyCycle) {
 int osc_measureRootMeanSquare(rpApp_osc_source _source, float *_rms) {
     g_viewController.lockView();
     auto *data = g_viewController.getView(_source);
-    auto size = g_viewController.getViewSize();
-    auto ret = g_measureController.measureRootMeanSquare(_source,data,size,_rms);
+    auto ret = g_measureController.measureRootMeanSquare(_source,data,_rms);
     g_viewController.unlockView();
     return ret;
 }
@@ -587,7 +578,7 @@ int osc_measureRootMeanSquare(rpApp_osc_source _source, float *_rms) {
 int osc_getCursorVoltage(rpApp_osc_source _source, uint32_t _cursor, float *_value) {
     g_viewController.lockView();
     auto view = g_viewController.getView(_source);
-    auto value = view[_cursor];
+    auto value = (*view)[_cursor];
     g_viewController.unlockView();
     return unscaleAmplitudeChannel(_source, value, _value);
 }
@@ -661,16 +652,85 @@ int osc_getMathSources(rp_channel_t *_source1, rp_channel_t *_source2) {
 int osc_getData(rpApp_osc_source _source, float *_data, uint32_t _size) {
     g_viewController.lockView();
     auto view = g_viewController.getView(_source);
-    auto viewSize = g_viewController.getViewSize();
-    if (viewSize < _size){
+    if (view->size() < _size){
         g_viewController.unlockView();
-        WARNING("There's less data %d than required %d",viewSize,_size)
+        WARNING("There's less data %d than required %d",view->size() ,_size)
         return RP_EOOR;
     }
-    memcpy_neon(_data,view,_size * sizeof(float));
+    memcpy_neon(_data,view->data(),_size * sizeof(float));
     g_viewController.unlockView();
     return RP_OK;
 }
+
+int osc_getExportedData(rpApp_osc_source _source, rpApp_osc_exportMode _mode, bool _normalize, float *_data, uint32_t *_size){
+
+    auto norma = [](float *data, uint32_t size){
+        if (size == 0) return;
+
+        float max = data[0];
+        float min = data[0];
+        for(auto i = 1u; i < size; ++i){
+            if (max < data[i]){
+                max = data[i];
+            }
+            if (min > data[i]){
+                min = data[i];
+            }
+        }
+        float amp = (max - min) / 2.0;
+        for(auto i = 0u; i < size; ++i){
+            data[i] -= (amp + min);
+            data[i] /= amp;
+        }
+    };
+
+    if (_mode == RPAPP_VIEW_EXPORT){
+        uint32_t ret_size = *_size;
+
+        auto ret = osc_getData(_source,_data,ret_size);
+        if (ret != RP_OK){
+            *_size = 0;
+            return ret;
+        }
+   
+        for(auto i = 0u; i < *_size; ++i){
+            unscaleAmplitudeChannel(_source, _data[i],&_data[i]);
+        }
+
+        if (_normalize){
+            norma(_data,ret_size);
+        }
+        return RP_OK;
+    }
+
+    if (_mode == RPAPP_RAW_EXPORT){
+
+        if (_source != RPAPP_OSC_SOUR_MATH){
+            g_viewController.lockView();
+            auto view = g_viewController.getOriginalData(_source);
+            if (view->size() > *_size){
+                g_viewController.unlockView();
+                WARNING("There's more data %d than required %d",view->size() ,*_size)
+                *_size = 0;
+                return RP_EOOR;
+            }
+    
+            memcpy_neon(_data,view->data(),view->size() * sizeof(float));
+        
+            g_viewController.unlockView();
+
+            *_size = view->size();
+            
+            if (_normalize){
+                norma(_data,view->size());
+            }
+            return RP_OK;
+        }
+    }
+
+    return RP_EOOR;
+}
+
 
 int osc_getRawData(rp_channel_t _source, uint16_t *_data, uint32_t _size) {
     g_viewController.lockView();
@@ -812,18 +872,18 @@ void calculateIntegral(rp_channel_t _channel, float _scale, float _offset, float
     auto view = g_viewController.getView((rpApp_osc_source) _channel);
     auto viewMath = g_viewController.getView(RPAPP_OSC_SOUR_MATH);
     auto viewSize = g_viewController.getViewSize();
-    ECHECK_APP_NO_RET(unscaleAmplitudeChannel((rpApp_osc_source) _channel, view[0], &v));
+    ECHECK_APP_NO_RET(unscaleAmplitudeChannel((rpApp_osc_source) _channel, (*view)[0], &v));
 	ECHECK_APP_NO_RET(attenuateAmplitudeChannel((rpApp_osc_source) _channel, v, &v));
 
-    viewMath[0] = ch_sign * v * dt;
+    (*viewMath)[0] = ch_sign * v * dt;
 
     for (int i = 1; i < viewSize; ++i) {
-        ECHECK_APP_NO_RET(unscaleAmplitudeChannel((rpApp_osc_source) _channel, view[i], &v));
+        ECHECK_APP_NO_RET(unscaleAmplitudeChannel((rpApp_osc_source) _channel, (*view)[i], &v));
 		ECHECK_APP_NO_RET(attenuateAmplitudeChannel((rpApp_osc_source) _channel, v, &v));
-        viewMath[i] = viewMath[i-1] + (ch_sign * v * dt);
-        viewMath[i-1] = scaleAmplitude(viewMath[i-1], _scale, 1, _offset, _invertFactor);
+        (*viewMath)[i] = (*viewMath)[i-1] + (ch_sign * v * dt);
+        (*viewMath)[i-1] = scaleAmplitude((*viewMath)[i-1], _scale, 1, _offset, _invertFactor);
     }
-    viewMath[viewSize - 1] = scaleAmplitude(viewMath[viewSize - 1], _scale, 1, _offset, _invertFactor);
+    (*viewMath)[viewSize - 1] = scaleAmplitude((*viewMath)[viewSize - 1], _scale, 1, _offset, _invertFactor);
     g_viewController.unlockView();
 }
 
@@ -842,15 +902,15 @@ void calculateDevivative(rp_channel_t _channel, float _scale, float _offset, flo
     auto viewMath = g_viewController.getView(RPAPP_OSC_SOUR_MATH);
     auto viewSize = g_viewController.getViewSize();
 
-    ECHECK_APP_NO_RET(unscaleAmplitudeChannel((rpApp_osc_source) _channel, view[0], &v2));
+    ECHECK_APP_NO_RET(unscaleAmplitudeChannel((rpApp_osc_source) _channel, (*view)[0], &v2));
 	ECHECK_APP_NO_RET(attenuateAmplitudeChannel((rpApp_osc_source) _channel, v2, &v2));
     for (int i = 0; i < viewSize - 1; ++i) {
         v1 = v2;
-        ECHECK_APP_NO_RET(unscaleAmplitudeChannel((rpApp_osc_source) _channel, view[i + 1], &v2));
+        ECHECK_APP_NO_RET(unscaleAmplitudeChannel((rpApp_osc_source) _channel, (*view)[i + 1], &v2));
 		ECHECK_APP_NO_RET(attenuateAmplitudeChannel((rpApp_osc_source) _channel, v2, &v2));
-        viewMath[i] = scaleAmplitude(ch_sign * (v2 - v1) / dt2, _scale, 1, _offset, _invertFactor);
+        (*viewMath)[i] = scaleAmplitude(ch_sign * (v2 - v1) / dt2, _scale, 1, _offset, _invertFactor);
     }
-    viewMath[viewSize - 1] = viewMath[viewSize - 2];
+    (*viewMath)[viewSize - 1] = (*viewMath)[viewSize - 2];
     g_viewController.unlockView();
 }
 
@@ -954,6 +1014,21 @@ int waitTrigger(float _timescale,bool _disableTimeout,bool *_isresetted,bool *_e
     } while (trig_state != RP_TRIG_STATE_TRIGGERED && timeout_state);
     g_viewController.setTriggerState(trig_state == RP_TRIG_STATE_TRIGGERED);
     *_exitByTimeout = !timeout_state;
+
+    /*
+        g_viewController.setTriggerState(false);
+    do {
+        if (g_adcController.isNeedResetWaitTrigger()){
+            *_isresetted = true;
+            break;
+        }
+        timeout_state = _disableTimeout ? true : timeOut > g_viewController.getClock();
+        ECHECK_APP(rp_AcqGetTriggerState(&trig_state));
+    } while (trig_state != RP_TRIG_STATE_TRIGGERED && timeout_state);
+    g_viewController.setTriggerState(trig_state == RP_TRIG_STATE_TRIGGERED);
+    *_exitByTimeout = (!timeout_state) && (trig_state != RP_TRIG_STATE_TRIGGERED);
+    */
+
     return RP_OK;
 }
 
@@ -972,6 +1047,7 @@ int waitToFillAfterTriggerBuffer(float _timescale) {
     do {
         ECHECK_APP(rp_AcqGetBufferFillState(&bufferIsFill));
     } while (!bufferIsFill && timeOut > g_viewController.getClock());
+    // fprintf(stderr,"Buff is fill %d\n",bufferIsFill);
     return RP_OK;
 }
 
@@ -1018,13 +1094,13 @@ void mathThreadFunction() {
             auto viewS2 = g_viewController.getView((rpApp_osc_source) mathSource2);
             auto viewMath = g_viewController.getView(RPAPP_OSC_SOUR_MATH);
             for (vsize_t i = 0; i < viewSize; ++i) {
-                ECHECK_APP_NO_RET(unscaleAmplitudeChannel((rpApp_osc_source) mathSource1, viewS1[i], &v1));
-                ECHECK_APP_NO_RET(unscaleAmplitudeChannel((rpApp_osc_source) mathSource2, viewS2[i], &v2));
+                ECHECK_APP_NO_RET(unscaleAmplitudeChannel((rpApp_osc_source) mathSource1, (*viewS1)[i], &v1));
+                ECHECK_APP_NO_RET(unscaleAmplitudeChannel((rpApp_osc_source) mathSource2, (*viewS2)[i], &v2));
 
                 ECHECK_APP_NO_RET(attenuateAmplitudeChannel((rpApp_osc_source) mathSource1, v1, &v1));
                 ECHECK_APP_NO_RET(attenuateAmplitudeChannel((rpApp_osc_source) mathSource2, v2, &v2));
                 auto v = scaleAmplitude(calculateMath(sign1 * v1, sign2 * v2, operation), math_ampScale, 1, math_ampOffset, invertFactor);
-                viewMath[i] = v;
+                (*viewMath)[i] = v;
             }
              g_viewController.unlockView();
         }
@@ -1240,6 +1316,17 @@ void mainThreadFun() {
 
             waitToFillAfterTriggerBuffer(tScaleAcq);
 
+            if (exitByTimeout){
+                uint32_t  tp,wp;
+                rp_AcqGetWritePointer(&wp);
+                rp_AcqGetWritePointerAtTrig(&tp);
+                rp_acq_trig_src_t s;
+                rp_AcqGetTriggerSrc(&s);
+                
+                fprintf(stderr,"TP %d WP %d source %d\n",tp,wp,s);
+                
+            }
+
             if (viewMode == CViewController::ROLL && contMode){
                 ECHECK_APP_NO_RET(rp_AcqGetWritePointer(&pPosition));
             }else{
@@ -1248,7 +1335,7 @@ void mainThreadFun() {
             g_viewController.lockView();
             g_viewController.setCapturedDecimation(decimationInACQ);
             auto buff = g_viewController.getAcqBuffers();
-            ECHECK_APP_NO_RET(rp_AcqGetDataV2(pPosition,buff));
+            ECHECK_APP_NO_RET(rp_AcqGetData(pPosition,buff));
             g_viewController.unlockView();
             
             if (!contMode){
@@ -1284,14 +1371,14 @@ void mainThreadFun() {
             if (tsChannel != -1){
                 g_decimator.precalculateOffset(buff->ch_f[tsChannel],ADC_BUFFER_SIZE); 
             }
-            
             for (auto channel = 0u; channel < adc_channels; ++channel) {
                 auto view = g_viewController.getView((rpApp_osc_source)channel);
+                auto orignalData = g_viewController.getOriginalData((rpApp_osc_source)channel);
                 auto viewSize = g_viewController.getViewSize();
                 if (viewMode == CViewController::ROLL && contMode){
                     posInPoints = -viewSize / 2.0;
                 }
-                g_decimator.decimate((rp_channel_t) channel,buff->ch_f[channel],ADC_BUFFER_SIZE,posInPoints,view ,viewSize);
+                g_decimator.decimate((rp_channel_t) channel,buff->ch_f[channel],ADC_BUFFER_SIZE,posInPoints,view ,orignalData);
             }
             g_viewController.unlockView();
             mathThreadFunction();

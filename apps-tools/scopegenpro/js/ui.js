@@ -484,35 +484,24 @@
             setTimeout(OSC.SaveGraphsPNG, 30);
         });
 
-        $('#OSC_REQ_CSV').on('click', function() {
-            OSC.params.local['REQUEST_DATA'] = { value: 3 };
+        $('#normalize_chbox').click(function(event){
+            var chkBox = document.getElementById('normalize_chbox')
+            var state = chkBox.getAttribute('data-checked') === "true"
+            OSC.params.local['REQUEST_NORMALIZE'] = { value: !state }
             OSC.sendParams();
         });
 
-        $('#OSC_REQ_WAV').on('click', function() {
-            OSC.params.local['REQUEST_DATA'] = { value: 1 };
+        $('#view_chbox').click(function(event){
+            var chkBox = document.getElementById('view_chbox')
+            var state = chkBox.getAttribute('data-checked') === "true"
+            OSC.params.local['REQUEST_VIEW'] = { value: !state }
             OSC.sendParams();
         });
 
-        $('#OSC_REQ_TDMS').on('click', function() {
-            OSC.params.local['REQUEST_DATA'] = { value: 2 };
+        $('#OSC_REQ_EXPORT_FILE').on('click', function() {
+            OSC.params.local['REQUEST_DATA'] = { value: true };
             OSC.sendParams();
         });
-
-        $('#OSC_REQ_CSV_RAW').on('click', function() {
-            OSC.params.local['REQUEST_DATA'] = { value: 6 };
-            OSC.sendParams();
-        });
-
-        $('#OSC_REQ_WAV_RAW').on('click', function() {
-            OSC.params.local['REQUEST_DATA'] = { value: 4 };
-            OSC.sendParams();
-        });
-
-        $('#OSC_REQ_TDMS_RAW').on('click', function() {
-            OSC.params.local['REQUEST_DATA'] = { value: 5 };
-            OSC.sendParams();
-         });
 
 
         $('#OSC_SINGLE').on('click', function(ev) {
@@ -539,6 +528,10 @@
             $('body').removeClass('loaded');
             OSC.loaderShow = true;
             OSC.signalStack = [];
+        });
+
+        $('#OSC_EXPORT').on('click', function(ev) {
+            $('#export_dialog').modal("show");
         });
 
         // Selecting active signal

@@ -533,6 +533,21 @@
     }
 
 
+    OSC.exportNormalize = function(new_params){
+        var state = new_params['REQUEST_NORMALIZE'].value;
+        var chkBox = document.getElementById('normalize_chbox');
+        chkBox.setAttribute('data-checked', state);
+    }
+
+
+    OSC.exportViewMode = function(new_params){
+        var state = new_params['REQUEST_VIEW'].value;
+        var chkBox = document.getElementById('view_chbox');
+        chkBox.setAttribute('data-checked', state);
+    }
+
+    OSC.param_callbacks["REQUEST_NORMALIZE"] = OSC.exportNormalize;
+    OSC.param_callbacks["REQUEST_VIEW"] = OSC.exportViewMode;
 
 
     OSC.param_callbacks["DOWNLOAD_FILE"] = OSC.downloadFile;
