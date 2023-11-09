@@ -242,7 +242,7 @@ auto CViewController::getSampledAfterTriggerInView() -> uint32_t{
     auto decFactor = timeToIndexD(m_timeScale) / (double)getSamplesPerDivision();
     int posInPoints = ((m_timeOffet / m_timeScale) * getSamplesPerDivision());
     auto x = m_viewSizeInPoints/2.0 + posInPoints;
-    auto extraPoints = (float)ADC_BUFFER_SIZE / (float)getViewSize() * decFactor; 
+    auto extraPoints = floor((float)ADC_BUFFER_SIZE / (float)getViewSize()) * decFactor + 2;
     return MIN(x * decFactor + extraPoints,ADC_BUFFER_SIZE);
 }
 

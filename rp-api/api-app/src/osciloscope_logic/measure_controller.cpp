@@ -330,7 +330,7 @@ auto CMeasureController::measurePeriodMath(float _timeScale, float _sampPerDev, 
     }
 
     mean = mean / size;
-    for (int i = 0; i < size; ++i){
+    for (vsize_t i = 0; i < size; ++i){
         m_viewTmp[i] -= mean;
     }
 
@@ -338,7 +338,7 @@ auto CMeasureController::measurePeriodMath(float _timeScale, float _sampPerDev, 
 
     for (vsize_t i = 0; i < size; ++i) {
         xcorr[i] = 0;
-        for (int j = 0; j < size-i; ++j) {
+        for (vsize_t j = 0; j < size-i; ++j) {
             xcorr[i] += m_viewTmp[j] * m_viewTmp[j+i];
         }
         xcorr[i] /= size-i;
@@ -366,7 +366,7 @@ auto CMeasureController::measurePeriodMath(float _timeScale, float _sampPerDev, 
     int right_edge_idx = size-2;
 
     // search for left point where correlation function is less than it's expected
-    for (int i = 1; i < size-1; ++i) {
+    for (vsize_t i = 1; i < size-1; ++i) {
         if((xcorr[i] / xcorr[0]) < PERIOD_EXISTS_MIN_THRESHOLD) {
             left_edge_idx = i;
             break;
@@ -378,7 +378,7 @@ auto CMeasureController::measurePeriodMath(float _timeScale, float _sampPerDev, 
     }
 
     // search for left point where correlation function is greater than it's expected
-    for (int i = left_edge_idx; i < size-1; ++i) {
+    for (vsize_t i = left_edge_idx; i < size-1; ++i) {
         if((xcorr[i] / xcorr[0]) >= PERIOD_EXISTS_MAX_THRESHOLD) {
             left_idx = i;
             break;
@@ -390,7 +390,7 @@ auto CMeasureController::measurePeriodMath(float _timeScale, float _sampPerDev, 
     }
 
     // search for right point where correlation function is less than it's expected
-    for (int i = left_idx; i < size-1; ++i) {
+    for (vsize_t i = left_idx; i < size-1; ++i) {
         if((xcorr[i] / xcorr[0]) < PERIOD_EXISTS_MIN_THRESHOLD) {
             right_edge_idx = i;
             break;
@@ -398,7 +398,7 @@ auto CMeasureController::measurePeriodMath(float _timeScale, float _sampPerDev, 
     }
 
     // search for right point where correlation function is greater than it's expected
-    for (int i = right_edge_idx; i >= left_idx; --i) {
+    for (vsize_t i = right_edge_idx; i >= left_idx; --i) {
         if((xcorr[i] / xcorr[0]) >= PERIOD_EXISTS_MAX_THRESHOLD) {
             right_idx = i;
             break;
@@ -416,9 +416,9 @@ auto CMeasureController::measurePeriodMath(float _timeScale, float _sampPerDev, 
     }
 
     // search for left point which is almost equal to maximum
-    int left_amax_idx = max_idx;
-    int right_amax_idx = max_idx;
-    for (int i = left_idx; i <= right_idx; ++i) {
+    vsize_t left_amax_idx = max_idx;
+    vsize_t right_amax_idx = max_idx;
+    for (vsize_t i = left_idx; i <= right_idx; ++i) {
         if(xcorr[i] >= loc_max * PERIOD_EXISTS_PEAK_THRESHOLD) {
             left_amax_idx = i;
             break;
@@ -426,7 +426,7 @@ auto CMeasureController::measurePeriodMath(float _timeScale, float _sampPerDev, 
     }
 
     // search for right point which is almost equal to maximum
-    for (int i = right_edge_idx; i >= left_idx; --i) {
+    for (vsize_t i = right_edge_idx; i >= left_idx; --i) {
         if(xcorr[i] >= loc_max * PERIOD_EXISTS_PEAK_THRESHOLD) {
             right_amax_idx = i;
             break;
