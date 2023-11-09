@@ -975,6 +975,8 @@ int waitToFillPreTriggerBuffer(float _timescale) {
 
     // Max timeout 1 second
     auto timeOut  = MIN(g_viewController.calculateTimeOut(_timescale),1000.0);
+    fprintf(stderr,"timeOut %f\n",timeOut);
+
     timeOut += g_viewController.getClock();
 
     uint32_t preTriggerCount;
@@ -984,11 +986,17 @@ int waitToFillPreTriggerBuffer(float _timescale) {
     auto deltaSample = timeToIndexD(_timescale) / samplesPerDivision;
     auto viewInSamples = viewSize * deltaSample + 4;
     auto needWaitSamples = 0u;
+    auto exitByTimout = false;
+    auto exitByPreTrigger = false;
+
     do {
         ECHECK_APP(rp_AcqGetTriggerDelay(&triggerDelay));
         ECHECK_APP(rp_AcqGetPreTriggerCounter(&preTriggerCount));
         needWaitSamples = viewInSamples - triggerDelay;
-    } while (preTriggerCount < needWaitSamples && timeOut > g_viewController.getClock());
+        exitByTimout = timeOut > g_viewController.getClock();
+        exitByPreTrigger = preTriggerCount < needWaitSamples;
+    } while (exitByPreTrigger && exitByTimout);
+    fprintf(stderr,"exitByPreTrigger %d exitByTimout %d\n",exitByPreTrigger,exitByTimout);
     return RP_OK;
 }
 
@@ -1030,6 +1038,7 @@ int waitTrigger(float _timescale,bool _disableTimeout,bool *_isresetted,bool *_e
     */
 
     return RP_OK;
+    
 }
 
 int waitToFillAfterTriggerBuffer(float _timescale) {

@@ -22,15 +22,15 @@
 #include <stdio.h>
 #include <math.h>
 #include <pthread.h>
-//#include <mutex>
-#include "ba_api.h"
+#include "bodeApp.h"
 #include <chrono>
-#include "arm_neon.h"
 
 #include "rp_hw-calib.h"
 #include "rp_hw-profiles.h"
 
 using namespace std::chrono;
+
+static auto adc_rate = rpApp_BaGetADCSpeed();
 
 typedef double data_t;
 
@@ -47,7 +47,7 @@ static std::vector<float> calib_data;
 static pthread_mutex_t mutex;
 
 
-uint8_t rp_BaGetADCChannels(){
+uint8_t rpApp_BaGetADCChannels(){
     uint8_t c = 0;
     if (rp_HPGetFastADCChannelsCount(&c) != RP_HP_OK){
         fprintf(stderr,"[Error] Can't get fast ADC channels count\n");
@@ -55,7 +55,7 @@ uint8_t rp_BaGetADCChannels(){
     return c;
 }
 
-uint8_t rp_BaGetDACChannels(){
+uint8_t rpApp_BaGetDACChannels(){
     uint8_t c = 0;
     if (rp_HPGetFastADCChannelsCount(&c) != RP_HP_OK){
         fprintf(stderr,"[Error] Can't get fast DAC channels count\n");
@@ -63,7 +63,7 @@ uint8_t rp_BaGetDACChannels(){
     return c;
 }
 
-uint32_t rp_BaGetADCSpeed(){
+uint32_t rpApp_BaGetADCSpeed(){
     uint32_t c = 0;
     if (rp_HPGetBaseFastADCSpeedHz(&c) != RP_HP_OK){
         fprintf(stderr,"[Error] Can't get fast ADC speed\n");
@@ -239,7 +239,7 @@ data_t phaseCalculator(data_t freq_HZ, data_t samplesPerSecond, int numSamples,i
 	return phaseShift;
 }
 
-int rp_BaDataAnalysisTrap(const rp_ba_buffer_t &buffer,
+int rpApp_BaDataAnalysisTrap(const rp_ba_buffer_t &buffer,
                                         uint32_t size,
                                         float _freq, // 2*pi*f
                                         int decimation,
@@ -252,7 +252,7 @@ int rp_BaDataAnalysisTrap(const rp_ba_buffer_t &buffer,
 
         double ang, u_dut_1_phase, u_dut_2_phase, phase;
 
-        double T = (decimation / rp_BaGetADCSpeed());
+        double T = (decimation / rpApp_BaGetADCSpeed());
 
 		std::vector<double> u_dut_1;
 		u_dut_1.reserve(size);
@@ -341,7 +341,7 @@ int rp_BaDataAnalysisTrap(const rp_ba_buffer_t &buffer,
 }
 
 
-int rp_BaDataAnalysis(const rp_ba_buffer_t &buffer,
+int rpApp_BaDataAnalysis(const rp_ba_buffer_t &buffer,
 					uint32_t size,
 					float samplesPerSecond,
 					float _freq,
@@ -407,7 +407,7 @@ int rp_BaDataAnalysis(const rp_ba_buffer_t &buffer,
 
 
 
-float rp_BaCalibGain(float _freq, float _ampl)
+float rpApp_BaCalibGain(float _freq, float _ampl)
 {
     for (size_t i = 3; i < calib_data.size(); i += 3) // 3 - freq, ampl, phase
     {
@@ -423,7 +423,7 @@ float rp_BaCalibGain(float _freq, float _ampl)
     return _ampl;
 }
 
-float rp_BaCalibPhase(float _freq, float _phase)
+float rpApp_BaCalibPhase(float _freq, float _phase)
 {
     for (size_t i = 3; i < calib_data.size(); i += 3) // 3 - freq, ampl, phase
     {
@@ -440,14 +440,14 @@ float rp_BaCalibPhase(float _freq, float _phase)
 }
 
 
-int rp_BaResetCalibration()
+int rpApp_BaResetCalibration()
 {
 	calib_data.clear();
 	remove(BA_CALIB_FILENAME);
     return RP_OK;
 }
 
-int rp_BaReadCalibration()
+int rpApp_BaReadCalibration()
 {
 	int ignored __attribute__((unused));
     // if current mode != calibration then load calibration params
@@ -469,7 +469,7 @@ int rp_BaReadCalibration()
     return RP_OK;
 }
 
-int rp_BaWriteCalib(float _current_freq,float _amplitude,float _phase_out)
+int rpApp_BaWriteCalib(float _current_freq,float _amplitude,float _phase_out)
 {
     FILE* calib_file = nullptr;
     calib_file = fopen(BA_CALIB_FILENAME, "a");
@@ -484,13 +484,13 @@ int rp_BaWriteCalib(float _current_freq,float _amplitude,float _phase_out)
     return RP_OK;
 }
 
-bool rp_BaGetCalibStatus(){
+bool rpApp_BaGetCalibStatus(){
 	return !calib_data.empty();
 }
 
 
 /* Acquire functions. Callback to the API structure */
-int rp_BaSafeThreadAcqPrepare()
+int rpApp_BaSafeThreadAcqPrepare()
 {
 	pthread_mutex_lock(&mutex);
 	EXEC_CHECK_MUTEX(rp_AcqReset(), mutex);
@@ -504,7 +504,7 @@ int rp_BaSafeThreadAcqPrepare()
 }
 
 /* Generate functions  */
-int rp_BaSafeThreadGen(rp_channel_t _channel, float _frequency, float _ampl, float _dc_bias)
+int rpApp_BaSafeThreadGen(rp_channel_t _channel, float _frequency, float _ampl, float _dc_bias)
 {
 	pthread_mutex_lock(&mutex);
 	EXEC_CHECK_MUTEX(rp_GenReset(), mutex);
@@ -521,13 +521,13 @@ int rp_BaSafeThreadGen(rp_channel_t _channel, float _frequency, float _ampl, flo
 }
 
 
-int rp_BaSafeThreadAcqData(rp_ba_buffer_t &_buffer, int _decimation, int _acq_size, float _trigger)
+int rpApp_BaSafeThreadAcqData(rp_ba_buffer_t &_buffer, int _decimation, int _acq_size, float _trigger)
 {
 	(void)(_trigger);
 	uint32_t pos = 0;
 	uint32_t acq_u_size = _acq_size;
 	//uint32_t acq_delay = acq_u_size > ADC_BUFFER_SIZE / 2.0 ? acq_u_size - ADC_BUFFER_SIZE / 2.0 : 0;
-	uint64_t sleep_time = static_cast<uint64_t>(_acq_size) * _decimation / (rp_BaGetADCSpeed() / 1e6);
+	uint64_t sleep_time = static_cast<uint64_t>(_acq_size) * _decimation / (rpApp_BaGetADCSpeed() / 1e6);
 	sleep_time = sleep_time < 1 ? 1 : sleep_time;
 	bool fillState = false;
 
@@ -563,7 +563,7 @@ int rp_BaSafeThreadAcqData(rp_ba_buffer_t &_buffer, int _decimation, int _acq_si
 	buffers_t buf;
 	buf.size = acq_u_size;
 	buf.use_calib_for_volts = true;
-	static uint8_t max_channels = rp_BaGetADCChannels();
+	static uint8_t max_channels = rpApp_BaGetADCChannels();
     for(uint8_t ch = 0; ch < max_channels; ch++){
         buf.ch_f[ch] = NULL;
         buf.ch_d[ch] = NULL;
@@ -577,17 +577,17 @@ int rp_BaSafeThreadAcqData(rp_ba_buffer_t &_buffer, int _decimation, int _acq_si
 	return RP_OK;
 }
 
-int rp_BaGetAmplPhase(float _amplitude_in, float _dc_bias, int _periods_number, rp_ba_buffer_t &_buffer, float* _amplitude, float* _phase, float _freq,float _input_threshold)
+int rpApp_BaGetAmplPhase(float _amplitude_in, float _dc_bias, int _periods_number, rp_ba_buffer_t &_buffer, float* _amplitude, float* _phase, float _freq,float _input_threshold)
 {
     float gain = 0;
     float phase_out = 0;
     int acq_size;
 
     //Generate a sinusoidal wave form
-    rp_BaSafeThreadGen(RP_CH_1, _freq, _amplitude_in, _dc_bias);
+    rpApp_BaSafeThreadGen(RP_CH_1, _freq, _amplitude_in, _dc_bias);
     int size_buff_limit = ADC_BUFFER_SIZE / 4;
 	int sampls = size_buff_limit / _periods_number;
-	int decimation = rp_BaGetADCSpeed() / (sampls * _freq);
+	int decimation = adc_rate / (sampls * _freq);
 	decimation = decimation < 1 ? 1 : decimation;
 
 	if (decimation < 16){
@@ -606,14 +606,14 @@ int rp_BaGetAmplPhase(float _amplitude_in, float _dc_bias, int _periods_number, 
         decimation = 65536;
     }
 
-	acq_size = round((static_cast<float>(_periods_number) * rp_BaGetADCSpeed()) / (_freq * decimation));
+	acq_size = round((static_cast<float>(_periods_number) * rpApp_BaGetADCSpeed()) / (_freq * decimation));
 
 	fprintf(stderr,"Dec %d freq %f acq_size %d\n",decimation,_freq,acq_size);
 
-    rp_BaSafeThreadAcqData(_buffer,decimation, acq_size,_amplitude_in);
+    rpApp_BaSafeThreadAcqData(_buffer,decimation, acq_size,_amplitude_in);
     rp_GenOutDisable(RP_CH_1);
     //int ret = rp_BaDataAnalysis(_buffer, acq_size, ADC_SAMPLE_RATE / decimation,_freq, samples_period,  &gain, &phase_out,_input_threshold);
-	int ret = rp_BaDataAnalysisTrap(_buffer, acq_size, _freq, decimation,  &gain, &phase_out,_input_threshold);
+	int ret = rpApp_BaDataAnalysisTrap(_buffer, acq_size, _freq, decimation,  &gain, &phase_out,_input_threshold);
 
     *_amplitude = 10.*logf(gain);
     *_phase = phase_out;

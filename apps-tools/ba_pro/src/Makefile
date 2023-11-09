@@ -2,7 +2,7 @@
 CXX=$(CROSS_COMPILE)g++
 RM=rm
 
-CXXSOURCES=main.cpp ba_api.cpp
+CXXSOURCES=main.cpp
 
 INCLUDE =  -I$(INSTALL_DIR)/include
 INCLUDE += -I$(INSTALL_DIR)/include/api2
@@ -35,10 +35,6 @@ LDFLAGS += -lrp-gpio -lrp-i2c -lrp-spi -lrp-hw
 
 all: make_c_app
 clean: clean_c_app
-
-copy:
-	cp ../../../Test/bode/src/ba_api.h $(DIR)
-	cp ../../../Test/bode/src/ba_api.cpp $(DIR)
 
 make_c_app: $(OBJECTS)
 	$(CXX) -o $(C_OUT_NAME) $(OBJECTS) $(CFLAGS) $(LDFLAGS)

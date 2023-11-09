@@ -26,7 +26,6 @@ export CFLAGS
 all: $(CONTROLLER)
 
 $(CONTROLLER):
-	$(MAKE) -C src copy
 	$(MAKE) -C src 
 
 $(ZIP): $(CONTROLLER)

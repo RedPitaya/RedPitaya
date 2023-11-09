@@ -38,6 +38,7 @@ message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
 
 include_directories(${INSTALL_DIR}/include)
+include_directories(${INSTALL_DIR}/include/apiApp)
 
 file(GLOB SOURCES "src/*.cpp")
 file(GLOB RP_HEADERS "src/*.h")
@@ -51,11 +52,11 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE rp rp-hw rp-hw-calib rp-hw-profiles)
+target_link_libraries(${PROJECT_NAME} PRIVATE -static rpapp rp-dsp rp rp-hw rp-hw-calib rp-hw-profiles)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE rp-i2c rp-spi rp-gpio)
+target_link_libraries(${PROJECT_NAME} PRIVATE -static rp-i2c rp-spi rp-gpio)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE rp-hw i2c)
+target_link_libraries(${PROJECT_NAME} PRIVATE -static  rp-hw i2c)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE pthread)
 

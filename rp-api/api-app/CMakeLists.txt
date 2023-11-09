@@ -51,6 +51,7 @@ list(APPEND src_rpapp
         ${CMAKE_SOURCE_DIR}/src/rpApp.cpp
         ${CMAKE_SOURCE_DIR}/src/common.cpp
         ${CMAKE_SOURCE_DIR}/src/osciloscopeApp.cpp
+        ${CMAKE_SOURCE_DIR}/src/bodeApp.cpp
         ${CMAKE_SOURCE_DIR}/src/spectrometerApp.cpp
         ${CMAKE_SOURCE_DIR}/src/osciloscope_logic/data_decimator.cpp
         ${CMAKE_SOURCE_DIR}/src/osciloscope_logic/view_controller.cpp
@@ -60,10 +61,7 @@ list(APPEND src_rpapp
 
 list(APPEND header_rpapp
         ${CMAKE_SOURCE_DIR}/src/rpApp.h
-        ${CMAKE_SOURCE_DIR}/src/version.h
-        ${CMAKE_SOURCE_DIR}/src/common.h
-        ${CMAKE_SOURCE_DIR}/src/osciloscopeApp.h
-        ${CMAKE_SOURCE_DIR}/src/spectrometerApp.h
+        ${CMAKE_SOURCE_DIR}/src/bodeApp.h
         )
 
 list(APPEND src_rpapp_lcr
@@ -74,10 +72,7 @@ list(APPEND src_rpapp_lcr
         )
 
 list(APPEND header_rpapp_lcr
-        ${CMAKE_SOURCE_DIR}/lcr_meter/src/calib.h
-        ${CMAKE_SOURCE_DIR}/lcr_meter/src/lcr_meter.h
         ${CMAKE_SOURCE_DIR}/lcr_meter/src/lcrApp.h
-        ${CMAKE_SOURCE_DIR}/lcr_meter/src/utils.h
         )
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)

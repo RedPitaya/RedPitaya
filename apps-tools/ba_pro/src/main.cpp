@@ -16,7 +16,7 @@
 #include <mutex>
 
 #include "version.h"
-#include "ba_api.h"
+#include "bodeApp.h"
 
 #include "rp_hw-calib.h"
 #include "rp_hw-profiles.h"
@@ -267,7 +267,7 @@ void UpdateParams(void)
 
 void bode_ResetCalib()
 {
-	rp_BaResetCalibration();
+	rpApp_BaResetCalibration();
 	ba_calibrate_reset.SendValue(false);
 	fprintf(stderr, "Calibration reseted\n");
 }
@@ -326,12 +326,12 @@ void OnNewParams(void)
 			bode_ResetCalib();
 		}
 
-        rp_BaReadCalibration();
-		ba_calibrate_enable.SendValue(rp_BaGetCalibStatus());
+        rpApp_BaReadCalibration();
+		ba_calibrate_enable.SendValue(rpApp_BaGetCalibStatus());
     }
     else if (!ba_measure_start.NewValue() && ba_calibrate_start.NewValue()) // user start calibration
     {
-        rp_BaResetCalibration(); // clear old calibrations
+        rpApp_BaResetCalibration(); // clear old calibrations
 
         // default settings
         ba_start_freq.SendValue(100);
@@ -386,7 +386,7 @@ void OnNewParams(void)
 	        old_steps = ba_steps.NewValue();
 
 	    	first_step = false;
-			rp_BaSafeThreadAcqPrepare();
+			rpApp_BaSafeThreadAcqPrepare();
 	    }
 
         if (steps <= 0)
@@ -423,7 +423,7 @@ void OnNewParams(void)
         {
             float ampl_out = 0;
 			float threshold = ba_calibrate_start.NewValue() ? 0 : ba_input_threshold.NewValue();
-			ret = rp_BaGetAmplPhase(ba_amplitude.NewValue(), ba_dc_bias.NewValue(),ba_periods_number.NewValue(), buffer, &ampl_out, &phase_out, current_freq,threshold);
+			ret = rpApp_BaGetAmplPhase(ba_amplitude.NewValue(), ba_dc_bias.NewValue(),ba_periods_number.NewValue(), buffer, &ampl_out, &phase_out, current_freq,threshold);
             if (ret ==  RP_EOOR) // isnan && isinf
             {
                 // if error - next step
@@ -442,15 +442,15 @@ void OnNewParams(void)
 		ba_start_freq.SendValue(next_freq);
 
         if (ba_calibrate_start.NewValue()){ // save data in calibration mode
-			rp_BaWriteCalib(current_freq,amplitude,phase_out);
+			rpApp_BaWriteCalib(current_freq,amplitude,phase_out);
 			// signal.push_back(amplitude);
 			// phase.push_back(phase_out);
-			signal.push_back(rp_BaCalibGain(next_freq, amplitude));
-			phase.push_back(rp_BaCalibPhase(next_freq, phase_out));
+			signal.push_back(rpApp_BaCalibGain(next_freq, amplitude));
+			phase.push_back(rpApp_BaCalibPhase(next_freq, phase_out));
 		}
 		else{
-			signal.push_back(rp_BaCalibGain(next_freq, amplitude));
-			phase.push_back(rp_BaCalibPhase(next_freq, phase_out));
+			signal.push_back(rpApp_BaCalibGain(next_freq, amplitude));
+			phase.push_back(rpApp_BaCalibPhase(next_freq, phase_out));
 		}
 		if (ret == RP_OK){
 	        bad_signal.push_back(0);
