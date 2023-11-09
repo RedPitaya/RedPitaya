@@ -975,7 +975,6 @@ int waitToFillPreTriggerBuffer(float _timescale) {
 
     // Max timeout 1 second
     auto timeOut  = MIN(g_viewController.calculateTimeOut(_timescale),1000.0);
-    fprintf(stderr,"timeOut %f\n",timeOut);
 
     timeOut += g_viewController.getClock();
 
@@ -996,7 +995,6 @@ int waitToFillPreTriggerBuffer(float _timescale) {
         exitByTimout = timeOut > g_viewController.getClock();
         exitByPreTrigger = preTriggerCount < needWaitSamples;
     } while (exitByPreTrigger && exitByTimout);
-    fprintf(stderr,"exitByPreTrigger %d exitByTimout %d\n",exitByPreTrigger,exitByTimout);
     return RP_OK;
 }
 
@@ -1011,34 +1009,19 @@ int waitTrigger(float _timescale,bool _disableTimeout,bool *_isresetted,bool *_e
     g_adcController.resetWaitTriggerRequest();
     *_isresetted = false;
     *_exitByTimeout = false;
+
     g_viewController.setTriggerState(false);
     do {
         if (g_adcController.isNeedResetWaitTrigger()){
             *_isresetted = true;
             break;
         }
-        ECHECK_APP(rp_AcqGetTriggerState(&trig_state));
-        timeout_state = _disableTimeout ? true : timeOut > g_viewController.getClock();
-    } while (trig_state != RP_TRIG_STATE_TRIGGERED && timeout_state);
-    g_viewController.setTriggerState(trig_state == RP_TRIG_STATE_TRIGGERED);
-    *_exitByTimeout = !timeout_state;
-
-    /*
-        g_viewController.setTriggerState(false);
-    do {
-        if (g_adcController.isNeedResetWaitTrigger()){
-            *_isresetted = true;
-            break;
-        }
         timeout_state = _disableTimeout ? true : timeOut > g_viewController.getClock();
         ECHECK_APP(rp_AcqGetTriggerState(&trig_state));
-    } while (trig_state != RP_TRIG_STATE_TRIGGERED && timeout_state);
+    } while ((trig_state != RP_TRIG_STATE_TRIGGERED) && timeout_state);
     g_viewController.setTriggerState(trig_state == RP_TRIG_STATE_TRIGGERED);
     *_exitByTimeout = (!timeout_state) && (trig_state != RP_TRIG_STATE_TRIGGERED);
-    */
-
     return RP_OK;
-    
 }
 
 int waitToFillAfterTriggerBuffer(float _timescale) {
@@ -1295,6 +1278,7 @@ void mainThreadFun() {
             ECHECK_APP_NO_RET(rp_AcqSetTriggerDelayDirect(delay));           
             g_viewController.unlockView();
 
+            ECHECK_APP_NO_RET(rp_AcqSetTriggerSrc(RP_TRIG_SRC_DISABLED));
             ECHECK_APP_NO_RET(threadSafe_acqStart());
            
             auto trigSweep = g_adcController.getTriggerSweep();
@@ -1303,7 +1287,6 @@ void mainThreadFun() {
             auto viewMode = g_viewController.getViewMode();
 
             ECHECK_APP_NO_RET(waitToFillPreTriggerBuffer(tScaleAcq));
-
             ECHECK_APP_NO_RET(osc_setTriggerSource(trigSource));
             auto isReset = false;
             auto disableTimeout = false;
@@ -1324,17 +1307,6 @@ void mainThreadFun() {
             }
 
             waitToFillAfterTriggerBuffer(tScaleAcq);
-
-            if (exitByTimeout){
-                uint32_t  tp,wp;
-                rp_AcqGetWritePointer(&wp);
-                rp_AcqGetWritePointerAtTrig(&tp);
-                rp_acq_trig_src_t s;
-                rp_AcqGetTriggerSrc(&s);
-                
-                fprintf(stderr,"TP %d WP %d source %d\n",tp,wp,s);
-                
-            }
 
             if (viewMode == CViewController::ROLL && contMode){
                 ECHECK_APP_NO_RET(rp_AcqGetWritePointer(&pPosition));
