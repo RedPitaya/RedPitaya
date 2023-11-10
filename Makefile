@@ -294,11 +294,12 @@ COMM_DIR           = Examples/Communication/C
 XADC_DIR           = Test/xadc
 LA_TEST_DIR        = rp-api/api2/test
 DAISY_TOOL_DIR     = Test/daisy_tool
+FPGA_TESTS_DIR     = Examples/Tests
 
 .PHONY: examples rp_communication fpgautils
-.PHONY: lcr bode monitor generator acquire calib spectrum laboardtest led_control daisy_tool
+.PHONY: lcr bode monitor generator acquire calib spectrum laboardtest led_control daisy_tool fpga_tests
 
-examples: lcr bode monitor calib spectrum acquire generator led_control fpgautils daisy_tool
+examples: lcr bode monitor calib spectrum acquire generator led_control fpgautils daisy_tool fpga_tests
 
 # calibrate laboardtest
 
@@ -366,6 +367,10 @@ fpgautils:
 	mkdir -p $(abspath $(INSTALL_DIR))/bin
 	$(CC) tools/fpgautils/fpgautil.c -o $(abspath $(INSTALL_DIR))/bin/fpgautil
 
+fpga_tests:
+	$(MAKE) -C $(FPGA_TESTS_DIR) clean
+	$(MAKE) -C $(FPGA_TESTS_DIR)
+	$(MAKE) -C $(FPGA_TESTS_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 ################################################################################
 # Red Pitaya ecosystem and tools

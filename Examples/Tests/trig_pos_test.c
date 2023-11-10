@@ -30,7 +30,7 @@ int main(int argc, char **argv){
         }
 
         /* Print error, if rp_Init() function failed */
-        if(rp_Init() != RP_OK){
+        if(rp_InitReset(false) != RP_OK){
                 fprintf(stderr, "Rp api init failed!\n");
         }
 

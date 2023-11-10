@@ -92,7 +92,7 @@ int osc_Init() {
     g_measureController.setscaleFunction(scaleAmplitudeChannel);
     g_measureController.setAttenuateAmplitudeChannelFunction(attenuateAmplitudeChannel);
     g_adcController.setAttenuateAmplitudeChannelFunction(attenuateAmplitudeChannel);
-    g_adcController.setUnAttenuateAmplitudeChannelFunction(unattenuateAmplitudeChannel);    
+    g_adcController.setUnAttenuateAmplitudeChannelFunction(unattenuateAmplitudeChannel);
     g_threadRun = true;
     g_thread = new std::thread(mainThreadFun);
     return RP_OK;
@@ -395,7 +395,7 @@ int osc_getTriggerSlope(rpApp_osc_trig_slope_t *slope) {
 }
 
 int osc_setTriggerLevel(float _level) {
-    std::lock_guard<std::mutex> lock(g_mutex);   
+    std::lock_guard<std::mutex> lock(g_mutex);
     ECHECK_APP(g_adcController.setTriggetLevel(_level));
     update_view();
     return RP_OK;
@@ -423,7 +423,7 @@ int osc_getTriggerSweep(rpApp_osc_trig_sweep_t *sweep) {
 }
 
 int osc_SetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode _mode){
-    std::lock_guard<std::mutex> lock(g_mutex);   
+    std::lock_guard<std::mutex> lock(g_mutex);
     g_decimator.setInterpolationMode(_channel,_mode);
     return RP_OK;
 }
@@ -458,7 +458,7 @@ int osc_getViewPart(float *ratio) {
     auto timeScale = g_viewController.getTimeScale();
     auto spd = g_viewController.getSamplesPerDivision();
     auto viewSize = g_viewController.getViewSize();
-    *ratio = ((float)viewSize * (float)timeToIndexI(timeScale) / spd) 
+    *ratio = ((float)viewSize * (float)timeToIndexI(timeScale) / spd)
                  / (float)ADC_BUFFER_SIZE;
     return RP_OK;
 }
@@ -530,7 +530,7 @@ int osc_measurePeriodMath(float *_period) {
     auto ret = g_measureController.measurePeriodMath(tSacale,sampPerDiv,data,_period);
     g_viewController.unlockView();
     return ret;
-    
+
 }
 
 int osc_measurePeriodCh(rpApp_osc_source _source, float *_period) {
@@ -538,7 +538,7 @@ int osc_measurePeriodCh(rpApp_osc_source _source, float *_period) {
     if (_source == RPAPP_OSC_SOUR_CH2) ch = RP_CH_2;
     if (_source == RPAPP_OSC_SOUR_CH3) ch = RP_CH_3;
     if (_source == RPAPP_OSC_SOUR_CH4) ch = RP_CH_4;
-    
+
     g_viewController.lockView();
     auto *data = g_viewController.getAcqBuffers();
     if (data->channels < ch) {
@@ -692,7 +692,7 @@ int osc_getExportedData(rpApp_osc_source _source, rpApp_osc_exportMode _mode, bo
             *_size = 0;
             return ret;
         }
-   
+
         for(auto i = 0u; i < *_size; ++i){
             unscaleAmplitudeChannel(_source, _data[i],&_data[i]);
         }
@@ -714,13 +714,13 @@ int osc_getExportedData(rpApp_osc_source _source, rpApp_osc_exportMode _mode, bo
                 *_size = 0;
                 return RP_EOOR;
             }
-    
+
             memcpy_neon(_data,view->data(),view->size() * sizeof(float));
-        
+
             g_viewController.unlockView();
 
             *_size = view->size();
-            
+
             if (_normalize){
                 norma(_data,view->size());
             }
@@ -739,7 +739,7 @@ int osc_getRawData(rp_channel_t _source, uint16_t *_data, uint32_t _size) {
         g_viewController.unlockView();
         WARNING("Channel selection error")
         return RP_EOOR;
-    } 
+    }
 
     if (rawData->size < _size){
         g_viewController.unlockView();
@@ -1005,7 +1005,7 @@ int waitTrigger(float _timescale,bool _disableTimeout,bool *_isresetted,bool *_e
     // Max timeout 1 second
     auto timeOut  = MIN(g_viewController.calculateTimeOut(_timescale),1000.0);
     timeOut += g_viewController.getClock();
-    
+
     g_adcController.resetWaitTriggerRequest();
     *_isresetted = false;
     *_exitByTimeout = false;
@@ -1134,8 +1134,8 @@ void checkAutoscale(bool fromThread) {
         timeScaleIdx = 0;
         period_to_set = scales[timeScaleIdx];
         measCount = 0;
-        
-    } else {       
+
+    } else {
         if(++measCount < 2) {
             return;
         }
@@ -1146,7 +1146,7 @@ void checkAutoscale(bool fromThread) {
         for (int source = RPAPP_OSC_SOUR_CH1; source <= RPAPP_OSC_SOUR_MATH; ++source) {
             if (source < channels || source == RPAPP_OSC_SOUR_MATH){
                 ECHECK_APP_NO_RET(osc_measureVpp((rpApp_osc_source)source, &vpp));
-                ECHECK_APP_NO_RET(osc_measureMeanVoltage((rpApp_osc_source)source, &vMean));            
+                ECHECK_APP_NO_RET(osc_measureMeanVoltage((rpApp_osc_source)source, &vMean));
                 if (fabs(vpp) > SIGNAL_EXISTENCE) {
                     ret = osc_measurePeriod((rpApp_osc_source)source, &period);
                     periods[source][timeScaleIdx] = (ret == RP_OK) ? period : 0.f;
@@ -1158,7 +1158,7 @@ void checkAutoscale(bool fromThread) {
                 vMeans[source][timeScaleIdx] = vMean;
                 WARNING("Source %d ts %d per %f vpp %f",source,timeScaleIdx,periods[source][timeScaleIdx],vpp);
             }
-            
+
         }
 
 
@@ -1249,7 +1249,7 @@ void checkAutoscale(bool fromThread) {
             period_to_set = scales[timeScaleIdx];
         }
     }
-    
+
     ECHECK_APP_NO_RET(osc_setTimeScale(period_to_set));
     ECHECK_APP_NO_RET(osc_setTimeOffset(AUTO_SCALE_TIME_OFFSET));
 }
@@ -1258,7 +1258,7 @@ void mainThreadFun() {
     auto pPosition = 0u;
     auto trigLevel = 0.0f;
     auto adc_channels = getADCChannels();
-    
+
     while (g_threadRun) {
 
         auto tScaleAcq = 0.0f;
@@ -1275,12 +1275,12 @@ void mainThreadFun() {
             // Need set before calculate trigger deleay
             ECHECK_APP_NO_RET(rp_AcqSetDecimation(decimationInACQ));
             auto delay = g_viewController.getSampledAfterTriggerInView();
-            ECHECK_APP_NO_RET(rp_AcqSetTriggerDelayDirect(delay));           
+            ECHECK_APP_NO_RET(rp_AcqSetTriggerDelayDirect(delay));
             g_viewController.unlockView();
 
             ECHECK_APP_NO_RET(rp_AcqSetTriggerSrc(RP_TRIG_SRC_DISABLED));
             ECHECK_APP_NO_RET(threadSafe_acqStart());
-           
+
             auto trigSweep = g_adcController.getTriggerSweep();
             auto trigSource = g_adcController.getTriggerSources();
             auto contMode = g_adcController.getContinuousMode();
@@ -1291,13 +1291,13 @@ void mainThreadFun() {
             auto isReset = false;
             auto disableTimeout = false;
             auto exitByTimeout = false;
-            
+
             if (trigSweep == RPAPP_OSC_TRIG_NORMAL || trigSweep == RPAPP_OSC_TRIG_SINGLE){
                 disableTimeout = true;
             }
-            
+
             waitTrigger(tScaleAcq,disableTimeout,&isReset,&exitByTimeout);
-            
+
             if (isReset){
                 continue;
             }
@@ -1318,7 +1318,7 @@ void mainThreadFun() {
             auto buff = g_viewController.getAcqBuffers();
             ECHECK_APP_NO_RET(rp_AcqGetData(pPosition,buff));
             g_viewController.unlockView();
-            
+
             if (!contMode){
                 ECHECK_APP_NO_RET(threadSafe_acqStop());
             }
@@ -1334,7 +1334,7 @@ void mainThreadFun() {
         if (g_viewController.isNeedUpdateView()){
             g_mutex.lock();
             g_viewController.lockView();
-            
+
             auto contMode = g_adcController.getContinuousMode();
             auto viewMode =  g_viewController.getViewMode();
             auto spd = g_viewController.getSamplesPerDivision();
@@ -1350,7 +1350,7 @@ void mainThreadFun() {
             g_decimator.resetOffest();
             auto tsChannel = convertCh(trigSource);
             if (tsChannel != -1){
-                g_decimator.precalculateOffset(buff->ch_f[tsChannel],ADC_BUFFER_SIZE); 
+                g_decimator.precalculateOffset(buff->ch_f[tsChannel],ADC_BUFFER_SIZE);
             }
             for (auto channel = 0u; channel < adc_channels; ++channel) {
                 auto view = g_viewController.getView((rpApp_osc_source)channel);
