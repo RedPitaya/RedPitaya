@@ -393,6 +393,10 @@ auto testTrig(settings s) -> int {
     for(auto i : dec_list){
         auto adcCurRate = adcRate / i;
         auto maxFreq = adcCurRate / minPointerPerPer;
+        if (maxFreq > 17000000) { // DAC limitation
+            maxFreq = 17000000;
+        }
+
         auto minFreq = adcCurRate / maxPointerPerPer;
         minFreq = MAX(minFreq,1);
         maxFreq = MAX(maxFreq,1);
@@ -489,7 +493,7 @@ auto testTrigSettingNow(settings s) -> int {
             dec_list.push_back(dec + 4);
         }
     }
-    result |= startGenerator(RP_CH_1,RP_WAVEFORM_SINE,10000000,0.9,0,s.verbose);
+    result |= startGenerator(RP_CH_1,RP_WAVEFORM_SINE,1000,0.9,0,s.verbose);  // low frequency for very high decimations
     result |= rp_AcqReset();
     result |= rp_AcqSetTriggerLevel(RP_T_CH_1, 0);
     result |= rp_AcqSetTriggerHyst(0.005);
@@ -509,6 +513,7 @@ auto testTrigSettingNow(settings s) -> int {
 
         ret |= rp_AcqSetDecimationFactor(dec);
         ret |= rp_AcqSetTriggerSrc(RP_TRIG_SRC_DISABLED);
+        result |= rp_AcqStart(); //start at each loop
 
         // no nessasry wait
         usleep(100);
@@ -630,7 +635,7 @@ auto testTrigDelay(settings s) -> int {
 
             ret |= rp_AcqReset();
             ret |= rp_AcqSetDecimationFactor(dec);
-            ret |= rp_AcqSetTriggerLevel(RP_T_CH_1, 0.7);
+            ret |= rp_AcqSetTriggerLevel(RP_T_CH_1, 0.2); // need low threshold so the very first sample can be high
             ret |= rp_AcqSetTriggerHyst(0.005);
             ret |= rp_AcqSetTriggerDelayDirect(i);
             ret |= rp_AcqStart();
@@ -668,9 +673,9 @@ auto testTrigDelay(settings s) -> int {
 
             uint32_t sampWithData = 0;
             for(uint32_t z = 0; z < buffer->size; z++){
-                if (buffer->ch_i[0][z] > 1024 * 4){
+                if (buffer->ch_i[0][z] > 1000) { // must take into account the rise time and initial ringing of step signal
                     sampWithData++;
-                }
+                }              
             }
             bool testResult = sampWithData != i;
             ret |= testResult;
