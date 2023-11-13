@@ -132,6 +132,42 @@ scpi_result_t RP_AcqDecimationQ(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_AcqDecimationFactor(scpi_t *context) {
+
+    uint32_t value;
+
+    /* Read DECIMATION parameter */
+    if (!SCPI_ParamUInt32(context, &value, true)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+
+    // Now set the decimation
+    auto result = rp_AcqSetDecimationFactor(value);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to set decimation factor: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqDecimationFactorQ(scpi_t *context) {
+    // Get decimation
+    u_int32_t decimation;
+    auto result = rp_AcqGetDecimationFactor(&decimation);
+
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to get decimation factor: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    // Return back result
+    SCPI_ResultUInt32Base(context, decimation, 10);
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_AcqSamplingRateHzQ(scpi_t *context) {
 
     // get sampling rate
@@ -545,7 +581,7 @@ scpi_result_t RP_AcqDataPosQ(scpi_t *context) {
         SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Unable to read END parameter.");
         return SCPI_RES_ERR;
     }
-    
+
     uint32_t size_buff;
     rp_AcqGetBufSize(&size_buff);
 

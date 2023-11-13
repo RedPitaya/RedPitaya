@@ -194,6 +194,9 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "ACQ:RST", .callback                    = RP_AcqReset,},
     {.pattern = "ACQ:DEC", .callback                    = RP_AcqDecimation,},
     {.pattern = "ACQ:DEC?", .callback                   = RP_AcqDecimationQ,},
+    {.pattern = "ACQ:DEC:F", .callback                  = RP_AcqDecimationFactor,},
+    {.pattern = "ACQ:DEC:F?", .callback                 = RP_AcqDecimationFactorQ,},
+
     {.pattern = "ACQ:SRATe?", .callback                 = RP_AcqSamplingRateHzQ,},
     {.pattern = "ACQ:AVG", .callback                    = RP_AcqAveraging,},
     {.pattern = "ACQ:AVG?", .callback                   = RP_AcqAveragingQ,},
@@ -237,7 +240,7 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "ACQ:AXI:SOUR#:ENable", .callback       = RP_AcqAxiEnable,},
     {.pattern = "ACQ:AXI:SOUR#:DATA:Start:N?",.callback = RP_AcqAxiDataQ,},
     {.pattern = "ACQ:AXI:SOUR#:SET:Buffer", .callback   = RP_AcqAxiSetAddres,},
-    
+
 
     {.pattern = "ACQ:SOUR#:COUP", .callback             = RP_AcqAC_DC,},
     {.pattern = "ACQ:SOUR#:COUP?", .callback            = RP_AcqAC_DCQ,},
