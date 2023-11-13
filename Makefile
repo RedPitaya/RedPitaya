@@ -367,9 +367,9 @@ fpgautils:
 	mkdir -p $(abspath $(INSTALL_DIR))/bin
 	$(CC) tools/fpgautils/fpgautil.c -o $(abspath $(INSTALL_DIR))/bin/fpgautil
 
-fpga_tests:
+fpga_tests: api
 	$(MAKE) -C $(FPGA_TESTS_DIR) clean
-	$(MAKE) -C $(FPGA_TESTS_DIR)
+	$(MAKE) -C $(FPGA_TESTS_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(FPGA_TESTS_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 ################################################################################

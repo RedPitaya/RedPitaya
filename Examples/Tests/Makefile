@@ -1,14 +1,14 @@
 CFLAGS  = -std=gnu11 -Wall ## -Werror
-CFLAGS += -I/opt/redpitaya/include
-LDFLAGS = -L/opt/redpitaya/lib
+CFLAGS += -I$(INSTALL_DIR)/include
+LDFLAGS = -L$(INSTALL_DIR)/lib
 LDLIBS = -static -lrp -lrp-hw-calib -lrp-hw-profiles
 
-INCLUDE += -I/opt/redpitaya/include/api250-12
+INCLUDE += -I$(INSTALL_DIR)/include/api250-12
 LDLIBS += -lrp-gpio -lrp-i2c
 LDLIBS += -lrp-hw -lm -lstdc++ -lpthread -li2c
 
 CXXFLAGS  = -std=c++17 -Wall ## -Werror
-CXXFLAGS += -I/opt/redpitaya/include
+CXXFLAGS += -I$(INSTALL_DIR)/include
 
 
 # List of compiled object files (not yet linked to executable)
