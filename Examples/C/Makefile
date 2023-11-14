@@ -35,7 +35,8 @@ PRGS += acquire_trigger_software \
 		generate_continuous \
 		generate_two_burst_trigger_software \
 		generate_two_trigger_software_sync \
-		axi
+		axi \
+		axi_4ch
 
 PRGS += i2c_eeprom_read_calib_125_14
 PRGS += acquire_4ch_trigger_software

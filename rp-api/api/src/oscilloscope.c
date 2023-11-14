@@ -47,6 +47,13 @@ static volatile uint32_t *osc_chc = NULL;
 // The FPGA input signal buffer pointer for channel D
 static volatile uint32_t *osc_chd = NULL;
 
+// The FPGA input signal buffer pointer for AXI channel C
+static volatile uint16_t *osc_axi_chc = NULL;
+
+// The FPGA input signal buffer pointer for AXI channel D
+static volatile uint16_t *osc_axi_chd = NULL;
+
+
 bool emulate4Ch = false;
 
 static uint32_t g_adc_axi_start = 0;
@@ -224,6 +231,20 @@ int osc_axi_GetBufferFillStateChA(bool *state)
 int osc_axi_GetBufferFillStateChB(bool *state)
 {
     return cmn_AreBitsSet(osc_reg->axi_state, AXI_CHB_FILL_STATE , AXI_CHB_FILL_STATE, state);
+}
+
+int osc_axi_GetBufferFillStateChC(bool *state)
+{
+    if (!osc_reg_4ch)
+        return RP_NOTS;
+    return cmn_AreBitsSet(osc_reg_4ch->axi_state, AXI_CHA_FILL_STATE , AXI_CHA_FILL_STATE, state);
+}
+
+int osc_axi_GetBufferFillStateChD(bool *state)
+{
+    if (!osc_reg_4ch)
+        return RP_NOTS;
+    return cmn_AreBitsSet(osc_reg_4ch->axi_state, AXI_CHB_FILL_STATE , AXI_CHB_FILL_STATE, state);
 }
 
 int osc_GetBufferFillState(bool *state){
@@ -617,59 +638,132 @@ int osc_axi_unmap(size_t size, void** mapped)
     return RP_OK;
 }
 
+bool checkBufferOverlap(rp_channel_t _channel,uint32_t _start,uint32_t _end) {
+    int maxSize = 0;
+    uint32_t start[RP_CH_4 + 1];
+    uint32_t end[RP_CH_4 + 1];
+
+    uint32_t ch_en = 0;
+    int ret = 0;
+
+    ret = cmn_GetValue(&osc_reg->cha_axi_enable, &ch_en, AXI_ENABLE_MASK);
+    if (ret != RP_OK){
+        return true;
+    }
+
+    if (ch_en && _channel != RP_CH_1) {
+        ret = cmn_GetValue(&osc_reg->cha_axi_addr_high, &end[maxSize], FULL_MASK);
+        if (ret != RP_OK) {
+            return true;
+        }
+        ret = cmn_GetValue(&osc_reg->cha_axi_addr_low, &start[maxSize], FULL_MASK);
+        if (ret != RP_OK) {
+            return true;
+        }
+        maxSize++;
+    }
+
+    ret = cmn_GetValue(&osc_reg->chb_axi_enable, &ch_en, AXI_ENABLE_MASK);
+    if (ret != RP_OK){
+        return true;
+    }
+
+    if (ch_en && _channel != RP_CH_2) {
+        ret = cmn_GetValue(&osc_reg->chb_axi_addr_high, &end[maxSize], FULL_MASK);
+        if (ret != RP_OK) {
+            return true;
+        }
+        ret = cmn_GetValue(&osc_reg->chb_axi_addr_low, &start[maxSize], FULL_MASK);
+        if (ret != RP_OK) {
+            return true;
+        }
+        maxSize++;
+    }
+
+    if (osc_reg_4ch){
+        ret = cmn_GetValue(&osc_reg_4ch->cha_axi_enable, &ch_en, AXI_ENABLE_MASK);
+        if (ret != RP_OK){
+            return true;
+        }
+
+        if (ch_en && _channel != RP_CH_3) {
+            ret = cmn_GetValue(&osc_reg_4ch->cha_axi_addr_high, &end[maxSize], FULL_MASK);
+            if (ret != RP_OK) {
+                return true;
+            }
+            ret = cmn_GetValue(&osc_reg_4ch->cha_axi_addr_low, &start[maxSize], FULL_MASK);
+            if (ret != RP_OK) {
+                return true;
+            }
+            maxSize++;
+        }
+
+        ret = cmn_GetValue(&osc_reg_4ch->chb_axi_enable, &ch_en, AXI_ENABLE_MASK);
+        if (ret != RP_OK){
+            return true;
+        }
+
+        if (ch_en && _channel != RP_CH_4) {
+            ret = cmn_GetValue(&osc_reg_4ch->chb_axi_addr_high, &end[maxSize], FULL_MASK);
+            if (ret != RP_OK) {
+                return true;
+            }
+            ret = cmn_GetValue(&osc_reg_4ch->chb_axi_addr_low, &start[maxSize], FULL_MASK);
+            if (ret != RP_OK) {
+                return true;
+            }
+            maxSize++;
+        }
+    }
+    bool overlaped = false;
+    for(int i = 0 ; i < maxSize; i++) {
+        if (start[i] <= _start && _start <= end[i]){
+            overlaped |= true;
+        }
+        if (start[i] <= _end && _end <= end[i]){
+            overlaped |= true;
+        }
+        if (_start <= start[i] && end[i] <= _end){
+            overlaped |= true;
+        }
+    }
+    return overlaped;
+}
+
 int osc_axi_EnableChA(bool enable)
 {
     int ret = 0;
     uint32_t tmp;
-    uint32_t cha_addr_high, cha_addr_low, chb_addr_high, chb_addr_low, chb_en;
-    ret = cmn_GetValue(&osc_reg->cha_axi_addr_high, &cha_addr_high, FULL_MASK);
+    uint32_t ch_addr_high, ch_addr_low;
+    ret = cmn_GetValue(&osc_reg->cha_axi_addr_high, &ch_addr_high, FULL_MASK);
     if (ret != RP_OK) {
         return ret;
     }
-    ret = cmn_GetValue(&osc_reg->cha_axi_addr_low, &cha_addr_low, FULL_MASK);
-    if (ret != RP_OK) {
-        return ret;
-    }
-    ret = cmn_GetValue(&osc_reg->chb_axi_addr_high, &chb_addr_high, FULL_MASK);
-    if (ret != RP_OK) {
-        return ret;
-    }
-    ret = cmn_GetValue(&osc_reg->chb_axi_addr_low, &chb_addr_low, FULL_MASK);
-    if (ret != RP_OK) {
-        return ret;
-    }
-    ret = cmn_GetValue(&osc_reg->chb_axi_enable, &chb_en, AXI_ENABLE_MASK);
+    ret = cmn_GetValue(&osc_reg->cha_axi_addr_low, &ch_addr_low, FULL_MASK);
     if (ret != RP_OK) {
         return ret;
     }
 
     if (enable)
     {
-        if (cha_addr_low > cha_addr_high)
+        if (ch_addr_low > ch_addr_high)
         {
             return RP_EOOR;
         }
-        if (cha_addr_low < g_adc_axi_start)
+        if (ch_addr_low < g_adc_axi_start)
         {
             return RP_EOOR;
         }
-        if (cha_addr_high > (g_adc_axi_start + g_adc_axi_size))
+        if (ch_addr_high > (g_adc_axi_start + g_adc_axi_size))
         {
             return RP_EOOR;
         }
-        if (chb_en)
-        {
-            // chech if buffers are not overlapping
-            if ((cha_addr_low < chb_addr_low)&&(cha_addr_high > chb_addr_low))
-            {
-                return RP_EOOR;
-            }
-            if ((cha_addr_low > chb_addr_low)&&(cha_addr_low < chb_addr_high))
-            {
-                return RP_EOOR;
-            }
+
+        if (checkBufferOverlap(RP_CH_1,ch_addr_low,ch_addr_high)){
+            return RP_EOOR;
         }
-        ret = osc_axi_map(cha_addr_high - cha_addr_low, cha_addr_low, (void**)&osc_axi_cha);
+
+        ret = osc_axi_map(ch_addr_high - ch_addr_low, ch_addr_low, (void**)&osc_axi_cha);
         if (ret != RP_OK)
         {
             return ret;
@@ -677,7 +771,7 @@ int osc_axi_EnableChA(bool enable)
         cmn_Debug("cmn_SetValue(&osc_reg->cha_axi_enable) mask 0x1", 1);
         return cmn_SetValue(&osc_reg->cha_axi_enable, 1, AXI_ENABLE_MASK, &tmp);
     }
-    ret = osc_axi_unmap(cha_addr_high - cha_addr_low, (void**)&osc_axi_cha);
+    ret = osc_axi_unmap(ch_addr_high - ch_addr_low, (void**)&osc_axi_cha);
     if (ret != RP_OK)
     {
         cmn_Debug("cmn_SetValue(&osc_reg->cha_axi_enable) mask 0x1", 0);
@@ -692,55 +786,36 @@ int osc_axi_EnableChB(bool enable)
 {
     int ret = 0;
     uint32_t tmp;
-    uint32_t cha_addr_high, cha_addr_low, chb_addr_high, chb_addr_low, cha_en;
-    ret = cmn_GetValue(&osc_reg->cha_axi_addr_high, &cha_addr_high, FULL_MASK);
+    uint32_t ch_addr_high, ch_addr_low;
+    ret = cmn_GetValue(&osc_reg->chb_axi_addr_high, &ch_addr_high, FULL_MASK);
     if (ret != RP_OK) {
         return ret;
     }
-    ret = cmn_GetValue(&osc_reg->cha_axi_addr_low, &cha_addr_low, FULL_MASK);
-    if (ret != RP_OK) {
-        return ret;
-    }
-    ret = cmn_GetValue(&osc_reg->chb_axi_addr_high, &chb_addr_high, FULL_MASK);
-    if (ret != RP_OK) {
-        return ret;
-    }
-    ret = cmn_GetValue(&osc_reg->chb_axi_addr_low, &chb_addr_low, FULL_MASK);
-    if (ret != RP_OK) {
-        return ret;
-    }
-    ret = cmn_GetValue(&osc_reg->cha_axi_enable, &cha_en, AXI_ENABLE_MASK);
+    ret = cmn_GetValue(&osc_reg->chb_axi_addr_low, &ch_addr_low, FULL_MASK);
     if (ret != RP_OK) {
         return ret;
     }
 
     if (enable)
     {
-        if (chb_addr_low > chb_addr_high)
+        if (ch_addr_low > ch_addr_high)
         {
             return RP_EOOR;
         }
-        if (chb_addr_low < g_adc_axi_start)
+        if (ch_addr_low < g_adc_axi_start)
         {
             return RP_EOOR;
         }
-        if (chb_addr_high > (g_adc_axi_start + g_adc_axi_size))
+        if (ch_addr_high > (g_adc_axi_start + g_adc_axi_size))
         {
             return RP_EOOR;
         }
-        if (cha_en)
-        {
-            // chech if buffers are not overlapping
-            if ((chb_addr_low < cha_addr_low)&&(chb_addr_high > cha_addr_low))
-            {
-               return RP_EOOR;
-            }
-            if ((chb_addr_low > cha_addr_low)&&(chb_addr_low < cha_addr_high))
-            {
-               return RP_EOOR;
-            }
+
+        if (checkBufferOverlap(RP_CH_2,ch_addr_low,ch_addr_high)){
+            return RP_EOOR;
         }
-        ret = osc_axi_map(chb_addr_high - chb_addr_low, chb_addr_low, (void**)&osc_axi_chb);
+
+        ret = osc_axi_map(ch_addr_high - ch_addr_low, ch_addr_low, (void**)&osc_axi_chb);
         if (ret != RP_OK)
         {
             return ret;
@@ -748,7 +823,7 @@ int osc_axi_EnableChB(bool enable)
         cmn_Debug("cmn_SetValue(&osc_reg->chb_axi_enable) mask 0x1", 1);
         return cmn_SetValue(&osc_reg->chb_axi_enable, 1, AXI_ENABLE_MASK, &tmp);
     }
-    ret = osc_axi_unmap(chb_addr_high - chb_addr_low, (void**)&osc_axi_chb);
+    ret = osc_axi_unmap(ch_addr_high - ch_addr_low, (void**)&osc_axi_chb);
     if (ret != RP_OK)
     {
         cmn_Debug("cmn_SetValue(&osc_reg->chb_axi_enable) mask 0x1", 0);
@@ -757,6 +832,114 @@ int osc_axi_EnableChB(bool enable)
     }
     cmn_Debug("cmn_SetValue(&osc_reg->chb_axi_enable) mask 0x1", 0);
     return cmn_SetValue(&osc_reg->chb_axi_enable, 0, AXI_ENABLE_MASK, &tmp);
+}
+
+int osc_axi_EnableChC(bool enable)
+{
+    if (!osc_reg_4ch)
+        return RP_NOTS;
+    int ret = 0;
+    uint32_t tmp;
+    uint32_t ch_addr_high, ch_addr_low;
+    ret = cmn_GetValue(&osc_reg_4ch->cha_axi_addr_high, &ch_addr_high, FULL_MASK);
+    if (ret != RP_OK) {
+        return ret;
+    }
+    ret = cmn_GetValue(&osc_reg_4ch->cha_axi_addr_low, &ch_addr_low, FULL_MASK);
+    if (ret != RP_OK) {
+        return ret;
+    }
+
+    if (enable)
+    {
+        if (ch_addr_low > ch_addr_high)
+        {
+            return RP_EOOR;
+        }
+        if (ch_addr_low < g_adc_axi_start)
+        {
+            return RP_EOOR;
+        }
+        if (ch_addr_high > (g_adc_axi_start + g_adc_axi_size))
+        {
+            return RP_EOOR;
+        }
+
+        if (checkBufferOverlap(RP_CH_3,ch_addr_low,ch_addr_high)){
+            return RP_EOOR;
+        }
+
+        ret = osc_axi_map(ch_addr_high - ch_addr_low, ch_addr_low, (void**)&osc_axi_chc);
+        if (ret != RP_OK)
+        {
+            return ret;
+        }
+        cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_axi_enable) mask 0x1", 1);
+        return cmn_SetValue(&osc_reg_4ch->cha_axi_enable, 1, AXI_ENABLE_MASK, &tmp);
+    }
+    ret = osc_axi_unmap(ch_addr_high - ch_addr_low, (void**)&osc_axi_chc);
+    if (ret != RP_OK)
+    {
+        cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_axi_enable) mask 0x1", 0);
+        cmn_SetValue(&osc_reg_4ch->cha_axi_enable, 0, AXI_ENABLE_MASK, &tmp);
+        return ret;
+    }
+    cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_axi_enable) mask 0x1", 0);
+    return cmn_SetValue(&osc_reg_4ch->cha_axi_enable, 0, AXI_ENABLE_MASK, &tmp);
+}
+
+int osc_axi_EnableChD(bool enable)
+{
+    if (!osc_reg_4ch)
+        return RP_NOTS;
+    int ret = 0;
+    uint32_t tmp;
+    uint32_t ch_addr_high, ch_addr_low;
+    ret = cmn_GetValue(&osc_reg_4ch->chb_axi_addr_high, &ch_addr_high, FULL_MASK);
+    if (ret != RP_OK) {
+        return ret;
+    }
+    ret = cmn_GetValue(&osc_reg_4ch->chb_axi_addr_low, &ch_addr_low, FULL_MASK);
+    if (ret != RP_OK) {
+        return ret;
+    }
+
+    if (enable)
+    {
+        if (ch_addr_low > ch_addr_high)
+        {
+            return RP_EOOR;
+        }
+        if (ch_addr_low < g_adc_axi_start)
+        {
+            return RP_EOOR;
+        }
+        if (ch_addr_high > (g_adc_axi_start + g_adc_axi_size))
+        {
+            return RP_EOOR;
+        }
+
+        if (checkBufferOverlap(RP_CH_4,ch_addr_low,ch_addr_high)){
+            return RP_EOOR;
+        }
+
+        ret = osc_axi_map(ch_addr_high - ch_addr_low, ch_addr_low, (void**)&osc_axi_chd);
+        if (ret != RP_OK)
+        {
+            return ret;
+        }
+        cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_axi_enable) mask 0x1", 1);
+        return cmn_SetValue(&osc_reg_4ch->chb_axi_enable, 1, AXI_ENABLE_MASK, &tmp);
+    }
+    ret = osc_axi_unmap(ch_addr_high - ch_addr_low, (void**)&osc_axi_chd);
+    if (ret != RP_OK)
+    {
+        cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_axi_enable) mask 0x1", 0);
+        cmn_SetValue(&osc_reg_4ch->chb_axi_enable, 0, AXI_ENABLE_MASK, &tmp);
+        return ret;
+    }
+    cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_axi_enable) mask 0x1", 0);
+    return cmn_SetValue(&osc_reg_4ch->chb_axi_enable, 0, AXI_ENABLE_MASK, &tmp);
 }
 
 int osc_axi_SetAddressStartChA(uint32_t address)
@@ -773,6 +956,25 @@ int osc_axi_SetAddressStartChB(uint32_t address)
     return cmn_SetValue(&osc_reg->chb_axi_addr_low, address, FULL_MASK, &tmp);
 }
 
+int osc_axi_SetAddressStartChC(uint32_t address)
+{
+    if (!osc_reg_4ch)
+        return RP_NOTS;
+    uint32_t tmp;
+    cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_axi_addr_low) mask 0xFFFFFFFF", address);
+    return cmn_SetValue(&osc_reg_4ch->cha_axi_addr_low, address, FULL_MASK, &tmp);
+}
+
+int osc_axi_SetAddressStartChD(uint32_t address)
+{
+    if (!osc_reg_4ch)
+        return RP_NOTS;
+    uint32_t tmp;
+    cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_axi_addr_low) mask 0xFFFFFFFF", address);
+    return cmn_SetValue(&osc_reg_4ch->chb_axi_addr_low, address, FULL_MASK, &tmp);
+}
+
+
 int osc_axi_SetAddressEndChA(uint32_t address)
 {
     uint32_t tmp;
@@ -787,12 +989,43 @@ int osc_axi_SetAddressEndChB(uint32_t address)
     return cmn_SetValue(&osc_reg->chb_axi_addr_high, address, FULL_MASK, &tmp);
 }
 
+int osc_axi_SetAddressEndChC(uint32_t address)
+{
+    if (!osc_reg_4ch)
+        return RP_NOTS;
+    uint32_t tmp;
+    cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_axi_addr_high) mask 0xFFFFFFFF", address);
+    return cmn_SetValue(&osc_reg_4ch->cha_axi_addr_high, address, FULL_MASK, &tmp);
+}
+
+int osc_axi_SetAddressEndChD(uint32_t address)
+{
+    if (!osc_reg_4ch)
+        return RP_NOTS;
+    uint32_t tmp;
+    cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_axi_addr_high) mask 0xFFFFFFFF", address);
+    return cmn_SetValue(&osc_reg_4ch->chb_axi_addr_high, address, FULL_MASK, &tmp);
+}
+
+
 int osc_axi_GetAddressStartChA(uint32_t *address){
-     return cmn_GetValue(&osc_reg->cha_axi_addr_low, address, FULL_MASK);
+    return cmn_GetValue(&osc_reg->cha_axi_addr_low, address, FULL_MASK);
 }
 
 int osc_axi_GetAddressStartChB(uint32_t *address){
-     return cmn_GetValue(&osc_reg->chb_axi_addr_low, address, FULL_MASK);
+    return cmn_GetValue(&osc_reg->chb_axi_addr_low, address, FULL_MASK);
+}
+
+int osc_axi_GetAddressStartChC(uint32_t *address){
+    if (!osc_reg_4ch)
+        return RP_NOTS;
+    return cmn_GetValue(&osc_reg_4ch->cha_axi_addr_low, address, FULL_MASK);
+}
+
+int osc_axi_GetAddressStartChD(uint32_t *address){
+    if (!osc_reg_4ch)
+        return RP_NOTS;
+    return cmn_GetValue(&osc_reg_4ch->chb_axi_addr_low, address, FULL_MASK);
 }
 
 int osc_axi_GetAddressEndChA(uint32_t *address){
@@ -801,6 +1034,18 @@ int osc_axi_GetAddressEndChA(uint32_t *address){
 
 int osc_axi_GetAddressEndChB(uint32_t *address){
      return cmn_GetValue(&osc_reg->chb_axi_addr_high, address, FULL_MASK);
+}
+
+int osc_axi_GetAddressEndChC(uint32_t *address){
+    if (!osc_reg_4ch)
+        return RP_NOTS;
+    return cmn_GetValue(&osc_reg_4ch->cha_axi_addr_high, address, FULL_MASK);
+}
+
+int osc_axi_GetAddressEndChD(uint32_t *address){
+    if (!osc_reg_4ch)
+        return RP_NOTS;
+    return cmn_GetValue(&osc_reg_4ch->chb_axi_addr_high, address, FULL_MASK);
 }
 
 int osc_axi_GetWritePointerChA(uint32_t* pos)
@@ -817,6 +1062,28 @@ int osc_axi_GetWritePointerChB(uint32_t* pos)
     uint32_t addr;
     osc_axi_GetAddressStartChB(&addr);
     cmn_GetValue(&osc_reg->chb_axi_wr_ptr_cur, pos, FULL_MASK);
+    *pos = (*pos  - addr) / 2;
+    return RP_OK;
+}
+
+int osc_axi_GetWritePointerChC(uint32_t* pos)
+{
+    if (!osc_reg_4ch)
+        return RP_NOTS;
+    uint32_t addr;
+    osc_axi_GetAddressStartChC(&addr);
+    cmn_GetValue(&osc_reg_4ch->cha_axi_wr_ptr_cur, pos, FULL_MASK);
+    *pos = (*pos - addr) / 2;
+    return RP_OK;
+}
+
+int osc_axi_GetWritePointerChD(uint32_t* pos)
+{
+    if (!osc_reg_4ch)
+        return RP_NOTS;
+    uint32_t addr;
+    osc_axi_GetAddressStartChD(&addr);
+    cmn_GetValue(&osc_reg_4ch->chb_axi_wr_ptr_cur, pos, FULL_MASK);
     *pos = (*pos  - addr) / 2;
     return RP_OK;
 }
@@ -839,6 +1106,28 @@ int osc_axi_GetWritePointerAtTrigChB(uint32_t* pos)
     return RP_OK;
 }
 
+int osc_axi_GetWritePointerAtTrigChC(uint32_t* pos)
+{
+    if (!osc_reg_4ch)
+        return RP_NOTS;
+    uint32_t addr;
+    osc_axi_GetAddressStartChC(&addr);
+    cmn_GetValue(&osc_reg_4ch->cha_axi_wr_ptr_trigger, pos, FULL_MASK);
+    *pos = (*pos - addr) / 2;
+    return RP_OK;
+}
+
+int osc_axi_GetWritePointerAtTrigChD(uint32_t* pos)
+{
+    if (!osc_reg_4ch)
+        return RP_NOTS;
+    uint32_t addr;
+    osc_axi_GetAddressStartChD(&addr);
+    cmn_GetValue(&osc_reg_4ch->chb_axi_wr_ptr_trigger, pos, FULL_MASK);
+    *pos = (*pos - addr) / 2;
+    return RP_OK;
+}
+
 int osc_axi_SetTriggerDelayChA(uint32_t decimated_data_num)
 {
     uint32_t currentValue = 0;
@@ -853,6 +1142,24 @@ int osc_axi_SetTriggerDelayChB(uint32_t decimated_data_num)
     return cmn_SetValue(&osc_reg->chb_axi_delay, decimated_data_num, TRIG_DELAY_MASK, &currentValue);
 }
 
+int osc_axi_SetTriggerDelayChC(uint32_t decimated_data_num)
+{
+    if (!osc_reg_4ch)
+        return RP_NOTS;
+    uint32_t currentValue = 0;
+    cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_axi_delay) mask 0xFFFFFFFF", decimated_data_num);
+    return cmn_SetValue(&osc_reg_4ch->cha_axi_delay, decimated_data_num, TRIG_DELAY_MASK, &currentValue);
+}
+
+int osc_axi_SetTriggerDelayChD(uint32_t decimated_data_num)
+{
+    if (!osc_reg_4ch)
+        return RP_NOTS;
+    uint32_t currentValue = 0;
+    cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_axi_delay) mask 0xFFFFFFFF", decimated_data_num);
+    return cmn_SetValue(&osc_reg_4ch->chb_axi_delay, decimated_data_num, TRIG_DELAY_MASK, &currentValue);
+}
+
 int osc_axi_GetTriggerDelayChA(uint32_t* decimated_data_num)
 {
     return cmn_GetValue(&osc_reg->cha_axi_delay, decimated_data_num, TRIG_DELAY_MASK);
@@ -863,6 +1170,20 @@ int osc_axi_GetTriggerDelayChB(uint32_t* decimated_data_num)
     return cmn_GetValue(&osc_reg->chb_axi_delay, decimated_data_num, TRIG_DELAY_MASK);
 }
 
+int osc_axi_GetTriggerDelayChC(uint32_t* decimated_data_num)
+{
+    if (!osc_reg_4ch)
+        return RP_NOTS;
+    return cmn_GetValue(&osc_reg_4ch->cha_axi_delay, decimated_data_num, TRIG_DELAY_MASK);
+}
+
+int osc_axi_GetTriggerDelayChD(uint32_t* decimated_data_num)
+{
+    if (!osc_reg_4ch)
+        return RP_NOTS;
+    return cmn_GetValue(&osc_reg_4ch->chb_axi_delay, decimated_data_num, TRIG_DELAY_MASK);
+}
+
 const volatile uint16_t* osc_axi_GetDataBufferChA()
 {
     return osc_axi_cha;
@@ -871,4 +1192,18 @@ const volatile uint16_t* osc_axi_GetDataBufferChA()
 const volatile uint16_t* osc_axi_GetDataBufferChB()
 {
     return osc_axi_chb;
+}
+
+const volatile uint16_t* osc_axi_GetDataBufferChC()
+{
+    if (emulate4Ch)
+        return osc_axi_GetDataBufferChA();
+    return osc_axi_chc;
+}
+
+const volatile uint16_t* osc_axi_GetDataBufferChD()
+{
+    if (emulate4Ch)
+        return osc_axi_GetDataBufferChB();
+    return osc_axi_chd;
 }

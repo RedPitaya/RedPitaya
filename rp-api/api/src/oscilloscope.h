@@ -334,8 +334,6 @@ int osc_ResetWriteStateMachine();
 int osc_SetArmKeep(bool enable);
 int osc_GetArmKeep(bool *state);
 int osc_GetBufferFillState(bool *state);
-int osc_axi_GetBufferFillStateChA(bool *state);
-int osc_axi_GetBufferFillStateChB(bool *state);
 int osc_GetTriggerState(bool *received);
 int osc_GetPreTriggerCounter(uint32_t *value);
 int osc_SetThresholdChA(uint32_t threshold);
@@ -378,26 +376,51 @@ const volatile uint32_t* osc_GetDataBufferChD();
 int osc_axi_GetMemoryRegion(uint32_t *_start,uint32_t *_size);
 int osc_axi_EnableChA(bool enable);
 int osc_axi_EnableChB(bool enable);
+int osc_axi_EnableChC(bool enable);
+int osc_axi_EnableChD(bool enable);
 int osc_axi_SetAddressStartChA(uint32_t address);
 int osc_axi_SetAddressStartChB(uint32_t address);
+int osc_axi_SetAddressStartChC(uint32_t address);
+int osc_axi_SetAddressStartChD(uint32_t address);
 int osc_axi_SetAddressEndChA(uint32_t address);
 int osc_axi_SetAddressEndChB(uint32_t address);
+int osc_axi_SetAddressEndChC(uint32_t address);
+int osc_axi_SetAddressEndChD(uint32_t address);
 
 int osc_axi_GetAddressStartChA(uint32_t *address);
 int osc_axi_GetAddressStartChB(uint32_t *address);
+int osc_axi_GetAddressStartChC(uint32_t *address);
+int osc_axi_GetAddressStartChD(uint32_t *address);
 int osc_axi_GetAddressEndChA(uint32_t *address);
 int osc_axi_GetAddressEndChB(uint32_t *address);
+int osc_axi_GetAddressEndChC(uint32_t *address);
+int osc_axi_GetAddressEndChD(uint32_t *address);
+
+int osc_axi_GetBufferFillStateChA(bool *state);
+int osc_axi_GetBufferFillStateChB(bool *state);
+int osc_axi_GetBufferFillStateChC(bool *state);
+int osc_axi_GetBufferFillStateChD(bool *state);
 
 int osc_axi_GetWritePointerChA(uint32_t* pos);
 int osc_axi_GetWritePointerChB(uint32_t* pos);
+int osc_axi_GetWritePointerChC(uint32_t* pos);
+int osc_axi_GetWritePointerChD(uint32_t* pos);
 int osc_axi_GetWritePointerAtTrigChA(uint32_t* pos);
 int osc_axi_GetWritePointerAtTrigChB(uint32_t* pos);
+int osc_axi_GetWritePointerAtTrigChC(uint32_t* pos);
+int osc_axi_GetWritePointerAtTrigChD(uint32_t* pos);
 int osc_axi_SetTriggerDelayChA(uint32_t decimated_data_num);
 int osc_axi_SetTriggerDelayChB(uint32_t decimated_data_num);
+int osc_axi_SetTriggerDelayChC(uint32_t decimated_data_num);
+int osc_axi_SetTriggerDelayChD(uint32_t decimated_data_num);
 int osc_axi_GetTriggerDelayChA(uint32_t* decimated_data_num);
 int osc_axi_GetTriggerDelayChB(uint32_t* decimated_data_num);
+int osc_axi_GetTriggerDelayChC(uint32_t* decimated_data_num);
+int osc_axi_GetTriggerDelayChD(uint32_t* decimated_data_num);
 
 const volatile uint16_t* osc_axi_GetDataBufferChA();
 const volatile uint16_t* osc_axi_GetDataBufferChB();
+const volatile uint16_t* osc_axi_GetDataBufferChC();
+const volatile uint16_t* osc_axi_GetDataBufferChD();
 
 #endif /* SRC_OSCILLOSCOPE_H_ */
