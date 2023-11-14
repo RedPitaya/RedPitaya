@@ -1,3 +1,4 @@
+INSTALL_DIR ?= /opt/redpitaya
 CFLAGS  = -std=gnu11 -Wall ## -Werror
 CFLAGS += -I$(INSTALL_DIR)/include
 LDFLAGS = -L$(INSTALL_DIR)/lib

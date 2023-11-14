@@ -38,6 +38,7 @@ struct settings{
     bool testTrig = false;
     bool testTrigDelay = false;
     bool testTrigSettingNow = false;
+    bool testKeepArm = false;
     bool verbose = false;
     bool stopOnFail = false;
 };
@@ -172,6 +173,7 @@ auto printHelp(char* prog) -> void {
                     "\t-t1 : Start test trigger position\n" \
                     "\t-t2 : Start test delay logic\n" \
                     "\t-t3 : Start test trigger setting now\n" \
+                    "\t-t4 : Start test keep arm\n" \
                     "\t-a : Start all test\n" \
                     "\t-d : Enable debug register mode\n" \
                     "\t-b : Show captured buffer\n" \
@@ -211,10 +213,15 @@ auto parseOptions(int argc, char **argv) -> settings {
             s.testTrigSettingNow = true;
         }
 
+        if (strcmp(argv[i],"-t4")==0){
+            s.testKeepArm = true;
+        }
+
         if (strcmp(argv[i],"-a")==0){
             s.testTrigDelay = true;
             s.testTrig = true;
             s.testTrigSettingNow = true;
+            s.testKeepArm = true;
         }
 
         if (strcmp(argv[i],"-v")==0){
@@ -498,7 +505,6 @@ auto testTrigSettingNow(settings s) -> int {
     result |= rp_AcqSetTriggerLevel(RP_T_CH_1, 0);
     result |= rp_AcqSetTriggerHyst(0.005);
     result |= rp_AcqSetTriggerDelayDirect(ADC_BUFFER_SIZE/2.0);
-    result |= rp_AcqStart();
 
     uint32_t trig_pos_prev;
     uint32_t write_pos_prev;
@@ -513,10 +519,7 @@ auto testTrigSettingNow(settings s) -> int {
 
         ret |= rp_AcqSetDecimationFactor(dec);
         ret |= rp_AcqSetTriggerSrc(RP_TRIG_SRC_DISABLED);
-        result |= rp_AcqStart(); //start at each loop
-
-        // no nessasry wait
-        usleep(100);
+        ret |= rp_AcqStart(); //start at each loop
 
         ret |= rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE);
 
@@ -594,6 +597,134 @@ auto testTrigSettingNow(settings s) -> int {
     return result;
 }
 
+
+auto testKeepArm(settings s) -> int {
+    static double rate = getADCRate();
+    Color::Modifier red(Color::FG_RED);
+    Color::Modifier green(Color::FG_GREEN);
+    auto max_timeout = ADC_BUFFER_SIZE / (rate / RP_DEC_65536) * 1000.0;
+
+    int result = 0;
+    list<uint32_t> dec_list;
+    for(uint32_t dec = RP_DEC_8192; dec <= RP_DEC_65536; dec *= 2){
+        dec_list.push_back(dec);
+        if (dec >= 16 && dec < RP_DEC_65536){
+            dec_list.push_back(dec + 1);
+            dec_list.push_back(dec + 2);
+            dec_list.push_back(dec + 3);
+            dec_list.push_back(dec + 4);
+        }
+    }
+    result |= startGenerator(RP_CH_1,RP_WAVEFORM_SINE,100,0.9,0,s.verbose);  // low frequency for very high decimations
+    result |= rp_AcqReset();
+    result |= rp_AcqSetTriggerLevel(RP_T_CH_1, 0);
+    result |= rp_AcqSetTriggerHyst(0.005);
+    result |= rp_AcqSetTriggerDelayDirect(ADC_BUFFER_SIZE/2.0);
+    result |= rp_AcqSetArmKeep(true);
+
+    uint32_t prev_test_trig = 0xFFFFFFFF;
+
+    for(auto dec : dec_list){
+        string testName = "Keep arm test. Decimate: " + to_string(dec);
+        if (s.verbose){
+            std::cout << testName << "\n";
+        }
+
+        int ret = 0;
+
+        ret |= rp_AcqSetDecimationFactor(dec);
+        ret |= rp_AcqSetTriggerSrc(RP_TRIG_SRC_DISABLED);
+        ret |= rp_AcqStart(); //start at each loop
+
+        ret |= rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE);
+
+        auto timeout = max_timeout + getClock();
+        rp_acq_trig_state_t state = RP_TRIG_STATE_TRIGGERED;
+        while(1){
+            ret |= rp_AcqGetTriggerState(&state);
+            if(state == RP_TRIG_STATE_TRIGGERED){
+                break;
+            }
+            if (timeout < getClock()) {
+                printf("Fail wait trigger.\n");
+                ret |= true;
+                break;
+            }
+        }
+
+        bool fillState = false;
+        timeout = max_timeout + getClock();
+        while(!fillState){
+            ret |=  rp_AcqGetBufferFillState(&fillState);
+            if (timeout < getClock()) {
+                printf("Fail wait fill state\n");
+                ret |= true;
+                break;
+            }
+        }
+        // Testing write pointer after
+        uint16_t readCount = 10;
+
+        uint32_t trig_pos_prev = 0xFFFFFFFF;
+        uint32_t write_pos_prev = 0xFFFFFFFF;
+
+
+        uint32_t trig_pos = 0xFFFFFFFF;
+        uint32_t write_pos = 0xFFFFFFFF;
+
+        ret |= rp_AcqGetWritePointerAtTrig(&trig_pos);
+        ret |= rp_AcqGetWritePointer(&write_pos);
+
+        trig_pos_prev = trig_pos;
+        write_pos_prev = write_pos;
+        usleep(1000);
+
+        if (trig_pos == prev_test_trig){
+            std::cout << "Trigger Position was not changed after prev test\n";
+            std::cout << "Trigger position " << write_pos << " prev test position " << write_pos_prev << "\n";
+            ret |= true;
+        }
+
+        while(readCount){
+            ret |= rp_AcqGetWritePointerAtTrig(&trig_pos);
+            ret |= rp_AcqGetWritePointer(&write_pos);
+
+            if (write_pos == write_pos_prev){
+                std::cout << "Write Position was not changed\n";
+                std::cout << "Write position " << write_pos << " prev position " << write_pos_prev << "\n";
+                ret |= true;
+            }
+
+            if (trig_pos != trig_pos_prev){
+                std::cout << "Trigger Position was changed\n";
+                std::cout << "Trigger position " << write_pos << " prev position " << write_pos_prev << "\n";
+                ret |= true;
+            }
+
+            trig_pos_prev = trig_pos;
+            write_pos_prev = write_pos;
+            readCount--;
+            usleep(1000);
+        }
+
+        prev_test_trig = trig_pos;
+
+        result |= ret;
+
+        if (s.verbose || ret){
+            printTestResult(testName,ret == 0);
+        }
+
+        if (s.stopOnFail && result) {
+            exit(-1);
+        }
+    }
+    result |= rp_AcqStop();
+
+    return result;
+}
+
+
 auto testTrigDelay(settings s) -> int {
     static double rate = getADCRate();
     Color::Modifier red(Color::FG_RED);
@@ -635,7 +766,7 @@ auto testTrigDelay(settings s) -> int {
 
             ret |= rp_AcqReset();
             ret |= rp_AcqSetDecimationFactor(dec);
-            ret |= rp_AcqSetTriggerLevel(RP_T_CH_1, 0.2); // need low threshold so the very first sample can be high
+            ret |= rp_AcqSetTriggerLevel(RP_T_CH_1, 0.7); // need low threshold so the very first sample can be high
             ret |= rp_AcqSetTriggerHyst(0.005);
             ret |= rp_AcqSetTriggerDelayDirect(i);
             ret |= rp_AcqStart();
@@ -673,15 +804,17 @@ auto testTrigDelay(settings s) -> int {
 
             uint32_t sampWithData = 0;
             for(uint32_t z = 0; z < buffer->size; z++){
-                if (buffer->ch_i[0][z] > 1000) { // must take into account the rise time and initial ringing of step signal
+                if (buffer->ch_i[0][z] >= 8192 * 0.7) { // must take into account the rise time and initial ringing of step signal
                     sampWithData++;
-                }              
+                }
             }
+
             bool testResult = sampWithData != i;
             ret |= testResult;
             if (testResult){
                 std::cout << "The number of data samples is not equal to the trigger delay\n";
                 std::cout << "Delay " << i << " samples " << sampWithData << "\n";
+                printBuffer(buffer,-2,sampWithData + 3);
             }
 
             if (s.verbose || ret){
@@ -730,6 +863,10 @@ int main(int argc, char **argv){
 
     if (s.testTrigSettingNow && !s.noDAC){
         result |=  testTrigSettingNow(s);
+    }
+
+    if (s.testKeepArm && !s.noDAC){
+        result |=  testKeepArm(s);
     }
 
     printAllResult();
