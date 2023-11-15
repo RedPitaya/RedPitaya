@@ -140,11 +140,21 @@ int osc_SetAveraging(bool enable)
 {
     if (enable) {
         cmn_Debug("cmn_SetBits(&osc_reg->other) mask 0x1", 0x1);
-        return cmn_SetBits(&osc_reg->other, 0x1, DATA_AVG_MASK);
+        bool ret = cmn_SetBits(&osc_reg->other, 0x1, DATA_AVG_MASK);
+        if (osc_reg_4ch){
+            cmn_Debug("cmn_SetBits(&osc_reg_4ch->other) mask 0x1", 0x1);
+            ret |= cmn_SetBits(&osc_reg_4ch->other, 0x1, DATA_AVG_MASK);
+        }
+        return ret;
     }
     else {
         cmn_Debug("cmn_UnsetBits(&osc_reg->other) mask 0x1", 0x1);
-        return cmn_UnsetBits(&osc_reg->other, 0x1, DATA_AVG_MASK);
+        auto ret = cmn_UnsetBits(&osc_reg->other, 0x1, DATA_AVG_MASK);
+        if (osc_reg_4ch){
+            cmn_Debug("cmn_UnsetBits(&osc_reg_4ch->other) mask 0x1", 0x1);
+            ret |= cmn_UnsetBits(&osc_reg_4ch->other, 0x1, DATA_AVG_MASK);
+        }
+        return ret;
     }
 }
 
