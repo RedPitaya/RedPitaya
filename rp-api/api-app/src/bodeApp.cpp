@@ -25,6 +25,7 @@
 #include "bodeApp.h"
 #include <chrono>
 
+#include "common.h"
 #include "rp_hw-calib.h"
 #include "rp_hw-profiles.h"
 
@@ -252,7 +253,7 @@ int rpApp_BaDataAnalysisTrap(const rp_ba_buffer_t &buffer,
 
         double ang, u_dut_1_phase, u_dut_2_phase, phase;
 
-        double T = (decimation / rpApp_BaGetADCSpeed());
+        double T = ((double)decimation / (double)rpApp_BaGetADCSpeed());
 
 		std::vector<double> u_dut_1;
 		u_dut_1.reserve(size);
@@ -292,8 +293,8 @@ int rpApp_BaDataAnalysisTrap(const rp_ba_buffer_t &buffer,
                 }
                 if ((u1_max - u1_min) < input_threshold) ret_value = RP_EIPV;
                 if ((u2_max - u2_min) < input_threshold) ret_value = RP_EIPV;
-
         }
+
 
         for (size_t i = 0; i < size; i++){
                 ang = (i * T * w_out);
@@ -322,7 +323,6 @@ int rpApp_BaDataAnalysisTrap(const rp_ba_buffer_t &buffer,
         u_dut_2_phase = atan2f(component_lock_in[1][1], component_lock_in[1][0]);
 
         phase = u_dut_1_phase - u_dut_2_phase;
-
         /* Phase has to be limited between M_PI and -M_PI. */
         if (phase <= -M_PI)
                 phase += 2*M_PI;
@@ -384,9 +384,9 @@ int rpApp_BaDataAnalysis(const rp_ba_buffer_t &buffer,
 	data_t sig1_rms =  RMS(buffer.ch1,size);
 	data_t sig2_rms =  RMS(buffer.ch2,size);
 
-	fprintf(stderr,"freq %f\n",_freq);
-	fprintf(stderr,"RMS 1 %f min %f max %f\n",sig1_rms, min_ch1, max_ch1);
-	fprintf(stderr,"RMS 2 %f min %f max %f\n",sig2_rms, min_ch2, max_ch2);
+	TRACE_SHORT("freq %f",_freq);
+	TRACE_SHORT("RMS 1 %f min %f max %f",sig1_rms, min_ch1, max_ch1);
+	TRACE_SHORT("RMS 2 %f min %f max %f",sig2_rms, min_ch2, max_ch2);
 
 
 	*gain = sig2_rms / sig1_rms;
@@ -553,7 +553,6 @@ int rpApp_BaSafeThreadAcqData(rp_ba_buffer_t &_buffer, int _decimation, int _acq
 	}
 
 	while(!fillState){
-
 		EXEC_CHECK_MUTEX(rp_AcqGetBufferFillState(&fillState), mutex);
 	}
 
@@ -607,16 +606,17 @@ int rpApp_BaGetAmplPhase(float _amplitude_in, float _dc_bias, int _periods_numbe
     }
 
 	acq_size = round((static_cast<float>(_periods_number) * rpApp_BaGetADCSpeed()) / (_freq * decimation));
-
-	fprintf(stderr,"Dec %d freq %f acq_size %d\n",decimation,_freq,acq_size);
+    TRACE_SHORT("Dec %d freq %f acq_size %d",decimation,_freq,acq_size)
 
     rpApp_BaSafeThreadAcqData(_buffer,decimation, acq_size,_amplitude_in);
     rp_GenOutDisable(RP_CH_1);
-    //int ret = rp_BaDataAnalysis(_buffer, acq_size, ADC_SAMPLE_RATE / decimation,_freq, samples_period,  &gain, &phase_out,_input_threshold);
+    // int ret = rp_BaDataAnalysis(_buffer, acq_size, ADC_SAMPLE_RATE / decimation,_freq, samples_period,  &gain, &phase_out,_input_threshold);
 	int ret = rpApp_BaDataAnalysisTrap(_buffer, acq_size, _freq, decimation,  &gain, &phase_out,_input_threshold);
 
     *_amplitude = 10.*logf(gain);
     *_phase = phase_out;
+    TRACE_SHORT("Calc amp %f phase %f",*_amplitude,*_phase)
+
 	if (std::isnan(*_amplitude) || std::isinf(*_amplitude)) ret =  RP_EOOR;
     return ret;
 }

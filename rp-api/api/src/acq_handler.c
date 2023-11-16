@@ -1296,10 +1296,6 @@ int acq_GetData(uint32_t pos,buffers_t *out)
 
     if (channels > 0){
         uint32_t size = out->size;
-        if (!out->ch_i[0]){
-            fprintf(stderr,"[FATAL ERROR] Buffer[0] for fill is NULL\n");
-            assert(false);
-        }
         int ret = acq_GetDataInBuffer(RP_CH_1,pos,&size,out);
         if (ret != RP_OK){
             return ret;
@@ -1309,10 +1305,6 @@ int acq_GetData(uint32_t pos,buffers_t *out)
 
     if (channels > 1){
         uint32_t size = out->size;
-        if (!out->ch_i[1]){
-            fprintf(stderr,"[FATAL ERROR] Buffer[1] for fill is NULL\n");
-            assert(false);
-        }
         int ret = acq_GetDataInBuffer(RP_CH_2,pos,&size,out);
         if (ret != RP_OK){
             return ret;
@@ -1322,10 +1314,6 @@ int acq_GetData(uint32_t pos,buffers_t *out)
 
     if (channels > 2){
         uint32_t size = out->size;
-        if (!out->ch_i[2]){
-            fprintf(stderr,"[FATAL ERROR] Buffer[2] for fill is NULL\n");
-            assert(false);
-        }
         int ret = acq_GetDataInBuffer(RP_CH_3,pos,&size,out);
         if (ret != RP_OK){
             return ret;
@@ -1335,10 +1323,6 @@ int acq_GetData(uint32_t pos,buffers_t *out)
 
     if (channels > 3){
         uint32_t size = out->size;
-        if (!out->ch_i[3]){
-            fprintf(stderr,"[FATAL ERROR] Buffer[3] for fill is NULL\n");
-            assert(false);
-        }
         int ret = acq_GetDataInBuffer(RP_CH_4,pos,&size,out);
         if (ret != RP_OK){
             return ret;

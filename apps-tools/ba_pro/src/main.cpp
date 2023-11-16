@@ -440,7 +440,6 @@ void OnNewParams(void)
         cur_step++;
         ba_current_step.Set(cur_step);
 		ba_start_freq.SendValue(next_freq);
-
         if (ba_calibrate_start.NewValue()){ // save data in calibration mode
 			rpApp_BaWriteCalib(current_freq,amplitude,phase_out);
 			// signal.push_back(amplitude);
