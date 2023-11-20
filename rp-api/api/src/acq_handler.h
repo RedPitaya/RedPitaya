@@ -111,4 +111,7 @@ int acq_GetFilterCalibValue(rp_channel_t channel,uint32_t* coef_aa, uint32_t* co
 int acq_SetExtTriggerDebouncerUs(double value);
 int acq_GetExtTriggerDebouncerUs(double *value);
 
+int acq_SetIntTriggerDebouncerUs(double value);
+int acq_GetIntTriggerDebouncerUs(double *value);
+
 #endif /* SRC_ACQ_HANDLER_H_ */

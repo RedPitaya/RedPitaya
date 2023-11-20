@@ -1615,6 +1615,14 @@ int rp_AcqGetExtTriggerDebouncerUs(double *value){
     return acq_GetExtTriggerDebouncerUs(value);
 }
 
+int rp_AcqSetIntTriggerDebouncerUs(double value){
+    return acq_SetIntTriggerDebouncerUs(value);
+}
+
+int rp_AcqGetIntTriggerDebouncerUs(double *value){
+    return acq_GetIntTriggerDebouncerUs(value);
+}
+
 int rp_GenSetExtTriggerDebouncerUs(double value){
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;

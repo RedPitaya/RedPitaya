@@ -735,6 +735,18 @@ print("rp.rp_AcqSetExtTriggerDebouncerUs(123)")
 res = rp.rp_AcqSetExtTriggerDebouncerUs(123)
 print(res)
 
+print("rp.rp_AcqGetExtTriggerDebouncerUs()")
+res = rp.rp_AcqGetExtTriggerDebouncerUs()
+print(res)
+
+print("rp.rp_AcqSetIntTriggerDebouncerUs(1000)")
+res = rp.rp_AcqSetIntTriggerDebouncerUs(1000)
+print(res)
+
+print("rp.rp_AcqGetIntTriggerDebouncerUs()")
+res = rp.rp_AcqGetIntTriggerDebouncerUs()
+print(res)
+
 print("rp.rp_AcqSetAC_DC(rp.RP_CH_1,rp.RP_DC)")
 res = rp.rp_AcqSetAC_DC(rp.RP_CH_1,rp.RP_DC)
 print(res)

@@ -283,13 +283,20 @@ typedef struct osc_control_s {
     /* Reserved */
     uint32_t reserved_8C;
 
-    /**@brief Offset 0x90 - Trigger debuncer time
+    /**@brief Offset 0x90 - External trigger debuncer time
     * bits [19:0] Number of ADC clock periods
     * trigger is disabled after activation
     * reset value is decimal 62500
     * or equivalent to 0.5ms
     */
-    uint32_t trig_dbc_t:20,:12; // 0x90
+    uint32_t ext_trig_dbc_t:20,:12; // 0x90
+
+    /**@brief Offset 0x90 - Internal trigger debuncer time
+    * Number of ADC clock periods
+    * trigger is disabled after activation
+    * reset value is decimal 0
+    */
+    uint32_t int_trig_dbc_t; // 0x94
 
     /* ChA & ChB data - 14 LSB bits valid starts from 0x10000 and
      * 0x20000 and are each 16k samples long */
@@ -365,8 +372,10 @@ int osc_GetEqFiltersChC(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk,
 int osc_SetEqFiltersChD(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp);
 int osc_GetEqFiltersChD(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
 
-int osc_SetTriggerDebouncer(uint32_t value);
-int osc_GetTriggerDebouncer(uint32_t *value);
+int osc_SetExtTriggerDebouncer(uint32_t value);
+int osc_GetExtTriggerDebouncer(uint32_t *value);
+int osc_SetIntTriggerDebouncer(uint32_t value);
+int osc_GetIntTriggerDebouncer(uint32_t *value);
 
 const volatile uint32_t* osc_GetDataBufferChA();
 const volatile uint32_t* osc_GetDataBufferChB();

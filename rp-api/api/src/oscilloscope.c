@@ -140,7 +140,7 @@ int osc_SetAveraging(bool enable)
 {
     if (enable) {
         cmn_Debug("cmn_SetBits(&osc_reg->other) mask 0x1", 0x1);
-        bool ret = cmn_SetBits(&osc_reg->other, 0x1, DATA_AVG_MASK);
+        int ret = cmn_SetBits(&osc_reg->other, 0x1, DATA_AVG_MASK);
         if (osc_reg_4ch){
             cmn_Debug("cmn_SetBits(&osc_reg_4ch->other) mask 0x1", 0x1);
             ret |= cmn_SetBits(&osc_reg_4ch->other, 0x1, DATA_AVG_MASK);
@@ -149,7 +149,7 @@ int osc_SetAveraging(bool enable)
     }
     else {
         cmn_Debug("cmn_UnsetBits(&osc_reg->other) mask 0x1", 0x1);
-        auto ret = cmn_UnsetBits(&osc_reg->other, 0x1, DATA_AVG_MASK);
+        int ret = cmn_UnsetBits(&osc_reg->other, 0x1, DATA_AVG_MASK);
         if (osc_reg_4ch){
             cmn_Debug("cmn_UnsetBits(&osc_reg_4ch->other) mask 0x1", 0x1);
             ret |= cmn_UnsetBits(&osc_reg_4ch->other, 0x1, DATA_AVG_MASK);
@@ -543,24 +543,39 @@ int osc_GetWritePointerAtTrig(uint32_t* pos)
     return RP_OK;
 }
 
-int osc_SetTriggerDebouncer(uint32_t value){
+int osc_SetExtTriggerDebouncer(uint32_t value){
     if (DEBAUNCER_MASK < value) {
-        cmn_Debug("[osc_SetTriggerDebouncer] Error: osc_reg.trig_dbc_t <- ",value);
+        cmn_Debug("[osc_SetExtTriggerDebouncer] Error: osc_reg.ext_trig_dbc_t <- ",value);
         return RP_EIPV;
     }
-    cmn_Debug("[osc_SetTriggerDebouncer] osc_reg.trig_dbc_t <- ",value);
-    osc_reg->trig_dbc_t = value;
+    cmn_Debug("[osc_SetExtTriggerDebouncer] osc_reg.ext_trig_dbc_t <- ",value);
+    osc_reg->ext_trig_dbc_t = value;
 
     if (osc_reg_4ch){
-        cmn_Debug("[osc_SetTriggerDebouncer] osc_reg_4ch.trig_dbc_t <- ",value);
-        osc_reg_4ch->trig_dbc_t = value;
+        cmn_Debug("[osc_SetExtTriggerDebouncer] osc_reg_4ch.ext_trig_dbc_t <- ",value);
+        osc_reg_4ch->ext_trig_dbc_t = value;
     }
     return RP_OK;
 }
 
-int osc_GetTriggerDebouncer(uint32_t *value){
-    *value = osc_reg->trig_dbc_t;
-    cmn_Debug("[osc_SetTriggerDebouncer] osc_reg.trig_dbc_t ->",*value);
+int osc_GetExtTriggerDebouncer(uint32_t *value){
+    *value = osc_reg->ext_trig_dbc_t;
+    return RP_OK;
+}
+
+int osc_SetIntTriggerDebouncer(uint32_t value){
+    cmn_Debug("[osc_IntExtTriggerDebouncer] osc_reg.int_trig_dbc_t <- ",value);
+    osc_reg->int_trig_dbc_t = value;
+
+    if (osc_reg_4ch){
+        cmn_Debug("[osc_IntExtTriggerDebouncer] osc_reg_4ch.int_trig_dbc_t <- ",value);
+        osc_reg_4ch->int_trig_dbc_t = value;
+    }
+    return RP_OK;
+}
+
+int osc_GetIntTriggerDebouncer(uint32_t *value){
+    *value = osc_reg->int_trig_dbc_t;
     return RP_OK;
 }
 

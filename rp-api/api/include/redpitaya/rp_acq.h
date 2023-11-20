@@ -506,6 +506,22 @@ int rp_AcqSetExtTriggerDebouncerUs(double value);
 int rp_AcqGetExtTriggerDebouncerUs(double *value);
 
 /**
+ * Sets int. trigger debouncer for acquisition in Us (Value must be positive).
+ * @param value Value in microseconds.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqSetIntTriggerDebouncerUs(double value);
+
+/**
+ * Gets int. trigger debouncer for acquisition in Us
+ * @param value Return value in microseconds.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetIntTriggerDebouncerUs(double *value);
+
+/**
 * Sets the AC / DC modes for input.
 * Only works with Redpitaya 250-12 otherwise returns RP_NOTS
 * @param channel Channel A or B.
