@@ -541,6 +541,7 @@ void CBoard::startStreaming(QDateTime time){
 void CBoard::stopStreaming(){
     m_asionet = nullptr;
     m_net_buffer = nullptr;
+    m_file_manager->stopAndFlush();
     m_file_manager = nullptr;
     m_configManager->sendStop(m_ip.toStdString());
 }

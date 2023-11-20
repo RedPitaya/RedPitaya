@@ -56,7 +56,7 @@ auto getNewFileName(CStreamSettings::DataFormat _fileType,std::string &_filePath
     if (_fileType == CStreamSettings::DataFormat::TDMS) filename += "tdms";
     if (_fileType == CStreamSettings::DataFormat::WAV)  filename += "wav";
     if (_fileType == CStreamSettings::DataFormat::BIN)  filename += "bin";
-    
+
     return filename;
 }
 
@@ -87,14 +87,14 @@ CStreamingFile::CStreamingFile(CStreamSettings::DataFormat _fileType,std::string
     m_waveWriter = new CWaveWriter();
 
     m_file_manager->outSpaceNotify.connect([&](){
-        stop(CStreamingFile::OUT_SPACE);
+        stop(CStreamingFile::OUT_SPACE,false);
     });
 }
 
 
 CStreamingFile::~CStreamingFile()
 {
-    stop();
+    stopImmediately();
     if (m_file_manager){
         delete m_file_manager;
         m_file_manager = nullptr;
@@ -121,7 +121,7 @@ auto CStreamingFile::isOutOfSpace() -> bool {
     if (m_file_manager) {
         return m_file_manager->isOutOfSpace();
     }
-    return false;  
+    return false;
 }
 
 auto CStreamingFile::run(std::string _prefix) -> void {
@@ -138,13 +138,13 @@ auto CStreamingFile::run(std::string _prefix) -> void {
     m_file_manager->startWrite(m_fileType);
 }
 
-auto CStreamingFile::stop(CStreamingFile::EStopReason reason) -> void{
+auto CStreamingFile::stop(CStreamingFile::EStopReason reason, bool _flush) -> void{
     std::lock_guard<std::mutex> lock(m_stopMtx);
     if (m_file_manager) {
-        m_file_manager->stopWrite(false);
+        m_file_manager->stopWrite(_flush);
         if (m_testMode){
             m_file_manager->deleteFile();
-        }        
+        }
     }
     if (m_fileLogger && !m_testMode)
         m_fileLogger->dumpToFile();
@@ -154,8 +154,12 @@ auto CStreamingFile::stop(CStreamingFile::EStopReason reason) -> void{
     }
 }
 
-auto CStreamingFile::stop() -> void {    
-    stop(CStreamingFile::NORMAL);
+auto CStreamingFile::stopImmediately() -> void {
+    stop(CStreamingFile::NORMAL,false);
+}
+
+auto CStreamingFile::stopAndFlush() -> void {
+    stop(CStreamingFile::NORMAL,true);
 }
 
 auto CStreamingFile::convertBuffers(DataLib::CDataBuffersPack::Ptr pack, DataLib::EDataBuffersPackChannel channel,bool lockADCTo1V) -> SBuffPass {
@@ -388,7 +392,7 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPack::Ptr pack) -> int {
             }
         }
         if(reachLimits){
-            stop(CStreamingFile::REACH_LIMIT);
+            stop(CStreamingFile::REACH_LIMIT,true);
         }
     }
     return 1;

@@ -41,7 +41,8 @@ public:
 
 
     auto run(std::string _prefix) -> void;
-    auto stop() -> void;
+    auto stopAndFlush() -> void;
+    auto stopImmediately() -> void;
     auto addNetWorkLost(uint64_t count) -> void;
     auto disableNotify() -> void;
 
@@ -83,7 +84,7 @@ private:
 
     CStreamSettings::DataFormat m_fileType;
 
-    auto stop(EStopReason reason) -> void;
+    auto stop(EStopReason reason, bool _flush) -> void;
     auto convertBuffers(DataLib::CDataBuffersPack::Ptr pack, DataLib::EDataBuffersPackChannel channel,bool lockADCTo1V) -> SBuffPass;
 };
 

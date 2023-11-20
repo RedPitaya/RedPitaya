@@ -35,7 +35,7 @@ auto stopStreaming(std::string host) -> void;
 
 
 auto runClient(std::string  host,StateRunnedHosts state) -> void{
-    g_terminate[host] = false;    
+    g_terminate[host] = false;
     auto protocol = net_lib::EProtocol::P_TCP;
 
     if (g_soption.save_dir == "")
@@ -171,14 +171,14 @@ auto runClient(std::string  host,StateRunnedHosts state) -> void{
 
     auto g_net_buffer_w = std::weak_ptr<streaming_lib::CStreamingNetBuffer>(g_net_buffer);
     g_asionet->reciveNotify.connect([g_net_buffer_w](std::error_code error,uint8_t *buff,size_t _size){
-        auto obj = g_net_buffer_w.lock();        
+        auto obj = g_net_buffer_w.lock();
         if (obj){
             if (!error){
                 obj->addNewBuffer(buff,_size);
             }
         }
     });
-    g_asionet->start();    
+    g_asionet->start();
     auto beginTime = std::chrono::time_point_cast<std::chrono::milliseconds >(std::chrono::system_clock::now()).time_since_epoch().count();
     auto curTime = beginTime;
     while(g_file_manager->isFileThreadWork() &&  !g_terminate[host]){
@@ -192,7 +192,7 @@ auto runClient(std::string  host,StateRunnedHosts state) -> void{
         }
     }
 
-    g_file_manager->stop();
+    g_file_manager->stopAndFlush();
     g_asionet->stop();
     if (g_soption.streamign_type == ClientOpt::StreamingType::CSV && g_soption.testmode != ClientOpt::TestMode::ENABLE) {
         const std::lock_guard<std::mutex> lock(g_s_csv_mutex);
@@ -293,7 +293,7 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl,ClientOpt::Option
                 t.join();
             }
         }
-        
+
 
         remote_opt.remote_mode = ClientOpt::RemoteMode::STOP;
         if (!startRemote(cl,remote_opt,&runned_hosts)){
