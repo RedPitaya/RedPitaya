@@ -479,7 +479,13 @@ auto parse(int argc, char* argv[]) -> Options{
             }
 
             case 'a': {
-                opt.enableAXI = true;
+                if (!rp_HPGetIsDMAinv0_94OrDefault()){
+                    opt.error = true;
+                    fprintf(stderr, "[ERROR] AXI mode not supported\n");
+                }
+                else{
+                    opt.enableAXI = true;
+                }
                 break;
             }
 

@@ -16,6 +16,7 @@
 #include <string.h>
 #include <sys/param.h>
 #include <iostream>
+#include <vector>
 
 #include "rp.h"
 #include "rp_hw-calib.h"
@@ -169,17 +170,13 @@ int main(int argc, char *argv[])
 
     if (option.enableAXI){
         rp_AcqAxiSetDecimationFactor(option.decimation);
-        rp_AcqAxiSetTriggerDelay(RP_CH_1, option.dataSize);
-        rp_AcqAxiSetTriggerDelay(RP_CH_2, option.dataSize);
-        rp_AcqAxiSetBufferSamples(RP_CH_1, axi_start, option.dataSize);
-        rp_AcqAxiSetBufferSamples(RP_CH_2, axi_start + axi_size / 2, option.dataSize);
-        if (rp_AcqAxiEnable(RP_CH_1, true) != RP_OK){
-            fprintf(stderr,"Error: Can't enable AXI for channel 1");
-            return -1;
-        }
-        if (rp_AcqAxiEnable(RP_CH_2, true) != RP_OK){
-            fprintf(stderr,"Error: Can't enable AXI for channel 2");
-            return -1;
+        for(int i = 0 ; i < channels; i++){
+            rp_AcqAxiSetTriggerDelay((rp_channel_t)i, option.dataSize);
+            rp_AcqAxiSetBufferSamples((rp_channel_t)i, axi_start + axi_size / 2 * i, option.dataSize);
+            if (rp_AcqAxiEnable((rp_channel_t)i, true) != RP_OK){
+                fprintf(stderr,"Error: Can't enable AXI for channel %d\n",i + 1);
+                return -1;
+            }
         }
     }
 
@@ -223,15 +220,16 @@ int main(int argc, char *argv[])
 
     int start_ch = 0;
     int end_ch = channels - 1;
-
+    auto size = MAX(ADC_BUFFER_SIZE, option.dataSize);
     if (option.showInVolt){
-        float buffers[4][MAX(ADC_BUFFER_SIZE, option.dataSize)];
+        std::vector<float> buffers[4];
         for(auto i = start_ch; i <= end_ch; i++){
+            buffers[i].resize(size);
             auto ch = (rp_channel_t)i;
             if (option.enableAXI) {
-                rp_AcqAxiGetDataV(ch, pos, &acq_u_size, buffers[i]);
+                rp_AcqAxiGetDataV(ch, pos, &acq_u_size, buffers[i].data());
             } else {
-                rp_AcqGetDataV(ch, pos, &acq_u_size, buffers[i]);
+                rp_AcqGetDataV(ch, pos, &acq_u_size, buffers[i].data());
             }
         }
         for(uint32_t i = 0; i< option.dataSize; i++){
@@ -247,17 +245,17 @@ int main(int argc, char *argv[])
         }
 
     }else{
-        int16_t buffers[4][MAX(ADC_BUFFER_SIZE, option.dataSize)];
-
+        std::vector<int16_t> buffers[4];
         for(auto i = start_ch; i <= end_ch; i++){
+            buffers[i].resize(size);
             auto ch = (rp_channel_t)i;
             if (option.enableAXI) {
-                rp_AcqAxiGetDataRaw(ch, pos, &acq_u_size, buffers[i]);
+                rp_AcqAxiGetDataRaw(ch, pos, &acq_u_size, buffers[i].data());
             } else {
                 if (option.disableCalibration)
-                    rp_AcqGetDataRaw(ch, pos, &acq_u_size, buffers[i]);
+                    rp_AcqGetDataRaw(ch, pos, &acq_u_size, buffers[i].data());
                 else
-                    rp_AcqGetDataRawWithCalib(ch, pos, &acq_u_size, buffers[i]);
+                    rp_AcqGetDataRawWithCalib(ch, pos, &acq_u_size, buffers[i].data());
             }
         }
 
@@ -276,8 +274,8 @@ int main(int argc, char *argv[])
     }
 
     if (option.enableAXI) {
-        rp_AcqAxiEnable(RP_CH_1, false);
-        rp_AcqAxiEnable(RP_CH_2, false);
+        for(int i = 0 ; i < channels; i++)
+            rp_AcqAxiEnable((rp_channel_t)i, false);
     }
 
 
