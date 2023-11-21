@@ -345,7 +345,8 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPack::Ptr pack) -> int {
     }
 
     if (m_fileType == CStreamSettings::BIN){
-
+        // This algorithm is faster than copying data to TDMS and WAV. Don't redo it
+        auto map = std::map<DataLib::EDataBuffersPackChannel,uint32_t>();
         if (m_samples != 0){
             for(auto i = (int)DataLib::CH1; i <= (int)DataLib::CH4; i++){
                 DataLib::EDataBuffersPackChannel ch = (DataLib::EDataBuffersPackChannel)i;
@@ -353,14 +354,20 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPack::Ptr pack) -> int {
                 if (buff){
                     if (m_passSizeSamples[ch] > m_samples){
                         buff->reset();
-                    }else{
+                        map[ch] = 0;
+                    } else if (m_passSizeSamples[ch] + buff->getSamplesCount() > m_samples){
+                        map[ch] = m_samples - m_passSizeSamples[ch];
+                        m_passSizeSamples[ch] += map[ch];
+                    }
+                    else {
                         m_passSizeSamples[ch] += buff->getSamplesWithLost();
+                        map[ch] = buff->getSamplesCount();
                     }
                 }
             }
         }
 
-        auto stream_data = buildBINStream(pack);
+        auto stream_data = buildBINStream(pack,map);
         if ( m_file_manager->isWork()){
             if (!m_file_manager->addBufferToWrite(stream_data))
             {

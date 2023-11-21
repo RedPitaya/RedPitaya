@@ -26,7 +26,7 @@ auto readBinInfo(std::iostream *buffer) -> CBinInfo;
 auto readCSV(std::iostream *buffer,int64_t *_position,int *_channels,uint64_t *samplePos,bool skipData = false) -> std::iostream *;
 
 auto buildTDMSStream(std::map<DataLib::EDataBuffersPackChannel,SBuffPass> new_buffs) -> std::iostream *;
-auto buildBINStream (DataLib::CDataBuffersPack::Ptr buff_pack) -> std::iostream *;
+auto buildBINStream (DataLib::CDataBuffersPack::Ptr buff_pack, std::map<DataLib::EDataBuffersPackChannel,uint32_t> _samples) -> std::iostream *;
 
 auto dirNameOf(const std::string& fname) -> std::string;
 
