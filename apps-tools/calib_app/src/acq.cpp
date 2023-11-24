@@ -334,6 +334,7 @@ void COscilloscope::acquire(){
     rp_AcqStop();
     rp_AcqGetWritePointer(&pos);
     m_buffer.size = acq_u_size;
+    m_buffer.use_calib_for_raw = true;
     rp_AcqGetData(pos, &m_buffer);
 
     if (acq_u_size > 0) {
@@ -737,6 +738,7 @@ void COscilloscope::acquireAutoFilterSync(){
     //   rp_AcqGetWritePointerAtTrig(&pos);
         rp_AcqGetWritePointer(&pos);
         m_buffer.size = acq_u_size;
+        m_buffer.use_calib_for_raw = true;
         rp_AcqGetData((pos + 1)  % ADC_BUFFER_SIZE , &m_buffer);
 
         bool exitFlag = true;
