@@ -80,6 +80,9 @@ int rp_get_params(rp_app_params_t **p);
 int rp_get_signals(float ***s, int *sig_num, int *sig_len);
 
 auto getModelS() -> std::string;
+auto getMaxADC() -> uint32_t;
+
+void updateParametersByConfig();
 
 #ifdef __cplusplus
 }

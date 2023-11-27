@@ -2,7 +2,7 @@
 CXX=$(CROSS_COMPILE)g++
 RM=rm
 
-CXXSOURCES=main.cpp
+CXXSOURCES=main.cpp settings.cpp
 
 INCLUDE =  -I$(INSTALL_DIR)/include
 INCLUDE += -I$(INSTALL_DIR)/include/api2
@@ -14,7 +14,7 @@ LIBS = -L$(INSTALL_DIR)/lib
 LIBS += -L$(INSTALL_DIR)/rp_sdk
 
 COMMON_FLAGS+=-Wall -fPIC -Os -s -w -mfpu=neon
-CFLAGS+=$(COMMON_FLAGS) $(INCLUDE) 
+CFLAGS+=$(COMMON_FLAGS) $(INCLUDE)
 CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE)
 LDFLAGS = -shared $(COMMON_FLAGS) $(LIBS)
 LDFLAGS+= -Wl,--whole-archive

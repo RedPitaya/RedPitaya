@@ -91,7 +91,7 @@ if(BUILD_SHARED)
     target_sources(rpapp-shared PRIVATE $<TARGET_OBJECTS:rpapp-obj>)
     target_link_options(rpapp-shared PRIVATE -shared -Wl,--version-script=${CMAKE_SOURCE_DIR}/src/exportmap)
     target_link_libraries(rpapp-shared -lm -lpthread)
-    target_link_libraries(rpapp-shared rp-hw-calib rp-hw-profiles)
+    target_link_libraries(rpapp-shared rp-hw-calib rp-hw-profiles rp-dsp)
 
     if(IS_INSTALL)
         install(TARGETS rpapp-shared

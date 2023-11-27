@@ -63,6 +63,7 @@ public:
 
     void setChannel(uint8_t ch, bool enable);
     int setSignalLength(uint32_t len);
+    int setSignalLengthDiv2(uint32_t len);
     uint32_t getSignalLength();
     uint32_t getSignalMaxLength();
     uint32_t getOutSignalLength();
@@ -81,13 +82,15 @@ public:
     void setMode(mode_t mode);
     mode_t getMode();
 
-    
+
     int prepareFreqVector(data_t *data, double adc_rate_f_s, float decimation);
 
     int windowFilter(data_t *data);
     int fftInit();
     int fftClean();
     int fft(data_t *data);
+    int getAmpAndPhase(data_t *_data, double _freq, double *_amp1, double *_phase1, double *_amp2, double *_phase2);
+
     int decimate(data_t *data,uint32_t in_len, uint32_t out_len);
     int cnvToDBM(data_t *data,uint32_t  decimation);
     int cnvToDBMMaxValueRanged(data_t *data,uint32_t  decimation,uint32_t minFreq,uint32_t maxFreq);

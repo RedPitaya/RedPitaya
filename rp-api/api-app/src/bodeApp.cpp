@@ -28,10 +28,12 @@
 #include "common.h"
 #include "rp_hw-calib.h"
 #include "rp_hw-profiles.h"
+#include "rp_dsp.h"
 
 using namespace std::chrono;
 
 static auto adc_rate = rpApp_BaGetADCSpeed();
+static auto adc_channels = rpApp_BaGetADCChannels();
 
 typedef double data_t;
 
@@ -46,6 +48,8 @@ typedef double data_t;
 
 static std::vector<float> calib_data;
 static pthread_mutex_t mutex;
+
+rp_dsp_api::CDSP    g_dsp_logic(adc_channels,ADC_BUFFER_SIZE,adc_rate);
 
 
 uint8_t rpApp_BaGetADCChannels(){
@@ -72,14 +76,35 @@ uint32_t rpApp_BaGetADCSpeed(){
     return c;
 }
 
+data_t MEAN(const std::vector<float> &data, int size){
+    data_t result = 0;
+    for(int i = 0; i < size; i++){
+        result += data[i];
+    }
+    result =  result / (double)size;
+    return result;
+}
+
 data_t RMS(const std::vector<float> &data, int size){
     data_t result = 0;
     for(int i = 0; i < size; i++){
-		int x = data[i] * 1000;
-		double d = (double)x / 1000.0;
+		int x = data[i] * 100000;
+		double d = (double)x / 100000.0;
         result += d * d;
     }
     result =  sqrt(result / (double)size);
+    return result;
+}
+
+data_t P_P(const std::vector<float> &data, int size){
+    data_t result = 0;
+    data_t min = data[0];
+    data_t max = data[0];
+    for(int i = 0; i < size; i++){
+        min = min > data[i] ? data[i] : min;
+        max = max < data[i] ? data[i] : max;
+    }
+    result =  max - min;
     return result;
 }
 
@@ -251,7 +276,7 @@ int rpApp_BaDataAnalysisTrap(const rp_ba_buffer_t &buffer,
 
 		float w_out = _freq*2 * M_PI;
 
-        double ang, u_dut_1_phase, u_dut_2_phase, phase;
+        double ang,  phase;
 
         double T = ((double)decimation / (double)rpApp_BaGetADCSpeed());
 
@@ -259,10 +284,6 @@ int rpApp_BaDataAnalysisTrap(const rp_ba_buffer_t &buffer,
 		u_dut_1.reserve(size);
 		std::vector<double> u_dut_2;
 		u_dut_2.reserve(size);
-        // double u_dut_1[size];
-        // double u_dut_2[size];
-        // double u_dut_1_s[2][size];
-        // double u_dut_2_s[2][size];
 
 		std::vector<double> u_dut_1_s[2];
 		u_dut_1_s[0].reserve(size);
@@ -276,8 +297,8 @@ int rpApp_BaDataAnalysisTrap(const rp_ba_buffer_t &buffer,
         int ret_value = RP_OK;
 
         for (size_t i = 0; i < size; i++){
-                u_dut_1[i] = ceil(buffer.ch2[i] * 1000.0) / 1000.0;
-                u_dut_2[i] = ceil(buffer.ch1[i] * 1000.0) / 1000.0;
+                u_dut_1[i] = ceil(buffer.ch2[i] * 100000.0) / 100000.0;
+                u_dut_2[i] = ceil(buffer.ch1[i] * 100000.0) / 100000.0;
         }
 
         if (size > 0){
@@ -313,14 +334,14 @@ int rpApp_BaDataAnalysisTrap(const rp_ba_buffer_t &buffer,
         component_lock_in[1][1] = ba_trapezoidalApprox(u_dut_2_s[1].data(), T, size); //I_Y
 
         /* Calculating voltage amplitude and phase */
-        // u_dut_1_ampl = 2.0 * (sqrtf(powf(component_lock_in[0][0], 2.0) + powf(component_lock_in[0][1], 2.0)));
+        auto u_dut_1_ampl = 2.0 * (sqrtf(powf(component_lock_in[0][0], 2.0) + powf(component_lock_in[0][1], 2.0)));
 
-        u_dut_1_phase = atan2f(component_lock_in[0][1], component_lock_in[0][0]);
+        auto u_dut_1_phase = atan2f(component_lock_in[0][1], component_lock_in[0][0]);
 
         /* Calculating current amplitude and phase */
-        // u_dut_2_ampl = 2.0 * (sqrtf(powf(component_lock_in[1][0], 2.0) + powf(component_lock_in[1][1], 2.0)));
+        auto u_dut_2_ampl = 2.0 * (sqrtf(powf(component_lock_in[1][0], 2.0) + powf(component_lock_in[1][1], 2.0)));
 
-        u_dut_2_phase = atan2f(component_lock_in[1][1], component_lock_in[1][0]);
+        auto u_dut_2_phase = atan2f(component_lock_in[1][1], component_lock_in[1][0]);
 
         phase = u_dut_1_phase - u_dut_2_phase;
         /* Phase has to be limited between M_PI and -M_PI. */
@@ -331,11 +352,76 @@ int rpApp_BaDataAnalysisTrap(const rp_ba_buffer_t &buffer,
 
         *phase_out = phase * (180.0 / M_PI);
 		// Old logic
-        // *gain = u_dut_1_ampl / u_dut_2_ampl;
+        *gain = u_dut_1_ampl / u_dut_2_ampl;
 
-		data_t sig1_rms =  RMS(buffer.ch1,size);
-		data_t sig2_rms =  RMS(buffer.ch2,size);
-		*gain = sig2_rms / sig1_rms;
+		// data_t sig1_rms =  RMS(buffer.ch1,size);
+		// data_t sig2_rms =  RMS(buffer.ch2,size);
+		// *gain = sig2_rms / sig1_rms;
+        #ifdef TRACE_ENABLE
+            auto mean1 = MEAN(buffer.ch1,buffer.ch1.size());
+            auto mean2 = MEAN(buffer.ch2,buffer.ch2.size());
+            auto pp1 = P_P(buffer.ch1,buffer.ch1.size());
+            auto pp2 = P_P(buffer.ch2,buffer.ch2.size());
+
+            TRACE_SHORT("Signal 1: Amplitude %f Phase %f Mean %f P-P %f",u_dut_1_ampl,u_dut_1_phase,mean1,pp1)
+            TRACE_SHORT("Signal 2: Amplitude %f Phase %f Mean %f P-P %f",u_dut_2_ampl,u_dut_2_phase,mean2,pp2)
+        #endif
+        return ret_value;
+}
+
+
+int rpApp_BaDataAnalysisFFT(const rp_ba_buffer_t &buffer,
+                                        uint32_t size,
+                                        float _freq, // 2*pi*f
+                                        int decimation,
+                                        float *gain,
+                                        float *phase_out,
+                                        float input_threshold)
+{
+
+        int ret_value = RP_OK;
+
+        if (size > 0){
+                double u1_max = buffer.ch1[0];
+                double u1_min = buffer.ch1[0];
+                double u2_max = buffer.ch2[0];
+                double u2_min = buffer.ch2[0];
+                for (size_t i = 1; i < size; i++){
+                        if (u1_max < buffer.ch1[i]) u1_max = buffer.ch1[i];
+                        if (u2_max < buffer.ch2[i]) u2_max = buffer.ch2[i];
+                        if (u1_min > buffer.ch1[i]) u1_min = buffer.ch1[i];
+                        if (u2_min > buffer.ch2[i]) u2_min = buffer.ch2[i];
+                }
+                if ((u1_max - u1_min) < input_threshold) ret_value = RP_EIPV;
+                if ((u2_max - u2_min) < input_threshold) ret_value = RP_EIPV;
+        }
+
+        auto data = g_dsp_logic.createData();
+        g_dsp_logic.setSignalLengthDiv2(size);
+        g_dsp_logic.window_init(rp_dsp_api::FLAT_TOP);
+        g_dsp_logic.fftInit();
+
+        g_dsp_logic.prepareFreqVector(data,adc_rate,decimation);
+        for(size_t i = 0 ; i < size; i++){
+            data->m_in[0][i] = buffer.ch1[i];
+        }
+
+        for(size_t i = 0 ; i < size; i++){
+            data->m_in[1][i] = buffer.ch2[i];
+        }
+
+        g_dsp_logic.windowFilter(data);
+        g_dsp_logic.fft(data);
+        double amp[2];
+        double phase[2];
+        g_dsp_logic.getAmpAndPhase(data,_freq,&amp[0],&phase[0],&amp[1],&phase[1]);
+
+        TRACE_SHORT("A1 %f A2 %f P1 %f P2 %f",amp[0],amp[1],phase[0] * 180 / M_PI ,phase[1] * 180 / M_PI);
+        g_dsp_logic.deleteData(data);
+        g_dsp_logic.fftClean();
+
+        *phase_out = phase[0] - phase[1];
+		*gain = amp[0]/amp[1];
 
         return ret_value;
 }
@@ -576,6 +662,17 @@ int rpApp_BaSafeThreadAcqData(rp_ba_buffer_t &_buffer, int _decimation, int _acq
 	return RP_OK;
 }
 
+uint32_t increaseSmallBuffer(uint32_t _decimation, uint32_t _currentSize){
+    int half_size = ADC_BUFFER_SIZE / 2;
+    int rate = half_size / _currentSize;
+    if (_decimation < 16){
+        rate = rate / _decimation;
+        rate = rate < 1 ? 1 : rate;
+        _currentSize *= rate;
+    }
+    return _currentSize;
+}
+
 int rpApp_BaGetAmplPhase(float _amplitude_in, float _dc_bias, int _periods_number, rp_ba_buffer_t &_buffer, float* _amplitude, float* _phase, float _freq,float _input_threshold)
 {
     float gain = 0;
@@ -606,16 +703,18 @@ int rpApp_BaGetAmplPhase(float _amplitude_in, float _dc_bias, int _periods_numbe
     }
 
 	acq_size = round((static_cast<float>(_periods_number) * rpApp_BaGetADCSpeed()) / (_freq * decimation));
-    TRACE_SHORT("Dec %d freq %f acq_size %d",decimation,_freq,acq_size)
+    auto new_acq_size = increaseSmallBuffer(decimation,acq_size);
+    TRACE_SHORT("Decimation: %d Gen freq: %f Buffer size %d Increase size %d",decimation,_freq,acq_size,new_acq_size);
 
-    rpApp_BaSafeThreadAcqData(_buffer,decimation, acq_size,_amplitude_in);
+    rpApp_BaSafeThreadAcqData(_buffer,decimation, new_acq_size,_amplitude_in);
     rp_GenOutDisable(RP_CH_1);
     // int ret = rp_BaDataAnalysis(_buffer, acq_size, ADC_SAMPLE_RATE / decimation,_freq, samples_period,  &gain, &phase_out,_input_threshold);
-	int ret = rpApp_BaDataAnalysisTrap(_buffer, acq_size, _freq, decimation,  &gain, &phase_out,_input_threshold);
+	int ret = rpApp_BaDataAnalysisTrap(_buffer, new_acq_size, _freq, decimation,  &gain, &phase_out,_input_threshold);
+	//int ret = rpApp_BaDataAnalysisFFT(_buffer, acq_size, _freq, decimation,  &gain, &phase_out,_input_threshold);
 
     *_amplitude = 10.*logf(gain);
     *_phase = phase_out;
-    TRACE_SHORT("Calc amp %f phase %f",*_amplitude,*_phase)
+    TRACE_SHORT("Gain %f Diff phase %f",*_amplitude,*_phase)
 
 	if (std::isnan(*_amplitude) || std::isinf(*_amplitude)) ret =  RP_EOOR;
     return ret;
