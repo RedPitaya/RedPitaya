@@ -297,8 +297,8 @@ int rpApp_BaDataAnalysisTrap(const rp_ba_buffer_t &buffer,
         int ret_value = RP_OK;
 
         for (size_t i = 0; i < size; i++){
-                u_dut_1[i] = ceil(buffer.ch2[i] * 100000.0) / 100000.0;
-                u_dut_2[i] = ceil(buffer.ch1[i] * 100000.0) / 100000.0;
+                u_dut_1[i] = buffer.ch2[i];
+                u_dut_2[i] = buffer.ch1[i];
         }
 
         if (size > 0){
@@ -318,7 +318,7 @@ int rpApp_BaDataAnalysisTrap(const rp_ba_buffer_t &buffer,
 
 
         for (size_t i = 0; i < size; i++){
-                ang = (i * T * w_out);
+                ang = ((double)i * T * (double)w_out);
 
                 u_dut_1_s[0][i] = u_dut_1[i] * sin(ang);
                 u_dut_1_s[1][i] = u_dut_1[i] * sin(ang + (M_PI / 2));
@@ -363,8 +363,8 @@ int rpApp_BaDataAnalysisTrap(const rp_ba_buffer_t &buffer,
             auto pp1 = P_P(buffer.ch1,buffer.ch1.size());
             auto pp2 = P_P(buffer.ch2,buffer.ch2.size());
 
-            TRACE_SHORT("Signal 1: Amplitude %f Phase %f Mean %f P-P %f",u_dut_1_ampl,u_dut_1_phase,mean1,pp1)
-            TRACE_SHORT("Signal 2: Amplitude %f Phase %f Mean %f P-P %f",u_dut_2_ampl,u_dut_2_phase,mean2,pp2)
+            TRACE_SHORT("Signal 1: Amplitude %.9f Phase %.9f Mean %f P-P %f",u_dut_1_ampl,u_dut_1_phase,mean1,pp1)
+            TRACE_SHORT("Signal 2: Amplitude %.9f Phase %.9f Mean %f P-P %f",u_dut_2_ampl,u_dut_2_phase,mean2,pp2)
         #endif
         return ret_value;
 }
@@ -712,7 +712,7 @@ int rpApp_BaGetAmplPhase(float _amplitude_in, float _dc_bias, int _periods_numbe
 	int ret = rpApp_BaDataAnalysisTrap(_buffer, new_acq_size, _freq, decimation,  &gain, &phase_out,_input_threshold);
 	//int ret = rpApp_BaDataAnalysisFFT(_buffer, acq_size, _freq, decimation,  &gain, &phase_out,_input_threshold);
 
-    *_amplitude = 10.*logf(gain);
+    *_amplitude = 20.*log10f(gain);
     *_phase = phase_out;
     TRACE_SHORT("Gain %f Diff phase %f",*_amplitude,*_phase)
 
