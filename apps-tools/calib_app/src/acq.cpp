@@ -865,6 +865,7 @@ void COscilloscope::setGEN0(){
     rp_GenFallTime(RP_CH_2,0);
     rp_GenOutEnable(RP_CH_1);
     rp_GenOutEnable(RP_CH_2);
+    rp_GenSynchronise();
 }
 
 void COscilloscope::setGEN0_5(){
@@ -886,6 +887,7 @@ void COscilloscope::setGEN0_5(){
     rp_GenFallTime(RP_CH_2,0);
     rp_GenOutEnable(RP_CH_1);
     rp_GenOutEnable(RP_CH_2);
+    rp_GenSynchronise();
 }
 
 void COscilloscope::setGEN0_5_SINE(){
@@ -907,6 +909,7 @@ void COscilloscope::setGEN0_5_SINE(){
     rp_GenFallTime(RP_CH_2,0);
     rp_GenOutEnable(RP_CH_1);
     rp_GenOutEnable(RP_CH_2);
+    rp_GenSynchronise();
 }
 
 
@@ -965,6 +968,7 @@ void COscilloscope::resetGen(){
     setAmp(RP_CH_2,0.9);
     setOffset(RP_CH_1,0);
     setOffset(RP_CH_2,0);
+    rp_GenSynchronise();
 }
 
 void COscilloscope::enableGen(rp_channel_t _ch,bool _enable){
