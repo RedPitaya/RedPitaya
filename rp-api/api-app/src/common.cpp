@@ -256,7 +256,7 @@ auto convertCh(rpApp_osc_trig_source_t ts) -> int{
         return RP_CH_3;
     case RPAPP_OSC_TRIG_SRC_CH4:
         return RP_CH_4;
-    
+
     default:
         break;
     }

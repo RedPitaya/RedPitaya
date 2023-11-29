@@ -11,7 +11,7 @@ CADCController::CADCController():
     m_UnAttAmplFunc(NULL),
     m_resetWaitTrigggerRequest(false)
 {
-    
+
 }
 
 CADCController::~CADCController(){
@@ -20,7 +20,7 @@ CADCController::~CADCController(){
 
 auto CADCController::startAcq() -> int{
     std::lock_guard<std::mutex> lock(m_acqMutex);
-    if (m_isAdcRun) 
+    if (m_isAdcRun)
         return RP_OK;
     ECHECK_APP(rp_AcqStart())
     ECHECK_APP(rp_AcqSetArmKeep(m_trigSweep != RPAPP_OSC_TRIG_SINGLE && m_continuousMode));
@@ -82,7 +82,7 @@ auto CADCController::resetWaitTriggerRequest() -> void{
 }
 
 
-auto CADCController::setTriggerSourcesUnsafe(rpApp_osc_trig_source_t _source) -> int{   
+auto CADCController::setTriggerSourcesUnsafe(rpApp_osc_trig_source_t _source) -> int{
     rp_acq_trig_src_t src;
     switch (_source) {
         case RPAPP_OSC_TRIG_SRC_CH1:
@@ -137,6 +137,11 @@ auto CADCController::setTriggerSourcesUnsafe(rpApp_osc_trig_source_t _source) ->
 auto CADCController::getTriggerSources() -> rpApp_osc_trig_source_t{
     return m_trigSource;
 }
+
+auto CADCController::isInternalTrigger() -> bool{
+    return m_trigSource == RPAPP_OSC_TRIG_SRC_EXTERNAL;
+}
+
 
 auto CADCController::setTriggerSlope(rpApp_osc_trig_slope_t _slope) -> int{
     std::lock_guard<std::mutex> lock(m_acqMutex);

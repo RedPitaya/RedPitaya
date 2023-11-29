@@ -516,11 +516,16 @@ auto testTrigSettingNow(settings s) -> int {
         }
 
         int ret = 0;
-
+        double deb = MAX(20000.0,  (((double)dec * (double)ADC_BUFFER_SIZE) / rate) * 2.0 * 1000.0 * 1000.0); // wait 2 buffers or 20 ms (need for wait for print all text in console). Convert s -> us
         ret |= rp_AcqSetDecimationFactor(dec);
-        ret |= rp_AcqSetTriggerSrc(RP_TRIG_SRC_DISABLED);
-        ret |= rp_AcqStart(); //start at each loop
+        if (s.verbose)
+            printf("Set debouncer %f uS\n",deb);
 
+        ret |= rp_AcqSetIntTriggerDebouncerUs(deb);
+        fflush(stdout);
+
+        auto timeLoop = getClock();
+        ret |= rp_AcqStart(); //start at each loop
         ret |= rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE);
 
         auto timeout = max_timeout + getClock();
@@ -552,9 +557,9 @@ auto testTrigSettingNow(settings s) -> int {
 
         ret |= rp_AcqGetWritePointerAtTrig(&trig_pos);
         ret |= rp_AcqGetWritePointer(&write_pos);
-
         ret |= rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW);
-
+        if (s.verbose)
+            printf("Time %f\n",getClock() - timeLoop);
         usleep(500000);
         uint32_t new_trig_pos;
         uint32_t new_write_pos;
@@ -578,7 +583,6 @@ auto testTrigSettingNow(settings s) -> int {
             std::cout << "Required trigger position " << trig_pos << " after set now " << new_trig_pos << "\n";
             std::cout << "Required write position " << write_pos << " after set now " << new_write_pos << "\n";
         }
-
 
         ret |= testResult;
         ret |= posNotChanged;

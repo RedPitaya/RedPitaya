@@ -1686,6 +1686,8 @@ int acq_SetDefault() {
     acq_SetTriggerSrc(RP_TRIG_SRC_DISABLED);
     acq_SetTriggerDelay(0);
     acq_SetTriggerDelayNs(0);
+    acq_SetIntTriggerDebouncerUs(0);
+    acq_SetArmKeep(false);
 
     for(int i = 0; i < channels; i++){
         acq_SetChannelThreshold((rp_channel_t)i, 0.0);

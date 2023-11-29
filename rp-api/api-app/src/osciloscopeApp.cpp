@@ -62,12 +62,6 @@ static inline float sign(float a) {
     return (a < 0.f) ? -1.f : 1.f;
 }
 
-// static inline double linear(float x0, float y0, float x1, float y1, double x) {
-//     double k = (y1 - y0) / (x1 - x0);
-//     double b = y0 - (k * x0);
-//     return (k * x) + b;
-// }
-
 inline void update_view() {
     if(g_viewController.isOscRun()) {
         g_viewController.requestUpdateViewFromADC();
@@ -1279,6 +1273,14 @@ void mainThreadFun() {
             g_viewController.unlockView();
 
             ECHECK_APP_NO_RET(rp_AcqSetTriggerSrc(RP_TRIG_SRC_DISABLED));
+            if (g_adcController.getContinuousMode()){
+                ECHECK_APP_NO_RET(rp_AcqSetIntTriggerDebouncerUs(0));
+            }else{
+                auto timeout = MIN(g_viewController.calculateTimeOut(tScaleAcq),1000.0) * 1000.0;
+                ECHECK_APP_NO_RET(rp_AcqSetIntTriggerDebouncerUs(timeout));
+            }
+            ECHECK_APP_NO_RET(rp_AcqSetTriggerSrc(RP_TRIG_SRC_DISABLED));
+
             ECHECK_APP_NO_RET(threadSafe_acqStart());
 
             auto trigSweep = g_adcController.getTriggerSweep();
@@ -1343,7 +1345,9 @@ void mainThreadFun() {
             auto trigSource = g_adcController.getTriggerSources();
             auto _deltaSample = timeToIndexD(tScale) / (double)spd;
             ECHECK_APP_NO_RET(g_adcController.getTriggerLevel(&trigLevel));
+            TRACE_SHORT("_deltaSample %f timeToIndexD(tScale) %f",_deltaSample,timeToIndexD(tScale))
             g_decimator.setDecimationFactor(_deltaSample);
+
             g_decimator.setTriggerLevel(trigLevel);
             int posInPoints = ((tOffset / tScale) * spd);
             auto buff = g_viewController.getAcqBuffers();

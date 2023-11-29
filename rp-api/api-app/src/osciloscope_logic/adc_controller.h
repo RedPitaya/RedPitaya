@@ -10,7 +10,7 @@
 #include "constants.h"
 
 class CADCController{
-    
+
 public:
     typedef std::function<int(rpApp_osc_source source, float volts, float *res)> func_t;
 
@@ -34,6 +34,7 @@ public:
     auto setTriggerSources(rpApp_osc_trig_source_t _source) -> int;
     auto getTriggerSources() -> rpApp_osc_trig_source_t;
     auto setTriggerSourceInFPGA() -> int;
+    auto isInternalTrigger() -> bool;
 
     auto setTriggerSlope(rpApp_osc_trig_slope_t _slope) -> int;
     auto getTriggerSlope() -> rpApp_osc_trig_slope_t;
@@ -54,7 +55,7 @@ public:
 private:
 
     auto setTriggerSourcesUnsafe(rpApp_osc_trig_source_t _source) -> int;
-    
+
     std::atomic_bool m_isAdcRun;
     std::atomic_bool m_continuousMode;
     std::mutex m_acqMutex;

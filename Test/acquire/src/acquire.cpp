@@ -182,8 +182,7 @@ int main(int argc, char *argv[])
 
     rp_AcqSetDecimationFactor(option.decimation);
 
-    // Default trigger delay 0 and equal ADC_BUUFER / 2
-	rp_AcqSetTriggerDelay(-ADC_BUFFER_SIZE / 2.0 + option.dataSize);
+	rp_AcqSetTriggerDelayDirect(option.dataSize);
     rp_AcqSetTriggerLevel(getTrigChByTrigSource(option.trigger_mode),option.trigger_level);
 
 	rp_AcqStart();

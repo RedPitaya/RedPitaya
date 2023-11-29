@@ -168,7 +168,7 @@ auto CViewController::calculateDecimation(float _scale,rp_acq_decimation_t *_dec
     if (maxDeltaSample / 65536.0f > ratio) {
         return RP_EOOR;
     }
-
+    TRACE_SHORT("maxDeltaSample %f ratio %f _scale %f rate %f",maxDeltaSample,ratio,_scale,rate)
     // contition: viewBuffer cannot be larger than adcBuffer
     if (maxDeltaSample <= ratio) {
         *_decimation = RP_DEC_1;
