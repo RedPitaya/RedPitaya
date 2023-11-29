@@ -247,6 +247,17 @@ auto printBuffer(buffers_t *data,int indexOffset,int size) -> void {
     }
 }
 
+auto printBufferF(buffers_t *data,int indexOffset,int size) -> void {
+    for(int ch = 0 ; ch < data->channels ; ch++){
+        printf("Ch %d :",ch+1);
+        for(int i = 0; i < size; i++){
+            int pos = (data->size + i + indexOffset) % data->size;
+            printf("[%d = %f]", i + indexOffset, data->ch_f[ch][pos]);
+        }
+        printf("\n");
+    }
+}
+
 auto printTestResult(string _testName,bool result) -> void {
     Color::Modifier red(Color::FG_RED);
     Color::Modifier green(Color::FG_GREEN);
@@ -747,7 +758,7 @@ auto testTrigDelay(settings s) -> int {
         }
     }
 
-    auto buffer = rp_createBuffer(getADCChannels(),ADC_BUFFER_SIZE,true,false,false);
+    auto buffer = rp_createBuffer(getADCChannels(),ADC_BUFFER_SIZE,false,false,true);
     if (!buffer){
         printf("Can't allocate buffer\n");
         exit(-1);
@@ -808,7 +819,7 @@ auto testTrigDelay(settings s) -> int {
 
             uint32_t sampWithData = 0;
             for(uint32_t z = 0; z < buffer->size; z++){
-                if (buffer->ch_i[0][z] >= 8192 * 0.7) { // must take into account the rise time and initial ringing of step signal
+                if (buffer->ch_f[0][z] >= 0.7) { // must take into account the rise time and initial ringing of step signal
                     sampWithData++;
                 }
             }
@@ -818,7 +829,7 @@ auto testTrigDelay(settings s) -> int {
             if (testResult){
                 std::cout << "The number of data samples is not equal to the trigger delay\n";
                 std::cout << "Delay " << i << " samples " << sampWithData << "\n";
-                printBuffer(buffer,-2,sampWithData + 3);
+                printBufferF(buffer,-2,sampWithData + 3);
             }
 
             if (s.verbose || ret){
