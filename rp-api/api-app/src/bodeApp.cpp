@@ -594,13 +594,13 @@ int rpApp_BaSafeThreadGen(rp_channel_t _channel, float _frequency, float _ampl, 
 {
 	pthread_mutex_lock(&mutex);
 	EXEC_CHECK_MUTEX(rp_GenReset(), mutex);
-	EXEC_CHECK_MUTEX(rp_GenAmp(_channel, _ampl), mutex); //LCR_AMPLITUDE
-	EXEC_CHECK_MUTEX(rp_GenOffset(_channel, _dc_bias), mutex); // 0.25
+	EXEC_CHECK_MUTEX(rp_GenAmp(_channel, _ampl), mutex);
+	EXEC_CHECK_MUTEX(rp_GenOffset(_channel, _dc_bias), mutex);
 	EXEC_CHECK_MUTEX(rp_GenWaveform(_channel, RP_WAVEFORM_SINE), mutex);
 	EXEC_CHECK_MUTEX(rp_GenFreq(_channel, _frequency), mutex);
 	EXEC_CHECK_MUTEX(rp_GenOutEnable(_channel), mutex);
 	EXEC_CHECK_MUTEX(rp_GenResetTrigger(_channel), mutex);
-
+	TRACE_SHORT("Start GEN A: %f Off: %f Freq: %f",_ampl,_dc_bias,_frequency)
 	usleep(10000);
 	pthread_mutex_unlock(&mutex);
 	return RP_OK;
