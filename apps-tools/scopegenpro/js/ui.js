@@ -58,6 +58,10 @@
             }, 200);
         });
 
+        $("#ext_con_but").click(function(event) {
+            $('#ext_connections_dialog').modal("show");
+        });
+
         $(moreVal + ', ' + lessVal).on("mouseup mouseout", function() {
             clearTimeout(timeout);
             clearInterval(interval);

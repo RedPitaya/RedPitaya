@@ -10,6 +10,7 @@
     <div id="loader"></div>
 </div>
 <div id="header">
+    <div id="ext_con_but"><img src="../assets/images/ext_conections_w.png" style="padding-top: 0px;width: 36px;height: 20px;padding-left: 0px;margin-left: 2px;margin-top: 2px;"></div>
     <div id="connection_meter" title="It seems like your connection is ok"><img src="../assets/images/good_net.png" id="connection_icon" width="20px"><span id="throughput_view2">0 kB/s</span></div>
 </div>
 <div id="img_loading" class="img-container">
@@ -933,6 +934,24 @@
                     <div class="bazaar-link">
                         <a id="OSC_REQ_EXPORT_FILE" href="#" data-dismiss="modal" class="list-group-item exp_but">DOWNLOAD FILE</a>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="ext_connections_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+    <div class="modal-dialog" style="width: 700px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="bazaar_naLabel">External Connections</h4>
+            </div>
+            <div class="modal-body" style="display: flex;">
+                <img src="../assets/images/red_pitaya_pinout.png" style="width: 100%;">
+            </div>
+            <div class="modal-footer">
+                <div class="bazaar-link">
+                    <a href="#" data-dismiss="modal" id="disable_analytics" class="list-group-item exp_but">Close</a>
                 </div>
             </div>
         </div>

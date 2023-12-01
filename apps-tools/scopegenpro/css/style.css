@@ -31,6 +31,13 @@ body {
 
 .modal {}
 
+#ext_con_but {
+    float: left;
+    width: 5%;
+    text-align: left;
+    cursor: pointer;
+}
+
 input,
 #info div,
 #info span,
@@ -864,7 +871,6 @@ btn:active {
 
 a.list-group-item {
     color: silver;
-    #555555;
 }
 
 a.list-group-item:hover:visited {

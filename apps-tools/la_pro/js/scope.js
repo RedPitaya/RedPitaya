@@ -4038,6 +4038,10 @@ $(function() {
         OSC.sendParams();
     }
 
+    $("#ext_con_but").click(function(event) {
+        $('#ext_connections_dialog').modal("show");
+    });
+
     $('#pre-sample-buf-val').change(function(e) {
         var val = $('#pre-sample-buf-val').val();
         if (val == "") {

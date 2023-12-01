@@ -68,9 +68,13 @@
             }, 200);
         });
 
+        $("#ext_con_but").click(function(event) {
+            $('#ext_connections_dialog').modal("show");
+        });
+
         $('#reset_settings').click(function() {
             SPEC.params.local['RESET_CONFIG_SETTINGS'] = { value: 1 };
-            SPEC.sendParams();           
+            SPEC.sendParams();
         });
 
         $(moreVal + ', ' + lessVal).on("mouseup mouseout", function() {
