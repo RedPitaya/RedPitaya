@@ -84,8 +84,8 @@ int main(int argc, char **argv)
 
     fprintf(stderr,"Tr pos1: 0x%X pos2: 0x%X\n",posChA,posChB);
 
-    int16_t *buff1 = (uint16_t *)malloc(DATA_SIZE * sizeof(int16_t));
-    int16_t *buff2 = (uint16_t *)malloc(DATA_SIZE * sizeof(int16_t));
+    int16_t *buff1 = (int16_t *)malloc(DATA_SIZE * sizeof(int16_t));
+    int16_t *buff2 = (int16_t *)malloc(DATA_SIZE * sizeof(int16_t));
 
     uint32_t size1 = DATA_SIZE;
     uint32_t size2 = DATA_SIZE;
