@@ -356,6 +356,7 @@
         if (SPEC.graphs && SPEC.graphs.elem) {
             var plot_elem = SPEC.graphs.elem;
 
+                if ((SPEC.params.orig['xmin'] === undefined) || (SPEC.params.orig['xmax'] === undefined)) return
                 var plot = SPEC.graphs.plot;
                 SPEC.params.local['xmin'] = { value: SPEC.params.orig['xmin'].value };
                 SPEC.params.local['xmax'] = { value: SPEC.params.orig['xmax'].value };
