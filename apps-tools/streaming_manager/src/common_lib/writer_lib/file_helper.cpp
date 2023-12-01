@@ -184,13 +184,15 @@ auto buildBINStream(DataLib::CDataBuffersPack::Ptr buff_pack,std::map<DataLib::E
     memset(header.sizeCh,0,sizeof(uint32_t) * 4);
 
     for(int i = 0; i < 4; i++){
-        ch_samp[i] = ch[i]->getSamplesCount() < _samples[DataLib::CH1] ? ch[i]->getSamplesCount() : _samples[DataLib::CH1];
-        auto bytes = ch[i]->getBitBySample() / 8;
-        ch_size[i] = ch_samp[i] * bytes > ch[i]->getBufferLenght() ? ch[i]->getBufferLenght() : ch_samp[i] * bytes;
-        header.dataFormatSize[i] = ch[i]->getBitBySample() / 8;
-        header.sizeCh[i] = ch_size[i];
-        header.sampleCh[i] = ch_samp[i];
-        header.lostCount[i] = ch[i]->getLostSamples(DataLib::FPGA) + ch[i]->getLostSamples(DataLib::RP_INTERNAL_BUFFER);
+        if (ch[i]){
+            ch_samp[i] = ch[i]->getSamplesCount() < _samples[DataLib::CH1] ? ch[i]->getSamplesCount() : _samples[DataLib::CH1];
+            auto bytes = ch[i]->getBitBySample() / 8;
+            ch_size[i] = ch_samp[i] * bytes > ch[i]->getBufferLenght() ? ch[i]->getBufferLenght() : ch_samp[i] * bytes;
+            header.dataFormatSize[i] = ch[i]->getBitBySample() / 8;
+            header.sizeCh[i] = ch_size[i];
+            header.sampleCh[i] = ch_samp[i];
+            header.lostCount[i] = ch[i]->getLostSamples(DataLib::FPGA) + ch[i]->getLostSamples(DataLib::RP_INTERNAL_BUFFER);
+        }
     }
 
     header.sigmentLength = header.sizeCh[0] + header.sizeCh[1] + header.sizeCh[2] + header.sizeCh[3];
