@@ -20,8 +20,8 @@ CADCController::~CADCController(){
 
 auto CADCController::startAcq() -> int{
     std::lock_guard<std::mutex> lock(m_acqMutex);
-    if (m_isAdcRun)
-        return RP_OK;
+    // if (m_isAdcRun)
+    //     return RP_OK;
     ECHECK_APP(rp_AcqStart())
     ECHECK_APP(rp_AcqSetArmKeep(m_trigSweep != RPAPP_OSC_TRIG_SINGLE && m_continuousMode));
     m_isAdcRun = true;
@@ -83,8 +83,13 @@ auto CADCController::resetWaitTriggerRequest() -> void{
 
 
 auto CADCController::setTriggerSourcesUnsafe(rpApp_osc_trig_source_t _source) -> int{
+    m_trigSource = _source;
+    return RP_OK;
+}
+
+auto CADCController::setTriggerToADC() -> int{
     rp_acq_trig_src_t src;
-    switch (_source) {
+    switch (m_trigSource) {
         case RPAPP_OSC_TRIG_SRC_CH1:
             if (m_trigSlope == RPAPP_OSC_TRIG_SLOPE_NE) {
                 src = RP_TRIG_SRC_CHA_NE;
@@ -126,22 +131,29 @@ auto CADCController::setTriggerSourcesUnsafe(rpApp_osc_trig_source_t _source) ->
             }
             break;
         default:
-            WARNING("Unknown value %d",_source)
+            WARNING("Unknown value %d",m_trigSource)
             return RP_EOOR;
     }
     ECHECK_APP(rp_AcqSetTriggerSrc(src));
-    m_trigSource = _source;
     return RP_OK;
 }
+
 
 auto CADCController::getTriggerSources() -> rpApp_osc_trig_source_t{
     return m_trigSource;
 }
 
 auto CADCController::isInternalTrigger() -> bool{
-    return m_trigSource == RPAPP_OSC_TRIG_SRC_EXTERNAL;
+    return m_trigSource != RPAPP_OSC_TRIG_SRC_EXTERNAL;
 }
 
+auto CADCController::isExternalHasLevel() -> bool{
+    bool state;
+    if (rp_HPGetIsExternalTriggerLevelPresent(&state) == RP_OK){
+        return state;
+    }
+    return false;
+}
 
 auto CADCController::setTriggerSlope(rpApp_osc_trig_slope_t _slope) -> int{
     std::lock_guard<std::mutex> lock(m_acqMutex);

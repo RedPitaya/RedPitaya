@@ -600,6 +600,14 @@ print("rp.rp_AcqReset()")
 res = rp.rp_AcqReset()
 print(res)
 
+print("rp.rp_AcqUnlockTrigger()")
+res = rp.rp_AcqUnlockTrigger()
+print(res)
+
+print("rp.rp_AcqGetUnlockTrigger()")
+res = rp.rp_AcqGetUnlockTrigger()
+print(res)
+
 print("rp.rp_AcqStart()")
 res = rp.rp_AcqStart()
 print(res)
@@ -737,14 +745,6 @@ print(res)
 
 print("rp.rp_AcqGetExtTriggerDebouncerUs()")
 res = rp.rp_AcqGetExtTriggerDebouncerUs()
-print(res)
-
-print("rp.rp_AcqSetIntTriggerDebouncerUs(1000)")
-res = rp.rp_AcqSetIntTriggerDebouncerUs(1000)
-print(res)
-
-print("rp.rp_AcqGetIntTriggerDebouncerUs()")
-res = rp.rp_AcqGetIntTriggerDebouncerUs()
 print(res)
 
 print("rp.rp_AcqSetAC_DC(rp.RP_CH_1,rp.RP_DC)")

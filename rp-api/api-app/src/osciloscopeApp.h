@@ -34,6 +34,7 @@
 #define VMEAN_REP_COUNT_MIN           3
 
 int osc_Init();
+int osc_RunMainThread();
 int osc_Release();
 int osc_SetDefaultValues();
 

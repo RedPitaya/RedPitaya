@@ -107,7 +107,7 @@ auto CDataDecimator::resetOffest() -> void{
     std::lock_guard<std::mutex> lock(m_settingsMutex);
     m_dataOffset = 0;
 }
-    
+
 
 auto CDataDecimator::decimate(rp_channel_t _channel, const float *_data,vsize_t _dataSize, int  _triggerPointPos) -> bool{
     return decimate(_channel,_data,_dataSize,_triggerPointPos,&m_decimatedData,&m_originalData);
@@ -129,7 +129,7 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float *_data,vsize_t 
     //             x += _dataSize;
     //         }
     //     }
-    //     return  x % _dataSize; 
+    //     return  x % _dataSize;
     // };
 
     auto screenToBuffer = [=](int i, float dec, float *t) -> int {
@@ -143,16 +143,16 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float *_data,vsize_t 
         }else{
                 x += _dataSize;
         }
-        return  x; 
+        return  x;
     };
     auto viewSize = _view->size();
     int centerView = viewSize / 2;
     int trigPostInView = centerView - _triggerPointPos;
-       
+
     if (((float)viewSize * m_decimationFactor) > (_dataSize)){
      //   TRACE("Buffer size is smaller than needed for display buffer size %d factor %f",_dataSize,m_decimationFactor)
     }
-    
+
     int startView,stopView;
 
     if (m_decimationFactor < 1){
@@ -202,10 +202,10 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float *_data,vsize_t 
                         break;
                 }
             }
-            
+
             ECHECK_APP_NO_RET(m_scaleFunc((rpApp_osc_source)_channel,y,&scaledValue))
             (*_view)[iView] = scaledValue;
-        }       
+        }
     }else{
         startView = 0 - trigPostInView;
         stopView = viewSize - trigPostInView;
@@ -223,7 +223,7 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float *_data,vsize_t 
     if (_originalData){
         _originalData->resize(0);
         float t = 0;
-        int dataIndexStart = INT32_MAX; 
+        int dataIndexStart = INT32_MAX;
         int dataIndexEnd = INT32_MAX;
         int x = startView;
         while(dataIndexStart == INT32_MAX && x <= stopView){

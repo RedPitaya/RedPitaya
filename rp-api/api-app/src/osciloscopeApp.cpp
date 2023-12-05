@@ -87,6 +87,10 @@ int osc_Init() {
     g_measureController.setAttenuateAmplitudeChannelFunction(attenuateAmplitudeChannel);
     g_adcController.setAttenuateAmplitudeChannelFunction(attenuateAmplitudeChannel);
     g_adcController.setUnAttenuateAmplitudeChannelFunction(unattenuateAmplitudeChannel);
+    return RP_OK;
+}
+
+int osc_RunMainThread(){
     g_threadRun = true;
     g_thread = new std::thread(mainThreadFun);
     return RP_OK;
@@ -968,12 +972,13 @@ int waitToFillPreTriggerBuffer(float _timescale) {
     }
 
     // Max timeout 1 second
-    auto timeOut  = MIN(g_viewController.calculateTimeOut(_timescale),1000.0);
+    auto ct = g_viewController.calculateTimeOut(_timescale) * 10;
+    auto timeOut  = MIN(ct,1000.0);
 
     timeOut += g_viewController.getClock();
 
     uint32_t preTriggerCount;
-    int triggerDelay;
+    uint32_t triggerDelay;
     auto viewSize = g_viewController.getViewSize();
     auto samplesPerDivision = g_viewController.getSamplesPerDivision();
     auto deltaSample = timeToIndexD(_timescale) / samplesPerDivision;
@@ -983,12 +988,14 @@ int waitToFillPreTriggerBuffer(float _timescale) {
     auto exitByPreTrigger = false;
 
     do {
-        ECHECK_APP(rp_AcqGetTriggerDelay(&triggerDelay));
+        ECHECK_APP(rp_AcqGetTriggerDelayDirect(&triggerDelay));
         ECHECK_APP(rp_AcqGetPreTriggerCounter(&preTriggerCount));
         needWaitSamples = viewInSamples - triggerDelay;
         exitByTimout = timeOut > g_viewController.getClock();
         exitByPreTrigger = preTriggerCount < needWaitSamples;
     } while (exitByPreTrigger && exitByTimout);
+
+    // fprintf(stderr,"TE %d TT %d , %d , %d, %f\n",exitByPreTrigger,exitByTimout,preTriggerCount,needWaitSamples,ct);
     return RP_OK;
 }
 
@@ -1033,7 +1040,6 @@ int waitToFillAfterTriggerBuffer(float _timescale) {
     do {
         ECHECK_APP(rp_AcqGetBufferFillState(&bufferIsFill));
     } while (!bufferIsFill && timeOut > g_viewController.getClock());
-    // fprintf(stderr,"Buff is fill %d\n",bufferIsFill);
     return RP_OK;
 }
 
@@ -1252,7 +1258,7 @@ void mainThreadFun() {
     auto pPosition = 0u;
     auto trigLevel = 0.0f;
     auto adc_channels = getADCChannels();
-
+    // rp_EnableDebugReg();
     while (g_threadRun) {
 
         auto tScaleAcq = 0.0f;
@@ -1272,24 +1278,13 @@ void mainThreadFun() {
             ECHECK_APP_NO_RET(rp_AcqSetTriggerDelayDirect(delay));
             g_viewController.unlockView();
 
-            ECHECK_APP_NO_RET(rp_AcqSetTriggerSrc(RP_TRIG_SRC_DISABLED));
-            if (g_adcController.getContinuousMode()){
-                ECHECK_APP_NO_RET(rp_AcqSetIntTriggerDebouncerUs(0));
-            }else{
-                auto timeout = MIN(g_viewController.calculateTimeOut(tScaleAcq),1000.0) * 1000.0;
-                ECHECK_APP_NO_RET(rp_AcqSetIntTriggerDebouncerUs(timeout));
-            }
-            ECHECK_APP_NO_RET(rp_AcqSetTriggerSrc(RP_TRIG_SRC_DISABLED));
-
             ECHECK_APP_NO_RET(threadSafe_acqStart());
-
             auto trigSweep = g_adcController.getTriggerSweep();
-            auto trigSource = g_adcController.getTriggerSources();
             auto contMode = g_adcController.getContinuousMode();
             auto viewMode = g_viewController.getViewMode();
-
+            // fprintf(stderr,"%f delay %d decimationInACQ %d\n",tScaleAcq,delay,decimationInACQ);
             ECHECK_APP_NO_RET(waitToFillPreTriggerBuffer(tScaleAcq));
-            ECHECK_APP_NO_RET(osc_setTriggerSource(trigSource));
+            ECHECK_APP_NO_RET(g_adcController.setTriggerToADC());
             auto isReset = false;
             auto disableTimeout = false;
             auto exitByTimeout = false;
@@ -1306,6 +1301,15 @@ void mainThreadFun() {
 
             if (exitByTimeout){
                 ECHECK_APP_NO_RET(rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW));
+                g_viewController.setDataWithTrigger(false);
+            }else{
+                if (g_adcController.isInternalTrigger()){
+                    g_viewController.setDataWithTrigger(true);
+                }else if (g_adcController.isExternalHasLevel()){
+                    g_viewController.setDataWithTrigger(true);
+                }else{
+                    g_viewController.setDataWithTrigger(false);
+                }
             }
 
             waitToFillAfterTriggerBuffer(tScaleAcq);
@@ -1347,15 +1351,15 @@ void mainThreadFun() {
             ECHECK_APP_NO_RET(g_adcController.getTriggerLevel(&trigLevel));
             TRACE_SHORT("_deltaSample %f timeToIndexD(tScale) %f",_deltaSample,timeToIndexD(tScale))
             g_decimator.setDecimationFactor(_deltaSample);
-
             g_decimator.setTriggerLevel(trigLevel);
             int posInPoints = ((tOffset / tScale) * spd);
             auto buff = g_viewController.getAcqBuffers();
             g_decimator.resetOffest();
             auto tsChannel = convertCh(trigSource);
-            if (tsChannel != -1){
+            if (tsChannel != -1 && g_viewController.isDataWithTrigger()){
                 g_decimator.precalculateOffset(buff->ch_f[tsChannel],ADC_BUFFER_SIZE);
             }
+
             for (auto channel = 0u; channel < adc_channels; ++channel) {
                 auto view = g_viewController.getView((rpApp_osc_source)channel);
                 auto orignalData = g_viewController.getOriginalData((rpApp_osc_source)channel);

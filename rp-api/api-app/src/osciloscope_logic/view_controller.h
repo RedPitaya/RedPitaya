@@ -10,7 +10,7 @@
 #include "constants.h"
 
 class CViewController{
-    
+
 public:
 
     enum EViewMode{
@@ -31,7 +31,7 @@ public:
     auto setViewSize(vsize_t _size) -> void;
 
     auto getSamplesPerDivision() const -> float;
-    
+
     auto lockView() -> void;
     auto unlockView() -> void;
 
@@ -58,7 +58,7 @@ public:
     auto calculateTimeOut(float _timeScale) -> double;
 
     auto viewIndexToTime(int _index) -> float;
-    
+
     auto setTimeScale(float _scale) -> int;
     auto getTimeScale() -> float;
 
@@ -76,6 +76,8 @@ public:
 
     auto setTriggerState(bool _state) -> void;
     auto isTriggered() const -> bool;
+    auto setDataWithTrigger(bool _state) -> void;
+    auto isDataWithTrigger() -> bool;
 
     auto getViewMode() -> EViewMode;
     auto setViewMode(EViewMode _mode) -> void;
@@ -84,8 +86,9 @@ public:
 
     auto setCapturedDecimation(rp_acq_decimation_t _dec) -> void;
     auto getCapturedDecimation() -> rp_acq_decimation_t;
-    
-private: 
+
+
+private:
 
     auto initView() -> bool;
     auto releaseView() -> void;
@@ -99,6 +102,7 @@ private:
     std::mutex m_viewMutex;
 
     buffers_t *m_acqData;
+    bool       m_dataHasTrigger;
 
     std::atomic_bool m_updateViewFromADCRequest;
     std::atomic_bool m_updateViewRequest;

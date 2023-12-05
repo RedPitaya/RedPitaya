@@ -166,6 +166,13 @@ const char* rpApp_GetError(int errorCode);
 int rpApp_OscRun();
 
 /**
+* Starts main thread.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscRunMainThread();
+
+/**
 * Stops oscilloscope.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.

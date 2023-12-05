@@ -198,6 +198,20 @@ int osc_GetTriggerSource(uint32_t* source)
     return cmn_GetValue(&osc_reg->trig_source, source, TRIG_SRC_MASK);
 }
 
+int osc_SetUnlockTrigger()
+{
+    // Need disable trigger with unlock
+    cmn_Debug("[osc_SetUnlockTrigger] osc_reg->trigger_lock_ctr = ", 0x1);
+    osc_reg->trigger_lock_ctr = 1;
+    return RP_OK;
+    // return cmn_SetBits(&osc_reg->trig_lock_sts, 0x10, TRIG_SRC_MASK | TRIG_UNLOCK_MASK);
+}
+
+int osc_GetUnlockTrigger(bool *state){
+    return cmn_AreBitsSet(osc_reg->trig_source, 0x10 , TRIG_UNLOCK_MASK, state);
+}
+
+
 int osc_WriteDataIntoMemory(bool enable)
 {
     if (enable) {
@@ -560,22 +574,6 @@ int osc_SetExtTriggerDebouncer(uint32_t value){
 
 int osc_GetExtTriggerDebouncer(uint32_t *value){
     *value = osc_reg->ext_trig_dbc_t;
-    return RP_OK;
-}
-
-int osc_SetIntTriggerDebouncer(uint32_t value){
-    cmn_Debug("[osc_IntExtTriggerDebouncer] osc_reg.int_trig_dbc_t <- ",value);
-    osc_reg->int_trig_dbc_t = value;
-
-    if (osc_reg_4ch){
-        cmn_Debug("[osc_IntExtTriggerDebouncer] osc_reg_4ch.int_trig_dbc_t <- ",value);
-        osc_reg_4ch->int_trig_dbc_t = value;
-    }
-    return RP_OK;
-}
-
-int osc_GetIntTriggerDebouncer(uint32_t *value){
-    *value = osc_reg->int_trig_dbc_t;
     return RP_OK;
 }
 

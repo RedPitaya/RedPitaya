@@ -80,6 +80,8 @@ int acq_Start();
 int acq_Stop();
 int acq_Reset();
 int acq_ResetFpga();
+int acq_SetUnlockTrigger();
+int acq_GetUnlockTrigger(bool *state);
 int acq_GetADCSamplePeriod(double *value);
 
 int acq_GetDataPosRaw(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, int16_t* buffer, uint32_t *buffer_size);
@@ -110,8 +112,5 @@ int acq_GetFilterCalibValue(rp_channel_t channel,uint32_t* coef_aa, uint32_t* co
 
 int acq_SetExtTriggerDebouncerUs(double value);
 int acq_GetExtTriggerDebouncerUs(double *value);
-
-int acq_SetIntTriggerDebouncerUs(double value);
-int acq_GetIntTriggerDebouncerUs(double *value);
 
 #endif /* SRC_ACQ_HANDLER_H_ */

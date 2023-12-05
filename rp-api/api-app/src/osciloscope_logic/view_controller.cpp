@@ -8,6 +8,7 @@ CViewController::CViewController():
     m_viewGridYCount(DIVISIONS_COUNT_Y),
     m_viewSizeInPoints(VIEW_SIZE_DEFAULT),
     m_acqData(NULL),
+    m_dataHasTrigger(false),
     m_updateViewFromADCRequest(false),
     m_updateViewRequest(false),
     m_autoScale(false),
@@ -85,6 +86,7 @@ auto CViewController::getAcqBuffers() -> buffers_t*{
     return m_acqData;
 }
 
+// Return value in milliseconds 1.0 = 1ms
 auto CViewController::getClock() -> double {
     struct timespec tp;
     clock_gettime(CLOCK_REALTIME, &tp);
@@ -131,6 +133,7 @@ auto CViewController::convertSamplesToTime(int32_t samples) -> double{
     return (double)samples * ((double)decimation / rate) * 1000 ;
 }
 
+// Calculate in milliseconds
 auto CViewController::calculateTimeOut(float _timeScale) -> double{
     double timeout = MAX(0.1f , (2.f * _timeScale * (float)getGridXCount()));
     return timeout;
@@ -227,6 +230,14 @@ auto CViewController::setTriggerState(bool _state) -> void{
 
 auto CViewController::isTriggered() const -> bool{
     return m_triggerState;
+}
+
+auto CViewController::setDataWithTrigger(bool _state) -> void{
+    m_dataHasTrigger = _state;
+}
+
+auto CViewController::isDataWithTrigger() -> bool{
+    return m_dataHasTrigger;
 }
 
 auto CViewController::getViewMode() -> EViewMode{

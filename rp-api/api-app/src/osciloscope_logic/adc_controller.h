@@ -33,8 +33,11 @@ public:
 
     auto setTriggerSources(rpApp_osc_trig_source_t _source) -> int;
     auto getTriggerSources() -> rpApp_osc_trig_source_t;
+    auto setTriggerToADC() -> int;
+
     auto setTriggerSourceInFPGA() -> int;
     auto isInternalTrigger() -> bool;
+    auto isExternalHasLevel() -> bool;
 
     auto setTriggerSlope(rpApp_osc_trig_slope_t _slope) -> int;
     auto getTriggerSlope() -> rpApp_osc_trig_slope_t;

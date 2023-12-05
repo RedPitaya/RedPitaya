@@ -951,6 +951,7 @@ int acq_GetChannelThresholdHyst(rp_channel_t channel, float* voltage){
 
 int acq_Start(){
     osc_WriteDataIntoMemory(true);
+    acq_SetUnlockTrigger();
     return RP_OK;
 }
 
@@ -962,6 +963,15 @@ int acq_Reset(){
     acq_SetDefault();
     return osc_ResetWriteStateMachine();
 }
+
+int acq_SetUnlockTrigger(){
+    return osc_SetUnlockTrigger();
+}
+
+int acq_GetUnlockTrigger(bool *state){
+    return osc_GetUnlockTrigger(state);
+}
+
 
 int acq_axi_Enable(rp_channel_t channel, bool enable)
 {
@@ -1686,7 +1696,6 @@ int acq_SetDefault() {
     acq_SetTriggerSrc(RP_TRIG_SRC_DISABLED);
     acq_SetTriggerDelay(0);
     acq_SetTriggerDelayNs(0);
-    acq_SetIntTriggerDebouncerUs(0);
     acq_SetArmKeep(false);
 
     for(int i = 0; i < channels; i++){
@@ -1801,32 +1810,6 @@ int acq_GetExtTriggerDebouncerUs(double *value){
     }
     uint32_t samples = 0;
     osc_GetExtTriggerDebouncer(&samples);
-    *value = (samples * sp) / 1000.0;
-    return RP_OK;
-}
-
-
-int acq_SetIntTriggerDebouncerUs(double value){
-    if (value < 0)
-        return RP_EIPV;
-
-    double sp = 0;
-    int ret = acq_GetADCSamplePeriod(&sp);
-    if (ret != RP_OK){
-        return ret;
-    }
-    uint32_t samples = (value * 1000.0) / sp;
-    return osc_SetIntTriggerDebouncer(samples);
-}
-
-int acq_GetIntTriggerDebouncerUs(double *value){
-    double sp = 0;
-    int ret = acq_GetADCSamplePeriod(&sp);
-    if (ret != RP_OK){
-        return ret;
-    }
-    uint32_t samples = 0;
-    osc_GetIntTriggerDebouncer(&samples);
     *value = (samples * sp) / 1000.0;
     return RP_OK;
 }

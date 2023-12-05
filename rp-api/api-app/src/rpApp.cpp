@@ -38,6 +38,10 @@ int rpApp_Init() {
     return RP_OK;
 }
 
+int rpApp_OscRunMainThread(){
+    return osc_RunMainThread();
+}
+
 int rpApp_Release() {
     ECHECK_APP(osc_stop());
     ECHECK_APP(osc_Release());

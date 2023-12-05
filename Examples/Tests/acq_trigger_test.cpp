@@ -171,7 +171,7 @@ auto printHelp(char* prog) -> void {
 
     std::string s = "\n" \
                     "\t-t1 : Start test trigger position\n" \
-                    "\t-t2 : Start test delay logic\n" \
+                    "\t-t2 : Start test pretrigger and delay logic\n" \
                     "\t-t3 : Start test trigger setting now\n" \
                     "\t-t4 : Start test keep arm\n" \
                     "\t-a : Start all test\n" \
@@ -342,6 +342,7 @@ auto getData(rp_channel_trigger_t _ch, uint32_t _dec, int32_t _triggerDelay, flo
     uint32_t preTriggerWait = ADC_BUFFER_SIZE - _triggerDelay;
 
     ret |= rp_AcqStart();
+
     uint32_t pretrigger = 0;
     while(pretrigger < preTriggerWait && pretrigger < ADC_BUFFER_SIZE){
         ret |= rp_AcqGetPreTriggerCounter(&pretrigger);
@@ -527,18 +528,9 @@ auto testTrigSettingNow(settings s) -> int {
         }
 
         int ret = 0;
-        double deb = MAX(20000.0,  (((double)dec * (double)ADC_BUFFER_SIZE) / rate) * 2.0 * 1000.0 * 1000.0); // wait 2 buffers or 20 ms (need for wait for print all text in console). Convert s -> us
-        ret |= rp_AcqSetDecimationFactor(dec);
-        if (s.verbose)
-            printf("Set debouncer %f uS\n",deb);
-
-        ret |= rp_AcqSetIntTriggerDebouncerUs(deb);
-        fflush(stdout);
-
         auto timeLoop = getClock();
-        ret |= rp_AcqStart(); //start at each loop
+        ret |= rp_AcqStart();
         ret |= rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE);
-
         auto timeout = max_timeout + getClock();
         rp_acq_trig_state_t state = RP_TRIG_STATE_TRIGGERED;
         while(1){
@@ -568,7 +560,10 @@ auto testTrigSettingNow(settings s) -> int {
 
         ret |= rp_AcqGetWritePointerAtTrig(&trig_pos);
         ret |= rp_AcqGetWritePointer(&write_pos);
+
+
         ret |= rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW);
+
         if (s.verbose)
             printf("Time %f\n",getClock() - timeLoop);
         usleep(500000);
@@ -599,6 +594,8 @@ auto testTrigSettingNow(settings s) -> int {
         ret |= posNotChanged;
         result |= ret;
         if (s.verbose || ret){
+            std::cout << "Trigger position " << trig_pos << "\n";
+            std::cout << "Write position " << write_pos << "\n";
             printTestResult(testName,ret == 0);
         }
 
@@ -785,8 +782,21 @@ auto testTrigDelay(settings s) -> int {
             ret |= rp_AcqSetTriggerHyst(0.005);
             ret |= rp_AcqSetTriggerDelayDirect(i);
             ret |= rp_AcqStart();
+
+            uint32_t oldPreTrigger = 0, newPretrigger = 0;
+            for(int i = 0; i < 10; i++){
+                rp_AcqGetPreTriggerCounter(&newPretrigger);
+                usleep(1000);
+                if (newPretrigger == oldPreTrigger && oldPreTrigger != 0){
+                    printf("Fail check pre trigger counter: %d.\n",newPretrigger);
+                    ret |= true;
+                }
+                oldPreTrigger = newPretrigger;
+            }
+
             ret |= rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE);
             ret |= startGenerator(RP_CH_1,RP_WAVEFORM_DC,1000,1,0,s.verbose);
+
 
             auto timeout = max_timeout + getClock();
             rp_acq_trig_state_t state = RP_TRIG_STATE_TRIGGERED;

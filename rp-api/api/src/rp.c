@@ -1058,6 +1058,16 @@ int rp_AcqStop()
 {
     return acq_Stop();
 }
+
+int rp_AcqUnlockTrigger()
+{
+    return acq_SetUnlockTrigger();
+}
+
+int rp_AcqGetUnlockTrigger(bool *state){
+    return acq_GetUnlockTrigger(state);
+}
+
 int rp_AcqReset()
 {
     return acq_Reset();
@@ -1613,14 +1623,6 @@ int rp_AcqSetExtTriggerDebouncerUs(double value){
 
 int rp_AcqGetExtTriggerDebouncerUs(double *value){
     return acq_GetExtTriggerDebouncerUs(value);
-}
-
-int rp_AcqSetIntTriggerDebouncerUs(double value){
-    return acq_SetIntTriggerDebouncerUs(value);
-}
-
-int rp_AcqGetIntTriggerDebouncerUs(double *value){
-    return acq_GetIntTriggerDebouncerUs(value);
 }
 
 int rp_GenSetExtTriggerDebouncerUs(double value){

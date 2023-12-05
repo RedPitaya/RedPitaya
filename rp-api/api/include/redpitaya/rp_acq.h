@@ -335,6 +335,20 @@ int rp_AcqReset();
 int rp_AcqResetFpga();
 
 /**
+ * Unlocks trigger capture after a trigger has been detected.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqUnlockTrigger();
+
+/**
+ * Returns the trigger's current blocking state..
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetUnlockTrigger(bool *state);
+
+/**
  * Normalizes the ADC buffer position. Returns the modulo operation of ADC buffer size...
  * @param pos position to be normalized
  * @return Normalized position (pos % ADC_BUFFER_SIZE)
@@ -504,22 +518,6 @@ int rp_AcqSetExtTriggerDebouncerUs(double value);
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 int rp_AcqGetExtTriggerDebouncerUs(double *value);
-
-/**
- * Sets int. trigger debouncer for acquisition in Us (Value must be positive).
- * @param value Value in microseconds.
- * @return If the function is successful, the return value is RP_OK.
- * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
- */
-int rp_AcqSetIntTriggerDebouncerUs(double value);
-
-/**
- * Gets int. trigger debouncer for acquisition in Us
- * @param value Return value in microseconds.
- * @return If the function is successful, the return value is RP_OK.
- * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
- */
-int rp_AcqGetIntTriggerDebouncerUs(double *value);
 
 /**
 * Sets the AC / DC modes for input.

@@ -291,12 +291,10 @@ typedef struct osc_control_s {
     */
     uint32_t ext_trig_dbc_t:20,:12; // 0x90
 
-    /**@brief Offset 0x90 - Internal trigger debuncer time
-    * Number of ADC clock periods
-    * trigger is disabled after activation
-    * reset value is decimal 0
+    /**@brief Offset 0x94 - Trigger lock control
+     * bit[0] - (W) Write 1 for unlock trigger
     */
-    uint32_t int_trig_dbc_t; // 0x94
+    uint32_t trigger_lock_ctr :1, : 31; // 0x94
 
     /* ChA & ChB data - 14 LSB bits valid starts from 0x10000 and
      * 0x20000 and are each 16k samples long */
@@ -318,6 +316,7 @@ static const uint32_t TRIG_ST_MCH_MASK      = 0x4;          // (2nd bit)
 static const uint32_t PRE_TRIGGER_COUNTER   = 0xFFFFFFFF;   // (32 bit)
 static const uint32_t ARM_KEEP_MASK         = 0x8;          // (4 bit)
 static const uint32_t FILL_STATE_MASK       = 0x10;         // (1 bit)
+static const uint32_t TRIG_UNLOCK_MASK      = 0x10;         // (1 bit)
 
 static const uint32_t AXI_ENABLE_MASK       = 0x1;          // (1 bit)
 static const uint32_t AXI_CHA_FILL_STATE    = 0x10;         // (1 bit)
@@ -336,6 +335,8 @@ int osc_SetAveraging(bool enable);
 int osc_GetAveraging(bool* enable);
 int osc_SetTriggerSource(uint32_t source);
 int osc_GetTriggerSource(uint32_t* source);
+int osc_SetUnlockTrigger();
+int osc_GetUnlockTrigger(bool *state);
 int osc_WriteDataIntoMemory(bool enable);
 int osc_ResetWriteStateMachine();
 int osc_SetArmKeep(bool enable);
@@ -374,8 +375,6 @@ int osc_GetEqFiltersChD(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk,
 
 int osc_SetExtTriggerDebouncer(uint32_t value);
 int osc_GetExtTriggerDebouncer(uint32_t *value);
-int osc_SetIntTriggerDebouncer(uint32_t value);
-int osc_GetIntTriggerDebouncer(uint32_t *value);
 
 const volatile uint32_t* osc_GetDataBufferChA();
 const volatile uint32_t* osc_GetDataBufferChB();

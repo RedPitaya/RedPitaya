@@ -100,9 +100,10 @@ int rp_app_init(void) {
 
     rpApp_Init();
     rpApp_OscRun();
-
+    // Need run after init parameters
     updateParametersByConfig();
     createDirTree("/tmp/scopegenpro");
+    rpApp_OscRunMainThread();
     return 0;
 }
 
@@ -219,7 +220,7 @@ void OnNewParams(void) {
     updateGeneratorParameters(false);
     updateOscParams(false);
     updateMathParams(false);
-   
+
 
 /* ------ UPDATE DEBUG PARAMETERS ------*/
 
