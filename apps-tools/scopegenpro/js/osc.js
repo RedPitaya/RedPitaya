@@ -69,7 +69,19 @@
     }
 
     OSC.processSampleRate = function(new_params) {
-        $('#OSC_SAMPL_RATE').html(OSC.sample_rates[new_params['OSC_SAMPL_RATE'].value] + 'S/s');
+        var curRate = OSC.adc_max_rate / new_params['OSC_SAMPL_RATE'].value;
+        var val = curRate;
+        var suf = ""
+        if (curRate > 1000000){
+            suf = "M"
+            val  = (curRate / 1000000).toFixed(3);;
+
+        }else if (curRate > 1000){
+            suf = "k";
+            val  = (curRate / 1000).toFixed(3);;
+        }
+
+        $('#OSC_SAMPL_RATE').html(val + " " + suf+ 'S/s');
     }
 
     OSC.processTrigInfo = function(new_params) {

@@ -65,8 +65,8 @@ public:
     auto setTimeOffset(float _offset) -> int;
     auto getTimeOffset() -> float;
 
-    auto calculateDecimation(float _scale,rp_acq_decimation_t *_decimation) -> int;
-    auto getCurrentDecimation() -> rp_acq_decimation_t;
+    auto calculateDecimation(float _scale,uint32_t *_decimation) -> int;
+    auto getCurrentDecimation() -> uint32_t;
 
     auto clearView() -> void;
 
@@ -83,9 +83,10 @@ public:
     auto setViewMode(EViewMode _mode) -> void;
 
     auto getSampledAfterTriggerInView() -> uint32_t;
+    auto calcExtraPoints() -> uint32_t;
 
-    auto setCapturedDecimation(rp_acq_decimation_t _dec) -> void;
-    auto getCapturedDecimation() -> rp_acq_decimation_t;
+    auto setCapturedDecimation(uint32_t _dec) -> void;
+    auto getCapturedDecimation() -> uint32_t;
 
 
 private:
@@ -116,7 +117,7 @@ private:
 
     EViewMode m_ViewMode;
 
-    rp_acq_decimation_t m_capturedDecimation;
+    uint32_t m_capturedDecimation;
 };
 
 #endif // __VIEW_CONTROLLER_H

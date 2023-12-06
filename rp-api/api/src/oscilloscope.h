@@ -48,7 +48,7 @@ typedef struct osc_control_s {
     /** @brief Offset 0x04 - trigger source register
      *
      * Trigger source register (offset 0x04):
-     * bits [ 2 : 0] - trigger source:
+     * bits [ 3 : 0] - trigger source:
      * 1 - trig immediately
      * 2 - ChA positive edge
      * 3 - ChA negative edge
@@ -59,7 +59,8 @@ typedef struct osc_control_s {
      Only for 250-12
      * 8 - Arbitrary wave generator positive edge
      * 9 - Arbitrary wave generator negative edge
-     * bits [31 : 3] -reserved
+     * bits [4] - Trigger lock state
+     * bits [31 : 5] -reserved
      */
     uint32_t trig_source;
 

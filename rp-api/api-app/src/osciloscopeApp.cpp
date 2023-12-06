@@ -213,7 +213,7 @@ int osc_isTriggered() {
 
 int osc_setTimeScale(float _scale) {
     std::lock_guard<std::mutex> lock(g_mutex);
-    rp_acq_decimation_t newDecimation;
+    uint32_t newDecimation;
     auto ret = g_viewController.calculateDecimation(_scale,&newDecimation);
     if (ret != RP_OK){
         WARNING("Can't calculate new decimation for scale %f",_scale)
@@ -982,7 +982,8 @@ int waitToFillPreTriggerBuffer(float _timescale) {
     auto viewSize = g_viewController.getViewSize();
     auto samplesPerDivision = g_viewController.getSamplesPerDivision();
     auto deltaSample = timeToIndexD(_timescale) / samplesPerDivision;
-    auto viewInSamples = viewSize * deltaSample + 4;
+    auto viewInSamples = viewSize * deltaSample;
+    auto extraPoints = g_viewController.calcExtraPoints();
     auto needWaitSamples = 0u;
     auto exitByTimout = false;
     auto exitByPreTrigger = false;
@@ -990,7 +991,7 @@ int waitToFillPreTriggerBuffer(float _timescale) {
     do {
         ECHECK_APP(rp_AcqGetTriggerDelayDirect(&triggerDelay));
         ECHECK_APP(rp_AcqGetPreTriggerCounter(&preTriggerCount));
-        needWaitSamples = viewInSamples - triggerDelay;
+        needWaitSamples = viewInSamples - triggerDelay + extraPoints;
         exitByTimout = timeOut > g_viewController.getClock();
         exitByPreTrigger = preTriggerCount < needWaitSamples;
     } while (exitByPreTrigger && exitByTimout);
@@ -1273,7 +1274,7 @@ void mainThreadFun() {
             tScaleAcq = g_viewController.getTimeScale();
             tOffsetAcq = g_viewController.getTimeOffset();
             // Need set before calculate trigger deleay
-            ECHECK_APP_NO_RET(rp_AcqSetDecimation(decimationInACQ));
+            ECHECK_APP_NO_RET(rp_AcqSetDecimationFactor(decimationInACQ));
             auto delay = g_viewController.getSampledAfterTriggerInView();
             ECHECK_APP_NO_RET(rp_AcqSetTriggerDelayDirect(delay));
             g_viewController.unlockView();

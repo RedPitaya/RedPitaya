@@ -31,6 +31,7 @@ CDoubleParameter    inTimeScale("OSC_TIME_SCALE", CBaseParameter::RW, 1, 0,0,100
 CIntParameter       inViewStartPos("OSC_VIEW_START_POS", CBaseParameter::RO, 0, 0, 0, 16384,CONFIG_VAR);
 CIntParameter       inViewEndPos("OSC_VIEW_END_POS", CBaseParameter::RO, 0, 0, 0, 16384,CONFIG_VAR);
 CIntParameter       adc_count("ADC_COUNT", CBaseParameter::RO, getADCChannels(), 0, 0, 4,0);
+CIntParameter       adc_rate("ADC_RATE", CBaseParameter::RO, getADCRate(), 0, getADCRate(), getADCRate(),0);
 
 
 /***************************************************************************************
@@ -390,7 +391,7 @@ auto requestFile() -> void {
             formatter.closeFile();
             download_file.Value() = filename;
         }else{
-            download_file.Value() = std::string("error");            
+            download_file.Value() = std::string("error");
         }
 
         for(int i = 0; i <= g_adc_channels; i++){

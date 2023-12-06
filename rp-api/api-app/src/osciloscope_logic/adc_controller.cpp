@@ -20,8 +20,9 @@ CADCController::~CADCController(){
 
 auto CADCController::startAcq() -> int{
     std::lock_guard<std::mutex> lock(m_acqMutex);
-    // if (m_isAdcRun)
-    //     return RP_OK;
+    ECHECK_APP(rp_AcqUnlockTrigger())
+    if (m_isAdcRun)
+        return RP_OK;
     ECHECK_APP(rp_AcqStart())
     ECHECK_APP(rp_AcqSetArmKeep(m_trigSweep != RPAPP_OSC_TRIG_SINGLE && m_continuousMode));
     m_isAdcRun = true;

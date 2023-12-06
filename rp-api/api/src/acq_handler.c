@@ -449,9 +449,9 @@ int acq_GetSamplingRateHz(float* sampling_rate){
         return RP_EOOR;
     }
 
-    rp_acq_decimation_t decimation;
-    acq_GetDecimation(&decimation);
-    *sampling_rate = max_rate / decimation;
+    uint32_t decimation;
+    acq_GetDecimationFactor(&decimation);
+    *sampling_rate = max_rate / (float)decimation;
     return RP_OK;
 }
 

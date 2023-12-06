@@ -163,7 +163,7 @@ auto CViewController::getTimeOffset() -> float{
     return m_timeOffet;
 }
 
-auto CViewController::calculateDecimation(float _scale,rp_acq_decimation_t *_decimation) -> int{
+auto CViewController::calculateDecimation(float _scale,uint32_t *_decimation) -> int{
     static double rate = getADCRate();
     float maxDeltaSample = rate * _scale / 1000.0f / getSamplesPerDivision();
     float ratio = (float) ADC_BUFFER_SIZE / (float) getViewSize();
@@ -173,29 +173,29 @@ auto CViewController::calculateDecimation(float _scale,rp_acq_decimation_t *_dec
     }
     TRACE_SHORT("maxDeltaSample %f ratio %f _scale %f rate %f",maxDeltaSample,ratio,_scale,rate)
     // contition: viewBuffer cannot be larger than adcBuffer
+    ratio *= 0.9;
     if (maxDeltaSample <= ratio) {
         *_decimation = RP_DEC_1;
+    }
+    else if (maxDeltaSample / 4.0f <= ratio) {
+        *_decimation = RP_DEC_4;
     }
     else if (maxDeltaSample / 8.0f <= ratio) {
         *_decimation = RP_DEC_8;
     }
-    else if (maxDeltaSample / 64.0f <= ratio) {
-        *_decimation = RP_DEC_64;
-    }
-    else if (maxDeltaSample / 1024.0f <= ratio) {
-        *_decimation = RP_DEC_1024;
-    }
-    else if (maxDeltaSample / 8192.0f <= ratio) {
-        *_decimation = RP_DEC_8192;
-    }
     else {
-        *_decimation = RP_DEC_65536;
+        for(int i = 16; i <= RP_DEC_65536;i++){
+            if (maxDeltaSample / (float)i <= ratio){
+                *_decimation = i;
+                break;
+            }
+        }
     }
     return RP_OK;
 }
 
-auto CViewController::getCurrentDecimation() -> rp_acq_decimation_t{
-    rp_acq_decimation_t dec;
+auto CViewController::getCurrentDecimation() -> uint32_t{
+    uint32_t dec;
     if (calculateDecimation(getTimeScale(),&dec) != RP_OK){
         dec = RP_DEC_1;
     }
@@ -253,15 +253,20 @@ auto CViewController::getSampledAfterTriggerInView() -> uint32_t{
     auto decFactor = timeToIndexD(m_timeScale) / (double)getSamplesPerDivision();
     int posInPoints = ((m_timeOffet / m_timeScale) * getSamplesPerDivision());
     auto x = m_viewSizeInPoints/2.0 + posInPoints;
-    auto extraPoints = floor((float)ADC_BUFFER_SIZE / (float)getViewSize()) * decFactor + 2;
+    auto extraPoints = calcExtraPoints();
     return MIN(x * decFactor + extraPoints,ADC_BUFFER_SIZE);
 }
 
-auto CViewController::setCapturedDecimation(rp_acq_decimation_t _dec) -> void{
+auto CViewController::calcExtraPoints() -> uint32_t{
+    auto decFactor = timeToIndexD(m_timeScale) / (double)getSamplesPerDivision();
+    return floor((float)ADC_BUFFER_SIZE / (float)getViewSize()) * decFactor + 2;
+}
+
+auto CViewController::setCapturedDecimation(uint32_t _dec) -> void{
     m_capturedDecimation = _dec;
 }
 
-auto CViewController::getCapturedDecimation() -> rp_acq_decimation_t{
+auto CViewController::getCapturedDecimation() -> uint32_t{
     return m_capturedDecimation;
 }
 

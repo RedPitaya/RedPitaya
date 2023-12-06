@@ -60,6 +60,7 @@
     OSC.config.socket_url = 'ws://' + window.location.host + '/wss';
     OSC.rp_model = "";
     OSC.adc_channes = 2;
+    OSC.adc_max_rate = 0;
     OSC.is_ext_trig_level_present = false;
     OSC.is_webpage_loaded = false;
 
@@ -107,8 +108,6 @@
     OSC.refresh_times = [];
     OSC.counts_offset = 0;
 
-    // Sampling rates
-    OSC.sample_rates = {1:'125M', 8:'15.625M', 64: '1.953M', 1024: '122.070k', 8192:'15.258k', 65536:'1.907k'};
     OSC.mouseWheelEventFired = false; // for MAC
 
     // App state
@@ -728,6 +727,10 @@
 
         if (new_params['ADC_COUNT']){
             OSC.adc_channes = new_params['ADC_COUNT'].value;
+        }
+
+        if (new_params['ADC_RATE']){
+            OSC.adc_max_rate = new_params['ADC_RATE'].value;
         }
 
         if (new_params['OSC_TRIG_LIMIT_IS_PRESENT']){
