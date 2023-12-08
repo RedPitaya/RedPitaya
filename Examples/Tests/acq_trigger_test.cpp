@@ -27,7 +27,8 @@ list<string> g_result;
 typedef enum {
     RP_125_14,
     RP_250_12,
-    RP_125_14_4CH
+    RP_125_14_4CH,
+    RP_122_16
 } models_t;
 
 struct settings{
@@ -105,6 +106,15 @@ auto getDACChannels() -> uint8_t{
     return c;
 }
 
+auto getDACGainCh1() -> float{
+    float c = 0;
+    if (rp_HPGetFastDACGain(RP_CH_1, &c) != RP_HP_OK){
+        fprintf(stderr,"[Error] Can't get fast DAC gain\n");
+        exit(-1);
+    }
+    return c;
+}
+
 auto getADCRate() -> uint32_t{
     uint32_t c = 0;
     if (rp_HPGetBaseFastADCSpeedHz(&c) != RP_HP_OK){
@@ -139,7 +149,7 @@ auto getModel() -> models_t{
 
         case STEM_122_16SDR_v1_0:
         case STEM_122_16SDR_v1_1:
-            return RP_125_14;
+            return RP_122_16;
 
         case STEM_125_14_Z7020_4IN_v1_0:
         case STEM_125_14_Z7020_4IN_v1_2:
@@ -392,6 +402,7 @@ auto testTrig(settings s) -> int {
     uint32_t minPointerPerPer = 4;
     uint32_t maxPointerPerPer = 100;
     uint32_t steps = 25;
+    auto model = getModel();
     int result = 0;
     list<uint32_t> dec_list;
     for(uint32_t dec = RP_DEC_1; dec <= RP_DEC_65536; dec *= 2){
@@ -419,9 +430,14 @@ auto testTrig(settings s) -> int {
         auto minFreq = adcCurRate / maxPointerPerPer;
         minFreq = MAX(minFreq,1);
         maxFreq = MAX(maxFreq,1);
+
         auto freqSteps = MAX(1,(maxFreq - minFreq) / steps);
         test_list[i] = {};
         for(uint32_t freq = minFreq; freq < maxFreq; freq += freqSteps){
+            if (model == RP_122_16){
+                if (freq  < 100000)
+                    continue;
+            }
             test_list[i].push_back(freq);
         }
     }
@@ -440,7 +456,7 @@ auto testTrig(settings s) -> int {
             if (s.verbose){
                 std::cout << testName << "\n";
             }
-            testResult |= startGenerator(RP_CH_1,RP_WAVEFORM_SINE,freq,0.9,0,s.verbose);
+            testResult |= startGenerator(RP_CH_1,RP_WAVEFORM_SINE,freq, getDACGainCh1() * 0.9,0,s.verbose);
 
             testResult |=  getData(RP_T_CH_1,dec,ADC_BUFFER_SIZE/2.0, 0 ,RP_TRIG_SRC_CHA_PE,s.verbose,buffer);
 
@@ -512,7 +528,7 @@ auto testTrigSettingNow(settings s) -> int {
             dec_list.push_back(dec + 4);
         }
     }
-    result |= startGenerator(RP_CH_1,RP_WAVEFORM_SINE,1000,0.9,0,s.verbose);  // low frequency for very high decimations
+    result |= startGenerator(RP_CH_1,RP_WAVEFORM_SINE,1000, getDACGainCh1() * 0.9 ,0,s.verbose);  // low frequency for very high decimations
     result |= rp_AcqReset();
     result |= rp_AcqSetTriggerLevel(RP_T_CH_1, 0);
     result |= rp_AcqSetTriggerHyst(0.005);
@@ -615,10 +631,19 @@ auto testKeepArm(settings s) -> int {
     Color::Modifier red(Color::FG_RED);
     Color::Modifier green(Color::FG_GREEN);
     auto max_timeout = ADC_BUFFER_SIZE / (rate / RP_DEC_65536) * 1000.0;
+    auto genFreq = 100;
+    auto model = getModel();
+    auto maxDec = RP_DEC_8192;
+    auto minDec = RP_DEC_65536;
 
+    if (model == RP_122_16){
+        genFreq = 100000;
+        maxDec = RP_DEC_16;
+        minDec = RP_DEC_4096;
+    }
     int result = 0;
     list<uint32_t> dec_list;
-    for(uint32_t dec = RP_DEC_8192; dec <= RP_DEC_65536; dec *= 2){
+    for(uint32_t dec = maxDec; dec <= minDec; dec *= 2){
         dec_list.push_back(dec);
         if (dec >= 16 && dec < RP_DEC_65536){
             dec_list.push_back(dec + 1);
@@ -627,7 +652,7 @@ auto testKeepArm(settings s) -> int {
             dec_list.push_back(dec + 4);
         }
     }
-    result |= startGenerator(RP_CH_1,RP_WAVEFORM_SINE,100,0.9,0,s.verbose);  // low frequency for very high decimations
+    result |= startGenerator(RP_CH_1,RP_WAVEFORM_SINE,genFreq, getDACGainCh1() * 0.9, 0, s.verbose);  // low frequency for very high decimations
     result |= rp_AcqReset();
     result |= rp_AcqSetTriggerLevel(RP_T_CH_1, 0);
     result |= rp_AcqSetTriggerHyst(0.005);
@@ -742,6 +767,11 @@ auto testTrigDelay(settings s) -> int {
     Color::Modifier red(Color::FG_RED);
     Color::Modifier green(Color::FG_GREEN);
     auto max_timeout = ADC_BUFFER_SIZE / (rate / RP_DEC_65536) * 1000.0;
+    auto model = getModel();
+    if (model == RP_122_16){
+        printf("Test not available on 122-16\n");
+        return 0;
+    }
 
     int result = 0;
     list<uint32_t> dec_list;
