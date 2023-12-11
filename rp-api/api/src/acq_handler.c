@@ -1256,9 +1256,9 @@ int acq_GetDataInBuffer(rp_channel_t channel, uint32_t pos, uint32_t* size,buffe
     uint32_t g_base_raw = out->use_calib_for_raw ? calib.base : 1;
     int32_t offset_raw  = out->use_calib_for_raw ? calib.offset  : 0;
 
-    uint32_t gain_volt  = out->use_calib_for_raw ?  calib.gain : 1;
-    uint32_t g_base_volt = out->use_calib_for_raw ? calib.base : 1;
-    int32_t offset_volt  = out->use_calib_for_raw ? calib.offset  : 0;
+    uint32_t gain_volt  = out->use_calib_for_volts ?  calib.gain : 1;
+    uint32_t g_base_volt = out->use_calib_for_volts ? calib.base : 1;
+    int32_t offset_volt  = out->use_calib_for_volts ? calib.offset  : 0;
 
     uint32_t mask = ((uint64_t)1 << bits) - 1;
 
