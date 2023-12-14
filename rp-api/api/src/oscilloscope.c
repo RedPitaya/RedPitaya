@@ -60,6 +60,8 @@ static uint32_t g_adc_axi_start = 0;
 
 static uint32_t g_adc_axi_size = 0;
 
+#define RESERV_DMA_BYTES 8
+
 /**
  * general
  */
@@ -1000,6 +1002,7 @@ int osc_axi_SetAddressStartChD(uint32_t address)
 
 int osc_axi_SetAddressEndChA(uint32_t address)
 {
+    address -= RESERV_DMA_BYTES;
     uint32_t tmp;
     cmn_Debug("cmn_SetValue(&osc_reg->cha_axi_addr_high) mask 0xFFFFFFFF", address);
     return cmn_SetValue(&osc_reg->cha_axi_addr_high, address, FULL_MASK, &tmp);
@@ -1007,6 +1010,7 @@ int osc_axi_SetAddressEndChA(uint32_t address)
 
 int osc_axi_SetAddressEndChB(uint32_t address)
 {
+    address -= RESERV_DMA_BYTES;
     uint32_t tmp;
     cmn_Debug("cmn_SetValue(&osc_reg->chb_axi_addr_high) mask 0xFFFFFFFF", address);
     return cmn_SetValue(&osc_reg->chb_axi_addr_high, address, FULL_MASK, &tmp);
@@ -1014,6 +1018,7 @@ int osc_axi_SetAddressEndChB(uint32_t address)
 
 int osc_axi_SetAddressEndChC(uint32_t address)
 {
+    address -= RESERV_DMA_BYTES;
     if (!osc_reg_4ch)
         return RP_NOTS;
     uint32_t tmp;
@@ -1023,6 +1028,7 @@ int osc_axi_SetAddressEndChC(uint32_t address)
 
 int osc_axi_SetAddressEndChD(uint32_t address)
 {
+    address -= RESERV_DMA_BYTES;
     if (!osc_reg_4ch)
         return RP_NOTS;
     uint32_t tmp;
@@ -1052,23 +1058,31 @@ int osc_axi_GetAddressStartChD(uint32_t *address){
 }
 
 int osc_axi_GetAddressEndChA(uint32_t *address){
-     return cmn_GetValue(&osc_reg->cha_axi_addr_high, address, FULL_MASK);
+    int ret = cmn_GetValue(&osc_reg->cha_axi_addr_high, address, FULL_MASK);
+    *address += RESERV_DMA_BYTES;
+    return ret;
 }
 
 int osc_axi_GetAddressEndChB(uint32_t *address){
-     return cmn_GetValue(&osc_reg->chb_axi_addr_high, address, FULL_MASK);
+    int ret = cmn_GetValue(&osc_reg->chb_axi_addr_high, address, FULL_MASK);
+    *address += RESERV_DMA_BYTES;
+    return ret;
 }
 
 int osc_axi_GetAddressEndChC(uint32_t *address){
     if (!osc_reg_4ch)
         return RP_NOTS;
-    return cmn_GetValue(&osc_reg_4ch->cha_axi_addr_high, address, FULL_MASK);
+    int ret = cmn_GetValue(&osc_reg_4ch->cha_axi_addr_high, address, FULL_MASK);
+    *address += RESERV_DMA_BYTES;
+    return ret;
 }
 
 int osc_axi_GetAddressEndChD(uint32_t *address){
     if (!osc_reg_4ch)
         return RP_NOTS;
-    return cmn_GetValue(&osc_reg_4ch->chb_axi_addr_high, address, FULL_MASK);
+    int ret = cmn_GetValue(&osc_reg_4ch->chb_axi_addr_high, address, FULL_MASK);
+    *address += RESERV_DMA_BYTES;
+    return ret;
 }
 
 int osc_axi_GetWritePointerChA(uint32_t* pos)
