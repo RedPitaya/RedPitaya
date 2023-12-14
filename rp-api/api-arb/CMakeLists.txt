@@ -1,25 +1,31 @@
-cmake_minimum_required(VERSION 3.22)
-project(rp-hw-can)
-
+cmake_minimum_required(VERSION 3.14)
+project(rp-arb)
 
 option(BUILD_SHARED "Builds shared library" ON)
 option(BUILD_STATIC "Builds static library" ON)
 option(BUILD_PYTHON_MODULE "Builds python module" ON)
 
 option(IS_INSTALL "Install library" ON)
+option(BUILD_DOC "Build documentation" ON)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
-set(CMAKE_CXX_STANDARD 20)
-set(C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
+set(C_STANDARD 17)
+
 
 if(NOT DEFINED INSTALL_DIR)
     message(WARNING,"Installation path not set. Installation will be skipped")
     set(IS_INSTALL OFF)
 endif()
+
+if(NOT DEFINED DEBUG_REG)
+  set(DEBUG_REG OFF)
+endif()
+
 
 if(NOT DEFINED VERSION)
   set(VERSION 0.00-0000)
@@ -28,6 +34,7 @@ endif()
 if(NOT DEFINED REVISION)
   set(REVISION devbuild)
 endif()
+
 
 message(STATUS "VERSION=${VERSION}")
 message(STATUS "REVISION=${REVISION}")
@@ -44,20 +51,28 @@ message(STATUS "Compiler C++version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
 
-include_directories("include")
-include_directories("src")
+include_directories(${CMAKE_SOURCE_DIR}/include)
+include_directories(${CMAKE_SOURCE_DIR}/src)
 include_directories(${INSTALL_DIR}/include)
 link_directories(${INSTALL_DIR}/lib)
 
-file(GLOB PR_HW_SOURCES "src/*.cpp")
+list(APPEND src
+            ${CMAKE_SOURCE_DIR}/src/rp_arb.cpp
+        )
+
+list(APPEND header
+    ${CMAKE_SOURCE_DIR}/src/rp_arb.h
+)
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
-add_compile_options(-Wall -pedantic -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+add_compile_options(-Wall -pedantic -Wextra -Wno-unused-parameter -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
-add_library(${PROJECT_NAME}-obj OBJECT ${PR_HW_SOURCES})
+add_library(${PROJECT_NAME}-obj OBJECT ${src})
+
 
 if(BUILD_SHARED)
+
     if (BUILD_PYTHON_MODULE)
         find_package(SWIG REQUIRED)
         INCLUDE(${SWIG_USE_FILE})
@@ -65,32 +80,32 @@ if(BUILD_SHARED)
         find_package(PythonLibs)
         include_directories(${PYTHON_INCLUDE_PATH})
 
-        set(CMAKE_SWIG_FLAGS "")
-        set(src/rp_hw_can.i PROPERTIES CPLUSPLUS ON)
+        set_property(SOURCE src/rp_arb.i PROPERTY CPLUSPLUS ON)
+        # SET_SOURCE_FILES_PROPERTIES(src/rp_dsp.i PROPERTIES SWIG_FLAGS "-includeall")
 
-        SWIG_ADD_LIBRARY(rp_hw_can_py LANGUAGE python SOURCES src/rp_hw_can.i ${PR_HW_SOURCES})
-        SWIG_LINK_LIBRARIES(rp_hw_can_py ${PYTHON_LIBRARIES} rp.a rp-hw-calib.a rp-hw-profiles.a rp-i2c.a rp-spi.a rp-gpio.a rp-hw.a i2c socketcan)
-    endif()
+        SWIG_ADD_LIBRARY(rp_arb_py LANGUAGE python SOURCES src/rp_arb.i ${src})
+        SWIG_LINK_LIBRARIES(rp_arb_py ${PYTHON_LIBRARIES} rp.a rp-hw-calib.a rp-hw-profiles.a rp-i2c.a rp-spi.a rp-gpio.a rp-hw.a i2c -lm -lpthread)
+     endif()
 
     add_library(${PROJECT_NAME}-shared SHARED)
     set_property(TARGET ${PROJECT_NAME}-shared PROPERTY OUTPUT_NAME ${PROJECT_NAME})
-    target_link_options(${PROJECT_NAME}-shared PRIVATE -shared -Wl,--version-script=${CMAKE_SOURCE_DIR}/src/exportmap)
     target_sources(${PROJECT_NAME}-shared PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-obj>)
-    target_link_libraries(${PROJECT_NAME}-shared rp socketcan)
+    target_link_libraries(${PROJECT_NAME}-shared -lrp -lm -lpthread)
 
     if(IS_INSTALL)
         install(TARGETS ${PROJECT_NAME}-shared
             LIBRARY DESTINATION ${INSTALL_DIR}/lib
             ARCHIVE DESTINATION ${INSTALL_DIR}/lib)
-        install(DIRECTORY ${CMAKE_SOURCE_DIR}/include
-            DESTINATION ${INSTALL_DIR} PATTERN "*.h")
+
+        install(FILES ${header}
+            DESTINATION ${INSTALL_DIR}/include)
 
         if (BUILD_PYTHON_MODULE)
-            install(FILES $<TARGET_PROPERTY:rp_hw_can_py,SWIG_SUPPORT_FILES> DESTINATION ${INSTALL_DIR}/lib/python)
-            install(TARGETS rp_hw_can_py
+            install(FILES $<TARGET_PROPERTY:rp_arb_py,SWIG_SUPPORT_FILES> DESTINATION ${INSTALL_DIR}/lib/python)
+            install(TARGETS rp_arb_py
                 LIBRARY DESTINATION ${INSTALL_DIR}/lib/python
                 ARCHIVE DESTINATION ${INSTALL_DIR}/lib/python)
-            install(FILES tests/rp_hw_can_test.py
+            install(FILES tests/rp_arb_test.py
                 DESTINATION ${INSTALL_DIR}/lib/python PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
                 GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_WRITE WORLD_EXECUTE)
         endif()
@@ -102,14 +117,16 @@ if(BUILD_STATIC)
     add_library(${PROJECT_NAME}-static STATIC)
     set_property(TARGET ${PROJECT_NAME}-static PROPERTY OUTPUT_NAME ${PROJECT_NAME})
     target_sources(${PROJECT_NAME}-static PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-obj>)
+    target_link_libraries(${PROJECT_NAME}-static -lrp -lm -lpthread)
 
     if(IS_INSTALL)
         install(TARGETS ${PROJECT_NAME}-static
             LIBRARY DESTINATION ${INSTALL_DIR}/lib
             ARCHIVE DESTINATION ${INSTALL_DIR}/lib)
-        install(DIRECTORY ${CMAKE_SOURCE_DIR}/include
-            DESTINATION ${INSTALL_DIR} PATTERN "*.h")
-        endif()
+
+        install(FILES ${header}
+            DESTINATION ${INSTALL_DIR}/include)
+    endif()
 endif()
 
 unset(INSTALL_DIR CACHE)

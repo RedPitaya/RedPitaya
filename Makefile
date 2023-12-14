@@ -48,12 +48,13 @@ LIBRP250_12_DIR 		= rp-api/api-250-12
 LIBRP_DSP_DIR   		= rp-api/api-dsp
 LIBRPAPP_DIR    		= rp-api/api-app
 LIBRP_FORMATTER_DIR   	= rp-api/api-formatter
+LIBRP_ARB_DIR		   	= rp-api/api-arb
 ECOSYSTEM_DIR   		= Applications/ecosystem
 
-.PHONY: api api2 librp librp250_12 librp_hw librp_dsp librp_hw_profiles librp_hw_calibration librp_hw_can
+.PHONY: api api2 librp librp250_12 librp_hw librp_dsp librp_hw_profiles librp_hw_calibration librp_hw_can librparb
 .PHONY: librpapp liblcr_meter
 
-api: librp librp_hw librp_hw_can librp_dsp librpapp librp_formatter
+api: librp librp_hw librp_hw_can librp_dsp librpapp librp_formatter librparb
 
 api2: librp2
 
@@ -97,6 +98,9 @@ librpapp: librp
 	cmake -B$(abspath $(LIBRPAPP_DIR)/build) -S$(abspath $(LIBRPAPP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(LIBRPAPP_DIR)/build install
 
+librparb: librp
+	cmake -B$(abspath $(LIBRP_ARB_DIR)/build) -S$(abspath $(LIBRP_ARB_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRP_ARB_DIR)/build install
 
 
 ################################################################################
@@ -408,6 +412,7 @@ APP_JUPYTERMANAGER_DIR   = apps-tools/jupyter_manager
 APP_STREAMINGMANAGER_DIR = apps-tools/streaming_manager
 APP_CALIB_DIR			 = apps-tools/calib_app
 APP_MAIN_MENU_DIR        = apps-tools/main_menu
+APP_ARB_MANAGER_DIR      = apps-tools/arb_manager
 
 .PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager streaming_manager calib_app main_menu
 
@@ -427,6 +432,11 @@ main_menu: ecosystem api $(NGINX)
 	$(MAKE) -C $(APP_MAIN_MENU_DIR) clean
 	$(MAKE) -C $(APP_MAIN_MENU_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_MAIN_MENU_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+arb_manager: ecosystem api # $(NGINX)
+	$(MAKE) -C $(APP_ARB_MANAGER_DIR) clean
+	$(MAKE) -C $(APP_ARB_MANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(APP_ARB_MANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 scpi_manager: ecosystem api $(NGINX)
 	$(MAKE) -C $(APP_SCPIMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
@@ -530,6 +540,7 @@ clean:
 	rm -rf $(abspath $(LIBRP_DSP_DIR)/build)
 	rm -rf $(abspath $(LIBRP_FORMATTER_DIR)/build)
 	rm -rf $(abspath $(LIBRP_HW_CALIB_DIR)/build)
+	rm -rf $(abspath $(LIBRP_ARB_DIR)/build)
 
 
 	rm -rf $(abspath $(CALIB_DIR)/build)
@@ -542,16 +553,19 @@ clean:
 	rm -rf $(abspath $(SPECTRUM_DIR)/build)
 	rm -rf $(abspath $(LIBRPAPP_DIR)/build)
 
+
 	$(MAKE) -C $(NGINX_DIR) clean
 	$(MAKE) -C $(SCPI_SERVER_DIR) clean
 	$(MAKE) -C $(COMM_DIR) clean
 	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) clean
 	$(MAKE) -C $(APP_MAIN_MENU_DIR) clean
 
-
+	$(MAKE) -C $(APP_ARB_MANAGER_DIR) clean
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) clean
 	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) clean
 	$(MAKE) -C $(APP_LCRMETER_DIR) clean
 	$(MAKE) -C $(APP_LA_PRO_DIR) clean
 	$(MAKE) -C $(APP_BA_PRO_DIR) clean
 	$(MAKE) -C $(IDGEN_DIR) clean
+
+
