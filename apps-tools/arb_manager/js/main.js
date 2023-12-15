@@ -51,13 +51,17 @@
     SM.config.socket_url = 'ws://' + window.location.host + '/wss';
 
     SM.charts = [];
+    SM.renamePrev = "";
+    SM.renameSend = false;
 
     SM.status = {
         NONE: 0,
         REQ_UPDATE: 1,
         FILE_ERR: 2,
         FILE_ERR_TO_LONG: 3,
-        FILE_ERR_PARS_ERR: 4
+        FILE_ERR_PARS_ERR: 4,
+        FILE_ERR_CANT_RENAME: 5,
+        FILE_RENAME_DONE: 6
     };
 
     // App state
@@ -456,11 +460,22 @@
             input_item.addEventListener("keypress", function(event) {
                 // If the user presses the "Enter" key on the keyboard
                 if (event.key === "Enter") {
+                    SM.renameSend = true;
                     SM.parametersCache["RP_RENAME_FILE"] = { value: $(this).attr('fileName') + "\n" + $(this).val()};
                     SM.sendParameters();
                 }
             });
 
+            input_item.addEventListener("focusin",  function(event) {
+                SM.renamePrev = $(this).val();
+                SM.renameSend = false;
+            });
+
+            input_item.addEventListener("focusout", function(event) {
+                if (SM.renameSend &&  SM.renamePrev  !== ""){
+                    $(this).val( SM.renamePrev )
+                }
+            });
         }
 
     }
@@ -478,6 +493,31 @@
             SM.parametersCache["RP_FILES_LIST"] = { value: "req" };
             SM.sendParameters();
         }
+
+        if (SM.status.FILE_ERR === value){
+            $('#info_dialog_label').text("Error upload file");
+            $('#info_dialog').modal('show');
+        }
+
+        if (SM.status.FILE_ERR_TO_LONG === value){
+            $('#info_dialog_label').text("There is a lot of data in the file.\nThere must be no more than 16384 samples");
+            $('#info_dialog').modal('show');
+        }
+
+        if (SM.status.FILE_ERR_PARS_ERR === value){
+            $('#info_dialog_label').text("Error parsing file. The data must be in one column in the format ±X.XXX");
+            $('#info_dialog').modal('show');
+        }
+
+        if (SM.status.FILE_ERR_CANT_RENAME === value){
+            $(":focus").fI()
+        }
+
+        if (SM.status.FILE_RENAME_DONE === value){
+            SM.renamePrev = "";
+            SM.renameSend = false;
+        }
+
     }
 
     //Set handlers timers

@@ -433,7 +433,7 @@ main_menu: ecosystem api $(NGINX)
 	$(MAKE) -C $(APP_MAIN_MENU_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_MAIN_MENU_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-arb_manager: ecosystem api # $(NGINX)
+arb_manager: ecosystem api $(NGINX)
 	$(MAKE) -C $(APP_ARB_MANAGER_DIR) clean
 	$(MAKE) -C $(APP_ARB_MANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_ARB_MANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))

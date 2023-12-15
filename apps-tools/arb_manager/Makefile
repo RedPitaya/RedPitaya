@@ -31,7 +31,13 @@ $(ZIP): $(CONTROLLER)
 	-$(RM) target -rf
 	mkdir -p target/$(APP)
 
-	cp -r $(CONTROLLER) fpga.conf fpga.sh target/$(APP)
+	cp -r $(CONTROLLER) fpga.conf fpga.sh css img info js nginx.conf target/$(APP)
+	cp *.html target/$(APP)
+
+	sed -i target/$(APP)/info/info.json -e 's/NAME_INFO/Oscilloscope/'
+	sed -i target/$(APP)/info/info.json -e 's/REVISION/$(REVISION)/'
+	sed -i target/$(APP)/info/info.json -e 's/BUILD_NUMBER/$(BUILD_NUMBER)/'
+	sed -i target/$(APP)/info/info.json -e 's/DESC_INFO/Oscilloscope and Signal generator/'
 
 	cd target; zip -r ../$(ZIP) *
 	$(RM) target -rf

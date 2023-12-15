@@ -27,7 +27,8 @@ enum req_status_e{
     FILE_ERR = 2,
     FILE_ERR_TO_LONG = 3,
     FILE_ERR_PARS_ERR = 4,
-    FILE_ERR_CANT_RENAME = 5
+    FILE_ERR_CANT_RENAME = 5,
+    FILE_RENAME_DONE = 6
 };
 
 CStringParameter req_check_file("RP_REQ_CHECK_FILE",CBaseParameter::RW, "", 0);
@@ -194,6 +195,10 @@ void OnNewParams(void) {
                         auto res = rp_ARBRenameFile(i,new_name);
                         if (res == RP_ARB_FILE_CANT_RENAME){
                             req_status.SendValue(FILE_ERR_CANT_RENAME);
+                            break;
+                        }
+                        else{
+                            req_status.SendValue(FILE_RENAME_DONE);
                             break;
                         }
                     }
