@@ -1,7 +1,5 @@
-MODEL ?= Z10
-
 CFLAGS  = -std=gnu11 -Wall ## -Werror
-CFLAGS += -I/opt/redpitaya/include -D$(MODEL)
+CFLAGS += -I/opt/redpitaya/include
 LDFLAGS = -L/opt/redpitaya/lib
 LDLIBS = -static -lrp-hw-can -lrp -lrp-hw-calib -lrp-hw-profiles
 
@@ -53,3 +51,7 @@ $(PRGS): %: %.c
 clean:
 	$(RM) *.o
 	$(RM) $(OBJS)
+
+clean_all: clean
+	$(RM) $(PRGS)
+

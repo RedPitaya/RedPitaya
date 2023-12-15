@@ -1624,21 +1624,25 @@ int acq_GetBufferSize(uint32_t *size) {
 
 int acq_axi_SetBufferSamples(rp_channel_t channel, uint32_t address, uint32_t _samples) {
 
-    CHECK_CHANNEL("acq_axi_SetBuffer")
+    CHECK_CHANNEL("acq_axi_SetBufferSamples")
 
     uint32_t start,res_size;
     osc_axi_GetMemoryRegion(&start,&res_size);
 
     if (address < start){
-        fprintf(stderr,"[Error:acq_axi_SetBuffer] Start address lower than reserved. Address: 0x%X reserved 0x%X\n",address,start);
+        fprintf(stderr,"[Error:acq_axi_SetBufferSamples] Start address lower than reserved. Address: 0x%X reserved 0x%X\n",address,start);
         return RP_EOOR;
     }
 
     if (address + (_samples - 4) * 2 > start + res_size){
-        fprintf(stderr,"[Error:acq_axi_SetBuffer] The specified buffer size is greater than the reserved memory - 8 bytes. End address: 0x%X End reserved 0x%X\n",address + _samples * 2,start + res_size);
+        fprintf(stderr,"[Error:acq_axi_SetBufferSamples] The specified buffer size is greater than the reserved memory - 8 bytes. End address: 0x%X End reserved 0x%X\n",address + _samples * 2,start + res_size);
         return RP_EOOR;
     }
 
+    if (_samples % 8){
+        fprintf(stderr,"[Error:acq_axi_SetBufferSamples] Buffer samples must be a multiple of 8\n");
+        return RP_EOOR;
+    }
 
     if (channel == RP_CH_1) {
         osc_axi_SetAddressStartChA(address);
@@ -1668,8 +1672,8 @@ int acq_axi_SetBufferSamples(rp_channel_t channel, uint32_t address, uint32_t _s
 }
 
 int acq_axi_SetBufferBytes(rp_channel_t channel, uint32_t address, uint32_t _size){
-    if (_size % 2){
-        fprintf(stderr,"[Error:acq_axi_SetBuffer] Buffer size must be a multiple of 2\n");
+    if (_size % 16){
+        fprintf(stderr,"[Error:acq_axi_SetBufferBytes] Buffer size must be a multiple of 16\n");
         return RP_EOOR;
     }
     return acq_axi_SetBufferSamples(channel,address,_size / 2);
