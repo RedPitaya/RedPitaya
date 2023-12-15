@@ -43,6 +43,16 @@
         }
     }
 
+    window.addEventListener( "pageshow", function ( event ) {
+        var historyTraversal = event.persisted ||
+                               ( typeof window.performance != "undefined" &&
+                                    window.performance.navigation.type === 2 );
+        if ( historyTraversal ) {
+          // Handle page restore.
+          window.location.reload();
+        }
+    });
+
 })();
 
 (function(OSC, $, undefined) {
@@ -61,6 +71,8 @@
     OSC.rp_model = "";
     OSC.adc_channes = 2;
     OSC.adc_max_rate = 0;
+    OSC.arb_list = undefined;
+
     OSC.is_ext_trig_level_present = false;
     OSC.is_webpage_loaded = false;
 
@@ -370,6 +382,8 @@
 
                 OSC.updateInterfaceFor250(OSC.rp_model);
                 OSC.updateInterfaceForZ20(OSC.rp_model);
+                if (OSC.arb_list !== undefined)
+                    OSC.updateARBFunc(OSC.arb_list)
                 OSC.initUI();
                 OSC.initCursors();
                 OSC.initOSCHandlers();
@@ -623,8 +637,8 @@
     OSC.param_callbacks["SOUR1_SWEEP_DIR"] = OSC.updateGenSweepMode;
     OSC.param_callbacks["SOUR2_SWEEP_DIR"] = OSC.updateGenSweepMode;
 
-    OSC.param_callbacks["SOUR1_FUNC"] = OSC.updateGenSweepFunc;
-    OSC.param_callbacks["SOUR2_FUNC"] = OSC.updateGenSweepFunc;
+    OSC.param_callbacks["SOUR1_FUNC"] = OSC.updateGenFunc;
+    OSC.param_callbacks["SOUR2_FUNC"] = OSC.updateGenFunc;
 
     OSC.param_callbacks["SOUR1_TRIG_SOUR"] = OSC.updateGenTrigSource;
     OSC.param_callbacks["SOUR2_TRIG_SOUR"] = OSC.updateGenTrigSource;
@@ -732,6 +746,14 @@
         if (new_params['ADC_RATE']){
             OSC.adc_max_rate = new_params['ADC_RATE'].value;
         }
+
+        if (new_params['ARB_LIST'] && OSC.arb_list === undefined){
+            OSC.arb_list = new_params['ARB_LIST'].value;
+            if (OSC.arb_list !== "")
+                OSC.updateARBFunc(OSC.arb_list)
+        }
+
+
 
         if (new_params['OSC_TRIG_LIMIT_IS_PRESENT']){
             OSC.is_ext_trig_level_present = new_params['OSC_TRIG_LIMIT_IS_PRESENT'].value;
@@ -1153,6 +1175,11 @@
             console.log('ERROR: Cannot save changes, socket not opened');
             return false;
         }
+
+        if (OSC.ws.readyState !== WebSocket.OPEN){
+            window.location.reload(true);
+        }
+
         //if (!disable_defCur) OSC.setDefCursorVals();
 
         // Hack for json limitation
@@ -1170,6 +1197,9 @@
         if (!OSC.state.socket_opened) {
             console.log('ERROR: Cannot save changes, socket not opened');
             return false;
+        }
+        if (OSC.ws.readyState !== WebSocket.OPEN){
+            window.location.reload(true);
         }
         OSC.params.local['in_command'] = { value: 'send_all_params' };
         OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));

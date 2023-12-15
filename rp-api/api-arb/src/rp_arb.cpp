@@ -173,6 +173,16 @@ int rp_ARBGetSignal(uint32_t _index,float *_data,uint32_t *size){
 	return RP_ARB_FILE_OK;
 }
 
+int rp_ARBGetSignalByName(std::string _sigName,float *_data,uint32_t *_size){
+	*_size = 0;
+	for(uint32_t i = 0; i < g_files.size(); i++){
+		if (g_files[i].second == _sigName){
+			return rp_ARBGetSignal(i,_data,_size);
+		}
+	}
+	return RP_ARB_FILE_ERR;
+}
+
 int rp_ARBRenameFile(uint32_t _index,std::string _new_name){
 	if (_index >= g_files.size()){
 		return RP_ARB_WRONG_INDEX;

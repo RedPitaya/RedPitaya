@@ -15,3 +15,4 @@ auto sendFreqInSweepMode() -> void;
 auto initGenAfterLoad() -> void;
 auto updateGeneratorParameters(bool force) -> void;
 auto setNeedUpdateGenSignal() -> void;
+auto loadARBList() -> std::string;

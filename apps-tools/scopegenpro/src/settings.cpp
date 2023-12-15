@@ -142,10 +142,10 @@ auto configSetWithList(const std::string &_directory, const std::string &_filena
         if (stream.is_open()) {
             JSONNode root_node(JSON_NODE);
 
-            int out1Imp = NO_INIT;
-            int out2Imp = NO_INIT;
-            float out1A = NO_INIT;
-            float out2A = NO_INIT;
+            // int out1Imp = NO_INIT;
+            // int out2Imp = NO_INIT;
+            // float out1A = NO_INIT;
+            // float out2A = NO_INIT;
 
             auto x = CDataManager::GetInstance()->GetParametersList();
             for(CBaseParameter* i : *x){
@@ -192,10 +192,10 @@ auto configSet(const std::string &_directory, const std::string &_filename) -> b
         if (stream.is_open()) {
             JSONNode root_node(JSON_NODE);
 
-            int out1Imp = NO_INIT;
-            int out2Imp = NO_INIT;
-            float out1A = NO_INIT;
-            float out2A = NO_INIT;
+            // int out1Imp = NO_INIT;
+            // int out2Imp = NO_INIT;
+            // float out1A = NO_INIT;
+            // float out2A = NO_INIT;
 
             auto x = CDataManager::GetInstance()->GetParametersList();
             for(CBaseParameter* i : *x){

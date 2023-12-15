@@ -1,10 +1,25 @@
 #include <math.h>
 #include "sig_gen.h"
-
+#include "rp_hw-profiles.h"
 
 /***************************************************************************************
 *                            SIGNAL GENERATING TEMPORARY                                *
 ****************************************************************************************/
+
+void synthesis_arb(CFloatSignal *signal, const float *data, uint32_t _size, float freq, float amp, float off, float showOff,float tscale) {
+    auto sigSize = (*signal).GetSize();
+    if (sigSize == 0) return;
+    float rate = (float)_size / (float)DAC_BUFFER_SIZE ;
+    int period = (int) sigSize * 1000 / (freq * tscale * 10) * rate;
+    for (size_t i = 0; i < sigSize; ++i)
+	{
+        auto x = i % period;
+
+        auto t =  (float)x / (float)period;
+        int z = ((int)(t * _size) % _size);
+		(*signal)[i] = data[z] * amp + off + showOff;
+	}
+}
 
 void synthesis_sin(CFloatSignal *signal, float freq, float phase, float amp, float off, float showOff,float tscale) {
     auto sigSize = (*signal).GetSize();

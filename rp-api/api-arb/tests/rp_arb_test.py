@@ -33,6 +33,12 @@ print("rp_ARBGetSignal(0,d.cast())")
 res = rp_ARBGetSignal(0,d.cast())
 print(res)
 
+d = arrFloat(1024 * 16)
+print("rp_ARBGetSignalByName('',d.cast())")
+res = rp_ARBGetSignalByName('',d.cast())
+print(res)
+
+
 print("rp_ARBRenameFile(0,'')")
 res = rp_ARBRenameFile(0,'')
 print(res)
