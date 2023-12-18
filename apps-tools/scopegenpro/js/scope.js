@@ -72,6 +72,7 @@
     OSC.adc_channes = 2;
     OSC.adc_max_rate = 0;
     OSC.arb_list = undefined;
+    OSC.previousPageUrl = undefined;
 
     OSC.is_ext_trig_level_present = false;
     OSC.is_webpage_loaded = false;
@@ -371,6 +372,8 @@
         if (OSC.rp_model === "") {
             console.log("Model",_value.value)
             $('#BODY').load((_value.value === "Z20_125_4CH" ? "4ch_adc.html" : "2ch_adc.html"), function() {
+                $("#back_button").attr("href", OSC.previousPageUrl)
+
                 OSC.rp_model = _value.value;
                 console.log( "Load was performed." );
 
@@ -752,8 +755,6 @@
             if (OSC.arb_list !== "")
                 OSC.updateARBFunc(OSC.arb_list)
         }
-
-
 
         if (new_params['OSC_TRIG_LIMIT_IS_PRESENT']){
             OSC.is_ext_trig_level_present = new_params['OSC_TRIG_LIMIT_IS_PRESENT'].value;
@@ -1804,4 +1805,6 @@ $(function() {
     // Everything prepared, start application
     OSC.startApp();
 
+    OSC.previousPageUrl = document.referrer;
+    console.log(`Previously visited page URL: ${OSC.previousPageUrl}`);
 });

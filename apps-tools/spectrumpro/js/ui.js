@@ -191,4 +191,26 @@
         });
     }
 
+    UI.updateARBFunc = function(list) {
+        const splitLines = value => value.split(/\r?\n/);
+        splitLines(list).forEach(function(item){
+            var id = item.trim();
+            if (id !== ""){
+                var name = id.slice(1);
+                var opt = document.createElement('option')
+                var opt2 = document.createElement('option')
+                opt.setAttribute('value', id)
+                opt.innerText = name
+                opt2.setAttribute('value', id)
+                opt2.innerText = name
+                var r1 = document.getElementById('SOUR1_FUNC');
+                if (r1!= null)
+                    r1.appendChild(opt);
+                var r2 = document.getElementById('SOUR2_FUNC');
+                if (r2!= null)
+                    r2.appendChild(opt2);
+            }
+        });
+    }
+
 }(window.UI = window.UI || {}, jQuery));

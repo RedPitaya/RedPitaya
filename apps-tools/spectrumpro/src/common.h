@@ -4,6 +4,7 @@
 #include <string>
 #include "rp.h"
 #include "rp_hw-profiles.h"
+#include "rp_arb.h"
 
 #define MAX_ADC_CHANNELS 4
 #define MAX_DAC_CHANNELS 2
@@ -20,5 +21,6 @@ auto getModelName() -> std::string;
 
 auto outAmpDef() -> float;
 auto outAmpMax() -> float;
+auto loadARBList() -> std::string;
 
 #endif

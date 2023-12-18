@@ -53,6 +53,7 @@
     SM.charts = [];
     SM.renamePrev = "";
     SM.renameSend = false;
+    SM.previousPageUrl = undefined;
 
     SM.status = {
         NONE: 0,
@@ -559,9 +560,10 @@ $(function() {
         }
     });
 
-
-
     // Everything prepared, start application
     SM.startApp();
 
+    SM.previousPageUrl = document.referrer;
+    console.log(`Previously visited page URL: ${SM.previousPageUrl}`);
+    $("#back_button").attr("href", SM.previousPageUrl)
 });

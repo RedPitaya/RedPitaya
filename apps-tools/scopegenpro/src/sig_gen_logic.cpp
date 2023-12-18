@@ -501,7 +501,6 @@ auto updateGeneratorParameters(bool force) -> void{
 
             if (IS_NEW(outWaveform[i]) || force){
                 auto wf = outWaveform[i].NewValue();
-                fprintf(stderr,"W %s\n",wf.c_str());
                 if (wf[0] == 'A'){
                     auto signame = wf.erase(0, 1);
                     float data[DAC_BUFFER_SIZE];

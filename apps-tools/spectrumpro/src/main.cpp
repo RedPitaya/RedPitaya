@@ -94,7 +94,9 @@ CFloatParameter outPhase[MAX_DAC_CHANNELS]                 = INIT2("SOUR","_PHAS
 CFloatParameter outDCYC[MAX_DAC_CHANNELS]                  = INIT2("SOUR","_DCYC", CBaseParameter::RW, 50, 0, 0, 100,CONFIG_VAR);
 CFloatParameter outRiseTime[MAX_DAC_CHANNELS]              = INIT2("SOUR","_RISE", CBaseParameter::RW, 1, 0, 0.1, 1000,CONFIG_VAR);
 CFloatParameter outFallTime[MAX_DAC_CHANNELS]              = INIT2("SOUR","_FALL", CBaseParameter::RW, 1, 0, 0.1, 1000,CONFIG_VAR);
-CIntParameter outWAveform[MAX_DAC_CHANNELS]                = INIT2("SOUR","_FUNC", CBaseParameter::RW, RP_WAVEFORM_SINE, 0, RP_WAVEFORM_SINE, RP_WAVEFORM_DC_NEG,CONFIG_VAR);
+CStringParameter outWaveform[MAX_DAC_CHANNELS]             = INIT2("SOUR","_FUNC", CBaseParameter::RW, "0", 0,CONFIG_VAR);
+
+CStringParameter outARBList = CStringParameter("ARB_LIST", CBaseParameter::RW, loadARBList(), 0);
 
 CIntParameter outGain[MAX_DAC_CHANNELS]                    = INIT2("CH","_OUT_GAIN", CBaseParameter::RW, 0, 0, 0, 1);
 CIntParameter outTemperatureRuntime[MAX_DAC_CHANNELS]      = INIT2("SOUR","_TEMP_RUNTIME", CBaseParameter::RWSA, 0, 0, 0, 1);
@@ -668,10 +670,34 @@ static void UpdateGeneratorParameters(bool force)
             RESEND(outFallTime[ch])
         }
 
-        if (outWAveform[ch].IsNewValue() || force) {
-            rp_GenWaveform((rp_channel_t)ch, (rp_waveform_t) outWAveform[ch].NewValue());
-            outWAveform[ch].Update();
-            RESEND(outWAveform[ch])
+        if (outWaveform[ch].IsNewValue() || force){
+            auto wf = outWaveform[ch].NewValue();
+            if (wf[0] == 'A'){
+                auto signame = wf.erase(0, 1);
+                float data[DAC_BUFFER_SIZE];
+                uint32_t size;
+                if (!rp_ARBGetSignalByName(signame,data,&size)){
+                    rp_GenArbWaveform((rp_channel_t)ch,data,size);
+                    rp_GenWaveform((rp_channel_t)ch,RP_WAVEFORM_ARBITRARY);
+                    outWaveform[ch].Update();
+                }else{
+                    outWaveform[ch].Update();
+                    rp_GenWaveform((rp_channel_t)ch, RP_WAVEFORM_SINE);
+                    outWaveform[ch].Value() = "0";
+                }
+
+            }else{
+                try{
+                    rp_waveform_t w = (rp_waveform_t)stoi(wf);
+                    rp_GenWaveform((rp_channel_t)ch, w);
+                    outWaveform[ch].Update();
+                }
+                catch (const std::exception&) {
+                    rp_GenWaveform((rp_channel_t)ch, RP_WAVEFORM_SINE);
+                    outWaveform[ch].Update();
+                    outWaveform[ch].Value() = "0";
+                }
+            }
         }
     }
 

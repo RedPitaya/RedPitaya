@@ -27,7 +27,7 @@ const char format_125_14[] =
         "\tchannel         Channel to generate signal on [1, 2].\n"
         "\tamplitude       Peak-to-peak signal amplitude in Vpp [0.0 - %1.1f].\n"
         "\tfrequency       Signal frequency in Hz [%d - %d].\n"
-        "\ttype            Signal type [sine, sqr, tri, sweep, dc].\n"
+        "\ttype            Signal type [sine, sqr, tri, sweep, dc%s].\n"
         "\tend frequency   Sweep-to frequency in Hz [%d - %d].\n"
         "\tcalib           Disable calibration [-c]. By default calibration enabled.\n"
         "\n"
@@ -43,7 +43,7 @@ const char format_250_12[] =
         "\tamplitude       Peak-to-peak signal amplitude in Vpp [0.0 - %1.1f].\n"
         "\tfrequency       Signal frequency in Hz [%d - %d].\n"
         "\tgain            Gain output value [x1, x5] (default value x1).\n"
-        "\ttype            Signal type [sine, sqr, tri, sweep, dc].\n"
+        "\ttype            Signal type [sine, sqr, tri, sweep, dc%s].\n"
         "\tend frequency   Sweep-to frequency in Hz [%d - %d].\n"
         "\tcalib           Disable calibration [-c]. By default calibration enabled.\n"
         "\n"
@@ -52,14 +52,27 @@ const char format_250_12[] =
 
 
 void usage_125_14() {
+    auto list = getARBList();
+    std::string s = "";
+    for(auto &itm : list){
+        s += ", ";
+        s += itm;
+    }
+
     fprintf( stderr, format_125_14, g_argv0, VERSION_STR, REVISION_STR,
-             g_argv0, g_max_amplitude, g_min_frequency, g_max_frequency,g_min_frequency, g_max_frequency);
+             g_argv0, g_max_amplitude, g_min_frequency, g_max_frequency, s.c_str(), g_min_frequency, g_max_frequency);
 }
 
 void usage_250_12() {
+    auto list = getARBList();
+    std::string s = "";
+    for(auto &itm : list){
+        s += ", ";
+        s += itm;
+    }
 
     fprintf( stderr, format_250_12, g_argv0, VERSION_STR, REVISION_STR,
-             g_argv0, g_max_amplitude, g_min_frequency, g_max_frequency,g_min_frequency, g_max_frequency);
+             g_argv0, g_max_amplitude, g_min_frequency, g_max_frequency, s.c_str(), g_min_frequency, g_max_frequency);
 }
 
 void usage(models_t model){
@@ -74,6 +87,7 @@ void usage(models_t model){
 /** Signal generator main */
 int main(int argc, char *argv[])
 {
+    loadARBList();
     auto channels = getChannels();
     auto model = getModel();
     if (channels == 0){
@@ -143,9 +157,22 @@ int main(int argc, char *argv[])
         } else if ( strcmp(argv[4 + PARAMETER_CORRECT], "sweep") == 0) {
             config.type = RP_WAVEFORM_SWEEP;
         } else {
-            fprintf(stderr, "Invalid signal type: %s\n", argv[4 + PARAMETER_CORRECT]);
-            usage(model);
-            return -1;
+            auto list = getARBList();
+            std::string s = "";
+
+            bool find = false;
+            for(auto &itm : list){
+                if ( strcmp(argv[4 + PARAMETER_CORRECT], itm.c_str()) == 0) {
+                    find = true;
+                    config.arb = itm;
+                }
+            }
+
+            if (!find){
+                fprintf(stderr, "Invalid signal type: %s\n", argv[4 + PARAMETER_CORRECT]);
+                usage(model);
+                return -1;
+            }
         }
     }
 

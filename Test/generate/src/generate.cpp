@@ -1,11 +1,14 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
+#include <vector>
 #include <string.h>
 #include <unistd.h>
 
 #include "generate.h"
+#include "rp_arb.h"
 
+std::vector<std::string> g_arbList;
 
 uint8_t getChannels(){
     uint8_t c = 0;
@@ -76,6 +79,23 @@ models_t getModel(){
     return RP_125_14;
 }
 
+auto loadARBList() -> void{
+    uint32_t c = 0;
+    rp_ARBInit();
+    std::string list;
+    if (!rp_ARBGetCount(&c)){
+        for(uint32_t i = 0; i < c; i++){
+            std::string name;
+            if (!rp_ARBGetName(i,&name)){
+                g_arbList.push_back(name);
+            }
+        }
+    }
+}
+
+auto getARBList() -> std::vector<std::string>{
+    return g_arbList;
+}
 
 
 /** Signal generator main */
@@ -111,29 +131,38 @@ int gen(config_t &conf)
     rp_GenFreq(ch,conf.freq);
     rp_GenTriggerSource(ch,RP_GEN_TRIG_SRC_INTERNAL);
 
-    if (conf.type == RP_WAVEFORM_SINE){
-        rp_GenWaveform(ch, RP_WAVEFORM_SINE);
+    if (conf.arb == ""){
+        if (conf.type == RP_WAVEFORM_SINE){
+            rp_GenWaveform(ch, RP_WAVEFORM_SINE);
+        }
+
+        if (conf.type == RP_WAVEFORM_SQUARE){
+            rp_GenWaveform(ch, RP_WAVEFORM_SQUARE);
+        }
+
+        if (conf.type == RP_WAVEFORM_TRIANGLE){
+            rp_GenWaveform(ch, RP_WAVEFORM_TRIANGLE);
+        }
+
+        if (conf.type == RP_WAVEFORM_DC){
+            rp_GenWaveform(ch, RP_WAVEFORM_DC);
+        }
+
+        if (conf.type == RP_WAVEFORM_SWEEP){
+            rp_GenSweepDir(ch,RP_GEN_SWEEP_DIR_UP_DOWN);
+            rp_GenSweepMode(ch,RP_GEN_SWEEP_MODE_LOG);
+            rp_GenSweepStartFreq(ch,conf.freq);
+            rp_GenSweepEndFreq(ch,conf.end_freq);
+            rp_GenWaveform(ch, RP_WAVEFORM_SWEEP);
+        }
+    }else{
+        float data[DAC_BUFFER_SIZE];
+        uint32_t s;
+        rp_ARBGetSignalByName(conf.arb,data,&s);
+        rp_GenArbWaveform(ch,data,s);
+        rp_GenWaveform(ch, RP_WAVEFORM_ARBITRARY);
     }
 
-    if (conf.type == RP_WAVEFORM_SQUARE){
-        rp_GenWaveform(ch, RP_WAVEFORM_SQUARE);
-    }
-
-    if (conf.type == RP_WAVEFORM_TRIANGLE){
-        rp_GenWaveform(ch, RP_WAVEFORM_TRIANGLE);
-    }
-
-    if (conf.type == RP_WAVEFORM_DC){
-        rp_GenWaveform(ch, RP_WAVEFORM_DC);
-    }
-
-    if (conf.type == RP_WAVEFORM_SWEEP){
-        rp_GenSweepDir(ch,RP_GEN_SWEEP_DIR_UP_DOWN);
-        rp_GenSweepMode(ch,RP_GEN_SWEEP_MODE_LOG);
-        rp_GenSweepStartFreq(ch,conf.freq);
-        rp_GenSweepEndFreq(ch,conf.end_freq);
-        rp_GenWaveform(ch, RP_WAVEFORM_SWEEP);
-    }
     if (rp_HPGetIsGainDACx5OrDefault()){
         rp_GenSetGainOut(ch,conf.gain);
     }
