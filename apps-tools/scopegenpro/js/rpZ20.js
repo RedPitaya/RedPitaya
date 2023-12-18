@@ -16,8 +16,8 @@
                         element.parentNode.removeChild(element);
                     });
 
-                $(".122_16_gen_sel").prop( "disabled", true );
-                $(".122_16_gen_sel").css({ "-webkit-appearance": "none","-moz-appearance": "none", "appearance": "none" });
+                // $(".122_16_gen_sel").prop( "disabled", true );
+                // $(".122_16_gen_sel").css({ "-webkit-appearance": "none","-moz-appearance": "none", "appearance": "none" });
                 $(".out_phase").switchClass("col-xs-6", "col-xs-12");
             }
         }

@@ -777,8 +777,8 @@ void OnNewParams(void)
 
     if (resetSettings.IsNewValue()){
         if (resetSettings.NewValue() == 1){
-            deleteConfig(getHomeDirectory() + "/.config/redpitaya/apps/scopegenpro/config.json");
-            configSetWithList(getHomeDirectory() + "/.config/redpitaya/apps/scopegenpro", "config.json",g_savedParams);
+            deleteConfig(getHomeDirectory() + "/.config/redpitaya/apps/spectrumpro/config.json");
+            configSetWithList(getHomeDirectory() + "/.config/redpitaya/apps/spectrumpro", "config.json",g_savedParams);
             resetSettings.Update();
             resetSettings.SendValue(2);
             return;
