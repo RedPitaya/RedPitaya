@@ -26,7 +26,8 @@ typedef struct {
     rp_waveform_t type;
     rp_gen_gain_t gain;
     bool       calib;
-    std::string arb;
+    std::string arb = "";
+    bool regDebug = false;
 } config_t;
 
 uint8_t getChannels();

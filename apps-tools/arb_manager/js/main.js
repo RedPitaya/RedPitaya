@@ -35,6 +35,7 @@
     SM.ss_rate = -1;
     SM.ss_max_rate = -1;
     SM.ss_max_rate_devider = -1;
+    SM.ss_max_gain = undefined;
     SM.param_callbacks = {};
     SM.parameterStack = [];
     SM.signalStack = [];
@@ -267,6 +268,10 @@
 
     SM.processParameters = function(new_params) {
 
+        if (new_params['MAX_GAIN'] && SM.ss_max_gain === undefined){
+            SM.ss_max_gain = new_params['MAX_GAIN'].value;
+        }
+
         if (Object.keys(new_params).length !== 0)
             console.log(new_params)
 
@@ -312,8 +317,8 @@
             },
             yaxes: [{
                 show: false,
-                min: -1,
-                max: 1,
+                min: SM.ss_max_gain * -1,
+                max: SM.ss_max_gain,
                 labelWidth: 5,
                 tickDecimals: 1,
                 //   alignTicksWithAxis: 1,
@@ -382,14 +387,16 @@
             if (cols.length >= 2){
                 var fname = cols[0].toString();
                 var name = cols.length  > 1 ? cols[1].toString() : "";
-                var size = cols.length  > 2 ? parseInt(cols[2]) : 0;
-                var values = cols.length  > 3 ? cols[3].toString() : "";
+                var is_valid = cols.length  > 2 ? parseInt(cols[2]) : 0;
+                var size = cols.length  > 3 ? parseInt(cols[3]) : 0;
+                var values = cols.length  > 4 ? cols[4].toString() : "";
 
                 if (files[fname] == undefined){
                     files[fname] = {}
                 }
                 files[fname]["name"] = name;
                 files[fname]["size"] = size;
+                files[fname]["is_valid"] = is_valid;
 
                 var sigVal = values.trim().split(';');
                 var sigValF = [];
@@ -424,6 +431,13 @@
             input_item.setAttribute('maxlength', '10');
             input_item.value = value["name"]
             input_item.setAttribute("fileName",key)
+
+            if (value["is_valid"] !== 1){
+                var label_error = document.createElement('label');
+                item5.append(label_error)
+                label_error.innerText = 'Out of range'
+                label_error.style.color= '#E00000';
+            }
 
             var item4 = document.createElement('item4');
             span1.append(item4)

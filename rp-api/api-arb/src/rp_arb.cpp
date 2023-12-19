@@ -18,8 +18,10 @@
 #include <algorithm>
 #include <unistd.h>
 #include <map>
+#include <cmath>
 #include "rp_arb.h"
 #include "rp.h"
+#include "rp_hw-profiles.h"
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 
@@ -54,6 +56,31 @@ bool checkFreeName(std::string _name){
 			}
 		}
 	}
+	return true;
+}
+
+auto getDACChannels() -> uint8_t{
+    uint8_t c = 0;
+
+    if (rp_HPGetFastDACChannelsCount(&c) != RP_HP_OK){
+        fprintf(stderr,"[Error] Can't get fast DAC channels count\n");
+    }
+    return c;
+}
+
+bool getGain(float *f){
+	auto count = getDACChannels();
+	float z = -1;
+	for(int i = 0; i < count ;i++){
+		float g;
+		if (rp_HPGetFastDACGain(i, &g) != RP_HP_OK) return false;
+		if(z == -1){
+			z = g;
+		}else if (z != g){
+			return false;
+		}
+	}
+	*f = z;
 	return true;
 }
 
@@ -225,4 +252,30 @@ int rp_ARBLoadToFPGA(rp_channel_t _channel, std::string _sigName){
 	}
 	return RP_ARB_ERROR_LOAD;
 }
+
+int rp_ARBIsValid(std::string _sigName,bool *_valid){
+
+	float max_gain;
+	if (!getGain(&max_gain)) return RP_ARB_FILE_ERR;
+
+	*_valid = false;
+	for(uint32_t i = 0; i < g_files.size(); i++){
+		if (g_files[i].second == _sigName){
+			float data[DAC_BUFFER_SIZE];
+			uint32_t size;
+			if (rp_ARBGetSignal(i,data,&size) == RP_ARB_FILE_OK){
+				for (uint32_t z = 0 ; z < size ; z++){
+					if (max_gain < fabs(data[z])){
+						*_valid = false;
+						return RP_ARB_FILE_OK;
+					}
+				}
+				*_valid = true;
+				return RP_ARB_FILE_OK;
+			}
+		}
+	}
+	return RP_ARB_FILE_ERR;
+}
+
 

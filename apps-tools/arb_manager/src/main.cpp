@@ -20,6 +20,7 @@
 #include "main.h"
 #include "rp.h"
 #include "rp_arb.h"
+#include "rp_hw-profiles.h"
 
 enum req_status_e{
     NONE = 0,
@@ -35,7 +36,34 @@ CStringParameter req_check_file("RP_REQ_CHECK_FILE",CBaseParameter::RW, "", 0);
 CIntParameter req_status("RP_REQ_STATUS", CBaseParameter::RW, 0, 0, 0, 100);
 CStringParameter req_files_list("RP_FILES_LIST",CBaseParameter::RW, "", 0);
 CStringParameter req_rename_file("RP_RENAME_FILE",CBaseParameter::RW, "", 0);
+CFloatParameter  max_gain("MAX_GAIN", CBaseParameter::RW, 1, 0, 0, 100);
 
+
+
+auto getDACChannels() -> uint8_t{
+    uint8_t c = 0;
+
+    if (rp_HPGetFastDACChannelsCount(&c) != RP_HP_OK){
+        fprintf(stderr,"[Error] Can't get fast DAC channels count\n");
+    }
+    return c;
+}
+
+bool getGain(float *f){
+	auto count = getDACChannels();
+	float z = -1;
+	for(int i = 0; i < count ;i++){
+		float g;
+		if (rp_HPGetFastDACGain(i, &g) != RP_HP_OK) return false;
+		if(z == -1){
+			z = g;
+		}else if (z != g){
+			return false;
+		}
+	}
+	*f = z;
+	return true;
+}
 
 
 const char *rp_app_desc(void) {
@@ -44,6 +72,10 @@ const char *rp_app_desc(void) {
 
 int rp_app_init(void) {
     fprintf(stderr, "Loading arb manager %s-%s.\n", VERSION_STR, REVISION_STR);
+    float gain;
+    if (getGain(&gain)){
+        max_gain.Value() = gain;
+    }
     rp_ARBInit();
     CDataManager::GetInstance()->SetParamInterval(50);
     CDataManager::GetInstance()->SetSignalInterval(50);
@@ -102,12 +134,15 @@ void sendFilesInfo() {
         float data[DAC_BUFFER_SIZE];
         uint32_t dataSizeOut;
         float dataOut[DAC_BUFFER_SIZE];
+        bool is_valid;
 
-        if (rp_ARBGetFileName(i,&fileName) != RP_OK)
+        if (rp_ARBGetFileName(i,&fileName) != RP_ARB_FILE_OK)
             continue;
-        if (rp_ARBGetName(i,&name) != RP_OK)
+        if (rp_ARBGetName(i,&name) != RP_ARB_FILE_OK)
             continue;
-        if (rp_ARBGetSignal(i,data,&dataSize) != RP_OK)
+        if (rp_ARBGetSignal(i,data,&dataSize) != RP_ARB_FILE_OK)
+            continue;
+        if (rp_ARBIsValid(name,&is_valid) != RP_ARB_FILE_OK)
             continue;
 
         decimateSignal(data,dataSize,dataOut,&dataSizeOut);
@@ -119,7 +154,7 @@ void sendFilesInfo() {
             sig += std::to_string(dataOut[j]);
         }
 
-        req += fileName + "\t" + name + "\t" + sig +"\n";
+        req += fileName + "\t" + name + "\t" + std::to_string(is_valid) + "\t" + sig + "\n";
     }
     req_files_list.Value() = req;
 }

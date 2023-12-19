@@ -87,7 +87,11 @@ auto loadARBList() -> void{
         for(uint32_t i = 0; i < c; i++){
             std::string name;
             if (!rp_ARBGetName(i,&name)){
-                g_arbList.push_back(name);
+                bool is_valid;
+                if (!rp_ARBIsValid(name,&is_valid)){
+                    if (is_valid)
+                        g_arbList.push_back(name);
+                }
             }
         }
     }
@@ -102,6 +106,9 @@ auto getARBList() -> std::vector<std::string>{
 int gen(config_t &conf)
 {
     rp_channel_t ch = (rp_channel_t)conf.ch;
+    if (conf.regDebug){
+        rp_EnableDebugReg();
+    }
 
     rp_InitReset(false);
 
@@ -159,7 +166,9 @@ int gen(config_t &conf)
         float data[DAC_BUFFER_SIZE];
         uint32_t s;
         rp_ARBGetSignalByName(conf.arb,data,&s);
-        rp_GenArbWaveform(ch,data,s);
+        if (rp_GenArbWaveform(ch,data,s)!= RP_OK){
+            fprintf(stderr,"Error load ARB waveform\n");
+        }
         rp_GenWaveform(ch, RP_WAVEFORM_ARBITRARY);
     }
 

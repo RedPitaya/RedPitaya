@@ -470,6 +470,7 @@ int gen_setArbWaveform(rp_channel_t channel, float *data, uint32_t length) {
             max = data[i];
     }
     if (min < (is_sign ? -fs : 0) || max > fs) {
+        fprintf(stderr,"[Error:gen_setArbWaveform] The signal is greater than acceptable.\n");
         return RP_ENN;
     }
 

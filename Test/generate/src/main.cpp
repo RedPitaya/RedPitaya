@@ -22,7 +22,7 @@ const char *g_argv0 = NULL;
 const char format_125_14[] =
         "%s version %s-%s\n"
         "\n"
-        "Usage: %s   channel amplitude frequency <type> <end frequency> <calib>\n"
+        "Usage: %s   channel amplitude frequency <type> <end frequency> <calib> <debug>\n"
         "\n"
         "\tchannel         Channel to generate signal on [1, 2].\n"
         "\tamplitude       Peak-to-peak signal amplitude in Vpp [0.0 - %1.1f].\n"
@@ -30,6 +30,7 @@ const char format_125_14[] =
         "\ttype            Signal type [sine, sqr, tri, sweep, dc%s].\n"
         "\tend frequency   Sweep-to frequency in Hz [%d - %d].\n"
         "\tcalib           Disable calibration [-c]. By default calibration enabled.\n"
+        "\tdebug           Debug FPGA registers [-d].\n"
         "\n"
         "Setting the frequency to 0 will disable the generator completely.\n"
         "\n";
@@ -37,7 +38,7 @@ const char format_125_14[] =
 const char format_250_12[] =
         "%s version %s-%s\n"
         "\n"
-        "Usage: %s   channel amplitude frequency <gain> <type> <end frequency> <calib>\n"
+        "Usage: %s   channel amplitude frequency <gain> <type> <end frequency> <calib> <debug>\n"
         "\n"
         "\tchannel         Channel to generate signal on [1, 2].\n"
         "\tamplitude       Peak-to-peak signal amplitude in Vpp [0.0 - %1.1f].\n"
@@ -46,6 +47,7 @@ const char format_250_12[] =
         "\ttype            Signal type [sine, sqr, tri, sweep, dc%s].\n"
         "\tend frequency   Sweep-to frequency in Hz [%d - %d].\n"
         "\tcalib           Disable calibration [-c]. By default calibration enabled.\n"
+        "\tdebug           Debug FPGA registers [-d].\n"
         "\n"
         "Setting the frequency to 0 will disable the generator completely.\n"
         "\n";
@@ -140,6 +142,12 @@ int main(int argc, char *argv[])
             fprintf(stderr, "Invalid parameter: %s\n", argv[4 + PARAMETER_CORRECT]);
             usage(model);
             return -1;
+        }
+    }
+
+    for(int i = 1; i < argc; i++){
+         if ( strcmp(argv[i], "-d") == 0) {
+           config.regDebug = true;
         }
     }
 

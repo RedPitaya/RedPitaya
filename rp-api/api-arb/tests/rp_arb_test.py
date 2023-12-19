@@ -46,3 +46,7 @@ print(res)
 print("rp_ARBLoadToFPGA(0,'')")
 res = rp_ARBLoadToFPGA(0,'')
 print(res)
+
+print("rp_ARBIsValid('')")
+res = rp_ARBIsValid('')
+print(res)

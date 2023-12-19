@@ -39,5 +39,6 @@ int rp_ARBGetSignal(uint32_t _index,float *_data,uint32_t *_size);
 int rp_ARBGetSignalByName(std::string _sigName,float *_data,uint32_t *_size);
 int rp_ARBRenameFile(uint32_t _index,std::string _new_name);
 int rp_ARBLoadToFPGA(rp_channel_t _channel, std::string _sigName);
+int rp_ARBIsValid(std::string _sigName,bool *_valid);
 
 #endif // __ARB_API_H
