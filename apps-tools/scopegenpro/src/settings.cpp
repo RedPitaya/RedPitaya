@@ -87,9 +87,6 @@ auto getHomeDirectory() -> std::string {
 
 // Reads the configuration file
 auto configGet(const std::string &_path) -> void {
-    std::lock_guard<std::mutex> lock(g_mutex);
-    if (g_disableSaveSettings) return false;
-
     std::ifstream stream(_path.c_str(), std::ios_base::in | std::ios_base::binary);
 
     if (stream.is_open()) {
@@ -145,6 +142,9 @@ auto configGet(const std::string &_path) -> void {
 }
 
 auto configSetWithList(const std::string &_directory, const std::string &_filename,const std::vector<std::string> &_parameters) -> bool {
+    std::lock_guard<std::mutex> lock(g_mutex);
+    if (g_disableSaveSettings) return false;
+
     if (createDirectory(_directory)) {
         std::ofstream stream(_directory + "/" + _filename, std::ios_base::out | std::ios_base::trunc | std::ios_base::binary);
 

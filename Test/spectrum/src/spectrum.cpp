@@ -273,7 +273,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    error_code = g_dsp.window_init(rp_dsp_api::HANNING);
+    error_code = g_dsp.window_init(args.wm);
 
     if (error_code != 0) {
         std::cerr << "Error: rp_spectr_init, code: " << error_code << std::endl;
