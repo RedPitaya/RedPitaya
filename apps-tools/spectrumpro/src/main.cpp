@@ -47,8 +47,8 @@ CIntParameter   view_port_width     ("view_port_width",   CBaseParameter::RW, 25
 CFloatParameter view_port_start     ("view_port_start",   CBaseParameter::RW, 0, 0, 0, MAX_FREQ);
 CFloatParameter view_port_end       ("view_port_end",     CBaseParameter::RW, MAX_FREQ, 0, 0, MAX_FREQ);
 
-CIntParameter   freq_unit           ("freq_unit",    CBaseParameter::RWSA, 2, 0, 0, 2,CONFIG_VAR);
-CIntParameter   y_axis_mode         ("y_axis_mode",  CBaseParameter::RW, 0, 0, 0, 2,CONFIG_VAR); // 0 -dBm mode ; 1 - Volt mode ; 2 -dBu mode
+CIntParameter   freq_unit           ("freq_unit",    CBaseParameter::RWSA, 2, 0, 0, 2, CONFIG_VAR);
+CIntParameter   y_axis_mode         ("y_axis_mode",  CBaseParameter::RW, 0, 0, 0, 4, CONFIG_VAR); // 0 -dBm mode ; 1 - Volt mode ; 2 -dBu mode; 3 -dBV mode; 4 -dBuV mode
 CIntParameter   adc_freq            ("ADC_FREQ",     CBaseParameter::RWSA, 0, 0, 0, getADCRate());
 CIntParameter   rbw                 ("RBW",          CBaseParameter::RWSA, 0, 0, 0, MAX_FREQ);
 CFloatParameter impedance           ("DBU_IMP_FUNC", CBaseParameter::RW, 50, 0, 0.1, 1000,CONFIG_VAR);

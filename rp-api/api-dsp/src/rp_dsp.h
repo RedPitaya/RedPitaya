@@ -30,7 +30,9 @@ namespace rp_dsp_api{
     typedef enum{
         DBM             = 0,
         VOLT            = 1,
-        DBU             = 2
+        DBU             = 2,
+        DBV             = 3,
+        DBuV            = 4
     } mode_t;
 
     typedef struct{

@@ -525,6 +525,17 @@ auto CDSP::decimate(data_t *data,uint32_t in_len, uint32_t out_len) -> int {
                     ch_p = data->m_fft[c][k] * wsumf / 1.414213562;
                 }
 
+                // dBV
+                // V -> RMS
+                if (getMode() == DBV){
+                    ch_p = data->m_fft[c][k] * wsumf  / 1.414213562;
+                }
+
+                 // dBuV
+                if (getMode() == DBuV){
+                    ch_p = data->m_fft[c][k] * wsumf / 1.414213562;
+                }
+
                 data->m_decimated[c][i] += (double)ch_p;  // Summing the power expressed in Watts associated to each FFT bin
             }
             data->m_decimated[c][i] /= step;
@@ -689,6 +700,24 @@ auto CDSP::cnvToMetric(data_t *data,uint32_t  decimation) -> int{
                     data->m_converted[c][i] = 20 * log10f_neon(ch_p / 0.775);
                 else
                     data->m_converted[c][i] = -120;
+            }
+
+            if (getMode() == DBV){
+                double ch_p = data->m_decimated[c][i];
+                // ( 20*log10( RMS / 1.0 ))
+                if (ch_p * g_w2mw > 1.0e-12 )
+                    data->m_converted[c][i] = 20 * log10f_neon(ch_p);
+                else
+                    data->m_converted[c][i] = -120;
+            }
+
+            if (getMode() == DBuV){
+                  double ch_p = data->m_decimated[c][i];
+                // ( 20*log10( RMS / 1.0 )) + 120
+                if (ch_p * g_w2mw > 1.0e-12 )
+                    data->m_converted[c][i] = 20 * log10f_neon(ch_p) + 120;
+                else
+                    data->m_converted[c][i] = -10;
             }
 
             /* Find peaks */

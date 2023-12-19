@@ -794,6 +794,8 @@
 
             if ('y_axis_mode' in new_params && new_params['y_axis_mode'].value != undefined) {
                 var z = "dbm";
+                if (new_params['y_axis_mode'].value ===4) z = "dbuV";
+                if (new_params['y_axis_mode'].value ===3) z = "dbV";
                 if (new_params['y_axis_mode'].value ===2) z = "dbu";
                 if (new_params['y_axis_mode'].value ===1) z = "v";
                 $('#BDM_DBU_FUNC').val(z);

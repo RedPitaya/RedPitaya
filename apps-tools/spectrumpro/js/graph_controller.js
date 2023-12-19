@@ -431,6 +431,14 @@
             mode_value = 2;
             $('.power-label').text('Amplitude [dBu]');
         }
+        if (mode === "dbV") {
+            mode_value = 3;
+            $('.power-label').text('Amplitude [dBV]');
+        }
+        if (mode === "dbuV") {
+            mode_value = 4;
+            $('.power-label').text('Amplitude [dBµV]');
+        }
         SPEC.sendParameters({'y_axis_mode':mode_value});
         UI_GRAPH.resetZoom();
     }
@@ -444,6 +452,16 @@
         }
 
         if (mode === "dbu") {
+            UI_GRAPH.ymax = 10.0;
+            UI_GRAPH.ymin = -130.0;
+        }
+
+        if (mode === "dbuV") {
+            UI_GRAPH.ymax = 130.0;
+            UI_GRAPH.ymin = -10.0;
+        }
+
+        if (mode === "dbV") {
             UI_GRAPH.ymax = 10.0;
             UI_GRAPH.ymin = -130.0;
         }
