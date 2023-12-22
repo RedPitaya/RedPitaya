@@ -32,9 +32,9 @@
 #include <sys/param.h>
 
 #include "main_osc.h"
-#include "fpga_osc.h"
-#include "fpga_awg.h"
-#include "redpitaya/version.h"
+// #include "fpga_osc.h"
+// #include "fpga_awg.h"
+#include "version.h"
 
 #define M_PI 3.14159265358979323846
 
@@ -752,7 +752,7 @@ int main(int argc, char *argv[]) {
                     fprintf(progress_file , "%d \n" ,  progress_int );
                     //system("clear");
                     //printf(" progress: %d  \n",progress_int);
-                     
+
                     fclose(progress_file);
                 }
 
@@ -838,7 +838,7 @@ int main(int argc, char *argv[]) {
                         if ( (Z_amp >= (6.0*R_shunt)) || (Z_amp <= (1.0/6.0*R_shunt)) ) {
                             if      ((Z_amp > 2e6)                      )     R_shunt_k=5; // 1M3
                             else if ((Z_amp > 50e3) && (Z_amp <= 2e6))       R_shunt_k=4; // 100K
-                            else if ((Z_amp >  5e3) && (Z_amp <= 50e3))     R_shunt_k=3; // 10K 
+                            else if ((Z_amp >  5e3) && (Z_amp <= 50e3))     R_shunt_k=3; // 10K
                             else if ((Z_amp >  0.5e3)  && (Z_amp <= 5e3))     R_shunt_k=2; // 1K
                             else if ((Z_amp >  50)  && (Z_amp <=  0.5e3))      R_shunt_k=1; // 100E
                             else if ((Z_amp <= 50)                     )     R_shunt_k=0; // 10E
@@ -989,15 +989,15 @@ int main(int argc, char *argv[]) {
             calib_data_combine[ 1 ] = creal( ( ( ( Z_short[i] - Z_measure[i]) * ( Z_open[i]) ) / ( (Z_measure[i] - Z_open[i]) * (Z_short[i] - Z_load[i]) ) ) );
             calib_data_combine[ 2 ] = cimag( ( ( ( Z_short[i] - Z_measure[i]) * ( Z_open[i]) ) / ( (Z_measure[i] - Z_open[i]) * (Z_short[i] - Z_load[i]) ) ) );
         }
-        
 
-        if (sweep_function==0) 
+
+        if (sweep_function==0)
         {
         w_out = 2 * M_PI * start_frequency; // angular velocity
         }
         else {
         w_out = 2 * M_PI * Frequency[ i ]; // angular velocity
-        }  
+        }
 
         PhaseZ[ i ] = ( 180 / M_PI) * (atan2f( calib_data_combine[ 2 ], calib_data_combine[ 1 ] ));
         AmplitudeZ[ i ] = sqrtf( powf( calib_data_combine[ 1 ], 2 ) + powf(calib_data_combine[ 2 ], 2 ) );
@@ -1023,10 +1023,10 @@ int main(int argc, char *argv[]) {
 
         /// Output
         /*printf(" %.1f    %.3f    %.1f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f\n",*/
-         printf(" %.1f    %.3e    %.2f    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.2f\n",  
-        
-        /*"Output:\tFrequency [Hz], |Z| [Ohm], P [deg], Ls [H], Cs [F], Rs [Ohm], Lp [H], Cp [F], Rp [Ohm], Q, D, Xs [H], Gp [S], Bp [S], |Y| [S], -P [deg]\n";*/   
-         
+         printf(" %.1f    %.3e    %.2f    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.2f\n",
+
+        /*"Output:\tFrequency [Hz], |Z| [Ohm], P [deg], Ls [H], Cs [F], Rs [Ohm], Lp [H], Cp [F], Rp [Ohm], Q, D, Xs [H], Gp [S], Bp [S], |Y| [S], -P [deg]\n";*/
+
             Frequency[ !sweep_function ? 0 : i ],
             AmplitudeZ[ i ],
             PhaseZ[ i ],
@@ -1038,26 +1038,26 @@ int main(int argc, char *argv[]) {
             R_p[ i ],
             Q[ i ],
             D[ i ],
-            X_s[ i ],               
+            X_s[ i ],
             G_p[ i ],
-            B_p[ i ],           
+            B_p[ i ],
             Y_abs[ i ],
             PhaseY[ i ]
             );
 
 
- 
+
         /** Saving files */
         if (!sweep_function) {
             fprintf(file_frequency, "%.1f\n", Frequency[0]);
         } else {
             fprintf(file_frequency, "%.1f\n", Frequency[i]);
-            
+
         }
 
-        fprintf(file_amplitude, "%.3f\n", AmplitudeZ[i]);        
+        fprintf(file_amplitude, "%.3f\n", AmplitudeZ[i]);
         fprintf(file_phase, "%.2f\n", PhaseZ[i]);
-        
+
         fprintf(file_L_s, "%.15f\n", L_s[i]);
         fprintf(file_C_s, "%.15f\n", C_s[i]);
         fprintf(file_R_s, "%.15f\n", R_s[i]);
@@ -1077,11 +1077,11 @@ int main(int argc, char *argv[]) {
         fprintf(file_PhaseY, "%.15f\n", PhaseY[i]);
 
         /*Dummy data*/
-        
+
 /*
-        fprintf(file_amplitude, "%.15f\n", 1.0e-15*powf((i-5),3.0));        
+        fprintf(file_amplitude, "%.15f\n", 1.0e-15*powf((i-5),3.0));
         fprintf(file_phase, "%.2f\n", -90.0);
-        
+
         fprintf(file_L_s, "%.15f\n", 1.0e12*powf((i-5),3.0));
         fprintf(file_C_s, "%.15f\n", -110.0);
         fprintf(file_R_s, "%.15f\n", 90.0);
@@ -1099,16 +1099,16 @@ int main(int argc, char *argv[]) {
 
         fprintf(file_Y_abs, "%.15f\n", 1400.0);
         fprintf(file_PhaseY, "%.15f\n", 1500.0);*/
-          
-        
-        
-      
+
+
+
+
     }
 
 
     /** Closing files */
     fclose(file_frequency);
-    
+
     fclose(file_amplitude);
     fclose(file_phase);
 
@@ -1122,16 +1122,16 @@ int main(int argc, char *argv[]) {
 
     fclose(file_Q);
     fclose(file_D);
-    
+
     fclose(file_X_s);
     fclose(file_G_p);
     fclose(file_B_p);
-    
+
     fclose(file_Y_abs);
     fclose(file_PhaseY);
-    
-    
-    
+
+
+
 
     /** All's well that ends well. */
     return 1;
@@ -1417,7 +1417,7 @@ int LCR_data_analysis(float **s,
 
         sum_buff_in1 += U_acq[1][i];
         sum_buff_in2 += U_acq[2][i];
-               
+
         }
         float mean_buff_in1=sum_buff_in1/size;
         float mean_buff_in2=sum_buff_in2/size;
@@ -1425,22 +1425,22 @@ int LCR_data_analysis(float **s,
       // MANUAL CORRECTION
       double C_cable=460E-12;
       float P_correction=atan(-w_out*C_cable*R_shunt);
-   
-  
+
+
       if        (R_shunt==1300000.0)     {  R_shunt=R_shunt*1.0;  C_cable=465E-12;  }
 
       else if   (R_shunt==100000.0)      {  R_shunt=R_shunt*1.0;  C_cable=390E-12;  }
 
       else if   (R_shunt==10000.0)       {  R_shunt=R_shunt*1.0;  C_cable=350E-12;  }
-  
+
       else if   (R_shunt==1000.0)        {  R_shunt=R_shunt*1.0;  C_cable=160E-12;  }
 
       else if   (R_shunt==100.0)         {  R_shunt=R_shunt*1.0;  C_cable=100E-12;  }
 
       else if   (R_shunt==10.0)          {  R_shunt=R_shunt*1.15;  C_cable=100E-12;  }
-       /////// 
+       ///////
 
-   
+
 
 
     /* Voltage and current on the load can be calculated from gathered data */
@@ -1533,12 +1533,12 @@ int inquire_user_wait() {
 int i2c_set_shunt (int k) {
 
     int  dat;
-    int  fd; 
+    int  fd;
     int  status;
     char str [1+2*11];
 
     // parse input arguments
-   
+
     dat = (1<<k);
 
     // Open the device.
@@ -1582,7 +1582,7 @@ int i2c_set_shunt (int k) {
     status = write(fd, str, 1+2*11);
 
     if (!status) fprintf(stderr, "Error I2C write\n");
-    
+
     close(fd);
     return 0;
 }

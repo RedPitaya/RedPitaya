@@ -14,7 +14,7 @@
 #ifndef __GENERATE_H
 #define __GENERATE_H
 
-#include "redpitaya/rp.h"
+#include "rp.h"
 #include "rp_hw-profiles.h"
 
 

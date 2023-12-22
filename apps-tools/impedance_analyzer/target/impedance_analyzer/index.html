@@ -1,0 +1,2850 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LCR meter</title>
+    <link href="../assets/bootstrap-3.0.0/css/bootstrap.css" rel="stylesheet" type="text/css">
+    <link href="../assets/style.css?6" rel="stylesheet" type="text/css">
+    <script src="../assets/bootstrap-3.0.0/js/jquery.js"></script>
+    <link href="style.css?6" rel="stylesheet" type="text/css">
+    <script src="../assets/bootstrap-3.0.0/js/bootstrap.min.js"></script>
+    <script src="../assets/flot/jquery.flot.min.js"></script>
+    <script src="../assets/flot/jquery.flot.selection.min.js"></script>
+    <script src="../assets/flot/jquery.flot.navigate.js"></script>
+    <script src="../assets/flot/jquery.flot.resize.min.js"></script>
+    <script src="../assets/flot/jquery.flot.touch.js?2"></script>
+    <script type="text/javascript">
+      // Settings which can be modified
+       
+      var app_id = 'impedance_analyzer';  
+      var root_url = '';
+      //var root_url = 'http://10.0.1.221';      // Test local
+      //var root_url = 'http://192.168.53.133';  // Test remote and local
+      //var root_url = 'http://192.168.1.100';   // Default RedPitaya IP
+      var start_app_url = root_url + '/bazaar?start=' + app_id;
+      var stop_app_url = root_url + '/bazaar?stop=';
+      var get_url = root_url + '/data';
+      var post_url = root_url + '/data';
+      var upload_url = root_url + '/upload_gen_ch';  // The channel number is added automatically
+      
+      var update_interval = 1000;              // Update interval for PC, milliseconds
+      var update_interval_mobdev = 1000;      // Update interval for mobile devices, milliseconds 
+      var request_timeout = 3000;            // Milliseconds
+      var long_timeout = 20000;              // Milliseconds
+      var meas_panel_dec = 5;                // Decimation for numerical measure panel to make it human readable
+      var meas_panel_dec_mobdev = 1;         // Decimation for numerical measure panel for mobile devices
+      var points_per_px = 5;                 // How many points per pixel should be drawn. Set null for unlimited (will disable client side decimation).
+      var xdecimal_places = 2;               // Number of decimal places for the xmin/xmax values. Maximum supported are 12.
+      var trigger_level_xdecimal_places = 4; // Number of decimal places for trigger level tooltip
+      var range_offset = 1;                  // Percentages
+        
+      var xmin = 1;
+      var xmax = 100000000;  
+      
+      /* LCR data type. 0 - phase, 1 - amplitude */
+      var change = 0;
+      var data_type = 1;
+      var lcr_modal;
+      var input_control = 0;
+      var lcr_modal;
+      var change_Measure = 0;
+      var measure = 0;
+      var linlog1 = "";
+      var editing = 0;
+      var options;
+      var log = -1;
+      
+      var time_range_max = [130, 1000, 8, 130, 1, 8];
+      var range_steps = [0];
+      
+      var plot_options = {
+        colors: ['#F6EB16', '#2CB34A', '#333333'],    // channel1, channel2, trigger line
+        lines: { lineWidth: 1 , shadow: 0},
+        selection: { mode: null }, //comment mode: 'xy'
+        zoom: { interactive: false, trigger: null }, //comment interactive: true
+        yaxis: {  color:'#989898' ,tickFormatter: funcyTickFormat},
+        xaxis: { color:'#989898',ticks: [1,10,100,200,400,600,800,1000,2000,4000,6000,8000,10000,20000,40000,60000,80000,100000,200000,400000,600000,800000,1000000,2000000,4000000,6000000,8000000,10000000,,20000000,40000000,60000000,80000000,100000000],transform:  function(v) {return Math.log(v+0.0001); /*move away from zero*/} , tickDecimals: 0,reserveSpace: true , tickFormatter: funcxTickFormat},
+        
+        grid: { borderWidth: 1, color:'#989898',backgroundColor: 'transparent' },
+        legend: { show:0, noColumns: 2, margin: [0, 0]},
+        touch: { autoWidth: false, autoHeight: false }
+      };
+      
+     /* function funcxTickFormat(val, axis){
+        if (val > 1000000000-1)
+          return (val / 1000000000).toFixed(axis.tickDecimals) + "G";
+        else if (val > 1000000-1)
+          return (val / 1000000).toFixed(axis.tickDecimals) + "M";
+        else if (val > 1000-1)
+          return (val / 1000).toFixed(axis.tickDecimals) + "k";
+      
+        else if (Math.abs(val) < 0.00099)
+          return (val * 1000).toFixed(axis.tickDecimals) + "m";
+        else if (Math.abs(val) < 0.00000099)
+          return (val * 1000000).toFixed(axis.tickDecimals) + "u";
+        else if (Math.abs(val) < 0.00000000099)
+          return (val * 1000000000).toFixed(axis.tickDecimals) + "n";
+      
+        else
+          return val.toFixed(axis.tickDecimals) + "";
+      }
+      
+      function funcyTickFormat(val, axis){
+        if (Math.abs(val) < 0.000000000000001) //for zero
+          return (val).toFixed(axis.tickDecimals) + "";
+        else if (Math.abs(val) < 0.000000000001)
+          return (val * 100000000000000).toFixed(axis.tickDecimals) + "p";
+        else if (Math.abs(val) < 0.000000001)
+          return (val * 100000000000).toFixed(axis.tickDecimals) + "n";
+        else if (Math.abs(val) < 0.000001)
+          return (val * 100000000).toFixed(axis.tickDecimals) + "u";
+        else if (Math.abs(val) < 0.001)
+          return (val * 100000).toFixed(axis.tickDecimals) + "m";
+        else if (Math.abs(val) > 1000000000-1)
+          return (val / 1000000000).toFixed(axis.tickDecimals) + "G";
+        else if (Math.abs(val) > 1000000-1)
+          return (val / 1000000).toFixed(axis.tickDecimals) + "M";
+        else if (Math.abs(val) > 1000-1)
+          return (val / 1000).toFixed(axis.tickDecimals) + "k";
+        
+        else
+          return val.toFixed(axis.tickDecimals) + "";
+      
+      
+      }*/
+        function funcxTickFormat(val, axis){
+   
+   if (Math.abs(val)  >= 0 && Math.abs(val)  < 1000)
+      return (val * 1).toFixed(0) + " ";
+   else if (Math.abs(val)  >=  1000  && Math.abs(val)  < 1000000)
+      return (val / 1000).toFixed(0) + "k";
+   else if (Math.abs(val)  >=  1000000 )
+      return (val / 1000000).toFixed(0) + "M";
+    }
+
+
+     function funcyTickFormat(val, axis){
+   if (Math.abs(val) <  0.00000000000001)
+        return (val * 0).toFixed(0);
+   else if (Math.abs(val)  >=  0.00000000000001 &&  Math.abs(val) <  0.000000001)
+        return (val * 1000000000000).toFixed(2) + " p";
+   else if (Math.abs(val) >=  0.000000001 && Math.abs(val) <  0.000001) 
+      return (val * 1000000000).toFixed(2) + " n";
+   else if (Math.abs(val)  >=  0.000001 && Math.abs(val)  < 0.001)
+      return (val * 1000000).toFixed(2) + " u";
+   else if (Math.abs(val)  >=  0.001 && Math.abs(val)  < 1)
+      return (val * 1000).toFixed(2) + " m";
+  else if (Math.abs(val)  >= 1 && Math.abs(val)  < 1000)
+      return (val * 1).toFixed(2);
+   else if (Math.abs(val)  >=  1000  && Math.abs(val)  < 1000000)
+      return (val / 1000).toFixed(2) + " k";
+   else if (Math.abs(val)  >=  1000000 &&  Math.abs(val)  < 1000000000)
+      return (val / 1000000).toFixed(2) + " M";
+   else if (Math.abs(val)  >=  1000000000)
+      return (val / 1000000000).toFixed(2) + " G";
+
+  }
+
+      
+      
+      var counter = 0;
+      // Settings which should not be modified
+      
+      var update_timer = null;
+      var zoompan_timer = null;
+      var downloading = false;
+      var sending = false;
+      var send_que = false;
+      var use_long_timeout = false;
+      var trig_dragging = false;
+      var touch_last_y = 0;
+      var user_editing = false;
+      var app_started = false;
+      var last_get_failed = false;
+      var refresh_counter = 0;
+      var autorun = 1;
+      var datasets = [];
+      var plot = null;
+      var params = {
+        original: null,
+        local: null
+      };
+      
+      // Default parameters - posted after server side app is started 
+      var def_params = {
+        en_avg_at_dec: 0
+      }; 
+        
+      // On page loaded
+      
+      $(function() {
+        
+        // Show different buttons on touch screens    
+        if(window.ontouchstart === undefined) {
+          $('.btn-lg').removeClass('btn-lg');
+          $('#accordion .btn, .modal .btn').addClass('btn-sm');
+          $('#btn_zoompan').remove();
+          $('#btn_zoomin, #btn_zoomout, #btn_pan').hide(); //comment .show()
+        }
+        else {
+          update_interval = update_interval_mobdev;
+          meas_panel_dec = meas_panel_dec_mobdev;
+          $('#btn_zoomin, #btn_zoomout, #btn_pan').remove();
+          $('#btn_zoompan').hide(); //comment .show()
+        }
+        
+        // Add application ID in the message from modal popup
+        $('.app-id').text(app_id);
+        
+        // Disable all controls until the params state is loaded for the first time 
+        $('input, select, button', '.container').prop('disabled', true);
+        
+        // Events binding for trigger controls
+        
+        $('#trigger_canvas').on({
+          'mousedown touchstart': function(evt) {
+          
+            // Ignore the event if trigger source is External or mode is not Normal
+            if(!params.original || params.original.trig_mode != 1 || params.original.trig_source == 2) {
+              return;
+            }
+          
+            trig_dragging = true;
+            $('input, select', '#accordion').blur();
+            mouseDownMove(this, evt);
+            evt.preventDefault();
+            return false;
+          },
+          'mousemove touchmove': function(evt) {
+            if(! trig_dragging) {
+              return;
+            }
+            mouseDownMove(this, evt);
+            evt.preventDefault();
+            return false;
+          },
+          'mouseup mouseout touchend': mouseUpOut
+        });
+        
+        $('input,select', '#accordion').on('focus', function() {
+          user_editing = true;
+        });
+        
+        $('#trig_mode').on('change', function() {
+          onDropdownChange($(this), 'trig_mode', true);
+          
+          // Autorun if trigger mode is Auto(0) or Normal(1), stop if it is Single(2).
+          autorun = (params.local.trig_mode == 2 ? 0 : 1); 
+          runStop();
+        });
+        
+        $('#trig_source').on('change', function() { onDropdownChange($(this), 'trig_source'); });
+        $('#trig_edge').on('change', function() { onDropdownChange($(this), 'trig_edge'); });
+        
+        $('#trig_level')
+          .on('focus paste', function() {
+            $(this).parent().addClass('input-group');
+            $('#apply_trig_level').show();
+          })
+          .on('blur', function() {
+            $('#apply_trig_level').hide();
+            $(this).parent().removeClass('input-group');
+            
+            var tlev = parseLocalFloat($(this).val());
+            var scale = (params.local.trig_source == 0 ? params.local.scale_ch1 : params.local.scale_ch2);
+            if(! isNaN(tlev)) {
+              params.local.trig_level = tlev / scale;
+              updateTriggerSlider(undefined, false);
+              redrawPlot();
+              sendParams();
+            }
+            else {
+              tlev = params.local.trig_level * scale;
+              $(this).val(tlev)
+            }
+            user_editing = false;
+          })
+          .on('change', function() {
+            $(this).blur();
+          })
+          .on('keypress', function(e) {
+            if(e.keyCode == 13) {
+              $(this).blur();
+            }
+          });
+        
+        // Events binding for range controls
+        
+        $('#range_x_minus, #range_x_plus').on('click', function() {
+          var nearest = $(this).data('nearest');
+          
+          if(nearest && plot) {
+            var options = plot.getOptions();
+            var axes = plot.getAxes();
+            var min = (options.xaxes[0].min !== null ? options.xaxes[0].min : axes.xaxis.min);
+            var max = (options.xaxes[0].max !== null ? options.xaxes[0].max : axes.xaxis.max);
+            var unit = $(this).data('unit');
+            
+            // Convert nanoseconds to milliseconds.
+            if(unit == 'ns') {
+              nearest /= 1000;
+            }
+            
+            var center = (min + max) / 2;
+            var half = nearest / 2;
+            min = center - half;
+            max = center + half;
+      
+            options.xaxes[0].min = min;
+            options.xaxes[0].max = max;
+      
+            plot.setupGrid();
+            plot.draw();
+            
+            params.local.xmin = min;
+            params.local.xmax = max;       
+            
+            updateRanges();
+            $(this).tooltip($(this).prop('disabled') === true ? 'hide' : 'show');
+            sendParams(true);
+          }
+        });
+        
+        $('#range_y_minus, #range_y_plus').on('click', function() {
+          var nearest = $(this).data('nearest');
+          
+          if(nearest && plot) {
+            var options = plot.getOptions();
+            var axes = plot.getAxes();
+            var min = (options.yaxes[0].min !== null ? options.yaxes[0].min : axes.yaxis.min);
+            var max = (options.yaxes[0].max !== null ? options.yaxes[0].max : axes.yaxis.max);
+            var unit = $(this).data('unit');
+            
+            // Convert millivolts to volts.
+            if(unit == 'mV') {
+              nearest /= 1000;
+            }
+            
+            var center = (min + max) / 2;
+            var half = nearest / 2;
+            min = center - half;
+            max = center + half;
+            
+            options.yaxes[0].min = min;
+            options.yaxes[0].max = max;
+      
+            plot.setupGrid();
+            plot.draw();
+                   
+            updateRanges();
+            $(this).tooltip($(this).prop('disabled') === true ? 'hide' : 'show');
+            updateTriggerSlider();
+          }
+        });
+        
+        $('#offset_x_minus, #offset_x_plus').on('click', function() {
+          if(plot) {
+            var direction = ($(this).attr('id') == 'offset_x_minus' ? 'left' : 'right');
+            var options = plot.getOptions();
+            var axes = plot.getAxes();
+            var min = (options.xaxes[0].min !== null ? options.xaxes[0].min : axes.xaxis.min);
+            var max = (options.xaxes[0].max !== null ? options.xaxes[0].max : axes.xaxis.max);
+            var offset = (max - min) * range_offset/100;
+            
+            if(direction == 'left') {
+              min -= offset;
+              max -= offset;
+            }
+            else {
+              min += offset;
+              max += offset;
+            }
+            
+            options.xaxes[0].min = min;
+            options.xaxes[0].max = max;
+      
+            plot.setupGrid();
+            plot.draw();
+            
+            params.local.xmin = min;
+            params.local.xmax = max;
+                   
+            updateRanges();
+            sendParams(true);
+          }
+        });
+        
+        $('#offset_y_minus, #offset_y_plus').on('click', function() {
+          if(plot) {
+            var direction = ($(this).attr('id') == 'offset_y_minus' ? 'down' : 'up');
+            var options = plot.getOptions();
+            var axes = plot.getAxes();
+            var min = (options.yaxes[0].min !== null ? options.yaxes[0].min : axes.yaxis.min);
+            var max = (options.yaxes[0].max !== null ? options.yaxes[0].max : axes.yaxis.max);
+            var offset = (max - min) * range_offset/100;            
+            if(direction == 'down') {
+              min -= offset;
+              max -= offset;
+            }
+            else {
+              min += offset;
+              max += offset;
+            }
+            
+            options.yaxes[0].min = min;
+            options.yaxes[0].max = max;
+      
+            plot.setupGrid();
+            plot.draw();
+                   
+            updateRanges();
+            updateTriggerSlider();
+          }
+        });
+          
+        // Events binding for gain controls
+        
+        $('#gain_ch1_att').on('change', function() { onDropdownChange($(this), 'prb_att_ch1'); });
+        $('#gain_ch1_sett').on('change', function() { onDropdownChange($(this), 'gain_ch1'); });
+        $('#gain_ch2_att').on('change', function() { onDropdownChange($(this), 'prb_att_ch2'); });
+        $('#gain_ch2_sett').on('change', function() { onDropdownChange($(this), 'gain_ch2'); });
+        
+        // Events binding for signal generator
+        
+        $('#gen_enable_ch1, #gen_enable_ch2').on('change', function() { 
+          params.local[this.id] = ($(this).is(':checked') ? 1 : 0);
+          sendParams(); 
+        });
+        
+        $('#gen_ch1_sigtype').on('change', function() { onDropdownChange($(this), 'gen_sig_type_ch1'); });
+        $('#gen_ch1_trigmode').on('change', function() { onDropdownChange($(this), 'gen_trig_mod_ch1'); });
+        $('#gen_ch2_sigtype').on('change', function() { onDropdownChange($(this), 'gen_sig_type_ch2'); });
+        $('#gen_ch2_trigmode').on('change', function() { onDropdownChange($(this), 'gen_trig_mod_ch2'); });
+        
+        $('#gen_ch1_ampl')
+          .on('focus paste', function() {
+            $(this).parent().addClass('input-group');
+            $('#apply_gen_ch1_ampl').show();
+          })
+          .on('blur', function() {
+            $('#apply_gen_ch1_ampl').hide();
+            $(this).parent().removeClass('input-group');
+            
+            var val = parseLocalFloat($(this).val());
+            if(! isNaN(val)) {
+              params.local.gen_sig_amp_ch1 = val;
+              sendParams();
+            }
+            else {
+              $(this).val(params.local.gen_sig_amp_ch1)
+            }
+            user_editing = false;
+          })
+          .on('change', function() {
+            $(this).blur();
+          })
+          .on('keypress', function(e) {
+            if(e.keyCode == 13) {
+              $(this).blur();
+            }
+          });
+          
+        $('#gen_ch1_freq')
+          .on('focus paste', function() {
+            $(this).parent().addClass('input-group');
+            $('#apply_gen_ch1_freq').show();
+          })
+          .on('blur', function() {
+            $('#apply_gen_ch1_freq').hide();
+            $(this).parent().removeClass('input-group');
+            
+            var val = parseLocalFloat($(this).val());
+            if(! isNaN(val)) {
+              params.local.gen_sig_freq_ch1 = val;
+              sendParams();
+            }
+            else {
+              $(this).val(params.local.gen_sig_freq_ch1)
+            }
+            user_editing = false;
+          })
+          .on('change', function() {
+            $(this).blur();
+          })
+          .on('keypress', function(e) {
+            if(e.keyCode == 13) {
+              $(this).blur();
+            }
+          });
+          
+        $('#gen_ch1_dc')
+          .on('focus paste', function() {
+            $(this).parent().addClass('input-group');
+            $('#apply_gen_ch1_dc').show();
+          })
+          .on('blur', function() {
+            $('#apply_gen_ch1_dc').hide();
+            $(this).parent().removeClass('input-group');
+            
+            var val = parseLocalFloat($(this).val());
+            if(! isNaN(val)) {
+              params.local.gen_sig_dcoff_ch1 = val;
+              sendParams();
+            }
+            else {
+              $(this).val(params.local.gen_sig_dcoff_ch1)
+            }
+            user_editing = false;
+          })
+          .on('change', function() {
+            $(this).blur();
+          })
+          .on('keypress', function(e) {
+            if(e.keyCode == 13) {
+              $(this).blur();
+            }
+          });
+          
+        $('#gen_ch2_ampl')
+          .on('focus paste', function() {
+            $(this).parent().addClass('input-group');
+            $('#apply_gen_ch2_ampl').show();
+          })
+          .on('blur', function() {
+            $('#apply_gen_ch2_ampl').hide();
+            $(this).parent().removeClass('input-group');
+            
+            var val = parseLocalFloat($(this).val());
+            if(! isNaN(val)) {
+              params.local.gen_sig_amp_ch2 = val;
+              sendParams();
+            }
+            else {
+              $(this).val(params.local.gen_sig_amp_ch2)
+            }
+            user_editing = false;
+          })
+          .on('change', function() {
+            $(this).blur();
+          })
+          .on('keypress', function(e) {
+            if(e.keyCode == 13) {
+              $(this).blur();
+            }
+          });
+          
+        $('#gen_ch2_freq')
+          .on('focus paste', function() {
+            $(this).parent().addClass('input-group');
+            $('#apply_gen_ch2_freq').show();
+          })
+          .on('blur', function() {
+            $('#apply_gen_ch2_freq').hide();
+            $(this).parent().removeClass('input-group');
+            
+            var val = parseLocalFloat($(this).val());
+            if(! isNaN(val)) {
+              params.local.gen_sig_freq_ch2 = val;
+              sendParams();
+            }
+            else {
+              $(this).val(params.local.gen_sig_freq_ch2)
+            }
+            user_editing = false;
+          })
+          .on('change', function() {
+            $(this).blur();
+          })
+          .on('keypress', function(e) {
+            if(e.keyCode == 13) {
+              $(this).blur();
+            }
+          });
+          
+        $('#gen_ch2_dc')
+          .on('focus paste', function() {
+            $(this).parent().addClass('input-group');
+            $('#apply_gen_ch2_dc').show();
+          })
+          .on('blur', function() {
+            $('#apply_gen_ch2_dc').hide();
+            $(this).parent().removeClass('input-group');
+                    
+            var val = parseLocalFloat($(this).val());
+            if(! isNaN(val)) {
+              params.local.gen_sig_dcoff_ch2 = val;
+              sendParams();
+            }
+            else {
+              $(this).val(params.local.gen_sig_dcoff_ch2)
+            }
+            user_editing = false;
+          })
+          .on('change', function() {
+            $(this).blur();
+          })
+          .on('keypress', function(e) {
+            if(e.keyCode == 13) {
+              $(this).blur();
+            }
+          });
+          
+        // Modals
+        
+        $('#modal_err, #modal_app').modal({ show: false, backdrop: 'static', keyboard: false });
+        $('#modal_upload').modal({ show: false });
+        
+        $('#btn_switch_app').on('click', function() {
+          var newapp_id = $('#new_app_id').text();
+          if(newapp_id.length) {
+            location.href = location.href.replace(app_id, newapp_id);
+          }
+        });
+        
+        $('.btn-app-restart').on('click', function() {
+          location.reload();
+        });
+        
+        $('#btn_retry_get').on('click', function() {
+          $('#modal_err').modal('hide');
+          updateGraphData();
+        });
+        
+        $('.btn-close-modal').on('click', function() {
+          $(this).closest('.modal').modal('hide');
+        });
+      
+        $('#btn_lcr_params').on('click', function() {
+          $('#modal_params').modal('hide');
+          updateGraphData();
+        });
+        // Reset the upload form to prevent browser caching of the uploaded file name
+        $('#upload_form')[0].reset();
+          
+        // Other event bindings
+        
+        $('#trigger_tooltip').tooltip({
+          title: '',
+          trigger: 'manual',
+          placement: 'auto left',
+          animation: false
+        });
+        
+        $('.btn').on('click', function() {
+          var btn = $(this);
+          setTimeout(function() { btn.blur(); }, 10);
+        });
+        
+        $('#btn_toolbar .btn').on('blur', function() {
+          $(this).removeClass('active');
+        });
+        
+        $(document).on('click', '#accordion > .panel > .panel-heading', function(event) {
+          $(this).next('.panel-collapse').collapse('toggle');
+          event.stopImmediatePropagation();
+        });
+        
+        // Tooltips for range buttons
+        $('#range_x_minus, #range_x_plus, #range_y_minus, #range_y_plus').tooltip({
+          container: 'body'
+        });
+        
+        // Load first data
+        updateGraphData();
+        
+        // Stop the application when page is unloaded
+        window.onbeforeunload = function() { 
+          $.ajax({
+            url: stop_app_url,
+            async: false
+          });
+        };
+                
+      });
+      
+      function startApp() {
+        $.get(
+          start_app_url
+        )
+        .done(function(dresult) {
+          if(dresult.status == 'ERROR') {
+            showModalError((dresult.reason ? dresult.reason : 'Could not start the application.'), true);
+          }
+          else {
+            $.post(
+              post_url, 
+              JSON.stringify({ datasets: { params: def_params } })
+            )
+            .done(function(dresult) {
+              app_started = true;
+              updateGraphData();      
+            })
+            .fail(function() {
+              showModalError('Could not initialize the application with default parameters.', false, true);
+            });
+          }
+        })
+        .fail(function() {
+          showModalError('Could not start the application.', true);
+        });
+      }
+      
+      function showModalError(err_msg, retry_btn, restart_btn, ignore_btn) {
+        var err_modal = $('#modal_err');
+        
+        err_modal.find('#btn_retry_get')[retry_btn ? 'show' : 'hide']();
+        err_modal.find('.btn-app-restart')[restart_btn ? 'show' : 'hide']();
+        err_modal.find('#btn_ignore')[ignore_btn ? 'show' : 'hide']();
+        err_modal.find('.modal-body').html(err_msg);
+        err_modal.modal('show');
+      }   
+      
+      function updateGraphData() {
+        if(downloading) {
+          return;
+        }
+        if(update_timer) {
+          clearTimeout(update_timer);
+          update_timer = null;
+        }
+        downloading = true;
+        
+        // Send params if there are any unsent changes
+        sendParams();
+        
+        var arun_before_ajax = autorun;
+        var long_timeout_used = use_long_timeout;
+        
+        $.ajax({
+          url: get_url,
+          timeout: (use_long_timeout ? long_timeout : request_timeout),
+          cache: false
+        })
+        .done(function(dresult) {
+          last_get_failed = false;
+          
+          if(dresult.status === 'ERROR') {
+            if(! app_started) {
+              startApp();
+            }
+            else {
+              showModalError((dresult.reason ? dresult.reason : 'Application error.'), true, true);
+            }
+      
+          }
+          else if(dresult.datasets !== undefined && dresult.datasets.params !== undefined) {
+            // Check if the application started on the server is the same as on client
+            if(app_id !== dresult.app.id) {
+              if(! app_started) {
+                startApp();
+              }
+              else {
+                $('#new_app_id').text(dresult.app.id);
+                $('#modal_app').modal('show');
+              }
+              return;
+            }
+            
+            app_started = true;
+          
+            // Check if trigger mode (which may switch autorun) was changed during ajax request
+            var arun_after_ajax = autorun;
+            
+            datasets = [];
+            for(var i=0; i<dresult.datasets.g1.length; i++) {
+              dresult.datasets.g1[i].color = i;
+              dresult.datasets.g1[i].label = 'Channel ' + (i+1);          
+              datasets.push(dresult.datasets.g1[i]);
+            }
+            
+            if(! plot) {
+              initPlot(dresult.datasets.params);
+            }
+            else {
+              // Apply the params state received from server if not in edit mode
+              if(! user_editing) {
+                loadParams(dresult.datasets.params);
+                
+                // Restore the autorun value modified by loadParams 
+                if(arun_before_ajax != arun_after_ajax) {
+                  autorun = arun_after_ajax; 
+                }
+              }
+              // Time units must be always updated
+              else {
+                updateTimeUnits(dresult.datasets.params);
+              }
+              
+              // Force X min/max
+              if(dresult.datasets.params.forcex_flag == 1) {
+                var options = plot.getOptions();
+                options.xaxes[0].min = dresult.datasets.params.xmin;
+                options.xaxes[0].max = dresult.datasets.params.xmax;
+              }
+              
+              // Redraw the plot using new datasets
+              plot.setData(filterData(datasets, plot.width()));
+              plot.setupGrid();
+              plot.draw();
+            }
+            
+            if(! trig_dragging) {
+              updateTriggerSlider();
+            }
+            
+            updateRanges();
+      
+            if(autorun || dresult.status === 'AGAIN') {
+              if(autorun) {
+                $('#btn_single').prop('disabled', true);
+              }
+              update_timer = setTimeout(function() {
+                updateGraphData();
+                updateGraphData();
+              }, update_interval);
+            }
+            else {
+              $('#btn_single').prop('disabled', false);
+            }
+          }
+          else {
+            showModalError('Wrong application data received.', true, true);
+          }
+        })
+        .fail(function(jqXHR, textStatus, errorThrown) {
+          if(last_get_failed) {
+            showModalError('Data receiving failed.<br>Error status: ' + textStatus, true, true);
+            last_get_failed = false;
+          }
+          else {
+            last_get_failed = true;
+            downloading = false;
+            updateGraphData();  // One more try
+          }
+        })
+        .always(function() {
+          if(! last_get_failed) {
+            downloading = false;
+            
+            if(params.local) {
+              // Disable trigger level input if trigger source is External or mode is not Normal
+              if(params.original.trig_mode != 1 || params.original.trig_source == 2) {
+                $('#trig_level').prop('disabled', true);
+                if($('#trig_level').is(':focus')) {
+                  $('#trig_level').blur();
+                }
+                $('#apply_trig_level').hide().parent().removeClass('input-group');
+              }
+              else {
+                $('#trig_level').prop('disabled', false);
+              }
+              
+              // Manage the state of other components
+              $('#accordion').find('input,select').not('#trig_level').prop('disabled', false);
+              $('.btn').not('#btn_single, #range_y_plus, #range_y_minus, #range_x_plus, #range_x_minus, #gen_ch1_single, #gen_ch2_single').prop('disabled', false);
+            }
+          }
+          
+          if(long_timeout_used) {
+            use_long_timeout = false;
+          }
+        
+        });
+        autoscaleY();
+      
+      }
+      
+      function initPlot(init_params) {
+        var plot_holder = $('#plot_holder');
+        var ymax = init_params.gui_reset_y_range / 2;
+        var ymin = ymax * -1;
+        
+        // Load received params
+        loadParams(init_params);
+        
+        // When xmin/xmax are null, the min/max values of received data will be used. For ymin/ymax use the gui_reset_y_range param.
+        $.extend(true, plot_options, {
+          xaxis: { min: null, max: null },
+          yaxis: { min: ymin, max: ymax }
+        });
+        
+        // Local optimization    
+        var filtered_data = filterData(datasets, plot_holder.width());
+      
+        // Plot first creation and drawing
+        plot = $.plot(
+          plot_holder, 
+          filtered_data,
+          plot_options
+        );
+        
+        // Selection
+        plot_holder.on('plotselected', function(event, ranges) {
+        
+          // Clamp the zooming to prevent eternal zoom
+          if(ranges.xaxis.to - ranges.xaxis.from < 0.00001) {
+            ranges.xaxis.to = ranges.xaxis.from + 0.00001;
+          }
+          if(ranges.yaxis.to - ranges.yaxis.from < 0.00001) {
+            ranges.yaxis.to = ranges.yaxis.from + 0.00001;
+          }
+      
+          // Do the zooming
+          plot = $.plot(
+            plot_holder, 
+            getData(ranges.xaxis.from, ranges.xaxis.to),
+            $.extend(true, plot_options, {
+              xaxis: { min: ranges.xaxis.from, max: ranges.xaxis.to },
+              yaxis: { min: ranges.yaxis.from, max: ranges.yaxis.to }
+            })
+          );
+          
+          params.local.xmin = parseFloat(ranges.xaxis.from.toFixed(xdecimal_places));
+          params.local.xmax = parseFloat(ranges.xaxis.to.toFixed(xdecimal_places));
+          
+          updateTriggerSlider();
+          sendParams(true);
+        });
+        
+        // Zoom / Pan
+        plot_holder.on('plotzoom plotpan touchmove touchend', function(event) {
+          
+          if(zoompan_timer) {
+            clearTimeout(zoompan_timer);
+            zoompan_timer = null;
+          }
+          
+          zoompan_timer = setTimeout(function() {
+            zoompan_timer = null;
+            
+            var xaxis = plot.getAxes().xaxis;
+            params.local.xmin = parseFloat(xaxis.min.toFixed(xdecimal_places));
+            params.local.xmax = parseFloat(xaxis.max.toFixed(xdecimal_places));
+            
+            updateTriggerSlider();
+            sendParams(true);
+                    
+          }, 250);
+        });
+      }
+      
+      function onDropdownChange(that, param_name, do_get) {
+        params.local[param_name] = parseInt(that.val());
+        sendParams(do_get);
+        that.blur();
+        user_editing = false;
+      }
+      
+      function loadParams(orig_params) {
+        if(! $.isPlainObject(orig_params)) {
+          return;
+        }
+        
+        // Ignore xmin/xmax values received from server. That values must be used only on AUTO button click 
+        // and on ForceX flag, but that is done before the sendParams() function is called.
+        if(plot) {
+          var options = plot.getOptions();
+          if(options.xaxes[0].min && options.xaxes[0].max) {
+            orig_params.xmin = options.xaxes[0].min;
+            orig_params.xmax = options.xaxes[0].max;
+          }
+        }
+        
+        // Same data in local and original params
+        params.original = $.extend({}, orig_params);
+        params.local = $.extend({}, params.original);
+      
+        // Autorun if trigger mode is Auto(0) or Normal(1), stop if it is Single(2)
+        autorun = (params.original.trig_mode == 2 ? 0 : 1);
+        
+        // Enable the Single button when not in autorun mode
+        $('#btn_single').prop('disabled', autorun);
+        
+        $('#trig_mode').val(params.original.trig_mode);
+        $('#trig_source').val(params.original.trig_source);
+        $('#trig_edge').val(params.original.trig_edge);
+        var scale = (params.original.trig_source == 0 ? params.original.scale_ch1 : params.original.scale_ch2);
+        $('#trig_level').val(floatToLocalString(params.original.trig_level * scale));
+        
+        if ((refresh_counter++ % meas_panel_dec) == 0) {
+            $('#info_ch1_min').html(floatToLocalString(shortenFloat(params.original.meas_min_ch1)));
+            $('#info_ch1_max').html(floatToLocalString(shortenFloat(params.original.meas_max_ch1)));
+            $('#info_ch1_amp').html(floatToLocalString(shortenFloat(params.original.meas_amp_ch1)));
+            $('#info_ch1_avg').html(floatToLocalString(shortenFloat(params.original.meas_avg_ch1)));
+            $('#info_ch1_freq').html(convertHz(params.original.meas_freq_ch1));
+            $('#info_ch1_period').html(convertSec(params.original.meas_per_ch1));
+      
+            $('#info_ch2_min').html(floatToLocalString(shortenFloat(params.original.meas_min_ch2)));
+            $('#info_ch2_max').html(floatToLocalString(shortenFloat(params.original.meas_max_ch2)));
+            $('#info_ch2_amp').html(floatToLocalString(shortenFloat(params.original.meas_amp_ch2)));
+            $('#info_ch2_avg').html(floatToLocalString(shortenFloat(params.original.meas_avg_ch2)));
+            $('#info_ch2_freq').html(convertHz(params.original.meas_freq_ch2));
+            $('#info_ch2_period').html(convertSec(params.original.meas_per_ch2));
+        }
+        
+        $('#gain_ch1_att').val(params.original.prb_att_ch1);
+        $('#gain_ch1_sett').val(params.original.gain_ch1);
+        $('#gain_ch2_att').val(params.original.prb_att_ch2);
+        $('#gain_ch2_sett').val(params.original.gain_ch2);
+        
+        $('#gen_enable_ch1').prop('checked', (params.original.gen_enable_ch1 ? true : false));
+        $('#gen_enable_ch2').prop('checked', (params.original.gen_enable_ch2 ? true : false));
+        
+        $('#gen_ch1_sigtype').val(params.original.gen_sig_type_ch1);
+        $('#gen_ch1_ampl').val(floatToLocalString(params.original.gen_sig_amp_ch1));
+        $('#gen_ch1_freq').val(floatToLocalString(params.original.gen_sig_freq_ch1));
+        $('#gen_ch1_dc').val(floatToLocalString(params.original.gen_sig_dcoff_ch1));
+        $('#gen_ch1_trigmode').val(params.original.gen_trig_mod_ch1);
+        
+        $('#gen_ch2_sigtype').val(params.original.gen_sig_type_ch2);
+        $('#gen_ch2_ampl').val(floatToLocalString(params.original.gen_sig_amp_ch2));
+        $('#gen_ch2_freq').val(floatToLocalString(params.original.gen_sig_freq_ch2));
+        $('#gen_ch2_dc').val(floatToLocalString(params.original.gen_sig_dcoff_ch2));
+        $('#gen_ch2_trigmode').val(params.original.gen_trig_mod_ch2);
+        
+        $('#gen_ch1_single').prop('disabled', (params.original.gen_trig_mod_ch1 == 1 ? false : true));
+        $('#gen_ch2_single').prop('disabled', (params.original.gen_trig_mod_ch2 == 1 ? false : true));    
+        
+        if(params.original.en_avg_at_dec) {
+          $('#btn_avg').removeClass('btn-default').addClass('btn-primary');
+        }
+        else {
+          $('#btn_avg').removeClass('btn-primary').addClass('btn-default');
+        }
+        
+        updateTimeUnits(orig_params);
+        $('#ytitle').show();
+      
+      }
+      
+      //********* axis!!!  apply_Yaxis  var freq = document.getElementById("info_ch1_freq").innerHTML;
+      function updateTimeUnits(new_params) {
+      
+        if(params.local.start_measure == 0){
+          lcr_modal.hidePleaseWait();
+          var show_lcr_channel = $('#btn_ch1');
+          show_lcr_channel.data('checked', true);
+        }
+      
+        if(! $.isPlainObject(new_params)) {
+          return;
+        } 
+        
+        params.original.time_units = params.local.time_units = new_params.time_units;
+      
+        var timeu_lbl = (params.original.time_units == 0 ? 'μs' : (params.original.time_units == 1 ? 'ms' : 's'));
+       // $('#xtitle').text('Time [ ' + timeu_lbl + ' ]');
+      
+      
+        if(change_Measure == 1)
+        {
+      
+          var di = document.getElementById("apply_Yaxis").selectedIndex;
+          var ytitl = document.getElementById("apply_Yaxis").options[di].text;
+      
+          /* Set Y tittle */
+          $('#ytitle').text(ytitl);
+      
+          var id = document.getElementById("apply_Xaxis").selectedIndex;
+          var xtitl = document.getElementById("apply_Xaxis").options[id].text;
+      
+          /* Set X tittle */
+          $('#xtitle').text(xtitl);
+      
+          /* We don't want to IF everytime */
+          change_Measure = 0;
+        }
+        
+        if(flag_graph == 1)
+        {
+          var di = document.getElementById("apply_Yaxis").selectedIndex;
+          var ytitl=document.getElementById("apply_Yaxis").options[di].text;
+      
+          $('#ytitle').text(ytitl);
+      
+          var id = document.getElementById("apply_Xaxis").selectedIndex;
+          var xtitl = document.getElementById("apply_Xaxis").options[id].text;
+      
+          $('#xtitle').text(xtitl);
+          flag_graph = 0;
+      
+        }
+      
+      
+      
+      /*
+      if(flag_table==1)
+      {
+        var i1 = document.getElementById("column_one").selectedIndex;
+        var i2 = document.getElementById("column_two").selectedIndex;
+        var i3 = document.getElementById("column_three").selectedIndex;
+        var i4 = document.getElementById("column_four").selectedIndex;
+        
+        i1 = document.getElementById("column_one").options[i1].text;
+        i2 = document.getElementById("column_two").options[i2].text;
+        i3 = document.getElementById("column_three").options[i3].text;
+        i4 = document.getElementById("column_four").options[i4].text;
+        
+        document.getElementById("c_1").innerHTML=i1;
+        document.getElementById("c_2").innerHTML=i2;
+        document.getElementById("c_3").innerHTML=i3;
+        document.getElementById("c_4").innerHTML=i4;
+        
+        flag_table=0;
+      }
+      */
+      
+      }
+      
+      function isParamChanged() {
+        if(params.original) {
+          for(var key in params.original) {
+            if(params.original[key] != params.local[key]) {
+              return true;
+            }
+          }
+        }
+      
+        
+      
+        return false;
+      }
+      
+      function sendParams(refresh_data, force_send, single_btn) {
+        if(sending || (force_send !== true && !isParamChanged())) {
+          send_que = sending;
+          return;
+        }
+        
+        var auto_flag = params.local.auto_flag;  // Keep the value of auto_flag, because in POST response it is always 0
+        sending = true;
+        params.local.single_btn = (single_btn === true ? 1 : 0);
+        use_long_timeout = !!auto_flag;
+      
+        $.ajax({
+          type: 'POST',
+          url: post_url,
+          data: JSON.stringify({ datasets: { params: params.local } }),
+          timeout: (use_long_timeout ? long_timeout : request_timeout),
+          cache: false
+        })
+        .done(function(dresult) {
+          // OK: Load the params received as POST result
+          if(dresult.datasets !== undefined && dresult.datasets.params !== undefined) {
+          
+            // Use the provided min/max values only once after AUTO button was clicked
+            if(auto_flag == 1 && dresult.datasets.params.min_y !== dresult.datasets.params.max_y) {
+              var options = plot.getOptions();
+              
+              options.xaxes[0].min = dresult.datasets.params.xmin;
+              options.xaxes[0].max = dresult.datasets.params.xmax;
+              options.yaxes[0].min = dresult.datasets.params.min_y;
+              options.yaxes[0].max = dresult.datasets.params.max_y;
+              
+              // Enable both channels after click on AUTO button
+              if(!$('#btn_ch1').data('checked') || !$('#btn_ch2').data('checked')) {
+                $('#btn_ch1').data('checked', true).removeClass('btn-default').addClass('btn-primary');
+                $('#btn_ch2').data('checked', true).removeClass('btn-default').addClass('btn-primary');
+                redrawPlot();
+              }
+              // Both channels are already active, do a quick redraw
+              else {
+                plot.setupGrid();
+                plot.draw();
+              }
+            }
+          
+            if(auto_flag == 0 && dresult.datasets.params.forcex_flag == 1) {
+              var options = plot.getOptions();
+              
+              options.xaxes[0].min = dresult.datasets.params.xmin;
+              options.xaxes[0].max = dresult.datasets.params.xmax;
+             
+              plot.setupGrid();
+              plot.draw();
+            }      
+          
+            loadParams(dresult.datasets.params);
+            updateTriggerSlider();
+            
+            if(refresh_data && !downloading) {
+              updateGraphData();
+            } 
+          }
+          else if(dresult.status == 'ERROR') {
+            showModalError((dresult.reason ? dresult.reason : 'Error while sending data (E1).'), false, true, true);
+            send_que = false;
+          }
+          else {
+            showModalError('Error while sending data (E2).', false, true, true);
+          }
+        })
+        .fail(function() {
+          showModalError('Error while sending data (E3).', false, true, true);
+        })
+        .always(function() {
+          sending = false;
+          user_editing = false;
+          
+          if(send_que) {
+            send_que = false;
+            setTimeout(function(refresh_data) {
+              sendParams(refresh_data);
+            }, 100);
+          }
+        });
+      }
+      
+      function getData(from, to) {
+        var rangedata = new Array();
+        for(var i=0; i<datasets.length; i++) {
+          if(! $('#btn_ch' + (i+1)).data('checked')) {
+            continue;
+          }
+          rangedata.push({ color: datasets[i].color, label: datasets[i].label, data: [] });
+          for(var j=0; j<datasets[i].data.length; j++) {
+            if(datasets[i].data[j][0] > to) {
+              break;
+            }
+            if(datasets[i].data[j][0] >= from) {
+              rangedata[rangedata.length - 1].data.push(datasets[i].data[j]);
+            }
+          }
+        }
+        rangedata = filterData(rangedata, (plot ? plot.width() : $('plot_holder').width()));
+      
+      
+        return rangedata;
+      }
+      
+      // Use only data for selected channels and do downsamling (data decimation), which is required for 
+      // better performance. On the canvas cannot be shown too much graph points. 
+      function filterData(dsets, points) {
+        var filtered = [];
+        var num_of_channels = 2;
+      
+        for(var l=0; l<num_of_channels; l++) {
+          if(! $('#btn_ch' + (l+1)).data('checked')) {
+            continue;
+          }
+      
+          i = Math.min(l, dsets.length - 1);
+      
+          filtered.push({ color: dsets[i].color, label: dsets[i].label, data: [] });
+          
+          if(points_per_px === null || dsets[i].data.length > points * points_per_px) {
+            var step = Math.ceil(dsets[i].data.length / (points * points_per_px));
+            var k = 0;
+            for(var j=0; j<dsets[i].data.length; j++) {
+              if(k > 0 && ++k < step) {
+                continue;
+              }
+              filtered[filtered.length - 1].data.push(dsets[i].data[j]);
+              k = 1;
+            }
+          }
+          else {
+            filtered[filtered.length - 1].data = dsets[i].data.slice(0);
+          }
+        }
+        
+        filtered = addTriggerDataSet(filtered);
+        return filtered;
+      }
+      
+      // Add a data series for the trigger level line
+      function addTriggerDataSet(dsets) {
+      
+        // Transform trigger level to real values
+        var scale = (params.local.trig_source == 0 ? params.local.scale_ch1 : params.local.scale_ch2);
+        var tlev = params.local.trig_level * scale;
+      
+        // Don't add trigger dataset if trigger level is outside the visible area...
+        if(plot) {
+          var yaxis = plot.getAxes().yaxis;
+          if(tlev < yaxis.min || tlev > yaxis.max) {
+            return dsets;
+          }
+        }
+        // ...or trigger mode is not Normal
+        if(params.local.trig_mode != 1) {
+          return dsets;
+        }
+        // ...or trigger source is external
+        if(params.local.trig_source == 2) {
+          return dsets;
+        }
+        // ...or outside of received data for Y axis
+        var ch1ymin = null, 
+            ch1ymax = null;
+        // Find Y min/max values from data for first visible channel
+        for(var i=0; i<dsets[0].data.length; i++) {
+          ch1ymin = (ch1ymin === null || ch1ymin > dsets[0].data[i][1] ? dsets[0].data[i][1] : ch1ymin);
+          ch1ymax = (ch1ymax === null || ch1ymax < dsets[0].data[i][1] ? dsets[0].data[i][1] : ch1ymax);
+        }
+        if(dsets.length > 1) {
+          var ch2ymin = null, 
+              ch2ymax = null;
+          // Find Y min/max values from data for second visible channel
+          for(var i=0; i<dsets[1].data.length; i++) {
+            ch2ymin = (ch2ymin === null || ch2ymin > dsets[1].data[i][1] ? dsets[1].data[i][1] : ch2ymin);
+            ch2ymax = (ch2ymax === null || ch2ymax < dsets[1].data[i][1] ? dsets[1].data[i][1] : ch2ymax);
+          }
+          // Check if trigger level is outside of found values
+          if(tlev < Math.min(ch1ymin, ch2ymin) || tlev > Math.max(ch1ymax, ch2ymax)) {
+            return dsets;
+          }
+        }
+        else {
+          // Check if trigger level is outside of found values
+          if(tlev < ch1ymin || tlev > ch1ymax) {
+            return dsets;
+          }
+        }
+      
+        var index = 0;
+        var dxmin = 0;
+        var dxmax = 1;
+        
+        if(dsets.length && dsets[0].data[0]) {
+          index = dsets.length;
+          
+          dxmin = dsets[0].data[0][0];
+          dxmax = dsets[0].data[dsets[0].data.length - 1][0];
+        }
+        dsets[index] = { color: 2, data: [[dxmin, tlev], [dxmax, tlev]], shadowSize: 0 };
+        
+        return dsets;
+      }
+      
+      function runStop() {
+        if(autorun) {
+          $('#btn_single').prop('disabled', true);
+          updateGraphData();
+        }
+        else {
+          $('#btn_single').prop('disabled', false);
+          if(update_timer) {
+            clearTimeout(update_timer);
+            update_timer = null;
+          }
+        }
+      }
+      
+      function singleUpdate() {
+        if(! autorun) {
+          sendParams(true, true, true);
+        }
+      }
+      
+      function redrawPlot() {
+        if (document.getElementById("apply_gen_fs_scale") == null){
+          measure = 1;
+          linlog1 = document.getElementById("apply_gen_ms_scale").value;
+        }
+        else{
+          measure = 0;
+          linlog1 = document.getElementById("apply_gen_fs_scale").value;
+          if(linlog1 == "0"){
+            document.getElementById("gen_fs_Sfreq").value = 10000;
+            document.getElementById("gen_fs_Efreq").value = 1000000;
+          }
+        }
+      
+        if(! downloading) {
+          if(! plot) {
+            updateGraphData();
+          }
+          else {
+            options = plot.getOptions();
+      
+            if (linlog1 == "0" || measure != 0){
+      
+              plot = $.plot(
+                plot.getPlaceholder(), 
+                filterData(datasets, plot.width()),
+                $.extend(true, plot_options, {
+                  yaxis: { min: options.yaxes[0].min, max: options.yaxes[0].max },
+                  xaxis: { min: options.xaxes[0].min, max: options.xaxes[0].max,ticks:null,transform:null,tickFormatter: funcxTickFormat,tickDecimals: 0,reserveSpace: true},
+                })
+              );
+      
+            }
+            else{
+      
+              plot = $.plot(
+                plot.getPlaceholder(), 
+                filterData(datasets, plot.width()),
+                $.extend(true, plot_options, {
+                  yaxis: { min: options.yaxes[0].min, max: options.yaxes[0].max },
+                  xaxis: { color:'#989898',ticks: [1,10,100,200,400,600,800,1000,2000,4000,6000,8000,10000,20000,40000,60000,80000,100000,200000,400000,600000,800000,1000000,2000000,4000000,6000000,8000000,10000000,,20000000,40000000,60000000,80000000,100000000],transform:  function(v) {return Math.log(v+0.0001); /*move away from zero*/} , tickDecimals: 0,reserveSpace: true , tickFormatter: funcxTickFormat},
+                })
+              );
+      
+      
+            }
+            updateTriggerSlider();        
+          }
+        }
+        //setVisibleChannels('#btn_ch2');
+      }
+      
+      function setVisibleChannels(btn) {
+        var other_btn = $(btn.id == 'btn_ch1' ? '#btn_ch2' : '#btn_ch1');
+        var btn = $(btn);
+        var checked = !btn.data('checked');
+        
+        btn.data('checked', checked).toggleClass('btn-default btn-primary');
+        
+        // At least one button must be checked, so that at least one graph will be visible.
+        if(! checked) {
+          other_btn.data('checked', true).removeClass('btn-default').addClass('btn-primary');
+        }
+        redrawPlot();
+      }
+      
+      function autoscaleY() {
+        if(! plot) {
+          return;
+        }
+        
+        var options = plot.getOptions();
+        var axes = plot.getAxes();
+        
+        // Set Y scale to data min/max + 10%
+        /*options.yaxes[0].min = (axes.yaxis.datamin < 0 ? axes.yaxis.datamin * 1.1 : axes.yaxis.datamin - axes.yaxis.datamin * 0.1); 
+        options.yaxes[0].max = (axes.yaxis.datamax > 0 ? axes.yaxis.datamax * 1.1 : axes.yaxis.datamax + axes.yaxis.datamax * 0.1);*/
+
+        options.yaxes[0].min = (axes.yaxis.datamin < 0 ? axes.yaxis.datamin * 1.1 : axes.yaxis.datamin - Math.abs(axes.yaxis.datamin) * 0.1); 
+        options.yaxes[0].max = (axes.yaxis.datamax > 0 ? axes.yaxis.datamax * 1.1 : axes.yaxis.datamax + Math.abs(axes.yaxis.datamax) * 0.1);
+      
+        plot.setupGrid();
+        plot.draw();
+        
+        updateRanges();
+        updateTriggerSlider();
+      }
+      
+      function setAvgAtDec() {
+        if(! plot) {
+          return;
+        }
+        
+        $('#btn_avg').toggleClass('btn-default btn-primary');
+      
+        if($('#btn_avg').hasClass('btn-primary')) {
+          params.local.en_avg_at_dec = 1;
+        }
+        else{
+          params.local.en_avg_at_dec = 0;
+        }
+      
+        sendParams(true, true);
+      }
+      
+      function resetZoom() {
+        if(! plot) {
+          return;
+        }
+        
+        $('#btn_ch1').data('checked', true).removeClass('btn-default').addClass('btn-primary');
+        
+        var ymax = params.original.gui_reset_y_range / 2;
+        var ymin = ymax * -1;
+        
+        $.extend(true, plot_options, {
+          xaxis: { min: null, max: null },
+          yaxis: { min: ymin, max: ymax }
+        });
+             
+        var options = plot.getOptions();
+        options.xaxes[0].min = null;
+        options.xaxes[0].max = null;
+        options.yaxes[0].min = ymin;
+        options.yaxes[0].max = ymax;
+      
+        plot.setupGrid();
+        plot.draw();
+        
+        params.local.xmin = datasets[0][1];
+        params.local.xmax = datasets[datasets.length-1][1];
+        
+        sendParams(true, true);
+      }
+      
+      function updateZoom() {
+        if(! plot) {
+          return;
+        }
+        
+        params.local.xmin = 0;
+        params.local.xmax = time_range_max[params.local.time_range];
+      
+        var axes = plot.getAxes();
+        var options = plot.getOptions();
+        
+        options.xaxes[0].min = params.local.xmin;
+        options.xaxes[0].max = params.local.xmax;
+        options.yaxes[0].min = axes.yaxis.min;
+        options.yaxes[0].max = axes.yaxis.max;
+        
+        plot.setupGrid();
+        plot.draw();
+      
+        sendParams(true, true);
+      }
+      
+      function selectTool(toolname) {
+        $('#selzoompan .btn').removeClass('btn-primary').addClass('btn-default');
+        $(this).toggleClass('btn-default btn-primary');
+      
+        if(toolname == 'zoomin') {
+          enableZoomInSelection();
+        }
+        if(toolname == 'zoomout') {
+          enableZoomOut();
+        }
+        else if(toolname == 'pan') {
+          enablePanning();
+        }
+      }
+      
+      function enableZoomInSelection() {
+        if(plot_options.hasOwnProperty('selection')) {
+          return;
+        }
+        
+        var plot_pholder = plot.getPlaceholder();
+      
+        // Disable panning and zoom out
+        delete plot_options.pan;
+        plot_pholder.off('click.rp');
+        
+        // Get current min/max for both axes to use them to fix the current view
+        var axes = plot.getAxes();
+        
+        plot = $.plot(
+          plot_pholder, 
+          plot.getData(),
+          $.extend(true, plot_options, {
+            selection: { mode: 'xy' },
+            xaxis: { min: axes.xaxis.min, max: axes.xaxis.max  },
+            yaxis: { min: axes.yaxis.min, max: axes.yaxis.max }
+          })
+        );
+      }
+      
+      function enableZoomOut() {
+        var plot_pholder = plot.getPlaceholder();
+        
+        plot_pholder.on('click.rp', function(event) {
+          var offset = $(event.target).offset();
+          
+          plot.zoomOut({
+            center: { left: event.pageX - offset.left, top: event.pageY - offset.top },
+            amount: 1.2
+          });
+        });
+        
+        // Disable zoom in selection and panning
+        delete plot_options.selection;
+        delete plot_options.pan;
+        
+        // Get current min/max for both axes to use them to fix the current view
+        var axes = plot.getAxes();
+        
+        plot = $.plot(
+          plot_pholder, 
+          plot.getData(),
+          $.extend(true, plot_options, {
+            xaxis: { min: axes.xaxis.min, max: axes.xaxis.min  },
+            yaxis: { min: axes.yaxis.min, max: axes.yaxis.max }
+          })
+        );
+      }
+      
+      function enablePanning() {
+        if(plot_options.hasOwnProperty('pan')) {
+          return;
+        }
+        
+        var plot_pholder = plot.getPlaceholder();
+        
+        // Disable selection zooming and zoom out
+        delete plot_options.selection;
+        plot_pholder.off('click.rp');
+        
+        // Get current min/max for both axes to use them to fix the current view
+        var axes = plot.getAxes();
+        
+        plot = $.plot(
+          plot_pholder, 
+          plot.getData(),
+          $.extend(true, plot_options, {
+            pan: { interactive: true },
+            xaxis: { min: axes.xaxis.min, max: axes.xaxis.min  },
+            yaxis: { min: axes.yaxis.min, max: axes.yaxis.max }
+          })
+        );
+      }
+      
+      function mouseDownMove(that, evt) {
+        var y;
+        user_editing = true;
+        
+        if(evt.type.indexOf('touch') > -1) {
+          y = evt.originalEvent.touches[0].clientY - that.getBoundingClientRect().top - plot.getPlotOffset().top;
+          touch_last_y = y;
+        }
+        else {
+          y = evt.clientY - that.getBoundingClientRect().top - plot.getPlotOffset().top;
+        }
+        updateTriggerSlider(y);
+        
+        $('#trigger_tooltip').data('bs.tooltip').options.title = plot.getAxes().yaxis.c2p(y).toFixed(trigger_level_xdecimal_places);
+        $('#trigger_tooltip').tooltip('show');
+      }
+      
+      function mouseUpOut(evt) {
+        if(trig_dragging) {
+          trig_dragging = false;
+          
+          var y;
+          if(evt.type.indexOf('touch') > -1) {
+            //y = evt.originalEvent.touches[0].clientY - this.getBoundingClientRect().top - plot.getPlotOffset().top;
+            y = touch_last_y;
+          }
+          else {
+            y = evt.clientY - this.getBoundingClientRect().top - plot.getPlotOffset().top;
+          }
+          
+          var scale = (params.local.trig_source == 0 ? params.local.scale_ch1 : params.local.scale_ch2);
+          params.local.trig_level = parseFloat(plot.getAxes().yaxis.c2p(y).toFixed(trigger_level_xdecimal_places)) / scale;           
+          
+          updateTriggerSlider();
+          redrawPlot();
+          sendParams();
+        }
+        else {
+          user_editing = false;
+        }
+        $('#trigger_tooltip').tooltip('hide');
+      }
+      
+      function updateTriggerSlider(y, update_input) {
+        if(! plot) {
+          return;
+        }
+        
+        var canvas = $('#trigger_canvas')[0];
+        var context = canvas.getContext('2d');
+        var plot_offset = plot.getPlotOffset();
+        var ymax = params.original.gui_reset_y_range / 2;
+        var ymin = ymax * -1;
+        
+        // Transform trigger level to real values
+        // TODO: local or original params?
+        var scale = (params.local.trig_source == 0 ? params.local.scale_ch1 : params.local.scale_ch2);
+        var tlev = params.local.trig_level * scale;
+      
+        // If trigger level is outside the predefined ymin/ymax, change the level
+        
+        if(tlev < ymin) {
+          tlev = ymin;
+        }
+        else if(tlev > ymax) {
+          tlev = ymax;
+        }
+        
+        if(y === undefined) {
+          if(update_input !== false) {
+            $('#trig_level').not(':focus').val(floatToLocalString(tlev));
+          }
+          y = plot.getAxes().yaxis.p2c(tlev);
+        }
+        
+        // If trigger source is External or mode is not Normal or trigger level is not in visible area, do not show the trigger slider and paint the vertical line with gray
+        context.clearRect(0, 0, canvas.width, canvas.height); 
+        var yaxis = plot.getAxes().yaxis;
+        if(params.original.trig_mode != 1 || tlev < yaxis.min || tlev > yaxis.max || params.original.trig_source == 2) {
+          context.lineWidth = 1;
+          context.strokeStyle = '#dddddd';
+          context.stroke();
+          context.beginPath();
+          context.moveTo(10, plot_offset.top);
+          context.lineTo(10, canvas.height - plot_offset.bottom + 1);
+          context.stroke();
+        }
+        else {
+          context.beginPath();
+          context.arc(10, y + plot_offset.top, 8, 0, 2 * Math.PI, false);
+          context.fillStyle = '#009900';
+          context.fill();
+          context.lineWidth = 1;
+          context.strokeStyle = '#007700';
+          context.stroke();
+          context.beginPath();
+          context.moveTo(10, plot_offset.top);
+          context.lineTo(10, canvas.height - plot_offset.bottom + 1);
+          context.stroke();
+        }
+        $('#trigger_tooltip').css({ top: y + plot_offset.top });  
+      }
+      
+      function updateRanges() {
+        var xunit = (params.local.time_units == 0 ? 'μs' : (params.local.time_units == 1 ? 'ms' : 's'));
+        var yunit = 'V';
+        var axes = plot.getAxes();
+        var xrange = axes.xaxis.max - axes.xaxis.min;
+        var yrange = axes.yaxis.max - axes.yaxis.min;
+        var yminrange = 5e-3;  // Volts
+        var ymaxrange = params.original.gui_reset_y_range;
+        var xmaxrange = 10.0;  // seconds
+        var xminrange = 20e-9; // seconds
+        var decimals = 0;
+      
+        if(xunit == 'μs' && xrange < 1) {
+          xrange *= 1000;
+          xunit = 'ns';
+        }
+        if(xrange < 1) {
+          decimals = 1;
+        }
+        var seconds = (xunit == 'ns' ? 1e-9 : ( xunit == 'μs' ? 1e-6 : (xunit == 'ms' ? 1e-3 : 1)));
+        
+        if(yrange < 1) {
+          yunit = 'mV';
+          yrange *= 1000;
+          ymaxrange *= 1000;
+          yminrange *= 1000;
+        }
+      
+        $('#range_x').html(+(Math.round(xrange + "e+" + decimals) + "e-" + decimals) + ' ' + xunit);
+        $('#range_y').html(Math.floor(yrange) + ' ' + yunit);
+        
+        var nearest_x = getNearestRanges(xrange);
+        var nearest_y = getNearestRanges(yrange);
+            
+        // X limitations 
+        if(nearest_x.next * seconds > xmaxrange) {
+          nearest_x.next = null;
+          $('#range_x_plus').prop('disabled', true);
+        }
+        else {
+          $('#range_x_plus').prop('disabled', false);
+        }
+        if(nearest_x.prev * seconds < xminrange) {
+          nearest_x.prev = null;
+          $('#range_x_minus').prop('disabled', true);
+        }
+        else {
+          $('#range_x_minus').prop('disabled', false);
+        }
+        
+        $('#range_x_minus').data({ nearest: nearest_x.prev, unit: xunit }).data('bs.tooltip').options.title = nearest_x.prev;
+        $('#range_x_plus').data({ nearest: nearest_x.next, unit: xunit }).data('bs.tooltip').options.title = nearest_x.next;
+        
+        // Y limitations
+        if(nearest_y.next - nearest_y.prev >= ymaxrange) {
+          nearest_y.next = null;
+          $('#range_y_plus').prop('disabled', true);
+        }
+        else {
+          $('#range_y_plus').prop('disabled', false);
+        }
+        if(nearest_y.prev < yminrange) {
+          nearest_y.prev = null;
+          $('#range_y_minus').prop('disabled', true);
+        }
+        else {
+          $('#range_y_minus').prop('disabled', false);
+        }
+        
+        $('#range_y_minus').data({ nearest: nearest_y.prev, unit: yunit }).data('bs.tooltip').options.title = nearest_y.prev;
+        $('#range_y_plus').data({ nearest: nearest_y.next, unit: yunit }).data('bs.tooltip').options.title = nearest_y.next;
+      }
+      
+      function getNearestRanges(number) {
+        var log10 = Math.floor(Math.log(number) / Math.LN10); 
+        var normalized = number / Math.pow(10, log10);    
+        var i = 0;
+        var prev = null;
+        var next = null;
+        
+        while(i < range_steps.length - 1) {
+          var ratio = range_steps[i+1] / normalized;
+          if(ratio > 0.99 && ratio < 1.01) {
+            prev = range_steps[i];
+            next = range_steps[i+2];
+            break;
+          }
+          if(range_steps[i] < normalized && normalized < range_steps[i+1]) {
+            prev = range_steps[i];
+            next = range_steps[i+1];
+            break;
+          }
+          i++;
+        }
+      
+        return { 
+          prev: prev * Math.pow(10, log10), 
+          next: next * Math.pow(10, log10) 
+        };
+      }
+      
+      function serverAutoScale() {
+        params.local.auto_flag = 1;
+        sendParams(true);
+      }
+      
+      function postGenSingle(channel) {
+        if(params.local['gen_trig_mod_ch' + channel] == 1) {
+          params.local['gen_single_ch' + channel] = 1;
+          sendParams();
+        }
+        else {
+          $('#gen_ch' + channel + '_single').prop('disabled', true);
+        }
+        return false;
+      }
+      
+      function showUploadForm(channel) {
+        var file_elem = $('#uploaded_file');
+        var fcontent_elem = $('#uploaded_file_content');
+        var hint_elem = $('#upload_form .help-block');
+        
+        fcontent_elem.val('');
+        hint_elem.html('Select the CSV file to upload.');
+        $('#upload_form')[0].reset();
+        $('#modal_upload_label span').text(channel);
+        
+        if(file_elem[0].files === undefined) {
+          file_elem.hide().parent().addClass('has-error');
+          hint_elem.html('Your browser is too old and do not support this feature.');
+        }
+        else {
+          file_elem.show().parent().removeClass('has-error');
+          file_elem.off('change').on('change', function() {
+            var file = this.files[0];
+            var freader = new FileReader();
+            
+            // File validation
+            //var size = file.size;
+            var type = file.type;
+            if(file.type !== 'text/csv' && file.type !== 'text/comma-separated-values' && file.type !== 'application/vnd.ms-excel') {
+              file_elem.parent().addClass('has-error');
+              hint_elem.html('Wrong file type: ' + file.type);
+              $('#upload_form')[0].reset();
+            }
+            else {
+              file_elem.parent().removeClass('has-error');
+              hint_elem.html('File size: ' + file.size + ' bytes');
+              freader.onload = function(data) {
+                fcontent_elem.val(this.result);
+              };
+              freader.readAsText(file);
+            }
+          });
+        }
+        
+        $('#modal_upload').modal('show');
+        
+        return false;
+      }
+      
+      function startUpload() {
+        var mbody = $('#modal_upload .modal-body');
+        var file_elem = $('#uploaded_file');
+        var hint_elem = $('#upload_form .help-block');
+        var channel = $('#modal_upload_label span').text();
+        
+        if(mbody.data('errtimer')) {
+          clearTimeout(mbody.data('errtimer'));
+          mbody.removeData('errtimer');
+        }
+        
+        if(! $('#uploaded_file').val().length) {
+          mbody.addClass('alert-danger').data('errtimer', setTimeout(function() { 
+            $('#modal_upload .modal-body').removeClass('alert-danger'); 
+          }, 1000));
+          return;
+        }
+        
+        file_elem.hide();
+        hint_elem.html('Uploading file...');
+        
+        $.post(upload_url + channel, $('#uploaded_file_content').val(), function(dresult) {
+          if($.type(dresult) == 'string' && dresult.trim() == 'OK') {
+            $('#upload_form')[0].reset();
+            $('#modal_upload').modal('hide');
+            
+            user_editing = true;
+            params.local.gen_awg_refresh = parseInt(channel);
+            sendParams();
+          }
+          else {
+            file_elem.show();
+            hint_elem.html('Error while uploading the file.');
+            file_elem.parent().addClass('has-error');
+          }
+        })
+        .fail(function() {
+          file_elem.show();
+          hint_elem.html('Error while uploading the selected file.');
+          file_elem.parent().addClass('has-error');
+        });
+      }
+      
+      function getLocalDecimalSeparator() {
+        var n = 1.1;
+        return n.toLocaleString().substring(1,2);
+      }
+      
+      function parseLocalFloat(num) {
+                return +(num.replace(getLocalDecimalSeparator(), '.'));
+      }
+      
+      function floatToLocalString(num) {
+        // Workaround for a bug in Safari 6 (reference: https://github.com/mleibman/SlickGrid/pull/472)
+        //return num.toString().replace('.', getLocalDecimalSeparator());
+        return (num + '').replace('.', getLocalDecimalSeparator());
+      }
+      
+      function shortenFloat(value) {
+        return value.toFixed(Math.abs(value) >= 10 ? 1 : 3);
+      }
+      
+      function convertHz(value) {
+        var unit = '';
+        var decsep = getLocalDecimalSeparator();
+        
+        if(value >= 1e6) {
+          value /= 1e6;
+          unit = '<span class="unit">MHz</span>';
+        }
+        else if(value >= 1e3) {
+          value /= 1e3;
+          unit = '<span class="unit">kHz</span>';
+        }
+        else {
+          unit = '<span class="unit">Hz</span>';
+        }
+      
+        // Fix to 4 decimal digits in total regardless of the decimal point placement
+        var eps = 1e-2;
+        if (value >= 100 - eps) {
+          value = value.toFixed(1);
+        }
+        else if  (value >= 10 - eps) {
+          value = value.toFixed(2);
+        }
+        else {
+          value = value.toFixed(3);
+        }
+        
+        value = (value == 0 ? '---' + decsep + '-' : floatToLocalString(value));
+        return value + unit;
+      }
+      
+      function convertSec(value) {
+        var unit = '';
+        var decsep = getLocalDecimalSeparator();
+        
+        if(value < 1e-6) {
+          value *= 1e9;
+          unit = '<span class="unit">ns</span>';
+        }
+        else if(value < 1e-3) {
+          value *= 1e6;
+          unit = '<span class="unit">μs</span>';
+        }
+        else if(value < 1) {
+          value *= 1e3
+          unit = '<span class="unit">ms</span>';
+        }
+        else {
+          unit = '<span class="unit">s</span>';
+        }
+      
+        // Fix to 4 decimal digits in total regardless of the decimal point placement
+        var eps = 1e-2;
+        if (value >= 100 - eps) {
+          value = value.toFixed(1);
+        }
+        else if  (value >= 10 - eps) {
+          value = value.toFixed(2);
+        }
+        else {
+          value = value.toFixed(3);
+        }
+        
+        value = (value == 0 ? '---' + decsep + '-' : floatToLocalString(value));
+        return value + unit;
+      }
+      
+      $(function(){
+        $('.btn-choose').click(function() { 
+            $(this).toggleClass('stay-active');
+        });
+      });
+      
+      
+      $(document).ready(function(e) {
+      $(".logo").click(function(e) { updateGraphData(); alert("dela"); });
+      });
+      
+      function selectAmpPhase(toggle_id) {
+        $('#toggle .btn').removeClass('btn-primary').addClass('btn-default');
+        $(this).toggleClass('btn-default btn-primary');
+      
+        if(toggle_id == 'toggle_amp') {
+      
+          data_type = 1;
+          alert(data_type);
+        }else{
+          data_type = 0;
+        }
+        
+      }
+      
+      var flag_table = 1;
+       var flag_graph = 0;
+       
+       function change_graph()
+       {
+        flag_graph=1;
+       }
+      
+      /*function changeData(){
+        change_graph();
+      
+        params.local.bode_data_plot = parseLocalFloat(document.getElementById('apply_Yaxis').value);
+      
+        sendParams();
+      }*/
+      
+      
+      function startMeasure(clicked_measure){
+      
+        /* Set inputs back to GRAY */
+        document.getElementById('gen_R_shunt').style.borderColor = "#cccccc";
+        document.getElementById('gen_avg').style.borderColor = "#cccccc";
+        document.getElementById('gen_DC_bias').style.borderColor = "#cccccc";
+        document.getElementById('gen_amp').style.borderColor = "#cccccc";
+        document.getElementById('step').style.borderColor = "#cccccc";
+        document.getElementById('gen_fs_Sfreq').style.borderColor = "#cccccc";
+        document.getElementById('gen_fs_Efreq').style.borderColor = "#cccccc";
+      
+        document.getElementById('step').style.borderColor = "#cccccc";
+        document.getElementById('gen_ms_freq').style.borderColor = "#cccccc";
+        document.getElementById('gen_LoadIm').style.borderColor = "#cccccc";
+        document.getElementById('gen_LoadRe').style.borderColor = "#cccccc";
+      
+        /* General parameters for both MS and FS */
+        var amp = parseLocalFloat(document.getElementById('gen_amp').value);
+        var avg = parseLocalFloat(document.getElementById('gen_avg').value);
+        var dc_bias = parseLocalFloat(document.getElementById('gen_DC_bias').value);
+        var R_shunt = parseLocalFloat(document.getElementById('gen_R_shunt').value);
+      
+        
+        if(clicked_measure == 'btn_start_frequency_sweep'){
+          
+          /* Read the values from input fields */
+          
+          var fs_step = parseLocalFloat(document.getElementById('step').value);
+          var fs_Sfreq = parseLocalFloat(document.getElementById('gen_fs_Sfreq').value);
+          var fs_Efreq = parseLocalFloat(document.getElementById('gen_fs_Efreq').value);
+          var fs_LoadIm = parseLocalFloat(document.getElementById('gen_LoadIm').value);
+          var fs_LoadRe = parseLocalFloat(document.getElementById('gen_LoadRe').value);
+      
+      
+          /* Argument check */
+          if(amp > 2 || amp <= 0){
+            document.getElementById('gen_amp').style.borderColor = "red";
+          }
+          if(avg < 0){
+            document.getElementById('gen_avg').style.borderColor = "red";
+          }
+          if(dc_bias < 0 || dc_bias > 1){
+            document.getElementById('gen_DC_bias').style.borderColor = "red";
+            
+          }
+          if(dc_bias + amp <= 0 || amp + dc_bias > 1){
+            document.getElementById('gen_DC_bias').style.borderColor = "red";
+            document.getElementById('gen_amp').style.borderColor = "red";
+          }
+          if(fs_step < 0 || fs_step >  1000){
+            document.getElementById('step').style.borderColor = "red";
+          }
+          if(R_shunt < 0){
+            document.getElementById('gen_R_shunt').style.borderColor = "red";
+          }
+          if(fs_Sfreq < 0 || fs_Sfreq > 62.5e6){
+            document.getElementById('gen_fs_Sfreq').style.borderColor = "red";
+          }
+          if(fs_Efreq < 0 || fs_Efreq > 62.5e6 || fs_Efreq < fs_Sfreq){
+            document.getElementById('gen_fs_Efreq').style.borderColor = "red";
+          }
+          if(fs_LoadIm < 0){
+            document.getElementById('gen_LoadIm').style.borderColor = "red";
+          }
+          if(fs_LoadRe < 0){
+            document.getElementById('gen_LoadRe').style.borderColor = "red";
+          }
+      
+      
+          /* End function if input error */
+          if(document.getElementById('gen_amp').style.borderColor == "red" ||
+           document.getElementById('gen_avg').style.borderColor == "red" ||
+           document.getElementById('gen_DC_bias').style.borderColor == "red" ||
+           document.getElementById('gen_R_shunt').style.borderColor == "red" ||
+           document.getElementById('step').style.borderColor == "red" ||
+           document.getElementById('gen_fs_Sfreq').style.borderColor == "red" || 
+           document.getElementById('gen_fs_Efreq').style.borderColor == "red" || 
+           document.getElementById('gen_LoadIm').style.borderColor == "red" || 
+           document.getElementById('gen_LoadRe').style.borderColor == "red"){
+      
+              return;
+          }
+      
+          /* If everything was OK, write data to local params */
+          params.local.gen_amp = amp;
+          params.local.gen_avg = avg;
+          params.local.gen_DC_bias = dc_bias;
+          params.local.gen_R_shunt = R_shunt;
+          params.local.lcr_steps = fs_step;
+          params.local.start_freq = fs_Sfreq;
+          params.local.end_freq = fs_Efreq;
+          params.local.gen_fs_LoadRe = fs_LoadRe;
+          params.local.gen_fs_LoadIm = fs_LoadIm;
+      
+      
+          /* Pulling data from dropdown list for Scale type */
+          params.local.lcr_scale_type = parseLocalFloat(document.getElementById('apply_gen_fs_scale').value);
+      
+          /* Pulling data from dropdown list for calibration type */
+          params.local.lcr_calibration = 0;//parseLocalFloat(document.getElementById('apply_gen_fs_OSCalib').value);
+          /* Start measure */
+          params.local.start_measure = 1;
+          
+          
+          
+        }else if(clicked_measure == 'btn_start_measurment_sweep'){
+          
+          /* MS specific parameters */
+          var ms_step = parseLocalFloat(document.getElementById('step').value);
+          var ms_freq = parseLocalFloat(document.getElementById('gen_ms_freq').value);
+          var ms_re = parseLocalFloat(document.getElementById('gen_LoadRe').value);
+          var ms_im = parseLocalFloat(document.getElementById('gen_LoadIm').value);
+      
+      
+          if(ms_step < 0 || ms_step > 1000){
+            document.getElementById('step').style.borderColor = "red";
+          }
+          if(ms_freq < 0 || ms_freq > 100000000){
+            document.getElementById('gen_ms_freq').style.borderColor = "red";
+          }
+          if(ms_re < 0){
+            document.getElementById('gen_LoadRe').style.borderColor = "red";
+          }
+          if(ms_im < 0){
+            document.getElementById('gen_LoadIm').style.borderColor = "red";
+          }
+      
+          /* End function if input error */
+          if(document.getElementById('gen_amp').style.borderColor == "red" ||
+           document.getElementById('gen_avg').style.borderColor == "red" ||
+           document.getElementById('gen_DC_bias').style.borderColor == "red" ||
+           document.getElementById('gen_R_shunt').style.borderColor == "red" ||
+           document.getElementById('step').style.borderColor == "red" ||
+           document.getElementById('gen_ms_freq').style.borderColor == "red" || 
+           document.getElementById('gen_LoadRe').style.borderColor == "red" || 
+           document.getElementById('gen_LoadIm').style.borderColor == "red"){
+      
+              return;
+          }
+      
+          /* Like in FS, if everything was OK, we write it in params */
+          params.local.gen_amp = amp;
+          params.local.gen_avg = avg;
+          params.local.gen_DC_bias = dc_bias;
+          params.local.gen_R_shunt = R_shunt;
+          params.local.lcr_steps = ms_step;
+          params.local.start_freq = ms_freq;
+          params.local.end_freq = 100000000;
+          params.local.gen_fs_LoadRe = ms_re;
+          params.local.gen_fs_LoadIm = ms_im;
+          /* Pulling data from dropdown list for Scale type */
+          params.local.lcr_scale_type = parseLocalFloat(document.getElementById('apply_gen_ms_scale').value);
+      
+          /* Pulling data from dropdown list for calibration type */
+          params.local.lcr_calibration = 0; //parseLocalFloat(document.getElementById('apply_gen_ms_OSCalib').value);
+      
+          params.local.start_measure = 2;
+          
+        }
+      
+        lcr_modal.showPleaseWait();
+        var hide_channel_lcr = $('#btn_ch1');
+        hide_channel_lcr.data('checked', false);
+      
+        /* Show tittle for X and Y axis */
+        change_Measure = 1;
+        params.local.plot_y_scale_data = parseLocalFloat(document.getElementById('apply_Yaxis').value);
+      
+        /* Send params to C controller */
+        sendParams();
+      }
+      
+      function changeData(){
+      
+        change = 1;
+        params.local.plot_y_scale_data = parseLocalFloat(document.getElementById('apply_Yaxis').value);
+      
+        /* Change the graph X and Y axis */
+        change_Measure = 1;
+        /* Send params with same measure */
+        sendParams();
+      }
+      
+      $('#pleaseWaitDialog').css({
+        'background-image': 'none',
+        'background-color': '#D5273A'
+        });
+      
+      lcr_modal = lcr_modal || (function () {
+        var pleaseWaitDiv = $('<div class="modal" id="pleaseWaitDialog" data-backdrop="static" data-keyboard="false"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h1>Measuring...</h1></div><div class="modal-body"><div class="progress progress-bar-danger progress-striped active"><div class="bar" style="width: 100%; "></div></div></div></div></div></div>');
+        return {
+            showPleaseWait: function() {
+                pleaseWaitDiv.modal();
+            },
+            hidePleaseWait: function () {
+                pleaseWaitDiv.modal('hide');
+            },
+      
+        };
+      })();
+      
+      function hideWaitBar()
+      {
+        lcr_modal.hidePleaseWait();
+      }
+      
+      $(document).ready(function(){
+      //hide the pannel (to be shown later)
+        $(".meas_parameters_setings_panel").hide();
+        $(".plot_setings").hide();
+        $(".freq_sweep_setings_panel").hide();
+        $(".meas_sweep_setings_panel").hide();
+        $(".Cursor_setings_panel").hide();
+      
+        //select buttons background change
+        //frequency sweep
+        
+        
+        $("#Freq_sweep_select").on('click touchend', function(){
+          $("#Freq_sweep_select > div").css("background-color", "#6B6869");
+          $("#Meas_sweep_select > div").css("background-color", "transparent");
+          $('#btn_start_measurment_sweep').attr('id','btn_start_frequency_sweep');
+          $('#apply_gen_ms_scale').attr('id','apply_gen_fs_scale');
+          $("#apply_Xaxis").val("0");
+          $("#apply_gen_fs_scale").val("1");
+
+          if(measure != 0){
+            log = options.xaxes[0].min;
+            options.xaxes[0].min = 1;
+            params.local.xmin = 1;
+            //options.xaxes[0].max = parseInt($("#step_info").val()) + 1;
+            //params.local.xmax = parseInt($("#step_info").val()) + 1;
+          }
+
+          if(change == 1){
+            changeData()
+          }
+          redrawPlot();
+        });
+      
+        $("#Meas_sweep_select").on('click touchend',function(){
+          $("#Freq_sweep_select > div").css("background-color", "transparent");
+          $("#Meas_sweep_select > div").css("background-color", "#6B6869");
+          $('#btn_start_frequency_sweep').attr('id','btn_start_measurment_sweep');
+          $('#apply_gen_fs_scale').attr('id','apply_gen_ms_scale');
+          $("#apply_Xaxis").val("1");
+          $("#apply_gen_ms_scale").val("0");
+      
+          if(change == 1){
+            changeData()
+          }
+          redrawPlot();
+        });
+      
+        $( "#Cursors_select" ).click(function() {
+          $( "#Cursors_select > div" ).toggleClass( "highlight" );
+        });
+      
+      
+        //Menu panel toggles
+        //measurement_parameters
+        $("#meas_params").click(function(){
+          $(".general_menu").hide();
+          $(".meas_parameters_setings_panel").show();
+        });
+        //toggle back
+        $("#meas_params_back").on('click touchstart',function(){
+          $(".meas_parameters_setings_panel").hide();
+          $(".general_menu").show();
+        });
+      
+        //frequency sweep
+        $("#Freq_sweep_setings").click(function(){
+          $(".general_menu").hide();
+          $(".freq_sweep_setings_panel").show();
+        })
+        $("#Freq_sweep_back").on('click touchend',function(){
+          $(".general_menu").show();
+          $(".freq_sweep_setings_panel").hide();
+        })
+      
+        //measurement sweep
+        $("#Meas_sweep_setings").click(function(){
+          $(".general_menu").hide();
+          $(".meas_sweep_setings_panel").show();
+        })
+        $("#Meas_sweep_back").on('click touchend',function(){
+          $(".general_menu").show();
+          $(".meas_sweep_setings_panel").hide();
+        })
+        
+        //plot setings
+        $("#Plot_setings").on('click',function(){
+          $(".general_menu").hide();
+          $(".plot_setings").show();
+        });
+        $("#Plot_setings_back").on('click',function(){
+          $(".general_menu").show();
+          $(".plot_setings").hide();
+        });
+      
+        //cursor setings
+        $("#Cursors_setings").on('click touchend',function(){
+          $(".general_menu").hide();
+          $(".Cursor_setings_panel").show();
+        })
+        $("#Cursor_setings_back").on('click touchend',function(){
+          $(".general_menu").show();
+          $(".Cursor_setings_panel").hide();
+        })
+      
+      
+      
+        $(function(){
+          $(".button_up_c_node").mousedown(function(){
+              $(".node").attr("src","images/node_up.png")
+            })
+          $(".button_left_c_node").mousedown(function(){$(".node").attr("src","images/node_left.png")
+            })
+          $(".button_right_c_node").mousedown(function(){$(".node").attr("src","images/node_right.png")
+            })
+          $(".button_down_c_node").mousedown(function(){$(".node").attr("src","images/node_down.png")
+            })
+          $(".button_fine_c_node").mousedown(function(){
+              $(".node").attr("src","images/node_fine.png")
+            })
+          $(".button_up_c_node").mouseup(function(){$(".node").attr("src","images/node_stnd_by.png")
+            })
+          $(".button_left_c_node").mouseup(function(){$(".node").attr("src","images/node_stnd_by.png")
+            })
+          $(".button_right_c_node").mouseup(function(){$(".node").attr("src","images/node_stnd_by.png")
+            })
+          $(".button_down_c_node").mouseup(function(){$(".node").attr("src","images/node_stnd_by.png")
+            })
+          $(".button_fine_c_node").mouseup(function(){$(".node").attr("src","images/node_stnd_by.png")
+            })
+        });
+      
+      });
+      
+      $(document).ready(function(){
+      
+        //load data to the fields when documnet loads
+        $( "#step_info" ).text( $('#step').val());
+        $( "#amplitude_info" ).text( $('#gen_amp').val());
+        $( "#averaging_info" ).text( $('#gen_avg').val());
+        $( "#shunt_info" ).text( $('#gen_R_shunt').val());
+        $( "#fs_start_fr_info" ).text( $('#gen_fs_Sfreq').val());
+        $( "#fs_stop_fr_info" ).text( $('#gen_fs_Efreq').val());
+        $( "#ms_frequency_info" ).text( $('#gen_ms_freq').val());
+        
+      
+        //load the changes
+        $("#step").change(function(){
+          $( "#step_info" ).text( $('#step').val());
+        });
+      
+        $("#gen_amp").change(function(){
+          $( "#amplitude_info" ).text( $('#gen_amp').val());
+        });
+        $("#gen_avg").change(function(){
+          $( "#averaging_info" ).text( $('#gen_avg').val());
+        });
+        $("#gen_R_shunt").change(function(){
+          $( "#shunt_info" ).text( $('#gen_R_shunt').val());
+        });
+        $("#gen_fs_Sfreq").change(function(){
+          $( "#fs_start_fr_info" ).text( $('#gen_fs_Sfreq').val());
+        });
+        $("#gen_fs_Efreq").change(function(){
+          $( "#fs_stop_fr_info" ).text( $('#gen_fs_Efreq').val());
+        });
+        $("#gen_ms_freq").change(function(){
+          $( "#ms_frequency_info" ).text( $('#gen_ms_freq').val());
+        });
+      
+      
+      });
+      
+    </script>
+    <script src="../assets/redpitaya.custom.js"></script>
+  </head>
+  <body>
+    <div class="header">
+      <div class="container" id="navigation_bar";>
+        <a id="btn_exit" class="pull-left" href="/index.html"><img src = "images/arow-left.png" id="arrow_back"; height="25px" title="Exit" alt="Exit"></span></a>
+        <img class="logo pull-left" src="../assets/images/logo_white.png">
+        <!--
+          <ul class="nav navbar-nav navbar-right" >
+            <li ><a href="#" class="navbutton" style="color:#CCCCCB;">SETTINGS</a></li>
+            <li ><a href="#" class="navbutton" style="color:#CCCCCB;">EXPORT</a></li>
+            <li ><a href="#" class="navbutton" style="color:#CCCCCB;">AUTO</a></li>
+            <li ><a href="#" class="navbutton" style="color:#CCCCCB;">STOP</a></li>
+          </ul>
+          -->
+      </div>
+    </div>
+    <div class="container">
+    <div class="row" hidden>
+      <div id="btn_toolbar" class="col-xs-12">
+        <!-- //comment <button id="btn_autoscale_y" class="btn btn-primary btn-lg" data-autozoom="false" onclick="autoscaleY()">
+          <span class="glyphicon glyphicon-resize-vertical"></span> Autoscale
+          </button>
+          <button class="btn btn-primary btn-lg" onclick="resetZoom()">
+          <span class="glyphicon glyphicon-retweet"></span> Reset zoom
+          </button> --> 
+        <div id="selzoompan" class="btn-group" data-toggle="buttons">
+          <button id="btn_zoomin" class="btn btn-primary" onclick="selectTool.call(this, 'zoomin')" style="display: none">
+          <span class="glyphicon glyphicon-zoom-in"></span>
+          </button>
+          <button id="btn_zoomout" class="btn btn-default" onclick="selectTool.call(this, 'zoomout')" style="display: none">
+          <span class="glyphicon glyphicon-zoom-out"></span>
+          </button>
+          <button id="btn_pan" class="btn btn-default" onclick="selectTool.call(this, 'pan')" style="display: none">
+          <span class="glyphicon glyphicon-move"></span>
+          </button>
+          <!-- Div for selecting type of data plot -->
+        </div>
+        <div hidden class="btn-group" data-toggle="buttons">
+          <!-- Primary data display is going to be amplitude--> 
+        </div>
+        <div hidden>
+          <button hidden id="btn_ch1" class="btn btn-primary btn-lg" data-checked="true" onclick="setVisibleChannels(this)">Channel 1</button>
+          <button hidden id="btn_ch2" class="btn btn-primary btn-lg" data-checked="false" onclick="setVisibleChannels(this)">Channel 2</button>
+          <button hidden id="btn_auto" class="btn btn-primary btn-lg" onclick="serverAutoScale()">AUTO</button>
+          <button hidden id="btn_avg" class="btn btn-default btn-lg" onclick="setAvgAtDec()">Averaging</button>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-12 col-sm-9 col-md-9">
+        <div class="graph-holder well well-small">
+          <div id="ytitle"></div>
+          <div id="trigger_cnv_holder">
+            <canvas id="trigger_canvas" width="0" height="340"></canvas>
+            <div id="trigger_tooltip"></div>
+          </div>
+          <div id="plot_holder"></div>
+          <div id="xtitle"></div>
+        </div>
+        <div  hidden class="table-holder well">
+          <table id="measurment_table">
+            <tr>
+              <th id="c_1">Frequency</th>
+              <th id="c_2"></th>
+              <th id="c_3">  </th>
+              <th id="c_4">  </th>
+            </tr>
+          </table>
+          <br>
+        </div>
+        <div id = "info_fieeld">
+          Steps: <a id = "step_info"></a><br>
+          Amplitude: <a id ="amplitude_info"></a> V<br>
+          Averaging: <a id ="averaging_info"></a><br>
+          R-shunt: <a id ="shunt_info"></a> Ω<br>
+        </div>
+        <div id = "info_fieeld">
+          Measurement sw.:<br>
+          Frequency: <a id = "ms_frequency_info"></a> Hz<br>
+          Frequnecy sw.:<br>
+          Start Fr.: <a id ="fs_start_fr_info"></a> Hz<br>
+          Stop Fr.: <a id ="fs_stop_fr_info"></a> Hz<br>
+        </div>
+      </div>
+      <div class="panel-group col-xs-12 col-sm-3 col-md-3" id="accordion">
+        <!-- MENU for Red Pitaya 2.0 
+          ##############################
+          ##############################
+          ##############################
+          ##############################-->
+        <div style="border:1px solid grey; height:381px; color:#CCCCCB; margin-top:30px;" >
+          <div class="general_menu">
+            <div class="title_section"; id="">
+              Settings
+            </div>
+            <a href="#" id="meas_params">
+              <div class="panel_button"; id="full_button">
+                Measurement settings
+              </div>
+            </a>
+            <a href="#" id="Freq_sweep_select">
+              <div class="panel_button"; id="left_button" style="background-color:#6B6869; padding-top:5px;">
+                Frequency<br>Sweep
+              </div>
+            </a>
+            <a href="#" id="Freq_sweep_setings">
+              <div class="panel_button"; id="right_button_gear">
+                <img id= ""; src="images/gear.png" height="40px;">
+              </div>
+            </a>
+            <a href="#" id="Meas_sweep_select">
+              <div class="panel_button"; style="padding-top:5px;" id="left_button">
+                Measurement<br>Sweep
+              </div>
+            <a>
+            <a href="#" id="Meas_sweep_setings">
+              <div class="panel_button"; id="right_button_gear">
+                <img id= ""; src="images/gear.png" height="40px;">
+              </div>
+            </a>
+            <a href="#" id="Plot_setings">
+              <div class="panel_button"; id="full_button">
+                Plot setings
+              </div>
+            </a>
+            <!--
+              TODO - implement when cursors available and new plot program selected
+              <a href = "#" id="Cursors_select">
+                <div class="panel_button"; id="left_button">
+                  Cursors
+                </div>
+              </a>
+              <a href="#" id="Cursors_setings">
+                <div class="panel_button"; id="right_button_gear">
+                  <img id= ""; src="images/gear.png" height="40px;">
+                </div>
+              </a>
+              -->
+            <a href="#" id="btn_start_frequency_sweep" data-checked="true" onclick="startMeasure(this.id)">
+              <div class="panel_button"; id="full_button">
+                Start measurement
+              </div>
+            </a>
+          </div>
+          <div class="meas_parameters_setings_panel" style=" overflow-y:scroll; height: inherit;">
+            <a href="#" id="meas_params_back">
+              <div class="title_section"; id="">
+                <img src = "images/arow-left-black.png" id="arrow_back1"; height="20px">
+                Measurement Settings
+              </div>
+            </a>
+            <div class="panel_input_field"; id="full_button">
+              <p id = "field_descr_text">Scale</p>
+              <select class="" id="apply_gen_fs_scale" onchange="redrawPlot()">
+                <option value="0">Lin</option>
+                <option value="1" selected>Log</option>
+              </select>
+              <!--
+              <div class="panel_input_field"; id="full_button">
+                <p id = "field_descr_text">Dual graph</p>
+                OFF
+              </div>
+              -->
+              <!--<input type="text" autocomplete="off" class="" value="Log" id="">-->
+            </div>
+            <div class="panel_input_field"; id="full_button">
+              <p id = "field_descr_text">Steps</p>
+              <input type="text" autocomplete="off" class="" value="10" id="step">
+            </div>
+            <div class="panel_input_field"; id="full_button">
+              <p id = "field_descr_text">Amplitude [Vpp]</p>
+              <input type="number" autocomplete="off"  value="0.4" id="gen_amp">
+            </div>
+            <div class="panel_input_field"; id="full_button">
+              <p id = "field_descr_text">Averaging</p>
+              <input type="number" autocomplete="off"  value="1" id="gen_avg">
+            </div>
+            <div class="panel_input_field"; id="full_button">
+              <p id = "field_descr_text">R-shunt [Ω]</p>
+              <input type="number" autocomplete="off"  value="0" id="gen_R_shunt">
+            </div>
+            <div class="panel_input_field" id="full_button" style="display: none;">
+              <p id = "field_descr_text">Load Re</p>
+              <input type="number" autocomplete="off" class="" value="0" id="gen_LoadRe">
+            </div>
+            <div class="panel_input_field" id="full_button" style="display: none;">
+              <p id = "field_descr_text">Load Im</p>
+              <input type="number" autocomplete="off" class="" value="0" id="gen_LoadIm">
+            </div>
+            <div class="panel_input_field" id="full_button">
+              <p id = "field_descr_text">DC-bias [V]</p>
+              <input type="number" autocomplete="off" class="" value="0.25" id="gen_DC_bias">
+            </div>
+          </div>
+          <div class="freq_sweep_setings_panel" >
+            <a href="#" id="Freq_sweep_back">
+              <div class="title_section"; id="">
+                <img src = "images/arow-left-black.png" id="arrow_back1"; height="20px">
+                Frequency sweep
+              </div>
+            </a>
+            <div class="panel_input_field"; id="full_button">
+              <p id = "field_descr_text">Start Frequency [Hz]</p>
+              <input type="number" autocomplete="off" class="" value="1000" id="gen_fs_Sfreq">
+            </div>
+            <div class="panel_input_field"; id="full_button">
+              <p id = "field_descr_text">End Frequency [Hz]</p>
+              <input type="number" autocomplete="off" class="" value="10000" id="gen_fs_Efreq">
+            </div>
+          </div>
+          <div class="meas_sweep_setings_panel" >
+            <a href="#" id="Meas_sweep_back">
+              <div class="title_section"; id="">
+                <img src = "images/arow-left-black.png" id="arrow_back1"; height="20px">
+                Measurement sweep
+              </div>
+            </a>
+            <div class="panel_input_field"; id="full_button">
+              <p id = "field_descr_text">Frequency [Hz]</p>
+              <input type="text" autocomplete="off" class="" value="1000" id="gen_ms_freq">
+            </div>
+          </div>
+          <div class="plot_setings" >
+            <a href="#" id="Plot_setings_back">
+              <div class="title_section"; id="">
+                <img src = "images/arow-left-black.png" id="arrow_back1"; height="20px">
+                Plot settings
+              </div>
+            </a>
+            <div class="panel_input_field"; id="full_button">
+              <p id = "field_descr_text">X-axis</p>
+              <select style="margin-left: 30%;" class="" id="apply_Xaxis">
+                <option value="0">Frequency [Hz]</option>
+                <option value="1"> Steps </option>
+              </select>
+              <!--<input type="text" autocomplete="off" class="" value="Frequency" id="">-->
+            </div>
+            <div class="panel_input_field"; id="full_button">
+              <p id = "field_descr_text">Y-axis</p>
+              <!--<input type="text" autocomplete="off" class="" value="|Z|" id="">-->
+              <select style="margin-left: 25%;" class="" id="apply_Yaxis">
+                <option value="0">|Z| [Ohm]</option>
+                <option value="1">P [deg]</option>
+                <option value="2">|Y| [S]</option>
+                <option value="3">-P [deg]</option>
+                <option value="4">Rs [Ohm]</option>
+                <option value="5">Rp [Ohm]</option>
+                <option value="6">Xs [Ohm]</option>
+                <option value="7">Gp [S]</option>
+                <option value="8">Bp [S]</option>
+                <option value="9">Cs [F]</option>
+                <option value="10">Cp [F]</option>
+                <option value="11">Ls [H]</option>
+                <option value="12">Lp [H]</option>
+                <option value="13">Q</option>
+                <option value="14">D</option>
+              </select>
+            </div>
+            <a href="#" id="" data-checked="true" onclick="changeData()">
+              <div class="panel_button"; id="full_button">
+                Show plot
+              </div>
+            </a>
+          </div>
+          <div class="Cursor_setings_panel" >
+            <a href="#" id="Cursor_setings_back">
+              <div class="title_section"; id="">
+                <img src = "images/arow-left-black.png" id="arrow_back1"; height="20px">
+                Cursors settings
+              </div>
+            </a>
+            <a href="#" id="meas_params">
+              <div class="panel_input_field"; id="left_button">
+                ON
+              </div>
+            </a>
+            <a href="#" id="meas_params">
+              <div class="panel_input_field"; id="right_button">
+                ON
+              </div>
+            </a>
+            <a href="#" id="meas_params">
+              <div class="panel_input_field"; id="left_button">
+                ON
+              </div>
+            </a>
+            <a href="#" id="meas_params">
+              <div class="panel_input_field"; id="right_button">
+                ON
+              </div>
+            </a>
+          </div>
+        </div>
+        <div hidden class="panel panel-default">
+          <div class="panel-heading">
+            <h4 class="panel-title">
+              <a data-toggle="collapse" href="#range">
+              Range
+              </a>
+            </h4>
+          </div>
+          <div id="range" class="panel-collapse collapse">
+            <div class="panel-body">
+              <form class="form-horizontal" role="form" onsubmit="return false;">
+                <div class="form-group">
+                  <label class="col-xs-4 col-sm-3 control-label" style="padding-top: 35px;">Range:</label>
+                  <div class="col-xs-8 col-sm-9">
+                    <div class="row">
+                      <div class="col-xs-6 text-center">
+                        <div class="group-label" style="padding-bottom: 10px;">X axis</div>
+                        <div class="btn-group" style="margin-bottom: -3px;">
+                          <button id="range_x_minus" type="button" class="btn btn-primary btn-lg range-btn-left">
+                          <span class="glyphicon glyphicon-minus"></span>
+                          </button>
+                          <button id="range_x_plus" type="button" class="btn btn-primary btn-lg range-btn-right">
+                          <span class="glyphicon glyphicon-plus"></span>
+                          </button>
+                        </div>
+                        <div>
+                          <span id="range_x" class="badge range-badge">-</span>
+                        </div>
+                      </div>
+                      <div class="col-xs-6 text-center">
+                        <div class="group-label" style="padding-bottom: 10px;">Y axis</div>
+                        <div class="btn-group" style="margin-bottom: -3px;">
+                          <button id="range_y_minus" type="button" class="btn btn-primary btn-lg range-btn-left">
+                          <span class="glyphicon glyphicon-minus"></span>
+                          </button>
+                          <button id="range_y_plus" type="button" class="btn btn-primary btn-lg range-btn-right">
+                          <span class="glyphicon glyphicon-plus"></span>
+                          </button>
+                        </div>
+                        <div>
+                          <span id="range_y" class="badge range-badge">-</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="col-xs-4 col-sm-3 control-label">Offset:</label>
+                  <div class="col-xs-8 col-sm-9">
+                    <div class="row">
+                      <div class="col-xs-6 text-center">
+                        <div class="btn-group" style="margin-bottom: -3px;">
+                          <button id="offset_x_minus" type="button" class="btn btn-primary btn-lg range-btn-left">
+                          <span class="glyphicon glyphicon-minus"></span>
+                          </button>
+                          <button id="offset_x_plus" type="button" class="btn btn-primary btn-lg range-btn-right">
+                          <span class="glyphicon glyphicon-plus"></span>
+                          </button>
+                        </div>
+                      </div>
+                      <div class="col-xs-6 text-center">
+                        <div class="btn-group" style="margin-bottom: -3px;">
+                          <button id="offset_y_minus" type="button" class="btn btn-primary btn-lg range-btn-left">
+                          <span class="glyphicon glyphicon-minus"></span>
+                          </button>
+                          <button id="offset_y_plus" type="button" class="btn btn-primary btn-lg range-btn-right">
+                          <span class="glyphicon glyphicon-plus"></span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="modal_err" class="modal" tabindex="-1" role="dialog" aria-labelledby="modal_err_label" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="modal_err_label">Application error</h4>
+          </div>
+          <div class="modal-body"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default btn-close-modal" id="btn_ignore">Ignore</button>
+            <button type="button" class="btn btn-default" id="btn_retry_get">Retry</button>
+            <button type="button" class="btn btn-primary btn-app-restart">Restart</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="modal_app" class="modal" tabindex="-1" role="dialog" aria-labelledby="modal_app_label" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="modal_app_label">Application stopped</h4>
+          </div>
+          <div class="modal-body">
+            The <strong><span class="app-id"></span></strong> application was stopped. The current started application is <strong><span id="new_app_id"></span></strong>.<br />
+            Do you want to switch to newly started application or to restart <strong><span class="app-id"></span></strong>?
+          </div>
+          <div class="modal-footer">
+            <a href="/index.html" class="btn btn-danger pull-left">Exit app</a>
+            <button type="button" class="btn btn-default" id="btn_switch_app">Switch</button>
+            <button type="button" class="btn btn-primary btn-app-restart">Restart</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="modal_upload" class="modal" tabindex="-1" role="dialog" aria-labelledby="modal_upload_label" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="modal_upload_label">File upload for channel <span></span></h4>
+          </div>
+          <div class="modal-body">
+            <form id="upload_form" role="form">
+              <div class="form-group">
+                <input type="file" name="file_select" id="uploaded_file">
+                <input type="hidden" name="file_content" id="uploaded_file_content">
+                <p class="help-block">Select the CSV file to upload.</p>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer" style="margin-top: 0;">
+            <button type="button" class="btn btn-default btn-close-modal">Close</button>
+            <button type="button" class="btn btn-primary" onclick="startUpload()">Upload</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="modal_params" class="modal" tabindex="-1" role="dialog" aria-labelledby="modal_err_label" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="parameter_input_fail">Parameter input error</h4>
+          </div>
+          <div class="modal-body"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary btn-app-restart" id="btn_lcr_params">Ok</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

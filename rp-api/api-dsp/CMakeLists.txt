@@ -56,14 +56,18 @@ include_directories("src")
 include_directories("src/kiss_fft")
 
 list(APPEND src
-            ${CMAKE_SOURCE_DIR}/src/kiss_fft/kiss_fft.c
-            ${CMAKE_SOURCE_DIR}/src/kiss_fft/kiss_fftr.c
-            ${CMAKE_SOURCE_DIR}/src/rp_math.cpp
-            ${CMAKE_SOURCE_DIR}/src/rp_dsp.cpp
-        )
+    ${CMAKE_SOURCE_DIR}/src/kiss_fft/kiss_fft.c
+    ${CMAKE_SOURCE_DIR}/src/kiss_fft/kiss_fftr.c
+    ${CMAKE_SOURCE_DIR}/src/rp_math.cpp
+    ${CMAKE_SOURCE_DIR}/src/rp_dsp.cpp
+    ${CMAKE_SOURCE_DIR}/src/rp_algorithms.cpp
+)
 
 list(APPEND header
     ${CMAKE_SOURCE_DIR}/src/rp_dsp.h
+    ${CMAKE_SOURCE_DIR}/src/rp_math.h
+    ${CMAKE_SOURCE_DIR}/src/rp_algorithms.h
+    ${CMAKE_SOURCE_DIR}/src/rp_interpolation.h
 )
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
@@ -100,7 +104,7 @@ if(BUILD_SHARED)
             ARCHIVE DESTINATION ${INSTALL_DIR}/lib)
 
         install(FILES ${header}
-            DESTINATION ${INSTALL_DIR}/include)
+            DESTINATION ${INSTALL_DIR}/include/math)
 
         if (BUILD_PYTHON_MODULE)
             install(FILES $<TARGET_PROPERTY:rp_dsp_py,SWIG_SUPPORT_FILES> DESTINATION ${INSTALL_DIR}/lib/python)
@@ -127,7 +131,7 @@ if(BUILD_STATIC)
             ARCHIVE DESTINATION ${INSTALL_DIR}/lib)
 
         install(FILES ${header}
-            DESTINATION ${INSTALL_DIR}/include)
+            DESTINATION ${INSTALL_DIR}/include/math)
     endif()
 endif()
 

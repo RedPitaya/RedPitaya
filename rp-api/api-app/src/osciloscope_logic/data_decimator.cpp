@@ -1,7 +1,7 @@
 #include <math.h>
 #include "common.h"
 #include "data_decimator.h"
-#include "interpolation.h"
+#include "math/rp_interpolation.h"
 
 CDataDecimator::CDataDecimator():
     m_decimationFactor(1)

@@ -58,7 +58,7 @@ api: librp librp_hw librp_hw_can librp_dsp librpapp librp_formatter librparb
 
 api2: librp2
 
-librp: librp250_12 librp_hw_calibration librp_hw_profiles
+librp: librp250_12 librp_hw_calibration librp_hw_profiles librp_dsp
 	cmake -B$(abspath $(LIBRP_DIR)/build) -S$(abspath $(LIBRP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)  -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(LIBRP_DIR)/build install
 
@@ -307,10 +307,10 @@ examples: lcr bode monitor calib spectrum acquire generator led_control fpgautil
 
 # calibrate laboardtest
 
-# lcr:
-# 	$(MAKE) -C $(LCR_DIR) clean
-# 	$(MAKE) -C $(LCR_DIR) MODEL=$(MODEL)
-#	$(MAKE) -C $(LCR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+lcr: api
+	rm -rf $(abspath $(LCR_DIR)/build)
+	cmake -B$(abspath $(LCR_DIR)/build) -S$(abspath $(LCR_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LCR_DIR)/build install
 
 bode: api
 	rm -rf $(abspath $(BODE_DIR)/build)
@@ -414,7 +414,7 @@ APP_CALIB_DIR			 = apps-tools/calib_app
 APP_MAIN_MENU_DIR        = apps-tools/main_menu
 APP_ARB_MANAGER_DIR      = apps-tools/arb_manager
 
-.PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager streaming_manager calib_app main_menu
+.PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager streaming_manager calib_app main_menu $(NGINX)
 
 apps-tools: ecosystem updater network_manager scpi_manager streaming_manager jupyter_manager calib_app main_menu
 
@@ -484,7 +484,7 @@ apps-free-clean:
 	$(MAKE) -i -C $(VNA_DIR) clean
 
 ################################################################################
-# Red Pitaya PRO applications
+# Red Pitaya applications
 ################################################################################
 
 APP_SCOPEGENPRO_DIR = apps-tools/scopegenpro
@@ -492,10 +492,11 @@ APP_SPECTRUMPRO_DIR = apps-tools/spectrumpro
 APP_LCRMETER_DIR    = apps-tools/lcr_meter
 APP_LA_PRO_DIR 		= apps-tools/la_pro
 APP_BA_PRO_DIR 		= apps-tools/ba_pro
+APP_IMP_ANAL_DIR 	= apps-tools/impedance_analyzer
 
-.PHONY: apps-pro scopegenpro spectrumpro lcr_meter la_pro ba_pro lcr_meter
+.PHONY: apps-pro scopegenpro spectrumpro lcr_meter la_pro ba_pro lcr_meter impedance_analyzer
 
-apps-tools: scopegenpro spectrumpro la_pro ba_pro lcr_meter
+apps-tools: scopegenpro spectrumpro la_pro ba_pro lcr_meter impedance_analyzer
 
 scopegenpro: api $(NGINX)
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) clean
@@ -522,6 +523,10 @@ ba_pro: api $(NGINX)
 	$(MAKE) -C $(APP_BA_PRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_BA_PRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
+impedance_analyzer: api $(NGINX)
+	$(MAKE) -C $(APP_IMP_ANAL_DIR) clean
+	$(MAKE) -C $(APP_IMP_ANAL_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(APP_IMP_ANAL_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 
 ################################################################################
@@ -543,6 +548,7 @@ clean:
 	rm -rf $(abspath $(LIBRP_ARB_DIR)/build)
 
 
+	rm -rf $(abspath $(LCR_DIR)/build)
 	rm -rf $(abspath $(CALIB_DIR)/build)
 	rm -rf $(abspath $(BODE_DIR)/build)
 	rm -rf $(abspath $(ACQUIRE_DIR)/build)
@@ -563,6 +569,7 @@ clean:
 	$(MAKE) -C $(APP_ARB_MANAGER_DIR) clean
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) clean
 	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) clean
+	$(MAKE) -C $(APP_IMP_ANAL_DIR) clean
 	$(MAKE) -C $(APP_LCRMETER_DIR) clean
 	$(MAKE) -C $(APP_LA_PRO_DIR) clean
 	$(MAKE) -C $(APP_BA_PRO_DIR) clean

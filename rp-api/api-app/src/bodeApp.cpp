@@ -28,7 +28,7 @@
 #include "common.h"
 #include "rp_hw-calib.h"
 #include "rp_hw-profiles.h"
-#include "rp_dsp.h"
+#include "math/rp_dsp.h"
 
 using namespace std::chrono;
 

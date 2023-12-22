@@ -7,12 +7,13 @@
 #include <cmath>
 #include <csignal>
 #include <unistd.h>
-#include <version.h>
-#include <rp.h>
-#include <rp_dsp.h>
 
+#include "rp.h"
 #include "rp_hw-calib.h"
 #include "rp_hw-profiles.h"
+#include "math/rp_dsp.h"
+#include "common/version.h"
+
 
 #include "cli_parse_args.h"
 

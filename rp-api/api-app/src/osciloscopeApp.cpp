@@ -27,6 +27,7 @@
 #include "osciloscopeApp.h"
 #include "common.h"
 #include "neon_asm.h"
+#include "math/rp_algorithms.h"
 
 #include "osciloscope_logic/data_decimator.h"
 #include "osciloscope_logic/view_controller.h"
@@ -1324,6 +1325,11 @@ void mainThreadFun() {
             g_viewController.setCapturedDecimation(decimationInACQ);
             auto buff = g_viewController.getAcqBuffers();
             ECHECK_APP_NO_RET(rp_AcqGetData(pPosition,buff));
+
+            // float od[DAC_BUFFER_SIZE];
+            // fir3(buff->ch_f[0],od,buff->size);
+            // memcpy_neon(buff->ch_f[0],od,buff->size * sizeof(float));
+
             g_viewController.unlockView();
 
             if (!contMode){

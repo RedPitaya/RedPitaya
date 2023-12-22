@@ -52,7 +52,7 @@ message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
 
 include_directories("include")
-include_directories("include/redpitaya")
+include_directories("include/common")
 include_directories("src")
 include_directories(${INSTALL_DIR}/include)
 
@@ -62,7 +62,6 @@ list(APPEND src
             ${CMAKE_SOURCE_DIR}/src/oscilloscope.c
             ${CMAKE_SOURCE_DIR}/src/acq_handler.c
             ${CMAKE_SOURCE_DIR}/src/rp.c
-            ${CMAKE_SOURCE_DIR}/src/neon_asm.cpp
             ${CMAKE_SOURCE_DIR}/src/generate.c
             ${CMAKE_SOURCE_DIR}/src/gen_handler.c
             ${CMAKE_SOURCE_DIR}/src/daisy.c
@@ -70,13 +69,17 @@ list(APPEND src
 
 
 list(APPEND header_rp
-    ${CMAKE_SOURCE_DIR}/include/redpitaya/rp.h
-    ${CMAKE_SOURCE_DIR}/include/redpitaya/rp_acq.h
-    ${CMAKE_SOURCE_DIR}/include/redpitaya/rp_acq_axi.h
-    ${CMAKE_SOURCE_DIR}/include/redpitaya/rp_enums.h
-    ${CMAKE_SOURCE_DIR}/include/redpitaya/rp_gen.h
-    ${CMAKE_SOURCE_DIR}/include/redpitaya/version.h
+    ${CMAKE_SOURCE_DIR}/include/rp.h
+    ${CMAKE_SOURCE_DIR}/include/rp_acq.h
+    ${CMAKE_SOURCE_DIR}/include/rp_acq_axi.h
+    ${CMAKE_SOURCE_DIR}/include/rp_enums.h
+    ${CMAKE_SOURCE_DIR}/include/rp_gen.h
 )
+
+list(APPEND header_rp_common
+    ${CMAKE_SOURCE_DIR}/include/common/version.h
+)
+
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
@@ -128,6 +131,9 @@ if(BUILD_SHARED)
         install(FILES ${header_rp}
             DESTINATION ${INSTALL_DIR}/include)
 
+        install(FILES ${header_rp_common}
+            DESTINATION ${INSTALL_DIR}/include/common)
+
         if (BUILD_PYTHON_MODULE)
             install(FILES $<TARGET_PROPERTY:rp_py,SWIG_SUPPORT_FILES> DESTINATION ${INSTALL_DIR}/lib/python)
             install(TARGETS rp_py
@@ -158,6 +164,8 @@ if(BUILD_STATIC)
         install(FILES ${header_rp}
             DESTINATION ${INSTALL_DIR}/include)
 
+        install(FILES ${header_rp_common}
+            DESTINATION ${INSTALL_DIR}/include/common)
     endif()
 endif()
 
