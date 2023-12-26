@@ -29,6 +29,7 @@
 #include "rp_hw-calib.h"
 #include "rp_hw-profiles.h"
 #include "math/rp_dsp.h"
+// #include "math/rp_algorithms.h"
 
 using namespace std::chrono;
 
@@ -297,8 +298,8 @@ int rpApp_BaDataAnalysisTrap(const rp_ba_buffer_t &buffer,
         int ret_value = RP_OK;
 
         for (size_t i = 0; i < size; i++){
-                u_dut_1[i] = buffer.ch2[i];
-                u_dut_2[i] = buffer.ch1[i];
+                u_dut_1[i] = buffer.ch1[i];
+                u_dut_2[i] = buffer.ch2[i];
         }
 
         if (size > 0){
@@ -343,7 +344,7 @@ int rpApp_BaDataAnalysisTrap(const rp_ba_buffer_t &buffer,
 
         auto u_dut_2_phase = atan2f(component_lock_in[1][1], component_lock_in[1][0]);
 
-        phase = u_dut_1_phase - u_dut_2_phase;
+        phase = u_dut_2_phase - u_dut_1_phase;
         /* Phase has to be limited between M_PI and -M_PI. */
         if (phase <= -M_PI)
                 phase += 2*M_PI;
@@ -352,7 +353,7 @@ int rpApp_BaDataAnalysisTrap(const rp_ba_buffer_t &buffer,
 
         *phase_out = phase * (180.0 / M_PI);
 		// Old logic
-        *gain = u_dut_1_ampl / u_dut_2_ampl;
+        *gain = u_dut_2_ampl / u_dut_1_ampl;
 
 		// data_t sig1_rms =  RMS(buffer.ch1,size);
 		// data_t sig2_rms =  RMS(buffer.ch2,size);
@@ -710,7 +711,7 @@ int rpApp_BaGetAmplPhase(float _amplitude_in, float _dc_bias, int _periods_numbe
     rp_GenOutDisable(RP_CH_1);
     // int ret = rp_BaDataAnalysis(_buffer, acq_size, ADC_SAMPLE_RATE / decimation,_freq, samples_period,  &gain, &phase_out,_input_threshold);
 	int ret = rpApp_BaDataAnalysisTrap(_buffer, new_acq_size, _freq, decimation,  &gain, &phase_out,_input_threshold);
-	//int ret = rpApp_BaDataAnalysisFFT(_buffer, acq_size, _freq, decimation,  &gain, &phase_out,_input_threshold);
+    // int ret = rpApp_BaDataAnalysisFFT(_buffer, acq_size, _freq, decimation,  &gain, &phase_out,_input_threshold);
 
     *_amplitude = 20.*log10f(gain);
     *_phase = phase_out;
