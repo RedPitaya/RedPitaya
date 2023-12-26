@@ -414,9 +414,9 @@ APP_CALIB_DIR			 = apps-tools/calib_app
 APP_MAIN_MENU_DIR        = apps-tools/main_menu
 APP_ARB_MANAGER_DIR      = apps-tools/arb_manager
 
-.PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager streaming_manager calib_app main_menu
+.PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager streaming_manager calib_app main_menu arb_manager
 
-apps-tools: ecosystem updater network_manager scpi_manager streaming_manager jupyter_manager calib_app main_menu
+apps-tools: ecosystem updater network_manager scpi_manager streaming_manager jupyter_manager calib_app main_menu arb_manager
 
 
 ecosystem:
