@@ -338,14 +338,21 @@ int acq_SetDecimationFactor(uint32_t decimation){
 
 int acq_axi_SetDecimationFactor(uint32_t decimation){
 
+    uint8_t channels = 0;
+    if (rp_HPGetFastADCChannelsCount(&channels) != RP_HP_OK){
+        fprintf(stderr,"[Error:acq_axi_SetDecimationFactor] Can't get fast ADC channels count\n");
+        return RP_NOTS;
+    }
+
     int64_t time_ns[4] = {0,0,0,0};
 
 
     if (triggerDelayInNs) {
-        acq_axi_GetTriggerDelayNs(RP_CH_1,&time_ns[0]);
-        acq_axi_GetTriggerDelayNs(RP_CH_2,&time_ns[1]);
-        acq_axi_GetTriggerDelayNs(RP_CH_3,&time_ns[2]);
-        acq_axi_GetTriggerDelayNs(RP_CH_4,&time_ns[3]);
+
+        if (channels >= 1) acq_axi_GetTriggerDelayNs(RP_CH_1,&time_ns[0]);
+        if (channels >= 2) acq_axi_GetTriggerDelayNs(RP_CH_2,&time_ns[1]);
+        if (channels >= 3) acq_axi_GetTriggerDelayNs(RP_CH_3,&time_ns[2]);
+        if (channels >= 4) acq_axi_GetTriggerDelayNs(RP_CH_4,&time_ns[3]);
     }
 
     bool check = false;
@@ -359,10 +366,10 @@ int acq_axi_SetDecimationFactor(uint32_t decimation){
     osc_SetDecimation(decimation);
     // Now update trigger delay based on new decimation
     if (triggerDelayInNs) {
-        acq_axi_SetTriggerDelayNs(RP_CH_1, time_ns[0]);
-        acq_axi_SetTriggerDelayNs(RP_CH_2, time_ns[1]);
-        acq_axi_SetTriggerDelayNs(RP_CH_3, time_ns[2]);
-        acq_axi_SetTriggerDelayNs(RP_CH_4, time_ns[3]);
+        if (channels >= 1) acq_axi_SetTriggerDelayNs(RP_CH_1, time_ns[0]);
+        if (channels >= 2) acq_axi_SetTriggerDelayNs(RP_CH_2, time_ns[1]);
+        if (channels >= 3) acq_axi_SetTriggerDelayNs(RP_CH_3, time_ns[2]);
+        if (channels >= 4) acq_axi_SetTriggerDelayNs(RP_CH_4, time_ns[3]);
     }
 
     return RP_OK;
