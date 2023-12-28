@@ -14,6 +14,7 @@
 
 #include "rp.h"
 #include "rp_hw-profiles.h"
+#include "rp_hw-calib.h"
 
 #define DATA_SIZE 20
 #define OFFSET 10
@@ -398,6 +399,10 @@ auto getData(rp_channel_trigger_t _ch, uint32_t _dec, int32_t _triggerDelay, flo
 }
 
 auto testTrig(settings s) -> int {
+
+    auto old_calib = rp_GetCalibrationSettings();
+    auto def_calib = rp_GetDefaultCalibrationSettings();
+    rp_CalibrationSetParams(def_calib);
     uint32_t adcRate = getADCRate();
     uint32_t minPointerPerPer = 4;
     uint32_t maxPointerPerPer = 100;
@@ -507,6 +512,7 @@ auto testTrig(settings s) -> int {
         }
     }
     rp_deleteBuffer(buffer);
+    rp_CalibrationSetParams(old_calib);
     return result;
 }
 
@@ -773,6 +779,13 @@ auto testTrigDelay(settings s) -> int {
         return 0;
     }
 
+    auto old_calib = rp_GetCalibrationSettings();
+    auto def_calib = rp_GetDefaultCalibrationSettings();
+    rp_CalibrationSetParams(def_calib);
+
+    uint8_t bits;
+    rp_HPGetFastADCBits(&bits);
+
     int result = 0;
     list<uint32_t> dec_list;
     for(uint32_t dec = RP_DEC_1; dec <= RP_DEC_65536; dec *= 2){
@@ -785,7 +798,7 @@ auto testTrigDelay(settings s) -> int {
         }
     }
 
-    auto buffer = rp_createBuffer(getADCChannels(),ADC_BUFFER_SIZE,false,false,true);
+    auto buffer = rp_createBuffer(getADCChannels(),ADC_BUFFER_SIZE,true,false,true);
     if (!buffer){
         printf("Can't allocate buffer\n");
         exit(-1);
@@ -859,7 +872,7 @@ auto testTrigDelay(settings s) -> int {
 
             uint32_t sampWithData = 0;
             for(uint32_t z = 0; z < buffer->size; z++){
-                if (buffer->ch_f[0][z] >= 0.7) { // must take into account the rise time and initial ringing of step signal
+                if (buffer->ch_i[0][z] >= (1 << (bits -1)) * 0.7) { // must take into account the rise time and initial ringing of step signal
                     sampWithData++;
                 }
             }
@@ -869,7 +882,7 @@ auto testTrigDelay(settings s) -> int {
             if (testResult){
                 std::cout << "The number of data samples is not equal to the trigger delay\n";
                 std::cout << "Delay " << i << " samples " << sampWithData << "\n";
-                printBufferF(buffer,-2,sampWithData + 3);
+                printBuffer(buffer,-2,sampWithData + 3);
             }
 
             if (s.verbose || ret){
@@ -884,6 +897,7 @@ auto testTrigDelay(settings s) -> int {
     }
 
     rp_deleteBuffer(buffer);
+    rp_CalibrationSetParams(old_calib);
     return result;
 }
 

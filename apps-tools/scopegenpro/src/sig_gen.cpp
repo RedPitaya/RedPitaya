@@ -11,6 +11,7 @@ void synthesis_arb(CFloatSignal *signal, const float *data, uint32_t _size, floa
     if (sigSize == 0) return;
     float rate = (float)_size / (float)DAC_BUFFER_SIZE ;
     int period = (int) sigSize * 1000 / (freq * tscale * 10) * rate;
+    if (period == 0) period = 1;
     for (size_t i = 0; i < sigSize; ++i)
 	{
         auto x = i % period;
