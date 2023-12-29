@@ -26,8 +26,8 @@
 
 #include "osciloscopeApp.h"
 #include "common.h"
-#include "neon_asm.h"
 #include "math/rp_algorithms.h"
+#include "math/rp_math.h"
 
 #include "osciloscope_logic/data_decimator.h"
 #include "osciloscope_logic/view_controller.h"

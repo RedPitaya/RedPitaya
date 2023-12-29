@@ -31,8 +31,8 @@
 
 #include "spectrometerApp.h"
 #include "common.h"
-#include "neon_asm.h"
 #include "version.h"
+#include "math/rp_math.h"
 
 
 typedef enum rp_spectr_worker_state_e {

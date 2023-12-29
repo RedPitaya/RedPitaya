@@ -15,7 +15,7 @@
 #include <thread>
 #include <mutex>
 
-#include "version.h"
+#include "common/version.h"
 #include "bodeApp.h"
 
 #include "rp_hw-calib.h"
@@ -23,9 +23,7 @@
 #include "settings.h"
 #include "main.h"
 
-extern "C" {
-    #include "rpApp.h"
-}
+#include "rpApp.h"
 
 /***************************************************************************************
 *                                     BODE ANALYSER                                    *
@@ -190,7 +188,7 @@ int rp_app_init(void)
 	rp_Init();
     rp_AcqSetAC_DC(RP_CH_1,RP_DC);
     rp_AcqSetAC_DC(RP_CH_2,RP_DC);
-
+    rpApp_BaInit();
     rpApp_BaReadCalibration();
     updateParametersByConfig();
 
@@ -205,6 +203,7 @@ int rp_app_exit(void)
     if (g_thread)
         g_thread->join();
 	rp_Release();
+    rpApp_BaRelease();
 	fprintf(stderr, "Unloading bode analyser version %s-%s.\n", VERSION_STR, REVISION_STR);
 	return 0;
 }
@@ -452,7 +451,7 @@ void threadLoop(){
                     float ampl_step = 0;
                     float phase_step = 0;
                     rpApp_BaSafeThreadAcqPrepare();
-                    auto ret = rpApp_BaGetAmplPhase(gen_ampl, dc_bias, per_number , buffer, &ampl_step, &phase_step, current_freq,threshold);
+                    auto ret = rpApp_BaGetAmplPhase(RP_BA_LOGIC_FFT,gen_ampl, dc_bias, per_number , buffer, &ampl_step, &phase_step, current_freq,threshold);
                     if (ret ==  RP_EOOR) { // isnan && isinf
                         cur_step++;
                         return;
@@ -545,7 +544,7 @@ void threadLoop(){
                     float ampl_step = 0;
                     float phase_step = 0;
                     rpApp_BaSafeThreadAcqPrepare();
-                    auto ret = rpApp_BaGetAmplPhase(gen_ampl, dc_bias, per_number , buffer, &ampl_step, &phase_step, current_freq,threshold);
+                    auto ret = rpApp_BaGetAmplPhase(RP_BA_LOGIC_FFT,gen_ampl, dc_bias, per_number , buffer, &ampl_step, &phase_step, current_freq,threshold);
                     if (ret ==  RP_EOOR) { // isnan && isinf
                         cur_step++;
                         return;

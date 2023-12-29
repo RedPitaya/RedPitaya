@@ -2,9 +2,17 @@
 #include <iostream>
 #include <string>
 #include <cstring>
+#include <algorithm>
+#include <threads.h>
+#include <mutex>
 
 #include "rp_algorithms.h"
 #include "rp_interpolation.h"
+#include "rp_dsp.h"
+
+std::mutex g_fft_mutex;
+rp_dsp_api::CDSP *g_fft = NULL;
+rp_dsp_api::data_t *g_fft_data = NULL;
 
 #define __SHORT_FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
@@ -40,24 +48,24 @@ int mean(const std::vector<double> &data, double *_value){
 }
 
 template<typename T>
-int rms(const std::vector<T> &data, T *_value){
-    if (data.size() == 0) return RP_A_DATA_SIZE_ZERO;
+int rms(const T *data, size_t size, T *_value){
+    if (size == 0) return RP_A_DATA_SIZE_ZERO;
     T result = 0;
-    for(auto i = 0u; i < data.size(); i++){
+    for(auto i = 0u; i < size; i++){
 		T d = (T)data[i];
         result += d * d;
     }
-    result =  sqrt(result / (T)data.size());
+    result =  sqrt(result / (T)size);
     *_value = result;
     return RP_A_OK;
 }
 
 int rms(const std::vector<float> &data, float *_value){
-    return rms<float>(data,_value);
+    return rms<float>(data.data(),data.size(),_value);
 }
 
 int rms(const std::vector<double> &data, double *_value){
-    return rms<double>(data,_value);
+    return rms<double>(data.data(),data.size(),_value);
 }
 
 template<typename T>
@@ -83,18 +91,16 @@ int p2p(const std::vector<double> &data, double *_value){
     return p2p<double>(data,_value);
 }
 
-int trapezoidalApprox(const double *data, size_t data_size, double *_value){
-    if (data_size < 2) return RP_A_ERROR;
+double trapezoidalApprox(const double *data, size_t data_size){
     double result = 0;
     for(auto i = 0u; i < data_size - 1; i++){
         result += data[i] + data[i+1];
     }
-    *_value = result;
-    return RP_A_OK;
+    return result;
 }
 
-int trapezoidalApprox(const std::vector<double> &data, double *_value){
-    return trapezoidalApprox(data.data(),data.size(),_value);
+double trapezoidalApprox(const std::vector<double> &data){
+    return trapezoidalApprox(data.data(),data.size());
 }
 
 
@@ -189,7 +195,7 @@ int analysisTrap(const T *ch1,
     if (ch1_size > ADC_BUFFER_SIZE) return RP_A_ERROR;
 
     size_t size = ch1_size;
-    double w_out = (double)signalFreq * 2.0 * M_PI;
+    float w_out = (double)signalFreq * 2.0 * M_PI;
 
     double ang,  phase;
 
@@ -200,20 +206,6 @@ int analysisTrap(const T *ch1,
     double u_dut_1_s[2][ADC_BUFFER_SIZE];
     double u_dut_2_s[2][ADC_BUFFER_SIZE];
 
-    // std::vector<double> u_dut_1;
-    // u_dut_1.resize(ch1_size);
-    // std::vector<double> u_dut_2;
-    // u_dut_2.resize(ch2_size);
-
-    // std::vector<double> u_dut_1_s[2];
-    // u_dut_1_s[0].resize(size);
-    // u_dut_1_s[1].resize(size);
-
-    // std::vector<double> u_dut_2_s[2];
-    // u_dut_2_s[0].resize(size);
-    // u_dut_2_s[1].resize(size);
-
-
     double component_lock_in[2][2];
     int ret_value = RP_A_OK;
 
@@ -223,8 +215,8 @@ int analysisTrap(const T *ch1,
     mean<T>(ch2, ch2_size, &mean_ch2);
 
     for (size_t i = 0; i < size; i++){
-        u_dut_1[i] = ch1[i] - mean_ch1;
-        u_dut_2[i] = ch2[i] - mean_ch2;
+        u_dut_1[i] = ch1[i]- mean_ch1;
+        u_dut_2[i] = ch2[i]- mean_ch2;
     }
 
     if (size > 0){
@@ -255,24 +247,24 @@ int analysisTrap(const T *ch1,
         u_dut_2_s[1][i] = u_dut_2[i] * sin(ang + (M_PI / 2));
     }
     /* Trapezoidal approximation */
-    trapezoidalApprox(u_dut_1_s[0], size , &(component_lock_in[0][0])); //U_X ch1
-    trapezoidalApprox(u_dut_1_s[1], size , &(component_lock_in[0][1])); //U_Y ch1
+    component_lock_in[0][0] = trapezoidalApprox(u_dut_1_s[0],size); //U_X ch1
+    component_lock_in[0][1] = trapezoidalApprox(u_dut_1_s[1],size); //U_Y ch1
 
-    trapezoidalApprox(u_dut_2_s[0], size , &(component_lock_in[1][0])); //U_X ch2
-    trapezoidalApprox(u_dut_2_s[1], size , &(component_lock_in[1][1])); //U_Y ch2
+    component_lock_in[1][0] = trapezoidalApprox(u_dut_2_s[0],size); //U_X ch2
+    component_lock_in[1][1] = trapezoidalApprox(u_dut_2_s[1],size); //U_Y ch2
 
 
     // printf("C %.9lf , %.9lf \n",component_lock_in[0][0],component_lock_in[0][1]);
 
     /* Calculating voltage amplitude and phase */
-    auto u_dut_1_ampl = 2.0 * (sqrt(pow(component_lock_in[0][0], 2.0) + pow(component_lock_in[0][1], 2.0)));
+    auto u_dut_1_ampl = 2.0 * (sqrtf(powf(component_lock_in[0][0], 2.0) + powf(component_lock_in[0][1], 2.0)));
 
-    auto u_dut_1_phase = atan2(component_lock_in[0][1], component_lock_in[0][0]);
+    auto u_dut_1_phase = atan2f(component_lock_in[0][1], component_lock_in[0][0]);
 
     /* Calculating current amplitude and phase */
-    auto u_dut_2_ampl = 2.0 * (sqrt(pow(component_lock_in[1][0], 2.0) + pow(component_lock_in[1][1], 2.0)));
+    auto u_dut_2_ampl = 2.0 * (sqrtf(powf(component_lock_in[1][0], 2.0) + powf(component_lock_in[1][1], 2.0)));
 
-    auto u_dut_2_phase = atan2(component_lock_in[1][1], component_lock_in[1][0]);
+    auto u_dut_2_phase = atan2f(component_lock_in[1][1], component_lock_in[1][0]);
 
     phase = u_dut_2_phase - u_dut_1_phase;
     /* Phase has to be limited between M_PI and -M_PI. */
@@ -285,7 +277,7 @@ int analysisTrap(const T *ch1,
     *phaseCh2 = u_dut_2_phase;
     // printf("%lf %lf \n",u_dut_1_ampl * 1000,u_dut_2_ampl * 1000);
     *phaseDiff = phase * (180.0 / M_PI);
-    *gain = u_dut_1_ampl / u_dut_2_ampl;
+    *gain =  u_dut_2_ampl / u_dut_1_ampl;
     return ret_value;
 }
 
@@ -397,4 +389,309 @@ auto oversampling(const float *_inData,size_t _inSize,float *_outData,size_t _ou
     }
 
     return true;
+}
+
+
+
+template<typename T>
+T calcPhase(T *data_origin, size_t size, std::vector<T> *data, T ampl, T freq, T periods, T phase, T step){
+    if (step < 0.01) return 1000;
+    static auto genSignal = [](std::vector<T> *data, T amp, T phase, T periods){
+        for(uint32_t i = 0; i < data->size(); i++){
+            T z = amp * sin((float)i / ((float)data->size()) * periods * 2 * M_PI + (phase));
+            (*data)[i] = z;
+        }
+    };
+
+
+    static auto compare = [](T *data, size_t size, std::vector<T> *sig2){
+        T res = 0;
+        for(size_t i = 0; i < size; i++){
+            res += (data[i] - (*sig2)[i]) * (data[i] - (*sig2)[i]);
+        }
+        return (T)res;
+    };
+
+    T p0 = phase;
+    T p1 = phase - step;
+    T p2 = phase + step;
+
+    genSignal(data,ampl,p0,periods);
+    T res0 = compare(data_origin,size,data);
+    genSignal(data,ampl,p1,periods);
+    T res1 = compare(data_origin,size,data);
+    genSignal(data,ampl,p2,periods);
+    T res2 = compare(data_origin,size,data);
+
+    // printf("P0 %f R0 %f ; P1 %f R1 %f ; P2 %f R2 %f\n",p0,res0,p1,res1,p2,res2);
+
+    if (res1 <= res2){
+        T new_step = (p0 - p1) / 2.0;
+        T res =  calcPhase(data_origin,size,data,ampl,freq,periods,p1 + new_step,new_step);
+        if (res != 1000){
+            return res;
+        }
+    }
+
+    if (res1 >= res2){
+        T new_step = (p2 - p0) / 2.0;
+        T res = calcPhase(data_origin,size,data,ampl,freq,periods,p0 + new_step,new_step);
+        if (res != 1000){
+            return res;
+        }
+    }
+    T minimum = std::min({res0, res1, res2});
+    if (minimum == res0) return p0;
+    if (minimum == res1) return p1;
+    if (minimum == res2) return p2;
+    return 1000;
+}
+
+
+template<typename T>
+int recoverySineSignal(T *data, size_t size, T freq, T periods, T *_ampl, T *_phase){
+    static T sqrt_2 = sqrt((T)2.0);
+    *_ampl = 0;
+    *_phase = 0;
+    if (size == 0) return RP_A_ERROR;
+
+    T rms_value = 0;
+    rms<T>(data,size,&rms_value);
+    *_ampl = rms_value * sqrt_2;
+
+    std::vector<T> signal;
+    signal.resize(size);
+    *_phase = calcPhase<T>(data,size,&signal,*_ampl,freq,periods,0,M_PI_2);
+    if (*_phase == 1000){
+        *_phase = 0;
+        return RP_A_ERROR;
+    }
+    return RP_A_OK;
+}
+
+int analysis(std::vector<float> &ch1, std::vector<float> &ch2,
+                uint32_t signalFreq, uint32_t periods,
+                uint32_t decimation, uint32_t adcRate,
+                float *amplutudeCh1, float *amplutudeCh2,
+                float *phaseCh1, float *phaseCh2, float *gain, float *phaseDiff){
+    float ampl[2];
+    float phase[2];
+    auto ret1 = recoverySineSignal<float>(ch1.data(),ch1.size(), signalFreq, periods, &ampl[0],&phase[0]);
+    auto ret2 = recoverySineSignal<float>(ch2.data(),ch2.size(), signalFreq, periods, &ampl[1],&phase[1]);
+
+    if (ret1 == RP_A_OK && ret2 == RP_A_OK){
+        if (ampl[1] == 0) return RP_A_ERROR;
+        *amplutudeCh1 = ampl[0];
+        *amplutudeCh2 = ampl[1];
+        *phaseCh1 = phase[0];
+        *phaseCh2 = phase[1];
+        *gain = ampl[1] / ampl[0];
+        *phaseDiff = phase[1] - phase[0];
+        if (*phaseDiff <= -M_PI)
+            *phaseDiff += 2 * M_PI;
+        else if (*phaseDiff >= M_PI)
+            *phaseDiff -= 2 * M_PI;
+        *phaseDiff *= 180/M_PI;
+        return RP_A_OK;
+    }
+    return RP_A_ERROR;
+}
+
+int analysis(std::vector<double> &ch1, std::vector<double> &ch2,
+                uint32_t signalFreq, uint32_t periods,
+                uint32_t decimation, uint32_t adcRate,
+                double *amplutudeCh1, double *amplutudeCh2,
+                double *phaseCh1, double *phaseCh2, double *gain, double *phaseDiff){
+    double ampl[2];
+    double phase[2];
+    auto ret1 = recoverySineSignal<double>(ch1.data(),ch1.size(), signalFreq, periods, &ampl[0],&phase[0]);
+    auto ret2 = recoverySineSignal<double>(ch2.data(),ch2.size(), signalFreq, periods, &ampl[1],&phase[1]);
+
+    if (ret1 == RP_A_OK && ret2 == RP_A_OK){
+        if (ampl[1] == 0) return RP_A_ERROR;
+        *amplutudeCh1 = ampl[0];
+        *amplutudeCh2 = ampl[1];
+        *phaseCh1 = phase[0];
+        *phaseCh2 = phase[1];
+        *gain = ampl[0] / ampl[1];
+        *phaseDiff = phase[1] - phase[0];
+        return RP_A_OK;
+    }
+    return RP_A_ERROR;
+}
+
+int analysis(float *ch1, float *ch2,
+                size_t ch1_size, size_t ch2_size,
+                uint32_t signalFreq, uint32_t periods,
+                uint32_t decimation, uint32_t adcRate,
+                float *amplutudeCh1, float *amplutudeCh2,
+                float *phaseCh1, float *phaseCh2, float *gain, float *phaseDiff){
+    float ampl[2];
+    float phase[2];
+    auto ret1 = recoverySineSignal<float>(ch1, ch1_size, signalFreq, periods, &ampl[0],&phase[0]);
+    auto ret2 = recoverySineSignal<float>(ch2, ch2_size, signalFreq, periods, &ampl[1],&phase[1]);
+
+    if (ret1 == RP_A_OK && ret2 == RP_A_OK){
+        if (ampl[1] == 0) return RP_A_ERROR;
+        *amplutudeCh1 = ampl[0];
+        *amplutudeCh2 = ampl[1];
+        *phaseCh1 = phase[0];
+        *phaseCh2 = phase[1];
+        *gain = ampl[0] / ampl[1];
+        *phaseDiff = phase[1] - phase[0];
+        return RP_A_OK;
+    }
+    return RP_A_ERROR;
+}
+
+int analysis(double *ch1, double *ch2,
+                size_t ch1_size, size_t ch2_size,
+                uint32_t signalFreq, uint32_t periods,
+                uint32_t decimation, uint32_t adcRate,
+                double *amplutudeCh1, double *amplutudeCh2,
+                double *phaseCh1, double *phaseCh2, double *gain, double *phaseDiff){
+    double ampl[2];
+    double phase[2];
+    auto ret1 = recoverySineSignal<double>(ch1, ch1_size, signalFreq, periods, &ampl[0],&phase[0]);
+    auto ret2 = recoverySineSignal<double>(ch2, ch2_size, signalFreq, periods, &ampl[1],&phase[1]);
+
+    if (ret1 == RP_A_OK && ret2 == RP_A_OK){
+        if (ampl[1] == 0) return RP_A_ERROR;
+        *amplutudeCh1 = ampl[0];
+        *amplutudeCh2 = ampl[1];
+        *phaseCh1 = phase[0];
+        *phaseCh2 = phase[1];
+        *gain = ampl[0] / ampl[1];
+        *phaseDiff = phase[1] - phase[0];
+        return RP_A_OK;
+    }
+    return RP_A_ERROR;
+}
+
+int initFFT(uint32_t max_buffer,uint32_t adcRate){
+    std::lock_guard<std::mutex> lock(g_fft_mutex);
+    if (g_fft != NULL){
+        WARNING("Can't init memory")
+        return RP_A_ERROR;
+    }
+    g_fft = new rp_dsp_api::CDSP(2,max_buffer,adcRate);
+    if (g_fft == NULL){
+        WARNING("Can't init memory")
+        return RP_A_ERROR;
+    }
+    g_fft_data = g_fft->createData();
+    if (g_fft_data == NULL) return RP_A_ERROR;
+    return RP_A_OK;
+}
+
+int releaseFFT(){
+    std::lock_guard<std::mutex> lock(g_fft_mutex);
+    if (g_fft)
+        g_fft->deleteData(g_fft_data);
+    delete g_fft;
+    return RP_A_OK;
+}
+
+template<typename T>
+int analysisFFT(const T *ch1, const T *ch2,
+                size_t size,
+                T _freq,
+                int decimation,
+                T *gain,
+                T *phase_out,
+                float input_threshold)
+{
+    std::lock_guard<std::mutex> lock(g_fft_mutex);
+    // T w_out = (T)_freq * 2.0 * M_PI;
+    int ret_value = RP_A_OK;
+    if (size > 0){
+            double u1_max = ch1[0];
+            double u1_min = ch1[0];
+            double u2_max = ch2[0];
+            double u2_min = ch2[0];
+            for (size_t i = 0; i < size; i++){
+                    if (u1_max < ch1[i]) u1_max = ch1[i];
+                    if (u2_max < ch2[i]) u2_max = ch2[i];
+                    if (u1_min > ch1[i]) u1_min = ch1[i];
+                    if (u2_min > ch2[i]) u2_min = ch2[i];
+                g_fft_data->m_in[0][i] = ch1[i];
+                g_fft_data->m_in[1][i] = ch2[i];
+            }
+            if ((u1_max - u1_min) < input_threshold) ret_value = RP_A_SMALL_SIGNAL;
+            if ((u2_max - u2_min) < input_threshold) ret_value = RP_A_SMALL_SIGNAL;
+    }
+
+    if (g_fft->setSignalLengthDiv2(size)){
+        WARNING("Can't set buffer size for FFT")
+        return RP_A_ERROR;
+    }
+
+    if (g_fft->window_init(rp_dsp_api::FLAT_TOP)){
+        WARNING("Can't init window")
+        return RP_A_ERROR;
+    }
+
+    g_fft->fftInit();
+    g_fft->prepareFreqVector(g_fft_data,decimation);
+
+
+    g_fft->windowFilter(g_fft_data);
+    g_fft->fft(g_fft_data);
+    double amp[2];
+    double phase[2];
+    g_fft->getAmpAndPhase(g_fft_data, _freq, &amp[0],&phase[0],&amp[1],&phase[1]);
+
+    TRACE_SHORT("A1 %f A2 %f P1 %f P2 %f",amp[0],amp[1],phase[0] * 180 / M_PI ,phase[1] * 180 / M_PI);
+    g_fft->fftClean();
+    auto phase2 = phase[1] - phase[0];
+    if (phase2 <= -M_PI)
+        phase2 += 2 * M_PI;
+    else if (phase2 >= M_PI)
+        phase2 -= 2 * M_PI;
+    phase2 *= 180 / M_PI;
+    *phase_out = phase2;
+    *gain = amp[1]/amp[0];
+    return ret_value;
+}
+
+int analysisFFT(const float *ch1, const float *ch2,
+                size_t size,
+                float freq,
+                int decimation,
+                float *gain,
+                float *phase_out,
+                float input_threshold){
+    return analysisFFT<float>(ch1,ch2,size,freq,decimation,gain,phase_out,input_threshold);
+}
+
+int analysisFFT(const double *ch1, const double *ch2,
+                size_t size,
+                double freq,
+                int decimation,
+                double *gain,
+                double *phase_out,
+                float input_threshold){
+    return analysisFFT<double>(ch1,ch2,size,freq,decimation,gain,phase_out,input_threshold);
+}
+
+int analysisFFT(const std::vector<float> &ch1, const std::vector<float> &ch2,
+                float freq,
+                int decimation,
+                float *gain,
+                float *phase_out,
+                float input_threshold){
+    if (ch1.size() != ch2.size()) return RP_A_ERROR;
+    auto size = ch1.size();
+    return analysisFFT<float>(ch1.data(),ch2.data(),size,freq,decimation,gain,phase_out,input_threshold);
+}
+
+int analysisFFT(const std::vector<double> &ch1, const std::vector<double> &ch2,
+                double freq,
+                int decimation,
+                double *gain,
+                double *phase_out,
+                double input_threshold){
+    if (ch1.size() != ch2.size()) return RP_A_ERROR;
+    auto size = ch1.size();
+    return analysisFFT<double>(ch1.data(),ch2.data(),size,freq,decimation,gain,phase_out,input_threshold);
 }

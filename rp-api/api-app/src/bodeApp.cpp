@@ -29,7 +29,7 @@
 #include "rp_hw-calib.h"
 #include "rp_hw-profiles.h"
 #include "math/rp_dsp.h"
-// #include "math/rp_algorithms.h"
+#include "math/rp_algorithms.h"
 
 using namespace std::chrono;
 
@@ -77,14 +77,14 @@ uint32_t rpApp_BaGetADCSpeed(){
     return c;
 }
 
-data_t MEAN(const std::vector<float> &data, int size){
-    data_t result = 0;
-    for(int i = 0; i < size; i++){
-        result += data[i];
-    }
-    result =  result / (double)size;
-    return result;
-}
+// data_t MEAN(const std::vector<float> &data, int size){
+//     data_t result = 0;
+//     for(int i = 0; i < size; i++){
+//         result += data[i];
+//     }
+//     result =  result / (double)size;
+//     return result;
+// }
 
 data_t RMS(const std::vector<float> &data, int size){
     data_t result = 0;
@@ -97,28 +97,28 @@ data_t RMS(const std::vector<float> &data, int size){
     return result;
 }
 
-data_t P_P(const std::vector<float> &data, int size){
-    data_t result = 0;
-    data_t min = data[0];
-    data_t max = data[0];
-    for(int i = 0; i < size; i++){
-        min = min > data[i] ? data[i] : min;
-        max = max < data[i] ? data[i] : max;
-    }
-    result =  max - min;
-    return result;
-}
+// data_t P_P(const std::vector<float> &data, int size){
+//     data_t result = 0;
+//     data_t min = data[0];
+//     data_t max = data[0];
+//     for(int i = 0; i < size; i++){
+//         min = min > data[i] ? data[i] : min;
+//         max = max < data[i] ? data[i] : max;
+//     }
+//     result =  max - min;
+//     return result;
+// }
 
-float ba_trapezoidalApprox(double *data, float T, int size)
-{
-        double result = 0;
+// float ba_trapezoidalApprox(double *data, float T, int size)
+// {
+//         double result = 0;
 
-        for(int i = 0; i < size - 1; i++){
-                result += data[i] + data[i+1];
-        }
-        result = ((T / 2.0) * result);
-        return result;
-}
+//         for(int i = 0; i < size - 1; i++){
+//                 result += data[i] + data[i+1];
+//         }
+//         result = ((T / 2.0) * result);
+//         return result;
+// }
 
 
 float l_inter(float a, float b, float f){
@@ -159,13 +159,13 @@ data_t getMaxArg(data_t *a, data_t *b,int start,int stop, int step,int lenghtArr
 	if (stop == 0)  stop = len;
 
 	std::vector<data_t> packBufA;
-	packBufA.reserve(len);
+	packBufA.resize(len);
 	std::vector<data_t> packBufB;
-	packBufB.reserve(len);
+	packBufB.resize(len);
 	std::vector<data_t> corralate;
-	corralate.reserve(len);
+	corralate.resize(len);
 	std::vector<int> corralateIndex;
-	corralateIndex.reserve(len);
+	corralateIndex.resize(len);
 
 	// data_t packBufA[len];
 	// data_t packBufB[len];
@@ -266,109 +266,109 @@ data_t phaseCalculator(data_t freq_HZ, data_t samplesPerSecond, int numSamples,i
 	return phaseShift;
 }
 
-int rpApp_BaDataAnalysisTrap(const rp_ba_buffer_t &buffer,
-                                        uint32_t size,
-                                        float _freq, // 2*pi*f
-                                        int decimation,
-                                        float *gain,
-                                        float *phase_out,
-                                        float input_threshold)
-{
+// int rpApp_BaDataAnalysisTrap(const rp_ba_buffer_t &buffer,
+//                                         uint32_t size,
+//                                         float _freq, // 2*pi*f
+//                                         int decimation,
+//                                         float *gain,
+//                                         float *phase_out,
+//                                         float input_threshold)
+// {
 
-		float w_out = _freq*2 * M_PI;
+// 		float w_out = _freq * 2 * M_PI;
 
-        double ang,  phase;
+//         double ang,  phase;
 
-        double T = ((double)decimation / (double)rpApp_BaGetADCSpeed());
+//         double T = ((double)decimation / (double)rpApp_BaGetADCSpeed());
 
-		std::vector<double> u_dut_1;
-		u_dut_1.reserve(size);
-		std::vector<double> u_dut_2;
-		u_dut_2.reserve(size);
+// 		std::vector<double> u_dut_1;
+// 		u_dut_1.reserve(size);
+// 		std::vector<double> u_dut_2;
+// 		u_dut_2.reserve(size);
 
-		std::vector<double> u_dut_1_s[2];
-		u_dut_1_s[0].reserve(size);
-		u_dut_1_s[1].reserve(size);
-		std::vector<double> u_dut_2_s[2];
-		u_dut_2_s[0].reserve(size);
-		u_dut_2_s[1].reserve(size);
-
-
-        double component_lock_in[2][2];
-        int ret_value = RP_OK;
-
-        for (size_t i = 0; i < size; i++){
-                u_dut_1[i] = buffer.ch1[i];
-                u_dut_2[i] = buffer.ch2[i];
-        }
-
-        if (size > 0){
-                double u1_max = u_dut_1[0];
-                double u1_min = u_dut_1[0];
-                double u2_max = u_dut_2[0];
-                double u2_min = u_dut_2[0];
-                for (size_t i = 1; i < size; i++){
-                        if (u1_max < u_dut_1[i]) u1_max = u_dut_1[i];
-                        if (u2_max < u_dut_2[i]) u2_max = u_dut_2[i];
-                        if (u1_min > u_dut_1[i]) u1_min = u_dut_1[i];
-                        if (u2_min > u_dut_2[i]) u2_min = u_dut_2[i];
-                }
-                if ((u1_max - u1_min) < input_threshold) ret_value = RP_EIPV;
-                if ((u2_max - u2_min) < input_threshold) ret_value = RP_EIPV;
-        }
+// 		std::vector<double> u_dut_1_s[2];
+// 		u_dut_1_s[0].reserve(size);
+// 		u_dut_1_s[1].reserve(size);
+// 		std::vector<double> u_dut_2_s[2];
+// 		u_dut_2_s[0].reserve(size);
+// 		u_dut_2_s[1].reserve(size);
 
 
-        for (size_t i = 0; i < size; i++){
-                ang = ((double)i * T * (double)w_out);
+//         double component_lock_in[2][2];
+//         int ret_value = RP_OK;
 
-                u_dut_1_s[0][i] = u_dut_1[i] * sin(ang);
-                u_dut_1_s[1][i] = u_dut_1[i] * sin(ang + (M_PI / 2));
+//         for (size_t i = 0; i < size; i++){
+//                 u_dut_1[i] = buffer.ch1[i];
+//                 u_dut_2[i] = buffer.ch2[i];
+//         }
 
-                u_dut_2_s[0][i] = u_dut_2[i] * sin(ang);
-                u_dut_2_s[1][i] = u_dut_2[i] * sin(ang + (M_PI / 2));
-        }
+//         if (size > 0){
+//                 double u1_max = u_dut_1[0];
+//                 double u1_min = u_dut_1[0];
+//                 double u2_max = u_dut_2[0];
+//                 double u2_min = u_dut_2[0];
+//                 for (size_t i = 1; i < size; i++){
+//                         if (u1_max < u_dut_1[i]) u1_max = u_dut_1[i];
+//                         if (u2_max < u_dut_2[i]) u2_max = u_dut_2[i];
+//                         if (u1_min > u_dut_1[i]) u1_min = u_dut_1[i];
+//                         if (u2_min > u_dut_2[i]) u2_min = u_dut_2[i];
+//                 }
+//                 if ((u1_max - u1_min) < input_threshold) ret_value = RP_EIPV;
+//                 if ((u2_max - u2_min) < input_threshold) ret_value = RP_EIPV;
+//         }
 
-        /* Trapezoidal approximation */
-        component_lock_in[0][0] = ba_trapezoidalApprox(u_dut_1_s[0].data(), T, size); //U_X
-        component_lock_in[0][1] = ba_trapezoidalApprox(u_dut_1_s[1].data(), T, size); //U_Y
-        component_lock_in[1][0] = ba_trapezoidalApprox(u_dut_2_s[0].data(), T, size); //I_X
-        component_lock_in[1][1] = ba_trapezoidalApprox(u_dut_2_s[1].data(), T, size); //I_Y
 
-        /* Calculating voltage amplitude and phase */
-        auto u_dut_1_ampl = 2.0 * (sqrtf(powf(component_lock_in[0][0], 2.0) + powf(component_lock_in[0][1], 2.0)));
+//         for (size_t i = 0; i < size; i++){
+//                 ang = ((double)i * T * (double)w_out);
 
-        auto u_dut_1_phase = atan2f(component_lock_in[0][1], component_lock_in[0][0]);
+//                 u_dut_1_s[0][i] = u_dut_1[i] * sin(ang);
+//                 u_dut_1_s[1][i] = u_dut_1[i] * sin(ang + (M_PI / 2));
 
-        /* Calculating current amplitude and phase */
-        auto u_dut_2_ampl = 2.0 * (sqrtf(powf(component_lock_in[1][0], 2.0) + powf(component_lock_in[1][1], 2.0)));
+//                 u_dut_2_s[0][i] = u_dut_2[i] * sin(ang);
+//                 u_dut_2_s[1][i] = u_dut_2[i] * sin(ang + (M_PI / 2));
+//         }
 
-        auto u_dut_2_phase = atan2f(component_lock_in[1][1], component_lock_in[1][0]);
+//         /* Trapezoidal approximation */
+//         component_lock_in[0][0] = ba_trapezoidalApprox(u_dut_1_s[0].data(), T, size); //U_X
+//         component_lock_in[0][1] = ba_trapezoidalApprox(u_dut_1_s[1].data(), T, size); //U_Y
+//         component_lock_in[1][0] = ba_trapezoidalApprox(u_dut_2_s[0].data(), T, size); //I_X
+//         component_lock_in[1][1] = ba_trapezoidalApprox(u_dut_2_s[1].data(), T, size); //I_Y
 
-        phase = u_dut_2_phase - u_dut_1_phase;
-        /* Phase has to be limited between M_PI and -M_PI. */
-        if (phase <= -M_PI)
-                phase += 2*M_PI;
-        else if (phase >= M_PI)
-                phase -= 2*M_PI;
+//         /* Calculating voltage amplitude and phase */
+//         auto u_dut_1_ampl = 2.0 * (sqrtf(powf(component_lock_in[0][0], 2.0) + powf(component_lock_in[0][1], 2.0)));
 
-        *phase_out = phase * (180.0 / M_PI);
-		// Old logic
-        *gain = u_dut_2_ampl / u_dut_1_ampl;
+//         auto u_dut_1_phase = atan2f(component_lock_in[0][1], component_lock_in[0][0]);
 
-		// data_t sig1_rms =  RMS(buffer.ch1,size);
-		// data_t sig2_rms =  RMS(buffer.ch2,size);
-		// *gain = sig2_rms / sig1_rms;
-        #ifdef TRACE_ENABLE
-            auto mean1 = MEAN(buffer.ch1,buffer.ch1.size());
-            auto mean2 = MEAN(buffer.ch2,buffer.ch2.size());
-            auto pp1 = P_P(buffer.ch1,buffer.ch1.size());
-            auto pp2 = P_P(buffer.ch2,buffer.ch2.size());
+//         /* Calculating current amplitude and phase */
+//         auto u_dut_2_ampl = 2.0 * (sqrtf(powf(component_lock_in[1][0], 2.0) + powf(component_lock_in[1][1], 2.0)));
 
-            TRACE_SHORT("Signal 1: Amplitude %.9f Phase %.9f Mean %f P-P %f",u_dut_1_ampl,u_dut_1_phase,mean1,pp1)
-            TRACE_SHORT("Signal 2: Amplitude %.9f Phase %.9f Mean %f P-P %f",u_dut_2_ampl,u_dut_2_phase,mean2,pp2)
-        #endif
-        return ret_value;
-}
+//         auto u_dut_2_phase = atan2f(component_lock_in[1][1], component_lock_in[1][0]);
+
+//         phase = u_dut_2_phase - u_dut_1_phase;
+//         /* Phase has to be limited between M_PI and -M_PI. */
+//         if (phase <= -M_PI)
+//                 phase += 2*M_PI;
+//         else if (phase >= M_PI)
+//                 phase -= 2*M_PI;
+
+//         *phase_out = phase * (180.0 / M_PI);
+// 		// Old logic
+//         *gain = u_dut_2_ampl / u_dut_1_ampl;
+
+// 		// data_t sig1_rms =  RMS(buffer.ch1,size);
+// 		// data_t sig2_rms =  RMS(buffer.ch2,size);
+// 		// *gain = sig2_rms / sig1_rms;
+//         #ifdef TRACE_ENABLE
+//             auto mean1 = MEAN(buffer.ch1,buffer.ch1.size());
+//             auto mean2 = MEAN(buffer.ch2,buffer.ch2.size());
+//             auto pp1 = P_P(buffer.ch1,buffer.ch1.size());
+//             auto pp2 = P_P(buffer.ch2,buffer.ch2.size());
+
+//             TRACE_SHORT("Signal 1: Amplitude %.9f Phase %.9f Mean %f P-P %f",u_dut_1_ampl,u_dut_1_phase,mean1,pp1)
+//             TRACE_SHORT("Signal 2: Amplitude %.9f Phase %.9f Mean %f P-P %f",u_dut_2_ampl,u_dut_2_phase,mean2,pp2)
+//         #endif
+//         return ret_value;
+// }
 
 
 int rpApp_BaDataAnalysisFFT(const rp_ba_buffer_t &buffer,
@@ -420,9 +420,14 @@ int rpApp_BaDataAnalysisFFT(const rp_ba_buffer_t &buffer,
         TRACE_SHORT("A1 %f A2 %f P1 %f P2 %f",amp[0],amp[1],phase[0] * 180 / M_PI ,phase[1] * 180 / M_PI);
         g_dsp_logic.deleteData(data);
         g_dsp_logic.fftClean();
-
-        *phase_out = phase[0] - phase[1];
-		*gain = amp[0]/amp[1];
+        auto phase2 = phase[1] - phase[0];
+        if (phase2 <= -M_PI)
+            phase2 += 2 * M_PI;
+        else if (phase2 >= M_PI)
+            phase2 -= 2 * M_PI;
+        phase2 *= 180 / M_PI;
+        *phase_out = phase2;
+		*gain = amp[1]/amp[0];
 
         return ret_value;
 }
@@ -439,9 +444,9 @@ int rpApp_BaDataAnalysis(const rp_ba_buffer_t &buffer,
 {
 	int ret_value = RP_OK;
 	std::vector<data_t> buf1;
-	buf1.reserve(size);
+	buf1.resize(size);
 	std::vector<data_t> buf2;
-	buf2.reserve(size);
+	buf2.resize(size);
 	// data_t buf1[size];
 	// data_t buf2[size];
 	data_t max_ch1 = -100000;
@@ -658,6 +663,8 @@ int rpApp_BaSafeThreadAcqData(rp_ba_buffer_t &_buffer, int _decimation, int _acq
 
 	buf.ch_f[0] = _buffer.ch1.data();
 	buf.ch_f[1] = _buffer.ch2.data();
+    _buffer.ch1.resize(_acq_size);
+    _buffer.ch2.resize(_acq_size);
 	EXEC_CHECK_MUTEX(rp_AcqGetData(pos, &buf), mutex);
 	pthread_mutex_unlock(&mutex);
 	return RP_OK;
@@ -674,10 +681,11 @@ uint32_t increaseSmallBuffer(uint32_t _decimation, uint32_t _currentSize){
     return _currentSize;
 }
 
-int rpApp_BaGetAmplPhase(float _amplitude_in, float _dc_bias, int _periods_number, rp_ba_buffer_t &_buffer, float* _amplitude, float* _phase, float _freq,float _input_threshold)
+int rpApp_BaGetAmplPhase(rp_ba_logic_t mode, float _amplitude_in, float _dc_bias, int _periods_number, rp_ba_buffer_t &_buffer, float* _amplitude, float* _phase, float _freq,float _input_threshold)
 {
     float gain = 0;
     float phase_out = 0;
+    int ret = 0;
     int acq_size;
 
     //Generate a sinusoidal wave form
@@ -703,15 +711,34 @@ int rpApp_BaGetAmplPhase(float _amplitude_in, float _dc_bias, int _periods_numbe
         decimation = 65536;
     }
 
-	acq_size = round((static_cast<float>(_periods_number) * rpApp_BaGetADCSpeed()) / (_freq * decimation));
+	acq_size = round((static_cast<float>(_periods_number) * adc_rate) / (_freq * decimation));
     auto new_acq_size = increaseSmallBuffer(decimation,acq_size);
     TRACE_SHORT("Decimation: %d Gen freq: %f Buffer size %d Increase size %d",decimation,_freq,acq_size,new_acq_size);
 
     rpApp_BaSafeThreadAcqData(_buffer,decimation, new_acq_size,_amplitude_in);
     rp_GenOutDisable(RP_CH_1);
     // int ret = rp_BaDataAnalysis(_buffer, acq_size, ADC_SAMPLE_RATE / decimation,_freq, samples_period,  &gain, &phase_out,_input_threshold);
-	int ret = rpApp_BaDataAnalysisTrap(_buffer, new_acq_size, _freq, decimation,  &gain, &phase_out,_input_threshold);
+	//int ret = dataAnalysisTrap(_buffer.ch1,_buffer.ch2, new_acq_size, _freq, decimation,rpApp_BaGetADCSpeed(),  &gain, &phase_out,_input_threshold);
     // int ret = rpApp_BaDataAnalysisFFT(_buffer, acq_size, _freq, decimation,  &gain, &phase_out,_input_threshold);
+
+    if (mode == RP_BA_LOGIC_FFT){
+        float phase[2];
+        ret = analysisTrap(_buffer.ch1, _buffer.ch2, _freq,decimation,adc_rate,_input_threshold
+        ,&phase[0]
+        ,&phase[1]
+        ,&gain
+        ,&phase_out);
+    }
+
+    if (mode == RP_BA_LOGIC_FFT){
+        ret = analysisFFT(_buffer.ch1, _buffer.ch2, _freq, decimation
+        ,&gain
+        ,&phase_out
+        ,_input_threshold);
+    }
+
+    // int ret = analysis(_buffer.ch1, _buffer.ch2, _freq,_periods_number,decimation,rpApp_BaGetADCSpeed(),&ampl[0],&ampl[1],&phase[0],&phase[1],&gain,&phase_out);
+
 
     *_amplitude = 20.*log10f(gain);
     *_phase = phase_out;
@@ -719,4 +746,12 @@ int rpApp_BaGetAmplPhase(float _amplitude_in, float _dc_bias, int _periods_numbe
 
 	if (std::isnan(*_amplitude) || std::isinf(*_amplitude)) ret =  RP_EOOR;
     return ret;
+}
+
+int rpApp_BaInit(){
+    return initFFT(ADC_BUFFER_SIZE,adc_rate);
+}
+
+int rpApp_BaRelease(){
+    return releaseFFT();
 }

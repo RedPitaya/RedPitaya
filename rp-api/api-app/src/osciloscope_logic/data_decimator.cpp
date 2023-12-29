@@ -15,7 +15,7 @@ CDataDecimator::CDataDecimator():
     for(auto i = 0u; i< MAX_ADC_CHANNELS; ++i){
         m_mode[i] = DISABLED;
     }
-    m_originalData.reserve(ADC_BUFFER_SIZE);
+    m_originalData.resize(ADC_BUFFER_SIZE);
 }
 
 CDataDecimator::~CDataDecimator(){
@@ -26,7 +26,7 @@ CDataDecimator::~CDataDecimator(){
 auto CDataDecimator::setViewSize(vsize_t _size) -> void{
     std::lock_guard<std::mutex> lock(m_settingsMutex);
     m_viewSize = _size;
-    m_decimatedData.reserve(m_viewSize);
+    m_decimatedData.resize(m_viewSize);
 }
 
 auto CDataDecimator::getViewSize() const -> vsize_t{
