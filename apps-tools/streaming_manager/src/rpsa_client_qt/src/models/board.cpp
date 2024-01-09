@@ -254,7 +254,13 @@ auto CBoard::createStreaming(net_lib::EProtocol protocol) -> void{
 
     m_asionet->clientErrorNotify.connect([=](std::error_code err)
     {
-        QString msg = "Error " + QString::fromStdString(err.message());
+#if defined(Q_OS_WIN)
+        std::wstringstream ws;
+        ws << err.message().c_str();
+        QString msg = "Error " + QString::fromWCharArray(ws.str().c_str());
+#else
+       QString msg = "Error " + QString::fromStdString(err.message());
+#endif
         addLog(msg);
         stopStreaming();
     });
@@ -541,7 +547,7 @@ void CBoard::startStreaming(QDateTime time){
 void CBoard::stopStreaming(){
     m_asionet = nullptr;
     m_net_buffer = nullptr;
-    m_file_manager->stopAndFlush();
+    if (m_file_manager) m_file_manager->stopAndFlush();
     m_file_manager = nullptr;
     m_configManager->sendStop(m_ip.toStdString());
 }
