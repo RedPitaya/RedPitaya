@@ -247,8 +247,8 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "ACQ:TRig:EXT:LEV", .callback           = RP_AcqExtTriggerLevel,},
     {.pattern = "ACQ:TRig:EXT:LEV?", .callback          = RP_AcqExtTriggerLevelQ,},
 
-    {.pattern = "ACQ:TRig:EXT:DEBouncerUs", .callback   = RP_AcqExtTriggerDebouncerUs,},
-    {.pattern = "ACQ:TRig:EXT:DEBouncerUs?", .callback  = RP_AcqExtTriggerDebouncerUsQ,},
+    {.pattern = "ACQ:TRig:EXT:DEBouncer[:US]", .callback   = RP_AcqExtTriggerDebouncerUs,},
+    {.pattern = "ACQ:TRig:EXT:DEBouncer[:US]?", .callback  = RP_AcqExtTriggerDebouncerUsQ,},
 
     /* Generate */
     {.pattern = "GEN:RST", .callback                    = RP_GenReset,},
