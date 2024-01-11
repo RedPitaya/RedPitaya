@@ -61,6 +61,7 @@ CBooleanParameter 	ba_scale(			"BA_SCALE", 			CBaseParameter::RW, true, 	0, CONF
 CBooleanParameter 	ba_auto_scale(		"BA_AUTO_SCALE",    	CBaseParameter::RW, true, 	0, CONFIG_VAR);
 CFloatParameter 	ba_input_threshold(	"BA_INPUT_THRESHOLD",	CBaseParameter::RW, 0.001,	0,	    0, 		1 , CONFIG_VAR);
 CBooleanParameter 	ba_show_all(		"BA_SHOW_ALL",      	CBaseParameter::RW, true, 	0, CONFIG_VAR);
+CIntParameter		ba_logic_mode(		"BA_LOGIC_MODE", 		CBaseParameter::RW, 0, 		0, 		0, 		10 , CONFIG_VAR);
 
 // Status parameters
 CStringParameter 	redpitaya_model(	"RP_MODEL_STR", 		CBaseParameter::RO, getModelS(), 0);
@@ -305,6 +306,10 @@ void UpdateParams(void)
 		ba_scale.Update();
 	}
 
+    if (ba_logic_mode.IsNewValue()) {
+        ba_logic_mode.Update();
+    }
+
 	//Scale update
 	if (IS_NEW(ba_input_threshold)) {
 		ba_input_threshold.Update();
@@ -388,6 +393,7 @@ void threadLoop(){
     float per_number = 0;
     float gen_ampl = 0;
     float dc_bias = 0;
+    rp_ba_logic_t logic_mode = RP_BA_LOGIC_TRAP;
 
     while (!g_exit_flag)
     {
@@ -412,6 +418,7 @@ void threadLoop(){
                 end_freq = getMaxADC();
                 steps = 500;
                 threshold = ba_input_threshold.Value();
+                logic_mode = (rp_ba_logic_t)ba_logic_mode.Value();
                 per_number = ba_periods_number.Value();
                 gen_ampl = ba_amplitude.Value();
                 dc_bias = ba_dc_bias.Value();
@@ -451,7 +458,7 @@ void threadLoop(){
                     float ampl_step = 0;
                     float phase_step = 0;
                     rpApp_BaSafeThreadAcqPrepare();
-                    auto ret = rpApp_BaGetAmplPhase(RP_BA_LOGIC_FFT,gen_ampl, dc_bias, per_number , buffer, &ampl_step, &phase_step, current_freq,threshold);
+                    auto ret = rpApp_BaGetAmplPhase(logic_mode,gen_ampl, dc_bias, per_number , buffer, &ampl_step, &phase_step, current_freq,threshold);
                     if (ret ==  RP_EOOR) { // isnan && isinf
                         cur_step++;
                         return;
@@ -503,6 +510,7 @@ void threadLoop(){
                 end_freq = ba_end_freq.Value();
                 steps = ba_steps.Value();
                 threshold = ba_input_threshold.Value();
+                logic_mode = (rp_ba_logic_t)ba_logic_mode.Value();
                 per_number = ba_periods_number.Value();
                 gen_ampl = ba_amplitude.Value();
                 dc_bias = ba_dc_bias.Value();
@@ -544,7 +552,7 @@ void threadLoop(){
                     float ampl_step = 0;
                     float phase_step = 0;
                     rpApp_BaSafeThreadAcqPrepare();
-                    auto ret = rpApp_BaGetAmplPhase(RP_BA_LOGIC_FFT,gen_ampl, dc_bias, per_number , buffer, &ampl_step, &phase_step, current_freq,threshold);
+                    auto ret = rpApp_BaGetAmplPhase(logic_mode,gen_ampl, dc_bias, per_number , buffer, &ampl_step, &phase_step, current_freq,threshold);
                     if (ret ==  RP_EOOR) { // isnan && isinf
                         cur_step++;
                         return;

@@ -721,7 +721,7 @@ int rpApp_BaGetAmplPhase(rp_ba_logic_t mode, float _amplitude_in, float _dc_bias
 	//int ret = dataAnalysisTrap(_buffer.ch1,_buffer.ch2, new_acq_size, _freq, decimation,rpApp_BaGetADCSpeed(),  &gain, &phase_out,_input_threshold);
     // int ret = rpApp_BaDataAnalysisFFT(_buffer, acq_size, _freq, decimation,  &gain, &phase_out,_input_threshold);
 
-    if (mode == RP_BA_LOGIC_FFT){
+    if (mode == RP_BA_LOGIC_TRAP){
         float phase[2];
         ret = analysisTrap(_buffer.ch1, _buffer.ch2, _freq,decimation,adc_rate,_input_threshold
         ,&phase[0]

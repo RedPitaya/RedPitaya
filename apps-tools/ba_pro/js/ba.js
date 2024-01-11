@@ -1008,6 +1008,20 @@
         }
     }
 
+    BA.setLogic = function(new_params) {
+        var param_name = "BA_LOGIC_MODE"
+        var old_params = BA.params.orig;
+        if ((!BA.state.editing &&
+            ((old_params[param_name] !== undefined && old_params[param_name].value !== new_params[param_name].value) ||
+            (old_params[param_name] == undefined))
+            )) {
+            var radios = $('input[name="' + param_name + '"]');
+            radios.closest('.btn-group').children('.btn.active').removeClass('active');
+            radios.eq([+new_params[param_name].value]).prop('checked', true).parent().addClass('active');
+        }
+    }
+
+
     BA.setPerNum = function(new_params) {
         var param_name = "BA_PERIODS_NUMBER"
         BA.setValue(param_name,new_params)
@@ -1346,6 +1360,7 @@
     BA.param_callbacks["BA_END_FREQ"] = BA.endFreq;
     BA.param_callbacks["BA_STEPS"] = BA.setSteps;
     BA.param_callbacks["BA_SCALE"] = BA.setScale;
+    BA.param_callbacks["BA_LOGIC_MODE"] = BA.setLogic;
 
     BA.param_callbacks["BA_SCALE"] = BA.setPerNum;
     BA.param_callbacks["BA_AVERAGING"] = BA.setAverage;
@@ -1712,6 +1727,10 @@ $(function() {
 
     // Everything prepared, start application
     BA.startApp();
+
+    BA.previousPageUrl = document.referrer;
+    console.log(`Previously visited page URL: ${BA.previousPageUrl}`);
+    $("#back_button").attr("href", BA.previousPageUrl)
 
     // // Start measuring after loading. Must be last in this file!
     // setTimeout(function() {

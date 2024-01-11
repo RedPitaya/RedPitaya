@@ -153,6 +153,19 @@ var scale1Click = function(event){
 	BA.scale = true;
 }
 
+//Logic button 0 set
+var logic0Click = function(event){
+	BA.parametersCache["BA_LOGIC_MODE"] = { value: 0 };
+	BA.sendParameters();
+}
+
+
+//Logic button 1 set
+var logic1Click = function(event){
+	BA.parametersCache["BA_LOGIC_MODE"] = { value: 1 };
+	BA.sendParameters();
+}
+
 
 // Calibration start click
 var calibrateClick = function(event){
@@ -199,6 +212,8 @@ var clickCallbacks={}
 
 clickCallbacks["BA_SCALE0"] = scale0Click;
 clickCallbacks["BA_SCALE1"] = scale1Click;
+clickCallbacks["BA_LOGIC_MODE0"] = logic0Click;
+clickCallbacks["BA_LOGIC_MODE1"] = logic1Click;
 clickCallbacks["calib_btn"] = calibrateClick;
 clickCallbacks["calib_reset_btn"] = calibrateResetClick;
 
