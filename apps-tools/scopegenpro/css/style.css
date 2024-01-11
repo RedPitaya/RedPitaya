@@ -31,6 +31,13 @@ body {
 
 .modal {}
 
+#ext_con_but {
+    float: left;
+    width: 5%;
+    text-align: left;
+    cursor: pointer;
+}
+
 input,
 #info div,
 #info span,
@@ -181,7 +188,7 @@ area:hover {
 }
 
 .logo {
-    margin: 5px 0px 0px 15px;
+    margin: 3px 0px 0px 15px;
     float: left;
 }
 
@@ -854,4 +861,45 @@ btn:active {
     display: inline;
     float: right;
     margin: 0px 40px 0px 0px;
+}
+
+.list-group-item {
+    background-color: #323232;
+    font-family: sans-serif;
+    color: blue;
+}
+
+a.list-group-item {
+    color: silver;
+}
+
+a.list-group-item:hover:visited {
+    color: black;
+}
+
+.list-group-item.more {
+    font-size: 18px;
+}
+
+.list-group-item.exp_but {
+    font-weight: bold;
+    text-align: center;
+}
+
+.checkbox_export {
+    position: relative;
+    display: inline-block;
+    height: 15px;
+    width: 15px;
+    border: 1px solid;
+    cursor: pointer;
+}
+.checkbox_export:after {
+    position: absolute;
+    width: 100%;
+    line-height: 100%;
+    text-align: center;
+}
+.checkbox_export[data-checked="true"]:after {
+    content: "✓";
 }

@@ -41,7 +41,7 @@ client:
 
 client-win:
 	cd src; \
-	cmake -B build -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release  -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DBUILD_WEB_APP_SERVER=OFF -DBUILD_CONSOLE_SERVER=OFF -DCMAKE_TOOLCHAIN_FILE=./toolchains/toolchain-i686-w64-mingw32.cmake; \
+	cmake -B build -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release  -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DBUILD_WEB_APP_SERVER=OFF -DBUILD_CONSOLE_SERVER=OFF -DCMAKE_TOOLCHAIN_FILE=./toolchains/toolchain-x86_64-mingw32-gcc.cmake; \
 	make -C build -j $(JOBS)
 
 install_servers:
@@ -56,7 +56,7 @@ install_client:
 
 install_client_win:
 	cd src; \
-	cmake -B build -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DBUILD_WEB_APP_SERVER=OFF -DBUILD_CONSOLE_SERVER=OFF -DCMAKE_TOOLCHAIN_FILE=./toolchains/toolchain-i686-w64-mingw32.cmake; \
+	cmake -B build -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DBUILD_WEB_APP_SERVER=OFF -DBUILD_CONSOLE_SERVER=OFF -DCMAKE_TOOLCHAIN_FILE=./toolchains/toolchain-x86_64-mingw32-gcc.cmake; \
 	make -C build -j $(JOBS) install
 
 install_client_qt:
@@ -69,7 +69,7 @@ install_client_qt:
 
 install_client_qt_win:
 	cd src; \
-	cmake -B build -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release  -DVERSION=$(VERSION) -DREVISION=$(REVISION)  -DBUILD_WEB_APP_SERVER=OFF -DBUILD_CONSOLE_SERVER=OFF -DBUILD_RPSA_CLIENT_QT=ON -DBUILD_RPSA_CLIENT=OFF -DBUILD_CONVERT_TOOL=OFF -DCMAKE_PREFIX_PATH:PATH=$(QT_DIR) -DQt5_DIR:PATH=$(QT_DIR)/lib/cmake/Qt5 -DQT=$(QT_DIR) -DQT_DIR=$(QT_DIR) -DCMAKE_TOOLCHAIN_FILE=./toolchains/toolchain-i686-w64-mingw32.cmake; \
+	cmake -B build -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release  -DVERSION=$(VERSION) -DREVISION=$(REVISION)  -DBUILD_WEB_APP_SERVER=OFF -DBUILD_CONSOLE_SERVER=OFF -DBUILD_RPSA_CLIENT_QT=ON -DBUILD_RPSA_CLIENT=OFF -DBUILD_CONVERT_TOOL=OFF -DCMAKE_PREFIX_PATH:PATH=$(QT_DIR) -DQt5_DIR:PATH=$(QT_DIR)/lib/cmake/Qt5 -DQT=$(QT_DIR) -DQT_DIR=$(QT_DIR) -DCMAKE_TOOLCHAIN_FILE=./toolchains/toolchain-x86_64-mingw32-gcc.cmake; \
 	make -C build -j $(JOBS) install
 	cd ${INSTALL_DIR}/streaming/rpsa_client-qt_${VERSION}-${REVISION}-win; \
 	zip -r ${INSTALL_DIR}/streaming/rpsa_client-desktop_${VERSION}-${REVISION}-win.zip *

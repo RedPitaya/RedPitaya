@@ -10,6 +10,7 @@
     <div id="loader"></div>
 </div>
 <div id="header">
+    <div id="ext_con_but"><img src="../assets/images/ext_conections_w.png" style="padding-top: 0px;width: 36px;height: 20px;padding-left: 0px;margin-left: 2px;margin-top: 2px;"></div>
     <div id="connection_meter" title="It seems like your connection is ok"><img src="../assets/images/good_net.png" id="connection_icon" width="20px"><span id="throughput_view2">0 kB/s</span></div>
 </div>
 <div id="img_loading" class="img-container">
@@ -27,8 +28,11 @@
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
                     </button>
-                    <a class="navbar-brand" href="/">
+                    <a id="back_button" class="navbar-brand" href="/">
                         <img class="back-btn" src="../assets/images/navigation_arrow_left.png">
+                    </a>
+                    <a class="navbar-brand" href="/">
+                        <img class="back-btn" src="../assets/images/home.png">
                     </a>
                     <img class="logo" width=110 src="../assets/images/navigation_logo.png">
                 </div>
@@ -42,6 +46,7 @@
                         <li class="dropdown">
                             <a class="btn btn-default dropdown-toggle" type="button" id="menu1" data-toggle="dropdown">SETTINGS<span class="caret"></span></a>
                             <ul class="dropdown-menu" role="menu" aria-labelledby="menu1" style="background: #cdcccc; min-width: 0px;">
+                                <li><a id="arb_manager" href="/arb_manager">ARB Manager</a></li>
                                 <li><a id="sys_info" href="#">SYS INFO</a></li>
                                 <li class="250_12_block"><a id="ext_clock_enable" href="#">EXT. CLOCK</a></li>
                                 <li><a id="reset_settings" href="#">RESET</a></li>
@@ -51,7 +56,7 @@
                             <a class="btn btn-default dropdown-toggle" type="button" id="dd_menu" data-toggle="dropdown" style="padding-left: 20px;">EXPORT<span class="caret"></span></a>
                             <ul class="dropdown-menu" role="menu" aria-labelledby="menu1" style="background: #cdcccc; min-width: 0px;">
                                 <li><a id="OSC_SAVEGRAPH" href="#">Graph</a></li>
-                                <li><a id="OSC_SAVECSV" download="scopeData.csv" href="#">Data in CSV</a></li>
+                                <li><a id="OSC_EXPORT" href="#">File</a></li>
                             </ul>
                         </li>
                         <li><a id="OSC_AUTOSCALE" href="#" style="padding-left: 23px; white-space: nowrap;">AUTO SCALE</a></li>
@@ -220,6 +225,17 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-xs-12 option-content">
+                        <span class="col-info" style="margin-top: -11px;">Interpolation</span>
+                        <div class="right-menu-option" style="margin-top: 10px;">
+                            <select id="OSC_CH1_SMOOTH" class="form-control styled-select">
+                                <option value="0">DISABLED</option>
+                                <option value="1">B-SPLINE</option>
+                                <option value="2">CATMULL-ROM</option>
+                                <option value="3">LANCZOS</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
                 <div id="in2_dialog" class="dialog row right-menu-cont">
                     <div class="col-xs-12 option-content">
@@ -283,6 +299,17 @@
                                     <input type="radio" value="1" id="OSC_CH2_IN_AC_DC1" name="OSC_CH2_IN_AC_DC" autocomplete="off">DC
                                 </label>
                             </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <span class="col-info" style="margin-top: -11px;">Interpolation</span>
+                        <div class="right-menu-option" style="margin-top: 10px;">
+                            <select id="OSC_CH2_SMOOTH" class="form-control styled-select">
+                                <option value="0">DISABLED</option>
+                                <option value="1">B-SPLINE</option>
+                                <option value="2">CATMULL-ROM</option>
+                                <option value="3">LANCZOS</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -1166,7 +1193,70 @@
     <div id="weak_conn_msg" style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(34, 34, 34, 1); text-align:center; padding: 10px; font-size:18px; color:white;">
         <span id="delay">Performance problem has occurred</span>
     </div>
-    <div id="demo_label" style="display:none; position:fixed; bottom:0; right: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white; cursor: pointer;">
-        You are working in demo mode. Click here to see details.
+    <div id="export_dialog" class="modal fade" role="dialog" tabindex="-1" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+        <div class="modal-dialog" style="width: 650px;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="bazaar_naLabel">Export</h4>
+                </div>
+                <div class="modal-body" style="display: flex;">
+                    <div style="text-align: left;margin-left: 5%;">
+                        <table>
+                            <col width="400px">
+                            <col width="200px">
+                            <tr style="height:60px;">
+                                <td>Format:</td>
+                                <td>
+                                    <select id="REQUEST_FORMAT" class="form-control styled-select" style="border: 1px solid #ddd;">
+                                        <option value="3">CSV</option>
+                                        <option value="1">WAV</option>
+                                        <option value="2">TDMS</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr style="height:60px;">
+                                <td>Normalize data to 1V p-p:</td>
+                                <td>
+                                        <span id="normalize_chbox" class="checkbox_export" style="margin-left: 10px;"/>
+                                </td>
+                            </tr>
+                            <tr style="height: 20px;font-size: 12px;">
+                                <td>(The wav format in volts is always normalised)</td>
+                            </tr>
+                            <tr style="height:60px;">
+                                <td>Export view:</td>
+                                <td>
+                                    <span id="view_chbox" class="checkbox_export" style="margin-left: 10px;"/>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="bazaar-link">
+                        <a id="OSC_REQ_EXPORT_FILE" href="#" data-dismiss="modal" class="list-group-item exp_but">DOWNLOAD FILE</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="ext_connections_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+    <div class="modal-dialog" style="width: 700px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="bazaar_naLabel">External Connections</h4>
+            </div>
+            <div class="modal-body" style="display: flex;">
+                <img src="../assets/images/red_pitaya_pinout.png" style="width: 100%;">
+            </div>
+            <div class="modal-footer">
+                <div class="bazaar-link">
+                    <a href="#" data-dismiss="modal" id="disable_analytics" class="list-group-item exp_but">Close</a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>

@@ -22,20 +22,14 @@
 #include <string.h>
 #include <math.h>
 #include <complex.h>
-#include <stdatomic.h>
+#include <atomic>
+#include <vector>
 
 #include "lcr_meter.h"
 #include "utils.h"
 #include "calib.h"
 #include "rp.h"
 #include "rp_hw-calib.h"
-
-// /* Global variables definition */
-// #ifdef Z20_250_12
-// #define MIN_PERIODES 4
-// #else
-// #define MIN_PERIODES 8
-// #endif
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -52,7 +46,7 @@ typedef struct impendace_params {
 /* Thread variables */
 pthread_t                  *g_lcr_thread_handler = NULL;
 pthread_mutex_t             g_mutex;
-volatile atomic_flag        g_thread_flag = ATOMIC_FLAG_INIT;
+volatile std::atomic_flag        g_thread_flag = ATOMIC_FLAG_INIT;
 volatile impendace_params_t g_th_params;
 
 
@@ -74,7 +68,7 @@ const double SHUNT_TABLE[] =
 {10, 1e2, 1e3, 1e4, 1e5, 1.3e6};
 
 const int RANGE_FORMAT[] =
-{1.0, 10.0, 100.0, 1000.0};
+{1, 10, 100, 1000};
 
 const double RANGE_UNITS[] =
 {1e-9, 1e-6, 1e-3, 1, 1e3, 1e6};
@@ -88,6 +82,19 @@ double C_CALIB[6/*shunt*/][6/*freq*/] =
  {-146E-12,-146E-12, -17E-12, 175E-12, 288E-12, 288E-12},     // 100k
  {-40E-12,-40E-12, 230E-12, 290E-12, 170E-12, 170E-12} // 1M
 };
+
+
+auto getADCChannels() -> uint8_t{
+    uint8_t c = 0;
+    if (rp_HPGetFastADCChannelsCount(&c) != RP_HP_OK){
+        fprintf(stderr,"[Error] Can't get fast ADC channels count\n");
+    }
+    if (c > MAX_ADC_CHANNELS){
+        fprintf(stderr,"[Error] The number of channels is more than allowed\n");
+        exit(-1);
+    }
+    return c;
+}
 
 void flog(char *s){
     FILE *out = fopen("/tmp/debug.log", "a+");
@@ -215,7 +222,7 @@ int lcr_SafeThreadGen(rp_channel_t channel,
 /* Main call function */
 int lcr_Run(){
     if (g_lcr_thread_handler != NULL) return RP_EOOR;
-    g_lcr_thread_handler = malloc(sizeof(pthread_t));
+    g_lcr_thread_handler = new pthread_t();
     int err;
 
     atomic_flag_test_and_set(&g_thread_flag);
@@ -230,7 +237,7 @@ int lcr_Stop(){
     if (g_lcr_thread_handler == NULL) return RP_EOOR;
     atomic_flag_clear(&g_thread_flag);
     pthread_join(*g_lcr_thread_handler, 0);
-    free(g_lcr_thread_handler);
+    delete g_lcr_thread_handler;
     g_lcr_thread_handler = NULL;
     return RP_OK;
 }
@@ -324,10 +331,17 @@ int lcr_ThreadAcqData(float **data,uint32_t *acq_size)
     ECHECK(rp_AcqGetWritePointerAtTrig(&pos));
     pos++;
     buffers_t buff;
+    static uint8_t max_channels = getADCChannels();
+    for(uint8_t ch = 0; ch < max_channels; ch++){
+        buff.ch_f[ch] = NULL;
+        buff.ch_d[ch] = NULL;
+        buff.ch_i[ch] = NULL;
+    }
     buff.ch_f[0] = rawData0;
     buff.ch_f[1] = rawData1;
     buff.size = ADC_BUFFER_SIZE;
-    ECHECK(rp_AcqGetDataV2(pos,&buff));
+    buff.use_calib_for_volts = true;
+    ECHECK(rp_AcqGetData(pos,&buff));
     for(uint32_t i = 0; i < *acq_size; ++i) {
         data[0][i] = buff.ch_f[0][i];
         data[1][i] = buff.ch_f[1][i];
@@ -529,7 +543,7 @@ int lcr_CalculateData(float _Complex z_measured, float phase_measured)
 
     data_t w_out = 2 * M_PI * g_th_params.frequency;
 
-    data_t Y = 1.0 / z_final;
+    auto Y = 1.0 / z_final;
     data_t G_p = creal(Y);
     data_t B_p = cimag(Y);
     data_t X_s = cimag(z_final);
@@ -646,8 +660,11 @@ data_t calcPoint(data_t *a, data_t *b,int lenghtArray,int index){
 }
 
 data_t getMaxArg(data_t *a, data_t *b,int start,int stop, int step,int lenghtArray){
-    data_t corralate[lenghtArray * 2 + 1];
-    int    corralateIndex[lenghtArray * 2 + 1];
+    std::vector<data_t> corralate;
+    std::vector<int> corralateIndex;
+    
+    corralate.resize(lenghtArray * 2 + 1);
+    corralateIndex.resize(lenghtArray * 2 + 1);
 
     for(int k = 0; k < lenghtArray * 2 + 1 ; k++){
         corralate[k] = 0;
@@ -765,10 +782,11 @@ int lcr_data_analysis(const float **data,
     //double c_calib = C_CALIB[getIndex(r_shunt)][getIndex(w_out/(2*M_PI*10))];
     g_isSine = isSineTester((float**)data, size, T);
 
-    data_t u_dut[size];
-    data_t i_dut[size];
-	data_t buf1[size];
-	data_t buf2[size];
+    std::vector<data_t> u_dut,i_dut,buf1,buf2;
+    u_dut.resize(size);
+    i_dut.resize(size);
+    buf1.resize(size);
+    buf2.resize(size);
 
     double r_RC = r_shunt;// (r_shunt * (1.0 / (w_out * c_calib))) / (r_shunt + (1.0 / (w_out * c_calib)));
 
@@ -785,15 +803,15 @@ int lcr_data_analysis(const float **data,
     }
   //  fflush(f);
   //  fclose(f);
-    Fir(buf1,size);
-    Fir(buf2,size);
-    Normalize(buf1,size);
-    Normalize(buf2,size);
-    data_t sig1_rms =  RMS(i_dut,size);
-	data_t sig2_rms =  RMS(u_dut,size);
+    Fir(buf1.data(),size);
+    Fir(buf2.data(),size);
+    Normalize(buf1.data(),size);
+    Normalize(buf2.data(),size);
+    data_t sig1_rms =  RMS(i_dut.data(),size);
+	data_t sig2_rms =  RMS(u_dut.data(),size);
     double z_ampl =  sig2_rms / sig1_rms;
     int samples_period = round((double)speed / (g_th_params.frequency * decimation));
-    double phase_z_rad = phaseCalculator(g_th_params.frequency,(double)speed  / (double)decimation, size ,samples_period,buf1,buf2);
+    double phase_z_rad = phaseCalculator(g_th_params.frequency,(double)speed  / (double)decimation, size ,samples_period,buf1.data(),buf2.data());
     //fprintf(stderr,"P1: %f\nP2: %f\nP3: %d\nP4:%d\n",g_th_params.frequency,ADC_SAMPLE_RATE / decimation, size ,samples_period);
 	if (phase_z_rad <= -M_PI)
 		phase_z_rad += 2*M_PI;

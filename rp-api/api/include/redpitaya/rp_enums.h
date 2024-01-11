@@ -158,6 +158,8 @@ typedef struct
 {
     uint8_t channels;
     uint32_t size;
+    bool     use_calib_for_raw;
+    bool     use_calib_for_volts;
     int16_t  *ch_i[4];
     double   *ch_d[4];
     float    *ch_f[4];
@@ -205,10 +207,10 @@ typedef enum {
     RP_TRIG_SRC_EXT_NE   = 7, //!< Trigger set to external trigger negative edge (DIO0_P pin)
     RP_TRIG_SRC_AWG_PE   = 8, //!< Trigger set to arbitrary wave generator application positive edge
     RP_TRIG_SRC_AWG_NE   = 9, //!< Trigger set to arbitrary wave generator application negative edge
-    RP_TRIG_SRC_CHC_PE   = 10,//!< Trigger set to Channel B threshold positive edge
-    RP_TRIG_SRC_CHC_NE   = 11,//!< Trigger set to Channel B threshold negative edge
-    RP_TRIG_SRC_CHD_PE   = 12,//!< Trigger set to Channel B threshold positive edge
-    RP_TRIG_SRC_CHD_NE   = 13 //!< Trigger set to Channel B threshold negative edge
+    RP_TRIG_SRC_CHC_PE   = 10,//!< Trigger set to Channel C threshold positive edge
+    RP_TRIG_SRC_CHC_NE   = 11,//!< Trigger set to Channel C threshold negative edge
+    RP_TRIG_SRC_CHD_PE   = 12,//!< Trigger set to Channel D threshold positive edge
+    RP_TRIG_SRC_CHD_NE   = 13 //!< Trigger set to Channel D threshold negative edge
 } rp_acq_trig_src_t;
 
 

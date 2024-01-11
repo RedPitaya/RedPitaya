@@ -45,13 +45,19 @@ int acq_SetTriggerSrc(rp_acq_trig_src_t source);
 int acq_GetTriggerSrc(rp_acq_trig_src_t* source);
 int acq_GetTriggerState(rp_acq_trig_state_t* state);
 int acq_SetTriggerDelay(int32_t decimated_data_num);
-int acq_axi_SetTriggerDelay(rp_channel_t channel, int32_t decimated_data_num);
 int acq_GetTriggerDelay(int32_t* decimated_data_num);
-int acq_axi_GetTriggerDelay(rp_channel_t channel, int32_t* decimated_data_num);
 int acq_SetTriggerDelayNs(int64_t time_ns);
-int acq_axi_SetTriggerDelayNs(rp_channel_t channel, int64_t time_ns);
 int acq_GetTriggerDelayNs(int64_t* time_ns);
+int acq_SetTriggerDelayDirect(uint32_t decimated_data_num);
+int acq_GetTriggerDelayDirect(uint32_t* decimated_data_num);
+int acq_SetTriggerDelayNsDirect(uint64_t time_ns);
+int acq_GetTriggerDelayNsDirect(uint64_t* time_ns);
+
+int acq_axi_SetTriggerDelay(rp_channel_t channel, int32_t decimated_data_num);
+int acq_axi_GetTriggerDelay(rp_channel_t channel, int32_t* decimated_data_num);
+int acq_axi_SetTriggerDelayNs(rp_channel_t channel, int64_t time_ns);
 int acq_axi_GetTriggerDelayNs(rp_channel_t channel, int64_t* time_ns);
+
 int acq_SetTriggerLevel(rp_channel_trigger_t channel, float voltage);
 int acq_GetTriggerLevel(rp_channel_trigger_t channel, float *voltage);
 int acq_GetPreTriggerCounter(uint32_t* value);
@@ -74,6 +80,8 @@ int acq_Start();
 int acq_Stop();
 int acq_Reset();
 int acq_ResetFpga();
+int acq_SetUnlockTrigger();
+int acq_GetUnlockTrigger(bool *state);
 int acq_GetADCSamplePeriod(double *value);
 
 int acq_GetDataPosRaw(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, int16_t* buffer, uint32_t *buffer_size);
@@ -93,9 +101,7 @@ int acq_SetDefault();
 uint32_t acq_GetNormalizedDataPos(uint32_t pos);
 
 
-int acq_GetDataRawV2(uint32_t pos,buffers_t *out);
-int acq_GetDataV2(uint32_t pos,buffers_t *out);
-int acq_GetDataV2D(uint32_t pos,buffers_t *out);
+int acq_GetData(uint32_t pos,buffers_t *out);
 
 int acq_SetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t mode);
 int acq_GetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t *status);

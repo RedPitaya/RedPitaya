@@ -169,6 +169,22 @@ int rp_AcqSetTriggerDelay(int32_t decimated_data_num);
 int rp_AcqGetTriggerDelay(int32_t* decimated_data_num);
 
 /**
+ * Sets the number of decimated data after trigger written into memory.
+ * @param decimated_data_num Number of decimated data. It must not be higher than the ADC buffer size.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqSetTriggerDelayDirect(uint32_t decimated_data_num);
+
+/**
+ * Returns current number of decimated data after trigger written into memory.
+ * @param decimated_data_num Number of decimated data.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetTriggerDelayDirect(uint32_t* decimated_data_num);
+
+/**
  * Sets the amount of decimated data in nanoseconds after trigger written into memory.
  * @param time_ns Time in nanoseconds. Number of ADC samples within the specified
  * time must not be higher than the ADC buffer size.
@@ -184,6 +200,23 @@ int rp_AcqSetTriggerDelayNs(int64_t time_ns);
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 int rp_AcqGetTriggerDelayNs(int64_t* time_ns);
+
+/**
+ * Sets the amount of decimated data in nanoseconds after trigger written into memory.
+ * @param time_ns Time in nanoseconds. Number of ADC samples within the specified
+ * time must not be higher than the ADC buffer size.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqSetTriggerDelayNsDirect(uint64_t time_ns);
+
+/**
+ * Returns the current amount of decimated data in nanoseconds after trigger written into memory.
+ * @param time_ns Time in nanoseconds.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetTriggerDelayNsDirect(uint64_t* time_ns);
 
 /**
  * Returns the number of valid data ponts before trigger.
@@ -302,6 +335,20 @@ int rp_AcqReset();
 int rp_AcqResetFpga();
 
 /**
+ * Unlocks trigger capture after a trigger has been detected.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqUnlockTrigger();
+
+/**
+ * Returns the trigger's current blocking state..
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetUnlockTrigger(bool *state);
+
+/**
  * Normalizes the ADC buffer position. Returns the modulo operation of ADC buffer size...
  * @param pos position to be normalized
  * @return Normalized position (pos % ADC_BUFFER_SIZE)
@@ -360,19 +407,6 @@ int rp_AcqGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_
 int rp_AcqGetDataRawWithCalib(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_t* buffer);
 
 /**
- * Returns the ADC buffer in raw units from specified position and desired size.
- * Output buffer must be at least 'size' long.
- * Data not calibrated
- * @param channel Channel A or B for which we want to retrieve the ADC buffer.
- * @param pos Starting position of the ADC buffer to retrieve.
- * @param size Length of the ADC buffer to retrieve. Returns length of filled buffer. In case of too small buffer, required size is returned.
- * @param buffer The output buffer gets filled with the selected part of the ADC buffer.
- * @return If the function is successful, the return value is RP_OK.
- * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
- */
-int rp_AcqGetDataRawV2(uint32_t pos, buffers_t *out);
-
-/**
  * Returns the ADC buffer in raw units from the oldest sample to the newest one.
  * Output buffer must be at least 'size' long.
  * CAUTION: Use this method only when write pointer has stopped (Trigger happened and writing stopped).
@@ -408,29 +442,15 @@ int rp_AcqGetLatestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer
 int rp_AcqGetDataV(rp_channel_t channel, uint32_t pos, uint32_t* size, float* buffer);
 
 /**
- * Returns the ADC buffer in Volt units from specified position and desired size.
+ * Returns the ADC buffers from specified position and desired size.
  * Output buffer must be at least 'size' long.
  * @param pos Starting position of the ADC buffer to retrieve
  * @param size Length of the ADC buffer to retrieve. Returns length of filled buffer. In case of too small buffer, required size is returned.
- * @param buffer1 The output buffer gets filled with the selected part of the ADC buffer for channel 1.
- * @param buffer2 The output buffer gets filled with the selected part of the ADC buffer for channel 2.
+ * @param out The buffer will be filled according to the settings.
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetDataV2(uint32_t pos, buffers_t *out);
-
-
-/**
- * Returns the ADC buffer in Volt units from specified position and desired size.
- * Output buffer must be at least 'size' long.
- * @param pos Starting position of the ADC buffer to retrieve
- * @param size Length of the ADC buffer to retrieve. Returns length of filled buffer. In case of too small buffer, required size is returned.
- * @param buffer1 The output buffer gets filled with the selected part of the ADC buffer for channel 1.
- * @param buffer2 The output buffer gets filled with the selected part of the ADC buffer for channel 2.
- * @return If the function is successful, the return value is RP_OK.
- * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
- */
-int rp_AcqGetDataV2D(uint32_t pos, buffers_t *out);
+int rp_AcqGetData(uint32_t pos, buffers_t *out);
 
 /**
  * Returns the ADC buffer in Volt units from the oldest sample to the newest one.

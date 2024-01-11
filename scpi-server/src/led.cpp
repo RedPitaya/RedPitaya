@@ -31,17 +31,16 @@ scpi_result_t RP_LED_MMC(scpi_t *context) {
     int32_t value;
 
     if (!SCPI_ParamChoice(context, scpi_LED_state, &value, true)) {
-        RP_LOG(context,LOG_ERR, "*LED:MMC is missing first parameter.");
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Missing first parameter.");
         return SCPI_RES_ERR;
     }
 
-    int result = rp_SetLEDMMCState((bool)value);
+    auto result = rp_SetLEDMMCState((bool)value);
     if (RP_HW_OK != result) {
-        RP_LOG(context,LOG_ERR, "*LED:MMC Failed to set MMC led: %d", result);
+        RP_LOG_ERR("Failed to set MMC led: %s", rp_HwGetError(result));
         return SCPI_RES_ERR;
     }
-
-    RP_LOG(context,LOG_INFO, "*LED:MMC Successfully set MMC led.");
+    RP_LOG_INFO("%s",rp_HwGetError(result))
     return SCPI_RES_OK;
 }
 
@@ -49,23 +48,21 @@ scpi_result_t RP_LED_MMCQ(scpi_t *context) {
     const char *_name;
 
     bool value;
-    int result = rp_GetLEDMMCState(&value);
+    auto result = rp_GetLEDMMCState(&value);
 
     if (RP_OK != result) {
-        RP_LOG(context,LOG_ERR, "*LED:MMC? Failed get LED state: %d", result);
+        RP_LOG_ERR("Failed get LED state: %d", result);
         return SCPI_RES_ERR;
     }
 
     if(!SCPI_ChoiceToName(scpi_LED_state, (int32_t)value, &_name)){
-        RP_LOG(context,LOG_ERR, "*LED:MMC? Failed to parse LED state.");
+        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Failed to parse LED state.")
         return SCPI_RES_ERR;
     }
 
     // Return back result
     SCPI_ResultMnemonic(context, _name);
-
-
-    RP_LOG(context,LOG_INFO, "*LED:MMC? Successfully returned MMC led state.");
+    RP_LOG_INFO("%s",rp_HwGetError(result))
     return SCPI_RES_OK;
 }
 
@@ -73,17 +70,16 @@ scpi_result_t RP_LED_HB(scpi_t *context) {
     int32_t value;
 
     if (!SCPI_ParamChoice(context, scpi_LED_state, &value, true)) {
-        RP_LOG(context,LOG_ERR, "*LED:HB is missing first parameter.");
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Missing first parameter.");
         return SCPI_RES_ERR;
     }
 
-    int result = rp_SetLEDHeartBeatState((bool)value);
+    auto result = rp_SetLEDHeartBeatState((bool)value);
     if (RP_HW_OK != result) {
-        RP_LOG(context,LOG_ERR, "*LED:HB Failed to set HB led: %d", result);
+        RP_LOG_ERR("Failed to set HB led: %s", rp_HwGetError(result));
         return SCPI_RES_ERR;
     }
-
-    RP_LOG(context,LOG_INFO, "*LED:HB Successfully set HB led.");
+    RP_LOG_INFO("%s",rp_HwGetError(result))
     return SCPI_RES_OK;
 }
 
@@ -91,23 +87,21 @@ scpi_result_t RP_LED_HBQ(scpi_t *context) {
     const char *_name;
 
     bool value;
-    int result = rp_GetLEDHeartBeatState(&value);
+    auto result = rp_GetLEDHeartBeatState(&value);
 
     if (RP_OK != result) {
-        RP_LOG(context,LOG_ERR, "*LED:HB? Failed get LED state: %d", result);
+        RP_LOG_ERR("Failed get LED state: %s", rp_HwGetError(result));
         return SCPI_RES_ERR;
     }
 
     if(!SCPI_ChoiceToName(scpi_LED_state, (int32_t)value, &_name)){
-        RP_LOG(context,LOG_ERR, "*LED:HB? Failed to parse LED state.");
+        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Failed to parse LED state.")
         return SCPI_RES_ERR;
     }
 
     // Return back result
     SCPI_ResultMnemonic(context, _name);
-
-
-    RP_LOG(context,LOG_INFO, "*LED:HB? Successfully returned HB led state.");
+    RP_LOG_INFO("%s",rp_HwGetError(result))
     return SCPI_RES_OK;
 }
 
@@ -115,17 +109,16 @@ scpi_result_t RP_LED_ETH(scpi_t *context) {
     int32_t value;
 
     if (!SCPI_ParamChoice(context, scpi_LED_state, &value, true)) {
-        RP_LOG(context,LOG_ERR, "*LED:ETH is missing first parameter.");
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Missing first parameter.");
         return SCPI_RES_ERR;
     }
 
-    int result = rp_SetLEDEthState((bool)value);
+    auto result = rp_SetLEDEthState((bool)value);
     if (RP_HW_OK != result) {
-        RP_LOG(context,LOG_ERR, "*LED:ETH Failed to set ETH led: %d", result);
+        RP_LOG_ERR("Failed to set ETH led: %s", rp_HwGetError(result));
         return SCPI_RES_ERR;
     }
-
-    RP_LOG(context,LOG_INFO, "*LED:ETH Successfully set ETH led.");
+    RP_LOG_INFO("%s",rp_HwGetError(result))
     return SCPI_RES_OK;
 }
 
@@ -133,22 +126,20 @@ scpi_result_t RP_LED_ETHQ(scpi_t *context) {
     const char *_name;
 
     bool value;
-    int result = rp_GetLEDEthState(&value);
+    auto result = rp_GetLEDEthState(&value);
 
     if (RP_OK != result) {
-        RP_LOG(context,LOG_ERR, "*LED:ETH? Failed get LED state: %d", result);
+        RP_LOG_ERR("Failed get LED state: %s", rp_HwGetError(result));
         return SCPI_RES_ERR;
     }
 
     if(!SCPI_ChoiceToName(scpi_LED_state, (int32_t)value, &_name)){
-        RP_LOG(context,LOG_ERR, "*LED:ETH? Failed to parse LED state.");
+        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Failed to parse LED state.")
         return SCPI_RES_ERR;
     }
 
     // Return back result
     SCPI_ResultMnemonic(context, _name);
-
-
-    RP_LOG(context,LOG_INFO, "*LED:ETH? Successfully returned ETH led state.");
+    RP_LOG_INFO("%s",rp_HwGetError(result))
     return SCPI_RES_OK;
 }

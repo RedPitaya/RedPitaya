@@ -19,6 +19,7 @@
 #include <linux/i2c-dev.h>
 #include <string.h>
 #include <unistd.h>
+#include <vector>
 #include <stdint.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -165,11 +166,12 @@ float vectorMean(float *data, int size){
 float **multiDimensionVector(int second_dimenson){
 
     /* Allocate first dimension */
-    float **data_out = malloc(2 * sizeof(float*));
+//    float **data_out = malloc(2 * sizeof(float*));
+    float **data_out = new float*[2];
     /* For each element in the first dimension,
          * allocate a size equal to the second dimension*/
     for(int i = 0; i < 2; i++){
-        data_out[i] = malloc(second_dimenson * sizeof(float));
+        data_out[i] = new float[second_dimenson];
     }
 
     return data_out;
@@ -179,27 +181,32 @@ int delMultiDimensionVector(float** data)
 {
     // Free memory
     for(int i = 0; i < 2; i++) {
-        free(data[i]);
+        delete[] data[i];
     }
-    free(data);
+    delete[] data;
 
     return RP_OK;
 }
 
 bool isSineTester(float **data, uint32_t size, double T)
 {
-    double ch0_rms[size];
-    double ch0_avr[size];
-    double ch1_rms[size];
-    double ch1_avr[size];
+    std::vector<double> ch0_rms;
+    std::vector<double> ch0_avr;
+    std::vector<double> ch1_rms;
+    std::vector<double> ch1_avr;
+    ch0_rms.resize(size);
+    ch0_avr.resize(size);
+    ch1_rms.resize(size);
+    ch1_avr.resize(size);
+    
     for(uint32_t i = 0; i < size; i++) {
         ch0_rms[i] = data[0][i] * data[0][i];
         ch0_avr[i] = ABS(data[0][i]);
         ch1_rms[i] = data[1][i] * data[1][i];
         ch1_avr[i] = ABS(data[1][i]);
     }
-    double K0 = sqrtf(T * size * trapezoidalApprox(ch0_rms, T, size)) / trapezoidalApprox(ch0_avr, T, size);
-    double K1 = sqrtf(T * size * trapezoidalApprox(ch1_rms, T, size)) / trapezoidalApprox(ch1_avr, T, size);
+    double K0 = sqrtf(T * size * trapezoidalApprox(ch0_rms.data(), T, size)) / trapezoidalApprox(ch0_avr.data(), T, size);
+    double K1 = sqrtf(T * size * trapezoidalApprox(ch1_rms.data(), T, size)) / trapezoidalApprox(ch1_avr.data(), T, size);
 
     bool isK0sine = ((K0 > 1.2) && (K0 < 1.25));
     bool isK1sine = ((K1 > 1.2) && (K1 < 1.25));
@@ -292,7 +299,8 @@ void Fir(double *data, int data_size){
     double core_w = 10;
     double core_w_i_1 = 9;
     double core_w_i_0 = 7;
-    double new_buf[data_size];
+    std::vector<double> new_buf;
+    new_buf.resize(data_size);
     for(int i = 0; i < data_size; ++i){
         double cur_core = core_w;
         new_buf[i] = 0;
@@ -305,7 +313,7 @@ void Fir(double *data, int data_size){
         }
         new_buf[i] /= cur_core;
     }
-    memcpy(new_buf,data,data_size * sizeof(double));
+    memcpy(new_buf.data(),data,data_size * sizeof(double));
 }
 
 void Normalize(double *data, int data_size){

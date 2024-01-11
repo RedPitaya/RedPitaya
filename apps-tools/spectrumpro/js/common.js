@@ -60,6 +60,8 @@
     }
 
     SPEC.y_axis_label = function() {
+        if (SPEC.config.y_axis_mode == "dbuV") return "dBµV"
+        if (SPEC.config.y_axis_mode == "dbV") return "dBV"
         if (SPEC.config.y_axis_mode == "dbm") return "dBm"
         if (SPEC.config.y_axis_mode == "dbu") return "dBu"
         if (SPEC.config.y_axis_mode == "v")   return "V"
@@ -67,6 +69,8 @@
     }
 
     SPEC.y_axis_diff_label = function() {
+        if (SPEC.config.y_axis_mode == "dbuV") return "dB"
+        if (SPEC.config.y_axis_mode == "dbV") return "dB"
         if (SPEC.config.y_axis_mode == "dbm") return "dB"
         if (SPEC.config.y_axis_mode == "dbu") return "dB"
         if (SPEC.config.y_axis_mode == "v")   return "V"
@@ -77,6 +81,8 @@
         if (SPEC.config.y_axis_mode == "dbm") return 0
         if (SPEC.config.y_axis_mode == "v")   return 1
         if (SPEC.config.y_axis_mode == "dbu") return 2
+        if (SPEC.config.y_axis_mode == "dbV") return 3
+        if (SPEC.config.y_axis_mode == "dbuV") return 4
         return ""
     }
 

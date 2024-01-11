@@ -34,15 +34,13 @@ const scpi_choice_def_t scpi_RpApin[] = {
 };
 
 scpi_result_t RP_AnalogPinReset(scpi_t *context) {
-    int result = rp_ApinReset();
+    auto result = rp_ApinReset();
 
     if (RP_OK != result) {
-        RP_LOG(context,LOG_ERR, "ANALOG:RST Failed to reset Red "
-            "Pitaya analog resources: %s" , rp_GetError(result));
+        RP_LOG_CRIT("Failed to reset Red Pitaya analog resources: %s" , rp_GetError(result));
         return SCPI_RES_ERR;
     }
-
-    RP_LOG(context,LOG_INFO, "*ANALOG:RST Successfully reset analog pin resources.");
+    RP_LOG_INFO("%s",rp_GetError(result))
     return SCPI_RES_OK;
 }
 
@@ -57,7 +55,7 @@ scpi_result_t RP_AnalogPinValueQ(scpi_t * context) {
 
     /* Read first parameter - APIN */
     if (!SCPI_ParamChoice(context, scpi_RpApin, &choice, true)) {
-        RP_LOG(context,LOG_ERR, "*ANALOG:PIN? is missing first parameter.");
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Missing first parameter.");
         return SCPI_RES_ERR;
     }
 
@@ -67,17 +65,16 @@ scpi_result_t RP_AnalogPinValueQ(scpi_t * context) {
     // Now get the pin value
     float value;
     uint32_t raw;
-    int result = rp_ApinGetValue(pin, &value,&raw);
+    auto result = rp_ApinGetValue(pin, &value,&raw);
 
     if (RP_OK != result){
-        RP_LOG(context,LOG_ERR, "*ANALOG:PIN? Failed to get pin value: %s", rp_GetError(result));
+        RP_LOG_CRIT("Failed to get pin value: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
     // Return back result
     SCPI_ResultFloat(context, value);
-
-    RP_LOG(context,LOG_INFO, "*ANALOG:PIN? Successfully returned port value.");
+    RP_LOG_INFO("%s",rp_GetError(result))
     return SCPI_RES_OK;
 }
 
@@ -93,26 +90,25 @@ scpi_result_t RP_AnalogPinValue(scpi_t * context) {
 
     /* Read first parameter - APIN */
     if (!SCPI_ParamChoice(context, scpi_RpApin, &choice, true)) {
-        RP_LOG(context,LOG_ERR, "*ANALOG:PIN is missing first parameter.");
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Missing first parameter.");
         return SCPI_RES_ERR;
     }
 
 
     /* Read second parameter - VALUE */
     if (!SCPI_ParamDouble(context, &value, true)) {
-        RP_LOG(context,LOG_ERR, "*ANALOG:PIN is missing second parameter.");
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Missing second parameter.");
         return SCPI_RES_ERR;
     }
     // Convert port into pin id
     rp_apin_t pin = (rp_apin_t)choice;
 
     /* Set pin value */
-    int result = rp_ApinSetValue(pin, (float) value);
+    auto result = rp_ApinSetValue(pin, (float) value);
     if (RP_OK != result){
-        RP_LOG(context,LOG_ERR, "*ANALOG:PIN Failed to set pin value: %s", rp_GetError(result));
+        RP_LOG_CRIT("Failed to set pin value: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
-
-    RP_LOG(context,LOG_INFO, "*ANALOG:PIN Successfully set port value.");
+    RP_LOG_INFO("%s",rp_GetError(result))
     return SCPI_RES_OK;
 }

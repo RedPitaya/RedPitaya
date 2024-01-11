@@ -100,6 +100,17 @@ typedef enum {
     RPAPP_OSC_MATH_INT,         //!< Math operation integrate
 } rpApp_osc_math_oper_t;
 
+typedef enum{
+    DISABLED    = 0,
+    BSPLINE     = 1,
+    CATMULLROM  = 2,
+    LANCZOS     = 3
+} rpApp_osc_interpolationMode;
+
+typedef enum{
+    RPAPP_RAW_EXPORT = 0,
+    RPAPP_VIEW_EXPORT = 1
+} rpApp_osc_exportMode;
 
 /** @name General
 */
@@ -155,6 +166,13 @@ const char* rpApp_GetError(int errorCode);
 int rpApp_OscRun();
 
 /**
+* Starts main thread.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscRunMainThread();
+
+/**
 * Stops oscilloscope.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
@@ -181,6 +199,14 @@ int rpApp_OscSingle();
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rpApp_OscAutoScale();
+
+/**
+* Check if the auto-stabilization algorithm is running
+* @param _state is auto scale enable
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscGetAutoScale(bool *_state);
 
 /**
  * Gets oscilloscope state. If running is true then oscilloscope is acquiring new data else data is not refreshed.
@@ -544,13 +570,25 @@ int rpApp_OscGetMathSources(rp_channel_t *source1, rp_channel_t *source2);
 
 /**
 * Gets source data.
-* @param source Source ch1, ch2 or math inticates with data we want toi get.
+* @param source Source ch1, ch2 or math inticates with data we want to get.
 * @param data View buffer.
 * @param size Number of values to be returned.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rpApp_OscGetViewData(rpApp_osc_source source, float *data, uint32_t size);
+
+/**
+* Gets data for export.
+* @param source Source ch1, ch2 or math inticates with data we want to get.
+* @param mode Export mode.
+* @param normalize Normalize data to 2V p-p.
+* @param data Buffer for values.
+* @param size Number of values to be returned.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscGetExportedData(rpApp_osc_source source, rpApp_osc_exportMode mode, bool normalize, float *data, uint32_t *size);
 
 /**
 * Gets raw data.
@@ -593,6 +631,17 @@ int rpApp_OscGetViewLimits(uint32_t* start, uint32_t* end);
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rpApp_OscScaleMath();
+
+/**
+* Requests a data update from the ADC, if possible.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscRefreshViewData();
+
+int rpApp_OscSetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode _mode);
+
+int rpApp_OscGetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode *_mode);
 
 ///@}
 

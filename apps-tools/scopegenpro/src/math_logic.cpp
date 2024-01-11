@@ -122,6 +122,10 @@ auto checkMathScale() -> void {
     }
 }
 
+auto isMathShow() -> bool{
+    return mathShow.Value();   
+}
+
 auto updateMathSignal() -> void{
     if (mathShow.Value()) {
         if (math.GetSize() != CH_SIGNAL_SIZE_DEFAULT)

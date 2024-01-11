@@ -44,40 +44,40 @@ message(STATUS "Compiler C++version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
 include_directories(${INSTALL_DIR}/include)
+include_directories(${CMAKE_SOURCE_DIR}/src)
 link_directories(${INSTALL_DIR}/lib)
 
 list(APPEND src_rpapp
+        ${CMAKE_SOURCE_DIR}/src/rpApp.cpp
         ${CMAKE_SOURCE_DIR}/src/common.cpp
         ${CMAKE_SOURCE_DIR}/src/osciloscopeApp.cpp
-        ${CMAKE_SOURCE_DIR}/src/rpApp.cpp
+        ${CMAKE_SOURCE_DIR}/src/bodeApp.cpp
         ${CMAKE_SOURCE_DIR}/src/spectrometerApp.cpp
+        ${CMAKE_SOURCE_DIR}/src/osciloscope_logic/data_decimator.cpp
+        ${CMAKE_SOURCE_DIR}/src/osciloscope_logic/view_controller.cpp
+        ${CMAKE_SOURCE_DIR}/src/osciloscope_logic/measure_controller.cpp
+        ${CMAKE_SOURCE_DIR}/src/osciloscope_logic/adc_controller.cpp
         )
 
 list(APPEND header_rpapp
-        ${CMAKE_SOURCE_DIR}/src/common.h
-        ${CMAKE_SOURCE_DIR}/src/osciloscopeApp.h
         ${CMAKE_SOURCE_DIR}/src/rpApp.h
-        ${CMAKE_SOURCE_DIR}/src/spectrometerApp.h
-        ${CMAKE_SOURCE_DIR}/src/version.h
-)
+        ${CMAKE_SOURCE_DIR}/src/bodeApp.h
+        )
 
 list(APPEND src_rpapp_lcr
-        ${CMAKE_SOURCE_DIR}/lcr_meter/src/calib.c
-        ${CMAKE_SOURCE_DIR}/lcr_meter/src/lcr_meter.c
-        ${CMAKE_SOURCE_DIR}/lcr_meter/src/lcrApp.c
-        ${CMAKE_SOURCE_DIR}/lcr_meter/src/utils.c
+        ${CMAKE_SOURCE_DIR}/lcr_meter/src/calib.cpp
+        ${CMAKE_SOURCE_DIR}/lcr_meter/src/lcr_meter.cpp
+        ${CMAKE_SOURCE_DIR}/lcr_meter/src/lcrApp.cpp
+        ${CMAKE_SOURCE_DIR}/lcr_meter/src/utils.cpp
         )
 
 list(APPEND header_rpapp_lcr
-        ${CMAKE_SOURCE_DIR}/lcr_meter/src/calib.h
-        ${CMAKE_SOURCE_DIR}/lcr_meter/src/lcr_meter.h
         ${CMAKE_SOURCE_DIR}/lcr_meter/src/lcrApp.h
-        ${CMAKE_SOURCE_DIR}/lcr_meter/src/utils.h
-)
+        )
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
-add_compile_options(-Wall -pedantic -Wextra -Wno-unused-parameter -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+add_compile_options(-Wall -pedantic -Wextra -Wno-unused-parameter -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 add_library(rpapp-obj OBJECT ${src_rpapp})
 
@@ -90,8 +90,8 @@ if(BUILD_SHARED)
     set_property(TARGET rpapp-shared PROPERTY OUTPUT_NAME rpapp)
     target_sources(rpapp-shared PRIVATE $<TARGET_OBJECTS:rpapp-obj>)
     target_link_options(rpapp-shared PRIVATE -shared -Wl,--version-script=${CMAKE_SOURCE_DIR}/src/exportmap)
-    target_link_libraries(rpapp-shared -lm -lpthread)
-    target_link_libraries(rpapp-shared rp-hw-calib rp-hw-profiles)
+    target_link_libraries(rpapp-shared -lrp -lm -lpthread)
+    target_link_libraries(rpapp-shared rp-hw-calib rp-hw-profiles rp-dsp)
 
     if(IS_INSTALL)
         install(TARGETS rpapp-shared
@@ -126,7 +126,7 @@ if (ENABLE_LCR)
         set_property(TARGET rpapp_lcr-shared PROPERTY OUTPUT_NAME rpapp_lcr)
         target_sources(rpapp_lcr-shared PRIVATE $<TARGET_OBJECTS:rpapp_lcr-obj>)
         target_link_options(rpapp_lcr-shared PRIVATE -shared -Wl,--version-script=${CMAKE_SOURCE_DIR}/lcr_meter/src/exportmap)
-        target_link_libraries(rpapp_lcr-shared -lm -lpthread)
+        target_link_libraries(rpapp_lcr-shared -lrp -lm -lpthread)
         target_link_libraries(rpapp_lcr-shared rp-hw-calib rp-hw-profiles)
 
         if(IS_INSTALL)
@@ -144,7 +144,7 @@ if (ENABLE_LCR)
         add_library(rpapp_lcr-static STATIC)
         set_property(TARGET rpapp_lcr-static PROPERTY OUTPUT_NAME rpapp_lcr)
         target_sources(rpapp_lcr-static PRIVATE $<TARGET_OBJECTS:rpapp_lcr-obj>)
-        target_link_libraries(rpapp_lcr-static -lm -lpthread)
+        target_link_libraries(rpapp_lcr-static -lrp -lm -lpthread)
 
         if(IS_INSTALL)
             install(TARGETS rpapp_lcr-static

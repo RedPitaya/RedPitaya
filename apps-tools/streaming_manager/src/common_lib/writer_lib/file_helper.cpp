@@ -170,52 +170,37 @@ auto buildTDMSStream(std::map<DataLib::EDataBuffersPackChannel,SBuffPass> new_bu
     return memory;
 }
 
-auto buildBINStream(DataLib::CDataBuffersPack::Ptr buff_pack) -> std::iostream *{
+auto buildBINStream(DataLib::CDataBuffersPack::Ptr buff_pack,std::map<DataLib::EDataBuffersPackChannel,uint32_t> _samples) -> std::iostream *{
     stringstream *memory = new stringstream(ios_base::in | ios_base::out | ios_base::binary);
     CBinInfo::BinHeader header;
-    auto ch1 = buff_pack->getBuffer(DataLib::CH1);
-    auto ch2 = buff_pack->getBuffer(DataLib::CH2);
-    auto ch3 = buff_pack->getBuffer(DataLib::CH3);
-    auto ch4 = buff_pack->getBuffer(DataLib::CH4);
-
+    DataLib::CDataBuffer::Ptr ch[4] = {NULL,NULL,NULL,NULL};
+    ch[0] = buff_pack->getBuffer(DataLib::CH1);
+    ch[1] = buff_pack->getBuffer(DataLib::CH2);
+    ch[2] = buff_pack->getBuffer(DataLib::CH3);
+    ch[3] = buff_pack->getBuffer(DataLib::CH4);
+    uint32_t ch_samp[4] = {0,0,0,0};
+    uint32_t ch_size[4] = {0,0,0,0};
     memset(header.dataFormatSize,0,sizeof(uint8_t) * 4);
     memset(header.sizeCh,0,sizeof(uint32_t) * 4);
 
-    if (ch1.get()){
-        header.dataFormatSize[0] = ch1->getBitBySample() / 8;
-        header.sizeCh[0] = ch1->getBufferLenght();
-        header.sampleCh[0] = ch1->getSamplesCount();
-        header.lostCount[0] = ch1->getLostSamples(DataLib::FPGA) + ch1->getLostSamples(DataLib::RP_INTERNAL_BUFFER);
-    }
-
-    if (ch2.get()){
-        header.dataFormatSize[1] = ch2->getBitBySample() / 8;
-        header.sizeCh[1] = ch2->getBufferLenght();
-        header.sampleCh[1] = ch2->getSamplesCount();
-        header.lostCount[1] = ch2->getLostSamples(DataLib::FPGA) + ch2->getLostSamples(DataLib::RP_INTERNAL_BUFFER);
-    }
-
-    if (ch3.get()){
-        header.dataFormatSize[2] = ch3->getBitBySample() / 8;
-        header.sizeCh[2] = ch3->getBufferLenght();
-        header.sampleCh[2] = ch3->getSamplesCount();
-        header.lostCount[2] = ch3->getLostSamples(DataLib::FPGA) + ch3->getLostSamples(DataLib::RP_INTERNAL_BUFFER);
-    }
-
-    if (ch4.get()){
-        header.dataFormatSize[3] = ch4->getBitBySample() / 8;
-        header.sizeCh[3] = ch4->getBufferLenght();
-        header.sampleCh[3] = ch4->getSamplesCount();
-        header.lostCount[3] = ch4->getLostSamples(DataLib::FPGA) + ch4->getLostSamples(DataLib::RP_INTERNAL_BUFFER);
+    for(int i = 0; i < 4; i++){
+        if (ch[i]){
+            ch_samp[i] = ch[i]->getSamplesCount() < _samples[DataLib::CH1] ? ch[i]->getSamplesCount() : _samples[DataLib::CH1];
+            auto bytes = ch[i]->getBitBySample() / 8;
+            ch_size[i] = ch_samp[i] * bytes > ch[i]->getBufferLenght() ? ch[i]->getBufferLenght() : ch_samp[i] * bytes;
+            header.dataFormatSize[i] = ch[i]->getBitBySample() / 8;
+            header.sizeCh[i] = ch_size[i];
+            header.sampleCh[i] = ch_samp[i];
+            header.lostCount[i] = ch[i]->getLostSamples(DataLib::FPGA) + ch[i]->getLostSamples(DataLib::RP_INTERNAL_BUFFER);
+        }
     }
 
     header.sigmentLength = header.sizeCh[0] + header.sizeCh[1] + header.sizeCh[2] + header.sizeCh[3];
     //Write header
     memory->write((const char*)&header,sizeof(header));
-    if (ch1.get() && ch1->getBufferLenght()) memory->write((const char*)ch1->getBuffer().get(), ch1->getBufferLenght());
-    if (ch2.get() && ch2->getBufferLenght()) memory->write((const char*)ch2->getBuffer().get(), ch2->getBufferLenght());
-    if (ch3.get() && ch3->getBufferLenght()) memory->write((const char*)ch3->getBuffer().get(), ch3->getBufferLenght());
-    if (ch4.get() && ch4->getBufferLenght()) memory->write((const char*)ch4->getBuffer().get(), ch4->getBufferLenght());
+    for(int i = 0; i < 4; i++){
+        if (ch[i] && ch_size[i]) memory->write((const char*)ch[i]->getBuffer().get(), ch_size[i]);
+    }
     //Write end segment
     memory->write((const char*)g_endOfSegment,12);
     return memory;

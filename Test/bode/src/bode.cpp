@@ -33,7 +33,7 @@
 
 #include "version.h"
 #include "rp.h"
-#include "ba_api.h"
+#include "bodeApp.h"
 
 
 const char *g_argv0 = NULL; // Program name
@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
     unsigned int averaging_num = 1;
     unsigned int steps = 500;
     double start_frequency = 100;
-    double end_frequency = rp_BaGetADCSpeed() / 2.0;
+    double end_frequency = rpApp_BaGetADCSpeed() / 2.0;
     c_max_frequency = end_frequency;
     unsigned int scale_type = 1;
     int ignored __attribute__((unused));
@@ -93,13 +93,13 @@ int main(int argc, char *argv[]) {
     /** Set program name */
     g_argv0 = argv[0];
 
-    auto dac_channels = rp_BaGetDACChannels();
+    auto dac_channels = rpApp_BaGetDACChannels();
     if (dac_channels == 0){
         fprintf(stderr,"There are no FAST DAC outputs on this board.\n");
         return 0;
     }
 
-    auto adc_channels = rp_BaGetADCChannels();
+    auto adc_channels = rpApp_BaGetADCChannels();
     if (adc_channels < 2){
         fprintf(stderr,"There are no FAST ADC inputs on this board.\n");
         return 0;
@@ -242,9 +242,9 @@ int main(int argc, char *argv[]) {
     FILE *file_phase = fopen("/tmp/bode_data/data_phase", "w");
 
     if (calibMode){
-        rp_BaResetCalibration();
+        rpApp_BaResetCalibration();
     }else{
-        rp_BaReadCalibration();
+        rpApp_BaReadCalibration();
     }
 
 
@@ -267,7 +267,7 @@ int main(int argc, char *argv[]) {
     float old_freq = start_frequency;
     //float old_steps = steps;
     rp_Init();
-    rp_BaSafeThreadAcqPrepare();
+    rpApp_BaSafeThreadAcqPrepare();
 
     while(steps > 0) {
 
@@ -290,7 +290,7 @@ int main(int argc, char *argv[]) {
         {
             float ampl_out = 0;
 
-            if (rp_BaGetAmplPhase(ampl, DC_bias,periods_number, buffer, &ampl_out, &phase_out, current_freq,0) ==  RP_EOOR) // isnan && isinf
+            if (rpApp_BaGetAmplPhase(ampl, DC_bias,periods_number, buffer, &ampl_out, &phase_out, current_freq,0) ==  RP_EOOR) // isnan && isinf
             {
                 --steps;
                 continue;
@@ -301,15 +301,15 @@ int main(int argc, char *argv[]) {
 
         --steps;
         cur_step++;
-        float calib_ampl = rp_BaCalibGain(current_freq, amplitude);
-        float calib_phase = rp_BaCalibPhase(current_freq, phase_out);
+        float calib_ampl = rpApp_BaCalibGain(current_freq, amplitude);
+        float calib_phase = rpApp_BaCalibPhase(current_freq, phase_out);
         fprintf(file_frequency, "%.5f\n", current_freq);
         fprintf(file_amplitude, "%.5f\n", calib_ampl);
         fprintf(file_phase,     "%.5f\n", calib_phase);
 
         if (calibMode) // save data in calibration mode
         {
-			rp_BaWriteCalib(current_freq,amplitude,phase_out);
+			rpApp_BaWriteCalib(current_freq,amplitude,phase_out);
         }
 
         printf("%.2f    %.5f    %.5f\n", current_freq, calib_phase, calib_ampl);

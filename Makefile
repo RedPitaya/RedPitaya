@@ -13,7 +13,7 @@ VER := $(shell cat apps-tools/ecosystem/info/info.json | grep version | sed -e '
 BUILD_NUMBER ?= 0
 REVISION ?= $(shell git rev-parse --short HEAD)
 VERSION = $(VER)-$(BUILD_NUMBER)
-LINUX_VER = 2.01
+LINUX_VER = 2.03
 export BUILD_NUMBER
 export REVISION
 export VERSION
@@ -40,18 +40,21 @@ $(INSTALL_DIR):
 
 LIBRP_DIR       		= rp-api/api
 LIBRP_HW_DIR    		= rp-api/api-hw
+LIBRP_HW_CAN_DIR  		= rp-api/api-hw-can
 LIBRP_HW_PROFILES_DIR	= rp-api/api-hw-profiles
 LIBRP_HW_CALIB_DIR		= rp-api/api-hw-calib
 LIBRP2_DIR      		= rp-api/api2
 LIBRP250_12_DIR 		= rp-api/api-250-12
 LIBRP_DSP_DIR   		= rp-api/api-dsp
 LIBRPAPP_DIR    		= rp-api/api-app
+LIBRP_FORMATTER_DIR   	= rp-api/api-formatter
+LIBRP_ARB_DIR		   	= rp-api/api-arb
 ECOSYSTEM_DIR   		= Applications/ecosystem
 
-.PHONY: api api2 librp librp250_12 librp_hw librp_dsp librp_hw_profiles librp_hw_calibration
+.PHONY: api api2 librp librp250_12 librp_hw librp_dsp librp_hw_profiles librp_hw_calibration librp_hw_can librparb
 .PHONY: librpapp liblcr_meter
 
-api: librp librp_hw librp_dsp librpapp
+api: librp librp_hw librp_hw_can librp_dsp librpapp librp_formatter librparb
 
 api2: librp2
 
@@ -62,6 +65,10 @@ librp: librp250_12 librp_hw_calibration librp_hw_profiles
 librp_hw:
 	cmake -B$(abspath $(LIBRP_HW_DIR)/build) -S$(abspath $(LIBRP_HW_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(LIBRP_HW_DIR)/build install
+
+librp_hw_can: librp
+	cmake -B$(abspath $(LIBRP_HW_CAN_DIR)/build) -S$(abspath $(LIBRP_HW_CAN_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRP_HW_CAN_DIR)/build install
 
 librp_hw_calibration: librp_hw_profiles
 	cmake -B$(abspath $(LIBRP_HW_CALIB_DIR)/build) -S$(abspath $(LIBRP_HW_CALIB_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
@@ -75,6 +82,10 @@ librp_dsp:
 	cmake -B$(abspath $(LIBRP_DSP_DIR)/build) -S$(abspath $(LIBRP_DSP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(LIBRP_DSP_DIR)/build install
 
+librp_formatter:
+	cmake -B$(abspath $(LIBRP_FORMATTER_DIR)/build) -S$(abspath $(LIBRP_FORMATTER_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRP_FORMATTER_DIR)/build install
+
 librp2:
 	cmake -B$(abspath $(LIBRP2_DIR)/build) -S$(abspath $(LIBRP2_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(LIBRP2_DIR)/build install
@@ -87,6 +98,9 @@ librpapp: librp
 	cmake -B$(abspath $(LIBRPAPP_DIR)/build) -S$(abspath $(LIBRPAPP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
 	$(MAKE) -C $(LIBRPAPP_DIR)/build install
 
+librparb: librp
+	cmake -B$(abspath $(LIBRP_ARB_DIR)/build) -S$(abspath $(LIBRP_ARB_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRP_ARB_DIR)/build install
 
 
 ################################################################################
@@ -284,11 +298,12 @@ COMM_DIR           = Examples/Communication/C
 XADC_DIR           = Test/xadc
 LA_TEST_DIR        = rp-api/api2/test
 DAISY_TOOL_DIR     = Test/daisy_tool
+FPGA_TESTS_DIR     = Examples/Tests
 
 .PHONY: examples rp_communication fpgautils
-.PHONY: lcr bode monitor generator acquire calib spectrum laboardtest led_control daisy_tool
+.PHONY: lcr bode monitor generator acquire calib spectrum laboardtest led_control daisy_tool fpga_tests
 
-examples: lcr bode monitor calib spectrum acquire generator led_control fpgautils daisy_tool
+examples: lcr bode monitor calib spectrum acquire generator led_control fpgautils daisy_tool fpga_tests
 
 # calibrate laboardtest
 
@@ -356,6 +371,10 @@ fpgautils:
 	mkdir -p $(abspath $(INSTALL_DIR))/bin
 	$(CC) tools/fpgautils/fpgautil.c -o $(abspath $(INSTALL_DIR))/bin/fpgautil
 
+fpga_tests: api
+	$(MAKE) -C $(FPGA_TESTS_DIR) clean
+	$(MAKE) -C $(FPGA_TESTS_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(FPGA_TESTS_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 ################################################################################
 # Red Pitaya ecosystem and tools
@@ -393,10 +412,11 @@ APP_JUPYTERMANAGER_DIR   = apps-tools/jupyter_manager
 APP_STREAMINGMANAGER_DIR = apps-tools/streaming_manager
 APP_CALIB_DIR			 = apps-tools/calib_app
 APP_MAIN_MENU_DIR        = apps-tools/main_menu
+APP_ARB_MANAGER_DIR      = apps-tools/arb_manager
 
-.PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager streaming_manager calib_app main_menu
+.PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager streaming_manager calib_app main_menu arb_manager
 
-apps-tools: ecosystem updater network_manager scpi_manager streaming_manager jupyter_manager calib_app main_menu
+apps-tools: ecosystem updater network_manager scpi_manager streaming_manager jupyter_manager calib_app main_menu arb_manager
 
 
 ecosystem:
@@ -412,6 +432,11 @@ main_menu: ecosystem api $(NGINX)
 	$(MAKE) -C $(APP_MAIN_MENU_DIR) clean
 	$(MAKE) -C $(APP_MAIN_MENU_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_MAIN_MENU_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+arb_manager: ecosystem api $(NGINX)
+	$(MAKE) -C $(APP_ARB_MANAGER_DIR) clean
+	$(MAKE) -C $(APP_ARB_MANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(APP_ARB_MANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 scpi_manager: ecosystem api $(NGINX)
 	$(MAKE) -C $(APP_SCPIMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
@@ -509,10 +534,13 @@ clean:
 	rm -rf $(abspath $(LIBRP_DIR)/build)
 	rm -rf $(abspath $(LIBRP2_DIR)/build)
 	rm -rf $(abspath $(LIBRP_HW_DIR)/build)
+	rm -rf $(abspath $(LIBRP_HW_CAN_DIR)/build)
 	rm -rf $(abspath $(LIBRP_HW_PROFILES_DIR)/build)
 	rm -rf $(abspath $(LIBRP250_12_DIR)/build)
 	rm -rf $(abspath $(LIBRP_DSP_DIR)/build)
+	rm -rf $(abspath $(LIBRP_FORMATTER_DIR)/build)
 	rm -rf $(abspath $(LIBRP_HW_CALIB_DIR)/build)
+	rm -rf $(abspath $(LIBRP_ARB_DIR)/build)
 
 
 	rm -rf $(abspath $(CALIB_DIR)/build)
@@ -525,16 +553,19 @@ clean:
 	rm -rf $(abspath $(SPECTRUM_DIR)/build)
 	rm -rf $(abspath $(LIBRPAPP_DIR)/build)
 
+
 	$(MAKE) -C $(NGINX_DIR) clean
 	$(MAKE) -C $(SCPI_SERVER_DIR) clean
 	$(MAKE) -C $(COMM_DIR) clean
 	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) clean
 	$(MAKE) -C $(APP_MAIN_MENU_DIR) clean
 
-
+	$(MAKE) -C $(APP_ARB_MANAGER_DIR) clean
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) clean
 	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) clean
 	$(MAKE) -C $(APP_LCRMETER_DIR) clean
 	$(MAKE) -C $(APP_LA_PRO_DIR) clean
 	$(MAKE) -C $(APP_BA_PRO_DIR) clean
 	$(MAKE) -C $(IDGEN_DIR) clean
+
+

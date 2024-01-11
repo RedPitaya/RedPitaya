@@ -16,6 +16,9 @@
 #define __LCRMETER_H
 #include <stdint.h>
 #include <stdbool.h>
+#include <string>
+
+#include "lcrApp.h"
 #include "rp.h"
 
 #define LCR_AMPLITUDE			0.25
@@ -27,12 +30,7 @@
 #define START_CORR_FREQ			100
 #define END_CORR_FREQ			100000
 
-
-typedef enum calibration{
-	CALIB_NONE,
-	CALIB_OPEN,
-	CALIB_SHORT,
-} calib_t;
+#define MAX_ADC_CHANNELS 4
 
 /* Main lcr params structure */
 typedef struct params_e{
@@ -46,43 +44,14 @@ typedef struct params_e{
 	bool    series;
 } lcr_params_t;
 
-/* Main lcr measurment data */
-typedef struct data_e {
-	double lcr_amplitude;
-	double lcr_phase;
-	double lcr_D;
-	double lcr_Q;
-	double lcr_ESR;
-	double lcr_L;
-	double lcr_C;
-	double lcr_R;
-// values for console tool
-	double lcr_L_s;
-	double lcr_C_s;
-	double lcr_R_s;
-	double lcr_L_p;
-	double lcr_C_p;
-	double lcr_R_p;
-	double lcr_D_s;
-	double lcr_Q_s;
-	double lcr_D_p;
-	double lcr_Q_p;
-	double lcr_X_s;
-    double lcr_G_p;
-    double lcr_B_p;
-	double lcr_Y_abs;
-	double lcr_Phase_Y;
 
-}lcr_main_data_t;
-
-
-static inline char *stringFromCalib(enum calibration calib)
+static inline const char *stringFromCalib(enum calibration calib)
 {
-    static char *strings[] = { "CALIB_NONE", 
+    static std::string strings[] = { "CALIB_NONE", 
     						   "CALIB_OPEN", 
     						   "CALIB_SHORT"};
 
-    return strings[calib];
+    return strings[(int)calib].c_str();
 }
 
 /* Resource managment functions */
@@ -96,7 +65,7 @@ int   lcr_Run();
 int   lcr_Stop();
 int   lcr_GenRun();
 int   lcr_GenStop();
-void *lcr_MainThread();
+void *lcr_MainThread(void*);
 
 /* Measurment functions */
 int   lcr_SafeThreadGen(rp_channel_t channel, float frequency);

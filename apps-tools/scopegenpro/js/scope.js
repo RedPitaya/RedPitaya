@@ -43,6 +43,16 @@
         }
     }
 
+    window.addEventListener( "pageshow", function ( event ) {
+        var historyTraversal = event.persisted ||
+                               ( typeof window.performance != "undefined" &&
+                                    window.performance.navigation.type === 2 );
+        if ( historyTraversal ) {
+          // Handle page restore.
+          window.location.reload();
+        }
+    });
+
 })();
 
 (function(OSC, $, undefined) {
@@ -60,6 +70,10 @@
     OSC.config.socket_url = 'ws://' + window.location.host + '/wss';
     OSC.rp_model = "";
     OSC.adc_channes = 2;
+    OSC.adc_max_rate = 0;
+    OSC.arb_list = undefined;
+    OSC.previousPageUrl = undefined;
+
     OSC.is_ext_trig_level_present = false;
     OSC.is_webpage_loaded = false;
 
@@ -107,8 +121,6 @@
     OSC.refresh_times = [];
     OSC.counts_offset = 0;
 
-    // Sampling rates
-    OSC.sample_rates = {1:'125M', 8:'15.625M', 64: '1.953M', 1024: '122.070k', 8192:'15.258k', 65536:'1.907k'};
     OSC.mouseWheelEventFired = false; // for MAC
 
     // App state
@@ -360,6 +372,8 @@
         if (OSC.rp_model === "") {
             console.log("Model",_value.value)
             $('#BODY').load((_value.value === "Z20_125_4CH" ? "4ch_adc.html" : "2ch_adc.html"), function() {
+                $("#back_button").attr("href", OSC.previousPageUrl)
+
                 OSC.rp_model = _value.value;
                 console.log( "Load was performed." );
 
@@ -371,6 +385,8 @@
 
                 OSC.updateInterfaceFor250(OSC.rp_model);
                 OSC.updateInterfaceForZ20(OSC.rp_model);
+                if (OSC.arb_list !== undefined)
+                    OSC.updateARBFunc(OSC.arb_list)
                 OSC.initUI();
                 OSC.initCursors();
                 OSC.initOSCHandlers();
@@ -504,7 +520,53 @@
         }
     }
 
+    function download(url, filename) {
+        fetch(url)
+          .then(response => response.blob())
+          .then(blob => {
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+        })
+        .catch(console.error);
+      }
 
+    OSC.downloadFile = function(new_params){
+        var filename = new_params['DOWNLOAD_FILE'].value;
+        if (!filename.includes("error")) {
+            if (filename !== ""){
+                console.log(filename);
+                OSC.params.local['DOWNLOAD_FILE'] = { value: "" };
+                OSC.sendParams();
+
+                download("/scopegenpro/files/"+filename,filename);
+            }
+        }
+        else{
+            console.log("Error download file");
+        }
+    }
+
+
+    OSC.exportNormalize = function(new_params){
+        var state = new_params['REQUEST_NORMALIZE'].value;
+        var chkBox = document.getElementById('normalize_chbox');
+        chkBox.setAttribute('data-checked', state);
+    }
+
+
+    OSC.exportViewMode = function(new_params){
+        var state = new_params['REQUEST_VIEW'].value;
+        var chkBox = document.getElementById('view_chbox');
+        chkBox.setAttribute('data-checked', state);
+    }
+
+    OSC.param_callbacks["REQUEST_NORMALIZE"] = OSC.exportNormalize;
+    OSC.param_callbacks["REQUEST_VIEW"] = OSC.exportViewMode;
+
+
+    OSC.param_callbacks["DOWNLOAD_FILE"] = OSC.downloadFile;
 
     OSC.param_callbacks["OSC_RUN"] = OSC.processRun;
     OSC.param_callbacks["OSC_VIEV_PART"] = OSC.processViewPart;
@@ -578,8 +640,8 @@
     OSC.param_callbacks["SOUR1_SWEEP_DIR"] = OSC.updateGenSweepMode;
     OSC.param_callbacks["SOUR2_SWEEP_DIR"] = OSC.updateGenSweepMode;
 
-    OSC.param_callbacks["SOUR1_FUNC"] = OSC.updateGenSweepFunc;
-    OSC.param_callbacks["SOUR2_FUNC"] = OSC.updateGenSweepFunc;
+    OSC.param_callbacks["SOUR1_FUNC"] = OSC.updateGenFunc;
+    OSC.param_callbacks["SOUR2_FUNC"] = OSC.updateGenFunc;
 
     OSC.param_callbacks["SOUR1_TRIG_SOUR"] = OSC.updateGenTrigSource;
     OSC.param_callbacks["SOUR2_TRIG_SOUR"] = OSC.updateGenTrigSource;
@@ -684,6 +746,16 @@
             OSC.adc_channes = new_params['ADC_COUNT'].value;
         }
 
+        if (new_params['ADC_RATE']){
+            OSC.adc_max_rate = new_params['ADC_RATE'].value;
+        }
+
+        if (new_params['ARB_LIST'] && OSC.arb_list === undefined){
+            OSC.arb_list = new_params['ARB_LIST'].value;
+            if (OSC.arb_list !== "")
+                OSC.updateARBFunc(OSC.arb_list)
+        }
+
         if (new_params['OSC_TRIG_LIMIT_IS_PRESENT']){
             OSC.is_ext_trig_level_present = new_params['OSC_TRIG_LIMIT_IS_PRESENT'].value;
         }
@@ -760,6 +832,15 @@
             }
         }
     };
+
+    function sleep(milliseconds) {
+        var start = new Date().getTime();
+        for (var i = 0; i < 1e7; i++) {
+          if ((new Date().getTime() - start) > milliseconds){
+            break;
+          }
+        }
+    }
 
     // Processes newly received data for signals
     OSC.iterCnt = 0;
@@ -1095,6 +1176,11 @@
             console.log('ERROR: Cannot save changes, socket not opened');
             return false;
         }
+
+        if (OSC.ws.readyState !== WebSocket.OPEN){
+            window.location.reload(true);
+        }
+
         //if (!disable_defCur) OSC.setDefCursorVals();
 
         // Hack for json limitation
@@ -1112,6 +1198,9 @@
         if (!OSC.state.socket_opened) {
             console.log('ERROR: Cannot save changes, socket not opened');
             return false;
+        }
+        if (OSC.ws.readyState !== WebSocket.OPEN){
+            window.location.reload(true);
         }
         OSC.params.local['in_command'] = { value: 'send_all_params' };
         OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));
@@ -1716,4 +1805,6 @@ $(function() {
     // Everything prepared, start application
     OSC.startApp();
 
+    OSC.previousPageUrl = document.referrer;
+    console.log(`Previously visited page URL: ${OSC.previousPageUrl}`);
 });

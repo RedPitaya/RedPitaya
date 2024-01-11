@@ -1,4 +1,5 @@
 #include <stdexcept>
+#include <cstring>
 #include <iostream>
 #include <getopt.h>
 
@@ -14,13 +15,15 @@ std::string cli_help_string() {
     "-n, --no-average: disable average the measurement from 10 times\n"
     "-C, --csv: print values by columns Frequency (Hz), ch0 (dB), ch1 (dB)\n"
     "-L, --csv-limit: print values by columns Frequency (Hz), ch0 min (dB), ch0 max (dB), ch1 min (dB), ch1 max (dB)\n"
-    "-t, --test: test mode avoids the initiating/resetting/releasing FPGA";
+    "-W, --window: window function. Available options: [rect, hanning, hamming, blackman_harris, flat_top, kaiser_4, kaiser_8] (default: hanning)\n"
+    "-t, --test: test mode avoids the initiating/resetting/releasing FPGA\n";
 }
 
 const struct option long_opt[] = {
         { "help",       no_argument,        0, 'h' },
         { "min",        required_argument,  0, 'm' },
         { "max",        required_argument,  0, 'M' },
+        { "window",     required_argument,  0, 'W' },
         { "count",      required_argument,  0, 'c' },
         { "average",    no_argument,        0, 'a' },
         { "no-average", no_argument,        0, 'n' },
@@ -45,7 +48,7 @@ bool cli_parse_args(int argc, char * const argv[], cli_args_t &out_args) {
     try {
         int short_opt;
         int option_index = 0;
-        while ((short_opt = getopt_long(argc, argv, "hm:M:c:anCLt", long_opt, &option_index)) != -1) {
+        while ((short_opt = getopt_long(argc, argv, "hm:M:c:anCLtW:", long_opt, &option_index)) != -1) {
             switch (short_opt) {
             case 'h':
                 args.help = true;
@@ -69,6 +72,37 @@ bool cli_parse_args(int argc, char * const argv[], cli_args_t &out_args) {
 
                 if (args.freq_max < 0. || args.freq_max > F_MAX) {
                     throw std::out_of_range("freq_max");
+                }
+
+                break;
+
+            case 'W':
+                if (strcmp(optarg,"rect") == 0){
+                    args.wm = rp_dsp_api::RECTANGULAR;
+                }
+
+                if (strcmp(optarg,"hanning") == 0){
+                    args.wm = rp_dsp_api::HANNING;
+                }
+
+                if (strcmp(optarg,"hamming") == 0){
+                    args.wm = rp_dsp_api::HAMMING;
+                }
+
+                if (strcmp(optarg,"blackman_harris") == 0){
+                    args.wm = rp_dsp_api::BLACKMAN_HARRIS;
+                }
+
+                if (strcmp(optarg,"flat_top") == 0){
+                    args.wm = rp_dsp_api::FLAT_TOP;
+                }
+
+                if (strcmp(optarg,"kaiser_4") == 0){
+                    args.wm = rp_dsp_api::KAISER_4;
+                }
+
+                if (strcmp(optarg,"kaiser_8") == 0){
+                    args.wm = rp_dsp_api::KAISER_8;
                 }
 
                 break;

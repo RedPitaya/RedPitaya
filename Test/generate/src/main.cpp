@@ -22,14 +22,15 @@ const char *g_argv0 = NULL;
 const char format_125_14[] =
         "%s version %s-%s\n"
         "\n"
-        "Usage: %s   channel amplitude frequency <type> <end frequency> <calib>\n"
+        "Usage: %s   channel amplitude frequency <type> <end frequency> <calib> <debug>\n"
         "\n"
         "\tchannel         Channel to generate signal on [1, 2].\n"
         "\tamplitude       Peak-to-peak signal amplitude in Vpp [0.0 - %1.1f].\n"
         "\tfrequency       Signal frequency in Hz [%d - %d].\n"
-        "\ttype            Signal type [sine, sqr, tri, sweep, dc].\n"
+        "\ttype            Signal type [sine, sqr, tri, sweep, dc%s].\n"
         "\tend frequency   Sweep-to frequency in Hz [%d - %d].\n"
         "\tcalib           Disable calibration [-c]. By default calibration enabled.\n"
+        "\tdebug           Debug FPGA registers [-d].\n"
         "\n"
         "Setting the frequency to 0 will disable the generator completely.\n"
         "\n";
@@ -37,29 +38,43 @@ const char format_125_14[] =
 const char format_250_12[] =
         "%s version %s-%s\n"
         "\n"
-        "Usage: %s   channel amplitude frequency <gain> <type> <end frequency> <calib>\n"
+        "Usage: %s   channel amplitude frequency <gain> <type> <end frequency> <calib> <debug>\n"
         "\n"
         "\tchannel         Channel to generate signal on [1, 2].\n"
         "\tamplitude       Peak-to-peak signal amplitude in Vpp [0.0 - %1.1f].\n"
         "\tfrequency       Signal frequency in Hz [%d - %d].\n"
         "\tgain            Gain output value [x1, x5] (default value x1).\n"
-        "\ttype            Signal type [sine, sqr, tri, sweep, dc].\n"
+        "\ttype            Signal type [sine, sqr, tri, sweep, dc%s].\n"
         "\tend frequency   Sweep-to frequency in Hz [%d - %d].\n"
         "\tcalib           Disable calibration [-c]. By default calibration enabled.\n"
+        "\tdebug           Debug FPGA registers [-d].\n"
         "\n"
         "Setting the frequency to 0 will disable the generator completely.\n"
         "\n";
 
 
 void usage_125_14() {
+    auto list = getARBList();
+    std::string s = "";
+    for(auto &itm : list){
+        s += ", ";
+        s += itm;
+    }
+
     fprintf( stderr, format_125_14, g_argv0, VERSION_STR, REVISION_STR,
-             g_argv0, g_max_amplitude, g_min_frequency, g_max_frequency,g_min_frequency, g_max_frequency);
+             g_argv0, g_max_amplitude, g_min_frequency, g_max_frequency, s.c_str(), g_min_frequency, g_max_frequency);
 }
 
 void usage_250_12() {
+    auto list = getARBList();
+    std::string s = "";
+    for(auto &itm : list){
+        s += ", ";
+        s += itm;
+    }
 
     fprintf( stderr, format_250_12, g_argv0, VERSION_STR, REVISION_STR,
-             g_argv0, g_max_amplitude, g_min_frequency, g_max_frequency,g_min_frequency, g_max_frequency);
+             g_argv0, g_max_amplitude, g_min_frequency, g_max_frequency, s.c_str(), g_min_frequency, g_max_frequency);
 }
 
 void usage(models_t model){
@@ -74,6 +89,7 @@ void usage(models_t model){
 /** Signal generator main */
 int main(int argc, char *argv[])
 {
+    loadARBList();
     auto channels = getChannels();
     auto model = getModel();
     if (channels == 0){
@@ -129,6 +145,12 @@ int main(int argc, char *argv[])
         }
     }
 
+    for(int i = 1; i < argc; i++){
+         if ( strcmp(argv[i], "-d") == 0) {
+           config.regDebug = true;
+        }
+    }
+
     /* Signal type argument parsing */
     config.type = RP_WAVEFORM_SINE;
     if (argc > (4 + PARAMETER_CORRECT)) {
@@ -143,9 +165,22 @@ int main(int argc, char *argv[])
         } else if ( strcmp(argv[4 + PARAMETER_CORRECT], "sweep") == 0) {
             config.type = RP_WAVEFORM_SWEEP;
         } else {
-            fprintf(stderr, "Invalid signal type: %s\n", argv[4 + PARAMETER_CORRECT]);
-            usage(model);
-            return -1;
+            auto list = getARBList();
+            std::string s = "";
+
+            bool find = false;
+            for(auto &itm : list){
+                if ( strcmp(argv[4 + PARAMETER_CORRECT], itm.c_str()) == 0) {
+                    find = true;
+                    config.arb = itm;
+                }
+            }
+
+            if (!find){
+                fprintf(stderr, "Invalid signal type: %s\n", argv[4 + PARAMETER_CORRECT]);
+                usage(model);
+                return -1;
+            }
         }
     }
 

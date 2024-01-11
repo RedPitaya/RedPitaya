@@ -19,9 +19,6 @@
             setTimeout('SPEC.exitEditing(true)', 1000);
         });
 
-        // Initialize FastClick to remove the 300ms delay between a physical tap and the firing of a click event on mobile browsers
-        new FastClick(document.body);
-
         // Process clicks on top menu buttons
         $('#SPEC_RUN').on('click', function() {
             //ev.preventDefault();

@@ -21,7 +21,7 @@
 #include "common.h"
 #include "redpitaya/rp.h"
 
-static int fd = 0;
+int fd = 0;
 
 bool g_DebugReg = false;
 
@@ -42,7 +42,7 @@ int cmn_Release()
             return RP_ECMD;
         }
     }
-
+    fd = 0;
     return RP_OK;
 }
 

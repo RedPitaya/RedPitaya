@@ -1,6 +1,7 @@
 #include <DataManager.h>
 #include <CustomParameters.h>
 #include <math.h>
+#include <unistd.h>
 #include <mutex>
 
 #include "sweepController.h"
@@ -9,6 +10,7 @@
 #include "rp_hw-profiles.h"
 #include "common.h"
 #include "main.h"
+#include "rp_arb.h"
 
 const float LEVEL_AMPS_MAX = outAmpMax();
 const float LEVEL_AMPS_DEF = outAmpDef();
@@ -25,13 +27,13 @@ CBooleanParameter outShow[MAX_DAC_CHANNELS]        = INIT2("OUTPUT","_SHOW", CBa
 CBooleanParameter outState[MAX_DAC_CHANNELS]       = INIT2("OUTPUT","_STATE", CBaseParameter::RW, false, 0,CONFIG_VAR);
 CFloatParameter outAmplitude[MAX_DAC_CHANNELS]     = INIT2("SOUR","_VOLT", CBaseParameter::RW, LEVEL_AMPS_DEF , 0, 0, LEVEL_AMPS_MAX,CONFIG_VAR);
 CFloatParameter outOffset[MAX_DAC_CHANNELS]        = INIT2("SOUR","_VOLT_OFFS", CBaseParameter::RW, 0, 0, -LEVEL_AMPS_MAX, LEVEL_AMPS_MAX,CONFIG_VAR);
-CIntParameter   outFrequancy[MAX_DAC_CHANNELS]     = INIT2("SOUR","_FREQ_FIX", CBaseParameter::RW, 1000, 0, 1, getDACRate(),CONFIG_VAR);
+CIntParameter   outFrequancy[MAX_DAC_CHANNELS]     = INIT2("SOUR","_FREQ_FIX", CBaseParameter::RW, 1000, 0, 1, (int)getDACRate(),CONFIG_VAR);
 CFloatParameter outScale[MAX_DAC_CHANNELS]         = INIT2("OSC_OUTPUT","_SCALE", CBaseParameter::RW, 1, 0, 0.00005, 1000,CONFIG_VAR);
 
 CSweepController *g_sweepController = new CSweepController();
 
-CIntParameter   outSweepStartFrequancy[MAX_DAC_CHANNELS]   = INIT2("SOUR","_SWEEP_FREQ_START", CBaseParameter::RW, 1000, 0, 1, getDACRate(),CONFIG_VAR);
-CIntParameter   outSweepEndFrequancy[MAX_DAC_CHANNELS]     = INIT2("SOUR","_SWEEP_FREQ_END"  , CBaseParameter::RW, 10000, 0, 1, getDACRate(),CONFIG_VAR);
+CIntParameter   outSweepStartFrequancy[MAX_DAC_CHANNELS]   = INIT2("SOUR","_SWEEP_FREQ_START", CBaseParameter::RW, 1000, 0, 1, (int)getDACRate(),CONFIG_VAR);
+CIntParameter   outSweepEndFrequancy[MAX_DAC_CHANNELS]     = INIT2("SOUR","_SWEEP_FREQ_END"  , CBaseParameter::RW, 10000, 0, 1, (int)getDACRate(),CONFIG_VAR);
 CIntParameter   outSweepMode[MAX_DAC_CHANNELS]             = INIT2("SOUR","_SWEEP_MODE", CBaseParameter::RW, RP_GEN_SWEEP_MODE_LINEAR, 0, RP_GEN_SWEEP_MODE_LINEAR, RP_GEN_SWEEP_MODE_LOG,CONFIG_VAR);
 CIntParameter   outSweepDir[MAX_DAC_CHANNELS]              = INIT2("SOUR","_SWEEP_DIR", CBaseParameter::RW, RP_GEN_SWEEP_DIR_NORMAL, 0, RP_GEN_SWEEP_DIR_NORMAL, RP_GEN_SWEEP_DIR_UP_DOWN,CONFIG_VAR);
 CIntParameter   outSweepTime[MAX_DAC_CHANNELS]             = INIT2("SOUR","_SWEEP_TIME", CBaseParameter::RW, 1000000, 0, 1, 2000000000,CONFIG_VAR); // In microseconds
@@ -44,7 +46,7 @@ CFloatParameter outDCYC[MAX_DAC_CHANNELS]                  = INIT2("SOUR","_DCYC
 CFloatParameter outRiseTime[MAX_DAC_CHANNELS]              = INIT2("SOUR","_RISE", CBaseParameter::RW, 1, 0, 0.1, 1000,CONFIG_VAR);
 CFloatParameter outFallTime[MAX_DAC_CHANNELS]              = INIT2("SOUR","_FALL", CBaseParameter::RW, 1, 0, 0.1, 1000,CONFIG_VAR);
 
-CIntParameter outWAveform[MAX_DAC_CHANNELS]                = INIT2("SOUR","_FUNC", CBaseParameter::RW, RP_WAVEFORM_SINE, 0, RP_WAVEFORM_SINE, RP_WAVEFORM_SWEEP,CONFIG_VAR);
+CStringParameter outWaveform[MAX_DAC_CHANNELS]             = INIT2("SOUR","_FUNC", CBaseParameter::RW, "0", 0,CONFIG_VAR);
 CIntParameter outTriggerSource[MAX_DAC_CHANNELS]           = INIT2("SOUR","_TRIG_SOUR", CBaseParameter::RW, RP_GEN_TRIG_SRC_INTERNAL, 0, RP_GEN_TRIG_SRC_INTERNAL, RP_GEN_TRIG_SRC_EXT_NE,CONFIG_VAR);
 
 CFloatParameter outShowOffset[MAX_DAC_CHANNELS]            = INIT2("OUTPUT","_SHOW_OFF", CBaseParameter::RW, 0, 0, -40, 40,CONFIG_VAR);
@@ -61,6 +63,7 @@ CIntParameter     outBurstDelay[MAX_DAC_CHANNELS]          = INIT2("SOUR","_BURS
 CBooleanParameter outGenSyncReset("SYNC_GEN", CBaseParameter::RW, false, 0);
 
 CIntParameter       outGain[MAX_DAC_CHANNELS] = INIT2("OSC_CH","_OUT_GAIN", CBaseParameter::RW, RP_GAIN_1X, 0, 0, 1,CONFIG_VAR);
+CStringParameter    outARBList                = CStringParameter("ARB_LIST", CBaseParameter::RW, loadARBList(), 0);
 
 
 static const uint8_t g_dac_channels = getDACChannels();
@@ -98,11 +101,31 @@ auto generateOutSignalForWeb(float tscale) -> void{
     }
 }
 
+auto loadARBList() -> std::string{
+    uint32_t c = 0;
+    rp_ARBInit();
+    std::string list;
+    if (!rp_ARBGetCount(&c)){
+        for(uint32_t i = 0; i < c; i++){
+            std::string name;
+            if (!rp_ARBGetName(i,&name)){
+                bool is_valid;
+                if (!rp_ARBIsValid(name,&is_valid)){
+                    if (is_valid)
+                        list += "A" + name + "\n";
+                }
+            }
+        }
+    }
+    return list;
+}
+
 auto generate(rp_channel_t channel,float tscale) -> void {
     if (!rp_HPIsFastDAC_PresentOrDefault()) return;
 
     CFloatSignal *signal;
-    rp_waveform_t waveform;
+    std::string waveform;
+    rp_waveform_t waveform_api = RP_WAVEFORM_SINE;
     rp_gen_sweep_mode_t sweep_mode;
     rp_gen_sweep_dir_t sweep_dir;
     rp_gen_mode_t gen_mode;
@@ -111,7 +134,7 @@ auto generate(rp_channel_t channel,float tscale) -> void {
 	// std::vector<float> data;
 
     signal = &outSignal[channel];
-    waveform = (rp_waveform_t) outWAveform[channel].Value();
+    waveform =  outWaveform[channel].Value();
     frequency = outFrequancy[channel].Value();
     phase = (float) (outPhase[channel].Value() / 180.0f * M_PI);
     amplitude = outAmplitude[channel].Value()/outScale[channel].Value();
@@ -134,60 +157,78 @@ auto generate(rp_channel_t channel,float tscale) -> void {
     if (tscale == 0)
         return;
 
-    switch (waveform) {
-        case RP_WAVEFORM_SINE:
-            if (gen_mode == RP_GEN_MODE_CONTINUOUS)
-                synthesis_sin(signal, frequency, phase, amplitude, offset, showOff, tscale);
-            else
-                synthesis_sin_burst(signal, frequency, phase, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale);
-            break;
-        case RP_WAVEFORM_TRIANGLE:
-            if (gen_mode == RP_GEN_MODE_CONTINUOUS)
-                synthesis_triangle(signal, frequency, phase, amplitude, offset, showOff, tscale);
-            else
-                synthesis_triangle_burst(signal, frequency, phase, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale);
-            break;
-        case RP_WAVEFORM_SQUARE:
-            if (gen_mode == RP_GEN_MODE_CONTINUOUS)
-                synthesis_square(signal, frequency, phase, amplitude, offset, showOff, tscale, riseTime, fallTime);
-            else
-                synthesis_square_burst(signal, frequency, phase, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale, riseTime, fallTime);
-            break;
-        case RP_WAVEFORM_RAMP_UP:
-            if (gen_mode == RP_GEN_MODE_CONTINUOUS)
-                synthesis_rampUp(signal, frequency, phase, amplitude, offset, showOff, tscale);
-            else
-                synthesis_rampUp_burst(signal, frequency, phase, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale);
-            break;
-        case RP_WAVEFORM_RAMP_DOWN:
-            if (gen_mode == RP_GEN_MODE_CONTINUOUS)
-                synthesis_rampDown(signal, frequency, phase, amplitude, offset, showOff, tscale);
-            else
-                synthesis_rampDown_burst(signal, frequency, phase, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale);
-            break;
-        case RP_WAVEFORM_DC:
-            if (gen_mode == RP_GEN_MODE_CONTINUOUS)
-                synthesis_DC(signal, frequency, phase, amplitude, offset, showOff);
-            else
-                synthesis_DC_burst(signal, frequency, phase, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale);
-            break;
-        case RP_WAVEFORM_DC_NEG:
-            if (gen_mode == RP_GEN_MODE_CONTINUOUS)
-                synthesis_DC_NEG(signal, frequency, phase, amplitude, offset, showOff);
-            else
-                synthesis_DC_NEG_burst(signal, frequency, phase, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale);
-            break;
-        case RP_WAVEFORM_PWM:
-            if (gen_mode == RP_GEN_MODE_CONTINUOUS)
-                synthesis_PWM(signal, frequency, phase, amplitude, offset, showOff, duty_cycle, tscale);
-            else
-                synthesis_PWM_burst(signal, frequency, phase, amplitude, offset, showOff, duty_cycle, burstCount, burstPeriod, burstReps, tscale);
-            break;
-        case RP_WAVEFORM_SWEEP:
-            synthesis_sweep(signal, frequency, freqSweepStart,freqSweepEnd,sweep_mode,sweep_dir, phase, amplitude, offset, showOff, tscale);
-            break;
-        default:
-            break;
+    if (waveform[0] == 'A'){
+        auto sigSize = (*signal).GetSize();
+        if (sigSize){
+            auto signame = waveform.erase(0, 1);
+            float data[DAC_BUFFER_SIZE];
+            uint32_t size;
+            if (!rp_ARBGetSignalByName(signame,data,&size)){
+                synthesis_arb(signal,data,size,frequency,amplitude,offset,showOff,tscale);
+            }
+        }
+    }else{
+        try{
+            waveform_api = (rp_waveform_t)std::stoi(waveform);
+        }
+        catch (const std::exception&) {
+            waveform_api = RP_WAVEFORM_SINE;
+        }
+        switch (waveform_api) {
+            case RP_WAVEFORM_SINE:
+                if (gen_mode == RP_GEN_MODE_CONTINUOUS)
+                    synthesis_sin(signal, frequency, phase, amplitude, offset, showOff, tscale);
+                else
+                    synthesis_sin_burst(signal, frequency, phase, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale);
+                break;
+            case RP_WAVEFORM_TRIANGLE:
+                if (gen_mode == RP_GEN_MODE_CONTINUOUS)
+                    synthesis_triangle(signal, frequency, phase, amplitude, offset, showOff, tscale);
+                else
+                    synthesis_triangle_burst(signal, frequency, phase, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale);
+                break;
+            case RP_WAVEFORM_SQUARE:
+                if (gen_mode == RP_GEN_MODE_CONTINUOUS)
+                    synthesis_square(signal, frequency, phase, amplitude, offset, showOff, tscale, riseTime, fallTime);
+                else
+                    synthesis_square_burst(signal, frequency, phase, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale, riseTime, fallTime);
+                break;
+            case RP_WAVEFORM_RAMP_UP:
+                if (gen_mode == RP_GEN_MODE_CONTINUOUS)
+                    synthesis_rampUp(signal, frequency, phase, amplitude, offset, showOff, tscale);
+                else
+                    synthesis_rampUp_burst(signal, frequency, phase, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale);
+                break;
+            case RP_WAVEFORM_RAMP_DOWN:
+                if (gen_mode == RP_GEN_MODE_CONTINUOUS)
+                    synthesis_rampDown(signal, frequency, phase, amplitude, offset, showOff, tscale);
+                else
+                    synthesis_rampDown_burst(signal, frequency, phase, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale);
+                break;
+            case RP_WAVEFORM_DC:
+                if (gen_mode == RP_GEN_MODE_CONTINUOUS)
+                    synthesis_DC(signal, frequency, phase, amplitude, offset, showOff);
+                else
+                    synthesis_DC_burst(signal, frequency, phase, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale);
+                break;
+            case RP_WAVEFORM_DC_NEG:
+                if (gen_mode == RP_GEN_MODE_CONTINUOUS)
+                    synthesis_DC_NEG(signal, frequency, phase, amplitude, offset, showOff);
+                else
+                    synthesis_DC_NEG_burst(signal, frequency, phase, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale);
+                break;
+            case RP_WAVEFORM_PWM:
+                if (gen_mode == RP_GEN_MODE_CONTINUOUS)
+                    synthesis_PWM(signal, frequency, phase, amplitude, offset, showOff, duty_cycle, tscale);
+                else
+                    synthesis_PWM_burst(signal, frequency, phase, amplitude, offset, showOff, duty_cycle, burstCount, burstPeriod, burstReps, tscale);
+                break;
+            case RP_WAVEFORM_SWEEP:
+                synthesis_sweep(signal, frequency, freqSweepStart,freqSweepEnd,sweep_mode,sweep_dir, phase, amplitude, offset, showOff, tscale);
+                break;
+            default:
+                break;
+        }
     }
 }
 
@@ -347,7 +388,7 @@ auto updateGeneratorParameters(bool force) -> void{
         auto ch = (rp_channel_t)i;
 
         if (IS_NEW(outState[i]) || IS_NEW(outAmplitude[i]) || IS_NEW(outOffset[i]) || IS_NEW(outPhase[i])
-            || IS_NEW(outDCYC[i]) || IS_NEW(outWAveform[i]) || IS_NEW(outTriggerSource[i])
+            || IS_NEW(outDCYC[i]) || IS_NEW(outWaveform[i]) || IS_NEW(outTriggerSource[i])
             || IS_NEW(outRiseTime[i]) || IS_NEW(outFallTime[i]) || IS_NEW(outImp[i]) || force) {
             // updateOutCh1 = true;
 
@@ -357,10 +398,13 @@ auto updateGeneratorParameters(bool force) -> void{
                     if (rp_HPGetFastDACIsTempProtectionOrDefault()){
                         rp_SetLatchTempAlarm(ch,false);
                     }
-
+                    if (!force){
+                        rp_GenResetChannelSM(ch);
+                        usleep(1000);
+                    }
                     rp_GenOutEnable(ch);
                     if (!force)
-                        rp_GenResetTrigger(ch);
+                        rp_GenTriggerOnly(ch);
                 } else {
                     rp_GenOutDisable(ch);
                 }
@@ -459,9 +503,34 @@ auto updateGeneratorParameters(bool force) -> void{
                 outFallTime[i].Update();
             }
 
-            if (IS_NEW(outWAveform[i]) || force){
-                rp_GenWaveform(ch, (rp_waveform_t) outWAveform[i].NewValue());
-                outWAveform[i].Update();
+            if (IS_NEW(outWaveform[i]) || force){
+                auto wf = outWaveform[i].NewValue();
+                if (wf[0] == 'A'){
+                    auto signame = wf.erase(0, 1);
+                    float data[DAC_BUFFER_SIZE];
+                    uint32_t size;
+                    if (!rp_ARBGetSignalByName(signame,data,&size)){
+                        rp_GenArbWaveform(ch,data,size);
+                        rp_GenWaveform(ch,RP_WAVEFORM_ARBITRARY);
+                        outWaveform[i].Update();
+                    }else{
+                        outWaveform[i].Update();
+                        rp_GenWaveform(ch, RP_WAVEFORM_SINE);
+                        outWaveform[i].Value() = "0";
+                    }
+
+                }else{
+                    try{
+                        rp_waveform_t w = (rp_waveform_t)stoi(wf);
+                        rp_GenWaveform(ch, w);
+                        outWaveform[i].Update();
+                    }
+                    catch (const std::exception&) {
+                        rp_GenWaveform(ch, RP_WAVEFORM_SINE);
+                        outWaveform[i].Update();
+                        outWaveform[i].Value() = "0";
+                    }
+                }
             }
 
             if (IS_NEW(outTriggerSource[i]) || force){

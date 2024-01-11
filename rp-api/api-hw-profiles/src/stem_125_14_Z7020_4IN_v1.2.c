@@ -93,7 +93,7 @@ profiles_t stem_125_14_Z7020_4IN_v1_2 = {
 
     .is_daisy_chain_clock_sync = false,
 
-    .is_dma_mode_v0_94 = false
+    .is_dma_mode_v0_94 = true
 };
 
 profiles_t* getProfile_STEM_125_14_Z7020_4IN_v1_2(){

@@ -467,6 +467,10 @@
             $('#sysinfo_dialog').modal("show");
         });
 
+        $("#ext_con_but").click(function(event) {
+            $('#ext_connections_dialog').modal("show");
+        });
+
 
         $("#bug_report").click(function(event) {
             fetch('/get_bug_report')

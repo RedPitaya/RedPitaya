@@ -2,6 +2,7 @@
 
 #include <string>
 #include "rp_hw-profiles.h"
+#include "rp_dsp.h"
 
 uint32_t getMaxFreqRate();
 
@@ -16,6 +17,7 @@ struct cli_args_t {
     bool csv_limit = false;
     bool help = false;
     bool test = false;
+    rp_dsp_api::window_mode_t wm = rp_dsp_api::HANNING;
 };
 
 std::string cli_help_string();

@@ -100,8 +100,8 @@ var biasDCChange = function(event){
 
 //Min gain changed
 var gainMinChange = function(event){
-	BA.parametersCache["BA_GAIN_MIN"] = { value: $("#BA_SIGNAL_1_MIN").val() };
-	BA.graphCache.plot.getAxes().yaxis.options.min = parseInt($("#BA_SIGNAL_1_MIN").val() ) * 1;
+	BA.parametersCache["BA_GAIN_MIN"] = { value: $("#BA_GAIN_MIN").val() };
+	BA.graphCache.plot.getAxes().yaxis.options.min = parseInt($("#BA_GAIN_MIN").val() ) * 1;
     BA.graphCache.plot.setupGrid();
     BA.graphCache.plot.draw();
 	BA.sendParameters();
@@ -110,8 +110,8 @@ var gainMinChange = function(event){
 
 //Max gain changed
 var gainMaxChange = function(event){
-	BA.parametersCache["BA_GAIN_MAX"] = { value: $("#BA_SIGNAL_1_MAX").val() };
-	BA.graphCache.plot.getAxes().yaxis.options.max = parseInt($("#BA_SIGNAL_1_MAX").val() ) * 1;
+	BA.parametersCache["BA_GAIN_MAX"] = { value: $("#BA_GAIN_MAX").val() };
+	BA.graphCache.plot.getAxes().yaxis.options.max = parseInt($("#BA_GAIN_MAX").val() ) * 1;
 	BA.graphCache.plot.setupGrid();
     BA.graphCache.plot.draw();
 	BA.sendParameters();
@@ -120,8 +120,8 @@ var gainMaxChange = function(event){
 
 //Min phase changed
 var phaseMinChange = function(event){
-	BA.parametersCache["BA_PHASE_MIN"] = { value: $("#BA_SIGNAL_2_MIN").val() };
-	BA.graphCache.plot.getAxes().y2axis.options.min = parseInt($("#BA_SIGNAL_2_MIN").val() ) * 1;
+	BA.parametersCache["BA_PHASE_MIN"] = { value: $("#BA_PHASE_MIN").val() };
+	BA.graphCache.plot.getAxes().y2axis.options.min = parseInt($("#BA_PHASE_MIN").val() ) * 1;
 	BA.graphCache.plot.setupGrid();
     BA.graphCache.plot.draw();
 	BA.sendParameters();
@@ -130,8 +130,8 @@ var phaseMinChange = function(event){
 
 //Max phase changed
 var phaseMaxChange = function(event){
-	BA.parametersCache["BA_PHASE_MAX"] = { value: $("#BA_SIGNAL_2_MAX").val() };
-	BA.graphCache.plot.getAxes().y2axis.options.max = parseInt($("#BA_SIGNAL_2_MAX").val() ) * 1;
+	BA.parametersCache["BA_PHASE_MAX"] = { value: $("#BA_PHASE_MAX").val() };
+	BA.graphCache.plot.getAxes().y2axis.options.max = parseInt($("#BA_PHASE_MAX").val() ) * 1;
 	BA.graphCache.plot.setupGrid();
     BA.graphCache.plot.draw();
 	BA.sendParameters();
@@ -158,18 +158,13 @@ var scale1Click = function(event){
 var calibrateClick = function(event){
 	if (BA.running)
 		return;
-    BA.parametersCache["BA_CALIBRATE_START"] = { value: 1 };
     $('#calibration_dialog').modal('hide');
     $('#calibration').show();
-    $("#BA_START_FREQ").val(100);
-    $("#BA_END_FREQ").val(62500000);
-    $("#BA_STEPS").val(500);
-    $("#BA_PERIODS_NUMBER").val(8);
-    $("#BA_AVERAGING").val(1);
     $('body').removeClass('loaded');
     BA.curGraphScale = BA.scale;
     BA.calibrating = true;
-	BA.sendParameters();
+    BA.parametersCache["BA_STATUS"] = { value: 2 };
+    BA.sendParameters();
 }
 
 
@@ -177,7 +172,7 @@ var calibrateClick = function(event){
 var calibrateResetClick = function(event){
 	if (BA.running)
 		return;
-    BA.parametersCache["BA_CALIBRATE_RESET"] = { value: 1 };
+    BA.parametersCache["BA_STATUS"] = { value: 3 };
     $('#calibration_dialog').modal('hide');
 	BA.sendParameters();
 }
@@ -194,10 +189,10 @@ changeCallbacks["BA_INPUT_THRESHOLD"] = inputThresholdChange;
 changeCallbacks["BA_AVERAGING"] = averChange;
 changeCallbacks["BA_AMPLITUDE"] = amplChange;
 changeCallbacks["BA_DC_BIAS"] = biasDCChange;
-changeCallbacks["BA_SIGNAL_1_MIN"] = gainMinChange;
-changeCallbacks["BA_SIGNAL_1_MAX"] = gainMaxChange;
-changeCallbacks["BA_SIGNAL_2_MIN"] = phaseMinChange;
-changeCallbacks["BA_SIGNAL_2_MAX"] = phaseMaxChange;
+changeCallbacks["BA_GAIN_MIN"] = gainMinChange;
+changeCallbacks["BA_GAIN_MAX"] = gainMaxChange;
+changeCallbacks["BA_PHASE_MIN"] = phaseMinChange;
+changeCallbacks["BA_PHASE_MAX"] = phaseMaxChange;
 
 
 var clickCallbacks={}
