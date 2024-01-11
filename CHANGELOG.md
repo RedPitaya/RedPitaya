@@ -1,4 +1,36 @@
-# Beta version (2.00-23)
+# Beta version (2.00-30)
+
+- **Jupyter Lab is now supported on all Red Pitaya products using common Python API**
+- **Acquisition into DDR is now also supported for all Red Pitaya models** 
+- **Streaming is now also supported for STEMlab 125-14 4 Input**
+
+
+General 
+- Added possibility to convert from new calibration to old calibration using caliber tool.
+- External connector descriptions can be opened from the WEB interface 
+ 
+APIs & SCPI 
+- Added missing trigger states in SCPI for 4ch.
+- Support for the CAN interface 
+- SCPI server refactoring
+- SCPI server error handling improvement
+- New SCPI commands added like time, date
+- SCPI now supports more decimations
+- Added internal trigger debouncer in API
+ 
+WEB apps 
+- A new ARB manager app was implemented for importing custom waveforms for signal generator
+- Interpolation added to Oscilloscope and signal generator app
+- Improved data export for Oscilloscope and signal generator app
+- Improved decimation for the Oscilloscope and signal generator app
+- Improved calibration application
+- Bode WEB app improvement
+- Added DVB and dBuV in the Spectrum analyzer app
+- Fixed an issue with limiting the number of samples recorded in BIN format for streaming
+- Fix BIN/CSV mode in the streaming manager
+- Fixed a bug where the buffers were not written to the file after stopping streaming
+
+# Stable version (2.00-23)
 General 
 - Support for old board models
 
