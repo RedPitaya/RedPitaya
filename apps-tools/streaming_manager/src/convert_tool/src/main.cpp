@@ -135,7 +135,7 @@ int main(int argc, char* argv[])
                 if (bi.dataFormatSize[i] == 4) dft = "Float";
                 aprintf(stdout,"\tData format type:\t%s\n",dft.c_str());
                 aprintf(stdout,"\tSamples count:\t%llu\n",bi.samples_ch[i]);
-                aprintf(stdout,"\tLost samples count: %lld\n",(long long int)bi.lostCount[4]);
+                aprintf(stdout,"\tLost samples count: %llu\n",bi.lostCount[i]);
             }
 
 

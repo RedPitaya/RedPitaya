@@ -48,16 +48,18 @@ void usage()
         "       Possible combination of flags: -wn, -wf, -wfn, -wmn, -wfmn\n"
         "\n"
         " -f    Use factory address space.\n"
-        " -d    Reset calibration values in eeprom from factory zone.\n"
-        "       Possible combination of flags: -dn. With this combination, the program will convert from the old format to the universal one when copying from the factory zone.\n"
+        " -d    Reset calibration values in eeprom from factory zone. WARNING: Saves automatic to a new format\n"
         "\n"
         " -i    Reset calibration values in eeprom by default\n"
         "       Possible combination of flags: -in , -inf.\n"
+        "\n"
+        " -o    Converts the calibration from the user zone to the old calibration format. For ecosystem version 0.98\n"
         "\n"
         " -v    Produce verbose output.\n"
         " -h    Print this info.\n"
         " -x    Print in hex.\n"
         " -u    Print stored calibration in unified format.\n"
+        "\n"
         " -m    Modify specific parameter in universal calibration\n"
         " -n    Flag for working with the new calibration storage format.\n"
         "\n";
@@ -197,7 +199,7 @@ int main(int argc, char **argv)
     }
 
     /* Parse options */
-    const char *optstring = "rwfdvhzxiunm";
+    const char *optstring = "rwfdvhzxiunmo";
     unsigned int want_bits = 0;
     bool factory = false;
 
@@ -250,6 +252,10 @@ int main(int argc, char **argv)
                 want_bits |= WANT_MODIFY;
             break;
 
+        case 'o':
+                want_bits |= WANT_TO_OLD;
+            break;
+
         case 'h':
             usage();
             exit ( EXIT_SUCCESS );
@@ -268,9 +274,16 @@ int main(int argc, char **argv)
         usage();
         exit( EXIT_FAILURE );
     }
+
+    if ((want_bits & WANT_TO_OLD) && (want_bits != WANT_TO_OLD) ) {
+        fprintf(stderr, "Flag -o cannot be combined with other flags.\n");
+        usage();
+        exit( EXIT_FAILURE );
+    }
+
     rp_HPeModels_t model;
     if (rp_HPGetModel(&model) != RP_HP_OK){
-        fprintf(stderr,"[Error] Unknown model: %d.\n",model);
+        fprintf(stderr,"ERROR: Unknown model: %d.\n",model);
         exit( EXIT_FAILURE);
     }
 
@@ -323,7 +336,7 @@ int main(int argc, char **argv)
         }
     }
 
-    /* Read */
+     /* Read */
     if (want_bits & WANT_READ) {
         uint8_t *buff = NULL;
         uint16_t size = 0;
@@ -338,6 +351,37 @@ int main(int argc, char **argv)
             print_eeprom(model,(rp_eepromWpData_t*)buff, want_bits);
         }else{
             print_eepromUni((rp_eepromUniData_t*)buff,want_bits);
+        }
+    }
+
+
+    if (want_bits & WANT_TO_OLD) {
+        uint8_t *buff = NULL;
+        uint16_t size = 0;
+
+        int ret = rp_CalibGetEEPROM(&buff,&size,false);
+
+        if (ret) {
+            fprintf(stderr, "ERROR: Read failed!\n");
+            return ret;
+        }
+
+        rp_calib_params_t calib;
+        ret =  rp_CalibConvertEEPROM(buff,size,&calib);
+        if (ret) {
+            fprintf(stderr, "ERROR: Convert data failed!\n");
+            return ret;
+        }
+
+        ret = rp_CalibConvertToOld(&calib);
+        if (ret) {
+            fprintf(stderr, "ERROR: Can't convert data to the old version! (%d)\n",ret);
+            return ret;
+        }
+        ret = rp_CalibrationWriteParamsEx(calib,false);
+        if (ret) {
+            fprintf(stderr, "ERROR: Write failed!\n");
+            return ret;
         }
     }
 

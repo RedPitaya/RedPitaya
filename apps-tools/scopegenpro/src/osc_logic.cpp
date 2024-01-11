@@ -9,18 +9,29 @@
 #include "common.h"
 #include "main.h"
 
+#include "math_logic.h"
+#include "rp_formatter.h"
+
 #define MAX_FREQ getMaxFreqRate()
 #define MAX_TRIGGER_LEVEL getMaxTriggerLevel()
+
+enum request_mode{
+    NONE = 0x0,
+    WAV  = 0x1,
+    TDMS = 0x2,
+    CSV  = 0x3
+};
 
 static const uint8_t g_adc_channels = getADCChannels();
 bool g_need_update_sig_gen = false;
 std::mutex g_need_update_sig_gen_mtx;
 
 CFloatParameter     inTimeOffset("OSC_TIME_OFFSET", CBaseParameter::RW, 0, 0, -100000, 100000,CONFIG_VAR);
-CDoubleParameter    inTimeScale("OSC_TIME_SCALE", CBaseParameter::RW, 1, 0,0,100000,CONFIG_VAR);
+CDoubleParameter    inTimeScale("OSC_TIME_SCALE", CBaseParameter::RW, 1, 0,0,100000000,CONFIG_VAR);
 CIntParameter       inViewStartPos("OSC_VIEW_START_POS", CBaseParameter::RO, 0, 0, 0, 16384,CONFIG_VAR);
 CIntParameter       inViewEndPos("OSC_VIEW_END_POS", CBaseParameter::RO, 0, 0, 0, 16384,CONFIG_VAR);
 CIntParameter       adc_count("ADC_COUNT", CBaseParameter::RO, getADCChannels(), 0, 0, 4,0);
+CIntParameter       adc_rate("ADC_RATE", CBaseParameter::RO, getADCRate(), 0, getADCRate(), getADCRate(),0);
 
 
 /***************************************************************************************
@@ -57,6 +68,8 @@ CFloatParameter     inProbe[MAX_ADC_CHANNELS] = INIT("OSC_CH","_PROBE", CBasePar
 CIntParameter       inGain[MAX_ADC_CHANNELS] = INIT("OSC_CH","_IN_GAIN", CBaseParameter::RW, RP_LOW, 0, 0, 1,CONFIG_VAR);
 CIntParameter       inAC_DC[MAX_ADC_CHANNELS] = INIT("OSC_CH","_IN_AC_DC", CBaseParameter::RW, RP_DC, 0, 0, 1,CONFIG_VAR);
 
+CIntParameter       inSmoothMode[MAX_ADC_CHANNELS] = INIT("OSC_CH","_SMOOTH", CBaseParameter::RW, RP_DC, 0, 0, 3,CONFIG_VAR);
+
 
 /* --------------------------------  TRIGGER PARAMETERS --------------------------- */
 CFloatParameter     inTriggLevel("OSC_TRIG_LEVEL", CBaseParameter::RW, 0, 0, -20, 20,CONFIG_VAR);
@@ -72,6 +85,11 @@ CIntParameter triggerInfo("OSC_TRIG_INFO", CBaseParameter::RW, 0, 0, 0, 3);
 CIntParameter pllControlEnable ("EXT_CLOCK_ENABLE", CBaseParameter::RW, 0, 0, 0, 1,rp_HPGetIsPLLControlEnableOrDefault() ? CONFIG_VAR : 0);
 CIntParameter pllControlLocked ("EXT_CLOCK_LOCKED", CBaseParameter::RO, 0, 0, 0, 1);
 
+CStringParameter 	download_file("DOWNLOAD_FILE", CBaseParameter::RW, "", 0);
+CBooleanParameter   request_data("REQUEST_DATA", CBaseParameter::RW,false,0);
+CIntParameter       request_format ("REQUEST_FORMAT", CBaseParameter::RW, 1, 0, 1, 3,CONFIG_VAR);
+CBooleanParameter   request_normalize("REQUEST_NORMALIZE", CBaseParameter::RW,true,0,CONFIG_VAR);
+CBooleanParameter   request_view("REQUEST_VIEW", CBaseParameter::RW,true,0,CONFIG_VAR);
 
 auto initOscAfterLoad() -> void{
 if (rp_HPGetFastADCIsAC_DCOrDefault()){
@@ -214,22 +232,9 @@ auto updateOscParametersToWEB() -> void{
     }
 
     if (inAutoscale.NewValue()){
-
-
-		uint32_t start, end;
-		rpApp_OscGetViewLimits(&start, &end);
-        // check autoscale state
-		if (start || end){
-			inAutoscale.SendValue(false);
-        }
-        // else{
-        //     inViewStartPos.SendValue(start);
-        //     inViewEndPos.SendValue(end);
-        // }
-
-
-
-
+        bool as = false;
+        rpApp_OscGetAutoScale(&as);
+    	inAutoscale.SendValue(as);
     }else{
         uint32_t start, end;
 		rpApp_OscGetViewLimits(&start, &end);
@@ -301,6 +306,98 @@ auto updateOscSignal() -> void{
             outCh[i].Resize(0);
         }
     }
+    rpApp_OscRefreshViewData();
+}
+
+auto requestFile() -> void {
+    download_file.Update();
+
+    if (request_normalize.IsNewValue()){
+        request_normalize.Update();
+    }
+
+    if (request_view.IsNewValue()){
+        request_view.Update();
+    }
+
+    if (request_format.IsNewValue()){
+        request_format.Update();
+        fprintf(stderr,"Export format %d\n",request_format.Value());
+    }
+
+    if (request_data.IsNewValue()){
+        request_data.Update();
+        request_data.Value() = false;
+
+        request_mode mode = (request_mode)request_format.Value();
+        rp_acq_decimation_t sampling_rate;
+        rp_AcqGetDecimation(&sampling_rate);
+        auto rate = getADCRate() / (uint32_t)sampling_rate;
+        auto f_mode = rp_formatter_api::rp_mode_t::RP_F_WAV;
+        auto is_view = request_view.Value()? RPAPP_VIEW_EXPORT : RPAPP_RAW_EXPORT;
+        auto is_normal = request_normalize.Value();
+        auto suffix = std::string("error");
+        auto file_format = mode & 0xF;
+        if (file_format == WAV){
+            suffix = ".wav";
+            is_normal = true;
+            f_mode = rp_formatter_api::rp_mode_t::RP_F_WAV;
+        }
+
+        if (file_format == CSV){
+            suffix = ".csv";
+            f_mode = rp_formatter_api::rp_mode_t::RP_F_CSV;
+        }
+
+        if (file_format == TDMS){
+            suffix = ".tdms";
+            f_mode = rp_formatter_api::rp_mode_t::RP_F_TDMS;
+        }
+
+        rp_formatter_api::CFormatter formatter(f_mode,rate);
+
+        float *buff[g_adc_channels + 1];
+
+        for(int i = 0; i <= g_adc_channels; i++){
+            buff[i] = NULL;
+        }
+
+        uint8_t allChannels = 0;
+
+        for(int i = 0; i < g_adc_channels; i++){
+            if (inShow[i].Value()) {
+                uint32_t size = is_view ? CH_SIGNAL_SIZE_DEFAULT: ADC_BUFFER_SIZE;
+                buff[i] = new float[size];
+                if (rpApp_OscGetExportedData((rpApp_osc_source)i,is_view,is_normal,buff[i],&size) == RP_OK){
+                    formatter.setChannel((rp_formatter_api::rp_channel_t)i, buff[i],size,std::string("Channel_") + std::to_string(i+1));
+                    allChannels++;
+                }
+            }
+        }
+
+        if (isMathShow()){
+            uint32_t size = is_view ? CH_SIGNAL_SIZE_DEFAULT: ADC_BUFFER_SIZE;
+            buff[g_adc_channels] = new float[size];
+            if (rpApp_OscGetExportedData(RPAPP_OSC_SOUR_MATH,is_view,is_normal,buff[g_adc_channels],&size) == RP_OK){
+                formatter.setChannel((rp_formatter_api::rp_channel_t)allChannels, buff[g_adc_channels],size,std::string("Math"));
+                allChannels++;
+            }
+        }
+
+        std::string filename = std::string("scopegen_data") + suffix;
+        formatter.openFile("/tmp/scopegenpro/" + filename);
+        if (formatter.isOpenFile()){
+            formatter.writeToFile();
+            formatter.closeFile();
+            download_file.Value() = filename;
+        }else{
+            download_file.Value() = std::string("error");
+        }
+
+        for(int i = 0; i <= g_adc_channels; i++){
+            delete[] buff[i];
+        }
+    }
 }
 
 
@@ -317,6 +414,8 @@ auto updateOscParams(bool force) -> void{
                 pllControlEnable.Update();
         }
     }
+
+    requestFile();
 
 /* ------ UPDATE OSCILLOSCOPE LOCAL PARAMETERS ------*/
 
@@ -347,9 +446,6 @@ auto updateOscParams(bool force) -> void{
 	inAutoscale.Update();
 
     if (inAutoscale.Value()) {
-        // rpApp_OscSetMathOperation((rpApp_osc_math_oper_t) mathOperation.NewValue());
-		// mathOperation.Update();
-
         if (rp_HPGetIsAttenuatorControllerPresentOrDefault()){
             for(int i = 0; i < g_adc_channels; i++){
                 rpApp_OscSetInputGain((rp_channel_t)i, (rpApp_osc_in_gain_t)RPAPP_OSC_IN_GAIN_HV);
@@ -358,31 +454,7 @@ auto updateOscParams(bool force) -> void{
             }
             sleep(1);
         }
-
         rpApp_OscAutoScale();
-        // for(int i = 0; i < g_adc_channels; i++){
-        //     double dvalue;
-        //     rpApp_OscGetAmplitudeScale((rpApp_osc_source)i, &dvalue);
-        //     inScale[i].Update();
-        //     inScale[i].SendValue(dvalue);
-        //     rpApp_OscGetAmplitudeOffset((rpApp_osc_source)i, &dvalue);
-        //     inOffset[i].Update();
-        //     inOffset[i].SendValue(dvalue);
-        // }
-
-        // float fvalue;
-        // rp_AcqGetTriggerHyst(&fvalue);
-        // inTrigHyst.SendValue(fvalue);
-
-        // float value;
-        // rpApp_OscGetTimeOffset(&value);
-        // inTimeOffset.SendValue(value);
-        // rpApp_OscGetTimeScale(&value);
-        // inTimeScale.SendValue(std::to_string(value));
-
-        // rpApp_osc_trig_sweep_t sweep;
-        // rpApp_OscGetTriggerSweep(&sweep);
-        // inTrigSweep.Value() = sweep;
         return;
     }
 
@@ -391,7 +463,7 @@ auto updateOscParams(bool force) -> void{
     IF_VALUE_CHANGED_FORCE(inTrigHyst, rp_AcqSetTriggerHyst(inTrigHyst.NewValue()),force)
 
     if (IS_NEW(inTimeScale) || force){
-        if (rpApp_OscSetTimeScale(inTimeScale.NewValue() / 1000) == RP_OK){
+        if (rpApp_OscSetTimeScale(inTimeScale.NewValue() / 1000.0) == RP_OK){
             inTimeScale.Update();
             std::lock_guard<std::mutex> lock(g_need_update_sig_gen_mtx);
             g_need_update_sig_gen = true;
@@ -443,6 +515,8 @@ auto updateOscParams(bool force) -> void{
         }
 
         IF_VALUE_CHANGED_FORCE(inProbe[i], rpApp_OscSetProbeAtt((rp_channel_t)i, inProbe[i].NewValue()),force)
+
+        IF_VALUE_CHANGED_FORCE(inSmoothMode[i], rpApp_OscSetSmoothMode((rp_channel_t)i, (rpApp_osc_interpolationMode)inSmoothMode[i].NewValue()),force)
 
         if (rp_HPGetFastADCIsAC_DCOrDefault()){
             IF_VALUE_CHANGED_FORCE(inAC_DC[i], rp_AcqSetAC_DC((rp_channel_t)i, inAC_DC[i].NewValue() == 0 ? RP_AC:RP_DC),force)

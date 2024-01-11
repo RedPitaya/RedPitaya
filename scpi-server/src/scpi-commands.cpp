@@ -27,6 +27,7 @@
 #include "led.h"
 #include "spi.h"
 #include "i2c.h"
+#include "can.h"
 #include "acquire.h"
 #include "acquire_axi.h"
 #include "generate.h"
@@ -85,7 +86,7 @@ scpi_result_t SCPI_Control(scpi_t * context, scpi_ctrl_name_t ctrl, scpi_reg_val
 
 scpi_result_t SCPI_Reset(scpi_t * context) {
     /* Terminating all scpi operations */
-    RP_LOG(context, LOG_INFO, "*RST Sucsessfuly reset scpi server.");
+    RP_LOG_INFO("Sucsessfuly reset scpi server.")
     return SCPI_RES_OK;
 }
 
@@ -96,9 +97,9 @@ scpi_result_t SCPI_SystemCommTcpipControlQ(scpi_t * context) {
 
 scpi_result_t SCPI_SystemErrorNextQEx(scpi_t * context) {
     if (rp_errorCount(context)){
-        auto str = rp_popError(context);
-        SCPI_ResultInt32(context, RP_ERR_CODE);
-        SCPI_ResultText(context, str.c_str());
+        auto err = rp_popError(context);
+        SCPI_ResultInt32(context, err.baseCode + err.errorCode);
+        SCPI_ResultText(context, err.msg.c_str());
         return SCPI_RES_OK;
     }
 
@@ -175,8 +176,8 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "ANALOG:PIN", .callback                 = RP_AnalogPinValue,},
     {.pattern = "ANALOG:PIN?", .callback                = RP_AnalogPinValueQ,},
 
-    {.pattern = "DAISY:SYNC:TRIG", .callback            = RP_EnableDaisyChainTrigSync,},
-    {.pattern = "DAISY:SYNC:TRIG?", .callback           = RP_EnableDaisyChainTrigSyncQ,},
+    {.pattern = "DAISY:SYNC:TRig", .callback            = RP_EnableDaisyChainTrigSync,},
+    {.pattern = "DAISY:SYNC:TRig?", .callback           = RP_EnableDaisyChainTrigSyncQ,},
 
     {.pattern = "DAISY:SYNC:CLK", .callback             = RP_EnableDaisyChainClockSync,},
     {.pattern = "DAISY:SYNC:CLK?", .callback            = RP_EnableDaisyChainClockSyncQ,},
@@ -193,42 +194,45 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "ACQ:RST", .callback                    = RP_AcqReset,},
     {.pattern = "ACQ:DEC", .callback                    = RP_AcqDecimation,},
     {.pattern = "ACQ:DEC?", .callback                   = RP_AcqDecimationQ,},
+    {.pattern = "ACQ:DEC:F", .callback                  = RP_AcqDecimationFactor,},
+    {.pattern = "ACQ:DEC:F?", .callback                 = RP_AcqDecimationFactorQ,},
+
     {.pattern = "ACQ:SRATe?", .callback                 = RP_AcqSamplingRateHzQ,},
     {.pattern = "ACQ:AVG", .callback                    = RP_AcqAveraging,},
     {.pattern = "ACQ:AVG?", .callback                   = RP_AcqAveragingQ,},
-    {.pattern = "ACQ:TRIG", .callback                   = RP_AcqTriggerSrc,},
-    {.pattern = "ACQ:TRIG:STAT?", .callback             = RP_AcqTriggerSrcQ,},
-    {.pattern = "ACQ:TRIG:DLY", .callback               = RP_AcqTriggerDelay,},
-    {.pattern = "ACQ:TRIG:DLY?", .callback              = RP_AcqTriggerDelayQ,},
-    {.pattern = "ACQ:TRIG:DLY:NS", .callback            = RP_AcqTriggerDelayNs,},
-    {.pattern = "ACQ:TRIG:DLY:NS?", .callback           = RP_AcqTriggerDelayNsQ,},
-    {.pattern = "ACQ:TRIG:HYST", .callback              = RP_AcqTriggerHyst,},
-    {.pattern = "ACQ:TRIG:HYST?", .callback             = RP_AcqTriggerHystQ,},
-    {.pattern = "ACQ:TRIG:FILL?", .callback             = RP_AcqTriggerFillQ,},
+    {.pattern = "ACQ:TRig", .callback                   = RP_AcqTriggerSrc,},
+    {.pattern = "ACQ:TRig:STAT?", .callback             = RP_AcqTriggerSrcQ,},
+    {.pattern = "ACQ:TRig:DLY", .callback               = RP_AcqTriggerDelay,},
+    {.pattern = "ACQ:TRig:DLY?", .callback              = RP_AcqTriggerDelayQ,},
+    {.pattern = "ACQ:TRig:DLY:NS", .callback            = RP_AcqTriggerDelayNs,},
+    {.pattern = "ACQ:TRig:DLY:NS?", .callback           = RP_AcqTriggerDelayNsQ,},
+    {.pattern = "ACQ:TRig:HYST", .callback              = RP_AcqTriggerHyst,},
+    {.pattern = "ACQ:TRig:HYST?", .callback             = RP_AcqTriggerHystQ,},
+    {.pattern = "ACQ:TRig:FILL?", .callback             = RP_AcqTriggerFillQ,},
     {.pattern = "ACQ:SOUR#:GAIN", .callback             = RP_AcqGain,},
     {.pattern = "ACQ:SOUR#:GAIN?", .callback            = RP_AcqGainQ,},
-    {.pattern = "ACQ:TRIG:LEV", .callback               = RP_AcqTriggerLevel,},
-    {.pattern = "ACQ:TRIG:LEV?", .callback              = RP_AcqTriggerLevelQ,},
+    {.pattern = "ACQ:TRig:LEV", .callback               = RP_AcqTriggerLevel,},
+    {.pattern = "ACQ:TRig:LEV?", .callback              = RP_AcqTriggerLevelQ,},
     {.pattern = "ACQ:WPOS?", .callback                  = RP_AcqWritePointerQ,},
     {.pattern = "ACQ:TPOS?", .callback                  = RP_AcqWritePointerAtTrigQ,},
-    {.pattern = "ACQ:DATA:UNITS", .callback             = RP_AcqScpiDataUnits,},
-    {.pattern = "ACQ:DATA:UNITS?", .callback            = RP_AcqScpiDataUnitsQ,},
+    {.pattern = "ACQ:DATA:Units", .callback             = RP_AcqScpiDataUnits,},
+    {.pattern = "ACQ:DATA:Units?", .callback            = RP_AcqScpiDataUnitsQ,},
     {.pattern = "ACQ:DATA:FORMAT", .callback            = RP_AcqSetDataFormat,},
-    {.pattern = "ACQ:SOUR#:DATA:STArt:END?", .callback  = RP_AcqDataPosQ,},
-    {.pattern = "ACQ:SOUR#:DATA:STArt:N?", .callback    = RP_AcqDataQ,},
-    {.pattern = "ACQ:SOUR#:DATA:OLD:N?", .callback      = RP_AcqOldestDataQ,},
+    {.pattern = "ACQ:SOUR#:DATA:Start:End?", .callback  = RP_AcqDataPosQ,},
+    {.pattern = "ACQ:SOUR#:DATA:Start:N?", .callback    = RP_AcqDataQ,},
+    {.pattern = "ACQ:SOUR#:DATA:Old:N?", .callback      = RP_AcqOldestDataQ,},
     {.pattern = "ACQ:SOUR#:DATA?", .callback            = RP_AcqDataOldestAllQ,},
-    {.pattern = "ACQ:SOUR#:DATA:LAT:N?", .callback      = RP_AcqLatestDataQ,},
+    {.pattern = "ACQ:SOUR#:DATA:Last:N?", .callback      = RP_AcqLatestDataQ,},
     {.pattern = "ACQ:BUF:SIZE?", .callback              = RP_AcqBufferSizeQ,},
 
     // DMA mode for ACQ
-    {.pattern = "ACQ:AXI:DATA:UNITS", .callback         = RP_AcqAxiScpiDataUnits,},
-    {.pattern = "ACQ:AXI:DATA:UNITS?", .callback        = RP_AcqAxiScpiDataUnitsQ,},
+    {.pattern = "ACQ:AXI:DATA:Units", .callback         = RP_AcqAxiScpiDataUnits,},
+    {.pattern = "ACQ:AXI:DATA:Units?", .callback        = RP_AcqAxiScpiDataUnitsQ,},
     {.pattern = "ACQ:AXI:DEC", .callback                = RP_AcqAxiDecimation,},
     {.pattern = "ACQ:AXI:DEC?", .callback               = RP_AcqAxiDecimationQ,},
     {.pattern = "ACQ:AXI:START?", .callback             = RP_AcqAxiStartQ,},
     {.pattern = "ACQ:AXI:SIZE?", .callback              = RP_AcqAxiEndQ,},
-    {.pattern = "ACQ:AXI:SOUR#:TRIG:FILL?", .callback   = RP_AcqAxiTriggerFillQ,},
+    {.pattern = "ACQ:AXI:SOUR#:Trig:Fill?", .callback   = RP_AcqAxiTriggerFillQ,},
     {.pattern = "ACQ:AXI:SOUR#:Trig:Dly", .callback     = RP_AcqAxiTriggerDelay,},
     {.pattern = "ACQ:AXI:SOUR#:Trig:Dly?", .callback    = RP_AcqAxiTriggerDelayQ,},
     {.pattern = "ACQ:AXI:SOUR#:Write:Pos?", .callback   = RP_AcqAxiWritePointerQ,},
@@ -236,15 +240,15 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "ACQ:AXI:SOUR#:ENable", .callback       = RP_AcqAxiEnable,},
     {.pattern = "ACQ:AXI:SOUR#:DATA:Start:N?",.callback = RP_AcqAxiDataQ,},
     {.pattern = "ACQ:AXI:SOUR#:SET:Buffer", .callback   = RP_AcqAxiSetAddres,},
-    
+
 
     {.pattern = "ACQ:SOUR#:COUP", .callback             = RP_AcqAC_DC,},
     {.pattern = "ACQ:SOUR#:COUP?", .callback            = RP_AcqAC_DCQ,},
-    {.pattern = "ACQ:TRIG:EXT:LEV", .callback           = RP_AcqExtTriggerLevel,},
-    {.pattern = "ACQ:TRIG:EXT:LEV?", .callback          = RP_AcqExtTriggerLevelQ,},
+    {.pattern = "ACQ:TRig:EXT:LEV", .callback           = RP_AcqExtTriggerLevel,},
+    {.pattern = "ACQ:TRig:EXT:LEV?", .callback          = RP_AcqExtTriggerLevelQ,},
 
-    {.pattern = "ACQ:TRIG:EXT:DEBouncerUs", .callback   = RP_AcqExtTriggerDebouncerUs,},
-    {.pattern = "ACQ:TRIG:EXT:DEBouncerUs?", .callback  = RP_AcqExtTriggerDebouncerUsQ,},
+    {.pattern = "ACQ:TRig:EXT:DEBouncer[:US]", .callback   = RP_AcqExtTriggerDebouncerUs,},
+    {.pattern = "ACQ:TRig:EXT:DEBouncer[:US]?", .callback  = RP_AcqExtTriggerDebouncerUsQ,},
 
     /* Generate */
     {.pattern = "GEN:RST", .callback                    = RP_GenReset,},
@@ -252,7 +256,7 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "OUTPUT:STATE", .callback               = RP_GenSyncState,},
     {.pattern = "OUTPUT#:STATE", .callback              = RP_GenState,},
     {.pattern = "OUTPUT#:STATE?", .callback             = RP_GenStateQ,},
-    {.pattern = "SOUR:TRIG:INT", .callback              = RP_GenTriggerBoth,},
+    {.pattern = "SOUR:TRig:INT", .callback              = RP_GenTriggerBoth,},
     {.pattern = "SOUR#:FREQ:FIX", .callback             = RP_GenFrequency,},
     {.pattern = "SOUR#:FREQ:FIX?", .callback            = RP_GenFrequencyQ,},
     {.pattern = "SOUR#:FUNC", .callback                 = RP_GenWaveForm,},
@@ -276,18 +280,18 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "SOUR#:BURS:INT:PER", .callback         = RP_GenBurstPeriod,},
     {.pattern = "SOUR#:BURS:INT:PER?", .callback        = RP_GenBurstPeriodQ,},
 
-    {.pattern = "SOUR#:BURS:LastValue", .callback       = RP_GenBurstLastValue,},
-    {.pattern = "SOUR#:BURS:LastValue?", .callback      = RP_GenBurstLastValueQ,},
+    {.pattern = "SOUR#:BURS:LASTValue", .callback       = RP_GenBurstLastValue,},
+    {.pattern = "SOUR#:BURS:LASTValue?", .callback      = RP_GenBurstLastValueQ,},
 
-    {.pattern = "SOUR#:InitValue", .callback            = RP_GenInitValue,},
-    {.pattern = "SOUR#:InitValue?", .callback           = RP_GenInitValueQ,},
+    {.pattern = "SOUR#:INITValue", .callback            = RP_GenInitValue,},
+    {.pattern = "SOUR#:INITValue?", .callback           = RP_GenInitValueQ,},
 
-    {.pattern = "SOUR#:TRIG:SOUR", .callback            = RP_GenTriggerSource,},
-    {.pattern = "SOUR#:TRIG:SOUR?", .callback           = RP_GenTriggerSourceQ,},
-    {.pattern = "SOUR#:TRIG:INT", .callback             = RP_GenTrigger,},
+    {.pattern = "SOUR#:TRig:SOUR", .callback            = RP_GenTriggerSource,},
+    {.pattern = "SOUR#:TRig:SOUR?", .callback           = RP_GenTriggerSourceQ,},
+    {.pattern = "SOUR#:TRig:INT", .callback             = RP_GenTrigger,},
 
-    {.pattern = "SOUR:TRIG:EXT:DEBouncerUs", .callback  = RP_GenExtTriggerDebouncerUs,},
-    {.pattern = "SOUR:TRIG:EXT:DEBouncerUs?", .callback = RP_GenExtTriggerDebouncerUsQ,},
+    {.pattern = "SOUR:TRig:EXT:DEBouncer[:US]", .callback  = RP_GenExtTriggerDebouncerUs,},
+    {.pattern = "SOUR:TRig:EXT:DEBouncer[:US]?", .callback = RP_GenExtTriggerDebouncerUsQ,},
 
     /* uart */
     {.pattern = "UART:INIT", .callback                  = RP_Uart_Init,},
@@ -304,7 +308,7 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "UART:TIMEOUT", .callback               = RP_Uart_Timeout,},
     {.pattern = "UART:TIMEOUT?", .callback              = RP_Uart_TimeoutQ,},
     {.pattern = "UART:WRITE#", .callback                = RP_Uart_SendBuffer,},
-    {.pattern = "UART:READ#", .callback                 = RP_Uart_ReadBuffer,},
+    {.pattern = "UART:READ#?", .callback                = RP_Uart_ReadBufferQ,},
 
     /* led */
     {.pattern = "LED:MMC", .callback                    = RP_LED_MMC,},
@@ -323,19 +327,19 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "SPI:SETtings:GET", .callback           = RP_SPI_GetSettings,},
 
     {.pattern = "SPI:SETtings:MODE", .callback          = RP_SPI_SetMode,},
-    {.pattern = "SPI:SETtings:MODE?", .callback         = RP_SPI_GetMode,},
+    {.pattern = "SPI:SETtings:MODE?", .callback         = RP_SPI_GetModeQ,},
     {.pattern = "SPI:SETtings:CSMODE", .callback        = RP_SPI_SetCSMode,},
-    {.pattern = "SPI:SETtings:CSMODE?", .callback       = RP_SPI_GetCSMode,},
+    {.pattern = "SPI:SETtings:CSMODE?", .callback       = RP_SPI_GetCSModeQ,},
     {.pattern = "SPI:SETtings:SPEED", .callback         = RP_SPI_SetSpeed,},
-    {.pattern = "SPI:SETtings:SPEED?", .callback        = RP_SPI_GetSpeed,},
+    {.pattern = "SPI:SETtings:SPEED?", .callback        = RP_SPI_GetSpeedQ,},
 
     {.pattern = "SPI:SETtings:WORD", .callback          = RP_SPI_SetWord,},
-    {.pattern = "SPI:SETtings:WORD?", .callback         = RP_SPI_GetWord,},
+    {.pattern = "SPI:SETtings:WORD?", .callback         = RP_SPI_GetWordQ,},
 
 
     {.pattern = "SPI:MSG:CREATE", .callback             = RP_SPI_CreateMessage,},
     {.pattern = "SPI:MSG:DEL", .callback                = RP_SPI_DestroyMessage,},
-    {.pattern = "SPI:MSG:SIZE?", .callback              = RP_SPI_GetMessageLen,},
+    {.pattern = "SPI:MSG:SIZE?", .callback              = RP_SPI_GetMessageLenQ,},
 
     {.pattern = "SPI:MSG#:TX#", .callback               = RP_SPI_SetTX,},
     {.pattern = "SPI:MSG#:TX#:RX", .callback            = RP_SPI_SetTXRX,},
@@ -343,9 +347,9 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "SPI:MSG#:TX#:CS", .callback            = RP_SPI_SetTXCS,},
     {.pattern = "SPI:MSG#:TX#:RX:CS", .callback         = RP_SPI_SetTXRXCS,},
     {.pattern = "SPI:MSG#:RX#:CS", .callback            = RP_SPI_SetRXCS,},
-    {.pattern = "SPI:MSG#:RX?", .callback               = RP_SPI_GetRXBuffer,},
-    {.pattern = "SPI:MSG#:TX?", .callback               = RP_SPI_GetTXBuffer,},
-    {.pattern = "SPI:MSG#:CS?", .callback               = RP_SPI_GetCSChangeState,},
+    {.pattern = "SPI:MSG#:RX?", .callback               = RP_SPI_GetRXBufferQ,},
+    {.pattern = "SPI:MSG#:TX?", .callback               = RP_SPI_GetTXBufferQ,},
+    {.pattern = "SPI:MSG#:CS?", .callback               = RP_SPI_GetCSChangeStateQ,},
 
     {.pattern = "SPI:PASS", .callback                   = RP_SPI_Pass,},
 
@@ -355,16 +359,52 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "I2C:FMODE", .callback                 = RP_I2C_ForceMode,},
     {.pattern = "I2C:FMODE?", .callback                = RP_I2C_ForceModeQ,},
 
-    {.pattern = "I2C:Smbus:Read#", .callback           = RP_I2C_SMBUS_Read,},
-    {.pattern = "I2C:Smbus:Read#:Word", .callback      = RP_I2C_SMBUS_ReadWord,},
-    {.pattern = "I2C:Smbus:Read#:Buffer#", .callback   = RP_I2C_SMBUS_ReadBuffer,},
-    {.pattern = "I2C:IOctl:Read:Buffer#", .callback    = RP_I2C_IOCTL_ReadBuffer,},
+    {.pattern = "I2C:Smbus:Read#?", .callback          = RP_I2C_SMBUS_ReadQ,},
+    {.pattern = "I2C:Smbus:Read#:Word?", .callback     = RP_I2C_SMBUS_ReadWordQ,},
+    {.pattern = "I2C:Smbus:Read#:Buffer#?", .callback  = RP_I2C_SMBUS_ReadBufferQ,},
+    {.pattern = "I2C:IOctl:Read:Buffer#?", .callback   = RP_I2C_IOCTL_ReadBufferQ,},
 
     {.pattern = "I2C:Smbus:Write#", .callback          = RP_I2C_SMBUS_Write,},
     {.pattern = "I2C:Smbus:Write#:Word", .callback     = RP_I2C_SMBUS_WriteWord,},
     {.pattern = "I2C:Smbus:Write#:Buffer#", .callback  = RP_I2C_SMBUS_WriteBuffer,},
     {.pattern = "I2C:IOctl:Write:Buffer#", .callback   = RP_I2C_IOCTL_WriteBuffer,},
 
+    /* can */
+    {.pattern = "CAN:FPGA", .callback                   = RP_CAN_FpgaEnable,},
+    {.pattern = "CAN:FPGA?", .callback                  = RP_CAN_FpgaEnableQ,},
+    {.pattern = "CAN#:START", .callback                 = RP_CAN_Start,},
+    {.pattern = "CAN#:STOP", .callback                  = RP_CAN_Stop,},
+    {.pattern = "CAN#:RESTART", .callback               = RP_CAN_Restart,},
+    {.pattern = "CAN#:STATE?", .callback                = RP_CAN_StateQ,},
+    {.pattern = "CAN#:BITRate", .callback               = RP_CAN_Bitrate,},
+    {.pattern = "CAN#:BITRate:SP", .callback            = RP_CAN_BitrateSamplePoint,},
+    {.pattern = "CAN#:BITRate:SP?", .callback           = RP_CAN_BitrateSamplePointQ,},
+    {.pattern = "CAN#:BITTiming", .callback             = RP_CAN_BitTiming,},
+    {.pattern = "CAN#:BITTiming?", .callback            = RP_CAN_BitTimingQ,},
+    {.pattern = "CAN#:BITTiming:Limits?", .callback     = RP_CAN_BitTimingLimitsQ,},
+    {.pattern = "CAN#:CLOCK?", .callback                = RP_CAN_ClockFreqQ,},
+    {.pattern = "CAN#:BUS:ERROR?", .callback            = RP_CAN_BusErrorCountersQ,},
+    {.pattern = "CAN#:Restart:Time", .callback          = RP_CAN_RestartTime,},
+    {.pattern = "CAN#:Restart:Time?", .callback         = RP_CAN_RestartTimeQ,},
+    {.pattern = "CAN#:MODE", .callback                  = RP_CAN_ControllerMode,},
+    {.pattern = "CAN#:MODE?", .callback                 = RP_CAN_ControllerModeQ,},
+    {.pattern = "CAN#:OPEN", .callback                  = RP_CAN_Open,},
+    {.pattern = "CAN#:CLOSE", .callback                 = RP_CAN_Close,},
+    {.pattern = "CAN#:Send#", .callback                 = RP_CAN_Send,},
+    {.pattern = "CAN#:Send#:Timeout#", .callback        = RP_CAN_Send,},
+    {.pattern = "CAN#:Send#:Ext", .callback             = RP_CAN_Send,},
+    {.pattern = "CAN#:Send#:Timeout#:Ext", .callback    = RP_CAN_Send,},
+    {.pattern = "CAN#:Send#:RTR", .callback             = RP_CAN_Send,},
+    {.pattern = "CAN#:Send#:Timeout#:RTR", .callback    = RP_CAN_Send,},
+    {.pattern = "CAN#:Send#:Ext:RTR", .callback         = RP_CAN_Send,},
+    {.pattern = "CAN#:Send#:Timeout#:Ext:RTR", .callback= RP_CAN_Send,},
+    {.pattern = "CAN#:Read?", .callback                 = RP_CAN_ReadQ,},
+    {.pattern = "CAN#:Read:Timeout#?", .callback        = RP_CAN_ReadQ,},
+    {.pattern = "CAN#:Filter:Add", .callback            = RP_CAN_AddFilter,},
+    {.pattern = "CAN#:Filter:Remove", .callback         = RP_CAN_RemoveFilter,},
+    {.pattern = "CAN#:Filter:Clear", .callback          = RP_CAN_ClearFilter,},
+    {.pattern = "CAN#:Filter:Set", .callback            = RP_CAN_SetFilter,},
+    {.pattern = "CAN#:SHOW:ERROR", .callback            = RP_CAN_ShowErrorFrames,},
 
     SCPI_CMD_LIST_END
 };

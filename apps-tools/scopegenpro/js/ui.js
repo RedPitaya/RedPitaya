@@ -58,6 +58,10 @@
             }, 200);
         });
 
+        $("#ext_con_but").click(function(event) {
+            $('#ext_connections_dialog').modal("show");
+        });
+
         $(moreVal + ', ' + lessVal).on("mouseup mouseout", function() {
             clearTimeout(timeout);
             clearInterval(interval);
@@ -212,6 +216,27 @@
         });
     };
 
+    OSC.updateARBFunc = function(list) {
+        const splitLines = value => value.split(/\r?\n/);
+        splitLines(list).forEach(function(item){
+            var id = item.trim();
+            if (id !== ""){
+                var name = id.slice(1);
+                var opt = document.createElement('option')
+                var opt2 = document.createElement('option')
+                opt.setAttribute('value', id)
+                opt.innerText = name
+                opt2.setAttribute('value', id)
+                opt2.innerText = name
+                var r1 = document.getElementById('SOUR1_FUNC');
+                if (r1!= null)
+                    r1.appendChild(opt);
+                var r2 = document.getElementById('SOUR2_FUNC');
+                if (r2!= null)
+                    r2.appendChild(opt2);
+            }
+        });
+    }
 
     OSC.updateLimits = function () {
         // { // OSC_CH1_OFFSET limits
@@ -484,9 +509,25 @@
             setTimeout(OSC.SaveGraphsPNG, 30);
         });
 
-        $('#OSC_SAVECSV').on('click', function() {
-            $(this).attr('href', OSC.downloadDataAsCSV("scopeData.csv"));
+        $('#normalize_chbox').click(function(event){
+            var chkBox = document.getElementById('normalize_chbox')
+            var state = chkBox.getAttribute('data-checked') === "true"
+            OSC.params.local['REQUEST_NORMALIZE'] = { value: !state }
+            OSC.sendParams();
         });
+
+        $('#view_chbox').click(function(event){
+            var chkBox = document.getElementById('view_chbox')
+            var state = chkBox.getAttribute('data-checked') === "true"
+            OSC.params.local['REQUEST_VIEW'] = { value: !state }
+            OSC.sendParams();
+        });
+
+        $('#OSC_REQ_EXPORT_FILE').on('click', function() {
+            OSC.params.local['REQUEST_DATA'] = { value: true };
+            OSC.sendParams();
+        });
+
 
         $('#OSC_SINGLE').on('click', function(ev) {
             ev.preventDefault();
@@ -512,6 +553,10 @@
             $('body').removeClass('loaded');
             OSC.loaderShow = true;
             OSC.signalStack = [];
+        });
+
+        $('#OSC_EXPORT').on('click', function(ev) {
+            $('#export_dialog').modal("show");
         });
 
         // Selecting active signal

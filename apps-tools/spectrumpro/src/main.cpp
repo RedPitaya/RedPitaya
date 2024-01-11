@@ -47,8 +47,8 @@ CIntParameter   view_port_width     ("view_port_width",   CBaseParameter::RW, 25
 CFloatParameter view_port_start     ("view_port_start",   CBaseParameter::RW, 0, 0, 0, MAX_FREQ);
 CFloatParameter view_port_end       ("view_port_end",     CBaseParameter::RW, MAX_FREQ, 0, 0, MAX_FREQ);
 
-CIntParameter   freq_unit           ("freq_unit",    CBaseParameter::RWSA, 2, 0, 0, 2,CONFIG_VAR);
-CIntParameter   y_axis_mode         ("y_axis_mode",  CBaseParameter::RW, 0, 0, 0, 2,CONFIG_VAR); // 0 -dBm mode ; 1 - Volt mode ; 2 -dBu mode
+CIntParameter   freq_unit           ("freq_unit",    CBaseParameter::RWSA, 2, 0, 0, 2, CONFIG_VAR);
+CIntParameter   y_axis_mode         ("y_axis_mode",  CBaseParameter::RW, 0, 0, 0, 4, CONFIG_VAR); // 0 -dBm mode ; 1 - Volt mode ; 2 -dBu mode; 3 -dBV mode; 4 -dBuV mode
 CIntParameter   adc_freq            ("ADC_FREQ",     CBaseParameter::RWSA, 0, 0, 0, getADCRate());
 CIntParameter   rbw                 ("RBW",          CBaseParameter::RWSA, 0, 0, 0, MAX_FREQ);
 CFloatParameter impedance           ("DBU_IMP_FUNC", CBaseParameter::RW, 50, 0, 0.1, 1000,CONFIG_VAR);
@@ -94,7 +94,9 @@ CFloatParameter outPhase[MAX_DAC_CHANNELS]                 = INIT2("SOUR","_PHAS
 CFloatParameter outDCYC[MAX_DAC_CHANNELS]                  = INIT2("SOUR","_DCYC", CBaseParameter::RW, 50, 0, 0, 100,CONFIG_VAR);
 CFloatParameter outRiseTime[MAX_DAC_CHANNELS]              = INIT2("SOUR","_RISE", CBaseParameter::RW, 1, 0, 0.1, 1000,CONFIG_VAR);
 CFloatParameter outFallTime[MAX_DAC_CHANNELS]              = INIT2("SOUR","_FALL", CBaseParameter::RW, 1, 0, 0.1, 1000,CONFIG_VAR);
-CIntParameter outWAveform[MAX_DAC_CHANNELS]                = INIT2("SOUR","_FUNC", CBaseParameter::RW, RP_WAVEFORM_SINE, 0, RP_WAVEFORM_SINE, RP_WAVEFORM_DC_NEG,CONFIG_VAR);
+CStringParameter outWaveform[MAX_DAC_CHANNELS]             = INIT2("SOUR","_FUNC", CBaseParameter::RW, "0", 0,CONFIG_VAR);
+
+CStringParameter outARBList = CStringParameter("ARB_LIST", CBaseParameter::RW, loadARBList(), 0);
 
 CIntParameter outGain[MAX_DAC_CHANNELS]                    = INIT2("CH","_OUT_GAIN", CBaseParameter::RW, 0, 0, 0, 1);
 CIntParameter outTemperatureRuntime[MAX_DAC_CHANNELS]      = INIT2("SOUR","_TEMP_RUNTIME", CBaseParameter::RWSA, 0, 0, 0, 1);
@@ -436,20 +438,20 @@ void UpdateSignals(void)
 
     size_t signal_size = 0;
     rpApp_SpecGetViewSize(&signal_size);
-    bool isShow = false;
+    bool isShow = true;
     for(auto i = 0u; i < g_adc_count; i++){
         isShow |= inShow[i].Value();
     }
-    if (isShow){
-        int ret = rpApp_SpecGetViewData(data, signal_size);
-        if (ret != 0) {
-            return;
-        }
 
-        auto mode = rp_dsp_api::mode_t::DBM;
-        rpApp_SpecGetMode(&mode);
-        signal_mode[0] = mode;
+    int ret = rpApp_SpecGetViewData(data, signal_size);
+    if (ret != 0) {
+        return;
     }
+
+    auto mode = rp_dsp_api::mode_t::DBM;
+    rpApp_SpecGetMode(&mode);
+    signal_mode[0] = mode;
+
     for(auto i = 0u; i < g_adc_count; i++){
         if (inFreeze[i].Value() && g_old_signalSize == signal_size) {
             memcpy_neon(data[i + 1],data_freeze[i],signal_size * sizeof(float));
@@ -504,11 +506,7 @@ void UpdateSignals(void)
 
     auto indexArray = prepareIndexArray(i_start,i_stop,width,xAxisLogMode.Value());
 
-    if (isShow) {
-        decimateData(s_xaxis,data[0],i_start,i_stop,width,xAxisLogMode.Value(),indexArray);
-    }else{
-        s_xaxis.Resize(0);
-    }
+    decimateData(s_xaxis,data[0],i_start,i_stop,width,xAxisLogMode.Value(),indexArray);
     // End resize
 
     if (requestFullData.Value()){
@@ -672,10 +670,34 @@ static void UpdateGeneratorParameters(bool force)
             RESEND(outFallTime[ch])
         }
 
-        if (outWAveform[ch].IsNewValue() || force) {
-            rp_GenWaveform((rp_channel_t)ch, (rp_waveform_t) outWAveform[ch].NewValue());
-            outWAveform[ch].Update();
-            RESEND(outWAveform[ch])
+        if (outWaveform[ch].IsNewValue() || force){
+            auto wf = outWaveform[ch].NewValue();
+            if (wf[0] == 'A'){
+                auto signame = wf.erase(0, 1);
+                float data[DAC_BUFFER_SIZE];
+                uint32_t size;
+                if (!rp_ARBGetSignalByName(signame,data,&size)){
+                    rp_GenArbWaveform((rp_channel_t)ch,data,size);
+                    rp_GenWaveform((rp_channel_t)ch,RP_WAVEFORM_ARBITRARY);
+                    outWaveform[ch].Update();
+                }else{
+                    outWaveform[ch].Update();
+                    rp_GenWaveform((rp_channel_t)ch, RP_WAVEFORM_SINE);
+                    outWaveform[ch].Value() = "0";
+                }
+
+            }else{
+                try{
+                    rp_waveform_t w = (rp_waveform_t)stoi(wf);
+                    rp_GenWaveform((rp_channel_t)ch, w);
+                    outWaveform[ch].Update();
+                }
+                catch (const std::exception&) {
+                    rp_GenWaveform((rp_channel_t)ch, RP_WAVEFORM_SINE);
+                    outWaveform[ch].Update();
+                    outWaveform[ch].Value() = "0";
+                }
+            }
         }
     }
 
@@ -755,8 +777,8 @@ void OnNewParams(void)
 
     if (resetSettings.IsNewValue()){
         if (resetSettings.NewValue() == 1){
-            deleteConfig(getHomeDirectory() + "/.config/redpitaya/apps/scopegenpro/config.json");
-            configSetWithList(getHomeDirectory() + "/.config/redpitaya/apps/scopegenpro", "config.json",g_savedParams);
+            deleteConfig(getHomeDirectory() + "/.config/redpitaya/apps/spectrumpro/config.json");
+            configSetWithList(getHomeDirectory() + "/.config/redpitaya/apps/spectrumpro", "config.json",g_savedParams);
             resetSettings.Update();
             resetSettings.SendValue(2);
             return;

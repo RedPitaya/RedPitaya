@@ -6,6 +6,10 @@ import rp_hw
 
 print("For test need connect with wire RX<->TX and MOSI<->MISO")
 
+print("rp_hw.rp_HwGetError(rp_hw.RP_HW_EAL)")
+res = rp_hw.rp_HwGetError(rp_hw.RP_HW_EAL)
+print(res)
+
 print("rp_hw.rp_UartInit()")
 res = rp_hw.rp_UartInit()
 print(res)

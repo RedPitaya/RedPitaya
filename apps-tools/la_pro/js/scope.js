@@ -2365,9 +2365,6 @@ $(function() {
         OSC.exitEditing(true);
     });
 
-    // Initialize FastClick to remove the 300ms delay between a physical tap and the firing of a click event on mobile browsers
-    //new FastClick(document.body);
-
     $(".dbl").on('dblclick', function() {
         var cls = $(this).attr('class');
         if (cls.indexOf('ch1') != -1)
@@ -4040,6 +4037,10 @@ $(function() {
 
         OSC.sendParams();
     }
+
+    $("#ext_con_but").click(function(event) {
+        $('#ext_connections_dialog').modal("show");
+    });
 
     $('#pre-sample-buf-val').change(function(e) {
         var val = $('#pre-sample-buf-val').val();

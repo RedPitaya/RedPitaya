@@ -192,6 +192,10 @@ int acq_axi_GetBufferFillState(rp_channel_t channel, bool* state) {
         return osc_axi_GetBufferFillStateChA(state);
     case RP_CH_2:
         return osc_axi_GetBufferFillStateChB(state);
+    case RP_CH_3:
+        return osc_axi_GetBufferFillStateChC(state);
+    case RP_CH_4:
+        return osc_axi_GetBufferFillStateChD(state);
     default:
         return RP_EIPV;
     }
@@ -334,12 +338,21 @@ int acq_SetDecimationFactor(uint32_t decimation){
 
 int acq_axi_SetDecimationFactor(uint32_t decimation){
 
+    uint8_t channels = 0;
+    if (rp_HPGetFastADCChannelsCount(&channels) != RP_HP_OK){
+        fprintf(stderr,"[Error:acq_axi_SetDecimationFactor] Can't get fast ADC channels count\n");
+        return RP_NOTS;
+    }
+
     int64_t time_ns[4] = {0,0,0,0};
 
-    
+
     if (triggerDelayInNs) {
-        acq_axi_GetTriggerDelayNs(RP_CH_1,&time_ns[0]);
-        acq_axi_GetTriggerDelayNs(RP_CH_2,&time_ns[1]);
+
+        if (channels >= 1) acq_axi_GetTriggerDelayNs(RP_CH_1,&time_ns[0]);
+        if (channels >= 2) acq_axi_GetTriggerDelayNs(RP_CH_2,&time_ns[1]);
+        if (channels >= 3) acq_axi_GetTriggerDelayNs(RP_CH_3,&time_ns[2]);
+        if (channels >= 4) acq_axi_GetTriggerDelayNs(RP_CH_4,&time_ns[3]);
     }
 
     bool check = false;
@@ -353,8 +366,10 @@ int acq_axi_SetDecimationFactor(uint32_t decimation){
     osc_SetDecimation(decimation);
     // Now update trigger delay based on new decimation
     if (triggerDelayInNs) {
-        acq_axi_SetTriggerDelayNs(RP_CH_1, time_ns[0]);
-        acq_axi_SetTriggerDelayNs(RP_CH_2, time_ns[1]);
+        if (channels >= 1) acq_axi_SetTriggerDelayNs(RP_CH_1, time_ns[0]);
+        if (channels >= 2) acq_axi_SetTriggerDelayNs(RP_CH_2, time_ns[1]);
+        if (channels >= 3) acq_axi_SetTriggerDelayNs(RP_CH_3, time_ns[2]);
+        if (channels >= 4) acq_axi_SetTriggerDelayNs(RP_CH_4, time_ns[3]);
     }
 
     return RP_OK;
@@ -441,9 +456,9 @@ int acq_GetSamplingRateHz(float* sampling_rate){
         return RP_EOOR;
     }
 
-    rp_acq_decimation_t decimation;
-    acq_GetDecimation(&decimation);
-    *sampling_rate = max_rate / decimation;
+    uint32_t decimation;
+    acq_GetDecimationFactor(&decimation);
+    *sampling_rate = max_rate / (float)decimation;
     return RP_OK;
 }
 
@@ -485,6 +500,12 @@ int acq_SetTriggerDelay(int32_t decimated_data_num){
     return RP_OK;
 }
 
+int acq_SetTriggerDelayDirect(uint32_t decimated_data_num){
+    osc_SetTriggerDelay(decimated_data_num);
+    triggerDelayInNs = false;
+    return RP_OK;
+}
+
 int acq_axi_SetTriggerDelay(rp_channel_t channel, int32_t decimated_data_num)
 {
 
@@ -498,6 +519,12 @@ int acq_axi_SetTriggerDelay(rp_channel_t channel, int32_t decimated_data_num)
     case RP_CH_2:
         osc_axi_SetTriggerDelayChB(decimated_data_num);
         break;
+    case RP_CH_3:
+        osc_axi_SetTriggerDelayChC(decimated_data_num);
+        break;
+    case RP_CH_4:
+        osc_axi_SetTriggerDelayChD(decimated_data_num);
+        break;
     default:
         return RP_EIPV;
     }
@@ -508,6 +535,13 @@ int acq_axi_SetTriggerDelay(rp_channel_t channel, int32_t decimated_data_num)
 int acq_SetTriggerDelayNs(int64_t time_ns){
     int32_t samples = cnvTimeToSmpls(time_ns);
     acq_SetTriggerDelay(samples);
+    triggerDelayInNs = true;
+    return RP_OK;
+}
+
+int acq_SetTriggerDelayNsDirect(uint64_t time_ns){
+    int32_t samples = cnvTimeToSmpls(time_ns);
+    acq_SetTriggerDelayDirect(samples);
     triggerDelayInNs = true;
     return RP_OK;
 }
@@ -530,6 +564,13 @@ int acq_GetTriggerDelay(int32_t* decimated_data_num){
     return r;
 }
 
+int acq_GetTriggerDelayDirect(uint32_t* decimated_data_num){
+    uint32_t trig_dly;
+    int r=osc_GetTriggerDelay(&trig_dly);
+    *decimated_data_num=trig_dly;
+    return r;
+}
+
 int acq_axi_GetTriggerDelay(rp_channel_t channel, int32_t* decimated_data_num)
 {
 
@@ -545,6 +586,12 @@ int acq_axi_GetTriggerDelay(rp_channel_t channel, int32_t* decimated_data_num)
     case RP_CH_2:
         r=osc_axi_GetTriggerDelayChB(&trig_dly);
         break;
+    case RP_CH_3:
+        r=osc_axi_GetTriggerDelayChC(&trig_dly);
+        break;
+    case RP_CH_4:
+        r=osc_axi_GetTriggerDelayChD(&trig_dly);
+        break;
     default:
         return RP_EIPV;
     }
@@ -555,6 +602,13 @@ int acq_axi_GetTriggerDelay(rp_channel_t channel, int32_t* decimated_data_num)
 int acq_GetTriggerDelayNs(int64_t* time_ns){
     int32_t samples;
     acq_GetTriggerDelay(&samples);
+    *time_ns = cnvSmplsToTime(samples);
+    return RP_OK;
+}
+
+int acq_GetTriggerDelayNsDirect(uint64_t* time_ns){
+    uint32_t samples;
+    acq_GetTriggerDelayDirect(&samples);
     *time_ns = cnvSmplsToTime(samples);
     return RP_OK;
 }
@@ -593,6 +647,10 @@ int acq_axi_GetWritePointer(rp_channel_t channel, uint32_t* pos)
         return osc_axi_GetWritePointerChA(pos);
     case RP_CH_2:
         return osc_axi_GetWritePointerChB(pos);
+    case RP_CH_3:
+        return osc_axi_GetWritePointerChC(pos);
+    case RP_CH_4:
+        return osc_axi_GetWritePointerChD(pos);
     default:
         return RP_EIPV;
     }
@@ -609,6 +667,10 @@ int acq_axi_GetWritePointerAtTrig(rp_channel_t channel, uint32_t* pos)
         return osc_axi_GetWritePointerAtTrigChA(pos);
     case RP_CH_2:
         return osc_axi_GetWritePointerAtTrigChB(pos);
+    case RP_CH_3:
+        return osc_axi_GetWritePointerAtTrigChC(pos);
+    case RP_CH_4:
+        return osc_axi_GetWritePointerAtTrigChD(pos);
     default:
         return RP_EIPV;
     }
@@ -896,6 +958,7 @@ int acq_GetChannelThresholdHyst(rp_channel_t channel, float* voltage){
 
 int acq_Start(){
     osc_WriteDataIntoMemory(true);
+    acq_SetUnlockTrigger();
     return RP_OK;
 }
 
@@ -908,6 +971,15 @@ int acq_Reset(){
     return osc_ResetWriteStateMachine();
 }
 
+int acq_SetUnlockTrigger(){
+    return osc_SetUnlockTrigger();
+}
+
+int acq_GetUnlockTrigger(bool *state){
+    return osc_GetUnlockTrigger(state);
+}
+
+
 int acq_axi_Enable(rp_channel_t channel, bool enable)
 {
 
@@ -919,6 +991,10 @@ int acq_axi_Enable(rp_channel_t channel, bool enable)
         return osc_axi_EnableChA(enable);
     case RP_CH_2:
         return osc_axi_EnableChB(enable);
+    case RP_CH_3:
+        return osc_axi_EnableChC(enable);
+    case RP_CH_4:
+        return osc_axi_EnableChD(enable);
     default:
         return RP_EIPV;
     }
@@ -969,6 +1045,10 @@ static const volatile uint16_t* getAxiRawBuffer(rp_channel_t channel)
         return osc_axi_GetDataBufferChA();
     case RP_CH_2:
         return osc_axi_GetDataBufferChB();
+    case RP_CH_3:
+        return osc_axi_GetDataBufferChC();
+    case RP_CH_4:
+        return osc_axi_GetDataBufferChD();
     default:
         fprintf(stderr,"[Error:getAxiRawBuffer] Channel is larger than allowed\n");
         return NULL;
@@ -1072,6 +1152,12 @@ int acq_axi_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16
     case RP_CH_2:
         buffer_size = axi_ch_buffer_size_in_samples[1];
         break;
+    case RP_CH_3:
+        buffer_size = axi_ch_buffer_size_in_samples[2];
+        break;
+    case RP_CH_4:
+        buffer_size = axi_ch_buffer_size_in_samples[3];
+        break;
     default:
         return RP_EIPV;
     }
@@ -1111,7 +1197,111 @@ int acq_axi_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16
     return RP_OK;
 }
 
-int acq_GetDataRawV2(uint32_t pos,buffers_t *out)
+int acq_GetDataInBuffer(rp_channel_t channel, uint32_t pos, uint32_t* size,buffers_t *out){
+
+    CHECK_CHANNEL("acq_GetDataInBuffer")
+
+    *size = MIN(*size, ADC_BUFFER_SIZE);
+
+    const volatile uint32_t* raw_buffer = getRawBuffer(channel);
+
+    if (!raw_buffer) {
+        return RP_EOOR;
+    }
+
+    rp_pinState_t mode;
+    float fullScale;
+    float gainValue;
+
+    if (acq_GetGainV(channel, &gainValue) != RP_OK){
+        return RP_EOOR;
+    }
+
+    if (acq_GetGain(channel, &mode) != RP_OK){
+        return RP_EOOR;
+    }
+
+    rp_acq_ac_dc_mode_t power_mode;
+    if (acq_GetAC_DC(channel,&power_mode) != RP_OK){
+        return RP_EOOR;
+    }
+
+    if (rp_HPGetHWADCFullScale(&fullScale) != RP_OK){
+        return RP_EOOR;
+    }
+
+    uint_gain_calib_t calib;
+    uint8_t bits = 0;
+
+    bool is_sign = false;
+    int ret = rp_HPGetFastADCBits(&bits);
+    ret |= rp_HPGetFastADCIsSigned(&is_sign);
+
+
+    switch (mode)
+    {
+        case RP_LOW:
+            ret |= rp_CalibGetFastADCCalibValueI(convertCh(channel),convertPower(power_mode),&calib);
+            break;
+
+        case RP_HIGH:
+            ret |= rp_CalibGetFastADCCalibValue_1_20I(convertCh(channel),convertPower(power_mode),&calib);
+            break;
+
+        default:
+            fprintf(stderr,"[Error:acq_GetDataInBuffer] Unknown mode: %d\n",mode);
+            return RP_EOOR;
+            break;
+    }
+
+    if (ret != RP_HW_CALIB_OK){
+        fprintf(stderr,"[Error:acq_GetDataInBuffer] Error get calibaration: %d\n",ret);
+        return RP_EOOR;
+    }
+
+    uint32_t gain_raw  = out->use_calib_for_raw ?  calib.gain : 1;
+    uint32_t g_base_raw = out->use_calib_for_raw ? calib.base : 1;
+    int32_t offset_raw  = out->use_calib_for_raw ? calib.offset  : 0;
+
+    uint32_t gain_volt  = out->use_calib_for_volts ?  calib.gain : 1;
+    uint32_t g_base_volt = out->use_calib_for_volts ? calib.base : 1;
+    int32_t offset_volt  = out->use_calib_for_volts ? calib.offset  : 0;
+
+    uint32_t mask = ((uint64_t)1 << bits) - 1;
+
+    bool is_need_raw = out->ch_i[channel] != NULL;
+    bool is_need_vold_f = out->ch_f[channel] != NULL;
+    bool is_need_vold_d = out->ch_d[channel] != NULL;
+    int16_t* iPtr = out->ch_i[channel];
+    float* fPtr = out->ch_f[channel];
+    double* dPtr = out->ch_d[channel];
+
+    for (uint32_t i = 0; i < (*size); ++i) {
+
+        uint32_t cnts = (raw_buffer[(pos + i) % ADC_BUFFER_SIZE]) & mask;
+
+        if (is_need_raw){
+            if (is_sign)
+                iPtr[i] = cmn_CalibCntsSigned(cnts,bits,gain_raw,g_base_raw,offset_raw);
+            else
+                iPtr[i] = cmn_CalibCntsUnsigned(cnts,bits,gain_raw,g_base_raw,offset_raw);
+        }
+
+        if (is_need_vold_d || is_need_vold_f){
+            float value = 0;
+            if (is_sign)
+                value = cmn_convertToVoltSigned(cnts,bits,fullScale,gain_volt,g_base_volt,offset_volt) * gainValue;
+            else
+                value = cmn_convertToVoltUnsigned(cnts,bits,fullScale,gain_volt,g_base_volt,offset_volt) * gainValue;
+            if (is_need_vold_f) fPtr[i] = value;
+            if (is_need_vold_d) dPtr[i] = value;
+        }
+    }
+
+    return RP_OK;
+}
+
+int acq_GetData(uint32_t pos,buffers_t *out)
 {
     uint8_t channels = 0;
     if (rp_HPGetFastADCChannelsCount(&channels) != RP_HP_OK){
@@ -1123,11 +1313,7 @@ int acq_GetDataRawV2(uint32_t pos,buffers_t *out)
 
     if (channels > 0){
         uint32_t size = out->size;
-        if (!out->ch_i[0]){
-            fprintf(stderr,"[FATAL ERROR] Buffer[0] for fill is NULL\n");
-            assert(false);
-        }
-        int ret = acq_GetDataRaw(RP_CH_1,pos,&size,out->ch_i[0],false);
+        int ret = acq_GetDataInBuffer(RP_CH_1,pos,&size,out);
         if (ret != RP_OK){
             return ret;
         }
@@ -1136,11 +1322,7 @@ int acq_GetDataRawV2(uint32_t pos,buffers_t *out)
 
     if (channels > 1){
         uint32_t size = out->size;
-        if (!out->ch_i[1]){
-            fprintf(stderr,"[FATAL ERROR] Buffer[1] for fill is NULL\n");
-            assert(false);
-        }
-        int ret = acq_GetDataRaw(RP_CH_2,pos,&size,out->ch_i[1],false);
+        int ret = acq_GetDataInBuffer(RP_CH_2,pos,&size,out);
         if (ret != RP_OK){
             return ret;
         }
@@ -1149,11 +1331,7 @@ int acq_GetDataRawV2(uint32_t pos,buffers_t *out)
 
     if (channels > 2){
         uint32_t size = out->size;
-        if (!out->ch_i[2]){
-            fprintf(stderr,"[FATAL ERROR] Buffer[2] for fill is NULL\n");
-            assert(false);
-        }
-        int ret = acq_GetDataRaw(RP_CH_3,pos,&size,out->ch_i[2],false);
+        int ret = acq_GetDataInBuffer(RP_CH_3,pos,&size,out);
         if (ret != RP_OK){
             return ret;
         }
@@ -1162,11 +1340,7 @@ int acq_GetDataRawV2(uint32_t pos,buffers_t *out)
 
     if (channels > 3){
         uint32_t size = out->size;
-        if (!out->ch_i[3]){
-            fprintf(stderr,"[FATAL ERROR] Buffer[3] for fill is NULL\n");
-            assert(false);
-        }
-        int ret = acq_GetDataRaw(RP_CH_4,pos,&size,out->ch_i[3],false);
+        int ret = acq_GetDataInBuffer(RP_CH_4,pos,&size,out);
         if (ret != RP_OK){
             return ret;
         }
@@ -1319,6 +1493,12 @@ int acq_axi_GetDataVEx(rp_channel_t channel,  uint32_t pos, uint32_t* size, void
     case RP_CH_2:
         buffer_size = axi_ch_buffer_size_in_samples[1];
         break;
+    case RP_CH_3:
+        buffer_size = axi_ch_buffer_size_in_samples[2];
+        break;
+    case RP_CH_4:
+        buffer_size = axi_ch_buffer_size_in_samples[3];
+        break;
     default:
         return RP_EIPV;
     }
@@ -1399,144 +1579,6 @@ int acq_axi_GetDataV(rp_channel_t channel,  uint32_t pos, uint32_t* size, float*
     return acq_axi_GetDataVEx(channel,pos,size,buffer,true);
 }
 
-int acq_GetDataV2(uint32_t pos, buffers_t *out)
-{
-    uint8_t channels = 0;
-    if (rp_HPGetFastADCChannelsCount(&channels) != RP_HP_OK){
-        channels = 0;
-    }
-
-    bool fillData = false;
-    out->size = MIN(out->size, ADC_BUFFER_SIZE);
-
-    if (channels > 0){
-        uint32_t size = out->size;
-        if (!out->ch_f[0]){
-            fprintf(stderr,"[FATAL ERROR] Buffer[0] for fill is NULL\n");
-            assert(false);
-        }
-        int ret = acq_GetDataV(RP_CH_1,pos,&size,out->ch_f[0]);
-        if (ret != RP_OK){
-            return ret;
-        }
-        fillData = true;
-    }
-
-    if (channels > 1){
-        uint32_t size = out->size;
-        if (!out->ch_f[1]){
-            fprintf(stderr,"[FATAL ERROR] Buffer[1] for fill is NULL\n");
-            assert(false);
-        }
-        int ret = acq_GetDataV(RP_CH_2,pos,&size,out->ch_f[1]);
-        if (ret != RP_OK){
-            return ret;
-        }
-        fillData = true;
-    }
-
-    if (channels > 2){
-        uint32_t size = out->size;
-        if (!out->ch_f[2]){
-            fprintf(stderr,"[FATAL ERROR] Buffer[2] for fill is NULL\n");
-            assert(false);
-        }
-        int ret = acq_GetDataV(RP_CH_3,pos,&size,out->ch_f[2]);
-        if (ret != RP_OK){
-            return ret;
-        }
-        fillData = true;
-    }
-
-    if (channels > 3){
-        uint32_t size = out->size;
-        if (!out->ch_f[3]){
-            fprintf(stderr,"[FATAL ERROR] Buffer[3] for fill is NULL\n");
-            assert(false);
-        }
-        int ret = acq_GetDataV(RP_CH_4,pos,&size,out->ch_f[3]);
-        if (ret != RP_OK){
-            return ret;
-        }
-        fillData = true;
-    }
-
-    if (!fillData){
-        return RP_EOOR;
-    }
-
-    return RP_OK;
-}
-
-int acq_GetDataV2D(uint32_t pos, buffers_t *out)
-{
-    uint8_t channels = 0;
-    if (rp_HPGetFastADCChannelsCount(&channels) != RP_HP_OK){
-        channels = 0;
-    }
-
-    bool fillData = false;
-    out->size = MIN(out->size, ADC_BUFFER_SIZE);
-
-    if (channels > 0){
-        uint32_t size = out->size;
-        if (!out->ch_d[0]){
-            fprintf(stderr,"[FATAL ERROR] Buffer[0] for fill is NULL\n");
-            assert(false);
-        }
-        int ret = acq_GetDataVEx(RP_CH_1,pos,&size,out->ch_d[0],false);
-        if (ret != RP_OK){
-            return ret;
-        }
-        fillData = true;
-    }
-
-    if (channels > 1){
-        uint32_t size = out->size;
-        if (!out->ch_d[1]){
-            fprintf(stderr,"[FATAL ERROR] Buffer[1] for fill is NULL\n");
-            assert(false);
-        }
-        int ret = acq_GetDataVEx(RP_CH_2,pos,&size,out->ch_d[1],false);
-        if (ret != RP_OK){
-            return ret;
-        }
-        fillData = true;
-    }
-
-    if (channels > 2){
-        uint32_t size = out->size;
-        if (!out->ch_d[2]){
-            fprintf(stderr,"[FATAL ERROR] Buffer[2] for fill is NULL\n");
-            assert(false);
-        }
-        int ret = acq_GetDataVEx(RP_CH_3,pos,&size,out->ch_d[2],false);
-        if (ret != RP_OK){
-            return ret;
-        }
-        fillData = true;
-    }
-
-    if (channels > 3){
-        uint32_t size = out->size;
-        if (!out->ch_d[3]){
-            fprintf(stderr,"[FATAL ERROR] Buffer[3] for fill is NULL\n");
-            assert(false);
-        }
-        int ret = acq_GetDataVEx(RP_CH_4,pos,&size,out->ch_d[3],false);
-        if (ret != RP_OK){
-            return ret;
-        }
-        fillData = true;
-    }
-
-    if (!fillData){
-        return RP_EOOR;
-    }
-
-    return RP_OK;
-}
-
 int acq_GetDataPosV(rp_channel_t channel,  uint32_t start_pos, uint32_t end_pos, float* buffer, uint32_t *buffer_size)
 {
 
@@ -1589,40 +1631,56 @@ int acq_GetBufferSize(uint32_t *size) {
 
 int acq_axi_SetBufferSamples(rp_channel_t channel, uint32_t address, uint32_t _samples) {
 
-    CHECK_CHANNEL("acq_axi_SetBuffer")
+    CHECK_CHANNEL("acq_axi_SetBufferSamples")
 
     uint32_t start,res_size;
     osc_axi_GetMemoryRegion(&start,&res_size);
 
     if (address < start){
-        fprintf(stderr,"[Error:acq_axi_SetBuffer] Start address lower than reserved. Address: 0x%X reserved 0x%X\n",address,start);
+        fprintf(stderr,"[Error:acq_axi_SetBufferSamples] Start address lower than reserved. Address: 0x%X reserved 0x%X\n",address,start);
         return RP_EOOR;
     }
 
-    if (address + _samples * 2 > start + res_size){
-        fprintf(stderr,"[Error:acq_axi_SetBuffer] The specified buffer size is greater than the reserved memory. End address: 0x%X End reserved 0x%X\n",address + _samples * 2,start + res_size);
+    if (address + (_samples - 4) * 2 > start + res_size){
+        fprintf(stderr,"[Error:acq_axi_SetBufferSamples] The specified buffer size is greater than the reserved memory - 8 bytes. End address: 0x%X End reserved 0x%X\n",address + _samples * 2,start + res_size);
         return RP_EOOR;
     }
 
+    if (_samples % 8){
+        fprintf(stderr,"[Error:acq_axi_SetBufferSamples] Buffer samples must be a multiple of 8\n");
+        return RP_EOOR;
+    }
 
     if (channel == RP_CH_1) {
         osc_axi_SetAddressStartChA(address);
         osc_axi_SetAddressEndChA(address + _samples * 2);
         axi_ch_buffer_size_in_samples[0] = _samples;
-    } else if (channel == RP_CH_2) {
+    }
+
+    if (channel == RP_CH_2) {
         osc_axi_SetAddressStartChB(address);
         osc_axi_SetAddressEndChB(address + _samples * 2);
         axi_ch_buffer_size_in_samples[1] = _samples;
-    } else {
-        fprintf(stderr,"[Error:acq_axi_SetBuffer] Channel is larger than allowed\n");
-        return RP_EPN;
     }
+
+    if (channel == RP_CH_3) {
+        osc_axi_SetAddressStartChC(address);
+        osc_axi_SetAddressEndChC(address + _samples * 2);
+        axi_ch_buffer_size_in_samples[2] = _samples;
+    }
+
+    if (channel == RP_CH_4) {
+        osc_axi_SetAddressStartChD(address);
+        osc_axi_SetAddressEndChD(address + _samples * 2);
+        axi_ch_buffer_size_in_samples[3] = _samples;
+    }
+
     return RP_OK;
 }
 
 int acq_axi_SetBufferBytes(rp_channel_t channel, uint32_t address, uint32_t _size){
-    if (_size % 2){
-        fprintf(stderr,"[Error:acq_axi_SetBuffer] Buffer size must be a multiple of 2\n");
+    if (_size % 16){
+        fprintf(stderr,"[Error:acq_axi_SetBufferBytes] Buffer size must be a multiple of 16\n");
         return RP_EOOR;
     }
     return acq_axi_SetBufferSamples(channel,address,_size / 2);
@@ -1638,47 +1696,32 @@ int acq_SetDefault() {
     uint32_t start,size;
     osc_axi_GetMemoryRegion(&start,&size);
 
-    acq_SetChannelThreshold(RP_CH_1, 0.0);
-    acq_SetChannelThreshold(RP_CH_2, 0.0);
-    acq_SetChannelThresholdHyst(RP_CH_1, 0.005);
-    acq_SetChannelThresholdHyst(RP_CH_2, 0.005);
-
-    acq_SetGain(RP_CH_1, RP_LOW);
-    acq_SetGain(RP_CH_2, RP_LOW);
-    acq_SetDecimation(RP_DEC_1);
-    acq_SetAveraging(true);
-    acq_SetTriggerSrc(RP_TRIG_SRC_DISABLED);
-    acq_SetTriggerDelay(0);
-    acq_SetTriggerDelayNs(0);
-
-    acq_axi_Enable(RP_CH_1, false);
-    acq_axi_Enable(RP_CH_2, false);
-    acq_axi_SetBufferBytes(RP_CH_1, start, 0);
-    acq_axi_SetBufferBytes(RP_CH_2, start, 0);
-    acq_axi_SetTriggerDelay(RP_CH_1, 0);
-    acq_axi_SetTriggerDelay(RP_CH_2, 0);
-    acq_axi_SetTriggerDelayNs(RP_CH_1, 0);
-    acq_axi_SetTriggerDelayNs(RP_CH_2, 0);
-
-    if(rp_HPGetFastADCIsAC_DCOrDefault()){
-        acq_SetAC_DC(RP_CH_1,RP_DC);
-        acq_SetAC_DC(RP_CH_2,RP_DC);
-    }
-
     uint8_t channels = 0;
     if (rp_HPGetFastADCChannelsCount(&channels) != RP_HP_OK){
         fprintf(stderr,"[Error:acq_SetDefault] Can't get fast ADC channels count\n");
         return RP_NOTS;
     }
-    if (channels > 2){
-        acq_SetChannelThreshold(RP_CH_3, 0.0);
-        acq_SetChannelThreshold(RP_CH_4, 0.0);
-        acq_SetChannelThresholdHyst(RP_CH_3, 0.005);
-        acq_SetChannelThresholdHyst(RP_CH_4, 0.005);
-        acq_SetGain(RP_CH_3, RP_LOW);
-        acq_SetGain(RP_CH_4, RP_LOW);
-    }
 
+    acq_SetDecimation(RP_DEC_1);
+    acq_SetAveraging(true);
+    acq_SetTriggerSrc(RP_TRIG_SRC_DISABLED);
+    acq_SetTriggerDelay(0);
+    acq_SetTriggerDelayNs(0);
+    acq_SetArmKeep(false);
+
+    for(int i = 0; i < channels; i++){
+        acq_SetChannelThreshold((rp_channel_t)i, 0.0);
+        acq_SetChannelThresholdHyst((rp_channel_t)i, 0.005);
+        acq_SetGain((rp_channel_t)i, RP_LOW);
+        acq_axi_Enable((rp_channel_t)i, false);
+        acq_axi_SetBufferBytes((rp_channel_t)i, start, 0);
+        acq_axi_SetTriggerDelay((rp_channel_t)i, 0);
+        acq_axi_SetTriggerDelayNs((rp_channel_t)i, 0);
+
+        if(rp_HPGetFastADCIsAC_DCOrDefault()){
+            acq_SetAC_DC((rp_channel_t)i,RP_DC);
+        }
+    }
     return RP_OK;
 }
 
@@ -1767,7 +1810,7 @@ int acq_SetExtTriggerDebouncerUs(double value){
         return ret;
     }
     uint32_t samples = (value * 1000.0) / sp;
-    return osc_SetTriggerDebouncer(samples);
+    return osc_SetExtTriggerDebouncer(samples);
 }
 
 int acq_GetExtTriggerDebouncerUs(double *value){
@@ -1777,7 +1820,7 @@ int acq_GetExtTriggerDebouncerUs(double *value){
         return ret;
     }
     uint32_t samples = 0;
-    osc_GetTriggerDebouncer(&samples);
+    osc_GetExtTriggerDebouncer(&samples);
     *value = (samples * sp) / 1000.0;
     return RP_OK;
 }

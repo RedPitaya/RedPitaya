@@ -19,7 +19,41 @@
 extern "C" {
 #endif
 
-#include "lcr_meter.h"
+typedef enum calibration{
+	CALIB_NONE,
+	CALIB_OPEN,
+	CALIB_SHORT,
+} calib_t;
+
+/* Main lcr measurment data */
+typedef struct data_e {
+	double lcr_amplitude;
+	double lcr_phase;
+	double lcr_D;
+	double lcr_Q;
+	double lcr_ESR;
+	double lcr_L;
+	double lcr_C;
+	double lcr_R;
+// values for console tool
+	double lcr_L_s;
+	double lcr_C_s;
+	double lcr_R_s;
+	double lcr_L_p;
+	double lcr_C_p;
+	double lcr_R_p;
+	double lcr_D_s;
+	double lcr_Q_s;
+	double lcr_D_p;
+	double lcr_Q_p;
+	double lcr_X_s;
+    double lcr_G_p;
+    double lcr_B_p;
+	double lcr_Y_abs;
+	double lcr_Phase_Y;
+
+}lcr_main_data_t;
+
 
 /** @name General
 */

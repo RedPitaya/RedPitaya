@@ -144,11 +144,14 @@ static void spectrum_worker(cli_args_t args) {
         rp_AcqGetWritePointerAtTrig(&trig_pos);
         buffers_t buff;
         buff.size = buffer_size;
+        buff.use_calib_for_volts = true;
         for(int i = 0; i < MAX_CHANNELS; i++){
+            buff.ch_f[i] = NULL;
+            buff.ch_i[i] = NULL;
             buff.ch_d[i] = data->m_in[i];
         }
 
-        rp_AcqGetDataV2D(trig_pos,&buff);
+        rp_AcqGetData(trig_pos,&buff);
 
         g_dsp.windowFilter(data);
 
@@ -270,7 +273,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    error_code = g_dsp.window_init(rp_dsp_api::HANNING);
+    error_code = g_dsp.window_init(args.wm);
 
     if (error_code != 0) {
         std::cerr << "Error: rp_spectr_init, code: " << error_code << std::endl;

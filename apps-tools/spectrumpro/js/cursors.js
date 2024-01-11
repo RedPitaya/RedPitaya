@@ -2,7 +2,7 @@
 
     SPEC.initCursors = function() {
         var plot = SPEC.getPlot();
-        if (!(SPEC.isVisibleChannels() && plot)) {
+        if (!(plot)) {
             return;
         }
         var offset = plot.getPlotOffset();
@@ -64,7 +64,7 @@
             var y = cursor;
             if (visible) {
                 var plot = SPEC.getPlot();
-                if (SPEC.isVisibleChannels() && plot) {
+                if (plot) {
                     var offset = plot.getPlotOffset();
                     var graph_height = $('#graph_grid').height() - offset.top - offset.bottom;
                     var top = (graph_height + 7) * value;
@@ -84,7 +84,7 @@
 
     SPEC.updateYCursorElemsTop = function(y, top, save) {
         var plot = SPEC.getPlot();
-        if (!(SPEC.isVisibleChannels() && plot)) {
+        if (!(plot)) {
             return;
         }
         var axes = plot.getAxes();
@@ -151,7 +151,7 @@
             if (visible) {
 
                 var plot = SPEC.getPlot();
-                if (SPEC.isVisibleChannels() && plot) {
+                if (plot) {
                     var offset = plot.getPlotOffset();
                     var graph_width = $('#graph_grid').width() - offset.left - offset.right;
                     var left = graph_width * value;
@@ -171,7 +171,7 @@
 
     SPEC.updateXCursorElemsTop = function(x,left, save) {
         var plot = SPEC.getPlot();
-        if (!(SPEC.isVisibleChannels() && plot)) {
+        if (!(plot)) {
             return;
         }
         var axes = plot.getAxes();

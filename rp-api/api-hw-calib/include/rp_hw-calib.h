@@ -47,25 +47,19 @@ typedef enum {
     /** Invalid parameter. */
     RP_HW_CALIB_EIP =   6,
     /** Adjust error. */
-    RP_HW_CALIB_EA =    7
+    RP_HW_CALIB_EA =    7,
+    /** Unknown calibration. */
+    RP_HW_CALIB_UC =    8
 } rp_calib_error;
 
 ///@}
 
-// 125-14 ...
-#define RP_HW_PACK_ID_V1        1
 
-// 250-12 ...
-#define RP_HW_PACK_ID_V2        2
-
-// 125-14 4Ch ...
-#define RP_HW_PACK_ID_V3        3
-
-// 122-16 ...
-#define RP_HW_PACK_ID_V4        4
-
-// Universal calibration
-#define RP_HW_PACK_ID_V5        5
+#define RP_HW_PACK_ID_V1        1 // 125-14 ...
+#define RP_HW_PACK_ID_V2        2 // 250-12 ...
+#define RP_HW_PACK_ID_V3        3 // 125-14 4Ch ...
+#define RP_HW_PACK_ID_V4        4 // 122-16 ...
+#define RP_HW_PACK_ID_V5        5 // Universal calibration
 
 #define MAX_UNIVERSAL_ITEMS_COUNT 512
 
@@ -228,6 +222,14 @@ rp_calib_error rp_CalibrationFactoryReset(bool convert_to_new);
 rp_calib_error rp_CalibrationWriteParams(rp_calib_params_t calib_params,bool use_factory_zone);
 
 /**
+* Write calibration values and skip recalculate calibration values
+* Calibration data is written to EEPROM and repopulated so that rp_GetCalibrationSettings works properly.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+rp_calib_error rp_CalibrationWriteParamsEx(rp_calib_params_t calib_params,bool use_factory_zone);
+
+/**
 * Set calibration values in memory.
 * Calibration values are written to temporary memory, but not permanently.
 * @return If the function is successful, the return value is RP_OK.
@@ -248,6 +250,13 @@ rp_calib_error rp_CalibGetEEPROM(uint8_t **_out_data,uint16_t *_out_size,bool us
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 rp_calib_error rp_CalibConvertEEPROM(uint8_t *data,uint16_t size,rp_calib_params_t *_out_calib);
+
+/**
+* The function converts the data to old format
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+rp_calib_error rp_CalibConvertToOld(rp_calib_params_t *_out_calib);
 
 /**
 * The function return name of universal parameter

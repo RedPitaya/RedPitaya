@@ -353,14 +353,17 @@ void *rp_spectr_worker_thread(void *args)
             uint32_t trig_pos;
             rp_AcqGetWritePointerAtTrig(&trig_pos);
 
-            auto adc_channels = getADCChannels();
+            static auto adc_channels = getADCChannels();
             buffers_t buff_out;
             buff_out.size = buffer_size;
+            buff_out.use_calib_for_volts = true;
             for(auto z = 0 ; z < adc_channels; z++){
                 buff_out.ch_d[z] = g_data->m_in[z];
+                buff_out.ch_f[z] = NULL;
+                buff_out.ch_i[z] = NULL;
             }
 
-            rp_AcqGetDataV2D(trig_pos,&buff_out);
+            rp_AcqGetData(trig_pos,&buff_out);
 
             /* retrieve data and process it*/
 

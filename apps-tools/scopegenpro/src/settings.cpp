@@ -8,11 +8,15 @@
 #include <istream>
 #include <iterator>
 #include <cstdio>
+#include <mutex>
 
 #include <sys/sysinfo.h>
 #include <unistd.h>
 #include <pwd.h>
 #include <sys/stat.h>
+
+bool g_disableSaveSettings = false;
+std::mutex g_mutex;
 
 // Check the path is a directory.
 auto isDirectory(const std::string &_path) -> bool {
@@ -63,6 +67,8 @@ auto createDirectory(const std::string &_path) -> bool {
 }
 
 auto deleteConfig(const std::string &_path) -> bool{
+    std::lock_guard<std::mutex> lock(g_mutex);
+    g_disableSaveSettings = true;
     return std::remove(_path.c_str()) == 0;
 }
 
@@ -136,16 +142,19 @@ auto configGet(const std::string &_path) -> void {
 }
 
 auto configSetWithList(const std::string &_directory, const std::string &_filename,const std::vector<std::string> &_parameters) -> bool {
+    std::lock_guard<std::mutex> lock(g_mutex);
+    if (g_disableSaveSettings) return false;
+
     if (createDirectory(_directory)) {
         std::ofstream stream(_directory + "/" + _filename, std::ios_base::out | std::ios_base::trunc | std::ios_base::binary);
 
         if (stream.is_open()) {
             JSONNode root_node(JSON_NODE);
 
-            int out1Imp = NO_INIT;
-            int out2Imp = NO_INIT;
-            float out1A = NO_INIT;
-            float out2A = NO_INIT;
+            // int out1Imp = NO_INIT;
+            // int out2Imp = NO_INIT;
+            // float out1A = NO_INIT;
+            // float out2A = NO_INIT;
 
             auto x = CDataManager::GetInstance()->GetParametersList();
             for(CBaseParameter* i : *x){
@@ -186,16 +195,19 @@ auto configSetWithList(const std::string &_directory, const std::string &_filena
 
 // Writes the configuration file
 auto configSet(const std::string &_directory, const std::string &_filename) -> bool {
+    std::lock_guard<std::mutex> lock(g_mutex);
+    if (g_disableSaveSettings) return false;
+
     if (createDirectory(_directory)) {
         std::ofstream stream(_directory + "/" + _filename, std::ios_base::out | std::ios_base::trunc | std::ios_base::binary);
 
         if (stream.is_open()) {
             JSONNode root_node(JSON_NODE);
 
-            int out1Imp = NO_INIT;
-            int out2Imp = NO_INIT;
-            float out1A = NO_INIT;
-            float out2A = NO_INIT;
+            // int out1Imp = NO_INIT;
+            // int out2Imp = NO_INIT;
+            // float out1A = NO_INIT;
+            // float out2A = NO_INIT;
 
             auto x = CDataManager::GetInstance()->GetParametersList();
             for(CBaseParameter* i : *x){

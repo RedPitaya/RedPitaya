@@ -311,9 +311,6 @@
                     //Recieving parameters
                     if (receive.parameters) {
                         BA.parameterStack.push(receive.parameters);
-                        if (Object.keys(receive.parameters).length == 0) {
-                            BA.sendParameters();
-                        }
                     }
 
                     //Recieve signals
@@ -385,9 +382,8 @@
             console.log('ERROR: Cannot save changes, socket not opened');
             return false;
         }
-
-        BA.parametersCache["in_command"] = { value: "send_all_params" };
         BA.ws.send(JSON.stringify({ parameters: BA.parametersCache }));
+        console.log("SEND: ", BA.parametersCache )
         BA.parametersCache = {};
         return true;
     };
@@ -547,6 +543,7 @@
     BA.prepareOneSignal = function(signal_name) {
         var one_signal = BA.signalStack[0][signal_name];
         var bad_signal = BA.signalStack[0]['BA_BAD_SIGNAL'];
+        var signal_param = BA.signalStack[0]['BA_SIGNAL_PARAMETERS'];
 
         // Ignore empty signals
         if (one_signal.size == 0)
@@ -559,16 +556,20 @@
             endFreq = 0,
             steps = 0,
             step = 0,
-            val = 0;
+            min_val = undefined,
+            max_val = undefined,
+            min_all_val = undefined,
+            max_all_val = undefined;
 
-        startFreq = parseInt($('#BA_START_FREQ').val()) * 1;
-        endFreq = parseInt($('#BA_END_FREQ').val()) * 1;
-        steps = parseInt($('#BA_STEPS').val()) * 1;
+        startFreq = signal_param.value[0];
+        endFreq = signal_param.value[1];
+        steps = signal_param.value[2];
         step = (endFreq - startFreq) / (steps - 1);
 
 
         for (var i = 0; i < one_signal.size; i++) {
             var freq = startFreq + i * step;
+            var samp_val = one_signal.value[i];
             if (BA.scale) {
                 var a = Math.log10(startFreq);
                 var b = Math.log10(endFreq);
@@ -579,7 +580,7 @@
             if (i > 0) {
                 if (bad_signal.value[i] != bad_signal.value[i - 1]) {
                     var f = (freq + freq_old) / 2.0;
-                    var s = (one_signal.value[i] + one_signal.value[i - 1]) / 2.0;
+                    var s = (samp_val + one_signal.value[i - 1]) / 2.0;
                     points.push([f, s]);
                     points_bad.push([f, s]);
                     if (bad_signal.value[i] == 0) {
@@ -590,10 +591,15 @@
                 }
             }
 
+            if ((min_val == undefined || min_val > samp_val) && bad_signal.value[i] == 0) min_val = samp_val;
+            if ((max_val == undefined || max_val < samp_val) && bad_signal.value[i] == 0) max_val = samp_val;
+            if (min_all_val == undefined || min_all_val > samp_val) min_all_val = samp_val;
+            if (max_all_val == undefined || max_all_val < samp_val) max_all_val = samp_val;
+
             if (bad_signal.value[i] == 0) {
-                points.push([freq, one_signal.value[i]]);
+                points.push([freq, samp_val]);
             } else {
-                points_bad.push([freq, one_signal.value[i]]);
+                points_bad.push([freq, samp_val]);
             }
             BA.lastSignals[signal_name] = points;
             BA.lastSignals[signal_name + "_BAD"] = points_bad;
@@ -605,65 +611,39 @@
         // AUTOSCALE if switched on
         if ($('#BA_AUTOSCALE_BTN').hasClass('active')) {
             // For autoscale of max Y value
-            var l = BA.lastSignals[signal_name].length;
-            var v = l > 0 ? parseFloat(BA.lastSignals[signal_name][l - 1][1]).toFixed(3) * 1 : 0;
+            var min = min_val;
+            var max = max_val;
             if ($('#BA_SHOWALL_BTN').hasClass('active')) {
-                l = one_signal['value'].length;
-                v = l > 0 ? parseFloat(one_signal['value'][l - 1]).toFixed(3) * 1 : 0;
+                min = min_all_val;
+                max = max_all_val;
             }
-            var v2 = 0;
+
             var yaxis;
-
-
+            var axis_name = ""
             // Choose right yaxis
-            if (signal_name == "BA_SIGNAL_1")
+            if (signal_name == "BA_SIGNAL_1"){
                 yaxis = BA.graphCache.plot.getAxes().yaxis;
-            else
+                axis_name = "BA_GAIN"
+            }
+            else{
                 yaxis = BA.graphCache.plot.getAxes().y2axis;
-
-
-            // For autoscale of max Y value
-            if (v >= 0) {
-                v2 = parseFloat($('#' + signal_name + '_MAX').val()) / 1.2;
-                if (l == 1) {
-                    $('#' + signal_name + '_MAX').val(((1 + v) * 1.2).toFixed(3));
-                    yaxis.options.max = (1 + v) * 1.2;
-                } else if (v > v2) {
-                    $('#' + signal_name + '_MAX').val((v * 1.2).toFixed(3));
-                    yaxis.options.max = v * 1.2;
-                }
-            } else {
-                var v2 = parseFloat($('#' + signal_name + '_MAX').val()) * 1.2;
-                if (l == 1) {
-                    $('#' + signal_name + '_MAX').val(((1 + v) / 1.2).toFixed(3));
-                    yaxis.options.max = (1 + v) / 1.2;
-                } else if (v > v2) {
-                    $('#' + signal_name + '_MAX').val((v / 1.2).toFixed(3));
-                    yaxis.options.max = v / 1.2;
-                }
+                axis_name = "BA_PHASE"
             }
 
+            var size = (max - min) * 0.2;
+            if (size < 5) size = 5
+            $('#' + axis_name + '_MAX').val(max + size);
+            yaxis.options.max = max+ size;
 
-            // For autoscale of min Y value
-            if (v >= 0) {
-                v2 = parseFloat($('#' + signal_name + '_MIN').val()) * 1.2;
-                if (l == 1) {
-                    $('#' + signal_name + '_MIN').val((1.2 / (-1 + v)).toFixed(3));
-                    yaxis.options.min = 1.2 / (-1 + v);
-                } else if (v < v2) {
-                    $('#' + signal_name + '_MIN').val((1.2 / v).toFixed(3));
-                    yaxis.options.min = 1.2 / v;
-                }
-            } else {
-                v2 = parseFloat($('#' + signal_name + '_MIN').val()) / 1.2;
-                if (l == 1) {
-                    $('#' + signal_name + '_MIN').val((1.2 * (-1 + v)).toFixed(3));
-                    yaxis.options.min = 1.2 * (-1 + v);
-                } else if (v < v2) {
-                    $('#' + signal_name + '_MIN').val((1.2 * v).toFixed(3));
-                    yaxis.options.min = 1.2 * v;
-                }
-            }
+            $('#' + axis_name + '_MIN').val(min - size);
+            yaxis.options.min = min - size;
+
+            BA.parametersCache["BA_GAIN_MIN"] = { value: $("#BA_GAIN_MIN").val() };
+            BA.parametersCache["BA_GAIN_MAX"] = { value: $("#BA_GAIN_MAX").val() };
+            BA.parametersCache["BA_PHASE_MIN"] = { value: $("#BA_PHASE_MIN").val() };
+            BA.parametersCache["BA_PHASE_MAX"] = { value: $("#BA_PHASE_MAX").val() };
+            BA.sendParameters();
+
         }
     }
 
@@ -673,11 +653,11 @@
         $('#bode_plot').remove();
 
 
-        var yMin1 = parseFloat($('#BA_SIGNAL_1_MIN').val()) * 1;
-        var yMax1 = parseFloat($('#BA_SIGNAL_1_MAX').val()) * 1;
+        var yMin1 = parseFloat($('#BA_GAIN_MIN').val()) * 1;
+        var yMax1 = parseFloat($('#BA_GAIN_MAX').val()) * 1;
 
-        var yMin2 = parseFloat($('#BA_SIGNAL_2_MIN').val()) * 1;
-        var yMax2 = parseFloat($('#BA_SIGNAL_2_MAX').val()) * 1;
+        var yMin2 = parseFloat($('#BA_PHASE_MIN').val()) * 1;
+        var yMax2 = parseFloat($('#BA_PHASE_MAX').val()) * 1;
 
         BA.graphCache = {};
         BA.graphCache.elem = $('<div id="bode_plot" class="plot" />').css($('#graph_bode_grid').css(['height', 'width'])).appendTo('#graph_bode');
@@ -877,13 +857,14 @@
     }
 
     BA.processParameters = function(new_params) {
-        var old_params = $.extend(true, {}, BA.params.orig);
+        if (Object.keys(new_params).length > 0) {
+            console.log(new_params)
+        }
 
-        var send_all_params = Object.keys(new_params).indexOf('send_all_params') != -1;
         for (var param_name in new_params) {
-            BA.params.orig[param_name] = new_params[param_name];
             if (BA.param_callbacks[param_name] !== undefined)
                 BA.param_callbacks[param_name](new_params);
+            BA.params.orig[param_name] = new_params[param_name];
         }
         // Resize double-headed arrows showing the difference between cursors
     };
@@ -903,17 +884,28 @@
 
 
 
-    BA.process_run = function(new_params) {
-        if (new_params['BA_MEASURE_START'].value === false) {
+    BA.processStatus = function(new_params) {
+        var status = new_params['BA_STATUS'].value
+        if (status === 0 || status === 6 || status === 7) {
             $('#BA_STOP').hide();
             $('#BA_RUN').show();
-            BA.running = false;
+            $('body').addClass('loaded');
+            $('#calibration').hide();
             $('#measuring-status').hide();
-        } else {
+            BA.calibrating = false;
+            BA.running = false;
+            BA.parametersCache["BA_STATUS"] = { value: 0 };
+            BA.sendParameters();
+        }
+
+        if (status === 1 || status === 8) {
             $('#BA_STOP').css('display', 'block');
             $('#BA_RUN').hide();
             BA.running = true;
             $('#measuring-status').show();
+        }
+
+        if (status === 5) {
         }
     }
 
@@ -926,10 +918,13 @@
     }
 
     BA.calib_enable = function(new_params) {
+        var ba_state = $("#BA_CALIB_STATE");
         if ((new_params['BA_CALIBRATE_ENABLE'].value === false)) {
-            $("#BA_CALIB_STATE").attr("src", "img/red_led.png");
+            if (ba_state.attr('src') !== "img/red_led.png")
+                ba_state.attr("src", "img/red_led.png");
         } else {
-            $("#BA_CALIB_STATE").attr("src", "img/green_led.png");
+            if (ba_state.attr('src') !== "img/green_led.png")
+                ba_state.attr("src", "img/green_led.png");
         }
     }
 
@@ -970,6 +965,120 @@
         BA.graphSize.right = BA.graphSize.left + $("#graphs_holder").width() - 81;
         BA.graphSize.top = $("#graph_bode").offset().top - 1;
         BA.graphSize.bottom = BA.graphSize.top + $("#graph_bode").height() - 37;
+    }
+
+    BA.setValue = function(param_name,new_params) {
+        var old_params = BA.params.orig;
+        if ((!BA.state.editing &&
+            ((old_params[param_name] !== undefined && old_params[param_name].value !== new_params[param_name].value) ||
+            (old_params[param_name] == undefined))
+            )) {
+            var value = $('#' + param_name).val();
+            if (value !== new_params[param_name].value) {
+                $('#' + param_name).val(new_params[param_name].value);
+            }
+        }
+    }
+
+    BA.startFreq = function(new_params) {
+        var param_name = "BA_START_FREQ"
+        BA.setValue(param_name,new_params)
+    }
+
+    BA.endFreq = function(new_params) {
+        var param_name = "BA_END_FREQ"
+        BA.setValue(param_name,new_params)
+    }
+
+    BA.setSteps = function(new_params) {
+        var param_name = "BA_STEPS"
+        BA.setValue(param_name,new_params)
+    }
+
+    BA.setScale = function(new_params) {
+        var param_name = "BA_SCALE"
+        var old_params = BA.params.orig;
+        if ((!BA.state.editing &&
+            ((old_params[param_name] !== undefined && old_params[param_name].value !== new_params[param_name].value) ||
+            (old_params[param_name] == undefined))
+            )) {
+            var radios = $('input[name="' + param_name + '"]');
+            radios.closest('.btn-group').children('.btn.active').removeClass('active');
+            radios.eq([+new_params[param_name].value]).prop('checked', true).parent().addClass('active');
+        }
+    }
+
+    BA.setPerNum = function(new_params) {
+        var param_name = "BA_PERIODS_NUMBER"
+        BA.setValue(param_name,new_params)
+    }
+
+    BA.setAverage = function(new_params) {
+        var param_name = "BA_AVERAGING"
+        BA.setValue(param_name,new_params)
+    }
+
+    BA.setOutAmpl = function(new_params) {
+        var param_name = "BA_AMPLITUDE"
+        BA.setValue(param_name,new_params)
+    }
+
+    BA.setDCBias = function(new_params) {
+        var param_name = "BA_DC_BIAS"
+        BA.setValue(param_name,new_params)
+    }
+
+    BA.setInThreshold = function(new_params) {
+        var param_name = "BA_INPUT_THRESHOLD"
+        BA.setValue(param_name,new_params)
+    }
+
+    BA.setGainMin = function(new_params) {
+        var param_name = "BA_GAIN_MIN"
+        BA.setValue(param_name,new_params)
+    }
+
+    BA.setGainMax = function(new_params) {
+        var param_name = "BA_GAIN_MAX"
+        BA.setValue(param_name,new_params)
+    }
+
+    BA.setPhaseMin = function(new_params) {
+        var param_name = "BA_PHASE_MIN"
+        BA.setValue(param_name,new_params)
+    }
+
+    BA.setPhaseMax = function(new_params) {
+        var param_name = "BA_PHASE_MAX"
+        BA.setValue(param_name,new_params)
+    }
+
+    BA.setAutoScale = function(new_params){
+        var param_name = "BA_AUTO_SCALE"
+        var old_params = BA.params.orig;
+        if (((old_params[param_name] !== undefined && old_params[param_name].value !== new_params[param_name].value) ||
+            (old_params[param_name] == undefined))
+            ) {
+                if (new_params[param_name].value){
+                    $('#BA_AUTOSCALE_BTN').addClass('active');
+                }else{
+                    $('#BA_AUTOSCALE_BTN').removeClass('active');
+                }
+        }
+    }
+
+    BA.setShowAll = function(new_params){
+        var param_name = "BA_SHOW_ALL"
+        var old_params = BA.params.orig;
+        if (((old_params[param_name] !== undefined && old_params[param_name].value !== new_params[param_name].value) ||
+            (old_params[param_name] == undefined))
+            ) {
+                if (new_params[param_name].value){
+                    $('#BA_SHOWALL_BTN').addClass('active');
+                }else{
+                    $('#BA_SHOWALL_BTN').removeClass('active');
+                }
+        }
     }
 
 
@@ -1053,8 +1162,8 @@
     BA.updateYLinesAndArrows = function() {
         var diff_px = 0;
         let unit = ' dB';
-        let min = parseFloat($('#BA_SIGNAL_1_MIN').val());
-        let max = parseFloat($('#BA_SIGNAL_1_MAX').val());
+        let min = parseFloat($('#BA_GAIN_MIN').val());
+        let max = parseFloat($('#BA_GAIN_MAX').val());
         let new_val = 0;
 
 
@@ -1111,8 +1220,8 @@
     BA.updateZLinesAndArrows = function() {
         var diff_px = 0;
         let unit = ' deg';
-        let min = parseFloat($('#BA_SIGNAL_2_MIN').val());
-        let max = parseFloat($('#BA_SIGNAL_2_MAX').val());
+        let min = parseFloat($('#BA_PHASE_MIN').val());
+        let max = parseFloat($('#BA_PHASE_MAX').val());
         let new_val = 0;
 
 
@@ -1223,13 +1332,33 @@
     }
 
 
-    BA.param_callbacks["BA_MEASURE_START"] = BA.process_run;
+    BA.param_callbacks["BA_STATUS"] = BA.processStatus;
+
+    // BA.param_callbacks["BA_MEASURE_START"] = BA.process_run;
     BA.param_callbacks["BA_CALIBRATE_START"] = BA.calib_stop;
     BA.param_callbacks["BA_CURRENT_FREQ"] = BA.change_cur_freq;
     BA.param_callbacks["BA_CURRENT_STEP"] = BA.change_cur_step;
     BA.param_callbacks["BA_CALIBRATE_ENABLE"] = BA.calib_enable;
     BA.param_callbacks["BA_INPUT_THRESHOLD"] = BA.change_input_threshold;
     BA.param_callbacks["RP_MODEL_STR"] = BA.modelProcess;
+
+    BA.param_callbacks["BA_START_FREQ"] = BA.startFreq;
+    BA.param_callbacks["BA_END_FREQ"] = BA.endFreq;
+    BA.param_callbacks["BA_STEPS"] = BA.setSteps;
+    BA.param_callbacks["BA_SCALE"] = BA.setScale;
+
+    BA.param_callbacks["BA_SCALE"] = BA.setPerNum;
+    BA.param_callbacks["BA_AVERAGING"] = BA.setAverage;
+    BA.param_callbacks["BA_AMPLITUDE"] = BA.setOutAmpl;
+    BA.param_callbacks["BA_DC_BIAS"] = BA.setDCBias;
+    BA.param_callbacks["BA_INPUT_THRESHOLD"] = BA.setInThreshold;
+
+    BA.param_callbacks["BA_GAIN_MIN"] = BA.setGainMin;
+    BA.param_callbacks["BA_GAIN_MAX"] = BA.setGainMax;
+    BA.param_callbacks["BA_PHASE_MIN"] = BA.setPhaseMin;
+    BA.param_callbacks["BA_PHASE_MAX"] = BA.setPhaseMax;
+    BA.param_callbacks["BA_AUTO_SCALE"] = BA.setAutoScale;
+    BA.param_callbacks["BA_SHOW_ALL"] = BA.setShowAll;
 
 
 }(window.BA = window.BA || {}, jQuery));
@@ -1326,6 +1455,12 @@ $(function() {
         setTimeout(BA.SaveGraphs, 30);
     });
 
+    $('#reset_settings').on('click', function() {
+        BA.parametersCache["BA_STATUS"] = { value: 4 };
+        BA.sendParameters();
+        location.reload();
+    });
+
     $('#downl_csv').on('click', function() {
         BA.downloadDataAsCSV("baData.csv");
     });
@@ -1335,10 +1470,10 @@ $(function() {
     $('#BA_RUN').on('click', function(ev) {
 
         if ($('#BA_AUTOSCALE_BTN').hasClass('active')) {
-            $('#BA_SIGNAL_1_MAX').val(0);
-            $('#BA_SIGNAL_1_MIN').val(0);
-            $('#BA_SIGNAL_2_MAX').val(0);
-            $('#BA_SIGNAL_2_MIN').val(0);
+            $('#BA_GAIN_MIN').val(0);
+            $('#BA_GAIN_MAX').val(0);
+            $('#BA_PHASE_MAX').val(0);
+            $('#BA_PHASE_MIN').val(0);
 
         }
 
@@ -1354,7 +1489,7 @@ $(function() {
         BA.parametersCache["BA_START_FREQ"] = { value: $("#BA_START_FREQ").val() };
         BA.parametersCache["BA_END_FREQ"] = { value: $('#BA_END_FREQ').val() };
         BA.parametersCache["BA_STEPS"] = { value: $('#BA_STEPS').val() };
-        BA.parametersCache["BA_MEASURE_START"] = { value: true };
+        BA.parametersCache["BA_STATUS"] = { value: 1 };
         BA.sendParameters();
         //BA.running = true;
         BA.curGraphScale = BA.scale;
@@ -1363,12 +1498,8 @@ $(function() {
     //Stop button
     $('#BA_STOP').on('click', function(ev) {
         ev.preventDefault();
-        //$('#BA_STOP').hide();
-        //$('#BA_RUN').show();
-        //$('#measuring-status').hide();
-        BA.parametersCache["BA_MEASURE_START"] = { value: false };
+        BA.parametersCache["BA_STATUS"] = { value: 0 };
         BA.sendParameters();
-        //BA.running = false;
     });
 
     //Loader wrapper
@@ -1377,8 +1508,7 @@ $(function() {
         if (BA.calibrating == true) {
             $('body').addClass('loaded');
             $('#calibration').hide();
-            BA.parametersCache["BA_CALIBRATE_START"] = { value: 0 };
-            BA.parametersCache["BA_MEASURE_START"] = { value: false };
+            BA.parametersCache["BA_STATUS"] = { value: 0 };
             BA.sendParameters();
             BA.calibrating = false;
         }
@@ -1496,17 +1626,29 @@ $(function() {
     $('#restart_app_btn').on('click', function() { location.reload() });
 
     $('#BA_AUTOSCALE_BTN').click(function() {
-        if ($(this).hasClass('active'))
+        if ($(this).hasClass('active')){
             $(this).removeClass('active');
-        else
+            BA.parametersCache["BA_AUTO_SCALE"] = { value: false };
+            BA.sendParameters();
+        }
+        else{
             $(this).addClass('active');
+            BA.parametersCache["BA_AUTO_SCALE"] = { value: true };
+            BA.sendParameters();
+        }
     });
 
     $('#BA_SHOWALL_BTN').click(function() {
-        if ($(this).hasClass('active'))
+        if ($(this).hasClass('active')){
             $(this).removeClass('active');
-        else
+            BA.parametersCache["BA_SHOW_ALL"] = { value: false };
+            BA.sendParameters();
+        }
+        else{
             $(this).addClass('active');
+            BA.parametersCache["BA_SHOW_ALL"] = { value: true };
+            BA.sendParameters();
+        }
     });
 
     $('#BA_CURSOR_X1').click(function() {

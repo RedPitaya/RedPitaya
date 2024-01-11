@@ -109,6 +109,7 @@
 
         SPEC.config.gen_enable = undefined;
         SPEC.channelsCount = 2;
+        SPEC.arb_list = undefined;
 
 
         SPEC.compressed_data = 0;
@@ -199,6 +200,8 @@
                 SPEC.rp_model = _value["RP_MODEL_STR"].value;
 
                 $('#BODY').load((SPEC.rp_model === "Z20_125_4CH" ? "4ch_adc.html" : "2ch_adc.html"), function() {
+                    $("#back_button").attr("href", SPEC.previousPageUrl)
+
                     console.log( "Load was performed." );
 
                     const ob = new ResizeObserver(function(entries) {
@@ -210,6 +213,9 @@
                         $(window).resize();
                     });
                     ob_plot_root.observe(document.querySelector("#root_plot"));
+
+                    if (SPEC.arb_list !== undefined)
+                        UI.updateARBFunc(SPEC.arb_list)
 
                     UI.initHandlers();
                     SPEC.initHandlers();
@@ -760,6 +766,11 @@
         SPEC.processParameters = function(new_params) {
             var old_params = $.extend(true, {}, SPEC.params.orig);
 
+            if (new_params['ARB_LIST'] && SPEC.arb_list === undefined){
+                SPEC.arb_list = new_params['ARB_LIST'].value;
+                if (SPEC.arb_list !== "")
+                    UI.updateARBFunc(SPEC.arb_list)
+            }
 
             if ('CH1_OUT_GAIN' in new_params && new_params['CH1_OUT_GAIN'].value != undefined) {
                 SPEC.processParametersZ250('CH1_OUT_GAIN', new_params['CH1_OUT_GAIN'].value);
@@ -783,6 +794,8 @@
 
             if ('y_axis_mode' in new_params && new_params['y_axis_mode'].value != undefined) {
                 var z = "dbm";
+                if (new_params['y_axis_mode'].value ===4) z = "dbuV";
+                if (new_params['y_axis_mode'].value ===3) z = "dbV";
                 if (new_params['y_axis_mode'].value ===2) z = "dbu";
                 if (new_params['y_axis_mode'].value ===1) z = "v";
                 $('#BDM_DBU_FUNC').val(z);
@@ -924,13 +937,16 @@
             const start1 = performance.now();
 
             var pointsX = [];
+            var pointsXAxis = [];
             for (var i = 0; i < new_signals['ch_xaxis'].size; i++) {
                 var x = new_signals['ch_xaxis'].value[i] / Math.pow(1000,SPEC.config.unit);
                 if (UI_GRAPH.x_axis_mode === 1) {
                     x = UI_GRAPH.convertXLog(x);
                 }
                 pointsX.push(x);
+                pointsXAxis.push([x,undefined]);
             }
+            bufferDataset.push({ color: "#000000", data: pointsXAxis });
 
             for (sig_name in new_signals) {
                 // Ignore empty signals
@@ -1026,7 +1042,7 @@
             }
 
             UI_GRAPH.unlockUpdateYLimit();
-            if (SPEC.isVisibleChannels() && bufferDataset.length > 0) {
+            if (bufferDataset.length > 0) {
 
                 if (SPEC.graphs && SPEC.graphs.elem) {
 
@@ -1390,7 +1406,7 @@
         if ($('#root_waterfall').height() !== newh){
             $('#root_waterfall').css('height', newh);
         }
-        
+
         var plot = SPEC.getPlot();
         if (!(SPEC.isVisibleChannels() && plot)) {
             return;
@@ -1665,7 +1681,7 @@ $(function() {
             // // Set the resized flag
             SPEC.state.resized = true;
             SPEC.updateJoystickPosition();
-            
+
         }
     }).resize();
 
@@ -1689,4 +1705,6 @@ $(function() {
     // Everything prepared, start application
     SPEC.startApp();
 
+    SPEC.previousPageUrl = document.referrer;
+    console.log(`Previously visited page URL: ${SPEC.previousPageUrl}`);
 })

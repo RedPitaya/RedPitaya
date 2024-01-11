@@ -1,15 +1,7 @@
 /*
- * Red Pitaya Bode analyzer client
+ * Red Pitaya stream service manager
  *
- * Author: Dakus <info@eskala.eu>
- *
- * (c) Red Pitaya  http://www.redpitaya.com
- *
- */
-/*
- * Red Pitaya Bode analyzer client
- *
- * Author: Dakus <info@eskala.eu>
+ * Author: Danilyuk Nikolay <n.danilyuk@integrasources.eu>
  *
  * (c) Red Pitaya  http://www.redpitaya.com
  *
@@ -535,7 +527,7 @@
             splitLines(msg).forEach(function(item){
                 if (item !== "" && item.includes("data_file")){
                     var cols = item.trim().split(' ');
-                    cols = cols.filter(item => item.trim().length > 0); 
+                    cols = cols.filter(item => item.trim().length > 0);
                     if (cols.length >= 7){
                         var size = parseInt(cols[4]);
                         var name = cols[8].toString();
@@ -550,7 +542,7 @@
                         if (name.endsWith(".log")){
                             files[baseName]["log"] = true
                         }
-                        
+
                         if (name.endsWith(".tdms")){
                             files[baseName]["format"] = "tdms"
                             files[baseName]["size"] = size
@@ -571,7 +563,7 @@
             console.log(files)
 
             for (const [key, value] of Object.entries(files)) {
-                
+
                 var new_row = document.createElement('div');
                 new_row.className = "filecell"
                 var sub_row = document.createElement('div');
@@ -606,7 +598,7 @@
                     item4.append(li)
                     var a = document.createElement('a');
                     a.innerText = "LOG"
-                    a.setAttribute('href', "/streaming_manager/upload/" + key + "." + value["format"] + ".log");                    
+                    a.setAttribute('href', "/streaming_manager/upload/" + key + "." + value["format"] + ".log");
                     li.append(a)
                 }
 
@@ -627,13 +619,13 @@
                 var a = document.createElement('a');
                 a.innerText = "🡇"
                 a.setAttribute('href', "/streaming_manager/upload/" + key + "." + value["format"]);
-                li.append(a)          
+                li.append(a)
                 document.getElementById('files_table').appendChild(new_row);
 
             }
         });
     }
-    
+
 
     SM.setBoardMode = function(param) {
         var str = ""
@@ -785,9 +777,9 @@
     SM.param_callbacks["SS_DAC_CHANNELS"] = SM.setDACChannel;
     SM.param_callbacks["SS_IS_AC_DC"] = SM.setISACDC;
     SM.param_callbacks["SS_RESOLUTION"] = SM.setResolution;
-    
 
-    
+
+
 }(window.SM = window.SM || {}, jQuery));
 
 
@@ -823,7 +815,7 @@ $(function() {
         SM.refreshFiles();
     });
 
-    
+
     $('#B_DELETE_ALL').on('click', function(ev) {
         ev.preventDefault();
         $.ajax({

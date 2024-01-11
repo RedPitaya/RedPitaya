@@ -4,7 +4,7 @@
  * @brief Red Pitaya Spectrum Analyzer DSC processing.
  *
  * @Author Jure Menart <juremenart@gmail.com>
- *         
+ *
  * (c) Red Pitaya  http://www.redpitaya.com
  *
  * This part of code is written in C programming language.
@@ -54,6 +54,10 @@ constexpr double g_w2mw = 1000;
 #define RP_FLATTOP_A3 0.083578947
 #define RP_FLATTOP_A4 0.006947368
 
+#define __SHORT_FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+#define FATAL(X)  {fprintf(stderr, "Error at line %d, file %s errno %d [%s] %s\n", __LINE__, __SHORT_FILENAME__, errno, strerror(errno),X); exit(1);}
+#define WARNING(...) { char error_msg[512]; snprintf(error_msg,512,__VA_ARGS__);fprintf(stderr,"[W] %s:%d %s\n",__SHORT_FILENAME__,__LINE__,error_msg);}
+
 using namespace rp_dsp_api;
 
 template<typename T>
@@ -89,7 +93,7 @@ auto __zeroethOrderBessel( double x ) -> double {
         Value += term;
         ++m;
         term *= (x * x) / (4 * m * m);
-    }   
+    }
     return Value;
 }
 
@@ -130,7 +134,7 @@ CDSP::CDSP(uint8_t max_channels,uint32_t max_adc_buffer,uint32_t adc_max_speed) 
     }
 }
 
-CDSP::~CDSP(){    
+CDSP::~CDSP(){
     fftClean();
     window_clean();
     delete m_pimpl;
@@ -144,7 +148,7 @@ auto CDSP::setChannel(uint8_t ch, bool enable) -> void{
 
 auto CDSP::setImpedance(double value) -> void {
     if (value > 0)
-        m_pimpl->m_imp = value;    
+        m_pimpl->m_imp = value;
 }
 
 auto CDSP::getImpedance() -> double{
@@ -152,18 +156,35 @@ auto CDSP::getImpedance() -> double{
 }
 
 auto CDSP::setSignalLength(uint32_t len) -> int {
-    if (len < 256 || len > m_pimpl->m_max_adc_buffer_size) return -1;
-    
+    if (len < 256 || len > m_pimpl->m_max_adc_buffer_size) {
+        WARNING("Wrong buffer size %d",len)
+        return -1;
+    }
+
     unsigned char res = 0;
-    int n = len; 
+    int n = len;
     while (n) {
         res += n&1;
         n >>= 1;
     }
-    if (res != 1) return -1;
+    if (res != 1) {
+        WARNING("Wrong buffer size %d",len)
+        return -1;
+    }
     m_pimpl->m_signal_length = len;
     return 0;
 }
+
+int CDSP::setSignalLengthDiv2(uint32_t len){
+    if (len > m_pimpl->m_max_adc_buffer_size) {
+        WARNING("Buffer is too long %d",len)
+        return -1;
+    }
+    len = (len / 2) * 2;
+    m_pimpl->m_signal_length = len;
+    return 0;
+}
+
 
 auto CDSP::getOutSignalLength() -> uint32_t {
     return getSignalLength()/2;
@@ -187,18 +208,18 @@ int CDSP::window_init(window_mode_t mode){
     m_pimpl->m_window_sum  = 0;
     m_pimpl->m_window_mode = mode;
     window_clean();
-    
+
     try{
         m_pimpl->m_window = new double[getSignalMaxLength()];
     } catch (const std::bad_alloc& e) {
         fprintf(stderr, "rp_spectr_window_init() can not allocate mem\n");
         return -1;
     }
-    
+
     switch(m_pimpl->m_window_mode) {
         case HANNING:{
             for(i = 0; i < getSignalLength(); i++) {
-                m_pimpl->m_window[i] = RP_SPECTR_HANN_AMP * 
+                m_pimpl->m_window[i] = RP_SPECTR_HANN_AMP *
                 (1 - cos(2*M_PI*i / (double)(getSignalLength()-1)));
                 m_pimpl->m_window_sum += m_pimpl->m_window[i];
             }
@@ -213,7 +234,7 @@ int CDSP::window_init(window_mode_t mode){
         }
         case HAMMING:{
             for(i = 0; i < getSignalLength(); i++) {
-                m_pimpl->m_window[i] = 0.54 - 
+                m_pimpl->m_window[i] = 0.54 -
                 0.46 * cos(2*M_PI*i / (double)(getSignalLength()-1));
                 m_pimpl->m_window_sum += m_pimpl->m_window[i];
             }
@@ -221,7 +242,7 @@ int CDSP::window_init(window_mode_t mode){
         }
         case BLACKMAN_HARRIS:{
             for(i = 0; i < getSignalLength(); i++) {
-                m_pimpl->m_window[i] = RP_BLACKMAN_A0 - 
+                m_pimpl->m_window[i] = RP_BLACKMAN_A0 -
                                RP_BLACKMAN_A1 * cos(2*M_PI*i / (double)(getSignalLength()-1)) +
                                RP_BLACKMAN_A2 * cos(4*M_PI*i / (double)(getSignalLength()-1)) -
                                RP_BLACKMAN_A3 * cos(6*M_PI*i / (double)(getSignalLength()-1));
@@ -231,7 +252,7 @@ int CDSP::window_init(window_mode_t mode){
         }
         case FLAT_TOP:{
             for(i = 0; i < getSignalLength(); i++) {
-                m_pimpl->m_window[i] = RP_FLATTOP_A0 - 
+                m_pimpl->m_window[i] = RP_FLATTOP_A0 -
                                RP_FLATTOP_A1 * cos(2*M_PI*i / (double)(getSignalLength()-1)) +
                                RP_FLATTOP_A2 * cos(4*M_PI*i / (double)(getSignalLength()-1)) -
                                RP_FLATTOP_A3 * cos(6*M_PI*i / (double)(getSignalLength()-1)) +
@@ -342,7 +363,7 @@ auto CDSP::prepareFreqVector(data_t *data, double f_s, float decimation) -> int 
     // (float)spectr_fpga_cnv_freq_range_to_dec(freq_range);
     /* Divider to get to the right units - [MHz], [kHz] or [Hz] */
     //float unit_div = 1e6;
-    
+
     for(i = 0; i < getOutSignalLength(); i++) {
         /* We use full FPGA signal length range for this calculation, eventhough
          * the output vector is smaller. */
@@ -386,8 +407,8 @@ auto CDSP::fftInit() -> int {
 
 auto CDSP::fftClean() -> int {
     kiss_fft_cleanup();
-    
-    if(m_pimpl->m_kiss_fft_out) {    
+
+    if(m_pimpl->m_kiss_fft_out) {
         for(uint32_t j = 0; j < m_pimpl->m_max_channels; j++) {
             if (m_pimpl->m_kiss_fft_out[j])
                 delete[] m_pimpl->m_kiss_fft_out[j];
@@ -424,13 +445,39 @@ auto CDSP::fft(data_t *data) -> int {
 
     for(uint32_t j = 0; j < m_pimpl->m_max_channels; j++) {
         if (!m_pimpl->m_channelState[j]) continue;
-        for(uint32_t i = 0; i < getOutSignalLength(); i++) {                     // FFT limited to fs/2, specter of amplitudes            
+        for(uint32_t i = 0; i < getOutSignalLength(); i++) {                     // FFT limited to fs/2, specter of amplitudes
             data->m_fft[j][i] = sqrtf_neon(pow(m_pimpl->m_kiss_fft_out[j][i].r, 2) +
                             pow(m_pimpl->m_kiss_fft_out[j][i].i, 2));
         }
     }
     return 0;
 }
+
+int CDSP::getAmpAndPhase(data_t *_data, double _freq, double *_amp1, double *_phase1, double *_amp2, double *_phase2){
+    float wsumf = 1.0 / (float)m_pimpl->m_window_sum * 2.0;
+
+    auto amp = [&](int ch, int i){
+        return sqrtf(pow(m_pimpl->m_kiss_fft_out[ch][i].r, 2) +
+                                pow(m_pimpl->m_kiss_fft_out[ch][i].i, 2)) * wsumf;
+    };
+
+    for(uint32_t i = 0; i < getOutSignalLength(); i++){
+        if (_data->m_freq_vector[i] >= _freq){
+            *_amp1 = amp(0,i);
+            *_amp2 = amp(1,i);
+
+            *_phase1 = atan2(m_pimpl->m_kiss_fft_out[0][i].i,m_pimpl->m_kiss_fft_out[0][i].r);
+            *_phase2 = atan2(m_pimpl->m_kiss_fft_out[1][i].i,m_pimpl->m_kiss_fft_out[1][i].r);
+
+            printf("i %d freq %f\n",i,_data->m_freq_vector[i]);
+            printf("A-1 %f A0 %f A1 %f\n",amp(0,i-1),amp(0,i),amp(0,i+1));
+
+            return 0;
+        }
+    }
+    return -1;
+}
+
 
 auto CDSP::decimate(data_t *data,uint32_t in_len, uint32_t out_len) -> int {
     std::lock_guard<std::mutex> lock(m_pimpl->m_channelMutex);
@@ -445,11 +492,11 @@ auto CDSP::decimate(data_t *data,uint32_t in_len, uint32_t out_len) -> int {
     step = (uint32_t)round((float)in_len / (float)out_len);
     if(step < 1)
         step = 1;
-    
+
     float wsumf = 1.0 / (float)m_pimpl->m_window_sum * 2.0;
 
     for(uint32_t c = 0; c < m_pimpl->m_max_channels; c++) {
-        if (!m_pimpl->m_channelState[c]) continue; 
+        if (!m_pimpl->m_channelState[c]) continue;
         for(i = 0, j = 0; i < out_len; i++, j+=step) {
             uint32_t k=j;
 
@@ -460,10 +507,10 @@ auto CDSP::decimate(data_t *data,uint32_t in_len, uint32_t out_len) -> int {
             data->m_decimated[c][i] = 0;
 
             for(k=j; k < j+step; k++) {
-        
+
                 double ch_p = 0;
-                
-                //dBm                
+
+                //dBm
                 if (getMode() == DBM){
                     /* Conversion to power (Watts) */
                     // V -> RMS -> power
@@ -477,7 +524,18 @@ auto CDSP::decimate(data_t *data,uint32_t in_len, uint32_t out_len) -> int {
                 if (getMode() == DBU){
                     ch_p = data->m_fft[c][k] * wsumf / 1.414213562;
                 }
-        
+
+                // dBV
+                // V -> RMS
+                if (getMode() == DBV){
+                    ch_p = data->m_fft[c][k] * wsumf  / 1.414213562;
+                }
+
+                 // dBuV
+                if (getMode() == DBuV){
+                    ch_p = data->m_fft[c][k] * wsumf / 1.414213562;
+                }
+
                 data->m_decimated[c][i] += (double)ch_p;  // Summing the power expressed in Watts associated to each FFT bin
             }
             data->m_decimated[c][i] /= step;
@@ -492,12 +550,12 @@ auto CDSP::cnvToDBM(data_t *data,uint32_t  decimation) -> int {
         fprintf(stderr, "cnvToDBM() data not initialized\n");
         return -1;
     }
-    
+
     double *max_pw = new double[m_pimpl->m_max_channels];
     int *max_pw_idx = new int[m_pimpl->m_max_channels];
 
     float freq_smpl = (float)m_pimpl->m_adc_max_speed / (float)decimation;
-   
+
     if (m_pimpl->m_remove_DC) {
         int8_t count = remoteDCCount();
         for(uint32_t c = 0; c < m_pimpl->m_max_channels; c++) {
@@ -516,15 +574,15 @@ auto CDSP::cnvToDBM(data_t *data,uint32_t  decimation) -> int {
             /* Conversion to power (Watts) */
 
             double ch_p = data->m_decimated[c][i];
-           
+
             // Avoiding -Inf due to log10(0.0)
-            
-            if (ch_p * g_w2mw > 1.0e-12 )	
+
+            if (ch_p * g_w2mw > 1.0e-12 )
                 data->m_converted[c][i] = 10 * log10f_neon(ch_p * g_w2mw);  // W -> mW -> dBm
-            else	
+            else
                 data->m_converted[c][i] = 10 * log10f_neon(1.0e-12);
-            
-            
+
+
             /* Find peaks */
             if(data->m_converted[c][i] > max_pw[c]) {
                 max_pw[c]     = data->m_converted[c][i];
@@ -547,7 +605,7 @@ auto CDSP::cnvToDBMMaxValueRanged(data_t *data,uint32_t  decimation,uint32_t min
         fprintf(stderr, "cnvToDBM() data not initialized\n");
         return -1;
     }
-    
+
     double *max_pw = new double[m_pimpl->m_max_channels];
     int *max_pw_idx = new int[m_pimpl->m_max_channels];
     float freq_smpl = (float)m_pimpl->m_adc_max_speed / (float)decimation;
@@ -558,7 +616,7 @@ auto CDSP::cnvToDBMMaxValueRanged(data_t *data,uint32_t  decimation,uint32_t min
                 data->m_decimated[c][x] = data->m_decimated[c][count];
             }
         }
-    }  
+    }
     for(uint32_t c = 0; c < m_pimpl->m_max_channels; c++) {
         if (!m_pimpl->m_channelState[c]) continue;
         max_pw[c] =  -1e5;
@@ -568,17 +626,17 @@ auto CDSP::cnvToDBMMaxValueRanged(data_t *data,uint32_t  decimation,uint32_t min
             /* Conversion to power (Watts) */
 
             double ch_p = data->m_decimated[c][i];
-           
+
             // Avoiding -Inf due to log10(0.0)
-            
-            if (ch_p * g_w2mw > 1.0e-12 )	
+
+            if (ch_p * g_w2mw > 1.0e-12 )
                 data->m_converted[c][i] = 10 * log10f_neon(ch_p * g_w2mw);  // W -> mW -> dBm
-            else	
+            else
                 data->m_converted[c][i] = 10 * log10f_neon(1.0e-12);
-            
+
             auto currentFreq = ((float)i / (float)getOutSignalLength() * freq_smpl  / 2);
             if (currentFreq < minFreq || currentFreq > maxFreq) continue;
-          
+
             /* Find peaks */
             if(data->m_converted[c][i] > max_pw[c]) {
                 max_pw[c]     = data->m_converted[c][i];
@@ -601,10 +659,10 @@ auto CDSP::cnvToMetric(data_t *data,uint32_t  decimation) -> int{
         return -1;
     }
     uint32_t i;
-    
+
     double *max_pw = new double[m_pimpl->m_max_channels];
     int *max_pw_idx = new int[m_pimpl->m_max_channels];
-    
+
     float  freq_smpl = (float)m_pimpl->m_adc_max_speed / (float)decimation;
 
     if (m_pimpl->m_remove_DC) {
@@ -625,9 +683,9 @@ auto CDSP::cnvToMetric(data_t *data,uint32_t  decimation) -> int{
             /* Conversion to power (Watts) */
             if (getMode() == DBM){
                 double ch_p=data->m_decimated[c][i];
-                if (ch_p * g_w2mw > 1.0e-12 )	
+                if (ch_p * g_w2mw > 1.0e-12 )
                     data->m_converted[c][i] = 10 * log10f_neon(ch_p * g_w2mw);  // W -> mW -> dBm
-                else	
+                else
                     data->m_converted[c][i] = -120;
             }
 
@@ -638,10 +696,28 @@ auto CDSP::cnvToMetric(data_t *data,uint32_t  decimation) -> int{
             if (getMode() == DBU){
                 double ch_p = data->m_decimated[c][i];
                 // ( 20*log10( 0.686 / .775 ))
-                if (ch_p * g_w2mw > 1.0e-12 )	
+                if (ch_p * g_w2mw > 1.0e-12 )
                     data->m_converted[c][i] = 20 * log10f_neon(ch_p / 0.775);
-                else	
+                else
                     data->m_converted[c][i] = -120;
+            }
+
+            if (getMode() == DBV){
+                double ch_p = data->m_decimated[c][i];
+                // ( 20*log10( RMS / 1.0 ))
+                if (ch_p * g_w2mw > 1.0e-12 )
+                    data->m_converted[c][i] = 20 * log10f_neon(ch_p);
+                else
+                    data->m_converted[c][i] = -120;
+            }
+
+            if (getMode() == DBuV){
+                  double ch_p = data->m_decimated[c][i];
+                // ( 20*log10( RMS / 1.0 )) + 120
+                if (ch_p * g_w2mw > 1.0e-12 )
+                    data->m_converted[c][i] = 20 * log10f_neon(ch_p) + 120;
+                else
+                    data->m_converted[c][i] = -10;
             }
 
             /* Find peaks */

@@ -11,3 +11,5 @@ auto checkMathScale() -> void;
 
 auto updateMathSignal() -> void;
 auto updateMathParams(bool force) -> void;
+
+auto isMathShow() -> bool;

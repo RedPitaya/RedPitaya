@@ -16,6 +16,7 @@
 
 #include "scpi/types.h"
 #include "scpi/parser.h"
+#include "scpi/error.h"
 #include "rp.h"
 #include "rp_hw-profiles.h"
 
@@ -89,12 +90,45 @@ const scpi_choice_def_t scpi_RpTrigStat[] = {
     {"WAIT", 7},
     {"WAIT", 8},
     {"WAIT", 9},
+    {"WAIT", 10},
+    {"WAIT", 11},
+    {"WAIT", 12},
+    {"WAIT", 13},
     SCPI_CHOICE_LIST_END
 };
 
-#define SCPI_CMD_NUM 	1
+auto getCmdName(scpi_t *context) -> const char *;
+auto rp_Log(scpi_t *context, int mode, int rp_err_code, const char * format, ...) -> void;
+auto scpi_Log(scpi_t *context, int mode, int err_code, const char * format, ...) -> void;
 
-#define RP_F_NAME(X) X
+#define SCPI_CMD_NUM 	1
+#define RP_F_NAME auto func = getCmdName(context);
+#define RP_LOG_INFO(...)  { char error_msg[512]; \
+                            snprintf(error_msg,512,__VA_ARGS__); \
+                            rp_Log(context,LOG_INFO, 0, "*%s %s", getCmdName(context),error_msg); }
+#define RP_LOG_ERR(...)  { char error_msg[512]; \
+                            snprintf(error_msg,512,__VA_ARGS__); \
+                            rp_Log(context,LOG_ERR, result, "*%s %s", getCmdName(context),error_msg); }
+#define RP_LOG_CRIT(...)  { char error_msg[512]; \
+                            snprintf(error_msg,512,__VA_ARGS__); \
+                            rp_Log(context,LOG_CRIT, result, "*%s %s", getCmdName(context),error_msg); }
+
+#define RP_LOG_INFO(...)  { char error_msg[512]; \
+                            snprintf(error_msg,512,__VA_ARGS__); \
+                            rp_Log(context,LOG_INFO, 0, "*%s %s", getCmdName(context),error_msg); }
+#define RP_LOG_ERR(...)  { char error_msg[512]; \
+                            snprintf(error_msg,512,__VA_ARGS__); \
+                            rp_Log(context,LOG_ERR, result, "*%s %s", getCmdName(context),error_msg); }
+#define RP_LOG_CRIT(...)  { char error_msg[512]; \
+                            snprintf(error_msg,512,__VA_ARGS__); \
+                            rp_Log(context,LOG_CRIT, result, "*%s %s", getCmdName(context),error_msg); }
+
+#define SCPI_LOG_ERR(X,...)  { char error_msg[512]; \
+                            snprintf(error_msg,512,__VA_ARGS__); \
+                            rp_Log(context,LOG_ERR, X, "*%s %s", getCmdName(context),error_msg); }
+#define SCPI_LOG_CRIT(X,...)  { char error_msg[512]; \
+                            snprintf(error_msg,512,__VA_ARGS__); \
+                            rp_Log(context,LOG_CRIT, X, "*%s %s", getCmdName(context),error_msg); }
 
 
 int RP_ParseChArgvADC(scpi_t *context, rp_channel_t *channel);
@@ -103,7 +137,6 @@ int RP_ParseChArgvDAC(scpi_t *context, rp_channel_t *channel);
 rp_scpi_log getLogMode();
 scpi_result_t RP_SetLogMode(scpi_t *context);
 
-void RP_LOG(scpi_t *context,int mode, const char * format, ...);
 
 uint8_t getADCChannels(scpi_t *context);
 uint8_t getDACChannels(scpi_t *context);

@@ -37,7 +37,6 @@
     <script src="../assets/jquery/jquery.cookie.js"></script>
     <script src="../assets/jquery/jquery.browser.js"></script>
     <script src="../assets/bootstrap/js/bootstrap.min.js"></script>
-    <script src="../assets/fastclick.min.js"></script>
     <script src="../assets/browsercheck.js?1"></script>
     <script src="../assets/pako.js"></script>
     <script src="../assets/offline.min.js?1"></script>
@@ -95,10 +94,11 @@
                                 </a>
                             </li>
                             <li class="dropdown">
-                                <a class="btn btn-default dropdown-toggle" type="button" id="dd_menu" data-toggle="dropdown" style="padding-left: 20px;">EXPORT<span class="caret"></span></a>
+                                <a class="btn btn-default dropdown-toggle" type="button" id="dd_menu" data-toggle="dropdown" style="padding-left: 20px;">MENU<span class="caret"></span></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="menu1" style="background: #cdcccc; min-width: 0px;">
-                                    <li><a id="downl_graph" href="#">Graph</a></li>
-                                    <li><a id="downl_csv" href="#">Data in CSV</a></li>
+                                    <li><a id="downl_graph" href="#">Export Graph</a></li>
+                                    <li><a id="downl_csv" href="#">Export in CSV</a></li>
+                                    <li><a id="reset_settings" href="#">RESET</a></li>
                                 </ul>
                             </li>
                             <li><a id="BA_CALIBRATE" href="#" style="padding-left: 23px; white-space: nowrap;">CALIBRATE</a></li>
@@ -204,10 +204,10 @@
                             <div class="right-menu-option" style="margin-top: 10px;">
                                 <div class="btn-group btn-group-justified" data-toggle="buttons">
                                     <label id="BA_SCALE0" class="btn">
-                                        <input type="radio" value="0" name="BA_SCALE" autocomplete="off">Lin
+                                        <input type="radio" value="0" name="BA_SCALE" id="BA_SCALE" autocomplete="off">Lin
                                     </label>
                                     <label id="BA_SCALE1" class="btn active">
-                                        <input type="radio" value="1" name="BA_SCALE" autocomplete="off">Log
+                                        <input type="radio" value="1" name="BA_SCALE" id="BA_SCALE1" autocomplete="off">Log
                                     </label>
                                 </div>
                             </div>
@@ -260,25 +260,25 @@
                         <div class="col-xs-6 option-content">
                             <span class="col-info">Gain min [dB]</span>
                             <div class="right-menu-option" style="margin-top: 10px;">
-                                <input id="BA_SIGNAL_1_MIN" class="setfield input-number" type="text" value="-80" step="1" min="-1000" max="1000">
+                                <input id="BA_GAIN_MIN" class="setfield input-number" type="text" value="-80" step="1" min="-1000" max="1000">
                             </div>
                         </div>
                         <div class="col-xs-6 option-content">
                             <span class="col-info">Gain max [dB]</span>
                             <div class="right-menu-option" style="margin-top: 10px;">
-                                <input id="BA_SIGNAL_1_MAX" class="setfield input-number" type="text" value="10" step="1" min="-1000" max="1000">
+                                <input id="BA_GAIN_MAX" class="setfield input-number" type="text" value="10" step="1" min="-1000" max="1000">
                             </div>
                         </div>
                         <div class="col-xs-6 option-content">
                             <span class="col-info">Phase min [deg]</span>
                             <div class="right-menu-option" style="margin-top: 10px;">
-                                <input id="BA_SIGNAL_2_MIN" class="setfield input-number" type="text" value="-90" step="1" min="-1000" max="100">
+                                <input id="BA_PHASE_MIN" class="setfield input-number" type="text" value="-90" step="1" min="-1000" max="100">
                             </div>
                         </div>
                         <div class="col-xs-6 option-content">
                             <span class="col-info">Phase max [deg]</span>
                             <div class="right-menu-option" style="margin-top: 10px;">
-                                <input id="BA_SIGNAL_2_MAX" class="setfield input-number" type="text" value="90" step="1" min="-1000" max="1000">
+                                <input id="BA_PHASE_MAX" class="setfield input-number" type="text" value="90" step="1" min="-1000" max="1000">
                             </div>
                         </div>
                         <div class="col-xs-12 option-content">

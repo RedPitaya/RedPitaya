@@ -18,8 +18,8 @@ SUFFIX=$3
 REV="$(echo $1 | cut -d'-' -f2)"
 NUM="$(echo $1 | cut -d'-' -f3)"
 
-wget -N https://downloads.redpitaya.com/downloads/LinuxOS/red_pitaya_OS-beta_2.00.img.zip
-unzip -n red_pitaya_OS-beta_2.00.img.zip
+wget -N https://downloads.redpitaya.com/downloads/LinuxOS/red_pitaya_OS-beta_2.01.img.zip
+unzip -n red_pitaya_OS-beta_2.01.img.zip
 rm -f redpitaya.img
 mv *.img redpitaya.img
 
@@ -106,6 +106,9 @@ sudo losetup -d "$LOOP_DEV"
 sleep 2
 
 mv redpitaya.img $(echo $PREFIX'_OS_'$REV'-'$NUM$SUFFIX'_beta.img')
-zip $(echo $PREFIX'_OS_'$REV'-'$NUM$SUFFIX'_beta.img.zip') $(echo $PREFIX'_OS_'$REV'-'$NUM$SUFFIX'_beta.img') 
+md5sum $(echo $PREFIX'_OS_'$REV'-'$NUM$SUFFIX'_beta.img') > md5.txt
+zip $(echo $PREFIX'_OS_'$REV'-'$NUM$SUFFIX'_beta.img.zip') $(echo $PREFIX'_OS_'$REV'-'$NUM$SUFFIX'_beta.img') md5.txt
 rm -f $(echo $PREFIX'_OS_'$REV'-'$NUM'_beta.img')
+rm md5.txt
 echo "ALL DONE"
+

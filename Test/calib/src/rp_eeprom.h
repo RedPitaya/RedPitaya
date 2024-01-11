@@ -33,7 +33,8 @@ typedef enum {
     WANT_INIT       = 0x40,
     WANT_PRINT      = 0x80,
     WANT_NEW_FORMAT = 0x100,
-    WANT_MODIFY     = 0x200
+    WANT_MODIFY     = 0x200,
+    WANT_TO_OLD     = 0x400
 
 } WANT_FLAGS;
 

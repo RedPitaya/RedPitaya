@@ -38,9 +38,13 @@ int rpApp_Init() {
     return RP_OK;
 }
 
+int rpApp_OscRunMainThread(){
+    return osc_RunMainThread();
+}
+
 int rpApp_Release() {
+    ECHECK_APP(osc_stop());
     ECHECK_APP(osc_Release());
-//    ECHECK_APP(osc_Release());
     ECHECK_APP(rp_Release());
     // TODO: Place other module releasing here (in reverse order)
 
@@ -96,6 +100,14 @@ int rpApp_OscSingle() {
 
 int rpApp_OscAutoScale() {
     return osc_autoScale();
+}
+
+int rpApp_OscGetAutoScale(bool *_state) {
+    return osc_getAutoScale(_state);
+}
+
+int rpApp_OscRefreshViewData() {
+    return osc_refreshViewData();
 }
 
 int rpApp_OscIsRunning(bool *running) {
@@ -155,7 +167,6 @@ int rpApp_OscGetAmplitudeOffset(rpApp_osc_source source, double *offset) {
 }
 
 int rpApp_OscSetTriggerSource(rpApp_osc_trig_source_t triggerSource) {
-	printf("set trigger src %d\n", triggerSource);
     return osc_setTriggerSource(triggerSource);
 }
 
@@ -204,6 +215,10 @@ int rpApp_OscGetViewData(rpApp_osc_source source, float *data, uint32_t size) {
 
 int rpApp_OscGetRawData(rp_channel_t source, uint16_t *data, uint32_t size) {
     return osc_getRawData(source, data, size);
+}
+
+int rpApp_OscGetExportedData(rpApp_osc_source source, rpApp_osc_exportMode mode, bool normalize, float *data, uint32_t *size){
+    return osc_getExportedData(source,mode,normalize,data,size);
 }
 
 int rpApp_OscSetViewSize(uint32_t size) {
@@ -289,6 +304,15 @@ int rpApp_OscGetMathSources(rp_channel_t *source1, rp_channel_t *source2) {
 int rpApp_OscScaleMath(){
     return osc_scaleMath();
 }
+
+int rpApp_OscSetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode _mode){
+    return osc_SetSmoothMode(_channel,_mode);
+}
+
+int rpApp_OscGetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode *_mode){
+    return osc_GetSmoothMode(_channel,_mode);
+}
+
 
 // SPECTRUM
 

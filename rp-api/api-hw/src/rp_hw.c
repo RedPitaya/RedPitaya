@@ -21,6 +21,56 @@
 #include "i2c.h"
 #include "sensors.h"
 
+#define XSTR(s) STR(s)
+#define STR(s) #s
+
+#ifndef VERSION
+#define VERSION_STR "0.00-0000"
+#else
+#define VERSION_STR XSTR(VERSION)
+#endif
+
+#ifndef REVISION
+#define REVISION_STR "unknown"
+#else
+#define REVISION_STR XSTR(REVISION)
+#endif
+
+static char version[50];
+
+const char* rp_HwGetVersion()
+{
+    sprintf(version, "%s (%s)", VERSION_STR, REVISION_STR);
+    return version;
+}
+
+const char* rp_HwGetError(int errorCode) {
+    switch (errorCode) {
+        case RP_HW_OK:         return "OK";
+        case RP_HW_EAL:     return "Bad alloc.";
+        case RP_HW_EUTO:    return "Timeout read from uart.";
+        case RP_HW_EIPV:    return "Invalid parameter value.";
+        case RP_HW_EUF:     return "Unsupported Feature.";
+        case RP_HW_EIU:     return "Failed to init uart.";
+        case RP_HW_ERU:     return "Failed read from uart.";
+        case RP_HW_EWU:     return "Failed write to uart.";
+        case RP_HW_ESU:     return "Failed set settings to uart.";
+        case RP_HW_EGU:     return "Failed get settings from uart.";
+        case RP_HW_EIS:     return "Failed to init SPI.";
+        case RP_HW_ESGS:    return "Failed get settings from SPI.";
+        case RP_HW_ESSS:    return "Failed set settings to SPI.";
+        case RP_HW_EST:     return "Failed SPI read/write.";
+        case RP_HW_ESMI:    return "Failed SPI message not init.";
+        case RP_HW_ESMO:    return "Failed index SPI message out of range.";
+        case RP_HW_EIIIC:   return "Failed to init I2C.";
+        case RP_HW_ERIIC:   return "Failed to read from I2C.";
+        case RP_HW_EWIIC:  return " Failed to write to I2C.";
+        case RP_HW_ESIIC:  return "Failed to set slave mode for I2C.";
+        case RP_HW_EBIIC:  return "Failed I2C. Buffer is NULL.";
+        default:       return "Unknown error";
+    }
+}
+
 int rp_UartInit(){
     return uart_Init();
 }

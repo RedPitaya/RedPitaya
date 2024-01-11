@@ -8,7 +8,6 @@
                                     });
             } else {
                 OSC.rp_model = model;
-                OSC.sample_rates = {1:'250M', 8:'31.25M', 64: '3.906M', 1024: '244.141k', 8192:'30.518k', 65536:'3.815k'};
 
                 OSC.voltage_steps = [
                     // Millivolts

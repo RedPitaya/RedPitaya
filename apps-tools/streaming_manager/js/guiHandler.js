@@ -1,3 +1,12 @@
+/*
+ * Red Pitaya stream service manager
+ *
+ * Author: Danilyuk Nikolay <n.danilyuk@integrasources.eu>
+ *
+ * (c) Red Pitaya  http://www.redpitaya.com
+ *
+ */
+
 function ValidateIPaddress(ipaddress) {
     if (ipaddress == '')
         return false;
@@ -158,7 +167,7 @@ var setMode = function(_mode, _state) {
         SM.parametersCache["SS_SAVE_MODE"] = { value: _state ? 1 : 0};
         SM.sendParameters();
     }
-    
+
     if (_mode == "SS_CH1_ENABLE"){
         var curValue = SM.params.orig["SS_CHANNEL"] != undefined ? SM.params.orig["SS_CHANNEL"].value : 0;
         SM.parametersCache["SS_CHANNEL"] = { value: (curValue & 0xE) | (_state ? 0x1 : 0x0) };
@@ -207,7 +216,7 @@ var setMode = function(_mode, _state) {
         SM.sendParameters();
     }
 
-    
+
     if (_mode == "SS_CH1_AC_DC"){
         var curValue = SM.params.orig["SS_AC_DC"] != undefined ? SM.params.orig["SS_AC_DC"].value : 0;
         SM.parametersCache["SS_AC_DC"] = { value: (curValue & 0xE) | (_state ? 0x1 : 0x0) };

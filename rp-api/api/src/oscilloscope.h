@@ -48,7 +48,7 @@ typedef struct osc_control_s {
     /** @brief Offset 0x04 - trigger source register
      *
      * Trigger source register (offset 0x04):
-     * bits [ 2 : 0] - trigger source:
+     * bits [ 3 : 0] - trigger source:
      * 1 - trig immediately
      * 2 - ChA positive edge
      * 3 - ChA negative edge
@@ -59,7 +59,8 @@ typedef struct osc_control_s {
      Only for 250-12
      * 8 - Arbitrary wave generator positive edge
      * 9 - Arbitrary wave generator negative edge
-     * bits [31 : 3] -reserved
+     * bits [4] - Trigger lock state
+     * bits [31 : 5] -reserved
      */
     uint32_t trig_source;
 
@@ -283,13 +284,18 @@ typedef struct osc_control_s {
     /* Reserved */
     uint32_t reserved_8C;
 
-    /**@brief Offset 0x90 - Trigger debuncer time
+    /**@brief Offset 0x90 - External trigger debuncer time
     * bits [19:0] Number of ADC clock periods
     * trigger is disabled after activation
     * reset value is decimal 62500
     * or equivalent to 0.5ms
     */
-    uint32_t trig_dbc_t:20,:12; // 0x90
+    uint32_t ext_trig_dbc_t:20,:12; // 0x90
+
+    /**@brief Offset 0x94 - Trigger lock control
+     * bit[0] - (W) Write 1 for unlock trigger
+    */
+    uint32_t trigger_lock_ctr :1, : 31; // 0x94
 
     /* ChA & ChB data - 14 LSB bits valid starts from 0x10000 and
      * 0x20000 and are each 16k samples long */
@@ -311,6 +317,7 @@ static const uint32_t TRIG_ST_MCH_MASK      = 0x4;          // (2nd bit)
 static const uint32_t PRE_TRIGGER_COUNTER   = 0xFFFFFFFF;   // (32 bit)
 static const uint32_t ARM_KEEP_MASK         = 0x8;          // (4 bit)
 static const uint32_t FILL_STATE_MASK       = 0x10;         // (1 bit)
+static const uint32_t TRIG_UNLOCK_MASK      = 0x10;         // (1 bit)
 
 static const uint32_t AXI_ENABLE_MASK       = 0x1;          // (1 bit)
 static const uint32_t AXI_CHA_FILL_STATE    = 0x10;         // (1 bit)
@@ -329,13 +336,13 @@ int osc_SetAveraging(bool enable);
 int osc_GetAveraging(bool* enable);
 int osc_SetTriggerSource(uint32_t source);
 int osc_GetTriggerSource(uint32_t* source);
+int osc_SetUnlockTrigger();
+int osc_GetUnlockTrigger(bool *state);
 int osc_WriteDataIntoMemory(bool enable);
 int osc_ResetWriteStateMachine();
 int osc_SetArmKeep(bool enable);
 int osc_GetArmKeep(bool *state);
 int osc_GetBufferFillState(bool *state);
-int osc_axi_GetBufferFillStateChA(bool *state);
-int osc_axi_GetBufferFillStateChB(bool *state);
 int osc_GetTriggerState(bool *received);
 int osc_GetPreTriggerCounter(uint32_t *value);
 int osc_SetThresholdChA(uint32_t threshold);
@@ -367,8 +374,8 @@ int osc_GetEqFiltersChC(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk,
 int osc_SetEqFiltersChD(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp);
 int osc_GetEqFiltersChD(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
 
-int osc_SetTriggerDebouncer(uint32_t value);
-int osc_GetTriggerDebouncer(uint32_t *value);
+int osc_SetExtTriggerDebouncer(uint32_t value);
+int osc_GetExtTriggerDebouncer(uint32_t *value);
 
 const volatile uint32_t* osc_GetDataBufferChA();
 const volatile uint32_t* osc_GetDataBufferChB();
@@ -378,26 +385,51 @@ const volatile uint32_t* osc_GetDataBufferChD();
 int osc_axi_GetMemoryRegion(uint32_t *_start,uint32_t *_size);
 int osc_axi_EnableChA(bool enable);
 int osc_axi_EnableChB(bool enable);
+int osc_axi_EnableChC(bool enable);
+int osc_axi_EnableChD(bool enable);
 int osc_axi_SetAddressStartChA(uint32_t address);
 int osc_axi_SetAddressStartChB(uint32_t address);
+int osc_axi_SetAddressStartChC(uint32_t address);
+int osc_axi_SetAddressStartChD(uint32_t address);
 int osc_axi_SetAddressEndChA(uint32_t address);
 int osc_axi_SetAddressEndChB(uint32_t address);
+int osc_axi_SetAddressEndChC(uint32_t address);
+int osc_axi_SetAddressEndChD(uint32_t address);
 
 int osc_axi_GetAddressStartChA(uint32_t *address);
 int osc_axi_GetAddressStartChB(uint32_t *address);
+int osc_axi_GetAddressStartChC(uint32_t *address);
+int osc_axi_GetAddressStartChD(uint32_t *address);
 int osc_axi_GetAddressEndChA(uint32_t *address);
 int osc_axi_GetAddressEndChB(uint32_t *address);
+int osc_axi_GetAddressEndChC(uint32_t *address);
+int osc_axi_GetAddressEndChD(uint32_t *address);
+
+int osc_axi_GetBufferFillStateChA(bool *state);
+int osc_axi_GetBufferFillStateChB(bool *state);
+int osc_axi_GetBufferFillStateChC(bool *state);
+int osc_axi_GetBufferFillStateChD(bool *state);
 
 int osc_axi_GetWritePointerChA(uint32_t* pos);
 int osc_axi_GetWritePointerChB(uint32_t* pos);
+int osc_axi_GetWritePointerChC(uint32_t* pos);
+int osc_axi_GetWritePointerChD(uint32_t* pos);
 int osc_axi_GetWritePointerAtTrigChA(uint32_t* pos);
 int osc_axi_GetWritePointerAtTrigChB(uint32_t* pos);
+int osc_axi_GetWritePointerAtTrigChC(uint32_t* pos);
+int osc_axi_GetWritePointerAtTrigChD(uint32_t* pos);
 int osc_axi_SetTriggerDelayChA(uint32_t decimated_data_num);
 int osc_axi_SetTriggerDelayChB(uint32_t decimated_data_num);
+int osc_axi_SetTriggerDelayChC(uint32_t decimated_data_num);
+int osc_axi_SetTriggerDelayChD(uint32_t decimated_data_num);
 int osc_axi_GetTriggerDelayChA(uint32_t* decimated_data_num);
 int osc_axi_GetTriggerDelayChB(uint32_t* decimated_data_num);
+int osc_axi_GetTriggerDelayChC(uint32_t* decimated_data_num);
+int osc_axi_GetTriggerDelayChD(uint32_t* decimated_data_num);
 
 const volatile uint16_t* osc_axi_GetDataBufferChA();
 const volatile uint16_t* osc_axi_GetDataBufferChB();
+const volatile uint16_t* osc_axi_GetDataBufferChC();
+const volatile uint16_t* osc_axi_GetDataBufferChD();
 
 #endif /* SRC_OSCILLOSCOPE_H_ */

@@ -204,9 +204,6 @@
 
         var plot_elem = SPEC.graphs.elem;
 
-        if (!SPEC.isVisibleChannels())
-            return null;
-
         var options = SPEC.graphs.plot.getOptions();
         var axes = SPEC.graphs.plot.getAxes();
         var curr_scale = axes.yaxis.tickSize;
@@ -235,8 +232,6 @@
 
         if (UI_GRAPH.y_axis_mode === 1) return;
 
-        if (!SPEC.isVisibleChannels())
-            return null;
 
         var options = SPEC.graphs.plot.getOptions();
         if ( options.yaxes[0].min - value < UI_GRAPH.ymin) {
@@ -262,8 +257,6 @@
         if (!(SPEC.graphs && SPEC.graphs.elem))
             return null;
 
-        if (!SPEC.isVisibleChannels())
-            return null;
 
         var options = SPEC.graphs.plot.getOptions();
         var value_min = value;
@@ -299,8 +292,7 @@
         if (!(SPEC.graphs && SPEC.graphs.elem))
             return null;
 
-        if (!SPEC.isVisibleChannels())
-            return null;
+
         var options = SPEC.graphs.plot.getOptions();
         var axes = SPEC.graphs.plot.getAxes();
         var curr_scale = axes.xaxis.tickSize;
@@ -331,8 +323,8 @@
     UI_GRAPH.resetZoom = function() {
         if (!(SPEC.graphs && SPEC.graphs.elem))
             return;
-        if (!SPEC.isVisibleChannels())
-            return;
+        if (SPEC.params.orig['xmin'] == undefined) return;
+        if (SPEC.params.orig['xmax'] == undefined) return;
 
         var plot = SPEC.graphs.plot;
         var curr_options = plot.getOptions();
@@ -363,8 +355,8 @@
 
         if (SPEC.graphs && SPEC.graphs.elem) {
             var plot_elem = SPEC.graphs.elem;
-            if (SPEC.isVisibleChannels()) {
 
+                if ((SPEC.params.orig['xmin'] === undefined) || (SPEC.params.orig['xmax'] === undefined)) return
                 var plot = SPEC.graphs.plot;
                 SPEC.params.local['xmin'] = { value: SPEC.params.orig['xmin'].value };
                 SPEC.params.local['xmax'] = { value: SPEC.params.orig['xmax'].value };
@@ -388,7 +380,6 @@
                 if (UI_GRAPH.minMaxChange !== undefined){
                     UI_GRAPH.minMaxChange(options.xaxes[0].min,options.xaxes[0].max)
                 }
-            }
         }
     };
 
@@ -440,6 +431,14 @@
             mode_value = 2;
             $('.power-label').text('Amplitude [dBu]');
         }
+        if (mode === "dbV") {
+            mode_value = 3;
+            $('.power-label').text('Amplitude [dBV]');
+        }
+        if (mode === "dbuV") {
+            mode_value = 4;
+            $('.power-label').text('Amplitude [dBµV]');
+        }
         SPEC.sendParameters({'y_axis_mode':mode_value});
         UI_GRAPH.resetZoom();
     }
@@ -453,6 +452,16 @@
         }
 
         if (mode === "dbu") {
+            UI_GRAPH.ymax = 10.0;
+            UI_GRAPH.ymin = -130.0;
+        }
+
+        if (mode === "dbuV") {
+            UI_GRAPH.ymax = 130.0;
+            UI_GRAPH.ymin = -10.0;
+        }
+
+        if (mode === "dbV") {
             UI_GRAPH.ymax = 10.0;
             UI_GRAPH.ymin = -130.0;
         }

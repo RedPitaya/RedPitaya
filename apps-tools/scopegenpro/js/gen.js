@@ -242,7 +242,7 @@ OSC.updateGenSweepMode= function(new_params,param_name){
     }
 }
 
-OSC.updateGenSweepFunc= function(new_params,param_name){
+OSC.updateGenFunc= function(new_params,param_name){
     var state = OSC.params.orig[param_name].value;
     var field = $('#' + param_name);
     if (field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
@@ -250,21 +250,21 @@ OSC.updateGenSweepFunc= function(new_params,param_name){
     }
 }
 
-OSC.updateGenSweepFunc= function(new_params,param_name){
-    var state = OSC.params.orig[param_name].value;
-    var field = $('#' + param_name);
-    if (field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
-        field.val(new_params[param_name].value);
-    }
-}
+// OSC.updateGenSweepFunc= function(new_params,param_name){
+//     var state = OSC.params.orig[param_name].value;
+//     var field = $('#' + param_name);
+//     if (field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
+//         field.val(new_params[param_name].value);
+//     }
+// }
 
-OSC.updateGenSweepFunc= function(new_params,param_name){
-    var state = OSC.params.orig[param_name].value;
-    var field = $('#' + param_name);
-    if (field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
-        field.val(new_params[param_name].value);
-    }
-}
+// OSC.updateGenSweepFunc= function(new_params,param_name){
+//     var state = OSC.params.orig[param_name].value;
+//     var field = $('#' + param_name);
+//     if (field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
+//         field.val(new_params[param_name].value);
+//     }
+// }
 
 OSC.updateGenTrigSource= function(new_params,param_name){
     var state = OSC.params.orig[param_name].value;

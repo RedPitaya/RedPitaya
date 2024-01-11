@@ -1,3 +1,12 @@
+/*
+ * Red Pitaya stream service manager
+ *
+ * Author: Danilyuk Nikolay <n.danilyuk@integrasources.eu>
+ *
+ * (c) Red Pitaya  http://www.redpitaya.com
+ *
+ */
+
 (function(SM, $, undefined) {
     SM.max_rate_1ch = [125e6, 125e6];
     SM.max_rate_2chs = [125e6, 125e6];

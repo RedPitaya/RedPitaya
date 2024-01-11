@@ -94,7 +94,7 @@ profiles_t stem_250_12_v1_1 = {
 
     .is_daisy_chain_clock_sync = false,
 
-    .is_dma_mode_v0_94 = false
+    .is_dma_mode_v0_94 = true
 };
 
 profiles_t* getProfile_STEM_250_12_v1_1(){

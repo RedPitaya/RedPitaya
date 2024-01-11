@@ -68,9 +68,13 @@
             }, 200);
         });
 
+        $("#ext_con_but").click(function(event) {
+            $('#ext_connections_dialog').modal("show");
+        });
+
         $('#reset_settings').click(function() {
             SPEC.params.local['RESET_CONFIG_SETTINGS'] = { value: 1 };
-            SPEC.sendParams();           
+            SPEC.sendParams();
         });
 
         $(moreVal + ', ' + lessVal).on("mouseup mouseout", function() {
@@ -184,6 +188,28 @@
 
         $('input[type=text]:not([readonly]):not(.no-arrows)[step]').iLightInputNumber({
             mobile: false
+        });
+    }
+
+    UI.updateARBFunc = function(list) {
+        const splitLines = value => value.split(/\r?\n/);
+        splitLines(list).forEach(function(item){
+            var id = item.trim();
+            if (id !== ""){
+                var name = id.slice(1);
+                var opt = document.createElement('option')
+                var opt2 = document.createElement('option')
+                opt.setAttribute('value', id)
+                opt.innerText = name
+                opt2.setAttribute('value', id)
+                opt2.innerText = name
+                var r1 = document.getElementById('SOUR1_FUNC');
+                if (r1!= null)
+                    r1.appendChild(opt);
+                var r2 = document.getElementById('SOUR2_FUNC');
+                if (r2!= null)
+                    r2.appendChild(opt2);
+            }
         });
     }
 

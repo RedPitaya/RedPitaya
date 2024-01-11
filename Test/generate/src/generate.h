@@ -3,6 +3,8 @@
 
 
 #include <stdint.h>
+#include <string>
+#include <vector>
 #include "version.h"
 
 #include "rp.h"
@@ -24,13 +26,16 @@ typedef struct {
     rp_waveform_t type;
     rp_gen_gain_t gain;
     bool       calib;
+    std::string arb = "";
+    bool regDebug = false;
 } config_t;
 
 uint8_t getChannels();
 models_t getModel();
 uint32_t getMaxSpeed();
 float fullScale();
-
+auto loadARBList() -> void;
+auto getARBList() -> std::vector<std::string>;
 int gen(config_t &conf);
 
 #endif

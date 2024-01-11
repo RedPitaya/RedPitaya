@@ -842,19 +842,23 @@ void sendFilterCalibValues(rp_channel_t _ch){
 	}
 }
 
+void updateAcqData(){
+    auto x = g_acq->getData();
+    for(int i = 0; i < getADCChannels(); i++){
+        ch_max[i].Value() = x.ch_max[i];
+        ch_min[i].Value() = x.ch_min[i];
+        ch_avg[i].Value() = x.ch_avg[i];
+        ch_p_p[i].Value() = x.ch_p_p[i];
+        ch_per_buff[i].Value() = x.periodsByBuffer[i];
+        ch_is_sine[i].Value() = x.isSineSignal[i];
+    }
+}
+
 //Update parameters
 void UpdateParams(void)
 {	if (!g_calib || !g_acq || !g_calib_man) return;
 	try{
-		auto x = g_acq->getData();
-		for(int i = 0; i < getADCChannels(); i++){
-			ch_max[i].Value() = x.ch_max[i];
-			ch_min[i].Value() = x.ch_min[i];
-			ch_avg[i].Value() = x.ch_avg[i];
-			ch_p_p[i].Value() = x.ch_p_p[i];
-			ch_per_buff[i].Value() = x.periodsByBuffer[i];
-			ch_is_sine[i].Value() = x.isSineSignal[i];
-		}
+        updateAcqData();
 
 // AUTO MODE
 		if (ss_next_step.IsNewValue() && ref_volt.IsNewValue())

@@ -20,6 +20,7 @@
 #include "rp.h"
 #include "lcr_meter.h"
 #include "utils.h"
+#include "lcrApp.h"
 
 int store_calib(const calib_t CALIB_MODE,
 				float _Complex *amplitude_z);

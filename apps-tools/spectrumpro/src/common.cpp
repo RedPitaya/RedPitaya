@@ -60,6 +60,25 @@ auto getMaxFreqRate() -> float{
     return c;
 }
 
+auto loadARBList() -> std::string{
+    uint32_t c = 0;
+    rp_ARBInit();
+    std::string list;
+    if (!rp_ARBGetCount(&c)){
+        for(uint32_t i = 0; i < c; i++){
+            std::string name;
+            if (!rp_ARBGetName(i,&name)){
+                bool is_valid;
+                if (!rp_ARBIsValid(name,&is_valid)){
+                    if (is_valid)
+                        list += "A" + name + "\n";
+                }
+            }
+        }
+    }
+    return list;
+}
+
 auto isZModePresent() -> bool{
     auto model = getModel();
     switch (model)

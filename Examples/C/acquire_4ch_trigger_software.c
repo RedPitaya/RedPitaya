@@ -27,10 +27,6 @@ int main(int argc, char **argv){
         }
 
         uint32_t buff_size = 16384;
-        float *buff_ch1 = (float *)malloc(buff_size * sizeof(float));
-        float *buff_ch2 = (float *)malloc(buff_size * sizeof(float));
-        float *buff_ch3 = (float *)malloc(buff_size * sizeof(float));
-        float *buff_ch4 = (float *)malloc(buff_size * sizeof(float));
 
         rp_AcqReset();
         rp_AcqSetDecimation(RP_DEC_8);
@@ -61,24 +57,16 @@ int main(int argc, char **argv){
 
         uint32_t pos = 0;
 	rp_AcqGetWritePointerAtTrig(&pos);
-        buffers_t b;
-        b.size = buff_size;
-        b.ch_f[0] = buff_ch1;
-        b.ch_f[1] = buff_ch2;
-        b.ch_f[2] = buff_ch3;
-        b.ch_f[3] = buff_ch4;
+        buffers_t *b = rp_createBuffer(4,buff_size,false,false,true);
 
-        rp_AcqGetDataV2(pos, &b);
+        rp_AcqGetData(pos, b);
 
         int i;
         for(i = 0; i < buff_size; i++){
-                printf("%f %f %f %f\n", buff_ch1[i],buff_ch2[i],buff_ch3[i],buff_ch4[i]);
+                printf("%f %f %f %f\n", b->ch_f[0][i],b->ch_f[1][i],b->ch_f[2][i],b->ch_f[3][i]);
         }
         /* Releasing resources */
-        free(buff_ch1);
-        free(buff_ch2);
-        free(buff_ch3);
-        free(buff_ch4);
+        rp_deleteBuffer(b);
         rp_Release();
 
         return 0;

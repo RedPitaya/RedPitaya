@@ -68,12 +68,12 @@ int rp_IsApiInit(){
 
 int rp_Release()
 {
-    osc_Release();
-    generate_Release();
-    ams_Release();
-    hk_Release();
-    cmn_Release();
-    daisy_Release();
+    ECHECK(osc_Release())
+    ECHECK(generate_Release())
+    ECHECK(ams_Release())
+    ECHECK(hk_Release())
+    ECHECK(daisy_Release())
+    ECHECK(cmn_Release())
     g_api_state = false;
     return RP_OK;
 }
@@ -122,6 +122,8 @@ const char* rp_GetError(int errorCode) {
         case RP_EABA:  return "Failed to acquire bus access";
         case RP_EFRB:  return "Failed to read from the bus";
         case RP_EFWB:  return "Failed to write to the bus";
+        case RP_EMNC:  return "Extension module not connected";
+        case RP_NOTS:  return "Command not supported ";
         default:       return "Unknown error";
     }
 }
@@ -939,6 +941,11 @@ int rp_AcqSetTriggerDelay(int32_t decimated_data_num)
     return acq_SetTriggerDelay(decimated_data_num);
 }
 
+int rp_AcqSetTriggerDelayDirect(uint32_t decimated_data_num)
+{
+    return acq_SetTriggerDelayDirect(decimated_data_num);
+}
+
 int rp_AcqAxiSetTriggerDelay(rp_channel_t channel, int32_t decimated_data_num){
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
@@ -956,6 +963,11 @@ int rp_AcqGetTriggerDelay(int32_t* decimated_data_num)
     return acq_GetTriggerDelay(decimated_data_num);
 }
 
+int rp_AcqGetTriggerDelayDirect(uint32_t* decimated_data_num)
+{
+    return acq_GetTriggerDelayDirect(decimated_data_num);
+}
+
 int rp_AcqSetTriggerDelayNs(int64_t time_ns)
 {
     return acq_SetTriggerDelayNs(time_ns);
@@ -964,6 +976,16 @@ int rp_AcqSetTriggerDelayNs(int64_t time_ns)
 int rp_AcqGetTriggerDelayNs(int64_t* time_ns)
 {
     return acq_GetTriggerDelayNs(time_ns);
+}
+
+int rp_AcqSetTriggerDelayNsDirect(uint64_t time_ns)
+{
+    return acq_SetTriggerDelayNsDirect(time_ns);
+}
+
+int rp_AcqGetTriggerDelayNsDirect(uint64_t* time_ns)
+{
+    return acq_GetTriggerDelayNsDirect(time_ns);
 }
 
 int rp_AcqGetPreTriggerCounter(uint32_t* value) {
@@ -1036,6 +1058,16 @@ int rp_AcqStop()
 {
     return acq_Stop();
 }
+
+int rp_AcqUnlockTrigger()
+{
+    return acq_SetUnlockTrigger();
+}
+
+int rp_AcqGetUnlockTrigger(bool *state){
+    return acq_GetUnlockTrigger(state);
+}
+
 int rp_AcqReset()
 {
     return acq_Reset();
@@ -1088,18 +1120,9 @@ int rp_AcqAxiGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, int
     return acq_axi_GetDataRaw(channel, pos, size, buffer);
 }
 
-int rp_AcqGetDataRawV2(uint32_t pos, buffers_t *out)
+int rp_AcqGetData(uint32_t pos, buffers_t *out)
 {
-    return acq_GetDataRawV2(pos, out);
-}
-
-int rp_AcqGetDataV2(uint32_t pos, buffers_t *out)
-{
-    return acq_GetDataV2(pos, out);
-}
-
-int rp_AcqGetDataV2D(uint32_t pos, buffers_t *out){
-    return acq_GetDataV2D(pos, out);
+    return acq_GetData(pos, out);
 }
 
 int rp_AcqGetOldestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer)
@@ -1465,6 +1488,12 @@ int rp_GenResetTrigger(rp_channel_t channel){
     return gen_Trigger(channel);
 }
 
+int rp_GenResetChannelSM(rp_channel_t channel){
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
+    return gen_ResetChannelSM(channel);
+}
+
 int rp_GenOutEnableSync(bool enable){
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
@@ -1580,6 +1609,14 @@ int rp_GetSourceTrigOutput(rp_outTiggerMode_t *mode){
     return house_GetSourceTrigOutput(mode);
 }
 
+int rp_SetCANModeEnable(bool _enable){
+    return house_SetCANModeEnable(_enable);
+}
+
+int rp_GetCANModeEnable(bool *_enable){
+    return house_GetCANModeEnable(_enable);
+}
+
 int rp_AcqSetExtTriggerDebouncerUs(double value){
     return acq_SetExtTriggerDebouncerUs(value);
 }
@@ -1615,6 +1652,8 @@ buffers_t* rp_createBuffer(uint8_t maxChannels,uint32_t length,bool initInt16, b
     if (b == NULL) return NULL;
     b->channels = maxChannels;
     b->size = length;
+    b->use_calib_for_raw = false;
+    b->use_calib_for_volts = true;
 
     bool NeedFree = false;
     for(int i = 0 ; i < 4; i++){

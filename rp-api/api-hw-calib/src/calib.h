@@ -28,15 +28,16 @@ rp_calib_params_t calib_GetParams();
 rp_calib_params_t calib_GetDefaultCalib();
 rp_calib_params_t calib_GetUniversalDefaultCalib();
 
-rp_calib_error calib_WriteParams(rp_HPeModels_t model, rp_calib_params_t *calib_params,bool use_factory_zone);
+rp_calib_error calib_WriteParams(rp_HPeModels_t model, rp_calib_params_t *calib_params, bool use_factory_zone, bool skip_recalculate);
 rp_calib_error calib_SetParams(rp_calib_params_t *calib_params);
-rp_calib_error calib_WriteDirectlyParams(rp_calib_params_t *calib_params,bool use_factory_zone);
+rp_calib_error calib_WriteDirectlyParams(rp_calib_params_t *calib_params,bool use_factory_zone, bool skip_recalculate);
 
 void calib_SetToZero(bool is_new_format);
 rp_calib_error calib_LoadFromFactoryZone(bool convert_to_new);
 rp_calib_error calib_Reset(bool use_factory_zone,bool is_new_format);
 rp_calib_error calib_GetEEPROM(uint8_t **data,uint16_t *size,bool use_factory_zone);
 rp_calib_error calib_ConvertEEPROM(uint8_t *data,uint16_t size,rp_calib_params_t *out);
+rp_calib_error calib_ConvertToOld(rp_calib_params_t *out);
 
 rp_calib_error calib_Print(rp_calib_params_t *calib);
 rp_calib_error calib_PrintEx(FILE *__restrict out,rp_calib_params_t *calib);

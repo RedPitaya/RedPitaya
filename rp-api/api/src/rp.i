@@ -85,10 +85,12 @@
 
 %apply unsigned long long *OUTPUT { uint64_t *dna };
 %apply long long *OUTPUT { int64_t *time_ns };
+%apply unsigned long long *OUTPUT { uint64_t *time_ns };
 
 %apply int *OUTPUT { int * num };
 %apply int *OUTPUT { int * repetitions };
 %apply int *OUTPUT { int * decimated_data_num };
+%apply unsigned int *OUTPUT { unsigned int * decimated_data_num };
 
 %array_class(float, arbBuffer);
 %array_class(int16_t, i16Buffer);

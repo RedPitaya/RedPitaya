@@ -45,11 +45,15 @@ rp_hw_calib.cCalibArr_setitem(rp_calib.fast_adc_1_1,0,calib_1)
 rp_hw_calib.cCalibArr_setitem(rp_calib.fast_adc_1_1,1,calib_2)
 
 
-print("rp_hw_calib.rp_CalibrationWriteParams(res)")
+print("rp_hw_calib.rp_CalibrationWriteParams(rp_calib,False)")
 res = rp_hw_calib.rp_CalibrationWriteParams(rp_calib,False)
 print(res)
 
-print("rp_hw_calib.rp_CalibrationSetParams(res)")
+print("rp_hw_calib.rp_CalibrationWriteParamsEx(rp_calib,False)")
+res = rp_hw_calib.rp_CalibrationWriteParamsEx(rp_calib,False)
+print(res)
+
+print("rp_hw_calib.rp_CalibrationSetParams(rp_calib)")
 res = rp_hw_calib.rp_CalibrationSetParams(rp_calib)
 print(res)
 
@@ -71,6 +75,14 @@ t = rp_hw_calib.new_p_rp_calib_params_t()
 
 print("rp_hw_calib.rp_CalibConvertEEPROM(raw_data[1],raw_data[2],t)")
 res = rp_hw_calib.rp_CalibConvertEEPROM(raw_data[1],raw_data[2],t)
+print(res)
+
+print("rp_hw_calib.rp_CalibPrint(t)")
+res = rp_hw_calib.rp_CalibPrint(t)
+print(res)
+
+print("rp_hw_calib.rp_CalibConvertToOld(t)")
+res = rp_hw_calib.rp_CalibConvertToOld(t)
 print(res)
 
 print("rp_hw_calib.rp_CalibPrint(t)")
