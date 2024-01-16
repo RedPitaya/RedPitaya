@@ -424,18 +424,46 @@ static scpi_interface_t scpi_interface = {
     .reset   = SCPI_Reset,
 };
 
-#define SCPI_INPUT_BUFFER_LENGTH 538688
-static char scpi_input_buffer[SCPI_INPUT_BUFFER_LENGTH];
+#define SCPI_INPUT_BUFFER_LENGTH 1024 * 512
+// static char scpi_input_buffer[SCPI_INPUT_BUFFER_LENGTH];
 
 
+scpi_t* initContext(){
+    _scpi_t *ctx = NULL;
+    char *buffer = NULL;
+    try{
+        ctx = new _scpi_t();
+    }catch(const std::bad_alloc &err)
+    {
+        fprintf(stderr,"Failed allocate scpi_t: %s\n",err.what());
+        return NULL;
+    };
 
-scpi_t scpi_context = {
-    .cmdlist = scpi_commands,
-    .buffer = {
-        .length = SCPI_INPUT_BUFFER_LENGTH,
-        .data = scpi_input_buffer,
-    },
-    .interface = &scpi_interface,
-    .units = scpi_units_def,
-    .idn = {"REDPITAYA", "INSTR2023", NULL, "05-03"},
-};
+    try{
+        buffer = new char[SCPI_INPUT_BUFFER_LENGTH];
+    }catch(const std::bad_alloc &)
+    {
+        fprintf(stderr,"Failed allocate buffer for scpi_t\n");
+        return NULL;
+    };
+    ctx->cmdlist = scpi_commands;
+    ctx->buffer.data = buffer;
+    ctx->buffer.length = SCPI_INPUT_BUFFER_LENGTH;
+    ctx->interface = &scpi_interface;
+    ctx->units = scpi_units_def;
+    // user_context will be pointer to socket
+    ctx->user_context = NULL;
+    // ctx->binary_output = false;
+    return ctx;
+}
+
+// scpi_t scpi_context = {
+//     .cmdlist = scpi_commands,
+//     .buffer = {
+//         .length = SCPI_INPUT_BUFFER_LENGTH,
+//         .data = scpi_input_buffer,
+//     },
+//     .interface = &scpi_interface,
+//     .units = scpi_units_def,
+//     .idn = {"REDPITAYA", "INSTR2023", NULL, "05-03"},
+// };

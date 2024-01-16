@@ -14,7 +14,8 @@
 
 #include "scpi/scpi.h"
 
-extern scpi_t scpi_context;
+// extern scpi_t scpi_context;
 
+scpi_t* initContext();
 
 #endif /* SCPI_COMMANDS_H_ */
