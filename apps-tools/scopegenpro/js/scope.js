@@ -1807,4 +1807,8 @@ $(function() {
 
     OSC.previousPageUrl = document.referrer;
     console.log(`Previously visited page URL: ${OSC.previousPageUrl}`);
+    const currentUrl = window.location.href;
+    if (currentUrl === OSC.previousPageUrl || OSC.previousPageUrl === ''){
+        OSC.previousPageUrl = '/'
+    }
 });

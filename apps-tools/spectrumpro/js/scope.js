@@ -1707,4 +1707,11 @@ $(function() {
 
     SPEC.previousPageUrl = document.referrer;
     console.log(`Previously visited page URL: ${SPEC.previousPageUrl}`);
+
+    SPEC.previousPageUrl = document.referrer;
+    console.log(`Previously visited page URL: ${SPEC.previousPageUrl}`);
+    const currentUrl = window.location.href;
+    if (currentUrl === SPEC.previousPageUrl || SPEC.previousPageUrl === ''){
+        SPEC.previousPageUrl = '/'
+    }
 })
