@@ -1,8 +1,10 @@
 #
-# Authors: Aleš Bardorfer, Luka Golinar
+# $Id: Makefile 1235 2014-02-21 16:44:10Z ales.bardorfer $
 #
 # Red Pitaya specific application Makefile.
 #
+
+
 
 APP=$(notdir $(CURDIR:%/=%))
 
@@ -13,34 +15,32 @@ VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 
 
 INSTALL_DIR ?= .
 
-CONTROLLERHF = controllerhf.so
-ZIP = ../../$(APP)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip
-LCR          = $(INSTALL_DIR)/bin/lcr
+CONTROLLER=controllerhf.so
+ZIP=../../$(APP)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip
+ARTIFACTS=$(CONTROLLER)
 
 CFLAGS += -DVERSION=$(VER)-$(BUILD_NUMBER) -DREVISION=$(REVISION)
 export CFLAGS
 
-all: $(CONTROLLERHF)
 
-$(CONTROLLERHF):
-	$(MAKE) -C src
+all: $(CONTROLLER)
 
-$(LCR):
-	$(MAKE) -C ../../ lcr
+$(CONTROLLER):
+	$(MAKE) -C src 
 
-$(ZIP): $(CONTROLLERHF)
+$(ZIP): $(CONTROLLER)
 	-$(RM) target -rf
 	mkdir -p target/$(APP)
-	cp -r $(CONTROLLERHF) $(LCR) fpga.conf info index.html style.css images target/$(APP)
+	cp -r $(CONTROLLER) fpga.conf fpga.sh css fonts img *.html info js target/$(APP)
 	sed -i target/$(APP)/info/info.json -e 's/REVISION/$(REVISION)/'
 	sed -i target/$(APP)/info/info.json -e 's/BUILD_NUMBER/$(BUILD_NUMBER)/'
 	cd target; zip -r ../$(ZIP) *
 	$(RM) target -rf
 
 install: $(ZIP)
-	unzip $(ZIP) -d $(INSTALL_DIR)/www/apps
+	unzip -o $(ZIP) -d $(INSTALL_DIR)/www/apps
 
 clean:
 	$(MAKE) -C src clean
 	-$(RM) target -rf
-	-$(RM) *.so
+	-$(RM) $(ZIP)

@@ -6,7 +6,7 @@
 #include <unistd.h>
 
 #include "generate.h"
-#include "rp_arb.h"
+#include "common/rp_arb.h"
 
 std::vector<std::string> g_arbList;
 

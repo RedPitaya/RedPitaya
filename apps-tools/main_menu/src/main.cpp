@@ -17,7 +17,7 @@
 #include <fstream>
 #include <cstdio>
 
-#include "version.h"
+#include "common/version.h"
 #include "main.h"
 #include "rp.h"
 

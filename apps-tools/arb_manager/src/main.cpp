@@ -16,10 +16,10 @@
 #include <fstream>
 #include <cstdio>
 
-#include "version.h"
+#include "common/version.h"
 #include "main.h"
 #include "rp.h"
-#include "rp_arb.h"
+#include "common/rp_arb.h"
 #include "rp_hw-profiles.h"
 
 enum req_status_e{

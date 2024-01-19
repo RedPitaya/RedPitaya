@@ -12,7 +12,7 @@
 #include <mutex>
 
 #include "rp.h"
-#include "version.h"
+#include "common/version.h"
 #include "acq.h"
 #include "calib.h"
 #include "calib_man.h"

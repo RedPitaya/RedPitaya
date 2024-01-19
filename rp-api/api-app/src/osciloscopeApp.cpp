@@ -92,6 +92,7 @@ int osc_Init() {
 }
 
 int osc_RunMainThread(){
+    if (g_thread) return RP_EOOR;
     g_threadRun = true;
     g_thread = new std::thread(mainThreadFun);
     return RP_OK;
@@ -102,6 +103,8 @@ int osc_Release() {
     if (g_thread){
         if (g_thread->joinable()){
             g_thread->join();
+            delete g_thread;
+            g_thread = NULL;
         }
     }
     return RP_OK;

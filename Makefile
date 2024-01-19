@@ -148,7 +148,7 @@ LUARESTY_L_DIR  = Bazaar/nginx/ngx_ext_modules/lua-resty-lrucache-module
 NGINX_SRC_DIR   = Bazaar/nginx/nginx
 SOCKPROC_DIR    = Bazaar/tools/sockproc
 
-.PHONY: ecosystem nginx $(LIBJSON_DIR) $(LIBJSON_TAR) $(DL) $(SOCKPROC_TAR) $(WEBSOCKETPP_DIR) $(WEBSOCKETPP_TAR) $(LUANGINX_TAR) $(NGINX_TAR) $(NGINX_SRC_DIR) $(LUANGINX_DIR)
+.PHONY: ecosystem nginx $(NGINX) $(LIBJSON_DIR) $(LIBJSON_TAR) $(DL) $(SOCKPROC_TAR) $(WEBSOCKETPP_DIR) $(WEBSOCKETPP_TAR) $(LUANGINX_TAR) $(NGINX_TAR) $(NGINX_SRC_DIR) $(LUANGINX_DIR)
 
 $(WEBSOCKETPP_TAR): | $(DL)
 	wget $(WEBSOCKETPP_URL) -O $@ --show-progress
@@ -206,7 +206,7 @@ $(NGINX_SRC_DIR): $(NGINX_TAR)
 	mkdir -p $@/conf/lua/
 	cp -fr patches/lua/* $@/conf/lua/
 
-$(NGINX): $(CRYPTOPP_DIR) $(WEBSOCKETPP_DIR) $(LIBJSON_DIR) $(LUARESTY_DIR) $(LUARESTY_L_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR)
+$(NGINX):  $(CRYPTOPP_DIR) $(WEBSOCKETPP_DIR) $(LIBJSON_DIR) $(LUARESTY_DIR) $(LUARESTY_L_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR)
 # $(MAKE) -C $(NGINX_DIR) clean
 	$(MAKE) -C $(NGINX_DIR)
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
@@ -496,7 +496,7 @@ APP_IMP_ANAL_DIR 	= apps-tools/impedance_analyzer
 
 .PHONY: apps-pro scopegenpro spectrumpro lcr_meter la_pro ba_pro lcr_meter impedance_analyzer
 
-apps-tools: scopegenpro spectrumpro la_pro ba_pro lcr_meter impedance_analyzer
+apps-tools: scopegenpro spectrumpro la_pro ba_pro lcr_meter # impedance_analyzer
 
 scopegenpro: api $(NGINX)
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) clean

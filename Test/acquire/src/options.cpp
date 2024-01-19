@@ -6,7 +6,7 @@
 #include <ctime>
 #include <chrono>
 
-#include "version.h"
+#include "common/version.h"
 #include "options.h"
 
 #define DEC_MAX 5

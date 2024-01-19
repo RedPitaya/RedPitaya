@@ -1,7 +1,8 @@
 CC=$(CROSS_COMPILE)gcc
+CXX=$(CROSS_COMPILE)g++
 RM=rm
 
-OBJECTS=main.o fpga.o worker.o calib.o fpga_awg.o generate.o
+CXXSOURCES = main.cpp settings.cpp
 
 INCLUDE =  -I$(INSTALL_DIR)/include
 INCLUDE += -I$(INSTALL_DIR)/include/api2
@@ -12,15 +13,29 @@ INCLUDE += -I$(INSTALL_DIR)/rp_sdk/libjson
 LIBS = -L$(INSTALL_DIR)/lib
 LIBS += -L$(INSTALL_DIR)/rp_sdk
 
-CFLAGS+= -Wall -Werror -g -fPIC $(INCLUDE)
-LDFLAGS=-shared $(LIBS)
+COMMON_FLAGS+=-Wall -fPIC -Os -s
 
-CONTROLLER = ../controllerhf.so
+CFLAGS+=$(COMMON_FLAGS) $(INCLUDE)
+CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE)  -D_FILE_OFFSET_BITS=64
+LDFLAGS += -shared $(COMMON_FLAGS) $(LIBS)
+#LDFLAGS += -Wl,--whole-archive,--no-as-needed
+LDFLAGS += -lcryptopp -l:librpapp.a -lrp-dsp -lrp -lrp_sdk -lrp-hw -lrp-hw-calib -lrp-hw-profiles
+#LDFLAGS += -Wl,--no-whole-archive
 
-all: $(CONTROLLER)
+INCLUDE += -I$(INSTALL_DIR)/include/api250-12
+LDFLAGS += -lrp-gpio -lrp-i2c -lrp-spi
 
-$(CONTROLLER): $(OBJECTS)
-	$(CC) -o $(CONTROLLER) $(OBJECTS) $(CFLAGS) $(LDFLAGS)
+COBJECTS=$(CSOURCES:.c=.o)
+CXXOBJECTS=$(CXXSOURCES:.cpp=.o)
+OBJECTS=$(COBJECTS) $(CXXOBJECTS)
+
+OUT_DIR=../
+C_OUT_NAME=$(OUT_DIR)controllerhf.so
+
+all: make_c_app
+
+make_c_app: $(OBJECTS)
+	$(CXX) $(OBJECTS) -o $(C_OUT_NAME) $(CFLAGS) $(LDFLAGS)
 
 clean:
-	-$(RM) -f $(OBJECTS)
+	-$(RM) -f $(C_OUT_NAME) $(OBJECTS)

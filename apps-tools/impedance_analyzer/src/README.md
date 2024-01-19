@@ -1,2 +1,0 @@
-developer: luka.golinar, redpitaya
-
