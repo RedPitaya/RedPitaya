@@ -86,6 +86,7 @@ public:
 
 
     int prepareFreqVector(data_t *data, double adc_rate_f_s, float decimation);
+    int prepareFreqVector(data_t *data, float decimation);
 
     int windowFilter(data_t *data);
     int fftInit();

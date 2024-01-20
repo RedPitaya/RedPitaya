@@ -19,7 +19,7 @@
 #include <math.h>
 #include <assert.h>
 #include "common.h"
-#include "redpitaya/rp.h"
+#include "rp.h"
 
 int fd = 0;
 

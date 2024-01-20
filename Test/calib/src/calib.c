@@ -21,7 +21,7 @@
 #include <sys/param.h>
 
 #include "rp_eeprom.h"
-#include "version.h"
+#include "common/version.h"
 #include "rp.h"
 #include "rp_hw-profiles.h"
 // #define DEBUG

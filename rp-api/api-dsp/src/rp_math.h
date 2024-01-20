@@ -21,6 +21,9 @@ extern "C" {
 float log10f_neon(float x);
 float sqrtf_neon(float x);
 
+void memcpy_neon(volatile void *dst, volatile const void *src, size_t n);
+void memcpy_stride_8bit_neon(volatile void *dst, volatile const void *src, size_t n);
+
 #ifdef __cplusplus
 }
 #endif

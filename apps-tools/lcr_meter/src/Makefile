@@ -3,11 +3,11 @@ CXX=$(CROSS_COMPILE)g++
 RM=rm
 
 CXXSOURCES=main.cpp
-CXXSOURCES_TOOL=lcr.cpp
 
 INCLUDE =  -I$(INSTALL_DIR)/include
 INCLUDE += -I$(INSTALL_DIR)/include/api2
 INCLUDE += -I$(INSTALL_DIR)/include/apiApp
+INCLUDE += -I$(INSTALL_DIR)/include/common
 INCLUDE += -I$(INSTALL_DIR)/rp_sdk
 INCLUDE += -I$(INSTALL_DIR)/rp_sdk/libjson
 
@@ -34,13 +34,9 @@ LDFLAGS_TOOL += -lrp-gpio -lrp-i2c -lrp-spi -lrp-hw  -lrp-hw-calib -lrp-hw-profi
 CXXOBJECTS=$(CXXSOURCES:.cpp=.o)
 OBJECTS=$(CXXOBJECTS)
 
-CXXOBJECTS_TOOL=$(CXXSOURCES_TOOL:.cpp=.o)
-OBJECTS_TOOL=$(CXXOBJECTS_TOOL)
-
 
 OUT_DIR=../
 C_OUT_NAME=$(OUT_DIR)controllerhf.so
-C_OUT_NAME_TOOL=$(OUT_DIR)lcr
 
 all: make_c_app
 
@@ -50,9 +46,5 @@ all: make_c_app
 make_c_app: $(OBJECTS)
 	$(CXX) $(OBJECTS) -o $(C_OUT_NAME) $(LDFLAGS)
 
-lcr: $(OBJECTS_TOOL)
-	$(CXX) $(OBJECTS_TOOL) -o $(C_OUT_NAME_TOOL) $(LDFLAGS_TOOL)
-
 clean:
 	-$(RM) -f $(C_OUT_NAME) $(OBJECTS)
-	-$(RM) -f $(C_OUT_NAME_TOOL) $(OBJECTS_TOOL)

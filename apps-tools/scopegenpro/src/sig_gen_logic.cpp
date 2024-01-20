@@ -10,7 +10,7 @@
 #include "rp_hw-profiles.h"
 #include "common.h"
 #include "main.h"
-#include "rp_arb.h"
+#include "common/rp_arb.h"
 
 const float LEVEL_AMPS_MAX = outAmpMax();
 const float LEVEL_AMPS_DEF = outAmpDef();

@@ -6,15 +6,12 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <sys/param.h>
-
-#include "version.h"
-#include "rp.h"
 #include <sys/syslog.h> //Add custom RP_LCR LOG system
 
-#include "lcrApp.h"
+#include "common/version.h"
+#include "rp.h"
+#include "apiApp/lcrApp.h"
 
-#include "rp-spi.h"
-#include "rp-i2c-max7311.h"
 #include "rp_hw-calib.h"
 
 const char *g_argv0 = NULL; // Program name
@@ -33,7 +30,7 @@ bool checkFreq(int _freq){
 
 int checkShunt(int _shunt){
     switch(_shunt){
-        case 0: return -1;
+        case 0: return RP_LCR_S_NOT_INIT;
         case 10: return 0;
         case 100: return 1;
         case 1000: return 2;
@@ -50,10 +47,7 @@ void usage() {
     const char *format =
             "LCR meter version %s, compiled at %s\n"
             "\n"
-            "Usage:\t%s [freq] "
-                       "[r_shunt] "
-                       "-v "
-                       "\n"
+            "Usage:\t%s freq r_shunt [-v]\n"
             "\n"
             "\tfreq               Signal frequency used for measurement [ 100 , 1000, 10000 , 100000 ] Hz.\n"
             "\tr_shunt            Shunt resistor value in Ohms [ 10, 100, 1000, 10000, 100000, 1000000 ]. If set to 0, Automatic ranging is used.\n"
@@ -93,47 +87,6 @@ char GetPrefix(float value, float *new_value){
     return 0;
 }
 
-auto getModel() -> rp_HPeModels_t{
-    rp_HPeModels_t c = STEM_125_14_v1_0;
-    if (rp_HPGetModel(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get board model\n");
-    }
-    return c;
-}
-
-auto getModelName() -> std::string{
-    auto model = getModel();
-    switch (model)
-    {
-        case STEM_125_10_v1_0:
-        case STEM_125_14_v1_0:
-        case STEM_125_14_v1_1:
-        case STEM_125_14_LN_v1_1:
-            return "Z10";
-        case STEM_125_14_Z7020_v1_0:
-        case STEM_125_14_Z7020_LN_v1_1:
-            return "Z20_125";
-        case STEM_122_16SDR_v1_0:
-        case STEM_122_16SDR_v1_1:
-            return "Z20";
-        case STEM_125_14_Z7020_4IN_v1_0:
-        case STEM_125_14_Z7020_4IN_v1_2:
-        case STEM_125_14_Z7020_4IN_v1_3:
-            return "Z20_125_4CH";
-        case STEM_250_12_v1_0:
-        case STEM_250_12_v1_1:
-        case STEM_250_12_v1_2:
-        case STEM_250_12_v1_2a:
-            return "Z20_250_12";
-        case STEM_250_12_120:
-            return "Z20_250_12_120";
-        default:{
-            fprintf(stderr,"[Error:getModelName] Unknown model: %d.\n",model);
-            return "";
-        }
-    }
-    return "";
-}
 
 int main(int argc, char *argv[]) {
 
@@ -149,6 +102,10 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
+    if (strcmp(argv[1],"-s") == 0) {
+        lcr_shunt_t shunt = (lcr_shunt_t)atoi(argv[2]);
+        return lcrApp_LcrSetShunt(shunt);
+    }
 
     freq = atoi(argv[1]);
     if (!checkFreq(freq)) {
@@ -175,29 +132,22 @@ int main(int argc, char *argv[]) {
     lcrApp_lcrInit();
     auto Connected = lcrApp_LcrCheckExtensionModuleConnection() == RP_OK;
 
-    if (rp_HPGetFastADCIsAC_DCOrDefault()){
-        rp_AcqSetAC_DC(RP_CH_1,RP_DC);
-        rp_AcqSetAC_DC(RP_CH_2,RP_DC);
-    }
-
-    auto modelName = getModelName();
-    if ( modelName == "Z20_250_12" || modelName == "Z20_250_12_120"){
-        // This trick for check LCR module in 250-12. Because two chips are on the same address
-        int maxCheck = rp_max7311::rp_check();
-        if (maxCheck == 1) Connected = false;
-    }
-
     if (Connected){
+        if (rp_HPGetFastADCIsAC_DCOrDefault()){
+            rp_AcqSetAC_DC(RP_CH_1,RP_DC);
+            rp_AcqSetAC_DC(RP_CH_2,RP_DC);
+        }
+
         lcr_main_data_t *data = (lcr_main_data_t *)malloc(sizeof(lcr_main_data_t));
         lcrApp_LcrSetShuntIsAuto(false);
-        r_shunt == -1 ? lcrApp_LcrSetShuntIsAuto(true) : lcrApp_LcrSetShunt(r_shunt);
+        r_shunt == RP_LCR_S_NOT_INIT ? lcrApp_LcrSetShuntIsAuto(true) : lcrApp_LcrSetShunt((lcr_shunt_t)r_shunt);
         lcrApp_LcrSetFrequency(freq);
         lcrApp_GenRun();
         lcrApp_LcrRun();
-        int old_shunt = -2;
-        int cur_shunt = 0;
+        lcr_shunt_t old_shunt = RP_LCR_S_NOT_INIT;
+        lcr_shunt_t cur_shunt = RP_LCR_S_NOT_INIT;
         lcrApp_LcrGetShunt(&cur_shunt);
-        while((r_shunt == -1) && (old_shunt !=cur_shunt)) {
+        while((r_shunt == RP_LCR_S_NOT_INIT) && (old_shunt !=cur_shunt)) {
             usleep(500000);
             old_shunt = cur_shunt;
             lcrApp_LcrGetShunt(&cur_shunt);

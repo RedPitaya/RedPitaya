@@ -20,7 +20,7 @@
 
 #include "rp.h"
 #include "rp_hw-calib.h"
-#include "version.h"
+#include "common/version.h"
 #include "options.h"
 #include "api250-12/rp-spi.h"
 

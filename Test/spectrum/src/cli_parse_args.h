@@ -2,7 +2,7 @@
 
 #include <string>
 #include "rp_hw-profiles.h"
-#include "rp_dsp.h"
+#include "math/rp_dsp.h"
 
 uint32_t getMaxFreqRate();
 

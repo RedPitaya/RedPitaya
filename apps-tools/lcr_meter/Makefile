@@ -16,17 +16,16 @@ VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 
 INSTALL_DIR ?= .
 
 CONTROLLER=controllerhf.so
-TOOL=lcr
 ZIP=../../$(APP)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip
 ARTIFACTS=$(CONTROLLER)
 
 CFLAGS += -DVERSION=$(VER)-$(BUILD_NUMBER) -DREVISION=$(REVISION)
 export CFLAGS
 
-all: $(CONTROLLER) tool
+all: $(CONTROLLER)
 
 $(CONTROLLER):
-	$(MAKE) -C src 
+	$(MAKE) -C src
 
 $(ZIP): $(CONTROLLER)
 	-$(RM) target -rf
@@ -37,13 +36,8 @@ $(ZIP): $(CONTROLLER)
 	cd target; zip -r ../$(ZIP) *
 	$(RM) target -rf
 
-tool:
-	$(MAKE) -C src  lcr
-
 install: $(ZIP)
 	unzip -o $(ZIP) -d $(INSTALL_DIR)/www/apps
-	mkdir -p $(INSTALL_DIR)/bin
-	cp $(TOOL) $(INSTALL_DIR)/bin
 
 clean:
 	$(MAKE) -C src clean

@@ -32,11 +32,11 @@ class CMeasureController{
     auto measureMin(const rpApp_osc_source _channel, const std::vector<float> *_data, float *_Min) -> int;
     auto measureDutyCycle(const rpApp_osc_source _channel, const std::vector<float> *_data, float *_dutyCycle) -> int;
     auto measureRootMeanSquare(const rpApp_osc_source _channel, const std::vector<float> *_data, float *_rms) -> int;
-    
+
     auto measureMeanVoltage(const rpApp_osc_source _channel, const std::vector<float> *_data, float *_meanVoltage) -> int;
     auto measureMaxVoltage(const rpApp_osc_source _channel,bool _inverted, const std::vector<float> *_data, float *_Vmax) -> int;
     auto measureMinVoltage(const rpApp_osc_source _channel,bool _inverted, const std::vector<float> *_data, float *_Vmin) -> int;
-      
+
     auto measurePeriodCh(const float *_dataRaw, vsize_t _dataSize, float *period) -> int;
     auto measurePeriodMath(float _timeScale, float _sampPerDev, const std::vector<float> *_data, float *period) -> int;
 

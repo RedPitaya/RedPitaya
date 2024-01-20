@@ -18,7 +18,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include "redpitaya/rp.h"
+#include "rp.h"
 #include "rp_hw-calib.h"
 
 

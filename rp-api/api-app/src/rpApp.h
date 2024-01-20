@@ -21,7 +21,7 @@ extern "C" {
 #endif
 
 #include "rp.h"
-#include "rp_dsp.h"
+#include "math/rp_dsp.h"
 
 /** @name Error codes
 *  Various error codes returned by the API.

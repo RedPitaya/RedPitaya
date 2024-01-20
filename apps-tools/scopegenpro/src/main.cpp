@@ -10,7 +10,7 @@
 #include "main.h"
 #include "settings.h"
 
-#include "version.h"
+#include "common/version.h"
 #include <sys/sysinfo.h>
 #include <unistd.h>
 #include <pwd.h>

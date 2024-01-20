@@ -16,7 +16,7 @@
 #define GENERATE_HANDLER_H_
 
 
-#include "redpitaya/rp.h"
+#include "rp.h"
 #include "rp_hw-profiles.h"
 
 int gen_SetDefaultValues();

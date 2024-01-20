@@ -26,7 +26,8 @@
 
 #include "osciloscopeApp.h"
 #include "common.h"
-#include "neon_asm.h"
+#include "math/rp_algorithms.h"
+#include "math/rp_math.h"
 
 #include "osciloscope_logic/data_decimator.h"
 #include "osciloscope_logic/view_controller.h"
@@ -91,6 +92,7 @@ int osc_Init() {
 }
 
 int osc_RunMainThread(){
+    if (g_thread) return RP_EOOR;
     g_threadRun = true;
     g_thread = new std::thread(mainThreadFun);
     return RP_OK;
@@ -101,6 +103,8 @@ int osc_Release() {
     if (g_thread){
         if (g_thread->joinable()){
             g_thread->join();
+            delete g_thread;
+            g_thread = NULL;
         }
     }
     return RP_OK;
@@ -1324,6 +1328,11 @@ void mainThreadFun() {
             g_viewController.setCapturedDecimation(decimationInACQ);
             auto buff = g_viewController.getAcqBuffers();
             ECHECK_APP_NO_RET(rp_AcqGetData(pPosition,buff));
+
+            // float od[DAC_BUFFER_SIZE];
+            // fir3(buff->ch_f[0],od,buff->size);
+            // memcpy_neon(buff->ch_f[0],od,buff->size * sizeof(float));
+
             g_viewController.unlockView();
 
             if (!contMode){

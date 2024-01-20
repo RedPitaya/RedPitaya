@@ -9,7 +9,7 @@
 
 extern "C" {
     #include "rpApp.h"
-    #include "version.h"
+    #include "common/version.h"
 }
 
 /* Parameters description structure - must be the same for all RP controllers */

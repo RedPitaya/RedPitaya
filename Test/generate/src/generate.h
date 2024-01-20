@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
-#include "version.h"
+#include "common/version.h"
 
 #include "rp.h"
 #include "rp_hw-calib.h"

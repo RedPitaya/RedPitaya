@@ -19,7 +19,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "redpitaya/rp.h"
+#include "rp.h"
 #include "rp_hw-profiles.h"
 
 // Base Housekeeping address

@@ -24,16 +24,21 @@
 #include <complex.h>
 #include <atomic>
 #include <vector>
+#include <thread>
+
 
 #include "lcr_meter.h"
+
+
 #include "utils.h"
 #include "calib.h"
 #include "rp.h"
 #include "rp_hw-calib.h"
+#include "utils.h"
+#include "math/rp_algorithms.h"
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
+CLCRHardware    g_lcr_hw;
+CLCRGenerator   g_generator;
 
 typedef double data_t;
 
@@ -44,28 +49,27 @@ typedef struct impendace_params {
 } impendace_params_t;
 
 /* Thread variables */
-pthread_t                  *g_lcr_thread_handler = NULL;
-pthread_mutex_t             g_mutex;
-volatile std::atomic_flag        g_thread_flag = ATOMIC_FLAG_INIT;
+std::thread *g_lcr_thread = NULL;
+std::mutex g_lcr_mutex;
+std::mutex g_lcr_mutex_analize;
+std::atomic_bool g_lcr_threadRun = false;
+
+static auto g_adc_rate = rp_HPGetBaseFastADCSpeedHzOrDefault();
+
 volatile impendace_params_t g_th_params;
 
 
 // static bool                 g_isCuruitOpend            = false;
 // static bool                 g_isFrequencyChange        = false;
 bool                        g_isShuntAutoChange        = true;
-bool                        g_isSine                   = true;
 
 
 /* Init lcr params struct */
-lcr_params_t main_params = {0, 0, CALIB_NONE, false, 0 , 0 , 0, true};
+lcr_params_t main_params = {CALIB_NONE, false, 0 , 0 , 0, true};
 
 /* Main lcr data params */
 lcr_main_data_t calc_data;
 
-
-/* R shunt values definition */
-const double SHUNT_TABLE[] =
-{10, 1e2, 1e3, 1e4, 1e5, 1.3e6};
 
 const int RANGE_FORMAT[] =
 {1, 10, 100, 1000};
@@ -73,28 +77,6 @@ const int RANGE_FORMAT[] =
 const double RANGE_UNITS[] =
 {1e-9, 1e-6, 1e-3, 1, 1e3, 1e6};
 
-double C_CALIB[6/*shunt*/][6/*freq*/] =
-//100    1k     10k    100k     1M
-{{1E-12,1E-12, 1E-12, 1E-12, 1E-12 , 1E-12}, // 10
- {1E-12,1E-12, 1E-12, 1E-12, 1E-12 , 1E-12}, // 100
- {1E-12,1E-12, 1E-12, 1E-12, 1E-12 , 1E-12}, // 1k
- {-1160E-12,-1160E-12, -113E-12, -13E-12, 176E-12, 176E-12}, // 10k
- {-146E-12,-146E-12, -17E-12, 175E-12, 288E-12, 288E-12},     // 100k
- {-40E-12,-40E-12, 230E-12, 290E-12, 170E-12, 170E-12} // 1M
-};
-
-
-auto getADCChannels() -> uint8_t{
-    uint8_t c = 0;
-    if (rp_HPGetFastADCChannelsCount(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get fast ADC channels count\n");
-    }
-    if (c > MAX_ADC_CHANNELS){
-        fprintf(stderr,"[Error] The number of channels is more than allowed\n");
-        exit(-1);
-    }
-    return c;
-}
 
 void flog(char *s){
     FILE *out = fopen("/tmp/debug.log", "a+");
@@ -102,218 +84,155 @@ void flog(char *s){
     fclose(out);
 }
 
-int getIndex(double x)
-{
-    int index = -1;
-    do {
-        index++;
-        x /= 10;
-    } while(x > 5);
-    return index;
-}
-
-data_t accu_buf[2][5];
-int    accu_buf_size = 0;
 
 /* Init the main API structure */
 int lcr_Init()
 {
-    accu_buf_size = 0;
-    /* Init mutex thread */
-    if(pthread_mutex_init(&g_mutex, NULL)){
-        RP_LOG(LOG_ERR, "Failed to initialize mutex: %s\n", strerror(errno));
-        return RP_EOOR;
-    }
-
-    pthread_mutex_lock(&g_mutex);
 
     if(rp_Init() != RP_OK) {
-        RP_LOG(LOG_ERR, "Unable to inicialize the RPI API structure "
-                        "needed by impedance analyzer application: %s\n", strerror(errno));
+        FATAL("Unable to inicialize the RPI API structure needed by impedance analyzer application\n")
         return RP_EOOR;
     }
 
     /* Set default values of the lcr structure */
     lcr_SetDefaultValues();
-    rp_AcqReset();
-    rp_GenReset();
+
 
     /* Set calibration values */
-    FILE* f_calib = fopen("/opt/redpitaya/www/apps/lcr_meter/CAPACITOR_CALIB", "rb");
-    if(f_calib) {
-        int readed = fread(&C_CALIB, sizeof(C_CALIB), 1, f_calib);
-        if(readed != 1){
-            fclose(f_calib);
-            pthread_mutex_unlock(&g_mutex);
-            return RP_RCA;
-        }
-        fclose(f_calib);
-    }
-    pthread_mutex_unlock(&g_mutex);
-    lcr_GenRun();
+    // FILE* f_calib = fopen("/opt/redpitaya/www/apps/lcr_meter/CAPACITOR_CALIB", "rb");
+    // if(f_calib) {
+    //     int readed = fread(&C_CALIB, sizeof(C_CALIB), 1, f_calib);
+    //     if(readed != 1){
+    //         fclose(f_calib);
+    //         pthread_mutex_unlock(&g_mutex);
+    //         return RP_RCA;
+    //     }
+    //     fclose(f_calib);
+    // }
+    // pthread_mutex_unlock(&g_mutex);
+//    lcr_GenRun();
     return RP_OK;
 }
 
 /* Release resources used the main API structure */
 int lcr_Release(){
+    lcr_Stop();
     lcr_GenStop();
-    pthread_mutex_lock(&g_mutex);
     rp_Release();
-    RP_LOG(LOG_INFO, "Releasing Red Pitaya library resources.\n");
-    pthread_mutex_unlock(&g_mutex);
-    pthread_mutex_destroy(&g_mutex);
+    TRACE_SHORT("Releasing Red Pitaya library resources.\n");
     return RP_OK;
 }
 
 /* Set default values of all rpi resources */
 int lcr_Reset(){
-    pthread_mutex_lock(&g_mutex);
+    std::lock_guard<std::mutex> lock(g_lcr_mutex);
     rp_Reset();
     /* Set default values of the lcr_params structure */
     lcr_SetDefaultValues();
-    pthread_mutex_unlock(&g_mutex);
     return RP_OK;
 }
 
 int lcr_SetDefaultValues(){
-    EXEC_CHECK(lcr_setRShunt(0));
-    set_IIC_Shunt(0);
-    EXEC_CHECK(lcr_SetFrequency(10.0));
-    EXEC_CHECK(lcr_SetCalibMode(CALIB_NONE));
-    EXEC_CHECK(lcr_SetMeasTolerance(0));
-    EXEC_CHECK(lcr_SetMeasRangeMode(0));
-    EXEC_CHECK(lcr_SetRangeFormat(0));
-    EXEC_CHECK(lcr_SetRangeUnits(0));
-    EXEC_CHECK(lcr_SetMeasSeries(true));
-    accu_buf_size = 0;
+    ECHECK_LCR_APP(lcr_setRShunt(RP_LCR_S_10));
+    ECHECK_LCR_APP(lcr_SetFrequency(10.0));
+    ECHECK_LCR_APP(lcr_SetCalibMode(CALIB_NONE));
+    ECHECK_LCR_APP(lcr_SetMeasTolerance(0));
+    ECHECK_LCR_APP(lcr_SetMeasRangeMode(0));
+    ECHECK_LCR_APP(lcr_SetRangeFormat(0));
+    ECHECK_LCR_APP(lcr_SetRangeUnits(0));
+    ECHECK_LCR_APP(lcr_SetMeasSeries(true));
     return RP_OK;
 }
 
 int  lcr_GenRun(){
-    return lcr_SafeThreadGen(RP_CH_1, main_params.frequency);
+    return g_generator.start();
 }
 
 int  lcr_GenStop(){
-    pthread_mutex_lock(&g_mutex);
-    ECHECK_APP_MUTEX(g_mutex,rp_GenOutDisable(RP_CH_1));
-    ECHECK_APP_MUTEX(g_mutex,rp_GenOutDisable(RP_CH_2));
-    pthread_mutex_unlock(&g_mutex);
-    return RP_OK;
+    return g_generator.stop();
 }
-
-/* Generate functions  */
-int lcr_SafeThreadGen(rp_channel_t channel,
-                      float frequency)
-{
-    pthread_mutex_lock(&g_mutex);
-    ECHECK_APP_MUTEX(g_mutex,rp_GenReset());
-    ECHECK_APP_MUTEX(g_mutex,rp_GenAmp(channel, LCR_AMPLITUDE));
-    ECHECK_APP_MUTEX(g_mutex,rp_GenOffset(channel, LCR_AMPLITUDE));
-    ECHECK_APP_MUTEX(g_mutex,rp_GenWaveform(channel, RP_WAVEFORM_SINE));//RP_WAVEFORM_TRIANGLE
-    ECHECK_APP_MUTEX(g_mutex,rp_GenFreq(channel, frequency));
-    ECHECK_APP_MUTEX(g_mutex,rp_GenOutEnable(channel));
-    ECHECK_APP_MUTEX(g_mutex,rp_GenResetTrigger(channel));
-    g_th_params.frequency = frequency;
-    pthread_mutex_unlock(&g_mutex);
-    return RP_OK;
-}
-
 
 /* Main call function */
 int lcr_Run(){
-    if (g_lcr_thread_handler != NULL) return RP_EOOR;
-    g_lcr_thread_handler = new pthread_t();
-    int err;
-
-    atomic_flag_test_and_set(&g_thread_flag);
-    err = pthread_create(g_lcr_thread_handler, 0, lcr_MainThread, NULL);
-    if(err != RP_OK){
-        return RP_EOOR;
-    }
+    std::lock_guard<std::mutex> lock(g_lcr_mutex);
+    if (g_lcr_thread) return RP_EOOR;
+    g_lcr_threadRun = true;
+    g_lcr_thread = new std::thread(lcr_MainThread);
     return RP_OK;
 }
 
 int lcr_Stop(){
-    if (g_lcr_thread_handler == NULL) return RP_EOOR;
-    atomic_flag_clear(&g_thread_flag);
-    pthread_join(*g_lcr_thread_handler, 0);
-    delete g_lcr_thread_handler;
-    g_lcr_thread_handler = NULL;
+    std::lock_guard<std::mutex> lock(g_lcr_mutex);
+    g_lcr_threadRun = false;
+    if (g_lcr_thread){
+        if (g_lcr_thread->joinable()){
+            g_lcr_thread->join();
+            delete g_lcr_thread;
+            g_lcr_thread = NULL;
+        }
+    }
     return RP_OK;
 }
 
 int lcr_CopyParams(lcr_main_data_t *params){
-    pthread_mutex_lock(&g_mutex);
-    if(lcr_CalculateData(g_th_params.z_out, g_th_params.phase_out) != RP_OK){
-         pthread_mutex_unlock(&g_mutex);
+    std::lock_guard<std::mutex> lock(g_lcr_mutex);
+
+    if(lcr_CalculateData(g_th_params.z_out, g_th_params.phase_out, g_th_params.frequency) != RP_OK){
          return RP_EOOR;
     }
     memcpy(params,&calc_data,sizeof(lcr_main_data_t));
-    pthread_mutex_unlock(&g_mutex);
     return RP_OK;
 }
 
 /* Main Lcr meter thread */
-void *lcr_MainThread(void *args)
-{
-    float **analysis_data = multiDimensionVector(ADC_BUFFER_SIZE);
-    while(atomic_flag_test_and_set(&g_thread_flag)){
-            /* Main lcr meter algorithm */
+void lcr_MainThread(){
+    auto buffer = rp_createBuffer(2,ADC_BUFFER_SIZE,false,false,true);
+    initFFT(ADC_BUFFER_SIZE, g_adc_rate);
+    buffer->use_calib_for_raw = false;
+    buffer->use_calib_for_volts = false;
+    if (buffer == NULL){
+        FATAL("Unable to allocate memory for data buffer")
+        return;
+    }
 
-            pthread_mutex_lock(&g_mutex);
-            uint32_t acq_size = 0;
-            int ret_val = lcr_ThreadAcqData(analysis_data, &acq_size);
-            if(ret_val == RP_OK) {
-                if(main_params.calibration) {
-                } else {
-                    lcr_CheckShunt((const float **)analysis_data,acq_size);
-                    lcr_getImpedance((const float **)analysis_data,acq_size);
+    while(g_lcr_threadRun){
+            /* Main lcr meter algorithm */
+            {
+                std::lock_guard<std::mutex> lock(g_lcr_mutex);
+                int ret_val = lcr_ThreadAcqData(buffer);
+                if(ret_val == RP_OK) {
+                    if(main_params.calibration) {
+                    } else {
+                        lcr_CheckShunt(buffer->ch_f[0],buffer->ch_f[1],buffer->size);
+                        lcr_getImpedance(buffer);
+                    }
                 }
             }
-            pthread_mutex_unlock(&g_mutex);
-
             usleep(500);
     }
-    delMultiDimensionVector(analysis_data);
-    //Exit thread
-    //pthread_exit(0);
-    return RP_OK;
+    rp_deleteBuffer(buffer);
+    releaseFFT();
 }
 
 
 /* Acquire functions. Callback to the API structure */
-int lcr_ThreadAcqData(float **data,uint32_t *acq_size)
+int lcr_ThreadAcqData(buffers_t *data)
 {
-    uint32_t speed = 0;
-    int ret = rp_HPGetBaseFastADCSpeedHz(&speed);
-    if (ret != RP_HP_OK){
-        fprintf(stderr,"[Error:lcr_ThreadAcqData] Error get ADC rate err: %d\n",ret);
-        return RP_EOOR;
-    }
-
     rp_acq_trig_state_t state;
     rp_acq_decimation_t api_decimation;
 
     uint32_t pos;
     bool     fillState = false;
-    float rawData0[ADC_BUFFER_SIZE];
-    float rawData1[ADC_BUFFER_SIZE];
     int      dec;
-	*acq_size = ADC_BUFFER_SIZE;
-    lcr_getDecimationValue(g_th_params.frequency, &api_decimation, &dec,speed);
-    unsigned long long sleep_time = (unsigned long long)((*acq_size) * dec / (speed / 1e6));
-	sleep_time = sleep_time < 1 ? 1 : sleep_time;
+    float freq = g_generator.getFreq();
+    lcr_getDecimationValue(freq, &api_decimation, &dec,g_adc_rate);
 
-    //*acq_size = round((MIN_PERIODES * ADC_SAMPLE_RATE) / (g_th_params.frequency * dec));
-
-    uint32_t acq_delay = *acq_size > ADC_BUFFER_SIZE ? ADC_BUFFER_SIZE / 2.0 : *acq_size - ADC_BUFFER_SIZE / 2.0;
-    ECHECK(rp_AcqReset());
-    ECHECK(rp_AcqSetDecimation(api_decimation));
-    ECHECK(rp_AcqSetTriggerLevel(RP_T_CH_1, 0));
-    ECHECK(rp_AcqSetTriggerDelay(acq_delay));
-    ECHECK(rp_AcqStart());
-    usleep(sleep_time);
-    ECHECK(rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW));
+    ECHECK_APP(rp_AcqReset());
+    ECHECK_APP(rp_AcqSetDecimation(api_decimation));
+    ECHECK_APP(rp_AcqSetTriggerLevel(RP_T_CH_1, 0));
+    ECHECK_APP(rp_AcqSetTriggerDelayDirect(ADC_BUFFER_SIZE));
+    ECHECK_APP(rp_AcqStart());
+    ECHECK_APP(rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW));
 
     state = RP_TRIG_STATE_TRIGGERED;
     while(true){
@@ -324,153 +243,65 @@ int lcr_ThreadAcqData(float **data,uint32_t *acq_size)
     }
 
     while(!fillState){
-        ECHECK(rp_AcqGetBufferFillState(&fillState));
+        ECHECK_APP(rp_AcqGetBufferFillState(&fillState));
     }
 
-    ECHECK(rp_AcqStop());
-    ECHECK(rp_AcqGetWritePointerAtTrig(&pos));
-    pos++;
-    buffers_t buff;
-    static uint8_t max_channels = getADCChannels();
-    for(uint8_t ch = 0; ch < max_channels; ch++){
-        buff.ch_f[ch] = NULL;
-        buff.ch_d[ch] = NULL;
-        buff.ch_i[ch] = NULL;
-    }
-    buff.ch_f[0] = rawData0;
-    buff.ch_f[1] = rawData1;
-    buff.size = ADC_BUFFER_SIZE;
-    buff.use_calib_for_volts = true;
-    ECHECK(rp_AcqGetData(pos,&buff));
-    for(uint32_t i = 0; i < *acq_size; ++i) {
-        data[0][i] = buff.ch_f[0][i];
-        data[1][i] = buff.ch_f[1][i];
-    }
-    //FirRectangleWindow(data[0], *acq_size, 7);
-    //FirRectangleWindow(data[1], *acq_size, 7);
-    //ECHECK(rp_AcqGetDataV(RP_CH_1, pos, acq_size, data[0]));
-    //ECHECK(rp_AcqGetDataV(RP_CH_2, pos, acq_size, data[1]));
-
+    ECHECK_APP(rp_AcqStop());
+    ECHECK_APP(rp_AcqGetWritePointerAtTrig(&pos));
+    ECHECK_APP(rp_AcqGetData(pos,data));
     return RP_OK;
 }
 
-int lcr_getImpedance(const float **data,const uint32_t acq_size)
+int lcr_getImpedance(buffers_t *data)
 {
-    uint32_t speed = 0;
-    int ret = rp_HPGetBaseFastADCSpeedHz(&speed);
-    if (ret != RP_HP_OK){
-        fprintf(stderr,"[Error:lcr_ThreadAcqData] Error get ADC rate err: %d\n",ret);
-        return RP_EOOR;
-    }
-
-    float w_out;
+    // float w_out;
     int decimation;
     rp_acq_decimation_t api_decimation;
-    int r_shunt_index;
-    lcr_getRShunt(&r_shunt_index);
-
-    double r_shunt = SHUNT_TABLE[r_shunt_index];
-
+    auto r_shunt = g_lcr_hw.getShunt();
     //Calculate output angular velocity
-    w_out = g_th_params.frequency * 2 * M_PI;
-    lcr_getDecimationValue(g_th_params.frequency, &api_decimation, &decimation,speed);
+    float freq = g_generator.getFreq();
+    lcr_getDecimationValue(freq, &api_decimation, &decimation,g_adc_rate);
 
-    return lcr_data_analysis((const float**)data, acq_size, 0,
-                                r_shunt, w_out, decimation);
+    return lcr_data_analysis(data, r_shunt,  freq, decimation);
 }
 
-void lcr_CheckShunt(const float **data,const uint32_t acq_size)
+void lcr_CheckShunt(const float *ch1, const float *ch2, const uint32_t _size)
 {
     // Is AUTO or MANUAL mode is selected
     if(!g_isShuntAutoChange) {
-        set_IIC_Shunt(main_params.r_shunt);
         return;
     }
 
     // Calculate pick to pick voltage
-    float u0_max = -1E9;
-    float u0_min =  1E9;
-    float u1_max = -1E9;
-    float u1_min =  1E9;
-    for(uint32_t i = 0; i < acq_size; i++) {
-        u0_max = MAX(u0_max, data[0][i]);
-        u0_min = MIN(u0_min, data[0][i]);
-        u1_max = MAX(u1_max, data[1][i]);
-        u1_min = MIN(u1_min, data[1][i]);
+    float u0_max = ch1[0];
+    float u0_min = ch1[0];
+    float u1_max = ch2[0];
+    float u1_min = ch2[0];
+    for(uint32_t i = 0; i < _size; i++) {
+        u0_max = u0_max < ch1[i] ? ch1[i] : u0_max;
+        u0_min = u0_min > ch1[i] ? ch1[i] : u0_min;
+        u1_max = u1_max < ch2[i] ? ch2[i] : u1_max;
+        u1_min = u1_min > ch2[i] ? ch2[i] : u1_min;
     }
     float p2p0   = (u0_max - u0_min);
     float p2p1   = (u1_max - u1_min);
-//    float diff   = p2p1 - p2p0;
     float maxp2p = p2p0 > p2p1 ? p2p0 : p2p1;
     float measurep2p =  p2p0 < p2p1 ? p2p0 : p2p1;
 
     if (maxp2p * 0.15 > measurep2p) {
-            main_params.r_shunt = main_params.r_shunt < 5 ? main_params.r_shunt + 1 : 5;
-            set_IIC_Shunt(main_params.r_shunt);
+        auto shunt = g_lcr_hw.getShunt();
+        if (shunt < RP_LCR_S_1M) shunt = (lcr_shunt_t)((int)shunt + 1);
+        g_lcr_hw.setI2CShunt(shunt);
     }
 
     if (maxp2p * 0.85 < measurep2p) {
-            main_params.r_shunt = main_params.r_shunt > 0 ? main_params.r_shunt - 1 : 0;
-            set_IIC_Shunt(main_params.r_shunt);
+        auto shunt = g_lcr_hw.getShunt();
+        if (shunt > RP_LCR_S_10) shunt = (lcr_shunt_t)((int)shunt - 1);
+        g_lcr_hw.setI2CShunt(shunt);
     }
 }
 
-
-
-// int lcr_Correction(){
-//     int start_freq 		= START_CORR_FREQ;
-
-//     int ret_val;
-//     struct impendace_params args;
-//     pthread_t lcr_thread_handler;
-
-//     float _Complex *amplitude_z =
-//             malloc(CALIB_STEPS * sizeof(float _Complex));
-
-//     calib_t calib_mode = main_params.calibration;
-
-//     char command[100];
-//     //Set system to read-write
-//     strcpy(command, "rw");
-
-//     ret_val = system(command);
-//     if(ret_val != 0){
-//         free(amplitude_z);
-//         return RP_EOOR;
-//     }
-
-//     for(int i = 0; i < CALIB_STEPS; i++){
-
-//         args.frequency = start_freq * powf(10, i);
-//         //lcr_MainThread(&args);
-//         ret_val = pthread_create(&lcr_thread_handler, 0, lcr_MainThread, &args);
-//         if(ret_val != 0){
-//             printf("Main thread creation failed.\n");
-//             free(amplitude_z);
-//             return RP_EOOR;
-//         }
-
-//         pthread_join(lcr_thread_handler, 0);
-//         amplitude_z[i] = args.z_out;
-//     }
-
-//     //Store calibration
-//     store_calib(calib_mode, amplitude_z);
-
-//     free(amplitude_z);
-
-//     //Set system to read-only
-//     strcpy(command, "ro");
-
-//     ret_val = system(command);
-//     if(ret_val != 0){
-//         return RP_EOOR;
-//     }
-
-//     return RP_OK;
-// }
-
-int lcr_CalculateData(float _Complex z_measured, float phase_measured)
+int lcr_CalculateData(float _Complex z_measured, float phase_measured,float freq)
 {
     int status;
     bool calibration = false;
@@ -522,13 +353,13 @@ int lcr_CalculateData(float _Complex z_measured, float phase_measured)
                 fclose(f_short);
                 return RP_RCA;
             }
-            z_short[line] = z_short_real + z_short_imag*I;
+            z_short[line] = z_short_real + z_short_imag * I;
             line++;
         }
     }
 
     /* --------------- CALCULATING OUTPUT PARAMETERS --------------- */
-    int index = log10(g_th_params.frequency) - 2;
+    int index = log10(freq) - 2;
 
     //Calibration was made
     if(calibration) {
@@ -541,7 +372,7 @@ int lcr_CalculateData(float _Complex z_measured, float phase_measured)
         z_final = z_measured;
     }
 
-    data_t w_out = 2 * M_PI * g_th_params.frequency;
+    data_t w_out = 2 * M_PI * freq;
 
     auto Y = 1.0 / z_final;
     data_t G_p = creal(Y);
@@ -607,258 +438,57 @@ int lcr_CalculateData(float _Complex z_measured, float phase_measured)
     return RP_OK;
 }
 
-
-data_t RMS(double *data, int size){
-    data_t max = data[0];
-    data_t min = data[0];
-    for(int i = 0; i < size; i++){
-        if (data[i] > max) {
-            max = data[i];
-        }
-        if (data[i] < min) {
-            min = data[i];
-        }
-    }
-    data_t mean = (max + min) / 2.0;
-    data_t result = 0;
-    for(int i = 0; i < size; i++){
-        data_t z = data[i] - mean;
-        result +=  z * z;
-    }
-    result =  sqrt(result / size);
-    return result;
-}
-
-
-data_t InterpolateLagrangePolynomial (data_t x, data_t* x_values, data_t* y_values, int size)
-{
-	data_t lagrange_pol = 0;
-	data_t basics_pol;
-
-	for (int i = 0; i < size; i++)
-	{
-		basics_pol = 1;
-		for (int j = 0; j < size; j++)
-		{
-			if (j == i) continue;
-			basics_pol *= (x - x_values[j])/(x_values[i] - x_values[j]);
-		}
-		lagrange_pol += basics_pol*y_values[i];
-	}
-	return lagrange_pol;
-}
-
-data_t calcPoint(data_t *a, data_t *b,int lenghtArray,int index){
-	data_t x = 0;
-	int j = 0;
-	int i = index - lenghtArray > 0 ? index - lenghtArray : 0;
-	for (; i < lenghtArray && i <= index; i++) {
-		j = index - i;
-		x +=a[i]*b[lenghtArray - j - 1];
-	}
-	return x;
-}
-
-data_t getMaxArg(data_t *a, data_t *b,int start,int stop, int step,int lenghtArray){
-    std::vector<data_t> corralate;
-    std::vector<int> corralateIndex;
-    
-    corralate.resize(lenghtArray * 2 + 1);
-    corralateIndex.resize(lenghtArray * 2 + 1);
-
-    for(int k = 0; k < lenghtArray * 2 + 1 ; k++){
-        corralate[k] = 0;
-     	corralateIndex[k] = -1;
-    }
-
-    for(int k = start; k <= stop ; k+=step){
-        corralate[k] = calcPoint(a,b,lenghtArray,k);
-        corralateIndex[k] = k;
-    }
-
-    int maxK = 0;
-    int maxCor = 0;
-    int init = 1;
-    for(int k = start; k <= stop ; k++){
-        if (corralateIndex[k] != -1)
-            if (corralate[k] > maxCor || init){
-                init = 0;
-                maxCor = corralate[k];
-                maxK = corralateIndex[k];
-            }
-    }
-    return maxK;
-}
-
-data_t crossCorrelation(data_t *xSignalArray, data_t *ySignalArray, int lenghtArray,int sepm_Per)
-{
-    data_t argmax = 0;
-    data_t *a = xSignalArray;
-    data_t *b = ySignalArray;
-    int step =  log2(lenghtArray);
-    int maxK = -1;
-    int start = 0;
-    int stop  = lenghtArray * 2;
-    int oldMaxK = -1;
-    while(step>=1){
-        maxK =getMaxArg(a,b,start,stop,step,lenghtArray);
-        start = maxK - step * 10 < 0 ? 0 : maxK - step * 10;
-        stop  = maxK + step * 10 > (lenghtArray * 2 + 1) ? (lenghtArray * 2 + 1) : maxK + step * 10;
-        step /=2;
-        if (maxK == oldMaxK) break;
-        oldMaxK = maxK;
-    }
-
-	argmax = maxK;
-
-	if (argmax > 0 && argmax < lenghtArray * 2){
-		data_t x_axis[] = { 0 , 1 , 2};
-		data_t y_axis[3];
-
-		for(int i = argmax-1,j=0; i <= argmax+1 ;i++,j++){
-			y_axis[j] = calcPoint(a,b,lenghtArray,i);
-		}
-		data_t eps = 0.0001;
-		data_t start = 0;
-		data_t stop = 2;
-		data_t y_start = InterpolateLagrangePolynomial(start,x_axis,y_axis,3);
-		data_t y_stop  = InterpolateLagrangePolynomial(stop,x_axis,y_axis,3);
-		data_t max_inter = 0;
-		while(eps  < (stop - start)){
-			data_t z = (stop - start)/2.0 + start;
-			data_t y_sub  = InterpolateLagrangePolynomial(z,x_axis,y_axis,3);
-			if (y_sub > y_start || y_sub > y_stop){
-				if (y_start > y_stop){
-					stop = z;
-					y_stop = y_sub;
-				}else{
-					start = z;
-					y_start = y_sub;
-				}
-				max_inter = z;
-			}
-			else{
-				max_inter = y_stop > y_start? stop : start;
-				break;
-			}
-		}
-		argmax = argmax-1 + max_inter;
-	}
-    return argmax;
-}
-
-data_t phaseCalculator(data_t freq_HZ, data_t samplesPerSecond, int numSamples,int sepm_Per, data_t *xSamples, data_t *ySamples)
-{
-    data_t timeShift, phaseShift, timeLine;
-    data_t argmax = crossCorrelation(xSamples, ySamples, numSamples,sepm_Per);
-
-    timeLine = ((numSamples - 1) / samplesPerSecond);
-    timeShift = ((timeLine * argmax) / (numSamples - 1)) + (-timeLine);
-    phaseShift = ((2 * M_PI) * fmod((freq_HZ * timeShift), 1.0)) - M_PI;
-    if (phaseShift <= -M_PI/2)
-		phaseShift += M_PI;
-	else if (phaseShift >= M_PI/2)
-		phaseShift -= M_PI;
-	return phaseShift;
-}
-
-int static_x = 0;
-
-int lcr_data_analysis(const float **data,
-                      uint32_t size,
-                      float dc_bias,
-                      double r_shunt,
-                      float w_out,
+int lcr_data_analysis(buffers_t *data,
+                      lcr_shunt_t r_shunt,
+                      float sigFreq,
                       int decimation)
 {
-    uint32_t speed = 0;
-    int ret = rp_HPGetBaseFastADCSpeedHz(&speed);
-    if (ret != RP_HP_OK){
-        fprintf(stderr,"[Error:lcr_ThreadAcqData] Error get ADC rate err: %d\n",ret);
-        return RP_EOOR;
+    std::lock_guard<std::mutex> lock(g_lcr_mutex_analize);
+    static std::vector<data_t> u_dut;
+    static std::vector<data_t> i_dut;
+    u_dut.resize(data->size);
+    i_dut.resize(data->size);
+
+    auto r_RC = g_lcr_hw.calibShunt(r_shunt,sigFreq);
+
+    for(uint32_t i = 0; i < data->size; i++) {
+        u_dut[i] = data->ch_f[0][i] - data->ch_f[1][i];
+        i_dut[i] = data->ch_f[1][i] / r_RC;
     }
 
-    double T = ((double)decimation / (double)speed);
-    //double c_calib = C_CALIB[getIndex(r_shunt)][getIndex(w_out/(2*M_PI*10))];
-    g_isSine = isSineTester((float**)data, size, T);
+    double z_ampl;
+    double phase_z_deg;
+    analysisFFT(i_dut,u_dut,sigFreq,decimation,&z_ampl,&phase_z_deg,0);
 
-    std::vector<data_t> u_dut,i_dut,buf1,buf2;
-    u_dut.resize(size);
-    i_dut.resize(size);
-    buf1.resize(size);
-    buf2.resize(size);
+    // printf("sigFreq %f\n",sigFreq);
+    // printf("Amp %f\n",z_ampl);
+    // printf("phase_z_deg %f\n",phase_z_deg);
 
-    double r_RC = r_shunt;// (r_shunt * (1.0 / (w_out * c_calib))) / (r_shunt + (1.0 / (w_out * c_calib)));
 
- //   char p[200];
- //   sprintf(p,"/root/%d.buf",static_x++);
-
-  // FILE *f = fopen(p,"w");
-    for(uint32_t i = 0; i < size; i++) {
-        i_dut[i] = data[1][i] / r_RC;
-        u_dut[i] = data[0][i] - data[1][i];
-   		buf1[i] = data[1][i];
-		buf2[i] = (data[0][i]*2 - data[1][i]);
-   //     fprintf(f,"%f\t%f\n",buf1[i],buf2[i]);
-    }
-  //  fflush(f);
-  //  fclose(f);
-    Fir(buf1.data(),size);
-    Fir(buf2.data(),size);
-    Normalize(buf1.data(),size);
-    Normalize(buf2.data(),size);
-    data_t sig1_rms =  RMS(i_dut.data(),size);
-	data_t sig2_rms =  RMS(u_dut.data(),size);
-    double z_ampl =  sig2_rms / sig1_rms;
-    int samples_period = round((double)speed / (g_th_params.frequency * decimation));
-    double phase_z_rad = phaseCalculator(g_th_params.frequency,(double)speed  / (double)decimation, size ,samples_period,buf1.data(),buf2.data());
-    //fprintf(stderr,"P1: %f\nP2: %f\nP3: %d\nP4:%d\n",g_th_params.frequency,ADC_SAMPLE_RATE / decimation, size ,samples_period);
-	if (phase_z_rad <= -M_PI)
-		phase_z_rad += 2*M_PI;
-	else if (phase_z_rad >= M_PI)
-		phase_z_rad -= 2*M_PI;
-    accu_buf[0][accu_buf_size] = z_ampl;
-    accu_buf[1][accu_buf_size] = phase_z_rad;
-    accu_buf_size++;
-    if (accu_buf_size >= 5){
-        accu_buf_size = 0;
-    }
-
-    z_ampl = 0;
-    phase_z_rad = 0;
-    for(int  i = 0 ; i < 5;i++){
-        z_ampl += accu_buf[0][i];
-        phase_z_rad += accu_buf[1][i];
-    }
-    z_ampl /= 5;
-    phase_z_rad /= 5;
-
-    g_th_params.phase_out = phase_z_rad * (180.0 / M_PI);
+    g_th_params.phase_out = phase_z_deg;
+    auto phase_z_rad = phase_z_deg * M_PI / 180.0;
     g_th_params.z_out = (z_ampl * cosf(phase_z_rad)) + (z_ampl * sinf(phase_z_rad) * I);
+    g_th_params.frequency = sigFreq;
     return RP_OK;
 }
 
 
-/* Getters and setters */
 int lcr_SetFrequency(float frequency){
-    main_params.frequency = frequency;
+    g_generator.setFreq(frequency);
     return RP_OK;
 }
 
 int lcr_GetFrequency(float *frequency){
-    *frequency = main_params.frequency;
+    *frequency = g_generator.getFreq();
     return RP_OK;
 }
 
-int lcr_setRShunt(int r_shunt){
-    if((r_shunt >= 0) && (r_shunt < 6)){
-        main_params.r_shunt = r_shunt;
-    }
-    return RP_OK;
+int lcr_setRShunt(lcr_shunt_t r_shunt){
+    return g_lcr_hw.setI2CShunt(r_shunt);
 }
 
-int lcr_getRShunt(int *r_shunt){
-    *r_shunt = main_params.r_shunt;
+int lcr_getRShunt(lcr_shunt_t *r_shunt){
+    *r_shunt = g_lcr_hw.getShunt();
     return RP_OK;
 }
 
@@ -927,6 +557,8 @@ int lcr_GetRangeUnits(int *units){
     return RP_OK;
 }
 
-bool lcr_isSine(){
-    return g_isSine;
+int lcr_CheckModuleConnection(){
+    if(g_lcr_hw.checkExtensionModuleConnection() < 0)
+        return RP_EMNC;
+    return RP_OK;
 }

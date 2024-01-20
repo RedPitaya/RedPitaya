@@ -19,7 +19,7 @@
 
 #include "common.h"
 #include "oscilloscope.h"
-#include "redpitaya/rp.h"
+#include "rp.h"
 
 // The FPGA register structure for oscilloscope
 static volatile osc_control_t *osc_reg = NULL;

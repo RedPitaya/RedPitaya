@@ -63,7 +63,7 @@ list(APPEND src
             ${CMAKE_SOURCE_DIR}/src/tdms/binary_stream.cpp
             ${CMAKE_SOURCE_DIR}/src/tdms/data_type.cpp
             ${CMAKE_SOURCE_DIR}/src/tdms/file.cpp
-            ${CMAKE_SOURCE_DIR}/src/tdms/writer.cpp        
+            ${CMAKE_SOURCE_DIR}/src/tdms/writer.cpp
             ${CMAKE_SOURCE_DIR}/src/rp_formatter.cpp
         )
 
@@ -105,7 +105,7 @@ if(BUILD_SHARED)
             ARCHIVE DESTINATION ${INSTALL_DIR}/lib)
 
         install(FILES ${header}
-            DESTINATION ${INSTALL_DIR}/include)
+            DESTINATION ${INSTALL_DIR}/include/common)
 
         if (BUILD_PYTHON_MODULE)
             install(FILES $<TARGET_PROPERTY:rp_formatter_py,SWIG_SUPPORT_FILES> DESTINATION ${INSTALL_DIR}/lib/python)
@@ -132,7 +132,7 @@ if(BUILD_STATIC)
             ARCHIVE DESTINATION ${INSTALL_DIR}/lib)
 
         install(FILES ${header}
-            DESTINATION ${INSTALL_DIR}/include)
+            DESTINATION ${INSTALL_DIR}/include/common)
     endif()
 endif()
 

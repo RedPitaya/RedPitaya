@@ -47,10 +47,6 @@ int lcrApp_LcrCopyParams(lcr_main_data_t *data){
 	return lcr_CopyParams(data);
 }
 
-bool lcrApp_LcrIsSine(){
-    return lcr_isSine();
-}
-
 // int lcrApp_LcrStartCorrection(){
 // 	return lcr_Correction();
 // }
@@ -63,11 +59,11 @@ int lcrApp_LcrGetFrequency(float *frequency){
 	return lcr_GetFrequency(frequency);
 }
 
-int lcrApp_LcrSetShunt(int shunt){
+int lcrApp_LcrSetShunt(lcr_shunt_t shunt){
         return lcr_setRShunt(shunt);
 }
 
-int lcrApp_LcrGetShunt(int *shunt){
+int lcrApp_LcrGetShunt(lcr_shunt_t *shunt){
         return lcr_getRShunt(shunt);
 }
 
@@ -124,7 +120,24 @@ int lcrApp_LcrGetMeasRangeUnits(int *units){
 }
 
 int lcrApp_LcrCheckExtensionModuleConnection() {
-	if(checkExtensionModuleConnection() < 0)
-        return RP_EMNC;
-    return RP_OK;
+    return lcr_CheckModuleConnection();
+}
+
+const char* lcrApp_LcrGetError(lcr_error_t errorCode){
+    switch (errorCode)
+    {
+        case RP_LCR_OK:
+            return "OK";
+        case RP_LCR_HW_CANT_OPEN:
+            return "Can't open i2c device";
+        case RP_LCR_HW_MISSING_DEVICE:
+            return "LCR extension not connected";
+        case RP_LCR_HW_ERROR:
+            return "Undefined error";
+        case RP_LCR_HW_ERROR_DETECT:
+            return "LCR extension detection error";
+        default:
+            break;
+    }
+    return "Undefined error";
 }

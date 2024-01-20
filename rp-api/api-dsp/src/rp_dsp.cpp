@@ -373,6 +373,9 @@ auto CDSP::prepareFreqVector(data_t *data, double f_s, float decimation) -> int 
     return 0;
 }
 
+auto CDSP::prepareFreqVector(data_t *data, float decimation) -> int{
+    return prepareFreqVector(data,m_pimpl->m_adc_max_speed,decimation);
+}
 
 auto CDSP::windowFilter(data_t *data) -> int {
     uint32_t i,j;
@@ -469,8 +472,8 @@ int CDSP::getAmpAndPhase(data_t *_data, double _freq, double *_amp1, double *_ph
             *_phase1 = atan2(m_pimpl->m_kiss_fft_out[0][i].i,m_pimpl->m_kiss_fft_out[0][i].r);
             *_phase2 = atan2(m_pimpl->m_kiss_fft_out[1][i].i,m_pimpl->m_kiss_fft_out[1][i].r);
 
-            printf("i %d freq %f\n",i,_data->m_freq_vector[i]);
-            printf("A-1 %f A0 %f A1 %f\n",amp(0,i-1),amp(0,i),amp(0,i+1));
+            // printf("i %d freq %f\n",i,_data->m_freq_vector[i]);
+            // printf("A-1 %f A0 %f A1 %f\n",amp(0,i-1),amp(0,i),amp(0,i+1));
 
             return 0;
         }

@@ -4,7 +4,7 @@
  * @brief Red Pitaya Spectrum Analyzer worker.
  *
  * @Author Jure Menart <juremenart@gmail.com>
- *         
+ *
  * (c) Red Pitaya  http://www.redpitaya.com
  *
  * This part of code is written in C programming language.
@@ -16,7 +16,7 @@
 #define __SPECTROMETERAPP_H
 
 #include "rpApp.h"
-#include "rp_dsp.h"
+#include "math/rp_dsp.h"
 
 int spec_run();
 
