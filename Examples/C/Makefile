@@ -22,7 +22,8 @@ PRGS =  analog_inputs \
 		uart \
 		uart_loopback \
 		can_pass \
-		can_loopback
+		can_loopback \
+		calibration_api
 
 PRGS += acquire_trigger_software \
 		acquire_trigger_posedge \
@@ -36,7 +37,7 @@ PRGS += acquire_trigger_software \
 		axi \
 		axi_4ch
 
-PRGS += i2c_eeprom_read_calib_125_14
+PRGS += i2c_eeprom_read_calib
 PRGS += acquire_4ch_trigger_software
 PRGS += i2c_switch_max7311
 

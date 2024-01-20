@@ -189,6 +189,30 @@ scpi_result_t RP_GenFrequencyQ(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_GenFrequencyDirect(scpi_t *context){
+
+    scpi_number_t frequency;
+    rp_channel_t channel;
+
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    /* Parse first, FREQUENCY parameter */
+    if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &frequency, true)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+
+    auto result = rp_GenFreqDirect(channel, frequency.content.value);
+    if(result != RP_OK){
+        RP_LOG_CRIT("Failed to set frequency: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_GenWaveForm(scpi_t *context) {
 
     rp_channel_t channel;
@@ -246,7 +270,7 @@ scpi_result_t RP_GenPhase(scpi_t *context) {
 
     rp_channel_t channel;
     scpi_number_t phase;
-   
+
     if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }

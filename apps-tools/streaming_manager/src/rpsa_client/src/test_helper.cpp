@@ -193,8 +193,8 @@ auto printStatisitc(bool force) -> void{
                 ss << "                  +...................+...................+...................+...................+...................+...................+";
                 ss << " " + createStr(std::to_string(g_lostRate[host]),17) << "|\n";
                 ss << "                  |";
-                ss << "Lost in UDP: " << createStr(std::to_string(g_lostNetRate[host]),26) << "|";
-                ss << "Lost in file: " << createStr(std::to_string(g_lostFileRate[host]),25) << "|";
+                ss << "Lost in UDP: " << createStr(std::to_string(g_lostNetRate[host]),46) << "|";
+                ss << "Lost in file: " << createStr(std::to_string(g_lostFileRate[host]),45) << "|";
                 ss << "                  |\n";
                 ss << "                  +...................+...................+...................+...................+...................+...................+";
                 ss << "                  |\n";
@@ -235,6 +235,7 @@ auto printFinalStatisitc() -> void{
         ss << "Host              | Bytes all         | Bandwidth         |    Samples CH1    |    Samples CH2    |    Samples CH3    |    Samples CH4    |      Lost        |\n";
 
         bool first = true;
+
         for(auto const& host: keys){
             if (first){
                 first = false;
@@ -252,14 +253,14 @@ auto printFinalStatisitc() -> void{
             ss << "                  +...................+...................+...................+...................+...................+...................+";
             ss << " " + createStr(std::to_string(g_lostRateTotal[host]),17) << "|\n";
             ss << "                  |";
-            ss << "Lost in UDP: " << createStr(std::to_string(g_lostNetRateTotal[host]),26) << "|";
-            ss << "Lost in file: " << createStr(std::to_string(g_lostFileRateTotal[host]),25) << "|";
+            ss << "Lost in UDP: " << createStr(std::to_string(g_lostNetRateTotal[host]),46) << "|";
+            ss << "Lost in file: " << createStr(std::to_string(g_lostFileRateTotal[host]),45) << "|";
             ss << "                  |\n";
             ss << "                  +...................+...................+...................+...................+...................+...................+";
             ss << "                  |\n";
             if (g_brokenBuffer.size() > 0 && g_brokenBuffer[host] != -1){
                 ss << "                  |";
-                ss << "Broken buffers: " << createStr(std::to_string(g_brokenBuffer[host]),23)<< "|";
+                ss << "Broken buffers: " << createStr(std::to_string(g_brokenBuffer[host]),63)<< "|";
                 ss << "                                       |                  |\n";
             }
         }

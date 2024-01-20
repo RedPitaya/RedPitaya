@@ -160,11 +160,11 @@ auto runClient(std::string  host,StateRunnedHosts state) -> void{
         g_runClientCounter--;
     });
 
-    g_asionet->clientErrorNotify.connect([host](std::error_code)
+    g_asionet->clientErrorNotify.connect([host](std::error_code err)
     {
         const std::lock_guard<std::mutex> lock(g_smutex);
         if (g_soption.verbous)
-            aprintf(stdout,"%s Error %s\n",getTS(": ").c_str(),host.c_str());
+            aprintf(stdout,"%s Error %s %s\n",getTS(": ").c_str(),host.c_str(),err.message().c_str());
         stopStreaming(host);
         g_runClientCounter--;
     });

@@ -26,8 +26,15 @@
 
 rp_scpi_acq_unit_t unit     = RP_SCPI_VOLTS;        // default value
 
+const scpi_choice_def_t scpi_RpAcqTrigRequest[] = {
+    {"PRE_TRIG",     1},
+    {"POST_TRIG",    2},
+    {"PRE_POST_TRIG",  3},
+    SCPI_CHOICE_LIST_END
+};
 
-scpi_result_t RP_AcqSetDataFormat(scpi_t *context) {
+
+scpi_result_t RP_AcqDataFormat(scpi_t *context) {
     const char * param;
     size_t param_len;
 
@@ -48,6 +55,16 @@ scpi_result_t RP_AcqSetDataFormat(scpi_t *context) {
     else {
         RP_LOG_INFO("Wrong argument value");
         return SCPI_RES_ERR;
+    }
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqDataFormatQ(scpi_t *context) {
+    if (context->binary_output) {
+        SCPI_ResultMnemonic(context, "BIN");
+    }
+    else {
+        SCPI_ResultMnemonic(context, "ASCII");
     }
     return SCPI_RES_OK;
 }
@@ -600,6 +617,7 @@ scpi_result_t RP_AcqDataPosQ(scpi_t *context) {
 
         if(result != RP_OK){
             RP_LOG_CRIT("Failed to get data in volts: %s", rp_GetError(result));
+            delete[] buffer;
             return SCPI_RES_ERR;
         }
 
@@ -619,6 +637,7 @@ scpi_result_t RP_AcqDataPosQ(scpi_t *context) {
 
         if(result != RP_OK){
             RP_LOG_CRIT("Failed to get raw data: %s", rp_GetError(result));
+            delete[] buffer;
             return SCPI_RES_ERR;
         }
 
@@ -666,6 +685,7 @@ scpi_result_t RP_AcqDataQ(scpi_t *context) {
         result = rp_AcqGetDataV(channel, start, &size, buffer);
         if(result != RP_OK){
             RP_LOG_CRIT("Failed to get data in volts: %s", rp_GetError(result));
+            delete[] buffer;
             return SCPI_RES_ERR;
         }
 
@@ -685,6 +705,7 @@ scpi_result_t RP_AcqDataQ(scpi_t *context) {
 
         if(result != RP_OK){
             RP_LOG_CRIT("Failed to get raw data: %s", rp_GetError(result));
+            delete[] buffer;
             return SCPI_RES_ERR;
         }
 
@@ -806,6 +827,106 @@ scpi_result_t RP_AcqLatestDataQ(scpi_t *context) {
         }
 
         SCPI_ResultBufferInt16(context, buffer, size);
+    }
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqTriggerDataQ(scpi_t *context) {
+
+    uint32_t count;
+    int result;
+
+    rp_channel_t channel;
+    int32_t trig_request;
+
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    /* Parse count samples parameter */
+    if(!SCPI_ParamUInt32(context, &count, true)){
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Missing Size parameter.");
+        return SCPI_RES_ERR;
+    }
+
+    /* Parse MODE parameter */
+    if(!SCPI_ParamChoice(context, scpi_RpAcqTrigRequest, &trig_request, true)){
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Missing trigger mode parameter.");
+        return SCPI_RES_ERR;
+    }
+
+    uint32_t trig_pos;
+    result = rp_AcqGetWritePointerAtTrig(&trig_pos);
+    if(result != RP_OK){
+        RP_LOG_CRIT("Failed to get trigger position: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    uint32_t size_buff;
+    rp_AcqGetBufSize(&size_buff);
+
+    uint32_t data_start;
+    uint32_t data_size;
+
+    switch (trig_request)
+    {
+        case 1: // Pre trigger mode
+            data_start = (ADC_BUFFER_SIZE + trig_pos - count) % ADC_BUFFER_SIZE;
+            data_size = count + 1;
+            break;
+        case 2: // Post trigger mode
+            data_start = trig_pos;
+            data_size = count + 1;
+            break;
+        case 3: // Pre-Post trigger mode
+            data_start = (ADC_BUFFER_SIZE + trig_pos - count) % ADC_BUFFER_SIZE;
+            data_size = count * 2 + 1;
+            break;
+
+        default:
+            RP_LOG_CRIT("Undefined trigger mode: %d", trig_request);
+            return SCPI_RES_ERR;
+    }
+
+    if(unit == RP_SCPI_VOLTS){
+        float *buffer = nullptr;
+        try{
+            buffer = new float[data_size];
+        }catch(std::bad_alloc &)
+        {
+            SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Failed allocate buffer")
+            return SCPI_RES_ERR;
+        };
+        result = rp_AcqGetDataV(channel, data_start, &data_size, buffer);
+        if(result != RP_OK){
+            RP_LOG_CRIT("Failed to get data in volts: %s", rp_GetError(result));
+            delete[] buffer;
+            return SCPI_RES_ERR;
+        }
+
+        SCPI_ResultBufferFloat(context, buffer, data_size);
+        delete[] buffer;
+
+    }else{
+        int16_t *buffer = nullptr;
+        try{
+            buffer = new int16_t[data_size];
+        }catch(std::bad_alloc &)
+        {
+            SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Failed allocate buffer")
+            return SCPI_RES_ERR;
+        };
+        result = rp_AcqGetDataRaw(channel, data_start, &data_size, buffer);
+
+        if(result != RP_OK){
+            RP_LOG_CRIT("Failed to get raw data: %s", rp_GetError(result));
+            delete[] buffer;
+            return SCPI_RES_ERR;
+        }
+
+        SCPI_ResultBufferInt16(context, buffer, data_size);
+        delete[] buffer;
     }
     RP_LOG_INFO("%s",rp_GetError(result))
     return SCPI_RES_OK;

@@ -24,6 +24,9 @@
 #include <signal.h>
 #include <unistd.h>
 #include <syslog.h>
+#include <thread>
+#include <vector>
+#include <mutex>
 
 #include "scpi-commands.h"
 #include "common.h"
@@ -122,7 +125,8 @@ void LogMessage(char *m, size_t len) {
  * @param connfd The communication port
  * @return
  */
-static int handleConnection(int connfd) {
+static int handleConnection(scpi_t *ctx, int connfd) {
+    static std::mutex mtx;
     int read_size;
 
     size_t message_len = MAX_BUFF_SIZE;
@@ -130,9 +134,9 @@ static int handleConnection(int connfd) {
     char buffer[MAX_BUFF_SIZE];
     size_t msg_end = 0;
 
-    installTermSignalHandler();
+    // installTermSignalHandler();
 
-    prctl( 1, SIGTERM );
+    // prctl( 1, SIGTERM );
 
     rp_Log(nullptr,LOG_INFO, 0,  "Waiting for first client request.");
     int buf = 1024 * 16;
@@ -165,12 +169,12 @@ static int handleConnection(int connfd) {
         char *m = message_buff;
         size_t pos = 0;
         while ((pos = getNextCommand(m, msg_end)) != 0) {
-
+            std::lock_guard<std::mutex> lock(mtx);
             // Log out message
             LogMessage(m, pos);
 
             //Parse the message and return response
-            SCPI_Input(&scpi_context, m, pos);
+            SCPI_Input(ctx, m, pos);
             m += pos;
             msg_end -= pos;
         }
@@ -201,6 +205,50 @@ static int handleConnection(int connfd) {
     return 0;
 }
 
+std::thread* threadConnection(int connId){
+    auto func = [](int connId) {
+        const char* id0 = "REDPITAYA";
+        const char* id1 = "INSTR2024";
+        const char* id2 = NULL;
+        const char* id3 = "01-16";
+        int sockId = connId;
+        scpi_error_t scpi_error_queue_data[SCPI_ERROR_QUEUE_SIZE];
+        auto ctx = initContext();
+        if (ctx == NULL) {
+            close(sockId);
+            return;
+        }
+        ctx->idn[0] = id0;
+        ctx->idn[1] = id1;
+        ctx->idn[2] = id2;
+        ctx->idn[3] = id3;
+        SCPI_Init(ctx,
+                ctx->cmdlist,
+                ctx->interface,
+                ctx->units,
+                id0,
+                id1,
+                id2,
+                id3,
+                ctx->buffer.data,
+                ctx->buffer.length,
+                scpi_error_queue_data,
+                SCPI_ERROR_QUEUE_SIZE);
+
+        ctx->user_context = &sockId;
+
+        handleConnection(ctx,sockId);
+
+        close(sockId);
+        delete[] ctx->buffer.data;
+        delete ctx;
+
+        rp_Log(nullptr,LOG_INFO, 0, "Closing connection with client");
+    };
+
+    auto th = new std::thread(func,connId);
+    return th;
+}
 
 /**
  * Main daemon entrance point. Opens a socket and listens for any incoming connection.
@@ -213,6 +261,8 @@ static int handleConnection(int connfd) {
 int main(int argc, char *argv[])
 {
 
+    std::vector<std::thread*> clients;
+
     // Open logging into "/var/log/messages" or /var/log/syslog" or other configured...
     setlogmask (LOG_UPTO (LOG_INFO));
     openlog ("scpi-server", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
@@ -220,6 +270,8 @@ int main(int argc, char *argv[])
     rp_Log (nullptr, LOG_NOTICE, 0, "scpi-server started");
 
     installTermSignalHandler();
+
+    prctl( 1, SIGTERM );
 
     int listenfd = 0, connfd = 0;
     struct sockaddr_in serv_addr;
@@ -242,27 +294,9 @@ int main(int argc, char *argv[])
 
 
 
-    // user_context will be pointer to socket
-    scpi_context.user_context = NULL;
-    scpi_context.binary_output = false;
 
-    static scpi_error_t scpi_error_queue_data[SCPI_ERROR_QUEUE_SIZE];
-    
-    SCPI_Init(&scpi_context,
-              scpi_context.cmdlist,
-              scpi_context.interface,
-              scpi_context.units,
-              scpi_context.idn[0],
-              scpi_context.idn[1],
-              scpi_context.idn[2],
-              scpi_context.idn[3],
-              scpi_context.buffer.data,
-              scpi_context.buffer.length,
-              scpi_error_queue_data,
-              SCPI_ERROR_QUEUE_SIZE);
-             
 
-    RP_ResetAll(&scpi_context); // need for set default values of scpi
+    // RP_ResetAll(&scpi_context); // need for set default values of scpi
 
     // Create a socket
     listenfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -327,6 +361,9 @@ int main(int argc, char *argv[])
             return (EXIT_FAILURE);
         }
 
+        auto cth = threadConnection(connfd);
+        clients.push_back(cth);
+        /*
         // Fork a child process, which will talk to the client
         if (!fork()) {
 
@@ -352,6 +389,12 @@ int main(int argc, char *argv[])
         }
 
         close(connfd);
+        */
+    }
+
+    for (auto th: clients){
+        if (th->joinable())
+            th->join();
     }
 
     close(listenfd);

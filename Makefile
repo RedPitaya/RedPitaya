@@ -271,7 +271,7 @@ scpi: api $(INSTALL_DIR) $(SCPI_PARSER_DIR)
 
 # git clone https://github.com/RedPitaya/red-pitaya-notes.git -b charly25ab
 # ZIP file name should be updated for each new build
-SDR_ZIP = SDR-bundle-25-9253aa5e.zip
+SDR_ZIP = SDR-bundle-26-cc97bf9a.zip
 SDR_URL = https://downloads.redpitaya.com/hamlab/sdr-bundle/$(SDR_ZIP)
 
 sdr: | $(DL)
@@ -414,9 +414,10 @@ APP_CALIB_DIR			 = apps-tools/calib_app
 APP_MAIN_MENU_DIR        = apps-tools/main_menu
 APP_ARB_MANAGER_DIR      = apps-tools/arb_manager
 
-.PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager streaming_manager calib_app main_menu $(NGINX)
+.PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager streaming_manager calib_app main_menu arb_manager $(NGINX)
 
-apps-tools: ecosystem updater network_manager scpi_manager streaming_manager jupyter_manager calib_app main_menu
+
+apps-tools: ecosystem updater network_manager scpi_manager streaming_manager jupyter_manager calib_app main_menu arb_manager
 
 
 ecosystem:

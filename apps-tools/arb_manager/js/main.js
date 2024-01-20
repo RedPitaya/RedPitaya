@@ -579,5 +579,10 @@ $(function() {
 
     SM.previousPageUrl = document.referrer;
     console.log(`Previously visited page URL: ${SM.previousPageUrl}`);
+    const currentUrl = window.location.href;
+    if (currentUrl === SM.previousPageUrl || SM.previousPageUrl === ''){
+        SM.previousPageUrl = '/'
+    }
     $("#back_button").attr("href", SM.previousPageUrl)
+
 });
