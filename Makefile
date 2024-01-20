@@ -271,7 +271,7 @@ scpi: api $(INSTALL_DIR) $(SCPI_PARSER_DIR)
 
 # git clone https://github.com/RedPitaya/red-pitaya-notes.git -b charly25ab
 # ZIP file name should be updated for each new build
-SDR_ZIP = SDR-bundle-25-9253aa5e.zip
+SDR_ZIP = SDR-bundle-26-cc97bf9a.zip
 SDR_URL = https://downloads.redpitaya.com/hamlab/sdr-bundle/$(SDR_ZIP)
 
 sdr: | $(DL)
