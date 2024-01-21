@@ -1,6 +1,6 @@
 #include "main.h"
 #include "settings.h"
-#include "rp_dsp.h"
+#include "math/rp_dsp.h"
 #include "rp.h"
 #include "neon_asm.h"
 #include "rp_math.h"

@@ -10,7 +10,7 @@
 #include "main.h"
 
 #include "math_logic.h"
-#include "rp_formatter.h"
+#include "common/rp_formatter.h"
 
 #define MAX_FREQ getMaxFreqRate()
 #define MAX_TRIGGER_LEVEL getMaxTriggerLevel()
