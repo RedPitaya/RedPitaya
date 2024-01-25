@@ -34,7 +34,7 @@ public:
 
     auto setI2CShunt(lcr_shunt_t _shunt) -> lcr_error_t;
     auto getShunt() -> lcr_shunt_t;
-    auto checkExtensionModuleConnection() -> lcr_error_t;
+    auto checkExtensionModuleConnection(bool _muteWarnings) -> lcr_error_t;
     auto isExtensionConnected() -> bool;
     auto getShuntValue(lcr_shunt_t _shunt) -> double;
     auto calibShunt(lcr_shunt_t _shunt,float freq) -> double;

@@ -497,7 +497,7 @@ APP_IMP_ANAL_DIR 	= apps-tools/impedance_analyzer
 
 .PHONY: apps-pro scopegenpro spectrumpro lcr_meter la_pro ba_pro lcr_meter impedance_analyzer
 
-apps-tools: scopegenpro spectrumpro la_pro ba_pro lcr_meter # impedance_analyzer
+apps-tools: scopegenpro spectrumpro la_pro ba_pro lcr_meter impedance_analyzer
 
 scopegenpro: api $(NGINX)
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) clean

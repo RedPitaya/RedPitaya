@@ -35,6 +35,14 @@ int lcrApp_LcrRun(){
 	return lcr_Run();
 }
 
+int lcrApp_LcrStop(){
+    return lcr_Stop();
+}
+
+int lcrApp_LcrSetPause(bool pause){
+    return lcr_SetPause(pause);
+}
+
 int lcrApp_GenRun(){
 	return lcr_GenRun();
 }
@@ -57,6 +65,22 @@ int lcrApp_LcrSetFrequency(float frequency){
 
 int lcrApp_LcrGetFrequency(float *frequency){
 	return lcr_GetFrequency(frequency);
+}
+
+int lcrApp_LcrSetAmplitude(float volt){
+	return lcr_SetAmplitude(volt);
+}
+
+int lcrApp_LcrGetAmplitude(float *volt){
+	return lcr_GetAmplitude(volt);
+}
+
+int lcrApp_LcrSetOffset(float offset){
+	return lcr_SetOffset(offset);
+}
+
+int lcrApp_LcrGetOffset(float *offset){
+	return lcr_GetOffset(offset);
 }
 
 int lcrApp_LcrSetShunt(lcr_shunt_t shunt){
@@ -119,8 +143,8 @@ int lcrApp_LcrGetMeasRangeUnits(int *units){
 	return lcr_GetRangeUnits(units);
 }
 
-int lcrApp_LcrCheckExtensionModuleConnection() {
-    return lcr_CheckModuleConnection();
+int lcrApp_LcrCheckExtensionModuleConnection(bool _muteWarnings) {
+    return lcr_CheckModuleConnection(_muteWarnings);
 }
 
 const char* lcrApp_LcrGetError(lcr_error_t errorCode){
@@ -136,8 +160,26 @@ const char* lcrApp_LcrGetError(lcr_error_t errorCode){
             return "Undefined error";
         case RP_LCR_HW_ERROR_DETECT:
             return "LCR extension detection error";
+        case RP_LCR_ERROR_INVALID_VALUE:
+            return "Invalid value";
         default:
             break;
     }
     return "Undefined error";
+}
+
+int lcrApp_LcrSetCustomShunt(int shunt){
+    return lcr_SetCustomShunt(shunt);
+}
+
+int lcrApp_LcrGetCustomShunt(int *shunt){
+    return lcr_GetCustomShunt(shunt);
+}
+
+int lcrApp_LcrSetShuntMode(lcr_shunt_mode_t shunt_mode){
+    return lcr_SetShuntMode(shunt_mode);
+}
+
+int lcrApp_LcrGetShuntMode(lcr_shunt_mode_t *shunt_mode){
+    return lcr_GetShuntMode(shunt_mode);
 }

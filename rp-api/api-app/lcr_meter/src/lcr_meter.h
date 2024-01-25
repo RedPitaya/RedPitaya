@@ -41,6 +41,8 @@ typedef struct params_e{
 	int     range_format;
 	int     range_units;
 	bool    series;
+    lcr_shunt_mode_t shunt_mode;
+    int shunt;
 } lcr_params_t;
 
 
@@ -62,14 +64,15 @@ int   lcr_SetDefaultValues();
 /* Main lcr functions */
 int   lcr_Run();
 int   lcr_Stop();
+int   lcr_SetPause(bool pause);
 int   lcr_GenRun();
 int   lcr_GenStop();
 void  lcr_MainThread();
 
 /* Measurment functions */
 int   lcr_SafeThreadGen(rp_channel_t channel, float frequency);
-int   lcr_ThreadAcqData(buffers_t *data);
-int   lcr_getImpedance(buffers_t *data);
+int   lcr_ThreadAcqData(buffers_t *data, int *dec, float *freq);
+int   lcr_getImpedance(buffers_t *data, int api_decimation, float freq);
 void  lcr_CheckShunt(const float *ch1, const float *ch2, const uint32_t _size);
 
 // int lcr_Correction();
@@ -84,6 +87,10 @@ int lcr_data_analysis(buffers_t *data,
 /* Getters and Setters */
 int lcr_SetFrequency(float frequency);
 int lcr_GetFrequency(float *frequency);
+int lcr_SetAmplitude(float volt);
+int lcr_GetAmplitude(float *volt);
+int lcr_SetOffset(float offset);
+int lcr_GetOffset(float *offset);
 int lcr_setRShunt(lcr_shunt_t r_shunt);
 int lcr_getRShunt(lcr_shunt_t *r_shunt);
 int lcr_setRShuntIsAuto(bool isAuto);
@@ -99,8 +106,12 @@ int lcr_SetRangeFormat(int format);
 int lcr_GetRangeFormat(int *format);
 int lcr_SetRangeUnits(int units);
 int lcr_GetRangeUnits(int *units);
+int lcr_SetCustomShunt(int shunt);
+int lcr_GetCustomShunt(int *shunt);
+int lcr_SetShuntMode(lcr_shunt_mode_t shunt_mode);
+int lcr_GetShuntMode(lcr_shunt_mode_t *shunt_mode);
 
-int lcr_CheckModuleConnection();
+int lcr_CheckModuleConnection(bool _muteWarnings);
 
 #endif //__LCRMETER_H
 

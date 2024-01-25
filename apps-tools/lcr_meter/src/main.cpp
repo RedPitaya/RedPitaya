@@ -126,7 +126,7 @@ void UpdateParams(void){
     CDataManager::GetInstance()->SendAllParams();
     bool moduleStatusFlag = false;
 
-    moduleStatusFlag = lcrApp_LcrCheckExtensionModuleConnection() == RP_OK;
+    moduleStatusFlag = lcrApp_LcrCheckExtensionModuleConnection(false) == RP_OK;
 
     if(moduleStatus.Value() != moduleStatusFlag) {
         moduleStatus.Value() = moduleStatusFlag;

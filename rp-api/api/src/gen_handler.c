@@ -166,7 +166,7 @@ int gen_checkAmplitudeAndOffset(rp_channel_t channel,float amplitude, float offs
         return RP_NOTS;
     }
 
-    if (fabs(amplitude) + fabs(offset) > fs) {
+    if ((int)((fabs(amplitude) + fabs(offset)) * 100000) > (int)(fs * 100000)) {
         return RP_EOOR;
     }
     return RP_OK;

@@ -17,15 +17,17 @@
 const char *g_argv0 = NULL; // Program name
 
 bool checkFreq(int _freq){
-    switch(_freq){
-        case 10: return true;
-        case 100: return true;
-        case 1000: return true;
-        case 10000: return true;
-        case 100000: return true;
-        default:
-            return false;
-    }
+    return _freq >=1 && _freq <= 1000000;
+
+    // switch(_freq){
+    //     case 10: return true;
+    //     case 100: return true;
+    //     case 1000: return true;
+    //     case 10000: return true;
+    //     case 100000: return true;
+    //     default:
+    //         return false;
+    // }
 }
 
 int checkShunt(int _shunt){
@@ -49,7 +51,7 @@ void usage() {
             "\n"
             "Usage:\t%s freq r_shunt [-v]\n"
             "\n"
-            "\tfreq               Signal frequency used for measurement [ 100 , 1000, 10000 , 100000 ] Hz.\n"
+            "\tfreq               Signal frequency used for measurement Hz.\n"
             "\tr_shunt            Shunt resistor value in Ohms [ 10, 100, 1000, 10000, 100000, 1000000 ]. If set to 0, Automatic ranging is used.\n"
             "\t-v                 Verbose mode\n"
             "\t                   Automatic ranging demands Extenson module.\n"
@@ -130,7 +132,7 @@ int main(int argc, char *argv[]) {
 
 
     lcrApp_lcrInit();
-    auto Connected = lcrApp_LcrCheckExtensionModuleConnection() == RP_OK;
+    auto Connected = lcrApp_LcrCheckExtensionModuleConnection(false) == RP_OK;
 
     if (Connected){
         if (rp_HPGetFastADCIsAC_DCOrDefault()){

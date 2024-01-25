@@ -463,7 +463,13 @@
                     var data = new Uint8Array(ev.data);
                     OSC.compressed_data += data.length;
                     var inflate = pako.inflate(data);
-                    var text = String.fromCharCode.apply(null, new Uint8Array(inflate));
+                    // var text = String.fromCharCode.apply(null, new Uint8Array(inflate));
+                    var bytes = new Uint8Array(inflate);
+                    var text = '';
+                    for(var i = 0; i < Math.ceil(bytes.length / 32768.0); i++) {
+                      text += String.fromCharCode.apply(null, bytes.slice(i * 32768, Math.min((i+1) * 32768, bytes.length)))
+                    }
+
 
                     OSC.decompressed_data += text.length;
                     var receive = JSON.parse(text);

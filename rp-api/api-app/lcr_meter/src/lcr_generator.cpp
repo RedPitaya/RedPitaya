@@ -69,3 +69,21 @@ auto CLCRGenerator::setFreq(uint32_t _freq) -> void{
 auto CLCRGenerator::getFreq() -> uint32_t{
     return m_freq;
 }
+
+auto CLCRGenerator::setAmplitude(float _ampl) -> void{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_amplitude = _ampl;
+}
+
+auto CLCRGenerator::getAmplitude() -> float{
+    return m_amplitude;
+}
+
+auto CLCRGenerator::setOffset(float _offset) -> void{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_offset = _offset;
+}
+
+auto CLCRGenerator::getOffset() -> float{
+    return m_offset;
+}

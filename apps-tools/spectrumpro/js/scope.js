@@ -412,7 +412,13 @@
                         var data = new Uint8Array(ev.data);
                         SPEC.compressed_data += data.length;
                         var inflate = pako.inflate(data);
-                        var text = SPEC.handleCodePoints(inflate);
+                        // var text = SPEC.handleCodePoints(inflate);
+
+                        var bytes = new Uint8Array(inflate);
+                        var text = '';
+                        for(var i = 0; i < Math.ceil(bytes.length / 32768.0); i++) {
+                          text += String.fromCharCode.apply(null, bytes.slice(i * 32768, Math.min((i+1) * 32768, bytes.length)))
+                        }
 
                         SPEC.decompressed_data += text.length;
                         var receive = JSON.parse(text);
@@ -1467,19 +1473,19 @@
     };
 
 
-    SPEC.handleCodePoints = function(array) {
-        var CHUNK_SIZE = 0x8000; // arbitrary number here, not too small, not too big
-        var index = 0;
-        var length = array.length;
-        var result = '';
-        var slice;
-        while (index < length) {
-            slice = array.slice(index, Math.min(index + CHUNK_SIZE, length)); // `Math.min` is not really necessary here I think
-            result += String.fromCharCode.apply(null, slice);
-            index += CHUNK_SIZE;
-        }
-        return result;
-    }
+    // SPEC.handleCodePoints = function(array) {
+    //     var CHUNK_SIZE = 0x8000; // arbitrary number here, not too small, not too big
+    //     var index = 0;
+    //     var length = array.length;
+    //     var result = '';
+    //     var slice;
+    //     while (index < length) {
+    //         slice = array.slice(index, Math.min(index + CHUNK_SIZE, length)); // `Math.min` is not really necessary here I think
+    //         result += String.fromCharCode.apply(null, slice);
+    //         index += CHUNK_SIZE;
+    //     }
+    //     return result;
+    // }
 
     SPEC.getLocalDecimalSeparator = function() {
         var n = 1.1;

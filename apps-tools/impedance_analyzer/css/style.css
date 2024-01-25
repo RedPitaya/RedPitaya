@@ -510,6 +510,17 @@ area:hover {
     cursor: pointer;
 }
 
+.form-control[disabled] {
+    color: #fff;
+    background-color: #343433;
+    background-image: none;
+    border: 0px none;
+    box-shadow: none;
+    border-radius: 0px;
+    height: 33px;
+    cursor: pointer;
+}
+
 .form-control:hover {
     color: #fff;
     background-color: #444;
@@ -892,11 +903,6 @@ btn:active {
 #throughput_view2 {
     text-align: right;
     width: 150px;
-}
-
-#BA_CUR_INFO {
-    float: right;
-    margin-right: 15px;
 }
 
 #calibration{

@@ -464,20 +464,52 @@ int CDSP::getAmpAndPhase(data_t *_data, double _freq, double *_amp1, double *_ph
                                 pow(m_pimpl->m_kiss_fft_out[ch][i].i, 2)) * wsumf;
     };
 
+    // for(uint32_t i = 0; i < getOutSignalLength() - 1; i++){
+    //     if (_data->m_freq_vector[i] <= _freq && _freq <= _data->m_freq_vector[i + 1] ){
+
+    //         auto t = (_freq - _data->m_freq_vector[i]) / (_data->m_freq_vector[i + 1]  - _data->m_freq_vector[i]);
+    //         auto i00 = m_pimpl->m_kiss_fft_out[0][i].i;
+    //         auto r00 = m_pimpl->m_kiss_fft_out[0][i].r;
+
+    //         auto i10 = m_pimpl->m_kiss_fft_out[1][i].i;
+    //         auto r10 = m_pimpl->m_kiss_fft_out[1][i].r;
+
+    //         auto i01 = m_pimpl->m_kiss_fft_out[0][i + 1].i;
+    //         auto r01 = m_pimpl->m_kiss_fft_out[0][i + 1].r;
+
+    //         auto i11 = m_pimpl->m_kiss_fft_out[1][i + 1].i;
+    //         auto r11 = m_pimpl->m_kiss_fft_out[1][i + 1].r;
+
+
+    //         auto I0 = (i01 - i00) * t + i00;
+    //         auto I1 = (i11 - i10) * t + i10;
+
+    //         auto R0 = (r01 - r00) * t + r00;
+    //         auto R1 = (r11 - r10) * t + r10;
+
+    //         *_amp1 = sqrtf(pow(I0, 2) + pow(R0, 2)) * wsumf;
+    //         *_amp2 = sqrtf(pow(I1, 2) + pow(R1, 2)) * wsumf;
+
+    //         *_phase1 = atan2(I0,R0);
+    //         *_phase2 = atan2(I1,R1);
+
+    //         printf("i %d freq %f - %f t %f\n",i,_data->m_freq_vector[i],_data->m_freq_vector[i + 1],t);
+    //         // printf("A-1 %f A0 %f A1 %f\n",amp(0,i-1),amp(0,i),amp(0,i+1));
+
+    //         return 0;
+    //     }
+    // }
+
     for(uint32_t i = 0; i < getOutSignalLength(); i++){
         if (_data->m_freq_vector[i] >= _freq){
             *_amp1 = amp(0,i);
             *_amp2 = amp(1,i);
-
             *_phase1 = atan2(m_pimpl->m_kiss_fft_out[0][i].i,m_pimpl->m_kiss_fft_out[0][i].r);
             *_phase2 = atan2(m_pimpl->m_kiss_fft_out[1][i].i,m_pimpl->m_kiss_fft_out[1][i].r);
-
-            // printf("i %d freq %f\n",i,_data->m_freq_vector[i]);
-            // printf("A-1 %f A0 %f A1 %f\n",amp(0,i-1),amp(0,i),amp(0,i+1));
-
             return 0;
         }
     }
+
     return -1;
 }
 

@@ -65,7 +65,6 @@
         <div id="calibration">Calibrating...</div>
     </div>
     <div id="header">
-        <div id="connection_meter" title="It seems like your connection is ok"><img src="../assets/images/good_net.png" id="connection_icon" width="20px"><span id="throughput_view2">0 kB/s</span></div>
     </div>
     <div id="img_loading" class="img-container">
         <div class="centerer"></div>
@@ -93,7 +92,7 @@
                     <div class="collapse navbar-collapse">
                         <ul class="nav navbar-nav">
                             <li style="width: 60px">
-                                <a href="https://redpitaya.readthedocs.io/en/latest/appsFeatures/applications/bode/bode.html" target="_blank" style="padding-left: 0; padding-right: 0;">
+                                <a href="https://redpitaya.readthedocs.io/en/latest/appsFeatures/applications/marketplace/impedance.html" target="_blank" style="padding-left: 0; padding-right: 0;">
                                     <img src="../assets/images/help.png" width=20px>
                                 </a>
                             </li>
@@ -105,10 +104,9 @@
                                     <li><a id="reset_settings" href="#">RESET</a></li>
                                 </ul>
                             </li>
-                            <li><a id="BA_CALIBRATE" href="#" style="padding-left: 23px; white-space: nowrap;">CALIBRATE</a></li>
                             <li>
-                                <a id="BA_RUN" href="#" style="">RUN</a>
-                                <a id="BA_STOP" href="#" style="display:none;">STOP</a>
+                                <a id="IA_RUN" href="#" style="">RUN</a>
+                                <a id="IA_STOP" href="#" style="display:none;">STOP</a>
                             </li>
                         </ul>
                     </div>
@@ -174,7 +172,7 @@
                         </div>
                         <div class="col-xs-12 option-content">
                             <div class="right-menu-option">
-                                <img id="BA_CALIB_STATE" src="img/green_led.png" style="width: 20px;height: 20px;">CALIBRATION
+                                <img id="IA_LCR_EXT" src="img/green_led.png" style="width: 20px;height: 20px;">LCR extension
                             </div>
                         </div>
                     </div>
@@ -188,69 +186,69 @@
                         <div class="col-xs-12 option-content">
                             <span class="col-info">Start frequency [Hz]</span>
                             <div class="right-menu-option" style="margin-top: 10px;">
-                                <input id="BA_START_FREQ" class="setfield input-number" type="text" value="1000" step="1" min="0" max="62500000">
+                                <input id="IA_START_FREQ" class="setfield input-number" type="text" value="1000" step="1" min="0" max="62500000">
                             </div>
                         </div>
                         <div class="col-xs-12 option-content">
                             <span class="col-info">End frequency [Hz]</span>
                             <div class="right-menu-option" style="margin-top: 10px;">
-                                <input id="BA_END_FREQ" class="setfield input-number" type="text" value="10000" step="1" min="1" max="62500000">
+                                <input id="IA_END_FREQ" class="setfield input-number" type="text" value="10000" step="1" min="1" max="62500000">
                             </div>
                         </div>
                         <div class="col-xs-12 option-content">
                             <span class="col-info">Steps</span>
                             <div class="right-menu-option" style="margin-top: 10px;">
-                                <input id="BA_STEPS" class="setfield input-number" type="text" value="25" step="1" min="1" max="62500000">
+                                <input id="IA_STEPS" class="setfield input-number" type="text" value="25" step="1" min="1" max="62500000">
                             </div>
                         </div>
                         <div class="col-xs-12 option-content">
-                            <span class="col-info">Scale</span>
-                            <div class="right-menu-option" style="margin-top: 10px;">
-                                <div class="btn-group btn-group-justified" data-toggle="buttons">
-                                    <label id="BA_SCALE0" class="btn">
-                                        <input type="radio" value="0" name="BA_SCALE" id="BA_SCALE" autocomplete="off">Lin
-                                    </label>
-                                    <label id="BA_SCALE1" class="btn active">
-                                        <input type="radio" value="1" name="BA_SCALE" id="BA_SCALE1" autocomplete="off">Log
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-xs-12 option-content">
-                            <span class="col-info">Analysis</span>
-                            <div class="right-menu-option" style="margin-top: 10px;">
-                                <div class="btn-group btn-group-justified" data-toggle="buttons">
-                                    <label id="BA_LOGIC_MODE0" class="btn">
-                                        <input type="radio" value="0" name="BA_LOGIC_MODE" id="BA_LOGIC_MODE" autocomplete="off">U/I
-                                    </label>
-                                    <label id="BA_LOGIC_MODE1" class="btn active">
-                                        <input type="radio" value="1" name="BA_LOGIC_MODE" id="BA_LOGIC_MODE1" autocomplete="off">FFT
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-xs-6 option-content">
-                            <span class="col-info">Periods number</span>
-                            <div class="right-menu-option" style="margin-top: 10px;">
-                                <input id="BA_PERIODS_NUMBER" class="setfield input-number" type="text" value="8" step="1" min="1" max="8">
-                            </div>
-                        </div>
-                        <div class="col-xs-6 option-content">
                             <span class="col-info">Averaging</span>
                             <div class="right-menu-option" style="margin-top: 10px;">
-                                <input id="BA_AVERAGING" class="setfield input-number" type="text" value="1" step="1" min="1" max="10">
+                                <input id="IA_AVERAGING" class="setfield input-number" type="text" value="1" step="1" min="1" max="10">
                             </div>
                         </div>
                         <div class="col-xs-6 option-content">
                             <span class="col-info">Amplitude [V]</span>
                             <div class="right-menu-option" style="margin-top: 10px;">
-                                <input id="BA_AMPLITUDE" class="setfield input-number" type="text" value="1" step="0.01" min="0" max="1">
+                                <input id="IA_AMPLITUDE" class="setfield input-number" type="text" value="1" step="0.01" min="0" max="1">
                             </div>
                         </div>
                         <div class="col-xs-6 option-content">
                             <span class="col-info">DC bias [V]</span>
                             <div class="right-menu-option" style="margin-top: 10px;">
-                                <input id="BA_DC_BIAS" class="setfield input-number" type="text" value="0" step="0.01" min="-1" max="1">
+                                <input id="IA_DC_BIAS" class="setfield input-number" type="text" value="0" step="0.01" min="-1" max="1">
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <span class="col-info">Measure scale</span>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <div class="btn-group btn-group-justified" data-toggle="buttons">
+                                    <label id="IA_SCALE0" class="btn">
+                                        <input type="radio" value="0" name="IA_SCALE" id="IA_SCALE" autocomplete="off">Lin
+                                    </label>
+                                    <label id="IA_SCALE1" class="btn active">
+                                        <input type="radio" value="1" name="IA_SCALE" id="IA_SCALE1" autocomplete="off">Log
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content" id="LCR_SHUNT_BOX" style="display: none;">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Shunt [Ω]</span>
+                                <select id="IA_LCR_SHUNT" class="form-control styled-select" style="margin-top: 10px;">
+                                    <option value="0">10</option>
+                                    <option value="1">100</option>
+                                    <option value="2">1k</option>
+                                    <option value="3">10k</option>
+                                    <option value="4">100k</option>
+                                    <option value="5">1M</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content" id="SHUNT_BOX" style="display: none;">
+                            <span class="col-info">Shunt [Ω]</span>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <input id="IA_SHUNT" class="setfield input-number" type="text" value="1" step="1" min="1" max="10000000">
                             </div>
                         </div>
                     </div>
@@ -261,33 +259,39 @@
                                 <img src="../assets/images/navigation_arrow_left.png"> Plot settings
                             </div>
                         </div>
-                        <div class="col-xs-6 option-content">
-                            <span class="col-info">Gain min [dB]</span>
-                            <div class="right-menu-option" style="margin-top: 10px;">
-                                <input id="BA_GAIN_MIN" class="setfield input-number" type="text" value="-80" step="1" min="-1000" max="1000">
-                            </div>
-                        </div>
-                        <div class="col-xs-6 option-content">
-                            <span class="col-info">Gain max [dB]</span>
-                            <div class="right-menu-option" style="margin-top: 10px;">
-                                <input id="BA_GAIN_MAX" class="setfield input-number" type="text" value="10" step="1" min="-1000" max="1000">
-                            </div>
-                        </div>
-                        <div class="col-xs-6 option-content">
-                            <span class="col-info">Phase min [deg]</span>
-                            <div class="right-menu-option" style="margin-top: 10px;">
-                                <input id="BA_PHASE_MIN" class="setfield input-number" type="text" value="-90" step="1" min="-1000" max="100">
-                            </div>
-                        </div>
-                        <div class="col-xs-6 option-content">
-                            <span class="col-info">Phase max [deg]</span>
-                            <div class="right-menu-option" style="margin-top: 10px;">
-                                <input id="BA_PHASE_MAX" class="setfield input-number" type="text" value="90" step="1" min="-1000" max="1000">
+                        <div class="col-xs-12 option-content">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Y-axis</span>
+                                <select id="IA_Y_AXIS" class="form-control styled-select" style="margin-top: 10px;">
+                                    <option value="1">|Z| [Ohm]</option>
+                                    <option value="2">P [deg]</option>
+                                    <option value="3">|Y| [S]</option>
+                                    <option value="4">-P [deg]</option>
+                                    <option value="5">Rs [Ohm]</option>
+                                    <option value="6">Rp [Ohm]</option>
+                                    <option value="7">Xs [Ohm]</option>
+                                    <option value="8">Gp [S]</option>
+                                    <option value="9">Bp [S]</option>
+                                    <option value="10">Cs [F]</option>
+                                    <option value="11">Cp [F]</option>
+                                    <option value="12">Ls [H]</option>
+                                    <option value="13">Lp [H]</option>
+                                    <option value="14">Q</option>
+                                    <option value="15">D</option>
+                                </select>
                             </div>
                         </div>
                         <div class="col-xs-12 option-content">
-                            <div class="right-menu-option">
-                                <a id="BA_AUTOSCALE_BTN" class="btn active">AUTOSCALE</a>
+                            <span class="col-info">Scale</span>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <div class="btn-group btn-group-justified" data-toggle="buttons">
+                                    <label id="IA_SCALE_PLOT0" class="btn">
+                                        <input type="radio" value="0" name="IA_SCALE_PLOT" id="IA_SCALE_PLOT" autocomplete="off">Lin
+                                    </label>
+                                    <label id="IA_SCALE_PLOT1" class="btn active">
+                                        <input type="radio" value="1" name="IA_SCALE_PLOT" id="IA_SCALE_PLOT1" autocomplete="off">Log
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -299,22 +303,22 @@
                         </div>
                         <div class="col-xs-6 option-content">
                             <div class="right-menu-option">
-                                <button id="BA_CURSOR_X1" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">X1</button>
+                                <button id="IA_CURSOR_X1_ENABLE" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">X1</button>
                             </div>
                         </div>
                         <div class="col-xs-6 option-content">
                             <div class="right-menu-option">
-                                <button id="BA_CURSOR_X2" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">X2</button>
+                                <button id="IA_CURSOR_X2_ENABLE" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">X2</button>
                             </div>
                         </div>
                         <div class="col-xs-6 option-content">
                             <div class="right-menu-option">
-                                <button id="BA_CURSOR_Y1" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">Y1</button>
+                                <button id="IA_CURSOR_Y1_ENABLE" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">Y1</button>
                             </div>
                         </div>
                         <div class="col-xs-6 option-content">
                             <div class="right-menu-option">
-                                <button id="BA_CURSOR_Y2" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">Y2</button>
+                                <button id="IA_CURSOR_Y2_ENABLE" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">Y2</button>
                             </div>
                         </div>
                     </div>
@@ -330,18 +334,19 @@
                 <!-- Main container -->
                 <div id="main">
                     <div id="graphs_holder">
-                        <div id="BA_CUR_INFO">Current step: <span id="BA_CUR_STEP" style="margin-right: 40px">1</span>Current freq: <span id="BA_CUR_FREQ">1Hz</span></div>
-                        <img id="cur_x1_arrow" class="varrow" src="img/cursor-arrow-up.png">
-                        <div id="cur_x1" class="vline"></div>
-                        <div id="cur_x1_info" class="cur_info"></div>
-                        <img id="cur_x2_arrow" class="varrow" src="img/cursor-arrow-up.png">
-                        <div id="cur_x2" class="vline"></div>
-                        <div id="cur_x2_info" class="cur_info"></div>
-                        <div id="cur_x_diff"></div>
-                        <div id="cur_x_diff_info" class="cur_info"></div>
+                        <div id="IA_CUR_INFO">Current step: <span id="IA_CUR_STEP" style="margin-right: 40px">1</span>Current freq: <span id="IA_CUR_FREQ">1Hz</span></div>
                         <div style="clear: both; position: relative; padding: 0px; margin: 0px;">
                             <div id="graph_bode" class="graphs">
                                 <canvas id="graph_bode_grid" class="graph_grid"></canvas>
+                                <img id="cur_x1_arrow" class="varrow" src="img/cursor-arrow-up.png">
+                                <div id="cur_x1" class="vline"></div>
+                                <div id="cur_x1_info" class="cur_info"></div>
+                                <img id="cur_x2_arrow" class="varrow" src="img/cursor-arrow-up.png">
+                                <div id="cur_x2" class="vline"></div>
+                                <div id="cur_x2_info" class="cur_info"></div>
+                                <div id="cur_x_diff"></div>
+                                <div id="cur_x_diff_info" class="cur_info"></div>
+
                                 <img id="cur_y1_arrow" class="harrow" src="img/cursor-arrow-left.png">
                                 <div id="cur_y1" class="hline"></div>
                                 <div id="cur_y1_info" class="cur_info"></div>
@@ -351,20 +356,12 @@
                                 <div id="cur_y_diff"></div>
                                 <div id="cur_y_diff_info" class="cur_info"></div>
 
-                                <img id="cur_z1_arrow" class="harrow" src="img/cursor-arrow-right.png">
-                                <div id="cur_z1" class="hline"></div>
-                                <div id="cur_z1_info" class="cur_info"></div>
-                                <img id="cur_z2_arrow" class="harrow" src="img/cursor-arrow-right.png">
-                                <div id="cur_z2" class="hline"></div>
-                                <div id="cur_z2_info" class="cur_info"></div>
-                                <div id="cur_z_diff"></div>
-                                <div id="cur_z_diff_info" class="cur_info"></div>
-
+                                <!-- <div id="cur_rectangle" style="position: fixed;border: 2px solid;"></div> -->
 
                             </div>
 
                             <div class="clear info-graph">
-                                <div id="amplitude-info" class="left-info">Amplitude [dB]</div>
+                                <div id="amplitude-info" class="left-info"></div>
                                 <div id="freq-info" class="text-center">Frequency [Hz]</div>
                             </div>
                         </div>

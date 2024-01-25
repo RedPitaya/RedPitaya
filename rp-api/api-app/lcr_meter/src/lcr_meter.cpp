@@ -53,6 +53,8 @@ std::thread *g_lcr_thread = NULL;
 std::mutex g_lcr_mutex;
 std::mutex g_lcr_mutex_analize;
 std::atomic_bool g_lcr_threadRun = false;
+std::atomic_bool g_lcr_threadPause = false;
+std::atomic_bool g_lcr_GenRun = false;
 
 static auto g_adc_rate = rp_HPGetBaseFastADCSpeedHzOrDefault();
 
@@ -65,7 +67,7 @@ bool                        g_isShuntAutoChange        = true;
 
 
 /* Init lcr params struct */
-lcr_params_t main_params = {CALIB_NONE, false, 0 , 0 , 0, true};
+lcr_params_t main_params = {CALIB_NONE, false, 0 , 0 , 0, true , RP_LCR_S_EXTENSION, 100};
 
 /* Main lcr data params */
 lcr_main_data_t calc_data;
@@ -110,7 +112,6 @@ int lcr_Init()
     //     fclose(f_calib);
     // }
     // pthread_mutex_unlock(&g_mutex);
-//    lcr_GenRun();
     return RP_OK;
 }
 
@@ -132,6 +133,12 @@ int lcr_Reset(){
     return RP_OK;
 }
 
+int lcr_SetPause(bool pause){
+    g_lcr_threadPause = pause;
+    return RP_OK;
+}
+
+
 int lcr_SetDefaultValues(){
     ECHECK_LCR_APP(lcr_setRShunt(RP_LCR_S_10));
     ECHECK_LCR_APP(lcr_SetFrequency(10.0));
@@ -145,10 +152,14 @@ int lcr_SetDefaultValues(){
 }
 
 int  lcr_GenRun(){
+    std::lock_guard<std::mutex> lock(g_lcr_mutex);
+    g_lcr_GenRun = true;
     return g_generator.start();
 }
 
 int  lcr_GenStop(){
+    std::lock_guard<std::mutex> lock(g_lcr_mutex);
+    g_lcr_GenRun = false;
     return g_generator.stop();
 }
 
@@ -197,14 +208,20 @@ void lcr_MainThread(){
 
     while(g_lcr_threadRun){
             /* Main lcr meter algorithm */
+            if (!g_lcr_threadPause)
             {
                 std::lock_guard<std::mutex> lock(g_lcr_mutex);
-                int ret_val = lcr_ThreadAcqData(buffer);
-                if(ret_val == RP_OK) {
-                    if(main_params.calibration) {
-                    } else {
-                        lcr_CheckShunt(buffer->ch_f[0],buffer->ch_f[1],buffer->size);
-                        lcr_getImpedance(buffer);
+                if (g_lcr_GenRun){
+                    int decimation;
+                    float freq;
+                    int ret_val = lcr_ThreadAcqData(buffer,&decimation,&freq);
+                    if(ret_val == RP_OK) {
+                        if(main_params.calibration) {
+                        } else {
+                            if (main_params.shunt_mode == RP_LCR_S_EXTENSION)
+                                lcr_CheckShunt(buffer->ch_f[0],buffer->ch_f[1],buffer->size);
+                            lcr_getImpedance(buffer,decimation,freq);
+                        }
                     }
                 }
             }
@@ -216,19 +233,15 @@ void lcr_MainThread(){
 
 
 /* Acquire functions. Callback to the API structure */
-int lcr_ThreadAcqData(buffers_t *data)
+int lcr_ThreadAcqData(buffers_t *data, int *dec, float *freq)
 {
     rp_acq_trig_state_t state;
-    rp_acq_decimation_t api_decimation;
-
     uint32_t pos;
     bool     fillState = false;
-    int      dec;
-    float freq = g_generator.getFreq();
-    lcr_getDecimationValue(freq, &api_decimation, &dec,g_adc_rate);
-
+    *freq = g_generator.getFreq();
+    lcr_getDecimationValue(*freq, dec,g_adc_rate);
     ECHECK_APP(rp_AcqReset());
-    ECHECK_APP(rp_AcqSetDecimation(api_decimation));
+    ECHECK_APP(rp_AcqSetDecimationFactor(*dec));
     ECHECK_APP(rp_AcqSetTriggerLevel(RP_T_CH_1, 0));
     ECHECK_APP(rp_AcqSetTriggerDelayDirect(ADC_BUFFER_SIZE));
     ECHECK_APP(rp_AcqStart());
@@ -252,17 +265,10 @@ int lcr_ThreadAcqData(buffers_t *data)
     return RP_OK;
 }
 
-int lcr_getImpedance(buffers_t *data)
+int lcr_getImpedance(buffers_t *data, int api_decimation, float freq)
 {
-    // float w_out;
-    int decimation;
-    rp_acq_decimation_t api_decimation;
     auto r_shunt = g_lcr_hw.getShunt();
-    //Calculate output angular velocity
-    float freq = g_generator.getFreq();
-    lcr_getDecimationValue(freq, &api_decimation, &decimation,g_adc_rate);
-
-    return lcr_data_analysis(data, r_shunt,  freq, decimation);
+    return lcr_data_analysis(data, r_shunt,  freq, api_decimation);
 }
 
 void lcr_CheckShunt(const float *ch1, const float *ch2, const uint32_t _size)
@@ -428,6 +434,7 @@ int lcr_CalculateData(float _Complex z_measured, float phase_measured,float freq
     calc_data.lcr_B_p       = B_p;
     calc_data.lcr_Y_abs     = sqrtf( powf( creal(Y), 2 ) + powf(cimag(Y), 2 ) );
     calc_data.lcr_Phase_Y   = -phase_out;
+    calc_data.lcr_freq = freq;
 
     //Close files, if calibration
     if(calibration) {
@@ -435,7 +442,7 @@ int lcr_CalculateData(float _Complex z_measured, float phase_measured,float freq
         fclose(f_open);
     }
 
-    return RP_OK;
+    return RP_LCR_OK;
 }
 
 int lcr_data_analysis(buffers_t *data,
@@ -449,7 +456,14 @@ int lcr_data_analysis(buffers_t *data,
     u_dut.resize(data->size);
     i_dut.resize(data->size);
 
-    auto r_RC = g_lcr_hw.calibShunt(r_shunt,sigFreq);
+    auto r_RC = 1;
+    if (main_params.shunt_mode == RP_LCR_S_EXTENSION)
+        r_RC = g_lcr_hw.calibShunt(r_shunt,sigFreq);
+
+    if (main_params.shunt_mode == RP_LCR_S_CUSTOM)
+        r_RC = main_params.shunt;
+
+    // WARNING("Shunt %d freq %f decimation %d",r_RC,sigFreq,decimation)
 
     for(uint32_t i = 0; i < data->size; i++) {
         u_dut[i] = data->ch_f[0][i] - data->ch_f[1][i];
@@ -459,28 +473,50 @@ int lcr_data_analysis(buffers_t *data,
     double z_ampl;
     double phase_z_deg;
     analysisFFT(i_dut,u_dut,sigFreq,decimation,&z_ampl,&phase_z_deg,0);
+    // double p1,p2;
+    // analysisTrap(i_dut,u_dut,sigFreq,decimation,g_adc_rate,0,&p1,&p2,&z_ampl,&phase_z_deg);
 
-    // printf("sigFreq %f\n",sigFreq);
-    // printf("Amp %f\n",z_ampl);
-    // printf("phase_z_deg %f\n",phase_z_deg);
+    // WARNING("sigFreq %f\n",sigFreq);
+    // WARNING("Amp %f\n",z_ampl);
+    // WARNING("phase_z_deg %f\n",phase_z_deg);
 
 
     g_th_params.phase_out = phase_z_deg;
     auto phase_z_rad = phase_z_deg * M_PI / 180.0;
     g_th_params.z_out = (z_ampl * cosf(phase_z_rad)) + (z_ampl * sinf(phase_z_rad) * I);
     g_th_params.frequency = sigFreq;
-    return RP_OK;
+    return RP_LCR_OK;
 }
 
 
 int lcr_SetFrequency(float frequency){
     g_generator.setFreq(frequency);
-    return RP_OK;
+    return RP_LCR_OK;
 }
 
 int lcr_GetFrequency(float *frequency){
     *frequency = g_generator.getFreq();
-    return RP_OK;
+    return RP_LCR_OK;
+}
+
+int lcr_SetAmplitude(float volt){
+    g_generator.setAmplitude(volt);
+    return RP_LCR_OK;
+}
+
+int lcr_GetAmplitude(float *volt){
+    *volt = g_generator.getAmplitude();
+    return RP_LCR_OK;
+}
+
+int lcr_SetOffset(float offset){
+    g_generator.setOffset(offset);
+    return RP_LCR_OK;
+}
+
+int lcr_GetOffset(float *offset){
+    *offset = g_generator.getOffset();
+    return RP_LCR_OK;
 }
 
 int lcr_setRShunt(lcr_shunt_t r_shunt){
@@ -489,76 +525,99 @@ int lcr_setRShunt(lcr_shunt_t r_shunt){
 
 int lcr_getRShunt(lcr_shunt_t *r_shunt){
     *r_shunt = g_lcr_hw.getShunt();
-    return RP_OK;
+    return RP_LCR_OK;
 }
 
 int lcr_setRShuntIsAuto(bool isAuto){
     g_isShuntAutoChange = isAuto;
-    return RP_OK;
+    return RP_LCR_OK;
 }
 
 int lcr_SetCalibMode(calib_t calibrated){
     main_params.calibration = calibrated;
-    return RP_OK;
+    return RP_LCR_OK;
 }
 
 int lcr_GetCalibMode(calib_t *mode){
     *mode = main_params.calibration;
-    return RP_OK;
+    return RP_LCR_OK;
 }
 
 int lcr_SetMeasSeries(bool series){
     main_params.series = series;
-    return RP_OK;
+    return RP_LCR_OK;
 }
 
 int lcr_GetMeasSeries(bool *series){
     *series = main_params.series;
-    return RP_OK;
+    return RP_LCR_OK;
 }
 
 int lcr_SetMeasTolerance(int tolerance){
     main_params.tolerance = tolerance;
-    return RP_OK;
+    return RP_LCR_OK;
 }
 
 int lcr_GetMeasTolerance(int *tolerance){
     *tolerance = main_params.tolerance;
-    return RP_OK;
+    return RP_LCR_OK;
 }
 
 int lcr_SetMeasRangeMode(int range){
     main_params.range = range;
-    return RP_OK;
+    return RP_LCR_OK;
 }
 
 int lcr_GetMeasRangeMode(int *range){
     *range = main_params.range;
-    return RP_OK;
+    return RP_LCR_OK;
 }
 
 int lcr_SetRangeFormat(int format){
     main_params.range_format = format;
-    return RP_OK;
+    return RP_LCR_OK;
 }
 
 int lcr_GetRangeFormat(int *format){
     *format = main_params.range_format;
-    return RP_OK;
+    return RP_LCR_OK;
 }
 
 int lcr_SetRangeUnits(int units){
     main_params.range_units = units;
-    return RP_OK;
+    return RP_LCR_OK;
 }
 
 int lcr_GetRangeUnits(int *units){
     *units = main_params.range_units;
-    return RP_OK;
+    return RP_LCR_OK;
 }
 
-int lcr_CheckModuleConnection(){
-    if(g_lcr_hw.checkExtensionModuleConnection() < 0)
+int lcr_CheckModuleConnection(bool _muteWarnings){
+    if(g_lcr_hw.checkExtensionModuleConnection(_muteWarnings) != 0)
         return RP_EMNC;
-    return RP_OK;
+    return RP_LCR_OK;
+}
+
+int lcr_SetCustomShunt(int shunt){
+    if (shunt < 1 || shunt > 10e6){
+        return RP_LCR_ERROR_INVALID_VALUE;
+    }
+    main_params.shunt = shunt;
+    return RP_LCR_OK;
+}
+
+int lcr_GetCustomShunt(int *shunt){
+    *shunt = main_params.shunt;
+    return RP_LCR_OK;
+}
+
+int lcr_SetShuntMode(lcr_shunt_mode_t shunt_mode){
+    main_params.shunt_mode = shunt_mode;
+    return RP_LCR_OK;
+}
+
+int lcr_GetShuntMode(lcr_shunt_mode_t *shunt_mode){
+    *shunt_mode = main_params.shunt_mode;
+    return RP_LCR_OK;
 }

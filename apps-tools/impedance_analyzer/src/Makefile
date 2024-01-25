@@ -17,9 +17,10 @@ COMMON_FLAGS+=-Wall -fPIC -Os -s
 
 CFLAGS+=$(COMMON_FLAGS) $(INCLUDE)
 CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE)  -D_FILE_OFFSET_BITS=64
-LDFLAGS += -shared $(COMMON_FLAGS) $(LIBS)
+LDFLAGS += -shared
+LDFLAGS += $(COMMON_FLAGS) $(LIBS)
 #LDFLAGS += -Wl,--whole-archive,--no-as-needed
-LDFLAGS += -lcryptopp -l:librpapp.a -lrp-dsp -lrp -lrp_sdk -lrp-hw -lrp-hw-calib -lrp-hw-profiles
+LDFLAGS += -lcryptopp -lrpapp_lcr -lrpapp -lrpapp -lrp-dsp -lrp -lrp_sdk -lrp-hw -lrp-hw-calib -lrp-hw-profiles
 #LDFLAGS += -Wl,--no-whole-archive
 
 INCLUDE += -I$(INSTALL_DIR)/include/api250-12

@@ -589,6 +589,7 @@ int releaseFFT(){
     if (g_fft)
         g_fft->deleteData(g_fft_data);
     delete g_fft;
+    g_fft = NULL;
     return RP_A_OK;
 }
 

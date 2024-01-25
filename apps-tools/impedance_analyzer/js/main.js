@@ -28,7 +28,6 @@
 
 
     MAIN.scale = true;
-    MAIN.curGraphScale = true;
     MAIN.param_callbacks = {};
 
     // App state
@@ -40,14 +39,12 @@
         graph_grid_width: null
     };
 
-    MAIN.firstValGot = { 'BA_SIGNAL_1': false, 'BA_SIGNAL_2': false };
-
-    MAIN.lastSignals = { 'BA_SIGNAL_1': undefined, 'BA_SIGNAL_2': undefined, 'BA_SIGNAL_1_BAD': undefined, 'BA_SIGNAL_2_BAD': undefined };
+    MAIN.lastSignals = { };
 
     // Current step and freq
     MAIN.currentFreq = 0;
     MAIN.currentStep = 0;
-
+    MAIN.max_adc_rate = 0;
     //Graph cache
     MAIN.graphCache = undefined;
 
@@ -57,15 +54,8 @@
 
     MAIN.cur_freq = 0;
     MAIN.input_threshold = 0;
-
-
-    MAIN.graphSize = {
-        left: 0,
-        right: 0,
-        top: 0,
-        bottom: 0,
-    };
-
+    MAIN.currentYAxis = 1;
+    MAIN.yAxisSuffix = undefined;
 
 
     //Write email
@@ -124,17 +114,42 @@
     }
 
     MAIN.downloadDataAsCSV = function(filename) {
-        var header = 'Frequency [Hz], Amplitude [dB], Phase [deg]';
+        var header = 'Freq [Hz]';
         var row_delim = '\n';
-        var strings = header + row_delim;
-
-        var amplitude_signal = MAIN.lastSignals['BA_SIGNAL_1'];
-        var phase_signal = MAIN.lastSignals['BA_SIGNAL_2'];
-
-        if (amplitude_signal.length === phase_signal.length) {
-            for (var i = 0; i < amplitude_signal.length; ++i) {
-                strings += amplitude_signal[i][0] + ', ' + amplitude_signal[i][1] + ', ' + phase_signal[i][1] + row_delim;
+        var delim = ',';
+        var coff = {};
+        for (var i = 1 ; i <= 15; i++){
+            var hs = MAIN.getCurrentSignalSettingsVal(i);
+            var sigVal = MAIN.lastSignals[hs.name];
+            var min_y = Math.min(...sigVal.value)
+            var max_y = Math.max(...sigVal.value)
+            if (hs.scale)
+                suff = getSuffix(Math.abs((max_y - min_y) / 2.0 + min_y))
+            else{
+                suff = getSuffix(Math.pow(10,14))
             }
+            coff[i] = suff;
+        }
+        for (var i = 1 ; i <= 15; i++){
+            var hs = MAIN.getCurrentSignalSettingsVal(i);
+            var suff = coff[i]
+            header += delim + hs.label
+            header += hs.nominal !== "" ? " [" + suff.name + hs.nominal + "]" : ""
+            header += suff.value !== "" ? " " + suff.value : ""
+        }
+        header += row_delim;
+
+        var strings = header;
+        var freq = MAIN.lastSignals["IA_SIGNAL_FREQ"];
+        for (var i = 0 ; i < freq.size; i++){
+            strings += freq.value[i];
+            for (var z = 1 ; z <= 15; z++){
+                var hs = MAIN.getCurrentSignalSettingsVal(z);
+                var sigVal = MAIN.lastSignals[hs.name];
+                var suff = coff[z];
+                strings += "," +  (sigVal.value[i] / suff.coff).toFixed(3);
+            }
+            strings += row_delim;
         }
 
         var a = document.createElement('a');
@@ -159,8 +174,59 @@
         return;
     };
 
+    MAIN.getCurrentSignalSettings = function() {
+        return MAIN.getCurrentSignalSettingsVal(MAIN.currentYAxis)
+    }
+
+    MAIN.getCurrentSignalSettingsVal = function(X) {
+        switch(X){
+            case 1:
+                return {name: "IA_SIGNAL_Z", label: "|Z|", nominal: "Ohm", scale: true}
+            case 2:
+                return {name: "IA_SIGNAL_PHASE", label: "P", nominal: "Deg" , scale: false}
+            case 3:
+                return {name: "IA_SIGNAL_Y", label: "|Y|", nominal: "S" , scale: true}
+            case 4:
+                return {name: "IA_SIGNAL_NEG_PHASE", label: "-P", nominal: "Deg" , scale: false}
+            case 5:
+                return {name: "IA_SIGNAL_R_s", label: "Rs", nominal: "Ohm" , scale: true}
+            case 6:
+                return {name: "IA_SIGNAL_R_p", label: "Rp", nominal: "Ohm" , scale: true}
+            case 7:
+                return {name: "IA_SIGNAL_X_s", label: "Xs", nominal: "Ohm" , scale: true}
+            case 8:
+                return {name: "IA_SIGNAL_G_p", label: "Gp", nominal: "S" , scale: true}
+            case 9:
+                return {name: "IA_SIGNAL_B_p", label: "Bp", nominal: "S" , scale: true}
+            case 10:
+                return {name: "IA_SIGNAL_C_s", label: "Cs", nominal: "F" , scale: true}
+            case 11:
+                return {name: "IA_SIGNAL_C_p", label: "Cp", nominal: "F" , scale: true}
+            case 12:
+                return {name: "IA_SIGNAL_L_s", label: "Ls", nominal: "H" , scale: true}
+            case 13:
+                return {name: "IA_SIGNAL_L_p", label: "Lp", nominal: "H" , scale: true}
+            case 14:
+                return {name: "IA_SIGNAL_Q", label: "Q", nominal: "" , scale: true}
+            case 15:
+                return {name: "IA_SIGNAL_D", label: "D", nominal: "", scale: true}
+        }
+        return {name: "", label: "undefined", nominal: ""}
+    }
 
 
+
+    function getSuffix(value) {
+        if (value < Math.pow(10,3)) return {name: "p" , value : "10⁻¹²", coff: 1}
+        if (value < Math.pow(10,6)) return {name: "n" , value : "10⁻⁹" , coff: Math.pow(10,3)}
+        if (value < Math.pow(10,9)) return {name: "µ" , value : "10⁻⁶" , coff: Math.pow(10,6)}
+        if (value < Math.pow(10,12)) return {name: "m" , value : "10⁻³" , coff: Math.pow(10,9)}
+        if (value < Math.pow(10,15)) return {name: "" , value : "" , coff: Math.pow(10,12)}
+        if (value < Math.pow(10,18)) return {name: "k" , value : "10³", coff: Math.pow(10,15)}
+        if (value < Math.pow(10,21)) return {name: "M" , value : "10⁶" , coff: Math.pow(10,18)}
+        if (value < Math.pow(10,23)) return {name: "G" , value : "10⁹" , coff: Math.pow(10,21)}
+        return {name: "" , value : ""}
+    }
 
 
 
@@ -175,81 +241,14 @@
     }
 
 
-    //Draw one signal
-    MAIN.prepareOneSignal = function(SIGNALS,signal_name) {
-        var one_signal = SIGNALS[signal_name];
-        var signal_param = SIGNALS['BA_SIGNAL_PARAMETERS'];
+    MAIN.getPlot = function() {
 
-        // Ignore empty signals
-        if (one_signal.size == 0)
-            return;
-
-        // Create points mas
-        var points = [];
-        var startFreq = 0,
-            endFreq = 0,
-            steps = 0,
-            step = 0,
-            min_val = undefined,
-            max_val = undefined,
-
-        startFreq = signal_param.value[0];
-        endFreq = signal_param.value[1];
-        steps = signal_param.value[2];
-        step = (endFreq - startFreq) / (steps - 1);
-
-
-        for (var i = 0; i < one_signal.size; i++) {
-            var freq = startFreq + i * step;
-            var samp_val = one_signal.value[i];
-            if (MAIN.scale) {
-                var a = Math.log10(startFreq);
-                var b = Math.log10(endFreq);
-                var c = (b - a) / (steps - 1);
-                freq = Math.pow(10, c * i + a);
-            }
-            MAIN.freq = freq;
-
-            if ((min_val == undefined || min_val > samp_val)) min_val = samp_val;
-            if ((max_val == undefined || max_val < samp_val)) max_val = samp_val;
-
-            points.push([freq, samp_val]);
-            MAIN.lastSignals[signal_name] = points;
-            freq_old = freq;
+        if (MAIN.graphCache && MAIN.graphCache.elem) {
+            var plot = MAIN.graphCache.plot;
+            return plot;
         }
-
-
-
-        // AUTOSCALE if switched on
-        if ($('#BA_AUTOSCALE_BTN').hasClass('active')) {
-            // For autoscale of max Y value
-            var min = min_val;
-            var max = max_val;
-
-
-            var yaxis;
-            var axis_name = ""
-            // Choose right yaxis
-            if (signal_name == "BA_SIGNAL_1"){
-                yaxis = MAIN.graphCache.plot.getAxes().yaxis;
-                axis_name = "BA_GAIN"
-            }
-
-
-            var size = (max - min) * 0.2;
-            if (size < 5) size = 5
-            $('#' + axis_name + '_MAX').val(max + size);
-            yaxis.options.max = max+ size;
-
-            $('#' + axis_name + '_MIN').val(min - size);
-            yaxis.options.min = min - size;
-
-            CLIENT.parametersCache["BA_GAIN_MIN"] = { value: $("#BA_GAIN_MIN").val() };
-            CLIENT.parametersCache["BA_GAIN_MAX"] = { value: $("#BA_GAIN_MAX").val() };
-            CLIENT.sendParameters();
-
-        }
-    }
+        return undefined;
+    };
 
 
     MAIN.initPlot = function(update) {
@@ -257,14 +256,14 @@
         $('#bode_plot').remove();
 
 
-        var yMin1 = parseFloat($('#BA_GAIN_MIN').val()) * 1;
-        var yMax1 = parseFloat($('#BA_GAIN_MAX').val()) * 1;
+        var yMin1 = -5;
+        var yMax1 = 5;
 
         MAIN.graphCache = {};
         MAIN.graphCache.elem = $('<div id="bode_plot" class="plot" />').css($('#graph_bode_grid').css(['height', 'width'])).appendTo('#graph_bode');
 
         var t = [];
-        if ($("#BA_SCALE1").hasClass("active"))
+        if (MAIN.scale)
             t = [1, 10, 100, 200, 400, 600, 800, 1000, 2000, 4000, 6000, 8000, 10000, 20000, 40000, 60000, 80000, 100000, 200000, 400000, 600000, 800000, 1000000, 2000000, 4000000, 6000000, 8000000, 10000000, , 20000000, 40000000, 60000000, 80000000, 100000000];
         else
             t = null;
@@ -290,7 +289,6 @@
                         return Math.log(v + 0.0001); // move away from zero
                     else
                         return v;
-
                 },
                 tickDecimals: 0,
                 reserveSpace: false,
@@ -309,13 +307,14 @@
         };
 
 
-        if ($("#BA_SCALE0").hasClass("active")) {
+        if ($("#IA_SCALE_PLOT0").hasClass("active")) {
             options.xaxis.transform = null;
         }
 
         var lastsig1 = [];
-        if (update == true) {
-            lastsig1 = MAIN.lastSignals["BA_SIGNAL_1"];
+        if (update !== true) {
+            lastsig1.push([$("#IA_START_FREQ").val(),undefined])
+            lastsig1.push([$("#IA_END_FREQ").val(),undefined])
         }
         var data_points = [{ data: lastsig1, color: '#f3ec1a'}];
         MAIN.graphCache.plot = $.plot(MAIN.graphCache.elem, data_points, options);
@@ -325,88 +324,62 @@
 
     //Draw signals
     MAIN.drawSignals = function(SIG) {
+        // console.log(SIG)
+        MAIN.lastSignals = SIG;
+        MAIN.updatePlot();
+    };
 
-        if (MAIN.running == true) {
+    MAIN.updatePlot = function(){
 
-            var lastsig1 = [];
+        // If there is graph on screen
+        if (MAIN.graphCache == undefined) {
+            MAIN.initPlot(false);
+        }
 
-            // If there is graph on screen
-            if (MAIN.graphCache == undefined) {
-                MAIN.initPlot(false);
+        var lastsig1 = [];
+        var curSig = MAIN.getCurrentSignalSettings();
+        var freqSig = MAIN.lastSignals["IA_SIGNAL_FREQ"];
+        var sigVal = MAIN.lastSignals[curSig.name];
+        var min_y = 0;
+        var max_y = 0;
+        var suff = undefined;
+        if (freqSig !== undefined && sigVal !== undefined && freqSig.size > 0){
+            min_y = Math.min(...sigVal.value)
+            max_y = Math.max(...sigVal.value)
+            if (curSig.scale)
+                suff = getSuffix(Math.abs((max_y - min_y) / 2.0 + min_y))
+            else{
+                suff = getSuffix(Math.pow(10,14))
             }
+            for(var i = 0; i < freqSig.size; i++){
+                lastsig1.push([freqSig.value[i], sigVal.value[i] / suff.coff])
+            }
+            min_y = min_y / suff.coff
+            max_y = max_y / suff.coff
+            var lab = curSig.label
+            lab += curSig.nominal !== "" ? " [" + suff.name + curSig.nominal + "] " + suff.value :  " " + suff.value
+            $("#amplitude-info").text(lab)
+            MAIN.yAxisSuffix = suff
 
-
-            // Prepare every signal
-            MAIN.prepareOneSignal(SIG,'BA_SIGNAL_1');
-
-            lastsig1 = MAIN.lastSignals["BA_SIGNAL_1"];
-
-            MAIN.graphCache.elem.show();
-            MAIN.graphCache.plot.resize();
-            MAIN.graphCache.plot.setupGrid();
-            var data_points = [{ data: lastsig1, color: '#f3ec1a', label: "Amplitude" }];
-            MAIN.graphCache.plot.setData(data_points);
-            MAIN.graphCache.plot.draw();
-            MAIN.updateLinesAndArrows();
-
-            // Reset resize flag
-            MAIN.state.resized = false;
-        }
-    };
-
-
-    MAIN.enableCursor = function(x) {
-        var x2 = (x[1] == '1') ? x[0] + '2' : x[0] + '1';
-        var d = (x[1] == '1') ? '1' : '2';
-        $('cur_' + x).show();
-        $('cur_' + x + '_info').show();
-        $('cur_' + x + '_arrow').show();
-
-        if ($('cur_' + x2).is(':visible')) {
-            $('cur_' + x[0] + '_diff').show();
-            $('cur_' + x[0] + '_diff_info').show();
+        }else{
+            lastsig1.push([$("#IA_START_FREQ").val(),undefined])
+            lastsig1.push([$("#IA_END_FREQ").val(),undefined])
         }
 
-        CLIENT.params.local['BA_CURSOR_' + x[0].toUpperCase() + '1'] = { value: 1 };
-        CLIENT.params.local['BA_CURSOR_' + x[0].toUpperCase() + '2'] = { value: 1 };
+        MAIN.graphCache.elem.show();
+        MAIN.graphCache.plot.resize();
+        MAIN.graphCache.plot.setupGrid();
+        var data_points = [{ data: lastsig1, color: '#f3ec1a' }];
+        MAIN.graphCache.plot.setData(data_points);
+        MAIN.graphCache.plot.draw();
+        var yaxis = MAIN.graphCache.plot.getAxes().yaxis;
 
-        CLIENT.params.local['BA_CUR1_T'] = { value: 1 };
-        CLIENT.params.local['BA_CUR2_T'] = { value: 1 };
+        var size = (max_y - min_y) * 0.2;
+        // if (size < 5) size = 5
+        yaxis.options.max = max_y + size;
+        yaxis.options.min = min_y - size;
 
-        if (x[0] == 'x') {
-            CURSORS.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
-            CURSORS.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
-        }
-        if (x[0] == 'y') {
-            CURSORS.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
-            CURSORS.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
-        }
-
-        CLIENT.params.local = {};
-    };
-
-    MAIN.disableCursor = function(x) {
-        var d = (x[1] == '1') ? '1' : '2';
-
-        $('cur_' + x).hide();
-        $('cur_' + x + '_info').hide();
-        $('cur_' + x + '_arrow').hide();
-        $('cur_' + x[0] + '_diff').hide();
-        $('cur_' + x[0] + '_diff_info').hide();
-
-        CLIENT.params.local['BA_CURSOR_' + x[0].toUpperCase() + '1'] = { value: 0 };
-        CLIENT.params.local['BA_CURSOR_' + x[0].toUpperCase() + '2'] = { value: 0 };
-
-        if (x[0] == 'x') {
-            CURSORS.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
-            CURSORS.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
-        }
-        if (x[0] == 'y') {
-            CURSORS.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
-            CURSORS.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
-        }
-
-        CLIENT.params.local = {};
+        MAIN.updateLinesAndArrows();
     };
 
     MAIN.processSignals = function(SIG){
@@ -414,52 +387,32 @@
     }
 
     MAIN.processStatus = function(new_params) {
-        var status = new_params['BA_STATUS'].value
-        if (status === 0 || status === 6 || status === 7) {
-            $('#BA_STOP').hide();
-            $('#BA_RUN').show();
+        var status = new_params['IA_STATUS'].value
+        // Stopped
+        if (status === 0 || status === 3 || status === 4) {
+            $('#IA_STOP').hide();
+            $('#IA_RUN').show();
             $('body').addClass('loaded');
-            $('#calibration').hide();
             $('#measuring-status').hide();
-            MAIN.calibrating = false;
             MAIN.running = false;
-            CLIENT.parametersCache["BA_STATUS"] = { value: 0 };
+            CLIENT.parametersCache["IA_STATUS"] = { value: 0 };
             CLIENT.sendParameters();
         }
 
-        if (status === 1 || status === 8) {
-            $('#BA_STOP').css('display', 'block');
-            $('#BA_RUN').hide();
+        // Runned
+        if (status === 1 || status === 5) {
+            $('#IA_STOP').css('display', 'block');
+            $('#IA_RUN').hide();
             MAIN.running = true;
             $('#measuring-status').show();
         }
 
-        if (status === 5) {
-        }
     }
 
-    MAIN.calib_stop = function(new_params) {
-        if ((new_params['BA_CALIBRATE_START'].value === false) && (MAIN.calibrating == true)) {
-            MAIN.calibrating = false;
-            $('body').addClass('loaded');
-            $('#calibration').hide();
-        }
-    }
-
-    MAIN.calib_enable = function(new_params) {
-        var ba_state = $("#BA_CALIB_STATE");
-        if ((new_params['BA_CALIBRATE_ENABLE'].value === false)) {
-            if (ba_state.attr('src') !== "img/red_led.png")
-                ba_state.attr("src", "img/red_led.png");
-        } else {
-            if (ba_state.attr('src') !== "img/green_led.png")
-                ba_state.attr("src", "img/green_led.png");
-        }
-    }
 
     MAIN.change_cur_freq = function(new_params) {
 
-        var val = new_params['BA_CURRENT_FREQ'].value;
+        var val = new_params['IA_CURRENT_FREQ'].value;
         MAIN.cur_freq = val;
         var result = "";
 
@@ -473,19 +426,11 @@
             result = val + " Hz";
         }
 
-        $('#BA_CUR_FREQ').text(result);
+        $('#IA_CUR_FREQ').text(result);
     }
 
     MAIN.change_cur_step = function(new_params) {
-        $('#BA_CUR_STEP').text(new_params['BA_CURRENT_STEP'].value);
-    }
-
-    MAIN.updateGraphSize = function() {
-        MAIN.graphSize.left = $("#graphs_holder").offset().left + 78;
-        MAIN.graphSize.right = MAIN.graphSize.left + $("#graphs_holder").width() - 81;
-        MAIN.graphSize.top = $("#graph_bode").offset().top - 1;
-        MAIN.graphSize.bottom = MAIN.graphSize.top + $("#graph_bode").height() - 37;
-        CURSORS.installCursorsHandlers()
+        $('#IA_CUR_STEP').text(new_params['IA_CURRENT_STEP'].value);
     }
 
     MAIN.setValue = function(param_name,new_params) {
@@ -502,150 +447,96 @@
     }
 
     MAIN.startFreq = function(new_params) {
-        var param_name = "BA_START_FREQ"
+        var param_name = "IA_START_FREQ"
         MAIN.setValue(param_name,new_params)
     }
 
     MAIN.endFreq = function(new_params) {
-        var param_name = "BA_END_FREQ"
+        var param_name = "IA_END_FREQ"
         MAIN.setValue(param_name,new_params)
     }
 
     MAIN.setSteps = function(new_params) {
-        var param_name = "BA_STEPS"
+        var param_name = "IA_STEPS"
         MAIN.setValue(param_name,new_params)
     }
 
     MAIN.setScale = function(new_params) {
-        var param_name = "BA_SCALE"
-        var old_params = CLIENT.params.orig;
-        if ((!MAIN.state.editing &&
-            ((old_params[param_name] !== undefined && old_params[param_name].value !== new_params[param_name].value) ||
-            (old_params[param_name] == undefined))
-            )) {
-            var radios = $('input[name="' + param_name + '"]');
-            radios.closest('.btn-group').children('.btn.active').removeClass('active');
-            radios.eq([+new_params[param_name].value]).prop('checked', true).parent().addClass('active');
-        }
+        var param_name = "IA_SCALE"
+        var radios = $('input[name="' + param_name + '"]');
+        radios.closest('.btn-group').children('.btn.active').removeClass('active');
+        radios.eq([+new_params[param_name].value]).prop('checked', true).parent().addClass('active');
     }
 
-    MAIN.setLogic = function(new_params) {
-        var param_name = "BA_LOGIC_MODE"
-        var old_params = CLIENT.params.orig;
-        if ((!MAIN.state.editing &&
-            ((old_params[param_name] !== undefined && old_params[param_name].value !== new_params[param_name].value) ||
-            (old_params[param_name] == undefined))
-            )) {
-            var radios = $('input[name="' + param_name + '"]');
-            radios.closest('.btn-group').children('.btn.active').removeClass('active');
-            radios.eq([+new_params[param_name].value]).prop('checked', true).parent().addClass('active');
-        }
-    }
-
-
-    MAIN.setPerNum = function(new_params) {
-        var param_name = "BA_PERIODS_NUMBER"
-        MAIN.setValue(param_name,new_params)
+    MAIN.setScalePlot = function(new_params) {
+        var param_name = "IA_SCALE_PLOT"
+        var radios = $('input[name="' + param_name + '"]');
+        radios.closest('.btn-group').children('.btn.active').removeClass('active');
+        radios.eq([+new_params[param_name].value]).prop('checked', true).parent().addClass('active');
+        MAIN.scale = new_params[param_name].value
+        MAIN.initPlot(true);
     }
 
     MAIN.setAverage = function(new_params) {
-        var param_name = "BA_AVERAGING"
+        var param_name = "IA_AVERAGING"
         MAIN.setValue(param_name,new_params)
     }
 
     MAIN.setOutAmpl = function(new_params) {
-        var param_name = "BA_AMPLITUDE"
+        var param_name = "IA_AMPLITUDE"
         MAIN.setValue(param_name,new_params)
     }
 
     MAIN.setDCBias = function(new_params) {
-        var param_name = "BA_DC_BIAS"
+        var param_name = "IA_DC_BIAS"
         MAIN.setValue(param_name,new_params)
     }
 
-    MAIN.setGainMin = function(new_params) {
-        var param_name = "BA_GAIN_MIN"
-        MAIN.setValue(param_name,new_params)
+    MAIN.setMaxADC = function(new_params) {
+        var param_name = "RP_MAX_ADC"
+        MAIN.max_adc_rate  = new_params[param_name].value;
     }
 
-    MAIN.setGainMax = function(new_params) {
-        var param_name = "BA_GAIN_MAX"
-        MAIN.setValue(param_name,new_params)
+    MAIN.setLcrShunt = function(new_params) {
+        var param_name = "IA_LCR_SHUNT"
+        $("#"+param_name).val(new_params[param_name].value);
     }
 
-    MAIN.setPhaseMin = function(new_params) {
-        var param_name = "BA_PHASE_MIN"
-        MAIN.setValue(param_name,new_params)
+    MAIN.setYAxis = function(new_params) {
+        var param_name = "IA_Y_AXIS"
+        $("#"+param_name).val(new_params[param_name].value);
+        MAIN.currentYAxis = new_params[param_name].value;
+        MAIN.updatePlot();
+        var c = MAIN.getCurrentSignalSettings()
+        $("#amplitude-info").text(c.label)
     }
 
-    MAIN.setPhaseMax = function(new_params) {
-        var param_name = "BA_PHASE_MAX"
-        MAIN.setValue(param_name,new_params)
+    MAIN.setShunt = function(new_params) {
+        var param_name = "IA_SHUNT"
+        $("#"+param_name).val(new_params[param_name].value);
     }
 
-    MAIN.setAutoScale = function(new_params){
-        var param_name = "BA_AUTO_SCALE"
-        var old_params = CLIENT.params.orig;
-        if (((old_params[param_name] !== undefined && old_params[param_name].value !== new_params[param_name].value) ||
-            (old_params[param_name] == undefined))
-            ) {
-                if (new_params[param_name].value){
-                    $('#BA_AUTOSCALE_BTN').addClass('active');
-                }else{
-                    $('#BA_AUTOSCALE_BTN').removeClass('active');
-                }
+
+    MAIN.setLCRExt = function(new_params) {
+        var lcr_state = $("#IA_LCR_EXT");
+        if ((new_params['IA_LCR_EXT'].value === false)) {
+            if (lcr_state.attr('src') !== "img/red_led.png")
+                lcr_state.attr("src", "img/red_led.png");
+            $("#LCR_SHUNT_BOX").hide()
+            $("#SHUNT_BOX").show()
+        } else {
+            if (lcr_state.attr('src') !== "img/green_led.png")
+                lcr_state.attr("src", "img/green_led.png");
+            $("#LCR_SHUNT_BOX").show()
+            $("#SHUNT_BOX").hide()
         }
     }
-
-
 
 
     MAIN.updateLinesAndArrows = function() {
         CURSORS.updateXLinesAndArrows();
         CURSORS.updateYLinesAndArrows();
     }
-
-
-    MAIN.updateCursors = function() {
-        if (MAIN.graphCache === undefined)
-            return;
-        var plot = MAIN.graphCache.plot;
-        var offset = plot.getPlotOffset();
-        var left = offset.left + 1 + 'px';
-        var right = offset.right + 1 + 'px';
-        var top = offset.top + 1 + 'px';
-        var bottom = offset.bottom + 9 + 'px';
-
-        //update lines length
-        $('.hline').css('left', left);
-        $('.hline').css('right', right);
-        $('.vline').css('top', top);
-        $('.vline').css('bottom', bottom);
-
-        //update arrows positions
-        var diff_left = offset.left + 2 + 'px';
-        var diff_top = offset.top - 2 + 'px';
-        var margin_left = offset.left - 7 - 2 + 'px';
-        var margin_top = -7 + offset.top - 2 + 'px';
-        var margin_bottom = -2 + offset.bottom + 'px';
-        var line_margin_left = offset.left - 2 + 'px';
-        var line_margin_top = offset.top - 2 + 'px';
-        var line_margin_bottom = offset.bottom - 2 + 'px';
-
-        $('.varrow').css('margin-left', margin_left);
-        $('.harrow').css('margin-top', margin_top);
-        $('.harrow').css('margin-bottom', margin_bottom);
-        $('.vline').css('margin-left', line_margin_left);
-        $('.hline').css('margin-top', line_margin_top);
-        $('.hline').css('margin-bottom', line_margin_bottom);
-
-        $('#cur_x_diff').css('margin-left', diff_left);
-        $('#cur_y_diff').css('margin-top', diff_top);
-        $('#cur_z_diff').css('margin-top', diff_top);
-        $('#cur_x_diff_info').css('margin-left', diff_left);
-        $('#cur_y_diff_info').css('margin-top', diff_top);
-        $('#cur_z_diff_info').css('margin-top', diff_top);
-    };
 
     MAIN.modelProcess = function(value) {
         if (value["RP_MODEL_STR"].value === "Z20_250_12") {
@@ -657,31 +548,40 @@
     }
 
 
-    MAIN.param_callbacks["BA_STATUS"] = MAIN.processStatus;
+    MAIN.param_callbacks["IA_STATUS"] = MAIN.processStatus;
 
     // MAIN.param_callbacks["BA_MEASURE_START"] = MAIN.process_run;
-    MAIN.param_callbacks["BA_CALIBRATE_START"] = MAIN.calib_stop;
-    MAIN.param_callbacks["BA_CURRENT_FREQ"] = MAIN.change_cur_freq;
-    MAIN.param_callbacks["BA_CURRENT_STEP"] = MAIN.change_cur_step;
-    MAIN.param_callbacks["BA_CALIBRATE_ENABLE"] = MAIN.calib_enable;
+    MAIN.param_callbacks["IA_CURRENT_FREQ"] = MAIN.change_cur_freq;
+    MAIN.param_callbacks["IA_CURRENT_STEP"] = MAIN.change_cur_step;
     MAIN.param_callbacks["RP_MODEL_STR"] = MAIN.modelProcess;
 
-    MAIN.param_callbacks["BA_START_FREQ"] = MAIN.startFreq;
-    MAIN.param_callbacks["BA_END_FREQ"] = MAIN.endFreq;
-    MAIN.param_callbacks["BA_STEPS"] = MAIN.setSteps;
-    MAIN.param_callbacks["BA_SCALE"] = MAIN.setScale;
-    MAIN.param_callbacks["BA_LOGIC_MODE"] = MAIN.setLogic;
+    MAIN.param_callbacks["IA_START_FREQ"] = MAIN.startFreq;
+    MAIN.param_callbacks["IA_END_FREQ"] = MAIN.endFreq;
+    MAIN.param_callbacks["IA_STEPS"] = MAIN.setSteps;
+    MAIN.param_callbacks["IA_SCALE"] = MAIN.setScale;
+    MAIN.param_callbacks["IA_SCALE_PLOT"] = MAIN.setScalePlot;
+    MAIN.param_callbacks["IA_Y_AXIS"] = MAIN.setYAxis;
 
-    MAIN.param_callbacks["BA_SCALE"] = MAIN.setPerNum;
-    MAIN.param_callbacks["BA_AVERAGING"] = MAIN.setAverage;
-    MAIN.param_callbacks["BA_AMPLITUDE"] = MAIN.setOutAmpl;
-    MAIN.param_callbacks["BA_DC_BIAS"] = MAIN.setDCBias;
+    MAIN.param_callbacks["IA_LCR_SHUNT"] = MAIN.setLcrShunt;
+    MAIN.param_callbacks["IA_SHUNT"] = MAIN.setShunt;
 
-    MAIN.param_callbacks["BA_GAIN_MIN"] = MAIN.setGainMin;
-    MAIN.param_callbacks["BA_GAIN_MAX"] = MAIN.setGainMax;
-    MAIN.param_callbacks["BA_PHASE_MIN"] = MAIN.setPhaseMin;
-    MAIN.param_callbacks["BA_PHASE_MAX"] = MAIN.setPhaseMax;
-    MAIN.param_callbacks["BA_AUTO_SCALE"] = MAIN.setAutoScale;
+    MAIN.param_callbacks["IA_AVERAGING"] = MAIN.setAverage;
+    MAIN.param_callbacks["IA_AMPLITUDE"] = MAIN.setOutAmpl;
+    MAIN.param_callbacks["IA_DC_BIAS"] = MAIN.setDCBias;
+
+    MAIN.param_callbacks["IA_CURSOR_X1_ENABLE"] = CURSORS.enableCursorX1Callback;
+    MAIN.param_callbacks["IA_CURSOR_X2_ENABLE"] = CURSORS.enableCursorX2Callback;
+    MAIN.param_callbacks["IA_CURSOR_Y1_ENABLE"] = CURSORS.enableCursorY1Callback;
+    MAIN.param_callbacks["IA_CURSOR_Y2_ENABLE"] = CURSORS.enableCursorY2Callback;
+
+    MAIN.param_callbacks["IA_CURSOR_X1"] = CURSORS.cursorX1Callback;
+    MAIN.param_callbacks["IA_CURSOR_X2"] = CURSORS.cursorX2Callback;
+    MAIN.param_callbacks["IA_CURSOR_Y1"] = CURSORS.cursorY1Callback;
+    MAIN.param_callbacks["IA_CURSOR_Y2"] = CURSORS.cursorY2Callback;
+
+    MAIN.param_callbacks["IA_LCR_EXT"] = MAIN.setLCRExt;
+    MAIN.param_callbacks["RP_MAX_ADC"] = MAIN.setMaxADC;
+
 
 
 }(window.MAIN = window.MAIN || {}, jQuery));
@@ -693,58 +593,39 @@
 $(function() {
 
 
-
-
-
     // Export
     $('#downl_graph').on('click', function() {
         setTimeout(MAIN.SaveGraphs, 30);
     });
 
     $('#reset_settings').on('click', function() {
-        CLIENT.parametersCache["BA_STATUS"] = { value: 4 };
+        CLIENT.parametersCache["IA_STATUS"] = { value: 2 };
         CLIENT.sendParameters();
         location.reload();
     });
 
     $('#downl_csv').on('click', function() {
-        MAIN.downloadDataAsCSV("baData.csv");
+        MAIN.downloadDataAsCSV("iaData.csv");
     });
 
     // Process clicks on top menu buttons
     //Run button
-    $('#BA_RUN').on('click', function(ev) {
-
-        if ($('#BA_AUTOSCALE_BTN').hasClass('active')) {
-            $('#BA_GAIN_MIN').val(0);
-            $('#BA_GAIN_MAX').val(0);
-            $('#BA_PHASE_MAX').val(0);
-            $('#BA_PHASE_MIN').val(0);
-
-        }
+    $('#IA_RUN').on('click', function(ev) {
 
         MAIN.initPlot(false);
-        MAIN.firstValGot.BA_SIGNAL_1 = false;
-        MAIN.firstValGot.BA_SIGNAL_2 = false;
-        delete MAIN.lastSignals['BA_SIGNAL_1'];
-        delete MAIN.lastSignals['BA_SIGNAL_2'];
+
         ev.preventDefault();
         //$('#BA_RUN').hide();
         //$('#BA_STOP').css('display', 'block');
         //$('#measuring-status').show();
-        CLIENT.parametersCache["BA_START_FREQ"] = { value: $("#BA_START_FREQ").val() };
-        CLIENT.parametersCache["BA_END_FREQ"] = { value: $('#BA_END_FREQ').val() };
-        CLIENT.parametersCache["BA_STEPS"] = { value: $('#BA_STEPS').val() };
-        CLIENT.parametersCache["BA_STATUS"] = { value: 1 };
+        CLIENT.parametersCache["IA_STATUS"] = { value: 1 };
         CLIENT.sendParameters();
-        //MAIN.running = true;
-        MAIN.curGraphScale = MAIN.scale;
     });
 
     //Stop button
-    $('#BA_STOP').on('click', function(ev) {
+    $('#IA_STOP').on('click', function(ev) {
         ev.preventDefault();
-        CLIENT.parametersCache["BA_STATUS"] = { value: 0 };
+        CLIENT.parametersCache["IA_STATUS"] = { value: 0 };
         CLIENT.sendParameters();
     });
 
@@ -754,12 +635,10 @@ $(function() {
         if (MAIN.calibrating == true) {
             $('body').addClass('loaded');
             $('#calibration').hide();
-            CLIENT.parametersCache["BA_STATUS"] = { value: 0 };
+            CLIENT.parametersCache["IA_STATUS"] = { value: 0 };
             CLIENT.sendParameters();
-            MAIN.calibrating = false;
         }
     });
-
 
 
 
@@ -835,21 +714,12 @@ $(function() {
             MAIN.sendParameters();
         }
 
-        MAIN.updateGraphSize();
-
-
         // Set the resized flag
         MAIN.state.resized = true;
 
-        if ((MAIN.lastSignals['BA_SIGNAL_1'] != undefined) || (MAIN.lastSignals['BA_SIGNAL_2'] != undefined)) {
-            MAIN.initPlot(true);
+        MAIN.initPlot(true);
+        MAIN.updateLinesAndArrows();
 
-            setTimeout(function() {
-                MAIN.updateLinesAndArrows();
-            }, 120);
-
-            MAIN.updateCursors();
-        }
     }).resize();
 
 
@@ -885,63 +755,6 @@ $(function() {
         }
     });
 
-    $('#BA_CURSOR_X1').click(function() {
-        var btn = $(this);
-        if (!btn.hasClass('active'))
-            MAIN.enableCursor('x1');
-        else
-            MAIN.disableCursor('x1');
-        MAIN.updateLinesAndArrows();
-    });
-
-    $('#BA_CURSOR_X2').click(function() {
-        var btn = $(this);
-        if (!btn.hasClass('active'))
-            MAIN.enableCursor('x2');
-        else
-            MAIN.disableCursor('x2');
-        MAIN.updateLinesAndArrows();
-    });
-
-    $('#BA_CURSOR_Y1').click(function() {
-        var btn = $(this);
-        if (!btn.hasClass('active'))
-            MAIN.enableCursor('y1');
-        else
-            MAIN.disableCursor('y1');
-        MAIN.updateLinesAndArrows();
-    });
-
-    $('#BA_CURSOR_Y2').click(function() {
-        var btn = $(this);
-        if (!btn.hasClass('active'))
-            MAIN.enableCursor('y2');
-        else
-            MAIN.disableCursor('y2');
-        MAIN.updateLinesAndArrows();
-    });
-
-    $('#BA_CURSOR_Z1').click(function() {
-        var btn = $(this);
-        if (!btn.hasClass('active'))
-            MAIN.enableCursor('z1');
-        else
-            MAIN.disableCursor('z1');
-        MAIN.updateLinesAndArrows();
-    });
-
-    $('#BA_CURSOR_Z2').click(function() {
-        var btn = $(this);
-        if (!btn.hasClass('active'))
-            MAIN.enableCursor('z2');
-        else
-            MAIN.disableCursor('z2');
-        MAIN.updateLinesAndArrows();
-    });
-
-    $('#BA_CALIBRATE').click(function() {
-        $('#calibration_dialog').modal('show');
-    });
 
     // Everything prepared, start application
     CLIENT.startApp();

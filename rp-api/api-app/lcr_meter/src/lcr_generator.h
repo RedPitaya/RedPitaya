@@ -37,6 +37,10 @@ public:
     auto setDefault() -> void;
     auto setFreq(uint32_t _freq) -> void;
     auto getFreq() -> uint32_t;
+    auto setAmplitude(float _ampl) -> void;
+    auto getAmplitude() -> float;
+    auto setOffset(float _offset) -> void;
+    auto getOffset() -> float;
 
 private:
     std::mutex m_mutex;

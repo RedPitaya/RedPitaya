@@ -56,7 +56,7 @@ const double G_SHUNT_TABLE[] =
  auto getModel() -> rp_HPeModels_t{
     rp_HPeModels_t c = STEM_125_14_v1_0;
     if (rp_HPGetModel(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get board model\n");
+        WARNING("Can't get board model\n");
     }
     return c;
 }
@@ -70,7 +70,7 @@ CLCRHardware::~CLCRHardware(){
 }
 
 auto CLCRHardware::isExtensionConnected() -> bool{
-    checkExtensionModuleConnection();
+    checkExtensionModuleConnection(false);
     return is_connected;
 }
 
@@ -147,7 +147,7 @@ auto CLCRHardware::setI2CShunt(lcr_shunt_t _shunt) -> lcr_error_t {
     return RP_LCR_OK;
 }
 
-auto CLCRHardware::checkExtensionModuleConnection() -> lcr_error_t{
+auto CLCRHardware::checkExtensionModuleConnection(bool _muteWarnings) -> lcr_error_t{
     std::lock_guard<std::mutex> lock(m_mutex);
     int status;
     int fd;
@@ -156,7 +156,8 @@ auto CLCRHardware::checkExtensionModuleConnection() -> lcr_error_t{
     // Open the device.
     fd = open("/dev/i2c-0", O_RDWR);
     if (fd < 0) {
-        WARNING("Cannot open the I2C device: %d", fd);
+        if (!_muteWarnings)
+            WARNING("Cannot open the I2C device: %d", fd);
         is_connected = false;
         return RP_LCR_HW_CANT_OPEN;
     }
@@ -165,7 +166,8 @@ auto CLCRHardware::checkExtensionModuleConnection() -> lcr_error_t{
     status = ioctl(fd, I2C_SLAVE_FORCE, EXPANDER_ADDR);
     if (status < 0) {
         close(fd);
-        WARNING("Unable to set the I2C address: %d", status);
+        if (!_muteWarnings)
+            WARNING("Unable to set the I2C address: %d", status);
         is_connected = false;
         return RP_LCR_HW_MISSING_DEVICE;
     }
@@ -175,7 +177,8 @@ auto CLCRHardware::checkExtensionModuleConnection() -> lcr_error_t{
 
     if(retVal < 0) {
         close(fd);
-        WARNING("I2C address resolving failed: %d", retVal);
+        if (!_muteWarnings)
+            WARNING("I2C address resolving failed: %d", retVal);
         is_connected = false;
         return RP_LCR_HW_ERROR_DETECT;
     }
@@ -213,14 +216,14 @@ auto CLCRHardware::getShuntValue(lcr_shunt_t _shunt) -> double{
 }
 
 auto CLCRHardware::calibShunt(lcr_shunt_t _shunt,float freq) -> double{
-    auto getIndex = [](int x){
-        int index = -1;
-        do {
-            index++;
-            x /= 10;
-        } while(x > 5);
-        return index;
-    };
+    // auto getIndex = [](int x){
+    //     int index = -1;
+    //     do {
+    //         index++;
+    //         x /= 10;
+    //     } while(x > 5);
+    //     return index;
+    // };
     auto s = getShuntValue(_shunt);
     if (_shunt == RP_LCR_S_NOT_INIT) return 1;
     return s;

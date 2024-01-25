@@ -58,6 +58,6 @@
 }
 
 
-void lcr_getDecimationValue(float frequency,rp_acq_decimation_t *api_dec,int *dec_val,uint32_t adc_rate);
+void lcr_getDecimationValue(float frequency,int *dec_val,uint32_t adc_rate);
 
 #endif //UTILS_H_
