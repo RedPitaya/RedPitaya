@@ -52,6 +52,7 @@
                 if (listOfapplications[i]["id"] === 'marketplace' ||
                     listOfapplications[i]["id"] === 'ba_pro' ||
                     listOfapplications[i]["id"] === 'lcr_meter' ||
+                    listOfapplications[i]["id"] === 'impedance_analyzer' ||
                     listOfapplications[i]["id"] === 'fpgaexamples' ||
                     listOfapplications[i]["id"] === 'activelearning' ||
                     listOfapplications[i]["id"] === 'sdr_receiver_hpsdr' ||
@@ -90,6 +91,7 @@
                     listOfapplications[i]["id"] === 'ba_pro' ||
                     listOfapplications[i]["id"] === 'arb_manager' ||
                     listOfapplications[i]["id"] === 'lcr_meter' ||
+                    listOfapplications[i]["id"] === 'impedance_analyzer' ||
                     listOfapplications[i]["id"] === 'fpgaexamples' ||
                     listOfapplications[i]["id"] === 'activelearning' ||
                     listOfapplications[i]["id"] === 'sdr_receiver_hpsdr' ||
