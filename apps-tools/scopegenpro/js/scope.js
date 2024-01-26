@@ -1351,7 +1351,10 @@
         for (var i = 0; i < scale_list.length - 1; i++) {
 
             if (OSC.state.fine && (curr_scale == scale_list[i] || (curr_scale > scale_list[i] && curr_scale < scale_list[i + 1]) || (curr_scale == scale_list[i + 1] && direction == '-'))) {
-                new_scale = curr_scale + (OSC.scale_list[i + 1] / 100) * (direction == '-' ? -1 : 1);
+                var dev = 100
+                if (scale_list[i + 1] <= (5 / 1000)) dev = 50
+                if (scale_list[i + 1] <= (2 / 1000)) dev = 20
+                new_scale = parseFloat(curr_scale) + (parseFloat(scale_list[i + 1]) / dev) * (direction == '-' ? -1 : 1);
                 // Do not allow values smaller than the lowest possible one
                 if (new_scale < scale_list[0]) {
                     new_scale = scale_list[0];
