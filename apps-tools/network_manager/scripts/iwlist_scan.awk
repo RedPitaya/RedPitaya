@@ -25,8 +25,7 @@ substr($1, 0, 5) == "ESSID" {
 
 substr($2, 0, 6) == "Signal" {
     split($3,res , "=")
-    split(res[2],res2 , "/")
-    wifi[MAC]["sig"] = res2[1] - 100
+    wifi[MAC]["sig"] = res[2]
 }
 
 $1 == "Encryption" {
@@ -39,7 +38,7 @@ $1 == "Encryption" {
 END {
     t=""
     printf "{\"scan\": [\n"
-    fmt = "  {\"SSID\": %s, \"sig\": \"%s\", \"enc\": \"%s\"}"
+    fmt = "  {\"SSID\": %s, \"sig\": \"%s\", \"enc\": \"%s\", \"rtl8188\": \"Yes\"}"
     for (w in wifi) {
         printf t
         printf fmt, wifi[w]["SSID"], wifi[w]["sig"], wifi[w]["enc"]

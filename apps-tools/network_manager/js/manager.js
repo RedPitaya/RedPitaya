@@ -30,7 +30,7 @@
                     $('#wlan0_block_nodongle').show();
                     WIZARD.stopWaiting();
                     $('#wifi_scan_result').html("");
-                } 
+                }
                 else{
 
                     $('#wlan0_block_nodongle').hide();
@@ -58,7 +58,7 @@
                         WIZARD.restoreAPSSIDIfPossible();
                         WIZARD.GetWlan0Status();
                     }
-                    
+
                     if (code == "0") {
                         $('#wlan0_ap_mode').hide();
                         $('#wlan0_client_mode_link').hide();
@@ -83,7 +83,7 @@
                             $('#wlan0_ap_mode').show();
                         }
                     }
-                                   
+
                 }
             })
     };
@@ -96,18 +96,37 @@
         if (iwlistResult.scan.length > 0){
             for (i in iwlistResult.scan) {
                 var ssid       =  iwlistResult.scan[i].SSID;
-                var encryption = (iwlistResult.scan[i].enc == "Open") ? false : true;
+                var encryption =  iwlistResult.scan[i].enc !== "Open"
                 var level      =  iwlistResult.scan[i].sig
+                var rtl8188    =  iwlistResult.scan[i].rtl8188 == "Yes"
+                if ( ssid !== ""){
+                    htmlList += "<div>";
+                    var node = "<div style='width: 50px; float: left;height:32px'>"
+                    var lock = (encryption) ? "<img src='img/wifi-icons/lock.png' style='width:16px;margin-top:8px;margin-bottom:8px;margin-left:4px;margin-right:5px;vertical-align: top;'>" : "";
 
-                htmlList += "<div>";
-                var lock = (encryption) ? "<img src='img/wifi-icons/lock.png' width=15>" : "";
-                if      (level < -81)  icon = "<div style='width: 40px; float: left;'><img src='img/wifi-icons/connection_0.png' width=25>" + lock + "</div>";
-                else if (level < -71)  icon = "<div style='width: 40px; float: left;'><img src='img/wifi-icons/connection_1.png' width=25>" + lock + "</div>";
-                else if (level < -53)  icon = "<div style='width: 40px; float: left;'><img src='img/wifi-icons/connection_2.png' width=25>" + lock + "</div>";
-                else                   icon = "<div style='width: 40px; float: left;'><img src='img/wifi-icons/connection_3.png' width=25>" + lock + "</div>";
+                    if (rtl8188){
+                        if (level.includes("/")){
+                            var x = level.split("/")
+                            level = parseFloat(x[0]) - 100
+                        }else{
+                            level = undefined
+                        }
+                    }
 
-                htmlList += icon + "<div key='" + ssid + "' class='btn-wifi-item btn'>" + ssid + "&nbsp;</div>";
-                htmlList += "</div>";
+                    if (level !== undefined){
+                        var style = "width: 20px; margin-left: 2px; margin-right: 3px;margin-top: 6px;"
+                        if      (level < -81)  node += "<img src='img/wifi-icons/connection_0.png' style='" + style + "'>"
+                        else if (level < -71)  node += "<img src='img/wifi-icons/connection_1.png' style='" + style + "'>"
+                        else if (level < -53)  node += "<img src='img/wifi-icons/connection_2.png' style='" + style + "'>"
+                        else                   node += "<img src='img/wifi-icons/connection_3.png' style='" + style + "'>"
+                    }else{
+                        node += "<div style='width:25px;height:32px;display: inline-block;'/>"
+                    }
+
+                    node += lock + "</div>"
+                    htmlList += node + "<div key='" + ssid + "' class='btn-wifi-item btn'>" + ssid + "&nbsp;</div>";
+                    htmlList += "</div>";
+                }
             }
         }else{
             $.ajax({
@@ -283,7 +302,7 @@
         $('body').removeClass('loaded');
     };
 
-    
+
     /**
      * @name stopWaiting
      * @function
@@ -301,7 +320,7 @@
      */
 
     WIZARD.dropAP = function() {
-        WIZARD.startWaiting(); 
+        WIZARD.startWaiting();
         $.ajax({
             url: '/remove_ap',
             type: 'GET'
@@ -365,7 +384,7 @@ checkPassword = function(pass) {
 };
 
 checkPassword_C = function(pass) {
-    if (pass.length >= 8) {
+    if (pass.length >= 8 || pass.length == 0) {
         for (var i = 0; i < pass.length; i++){
             var code = pass.charCodeAt(i);
             if (code < 32 || code > 126){
@@ -389,7 +408,7 @@ $(document).ready(function() {
 
     setInterval(WIZARD.checkState, 2000);
     setInterval(WIZARD.GetEth0Status, 2000);
-  
+
     $('body').addClass('loaded');
     $('#network_apply').click(WIZARD.ManualSetEth0);
     $('#refresh_list_btn').click(WIZARD.startScan);
@@ -421,11 +440,11 @@ $(document).ready(function() {
                 });
             }
         }
-                
+
     });
 
     $('#client_disconnect').click(function(event) {
-        
+
         var lastSSID = WIZARD.connectedSSID;
         WIZARD.state = "to_normal";
         WIZARD.startWaiting();
@@ -436,7 +455,7 @@ $(document).ready(function() {
         .always(function() {
             WIZARD.connectedSSID = '';
             WIZARD.stopWaiting();
-        });      
+        });
     });
 
     $('#wifi_mode').click(function() {
@@ -490,14 +509,14 @@ $(document).ready(function() {
                         pass_input.val('');
                     });
         	}
-        } 
+        }
     });
 
     $('#ap_mode_stop').click(function() {
         WIZARD.dropAP();
         $('#wlan0_address_label').text('');
     });
-    
+
 
     $('#clear_entry').click(function() {
         $('#ssid_input_client').val("");
@@ -505,8 +524,8 @@ $(document).ready(function() {
     });
 
     $('#client_reboot').click(function(event) {
-        
-        WIZARD.startWaiting(); 
+
+        WIZARD.startWaiting();
         $.ajax({
             url: '/reboot',
             type: 'GET'
@@ -515,6 +534,6 @@ $(document).ready(function() {
             setTimeout(function(){
                 window.location.reload(1);
              }, 30000);
-        });      
+        });
     });
 });
