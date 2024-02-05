@@ -17,7 +17,7 @@ export REVISION
 export VERSION
 
 SUBMODULE_UBT = "redpitaya-v2022.1"
-SUBMODULE_LIN = "branch-redpitaya-v2022.3"
+SUBMODULE_LIN = "branch-redpitaya-dev"
 SUBMODULE_APP = ""
 
 define GREET_MSG
@@ -63,7 +63,7 @@ $(INSTALL_DIR):
 ################################################################################
 
 UBOOT_TAG      = redpitaya-v2022.2
-LINUX_TAG      = branch-redpitaya-v2022.3
+LINUX_TAG      = branch-redpitaya-dev
 DTREE_TAG      = xilinx_v2022.1
 DTREE_PATH_TAG = xilinx-v2022.1
 
