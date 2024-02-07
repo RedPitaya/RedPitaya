@@ -92,7 +92,7 @@ int rp_app_init(void)
     // Init generator
     set_generator_config();
     rp_GenOutEnable(RP_CH_1);
-
+    rp_GenResetTrigger(RP_CH_1);
     return 0;
 }
 
@@ -102,7 +102,7 @@ int rp_app_exit(void)
     fprintf(stderr, "Unloading generator application\n");
 
     // Disabe generator
-    rp_GenOutEnable(RP_CH_1);
+    rp_GenOutDisable(RP_CH_1);
 
     rpApp_Release();
 

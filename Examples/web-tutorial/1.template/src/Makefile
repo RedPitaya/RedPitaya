@@ -1,6 +1,8 @@
 CXX=$(CROSS_COMPILE)g++
 RM=rm
 
+INSTALL_DIR ?= /opt/redpitaya/
+
 CXXSOURCES=main.cpp
 
 INCLUDE =  -I$(INSTALL_DIR)/include
