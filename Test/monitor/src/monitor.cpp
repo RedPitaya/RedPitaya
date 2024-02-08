@@ -115,7 +115,7 @@ int main(int argc, char **argv) {
 		printf("Reserved memory:\n");
 		printf("\tstart:\t0x%X (%d)\n",start,start);
 		printf("\tend:\t0x%X (%d)\n",start + size,start + size);
-		printf("\tsize:\t0x%X (%d) %d kB\n", size,size,size/1024);				
+		printf("\tsize:\t0x%X (%d) %d kB\n", size,size,size/1024);
 		rp_Release();
 		return 0;
 	}

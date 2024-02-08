@@ -261,7 +261,7 @@ int hp_cmn_Init(){
 		return RP_HP_ERE;
 	}
 
-	if(fseek(fp, 0x1800	, SEEK_SET) < 0) {
+	if(fseek(fp, 0x1804	, SEEK_SET) < 0) {
         fclose(fp);
 		fprintf(stderr,"[hp_cmn_Init] Error open eeprom\n");
         return RP_HP_ERE;
@@ -276,7 +276,6 @@ int hp_cmn_Init(){
 
 	int size = fread(buf, sizeof(char), LINE_LENGTH, fp);
 	int position = 0;
-
 	while(position <  size){
 		int slen = strlen(&buf[position]);
 		if (!slen) break;
