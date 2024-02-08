@@ -1,6 +1,7 @@
 # load extra enviroment form eeprom
 i2c dev 0
-eeprom read  0 0x50 0 0x1800 0x400
+# Added an extra offset of 4 bytes from 0x1800 -> 0x1804, since the memory was not initially initialized correctly and there are always 4 bytes of garbage at the beginning of the data.
+eeprom read  0 0x50 0 0x1804 0x400
 env import -b 0 0x400 hw_rev serial ethaddr
 
 # set main memory address table
