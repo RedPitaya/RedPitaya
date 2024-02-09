@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <mutex>
 
-#include "sweepController.h"
+#include "common/rp_sweep.h"
 #include "sig_gen_logic.h"
 #include "sig_gen.h"
 #include "rp_hw-profiles.h"
@@ -30,7 +30,7 @@ CFloatParameter outOffset[MAX_DAC_CHANNELS]        = INIT2("SOUR","_VOLT_OFFS", 
 CIntParameter   outFrequancy[MAX_DAC_CHANNELS]     = INIT2("SOUR","_FREQ_FIX", CBaseParameter::RW, 1000, 0, 1, (int)getDACRate(),CONFIG_VAR);
 CFloatParameter outScale[MAX_DAC_CHANNELS]         = INIT2("OSC_OUTPUT","_SCALE", CBaseParameter::RW, 1, 0, 0.00005, 1000,CONFIG_VAR);
 
-CSweepController *g_sweepController = new CSweepController();
+rp_sweep_api::CSweepController *g_sweepController = new rp_sweep_api::CSweepController();
 
 CIntParameter   outSweepStartFrequancy[MAX_DAC_CHANNELS]   = INIT2("SOUR","_SWEEP_FREQ_START", CBaseParameter::RW, 1000, 0, 1, (int)getDACRate(),CONFIG_VAR);
 CIntParameter   outSweepEndFrequancy[MAX_DAC_CHANNELS]     = INIT2("SOUR","_SWEEP_FREQ_END"  , CBaseParameter::RW, 10000, 0, 1, (int)getDACRate(),CONFIG_VAR);

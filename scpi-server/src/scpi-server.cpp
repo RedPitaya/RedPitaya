@@ -34,6 +34,7 @@
 #include "scpi/parser.h"
 #include "rp.h"
 #include "api_cmd.h"
+#include "sweep.h"
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
@@ -398,7 +399,7 @@ int main(int argc, char *argv[])
     }
 
     close(listenfd);
-
+    stopSweep();
     result = rp_Release();
     if (result != RP_OK) {
         rp_Log(nullptr,LOG_ERR, result, "Failed to release RP App library: %s", rp_GetError(result));

@@ -3,7 +3,7 @@ CC=$(CROSS_COMPILE)gcc
 CXX=$(CROSS_COMPILE)g++
 RM=rm
 
-CXXSOURCES=main.cpp settings.cpp sweepController.cpp sig_gen.cpp common.cpp sig_gen_logic.cpp osc_logic.cpp math_logic.cpp
+CXXSOURCES=main.cpp settings.cpp sig_gen.cpp common.cpp sig_gen_logic.cpp osc_logic.cpp math_logic.cpp
 
 INCLUDE =  -I$(INSTALL_DIR)/include
 INCLUDE += -I$(INSTALL_DIR)/include/api2
@@ -22,7 +22,7 @@ COMMON_FLAGS+=-Os -s
 CXXFLAGS+=$(COMMON_FLAGS) -std=c++11 $(INCLUDE)  -D_FILE_OFFSET_BITS=64
 LDFLAGS = -shared $(COMMON_FLAGS) $(LIBS)
 #LDFLAGS+= -Wl,--whole-archive,--no-as-needed
-LDFLAGS+= -lcryptopp -lrpapp -lrp-arb -lrp -lrp_sdk  -lrp-hw -lrp-hw-calib -lrp-hw-profiles
+LDFLAGS+= -lcryptopp -lrpapp -lrp-arb -lrp-sweep -lrp -lrp_sdk  -lrp-hw -lrp-hw-calib -lrp-hw-profiles
 #LDFLAGS+= -Wl,--no-whole-archive
 
 LDFLAGS += -lrp-gpio -lrp-i2c -lrp-spi -lrp-formatter

@@ -31,6 +31,7 @@
 #include "acquire.h"
 #include "acquire_axi.h"
 #include "generate.h"
+#include "sweep.h"
 
 #include "scpi/error.h"
 #include "scpi/ieee488.h"
@@ -286,6 +287,21 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "SOUR#:BURS:NOR?", .callback            = RP_GenBurstRepetitionsQ,},
     {.pattern = "SOUR#:BURS:INT:PER", .callback         = RP_GenBurstPeriod,},
     {.pattern = "SOUR#:BURS:INT:PER?", .callback        = RP_GenBurstPeriodQ,},
+
+    {.pattern = "SOUR:SWeep:PAUSE", .callback           = RP_GenSweepPause,},
+    {.pattern = "SOUR:SWeep:RESET", .callback           = RP_GenSweepReset,},
+    {.pattern = "SOUR#:SWeep:STATE", .callback          = RP_GenSweepState,},
+    {.pattern = "SOUR#:SWeep:STATE?", .callback         = RP_GenSweepStateQ,},
+    {.pattern = "SOUR#:SWeep:FREQ:START", .callback     = RP_GenSweepFreqStart,},
+    {.pattern = "SOUR#:SWeep:FREQ:START?", .callback    = RP_GenSweepFreqStartQ,},
+    {.pattern = "SOUR#:SWeep:FREQ:STOP", .callback      = RP_GenSweepFreqStop,},
+    {.pattern = "SOUR#:SWeep:FREQ:STOP?", .callback     = RP_GenSweepFreqStopQ,},
+    {.pattern = "SOUR#:SWeep:TIME", .callback           = RP_GenSweepTime,},
+    {.pattern = "SOUR#:SWeep:TIME?", .callback          = RP_GenSweepTimeQ,},
+    {.pattern = "SOUR#:SWeep:MODE", .callback           = RP_GenSweepMode,},
+    {.pattern = "SOUR#:SWeep:MODE?", .callback          = RP_GenSweepModeQ,},
+    {.pattern = "SOUR#:SWeep:DIR", .callback            = RP_GenSweepDir,},
+    {.pattern = "SOUR#:SWeep:DIR?", .callback           = RP_GenSweepDirQ,},
 
     {.pattern = "SOUR#:BURS:LASTValue", .callback       = RP_GenBurstLastValue,},
     {.pattern = "SOUR#:BURS:LASTValue?", .callback      = RP_GenBurstLastValueQ,},
