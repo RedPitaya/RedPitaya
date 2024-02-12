@@ -37,7 +37,7 @@ const scpi_choice_def_t scpi_sweep_mode[] = {
 
 const scpi_choice_def_t scpi_sweep_dir[] = {
     {"NORMAL", 0},
-    {"UP_DOWN ", 1},
+    {"UP_DOWN", 1},
     SCPI_CHOICE_LIST_END
 };
 
@@ -181,7 +181,7 @@ scpi_result_t RP_GenSweepFreqStop(scpi_t *context){
         return SCPI_RES_ERR;
     }
 
-    auto result = g_sweepController.setStartFreq(channel, frequency.content.value);
+    auto result = g_sweepController.setStopFreq(channel, frequency.content.value);
     if(result != RP_OK){
         RP_LOG_CRIT("Failed to set stop frequency: %s", rp_GetError(result));
         return SCPI_RES_ERR;

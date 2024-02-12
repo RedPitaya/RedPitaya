@@ -114,6 +114,7 @@ void CSweepController::run(){
     catch (const std::exception& e){
         WARNING("Thread cannot be started %s",e.what())
     }
+
 }
 
 void CSweepController::stop(){
