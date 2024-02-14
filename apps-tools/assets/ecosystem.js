@@ -276,36 +276,6 @@
                 $('#ic_missing').modal('hide');
         });
 
-        // App configuration
-        RedPitayaOS.config = {};
-        RedPitayaOS.config.app_id = 'main_menu';
-        RedPitayaOS.config.server_ip = ''; // Leave empty on production, it is used for testing only
-        RedPitayaOS.config.start_app_url = (RedPitayaOS.config.server_ip.length ? 'http://' + RedPitayaOS.config.server_ip : '') + '/bazaar?start=' + RedPitayaOS.config.app_id;
-        RedPitayaOS.config.stop_app_url = (RedPitayaOS.config.server_ip.length ? 'http://' + RedPitayaOS.config.server_ip : '') + '/bazaar?stop=' + RedPitayaOS.config.app_id;
-
-
-        RedPitayaOS.startApp = function() {
-            $.get(
-                    RedPitayaOS.config.start_app_url
-                )
-                .done(function(dresult) {
-                    if (dresult.status == 'OK') {
-                        console.log("Load main menu");
-                    } else if (dresult.status == 'ERROR') {
-                        console.log(dresult.reason ? dresult.reason : 'Could not start the application (ERR1)');
-                        RedPitayaOS.startApp();
-                    } else {
-                        console.log('Could not start the application (ERR2)');
-                        RedPitayaOS.startApp();
-                    }
-                })
-                .fail(function() {
-                    console.log('Could not start the application (ERR3)');
-                    RedPitayaOS.startApp();
-                });
-        };
-
-        RedPitayaOS.startApp();
     });
 
 })(window.RedPitayaOS = window.RedPitayaOS || {}, jQuery);

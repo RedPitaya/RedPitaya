@@ -19,6 +19,7 @@ export REVISION
 export VERSION
 export LINUX_VER
 BUILD_MODE ?= Release
+VERBOSE = OFF
 ################################################################################
 #
 ################################################################################
@@ -60,53 +61,67 @@ api: librp librp_hw librp_hw_can librp_dsp librpapp librp_formatter librparb lib
 api2: librp2
 
 librp: librp250_12 librp_hw_calibration librp_hw_profiles librp_dsp
-	cmake -B$(abspath $(LIBRP_DIR)/build) -S$(abspath $(LIBRP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)  -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(LIBRP_DIR)/build) -S$(abspath $(LIBRP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)  -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
 	$(MAKE) -C $(LIBRP_DIR)/build install
 
 librp_hw:
-	cmake -B$(abspath $(LIBRP_HW_DIR)/build) -S$(abspath $(LIBRP_HW_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(LIBRP_HW_DIR)/build) -S$(abspath $(LIBRP_HW_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
 	$(MAKE) -C $(LIBRP_HW_DIR)/build install
 
 librp_hw_can: librp
-	cmake -B$(abspath $(LIBRP_HW_CAN_DIR)/build) -S$(abspath $(LIBRP_HW_CAN_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(LIBRP_HW_CAN_DIR)/build) -S$(abspath $(LIBRP_HW_CAN_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
 	$(MAKE) -C $(LIBRP_HW_CAN_DIR)/build install
 
 librp_hw_calibration: librp_hw_profiles
-	cmake -B$(abspath $(LIBRP_HW_CALIB_DIR)/build) -S$(abspath $(LIBRP_HW_CALIB_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(LIBRP_HW_CALIB_DIR)/build) -S$(abspath $(LIBRP_HW_CALIB_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
 	$(MAKE) -C $(LIBRP_HW_CALIB_DIR)/build install
 
 librp_hw_profiles:
-	cmake -B$(abspath $(LIBRP_HW_PROFILES_DIR)/build) -S$(abspath $(LIBRP_HW_PROFILES_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(LIBRP_HW_PROFILES_DIR)/build) -S$(abspath $(LIBRP_HW_PROFILES_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
 	$(MAKE) -C $(LIBRP_HW_PROFILES_DIR)/build install
 
 librp_dsp:
-	cmake -B$(abspath $(LIBRP_DSP_DIR)/build) -S$(abspath $(LIBRP_DSP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(LIBRP_DSP_DIR)/build) -S$(abspath $(LIBRP_DSP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
 	$(MAKE) -C $(LIBRP_DSP_DIR)/build install
 
 librp_sweep: librp
-	cmake -B$(abspath $(LIBRP_SWEEP_DIR)/build) -S$(abspath $(LIBRP_SWEEP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(LIBRP_SWEEP_DIR)/build) -S$(abspath $(LIBRP_SWEEP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
 	$(MAKE) -C $(LIBRP_SWEEP_DIR)/build install
 
 librp_formatter:
-	cmake -B$(abspath $(LIBRP_FORMATTER_DIR)/build) -S$(abspath $(LIBRP_FORMATTER_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(LIBRP_FORMATTER_DIR)/build) -S$(abspath $(LIBRP_FORMATTER_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
 	$(MAKE) -C $(LIBRP_FORMATTER_DIR)/build install
 
 librp2:
-	cmake -B$(abspath $(LIBRP2_DIR)/build) -S$(abspath $(LIBRP2_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(LIBRP2_DIR)/build) -S$(abspath $(LIBRP2_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
 	$(MAKE) -C $(LIBRP2_DIR)/build install
 
 librp250_12: librp_hw
-	cmake -B$(LIBRP250_12_DIR)/build -S$(LIBRP250_12_DIR) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(LIBRP250_12_DIR)/build -S$(LIBRP250_12_DIR) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
 	$(MAKE) -C $(LIBRP250_12_DIR)/build install
 
 librpapp: librp
-	cmake -B$(abspath $(LIBRPAPP_DIR)/build) -S$(abspath $(LIBRPAPP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(LIBRPAPP_DIR)/build) -S$(abspath $(LIBRPAPP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
 	$(MAKE) -C $(LIBRPAPP_DIR)/build install
 
 librparb: librp
-	cmake -B$(abspath $(LIBRP_ARB_DIR)/build) -S$(abspath $(LIBRP_ARB_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(LIBRP_ARB_DIR)/build) -S$(abspath $(LIBRP_ARB_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
 	$(MAKE) -C $(LIBRP_ARB_DIR)/build install
 
+
+################################################################################
+# Web API libraries
+################################################################################
+
+LIBRP_SYSTEM_DIR       		= rp-web-api/rp-system
+
+.PHONY: librpsystem
+
+web-api: librpsystem
+
+librpsystem: api nginx
+	cmake -B$(abspath $(LIBRP_SYSTEM_DIR)/build) -S$(abspath $(LIBRP_SYSTEM_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRP_SYSTEM_DIR)/build install
 
 ################################################################################
 # Red Pitaya ecosystem
@@ -130,7 +145,7 @@ NGINX_TAG       = 1.19.10
 SOCKPROC_TAG    = master
 
 WEBSOCKETPP_URL = https://github.com/zaphoyd/websocketpp/archive/$(WEBSOCKETPP_TAG).tar.gz
-LIBJSON_URL     = https://github.com/RedPitaya/libjson/archive/refs/tags/7.6.1.tar.gz
+LIBJSON_URL     = https://github.com/RedPitaya/libjson/archive/refs/tags/7.6.3.tar.gz
 LUANGINX_URL    = https://codeload.github.com/openresty/lua-nginx-module/tar.gz/$(LUANGINX_TAG)
 LUARESTY_URL    = https://github.com/openresty/lua-resty-core/archive/refs/tags/$(LUARESTY_TAG).tar.gz
 LUARESTY_L_URL  = https://github.com/openresty/lua-resty-lrucache/archive/refs/tags/$(LUARESTY_L_TAG).tar.gz
@@ -138,7 +153,7 @@ NGINX_URL       = http://nginx.org/download/nginx-$(NGINX_TAG).tar.gz
 SOCKPROC_URL	= https://github.com/juce/sockproc/archive/$(SOCKPROC_TAG).tar.gz
 
 WEBSOCKETPP_TAR = $(DL)/websocketpp-$(WEBSOCKETPP_TAG).tar.gz
-LIBJSON_TAR     = $(DL)/libjson_7.6.1.zip
+LIBJSON_TAR     = $(DL)/libjson_7.6.3.zip
 LUANGINX_TAR    = $(DL)/lua-nginx-module-$(LUANGINX_TAG).tar.gz
 LUARESTY_TAR    = $(DL)/lua-resty-module-$(LUARESTY_TAG).tar.gz
 LUARESTY_L_TAR  = $(DL)/lua-resty-lrucache-module-$(LUARESTY_L_TAG).tar.gz
@@ -161,7 +176,6 @@ $(WEBSOCKETPP_TAR): | $(DL)
 $(WEBSOCKETPP_DIR): $(WEBSOCKETPP_TAR)
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
-#	patch -d $@ -p1 < patches/websocketpp-$(WEBSOCKETPP_TAG).patch
 
 $(SOCKPROC_TAR): | $(DL)
 	wget $(SOCKPROC_URL) -O $@ --show-progress
@@ -314,42 +328,42 @@ examples: lcr bode monitor calib spectrum acquire generator led_control fpgautil
 
 lcr: api
 	rm -rf $(abspath $(LCR_DIR)/build)
-	cmake -B$(abspath $(LCR_DIR)/build) -S$(abspath $(LCR_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(LCR_DIR)/build) -S$(abspath $(LCR_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
 	$(MAKE) -C $(LCR_DIR)/build install
 
 bode: api
 	rm -rf $(abspath $(BODE_DIR)/build)
-	cmake -B$(abspath $(BODE_DIR)/build) -S$(abspath $(BODE_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(BODE_DIR)/build) -S$(abspath $(BODE_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
 	$(MAKE) -C $(BODE_DIR)/build install
 
 monitor: api
 	rm -rf $(abspath $(MONITOR_DIR)/build)
-	cmake -B$(abspath $(MONITOR_DIR)/build) -S$(abspath $(MONITOR_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(MONITOR_DIR)/build) -S$(abspath $(MONITOR_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
 	$(MAKE) -C $(MONITOR_DIR)/build install
 
 generator: api
 	rm -rf $(abspath $(GENERATOR_DIR)/build)
-	cmake -B$(abspath $(GENERATOR_DIR)/build) -S$(abspath $(GENERATOR_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(GENERATOR_DIR)/build) -S$(abspath $(GENERATOR_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
 	$(MAKE) -C $(GENERATOR_DIR)/build install
 
 acquire: api
 	rm -rf $(abspath $(ACQUIRE_DIR)/build)
-	cmake -B$(abspath $(ACQUIRE_DIR)/build) -S$(abspath $(ACQUIRE_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(ACQUIRE_DIR)/build) -S$(abspath $(ACQUIRE_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
 	$(MAKE) -C $(ACQUIRE_DIR)/build install
 
 calib: api
 	rm -rf $(abspath $(CALIB_DIR)/build)
-	cmake -B$(abspath $(CALIB_DIR)/build) -S$(abspath $(CALIB_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(CALIB_DIR)/build) -S$(abspath $(CALIB_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
 	$(MAKE) -C $(CALIB_DIR)/build install
 
 daisy_tool: api
 	rm -rf $(abspath $(DAISY_TOOL_DIR)/build)
-	cmake -B$(abspath $(DAISY_TOOL_DIR)/build) -S$(abspath $(DAISY_TOOL_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(DAISY_TOOL_DIR)/build) -S$(abspath $(DAISY_TOOL_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
 	$(MAKE) -C $(DAISY_TOOL_DIR)/build install
 
 spectrum: api
 	rm -rf $(abspath $(SPECTRUM_DIR)/build)
-	cmake -B$(abspath $(SPECTRUM_DIR)/build) -S$(abspath $(SPECTRUM_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(SPECTRUM_DIR)/build) -S$(abspath $(SPECTRUM_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
 	$(MAKE) -C $(SPECTRUM_DIR)/build install
 
 # calibrate: api
@@ -359,7 +373,7 @@ spectrum: api
 
 led_control: api
 	rm -rf $(abspath $(LED_CONTROL_DIR)/build)
-	cmake -B$(abspath $(LED_CONTROL_DIR)/build) -S$(abspath $(LED_CONTROL_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	cmake -B$(abspath $(LED_CONTROL_DIR)/build) -S$(abspath $(LED_CONTROL_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
 	$(MAKE) -C $(LED_CONTROL_DIR)/build install
 
 laboardtest: api2
@@ -429,30 +443,30 @@ ecosystem:
 	$(MAKE) -C $(APP_ECOSYSTEM_DIR) clean
 	$(MAKE) -C $(APP_ECOSYSTEM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-updater: ecosystem $(NGINX)
+updater: ecosystem web-api $(NGINX)
 	$(MAKE) -C $(APP_UPDATER_DIR) clean
 	$(MAKE) -C $(APP_UPDATER_DIR)
 	$(MAKE) -C $(APP_UPDATER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-main_menu: ecosystem api $(NGINX)
+main_menu: ecosystem web-api api # $(NGINX)
 	$(MAKE) -C $(APP_MAIN_MENU_DIR) clean
 	$(MAKE) -C $(APP_MAIN_MENU_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_MAIN_MENU_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-arb_manager: ecosystem api $(NGINX)
+arb_manager: ecosystem web-api api $(NGINX)
 	$(MAKE) -C $(APP_ARB_MANAGER_DIR) clean
 	$(MAKE) -C $(APP_ARB_MANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_ARB_MANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-scpi_manager: ecosystem api $(NGINX)
+scpi_manager: ecosystem web-api api $(NGINX)
 	$(MAKE) -C $(APP_SCPIMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-streaming_manager: api $(NGINX)
+streaming_manager: web-api api $(NGINX)
 	$(MAKE) -i -C $(APP_STREAMINGMANAGER_DIR) clean
 	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-calib_app: api  $(NGINX)
+calib_app: web-api api  $(NGINX)
 	$(MAKE) -i -C $(APP_CALIB_DIR) clean
 	$(MAKE) -C $(APP_CALIB_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
 	$(MAKE) -C $(APP_CALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
@@ -504,34 +518,34 @@ APP_IMP_ANAL_DIR 	= apps-tools/impedance_analyzer
 
 apps-tools: scopegenpro spectrumpro la_pro ba_pro lcr_meter impedance_analyzer
 
-scopegenpro: api $(NGINX)
+scopegenpro: web-api api $(NGINX)
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) clean
-	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
+	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-spectrumpro: api $(NGINX)
+spectrumpro: web-api api $(NGINX)
 	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) clean
-	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
+	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
 	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-lcr_meter: api $(NGINX)
+lcr_meter: web-api api $(NGINX)
 	$(MAKE) -C $(APP_LCRMETER_DIR) clean
-	$(MAKE) -C $(APP_LCRMETER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
+	$(MAKE) -C $(APP_LCRMETER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
 	$(MAKE) -C $(APP_LCRMETER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-la_pro: api api2
+la_pro: web-api api api2
 	$(MAKE) -C $(APP_LA_PRO_DIR) clean
-	$(MAKE) -C $(APP_LA_PRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(APP_LA_PRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
 	$(MAKE) -C $(APP_LA_PRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-ba_pro: api $(NGINX)
+ba_pro: web-api api $(NGINX)
 	$(MAKE) -C $(APP_BA_PRO_DIR) clean
-	$(MAKE) -C $(APP_BA_PRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(APP_BA_PRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
 	$(MAKE) -C $(APP_BA_PRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-impedance_analyzer: api $(NGINX)
+impedance_analyzer: web-api api $(NGINX)
 	$(MAKE) -C $(APP_IMP_ANAL_DIR) clean
-	$(MAKE) -C $(APP_IMP_ANAL_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(APP_IMP_ANAL_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
 	$(MAKE) -C $(APP_IMP_ANAL_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 
@@ -554,6 +568,7 @@ clean:
 	rm -rf $(abspath $(LIBRP_HW_CALIB_DIR)/build)
 	rm -rf $(abspath $(LIBRP_ARB_DIR)/build)
 
+	rm -rf $(abspath $(LIBRP_SYSTEM_DIR)/build)
 
 	rm -rf $(abspath $(LCR_DIR)/build)
 	rm -rf $(abspath $(CALIB_DIR)/build)

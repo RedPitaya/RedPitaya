@@ -14,7 +14,7 @@ INCLUDE += -I$(INSTALL_DIR)/rp_sdk/libjson
 LIBS = -L$(INSTALL_DIR)/lib
 LIBS += -L$(INSTALL_DIR)/rp_sdk
 
-COMMON_FLAGS+=-Wall -fPIC -pedantic -Os -s -w -DASIO_STANDALONE
+COMMON_FLAGS+=-Wall -fPIC -pedantic -Os -s -w -DASIO_STANDALONE -Wl,-rpath,/opt/redpitaya/lib:/opt/redpitaya/lib/web
 CFLAGS += $(COMMON_FLAGS) $(INCLUDE)
 CXXFLAGS+=$(COMMON_FLAGS) -std=c++14 $(INCLUDE)
 LDFLAGS = $(COMMON_FLAGS) $(LIBS)

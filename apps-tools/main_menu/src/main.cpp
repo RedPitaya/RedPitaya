@@ -1,4 +1,4 @@
-
+#include <DataManager.h>
 #include <string>
 #include <memory>
 #include <unistd.h>
@@ -20,6 +20,7 @@
 #include "common/version.h"
 #include "main.h"
 #include "rp.h"
+#include "web/rp_system.h"
 
 const char *rp_app_desc(void) {
     return (const char *)"Red Pitaya main menu application.\n";
@@ -28,12 +29,20 @@ const char *rp_app_desc(void) {
 int rp_app_init(void) {
     fprintf(stderr, "Loading main menu %s-%s.\n", VERSION_STR, REVISION_STR);
     // Need for reset fpga by default
+    CDataManager::GetInstance()->SetParamInterval(1000);
+    CDataManager::GetInstance()->SetSignalInterval(1000);
     rp_Init();
-    rp_Release();
+    rp_WS_Init();
+    rp_WS_SetInterval(RP_WS_DISK_SIZE,10000);
+    rp_WS_SetInterval(RP_WS_RAM,5000);
+    rp_WS_SetInterval(RP_WS_SENSOR_VOLT,2000);
+    rp_WS_SetMode((rp_system_mode_t)(RP_WS_ALL & ~RP_WS_SLOW_DAC));
+    rp_WS_UpdateParameters(true);
     return 0;
 }
 
 int rp_app_exit(void) {
+    rp_Release();
     fprintf(stderr, "Unloading main menu %s-%s.\n", VERSION_STR, REVISION_STR);
     return 0;
 }
@@ -52,12 +61,16 @@ int rp_get_signals(float ***, int *, int *) {
 
 
 
-void UpdateParams(void) {}
+void UpdateParams(void) {
+    rp_WS_UpdateParameters(false);
+}
 
 void PostUpdateSignals(void){}
 
 void UpdateSignals(void) {}
 
-void OnNewParams(void) {}
+void OnNewParams(void) {
+
+}
 
 void OnNewSignals(void){}

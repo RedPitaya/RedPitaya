@@ -17,12 +17,15 @@
     <script src="../assets/jquery.cookie.js?1" onerror="location.reload()"></script>
     <script src="../assets/quickpager.jquery.js?1" onerror="location.reload()"></script>
     <script src="../assets/hammer.js?1" onerror="location.reload()"></script>
+    <script src="../assets/pako.js" onerror="location.reload()"></script>
     <script src="../assets/black_list_app.js?1" onerror="location.reload()"></script>
     <script src="../assets/desktop.js?1" onerror="location.reload()"></script>
     <script src="../assets/browsercheck.js?1" onerror="location.reload()"></script>
     <script src="../assets/ecosystem.js?1" onerror="location.reload()"></script>
     <script src="../assets/popupstack.js?1" onerror="location.reload()"></script>
     <script src="../assets/jquery.browser.js?1" onerror="location.reload()"></script>
+    <script src="../main_menu/js/client.js?1" onerror="location.reload()"></script>
+    <script src="../main_menu/js/main.js?1" onerror="location.reload()"></script>
     <link href="./assets/popupstack.css?1" rel="stylesheet" type="text/css" onerror="location.reload()" />
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
@@ -120,7 +123,7 @@
         </div>
     </div>
     <div class="modal fade" id="sysinfo_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
-        <div class="modal-dialog" style="width: 900px;">
+        <div class="modal-dialog" style="width: 1280px;">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -152,8 +155,56 @@
                                 <td><a id="SI_LINUX">-</a></td>
                             </tr>
                             <tr style="height:40px;">
+                                <td>CPU load:</td>
+                                <td><a id="CPU_LOAD_ID">-</a></td>
+                            </tr>
+                            <tr style="height:40px;">
                                 <td>RAM size:</td>
                                 <td><a id="RAM_SIZE_ID">-</a></td>
+                            </tr>
+                            <tr style="height:40px;">
+                                <td>Temperature:</td>
+                                <td><a id="TEMP_ID">-</a></td>
+                            </tr>
+                            <tr style="height:40px;">
+                                <td>SD:</td>
+                                <td><a id="SD_SIZE_ID">-</a></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div style="text-align: left;margin-left: 5%;">
+                        <table>
+                            <col width="880px">
+                            <tr style="height:40px;">
+                                <td colspan="2" style="text-align: center;">Sensors</td>
+                            </tr>
+                        </table>
+                        <table>
+                            <col width="450px">
+                            <col width="400px">
+                            <tr style="height:40px;">
+                                <td>VCC PINT (1.0V):</td>
+                                <td><a id="VCCPINT_ID">-</a></td>
+                            </tr>
+                            <tr style="height:40px;">
+                                <td>VCC PAUX (1.8V):</td>
+                                <td><a id="VCCPAUX_ID">-</a></td>
+                            </tr>
+                            <tr style="height:40px;">
+                                <td>VCC BRAM (1.0V):</td>
+                                <td><a id="VCCBRAM_ID">-</a></td>
+                            </tr>
+                            <tr style="height:40px;">
+                                <td>VCC INT (1.0V):</td>
+                                <td><a id="VCCINT_ID">-</a></td>
+                            </tr>
+                            <tr style="height:40px;">
+                                <td>VCC AUX (1.8V):</td>
+                                <td><a id="VCCAUX_ID">-</a></td>
+                            </tr>
+                            <tr style="height:40px;">
+                                <td>VCC DDR (1.5V):</td>
+                                <td><a id="VCCDDR_ID">-</a></td>
                             </tr>
                         </table>
                     </div>

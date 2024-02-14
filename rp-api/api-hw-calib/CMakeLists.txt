@@ -42,6 +42,12 @@ message(STATUS "Compiler C++ ID: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "Compiler C++version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
+list(APPEND r_paths
+    /opt/redpitaya/lib
+    /opt/redpitaya/lib/web
+)
+
+set(CMAKE_INSTALL_RPATH ${r_paths})
 
 include_directories("include")
 include_directories("src")

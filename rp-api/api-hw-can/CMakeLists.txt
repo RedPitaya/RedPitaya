@@ -43,6 +43,12 @@ message(STATUS "Compiler C++ ID: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "Compiler C++version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
+list(APPEND r_paths
+    /opt/redpitaya/lib
+    /opt/redpitaya/lib/web
+)
+
+set(CMAKE_INSTALL_RPATH ${r_paths})
 
 include_directories("include")
 include_directories("src")
@@ -69,7 +75,7 @@ if(BUILD_SHARED)
         set(src/rp_hw_can.i PROPERTIES CPLUSPLUS ON)
 
         SWIG_ADD_LIBRARY(rp_hw_can_py LANGUAGE python SOURCES src/rp_hw_can.i ${PR_HW_SOURCES})
-        SWIG_LINK_LIBRARIES(rp_hw_can_py ${PYTHON_LIBRARIES} rp.a rp-hw-calib.a rp-hw-profiles.a rp-i2c.a rp-spi.a rp-gpio.a rp-hw.a i2c socketcan)
+        SWIG_LINK_LIBRARIES(rp_hw_can_py ${PYTHON_LIBRARIES} rp rp-hw-calib rp-hw-profiles rp-i2c rp-spi rp-gpio rp-hw i2c socketcan)
     endif()
 
     add_library(${PROJECT_NAME}-shared SHARED)

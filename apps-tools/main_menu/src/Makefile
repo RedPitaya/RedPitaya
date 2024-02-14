@@ -12,14 +12,16 @@ INCLUDE += -I$(INSTALL_DIR)/rp_sdk
 INCLUDE += -I$(INSTALL_DIR)/rp_sdk/libjson
 
 LIBS = -L$(INSTALL_DIR)/lib
+LIBS += -L$(INSTALL_DIR)/lib/web
 LIBS += -L$(INSTALL_DIR)/rp_sdk
 
 COMMON_FLAGS+=-Wall -fPIC -pedantic -Os -s -w -DASIO_STANDALONE
 CFLAGS += $(COMMON_FLAGS) $(INCLUDE)
-CXXFLAGS+=$(COMMON_FLAGS) -std=c++14 $(INCLUDE)
+CXXFLAGS+=$(COMMON_FLAGS) -std=c++17 $(INCLUDE)
 LDFLAGS = $(COMMON_FLAGS) $(LIBS)
+LDWFLAGS+= -Wl,-rpath,/opt/redpitaya/lib:/opt/redpitaya/lib/web
 LDWFLAGS+= -Wl,--whole-archive
-LDWFLAGS+= -lrp_sdk -lrp -lrp-hw -lrp-hw-calib -lrp-hw-profiles
+LDWFLAGS+= -lrp-system -lrp_sdk -lrp -lrp-hw -lrp-hw-calib -lrp-hw-profiles
 LDWFLAGS+= -Wl,--no-whole-archive
 LDWFLAGS+= -shared
 

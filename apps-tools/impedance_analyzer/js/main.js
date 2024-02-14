@@ -727,10 +727,10 @@ $(function() {
 
     // Stop the application when page is unloaded
     $(window).on('beforeunload', function() {
-        MAIN.ws.onclose = function() {}; // disable onclose handler first
-        MAIN.ws.close();
+        CLIENT.ws.onclose = function() {}; // disable onclose handler first
+        CLIENT.ws.close();
         $.ajax({
-            url: MAIN.config.stop_app_url,
+            url: CLIENT.config.stop_app_url,
             async: false
         });
     });

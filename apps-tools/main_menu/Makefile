@@ -31,7 +31,7 @@ $(ZIP): $(CONTROLLER)
 	-$(RM) target -rf
 	mkdir -p target/$(APP)
 
-	cp -r $(CONTROLLER) fpga.conf fpga.sh target/$(APP)
+	cp -r $(CONTROLLER) fpga.conf js fpga.sh fpga.conf target/$(APP)
 
 	cd target; zip -r ../$(ZIP) *
 	$(RM) target -rf

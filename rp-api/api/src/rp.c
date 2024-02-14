@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <pthread.h>
 
 #include "common/version.h"
 #include "common.h"
@@ -30,6 +31,8 @@
 static char version[50];
 int g_api_state = 0;
 
+pthread_mutex_t rp_init_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 /**
  * Global methods
  */
@@ -41,6 +44,8 @@ int rp_Init()
 
 int rp_InitReset(bool reset)
 {
+    if (g_api_state) return RP_EOOR;
+    pthread_mutex_lock(&rp_init_mutex);
     cmn_Init();
 
     rp_CalibInit();
@@ -59,6 +64,7 @@ int rp_InitReset(bool reset)
         rp_Reset();
     }
     g_api_state = true;
+    pthread_mutex_unlock(&rp_init_mutex);
     return RP_OK;
 }
 
@@ -68,6 +74,7 @@ int rp_IsApiInit(){
 
 int rp_Release()
 {
+    pthread_mutex_lock(&rp_init_mutex);
     ECHECK(osc_Release())
     ECHECK(generate_Release())
     ECHECK(ams_Release())
@@ -75,6 +82,7 @@ int rp_Release()
     ECHECK(daisy_Release())
     ECHECK(cmn_Release())
     g_api_state = false;
+    pthread_mutex_unlock(&rp_init_mutex);
     return RP_OK;
 }
 
@@ -613,46 +621,34 @@ int rp_ApinReset() {
 
 int rp_ApinGetValue(rp_apin_t pin, float* value, uint32_t* raw) {
     if (pin <= RP_AOUT3) {
-        rp_AOpinGetValue(pin-RP_AOUT0, value, raw);
+        return rp_AOpinGetValue(pin-RP_AOUT0, value, raw);
     } else if (pin <= RP_AIN3) {
-        rp_AIpinGetValue(pin-RP_AIN0, value, raw);
-    } else {
-        return RP_EPN;
+        return rp_AIpinGetValue(pin-RP_AIN0, value, raw);
     }
-    return RP_OK;
+    return RP_EPN;
 }
 
 int rp_ApinGetValueRaw(rp_apin_t pin, uint32_t* value) {
     if (pin <= RP_AOUT3) {
-        rp_AOpinGetValueRaw(pin-RP_AOUT0, value);
+        return rp_AOpinGetValueRaw(pin-RP_AOUT0, value);
     } else if (pin <= RP_AIN3) {
-        rp_AIpinGetValueRaw(pin-RP_AIN0, value);
-    } else {
-        return RP_EPN;
+        return rp_AIpinGetValueRaw(pin-RP_AIN0, value);
     }
-    return RP_OK;
+    return RP_EPN;
 }
 
 int rp_ApinSetValue(rp_apin_t pin, float value) {
     if (pin <= RP_AOUT3) {
-        rp_AOpinSetValue(pin-RP_AOUT0, value);
-    } else if (pin <= RP_AIN3) {
-        return RP_EPN;
-    } else {
-        return RP_EPN;
+        return rp_AOpinSetValue(pin-RP_AOUT0, value);
     }
-    return RP_OK;
+    return RP_EPN;
 }
 
 int rp_ApinSetValueRaw(rp_apin_t pin, uint32_t value) {
     if (pin <= RP_AOUT3) {
-        rp_AOpinSetValueRaw(pin-RP_AOUT0, value);
-    } else if (pin <= RP_AIN3) {
-        return RP_EPN;
-    } else {
-        return RP_EPN;
+        return rp_AOpinSetValueRaw(pin-RP_AOUT0, value);
     }
-    return RP_OK;
+    return RP_EPN;
 }
 
 int rp_ApinGetRange(rp_apin_t pin, float* min_val, float* max_val) {

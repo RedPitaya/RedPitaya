@@ -20,6 +20,12 @@ message(STATUS "Compiler С++ ID: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "Compiler С++version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Compiler С++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
+list(APPEND r_paths
+    /opt/redpitaya/lib
+    /opt/redpitaya/lib/web
+)
+
+set(CMAKE_INSTALL_RPATH ${r_paths})
 
 set(CMAKE_CXX_STANDARD 17)
 

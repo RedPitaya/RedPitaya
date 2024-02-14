@@ -402,7 +402,6 @@
                         $('#SI_DNA').text(obj['dna']);
                         $('#SI_ECOSYSTEM').text(obj['ecosystem']['version'] + '-' + obj['ecosystem']['revision']);
                         $('#SI_LINUX').text(obj['linux']);
-                        $('#RAM_SIZE_ID').text(obj['mem_size']+"Mb");
                         $('#UBOOT_MODE_ID').text(obj['boot_512'] == "1"?"BOOT mode: Unify":"BOOT mode: SIGNALlab");
 
                         if (obj['mem_upgrade'] == "1"){
