@@ -520,32 +520,32 @@ apps-tools: scopegenpro spectrumpro la_pro ba_pro lcr_meter impedance_analyzer
 
 scopegenpro: web-api api $(NGINX)
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) clean
-	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
+	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 spectrumpro: web-api api $(NGINX)
 	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) clean
-	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
+	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
 	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 lcr_meter: web-api api $(NGINX)
 	$(MAKE) -C $(APP_LCRMETER_DIR) clean
-	$(MAKE) -C $(APP_LCRMETER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
+	$(MAKE) -C $(APP_LCRMETER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
 	$(MAKE) -C $(APP_LCRMETER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 la_pro: web-api api api2
 	$(MAKE) -C $(APP_LA_PRO_DIR) clean
-	$(MAKE) -C $(APP_LA_PRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
+	$(MAKE) -C $(APP_LA_PRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_LA_PRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 ba_pro: web-api api $(NGINX)
 	$(MAKE) -C $(APP_BA_PRO_DIR) clean
-	$(MAKE) -C $(APP_BA_PRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
+	$(MAKE) -C $(APP_BA_PRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_BA_PRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 impedance_analyzer: web-api api $(NGINX)
 	$(MAKE) -C $(APP_IMP_ANAL_DIR) clean
-	$(MAKE) -C $(APP_IMP_ANAL_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
+	$(MAKE) -C $(APP_IMP_ANAL_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_IMP_ANAL_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 
