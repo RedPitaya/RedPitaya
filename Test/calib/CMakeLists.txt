@@ -35,6 +35,10 @@ message(STATUS "Compiler C++ ID: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "Compiler C++version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
+list(APPEND r_paths
+    /opt/redpitaya/lib
+    /opt/redpitaya/lib/web
+)
 
 include_directories(${INSTALL_DIR}/include)
 
@@ -49,7 +53,7 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 
 
 target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib)
-target_link_libraries(${PROJECT_NAME} PRIVATE -static rp-hw-calib rp-hw-profiles m)
+target_link_libraries(${PROJECT_NAME} PRIVATE rp-hw-calib rp-hw-profiles m)
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${INSTALL_DIR}/bin)
 
