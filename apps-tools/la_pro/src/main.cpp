@@ -410,7 +410,7 @@ void OnNewParams(void)
 			int pre = preSampleBuf.Value();
 			uint32_t POST = BUF_SIZE - pre;
 			uint32_t samples = 0;
-
+            RP_STATUS s;
 			// buffers for fpga
 			auto buf = new uint8_t[BUF_SIZE*2];
 			auto buf1 = new int16_t[BUF_SIZE];
@@ -468,6 +468,10 @@ void OnNewParams(void)
 
 		    delete[] buf;
 		    delete[] buf1;
+
+            if (s != RP_API_OK){
+                fprintf(stderr,"Error api2 %d\n",s);
+            }
 		}).detach();
 	}
 	else if (!createDecoder.IsNewValue() && !decoderName.IsNewValue() && !destroyDecoder.IsNewValue() && !g_decoders.size() && !ch1.GetSize()) // nothing

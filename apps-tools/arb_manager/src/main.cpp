@@ -106,7 +106,7 @@ auto decimateSignal(float *data, uint32_t size,float *out,uint32_t *sizeOut) -> 
     if (rate < 1){
         *sizeOut = 0;
         int prev_x = -1;
-        for(int i = 0 ; i < size ; i++){
+        for(uint32_t i = 0 ; i < size ; i++){
             int x = (float)i * (float)rate;
             out[x] = data[i];
             if (prev_x != x){
@@ -115,7 +115,7 @@ auto decimateSignal(float *data, uint32_t size,float *out,uint32_t *sizeOut) -> 
             }
         }
     }else{
-        for(int i = 0 ; i < size ; i++){
+        for(uint32_t i = 0 ; i < size ; i++){
             out[i] = data[i];
         }
         *sizeOut = size;
@@ -147,7 +147,7 @@ void sendFilesInfo() {
 
         decimateSignal(data,dataSize,dataOut,&dataSizeOut);
         std::string sig = std::to_string(dataSizeOut) + "\t";
-        for(int j = 0 ; j < dataSizeOut; j++){
+        for(uint32_t j = 0 ; j < dataSizeOut; j++){
             if (j !=0 ){
                 sig += ";";
             }
@@ -222,7 +222,7 @@ void OnNewParams(void) {
         auto new_name = items[1];
         uint32_t count = 0;
         if (rp_ARBGetCount(&count) == RP_ARB_FILE_OK){
-            for(int i = 0; i < count; i++){
+            for(uint32_t i = 0; i < count; i++){
                 std::string fname = "";
                 if (rp_ARBGetFileName(i,&fname) == RP_ARB_FILE_OK){
                     if (fname == id){
