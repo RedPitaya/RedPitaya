@@ -4,7 +4,7 @@ set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
 set(CMAKE_CXX_STANDARD 11)
 set(C_STANDARD 11)
-set(CMAKE_VERBOSE_MAKEFILE ON)
+set(CMAKE_VERBOSE_MAKEFILE OFF)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 
@@ -41,7 +41,6 @@ list(APPEND r_paths
     /opt/redpitaya/lib
     /opt/redpitaya/lib/web
 )
-
 
 set(CMAKE_INSTALL_RPATH ${r_paths})
 

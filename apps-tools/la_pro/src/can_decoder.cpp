@@ -73,7 +73,7 @@ void CANDecoder::ResetDecoder()
 {
 	m_OldCanRX = 1;
 	m_dom_edge_snum = 0;
-	m_dom_edge_bcount = 0; 
+	m_dom_edge_bcount = 0;
 	m_Samplenum = 0;
 	m_SampleSkip = 0;
 	m_State = IDLE;
@@ -117,7 +117,7 @@ void CANDecoder::Decode(const uint8_t* _input, uint32_t _size)
 		m_Start = true;
 	}
 
-	
+
 #endif
 	ResetDecoder();
 	m_ParametersUpdated = false;
@@ -128,7 +128,7 @@ void CANDecoder::Decode(const uint8_t* _input, uint32_t _size)
 		const uint8_t data  = _input[i + 1];
 		for (uint16_t j = 0; j < count + 1; ++j)
 		{
-			
+
 			// Get bit state of line in LA
 			bool can_rx = (data & 1 << m_Options.can_rx) >> m_Options.can_rx;
 			if (m_Options.invert_bit != 0){
@@ -137,7 +137,7 @@ void CANDecoder::Decode(const uint8_t* _input, uint32_t _size)
 			// char s[20];
 			// sprintf(s,"%d",can_rx);
 			// PrintLogInFile(s);
-			
+
 			if (m_State == IDLE)
 			{
 				if (IsLowState(can_rx)){
@@ -145,7 +145,7 @@ void CANDecoder::Decode(const uint8_t* _input, uint32_t _size)
 					m_State = CORRECT;
 					disableSynOnStart = false;
 				}else{
-					m_TempResult.push_back(OutputPacket{NOTHING, can_rx, 1}); 
+					m_TempResult.push_back(OutputPacket{NOTHING, can_rx, 1});
 					if (m_Bitwidth * 8 < m_Samplenum  && disableSynOnStart) {
 						m_SyncMode = false;
 						disableSynOnStart = false;
@@ -155,8 +155,8 @@ void CANDecoder::Decode(const uint8_t* _input, uint32_t _size)
 			if (m_State == CORRECT){
 				int32_t pos = Get_sample_point(m_CurBit);
 				m_SampleSkip = pos - m_Samplenum;
-				m_State = GET_INFO;	
-				//printf("S %d :  %d : %d : %d\n",m_Samplenum,m_SampleSkip,m_CurBit,pos);			
+				m_State = GET_INFO;
+				//printf("S %d :  %d : %d : %d\n",m_Samplenum,m_SampleSkip,m_CurBit,pos);
 			}
 
 			if (m_State == GET_INFO){
@@ -164,19 +164,19 @@ void CANDecoder::Decode(const uint8_t* _input, uint32_t _size)
 					Dom_edge_seen();
 					m_State = CORRECT;
 				}
-				
+
 				if(m_SampleSkip <= 0){
 					if (m_SyncMode){
 						m_SyncBits.push_back(can_rx);
 						m_CurBit += 1;
-						m_TempResult.push_back(OutputPacket{SYNC, can_rx, 1}); 
+						m_TempResult.push_back(OutputPacket{SYNC, can_rx, 1});
 						if (m_SyncBits.size() >= 7){
 							std::vector<uint32_t> last_7_bits(m_SyncBits.end() - 7, m_SyncBits.end());
-							std::vector<uint32_t> data { 1, 1, 1, 1, 1, 1, 1 }; 
+							std::vector<uint32_t> data { 1, 1, 1, 1, 1, 1, 1 };
 							if (last_7_bits == data){
 								m_State = IDLE;
 								m_SyncMode = false;
-								
+
 							}else{
 								m_State = CORRECT;
 							}
@@ -197,24 +197,24 @@ void CANDecoder::Decode(const uint8_t* _input, uint32_t _size)
 						}
 					}
 				}else{
-					m_TempResult.push_back(OutputPacket{NOTHING, can_rx, 1}); 
+					m_TempResult.push_back(OutputPacket{NOTHING, can_rx, 1});
 				}
 
 				if (m_SampleSkip > 0){
-					m_SampleSkip--;					
-				}	
+					m_SampleSkip--;
+				}
 			}
 
 			m_OldCanRX = can_rx;
-			
+
 			assert(m_Samplenum < std::numeric_limits<decltype(m_Samplenum)>::max() && "m_Samplenum overflow");
 			++m_Samplenum;
-			
+
 		}
 	}
 	m_TempResult = PackResult(m_TempResult);
 	int sum = 0;
-	for(auto i = 0; i < m_TempResult.size(); i ++) {
+	for(auto i = 0u; i < m_TempResult.size(); i ++) {
 		if (sum <= m_Options.frame_limit) {
 				m_Result.push_back(m_TempResult[i]);
 			}
@@ -223,7 +223,7 @@ void CANDecoder::Decode(const uint8_t* _input, uint32_t _size)
 		}
 	}
 	fprintf(stderr,"Pack result: %d frames found: %d\n",m_TempResult.size(),sum);
-	
+
 #ifndef CLI
 	m_Signal.Set(std::move(m_Result));
 	pthread_mutex_unlock(&m_mutex);
@@ -234,7 +234,7 @@ std::vector<OutputPacket> CANDecoder::PackResult(std::vector<OutputPacket> &_dat
 	std::vector<OutputPacket> new_result;
 	for (size_t i = 0; i < _data.size(); i++){
 		if (new_result.size () > 0 ){
-			if ((new_result.back().control == _data[i].control) && 
+			if ((new_result.back().control == _data[i].control) &&
 					(new_result.back().data == _data[i].data)){
 						uint32_t sum_size = _data[i].length + new_result.back().length;
 						if (sum_size > 0xFFFF){
@@ -249,11 +249,11 @@ std::vector<OutputPacket> CANDecoder::PackResult(std::vector<OutputPacket> &_dat
 					}
 		}else{
 			new_result.push_back(_data[i]);
-		}		 
+		}
 	}
 	return new_result;
 }
-	
+
 
 void CANDecoder::Dom_edge_seen(){
 	m_dom_edge_snum = m_Samplenum;
@@ -295,7 +295,7 @@ bool CANDecoder::Handle_Bit(const bool _can_rx){
 	m_Bits.push_back(_can_rx);
 	m_RawBits.push_back(_can_rx);
 	uint32_t bitnum = m_Bits.size() - 1;
-	
+
 	if (m_IsFlexibleData && _can_rx){
 		if ((bitnum == 16 && m_Frame_Type == Standart) || (bitnum == 35 && m_Frame_Type == Extended)){
 			Dom_edge_seen();
@@ -304,7 +304,7 @@ bool CANDecoder::Handle_Bit(const bool _can_rx){
 	}
 
 	// If this is a stuff bit, remove it from self.bits and ignore it.
-    
+
 	if (Is_Stuff_Bit()){
 		m_TempResult.push_back(OutputPacket{STUFF_BIT, _can_rx, 1}); // Put stuff bit
 		m_CurBit += 1; // Increase curbit (bitnum is not affected).
@@ -334,12 +334,12 @@ bool CANDecoder::Handle_Bit(const bool _can_rx){
 		m_ID = Convert(id_bits);
 		m_TempResult.push_back(OutputPacket{ID, m_ID, 1});
 		if ((m_ID & 0x7f0) == 0x7f0){
-			m_TempResult.push_back(OutputPacket{WARNING_1, m_ID, 1});	
+			m_TempResult.push_back(OutputPacket{WARNING_1, m_ID, 1});
 		}
 	}
 
 	// RTR or SRR bit, depending on frame type (gets handled later).
-    if (bitnum == 12){ 
+    if (bitnum == 12){
         m_SS_bit12 = m_Samplenum;
 	}
 
@@ -349,7 +349,7 @@ bool CANDecoder::Handle_Bit(const bool _can_rx){
 	{
 		m_Frame_Type = Standart;
 		if (_can_rx == 1) m_Frame_Type = Extended;
-		m_TempResult.push_back(OutputPacket{IDE, _can_rx, 1});	
+		m_TempResult.push_back(OutputPacket{IDE, _can_rx, 1});
 	}
 
 	if (bitnum >= 14){
@@ -373,7 +373,7 @@ bool CANDecoder::Decode_Standard_Frame(const bool _can_rx,uint32_t bitnum){
 		m_IsFlexibleData = false;
 		if (_can_rx) m_IsFlexibleData = true;
 		if (m_IsFlexibleData){
-			m_TempResult.push_back(OutputPacket{RESERV_BIT_FLEX, _can_rx, 1});	
+			m_TempResult.push_back(OutputPacket{RESERV_BIT_FLEX, _can_rx, 1});
 			m_TempResult.push_back(OutputPacket{RESERV_BIT, _can_rx, 1});
 		}else{
 			m_TempResult.push_back(OutputPacket{RESERV_BIT, _can_rx, 1});
@@ -388,11 +388,11 @@ bool CANDecoder::Decode_Standard_Frame(const bool _can_rx,uint32_t bitnum){
             //  Remote frames do not contain a data field.
 			m_TempResult.push_back(OutputPacket{RTR, m_Bits[12], 1});
 			m_DLC_start = 15;
-		} 
+		}
 	}
 
 	if (bitnum == 15 && m_IsFlexibleData){
-        m_TempResult.push_back(OutputPacket{RESERV_BIT, _can_rx, 1});	
+        m_TempResult.push_back(OutputPacket{RESERV_BIT, _can_rx, 1});
 	}
 
 
@@ -418,7 +418,7 @@ bool CANDecoder::Decode_Standard_Frame(const bool _can_rx,uint32_t bitnum){
 		m_Last_Databit = m_DLC_start + 3 + DLC2Len(m_DataLenghtCode) * 8;
 		if (m_DataLenghtCode > 8 && !m_IsFlexibleData){
 			m_TempResult.push_back(OutputPacket{ERROR_2, m_DataLenghtCode, 1});
-		}	
+		}
 	}
 
 	// Remember all databyte bits, except the very last one.
@@ -478,7 +478,7 @@ bool CANDecoder::Decode_Extended_Frame(const bool _can_rx,uint32_t bitnum){
 		if (_can_rx) m_IsFlexibleData = true;
 		if (m_IsFlexibleData) {
 			m_DLC_start = 37;
-			m_TempResult.push_back(OutputPacket{RESERV_BIT_FLEX, _can_rx, 1});	
+			m_TempResult.push_back(OutputPacket{RESERV_BIT_FLEX, _can_rx, 1});
 			m_TempResult.push_back(OutputPacket{RESERV_BIT, _can_rx, 1});
 		}else{
 			m_TempResult.push_back(OutputPacket{RESERV_BIT, _can_rx, 1});
@@ -512,7 +512,7 @@ bool CANDecoder::Decode_Extended_Frame(const bool _can_rx,uint32_t bitnum){
 		m_Last_Databit = m_DLC_start + 3 + DLC2Len(m_DataLenghtCode) * 8;
 		if (m_DataLenghtCode > 8 && !m_IsFlexibleData){
 			m_TempResult.push_back(OutputPacket{ERROR_2, m_DataLenghtCode, 1});
-		}	
+		}
 	}
 
 	// Remember all databyte bits, except the very last one.
@@ -546,7 +546,7 @@ bool CANDecoder::Decode_End_Frame(const bool _can_rx,uint32_t bitnum){
 		}else{
 			m_CRC_Len = 15;
 		}
-	} 
+	}
 
 
 	// CRC sequence (15 bits, 17 bits or 21 bits)
@@ -560,17 +560,17 @@ bool CANDecoder::Decode_End_Frame(const bool _can_rx,uint32_t bitnum){
 		}else{
 			m_TempResult.push_back(OutputPacket{CRC_LEN, 15, 1});
 		}
-		
+
 		uint32_t x = m_Last_Databit + 1;
-		std::vector<uint32_t> crc_bits(m_Bits.begin() + x, m_Bits.begin() + x + m_CRC_Len);	
+		std::vector<uint32_t> crc_bits(m_Bits.begin() + x, m_Bits.begin() + x + m_CRC_Len);
 		m_CRC = Convert(crc_bits);
 		m_TempResult.push_back(OutputPacket{CRC_SEQ, m_CRC, 1});
-	}	
+	}
 
     // CRC delimiter bit (recessive)
     if (bitnum == m_Last_Databit + m_CRC_Len + 1){
 		m_TempResult.push_back(OutputPacket{CRC_DELIMITER, _can_rx, 1});
-		if (_can_rx != 1) {			
+		if (_can_rx != 1) {
 			m_TempResult.push_back(OutputPacket{WARNING_2, _can_rx, 1});
 		}
 		if (m_IsFlexibleData) {
@@ -582,7 +582,7 @@ bool CANDecoder::Decode_End_Frame(const bool _can_rx,uint32_t bitnum){
     if (bitnum == m_Last_Databit + m_CRC_Len + 2){
 		m_TempResult.push_back(OutputPacket{ACK_SLOT, _can_rx, 1});
 	}
-            
+
  	// ACK delimiter bit (recessive)
     if (bitnum == m_Last_Databit + m_CRC_Len + 3){
 		m_TempResult.push_back(OutputPacket{ACK_DELIMITER, _can_rx, 1});
@@ -595,12 +595,12 @@ bool CANDecoder::Decode_End_Frame(const bool _can_rx,uint32_t bitnum){
     if (bitnum == m_Last_Databit + m_CRC_Len + 4){
 		m_SS_block = m_Samplenum;
 	}
-     
+
 	// End of frame (EOF), 7 recessive bits
     if (bitnum == m_Last_Databit + m_CRC_Len + 10){
 		m_TempResult.push_back(OutputPacket{END_OF_FRAME, _can_rx, 1});
 		std::vector<uint32_t> last_7_bits(m_RawBits.end() - 7, m_RawBits.end());
-		std::vector<uint32_t> data { 1, 1, 1, 1, 1, 1, 1 }; 
+		std::vector<uint32_t> data { 1, 1, 1, 1, 1, 1, 1 };
 		if (last_7_bits != data){
 			m_TempResult.push_back(OutputPacket{ERROR_3, 0, 1});
 		}
@@ -611,13 +611,13 @@ bool CANDecoder::Decode_End_Frame(const bool _can_rx,uint32_t bitnum){
 }
 
 bool CANDecoder::Is_Stuff_Bit(){
-	// Don't chack end of frame. 
+	// Don't chack end of frame.
 	if (m_Bits.size() > m_Last_Databit + 17)
-		return false; 
+		return false;
 
 	std::vector<uint32_t> last_6_bits(m_RawBits.end() - 6, m_RawBits.end());
-	std::vector<uint32_t> data_1 { 0, 0, 0, 0, 0, 1 }; 
-	std::vector<uint32_t> data_2 { 1, 1, 1, 1, 1, 0 }; 
+	std::vector<uint32_t> data_1 { 0, 0, 0, 0, 0, 1 };
+	std::vector<uint32_t> data_2 { 1, 1, 1, 1, 1, 0 };
 	if (last_6_bits != data_1 && last_6_bits != data_2){
 		return false;
 	}
@@ -629,7 +629,7 @@ bool CANDecoder::Is_Stuff_Bit(){
 uint32_t CANDecoder::Convert(const std::vector<uint32_t> &_bits){
 	uint32_t x = 0;
 	for (uint32_t i = 0 ;i < _bits.size() ; i++)
-	{  
+	{
     	if (_bits[i] > 0 ) {
 			x = x | (_bits[i] << (_bits.size() - i - 1));
 		}

@@ -22,6 +22,7 @@
 #include "sig_gen_logic.h"
 #include "osc_logic.h"
 #include "math_logic.h"
+#include "web/rp_system.h"
 
 
 /* -------------------------  debug parameter  --------------------------------- */

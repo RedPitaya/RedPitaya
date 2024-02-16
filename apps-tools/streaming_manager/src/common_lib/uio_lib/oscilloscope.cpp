@@ -187,7 +187,7 @@ auto COscilloscope::setReg(volatile OscilloscopeMapT *_OscMap) -> void {
         setRegister(_OscMap,&(_OscMap->filt_coeff_bb_ch2),m_BB_ch[1]);
         setRegister(_OscMap,&(_OscMap->filt_coeff_kk_ch2),m_KK_ch[1]);
         setRegister(_OscMap,&(_OscMap->filt_coeff_pp_ch2),m_PP_ch[1]);
-        
+
         if (m_maxChannels >= 3){
             setRegister(_OscMap,&(_OscMap->calib_offset_ch3),m_calib_offset_ch[2]);
             setRegister(_OscMap,&(_OscMap->calib_gain_ch3),m_calib_gain_ch[2]);

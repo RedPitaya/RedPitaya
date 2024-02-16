@@ -40,6 +40,8 @@ list(APPEND r_paths
     /opt/redpitaya/lib/web
 )
 
+set(CMAKE_INSTALL_RPATH ${r_paths})
+
 include_directories(${INSTALL_DIR}/include)
 
 file(GLOB SOURCES "src/*.c")

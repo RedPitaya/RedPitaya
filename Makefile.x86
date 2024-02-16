@@ -8,7 +8,7 @@ BUILD_NUMBER ?= 0
 GIT_MODE ?= GITHUB
 GITLAB_TOKEN ?= NONE
 
-CPU_CORES=$($(shell grep '^processor' /proc/cpuinfo | sort -u | wc -l) + 1)
+CPU_CORES = $(shell ./get_cpu_ram.sh)
 
 REVISION ?= $(shell git rev-parse --short HEAD)
 VERSION = $(VER)-$(BUILD_NUMBER)

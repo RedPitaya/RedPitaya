@@ -143,11 +143,13 @@ void UpdateParams(void)
 {
   	inRun.Update();
 
-    if (rp_HPIsFastDAC_PresentOrDefault())
+    if (rp_HPIsFastDAC_PresentOrDefault()){
         g_sweepController->pause(!inRun.Value());
+    }
 
-	if (inRun.Value() == false)
+	if (inRun.Value() == false){
 		return;
+    }
 
     auto adc = rpApp_SpecGetADCFreq();
     auto buf = rpApp_SpecGetADCBufferSize();
@@ -294,12 +296,9 @@ void decimateDataFirstN(CFloatSignal &dest, float *src,int start,int stop,int vi
 
     // auto timeNowP1 = std::chrono::system_clock::now();
 
-    float koef = 1;
     int pointsNumOrig = stop - start;
     int pointsNum = pointsNumOrig;
-    if (pointsNum > view_size)
-    {
-        koef = (float)pointsNum / view_size;
+    if (pointsNum > view_size){
         pointsNum = view_size;
     }
 

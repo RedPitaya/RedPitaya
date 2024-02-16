@@ -90,7 +90,7 @@ CBooleanParameter 	gen_enable[MAX_DAC_CHANNELS]	= INIT2( "gen","_enable", 	     
 CIntParameter		gen_type[MAX_DAC_CHANNELS]		= INIT2( "gen","_type", 				CBaseParameter::RW,   0 ,0,	0, 10);
 CFloatParameter		gen_offset[MAX_DAC_CHANNELS]	= INIT2( "gen","_offset",			CBaseParameter::RW,   0 ,0,	-1, 1);
 CFloatParameter		gen_amp[MAX_DAC_CHANNELS]		= INIT2( "gen","_amp",				CBaseParameter::RW,   0.9 ,0,	0.001, 1);
-CIntParameter		gen_freq[MAX_DAC_CHANNELS]		= INIT2( "gen","_freq",				CBaseParameter::RW,   1000 ,0,	1, getDACRate() / DAC_DEVIDER);
+CIntParameter		gen_freq[MAX_DAC_CHANNELS]		= INIT2( "gen","_freq",				CBaseParameter::RW,   1000 ,0,	1, (int)(getDACRate() / DAC_DEVIDER));
 
 
 CBooleanParameter 	gen_gain(	  "gen_gain", 		        CBaseParameter::RW, false,0);

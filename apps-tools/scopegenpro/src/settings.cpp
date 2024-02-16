@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <istream>
 #include <iterator>
+#include <iostream>
 #include <cstdio>
 #include <mutex>
 

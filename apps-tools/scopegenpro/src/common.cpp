@@ -86,7 +86,6 @@ auto getMaxFreqRate() -> float{
 }
 
 auto getMaxTriggerLevel() -> float{
-    auto rate = getADCRate();
     auto model = getModel();
     switch (model)
     {

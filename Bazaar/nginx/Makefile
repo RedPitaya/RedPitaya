@@ -37,8 +37,6 @@ configuration += --with-ld-opt="-Wl,-rpath,/usr/lib/arm-linux-gnueabihf"
 
 VERSION=$(VER)-$(BUILD_NUMBER)
 
-.PHONY: $(NGINX)
-
 all: $(NGINX)
 
 $(NGINX): $(RP_MANAGER_LIB) $(WS_SERVER_LIB)

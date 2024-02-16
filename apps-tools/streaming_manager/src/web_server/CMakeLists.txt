@@ -28,7 +28,7 @@ list(APPEND r_paths
 
 set(CMAKE_INSTALL_RPATH ${r_paths})
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 FILE(GLOB_RECURSE INC_ALL "*.h")
 
@@ -51,7 +51,7 @@ if (RP_PLATFORM)
 endif()
 
 target_compile_options(${PROJECT_NAME}
-    PRIVATE -Wall -fpermissive -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os -s>  -ffunction-sections -fdata-sections)
+    PRIVATE -Wall -Wno-reorder -fpermissive -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os -s>  -ffunction-sections -fdata-sections)
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC  ${PROJECT_SOURCE_DIR}

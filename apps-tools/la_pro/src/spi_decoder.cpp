@@ -109,7 +109,7 @@ void SpiDecoder::Decode(const uint8_t* _input, uint32_t _size)
 			bool clk = (data & 1 << m_Options.clk) >> m_Options.clk;
 			bool miso_mosi_data = (data & 1 << m_Options.data) >> m_Options.data;
 			bool cs = (data & 1 << m_Options.cs) >> m_Options.cs;
-			
+
 			if (m_Options.invert_bit != 0){
 				clk = !clk;
 				miso_mosi_data = !miso_mosi_data;

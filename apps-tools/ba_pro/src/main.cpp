@@ -201,8 +201,9 @@ int rp_app_init(void)
 int rp_app_exit(void)
 {
     g_exit_flag = true;
-    if (g_thread)
+    if (g_thread){
         g_thread->join();
+    }
 	rp_Release();
     rpApp_BaRelease();
 	fprintf(stderr, "Unloading bode analyser version %s-%s.\n", VERSION_STR, REVISION_STR);

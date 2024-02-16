@@ -23,14 +23,14 @@ struct SpiParameters
 {
     uint8_t clk; // 0...7 - ch Number
     uint8_t data; // 0...7
-    uint8_t cs;  // -1...7, -1 if is not set
+     int8_t cs;  // -1...7, -1 if is not set
     uint8_t cpol = 0;
     uint8_t cpha = 0;
     uint8_t word_size = 8;
 	uint32_t acq_speed;
     CsPolartiy cs_polarity = ActiveLow;
     BitOrder bit_order = MsbFirst;
-	uint8_t  invert_bit; 
+	uint8_t  invert_bit;
 };
 
 #ifndef CLI
@@ -57,7 +57,7 @@ public:
 		val.push_back(JSONNode("acq_speed", this->m_Value.value.acq_speed));
 		val.push_back(JSONNode("cs_polarity", (int)this->m_Value.value.cs_polarity));
 		val.push_back(JSONNode("bit_order", (int)this->m_Value.value.bit_order));
-		val.push_back(JSONNode("invert_bit", this->m_Value.value.invert_bit));	
+		val.push_back(JSONNode("invert_bit", this->m_Value.value.invert_bit));
 		n.push_back(val);
 		n.push_back(JSONNode("access_mode", this->m_Value.access_mode));
 

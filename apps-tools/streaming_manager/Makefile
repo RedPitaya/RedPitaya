@@ -15,12 +15,9 @@ VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 
 INSTALL_DIR ?= .
 STREAMING_MODE ?= MASTER
 
-UNAME := $(shell uname -m)
-ifeq ($(UNAME), x86_64)
-NUM_CPU := $(shell grep -c ^processor /proc/cpuinfo)
-endif
 
-JOBS=$$(($(NUM_CPU)+1))
+JOBS=$(shell ./get_cpu_ram.sh)
+
 
 CONTROLLER=controllerhf.so
 ZIP=../../$(APP)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip

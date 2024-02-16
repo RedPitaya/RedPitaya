@@ -410,7 +410,6 @@ void OnNewParams(void)
 			int pre = preSampleBuf.Value();
 			uint32_t POST = BUF_SIZE - pre;
 			uint32_t samples = 0;
-			RP_STATUS s;
 
 			// buffers for fpga
 			auto buf = new uint8_t[BUF_SIZE*2];
