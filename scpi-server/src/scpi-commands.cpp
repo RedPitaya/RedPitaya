@@ -202,11 +202,15 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "DAISY:SYNC:CLK", .callback             = RP_EnableDaisyChainClockSync,},
     {.pattern = "DAISY:SYNC:CLK?", .callback            = RP_EnableDaisyChainClockSyncQ,},
 
-    {.pattern = "DAISY:TRIG_O:ENable", .callback        = RP_DpinEnableTrigOutput,},
-    {.pattern = "DAISY:TRIG_O:ENable?", .callback       = RP_DpinEnableTrigOutputQ,},
+    {.pattern = "DAISY:TRIG_O:ENable", .callback        = RP_DpinEnableTrigOutput,}, // Depraceted need remove after update all examples
+    {.pattern = "DAISY:TRig:Out:ENable", .callback      = RP_DpinEnableTrigOutput,},
+    {.pattern = "DAISY:TRIG_O:ENable?", .callback       = RP_DpinEnableTrigOutputQ,}, // Depraceted need remove after update all examples
+    {.pattern = "DAISY:TRig:Out:ENable?", .callback     = RP_DpinEnableTrigOutputQ,},
 
-    {.pattern = "DAISY:TRIG_O:SOUR", .callback          = RP_SourceTrigOutput,},
-    {.pattern = "DAISY:TRIG_O:SOUR?", .callback         = RP_SourceTrigOutputQ,},
+    {.pattern = "DAISY:TRIG_O:SOUR", .callback          = RP_SourceTrigOutput,}, // Depraceted need remove after update all examples
+    {.pattern = "DAISY:TRig:Out:SOUR", .callback        = RP_SourceTrigOutput,},
+    {.pattern = "DAISY:TRIG_O:SOUR?", .callback         = RP_SourceTrigOutputQ,}, // Depraceted need remove after update all examples
+    {.pattern = "DAISY:TRig:Out:SOUR?", .callback       = RP_SourceTrigOutputQ,},
 
     /* Acquire */
     {.pattern = "ACQ:START", .callback                  = RP_AcqStart,},
