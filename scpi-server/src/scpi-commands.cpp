@@ -122,6 +122,20 @@ scpi_result_t RP_EcosystemVersionQ(scpi_t * context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_CommandsList(scpi_t * context) {
+    std::string result;
+
+    for (int i = 0; context->cmdlist[i].pattern != NULL; i++) {
+        if (i != 0) {
+            result += "\n";
+        }
+        result += std::string(context->cmdlist[i].pattern);
+    }
+
+    SCPI_ResultMnemonic(context,result.c_str());
+    return SCPI_RES_OK;
+}
+
 /**
  * SCPI Configuration
  */
@@ -148,6 +162,7 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "SYSTem:VERSion?",      .callback = RP_EcosystemVersionQ,},
     {.pattern = "SYSTem:BRD:ID?",       .callback = RP_BoardID,},
     {.pattern = "SYSTem:BRD:Name?",     .callback = RP_BoardName,},
+    {.pattern = "SYSTem:Help?",         .callback = RP_CommandsList,},
 
     {.pattern = "STATus:QUEStionable[:EVENt]?", .callback = SCPI_StatusQuestionableEventQ,},
     {.pattern = "STATus:QUEStionable:ENABle",   .callback = SCPI_StatusQuestionableEnable,},
@@ -224,11 +239,13 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "ACQ:DATA:Units?", .callback            = RP_AcqScpiDataUnitsQ,},
     {.pattern = "ACQ:DATA:FORMAT", .callback            = RP_AcqDataFormat,},
     {.pattern = "ACQ:DATA:FORMAT?", .callback           = RP_AcqDataFormatQ,},
+    {.pattern = "ACQ:SOUR#:DATA:STArt:End?", .callback  = RP_AcqDataPosQ,},
     {.pattern = "ACQ:SOUR#:DATA:Start:End?", .callback  = RP_AcqDataPosQ,},
+    {.pattern = "ACQ:SOUR#:DATA:STArt:N?", .callback    = RP_AcqDataQ,},
     {.pattern = "ACQ:SOUR#:DATA:Start:N?", .callback    = RP_AcqDataQ,},
     {.pattern = "ACQ:SOUR#:DATA:Old:N?", .callback      = RP_AcqOldestDataQ,},
     {.pattern = "ACQ:SOUR#:DATA?", .callback            = RP_AcqDataOldestAllQ,},
-    {.pattern = "ACQ:SOUR#:DATA:Last:N?", .callback     = RP_AcqLatestDataQ,},
+    {.pattern = "ACQ:SOUR#:DATA:LATest:N?", .callback   = RP_AcqLatestDataQ,},
     {.pattern = "ACQ:SOUR#:DATA:TRig?", .callback       = RP_AcqTriggerDataQ,},
     {.pattern = "ACQ:BUF:SIZE?", .callback              = RP_AcqBufferSizeQ,},
 
@@ -246,6 +263,7 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "ACQ:AXI:SOUR#:Trig:Pos?", .callback    = RP_AcqAxiWritePointerAtTrigQ,},
     {.pattern = "ACQ:AXI:SOUR#:ENable", .callback       = RP_AcqAxiEnable,},
     {.pattern = "ACQ:AXI:SOUR#:DATA:Start:N?",.callback = RP_AcqAxiDataQ,},
+    {.pattern = "ACQ:AXI:SOUR#:DATA:STArt:N?",.callback = RP_AcqAxiDataQ,},
     {.pattern = "ACQ:AXI:SOUR#:SET:Buffer", .callback   = RP_AcqAxiSetAddres,},
 
 

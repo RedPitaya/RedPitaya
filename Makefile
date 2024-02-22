@@ -265,6 +265,7 @@ SCPI_PARSER_TAR = $(DL)/scpi-parser-$(SCPI_PARSER_TAG).tar.gz
 SCPI_SERVER_DIR = scpi-server
 SCPI_PARSER_DIR = $(SCPI_SERVER_DIR)/scpi-parser
 
+.PHONY: scpi
 
 $(SCPI_PARSER_TAR): | $(DL)
 	wget $(SCPI_PARSER_URL) -O $@ --show-progress
@@ -274,6 +275,7 @@ $(SCPI_PARSER_DIR): $(SCPI_PARSER_TAR)
 	tar -xzf $< --strip-components=1 --directory=$@
 
 scpi: api $(INSTALL_DIR) $(SCPI_PARSER_DIR)
+	$(MAKE) -C $(SCPI_SERVER_DIR) clean
 	$(MAKE) -C $(SCPI_SERVER_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
