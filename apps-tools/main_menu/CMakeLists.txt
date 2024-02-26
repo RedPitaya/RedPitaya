@@ -64,6 +64,8 @@ list(APPEND libs_paths
 )
 
 set(CMAKE_INSTALL_RPATH ${r_paths})
+set(CMAKE_BUILD_RPATH ${r_paths})
+
 include_directories(${include_paths})
 link_directories(${libs_paths})
 

@@ -120,7 +120,7 @@ LIBRP_SYSTEM_DIR	= rp-web-api/rp-system
 
 web-api: librpsystem
 
-librpsystem: api $(NGINX)
+librpsystem: api nginx
 	cmake -B$(abspath $(LIBRP_SYSTEM_DIR)/build) -S$(abspath $(LIBRP_SYSTEM_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(LIBRP_SYSTEM_DIR)/build install -j$(CPU_CORES)
 
