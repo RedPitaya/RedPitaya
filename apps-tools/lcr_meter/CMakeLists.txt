@@ -68,7 +68,6 @@ list(APPEND rp_libs
     rpapp
     rpapp_lcr
     rp
-    rp2
     rp-arb
     rp-dsp
     rp-sweep
