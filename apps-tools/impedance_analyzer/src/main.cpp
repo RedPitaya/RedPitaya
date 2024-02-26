@@ -502,7 +502,7 @@ void threadLoop(){
 
                 uint32_t current_freq = 0.;
                 float freq_step = 0;
-                float next_freq = 0.;
+                // float next_freq = 0.;
 
                 if (ia_scale.NewValue()) {
                     // Log
@@ -511,12 +511,12 @@ void threadLoop(){
                     auto c = (b - a)/(steps - 1);
 
                     current_freq = pow(10.f, c * cur_step + a);
-                    next_freq = pow(10.f, c * (cur_step + 1) + a);
+                    // next_freq = pow(10.f, c * (cur_step + 1) + a);
                 } else {
                     // Linear
                     freq_step = (end_freq - start_freq) / (steps - 1);
                     current_freq = start_freq + freq_step * cur_step;
-                    next_freq = start_freq + freq_step * (cur_step - 1);
+                    // next_freq = start_freq + freq_step * (cur_step - 1);
                 }
                 lcrApp_LcrSetPause(true);
                 lcrApp_GenStop();

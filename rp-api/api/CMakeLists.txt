@@ -125,7 +125,6 @@ if(BUILD_SHARED)
 
     add_library(${PROJECT_NAME}-shared SHARED)
     set_property(TARGET ${PROJECT_NAME}-shared PROPERTY OUTPUT_NAME ${PROJECT_NAME})
-    target_link_options(${PROJECT_NAME}-shared PRIVATE -shared -Wl,--version-script=${CMAKE_SOURCE_DIR}/src/exportmap)
     target_sources(${PROJECT_NAME}-shared PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-obj>)
     target_link_libraries(${PROJECT_NAME}-shared -lm -lpthread)
     target_link_libraries(${PROJECT_NAME}-shared rp-hw rp-hw-calib rp-hw-profiles rp-i2c rp-spi rp-gpio i2c)

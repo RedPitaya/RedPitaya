@@ -6,6 +6,7 @@
 #include <sstream>
 #include <algorithm>
 #include <istream>
+#include <iostream>
 #include <iterator>
 
 #include <sys/sysinfo.h>

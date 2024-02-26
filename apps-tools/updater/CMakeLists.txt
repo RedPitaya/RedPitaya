@@ -5,14 +5,14 @@ set(CMAKE_CXX_COMPILER "g++")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 
-set(APP updated)
+set(APP updater)
 set(BUILD_PATH ${CMAKE_BINARY_DIR}/${APP})
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${BUILD_PATH})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${BUILD_PATH})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BUILD_PATH})
 
-project(controllerhf)
+project(daemon)
 
 if(NOT DEFINED INSTALL_DIR)
     message(FATAL_ERROR,"Installation path not set.")
@@ -63,6 +63,26 @@ list(APPEND libs_paths
     ${INSTALL_DIR}/rp_sdk
 )
 
+list(APPEND rp_libs
+    rp-system
+    rpapp
+    rpapp_lcr
+    rp
+    rp2
+    rp-arb
+    rp-dsp
+    rp-sweep
+    rp-formatter
+    rp-hw-calib
+    rp-hw-can
+    rp-hw-profiles
+    rp-hw
+    rp-i2c
+    rp-spi
+    rp-gpio
+    i2c
+)
+
 set(CMAKE_INSTALL_RPATH ${r_paths})
 set(CMAKE_BUILD_RPATH ${r_paths})
 include_directories(${include_paths})
@@ -76,9 +96,8 @@ add_compile_options(-Wall -Wno-reorder -Wno-cpp -Wextra $<$<CONFIG:Release>:-Wno
 add_compile_options(-DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os>  -ffunction-sections -fdata-sections)
 
 
-add_library(${PROJECT_NAME} SHARED ${SOURCES})
-
-target_link_libraries(${PROJECT_NAME} PRIVATE rp-system rp rp-hw-calib rp-hw-profiles rp-hw rp-i2c rp-spi rp-gpio i2c pthread)
+add_executable(${PROJECT_NAME} ${SOURCES})
+target_link_libraries(${PROJECT_NAME} PRIVATE cryptopp rp_sdk ${rp_libs} pthread)
 set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")
 
 

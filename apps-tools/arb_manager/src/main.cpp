@@ -127,7 +127,7 @@ void sendFilesInfo() {
     rp_ARBLoadFiles();
     rp_ARBGetCount(&count);
     std::string req;
-    for(int i = 0; i < count; i++){
+    for(uint32_t i = 0; i < count; i++){
         std::string fileName;
         std::string name;
         uint32_t dataSize;

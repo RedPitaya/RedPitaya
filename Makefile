@@ -501,7 +501,7 @@ ba_pro: web-api api $(NGINX)
 
 impedance_analyzer: web-api api $(NGINX)
 	cmake -B$(abspath $(APP_IMP_ANAL_DIR)/build) -S$(abspath $(APP_IMP_ANAL_DIR)) $(CMAKEVAR)
-	$(MAKE) -C $(APP_CALIB_DIR)/build install -j$(CPU_CORES)
+	$(MAKE) -C $(APP_IMP_ANAL_DIR)/build install -j$(CPU_CORES)
 
 
 ################################################################################

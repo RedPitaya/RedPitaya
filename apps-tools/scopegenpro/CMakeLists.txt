@@ -63,6 +63,26 @@ list(APPEND libs_paths
     ${INSTALL_DIR}/rp_sdk
 )
 
+list(APPEND rp_libs
+    rp-system
+    rpapp
+    rpapp_lcr
+    rp
+    rp2
+    rp-arb
+    rp-dsp
+    rp-sweep
+    rp-formatter
+    rp-hw-calib
+    rp-hw-can
+    rp-hw-profiles
+    rp-hw
+    rp-i2c
+    rp-spi
+    rp-gpio
+    i2c
+)
+
 set(CMAKE_INSTALL_RPATH ${r_paths})
 set(CMAKE_BUILD_RPATH ${r_paths})
 include_directories(${include_paths})
@@ -70,15 +90,14 @@ link_directories(${libs_paths})
 
 file(GLOB SOURCES "src/*.cpp")
 
-add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
+add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC -D_FILE_OFFSET_BITS=64)
 add_compile_definitions(ARCH_ARM)
 add_compile_options(-Wall -Wno-reorder -Wno-cpp -Wextra $<$<CONFIG:Release>:-Wno-unused-parameter> $<$<CONFIG:Release>:-Wno-unused-variable>)
 add_compile_options(-DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os>  -ffunction-sections -fdata-sections)
 
 
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
-
-target_link_libraries(${PROJECT_NAME} PRIVATE rp-system rp rp-hw-calib rp-hw-profiles rp-hw rp-i2c rp-spi rp-gpio i2c pthread)
+target_link_libraries(${PROJECT_NAME} PRIVATE cryptopp rp_sdk ${rp_libs} pthread)
 set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")
 
 
