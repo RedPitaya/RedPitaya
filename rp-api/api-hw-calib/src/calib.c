@@ -124,6 +124,7 @@ rp_calib_error calib_InitModelEx(rp_HPeModels_t model,bool use_factory_zone,rp_c
             case STEM_250_12_v1_1:
             case STEM_250_12_v1_2:
             case STEM_250_12_v1_2a:
+            case STEM_250_12_v1_2b:
             case STEM_250_12_120:{
                 uint16_t size = sizeof(rp_calib_params_v3_t);
                 uint8_t* buffer = use_factory_zone ? readFromFactoryEpprom(&size) : readFromEpprom(&size);
@@ -288,6 +289,7 @@ rp_calib_error calib_WriteParams(rp_HPeModels_t model, rp_calib_params_t *calib_
             case STEM_250_12_v1_1:
             case STEM_250_12_v1_2:
             case STEM_250_12_v1_2a:
+            case STEM_250_12_v1_2b:
             case STEM_250_12_120:{
 
                 uint16_t size = sizeof(rp_calib_params_v3_t);
@@ -639,6 +641,7 @@ rp_calib_error calib_ConvertToOld(rp_calib_params_t *out){
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
         case STEM_250_12_v1_2a:
+        case STEM_250_12_v1_2b:
         case STEM_250_12_120:{
             out->dataStructureId = RP_HW_PACK_ID_V2;
             for(int i = 0; i < 2; ++i){

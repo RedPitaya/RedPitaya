@@ -1,0 +1,4 @@
+{
+global: *rp_WS_*;
+local: *;
+};

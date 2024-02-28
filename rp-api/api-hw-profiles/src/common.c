@@ -40,6 +40,7 @@
 #include "stem_250_12_v1.1.h"
 #include "stem_250_12_v1.2.h"
 #include "stem_250_12_v1.2a.h"
+#include "stem_250_12_v1.2b.h"
 #include "stem_250_12_120.h"
 #include "stem_special.h"
 
@@ -62,6 +63,7 @@ profiles_t *g_profile = NULL;
 // "STEM_250-12_v1.1"
 // "STEM_250-12_v1.2"
 // "STEM_250-12_v1.2a"
+// "STEM_250-12_v1.2b"
 // "STEM_250-12_v1.0"
 // "STEM_250-12_120"
 
@@ -208,6 +210,14 @@ void hp_checkModel(char *model,char *eth_mac){
 
 	if (strcmp(model,"stem_250-12_v1.2a") == 0){
 		g_profile = getProfile_STEM_250_12_v1_2a();
+		strcpy(g_profile->boardModelEEPROM,modelOrig);
+		if (eth_mac)
+			strcpy(g_profile->boardETH_MAC,eth_mac);
+		return;
+	}
+
+    if (strcmp(model,"stem_250-12_v1.2b") == 0){
+		g_profile = getProfile_STEM_250_12_v1_2b();
 		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);

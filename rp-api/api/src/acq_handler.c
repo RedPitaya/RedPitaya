@@ -22,7 +22,6 @@
 #include "common.h"
 #include "oscilloscope.h"
 #include "acq_handler.h"
-#include "math/rp_math.h"
 
 #include "rp-i2c-mcp47x6-c.h"
 #include "rp-i2c-max7311-c.h"

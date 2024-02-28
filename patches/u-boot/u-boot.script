@@ -139,6 +139,14 @@ then
   setenv zynq z7020
 fi
 
+if test ${hw_rev} == 'STEM_250-12_v1.2b'
+then
+  setenv bootargs ${bootargs} mem=512M
+  setenv high     0x20000000
+  setenv dts_path z20_250
+  setenv zynq z7020
+fi
+
 if test ${hw_rev} == 'STEM_250-12_120'
 then
   setenv bootargs ${bootargs} mem=512M

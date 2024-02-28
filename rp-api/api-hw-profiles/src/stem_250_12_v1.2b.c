@@ -1,9 +1,9 @@
-#include "stem_250_12_v1.2a.h"
+#include "stem_250_12_v1.2b.h"
 
 
-profiles_t stem_250_12_v1_2a = {
-    .boardModel = STEM_250_12_v1_2a,
-    .boardName = "SIGNALlab 250-12 v1.2a",
+profiles_t stem_250_12_v1_2b = {
+    .boardModel = STEM_250_12_v1_2b,
+    .boardName = "SIGNALlab 250-12 v1.2b",
     .boardModelEEPROM = "",
     .boardETH_MAC =  "",
     .zynqCPUModel = Z7020,
@@ -96,6 +96,6 @@ profiles_t stem_250_12_v1_2a = {
     .is_dma_mode_v0_94 = true
 };
 
-profiles_t* getProfile_STEM_250_12_v1_2a(){
-    return &stem_250_12_v1_2a;
+profiles_t* getProfile_STEM_250_12_v1_2b(){
+    return &stem_250_12_v1_2b;
 }

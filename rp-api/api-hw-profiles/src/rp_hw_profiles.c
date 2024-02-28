@@ -15,6 +15,7 @@
 #include "stem_250_12_v1.1.h"
 #include "stem_250_12_v1.2.h"
 #include "stem_250_12_v1.2a.h"
+#include "stem_250_12_v1.2b.h"
 #include "stem_250_12_120.h"
 
 profiles_t* getProfile(int *state){
@@ -68,6 +69,7 @@ int rp_HPPrintAll(){
     hp_cmn_Print(getProfile_STEM_250_12_v1_1());
     hp_cmn_Print(getProfile_STEM_250_12_v1_2());
     hp_cmn_Print(getProfile_STEM_250_12_v1_2a());
+    hp_cmn_Print(getProfile_STEM_250_12_v1_2b());
     hp_cmn_Print(getProfile_STEM_250_12_120());
     return RP_HP_OK;
 }

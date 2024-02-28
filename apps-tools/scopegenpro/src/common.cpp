@@ -75,6 +75,7 @@ auto getMaxFreqRate() -> float{
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
         case STEM_250_12_v1_2a:
+        case STEM_250_12_v1_2b:
             return rate / 4;
         case STEM_250_12_120:
             return rate / 2;
@@ -105,6 +106,7 @@ auto getMaxTriggerLevel() -> float{
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
         case STEM_250_12_v1_2a:
+        case STEM_250_12_v1_2b:
         case STEM_250_12_120:
             return 5;
         default:{
@@ -135,6 +137,7 @@ auto isZModePresent() -> bool{
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
         case STEM_250_12_v1_2a:
+        case STEM_250_12_v1_2b:
         case STEM_250_12_120:
             return true;
         default:{
@@ -166,6 +169,7 @@ auto outAmpDef() -> float{
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
         case STEM_250_12_v1_2a:
+        case STEM_250_12_v1_2b:
         case STEM_250_12_120:
             return 0.9;
         default:{
@@ -197,6 +201,7 @@ auto outAmpMax() -> float{
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
         case STEM_250_12_v1_2a:
+        case STEM_250_12_v1_2b:
         case STEM_250_12_120:
             return 10.0;
         default:{
@@ -231,6 +236,7 @@ auto getModelName() -> std::string{
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
         case STEM_250_12_v1_2a:
+        case STEM_250_12_v1_2b:
             return "Z20_250_12";
         case STEM_250_12_120:
             return "Z20_250_12_120";

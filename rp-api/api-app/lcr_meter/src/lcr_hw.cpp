@@ -192,6 +192,7 @@ auto CLCRHardware::checkExtensionModuleConnection(bool _muteWarnings) -> lcr_err
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
         case STEM_250_12_v1_2a:
+        case STEM_250_12_v1_2b:
         case STEM_250_12_120:{
             auto maxCheck = rp_max7311::rp_check();
             if (maxCheck == 1) is_connected = false;

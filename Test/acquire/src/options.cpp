@@ -581,6 +581,7 @@ models_t getModel(){
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
         case STEM_250_12_v1_2a:
+        case STEM_250_12_v1_2b:
             return RP_250_12;
         default:
             fprintf(stderr,"[Error] Can't get board model\n");

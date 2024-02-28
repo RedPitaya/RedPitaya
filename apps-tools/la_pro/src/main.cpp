@@ -134,6 +134,7 @@ std::map<std::string, std::shared_ptr<Decoder> > g_decoders;
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
 		case STEM_250_12_v1_2a:
+        case STEM_250_12_v1_2b:
             return "Z20_250_12";
         case STEM_250_12_120:
             return "Z20_250_12_120";
