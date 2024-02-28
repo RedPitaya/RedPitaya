@@ -7,10 +7,10 @@
 auto getADCChannels() -> uint8_t{
     uint8_t c = 0;
     if (rp_HPGetFastADCChannelsCount(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get fast ADC channels count\n");
+        ERROR("Can't get fast ADC channels count");
     }
     if (c > MAX_ADC_CHANNELS){
-        fprintf(stderr,"[Error] The number of channels is more than allowed\n");
+        ERROR("The number of channels is more than allowed");
         exit(-1);
     }
     return c;
@@ -20,11 +20,11 @@ auto getDACChannels() -> uint8_t{
     uint8_t c = 0;
 
     if (rp_HPGetFastDACChannelsCount(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get fast DAC channels count\n");
+        ERROR("Can't get fast DAC channels count");
     }
 
     if (c > MAX_DAC_CHANNELS){
-        fprintf(stderr,"[Error] The number of channels is more than allowed\n");
+        ERROR("The number of channels is more than allowed");
         exit(-1);
     }
     return c;
@@ -33,7 +33,7 @@ auto getDACChannels() -> uint8_t{
 auto getDACRate() -> uint32_t{
     uint32_t c = 0;
     if (rp_HPGetBaseFastDACSpeedHz(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get fast DAC channels count\n");
+        ERROR("Can't get fast DAC channels count");
     }
     return c;
 }
@@ -41,7 +41,7 @@ auto getDACRate() -> uint32_t{
 auto getADCRate() -> uint32_t{
     uint32_t c = 0;
     if (rp_HPGetBaseFastADCSpeedHz(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get fast ADC channels count\n");
+        ERROR("Can't get fast ADC channels count");
     }
     return c;
 }
@@ -49,7 +49,7 @@ auto getADCRate() -> uint32_t{
  auto getModel() -> rp_HPeModels_t{
     rp_HPeModels_t c = STEM_125_14_v1_0;
     if (rp_HPGetModel(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get board model\n");
+        ERROR("Can't get board model");
     }
     return c;
 }
@@ -79,7 +79,7 @@ auto getMaxFreqRate() -> float{
         case STEM_250_12_120:
             return rate / 2;
         default:{
-            fprintf(stderr,"[Error:getMaxFreqRate] Unknown model: %d.\n",model);
+            ERROR("Unknown model: %d.",model);
             return 0;
         }
     }
@@ -108,7 +108,7 @@ auto getMaxTriggerLevel() -> float{
         case STEM_250_12_120:
             return 5;
         default:{
-            fprintf(stderr,"[Error:getMaxFreqRate] Unknown model: %d.\n",model);
+            ERROR("Unknown model: %d.",model);
             return 0;
         }
     }
@@ -138,7 +138,7 @@ auto isZModePresent() -> bool{
         case STEM_250_12_120:
             return true;
         default:{
-            fprintf(stderr,"[Error:isZModePresent] Unknown model: %d.\n",model);
+            ERROR("Unknown model: %d.",model);
             return false;
         }
     }
@@ -169,7 +169,7 @@ auto outAmpDef() -> float{
         case STEM_250_12_120:
             return 0.9;
         default:{
-            fprintf(stderr,"[Error:outAmpDef] Unknown model: %d.\n",model);
+            ERROR("Unknown model: %d.",model);
             return 0;
         }
     }
@@ -200,7 +200,7 @@ auto outAmpMax() -> float{
         case STEM_250_12_120:
             return 10.0;
         default:{
-            fprintf(stderr,"[Error:outAmpMax] Unknown model: %d.\n",model);
+            ERROR("Unknown model: %d.",model);
             return 0;
         }
     }
@@ -235,7 +235,7 @@ auto getModelName() -> std::string{
         case STEM_250_12_120:
             return "Z20_250_12_120";
         default:{
-            fprintf(stderr,"[Error:getModelName] Unknown model: %d.\n",model);
+            ERROR("Unknown model: %d.",model);
             return "";
         }
     }

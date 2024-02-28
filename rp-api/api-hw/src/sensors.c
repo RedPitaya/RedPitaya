@@ -1,14 +1,14 @@
 #include <stdio.h>
 #include "rp_hw.h"
 #include "sensors.h"
-
+#include "rp_log.h"
 
 
 int sens_GetValueFromFile(const char* file, uint32_t *value){
     FILE *fp;
     fp = fopen (file, "r");
 	if (fp==0) {
-		fprintf(stderr,"Error: Can't open %s\n",file);
+		ERROR("Can't open %s",file);
 		return -1;
 	}
     int rv = 0;
@@ -22,7 +22,7 @@ int sens_GetFValueFromFile(const char* file, float *value){
     FILE *fp;
     fp = fopen (file, "r");
 	if (fp==0) {
-		fprintf(stderr,"Error: Can't open %s\n",file);
+		ERROR("Can't open %s",file);
 		return -1;
 	}
     float r = !fscanf (fp, "%f", value);
@@ -67,7 +67,7 @@ float sens_GetCPUTemp(uint32_t *raw){
 int AI4pinGetValueRaw(uint32_t* value) {
     FILE *fp = fopen ("/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_voltage12_raw", "r");
     if (!fp){
-        fprintf(stderr,"Error: Can't open %s\n","/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_voltage12_raw");
+        ERROR("Can't open %s","/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_voltage12_raw");
         return -1;
     }
     int r = !fscanf (fp, "%u", value);

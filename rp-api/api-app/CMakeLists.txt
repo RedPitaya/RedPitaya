@@ -51,6 +51,7 @@ list(APPEND r_paths
 set(CMAKE_INSTALL_RPATH ${r_paths})
 
 include_directories(${INSTALL_DIR}/include)
+include_directories(${INSTALL_DIR}/include/common)
 include_directories(${INSTALL_DIR}/include/api250-12)
 include_directories(${CMAKE_SOURCE_DIR}/src)
 link_directories(${INSTALL_DIR}/lib)

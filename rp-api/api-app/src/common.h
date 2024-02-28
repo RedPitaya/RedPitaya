@@ -30,23 +30,10 @@
 #define MAX_ADC_CHANNELS 4
 #define MAX_DAC_CHANNELS 2
 
-#define __SHORT_FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
-
-#define FATAL(X)  {fprintf(stderr, "Error at line %d, file %s errno %d [%s] %s\n", __LINE__, __SHORT_FILENAME__, errno, strerror(errno),X); exit(1);}
-#define WARNING(...) { char error_msg[512]; snprintf(error_msg,512,__VA_ARGS__);fprintf(stderr,"[W] %s:%d %s\n",__SHORT_FILENAME__,__LINE__,error_msg);}
-
-#ifdef TRACE_ENABLE
-#define TRACE(...) { char error_msg[512]; snprintf(error_msg,512,__VA_ARGS__);fprintf(stderr,"[T] %s:%d %s\n",__SHORT_FILENAME__,__LINE__,error_msg);}
-#define TRACE_SHORT(...) { char error_msg[512]; snprintf(error_msg,512,__VA_ARGS__);fprintf(stderr,"[T] %s\n",error_msg);}
-#else
-#define TRACE(...)
-#define TRACE_SHORT(...)
-#endif
-
 #define ECHECK_APP(x) { \
     int retval = (x); \
     if (retval != RP_OK) { \
-        WARNING("Runtime error: %s returned \"%s\"", #x, rpApp_GetError(retval)); \
+        ERROR("%s returned \"%s\"", #x, rpApp_GetError(retval)); \
         return retval; \
     } \
 }
@@ -55,7 +42,7 @@
 #define ECHECK_APP_NO_RET(x) { \
     int retval = (x); \
     if (retval != RP_OK) { \
-        WARNING("Runtime error: %s returned \"%s\"", #x, rpApp_GetError(retval)); \
+        ERROR("%s returned \"%s\"", #x, rpApp_GetError(retval)); \
     } \
 }
 
@@ -129,11 +116,11 @@ switch ((SOURCE)) { \
 #define CHECK_CHANNEL() \
     uint8_t channels_rp_HPGetFastADCChannelsCount = 0; \
     if (rp_HPGetFastADCChannelsCount(&channels_rp_HPGetFastADCChannelsCount) != RP_HP_OK){ \
-        WARNING("Can't get fast ADC channels count"); \
+        ERROR("Can't get fast ADC channels count"); \
         return RP_NOTS; \
     } \
     if (channel >= channels_rp_HPGetFastADCChannelsCount){ \
-        WARNING("Channel is larger than allowed"); \
+        ERROR("Channel is larger than allowed"); \
         return RP_NOTS; \
     }
 

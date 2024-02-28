@@ -17,8 +17,6 @@
 
 #include "rp_hw.h"
 
-#define MSG(...) fprintf(stderr,__VA_ARGS__);
-
 typedef struct spi_config {
     uint8_t  raw_value;
     rp_spi_mode_t       spi_mode;

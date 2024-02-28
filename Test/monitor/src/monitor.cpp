@@ -33,8 +33,6 @@
 #include "rp_hw-profiles.h"
 #include "rp.h"
 
-#define FATAL do { fprintf(stderr, "Error at line %d, file %s (%d) [%s]\n", \
-  __LINE__, __FILE__, errno, strerror(errno)); exit(1); } while(0)
 
 #define MAP_SIZE 4096UL
 #define MAP_MASK (MAP_SIZE - 1)
@@ -202,7 +200,7 @@ int main(int argc, char **argv) {
 		return ret;
 	}
 
-	if((fd = open("/dev/mem", O_RDWR | O_SYNC)) == -1) FATAL;
+	if((fd = open("/dev/mem", O_RDWR | O_SYNC)) == -1) FATAL("Error open device");
 
 	/* Read from command line */
 	unsigned long addr;
@@ -213,7 +211,7 @@ int main(int argc, char **argv) {
 
 	/* Map one page */
 	map_base = mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, addr & ~MAP_MASK);
-	if(map_base == (void *) -1) FATAL;
+	if(map_base == (void *) -1) FATAL("Error map memory");
 
 	if (addr != 0) {
 		if (val_count == 0) {
@@ -224,12 +222,12 @@ int main(int argc, char **argv) {
 		}
 	}
 	if (map_base != (void*)(-1)) {
-		if(munmap(map_base, MAP_SIZE) == -1) FATAL;
+		if(munmap(map_base, MAP_SIZE) == -1) FATAL("Error unmap memory");
 		map_base = (void*)(-1);
 	}
 
 	if (map_base != (void*)(-1)) {
-		if(munmap(map_base, MAP_SIZE) == -1) FATAL;
+		if(munmap(map_base, MAP_SIZE) == -1) FATAL("Error unmap memory");
 	}
 	if (fd != -1) {
 		close(fd);

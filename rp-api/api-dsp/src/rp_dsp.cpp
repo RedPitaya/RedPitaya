@@ -24,6 +24,8 @@
 #include <map>
 
 #include "rp_dsp.h"
+#include "rp_log.h"
+
 #include "kiss_fftr.h"
 
 #include "rp_math.h"
@@ -54,10 +56,6 @@ constexpr double g_w2mw = 1000;
 #define RP_FLATTOP_A3 0.083578947
 #define RP_FLATTOP_A4 0.006947368
 
-#define __SHORT_FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
-#define FATAL(X)  {fprintf(stderr, "Error at line %d, file %s errno %d [%s] %s\n", __LINE__, __SHORT_FILENAME__, errno, strerror(errno),X); exit(1);}
-#define WARNING(...) { char error_msg[512]; snprintf(error_msg,512,__VA_ARGS__);fprintf(stderr,"[W] %s:%d %s\n",__SHORT_FILENAME__,__LINE__,error_msg);}
-
 using namespace rp_dsp_api;
 
 template<typename T>
@@ -69,7 +67,7 @@ auto createArray(uint32_t count,uint32_t signalLen) -> T** {
         }
         return arr;
     }catch (const std::bad_alloc& e) {
-        fprintf(stderr, "createArray() can not allocate mem\n");
+        ERROR("Can not allocate memory");
         return nullptr;
     }
 }
@@ -212,7 +210,7 @@ int CDSP::window_init(window_mode_t mode){
     try{
         m_pimpl->m_window = new double[getSignalMaxLength()];
     } catch (const std::bad_alloc& e) {
-        fprintf(stderr, "rp_spectr_window_init() can not allocate mem\n");
+        ERROR("Can not allocate memory");
         return -1;
     }
 
@@ -318,7 +316,7 @@ auto CDSP::remoteDCCount() -> uint8_t{
             return 4;
         }
         default:
-            fprintf(stderr,"[Error] remoteDCCount: Unknown window window mode\n");
+            ERROR("Unknown window window mode");
             return 0;
     }
     return 0;
@@ -354,7 +352,7 @@ auto CDSP::getMode() -> mode_t {
 
 auto CDSP::prepareFreqVector(data_t *data, double f_s, float decimation) -> int {
     if (!data || !data->m_freq_vector){
-        fprintf(stderr, "prepareFreqVector() data not initialized\n");
+        ERROR("Data not initialized");
         return -1;
     }
     uint32_t i;
@@ -380,7 +378,7 @@ auto CDSP::prepareFreqVector(data_t *data, float decimation) -> int{
 auto CDSP::windowFilter(data_t *data) -> int {
     uint32_t i,j;
     if (!data || !data->m_in || !data->m_filtred){
-        fprintf(stderr, "windowFilter() data not initialized\n");
+        ERROR("Data not initialized");
         return -1;
     }
 
@@ -431,12 +429,12 @@ auto CDSP::fftClean() -> int {
 
 auto CDSP::fft(data_t *data) -> int {
     if (!data || !data->m_in || !data->m_filtred || !data->m_fft){
-        fprintf(stderr, "fft() data not initialized\n");
+        ERROR("Data not initialized");
         return -1;
     }
 
     if(!m_pimpl->m_kiss_fft_out  || !m_pimpl->m_kiss_fft_cfg) {
-        fprintf(stderr, "rp_spect_fft not initialized");
+        ERROR("rp_spect_fft not initialized");
         return -1;
     }
 
@@ -520,7 +518,7 @@ auto CDSP::decimate(data_t *data,uint32_t in_len, uint32_t out_len) -> int {
     uint32_t i, j;
 
     if (!data || !data->m_decimated || !data->m_fft){
-        fprintf(stderr, "decimated() data not initialized\n");
+        ERROR("Data not initialized");
         return -1;
     }
 
@@ -536,7 +534,7 @@ auto CDSP::decimate(data_t *data,uint32_t in_len, uint32_t out_len) -> int {
             uint32_t k=j;
 
             if(j >= in_len) {
-                fprintf(stderr, "rp_spectr_decimate() index too high\n");
+                ERROR("rp_spectr_decimate() index too high");
                 return -1;
             }
             data->m_decimated[c][i] = 0;
@@ -582,7 +580,7 @@ auto CDSP::decimate(data_t *data,uint32_t in_len, uint32_t out_len) -> int {
 auto CDSP::cnvToDBM(data_t *data,uint32_t  decimation) -> int {
     std::lock_guard<std::mutex> lock(m_pimpl->m_channelMutex);
     if (!data || !data->m_decimated || !data->m_converted || !data->m_peak_freq || !data->m_peak_power ){
-        fprintf(stderr, "cnvToDBM() data not initialized\n");
+        ERROR("Data not initialized");
         return -1;
     }
 
@@ -637,7 +635,7 @@ auto CDSP::cnvToDBM(data_t *data,uint32_t  decimation) -> int {
 auto CDSP::cnvToDBMMaxValueRanged(data_t *data,uint32_t  decimation,uint32_t minFreq,uint32_t maxFreq) -> int {
     std::lock_guard<std::mutex> lock(m_pimpl->m_channelMutex);
     if (!data || !data->m_decimated || !data->m_converted || !data->m_peak_freq || !data->m_peak_power ){
-        fprintf(stderr, "cnvToDBM() data not initialized\n");
+        ERROR("Data not initialized");
         return -1;
     }
 
@@ -690,7 +688,7 @@ auto CDSP::cnvToDBMMaxValueRanged(data_t *data,uint32_t  decimation,uint32_t min
 auto CDSP::cnvToMetric(data_t *data,uint32_t  decimation) -> int{
     std::lock_guard<std::mutex> lock(m_pimpl->m_channelMutex);
     if (!data || !data->m_decimated || !data->m_converted || !data->m_peak_freq || !data->m_peak_power ){
-        fprintf(stderr, "cnvToDBM() data not initialized\n");
+        ERROR("Data not initialized");
         return -1;
     }
     uint32_t i;
@@ -790,7 +788,7 @@ auto CDSP::createData() -> data_t *{
         return d;
     }catch (const std::bad_alloc& e) {
         deleteData(d);
-        fprintf(stderr, "createArray() can not allocate mem\n");
+        ERROR("Can not allocate memory");
         return nullptr;
     }
 }

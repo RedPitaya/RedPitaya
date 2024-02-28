@@ -28,12 +28,18 @@ static char version[50];
 */
 
 int rpApp_Init() {
-    ECHECK_APP(rp_Init());
-    //ECHECK_APP(cmn_Init());
-    ECHECK_APP(osc_Init());
-    // TODO: Place other module releasing here (in reverse order)
+    int ret = rp_Init();
+    if (ret != RP_OK){
+        return ret;
+    }
 
-    ECHECK_APP(rpApp_Reset());
+    osc_Init();
+
+    ret = rpApp_Reset();
+    if (ret != RP_OK){
+        rpApp_Release();
+        return ret;
+    }
 
     return RP_OK;
 }
@@ -43,20 +49,16 @@ int rpApp_OscRunMainThread(){
 }
 
 int rpApp_Release() {
-    ECHECK_APP(osc_stop());
-    ECHECK_APP(osc_Release());
-    ECHECK_APP(rp_Release());
-    // TODO: Place other module releasing here (in reverse order)
-
+    osc_stop();
+    osc_Release();
+    ECHECK(rp_Release());
     return RP_OK;
 }
 
 int rpApp_Reset() {
-    ECHECK_APP(rp_Reset())
-    ECHECK_APP(osc_SetDefaultValues());
-    // TODO: Place other module resetting here (in reverse order)
-
-    return 0;
+    rp_Reset();
+    ECHECK(osc_SetDefaultValues());
+    return RP_OK;
 }
 
 const char *rpApp_GetVersion() {

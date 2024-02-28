@@ -5,10 +5,10 @@
 auto getADCChannels() -> uint8_t{
     uint8_t c = 0;
     if (rp_HPGetFastADCChannelsCount(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get fast ADC channels count\n");
+        ERROR("Can't get fast ADC channels count");
     }
     if (c > MAX_ADC_CHANNELS){
-        fprintf(stderr,"[Error] The number of channels is more than allowed\n");
+        FATAL("The number of channels is more than allowed");
         exit(-1);
     }
     return c;
@@ -18,11 +18,11 @@ auto getDACChannels() -> uint8_t{
     uint8_t c = 0;
 
     if (rp_HPGetFastDACChannelsCount(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get fast DAC channels count\n");
+        ERROR("Can't get fast DAC channels count");
     }
 
     if (c > MAX_DAC_CHANNELS){
-        fprintf(stderr,"[Error] The number of channels is more than allowed\n");
+        FATAL("The number of channels is more than allowed");
         exit(-1);
     }
     return c;
@@ -31,7 +31,7 @@ auto getDACChannels() -> uint8_t{
 auto getDACRate() -> uint32_t{
     uint32_t c = 0;
     if (rp_HPGetBaseFastDACSpeedHz(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get fast DAC channels count\n");
+        ERROR("Can't get fast DAC channels count");
     }
     return c;
 }
@@ -39,7 +39,7 @@ auto getDACRate() -> uint32_t{
 auto getADCRate() -> uint32_t{
     uint32_t c = 0;
     if (rp_HPGetBaseFastADCSpeedHz(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get fast ADC channels count\n");
+        ERROR("Can't get fast ADC channels count");
     }
     return c;
 }
@@ -47,7 +47,7 @@ auto getADCRate() -> uint32_t{
  auto getModel() -> rp_HPeModels_t{
     rp_HPeModels_t c = STEM_125_14_v1_0;
     if (rp_HPGetModel(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get board model\n");
+        ERROR("Can't get board model");
     }
     return c;
 }
@@ -85,7 +85,7 @@ auto getModelName() -> std::string{
         case STEM_250_12_120:
             return "Z20_250_12_120";
         default:{
-            fprintf(stderr,"[Error:getModelName] Unknown model: %d.\n",model);
+            ERROR("Unknown model: %d.",model);
             return "";
         }
     }
@@ -99,7 +99,7 @@ auto getADCSamplePeriod(double *value) -> int{
     if (ret == RP_HP_OK){
         *value = (double)1e9/speed;
     }else{
-        fprintf(stderr,"[Error:getADCSamplePeriod] Can't get FAST ADC Rate\n");
+        ERROR("Can't get FAST ADC Rate");
     }
     return ret;
 }

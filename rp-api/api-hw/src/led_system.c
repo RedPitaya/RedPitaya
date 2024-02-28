@@ -28,6 +28,7 @@
 #include <linux/sockios.h>
 
 #include "led_system.h"
+#include "rp_log.h"
 
 const char mmc_Led[]="/sys/devices/soc0/led-system/leds/led8";
 const char heartbeat_Led[]="/sys/devices/soc0/led-system/leds/led9";
@@ -65,7 +66,7 @@ int led_GetMMCState(bool *_enable){
     char value[MAX_LINE_LENGTH];
     sprintf(path,"%s/%s",mmc_Led,"trigger");
     if (GetValueFromFile(path,value)){
-        *_enable = strstr(value, "[mmc0]") != NULL; 
+        *_enable = strstr(value, "[mmc0]") != NULL;
         return RP_HW_OK;
     }
     return RP_HW_EUF;
@@ -87,7 +88,7 @@ int led_GetHeartBeatState(bool *_enable){
     char value[MAX_LINE_LENGTH];
     sprintf(path,"%s/%s",heartbeat_Led,"trigger");
     if (GetValueFromFile(path,value)){
-        *_enable = strstr(value, "[heartbeat]") != NULL; 
+        *_enable = strstr(value, "[heartbeat]") != NULL;
         return RP_HW_OK;
     }
     return RP_HW_EUF;
@@ -100,7 +101,7 @@ int led_SetHeartBeatState(bool _enable){
     sprintf(path,"%s/%s",heartbeat_Led,"trigger");
     if (SetValueToFile(path,value)){
         return RP_HW_OK;
-    }   
+    }
     return RP_HW_EUF;
 }
 
@@ -138,7 +139,7 @@ int phy_read(uint16_t *_val)
 	int err = __phy_op(&eth, _val, SIOCGMIIREG);
 
 	if (err) {
-		fprintf(stderr, "Error: phy_read (%d)\n", err);
+		ERROR("phy_read (%d)", err);
 		return err;
 	}
 	return RP_HW_OK;
@@ -149,7 +150,7 @@ int phy_write(uint16_t val)
 	int err = __phy_op(&eth, &val, SIOCSMIIREG);
 
 	if (err)
-		fprintf(stderr, "Error: phy_write (%d)\n", err);
+		ERROR("phy_write (%d)", err);
 
 	return err;
 }

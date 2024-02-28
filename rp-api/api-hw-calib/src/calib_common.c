@@ -4,6 +4,7 @@
 #include <math.h>
 #include "calib_common.h"
 #include "rp_hw-calib.h"
+#include "rp_log.h"
 
 
 static const char eeprom_device[]="/sys/bus/i2c/devices/0-0050/eeprom";
@@ -31,7 +32,7 @@ uint8_t* readParams(uint16_t *size, bool use_factory_zone)
     /* open EEPROM device */
     fp = fopen(eeprom_device, "r");
     if(fp == NULL) {
-        fprintf(stderr,"[Error:readParams] Error opening eeprom file.\n");
+        ERROR("Error opening eeprom file.");
         return NULL;
     }
 
@@ -44,7 +45,7 @@ uint8_t* readParams(uint16_t *size, bool use_factory_zone)
 
     uint8_t* buf = (uint8_t *)malloc(*size);
 	if (!buf) {
-        fprintf(stderr,"[Error:readParams] Memory allocation error.\n");
+        ERROR("Memory allocation error.");
 		fclose(fp);
 		return NULL;
 	}
@@ -61,7 +62,7 @@ uint8_t* readHeader(uint16_t *size, bool use_factory_zone)
     /* open EEPROM device */
     fp = fopen(eeprom_device, "r");
     if(fp == NULL) {
-        fprintf(stderr,"[Error:readParams] Error opening eeprom file.\n");
+        ERROR("Error opening eeprom file.");
         return NULL;
     }
 
@@ -74,7 +75,7 @@ uint8_t* readHeader(uint16_t *size, bool use_factory_zone)
 
     uint8_t* buf = (uint8_t *)malloc(*size);
 	if (!buf) {
-        fprintf(stderr,"[Error:readParams] Memory allocation error.\n");
+        ERROR("Memory allocation error.");
 		fclose(fp);
 		return NULL;
 	}
@@ -90,7 +91,7 @@ int writeParams(uint8_t *buffer,uint16_t size,bool use_factory_zone) {
     /* open EEPROM device */
     fp = fopen(eeprom_device, "w+");
     if(fp == NULL) {
-        fprintf(stderr,"[Error:readParams] Error opening eeprom file.\n");
+        ERROR("Error opening eeprom file.");
         return -1;
     }
 
@@ -885,7 +886,7 @@ bool recalculateGain(rp_calib_params_t *param){
         param->fast_adc_1_1[i].gainCalc = (double)param->fast_adc_1_1[i].calibValue / baseValue;
         param->fast_adc_1_1[i].gainCalc = CHECK_GAIN_LIMIT(param->fast_adc_1_1[i].gainCalc);
         if (!CHECK_VALID_GAIN_LIMIT(param->fast_adc_1_1[i].gainCalc)){
-            fprintf(stderr,"[Error] Invalid gain fast_adc_1_1[%d] = %f\n",i,param->fast_adc_1_1[i].gainCalc);
+            ERROR("Invalid gain fast_adc_1_1[%d] = %f",i,param->fast_adc_1_1[i].gainCalc);
             return false;
         }
     }
@@ -896,7 +897,7 @@ bool recalculateGain(rp_calib_params_t *param){
         param->fast_adc_1_20[i].gainCalc = (double)param->fast_adc_1_20[i].calibValue / baseValue;
         param->fast_adc_1_20[i].gainCalc = CHECK_GAIN_LIMIT(param->fast_adc_1_20[i].gainCalc);
         if (!CHECK_VALID_GAIN_LIMIT(param->fast_adc_1_20[i].gainCalc)){
-            fprintf(stderr,"[Error] Invalid gain fast_adc_1_20[%d] = %f\n",i,param->fast_adc_1_20[i].gainCalc);
+            ERROR("Invalid gain fast_adc_1_20[%d] = %f",i,param->fast_adc_1_20[i].gainCalc);
             return false;
         }
     }
@@ -907,7 +908,7 @@ bool recalculateGain(rp_calib_params_t *param){
         param->fast_adc_1_1_ac[i].gainCalc = (double)param->fast_adc_1_1_ac[i].calibValue / baseValue;
         param->fast_adc_1_1_ac[i].gainCalc = CHECK_GAIN_LIMIT(param->fast_adc_1_1_ac[i].gainCalc);
         if (!CHECK_VALID_GAIN_LIMIT(param->fast_adc_1_1_ac[i].gainCalc)){
-            fprintf(stderr,"[Error] Invalid gain fast_adc_1_1_ac[%d] = %f\n",i,param->fast_adc_1_1_ac[i].gainCalc);
+            ERROR("Invalid gain fast_adc_1_1_ac[%d] = %f",i,param->fast_adc_1_1_ac[i].gainCalc);
             return false;
         }
     }
@@ -918,7 +919,7 @@ bool recalculateGain(rp_calib_params_t *param){
         param->fast_adc_1_20_ac[i].gainCalc = (double)param->fast_adc_1_20_ac[i].calibValue / baseValue;
         param->fast_adc_1_20_ac[i].gainCalc = CHECK_GAIN_LIMIT(param->fast_adc_1_20_ac[i].gainCalc);
         if (!CHECK_VALID_GAIN_LIMIT(param->fast_adc_1_20_ac[i].gainCalc)){
-            fprintf(stderr,"[Error] Invalid gain fast_adc_1_20_ac[%d] = %f\n",i,param->fast_adc_1_20_ac[i].gainCalc);
+            ERROR("Invalid gain fast_adc_1_20_ac[%d] = %f",i,param->fast_adc_1_20_ac[i].gainCalc);
             return false;
         }
     }
@@ -929,7 +930,7 @@ bool recalculateGain(rp_calib_params_t *param){
         param->fast_dac_x1[i].gainCalc = (double)param->fast_dac_x1[i].calibValue / baseValue;
         param->fast_dac_x1[i].gainCalc = CHECK_GAIN_LIMIT(param->fast_dac_x1[i].gainCalc);
         if (!CHECK_VALID_GAIN_LIMIT(param->fast_dac_x1[i].gainCalc)){
-            fprintf(stderr,"[Error] Invalid gain fast_dac_x1[%d] = %f\n",i,param->fast_dac_x1[i].gainCalc);
+            ERROR("Invalid gain fast_dac_x1[%d] = %f",i,param->fast_dac_x1[i].gainCalc);
             return false;
         }
     }
@@ -940,7 +941,7 @@ bool recalculateGain(rp_calib_params_t *param){
         param->fast_dac_x5[i].gainCalc = (double)param->fast_dac_x5[i].calibValue / baseValue;
         param->fast_dac_x5[i].gainCalc = CHECK_GAIN_LIMIT(param->fast_dac_x5[i].gainCalc);
         if (!CHECK_VALID_GAIN_LIMIT(param->fast_dac_x5[i].gainCalc)){
-            fprintf(stderr,"[Error] Invalid gain fast_dac_x5[%d = %f\n",i,param->fast_dac_x5[i].gainCalc);
+            ERROR("Invalid gain fast_dac_x5[%d = %f",i,param->fast_dac_x5[i].gainCalc);
             return false;
         }
     }
@@ -955,7 +956,7 @@ bool recalculateCalibValue(rp_calib_params_t *param){
         double baseValue = calibBaseScaleFromVoltage(param->fast_adc_1_1[i].baseScale,param->dataStructureId == RP_HW_PACK_ID_V5);
         param->fast_adc_1_1[i].calibValue = CHECK_GAIN_LIMIT(param->fast_adc_1_1[i].gainCalc) * (double)baseValue;
         if (!CHECK_VALID_GAIN_LIMIT(param->fast_adc_1_1[i].gainCalc)){
-            fprintf(stderr,"[Error] Invalid gain fast_adc_1_1[%d] = %f\n",i,param->fast_adc_1_1[i].gainCalc);
+            ERROR("Invalid gain fast_adc_1_1[%d] = %f",i,param->fast_adc_1_1[i].gainCalc);
             return false;
         }
     }
@@ -965,7 +966,7 @@ bool recalculateCalibValue(rp_calib_params_t *param){
         double baseValue = calibBaseScaleFromVoltage(param->fast_adc_1_20[i].baseScale,param->dataStructureId == RP_HW_PACK_ID_V5);
         param->fast_adc_1_20[i].calibValue = CHECK_GAIN_LIMIT(param->fast_adc_1_20[i].gainCalc) * (double)baseValue;
         if (!CHECK_VALID_GAIN_LIMIT(param->fast_adc_1_20[i].gainCalc)){
-            fprintf(stderr,"[Error] Invalid gain fast_adc_1_20[%d] = %f\n",i,param->fast_adc_1_20[i].gainCalc);
+            ERROR("Invalid gain fast_adc_1_20[%d] = %f",i,param->fast_adc_1_20[i].gainCalc);
             return false;
         }
     }
@@ -975,7 +976,7 @@ bool recalculateCalibValue(rp_calib_params_t *param){
         double baseValue = calibBaseScaleFromVoltage(param->fast_adc_1_1_ac[i].baseScale,param->dataStructureId == RP_HW_PACK_ID_V5);
         param->fast_adc_1_1_ac[i].calibValue = CHECK_GAIN_LIMIT(param->fast_adc_1_1_ac[i].gainCalc) * (double)baseValue;
         if (!CHECK_VALID_GAIN_LIMIT(param->fast_adc_1_1_ac[i].gainCalc)){
-            fprintf(stderr,"[Error] Invalid gain fast_adc_1_1_ac[%d] = %f\n",i,param->fast_adc_1_1_ac[i].gainCalc);
+            ERROR("Invalid gain fast_adc_1_1_ac[%d] = %f",i,param->fast_adc_1_1_ac[i].gainCalc);
             return false;
         }
     }
@@ -985,7 +986,7 @@ bool recalculateCalibValue(rp_calib_params_t *param){
         double baseValue = calibBaseScaleFromVoltage(param->fast_adc_1_20_ac[i].baseScale,param->dataStructureId == RP_HW_PACK_ID_V5);
         param->fast_adc_1_20_ac[i].calibValue = CHECK_GAIN_LIMIT(param->fast_adc_1_20_ac[i].gainCalc) * (double)baseValue;
         if (!CHECK_VALID_GAIN_LIMIT(param->fast_adc_1_20_ac[i].gainCalc)){
-            fprintf(stderr,"[Error] Invalid gain fast_adc_1_20_ac[%d] = %f\n",i,param->fast_adc_1_20_ac[i].gainCalc);
+            ERROR("Invalid gain fast_adc_1_20_ac[%d] = %f",i,param->fast_adc_1_20_ac[i].gainCalc);
             return false;
         }
     }
@@ -995,7 +996,7 @@ bool recalculateCalibValue(rp_calib_params_t *param){
         double baseValue = calibBaseScaleFromVoltage(param->fast_dac_x1[i].baseScale,param->dataStructureId == RP_HW_PACK_ID_V5);
         param->fast_dac_x1[i].calibValue = CHECK_GAIN_LIMIT(param->fast_dac_x1[i].gainCalc) * (double)baseValue;
         if (!CHECK_VALID_GAIN_LIMIT(param->fast_dac_x1[i].gainCalc)){
-            fprintf(stderr,"[Error] Invalid gain fast_dac_x1[%d] = %f\n",i,param->fast_dac_x1[i].gainCalc);
+            ERROR("Invalid gain fast_dac_x1[%d] = %f",i,param->fast_dac_x1[i].gainCalc);
             return false;
         }
     }
@@ -1005,7 +1006,7 @@ bool recalculateCalibValue(rp_calib_params_t *param){
         double baseValue = calibBaseScaleFromVoltage(param->fast_dac_x5[i].baseScale,param->dataStructureId == RP_HW_PACK_ID_V5);
         param->fast_dac_x5[i].calibValue = CHECK_GAIN_LIMIT(param->fast_dac_x5[i].gainCalc) * (double)baseValue;
         if (!CHECK_VALID_GAIN_LIMIT(param->fast_dac_x5[i].gainCalc)){
-            fprintf(stderr,"[Error] Invalid gain fast_dac_x5[%d] = %f\n",i,param->fast_dac_x5[i].gainCalc);
+            ERROR("Invalid gain fast_dac_x5[%d] = %f",i,param->fast_dac_x5[i].gainCalc);
             return false;
         }
     }
@@ -1032,14 +1033,14 @@ rp_calib_error adjustingBaseScaleEx(float *baseScale,int32_t *offset,bool adjust
     }
 
     if (detectedCoff == -1){
-        fprintf(stderr,"[Error] Base scale recognition error for value %d\n",*calibValue);
+        ERROR("Base scale recognition error for value %d",*calibValue);
         return RP_HW_CALIB_EA;
     }
 
     float x = *baseScale / detectedCoff;
     *calibValue = *calibValue * x;
 //    *offset = *offset * x;
-    fprintf(stderr,"[Warning] Calibration corrected from %f to %f. New calib gain value %d and offset %d\n",*baseScale,detectedCoff,*calibValue,*offset);
+    WARNING("Calibration corrected from %f to %f. New calib gain value %d and offset %d",*baseScale,detectedCoff,*calibValue,*offset);
     return RP_HW_CALIB_OK;
 }
 

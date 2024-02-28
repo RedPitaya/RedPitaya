@@ -18,6 +18,7 @@
 #include "uart_decoder.h"
 #include "can_decoder.h"
 #include "rp_hw-profiles.h"
+#include "rp_log.h"
 
 extern "C" {
 #include "la_acq.h"
@@ -107,7 +108,7 @@ std::map<std::string, std::shared_ptr<Decoder> > g_decoders;
  auto getModelS() -> std::string{
     rp_HPeModels_t c = STEM_125_14_v1_0;
     if (rp_HPGetModel(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get board model\n");
+       ERROR("Can't get board model");
     }
 
     switch (c)
@@ -138,7 +139,7 @@ std::map<std::string, std::shared_ptr<Decoder> > g_decoders;
             return "Z20_250_12_120";
 
         default:
-            fprintf(stderr,"[Error] Can't get board model\n");
+            ERROR("Can't get board model");
             exit(-1);
     }
     return "Z10";
@@ -216,7 +217,7 @@ const char *rp_app_desc(void) {
 int rp_app_init(void) {
 
 	int s = rp_OpenUnit();
-	fprintf(stderr, "openunit %d\n", s);
+	TRACE("openunit %d", s);
 	set_application_mode(BASIC_ONLY);
 
 	time_t t;
@@ -239,7 +240,7 @@ int rp_app_exit(void) {
 
 void rpReadyCallback(RP_STATUS status, void * pParameter)
 {
-	fprintf(stderr, "ACQ_CALLBACK\n");
+	TRACE("ACQ_CALLBACK");
 }
 
 static size_t readFile(const char* _fname, uint8_t* _buf, size_t _buf_size)
@@ -257,7 +258,7 @@ static size_t readFile(const char* _fname, uint8_t* _buf, size_t _buf_size)
 
 static void writeToFile(const char* _fname, uint8_t* _buf, size_t _buf_size)
 {
-	fprintf(stderr, "Data was got, writing to file: %s\n", _fname);
+	TRACE("Data was got, writing to file: %s", _fname);
 	FILE* f = fopen(_fname, "wb");
 	fwrite(_buf, sizeof(uint8_t), _buf_size, f);
 	fclose(f);
@@ -315,11 +316,8 @@ void PostUpdateSignals(void)
 
 void* trigAcq(void *arg)
 {
-    fprintf(stderr, "TrigAcqThreadStarted\n");
     sleep(2);
-    fprintf(stderr, "SW trigger\n");
     if(rp_SoftwareTrigger() != RP_API_OK){
-    	fprintf(stderr, "Cannot trigger acq.\n");
     	rp_Stop();
 		measureState.SendValue(4);
     }
@@ -343,7 +341,6 @@ void DoDecode(bool fpgaDataReceived, uint8_t* file_buf)
             else
             {
             	decoder.second->UpdateParameters();
-				fprintf(stderr, "[DoDecode] UpdateParameters()\n");
             }
         }
     }
@@ -351,7 +348,6 @@ void DoDecode(bool fpgaDataReceived, uint8_t* file_buf)
 
 void OnNewParams(void)
 {
-	fprintf(stderr, "OnNewParams()\n");
 
 	// Update measure select
 	if (measureSelect.IsNewValue())
@@ -394,16 +390,13 @@ void OnNewParams(void)
 	if (!inRun.NewValue() && inRun.Value())
 	{
 		inRun.Update();
-		fprintf(stderr, "before Stopo()\n");
 		rp_Stop();
 		sleep(2);
-		fprintf(stderr, "after Stopo()\n");
 		measureState.SendValue(1);
 	}
 	else if (inRun.NewValue() && !inRun.Value()) // FPGA mode
 	{
 		inRun.Update();
-		fprintf(stderr, "TEST()\n");
 		measureState.SendValue(2);
 		std::thread([&]{
 			size_t BUF_SIZE = 1024*1024;
@@ -417,7 +410,6 @@ void OnNewParams(void)
 
 			rp_Stop();
 			uint8_t decimateRate = decimate.Value();
-			fprintf(stderr, "Sample rate before send: : %d\n", decimateRate);
 
 			if (triggers.empty())
 			{
@@ -432,7 +424,7 @@ void OnNewParams(void)
 
 			s = rp_EnableDigitalPortDataRLE(1);
 			double timeIndisposedMs;
-			fprintf(stderr, "pre = %d post = %d buf_size = %zu\n", pre, POST, BUF_SIZE);
+			TRACE("pre = %d post = %d buf_size = %zu", pre, POST, BUF_SIZE);
 			s = rp_RunBlock(pre, POST, decimateRate, &timeIndisposedMs, &rpReadyCallback, NULL);
 			s = rp_SetDataBuffer(buf1, BUF_SIZE, RP_RATIO_MODE_NONE);
 			samples = BUF_SIZE;
@@ -451,8 +443,8 @@ void OnNewParams(void)
 					sum += buf[i*2] + 1;
 			}
 
-			fprintf(stderr, "ch1 samples %d sum %d\n", samples, trigPos);
-			fprintf(stderr, "%x\n-->%x\n%x\n", buf[pre*2-1], buf[pre*2+1], buf[pre*2+3]);
+			TRACE("ch1 samples %d sum %d", samples, trigPos);
+			TRACE("%x\n-->%x\n%x", buf[pre*2-1], buf[pre*2+1], buf[pre*2+3]);
 			ch1.Set(buf, samples*2);
 
 			uint8_t fileBuf[ch1.GetSize()];
@@ -470,7 +462,7 @@ void OnNewParams(void)
 		    delete[] buf1;
 
             if (s != RP_API_OK){
-                fprintf(stderr,"Error api2 %d\n",s);
+                ERROR("Error api2 %d",s);
             }
 		}).detach();
 	}
@@ -483,7 +475,7 @@ void OnNewParams(void)
     // Create decoders
 	if (createDecoder.IsNewValue() && decoderName.IsNewValue())
 	{
-		fprintf(stderr, "CREATE DECODER...\n");
+		TRACE("CREATE DECODER...");
 
 		createDecoder.Update();
 		decoderName.Update();
@@ -492,33 +484,33 @@ void OnNewParams(void)
 		if (createDecoder.Value() == "i2c")
 		{
 			g_decoders[name] = std::make_shared<I2CDecoder>(name);
-            fprintf(stderr, "createDecoder: %s\n", createDecoder.Value().c_str());
+            TRACE("createDecoder: %s", createDecoder.Value().c_str());
 		}
 		else if (createDecoder.Value() == "spi")
 		{
 			g_decoders[name] = std::make_shared<SpiDecoder>(name);
-            fprintf(stderr, "createDecoder: %s\n", createDecoder.Value().c_str());
+            TRACE("createDecoder: %s", createDecoder.Value().c_str());
 		}
 		else if (createDecoder.Value() == "can")
 		{
 			g_decoders[name] = std::make_shared<CANDecoder>(name);
-            fprintf(stderr, "createDecoder: %s\n", createDecoder.Value().c_str());
+            TRACE("createDecoder: %s", createDecoder.Value().c_str());
 		}
 		else if (createDecoder.Value() == "uart")
 		{
 			g_decoders[name] = std::make_shared<UARTDecoder>(name);
-            fprintf(stderr, "createDecoder: %s\n", createDecoder.Value().c_str());
+            TRACE("createDecoder: %s", createDecoder.Value().c_str());
 		}
 
 		createDecoder.Value() = name;
-        fprintf(stderr, "Value: %s\n", name.c_str());
+        TRACE("Value: %s", name.c_str());
 	}
 
 	// Delete decoders
 	if (destroyDecoder.IsNewValue())
 	{
 		destroyDecoder.Update();
-        fprintf(stderr, "destroyDecoder: %s\n", destroyDecoder.Value().c_str());
+        TRACE("destroyDecoder: %s", destroyDecoder.Value().c_str());
 		g_decoders.erase(destroyDecoder.Value());
 	}
 

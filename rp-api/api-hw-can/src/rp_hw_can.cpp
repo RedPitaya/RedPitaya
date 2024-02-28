@@ -34,16 +34,16 @@ const char *can_states[RP_CAN_STATE_SLEEPING + 1] = {
 };
 
 int rp_CanSetFPGAEnable(bool _enable){
-    ECHECK_APP_RP(rp_InitReset(false))
-    ECHECK_APP_RP(rp_SetCANModeEnable(_enable));
-    ECHECK_APP_RP(rp_Release())
+    ECHECK(rp_InitReset(false))
+    ECHECK(rp_SetCANModeEnable(_enable));
+    ECHECK(rp_Release())
     return RP_HW_CAN_OK;
 }
 
 int rp_CanGetFPGAEnable(bool *_state){
-    ECHECK_APP_RP(rp_InitReset(false))
-    ECHECK_APP_RP(rp_GetCANModeEnable(_state));
-    ECHECK_APP_RP(rp_Release())
+    ECHECK(rp_InitReset(false))
+    ECHECK(rp_GetCANModeEnable(_state));
+    ECHECK(rp_Release())
     return RP_HW_CAN_OK;
 }
 

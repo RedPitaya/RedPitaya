@@ -23,14 +23,14 @@
     #define M_PI 3.14159265358979323846
 #endif
 
-#define CHECK_CHANNEL(X) \
+#define CHECK_CHANNEL \
     uint8_t channels_rp_HPGetFastDACChannelsCount = 0; \
     if (rp_HPGetFastDACChannelsCount(&channels_rp_HPGetFastDACChannelsCount) != RP_HP_OK){ \
-        fprintf(stderr,"[Error:%s] Can't get fast DAC channels count\n",X); \
+        ERROR("Can't get fast DAC channels count"); \
         return RP_NOTS; \
     } \
     if (channel >= channels_rp_HPGetFastDACChannelsCount){ \
-        fprintf(stderr,"[Error:%s] Channel is larger than allowed\n",X); \
+        ERROR("Channel is larger than allowed"); \
         return RP_NOTS; \
     }
 
@@ -69,13 +69,13 @@ int gen_SetDefaultValues() {
 
     uint8_t channels = 0;
     if (rp_HPGetFastDACChannelsCount(&channels) != RP_HP_OK){
-        fprintf(stderr,"[Error:gen_SetDefaultValues] Can't get fast DAC channels count\n");
+        ERROR("Can't get fast DAC channels count");
         return RP_NOTS;
     }
 
     bool x5_gain = false;
     if (rp_HPGetIsGainDACx5(&x5_gain) != RP_HP_OK){
-        fprintf(stderr,"[Error:gen_SetDefaultValues] Can't get fast DAC gain mode\n");
+        ERROR("Can't get fast DAC gain mode");
         return RP_NOTS;
     }
 
@@ -98,16 +98,15 @@ int gen_SetDefaultValues() {
 
         float fs = 0;
         if (rp_HPGetFastDACGain(convertCh(ch), &fs) != RP_HP_OK){
-            fprintf(stderr,"[Error:gen_SetDefaultValues] Can't get fast DAC gain\n");
+            ERROR("Can't get fast DAC gain");
             return RP_NOTS;
         }
 
         float fsBase = 0;
         if (rp_HPGetHWDACFullScale(&fsBase) != RP_HP_OK){
-            fprintf(stderr,"[Error:gen_SetDefaultValues] Can't get fast HW DAC full scale\n");
+            ERROR("Can't get fast HW DAC full scale");
             return RP_NOTS;
         }
-
 
         gen_setAmplitude(ch, fs * fsBase * 0.8);
         gen_setDutyCycle(ch, 0.5);
@@ -139,14 +138,14 @@ int gen_GetDACSamplePeriod(double *value){
 
 int gen_Disable(rp_channel_t channel) {
 
-    CHECK_CHANNEL("gen_Disable")
+    CHECK_CHANNEL
 
     return generate_setOutputDisable(channel, true);
 }
 
 int gen_Enable(rp_channel_t channel) {
 
-    CHECK_CHANNEL("gen_Enable")
+    CHECK_CHANNEL
 
     return generate_setOutputDisable(channel, false);
 }
@@ -162,7 +161,7 @@ int gen_IsEnable(rp_channel_t channel, bool *value) {
 int gen_checkAmplitudeAndOffset(rp_channel_t channel,float amplitude, float offset) {
     float fs = 0;
     if (rp_HPGetFastDACGain(convertCh(channel), &fs) != RP_HP_OK){
-        fprintf(stderr,"[Error:gen_checkAmplitudeAndOffset] Can't get fast DAC full scale\n");
+        ERROR("Can't get fast DAC full scale");
         return RP_NOTS;
     }
 
@@ -174,7 +173,7 @@ int gen_checkAmplitudeAndOffset(rp_channel_t channel,float amplitude, float offs
 
 int gen_setAmplitude(rp_channel_t channel, float amplitude) {
 
-    CHECK_CHANNEL("gen_setAmplitude")
+    CHECK_CHANNEL
 
     if (gen_checkAmplitudeAndOffset(channel, amplitude, ch_offset[channel]) != RP_OK){
         return RP_EOOR;
@@ -187,7 +186,7 @@ int gen_setAmplitude(rp_channel_t channel, float amplitude) {
 
 int gen_getAmplitude(rp_channel_t channel, float *amplitude) {
 
-    CHECK_CHANNEL("gen_getAmplitude")
+    CHECK_CHANNEL
 
     *amplitude = ch_amplitude[channel];
     return RP_OK;
@@ -195,7 +194,7 @@ int gen_getAmplitude(rp_channel_t channel, float *amplitude) {
 
 int gen_setOffset(rp_channel_t channel, float offset) {
 
-    CHECK_CHANNEL("gen_setOffset")
+    CHECK_CHANNEL
 
     if (gen_checkAmplitudeAndOffset(channel, ch_amplitude[channel], offset) != RP_OK){
         return RP_EOOR;
@@ -209,7 +208,7 @@ int gen_setOffset(rp_channel_t channel, float offset) {
 
 int gen_getOffset(rp_channel_t channel, float *offset) {
 
-    CHECK_CHANNEL("gen_getOffset")
+    CHECK_CHANNEL
 
     *offset = ch_offset[channel];
     return RP_OK;
@@ -217,7 +216,7 @@ int gen_getOffset(rp_channel_t channel, float *offset) {
 
 int gen_setRiseFallMin(rp_channel_t channel, float min) {
 
-    CHECK_CHANNEL("gen_setRiseFallMin")
+    CHECK_CHANNEL
 
     ch_riseFallMin[channel] = min;
     if (ch_riseTime[channel] < ch_riseFallMin[channel]) {
@@ -231,7 +230,7 @@ int gen_setRiseFallMin(rp_channel_t channel, float min) {
 
 int gen_getRiseFallMin(rp_channel_t channel, float *min) {
 
-    CHECK_CHANNEL("gen_getRiseFallMin")
+    CHECK_CHANNEL
 
     *min = ch_riseFallMin[channel];
     return RP_OK;
@@ -239,7 +238,7 @@ int gen_getRiseFallMin(rp_channel_t channel, float *min) {
 
 int gen_setRiseFallMax(rp_channel_t channel, float max) {
 
-    CHECK_CHANNEL("gen_setRiseFallMax")
+    CHECK_CHANNEL
 
     ch_riseFallMax[channel] = max;
     if (ch_riseTime[channel] > ch_riseFallMax[channel]) {
@@ -254,7 +253,7 @@ int gen_setRiseFallMax(rp_channel_t channel, float max) {
 
 int gen_getRiseFallMax(rp_channel_t channel, float *max) {
 
-    CHECK_CHANNEL("gen_getRiseFallMax")
+    CHECK_CHANNEL
 
     *max = ch_riseFallMax[channel];
     return RP_OK;
@@ -262,11 +261,11 @@ int gen_getRiseFallMax(rp_channel_t channel, float *max) {
 
 int gen_setFrequency(rp_channel_t channel, float frequency) {
 
-    CHECK_CHANNEL("gen_setFrequency")
+    CHECK_CHANNEL
 
     uint32_t base_freq = 0;
     if (rp_HPGetBaseFastDACSpeedHz(&base_freq) != RP_HP_OK){
-        fprintf(stderr,"[Error:gen_setFrequency] Can't get fast ADC base rate\n");
+        ERROR("Can't get fast ADC base rate");
         return RP_NOTS;
     }
 
@@ -286,11 +285,11 @@ int gen_setFrequency(rp_channel_t channel, float frequency) {
 
 int gen_setFrequencyDirect(rp_channel_t channel, float frequency){
 
-    CHECK_CHANNEL("gen_setFrequencyDirect")
+    CHECK_CHANNEL
 
     uint32_t base_freq = 0;
     if (rp_HPGetBaseFastDACSpeedHz(&base_freq) != RP_HP_OK){
-        fprintf(stderr,"[Error:gen_setFrequencyDirect] Can't get fast ADC base rate\n");
+        ERROR("Can't get fast ADC base rate");
         return RP_NOTS;
     }
 
@@ -308,11 +307,11 @@ int gen_setFrequencyDirect(rp_channel_t channel, float frequency){
 
 int gen_getFrequency(rp_channel_t channel, float *frequency) {
 
-    CHECK_CHANNEL("gen_getFrequency")
+    CHECK_CHANNEL
 
     uint32_t base_freq = 0;
     if (rp_HPGetBaseFastDACSpeedHz(&base_freq) != RP_HP_OK){
-        fprintf(stderr,"[Error:gen_getFrequency] Can't get fast ADC base rate\n");
+        ERROR("Can't get fast ADC base rate");
         return RP_NOTS;
     }
 
@@ -321,11 +320,11 @@ int gen_getFrequency(rp_channel_t channel, float *frequency) {
 
 int gen_setSweepStartFrequency(rp_channel_t channel, float frequency){
 
-    CHECK_CHANNEL("gen_setSweepStartFrequency")
+    CHECK_CHANNEL
 
     uint32_t base_freq = 0;
     if (rp_HPGetBaseFastDACSpeedHz(&base_freq) != RP_HP_OK){
-        fprintf(stderr,"[Error:gen_setSweepStartFrequency] Can't get fast ADC base rate\n");
+        ERROR("Can't get fast ADC base rate");
         return RP_NOTS;
     }
 
@@ -338,7 +337,7 @@ int gen_setSweepStartFrequency(rp_channel_t channel, float frequency){
 
 int gen_getSweepStartFrequency(rp_channel_t channel, float *frequency){
 
-    CHECK_CHANNEL("gen_getSweepStartFrequency")
+    CHECK_CHANNEL
 
     *frequency = ch_sweepStartFrequency[channel];
     return RP_OK;
@@ -346,11 +345,11 @@ int gen_getSweepStartFrequency(rp_channel_t channel, float *frequency){
 
 int gen_setSweepEndFrequency(rp_channel_t channel, float frequency){
 
-    CHECK_CHANNEL("gen_setSweepEndFrequency")
+    CHECK_CHANNEL
 
     uint32_t base_freq = 0;
     if (rp_HPGetBaseFastDACSpeedHz(&base_freq) != RP_HP_OK){
-        fprintf(stderr,"[Error:gen_setSweepEndFrequency] Can't get fast ADC base rate\n");
+        ERROR("Can't get fast ADC base rate");
         return RP_NOTS;
     }
 
@@ -364,7 +363,7 @@ int gen_setSweepEndFrequency(rp_channel_t channel, float frequency){
 
 int gen_getSweepEndFrequency(rp_channel_t channel, float *frequency){
 
-    CHECK_CHANNEL("gen_getSweepEndFrequency")
+    CHECK_CHANNEL
 
     *frequency = ch_sweepEndFrequency[channel];
     return RP_OK;
@@ -373,7 +372,7 @@ int gen_getSweepEndFrequency(rp_channel_t channel, float *frequency){
 
 int gen_setPhase(rp_channel_t channel, float phase) {
 
-    CHECK_CHANNEL("gen_setPhase")
+    CHECK_CHANNEL
 
     if (phase < PHASE_MIN || phase > PHASE_MAX) {
         return RP_EOOR;
@@ -384,7 +383,7 @@ int gen_setPhase(rp_channel_t channel, float phase) {
 
 int gen_getPhase(rp_channel_t channel, float *phase) {
 
-    CHECK_CHANNEL("gen_getPhase")
+    CHECK_CHANNEL
 
     *phase = ch_phase[channel];
     return RP_OK;
@@ -392,7 +391,7 @@ int gen_getPhase(rp_channel_t channel, float *phase) {
 
 int gen_setWaveform(rp_channel_t channel, rp_waveform_t type) {
 
-    CHECK_CHANNEL("gen_setWaveform")
+    CHECK_CHANNEL
 
     ch_waveform[channel] = type;
     if (type == RP_WAVEFORM_ARBITRARY) {
@@ -406,7 +405,7 @@ int gen_setWaveform(rp_channel_t channel, rp_waveform_t type) {
 
 int gen_getWaveform(rp_channel_t channel, rp_waveform_t *type) {
 
-    CHECK_CHANNEL("gen_getWaveform")
+    CHECK_CHANNEL
 
     *type = ch_waveform[channel];
     return RP_OK;
@@ -414,7 +413,7 @@ int gen_getWaveform(rp_channel_t channel, rp_waveform_t *type) {
 
 int gen_setSweepMode(rp_channel_t channel, rp_gen_sweep_mode_t mode) {
 
-    CHECK_CHANNEL("gen_setSweepMode")
+    CHECK_CHANNEL
 
     ch_sweepMode[channel] = mode;
 
@@ -423,14 +422,14 @@ int gen_setSweepMode(rp_channel_t channel, rp_gen_sweep_mode_t mode) {
 
 int gen_getSweepMode(rp_channel_t channel, rp_gen_sweep_mode_t *mode) {
 
-    CHECK_CHANNEL("gen_getSweepMode")
+    CHECK_CHANNEL
 
     *mode = ch_sweepMode[channel];
     return RP_OK;
 }
 
 int gen_setSweepDir(rp_channel_t channel, rp_gen_sweep_dir_t mode){
-    CHECK_CHANNEL("gen_setSweepDir")
+    CHECK_CHANNEL
 
     ch_sweepDir[channel] = mode;
     return synthesize_signal(channel);
@@ -438,7 +437,7 @@ int gen_setSweepDir(rp_channel_t channel, rp_gen_sweep_dir_t mode){
 
 int gen_getSweepDir(rp_channel_t channel, rp_gen_sweep_dir_t *mode){
 
-    CHECK_CHANNEL("gen_getSweepDir")
+    CHECK_CHANNEL
 
     *mode = ch_sweepDir[channel];
     return RP_OK;
@@ -446,17 +445,17 @@ int gen_getSweepDir(rp_channel_t channel, rp_gen_sweep_dir_t *mode){
 
 int gen_setArbWaveform(rp_channel_t channel, float *data, uint32_t length) {
 
-    CHECK_CHANNEL("gen_setArbWaveform")
+    CHECK_CHANNEL
 
     float fs = 0;
     if (rp_HPGetFastDACGain(channel,&fs) != RP_HP_OK){
-        fprintf(stderr,"[Error:gen_setArbWaveform] Can't get fast DAC full scale\n");
+        ERROR("Can't get fast DAC full scale");
         return RP_NOTS;
     }
 
     bool is_sign = false;
     if (rp_HPGetFastDACIsSigned(&is_sign) != RP_HP_OK){
-        fprintf(stderr,"[Error:gen_setArbWaveform] Can't get fast DAC sign value\n");
+        ERROR("Can't get fast DAC sign value");
         return RP_NOTS;
     }
 
@@ -470,7 +469,7 @@ int gen_setArbWaveform(rp_channel_t channel, float *data, uint32_t length) {
             max = data[i];
     }
     if (min < (is_sign ? -fs : 0) || max > fs) {
-        fprintf(stderr,"[Error:gen_setArbWaveform] The signal is greater than acceptable.\n");
+        ERROR("The signal is greater than acceptable.");
         return RP_ENN;
     }
 
@@ -495,7 +494,7 @@ int gen_setArbWaveform(rp_channel_t channel, float *data, uint32_t length) {
 
 int gen_getArbWaveform(rp_channel_t channel, float *data, uint32_t *length) {
 
-    CHECK_CHANNEL("gen_getArbWaveform")
+    CHECK_CHANNEL
 
     // If this data was not set, then this method will return incorrect data
     float *pointer = ch_arbitraryData[channel];
@@ -509,7 +508,7 @@ int gen_getArbWaveform(rp_channel_t channel, float *data, uint32_t *length) {
 
 int gen_setDutyCycle(rp_channel_t channel, float ratio) {
 
-    CHECK_CHANNEL("gen_setDutyCycle")
+    CHECK_CHANNEL
 
     if (ratio < DUTY_CYCLE_MIN || ratio > DUTY_CYCLE_MAX) {
         return RP_EOOR;
@@ -521,7 +520,7 @@ int gen_setDutyCycle(rp_channel_t channel, float ratio) {
 
 int gen_getDutyCycle(rp_channel_t channel, float *ratio) {
 
-    CHECK_CHANNEL("gen_getDutyCycle")
+    CHECK_CHANNEL
 
     *ratio = ch_dutyCycle[channel];
     return RP_OK;
@@ -529,7 +528,7 @@ int gen_getDutyCycle(rp_channel_t channel, float *ratio) {
 
 int gen_setRiseTime(rp_channel_t channel, float time) {
 
-    CHECK_CHANNEL("gen_setRiseTime")
+    CHECK_CHANNEL
 
     if (time < ch_riseFallMin[channel]){
         time = ch_riseFallMin[channel];
@@ -544,7 +543,7 @@ int gen_setRiseTime(rp_channel_t channel, float time) {
 
 int gen_getRiseTime(rp_channel_t channel, float *time) {
 
-    CHECK_CHANNEL("gen_getRiseTime")
+    CHECK_CHANNEL
 
     *time = ch_riseTime[channel];
     return RP_OK;
@@ -552,7 +551,7 @@ int gen_getRiseTime(rp_channel_t channel, float *time) {
 
 int gen_setFallTime(rp_channel_t channel, float time) {
 
-    CHECK_CHANNEL("gen_setFallTime")
+    CHECK_CHANNEL
 
     if (time < ch_riseFallMin[channel]){
         time = ch_riseFallMin[channel];
@@ -567,7 +566,7 @@ int gen_setFallTime(rp_channel_t channel, float time) {
 
 int gen_getFallTime(rp_channel_t channel, float *time) {
 
-    CHECK_CHANNEL("gen_getFallTime")
+    CHECK_CHANNEL
 
     *time = ch_fallTime[channel];
     return RP_OK;
@@ -575,7 +574,7 @@ int gen_getFallTime(rp_channel_t channel, float *time) {
 
 int gen_setGenMode(rp_channel_t channel, rp_gen_mode_t mode) {
 
-    CHECK_CHANNEL("gen_setGenMode")
+    CHECK_CHANNEL
 
     ch_mode[channel] = mode;
 
@@ -602,7 +601,7 @@ int gen_setGenMode(rp_channel_t channel, rp_gen_mode_t mode) {
 
 int gen_getGenMode(rp_channel_t channel, rp_gen_mode_t *mode) {
 
-    CHECK_CHANNEL("gen_getGenMode")
+    CHECK_CHANNEL
 
     *mode = ch_mode[channel];
     return RP_OK;
@@ -610,7 +609,7 @@ int gen_getGenMode(rp_channel_t channel, rp_gen_mode_t *mode) {
 
 int gen_setBurstCount(rp_channel_t channel, int num) {
 
-    CHECK_CHANNEL("gen_setBurstCount")
+    CHECK_CHANNEL
 
     rp_gen_mode_t mode = ch_mode[channel];
 
@@ -629,7 +628,7 @@ int gen_setBurstCount(rp_channel_t channel, int num) {
 
 int gen_getBurstCount(rp_channel_t channel, int *num) {
 
-    CHECK_CHANNEL("gen_getBurstCount")
+    CHECK_CHANNEL
 
     *num = ch_burstCount[channel];
     return RP_OK;
@@ -637,7 +636,7 @@ int gen_getBurstCount(rp_channel_t channel, int *num) {
 
 int gen_setBurstLastValue(rp_channel_t channel, float amplitude){
 
-    CHECK_CHANNEL("gen_setBurstLastValue")
+    CHECK_CHANNEL
 
     int ret = generate_setBurstLastValue(channel,ch_gain[channel],  amplitude);
     if (ret == RP_OK){
@@ -648,7 +647,7 @@ int gen_setBurstLastValue(rp_channel_t channel, float amplitude){
 
 int gen_getBurstLastValue(rp_channel_t channel, float *amplitude){
 
-    CHECK_CHANNEL("gen_getBurstLastValue")
+    CHECK_CHANNEL
 
     *amplitude = ch_burstLastValue[channel];
     return RP_OK;
@@ -656,7 +655,7 @@ int gen_getBurstLastValue(rp_channel_t channel, float *amplitude){
 
 int gen_setInitGenValue(rp_channel_t channel, float amplitude){
 
-    CHECK_CHANNEL("gen_setInitGenValue")
+    CHECK_CHANNEL
 
     int ret = generate_setInitGenValue(channel,ch_gain[channel],  amplitude);
     if (ret == RP_OK){
@@ -667,7 +666,7 @@ int gen_setInitGenValue(rp_channel_t channel, float amplitude){
 
 int gen_getInitGenValue(rp_channel_t channel, float *amplitude){
 
-    CHECK_CHANNEL("gen_getInitGenValue")
+    CHECK_CHANNEL
 
     *amplitude = ch_initValue[channel];
     return RP_OK;
@@ -675,7 +674,7 @@ int gen_getInitGenValue(rp_channel_t channel, float *amplitude){
 
 int gen_setBurstRepetitions(rp_channel_t channel, int repetitions) {
 
-    CHECK_CHANNEL("gen_setBurstRepetitions")
+    CHECK_CHANNEL
 
     rp_gen_mode_t mode = ch_mode[channel];
 
@@ -693,7 +692,7 @@ int gen_setBurstRepetitions(rp_channel_t channel, int repetitions) {
 
 int gen_getBurstRepetitions(rp_channel_t channel, int *repetitions) {
 
-    CHECK_CHANNEL("gen_getBurstRepetitions")
+    CHECK_CHANNEL
 
     *repetitions = ch_burstRepetition[channel];
     return RP_OK;
@@ -701,7 +700,7 @@ int gen_getBurstRepetitions(rp_channel_t channel, int *repetitions) {
 
 int gen_setBurstPeriod(rp_channel_t channel, uint32_t period) {
 
-    CHECK_CHANNEL("gen_setBurstPeriod")
+    CHECK_CHANNEL
 
     rp_gen_mode_t mode = ch_mode[channel];
 
@@ -731,7 +730,7 @@ int gen_setBurstPeriod(rp_channel_t channel, uint32_t period) {
 
 int gen_getBurstPeriod(rp_channel_t channel, uint32_t *period) {
 
-    CHECK_CHANNEL("gen_getBurstPeriod")
+    CHECK_CHANNEL
 
     *period = ch_burstPeriod[channel];
     return RP_OK;
@@ -739,7 +738,7 @@ int gen_getBurstPeriod(rp_channel_t channel, uint32_t *period) {
 
 int gen_setTriggerSource(rp_channel_t channel, rp_trig_src_t src) {
 
-    CHECK_CHANNEL("gen_setTriggerSource")
+    CHECK_CHANNEL
 
     // if (src == RP_GEN_TRIG_GATED_BURST) {
     //     generate_setGatedBurst(channel, 1);
@@ -807,7 +806,7 @@ int gen_SynchroniseSM() {
 
 int synthesize_signal(rp_channel_t channel) {
 
-    CHECK_CHANNEL("synthesize_signal")
+    CHECK_CHANNEL
 
     float data[DAC_BUFFER_SIZE];
 
@@ -907,7 +906,7 @@ int synthesis_PWM(float scale,float ratio, float *data_out,uint16_t buffSize) {
 
 int synthesis_arbitrary(float scale,rp_channel_t channel, float *data_out, uint32_t * size) {
 
-    CHECK_CHANNEL("synthesis_arbitrary")
+    CHECK_CHANNEL
 
     float *pointer = ch_arbitraryData[channel];
 
@@ -1009,7 +1008,7 @@ int triggerIfInternal(rp_channel_t channel) {
 
 int gen_setEnableTempProtection(rp_channel_t channel, bool enable) {
 
-    CHECK_CHANNEL("gen_setEnableTempProtection")
+    CHECK_CHANNEL
 
     if (!rp_HPGetFastDACIsTempProtectionOrDefault())
         return RP_NOTS;
@@ -1020,7 +1019,7 @@ int gen_setEnableTempProtection(rp_channel_t channel, bool enable) {
 
 int gen_getEnableTempProtection(rp_channel_t channel, bool *enable) {
 
-    CHECK_CHANNEL("gen_getEnableTempProtection")
+    CHECK_CHANNEL
 
     if (!rp_HPGetFastDACIsTempProtectionOrDefault())
         return RP_NOTS;
@@ -1030,7 +1029,7 @@ int gen_getEnableTempProtection(rp_channel_t channel, bool *enable) {
 
 int gen_setLatchTempAlarm(rp_channel_t channel, bool status) {
 
-    CHECK_CHANNEL("gen_setLatchTempAlarm")
+    CHECK_CHANNEL
 
     if (!rp_HPGetFastDACIsTempProtectionOrDefault())
         return RP_NOTS;
@@ -1041,7 +1040,7 @@ int gen_setLatchTempAlarm(rp_channel_t channel, bool status) {
 
 int gen_getLatchTempAlarm(rp_channel_t channel, bool *status) {
 
-    CHECK_CHANNEL("gen_getLatchTempAlarm")
+    CHECK_CHANNEL
 
     if (!rp_HPGetFastDACIsTempProtectionOrDefault())
         return RP_NOTS;
@@ -1051,7 +1050,7 @@ int gen_getLatchTempAlarm(rp_channel_t channel, bool *status) {
 
 int gen_getRuntimeTempAlarm(rp_channel_t channel, bool *status) {
 
-    CHECK_CHANNEL("gen_getRuntimeTempAlarm")
+    CHECK_CHANNEL
 
     if (!rp_HPGetFastDACIsTempProtectionOrDefault())
         return RP_NOTS;
@@ -1061,7 +1060,7 @@ int gen_getRuntimeTempAlarm(rp_channel_t channel, bool *status) {
 
 int gen_setGainOut(rp_channel_t channel,rp_gen_gain_t mode){
 
-    CHECK_CHANNEL("gen_setGainOut")
+    CHECK_CHANNEL
 
     if (!rp_HPGetIsGainDACx5OrDefault())
         return RP_NOTS;
@@ -1083,7 +1082,7 @@ int gen_setGainOut(rp_channel_t channel,rp_gen_gain_t mode){
 
 int gen_getGainOut(rp_channel_t channel,rp_gen_gain_t *status){
 
-    CHECK_CHANNEL("gen_getGainOut")
+    CHECK_CHANNEL
 
     *status = ch_gain[channel];
     return RP_OK;

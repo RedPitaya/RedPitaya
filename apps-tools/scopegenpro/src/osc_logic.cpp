@@ -138,7 +138,7 @@ auto updateTriggerLimit(bool force) -> void {
             trigg_limit = rp_HPGetIsExternalTriggerFullScalePresentOrDefault();
         break;
         default:
-            fprintf(stderr,"[Error:updateTriggerLimit] Unknown trigger source: %d\n",t_channel);
+            ERROR("Unknown trigger source: %d",t_channel);
             rp_AcqGetGainV(RP_CH_1, &trigg_limit);
             trigg_limit = trigg_limit;
     }
@@ -322,7 +322,7 @@ auto requestFile() -> void {
 
     if (request_format.IsNewValue()){
         request_format.Update();
-        fprintf(stderr,"Export format %d\n",request_format.Value());
+        TRACE("Export format %d",request_format.Value());
     }
 
     if (request_data.IsNewValue()){

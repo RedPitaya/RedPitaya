@@ -131,7 +131,7 @@ void UpdateParams(void){
     if(moduleStatus.Value() != moduleStatusFlag) {
         moduleStatus.Value() = moduleStatusFlag;
         moduleStatus.SendValue(moduleStatusFlag);
-        fprintf(stderr, "------------> Module Status sended\n");
+        TRACE("------------> Module Status sended");
     }
     lcr_main_data_t *data = (lcr_main_data_t *)malloc(sizeof(lcr_main_data_t));
 

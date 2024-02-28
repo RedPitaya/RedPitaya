@@ -53,6 +53,7 @@ list(APPEND include_paths
     ${INSTALL_DIR}/include/api2
     ${INSTALL_DIR}/include/apiApp
     ${INSTALL_DIR}/include/redpitaya
+    ${INSTALL_DIR}/include/common
     ${INSTALL_DIR}/rp_sdk
     ${INSTALL_DIR}/rp_sdk/libjson
 )

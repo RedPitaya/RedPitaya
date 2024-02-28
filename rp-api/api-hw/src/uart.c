@@ -24,6 +24,7 @@
 #include <termios.h>
 #include <errno.h>
 #include "uart.h"
+#include "rp_log.h"
 
 #define   VMINX          1
 
@@ -62,13 +63,13 @@ int uart_InitDevice(char *_device){
     uart_fd = open(_device, O_RDWR | O_NOCTTY);
 
     if(uart_fd == -1){
-        fprintf(stderr, "Failed to open UART.\n");
+        ERROR("Failed to open UART.");
         return RP_HW_EIU;
     }
-    
+
     tcflush(uart_fd, TCIFLUSH);
     tcflush(uart_fd, TCIOFLUSH);
-    
+
     tcgetattr(uart_fd, &g_settings);
     return uart_SetSettings();
 }
@@ -79,7 +80,7 @@ int uart_Timeout(uint8_t deca_sec){
 }
 
 uint8_t uart_GetTimeout(){
-    return g_timeout; 
+    return g_timeout;
 }
 
 int uart_SetSettings(){
@@ -133,7 +134,7 @@ int uart_SetSettings(){
             default:
                 return RP_HW_ESU;
         }
-        
+
         g_settings.c_cflag &= ~CSTOPB;
         if (g_stop_bit == RP_UART_STOP2)
             g_settings.c_cflag |= CSTOPB; /* 8 bits */
@@ -144,7 +145,7 @@ int uart_SetSettings(){
         g_settings.c_iflag &= ~(IXON | IXOFF | IXANY);          // Disable XON/XOFF flow control both input & output
         g_settings.c_iflag &= ~(ICANON | ECHO | ECHOE | ISIG);  // Non Cannonical mode
         g_settings.c_oflag &= ~OPOST; /* raw output */
-        
+
         g_settings.c_lflag = 0;               //  enable raw input instead of canonical,
         g_settings.c_cc[VMIN]  = 0;           // Read at least 1 character
         g_settings.c_cc[VTIME] = g_timeout;          // Wait indefinetly
@@ -153,20 +154,20 @@ int uart_SetSettings(){
         * cfsetospeed - Set output speed
         * cfsetispeed - Set input speed
         * cfsetspeed  - Set both output and input speed */
-       
+
         cfsetspeed(&g_settings, g_baud_rate);
 
         /* Setting attributes */
         tcsetattr(uart_fd, TCSANOW, &g_settings);
-        
+
         tcflush(uart_fd, TCIFLUSH);
         tcflush(uart_fd, TCIOFLUSH);
 
         usleep(500000);   // 0.5 sec delay
-        
+
         return RP_HW_OK;
     }else{
-        fprintf(stderr, "Failed setup settings to UART.\n");
+        ERROR("Failed setup settings to UART.");
         return RP_HW_EIU;
     }
 
@@ -175,14 +176,14 @@ int uart_SetSettings(){
 int uart_read(unsigned char *_buffer,int *size){
 
     if (_buffer == NULL || *size <= 0){
-        fprintf(stderr, "Failed read from UART. Buffer is null\n");
+        ERROR("Failed read from UART. Buffer is null");
         return RP_HW_EIPV;
     }
 
-    if (uart_fd != -1){        
+    if (uart_fd != -1){
         while(1){
             if(uart_fd == -1){
-                fprintf(stderr, "Failed to read from UART. UART is closed.\n");
+                ERROR("Failed to read from UART. UART is closed.");
                 return RP_HW_ERU;
             }
             errno = 0;
@@ -193,10 +194,10 @@ int uart_read(unsigned char *_buffer,int *size){
                      continue;
                  /* Error differs */
                  }else{
-                     fprintf(stderr, "Error read from UART. Errno: %d\n", errno);
+                    ERROR("Error read from UART. Errno: %d", errno);
                     return RP_HW_ERU;
                 }
-    
+
             }else if (rx_length == 0){
                 if (g_timeout){
                     return RP_HW_EUTO;
@@ -210,7 +211,7 @@ int uart_read(unsigned char *_buffer,int *size){
         }
         return RP_HW_OK;
     }else{
-        fprintf(stderr, "Failed read from UART.\n");
+        ERROR("Failed read from UART.");
         return RP_HW_EIU;
     }
 }
@@ -218,7 +219,7 @@ int uart_read(unsigned char *_buffer,int *size){
 int uart_write(unsigned char *_buffer, int size){
     int count = 0;
     if (_buffer == NULL || size <= 0){
-        fprintf(stderr, "Failed write to UART.\n");
+        ERROR("Failed write to UART.");
         return RP_HW_EIPV;
     }
 
@@ -228,18 +229,18 @@ int uart_write(unsigned char *_buffer, int size){
         if(uart_fd != -1){
             count = write(uart_fd, _buffer, size);
         }else{
-            fprintf(stderr, "Failed write to UART.\n");
+            ERROR("Failed write to UART.");
             return RP_HW_EIU;
         }
 
         if(count < 0){
-            fprintf(stderr, "Failed write to UART.\n");
+            ERROR("Failed write to UART.");
             return RP_HW_EWU;
         }
 
         return RP_HW_OK;
     }else{
-        fprintf(stderr, "Failed write to UART.\n");
+        ERROR("Failed write to UART.");
         return RP_HW_EWU;
     }
     return 0;
@@ -261,7 +262,7 @@ int uart_SetSpeed(int _speed){
 
 int uart_GetSpeed(){
     return uart_ConvertSpeed(g_baud_rate);
-} 
+}
 
 
 int uart_SetBits(rp_uart_bits_size_t _size){
@@ -293,7 +294,7 @@ rp_uart_stop_bits_t uart_GetStopBits(){
 }
 
 
-//  Baud rate:- B1200, B2400, B4800, B9600, B19200, B38400, B57600, B115200, B230400, B460800, B500000, B576000, B921600, B1000000, B1152000, 
+//  Baud rate:- B1200, B2400, B4800, B9600, B19200, B38400, B57600, B115200, B230400, B460800, B500000, B576000, B921600, B1000000, B1152000,
 //  B1500000, B2000000, B2500000, B3000000, B3500000, B4000000
 
 int uart_GetSpeedType(int _speed){

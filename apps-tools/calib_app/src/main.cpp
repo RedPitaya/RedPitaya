@@ -170,7 +170,6 @@ int rp_app_init(void)
 	}
 
 	g_acq->start();
-	fprintf(stderr, "rp_app_init [OK]\n");
 	return 0;
 }
 
@@ -221,7 +220,7 @@ void UpdateSignals(void)
 		}
 	}catch (std::exception& e)
 	{
-		fprintf(stderr, "Error: UpdateSignals() %s\n",e.what());
+		ERROR("UpdateSignals() %s",e.what());
 	}
 }
 
@@ -1043,7 +1042,7 @@ void UpdateParams(void)
 
 	}catch (std::exception& e)
 	{
-		fprintf(stderr, "Error: UpdateParams() %s\n",e.what());
+		ERROR("UpdateParams() %s",e.what());
 	}
 
 }

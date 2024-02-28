@@ -60,6 +60,7 @@ set(CMAKE_INSTALL_RPATH ${r_paths})
 include_directories("include")
 include_directories("src")
 include_directories("src/kiss_fft")
+include_directories(${INSTALL_DIR}/include/common)
 
 list(APPEND src
     ${CMAKE_SOURCE_DIR}/src/kiss_fft/kiss_fft.c

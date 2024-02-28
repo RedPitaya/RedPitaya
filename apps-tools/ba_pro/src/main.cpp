@@ -89,7 +89,7 @@ void threadLoop();
 auto getModelS() -> std::string{
     rp_HPeModels_t c = STEM_125_14_v1_0;
     if (rp_HPGetModel(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get board model\n");
+        ERROR("Can't get board model");
     }
 
     switch (c)
@@ -120,7 +120,7 @@ auto getModelS() -> std::string{
             return "Z20_250_12_120";
 
         default:
-            fprintf(stderr,"[Error] Can't get board model\n");
+            ERROR("Can't get board model");
             exit(-1);
     }
     return "Z10";
@@ -130,7 +130,7 @@ auto getMaxADC() -> uint32_t{
     rp_HPeModels_t c = STEM_125_14_v1_0;
     int dev = 0;
     if (rp_HPGetModel(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get board model\n");
+        ERROR("Can't get board model");
     }
 
     switch (c)
@@ -166,7 +166,7 @@ auto getMaxADC() -> uint32_t{
             break;
 
         default:
-            fprintf(stderr,"[Error] Can't get board model\n");
+            ERROR("Can't get board model");
             exit(-1);
     }
     uint32_t adc = rpApp_BaGetADCSpeed();
@@ -337,7 +337,7 @@ void bode_ResetCalib() {
     std::lock_guard<std::mutex> lock(g_signalMutex);
 	rpApp_BaResetCalibration();
     rpApp_BaReadCalibration();
-	fprintf(stderr, "Calibration reseted\n");
+	TRACE_SHORT("Calibration reseted");
 }
 
 
@@ -347,7 +347,7 @@ void OnNewParams(void) {
 
     if (ba_status.IsNewValue() ){
         if (ba_status.NewValue() == BA_RESET_CONFIG_SETTINGS){
-            fprintf(stderr,"Delete config\n");
+            TRACE_SHORT("Delete config");
             deleteConfig(getHomeDirectory() + "/.config/redpitaya/apps/ba_pro/config.json");
             ba_status.Update();
             ba_status.SendValue(BA_RESET_CONFIG_SETTINGS_DONE);

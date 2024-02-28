@@ -15,20 +15,6 @@
 #include <chrono>
 #include "rp_hw-profiles.h"
 
-#define __SHORT_FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
-
-#define FATAL(X)  {fprintf(stderr, "Error at line %d, file %s errno %d [%s] %s\n", __LINE__, __SHORT_FILENAME__, errno, strerror(errno),X); exit(1);}
-#define WARNING(...) { char error_msg[512]; snprintf(error_msg,512,__VA_ARGS__);fprintf(stderr,"[W] %s:%d %s\n",__SHORT_FILENAME__,__LINE__,error_msg);}
-
-#ifdef TRACE_ENABLE
-#define TRACE(...) { char error_msg[512]; snprintf(error_msg,512,__VA_ARGS__);fprintf(stderr,"[T] %s:%d %s\n",__SHORT_FILENAME__,__LINE__,error_msg);}
-#define TRACE_SHORT(...) { char error_msg[512]; snprintf(error_msg,512,__VA_ARGS__);fprintf(stderr,"[T] %s\n",error_msg);}
-#else
-#define TRACE(...)
-#define TRACE_SHORT(...)
-#endif
-
-
 using namespace rp_sweep_api;
 using namespace std;
 using namespace std::chrono;
@@ -37,7 +23,7 @@ auto getDACChannels() -> uint8_t{
     uint8_t c = 0;
 
     if (rp_HPGetFastDACChannelsCount(&c) != RP_HP_OK){
-        WARNING("Can't get fast DAC channels count")
+        ERROR("Can't get fast DAC channels count")
     }
     return c;
 }
@@ -98,7 +84,7 @@ int convertIndex(rp_channel_t _ch){
                 break;
         }
     }
-    WARNING("Unsupported generator channel %d",_ch)
+    ERROR("Unsupported generator channel %d",_ch)
     return -1;
 }
 
@@ -112,7 +98,7 @@ void CSweepController::run(){
         m_pimpl->m_Thread = std::thread(&CSweepController::Impl::loop, this->m_pimpl);
     }
     catch (const std::exception& e){
-        WARNING("Thread cannot be started %s",e.what())
+        ERROR("Thread cannot be started %s",e.what())
     }
 
 }
@@ -184,7 +170,7 @@ void CSweepController::Impl::loop()
 
     }catch (std::exception& e)
 	{
-		WARNING("Runtime error %s",e.what())
+		ERROR("Runtime error %s",e.what())
 	}
 }
 
@@ -222,7 +208,7 @@ auto CSweepController::isGen(rp_channel_t _ch,bool *state) -> int{
 
 int CSweepController::setStartFreq(rp_channel_t _ch,float _freq){
     if (_freq == 0) {
-        WARNING("Frequency cannot be zero")
+        ERROR("Frequency cannot be zero")
         return RP_EOOR;
     }
     lock_guard<std::mutex> lock(m_pimpl->mtx);
@@ -237,7 +223,7 @@ int CSweepController::setStartFreq(rp_channel_t _ch,float _freq){
 
 int CSweepController::setStopFreq(rp_channel_t _ch,float _freq){
     if (_freq == 0) {
-        WARNING("Frequency cannot be zero")
+        ERROR("Frequency cannot be zero")
         return RP_EOOR;
     }
     lock_guard<std::mutex> lock(m_pimpl->mtx);
@@ -272,7 +258,7 @@ auto CSweepController::getStopFreq(rp_channel_t _ch,float *_freq) -> int{
 
 int CSweepController::setTime(rp_channel_t _ch,int _time){
     if (_time == 0) {
-        WARNING("Time cannot be zero")
+        ERROR("Time cannot be zero")
         return RP_EOOR;
     }
     lock_guard<std::mutex> lock(m_pimpl->mtx);

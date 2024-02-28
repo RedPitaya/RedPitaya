@@ -50,6 +50,7 @@ list(APPEND r_paths
 
 list(APPEND include_paths
     ${INSTALL_DIR}/include
+    ${INSTALL_DIR}/include/common
     ${INSTALL_DIR}/include/api2
     ${INSTALL_DIR}/include/apiApp
     ${INSTALL_DIR}/include/redpitaya

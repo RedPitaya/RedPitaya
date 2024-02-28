@@ -9,23 +9,11 @@
 #include "rp_algorithms.h"
 #include "rp_interpolation.h"
 #include "rp_dsp.h"
+#include "rp_log.h"
 
 std::mutex g_fft_mutex;
 rp_dsp_api::CDSP *g_fft = NULL;
 rp_dsp_api::data_t *g_fft_data = NULL;
-
-#define __SHORT_FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
-
-#define FATAL(X)  {fprintf(stderr, "Error at line %d, file %s errno %d [%s] %s\n", __LINE__, __SHORT_FILENAME__, errno, strerror(errno),X); exit(1);}
-#define WARNING(...) { char error_msg[512]; snprintf(error_msg,512,__VA_ARGS__);fprintf(stderr,"[W] %s:%d %s\n",__SHORT_FILENAME__,__LINE__,error_msg);}
-
-#ifdef TRACE_ENABLE
-#define TRACE(...) { char error_msg[512]; snprintf(error_msg,512,__VA_ARGS__);fprintf(stderr,"[T] %s:%d %s\n",__SHORT_FILENAME__,__LINE__,error_msg);}
-#define TRACE_SHORT(...) { char error_msg[512]; snprintf(error_msg,512,__VA_ARGS__);fprintf(stderr,"[T] %s\n",error_msg);}
-#else
-#define TRACE(...)
-#define TRACE_SHORT(...)
-#endif
 
 template<typename T>
 int mean(const T *data,size_t size, T *_value){
@@ -571,12 +559,12 @@ int analysis(double *ch1, double *ch2,
 int initFFT(uint32_t max_buffer,uint32_t adcRate){
     std::lock_guard<std::mutex> lock(g_fft_mutex);
     if (g_fft != NULL){
-        WARNING("Can't init memory")
+        ERROR("Can't init memory")
         return RP_A_ERROR;
     }
     g_fft = new rp_dsp_api::CDSP(2,max_buffer,adcRate);
     if (g_fft == NULL){
-        WARNING("Can't init memory")
+        ERROR("Can't init memory")
         return RP_A_ERROR;
     }
     g_fft_data = g_fft->createData();
@@ -623,12 +611,12 @@ int analysisFFT(const T *ch1, const T *ch2,
     }
 
     if (g_fft->setSignalLengthDiv2(size)){
-        WARNING("Can't set buffer size for FFT")
+        ERROR("Can't set buffer size for FFT")
         return RP_A_ERROR;
     }
 
     if (g_fft->window_init(rp_dsp_api::FLAT_TOP)){
-        WARNING("Can't init window")
+        ERROR("Can't init window")
         return RP_A_ERROR;
     }
 

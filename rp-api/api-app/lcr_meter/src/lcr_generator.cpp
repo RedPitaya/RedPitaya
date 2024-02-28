@@ -39,20 +39,20 @@ CLCRGenerator::~CLCRGenerator(){
 auto CLCRGenerator::start() -> int{
     rp_channel_t channel = RP_CH_1;
     std::lock_guard<std::mutex> lock(m_mutex);
-    ECHECK_APP(rp_GenReset());
-    ECHECK_APP(rp_GenAmp(channel, m_amplitude));
-    ECHECK_APP(rp_GenOffset(channel, m_offset));
-    ECHECK_APP(rp_GenWaveform(channel, RP_WAVEFORM_SINE));
-    ECHECK_APP(rp_GenFreq(channel, m_freq));
-    ECHECK_APP(rp_GenOutEnable(channel));
-    ECHECK_APP(rp_GenResetTrigger(channel));
+    ECHECK(rp_GenReset());
+    ECHECK(rp_GenAmp(channel, m_amplitude));
+    ECHECK(rp_GenOffset(channel, m_offset));
+    ECHECK(rp_GenWaveform(channel, RP_WAVEFORM_SINE));
+    ECHECK(rp_GenFreq(channel, m_freq));
+    ECHECK(rp_GenOutEnable(channel));
+    ECHECK(rp_GenResetTrigger(channel));
     return RP_LCR_OK;
 }
 
 auto CLCRGenerator::stop() -> int{
     std::lock_guard<std::mutex> lock(m_mutex);
-    ECHECK_APP(rp_GenOutDisable(RP_CH_1))
-    ECHECK_APP(rp_GenOutDisable(RP_CH_2))
+    ECHECK(rp_GenOutDisable(RP_CH_1))
+    ECHECK(rp_GenOutDisable(RP_CH_2))
     return RP_LCR_OK;
 }
 

@@ -60,6 +60,7 @@ set(CMAKE_INSTALL_RPATH ${r_paths})
 include_directories("include")
 include_directories("src")
 include_directories(${INSTALL_DIR}/include)
+include_directories(${INSTALL_DIR}/include/common)
 link_directories(${INSTALL_DIR}/lib)
 
 list(APPEND src

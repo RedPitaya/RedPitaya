@@ -56,7 +56,7 @@ rp_dsp_api::CDSP    g_dsp_logic(adc_channels,ADC_BUFFER_SIZE,adc_rate);
 uint8_t rpApp_BaGetADCChannels(){
     uint8_t c = 0;
     if (rp_HPGetFastADCChannelsCount(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get fast ADC channels count\n");
+        ERROR("Can't get fast ADC channels count");
     }
     return c;
 }
@@ -64,7 +64,7 @@ uint8_t rpApp_BaGetADCChannels(){
 uint8_t rpApp_BaGetDACChannels(){
     uint8_t c = 0;
     if (rp_HPGetFastADCChannelsCount(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get fast DAC channels count\n");
+        ERROR("Can't get fast DAC channels count");
     }
     return c;
 }
@@ -72,7 +72,7 @@ uint8_t rpApp_BaGetDACChannels(){
 uint32_t rpApp_BaGetADCSpeed(){
     uint32_t c = 0;
     if (rp_HPGetBaseFastADCSpeedHz(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get fast ADC speed\n");
+        ERROR("Can't get fast ADC speed");
     }
     return c;
 }

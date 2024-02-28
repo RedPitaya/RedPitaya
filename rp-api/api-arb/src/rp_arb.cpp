@@ -17,10 +17,10 @@
 #include <filesystem>
 #include <algorithm>
 #include <unistd.h>
+#include <vector>
 #include <map>
 #include <cmath>
 #include "rp_arb.h"
-#include "rp.h"
 #include "rp_hw-profiles.h"
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
@@ -63,7 +63,7 @@ auto getDACChannels() -> uint8_t{
     uint8_t c = 0;
 
     if (rp_HPGetFastDACChannelsCount(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get fast DAC channels count\n");
+        ERROR("Can't get fast DAC channels count\n");
     }
     return c;
 }

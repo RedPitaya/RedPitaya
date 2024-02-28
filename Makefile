@@ -61,7 +61,7 @@ api: librp librp_hw librp_hw_can librp_dsp librpapp librp_formatter librparb lib
 
 api2: librp2
 
-librp: librp250_12 librp_hw_calibration librp_hw_profiles librp_dsp
+librp: librp250_12 librp_hw_calibration librp_hw_profiles
 	cmake -B$(abspath $(LIBRP_DIR)/build) -S$(abspath $(LIBRP_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(LIBRP_DIR)/build install -j$(CPU_CORES)
 
@@ -81,7 +81,7 @@ librp_hw_profiles:
 	cmake -B$(abspath $(LIBRP_HW_PROFILES_DIR)/build) -S$(abspath $(LIBRP_HW_PROFILES_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(LIBRP_HW_PROFILES_DIR)/build install -j$(CPU_CORES)
 
-librp_dsp:
+librp_dsp: librp
 	cmake -B$(abspath $(LIBRP_DSP_DIR)/build) -S$(abspath $(LIBRP_DSP_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(LIBRP_DSP_DIR)/build install -j$(CPU_CORES)
 
@@ -89,7 +89,7 @@ librp_sweep: librp
 	cmake -B$(abspath $(LIBRP_SWEEP_DIR)/build) -S$(abspath $(LIBRP_SWEEP_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(LIBRP_SWEEP_DIR)/build install -j$(CPU_CORES)
 
-librp_formatter:
+librp_formatter: librp
 	cmake -B$(abspath $(LIBRP_FORMATTER_DIR)/build) -S$(abspath $(LIBRP_FORMATTER_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(LIBRP_FORMATTER_DIR)/build install -j$(CPU_CORES)
 
@@ -101,7 +101,7 @@ librp250_12: librp_hw
 	cmake -B$(LIBRP250_12_DIR)/build -S$(LIBRP250_12_DIR) $(CMAKEVAR)
 	$(MAKE) -C $(LIBRP250_12_DIR)/build install -j$(CPU_CORES)
 
-librpapp: librp
+librpapp: librp librp_dsp
 	cmake -B$(abspath $(LIBRPAPP_DIR)/build) -S$(abspath $(LIBRPAPP_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(LIBRPAPP_DIR)/build install -j$(CPU_CORES)
 

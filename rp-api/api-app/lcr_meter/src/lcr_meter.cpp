@@ -92,7 +92,7 @@ int lcr_Init()
 {
 
     if(rp_Init() != RP_OK) {
-        FATAL("Unable to inicialize the RPI API structure needed by impedance analyzer application\n")
+        FATAL("Unable to inicialize the RPI API structure needed by impedance analyzer application")
         return RP_EOOR;
     }
 
@@ -240,12 +240,12 @@ int lcr_ThreadAcqData(buffers_t *data, int *dec, float *freq)
     bool     fillState = false;
     *freq = g_generator.getFreq();
     lcr_getDecimationValue(*freq, dec,g_adc_rate);
-    ECHECK_APP(rp_AcqReset());
-    ECHECK_APP(rp_AcqSetDecimationFactor(*dec));
-    ECHECK_APP(rp_AcqSetTriggerLevel(RP_T_CH_1, 0));
-    ECHECK_APP(rp_AcqSetTriggerDelayDirect(ADC_BUFFER_SIZE));
-    ECHECK_APP(rp_AcqStart());
-    ECHECK_APP(rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW));
+    ECHECK(rp_AcqReset());
+    ECHECK(rp_AcqSetDecimationFactor(*dec));
+    ECHECK(rp_AcqSetTriggerLevel(RP_T_CH_1, 0));
+    ECHECK(rp_AcqSetTriggerDelayDirect(ADC_BUFFER_SIZE));
+    ECHECK(rp_AcqStart());
+    ECHECK(rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW));
 
     state = RP_TRIG_STATE_TRIGGERED;
     while(true){
@@ -256,12 +256,12 @@ int lcr_ThreadAcqData(buffers_t *data, int *dec, float *freq)
     }
 
     while(!fillState){
-        ECHECK_APP(rp_AcqGetBufferFillState(&fillState));
+        ECHECK(rp_AcqGetBufferFillState(&fillState));
     }
 
-    ECHECK_APP(rp_AcqStop());
-    ECHECK_APP(rp_AcqGetWritePointerAtTrig(&pos));
-    ECHECK_APP(rp_AcqGetData(pos,data));
+    ECHECK(rp_AcqStop());
+    ECHECK(rp_AcqGetWritePointerAtTrig(&pos));
+    ECHECK(rp_AcqGetData(pos,data));
     return RP_OK;
 }
 

@@ -70,7 +70,6 @@ auto getHomeDirectory() -> std::string {
     passwd *ppw = nullptr;
 
     if (getpwuid_r(getuid(), &pw, buf, sizeof(buf), &ppw) == 0) {
-        std::cout << "getpwuid" << std::endl;
         return pw.pw_dir;
     }
     return "";
@@ -129,10 +128,10 @@ auto configGet(const std::string &_path) -> void {
             }
         } catch (std::invalid_argument &) {
             // Parse error
-            fprintf(stderr, "JSON parse error\n");
+            ERROR("JSON parse error");
         }
     } else {
-        fprintf(stderr, "Can not open \"%s\"\n", _path.c_str());
+        ERROR("Can not open \"%s\"", _path.c_str());
     }
 }
 

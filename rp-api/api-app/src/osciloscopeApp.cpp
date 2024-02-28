@@ -162,20 +162,20 @@ int osc_SetDefaultValues() {
 int osc_run() {
     g_viewController.runOsc();
     g_viewController.requestUpdateViewFromADC();
-    WARNING("osc_run")
+    TRACE("osc_run")
     return RP_OK;
 }
 
 int osc_stop() {
     g_viewController.stopOsc();
-    WARNING("osc_stop")
+    TRACE("osc_stop")
     return RP_OK;
 }
 
 int osc_reset() {
     g_viewController.stopOsc();
     ECHECK_APP(osc_SetDefaultValues());
-    WARNING("osc_reset")
+    TRACE("osc_reset")
     return RP_OK;
 }
 

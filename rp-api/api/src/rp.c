@@ -75,12 +75,12 @@ int rp_IsApiInit(){
 int rp_Release()
 {
     pthread_mutex_lock(&rp_init_mutex);
-    ECHECK(osc_Release())
-    ECHECK(generate_Release())
-    ECHECK(ams_Release())
-    ECHECK(hk_Release())
-    ECHECK(daisy_Release())
-    ECHECK(cmn_Release())
+    ECHECK_NO_RET(osc_Release())
+    ECHECK_NO_RET(generate_Release())
+    ECHECK_NO_RET(ams_Release())
+    ECHECK_NO_RET(hk_Release())
+    ECHECK_NO_RET(daisy_Release())
+    ECHECK_NO_RET(cmn_Release())
     g_api_state = false;
     pthread_mutex_unlock(&rp_init_mutex);
     return RP_OK;
@@ -697,19 +697,19 @@ int rp_AIpinGetValue(int unsigned pin, float* value, uint32_t* raw) {
 
     float fs = 0;
     if (rp_HPGetSlowADCFullScale(ch,&fs) != RP_HP_OK){
-        fprintf(stderr,"[Error:rp_AIpinGetValue] Can't get slow ADC full scale\n");
+        ERROR("Can't get slow ADC full scale");
         return RP_EOOR;
     }
 
     bool is_signed = false;
     if (rp_HPGetSlowADCIsSigned(ch,&is_signed) != RP_HP_OK){
-        fprintf(stderr,"[Error:rp_AIpinGetValue] Can't get slow ADC sign state\n");
+        ERROR("Can't get slow ADC sign state");
         return RP_EOOR;
     }
 
     uint8_t bits = 0;
     if (rp_HPGetSlowADCBits(ch,&bits) != RP_HP_OK){
-        fprintf(stderr,"[Error:rp_AIpinGetValue] Can't get slow ADC bits\n");
+        ERROR("Can't get slow ADC bits");
         return RP_EOOR;
     }
     if (is_signed){
@@ -742,7 +742,7 @@ int rp_AOpinSetValueRaw(int unsigned pin, uint32_t value) {
 
     uint8_t bits = 0;
     if (rp_HPGetSlowADCBits(ch,&bits) != RP_HP_OK){
-        fprintf(stderr,"[Error:rp_AOpinSetValueRaw] Can't get slow DAC bits\n");
+        ERROR("Can't get slow DAC bits");
         return RP_EOOR;
     }
     uint32_t max_value = (1 << bits);
@@ -759,19 +759,19 @@ int rp_AOpinSetValue(int unsigned pin, float value) {
 
     float fs = 0;
     if (rp_HPGetSlowDACFullScale(ch,&fs) != RP_HP_OK){
-        fprintf(stderr,"[Error:rp_AOpinSetValue] Can't get slow ADC full scale\n");
+        ERROR("Can't get slow ADC full scale");
         return RP_EOOR;
     }
 
     bool is_signed = false;
     if (rp_HPGetSlowDACIsSigned(ch,&is_signed) != RP_HP_OK){
-        fprintf(stderr,"[Error:rp_AOpinSetValue] Can't get slow ADC sign state\n");
+        ERROR("Can't get slow ADC sign state");
         return RP_EOOR;
     }
 
     uint8_t bits = 0;
     if (rp_HPGetSlowDACBits(ch,&bits) != RP_HP_OK){
-        fprintf(stderr,"[Error:rp_AOpinSetValue] Can't get slow ADC bits\n");
+        ERROR("Can't get slow ADC bits");
         return RP_EOOR;
     }
 
@@ -788,7 +788,7 @@ int rp_AOpinGetValueRaw(int unsigned pin, uint32_t* value) {
 
     uint8_t bits = 0;
     if (rp_HPGetSlowADCBits(ch,&bits) != RP_HP_OK){
-        fprintf(stderr,"[Error:rp_AOpinSetValueRaw] Can't get slow DAC bits\n");
+        ERROR("Can't get slow DAC bits");
         return RP_EOOR;
     }
     uint32_t max_value = (1 << bits);
@@ -806,19 +806,19 @@ int rp_AOpinGetValue(int unsigned pin, float* value, uint32_t* raw) {
 
     float fs = 0;
     if (rp_HPGetSlowDACFullScale(ch,&fs) != RP_HP_OK){
-        fprintf(stderr,"[Error:rp_AIpinGetValue] Can't get slow ADC full scale\n");
+        ERROR("Can't get slow ADC full scale");
         return RP_EOOR;
     }
 
     bool is_signed = false;
     if (rp_HPGetSlowDACIsSigned(ch,&is_signed) != RP_HP_OK){
-        fprintf(stderr,"[Error:rp_AIpinGetValue] Can't get slow ADC sign state\n");
+        ERROR("Can't get slow ADC sign state");
         return RP_EOOR;
     }
 
     uint8_t bits = 0;
     if (rp_HPGetSlowDACBits(ch,&bits) != RP_HP_OK){
-        fprintf(stderr,"[Error:rp_AIpinGetValue] Can't get slow ADC bits\n");
+        ERROR("Can't get slow ADC bits");
         return RP_EOOR;
     }
     if (is_signed){
@@ -1640,7 +1640,7 @@ int rp_EnableDebugReg(){
 
 buffers_t* rp_createBuffer(uint8_t maxChannels,uint32_t length,bool initInt16, bool initDouble, bool initFloat){
     if (maxChannels > 4) {
-        fprintf(stderr,"[Error:rp_createBuffer] The number of channels is more than allowed");
+        ERROR("The number of channels is more than allowed");
         return NULL;
     }
 

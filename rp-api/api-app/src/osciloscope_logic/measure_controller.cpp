@@ -55,7 +55,7 @@ auto CMeasureController::check(const void *_data, vsize_t _sizeView) -> int{
         WARNING("Undefined unscale function")
         return RP_EOOR;
     }
-    
+
     if (m_attAmplFunc == NULL) {
         WARNING("Undefined attenuate function")
         return RP_EOOR;
@@ -75,7 +75,7 @@ auto CMeasureController::check(const void *_data, vsize_t _sizeView) -> int{
 
 auto CMeasureController::measureVpp(const rpApp_osc_source _channel, const std::vector<float> *_data, float *_Vpp) -> int{
     std::lock_guard<std::mutex> lock(m_settingsMutex);
-    
+
     auto ret = check(_data,_data->size());
     if (ret != RP_OK)
         return ret;
@@ -174,7 +174,7 @@ auto CMeasureController::measureMaxVoltage(const rpApp_osc_source _channel, bool
 
 auto CMeasureController::measureMinVoltage(const rpApp_osc_source _channel, bool _inverted, const std::vector<float> *_data, float *_Vmin) -> int{
     std::lock_guard<std::mutex> lock(m_settingsMutex);
-    
+
     auto ret = check(_data,_data->size());
     if (ret != RP_OK)
         return ret;
@@ -203,7 +203,7 @@ auto CMeasureController::measureDutyCycle(const rpApp_osc_source _channel, const
     auto ret = check(_data,_data->size());
     if (ret != RP_OK)
         return ret;
-    
+
     for (vsize_t i = 0; i < _data->size(); ++i) {
         if ((*_data)[i] > meanValue) {
             ++highTime;
@@ -212,7 +212,7 @@ auto CMeasureController::measureDutyCycle(const rpApp_osc_source _channel, const
 
     *_dutyCycle = (float)highTime / (float)(_data->size());
     return RP_OK;
-    
+
 }
 
 auto CMeasureController::measureRootMeanSquare(const rpApp_osc_source _channel, const std::vector<float> *_data, float *_rms) -> int{
@@ -242,7 +242,7 @@ auto CMeasureController::measurePeriodCh(const float *_dataRaw, vsize_t _dataSiz
         return ret;
 
     static const float c_meas_freq_thr = 0.0005;
-    
+
     int size = _dataSize;
     const int c_meas_time_thr = _dataSize / m_sample_per;
     const double c_min_period = 2.0 / m_osc_fpga_smpl_freq; // fpga rate / 2
@@ -264,7 +264,7 @@ auto CMeasureController::measurePeriodCh(const float *_dataRaw, vsize_t _dataSiz
     }
 
 	uint32_t dec_factor = 1;
-    ECHECK_APP(rp_AcqGetDecimationFactor(&dec_factor));
+    ECHECK(rp_AcqGetDecimationFactor(&dec_factor));
 
     float acq_dur = (float)(size)/(m_osc_fpga_smpl_freq) * (float) dec_factor;
     cen = (meas_max + meas_min) / 2;
@@ -311,11 +311,11 @@ auto CMeasureController::measurePeriodCh(const float *_dataRaw, vsize_t _dataSiz
 auto CMeasureController::measurePeriodMath(float _timeScale, float _sampPerDev, const std::vector<float> *_data, float *period) -> int{
     float m_viewTmp[VIEW_SIZE_MAX];
     float xcorr[VIEW_SIZE_MAX];
-    
+
     auto ret = check(_data,_data->size());
     if (ret != RP_OK)
         return ret;
-    
+
     auto size = _data->size();
 
     if (size > VIEW_SIZE_MAX){

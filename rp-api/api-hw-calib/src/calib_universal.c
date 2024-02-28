@@ -3,12 +3,13 @@
 #include <stdio.h>
 #include "calib_common.h"
 #include "calib_universal.h"
+#include "rp_log.h"
 
 #define GET_PARAMETER(X,Y,Z)    { \
                                     bool err = false; \
                                     int32_t val = getParameter(Z,Y,&err); \
                                     if (err) { \
-                                        fprintf(stderr,"[Error] Missing calib item %s (%d) .\n",getNameOfUniversalId(Y),Y); \
+                                        ERROR("Missing calib item %s (%d) .\n",getNameOfUniversalId(Y),Y); \
                                     } \
                                     X = val; \
                                 }
@@ -369,7 +370,7 @@ rp_calib_params_t convertUniversaltoCommon(rp_HPeModels_t model,rp_calib_params_
         }
 
         default:
-            fprintf(stderr,"[Error:calib_WriteParams] Unknown model: %d.\n",model);
+            ERROR("Unknown model: %d.",model);
             break;
     }
 
@@ -666,7 +667,7 @@ bool convertUniversal(rp_HPeModels_t model,rp_calib_params_t *param,rp_calib_par
         }
 
         default:
-            fprintf(stderr,"[Error:calib_WriteParams] Unknown model: %d.\n",model);
+            ERROR("Unknown model: %d.",model);
             return false;
     }
     out->count = count;
