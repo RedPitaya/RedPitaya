@@ -218,6 +218,14 @@ print("rp.rp_GetPllControlLocked()")
 res = rp.rp_GetPllControlLocked()
 print(res)
 
+print("rp.rp_SetExternalTriggerLevel(1)")
+res = rp.rp_SetExternalTriggerLevel(1)
+print(res)
+
+print("rp.rp_GetExternalTriggerLevel()")
+res = rp.rp_GetExternalTriggerLevel()
+print(res)
+
 
 # rp_gen.h
 

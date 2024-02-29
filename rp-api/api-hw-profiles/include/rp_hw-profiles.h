@@ -429,6 +429,15 @@ int rp_HPGetIsExternalTriggerFullScale(float *_out_value);
 float rp_HPGetIsExternalTriggerFullScalePresentOrDefault();
 
 /**
+* Returns whether the external trigger has a signed value
+* Function rp_HPGetIsExternalTriggerIsSignedOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
+*/
+int rp_HPGetIsExternalTriggerIsSigned(bool *_out_value);
+bool rp_HPGetIsExternalTriggerIsSignedOrDefault();
+
+/**
 * Returns the availability clock synchronization through the daisy chain.
 * Function rp_HPGetIsDaisyChainAvailableOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
 * @return If the function is successful, the return value is RP_OK.

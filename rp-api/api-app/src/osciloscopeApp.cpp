@@ -130,7 +130,7 @@ int osc_SetDefaultValues() {
     ECHECK_APP(osc_setTriggerSlope(RPAPP_OSC_TRIG_SLOPE_PE));
 
     if (rp_HPGetIsExternalTriggerLevelPresentOrDefault())
-        ECHECK_APP(rp_AcqSetTriggerLevel(RP_T_CH_EXT, 0));
+        ECHECK(rp_SetExternalTriggerLevel(0));
 
     ECHECK_APP(rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE));
     ECHECK_APP(osc_setTriggerLevel(0));

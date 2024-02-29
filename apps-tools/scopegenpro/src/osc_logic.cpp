@@ -112,6 +112,7 @@ if (rp_HPGetFastADCIsAC_DCOrDefault()){
 auto updateTriggerLimit(bool force) -> void {
     // Checking trigger limitation
     float trigg_limit = 0;
+    bool  is_signed = true;
 	auto t_channel = (rpApp_osc_trig_source_t) inTrigSource.Value();
     switch(t_channel){
         case RPAPP_OSC_TRIG_SRC_CH1:
@@ -136,6 +137,7 @@ auto updateTriggerLimit(bool force) -> void {
         break;
         case RPAPP_OSC_TRIG_SRC_EXTERNAL:
             trigg_limit = rp_HPGetIsExternalTriggerFullScalePresentOrDefault();
+            is_signed = rp_HPGetIsExternalTriggerIsSignedOrDefault();
         break;
         default:
             ERROR("Unknown trigger source: %d",t_channel);
@@ -144,6 +146,8 @@ auto updateTriggerLimit(bool force) -> void {
     }
 
     if (trigg_limit != inTriggLimit.Value() || force){
+        inTriggLimit.SetMin(is_signed ? -trigg_limit : 0);
+        inTriggLimit.SetMax(trigg_limit);
         inTriggLimit.SendValue(trigg_limit);
         // Need update trigger value
         float trigg_level;
@@ -152,7 +156,7 @@ auto updateTriggerLimit(bool force) -> void {
             trig_invert = inInvShow[t_channel].Value();
         }
         rpApp_OscGetTriggerLevel(&trigg_level);
-        inTriggLevel.SetMin(-trigg_limit);
+        inTriggLevel.SetMin(is_signed ? -trigg_limit : 0);
         inTriggLevel.SetMax(trigg_limit);
     	inTriggLevel.SendValue(trig_invert ? -trigg_level : trigg_level);
     }

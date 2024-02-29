@@ -85,6 +85,7 @@ profiles_t stem_125_14_Z7020_4IN_v1_2 = {
 
     .is_ext_trigger_level_available = false,
     .external_trigger_full_scale = 0,
+    .is_ext_trigger_signed = false,
 
     .fast_adc_spectrum_resolution = 62500000,
 

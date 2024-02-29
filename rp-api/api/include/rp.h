@@ -515,6 +515,28 @@ int rp_SetPllControlEnable(bool enable);
 int rp_GetPllControlLocked(bool *status);
 ///@}
 
+/** @name PLL Control for 250-12
+*/
+///@{
+
+/**
+* Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param value Trigger level. Positive value.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_SetExternalTriggerLevel(float value);
+
+/**
+* Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+* @param value Returns the trigger level.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GetExternalTriggerLevel(float *value);
+
+///@}
+
 #ifdef __cplusplus
 }
 #endif

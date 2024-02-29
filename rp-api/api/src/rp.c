@@ -28,8 +28,12 @@
 #include "gen_handler.h"
 #include "daisy.h"
 
+#include "rp-i2c-mcp47x6-c.h"
+#include "rp-i2c-max7311-c.h"
+
 static char version[50];
 int g_api_state = 0;
+float g_ext_trig_trash = 0;
 
 pthread_mutex_t rp_init_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -1694,4 +1698,39 @@ void rp_deleteBuffer(buffers_t *_in_buffer){
         free(_in_buffer->ch_i[i]);
     }
     _in_buffer->size = 0;
+}
+
+int rp_SetExternalTriggerLevel(float value){
+    if (rp_HPGetIsExternalTriggerLevelPresentOrDefault()){
+        float fullScale = rp_HPGetIsExternalTriggerFullScalePresentOrDefault();
+        bool is_signed = rp_HPGetIsExternalTriggerIsSignedOrDefault();
+        float min = (is_signed ? -fullScale : 0);
+        if (value <  min || value > fullScale){
+            ERROR("Value out of range %f. Min %f Max %f",value,min,fullScale)
+            return RP_EOOR;
+        }
+        int ret = rp_setExtTriggerLevel(value);
+        switch(ret){
+            case RP_I2C_EOOR: return RP_EOOR;
+            case RP_I2C_EFRB: return RP_EFRB;
+            case RP_I2C_EFWB: return RP_EFWB;
+            case RP_I2C_OK: {
+                g_ext_trig_trash = value;
+                return RP_OK;
+            }
+            default:
+                return RP_EOOR;
+        }
+    }
+    ERROR("Unsupported");
+    return RP_NOTS;
+}
+
+int rp_GetExternalTriggerLevel(float *value){
+    if (rp_HPGetIsExternalTriggerLevelPresentOrDefault()){
+        *value = g_ext_trig_trash;
+        return RP_OK;
+    }
+    ERROR("Unsupported");
+    return RP_NOTS;
 }

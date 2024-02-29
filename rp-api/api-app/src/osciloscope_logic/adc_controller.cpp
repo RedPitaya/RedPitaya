@@ -195,7 +195,7 @@ auto CADCController::setTriggetLevel(float _level) -> int{
     static auto IsExternalTriggerLevelPresent = rp_HPGetIsExternalTriggerLevelPresentOrDefault();
     if (IsExternalTriggerLevelPresent){
         if (m_trigSource == RPAPP_OSC_TRIG_SRC_EXTERNAL){
-            ECHECK(rp_AcqSetTriggerLevel(RP_T_CH_EXT, _level));
+            ECHECK(rp_SetExternalTriggerLevel(_level));
         }
     }
 
@@ -227,7 +227,7 @@ auto CADCController::getTriggerLevel(float *_level) -> int{
     static auto IsExternalTriggerLevelPresent = rp_HPGetIsExternalTriggerLevelPresentOrDefault();
     if (IsExternalTriggerLevelPresent){
         if (m_trigSource == RPAPP_OSC_TRIG_SRC_EXTERNAL){
-            ECHECK(rp_AcqGetTriggerLevel(RP_T_CH_EXT,_level));
+            ECHECK(rp_GetExternalTriggerLevel(_level));
         }
     }
 

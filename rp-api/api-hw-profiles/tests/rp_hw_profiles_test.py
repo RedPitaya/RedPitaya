@@ -320,6 +320,13 @@ print("rp_hw_profiles.rp_HPGetIsExternalTriggerFullScalePresentOrDefault()")
 res = rp_hw_profiles.rp_HPGetIsExternalTriggerFullScalePresentOrDefault()
 print(res)
 
+print("rp_hw_profiles.rp_HPGetIsExternalTriggerIsSigned()")
+res = rp_hw_profiles.rp_HPGetIsExternalTriggerIsSigned()
+print(res)
+
+print("rp_hw_profiles.rp_HPGetIsExternalTriggerIsSignedOrDefault()")
+res = rp_hw_profiles.rp_HPGetIsExternalTriggerIsSignedOrDefault()
+print(res)
 
 print("rp_hw_profiles.rp_HPGetIsDaisyChainClockAvailable()")
 res = rp_hw_profiles.rp_HPGetIsDaisyChainClockAvailable()

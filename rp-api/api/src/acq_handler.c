@@ -57,8 +57,6 @@ rp_acq_trig_src_t last_trig_src = RP_TRIG_SRC_DISABLED;
 
 float ch_hyst[4] = {0.005,0.005,0.005,0.005};
 float ch_trash[4] = {0.005,0.005,0.005,0.005};
-float ext_trig_trash = 0;
-
 
 /*----------------------------------------------------------------------------*/
 /**
@@ -682,25 +680,6 @@ int acq_SetTriggerLevel(rp_channel_trigger_t channel, float voltage){
         case RP_T_CH_2: return acq_SetChannelThreshold(RP_CH_2, voltage);
         case RP_T_CH_3: return acq_SetChannelThreshold(RP_CH_3, voltage);
         case RP_T_CH_4: return acq_SetChannelThreshold(RP_CH_4, voltage);
-        case RP_T_CH_EXT: {
-                if (rp_HPGetIsExternalTriggerLevelPresentOrDefault()){
-                    int ret = rp_setExtTriggerLevel(voltage);
-                    switch(ret){
-                        case RP_I2C_EOOR: return RP_EOOR;
-                        case RP_I2C_EFRB: return RP_EFRB;
-                        case RP_I2C_EFWB: return RP_EFWB;
-                        case RP_I2C_OK: {
-                            ext_trig_trash = voltage;
-                            return RP_OK;
-                        }
-                        default:
-                            return RP_EOOR;
-                    }
-                }else{
-                    ERROR("Unsupported");
-                    return RP_NOTS;
-                }
-        }
         default:
             ERROR("Channel is larger than allowed: %d",channel);
     }
@@ -714,27 +693,8 @@ int acq_GetTriggerLevel(rp_channel_trigger_t channel,float *voltage){
         case RP_T_CH_2: return acq_GetChannelThreshold(RP_CH_2, voltage);
         case RP_T_CH_3: return acq_GetChannelThreshold(RP_CH_3, voltage);
         case RP_T_CH_4: return acq_GetChannelThreshold(RP_CH_4, voltage);
-
-        case RP_T_CH_EXT: {
-                if (rp_HPGetIsExternalTriggerLevelPresentOrDefault()){
-                    *voltage = ext_trig_trash;
-                    return RP_OK;
-                    // int ret = rp_getExtTriggerLevel(voltage);
-                    // switch(ret){
-                    //     case RP_I2C_EOOR: return RP_EOOR;
-                    //     case RP_I2C_EFRB: return RP_EFRB;
-                    //     case RP_I2C_EFWB: return RP_EFWB;
-                    //     default:
-                    //         return RP_OK;
-                    // }
-                }else{
-                    ERROR("Unsupported");
-                    return RP_NOTS;
-                }
-        }
         default:
             ERROR("Channel is larger than allowed: %d",channel);
-
     }
     return RP_NOTS;
 }

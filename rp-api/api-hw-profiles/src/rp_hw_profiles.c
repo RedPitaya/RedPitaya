@@ -674,6 +674,21 @@ float rp_HPGetIsExternalTriggerFullScalePresentOrDefault(){
     return p->external_trigger_full_scale;
 }
 
+int rp_HPGetIsExternalTriggerIsSigned(bool *value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->is_ext_trigger_signed;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+bool rp_HPGetIsExternalTriggerIsSignedOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->is_ext_trigger_signed;
+}
+
 int rp_HPGetIsDaisyChainClockAvailable(bool *value){
     int state;
     profiles_t* p = getProfile(&state);

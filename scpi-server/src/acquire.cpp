@@ -998,7 +998,7 @@ scpi_result_t RP_AcqAC_DCQ(scpi_t * context){
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqExtTriggerLevel(scpi_t *context) {
+scpi_result_t RP_ExtTriggerLevel(scpi_t *context) {
     scpi_number_t value;
 
     if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &value, true)) {
@@ -1007,7 +1007,7 @@ scpi_result_t RP_AcqExtTriggerLevel(scpi_t *context) {
     }
 
     int result = 0;
-    result = rp_AcqSetTriggerLevel(RP_T_CH_EXT, (float) value.content.value);
+    result = rp_SetExternalTriggerLevel((float) value.content.value);
     if (RP_OK != result) {
         RP_LOG_CRIT("Failed to set trigger level: %s", rp_GetError(result));
         return SCPI_RES_ERR;
@@ -1016,9 +1016,9 @@ scpi_result_t RP_AcqExtTriggerLevel(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqExtTriggerLevelQ(scpi_t *context) {
+scpi_result_t RP_ExtTriggerLevelQ(scpi_t *context) {
     float value;
-    auto result = rp_AcqGetTriggerLevel(RP_T_CH_EXT,&value);
+    auto result = rp_GetExternalTriggerLevel(&value);
 
     if (RP_OK != result) {
         RP_LOG_CRIT("Failed to get trigger level: %s", rp_GetError(result));
@@ -1029,7 +1029,7 @@ scpi_result_t RP_AcqExtTriggerLevelQ(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqExtTriggerDebouncerUs(scpi_t *context) {
+scpi_result_t RP_ExtTriggerDebouncerUs(scpi_t *context) {
     scpi_number_t value;
 
     if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &value, true)) {
@@ -1046,7 +1046,7 @@ scpi_result_t RP_AcqExtTriggerDebouncerUs(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqExtTriggerDebouncerUsQ(scpi_t *context) {
+scpi_result_t RP_ExtTriggerDebouncerUsQ(scpi_t *context) {
     double value;
     auto result = rp_AcqGetExtTriggerDebouncerUs(&value);
 

@@ -85,6 +85,7 @@ profiles_t stem_122_16SDR_v1_1 = {
 
     .is_ext_trigger_level_available = false,
     .external_trigger_full_scale = 0,
+    .is_ext_trigger_signed = false,
 
     .fast_adc_spectrum_resolution = 61440000,
 
