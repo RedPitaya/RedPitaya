@@ -66,7 +66,5 @@ scpi_result_t RP_AcqAC_DCQ(scpi_t * context);
 scpi_result_t RP_ExtTriggerLevel(scpi_t *context);
 scpi_result_t RP_ExtTriggerLevelQ(scpi_t *context);
 
-scpi_result_t RP_ExtTriggerDebouncerUs(scpi_t *context);
-scpi_result_t RP_ExtTriggerDebouncerUsQ(scpi_t *context);
 
 #endif /* ACQUIRE_H_ */

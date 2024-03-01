@@ -274,11 +274,11 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "ACQ:SOUR#:COUP", .callback             = RP_AcqAC_DC,},
     {.pattern = "ACQ:SOUR#:COUP?", .callback            = RP_AcqAC_DCQ,},
 
-    // External trig level for 250-12
     {.pattern = "TRig:EXT:LEV", .callback               = RP_ExtTriggerLevel,},
     {.pattern = "TRig:EXT:LEV?", .callback              = RP_ExtTriggerLevelQ,},
-    {.pattern = "TRig:EXT:DEBouncer[:US]", .callback    = RP_ExtTriggerDebouncerUs,},
-    {.pattern = "TRig:EXT:DEBouncer[:US]?", .callback   = RP_ExtTriggerDebouncerUsQ,},
+
+    {.pattern = "ACQ:TRig:EXT:DEBouncer[:US]", .callback    = RP_ExtTriggerDebouncerUs,},
+    {.pattern = "ACQ:TRig:EXT:DEBouncer[:US]?", .callback   = RP_ExtTriggerDebouncerUsQ,},
 
     /* Generate */
     {.pattern = "GEN:RST", .callback                    = RP_GenReset,},

@@ -18,6 +18,8 @@
 #include <math.h>
 #include <time.h>
 
+#include "scpi/parser.h"
+#include "scpi/units.h"
 #include "common.h"
 #include "error.h"
 
@@ -365,4 +367,35 @@ auto getCmdName(scpi_t *context) -> const char *{
     strncpy(buff, context->param_list.cmd_raw.data, buff_len);
     buff[buff_len] = '\0';
     return buff;
+}
+
+scpi_result_t RP_ExtTriggerLevel(scpi_t *context) {
+    scpi_number_t value;
+
+    if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &value, true)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+
+    int result = 0;
+    result = rp_SetExternalTriggerLevel((float) value.content.value);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to set trigger level: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_ExtTriggerLevelQ(scpi_t *context) {
+    float value;
+    auto result = rp_GetExternalTriggerLevel(&value);
+
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to get trigger level: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    SCPI_ResultFloat(context, value);
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
 }

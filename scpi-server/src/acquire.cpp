@@ -998,37 +998,6 @@ scpi_result_t RP_AcqAC_DCQ(scpi_t * context){
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_ExtTriggerLevel(scpi_t *context) {
-    scpi_number_t value;
-
-    if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &value, true)) {
-        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Missing first parameter.");
-        return SCPI_RES_ERR;
-    }
-
-    int result = 0;
-    result = rp_SetExternalTriggerLevel((float) value.content.value);
-    if (RP_OK != result) {
-        RP_LOG_CRIT("Failed to set trigger level: %s", rp_GetError(result));
-        return SCPI_RES_ERR;
-    }
-    RP_LOG_INFO("%s",rp_GetError(result))
-    return SCPI_RES_OK;
-}
-
-scpi_result_t RP_ExtTriggerLevelQ(scpi_t *context) {
-    float value;
-    auto result = rp_GetExternalTriggerLevel(&value);
-
-    if (RP_OK != result) {
-        RP_LOG_CRIT("Failed to get trigger level: %s", rp_GetError(result));
-        return SCPI_RES_ERR;
-    }
-    SCPI_ResultFloat(context, value);
-    RP_LOG_INFO("%s",rp_GetError(result))
-    return SCPI_RES_OK;
-}
-
 scpi_result_t RP_ExtTriggerDebouncerUs(scpi_t *context) {
     scpi_number_t value;
 
