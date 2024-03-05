@@ -300,6 +300,8 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "SOUR#:PHAS?", .callback                = RP_GenPhaseQ,},
     {.pattern = "SOUR#:DCYC", .callback                 = RP_GenDutyCycle,},
     {.pattern = "SOUR#:DCYC?", .callback                = RP_GenDutyCycleQ,},
+    {.pattern = "SOUR#:LOAD", .callback                 = RP_GenLoad,},
+    {.pattern = "SOUR#:LOAD?", .callback                = RP_GenLoadQ,},
     {.pattern = "SOUR#:TRAC:DATA:DATA", .callback       = RP_GenArbitraryWaveForm,},
     {.pattern = "SOUR#:TRAC:DATA:DATA?", .callback      = RP_GenArbitraryWaveFormQ,},
     {.pattern = "SOUR#:BURS:STAT", .callback            = RP_GenGenerateMode,},

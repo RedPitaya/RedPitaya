@@ -38,7 +38,7 @@ float fullScale(){
     if (rp_HPGetFastDACGain(0,&c) != RP_HP_OK){
         fprintf(stderr,"[Error] Can't get fast DAC full scale\n");
     }
-    return c * fs;
+    return fs / c;
 }
 
 models_t getModel(){
@@ -118,6 +118,7 @@ int gen(config_t &conf)
         return -1;
     }
 
+    rp_GenSetLoadMode(ch,conf.load);
     rp_GenOutDisable(ch);
 
     uint8_t channels = 0;

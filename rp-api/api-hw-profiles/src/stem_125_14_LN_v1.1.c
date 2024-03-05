@@ -94,7 +94,8 @@ profiles_t stem_125_14_LN_v1_1 = {
 
     .is_daisy_chain_clock_sync = true,
 
-    .is_dma_mode_v0_94 = true
+    .is_dma_mode_v0_94 = true,
+    .is_DAC_50_Ohm_mode = false
 };
 
 profiles_t* getProfile_STEM_125_14_LN_v1_1(){

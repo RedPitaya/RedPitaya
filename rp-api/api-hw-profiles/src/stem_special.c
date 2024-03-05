@@ -94,7 +94,8 @@ profiles_t stem_special = {
 
     .is_daisy_chain_clock_sync = false,
 
-    .is_dma_mode_v0_94 = false
+    .is_dma_mode_v0_94 = false,
+    .is_DAC_50_Ohm_mode = false
 };
 
 profiles_t* getProfile_STEM_SPECIAL(){

@@ -531,11 +531,11 @@ int rp_GenSetGainOut(rp_channel_t channel,rp_gen_gain_t mode);
 * Get the gain modes for output.
 * Only works with Redpitaya 250-12 otherwise returns RP_NOTS
 * @param channel Channel A or B.
-* @param status Set current state.
+* @param mode Get current state.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetGainOut(rp_channel_t channel,rp_gen_gain_t *status);
+int rp_GenGetGainOut(rp_channel_t channel,rp_gen_gain_t *mode);
 
 /**
  * Sets ext. trigger debouncer for generation in Us (Value must be positive).
@@ -552,6 +552,22 @@ int rp_GenSetExtTriggerDebouncerUs(double value);
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 int rp_GenGetExtTriggerDebouncerUs(double *value);
+
+/**
+ * Sets the load mode for the generator output. Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+ * @param mode Load mode.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_GenSetLoadMode(rp_channel_t channel, rp_gen_load_mode_t mode);
+
+/**
+ * Gets the load mode for the generator. Only works with Redpitaya 250-12 otherwise returns RP_NOTS
+ * @param mode Return mode.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_GenGetLoadMode(rp_channel_t channel, rp_gen_load_mode_t *mode);
 
 ///@}
 

@@ -376,6 +376,15 @@ res = rp.rp_GenGetMode(rp.RP_CH_1)
 print(res)
 
 
+print("rp.rp_GenSetLoadMode(rp.RP_CH_1,rp.RP_GEN_50Ohm)")
+res = rp.rp_GenSetLoadMode(rp.RP_CH_1,rp.RP_GEN_50Ohm)
+print(res)
+
+print("rp.rp_GenGetLoadMode(rp.RP_CH_1)")
+res = rp.rp_GenGetLoadMode(rp.RP_CH_1)
+print(res)
+
+
 print("rp.rp_GenBurstCount(rp.RP_CH_1,rp.RP_GEN_MODE_BURST)")
 res = rp.rp_GenBurstCount(rp.RP_CH_1,rp.RP_GEN_MODE_BURST)
 print(res)

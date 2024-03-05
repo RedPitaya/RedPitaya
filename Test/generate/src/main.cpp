@@ -151,6 +151,12 @@ int main(int argc, char *argv[])
         }
     }
 
+     for(int i = 1; i < argc; i++){
+         if ( strcmp(argv[i], "50Ohm") == 0) {
+           config.load = RP_GEN_50Ohm;
+        }
+    }
+
     /* Signal type argument parsing */
     config.type = RP_WAVEFORM_SINE;
     if (argc > (4 + PARAMETER_CORRECT)) {

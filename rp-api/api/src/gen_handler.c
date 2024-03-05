@@ -57,6 +57,7 @@ rp_gen_sweep_dir_t   ch_sweepDir[2];
 uint32_t      ch_size[2] = {DAC_BUFFER_SIZE, DAC_BUFFER_SIZE};
 uint32_t      ch_arb_size[2] = {DAC_BUFFER_SIZE, DAC_BUFFER_SIZE};
 rp_gen_mode_t ch_mode[2] = {RP_GEN_MODE_CONTINUOUS, RP_GEN_MODE_CONTINUOUS};
+rp_gen_load_mode_t ch_load_mode[2] = {RP_GEN_HI_Z,RP_GEN_HI_Z};
 
 bool          ch_EnableTempProtection[2] = {0,0};
 bool          ch_LatchTempAlarm[2]       = {0,0};
@@ -94,6 +95,7 @@ int gen_SetDefaultValues() {
         gen_setWaveform(ch, RP_WAVEFORM_SINE);
         gen_setSweepMode(ch, RP_GEN_SWEEP_MODE_LINEAR);
         gen_setSweepDir(ch,RP_GEN_SWEEP_DIR_NORMAL);
+        gen_setLoadMode(ch,RP_GEN_HI_Z);
         gen_setOffset(ch, 0);
 
         float fs = 0;
@@ -175,13 +177,14 @@ int gen_setAmplitude(rp_channel_t channel, float amplitude) {
 
     CHECK_CHANNEL
 
-    if (gen_checkAmplitudeAndOffset(channel, amplitude, ch_offset[channel]) != RP_OK){
+    float koff = ch_load_mode[channel] == RP_GEN_50Ohm ? 2.0 : 1.0;
+
+    if (gen_checkAmplitudeAndOffset(channel, amplitude * koff, ch_offset[channel] * koff) != RP_OK){
         return RP_EOOR;
     }
 
     ch_amplitude[channel] = amplitude;
-
-    return generate_setAmplitude(channel, ch_gain[channel] , amplitude);
+    return generate_setAmplitude(channel, ch_gain[channel] , amplitude * koff);
 }
 
 int gen_getAmplitude(rp_channel_t channel, float *amplitude) {
@@ -189,6 +192,7 @@ int gen_getAmplitude(rp_channel_t channel, float *amplitude) {
     CHECK_CHANNEL
 
     *amplitude = ch_amplitude[channel];
+
     return RP_OK;
 }
 
@@ -196,13 +200,15 @@ int gen_setOffset(rp_channel_t channel, float offset) {
 
     CHECK_CHANNEL
 
-    if (gen_checkAmplitudeAndOffset(channel, ch_amplitude[channel], offset) != RP_OK){
+    float koff = ch_load_mode[channel] == RP_GEN_50Ohm ? 2.0 : 1.0;
+
+    if (gen_checkAmplitudeAndOffset(channel, ch_amplitude[channel] * koff, offset * koff) != RP_OK){
         return RP_EOOR;
     }
 
     ch_offset[channel] = offset;
 
-    return generate_setDCOffset(channel, ch_gain[channel] , offset);
+    return generate_setDCOffset(channel, ch_gain[channel] , offset  * koff);
 
 }
 
@@ -211,6 +217,7 @@ int gen_getOffset(rp_channel_t channel, float *offset) {
     CHECK_CHANNEL
 
     *offset = ch_offset[channel];
+
     return RP_OK;
 }
 
@@ -1112,3 +1119,16 @@ int gen_GetExtTriggerDebouncerUs(double *value){
     *value = (samples * sp) / 1000.0;
     return RP_OK;
 }
+
+int gen_setLoadMode(rp_channel_t channel, rp_gen_load_mode_t mode){
+    CHECK_CHANNEL
+    ch_load_mode[channel] = mode;
+    return RP_OK;
+}
+
+int gen_getLoadMode(rp_channel_t channel, rp_gen_load_mode_t *mode){
+    CHECK_CHANNEL
+    *mode = ch_load_mode[channel];
+    return RP_OK;
+}
+

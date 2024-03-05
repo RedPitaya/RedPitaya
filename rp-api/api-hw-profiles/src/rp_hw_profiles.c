@@ -599,6 +599,21 @@ bool rp_HPGetIsGainDACx5OrDefault(){
     return p->is_DAC_gain_x5;
 }
 
+int rp_HPGetIsDAC50OhmMode(bool *value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->is_DAC_50_Ohm_mode;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+bool rp_HPGetIsDAC50OhmModeOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->is_DAC_50_Ohm_mode;
+}
+
 int rp_HPGetIsCalibrationLogicPresent(bool *value){
     int state;
     profiles_t* p = getProfile(&state);

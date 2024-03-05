@@ -1637,6 +1637,18 @@ int rp_GenGetExtTriggerDebouncerUs(double *value){
     return gen_GetExtTriggerDebouncerUs(value);
 }
 
+int rp_GenSetLoadMode(rp_channel_t channel, rp_gen_load_mode_t mode){
+    if (!rp_HPGetIsDAC50OhmModeOrDefault())
+        return RP_NOTS;
+    return gen_setLoadMode(channel,mode);
+}
+
+int rp_GenGetLoadMode(rp_channel_t channel, rp_gen_load_mode_t *mode){
+    if (!rp_HPGetIsDAC50OhmModeOrDefault())
+        return RP_NOTS;
+    return gen_getLoadMode(channel,mode);
+}
+
 int rp_EnableDebugReg(){
     cmn_enableDebugReg();
     return RP_OK;

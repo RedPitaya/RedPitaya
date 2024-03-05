@@ -118,10 +118,17 @@ typedef enum {
     RP_GEN_TRIG_SRC_EXT_PE   = 2,   //!< External trigger source positive edge
     RP_GEN_TRIG_SRC_EXT_NE   = 3    //!< External trigger source negative edge
 } rp_trig_src_t;
+
 typedef enum {
     RP_GAIN_1X = 0,         //!< Set output gain in x1 mode
     RP_GAIN_5X = 1          //!< Set output gain in x5 mode
 } rp_gen_gain_t;
+
+typedef enum {
+    RP_GEN_HI_Z  = 0,         //!< Set output Hi-Z mode
+    RP_GEN_50Ohm = 1          //!< Set output 50 Ohm mode
+} rp_gen_load_mode_t;
+
 /**
  * Type representing Input/Output channels.
  */

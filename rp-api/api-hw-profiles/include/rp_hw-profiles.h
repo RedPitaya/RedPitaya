@@ -384,6 +384,15 @@ int rp_HPGetIsGainDACx5(bool *_out_value);
 bool rp_HPGetIsGainDACx5OrDefault();
 
 /**
+* Returns the presence of 50 ohm support for the oscillator.
+* Function rp_HPGetIsDAC50OhmModeOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
+*/
+int rp_HPGetIsDAC50OhmMode(bool *_out_value);
+bool rp_HPGetIsDAC50OhmModeOrDefault();
+
+/**
 * Returns a sign of the presence of the calibration functionality for the board
 * Function rp_HPGetIsCalibrationLogicPresentOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
 * @return If the function is successful, the return value is RP_OK.
