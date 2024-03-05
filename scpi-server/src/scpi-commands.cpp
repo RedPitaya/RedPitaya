@@ -186,6 +186,10 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "RP:DIg[:loop]", .callback              = RP_EnableDigLoop,},
     {.pattern = "RP:LOGmode", .callback                 = RP_SetLogMode,},
 
+    {.pattern = "RP:PLL:ENable", .callback              = RP_PLL,},
+    {.pattern = "RP:PLL:ENable?", .callback             = RP_PLLQ,},
+    {.pattern = "RP:PLL:STATE?", .callback              = RP_PLLStateQ,},
+
     {.pattern = "DIG:RST", .callback                    = RP_DigitalPinReset,},
     {.pattern = "DIG:PIN", .callback                    = RP_DigitalPinState,},
     {.pattern = "DIG:PIN?", .callback                   = RP_DigitalPinStateQ,},

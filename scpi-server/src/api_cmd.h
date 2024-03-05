@@ -28,5 +28,8 @@ scpi_result_t RP_DpinEnableTrigOutputQ(scpi_t *context);
 scpi_result_t RP_SourceTrigOutput(scpi_t *context);
 scpi_result_t RP_SourceTrigOutputQ(scpi_t *context);
 
+scpi_result_t RP_PLL(scpi_t *context);
+scpi_result_t RP_PLLQ(scpi_t *context);
+scpi_result_t RP_PLLStateQ(scpi_t *context);
 
 #endif /* API_CMD_H_ */

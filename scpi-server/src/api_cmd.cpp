@@ -40,6 +40,12 @@ const scpi_choice_def_t scpi_DAISY_state[] = {
     SCPI_CHOICE_LIST_END
 };
 
+const scpi_choice_def_t scpi_PLL_state[] = {
+    {"OFF", 0},
+    {"ON", 1},
+    SCPI_CHOICE_LIST_END
+};
+
 scpi_result_t RP_InitAll(scpi_t *context){
     auto result = rp_Init();
     if(result != RP_OK){
@@ -81,7 +87,7 @@ scpi_result_t RP_ResetAll(scpi_t *context){
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_ReleaseAll(scpi_t *context){   
+scpi_result_t RP_ReleaseAll(scpi_t *context){
     auto result = rp_Release();
     if(result != RP_OK){
         RP_LOG_CRIT("Failed to release Red Pitaya modules: %s", rp_GetError(result))
@@ -92,7 +98,7 @@ scpi_result_t RP_ReleaseAll(scpi_t *context){
 }
 
 
-scpi_result_t RP_EnableDigLoop(scpi_t *context){   
+scpi_result_t RP_EnableDigLoop(scpi_t *context){
     auto result = rp_EnableDigitalLoop(true);
     if(result != RP_OK){
         RP_LOG_CRIT("Failed to initialize Red Pitaya digital loop: %s", rp_GetError(result))
@@ -247,6 +253,59 @@ scpi_result_t RP_SourceTrigOutputQ(scpi_t *context){
     }
 
     SCPI_ResultMnemonic(context, _name);
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+
+scpi_result_t RP_PLL(scpi_t *context){
+     int32_t value;
+
+    if (!SCPI_ParamChoice(context, scpi_PLL_state, &value, true)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+
+    auto result = rp_SetPllControlEnable((bool)value);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to enabled mode: %s",rp_GetError(result))
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_PLLQ(scpi_t *context){
+    const char *_name;
+
+    bool value;
+    auto result = rp_GetPllControlEnable(&value);
+
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed get state: %s",rp_GetError(result))
+        return SCPI_RES_ERR;
+    }
+
+    if(!SCPI_ChoiceToName(scpi_PLL_state, (int32_t)value, &_name)){
+        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Failed to parse state.")
+        return SCPI_RES_ERR;
+    }
+    SCPI_ResultMnemonic(context, _name);
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_PLLStateQ(scpi_t *context){
+    bool value;
+    auto result = rp_GetPllControlLocked(&value);
+
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to get state: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    // Return back result
+    SCPI_ResultBool(context, value);
     RP_LOG_INFO("%s",rp_GetError(result))
     return SCPI_RES_OK;
 }
