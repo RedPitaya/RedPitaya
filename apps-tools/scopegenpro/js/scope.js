@@ -180,6 +180,7 @@
     OSC.g_CpuLoad = 100.0;
     OSC.g_TotalMemory = 256.0;
     OSC.g_FreeMemory = 256.0;
+    OSC.g_Temperature = 0.0;
 
     OSC.time_offset = 0;
     OSC.time_scale = 0;
@@ -275,13 +276,14 @@
         $('#throughput_view').text((OSC.compressed_data / 1024).toFixed(2) + "kB/s");
         $('#throughput_view2').text((OSC.compressed_data / 1024).toFixed(2) + "kB/s");
         $('#cpu_load').text(OSC.g_CpuLoad.toFixed(2) + "%");
+        $('#cpu_temp').text(OSC.g_Temperature.toFixed(0));
         $('#totalmem_view').text((OSC.g_TotalMemory / (1024 * 1024)).toFixed(2) + "Mb");
         $('#freemem_view').text((OSC.g_FreeMemory / (1024 * 1024)).toFixed(2) + "Mb");
         $('#usagemem_view').text(((OSC.g_TotalMemory - OSC.g_FreeMemory) / (1024 * 1024)).toFixed(2) + "Mb");
         if ($('#connection_icon').attr('src') !== '../assets/images/good_net.png')
             $('#connection_icon').attr('src', '../assets/images/good_net.png');
         $('#connection_meter').attr('title', 'It seems like your connection is ok');
-        if (g_PacketsRecv < 5 || g_PacketsRecv > 25) {
+        if (g_PacketsRecv < 5 || g_PacketsRecv > 1000) {
             if ($('#connection_icon').attr('src') !== '../assets/images/bad_net.pngg')
                 $('#connection_icon').attr('src', '../assets/images/bad_net.png');
             $('#connection_meter').attr('title', 'Connection problem');
@@ -738,11 +740,18 @@
     OSC.param_callbacks["MATH_SHOW_INVERTED"] = OSC.updateMathShowInverted;
 
 
-    OSC.param_callbacks["CPU_LOAD"] = OSC.setCPULoad;
-    OSC.param_callbacks["TOTAL_RAM"] = OSC.setRamTotal;
-    OSC.param_callbacks["FREE_RAM"] = OSC.setFreeRam;
-
+    OSC.param_callbacks["RP_SYSTEM_CPU_LOAD"] = OSC.setCPULoad;
+    OSC.param_callbacks["RP_SYSTEM_TOTAL_RAM"] = OSC.setRamTotal;
+    OSC.param_callbacks["RP_SYSTEM_FREE_RAM"] = OSC.setFreeRam;
+    OSC.param_callbacks["RP_SYSTEM_TEMPERATURE"] = OSC.setTemerature;
     OSC.param_callbacks["RESET_CONFIG_SETTINGS"] = OSC.resetSettingsRequest;
+
+    OSC.param_callbacks["RP_SYSTEM_SLOW_ADC0"] = OSC.setSlowADC1;
+    OSC.param_callbacks["RP_SYSTEM_SLOW_ADC1"] = OSC.setSlowADC2;
+    OSC.param_callbacks["RP_SYSTEM_SLOW_ADC2"] = OSC.setSlowADC3;
+    OSC.param_callbacks["RP_SYSTEM_SLOW_ADC3"] = OSC.setSlowADC4;
+
+
 
     // Processes newly received values for parameters
     OSC.processParameters = function(new_params) {

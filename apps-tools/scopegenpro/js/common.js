@@ -263,15 +263,35 @@
     }
 
     OSC.setCPULoad = function(new_params){
-        OSC.g_CpuLoad = new_params['CPU_LOAD'].value;
+        OSC.g_CpuLoad = new_params['RP_SYSTEM_CPU_LOAD'].value;
     }
 
     OSC.setRamTotal = function(new_params){
-        OSC.g_TotalMemory = new_params['TOTAL_RAM'].value;
+        OSC.g_TotalMemory = new_params['RP_SYSTEM_TOTAL_RAM'].value;
     }
 
     OSC.setFreeRam = function(new_params){
-        OSC.g_FreeMemory = new_params['FREE_RAM'].value;
+        OSC.g_FreeMemory = new_params['RP_SYSTEM_FREE_RAM'].value;
+    }
+
+    OSC.setTemerature = function(new_params){
+        OSC.g_Temperature = new_params['RP_SYSTEM_TEMPERATURE'].value;
+    }
+
+    OSC.setSlowADC1 = function(new_params){
+        $('#slow_adc_in1').text(new_params['RP_SYSTEM_SLOW_ADC0'].value.toFixed(3) + "V");
+    }
+
+    OSC.setSlowADC2 = function(new_params){
+        $('#slow_adc_in2').text(new_params['RP_SYSTEM_SLOW_ADC1'].value.toFixed(3) + "V");
+    }
+
+    OSC.setSlowADC3 = function(new_params){
+        $('#slow_adc_in3').text(new_params['RP_SYSTEM_SLOW_ADC2'].value.toFixed(3) + "V");
+    }
+
+    OSC.setSlowADC4 = function(new_params){
+        $('#slow_adc_in4').text(new_params['RP_SYSTEM_SLOW_ADC3'].value.toFixed(3) + "V");
     }
 
 }(window.OSC = window.OSC || {}, jQuery));

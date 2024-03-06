@@ -42,6 +42,7 @@
                             <a class="btn btn-default dropdown-toggle" type="button" id="menu1" data-toggle="dropdown">SETTINGS<span class="caret"></span></a>
                             <ul class="dropdown-menu" role="menu" aria-labelledby="menu1" style="background: #cdcccc; min-width: 0px;">
                                 <li><a id="sys_info" href="#">SYS INFO</a></li>
+                                <li><a id="slow_adc_info" href="#">IN/E2</a></li>
                                 <li class="250_12_block"><a id="ext_clock_enable" href="#">EXT. CLOCK</a></li>
                                 <li><a id="reset_settings" href="#">RESET</a></li>
                             </ul>
@@ -140,6 +141,14 @@
                     </div>
                     <div class="col-xs-6 option-content">
                         <div id="trig" class="right-menu-option edit-mode"><img src="img/gear.png"></div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option">
+                            <button type="button" class="btn menu-btn out_e2 not-signal dbl" data-toggle="button" aria-pressed="false" autocomplete="off">OUT/E2</button>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div id="slow_dac" class="right-menu-option edit-mode"><img src="img/gear.png"></div>
                     </div>
                     <div class="col-xs-6 option-content">
                         <div id="cursor" class="right-menu-option edit-mode">CURSOR</div>
@@ -617,6 +626,45 @@
                         </div>
                     </div>
                 </div>
+                <div id="slow_dac_dialog" class="dialog row right-menu-cont">
+                    <div class="col-xs-12 option-content close-dialog">
+                        <div class="right-menu-option out_e2">
+                            <img src="../assets/images/navigation_arrow_left.png"> SLOW OUT (E2)
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Out 1 / V</span>
+                            <div style="margin-top: 10px;">
+                                <input id="OSC_SLOW_OUT_1" class="setfield input-number" type="text" value="0.000" step="0.007" min="0" max="1.8">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Out 2 / V</span>
+                            <div style="margin-top: 10px;">
+                                <input id="OSC_SLOW_OUT_2" class="setfield input-number" type="text" value="0.000" step="0.007" min="0" max="1.8">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Out 3 / V</span>
+                            <div style="margin-top: 10px;">
+                                <input id="OSC_SLOW_OUT_3" class="setfield input-number" type="text" value="0.000" step="0.007" min="0" max="1.8">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Out 4 / V</span>
+                            <div style="margin-top: 10px;">
+                                <input id="OSC_SLOW_OUT_4" class="setfield input-number" type="text" value="0.000" step="0.007" min="0" max="1.8">
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div id="meas_dialog" class="dialog row right-menu-cont">
                     <div class="col-xs-12 option-content close-dialog">
                         <div class="right-menu-option">
@@ -877,6 +925,9 @@
     <div id="sys_info_view" style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white;">
         FPS:<span id="fps_view">0</span> Throughput:<span id="throughput_view">0</span> CPU Load:<span id="cpu_load">0</span>
         <br/> Memory total:<span id="totalmem_view">0</span> Free:<span id="freemem_view">0</span> Usage:<span id="usagemem_view">0</span>
+    </div>
+    <div id="slow_adc_info_view" style="display:none; position:fixed; bottom:0; right: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white;">
+        IN 1: <span id="slow_adc_in1">0</span> IN 2: <span id="slow_adc_in2">0</span> IN 3: <span id="slow_adc_in3">0</span> IN 4: <span id="slow_adc_in4">0</span>
     </div>
     <div id="weak_conn_msg" style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(34, 34, 34, 1); text-align:center; padding: 10px; font-size:18px; color:white;">
         <span id="delay">Performance problem has occurred</span>

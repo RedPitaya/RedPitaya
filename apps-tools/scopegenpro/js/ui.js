@@ -815,6 +815,17 @@
             }
         });
 
+        $('#slow_adc_info').click(function() {
+            var elem = $(this);
+            if (elem.text() == 'IN/E2') {
+                elem.html('&check; IN/E2');
+                $('#slow_adc_info_view').show();
+            } else {
+                elem.text('IN/E2');
+                $('#slow_adc_info_view').hide();
+            }
+        });
+
         $('#reset_settings').click(function() {
             OSC.params.local['RESET_CONFIG_SETTINGS'] = { value: 1 };
             OSC.sendParams();

@@ -16,13 +16,13 @@
 
 typedef enum {
     RP_WS_NONE          = 0,
-    RP_WS_CPU           = 0x1,
-    RP_WS_TEMPERATURE   = 0x2,
-    RP_WS_RAM           = 0x4,
-    RP_WS_SLOW_DAC      = 0x8,
-    RP_WS_SENSOR_VOLT   = 0x16,
-    RP_WS_DISK_SIZE     = 0x32,
-    RP_WS_ALL           = 0xFF
+    RP_WS_CPU           = 1,
+    RP_WS_TEMPERATURE   = 2,
+    RP_WS_RAM           = 4,
+    RP_WS_SLOW_DAC      = 8,
+    RP_WS_SENSOR_VOLT   = 16,
+    RP_WS_DISK_SIZE     = 32,
+    RP_WS_ALL           = 255
 } rp_system_mode_t;
 
 void rp_WS_Init();
