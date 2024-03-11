@@ -16,6 +16,7 @@
 #include <mutex>
 
 #include "common/version.h"
+#include "common/rp_log.h"
 #include "bodeApp.h"
 
 #include "rp_hw-calib.h"
@@ -404,7 +405,6 @@ void threadLoop(){
 
 
         int status = ba_status.Value();
-
         // user start calibration
         if (status == BA_START_CALIB || status == BA_START_CALIB_PROCESS){
             if (status == BA_START_CALIB){
@@ -523,6 +523,9 @@ void threadLoop(){
                 signal_parameters.push_back(steps);
 
                 ba_status.SendValue(BA_START_PROCESS);
+                TRACE_SHORT("start_freq %f",start_freq);
+                TRACE_SHORT("end_freq %f",end_freq);
+                TRACE_SHORT("steps %f",steps);
             }
 
             if (cur_step < steps){
