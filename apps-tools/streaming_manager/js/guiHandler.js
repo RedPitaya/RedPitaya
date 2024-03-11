@@ -1,3 +1,12 @@
+/*
+ * Red Pitaya stream service manager
+ *
+ * Author: Danilyuk Nikolay <n.danilyuk@integrasources.eu>
+ *
+ * (c) Red Pitaya  http://www.redpitaya.com
+ *
+ */
+
 function ValidateIPaddress(ipaddress) {
     if (ipaddress == '')
         return false;
@@ -79,39 +88,13 @@ var ipAddressChange = function(event) {
 
 
 var sendByNetChange = function(event) {
-    if ($("#SS_USE_NET").prop('checked')) {
-        SM.parametersCache["SS_USE_FILE"] = { value: false };
-        SM.sendParameters();
-        $(".network").show();
-        $(".file").hide();
-        SM.updateLimits();
-    }
+    SM.parametersCache["SS_USE_FILE"] = { value: false };
+    SM.sendParameters();
+    SM.updateLimits();
 }
 
 var sendToFileChange = function(event) {
-    if ($("#SS_USE_FILE").prop('checked')) {
-        SM.parametersCache["SS_USE_FILE"] = { value: true };
-        SM.sendParameters();
-        $(".network").hide();
-        $(".file").show();
-        SM.updateLimits();
-    }
-}
-
-var protocolChange = function(event) {
-    SM.parametersCache["SS_PROTOCOL"] = { value: $("#SS_PROTOCOL option:selected").val() };
-    SM.sendParameters();
-}
-
-var channelChange = function(event) {
-    SM.parametersCache["SS_CHANNEL"] = { value: $("#SS_CHANNEL option:selected").val() };
-    SM.sendParameters();
-    SM.updateLimits();
-
-}
-
-var resolutionChange = function(event) {
-    SM.parametersCache["SS_RESOLUTION"] = { value: $("#SS_RESOLUTION option:selected").val() };
+    SM.parametersCache["SS_USE_FILE"] = { value: true };
     SM.sendParameters();
     SM.updateLimits();
 }
@@ -128,18 +111,6 @@ var acdcChange = function(event) {
     SM.updateLimits();
 }
 
-var saveModeChange = function(event) {
-    SM.parametersCache["SS_SAVE_MODE"] = { value: $("#SS_SAVE_MODE option:selected").val() };
-    SM.sendParameters();
-    SM.updateLimits();
-}
-
-var useCalibChange = function(event) {
-    SM.parametersCache["SS_USE_CALIB"] = { value: $("#SS_USE_CALIB option:selected").val() };
-    SM.sendParameters();
-    SM.updateLimits();
-}
-
 var formatСhange = function(event) {
     SM.parametersCache["SS_FORMAT"] = { value: $("#SS_FORMAT option:selected").val() };
     SM.sendParameters();
@@ -147,7 +118,7 @@ var formatСhange = function(event) {
 
 var rateFocusOut = function(event) {
     SM.calcRateHz($("#SS_RATE").val());
-    rateFocusOutValue();    
+    rateFocusOutValue();
 }
 
 var rateFocusOutValue = function() {
@@ -168,23 +139,124 @@ var rateFocusOutValue = function() {
     $("#SS_RATE").val(text);
 }
 
+var setMode = function(_mode, _state) {
+    if (_mode == "SS_MODE") {
+        if (_state){
+            sendToFileChange();
+        }else{
+            sendByNetChange();
+        }
+    }
+
+    if (_mode == "SS_PROTOCOL"){
+        SM.parametersCache["SS_PROTOCOL"] = { value: _state ? 1 : 0};
+        SM.sendParameters();
+    }
+
+    if (_mode == "SS_USE_CALIB"){
+        SM.parametersCache["SS_USE_CALIB"] = { value: _state ? 1 : 0};
+        SM.sendParameters();
+    }
+
+    if (_mode == "SS_RESOLUTION"){
+        SM.parametersCache["SS_RESOLUTION"] = { value: _state ? 1 : 0};
+        SM.sendParameters();
+    }
+
+    if (_mode == "SS_SAVE_MODE"){
+        SM.parametersCache["SS_SAVE_MODE"] = { value: _state ? 1 : 0};
+        SM.sendParameters();
+    }
+
+    if (_mode == "SS_CH1_ENABLE"){
+        var curValue = SM.params.orig["SS_CHANNEL"] != undefined ? SM.params.orig["SS_CHANNEL"].value : 0;
+        SM.parametersCache["SS_CHANNEL"] = { value: (curValue & 0xE) | (_state ? 0x1 : 0x0) };
+        SM.sendParameters();
+    }
+
+    if (_mode == "SS_CH2_ENABLE"){
+        var curValue = SM.params.orig["SS_CHANNEL"] != undefined ? SM.params.orig["SS_CHANNEL"].value : 0;
+        SM.parametersCache["SS_CHANNEL"] = { value: (curValue & 0xD) | (_state ? 0x2 : 0x0) };
+        SM.sendParameters();
+    }
+
+    if (_mode == "SS_CH3_ENABLE"){
+        var curValue = SM.params.orig["SS_CHANNEL"] != undefined ? SM.params.orig["SS_CHANNEL"].value : 0;
+        SM.parametersCache["SS_CHANNEL"] = { value: (curValue & 0xB) | (_state ? 0x4 : 0x0) };
+        SM.sendParameters();
+    }
+
+    if (_mode == "SS_CH4_ENABLE"){
+        var curValue = SM.params.orig["SS_CHANNEL"] != undefined ? SM.params.orig["SS_CHANNEL"].value : 0;
+        SM.parametersCache["SS_CHANNEL"] = { value: (curValue & 0x7) | (_state ? 0x8 : 0x0) };
+        SM.sendParameters();
+    }
+
+    if (_mode == "SS_CH1_ATTENUATOR"){
+        var curValue = SM.params.orig["SS_ATTENUATOR"] != undefined ? SM.params.orig["SS_ATTENUATOR"].value : 0;
+        SM.parametersCache["SS_ATTENUATOR"] = { value: (curValue & 0xE) | (_state ? 0x1 : 0x0) };
+        SM.sendParameters();
+    }
+
+    if (_mode == "SS_CH2_ATTENUATOR"){
+        var curValue = SM.params.orig["SS_ATTENUATOR"] != undefined ? SM.params.orig["SS_ATTENUATOR"].value : 0;
+        SM.parametersCache["SS_ATTENUATOR"] = { value: (curValue & 0xD) | (_state ? 0x2 : 0x0) };
+        SM.sendParameters();
+    }
+
+    if (_mode == "SS_CH3_ATTENUATOR"){
+        var curValue = SM.params.orig["SS_ATTENUATOR"] != undefined ? SM.params.orig["SS_ATTENUATOR"].value : 0;
+        SM.parametersCache["SS_ATTENUATOR"] = { value: (curValue & 0xB) | (_state ? 0x4 : 0x0) };
+        SM.sendParameters();
+    }
+
+    if (_mode == "SS_CH4_ATTENUATOR"){
+        var curValue = SM.params.orig["SS_ATTENUATOR"] != undefined ? SM.params.orig["SS_ATTENUATOR"].value : 0;
+        SM.parametersCache["SS_ATTENUATOR"] = { value: (curValue & 0x7) | (_state ? 0x8 : 0x0) };
+        SM.sendParameters();
+    }
+
+
+    if (_mode == "SS_CH1_AC_DC"){
+        var curValue = SM.params.orig["SS_AC_DC"] != undefined ? SM.params.orig["SS_AC_DC"].value : 0;
+        SM.parametersCache["SS_AC_DC"] = { value: (curValue & 0xE) | (_state ? 0x1 : 0x0) };
+        SM.sendParameters();
+    }
+
+    if (_mode == "SS_CH2_AC_DC"){
+        var curValue = SM.params.orig["SS_AC_DC"] != undefined ? SM.params.orig["SS_AC_DC"].value : 0;
+        SM.parametersCache["SS_AC_DC"] = { value: (curValue & 0xD) | (_state ? 0x2 : 0x0) };
+        SM.sendParameters();
+    }
+
+    if (_mode == "SS_CH3_AC_DC"){
+        var curValue = SM.params.orig["SS_AC_DC"] != undefined ? SM.params.orig["SS_AC_DC"].value : 0;
+        SM.parametersCache["SS_AC_DC"] = { value: (curValue & 0xB) | (_state ? 0x4 : 0x0) };
+        SM.sendParameters();
+    }
+
+    if (_mode == "SS_CH4_AC_DC"){
+        var curValue = SM.params.orig["SS_AC_DC"] != undefined ? SM.params.orig["SS_AC_DC"].value : 0;
+        SM.parametersCache["SS_AC_DC"] = { value: (curValue & 0x7) | (_state ? 0x8 : 0x0) };
+        SM.sendParameters();
+    }
+
+}
+
+
 
 //Create callback
 var changeCallbacks = {}
 
 changeCallbacks["SS_PORT_NUMBER"] = portNumberChange;
 changeCallbacks["SS_IP_ADDR"] = ipAddressChange;
-changeCallbacks["SS_USE_NET"] = sendByNetChange;
-changeCallbacks["SS_USE_FILE"] = sendToFileChange;
-changeCallbacks["SS_PROTOCOL"] = protocolChange;
-changeCallbacks["SS_CHANNEL"] = channelChange;
-changeCallbacks["SS_RESOLUTION"] = resolutionChange;
+// changeCallbacks["SS_USE_NET"] = sendByNetChange;
+// changeCallbacks["SS_USE_FILE"] = sendToFileChange;
+// changeCallbacks["SS_CHANNEL"] = channelChange;
 changeCallbacks["SS_FORMAT"] = formatСhange;
 changeCallbacks["SS_SAMPLES"] = samplesNumberChange;
-changeCallbacks["SS_USE_CALIB"] = useCalibChange;
-changeCallbacks["SS_SAVE_MODE"] = saveModeChange;
-changeCallbacks["SS_ATTENUATOR"] = attenuatorChange;
-changeCallbacks["SS_AC_DC"] = acdcChange;
+// changeCallbacks["SS_ATTENUATOR"] = attenuatorChange;
+// changeCallbacks["SS_AC_DC"] = acdcChange;
 
 var clickCallbacks = {}
 
@@ -203,4 +275,9 @@ $(document).ready(function() {
 
     $("#SS_RATE").focusout(rateFocusOut);
 
+    $('.man_flipswitch').change(function() {
+        $(this).next().text($(this).is(':checked') ? ':checked' : ':not(:checked)');
+        setMode($(this).attr('id'), $(this).is(':checked'));
+
+    }).trigger('change');
 })

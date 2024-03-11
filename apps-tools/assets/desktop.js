@@ -18,7 +18,7 @@
         name: "Development",
         description: "Documentation, tutorials and a lot of interesting stuff",
         image: "../assets/images/development.png",
-        applications: ["visualprogramming", "scpi", "tutorials", "fpga", "apis", "capps", "cmd", "hardwaredoc", "instructions", "github", "activelearning", "jupyter"]
+        applications: ["visualprogramming", "scpi", "tutorials", "fpga", "apis", "capps", "cmd", "hardwaredoc", "instructions", "github", "activelearning", "jupyter","web_ssh"]
     }];
     var currentGroup = undefined;
 
@@ -33,68 +33,87 @@
         return currentGroup;
     }
 
+    Desktop.convertModel = function(model){
+        /*
+         List of board models
+
+            typedef enum {
+                STEM_125_10_v1_0            = 0,
+                STEM_125_14_v1_0            = 1,
+                STEM_125_14_v1_1            = 2,
+                STEM_122_16SDR_v1_0         = 3,
+                STEM_122_16SDR_v1_1         = 4,
+                STEM_125_14_LN_v1_1         = 5,
+                STEM_125_14_Z7020_v1_0      = 6,
+                STEM_125_14_Z7020_LN_v1_1   = 7,
+                STEM_125_14_Z7020_4IN_v1_0  = 8,
+                STEM_125_14_Z7020_4IN_v1_2  = 9,
+                STEM_125_14_Z7020_4IN_v1_3  = 10,
+                STEM_250_12_v1_0            = 11,
+                STEM_250_12_v1_1            = 12,
+                STEM_250_12_v1_2            = 13,
+                STEM_250_12_120             = 14,
+                STEM_250_12_v1_2a           = 15
+            }  rp_HPeModels_t;
+        */
+        if (model == 0){
+            return "STEM 10"
+        }
+        if (model == 1){
+            return "STEM 14"
+        }
+        if (model == 2){
+            return "STEM 14"
+        }
+        if (model == 3){
+            return "STEM 16"
+        }
+        if (model == 4){
+            return "STEM 16"
+        }
+        if (model == 5){
+            return "STEM 14"
+        }
+        if (model == 6){
+            return "STEM 14-Z20"
+        }
+        if (model == 7){
+            return "STEM 14-Z20"
+        }
+        if (model == 8){
+            return "STEM 14-Z20-4CH"
+        }
+        if (model == 9){
+            return "STEM 14-Z20-4CH"
+        }
+        if (model == 10){
+            return "STEM 14-Z20-4CH"
+        }
+        if (model == 11){
+            return "STEM 250 12"
+        }
+        if (model == 12){
+            return "STEM 250 12"
+        }
+        if (model == 13){
+            return "STEM 250 12"
+        }
+        if (model == 14){
+            return "STEM 250 12"
+        }
+        if (model == 15){
+            return "STEM 250 12"
+        }
+        console.log("[FATAL ERROR] Unknown model: " + model)
+        return ""
+    }
+
     Desktop.setApplications = function(listOfapplications) {
         $.ajax({
                 method: "GET",
                 url: '/get_info'
             })
             .done(function(result) {
-                stem_ver = result['stem_ver'];
-
-                if (stem_ver == "STEM 16") {
-                    for (i = default_applications.length - 1; i >= 0; i -= 1) {
-                        if (default_applications[i]["id"] === 'marketplace' ||
-                            default_applications[i]["id"] === 'fpgaexamples' ||
-                            default_applications[i]["id"] === 'jupyter' ||
-                            default_applications[i]["id"] === 'activelearning') {
-                            default_applications.splice(i, 1);
-                        }
-                    }
-                };
-
-                if (stem_ver == "STEM 14-Z20") {
-                    for (i = default_applications.length - 1; i >= 0; i -= 1) {
-                        if (default_applications[i]["id"] === 'marketplace') {
-                            default_applications.splice(i, 1);
-                        }
-                    }
-                };
-
-                if (stem_ver == "STEM 250 12") {
-                    for (i = default_applications.length - 1; i >= 0; i -= 1) {
-                        if (default_applications[i]["id"] === 'marketplace' ||
-                            default_applications[i]["id"] === 'fpgaexamples' ||
-                            default_applications[i]["id"] === 'jupyter' ||
-                            default_applications[i]["id"] === 'activelearning') {
-                            default_applications.splice(i, 1);
-                        }
-                    }
-                };
-
-                if (stem_ver == "STEM 250 12") {
-                    for (i = default_applications.length - 1; i >= 0; i -= 1) {
-                        if (default_applications[i]["id"] === 'marketplace' ||
-                            default_applications[i]["id"] === 'fpgaexamples' ||
-                            default_applications[i]["id"] === 'jupyter' ||
-                            default_applications[i]["id"] === 'activelearning') {
-                            default_applications.splice(i, 1);
-                        }
-                    }
-                };
-
-                if (stem_ver.includes("SLAVE")) {
-                    for (i = default_applications.length - 1; i >= 0; i -= 1) {
-                        if (default_applications[i]["id"] === 'marketplace' ||
-                            default_applications[i]["id"] === 'fpgaexamples' ||
-                            default_applications[i]["id"] === 'jupyter' ||
-                            default_applications[i]["id"] === 'scpi' ||
-                            default_applications[i]["id"] === 'Development' ||
-                            default_applications[i]["id"] === 'activelearning') {
-                            default_applications.splice(i, 1);
-                        }
-                    }
-                };
-
                 applications = [];
                 $.extend(true, applications, listOfapplications);
                 var url_arr = window.location.href.split("/");
@@ -112,6 +131,8 @@
                     applications[i].group = checkApplicationInGroup(applications[i].id);
                     applications[i].is_group = false;
                 }
+
+                applications = Desktop.filterApps(applications,Desktop.convertModel(result['stem_ver']));
 
                 for (var i = 0; i < groups.length; i++) {
                     var gr = {
@@ -131,7 +152,10 @@
                 }
                 applications.unshift(backButton);
                 Desktop.selectGroup();
-            });
+                setTimeout(function() {
+                    $('body').addClass('loaded');
+                }, 666);
+            }).fail(function(msg) { Desktop.setApplications(listOfapplications); });
     }
 
     var checkApplicationInGroup = function(app_id) {
@@ -264,7 +288,8 @@
         { id: "updater", name: "Red Pitaya OS Update", description: "Red Pitaya ecosystem updater", url: "/updater/", image: "../assets/images/updater.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "activelearning", name: "Teaching materials", description: "Teaching materials for Red Pitaya", url: "https://redpitaya-knowledge-base.readthedocs.io/en/latest/learn_fpga/fpga_learn.html", image: "../assets/images/active-learning.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "warranty_ext", name: "Unlock new benefits", description: "Keep your Red Pitaya fresh for longer", url: "https://go.redpitaya.com/refresh", image: "../assets/images/WarrantyExt.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "jupyter", name: "Python programming", description: "Jupyter notebook server for running Python applications in a browser tab", url: "/jupyter/notebooks/RedPitaya/welcome.ipynb", image: "../jupyter_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "jupyter", name: "Python programming", description: "Jupyter notebook server for running Python applications in a browser tab", url: "/jlab/lab/tree/RedPitaya/welcome.ipynb", image: "../jupyter_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "web_ssh", name: "Web Console", description: "SSH console based on the shellinabox", url: "http://" + window.location.hostname + ":4200", image: "../assets/images/ssh_icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' }
     ];
 
     var backButton = {
@@ -309,6 +334,48 @@
             $.get('/poweroff');
             setTimeout(function() { window.close(); }, 1000);
         });
+
+        $("#delete_settings_id").click(function(event) {
+            $.ajax({
+                method: "GET",
+                url: '/delete_settings'
+            })
+            .done(function(result) {
+                $("#sysinfo_dialog").modal("hide");
+            });
+        });
+
+        $("#up_boot_id").click(function(event) {
+            $.ajax({
+                method: "GET",
+                url: '/check_bootbin'
+            })
+            .done(function(result) {
+                console.log("/check_bootbin: res" + result);
+                if (result.trim().length === 0){
+                    $.ajax({
+                        method: "GET",
+                        url: '/copy_bootbin_1G'
+                    })
+                    .done(function(result) {
+                        console.log("/copy_bootbin_1G: res" + result);
+                        $('#up_boot_id a').text("Make Unify")
+                        $('#UBOOT_MODE_ID').text("BOOT mode: SIGNALlab");
+                    });
+                }else{
+                    $.ajax({
+                        method: "GET",
+                        url: '/copy_bootbin_512'
+                    })
+                    .done(function(result) {
+                        console.log("/copy_bootbin_512: res" + result);
+                        $('#up_boot_id a').text("Up to 1Gb RAM")
+                        $('#UBOOT_MODE_ID').text("BOOT mode: Unify");
+                    });
+                }
+            });
+        });
+
         $("#info").click(function(event) {
 
 
@@ -325,22 +392,96 @@
                         if (obj['model'].startsWith('STEM_125-14_Z7020_v1.0')) model = 'STEMlab 125-14-Z7020 v1.0';
                         if (obj['model'].startsWith('STEM_250-12_V1.1')) model = 'SIGNALlab 250-12 v1.1';
                         if (obj['model'].startsWith('STEM_250-12_V1.2')) model = 'SIGNALlab 250-12 v1.2';
+                        if (obj['model'].startsWith('STEM_250-12_V1.2a')) model = 'SIGNALlab 250-12 v1.2a';
                         if (obj['model'].startsWith('STEM_122-16SDR_v1.0')) model = 'SDRlab 122-16 v1.0';
-                        if (obj['model'].startsWith('STEM_122-16SDR_v1.0')) model = 'SDRlab 122-16 v1.0';
+                        if (obj['model'].startsWith('STEM_122-16SDR_v1.1')) model = 'SDRlab 122-16 v1.1';
+                        if (obj['model'].startsWith('STEM_125-14_Z7020_4IN_v1.0')) model = 'STEMlab 125-14 4-Input v1.0';
                         if (obj['model'].includes('SLAVE')) model += " / Streaming Slave";
                         $('#SI_B_MODEL').text(model);
                         $('#SI_MAC').text(obj['mac']);
                         $('#SI_DNA').text(obj['dna']);
                         $('#SI_ECOSYSTEM').text(obj['ecosystem']['version'] + '-' + obj['ecosystem']['revision']);
                         $('#SI_LINUX').text(obj['linux']);
-                        $('#sysinfo_dialog').modal("show");
+                        $('#RAM_SIZE_ID').text(obj['mem_size']+"Mb");
+                        $('#UBOOT_MODE_ID').text(obj['boot_512'] == "1"?"BOOT mode: Unify":"BOOT mode: SIGNALlab");
+
+                        if (obj['mem_upgrade'] == "1"){
+                            $('#up_boot_id a').text(obj['boot_512'] == "1"?"Up to 1Gb RAM":"Make Unify")
+                            $('#up_boot_id').show()
+                        }else{
+                            $('#up_boot_id').hide()
+                        }
+
+                        var fpga_list = obj['fpga']
+                        $("#FPGA_LIST_TABLE_ID tr").remove();
+                        Object.keys(obj['fpga']).forEach(element => {
+                            $('#FPGA_LIST_TABLE_ID tbody').append('<tr style="height:40px;"><td>'+ element +'</td><td>'+ fpga_list[element] +'</td></tr>');
+                        });
                     } catch (error) {
                         console.error(error);
                     }
                 })
 
+            $.ajax({
+                    method: "GET",
+                    url: '/get_led_status'
+                })
+                .done(function(msg) {
+                    msg = msg.trim();
+                    if (msg === "1" || msg === "2"){
+                        var chkBox = document.getElementById('fsck_chbox');
+                        chkBox.checked = true
+                        if (msg === "2"){
+                            $.ajax({
+                                method: "GET",
+                                url: '/set_led_status?enable=true'
+                            });
+                        }
+                    }
+                    if (msg === "0"){
+                        var chkBox = document.getElementById('fsck_chbox');
+                        chkBox.checked = false
+                    }
+
+                    console.log("LED STATUS ",msg)
+                })
+                .fail(function(msg) {
+                    console.log("LED STATUS fail")
+                });
+
+            $.ajax({
+                method: "GET",
+                url: '/get_fsck_status'
+            })
+            .done(function(msg) {
+                msg = msg.trim().split(" ").slice(-1)[0];
+                var chkBox = document.getElementById('fsck_chbox');
+                chkBox.checked = (msg !== "-1");
+
+                console.log("FSCK STATUS ",msg)
+            })
+            .fail(function(msg) {
+                console.log("FSCK STATUS fail")
+            });
 
             $('#sysinfo_dialog').modal("show");
+        });
+
+        $("#ext_con_but").click(function(event) {
+            $('#ext_connections_dialog').modal("show");
+        });
+
+
+        $("#bug_report").click(function(event) {
+            fetch('/get_bug_report')
+                .then(response => response.blob())
+                .then(blob => {
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = new Date().toJSON().slice(0,22) + ".zip";
+                link.click();
+            })
+            .catch(console.error);
         });
 
         $.ajax({
@@ -355,6 +496,35 @@
                 Desktop.sys_info_obj = undefined;
             });
 
+            $('#fsck_chbox').click(function(event){
+                var chkBox = document.getElementById('fsck_chbox');
+                if (chkBox.checked){
+                    $.ajax({
+                        method: "GET",
+                        url: '/set_fsck?enable=true'
+                    });
+                }else{
+                    $.ajax({
+                        method: "GET",
+                        url: '/set_fsck?enable=false'
+                    });
+                }
+            });
+
+            $('#led_chbox').click(function(event){
+                var chkBox = document.getElementById('led_chbox');
+                if (chkBox.checked){
+                    $.ajax({
+                        method: "GET",
+                        url: '/set_led_status?enable=true'
+                    });
+                }else{
+                    $.ajax({
+                        method: "GET",
+                        url: '/set_led_status?enable=false'
+                    });
+                }
+            });
     });
 
 })(window.Desktop = window.Desktop || {}, jQuery);

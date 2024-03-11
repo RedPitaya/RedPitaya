@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import sys
 import time
@@ -11,6 +11,7 @@ freq = 4
 ampl = 1
 
 rp_s.tx_txt('GEN:RST')
+
 rp_s.tx_txt('SOUR1:FUNC ' + str(wave_form).upper())
 rp_s.tx_txt('SOUR1:FREQ:FIX ' + str(freq))
 rp_s.tx_txt('SOUR1:VOLT ' + str(ampl))
@@ -30,6 +31,7 @@ rp_s.tx_txt('SOUR2:BURS:NOR 1')
 rp_s.tx_txt('SOUR2:BURS:INT:PER 5000')
 
 rp_s.tx_txt('OUTPUT:STATE ON')
+rp_s.tx_txt('SOUR:TRIG:INT')
 time.sleep(2)
 rp_s.tx_txt('SOUR1:TRIG:INT')
 time.sleep(2)

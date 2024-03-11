@@ -2,15 +2,16 @@
 clc
 clear all
 close all
-IP= '192.168.1.106'; % Input IP of your Red Pitaya...
+IP= ''; % Input IP of your Red Pitaya...
 port = 5000; % If you are using WiFi then IP is:
-tcpipObj=tcpip(IP, port); % 192.168.128.1
+tcpipObj=tcpip(IP, port);
 
 fopen(tcpipObj);
 tcpipObj.Terminator = 'CR/LF';
 
 %% The example generate sine bursts every 0.5 seconds indefinety
-fprintf(tcpipObj,'GEN:RST');
+
+fprintf(tcpipObj,'GEN:RST');               % Reset to default settings
 
 fprintf(tcpipObj,'SOUR1:FUNC SINE');
 fprintf(tcpipObj,'SOUR1:FREQ:FIX 4'); % Set frequency of output signal
@@ -30,6 +31,7 @@ fprintf(tcpipObj,'SOUR2:BURS:NCYC 2'); % Set 2 pulses of sine wave
 fprintf(tcpipObj,'SOUR2:BURS:NOR 1'); % 1 number of sine wave pulses
 fprintf(tcpipObj,'SOUR2:BURS:INT:PER 5000'); % Set time of burst period in microseconds = 5 * 1/Frequency * 1000000
 fprintf(tcpipObj,'OUTPUT:STATE ON'); % Set output to ON
+fprintf(tcpipObj,'SOUR:TRIG:INT');
 pause(2)
 fprintf(tcpipObj,'SOUR1:TRIG:INT');
 pause(2)

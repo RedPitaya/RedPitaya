@@ -2,7 +2,7 @@ clc
 clear all
 close all
 
-IP= '192.168.178.111';           % Input IP of your Red Pitaya...
+IP= '';           % Input IP of your Red Pitaya...
 port = 5000;
 tcpipObj=tcpip(IP, port);
 tcpipObj.InputBufferSize = 16384*32;
@@ -39,8 +39,8 @@ fprintf(tcpipObj,'ACQ:TRIG:DLY 0');
 fprintf(tcpipObj,'ACQ:START');
 pause(1);
 fprintf(tcpipObj,'ACQ:TRIG AWG_PE');
-fprintf(tcpipObj,'SOUR1:TRIG:INT');           % Set generator trigger to immediately
 fprintf(tcpipObj,'OUTPUT1:STATE ON');         % Set output to ON
+fprintf(tcpipObj,'SOUR1:TRIG:INT');           % Set generator trigger to immediately
 
 %% Wait for trigger
  while 1
@@ -49,6 +49,17 @@ fprintf(tcpipObj,'OUTPUT1:STATE ON');         % Set output to ON
     break
     end
  end
+
+% wait for fill adc buffer
+while 1
+     fill_state=query(tcpipObj,'ACQ:TRIG:FILL?')
+     
+     if strcmp('1',fill_state(1:1))
+   
+     break
+   
+     end
+end 
 
 %% Read & plot
 

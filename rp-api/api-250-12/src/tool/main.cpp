@@ -118,17 +118,17 @@ int main(int argc, char* argv[])
         int addr = 0;
         int reg  = 0;
 
-        if (sscanf(ADDRESS, "%x", &addr) == 0){
+        if (sscanf(ADDRESS, "%x", (unsigned int*)&addr) == 0){
             printf("Error parse address.\n");
             UsingArgs(argv[0]);
         }
 
         
-        if (sscanf(REGISTER, "%x", &reg) == 0){
+        if (sscanf(REGISTER, "%x", (unsigned int*)&reg) == 0){
             printf("Error parse register.\n");
             UsingArgs(argv[0]);
         }
-        char read_val = 0;
+        uint8_t read_val = 0;
         if (rp_i2c::rp_read_from_i2c(I2C_DEVICE,addr,reg,read_val,force_mode)){
             printf("ERROR read i2c from %s addr: 0x%.2x\treg: 0x%.2x\n",I2C_DEVICE,addr,reg);
             return -1;
@@ -154,18 +154,18 @@ int main(int argc, char* argv[])
         int reg  = 0;
         int val  = 0;
 
-        if (sscanf(ADDRESS, "%x", &addr) == 0){
+        if (sscanf(ADDRESS, "%x", (unsigned int*)&addr) == 0){
             printf("Error parse address.\n");
             UsingArgs(argv[0]);
         }
 
         
-        if (sscanf(REGISTER, "%x", &reg) == 0){
+        if (sscanf(REGISTER, "%x", (unsigned int*)&reg) == 0){
             printf("Error parse register.\n");
             UsingArgs(argv[0]);
         }
 
-        if (sscanf(VALUE, "%x", &val) == 0){
+        if (sscanf(VALUE, "%x", (unsigned int*)&val) == 0){
             printf("Error parse value.\n");
             UsingArgs(argv[0]);
         }

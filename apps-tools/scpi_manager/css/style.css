@@ -31,6 +31,13 @@ body {
 
 }
 
+#ext_con_but {
+  float: left;
+  width: 5%;
+  text-align: left;
+  cursor: pointer;
+}
+
 .left-content-scpi > p {
     color: #48b3d2;
 }
@@ -275,4 +282,58 @@ area:hover {
 .run_buttons a {
     color: #000000;
     text-decoration: none;
+}
+
+.list-group-item {
+  background-color: #323232;
+  font-family: sans-serif;
+  color: blue;
+}
+
+a.list-group-item {
+  color: silver;
+}
+
+a.list-group-item:hover:visited {
+  color: black;
+}
+
+.list-group-item.more {
+  font-size: 18px;
+}
+
+.list-group-item.exp_btn {
+  font-weight: bold;
+  text-align: center;
+  border: 1px solid #ddd;
+}
+
+.exp_btn {
+  background-image: none;
+  border: 0 solid transparent;
+  white-space: nowrap;
+  padding: 6px 12px;
+  line-height: 1.42857143;
+  border-radius: 0;
+  width: 100%;
+  background-color: transparent;
+  text-shadow: 0px 0px;
+ /*  box-shadow: 0 0 0 1px #777; */
+  color:#cdcccc !important;
+}
+
+.exp_btn:hover, btn:active {
+  color: #555 !important;
+  background-image: none;
+}
+
+.exp_btn.focus {
+  color: #777;
+  border: 0px solid transparent;
+}
+
+.exp_btn:active, .exp_btn.active {
+  background-image: none;
+  background-color: #999;
+  color: #111 !important;
 }

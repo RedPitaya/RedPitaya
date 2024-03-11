@@ -1,8 +1,8 @@
 #!/bin/bash
 
-PATH_XILINX_SDK=/opt/Xilinx/SDK/2019.1
-PATH_XILINX_VIVADO=/opt/Xilinx/Vivado/2020.1
-RP_UBUNTU=redpitaya_ubuntu_04-oct-2021.tar.gz
+PATH_XILINX_SDK=/opt/Xilinx/Xilinx/SDK/2019.1
+PATH_XILINX_VIVADO=/opt/Xilinx/Xilinx/Vivado/2020.1
+RP_UBUNTU=redpitaya_OS_16-03-48_03-Nov-2022.tar.gz
 SCHROOT_CONF_PATH=/etc/schroot/chroot.d/red-pitaya-ubuntu.conf
 
 function print_ok(){
@@ -98,14 +98,24 @@ print_fail
 exit 1
 fi
 
-echo -n "Download redpitaya ubuntu OS. "
-cd $DL
-wget -N http://downloads.redpitaya.com/downloads/LinuxOS/$RP_UBUNTU
-sudo chown root:root redpitaya_ubuntu_04-oct-2021.tar.gz
-sudo chmod 664 redpitaya_ubuntu_04-oct-2021.tar.gz
+if [ -z "$1" ]
+then
+    echo -n "Download redpitaya ubuntu OS. "
+    cd $DL
+    wget -N http://downloads.redpitaya.com/downloads/LinuxOS/$RP_UBUNTU
+else
+    echo "Set ubuntu OS from parameter $1"
+    RP_UBUNTU=$1
+    cd build_scripts
+    cp -f $RP_UBUNTU $DL/$RP_UBUNTU
+    cd $DL
+fi
+
 
 echo -n "Check redpitaya ubuntu OS. "
 if [[ -f "$RP_UBUNTU" ]]
+        chown root:root $RP_UBUNTU
+        chmod 664 $RP_UBUNTU
 then
 print_ok
 else
@@ -124,7 +134,7 @@ fi
 
 sleep 1
 echo  "Write new configuration"
-echo 
+echo
 echo  "[red-pitaya-ubuntu]"      | sudo tee -a $SCHROOT_CONF_PATH
 echo  "description=Red pitaya"   | sudo tee -a $SCHROOT_CONF_PATH
 echo  "type=file"                | sudo tee -a $SCHROOT_CONF_PATH
@@ -133,14 +143,14 @@ echo  "users=root"               | sudo tee -a $SCHROOT_CONF_PATH
 echo  "root-users=root"          | sudo tee -a $SCHROOT_CONF_PATH
 echo  "root-groups=root"         | sudo tee -a $SCHROOT_CONF_PATH
 echo  "personality=linux"        | sudo tee -a $SCHROOT_CONF_PATH
-echo  "preserve-enviroment=true" | sudo tee -a $SCHROOT_CONF_PATH
-if [[ $? = 0 ]] 
+echo  "preserve-environment=true"| sudo tee -a $SCHROOT_CONF_PATH
+if [[ $? = 0 ]]
 then
-echo 
+echo
 echo -n "Complete write new configuration "
 print_ok
-echo 
-else 
+echo
+else
 echo -n "Complete write new configuration "
 print_fail
 exit 1
@@ -159,12 +169,29 @@ export ARCH=arm
 export PATH=$PATH:$PATH_XILINX_VIVADO/bin
 export PATH=$PATH:$PATH_XILINX_SDK/bin
 export PATH=$PATH:$PATH_XILINX_SDK/gnu/aarch32/lin/gcc-arm-linux-gnueabi/bin/
+
 ENABLE_PRODUCTION_TEST=0
 GIT_COMMIT_SHORT=`git rev-parse --short HEAD`
 
-make -f Makefile.x86  MODEL=$MODEL
+make -f Makefile.x86 fpga MODEL=Z10 STREAMING=MASTER
+make -f Makefile.x86 fpga MODEL=Z20 STREAMING=MASTER
+make -f Makefile.x86 fpga MODEL=Z20_125 STREAMING=MASTER
+make -f Makefile.x86 fpga MODEL=Z20_125_4CH STREAMING=MASTER
+make -f Makefile.x86 fpga MODEL=Z20_250_12 STREAMING=MASTER
+
+make -f Makefile.x86
+
 schroot -c red-pitaya-ubuntu <<- EOL_CHROOT
-make -f Makefile CROSS_COMPILE="" REVISION=$GIT_COMMIT_SHORT MODEL=$MODEL ENABLE_PRODUCTION_TEST=$ENABLE_PRODUCTION_TEST
+make -f Makefile CROSS_COMPILE="" REVISION=$GIT_COMMIT_SHORT ENABLE_PRODUCTION_TEST=0 ENABLE_LICENSING=0 BUILD_NUMBER=1
 EOL_CHROOT
-make -f Makefile.x86 install MODEL=$MODEL
-make -f Makefile.x86 zip MODEL=$MODEL
+
+# required min-gw
+#make -f Makefile.x86 streaming
+
+# FOR BUILD QT CLIENTS NEED SETUP QT 5.15.2
+#make -f Makefile.x86 streaming_client_qt
+#export QT_DIR=/srv/Qt5.15.2-win
+#make -f Makefile.x86 streaming_client_qt_win
+#unset QT_DIR
+
+make -f Makefile.x86 zip

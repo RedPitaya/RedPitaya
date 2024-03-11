@@ -7,13 +7,23 @@
 #include <math.h>
 #include <string.h>
 
+#include "rp_hw-profiles.h"
 #include "rp.h"
 
 #define EPS 0.05
 #define EPS_F 100
 
-const float c_osc_fpga_smpl_freq = ADC_SAMPLE_RATE;
-const int c_meas_time_thr = ADC_BUFFER_SIZE / (1000000000 / ADC_SAMPLE_RATE);
+
+uint32_t getADCRate(){
+    uint32_t c = 0;
+    if (rp_HPGetBaseFastADCSpeedHz(&c) != RP_HP_OK){
+        fprintf(stderr,"[Error] Can't get fast ADC channels count\n");
+    }
+    return c;
+}
+
+#define c_osc_fpga_smpl_freq  getADCRate()
+#define c_meas_time_thr  (ADC_BUFFER_SIZE / (1000000000 / getADCRate()))
 const float c_meas_freq_thr = 0.05;
 const float c_min_period = 19.6e-9; // 51 MHz
 
@@ -102,7 +112,7 @@ bool isSineTester(float *data, uint32_t size)
 {
         uint32_t dec_factor = 1;
         rp_AcqGetDecimationFactor(&dec_factor);
-        double T = (dec_factor / ADC_SAMPLE_RATE);
+        double T = (dec_factor / getADCRate());
         double ch_rms[size];
         double ch_avr[size];
         for(int i = 0; i < size; i++) {

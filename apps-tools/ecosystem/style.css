@@ -58,10 +58,24 @@ a:visited {
     cursor: pointer;
 }
 
+#ext_con_but {
+    float: left;
+    width: 5%;
+    text-align: left;
+    cursor: pointer;
+}
+
+#bug_report {
+    float: left;
+    width: 5%;
+    text-align: left;
+    cursor: pointer;
+}
+
 #description {
     padding-top: 4px;
     overflow: hidden;
-    width: 90%;
+    width: 80%;
     height: 30px;
     white-space: nowrap;
     margin-left: auto;

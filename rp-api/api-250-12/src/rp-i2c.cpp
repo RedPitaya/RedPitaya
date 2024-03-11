@@ -7,7 +7,7 @@
 #include <clocale>
 #include <stdarg.h>
 #include "rp-i2c.h"
-#include "i2c/i2c.h"
+#include "rp_hw.h"
 #include <unistd.h>
 
 #include <linux/i2c-dev.h>
@@ -30,9 +30,11 @@ static XML::XMLString attr_write_string("write");
 static XML::XMLString attr_default_string("default");
 static XML::XMLString attr_decription_string("decription");
 
+pthread_mutex_t g_rp_i2c_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 bool g_enable_verbous = false;
-#define MSG(args...) if (g_enable_verbous) fprintf(stdout,args);
-#define MSG_A(args...) fprintf(stdout,args);
+#define MSG(...) if (g_enable_verbous) fprintf(stdout,__VA_ARGS__);
+#define MSG_A(...) fprintf(stdout,__VA_ARGS__);
 
 void rp_i2c_enable_verbous(){
     g_enable_verbous = true;
@@ -76,16 +78,36 @@ int readAttributeValue(XMLNode *node,XMLString &name,int &value){
         MSG_A("[rp_i2c] Missing attribute %s in register\n",name.getText());
         return  -1;
     }
-    sscanf(attr->ValueString().c_str(), "%x", &value);
+    sscanf(attr->ValueString().c_str(), "%x", (unsigned int*)&value);
     return 0;
 }
 
 int rp_write_to_i2c(const char* i2c_dev_path,int i2c_dev_address,int i2c_dev_reg_addr, unsigned short i2c_val_to_write, bool force){
-    return write_to_i2c(i2c_dev_path,i2c_dev_address,i2c_dev_reg_addr,i2c_val_to_write , force);
+    pthread_mutex_lock(&g_rp_i2c_mutex);
+    int ret = rp_I2C_InitDevice(i2c_dev_path,i2c_dev_address);
+    if (ret != RP_HW_OK){
+		pthread_mutex_unlock(&g_rp_i2c_mutex);
+        return ret;
+    }
+    rp_I2C_setForceMode(force);
+
+    ret =  rp_I2C_SMBUS_Write(i2c_dev_reg_addr,i2c_val_to_write);
+	pthread_mutex_unlock(&g_rp_i2c_mutex);
+    return ret;
 }
 
-int rp_read_from_i2c(const char* i2c_dev_path,int i2c_dev_address,int i2c_dev_reg_addr, char &value, bool force){
-    return read_from_i2c(i2c_dev_path,i2c_dev_address,i2c_dev_reg_addr,value , force);
+int rp_read_from_i2c(const char* i2c_dev_path,int i2c_dev_address,int i2c_dev_reg_addr, uint8_t &value, bool force){
+    pthread_mutex_lock(&g_rp_i2c_mutex);
+    int ret = rp_I2C_InitDevice(i2c_dev_path,i2c_dev_address);
+    if (ret != RP_HW_OK){
+		pthread_mutex_unlock(&g_rp_i2c_mutex);
+        return ret;
+    }
+    rp_I2C_setForceMode(force);
+
+    ret =  rp_I2C_SMBUS_Read(i2c_dev_reg_addr,&value);
+	pthread_mutex_unlock(&g_rp_i2c_mutex);
+    return ret;
 }
 
 int read_address(XMLDocument *doc,int &device_addr, string &bus_name){
@@ -105,7 +127,7 @@ int read_address(XMLDocument *doc,int &device_addr, string &bus_name){
             MSG_A("[rp_i2c] Missing attribute address in device_on_bus\n");
             return  -1;
         }
-        sscanf(attr->ValueString().c_str(), "%x", &device_addr);
+        sscanf(attr->ValueString().c_str(), "%x", (unsigned int*)&device_addr);
     }
 
     bus_name =  XMLString::toString(bus_node->GetInnerText());
@@ -172,7 +194,7 @@ int rp_i2c_load(const char *configuration_file, bool force){
                 data[0] = (char)reg_default;
             }
 
-            if (rp_write_to_i2c(bus_name.c_str(),device_addr, reg_addr, data[0],force) != 0) {
+            if (rp_write_to_i2c(bus_name.c_str(),device_addr, reg_addr, data[0],force) != RP_HW_OK) {
                 /* Error process */
                 MSG_A("[rp_i2c] ERROR write value of %s to i2c\n",reg_description.c_str());
             }
@@ -209,7 +231,7 @@ int rp_i2c_print(const char *configuration_file, bool force){
         std::string reg_write_mode;
         int reg_default = 0;
         std::string reg_description ;
-        char data;
+        uint8_t data;
 
         if (readAttributeValue(reg,attr_address_string,reg_addr)!=0) return -1;
     
@@ -231,7 +253,7 @@ int rp_i2c_print(const char *configuration_file, bool force){
         }
         reg_description = attr->ValueString();
         
-        if (rp_read_from_i2c(bus_name.c_str(),device_addr, reg_addr, data ,force) != 0) {
+        if (rp_read_from_i2c(bus_name.c_str(),device_addr, reg_addr, data ,force) != RP_HW_OK) {
             /* Error process */
             MSG_A("[rp_i2c] ERROR read value of %s to i2c\n",reg_description.c_str());
         }
@@ -266,7 +288,7 @@ int rp_i2c_compare(const char *configuration_file, bool force){
         std::string reg_write_mode;
         int reg_default = 0;
         std::string reg_description ;
-        char data;
+        uint8_t data;
 
         if (readAttributeValue(reg,attr_address_string,reg_addr)!=0) return -1;
     
@@ -289,19 +311,19 @@ int rp_i2c_compare(const char *configuration_file, bool force){
 
         if ((reg_write_mode == "value") || (reg_write_mode == "default")) {
             /* Write data to i2c */
-            char data_in_file = 0;
+            uint8_t data_in_file = 0;
 
             if (reg_write_mode == "value") {
-                data_in_file = (char)reg_value;
+                data_in_file = (uint8_t)reg_value;
             }
 
             if (reg_write_mode == "default") {
-                data_in_file = (char)reg_default;
+                data_in_file = (uint8_t)reg_default;
             }
 
             reg_description = attr->ValueString();
         
-            if (rp_read_from_i2c(bus_name.c_str(),device_addr, reg_addr, data , force) != 0) {
+            if (rp_read_from_i2c(bus_name.c_str(),device_addr, reg_addr, data , force) != RP_HW_OK) {
                 /* Error process */
                 MSG_A("[rp_i2c] ERROR read value of %s to i2c\n",reg_description.c_str());
             }

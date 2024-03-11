@@ -19,6 +19,8 @@
     UPD.SdLinuxVer = undefined;
     UPD.type = 'stemlab';
     UPD.path_fw = '';
+    UPD.timerCheck = undefined;
+
 
     UPD.startStep = function(step) {
         UPD.currentStep = step;
@@ -135,20 +137,6 @@
                     // - no available distributives for selected type
                     // - invalid response format
                     if (arr.length == 0 || arr.length % 2 != 0) {
-                        /*
-                                                TODO: remove before merge to master branch
-                                                if(UPD.type == "0.97")
-                                                {
-                                                    $("#ecosystem_type").val("2");
-                                                    UPD.type = "0.96";
-                                                    UPD.checkUpdates('0.96');
-                                                    return;
-                                                } else {
-                                                    $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
-                                                    $('#step_' + UPD.currentStep).find('.error_msg').show();
-                                                    return;
-                                                }
-                        */
                         $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
                         $('#step_' + UPD.currentStep).find('.error_msg').show();
                         return;
@@ -196,7 +184,7 @@
                     }
                     var distro_desc = es_distro_vers.vers_as_str + '-' + es_distro_vers.build + '(' + es_distro_size + ')';
                     var distro_desc_short = es_distro_vers.vers_as_str + '-' + es_distro_vers.build;
-                    if (distro_desc_short === UPD.currentVer) {
+                    if (UPD.compareVersions(distro_desc_short,UPD.currentVer) === 1) {
                         $('#used_last_version').show();
                         $('#select_ver').hide();
                         $('#step_4').hide();
@@ -239,45 +227,70 @@
         }, 500);
     }
 
+
     UPD.downloadEcosystem = function() {
         if (!UPD.isApply) {
             --UPD.currentStep; // FIXME
             return;
         }
-        setTimeout(function() {
-            $.ajax({
-                url: '/update_download?ecosystem=' + UPD.type + '/' + UPD.ecosystems[UPD.chosen_eco],
-                type: 'GET',
-            }).always(function() {
-                $('#step_' + UPD.currentStep).find('.step_icon').find('img').hide();
-                var check_progress = setInterval(function() {
-                    $.ajax({
-                        url: '/update_check',
-                        type: 'GET',
-                    }).done(function(msg) {
-                        var res = msg;
-                        var s = res.split(" ")[0];
-                        var size = parseInt(s) * 1;
-                        if (isNaN(size)) {
-                            $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
-                            $('#step_' + UPD.currentStep).find('.error_msg').show();
-                            clearInterval(check_progress);
-                        } else {
-                            var percent = ((size / UPD.ecosystems_sizes[UPD.chosen_eco]) * 100).toFixed(2);
-                            $('#percent').text(percent + "%");
-                            $('#percent').show();
 
-                            if (size >= UPD.ecosystems_sizes[UPD.chosen_eco]) {
-                                $('#percent').hide();
-                                UPD.nextStep();
-                                clearInterval(check_progress);
-                            }
-                        }
+        console.log("Check download");
+        $('#step_' + UPD.currentStep).find('.step_icon').find('img').hide();
 
-                    });
-                }, 1000)
-            });
-        }, 1000);
+
+
+        $.ajax({
+            url: '/update_download?ecosystem=' + UPD.type + '/' + UPD.ecosystems[UPD.chosen_eco],
+            type: 'GET',
+        }).done(function(res) {
+            console.log(res);
+            $('#percent').text("0%");
+
+            UPD.timerCheck = setInterval(function() {
+                var url_arr = window.location.href.split("/");;
+                var url = url_arr[0] + '//' + url_arr[2];
+                $.ajax({
+                    url:  url + ':81/update_check',
+                    type: 'GET',
+                }).done(function(msg) {
+                    if (msg.includes("NONE")) {
+                        $('#percent').text("0%");
+                        $('#percent').show();
+                        return;
+                    }
+                    var res = msg;
+                    var s = res.split(" ")[0];
+                    var size = parseInt(s) * 1;
+                    if (isNaN(size)) {
+                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                        $('#step_' + UPD.currentStep).find('.error_msg').show();
+                        clearInterval(UPD.timerCheck);
+                    } else {
+                        var percent = ((size / UPD.ecosystems_sizes[UPD.chosen_eco]) * 100).toFixed(2);
+                        $('#percent').text(percent + "%");
+                        $('#percent').show();
+                    }
+
+                    if (msg.includes("OK")){
+                        clearInterval(UPD.timerCheck);
+                        $('#percent').hide();
+                       UPD.nextStep();
+                    }
+
+                    if (msg.includes("FAIL")){
+                        clearInterval(UPD.timerCheck);
+                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                        $('#step_' + UPD.currentStep).find('.error_msg').show();
+                    }
+                });
+            }, 1000);
+
+
+        }).fail(function(msg) {
+            $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+            $('#step_' + UPD.currentStep).find('.error_msg').show();
+            clearInterval(UPD.timerCheck);
+        });
 
     }
 
@@ -411,41 +424,9 @@ $(document).ready(function() {
         })
         .done(function(result) {
             stem_ver = result['stem_ver'];
-            if (stem_ver == "STEM 16") {
-                UPD.type = "SDRlab-122-16/ecosystems";
-                UPD.path_fw = "SDRlab-122-16";
-                $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20.md");
-            } else if (stem_ver == "STEM 16 SLAVE") {
-                UPD.type = "Streaming slave boards/SDRlab-122-16/ecosystems";
-                UPD.path_fw = "Streaming slave boards/SDRlab-122-16";
-                $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20.md");
-            } else if (stem_ver == "STEM 250 12") {
-                UPD.type = "SIGNALlab-250-12/ecosystems";
-                UPD.path_fw = "SIGNALlab-250-12";
-                $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20_250_12.md");
-            } else if (stem_ver == "STEM 250 12 SLAVE") {
-                UPD.type = "Streaming slave boards/SIGNALlab-250-12/ecosystems";
-                UPD.path_fw = "Streaming slave boards/SIGNALlab-250-12";
-                $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG_Z20_250_12.md");
-            } else if (stem_ver == "STEM 14-Z20") {
-                UPD.type = "STEMlab-125-14-Z7020/ecosystems";
-                UPD.path_fw = "STEMlab-125-14-Z7020";
-                $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md");
-            } else if (stem_ver == "STEM 14-Z20 SLAVE") {
-                UPD.type = "Streaming slave boards/STEMlab-125-14-Z7020/ecosystems";
-                UPD.path_fw = "Streaming slave boards/STEMlab-125-14-Z7020";
-                $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md");
-            } else {
-                if (stem_ver.includes("SLAVE")){
-                    UPD.type = "Streaming slave boards/STEMlab-125-1x/ecosystems";
-                    UPD.path_fw = "Streaming slave boards/STEMlab-125-1x";
-                    $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md");
-                }else{
-                    UPD.type = "STEMlab-125-1x/ecosystems";
-                    UPD.path_fw = "STEMlab-125-1x";
-                    $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md");
-                }
-            } 
+            UPD.type = "Unify/ecosystems";
+            UPD.path_fw = "Unify";
+            $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md");
         });
 
     $('#ecosystem_type').change(function() {

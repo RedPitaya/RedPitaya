@@ -1,0 +1,176 @@
+-------------------------------------------------------------------------------
+Arbitrary CAN-FD bus traffic
+-------------------------------------------------------------------------------
+
+These captures are artifically generated CAN-FD messages and are not capturing
+specific vehicle or industrial protocols.
+
+Details:
+https://en.wikipedia.org/wiki/CAN_FD
+
+
+Logic analyzer setup
+--------------------
+
+The logic analyzer used was a Dreamsoucelab DSLogic Plus at a sample rate of
+100MHz.
+
+Channel 0 was hooked up to a PEAK-PCAN-USB Pro CAN-FD device which has two
+CAN ports. Both ports were connected together using a selfmade circuit board.
+
+The bus was externally terminated by adding a 120 Ohm resistor between CAN_L
+and CAN_H.
+
+The data has been generated using PEAK PCAN-View v4.2.1.533 software running
+under Windows 7. Firmware on PCAN-USB Pro was v3.2.0. Driver version was 4.1.4.
+Both ports were opened by running two instances of the software. One for each
+port. All ACKs were handled by the participants.
+
+
+can_fd_std_without_brs_8.sr
+---------------------------
+
+This shows a single CAN-FD message with 8 bytes of data without
+Bitrate Switch (BRS).
+
+Nominal bitrate: 1M (CLK: 80MHz, BRP: 10, TSeg1: 5, Tseg2: 2, Sjw: 1, SPP: 75%)
+Data bitrate: 2M (ignored, since BRS is disabled)
+Extended frame: No
+BRS: No
+11898-1 ISO-mode: On
+ID: 0x42
+Length: 8 bytes
+Data is counting up from 0x00 to 0x07
+
+
+can_fd_without_brs_64.sr
+------------------------
+
+This shows a single CAN-FD message with 64 bytes of data without
+Bitrate Switch (BRS).
+
+Host Clock: 80MHz
+Nominal Bitrate: 1M (BRP: 10, TSeg1: 5, Tseg2: 2, Sjw: 1, SPP: 75%)
+Data Bitrate: 2M (Ignored, since BRS is disabled)
+Extended Frame: No
+BRS: No
+11898-1 ISO-Mode: On
+ID: 0x42
+Length: 8 bytes
+Data is counting up from 0x00 to 0x07
+
+
+can_fd_std_without_brs_64.sr
+----------------------------
+
+This shows a single CAN-FD message with 64 bytes of data without
+Bitrate Switch (BRS).
+
+Host Clock: 80MHz
+Nominal Bitrate: 1M (BRP: 10, TSeg1: 5, Tseg2: 2, Sjw: 1, SPP: 75%)
+Data Bitrate: 2M (Ignored, since BRS is disabled)
+Extended Frame: No
+BRS: No
+11898-1 ISO-Mode: On
+ID: 0x42
+Length: 64 bytes
+Data is counting up from 0x00 to 0x3F
+
+
+can_fd_ext_without_brs_8.sr
+---------------------------
+
+This shows a single CAN-FD message with 8 bytes of data without
+Bitrate Switch (BRS).
+
+Host Clock: 80MHz
+Nominal Bitrate: 1M (BRP: 10, TSeg1: 5, Tseg2: 2, Sjw: 1, SPP: 75%)
+Data Bitrate: 2M (Ignored, since BRS is disabled)
+Extended Frame: Yes
+BRS: No
+11898-1 ISO-Mode: On
+ID: 0x42
+Length: 8 bytes
+Data is counting up from 0x00 to 0x07
+
+
+can_fd_ext_without_brs_64.sr
+----------------------------
+
+This shows a single CAN-FD message with 64 bytes of data without
+Bitrate Switch (BRS).
+
+Host Clock: 80MHz
+Nominal Bitrate: 1M (BRP: 10, TSeg1: 5, Tseg2: 2, Sjw: 1, SPP: 75%)
+Data Bitrate: 2M (Ignored, since BRS is disabled)
+Extended Frame: Yes
+BRS: No
+11898-1 ISO-Mode: On
+ID: 0x42
+Length: 64 bytes
+Data is counting up from 0x00 to 0x3F
+
+
+can_fd_std_brs_8.sr
+-------------------
+
+This shows a single CAN-FD message with 64 bytes of data with Bitrate Switch (BRS).
+
+Host Clock: 80MHz
+Nominal Bitrate: 1M (BRP: 10, TSeg1: 5, Tseg2: 2, Sjw: 1, SPP: 75%)
+Data Bitrate: 2M (BRP: 4, TSeg1: 7, Tseg2: 2, Sjw: 1, SPP: 80%)
+Extended Frame: No
+BRS: Yes
+11898-1 ISO-Mode: On
+ID: 0x42
+Length: 8 bytes
+Data is counting up from 0x00 to 0x07
+
+
+can_fd_std_brs_64.sr
+--------------------
+
+This shows a single CAN-FD message with 64 bytes of data with Bitrate Switch (BRS).
+
+Host Clock: 80MHz
+Nominal Bitrate: 1M (BRP: 10, TSeg1: 5, Tseg2: 2, Sjw: 1, SPP: 75%)
+Data Bitrate: 2M (BRP: 4, TSeg1: 7, Tseg2: 2, Sjw: 1, SPP: 80%)
+Extended Frame: No
+BRS: Yes
+11898-1 ISO-Mode: On
+ID: 0x42
+Length: 64 bytes
+Data is counting up from 0x00 to 0x3F
+
+
+can_fd_ext_brs_8.sr
+-------------------
+
+This shows a single CAN-FD message with 64 bytes of data with Bitrate Switch (BRS).
+
+Host Clock: 80MHz
+Nominal Bitrate: 1M (BRP: 10, TSeg1: 5, Tseg2: 2, Sjw: 1, SPP: 75%)
+Data Bitrate: 2M (BRP: 4, TSeg1: 7, Tseg2: 2, Sjw: 1, SPP: 80%)
+Extended Frame: Yes
+BRS: Yes
+11898-1 ISO-Mode: On
+ID: 0x42
+Length: 8 bytes
+Data is counting up from 0x00 to 0x07
+
+
+can_fd_ext_brs_64.sr
+--------------------
+
+This shows a single CAN-FD message with 64 bytes of data with Bitrate Switch (BRS).
+
+Host Clock: 80MHz
+Nominal Bitrate: 1M (BRP: 10, TSeg1: 5, Tseg2: 2, Sjw: 1, SPP: 75%)
+Data Bitrate: 2M (BRP: 4, TSeg1: 7, Tseg2: 2, Sjw: 1, SPP: 80%)
+Extended Frame: Yes
+BRS: Yes
+11898-1 ISO-Mode: On
+ID: 0x42
+Length: 64 bytes
+Data is counting up from 0x00 to 0x3F
+

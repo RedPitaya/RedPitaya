@@ -3,24 +3,6 @@
 #include "calib.h"
 
 
-void PrintLogInFile2(const char *message){
-	std::time_t result = std::time(nullptr);
-	std::fstream fs;
-  	fs.open ("/tmp/debug.log", std::fstream::in | std::fstream::out | std::fstream::app);
-	fs << std::asctime(std::localtime(&result)) << " : " << message << "\n";
-	fs.close();
-}
-
-float calibFullScaleToVoltage(uint32_t fullScaleGain) {
-    if (fullScaleGain == 0) return 1;
-    return (float) ((float)fullScaleGain  * 100.0 / ((uint64_t)1<<32));
-}
-
-uint32_t calibFullScaleFromVoltage(float voltageScale) {
-    return (uint32_t) (voltageScale / 100.0 * ((uint64_t)1<<32));
-}
-
-
 CCalib::Ptr CCalib::Create(COscilloscope::Ptr _acq)
 {
     return std::make_shared<CCalib>(_acq);
@@ -28,11 +10,14 @@ CCalib::Ptr CCalib::Create(COscilloscope::Ptr _acq)
 
 CCalib::CCalib(COscilloscope::Ptr _acq):
 m_acq(_acq),
-m_current_step(-1)
+m_current_step(-1),
+m_channels(0)
 {
-   m_pass_data.ch1 = 0;
-   m_pass_data.ch2 = 0;
-   m_calib_parameters_old = rp_GetCalibrationSettings();
+    m_channels = getADCChannels();
+    for(int i = 0; i < m_channels; i++){
+        m_pass_data.ch[i] = 0;
+    }
+    m_calib_parameters_old = rp_GetCalibrationSettings();
 }
 
 CCalib::~CCalib()
@@ -41,27 +26,59 @@ CCalib::~CCalib()
 }
 
 int CCalib::resetCalibToZero(){
-    return rp_CalibrationReset();
+    return rp_CalibrationReset(false,true);
 }
 
 int CCalib::resetCalibToFactory(){
-    return rp_CalibrationFactoryReset();
+    return rp_CalibrationFactoryReset(true);
 }
 
 void CCalib::restoreCalib(){
-    rp_CalibrationWriteParams(m_calib_parameters_old);
+    rp_CalibrationWriteParams(m_calib_parameters_old,false);
     rp_CalibInit();
 }
 
 int CCalib::calib(uint16_t _step,float _refdc){
-    return calib_board(_step,_refdc);
+    switch (getModel())
+    {
+        case STEM_125_10_v1_0:
+        case STEM_125_14_v1_0:
+        case STEM_125_14_v1_1:
+        case STEM_125_14_LN_v1_1:
+        case STEM_125_14_Z7020_v1_0:
+        case STEM_125_14_Z7020_LN_v1_1:
+            return calib_board_z10(_step,_refdc);
+
+        case STEM_122_16SDR_v1_0:
+        case STEM_122_16SDR_v1_1:{
+            fprintf(stderr,"[Error] Board can't be calibrate\n");
+            exit(-1);
+        }
+
+
+        case STEM_125_14_Z7020_4IN_v1_0:
+        case STEM_125_14_Z7020_4IN_v1_2:
+        case STEM_125_14_Z7020_4IN_v1_3:
+            return calib_board_z20_4ch(_step,_refdc);
+
+        case STEM_250_12_v1_0:
+        case STEM_250_12_v1_1:
+        case STEM_250_12_v1_2:
+        case STEM_250_12_v1_2a:
+        case STEM_250_12_120:
+            return calib_board_z20_250_12(_step,_refdc);
+        default:
+            fprintf(stderr,"[Error] Can't get board model\n");
+            exit(-1);
+    }
+    return 0;
 }
 
 COscilloscope::DataPass CCalib::getData(int skip_read){
     auto old_d = m_acq->getData();
     while(skip_read > 0){
         auto new_d = m_acq->getData();
-        skip_read -= (new_d.index - old_d.index); 
+        skip_read -= (new_d.index - old_d.index);
         old_d = new_d;
         std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
@@ -72,8 +89,8 @@ CCalib::DataPass CCalib::getCalibData(){
     return m_pass_data;
 }
 
-#if defined Z10 || defined Z20_125
-int CCalib::calib_board(uint16_t _step,float _refdc){
+
+int CCalib::calib_board_z10(uint16_t _step,float _refdc){
     if (m_current_step == _step) return 0;
     m_current_step = _step;
     switch(_step){
@@ -88,72 +105,76 @@ int CCalib::calib_board(uint16_t _step,float _refdc){
         case 1: {
             m_acq->setHV();
             auto x = getData(10);
-            m_calib_parameters.fe_ch1_hi_offs = x.ch1_avg_raw;
-            m_calib_parameters.fe_ch2_hi_offs = x.ch2_avg_raw;
-            m_pass_data.ch1 = m_calib_parameters.fe_ch1_hi_offs;
-            m_pass_data.ch2 = m_calib_parameters.fe_ch2_hi_offs;
-            rp_CalibrationWriteParams(m_calib_parameters);
+            m_calib_parameters.fast_adc_1_20[0].offset = x.ch_avg_raw[0];
+            m_calib_parameters.fast_adc_1_20[1].offset = x.ch_avg_raw[1];
+            rp_CalibrationWriteParams(m_calib_parameters,false);
             rp_CalibInit();
+            m_calib_parameters = rp_GetCalibrationSettings();
+            m_pass_data.ch[0] = m_calib_parameters.fast_adc_1_20[0].offset;
+            m_pass_data.ch[1] = m_calib_parameters.fast_adc_1_20[1].offset;
             return 0;
         }
 
         case 2: {
             m_acq->setHV();
             auto x = getData(10);
-            uint32_t ch1_calib = calibFullScaleFromVoltage(1.f * _refdc / x.ch1_avg);
-            uint32_t ch2_calib = calibFullScaleFromVoltage(1.f * _refdc / x.ch2_avg);
-            m_calib_parameters.fe_ch1_fs_g_hi = ch1_calib;
-            m_calib_parameters.fe_ch2_fs_g_hi = ch2_calib;
-            m_pass_data.ch1 = m_calib_parameters.fe_ch1_fs_g_hi;
-            m_pass_data.ch2 = m_calib_parameters.fe_ch2_fs_g_hi;
-            rp_CalibrationWriteParams(m_calib_parameters);
+            m_calib_parameters.fast_adc_1_20[0].gainCalc = _refdc / x.ch_avg[0];
+            m_calib_parameters.fast_adc_1_20[1].gainCalc = _refdc / x.ch_avg[1];
+            rp_CalibrationWriteParams(m_calib_parameters,false);
             rp_CalibInit();
+            m_calib_parameters = rp_GetCalibrationSettings();
+            m_pass_data.ch[0] = m_calib_parameters.fast_adc_1_20[0].calibValue;
+            m_pass_data.ch[1] = m_calib_parameters.fast_adc_1_20[1].calibValue;
             return 0;
         }
 
         case 3: {
             m_acq->setLV();
             auto x = getData(10);
-            m_calib_parameters.fe_ch1_lo_offs = x.ch1_avg_raw;
-            m_calib_parameters.fe_ch2_lo_offs = x.ch2_avg_raw;
-            m_pass_data.ch1 = m_calib_parameters.fe_ch1_lo_offs;
-            m_pass_data.ch2 = m_calib_parameters.fe_ch2_lo_offs;
-            rp_CalibrationWriteParams(m_calib_parameters);
+            m_calib_parameters.fast_adc_1_1[0].offset = x.ch_avg_raw[0];
+            m_calib_parameters.fast_adc_1_1[1].offset = x.ch_avg_raw[1];
+            rp_CalibrationWriteParams(m_calib_parameters,false);
             rp_CalibInit();
+            m_calib_parameters = rp_GetCalibrationSettings();
+            m_pass_data.ch[0] = m_calib_parameters.fast_adc_1_1[0].offset;
+            m_pass_data.ch[1] = m_calib_parameters.fast_adc_1_1[1].offset;
             return 0;
         }
 
         case 4: {
             m_acq->setLV();
             auto x = getData(10);
-            uint32_t ch1_calib = calibFullScaleFromVoltage(20.f * _refdc / x.ch1_avg);
-            uint32_t ch2_calib = calibFullScaleFromVoltage(20.f * _refdc / x.ch2_avg);
-            m_calib_parameters.fe_ch1_fs_g_lo = ch1_calib;
-            m_calib_parameters.fe_ch2_fs_g_lo = ch2_calib;
-            m_pass_data.ch1 = m_calib_parameters.fe_ch1_fs_g_lo;
-            m_pass_data.ch2 = m_calib_parameters.fe_ch2_fs_g_lo;
-            rp_CalibrationWriteParams(m_calib_parameters);
+            m_calib_parameters.fast_adc_1_1[0].gainCalc = _refdc / x.ch_avg[0];
+            m_calib_parameters.fast_adc_1_1[1].gainCalc = _refdc / x.ch_avg[1];
+            rp_CalibrationWriteParams(m_calib_parameters,false);
             rp_CalibInit();
+            m_calib_parameters = rp_GetCalibrationSettings();
+            m_pass_data.ch[0] = m_calib_parameters.fast_adc_1_1[0].calibValue;
+            m_pass_data.ch[1] = m_calib_parameters.fast_adc_1_1[1].calibValue;
             return 0;
         }
 
         case 5: {
-            m_acq->setGEN_DISABLE();
+            m_acq->setGEN0();
             m_acq->setLV();
             std::this_thread::sleep_for(std::chrono::microseconds(1000));
             return 0;
         }
 
         case 6: {
-            m_acq->setGEN_DISABLE();
+            m_acq->setGEN0();
             m_acq->setLV();
             auto x = getData(30);
-            m_calib_parameters.be_ch1_dc_offs = x.ch1_avg * -(1 << ADC_BITS-1);
-            m_calib_parameters.be_ch2_dc_offs = x.ch2_avg * -(1 << ADC_BITS-1);
-            m_pass_data.ch1 = m_calib_parameters.be_ch1_dc_offs;
-            m_pass_data.ch2 = m_calib_parameters.be_ch2_dc_offs;
-            rp_CalibrationWriteParams(m_calib_parameters);
+
+            auto bits = rp_HPGetFastADCBitsOrDefault();
+
+            m_calib_parameters.fast_dac_x1[0].offset = x.ch_avg[0] * -(1 << bits-1);
+            m_calib_parameters.fast_dac_x1[1].offset = x.ch_avg[1] * -(1 << bits-1);
+            rp_CalibrationWriteParams(m_calib_parameters,false);
             rp_CalibInit();
+            m_calib_parameters = rp_GetCalibrationSettings();
+            m_pass_data.ch[0] = m_calib_parameters.fast_dac_x1[0].offset;
+            m_pass_data.ch[1] = m_calib_parameters.fast_dac_x1[1].offset;
             return 0;
         }
 
@@ -169,14 +190,15 @@ int CCalib::calib_board(uint16_t _step,float _refdc){
             std::this_thread::sleep_for(std::chrono::microseconds(1000));
             m_acq->setLV();
             auto x = getData(30);
-            uint32_t ch1_calib = calibFullScaleFromVoltage(1.f * x.ch1_avg / 0.5);
-            uint32_t ch2_calib = calibFullScaleFromVoltage(1.f * x.ch2_avg / 0.5);
-            m_calib_parameters.be_ch1_fs = ch1_calib;
-            m_calib_parameters.be_ch2_fs = ch2_calib;
-            m_pass_data.ch1 = m_calib_parameters.be_ch1_fs;
-            m_pass_data.ch2 = m_calib_parameters.be_ch2_fs;
-            rp_CalibrationWriteParams(m_calib_parameters);
+            // uint32_t ch1_calib = calibFullScaleFromVoltage(1.f * x.ch_avg[0] / 0.5);
+            // uint32_t ch2_calib = calibFullScaleFromVoltage(1.f * x.ch_avg[1] / 0.5);
+            m_calib_parameters.fast_dac_x1[0].gainCalc = 0.5 / x.ch_avg[0];
+            m_calib_parameters.fast_dac_x1[1].gainCalc = 0.5 / x.ch_avg[1];
+            rp_CalibrationWriteParams(m_calib_parameters,false);
             rp_CalibInit();
+            m_calib_parameters = rp_GetCalibrationSettings();
+            m_pass_data.ch[0] = m_calib_parameters.fast_dac_x1[0].calibValue;
+            m_pass_data.ch[1] = m_calib_parameters.fast_dac_x1[1].calibValue;
             m_acq->setGEN0_5();
             std::this_thread::sleep_for(std::chrono::microseconds(1000));
             return 0;
@@ -184,10 +206,90 @@ int CCalib::calib_board(uint16_t _step,float _refdc){
     }
     return 0;
 }
-#endif
 
-#ifdef Z20_250_12
-int CCalib::calib_board(uint16_t _step,float _refdc){
+
+int CCalib::calib_board_z20_4ch(uint16_t _step,float _refdc){
+    if (m_current_step == _step) return 0;
+    m_current_step = _step;
+    switch(_step){
+        case 0: {
+            m_acq->startNormal();
+            m_calib_parameters_old = rp_GetCalibrationSettings();
+            resetCalibToZero();
+            m_calib_parameters = rp_GetCalibrationSettings();
+            return 0;
+        }
+
+        case 1: {
+            m_acq->setHV();
+            auto x = getData(10);
+            for(int ch = 0; ch < m_channels; ch++){
+                m_calib_parameters.fast_adc_1_20[ch].offset = x.ch_avg_raw[ch];
+            }
+            rp_CalibrationWriteParams(m_calib_parameters,false);
+            rp_CalibInit();
+
+            m_calib_parameters = rp_GetCalibrationSettings();
+            for(int ch = 0; ch < m_channels; ch++){
+                m_pass_data.ch[ch] = m_calib_parameters.fast_adc_1_20[ch].offset;
+            }
+            return 0;
+        }
+
+        case 2: {
+            m_acq->setHV();
+            auto x = getData(10);
+            for(int ch = 0; ch < m_channels; ch++){
+                m_calib_parameters.fast_adc_1_20[ch].gainCalc = _refdc / x.ch_avg[ch];
+            }
+
+            rp_CalibrationWriteParams(m_calib_parameters,false);
+            rp_CalibInit();
+
+            m_calib_parameters = rp_GetCalibrationSettings();
+            for(int ch = 0; ch < m_channels; ch++){
+                m_pass_data.ch[ch] = m_calib_parameters.fast_adc_1_20[ch].calibValue;
+            }
+            return 0;
+        }
+
+        case 3: {
+            m_acq->setLV();
+            auto x = getData(10);
+             for(int ch = 0; ch < m_channels; ch++){
+                m_calib_parameters.fast_adc_1_1[ch].offset = x.ch_avg_raw[ch];
+            }
+            rp_CalibrationWriteParams(m_calib_parameters,false);
+            rp_CalibInit();
+
+            m_calib_parameters = rp_GetCalibrationSettings();
+            for(int ch = 0; ch < m_channels; ch++){
+                m_pass_data.ch[ch] = m_calib_parameters.fast_adc_1_1[ch].offset;
+            }
+            return 0;
+        }
+
+        case 4: {
+            m_acq->setLV();
+            auto x = getData(10);
+            for(int ch = 0; ch < m_channels; ch++){
+                m_calib_parameters.fast_adc_1_1[ch].gainCalc = _refdc / x.ch_avg[ch];
+            }
+
+            rp_CalibrationWriteParams(m_calib_parameters,false);
+            rp_CalibInit();
+
+            m_calib_parameters = rp_GetCalibrationSettings();
+            for(int ch = 0; ch < m_channels; ch++){
+                m_pass_data.ch[ch] = m_calib_parameters.fast_adc_1_1[ch].calibValue;
+            }
+            return 0;
+        }
+    }
+    return 0;
+}
+
+int CCalib::calib_board_z20_250_12(uint16_t _step,float _refdc){
     if (m_current_step == _step) return 0;
     m_current_step = _step;
     switch(_step){
@@ -209,12 +311,16 @@ int CCalib::calib_board(uint16_t _step,float _refdc){
             m_acq->setLV();
             m_acq->setDC();
             auto x = getData(10);
-            m_calib_parameters.osc_ch1_off_1_dc = x.ch1_avg_raw;
-            m_calib_parameters.osc_ch2_off_1_dc = x.ch2_avg_raw;
-            m_pass_data.ch1 = m_calib_parameters.osc_ch1_off_1_dc;
-            m_pass_data.ch2 = m_calib_parameters.osc_ch2_off_1_dc;
-            rp_CalibrationWriteParams(m_calib_parameters);
+            for(int ch = 0; ch < m_channels; ch++){
+                m_calib_parameters.fast_adc_1_1[ch].offset = x.ch_avg_raw[ch];
+            }
+            rp_CalibrationWriteParams(m_calib_parameters,false);
             rp_CalibInit();
+
+            m_calib_parameters = rp_GetCalibrationSettings();
+            for(int ch = 0; ch < m_channels; ch++){
+                m_pass_data.ch[ch] = m_calib_parameters.fast_adc_1_1[ch].offset;
+            }
             return 0;
         }
 
@@ -222,14 +328,17 @@ int CCalib::calib_board(uint16_t _step,float _refdc){
             m_acq->setDC();
             m_acq->setLV();
             auto x = getData(10);
-            uint32_t ch1_calib = calibFullScaleFromVoltage(20.f * _refdc / x.ch1_avg);
-            uint32_t ch2_calib = calibFullScaleFromVoltage(20.f * _refdc / x.ch2_avg);
-            m_calib_parameters.osc_ch1_g_1_dc = ch1_calib;
-            m_calib_parameters.osc_ch2_g_1_dc = ch2_calib;
-            m_pass_data.ch1 = m_calib_parameters.osc_ch1_g_1_dc;
-            m_pass_data.ch2 = m_calib_parameters.osc_ch2_g_1_dc;
-            rp_CalibrationWriteParams(m_calib_parameters);
+            for(int ch = 0; ch < m_channels; ch++){
+                m_calib_parameters.fast_adc_1_1[ch].gainCalc = _refdc / x.ch_avg[ch];
+            }
+
+            rp_CalibrationWriteParams(m_calib_parameters,false);
             rp_CalibInit();
+
+            m_calib_parameters = rp_GetCalibrationSettings();
+            for(int ch = 0; ch < m_channels; ch++){
+                m_pass_data.ch[ch] = m_calib_parameters.fast_adc_1_1[ch].calibValue;
+            }
             return 0;
         }
 
@@ -239,18 +348,22 @@ int CCalib::calib_board(uint16_t _step,float _refdc){
             std::this_thread::sleep_for(std::chrono::microseconds(1000));
             return 0;
         }
-        
+
 
         case 5: {
             m_acq->setHV();
             m_acq->setDC();
             auto x = getData(10);
-            m_calib_parameters.osc_ch1_off_20_dc = x.ch1_avg_raw;
-            m_calib_parameters.osc_ch2_off_20_dc = x.ch2_avg_raw;
-            m_pass_data.ch1 = m_calib_parameters.osc_ch1_off_20_dc;
-            m_pass_data.ch2 = m_calib_parameters.osc_ch2_off_20_dc;
-            rp_CalibrationWriteParams(m_calib_parameters);
+            for(int ch = 0; ch < m_channels; ch++){
+                m_calib_parameters.fast_adc_1_20[ch].offset = x.ch_avg_raw[ch];
+            }
+            rp_CalibrationWriteParams(m_calib_parameters,false);
             rp_CalibInit();
+
+            m_calib_parameters = rp_GetCalibrationSettings();
+            for(int ch = 0; ch < m_channels; ch++){
+                m_pass_data.ch[ch] = m_calib_parameters.fast_adc_1_20[ch].offset;
+            }
             return 0;
         }
 
@@ -258,19 +371,22 @@ int CCalib::calib_board(uint16_t _step,float _refdc){
             m_acq->setDC();
             m_acq->setHV();
             auto x = getData(10);
-            uint32_t ch1_calib = calibFullScaleFromVoltage(1.f * _refdc / x.ch1_avg);
-            uint32_t ch2_calib = calibFullScaleFromVoltage(1.f * _refdc / x.ch2_avg);
-            m_calib_parameters.osc_ch1_g_20_dc = ch1_calib;
-            m_calib_parameters.osc_ch2_g_20_dc = ch2_calib;
-            m_pass_data.ch1 = m_calib_parameters.osc_ch1_g_20_dc;
-            m_pass_data.ch2 = m_calib_parameters.osc_ch2_g_20_dc;
-            rp_CalibrationWriteParams(m_calib_parameters);
+            for(int ch = 0; ch < m_channels; ch++){
+                m_calib_parameters.fast_adc_1_20[ch].gainCalc = _refdc / x.ch_avg[ch];
+            }
+
+            rp_CalibrationWriteParams(m_calib_parameters,false);
             rp_CalibInit();
+
+            m_calib_parameters = rp_GetCalibrationSettings();
+            for(int ch = 0; ch < m_channels; ch++){
+                m_pass_data.ch[ch] = m_calib_parameters.fast_adc_1_20[ch].calibValue;
+            }
             return 0;
         }
 
         case 7: {
-            m_acq->setGEN_DISABLE();
+            m_acq->setGEN0();
             m_acq->setLV();
             m_acq->setDC();
             m_acq->setGenGainx1();
@@ -279,17 +395,20 @@ int CCalib::calib_board(uint16_t _step,float _refdc){
         }
 
         case 8: {
-            m_acq->setGEN_DISABLE();
+            m_acq->setGEN0();
             m_acq->setLV();
             m_acq->setDC();
             m_acq->setGenGainx1();
             auto x = getData(30);
-            m_calib_parameters.gen_ch1_off_1 = x.ch1_avg * -(1 << ADC_BITS-1);
-            m_calib_parameters.gen_ch2_off_1 = x.ch2_avg * -(1 << ADC_BITS-1);
-            m_pass_data.ch1 = m_calib_parameters.gen_ch1_off_1;
-            m_pass_data.ch2 = m_calib_parameters.gen_ch2_off_1;
-            rp_CalibrationWriteParams(m_calib_parameters);
+            auto bits = rp_HPGetFastADCBitsOrDefault();
+
+            m_calib_parameters.fast_dac_x1[0].offset = x.ch_avg[0] * -(1 << bits-1);
+            m_calib_parameters.fast_dac_x1[1].offset = x.ch_avg[1] * -(1 << bits-1);
+            rp_CalibrationWriteParams(m_calib_parameters,false);
             rp_CalibInit();
+            m_calib_parameters = rp_GetCalibrationSettings();
+            m_pass_data.ch[0] = m_calib_parameters.fast_dac_x1[0].offset;
+            m_pass_data.ch[1] = m_calib_parameters.fast_dac_x1[1].offset;
             return 0;
         }
 
@@ -309,21 +428,20 @@ int CCalib::calib_board(uint16_t _step,float _refdc){
             m_acq->setLV();
             std::this_thread::sleep_for(std::chrono::microseconds(1000));
             auto x = getData(30);
-            uint32_t ch1_calib = calibFullScaleFromVoltage(2.f * x.ch1_avg / 0.5);
-            uint32_t ch2_calib = calibFullScaleFromVoltage(2.f * x.ch2_avg / 0.5);
-            m_calib_parameters.gen_ch1_g_1 = ch1_calib;
-            m_calib_parameters.gen_ch2_g_1 = ch2_calib;
-            m_pass_data.ch1 = m_calib_parameters.gen_ch1_g_1;
-            m_pass_data.ch2 = m_calib_parameters.gen_ch2_g_1;
-            rp_CalibrationWriteParams(m_calib_parameters);
+            m_calib_parameters.fast_dac_x1[0].gainCalc = 0.5 / x.ch_avg[0];
+            m_calib_parameters.fast_dac_x1[1].gainCalc = 0.5 / x.ch_avg[1];
+            rp_CalibrationWriteParams(m_calib_parameters,false);
             rp_CalibInit();
+            m_calib_parameters = rp_GetCalibrationSettings();
+            m_pass_data.ch[0] = m_calib_parameters.fast_dac_x1[0].calibValue;
+            m_pass_data.ch[1] = m_calib_parameters.fast_dac_x1[1].calibValue;
             m_acq->setGEN0_5();
             std::this_thread::sleep_for(std::chrono::microseconds(1000));
             return 0;
         }
 
         case 11: {
-            m_acq->setGEN_DISABLE();
+            m_acq->setGEN0();
             m_acq->setLV();
             m_acq->setDC();
             m_acq->setGenGainx5();
@@ -332,17 +450,20 @@ int CCalib::calib_board(uint16_t _step,float _refdc){
         }
 
         case 12: {
-            m_acq->setGEN_DISABLE();
+            m_acq->setGEN0();
             m_acq->setLV();
             m_acq->setDC();
             m_acq->setGenGainx5();
             auto x = getData(30);
-            m_calib_parameters.gen_ch1_off_5 = (x.ch1_avg * -(1 << ADC_BITS-1)) / 5.0;
-            m_calib_parameters.gen_ch2_off_5 = (x.ch2_avg * -(1 << ADC_BITS-1)) / 5.0;
-            m_pass_data.ch1 = m_calib_parameters.gen_ch1_off_5;
-            m_pass_data.ch2 = m_calib_parameters.gen_ch2_off_5;
-            rp_CalibrationWriteParams(m_calib_parameters);
+            auto bits = rp_HPGetFastADCBitsOrDefault();
+
+            m_calib_parameters.fast_dac_x5[0].offset = x.ch_avg[0] * -(1 << bits-1);
+            m_calib_parameters.fast_dac_x5[1].offset = x.ch_avg[1] * -(1 << bits-1);
+            rp_CalibrationWriteParams(m_calib_parameters,false);
             rp_CalibInit();
+            m_calib_parameters = rp_GetCalibrationSettings();
+            m_pass_data.ch[0] = m_calib_parameters.fast_dac_x5[0].offset;
+            m_pass_data.ch[1] = m_calib_parameters.fast_dac_x5[1].offset;
             return 0;
         }
 
@@ -362,14 +483,13 @@ int CCalib::calib_board(uint16_t _step,float _refdc){
             m_acq->setHV();
             std::this_thread::sleep_for(std::chrono::microseconds(1000));
             auto x = getData(30);
-            uint32_t ch1_calib = calibFullScaleFromVoltage(2.f * x.ch1_avg / 2.5);
-            uint32_t ch2_calib = calibFullScaleFromVoltage(2.f * x.ch2_avg / 2.5);
-            m_calib_parameters.gen_ch1_g_5 = ch1_calib;
-            m_calib_parameters.gen_ch2_g_5 = ch2_calib;
-            m_pass_data.ch1 = m_calib_parameters.gen_ch1_g_5;
-            m_pass_data.ch2 = m_calib_parameters.gen_ch2_g_5;
-            rp_CalibrationWriteParams(m_calib_parameters);
+            m_calib_parameters.fast_dac_x5[0].gainCalc = 2.5 / x.ch_avg[0];
+            m_calib_parameters.fast_dac_x5[1].gainCalc = 2.5 / x.ch_avg[1];
+            rp_CalibrationWriteParams(m_calib_parameters,false);
             rp_CalibInit();
+            m_calib_parameters = rp_GetCalibrationSettings();
+            m_pass_data.ch[0] = m_calib_parameters.fast_dac_x5[0].calibValue;
+            m_pass_data.ch[1] = m_calib_parameters.fast_dac_x5[1].calibValue;
             m_acq->setGEN0_5();
             std::this_thread::sleep_for(std::chrono::microseconds(1000));
             return 0;
@@ -390,12 +510,16 @@ int CCalib::calib_board(uint16_t _step,float _refdc){
             m_acq->setAC();
             m_acq->setGenGainx1();
             auto x = getData(10);
-            m_calib_parameters.osc_ch1_off_1_ac = x.ch1_avg_raw;
-            m_calib_parameters.osc_ch2_off_1_ac = x.ch2_avg_raw;
-            m_pass_data.ch1 = m_calib_parameters.osc_ch1_off_1_ac;
-            m_pass_data.ch2 = m_calib_parameters.osc_ch2_off_1_ac;
-            rp_CalibrationWriteParams(m_calib_parameters);
+            for(int ch = 0; ch < m_channels; ch++){
+                m_calib_parameters.fast_adc_1_1_ac[ch].offset = x.ch_avg_raw[ch];
+            }
+            rp_CalibrationWriteParams(m_calib_parameters,false);
             rp_CalibInit();
+
+            m_calib_parameters = rp_GetCalibrationSettings();
+            for(int ch = 0; ch < m_channels; ch++){
+                m_pass_data.ch[ch] = m_calib_parameters.fast_adc_1_1_ac[ch].offset;
+            }
             return 0;
         }
 
@@ -414,14 +538,17 @@ int CCalib::calib_board(uint16_t _step,float _refdc){
             m_acq->setAC();
             m_acq->setGenGainx1();
             auto x = getData(30);
-            uint32_t ch1_calib = calibFullScaleFromVoltage(20.f * 0.5 / x.ch1_max);
-            uint32_t ch2_calib = calibFullScaleFromVoltage(20.f * 0.5 / x.ch2_max);
-            m_calib_parameters.osc_ch1_g_1_ac = ch1_calib;
-            m_calib_parameters.osc_ch2_g_1_ac = ch2_calib;
-            m_pass_data.ch1 = m_calib_parameters.osc_ch1_g_1_ac;
-            m_pass_data.ch2 = m_calib_parameters.osc_ch2_g_1_ac;
-            rp_CalibrationWriteParams(m_calib_parameters);
+            for(int ch = 0; ch < m_channels; ch++){
+                m_calib_parameters.fast_adc_1_1_ac[ch].gainCalc = _refdc / x.ch_avg[ch];
+            }
+
+            rp_CalibrationWriteParams(m_calib_parameters,false);
             rp_CalibInit();
+
+            m_calib_parameters = rp_GetCalibrationSettings();
+            for(int ch = 0; ch < m_channels; ch++){
+                m_pass_data.ch[ch] = m_calib_parameters.fast_adc_1_1_ac[ch].calibValue;
+            }
             return 0;
         }
 
@@ -440,12 +567,16 @@ int CCalib::calib_board(uint16_t _step,float _refdc){
             m_acq->setAC();
             m_acq->setGenGainx1();
             auto x = getData(10);
-            m_calib_parameters.osc_ch1_off_20_ac = x.ch1_avg_raw;
-            m_calib_parameters.osc_ch2_off_20_ac = x.ch2_avg_raw;
-            m_pass_data.ch1 = m_calib_parameters.osc_ch1_off_20_ac;
-            m_pass_data.ch2 = m_calib_parameters.osc_ch2_off_20_ac;
-            rp_CalibrationWriteParams(m_calib_parameters);
+            for(int ch = 0; ch < m_channels; ch++){
+                m_calib_parameters.fast_adc_1_20_ac[ch].offset = x.ch_avg_raw[ch];
+            }
+            rp_CalibrationWriteParams(m_calib_parameters,false);
             rp_CalibInit();
+
+            m_calib_parameters = rp_GetCalibrationSettings();
+            for(int ch = 0; ch < m_channels; ch++){
+                m_pass_data.ch[ch] = m_calib_parameters.fast_adc_1_20_ac[ch].offset;
+            }
             return 0;
         }
 
@@ -464,18 +595,20 @@ int CCalib::calib_board(uint16_t _step,float _refdc){
             m_acq->setAC();
             m_acq->setGenGainx5();
             auto x = getData(30);
-            uint32_t ch1_calib = calibFullScaleFromVoltage(1.f * 2.5 / x.ch1_max);
-            uint32_t ch2_calib = calibFullScaleFromVoltage(1.f * 2.5 / x.ch2_max);
-            m_calib_parameters.osc_ch1_g_20_ac = ch1_calib;
-            m_calib_parameters.osc_ch2_g_20_ac = ch2_calib;
-            m_pass_data.ch1 = m_calib_parameters.osc_ch1_g_20_ac;
-            m_pass_data.ch2 = m_calib_parameters.osc_ch2_g_20_ac;
-            rp_CalibrationWriteParams(m_calib_parameters);
+            for(int ch = 0; ch < m_channels; ch++){
+                m_calib_parameters.fast_adc_1_20_ac[ch].gainCalc = _refdc / x.ch_avg[ch];
+            }
+
+            rp_CalibrationWriteParams(m_calib_parameters,false);
             rp_CalibInit();
+
+            m_calib_parameters = rp_GetCalibrationSettings();
+            for(int ch = 0; ch < m_channels; ch++){
+                m_pass_data.ch[ch] = m_calib_parameters.fast_adc_1_20_ac[ch].calibValue;
+            }
             return 0;
         }
-       
+
     }
     return 0;
 }
-#endif

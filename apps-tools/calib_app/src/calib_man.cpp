@@ -3,16 +3,6 @@
 #include "calib_man.h"
 
 
-float calibFullScaleToVoltageMan(uint32_t fullScaleGain) {
-    if (fullScaleGain == 0) return 1;
-    return (float) ((float)fullScaleGain  * 100.0 / ((uint64_t)1<<32));
-}
-
-uint32_t calibFullScaleFromVoltageMan(float voltageScale) {
-    return (uint32_t) (voltageScale / 100.0 * ((uint64_t)1<<32));
-}
-
-
 CCalibMan::Ptr CCalibMan::Create(COscilloscope::Ptr _acq)
 {
     return std::make_shared<CCalibMan>(_acq);
@@ -23,42 +13,47 @@ m_acq(_acq),
 m_calibMode(0)
 {
     m_currentGain = RP_LOW;
-#ifdef Z20_250_12
     m_currentAC_DC = RP_DC;
     m_currentGenGain = RP_GAIN_1X;
-#endif
     readCalib();
 }
 
 CCalibMan::~CCalibMan()
 {
-
 }
 
 void CCalibMan::init(){
     m_acq->startNormal();
-    m_acq->resetGen();
+    if (getDACChannels() >= 2){
+        m_acq->resetGen();
+    }
+
     m_currentGain = RP_LOW;
     m_acq->setLV();
-#ifdef Z20_250_12
-    m_currentAC_DC = RP_DC;
-    m_acq->setDC();
-    m_currentGenGain = RP_GAIN_1X;
-    m_acq->setGenGainx1();
-#endif
+    if (rp_HPGetFastADCIsAC_DCOrDefault()){
+        m_currentAC_DC = RP_DC;
+        m_acq->setDC();
+    }
+    if (rp_HPGetIsGainDACx5OrDefault()){
+        m_currentGenGain = RP_GAIN_1X;
+        m_acq->setGenGainx1();
+    }
     readCalib();
     m_calibMode = 0;
 }
 
 void CCalibMan::initSq(int _decimation){
     m_acq->startSquare(_decimation);
-	this->setModeLV_HV(RP_LOW);	
+	m_acq->setHyst(0.05);
+    this->setModeLV_HV(RP_LOW);
 	this->changeChannel(RP_CH_1);
-    setGenType(RP_CH_1,(int)RP_WAVEFORM_SQUARE);
-    setGenType(RP_CH_2,(int)RP_WAVEFORM_SQUARE);    
-    m_acq->setHyst(0.05);
-    enableGen(RP_CH_1,false);
-    enableGen(RP_CH_2,false);
+    if (getDACChannels() >= 2){
+        setGenType(RP_CH_1,(int)RP_WAVEFORM_SQUARE);
+        setGenType(RP_CH_2,(int)RP_WAVEFORM_SQUARE);
+        enableGen(RP_CH_1,false);
+        enableGen(RP_CH_2,false);
+    }
+
     readCalib();
     m_calibMode = 1;
 }
@@ -92,7 +87,7 @@ void CCalibMan::updateCalib(){
 
 void CCalibMan::writeCalib(){
     readCalib();
-    rp_CalibrationWriteParams(m_calib_parameters);
+    rp_CalibrationWriteParams(m_calib_parameters,false);
 }
 
 void CCalibMan::setModeLV_HV(rp_pinState_t _mode){
@@ -109,8 +104,12 @@ rp_pinState_t CCalibMan::getModeLV_HV(){
     return m_currentGain;
 }
 
-#ifdef Z20_250_12
 void CCalibMan::setModeAC_DC(rp_acq_ac_dc_mode_t _mode){
+    if (!rp_HPGetFastADCIsAC_DCOrDefault()){
+        fprintf(stderr,"[Error:setDC] AC/DC mode not present on board\n");
+        exit(-1);
+    }
+
     m_currentAC_DC = _mode;
     if (m_currentAC_DC == RP_DC){
         m_acq->setDC();
@@ -125,6 +124,11 @@ rp_acq_ac_dc_mode_t CCalibMan::getModeAC_DC(){
 }
 
 void CCalibMan::setGenGain(rp_gen_gain_t _mode){
+    if (!rp_HPGetIsGainDACx5OrDefault()){
+        fprintf(stderr,"[Error:setDC] Gen gain mode not present on board\n");
+        exit(-1);
+    }
+
     m_currentGenGain = _mode;
     if (m_currentGenGain == RP_GAIN_1X){
         m_acq->setGenGainx1();
@@ -135,124 +139,116 @@ void CCalibMan::setGenGain(rp_gen_gain_t _mode){
 }
 
 rp_gen_gain_t CCalibMan::getGenGain(){
-    return m_currentGenGain; 
-}           
-#endif
+    return m_currentGenGain;
+}
 
-int CCalibMan::getCalibValue(ClalibValue _type){
+double CCalibMan::getCalibValue(rp_channel_t ch,ClalibValue _type){
     auto g = getModeLV_HV();
-#ifdef Z20_250_12
     auto ac_dc = getModeAC_DC();
     auto gen_g = getGenGain();
-    switch (_type)
-    {
-        case ADC_CH1_OFF:  {
-            if (g == RP_LOW)  return  (ac_dc == RP_DC) ? m_calib_parameters.osc_ch1_off_1_dc  : m_calib_parameters.osc_ch1_off_1_ac;
-            if (g == RP_HIGH) return  (ac_dc == RP_DC) ? m_calib_parameters.osc_ch1_off_20_dc : m_calib_parameters.osc_ch1_off_20_ac;
-            break;
-        }
-        
-        case ADC_CH2_OFF:  {
-            if (g == RP_LOW)  return  (ac_dc == RP_DC) ? m_calib_parameters.osc_ch2_off_1_dc  : m_calib_parameters.osc_ch2_off_1_ac;
-            if (g == RP_HIGH) return  (ac_dc == RP_DC) ? m_calib_parameters.osc_ch2_off_20_dc : m_calib_parameters.osc_ch2_off_20_ac;
-            break;
-        }
-        
-        case ADC_CH1_GAIN: {
-            if (g == RP_LOW)  return  (ac_dc == RP_DC) ? m_calib_parameters.osc_ch1_g_1_dc  : m_calib_parameters.osc_ch1_g_1_ac;
-            if (g == RP_HIGH) return  (ac_dc == RP_DC) ? m_calib_parameters.osc_ch1_g_20_dc : m_calib_parameters.osc_ch1_g_20_ac;
-            break;
-        }
 
-        case ADC_CH2_GAIN: {
-            if (g == RP_LOW)  return  (ac_dc == RP_DC) ? m_calib_parameters.osc_ch2_g_1_dc  : m_calib_parameters.osc_ch2_g_1_ac;
-            if (g == RP_HIGH) return  (ac_dc == RP_DC) ? m_calib_parameters.osc_ch2_g_20_dc : m_calib_parameters.osc_ch2_g_20_ac;
-            break;
-        }
-
-        case DAC_CH1_OFF:  return  (gen_g == RP_GAIN_1X) ? m_calib_parameters.gen_ch1_off_1  : m_calib_parameters.gen_ch1_off_5;
-        case DAC_CH2_OFF:  return  (gen_g == RP_GAIN_1X) ? m_calib_parameters.gen_ch2_off_1  : m_calib_parameters.gen_ch2_off_5;
-        case DAC_CH1_GAIN:  return  (gen_g == RP_GAIN_1X) ? m_calib_parameters.gen_ch1_g_1  : m_calib_parameters.gen_ch1_g_5;
-        case DAC_CH2_GAIN:  return  (gen_g == RP_GAIN_1X) ? m_calib_parameters.gen_ch2_g_1  : m_calib_parameters.gen_ch2_g_5;
-    }
-#endif
-
-#if defined Z10 || defined Z20_125
 
     switch (_type)
     {
-        case ADC_CH1_OFF:  {
-            if (g == RP_LOW)  return m_calib_parameters.fe_ch1_lo_offs;
-            if (g == RP_HIGH) return m_calib_parameters.fe_ch1_hi_offs;
-            break;
-        }
-        
-        case ADC_CH2_OFF:  {
-            if (g == RP_LOW)  return m_calib_parameters.fe_ch2_lo_offs;
-            if (g == RP_HIGH) return m_calib_parameters.fe_ch2_hi_offs;
-            break;
-        }
-        
-        case ADC_CH1_GAIN: {
-            if (g == RP_LOW)  return m_calib_parameters.fe_ch1_fs_g_lo;
-            if (g == RP_HIGH) return m_calib_parameters.fe_ch1_fs_g_hi;
+        case ADC_CH_OFF:  {
+            if (getADCChannels() <= ch){
+                fprintf(stderr,"[Error:getCalibValue] Wrong channel\n");
+                exit(-1);
+            }
+            if (g == RP_LOW)  return (ac_dc == RP_DC) ?  m_calib_parameters.fast_adc_1_1[ch].offset :  m_calib_parameters.fast_adc_1_1_ac[ch].offset;
+            if (g == RP_HIGH) return (ac_dc == RP_DC) ?  m_calib_parameters.fast_adc_1_20[ch].offset :  m_calib_parameters.fast_adc_1_20_ac[ch].offset;
             break;
         }
 
-        case ADC_CH2_GAIN: {
-            if (g == RP_LOW)  return m_calib_parameters.fe_ch2_fs_g_lo;
-            if (g == RP_HIGH) return m_calib_parameters.fe_ch2_fs_g_hi;
+        case DAC_CH_OFF:  {
+            if (getDACChannels() <= ch){
+                fprintf(stderr,"[Error:getCalibValue] Wrong channel\n");
+                exit(-1);
+            }
+            return  (gen_g == RP_GAIN_1X) ? m_calib_parameters.fast_dac_x1[ch].offset  : m_calib_parameters.fast_dac_x5[ch].offset;
+        }
+
+        case ADC_CH_GAIN: {
+            if (getADCChannels() <= ch){
+                fprintf(stderr,"[Error:getCalibValue] Wrong channel\n");
+                exit(-1);
+            }
+            if (g == RP_LOW)  return  (ac_dc == RP_DC) ? m_calib_parameters.fast_adc_1_1[ch].gainCalc  : m_calib_parameters.fast_adc_1_1_ac[ch].gainCalc;
+            if (g == RP_HIGH) return  (ac_dc == RP_DC) ? m_calib_parameters.fast_adc_1_20[ch].gainCalc  : m_calib_parameters.fast_adc_1_20_ac[ch].gainCalc;
             break;
         }
-       
-        case DAC_CH1_OFF:  return m_calib_parameters.be_ch1_dc_offs;
-        case DAC_CH2_OFF:  return m_calib_parameters.be_ch2_dc_offs;
-        case DAC_CH1_GAIN:  return m_calib_parameters.be_ch1_fs;
-        case DAC_CH2_GAIN:  return m_calib_parameters.be_ch2_fs;  
-        case F_AA_CH1: {
-            if (g == RP_LOW)  return m_calib_parameters.low_filter_aa_ch1;
-            if (g == RP_HIGH) return m_calib_parameters.hi_filter_aa_ch1;
+
+
+        case DAC_CH_GAIN: {
+            if (getDACChannels() <= ch){
+                fprintf(stderr,"[Error:getCalibValue] Wrong channel\n");
+                exit(-1);
+            }
+            return  (gen_g == RP_GAIN_1X) ? m_calib_parameters.fast_dac_x1[ch].gainCalc  : m_calib_parameters.fast_dac_x5[ch].gainCalc;
+        }
+
+        case F_AA_CH: {
+            if (getADCChannels() <= ch){
+                fprintf(stderr,"[Error:getCalibValue] Wrong channel\n");
+                exit(-1);
+            }
+            if (!rp_HPGetFastADCIsFilterPresentOrDefault()){
+                fprintf(stderr,"[Error:getCalibValue] Filter not supported\n");
+                exit(-1);
+            }
+            if (g == RP_LOW)  return m_calib_parameters.fast_adc_filter_1_1[ch].aa;
+            if (g == RP_HIGH) return m_calib_parameters.fast_adc_filter_1_20[ch].aa;
             break;
         }
-        case F_AA_CH2: {
-            if (g == RP_LOW)  return m_calib_parameters.low_filter_aa_ch2;
-            if (g == RP_HIGH) return m_calib_parameters.hi_filter_aa_ch2;
+
+        case F_BB_CH: {
+            if (getADCChannels() <= ch){
+                fprintf(stderr,"[Error:getCalibValue] Wrong channel\n");
+                exit(-1);
+            }
+            if (!rp_HPGetFastADCIsFilterPresentOrDefault()){
+                fprintf(stderr,"[Error:getCalibValue] Filter not supported\n");
+                exit(-1);
+            }
+            if (g == RP_LOW)  return m_calib_parameters.fast_adc_filter_1_1[ch].bb;
+            if (g == RP_HIGH) return m_calib_parameters.fast_adc_filter_1_20[ch].bb;
             break;
         }
-        case F_BB_CH1: {
-            if (g == RP_LOW)  return m_calib_parameters.low_filter_bb_ch1;
-            if (g == RP_HIGH) return m_calib_parameters.hi_filter_bb_ch1;
+
+        case F_PP_CH: {
+            if (getADCChannels() <= ch){
+                fprintf(stderr,"[Error:getCalibValue] Wrong channel\n");
+                exit(-1);
+            }
+            if (!rp_HPGetFastADCIsFilterPresentOrDefault()){
+                fprintf(stderr,"[Error:getCalibValue] Filter not supported\n");
+                exit(-1);
+            }
+            if (g == RP_LOW)  return m_calib_parameters.fast_adc_filter_1_1[ch].pp;
+            if (g == RP_HIGH) return m_calib_parameters.fast_adc_filter_1_20[ch].pp;
             break;
         }
-        case F_BB_CH2: {
-            if (g == RP_LOW)  return m_calib_parameters.low_filter_bb_ch2;
-            if (g == RP_HIGH) return m_calib_parameters.hi_filter_bb_ch2;
+
+         case F_KK_CH: {
+            if (getADCChannels() <= ch){
+                fprintf(stderr,"[Error:getCalibValue] Wrong channel\n");
+                exit(-1);
+            }
+            if (!rp_HPGetFastADCIsFilterPresentOrDefault()){
+                fprintf(stderr,"[Error:getCalibValue] Filter not supported\n");
+                exit(-1);
+            }
+            if (g == RP_LOW)  return m_calib_parameters.fast_adc_filter_1_1[ch].kk;
+            if (g == RP_HIGH) return m_calib_parameters.fast_adc_filter_1_20[ch].kk;
             break;
         }
-        case F_PP_CH1: {
-            if (g == RP_LOW)  return m_calib_parameters.low_filter_pp_ch1;
-            if (g == RP_HIGH) return m_calib_parameters.hi_filter_pp_ch1;
-            break;
-        }
-        case F_PP_CH2: {
-            if (g == RP_LOW)  return m_calib_parameters.low_filter_pp_ch2;
-            if (g == RP_HIGH) return m_calib_parameters.hi_filter_pp_ch2;
-            break;
-        }
-         case F_KK_CH1: {
-            if (g == RP_LOW)  return m_calib_parameters.low_filter_kk_ch1;
-            if (g == RP_HIGH) return m_calib_parameters.hi_filter_kk_ch1;
-            break;
-        }
-        case F_KK_CH2: {
-            if (g == RP_LOW)  return m_calib_parameters.low_filter_kk_ch2;
-            if (g == RP_HIGH) return m_calib_parameters.hi_filter_kk_ch2;
-            break;
-        }
+
+        default:
+            fprintf(stderr,"[Error] Unknow mode\n");
     }
-#endif
     return 0;
 }
+
 
 int setCalibInt(int32_t *_x, int _value){
     *_x = _value;
@@ -260,205 +256,192 @@ int setCalibInt(int32_t *_x, int _value){
 }
 
 int setCalibUInt(uint32_t *_x, int _value){
-    *_x = _value;   
+    *_x = _value;
     return 0;
 }
 
-int CCalibMan::setCalibValue(ClalibValue _type, int _value){
-auto g = getModeLV_HV();
-#ifdef Z20_250_12
+int CCalibMan::setCalibValue(rp_channel_t ch,ClalibValue _type, double _value){
+    auto g = getModeLV_HV();
     auto ac_dc = getModeAC_DC();
     auto gen_g = getGenGain();
     switch (_type)
     {
-        case ADC_CH1_OFF:  {
-            if (g == RP_LOW)  return  (ac_dc == RP_DC) ? setCalibInt(&m_calib_parameters.osc_ch1_off_1_dc,_value)  : setCalibInt(&m_calib_parameters.osc_ch1_off_1_ac,_value);
-            if (g == RP_HIGH) return  (ac_dc == RP_DC) ? setCalibInt(&m_calib_parameters.osc_ch1_off_20_dc,_value) : setCalibInt(&m_calib_parameters.osc_ch1_off_20_ac,_value);
-            break;
-        }
-        
-        case ADC_CH2_OFF:  {
-            if (g == RP_LOW)  return  (ac_dc == RP_DC) ? setCalibInt(&m_calib_parameters.osc_ch2_off_1_dc,_value)  : setCalibInt(&m_calib_parameters.osc_ch2_off_1_ac ,_value);
-            if (g == RP_HIGH) return  (ac_dc == RP_DC) ? setCalibInt(&m_calib_parameters.osc_ch2_off_20_dc,_value) : setCalibInt(&m_calib_parameters.osc_ch2_off_20_ac,_value);
-            break;
-        }
-        
-        case ADC_CH1_GAIN: {
-            if (g == RP_LOW)  return  (ac_dc == RP_DC) ? setCalibUInt(&m_calib_parameters.osc_ch1_g_1_dc,_value)  : setCalibUInt(&m_calib_parameters.osc_ch1_g_1_ac,_value);
-            if (g == RP_HIGH) return  (ac_dc == RP_DC) ? setCalibUInt(&m_calib_parameters.osc_ch1_g_20_dc,_value) : setCalibUInt(&m_calib_parameters.osc_ch1_g_20_ac,_value);
+        case ADC_CH_OFF:  {
+            if (getADCChannels() <= ch){
+                fprintf(stderr,"[Error:setCalibValue] Wrong channel\n");
+                exit(-1);
+            }
+            if (g == RP_LOW)  (ac_dc == RP_DC) ? m_calib_parameters.fast_adc_1_1[ch].offset =_value  : m_calib_parameters.fast_adc_1_1_ac[ch].offset =_value;
+            if (g == RP_HIGH) (ac_dc == RP_DC) ? m_calib_parameters.fast_adc_1_20[ch].offset =_value  : m_calib_parameters.fast_adc_1_20_ac[ch].offset =_value;
             break;
         }
 
-        case ADC_CH2_GAIN: {
-            if (g == RP_LOW)  return  (ac_dc == RP_DC) ? setCalibUInt(&m_calib_parameters.osc_ch2_g_1_dc,_value)  : setCalibUInt(&m_calib_parameters.osc_ch2_g_1_ac,_value);
-            if (g == RP_HIGH) return  (ac_dc == RP_DC) ? setCalibUInt(&m_calib_parameters.osc_ch2_g_20_dc,_value) : setCalibUInt(&m_calib_parameters.osc_ch2_g_20_ac,_value);
+        case ADC_CH_GAIN: {
+            if (getADCChannels() <= ch){
+                fprintf(stderr,"[Error:setCalibValue] Wrong channel\n");
+                exit(-1);
+            }
+            if (g == RP_LOW)  (ac_dc == RP_DC) ? m_calib_parameters.fast_adc_1_1[ch].gainCalc =_value  : m_calib_parameters.fast_adc_1_1_ac[ch].gainCalc =_value;
+            if (g == RP_HIGH) (ac_dc == RP_DC) ? m_calib_parameters.fast_adc_1_20[ch].gainCalc =_value  : m_calib_parameters.fast_adc_1_20_ac[ch].gainCalc =_value;
             break;
         }
 
-        case DAC_CH1_OFF:   return  (gen_g == RP_GAIN_1X) ? setCalibInt(&m_calib_parameters.gen_ch1_off_1,_value)  : setCalibInt(&m_calib_parameters.gen_ch1_off_5,_value);
-        case DAC_CH2_OFF:   return  (gen_g == RP_GAIN_1X) ? setCalibInt(&m_calib_parameters.gen_ch2_off_1,_value)  : setCalibInt(&m_calib_parameters.gen_ch2_off_5,_value);
-        case DAC_CH1_GAIN:  return  (gen_g == RP_GAIN_1X) ? setCalibUInt(&m_calib_parameters.gen_ch1_g_1,_value)  : setCalibUInt(&m_calib_parameters.gen_ch1_g_5,_value);
-        case DAC_CH2_GAIN:  return  (gen_g == RP_GAIN_1X) ? setCalibUInt(&m_calib_parameters.gen_ch2_g_1,_value)  : setCalibUInt(&m_calib_parameters.gen_ch2_g_5,_value);
+        case DAC_CH_OFF:   {
+            if (getDACChannels() <= ch){
+                fprintf(stderr,"[Error:setCalibValue] Wrong channel\n");
+                exit(-1);
+            }
+            return  (gen_g == RP_GAIN_1X) ? m_calib_parameters.fast_dac_x1[ch].offset =_value  : m_calib_parameters.fast_dac_x5[ch].offset =_value;
+        }
+
+        case DAC_CH_GAIN:   {
+            if (getDACChannels() <= ch){
+                fprintf(stderr,"[Error:setCalibValue] Wrong channel\n");
+                exit(-1);
+            }
+            return  (gen_g == RP_GAIN_1X) ? m_calib_parameters.fast_dac_x1[ch].gainCalc =_value  : m_calib_parameters.fast_dac_x5[ch].gainCalc =_value;
+        }
+
+        case F_AA_CH: {
+            if (getADCChannels() <= ch){
+                fprintf(stderr,"[Error:setCalibValue] Wrong channel\n");
+                exit(-1);
+            }
+            if (!rp_HPGetFastADCIsFilterPresentOrDefault()){
+                fprintf(stderr,"[Error:setCalibValue] Filter not supported\n");
+                exit(-1);
+            }
+            if (g == RP_LOW)  m_calib_parameters.fast_adc_filter_1_1[ch].aa = _value;
+            if (g == RP_HIGH) m_calib_parameters.fast_adc_filter_1_20[ch].aa = _value;
+            break;
+        }
+
+        case F_BB_CH: {
+            if (getADCChannels() <= ch){
+                fprintf(stderr,"[Error:setCalibValue] Wrong channel\n");
+                exit(-1);
+            }
+            if (!rp_HPGetFastADCIsFilterPresentOrDefault()){
+                fprintf(stderr,"[Error:setCalibValue] Filter not supported\n");
+                exit(-1);
+            }
+            if (g == RP_LOW)  m_calib_parameters.fast_adc_filter_1_1[ch].bb = _value;
+            if (g == RP_HIGH) m_calib_parameters.fast_adc_filter_1_20[ch].bb = _value;
+            break;
+        }
+
+        case F_PP_CH: {
+            if (getADCChannels() <= ch){
+                fprintf(stderr,"[Error:setCalibValue] Wrong channel\n");
+                exit(-1);
+            }
+            if (!rp_HPGetFastADCIsFilterPresentOrDefault()){
+                fprintf(stderr,"[Error:setCalibValue] Filter not supported\n");
+                exit(-1);
+            }
+            if (g == RP_LOW)  m_calib_parameters.fast_adc_filter_1_1[ch].pp = _value;
+            if (g == RP_HIGH) m_calib_parameters.fast_adc_filter_1_20[ch].pp = _value;
+            break;
+        }
+
+         case F_KK_CH: {
+            if (getADCChannels() <= ch){
+                fprintf(stderr,"[Error:setCalibValue] Wrong channel\n");
+                exit(-1);
+            }
+            if (!rp_HPGetFastADCIsFilterPresentOrDefault()){
+                fprintf(stderr,"[Error:setCalibValue] Filter not supported\n");
+                exit(-1);
+            }
+            if (g == RP_LOW)  m_calib_parameters.fast_adc_filter_1_1[ch].kk = _value;
+            if (g == RP_HIGH) m_calib_parameters.fast_adc_filter_1_20[ch].kk = _value;
+            break;
+        }
+        default:
+            return -1;
     }
-#endif
-
-#if defined Z10 || defined Z20_125
-
-    switch (_type)
-    {
-        case ADC_CH1_OFF:  {
-            if (g == RP_LOW)  return setCalibInt(&m_calib_parameters.fe_ch1_lo_offs,_value);
-            if (g == RP_HIGH) return setCalibInt(&m_calib_parameters.fe_ch1_hi_offs,_value);
-            break;
-        }
-        
-        case ADC_CH2_OFF:  {
-            if (g == RP_LOW)  return setCalibInt(&m_calib_parameters.fe_ch2_lo_offs,_value);
-            if (g == RP_HIGH) return setCalibInt(&m_calib_parameters.fe_ch2_hi_offs,_value);
-            break;
-        }
-        
-        case ADC_CH1_GAIN: {
-            if (g == RP_LOW)  return setCalibUInt(&m_calib_parameters.fe_ch1_fs_g_lo,_value);
-            if (g == RP_HIGH) return setCalibUInt(&m_calib_parameters.fe_ch1_fs_g_hi,_value);
-            break;
-        }
-
-        case ADC_CH2_GAIN: {
-            if (g == RP_LOW)  return setCalibUInt(&m_calib_parameters.fe_ch2_fs_g_lo,_value);
-            if (g == RP_HIGH) return setCalibUInt(&m_calib_parameters.fe_ch2_fs_g_hi,_value);
-            break;
-        }
-
-        case F_AA_CH1: {
-            m_calib_parameters.magic = 0xDDCCBBAA;
-            if (g == RP_LOW)  return setCalibUInt(&m_calib_parameters.low_filter_aa_ch1,_value);
-            if (g == RP_HIGH) return setCalibUInt(&m_calib_parameters.hi_filter_aa_ch1,_value);
-            break;
-        }
-
-        case F_AA_CH2: {
-            m_calib_parameters.magic = 0xDDCCBBAA;
-            if (g == RP_LOW)  return setCalibUInt(&m_calib_parameters.low_filter_aa_ch2,_value);
-            if (g == RP_HIGH) return setCalibUInt(&m_calib_parameters.hi_filter_aa_ch2,_value);
-            break;
-        }
-
-        case F_BB_CH1: {
-            m_calib_parameters.magic = 0xDDCCBBAA;
-            if (g == RP_LOW)  return setCalibUInt(&m_calib_parameters.low_filter_bb_ch1,_value);
-            if (g == RP_HIGH) return setCalibUInt(&m_calib_parameters.hi_filter_bb_ch1,_value);
-            break;
-        }
-
-        case F_BB_CH2: {
-            m_calib_parameters.magic = 0xDDCCBBAA;
-            if (g == RP_LOW)  return setCalibUInt(&m_calib_parameters.low_filter_bb_ch2,_value);
-            if (g == RP_HIGH) return setCalibUInt(&m_calib_parameters.hi_filter_bb_ch2,_value);
-            break;
-        }
-
-        case F_PP_CH1: {
-            m_calib_parameters.magic = 0xDDCCBBAA;
-            if (g == RP_LOW)  return setCalibUInt(&m_calib_parameters.low_filter_pp_ch1,_value);
-            if (g == RP_HIGH) return setCalibUInt(&m_calib_parameters.hi_filter_pp_ch1,_value);
-            break;
-        }
-
-        case F_PP_CH2: {
-            m_calib_parameters.magic = 0xDDCCBBAA;
-            if (g == RP_LOW)  return setCalibUInt(&m_calib_parameters.low_filter_pp_ch2,_value);
-            if (g == RP_HIGH) return setCalibUInt(&m_calib_parameters.hi_filter_pp_ch2,_value);
-            break;
-        }
-
-        case F_KK_CH1: {
-            m_calib_parameters.magic = 0xDDCCBBAA;
-            if (g == RP_LOW)  return setCalibUInt(&m_calib_parameters.low_filter_kk_ch1,_value);
-            if (g == RP_HIGH) return setCalibUInt(&m_calib_parameters.hi_filter_kk_ch1,_value);
-            break;
-        }
-
-        case F_KK_CH2: {
-            m_calib_parameters.magic = 0xDDCCBBAA;
-            if (g == RP_LOW)  return setCalibUInt(&m_calib_parameters.low_filter_kk_ch2,_value);
-            if (g == RP_HIGH) return setCalibUInt(&m_calib_parameters.hi_filter_kk_ch2,_value);
-            break;
-        }
-       
-        case DAC_CH1_OFF:  return setCalibInt(&m_calib_parameters.be_ch1_dc_offs,_value);
-        case DAC_CH2_OFF:  return setCalibInt(&m_calib_parameters.be_ch2_dc_offs,_value);
-        case DAC_CH1_GAIN:  return setCalibUInt(&m_calib_parameters.be_ch1_fs,_value);
-        case DAC_CH2_GAIN:  return setCalibUInt(&m_calib_parameters.be_ch2_fs,_value);  
-    }
-#endif
-    return -1;
+    return 0;
 }
 
+
 int CCalibMan::enableGen(rp_channel_t _ch,bool _enable){
+    if (getDACChannels() == 0){
+        fprintf(stderr,"[Error:enableGen] Wrong channel\n");
+        return -1;
+    }
     m_acq->enableGen(_ch,_enable);
+    return 0;
 }
 
 
 int CCalibMan::setFreq(rp_channel_t _ch,int _freq){
-    m_acq->setFreq(_ch,_freq);
+    if (getDACChannels() == 0){
+        fprintf(stderr,"[Error:setFreq] Wrong channel\n");
+        return -1;
+    }
+    return m_acq->setFreq(_ch,_freq);
 }
 
 int CCalibMan::setAmp(rp_channel_t _ch,float _ampl){
-    m_acq->setAmp(_ch,_ampl);
+    if (getDACChannels() == 0){
+        fprintf(stderr,"[Error:setAmp] Wrong channel\n");
+        return -1;
+    }
+    return m_acq->setAmp(_ch,_ampl);
 }
 
 int CCalibMan::setOffset(rp_channel_t _ch,float _offset){
-    m_acq->setOffset(_ch,_offset);
+    if (getDACChannels() == 0){
+        fprintf(stderr,"[Error:setOffset] Wrong channel\n");
+        return -1;
+    }
+    return m_acq->setOffset(_ch,_offset);
 }
 
 int CCalibMan::setGenType(rp_channel_t _ch,int _type){
-    m_acq->setGenType(_ch,_type);
+    if (getDACChannels() == 0){
+        fprintf(stderr,"[Error:setGenType] Wrong channel\n");
+        return -1;
+    }
+    return m_acq->setGenType(_ch,_type);
 }
 
 void CCalibMan::updateGen(){
     m_acq->updateGenCalib();
 }
 
+
 void CCalibMan::updateAcqFilter(rp_channel_t _ch){
     m_acq->updateAcqFilter(_ch);
 }
 
 int CCalibMan::setDefualtFilter(rp_channel_t _ch){
-#if defined Z10 || defined Z20_125
-    auto x = rp_GetDefaultCalibrationSettings();
-    auto g = getModeLV_HV();
-    if (_ch == RP_CH_1){
-        if (g == RP_LOW)  {
-            setCalibValue(F_AA_CH1,x.low_filter_aa_ch1);
-            setCalibValue(F_BB_CH1,x.low_filter_bb_ch1);
-            setCalibValue(F_PP_CH1,x.low_filter_pp_ch1);
-            setCalibValue(F_KK_CH1,x.low_filter_kk_ch1);
-        }
-        if (g == RP_HIGH) {
-            setCalibValue(F_AA_CH1,x.hi_filter_aa_ch1);
-            setCalibValue(F_BB_CH1,x.hi_filter_bb_ch1);
-            setCalibValue(F_PP_CH1,x.hi_filter_pp_ch1);
-            setCalibValue(F_KK_CH1,x.hi_filter_kk_ch1);
-        }
+
+    if (!rp_HPGetFastADCIsFilterPresentOrDefault()){
+        fprintf(stderr,"[Fatal error] Filter not present in board\n");
+        return -1;
+
     }
 
-    if (_ch == RP_CH_2){
-        if (g == RP_LOW)  {
-            setCalibValue(F_AA_CH2,x.low_filter_aa_ch2);
-            setCalibValue(F_BB_CH2,x.low_filter_bb_ch2);
-            setCalibValue(F_PP_CH2,x.low_filter_pp_ch2);
-            setCalibValue(F_KK_CH2,x.low_filter_kk_ch2);
-        }
-        if (g == RP_HIGH) {
-            setCalibValue(F_AA_CH2,x.hi_filter_aa_ch2);
-            setCalibValue(F_BB_CH2,x.hi_filter_bb_ch2);
-            setCalibValue(F_PP_CH2,x.hi_filter_pp_ch2);
-            setCalibValue(F_KK_CH2,x.hi_filter_kk_ch2);
-        }
+    if (getADCChannels() <= _ch){
+        fprintf(stderr,"[Error:setCalibValue] Wrong channel\n");
+        return -1;
     }
+
+    auto g = getModeLV_HV();
+    auto x = rp_GetDefaultCalibrationSettings();
+    if (g == RP_LOW)  {
+        setCalibValue(_ch,F_AA_CH,x.fast_adc_filter_1_1[_ch].aa);
+        setCalibValue(_ch,F_BB_CH,x.fast_adc_filter_1_1[_ch].bb);
+        setCalibValue(_ch,F_PP_CH,x.fast_adc_filter_1_1[_ch].pp);
+        setCalibValue(_ch,F_KK_CH,x.fast_adc_filter_1_1[_ch].kk);
+    }
+    if (g == RP_HIGH) {
+        setCalibValue(_ch,F_AA_CH,x.fast_adc_filter_1_20[_ch].aa);
+        setCalibValue(_ch,F_BB_CH,x.fast_adc_filter_1_20[_ch].bb);
+        setCalibValue(_ch,F_PP_CH,x.fast_adc_filter_1_20[_ch].pp);
+        setCalibValue(_ch,F_KK_CH,x.fast_adc_filter_1_20[_ch].kk);
+    }
+
     return 0;
-#else 
-    return -1;
-#endif
 }

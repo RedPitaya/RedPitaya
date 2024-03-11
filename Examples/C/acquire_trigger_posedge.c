@@ -1,4 +1,4 @@
-/* Red Pitaya C API example Acquiring a signal from a buffer  
+/* Red Pitaya C API example Acquiring a signal from a buffer
  * This application acquires a signal on a specific channel */
 
 #include <stdio.h>
@@ -19,7 +19,7 @@ int main(int argc, char **argv){
         rp_GenAmp(RP_CH_1, 1.0);
         rp_GenWaveform(RP_CH_1, RP_WAVEFORM_SINE);
         rp_GenOutEnable(RP_CH_1);
-
+        rp_GenTriggerOnly(RP_CH_1);
 
         uint32_t buff_size = 16384;
         float *buff = (float *)malloc(buff_size * sizeof(float));
@@ -45,7 +45,12 @@ int main(int argc, char **argv){
                 break;
                 }
         }
-                
+
+        bool fillState = false;
+        while(!fillState){
+		rp_AcqGetBufferFillState(&fillState);
+	}
+
         rp_AcqGetOldestDataV(RP_CH_1, &buff_size, buff);
         int i;
         for(i = 0; i < buff_size; i++){
@@ -56,4 +61,3 @@ int main(int argc, char **argv){
         rp_Release();
         return 0;
 }
-        

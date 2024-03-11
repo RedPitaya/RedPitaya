@@ -122,4 +122,8 @@ $(function() {
     $('#SCPI_EXAMPLES').click(function(){
         window.open('http://redpitaya.readthedocs.io/en/latest/appsFeatures/remoteControl/remoteControl.html','_blank');
     });
+
+    $("#ext_con_but").click(function(event) {
+        $('#ext_connections_dialog').modal("show");
+    });
 });

@@ -84,6 +84,27 @@ var refVoltChange = function(event) {
     }
 }
 
+var checkGainParameters = function(_id) {
+    if (Validate($(_id).val()) == false) {
+        SM.parametersCache["calib_sig"] = { value: 2 }; // request old parameters
+        SM.sendParameters();
+        $(_id).fI();
+        return 0;
+    }
+    if ($(_id).val() > 1.5) {
+        SM.parametersCache["calib_sig"] = { value: 2 }; // request old parameters
+        SM.sendParameters();
+        $(_id).fI();
+        return 0;
+    } else if ($(_id).val() < 0.5) {
+        SM.parametersCache["calib_sig"] = { value: 2 }; // request old parameters
+        SM.sendParameters();
+        $(_id).fI();
+        return 0;
+    }
+    return -1;
+}
+
 var checkIntParameters = function(_id) {
     if (ValidateInt($(_id).val()) == false) {
         SM.parametersCache["calib_sig"] = { value: 2 }; // request old parameters
@@ -191,7 +212,7 @@ var checkIntParameters3 = function(_id, _min, _max) {
 }
 
 var ch1GainChange = function(event) {
-    if (checkUIntParameters("#CH1_GAIN") !== 0) {
+    if (checkGainParameters("#CH1_GAIN") !== 0) {
         SM.parametersCache["ch1_gain_adc_new"] = { value: $("#CH1_GAIN").val() };
         SM.sendParameters2("ch1_gain_adc_new");
         OBJ.adcCalibChange = true;
@@ -199,9 +220,25 @@ var ch1GainChange = function(event) {
 }
 
 var ch2GainChange = function(event) {
-    if (checkUIntParameters("#CH2_GAIN") !== 0) {
+    if (checkGainParameters("#CH2_GAIN") !== 0) {
         SM.parametersCache["ch2_gain_adc_new"] = { value: $("#CH2_GAIN").val() };
         SM.sendParameters2("ch2_gain_adc_new");
+        OBJ.adcCalibChange = true;
+    }
+}
+
+var ch3GainChange = function(event) {
+    if (checkGainParameters("#CH3_GAIN") !== 0) {
+        SM.parametersCache["ch3_gain_adc_new"] = { value: $("#CH3_GAIN").val() };
+        SM.sendParameters2("ch3_gain_adc_new");
+        OBJ.adcCalibChange = true;
+    }
+}
+
+var ch4GainChange = function(event) {
+    if (checkGainParameters("#CH4_GAIN") !== 0) {
+        SM.parametersCache["ch4_gain_adc_new"] = { value: $("#CH4_GAIN").val() };
+        SM.sendParameters2("ch4_gain_adc_new");
         OBJ.adcCalibChange = true;
     }
 }
@@ -222,8 +259,29 @@ var ch2OffChange = function(event) {
     }
 }
 
+var ch3OffChange = function(event) {
+    if (checkIntParameters("#CH3_OFFSET") !== 0) {
+        SM.parametersCache["ch3_off_adc_new"] = { value: $("#CH3_OFFSET").val() };
+        SM.sendParameters2("ch3_off_adc_new");
+        OBJ.adcCalibChange = true;
+    }
+}
+
+var ch4OffChange = function(event) {
+    if (checkIntParameters("#CH4_OFFSET") !== 0) {
+        SM.parametersCache["ch4_off_adc_new"] = { value: $("#CH4_OFFSET").val() };
+        SM.sendParameters2("ch4_off_adc_new");
+        OBJ.adcCalibChange = true;
+    }
+}
+
+var manualDecimationSelector = function(event) {
+    SM.parametersCache["manual_decimation"] = { value: $("#B_DEC_SELECTOR").val() };
+    SM.sendParameters2("manual_decimation");
+}
+
 var ch1DacGainChange = function(event) {
-    if (checkUIntParameters("#CH1_DAC_GAIN") !== 0) {
+    if (checkGainParameters("#CH1_DAC_GAIN") !== 0) {
         SM.parametersCache["ch1_gain_dac_new"] = { value: $("#CH1_DAC_GAIN").val() };
         SM.sendParameters2("ch1_gain_dac_new");
         OBJ.adcCalibChange = true;
@@ -231,7 +289,7 @@ var ch1DacGainChange = function(event) {
 }
 
 var ch2DacGainChange = function(event) {
-    if (checkUIntParameters("#CH2_DAC_GAIN") !== 0) {
+    if (checkGainParameters("#CH2_DAC_GAIN") !== 0) {
         SM.parametersCache["ch2_gain_dac_new"] = { value: $("#CH2_DAC_GAIN").val() };
         SM.sendParameters2("ch2_gain_dac_new");
         OBJ.adcCalibChange = true;
@@ -316,6 +374,13 @@ var filterDecimationChange = function(event) {
     SM.sendParameters2("adc_decimation");
     SM.parametersCache["zoom_mode"] = { value: false };
     SM.sendParameters2("zoom_mode");
+}
+
+
+
+var channelChanged = function(event) {
+    SM.parametersCache["adc_channel"] = { value: $("#FILTER_CHANNEL_4CH").val() };
+    SM.sendParameters2("adc_channel");
 }
 
 var filterChangeHyst = function(event) {
@@ -410,8 +475,15 @@ var changeCallbacks = {}
 changeCallbacks["SS_REF_VOLT"] = refVoltChange;
 changeCallbacks["CH1_GAIN"] = ch1GainChange;
 changeCallbacks["CH2_GAIN"] = ch2GainChange;
+changeCallbacks["CH3_GAIN"] = ch3GainChange;
+changeCallbacks["CH4_GAIN"] = ch4GainChange;
+
 changeCallbacks["CH1_OFFSET"] = ch1OffChange;
 changeCallbacks["CH2_OFFSET"] = ch2OffChange;
+changeCallbacks["CH3_OFFSET"] = ch3OffChange;
+changeCallbacks["CH4_OFFSET"] = ch4OffChange;
+
+changeCallbacks["B_DEC_SELECTOR"] = manualDecimationSelector;
 
 changeCallbacks["CH1_DAC_GAIN"] = ch1DacGainChange;
 changeCallbacks["CH2_DAC_GAIN"] = ch2DacGainChange;
@@ -429,6 +501,7 @@ changeCallbacks["CH2_DAC_FREQ"] = gen2FreqChange;
 changeCallbacks["CH2_DAC_AMPL"] = gen2AmpChange;
 changeCallbacks["CH2_DAC_OFF"] = gen2OffsetChange;
 changeCallbacks["FILTER_DECIMATION"] = filterDecimationChange;
+changeCallbacks["FILTER_CHANNEL_4CH"] = channelChanged;
 changeCallbacks["FILTER_HYST"] = filterChangeHyst;
 changeCallbacks["FILTER_DAC_FREQ"] = filterFreqChange;
 changeCallbacks["FILTER_DAC_AMPL"] = filterAmpChange;
@@ -443,12 +516,11 @@ changeCallbacks["SS_A_FILT_REF_VOLT"] = afilterCalibAmpChange;
 
 var clickCallbacks = {}
 
-//Subscribe changes and clicks
-$(document).ready(function() {
+var connectHandlers = function(){
     for (var k in changeCallbacks) {
         $("#" + k).change(changeCallbacks[k]);
     }
     for (var i in clickCallbacks) {
         $("#" + i).click(clickCallbacks[i]);
     }
-})
+}

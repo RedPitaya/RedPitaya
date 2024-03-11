@@ -1,0 +1,160 @@
+<!--
+ *
+ * Red Pitaya Stream service manager
+ *
+ * Author: Nikolay <n.danilyuk@integrasources.eu>
+ *
+ * (c) Red Pitaya  http://www.redpitaya.com
+ *
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"></meta>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Red Pitaya</title>
+    <link rel="stylesheet" href="../assets/bootstrap/css/bootstrap.min.css?1" onerror="location.reload()">
+    <link rel="stylesheet" href="../assets/popupstack.css?1" type="text/css" onerror="location.reload()" />
+    <link rel="stylesheet" href="../assets/help-system/help-system.css?1" type="text/css" onerror="location.reload()" />
+    <link href="../assets/loader.css?1" rel="stylesheet" type="text/css" onerror="location.reload()" />
+    <link rel="stylesheet" href="css/style.css?2" onerror="location.reload()">
+    <script src="../assets/jquery/jquery-2.1.3.min.js?1" onerror="location.reload()"></script>
+    <script src="../assets/jquery/jquery-ui.min.js?1" onerror="location.reload()"></script>
+    <script src="../assets/jquery/jquery.ui.touch-punch.min.js?1" onerror="location.reload()"></script>
+    <script src="../assets/jquery/jquery.cookie.js?3" onerror="location.reload()"></script>
+    <script src="../assets/jquery/jquery.browser.js?1" onerror="location.reload()"></script>
+    <script src="../assets/jquery/jquery.flot.js?1" onerror="location.reload()"></script>
+    <script src="../assets/bootstrap/js/bootstrap.min.js?1" onerror="location.reload()"></script>
+    <script src="../assets/browsercheck.js?1" onerror="location.reload()"></script>
+    <script src="../assets/popupstack.js?1" onerror="location.reload()"></script>
+    <script src="../assets/help-system/help-system.js?1" onerror="location.reload()"></script>
+    <script src="../assets/pako.js?1" onerror="location.reload()"></script>
+    <script src="../assets/jquery/jquery.flot.js?1" onerror="location.reload()"></script>
+    <script src="js/guiHandler.js?1" onerror="location.reload()"></script>
+    <script src="js/manager.js?1" onerror="location.reload()"></script>
+    <script src="js/main.js?1" onerror="location.reload()"></script>
+</head>
+
+<body>
+    <div id="loader-wrapper">
+        <div id="loader"></div>
+    </div>
+    <div id="header">
+        <div id="description">&nbsp;</div>
+    </div>
+    <div class="full-content">
+        <div class="container-fluid">
+            <div class="navbar navbar-inverse" role="navigation">
+                <div class="container">
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                            <span class="sr-only">T</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a id="back_button" class="navbar-brand" href="/">
+                            <img class="back-btn" src="../assets/images/navigation_arrow_left.png">
+                        </a>
+                        <a class="navbar-brand" href="/">
+                            <img class="back-btn" src="../assets/images/home.png">
+                        </a>
+                        <img class="logo" width=110 src="../assets/images/navigation_logo.png">
+                    </div>
+                    <div class="collapse navbar-collapse">
+                        <ul class="nav navbar-nav">
+                        </ul>
+                    </div>
+                    <div id="TITLE_ID" align="center" style="font-size: 18pt;color: lightgray;padding-right: 20%;padding-left: 20%;padding-top: 5px;">
+                        ARB waveform generation manager
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div id="main" style="visibility: hidden;">
+                    <div style="display: flex;">
+                        <div class="panels" style="width: 100%;">
+                            <div style="height: 100%;display: flex;flex-flow: column;">
+                                <div id="files_table" style="height: 100%;display: flex;flex-wrap: wrap;align-content: flex-start; overflow-x: auto;">
+                                    <div class="filecell">
+                                        <div>
+                                            <span>
+                                                <item5>
+                                                    <label>Signal name: </label>
+                                                    <input maxlength="18"></input>
+                                                </item5>
+                                                <item4>
+                                                    <li class="run_buttons2">
+                                                        <a>&#10060;</a>
+                                                    </li>
+                                                </item4>
+                                            </span>
+                                            <span>
+                                                <plot>
+
+                                                </plot>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div style="width: 100%;height: 40px;display: flex;padding-top: 5px;padding-bottom: 5px;justify-content: flex-end;">
+                                    <div style="width: 150px; margin-left: 10px">
+                                        <li class="run_buttons2" id="B_UPLOAD" style="width: 100%">
+                                            <a style="display: block;">Upload</a>
+                                        </li>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="feedback_error" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="oops_label">Oops, something went wrong</h4>
+                    </div>
+                    <div class="modal-body" style="text-align: center; font-size: 18px;">
+                        <p>Please send us the report and help us to fix this issue</p>
+                        <p>Thank you!</p>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="bazaar-link" style="float: left; width: 50%;">
+                            <a href="#" style="border: 1px solid; width: 100%" id="send_report_btn" data-dismiss="modal" class="list-group-item btn">Send report</a>
+                        </div>
+                        <div class="bazaar-link" style="float: left; width: 50%;">
+                            <a href="#" style="border: 1px solid; width: 100%" id="restart_app_btn" data-dismiss="modal" class="list-group-item btn">Restart Application</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="info_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="oops_label">Streaming Application</h4>
+                    </div>
+                    <div class="modal-body" style="text-align: center; font-size: 18px;">
+                        <p id="info_dialog_label">Out of free disk space</p>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="bazaar-link" style="float: center; width: 100%;">
+                            <a href="#" style="border: 1px solid; width: 100%" id="ok_app_btn" data-dismiss="modal" class="list-group-item btn">Ok</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+</body>
+
+</html>

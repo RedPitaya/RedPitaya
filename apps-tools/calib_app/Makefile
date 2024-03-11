@@ -6,8 +6,6 @@
 
 APP=$(notdir $(CURDIR:%/=%))
 
-MODEL ?= Z10
-
 # Versioning system
 BUILD_NUMBER ?= 0
 REVISION ?= devbuild
@@ -22,15 +20,22 @@ ARTIFACTS=$(CONTROLLER)
 CFLAGS += -DVERSION=$(VER)-$(BUILD_NUMBER) -DREVISION=$(REVISION)
 export CFLAGS
 
+.PHONY: all
+
 all: $(CONTROLLER)
 
 $(CONTROLLER):
-	$(MAKE) -C src MODEL=$(MODEL)
+	$(MAKE) -C src
 
 $(ZIP): $(CONTROLLER)
 	-$(RM) target -rf
 	mkdir -p target/$(APP)
-	cp -r $(CONTROLLER) fpga.conf nginx.conf css img *.html info js target/$(APP)
+
+	cp -r $(CONTROLLER) fpga.conf fpga.sh nginx.conf css img info js target/$(APP)
+
+	cp index.html 2ch_adc.html 4ch_adc.html target/$(APP)
+
+	sed -i target/$(APP)/info/info.json -e 's/DESC_INFO/Board Calibration Application/'
 	sed -i target/$(APP)/info/info.json -e 's/REVISION/$(REVISION)/'
 	sed -i target/$(APP)/info/info.json -e 's/BUILD_NUMBER/$(BUILD_NUMBER)/'
 	cd target; zip -r ../$(ZIP) *

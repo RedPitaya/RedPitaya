@@ -2,7 +2,7 @@
 clear all
 close all
 clc
-IP= '192.168.178.111';                % Input IP of your Red Pitaya...
+IP= '';                % Input IP of your Red Pitaya...
 port = 5000;
 tcpipObj = tcpip(IP, port);
 tcpipObj.InputBufferSize = 16384*32;
@@ -54,9 +54,19 @@ while 1
      break
    
      end
- end
+end
  
- 
+% wait for fill adc buffer
+while 1
+     fill_state=query(tcpipObj,'ACQ:TRIG:FILL?')
+     
+     if strcmp('1',fill_state(1:1))
+   
+     break
+   
+     end
+end 
+
 % Read data from buffer 
 signal_str=query(tcpipObj,'ACQ:SOUR1:DATA?');
 signal_str_2=query(tcpipObj,'ACQ:SOUR2:DATA?');

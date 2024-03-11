@@ -1,4 +1,0 @@
-/include/ "redpitaya.dtsi"
-/include/ "led-user.dtsi"
-/include/ "tft/tft-hx8357d-stmpe601.dtsi"
-/include/ "qspi.dtsi"

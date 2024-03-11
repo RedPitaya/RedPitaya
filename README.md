@@ -8,7 +8,7 @@ LabVIEW & C, makes it a perfect tool in education or rapid product development.
 # Where to get one?
 Red Pitaya boards can be purchased @ [RedPitaya online store](https://www.redpitaya.com/Catalog).
 To better understand how product specifications differ from each other we suggest you look at
-the [hardware specifications comparison table](https://redpitaya.readthedocs.io/en/latest/developerGuide/125-10/vs.html) 
+the [hardware specifications comparison table](https://redpitaya.readthedocs.io/en/latest/developerGuide/hardware/compares/vs.html)
 & Supported features and apps by [Red Pitaya model table](https://redpitaya.readthedocs.io/en/latest/appsFeatures/supportedFeaturesAndApps.html).
 
 
@@ -24,9 +24,10 @@ Once you connect to Red Pitaya from WEB browser it can be immediately used as:
 - Bode analyzer
 - LCR meter
 - Vector Network Analyzer
-- and more..
+- and more...
 There are also many other (contributed) applications available on RedPitaya marketplace.
 For more information about RedPitaya apps click [here](https://redpitaya.readthedocs.io/en/latest/appsFeatures/applications/apps-featured.html).
+
 
 
 # How to start using Red Pitaya as SDR (software defined radio)?
@@ -38,20 +39,24 @@ latest software from is [Pavel’s repository](http://pavel-demin.github.io/red-
 There are several ways to program / develop with Red Pitaya.
 
 1. Remote control / programming
+
    Remote control can be done by using most popular rapid prototyping development tools
-   MATLAB, LABview, SCILAB or Python remotely. There are [several examples](https://redpitaya.readthedocs.io/en/latest/appsFeatures/remoteControl/remoteControl.html) available.
+   MATLAB, LABview, SCILAB or Python remotely. There are [several examples](https://redpitaya.readthedocs.io/en/latest/appsFeatures/remoteControl/examples_top.html) available.
 
 2. Programming Red Pitaya directly from WEB browser / Python
    Red Pitaya can be programmed in Python directly from the WEB browser using [Jupyter](https://redpitaya.readthedocs.io/en/latest/appsFeatures/remoteControl/jupyter/Jupyter.html).
 
+
 3. C/C++ programming
-   RedPitaya hardware features can be easily accessed through C APIs. Many starting examples are available at this [link](https://redpitaya.readthedocs.io/en/latest/appsFeatures/remoteControl/remoteControl.html#examples).
+
+RedPitaya hardware features can be easily accessed through C APIs. Many starting examples are available at this [link](https://redpitaya.readthedocs.io/en/latest/appsFeatures/remoteControl/examples_top.html).
 
 4. FPGA programming
    Information on how to compile Red Pitaya open source FPGA code is [here](https://redpitaya.readthedocs.io/en/latest/developerGuide/software/build/fpga/fpga.html).
 
 5. Creating own WEB applications
    Instructions on how to create your own Red Pitaya WEB applications can be found [here](https://redpitaya.readthedocs.io/en/latest/developerGuide/software/build/webapp/webApps.html).
+
 
 
 # How to interface Red Pitaya with other hardware or sensors?
@@ -67,3 +72,4 @@ There are two main extension possibilities:
 
 # How to start teaching with RedPitaya?
 [Teaching lectures / material](https://redpitaya.com/teaching-materials/).
+[Red Pitaya Knowledge Base](https://redpitaya-knowledge-base.readthedocs.io/en/latest/index.html)

@@ -307,6 +307,9 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
     //         fprintf(stderr, "Problem with idfile generation");
     //     once = 0;
     // }
+
+    rp_bazaar_app_unload_module(&rp_module_ctx.app);
+
     DIR *dp;
     struct dirent *ep;
 
@@ -500,6 +503,8 @@ int rp_bazaar_app_unload_module(rp_bazaar_app_t *app)
 }
 
 /* Use xdevcfg to load the data - using 32k buffers */
+// OLD UNUSED CODE. now used fpga_utils
+
 fpga_stat_t rp_bazaar_app_load_fpga(const char *fpga_file)
 {
     int fo, fi;

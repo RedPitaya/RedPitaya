@@ -10,26 +10,26 @@
     WIZARD.state = "";
     WIZARD.connectedSSID = "";
     WIZARD.apSSID = '';
+    WIZARD.r8188eu = false;
 
     WIZARD.checkState = function() {
         $.ajax({
                 url: '/get_wlan0_state',
                 type: 'GET',
-                timeout: 1000
+                timeout: 2000
             })
             .success(function(msg) {
-                if (msg.startsWith("Service Fail")) {
-                    $('#wlan0_block_entry').hide();
-                    $('#wlan0_block_nodongle').hide();
-                    $('#wlan0_block_fail').show();
-                    WIZARD.stopWaiting();
-                } 
-                else
-                if (msg.startsWith("Dongle Fail")) {
+                msg = msg.trim()
+                dongle = msg[0];
+                code = msg[1];
+                WIZARD.r8188eu = dongle === '2';
+
+                if (dongle === '0') {
                     $('#wlan0_block_entry').hide();
                     $('#wlan0_block_fail').hide();
                     $('#wlan0_block_nodongle').show();
                     WIZARD.stopWaiting();
+                    $('#wifi_scan_result').html("");
                 } 
                 else{
 
@@ -37,7 +37,7 @@
                     $('#wlan0_block_fail').hide();
                     $('#wlan0_block_entry').show();
 
-                    if (msg.startsWith("Client Mode: Linked")) {
+                    if (code == "1") {
                         $('#wlan0_client_mode').hide();
                         $('#wlan0_ap_mode').hide();
                         $('#wlan0_mode').hide();
@@ -48,7 +48,7 @@
                         WIZARD.GetWlan0Status();
                     }
 
-                    if (msg.startsWith("AP Mode")) {
+                    if (code == "2") {
                         $('#wlan0_client_mode').hide();
                         $('#wlan0_client_mode_link').hide();
                         $('#wlan0_mode').hide();
@@ -59,11 +59,16 @@
                         WIZARD.GetWlan0Status();
                     }
                     
-                    if (msg.startsWith("Normal")) {
+                    if (code == "0") {
                         $('#wlan0_ap_mode').hide();
                         $('#wlan0_client_mode_link').hide();
                         $('#wlan0_ap_mode_work').hide();
-                        $('#wlan0_mode').show();
+                        if (WIZARD.r8188eu){
+                            $('#wlan0_mode option:first').prop('selected', true);
+                            $('#wlan0_mode').hide();
+                        }else{
+                            $('#wlan0_mode').show();
+                        }
                         $('#wlan0_client_mode').show();
                         $('#wlan0_mode_label').text("None");
                         $("#wlan0_ssid_label").text("None");
@@ -133,6 +138,9 @@
             })
             .done(function(msg) {
                 WIZARD.getScanResult(msg);
+            })
+            .fail(function (jqXHR, textStatus, errorThrown) {
+                console.log(textStatus,errorThrown)
             });
     };
 
@@ -143,24 +151,13 @@
                 timeout: 1000
             })
             .success(function(msg) {
+                msg = msg.trim()
                 if (msg == undefined || msg == "\n" || msg == "") {
                     $("#wlan0_ssid_label").text("None");
                     return;
                 }
-
-                var ssids = msg.match(/SSID:(.*)/g);
-                if (ssids == null) {
-                    $("#wlan0_ssid_label").text("None");
-                    return;
-                }
-                var ssid = ssids[0].substr(6, ssids[0].length - 6);
-                if (ssid === "Red Pitaya AP") {
-                    return;
-                }
-                else {
-                    WIZARD.connectedSSID = ssid;
-                    $("#wlan0_ssid_label").text(WIZARD.connectedSSID);
-                }
+                WIZARD.connectedSSID = msg;
+                $("#wlan0_ssid_label").text(WIZARD.connectedSSID);
             });
     };
 
@@ -215,6 +212,7 @@
         }).done(function(msg) {});
     };
 
+    var routingIsGot = false;
     WIZARD.GetEth0Status = function() {
         $.ajax({
             url: '/get_eth0_status',
@@ -222,6 +220,19 @@
         }).success(function(msg) {
             var info = WIZARD.ParseAddress(msg);
             var gateway = msg.split("gateway:")[1].split("\n")[0];
+
+            const $select = document.querySelector('#eth0_mode');
+            if (!routingIsGot)
+            {
+                if (msg.includes("dynamic")) {
+                    $select.value = "#eth0_dhcp_mode";
+                    routingIsGot = true;
+                }
+                else {
+                    $select.value = "#eth0_static_mode";
+                    routingIsGot = true;
+                }
+            }
 
             if (!gateway) {
                 gateway = "None";
@@ -376,8 +387,8 @@ $(document).ready(function() {
     Help.setState("idle");
 
 
-    setInterval(WIZARD.checkState, 1000);
-    setInterval(WIZARD.GetEth0Status, 1000);
+    setInterval(WIZARD.checkState, 2000);
+    setInterval(WIZARD.GetEth0Status, 2000);
   
     $('body').addClass('loaded');
     $('#network_apply').click(WIZARD.ManualSetEth0);

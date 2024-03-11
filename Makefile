@@ -2,8 +2,9 @@
 DL ?= dl
 
 INSTALL_DIR ?= build
-ENABLE_LICENSING ?= 1
 STREAMING ?= MASTER
+CPU_CORES=$($(shell grep '^processor' /proc/cpuinfo | sort -u | wc -l) + 1)
+
 ################################################################################
 # versioning system
 ################################################################################
@@ -11,43 +12,20 @@ STREAMING ?= MASTER
 VER := $(shell cat apps-tools/ecosystem/info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 BUILD_NUMBER ?= 0
 REVISION ?= $(shell git rev-parse --short HEAD)
-VERSION = $(VER)-$(BUILD_NUMBER)-$(REVISION)
-LINUX_VER = 1.06
+VERSION = $(VER)-$(BUILD_NUMBER)
+LINUX_VER = 2.03
 export BUILD_NUMBER
 export REVISION
 export VERSION
 export LINUX_VER
+BUILD_MODE ?= Release
 ################################################################################
 #
 ################################################################################
 
-# MODEL USE FOR determine kind of assembly
-# USED parameters:
-# Z10 - for Redpitaya 125-14
-# Z10_SLAVE - for Rediptaya 125-14 in slave streamig mode  
-# Z20 - for Redpitaya 122-16
-# Z20_125 - for Redpitaya Z20 125-14
-# Z20_250_12 - for RepPitaya 250-12
-# Production test script
-MODEL ?= Z10
+CUR_DIR = $(PWD)
 
-ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20))
-ifeq ($(STREAMING),MASTER)
-all: api nginx examples  apps-tools apps-pro startupsh scpi sdr apps-free-vna rp_communication
-endif
-endif
-
-ifeq ($(MODEL),$(filter $(MODEL),Z20_125 Z20_250_12))
-ifeq ($(STREAMING),MASTER)
-all: api nginx examples  apps-tools apps-pro startupsh scpi rp_communication
-endif
-endif
-
-ifeq ($(MODEL),$(filter $(MODEL),Z10))
-ifeq ($(STREAMING),SLAVE)
-all: nginx apps-tools streaming_slave startupsh
-endif
-endif
+all: api nginx examples  apps-tools apps-pro startupsh scpi rp_communication sdr
 
 
 $(DL):
@@ -60,58 +38,69 @@ $(INSTALL_DIR):
 # API libraries
 ################################################################################
 
-LIBRP_DIR       = rp-api/api
-LIBRP2_DIR      = rp-api/api2
-LIBRP250_12_DIR = rp-api/api-250-12
-LIBRPLCR_DIR	= Applications/api/rpApplications/lcr_meter
-LIBRPAPP_DIR    = Applications/api/rpApplications
-ECOSYSTEM_DIR   = Applications/ecosystem
+LIBRP_DIR       		= rp-api/api
+LIBRP_HW_DIR    		= rp-api/api-hw
+LIBRP_HW_CAN_DIR  		= rp-api/api-hw-can
+LIBRP_HW_PROFILES_DIR	= rp-api/api-hw-profiles
+LIBRP_HW_CALIB_DIR		= rp-api/api-hw-calib
+LIBRP2_DIR      		= rp-api/api2
+LIBRP250_12_DIR 		= rp-api/api-250-12
+LIBRP_DSP_DIR   		= rp-api/api-dsp
+LIBRPAPP_DIR    		= rp-api/api-app
+LIBRP_FORMATTER_DIR   	= rp-api/api-formatter
+LIBRP_ARB_DIR		   	= rp-api/api-arb
+ECOSYSTEM_DIR   		= Applications/ecosystem
 
-.PHONY: api api2 librp librp1 librp250_12
+.PHONY: api api2 librp librp250_12 librp_hw librp_dsp librp_hw_profiles librp_hw_calibration librp_hw_can librparb
 .PHONY: librpapp liblcr_meter
 
-api: librp
+api: librp librp_hw librp_hw_can librp_dsp librpapp librp_formatter librparb
 
 api2: librp2
 
-ifeq ($(MODEL),Z20_250_12)
-librp: librp250_12
-else
-librp:
-endif
-	$(MAKE) -C $(LIBRP_DIR) clean
-	$(MAKE) -C $(LIBRP_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(LIBRP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+librp: librp250_12 librp_hw_calibration librp_hw_profiles
+	cmake -B$(abspath $(LIBRP_DIR)/build) -S$(abspath $(LIBRP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)  -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRP_DIR)/build install
 
-librp1:
-	$(MAKE) -C $(LIBRP1_DIR) clean
-	$(MAKE) -C $(LIBRP1_DIR)
-	$(MAKE) -C $(LIBRP1_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+librp_hw:
+	cmake -B$(abspath $(LIBRP_HW_DIR)/build) -S$(abspath $(LIBRP_HW_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRP_HW_DIR)/build install
+
+librp_hw_can: librp
+	cmake -B$(abspath $(LIBRP_HW_CAN_DIR)/build) -S$(abspath $(LIBRP_HW_CAN_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRP_HW_CAN_DIR)/build install
+
+librp_hw_calibration: librp_hw_profiles
+	cmake -B$(abspath $(LIBRP_HW_CALIB_DIR)/build) -S$(abspath $(LIBRP_HW_CALIB_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRP_HW_CALIB_DIR)/build install
+
+librp_hw_profiles:
+	cmake -B$(abspath $(LIBRP_HW_PROFILES_DIR)/build) -S$(abspath $(LIBRP_HW_PROFILES_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRP_HW_PROFILES_DIR)/build install
+
+librp_dsp:
+	cmake -B$(abspath $(LIBRP_DSP_DIR)/build) -S$(abspath $(LIBRP_DSP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRP_DSP_DIR)/build install
+
+librp_formatter:
+	cmake -B$(abspath $(LIBRP_FORMATTER_DIR)/build) -S$(abspath $(LIBRP_FORMATTER_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRP_FORMATTER_DIR)/build install
 
 librp2:
-	$(MAKE) -C $(LIBRP2_DIR) clean
-	$(MAKE) -C $(LIBRP2_DIR)
-	$(MAKE) -C $(LIBRP2_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	cmake -B$(abspath $(LIBRP2_DIR)/build) -S$(abspath $(LIBRP2_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRP2_DIR)/build install
 
-librp250_12:
-	$(MAKE) -C $(LIBRP250_12_DIR) clean
-	$(MAKE) -C $(LIBRP250_12_DIR)
-	$(MAKE) -C $(LIBRP250_12_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
-
-ifeq ($(ENABLE_LICENSING),1)
-
-api: librpapp liblcr_meter
+librp250_12: librp_hw
+	cmake -B$(LIBRP250_12_DIR)/build -S$(LIBRP250_12_DIR) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRP250_12_DIR)/build install
 
 librpapp: librp
-	$(MAKE) -C $(LIBRPAPP_DIR) clean
-	$(MAKE) -C $(LIBRPAPP_DIR)
-	$(MAKE) -C $(LIBRPAPP_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	cmake -B$(abspath $(LIBRPAPP_DIR)/build) -S$(abspath $(LIBRPAPP_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRPAPP_DIR)/build install
 
-liblcr_meter: librp
-	$(MAKE) -C $(LIBRPLCR_DIR) clean
-	$(MAKE) -C $(LIBRPLCR_DIR)
-	$(MAKE) -C $(LIBRPLCR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
-endif
+librparb: librp
+	cmake -B$(abspath $(LIBRP_ARB_DIR)/build) -S$(abspath $(LIBRP_ARB_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LIBRP_ARB_DIR)/build install
 
 
 ################################################################################
@@ -128,30 +117,38 @@ SOCKPROC        = $(INSTALL_DIR)/sbin/sockproc
 STARTUPSH       = $(INSTALL_DIR)/sbin/startup.sh
 GETSYSINFOSH    = $(INSTALL_DIR)/sbin/getsysinfo.sh
 
-WEBSOCKETPP_TAG = 0.7.0
-LUANGINX_TAG    = v0.10.7
-NGINX_TAG       = 1.11.4
+WEBSOCKETPP_TAG = 0.8.2
+LUANGINX_TAG    = v0.10.21
+LUARESTY_TAG    = v0.1.23
+LUARESTY_L_TAG  = v0.13
+NGINX_TAG       = 1.19.10
 SOCKPROC_TAG    = master
 
 WEBSOCKETPP_URL = https://github.com/zaphoyd/websocketpp/archive/$(WEBSOCKETPP_TAG).tar.gz
-LIBJSON_URL     = http://sourceforge.net/projects/libjson/files/libjson_7.6.1.zip
+LIBJSON_URL     = https://github.com/RedPitaya/libjson/archive/refs/tags/7.6.1.tar.gz
 LUANGINX_URL    = https://codeload.github.com/openresty/lua-nginx-module/tar.gz/$(LUANGINX_TAG)
+LUARESTY_URL    = https://github.com/openresty/lua-resty-core/archive/refs/tags/$(LUARESTY_TAG).tar.gz
+LUARESTY_L_URL  = https://github.com/openresty/lua-resty-lrucache/archive/refs/tags/$(LUARESTY_L_TAG).tar.gz
 NGINX_URL       = http://nginx.org/download/nginx-$(NGINX_TAG).tar.gz
 SOCKPROC_URL	= https://github.com/juce/sockproc/archive/$(SOCKPROC_TAG).tar.gz
 
 WEBSOCKETPP_TAR = $(DL)/websocketpp-$(WEBSOCKETPP_TAG).tar.gz
 LIBJSON_TAR     = $(DL)/libjson_7.6.1.zip
-LUANGINX_TAR    = $(DL)/lua-nginx-module-$(LUANGINX_TAG).tr.gz
+LUANGINX_TAR    = $(DL)/lua-nginx-module-$(LUANGINX_TAG).tar.gz
+LUARESTY_TAR    = $(DL)/lua-resty-module-$(LUARESTY_TAG).tar.gz
+LUARESTY_L_TAR  = $(DL)/lua-resty-lrucache-module-$(LUARESTY_L_TAG).tar.gz
 NGINX_TAR       = $(DL)/nginx-$(NGINX_TAG).tar.gz
 SOCKPROC_TAR	= $(DL)/sockproc-$(SOCKPROC_TAG).tar.gz
 
 WEBSOCKETPP_DIR = Bazaar/nginx/ngx_ext_modules/ws_server/websocketpp
 LIBJSON_DIR     = Bazaar/tools/libjson
 LUANGINX_DIR    = Bazaar/nginx/ngx_ext_modules/lua-nginx-module
+LUARESTY_DIR    = Bazaar/nginx/ngx_ext_modules/lua-resty-module
+LUARESTY_L_DIR  = Bazaar/nginx/ngx_ext_modules/lua-resty-lrucache-module
 NGINX_SRC_DIR   = Bazaar/nginx/nginx
 SOCKPROC_DIR    = Bazaar/tools/sockproc
 
-.PHONY: ecosystem nginx
+.PHONY: ecosystem nginx $(LIBJSON_DIR) $(LIBJSON_TAR) $(DL) $(SOCKPROC_TAR) $(WEBSOCKETPP_DIR) $(WEBSOCKETPP_TAR) $(LUANGINX_TAR) $(NGINX_TAR) $(NGINX_SRC_DIR) $(LUANGINX_DIR)
 
 $(WEBSOCKETPP_TAR): | $(DL)
 	wget $(WEBSOCKETPP_URL) -O $@ --show-progress
@@ -159,7 +156,7 @@ $(WEBSOCKETPP_TAR): | $(DL)
 $(WEBSOCKETPP_DIR): $(WEBSOCKETPP_TAR)
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
-	patch -d $@ -p1 < patches/websocketpp-$(WEBSOCKETPP_TAG).patch
+#	patch -d $@ -p1 < patches/websocketpp-$(WEBSOCKETPP_TAG).patch
 
 $(SOCKPROC_TAR): | $(DL)
 	wget $(SOCKPROC_URL) -O $@ --show-progress
@@ -173,7 +170,7 @@ $(LIBJSON_TAR): | $(DL)
 
 $(LIBJSON_DIR): $(LIBJSON_TAR)
 	mkdir -p $@
-	unzip $< -d $(@D)
+	tar -xzf $< --strip-components=1 --directory=$@
 	patch -d $@ -p1 < patches/libjson.patch
 
 $(LUANGINX_TAR): | $(DL)
@@ -183,6 +180,22 @@ $(LUANGINX_DIR): $(LUANGINX_TAR)
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
 
+$(LUARESTY_TAR): | $(DL)
+	wget $(LUARESTY_URL) -O $@ --show-progress
+
+$(LUARESTY_DIR): $(LUARESTY_TAR)
+	mkdir -p $@
+	tar -xzf $< --strip-components=1 --directory=$@
+	$(MAKE) -C $(LUARESTY_DIR) install PREFIX=$(abspath $(INSTALL_DIR)/www/conf)
+
+$(LUARESTY_L_TAR): | $(DL)
+	wget $(LUARESTY_L_URL) -O $@ --show-progress
+
+$(LUARESTY_L_DIR): $(LUARESTY_L_TAR)
+	mkdir -p $@
+	tar -xzf $< --strip-components=1 --directory=$@
+	$(MAKE) -C $(LUARESTY_L_DIR) install PREFIX=$(abspath $(INSTALL_DIR)/www/conf)
+
 $(NGINX_TAR): | $(DL)
 	wget $(NGINX_URL) -O $@ --show-progress
 
@@ -190,31 +203,23 @@ $(NGINX_SRC_DIR): $(NGINX_TAR)
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
 	cp -f apps-tools/nginx.conf $@/conf/
-	mkdir $@/conf/lua/
+	mkdir -p $@/conf/lua/
 	cp -fr patches/lua/* $@/conf/lua/
 
-$(NGINX): $(CRYPTOPP_DIR) $(WEBSOCKETPP_DIR) $(LIBJSON_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR)
-	$(MAKE) -C $(NGINX_DIR) clean
+$(NGINX): $(CRYPTOPP_DIR) $(WEBSOCKETPP_DIR) $(LIBJSON_DIR) $(LUARESTY_DIR) $(LUARESTY_L_DIR) $(LUANGINX_DIR) $(NGINX_SRC_DIR)
+# $(MAKE) -C $(NGINX_DIR) clean
 	$(MAKE) -C $(NGINX_DIR)
 	$(MAKE) -C $(NGINX_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
 	mkdir -p $(INSTALL_DIR)/www/conf/lua
 	cp -fr $(NGINX_DIR)/nginx/conf/lua/* $(abspath $(INSTALL_DIR))/www/conf/lua
 
-ifeq ($(ENABLE_LICENSING),1)
 
-IDGEN_DIR = Applications/idgen
+IDGEN_DIR = apps-tools/idgen
 
 $(IDGEN):
 	$(MAKE) -C $(IDGEN_DIR) clean
 	$(MAKE) -C $(IDGEN_DIR)
 	$(MAKE) -C $(IDGEN_DIR) install DESTDIR=$(abspath $(INSTALL_DIR))
-
-else
-
-$(IDGEN):
-	touch $(IDGEN)
-
-endif
 
 $(SOCKPROC): $(SOCKPROC_DIR)
 	$(MAKE) -C $<
@@ -224,11 +229,7 @@ $(SOCKPROC): $(SOCKPROC_DIR)
 nginx: $(NGINX) $(SOCKPROC)
 
 startupsh:
-ifeq ($(MODEL),Z20_250_12)
-	cp -f patches/startup/startup.sh.Z250_12 $(STARTUPSH)
-else
 	cp -f patches/startup/startup.sh $(STARTUPSH)
-endif
 
 streaming_slave:
 	test -d $(INSTALL_DIR)/bin || mkdir -p $(INSTALL_DIR)/bin
@@ -239,7 +240,9 @@ streaming_slave:
 # SCPI server
 ################################################################################
 
-SCPI_PARSER_TAG = 07364fc7b52389bc2c4d172ab42aea555b0c38fc
+#SCPI_PARSER_TAG = 26aaabc20ef93754efe3ed43674e94c7cc444373
+SCPI_PARSER_TAG = redpitaya
+
 #SCPI_PARSER_URL = https://github.com/j123b567/scpi-parser/archive/$(SCPI_PARSER_TAG).tar.gz
 SCPI_PARSER_URL = https://github.com/RedPitaya/scpi-parser/archive/$(SCPI_PARSER_TAG).tar.gz
 SCPI_PARSER_TAR = $(DL)/scpi-parser-$(SCPI_PARSER_TAG).tar.gz
@@ -268,8 +271,8 @@ scpi: api $(INSTALL_DIR) $(SCPI_PARSER_DIR)
 
 # git clone https://github.com/RedPitaya/red-pitaya-notes.git -b charly25ab
 # ZIP file name should be updated for each new build
-SDR_ZIP = stemlab_sdr_transceiver_hpsdr-0.94-1656.zip
-SDR_URL = http://downloads.redpitaya.com/hamlab/charly25ab/$(SDR_ZIP)
+SDR_ZIP = SDR-bundle-25-9253aa5e.zip
+SDR_URL = https://downloads.redpitaya.com/hamlab/sdr-bundle/$(SDR_ZIP)
 
 sdr: | $(DL)
 ifeq ($(MODEL),$(filter $(MODEL),Z10))
@@ -287,28 +290,22 @@ BODE_DIR           = Test/bode
 MONITOR_DIR        = Test/monitor
 ACQUIRE_DIR        = Test/acquire
 CALIB_DIR          = Test/calib
-CALIBRATE_DIR      = Test/calibrate
+#CALIBRATE_DIR      = Test/calibrate
 GENERATOR_DIR	   = Test/generate
 SPECTRUM_DIR       = Test/spectrum
 LED_CONTROL_DIR    = Test/led_control
 COMM_DIR           = Examples/Communication/C
 XADC_DIR           = Test/xadc
 LA_TEST_DIR        = rp-api/api2/test
+DAISY_TOOL_DIR     = Test/daisy_tool
+FPGA_TESTS_DIR     = Examples/Tests
 
-.PHONY: examples rp_communication
-.PHONY: lcr bode monitor generator acquire calib calibrate spectrum laboardtest led_control
+.PHONY: examples rp_communication fpgautils
+.PHONY: lcr bode monitor generator acquire calib spectrum laboardtest led_control daisy_tool fpga_tests
 
-examples: lcr bode monitor calib spectrum acquire generator led_control
+examples: lcr bode monitor calib spectrum acquire generator led_control fpgautils daisy_tool fpga_tests
 
-ifeq ($(MODEL),Z20_250_12)
-examples: rp_i2c_tool
-endif
 # calibrate laboardtest
-
-rp_i2c_tool:
-	$(MAKE) -C $(LIBRP250_12_DIR) clean
-	$(MAKE) -C $(LIBRP250_12_DIR) tool
-	$(MAKE) -C $(LIBRP250_12_DIR) install_tool INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 # lcr:
 # 	$(MAKE) -C $(LCR_DIR) clean
@@ -316,43 +313,49 @@ rp_i2c_tool:
 #	$(MAKE) -C $(LCR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 bode: api
-	$(MAKE) -C $(BODE_DIR) clean
-	$(MAKE) -C $(BODE_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(BODE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	rm -rf $(abspath $(BODE_DIR)/build)
+	cmake -B$(abspath $(BODE_DIR)/build) -S$(abspath $(BODE_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(BODE_DIR)/build install
 
-monitor:
-	$(MAKE) -C $(MONITOR_DIR) clean
-	$(MAKE) -C $(MONITOR_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(MONITOR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+monitor: api
+	rm -rf $(abspath $(MONITOR_DIR)/build)
+	cmake -B$(abspath $(MONITOR_DIR)/build) -S$(abspath $(MONITOR_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(MONITOR_DIR)/build install
 
 generator: api
-	$(MAKE) -C $(GENERATOR_DIR) clean 
-	$(MAKE) -C $(GENERATOR_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(GENERATOR_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	rm -rf $(abspath $(GENERATOR_DIR)/build)
+	cmake -B$(abspath $(GENERATOR_DIR)/build) -S$(abspath $(GENERATOR_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(GENERATOR_DIR)/build install
 
 acquire: api
-	$(MAKE) -C $(ACQUIRE_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(ACQUIRE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	rm -rf $(abspath $(ACQUIRE_DIR)/build)
+	cmake -B$(abspath $(ACQUIRE_DIR)/build) -S$(abspath $(ACQUIRE_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(ACQUIRE_DIR)/build install
 
-calib:
-	$(MAKE) -C $(CALIB_DIR) clean
-	$(MAKE) -C $(CALIB_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(CALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+calib: api
+	rm -rf $(abspath $(CALIB_DIR)/build)
+	cmake -B$(abspath $(CALIB_DIR)/build) -S$(abspath $(CALIB_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(CALIB_DIR)/build install
+
+daisy_tool: api
+	rm -rf $(abspath $(DAISY_TOOL_DIR)/build)
+	cmake -B$(abspath $(DAISY_TOOL_DIR)/build) -S$(abspath $(DAISY_TOOL_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(DAISY_TOOL_DIR)/build install
 
 spectrum: api
-	$(MAKE) -C $(SPECTRUM_DIR) clean
-	$(MAKE) -C $(SPECTRUM_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(SPECTRUM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	rm -rf $(abspath $(SPECTRUM_DIR)/build)
+	cmake -B$(abspath $(SPECTRUM_DIR)/build) -S$(abspath $(SPECTRUM_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(SPECTRUM_DIR)/build install
 
-calibrate: api
-	$(MAKE) -C $(CALIBRATE_DIR) clean
-	$(MAKE) -C $(CALIBRATE_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(CALIBRATE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+# calibrate: api
+# 	$(MAKE) -C $(CALIBRATE_DIR) clean
+# 	$(MAKE) -C $(CALIBRATE_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+# 	$(MAKE) -C $(CALIBRATE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 led_control: api
-	$(MAKE) -C $(LED_CONTROL_DIR) clean
-	$(MAKE) -C $(LED_CONTROL_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(LED_CONTROL_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	rm -rf $(abspath $(LED_CONTROL_DIR)/build)
+	cmake -B$(abspath $(LED_CONTROL_DIR)/build) -S$(abspath $(LED_CONTROL_DIR)) -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)   -DVERSION=$(VERSION) -DREVISION=$(REVISION)
+	$(MAKE) -C $(LED_CONTROL_DIR)/build install
 
 laboardtest: api2
 	$(MAKE) -C $(LA_TEST_DIR) clean
@@ -360,10 +363,18 @@ laboardtest: api2
 	mkdir -p $(abspath $(INSTALL_DIR))/bin
 	cp rp-api/api2/test/laboardtest $(abspath $(INSTALL_DIR))/bin/laboardtest
 	cp rp-api/api2/test/install.sh $(abspath $(INSTALL_DIR))/install.sh
-	
+
 rp_communication:
 	make -C $(COMM_DIR)
 
+fpgautils:
+	mkdir -p $(abspath $(INSTALL_DIR))/bin
+	$(CC) tools/fpgautils/fpgautil.c -o $(abspath $(INSTALL_DIR))/bin/fpgautil
+
+fpga_tests: api
+	$(MAKE) -C $(FPGA_TESTS_DIR) clean
+	$(MAKE) -C $(FPGA_TESTS_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(FPGA_TESTS_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 ################################################################################
 # Red Pitaya ecosystem and tools
@@ -400,35 +411,13 @@ APP_UPDATER_DIR          = apps-tools/updater
 APP_JUPYTERMANAGER_DIR   = apps-tools/jupyter_manager
 APP_STREAMINGMANAGER_DIR = apps-tools/streaming_manager
 APP_CALIB_DIR			 = apps-tools/calib_app
+APP_MAIN_MENU_DIR        = apps-tools/main_menu
+APP_ARB_MANAGER_DIR      = apps-tools/arb_manager
 
-.PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager streaming_manager calib_app
+.PHONY: apps-tools ecosystem updater scpi_manager network_manager jupyter_manager streaming_manager calib_app main_menu arb_manager
 
+apps-tools: ecosystem updater network_manager scpi_manager streaming_manager jupyter_manager calib_app main_menu arb_manager
 
-ifeq ($(MODEL),$(filter $(MODEL),Z10 Z20_125))
-ifeq ($(STREAMING),MASTER)
-apps-tools: ecosystem updater network_manager scpi_manager streaming_manager jupyter_manager calib_app
-endif
-endif
-
-ifeq ($(MODEL),$(filter $(MODEL),Z20))
-ifeq ($(STREAMING),MASTER)
-apps-tools: ecosystem updater network_manager scpi_manager streaming_manager jupyter_manager
-endif
-endif
-
-
-ifeq ($(MODEL),$(filter $(MODEL),Z20_250_12))
-ifeq ($(STREAMING),MASTER)
-apps-tools: ecosystem updater network_manager scpi_manager streaming_manager calib_app
-endif
-endif
-
-
-ifeq ($(MODEL),$(filter $(MODEL),Z10))
-ifeq ($(STREAMING),SLAVE)
-apps-tools: ecosystem updater network_manager streaming_manager
-endif
-endif
 
 ecosystem:
 	$(MAKE) -C $(APP_ECOSYSTEM_DIR) clean
@@ -439,15 +428,25 @@ updater: ecosystem $(NGINX)
 	$(MAKE) -C $(APP_UPDATER_DIR)
 	$(MAKE) -C $(APP_UPDATER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
+main_menu: ecosystem api $(NGINX)
+	$(MAKE) -C $(APP_MAIN_MENU_DIR) clean
+	$(MAKE) -C $(APP_MAIN_MENU_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(APP_MAIN_MENU_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
+arb_manager: ecosystem api $(NGINX)
+	$(MAKE) -C $(APP_ARB_MANAGER_DIR) clean
+	$(MAKE) -C $(APP_ARB_MANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(APP_ARB_MANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+
 scpi_manager: ecosystem api $(NGINX)
 	$(MAKE) -C $(APP_SCPIMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 streaming_manager: api $(NGINX)
 	$(MAKE) -i -C $(APP_STREAMINGMANAGER_DIR) clean
-	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL) STREAMING_MODE=$(STREAMING)
-	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL) STREAMING_MODE=$(STREAMING)
+	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-calib_app: api $(NGINX)
+calib_app: api  $(NGINX)
 	$(MAKE) -i -C $(APP_CALIB_DIR) clean
 	$(MAKE) -C $(APP_CALIB_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
 	$(MAKE) -C $(APP_CALIB_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
@@ -488,26 +487,15 @@ apps-free-clean:
 # Red Pitaya PRO applications
 ################################################################################
 
-ifeq ($(ENABLE_LICENSING),1)
-
-APP_SCOPEGENPRO_DIR = Applications/scopegenpro
-APP_SPECTRUMPRO_DIR = Applications/spectrumpro
-APP_LCRMETER_DIR    = Applications/lcr_meter
-APP_LA_PRO_DIR 		= Applications/la_pro
-APP_BA_PRO_DIR 		= Applications/ba_pro
+APP_SCOPEGENPRO_DIR = apps-tools/scopegenpro
+APP_SPECTRUMPRO_DIR = apps-tools/spectrumpro
+APP_LCRMETER_DIR    = apps-tools/lcr_meter
+APP_LA_PRO_DIR 		= apps-tools/la_pro
+APP_BA_PRO_DIR 		= apps-tools/ba_pro
 
 .PHONY: apps-pro scopegenpro spectrumpro lcr_meter la_pro ba_pro lcr_meter
 
-apps-pro: scopegenpro spectrumpro 
-ifeq ($(MODEL),Z20_250_12)
-apps-pro: ba_pro lcr_meter la_pro
-else
-ifeq ($(MODEL),Z20)
-apps-pro:
-else
-apps-pro: la_pro ba_pro lcr_meter
-endif
-endif
+apps-tools: scopegenpro spectrumpro la_pro ba_pro lcr_meter
 
 scopegenpro: api $(NGINX)
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) clean
@@ -524,7 +512,7 @@ lcr_meter: api $(NGINX)
 	$(MAKE) -C $(APP_LCRMETER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) MODEL=$(MODEL)
 	$(MAKE) -C $(APP_LCRMETER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-la_pro: api api2 $(NGINX)
+la_pro: api api2
 	$(MAKE) -C $(APP_LA_PRO_DIR) clean
 	$(MAKE) -C $(APP_LA_PRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_LA_PRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
@@ -534,11 +522,6 @@ ba_pro: api $(NGINX)
 	$(MAKE) -C $(APP_BA_PRO_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(APP_BA_PRO_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-else
-
-apps-pro:
-
-endif
 
 
 ################################################################################
@@ -548,18 +531,41 @@ endif
 
 clean:
 	# todo, remove downloaded libraries and symlinks
-	make -C $(NGINX_DIR) clean
-	make -C $(MONITOR_DIR) clean
-	make -C $(GENERATOR_DIR) clean
-	make -C $(ACQUIRE_DIR) clean
-	make -C $(GENERATOR250_DIR) clean
-	make -C $(CALIB_DIR) clean
-	make -C $(SCPI_SERVER_DIR) clean
-	make -C $(LIBRP250_12_DIR)    clean
-	make -C $(LIBRP2_DIR)    clean
-	make -C $(LIBRP_DIR)    clean
-	make -C $(LIBRPAPP_DIR) clean
-	make -C $(LIBRPLCR_DIR) clean
-	make -C $(COMM_DIR) clean
-	make -C $(PRODUCTION_TEST_DIR) clean
-	apps-free-clean
+	rm -rf $(abspath $(LIBRP_DIR)/build)
+	rm -rf $(abspath $(LIBRP2_DIR)/build)
+	rm -rf $(abspath $(LIBRP_HW_DIR)/build)
+	rm -rf $(abspath $(LIBRP_HW_CAN_DIR)/build)
+	rm -rf $(abspath $(LIBRP_HW_PROFILES_DIR)/build)
+	rm -rf $(abspath $(LIBRP250_12_DIR)/build)
+	rm -rf $(abspath $(LIBRP_DSP_DIR)/build)
+	rm -rf $(abspath $(LIBRP_FORMATTER_DIR)/build)
+	rm -rf $(abspath $(LIBRP_HW_CALIB_DIR)/build)
+	rm -rf $(abspath $(LIBRP_ARB_DIR)/build)
+
+
+	rm -rf $(abspath $(CALIB_DIR)/build)
+	rm -rf $(abspath $(BODE_DIR)/build)
+	rm -rf $(abspath $(ACQUIRE_DIR)/build)
+	rm -rf $(abspath $(DAISY_TOOL_DIR)/build)
+	rm -rf $(abspath $(GENERATOR_DIR)/build)
+	rm -rf $(abspath $(LED_CONTROL_DIR)/build)
+	rm -rf $(abspath $(MONITOR_DIR)/build)
+	rm -rf $(abspath $(SPECTRUM_DIR)/build)
+	rm -rf $(abspath $(LIBRPAPP_DIR)/build)
+
+
+	$(MAKE) -C $(NGINX_DIR) clean
+	$(MAKE) -C $(SCPI_SERVER_DIR) clean
+	$(MAKE) -C $(COMM_DIR) clean
+	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) clean
+	$(MAKE) -C $(APP_MAIN_MENU_DIR) clean
+
+	$(MAKE) -C $(APP_ARB_MANAGER_DIR) clean
+	$(MAKE) -C $(APP_SCOPEGENPRO_DIR) clean
+	$(MAKE) -C $(APP_SPECTRUMPRO_DIR) clean
+	$(MAKE) -C $(APP_LCRMETER_DIR) clean
+	$(MAKE) -C $(APP_LA_PRO_DIR) clean
+	$(MAKE) -C $(APP_BA_PRO_DIR) clean
+	$(MAKE) -C $(IDGEN_DIR) clean
+
+

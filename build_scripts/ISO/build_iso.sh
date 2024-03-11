@@ -14,11 +14,12 @@ fi
 
 ECO_FILE=$1
 PREFIX=$2
+SUFFIX=$3
 REV="$(echo $1 | cut -d'-' -f2)"
 NUM="$(echo $1 | cut -d'-' -f3)"
 
-wget -N https://downloads.redpitaya.com/downloads/LinuxOS/red_pitaya_OS-beta_1.06.img.zip
-unzip -n red_pitaya_OS-beta_1.06.img.zip
+wget -N https://downloads.redpitaya.com/downloads/LinuxOS/red_pitaya_OS-beta_2.01.img.zip
+unzip -n red_pitaya_OS-beta_2.01.img.zip
 rm -f redpitaya.img
 mv *.img redpitaya.img
 
@@ -81,9 +82,7 @@ echo "remove qemu"
 sudo rm "root/usr/bin/qemu-arm-static"
 
 sudo rm -rf ./boot/*
-echo "STOP"
-# read
-echo "DONE"
+
 sleep 2
 sudo unzip -o $ECO_FILE -d ./boot
 
@@ -106,7 +105,10 @@ sudo losetup -d "$LOOP_DEV"
 
 sleep 2
 
-mv redpitaya.img $(echo $PREFIX'_OS_'$REV'-'$NUM'_beta.img')
-zip $(echo $PREFIX'_OS_'$REV'-'$NUM'_beta.img.zip') $(echo $PREFIX'_OS_'$REV'-'$NUM'_beta.img') 
+mv redpitaya.img $(echo $PREFIX'_OS_'$REV'-'$NUM$SUFFIX'_beta.img')
+md5sum $(echo $PREFIX'_OS_'$REV'-'$NUM$SUFFIX'_beta.img') > md5.txt
+zip $(echo $PREFIX'_OS_'$REV'-'$NUM$SUFFIX'_beta.img.zip') $(echo $PREFIX'_OS_'$REV'-'$NUM$SUFFIX'_beta.img') md5.txt
 rm -f $(echo $PREFIX'_OS_'$REV'-'$NUM'_beta.img')
+rm md5.txt
 echo "ALL DONE"
+

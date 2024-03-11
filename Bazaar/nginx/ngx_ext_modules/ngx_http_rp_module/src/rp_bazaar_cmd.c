@@ -465,43 +465,52 @@ int rp_bazaar_start(ngx_http_request_t *r,
          *    - Test if fpga loaded correctly
          *    - Read/write permissions
          *    - File exists/not exists */
-        switch (rp_bazaar_app_load_fpga(fpga_name)) {
-            case FPGA_FIND_ERR:
-                if (fpga_name)  free(fpga_name);
-                return rp_module_cmd_error(json_root, "Cannot find fpga file.", NULL, r->pool);
-            case FPGA_READ_ERR:
-                if (fpga_name)  free(fpga_name);
-                return rp_module_cmd_error(json_root, "Unable to read FPGA file.", NULL, r->pool);
-            case FPGA_WRITE_ERR:
-                if (fpga_name)  free(fpga_name);
-                return rp_module_cmd_error(json_root, "Unable to write FPGA file into memory.", NULL, r->pool);
-            /* App is a new app and doesn't need custom fpga.bit */
-            case FPGA_NOT_REQ:
-                if (fpga_name)  free(fpga_name);
-                break;
-            case FPGA_OK:
-            {
-                if (fpga_name)  free(fpga_name);
-                len = strlen((char *)lc->bazaar_dir.data) + strlen(argv[0]) + strlen("/fpga.sh") + 2;
-                char dmaDrv[len];
-                sprintf(dmaDrv, "%s/%s/fpga.sh", lc->bazaar_dir.data, argv[0]);
-                if (system(dmaDrv))
-                    fprintf(stderr, "Problem running %s\n", dmaDrv);
-                break;
-            }
-            default:
-                if (fpga_name)  free(fpga_name);
-                return rp_module_cmd_error(json_root, "Unknown error.", NULL, r->pool);
-        }
+        // switch (rp_bazaar_app_load_fpga(fpga_name)) {
+        //     case FPGA_FIND_ERR:
+        //         if (fpga_name)  free(fpga_name);
+        //         return rp_module_cmd_error(json_root, "Cannot find fpga file.", NULL, r->pool);
+        //     case FPGA_READ_ERR:
+        //         if (fpga_name)  free(fpga_name);
+        //         return rp_module_cmd_error(json_root, "Unable to read FPGA file.", NULL, r->pool);
+        //     case FPGA_WRITE_ERR:
+        //         if (fpga_name)  free(fpga_name);
+        //         return rp_module_cmd_error(json_root, "Unable to write FPGA file into memory.", NULL, r->pool);
+        //     /* App is a new app and doesn't need custom fpga.bit */
+        //     case FPGA_NOT_REQ:
+        //         if (fpga_name)  free(fpga_name);
+        //         break;
+        //     case FPGA_OK:
+        //     {
+        //         if (fpga_name)  free(fpga_name);
+        //         len = strlen((char *)lc->bazaar_dir.data) + strlen(argv[0]) + strlen("/fpga.sh") + 2;
+        //         char dmaDrv[len];
+        //         sprintf(dmaDrv, "%s/%s/fpga.sh", lc->bazaar_dir.data, argv[0]);
+        //         if (system(dmaDrv))
+        //             fprintf(stderr, "Problem running %s\n", dmaDrv);
+        //         break;
+        //     }
+        //     default:
+        //         if (fpga_name)  free(fpga_name);
+        //         return rp_module_cmd_error(json_root, "Unknown error.", NULL, r->pool);
+        // }
+        if (fpga_name)  free(fpga_name);
+        len = strlen((char *)lc->bazaar_dir.data) + strlen(argv[0]) + strlen("/fpga.sh") + 2;
+        char dmaDrv[len];
+        sprintf(dmaDrv, "%s/%s/fpga.sh", lc->bazaar_dir.data, argv[0]);
+        if (system(dmaDrv))
+            fprintf(stderr, "Problem running %s\n", dmaDrv);
     } else {
         fprintf(stderr, "Not loading specific FPGA, since no fpga.conf file was found.\n");
     }
 
     /* Load new application. */
     fprintf(stderr, "Loading application: '%s'\n", app_name);
-    if(rp_bazaar_app_load_module(&app_name[0], &rp_module_ctx.app) < 0) {
+    int ret = rp_bazaar_app_load_module(&app_name[0], &rp_module_ctx.app);
+    if(ret < 0) {
+        char err[250];
+        sprintf(err,"Can not load application. Error: %d",ret);
         rp_bazaar_app_unload_module(&rp_module_ctx.app);
-        return rp_module_cmd_error(json_root, "Can not load application.",
+        return rp_module_cmd_error(json_root, err,
                                    NULL, r->pool);
     }
 

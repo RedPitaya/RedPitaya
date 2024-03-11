@@ -155,7 +155,7 @@ namespace XML
 	}
 
 	void Buffer::Seek(unsigned int BytePosition){
-		if (BytePosition > lenght) throw new std::runtime_error("Buffer: Position out of range");
+		if (BytePosition > (unsigned int)lenght) throw new std::runtime_error("Buffer: Position out of range");
 		bytePosition = BytePosition;
 	}
 
@@ -189,7 +189,7 @@ namespace XML
 
 	bool IsSpaceChar(char ch){
 		char Symbols[] = { '\t','\n','\x0b','\x0c','\r',' ' };
-		for (int j = 0; j < sizeof(Symbols); j++){
+		for (unsigned int j = 0; j < sizeof(Symbols); j++){
 			if (ch == Symbols[j])
 				return true;
 		}
@@ -214,7 +214,7 @@ namespace XML
 
 	bool IsNumber(char ch){
 		char Symbols[] = { '0','1','2','3','4','5','6','7','8','9' };
-		for (int j = 0; j < sizeof(Symbols); j++){
+		for (unsigned int j = 0; j < sizeof(Symbols); j++){
 			if (ch == Symbols[j])
 				return true;
 		}

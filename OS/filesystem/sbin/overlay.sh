@@ -1,20 +1,26 @@
 #!/bin/sh
 
-# common directories
 FPGAS=/opt/redpitaya/fpga
-OVERLAYS=/sys/kernel/config/device-tree/overlays
+MODEL=$(/opt/redpitaya/bin/monitor -f)
 
-# first argument is overlay name
-OVERLAY=$1
-
-# first remove existing overlays, there is no way to unload the FPGA
-rmdir $OVERLAYS/*
-
-# first load the fpga, then the overlay
-cat $FPGAS/$OVERLAY/fpga.bit > /dev/xdevcfg
-mkdir $OVERLAYS/$OVERLAY
-cat $FPGAS/$OVERLAY/fpga.dtbo > $OVERLAYS/$OVERLAY/dtbo
-
-# wait a bit for the kernel to process the overlay,
-# before attempts are made to use the new drivers
+if [ "$?" = "0" ]
+then
 sleep 0.5s
+
+rmdir /configfs/device-tree/overlays/Full 2> /dev/null
+rm /tmp/loaded_fpga.inf 2> /dev/null
+
+sleep 0.5s
+
+/opt/redpitaya/bin/fpgautil -b $FPGAS/$MODEL/$1/fpga.bit.bin -o $FPGAS/$MODEL/$1/fpga.dtbo -n Full
+
+if [ "$?" = '0' ]
+then
+    echo -n $1 > /tmp/loaded_fpga.inf
+    exit 0
+else
+    rm /tmp/loaded_fpga.inf 2> /dev/null
+    exit 1
+fi
+fi
+exit 1

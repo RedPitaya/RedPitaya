@@ -15,7 +15,8 @@
 #define LOW  0
 #define HIGH 1
 
-#define MSG_A(args...) fprintf(stderr,args);
+#define MSG(...) if (g_enable_verbous) fprintf(stdout,__VA_ARGS__);
+#define MSG_A(...) fprintf(stdout,__VA_ARGS__);
 
 int gpio_write(int pin, int value){
 	char path[VALUE_MAX];

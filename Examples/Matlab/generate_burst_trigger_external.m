@@ -3,7 +3,7 @@ clc
 clear all
 close all
 
-IP= '192.168.178.56';            % Input IP of your Red Pitaya...
+IP= '';            % Input IP of your Red Pitaya...
 port = 5000;
 tcpipObj=tcpip(IP, port);
 
@@ -16,6 +16,8 @@ flushoutput(tcpipObj)
 
 %% Generate
 
+fprintf(tcpipObj,'GEN:RST')
+
 fprintf(tcpipObj,'SOUR1:FUNC SINE');          % Set function of output signal {sine, square, triangle,sawu,sawd, pwm}
 fprintf(tcpipObj,'SOUR1:FREQ:FIX 200');       % Set frequency of output signal
 fprintf(tcpipObj,'SOUR1:VOLT 1');             % Set amplitude of output signal
@@ -24,7 +26,9 @@ fprintf(tcpipObj,'SOUR1:BURS:NCYC 1');        % Set 1 pulses of sine wave
 fprintf(tcpipObj,'SOUR1:BURS:STAT ON');       % Set burst mode to ON
  
 fprintf(tcpipObj,'SOUR1:TRIG:SOUR EXT_PE');   % Set generator trigger to external
-fprintf(tcpipObj,'OUTPUT1:STATE ON');         % Set output to ON
+
+fprintf(tcpipObj,'OUTPUT1:STATE ON')
+fprintf(tcpipObj,'SOUR1:TRIG:INT')
 
 % For generating signal pulses you trigger signal frequency must be less than
 % frequency of generating signal pulses. If you have trigger signal frequency  

@@ -33,7 +33,15 @@
     OBJ.famSetModel = function(_model) {
         if (OBJ.famModel === undefined) {
             OBJ.famModel = _model.value;
-            if (OBJ.famModel === "Z10" || OBJ.amModel === "Z20_125") OBJ.famStates = OBJ.F_STATES_125_14;
+            if (OBJ.famModel === "Z10" || OBJ.famModel === "Z20_125" || OBJ.famModel === "Z20_125_4CH") OBJ.famStates = OBJ.F_STATES_125_14;
+
+            $('#am_a_filt_external_btn').on('click', function() { OBJ.famClickOkDialog() });
+
+            $('.a_filter_flipswitch').change(function() {
+                $(this).next().text($(this).is(':checked') ? ':checked' : ':not(:checked)');
+                OBJ.aFilterSetMode($(this).attr('id'), $(this).is(':checked'));
+
+            }).trigger('change');
         }
     }
 
@@ -41,52 +49,43 @@
         $("#fauto_calib_table").empty();
     }
 
-    OBJ.famAddNewRow = function() {
+    OBJ.famAddNewRow = function(row_id,ch) {
         var table = document.getElementById("fauto_calib_table");
         var row = table.insertRow(-1);
-        var id = OBJ.makeid(8);
-        row.setAttribute("id", id);
+
+        row.setAttribute("id", row_id);
         let newCell = row.insertCell(-1);
-        newCell.setAttribute("id", id + "_mode");
+        newCell.setAttribute("class", row_id + "_mode");
         newCell = row.insertCell(-1);
-        newCell.setAttribute("id", id + "_ch1_befor");
+        newCell.setAttribute("class", row_id + "_ch" + ch + "_name");
+        newCell.innerHTML = "CH "+ ch;
         newCell = row.insertCell(-1);
-        newCell.setAttribute("id", id + "_ch1_after");
+        newCell.setAttribute("id", row_id + "_ch" + ch + "_befor");
         newCell = row.insertCell(-1);
-        newCell.setAttribute("id", id + "_ch2_befor");
+        newCell.setAttribute("id", row_id + "_ch" + ch + "_after");
         newCell = row.insertCell(-1);
-        newCell.setAttribute("id", id + "_ch2_after");
+        newCell.setAttribute("id", row_id + "_aa_ch" + ch);
         newCell = row.insertCell(-1);
-        newCell.setAttribute("id", id + "_aa_ch1");
+        newCell.setAttribute("id", row_id + "_bb_ch" + ch );
         newCell = row.insertCell(-1);
-        newCell.setAttribute("id", id + "_aa_ch2");
+        newCell.setAttribute("id", row_id + "_pp_ch" + ch);
         newCell = row.insertCell(-1);
-        newCell.setAttribute("id", id + "_bb_ch1");
+        newCell.setAttribute("id", row_id + "_kk_ch" + ch);
         newCell = row.insertCell(-1);
-        newCell.setAttribute("id", id + "_bb_ch2");
-        newCell = row.insertCell(-1);
-        newCell.setAttribute("id", id + "_pp_ch1");
-        newCell = row.insertCell(-1);
-        newCell.setAttribute("id", id + "_pp_ch2");
-        newCell = row.insertCell(-1);
-        newCell.setAttribute("id", id + "_kk_ch1");
-        newCell = row.insertCell(-1);
-        newCell.setAttribute("id", id + "_kk_ch2");
-        newCell = row.insertCell(-1);
-        newCell.setAttribute("id", id + "_state");
-        return id;
+        newCell.setAttribute("class", row_id + "_state");
+        return row_id;
     }
 
     OBJ.famAddNewRowSpan = function() {
         var table = document.getElementById("fauto_calib_table");
         var row = table.insertRow(-1);
         var id = OBJ.makeid(8);
-        row.setAttribute("id", id);
+        row.setAttribute("class", id);
         let newCell = row.insertCell(-1);
-        newCell.setAttribute("id", id + "_mode");
-        newCell.setAttribute("colspan", "13");
+        newCell.setAttribute("class", id + "_mode");
+        newCell.setAttribute("colspan", "8");
         newCell = row.insertCell(-1);
-        newCell.setAttribute("id", id + "_state");
+        newCell.setAttribute("class", id + "_state");
         return id;
     }
 
@@ -95,8 +94,9 @@
     }
 
     OBJ.famSetRowName = function(_id, _name) {
-        $("#" + _id + "_mode").text(_name);
+        $("." + _id + "_mode").text(_name);
     }
+
 
     OBJ.famSetName = function() {
         if (OBJ.famCheckEmptyVariables()) {
@@ -104,9 +104,17 @@
         }
     }
 
+    OBJ.famSetNameEx = function(channels) {
+        if (OBJ.famCheckEmptyVariables()) {
+            for(var i = 1; i<= channels ;i++)
+                OBJ.famSetRowName(OBJ.famCurrentRowID, OBJ.famStates[OBJ.famCurrentTest].name);
+        }
+    }
+
     OBJ.famSetStartButton = function() {
         if (OBJ.famCheckEmptyVariables()) {
-            var element = document.getElementById(OBJ.famCurrentRowID + "_state");
+            var arr = document.getElementsByClassName(OBJ.famCurrentRowID + "_state");
+            var element = arr[arr.length -1];
             var d = document.createElement("div");
             element.appendChild(d);
             d.setAttribute("class", "am_start_buttons");
@@ -125,6 +133,7 @@
         }
     }
 
+
     OBJ.famRemoveStateObject = function() {
         if (OBJ.famCheckEmptyVariables()) {
             OBJ.famRemoveStateObjectId(OBJ.famCurrentRowID);
@@ -132,20 +141,24 @@
     }
 
     OBJ.famRemoveStateObjectId = function(_id) {
-        var element = document.getElementById(_id + "_state");
-        element.innerHTML = '';
+        var arr = document.getElementsByClassName(_id + "_state");
+        Array.from(arr).forEach(element => {
+            element.innerHTML = '';
+        });
     }
 
     OBJ.famSetWait = function() {
         if (OBJ.famCheckEmptyVariables()) {
-            var element = document.getElementById(OBJ.famCurrentRowID + "_state");
-            var d2 = document.createElement("div");
-            element.appendChild(d2);
-            d2.setAttribute("class", "lds-ellipsis");
-            d2.appendChild(document.createElement("div"));
-            d2.appendChild(document.createElement("div"));
-            d2.appendChild(document.createElement("div"));
-            d2.appendChild(document.createElement("div"));
+            var arr = document.getElementsByClassName(OBJ.famCurrentRowID + "_state")
+            Array.from(arr).forEach(element => {
+                var d2 = document.createElement("div");
+                element.appendChild(d2);
+                d2.setAttribute("class", "lds-ellipsis");
+                d2.appendChild(document.createElement("div"));
+                d2.appendChild(document.createElement("div"));
+                d2.appendChild(document.createElement("div"));
+                d2.appendChild(document.createElement("div"));
+            });
         }
     }
 
@@ -156,25 +169,29 @@
     }
 
     OBJ.famSetOkStateId = function(_id) {
-        var element = document.getElementById(_id + "_state");
-        var elem = document.createElement("img");
-        elem.setAttribute("src", "./img/ok.png");
-        elem.setAttribute("height", "16");
-        elem.setAttribute("width", "16");
-        element.appendChild(elem);
+        var arr = document.getElementsByClassName(_id + "_state");
+        Array.from(arr).forEach(element => {
+            var elem = document.createElement("img");
+            elem.setAttribute("src", "./img/ok.png");
+            elem.setAttribute("height", "16");
+            elem.setAttribute("width", "16");
+            element.appendChild(elem);
+        });
     }
 
     OBJ.famSetProgress = function() {
         if (OBJ.famCheckEmptyVariables()) {
-            if ($("#FAUTO_PROGRESS").length === 0) {
+            if ($(".FAUTO_PROGRESS").length === 0) {
                 OBJ.famRemoveStateObject();
-                var element = document.getElementById(OBJ.famCurrentRowID + "_state");
-                var elem = document.createElement("progress");
-                elem.setAttribute("id", "FAUTO_PROGRESS");
-                elem.setAttribute("max", "120");
-                elem.setAttribute("value", "0");
-                elem.setAttribute("style", "width:80%;");
-                element.appendChild(elem);
+                var arr = document.getElementsByClassName(OBJ.famCurrentRowID + "_state");
+                Array.from(arr).forEach(element => {
+                    var elem = document.createElement("progress");
+                    elem.setAttribute("class", "FAUTO_PROGRESS");
+                    elem.setAttribute("max", "120");
+                    elem.setAttribute("value", "0");
+                    elem.setAttribute("style", "width:80%;");
+                    element.appendChild(elem);
+                });
             }
         }
     }
@@ -195,11 +212,18 @@
         if (OBJ.famStates[OBJ.famCurrentTest] !== undefined) {
             if (OBJ.famStates[OBJ.famCurrentTest].hasOwnProperty("span")) {
                 OBJ.famCurrentRowID = OBJ.famAddNewRowSpan();
+                OBJ.famSetName();
+                OBJ.famSetStartButton("");
             } else {
-                OBJ.famCurrentRowID = OBJ.famAddNewRow();
+                var maxChannels = 2
+                if (OBJ.famModel === "Z20_125_4CH") maxChannels = 4
+                var id = OBJ.makeid(8);
+                for(var i = 0; i< maxChannels; i++)
+                    OBJ.famCurrentRowID = OBJ.famAddNewRow(id,i+1);
+                OBJ.famSetNameEx(maxChannels);
+                OBJ.famSetStartButton(maxChannels);
             }
-            OBJ.famSetName();
-            OBJ.famSetStartButton();
+
         }
     }
 
@@ -299,6 +323,22 @@
         }
     }
 
+    OBJ.famSetCalibAACh3 = function(_value) {
+        if (OBJ.famCheckEmptyVariables()) {
+            if (_value.value === 0) return;
+            var element_b = document.getElementById(OBJ.famCurrentRowID + "_aa_ch3");
+            if (element_b != undefined) element_b.innerText = "0x" + _value.value.toString(16);
+        }
+    }
+
+    OBJ.famSetCalibAACh4 = function(_value) {
+        if (OBJ.famCheckEmptyVariables()) {
+            if (_value.value === 0) return;
+            var element_b = document.getElementById(OBJ.famCurrentRowID + "_aa_ch4");
+            if (element_b != undefined) element_b.innerText = "0x" + _value.value.toString(16);
+        }
+    }
+
     OBJ.famSetCalibBBCh1 = function(_value) {
         if (OBJ.famCheckEmptyVariables()) {
             if (_value.value === 0) return;
@@ -311,6 +351,22 @@
         if (OBJ.famCheckEmptyVariables()) {
             if (_value.value === 0) return;
             var element_b = document.getElementById(OBJ.famCurrentRowID + "_bb_ch2");
+            if (element_b != undefined) element_b.innerText = "0x" + _value.value.toString(16);
+        }
+    }
+
+    OBJ.famSetCalibBBCh3 = function(_value) {
+        if (OBJ.famCheckEmptyVariables()) {
+            if (_value.value === 0) return;
+            var element_b = document.getElementById(OBJ.famCurrentRowID + "_bb_ch3");
+            if (element_b != undefined) element_b.innerText = "0x" + _value.value.toString(16);
+        }
+    }
+
+    OBJ.famSetCalibBBCh4 = function(_value) {
+        if (OBJ.famCheckEmptyVariables()) {
+            if (_value.value === 0) return;
+            var element_b = document.getElementById(OBJ.famCurrentRowID + "_bb_ch4");
             if (element_b != undefined) element_b.innerText = "0x" + _value.value.toString(16);
         }
     }
@@ -331,6 +387,22 @@
         }
     }
 
+    OBJ.famSetCalibPPCh3 = function(_value) {
+        if (OBJ.famCheckEmptyVariables()) {
+            if (_value.value === 0) return;
+            var element_b = document.getElementById(OBJ.famCurrentRowID + "_pp_ch3");
+            if (element_b != undefined) element_b.innerText = "0x" + _value.value.toString(16);
+        }
+    }
+
+    OBJ.famSetCalibPPCh4 = function(_value) {
+        if (OBJ.famCheckEmptyVariables()) {
+            if (_value.value === 0) return;
+            var element_b = document.getElementById(OBJ.famCurrentRowID + "_pp_ch4");
+            if (element_b != undefined) element_b.innerText = "0x" + _value.value.toString(16);
+        }
+    }
+
     OBJ.famSetCalibKKCh1 = function(_value) {
         if (OBJ.famCheckEmptyVariables()) {
             if (_value.value === 0) return;
@@ -343,6 +415,22 @@
         if (OBJ.famCheckEmptyVariables()) {
             if (_value.value === 0) return;
             var element_b = document.getElementById(OBJ.famCurrentRowID + "_kk_ch2");
+            if (element_b != undefined) element_b.innerText = "0x" + _value.value.toString(16);
+        }
+    }
+
+    OBJ.famSetCalibKKCh3 = function(_value) {
+        if (OBJ.famCheckEmptyVariables()) {
+            if (_value.value === 0) return;
+            var element_b = document.getElementById(OBJ.famCurrentRowID + "_kk_ch3");
+            if (element_b != undefined) element_b.innerText = "0x" + _value.value.toString(16);
+        }
+    }
+
+    OBJ.famSetCalibKKCh4 = function(_value) {
+        if (OBJ.famCheckEmptyVariables()) {
+            if (_value.value === 0) return;
+            var element_b = document.getElementById(OBJ.famCurrentRowID + "_kk_ch4");
             if (element_b != undefined) element_b.innerText = "0x" + _value.value.toString(16);
         }
     }
@@ -363,6 +451,20 @@
         }
     }
 
+    OBJ.famSetValueCh3Before = function(_value) {
+        if (OBJ.famCheckEmptyVariables()) {
+            var element_b = document.getElementById(OBJ.famCurrentRowID + "_ch3_befor");
+            if (element_b != undefined) element_b.innerText = _value.value;
+        }
+    }
+
+    OBJ.famSetValueCh4Before = function(_value) {
+        if (OBJ.famCheckEmptyVariables()) {
+            var element_b = document.getElementById(OBJ.famCurrentRowID + "_ch4_befor");
+            if (element_b != undefined) element_b.innerText = _value.value;
+        }
+    }
+
     OBJ.famSetValueCh1After = function(_value) {
         if (OBJ.famCheckEmptyVariables()) {
             var element_b = document.getElementById(OBJ.famCurrentRowID + "_ch1_after");
@@ -377,11 +479,25 @@
         }
     }
 
+    OBJ.famSetValueCh3After = function(_value) {
+        if (OBJ.famCheckEmptyVariables()) {
+            var element_b = document.getElementById(OBJ.famCurrentRowID + "_ch3_after");
+            if (element_b != undefined) element_b.innerText = _value.value;
+        }
+    }
+
+    OBJ.famSetValueCh4After = function(_value) {
+        if (OBJ.famCheckEmptyVariables()) {
+            var element_b = document.getElementById(OBJ.famCurrentRowID + "_ch4_after");
+            if (element_b != undefined) element_b.innerText = _value.value;
+        }
+    }
+
     OBJ.famSetProgressValue = function(_value) {
         if (OBJ.famCheckEmptyVariables()) {
             if (_value.value !== 0) {
                 OBJ.famSetProgress();
-                $('#FAUTO_PROGRESS').attr('value', _value.value);
+                $('.FAUTO_PROGRESS').attr('value', _value.value);
             }
         }
     }
@@ -435,25 +551,31 @@ $(function() {
 
     SM.param_callbacks["fauto_value_ch1_before"] = OBJ.famSetValueCh1Before;
     SM.param_callbacks["fauto_value_ch2_before"] = OBJ.famSetValueCh2Before;
+    SM.param_callbacks["fauto_value_ch3_before"] = OBJ.famSetValueCh3Before;
+    SM.param_callbacks["fauto_value_ch4_before"] = OBJ.famSetValueCh4Before;
     SM.param_callbacks["fauto_value_ch1_after"] = OBJ.famSetValueCh1After;
     SM.param_callbacks["fauto_value_ch2_after"] = OBJ.famSetValueCh2After;
+    SM.param_callbacks["fauto_value_ch3_after"] = OBJ.famSetValueCh3After;
+    SM.param_callbacks["fauto_value_ch4_after"] = OBJ.famSetValueCh4After;
     SM.param_callbacks["fauto_calib_progress"] = OBJ.famSetProgressValue;
 
 
     SM.param_callbacks["fauto_aa_Ch1"] = OBJ.famSetCalibAACh1;
     SM.param_callbacks["fauto_aa_Ch2"] = OBJ.famSetCalibAACh2;
+    SM.param_callbacks["fauto_aa_Ch3"] = OBJ.famSetCalibAACh3;
+    SM.param_callbacks["fauto_aa_Ch4"] = OBJ.famSetCalibAACh4;
     SM.param_callbacks["fauto_bb_Ch1"] = OBJ.famSetCalibBBCh1;
     SM.param_callbacks["fauto_bb_Ch2"] = OBJ.famSetCalibBBCh2;
+    SM.param_callbacks["fauto_bb_Ch3"] = OBJ.famSetCalibBBCh3;
+    SM.param_callbacks["fauto_bb_Ch4"] = OBJ.famSetCalibBBCh4;
     SM.param_callbacks["fauto_pp_Ch1"] = OBJ.famSetCalibPPCh1;
     SM.param_callbacks["fauto_pp_Ch2"] = OBJ.famSetCalibPPCh2;
+    SM.param_callbacks["fauto_pp_Ch3"] = OBJ.famSetCalibPPCh3;
+    SM.param_callbacks["fauto_pp_Ch4"] = OBJ.famSetCalibPPCh4;
     SM.param_callbacks["fauto_kk_Ch1"] = OBJ.famSetCalibKKCh1;
     SM.param_callbacks["fauto_kk_Ch2"] = OBJ.famSetCalibKKCh2;
+    SM.param_callbacks["fauto_kk_Ch3"] = OBJ.famSetCalibKKCh3;
+    SM.param_callbacks["fauto_kk_Ch4"] = OBJ.famSetCalibKKCh4;
 
-    $('#am_a_filt_external_btn').on('click', function() { OBJ.famClickOkDialog() });
 
-    $('.a_filter_flipswitch').change(function() {
-        $(this).next().text($(this).is(':checked') ? ':checked' : ':not(:checked)');
-        OBJ.aFilterSetMode($(this).attr('id'), $(this).is(':checked'));
-
-    }).trigger('change');
 });

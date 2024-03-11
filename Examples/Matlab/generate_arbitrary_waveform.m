@@ -2,7 +2,7 @@
 clc
 clear all
 close all
-IP= '192.168.178.102';           % Input IP of your Red Pitaya...
+IP= '';           % Input IP of your Red Pitaya...
 port = 5000;
 tcpipObj=tcpip(IP, port);
 
@@ -50,8 +50,7 @@ fprintf(tcpipObj,'SOUR2:VOLT 1');
 fprintf(tcpipObj,'SOUR1:FREQ:FIX 4000');        % Set frequency of output signal
 fprintf(tcpipObj,'SOUR2:FREQ:FIX 4000');
 
-
-fprintf(tcpipObj,'OUTPUT1:STATE ON');
-fprintf(tcpipObj,'OUTPUT2:STATE ON');
+fprintf(tcpipObj,'OUTPUT:STATE ON');            % Start two channels simultaneously
+frpitnf(tcpipObj,'SOUR:TRIG:INT');              % Generate triggers
 
 fclose(tcpipObj);

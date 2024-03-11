@@ -1,4 +1,4 @@
-/* Red Pitaya C API example Generating signal pulse on an external trigger 
+/* Red Pitaya C API example Generating signal pulse on an external trigger
  * This application generates a specific signal */
 
 #include <stdio.h>
@@ -7,9 +7,10 @@
 
 #include "rp.h"
 
-int main(int argc, char **argv){
+int main(int argc, char **argv) {
+
         /* Print error, if rp_Init() function failed */
-        if(rp_Init() != RP_OK){
+        if(rp_Init() != RP_OK) {
                 fprintf(stderr, "Rp api init failed!\n");
         }
 
@@ -30,14 +31,16 @@ int main(int argc, char **argv){
         rp_GenBurstCount(RP_CH_2, 2);
         rp_GenBurstRepetitions(RP_CH_2, 1);
         rp_GenBurstPeriod(RP_CH_2, 5000);
-        
+
         rp_GenOutEnableSync(true);
+	rp_GenSynchronise();
         sleep(2);
-        rp_GenTrigger(RP_CH_1);
+	rp_GenTriggerOnly(RP_CH_1);
         sleep(2);
-        rp_GenTrigger(RP_CH_2);
+	rp_GenTriggerOnly(RP_CH_2);
         sleep(1);
-        rp_GenTrigger(3); // Gen trigger on both channels
+	rp_GenSynchronise();
+
         rp_Release();
 }
 

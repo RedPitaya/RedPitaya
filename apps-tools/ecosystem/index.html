@@ -17,6 +17,7 @@
     <script src="../assets/jquery.cookie.js?1" onerror="location.reload()"></script>
     <script src="../assets/quickpager.jquery.js?1" onerror="location.reload()"></script>
     <script src="../assets/hammer.js?1" onerror="location.reload()"></script>
+    <script src="../assets/black_list_app.js?1" onerror="location.reload()"></script>
     <script src="../assets/desktop.js?1" onerror="location.reload()"></script>
     <script src="../assets/browsercheck.js?1" onerror="location.reload()"></script>
     <script src="../assets/ecosystem.js?1" onerror="location.reload()"></script>
@@ -35,7 +36,8 @@
     </div>
     <div id="main_content">
         <div id="header">
-            <div id="info"><img src="../assets/images/info.png" style="padding-top: 0px;width: 20px;height: 20px;padding-left: 0px;margin-left: 2px;margin-top: 2px;"></div>
+            <div id="info" style="width: 40px;"><img src="../assets/images/info.png" style="padding-top: 0px;width: 20px;height: 20px;padding-left: 0px;margin-left: 2px;margin-top: 2px;"></div>
+            <div id="ext_con_but"><img src="../assets/images/ext_conections_w.png" style="padding-top: 0px;width: 36px;height: 20px;padding-left: 0px;margin-left: 2px;margin-top: 2px;"></div>
             <div id="description"></div>
             <div id="reboot"><img src="../assets/images/power.png"></div>
         </div>
@@ -43,7 +45,10 @@
             <ul class="paging" id="list-container">
             </ul>
         </div>
-        <div id="footer">&nbsp;</div>
+        <div id="footer">
+            <div id="bug_report"><img src="../assets/images/bug_report.png" style="padding-top: 0px;width: 20px;height: 20px;padding-left: 0px;margin-left: 2px;margin-top: 2px;"></div>
+            <div id="ecosystem_info"></div>
+        </div>
     </div>
     <div class="modal fade" id="ic_missing" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -115,16 +120,16 @@
         </div>
     </div>
     <div class="modal fade" id="sysinfo_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog" style="width: 900px;">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                     <h4 class="modal-title" id="bazaar_naLabel">System Info</h4>
                 </div>
-                <div class="modal-body">
-                    <div style="text-align: left;margin-left: 10%;">
+                <div class="modal-body" style="display: flex;">
+                    <div style="text-align: left;margin-left: 5%;">
                         <table>
-                            <col width="130px">
+                            <col width="180px">
                             <col width="700px">
                             <tr style="height:40px;">
                                 <td>Board model:</td>
@@ -146,12 +151,99 @@
                                 <td>Linux:</td>
                                 <td><a id="SI_LINUX">-</a></td>
                             </tr>
+                            <tr style="height:40px;">
+                                <td>RAM size:</td>
+                                <td><a id="RAM_SIZE_ID">-</a></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div style="text-align: left;margin-left: 5%;">
+                        <table>
+                            <col width="880px">
+                            <tr style="height:40px;">
+                                <td colspan="2" style="text-align: center;">FPGA</td>
+                            </tr>
+                        </table>
+                        <table id="FPGA_LIST_TABLE_ID">
+                            <col width="180px">
+                            <col width="700px">
+                            <tr style="height:40px;">
+                                <td>MAC:</td>
+                                <td><a id="SI_MAC">-</a></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-header">
+                    <h4 class="modal-title" id="bazaar_naLabel">System settings</h4>
+                </div>
+                <div class="modal-body" style="display: flex;">
+                    <div style="text-align: left;margin-left: 5%;">
+                        <table>
+                            <col width="250px">
+                            <col width="200px">
+                            <tr style="height:60px;">
+                                <td>Enable File System Consistency Check after boot:</td>
+                                <td>
+                                    <label class="control control-checkbox">Enable<input id="fsck_chbox" type="checkbox" checked="checked" style=" margin-left: 10px; " />
+                                        <div class="control_indicator"></div>
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr style="height:60px;">
+                                <td>Turn on LED:</td>
+                                <td>
+                                    <label  class="control control-checkbox">Enable<input id="led_chbox" type="checkbox" checked="checked" style=" margin-left: 10px; " />
+                                        <div class="control_indicator"></div>
+                                    </label>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div style="text-align: left;margin-left: 5%;">
+                        <table>
+                            <col width="250px">
+                            <col width="200px">
+                            <tr style="height:60px;">
+                                <td id ="UBOOT_MODE_ID">-</td>
+                                <td>
+                                    <div id="up_boot_id" class="bazaar-link">
+                                        <a class="list-group-item btn" style="margin-left: 25px;">Up to 1Gb</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr style="height:60px;">
+                                <td>Remove stored settings for Web Apps:</td>
+                                <td>
+                                        <div id="delete_settings_id" class="bazaar-link">
+                                            <a class="list-group-item btn" style="margin-left: 25px;">DELETE</a>
+                                        </div>
+                                </td>
+                            </tr>
                         </table>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <div class="bazaar-link">
-                        <a href="#" data-dismiss="modal" id="disable_analytics" class="list-group-item btn">Cancel</a>
+                        <a href="#" data-dismiss="modal" id="disable_analytics" class="list-group-item btn">Close</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="ext_connections_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+        <div class="modal-dialog" style="width: 700px;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="bazaar_naLabel">External Connections</h4>
+                </div>
+                <div class="modal-body" style="display: flex;">
+                    <img src="../assets/images/red_pitaya_pinout.png" style="width: 100%;">
+                </div>
+                <div class="modal-footer">
+                    <div class="bazaar-link">
+                        <a href="#" data-dismiss="modal" id="disable_analytics" class="list-group-item btn">Close</a>
                     </div>
                 </div>
             </div>
