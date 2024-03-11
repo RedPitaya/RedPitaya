@@ -40,7 +40,7 @@ There are several ways to program / develop with Red Pitaya.
 1. Remote control / programming
 
    Remote control can be done by using most popular rapid prototyping development tools
-   MATLAB, LABview, SCILAB or Python remotely. There are [several examples](https://redpitaya.readthedocs.io/en/latest/appsFeatures/remoteControl/remoteControl.html) available.
+   MATLAB, LABview, SCILAB or Python remotely. There are [several examples](https://redpitaya.readthedocs.io/en/latest/appsFeatures/remoteControl/examples_top.html) available.
 
 2. Programing Red Pitaya directly from WEB browser / Python
 
@@ -48,7 +48,7 @@ Red Pitaya can be programmed in Python directly from the WEB browser using [Jupy
 
 3. C/C++ programming
 
-RedPitaya hardware features can be easily accessed through C APIs. Many starting examples are available at this [link](https://redpitaya.readthedocs.io/en/latest/appsFeatures/remoteControl/remoteControl.html#examples).
+RedPitaya hardware features can be easily accessed through C APIs. Many starting examples are available at this [link](https://redpitaya.readthedocs.io/en/latest/appsFeatures/remoteControl/examples_top.html).
 
 4. FPGA programming
 
