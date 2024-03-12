@@ -14,7 +14,9 @@
                     listOfapplications[i]["id"] === 'sdr_transceiver_hpsdr_z20' ||
                     listOfapplications[i]["id"] === 'sdr_transceiver_hpsdr_z20_122_88' ||
                     listOfapplications[i]["id"] === 'vna_z20' ||
-                    listOfapplications[i]["id"] === 'vna_z20_122_88') {
+                    listOfapplications[i]["id"] === 'vna_z20_122_88' ||
+                    listOfapplications[i]["id"] === 'sdr_transceiver_z20' ||
+                    listOfapplications[i]["id"] === 'sdr_transceiver_z20_122_88') {
                     listOfapplications.splice(i, 1);
                 }
             }
@@ -27,7 +29,9 @@
                     listOfapplications[i]["id"] === 'sdr_transceiver_hpsdr_z20' ||
                     listOfapplications[i]["id"] === 'sdr_transceiver_hpsdr_z20_122_88' ||
                     listOfapplications[i]["id"] === 'vna_z20' ||
-                    listOfapplications[i]["id"] === 'vna_z20_122_88') {
+                    listOfapplications[i]["id"] === 'vna_z20_122_88' ||
+                    listOfapplications[i]["id"] === 'sdr_transceiver_z20' ||
+                    listOfapplications[i]["id"] === 'sdr_transceiver_z20_122_88') {
                     listOfapplications.splice(i, 1);
                 }
             }
@@ -41,7 +45,9 @@
                     listOfapplications[i]["id"] === 'sdr_transceiver_hpsdr' ||
                     listOfapplications[i]["id"] === 'sdr_transceiver_hpsdr_z20_122_88' ||
                     listOfapplications[i]["id"] === 'vna' ||
-                    listOfapplications[i]["id"] === 'vna_z20_122_88') {
+                    listOfapplications[i]["id"] === 'vna_z20_122_88' ||
+                    listOfapplications[i]["id"] === 'sdr_transceiver' ||
+                    listOfapplications[i]["id"] === 'sdr_transceiver_z20_122_88') {
                     listOfapplications.splice(i, 1);
                 }
             }
@@ -60,7 +66,9 @@
                     listOfapplications[i]["id"] === 'sdr_transceiver_hpsdr' ||
                     listOfapplications[i]["id"] === 'sdr_transceiver_hpsdr_z20' ||
                     listOfapplications[i]["id"] === 'vna' ||
-                    listOfapplications[i]["id"] === 'vna_z20') {
+                    listOfapplications[i]["id"] === 'vna_z20' ||
+                    listOfapplications[i]["id"] === 'sdr_transceiver' ||
+                    listOfapplications[i]["id"] === 'sdr_transceiver_z20') {
                     listOfapplications.splice(i, 1);
                 }
             }
@@ -79,7 +87,10 @@
                     listOfapplications[i]["id"] === 'sdr_transceiver_hpsdr_z20_122_88' ||
                     listOfapplications[i]["id"] === 'vna' ||
                     listOfapplications[i]["id"] === 'vna_z20' ||
-                    listOfapplications[i]["id"] === 'vna_z20_122_88') {
+                    listOfapplications[i]["id"] === 'vna_z20_122_88' ||
+                    listOfapplications[i]["id"] === 'sdr_transceiver' ||
+                    listOfapplications[i]["id"] === 'sdr_transceiver_z20' ||
+                    listOfapplications[i]["id"] === 'sdr_transceiver_z20_122_88') {
                     listOfapplications.splice(i, 1);
                 }
             }
@@ -102,7 +113,10 @@
                     listOfapplications[i]["id"] === 'sdr_transceiver_hpsdr_z20_122_88' ||
                     listOfapplications[i]["id"] === 'vna' ||
                     listOfapplications[i]["id"] === 'vna_z20' ||
-                    listOfapplications[i]["id"] === 'vna_z20_122_88') {
+                    listOfapplications[i]["id"] === 'vna_z20_122_88' ||
+                    listOfapplications[i]["id"] === 'sdr_transceiver' ||
+                    listOfapplications[i]["id"] === 'sdr_transceiver_z20' ||
+                    listOfapplications[i]["id"] === 'sdr_transceiver_z20_122_88') {
                     listOfapplications.splice(i, 1);
                 }
             }

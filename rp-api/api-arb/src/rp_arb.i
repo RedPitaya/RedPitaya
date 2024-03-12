@@ -13,6 +13,7 @@
 %apply float *INOUT { float *_data };
 %apply unsigned int *OUTPUT { uint32_t *_size };
 %apply unsigned int *OUTPUT { uint32_t *_count };
+%apply unsigned int *OUTPUT { uint32_t *_color };
 %apply bool *OUTPUT { bool *_valid };
 %apply std::string *OUTPUT { std::string *_name };
 %apply std::string *OUTPUT { std::string *_fileName };

@@ -24,17 +24,27 @@
 #include "rp_hw-profiles.h"
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
+#define NAME_LEN 20
 
 std::string FILE_PATH = {"/home/redpitaya/arb_files"};
 
 namespace fs = std::filesystem;
 
-std::vector<std::pair<std::string,std::string>> g_files;
+struct info_t
+{
+    std::string name;
+    uint32_t color;
+};
+
+std::vector<std::pair<std::string,info_t>> g_files;
 
 struct binFile_t
 {
-	char sigName[20];
-	uint32_t size;
+    // TODO redo to header
+    int32_t version = 1;
+	char sigName[NAME_LEN];
+    uint32_t color;
+ 	uint32_t size;
 	float values[DAC_BUFFER_SIZE];
 };
 
@@ -49,8 +59,9 @@ bool checkFreeName(std::string _name){
 	for (const auto & entry : fs::directory_iterator(FILE_PATH)){
 		std::ifstream file(entry.path());
 		if (file.is_open()){
-			char name[20];
-			file.read(name,20);
+          	file.seekg (sizeof(int32_t), file.beg);
+			char name[NAME_LEN];
+			file.read(name,NAME_LEN);
 			if (_name == std::string(name)){
 				return false;
 			}
@@ -96,8 +107,11 @@ int rp_ARBGenFile(std::string _filename){
 	}
 
 	binFile_t s;
-	memset(&s,0,sizeof(binFile_t));
+	memset(s.sigName,0,sizeof(s.sigName));
+	memset(s.values,0,sizeof(s.values));
 	int size = 0;
+    s.version = 1;
+    s.color = 0xFFC2BC14;
 	auto filePath = trim(FILE_PATH + "/" + _filename);
 	std::ifstream file(filePath);
     std::string str;
@@ -143,11 +157,15 @@ int rp_ARBLoadFiles(){
 	g_files.clear();
 	for (const auto & entry : fs::directory_iterator(FILE_PATH)){
         // fprintf(stderr,"File %s\n",entry.path().filename().c_str());
+        TRACE_SHORT("Load file %s",entry.path().filename().c_str())
 		std::ifstream file(entry.path());
 		if (file.is_open()){
-			char name[20];
-			file.read(name,20);
-			g_files.push_back({entry.path().filename(),std::string(name)});
+            file.seekg (sizeof(int32_t), file.beg);
+			char name[NAME_LEN];
+			file.read(name,NAME_LEN);
+            uint32_t color;
+            file.read(reinterpret_cast<char*>(&color),sizeof(uint32_t));
+			g_files.push_back({entry.path().filename(),{.name = std::string(name),.color = color}});
 		}
 	}
 	return RP_ARB_FILE_OK;
@@ -163,7 +181,7 @@ int rp_ARBGetName(uint32_t _index,std::string *_name){
 	if (_index >= g_files.size()){
 		return RP_ARB_WRONG_INDEX;
 	}
-	*_name = g_files[_index].second;
+	*_name = g_files[_index].second.name;
 	return RP_ARB_FILE_OK;
 }
 
@@ -203,11 +221,38 @@ int rp_ARBGetSignal(uint32_t _index,float *_data,uint32_t *size){
 int rp_ARBGetSignalByName(std::string _sigName,float *_data,uint32_t *_size){
 	*_size = 0;
 	for(uint32_t i = 0; i < g_files.size(); i++){
-		if (g_files[i].second == _sigName){
+		if (g_files[i].second.name == _sigName){
 			return rp_ARBGetSignal(i,_data,_size);
 		}
 	}
 	return RP_ARB_FILE_ERR;
+}
+
+int rp_ARBSetColor(uint32_t _index,uint32_t color){
+    if (_index >= g_files.size()){
+		return RP_ARB_WRONG_INDEX;
+	}
+	auto fname = g_files[_index].first;
+	std::fstream file;
+	file.open(FILE_PATH + "/" + fname,std::fstream::in | std::fstream::out);
+	if (!file.is_open()){
+		return RP_ARB_FILE_ERR;
+	}
+
+	file.seekp (NAME_LEN + sizeof(int32_t), file.beg);
+	file.write(reinterpret_cast<char*>(&color),sizeof(uint32_t));
+	file.close();
+	return RP_ARB_FILE_OK;
+}
+
+
+int rp_ARBGetColor(uint32_t _index,uint32_t *color){
+    *color = 0xFFC2BC14;
+	if (_index >= g_files.size()){
+		return RP_ARB_WRONG_INDEX;
+	}
+	*color = g_files[_index].second.color;
+	return RP_ARB_FILE_OK;
 }
 
 int rp_ARBRenameFile(uint32_t _index,std::string _new_name){
@@ -215,13 +260,12 @@ int rp_ARBRenameFile(uint32_t _index,std::string _new_name){
 		return RP_ARB_WRONG_INDEX;
 	}
 	auto fname = g_files[_index].first;
-	char name[20];
+	char name[NAME_LEN];
 	std::fstream file;
 	file.open(FILE_PATH + "/" + fname,std::fstream::in | std::fstream::out);
 	if (file.is_open()){
-		file.seekg (0, file.beg);
-		char name[20];
-		file.read(name,20);
+		file.seekg (sizeof(int32_t), file.beg);
+		file.read(name,NAME_LEN);
 	}else{
 		return RP_ARB_FILE_ERR;
 	}
@@ -233,7 +277,7 @@ int rp_ARBRenameFile(uint32_t _index,std::string _new_name){
 	if (!checkFreeName(_new_name)){
 		return RP_ARB_FILE_CANT_RENAME;
 	}
-	file.seekp (0, file.beg);
+	file.seekp (sizeof(int32_t), file.beg);
 	file.write(_new_name.c_str(), MIN(_new_name.length(),19));
 	file.write("\0", 1);
 	file.close();
@@ -242,7 +286,7 @@ int rp_ARBRenameFile(uint32_t _index,std::string _new_name){
 
 int rp_ARBLoadToFPGA(rp_channel_t _channel, std::string _sigName){
 	for(uint32_t i = 0; i < g_files.size(); i++){
-		if (g_files[i].second == _sigName){
+		if (g_files[i].second.name == _sigName){
 			float data[DAC_BUFFER_SIZE];
 			uint32_t size;
 			if (rp_ARBGetSignal(i,data,&size)){
@@ -260,7 +304,7 @@ int rp_ARBIsValid(std::string _sigName,bool *_valid){
 
 	*_valid = false;
 	for(uint32_t i = 0; i < g_files.size(); i++){
-		if (g_files[i].second == _sigName){
+		if (g_files[i].second.name == _sigName){
 			float data[DAC_BUFFER_SIZE];
 			uint32_t size;
 			if (rp_ARBGetSignal(i,data,&size) == RP_ARB_FILE_OK){
