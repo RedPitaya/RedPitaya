@@ -291,6 +291,11 @@ int rp_AcqGetGainV(rp_channel_t channel, float* voltage);
 
 /**
  * Returns current position of ADC write pointer.
+ *
+ * The write pointer position is the index, within the ADC buffer, of the last
+ * array cell that has been written to.
+ * @note The ADC buffer is a ring buffer. When it is full, the index of the oldest ADC sample is
+ *     `(write_pointer_position + 1) % ADC_BUFFER_SIZE`
  * @param pos Write pointer position
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
