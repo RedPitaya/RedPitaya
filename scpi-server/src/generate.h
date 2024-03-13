@@ -22,6 +22,7 @@ scpi_result_t RP_GenReset(scpi_t * context);
 scpi_result_t RP_GenSync(scpi_t * context);
 scpi_result_t RP_GenFrequency(scpi_t * context);
 scpi_result_t RP_GenFrequencyQ(scpi_t * context);
+scpi_result_t RP_GenFrequencyDirect(scpi_t *context);
 scpi_result_t RP_GenWaveForm(scpi_t * context);
 scpi_result_t RP_GenWaveFormQ(scpi_t * context);
 scpi_result_t RP_GenAmplitude(scpi_t * context);
@@ -55,5 +56,8 @@ scpi_result_t RP_GenTriggerBoth(scpi_t *context);
 
 scpi_result_t RP_GenExtTriggerDebouncerUs(scpi_t *context);
 scpi_result_t RP_GenExtTriggerDebouncerUsQ(scpi_t *context);
+
+scpi_result_t RP_GenLoad(scpi_t * context);
+scpi_result_t RP_GenLoadQ(scpi_t * context);
 
 #endif /* GENERATE_H_ */

@@ -17,7 +17,7 @@
 
 #include "rp_hw_can.h"
 #include "rp.h"
-#include "version.h"
+#include "common/version.h"
 #include "common.h"
 #include "can_control.h"
 #include "can_socket.h"
@@ -34,16 +34,16 @@ const char *can_states[RP_CAN_STATE_SLEEPING + 1] = {
 };
 
 int rp_CanSetFPGAEnable(bool _enable){
-    ECHECK_APP_RP(rp_InitReset(false))
-    ECHECK_APP_RP(rp_SetCANModeEnable(_enable));   
-    ECHECK_APP_RP(rp_Release())
-    return RP_HW_CAN_OK;    
+    ECHECK(rp_InitReset(false))
+    ECHECK(rp_SetCANModeEnable(_enable));
+    ECHECK(rp_Release())
+    return RP_HW_CAN_OK;
 }
 
 int rp_CanGetFPGAEnable(bool *_state){
-    ECHECK_APP_RP(rp_InitReset(false))
-    ECHECK_APP_RP(rp_GetCANModeEnable(_state));   
-    ECHECK_APP_RP(rp_Release())
+    ECHECK(rp_InitReset(false))
+    ECHECK(rp_GetCANModeEnable(_state));
+    ECHECK(rp_Release())
     return RP_HW_CAN_OK;
 }
 
@@ -78,39 +78,39 @@ const char* rp_CanGetError(int errorCode) {
         case RP_HW_CAN_ESTE:   return "Failed. Timeout reached";
         case RP_HW_CAN_ESPE:   return "Failed. Poll error";
         case RP_HW_CAN_ESE:    return "Failed. Send error";
-        case RP_HW_CAN_ESFA:   return "Failed add filter. Filter already present in list"; 
+        case RP_HW_CAN_ESFA:   return "Failed add filter. Filter already present in list";
         case RP_HW_CAN_ESFS:   return "Failed apply filter";
         case RP_HW_CAN_ESEF:   return "Failed to set error handling";
         case RP_HW_CAN_ESR:    return "Failed read frame from socket";
-        
+
         default:       return "Unknown error";
     }
 }
 
 int rp_CanStart(rp_can_interface_t _interface){
     auto ifname = getInterfaceName(_interface);
-    if (!strcmp(ifname,"")) 
+    if (!strcmp(ifname,""))
         return RP_HW_CAN_EUI;
     return control_Start(ifname);
 }
 
 int rp_CanStop(rp_can_interface_t _interface){
     auto ifname = getInterfaceName(_interface);
-    if (!strcmp(ifname,"")) 
+    if (!strcmp(ifname,""))
         return RP_HW_CAN_EUI;
     return control_Stop(ifname);
 }
 
 int rp_CanRestart(rp_can_interface_t _interface){
     auto ifname = getInterfaceName(_interface);
-    if (!strcmp(ifname,"")) 
+    if (!strcmp(ifname,""))
         return RP_HW_CAN_EUI;
     return control_Restart(ifname);
 }
 
 int rp_CanGetState(rp_can_interface_t _interface,rp_can_state_t *_state){
     auto ifname = getInterfaceName(_interface);
-    if (!strcmp(ifname,"")) 
+    if (!strcmp(ifname,""))
         return RP_HW_CAN_EUI;
     return control_GetCanState(ifname,_state);
 }
@@ -122,84 +122,84 @@ const char * rp_CanGetStateName(rp_can_state_t state){
 
 int rp_CanSetBitrate(rp_can_interface_t _interface,uint32_t _bitRate){
     auto ifname = getInterfaceName(_interface);
-    if (!strcmp(ifname,"")) 
+    if (!strcmp(ifname,""))
         return RP_HW_CAN_EUI;
     return control_SetBitrateAndSamplePoint(ifname,_bitRate,-1);
 }
 
 int rp_CanSetBitrateAndSamplePoint(rp_can_interface_t _interface,uint32_t _bitRate,float _samplePoint){
     auto ifname = getInterfaceName(_interface);
-    if (!strcmp(ifname,"")) 
+    if (!strcmp(ifname,""))
         return RP_HW_CAN_EUI;
     return control_SetBitrateAndSamplePoint(ifname,_bitRate,_samplePoint);
 }
 
 int rp_CanGetBitrateAndSamplePoint(rp_can_interface_t _interface,uint32_t *_bitRate,float *_samplePoint){
     auto ifname = getInterfaceName(_interface);
-    if (!strcmp(ifname,"")) 
+    if (!strcmp(ifname,""))
         return RP_HW_CAN_EUI;
-    return control_GetBitrateAndSamplePoint(ifname,_bitRate,_samplePoint); 
+    return control_GetBitrateAndSamplePoint(ifname,_bitRate,_samplePoint);
 }
 
 int rp_CanGetBitTiming(rp_can_interface_t _interface, rp_can_bittiming_t *_bitTiming){
     auto ifname = getInterfaceName(_interface);
-    if (!strcmp(ifname,"")) 
+    if (!strcmp(ifname,""))
         return RP_HW_CAN_EUI;
     return control_GetBitTiming(ifname,_bitTiming);
 }
 
 int rp_CanSetBitTiming(rp_can_interface_t _interface, rp_can_bittiming_t _bitTiming){
     auto ifname = getInterfaceName(_interface);
-    if (!strcmp(ifname,"")) 
+    if (!strcmp(ifname,""))
         return RP_HW_CAN_EUI;
     return control_SetBitTiming(ifname,_bitTiming);
 }
 
 int rp_CanGetBitTimingLimits(rp_can_interface_t _interface, rp_can_bittiming_limits_t *_bitTimingLimits){
     auto ifname = getInterfaceName(_interface);
-    if (!strcmp(ifname,"")) 
+    if (!strcmp(ifname,""))
         return RP_HW_CAN_EUI;
     return control_GetBitTimingLimits(ifname,_bitTimingLimits);
 }
 
 int rp_CanGetClockFreq(rp_can_interface_t _interface,uint32_t *_freq){
     auto ifname = getInterfaceName(_interface);
-    if (!strcmp(ifname,"")) 
+    if (!strcmp(ifname,""))
         return RP_HW_CAN_EUI;
-    return control_GetClockFreq(ifname,_freq);    
+    return control_GetClockFreq(ifname,_freq);
 }
 
 int rp_CanGetBusErrorCounters(rp_can_interface_t _interface, uint16_t *_tx, uint16_t *_rx){
     auto ifname = getInterfaceName(_interface);
-    if (!strcmp(ifname,"")) 
+    if (!strcmp(ifname,""))
         return RP_HW_CAN_EUI;
     return control_GetBusErrorCounters(ifname,_tx,_rx);
 }
 
 int rp_CanSetRestartTime(rp_can_interface_t _interface, uint32_t _ms){
     auto ifname = getInterfaceName(_interface);
-    if (!strcmp(ifname,"")) 
+    if (!strcmp(ifname,""))
         return RP_HW_CAN_EUI;
     return control_SetRestartMs(ifname,_ms);
 }
 
 int rp_CanGetRestartTime(rp_can_interface_t _interface, uint32_t *_ms){
     auto ifname = getInterfaceName(_interface);
-    if (!strcmp(ifname,"")) 
+    if (!strcmp(ifname,""))
         return RP_HW_CAN_EUI;
     return control_GetRestartMs(ifname,_ms);
 }
 
 int rp_CanSetControllerMode(rp_can_interface_t _interface, rp_can_mode_t _mode, bool _state){
     auto ifname = getInterfaceName(_interface);
-    if (!strcmp(ifname,"")) 
+    if (!strcmp(ifname,""))
         return RP_HW_CAN_EUI;
     return control_SetMode(ifname,_mode,_state);
 }
 
 int rp_CanGetControllerMode(rp_can_interface_t _interface, rp_can_mode_t _mode, bool *_state){
     auto ifname = getInterfaceName(_interface);
-    if (!strcmp(ifname,"")) 
+    if (!strcmp(ifname,""))
         return RP_HW_CAN_EUI;
     return control_GetMode(ifname,_mode,_state);
 }

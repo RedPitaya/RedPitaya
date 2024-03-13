@@ -15,6 +15,7 @@
 #include <string.h>
 
 #include "i2c-helper.h"
+#include "rp_log.h"
 
 
 pthread_mutex_t i2c_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -25,7 +26,7 @@ int openDevice(const char* i2c_dev_node_path,uint8_t i2c_dev_address, bool force
 	/* Open the device node for the I2C adapter of bus 4 */
 	*i2c_dev_node = open(i2c_dev_node_path, O_RDWR);
 	if (*i2c_dev_node < 0) {
-		fprintf(stderr,"[rp_i2c] Unable to open device node ERROR: %d: %s\n", errno, strerror(errno));
+		ERROR("Unable to open device node ERROR: %d: %s", errno, strerror(errno));
 		return RP_HW_EIIIC;
 	}
 
@@ -35,7 +36,7 @@ int openDevice(const char* i2c_dev_node_path,uint8_t i2c_dev_address, bool force
 	/* Set I2C_SLAVE for adapter 4 */
 	ret_val = ioctl(*i2c_dev_node, flag ,i2c_dev_address);
 	if (ret_val < 0) {
-        fprintf(stderr,"[rp_i2c] Could not set I2C_SLAVE.\n");
+        ERROR("Could not set I2C_SLAVE.");
         close(*i2c_dev_node);
 		return RP_HW_ESIIC;
 	}
@@ -62,7 +63,7 @@ int i2c_SBMUS_write_byte(const char* i2c_dev_node_path,uint8_t i2c_dev_address,u
 					i2c_val_to_write);
 
 	if (ret_val < 0) {
-        fprintf(stderr,"[rp_i2c] I2C Write Operation failed.\n");
+        ERROR("I2C Write Operation failed.");
         close(i2c_dev_node);
 		pthread_mutex_unlock(&i2c_mutex);
         return RP_HW_EWIIC;
@@ -89,7 +90,7 @@ int i2c_SBMUS_write_word(const char* i2c_dev_node_path,uint8_t i2c_dev_address,u
 					i2c_dev_reg_addr,
 					i2c_val_to_write);
 	if (ret_val < 0) {
-        fprintf(stderr,"[rp_i2c] I2C Write Operation failed.\n");
+        ERROR("I2C Write Operation failed.");
         close(i2c_dev_node);
 		pthread_mutex_unlock(&i2c_mutex);
         return RP_HW_EWIIC;
@@ -116,7 +117,7 @@ int i2c_SBMUS_write_command(const char* i2c_dev_node_path,uint8_t i2c_dev_addres
 	ret_val = i2c_smbus_write_byte(i2c_dev_node,i2c_dev_command);
 
 	if (ret_val < 0) {
-        fprintf(stderr,"[rp_i2c] I2C Write Operation failed - %d.\n",errno);
+        ERROR("I2C Write Operation failed - %d.",errno);
         close(i2c_dev_node);
 		pthread_mutex_unlock(&i2c_mutex);
         return RP_HW_EWIIC;
@@ -144,7 +145,7 @@ int i2c_SBMUS_write_buffer(const char* i2c_dev_node_path,uint8_t i2c_dev_address
 	ret_val = i2c_smbus_write_block_data(i2c_dev_node,i2c_dev_reg_addr,len,buffer);
 
 	if (ret_val < 0) {
-        fprintf(stderr,"[rp_i2c] I2C Write Operation failed - %d.\n",errno);
+        ERROR("I2C Write Operation failed - %d.",errno);
         close(i2c_dev_node);
 		pthread_mutex_unlock(&i2c_mutex);
         return RP_HW_EWIIC;
@@ -171,7 +172,7 @@ int i2c_SBMUS_read_byte(const char* i2c_dev_node_path,uint8_t i2c_dev_address,ui
 	/* Read byte from the register of the I2C_SLAVE device */
 	read_value = i2c_smbus_read_byte_data(i2c_dev_node, i2c_dev_reg_addr);
 	if (read_value < 0) {
-        fprintf(stderr,"[rp_i2c] I2C Read operation failed.\n");
+        ERROR("I2C Read operation failed.");
         close(i2c_dev_node);
 		pthread_mutex_unlock(&i2c_mutex);
         return RP_HW_ERIIC;
@@ -198,7 +199,7 @@ int i2c_SBMUS_read_word(const char* i2c_dev_node_path,uint8_t i2c_dev_address,ui
 	/* Read byte from the register of the I2C_SLAVE device */
 	read_value = i2c_smbus_read_word_data(i2c_dev_node, i2c_dev_reg_addr);
 	if (read_value < 0) {
-        fprintf(stderr,"[rp_i2c] I2C Read operation failed.\n");
+        ERROR("I2C Read operation failed.");
         close(i2c_dev_node);
 		pthread_mutex_unlock(&i2c_mutex);
         return RP_HW_ERIIC;
@@ -226,7 +227,7 @@ int i2c_SBMUS_read_command(const char* i2c_dev_node_path,uint8_t i2c_dev_address
 	/* Read byte from the register of the I2C_SLAVE device */
 	read_value = i2c_smbus_read_byte(i2c_dev_node);
 	if (read_value < 0) {
-        fprintf(stderr,"[rp_i2c] I2C Read operation failed.\n");
+        ERROR("I2C Read operation failed.");
         close(i2c_dev_node);
 		pthread_mutex_unlock(&i2c_mutex);
         return RP_HW_ERIIC;
@@ -258,7 +259,7 @@ int i2c_SBMUS_read_buffer(const char* i2c_dev_node_path,uint8_t i2c_dev_address,
 	/* Read byte from the register of the I2C_SLAVE device */
 	read_value = i2c_smbus_read_i2c_block_data(i2c_dev_node, i2c_dev_reg_addr,*len,buffer);
 	if (read_value < 0) {
-        fprintf(stderr,"[rp_i2c] I2C Read operation failed - %d.\n",errno);
+        ERROR("I2C Read operation failed - %d.",errno);
         close(i2c_dev_node);
 		pthread_mutex_unlock(&i2c_mutex);
         return RP_HW_ERIIC;
@@ -304,7 +305,7 @@ int i2c_IOCTL_read_buffer(const char* i2c_dev_node_path,uint8_t i2c_dev_address,
 	data.nmsgs = 1;
 
 	if (ioctl(i2c_dev_node, I2C_RDWR, &data) < 0){
-		fprintf(stderr,"[rp_i2c] I2C Read operation failed - %d.\n",errno);
+		ERROR("I2C Read operation failed - %d.",errno);
 		pthread_mutex_unlock(&i2c_mutex);
 		return RP_HW_ERIIC;
 	}
@@ -346,7 +347,7 @@ int i2c_IOCTL_write_buffer(const char* i2c_dev_node_path,uint8_t i2c_dev_address
 	data.nmsgs = 1;
 
 	if (ioctl(i2c_dev_node, I2C_RDWR, &data) < 0){
-		fprintf(stderr,"[rp_i2c] I2C Write operation failed - %d.\n",errno);
+		ERROR("I2C Write operation failed - %d.",errno);
 		pthread_mutex_unlock(&i2c_mutex);
 		return RP_HW_EWIIC;
 	}

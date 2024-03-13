@@ -13,7 +13,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(C_STANDARD 17)
 
 
@@ -50,10 +50,17 @@ message(STATUS "Compiler C++ ID: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "Compiler C++version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
+list(APPEND r_paths
+    /opt/redpitaya/lib
+    /opt/redpitaya/lib/web
+)
+
+set(CMAKE_INSTALL_RPATH ${r_paths})
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/src)
 include_directories(${INSTALL_DIR}/include)
+include_directories(${INSTALL_DIR}/include/common)
 link_directories(${INSTALL_DIR}/lib)
 
 list(APPEND src
@@ -84,7 +91,7 @@ if(BUILD_SHARED)
         # SET_SOURCE_FILES_PROPERTIES(src/rp_dsp.i PROPERTIES SWIG_FLAGS "-includeall")
 
         SWIG_ADD_LIBRARY(rp_arb_py LANGUAGE python SOURCES src/rp_arb.i ${src})
-        SWIG_LINK_LIBRARIES(rp_arb_py ${PYTHON_LIBRARIES} rp.a rp-hw-calib.a rp-hw-profiles.a rp-i2c.a rp-spi.a rp-gpio.a rp-hw.a i2c -lm -lpthread)
+        SWIG_LINK_LIBRARIES(rp_arb_py ${PYTHON_LIBRARIES} rp rp-hw-calib rp-hw-profiles rp-i2c rp-spi rp-gpio rp-hw i2c -lm -lpthread)
      endif()
 
     add_library(${PROJECT_NAME}-shared SHARED)
@@ -98,7 +105,7 @@ if(BUILD_SHARED)
             ARCHIVE DESTINATION ${INSTALL_DIR}/lib)
 
         install(FILES ${header}
-            DESTINATION ${INSTALL_DIR}/include)
+            DESTINATION ${INSTALL_DIR}/include/common)
 
         if (BUILD_PYTHON_MODULE)
             install(FILES $<TARGET_PROPERTY:rp_arb_py,SWIG_SUPPORT_FILES> DESTINATION ${INSTALL_DIR}/lib/python)
@@ -125,7 +132,7 @@ if(BUILD_STATIC)
             ARCHIVE DESTINATION ${INSTALL_DIR}/lib)
 
         install(FILES ${header}
-            DESTINATION ${INSTALL_DIR}/include)
+            DESTINATION ${INSTALL_DIR}/include/common)
     endif()
 endif()
 

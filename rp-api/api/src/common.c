@@ -19,7 +19,7 @@
 #include <math.h>
 #include <assert.h>
 #include "common.h"
-#include "redpitaya/rp.h"
+#include "rp.h"
 
 int fd = 0;
 
@@ -196,7 +196,7 @@ rp_channel_calib_t convertCh(rp_channel_t ch){
         return RP_CH_4_CALIB;
 
     default:
-        fprintf(stderr,"[FATAL ERROR] Convert from %d\n",ch);
+        ERROR("Convert from %d",ch);
         assert(false);
     }
     return RP_EOOR;
@@ -208,7 +208,7 @@ rp_channel_t convertChFromIndex(uint8_t index){
     if (index == 2)  return RP_CH_3;
     if (index == 3)  return RP_CH_4;
 
-    fprintf(stderr,"[FATAL ERROR] Convert from %d\n",index);
+    ERROR("Convert from %d",index);
     assert(false);
     return RP_CH_1;
 }
@@ -230,7 +230,7 @@ rp_channel_calib_t convertPINCh(rp_apin_t pin){
         return RP_CH_4_CALIB;
 
     default:
-        fprintf(stderr,"[FATAL ERROR] Convert from PIN %d\n",pin);
+        ERROR("Convert from PIN %d",pin);
         assert(false);
     }
     return RP_EOOR;
@@ -244,7 +244,7 @@ rp_acq_ac_dc_mode_calib_t convertPower(rp_acq_ac_dc_mode_t ch){
     case RP_DC:
         return RP_DC_CALIB;
     default:
-        fprintf(stderr,"[FATAL ERROR] Convert from %d\n",ch);
+        ERROR("Convert from %d",ch);
         assert(false);
     }
     return RP_EOOR;
@@ -255,12 +255,12 @@ uint32_t cmn_convertToCnt(float voltage,uint8_t bits,float fullScale,bool is_sig
     uint32_t mask = ((uint64_t)1 << bits) - 1;
 
     if (gain == 0){
-        fprintf(stderr,"[FATAL ERROR] convertToCnt devide by zero\n");
+        ERROR("convertToCnt devide by zero");
         assert(false);
     }
 
     if (fullScale == 0){
-        fprintf(stderr,"[FATAL ERROR] convertToCnt devide by zero\n");
+        ERROR("convertToCnt devide by zero");
         assert(false);
     }
 

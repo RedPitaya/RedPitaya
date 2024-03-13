@@ -90,7 +90,7 @@ export DL=${PWD}/tmp/DL
 
 mkdir -p $DL
 echo -n "Created directory for download. "
-if [[ -d "$PATH_XILINX_SDK" ]]
+if [[ -d "$DL" ]]
 then
 print_ok
 else

@@ -23,7 +23,7 @@ CRYPTO_INSTALL_DIR=../../../../tools/build
 DECODERS_DIR=../../../../../Applications/la_pro/src/
 
 CXX=$(CROSS_COMPILE)g++
-CXXFLAGS=-c -s -Wall -Os -static -std=c++14 -fPIC -I$(LIBJSON_DIR) -DNDEBUG -I../../../../tools -I$(DECODERS_DIR) -I.
+CXXFLAGS=-c -s -Wall -Wno-reorder -Wno-cpp -Os -static -std=c++17 -fPIC -I$(LIBJSON_DIR) -DNDEBUG -I../../../../tools -I$(DECODERS_DIR) -I.
 
 ifeq ($(DIGITAL_LOOP),true)
 CXXFLAGS+=-DIGITAL_LOOP

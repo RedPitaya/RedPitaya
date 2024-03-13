@@ -38,6 +38,13 @@ print("rp_ARBGetSignalByName('',d.cast())")
 res = rp_ARBGetSignalByName('',d.cast())
 print(res)
 
+print("rp_ARBSetColor(0,123)")
+res = rp_ARBSetColor(0,123)
+print(res)
+
+print("rp_ARBGetColor(0)")
+res = rp_ARBGetColor(0)
+print(res)
 
 print("rp_ARBRenameFile(0,'')")
 res = rp_ARBRenameFile(0,'')

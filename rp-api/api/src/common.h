@@ -18,17 +18,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include "redpitaya/rp.h"
+#include "rp.h"
 #include "rp_hw-calib.h"
-
-
-#define ECHECK(x) { \
-        int retval = (x); \
-        if (retval != RP_OK) { \
-            fprintf(stderr, "Runtime error: %s returned \"%s\" at %s:%d\n", #x, rp_GetError(retval), __FILE__, __LINE__); \
-            return retval; \
-        } \
-}
 
 #define CHANNEL_ACTION(CHANNEL, CHANNEL_1_ACTION, CHANNEL_2_ACTION) \
 if ((CHANNEL) == RP_CH_1) { \

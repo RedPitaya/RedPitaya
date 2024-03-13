@@ -50,20 +50,31 @@ message(STATUS "Compiler C++ ID: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "Compiler C++version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
+list(APPEND r_paths
+    /opt/redpitaya/lib
+    /opt/redpitaya/lib/web
+)
+
+set(CMAKE_INSTALL_RPATH ${r_paths})
 
 include_directories("include")
 include_directories("src")
 include_directories("src/kiss_fft")
+include_directories(${INSTALL_DIR}/include/common)
 
 list(APPEND src
-            ${CMAKE_SOURCE_DIR}/src/kiss_fft/kiss_fft.c
-            ${CMAKE_SOURCE_DIR}/src/kiss_fft/kiss_fftr.c
-            ${CMAKE_SOURCE_DIR}/src/rp_math.cpp
-            ${CMAKE_SOURCE_DIR}/src/rp_dsp.cpp
-        )
+    ${CMAKE_SOURCE_DIR}/src/kiss_fft/kiss_fft.c
+    ${CMAKE_SOURCE_DIR}/src/kiss_fft/kiss_fftr.c
+    ${CMAKE_SOURCE_DIR}/src/rp_math.cpp
+    ${CMAKE_SOURCE_DIR}/src/rp_dsp.cpp
+    ${CMAKE_SOURCE_DIR}/src/rp_algorithms.cpp
+)
 
 list(APPEND header
     ${CMAKE_SOURCE_DIR}/src/rp_dsp.h
+    ${CMAKE_SOURCE_DIR}/src/rp_math.h
+    ${CMAKE_SOURCE_DIR}/src/rp_algorithms.h
+    ${CMAKE_SOURCE_DIR}/src/rp_interpolation.h
 )
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
@@ -100,7 +111,7 @@ if(BUILD_SHARED)
             ARCHIVE DESTINATION ${INSTALL_DIR}/lib)
 
         install(FILES ${header}
-            DESTINATION ${INSTALL_DIR}/include)
+            DESTINATION ${INSTALL_DIR}/include/math)
 
         if (BUILD_PYTHON_MODULE)
             install(FILES $<TARGET_PROPERTY:rp_dsp_py,SWIG_SUPPORT_FILES> DESTINATION ${INSTALL_DIR}/lib/python)
@@ -127,7 +138,7 @@ if(BUILD_STATIC)
             ARCHIVE DESTINATION ${INSTALL_DIR}/lib)
 
         install(FILES ${header}
-            DESTINATION ${INSTALL_DIR}/include)
+            DESTINATION ${INSTALL_DIR}/include/math)
     endif()
 endif()
 

@@ -4,13 +4,13 @@
 #include <unistd.h>
 #include <mutex>
 
-#include "sweepController.h"
+#include "common/rp_sweep.h"
 #include "sig_gen_logic.h"
 #include "sig_gen.h"
 #include "rp_hw-profiles.h"
 #include "common.h"
 #include "main.h"
-#include "rp_arb.h"
+#include "common/rp_arb.h"
 
 const float LEVEL_AMPS_MAX = outAmpMax();
 const float LEVEL_AMPS_DEF = outAmpDef();
@@ -30,7 +30,7 @@ CFloatParameter outOffset[MAX_DAC_CHANNELS]        = INIT2("SOUR","_VOLT_OFFS", 
 CIntParameter   outFrequancy[MAX_DAC_CHANNELS]     = INIT2("SOUR","_FREQ_FIX", CBaseParameter::RW, 1000, 0, 1, (int)getDACRate(),CONFIG_VAR);
 CFloatParameter outScale[MAX_DAC_CHANNELS]         = INIT2("OSC_OUTPUT","_SCALE", CBaseParameter::RW, 1, 0, 0.00005, 1000,CONFIG_VAR);
 
-CSweepController *g_sweepController = new CSweepController();
+rp_sweep_api::CSweepController *g_sweepController = new rp_sweep_api::CSweepController();
 
 CIntParameter   outSweepStartFrequancy[MAX_DAC_CHANNELS]   = INIT2("SOUR","_SWEEP_FREQ_START", CBaseParameter::RW, 1000, 0, 1, (int)getDACRate(),CONFIG_VAR);
 CIntParameter   outSweepEndFrequancy[MAX_DAC_CHANNELS]     = INIT2("SOUR","_SWEEP_FREQ_END"  , CBaseParameter::RW, 10000, 0, 1, (int)getDACRate(),CONFIG_VAR);
@@ -111,8 +111,11 @@ auto loadARBList() -> std::string{
             if (!rp_ARBGetName(i,&name)){
                 bool is_valid;
                 if (!rp_ARBIsValid(name,&is_valid)){
-                    if (is_valid)
-                        list += "A" + name + "\n";
+                    if (is_valid){
+                        uint32_t color;
+                        rp_ARBGetColor(i,&color);
+                        list += "A" + name + "\t" + std::to_string(color) + "\n";
+                    }
                 }
             }
         }

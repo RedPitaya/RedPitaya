@@ -18,6 +18,8 @@ LIBSCPI=scpi-parser/libscpi/dist/libscpi.a
 SCPISRV=scpi-server
 ARTIFACTS= $(LIBSCPI) $(SCPISRV)
 
+.PHONY: all
+
 all: $(LIBSCPI) $(SCPISRV)
 
 $(SCPISRV):
@@ -26,7 +28,7 @@ $(SCPISRV):
 $(LIBSCPI):
 	$(MAKE) -C scpi-parser CC=$(CROSS_COMPILE)gcc USER_FULL_ERROR_LIST=1
 
-install:
+install: all
 	mkdir -p $(INSTALL_DIR)/bin
 	cp $(SCPISRV) $(INSTALL_DIR)/bin
 

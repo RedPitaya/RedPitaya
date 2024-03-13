@@ -106,7 +106,7 @@ rp_pinState_t CCalibMan::getModeLV_HV(){
 
 void CCalibMan::setModeAC_DC(rp_acq_ac_dc_mode_t _mode){
     if (!rp_HPGetFastADCIsAC_DCOrDefault()){
-        fprintf(stderr,"[Error:setDC] AC/DC mode not present on board\n");
+        FATAL("AC/DC mode not present on board");
         exit(-1);
     }
 
@@ -125,7 +125,7 @@ rp_acq_ac_dc_mode_t CCalibMan::getModeAC_DC(){
 
 void CCalibMan::setGenGain(rp_gen_gain_t _mode){
     if (!rp_HPGetIsGainDACx5OrDefault()){
-        fprintf(stderr,"[Error:setDC] Gen gain mode not present on board\n");
+        FATAL("Gen gain mode not present on board");
         exit(-1);
     }
 
@@ -152,7 +152,7 @@ double CCalibMan::getCalibValue(rp_channel_t ch,ClalibValue _type){
     {
         case ADC_CH_OFF:  {
             if (getADCChannels() <= ch){
-                fprintf(stderr,"[Error:getCalibValue] Wrong channel\n");
+                FATAL("Wrong channel");
                 exit(-1);
             }
             if (g == RP_LOW)  return (ac_dc == RP_DC) ?  m_calib_parameters.fast_adc_1_1[ch].offset :  m_calib_parameters.fast_adc_1_1_ac[ch].offset;
@@ -162,7 +162,7 @@ double CCalibMan::getCalibValue(rp_channel_t ch,ClalibValue _type){
 
         case DAC_CH_OFF:  {
             if (getDACChannels() <= ch){
-                fprintf(stderr,"[Error:getCalibValue] Wrong channel\n");
+                FATAL("Wrong channel");
                 exit(-1);
             }
             return  (gen_g == RP_GAIN_1X) ? m_calib_parameters.fast_dac_x1[ch].offset  : m_calib_parameters.fast_dac_x5[ch].offset;
@@ -170,7 +170,7 @@ double CCalibMan::getCalibValue(rp_channel_t ch,ClalibValue _type){
 
         case ADC_CH_GAIN: {
             if (getADCChannels() <= ch){
-                fprintf(stderr,"[Error:getCalibValue] Wrong channel\n");
+                FATAL("Wrong channel");
                 exit(-1);
             }
             if (g == RP_LOW)  return  (ac_dc == RP_DC) ? m_calib_parameters.fast_adc_1_1[ch].gainCalc  : m_calib_parameters.fast_adc_1_1_ac[ch].gainCalc;
@@ -181,7 +181,7 @@ double CCalibMan::getCalibValue(rp_channel_t ch,ClalibValue _type){
 
         case DAC_CH_GAIN: {
             if (getDACChannels() <= ch){
-                fprintf(stderr,"[Error:getCalibValue] Wrong channel\n");
+                FATAL("Wrong channel");
                 exit(-1);
             }
             return  (gen_g == RP_GAIN_1X) ? m_calib_parameters.fast_dac_x1[ch].gainCalc  : m_calib_parameters.fast_dac_x5[ch].gainCalc;
@@ -189,11 +189,11 @@ double CCalibMan::getCalibValue(rp_channel_t ch,ClalibValue _type){
 
         case F_AA_CH: {
             if (getADCChannels() <= ch){
-                fprintf(stderr,"[Error:getCalibValue] Wrong channel\n");
+                FATAL("Wrong channel");
                 exit(-1);
             }
             if (!rp_HPGetFastADCIsFilterPresentOrDefault()){
-                fprintf(stderr,"[Error:getCalibValue] Filter not supported\n");
+                FATAL("Filter not supported");
                 exit(-1);
             }
             if (g == RP_LOW)  return m_calib_parameters.fast_adc_filter_1_1[ch].aa;
@@ -203,11 +203,11 @@ double CCalibMan::getCalibValue(rp_channel_t ch,ClalibValue _type){
 
         case F_BB_CH: {
             if (getADCChannels() <= ch){
-                fprintf(stderr,"[Error:getCalibValue] Wrong channel\n");
+                FATAL("Wrong channel");
                 exit(-1);
             }
             if (!rp_HPGetFastADCIsFilterPresentOrDefault()){
-                fprintf(stderr,"[Error:getCalibValue] Filter not supported\n");
+                FATAL("Filter not supported");
                 exit(-1);
             }
             if (g == RP_LOW)  return m_calib_parameters.fast_adc_filter_1_1[ch].bb;
@@ -217,11 +217,11 @@ double CCalibMan::getCalibValue(rp_channel_t ch,ClalibValue _type){
 
         case F_PP_CH: {
             if (getADCChannels() <= ch){
-                fprintf(stderr,"[Error:getCalibValue] Wrong channel\n");
+                FATAL("Wrong channel");
                 exit(-1);
             }
             if (!rp_HPGetFastADCIsFilterPresentOrDefault()){
-                fprintf(stderr,"[Error:getCalibValue] Filter not supported\n");
+                FATAL("Filter not supported");
                 exit(-1);
             }
             if (g == RP_LOW)  return m_calib_parameters.fast_adc_filter_1_1[ch].pp;
@@ -231,11 +231,11 @@ double CCalibMan::getCalibValue(rp_channel_t ch,ClalibValue _type){
 
          case F_KK_CH: {
             if (getADCChannels() <= ch){
-                fprintf(stderr,"[Error:getCalibValue] Wrong channel\n");
+                FATAL("Wrong channel");
                 exit(-1);
             }
             if (!rp_HPGetFastADCIsFilterPresentOrDefault()){
-                fprintf(stderr,"[Error:getCalibValue] Filter not supported\n");
+                FATAL("Filter not supported");
                 exit(-1);
             }
             if (g == RP_LOW)  return m_calib_parameters.fast_adc_filter_1_1[ch].kk;
@@ -244,7 +244,7 @@ double CCalibMan::getCalibValue(rp_channel_t ch,ClalibValue _type){
         }
 
         default:
-            fprintf(stderr,"[Error] Unknow mode\n");
+            ERROR("Unknow mode");
     }
     return 0;
 }
@@ -268,7 +268,7 @@ int CCalibMan::setCalibValue(rp_channel_t ch,ClalibValue _type, double _value){
     {
         case ADC_CH_OFF:  {
             if (getADCChannels() <= ch){
-                fprintf(stderr,"[Error:setCalibValue] Wrong channel\n");
+                FATAL("Wrong channel");
                 exit(-1);
             }
             if (g == RP_LOW)  (ac_dc == RP_DC) ? m_calib_parameters.fast_adc_1_1[ch].offset =_value  : m_calib_parameters.fast_adc_1_1_ac[ch].offset =_value;
@@ -278,7 +278,7 @@ int CCalibMan::setCalibValue(rp_channel_t ch,ClalibValue _type, double _value){
 
         case ADC_CH_GAIN: {
             if (getADCChannels() <= ch){
-                fprintf(stderr,"[Error:setCalibValue] Wrong channel\n");
+                FATAL("Wrong channel");
                 exit(-1);
             }
             if (g == RP_LOW)  (ac_dc == RP_DC) ? m_calib_parameters.fast_adc_1_1[ch].gainCalc =_value  : m_calib_parameters.fast_adc_1_1_ac[ch].gainCalc =_value;
@@ -288,7 +288,7 @@ int CCalibMan::setCalibValue(rp_channel_t ch,ClalibValue _type, double _value){
 
         case DAC_CH_OFF:   {
             if (getDACChannels() <= ch){
-                fprintf(stderr,"[Error:setCalibValue] Wrong channel\n");
+                FATAL("Wrong channel");
                 exit(-1);
             }
             return  (gen_g == RP_GAIN_1X) ? m_calib_parameters.fast_dac_x1[ch].offset =_value  : m_calib_parameters.fast_dac_x5[ch].offset =_value;
@@ -296,7 +296,7 @@ int CCalibMan::setCalibValue(rp_channel_t ch,ClalibValue _type, double _value){
 
         case DAC_CH_GAIN:   {
             if (getDACChannels() <= ch){
-                fprintf(stderr,"[Error:setCalibValue] Wrong channel\n");
+                FATAL("Wrong channel");
                 exit(-1);
             }
             return  (gen_g == RP_GAIN_1X) ? m_calib_parameters.fast_dac_x1[ch].gainCalc =_value  : m_calib_parameters.fast_dac_x5[ch].gainCalc =_value;
@@ -304,11 +304,11 @@ int CCalibMan::setCalibValue(rp_channel_t ch,ClalibValue _type, double _value){
 
         case F_AA_CH: {
             if (getADCChannels() <= ch){
-                fprintf(stderr,"[Error:setCalibValue] Wrong channel\n");
+                FATAL("Wrong channel");
                 exit(-1);
             }
             if (!rp_HPGetFastADCIsFilterPresentOrDefault()){
-                fprintf(stderr,"[Error:setCalibValue] Filter not supported\n");
+                FATAL("Filter not supported");
                 exit(-1);
             }
             if (g == RP_LOW)  m_calib_parameters.fast_adc_filter_1_1[ch].aa = _value;
@@ -318,11 +318,11 @@ int CCalibMan::setCalibValue(rp_channel_t ch,ClalibValue _type, double _value){
 
         case F_BB_CH: {
             if (getADCChannels() <= ch){
-                fprintf(stderr,"[Error:setCalibValue] Wrong channel\n");
+                FATAL("Wrong channel");
                 exit(-1);
             }
             if (!rp_HPGetFastADCIsFilterPresentOrDefault()){
-                fprintf(stderr,"[Error:setCalibValue] Filter not supported\n");
+                FATAL("Filter not supported");
                 exit(-1);
             }
             if (g == RP_LOW)  m_calib_parameters.fast_adc_filter_1_1[ch].bb = _value;
@@ -332,11 +332,11 @@ int CCalibMan::setCalibValue(rp_channel_t ch,ClalibValue _type, double _value){
 
         case F_PP_CH: {
             if (getADCChannels() <= ch){
-                fprintf(stderr,"[Error:setCalibValue] Wrong channel\n");
+                FATAL("Wrong channel");
                 exit(-1);
             }
             if (!rp_HPGetFastADCIsFilterPresentOrDefault()){
-                fprintf(stderr,"[Error:setCalibValue] Filter not supported\n");
+                FATAL("Filter not supported");
                 exit(-1);
             }
             if (g == RP_LOW)  m_calib_parameters.fast_adc_filter_1_1[ch].pp = _value;
@@ -346,11 +346,11 @@ int CCalibMan::setCalibValue(rp_channel_t ch,ClalibValue _type, double _value){
 
          case F_KK_CH: {
             if (getADCChannels() <= ch){
-                fprintf(stderr,"[Error:setCalibValue] Wrong channel\n");
+                FATAL("Wrong channel");
                 exit(-1);
             }
             if (!rp_HPGetFastADCIsFilterPresentOrDefault()){
-                fprintf(stderr,"[Error:setCalibValue] Filter not supported\n");
+                FATAL("Filter not supported");
                 exit(-1);
             }
             if (g == RP_LOW)  m_calib_parameters.fast_adc_filter_1_1[ch].kk = _value;
@@ -366,7 +366,7 @@ int CCalibMan::setCalibValue(rp_channel_t ch,ClalibValue _type, double _value){
 
 int CCalibMan::enableGen(rp_channel_t _ch,bool _enable){
     if (getDACChannels() == 0){
-        fprintf(stderr,"[Error:enableGen] Wrong channel\n");
+        ERROR("Wrong channel");
         return -1;
     }
     m_acq->enableGen(_ch,_enable);
@@ -376,7 +376,7 @@ int CCalibMan::enableGen(rp_channel_t _ch,bool _enable){
 
 int CCalibMan::setFreq(rp_channel_t _ch,int _freq){
     if (getDACChannels() == 0){
-        fprintf(stderr,"[Error:setFreq] Wrong channel\n");
+        ERROR("Wrong channel");
         return -1;
     }
     return m_acq->setFreq(_ch,_freq);
@@ -384,7 +384,7 @@ int CCalibMan::setFreq(rp_channel_t _ch,int _freq){
 
 int CCalibMan::setAmp(rp_channel_t _ch,float _ampl){
     if (getDACChannels() == 0){
-        fprintf(stderr,"[Error:setAmp] Wrong channel\n");
+        ERROR("Wrong channel");
         return -1;
     }
     return m_acq->setAmp(_ch,_ampl);
@@ -392,7 +392,7 @@ int CCalibMan::setAmp(rp_channel_t _ch,float _ampl){
 
 int CCalibMan::setOffset(rp_channel_t _ch,float _offset){
     if (getDACChannels() == 0){
-        fprintf(stderr,"[Error:setOffset] Wrong channel\n");
+        ERROR("Wrong channel");
         return -1;
     }
     return m_acq->setOffset(_ch,_offset);
@@ -400,7 +400,7 @@ int CCalibMan::setOffset(rp_channel_t _ch,float _offset){
 
 int CCalibMan::setGenType(rp_channel_t _ch,int _type){
     if (getDACChannels() == 0){
-        fprintf(stderr,"[Error:setGenType] Wrong channel\n");
+        ERROR("Wrong channel");
         return -1;
     }
     return m_acq->setGenType(_ch,_type);
@@ -418,13 +418,13 @@ void CCalibMan::updateAcqFilter(rp_channel_t _ch){
 int CCalibMan::setDefualtFilter(rp_channel_t _ch){
 
     if (!rp_HPGetFastADCIsFilterPresentOrDefault()){
-        fprintf(stderr,"[Fatal error] Filter not present in board\n");
+        ERROR("Filter not present in board");
         return -1;
 
     }
 
     if (getADCChannels() <= _ch){
-        fprintf(stderr,"[Error:setCalibValue] Wrong channel\n");
+        ERROR("Wrong channel");
         return -1;
     }
 

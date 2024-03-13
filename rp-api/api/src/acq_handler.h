@@ -18,7 +18,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "rp_hw-calib.h"
-#include "redpitaya/rp.h"
+#include "rp.h"
 
 //#define ADC_SAMPLE_PERIOD_DEF ((double)1e9/(double)ADC_SAMPLE_RATE)
 /* @brief Sampling period (non-decimated) - 8 [ns]. */

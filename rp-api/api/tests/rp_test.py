@@ -218,6 +218,14 @@ print("rp.rp_GetPllControlLocked()")
 res = rp.rp_GetPllControlLocked()
 print(res)
 
+print("rp.rp_SetExternalTriggerLevel(1)")
+res = rp.rp_SetExternalTriggerLevel(1)
+print(res)
+
+print("rp.rp_GetExternalTriggerLevel()")
+res = rp.rp_GetExternalTriggerLevel()
+print(res)
+
 
 # rp_gen.h
 
@@ -365,6 +373,15 @@ print(res)
 
 print("rp.rp_GenGetMode(rp.RP_CH_1)")
 res = rp.rp_GenGetMode(rp.RP_CH_1)
+print(res)
+
+
+print("rp.rp_GenSetLoadMode(rp.RP_CH_1,rp.RP_GEN_50Ohm)")
+res = rp.rp_GenSetLoadMode(rp.RP_CH_1,rp.RP_GEN_50Ohm)
+print(res)
+
+print("rp.rp_GenGetLoadMode(rp.RP_CH_1)")
+res = rp.rp_GenGetLoadMode(rp.RP_CH_1)
 print(res)
 
 

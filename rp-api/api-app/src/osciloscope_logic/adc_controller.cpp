@@ -20,19 +20,19 @@ CADCController::~CADCController(){
 
 auto CADCController::startAcq() -> int{
     std::lock_guard<std::mutex> lock(m_acqMutex);
-    ECHECK_APP(rp_AcqUnlockTrigger())
+    ECHECK(rp_AcqUnlockTrigger())
     if (m_isAdcRun)
         return RP_OK;
-    ECHECK_APP(rp_AcqStart())
-    ECHECK_APP(rp_AcqSetArmKeep(m_trigSweep != RPAPP_OSC_TRIG_SINGLE && m_continuousMode));
+    ECHECK(rp_AcqStart())
+    ECHECK(rp_AcqSetArmKeep(m_trigSweep != RPAPP_OSC_TRIG_SINGLE && m_continuousMode));
     m_isAdcRun = true;
     return RP_OK;
 }
 
 auto CADCController::stopAcq() -> int{
     std::lock_guard<std::mutex> lock(m_acqMutex);
-    ECHECK_APP(rp_AcqStop())
-    ECHECK_APP(rp_AcqSetArmKeep(false))
+    ECHECK(rp_AcqStop())
+    ECHECK(rp_AcqSetArmKeep(false))
     m_isAdcRun = false;
     return RP_OK;
 }
@@ -43,7 +43,7 @@ auto CADCController::isAdcRun() -> bool{
 
 auto CADCController::setContinuousMode(bool _enable) -> int{
     std::lock_guard<std::mutex> lock(m_acqMutex);
-    ECHECK_APP(rp_AcqSetArmKeep(_enable))
+    ECHECK(rp_AcqSetArmKeep(_enable))
     m_continuousMode = _enable;
     return RP_OK;
 }
@@ -135,7 +135,7 @@ auto CADCController::setTriggerToADC() -> int{
             WARNING("Unknown value %d",m_trigSource)
             return RP_EOOR;
     }
-    ECHECK_APP(rp_AcqSetTriggerSrc(src));
+    ECHECK(rp_AcqSetTriggerSrc(src));
     return RP_OK;
 }
 
@@ -195,7 +195,7 @@ auto CADCController::setTriggetLevel(float _level) -> int{
     static auto IsExternalTriggerLevelPresent = rp_HPGetIsExternalTriggerLevelPresentOrDefault();
     if (IsExternalTriggerLevelPresent){
         if (m_trigSource == RPAPP_OSC_TRIG_SRC_EXTERNAL){
-            ECHECK_APP(rp_AcqSetTriggerLevel(RP_T_CH_EXT, _level));
+            ECHECK(rp_SetExternalTriggerLevel(_level));
         }
     }
 
@@ -208,16 +208,16 @@ auto CADCController::setTriggetLevel(float _level) -> int{
     }
 
     if (m_trigSource == RPAPP_OSC_TRIG_SRC_CH1){
-        ECHECK_APP(rp_AcqSetTriggerLevel(RP_T_CH_1, _level));
+        ECHECK(rp_AcqSetTriggerLevel(RP_T_CH_1, _level));
     }
     if (m_trigSource == RPAPP_OSC_TRIG_SRC_CH2){
-        ECHECK_APP(rp_AcqSetTriggerLevel(RP_T_CH_2, _level));
+        ECHECK(rp_AcqSetTriggerLevel(RP_T_CH_2, _level));
     }
     if (m_trigSource == RPAPP_OSC_TRIG_SRC_CH3){
-        ECHECK_APP(rp_AcqSetTriggerLevel(RP_T_CH_3, _level));
+        ECHECK(rp_AcqSetTriggerLevel(RP_T_CH_3, _level));
     }
     if (m_trigSource == RPAPP_OSC_TRIG_SRC_CH4){
-        ECHECK_APP(rp_AcqSetTriggerLevel(RP_T_CH_4, _level));
+        ECHECK(rp_AcqSetTriggerLevel(RP_T_CH_4, _level));
     }
     return RP_OK;
 }
@@ -227,23 +227,23 @@ auto CADCController::getTriggerLevel(float *_level) -> int{
     static auto IsExternalTriggerLevelPresent = rp_HPGetIsExternalTriggerLevelPresentOrDefault();
     if (IsExternalTriggerLevelPresent){
         if (m_trigSource == RPAPP_OSC_TRIG_SRC_EXTERNAL){
-            ECHECK_APP(rp_AcqGetTriggerLevel(RP_T_CH_EXT,_level));
+            ECHECK(rp_GetExternalTriggerLevel(_level));
         }
     }
 
     if (m_trigSource == RPAPP_OSC_TRIG_SRC_CH1){
-        ECHECK_APP(rp_AcqGetTriggerLevel(RP_T_CH_1,_level));
+        ECHECK(rp_AcqGetTriggerLevel(RP_T_CH_1,_level));
     }
 
     if (m_trigSource == RPAPP_OSC_TRIG_SRC_CH2){
-        ECHECK_APP(rp_AcqGetTriggerLevel(RP_T_CH_2,_level));
+        ECHECK(rp_AcqGetTriggerLevel(RP_T_CH_2,_level));
     }
     if (m_trigSource == RPAPP_OSC_TRIG_SRC_CH3){
-        ECHECK_APP(rp_AcqGetTriggerLevel(RP_T_CH_3,_level));
+        ECHECK(rp_AcqGetTriggerLevel(RP_T_CH_3,_level));
     }
 
     if (m_trigSource == RPAPP_OSC_TRIG_SRC_CH4){
-        ECHECK_APP(rp_AcqGetTriggerLevel(RP_T_CH_4,_level));
+        ECHECK(rp_AcqGetTriggerLevel(RP_T_CH_4,_level));
     }
 
     if(m_trigSource != RPAPP_OSC_TRIG_SRC_EXTERNAL) {

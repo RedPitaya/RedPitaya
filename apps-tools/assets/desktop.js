@@ -53,7 +53,8 @@
                 STEM_250_12_v1_1            = 12,
                 STEM_250_12_v1_2            = 13,
                 STEM_250_12_120             = 14,
-                STEM_250_12_v1_2a           = 15
+                STEM_250_12_v1_2a           = 15,
+                STEM_250_12_v1_2b           = 16
             }  rp_HPeModels_t;
         */
         if (model == 0){
@@ -402,7 +403,6 @@
                         $('#SI_DNA').text(obj['dna']);
                         $('#SI_ECOSYSTEM').text(obj['ecosystem']['version'] + '-' + obj['ecosystem']['revision']);
                         $('#SI_LINUX').text(obj['linux']);
-                        $('#RAM_SIZE_ID').text(obj['mem_size']+"Mb");
                         $('#UBOOT_MODE_ID').text(obj['boot_512'] == "1"?"BOOT mode: Unify":"BOOT mode: SIGNALlab");
 
                         if (obj['mem_upgrade'] == "1"){

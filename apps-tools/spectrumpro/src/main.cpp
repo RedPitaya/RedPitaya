@@ -1,11 +1,11 @@
 #include "main.h"
 #include "settings.h"
-#include "rp_dsp.h"
+#include "math/rp_dsp.h"
 #include "rp.h"
 #include "neon_asm.h"
 #include "rp_math.h"
 #include "common.h"
-#include "sweepController.h"
+#include "common/rp_sweep.h"
 
 #define MAX_FREQ getMaxFreqRate()
 #define LEVEL_AMPS_MAX outAmpMax()
@@ -123,7 +123,7 @@ CIntParameter resetSettings("RESET_CONFIG_SETTINGS", CBaseParameter::RW, 0, 0, 0
 const std::vector<std::string> g_savedParams = {"OSC_CH1_IN_GAIN","OSC_CH2_IN_GAIN","OSC_CH3_IN_GAIN","OSC_CH4_IN_GAIN",
                                                 "OSC_CH1_IN_AC_DC","OSC_CH2_IN_AC_DC","OSC_CH3_IN_AC_DC","OSC_CH4_IN_AC_DC"};
 
-CSweepController *g_sweepController;
+rp_sweep_api::CSweepController *g_sweepController;
 
 void updateGen(void);
 
@@ -143,11 +143,13 @@ void UpdateParams(void)
 {
   	inRun.Update();
 
-    if (rp_HPIsFastDAC_PresentOrDefault())
+    if (rp_HPIsFastDAC_PresentOrDefault()){
         g_sweepController->pause(!inRun.Value());
+    }
 
-	if (inRun.Value() == false)
+	if (inRun.Value() == false){
 		return;
+    }
 
     auto adc = rpApp_SpecGetADCFreq();
     auto buf = rpApp_SpecGetADCBufferSize();
@@ -294,12 +296,9 @@ void decimateDataFirstN(CFloatSignal &dest, float *src,int start,int stop,int vi
 
     // auto timeNowP1 = std::chrono::system_clock::now();
 
-    float koef = 1;
     int pointsNumOrig = stop - start;
     int pointsNum = pointsNumOrig;
-    if (pointsNum > view_size)
-    {
-        koef = (float)pointsNum / view_size;
+    if (pointsNum > view_size){
         pointsNum = view_size;
     }
 
@@ -972,7 +971,7 @@ extern "C" int rp_app_init(void)
     rp_Init();
     rp_Reset();
 
-    g_sweepController = new CSweepController();
+    g_sweepController = new rp_sweep_api::CSweepController();
     if (rp_HPIsFastDAC_PresentOrDefault()){
         for(auto ch = 0u; ch < g_dac_count; ch++){
             rp_GenAmp((rp_channel_t)ch, outAmplitude[ch].NewValue());

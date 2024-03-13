@@ -282,8 +282,8 @@
         }
 
         if (param_name == 'OSC_TRIG_LIMIT' && OSC.params.orig['OSC_TRIG_LIMIT'] !== undefined) {
-            $("#OSC_TRIG_LEVEL").attr("max", OSC.params.orig['OSC_TRIG_LIMIT'].value);
-            $("#OSC_TRIG_LEVEL").attr("min", -OSC.params.orig['OSC_TRIG_LIMIT'].value);
+            $("#OSC_TRIG_LEVEL").attr("max", OSC.params.orig['OSC_TRIG_LIMIT'].max);
+            $("#OSC_TRIG_LEVEL").attr("min", OSC.params.orig['OSC_TRIG_LIMIT'].min);
         }
     }
 

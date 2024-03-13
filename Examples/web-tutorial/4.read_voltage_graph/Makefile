@@ -5,7 +5,7 @@ BUILD_NUMBER ?= 0
 REVISION ?= devbuild
 VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
 
-INSTALL_DIR ?= ../../build
+INSTALL_DIR ?= /opt/redpitaya/
 
 CONTROLLERHF = controllerhf.so
 

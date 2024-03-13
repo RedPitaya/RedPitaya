@@ -15,6 +15,7 @@
 #include "stem_250_12_v1.1.h"
 #include "stem_250_12_v1.2.h"
 #include "stem_250_12_v1.2a.h"
+#include "stem_250_12_v1.2b.h"
 #include "stem_250_12_120.h"
 
 profiles_t* getProfile(int *state){
@@ -68,6 +69,7 @@ int rp_HPPrintAll(){
     hp_cmn_Print(getProfile_STEM_250_12_v1_1());
     hp_cmn_Print(getProfile_STEM_250_12_v1_2());
     hp_cmn_Print(getProfile_STEM_250_12_v1_2a());
+    hp_cmn_Print(getProfile_STEM_250_12_v1_2b());
     hp_cmn_Print(getProfile_STEM_250_12_120());
     return RP_HP_OK;
 }
@@ -597,6 +599,21 @@ bool rp_HPGetIsGainDACx5OrDefault(){
     return p->is_DAC_gain_x5;
 }
 
+int rp_HPGetIsDAC50OhmMode(bool *value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->is_DAC_50_Ohm_mode;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+bool rp_HPGetIsDAC50OhmModeOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->is_DAC_50_Ohm_mode;
+}
+
 int rp_HPGetIsCalibrationLogicPresent(bool *value){
     int state;
     profiles_t* p = getProfile(&state);
@@ -670,6 +687,21 @@ int rp_HPGetIsExternalTriggerFullScale(float *value){
 float rp_HPGetIsExternalTriggerFullScalePresentOrDefault(){
     profiles_t* p = getProfileDefualt();
     return p->external_trigger_full_scale;
+}
+
+int rp_HPGetIsExternalTriggerIsSigned(bool *value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->is_ext_trigger_signed;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+bool rp_HPGetIsExternalTriggerIsSignedOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->is_ext_trigger_signed;
 }
 
 int rp_HPGetIsDaisyChainClockAvailable(bool *value){

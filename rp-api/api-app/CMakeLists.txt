@@ -43,7 +43,16 @@ message(STATUS "Compiler C++ ID: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "Compiler C++version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
+list(APPEND r_paths
+    /opt/redpitaya/lib
+    /opt/redpitaya/lib/web
+)
+
+set(CMAKE_INSTALL_RPATH ${r_paths})
+
 include_directories(${INSTALL_DIR}/include)
+include_directories(${INSTALL_DIR}/include/common)
+include_directories(${INSTALL_DIR}/include/api250-12)
 include_directories(${CMAKE_SOURCE_DIR}/src)
 link_directories(${INSTALL_DIR}/lib)
 
@@ -67,6 +76,8 @@ list(APPEND header_rpapp
 list(APPEND src_rpapp_lcr
         ${CMAKE_SOURCE_DIR}/lcr_meter/src/calib.cpp
         ${CMAKE_SOURCE_DIR}/lcr_meter/src/lcr_meter.cpp
+        ${CMAKE_SOURCE_DIR}/lcr_meter/src/lcr_generator.cpp
+        ${CMAKE_SOURCE_DIR}/lcr_meter/src/lcr_hw.cpp
         ${CMAKE_SOURCE_DIR}/lcr_meter/src/lcrApp.cpp
         ${CMAKE_SOURCE_DIR}/lcr_meter/src/utils.cpp
         )
@@ -91,7 +102,7 @@ if(BUILD_SHARED)
     target_sources(rpapp-shared PRIVATE $<TARGET_OBJECTS:rpapp-obj>)
     target_link_options(rpapp-shared PRIVATE -shared -Wl,--version-script=${CMAKE_SOURCE_DIR}/src/exportmap)
     target_link_libraries(rpapp-shared -lrp -lm -lpthread)
-    target_link_libraries(rpapp-shared rp-hw-calib rp-hw-profiles rp-dsp)
+    target_link_libraries(rpapp-shared rp-hw-calib rp-hw-profiles rp-dsp rp-i2c rp-spi rp-gpio i2c)
 
     if(IS_INSTALL)
         install(TARGETS rpapp-shared
@@ -127,7 +138,7 @@ if (ENABLE_LCR)
         target_sources(rpapp_lcr-shared PRIVATE $<TARGET_OBJECTS:rpapp_lcr-obj>)
         target_link_options(rpapp_lcr-shared PRIVATE -shared -Wl,--version-script=${CMAKE_SOURCE_DIR}/lcr_meter/src/exportmap)
         target_link_libraries(rpapp_lcr-shared -lrp -lm -lpthread)
-        target_link_libraries(rpapp_lcr-shared rp-hw-calib rp-hw-profiles)
+        target_link_libraries(rpapp_lcr-shared rp-dsp rp-hw-calib rp-hw-profiles rp-i2c rp-spi rp-gpio i2c)
 
         if(IS_INSTALL)
             install(TARGETS rpapp_lcr-shared
@@ -144,7 +155,7 @@ if (ENABLE_LCR)
         add_library(rpapp_lcr-static STATIC)
         set_property(TARGET rpapp_lcr-static PROPERTY OUTPUT_NAME rpapp_lcr)
         target_sources(rpapp_lcr-static PRIVATE $<TARGET_OBJECTS:rpapp_lcr-obj>)
-        target_link_libraries(rpapp_lcr-static -lrp -lm -lpthread)
+        target_link_libraries(rpapp_lcr-static -lrp-dsp -lrp -lrp-i2c -lrp-spi -lrp-gpio -li2c -lm -lpthread)
 
         if(IS_INSTALL)
             install(TARGETS rpapp_lcr-static

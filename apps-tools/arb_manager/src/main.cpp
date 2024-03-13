@@ -16,10 +16,10 @@
 #include <fstream>
 #include <cstdio>
 
-#include "version.h"
+#include "common/version.h"
 #include "main.h"
 #include "rp.h"
-#include "rp_arb.h"
+#include "common/rp_arb.h"
 #include "rp_hw-profiles.h"
 
 enum req_status_e{
@@ -29,13 +29,16 @@ enum req_status_e{
     FILE_ERR_TO_LONG = 3,
     FILE_ERR_PARS_ERR = 4,
     FILE_ERR_CANT_RENAME = 5,
-    FILE_RENAME_DONE = 6
+    FILE_RENAME_DONE = 6,
+    FILE_ERR_CANT_CHANGE_COLOR = 7,
+    FILE_CHANGE_COLOR_DONE = 8
 };
 
 CStringParameter req_check_file("RP_REQ_CHECK_FILE",CBaseParameter::RW, "", 0);
 CIntParameter req_status("RP_REQ_STATUS", CBaseParameter::RW, 0, 0, 0, 100);
 CStringParameter req_files_list("RP_FILES_LIST",CBaseParameter::RW, "", 0);
 CStringParameter req_rename_file("RP_RENAME_FILE",CBaseParameter::RW, "", 0);
+CStringParameter req_change_color("RP_CHANGE_COLOR",CBaseParameter::RW, "", 0);
 CFloatParameter  max_gain("MAX_GAIN", CBaseParameter::RW, 1, 0, 0, 100);
 
 
@@ -44,7 +47,7 @@ auto getDACChannels() -> uint8_t{
     uint8_t c = 0;
 
     if (rp_HPGetFastDACChannelsCount(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get fast DAC channels count\n");
+        ERROR("Can't get fast DAC channels count");
     }
     return c;
 }
@@ -106,7 +109,7 @@ auto decimateSignal(float *data, uint32_t size,float *out,uint32_t *sizeOut) -> 
     if (rate < 1){
         *sizeOut = 0;
         int prev_x = -1;
-        for(int i = 0 ; i < size ; i++){
+        for(uint32_t i = 0 ; i < size ; i++){
             int x = (float)i * (float)rate;
             out[x] = data[i];
             if (prev_x != x){
@@ -115,7 +118,7 @@ auto decimateSignal(float *data, uint32_t size,float *out,uint32_t *sizeOut) -> 
             }
         }
     }else{
-        for(int i = 0 ; i < size ; i++){
+        for(uint32_t i = 0 ; i < size ; i++){
             out[i] = data[i];
         }
         *sizeOut = size;
@@ -127,7 +130,7 @@ void sendFilesInfo() {
     rp_ARBLoadFiles();
     rp_ARBGetCount(&count);
     std::string req;
-    for(int i = 0; i < count; i++){
+    for(uint32_t i = 0; i < count; i++){
         std::string fileName;
         std::string name;
         uint32_t dataSize;
@@ -135,6 +138,7 @@ void sendFilesInfo() {
         uint32_t dataSizeOut;
         float dataOut[DAC_BUFFER_SIZE];
         bool is_valid;
+        uint32_t color;
 
         if (rp_ARBGetFileName(i,&fileName) != RP_ARB_FILE_OK)
             continue;
@@ -144,17 +148,19 @@ void sendFilesInfo() {
             continue;
         if (rp_ARBIsValid(name,&is_valid) != RP_ARB_FILE_OK)
             continue;
+        if (rp_ARBGetColor(i,&color) != RP_ARB_FILE_OK)
+            continue;
 
         decimateSignal(data,dataSize,dataOut,&dataSizeOut);
         std::string sig = std::to_string(dataSizeOut) + "\t";
-        for(int j = 0 ; j < dataSizeOut; j++){
+        for(uint32_t j = 0 ; j < dataSizeOut; j++){
             if (j !=0 ){
                 sig += ";";
             }
             sig += std::to_string(dataOut[j]);
         }
 
-        req += fileName + "\t" + name + "\t" + std::to_string(is_valid) + "\t" + sig + "\n";
+        req += fileName + "\t" + name + "\t" + std::to_string(is_valid) + "\t" + std::to_string(color) + "\t" + sig + "\n";
     }
     req_files_list.Value() = req;
 }
@@ -187,8 +193,9 @@ void UpdateSignals(void) {}
 void OnNewParams(void) {
     if (req_check_file.IsNewValue()){
         req_check_file.Update();
+        TRACE_SHORT("Request create file")
         int res = rp_ARBGenFile(req_check_file.Value());
-        req_check_file.SendValue("");
+        req_check_file.Value() = "";
         switch (res)
         {
             case RP_ARB_FILE_ERR:
@@ -209,6 +216,8 @@ void OnNewParams(void) {
     if (req_files_list.IsNewValue()){
         req_files_list.Update();
         if (req_files_list.Value() != ""){
+            TRACE_SHORT("Request files list")
+            req_files_list.Value() = "";
             sendFilesInfo();
         }
     }
@@ -222,11 +231,11 @@ void OnNewParams(void) {
         auto new_name = items[1];
         uint32_t count = 0;
         if (rp_ARBGetCount(&count) == RP_ARB_FILE_OK){
-            for(int i = 0; i < count; i++){
+            for(uint32_t i = 0; i < count; i++){
                 std::string fname = "";
                 if (rp_ARBGetFileName(i,&fname) == RP_ARB_FILE_OK){
                     if (fname == id){
-                        fprintf(stderr,"%s %s\n",fname.c_str(),id.c_str());
+                        TRACE_SHORT("%s %s\n",fname.c_str(),id.c_str());
                         auto res = rp_ARBRenameFile(i,new_name);
                         if (res == RP_ARB_FILE_CANT_RENAME){
                             req_status.SendValue(FILE_ERR_CANT_RENAME);
@@ -234,6 +243,36 @@ void OnNewParams(void) {
                         }
                         else{
                             req_status.SendValue(FILE_RENAME_DONE);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (req_change_color.IsNewValue()){
+        req_change_color.Update();
+        auto str = req_change_color.Value();
+        req_change_color.Value() = "";
+        auto items = split(str,"\n");
+        auto id = items[0];
+        auto color = std::stoul(items[1],nullptr,0);
+
+        uint32_t count = 0;
+        if (rp_ARBGetCount(&count) == RP_ARB_FILE_OK){
+            for(uint32_t i = 0; i < count; i++){
+                std::string fname = "";
+                if (rp_ARBGetFileName(i,&fname) == RP_ARB_FILE_OK){
+                    if (fname == id){
+                        TRACE_SHORT("%s %s\n",fname.c_str(),id.c_str());
+                        auto res = rp_ARBSetColor(i,color);
+                        if (res == RP_ARB_FILE_ERR){
+                            req_status.SendValue(FILE_ERR_CANT_CHANGE_COLOR);
+                            break;
+                        }
+                        else{
+                            req_status.SendValue(FILE_CHANGE_COLOR_DONE);
                             break;
                         }
                     }

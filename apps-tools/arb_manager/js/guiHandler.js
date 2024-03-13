@@ -94,7 +94,7 @@ $(document).ready(function() {
                             setTimeout(() => {
                                 SM.parametersCache["RP_REQ_CHECK_FILE"] = { value: e };
                                 SM.sendParameters();
-                            }, 500);
+                            }, 1000);
                         },
                         error: function(e) { console.log(e); },
                         // Form data

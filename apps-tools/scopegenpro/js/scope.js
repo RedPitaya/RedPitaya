@@ -180,6 +180,7 @@
     OSC.g_CpuLoad = 100.0;
     OSC.g_TotalMemory = 256.0;
     OSC.g_FreeMemory = 256.0;
+    OSC.g_Temperature = 0.0;
 
     OSC.time_offset = 0;
     OSC.time_scale = 0;
@@ -275,13 +276,14 @@
         $('#throughput_view').text((OSC.compressed_data / 1024).toFixed(2) + "kB/s");
         $('#throughput_view2').text((OSC.compressed_data / 1024).toFixed(2) + "kB/s");
         $('#cpu_load').text(OSC.g_CpuLoad.toFixed(2) + "%");
+        $('#cpu_temp').text(OSC.g_Temperature.toFixed(0));
         $('#totalmem_view').text((OSC.g_TotalMemory / (1024 * 1024)).toFixed(2) + "Mb");
         $('#freemem_view').text((OSC.g_FreeMemory / (1024 * 1024)).toFixed(2) + "Mb");
         $('#usagemem_view').text(((OSC.g_TotalMemory - OSC.g_FreeMemory) / (1024 * 1024)).toFixed(2) + "Mb");
         if ($('#connection_icon').attr('src') !== '../assets/images/good_net.png')
             $('#connection_icon').attr('src', '../assets/images/good_net.png');
         $('#connection_meter').attr('title', 'It seems like your connection is ok');
-        if (g_PacketsRecv < 5 || g_PacketsRecv > 25) {
+        if (g_PacketsRecv < 5 || g_PacketsRecv > 1000) {
             if ($('#connection_icon').attr('src') !== '../assets/images/bad_net.pngg')
                 $('#connection_icon').attr('src', '../assets/images/bad_net.png');
             $('#connection_meter').attr('title', 'Connection problem');
@@ -463,7 +465,13 @@
                     var data = new Uint8Array(ev.data);
                     OSC.compressed_data += data.length;
                     var inflate = pako.inflate(data);
-                    var text = String.fromCharCode.apply(null, new Uint8Array(inflate));
+                    // var text = String.fromCharCode.apply(null, new Uint8Array(inflate));
+                    var bytes = new Uint8Array(inflate);
+                    var text = '';
+                    for(var i = 0; i < Math.ceil(bytes.length / 32768.0); i++) {
+                      text += String.fromCharCode.apply(null, bytes.slice(i * 32768, Math.min((i+1) * 32768, bytes.length)))
+                    }
+
 
                     OSC.decompressed_data += text.length;
                     var receive = JSON.parse(text);
@@ -732,11 +740,18 @@
     OSC.param_callbacks["MATH_SHOW_INVERTED"] = OSC.updateMathShowInverted;
 
 
-    OSC.param_callbacks["CPU_LOAD"] = OSC.setCPULoad;
-    OSC.param_callbacks["TOTAL_RAM"] = OSC.setRamTotal;
-    OSC.param_callbacks["FREE_RAM"] = OSC.setFreeRam;
-
+    OSC.param_callbacks["RP_SYSTEM_CPU_LOAD"] = OSC.setCPULoad;
+    OSC.param_callbacks["RP_SYSTEM_TOTAL_RAM"] = OSC.setRamTotal;
+    OSC.param_callbacks["RP_SYSTEM_FREE_RAM"] = OSC.setFreeRam;
+    OSC.param_callbacks["RP_SYSTEM_TEMPERATURE"] = OSC.setTemerature;
     OSC.param_callbacks["RESET_CONFIG_SETTINGS"] = OSC.resetSettingsRequest;
+
+    OSC.param_callbacks["RP_SYSTEM_SLOW_ADC0"] = OSC.setSlowADC1;
+    OSC.param_callbacks["RP_SYSTEM_SLOW_ADC1"] = OSC.setSlowADC2;
+    OSC.param_callbacks["RP_SYSTEM_SLOW_ADC2"] = OSC.setSlowADC3;
+    OSC.param_callbacks["RP_SYSTEM_SLOW_ADC3"] = OSC.setSlowADC4;
+
+
 
     // Processes newly received values for parameters
     OSC.processParameters = function(new_params) {
@@ -1345,7 +1360,10 @@
         for (var i = 0; i < scale_list.length - 1; i++) {
 
             if (OSC.state.fine && (curr_scale == scale_list[i] || (curr_scale > scale_list[i] && curr_scale < scale_list[i + 1]) || (curr_scale == scale_list[i + 1] && direction == '-'))) {
-                new_scale = curr_scale + (OSC.scale_list[i + 1] / 100) * (direction == '-' ? -1 : 1);
+                var dev = 100
+                if (scale_list[i + 1] <= (5 / 1000)) dev = 50
+                if (scale_list[i + 1] <= (2 / 1000)) dev = 20
+                new_scale = parseFloat(curr_scale) + (parseFloat(scale_list[i + 1]) / dev) * (direction == '-' ? -1 : 1);
                 // Do not allow values smaller than the lowest possible one
                 if (new_scale < scale_list[0]) {
                     new_scale = scale_list[0];
@@ -1807,4 +1825,8 @@ $(function() {
 
     OSC.previousPageUrl = document.referrer;
     console.log(`Previously visited page URL: ${OSC.previousPageUrl}`);
+    const currentUrl = window.location.href;
+    if (currentUrl === OSC.previousPageUrl || OSC.previousPageUrl === ''){
+        OSC.previousPageUrl = '/'
+    }
 });

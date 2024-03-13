@@ -313,7 +313,7 @@ class CDoubleParameter : public CCustomParameter<double>
 public:
 	CDoubleParameter(std::string _name, CBaseParameter::AccessMode _access_mode, double _value, int _fpga_update, double _min, double _max)
 		:CCustomParameter(_name, _access_mode, _value, _fpga_update, _min, _max){};
-	
+
 	CDoubleParameter(std::string _name, CBaseParameter::AccessMode _access_mode, double _value, int _fpga_update, double _min, double _max,int _tag)
 		:CCustomParameter(_name, _access_mode, _value, _fpga_update, _min, _max,_tag){};
 };
@@ -362,10 +362,10 @@ public:
 class CByteSignal : public CCustomSignal<uint8_t>
 {
 public:
-	CByteSignal(std::string _name, uint8_t _size, uint8_t _def_value)
+	CByteSignal(std::string _name, int _size, uint8_t _def_value)
 		:CCustomSignal(_name, _size, _def_value){};
 
-	CByteSignal(std::string _name, CBaseParameter::AccessMode _access_mode, uint8_t _size, uint8_t _def_value)
+	CByteSignal(std::string _name, CBaseParameter::AccessMode _access_mode, int _size, uint8_t _def_value)
 		:CCustomSignal(_name, _access_mode, _size, _def_value){};
 };
 

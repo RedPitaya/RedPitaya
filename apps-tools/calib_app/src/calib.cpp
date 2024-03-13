@@ -51,7 +51,7 @@ int CCalib::calib(uint16_t _step,float _refdc){
 
         case STEM_122_16SDR_v1_0:
         case STEM_122_16SDR_v1_1:{
-            fprintf(stderr,"[Error] Board can't be calibrate\n");
+            FATAL("Board can't be calibrate");
             exit(-1);
         }
 
@@ -65,10 +65,11 @@ int CCalib::calib(uint16_t _step,float _refdc){
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
         case STEM_250_12_v1_2a:
+        case STEM_250_12_v1_2b:
         case STEM_250_12_120:
             return calib_board_z20_250_12(_step,_refdc);
         default:
-            fprintf(stderr,"[Error] Can't get board model\n");
+            FATAL("Can't get board model");
             exit(-1);
     }
     return 0;

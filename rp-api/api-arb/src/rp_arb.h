@@ -34,6 +34,8 @@ int rp_ARBGenFile(std::string _filename);
 int rp_ARBLoadFiles();
 int rp_ARBGetCount(uint32_t *_count);
 int rp_ARBGetName(uint32_t _index,std::string *_name);
+int rp_ARBSetColor(uint32_t _index,uint32_t color);
+int rp_ARBGetColor(uint32_t _index,uint32_t *_color);
 int rp_ARBGetFileName(uint32_t _index,std::string *_fileName);
 int rp_ARBGetSignal(uint32_t _index,float *_data,uint32_t *_size);
 int rp_ARBGetSignalByName(std::string _sigName,float *_data,uint32_t *_size);

@@ -31,6 +31,7 @@
 #include "acquire.h"
 #include "acquire_axi.h"
 #include "generate.h"
+#include "sweep.h"
 
 #include "scpi/error.h"
 #include "scpi/ieee488.h"
@@ -116,6 +117,25 @@ scpi_result_t SCPI_CoreClsEx(scpi_t * context) {
     return SCPI_CoreCls(context);
 }
 
+scpi_result_t RP_EcosystemVersionQ(scpi_t * context) {
+    SCPI_ResultMnemonic(context, rp_GetVersion());
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_CommandsList(scpi_t * context) {
+    std::string result;
+
+    for (int i = 0; context->cmdlist[i].pattern != NULL; i++) {
+        if (i != 0) {
+            result += "\n";
+        }
+        result += std::string(context->cmdlist[i].pattern);
+    }
+
+    SCPI_ResultMnemonic(context,result.c_str());
+    return SCPI_RES_OK;
+}
+
 /**
  * SCPI Configuration
  */
@@ -139,10 +159,10 @@ static const scpi_command_t scpi_commands[] = {
     /* Required SCPI commands (SCPI std V1999.0 4.2.1) */
     {.pattern = "SYSTem:ERRor[:NEXT]?", .callback = SCPI_SystemErrorNextQEx,},
     {.pattern = "SYSTem:ERRor:COUNt?",  .callback = SCPI_SystemErrorCountQEx,},
-    {.pattern = "SYSTem:VERSion?",      .callback = SCPI_SystemVersionQ,},
+    {.pattern = "SYSTem:VERSion?",      .callback = RP_EcosystemVersionQ,},
     {.pattern = "SYSTem:BRD:ID?",       .callback = RP_BoardID,},
     {.pattern = "SYSTem:BRD:Name?",     .callback = RP_BoardName,},
-    {.pattern = "SYSTem:VERSion?",      .callback = SCPI_SystemVersionQ,},
+    {.pattern = "SYSTem:Help?",         .callback = RP_CommandsList,},
 
     {.pattern = "STATus:QUEStionable[:EVENt]?", .callback = SCPI_StatusQuestionableEventQ,},
     {.pattern = "STATus:QUEStionable:ENABle",   .callback = SCPI_StatusQuestionableEnable,},
@@ -166,6 +186,10 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "RP:DIg[:loop]", .callback              = RP_EnableDigLoop,},
     {.pattern = "RP:LOGmode", .callback                 = RP_SetLogMode,},
 
+    {.pattern = "RP:PLL:ENable", .callback              = RP_PLL,},
+    {.pattern = "RP:PLL:ENable?", .callback             = RP_PLLQ,},
+    {.pattern = "RP:PLL:STATE?", .callback              = RP_PLLStateQ,},
+
     {.pattern = "DIG:RST", .callback                    = RP_DigitalPinReset,},
     {.pattern = "DIG:PIN", .callback                    = RP_DigitalPinState,},
     {.pattern = "DIG:PIN?", .callback                   = RP_DigitalPinStateQ,},
@@ -182,11 +206,15 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "DAISY:SYNC:CLK", .callback             = RP_EnableDaisyChainClockSync,},
     {.pattern = "DAISY:SYNC:CLK?", .callback            = RP_EnableDaisyChainClockSyncQ,},
 
-    {.pattern = "DAISY:TRIG_O:ENable", .callback        = RP_DpinEnableTrigOutput,},
-    {.pattern = "DAISY:TRIG_O:ENable?", .callback       = RP_DpinEnableTrigOutputQ,},
+    {.pattern = "DAISY:TRIG_O:ENable", .callback        = RP_DpinEnableTrigOutput,}, // Depraceted need remove after update all examples
+    {.pattern = "DAISY:TRig:Out:ENable", .callback      = RP_DpinEnableTrigOutput,},
+    {.pattern = "DAISY:TRIG_O:ENable?", .callback       = RP_DpinEnableTrigOutputQ,}, // Depraceted need remove after update all examples
+    {.pattern = "DAISY:TRig:Out:ENable?", .callback     = RP_DpinEnableTrigOutputQ,},
 
-    {.pattern = "DAISY:TRIG_O:SOUR", .callback          = RP_SourceTrigOutput,},
-    {.pattern = "DAISY:TRIG_O:SOUR?", .callback         = RP_SourceTrigOutputQ,},
+    {.pattern = "DAISY:TRIG_O:SOUR", .callback          = RP_SourceTrigOutput,}, // Depraceted need remove after update all examples
+    {.pattern = "DAISY:TRig:Out:SOUR", .callback        = RP_SourceTrigOutput,},
+    {.pattern = "DAISY:TRIG_O:SOUR?", .callback         = RP_SourceTrigOutputQ,}, // Depraceted need remove after update all examples
+    {.pattern = "DAISY:TRig:Out:SOUR?", .callback       = RP_SourceTrigOutputQ,},
 
     /* Acquire */
     {.pattern = "ACQ:START", .callback                  = RP_AcqStart,},
@@ -194,8 +222,8 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "ACQ:RST", .callback                    = RP_AcqReset,},
     {.pattern = "ACQ:DEC", .callback                    = RP_AcqDecimation,},
     {.pattern = "ACQ:DEC?", .callback                   = RP_AcqDecimationQ,},
-    {.pattern = "ACQ:DEC:F", .callback                  = RP_AcqDecimationFactor,},
-    {.pattern = "ACQ:DEC:F?", .callback                 = RP_AcqDecimationFactorQ,},
+    {.pattern = "ACQ:DEC:Factor", .callback             = RP_AcqDecimationFactor,},
+    {.pattern = "ACQ:DEC:Factor?", .callback            = RP_AcqDecimationFactorQ,},
 
     {.pattern = "ACQ:SRATe?", .callback                 = RP_AcqSamplingRateHzQ,},
     {.pattern = "ACQ:AVG", .callback                    = RP_AcqAveraging,},
@@ -217,12 +245,16 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "ACQ:TPOS?", .callback                  = RP_AcqWritePointerAtTrigQ,},
     {.pattern = "ACQ:DATA:Units", .callback             = RP_AcqScpiDataUnits,},
     {.pattern = "ACQ:DATA:Units?", .callback            = RP_AcqScpiDataUnitsQ,},
-    {.pattern = "ACQ:DATA:FORMAT", .callback            = RP_AcqSetDataFormat,},
+    {.pattern = "ACQ:DATA:FORMAT", .callback            = RP_AcqDataFormat,},
+    {.pattern = "ACQ:DATA:FORMAT?", .callback           = RP_AcqDataFormatQ,},
+    {.pattern = "ACQ:SOUR#:DATA:STArt:End?", .callback  = RP_AcqDataPosQ,},
     {.pattern = "ACQ:SOUR#:DATA:Start:End?", .callback  = RP_AcqDataPosQ,},
+    {.pattern = "ACQ:SOUR#:DATA:STArt:N?", .callback    = RP_AcqDataQ,},
     {.pattern = "ACQ:SOUR#:DATA:Start:N?", .callback    = RP_AcqDataQ,},
     {.pattern = "ACQ:SOUR#:DATA:Old:N?", .callback      = RP_AcqOldestDataQ,},
     {.pattern = "ACQ:SOUR#:DATA?", .callback            = RP_AcqDataOldestAllQ,},
-    {.pattern = "ACQ:SOUR#:DATA:Last:N?", .callback      = RP_AcqLatestDataQ,},
+    {.pattern = "ACQ:SOUR#:DATA:LATest:N?", .callback   = RP_AcqLatestDataQ,},
+    {.pattern = "ACQ:SOUR#:DATA:TRig?", .callback       = RP_AcqTriggerDataQ,},
     {.pattern = "ACQ:BUF:SIZE?", .callback              = RP_AcqBufferSizeQ,},
 
     // DMA mode for ACQ
@@ -239,16 +271,18 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "ACQ:AXI:SOUR#:Trig:Pos?", .callback    = RP_AcqAxiWritePointerAtTrigQ,},
     {.pattern = "ACQ:AXI:SOUR#:ENable", .callback       = RP_AcqAxiEnable,},
     {.pattern = "ACQ:AXI:SOUR#:DATA:Start:N?",.callback = RP_AcqAxiDataQ,},
+    {.pattern = "ACQ:AXI:SOUR#:DATA:STArt:N?",.callback = RP_AcqAxiDataQ,},
     {.pattern = "ACQ:AXI:SOUR#:SET:Buffer", .callback   = RP_AcqAxiSetAddres,},
 
 
     {.pattern = "ACQ:SOUR#:COUP", .callback             = RP_AcqAC_DC,},
     {.pattern = "ACQ:SOUR#:COUP?", .callback            = RP_AcqAC_DCQ,},
-    {.pattern = "ACQ:TRig:EXT:LEV", .callback           = RP_AcqExtTriggerLevel,},
-    {.pattern = "ACQ:TRig:EXT:LEV?", .callback          = RP_AcqExtTriggerLevelQ,},
 
-    {.pattern = "ACQ:TRig:EXT:DEBouncer[:US]", .callback   = RP_AcqExtTriggerDebouncerUs,},
-    {.pattern = "ACQ:TRig:EXT:DEBouncer[:US]?", .callback  = RP_AcqExtTriggerDebouncerUsQ,},
+    {.pattern = "TRig:EXT:LEV", .callback               = RP_ExtTriggerLevel,},
+    {.pattern = "TRig:EXT:LEV?", .callback              = RP_ExtTriggerLevelQ,},
+
+    {.pattern = "ACQ:TRig:EXT:DEBouncer[:US]", .callback    = RP_ExtTriggerDebouncerUs,},
+    {.pattern = "ACQ:TRig:EXT:DEBouncer[:US]?", .callback   = RP_ExtTriggerDebouncerUsQ,},
 
     /* Generate */
     {.pattern = "GEN:RST", .callback                    = RP_GenReset,},
@@ -259,6 +293,7 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "SOUR:TRig:INT", .callback              = RP_GenTriggerBoth,},
     {.pattern = "SOUR#:FREQ:FIX", .callback             = RP_GenFrequency,},
     {.pattern = "SOUR#:FREQ:FIX?", .callback            = RP_GenFrequencyQ,},
+    {.pattern = "SOUR#:FREQ:FIX:Direct", .callback      = RP_GenFrequencyDirect,},
     {.pattern = "SOUR#:FUNC", .callback                 = RP_GenWaveForm,},
     {.pattern = "SOUR#:FUNC?", .callback                = RP_GenWaveFormQ,},
     {.pattern = "SOUR#:VOLT", .callback                 = RP_GenAmplitude,},
@@ -269,6 +304,8 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "SOUR#:PHAS?", .callback                = RP_GenPhaseQ,},
     {.pattern = "SOUR#:DCYC", .callback                 = RP_GenDutyCycle,},
     {.pattern = "SOUR#:DCYC?", .callback                = RP_GenDutyCycleQ,},
+    {.pattern = "SOUR#:LOAD", .callback                 = RP_GenLoad,},
+    {.pattern = "SOUR#:LOAD?", .callback                = RP_GenLoadQ,},
     {.pattern = "SOUR#:TRAC:DATA:DATA", .callback       = RP_GenArbitraryWaveForm,},
     {.pattern = "SOUR#:TRAC:DATA:DATA?", .callback      = RP_GenArbitraryWaveFormQ,},
     {.pattern = "SOUR#:BURS:STAT", .callback            = RP_GenGenerateMode,},
@@ -279,6 +316,21 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "SOUR#:BURS:NOR?", .callback            = RP_GenBurstRepetitionsQ,},
     {.pattern = "SOUR#:BURS:INT:PER", .callback         = RP_GenBurstPeriod,},
     {.pattern = "SOUR#:BURS:INT:PER?", .callback        = RP_GenBurstPeriodQ,},
+
+    {.pattern = "SOUR:SWeep:PAUSE", .callback           = RP_GenSweepPause,},
+    {.pattern = "SOUR:SWeep:RESET", .callback           = RP_GenSweepReset,},
+    {.pattern = "SOUR#:SWeep:STATE", .callback          = RP_GenSweepState,},
+    {.pattern = "SOUR#:SWeep:STATE?", .callback         = RP_GenSweepStateQ,},
+    {.pattern = "SOUR#:SWeep:FREQ:START", .callback     = RP_GenSweepFreqStart,},
+    {.pattern = "SOUR#:SWeep:FREQ:START?", .callback    = RP_GenSweepFreqStartQ,},
+    {.pattern = "SOUR#:SWeep:FREQ:STOP", .callback      = RP_GenSweepFreqStop,},
+    {.pattern = "SOUR#:SWeep:FREQ:STOP?", .callback     = RP_GenSweepFreqStopQ,},
+    {.pattern = "SOUR#:SWeep:TIME", .callback           = RP_GenSweepTime,},
+    {.pattern = "SOUR#:SWeep:TIME?", .callback          = RP_GenSweepTimeQ,},
+    {.pattern = "SOUR#:SWeep:MODE", .callback           = RP_GenSweepMode,},
+    {.pattern = "SOUR#:SWeep:MODE?", .callback          = RP_GenSweepModeQ,},
+    {.pattern = "SOUR#:SWeep:DIR", .callback            = RP_GenSweepDir,},
+    {.pattern = "SOUR#:SWeep:DIR?", .callback           = RP_GenSweepDirQ,},
 
     {.pattern = "SOUR#:BURS:LASTValue", .callback       = RP_GenBurstLastValue,},
     {.pattern = "SOUR#:BURS:LASTValue?", .callback      = RP_GenBurstLastValueQ,},
@@ -417,18 +469,46 @@ static scpi_interface_t scpi_interface = {
     .reset   = SCPI_Reset,
 };
 
-#define SCPI_INPUT_BUFFER_LENGTH 538688
-static char scpi_input_buffer[SCPI_INPUT_BUFFER_LENGTH];
+#define SCPI_INPUT_BUFFER_LENGTH 1024 * 512
+// static char scpi_input_buffer[SCPI_INPUT_BUFFER_LENGTH];
 
 
+scpi_t* initContext(){
+    _scpi_t *ctx = NULL;
+    char *buffer = NULL;
+    try{
+        ctx = new _scpi_t();
+    }catch(const std::bad_alloc &err)
+    {
+        fprintf(stderr,"Failed allocate scpi_t: %s\n",err.what());
+        return NULL;
+    };
 
-scpi_t scpi_context = {
-    .cmdlist = scpi_commands,
-    .buffer = {
-        .length = SCPI_INPUT_BUFFER_LENGTH,
-        .data = scpi_input_buffer,
-    },
-    .interface = &scpi_interface,
-    .units = scpi_units_def,
-    .idn = {"REDPITAYA", "INSTR2023", NULL, "05-03"},
-};
+    try{
+        buffer = new char[SCPI_INPUT_BUFFER_LENGTH];
+    }catch(const std::bad_alloc &)
+    {
+        fprintf(stderr,"Failed allocate buffer for scpi_t\n");
+        return NULL;
+    };
+    ctx->cmdlist = scpi_commands;
+    ctx->buffer.data = buffer;
+    ctx->buffer.length = SCPI_INPUT_BUFFER_LENGTH;
+    ctx->interface = &scpi_interface;
+    ctx->units = scpi_units_def;
+    // user_context will be pointer to socket
+    ctx->user_context = NULL;
+    // ctx->binary_output = false;
+    return ctx;
+}
+
+// scpi_t scpi_context = {
+//     .cmdlist = scpi_commands,
+//     .buffer = {
+//         .length = SCPI_INPUT_BUFFER_LENGTH,
+//         .data = scpi_input_buffer,
+//     },
+//     .interface = &scpi_interface,
+//     .units = scpi_units_def,
+//     .idn = {"REDPITAYA", "INSTR2023", NULL, "05-03"},
+// };

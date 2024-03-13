@@ -15,7 +15,8 @@
 #include <thread>
 #include <mutex>
 
-#include "version.h"
+#include "common/version.h"
+#include "common/rp_log.h"
 #include "bodeApp.h"
 
 #include "rp_hw-calib.h"
@@ -23,9 +24,7 @@
 #include "settings.h"
 #include "main.h"
 
-extern "C" {
-    #include "rpApp.h"
-}
+#include "rpApp.h"
 
 /***************************************************************************************
 *                                     BODE ANALYSER                                    *
@@ -63,6 +62,7 @@ CBooleanParameter 	ba_scale(			"BA_SCALE", 			CBaseParameter::RW, true, 	0, CONF
 CBooleanParameter 	ba_auto_scale(		"BA_AUTO_SCALE",    	CBaseParameter::RW, true, 	0, CONFIG_VAR);
 CFloatParameter 	ba_input_threshold(	"BA_INPUT_THRESHOLD",	CBaseParameter::RW, 0.001,	0,	    0, 		1 , CONFIG_VAR);
 CBooleanParameter 	ba_show_all(		"BA_SHOW_ALL",      	CBaseParameter::RW, true, 	0, CONFIG_VAR);
+CIntParameter		ba_logic_mode(		"BA_LOGIC_MODE", 		CBaseParameter::RW, 0, 		0, 		0, 		10 , CONFIG_VAR);
 
 // Status parameters
 CStringParameter 	redpitaya_model(	"RP_MODEL_STR", 		CBaseParameter::RO, getModelS(), 0);
@@ -90,7 +90,7 @@ void threadLoop();
 auto getModelS() -> std::string{
     rp_HPeModels_t c = STEM_125_14_v1_0;
     if (rp_HPGetModel(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get board model\n");
+        ERROR("Can't get board model");
     }
 
     switch (c)
@@ -115,13 +115,14 @@ auto getModelS() -> std::string{
 	    case STEM_250_12_v1_0:
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
-		case STEM_250_12_v1_2a:
+        case STEM_250_12_v1_2a:
+        case STEM_250_12_v1_2b:
             return "Z20_250_12";
         case STEM_250_12_120:
             return "Z20_250_12_120";
 
         default:
-            fprintf(stderr,"[Error] Can't get board model\n");
+            ERROR("Can't get board model");
             exit(-1);
     }
     return "Z10";
@@ -131,7 +132,7 @@ auto getMaxADC() -> uint32_t{
     rp_HPeModels_t c = STEM_125_14_v1_0;
     int dev = 0;
     if (rp_HPGetModel(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get board model\n");
+        ERROR("Can't get board model");
     }
 
     switch (c)
@@ -159,7 +160,8 @@ auto getMaxADC() -> uint32_t{
 	    case STEM_250_12_v1_0:
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
-		case STEM_250_12_v1_2a:
+        case STEM_250_12_v1_2a:
+        case STEM_250_12_v1_2b:
             dev = 4;
             break;
         case STEM_250_12_120:
@@ -167,7 +169,7 @@ auto getMaxADC() -> uint32_t{
             break;
 
         default:
-            fprintf(stderr,"[Error] Can't get board model\n");
+            ERROR("Can't get board model");
             exit(-1);
     }
     uint32_t adc = rpApp_BaGetADCSpeed();
@@ -190,7 +192,7 @@ int rp_app_init(void)
 	rp_Init();
     rp_AcqSetAC_DC(RP_CH_1,RP_DC);
     rp_AcqSetAC_DC(RP_CH_2,RP_DC);
-
+    rpApp_BaInit();
     rpApp_BaReadCalibration();
     updateParametersByConfig();
 
@@ -202,9 +204,11 @@ int rp_app_init(void)
 int rp_app_exit(void)
 {
     g_exit_flag = true;
-    if (g_thread)
+    if (g_thread){
         g_thread->join();
+    }
 	rp_Release();
+    rpApp_BaRelease();
 	fprintf(stderr, "Unloading bode analyser version %s-%s.\n", VERSION_STR, REVISION_STR);
 	return 0;
 }
@@ -306,6 +310,10 @@ void UpdateParams(void)
 		ba_scale.Update();
 	}
 
+    if (ba_logic_mode.IsNewValue()) {
+        ba_logic_mode.Update();
+    }
+
 	//Scale update
 	if (IS_NEW(ba_input_threshold)) {
 		ba_input_threshold.Update();
@@ -332,7 +340,7 @@ void bode_ResetCalib() {
     std::lock_guard<std::mutex> lock(g_signalMutex);
 	rpApp_BaResetCalibration();
     rpApp_BaReadCalibration();
-	fprintf(stderr, "Calibration reseted\n");
+	TRACE_SHORT("Calibration reseted");
 }
 
 
@@ -342,7 +350,7 @@ void OnNewParams(void) {
 
     if (ba_status.IsNewValue() ){
         if (ba_status.NewValue() == BA_RESET_CONFIG_SETTINGS){
-            fprintf(stderr,"Delete config\n");
+            TRACE_SHORT("Delete config");
             deleteConfig(getHomeDirectory() + "/.config/redpitaya/apps/ba_pro/config.json");
             ba_status.Update();
             ba_status.SendValue(BA_RESET_CONFIG_SETTINGS_DONE);
@@ -389,6 +397,7 @@ void threadLoop(){
     float per_number = 0;
     float gen_ampl = 0;
     float dc_bias = 0;
+    rp_ba_logic_t logic_mode = RP_BA_LOGIC_TRAP;
 
     while (!g_exit_flag)
     {
@@ -396,7 +405,6 @@ void threadLoop(){
 
 
         int status = ba_status.Value();
-
         // user start calibration
         if (status == BA_START_CALIB || status == BA_START_CALIB_PROCESS){
             if (status == BA_START_CALIB){
@@ -413,6 +421,7 @@ void threadLoop(){
                 end_freq = getMaxADC();
                 steps = 500;
                 threshold = ba_input_threshold.Value();
+                logic_mode = (rp_ba_logic_t)ba_logic_mode.Value();
                 per_number = ba_periods_number.Value();
                 gen_ampl = ba_amplitude.Value();
                 dc_bias = ba_dc_bias.Value();
@@ -452,7 +461,7 @@ void threadLoop(){
                     float ampl_step = 0;
                     float phase_step = 0;
                     rpApp_BaSafeThreadAcqPrepare();
-                    auto ret = rpApp_BaGetAmplPhase(gen_ampl, dc_bias, per_number , buffer, &ampl_step, &phase_step, current_freq,threshold);
+                    auto ret = rpApp_BaGetAmplPhase(logic_mode,gen_ampl, dc_bias, per_number , buffer, &ampl_step, &phase_step, current_freq,threshold);
                     if (ret ==  RP_EOOR) { // isnan && isinf
                         cur_step++;
                         return;
@@ -504,6 +513,7 @@ void threadLoop(){
                 end_freq = ba_end_freq.Value();
                 steps = ba_steps.Value();
                 threshold = ba_input_threshold.Value();
+                logic_mode = (rp_ba_logic_t)ba_logic_mode.Value();
                 per_number = ba_periods_number.Value();
                 gen_ampl = ba_amplitude.Value();
                 dc_bias = ba_dc_bias.Value();
@@ -513,6 +523,9 @@ void threadLoop(){
                 signal_parameters.push_back(steps);
 
                 ba_status.SendValue(BA_START_PROCESS);
+                TRACE_SHORT("start_freq %f",start_freq);
+                TRACE_SHORT("end_freq %f",end_freq);
+                TRACE_SHORT("steps %f",steps);
             }
 
             if (cur_step < steps){
@@ -545,7 +558,7 @@ void threadLoop(){
                     float ampl_step = 0;
                     float phase_step = 0;
                     rpApp_BaSafeThreadAcqPrepare();
-                    auto ret = rpApp_BaGetAmplPhase(gen_ampl, dc_bias, per_number , buffer, &ampl_step, &phase_step, current_freq,threshold);
+                    auto ret = rpApp_BaGetAmplPhase(logic_mode,gen_ampl, dc_bias, per_number , buffer, &ampl_step, &phase_step, current_freq,threshold);
                     if (ret ==  RP_EOOR) { // isnan && isinf
                         cur_step++;
                         return;

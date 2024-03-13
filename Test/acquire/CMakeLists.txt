@@ -4,6 +4,7 @@ set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
 set(CMAKE_CXX_STANDARD 11)
 set(C_STANDARD 11)
+set(CMAKE_VERBOSE_MAKEFILE OFF)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 
@@ -36,6 +37,12 @@ message(STATUS "Compiler C++ ID: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "Compiler C++version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
+list(APPEND r_paths
+    /opt/redpitaya/lib
+    /opt/redpitaya/lib/web
+)
+
+set(CMAKE_INSTALL_RPATH ${r_paths})
 
 include_directories(${INSTALL_DIR}/include)
 
@@ -51,11 +58,11 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE -static rp rp-hw rp-hw-calib rp-hw-profiles)
+target_link_libraries(${PROJECT_NAME} PRIVATE rp rp-hw-calib rp-hw-profiles)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE -static rp-i2c rp-spi rp-gpio)
+target_link_libraries(${PROJECT_NAME} PRIVATE rp-hw rp-i2c rp-spi rp-gpio)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE -static rp-hw i2c)
+target_link_libraries(${PROJECT_NAME} PRIVATE i2c)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE pthread)
 

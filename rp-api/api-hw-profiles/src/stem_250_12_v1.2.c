@@ -85,6 +85,7 @@ profiles_t stem_250_12_v1_2 = {
 
     .is_ext_trigger_level_available = true,
     .external_trigger_full_scale = 10,
+    .is_ext_trigger_signed = false,
 
     .fast_adc_spectrum_resolution = 62500000,
 
@@ -93,7 +94,8 @@ profiles_t stem_250_12_v1_2 = {
 
     .is_daisy_chain_clock_sync = false,
 
-    .is_dma_mode_v0_94 = true
+    .is_dma_mode_v0_94 = true,
+    .is_DAC_50_Ohm_mode = true
 };
 
 profiles_t* getProfile_STEM_250_12_v1_2(){

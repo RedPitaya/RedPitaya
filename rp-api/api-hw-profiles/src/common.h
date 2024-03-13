@@ -69,9 +69,11 @@ typedef struct {
     bool                is_attenuator_controller_present;
     bool                is_ext_trigger_level_available;
     uint8_t             external_trigger_full_scale;
+    bool                is_ext_trigger_signed;
     uint32_t            fast_adc_spectrum_resolution;
     bool                is_daisy_chain_clock_sync;
     bool                is_dma_mode_v0_94;
+    bool                is_DAC_50_Ohm_mode;
 
 
 } profiles_t;

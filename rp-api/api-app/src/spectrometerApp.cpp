@@ -31,8 +31,8 @@
 
 #include "spectrometerApp.h"
 #include "common.h"
-#include "neon_asm.h"
 #include "version.h"
+#include "math/rp_math.h"
 
 
 typedef enum rp_spectr_worker_state_e {
@@ -113,7 +113,7 @@ auto createArray(uint32_t count,uint32_t signalLen) -> T** {
         }
         return arr;
     }catch (const std::bad_alloc& e) {
-        fprintf(stderr, "createArray() can not allocate mem\n");
+        ERROR("Can not allocate memory");
         return nullptr;
     }
 }
@@ -166,8 +166,7 @@ int rp_spectr_worker_init()
                        rp_spectr_worker_thread, NULL);
     if(ret_val != 0) {
         clearAll();
-        fprintf(stderr, "pthread_create() failed: %s\n",
-                strerror(errno));
+        ERROR("pthread_create() failed: %s\n",strerror(errno));
         return -1;
     }
     return 0;
@@ -202,7 +201,7 @@ int rp_spectr_worker_exit(void)
         rp_spectr_thread_handler = NULL;
     }
     if(ret_val != 0) {
-        fprintf(stderr, "pthread_join() failed: %s\n",
+        ERROR("pthread_join() failed: %s\n",
                 strerror(errno));
     }
     rp_spectr_worker_clean();
@@ -436,10 +435,8 @@ void rp_cleanup_signals(float ***a_signals)
 
 int spec_run()
 {
-    fprintf(stderr, "SPEC RUN Loading spectrum version %s-%s.\n", VERSION_STR ,REVISION_STR);
-
     if(rp_spectr_worker_init() < 0) {
-	    fprintf(stderr, "rp_spectr_worker_init failed\n");
+	    ERROR("rp_spectr_worker_init failed");
         return -1;
     }
     auto adc_rate = getADCRate();
@@ -580,7 +577,7 @@ int spec_setADCBufferSize(size_t size){
     if (!g_dsp) return -1;
 
     if (g_dsp->setSignalLength(size) != 0){
-        fprintf(stderr,"[Error] Wrong size %d\n",size);
+        ERROR("Wrong size %d",size);
     }
 
     if(g_dsp->window_init(g_dsp->getCurrentWindowMode()) < 0) {

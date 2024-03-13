@@ -303,7 +303,12 @@
                     var data = new Uint8Array(ev.data);
                     BA.compressed_data += data.length;
                     var inflate = pako.inflate(data);
-                    var text = String.fromCharCode.apply(null, new Uint8Array(inflate));
+                    // var text = String.fromCharCode.apply(null, new Uint8Array(inflate));
+                    var bytes = new Uint8Array(inflate);
+                    var text = '';
+                    for(var i = 0; i < Math.ceil(bytes.length / 32768.0); i++) {
+                      text += String.fromCharCode.apply(null, bytes.slice(i * 32768, Math.min((i+1) * 32768, bytes.length)))
+                    }
 
                     BA.decompressed_data += text.length;
                     var receive = JSON.parse(text);
@@ -1008,6 +1013,20 @@
         }
     }
 
+    BA.setLogic = function(new_params) {
+        var param_name = "BA_LOGIC_MODE"
+        var old_params = BA.params.orig;
+        if ((!BA.state.editing &&
+            ((old_params[param_name] !== undefined && old_params[param_name].value !== new_params[param_name].value) ||
+            (old_params[param_name] == undefined))
+            )) {
+            var radios = $('input[name="' + param_name + '"]');
+            radios.closest('.btn-group').children('.btn.active').removeClass('active');
+            radios.eq([+new_params[param_name].value]).prop('checked', true).parent().addClass('active');
+        }
+    }
+
+
     BA.setPerNum = function(new_params) {
         var param_name = "BA_PERIODS_NUMBER"
         BA.setValue(param_name,new_params)
@@ -1346,8 +1365,9 @@
     BA.param_callbacks["BA_END_FREQ"] = BA.endFreq;
     BA.param_callbacks["BA_STEPS"] = BA.setSteps;
     BA.param_callbacks["BA_SCALE"] = BA.setScale;
+    BA.param_callbacks["BA_LOGIC_MODE"] = BA.setLogic;
 
-    BA.param_callbacks["BA_SCALE"] = BA.setPerNum;
+    BA.param_callbacks["BA_PERIODS_NUMBER"] = BA.setPerNum;
     BA.param_callbacks["BA_AVERAGING"] = BA.setAverage;
     BA.param_callbacks["BA_AMPLITUDE"] = BA.setOutAmpl;
     BA.param_callbacks["BA_DC_BIAS"] = BA.setDCBias;
@@ -1712,6 +1732,10 @@ $(function() {
 
     // Everything prepared, start application
     BA.startApp();
+
+    BA.previousPageUrl = document.referrer;
+    console.log(`Previously visited page URL: ${BA.previousPageUrl}`);
+    $("#back_button").attr("href", BA.previousPageUrl)
 
     // // Start measuring after loading. Must be last in this file!
     // setTimeout(function() {

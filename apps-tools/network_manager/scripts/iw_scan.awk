@@ -54,7 +54,7 @@ $1 == "\tWPS" {
 END {
     t=""
     printf "{\"scan\": [\n"
-    fmt = "  {\"SSID\": \"%s\", \"sig\": \"%s\", \"enc\": \"%s\"}"
+    fmt = "  {\"SSID\": \"%s\", \"sig\": \"%s\", \"enc\": \"%s\", \"rtl8188\": \"No\"}"
     for (w in wifi) {
         printf t
         printf fmt, wifi[w]["SSID"], wifi[w]["sig"], wifi[w]["enc"]

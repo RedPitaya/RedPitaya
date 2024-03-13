@@ -90,7 +90,7 @@ int rp_get_signals(float ***s, int *sig_num, int *sig_len)
 void UpdateSignals(void)
 {
     float val;
-    uint32_t
+    uint32_t raw;
 
     //Read data from pin
     rp_AIpinGetValue(0, &val,&raw);

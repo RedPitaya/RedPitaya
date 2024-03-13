@@ -15,8 +15,9 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <pthread.h>
 
-#include "redpitaya/version.h"
+#include "common/version.h"
 #include "common.h"
 #include "housekeeping.h"
 #include "oscilloscope.h"
@@ -27,8 +28,14 @@
 #include "gen_handler.h"
 #include "daisy.h"
 
+#include "rp-i2c-mcp47x6-c.h"
+#include "rp-i2c-max7311-c.h"
+
 static char version[50];
 int g_api_state = 0;
+float g_ext_trig_trash = 0;
+
+pthread_mutex_t rp_init_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /**
  * Global methods
@@ -41,6 +48,8 @@ int rp_Init()
 
 int rp_InitReset(bool reset)
 {
+    if (g_api_state) return RP_EOOR;
+    pthread_mutex_lock(&rp_init_mutex);
     cmn_Init();
 
     rp_CalibInit();
@@ -59,6 +68,7 @@ int rp_InitReset(bool reset)
         rp_Reset();
     }
     g_api_state = true;
+    pthread_mutex_unlock(&rp_init_mutex);
     return RP_OK;
 }
 
@@ -68,13 +78,15 @@ int rp_IsApiInit(){
 
 int rp_Release()
 {
-    ECHECK(osc_Release())
-    ECHECK(generate_Release())
-    ECHECK(ams_Release())
-    ECHECK(hk_Release())
-    ECHECK(daisy_Release())
-    ECHECK(cmn_Release())
+    pthread_mutex_lock(&rp_init_mutex);
+    ECHECK_NO_RET(osc_Release())
+    ECHECK_NO_RET(generate_Release())
+    ECHECK_NO_RET(ams_Release())
+    ECHECK_NO_RET(hk_Release())
+    ECHECK_NO_RET(daisy_Release())
+    ECHECK_NO_RET(cmn_Release())
     g_api_state = false;
+    pthread_mutex_unlock(&rp_init_mutex);
     return RP_OK;
 }
 
@@ -613,46 +625,34 @@ int rp_ApinReset() {
 
 int rp_ApinGetValue(rp_apin_t pin, float* value, uint32_t* raw) {
     if (pin <= RP_AOUT3) {
-        rp_AOpinGetValue(pin-RP_AOUT0, value, raw);
+        return rp_AOpinGetValue(pin-RP_AOUT0, value, raw);
     } else if (pin <= RP_AIN3) {
-        rp_AIpinGetValue(pin-RP_AIN0, value, raw);
-    } else {
-        return RP_EPN;
+        return rp_AIpinGetValue(pin-RP_AIN0, value, raw);
     }
-    return RP_OK;
+    return RP_EPN;
 }
 
 int rp_ApinGetValueRaw(rp_apin_t pin, uint32_t* value) {
     if (pin <= RP_AOUT3) {
-        rp_AOpinGetValueRaw(pin-RP_AOUT0, value);
+        return rp_AOpinGetValueRaw(pin-RP_AOUT0, value);
     } else if (pin <= RP_AIN3) {
-        rp_AIpinGetValueRaw(pin-RP_AIN0, value);
-    } else {
-        return RP_EPN;
+        return rp_AIpinGetValueRaw(pin-RP_AIN0, value);
     }
-    return RP_OK;
+    return RP_EPN;
 }
 
 int rp_ApinSetValue(rp_apin_t pin, float value) {
     if (pin <= RP_AOUT3) {
-        rp_AOpinSetValue(pin-RP_AOUT0, value);
-    } else if (pin <= RP_AIN3) {
-        return RP_EPN;
-    } else {
-        return RP_EPN;
+        return rp_AOpinSetValue(pin-RP_AOUT0, value);
     }
-    return RP_OK;
+    return RP_EPN;
 }
 
 int rp_ApinSetValueRaw(rp_apin_t pin, uint32_t value) {
     if (pin <= RP_AOUT3) {
-        rp_AOpinSetValueRaw(pin-RP_AOUT0, value);
-    } else if (pin <= RP_AIN3) {
-        return RP_EPN;
-    } else {
-        return RP_EPN;
+        return rp_AOpinSetValueRaw(pin-RP_AOUT0, value);
     }
-    return RP_OK;
+    return RP_EPN;
 }
 
 int rp_ApinGetRange(rp_apin_t pin, float* min_val, float* max_val) {
@@ -701,19 +701,19 @@ int rp_AIpinGetValue(int unsigned pin, float* value, uint32_t* raw) {
 
     float fs = 0;
     if (rp_HPGetSlowADCFullScale(ch,&fs) != RP_HP_OK){
-        fprintf(stderr,"[Error:rp_AIpinGetValue] Can't get slow ADC full scale\n");
+        ERROR("Can't get slow ADC full scale");
         return RP_EOOR;
     }
 
     bool is_signed = false;
     if (rp_HPGetSlowADCIsSigned(ch,&is_signed) != RP_HP_OK){
-        fprintf(stderr,"[Error:rp_AIpinGetValue] Can't get slow ADC sign state\n");
+        ERROR("Can't get slow ADC sign state");
         return RP_EOOR;
     }
 
     uint8_t bits = 0;
     if (rp_HPGetSlowADCBits(ch,&bits) != RP_HP_OK){
-        fprintf(stderr,"[Error:rp_AIpinGetValue] Can't get slow ADC bits\n");
+        ERROR("Can't get slow ADC bits");
         return RP_EOOR;
     }
     if (is_signed){
@@ -746,7 +746,7 @@ int rp_AOpinSetValueRaw(int unsigned pin, uint32_t value) {
 
     uint8_t bits = 0;
     if (rp_HPGetSlowADCBits(ch,&bits) != RP_HP_OK){
-        fprintf(stderr,"[Error:rp_AOpinSetValueRaw] Can't get slow DAC bits\n");
+        ERROR("Can't get slow DAC bits");
         return RP_EOOR;
     }
     uint32_t max_value = (1 << bits);
@@ -763,19 +763,19 @@ int rp_AOpinSetValue(int unsigned pin, float value) {
 
     float fs = 0;
     if (rp_HPGetSlowDACFullScale(ch,&fs) != RP_HP_OK){
-        fprintf(stderr,"[Error:rp_AOpinSetValue] Can't get slow ADC full scale\n");
+        ERROR("Can't get slow ADC full scale");
         return RP_EOOR;
     }
 
     bool is_signed = false;
     if (rp_HPGetSlowDACIsSigned(ch,&is_signed) != RP_HP_OK){
-        fprintf(stderr,"[Error:rp_AOpinSetValue] Can't get slow ADC sign state\n");
+        ERROR("Can't get slow ADC sign state");
         return RP_EOOR;
     }
 
     uint8_t bits = 0;
     if (rp_HPGetSlowDACBits(ch,&bits) != RP_HP_OK){
-        fprintf(stderr,"[Error:rp_AOpinSetValue] Can't get slow ADC bits\n");
+        ERROR("Can't get slow ADC bits");
         return RP_EOOR;
     }
 
@@ -792,7 +792,7 @@ int rp_AOpinGetValueRaw(int unsigned pin, uint32_t* value) {
 
     uint8_t bits = 0;
     if (rp_HPGetSlowADCBits(ch,&bits) != RP_HP_OK){
-        fprintf(stderr,"[Error:rp_AOpinSetValueRaw] Can't get slow DAC bits\n");
+        ERROR("Can't get slow DAC bits");
         return RP_EOOR;
     }
     uint32_t max_value = (1 << bits);
@@ -810,19 +810,19 @@ int rp_AOpinGetValue(int unsigned pin, float* value, uint32_t* raw) {
 
     float fs = 0;
     if (rp_HPGetSlowDACFullScale(ch,&fs) != RP_HP_OK){
-        fprintf(stderr,"[Error:rp_AIpinGetValue] Can't get slow ADC full scale\n");
+        ERROR("Can't get slow ADC full scale");
         return RP_EOOR;
     }
 
     bool is_signed = false;
     if (rp_HPGetSlowDACIsSigned(ch,&is_signed) != RP_HP_OK){
-        fprintf(stderr,"[Error:rp_AIpinGetValue] Can't get slow ADC sign state\n");
+        ERROR("Can't get slow ADC sign state");
         return RP_EOOR;
     }
 
     uint8_t bits = 0;
     if (rp_HPGetSlowDACBits(ch,&bits) != RP_HP_OK){
-        fprintf(stderr,"[Error:rp_AIpinGetValue] Can't get slow ADC bits\n");
+        ERROR("Can't get slow ADC bits");
         return RP_EOOR;
     }
     if (is_signed){
@@ -1637,6 +1637,18 @@ int rp_GenGetExtTriggerDebouncerUs(double *value){
     return gen_GetExtTriggerDebouncerUs(value);
 }
 
+int rp_GenSetLoadMode(rp_channel_t channel, rp_gen_load_mode_t mode){
+    if (!rp_HPGetIsDAC50OhmModeOrDefault())
+        return RP_NOTS;
+    return gen_setLoadMode(channel,mode);
+}
+
+int rp_GenGetLoadMode(rp_channel_t channel, rp_gen_load_mode_t *mode){
+    if (!rp_HPGetIsDAC50OhmModeOrDefault())
+        return RP_NOTS;
+    return gen_getLoadMode(channel,mode);
+}
+
 int rp_EnableDebugReg(){
     cmn_enableDebugReg();
     return RP_OK;
@@ -1644,7 +1656,7 @@ int rp_EnableDebugReg(){
 
 buffers_t* rp_createBuffer(uint8_t maxChannels,uint32_t length,bool initInt16, bool initDouble, bool initFloat){
     if (maxChannels > 4) {
-        fprintf(stderr,"[Error:rp_createBuffer] The number of channels is more than allowed");
+        ERROR("The number of channels is more than allowed");
         return NULL;
     }
 
@@ -1698,4 +1710,39 @@ void rp_deleteBuffer(buffers_t *_in_buffer){
         free(_in_buffer->ch_i[i]);
     }
     _in_buffer->size = 0;
+}
+
+int rp_SetExternalTriggerLevel(float value){
+    if (rp_HPGetIsExternalTriggerLevelPresentOrDefault()){
+        float fullScale = rp_HPGetIsExternalTriggerFullScalePresentOrDefault();
+        bool is_signed = rp_HPGetIsExternalTriggerIsSignedOrDefault();
+        float min = (is_signed ? -fullScale : 0);
+        if (value <  min || value > fullScale){
+            ERROR("Value out of range %f. Min %f Max %f",value,min,fullScale)
+            return RP_EOOR;
+        }
+        int ret = rp_setExtTriggerLevel(value);
+        switch(ret){
+            case RP_I2C_EOOR: return RP_EOOR;
+            case RP_I2C_EFRB: return RP_EFRB;
+            case RP_I2C_EFWB: return RP_EFWB;
+            case RP_I2C_OK: {
+                g_ext_trig_trash = value;
+                return RP_OK;
+            }
+            default:
+                return RP_EOOR;
+        }
+    }
+    ERROR("Unsupported");
+    return RP_NOTS;
+}
+
+int rp_GetExternalTriggerLevel(float *value){
+    if (rp_HPGetIsExternalTriggerLevelPresentOrDefault()){
+        *value = g_ext_trig_trash;
+        return RP_OK;
+    }
+    ERROR("Unsupported");
+    return RP_NOTS;
 }

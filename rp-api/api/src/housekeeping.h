@@ -19,7 +19,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "redpitaya/rp.h"
+#include "rp.h"
 #include "rp_hw-profiles.h"
 
 // Base Housekeeping address
@@ -170,7 +170,7 @@ static int hk_Init(bool reset) {
 static hk_version_t house_getHKVersion() {
     rp_HPeModels_t c = STEM_125_14_v1_0;
     if (rp_HPGetModel(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get board model\n");
+        ERROR("Can't get board model");
     }
 
     switch (c)
@@ -196,10 +196,11 @@ static hk_version_t house_getHKVersion() {
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
         case STEM_250_12_v1_2a:
+        case STEM_250_12_v1_2b:
         case STEM_250_12_120:
             return HK_V3;
         default:
-            fprintf(stderr,"[Error] Can't get board model\n");
+            ERROR("Can't get board model");
     }
     return HK_V1;
 }

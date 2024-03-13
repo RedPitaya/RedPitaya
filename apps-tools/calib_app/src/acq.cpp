@@ -7,6 +7,7 @@
 #include <math.h>
 #include "acq.h"
 #include "acq_math.h"
+#include "rp_log.h"
 
 // Use (void) to silent unused warnings.
 #define assertm(exp, msg) assert(((void)msg, exp))
@@ -109,7 +110,7 @@ void COscilloscope::startThread(){
     }
     catch (std::exception& e)
     {
-        std::cerr << "Error: COscilloscope::start(), " << e.what() << std::endl;
+        ERROR("%s",e.what())
     }
 }
 
@@ -164,7 +165,7 @@ void COscilloscope::updateAcqFilter(rp_channel_t _ch){
         rp_AcqUpdateAcqFilter(_ch);
         pthread_mutex_unlock(&m_funcSelector);
     }else{
-        fprintf(stderr,"[Fatal error] Filter not present in board\n");
+        ERROR("Filter not present in board");
     }
 }
 
@@ -222,7 +223,7 @@ void COscilloscope::oscWorker(){
         }
     }catch (std::exception& e)
     {
-        std::cerr << "Error: oscWorker() -> %s\n" << e.what() << std::endl ;
+        ERROR("%s",e.what());
     }
 }
 
@@ -454,7 +455,7 @@ void COscilloscope::acquireSquare(){
             rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHD_PE);
         break;
         default:
-            assertm(false, "ERROR: void COscilloscope::acquireSquare() - Unknown channel");
+            FATAL("Unknown channel");
     }
     for (;timeout > 0;) {
         rp_AcqGetTriggerState(&trig_state);
@@ -551,7 +552,7 @@ COscilloscope::DataPassSq COscilloscope::selectRange(float *buffer,double _start
 
 void COscilloscope::acquireAutoFilter(){
     if (!rp_HPGetFastADCIsFilterPresentOrDefault()){
-        fprintf(stderr,"[Fatal error] Filter not present in board\n");
+        FATAL("Filter not present in board");
         exit(-1);
     }
 
@@ -597,7 +598,7 @@ void COscilloscope::acquireAutoFilter(){
                 rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHD_PE);
             break;
             default:
-                assertm(false, "ERROR: void COscilloscope::acquireSquare() - Unknown channel");
+                FATAL("Unknown channel");
 
         }
         for (;timeout > 0;) {
@@ -663,7 +664,7 @@ void COscilloscope::acquireAutoFilter(){
 void COscilloscope::acquireAutoFilterSync(){
 
     if (!rp_HPGetFastADCIsFilterPresentOrDefault()){
-        fprintf(stderr,"[Fatal error] Filter not present in board\n");
+        FATAL("Filter not present in board");
         exit(-1);
     }
 
@@ -715,7 +716,7 @@ void COscilloscope::acquireAutoFilterSync(){
                 rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHD_PE);
             break;
             default:
-                assertm(false, "ERROR: void COscilloscope::acquireSquare() - Unknown channel");
+                FATAL("Unknown channel");
 
         }
         for (;timeout > 0;) {
@@ -839,7 +840,7 @@ COscilloscope::DataPassAutoFilterSync COscilloscope::getDataAutoFilterSync(){
 
 void COscilloscope::setGEN_DISABLE(){
     if (getDACChannels() < 2){
-        fprintf(stderr,"[Error:setGEN_DISABLE] Fast DAC not present on board\n");
+        FATAL("Fast DAC not present on board");
         exit(-1);
     }
     rp_GenOutDisable(RP_CH_1);
@@ -848,7 +849,7 @@ void COscilloscope::setGEN_DISABLE(){
 
 void COscilloscope::setGEN0(){
     if (getDACChannels() < 2){
-        fprintf(stderr,"[Error:setGEN0] Fast DAC not present on board\n");
+        FATAL("Fast DAC not present on board");
         exit(-1);
     }
     rp_GenAmp(RP_CH_1, 0);
@@ -870,7 +871,7 @@ void COscilloscope::setGEN0(){
 
 void COscilloscope::setGEN0_5(){
     if (getDACChannels() < 2){
-        fprintf(stderr,"[Error:setGEN0_5] Fast DAC not present on board\n");
+        FATAL("Fast DAC not present on board");
         exit(-1);
     }
     rp_GenAmp(RP_CH_1, 0.5);
@@ -892,7 +893,7 @@ void COscilloscope::setGEN0_5(){
 
 void COscilloscope::setGEN0_5_SINE(){
     if (getDACChannels() < 2){
-        fprintf(stderr,"[Error:setGEN0_5_SINE] Fast DAC not present on board\n");
+        FATAL("Fast DAC not present on board");
         exit(-1);
     }
     rp_GenAmp(RP_CH_1, 0.5);
@@ -915,7 +916,7 @@ void COscilloscope::setGEN0_5_SINE(){
 
 void COscilloscope::setDC(){
     if (!rp_HPGetFastADCIsAC_DCOrDefault()){
-        fprintf(stderr,"[Error:setDC] AC/DC mode not present on board\n");
+        FATAL("AC/DC mode not present on board");
         exit(-1);
     }
     rp_AcqSetAC_DC(RP_CH_1,RP_DC);
@@ -924,7 +925,7 @@ void COscilloscope::setDC(){
 
 void COscilloscope::setAC(){
     if (!rp_HPGetFastADCIsAC_DCOrDefault()){
-        fprintf(stderr,"[Error:setDC] AC/DC mode not present on board\n");
+        FATAL("AC/DC mode not present on board");
         exit(-1);
     }
     rp_AcqSetAC_DC(RP_CH_1,RP_AC);
@@ -933,7 +934,7 @@ void COscilloscope::setAC(){
 
 void COscilloscope::setGenGainx1(){
     if (!rp_HPGetIsGainDACx5OrDefault()){
-        fprintf(stderr,"[Error:setDC] Gen gain mode not present on board\n");
+        FATAL("Gen gain mode not present on board");
         exit(-1);
     }
     rp_GenSetGainOut(RP_CH_1,RP_GAIN_1X);
@@ -942,7 +943,7 @@ void COscilloscope::setGenGainx1(){
 
 void COscilloscope::setGenGainx5(){
     if (!rp_HPGetIsGainDACx5OrDefault()){
-        fprintf(stderr,"[Error:setDC] Gen gain mode not present on board\n");
+        FATAL("Gen gain mode not present on board");
         exit(-1);
     }
     rp_GenSetGainOut(RP_CH_1,RP_GAIN_5X);
@@ -951,7 +952,7 @@ void COscilloscope::setGenGainx5(){
 
 void COscilloscope::resetGen(){
     if (getDACChannels() < 2){
-        fprintf(stderr,"[Error:resetGen] Fast DAC not present on board\n");
+        FATAL("Fast DAC not present on board");
         exit(-1);
     }
     enableGen(RP_CH_1,false);
@@ -973,7 +974,7 @@ void COscilloscope::resetGen(){
 
 void COscilloscope::enableGen(rp_channel_t _ch,bool _enable){
     if (getDACChannels() < 2){
-        fprintf(stderr,"[Error:enableGen] Fast DAC not present on board\n");
+        FATAL("Fast DAC not present on board");
         exit(-1);
     }
     if (_enable){
@@ -986,7 +987,7 @@ void COscilloscope::enableGen(rp_channel_t _ch,bool _enable){
 
 int COscilloscope::setFreq(rp_channel_t _ch,int _freq){
     if (getDACChannels() < 2){
-        fprintf(stderr,"[Error:setFreq] Fast DAC not present on board\n");
+        FATAL("Fast DAC not present on board");
         exit(-1);
     }
     return rp_GenFreq(_ch,_freq);
@@ -994,7 +995,7 @@ int COscilloscope::setFreq(rp_channel_t _ch,int _freq){
 
 int COscilloscope::setAmp(rp_channel_t _ch,float _ampl){
     if (getDACChannels() < 2){
-        fprintf(stderr,"[Error:setAmp] Fast DAC not present on board\n");
+        FATAL("Fast DAC not present on board");
         exit(-1);
     }
     return rp_GenAmp(_ch,_ampl);
@@ -1002,7 +1003,7 @@ int COscilloscope::setAmp(rp_channel_t _ch,float _ampl){
 
 int COscilloscope::setOffset(rp_channel_t _ch,float _offset){
     if (getDACChannels() < 2){
-        fprintf(stderr,"[Error:setOffset] Fast DAC not present on board\n");
+        FATAL("Fast DAC not present on board");
         exit(-1);
     }
     return rp_GenOffset(_ch,_offset);
@@ -1010,7 +1011,7 @@ int COscilloscope::setOffset(rp_channel_t _ch,float _offset){
 
 int COscilloscope::setGenType(rp_channel_t _ch,int _type){
     if (getDACChannels() < 2){
-        fprintf(stderr,"[Error:setGenType] Fast DAC not present on board\n");
+        FATAL("Fast DAC not present on board");
         exit(-1);
     }
     return rp_GenWaveform(_ch, (rp_waveform_t)_type);
@@ -1018,7 +1019,7 @@ int COscilloscope::setGenType(rp_channel_t _ch,int _type){
 
 void COscilloscope::updateGenCalib(){
     if (getDACChannels() < 2){
-        fprintf(stderr,"[Error:updateGenCalib] Fast DAC not present on board\n");
+        FATAL("Fast DAC not present on board");
         exit(-1);
     }
     float x = 0;

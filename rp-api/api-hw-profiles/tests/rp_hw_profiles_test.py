@@ -276,6 +276,15 @@ res = rp_hw_profiles.rp_HPGetIsGainDACx5OrDefault()
 print(res)
 
 
+print("rp_hw_profiles.rp_HPGetIsDAC50OhmMode()")
+res = rp_hw_profiles.rp_HPGetIsDAC50OhmMode()
+print(res)
+
+print("rp_hw_profiles.rp_HPGetIsDAC50OhmModeOrDefault()")
+res = rp_hw_profiles.rp_HPGetIsDAC50OhmModeOrDefault()
+print(res)
+
+
 print("rp_hw_profiles.rp_HPGetIsCalibrationLogicPresent()")
 res = rp_hw_profiles.rp_HPGetIsCalibrationLogicPresent()
 print(res)
@@ -320,6 +329,13 @@ print("rp_hw_profiles.rp_HPGetIsExternalTriggerFullScalePresentOrDefault()")
 res = rp_hw_profiles.rp_HPGetIsExternalTriggerFullScalePresentOrDefault()
 print(res)
 
+print("rp_hw_profiles.rp_HPGetIsExternalTriggerIsSigned()")
+res = rp_hw_profiles.rp_HPGetIsExternalTriggerIsSigned()
+print(res)
+
+print("rp_hw_profiles.rp_HPGetIsExternalTriggerIsSignedOrDefault()")
+res = rp_hw_profiles.rp_HPGetIsExternalTriggerIsSignedOrDefault()
+print(res)
 
 print("rp_hw_profiles.rp_HPGetIsDaisyChainClockAvailable()")
 res = rp_hw_profiles.rp_HPGetIsDaisyChainClockAvailable()

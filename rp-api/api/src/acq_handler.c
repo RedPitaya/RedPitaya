@@ -22,19 +22,18 @@
 #include "common.h"
 #include "oscilloscope.h"
 #include "acq_handler.h"
-#include "neon_asm.h"
 
 #include "rp-i2c-mcp47x6-c.h"
 #include "rp-i2c-max7311-c.h"
 
-#define CHECK_CHANNEL(X) \
+#define CHECK_CHANNEL \
     uint8_t channels_rp_HPGetFastADCChannelsCount = 0; \
     if (rp_HPGetFastADCChannelsCount(&channels_rp_HPGetFastADCChannelsCount) != RP_HP_OK){ \
-        fprintf(stderr,"[Error:%s] Can't get fast ADC channels count\n",X); \
+        ERROR("Can't get fast ADC channels count"); \
         return RP_NOTS; \
     } \
     if (channel >= channels_rp_HPGetFastADCChannelsCount){ \
-        fprintf(stderr,"[Error:%s] Channel is larger than allowed\n",X); \
+        ERROR("Channel is larger than allowed"); \
         return RP_NOTS; \
     }
 
@@ -58,8 +57,6 @@ rp_acq_trig_src_t last_trig_src = RP_TRIG_SRC_DISABLED;
 
 float ch_hyst[4] = {0.005,0.005,0.005,0.005};
 float ch_trash[4] = {0.005,0.005,0.005,0.005};
-float ext_trig_trash = 0;
-
 
 /*----------------------------------------------------------------------------*/
 /**
@@ -117,7 +114,7 @@ static int setEqFilters(rp_channel_t channel){
         return RP_EOOR;
     }
 
-    CHECK_CHANNEL("setEqFilters")
+    CHECK_CHANNEL
 
     channel_filter_t filter;
     switch(gain){
@@ -184,7 +181,7 @@ int acq_GetBufferFillState(bool* state){
 
 int acq_axi_GetBufferFillState(rp_channel_t channel, bool* state) {
 
-    CHECK_CHANNEL("acq_axi_GetBufferFillState")
+    CHECK_CHANNEL
 
     switch (channel)
     {
@@ -203,7 +200,7 @@ int acq_axi_GetBufferFillState(rp_channel_t channel, bool* state) {
 
 int acq_SetGain(rp_channel_t channel, rp_pinState_t state){
 
-    CHECK_CHANNEL("acq_SetGain")
+    CHECK_CHANNEL
 
     rp_pinState_t *gain = &gain_ch[channel];
 
@@ -215,19 +212,19 @@ int acq_SetGain(rp_channel_t channel, rp_pinState_t state){
 
     int ret = acq_GetChannelThreshold(channel, &ch_thr);
     if (ret != RP_OK){
-        fprintf(stderr,"[Error:acq_SetGain] Error get threshhold err: %d\n",ret);
+        ERROR("Error get threshhold err: %d",ret);
         return ret;
     }
 
     ret = acq_GetChannelThresholdHyst(channel, &ch_hyst);
     if (ret != RP_OK){
-        fprintf(stderr,"[Error:acq_SetGain] Error get threshhold hysteresis err: %d\n",ret);
+        fprintf(stderr,"[Error:acq_SetGain] Error get threshhold hysteresis err: %d",ret);
         return ret;
     }
 
     bool is_attenuator = false;
     if (rp_HPGetIsAttenuatorControllerPresent(&is_attenuator) != RP_HP_OK){
-        fprintf(stderr,"[Error:acq_SetGain] Error getting attenuator presence\n");
+        ERROR("Error getting attenuator presence");
         return RP_EOOR;
     }
     if (is_attenuator){
@@ -251,10 +248,10 @@ int acq_SetGain(rp_channel_t channel, rp_pinState_t state){
     if (status != RP_OK) {
         *gain = old_gain;
         if (acq_SetChannelThreshold(channel, ch_thr) != RP_OK){
-            fprintf(stderr,"[Error:acq_SetGain] Error setting threshold\n");
+            ERROR("Error setting threshold");
         }
         if (acq_SetChannelThresholdHyst(channel, ch_hyst) != RP_OK){
-            fprintf(stderr,"[Error:acq_SetGain] Error setting threshold hysteresis\n");
+            ERROR("Error setting threshold hysteresis");
         }
     }
     // At the end if everything is ok, update also equalization filters based on the new gain.
@@ -267,7 +264,7 @@ int acq_SetGain(rp_channel_t channel, rp_pinState_t state){
 
 int acq_GetGain(rp_channel_t channel, rp_pinState_t* state){
 
-    CHECK_CHANNEL("acq_GetGain")
+    CHECK_CHANNEL
 
     *state = gain_ch[channel];
     return RP_OK;
@@ -275,7 +272,7 @@ int acq_GetGain(rp_channel_t channel, rp_pinState_t* state){
 
 int acq_GetGainV(rp_channel_t channel, float* voltage){
 
-    CHECK_CHANNEL("acq_GetGainV")
+    CHECK_CHANNEL
 
     if (gain_ch[channel] == RP_LOW) {
         return rp_HPGetFastADCGain(channel,RP_HP_ADC_GAIN_NORMAL,voltage);
@@ -340,7 +337,7 @@ int acq_axi_SetDecimationFactor(uint32_t decimation){
 
     uint8_t channels = 0;
     if (rp_HPGetFastADCChannelsCount(&channels) != RP_HP_OK){
-        fprintf(stderr,"[Error:acq_axi_SetDecimationFactor] Can't get fast ADC channels count\n");
+        ERROR("Can't get fast ADC channels count");
         return RP_NOTS;
     }
 
@@ -509,7 +506,7 @@ int acq_SetTriggerDelayDirect(uint32_t decimated_data_num){
 int acq_axi_SetTriggerDelay(rp_channel_t channel, int32_t decimated_data_num)
 {
 
-    CHECK_CHANNEL("acq_axi_SetTriggerDelay")
+    CHECK_CHANNEL
 
     switch (channel)
     {
@@ -549,7 +546,7 @@ int acq_SetTriggerDelayNsDirect(uint64_t time_ns){
 int acq_axi_SetTriggerDelayNs(rp_channel_t channel, int64_t time_ns)
 {
 
-    CHECK_CHANNEL("acq_axi_SetTriggerDelayNs")
+    CHECK_CHANNEL
 
     int32_t samples = cnvTimeToSmpls(time_ns);
     acq_axi_SetTriggerDelay(channel, samples);
@@ -574,7 +571,7 @@ int acq_GetTriggerDelayDirect(uint32_t* decimated_data_num){
 int acq_axi_GetTriggerDelay(rp_channel_t channel, int32_t* decimated_data_num)
 {
 
-    CHECK_CHANNEL("acq_axi_GetTriggerDelay")
+    CHECK_CHANNEL
 
     uint32_t trig_dly;
     int r;
@@ -616,7 +613,7 @@ int acq_GetTriggerDelayNsDirect(uint64_t* time_ns){
 int acq_axi_GetTriggerDelayNs(rp_channel_t channel, int64_t* time_ns)
 {
 
-    CHECK_CHANNEL("acq_axi_GetTriggerDelayNs")
+    CHECK_CHANNEL
 
     int32_t samples;
     acq_axi_GetTriggerDelay(channel, &samples);
@@ -639,7 +636,7 @@ int acq_GetWritePointerAtTrig(uint32_t* pos){
 int acq_axi_GetWritePointer(rp_channel_t channel, uint32_t* pos)
 {
 
-    CHECK_CHANNEL("acq_axi_GetWritePointer")
+    CHECK_CHANNEL
 
     switch (channel)
     {
@@ -659,7 +656,7 @@ int acq_axi_GetWritePointer(rp_channel_t channel, uint32_t* pos)
 int acq_axi_GetWritePointerAtTrig(rp_channel_t channel, uint32_t* pos)
 {
 
-    CHECK_CHANNEL("acq_axi_GetWritePointerAtTrig")
+    CHECK_CHANNEL
 
     switch (channel)
     {
@@ -683,27 +680,8 @@ int acq_SetTriggerLevel(rp_channel_trigger_t channel, float voltage){
         case RP_T_CH_2: return acq_SetChannelThreshold(RP_CH_2, voltage);
         case RP_T_CH_3: return acq_SetChannelThreshold(RP_CH_3, voltage);
         case RP_T_CH_4: return acq_SetChannelThreshold(RP_CH_4, voltage);
-        case RP_T_CH_EXT: {
-                if (rp_HPGetIsExternalTriggerLevelPresentOrDefault()){
-                    int ret = rp_setExtTriggerLevel(voltage);
-                    switch(ret){
-                        case RP_I2C_EOOR: return RP_EOOR;
-                        case RP_I2C_EFRB: return RP_EFRB;
-                        case RP_I2C_EFWB: return RP_EFWB;
-                        case RP_I2C_OK: {
-                            ext_trig_trash = voltage;
-                            return RP_OK;
-                        }
-                        default:
-                            return RP_EOOR;
-                    }
-                }else{
-                    fprintf(stderr,"[Error:acq_SetTriggerLevel] Unsupported\n");
-                    return RP_NOTS;
-                }
-        }
         default:
-            fprintf(stderr,"[Error:acq_SetTriggerLevel] Channel is larger than allowed: %d\n",channel);
+            ERROR("Channel is larger than allowed: %d",channel);
     }
     return RP_NOTS;
 }
@@ -715,34 +693,15 @@ int acq_GetTriggerLevel(rp_channel_trigger_t channel,float *voltage){
         case RP_T_CH_2: return acq_GetChannelThreshold(RP_CH_2, voltage);
         case RP_T_CH_3: return acq_GetChannelThreshold(RP_CH_3, voltage);
         case RP_T_CH_4: return acq_GetChannelThreshold(RP_CH_4, voltage);
-
-        case RP_T_CH_EXT: {
-                if (rp_HPGetIsExternalTriggerLevelPresentOrDefault()){
-                    *voltage = ext_trig_trash;
-                    return RP_OK;
-                    // int ret = rp_getExtTriggerLevel(voltage);
-                    // switch(ret){
-                    //     case RP_I2C_EOOR: return RP_EOOR;
-                    //     case RP_I2C_EFRB: return RP_EFRB;
-                    //     case RP_I2C_EFWB: return RP_EFWB;
-                    //     default:
-                    //         return RP_OK;
-                    // }
-                }else{
-                    fprintf(stderr,"[Error:acq_GetTriggerLevel] Unsupported\n");
-                    return RP_NOTS;
-                }
-        }
         default:
-            fprintf(stderr,"[Error:acq_GetTriggerLevel] Channel is larger than allowed: %d\n",channel);
-
+            ERROR("Channel is larger than allowed: %d",channel);
     }
     return RP_NOTS;
 }
 
 int acq_SetChannelThreshold(rp_channel_t channel, float voltage){
 
-    CHECK_CHANNEL("acq_SetChannelThreshold")
+    CHECK_CHANNEL
 
     float gainValue;
     float fullScale;
@@ -789,13 +748,13 @@ int acq_SetChannelThreshold(rp_channel_t channel, float voltage){
             break;
 
         default:
-            fprintf(stderr,"[Error:acq_SetChannelThreshold] Unknown mode: %d\n",mode);
+            ERROR("Unknown mode: %d",mode);
             return RP_EOOR;
             break;
     }
 
     if (ret != RP_HW_CALIB_OK){
-        fprintf(stderr,"[Error:acq_SetChannelThreshold] Error get calibaration: %d\n",ret);
+        ERROR("Get calibaration: %d",ret);
         return RP_EOOR;
     }
 
@@ -835,7 +794,7 @@ int acq_SetChannelThreshold(rp_channel_t channel, float voltage){
 
 int acq_GetChannelThreshold(rp_channel_t channel, float* voltage){
 
-    CHECK_CHANNEL("acq_GetChannelThreshold")
+    CHECK_CHANNEL
 
     *voltage = ch_trash[channel];
     return RP_OK;
@@ -865,7 +824,7 @@ int acq_GetTriggerHyst(float *voltage){
 
 int acq_SetChannelThresholdHyst(rp_channel_t channel, float voltage){
 
-    CHECK_CHANNEL("acq_SetChannelThresholdHyst")
+    CHECK_CHANNEL
 
     float fullScale;
     float gainValue;
@@ -915,13 +874,13 @@ int acq_SetChannelThresholdHyst(rp_channel_t channel, float voltage){
             break;
 
         default:
-            fprintf(stderr,"[Error:acq_SetChannelThreshold] Unknown mode: %d\n",mode);
+            ERROR("Unknown mode: %d",mode);
             return RP_EOOR;
             break;
     }
 
     if (ret != RP_HW_CALIB_OK){
-        fprintf(stderr,"[Error:acq_SetChannelThreshold] Error get calibaration: %d\n",ret);
+        ERROR("Get calibaration: %d",ret);
         return RP_EOOR;
     }
 
@@ -950,7 +909,7 @@ int acq_SetChannelThresholdHyst(rp_channel_t channel, float voltage){
 
 int acq_GetChannelThresholdHyst(rp_channel_t channel, float* voltage){
 
-    CHECK_CHANNEL("acq_GetChannelThresholdHyst")
+    CHECK_CHANNEL
 
     *voltage = ch_hyst[channel];
     return RP_OK;
@@ -983,7 +942,7 @@ int acq_GetUnlockTrigger(bool *state){
 int acq_axi_Enable(rp_channel_t channel, bool enable)
 {
 
-    CHECK_CHANNEL("acq_axi_Enable")
+    CHECK_CHANNEL
 
     switch (channel)
     {
@@ -1009,11 +968,11 @@ static const volatile uint32_t* getRawBuffer(rp_channel_t channel){
 
     uint8_t channels = 0;
     if (rp_HPGetFastADCChannelsCount(&channels) != RP_HP_OK){
-        fprintf(stderr,"[Error:getRawBuffer] Can't get fast ADC channels count\n");
+        ERROR("Can't get fast ADC channels count");
         return NULL;
     }
     if (channel >= channels){
-        fprintf(stderr,"[Error:getRawBuffer] Channel is larger than allowed\n");
+        ERROR("Channel is larger than allowed");
         return NULL;
     }
 
@@ -1050,7 +1009,7 @@ static const volatile uint16_t* getAxiRawBuffer(rp_channel_t channel)
     case RP_CH_4:
         return osc_axi_GetDataBufferChD();
     default:
-        fprintf(stderr,"[Error:getAxiRawBuffer] Channel is larger than allowed\n");
+        ERROR("Channel is larger than allowed");
         return NULL;
     }
 }
@@ -1072,7 +1031,7 @@ uint32_t acq_GetNormalizedDataPos(uint32_t pos){
 
 int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* buffer,bool use_calib){
 
-    CHECK_CHANNEL("acq_GetDataRaw")
+    CHECK_CHANNEL
 
     *size = MIN(*size, ADC_BUFFER_SIZE);
 
@@ -1110,13 +1069,13 @@ int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* 
             break;
 
         default:
-            fprintf(stderr,"[Error:acq_GetDataRaw] Unknown mode: %d\n",mode);
+            ERROR("Unknown mode: %d",mode);
             return RP_EOOR;
             break;
     }
 
     if (ret != RP_HW_CALIB_OK){
-        fprintf(stderr,"[Error:acq_GetDataRaw] Error get calibaration: %d\n",ret);
+        ERROR("Get calibaration: %d",ret);
         return RP_EOOR;
     }
 
@@ -1140,7 +1099,7 @@ int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* 
 
 int acq_axi_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* buffer)
 {
-    CHECK_CHANNEL("acq_axi_GetDataRaw")
+    CHECK_CHANNEL
 
     const volatile uint16_t* raw_buffer = getAxiRawBuffer(channel);
     uint32_t buffer_size = 0;
@@ -1178,7 +1137,7 @@ int acq_axi_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16
     ret |= rp_HPGetFastADCIsSigned(&is_sign);
 
     if (ret != RP_HW_CALIB_OK){
-        fprintf(stderr,"[Error:acq_axi_GetDataRaw] Error get calibaration: %d\n",ret);
+        ERROR("Get calibaration: %d",ret);
         return RP_EOOR;
     }
 
@@ -1199,7 +1158,7 @@ int acq_axi_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16
 
 int acq_GetDataInBuffer(rp_channel_t channel, uint32_t pos, uint32_t* size,buffers_t *out){
 
-    CHECK_CHANNEL("acq_GetDataInBuffer")
+    CHECK_CHANNEL
 
     *size = MIN(*size, ADC_BUFFER_SIZE);
 
@@ -1249,13 +1208,13 @@ int acq_GetDataInBuffer(rp_channel_t channel, uint32_t pos, uint32_t* size,buffe
             break;
 
         default:
-            fprintf(stderr,"[Error:acq_GetDataInBuffer] Unknown mode: %d\n",mode);
+            ERROR("Unknown mode: %d",mode);
             return RP_EOOR;
             break;
     }
 
     if (ret != RP_HW_CALIB_OK){
-        fprintf(stderr,"[Error:acq_GetDataInBuffer] Error get calibaration: %d\n",ret);
+        ERROR("Get calibaration: %d",ret);
         return RP_EOOR;
     }
 
@@ -1357,7 +1316,7 @@ int acq_GetData(uint32_t pos,buffers_t *out)
 int acq_GetDataPosRaw(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, int16_t* buffer, uint32_t *buffer_size)
 {
 
-    CHECK_CHANNEL("acq_GetDataPosRaw")
+    CHECK_CHANNEL
 
     uint32_t size = getSizeFromStartEndPos(start_pos, end_pos);
 
@@ -1375,7 +1334,7 @@ int acq_GetDataPosRaw(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos
 int acq_GetOldestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer)
 {
 
-    CHECK_CHANNEL("acq_GetOldestDataRaw")
+    CHECK_CHANNEL
 
     uint32_t pos;
 
@@ -1388,7 +1347,7 @@ int acq_GetOldestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer)
 int acq_GetLatestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer)
 {
 
-    CHECK_CHANNEL("acq_GetLatestDataRaw")
+    CHECK_CHANNEL
 
     *size = MIN(*size, ADC_BUFFER_SIZE);
 
@@ -1408,7 +1367,7 @@ int acq_GetLatestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer)
 
 int acq_GetDataVEx(rp_channel_t channel,  uint32_t pos, uint32_t* size, void* in_buffer,bool is_float){
 
-    CHECK_CHANNEL("acq_GetDataVEx")
+    CHECK_CHANNEL
 
     *size = MIN(*size, ADC_BUFFER_SIZE);
 
@@ -1453,13 +1412,13 @@ int acq_GetDataVEx(rp_channel_t channel,  uint32_t pos, uint32_t* size, void* in
             break;
 
         default:
-            fprintf(stderr,"[Error:acq_GetDataVEx] Unknown mode: %d\n",mode);
+            ERROR("Unknown mode: %d",mode);
             return RP_EOOR;
             break;
     }
 
     if (ret != RP_HW_CALIB_OK){
-        fprintf(stderr,"[Error:acq_GetDataVEx] Error get calibaration: %d\n",ret);
+        ERROR("Get calibaration: %d",ret);
         return RP_EOOR;
     }
 
@@ -1481,7 +1440,7 @@ int acq_GetDataVEx(rp_channel_t channel,  uint32_t pos, uint32_t* size, void* in
 
 int acq_axi_GetDataVEx(rp_channel_t channel,  uint32_t pos, uint32_t* size, void* in_buffer, bool is_float){
 
-    CHECK_CHANNEL("acq_axi_GetDataVEx")
+    CHECK_CHANNEL
 
     const volatile uint16_t* raw_buffer = getAxiRawBuffer(channel);
     uint32_t buffer_size = 0;
@@ -1546,13 +1505,13 @@ int acq_axi_GetDataVEx(rp_channel_t channel,  uint32_t pos, uint32_t* size, void
             break;
 
         default:
-            fprintf(stderr,"[Error:acq_axi_GetDataVEx] Unknown mode: %d\n",mode);
+            ERROR("Unknown mode: %d",mode);
             return RP_EOOR;
             break;
     }
 
     if (ret != RP_HW_CALIB_OK){
-        fprintf(stderr,"[Error:acq_axi_GetDataVEx] Error get calibaration: %d\n",ret);
+        ERROR("Get calibaration: %d",ret);
         return RP_EOOR;
     }
 
@@ -1582,7 +1541,7 @@ int acq_axi_GetDataV(rp_channel_t channel,  uint32_t pos, uint32_t* size, float*
 int acq_GetDataPosV(rp_channel_t channel,  uint32_t start_pos, uint32_t end_pos, float* buffer, uint32_t *buffer_size)
 {
 
-    CHECK_CHANNEL("acq_GetDataPosV")
+    CHECK_CHANNEL
 
     uint32_t size = getSizeFromStartEndPos(start_pos, end_pos);
     if (size > *buffer_size) {
@@ -1598,7 +1557,7 @@ int acq_GetDataPosV(rp_channel_t channel,  uint32_t start_pos, uint32_t end_pos,
 int acq_GetOldestDataV(rp_channel_t channel, uint32_t* size, float* buffer)
 {
 
-    CHECK_CHANNEL("acq_GetOldestDataV")
+    CHECK_CHANNEL
 
     uint32_t pos;
 
@@ -1611,14 +1570,14 @@ int acq_GetOldestDataV(rp_channel_t channel, uint32_t* size, float* buffer)
 int acq_GetLatestDataV(rp_channel_t channel, uint32_t* size, float* buffer)
 {
 
-    CHECK_CHANNEL("acq_GetLatestDataV")
+    CHECK_CHANNEL
 
     *size = MIN(*size, ADC_BUFFER_SIZE);
 
     uint32_t pos;
     acq_GetWritePointer(&pos);
 
-    pos = (pos - (*size)) % ADC_BUFFER_SIZE;
+    pos = (pos + 1 - (*size)) % ADC_BUFFER_SIZE;
 
     return acq_GetDataV(channel, pos, size, buffer);
 }
@@ -1631,23 +1590,23 @@ int acq_GetBufferSize(uint32_t *size) {
 
 int acq_axi_SetBufferSamples(rp_channel_t channel, uint32_t address, uint32_t _samples) {
 
-    CHECK_CHANNEL("acq_axi_SetBufferSamples")
+    CHECK_CHANNEL
 
     uint32_t start,res_size;
     osc_axi_GetMemoryRegion(&start,&res_size);
 
     if (address < start){
-        fprintf(stderr,"[Error:acq_axi_SetBufferSamples] Start address lower than reserved. Address: 0x%X reserved 0x%X\n",address,start);
+        ERROR("Start address lower than reserved. Address: 0x%X reserved 0x%X",address,start);
         return RP_EOOR;
     }
 
     if (address + (_samples - 4) * 2 > start + res_size){
-        fprintf(stderr,"[Error:acq_axi_SetBufferSamples] The specified buffer size is greater than the reserved memory - 8 bytes. End address: 0x%X End reserved 0x%X\n",address + _samples * 2,start + res_size);
+        ERROR("The specified buffer size is greater than the reserved memory - 8 bytes. End address: 0x%X End reserved 0x%X",address + _samples * 2,start + res_size);
         return RP_EOOR;
     }
 
     if (_samples % 8){
-        fprintf(stderr,"[Error:acq_axi_SetBufferSamples] Buffer samples must be a multiple of 8\n");
+        ERROR("Buffer samples must be a multiple of 8");
         return RP_EOOR;
     }
 
@@ -1680,7 +1639,7 @@ int acq_axi_SetBufferSamples(rp_channel_t channel, uint32_t address, uint32_t _s
 
 int acq_axi_SetBufferBytes(rp_channel_t channel, uint32_t address, uint32_t _size){
     if (_size % 16){
-        fprintf(stderr,"[Error:acq_axi_SetBufferBytes] Buffer size must be a multiple of 16\n");
+        ERROR("Buffer size must be a multiple of 16");
         return RP_EOOR;
     }
     return acq_axi_SetBufferSamples(channel,address,_size / 2);
@@ -1698,7 +1657,7 @@ int acq_SetDefault() {
 
     uint8_t channels = 0;
     if (rp_HPGetFastADCChannelsCount(&channels) != RP_HP_OK){
-        fprintf(stderr,"[Error:acq_SetDefault] Can't get fast ADC channels count\n");
+        ERROR("Can't get fast ADC channels count");
         return RP_NOTS;
     }
 
@@ -1729,23 +1688,23 @@ int acq_SetDefault() {
 
 int acq_SetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t mode){
 
-    CHECK_CHANNEL("acq_SetAC_DC")
+    CHECK_CHANNEL
 
     uint8_t channels = 0;
     if (rp_HPGetFastADCChannelsCount(&channels) != RP_HP_OK){
-        fprintf(stderr,"[Error:acq_SetAC_DC] Can't get fast ADC channels count\n");
+        ERROR("Can't get fast ADC channels count");
         return RP_NOTS;
     }
 
     if (channel >= channels && mode == RP_DC){
-        fprintf(stderr,"[Error:acq_SetAC_DC] Channel is larger than allowed\n");
+        ERROR("Channel is larger than allowed");
         return RP_NOTS;
     }
 
     bool is_ac_dc = rp_HPGetFastADCIsAC_DCOrDefault();
 
     if (channel >= channels && mode == RP_AC && is_ac_dc){
-        fprintf(stderr,"[Error:acq_SetAC_DC] Channel is larger than allowed\n");
+        ERROR("Channel is larger than allowed");
         return RP_NOTS;
     }
 
@@ -1763,7 +1722,7 @@ int acq_SetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t mode){
 
 int acq_GetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t *status){
 
-    CHECK_CHANNEL("acq_GetAC_DC")
+    CHECK_CHANNEL
 
     *status = power_mode_ch[channel];
     return RP_OK;
@@ -1775,14 +1734,14 @@ int acq_axi_GetMemoryRegion(uint32_t *_start,uint32_t *_size){
 
 int acq_UpdateAcqFilter(rp_channel_t channel){
 
-    CHECK_CHANNEL("acq_UpdateAcqFilter")
+    CHECK_CHANNEL
 
     return setEqFilters(channel);
 }
 
 int acq_GetFilterCalibValue(rp_channel_t channel,uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp){
 
-    CHECK_CHANNEL("acq_GetFilterCalibValue")
+    CHECK_CHANNEL
 
     if (channel == RP_CH_1){
         return osc_GetEqFiltersChA(coef_aa,coef_bb,coef_kk,coef_pp);

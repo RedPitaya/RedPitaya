@@ -21,8 +21,15 @@ message(STATUS "Compiler С++ ID: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "Compiler С++version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Compiler С++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
+list(APPEND r_paths
+    /opt/redpitaya/lib
+    /opt/redpitaya/lib/web
+)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_INSTALL_RPATH ${r_paths})
+set(CMAKE_BUILD_RPATH ${r_paths})
+
+set(CMAKE_CXX_STANDARD 17)
 
 FILE(GLOB_RECURSE INC_ALL "*.h")
 
@@ -45,7 +52,7 @@ if (RP_PLATFORM)
 endif()
 
 target_compile_options(${PROJECT_NAME}
-    PRIVATE -Wall -fpermissive -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os -s>  -ffunction-sections -fdata-sections)
+    PRIVATE -Wall -Wno-reorder -fpermissive -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os -s>  -ffunction-sections -fdata-sections)
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC  ${PROJECT_SOURCE_DIR}

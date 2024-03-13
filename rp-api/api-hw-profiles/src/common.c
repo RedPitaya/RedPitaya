@@ -40,6 +40,7 @@
 #include "stem_250_12_v1.1.h"
 #include "stem_250_12_v1.2.h"
 #include "stem_250_12_v1.2a.h"
+#include "stem_250_12_v1.2b.h"
 #include "stem_250_12_120.h"
 #include "stem_special.h"
 
@@ -62,6 +63,7 @@ profiles_t *g_profile = NULL;
 // "STEM_250-12_v1.1"
 // "STEM_250-12_v1.2"
 // "STEM_250-12_v1.2a"
+// "STEM_250-12_v1.2b"
 // "STEM_250-12_v1.0"
 // "STEM_250-12_120"
 
@@ -208,6 +210,14 @@ void hp_checkModel(char *model,char *eth_mac){
 
 	if (strcmp(model,"stem_250-12_v1.2a") == 0){
 		g_profile = getProfile_STEM_250_12_v1_2a();
+		strcpy(g_profile->boardModelEEPROM,modelOrig);
+		if (eth_mac)
+			strcpy(g_profile->boardETH_MAC,eth_mac);
+		return;
+	}
+
+    if (strcmp(model,"stem_250-12_v1.2b") == 0){
+		g_profile = getProfile_STEM_250_12_v1_2b();
 		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);
@@ -399,11 +409,13 @@ int hp_cmn_Print(profiles_t *p){
 	}
 
 	fprintf(stdout,"FAST DAC x5 gain: %d\n",p->is_DAC_gain_x5);
+	fprintf(stdout,"FAST DAC 50 Ohm mode: %d\n",p->is_DAC_50_Ohm_mode);
 	fprintf(stdout,"FAST DAC overheating protection: %d\n",p->is_fast_dac_temp_protection);
 	fprintf(stdout,"FAST ADC/DAC calibration: %d\n",p->is_fast_calibration);
 	fprintf(stdout,"FAST ADC attenuator controller: %d\n",p->is_attenuator_controller_present);
 	fprintf(stdout,"FAST ADC External trigger level available: %d\n",p->is_ext_trigger_level_available);
 	fprintf(stdout,"FAST ADC External trigger level full scale: %d\n",p->external_trigger_full_scale);
+	fprintf(stdout,"FAST ADC External trigger level is signed: %d\n",p->is_ext_trigger_signed);
 	fprintf(stdout,"FAST ADC DMA mode support (v0.94): %d\n",p->is_dma_mode_v0_94);
 
 	fprintf(stdout,"\nDaisy chain clock sync support: %u\n", p->is_daisy_chain_clock_sync);

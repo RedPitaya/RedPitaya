@@ -397,6 +397,12 @@ area:hover {
     color: #75cede !important;
 }
 
+.out_e2,
+.btn.out_e2,
+.out_e2.focus {
+    color: #c911b9 !important;
+}
+
 .ch1.active,
 .ch2.active,
 .output1.active,
@@ -420,6 +426,15 @@ area:hover {
     display: none;
     margin: 0px -2px 0px -22px;
 }
+
+#slow_adc_in1,
+#slow_adc_in2,
+#slow_adc_in3,
+#slow_adc_in4 {
+    font-weight: bold;
+    color: rgb(23, 151, 11);
+}
+
 
 #edge1 img,
 #edge2 img {

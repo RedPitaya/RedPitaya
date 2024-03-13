@@ -30,7 +30,7 @@ int store_calib(const calib_t CALIB_MODE,
 	//Open file pointer to store calib data
 	FILE *calibration_file = fopen(&command[0], "w+");
 	if(calibration_file == NULL){
-		RP_LOG(LOG_INFO, "Error opening calibration file.\n");
+		TRACE_SHORT("Error opening calibration file.");
 	}
 
 	//Write data to calib_file

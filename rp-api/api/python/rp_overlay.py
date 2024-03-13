@@ -28,13 +28,6 @@ class overlay(object):
         else:
             print('Load overlay [FAIL].')
 
-    def __del__(self):
-        print('Overlay __del__ was activated.')
-        print('But since there are garbage collection ordering issues, this code is commented out.')
-#        os.system("rmdir {}".format(self.syspath))
-#        del(self.syspath)
-#        del(self.overlay)
-
     def status(self) -> bool:
         """Checking device tree overlay status.
 

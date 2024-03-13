@@ -50,9 +50,15 @@ message(STATUS "Compiler C++ ID: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "Compiler C++version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
+list(APPEND r_paths
+    /opt/redpitaya/lib
+    /opt/redpitaya/lib/web
+)
+
+set(CMAKE_INSTALL_RPATH ${r_paths})
 
 include_directories("include")
-include_directories("include/redpitaya")
+include_directories("include/common")
 include_directories("src")
 include_directories(${INSTALL_DIR}/include)
 
@@ -62,7 +68,6 @@ list(APPEND src
             ${CMAKE_SOURCE_DIR}/src/oscilloscope.c
             ${CMAKE_SOURCE_DIR}/src/acq_handler.c
             ${CMAKE_SOURCE_DIR}/src/rp.c
-            ${CMAKE_SOURCE_DIR}/src/neon_asm.cpp
             ${CMAKE_SOURCE_DIR}/src/generate.c
             ${CMAKE_SOURCE_DIR}/src/gen_handler.c
             ${CMAKE_SOURCE_DIR}/src/daisy.c
@@ -70,17 +75,22 @@ list(APPEND src
 
 
 list(APPEND header_rp
-    ${CMAKE_SOURCE_DIR}/include/redpitaya/rp.h
-    ${CMAKE_SOURCE_DIR}/include/redpitaya/rp_acq.h
-    ${CMAKE_SOURCE_DIR}/include/redpitaya/rp_acq_axi.h
-    ${CMAKE_SOURCE_DIR}/include/redpitaya/rp_enums.h
-    ${CMAKE_SOURCE_DIR}/include/redpitaya/rp_gen.h
-    ${CMAKE_SOURCE_DIR}/include/redpitaya/version.h
+    ${CMAKE_SOURCE_DIR}/include/rp.h
+    ${CMAKE_SOURCE_DIR}/include/rp_acq.h
+    ${CMAKE_SOURCE_DIR}/include/rp_acq_axi.h
+    ${CMAKE_SOURCE_DIR}/include/rp_enums.h
+    ${CMAKE_SOURCE_DIR}/include/rp_gen.h
 )
+
+list(APPEND header_rp_common
+    ${CMAKE_SOURCE_DIR}/include/common/version.h
+    ${CMAKE_SOURCE_DIR}/include/common/rp_log.h
+)
+
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
-add_compile_options(-Wall -pedantic -Wextra -Wno-unused-parameter -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+add_compile_options(-Wall -Wextra -Wno-unused-parameter -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 if(DEBUG_REG)
 add_compile_options(-DDEBUG_REG)
@@ -111,12 +121,11 @@ if(BUILD_SHARED)
         set_property(SOURCE src/rp.i PROPERTY CPLUSPLUS ON)
 
         SWIG_ADD_LIBRARY(rp_py LANGUAGE python SOURCES src/rp.i ${src})
-        SWIG_LINK_LIBRARIES(rp_py ${PYTHON_LIBRARIES} -lm -lpthread rp-hw-calib.a rp-hw-profiles.a rp-i2c.a rp-spi.a rp-gpio.a rp-hw.a i2c)
+        SWIG_LINK_LIBRARIES(rp_py ${PYTHON_LIBRARIES} -lm -lpthread rp-hw-calib rp-hw-profiles rp-i2c rp-spi rp-gpio rp-hw i2c)
     endif()
 
     add_library(${PROJECT_NAME}-shared SHARED)
     set_property(TARGET ${PROJECT_NAME}-shared PROPERTY OUTPUT_NAME ${PROJECT_NAME})
-    target_link_options(${PROJECT_NAME}-shared PRIVATE -shared -Wl,--version-script=${CMAKE_SOURCE_DIR}/src/exportmap)
     target_sources(${PROJECT_NAME}-shared PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-obj>)
     target_link_libraries(${PROJECT_NAME}-shared -lm -lpthread)
     target_link_libraries(${PROJECT_NAME}-shared rp-hw rp-hw-calib rp-hw-profiles rp-i2c rp-spi rp-gpio i2c)
@@ -127,6 +136,9 @@ if(BUILD_SHARED)
 
         install(FILES ${header_rp}
             DESTINATION ${INSTALL_DIR}/include)
+
+        install(FILES ${header_rp_common}
+            DESTINATION ${INSTALL_DIR}/include/common)
 
         if (BUILD_PYTHON_MODULE)
             install(FILES $<TARGET_PROPERTY:rp_py,SWIG_SUPPORT_FILES> DESTINATION ${INSTALL_DIR}/lib/python)
@@ -158,6 +170,8 @@ if(BUILD_STATIC)
         install(FILES ${header_rp}
             DESTINATION ${INSTALL_DIR}/include)
 
+        install(FILES ${header_rp_common}
+            DESTINATION ${INSTALL_DIR}/include/common)
     endif()
 endif()
 

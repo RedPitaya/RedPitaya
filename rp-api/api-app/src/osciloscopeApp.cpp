@@ -26,7 +26,8 @@
 
 #include "osciloscopeApp.h"
 #include "common.h"
-#include "neon_asm.h"
+#include "math/rp_algorithms.h"
+#include "math/rp_math.h"
 
 #include "osciloscope_logic/data_decimator.h"
 #include "osciloscope_logic/view_controller.h"
@@ -91,6 +92,7 @@ int osc_Init() {
 }
 
 int osc_RunMainThread(){
+    if (g_thread) return RP_EOOR;
     g_threadRun = true;
     g_thread = new std::thread(mainThreadFun);
     return RP_OK;
@@ -101,6 +103,8 @@ int osc_Release() {
     if (g_thread){
         if (g_thread->joinable()){
             g_thread->join();
+            delete g_thread;
+            g_thread = NULL;
         }
     }
     return RP_OK;
@@ -126,7 +130,7 @@ int osc_SetDefaultValues() {
     ECHECK_APP(osc_setTriggerSlope(RPAPP_OSC_TRIG_SLOPE_PE));
 
     if (rp_HPGetIsExternalTriggerLevelPresentOrDefault())
-        ECHECK_APP(rp_AcqSetTriggerLevel(RP_T_CH_EXT, 0));
+        ECHECK(rp_SetExternalTriggerLevel(0));
 
     ECHECK_APP(rp_AcqSetTriggerSrc(RP_TRIG_SRC_CHA_PE));
     ECHECK_APP(osc_setTriggerLevel(0));
@@ -158,20 +162,20 @@ int osc_SetDefaultValues() {
 int osc_run() {
     g_viewController.runOsc();
     g_viewController.requestUpdateViewFromADC();
-    WARNING("osc_run")
+    TRACE("osc_run")
     return RP_OK;
 }
 
 int osc_stop() {
     g_viewController.stopOsc();
-    WARNING("osc_stop")
+    TRACE("osc_stop")
     return RP_OK;
 }
 
 int osc_reset() {
     g_viewController.stopOsc();
     ECHECK_APP(osc_SetDefaultValues());
-    WARNING("osc_reset")
+    TRACE("osc_reset")
     return RP_OK;
 }
 
@@ -1324,6 +1328,11 @@ void mainThreadFun() {
             g_viewController.setCapturedDecimation(decimationInACQ);
             auto buff = g_viewController.getAcqBuffers();
             ECHECK_APP_NO_RET(rp_AcqGetData(pPosition,buff));
+
+            // float od[DAC_BUFFER_SIZE];
+            // fir3(buff->ch_f[0],od,buff->size);
+            // memcpy_neon(buff->ch_f[0],od,buff->size * sizeof(float));
+
             g_viewController.unlockView();
 
             if (!contMode){

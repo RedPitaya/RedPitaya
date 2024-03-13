@@ -31,7 +31,7 @@
 #include <getopt.h>
 #include <sys/param.h>
 
-#include "version.h"
+#include "common/version.h"
 #include "rp.h"
 #include "bodeApp.h"
 
@@ -266,6 +266,7 @@ int main(int argc, char *argv[]) {
 
     float old_freq = start_frequency;
     //float old_steps = steps;
+    rpApp_BaInit();
     rp_Init();
     rpApp_BaSafeThreadAcqPrepare();
 
@@ -290,7 +291,7 @@ int main(int argc, char *argv[]) {
         {
             float ampl_out = 0;
 
-            if (rpApp_BaGetAmplPhase(ampl, DC_bias,periods_number, buffer, &ampl_out, &phase_out, current_freq,0) ==  RP_EOOR) // isnan && isinf
+            if (rpApp_BaGetAmplPhase(RP_BA_LOGIC_TRAP, ampl, DC_bias,periods_number, buffer, &ampl_out, &phase_out, current_freq,0) ==  RP_EOOR) // isnan && isinf
             {
                 --steps;
                 continue;
@@ -316,6 +317,7 @@ int main(int argc, char *argv[]) {
     }
 
     rp_Release();
+    rpApp_BaRelease();
     /* Closing files */
     fclose(file_frequency);
     fclose(file_phase);

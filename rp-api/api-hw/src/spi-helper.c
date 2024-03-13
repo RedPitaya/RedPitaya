@@ -5,7 +5,7 @@
 #include <sys/ioctl.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include "rp_log.h"
 #include "spi-helper.h"
 
 int read_spi_configuration(int fd, spi_config_t *config)
@@ -14,7 +14,7 @@ int read_spi_configuration(int fd, spi_config_t *config)
 	uint32_t u32;
 
 	if (ioctl(fd, SPI_IOC_RD_MODE, &u8) < 0) {
-		MSG("[Error] SPI_IOC_RD_MODE\n");
+		ERROR("Set SPI_IOC_RD_MODE");
 		return RP_HW_ESGS;
 	}
 	config->raw_value = u8;
@@ -23,20 +23,20 @@ int read_spi_configuration(int fd, spi_config_t *config)
 	config->cs_mode = ((u8 & SPI_CS_HIGH) ? RP_SPI_CS_HIGH : RP_SPI_CS_NORMAL);
 
 	if (ioctl(fd, SPI_IOC_RD_LSB_FIRST, &u8) < 0) {
-		MSG("[Error] SPI_IOC_RD_LSB_FIRST\n");
+		ERROR("Set SPI_IOC_RD_LSB_FIRST");
 		return RP_HW_ESGS;
 	}
 	config->lsb_first = (u8 == SPI_LSB_FIRST ? RP_SPI_ORDER_BIT_LSB
 											 : RP_SPI_ORDER_BIT_MSB);
 
 	if (ioctl(fd, SPI_IOC_RD_BITS_PER_WORD, &u8) < 0) {
-		MSG("[Error] SPI_IOC_RD_BITS_PER_WORD\n");
+		ERROR("Set SPI_IOC_RD_BITS_PER_WORD");
 		return RP_HW_ESGS;
 	}
 	config->bits_per_word = (u8 == 0 ? 8 : u8);
 
 	if (ioctl(fd, SPI_IOC_RD_MAX_SPEED_HZ, &u32) < 0) {
-		MSG("[Error] SPI_IOC_RD_MAX_SPEED_HZ\n");
+		ERROR("Set SPI_IOC_RD_MAX_SPEED_HZ");
 		return RP_HW_ESGS;
 	}
 	config->spi_speed = u32;
@@ -56,25 +56,25 @@ int write_spi_configuration(int fd, spi_config_t *config)
 	u8 = (u8 & ~SPI_CS_HIGH) | (config->cs_mode == RP_SPI_CS_HIGH ? SPI_CS_HIGH : 0);
 
 	if (ioctl(fd, SPI_IOC_WR_MODE, &u8) < 0) {
-		MSG("[Error] SPI_IOC_WR_MODE\n");
+		ERROR("Set SPI_IOC_WR_MODE");
 		return RP_HW_ESSS;
 	}
 
 	u8 = (config->lsb_first == RP_SPI_ORDER_BIT_LSB ? SPI_LSB_FIRST : 0);
 	if (ioctl(fd, SPI_IOC_WR_LSB_FIRST, &u8) < 0) {
-		MSG("[Error] SPI_IOC_WR_LSB_FIRST\n");
+		ERROR("Set SPI_IOC_WR_LSB_FIRST");
 		return RP_HW_ESSS;
 	}
 
 	u8 = config->bits_per_word;
 	if (ioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &u8) < 0) {
-		MSG("[Error] SPI_IOC_WR_BITS_PER_WORD\n");
+		ERROR("Set SPI_IOC_WR_BITS_PER_WORD");
 		return RP_HW_ESSS;
 	}
 
 	u32 = config->spi_speed;
 	if (ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &u32) < 0) {
-		MSG("[Error] SPI_IOC_WR_MAX_SPEED_HZ\n");
+		ERROR("Set SPI_IOC_WR_MAX_SPEED_HZ");
 		return RP_HW_ESSS;
 	}
 
@@ -93,14 +93,14 @@ int read_write_spi_buffers(int fd, spi_data_t *data)
 	// };
 
 	if (!data) {
-		MSG("[Error] Message for SPI not init\n");
+		ERROR("Message for SPI not init");
 		return RP_HW_ESMI;
 	}
 
 	struct spi_ioc_transfer *messages = calloc(data->size, sizeof(struct spi_ioc_transfer));
 
 	if (!messages){
-		MSG("[Error] Can't allocate memory for spi_ioc_transfer\n");
+		ERROR("Can't allocate memory for spi_ioc_transfer");
 		return RP_HW_EAL;
 	}
 

@@ -56,6 +56,12 @@ const scpi_choice_def_t scpi_RpGenMode[] = {
     SCPI_CHOICE_LIST_END
 };
 
+const scpi_choice_def_t scpi_RpGenLoad[] = {
+    {"INF",         0},
+    {"L50",         1},
+    SCPI_CHOICE_LIST_END
+};
+
 scpi_result_t RP_GenReset(scpi_t *context) {
     auto result = rp_GenReset();
     if (RP_OK != result) {
@@ -189,6 +195,30 @@ scpi_result_t RP_GenFrequencyQ(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_GenFrequencyDirect(scpi_t *context){
+
+    scpi_number_t frequency;
+    rp_channel_t channel;
+
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    /* Parse first, FREQUENCY parameter */
+    if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &frequency, true)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+
+    auto result = rp_GenFreqDirect(channel, frequency.content.value);
+    if(result != RP_OK){
+        RP_LOG_CRIT("Failed to set frequency: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_GenWaveForm(scpi_t *context) {
 
     rp_channel_t channel;
@@ -246,7 +276,7 @@ scpi_result_t RP_GenPhase(scpi_t *context) {
 
     rp_channel_t channel;
     scpi_number_t phase;
-   
+
     if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
@@ -955,6 +985,56 @@ scpi_result_t RP_GenExtTriggerDebouncerUsQ(scpi_t *context) {
     }
 
     SCPI_ResultDouble(context, value);
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_GenLoad(scpi_t * context){
+    rp_channel_t channel;
+    int32_t usr_mode;
+
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    if(!SCPI_ParamChoice(context, scpi_RpGenLoad, &usr_mode, true)){
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+
+    rp_gen_load_mode_t mode = (rp_gen_load_mode_t)usr_mode;
+    auto result = rp_GenSetLoadMode(channel, mode);
+    if(result != RP_OK){
+        RP_LOG_CRIT("Failed to set generate mode: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_GenLoadQ(scpi_t * context){
+    rp_channel_t channel;
+    const char *gen_mode;
+    rp_gen_load_mode_t mode;
+
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    auto result = rp_GenGetLoadMode(channel, &mode);
+    if(result != RP_OK){
+        RP_LOG_CRIT("Failed to get generate load: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    int32_t i_mode = mode;
+
+    if(!SCPI_ChoiceToName(scpi_RpGenLoad, i_mode, &gen_mode)){
+        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Invalid generate load.")
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultMnemonic(context, gen_mode);
     RP_LOG_INFO("%s",rp_GetError(result))
     return SCPI_RES_OK;
 }

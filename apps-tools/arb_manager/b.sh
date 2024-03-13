@@ -1,5 +1,4 @@
-rm ./controllerhf.so
-#make clean
-make INSTALL_DIR=/boot -j 2
 rw
-cp  /root/redpitaya-public/apps-tools/arb_manager/controllerhf.so  /opt/redpitaya/www/apps/arb_manager
+cmake -B./build -DINSTALL_DIR=/opt/redpitaya  -DCMAKE_BUILD_TYPE=Debug
+make -C build install -j2
+cp -rf ./build/arb_manager/ /opt/arb_manager/www/apps/

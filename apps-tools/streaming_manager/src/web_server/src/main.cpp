@@ -93,7 +93,7 @@ std::atomic_bool g_dac_serverRun(false);
 auto getADCChannels() -> uint8_t{
     uint8_t c = 0;
     if (rp_HPGetFastADCChannelsCount(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get fast ADC channels count\n");
+        ERROR("Can't get fast ADC channels count");
     }
     return c;
 }
@@ -101,7 +101,7 @@ auto getADCChannels() -> uint8_t{
 auto getDACChannels() -> uint8_t{
     uint8_t c = 0;
     if (rp_HPGetFastDACChannelsCount(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get fast DAC channels count\n");
+        ERROR("Can't get fast DAC channels count");
     }
     return c;
 }
@@ -109,7 +109,7 @@ auto getDACChannels() -> uint8_t{
 auto getAC_DC() -> bool{
     bool c = false;
     if (rp_HPGetFastADCIsAC_DC(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get fast AC/DC mode\n");
+        ERROR("Can't get fast AC/DC mode");
     }
     return c;
 }
@@ -117,7 +117,7 @@ auto getAC_DC() -> bool{
 auto getDACRate() -> uint32_t{
     uint32_t c = 0;
     if (rp_HPGetBaseFastDACSpeedHz(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get fast DAC channels count\n");
+        ERROR("Can't get fast DAC channels count");
 		return 1;
     }
     return c;
@@ -126,7 +126,7 @@ auto getDACRate() -> uint32_t{
 auto getADCRate() -> uint32_t{
     uint32_t c = 0;
     if (rp_HPGetBaseFastADCSpeedHz(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get fast ADC channels count\n");
+        ERROR("Can't get fast ADC channels count");
     }
     return c;
 }
@@ -134,7 +134,7 @@ auto getADCRate() -> uint32_t{
 auto getADCBits() -> uint8_t{
     uint8_t c = 0;
     if (rp_HPGetFastADCBits(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get fast ADC bits\n");
+        ERROR("Can't get fast ADC bits");
     }
     return c;
 }
@@ -142,7 +142,7 @@ auto getADCBits() -> uint8_t{
 auto getModel() -> broadcast_lib::EModel{
     rp_HPeModels_t c = STEM_125_14_v1_0;
     if (rp_HPGetModel(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get board model\n");
+        ERROR("Can't get board model");
     }
 
     switch (c)
@@ -169,11 +169,12 @@ auto getModel() -> broadcast_lib::EModel{
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
 		case STEM_250_12_v1_2a:
+        case STEM_250_12_v1_2b:
             return broadcast_lib::EModel::RP_250_12;
 		case STEM_250_12_120:
 			return broadcast_lib::EModel::RP_250_12;
         default:
-            fprintf(stderr,"[Error] Can't get board model\n");
+            ERROR("Can't get board model");
             exit(-1);
     }
     return broadcast_lib::EModel::RP_125_14;
@@ -182,7 +183,7 @@ auto getModel() -> broadcast_lib::EModel{
  auto getModelS() -> std::string{
     rp_HPeModels_t c = STEM_125_14_v1_0;
     if (rp_HPGetModel(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get board model\n");
+        ERROR("Can't get board model");
     }
 
     switch (c)
@@ -208,11 +209,12 @@ auto getModel() -> broadcast_lib::EModel{
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
 		case STEM_250_12_v1_2a:
+        case STEM_250_12_v1_2b:
             return "Z20_250_12";
 		case STEM_250_12_120:
             return "Z20_250_12_120";
         default:
-            fprintf(stderr,"[Error] Can't get board model\n");
+            ERROR("Can't get board model");
             exit(-1);
     }
     return "Z10";
@@ -247,14 +249,14 @@ auto rp_app_init(void) -> int {
 			for (auto &uio : uioList){
 				if (uio.nodeName == "rp_oscilloscope")
 				{
-					fprintf(stderr,"rp_app_init::Check master/slave\n");
+					WARNING("Check master/slave");
 					auto osc = uio_lib::COscilloscope::create(uio,1,true,getADCRate(),false,getADCBits(),getADCChannels());
 					g_isMaster = osc->isMaster();
-					fprintf(stderr,"rp_app_init::Detected %s mode\n",g_isMaster == uio_lib::BoardMode::MASTER ? "Master" : (g_isMaster == uio_lib::BoardMode::SLAVE ? "Slave" : "Unknown"));
+					WARNING("Detected %s mode",g_isMaster == uio_lib::BoardMode::MASTER ? "Master" : (g_isMaster == uio_lib::BoardMode::SLAVE ? "Slave" : "Unknown"));
 					break;
 				}
 			}
-			fprintf(stderr,"ss_ip_addr %s\n",ss_ip_addr.Value().c_str());
+			TRACE("ss_ip_addr %s",ss_ip_addr.Value().c_str());
 			g_serverNetConfig = std::make_shared<ServerNetConfigManager>(config_file,g_isMaster != uio_lib::BoardMode::SLAVE ? broadcast_lib::EMode::AB_SERVER_MASTER
 																							    : broadcast_lib::EMode::AB_SERVER_SLAVE,
 																								ss_ip_addr.Value(),
@@ -292,13 +294,13 @@ auto rp_app_init(void) -> int {
         	});
 
             g_serverNetConfig->getNewSettingsNofiy.connect([](){
-                fprintf(stderr, "Info: Get new settigns from client\n");
+                WARNING("Info: Get new settigns from client\n");
             });
 
 
 		}catch (std::exception& e)
 			{
-				fprintf(stderr, "Error: Init ServerNetConfigManager() %s\n",e.what());
+				WARNING("Init ServerNetConfigManager() %s\n",e.what());
 			}
 		ss_is_master.SendValue(g_isMaster);
 		ss_status.SendValue(0);
@@ -316,7 +318,7 @@ auto rp_app_init(void) -> int {
 
 	}catch (std::exception& e)
 	{
-        aprintf(stderr, "Error: rp_app_init() %s\n",e.what());
+        ERROR("Error: rp_app_init() %s",e.what());
 	}
 	return 0;
 }
@@ -351,7 +353,7 @@ auto UpdateSignals(void) -> void {
 
 auto saveConfigInFile() -> void {
 	if (!g_serverNetConfig->getSettingsRef().writeToFile(config_file)){
-        aprintf(stderr, "Error save to file (%s)\n",config_file);
+        ERROR("Error save to file (%s)",config_file);
 	}
 }
 
@@ -616,7 +618,7 @@ void UpdateParams(void) {
 		}
 	}catch (std::exception& e)
 	{
-        aprintf(stderr, "Error: UpdateParams() %s\n",e.what());
+        ERROR("UpdateParams() %s",e.what());
 	}
 }
 
@@ -665,7 +667,7 @@ void startServer(bool testMode) {
  		auto max_channels = getADCChannels();
 
 		if (rp_CalibInit() != RP_HW_CALIB_OK){
-	        fprintf(stderr,"Error init calibration\n");
+	        ERROR("Error init calibration");
     	}
 
         auto uioList = uio_lib::GetUioList();
@@ -683,13 +685,13 @@ void startServer(bool testMode) {
 				rp_acq_ac_dc_mode_calib_t  mode = ( CStreamSettings::checkChannel(ac_dc, ch) ? RP_DC_CALIB : RP_AC_CALIB);
                 if (CStreamSettings::checkChannel(attenuator,ch) == false){
                     if (rp_CalibGetFastADCCalibValue((rp_channel_calib_t)ch,mode,&ch_gain[ch],&ch_off[ch]) != RP_HW_CALIB_OK){
-                        fprintf(stderr,"Error get calibration channel: %d\n",ch);
+                        ERROR("Error get calibration channel: %d",ch);
                     }
 
                     if (!filterBypass){
                         channel_filter_t f;
                         if (rp_CalibGetFastADCFilter((rp_channel_calib_t)ch,&f) != RP_HW_CALIB_OK){
-                            fprintf(stderr,"Error get filter value: %d\n",ch);
+                            ERROR("Error get filter value: %d",ch);
                         }
                         aa_ch[ch] = f.aa;
                         bb_ch[ch] = f.bb;
@@ -699,13 +701,13 @@ void startServer(bool testMode) {
                 }
 				else{
                     if (rp_CalibGetFastADCCalibValue_1_20((rp_channel_calib_t)ch,mode,&ch_gain[ch],&ch_off[ch]) != RP_HW_CALIB_OK){
-                        fprintf(stderr,"Error get calibration channel: %d\n",ch);
+                        ERROR("Error get calibration channel: %d",ch);
                     }
 
                     if (!filterBypass){
                         channel_filter_t f;
                         if (rp_CalibGetFastADCFilter_1_20((rp_channel_calib_t)ch,&f) != RP_HW_CALIB_OK){
-                            fprintf(stderr,"Error get filter value: %d\n",ch);
+                            ERROR("Error get filter value: %d",ch);
                         }
                         aa_ch[ch] = f.aa;
                         bb_ch[ch] = f.bb;
@@ -730,7 +732,7 @@ void startServer(bool testMode) {
 		{
 			if (uio.nodeName == "rp_oscilloscope")
 			{
-				fprintf(stderr,"COscilloscope::Create rate %d\n",rate);
+				TRACE("COscilloscope::Create rate %d",rate);
                 g_osc = uio_lib::COscilloscope::create(uio,rate,g_isMaster != uio_lib::BoardMode::SLAVE,getADCRate(),!filterBypass,getADCBits(),max_channels);
 				for(uint8_t ch = 0; ch < max_channels; ++ch){
 					g_osc->setCalibration(ch,ch_off[ch],ch_gain[ch]);
@@ -792,10 +794,10 @@ void startServer(bool testMode) {
 
         g_s_fpga = std::make_shared<streaming_lib::CStreamingFPGA>(g_osc,16);
         uint8_t resolution_val = (resolution == CStreamSettings::BIT_8 ? 8 : 16);
-		aprintf(stderr,"[Streaming] Set channels resolution %d\n",resolution_val);
+		TRACE("Set channels resolution %d",resolution_val);
 
         for(int i = 0; i < max_channels; i++){
-            if(CStreamSettings::checkChannel(channel,i)){ 
+            if(CStreamSettings::checkChannel(channel,i)){
                 g_s_fpga->addChannel((DataLib::EDataBuffersPackChannel)i, CStreamSettings::checkChannel(attenuator,i) ? DataLib::CDataBuffer::ATT_1_20 : DataLib::CDataBuffer::ATT_1_1,resolution_val);
                 g_s_buffer->addChannel((DataLib::EDataBuffersPackChannel)i,uio_lib::osc_buf_size,resolution_val);
             }
@@ -860,11 +862,11 @@ void startServer(bool testMode) {
         }
         ss_status.SendValue(1);
 
-		fprintf(stderr,"[Streaming] Start server\n");
+		TRACE("Start server");
 
 	}catch (std::exception& e)
 	{
-		fprintf(stderr, "Error: StartServer() %s\n",e.what());
+		TRACE("Error: StartServer() %s",e.what());
 	}
 }
 
@@ -877,8 +879,7 @@ void startADC(){
         }
 	}catch (std::exception& e)
 	{
-        aprintf(stderr, "Error: startADC() %s\n",e.what());
-        syslog (LOG_ERR,"Error: startADC() %s\n",e.what());
+        ERROR("Error: startADC() %s",e.what());
 	}
 }
 
@@ -888,7 +889,7 @@ void stopNonBlocking(ServerNetConfigManager::EStopReason x){
 		th.detach();
 	}catch (std::exception& e)
 	{
-        aprintf(stderr, "Error: stopNonBlocking() %s\n",e.what());
+        ERROR("Error: stopNonBlocking() %s",e.what());
 	}
 }
 
@@ -921,10 +922,10 @@ void stopServer(ServerNetConfigManager::EStopReason x){
         g_s_file = nullptr;
         g_s_buffer = nullptr;
         g_s_fpga = nullptr;
-        aprintf(stderr,"[Streaming] Stop server\n");
+        TRACE("Stop server");
 	}catch (std::exception& e)
 	{
-        aprintf(stderr, "Error: stopServer() %s\n",e.what());
+        ERROR("%s",e.what());
 	}
 }
 
@@ -947,7 +948,7 @@ auto startDACServer(bool testMode) -> void{
 
 		auto use_calib    = settings.getCalibration();
 		if (rp_CalibInit() != RP_HW_CALIB_OK){
-	        fprintf(stderr,"Error init calibration\n");
+	        ERROR("Error init calibration");
     	}
 		auto dac_gain = settings.getDACGain();
 		auto max_channels = getDACChannels();
@@ -960,7 +961,7 @@ auto startDACServer(bool testMode) -> void{
 			for(uint8_t ch = 0; ch < max_channels; ++ch){
 				rp_gen_gain_calib_t  mode = dac_gain == CStreamSettings::X1 ? RP_GAIN_CALIB_1X : RP_GAIN_CALIB_5X;
 				if (rp_CalibGetFastDACCalibValue((rp_channel_calib_t)ch,mode,&ch_gain[ch],&ch_off[ch]) != RP_HW_CALIB_OK){
-					fprintf(stderr,"Error get calibration channel: %d\n",ch);
+					ERROR("Error get calibration channel: %d",ch);
 				}
 			}
 		}
@@ -981,9 +982,8 @@ auto startDACServer(bool testMode) -> void{
 		}
 
         if (!g_gen){
-            aprintf(stdout,"[Streaming] Error init generator module\n");
-        	syslog (LOG_NOTICE, "[Streaming] Error init generator module\n");
-			return;
+            ERROR("Error init generator module");
+        	return;
 		}
 
         if (use_file == CStreamSettings::DAC_NET) {
@@ -1021,12 +1021,10 @@ auto startDACServer(bool testMode) -> void{
             g_serverNetConfig->sendDACServerStarted();
         }
 
-        aprintf(stdout,"[Streaming] Start dac server\n");
-        syslog (LOG_NOTICE, "[Streaming] Start dac server\n");
+        TRACE("Start dac server");
 	}catch (std::exception& e)
 	{
-        aprintf(stderr, "Error: startDACServer() %s\n",e.what());
-        syslog (LOG_ERR,"Error: startDACServer() %s\n",e.what());
+        ERROR("Error: startDACServer() %s",e.what());
 	}
 }
 
@@ -1036,8 +1034,7 @@ auto stopDACNonBlocking(dac_streaming_lib::CDACStreamingManager::NotifyResult x)
 		th.detach();
 	}catch (std::exception& e)
 	{
-        aprintf(stderr, "Error: stopDACNonBlocking() %s\n",e.what());
-        syslog (LOG_ERR,"Error: stopDACNonBlocking() %s\n",e.what());
+        ERROR("Error: stopDACNonBlocking() %s",e.what());
 	}
 }
 
@@ -1072,11 +1069,9 @@ auto stopDACServer(dac_streaming_lib::CDACStreamingManager::NotifyResult x) -> v
 					break;
             }
         }
-        aprintf(stdout,"[Streaming] Stop dac server\n");
-        syslog (LOG_NOTICE, "[Streaming] Stop dac server\n");
+        TRACE("Stop dac server");
 	}catch (std::exception& e)
 	{
-        aprintf(stderr, "Error: stopDACServer() %s\n",e.what());
-        syslog (LOG_ERR,"Error: stopDACServer() %s\n",e.what());
+        ERROR("%s",e.what());
 	}
 }

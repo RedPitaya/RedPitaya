@@ -44,7 +44,7 @@ auto CViewController::setViewSize(vsize_t _size) -> void{
     m_viewSizeInPoints = _size;
     for(int i = 0; i < MAX_VIEW_CHANNELS;i++){
         m_view[i].resize(m_viewSizeInPoints);
-        m_origialData[i].reserve(ADC_BUFFER_SIZE);
+        m_origialData[i].resize(ADC_BUFFER_SIZE);
     }
 }
 

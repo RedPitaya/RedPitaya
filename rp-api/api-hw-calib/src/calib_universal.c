@@ -3,12 +3,13 @@
 #include <stdio.h>
 #include "calib_common.h"
 #include "calib_universal.h"
+#include "rp_log.h"
 
 #define GET_PARAMETER(X,Y,Z)    { \
                                     bool err = false; \
                                     int32_t val = getParameter(Z,Y,&err); \
                                     if (err) { \
-                                        fprintf(stderr,"[Error] Missing calib item %s (%d) .\n",getNameOfUniversalId(Y),Y); \
+                                        ERROR("Missing calib item %s (%d) .\n",getNameOfUniversalId(Y),Y); \
                                     } \
                                     X = val; \
                                 }
@@ -289,6 +290,7 @@ rp_calib_params_t convertUniversaltoCommon(rp_HPeModels_t model,rp_calib_params_
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
         case STEM_250_12_v1_2a:
+        case STEM_250_12_v1_2b:
         case STEM_250_12_120:{
             calib.fast_adc_count_1_1 = 2;
             calib.fast_adc_count_1_20 = 2;
@@ -369,7 +371,7 @@ rp_calib_params_t convertUniversaltoCommon(rp_HPeModels_t model,rp_calib_params_
         }
 
         default:
-            fprintf(stderr,"[Error:calib_WriteParams] Unknown model: %d.\n",model);
+            ERROR("Unknown model: %d.",model);
             break;
     }
 
@@ -587,6 +589,7 @@ bool convertUniversal(rp_HPeModels_t model,rp_calib_params_t *param,rp_calib_par
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
         case STEM_250_12_v1_2a:
+        case STEM_250_12_v1_2b:
         case STEM_250_12_120:{
             if (param->fast_adc_count_1_1 != 2){
                 return false;
@@ -666,7 +669,7 @@ bool convertUniversal(rp_HPeModels_t model,rp_calib_params_t *param,rp_calib_par
         }
 
         default:
-            fprintf(stderr,"[Error:calib_WriteParams] Unknown model: %d.\n",model);
+            ERROR("Unknown model: %d.",model);
             return false;
     }
     out->count = count;
@@ -775,6 +778,8 @@ rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model){
     case STEM_250_12_v1_0:
     case STEM_250_12_v1_1:
     case STEM_250_12_v1_2:
+    case STEM_250_12_v1_2a:
+    case STEM_250_12_v1_2b:
     case STEM_250_12_120:
         calib.fast_adc_count_1_1 = 2;
         calib.fast_adc_count_1_20 = 2;
@@ -828,6 +833,7 @@ rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model){
         break;
 
     default:
+        ERROR("Unknown model: %d.",model);
         break;
     }
     return calib;

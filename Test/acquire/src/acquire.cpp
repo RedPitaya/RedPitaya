@@ -20,7 +20,7 @@
 
 #include "rp.h"
 #include "rp_hw-calib.h"
-#include "version.h"
+#include "common/version.h"
 #include "options.h"
 #include "api250-12/rp-spi.h"
 
@@ -183,7 +183,11 @@ int main(int argc, char *argv[])
     rp_AcqSetDecimationFactor(option.decimation);
 
 	rp_AcqSetTriggerDelayDirect(option.dataSize);
-    rp_AcqSetTriggerLevel(getTrigChByTrigSource(option.trigger_mode),option.trigger_level);
+    if (getTrigChByTrigSource(option.trigger_mode) != RP_T_CH_EXT){
+        rp_AcqSetTriggerLevel(getTrigChByTrigSource(option.trigger_mode) ,option.trigger_level);
+    }else{
+        rp_SetExternalTriggerLevel(option.trigger_level);
+    }
 
 	rp_AcqStart();
 	rp_AcqSetTriggerSrc(option.trigger_mode);

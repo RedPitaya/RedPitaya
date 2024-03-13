@@ -35,6 +35,14 @@ int lcrApp_LcrRun(){
 	return lcr_Run();
 }
 
+int lcrApp_LcrStop(){
+    return lcr_Stop();
+}
+
+int lcrApp_LcrSetPause(bool pause){
+    return lcr_SetPause(pause);
+}
+
 int lcrApp_GenRun(){
 	return lcr_GenRun();
 }
@@ -45,10 +53,6 @@ int lcrApp_GenStop(){
 
 int lcrApp_LcrCopyParams(lcr_main_data_t *data){
 	return lcr_CopyParams(data);
-}
-
-bool lcrApp_LcrIsSine(){
-    return lcr_isSine();
 }
 
 // int lcrApp_LcrStartCorrection(){
@@ -63,11 +67,27 @@ int lcrApp_LcrGetFrequency(float *frequency){
 	return lcr_GetFrequency(frequency);
 }
 
-int lcrApp_LcrSetShunt(int shunt){
+int lcrApp_LcrSetAmplitude(float volt){
+	return lcr_SetAmplitude(volt);
+}
+
+int lcrApp_LcrGetAmplitude(float *volt){
+	return lcr_GetAmplitude(volt);
+}
+
+int lcrApp_LcrSetOffset(float offset){
+	return lcr_SetOffset(offset);
+}
+
+int lcrApp_LcrGetOffset(float *offset){
+	return lcr_GetOffset(offset);
+}
+
+int lcrApp_LcrSetShunt(lcr_shunt_t shunt){
         return lcr_setRShunt(shunt);
 }
 
-int lcrApp_LcrGetShunt(int *shunt){
+int lcrApp_LcrGetShunt(lcr_shunt_t *shunt){
         return lcr_getRShunt(shunt);
 }
 
@@ -123,8 +143,43 @@ int lcrApp_LcrGetMeasRangeUnits(int *units){
 	return lcr_GetRangeUnits(units);
 }
 
-int lcrApp_LcrCheckExtensionModuleConnection() {
-	if(checkExtensionModuleConnection() < 0)
-        return RP_EMNC;
-    return RP_OK;
+int lcrApp_LcrCheckExtensionModuleConnection(bool _muteWarnings) {
+    return lcr_CheckModuleConnection(_muteWarnings);
+}
+
+const char* lcrApp_LcrGetError(lcr_error_t errorCode){
+    switch (errorCode)
+    {
+        case RP_LCR_OK:
+            return "OK";
+        case RP_LCR_HW_CANT_OPEN:
+            return "Can't open i2c device";
+        case RP_LCR_HW_MISSING_DEVICE:
+            return "LCR extension not connected";
+        case RP_LCR_HW_ERROR:
+            return "Undefined error";
+        case RP_LCR_HW_ERROR_DETECT:
+            return "LCR extension detection error";
+        case RP_LCR_ERROR_INVALID_VALUE:
+            return "Invalid value";
+        default:
+            break;
+    }
+    return "Undefined error";
+}
+
+int lcrApp_LcrSetCustomShunt(int shunt){
+    return lcr_SetCustomShunt(shunt);
+}
+
+int lcrApp_LcrGetCustomShunt(int *shunt){
+    return lcr_GetCustomShunt(shunt);
+}
+
+int lcrApp_LcrSetShuntMode(lcr_shunt_mode_t shunt_mode){
+    return lcr_SetShuntMode(shunt_mode);
+}
+
+int lcrApp_LcrGetShuntMode(lcr_shunt_mode_t *shunt_mode){
+    return lcr_GetShuntMode(shunt_mode);
 }

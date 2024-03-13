@@ -33,7 +33,7 @@
 #include "api250-12/rp-gpio-power.h"
 #include "api250-12/rp-i2c-max7311.h"
 
-#include "version.h"
+#include "common/version.h"
 
 #include "uio_lib/oscilloscope.h"
 #include "uio_lib/generator.h"

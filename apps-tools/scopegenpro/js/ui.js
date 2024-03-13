@@ -216,18 +216,39 @@
         });
     };
 
+    OSC.uintToColor = function(uint) {
+        const red = (uint >> 16) & 255;
+        const green = (uint >> 8) & 255;
+        const blue = uint & 255;
+
+        // Convert RGB components to hex format
+        const rHex = red.toString(16).padStart(2, '0');
+        const gHex = green.toString(16).padStart(2, '0');
+        const bHex = blue.toString(16).padStart(2, '0');
+
+        // Create the hex color string
+        const hexColor = "#" + rHex + gHex + bHex;
+
+        return hexColor;
+    }
+
     OSC.updateARBFunc = function(list) {
         const splitLines = value => value.split(/\r?\n/);
         splitLines(list).forEach(function(item){
             var id = item.trim();
             if (id !== ""){
                 var name = id.slice(1);
+                var cols = name.trim().split('\t');
+                id = id.trim().split('\t');
                 var opt = document.createElement('option')
                 var opt2 = document.createElement('option')
-                opt.setAttribute('value', id)
-                opt.innerText = name
-                opt2.setAttribute('value', id)
-                opt2.innerText = name
+                opt.setAttribute('value', id[0])
+                opt.innerText = cols[0]
+                opt2.setAttribute('value', id[0])
+                opt2.innerText = cols[0]
+                var color = OSC.uintToColor(parseInt(cols[1]))
+                opt.style.color = color
+                opt2.style.color = color
                 var r1 = document.getElementById('SOUR1_FUNC');
                 if (r1!= null)
                     r1.appendChild(opt);
@@ -812,6 +833,17 @@
             } else {
                 elem.text('SYS INFO');
                 $('#sys_info_view').hide();
+            }
+        });
+
+        $('#slow_adc_info').click(function() {
+            var elem = $(this);
+            if (elem.text() == 'IN/E2') {
+                elem.html('&check; IN/E2');
+                $('#slow_adc_info_view').show();
+            } else {
+                elem.text('IN/E2');
+                $('#slow_adc_info_view').hide();
             }
         });
 

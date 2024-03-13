@@ -66,7 +66,6 @@ void UARTDecoder::SetParameters(const UARTParameters& _new_params)
 bool UARTDecoder::IsParametersChanged()
 {
 #ifndef CLI
-    if(m_Parameters.IsNewValue())
     return (m_Parameters.IsNewValue()) || m_ParametersUpdated;
 #else
     return false;

@@ -16,7 +16,7 @@
 #define GENERATE_HANDLER_H_
 
 
-#include "redpitaya/rp.h"
+#include "rp.h"
 #include "rp_hw-profiles.h"
 
 int gen_SetDefaultValues();
@@ -63,6 +63,9 @@ int gen_setBurstRepetitions(rp_channel_t channel, int repetitions);
 int gen_getBurstRepetitions(rp_channel_t channel, int *repetitions);
 int gen_setBurstPeriod(rp_channel_t channel, uint32_t period);
 int gen_getBurstPeriod(rp_channel_t channel, uint32_t *period);
+
+int gen_setLoadMode(rp_channel_t channel, rp_gen_load_mode_t mode);
+int gen_getLoadMode(rp_channel_t channel, rp_gen_load_mode_t *mode);
 
 int gen_GetDACSamplePeriod(double *value);
 

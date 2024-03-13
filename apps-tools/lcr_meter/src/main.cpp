@@ -7,9 +7,7 @@
 #include <sys/syslog.h>
 #include <map>
 
-#include "version.h"
-#include "rp-spi.h"
-#include "rp-i2c-max7311.h"
+#include "common/version.h"
 #include "rp_hw-calib.h"
 
 #define CHECK_NAN_INF(X) if (std::isnan(X) || std::isinf(X)) X=0;
@@ -85,48 +83,6 @@ const char *rp_app_desc(void){
     return (const char *)"Red Pitaya Lcr meter application.\n";
 }
 
-auto getModel() -> rp_HPeModels_t{
-    rp_HPeModels_t c = STEM_125_14_v1_0;
-    if (rp_HPGetModel(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get board model\n");
-    }
-    return c;
-}
-
-auto getModelName() -> std::string{
-    auto model = getModel();
-    switch (model)
-    {
-        case STEM_125_10_v1_0:
-        case STEM_125_14_v1_0:
-        case STEM_125_14_v1_1:
-        case STEM_125_14_LN_v1_1:
-            return "Z10";
-        case STEM_125_14_Z7020_v1_0:
-        case STEM_125_14_Z7020_LN_v1_1:
-            return "Z20_125";
-        case STEM_122_16SDR_v1_0:
-        case STEM_122_16SDR_v1_1:
-            return "Z20";
-        case STEM_125_14_Z7020_4IN_v1_0:
-        case STEM_125_14_Z7020_4IN_v1_2:
-        case STEM_125_14_Z7020_4IN_v1_3:
-            return "Z20_125_4CH";
-        case STEM_250_12_v1_0:
-        case STEM_250_12_v1_1:
-        case STEM_250_12_v1_2:
-        case STEM_250_12_v1_2a:
-            return "Z20_250_12";
-        case STEM_250_12_120:
-            return "Z20_250_12_120";
-        default:{
-            fprintf(stderr,"[Error:getModelName] Unknown model: %d.\n",model);
-            return "";
-        }
-    }
-    return "";
-}
-
 
 int rp_app_init(void){
     fprintf(stderr, "Loading lcr meter version %s-%s.\n", VERSION_STR, REVISION_STR);
@@ -140,6 +96,8 @@ int rp_app_init(void){
     }
 
     lcrApp_LcrRun();
+    lcrApp_LcrSetFrequency(frequency.Value());
+    lcrApp_GenRun();
     return 0;
 }
 
@@ -168,19 +126,12 @@ void UpdateParams(void){
     CDataManager::GetInstance()->SendAllParams();
     bool moduleStatusFlag = false;
 
-    moduleStatusFlag = lcrApp_LcrCheckExtensionModuleConnection() == RP_OK;
-
-    auto modelName = getModelName();
-    if (modelName == "Z20_250_12" || modelName == "Z20_250_12_120"){
-        // This trick for check LCR module in 250-12. Because two chips are on the same address
-        int maxCheck = rp_max7311::rp_check();
-        if (maxCheck == 1) moduleStatusFlag = false;
-    }
+    moduleStatusFlag = lcrApp_LcrCheckExtensionModuleConnection(false) == RP_OK;
 
     if(moduleStatus.Value() != moduleStatusFlag) {
         moduleStatus.Value() = moduleStatusFlag;
         moduleStatus.SendValue(moduleStatusFlag);
-        fprintf(stderr, "------------> Module Status sended\n");
+        TRACE("------------> Module Status sended");
     }
     lcr_main_data_t *data = (lcr_main_data_t *)malloc(sizeof(lcr_main_data_t));
 
@@ -192,8 +143,8 @@ void UpdateParams(void){
     }
     /*Change shunt*/
     if(IS_NEW(shuntR)){
-        int shunt = shuntR.NewValue();
-        if(shunt == -1) {
+        lcr_shunt_t shunt = (lcr_shunt_t)shuntR.NewValue();
+        if(shunt == RP_LCR_S_NOT_INIT) {
             lcrApp_LcrSetShuntIsAuto(true);
         } else {
             lcrApp_LcrSetShuntIsAuto(false);
@@ -203,10 +154,10 @@ void UpdateParams(void){
     }
 
     /*Change is_sine status*/
-    lcr_is_sine.Value() = lcrApp_LcrIsSine();
+    lcr_is_sine.Value() = true;
 
     /*Get current shunt*/
-    int shuntValue = -1;
+    lcr_shunt_t shuntValue;
     lcrApp_LcrGetShunt(&shuntValue);
     shuntR.Value() = shuntValue;
     /* Change calibration mode */

@@ -10,7 +10,7 @@
 #include "main.h"
 #include "settings.h"
 
-#include "version.h"
+#include "common/version.h"
 #include <sys/sysinfo.h>
 #include <unistd.h>
 #include <pwd.h>
@@ -22,6 +22,7 @@
 #include "sig_gen_logic.h"
 #include "osc_logic.h"
 #include "math_logic.h"
+#include "web/rp_system.h"
 
 
 /* -------------------------  debug parameter  --------------------------------- */
@@ -34,15 +35,20 @@ CBooleanParameter digitalLoop("DIGITAL_LOOP", CBaseParameter::RW, false, 0);
 /***************************************************************************************
 *                                   SYSTEM STATUS                                      *
 ****************************************************************************************/
-long double cpu_values[4] = {0, 0, 0, 0}; /* reading only user, nice, system, idle */
-CFloatParameter cpuLoad("CPU_LOAD", CBaseParameter::RW, 0, 0, 0, 100);
+// long double cpu_values[4] = {0, 0, 0, 0}; /* reading only user, nice, system, idle */
+// CFloatParameter cpuLoad("CPU_LOAD", CBaseParameter::RW, 0, 0, 0, 100);
 
-CFloatParameter memoryTotal("TOTAL_RAM", CBaseParameter::RW, 0, 0, 0, 1e15);
-CFloatParameter memoryFree ("FREE_RAM", CBaseParameter::RW, 0, 0, 0, 1e15);
+// CFloatParameter memoryTotal("TOTAL_RAM", CBaseParameter::RW, 0, 0, 0, 1e15);
+// CFloatParameter memoryFree ("FREE_RAM", CBaseParameter::RW, 0, 0, 0, 1e15);
 CStringParameter redpitaya_model("RP_MODEL_STR", CBaseParameter::RO, getModelName(), 0);
 
 CIntParameter resetSettings("RESET_CONFIG_SETTINGS", CBaseParameter::RW, 0, 0, 0, 10);
 
+
+CFloatParameter slow_dac0 ("OSC_SLOW_OUT_1", CBaseParameter::RW, 0, 0, 0, rp_HPGetSlowDACFullScaleOrDefault(0),CONFIG_VAR);
+CFloatParameter slow_dac1 ("OSC_SLOW_OUT_2", CBaseParameter::RW, 0, 0, 0, rp_HPGetSlowDACFullScaleOrDefault(1),CONFIG_VAR);
+CFloatParameter slow_dac2 ("OSC_SLOW_OUT_3", CBaseParameter::RW, 0, 0, 0, rp_HPGetSlowDACFullScaleOrDefault(2),CONFIG_VAR);
+CFloatParameter slow_dac3 ("OSC_SLOW_OUT_4", CBaseParameter::RW, 0, 0, 0, rp_HPGetSlowDACFullScaleOrDefault(3),CONFIG_VAR);
 
 bool g_config_changed = false;
 uint16_t g_save_counter = 0; // By default, a save check every 40 ticks. One tick 50 ms.
@@ -64,6 +70,7 @@ void updateParametersByConfig(){
     updateOscParams(true);
     updateMathParams(true);
     updateTriggerLimit(true);
+    updateSlowDAC(true);
 }
 
 auto createDir(const std::string dir) -> bool
@@ -97,6 +104,12 @@ int rp_app_init(void) {
 
     CDataManager::GetInstance()->SetParamInterval(parameterPeriod.Value());
     CDataManager::GetInstance()->SetSignalInterval(signalPeriod.Value());
+
+    rp_WS_Init();
+    rp_WS_SetInterval(RP_WS_RAM,5000);
+    rp_WS_SetInterval(RP_WS_SLOW_DAC,500);
+    rp_WS_SetMode((rp_system_mode_t)(RP_WS_ALL & (~RP_WS_DISK_SIZE) & ~RP_WS_SENSOR_VOLT));
+    rp_WS_UpdateParameters(true);
 
     rpApp_Init();
     rpApp_OscRun();
@@ -138,33 +151,33 @@ void UpdateParams(void) {
 
     resumeSweepController(!is_osc_running);
 
-    static int times = 0;
-	if (times == 3)
-	{
-	    FILE *fp = fopen("/proc/stat","r");
-	    if(fp)
-	    {
-	    	long double a[4];
-	    	fscanf(fp,"%*s %Lf %Lf %Lf %Lf",&a[0],&a[1],&a[2],&a[3]);
-	    	fclose(fp);
+    // static int times = 0;
+	// if (times == 3)
+	// {
+	//     FILE *fp = fopen("/proc/stat","r");
+	//     if(fp)
+	//     {
+	//     	long double a[4];
+	//     	fscanf(fp,"%*s %Lf %Lf %Lf %Lf",&a[0],&a[1],&a[2],&a[3]);
+	//     	fclose(fp);
 
-	    	long double divider = ((a[0]+a[1]+a[2]+a[3]) - (cpu_values[0]+cpu_values[1]+cpu_values[2]+cpu_values[3]));
-	    	long double loadavg = 100;
-	    	if(divider > 0.01)
-			{
-				loadavg = ((a[0]+a[1]+a[2]) - (cpu_values[0]+cpu_values[1]+cpu_values[2])) / divider;
-			}
-			cpuLoad.Value() = (float)(loadavg * 100);
-			cpu_values[0]=a[0];cpu_values[1]=a[1];cpu_values[2]=a[2];cpu_values[3]=a[3];
-	    }
-	    times = 0;
+	//     	long double divider = ((a[0]+a[1]+a[2]+a[3]) - (cpu_values[0]+cpu_values[1]+cpu_values[2]+cpu_values[3]));
+	//     	long double loadavg = 100;
+	//     	if(divider > 0.01)
+	// 		{
+	// 			loadavg = ((a[0]+a[1]+a[2]) - (cpu_values[0]+cpu_values[1]+cpu_values[2])) / divider;
+	// 		}
+	// 		cpuLoad.Value() = (float)(loadavg * 100);
+	// 		cpu_values[0]=a[0];cpu_values[1]=a[1];cpu_values[2]=a[2];cpu_values[3]=a[3];
+	//     }
+	//     times = 0;
 
-		struct sysinfo memInfo;
-	    sysinfo (&memInfo);
-    	memoryTotal.Value() = (float)memInfo.totalram;
-    	memoryFree.Value() = (float)memInfo.freeram;
-	}
-	times++;
+	// 	struct sysinfo memInfo;
+	//     sysinfo (&memInfo);
+    // 	memoryTotal.Value() = (float)memInfo.totalram;
+    // 	memoryFree.Value() = (float)memInfo.freeram;
+	// }
+	// times++;
 
     updateGenTempProtection();
 
@@ -183,12 +196,33 @@ void UpdateParams(void) {
     updateOscParametersToWEB();
     updateMathParametersToWEB(is_auto_scale);
     sendFreqInSweepMode();
+    updateSlowDAC(false);
 
+    rp_WS_UpdateParameters(false);
 
     if (g_config_changed && (g_save_counter++ % 40 == 0)){
         g_config_changed = false;
         // Save the configuration file
         configSet(getHomeDirectory() + "/.config/redpitaya/apps/scopegenpro", "config.json");
+    }
+}
+
+void updateSlowDAC(bool force){
+    if (slow_dac0.IsNewValue() || force){
+        if (rp_AOpinSetValue(0,slow_dac0.NewValue()) == RP_OK)
+            slow_dac0.Update();
+    }
+    if (slow_dac1.IsNewValue() || force){
+        if (rp_AOpinSetValue(1,slow_dac1.NewValue()) == RP_OK)
+            slow_dac1.Update();
+    }
+    if (slow_dac2.IsNewValue() || force){
+        if (rp_AOpinSetValue(2,slow_dac2.NewValue()) == RP_OK)
+            slow_dac2.Update();
+    }
+    if (slow_dac3.IsNewValue() || force){
+        if (rp_AOpinSetValue(3,slow_dac3.NewValue()) == RP_OK)
+            slow_dac3.Update();
     }
 }
 

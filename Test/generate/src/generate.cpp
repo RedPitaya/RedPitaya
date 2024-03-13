@@ -6,7 +6,7 @@
 #include <unistd.h>
 
 #include "generate.h"
-#include "rp_arb.h"
+#include "common/rp_arb.h"
 
 std::vector<std::string> g_arbList;
 
@@ -38,7 +38,7 @@ float fullScale(){
     if (rp_HPGetFastDACGain(0,&c) != RP_HP_OK){
         fprintf(stderr,"[Error] Can't get fast DAC full scale\n");
     }
-    return c * fs;
+    return fs / c;
 }
 
 models_t getModel(){
@@ -70,6 +70,7 @@ models_t getModel(){
         case STEM_250_12_v1_1:
         case STEM_250_12_v1_2:
         case STEM_250_12_v1_2a:
+        case STEM_250_12_v1_2b:
         case STEM_250_12_120:
             return RP_250_12;
         default:
@@ -117,6 +118,7 @@ int gen(config_t &conf)
         return -1;
     }
 
+    rp_GenSetLoadMode(ch,conf.load);
     rp_GenOutDisable(ch);
 
     uint8_t channels = 0;

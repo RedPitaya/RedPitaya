@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
-#include "version.h"
+#include "common/version.h"
 
 #include "rp.h"
 #include "rp_hw-calib.h"
@@ -25,6 +25,7 @@ typedef struct {
     double     end_freq;
     rp_waveform_t type;
     rp_gen_gain_t gain;
+    rp_gen_load_mode_t load = RP_GEN_HI_Z;
     bool       calib;
     std::string arb = "";
     bool regDebug = false;

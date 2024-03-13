@@ -2,7 +2,7 @@ INSTALL_DIR ?= /opt/redpitaya
 CFLAGS  = -std=gnu11 -Wall ## -Werror
 CFLAGS += -I$(INSTALL_DIR)/include
 LDFLAGS = -L$(INSTALL_DIR)/lib
-LDLIBS = -static -lrp -lrp-hw-calib -lrp-hw-profiles
+LDLIBS = -static -lrp-dsp -lrp -lrp-hw-calib -lrp-hw-profiles
 
 INCLUDE += -I$(INSTALL_DIR)/include/api250-12
 LDLIBS += -lrp-gpio -lrp-i2c
@@ -16,7 +16,7 @@ CXXFLAGS += -I$(INSTALL_DIR)/include
 
 PRGS =  trig_pos_test
 
-PRGS_PP = acq_trigger_test
+PRGS_PP = acq_trigger_test dsp_test
 
 OBJS := $(patsubst %,%.o,$(PRGS))
 SRC := $(patsubst %,%.c,$(PRGS))

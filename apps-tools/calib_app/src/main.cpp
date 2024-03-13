@@ -12,7 +12,7 @@
 #include <mutex>
 
 #include "rp.h"
-#include "version.h"
+#include "common/version.h"
 #include "acq.h"
 #include "calib.h"
 #include "calib_man.h"
@@ -90,7 +90,7 @@ CBooleanParameter 	gen_enable[MAX_DAC_CHANNELS]	= INIT2( "gen","_enable", 	     
 CIntParameter		gen_type[MAX_DAC_CHANNELS]		= INIT2( "gen","_type", 				CBaseParameter::RW,   0 ,0,	0, 10);
 CFloatParameter		gen_offset[MAX_DAC_CHANNELS]	= INIT2( "gen","_offset",			CBaseParameter::RW,   0 ,0,	-1, 1);
 CFloatParameter		gen_amp[MAX_DAC_CHANNELS]		= INIT2( "gen","_amp",				CBaseParameter::RW,   0.9 ,0,	0.001, 1);
-CIntParameter		gen_freq[MAX_DAC_CHANNELS]		= INIT2( "gen","_freq",				CBaseParameter::RW,   1000 ,0,	1, getDACRate() / DAC_DEVIDER);
+CIntParameter		gen_freq[MAX_DAC_CHANNELS]		= INIT2( "gen","_freq",				CBaseParameter::RW,   1000 ,0,	1, (int)(getDACRate() / DAC_DEVIDER));
 
 
 CBooleanParameter 	gen_gain(	  "gen_gain", 		        CBaseParameter::RW, false,0);
@@ -170,7 +170,6 @@ int rp_app_init(void)
 	}
 
 	g_acq->start();
-	fprintf(stderr, "rp_app_init [OK]\n");
 	return 0;
 }
 
@@ -221,7 +220,7 @@ void UpdateSignals(void)
 		}
 	}catch (std::exception& e)
 	{
-		fprintf(stderr, "Error: UpdateSignals() %s\n",e.what());
+		ERROR("UpdateSignals() %s",e.what());
 	}
 }
 
@@ -1043,7 +1042,7 @@ void UpdateParams(void)
 
 	}catch (std::exception& e)
 	{
-		fprintf(stderr, "Error: UpdateParams() %s\n",e.what());
+		ERROR("UpdateParams() %s",e.what());
 	}
 
 }
