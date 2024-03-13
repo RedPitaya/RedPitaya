@@ -92,7 +92,7 @@ KERNEL_HEADERS ?= YES
 
 # HWID=v1r0 - this value for 250-12 rev 1.0. In all other cases, this parameter is empty.
 
-FPGA_COMMIT ?= Release-2024.1
+FPGA_COMMIT ?= Release-2024.2
 
 HWID ?=
 DEF_PARAM ?=
