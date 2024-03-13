@@ -111,8 +111,11 @@ auto loadARBList() -> std::string{
             if (!rp_ARBGetName(i,&name)){
                 bool is_valid;
                 if (!rp_ARBIsValid(name,&is_valid)){
-                    if (is_valid)
-                        list += "A" + name + "\n";
+                    if (is_valid){
+                        uint32_t color;
+                        rp_ARBGetColor(i,&color);
+                        list += "A" + name + "\t" + std::to_string(color) + "\n";
+                    }
                 }
             }
         }
