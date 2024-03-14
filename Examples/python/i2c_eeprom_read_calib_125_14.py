@@ -22,10 +22,10 @@ rp_s.check_error()
 rp_s.tx_txt('I2C:IO:W:B2 0,0')
 print("Write address for read")
 
-rp_s.tx_txt('I2C:IO:R:B32')
+rp_s.tx_txt('I2C:IO:R:B32?')
 b1 = rp_s.rx_txt().strip('{').strip('}')
 
-rp_s.tx_txt('I2C:IO:R:B16')
+rp_s.tx_txt('I2C:IO:R:B16?')
 b2 = rp_s.rx_txt().strip('{').strip('}')
 rp_s.check_error()
 
