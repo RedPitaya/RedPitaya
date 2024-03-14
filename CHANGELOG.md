@@ -1,4 +1,42 @@
-# Beta version (2.00-30)
+# Beta version (2.00-35)
+
+- **New WEB Impedance Analyzer app**
+- **System health status added to WEB interface**
+- **SCPI sweep generator support**
+
+
+General
+
+- Support for SIGNALlab 250-12 1.2b 
+- General performance and stability improvements
+- Fixed a critical bug that prevented OS 2.0 from loading on some boards.
+
+  
+APIs & SCPI
+
+- Sweep generator support
+- Added missing SCPI command for SIGNALlab 250-12 PLL, load and ext. trigger level setting
+- External trigger debouncer command fix
+- SCPI servers now retains settings even after disconnection
+- Added OS/ecosystem version command
+- Added command that lists all available and supported SCPI commands
+- Changing freq. doesn’t restart generator anymore
+- Added DMA mode for STEMlab 125-14 4 Inputs
+
+  
+WEB apps
+
+- There is a new WEB Impedance Analyzer app available
+- System health status is now also available through WEB interface, it displays voltages and temperature
+- Fine button amplitude scaling button fixed for oscilloscope app
+- Missing ext. trigger level setting added for SIGNALlab 250-12 
+- Added SDR transceiver app
+- Improvements for AWG manager
+- Fixed 3&4 ch bug in oscilloscope app for STEMlab 125-14 4 Inputs
+
+
+
+# Stable version (2.00-30)
 
 - **Jupyter Lab is now supported on all Red Pitaya products using common Python API**
 - **Acquisition into DDR is now also supported for all Red Pitaya models** 
