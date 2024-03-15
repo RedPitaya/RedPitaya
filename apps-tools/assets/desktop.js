@@ -105,6 +105,9 @@
         if (model == 15){
             return "STEM 250 12"
         }
+        if (model == 16){
+            return "STEM 250 12"
+        }
         console.log("[FATAL ERROR] Unknown model: " + model)
         return ""
     }
