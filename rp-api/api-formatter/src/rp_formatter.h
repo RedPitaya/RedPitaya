@@ -61,18 +61,23 @@ public:
     auto resetWriter() -> void;
 
     auto clearBuffer() -> void;
-    auto setChannel(rp_channel_t _channel,uint8_t* _buffer,size_t _samplesCount,std::string _name = "") -> void;
-    auto setChannel(rp_channel_t _channel,uint16_t* _buffer,size_t _samplesCount,std::string _name = "") -> void;
-    auto setChannel(rp_channel_t _channel,float* _buffer,size_t _samplesCount,std::string _name = "") -> void;
-    auto setChannel(rp_channel_t _channel,double* _buffer,size_t _samplesCount,std::string _name = "") -> void;
+    auto setChannel(rp_channel_t _channel,uint8_t* _buffer,int _samplesCount,std::string _name = "") -> void;
+    auto setChannel(rp_channel_t _channel,uint16_t* _buffer,int _samplesCount,std::string _name = "") -> void;
+    auto setChannel(rp_channel_t _channel,float* _buffer,int _samplesCount,std::string _name = "") -> void;
+    auto setChannel(rp_channel_t _channel,double* _buffer,int _samplesCount,std::string _name = "") -> void;
+
+    auto setChannelUI8NP(rp_channel_t _channel,uint8_t* _np_buffer,int _samplesCount,std::string _name = "") -> void;
+    auto setChannelUI16NP(rp_channel_t _channel,uint16_t* _np_buffer,int _samplesCount,std::string _name = "") -> void;
+    auto setChannelFNP(rp_channel_t _channel,float* _np_buffer,int _samplesCount,std::string _name = "") -> void;
+    auto setChannelDNP(rp_channel_t _channel,double* _np_buffer,int _samplesCount,std::string _name = "") -> void;
 
     auto openFile(std::string _path) -> bool;
     auto closeFile() -> bool;
     auto isOpenFile() -> bool;
-    
+
     auto writeToFile() -> bool;
     auto writeToStream(std::iostream *_memory) -> bool;
-    
+
 
 private:
 
@@ -80,7 +85,7 @@ private:
     CFormatter(CFormatter &&) = delete;
     CFormatter& operator=(const CFormatter&) =delete;
     CFormatter& operator=(CFormatter&&) =delete;
-    
+
     auto setChannelData(rp_channel_t _channel, void* _buffer, size_t _samplesCount, rp_bits_t _bits,std::string &_name) -> void;
 
     struct Impl;

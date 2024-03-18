@@ -1088,9 +1088,20 @@ int rp_AcqGetDataPosRaw(rp_channel_t channel, uint32_t start_pos, uint32_t end_p
     return acq_GetDataPosRaw(channel, start_pos, end_pos, buffer, buffer_size);
 }
 
+int rp_AcqGetDataPosRawNP(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, int16_t* np_buffer, int buffer_size)
+{
+    uint32_t size = buffer_size;
+    return acq_GetDataPosRaw(channel, start_pos, end_pos, np_buffer, &size);
+}
+
 int rp_AcqGetDataPosV(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, float* buffer, uint32_t* buffer_size)
 {
     return acq_GetDataPosV(channel, start_pos, end_pos, buffer, buffer_size);
+}
+
+int rp_AcqGetDataPosVNP(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, float* np_buffer, int buffer_size){
+    uint32_t size = buffer_size;
+    return acq_GetDataPosV(channel, start_pos, end_pos, np_buffer, &size);
 }
 
 int rp_AcqAxiGetMemoryRegion(uint32_t *_start,uint32_t *_size){
@@ -1110,14 +1121,32 @@ int rp_AcqGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_
     return acq_GetDataRaw(channel, pos, size, buffer,false);
 }
 
+int rp_AcqGetDataRawNP(rp_channel_t channel,  uint32_t pos, int16_t* np_buffer, int size)
+{
+    uint32_t usize = size;
+    return acq_GetDataRaw(channel, pos, &usize, np_buffer,false);
+}
+
 int rp_AcqGetDataRawWithCalib(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_t* buffer){
     return acq_GetDataRaw(channel, pos, size, buffer,true);
+}
+
+int rp_AcqGetDataRawWithCalibNP(rp_channel_t channel,  uint32_t pos, int16_t* np_buffer, int buffer_size){
+    uint32_t size = buffer_size;
+    return acq_GetDataRaw(channel, pos, &size, np_buffer,true);
 }
 
 int rp_AcqAxiGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_t* buffer){
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
     return acq_axi_GetDataRaw(channel, pos, size, buffer);
+}
+
+int rp_AcqAxiGetDataRawNP(rp_channel_t channel,  uint32_t pos, int16_t* np_buffer, int size){
+    if (!rp_HPGetIsDMAinv0_94OrDefault())
+        return RP_NOTS;
+    uint32_t usize = size;
+    return acq_axi_GetDataRaw(channel, pos, &usize, np_buffer);
 }
 
 int rp_AcqGetData(uint32_t pos, buffers_t *out)
@@ -1130,14 +1159,32 @@ int rp_AcqGetOldestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer
     return acq_GetOldestDataRaw(channel, size, buffer);
 }
 
+int rp_AcqGetOldestDataRawNP(rp_channel_t channel, int16_t* buff, int size)
+{
+    uint32_t usize = size;
+    return acq_GetOldestDataRaw(channel, &usize, buff);
+}
+
 int rp_AcqGetLatestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer)
 {
     return acq_GetLatestDataRaw(channel, size, buffer);
 }
 
+int rp_AcqGetLatestDataRawNP(rp_channel_t channel, int16_t* np_buffer, int size)
+{
+    uint32_t usize = size;
+    return acq_GetLatestDataRaw(channel, &usize,np_buffer);
+}
+
 int rp_AcqGetDataV(rp_channel_t channel, uint32_t pos, uint32_t* size, float* buffer)
 {
     return acq_GetDataV(channel, pos, size, buffer);
+}
+
+int rp_AcqGetDataVNP(rp_channel_t channel, uint32_t pos, float* np_buffer, int size)
+{
+    uint32_t usize = size;
+    return acq_GetDataV(channel, pos, &usize, np_buffer);
 }
 
 int rp_AcqAxiGetDataV(rp_channel_t channel, uint32_t pos, uint32_t* size, float* buffer){
@@ -1146,14 +1193,33 @@ int rp_AcqAxiGetDataV(rp_channel_t channel, uint32_t pos, uint32_t* size, float*
     return acq_axi_GetDataV(channel, pos, size, buffer);
 }
 
+int rp_AcqAxiGetDataVNP(rp_channel_t channel, uint32_t pos, float* np_buffer, int size){
+    if (!rp_HPGetIsDMAinv0_94OrDefault())
+        return RP_NOTS;
+    uint32_t usize = size;
+    return acq_axi_GetDataV(channel, pos, &usize, np_buffer);
+}
+
 int rp_AcqGetOldestDataV(rp_channel_t channel, uint32_t* size, float* buffer)
 {
     return acq_GetOldestDataV(channel, size, buffer);
 }
 
+int rp_AcqGetOldestDataVNP(rp_channel_t channel, float* np_buffer, int size)
+{
+    uint32_t usize = size;
+    return acq_GetOldestDataV(channel, &usize, np_buffer);
+}
+
 int rp_AcqGetLatestDataV(rp_channel_t channel, uint32_t* size, float* buffer)
 {
     return acq_GetLatestDataV(channel, size, buffer);
+}
+
+int rp_AcqGetLatestDataVNP(rp_channel_t channel, float* np_buffer, int size)
+{
+    uint32_t usize = size;
+    return acq_GetLatestDataV(channel, &usize, np_buffer);
 }
 
 int rp_AcqGetBufSize(uint32_t *size) {
@@ -1362,16 +1428,30 @@ int rp_GenGetSweepDir(rp_channel_t channel, rp_gen_sweep_dir_t *mode){
     return gen_getSweepDir(channel,mode);
 }
 
-int rp_GenArbWaveform(rp_channel_t channel, float *waveform, uint32_t length) {
+int rp_GenArbWaveform(rp_channel_t channel, float *waveform, int size) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    return gen_setArbWaveform(channel, waveform, length);
+    return gen_setArbWaveform(channel, waveform, (uint32_t)size);
 }
 
-int rp_GenGetArbWaveform(rp_channel_t channel, float *waveform, uint32_t *length) {
+int rp_GenArbWaveformNP(rp_channel_t channel, float *waveform, int size) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    return gen_getArbWaveform(channel, waveform, length);
+    return gen_setArbWaveform(channel, waveform, (uint32_t)size);
+}
+
+int rp_GenGetArbWaveform(rp_channel_t channel, float *waveform, int size, uint32_t *size_out) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
+    *size_out = size;
+    return gen_getArbWaveform(channel, waveform, size_out);
+}
+
+int rp_GenGetArbWaveformNP(rp_channel_t channel, float *waveform, int size, uint32_t *size_out) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
+    *size_out = size;
+    return gen_getArbWaveform(channel, waveform, size_out);
 }
 
 int rp_GenDutyCycle(rp_channel_t channel, float ratio) {
@@ -1746,3 +1826,5 @@ int rp_GetExternalTriggerLevel(float *value){
     ERROR("Unsupported");
     return RP_NOTS;
 }
+
+

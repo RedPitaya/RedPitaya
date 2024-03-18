@@ -21,9 +21,17 @@
 
 
 %{
+#define SWIG_FILE_WITH_INIT
 /* Includes the header in the wrapper code */
 #include "rp_formatter.h"
 %}
+
+%include "numpy.i"
+
+%init %{
+import_array();
+%}
+
 
 %array_class(uint8_t, arrUInt8);
 %array_class(uint16_t, arrUInt16);
@@ -34,6 +42,14 @@
 %array_class(u16_ptr, arrpUInt16);
 %array_class(float_ptr, arrpFloat);
 %array_class(double_ptr, arrpDouble);
+
+%numpy_typemaps(uint8_t,    NPY_UINT16   ,unsigned short)
+%numpy_typemaps(uint16_t,    NPY_UINT32   , unsigned int)
+
+%apply (uint8_t* IN_ARRAY1, int DIM1) {(uint8_t* _np_buffer, int _samplesCount)};
+%apply (uint16_t* IN_ARRAY1, int DIM1) {(uint16_t* _np_buffer, int _samplesCount)};
+%apply (float* IN_ARRAY1, int DIM1) {(float* _np_buffer, int _samplesCount)};
+%apply (double* IN_ARRAY1, int DIM1) {(double* _np_buffer, int _samplesCount)};
 
 /* Parse the header file to generate wrappers */
 %include "rp_formatter.h"

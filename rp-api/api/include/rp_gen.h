@@ -239,21 +239,45 @@ int rp_GenGetSweepDir(rp_channel_t channel, rp_gen_sweep_dir_t *mode);
 * Sets user defined waveform.
 * @param channel Channel A or B for witch we want to set waveform.
 * @param waveform Use defined wave form, where min is -1V an max is 1V.
-* @param length Length of waveform.
+* @param size Length of waveform.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenArbWaveform(rp_channel_t channel, float *waveform, uint32_t length);
+int rp_GenArbWaveform(rp_channel_t channel, float *waveform, int size);
+
+/**
+* Sets user defined waveform.
+* @param channel Channel A or B for witch we want to set waveform.
+* @param waveform Use defined wave form, where min is -1V an max is 1V.
+* @param size Length of waveform.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenArbWaveformNP(rp_channel_t channel, float *np_buffer, int size);
 
 /**
 * Gets user defined waveform.
 * @param channel Channel A or B for witch we want to get waveform.
 * @param waveform Pointer where waveform will be returned.
-* @param length Pointer where waveform length will be returned.
+* @param size Size of the input array.
+* @param size_out Returns the size of the signal
+
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetArbWaveform(rp_channel_t channel, float *waveform, uint32_t *length);
+int rp_GenGetArbWaveform(rp_channel_t channel, float *waveform, int size, uint32_t *size_out);
+
+/**
+* Gets user defined waveform.
+* @param channel Channel A or B for witch we want to get waveform.
+* @param waveform Pointer where waveform will be returned.
+* @param size Size of the input array.
+* @param size_out Returns the size of the signal
+
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenGetArbWaveformNP(rp_channel_t channel, float *np_buffer, int size, uint32_t *size_out);
 
 /**
 * Sets duty cycle of PWM signal.

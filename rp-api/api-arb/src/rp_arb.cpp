@@ -194,8 +194,8 @@ int rp_ARBGetFileName(uint32_t _index,std::string *_fileName){
 	return RP_ARB_FILE_OK;
 }
 
-int rp_ARBGetSignal(uint32_t _index,float *_data,uint32_t *size){
-	*size = 0;
+int rp_ARBGetSignal(uint32_t _index, float *_data, uint32_t *_size){
+	*_size = 0;
 	if (_index >= g_files.size()){
 		return RP_ARB_WRONG_INDEX;
 	}
@@ -207,8 +207,12 @@ int rp_ARBGetSignal(uint32_t _index,float *_data,uint32_t *size){
 	binFile_t s;
 	file.read ((char*)&s,sizeof(s));
 
-	*size = s.size;
+	*_size = s.size;
 	if (s.size > DAC_BUFFER_SIZE){
+		s.size = 0;
+		return RP_ARB_FILE_ERR;
+	}
+    if ((int)s.size > DAC_BUFFER_SIZE){
 		s.size = 0;
 		return RP_ARB_FILE_ERR;
 	}
@@ -218,7 +222,13 @@ int rp_ARBGetSignal(uint32_t _index,float *_data,uint32_t *size){
 	return RP_ARB_FILE_OK;
 }
 
-int rp_ARBGetSignalByName(std::string _sigName,float *_data,uint32_t *_size){
+int rp_ARBGetSignalNP(uint32_t _index, float *_np_data, int _in_size, uint32_t *_size){
+    *_size = _in_size;
+    return rp_ARBGetSignal(_index,_np_data,_size);
+}
+
+
+int rp_ARBGetSignalByName(std::string _sigName, float *_data, uint32_t *_size){
 	*_size = 0;
 	for(uint32_t i = 0; i < g_files.size(); i++){
 		if (g_files[i].second.name == _sigName){
@@ -227,6 +237,12 @@ int rp_ARBGetSignalByName(std::string _sigName,float *_data,uint32_t *_size){
 	}
 	return RP_ARB_FILE_ERR;
 }
+
+int rp_ARBGetSignalByNameNP(std::string _sigName, float *_np_data, int _in_size, uint32_t *_size){
+    *_size = _in_size;
+    return rp_ARBGetSignalByName(_sigName,_np_data,_size);
+}
+
 
 int rp_ARBSetColor(uint32_t _index,uint32_t color){
     if (_index >= g_files.size()){
@@ -288,7 +304,7 @@ int rp_ARBLoadToFPGA(rp_channel_t _channel, std::string _sigName){
 	for(uint32_t i = 0; i < g_files.size(); i++){
 		if (g_files[i].second.name == _sigName){
 			float data[DAC_BUFFER_SIZE];
-			uint32_t size;
+            uint32_t size;
 			if (rp_ARBGetSignal(i,data,&size)){
 				return rp_GenArbWaveform((rp_channel_t)_channel,data,size);
 			}

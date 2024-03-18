@@ -2,7 +2,7 @@
  * $Id$
  *
  * @brief Red Pitaya data formatter.
- *         
+ *
  * (c) Red Pitaya  http://www.redpitaya.com
  *
  */
@@ -27,7 +27,7 @@ struct CFormatter::Impl {
     rp_mode_t m_mode;
     uint32_t m_oscRate;
     SBufferPack m_pack;
-    std::fstream *m_file = NULL;  
+    std::fstream *m_file = NULL;
     CWaveWriter *m_wave = NULL;
     CTDMSWriter *m_tdms = NULL;
     CCSVWriter  *m_csv = NULL;
@@ -80,20 +80,36 @@ auto CFormatter::setChannelData(rp_channel_t _channel,void* _buffer,size_t _samp
     m_pimpl->m_pack.m_name[_channel] = _name;
 }
 
-auto CFormatter::setChannel(rp_channel_t _channel,uint8_t* _buffer,size_t _samplesCount,std::string _name) -> void {
+auto CFormatter::setChannel(rp_channel_t _channel,uint8_t* _buffer,int _samplesCount,std::string _name) -> void {
     setChannelData(_channel,_buffer,_samplesCount,RP_F_8_Bit,_name);
 }
 
-auto CFormatter::setChannel(rp_channel_t _channel,uint16_t* _buffer,size_t _samplesCount,std::string _name) -> void {
+auto CFormatter::setChannel(rp_channel_t _channel,uint16_t* _buffer,int _samplesCount,std::string _name) -> void {
     setChannelData(_channel,_buffer,_samplesCount,RP_F_16_Bit,_name);
 }
 
-auto CFormatter::setChannel(rp_channel_t _channel,float* _buffer,size_t _samplesCount,std::string _name) -> void {
+auto CFormatter::setChannel(rp_channel_t _channel,float* _buffer,int _samplesCount,std::string _name) -> void {
     setChannelData(_channel,_buffer,_samplesCount,RP_F_32_Bit,_name);
 }
 
-auto CFormatter::setChannel(rp_channel_t _channel,double* _buffer,size_t _samplesCount,std::string _name) -> void {
+auto CFormatter::setChannel(rp_channel_t _channel,double* _buffer,int _samplesCount,std::string _name) -> void {
     setChannelData(_channel,_buffer,_samplesCount,RP_F_64_Bit,_name);
+}
+
+auto CFormatter::setChannelUI8NP(rp_channel_t _channel,uint8_t* _np_buffer,int _samplesCount,std::string _name) -> void {
+    setChannelData(_channel,_np_buffer,_samplesCount,RP_F_8_Bit,_name);
+}
+
+auto CFormatter::setChannelUI16NP(rp_channel_t _channel,uint16_t* _np_buffer,int _samplesCount,std::string _name) -> void {
+    setChannelData(_channel,_np_buffer,_samplesCount,RP_F_16_Bit,_name);
+}
+
+auto CFormatter::setChannelFNP(rp_channel_t _channel,float* _np_buffer,int _samplesCount,std::string _name) -> void {
+    setChannelData(_channel,_np_buffer,_samplesCount,RP_F_32_Bit,_name);
+}
+
+auto CFormatter::setChannelDNP(rp_channel_t _channel,double* _np_buffer,int _samplesCount,std::string _name) -> void {
+    setChannelData(_channel,_np_buffer,_samplesCount,RP_F_64_Bit,_name);
 }
 
 auto CFormatter::openFile(std::string _path) -> bool {

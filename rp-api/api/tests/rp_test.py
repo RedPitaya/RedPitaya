@@ -3,6 +3,7 @@
 
 import rp
 import time
+import numpy as np
 
 # rp.h
 
@@ -338,10 +339,36 @@ print("rp.rp_GenArbWaveform(rp.RP_CH_1,buff.cast(),1024)")
 res = rp.rp_GenArbWaveform(rp.RP_CH_1,buff.cast(),1024)
 print(res)
 
-print("rp.rp_GenGetArbWaveform(rp.RP_CH_1,buff2.cast())")
-res = rp.rp_GenGetArbWaveform(rp.RP_CH_1,buff2.cast())
+print("rp.rp_GenGetArbWaveform(rp.RP_CH_1,buff2.cast(),1024)")
+res = rp.rp_GenGetArbWaveform(rp.RP_CH_1,buff2.cast(),1024)
 print(res,buff2[0],buff2[1],buff2[2],buff2[3],buff2[4],buff2[5])
 
+print("Testing numpy")
+
+N = 1024*16
+arr_f = np.zeros(N, dtype=np.float32)
+
+print("rp.rp_GenGetArbWaveformNP(rp.RP_CH_1,arr_f)")
+res = rp.rp_GenGetArbWaveformNP(rp.RP_CH_1,arr_f)
+print(res,arr_f)
+
+print("rp.rp_GenArbWaveformNP(rp.RP_CH_1,arr_f)")
+res = rp.rp_GenArbWaveformNP(rp.RP_CH_1,arr_f)
+print(res)
+
+print("End testing numpy")
+
+ibuff = rp.i16Buffer(1024)
+print("rp.rp_AcqGetDataRaw(rp.RP_CH_1,0,1024,ibuff.cast())")
+res = rp.rp_AcqGetDataRaw(rp.RP_CH_1,0,1024,ibuff.cast())
+print(res,ibuff[0],ibuff[1],ibuff[2],ibuff[3],ibuff[4])
+
+ibuff = rp.i16Buffer(1024)
+print("rp.rp_AcqGetDataRawWithCalib(rp.RP_CH_1,0,1024,ibuff.cast())")
+res = rp.rp_AcqGetDataRawWithCalib(rp.RP_CH_1,0,1024,ibuff.cast())
+print(res,ibuff[0],ibuff[1],ibuff[2],ibuff[3],ibuff[4])
+
+print("Testing numpy")
 
 print("rp.rp_GenDutyCycle(rp.RP_CH_1,0.2)")
 res = rp.rp_GenDutyCycle(rp.RP_CH_1,0.2)
@@ -659,6 +686,21 @@ print("rp.rp_AcqGetDataPosV(rp.RP_CH_1,0,1024,fbuff,1025)")
 res = rp.rp_AcqGetDataPosV(rp.RP_CH_1,0,1024,fbuff,1025)
 print(res,fbuff[0],fbuff[1],fbuff[2],fbuff[3],fbuff[4])
 
+print("Testing numpy")
+
+N = 128
+arr_i16 = np.zeros(N, dtype=np.int16)
+arr_f = np.zeros(N, dtype=np.float32)
+print("rp.rp_AcqGetDataPosRawNP(rp.RP_CH_1,0,128,arr_i16)")
+res = rp.rp_AcqGetDataPosRawNP(rp.RP_CH_1,0,128,arr_i16)
+print(arr_i16)
+
+print("rp.rp_AcqGetDataPosVNP(rp.RP_CH_1,0,128,arr_f)")
+res = rp.rp_AcqGetDataPosVNP(rp.RP_CH_1,0,128,arr_f)
+print(arr_f)
+
+print("End testing numpy")
+
 ibuff = rp.i16Buffer(1024)
 print("rp.rp_AcqGetDataRaw(rp.RP_CH_1,0,1024,ibuff.cast())")
 res = rp.rp_AcqGetDataRaw(rp.RP_CH_1,0,1024,ibuff.cast())
@@ -669,6 +711,17 @@ print("rp.rp_AcqGetDataRawWithCalib(rp.RP_CH_1,0,1024,ibuff.cast())")
 res = rp.rp_AcqGetDataRawWithCalib(rp.RP_CH_1,0,1024,ibuff.cast())
 print(res,ibuff[0],ibuff[1],ibuff[2],ibuff[3],ibuff[4])
 
+print("Testing numpy")
+
+print("rp.rp_AcqGetDataRawNP(rp.RP_CH_1,0,arr_i16)")
+res = rp.rp_AcqGetDataRawNP(rp.RP_CH_1,0,arr_i16)
+print(arr_i16)
+
+print("rp.rp_AcqGetDataRawWithCalibNP(rp.RP_CH_1,0,arr_i16)")
+res = rp.rp_AcqGetDataRawWithCalibNP(rp.RP_CH_1,0,arr_i16)
+print(arr_i16)
+
+print("End testing numpy")
 
 print("rp.rp_createBuffer(2,1024,True,False,False)")
 buff_t = rp.rp_createBuffer(2,1024,True,False,False)
@@ -700,6 +753,22 @@ fbuff = rp.fBuffer(1025)
 print("rp.rp_AcqGetDataV(rp.RP_CH_1,0,1024,fbuff)")
 res = rp.rp_AcqGetDataV(rp.RP_CH_1,0,1024,fbuff)
 print(res,fbuff[0],fbuff[1],fbuff[2],fbuff[3],fbuff[4])
+
+print("Testing numpy")
+
+print("rp.rp_AcqGetOldestDataRawNP(rp.RP_CH_1,arr_i16)")
+res = rp.rp_AcqGetOldestDataRawNP(rp.RP_CH_1,arr_i16)
+print(arr_i16)
+
+print("rp.rp_AcqGetLatestDataRawNP(rp.RP_CH_1,arr_i16)")
+res = rp.rp_AcqGetLatestDataRawNP(rp.RP_CH_1,arr_i16)
+print(arr_i16)
+
+print("rp.rp_AcqGetDataVNP(rp.RP_CH_1,0,arr_f)")
+res = rp.rp_AcqGetDataVNP(rp.RP_CH_1,0,arr_f)
+print(arr_f)
+
+print("End testing numpy")
 
 print("rp.rp_createBuffer(2,1024,False,False,True)")
 buff_t = rp.rp_createBuffer(2,1024,False,False,True)
@@ -742,6 +811,18 @@ fbuff = rp.fBuffer(1024)
 print("rp.rp_AcqGetLatestDataV(rp.RP_CH_1,1024,fbuff.cast())")
 res = rp.rp_AcqGetLatestDataV(rp.RP_CH_1,1024,fbuff.cast())
 print(res,fbuff[0],fbuff[1],fbuff[2],fbuff[3],fbuff[4])
+
+print("Testing numpy")
+
+print("rp.rp_AcqGetOldestDataVNP(rp.RP_CH_1,arr_f)")
+res = rp.rp_AcqGetOldestDataVNP(rp.RP_CH_1,arr_f)
+print(arr_f)
+
+print("rp.rp_AcqGetOldestDataVNP(rp.RP_CH_1,arr_f)")
+res = rp.rp_AcqGetOldestDataVNP(rp.RP_CH_1,arr_f)
+print(arr_f)
+
+print("End testing numpy")
 
 x = 0
 print("rp.rp_AcqGetBufSize(x)")
@@ -850,6 +931,18 @@ fbuff = rp.fBuffer(128)
 print("rp.rp_AcqAxiGetDataV(rp.RP_CH_1,trig,128,fbuff.cast())")
 res = rp.rp_AcqAxiGetDataV(rp.RP_CH_1,trig,128,fbuff.cast())
 print(res,fbuff[0],fbuff[1],fbuff[2],fbuff[3],fbuff[4])
+
+print("Testing numpy")
+
+print("rp.rp_AcqAxiGetDataRawNP(rp.RP_CH_1,0,arr_i16)")
+res = rp.rp_AcqAxiGetDataRawNP(rp.RP_CH_1,0,arr_i16)
+print(arr_i16)
+
+print("rp.rp_AcqAxiGetDataVNP(rp.RP_CH_1,0,arr_f)")
+res = rp.rp_AcqAxiGetDataVNP(rp.RP_CH_1,0,arr_f)
+print(arr_f)
+
+print("End testing numpy")
 
 print("rp.rp_Release()")
 res = rp.rp_Release()

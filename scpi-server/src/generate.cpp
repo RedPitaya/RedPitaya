@@ -384,13 +384,13 @@ scpi_result_t RP_GenArbitraryWaveFormQ(scpi_t *context) {
 
     rp_channel_t channel;
     float buffer[DAC_BUFFER_SIZE];
-    uint32_t size;
+    uint32_t size = DAC_BUFFER_SIZE;
 
     if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
-
-    auto result = rp_GenGetArbWaveform(channel, buffer, &size);
+    uint32_t ret_size = 0;
+    auto result = rp_GenGetArbWaveform(channel, buffer, size, &ret_size);
     if(result != RP_OK){
         RP_LOG_CRIT("Failed to get arbitrary waveform data: %s", rp_GetError(result));
         return SCPI_RES_ERR;

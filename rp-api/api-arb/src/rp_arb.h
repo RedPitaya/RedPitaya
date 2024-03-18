@@ -33,14 +33,16 @@ int rp_ARBInit();
 int rp_ARBGenFile(std::string _filename);
 int rp_ARBLoadFiles();
 int rp_ARBGetCount(uint32_t *_count);
-int rp_ARBGetName(uint32_t _index,std::string *_name);
-int rp_ARBSetColor(uint32_t _index,uint32_t color);
-int rp_ARBGetColor(uint32_t _index,uint32_t *_color);
-int rp_ARBGetFileName(uint32_t _index,std::string *_fileName);
-int rp_ARBGetSignal(uint32_t _index,float *_data,uint32_t *_size);
-int rp_ARBGetSignalByName(std::string _sigName,float *_data,uint32_t *_size);
-int rp_ARBRenameFile(uint32_t _index,std::string _new_name);
+int rp_ARBGetName(uint32_t _index, std::string *_name);
+int rp_ARBSetColor(uint32_t _index, uint32_t color);
+int rp_ARBGetColor(uint32_t _index, uint32_t *_color);
+int rp_ARBGetFileName(uint32_t _index, std::string *_fileName);
+int rp_ARBGetSignal(uint32_t _index, float *_data, uint32_t *_size);
+int rp_ARBGetSignalByName(std::string _sigName, float *_data, uint32_t *_size);
+int rp_ARBGetSignalNP(uint32_t _index, float *_np_data, int _in_size, uint32_t *_size);
+int rp_ARBGetSignalByNameNP(std::string _sigName, float *_np_data, int _in_size, uint32_t *_size);
+int rp_ARBRenameFile(uint32_t _index, std::string _new_name);
 int rp_ARBLoadToFPGA(rp_channel_t _channel, std::string _sigName);
-int rp_ARBIsValid(std::string _sigName,bool *_valid);
+int rp_ARBIsValid(std::string _sigName, bool *_valid);
 
 #endif // __ARB_API_H
