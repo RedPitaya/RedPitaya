@@ -733,3 +733,18 @@ bool rp_HPGetIsDMAinv0_94OrDefault(){
     profiles_t* p = getProfileDefualt();
     return p->is_dma_mode_v0_94;
 }
+
+int rp_HPGetFastADCIsSplitTrigger(bool *value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->is_split_osc_triggers;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+bool rp_HPGetFastADCIsSplitTriggerOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->is_split_osc_triggers;
+}

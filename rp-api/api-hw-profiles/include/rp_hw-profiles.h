@@ -465,6 +465,15 @@ int rp_HPGetIsDMAinv0_94(bool *_out_value);
 bool rp_HPGetIsDMAinv0_94OrDefault();
 
 /**
+* Returns the ability to separate trigger logic for fast ADC for v0.94.
+* Function rp_HPGetFastADCIsSplitTriggerOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
+*/
+int rp_HPGetFastADCIsSplitTrigger(bool *_out_value);
+bool rp_HPGetFastADCIsSplitTriggerOrDefault();
+
+/**
  * Print all parameters for current profile
  */
 int rp_HPPrint();

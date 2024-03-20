@@ -126,34 +126,85 @@ int osc_axi_GetMemoryRegion(uint32_t *_start,uint32_t *_size){
  * decimation
  */
 
-int osc_SetDecimation(uint32_t decimation)
+int osc_SetDecimation(rp_channel_t channel, uint32_t decimation)
 {
     uint32_t currentValue = 0;
-    cmn_Debug("cmn_SetValue(&osc_reg->data_dec) mask 0x1FFFF", decimation);
-    return cmn_SetValue(&osc_reg->data_dec, decimation, DATA_DEC_MASK,&currentValue);
+    switch (channel)
+    {
+        case RP_CH_1:
+            cmn_Debug("cmn_SetValue(&osc_reg->data_dec) mask 0x1FFFF <- 0x%X", decimation);
+            return cmn_SetValue(&osc_reg->data_dec, decimation, DATA_DEC_MASK,&currentValue);
+        case RP_CH_2:
+            cmn_Debug("cmn_SetValue(&osc_reg->data_dec_ch2) mask 0x1FFFF <- 0x%X", decimation);
+            return cmn_SetValue(&osc_reg->data_dec_ch2, decimation, DATA_DEC_MASK,&currentValue);
+        case RP_CH_3:
+            if (osc_reg_4ch){
+                cmn_Debug("cmn_SetValue(&osc_reg_4ch->data_dec) mask 0x1FFFF <- 0x%X", decimation);
+                return cmn_SetValue(&osc_reg_4ch->data_dec, decimation, DATA_DEC_MASK,&currentValue);
+            }else{
+                ERROR("Registers for channels 3 and 4 are not initialized")
+            }
+            break;
+        case RP_CH_4:
+            if (osc_reg_4ch){
+                cmn_Debug("cmn_SetValue(&osc_reg_4ch->data_dec_ch2) mask 0x1FFFF <- 0x%X", decimation);
+                return cmn_SetValue(&osc_reg_4ch->data_dec_ch2, decimation, DATA_DEC_MASK,&currentValue);
+            }else{
+                ERROR("Registers for channels 3 and 4 are not initialized")
+            }
+            break;
+        default:
+            ERROR("Wrong channel %d",channel)
+            break;
+    }
+    return RP_EOOR;
 }
 
-int osc_GetDecimation(uint32_t* decimation)
+int osc_GetDecimation(rp_channel_t channel, uint32_t* decimation)
 {
-    return cmn_GetValue(&osc_reg->data_dec, decimation, DATA_DEC_MASK);
+    switch (channel)
+    {
+        case RP_CH_1:
+            return cmn_GetValue(&osc_reg->data_dec, decimation, DATA_DEC_MASK);
+        case RP_CH_2:
+            return cmn_GetValue(&osc_reg->data_dec_ch2, decimation, DATA_DEC_MASK);
+        case RP_CH_3:
+            if (osc_reg_4ch){
+               return cmn_GetValue(&osc_reg_4ch->data_dec, decimation, DATA_DEC_MASK);
+            }else{
+                ERROR("Registers for channels 3 and 4 are not initialized")
+            }
+            break;
+        case RP_CH_4:
+            if (osc_reg_4ch){
+                return cmn_GetValue(&osc_reg_4ch->data_dec_ch2, decimation, DATA_DEC_MASK);
+            }else{
+                ERROR("Registers for channels 3 and 4 are not initialized")
+            }
+            break;
+        default:
+            ERROR("Wrong channel %d",channel)
+            break;
+    }
+    return RP_EOOR;
 }
 
 int osc_SetAveraging(bool enable)
 {
     if (enable) {
-        cmn_Debug("cmn_SetBits(&osc_reg->other) mask 0x1", 0x1);
+        cmn_Debug("cmn_SetBits(&osc_reg->other) mask 0x1 <- 0x%X", 0x1);
         int ret = cmn_SetBits(&osc_reg->other, 0x1, DATA_AVG_MASK);
         if (osc_reg_4ch){
-            cmn_Debug("cmn_SetBits(&osc_reg_4ch->other) mask 0x1", 0x1);
+            cmn_Debug("cmn_SetBits(&osc_reg_4ch->other) mask 0x1 <- 0x%X", 0x1);
             ret |= cmn_SetBits(&osc_reg_4ch->other, 0x1, DATA_AVG_MASK);
         }
         return ret;
     }
     else {
-        cmn_Debug("cmn_UnsetBits(&osc_reg->other) mask 0x1", 0x1);
+        cmn_Debug("cmn_UnsetBits(&osc_reg->other) mask 0x1 <-> 0x%X", 0x1);
         int ret = cmn_UnsetBits(&osc_reg->other, 0x1, DATA_AVG_MASK);
         if (osc_reg_4ch){
-            cmn_Debug("cmn_UnsetBits(&osc_reg_4ch->other) mask 0x1", 0x1);
+            cmn_Debug("cmn_UnsetBits(&osc_reg_4ch->other) mask 0x1 <-> 0x%X", 0x1);
             ret |= cmn_UnsetBits(&osc_reg_4ch->other, 0x1, DATA_AVG_MASK);
         }
         return ret;
@@ -169,9 +220,8 @@ int osc_GetAveraging(bool* enable)
  * trigger source
  */
 
-int osc_SetTriggerSource(uint32_t source)
+int osc_SetTriggerSource(rp_channel_t channel, uint32_t source)
 {
-
     if (emulate4Ch){
         if (source == RP_TRIG_SRC_CHC_PE){
             source = RP_TRIG_SRC_CHA_PE;
@@ -189,64 +239,239 @@ int osc_SetTriggerSource(uint32_t source)
             source = RP_TRIG_SRC_CHB_NE;
         }
     }
-
-    uint32_t currentValue = 0;
-    cmn_Debug("cmn_SetValue(&osc_reg->trig_source) mask 0xF", source);
-    return cmn_SetValue(&osc_reg->trig_source, source, TRIG_SRC_MASK, &currentValue);
-}
-
-int osc_GetTriggerSource(uint32_t* source)
-{
-    return cmn_GetValue(&osc_reg->trig_source, source, TRIG_SRC_MASK);
-}
-
-int osc_SetUnlockTrigger()
-{
-    // Need disable trigger with unlock
-    cmn_Debug("[osc_SetUnlockTrigger] osc_reg->trigger_lock_ctr = ", 0x1);
-    osc_reg->trigger_lock_ctr = 1;
-    return RP_OK;
-    // return cmn_SetBits(&osc_reg->trig_lock_sts, 0x10, TRIG_SRC_MASK | TRIG_UNLOCK_MASK);
-}
-
-int osc_GetUnlockTrigger(bool *state){
-    return cmn_AreBitsSet(osc_reg->trig_source, 0x10 , TRIG_UNLOCK_MASK, state);
-}
-
-
-int osc_WriteDataIntoMemory(bool enable)
-{
-    if (enable) {
-        cmn_Debug("cmn_SetBits(&osc_reg->conf) mask 0x1", 0x1);
-        return cmn_SetBits(&osc_reg->conf, 0x1, START_DATA_WRITE_MASK);
-    }
-    else {
-        cmn_Debug("cmn_UnsetBits(&osc_reg->conf) mask 0x1", 0x1);
-        return cmn_UnsetBits(&osc_reg->conf, 0x1, START_DATA_WRITE_MASK);
-    }
-}
-
-int osc_ResetWriteStateMachine()
-{
-    cmn_Debug("cmn_SetBits(&osc_reg->conf) mask 0x2", 0x2);
-    return cmn_SetBits(&osc_reg->conf, (0x1 << 1), RST_WR_ST_MCH_MASK);
-}
-
-int osc_SetArmKeep(bool enable)
-{
-    if (enable) {
-        cmn_Debug("cmn_SetBits(&osc_reg->conf) mask 0x8", 0x8);
-        return cmn_SetBits(&osc_reg->conf, 0x8, ARM_KEEP_MASK);
-    }
-    else
+    switch (channel)
     {
-        cmn_Debug("cmn_UnsetBits(&osc_reg->conf) mask 0x8", 0x8);
-        return cmn_UnsetBits(&osc_reg->conf, 0x8, ARM_KEEP_MASK);
+        case RP_CH_1:
+            cmn_Debug("[Write] osc_reg->trig_source.trig_source_ch0 <- 0x%X", source);
+            osc_reg->trig_source.trig_source_ch0 = source;
+            return RP_OK;
+        case RP_CH_2:
+            cmn_Debug("[Write] osc_reg->trig_source.trig_source_ch1 <- 0x%X", source);
+            osc_reg->trig_source.trig_source_ch1 = source;
+            return RP_OK;
+        case RP_CH_3:
+            if (osc_reg_4ch){
+                cmn_Debug("[Write] osc_reg_4ch->trig_source.trig_source_ch0 <- 0x%X", source);
+                osc_reg_4ch->trig_source.trig_source_ch0 = source;
+            }else{
+                ERROR("Registers for channels 3 and 4 are not initialized")
+            }
+            return RP_OK;
+        case RP_CH_4:
+            if (osc_reg_4ch){
+                cmn_Debug("[Write] osc_reg_4ch->trig_source.trig_source_ch1 <- 0x%X", source);
+                osc_reg_4ch->trig_source.trig_source_ch1 = source;
+            }else{
+                ERROR("Registers for channels 3 and 4 are not initialized")
+            }
+            return RP_OK;
+        default:
+            ERROR("Wrong channel %d",channel)
+            break;
     }
+    return RP_EOOR;
 }
 
-int osc_GetArmKeep(bool *state){
-    return cmn_AreBitsSet(osc_reg->conf, 0x8 , ARM_KEEP_MASK, state);
+int osc_GetTriggerSource(rp_channel_t channel, uint32_t* source)
+{
+    switch (channel)
+    {
+        case RP_CH_1:
+            *source = osc_reg->trig_source.trig_source_ch0;
+            return RP_OK;
+        case RP_CH_2:
+            *source = osc_reg->trig_source.trig_source_ch1;
+            return RP_OK;
+        case RP_CH_3:
+            if (osc_reg_4ch){
+                *source = osc_reg_4ch->trig_source.trig_source_ch0;
+                return RP_OK;
+            }else{
+                ERROR("Registers for channels 3 and 4 are not initialized")
+            }
+            break;
+        case RP_CH_4:
+            if (osc_reg_4ch){
+                *source = osc_reg_4ch->trig_source.trig_source_ch1;
+                return RP_OK;
+            }else{
+                ERROR("Registers for channels 3 and 4 are not initialized")
+            }
+            break;
+        default:
+            ERROR("Wrong channel %d",channel)
+            break;
+    }
+    return RP_EOOR;
+}
+
+int osc_SetSplitTriggerMode(bool enable)
+{
+    config_u_t config;
+    config.reg_full = osc_reg->config;
+    config.reg.config_ch[0].enable_split_trigger = enable ? 0x1 : 0;
+    osc_reg->config = config.reg_full;
+    cmn_Debug("[Write] osc_reg->config <- 0x%X",config.reg_full);
+    return RP_OK;
+}
+
+int osc_GetSplitTriggerMode(bool* enable)
+{
+    config_u_t config;
+    config.reg_full = osc_reg->config;
+    *enable = config.reg.config_ch[0].enable_split_trigger;
+    cmn_Debug("[Read] osc_reg->config -> 0x%X",config.reg_full);
+    return RP_OK;
+}
+
+
+
+int osc_SetUnlockTrigger(rp_channel_t channel)
+{
+    switch (channel)
+    {
+        case RP_CH_1:
+            cmn_Debug("[Write] osc_reg->trigger_lock_ctr <- 0x%X", 0x1);
+            osc_reg->trigger_lock_ctr = 1;
+            return RP_OK;
+        case RP_CH_2:
+            cmn_Debug("[Write] osc_reg->trigger_lock_ctr_ch2 <- 0x%X", 0x1);
+            osc_reg->trigger_lock_ctr_ch2 = 1;
+            return RP_OK;
+        case RP_CH_3:
+            if (osc_reg_4ch){
+                cmn_Debug("[Write] osc_reg_4ch->trigger_lock_ctr <- 0x%X", 0x1);
+                osc_reg_4ch->trigger_lock_ctr = 1;
+            }else{
+                ERROR("Registers for channels 3 and 4 are not initialized")
+            }
+            return RP_OK;
+        case RP_CH_4:
+            if (osc_reg_4ch){
+                cmn_Debug("[Write] osc_reg_4ch->trigger_lock_ctr_ch2 <- 0x%X", 0x1);
+                osc_reg_4ch->trigger_lock_ctr_ch2 = 1;
+            }else{
+                ERROR("Registers for channels 3 and 4 are not initialized")
+            }
+            return RP_OK;
+        default:
+            ERROR("Wrong channel %d",channel)
+            break;
+    }
+    return RP_EOOR;
+}
+
+int osc_GetUnlockTrigger(rp_channel_t channel, bool *state){
+    switch (channel)
+    {
+        case RP_CH_1:
+            *state = osc_reg->trig_source.trig_lock_ch0;
+            return RP_OK;
+        case RP_CH_2:
+            *state = osc_reg->trig_source.trig_lock_ch1;
+            return RP_OK;
+        case RP_CH_3:
+            if (osc_reg_4ch){
+                *state = osc_reg_4ch->trig_source.trig_lock_ch0;
+            }else{
+                ERROR("Registers for channels 3 and 4 are not initialized")
+            }
+            return RP_OK;
+        case RP_CH_4:
+            if (osc_reg_4ch){
+                *state = osc_reg_4ch->trig_source.trig_lock_ch1;
+            }else{
+                ERROR("Registers for channels 3 and 4 are not initialized")
+            }
+            return RP_OK;
+        default:
+            ERROR("Wrong channel %d",channel)
+            break;
+    }
+    return RP_EOOR;
+}
+
+
+int osc_WriteDataIntoMemory(rp_channel_t channel, bool enable)
+{
+    config_u_t config;
+    switch (channel)
+    {
+        case RP_CH_1:
+        case RP_CH_2:
+        case RP_CH_3:
+        case RP_CH_4:
+            config.reg_full = osc_reg->config;
+            config.reg.config_ch[channel].start_write = enable ? 0x1 : 0;
+            osc_reg->config = config.reg_full;
+            cmn_Debug("[Write] osc_reg->config <- 0x%X",config.reg_full);
+            return RP_OK;
+        default:
+            ERROR("Wrong channel %d",channel)
+            break;
+    }
+    return RP_EOOR;
+}
+
+int osc_ResetWriteStateMachine(rp_channel_t channel)
+{
+    config_u_t config;
+    switch (channel)
+    {
+        case RP_CH_1:
+        case RP_CH_2:
+        case RP_CH_3:
+        case RP_CH_4:
+            config.reg_full = osc_reg->config;
+            config.reg.config_ch[channel].reset_state_machine = 0x1;
+            osc_reg->config = config.reg_full;
+            cmn_Debug("[Write] osc_reg->config <- 0x%X",config.reg_full);
+            return RP_OK;
+        default:
+            ERROR("Wrong channel %d",channel)
+            break;
+    }
+    return RP_EOOR;
+}
+
+int osc_SetArmKeep(rp_channel_t channel, bool enable)
+{
+    config_u_t config;
+    switch (channel)
+    {
+        case RP_CH_1:
+        case RP_CH_2:
+        case RP_CH_3:
+        case RP_CH_4:
+            config.reg_full = osc_reg->config;
+            config.reg.config_ch[channel].arm_keep = enable ? 0x1 : 0;
+            osc_reg->config = config.reg_full;
+            cmn_Debug("[Write] osc_reg->config <- 0x%X",config.reg_full);
+            return RP_OK;
+        default:
+            ERROR("Wrong channel %d",channel)
+            break;
+    }
+    return RP_EOOR;
+}
+
+int osc_GetArmKeep(rp_channel_t channel, bool *state){
+    config_u_t config;
+    switch (channel)
+    {
+        case RP_CH_1:
+        case RP_CH_2:
+        case RP_CH_3:
+        case RP_CH_4:
+            config.reg_full = osc_reg->config;
+            *state = config.reg.config_ch[channel].arm_keep;
+            cmn_Debug("[Read] osc_reg->config -> 0x%X",config.reg_full);
+            return RP_OK;
+        default:
+            ERROR("Wrong channel %d",channel)
+            break;
+    }
+    return RP_EOOR;
 }
 
 int osc_axi_GetBufferFillStateChA(bool *state)
@@ -273,34 +498,140 @@ int osc_axi_GetBufferFillStateChD(bool *state)
     return cmn_AreBitsSet(osc_reg_4ch->axi_state, AXI_CHB_FILL_STATE , AXI_CHB_FILL_STATE, state);
 }
 
-int osc_GetBufferFillState(bool *state){
-    return cmn_AreBitsSet(osc_reg->conf, 0x10 , FILL_STATE_MASK, state);
+int osc_GetBufferFillState(rp_channel_t channel, bool *state)
+{
+    config_u_t config;
+    switch (channel)
+    {
+        case RP_CH_1:
+        case RP_CH_2:
+        case RP_CH_3:
+        case RP_CH_4:
+            config.reg_full = osc_reg->config;
+            *state = config.reg.config_ch[channel].all_data_written;
+            cmn_Debug("[Read] osc_reg->config -> 0x%X",config.reg_full);
+            return RP_OK;
+        default:
+            ERROR("Wrong channel %d",channel)
+            break;
+    }
+    return RP_EOOR;
 }
 
-int osc_GetTriggerState(bool *received)
+int osc_GetTriggerState(rp_channel_t channel, bool *received)
 {
-    return cmn_AreBitsSet(osc_reg->conf, (0x1 << 2), TRIG_ST_MCH_MASK, received);
+    config_u_t config;
+    switch (channel)
+    {
+        case RP_CH_1:
+        case RP_CH_2:
+        case RP_CH_3:
+        case RP_CH_4:
+            config.reg_full = osc_reg->config;
+            *received = config.reg.config_ch[channel].trigger_status;
+            cmn_Debug("[Read] osc_reg->config -> 0x%X",config.reg_full);
+            return RP_OK;
+        default:
+            ERROR("Wrong channel %d",channel)
+            break;
+    }
+    return RP_EOOR;
 }
 
-int osc_GetPreTriggerCounter(uint32_t *value)
+int osc_GetPreTriggerCounter(rp_channel_t channel, uint32_t *value)
 {
-    return cmn_GetValue(&osc_reg->pre_trigger_counter, value, PRE_TRIGGER_COUNTER);
+    switch (channel)
+    {
+        case RP_CH_1:
+                return cmn_GetValue(&osc_reg->pre_trigger_counter, value, PRE_TRIGGER_COUNTER);
+        case RP_CH_2:
+                return cmn_GetValue(&osc_reg->pre_trigger_counter_ch2, value, PRE_TRIGGER_COUNTER);
+        case RP_CH_3:
+            if (osc_reg_4ch){
+                    return cmn_GetValue(&osc_reg_4ch->pre_trigger_counter, value, PRE_TRIGGER_COUNTER);
+            }else{
+                ERROR("Registers for channels 3 and 4 are not initialized")
+            }
+            break;
+        case RP_CH_4:
+            if (osc_reg_4ch){
+                    return cmn_GetValue(&osc_reg_4ch->pre_trigger_counter_ch2, value, PRE_TRIGGER_COUNTER);
+            }else{
+                ERROR("Registers for channels 3 and 4 are not initialized")
+            }
+            break;
+        default:
+            ERROR("Wrong channel %d",channel)
+            break;
+    }
+    return RP_EOOR;
 }
 
 /**
  * trigger delay
  */
 
-int osc_SetTriggerDelay(uint32_t decimated_data_num)
+int osc_SetTriggerDelay(rp_channel_t channel, uint32_t decimated_data_num)
 {
     uint32_t currentValue = 0;
-    cmn_Debug("cmn_SetValue(&osc_reg->trigger_delay) mask 0xFFFFFFFF", decimated_data_num);
-    return cmn_SetValue(&osc_reg->trigger_delay, decimated_data_num, TRIG_DELAY_MASK, &currentValue);
+    switch (channel)
+    {
+        case RP_CH_1:
+            cmn_Debug("cmn_SetValue(&osc_reg->trigger_delay) mask 0xFFFFFFFF <- 0x%X", decimated_data_num);
+            return cmn_SetValue(&osc_reg->trigger_delay, decimated_data_num, TRIG_DELAY_MASK, &currentValue);
+        case RP_CH_2:
+            cmn_Debug("cmn_SetValue(&osc_reg->trigger_delay_ch2) mask 0xFFFFFFFF <- 0x%X", decimated_data_num);
+            return cmn_SetValue(&osc_reg->trigger_delay_ch2, decimated_data_num, TRIG_DELAY_MASK, &currentValue);
+        case RP_CH_3:
+            if (osc_reg_4ch){
+                cmn_Debug("cmn_SetValue(&osc_reg_4ch->trigger_delay) mask 0xFFFFFFFF <- 0x%X", decimated_data_num);
+                return cmn_SetValue(&osc_reg_4ch->trigger_delay, decimated_data_num, TRIG_DELAY_MASK, &currentValue);
+            }else{
+                ERROR("Registers for channels 3 and 4 are not initialized")
+            }
+            break;
+        case RP_CH_4:
+            if (osc_reg_4ch){
+                cmn_Debug("cmn_SetValue(&osc_reg_4ch->trigger_delay_ch2) mask 0xFFFFFFFF <- 0x%X", decimated_data_num);
+                return cmn_SetValue(&osc_reg_4ch->trigger_delay_ch2, decimated_data_num, TRIG_DELAY_MASK, &currentValue);
+            }else{
+                ERROR("Registers for channels 3 and 4 are not initialized")
+            }
+            break;
+        default:
+            ERROR("Wrong channel %d",channel)
+            break;
+    }
+    return RP_EOOR;
 }
 
-int osc_GetTriggerDelay(uint32_t* decimated_data_num)
+int osc_GetTriggerDelay(rp_channel_t channel, uint32_t* decimated_data_num)
 {
-    return cmn_GetValue(&osc_reg->trigger_delay, decimated_data_num, TRIG_DELAY_MASK);
+    switch (channel)
+    {
+        case RP_CH_1:
+            return cmn_GetValue(&osc_reg->trigger_delay, decimated_data_num, TRIG_DELAY_MASK);
+        case RP_CH_2:
+            return cmn_GetValue(&osc_reg->trigger_delay_ch2, decimated_data_num, TRIG_DELAY_MASK);
+        case RP_CH_3:
+            if (osc_reg_4ch){
+                return cmn_GetValue(&osc_reg_4ch->trigger_delay, decimated_data_num, TRIG_DELAY_MASK);
+            }else{
+                ERROR("Registers for channels 3 and 4 are not initialized")
+            }
+            break;
+        case RP_CH_4:
+            if (osc_reg_4ch){
+                return cmn_GetValue(&osc_reg_4ch->trigger_delay_ch2, decimated_data_num, TRIG_DELAY_MASK);
+            }else{
+                ERROR("Registers for channels 3 and 4 are not initialized")
+            }
+            break;
+        default:
+            ERROR("Wrong channel %d",channel)
+            break;
+    }
+    return RP_EOOR;
 }
 
 /**
@@ -310,7 +641,7 @@ int osc_GetTriggerDelay(uint32_t* decimated_data_num)
 int osc_SetThresholdChA(uint32_t threshold)
 {
     uint32_t currentValue = 0;
-    cmn_Debug("cmn_SetValue(&osc_reg->cha_thr) mask 0x3FFF", threshold);
+    cmn_Debug("cmn_SetValue(&osc_reg->cha_thr) mask 0x3FFF <- 0x%X", threshold);
     return cmn_SetValue(&osc_reg->cha_thr, threshold, THRESHOLD_MASK, &currentValue);
 }
 
@@ -322,7 +653,7 @@ int osc_GetThresholdChA(uint32_t* threshold)
 int osc_SetThresholdChB(uint32_t threshold)
 {
     uint32_t currentValue = 0;
-    cmn_Debug("cmn_SetValue(&osc_reg->chb_thr) mask 0x3FFF", threshold);
+    cmn_Debug("cmn_SetValue(&osc_reg->chb_thr) mask 0x3FFF <- 0x%X", threshold);
     return cmn_SetValue(&osc_reg->chb_thr, threshold, THRESHOLD_MASK, &currentValue);
 }
 
@@ -336,7 +667,7 @@ int osc_SetThresholdChC(uint32_t threshold)
     if (!osc_reg_4ch)
         return RP_NOTS;
     uint32_t currentValue = 0;
-    cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_thr) mask 0x3FFF", threshold);
+    cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_thr) mask 0x3FFF <- 0x%X", threshold);
     return cmn_SetValue(&osc_reg_4ch->cha_thr, threshold, THRESHOLD_MASK, &currentValue);
 }
 
@@ -352,7 +683,7 @@ int osc_SetThresholdChD(uint32_t threshold)
     if (!osc_reg_4ch)
         return RP_NOTS;
     uint32_t currentValue = 0;
-    cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_thr) mask 0x3FFF", threshold);
+    cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_thr) mask 0x3FFF <- 0x%X", threshold);
     return cmn_SetValue(&osc_reg_4ch->chb_thr, threshold, THRESHOLD_MASK, &currentValue);
 }
 
@@ -369,7 +700,7 @@ int osc_GetThresholdChD(uint32_t* threshold)
 int osc_SetHysteresisChA(uint32_t hysteresis)
 {
     uint32_t currentValue = 0;
-    cmn_Debug("cmn_SetValue(&osc_reg->cha_hystersis) mask 0x3FFF", hysteresis);
+    cmn_Debug("cmn_SetValue(&osc_reg->cha_hystersis) mask 0x3FFF <- 0x%X", hysteresis);
     return cmn_SetValue(&osc_reg->cha_hystersis, hysteresis, HYSTERESIS_MASK, &currentValue);
 }
 
@@ -394,7 +725,7 @@ int osc_SetHysteresisChC(uint32_t hysteresis)
     if (!osc_reg_4ch)
         return RP_NOTS;
     uint32_t currentValue = 0;
-    cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_hystersis) mask 0x3FFF", hysteresis);
+    cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_hystersis) mask 0x3FFF <- 0x%X", hysteresis);
     return cmn_SetValue(&osc_reg_4ch->cha_hystersis, hysteresis, HYSTERESIS_MASK, &currentValue);
 }
 
@@ -410,7 +741,7 @@ int osc_SetHysteresisChD(uint32_t hysteresis)
     if (!osc_reg_4ch)
         return RP_NOTS;
     uint32_t currentValue = 0;
-    cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_hystersis) mask 0x3FFF", hysteresis);
+    cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_hystersis) mask 0x3FFF <- 0x%X", hysteresis);
     return cmn_SetValue(&osc_reg_4ch->chb_hystersis, hysteresis, HYSTERESIS_MASK, &currentValue);
 }
 
@@ -431,13 +762,13 @@ int osc_SetEqFiltersChA(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, ui
     uint32_t currentValueKK = 0;
     uint32_t currentValuePP = 0;
 
-    cmn_Debug("cmn_SetValue(&osc_reg->cha_filt_aa) mask 0x3FFF", coef_aa);
+    cmn_Debug("cmn_SetValue(&osc_reg->cha_filt_aa) mask 0x3FFF <- 0x%X", coef_aa);
     cmn_SetValue(&osc_reg->cha_filt_aa, coef_aa, EQ_FILTER_AA,&currentValueAA);
-    cmn_Debug("cmn_SetValue(&osc_reg->cha_filt_bb) mask 0x1FFFFFF", coef_bb);
+    cmn_Debug("cmn_SetValue(&osc_reg->cha_filt_bb) mask 0x1FFFFFF <- 0x%X", coef_bb);
     cmn_SetValue(&osc_reg->cha_filt_bb, coef_bb, EQ_FILTER,&currentValueBB);
-    cmn_Debug("cmn_SetValue(&osc_reg->cha_filt_kk) mask 0x1FFFFFF", coef_kk);
+    cmn_Debug("cmn_SetValue(&osc_reg->cha_filt_kk) mask 0x1FFFFFF <- 0x%X", coef_kk);
     cmn_SetValue(&osc_reg->cha_filt_kk, coef_kk, EQ_FILTER,&currentValueKK);
-    cmn_Debug("cmn_SetValue(&osc_reg->cha_filt_pp) mask 0x1FFFFFF", coef_pp);
+    cmn_Debug("cmn_SetValue(&osc_reg->cha_filt_pp) mask 0x1FFFFFF <- 0x%X", coef_pp);
     cmn_SetValue(&osc_reg->cha_filt_pp, coef_pp, EQ_FILTER,&currentValuePP);
     return RP_OK;
 }
@@ -457,13 +788,13 @@ int osc_SetEqFiltersChB(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, ui
     uint32_t currentValueBB = 0;
     uint32_t currentValueKK = 0;
     uint32_t currentValuePP = 0;
-    cmn_Debug("cmn_SetValue(&osc_reg->chb_filt_aa) mask 0x3FFF", coef_aa);
+    cmn_Debug("cmn_SetValue(&osc_reg->chb_filt_aa) mask 0x3FFF <- 0x%X", coef_aa);
     cmn_SetValue(&osc_reg->chb_filt_aa, coef_aa, EQ_FILTER_AA,&currentValueAA);
-    cmn_Debug("cmn_SetValue(&osc_reg->chb_filt_bb) mask 0x1FFFFFF", coef_bb);
+    cmn_Debug("cmn_SetValue(&osc_reg->chb_filt_bb) mask 0x1FFFFFF <- 0x%X", coef_bb);
     cmn_SetValue(&osc_reg->chb_filt_bb, coef_bb, EQ_FILTER,&currentValueBB);
-    cmn_Debug("cmn_SetValue(&osc_reg->chb_filt_kk) mask 0x1FFFFFF", coef_kk);
+    cmn_Debug("cmn_SetValue(&osc_reg->chb_filt_kk) mask 0x1FFFFFF <- 0x%X", coef_kk);
     cmn_SetValue(&osc_reg->chb_filt_kk, coef_kk, EQ_FILTER,&currentValueKK);
-    cmn_Debug("cmn_SetValue(&osc_reg->chb_filt_pp) mask 0x1FFFFFF", coef_pp);
+    cmn_Debug("cmn_SetValue(&osc_reg->chb_filt_pp) mask 0x1FFFFFF <- 0x%X", coef_pp);
     cmn_SetValue(&osc_reg->chb_filt_pp, coef_pp, EQ_FILTER,&currentValuePP);
     return RP_OK;
 }
@@ -488,13 +819,13 @@ int osc_SetEqFiltersChC(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, ui
     uint32_t currentValueKK = 0;
     uint32_t currentValuePP = 0;
 
-    cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_filt_aa) mask 0x3FFF", coef_aa);
+    cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_filt_aa) mask 0x3FFF <- 0x%X", coef_aa);
     cmn_SetValue(&osc_reg_4ch->cha_filt_aa, coef_aa, EQ_FILTER_AA,&currentValueAA);
-    cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_filt_bb) mask 0x1FFFFFF", coef_bb);
+    cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_filt_bb) mask 0x1FFFFFF <- 0x%X", coef_bb);
     cmn_SetValue(&osc_reg_4ch->cha_filt_bb, coef_bb, EQ_FILTER,&currentValueBB);
-    cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_filt_kk) mask 0x1FFFFFF", coef_kk);
+    cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_filt_kk) mask 0x1FFFFFF <- 0x%X", coef_kk);
     cmn_SetValue(&osc_reg_4ch->cha_filt_kk, coef_kk, EQ_FILTER,&currentValueKK);
-    cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_filt_pp) mask 0x1FFFFFF", coef_pp);
+    cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_filt_pp) mask 0x1FFFFFF <- 0x%X", coef_pp);
     cmn_SetValue(&osc_reg_4ch->cha_filt_pp, coef_pp, EQ_FILTER,&currentValuePP);
     return RP_OK;
 }
@@ -520,13 +851,13 @@ int osc_SetEqFiltersChD(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, ui
     uint32_t currentValueBB = 0;
     uint32_t currentValueKK = 0;
     uint32_t currentValuePP = 0;
-    cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_filt_aa) mask 0x3FFF", coef_aa);
+    cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_filt_aa) mask 0x3FFF <- 0x%X", coef_aa);
     cmn_SetValue(&osc_reg_4ch->chb_filt_aa, coef_aa, EQ_FILTER_AA,&currentValueAA);
-    cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_filt_bb) mask 0x1FFFFFF", coef_bb);
+    cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_filt_bb) mask 0x1FFFFFF <- 0x%X", coef_bb);
     cmn_SetValue(&osc_reg_4ch->chb_filt_bb, coef_bb, EQ_FILTER,&currentValueBB);
-    cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_filt_kk) mask 0x1FFFFFF", coef_kk);
+    cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_filt_kk) mask 0x1FFFFFF <- 0x%X", coef_kk);
     cmn_SetValue(&osc_reg_4ch->chb_filt_kk, coef_kk, EQ_FILTER,&currentValueKK);
-    cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_filt_pp) mask 0x1FFFFFF", coef_pp);
+    cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_filt_pp) mask 0x1FFFFFF <- 0x%X", coef_pp);
     cmn_SetValue(&osc_reg_4ch->chb_filt_pp, coef_pp, EQ_FILTER,&currentValuePP);
     return RP_OK;
 }
@@ -546,29 +877,76 @@ int osc_GetEqFiltersChD(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk,
 /**
  * Write pointer
  */
-int osc_GetWritePointer(uint32_t* pos)
+int osc_GetWritePointer(rp_channel_t channel, uint32_t* pos)
 {
-    return cmn_GetValue(&osc_reg->wr_ptr_cur, pos, WRITE_POINTER_MASK);
+    switch (channel)
+    {
+        case RP_CH_1:
+            return cmn_GetValue(&osc_reg->wr_ptr_cur, pos, WRITE_POINTER_MASK);
+        case RP_CH_2:
+            return cmn_GetValue(&osc_reg->wr_ptr_cur_ch2, pos, WRITE_POINTER_MASK);
+        case RP_CH_3:
+            if (osc_reg_4ch){
+                return cmn_GetValue(&osc_reg_4ch->wr_ptr_cur, pos, WRITE_POINTER_MASK);
+            }else{
+                ERROR("Registers for channels 3 and 4 are not initialized")
+            }
+            break;
+        case RP_CH_4:
+            if (osc_reg_4ch){
+                return cmn_GetValue(&osc_reg_4ch->wr_ptr_cur_ch2, pos, WRITE_POINTER_MASK);
+            }else{
+                ERROR("Registers for channels 3 and 4 are not initialized")
+            }
+            break;
+        default:
+            ERROR("Wrong channel %d",channel)
+            break;
+    }
+    return RP_EOOR;
 }
 
-int osc_GetWritePointerAtTrig(uint32_t* pos)
+int osc_GetWritePointerAtTrig(rp_channel_t channel, uint32_t* pos)
 {
     uint32_t dec = 0;
-    osc_GetDecimation(&dec);
-    cmn_GetValue(&osc_reg->wr_ptr_trigger, pos, WRITE_POINTER_MASK);
-    return RP_OK;
+    osc_GetDecimation(channel,&dec);
+    switch (channel)
+    {
+        case RP_CH_1:
+            return cmn_GetValue(&osc_reg->wr_ptr_trigger, pos, WRITE_POINTER_MASK);
+        case RP_CH_2:
+            return cmn_GetValue(&osc_reg->wr_ptr_trigger_ch2, pos, WRITE_POINTER_MASK);
+        case RP_CH_3:
+            if (osc_reg_4ch){
+                return cmn_GetValue(&osc_reg_4ch->wr_ptr_trigger, pos, WRITE_POINTER_MASK);
+            }else{
+                ERROR("Registers for channels 3 and 4 are not initialized")
+            }
+            break;
+        case RP_CH_4:
+            if (osc_reg_4ch){
+                return cmn_GetValue(&osc_reg_4ch->wr_ptr_trigger_ch2, pos, WRITE_POINTER_MASK);
+            }else{
+                ERROR("Registers for channels 3 and 4 are not initialized")
+            }
+            break;
+        default:
+            ERROR("Wrong channel %d",channel)
+            break;
+    }
+    return RP_EOOR;
 }
 
 int osc_SetExtTriggerDebouncer(uint32_t value){
     if (DEBAUNCER_MASK < value) {
-        cmn_Debug("[osc_SetExtTriggerDebouncer] Error: osc_reg.ext_trig_dbc_t <- ",value);
+        ERROR("Error value 0x%X very big",value)
         return RP_EIPV;
     }
-    cmn_Debug("[osc_SetExtTriggerDebouncer] osc_reg.ext_trig_dbc_t <- ",value);
+    cmn_Debug("[osc_SetExtTriggerDebouncer] osc_reg.ext_trig_dbc_t <- 0x%X",value);
     osc_reg->ext_trig_dbc_t = value;
 
     if (osc_reg_4ch){
-        cmn_Debug("[osc_SetExtTriggerDebouncer] osc_reg_4ch.ext_trig_dbc_t <- ",value);
+        cmn_Debug("[osc_SetExtTriggerDebouncer] osc_reg_4ch.ext_trig_dbc_t <- 0x%X",value);
         osc_reg_4ch->ext_trig_dbc_t = value;
     }
     return RP_OK;
@@ -793,17 +1171,17 @@ int osc_axi_EnableChA(bool enable)
         {
             return ret;
         }
-        cmn_Debug("cmn_SetValue(&osc_reg->cha_axi_enable) mask 0x1", 1);
+        cmn_Debug("cmn_SetValue(&osc_reg->cha_axi_enable) mask 0x1 <- 0x%X", 1);
         return cmn_SetValue(&osc_reg->cha_axi_enable, 1, AXI_ENABLE_MASK, &tmp);
     }
     ret = osc_axi_unmap(ch_addr_high - ch_addr_low, (void**)&osc_axi_cha);
     if (ret != RP_OK)
     {
-        cmn_Debug("cmn_SetValue(&osc_reg->cha_axi_enable) mask 0x1", 0);
+        cmn_Debug("cmn_SetValue(&osc_reg->cha_axi_enable) mask 0x1 <- 0x%X", 0);
         cmn_SetValue(&osc_reg->cha_axi_enable, 0, AXI_ENABLE_MASK, &tmp);
         return ret;
     }
-    cmn_Debug("cmn_SetValue(&osc_reg->cha_axi_enable) mask 0x1", 0);
+    cmn_Debug("cmn_SetValue(&osc_reg->cha_axi_enable) mask 0x1 <- 0x%X", 0);
     return cmn_SetValue(&osc_reg->cha_axi_enable, 0, AXI_ENABLE_MASK, &tmp);
 }
 
@@ -845,17 +1223,17 @@ int osc_axi_EnableChB(bool enable)
         {
             return ret;
         }
-        cmn_Debug("cmn_SetValue(&osc_reg->chb_axi_enable) mask 0x1", 1);
+        cmn_Debug("cmn_SetValue(&osc_reg->chb_axi_enable) mask 0x1 <- 0x%X", 1);
         return cmn_SetValue(&osc_reg->chb_axi_enable, 1, AXI_ENABLE_MASK, &tmp);
     }
     ret = osc_axi_unmap(ch_addr_high - ch_addr_low, (void**)&osc_axi_chb);
     if (ret != RP_OK)
     {
-        cmn_Debug("cmn_SetValue(&osc_reg->chb_axi_enable) mask 0x1", 0);
+        cmn_Debug("cmn_SetValue(&osc_reg->chb_axi_enable) mask 0x1 <- 0x%X", 0);
         cmn_SetValue(&osc_reg->chb_axi_enable, 0, AXI_ENABLE_MASK, &tmp);
         return ret;
     }
-    cmn_Debug("cmn_SetValue(&osc_reg->chb_axi_enable) mask 0x1", 0);
+    cmn_Debug("cmn_SetValue(&osc_reg->chb_axi_enable) mask 0x1 <- 0x%X", 0);
     return cmn_SetValue(&osc_reg->chb_axi_enable, 0, AXI_ENABLE_MASK, &tmp);
 }
 
@@ -899,17 +1277,17 @@ int osc_axi_EnableChC(bool enable)
         {
             return ret;
         }
-        cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_axi_enable) mask 0x1", 1);
+        cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_axi_enable) mask 0x1 <- 0x%X", 1);
         return cmn_SetValue(&osc_reg_4ch->cha_axi_enable, 1, AXI_ENABLE_MASK, &tmp);
     }
     ret = osc_axi_unmap(ch_addr_high - ch_addr_low, (void**)&osc_axi_chc);
     if (ret != RP_OK)
     {
-        cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_axi_enable) mask 0x1", 0);
+        cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_axi_enable) mask 0x1 <- 0x%X", 0);
         cmn_SetValue(&osc_reg_4ch->cha_axi_enable, 0, AXI_ENABLE_MASK, &tmp);
         return ret;
     }
-    cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_axi_enable) mask 0x1", 0);
+    cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_axi_enable) mask 0x1 <- 0x%X", 0);
     return cmn_SetValue(&osc_reg_4ch->cha_axi_enable, 0, AXI_ENABLE_MASK, &tmp);
 }
 
@@ -953,31 +1331,31 @@ int osc_axi_EnableChD(bool enable)
         {
             return ret;
         }
-        cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_axi_enable) mask 0x1", 1);
+        cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_axi_enable) mask 0x1 <- 0x%X", 1);
         return cmn_SetValue(&osc_reg_4ch->chb_axi_enable, 1, AXI_ENABLE_MASK, &tmp);
     }
     ret = osc_axi_unmap(ch_addr_high - ch_addr_low, (void**)&osc_axi_chd);
     if (ret != RP_OK)
     {
-        cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_axi_enable) mask 0x1", 0);
+        cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_axi_enable) mask 0x1 <- 0x%X", 0);
         cmn_SetValue(&osc_reg_4ch->chb_axi_enable, 0, AXI_ENABLE_MASK, &tmp);
         return ret;
     }
-    cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_axi_enable) mask 0x1", 0);
+    cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_axi_enable) mask 0x1 <- 0x%X", 0);
     return cmn_SetValue(&osc_reg_4ch->chb_axi_enable, 0, AXI_ENABLE_MASK, &tmp);
 }
 
 int osc_axi_SetAddressStartChA(uint32_t address)
 {
     uint32_t tmp;
-    cmn_Debug("cmn_SetValue(&osc_reg->cha_axi_addr_low) mask 0xFFFFFFFF", address);
+    cmn_Debug("cmn_SetValue(&osc_reg->cha_axi_addr_low) mask 0xFFFFFFFF <- 0x%X", address);
     return cmn_SetValue(&osc_reg->cha_axi_addr_low, address, FULL_MASK, &tmp);
 }
 
 int osc_axi_SetAddressStartChB(uint32_t address)
 {
     uint32_t tmp;
-    cmn_Debug("cmn_SetValue(&osc_reg->chb_axi_addr_low) mask 0xFFFFFFFF", address);
+    cmn_Debug("cmn_SetValue(&osc_reg->chb_axi_addr_low) mask 0xFFFFFFFF <- 0x%X", address);
     return cmn_SetValue(&osc_reg->chb_axi_addr_low, address, FULL_MASK, &tmp);
 }
 
@@ -986,7 +1364,7 @@ int osc_axi_SetAddressStartChC(uint32_t address)
     if (!osc_reg_4ch)
         return RP_NOTS;
     uint32_t tmp;
-    cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_axi_addr_low) mask 0xFFFFFFFF", address);
+    cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_axi_addr_low) mask 0xFFFFFFFF <- 0x%X", address);
     return cmn_SetValue(&osc_reg_4ch->cha_axi_addr_low, address, FULL_MASK, &tmp);
 }
 
@@ -995,7 +1373,7 @@ int osc_axi_SetAddressStartChD(uint32_t address)
     if (!osc_reg_4ch)
         return RP_NOTS;
     uint32_t tmp;
-    cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_axi_addr_low) mask 0xFFFFFFFF", address);
+    cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_axi_addr_low) mask 0xFFFFFFFF <- 0x%X", address);
     return cmn_SetValue(&osc_reg_4ch->chb_axi_addr_low, address, FULL_MASK, &tmp);
 }
 
@@ -1004,7 +1382,7 @@ int osc_axi_SetAddressEndChA(uint32_t address)
 {
     address -= RESERV_DMA_BYTES;
     uint32_t tmp;
-    cmn_Debug("cmn_SetValue(&osc_reg->cha_axi_addr_high) mask 0xFFFFFFFF", address);
+    cmn_Debug("cmn_SetValue(&osc_reg->cha_axi_addr_high) mask 0xFFFFFFFF <- 0x%X", address);
     return cmn_SetValue(&osc_reg->cha_axi_addr_high, address, FULL_MASK, &tmp);
 }
 
@@ -1012,7 +1390,7 @@ int osc_axi_SetAddressEndChB(uint32_t address)
 {
     address -= RESERV_DMA_BYTES;
     uint32_t tmp;
-    cmn_Debug("cmn_SetValue(&osc_reg->chb_axi_addr_high) mask 0xFFFFFFFF", address);
+    cmn_Debug("cmn_SetValue(&osc_reg->chb_axi_addr_high) mask 0xFFFFFFFF <- 0x%X", address);
     return cmn_SetValue(&osc_reg->chb_axi_addr_high, address, FULL_MASK, &tmp);
 }
 
@@ -1022,7 +1400,7 @@ int osc_axi_SetAddressEndChC(uint32_t address)
     if (!osc_reg_4ch)
         return RP_NOTS;
     uint32_t tmp;
-    cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_axi_addr_high) mask 0xFFFFFFFF", address);
+    cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_axi_addr_high) mask 0xFFFFFFFF <- 0x%X", address);
     return cmn_SetValue(&osc_reg_4ch->cha_axi_addr_high, address, FULL_MASK, &tmp);
 }
 
@@ -1032,7 +1410,7 @@ int osc_axi_SetAddressEndChD(uint32_t address)
     if (!osc_reg_4ch)
         return RP_NOTS;
     uint32_t tmp;
-    cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_axi_addr_high) mask 0xFFFFFFFF", address);
+    cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_axi_addr_high) mask 0xFFFFFFFF <- 0x%X", address);
     return cmn_SetValue(&osc_reg_4ch->chb_axi_addr_high, address, FULL_MASK, &tmp);
 }
 
@@ -1168,14 +1546,14 @@ int osc_axi_GetWritePointerAtTrigChD(uint32_t* pos)
 int osc_axi_SetTriggerDelayChA(uint32_t decimated_data_num)
 {
     uint32_t currentValue = 0;
-    cmn_Debug("cmn_SetValue(&osc_reg->cha_axi_delay) mask 0xFFFFFFFF", decimated_data_num);
+    cmn_Debug("cmn_SetValue(&osc_reg->cha_axi_delay) mask 0xFFFFFFFF <- 0x%X", decimated_data_num);
     return cmn_SetValue(&osc_reg->cha_axi_delay, decimated_data_num, TRIG_DELAY_MASK, &currentValue);
 }
 
 int osc_axi_SetTriggerDelayChB(uint32_t decimated_data_num)
 {
     uint32_t currentValue = 0;
-    cmn_Debug("cmn_SetValue(&osc_reg->chb_axi_delay) mask 0xFFFFFFFF", decimated_data_num);
+    cmn_Debug("cmn_SetValue(&osc_reg->chb_axi_delay) mask 0xFFFFFFFF <- 0x%X", decimated_data_num);
     return cmn_SetValue(&osc_reg->chb_axi_delay, decimated_data_num, TRIG_DELAY_MASK, &currentValue);
 }
 
@@ -1184,7 +1562,7 @@ int osc_axi_SetTriggerDelayChC(uint32_t decimated_data_num)
     if (!osc_reg_4ch)
         return RP_NOTS;
     uint32_t currentValue = 0;
-    cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_axi_delay) mask 0xFFFFFFFF", decimated_data_num);
+    cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_axi_delay) mask 0xFFFFFFFF <- 0x%X", decimated_data_num);
     return cmn_SetValue(&osc_reg_4ch->cha_axi_delay, decimated_data_num, TRIG_DELAY_MASK, &currentValue);
 }
 
@@ -1193,7 +1571,7 @@ int osc_axi_SetTriggerDelayChD(uint32_t decimated_data_num)
     if (!osc_reg_4ch)
         return RP_NOTS;
     uint32_t currentValue = 0;
-    cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_axi_delay) mask 0xFFFFFFFF", decimated_data_num);
+    cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_axi_delay) mask 0xFFFFFFFF <- 0x%X", decimated_data_num);
     return cmn_SetValue(&osc_reg_4ch->chb_axi_delay, decimated_data_num, TRIG_DELAY_MASK, &currentValue);
 }
 

@@ -944,6 +944,142 @@ print(arr_f)
 
 print("End testing numpy")
 
+
+print("Testing split triiger functions")
+
+
+print("rp.rp_AcqSetSplitTrigger(True)")
+res = rp.rp_AcqSetSplitTrigger(True)
+print(res)
+
+print("rp.rp_AcqGetSplitTrigger()")
+res = rp.rp_AcqGetSplitTrigger()
+print(res)
+
+print("rp.rp_AcqSetSplitTriggerPass(False)")
+res = rp.rp_AcqSetSplitTriggerPass(False)
+print(res)
+
+print("rp.rp_AcqGetSplitTriggerPass()")
+res = rp.rp_AcqGetSplitTriggerPass()
+print(res)
+
+print("rp.rp_AcqSetArmKeepCh(rp.RP_CH_1, False)")
+res = rp.rp_AcqSetArmKeepCh(rp.RP_CH_1, False)
+print(res)
+
+print("rp.rp_AcqGetArmKeepCh(rp.RP_CH_1)")
+res = rp.rp_AcqGetArmKeepCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqGetBufferFillStateCh(rp.RP_CH_1)")
+res = rp.rp_AcqGetBufferFillStateCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqSetDecimationCh(rp.RP_CH_1, 1)")
+res = rp.rp_AcqSetDecimationCh(rp.RP_CH_1, 1)
+print(res)
+
+print("rp.rp_AcqGetDecimationCh(rp.RP_CH_1)")
+res = rp.rp_AcqGetDecimationCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqSetDecimationFactorCh(rp.RP_CH_1, 1)")
+res = rp.rp_AcqSetDecimationFactorCh(rp.RP_CH_1, 1)
+print(res)
+
+print("rp.rp_AcqGetDecimationFactorCh(rp.RP_CH_1)")
+res = rp.rp_AcqGetDecimationFactorCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqGetSamplingRateHzCh(rp.RP_CH_1)")
+res = rp.rp_AcqGetSamplingRateHzCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqSetTriggerSrcCh(rp.RP_CH_1, rp.RP_TRIG_SRC_NOW)")
+res = rp.rp_AcqSetTriggerSrcCh(rp.RP_CH_1, rp.RP_TRIG_SRC_NOW)
+print(res)
+
+print("rp.rp_AcqGetTriggerSrcCh(rp.RP_CH_1)")
+res = rp.rp_AcqGetTriggerSrcCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqGetTriggerStateCh(rp.RP_CH_1)")
+res = rp.rp_AcqGetTriggerStateCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqSetTriggerDelayCh(rp.RP_CH_1, 1)")
+res = rp.rp_AcqSetTriggerDelayCh(rp.RP_CH_1, 1)
+print(res)
+
+print("rp.rp_AcqGetTriggerDelayCh(rp.RP_CH_1)")
+res = rp.rp_AcqGetTriggerDelayCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqSetTriggerDelayDirectCh(rp.RP_CH_1, 1)")
+res = rp.rp_AcqSetTriggerDelayDirectCh(rp.RP_CH_1, 1)
+print(res)
+
+print("rp.rp_AcqGetTriggerDelayDirectCh(rp.RP_CH_1)")
+res = rp.rp_AcqGetTriggerDelayDirectCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqSetTriggerDelayNsCh(rp.RP_CH_1, 10000)")
+res = rp.rp_AcqSetTriggerDelayNsCh(rp.RP_CH_1, 10000)
+print(res)
+
+print("rp.rp_AcqGetTriggerDelayNsCh(rp.RP_CH_1)")
+res = rp.rp_AcqGetTriggerDelayNsCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqSetTriggerDelayNsDirectCh(rp.RP_CH_1, 10000)")
+res = rp.rp_AcqSetTriggerDelayNsDirectCh(rp.RP_CH_1, 10000)
+print(res)
+
+print("rp.rp_AcqGetTriggerDelayNsDirectCh(rp.RP_CH_1)")
+res = rp.rp_AcqGetTriggerDelayNsDirectCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqGetPreTriggerCounterCh(rp.RP_CH_1)")
+res = rp.rp_AcqGetPreTriggerCounterCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqGetWritePointerCh(rp.RP_CH_1)")
+res = rp.rp_AcqGetWritePointerCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqGetWritePointerAtTrigCh(rp.RP_CH_1)")
+res = rp.rp_AcqGetWritePointerAtTrigCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqStartCh(rp.RP_CH_1)")
+res = rp.rp_AcqStartCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqStopCh(rp.RP_CH_1)")
+res = rp.rp_AcqStopCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqResetCh(rp.RP_CH_1)")
+res = rp.rp_AcqResetCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqUnlockTriggerCh(rp.RP_CH_1)")
+res = rp.rp_AcqUnlockTriggerCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqGetUnlockTriggerCh(rp.RP_CH_1)")
+res = rp.rp_AcqGetUnlockTriggerCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqAxiSetDecimationFactorCh(rp.RP_CH_1, 1)")
+res = rp.rp_AcqAxiSetDecimationFactorCh(rp.RP_CH_1, 1)
+print(res)
+
+print("rp.rp_AcqAxiGetDecimationFactorCh(rp.RP_CH_1)")
+res = rp.rp_AcqAxiGetDecimationFactorCh(rp.RP_CH_1)
+print(res)
+
 print("rp.rp_Release()")
 res = rp.rp_Release()
 print(res)

@@ -418,6 +418,8 @@ int hp_cmn_Print(profiles_t *p){
 	fprintf(stdout,"FAST ADC External trigger level is signed: %d\n",p->is_ext_trigger_signed);
 	fprintf(stdout,"FAST ADC DMA mode support (v0.94): %d\n",p->is_dma_mode_v0_94);
 
+	fprintf(stdout,"FAST ADC Split trigger mode (v0.94): %d\n",p->is_split_osc_triggers);
+
 	fprintf(stdout,"\nDaisy chain clock sync support: %u\n", p->is_daisy_chain_clock_sync);
 
 	fprintf(stdout,"***********************************************************************\n");
