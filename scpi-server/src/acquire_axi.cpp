@@ -59,7 +59,7 @@ scpi_result_t RP_AcqAxiScpiDataUnitsQ(scpi_t *context){
 }
 
 scpi_result_t RP_AcqAxiTriggerFillQ(scpi_t *context){
-    
+
     rp_channel_t channel;
 
     if (RP_ParseChArgvADC(context, &channel) != RP_OK){
@@ -96,7 +96,34 @@ scpi_result_t RP_AcqAxiDecimation(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_AcqAxiDecimationCh(scpi_t *context) {
+
+    rp_channel_t channel;
+
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    uint32_t value;
+
+    /* Read DECIMATION parameter */
+    if (!SCPI_ParamUInt32(context, &value, true)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+
+    auto result = rp_AcqAxiSetDecimationFactorCh(channel,value);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to set decimation: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_AcqAxiDecimationQ(scpi_t *context) {
+
     uint32_t decimation;
 
     auto result = rp_AcqAxiGetDecimationFactor(&decimation);
@@ -109,6 +136,28 @@ scpi_result_t RP_AcqAxiDecimationQ(scpi_t *context) {
     RP_LOG_INFO("%s",rp_GetError(result))
     return SCPI_RES_OK;
 }
+
+scpi_result_t RP_AcqAxiDecimationChQ(scpi_t *context) {
+
+    rp_channel_t channel;
+
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    uint32_t decimation;
+
+    auto result = rp_AcqAxiGetDecimationFactorCh(channel,&decimation);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to get decimation: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    SCPI_ResultUInt32Base(context, decimation, 10);
+
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
 
 scpi_result_t RP_AcqAxiStartQ(scpi_t *context) {
     uint32_t start,size;
@@ -329,7 +378,7 @@ scpi_result_t RP_AcqAxiSetAddres(scpi_t *context) {
         SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Missing SIZE parameter.");
         return SCPI_RES_ERR;
     }
-    
+
     auto result = rp_AcqAxiSetBufferBytes(channel,start,size);
 
     if(result != RP_OK){

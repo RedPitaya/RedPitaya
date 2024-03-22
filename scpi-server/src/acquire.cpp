@@ -34,6 +34,40 @@ const scpi_choice_def_t scpi_RpAcqTrigRequest[] = {
 };
 
 
+scpi_result_t RP_AcqSplitTrigger(scpi_t * context){
+    bool state_c;
+    /* Parse first, STATE argument */
+    if(!SCPI_ParamBool(context, &state_c, true)){
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+
+    // Now set the decimation
+    auto result = rp_AcqSetSplitTrigger(state_c);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to set split trigger: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqSplitTriggerQ(scpi_t * context){
+
+    bool enabled;
+
+    auto result = rp_AcqGetSplitTrigger(&enabled);
+    if(result != RP_OK){
+        RP_LOG_CRIT("Failed to get split trigger: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultBool(context, enabled);
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+
 scpi_result_t RP_AcqDataFormat(scpi_t *context) {
     const char * param;
     size_t param_len;
@@ -80,6 +114,23 @@ scpi_result_t RP_AcqStart(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_AcqStartCh(scpi_t *context) {
+
+    rp_channel_t channel;
+
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    auto result = rp_AcqStartCh(channel);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to start Red Pitaya acquire: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_AcqStop(scpi_t *context) {
     auto result = rp_AcqStop();
     if (RP_OK != result) {
@@ -90,8 +141,45 @@ scpi_result_t RP_AcqStop(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t rp_AcqStopCh(scpi_t *context) {
+
+    rp_channel_t channel;
+
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    auto result = rp_AcqStopCh(channel);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to stop Red Pitaya acquisition: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_AcqReset(scpi_t *context) {
     auto result = rp_AcqReset();
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to reset Red Pitaya acquire: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    unit = RP_SCPI_VOLTS;
+    context->binary_output = false;
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqResetCh(scpi_t *context) {
+
+    rp_channel_t channel;
+
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    auto result = rp_AcqResetCh(channel);
     if (RP_OK != result) {
         RP_LOG_CRIT("Failed to reset Red Pitaya acquire: %s", rp_GetError(result));
         return SCPI_RES_ERR;
@@ -130,6 +218,39 @@ scpi_result_t RP_AcqDecimation(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_AcqDecimationCh(scpi_t *context) {
+
+    rp_channel_t channel;
+
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    uint32_t value;
+
+    /* Read DECIMATION parameter */
+    if (!SCPI_ParamUInt32(context, &value, true)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+
+    // Convert decimation to rp_acq_decimation_t
+    rp_acq_decimation_t decimation;
+    if (rp_AcqConvertFactorToDecimation(value, &decimation)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Parameter decimation is invalid.");
+        return SCPI_RES_ERR;
+    }
+
+    // Now set the decimation
+    auto result = rp_AcqSetDecimationCh(channel,decimation);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to set decimation: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_AcqDecimationQ(scpi_t *context) {
     // Get decimation
     rp_acq_decimation_t decimation;
@@ -149,6 +270,33 @@ scpi_result_t RP_AcqDecimationQ(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_AcqDecimationChQ(scpi_t * context) {
+
+    rp_channel_t channel;
+
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    // Get decimation
+    rp_acq_decimation_t decimation;
+    auto result = rp_AcqGetDecimationCh(channel,&decimation);
+
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to get decimation: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    // Convert decimation to int
+    auto value = (uint32_t)decimation;
+
+    // Return back result
+    SCPI_ResultUInt32Base(context, value, 10);
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+
 scpi_result_t RP_AcqDecimationFactor(scpi_t *context) {
 
     uint32_t value;
@@ -161,6 +309,32 @@ scpi_result_t RP_AcqDecimationFactor(scpi_t *context) {
 
     // Now set the decimation
     auto result = rp_AcqSetDecimationFactor(value);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to set decimation factor: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqDecimationFactorCh(scpi_t *context) {
+
+    rp_channel_t channel;
+
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    uint32_t value;
+
+    /* Read DECIMATION parameter */
+    if (!SCPI_ParamUInt32(context, &value, true)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+
+    // Now set the decimation
+    auto result = rp_AcqSetDecimationFactorCh(channel,value);
     if (RP_OK != result) {
         RP_LOG_CRIT("Failed to set decimation factor: %s", rp_GetError(result));
         return SCPI_RES_ERR;
@@ -185,11 +359,61 @@ scpi_result_t RP_AcqDecimationFactorQ(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_AcqDecimationFactorChQ(scpi_t *context) {
+
+    rp_channel_t channel;
+
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    // Get decimation
+    u_int32_t decimation;
+    auto result = rp_AcqGetDecimationFactorCh(channel,&decimation);
+
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to get decimation factor: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    // Return back result
+    SCPI_ResultUInt32Base(context, decimation, 10);
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_AcqSamplingRateHzQ(scpi_t *context) {
 
     // get sampling rate
     float samplingRate;
     auto result = rp_AcqGetSamplingRateHz(&samplingRate);
+
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to get sampling rate in Hz: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    // Return back string result
+    char samplingRateString[20];
+    sprintf(samplingRateString, "%9.0f Hz", samplingRate);
+
+    //Return string in form "<Value> Hz"
+    SCPI_ResultMnemonic(context, samplingRateString);
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqSamplingRateHzChQ(scpi_t *context) {
+
+    rp_channel_t channel;
+
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    // get sampling rate
+    float samplingRate;
+    auto result = rp_AcqGetSamplingRateHzCh(channel,&samplingRate);
 
     if (RP_OK != result) {
         RP_LOG_CRIT("Failed to get sampling rate in Hz: %s", rp_GetError(result));
@@ -263,6 +487,34 @@ scpi_result_t RP_AcqTriggerSrc(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_AcqTriggerSrcCh(scpi_t *context) {
+
+    rp_channel_t channel;
+
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    int32_t trig_src;
+
+    /* Read TRIGGER SOURCE parameter */
+    if (!SCPI_ParamChoice(context, scpi_RpTrigSrc, &trig_src, true)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+
+    rp_acq_trig_src_t source = (rp_acq_trig_src_t)trig_src;
+
+    // Now set the trigger source
+    int result = rp_AcqSetTriggerSrcCh(channel,source);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to set trigger source: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_AcqTriggerSrcQ(scpi_t *context) {
 
     const char *trig_name;
@@ -286,7 +538,37 @@ scpi_result_t RP_AcqTriggerSrcQ(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_AcqTriggerSrcChQ(scpi_t *context) {
+
+    rp_channel_t channel;
+
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    const char *trig_name;
+    // get trigger source
+    rp_acq_trig_src_t source;
+    auto result = rp_AcqGetTriggerSrcCh(channel, &source);
+
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to get trigger: %s", rp_GetError(result));
+        source = RP_TRIG_SRC_NOW;   // Some value not equal to DISABLE -> function return "WAIT"
+    }
+
+    if(!SCPI_ChoiceToName(scpi_RpTrigStat, source, &trig_name)){
+        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Failed to parse trigger source.")
+        return SCPI_RES_ERR;
+    }
+
+    // Return back result
+    SCPI_ResultMnemonic(context, trig_name);
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_AcqTriggerDelay(scpi_t *context) {
+
     int32_t triggerDelay;
 
     // read first parameter TRIGGER DELAY (value in samples)
@@ -305,7 +587,34 @@ scpi_result_t RP_AcqTriggerDelay(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_AcqTriggerDelayCh(scpi_t *context) {
+
+    rp_channel_t channel;
+
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    int32_t triggerDelay;
+
+    // read first parameter TRIGGER DELAY (value in samples)
+    if (!SCPI_ParamInt32(context, &triggerDelay, false)) {
+        triggerDelay = 0;
+    }
+
+    // Now set the trigger delay
+    auto result = rp_AcqSetTriggerDelayCh(channel, triggerDelay);
+
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to set trigger delay: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_AcqTriggerDelayQ(scpi_t *context) {
+
     // get trigger delay
     int32_t value;
     auto result = rp_AcqGetTriggerDelay(&value);
@@ -320,6 +629,30 @@ scpi_result_t RP_AcqTriggerDelayQ(scpi_t *context) {
     RP_LOG_INFO("%s",rp_GetError(result))
     return SCPI_RES_OK;
 }
+
+scpi_result_t RP_AcqTriggerDelayChQ(scpi_t *context) {
+
+    rp_channel_t channel;
+
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    // get trigger delay
+    int32_t value;
+    auto result = rp_AcqGetTriggerDelayCh(channel,&value);
+
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to get trigger delay: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    // Return back result
+    SCPI_ResultInt32(context, value);
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
 
 scpi_result_t RP_AcqTriggerDelayNs(scpi_t *context) {
     int64_t triggerDelay;
@@ -340,10 +673,59 @@ scpi_result_t RP_AcqTriggerDelayNs(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_AcqTriggerDelayNsCh(scpi_t *context) {
+
+    rp_channel_t channel;
+
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    int64_t triggerDelay;
+
+    // read first parameter TRIGGER DELAY ns (value in ns)
+    if (!SCPI_ParamInt64(context, &triggerDelay, false)) {
+        triggerDelay = 0;
+    }
+
+    // Now set the trigger delay in ns
+    auto result = rp_AcqSetTriggerDelayNsCh(channel, triggerDelay);
+
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to set trigger delay in ns: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_AcqTriggerDelayNsQ(scpi_t *context) {
     // get trigger delay ns
     int64_t value;
     int result = rp_AcqGetTriggerDelayNs(&value);
+
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to get trigger delay: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    // Return back result
+    SCPI_ResultInt32(context, value);
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqTriggerDelayNsChQ(scpi_t *context) {
+
+    rp_channel_t channel;
+
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    // get trigger delay ns
+    int64_t value;
+    int result = rp_AcqGetTriggerDelayNsCh(channel,&value);
 
     if (RP_OK != result) {
         RP_LOG_CRIT("Failed to get trigger delay: %s", rp_GetError(result));
@@ -399,6 +781,27 @@ scpi_result_t RP_AcqTriggerFillQ(scpi_t *context){
     RP_LOG_INFO("%s",rp_GetError(result))
     return SCPI_RES_OK;
 }
+
+scpi_result_t RP_AcqTriggerFillChQ(scpi_t *context){
+
+    rp_channel_t channel;
+
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    bool fillRes;
+    auto result = rp_AcqGetBufferFillStateCh(channel,&fillRes);
+    if(result != RP_OK){
+        RP_LOG_CRIT("Failed to get trigger fill state: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultInt32(context, fillRes);
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
 
 //Todo: Custom error handling.
 scpi_result_t RP_AcqGain(scpi_t *context) {
@@ -531,10 +934,56 @@ scpi_result_t RP_AcqWritePointerQ(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_AcqWritePointerChQ(scpi_t *context) {
+
+    rp_channel_t channel;
+
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    // get write pointer
+    uint32_t value;
+    auto result = rp_AcqGetWritePointerCh(channel, &value);
+
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to get writer position: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    // Return back result
+    SCPI_ResultUInt32Base(context, value, 10);
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_AcqWritePointerAtTrigQ(scpi_t *context) {
     // get write pointer at trigger
     uint32_t value;
     auto result = rp_AcqGetWritePointerAtTrig(&value);
+
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to get writer position at trigger: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    // Return back result
+    SCPI_ResultUInt32Base(context, value, 10);
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqWritePointerAtTrigChQ(scpi_t *context) {
+
+    rp_channel_t channel;
+
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    // get write pointer at trigger
+    uint32_t value;
+    auto result = rp_AcqGetWritePointerAtTrigCh(channel,&value);
 
     if (RP_OK != result) {
         RP_LOG_CRIT("Failed to get writer position at trigger: %s", rp_GetError(result));
