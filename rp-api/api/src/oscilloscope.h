@@ -41,7 +41,7 @@ typedef struct {
 } config_ch_t;
 
 typedef struct {
-    config_ch_t config_ch[4];
+    config_ch_t config_ch[2];
 } config_t;
 
 typedef union {

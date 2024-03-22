@@ -2,13 +2,13 @@ cmake_minimum_required(VERSION 3.14)
 
 set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
-set(CMAKE_CXX_STANDARD 20)
-set(C_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
+set(C_STANDARD 17)
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 
-project(acquire)
+project(acquire_p)
 
 if(NOT DEFINED INSTALL_DIR)
     message(FATAL_ERROR,"Installation path not set.")

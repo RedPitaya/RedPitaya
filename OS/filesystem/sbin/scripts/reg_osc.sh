@@ -22,6 +22,7 @@ echo "	- Reset write state machine: $(bitWiseAnd $X 0x2)"
 echo "	- Trigger has arrived stays on (1) until next arm or reset: $(bitWiseAnd $X 0x4)"
 echo "	- Trigger remains armed after ACQ delay passes: $(bitWiseAnd $X 0x8)"
 echo "	- ACQ delay has passed / (all data was written to buffer): $(bitWiseAnd $X 0x10)"
+echo "	- Split triggers: $(bitWiseAnd $X 0x20)"
 echo
 
 X=$(monitor 0x40100004)
