@@ -515,19 +515,19 @@ scpi_result_t RP_AcqTriggerSrcCh(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqTriggerSrcQ(scpi_t *context) {
+scpi_result_t RP_AcqTriggerStateQ(scpi_t *context) {
 
     const char *trig_name;
     // get trigger source
-    rp_acq_trig_src_t source;
-    auto result = rp_AcqGetTriggerSrc(&source);
+    rp_acq_trig_state_t state;
+    auto result = rp_AcqGetTriggerState(&state);
 
     if (RP_OK != result) {
         RP_LOG_CRIT("Failed to get trigger: %s", rp_GetError(result));
-        source = RP_TRIG_SRC_NOW;   // Some value not equal to DISABLE -> function return "WAIT"
+        state = RP_TRIG_STATE_WAITING;
     }
 
-    if(!SCPI_ChoiceToName(scpi_RpTrigStat, source, &trig_name)){
+    if(!SCPI_ChoiceToName(scpi_RpTrigStat, state, &trig_name)){
         SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Failed to parse trigger source.")
         return SCPI_RES_ERR;
     }
@@ -538,7 +538,7 @@ scpi_result_t RP_AcqTriggerSrcQ(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_AcqTriggerSrcChQ(scpi_t *context) {
+scpi_result_t RP_AcqTriggerStateChQ(scpi_t *context) {
 
     rp_channel_t channel;
 
@@ -548,15 +548,15 @@ scpi_result_t RP_AcqTriggerSrcChQ(scpi_t *context) {
 
     const char *trig_name;
     // get trigger source
-    rp_acq_trig_src_t source;
-    auto result = rp_AcqGetTriggerSrcCh(channel, &source);
+    rp_acq_trig_state_t state;
+    auto result = rp_AcqGetTriggerStateCh(channel, &state);
 
     if (RP_OK != result) {
         RP_LOG_CRIT("Failed to get trigger: %s", rp_GetError(result));
-        source = RP_TRIG_SRC_NOW;   // Some value not equal to DISABLE -> function return "WAIT"
+        state = RP_TRIG_STATE_WAITING;   // Some value not equal to DISABLE -> function return "WAIT"
     }
 
-    if(!SCPI_ChoiceToName(scpi_RpTrigStat, source, &trig_name)){
+    if(!SCPI_ChoiceToName(scpi_RpTrigStat, state, &trig_name)){
         SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Failed to parse trigger source.")
         return SCPI_RES_ERR;
     }
@@ -904,9 +904,55 @@ scpi_result_t RP_AcqTriggerLevel(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+
+scpi_result_t RP_AcqTriggerLevelCh(scpi_t *context) {
+    scpi_number_t value;
+
+    rp_channel_t channel;
+
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &value, true)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+
+    auto result = rp_AcqSetTriggerLevel((rp_channel_trigger_t)channel, (float) value.content.value);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to set trigger level: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_AcqTriggerLevelQ(scpi_t *context) {
     float value;
     auto result = rp_AcqGetTriggerLevel(RP_T_CH_1,&value);
+
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to get trigger level: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    // Return back result
+    SCPI_ResultFloat(context, value);
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqTriggerLevelChQ(scpi_t *context) {
+
+    rp_channel_t channel;
+
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    float value;
+    auto result = rp_AcqGetTriggerLevel((rp_channel_trigger_t)channel,&value);
 
     if (RP_OK != result) {
         RP_LOG_CRIT("Failed to get trigger level: %s", rp_GetError(result));
