@@ -288,15 +288,12 @@ auto usage(Options &opt) -> void{
 
 auto parse(int argc, char* argv[]) -> Options{
     Options opt;
-    if (argc < 2) return opt;
     int option_index = 0;
     int ch = -1;
 
     opt.channels = getChannels();
     opt.is_ext_trig_lev = getIsExtTrigLevel();
     opt.is_ac_dc = getIsACDC();
-
-    opt.error = false;
 
     opt.usage = g_format_common;
     opt.opts =  optstring_settings;
@@ -329,6 +326,10 @@ auto parse(int argc, char* argv[]) -> Options{
     }
     opt.usage += g_format_common_settings;
     opt.options.push_back({0,0,0,0});
+
+    if (argc < 2) return opt;
+
+    opt.error = false;
 
     while ((ch = getopt_long(argc, argv, (char*)opt.opts.c_str(), (option*)opt.options.data(), &option_index)) != -1) {
         switch (ch) {

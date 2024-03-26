@@ -11,12 +11,14 @@ LDLIBS += -lrp-hw -lm -lstdc++ -lpthread -li2c
 CXXFLAGS  = -std=c++17 -Wall ## -Werror
 CXXFLAGS += -I$(INSTALL_DIR)/include
 
+SCPI_LIBRARY = libscpi.a
 
 # List of compiled object files (not yet linked to executable)
 
 PRGS =  trig_pos_test
 
-PRGS_PP = acq_trigger_test dsp_test
+PRGS_PP = acq_trigger_test dsp_test acq_trigger_test_4ch
+SCPI_PP = scpi/scpi_client scpi/socket
 
 OBJS := $(patsubst %,%.o,$(PRGS))
 SRC := $(patsubst %,%.c,$(PRGS))
@@ -24,13 +26,22 @@ SRC := $(patsubst %,%.c,$(PRGS))
 OBJS_PP := $(patsubst %,%.o,$(PRGS_PP))
 SRC_PP := $(patsubst %,%.cpp,$(PRGS_PP))
 
+SCPI_OBJS_PP := $(patsubst %,%.o,$(SCPI_PP))
+SCPI_SRC_PP := $(patsubst %,%.cpp,$(SCPI_PP))
+
 all: $(PRGS) $(PRGS_PP)
 
 $(PRGS): %: %.c
 	$(CC) $< $(CFLAGS) $(LDFLAGS) $(LDLIBS) -o $@
 
-$(PRGS_PP): %: %.cpp
-	g++ $< $(CXXFLAGS) $(LDFLAGS) $(LDLIBS) -o $@
+$(PRGS_PP): %: %.cpp $(SCPI_LIBRARY)
+	g++ $< $(CXXFLAGS) $(LDFLAGS) $(LDLIBS) $(SCPI_LIBRARY) -o $@
+
+$(SCPI_PP):  %: %.cpp
+	g++ $(CXXFLAGS) -c $< -o $@.o
+
+$(SCPI_LIBRARY): $(SCPI_PP)
+	ar rcs $@ $(SCPI_OBJS_PP)
 
 install:
 	mkdir -p $(INSTALL_DIR)/tests
@@ -40,7 +51,8 @@ install:
 
 clean:
 	$(RM) *.o
-	$(RM) $(OBJS)
+	$(RM) $(SCPI_OBJS_PP)
 	$(RM) $(OBJS_PP)
 	$(RM) $(PRGS)
 	$(RM) $(PRGS_PP)
+	$(RM) $(SCPI_LIBRARY)

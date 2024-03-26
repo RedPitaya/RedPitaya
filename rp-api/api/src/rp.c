@@ -869,7 +869,6 @@ int rp_AcqSetArmKeepCh(rp_channel_t channel, bool enable)
     else if (g_split_trig_function_pass){
         return rp_AcqSetArmKeep(enable);
     }
-    ERROR("Unsupported");
     return RP_NOTS;
 }
 
@@ -880,7 +879,6 @@ int rp_AcqGetArmKeepCh(rp_channel_t channel, bool* state){
     else if (g_split_trig_function_pass){
         return rp_AcqGetArmKeep(state);
     }
-    ERROR("Unsupported");
     return RP_NOTS;
 }
 
@@ -895,7 +893,6 @@ int rp_AcqGetBufferFillStateCh(rp_channel_t channel, bool* state){
     else if (g_split_trig_function_pass){
         return rp_AcqGetBufferFillState(state);
     }
-    ERROR("Unsupported");
     return RP_NOTS;
 }
 
@@ -923,7 +920,6 @@ int rp_AcqSetDecimationCh(rp_channel_t channel, rp_acq_decimation_t decimation)
     else if (g_split_trig_function_pass){
         return rp_AcqSetDecimation(decimation);
     }
-    ERROR("Unsupported");
     return RP_NOTS;
 }
 
@@ -935,7 +931,6 @@ int rp_AcqGetDecimationCh(rp_channel_t channel, rp_acq_decimation_t* decimation)
     else if (g_split_trig_function_pass){
         return rp_AcqGetDecimation(decimation);
     }
-    ERROR("Unsupported");
     return RP_NOTS;
 }
 
@@ -957,7 +952,6 @@ int rp_AcqSetDecimationFactorCh(rp_channel_t channel, uint32_t decimation)
     else if (g_split_trig_function_pass){
         return rp_AcqSetDecimationFactor(decimation);
     }
-    ERROR("Unsupported");
     return RP_NOTS;
 }
 
@@ -969,7 +963,6 @@ int rp_AcqGetDecimationFactorCh(rp_channel_t channel, uint32_t* decimation)
     else if (g_split_trig_function_pass){
         return rp_AcqGetDecimationFactor(decimation);
     }
-    ERROR("Unsupported");
     return RP_NOTS;
 }
 
@@ -988,7 +981,6 @@ int rp_AcqAxiSetDecimationFactorCh(rp_channel_t channel, uint32_t decimation){
     else if (g_split_trig_function_pass){
         return rp_AcqAxiSetDecimationFactor(decimation);
     }
-    ERROR("Unsupported");
     return RP_NOTS;
 }
 
@@ -1007,7 +999,6 @@ int rp_AcqAxiGetDecimationFactorCh(rp_channel_t channel, uint32_t *decimation){
     else if (g_split_trig_function_pass){
         return rp_AcqAxiGetDecimationFactor(decimation);
     }
-    ERROR("Unsupported");
     return RP_NOTS;
 }
 
@@ -1028,18 +1019,39 @@ int rp_AcqGetSamplingRateHzCh(rp_channel_t channel, float* sampling_rate)
     else if (g_split_trig_function_pass){
         return rp_AcqGetSamplingRateHz(sampling_rate);
     }
-    ERROR("Unsupported");
     return RP_NOTS;
 }
 
 int rp_AcqSetAveraging(bool enabled)
 {
-    return acq_SetAveraging(enabled);
+    return acq_SetAveraging(RP_CH_1, enabled);
 }
 
 int rp_AcqGetAveraging(bool *enabled)
 {
-    return acq_GetAveraging(enabled);
+    return acq_GetAveraging(RP_CH_1, enabled);
+}
+
+int rp_AcqSetAveragingCh(rp_channel_t channel, bool enabled)
+{
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_SetAveraging(channel, enabled);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqSetAveraging(enabled);
+    }
+    return RP_NOTS;
+}
+
+int rp_AcqGetAveragingCh(rp_channel_t channel, bool *enabled)
+{
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_GetAveraging(channel, enabled);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqGetAveraging(enabled);
+    }
+    return RP_NOTS;
 }
 
 int rp_AcqSetTriggerSrc(rp_acq_trig_src_t source)
@@ -1060,7 +1072,6 @@ int rp_AcqSetTriggerSrcCh(rp_channel_t channel, rp_acq_trig_src_t source)
     else if (g_split_trig_function_pass){
         return rp_AcqSetTriggerSrc(source);
     }
-    ERROR("Unsupported");
     return RP_NOTS;
 }
 
@@ -1072,7 +1083,6 @@ int rp_AcqGetTriggerSrcCh(rp_channel_t channel, rp_acq_trig_src_t* source)
     else if (g_split_trig_function_pass){
         return rp_AcqGetTriggerSrc(source);
     }
-    ERROR("Unsupported");
     return RP_NOTS;
 }
 
@@ -1089,7 +1099,6 @@ int rp_AcqGetTriggerStateCh(rp_channel_t channel, rp_acq_trig_state_t* state)
     else if (g_split_trig_function_pass){
         return rp_AcqGetTriggerState(state);
     }
-    ERROR("Unsupported");
     return RP_NOTS;
 }
 
@@ -1106,7 +1115,6 @@ int rp_AcqSetTriggerDelayCh(rp_channel_t channel, int32_t decimated_data_num)
     else if (g_split_trig_function_pass){
         return rp_AcqSetTriggerDelay(decimated_data_num);
     }
-    ERROR("Unsupported");
     return RP_NOTS;
 }
 
@@ -1123,7 +1131,6 @@ int rp_AcqSetTriggerDelayDirectCh(rp_channel_t channel, uint32_t decimated_data_
     else if (g_split_trig_function_pass){
         return rp_AcqSetTriggerDelayDirect(decimated_data_num);
     }
-    ERROR("Unsupported");
     return RP_NOTS;
 }
 
@@ -1152,7 +1159,6 @@ int rp_AcqGetTriggerDelayCh(rp_channel_t channel, int32_t* decimated_data_num)
     else if (g_split_trig_function_pass){
         return rp_AcqGetTriggerDelay(decimated_data_num);
     }
-    ERROR("Unsupported");
     return RP_NOTS;
 }
 
@@ -1169,7 +1175,6 @@ int rp_AcqGetTriggerDelayDirectCh(rp_channel_t channel, uint32_t* decimated_data
     else if (g_split_trig_function_pass){
         return rp_AcqGetTriggerDelayDirect(decimated_data_num);
     }
-    ERROR("Unsupported");
     return RP_NOTS;
 }
 
@@ -1186,7 +1191,6 @@ int rp_AcqSetTriggerDelayNsCh(rp_channel_t channel, int64_t time_ns)
     else if (g_split_trig_function_pass){
         return rp_AcqSetTriggerDelayNs(time_ns);
     }
-    ERROR("Unsupported");
     return RP_NOTS;
 }
 
@@ -1203,7 +1207,6 @@ int rp_AcqGetTriggerDelayNsCh(rp_channel_t channel, int64_t* time_ns)
     else if (g_split_trig_function_pass){
         return rp_AcqGetTriggerDelayNs(time_ns);
     }
-    ERROR("Unsupported");
     return RP_NOTS;
 }
 
@@ -1220,7 +1223,6 @@ int rp_AcqSetTriggerDelayNsDirectCh(rp_channel_t channel, uint64_t time_ns)
     else if (g_split_trig_function_pass){
         return rp_AcqSetTriggerDelayNsDirect(time_ns);
     }
-    ERROR("Unsupported");
     return RP_NOTS;
 }
 
@@ -1237,7 +1239,6 @@ int rp_AcqGetTriggerDelayNsDirectCh(rp_channel_t channel, uint64_t* time_ns)
     else if (g_split_trig_function_pass){
         return rp_AcqGetTriggerDelayNsDirect(time_ns);
     }
-    ERROR("Unsupported");
     return RP_NOTS;
 }
 
@@ -1252,7 +1253,6 @@ int rp_AcqGetPreTriggerCounterCh(rp_channel_t channel, uint32_t* value) {
     else if (g_split_trig_function_pass){
         return rp_AcqGetPreTriggerCounter(value);
     }
-    ERROR("Unsupported");
     return RP_NOTS;
 }
 
@@ -1304,7 +1304,7 @@ int rp_AcqGetWritePointerCh(rp_channel_t channel, uint32_t* pos)
     else if (g_split_trig_function_pass){
         return rp_AcqGetWritePointer(pos);
     }
-    ERROR("Unsupported");
+
     return RP_NOTS;
 }
 
@@ -1327,7 +1327,7 @@ int rp_AcqGetWritePointerAtTrigCh(rp_channel_t channel, uint32_t* pos)
     else if (g_split_trig_function_pass){
         return rp_AcqGetWritePointerAtTrig(pos);
     }
-    ERROR("Unsupported");
+
     return RP_NOTS;
 }
 
@@ -1350,7 +1350,7 @@ int rp_AcqStartCh(rp_channel_t channel)
     else if (g_split_trig_function_pass){
         return rp_AcqStart();
     }
-    ERROR("Unsupported");
+
     return RP_NOTS;
 }
 
@@ -1367,7 +1367,7 @@ int rp_AcqStopCh(rp_channel_t channel)
     else if (g_split_trig_function_pass){
         return rp_AcqStop();
     }
-    ERROR("Unsupported");
+
     return RP_NOTS;
 }
 
@@ -1384,7 +1384,7 @@ int rp_AcqResetCh(rp_channel_t channel)
     else if (g_split_trig_function_pass){
         return rp_AcqReset();
     }
-    ERROR("Unsupported");
+
     return RP_NOTS;
 }
 
@@ -1406,7 +1406,7 @@ int rp_AcqUnlockTriggerCh(rp_channel_t channel)
     else if (g_split_trig_function_pass){
         return rp_AcqUnlockTrigger();
     }
-    ERROR("Unsupported");
+
     return RP_NOTS;
 }
 
@@ -1421,7 +1421,7 @@ int rp_AcqGetUnlockTriggerCh(rp_channel_t channel, bool *state){
     else if (g_split_trig_function_pass){
         return rp_AcqGetUnlockTrigger(state);
     }
-    ERROR("Unsupported");
+
     return RP_NOTS;
 }
 
@@ -2161,7 +2161,7 @@ int rp_SetExternalTriggerLevel(float value){
                 return RP_EOOR;
         }
     }
-    ERROR("Unsupported");
+
     return RP_NOTS;
 }
 
@@ -2170,7 +2170,7 @@ int rp_GetExternalTriggerLevel(float *value){
         *value = g_ext_trig_trash;
         return RP_OK;
     }
-    ERROR("Unsupported");
+
     return RP_NOTS;
 }
 
@@ -2178,7 +2178,7 @@ int rp_AcqSetSplitTrigger(bool enable){
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
         return acq_SetSplitTriggerMode(enable);
     }
-    ERROR("Unsupported");
+
     return RP_NOTS;
 }
 
@@ -2186,7 +2186,7 @@ int rp_AcqGetSplitTrigger(bool* state){
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
         return acq_GetSplitTriggerMode(state);
     }
-    ERROR("Unsupported");
+
     return RP_NOTS;
 }
 

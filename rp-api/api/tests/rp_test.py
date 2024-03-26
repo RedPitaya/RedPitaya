@@ -1072,6 +1072,15 @@ print("rp.rp_AcqGetUnlockTriggerCh(rp.RP_CH_1)")
 res = rp.rp_AcqGetUnlockTriggerCh(rp.RP_CH_1)
 print(res)
 
+print("rp.rp_AcqSetAveragingCh(rp.RP_CH_1,True)")
+res = rp.rp_AcqSetAveragingCh(rp.RP_CH_1,True)
+print(res)
+
+print("rp.rp_AcqGetAveragingCh(rp.RP_CH_1)")
+res = rp.rp_AcqGetAveragingCh(rp.RP_CH_1)
+print(res)
+
+
 print("rp.rp_AcqAxiSetDecimationFactorCh(rp.RP_CH_1, 1)")
 res = rp.rp_AcqAxiSetDecimationFactorCh(rp.RP_CH_1, 1)
 print(res)

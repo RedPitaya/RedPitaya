@@ -450,10 +450,57 @@ scpi_result_t RP_AcqAveraging(scpi_t *context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_AcqAveragingCh(scpi_t *context) {
+
+    rp_channel_t channel;
+
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    scpi_bool_t value;
+
+    // read first parameter AVERAGING (OFF,ON)
+    if (!SCPI_ParamBool(context, &value, false)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+
+    auto result = rp_AcqSetAveragingCh(channel, value);
+
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to set averaging: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_AcqAveragingQ(scpi_t *context) {
     // get averaging
     bool value;
     auto result = rp_AcqGetAveraging(&value);
+
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to get averaging: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultMnemonic(context, value ? "ON" : "OFF");
+    RP_LOG_INFO("%s",rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqAveragingChQ(scpi_t *context) {
+    rp_channel_t channel;
+
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK){
+        return SCPI_RES_ERR;
+    }
+
+    // get averaging
+    bool value;
+    auto result = rp_AcqGetAveragingCh(channel,&value);
 
     if (RP_OK != result) {
         RP_LOG_CRIT("Failed to get averaging: %s", rp_GetError(result));
@@ -1334,11 +1381,9 @@ scpi_result_t RP_AcqTriggerDataQ(scpi_t *context) {
 
     rp_channel_t channel;
     int32_t trig_request;
-
     if (RP_ParseChArgvADC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
-
     /* Parse count samples parameter */
     if(!SCPI_ParamUInt32(context, &count, true)){
         SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Missing Size parameter.");
@@ -1350,14 +1395,12 @@ scpi_result_t RP_AcqTriggerDataQ(scpi_t *context) {
         SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Missing trigger mode parameter.");
         return SCPI_RES_ERR;
     }
-
     uint32_t trig_pos;
-    result = rp_AcqGetWritePointerAtTrig(&trig_pos);
+    result = rp_AcqGetWritePointerAtTrigCh(channel,&trig_pos);
     if(result != RP_OK){
         RP_LOG_CRIT("Failed to get trigger position: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
-
     uint32_t size_buff;
     rp_AcqGetBufSize(&size_buff);
 
@@ -1383,7 +1426,6 @@ scpi_result_t RP_AcqTriggerDataQ(scpi_t *context) {
             RP_LOG_CRIT("Undefined trigger mode: %d", trig_request);
             return SCPI_RES_ERR;
     }
-
     if(unit == RP_SCPI_VOLTS){
         float *buffer = nullptr;
         try{

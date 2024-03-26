@@ -36,12 +36,15 @@ struct Options {
     bool                 error;
     bool                 reset_hk;
     bool                 enableAXI;
+    bool                 enableDebug = false;
+    int                  offset = 0;
 
 
     Options(){
         dataSize = ADC_BUFFER_SIZE;
         decimation = RP_DEC_1;
-
+        enableDebug = false;
+        offset = 0;
         for(int i = 0; i < getChannels(); i++){
             attenuator_mode[i] = RP_LOW;
             ac_dc_mode[i] = RP_AC;

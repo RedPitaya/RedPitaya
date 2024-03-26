@@ -459,12 +459,12 @@ int acq_GetSamplingRateHz(rp_channel_t channel, float* sampling_rate){
     return RP_OK;
 }
 
-int acq_SetAveraging(bool enable){
-    return osc_SetAveraging(enable);
+int acq_SetAveraging(rp_channel_t channel, bool enable){
+    return osc_SetAveraging(channel, enable);
 }
 
-int acq_GetAveraging(bool* enable){
-    return osc_GetAveraging(enable);
+int acq_GetAveraging(rp_channel_t channel, bool* enable){
+    return osc_GetAveraging(channel, enable);
 }
 
 int acq_SetTriggerSrc(rp_channel_t channel, rp_acq_trig_src_t source){
@@ -1668,7 +1668,7 @@ int acq_SetDefault(rp_channel_t channel)
     uint32_t start,size;
     osc_axi_GetMemoryRegion(&start,&size);
 
-    acq_SetAveraging(true);
+    acq_SetAveraging(channel,true);
     acq_SetTriggerSrc(channel,RP_TRIG_SRC_DISABLED);
     acq_SetArmKeep(channel,false);
 

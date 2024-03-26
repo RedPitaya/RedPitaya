@@ -252,6 +252,30 @@ int rp_AcqSetAveraging(bool enable);
 int rp_AcqGetAveraging(bool *enable);
 
 /**
+ * Enables or disables averaging of data between samples.
+ * Data between samples can be averaged by setting the averaging flag in the Data decimation register.
+ * This channel separation feature works with FPGA support.
+ * You can also enable function forwarding via rp_AcqSetSplitTriggerPass if this mode is not available.
+ * @param channel Channel A, B, C or D
+ * @param enabled When true, the averaging is enabled, otherwise it is disabled.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqSetAveragingCh(rp_channel_t channel, bool enable);
+
+/**
+ * Returns information if averaging of data between samples is enabled or disabled.
+ * Data between samples can be averaged by setting the averaging flag in the Data decimation register.
+ * This channel separation feature works with FPGA support.
+ * You can also enable function forwarding via rp_AcqSetSplitTriggerPass if this mode is not available.
+ * @param channel Channel A, B, C or D
+ * @param enabled Set to true when the averaging is enabled, otherwise is it set to false.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetAveragingCh(rp_channel_t channel, bool *enable);
+
+/**
  * Sets the trigger source used at acquiring signal. When acquiring is started,
  * the FPGA waits for the trigger condition on the specified source and when the condition is met, it
  * starts writing the signal to the buffer.

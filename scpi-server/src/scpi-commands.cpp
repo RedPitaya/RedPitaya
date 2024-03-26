@@ -239,6 +239,8 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "ACQ:SRATe:CH#?", .callback             = RP_AcqSamplingRateHzChQ,},
     {.pattern = "ACQ:AVG", .callback                    = RP_AcqAveraging,},
     {.pattern = "ACQ:AVG?", .callback                   = RP_AcqAveragingQ,},
+    {.pattern = "ACQ:AVG:CH#", .callback                = RP_AcqAveragingCh,},
+    {.pattern = "ACQ:AVG:CH#?", .callback               = RP_AcqAveragingChQ,},
     {.pattern = "ACQ:TRig", .callback                   = RP_AcqTriggerSrc,},
     {.pattern = "ACQ:TRig:CH#", .callback               = RP_AcqTriggerSrcCh,},
     {.pattern = "ACQ:TRig:STAT?", .callback             = RP_AcqTriggerStateQ,},

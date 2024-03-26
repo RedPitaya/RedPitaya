@@ -169,10 +169,13 @@ typedef struct osc_control_s {
     uint32_t chb_hystersis;
 
     /** @brief Offset 0x28
-     * bits [0] - enable signal average at decimation
-     * bits [31:1] - reserved
+     * bits [0] - enable signal average at decimation ch1  (The value is responsible for ch3 in the second set of registers)
+     * bits [7:1] - reserved
+     * bits [8] - enable signal average at decimation ch2 (The value is responsible for ch4 in the second set of registers)
+     * bits [31:9] - reserved
      */
-    uint32_t other;
+    uint32_t average_chA :1 ,: 7;
+    uint32_t average_chB :1 ,: 7 ,: 16;
 
     /** @brief Offset 0x2C - Pre Trigger counter
      *
@@ -419,8 +422,8 @@ int osc_Release();
 
 int osc_SetDecimation(rp_channel_t channel, uint32_t decimation);
 int osc_GetDecimation(rp_channel_t channel, uint32_t* decimation);
-int osc_SetAveraging(bool enable);
-int osc_GetAveraging(bool* enable);
+int osc_SetAveraging(rp_channel_t channel, bool enable);
+int osc_GetAveraging(rp_channel_t channel, bool* enable);
 int osc_SetTriggerSource(rp_channel_t channel, uint32_t source);
 int osc_GetTriggerSource(rp_channel_t channel, uint32_t* source);
 int osc_SetSplitTriggerMode(bool enable);

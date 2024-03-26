@@ -193,31 +193,77 @@ int osc_GetDecimation(rp_channel_t channel, uint32_t* decimation)
     return RP_EOOR;
 }
 
-int osc_SetAveraging(bool enable)
+int osc_SetAveraging(rp_channel_t channel, bool enable)
 {
-    if (enable) {
-        cmn_Debug("cmn_SetBits(&osc_reg->other) mask 0x1 <- 0x%X", 0x1);
-        int ret = cmn_SetBits(&osc_reg->other, 0x1, DATA_AVG_MASK);
-        if (osc_reg_4ch){
-            cmn_Debug("cmn_SetBits(&osc_reg_4ch->other) mask 0x1 <- 0x%X", 0x1);
-            ret |= cmn_SetBits(&osc_reg_4ch->other, 0x1, DATA_AVG_MASK);
-        }
-        return ret;
+    int value  = enable ? 0x1 : 0x0;
+    switch (channel)
+    {
+        case RP_CH_1:
+            cmn_Debug("[Write] osc_reg->average_chA <- 0x%X",  value);
+            osc_reg->average_chA = value;
+            return RP_OK;
+        case RP_CH_2:
+            cmn_Debug("[Write] osc_reg->average_chB <- 0x%X", value);
+            osc_reg->average_chB = value;
+            return RP_OK;
+        case RP_CH_3:
+            if (osc_reg_4ch){
+                cmn_Debug("[Write] osc_reg_4ch->average_chA <- 0x%X", value);
+                osc_reg_4ch->average_chA = value;
+            }else{
+                ERROR("Registers for channels 3 and 4 are not initialized")
+                return RP_NOTS;
+            }
+            return RP_OK;
+        case RP_CH_4:
+            if (osc_reg_4ch){
+                cmn_Debug("[Write] osc_reg_4ch->average_chB <- 0x%X", 0x1);
+                osc_reg_4ch->average_chB = value;
+            }else{
+                ERROR("Registers for channels 3 and 4 are not initialized")
+                return RP_NOTS;
+            }
+            return RP_OK;
+        default:
+            ERROR("Wrong channel %d",channel)
+            break;
     }
-    else {
-        cmn_Debug("cmn_UnsetBits(&osc_reg->other) mask 0x1 <-> 0x%X", 0x1);
-        int ret = cmn_UnsetBits(&osc_reg->other, 0x1, DATA_AVG_MASK);
-        if (osc_reg_4ch){
-            cmn_Debug("cmn_UnsetBits(&osc_reg_4ch->other) mask 0x1 <-> 0x%X", 0x1);
-            ret |= cmn_UnsetBits(&osc_reg_4ch->other, 0x1, DATA_AVG_MASK);
-        }
-        return ret;
-    }
+    return RP_EOOR;
 }
 
-int osc_GetAveraging(bool* enable)
+int osc_GetAveraging(rp_channel_t channel, bool* enable)
 {
-    return cmn_AreBitsSet(osc_reg->other, 0x1, DATA_AVG_MASK, enable);
+     switch (channel)
+    {
+        case RP_CH_1:
+            *enable = osc_reg->average_chA;
+            return RP_OK;
+        case RP_CH_2:
+            *enable = osc_reg->average_chB;
+            return RP_OK;
+        case RP_CH_3:
+            if (osc_reg_4ch){
+                *enable = osc_reg_4ch->average_chA;
+                return RP_OK;
+            }else{
+                ERROR("Registers for channels 3 and 4 are not initialized")
+                return RP_NOTS;
+            }
+            break;
+        case RP_CH_4:
+            if (osc_reg_4ch){
+                *enable = osc_reg_4ch->average_chB;
+                return RP_OK;
+            }else{
+                ERROR("Registers for channels 3 and 4 are not initialized")
+                return RP_NOTS;
+            }
+            break;
+        default:
+            ERROR("Wrong channel %d",channel)
+            break;
+    }
+    return RP_EOOR;
 }
 
 /**

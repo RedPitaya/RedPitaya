@@ -43,6 +43,8 @@ scpi_result_t RP_AcqSamplingRateHzQ(scpi_t * context);
 scpi_result_t RP_AcqSamplingRateHzChQ(scpi_t * context);
 scpi_result_t RP_AcqAveraging(scpi_t * context);
 scpi_result_t RP_AcqAveragingQ(scpi_t * context);
+scpi_result_t RP_AcqAveragingCh(scpi_t * context);
+scpi_result_t RP_AcqAveragingChQ(scpi_t * context);
 scpi_result_t RP_AcqTriggerSrc(scpi_t * context);
 scpi_result_t RP_AcqTriggerSrcCh(scpi_t * context);
 scpi_result_t RP_AcqTriggerStateQ(scpi_t *context);
