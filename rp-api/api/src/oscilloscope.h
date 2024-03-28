@@ -41,7 +41,7 @@ typedef struct {
 } config_ch_t;
 
 typedef struct {
-    config_ch_t config_ch[2];
+    config_ch_t config_ch[4];
 } config_t;
 
 typedef union {
@@ -50,14 +50,36 @@ typedef union {
 }config_u_t;
 
 typedef struct {
-    uint32_t trig_source_ch0       :4;
-    uint32_t trig_lock_ch0         :1;
-    uint32_t                       :3;
-    uint32_t trig_source_ch1       :4;
-    uint32_t trig_lock_ch1         :1;
-    uint32_t                       :3;
-    uint32_t                       :16;
+    uint8_t trig_source           :4;
+    uint8_t trig_lock             :1;
+    uint8_t                       :3;
 } trig_source_t;
+
+typedef union {
+    uint32_t reg_full;
+    trig_source_t reg[4];
+} trig_source_u_t;
+
+typedef struct {
+    uint8_t trig_lock             :1;
+    uint8_t                       :7;
+} trig_lock_control_t;
+
+typedef union {
+    uint32_t reg_full;
+    trig_lock_control_t reg[4];
+} trig_lock_control_u_t;
+
+
+typedef struct {
+    uint8_t average               :1;
+    uint8_t                       :7;
+} trig_average_t;
+
+typedef union {
+    uint32_t reg_full;
+    trig_average_t reg[4];
+} trig_average_u_t;
 
 // Oscilloscope structure declaration
 typedef struct osc_control_s {
@@ -65,19 +87,41 @@ typedef struct osc_control_s {
     /** @brief Offset 0x00 - configuration register
      *
      * Configuration register (offset 0x00):
-     * bit [0] - (W) arm_trigger
+     * bit [0] - (W) arm_trigger  - ch1/common
      * bit [1] - (W) rst_wr_state_machine
      * bit [2] - (R) trigger_status
      * bit [3] - (W) arm_keep
      * bit [4] - (R) All data written to buffer
-     * bits [31:5] - reserved
+     * bit [5] - (R/W) Independent mode on
+     * bits [7:6] - reserved
+     * bit [8] - (W) arm_trigger - ch2
+     * bit [9] - (W) rst_wr_state_machine
+     * bit [10] - (R) trigger_status
+     * bit [11] - (W) arm_keep
+     * bit [12] - (R) All data written to buffer
+     * bit [13] - (R/W) Independent mode on
+     * bits [15:14] - reserved
+     * bit [16] - (W) arm_trigger - ch3
+     * bit [17] - (W) rst_wr_state_machine
+     * bit [18] - (R) trigger_status
+     * bit [19] - (W) arm_keep
+     * bit [20] - (R) All data written to buffer
+     * bit [21] - (R/W) Independent mode on
+     * bits [23:22] - reserved
+     * bit [24] - (W) arm_trigger  - ch4
+     * bit [25] - (W) rst_wr_state_machine
+     * bit [26] - (R) trigger_status
+     * bit [27] - (W) arm_keep
+     * bit [28] - (R) All data written to buffer
+     * bit [29] - (R/W) Independent mode on
+     * bits [31:30] - reserved
      */
     uint32_t config;  // Can cast to config_u_t
 
     /** @brief Offset 0x04 - trigger source register
      *
      * Trigger source register (offset 0x04):
-     * bits [ 3 : 0] - trigger source:
+     * bits [3 : 0] - trigger source ch1/common:
         Trigger source
         1 - trig immediately
         2 - ch A threshold positive edge
@@ -94,9 +138,18 @@ typedef struct osc_control_s {
         12- ch D threshold positive edge
         13- ch D threshold negative edge
      * bits [4] - Trigger lock state
-     * bits [31 : 5] -reserved
+     * bits [7 : 5] -reserved
+     * bits [11 : 8] - trigger source ch2:
+     * bits [12] - Trigger lock state
+     * bits [15 : 13] -reserved
+     * bits [19 : 16] - trigger source ch3:
+     * bits [20] - Trigger lock state
+     * bits [23 : 21] -reserved
+     * bits [27 : 24] - trigger source ch4:
+     * bits [28] - Trigger lock state
+     * bits [31 : 29] -reserved
      */
-    trig_source_t trig_source;
+    uint32_t trig_source;
 
     /** @brief Offset 0x08 - Channel A threshold register
      *
@@ -169,13 +222,16 @@ typedef struct osc_control_s {
     uint32_t chb_hystersis;
 
     /** @brief Offset 0x28
-     * bits [0] - enable signal average at decimation ch1  (The value is responsible for ch3 in the second set of registers)
+     * bits [0] - enable signal average at decimation ch1
      * bits [7:1] - reserved
-     * bits [8] - enable signal average at decimation ch2 (The value is responsible for ch4 in the second set of registers)
-     * bits [31:9] - reserved
+     * bits [8] - enable signal average at decimation ch2
+     * bits [9:15] - reserved
+     * bits [16] - enable signal average at decimation ch3
+     * bits [23:17] - reserved
+     * bits [24] - enable signal average at decimation ch4
+     * bits [31:25] - reserved
      */
-    uint32_t average_chA :1 ,: 7;
-    uint32_t average_chB :1 ,: 7 ,: 16;
+    uint32_t average;
 
     /** @brief Offset 0x2C - Pre Trigger counter
      *
@@ -330,10 +386,16 @@ typedef struct osc_control_s {
     uint32_t ext_trig_dbc_t:20,:12; // 0x90
 
     /**@brief Offset 0x94 - Trigger lock control
-     * bit[0] - (W) Write 1 for unlock trigger
+     * bit[0] - (W) Write 1 for unlock trigger - ch1/common
+     * bit[7:1] - reserved
+     * bit[8] - (W) Write 1 for unlock trigger - ch2
+     * bit[15:9] - reserved
+     * bit[16] - (W) Write 1 for unlock trigger - ch3
+     * bit[23:17] - reserved
+     * bit[24] - (W) Write 1 for unlock trigger - ch4
+     * bit[31:25] - reserved
     */
-    uint32_t trigger_lock_ctr :1, : 7; // 0x94
-    uint32_t trigger_lock_ctr_ch2 :1, : 7, : 16; // 0x94
+    uint32_t trigger_lock_ctr; // 0x94
 
     /** @brief Offset 0x98 - reserved
      */

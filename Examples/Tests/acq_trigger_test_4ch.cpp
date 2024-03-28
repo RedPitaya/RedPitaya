@@ -14,25 +14,19 @@
 
 #include "rp.h"
 #include "rp_hw-profiles.h"
+#include "rp_hw.h"
 #include "rp_hw-calib.h"
 #include "scpi/scpi_client.h"
+#include "common/common.h"
 
 #define DATA_SIZE 20
 #define OFFSET 10
-#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
-#define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
+
 
 using namespace std;
 
 list<string> g_result;
 scpi_client g_client;
-
-typedef enum {
-    RP_125_14,
-    RP_250_12,
-    RP_125_14_4CH,
-    RP_122_16
-} models_t;
 
 struct settings{
     bool showBuffer = false;
@@ -42,126 +36,22 @@ struct settings{
     bool testTrigDelay = false;
     bool testTrigSettingNow = false;
     bool testKeepArm = false;
+    bool testNoise = false;
+    bool testInSplitMode = false;
     bool verbose = false;
     bool stopOnFail = false;
     std::string ip = "";
 };
 
-namespace Color {
-    enum Code {
-        FG_RED      = 31,
-        FG_GREEN    = 32,
-        FG_BLUE     = 34,
-        FG_DEFAULT  = 39,
-        BG_RED      = 41,
-        BG_GREEN    = 42,
-        BG_BLUE     = 44,
-        BG_DEFAULT  = 49
-    };
-    class Modifier {
-        Code code;
-    public:
-        Modifier(Code pCode) : code(pCode) {}
-        friend std::ostream&
+struct testStep{
+    rp_channel_t channel;
+    rp_channel_trigger_t channel_t;
+    rp_acq_trig_src_t t_source;
+};
 
-        operator<<(std::ostream& os, const Modifier& mod) {
-            return os << "\033[" << mod.code << "m";
-        }
-
-        operator std::string() const {
-            std::ostringstream out;
-            out << *this;
-            return out.str();
-        }
-
-        auto color(string &str) -> string{
-            Modifier def(FG_DEFAULT);
-            std::ostringstream out;
-            out << *this << str << def;
-            return out.str();
-        }
-
-        auto color(const char *str) -> string{
-            Modifier def(FG_DEFAULT);
-            std::ostringstream out;
-            out << *this << str << def;
-            return out.str();
-        }
-
-    };
-}
-
-auto getADCChannels() -> uint8_t{
-    uint8_t c = 0;
-    if (rp_HPGetFastADCChannelsCount(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get fast ADC channels count\n");
-        exit(-1);
-    }
-    return c;
-}
-
-auto getDACChannels() -> uint8_t{
-    uint8_t c = 0;
-    if (rp_HPGetFastDACChannelsCount(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get fast DAC channels count\n");
-        exit(-1);
-    }
-    return c;
-}
-
-auto getADCRate() -> uint32_t{
-    uint32_t c = 0;
-    if (rp_HPGetBaseFastADCSpeedHz(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get fast ADC rate\n");
-        exit(-1);
-    }
-    return c;
-}
-
-auto getClock() -> double {
-    struct timespec tp;
-    clock_gettime(CLOCK_REALTIME, &tp);
-    return ((double)tp.tv_sec * 1000.f) + ((double)tp.tv_nsec / 1000000.f);
-}
-
-auto getModel() -> models_t{
-    rp_HPeModels_t c = STEM_125_14_v1_0;
-    if (rp_HPGetModel(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get board model\n");
-        exit(-1);
-    }
-
-    switch (c)
-    {
-        case STEM_125_10_v1_0:
-        case STEM_125_14_v1_0:
-        case STEM_125_14_v1_1:
-        case STEM_125_14_LN_v1_1:
-        case STEM_125_14_Z7020_v1_0:
-        case STEM_125_14_Z7020_LN_v1_1:
-            return RP_125_14;
-
-        case STEM_122_16SDR_v1_0:
-        case STEM_122_16SDR_v1_1:
-            return RP_122_16;
-
-        case STEM_125_14_Z7020_4IN_v1_0:
-        case STEM_125_14_Z7020_4IN_v1_2:
-        case STEM_125_14_Z7020_4IN_v1_3:
-            return RP_125_14_4CH;
-
-        case STEM_250_12_v1_0:
-        case STEM_250_12_v1_1:
-        case STEM_250_12_v1_2:
-        case STEM_250_12_v1_2a:
-        case STEM_250_12_v1_2b:
-            return RP_250_12;
-        default:
-            fprintf(stderr,"[Error] Can't get board model\n");
-            exit(-1);
-    }
-    return RP_125_14;
-}
+struct testStepSplit{
+    rp_acq_trig_src_t t_source[4];
+};
 
 auto printHelp(char* prog) -> void {
     std::cout << prog << "-h SCPI_SERVER_IP [-t1] [-t2] [-t3] [-a] [-d] [-b] [-v] [-s]\n";
@@ -180,6 +70,8 @@ auto printHelp(char* prog) -> void {
                     "\t-t2 : Start test pretrigger and delay logic\n" \
                     "\t-t3 : Start test trigger setting now\n" \
                     "\t-t4 : Start test keep arm\n" \
+                    "\t-t5 : Start a noise test on a channels\n" \
+                    "\t-t6 : Start test trigger in split mode\n" \
                     "\t-a : Start all test\n" \
                     "\t-d : Enable debug register mode\n" \
                     "\t-b : Show captured buffer\n" \
@@ -231,11 +123,21 @@ auto parseOptions(int argc, char **argv) -> settings {
             s.testKeepArm = true;
         }
 
+        if (strcmp(argv[i],"-t5")==0){
+            s.testNoise = true;
+        }
+
+        if (strcmp(argv[i],"-t6")==0){
+            s.testInSplitMode = true;
+        }
+
         if (strcmp(argv[i],"-a")==0){
             s.testTrigDelay = true;
             s.testTrig = true;
             s.testTrigSettingNow = true;
             s.testKeepArm = true;
+            s.testNoise = true;
+            s.testInSplitMode = true;
         }
 
         if (strcmp(argv[i],"-v")==0){
@@ -248,74 +150,6 @@ auto parseOptions(int argc, char **argv) -> settings {
 
     }
     return s;
-}
-
-auto getTrigName(rp_acq_trig_src_t tr) -> std::string{
-    switch (tr)
-    {
-      case RP_TRIG_SRC_DISABLED: return "Disabled";
-    case RP_TRIG_SRC_NOW: return "NOW";
-    case RP_TRIG_SRC_CHA_PE: return "Ch1 PE";
-    case RP_TRIG_SRC_CHA_NE: return "Ch1 NE";
-    case RP_TRIG_SRC_CHB_PE: return "Ch2 PE";
-    case RP_TRIG_SRC_CHB_NE: return "Ch2 NE";
-    case RP_TRIG_SRC_EXT_PE: return "EXT PE";
-    case RP_TRIG_SRC_EXT_NE: return "EXT NE";
-    case RP_TRIG_SRC_AWG_PE: return "AWG PE";
-    case RP_TRIG_SRC_AWG_NE: return "AWG NE";
-    case RP_TRIG_SRC_CHC_PE: return "Ch3 PE";
-    case RP_TRIG_SRC_CHC_NE: return "Ch3 NE";
-    case RP_TRIG_SRC_CHD_PE: return "Ch4 PE";
-    case RP_TRIG_SRC_CHD_NE: return "Ch4 NE";
-
-    default:
-        break;
-    }
-    return "ERROR";
-}
-
-auto printBuffer(buffers_t *data,int indexOffset,int size) -> void {
-    for(int ch = 0 ; ch < data->channels ; ch++){
-        printf("Ch %d :",ch+1);
-        for(int i = 0; i < size; i++){
-            int pos = (data->size + i + indexOffset) % data->size;
-            printf("[%d = %d]", i + indexOffset, data->ch_i[ch][pos]);
-        }
-        printf("\n");
-    }
-}
-
-auto printBufferF(buffers_t *data,int indexOffset,int size) -> void {
-    for(int ch = 0 ; ch < data->channels ; ch++){
-        printf("Ch %d :",ch+1);
-        for(int i = 0; i < size; i++){
-            int pos = (data->size + i + indexOffset) % data->size;
-            printf("[%d = %f]", i + indexOffset, data->ch_f[ch][pos]);
-        }
-        printf("\n");
-    }
-}
-
-auto printTestResult(string _testName,bool result) -> void {
-    Color::Modifier red(Color::FG_RED);
-    Color::Modifier green(Color::FG_GREEN);
-
-    string ok = "[OK]";
-    string fail = "[FAIL]";
-
-    string res = string("Result of ") + _testName + " " + (result ?  green.color("[OK]") : red.color("[FAIL]"));
-    std::cout << res << "\n";
-    int allSize = 150;
-    allSize -= _testName.size();
-    allSize -= result ? ok.size() : fail.size();
-
-    g_result.push_back(_testName + string(allSize,'.') + (result ? green.color(ok) : red.color(fail)));
-}
-
-auto printAllResult() -> void {
-    for (auto const& i : g_result) {
-        std::cout << i << "\n";
-    }
 }
 
 auto startGenerator(std::string ip, rp_channel_t _channel, rp_waveform_t _wave, uint32_t _rate, float _volt, float _offset,bool _verbose) -> int {
@@ -338,8 +172,6 @@ auto startGenerator(std::string ip, rp_channel_t _channel, rp_waveform_t _wave, 
             printf("Undefined wave type\n");
             exit(-1);
     }
-
-
 
     int ret = 0;
     g_client.write("RP:LOG CONSOLE");
@@ -445,6 +277,106 @@ auto getData(rp_channel_trigger_t _ch, uint32_t _dec, int32_t _triggerDelay, flo
     return ret;
 }
 
+
+auto getDataSplit(testStepSplit settings, uint32_t _dec, int32_t _triggerDelay, float _trigLevel, bool _verbose, buffers_t *_buffer) -> int {
+    static double rate = getADCRate();
+    Color::Modifier red(Color::FG_RED);
+    Color::Modifier green(Color::FG_GREEN);
+
+    if (_verbose){
+        string s = "* Start capturing data";
+        std::cout << s << "\n";
+
+    }
+    bool chEnable[4];
+    chEnable[0] = settings.t_source[0] != RP_TRIG_SRC_DISABLED;
+    chEnable[1] = settings.t_source[1] != RP_TRIG_SRC_DISABLED;
+    chEnable[2] = settings.t_source[2] != RP_TRIG_SRC_DISABLED;
+    chEnable[3] = settings.t_source[3] != RP_TRIG_SRC_DISABLED;
+
+    int ret = 0;
+    for(int ch = 0; ch < 4; ch++){
+        if (chEnable[ch]) {
+            ret |= rp_AcqResetCh((rp_channel_t)ch);
+            ret |= rp_AcqSetDecimationFactorCh((rp_channel_t)ch,_dec);
+            ret |= rp_AcqSetTriggerLevel((rp_channel_trigger_t)ch, _trigLevel);
+            ret |= rp_AcqSetTriggerDelayDirectCh((rp_channel_t)ch, _triggerDelay);
+        }
+    }
+
+    ret |= rp_AcqSetTriggerHyst(0.005);
+
+    auto max_timeout = ADC_BUFFER_SIZE / (rate / RP_DEC_65536) * 1000.0;
+
+
+
+    uint32_t preTriggerWait = ADC_BUFFER_SIZE - _triggerDelay;
+
+    for(int ch = 0; ch < 4; ch++){
+        if (chEnable[ch]) {
+            ret |= rp_AcqStartCh((rp_channel_t)ch);
+        }
+    }
+
+    for(int ch = 0; ch < 4; ch++){
+        if (chEnable[ch]) {
+            auto timeout = max_timeout + getClock();
+            uint32_t pretrigger = 0;
+            while(pretrigger < preTriggerWait && pretrigger < ADC_BUFFER_SIZE){
+                ret |= rp_AcqGetPreTriggerCounterCh((rp_channel_t)ch, &pretrigger);
+                if (timeout < getClock()) {
+                    printf("Fail pre trigger counter on Ch %d. Current counter %d need %d\n",ch + 1, pretrigger,preTriggerWait);
+                    return -1;
+                }
+            }
+            ret |=rp_AcqSetTriggerSrcCh((rp_channel_t)ch, settings.t_source[ch]);
+            timeout = max_timeout + getClock();
+            rp_acq_trig_state_t state = RP_TRIG_STATE_TRIGGERED;
+            while(1){
+                ret |= rp_AcqGetTriggerStateCh((rp_channel_t)ch, &state);
+                if(state == RP_TRIG_STATE_TRIGGERED){
+                    break;
+                }
+                if (timeout < getClock()) {
+                    printf("Fail wait trigger on Ch %d.\n",ch + 1);
+                    return -1;
+                }
+            }
+        }
+    }
+
+    for(int ch = 0; ch < 4; ch++){
+        if (chEnable[ch]) {
+            bool fillState = false;
+            auto timeout = max_timeout + getClock();
+            while(!fillState){
+                ret |=  rp_AcqGetBufferFillStateCh((rp_channel_t)ch, &fillState);
+                if (timeout < getClock()) {
+                    printf("Fail wait fill state on Ch %d.\n", ch + 1);
+                    return -1;
+                }
+            }
+        }
+    }
+
+    for(int ch = 0; ch < 4; ch++){
+        if (chEnable[ch]) {
+            ret |= rp_AcqStopCh((rp_channel_t)ch);
+            uint32_t trig_pos;
+            ret |= rp_AcqGetWritePointerAtTrigCh((rp_channel_t)ch, &trig_pos);
+            uint32_t size = ADC_BUFFER_SIZE;
+            ret |= rp_AcqGetDataRaw((rp_channel_t)ch, trig_pos, &size , _buffer->ch_i[ch]);
+        }
+    }
+
+    if (_verbose){
+        string s = "* End capturing data " + (ret == 0 ? green.color("[OK]") : red.color("[FAIL]"));
+        std::cout << s << "\n";
+    }
+
+    return ret;
+}
+
 auto testTrig(settings s) -> int {
 
     auto old_calib = rp_GetCalibrationSettings();
@@ -499,7 +431,14 @@ auto testTrig(settings s) -> int {
         exit(-1);
     }
 
-    vector<rp_acq_trig_src_t> trig_list = {RP_TRIG_SRC_CHA_PE,RP_TRIG_SRC_CHB_PE,RP_TRIG_SRC_CHC_PE,RP_TRIG_SRC_CHD_PE};
+    vector<testStep> trig_list = {{RP_CH_1,RP_T_CH_1,RP_TRIG_SRC_CHA_PE},
+                                  {RP_CH_1,RP_T_CH_1,RP_TRIG_SRC_CHA_NE},
+                                  {RP_CH_2,RP_T_CH_2,RP_TRIG_SRC_CHB_PE},
+                                  {RP_CH_2,RP_T_CH_2,RP_TRIG_SRC_CHB_NE},
+                                  {RP_CH_3,RP_T_CH_3,RP_TRIG_SRC_CHC_PE},
+                                  {RP_CH_3,RP_T_CH_3,RP_TRIG_SRC_CHC_NE},
+                                  {RP_CH_4,RP_T_CH_4,RP_TRIG_SRC_CHD_PE},
+                                  {RP_CH_4,RP_T_CH_4,RP_TRIG_SRC_CHD_NE}};
 
 
     for(auto &i : test_list){
@@ -513,47 +452,37 @@ auto testTrig(settings s) -> int {
             }
             testResult |= startGenerator(s.ip, RP_CH_1,RP_WAVEFORM_SINE,freq,  0.9,0,s.verbose);
 
-            testResult |=  getData(RP_T_CH_1,dec,ADC_BUFFER_SIZE/2.0, 0 ,RP_TRIG_SRC_CHA_PE,s.verbose,buffer);
+            for(auto test_step : trig_list){
+                testResult |=  getData(test_step.channel_t,dec,ADC_BUFFER_SIZE/2.0, 0 ,test_step.t_source,s.verbose,buffer);
 
-            int ch = 0;
-            auto end = buffer->size - 1;
-            bool bufferIsOk = true;
-            // for(int ch = 0 ; ch < buffer->channels ; ch++){
-                if (!(buffer->ch_i[ch][0] > buffer->ch_i[ch][end] &&
-                    buffer->ch_i[ch][0] >= 0 &&
-                    buffer->ch_i[ch][end] < 0)){
-                        bufferIsOk = false;
-                    }
-            // }
+                int ch = test_step.channel;
+                float sign = getTrigNameDir(test_step.t_source);
+                auto end = buffer->size - 1;
+                bool bufferIsOk = true;
+                if (sign >= 0){
+                    if (!(buffer->ch_i[ch][0] > buffer->ch_i[ch][end] &&
+                        buffer->ch_i[ch][0] >= 0 &&
+                        buffer->ch_i[ch][end] < 0)){
+                            bufferIsOk = false;
+                        }
+                }else{
+                    if (!(buffer->ch_i[ch][0] < buffer->ch_i[ch][end] &&
+                        buffer->ch_i[ch][0] <= 0 &&
+                        buffer->ch_i[ch][end] > 0)){
+                            bufferIsOk = false;
+                        }
+                }
 
-            if (s.showBuffer || !bufferIsOk) {
-                if (!bufferIsOk)
-                    printf("Fail in CHA_PE trigger\n");
-                printBuffer(buffer,-5,10);
+                if (s.showBuffer || !bufferIsOk) {
+                    if (!bufferIsOk)
+                        printf("Fail in %s trigger\n",getTrigName(test_step.t_source).c_str());
+                    printBuffer(buffer,-5,10);
+                }
+                testResult |= !bufferIsOk;
             }
-            testResult |= !bufferIsOk;
-
-            testResult |=  getData(RP_T_CH_1,dec,ADC_BUFFER_SIZE/2.0, 0 ,RP_TRIG_SRC_CHA_NE,s.verbose,buffer);
-            testResult |= testResult;
-
-            bufferIsOk = true;
-            // for(int ch = 0 ; ch < buffer->channels ; ch++){
-                if (!(buffer->ch_i[ch][0] < buffer->ch_i[ch][end] &&
-                    buffer->ch_i[ch][0] <= 0 &&
-                    buffer->ch_i[ch][end] > 0)){
-                        bufferIsOk = false;
-                    }
-            // }
-
-            if (s.showBuffer || !bufferIsOk) {
-                if (!bufferIsOk)
-                    printf("Fail in CHA_NE trigger\n");
-                printBuffer(buffer,-5,10);
-            }
-            testResult |= !bufferIsOk;
             result |= testResult;
             if (s.verbose || testResult){
-                printTestResult(testName,testResult == 0);
+                printTestResult(g_result, testName,testResult == 0);
             }
 
             if (s.stopOnFail && result) {
@@ -668,7 +597,7 @@ auto testTrigSettingNow(settings s) -> int {
         if (s.verbose || ret){
             std::cout << "Trigger position " << trig_pos << "\n";
             std::cout << "Write position " << write_pos << "\n";
-            printTestResult(testName,ret == 0);
+            printTestResult(g_result, testName,ret == 0);
         }
 
         if (s.stopOnFail && result) {
@@ -805,7 +734,7 @@ auto testKeepArm(settings s) -> int {
         result |= ret;
 
         if (s.verbose || ret){
-            printTestResult(testName,ret == 0);
+            printTestResult(g_result, testName,ret == 0);
         }
 
         if (s.stopOnFail && result) {
@@ -936,7 +865,7 @@ auto testTrigDelay(settings s) -> int {
             }
 
             if (s.verbose || ret){
-                printTestResult(testName,ret == 0);
+                printTestResult(g_result, testName,ret == 0);
             }
 
             if (s.stopOnFail && ret) {
@@ -946,6 +875,267 @@ auto testTrigDelay(settings s) -> int {
         }
     }
 
+    rp_deleteBuffer(buffer);
+    rp_CalibrationSetParams(old_calib);
+    return result;
+}
+
+
+auto testNoise(settings s) -> int {
+
+    rp_SetLEDEthState(false);
+    rp_SetLEDHeartBeatState(false);
+    rp_SetLEDMMCState(false);
+
+    auto old_calib = rp_GetCalibrationSettings();
+    auto def_calib = rp_GetDefaultCalibrationSettings();
+    rp_CalibrationSetParams(def_calib);
+    uint32_t adcRate = getADCRate();
+    uint32_t minPointerPerPer = 4;
+    uint32_t maxPointerPerPer = 100;
+    uint32_t steps = 25;
+    auto model = getModel();
+    int result = 0;
+    list<uint32_t> dec_list;
+    for(uint32_t dec = RP_DEC_1; dec <= RP_DEC_65536; dec *= 2){
+        dec_list.push_back(dec);
+        if (dec >= RP_DEC_4096){
+            steps = 6;
+        }
+        if (dec >= 16 && dec < RP_DEC_65536){
+            dec_list.push_back(dec + 1);
+            dec_list.push_back(dec + 2);
+            dec_list.push_back(dec + 3);
+            dec_list.push_back(dec + 4);
+        }
+    }
+
+    map<uint32_t,vector<uint32_t>> test_list;
+
+    for(auto i : dec_list){
+        auto adcCurRate = adcRate / i;
+        auto maxFreq = adcCurRate / minPointerPerPer;
+        if (maxFreq > 17000000) { // DAC limitation
+            maxFreq = 17000000;
+        }
+
+        auto minFreq = adcCurRate / maxPointerPerPer;
+        minFreq = MAX(minFreq,1);
+        maxFreq = MAX(maxFreq,1);
+
+        auto freqSteps = MAX(1,(maxFreq - minFreq) / steps);
+        test_list[i] = {};
+        for(uint32_t freq = minFreq; freq < maxFreq; freq += freqSteps){
+            if (model == RP_122_16){
+                if (freq  < 100000)
+                    continue;
+            }
+            test_list[i].push_back(freq);
+        }
+    }
+    auto buffer = rp_createBuffer(getADCChannels(),ADC_BUFFER_SIZE,true,false,false);
+    if (!buffer){
+        printf("Can't allocate buffer\n");
+        exit(-1);
+    }
+
+    vector<testStep> trig_list = {{RP_CH_1,RP_T_CH_1,RP_TRIG_SRC_CHA_PE},
+                                  {RP_CH_2,RP_T_CH_2,RP_TRIG_SRC_CHB_PE},
+                                  {RP_CH_3,RP_T_CH_3,RP_TRIG_SRC_CHC_PE},
+                                  {RP_CH_4,RP_T_CH_4,RP_TRIG_SRC_CHD_PE}};
+
+
+    for(auto &i : test_list){
+        auto dec = i.first;
+        auto freq_list = i.second;
+        for(auto freq : freq_list){
+            int testResult = 0;
+            string testName = "Noise test. Decimate: " + to_string(dec) + ". Signal freq: " + to_string(freq);
+            if (s.verbose){
+                std::cout << testName << "\n";
+            }
+            testResult |= startGenerator(s.ip, RP_CH_1,RP_WAVEFORM_SINE,freq,  0.9,0,s.verbose);
+
+            for(auto test_step : trig_list){
+                testResult |=  getData(test_step.channel_t,dec,ADC_BUFFER_SIZE, 0 ,test_step.t_source,s.verbose,buffer);
+
+                int ch = test_step.channel;
+                auto end = buffer->size - 1;
+                bool bufferIsOk = true;
+
+                unsigned int idx = 0;
+                for(; idx < end - 2; idx++){
+
+                    if (buffer->ch_i[ch][idx] > 0 && buffer->ch_i[ch][idx + 2] > 0){
+                        if (buffer->ch_i[ch][idx+1] <= 0){
+                            bufferIsOk = false;
+                            break;
+                        }
+                    }
+
+                    if (buffer->ch_i[ch][idx] < 0 && buffer->ch_i[ch][idx + 2] < 0){
+                        if (buffer->ch_i[ch][idx+1] >= 0){
+                            bufferIsOk = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (s.showBuffer || !bufferIsOk) {
+                    if (!bufferIsOk)
+                        printf("Fail in %s trigger\n",getTrigName(test_step.t_source).c_str());
+                    printBuffer(buffer,idx ,3);
+                }
+                testResult |= !bufferIsOk;
+            }
+            result |= testResult;
+            if (s.verbose || testResult){
+                printTestResult(g_result, testName,testResult == 0);
+            }
+
+            if (s.stopOnFail && result) {
+                exit(-1);
+            }
+        }
+    }
+    rp_deleteBuffer(buffer);
+    rp_CalibrationSetParams(old_calib);
+    return result;
+}
+
+
+auto testSplitMode(settings s) -> int {
+
+    if (rp_AcqSetSplitTrigger(true) != RP_OK){
+        printf("Split mode not supported\n");
+        return RP_NOTS;
+    }
+
+    auto old_calib = rp_GetCalibrationSettings();
+    auto def_calib = rp_GetDefaultCalibrationSettings();
+    rp_CalibrationSetParams(def_calib);
+    uint32_t adcRate = getADCRate();
+    uint32_t minPointerPerPer = 4;
+    uint32_t maxPointerPerPer = 100;
+    uint32_t steps = 25;
+    auto model = getModel();
+    int result = 0;
+    list<uint32_t> dec_list;
+    for(uint32_t dec = RP_DEC_1; dec <= RP_DEC_65536; dec *= 2){
+        dec_list.push_back(dec);
+        if (dec >= RP_DEC_4096){
+            steps = 6;
+        }
+        if (dec >= 16 && dec < RP_DEC_65536){
+            dec_list.push_back(dec + 1);
+            dec_list.push_back(dec + 2);
+            dec_list.push_back(dec + 3);
+            dec_list.push_back(dec + 4);
+        }
+    }
+
+    map<uint32_t,vector<uint32_t>> test_list;
+
+    for(auto i : dec_list){
+        auto adcCurRate = adcRate / i;
+        auto maxFreq = adcCurRate / minPointerPerPer;
+        if (maxFreq > 17000000) { // DAC limitation
+            maxFreq = 17000000;
+        }
+
+        auto minFreq = adcCurRate / maxPointerPerPer;
+        minFreq = MAX(minFreq,1);
+        maxFreq = MAX(maxFreq,1);
+
+        auto freqSteps = MAX(1,(maxFreq - minFreq) / steps);
+        test_list[i] = {};
+        for(uint32_t freq = minFreq; freq < maxFreq; freq += freqSteps){
+            if (model == RP_122_16){
+                if (freq  < 100000)
+                    continue;
+            }
+            test_list[i].push_back(freq);
+        }
+    }
+    auto buffer = rp_createBuffer(getADCChannels(),ADC_BUFFER_SIZE,true,false,false);
+    if (!buffer){
+        printf("Can't allocate buffer\n");
+        exit(-1);
+    }
+
+    vector<testStepSplit> trig_list = {{.t_source = {RP_TRIG_SRC_CHA_PE, RP_TRIG_SRC_CHB_PE, RP_TRIG_SRC_CHC_PE, RP_TRIG_SRC_CHD_PE}},
+                                       {.t_source = {RP_TRIG_SRC_CHA_PE, RP_TRIG_SRC_CHB_NE, RP_TRIG_SRC_CHC_PE, RP_TRIG_SRC_CHD_NE}},
+                                       {.t_source = {RP_TRIG_SRC_CHA_NE, RP_TRIG_SRC_CHB_NE, RP_TRIG_SRC_CHC_NE, RP_TRIG_SRC_CHD_NE}},
+                                       {.t_source = {RP_TRIG_SRC_CHA_NE, RP_TRIG_SRC_CHB_PE, RP_TRIG_SRC_CHC_NE, RP_TRIG_SRC_CHD_PE}},
+                                       {.t_source = {RP_TRIG_SRC_CHA_NE, RP_TRIG_SRC_DISABLED, RP_TRIG_SRC_CHC_NE, RP_TRIG_SRC_DISABLED}},
+                                       {.t_source = {RP_TRIG_SRC_DISABLED, RP_TRIG_SRC_CHB_PE, RP_TRIG_SRC_DISABLED, RP_TRIG_SRC_CHD_PE}},
+                                       {.t_source = {RP_TRIG_SRC_CHA_NE, RP_TRIG_SRC_DISABLED, RP_TRIG_SRC_CHC_PE, RP_TRIG_SRC_DISABLED}}
+                                        //,
+                                    //    {.t_source = {RP_TRIG_SRC_CHA_PE, RP_TRIG_SRC_CHA_PE, RP_TRIG_SRC_CHA_PE, RP_TRIG_SRC_CHA_PE}},
+                                    //    {.t_source = {RP_TRIG_SRC_CHD_PE, RP_TRIG_SRC_CHD_PE, RP_TRIG_SRC_CHD_PE, RP_TRIG_SRC_CHD_PE}}
+                                       };
+
+
+    for(auto &i : test_list){
+        auto dec = i.first;
+        auto freq_list = i.second;
+        for(auto freq : freq_list){
+            int testResult = 0;
+            string testName = "Trigger position test. Decimate: " + to_string(dec) + ". Signal freq: " + to_string(freq);
+            if (s.verbose){
+                std::cout << testName << "\n";
+            }
+            testResult |= startGenerator(s.ip, RP_CH_1,RP_WAVEFORM_SINE,freq,  0.9,0,s.verbose);
+
+            for(auto test_step : trig_list){
+                testResult |=  getDataSplit(test_step,dec,ADC_BUFFER_SIZE/2.0, 0, s.verbose, buffer);
+                printf("\t - Test ");
+                for(int ch = 0 ; ch < 4; ch++){
+                    if (test_step.t_source[ch] != RP_TRIG_SRC_DISABLED){
+                        printf("Ch %d: %s ", ch + 1,getTrigName(test_step.t_source[ch]).c_str());
+                    }
+                }
+                printf("\n");
+                for(int ch = 0 ; ch < 4; ch++){
+                    if (test_step.t_source[ch] != RP_TRIG_SRC_DISABLED){
+                        float sign = getTrigNameDir(test_step.t_source[ch]);
+                        auto end = buffer->size - 1;
+                        bool bufferIsOk = true;
+                        if (sign >= 0){
+                        if (!(buffer->ch_i[ch][0] > buffer->ch_i[ch][end] &&
+                            buffer->ch_i[ch][0] >= 0 &&
+                            buffer->ch_i[ch][end] < 0)){
+                                bufferIsOk = false;
+                            }
+                        }else{
+                            if (!(buffer->ch_i[ch][0] < buffer->ch_i[ch][end] &&
+                                buffer->ch_i[ch][0] <= 0 &&
+                                buffer->ch_i[ch][end] > 0)){
+                                    bufferIsOk = false;
+                                }
+                        }
+
+                        if (s.showBuffer || !bufferIsOk) {
+                            if (!bufferIsOk)
+                                printf("Fail in %s trigger\n",getTrigName(test_step.t_source[ch]).c_str());
+                            printBuffer(buffer,-5,10);
+                        }
+                        testResult |= !bufferIsOk;
+                    }
+                }
+
+
+            }
+            result |= testResult;
+            if (s.verbose || testResult){
+                printTestResult(g_result, testName,testResult == 0);
+            }
+
+            if (s.stopOnFail && result) {
+                exit(-1);
+            }
+        }
+    }
     rp_deleteBuffer(buffer);
     rp_CalibrationSetParams(old_calib);
     return result;
@@ -978,6 +1168,8 @@ int main(int argc, char **argv){
         return 1;
     }
 
+    rp_AcqSetSplitTrigger(false);
+
     g_result.clear();
 
     if (s.testTrig){
@@ -996,7 +1188,15 @@ int main(int argc, char **argv){
         result |=  testKeepArm(s);
     }
 
-    printAllResult();
+    if (s.testNoise){
+        result |=  testNoise(s);
+    }
+
+    if (s.testInSplitMode){
+        result |=  testSplitMode(s);
+    }
+
+    printAllResult(g_result);
 
     rp_Release();
     return result;

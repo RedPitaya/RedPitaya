@@ -196,33 +196,17 @@ int osc_GetDecimation(rp_channel_t channel, uint32_t* decimation)
 int osc_SetAveraging(rp_channel_t channel, bool enable)
 {
     int value  = enable ? 0x1 : 0x0;
+    trig_average_u_t config;
     switch (channel)
     {
         case RP_CH_1:
-            cmn_Debug("[Write] osc_reg->average_chA <- 0x%X",  value);
-            osc_reg->average_chA = value;
-            return RP_OK;
         case RP_CH_2:
-            cmn_Debug("[Write] osc_reg->average_chB <- 0x%X", value);
-            osc_reg->average_chB = value;
-            return RP_OK;
         case RP_CH_3:
-            if (osc_reg_4ch){
-                cmn_Debug("[Write] osc_reg_4ch->average_chA <- 0x%X", value);
-                osc_reg_4ch->average_chA = value;
-            }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
-                return RP_NOTS;
-            }
-            return RP_OK;
         case RP_CH_4:
-            if (osc_reg_4ch){
-                cmn_Debug("[Write] osc_reg_4ch->average_chB <- 0x%X", 0x1);
-                osc_reg_4ch->average_chB = value;
-            }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
-                return RP_NOTS;
-            }
+            config.reg_full = osc_reg->average;
+            config.reg[channel].average = value;
+            osc_reg->average = config.reg_full;
+            cmn_Debug("[Write] osc_reg->average <- 0x%X",  config.reg_full);
             return RP_OK;
         default:
             ERROR("Wrong channel %d",channel)
@@ -233,32 +217,16 @@ int osc_SetAveraging(rp_channel_t channel, bool enable)
 
 int osc_GetAveraging(rp_channel_t channel, bool* enable)
 {
-     switch (channel)
+    trig_average_u_t config;
+    switch (channel)
     {
         case RP_CH_1:
-            *enable = osc_reg->average_chA;
-            return RP_OK;
         case RP_CH_2:
-            *enable = osc_reg->average_chB;
-            return RP_OK;
         case RP_CH_3:
-            if (osc_reg_4ch){
-                *enable = osc_reg_4ch->average_chA;
-                return RP_OK;
-            }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
-                return RP_NOTS;
-            }
-            break;
         case RP_CH_4:
-            if (osc_reg_4ch){
-                *enable = osc_reg_4ch->average_chB;
-                return RP_OK;
-            }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
-                return RP_NOTS;
-            }
-            break;
+            config.reg_full = osc_reg->average;
+            *enable = config.reg[channel].average;
+            return RP_OK;
         default:
             ERROR("Wrong channel %d",channel)
             break;
@@ -289,33 +257,18 @@ int osc_SetTriggerSource(rp_channel_t channel, uint32_t source)
             source = RP_TRIG_SRC_CHB_NE;
         }
     }
+
+    trig_source_u_t control;
     switch (channel)
     {
         case RP_CH_1:
-            cmn_Debug("[Write] osc_reg->trig_source.trig_source_ch0 <- 0x%X", source);
-            osc_reg->trig_source.trig_source_ch0 = source;
-            return RP_OK;
         case RP_CH_2:
-            cmn_Debug("[Write] osc_reg->trig_source.trig_source_ch1 <- 0x%X", source);
-            osc_reg->trig_source.trig_source_ch1 = source;
-            return RP_OK;
         case RP_CH_3:
-            if (osc_reg_4ch){
-                cmn_Debug("[Write] osc_reg_4ch->trig_source.trig_source_ch0 <- 0x%X", source);
-                osc_reg_4ch->trig_source.trig_source_ch0 = source;
-            }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
-                return RP_NOTS;
-            }
-            return RP_OK;
         case RP_CH_4:
-            if (osc_reg_4ch){
-                cmn_Debug("[Write] osc_reg_4ch->trig_source.trig_source_ch1 <- 0x%X", source);
-                osc_reg_4ch->trig_source.trig_source_ch1 = source;
-            }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
-                return RP_NOTS;
-            }
+            control.reg_full = osc_reg->trig_source;
+            control.reg[channel].trig_source = source;
+            osc_reg->trig_source = control.reg_full;
+            cmn_Debug("[Write] osc_reg->trig_source <- 0x%X", control.reg_full);
             return RP_OK;
         default:
             ERROR("Wrong channel %d",channel)
@@ -326,32 +279,16 @@ int osc_SetTriggerSource(rp_channel_t channel, uint32_t source)
 
 int osc_GetTriggerSource(rp_channel_t channel, uint32_t* source)
 {
+    trig_source_u_t control;
     switch (channel)
     {
         case RP_CH_1:
-            *source = osc_reg->trig_source.trig_source_ch0;
-            return RP_OK;
         case RP_CH_2:
-            *source = osc_reg->trig_source.trig_source_ch1;
-            return RP_OK;
         case RP_CH_3:
-            if (osc_reg_4ch){
-                *source = osc_reg_4ch->trig_source.trig_source_ch0;
-                return RP_OK;
-            }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
-                return RP_NOTS;
-            }
-            break;
         case RP_CH_4:
-            if (osc_reg_4ch){
-                *source = osc_reg_4ch->trig_source.trig_source_ch1;
-                return RP_OK;
-            }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
-                return RP_NOTS;
-            }
-            break;
+            control.reg_full = osc_reg->trig_source;
+            *source = control.reg[channel].trig_source;
+            return RP_OK;
         default:
             ERROR("Wrong channel %d",channel)
             break;
@@ -363,15 +300,12 @@ int osc_SetSplitTriggerMode(bool enable)
 {
     config_u_t config;
     config.reg_full = osc_reg->config;
-    config.reg.config_ch[0].enable_split_trigger = enable ? 0x1 : 0;
+    config.reg.config_ch[0].enable_split_trigger = enable ? 0x1 : 0x0;
+    config.reg.config_ch[1].enable_split_trigger = enable ? 0x1 : 0x0;
+    config.reg.config_ch[2].enable_split_trigger = enable ? 0x1 : 0x0;
+    config.reg.config_ch[3].enable_split_trigger = enable ? 0x1 : 0x0;
     osc_reg->config = config.reg_full;
     cmn_Debug("[Write] osc_reg->config <- 0x%X",config.reg_full);
-    if (osc_reg_4ch){
-        config.reg_full = osc_reg_4ch->config;
-        config.reg.config_ch[0].enable_split_trigger = enable ? 0x1 : 0;
-        osc_reg_4ch->config = config.reg_full;
-        cmn_Debug("[Write] osc_reg_4ch->trigger_lock_ctr <- 0x%X", 0x1);
-    }
     return RP_OK;
 }
 
@@ -388,33 +322,17 @@ int osc_GetSplitTriggerMode(bool* enable)
 
 int osc_SetUnlockTrigger(rp_channel_t channel)
 {
+    trig_lock_control_u_t config;
     switch (channel)
     {
         case RP_CH_1:
-            cmn_Debug("[Write] osc_reg->trigger_lock_ctr <- 0x%X", 0x1);
-            osc_reg->trigger_lock_ctr = 1;
-            return RP_OK;
         case RP_CH_2:
-            cmn_Debug("[Write] osc_reg->trigger_lock_ctr_ch2 <- 0x%X", 0x1);
-            osc_reg->trigger_lock_ctr_ch2 = 1;
-            return RP_OK;
         case RP_CH_3:
-            if (osc_reg_4ch){
-                cmn_Debug("[Write] osc_reg_4ch->trigger_lock_ctr <- 0x%X", 0x1);
-                osc_reg_4ch->trigger_lock_ctr = 1;
-            }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
-                return RP_NOTS;
-            }
-            return RP_OK;
         case RP_CH_4:
-            if (osc_reg_4ch){
-                cmn_Debug("[Write] osc_reg_4ch->trigger_lock_ctr_ch2 <- 0x%X", 0x1);
-                osc_reg_4ch->trigger_lock_ctr_ch2 = 1;
-            }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
-                return RP_NOTS;
-            }
+            config.reg_full = osc_reg->trigger_lock_ctr;
+            config.reg[channel].trig_lock = 0x1;
+            osc_reg->trigger_lock_ctr = config.reg_full;
+            cmn_Debug("[Write] osc_reg->trigger_lock_ctr <- 0x%X", config.reg_full);
             return RP_OK;
         default:
             ERROR("Wrong channel %d",channel)
@@ -424,29 +342,15 @@ int osc_SetUnlockTrigger(rp_channel_t channel)
 }
 
 int osc_GetUnlockTrigger(rp_channel_t channel, bool *state){
-    switch (channel)
+    trig_source_u_t control;
+        switch (channel)
     {
         case RP_CH_1:
-            *state = osc_reg->trig_source.trig_lock_ch0;
-            return RP_OK;
         case RP_CH_2:
-            *state = osc_reg->trig_source.trig_lock_ch1;
-            return RP_OK;
         case RP_CH_3:
-            if (osc_reg_4ch){
-                *state = osc_reg_4ch->trig_source.trig_lock_ch0;
-            }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
-                return RP_NOTS;
-            }
-            return RP_OK;
         case RP_CH_4:
-            if (osc_reg_4ch){
-                *state = osc_reg_4ch->trig_source.trig_lock_ch1;
-            }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
-                return RP_NOTS;
-            }
+            control.reg_full = osc_reg->trig_source;
+            *state = control.reg[channel].trig_lock;
             return RP_OK;
         default:
             ERROR("Wrong channel %d",channel)
@@ -462,39 +366,14 @@ int osc_WriteDataIntoMemory(rp_channel_t channel, bool enable)
     switch (channel)
     {
         case RP_CH_1:
-            config.reg_full = osc_reg->config;
-            config.reg.config_ch[0].start_write = enable ? 0x1 : 0;
-            osc_reg->config = config.reg_full;
-            cmn_Debug("[Write] osc_reg->config <- 0x%X",config.reg_full);
-            return RP_OK;
         case RP_CH_2:
+        case RP_CH_3:
+        case RP_CH_4:
             config.reg_full = osc_reg->config;
-            config.reg.config_ch[1].start_write = enable ? 0x1 : 0;
+            config.reg.config_ch[channel].start_write = enable ? 0x1 : 0;
             osc_reg->config = config.reg_full;
             cmn_Debug("[Write] osc_reg->config <- 0x%X",config.reg_full);
             return RP_OK;
-        case RP_CH_3:
-            if (osc_reg_4ch){
-                config.reg_full = osc_reg_4ch->config;
-                config.reg.config_ch[0].start_write = enable ? 0x1 : 0;
-                osc_reg_4ch->config = config.reg_full;
-                cmn_Debug("[Write] osc_reg_4ch->config <- 0x%X",config.reg_full);
-                return RP_OK;
-            }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
-                return RP_NOTS;
-            }
-        case RP_CH_4:
-            if (osc_reg_4ch){
-                config.reg_full = osc_reg_4ch->config;
-                config.reg.config_ch[1].start_write = enable ? 0x1 : 0;
-                osc_reg_4ch->config = config.reg_full;
-                cmn_Debug("[Write] osc_reg_4ch->config <- 0x%X",config.reg_full);
-                return RP_OK;
-            }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
-                return RP_NOTS;
-            }
         default:
             ERROR("Wrong channel %d",channel)
             break;
@@ -508,39 +387,14 @@ int osc_ResetWriteStateMachine(rp_channel_t channel)
     switch (channel)
     {
         case RP_CH_1:
-            config.reg_full = osc_reg->config;
-            config.reg.config_ch[0].reset_state_machine = 0x1;
-            osc_reg->config = config.reg_full;
-            cmn_Debug("[Write] osc_reg->config <- 0x%X",config.reg_full);
-            return RP_OK;
         case RP_CH_2:
+        case RP_CH_3:
+        case RP_CH_4:
             config.reg_full = osc_reg->config;
-            config.reg.config_ch[1].reset_state_machine = 0x1;
+            config.reg.config_ch[channel].reset_state_machine = 0x1;
             osc_reg->config = config.reg_full;
             cmn_Debug("[Write] osc_reg->config <- 0x%X",config.reg_full);
             return RP_OK;
-        case RP_CH_3:
-            if (osc_reg_4ch){
-                config.reg_full = osc_reg_4ch->config;
-                config.reg.config_ch[0].reset_state_machine = 0x1;
-                osc_reg_4ch->config = config.reg_full;
-                cmn_Debug("[Write] osc_reg_4ch->config <- 0x%X",config.reg_full);
-                return RP_OK;
-            }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
-                return RP_NOTS;
-            }
-        case RP_CH_4:
-            if (osc_reg_4ch){
-                config.reg_full = osc_reg_4ch->config;
-                config.reg.config_ch[1].reset_state_machine = 0x1;
-                osc_reg_4ch->config = config.reg_full;
-                cmn_Debug("[Write] osc_reg_4ch->config <- 0x%X",config.reg_full);
-                return RP_OK;
-            }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
-                return RP_NOTS;
-            }
         default:
             ERROR("Wrong channel %d",channel)
             break;
@@ -554,39 +408,14 @@ int osc_SetArmKeep(rp_channel_t channel, bool enable)
     switch (channel)
     {
         case RP_CH_1:
-            config.reg_full = osc_reg->config;
-            config.reg.config_ch[0].arm_keep = enable ? 0x1 : 0;
-            osc_reg->config = config.reg_full;
-            cmn_Debug("[Write] osc_reg->config <- 0x%X",config.reg_full);
-            return RP_OK;
         case RP_CH_2:
+        case RP_CH_3:
+        case RP_CH_4:
             config.reg_full = osc_reg->config;
-            config.reg.config_ch[1].arm_keep = enable ? 0x1 : 0;
+            config.reg.config_ch[channel].arm_keep = enable ? 0x1 : 0;
             osc_reg->config = config.reg_full;
             cmn_Debug("[Write] osc_reg->config <- 0x%X",config.reg_full);
             return RP_OK;
-        case RP_CH_3:
-            if (osc_reg_4ch){
-                config.reg_full = osc_reg_4ch->config;
-                config.reg.config_ch[0].arm_keep = enable ? 0x1 : 0;
-                osc_reg_4ch->config = config.reg_full;
-                cmn_Debug("[Write] osc_reg_4ch->config <- 0x%X",config.reg_full);
-                return RP_OK;
-            }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
-                return RP_NOTS;
-            }
-        case RP_CH_4:
-            if (osc_reg_4ch){
-                config.reg_full = osc_reg_4ch->config;
-                config.reg.config_ch[1].arm_keep = enable ? 0x1 : 0;
-                osc_reg_4ch->config = config.reg_full;
-                cmn_Debug("[Write] osc_reg_4ch->config <- 0x%X",config.reg_full);
-                return RP_OK;
-            }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
-                return RP_NOTS;
-            }
         default:
             ERROR("Wrong channel %d",channel)
             break;
@@ -599,35 +428,13 @@ int osc_GetArmKeep(rp_channel_t channel, bool *state){
     switch (channel)
     {
         case RP_CH_1:
-            config.reg_full = osc_reg->config;
-            *state = config.reg.config_ch[0].arm_keep;
-            cmn_Debug("[Read] osc_reg->config -> 0x%X",config.reg_full);
-            return RP_OK;
         case RP_CH_2:
+        case RP_CH_3:
+        case RP_CH_4:
             config.reg_full = osc_reg->config;
-            *state = config.reg.config_ch[1].arm_keep;
+            *state = config.reg.config_ch[channel].arm_keep;
             cmn_Debug("[Read] osc_reg->config -> 0x%X",config.reg_full);
             return RP_OK;
-        case RP_CH_3:
-            if (osc_reg_4ch){
-                 config.reg_full = osc_reg_4ch->config;
-                *state = config.reg.config_ch[0].arm_keep;
-                cmn_Debug("[Read] osc_reg_4ch->config -> 0x%X",config.reg_full);
-                return RP_OK;
-            }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
-                return RP_NOTS;
-            }
-        case RP_CH_4:
-            if (osc_reg_4ch){
-                 config.reg_full = osc_reg_4ch->config;
-                *state = config.reg.config_ch[1].arm_keep;
-                cmn_Debug("[Read] osc_reg_4ch->config -> 0x%X",config.reg_full);
-                return RP_OK;
-            }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
-                return RP_NOTS;
-            }
         default:
             ERROR("Wrong channel %d",channel)
             break;
@@ -665,35 +472,13 @@ int osc_GetBufferFillState(rp_channel_t channel, bool *state)
     switch (channel)
     {
         case RP_CH_1:
-            config.reg_full = osc_reg->config;
-            *state = config.reg.config_ch[0].all_data_written;
-            cmn_Debug("[Read] osc_reg->config -> 0x%X",config.reg_full);
-            return RP_OK;
         case RP_CH_2:
+        case RP_CH_3:
+        case RP_CH_4:
             config.reg_full = osc_reg->config;
-            *state = config.reg.config_ch[1].all_data_written;
+            *state = config.reg.config_ch[channel].all_data_written;
             cmn_Debug("[Read] osc_reg->config -> 0x%X",config.reg_full);
             return RP_OK;
-        case RP_CH_3:
-            if (osc_reg_4ch){
-                config.reg_full = osc_reg_4ch->config;
-                *state = config.reg.config_ch[0].all_data_written;
-                cmn_Debug("[Read] osc_reg_4ch->config -> 0x%X",config.reg_full);
-                return RP_OK;
-            }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
-                return RP_NOTS;
-            }
-        case RP_CH_4:
-            if (osc_reg_4ch){
-                config.reg_full = osc_reg_4ch->config;
-                *state = config.reg.config_ch[1].all_data_written;
-                cmn_Debug("[Read] osc_reg_4ch->config -> 0x%X",config.reg_full);
-                return RP_OK;
-            }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
-                return RP_NOTS;
-            }
         default:
             ERROR("Wrong channel %d",channel)
             break;
@@ -707,35 +492,13 @@ int osc_GetTriggerState(rp_channel_t channel, bool *received)
     switch (channel)
     {
         case RP_CH_1:
-            config.reg_full = osc_reg->config;
-            *received = config.reg.config_ch[0].trigger_status;
-            cmn_Debug("[Read] osc_reg->config -> 0x%X",config.reg_full);
-            return RP_OK;
         case RP_CH_2:
+        case RP_CH_3:
+        case RP_CH_4:
             config.reg_full = osc_reg->config;
-            *received = config.reg.config_ch[1].trigger_status;
+            *received = config.reg.config_ch[channel].trigger_status;
             cmn_Debug("[Read] osc_reg->config -> 0x%X",config.reg_full);
             return RP_OK;
-        case RP_CH_3:
-            if (osc_reg_4ch){
-                config.reg_full = osc_reg_4ch->config;
-                *received = config.reg.config_ch[0].trigger_status;
-                cmn_Debug("[Read] osc_reg_4ch->config -> 0x%X",config.reg_full);
-                return RP_OK;
-            }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
-                return RP_NOTS;
-            }
-        case RP_CH_4:
-            if (osc_reg_4ch){
-                config.reg_full = osc_reg_4ch->config;
-                *received = config.reg.config_ch[1].trigger_status;
-                cmn_Debug("[Read] osc_reg_4ch->config -> 0x%X",config.reg_full);
-                return RP_OK;
-            }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
-                return RP_NOTS;
-            }
         default:
             ERROR("Wrong channel %d",channel)
             break;
