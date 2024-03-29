@@ -891,7 +891,7 @@ auto testNoise(settings s) -> int {
     auto def_calib = rp_GetDefaultCalibrationSettings();
     rp_CalibrationSetParams(def_calib);
     uint32_t adcRate = getADCRate();
-    uint32_t minPointerPerPer = 4;
+    uint32_t minPointerPerPer = 8;
     uint32_t maxPointerPerPer = 100;
     uint32_t steps = 25;
     auto model = getModel();
@@ -984,7 +984,7 @@ auto testNoise(settings s) -> int {
                 if (s.showBuffer || !bufferIsOk) {
                     if (!bufferIsOk)
                         printf("Fail in %s trigger\n",getTrigName(test_step.t_source).c_str());
-                    printBuffer(buffer,idx ,3);
+                    printBuffer(buffer,idx - 3 ,7);
                 }
                 testResult |= !bufferIsOk;
             }
