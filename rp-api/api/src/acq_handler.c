@@ -66,11 +66,11 @@ float ch_trash[4] = {0.005,0.005,0.005,0.005};
  * @param[in] time time, specified in [ns]
  * @retval int number of ADC samples
  */
-static uint32_t cnvTimeToSmpls(int64_t time_ns){
+static uint32_t cnvTimeToSmpls(rp_channel_t channel, int64_t time_ns){
     /* Calculate sampling period (including decimation) */
 
     uint32_t decimation;
-    acq_GetDecimationFactor(&decimation);
+    acq_GetDecimationFactor(channel, &decimation);
     double sp = 0;
 
     if (acq_GetADCSamplePeriod(&sp) != RP_OK){
@@ -89,11 +89,11 @@ static uint32_t cnvTimeToSmpls(int64_t time_ns){
  * @param[in] samples, number of ADC samples
  * @retval int time, specified in [ns]
  */
-static int64_t cnvSmplsToTime(int32_t samples){
+static int64_t cnvSmplsToTime(rp_channel_t channel, int32_t samples){
     /* Calculate time (including decimation) */
 
     uint32_t decimation;
-    acq_GetDecimationFactor(&decimation);
+    acq_GetDecimationFactor(channel, &decimation);
 
     double sp = 0;
     if (acq_GetADCSamplePeriod(&sp) != RP_OK){
@@ -157,6 +157,15 @@ static int setEqFilters(rp_channel_t channel){
 
 /*----------------------------------------------------------------------------*/
 
+int acq_SetSplitTriggerMode(bool enable){
+    return osc_SetSplitTriggerMode(enable);
+}
+
+int acq_GetSplitTriggerMode(bool *state){
+    return osc_GetSplitTriggerMode(state);
+}
+
+
 int acq_GetADCSamplePeriod(double *value){
     *value = 0;
     uint32_t speed = 0;
@@ -167,16 +176,16 @@ int acq_GetADCSamplePeriod(double *value){
     return ret;
 }
 
-int acq_SetArmKeep(bool enable) {
-    return osc_SetArmKeep(enable);
+int acq_SetArmKeep(rp_channel_t channel, bool enable) {
+    return osc_SetArmKeep(channel,enable);
 }
 
-int acq_GetArmKeep(bool* state){
-    return osc_GetArmKeep(state);
+int acq_GetArmKeep(rp_channel_t channel, bool* state){
+    return osc_GetArmKeep(channel, state);
 }
 
-int acq_GetBufferFillState(bool* state){
-    return osc_GetBufferFillState(state);
+int acq_GetBufferFillState(rp_channel_t channel, bool* state){
+    return osc_GetBufferFillState(channel, state);
 }
 
 int acq_axi_GetBufferFillState(rp_channel_t channel, bool* state) {
@@ -285,35 +294,35 @@ int acq_GetGainV(rp_channel_t channel, float* voltage){
     return 0;
 }
 
-int acq_SetDecimation(rp_acq_decimation_t decimation){
+int acq_SetDecimation(rp_channel_t channel, rp_acq_decimation_t decimation){
     int64_t time_ns = 0;
 
     if (triggerDelayInNs) {
-        acq_GetTriggerDelayNs(&time_ns);
+        acq_GetTriggerDelayNs(channel,&time_ns);
     }
-    if (osc_SetDecimation((uint32_t)decimation)){
+    if (osc_SetDecimation(channel, (uint32_t)decimation)){
         return RP_EOOR;
     }
     // Now update trigger delay based on new decimation
     if (triggerDelayInNs) {
-        acq_SetTriggerDelayNs(time_ns);
+        acq_SetTriggerDelayNs(channel,time_ns);
     }
 
     return RP_OK;
 }
 
-int acq_GetDecimation(rp_acq_decimation_t* decimation){
+int acq_GetDecimation(rp_channel_t channel, rp_acq_decimation_t* decimation){
     uint32_t decimationVal;
-    osc_GetDecimation(&decimationVal);
+    osc_GetDecimation(channel,&decimationVal);
     *decimation = (rp_acq_decimation_t)decimationVal;
     return RP_OK;
 }
 
-int acq_SetDecimationFactor(uint32_t decimation){
+int acq_SetDecimationFactor(rp_channel_t channel, uint32_t decimation){
     int64_t time_ns = 0;
 
     if (triggerDelayInNs) {
-        acq_GetTriggerDelayNs(&time_ns);
+        acq_GetTriggerDelayNs(channel,&time_ns);
     }
 
     bool check = false;
@@ -324,16 +333,16 @@ int acq_SetDecimationFactor(uint32_t decimation){
     if (decimation >= 16 && decimation <= 65536) check = true;
 
     if (!check) return RP_EOOR;
-    osc_SetDecimation(decimation);
+    osc_SetDecimation(channel,decimation);
     // Now update trigger delay based on new decimation
     if (triggerDelayInNs) {
-        acq_SetTriggerDelayNs(time_ns);
+        acq_SetTriggerDelayNs(channel,time_ns);
     }
 
     return RP_OK;
 }
 
-int acq_axi_SetDecimationFactor(uint32_t decimation){
+int acq_axi_SetDecimationFactor(rp_channel_t channel, uint32_t decimation){
 
     uint8_t channels = 0;
     if (rp_HPGetFastADCChannelsCount(&channels) != RP_HP_OK){
@@ -341,15 +350,11 @@ int acq_axi_SetDecimationFactor(uint32_t decimation){
         return RP_NOTS;
     }
 
-    int64_t time_ns[4] = {0,0,0,0};
+    int64_t time_ns;
 
 
     if (triggerDelayInNs) {
-
-        if (channels >= 1) acq_axi_GetTriggerDelayNs(RP_CH_1,&time_ns[0]);
-        if (channels >= 2) acq_axi_GetTriggerDelayNs(RP_CH_2,&time_ns[1]);
-        if (channels >= 3) acq_axi_GetTriggerDelayNs(RP_CH_3,&time_ns[2]);
-        if (channels >= 4) acq_axi_GetTriggerDelayNs(RP_CH_4,&time_ns[3]);
+        acq_axi_GetTriggerDelayNs(channel,&time_ns);
     }
 
     bool check = false;
@@ -360,27 +365,22 @@ int acq_axi_SetDecimationFactor(uint32_t decimation){
     if (decimation >= 16 && decimation <= 65536) check = true;
 
     if (!check) return RP_EOOR;
-    osc_SetDecimation(decimation);
+    osc_SetDecimation(channel,decimation);
     // Now update trigger delay based on new decimation
     if (triggerDelayInNs) {
-        if (channels >= 1) acq_axi_SetTriggerDelayNs(RP_CH_1, time_ns[0]);
-        if (channels >= 2) acq_axi_SetTriggerDelayNs(RP_CH_2, time_ns[1]);
-        if (channels >= 3) acq_axi_SetTriggerDelayNs(RP_CH_3, time_ns[2]);
-        if (channels >= 4) acq_axi_SetTriggerDelayNs(RP_CH_4, time_ns[3]);
+        acq_axi_SetTriggerDelayNs(channel, time_ns);
     }
 
     return RP_OK;
 }
 
-int acq_axi_GetDecimationFactor(uint32_t *decimation){
-    osc_GetDecimation(decimation);
-    return RP_OK;
+int acq_axi_GetDecimationFactor(rp_channel_t channel, uint32_t *decimation){
+    return osc_GetDecimation(channel, decimation);
 }
 
 
-int acq_GetDecimationFactor(uint32_t* decimation){
-    osc_GetDecimation(decimation);
-    return RP_OK;
+int acq_GetDecimationFactor(rp_channel_t channel, uint32_t* decimation){
+    return osc_GetDecimation(channel, decimation);
 }
 
 int acq_ConvertFactorToDecimation(uint32_t factor, rp_acq_decimation_t* decimation){
@@ -443,7 +443,7 @@ int acq_ConvertFactorToDecimation(uint32_t factor, rp_acq_decimation_t* decimati
 }
 
 
-int acq_GetSamplingRateHz(float* sampling_rate){
+int acq_GetSamplingRateHz(rp_channel_t channel, float* sampling_rate){
     float max_rate = 0;
     uint32_t speed = 0;
     int ret = rp_HPGetBaseFastADCSpeedHz(&speed);
@@ -454,36 +454,36 @@ int acq_GetSamplingRateHz(float* sampling_rate){
     }
 
     uint32_t decimation;
-    acq_GetDecimationFactor(&decimation);
+    acq_GetDecimationFactor(channel, &decimation);
     *sampling_rate = max_rate / (float)decimation;
     return RP_OK;
 }
 
-int acq_SetAveraging(bool enable){
-    return osc_SetAveraging(enable);
+int acq_SetAveraging(rp_channel_t channel, bool enable){
+    return osc_SetAveraging(channel, enable);
 }
 
-int acq_GetAveraging(bool* enable){
-    return osc_GetAveraging(enable);
+int acq_GetAveraging(rp_channel_t channel, bool* enable){
+    return osc_GetAveraging(channel, enable);
 }
 
-int acq_SetTriggerSrc(rp_acq_trig_src_t source){
+int acq_SetTriggerSrc(rp_channel_t channel, rp_acq_trig_src_t source){
     last_trig_src = source;
-    return osc_SetTriggerSource(source);
+    return osc_SetTriggerSource(channel,source);
 }
 
-int acq_GetTriggerSrc(rp_acq_trig_src_t* source){
-    return osc_GetTriggerSource(source);
+int acq_GetTriggerSrc(rp_channel_t channel, rp_acq_trig_src_t* source){
+    return osc_GetTriggerSource(channel,source);
 }
 
-int acq_GetTriggerState(rp_acq_trig_state_t* state){
+int acq_GetTriggerState(rp_channel_t channel, rp_acq_trig_state_t* state){
     bool stateB;
-    osc_GetTriggerState(&stateB);
+    osc_GetTriggerState(channel, &stateB);
     *state= stateB ? RP_TRIG_STATE_TRIGGERED : RP_TRIG_STATE_WAITING;
     return RP_OK;
 }
 
-int acq_SetTriggerDelay(int32_t decimated_data_num){
+int acq_SetTriggerDelay(rp_channel_t channel, int32_t decimated_data_num){
     int32_t trig_dly;
     if(decimated_data_num < -TRIG_DELAY_ZERO_OFFSET){
             trig_dly=0;
@@ -491,14 +491,14 @@ int acq_SetTriggerDelay(int32_t decimated_data_num){
     else{
         trig_dly = decimated_data_num + TRIG_DELAY_ZERO_OFFSET;
     }
-    osc_SetTriggerDelay(trig_dly);
+    osc_SetTriggerDelay(channel, trig_dly);
 
     triggerDelayInNs = false;
     return RP_OK;
 }
 
-int acq_SetTriggerDelayDirect(uint32_t decimated_data_num){
-    osc_SetTriggerDelay(decimated_data_num);
+int acq_SetTriggerDelayDirect(rp_channel_t channel, uint32_t decimated_data_num){
+    osc_SetTriggerDelay(channel, decimated_data_num);
     triggerDelayInNs = false;
     return RP_OK;
 }
@@ -529,16 +529,16 @@ int acq_axi_SetTriggerDelay(rp_channel_t channel, int32_t decimated_data_num)
     return RP_OK;
 }
 
-int acq_SetTriggerDelayNs(int64_t time_ns){
-    int32_t samples = cnvTimeToSmpls(time_ns);
-    acq_SetTriggerDelay(samples);
+int acq_SetTriggerDelayNs(rp_channel_t channel, int64_t time_ns){
+    int32_t samples = cnvTimeToSmpls(channel, time_ns);
+    acq_SetTriggerDelay(channel, samples);
     triggerDelayInNs = true;
     return RP_OK;
 }
 
-int acq_SetTriggerDelayNsDirect(uint64_t time_ns){
-    int32_t samples = cnvTimeToSmpls(time_ns);
-    acq_SetTriggerDelayDirect(samples);
+int acq_SetTriggerDelayNsDirect(rp_channel_t channel, uint64_t time_ns){
+    int32_t samples = cnvTimeToSmpls(channel, time_ns);
+    acq_SetTriggerDelayDirect(channel, samples);
     triggerDelayInNs = true;
     return RP_OK;
 }
@@ -548,22 +548,22 @@ int acq_axi_SetTriggerDelayNs(rp_channel_t channel, int64_t time_ns)
 
     CHECK_CHANNEL
 
-    int32_t samples = cnvTimeToSmpls(time_ns);
+    int32_t samples = cnvTimeToSmpls(channel,time_ns);
     acq_axi_SetTriggerDelay(channel, samples);
     triggerDelayInNs = true;
     return RP_OK;
 }
 
-int acq_GetTriggerDelay(int32_t* decimated_data_num){
+int acq_GetTriggerDelay(rp_channel_t channel, int32_t* decimated_data_num){
     uint32_t trig_dly;
-    int r=osc_GetTriggerDelay(&trig_dly);
+    int r=osc_GetTriggerDelay(channel, &trig_dly);
     *decimated_data_num=(int32_t)trig_dly - TRIG_DELAY_ZERO_OFFSET;
     return r;
 }
 
-int acq_GetTriggerDelayDirect(uint32_t* decimated_data_num){
+int acq_GetTriggerDelayDirect(rp_channel_t channel, uint32_t* decimated_data_num){
     uint32_t trig_dly;
-    int r=osc_GetTriggerDelay(&trig_dly);
+    int r=osc_GetTriggerDelay(channel, &trig_dly);
     *decimated_data_num=trig_dly;
     return r;
 }
@@ -596,17 +596,17 @@ int acq_axi_GetTriggerDelay(rp_channel_t channel, int32_t* decimated_data_num)
     return r;
 }
 
-int acq_GetTriggerDelayNs(int64_t* time_ns){
+int acq_GetTriggerDelayNs(rp_channel_t channel, int64_t* time_ns){
     int32_t samples;
-    acq_GetTriggerDelay(&samples);
-    *time_ns = cnvSmplsToTime(samples);
+    acq_GetTriggerDelay(channel, &samples);
+    *time_ns = cnvSmplsToTime(channel, samples);
     return RP_OK;
 }
 
-int acq_GetTriggerDelayNsDirect(uint64_t* time_ns){
+int acq_GetTriggerDelayNsDirect(rp_channel_t channel, uint64_t* time_ns){
     uint32_t samples;
-    acq_GetTriggerDelayDirect(&samples);
-    *time_ns = cnvSmplsToTime(samples);
+    acq_GetTriggerDelayDirect(channel, &samples);
+    *time_ns = cnvSmplsToTime(channel, samples);
     return RP_OK;
 }
 
@@ -617,20 +617,20 @@ int acq_axi_GetTriggerDelayNs(rp_channel_t channel, int64_t* time_ns)
 
     int32_t samples;
     acq_axi_GetTriggerDelay(channel, &samples);
-    *time_ns=cnvSmplsToTime(samples);
+    *time_ns=cnvSmplsToTime(channel, samples);
     return RP_OK;
 }
 
-int acq_GetPreTriggerCounter(uint32_t* value){
-    return osc_GetPreTriggerCounter(value);
+int acq_GetPreTriggerCounter(rp_channel_t channel, uint32_t* value){
+    return osc_GetPreTriggerCounter(channel, value);
 }
 
-int acq_GetWritePointer(uint32_t* pos){
-    return osc_GetWritePointer(pos);
+int acq_GetWritePointer(rp_channel_t channel, uint32_t* pos){
+    return osc_GetWritePointer(channel, pos);
 }
 
-int acq_GetWritePointerAtTrig(uint32_t* pos){
-    return osc_GetWritePointerAtTrig(pos);
+int acq_GetWritePointerAtTrig(rp_channel_t channel, uint32_t* pos){
+    return osc_GetWritePointerAtTrig(channel, pos);
 }
 
 int acq_axi_GetWritePointer(rp_channel_t channel, uint32_t* pos)
@@ -915,27 +915,27 @@ int acq_GetChannelThresholdHyst(rp_channel_t channel, float* voltage){
     return RP_OK;
 }
 
-int acq_Start(){
-    osc_WriteDataIntoMemory(true);
-    acq_SetUnlockTrigger();
+int acq_Start(rp_channel_t channel){
+    osc_WriteDataIntoMemory(channel, true);
+    acq_SetUnlockTrigger(channel);
     return RP_OK;
 }
 
-int acq_Stop(){
-    return osc_WriteDataIntoMemory(false);
+int acq_Stop(rp_channel_t channel){
+    return osc_WriteDataIntoMemory(channel, false);
 }
 
-int acq_Reset(){
-    acq_SetDefault();
-    return osc_ResetWriteStateMachine();
+int acq_Reset(rp_channel_t channel){
+    acq_SetDefault(channel);
+    return osc_ResetWriteStateMachine(channel);
 }
 
-int acq_SetUnlockTrigger(){
-    return osc_SetUnlockTrigger();
+int acq_SetUnlockTrigger(rp_channel_t channel){
+    return osc_SetUnlockTrigger(channel);
 }
 
-int acq_GetUnlockTrigger(bool *state){
-    return osc_GetUnlockTrigger(state);
+int acq_GetUnlockTrigger(rp_channel_t channel, bool *state){
+    return osc_GetUnlockTrigger(channel, state);
 }
 
 
@@ -1338,7 +1338,7 @@ int acq_GetOldestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer)
 
     uint32_t pos;
 
-    acq_GetWritePointer(&pos);
+    acq_GetWritePointer(channel, &pos);
     pos++;
 
     return acq_GetDataRaw(channel, pos, size, buffer,false);
@@ -1352,7 +1352,7 @@ int acq_GetLatestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer)
     *size = MIN(*size, ADC_BUFFER_SIZE);
 
     uint32_t pos;
-    acq_GetWritePointer(&pos);
+    acq_GetWritePointer(channel, &pos);
 
     pos++;
 
@@ -1561,7 +1561,7 @@ int acq_GetOldestDataV(rp_channel_t channel, uint32_t* size, float* buffer)
 
     uint32_t pos;
 
-    acq_GetWritePointer(&pos);
+    acq_GetWritePointer(channel, &pos);
     pos++;
 
     return acq_GetDataV(channel, pos, size, buffer);
@@ -1575,7 +1575,7 @@ int acq_GetLatestDataV(rp_channel_t channel, uint32_t* size, float* buffer)
     *size = MIN(*size, ADC_BUFFER_SIZE);
 
     uint32_t pos;
-    acq_GetWritePointer(&pos);
+    acq_GetWritePointer(channel,&pos);
 
     pos = (pos + 1 - (*size)) % ADC_BUFFER_SIZE;
 
@@ -1647,43 +1647,47 @@ int acq_axi_SetBufferBytes(rp_channel_t channel, uint32_t address, uint32_t _siz
 
 
 
-/**
- * Sets default configuration
- * @return
- */
-int acq_SetDefault() {
-    uint32_t start,size;
-    osc_axi_GetMemoryRegion(&start,&size);
-
+int acq_SetDefaultAll()
+{
     uint8_t channels = 0;
     if (rp_HPGetFastADCChannelsCount(&channels) != RP_HP_OK){
         ERROR("Can't get fast ADC channels count");
         return RP_NOTS;
     }
-
-    acq_SetDecimation(RP_DEC_1);
-    acq_SetAveraging(true);
-    acq_SetTriggerSrc(RP_TRIG_SRC_DISABLED);
-    acq_SetTriggerDelay(0);
-    acq_SetTriggerDelayNs(0);
-    acq_SetArmKeep(false);
-
     for(int i = 0; i < channels; i++){
-        acq_SetChannelThreshold((rp_channel_t)i, 0.0);
-        acq_SetChannelThresholdHyst((rp_channel_t)i, 0.005);
-        acq_SetGain((rp_channel_t)i, RP_LOW);
-        acq_axi_Enable((rp_channel_t)i, false);
-        acq_axi_SetBufferBytes((rp_channel_t)i, start, 0);
-        acq_axi_SetTriggerDelay((rp_channel_t)i, 0);
-        acq_axi_SetTriggerDelayNs((rp_channel_t)i, 0);
-
-        if(rp_HPGetFastADCIsAC_DCOrDefault()){
-            acq_SetAC_DC((rp_channel_t)i,RP_DC);
-        }
+        acq_SetDefault(i);
     }
     return RP_OK;
 }
 
+
+int acq_SetDefault(rp_channel_t channel)
+{
+    CHECK_CHANNEL
+
+    uint32_t start,size;
+    osc_axi_GetMemoryRegion(&start,&size);
+
+    acq_SetAveraging(channel,true);
+    acq_SetTriggerSrc(channel,RP_TRIG_SRC_DISABLED);
+    acq_SetArmKeep(channel,false);
+
+    acq_SetDecimation(channel,RP_DEC_1);
+    acq_SetTriggerDelay(channel, 0);
+    acq_SetTriggerDelayNs(channel, 0);
+    acq_SetChannelThreshold(channel, 0.0);
+    acq_SetChannelThresholdHyst(channel, 0.005);
+    acq_SetGain(channel, RP_LOW);
+    acq_axi_Enable(channel, false);
+    acq_axi_SetBufferBytes(channel, start, 0);
+    acq_axi_SetTriggerDelay(channel, 0);
+    acq_axi_SetTriggerDelayNs(channel, 0);
+
+    if(rp_HPGetFastADCIsAC_DCOrDefault()){
+        acq_SetAC_DC(channel,RP_DC);
+    }
+    return RP_OK;
+}
 
 
 int acq_SetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t mode){

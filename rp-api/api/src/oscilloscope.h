@@ -30,37 +30,124 @@ static const int OSC_BASE_ADDR_4CH = 0x00200000;
 // Oscilloscope Channel B input signal buffer offset
 #define OSC_CHB_OFFSET 0x20000
 
+typedef struct {
+    uint8_t start_write            :1;  // (W) start write
+    uint8_t reset_state_machine    :1;  // (W) rst_wr_state_machine
+    uint8_t trigger_status         :1;  // (R) trigger_status
+    uint8_t arm_keep               :1;  // (W) arm_keep
+    uint8_t all_data_written       :1;  // (R) All data written to buffer
+    uint8_t enable_split_trigger   :1;  // Work only first channel
+    uint8_t                        :2;
+} config_ch_t;
+
+typedef struct {
+    config_ch_t config_ch[4];
+} config_t;
+
+typedef union {
+    uint32_t reg_full;
+    config_t reg;
+}config_u_t;
+
+typedef struct {
+    uint8_t trig_source           :4;
+    uint8_t trig_lock             :1;
+    uint8_t                       :3;
+} trig_source_t;
+
+typedef union {
+    uint32_t reg_full;
+    trig_source_t reg[4];
+} trig_source_u_t;
+
+typedef struct {
+    uint8_t trig_lock             :1;
+    uint8_t                       :7;
+} trig_lock_control_t;
+
+typedef union {
+    uint32_t reg_full;
+    trig_lock_control_t reg[4];
+} trig_lock_control_u_t;
+
+
+typedef struct {
+    uint8_t average               :1;
+    uint8_t                       :7;
+} trig_average_t;
+
+typedef union {
+    uint32_t reg_full;
+    trig_average_t reg[4];
+} trig_average_u_t;
+
 // Oscilloscope structure declaration
 typedef struct osc_control_s {
 
     /** @brief Offset 0x00 - configuration register
      *
      * Configuration register (offset 0x00):
-     * bit [0] - (W) arm_trigger
+     * bit [0] - (W) arm_trigger  - ch1/common
      * bit [1] - (W) rst_wr_state_machine
      * bit [2] - (R) trigger_status
      * bit [3] - (W) arm_keep
      * bit [4] - (R) All data written to buffer
-     * bits [31:5] - reserved
+     * bit [5] - (R/W) Independent mode on
+     * bits [7:6] - reserved
+     * bit [8] - (W) arm_trigger - ch2
+     * bit [9] - (W) rst_wr_state_machine
+     * bit [10] - (R) trigger_status
+     * bit [11] - (W) arm_keep
+     * bit [12] - (R) All data written to buffer
+     * bit [13] - (R/W) Independent mode on
+     * bits [15:14] - reserved
+     * bit [16] - (W) arm_trigger - ch3
+     * bit [17] - (W) rst_wr_state_machine
+     * bit [18] - (R) trigger_status
+     * bit [19] - (W) arm_keep
+     * bit [20] - (R) All data written to buffer
+     * bit [21] - (R/W) Independent mode on
+     * bits [23:22] - reserved
+     * bit [24] - (W) arm_trigger  - ch4
+     * bit [25] - (W) rst_wr_state_machine
+     * bit [26] - (R) trigger_status
+     * bit [27] - (W) arm_keep
+     * bit [28] - (R) All data written to buffer
+     * bit [29] - (R/W) Independent mode on
+     * bits [31:30] - reserved
      */
-    uint32_t conf;
+    uint32_t config;  // Can cast to config_u_t
 
     /** @brief Offset 0x04 - trigger source register
      *
      * Trigger source register (offset 0x04):
-     * bits [ 3 : 0] - trigger source:
-     * 1 - trig immediately
-     * 2 - ChA positive edge
-     * 3 - ChA negative edge
-     * 4 - ChB positive edge
-     * 5 - ChB negative edge
-     * 6 - External trigger 0
-     * 7 - External trigger 1
-     Only for 250-12
-     * 8 - Arbitrary wave generator positive edge
-     * 9 - Arbitrary wave generator negative edge
+     * bits [3 : 0] - trigger source ch1/common:
+        Trigger source
+        1 - trig immediately
+        2 - ch A threshold positive edge
+        3 - ch A threshold negative edge
+        4 - ch B threshold positive edge
+        5 - ch B threshold negative edge
+        6 - external trigger positive edge - DIO0_P pin
+        7 - external trigger negative edge
+        8 - arbitrary wave generator application       positive edge
+        9 - arbitrary wave generator application
+        negative edge
+        10- ch C threshold positive edge
+        11- ch C threshold negative edge
+        12- ch D threshold positive edge
+        13- ch D threshold negative edge
      * bits [4] - Trigger lock state
-     * bits [31 : 5] -reserved
+     * bits [7 : 5] -reserved
+     * bits [11 : 8] - trigger source ch2:
+     * bits [12] - Trigger lock state
+     * bits [15 : 13] -reserved
+     * bits [19 : 16] - trigger source ch3:
+     * bits [20] - Trigger lock state
+     * bits [23 : 21] -reserved
+     * bits [27 : 24] - trigger source ch4:
+     * bits [28] - Trigger lock state
+     * bits [31 : 29] -reserved
      */
     uint32_t trig_source;
 
@@ -68,10 +155,10 @@ typedef struct osc_control_s {
      *
      * Channel A threshold register (offset 0x08):
      * for 125 and 250
-     * bits [13: 0] - ChB threshold
+     * bits [13: 0] - ChA threshold
      * bits [31:14] - reserved
      * for 122
-     * bits [15: 0] - ChB threshold
+     * bits [15: 0] - ChA threshold
      * bits [31:16] - reserved
      */
     uint32_t cha_thr;
@@ -135,10 +222,16 @@ typedef struct osc_control_s {
     uint32_t chb_hystersis;
 
     /** @brief Offset 0x28
-     * bits [0] - enable signal average at decimation
-     * bits [31:1] - reserved
+     * bits [0] - enable signal average at decimation ch1
+     * bits [7:1] - reserved
+     * bits [8] - enable signal average at decimation ch2
+     * bits [9:15] - reserved
+     * bits [16] - enable signal average at decimation ch3
+     * bits [23:17] - reserved
+     * bits [24] - enable signal average at decimation ch4
+     * bits [31:25] - reserved
      */
-    uint32_t other;
+    uint32_t average;
 
     /** @brief Offset 0x2C - Pre Trigger counter
      *
@@ -293,9 +386,68 @@ typedef struct osc_control_s {
     uint32_t ext_trig_dbc_t:20,:12; // 0x90
 
     /**@brief Offset 0x94 - Trigger lock control
-     * bit[0] - (W) Write 1 for unlock trigger
+     * bit[0] - (W) Write 1 for unlock trigger - ch1/common
+     * bit[7:1] - reserved
+     * bit[8] - (W) Write 1 for unlock trigger - ch2
+     * bit[15:9] - reserved
+     * bit[16] - (W) Write 1 for unlock trigger - ch3
+     * bit[23:17] - reserved
+     * bit[24] - (W) Write 1 for unlock trigger - ch4
+     * bit[31:25] - reserved
     */
-    uint32_t trigger_lock_ctr :1, : 31; // 0x94
+    uint32_t trigger_lock_ctr; // 0x94
+
+    /** @brief Offset 0x98 - reserved
+     */
+    uint32_t reserved_98[30];
+
+    /** @brief Offset 0x110 - After trigger delay register
+     *
+     * After trigger delay register (offset 0x10)
+     * bits [31: 0] - trigger delay
+     * 32 bit number - how many decimated samples should be stored into a buffer.
+     * (max 16k samples)
+     */
+    uint32_t trigger_delay_ch2;
+
+    /** @brief Offset 0x114 - Data decimation register
+     *
+     * Data decimation register (offset 0x14):
+     * bits [16: 0] - decimation factor, legal values:
+     * 1, 8, 64, 1024, 8192 65536
+     * If other values are written data is undefined
+     * bits [31:17] - reserved
+     */
+    uint32_t data_dec_ch2;
+
+    /** @brief Offset 0x118 - Current write pointer register
+     *
+     * Current write pointer register (offset 0x18), read only:
+     * bits [13: 0] - current write pointer
+     * bits [31:14] - reserved
+     */
+    uint32_t wr_ptr_cur_ch2;
+
+    /** @brief Offset 0x11C - Trigger write pointer register
+     *
+     * Trigger write pointer register (offset 0x1C), read only:
+     * bits [13: 0] - trigger pointer (pointer where trigger was detected)
+     * bits [31:14] - reserved
+     */
+    uint32_t wr_ptr_trigger_ch2;
+
+    /** @brief Offset 0x120 - reserved
+     */
+    uint32_t reserved_120[3];
+
+    /** @brief Offset 0x12C - Pre Trigger counter
+     *
+     * Pre Trigger counter (offset 0x2C)
+     * bits [31: 0] - Pre Trigger counter
+     * 32 bit number - how many decimated samples have been stored into a buffer
+     * before trigger arrived.
+     */
+    uint32_t pre_trigger_counter_ch2;
 
     /* ChA & ChB data - 14 LSB bits valid starts from 0x10000 and
      * 0x20000 and are each 16k samples long */
@@ -330,21 +482,23 @@ static const uint32_t DEBAUNCER_MASK        = 0xFFFFF;      // (20 bit)
 int osc_Init(int channels);
 int osc_Release();
 
-int osc_SetDecimation(uint32_t decimation);
-int osc_GetDecimation(uint32_t* decimation);
-int osc_SetAveraging(bool enable);
-int osc_GetAveraging(bool* enable);
-int osc_SetTriggerSource(uint32_t source);
-int osc_GetTriggerSource(uint32_t* source);
-int osc_SetUnlockTrigger();
-int osc_GetUnlockTrigger(bool *state);
-int osc_WriteDataIntoMemory(bool enable);
+int osc_SetDecimation(rp_channel_t channel, uint32_t decimation);
+int osc_GetDecimation(rp_channel_t channel, uint32_t* decimation);
+int osc_SetAveraging(rp_channel_t channel, bool enable);
+int osc_GetAveraging(rp_channel_t channel, bool* enable);
+int osc_SetTriggerSource(rp_channel_t channel, uint32_t source);
+int osc_GetTriggerSource(rp_channel_t channel, uint32_t* source);
+int osc_SetSplitTriggerMode(bool enable);
+int osc_GetSplitTriggerMode(bool* enable);
+int osc_SetUnlockTrigger(rp_channel_t channel);
+int osc_GetUnlockTrigger(rp_channel_t channel, bool *state);
+int osc_WriteDataIntoMemory(rp_channel_t channel, bool enable);
 int osc_ResetWriteStateMachine();
-int osc_SetArmKeep(bool enable);
-int osc_GetArmKeep(bool *state);
-int osc_GetBufferFillState(bool *state);
-int osc_GetTriggerState(bool *received);
-int osc_GetPreTriggerCounter(uint32_t *value);
+int osc_SetArmKeep(rp_channel_t channel, bool enable);
+int osc_GetArmKeep(rp_channel_t channel, bool *state);
+int osc_GetBufferFillState(rp_channel_t channel, bool *state);
+int osc_GetTriggerState(rp_channel_t channel, bool *received);
+int osc_GetPreTriggerCounter(rp_channel_t channel, uint32_t *value);
 int osc_SetThresholdChA(uint32_t threshold);
 int osc_GetThresholdChA(uint32_t* threshold);
 int osc_SetThresholdChB(uint32_t threshold);
@@ -361,10 +515,10 @@ int osc_SetHysteresisChC(uint32_t hysteresis);
 int osc_GetHysteresisChC(uint32_t* hysteresis);
 int osc_SetHysteresisChD(uint32_t hysteresis);
 int osc_GetHysteresisChD(uint32_t* hysteresis);
-int osc_SetTriggerDelay(uint32_t decimated_data_num);
-int osc_GetTriggerDelay(uint32_t* decimated_data_num);
-int osc_GetWritePointer(uint32_t* pos);
-int osc_GetWritePointerAtTrig(uint32_t* pos);
+int osc_SetTriggerDelay(rp_channel_t channel, uint32_t decimated_data_num);
+int osc_GetTriggerDelay(rp_channel_t channel, uint32_t* decimated_data_num);
+int osc_GetWritePointer(rp_channel_t channel, uint32_t* pos);
+int osc_GetWritePointerAtTrig(rp_channel_t channel, uint32_t* pos);
 int osc_SetEqFiltersChA(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp);
 int osc_GetEqFiltersChA(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
 int osc_SetEqFiltersChB(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp);

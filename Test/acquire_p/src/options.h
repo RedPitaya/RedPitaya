@@ -3,6 +3,7 @@
 
 #include "rp.h"
 #include "rp_hw-profiles.h"
+#include <getopt.h>
 
 typedef enum {
     RP_125_14,
@@ -12,52 +13,65 @@ typedef enum {
 
 models_t getModel();
 uint8_t getChannels();
+bool getIsExtTrigLevel();
+bool getIsSplitTriggers();
+bool getIsACDC();
+auto parseTrigger(char *value,int channels) -> int;
 
 struct Options {
 
     uint32_t      dataSize;
     uint32_t      decimation;
 
+    int channels;
+    bool is_ext_trig_lev;
+    bool is_ac_dc;
+
+    std::vector<option> options;
+    std::string usage;
+    std::string opts;
+
     rp_pinState_t attenuator_mode[4];
 
-    rp_acq_ac_dc_mode_t ac_dc_mode[4];
+    rp_acq_ac_dc_mode_t ac_dc_mode[2];
 
-    float trigger_level;
-    rp_acq_trig_src_t    trigger_mode;
+    float trigger_level[4];
+    float trigger_level_ext = 0;
+    int offset = 0;
+    rp_acq_trig_src_t    trigger_mode[4];
 
     bool                 showVersion;
     bool                 showHelp;
     bool                 showInHex;
     bool                 showInVolt;
-    bool                 disableReset;
+    bool                 enableDebug;
     bool                 disableCalibration;
     bool                 enableEqualization;
     bool                 enableShaping;
     bool                 error;
     bool                 reset_hk;
     bool                 enableAXI;
-    bool                 enableDebug = false;
-    int                  offset = 0;
 
 
     Options(){
+
         dataSize = ADC_BUFFER_SIZE;
         decimation = RP_DEC_1;
-        enableDebug = false;
-        offset = 0;
+
         for(int i = 0; i < getChannels(); i++){
             attenuator_mode[i] = RP_LOW;
             ac_dc_mode[i] = RP_AC;
+            trigger_mode[i] = RP_TRIG_SRC_DISABLED;
+            trigger_level[i] = 0;
         }
 
-        trigger_level = 0;
-        trigger_mode = RP_TRIG_SRC_NOW;
+        trigger_level_ext = 0;
 
         showVersion = false;
         showHelp = false;
         showInHex = false;
         showInVolt = false;
-        disableReset = false;
+        enableDebug = false;
         disableCalibration = false;
         enableEqualization = false;
         enableShaping = false;
@@ -67,7 +81,7 @@ struct Options {
     };
 };
 
-auto usage(char const *progName) -> void;
+auto usage(Options &opt) -> void;
 auto parse(int argc, char* argv[]) -> Options;
 
 

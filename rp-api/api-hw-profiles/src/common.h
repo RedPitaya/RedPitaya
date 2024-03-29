@@ -75,6 +75,8 @@ typedef struct {
     bool                is_dma_mode_v0_94;
     bool                is_DAC_50_Ohm_mode;
 
+    bool                is_split_osc_triggers;
+
 
 } profiles_t;
 

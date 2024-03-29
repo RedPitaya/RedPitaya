@@ -307,6 +307,7 @@ LCR_DIR            = Test/lcr
 BODE_DIR           = Test/bode
 MONITOR_DIR        = Test/monitor
 ACQUIRE_DIR        = Test/acquire
+ACQUIRE_P_DIR      = Test/acquire_p
 CALIB_DIR          = Test/calib
 GENERATOR_DIR	   = Test/generate
 SPECTRUM_DIR       = Test/spectrum
@@ -319,9 +320,9 @@ FPGA_TESTS_DIR     = Examples/Tests
 STARTUPSH          = $(INSTALL_DIR)/sbin/startup.sh
 
 .PHONY: examples rp_communication fpgautils
-.PHONY: lcr bode monitor generator acquire calib laboardtest spectrum led_control daisy_tool fpga_tests
+.PHONY: lcr bode monitor generator acquire acquire_p calib laboardtest spectrum led_control daisy_tool fpga_tests
 
-examples: lcr bode monitor calib spectrum acquire generator led_control fpgautils daisy_tool fpga_tests
+examples: lcr bode monitor calib spectrum acquire acquire_p generator led_control fpgautils daisy_tool fpga_tests
 
 
 lcr: api
@@ -343,6 +344,10 @@ generator: api
 acquire: api
 	cmake -B$(abspath $(ACQUIRE_DIR)/build) -S$(abspath $(ACQUIRE_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(ACQUIRE_DIR)/build install -j$(CPU_CORES)
+
+acquire_p: api
+	cmake -B$(abspath $(ACQUIRE_P_DIR)/build) -S$(abspath $(ACQUIRE_P_DIR)) $(CMAKEVAR)
+	$(MAKE) -C $(ACQUIRE_P_DIR)/build install -j$(CPU_CORES)
 
 calib: api
 	cmake -B$(abspath $(CALIB_DIR)/build) -S$(abspath $(CALIB_DIR)) $(CMAKEVAR)
@@ -529,6 +534,7 @@ clean: nginx_clean scpi_clean
 	rm -rf $(abspath $(CALIB_DIR)/build)
 	rm -rf $(abspath $(BODE_DIR)/build)
 	rm -rf $(abspath $(ACQUIRE_DIR)/build)
+	rm -rf $(abspath $(ACQUIRE_P_DIR)/build)
 	rm -rf $(abspath $(DAISY_TOOL_DIR)/build)
 	rm -rf $(abspath $(GENERATOR_DIR)/build)
 	rm -rf $(abspath $(LED_CONTROL_DIR)/build)

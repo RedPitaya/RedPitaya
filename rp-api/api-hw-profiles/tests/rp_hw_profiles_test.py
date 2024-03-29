@@ -354,6 +354,14 @@ print("rp_hw_profiles.rp_HPGetIsDMAinv0_94OrDefault()")
 res = rp_hw_profiles.rp_HPGetIsDMAinv0_94OrDefault()
 print(res)
 
+print("rp_hw_profiles.rp_HPGetFastADCIsSplitTrigger()")
+res = rp_hw_profiles.rp_HPGetFastADCIsSplitTrigger()
+print(res)
+
+print("rp_hw_profiles.rp_HPGetFastADCIsSplitTriggerOrDefault()")
+res = rp_hw_profiles.rp_HPGetFastADCIsSplitTriggerOrDefault()
+print(res)
+
 
 print("rp_hw_profiles.rp_HPPrint()")
 rp_hw_profiles.rp_HPPrint()

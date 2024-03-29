@@ -34,6 +34,7 @@
 static char version[50];
 int g_api_state = 0;
 float g_ext_trig_trash = 0;
+bool  g_split_trig_function_pass = false;
 
 pthread_mutex_t rp_init_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -853,15 +854,46 @@ int rp_AOpinGetRange(int unsigned pin, float* min_val,  float* max_val) {
 
 int rp_AcqSetArmKeep(bool enable)
 {
-    return acq_SetArmKeep(enable);
+    return acq_SetArmKeep(RP_CH_1, enable);
 }
 
 int rp_AcqGetArmKeep(bool* state){
-    return acq_GetArmKeep(state);
+    return acq_GetArmKeep(RP_CH_1, state);
+}
+
+int rp_AcqSetArmKeepCh(rp_channel_t channel, bool enable)
+{
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_SetArmKeep(channel, enable);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqSetArmKeep(enable);
+    }
+    return RP_NOTS;
+}
+
+int rp_AcqGetArmKeepCh(rp_channel_t channel, bool* state){
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_GetArmKeep(channel, state);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqGetArmKeep(state);
+    }
+    return RP_NOTS;
 }
 
 int rp_AcqGetBufferFillState(bool* state){
-    return acq_GetBufferFillState(state);
+    return acq_GetBufferFillState(RP_CH_1, state);
+}
+
+int rp_AcqGetBufferFillStateCh(rp_channel_t channel, bool* state){
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_GetBufferFillState(channel, state);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqGetBufferFillState(state);
+    }
+    return RP_NOTS;
 }
 
 int rp_AcqAxiGetBufferFillState(rp_channel_t channel, bool* state){
@@ -872,34 +904,102 @@ int rp_AcqAxiGetBufferFillState(rp_channel_t channel, bool* state){
 
 int rp_AcqSetDecimation(rp_acq_decimation_t decimation)
 {
-    return acq_SetDecimation(decimation);
+    return acq_SetDecimation(RP_CH_1, decimation);
 }
 
 int rp_AcqGetDecimation(rp_acq_decimation_t* decimation)
 {
-    return acq_GetDecimation(decimation);
+    return acq_GetDecimation(RP_CH_1, decimation);
+}
+
+int rp_AcqSetDecimationCh(rp_channel_t channel, rp_acq_decimation_t decimation)
+{
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_SetDecimation(channel, decimation);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqSetDecimation(decimation);
+    }
+    return RP_NOTS;
+}
+
+int rp_AcqGetDecimationCh(rp_channel_t channel, rp_acq_decimation_t* decimation)
+{
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_GetDecimation(channel, decimation);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqGetDecimation(decimation);
+    }
+    return RP_NOTS;
 }
 
 int rp_AcqSetDecimationFactor(uint32_t decimation)
 {
-    return acq_SetDecimationFactor(decimation);
+    return acq_SetDecimationFactor(RP_CH_1, decimation);
+}
+
+int rp_AcqGetDecimationFactor(uint32_t* decimation)
+{
+    return acq_GetDecimationFactor(RP_CH_1, decimation);
+}
+
+int rp_AcqSetDecimationFactorCh(rp_channel_t channel, uint32_t decimation)
+{
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_SetDecimationFactor(channel, decimation);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqSetDecimationFactor(decimation);
+    }
+    return RP_NOTS;
+}
+
+int rp_AcqGetDecimationFactorCh(rp_channel_t channel, uint32_t* decimation)
+{
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_GetDecimationFactor(channel, decimation);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqGetDecimationFactor(decimation);
+    }
+    return RP_NOTS;
 }
 
 int rp_AcqAxiSetDecimationFactor(uint32_t decimation){
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
-    return acq_axi_SetDecimationFactor(decimation);
+    return acq_axi_SetDecimationFactor(RP_CH_1,decimation);
+}
+
+int rp_AcqAxiSetDecimationFactorCh(rp_channel_t channel, uint32_t decimation){
+    if (!rp_HPGetIsDMAinv0_94OrDefault())
+        return RP_NOTS;
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_axi_SetDecimationFactor(channel, decimation);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqAxiSetDecimationFactor(decimation);
+    }
+    return RP_NOTS;
 }
 
 int rp_AcqAxiGetDecimationFactor(uint32_t *decimation){
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
-    return acq_axi_GetDecimationFactor(decimation);
+    return acq_axi_GetDecimationFactor(RP_CH_1,decimation);
 }
 
-int rp_AcqGetDecimationFactor(uint32_t* decimation)
-{
-    return acq_GetDecimationFactor(decimation);
+int rp_AcqAxiGetDecimationFactorCh(rp_channel_t channel, uint32_t *decimation){
+    if (!rp_HPGetIsDMAinv0_94OrDefault())
+        return RP_NOTS;
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_axi_GetDecimationFactor(channel, decimation);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqAxiGetDecimationFactor(decimation);
+    }
+    return RP_NOTS;
 }
 
 int rp_AcqConvertFactorToDecimation(uint32_t factor,rp_acq_decimation_t* decimation){
@@ -908,42 +1008,130 @@ int rp_AcqConvertFactorToDecimation(uint32_t factor,rp_acq_decimation_t* decimat
 
 int rp_AcqGetSamplingRateHz(float* sampling_rate)
 {
-    return acq_GetSamplingRateHz(sampling_rate);
+    return acq_GetSamplingRateHz(RP_CH_1,sampling_rate);
+}
+
+int rp_AcqGetSamplingRateHzCh(rp_channel_t channel, float* sampling_rate)
+{
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_GetSamplingRateHz(channel, sampling_rate);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqGetSamplingRateHz(sampling_rate);
+    }
+    return RP_NOTS;
 }
 
 int rp_AcqSetAveraging(bool enabled)
 {
-    return acq_SetAveraging(enabled);
+    return acq_SetAveraging(RP_CH_1, enabled);
 }
 
 int rp_AcqGetAveraging(bool *enabled)
 {
-    return acq_GetAveraging(enabled);
+    return acq_GetAveraging(RP_CH_1, enabled);
+}
+
+int rp_AcqSetAveragingCh(rp_channel_t channel, bool enabled)
+{
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_SetAveraging(channel, enabled);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqSetAveraging(enabled);
+    }
+    return RP_NOTS;
+}
+
+int rp_AcqGetAveragingCh(rp_channel_t channel, bool *enabled)
+{
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_GetAveraging(channel, enabled);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqGetAveraging(enabled);
+    }
+    return RP_NOTS;
 }
 
 int rp_AcqSetTriggerSrc(rp_acq_trig_src_t source)
 {
-    return acq_SetTriggerSrc(source);
+    return acq_SetTriggerSrc(RP_CH_1, source);
 }
 
 int rp_AcqGetTriggerSrc(rp_acq_trig_src_t* source)
 {
-    return acq_GetTriggerSrc(source);
+    return acq_GetTriggerSrc(RP_CH_1, source);
+}
+
+int rp_AcqSetTriggerSrcCh(rp_channel_t channel, rp_acq_trig_src_t source)
+{
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_SetTriggerSrc(channel, source);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqSetTriggerSrc(source);
+    }
+    return RP_NOTS;
+}
+
+int rp_AcqGetTriggerSrcCh(rp_channel_t channel, rp_acq_trig_src_t* source)
+{
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_GetTriggerSrc(channel, source);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqGetTriggerSrc(source);
+    }
+    return RP_NOTS;
 }
 
 int rp_AcqGetTriggerState(rp_acq_trig_state_t* state)
 {
-    return acq_GetTriggerState(state);
+    return acq_GetTriggerState(RP_CH_1, state);
+}
+
+int rp_AcqGetTriggerStateCh(rp_channel_t channel, rp_acq_trig_state_t* state)
+{
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_GetTriggerState(channel, state);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqGetTriggerState(state);
+    }
+    return RP_NOTS;
 }
 
 int rp_AcqSetTriggerDelay(int32_t decimated_data_num)
 {
-    return acq_SetTriggerDelay(decimated_data_num);
+    return acq_SetTriggerDelay(RP_CH_1,decimated_data_num);
+}
+
+int rp_AcqSetTriggerDelayCh(rp_channel_t channel, int32_t decimated_data_num)
+{
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_SetTriggerDelay(channel, decimated_data_num);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqSetTriggerDelay(decimated_data_num);
+    }
+    return RP_NOTS;
 }
 
 int rp_AcqSetTriggerDelayDirect(uint32_t decimated_data_num)
 {
-    return acq_SetTriggerDelayDirect(decimated_data_num);
+    return acq_SetTriggerDelayDirect(RP_CH_1, decimated_data_num);
+}
+
+int rp_AcqSetTriggerDelayDirectCh(rp_channel_t channel, uint32_t decimated_data_num)
+{
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_SetTriggerDelayDirect(channel, decimated_data_num);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqSetTriggerDelayDirect(decimated_data_num);
+    }
+    return RP_NOTS;
 }
 
 int rp_AcqAxiSetTriggerDelay(rp_channel_t channel, int32_t decimated_data_num){
@@ -960,36 +1148,112 @@ int rp_AcqAxiGetTriggerDelay(rp_channel_t channel, int32_t *decimated_data_num){
 
 int rp_AcqGetTriggerDelay(int32_t* decimated_data_num)
 {
-    return acq_GetTriggerDelay(decimated_data_num);
+    return acq_GetTriggerDelay(RP_CH_1,decimated_data_num);
+}
+
+int rp_AcqGetTriggerDelayCh(rp_channel_t channel, int32_t* decimated_data_num)
+{
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_GetTriggerDelay(channel, decimated_data_num);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqGetTriggerDelay(decimated_data_num);
+    }
+    return RP_NOTS;
 }
 
 int rp_AcqGetTriggerDelayDirect(uint32_t* decimated_data_num)
 {
-    return acq_GetTriggerDelayDirect(decimated_data_num);
+    return acq_GetTriggerDelayDirect(RP_CH_1,decimated_data_num);
+}
+
+int rp_AcqGetTriggerDelayDirectCh(rp_channel_t channel, uint32_t* decimated_data_num)
+{
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_GetTriggerDelayDirect(channel, decimated_data_num);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqGetTriggerDelayDirect(decimated_data_num);
+    }
+    return RP_NOTS;
 }
 
 int rp_AcqSetTriggerDelayNs(int64_t time_ns)
 {
-    return acq_SetTriggerDelayNs(time_ns);
+    return acq_SetTriggerDelayNs(RP_CH_1,time_ns);
+}
+
+int rp_AcqSetTriggerDelayNsCh(rp_channel_t channel, int64_t time_ns)
+{
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_SetTriggerDelayNs(channel, time_ns);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqSetTriggerDelayNs(time_ns);
+    }
+    return RP_NOTS;
 }
 
 int rp_AcqGetTriggerDelayNs(int64_t* time_ns)
 {
-    return acq_GetTriggerDelayNs(time_ns);
+    return acq_GetTriggerDelayNs(RP_CH_1,time_ns);
+}
+
+int rp_AcqGetTriggerDelayNsCh(rp_channel_t channel, int64_t* time_ns)
+{
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_GetTriggerDelayNs(channel, time_ns);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqGetTriggerDelayNs(time_ns);
+    }
+    return RP_NOTS;
 }
 
 int rp_AcqSetTriggerDelayNsDirect(uint64_t time_ns)
 {
-    return acq_SetTriggerDelayNsDirect(time_ns);
+    return acq_SetTriggerDelayNsDirect(RP_CH_1,time_ns);
+}
+
+int rp_AcqSetTriggerDelayNsDirectCh(rp_channel_t channel, uint64_t time_ns)
+{
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_SetTriggerDelayNsDirect(channel, time_ns);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqSetTriggerDelayNsDirect(time_ns);
+    }
+    return RP_NOTS;
 }
 
 int rp_AcqGetTriggerDelayNsDirect(uint64_t* time_ns)
 {
-    return acq_GetTriggerDelayNsDirect(time_ns);
+    return acq_GetTriggerDelayNsDirect(RP_CH_1,time_ns);
+}
+
+int rp_AcqGetTriggerDelayNsDirectCh(rp_channel_t channel, uint64_t* time_ns)
+{
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_GetTriggerDelayNsDirect(channel, time_ns);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqGetTriggerDelayNsDirect(time_ns);
+    }
+    return RP_NOTS;
 }
 
 int rp_AcqGetPreTriggerCounter(uint32_t* value) {
-    return acq_GetPreTriggerCounter(value);
+    return acq_GetPreTriggerCounter(RP_CH_1,value);
+}
+
+int rp_AcqGetPreTriggerCounterCh(rp_channel_t channel, uint32_t* value) {
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_GetPreTriggerCounter(channel, value);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqGetPreTriggerCounter(value);
+    }
+    return RP_NOTS;
 }
 
 int rp_AcqGetGain(rp_channel_t channel, rp_pinState_t* state)
@@ -1029,7 +1293,19 @@ int rp_AcqSetTriggerHyst(float voltage)
 
 int rp_AcqGetWritePointer(uint32_t* pos)
 {
-    return acq_GetWritePointer(pos);
+    return acq_GetWritePointer(RP_CH_1,pos);
+}
+
+int rp_AcqGetWritePointerCh(rp_channel_t channel, uint32_t* pos)
+{
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_GetWritePointer(channel, pos);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqGetWritePointer(pos);
+    }
+
+    return RP_NOTS;
 }
 
 int rp_AcqAxiGetWritePointer(rp_channel_t channel, uint32_t* pos){
@@ -1040,7 +1316,19 @@ int rp_AcqAxiGetWritePointer(rp_channel_t channel, uint32_t* pos){
 
 int rp_AcqGetWritePointerAtTrig(uint32_t* pos)
 {
-    return acq_GetWritePointerAtTrig(pos);
+    return acq_GetWritePointerAtTrig(RP_CH_1,pos);
+}
+
+int rp_AcqGetWritePointerAtTrigCh(rp_channel_t channel, uint32_t* pos)
+{
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_GetWritePointerAtTrig(channel, pos);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqGetWritePointerAtTrig(pos);
+    }
+
+    return RP_NOTS;
 }
 
 int rp_AcqAxiGetWritePointerAtTrig(rp_channel_t channel, uint32_t* pos){
@@ -1051,31 +1339,90 @@ int rp_AcqAxiGetWritePointerAtTrig(rp_channel_t channel, uint32_t* pos){
 
 int rp_AcqStart()
 {
-    return acq_Start();
+    return acq_Start(RP_CH_1);
+}
+
+int rp_AcqStartCh(rp_channel_t channel)
+{
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_Start(channel);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqStart();
+    }
+
+    return RP_NOTS;
 }
 
 int rp_AcqStop()
 {
-    return acq_Stop();
+    return acq_Stop(RP_CH_1);
 }
 
-int rp_AcqUnlockTrigger()
+int rp_AcqStopCh(rp_channel_t channel)
 {
-    return acq_SetUnlockTrigger();
-}
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_Stop(channel);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqStop();
+    }
 
-int rp_AcqGetUnlockTrigger(bool *state){
-    return acq_GetUnlockTrigger(state);
+    return RP_NOTS;
 }
 
 int rp_AcqReset()
 {
-    return acq_Reset();
+    return acq_Reset(RP_CH_1);
+}
+
+int rp_AcqResetCh(rp_channel_t channel)
+{
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_Reset(channel);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqReset();
+    }
+
+    return RP_NOTS;
 }
 
 int rp_AcqResetFpga()
 {
     return acq_ResetFpga();
+}
+
+int rp_AcqUnlockTrigger()
+{
+    return acq_SetUnlockTrigger(RP_CH_1);
+}
+
+int rp_AcqUnlockTriggerCh(rp_channel_t channel)
+{
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_SetUnlockTrigger(channel);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqUnlockTrigger();
+    }
+
+    return RP_NOTS;
+}
+
+int rp_AcqGetUnlockTrigger(bool *state){
+    return acq_GetUnlockTrigger(RP_CH_1,state);
+}
+
+int rp_AcqGetUnlockTriggerCh(rp_channel_t channel, bool *state){
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_GetUnlockTrigger(channel,state);
+    }
+    else if (g_split_trig_function_pass){
+        return rp_AcqGetUnlockTrigger(state);
+    }
+
+    return RP_NOTS;
 }
 
 uint32_t rp_AcqGetNormalizedDataPos(uint32_t pos)
@@ -1814,7 +2161,7 @@ int rp_SetExternalTriggerLevel(float value){
                 return RP_EOOR;
         }
     }
-    ERROR("Unsupported");
+
     return RP_NOTS;
 }
 
@@ -1823,8 +2170,33 @@ int rp_GetExternalTriggerLevel(float *value){
         *value = g_ext_trig_trash;
         return RP_OK;
     }
-    ERROR("Unsupported");
+
     return RP_NOTS;
 }
 
+int rp_AcqSetSplitTrigger(bool enable){
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_SetSplitTriggerMode(enable);
+    }
+
+    return RP_NOTS;
+}
+
+int rp_AcqGetSplitTrigger(bool* state){
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        return acq_GetSplitTriggerMode(state);
+    }
+
+    return RP_NOTS;
+}
+
+int rp_AcqSetSplitTriggerPass(bool enable){
+    g_split_trig_function_pass = enable;
+    return RP_OK;
+}
+
+int rp_AcqGetSplitTriggerPass(bool* state){
+    *state = g_split_trig_function_pass;
+    return RP_OK;
+}
 
