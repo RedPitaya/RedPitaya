@@ -46,6 +46,12 @@ void stopSweep(){
 }
 
 
+scpi_result_t RP_GenSweepDefault(scpi_t *context) {
+    g_sweepController.setDefault();
+    RP_LOG_INFO("%s",rp_GetError(RP_OK))
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_GenSweepReset(scpi_t *context) {
     g_sweepController.resetAll();
     RP_LOG_INFO("%s",rp_GetError(RP_OK))

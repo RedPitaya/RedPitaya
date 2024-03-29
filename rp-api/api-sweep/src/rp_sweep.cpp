@@ -60,6 +60,7 @@ CSweepController::CSweepController()
     m_pimpl = new Impl();
     m_pimpl->m_IsRun = false;
     m_pimpl->m_Pause = false;
+    setDefault();
 }
 
 CSweepController::~CSweepController(){
@@ -342,4 +343,17 @@ auto CSweepController::isAllDisabled() -> bool{
 void CSweepController::pause(bool _state){
     m_pimpl->m_Pause = _state;
 }
+
+auto CSweepController::setDefault() -> void{
+    stop();
+    for(int i = RP_CH_1 ; i <= RP_CH_4 && i < g_sweep_dac_max_channels; i++){
+        setStartFreq((rp_channel_t)i,1000);
+        setStopFreq((rp_channel_t)i,1000);
+        setTime((rp_channel_t)i,1000);
+        setMode((rp_channel_t)i,RP_GEN_SWEEP_MODE_LINEAR);
+        setDir((rp_channel_t)i,RP_GEN_SWEEP_DIR_NORMAL);
+    }
+    resetAll();
+}
+
 

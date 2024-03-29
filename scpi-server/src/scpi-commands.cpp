@@ -344,6 +344,7 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "SOUR#:BURS:INT:PER?", .callback        = RP_GenBurstPeriodQ,},
 
     {.pattern = "SOUR:SWeep:PAUSE", .callback           = RP_GenSweepPause,},
+    {.pattern = "SOUR:SWeep:DEFault", .callback         = RP_GenSweepDefault,},
     {.pattern = "SOUR:SWeep:RESET", .callback           = RP_GenSweepReset,},
     {.pattern = "SOUR#:SWeep:STATE", .callback          = RP_GenSweepState,},
     {.pattern = "SOUR#:SWeep:STATE?", .callback         = RP_GenSweepStateQ,},
@@ -400,7 +401,7 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "SPI:INIT", .callback                   = RP_SPI_Init,},
     {.pattern = "SPI:INIT:DEV", .callback               = RP_SPI_InitDev,},
     {.pattern = "SPI:RELEASE", .callback                = RP_SPI_Release,},
-    {.pattern = "SPI:SETtings:DEF", .callback           = RP_SPI_SetDefault,},
+    {.pattern = "SPI:SETtings:DEFault", .callback       = RP_SPI_SetDefault,},
     {.pattern = "SPI:SETtings:SET", .callback           = RP_SPI_SetSettings,},
     {.pattern = "SPI:SETtings:GET", .callback           = RP_SPI_GetSettings,},
 

@@ -23,6 +23,7 @@
 #include "rp.h"
 #include "rp_hw-profiles.h"
 #include "common.h"
+#include "sweep.h"
 #include "scpi/parser.h"
 #include "scpi/units.h"
 
@@ -63,6 +64,7 @@ const scpi_choice_def_t scpi_RpGenLoad[] = {
 };
 
 scpi_result_t RP_GenReset(scpi_t *context) {
+    RP_GenSweepDefault(context);
     auto result = rp_GenReset();
     if (RP_OK != result) {
         RP_LOG_CRIT("Failed to reset Red Pitaya generate: %s", rp_GetError(result));

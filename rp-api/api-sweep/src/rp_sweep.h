@@ -40,6 +40,7 @@ public:
     auto setDir(rp_channel_t _ch,rp_gen_sweep_dir_t _dir) -> int;
     auto getDir(rp_channel_t _ch,rp_gen_sweep_dir_t *_dir) -> int;
     auto resetAll() -> void;
+    auto setDefault() -> void;
 private:
 
     CSweepController(const CSweepController &) = delete;
