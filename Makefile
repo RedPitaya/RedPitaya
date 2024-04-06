@@ -14,7 +14,7 @@ VER := $(shell cat apps-tools/ecosystem/info/info.json | grep version | sed -e '
 BUILD_NUMBER ?= 0
 REVISION ?= $(shell git rev-parse --short HEAD)
 VERSION = $(VER)-$(BUILD_NUMBER)
-LINUX_VER = 2.04
+LINUX_VER = 2.05
 export BUILD_NUMBER
 export REVISION
 export VERSION
@@ -289,7 +289,7 @@ scpi_clean:
 
 .PHONY: sdr
 
-SDR_ZIP = SDR-bundle-39-5eb6e37a.zip
+SDR_ZIP = SDR-bundle-55-50e62ca0.zip
 SDR_URL = https://downloads.redpitaya.com/hamlab/sdr-bundle/$(SDR_ZIP)
 
 sdr: | $(DL)
