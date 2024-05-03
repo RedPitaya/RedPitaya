@@ -188,8 +188,8 @@ Item {
                                         text: board.getDecimation()
                                         font.family: applicationFont.name
                                         font.pixelSize: parent.height * 0.5
-                                        validator: RegExpValidator {
-                                            regExp: /[0-9]{6}/
+                                        validator: RegularExpressionValidator {
+                                            regularExpression: /[0-9]{6}/
                                         }
                                         onTextEdited: {
                                             board.setDecimation(parseInt(text))
@@ -243,8 +243,8 @@ Item {
                                         }
                                         font.family: applicationFont.name
                                         font.pixelSize: parent.height * 0.5
-                                        validator: RegExpValidator {
-                                            regExp: /[0-9]{7}/
+                                        validator: RegularExpressionValidator {
+                                            regularExpression: /[0-9]{7}/
                                         }
                                         onTextEdited: {
                                             if (text === "") {
