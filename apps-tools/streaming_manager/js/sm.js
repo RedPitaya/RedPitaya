@@ -468,6 +468,8 @@
         $("#PC_CON_WIN > img").attr('src',"./img/ConWinRed.png")
         $("#PC_DESK_LIN > img").attr('src',"./img/DeskLinRed.png")
         $("#PC_CON_LIN > img").attr('src',"./img/ConLinRed.png")
+        $("#RP_CON_LIN > img").attr('src',"./img/ConRPRed.png")
+
         $.ajax({
             url: '/streaming_manager_get_clients_list',
             type: 'GET',
@@ -480,6 +482,7 @@
                 if (item !== ""){
                     console.log(item)
                     var is_win = item.includes("win.zip")
+                    var is_rp = item.includes("rp.zip")
                     var is_desktop = item.includes("rpsa_client-desktop")
                     if (is_desktop && is_win){
                         $("#PC_DESK_WIN > img").attr('src',"./img/DeskWinGreen.png")
@@ -490,6 +493,9 @@
                     } else if (is_win) {
                         $("#PC_CON_WIN > img").attr('src',"./img/ConWinGreen.png")
                         $("#PC_CON_WIN").attr('href',"/streaming_manager/clients/"+item)
+                    } else if (is_rp) {
+                        $("#RP_CON_LIN > img").attr('src',"./img/ConRPGreen.png")
+                        $("#RP_CON_LIN").attr('href',"/streaming_manager/clients/"+item)
                     } else {
                         $("#PC_CON_LIN > img").attr('src',"./img/ConLinGreen.png")
                         $("#PC_CON_LIN").attr('href',"/streaming_manager/clients/"+item)

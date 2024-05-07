@@ -15,6 +15,7 @@ message(STATUS "Is install ${IS_INSTALL}")
 message(STATUS "Install path ${INSTALL_DIR}")
 message(STATUS "VERSION=${VERSION}")
 message(STATUS "REVISION=${REVISION}")
+message(STATUS "CLIENT_SUFFIX=${CLIENT_SUFFIX}")
 
 message(STATUS "Compiler С path: ${CMAKE_C_COMPILER}")
 message(STATUS "Compiler С ID: ${CMAKE_C_COMPILER_ID}")
@@ -94,15 +95,15 @@ endif()
 
 if(IS_INSTALL)
        install(TARGETS ${PROJECT_NAME}
-              DESTINATION ${INSTALL_DIR}/streaming/rpsa_client-${VERSION}-${REVISION}${WIN_SUFFIX})
+              DESTINATION ${INSTALL_DIR}/streaming/rpsa_client-${VERSION}-${REVISION}${WIN_SUFFIX}${CLIENT_SUFFIX})
 
        file(GLOB_RECURSE JSON_FILES
             "${PROJECT_SOURCE_DIR}/*.json"
            )
 
        install(FILES ${JSON_FILES}
-              DESTINATION ${INSTALL_DIR}/streaming/rpsa_client-${VERSION}-${REVISION}${WIN_SUFFIX})
+              DESTINATION ${INSTALL_DIR}/streaming/rpsa_client-${VERSION}-${REVISION}${WIN_SUFFIX}${CLIENT_SUFFIX})
 
-        install(CODE "execute_process(COMMAND zip -urj ${INSTALL_DIR}/streaming/rpsa_client-${VERSION}-${REVISION}${WIN_SUFFIX}.zip ${INSTALL_DIR}/streaming/rpsa_client-${VERSION}-${REVISION}${WIN_SUFFIX})")
-        install(CODE "execute_process(COMMAND rm -rf ${INSTALL_DIR}/streaming/rpsa_client-${VERSION}-${REVISION}${WIN_SUFFIX})")
+        install(CODE "execute_process(COMMAND zip -urj ${INSTALL_DIR}/streaming/rpsa_client-${VERSION}-${REVISION}${WIN_SUFFIX}${CLIENT_SUFFIX}.zip ${INSTALL_DIR}/streaming/rpsa_client-${VERSION}-${REVISION}${WIN_SUFFIX}${CLIENT_SUFFIX})")
+        install(CODE "execute_process(COMMAND rm -rf ${INSTALL_DIR}/streaming/rpsa_client-${VERSION}-${REVISION}${WIN_SUFFIX}${CLIENT_SUFFIX})")
 endif()
