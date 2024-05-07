@@ -280,7 +280,7 @@ int rpApp_OscGetCursorDeltaTime(uint32_t cursor1, uint32_t cursor2, float *value
 }
 
 int rpApp_OscGetCursorDeltaAmplitude(rpApp_osc_source source, uint32_t cursor1, uint32_t cursor2, float *value) {
-    return oscGetCursorDeltaAmplitude(source, cursor1, cursor2, value);
+    return osc_GetCursorDeltaAmplitude(source, cursor1, cursor2, value);
 }
 
 int rpApp_OscGetCursorDeltaFrequency(uint32_t cursor1, uint32_t cursor2, float *value) {

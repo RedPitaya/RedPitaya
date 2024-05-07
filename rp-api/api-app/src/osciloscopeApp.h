@@ -82,7 +82,7 @@ int osc_measureRootMeanSquare(rpApp_osc_source source, float *rms);
 int osc_getCursorVoltage(rpApp_osc_source source, uint32_t cursor, float *value);
 int osc_getCursorTime(uint32_t cursor, float *value);
 int osc_getCursorDeltaTime(uint32_t cursor1, uint32_t cursor2, float *value);
-int oscGetCursorDeltaAmplitude(rpApp_osc_source source, uint32_t cursor1, uint32_t cursor2, float *value);
+int osc_GetCursorDeltaAmplitude(rpApp_osc_source source, uint32_t cursor1, uint32_t cursor2, float *value);
 int osc_getCursorDeltaFrequency(uint32_t cursor1, uint32_t cursor2, float *value);
 int osc_getData(rpApp_osc_source source_t, float *data, uint32_t size);
 int osc_getRawData(rp_channel_t source, uint16_t *data, uint32_t size);

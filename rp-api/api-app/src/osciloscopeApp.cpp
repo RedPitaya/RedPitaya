@@ -397,7 +397,7 @@ int osc_getTriggerSlope(rpApp_osc_trig_slope_t *slope) {
 }
 
 int osc_setTriggerLevel(float _level) {
-    std::lock_guard<std::mutex> lock(g_mutex);
+    std::lock_guard lock(g_mutex);
     ECHECK_APP(g_adcController.setTriggetLevel(_level));
     update_view();
     return RP_OK;
@@ -602,7 +602,7 @@ int osc_getCursorDeltaTime(uint32_t _cursor1, uint32_t _cursor2, float *_value) 
     return RP_OK;
 }
 
-int oscGetCursorDeltaAmplitude(rpApp_osc_source _source, uint32_t _cursor1, uint32_t _cursor2, float *_value) {
+int osc_GetCursorDeltaAmplitude(rpApp_osc_source _source, uint32_t _cursor1, uint32_t _cursor2, float *_value) {
     auto viewSize = g_viewController.getViewSize();
     if (static_cast<vsize_t>(_cursor1) >= viewSize || static_cast<vsize_t>(_cursor2) >= viewSize) {
         return RP_EOOR;

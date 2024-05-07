@@ -54,8 +54,6 @@ static volatile uint16_t *osc_axi_chc = NULL;
 static volatile uint16_t *osc_axi_chd = NULL;
 
 
-bool emulate4Ch = false;
-
 static uint32_t g_adc_axi_start = 0;
 
 static uint32_t g_adc_axi_size = 0;
@@ -82,9 +80,6 @@ int osc_Init(int channels)
 
     if (channels == 4){
         size_t base_addr = OSC_BASE_ADDR_4CH;
-        if (emulate4Ch){
-            base_addr = OSC_BASE_ADDR;
-        }
         cmn_Map(OSC_BASE_SIZE, base_addr, (void**)&osc_reg_4ch);
         osc_chc = (uint32_t*)((char*)osc_reg_4ch + OSC_CHA_OFFSET);
         osc_chd = (uint32_t*)((char*)osc_reg_4ch + OSC_CHB_OFFSET);
@@ -240,24 +235,6 @@ int osc_GetAveraging(rp_channel_t channel, bool* enable)
 
 int osc_SetTriggerSource(rp_channel_t channel, uint32_t source)
 {
-    if (emulate4Ch){
-        if (source == RP_TRIG_SRC_CHC_PE){
-            source = RP_TRIG_SRC_CHA_PE;
-        }
-
-        if (source == RP_TRIG_SRC_CHC_NE){
-            source = RP_TRIG_SRC_CHA_NE;
-        }
-
-        if (source == RP_TRIG_SRC_CHD_PE){
-            source = RP_TRIG_SRC_CHB_PE;
-        }
-
-        if (source == RP_TRIG_SRC_CHD_NE){
-            source = RP_TRIG_SRC_CHB_NE;
-        }
-    }
-
     trig_source_u_t control;
     switch (channel)
     {
@@ -944,18 +921,12 @@ const volatile uint32_t* osc_GetDataBufferChB()
 
 const volatile uint32_t* osc_GetDataBufferChC()
 {
-    if (emulate4Ch)
-        return osc_cha;
-    else
-        return osc_chc;
+    return osc_chc;
 }
 
 const volatile uint32_t* osc_GetDataBufferChD()
 {
-    if (emulate4Ch)
-        return osc_chb;
-    else
-        return osc_chd;
+    return osc_chd;
 }
 
 /**
@@ -1583,14 +1554,10 @@ const volatile uint16_t* osc_axi_GetDataBufferChB()
 
 const volatile uint16_t* osc_axi_GetDataBufferChC()
 {
-    if (emulate4Ch)
-        return osc_axi_GetDataBufferChA();
     return osc_axi_chc;
 }
 
 const volatile uint16_t* osc_axi_GetDataBufferChD()
 {
-    if (emulate4Ch)
-        return osc_axi_GetDataBufferChB();
     return osc_axi_chd;
 }
