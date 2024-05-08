@@ -588,6 +588,12 @@ btn:active {
     cursor: pointer;
 }
 
+.close-trig-dialog img {
+    height: 19px;
+    float: left;
+    margin: 7px -19px 0px 7px;
+    cursor: pointer;
+}
 
 #meas:hover,
 #cursor:hover {

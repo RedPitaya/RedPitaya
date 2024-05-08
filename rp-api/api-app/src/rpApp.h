@@ -389,6 +389,22 @@ int rpApp_OscSetTriggerLevel(float level);
 int rpApp_OscGetTriggerLevel(float *level);
 
 /**
+* Sets external trigger level.
+* @param level Level determines value at witch is triggered.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscSetExtTriggerLevel(float level);
+
+/**
+* Gets external trigger level.
+* @param level Level pointer.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscGetExtTriggerLevel(float *level);
+
+/**
 * Sets source signal inverted.
 * @param inverted Determines if the signal is to be inverted or not.
 * @return If the function is successful, the return value is RP_OK.

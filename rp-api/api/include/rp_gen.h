@@ -563,7 +563,7 @@ int rp_GenGetGainOut(rp_channel_t channel,rp_gen_gain_t *mode);
 
 /**
  * Sets ext. trigger debouncer for generation in Us (Value must be positive).
- * @param value Value in microseconds.
+ * @param value Value in microseconds. (0.008 - 8338) Default value: 0.5 ms.
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */

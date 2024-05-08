@@ -58,6 +58,7 @@ int osc_setAmplitudeScale(rpApp_osc_source source, double scale);
 int osc_getAmplitudeScale(rpApp_osc_source source, double *scale);
 int osc_setAmplitudeOffset(rpApp_osc_source source, double offset);
 int osc_getAmplitudeOffset(rpApp_osc_source source, double *offset);
+
 int osc_setTriggerSource(rpApp_osc_trig_source_t triggerSource);
 int osc_getTriggerSource(rpApp_osc_trig_source_t *triggerSource);
 int osc_setTriggerSlope(rpApp_osc_trig_slope_t slope);
@@ -66,6 +67,10 @@ int osc_setTriggerLevel(float level);
 int osc_getTriggerLevel(float *level);
 int osc_setTriggerSweep(rpApp_osc_trig_sweep_t mode);
 int osc_getTriggerSweep(rpApp_osc_trig_sweep_t *mode);
+
+int osc_setExtTriggerLevel(float level);
+int osc_getExtTriggerLevel(float *level);
+
 int osc_setInverted(rpApp_osc_source source, bool inverted);
 int osc_isInverted(rpApp_osc_source source, bool *inverted);
 int osc_getViewPart(float *ratio);

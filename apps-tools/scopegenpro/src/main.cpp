@@ -50,6 +50,8 @@ CFloatParameter slow_dac1 ("OSC_SLOW_OUT_2", CBaseParameter::RW, 0, 0, 0, rp_HPG
 CFloatParameter slow_dac2 ("OSC_SLOW_OUT_3", CBaseParameter::RW, 0, 0, 0, rp_HPGetSlowDACFullScaleOrDefault(2),CONFIG_VAR);
 CFloatParameter slow_dac3 ("OSC_SLOW_OUT_4", CBaseParameter::RW, 0, 0, 0, rp_HPGetSlowDACFullScaleOrDefault(3),CONFIG_VAR);
 
+
+
 bool g_config_changed = false;
 uint16_t g_save_counter = 0; // By default, a save check every 40 ticks. One tick 50 ms.
 
@@ -57,6 +59,9 @@ const std::vector<std::string> g_savedParams = {"OSC_CH1_IN_GAIN","OSC_CH2_IN_GA
                                                 "OSC_CH1_IN_AC_DC","OSC_CH2_IN_AC_DC","OSC_CH3_IN_AC_DC","OSC_CH4_IN_AC_DC"};
 
 void updateParametersByConfig(){
+
+    initExtTriggerLimits();
+
     configGet(getHomeDirectory() + "/.config/redpitaya/apps/scopegenpro/config.json");
 
     initOscAfterLoad();
@@ -111,6 +116,7 @@ int rp_app_init(void) {
     rp_WS_SetMode((rp_system_mode_t)(RP_WS_ALL & (~RP_WS_DISK_SIZE) & ~RP_WS_SENSOR_VOLT));
     rp_WS_UpdateParameters(true);
 
+
     rpApp_Init();
     rpApp_OscRun();
     // Need run after init parameters
@@ -150,35 +156,6 @@ void UpdateParams(void) {
     auto is_osc_running = getOscRunState();
 
     resumeSweepController(!is_osc_running);
-
-    // static int times = 0;
-	// if (times == 3)
-	// {
-	//     FILE *fp = fopen("/proc/stat","r");
-	//     if(fp)
-	//     {
-	//     	long double a[4];
-	//     	fscanf(fp,"%*s %Lf %Lf %Lf %Lf",&a[0],&a[1],&a[2],&a[3]);
-	//     	fclose(fp);
-
-	//     	long double divider = ((a[0]+a[1]+a[2]+a[3]) - (cpu_values[0]+cpu_values[1]+cpu_values[2]+cpu_values[3]));
-	//     	long double loadavg = 100;
-	//     	if(divider > 0.01)
-	// 		{
-	// 			loadavg = ((a[0]+a[1]+a[2]) - (cpu_values[0]+cpu_values[1]+cpu_values[2])) / divider;
-	// 		}
-	// 		cpuLoad.Value() = (float)(loadavg * 100);
-	// 		cpu_values[0]=a[0];cpu_values[1]=a[1];cpu_values[2]=a[2];cpu_values[3]=a[3];
-	//     }
-	//     times = 0;
-
-	// 	struct sysinfo memInfo;
-	//     sysinfo (&memInfo);
-    // 	memoryTotal.Value() = (float)memInfo.totalram;
-    // 	memoryFree.Value() = (float)memInfo.freeram;
-	// }
-	// times++;
-
     updateGenTempProtection();
 
 

@@ -140,19 +140,18 @@
                         $('#info_box').html('Trigger level ' + OSC.convertVoltage(new_value));
                     }
 
-                    if ($('#trig_dialog').is(':visible')) {
-                        var probeAttenuation = 1;
-                            var jumperSettings = 1;
-                            var ch = "CH"+(parseInt($("#OSC_TRIG_SOURCE").val()) + 1);
-                        if (ch == "CH1" || ch == "CH2" || ch == "CH3" || ch == "CH4") {
-                            probeAttenuation = parseInt($("#OSC_" + ch + "_PROBE option:selected").text());
-                            jumperSettings = $("#OSC_" + ch + "_IN_GAIN").parent().hasClass("active") ? 1 : 20;
-                        }
-
-                        OSC.setValue($('#OSC_TRIG_LEVEL'), OSC.formatInputValue(new_value, probeAttenuation, false, jumperSettings == 20));
-                        $('#OSC_TRIG_LEVEL').attr("step",OSC.getStepValue(probeAttenuation, false, jumperSettings == 20));
-                        $('#OSC_TRIG_LEVEL').change();
+                    var probeAttenuation = 1;
+                        var jumperSettings = 1;
+                        var ch = "CH"+(parseInt($("#OSC_TRIG_SOURCE").val()) + 1);
+                    if (ch == "CH1" || ch == "CH2" || ch == "CH3" || ch == "CH4") {
+                        probeAttenuation = parseInt($("#OSC_" + ch + "_PROBE option:selected").text());
+                        jumperSettings = $("#OSC_" + ch + "_IN_GAIN").parent().hasClass("active") ? 1 : 20;
                     }
+
+                    OSC.setValue($('#OSC_TRIG_LEVEL'), OSC.formatInputValue(new_value, probeAttenuation, false, jumperSettings == 20));
+                    $('#OSC_TRIG_LEVEL').attr("step",OSC.getStepValue(probeAttenuation, false, jumperSettings == 20));
+                    $('#OSC_TRIG_LEVEL').change();
+
                     if (save) {
                         OSC.params.local['OSC_TRIG_LEVEL'] = { value: new_value };
                         OSC.sendParams();
@@ -217,21 +216,9 @@
 
             // Trigger button is blured out and trigger level is hidden for source 'EXT'
             if ((trig_sour == 4) || (show_in_channel !== undefined && !show_in_channel)) {
-                $('#trigger_level, #trig_level_arrow').hide();
+                $('#trigger_level, #trig_level_arrow, .in_trigger_settings').hide();
                 $('#right_menu .menu-btn.trig').prop('disabled', true);
                 $('#osc_trig_level_info').html('-');
-                if (OSC.is_ext_trig_level_present && trig_sour == 4) {
-                    var level_value = OSC.params.orig['OSC_TRIG_LEVEL'] === undefined ? undefined : OSC.params.orig['OSC_TRIG_LEVEL'].value;
-                    if ((!OSC.state.editing) && level_value !== undefined) {
-                        var value = $('#OSC_TRIG_LEVEL').val();
-                        if (value !== level_value) {
-                            var probeAttenuation = 1;
-                            var jumperSettings = 1;
-                            OSC.setValue($('#OSC_TRIG_LEVEL'), OSC.formatInputValue(level_value, probeAttenuation, false, jumperSettings == 20));
-                            $('#OSC_TRIG_LEVEL').attr("step",OSC.getStepValue(probeAttenuation, false, jumperSettings == 20));
-                        }
-                    }
-                }
             } else {
 
                 var ots = trig_sour + 1;
@@ -245,7 +232,7 @@
                     var volt_per_px = (scale_value * 10) / graph_height;
                     var px_offset = -((level_value + source_offset) / volt_per_px - parseInt($('#trig_level_arrow').css('margin-top')) / 2);
                     $('#trig_level_arrow, #trigger_level').css('top', (graph_height + 7) / 2 + px_offset).show();
-
+                    $('.in_trigger_settings').show();
                     $('#right_menu .menu-btn.trig').prop('disabled', false);
                     $('#osc_trig_level_info').html(OSC.convertVoltage(level_value));
 
@@ -295,6 +282,17 @@
 
     OSC.trigLevel = function(new_params) {
         OSC.triggerParam('OSC_TRIG_LEVEL');
+    }
+
+    OSC.extTrigLevel = function(new_params) {
+        function update(param) {
+            if(param in OSC.params.orig){
+                $("#"+param).attr("min", OSC.params.orig[param].min);
+                $("#"+param).attr("max", OSC.params.orig[param].max);
+                $("#"+param).val(OSC.params.orig[param].value);
+            }
+        }
+        update("OSC_EXT_TRIG_LEVEL")
     }
 
     OSC.trigSource = function(new_params) {

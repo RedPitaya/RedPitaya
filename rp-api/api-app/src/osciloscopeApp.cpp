@@ -369,7 +369,7 @@ int osc_getAmplitudeOffset(rpApp_osc_source source, double *offset) {
 }
 
 int osc_setTriggerSource(rpApp_osc_trig_source_t _triggerSource) {
-    std::lock_guard<std::mutex> lock(g_mutex);
+    std::lock_guard lock(g_mutex);
     auto trigSource = g_adcController.getTriggerSources();
     if (trigSource != _triggerSource) {
         g_viewController.requestUpdateViewFromADC();
@@ -383,7 +383,7 @@ int osc_getTriggerSource(rpApp_osc_trig_source_t *triggerSource) {
 }
 
 int osc_setTriggerSlope(rpApp_osc_trig_slope_t _slope) {
-    std::lock_guard<std::mutex> lock(g_mutex);
+    std::lock_guard lock(g_mutex);
      auto trigSlope = g_adcController.getTriggerSlope();
     if (trigSlope != _slope) {
         g_viewController.requestUpdateViewFromADC();
@@ -398,7 +398,7 @@ int osc_getTriggerSlope(rpApp_osc_trig_slope_t *slope) {
 
 int osc_setTriggerLevel(float _level) {
     std::lock_guard lock(g_mutex);
-    ECHECK_APP(g_adcController.setTriggetLevel(_level));
+    ECHECK_APP(g_adcController.setTriggerLevel(_level));
     update_view();
     return RP_OK;
 }
@@ -406,6 +406,18 @@ int osc_setTriggerLevel(float _level) {
 int osc_getTriggerLevel(float *_level) {
     return g_adcController.getTriggerLevel(_level);
 }
+
+int osc_setExtTriggerLevel(float _level){
+    std::lock_guard lock(g_mutex);
+    ECHECK_APP(g_adcController.setExternalTriggerLevel(_level));
+    update_view();
+    return RP_OK;
+}
+
+int osc_getExtTriggerLevel(float *_level){
+    return g_adcController.getExternalTriggerLevel(_level);
+}
+
 
 int osc_setTriggerSweep(rpApp_osc_trig_sweep_t sweep) {
     g_adcController.setTriggerSweep(sweep);
@@ -425,7 +437,7 @@ int osc_getTriggerSweep(rpApp_osc_trig_sweep_t *sweep) {
 }
 
 int osc_SetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode _mode){
-    std::lock_guard<std::mutex> lock(g_mutex);
+    std::lock_guard lock(g_mutex);
     g_decimator.setInterpolationMode(_channel,_mode);
     return RP_OK;
 }
@@ -436,7 +448,7 @@ int osc_GetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode *_mode)
 }
 
 int osc_setInverted(rpApp_osc_source source, bool inverted) {
-    std::lock_guard<std::mutex> lock(g_mutex);
+    std::lock_guard lock(g_mutex);
     SOURCE_ACTION_4CH(source,
                   ch_inverted[0] = inverted,
                   ch_inverted[1] = inverted,

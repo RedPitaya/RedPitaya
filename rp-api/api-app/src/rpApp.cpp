@@ -192,6 +192,14 @@ int rpApp_OscGetTriggerLevel(float *level) {
     return osc_getTriggerLevel(level);
 }
 
+int rpApp_OscSetExtTriggerLevel(float level) {
+    return osc_setExtTriggerLevel(level);
+}
+
+int rpApp_OscGetExtTriggerLevel(float *level) {
+    return osc_getExtTriggerLevel(level);
+}
+
 int rpApp_OscSetInverted(rpApp_osc_source source, bool inverted) {
     return osc_setInverted(source, inverted);
 }

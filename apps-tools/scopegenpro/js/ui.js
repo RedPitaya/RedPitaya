@@ -630,6 +630,21 @@
             $('#' + $(this).attr('id') + '_burst_dialog').show();
         });
 
+        $('.edit-mode-trig-input').on('click', function() {
+            $('#trig_dialog').hide();
+            $('#trig_dialog_input').show();
+        });
+
+        $('.edit-mode-trig-output').on('click', function() {
+            $('#trig_dialog').hide();
+            $('#trig_dialog_output').show();
+        });
+
+        $('.close-trig-dialog').on('click', function() {
+            $('.dialog:visible').hide();
+            $('#'+$(this).attr('id')+"_dialog").show();
+        });
+
         // Close parameters dialog after Enter key is pressed
         $('input').keyup(function(event) {
             if (event.keyCode == 13)

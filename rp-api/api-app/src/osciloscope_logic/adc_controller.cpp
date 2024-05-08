@@ -190,14 +190,8 @@ auto CADCController::getUnAttenuateAmplitudeChannelFunction() const -> func_t{
     return m_UnAttAmplFunc;
 }
 
-auto CADCController::setTriggetLevel(float _level) -> int{
-    std::lock_guard<std::mutex> lock(m_acqMutex);
-    static auto IsExternalTriggerLevelPresent = rp_HPGetIsExternalTriggerLevelPresentOrDefault();
-    if (IsExternalTriggerLevelPresent){
-        if (m_trigSource == RPAPP_OSC_TRIG_SRC_EXTERNAL){
-            ECHECK(rp_SetExternalTriggerLevel(_level));
-        }
-    }
+auto CADCController::setTriggerLevel(float _level) -> int{
+    std::lock_guard lock(m_acqMutex);
 
     if(m_trigSource != RPAPP_OSC_TRIG_SRC_EXTERNAL) {
         rpApp_osc_source source = RPAPP_OSC_SOUR_CH1;
@@ -223,13 +217,7 @@ auto CADCController::setTriggetLevel(float _level) -> int{
 }
 
 auto CADCController::getTriggerLevel(float *_level) -> int{
-    std::lock_guard<std::mutex> lock(m_acqMutex);
-    static auto IsExternalTriggerLevelPresent = rp_HPGetIsExternalTriggerLevelPresentOrDefault();
-    if (IsExternalTriggerLevelPresent){
-        if (m_trigSource == RPAPP_OSC_TRIG_SRC_EXTERNAL){
-            ECHECK(rp_GetExternalTriggerLevel(_level));
-        }
-    }
+    std::lock_guard lock(m_acqMutex);
 
     if (m_trigSource == RPAPP_OSC_TRIG_SRC_CH1){
         ECHECK(rp_AcqGetTriggerLevel(RP_T_CH_1,_level));
@@ -252,6 +240,26 @@ auto CADCController::getTriggerLevel(float *_level) -> int{
         if (m_trigSource == RPAPP_OSC_TRIG_SRC_CH3) source = RPAPP_OSC_SOUR_CH3;
         if (m_trigSource == RPAPP_OSC_TRIG_SRC_CH4) source = RPAPP_OSC_SOUR_CH4;
         ECHECK_APP(m_attAmplFunc(source, *_level, _level));
+    }
+    return RP_OK;
+}
+
+auto CADCController::setExternalTriggerLevel(float _level) -> int{
+    std::lock_guard lock(m_acqMutex);
+    static auto IsExternalTriggerLevelPresent = rp_HPGetIsExternalTriggerLevelPresentOrDefault();
+    if (IsExternalTriggerLevelPresent){
+        ECHECK(rp_SetExternalTriggerLevel(_level));
+    }
+    return RP_OK;
+}
+
+auto CADCController::getExternalTriggerLevel(float *_level) -> int{
+    std::lock_guard lock(m_acqMutex);
+    static auto IsExternalTriggerLevelPresent = rp_HPGetIsExternalTriggerLevelPresentOrDefault();
+    if (IsExternalTriggerLevelPresent){
+        ECHECK(rp_GetExternalTriggerLevel(_level));
+    }else{
+        *_level = 0;
     }
     return RP_OK;
 }

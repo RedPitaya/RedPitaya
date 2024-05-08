@@ -62,6 +62,8 @@ CBooleanParameter outBurstRepInf[MAX_DAC_CHANNELS]         = INIT2("SOUR","_BURS
 CIntParameter     outBurstDelay[MAX_DAC_CHANNELS]          = INIT2("SOUR","_BURST_DELAY", CBaseParameter::RW, 1, 0, 1, 2000000000,CONFIG_VAR);
 CBooleanParameter outGenSyncReset("SYNC_GEN", CBaseParameter::RW, false, 0);
 
+CFloatParameter outExtTrigDeb("SOUR_DEB", CBaseParameter::RW, 500, 0, 0.008, 8338,CONFIG_VAR);
+
 CIntParameter       outGain[MAX_DAC_CHANNELS] = INIT2("OSC_CH","_OUT_GAIN", CBaseParameter::RW, RP_GAIN_1X, 0, 0, 1,CONFIG_VAR);
 CStringParameter    outARBList                = CStringParameter("ARB_LIST", CBaseParameter::RW, loadARBList(), 0);
 
@@ -572,6 +574,11 @@ auto updateGeneratorParameters(bool force) -> void{
         if (requestSendScale){
             outScale[i].SendValue(outScale[i].Value());
         }
+    }
+
+    if (IS_NEW(outExtTrigDeb) || force){
+        rp_GenSetExtTriggerDebouncerUs(outExtTrigDeb.NewValue());
+        outExtTrigDeb.Update();
     }
 
     setBurstParameters(force);

@@ -91,8 +91,20 @@ CIntParameter       request_format ("REQUEST_FORMAT", CBaseParameter::RW, 1, 0, 
 CBooleanParameter   request_normalize("REQUEST_NORMALIZE", CBaseParameter::RW,true,0,CONFIG_VAR);
 CBooleanParameter   request_view("REQUEST_VIEW", CBaseParameter::RW,true,0,CONFIG_VAR);
 
+CFloatParameter ext_trigger_level ("OSC_EXT_TRIG_LEVEL", CBaseParameter::RW, 0, 0, 0, 0,CONFIG_VAR);
+
+
+auto initExtTriggerLimits() -> void{
+    if (rp_HPGetIsExternalTriggerLevelPresentOrDefault()){
+        auto level = rp_HPGetIsExternalTriggerFullScalePresentOrDefault();
+        auto is_sign = rp_HPGetIsExternalTriggerIsSignedOrDefault();
+        ext_trigger_level.SetMin(is_sign ? -level : 0);
+        ext_trigger_level.SetMax(level);
+    }
+}
+
 auto initOscAfterLoad() -> void{
-if (rp_HPGetFastADCIsAC_DCOrDefault()){
+    if (rp_HPGetFastADCIsAC_DCOrDefault()){
         for(auto ch = 0u; ch < g_adc_channels ; ch++){
             rp_AcqSetAC_DC((rp_channel_t)ch,inAC_DC[ch].Value() == 0 ? RP_AC:RP_DC);
         }
@@ -224,6 +236,12 @@ auto updateOscParametersToWEB() -> void{
         inTimeOffset.SendValue(value);
         inTimeScale.Update();
         viewPortion.Update();
+    }
+
+    float ext_t_level;
+    rpApp_OscGetExtTriggerLevel(&ext_t_level);
+    if (ext_trigger_level.Value() != ext_t_level){
+        ext_trigger_level.SendValue(ext_t_level);
     }
 
     double dvalue;
@@ -549,9 +567,15 @@ auto updateOscParams(bool force) -> void{
     // Trigger level must be settled after trigger source
     if (trig_inversion_changed || IS_NEW(inTriggLevel) || force) {
         if (rpApp_OscSetTriggerLevel(trig_invert ? -inTriggLevel.NewValue() : inTriggLevel.NewValue()) == RP_OK) {
-            inTriggLevel.Update(); // Used in pait with inTrigSource
+            inTriggLevel.Update(); // Used in pair with inTrigSource
             inTrigSource.Update();
             requestSendTriggerLevel = true;
+        }
+    }
+
+    if (IS_NEW(ext_trigger_level) || force) {
+        if (rpApp_OscSetExtTriggerLevel(ext_trigger_level.NewValue())){
+            ext_trigger_level.Update();
         }
     }
 
@@ -571,6 +595,7 @@ auto updateOscParams(bool force) -> void{
     }
 
     // IF_VALUE_CHANGED_FORCE(mathOperation, rpApp_OscSetMathOperation((rpApp_osc_math_oper_t) mathOperation.NewValue()),force)
+
 
     if (update_trig_level){
         // Update the level

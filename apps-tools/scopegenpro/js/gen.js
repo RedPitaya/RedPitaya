@@ -152,30 +152,34 @@ OSC.ch2SetGenScale = function(new_params){
 }
 
 OSC.riseFallTime = function(new_params) {
-    if('SOUR1_RISE' in OSC.params.orig){
-        $("#SOUR1_RISE").val(OSC.params.orig['SOUR1_RISE'].value);
-        $("#SOUR1_RISE").attr("min", OSC.params.orig['SOUR1_RISE'].min);
-        $("#SOUR1_RISE").attr("max", OSC.params.orig['SOUR1_RISE'].max);
-        $("#SOUR1_RISE").attr("step", OSC.params.orig['SOUR1_RISE'].min);
+
+    function update(param) {
+        if(param in OSC.params.orig){
+            $("#"+param).val(OSC.params.orig[param].value);
+            $("#"+param).attr("min", OSC.params.orig[param].min);
+            $("#"+param).attr("max", OSC.params.orig[param].max);
+            $("#"+param).attr("step", OSC.params.orig[param].min);
+        }
     }
-    if('SOUR1_FALL' in OSC.params.orig){
-        $("#SOUR1_FALL").val(OSC.params.orig['SOUR1_FALL'].value);
-        $("#SOUR1_FALL").attr("min", OSC.params.orig['SOUR1_FALL'].min);
-        $("#SOUR1_FALL").attr("max", OSC.params.orig['SOUR1_FALL'].max);
-        $("#SOUR1_FALL").attr("step", OSC.params.orig['SOUR1_FALL'].min);
+
+    update("SOUR1_RISE")
+    update("SOUR1_FALL")
+    update("SOUR2_RISE")
+    update("SOUR2_FALL")
+}
+
+OSC.outExtTrigDeb = function(new_params) {
+
+    function update(param) {
+        if(param in OSC.params.orig){
+            $("#"+param).val(OSC.params.orig[param].value);
+            $("#"+param).attr("min", OSC.params.orig[param].min);
+            $("#"+param).attr("max", OSC.params.orig[param].max);
+            $("#"+param).attr("step", OSC.params.orig[param].min);
+        }
     }
-    if('SOUR2_RISE' in OSC.params.orig){
-        $("#SOUR2_RISE").val(OSC.params.orig['SOUR2_RISE'].value);
-        $("#SOUR2_RISE").attr("min", OSC.params.orig['SOUR2_RISE'].min);
-        $("#SOUR2_RISE").attr("max", OSC.params.orig['SOUR2_RISE'].max);
-        $("#SOUR2_RISE").attr("step", OSC.params.orig['SOUR2_RISE'].min);
-    }
-    if('SOUR2_FALL' in OSC.params.orig){
-        $("#SOUR2_FALL").val(OSC.params.orig['SOUR2_FALL'].value);
-        $("#SOUR2_FALL").attr("min", OSC.params.orig['SOUR2_FALL'].min);
-        $("#SOUR2_FALL").attr("max", OSC.params.orig['SOUR2_FALL'].max);
-        $("#SOUR2_FALL").attr("step", OSC.params.orig['SOUR2_FALL'].min);
-    }
+
+    update("SOUR_DEB")
 }
 
 OSC.setOutDCyc = function(param_name){

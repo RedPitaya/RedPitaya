@@ -593,6 +593,8 @@
 
     OSC.param_callbacks["OSC_TIME_OFFSET"] = OSC.timeOffset;
     OSC.param_callbacks["OSC_TRIG_LEVEL"] = OSC.trigLevel;
+    OSC.param_callbacks["OSC_EXT_TRIG_LEVEL"] = OSC.extTrigLevel;
+
     OSC.param_callbacks["OSC_TRIG_HYST"] = OSC.trigHyst;
     OSC.param_callbacks["OSC_TRIG_SOURCE"] = OSC.trigSource;
     OSC.param_callbacks["OSC_TRIG_SLOPE"] = OSC.trigSlope;
@@ -627,6 +629,8 @@
     OSC.param_callbacks["SOUR1_FALL"] = OSC.riseFallTime;
     OSC.param_callbacks["SOUR2_RISE"] = OSC.riseFallTime;
     OSC.param_callbacks["SOUR2_FALL"] = OSC.riseFallTime;
+
+    OSC.param_callbacks["SOUR_DEB"] = OSC.outExtTrigDeb;
 
     OSC.param_callbacks["SOUR1_DCYC"] = OSC.setOut1DCyc;
     OSC.param_callbacks["SOUR2_DCYC"] = OSC.setOut2DCyc;
@@ -773,6 +777,11 @@
 
         if (new_params['OSC_TRIG_LIMIT_IS_PRESENT']){
             OSC.is_ext_trig_level_present = new_params['OSC_TRIG_LIMIT_IS_PRESENT'].value;
+            if (OSC.is_ext_trig_level_present){
+                $('.ext_trig_level').show()
+            }else{
+                $('.ext_trig_level').hide()
+            }
         }
 
         // Hack for json limitation
