@@ -86,8 +86,8 @@
                 }
                 if (SM.first_run_net) {
                     SM.first_run_net = false;
-                    rate = SM.ss_full_rate / default_devider_net;
-                    rate_devider = default_devider_net;
+                    // rate = SM.ss_full_rate / default_devider_net;
+                    // rate_devider = default_devider_net;
                 }
             } else {
                 if (channel_mode != 3) {
@@ -99,8 +99,8 @@
                 }
                 if (SM.first_run_sd) {
                     SM.first_run_sd = false;
-                    rate = SM.ss_full_rate / default_devider_sd;
-                    rate_devider = default_devider_sd;
+                    // rate = SM.ss_full_rate / default_devider_sd;
+                    // rate_devider = default_devider_sd;
                 }
             }
 
@@ -122,8 +122,8 @@
                 }
                 if (SM.first_run_net) {
                     SM.first_run_net = false;
-                    rate = SM.ss_full_rate / default_devider_net;
-                    rate_devider = default_devider_net;
+                    // rate = SM.ss_full_rate / default_devider_net;
+                    // rate_devider = default_devider_net;
                 }
             } else {
                 if (channel_mode != 3) {
@@ -135,8 +135,8 @@
                 }
                 if (SM.first_run_sd) {
                     SM.first_run_sd = false;
-                    rate = SM.ss_full_rate / default_devider_sd;
-                    rate_devider = default_devider_sd;
+                    // rate = SM.ss_full_rate / default_devider_sd;
+                    // rate_devider = default_devider_sd;
                 }
             }
 
@@ -158,8 +158,8 @@
                 }
                 if (SM.first_run_net) {
                     SM.first_run_net = false;
-                    rate = SM.ss_full_rate / default_devider_net;
-                    rate_devider = default_devider_net;
+                    // rate = SM.ss_full_rate / default_devider_net;
+                    // rate_devider = default_devider_net;
                 }
             } else {
                 if (channel_mode != 3) {
@@ -171,8 +171,8 @@
                 }
                 if (SM.first_run_sd) {
                     SM.first_run_sd = false;
-                    rate = SM.ss_full_rate / default_devider_sd;
-                    rate_devider = default_devider_sd;
+                    // rate = SM.ss_full_rate / default_devider_sd;
+                    // rate_devider = default_devider_sd;
                 }
             }
         }
