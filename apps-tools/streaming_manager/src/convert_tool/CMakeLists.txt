@@ -27,6 +27,14 @@ set(CMAKE_CXX_STANDARD 17)
 
 FILE(GLOB_RECURSE INC_ALL "*.h")
 
+
+option(BUILD_PYTHON_MODULE "" OFF)
+option(BUILD_SHARED "" OFF)
+set(IS_INSTALL_CUR IS_INSTALL)
+set(IS_INSTALL OFF CACHE INTERNAL "")
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../../../rp-api/api-formatter ${CMAKE_CURRENT_BINARY_DIR}/api-formatter)
+set(IS_INSTALL IS_INSTALL_CUR)
+
 add_executable(${PROJECT_NAME} ${INC_ALL})
 
 if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
@@ -62,9 +70,10 @@ target_link_directories(${PROJECT_NAME}
     PRIVATE
     ${CMAKE_BINARY_DIR}/bin/
     ${CMAKE_BINARY_DIR}/lib/
+    ${CMAKE_BINARY_DIR}/output/
     )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC converter_lib writer_lib)
+target_link_libraries(${PROJECT_NAME} PUBLIC converter_lib writer_lib rp-formatter)
 
 if(NOT WIN32 )
     target_link_libraries(${PROJECT_NAME} PRIVATE pthread -static-libstdc++ -static-libgcc)

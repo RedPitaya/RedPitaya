@@ -2,7 +2,7 @@
  * $Id$
  *
  * @brief Red Pitaya data formatter.
- *         
+ *
  * (c) Red Pitaya  http://www.redpitaya.com
  *
  */
@@ -37,7 +37,7 @@ auto addStringToFileData (std::iostream *memory, std::string s) -> void {
 }
 
 auto addInt32ToFileData (std::iostream *memory, int32_t i, rp_endianness_t _endianeess) -> void {
-    char bytes[4];    
+    char bytes[4];
     if (_endianeess == RP_F_LittleEndian){
         bytes[3] = (i >> 24) & 0xFF;
         bytes[2] = (i >> 16) & 0xFF;
@@ -50,7 +50,7 @@ auto addInt32ToFileData (std::iostream *memory, int32_t i, rp_endianness_t _endi
         bytes[2] = (i >> 8) & 0xFF;
         bytes[3] = i & 0xFF;
     }
-    memory->write(bytes,4);   
+    memory->write(bytes,4);
 }
 
 auto addInt16ToFileData (std::iostream *memory, int16_t i, rp_endianness_t _endianeess) -> void {
@@ -90,13 +90,13 @@ auto CWaveWriter::resetHeaderInit() -> void{
 auto CWaveWriter::Impl::buildHeader(std::iostream *memory) -> void {
     int sampleRate = 44100;
     int32_t dataChunkSize = m_samplesPerChannel * m_numChannels * (m_bitDepth / 8);
-    int16_t data_format = m_bitDepth == 32 ? 0x0003: 0x0001; 
+    int16_t data_format = m_bitDepth == 32 ? 0x0003: 0x0001;
     addStringToFileData(memory,"RIFF");
-    
+
     int32_t fileSizeInBytes = 4 + 24 + 8 + dataChunkSize;
     addInt32ToFileData (memory, fileSizeInBytes, m_endianness);
     addStringToFileData(memory,"WAVE");
-    
+
     // -----------------------------------------------------------
     // FORMAT CHUNK
     addStringToFileData(memory,"fmt ");
@@ -104,15 +104,15 @@ auto CWaveWriter::Impl::buildHeader(std::iostream *memory) -> void {
     addInt16ToFileData (memory, data_format, m_endianness); // audio format = 1
     addInt16ToFileData (memory, (int16_t)m_numChannels, m_endianness); // num channels
     addInt32ToFileData (memory, (int32_t)m_OSCRate, m_endianness); // sample rate
-    
+
     int32_t numBytesPerSecond = (int32_t) ((m_numChannels * sampleRate * m_bitDepth) / 8);
     addInt32ToFileData (memory, numBytesPerSecond, m_endianness);
-    
+
     int16_t numBytesPerBlock = m_numChannels * (m_bitDepth / 8);
     addInt16ToFileData (memory, numBytesPerBlock, m_endianness);
-    
+
     addInt16ToFileData (memory, (int16_t)m_bitDepth, m_endianness);
-    
+
     // -----------------------------------------------------------
     memory->write("data",4);
     addInt32ToFileData (memory, dataChunkSize, m_endianness);
@@ -144,14 +144,14 @@ auto CWaveWriter::Impl::write(SBufferPack *_pack, std::iostream *_memory) -> boo
             channelsSamples.push_back(sCount);
         }
     }
-  
+
     if (maxBitBySample > RP_F_32_Bit){
         maxBitBySample = RP_F_32_Bit;
     }
 
     m_samplesPerChannel = maxSamples;
     m_bitDepth = maxBitBySample;
-   
+
 
     // std::stringstream *memory = new std::stringstream(std::ios_base::in | std::ios_base::out | std::ios_base::binary);
     if (m_headerInit)
@@ -194,14 +194,14 @@ auto CWaveWriter::Impl::write(SBufferPack *_pack, std::iostream *_memory) -> boo
 
         if (channelsBits[ch] == RP_F_32_Bit){
             if (channelsSamples[ch] > pos){
-                auto b = (float*)channels[ch]; 
+                auto b = (float*)channels[ch];
                 return b[pos];
             }
         }
 
         if (channelsBits[ch] == RP_F_64_Bit){
             if (channelsSamples[ch] > pos){
-                auto b = (double*)channels[ch]; 
+                auto b = (double*)channels[ch];
                 return b[pos];
             }
         }
@@ -259,7 +259,7 @@ auto CWaveWriter::writeToStream(SBufferPack *_pack, std::iostream *_memory) -> b
 auto CWaveWriter::Impl::updateSize(std::iostream *_memory,size_t _size) -> void {
     int offset1 = 4;
     int offset2 = 40;
-   
+
     auto cur_p = _memory->tellp();
     auto cur_g = _memory->tellg();
 

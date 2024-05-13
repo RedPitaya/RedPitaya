@@ -8,7 +8,7 @@
 #include <iomanip>
 #include "data_type.h"
 
-using namespace TDMS;
+using namespace rp_formatter_api::TDMS;
 
 time_t GetTime1904(){
     std::stringstream stream("1904-01-01 00:00:00");
@@ -366,7 +366,7 @@ auto DataType::GetRawTimeValue(time_t time_val) -> uint64_t*{
     return val;
 }
 
-TDMS::DataType::Raw::~Raw(){
+DataType::Raw::~Raw(){
 }
 
 auto DataType::GetDataString() -> string{

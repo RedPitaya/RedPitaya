@@ -35,10 +35,14 @@ if(NOT DEFINED REVISION)
   set(REVISION devbuild)
 endif()
 
-
+message(STATUS "Project=${PROJECT_NAME}")
 message(STATUS "VERSION=${VERSION}")
 message(STATUS "REVISION=${REVISION}")
+message(STATUS "Is install ${IS_INSTALL}")
 message(STATUS "Install path ${INSTALL_DIR}")
+
+message(STATUS "Build shared ${BUILD_SHARED}")
+message(STATUS "Build static ${BUILD_STATIC}")
 
 message(STATUS "Compiler C path: ${CMAKE_C_COMPILER}")
 message(STATUS "Compiler C ID: ${CMAKE_C_COMPILER_ID}")
@@ -62,19 +66,20 @@ include_directories("src")
 include_directories("src/writers")
 include_directories("src/tdms")
 
+
 list(APPEND src
-            ${CMAKE_SOURCE_DIR}/src/writers/rp_csv_writer.cpp
-            ${CMAKE_SOURCE_DIR}/src/writers/rp_wav_writer.cpp
-            ${CMAKE_SOURCE_DIR}/src/writers/rp_tdms_writer.cpp
-            ${CMAKE_SOURCE_DIR}/src/tdms/binary_stream.cpp
-            ${CMAKE_SOURCE_DIR}/src/tdms/data_type.cpp
-            ${CMAKE_SOURCE_DIR}/src/tdms/file.cpp
-            ${CMAKE_SOURCE_DIR}/src/tdms/writer.cpp
-            ${CMAKE_SOURCE_DIR}/src/rp_formatter.cpp
+            ${PROJECT_SOURCE_DIR}/src/writers/rp_csv_writer.cpp
+            ${PROJECT_SOURCE_DIR}/src/writers/rp_wav_writer.cpp
+            ${PROJECT_SOURCE_DIR}/src/writers/rp_tdms_writer.cpp
+            ${PROJECT_SOURCE_DIR}/src/tdms/binary_stream.cpp
+            ${PROJECT_SOURCE_DIR}/src/tdms/data_type.cpp
+            ${PROJECT_SOURCE_DIR}/src/tdms/file.cpp
+            ${PROJECT_SOURCE_DIR}/src/tdms/writer.cpp
+            ${PROJECT_SOURCE_DIR}/src/rp_formatter.cpp
         )
 
 list(APPEND header
-    ${CMAKE_SOURCE_DIR}/src/rp_formatter.h
+    ${PROJECT_SOURCE_DIR}/src/rp_formatter.h
 )
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
@@ -132,6 +137,14 @@ if(BUILD_STATIC)
     target_sources(${PROJECT_NAME}-static PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-obj>)
     target_link_libraries(${PROJECT_NAME}-static -lm -lpthread)
 
+    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin/include/${PROJECT_NAME}")
+    add_custom_command(TARGET ${PROJECT_NAME}-static POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${header}
+        "${CMAKE_BINARY_DIR}/bin/include/${PROJECT_NAME}"
+        COMMENT "Copying ${PROJECT_NAME} public headers to ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME}"
+        VERBATIM)
+
     if(IS_INSTALL)
         install(TARGETS ${PROJECT_NAME}-static
             LIBRARY DESTINATION ${INSTALL_DIR}/lib
@@ -141,5 +154,3 @@ if(BUILD_STATIC)
             DESTINATION ${INSTALL_DIR}/include/common)
     endif()
 endif()
-
-unset(INSTALL_DIR CACHE)

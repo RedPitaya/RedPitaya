@@ -620,7 +620,6 @@ gen_report_eco:
 ################################################################################
 
 APP_STREAMINGMANAGER_DIR = apps-tools/streaming_manager
-
 streaming:  streaming_client streaming_client_win
 
 streaming_client:

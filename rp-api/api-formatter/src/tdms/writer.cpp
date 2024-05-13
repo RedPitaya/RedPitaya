@@ -4,7 +4,7 @@
 #define  OFFSET_NEXT_SEGMENT    12
 #define  OFFSET_RAW_DATA        OFFSET_NEXT_SEGMENT + 8
 
-using namespace TDMS;
+using namespace rp_formatter_api::TDMS;
 
 
 void print_state (const std::ios& stream) {
