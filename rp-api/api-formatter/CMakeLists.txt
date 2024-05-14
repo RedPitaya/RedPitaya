@@ -61,12 +61,6 @@ list(APPEND r_paths
 
 set(CMAKE_INSTALL_RPATH ${r_paths})
 
-include_directories("include")
-include_directories("src")
-include_directories("src/writers")
-include_directories("src/tdms")
-
-
 list(APPEND src
             ${PROJECT_SOURCE_DIR}/src/writers/rp_csv_writer.cpp
             ${PROJECT_SOURCE_DIR}/src/writers/rp_wav_writer.cpp
@@ -82,11 +76,21 @@ list(APPEND header
     ${PROJECT_SOURCE_DIR}/src/rp_formatter.h
 )
 
-add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
-add_compile_definitions(ARCH_ARM)
-add_compile_options(-Wall -pedantic -Wextra -Wno-unused-parameter -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
-
 add_library(${PROJECT_NAME}-obj OBJECT ${src})
+
+target_include_directories(${PROJECT_NAME}-obj PUBLIC "include")
+target_include_directories(${PROJECT_NAME}-obj PUBLIC "src")
+target_include_directories(${PROJECT_NAME}-obj PUBLIC "src/writers")
+target_include_directories(${PROJECT_NAME}-obj PUBLIC "src/tdms")
+
+if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
+    target_compile_options(${PROJECT_NAME}-obj
+        PRIVATE -mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
+    target_compile_definitions(${PROJECT_NAME}-obj
+        PRIVATE ARCH_ARM)
+endif()
+
+target_compile_options(${PROJECT_NAME}-obj PRIVATE -Wall -pedantic -Wextra -Wno-unused-parameter -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 
 if(BUILD_SHARED)
@@ -96,13 +100,13 @@ if(BUILD_SHARED)
         INCLUDE(${SWIG_USE_FILE})
 
         find_package(PythonLibs)
-        include_directories(${PYTHON_INCLUDE_PATH})
 
         set_property(SOURCE src/rp_formatter.i PROPERTY CPLUSPLUS ON)
         # SET_SOURCE_FILES_PROPERTIES(src/rp_dsp.i PROPERTIES SWIG_FLAGS "-includeall")
 
         SWIG_ADD_LIBRARY(rp_formatter_py LANGUAGE python SOURCES src/rp_formatter.i ${src})
         SWIG_LINK_LIBRARIES(rp_formatter_py ${PYTHON_LIBRARIES} -lm -lpthread)
+        set_property(TARGET rp_formatter_py PROPERTY INCLUDE_DIRECTORIES ${PROJECT_SOURCE_DIR}/src ${PYTHON_INCLUDE_PATH})
      endif()
 
     add_library(${PROJECT_NAME}-shared SHARED)
