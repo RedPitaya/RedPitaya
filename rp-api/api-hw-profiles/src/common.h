@@ -77,7 +77,8 @@ typedef struct {
 
     bool                is_split_osc_triggers;
 
-
+    uint8_t             gpio_N_count;
+    uint8_t             gpio_P_count;
 } profiles_t;
 
 

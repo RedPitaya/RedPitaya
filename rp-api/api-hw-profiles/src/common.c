@@ -422,6 +422,9 @@ int hp_cmn_Print(profiles_t *p){
 
 	fprintf(stdout,"\nDaisy chain clock sync support: %u\n", p->is_daisy_chain_clock_sync);
 
+	fprintf(stdout,"GPIO DIO_N count: %u\n", p->gpio_N_count);
+	fprintf(stdout,"GPIO DIO_P count: %u\n", p->gpio_P_count);
+
 	fprintf(stdout,"***********************************************************************\n");
 	return RP_HP_OK;
 }

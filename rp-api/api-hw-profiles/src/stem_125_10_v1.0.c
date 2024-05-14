@@ -96,7 +96,10 @@ profiles_t stem_125_10_v1_0 = {
 
     .is_dma_mode_v0_94 = true,
     .is_DAC_50_Ohm_mode = false,
-    .is_split_osc_triggers = false
+    .is_split_osc_triggers = false,
+
+    .gpio_N_count = 8,
+    .gpio_P_count = 8
 };
 
 profiles_t* getProfile_STEM_125_10_v1_0(){

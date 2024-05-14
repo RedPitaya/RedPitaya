@@ -36,6 +36,7 @@ int g_api_state = 0;
 float g_ext_trig_trash = 0;
 bool  g_split_trig_function_pass = false;
 
+
 pthread_mutex_t rp_init_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /**
@@ -502,19 +503,36 @@ int rp_DpinReset() {
 }
 
 int rp_DpinSetDirection(rp_dpin_t pin, rp_pinDirection_t direction) {
+    uint8_t gpio_N,gpio_P;
+    int retval = rp_HPGetGPIO_N_Count(&gpio_N);
+    if (retval != RP_HP_OK){
+        ERROR("Get GPIO N count %d",retval)
+        return retval;
+    }
+    retval = rp_HPGetGPIO_P_Count(&gpio_P);
+    if (retval != RP_HP_OK){
+        ERROR("Get GPIO P count %d",retval)
+        return retval;
+    }
+
     uint32_t tmp;
     if (pin < RP_DIO0_P) {
         // LEDS
-        if (direction == RP_OUT)  return RP_OK;
-        else                      return RP_ELID;
+        return (direction == RP_OUT ? RP_OK : RP_ELID);
     } else if (pin < RP_DIO0_N) {
         // DIO_P
         pin -= RP_DIO0_P;
+        if (pin >= gpio_P){
+            return RP_EUF;
+        }
         rp_GPIOpGetDirection(&tmp);
         rp_GPIOpSetDirection((tmp & ~(1 << pin)) | ((direction << pin) & (1 << pin)));
     } else {
         // DIO_N
         pin -= RP_DIO0_N;
+        if (pin >= gpio_N){
+            return RP_EUF;
+        }
         rp_GPIOnGetDirection(&tmp);
         rp_GPIOnSetDirection((tmp & ~(1 << pin)) | ((direction << pin) & (1 << pin)));
    }
@@ -522,6 +540,18 @@ int rp_DpinSetDirection(rp_dpin_t pin, rp_pinDirection_t direction) {
 }
 
 int rp_DpinGetDirection(rp_dpin_t pin, rp_pinDirection_t* direction) {
+    uint8_t gpio_N,gpio_P;
+    int retval = rp_HPGetGPIO_N_Count(&gpio_N);
+    if (retval != RP_HP_OK){
+        ERROR("Get GPIO N count %d",retval)
+        return retval;
+    }
+    retval = rp_HPGetGPIO_P_Count(&gpio_P);
+    if (retval != RP_HP_OK){
+        ERROR("Get GPIO P count %d",retval)
+        return retval;
+    }
+
     uint32_t tmp;
     if (pin < RP_DIO0_P) {
         // LEDS
@@ -529,11 +559,17 @@ int rp_DpinGetDirection(rp_dpin_t pin, rp_pinDirection_t* direction) {
     } else if (pin < RP_DIO0_N) {
         // DIO_P
         pin -= RP_DIO0_P;
+        if (pin >= gpio_P){
+            return RP_EUF;
+        }
         rp_GPIOpGetDirection(&tmp);
         *direction = (tmp >> pin) & 0x1;
     } else {
         // DIO_N
         pin -= RP_DIO0_N;
+        if (pin >= gpio_N){
+            return RP_EUF;
+        }
         rp_GPIOnGetDirection(&tmp);
         *direction = (tmp >> pin) & 0x1;
     }
@@ -541,7 +577,20 @@ int rp_DpinGetDirection(rp_dpin_t pin, rp_pinDirection_t* direction) {
 }
 
 int rp_DpinSetState(rp_dpin_t pin, rp_pinState_t state) {
+    uint8_t gpio_N,gpio_P;
+    int retval = rp_HPGetGPIO_N_Count(&gpio_N);
+    if (retval != RP_HP_OK){
+        ERROR("Get GPIO N count %d",retval)
+        return retval;
+    }
+    retval = rp_HPGetGPIO_P_Count(&gpio_P);
+    if (retval != RP_HP_OK){
+        ERROR("Get GPIO P count %d",retval)
+        return retval;
+    }
+
     uint32_t tmp;
+
     rp_pinDirection_t direction;
     rp_DpinGetDirection(pin, &direction);
     if (!direction) {
@@ -554,11 +603,17 @@ int rp_DpinSetState(rp_dpin_t pin, rp_pinState_t state) {
     } else if (pin < RP_DIO0_N) {
         // DIO_P
         pin -= RP_DIO0_P;
+        if (pin >= gpio_P){
+            return RP_EUF;
+        }
         rp_GPIOpGetState(&tmp);
         rp_GPIOpSetState((tmp & ~(1 << pin)) | ((state << pin) & (1 << pin)));
     } else {
         // DIO_N
         pin -= RP_DIO0_N;
+        if (pin >= gpio_N){
+            return RP_EUF;
+        }
         rp_GPIOnGetState(&tmp);
         rp_GPIOnSetState((tmp & ~(1 << pin)) | ((state << pin) & (1 << pin)));
     }
@@ -566,6 +621,18 @@ int rp_DpinSetState(rp_dpin_t pin, rp_pinState_t state) {
 }
 
 int rp_DpinGetState(rp_dpin_t pin, rp_pinState_t* state) {
+    uint8_t gpio_N,gpio_P;
+    int retval = rp_HPGetGPIO_N_Count(&gpio_N);
+    if (retval != RP_HP_OK){
+        ERROR("Get GPIO N count %d",retval)
+        return retval;
+    }
+    retval = rp_HPGetGPIO_P_Count(&gpio_P);
+    if (retval != RP_HP_OK){
+        ERROR("Get GPIO P count %d",retval)
+        return retval;
+    }
+
     uint32_t tmp;
     if (pin < RP_DIO0_P) {
         // LEDS
@@ -574,11 +641,17 @@ int rp_DpinGetState(rp_dpin_t pin, rp_pinState_t* state) {
     } else if (pin < RP_DIO0_N) {
         // DIO_P
         pin -= RP_DIO0_P;
+        if (pin >= gpio_P){
+            return RP_EUF;
+        }
         rp_GPIOpGetState(&tmp);
         *state = (tmp >> pin) & 0x1;
     } else {
         // DIO_N
         pin -= RP_DIO0_N;
+        if (pin >= gpio_N){
+            return RP_EUF;
+        }
         rp_GPIOnGetState(&tmp);
         *state = (tmp >> pin) & 0x1;
     }
