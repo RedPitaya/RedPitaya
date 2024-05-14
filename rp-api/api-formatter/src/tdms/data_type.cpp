@@ -10,7 +10,7 @@
 
 using namespace rp_formatter_api::TDMS;
 
-time_t GetTime1904(){
+time_t rp_formatter_api_GetTime1904(){
     std::stringstream stream("1904-01-01 00:00:00");
     stream.imbue(std::locale::classic());
     std::tm time_point;
@@ -19,7 +19,7 @@ time_t GetTime1904(){
     return std::mktime(&time_point);
 }
 
-const time_t time_1904 = GetTime1904();
+const time_t time_1904 = rp_formatter_api_GetTime1904();
 
 DataType::DataType():
     m_dataType(TDMSType::Empty),

@@ -247,7 +247,7 @@ Row {
                             anchors.fill: parent
                             legend.visible: false
                             animationOptions: ChartView.NoAnimation
-                            property bool openGL: false
+                            property bool openGL: true
                             onOpenGLChanged: {
                                 series("signal 1").useOpenGL = openGL;
                                 series("signal 2").useOpenGL = openGL;

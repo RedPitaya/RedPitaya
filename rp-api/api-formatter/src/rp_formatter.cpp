@@ -21,7 +21,7 @@
 #include "writers/common.h"
 
 
-using namespace rp_formatter_api;
+namespace rp_formatter_api{
 
 struct CFormatter::Impl {
     rp_mode_t m_mode;
@@ -176,4 +176,4 @@ auto CFormatter::writeToStream(std::iostream *_memory) -> bool {
     return false;
 }
 
-
+}
