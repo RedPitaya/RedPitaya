@@ -32,6 +32,7 @@
         local: {}
     };
     SM.ss_status_last = -1;
+    SM.ss_full_rate = undefined;
     SM.ss_rate = -1;
     SM.ss_max_rate = -1;
     SM.ss_max_rate_devider = -1;
@@ -50,7 +51,6 @@
     SM.config.stop_app_url = window.location.origin + '/bazaar?stop=' + SM.config.app_id;
     SM.config.socket_url = 'ws://' + window.location.host + '/wss';
 
-    SM.rp_model = "";
     SM.adc_channels = undefined;
     SM.dac_channels = undefined;
     SM.is_acdc = undefined;
@@ -312,33 +312,34 @@
         }
     }
 
-    //Handlers
-    var signalsHandler = function() {
-        if (SM.signalStack.length > 0) {
-
-            SM.signalStack.splice(0, 1);
-        }
-        if (SM.signalStack.length > 2)
-            SM.signalStack.length = [];
-    }
-
     SM.updateADCMode = function(state){
-        // if (new_params[param_name].value){
-        //     $(".network").hide();
-        //     $(".file").show();
-        // }else{
-        //     $(".network").show();
-        //     $(".file").hide();
-        // }
     }
+
+    SM.updateMaxLimits = function(adc_rate) {
+        if (adc_rate !== undefined) {
+            if (SM.ss_full_rate === undefined) {
+                SM.ss_full_rate = adc_rate.value;
+                SM.ss_max_rate = adc_rate.value;
+                SM.ss_max_rate_devider = 1;
+                SM.updateLimits();
+            }
+        }
+    };
+
+    SM.updateLimits = function() {
+        if (SM.ss_rate != -1) {
+            SM.calcRateHz(SM.ss_full_rate / SM.ss_rate);
+        }
+        rateFocusOutValue();
+    };
+
 
     SM.processParameters = function(new_params) {
         var old_params = $.extend(true, {}, SM.params.orig);
         var send_all_params = Object.keys(new_params).indexOf('send_all_params') != -1;
-        SM.updateMaxLimits(new_params['RP_MODEL_STR']);
+        SM.updateMaxLimits(new_params['SS_ACD_MAX']);
 
         if (Object.keys(new_params).length !== 0)
-
             console.log(new_params)
 
         for (var param_name in new_params) {
@@ -348,30 +349,6 @@
 
             if (SM.param_callbacks[param_name] !== undefined)
                 SM.param_callbacks[param_name](new_params);
-
-            // Do not change fields from dialogs when user is editing something
-            // if ((old_params[param_name] === undefined || old_params[param_name].value !== new_params[param_name].value)) {
-            //     if (field.is('select') || field.is('input:text')) {
-            //         if (param_name == "SS_RATE"){
-            //             SM.ss_rate = new_params[param_name].value;
-            //             rateFocusOutValue();
-            //         }else{
-            //             field.val(new_params[param_name].value)
-            //         }
-            //     } else if (field.is('button')) {
-            //         field[new_params[param_name].value === true ? 'addClass' : 'removeClass']('active');
-            //     } else if (field.is('input:radio')) {
-            //         if (param_name == "SS_USE_FILE"){
-            //             SM.updateADCMode(new_params[param_name].value);
-            //         }else{
-            //             var radios = $('input[name="' + param_name + '"]');
-            //             radios.closest('.btn-group').children('.btn.active').removeClass('active');
-            //             radios.eq([+new_params[param_name].value]).prop('checked', true).parent().addClass('active');
-            //         }
-            //     } else if (field.is('span')) {
-            //         field.html(new_params[param_name].value);
-            //     }
-            // }
         }
 
     };
@@ -762,7 +739,6 @@
     }
 
     //Set handlers timers
-    //    setInterval(signalsHandler, 40);
     setInterval(parametersHandler, 50);
 
     SM.param_callbacks["SS_STATUS"] = SM.change_status;

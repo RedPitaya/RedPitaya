@@ -46,10 +46,9 @@ CIntParameter		ss_rate(  			"SS_RATE", 				CBaseParameter::RW, 4 ,0,	1,65536);
 CIntParameter		ss_format( 			"SS_FORMAT", 			CBaseParameter::RW, 0 ,0,	0, 2);
 CIntParameter		ss_status( 			"SS_STATUS", 			CBaseParameter::RW, 1 ,0,	0,100);
 CBooleanParameter 	ss_adc_data_pass(	"SS_ADC_DATA_PASS",		CBaseParameter::RW, false,0);
-CIntParameter		ss_acd_max(			"SS_ACD_MAX", 			CBaseParameter::RO, getADCRate() ,0,	0, getADCRate());
+CIntParameter		ss_acd_max(			"SS_ACD_MAX", 			CBaseParameter::RO, getADCRate() ,0,	getADCRate(), getADCRate());
 CIntParameter		ss_attenuator( 		"SS_ATTENUATOR",		CBaseParameter::RW, 0 ,0,	0, 256);
 CIntParameter		ss_ac_dc( 			"SS_AC_DC",				CBaseParameter::RW, 0 ,0,	0, 256);
-CStringParameter 	redpitaya_model(	"RP_MODEL_STR", 		CBaseParameter::RO, getModelS(), 10);
 
 CStringParameter    ss_dac_file(		"SS_DAC_FILE",			CBaseParameter::RW, "", 0);
 CIntParameter    	ss_dac_file_type(	"SS_DAC_FILE_TYPE",		CBaseParameter::RW,  0 ,0, 0, 1);
@@ -179,47 +178,6 @@ auto getModel() -> broadcast_lib::EModel{
     }
     return broadcast_lib::EModel::RP_125_14;
 }
-
- auto getModelS() -> std::string{
-    rp_HPeModels_t c = STEM_125_14_v1_0;
-    if (rp_HPGetModel(&c) != RP_HP_OK){
-        ERROR("Can't get board model");
-    }
-
-    switch (c)
-    {
-        case STEM_125_10_v1_0:
-        case STEM_125_14_v1_0:
-        case STEM_125_14_v1_1:
-        case STEM_125_14_LN_v1_1:
-        case STEM_125_14_Z7020_v1_0:
-        case STEM_125_14_Z7020_LN_v1_1:
-            return "Z10";
-
-        case STEM_122_16SDR_v1_0:
-        case STEM_122_16SDR_v1_1:
-            return "Z20";
-
-        case STEM_125_14_Z7020_4IN_v1_0:
-        case STEM_125_14_Z7020_4IN_v1_2:
-        case STEM_125_14_Z7020_4IN_v1_3:
-            return "Z10";
-
-        case STEM_250_12_v1_0:
-        case STEM_250_12_v1_1:
-        case STEM_250_12_v1_2:
-		case STEM_250_12_v1_2a:
-        case STEM_250_12_v1_2b:
-            return "Z20_250_12";
-		case STEM_250_12_120:
-            return "Z20_250_12_120";
-        default:
-            ERROR("Can't get board model");
-            exit(-1);
-    }
-    return "Z10";
-}
-
 
 //Application description
 const char *rp_app_desc(void)

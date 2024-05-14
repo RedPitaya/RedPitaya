@@ -185,7 +185,7 @@ Row {
                         MultiSwitch {
                             anchors.fill: parent
                             anchors.leftMargin: 4 * mainVisibleRootWindowId.scaleFactor
-                            anchors.rightMargin: 4 * mainVisibleRootWindowId.scaleFactor                            
+                            anchors.rightMargin: 4 * mainVisibleRootWindowId.scaleFactor
                             buttonNames: ["CONSOLE", "SIGNAL"]
                             inactiveTextColor: baseGrayColor
                             activeTextColor: "#303030"
@@ -247,7 +247,7 @@ Row {
                             anchors.fill: parent
                             legend.visible: false
                             animationOptions: ChartView.NoAnimation
-                            property bool openGL: true
+                            property bool openGL: false
                             onOpenGLChanged: {
                                 series("signal 1").useOpenGL = openGL;
                                 series("signal 2").useOpenGL = openGL;
@@ -465,7 +465,7 @@ Row {
                             Item {
                                 height: parent.height
                                 width: parent.width * 0.3
-                                Text {                                    
+                                Text {
                                     anchors.fill: parent
                                     verticalAlignment: Text.AlignVCenter
                                     horizontalAlignment: Text.AlignHCenter
@@ -624,7 +624,7 @@ Row {
                             Item {
                                 height: parent.height
                                 width: parent.width * 0.3
-                                Text {                                    
+                                Text {
                                     anchors.fill: parent
                                     verticalAlignment: Text.AlignVCenter
                                     horizontalAlignment: Text.AlignHCenter
