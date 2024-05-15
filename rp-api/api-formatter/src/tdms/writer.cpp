@@ -6,14 +6,6 @@
 
 using namespace rp_formatter_api::TDMS;
 
-
-void print_state (const std::ios& stream) {
-    std::cout << " good()=" << stream.good();
-    std::cout << " eof()=" << stream.eof();
-    std::cout << " fail()=" << stream.fail();
-    std::cout << " bad()=" << stream.bad();
-}
-
 auto WriterSegment::LoadMetadata(vector<shared_ptr<Metadata>> data) -> void{
     m_nodes = data;
 }

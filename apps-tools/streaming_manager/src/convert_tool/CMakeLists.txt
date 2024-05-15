@@ -34,8 +34,9 @@ set(IS_INSTALL_CUR IS_INSTALL)
 set(IS_INSTALL OFF CACHE INTERNAL "")
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../../../rp-api/api-formatter ${CMAKE_CURRENT_BINARY_DIR}/api-formatter)
 set(IS_INSTALL IS_INSTALL_CUR)
-
 add_executable(${PROJECT_NAME} ${INC_ALL})
+add_custom_target(install-rp-formatter DEPENDS rp-formatter-static)
+add_dependencies(${PROJECT_NAME} install-rp-formatter)
 
 if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
     target_compile_options(${PROJECT_NAME}
