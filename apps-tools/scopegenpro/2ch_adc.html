@@ -411,6 +411,16 @@
                         </div>
                     </div>
                     <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Trigger</span>
+                            <select id="SOUR2_TRIG_SOUR" class="form-control styled-select" style="margin-top: 10px;">
+                                <option value="1">Internal</option>
+                                <option value="2">External Positive edge</option>
+                                <option value="3">External Negative edge</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
                         <div id="out2" class="right-menu-option edit-mode-sweep">SWEEP MODE</div>
                     </div>
                     <div class="col-xs-12 option-content">
@@ -528,6 +538,16 @@
                                 <option value="8" class="122_16_block_remove">DC NEG</option>
                                 <option value="6" class="122_16_block_remove">PWM</option>
                                 <!--option value="7">ARB</option-->
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Trigger</span>
+                            <select id="SOUR1_TRIG_SOUR" class="form-control styled-select" style="margin-top: 10px;">
+                                <option value="1">Internal</option>
+                                <option value="2">External Positive edge</option>
+                                <option value="3">External Negative edge</option>
                             </select>
                         </div>
                     </div>
@@ -837,79 +857,6 @@
                         </div>
                     </div>
                     <div class="col-xs-12 option-content">
-                        <div class="right-menu-option edit-mode-trig-input">INPUT</div>
-                    </div>
-                    <div class="col-xs-12 option-content">
-                        <div class="right-menu-option edit-mode-trig-output">OUTPUT</div>
-                    </div>
-                    <div class="col-xs-12 option-content ext_trig_level">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Ext. trigger level / V</span>
-                            <div style="margin-top: 10px;">
-                                <input id="OSC_EXT_TRIG_LEVEL" class="setfield input-number" type="text" value="0.000" step="0.001" min="-1" max="1">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Time offset / ms</span>
-                            <!-- <input type="number" class="form-control no-up-down" maxlength="4" placeholder="DIN0" id=""> -->
-                            <!-- <input type="number" class="form-control no-up-down" min="1" maxlength="20" placeholder="1" value="1" id="time_offset_additional_label"> -->
-                            <div style="margin-top: 10px;">
-                                <input type="number" class="form-control no-up-down input-number no-lr-padding" step="0.001" id="time_offset_additional_label">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div class="right-menu-option">
-                            <div style="margin-top: 10px;">
-                                <div id="reset_time_offset_button" class="right-menu-option no-lr-padding">RESET</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div id="trig_dialog_output" class="dialog row right-menu-cont">
-                    <div class="col-xs-12 option-content">
-                        <div id="trig" class="right-menu-option close-trig-dialog trig">
-                            <img src="../assets/images/navigation_arrow_left.png"> OUTPUT
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Out1 / Trigger</span>
-                            <select id="SOUR1_TRIG_SOUR" class="form-control styled-select" style="margin-top: 10px;">
-                                <option value="1">Internal</option>
-                                <option value="2">External Positive edge</option>
-                                <option value="3">External Negative edge</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Out2 / Trigger</span>
-                            <select id="SOUR2_TRIG_SOUR" class="form-control styled-select" style="margin-top: 10px;">
-                                <option value="1">Internal</option>
-                                <option value="2">External Positive edge</option>
-                                <option value="3">External Negative edge</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Ext Trigger Debouncer (μS)</span>
-                            <div style="margin-top: 10px;">
-                                <input class="setfield input-number" id="SOUR_DEB" type="text" value="1.0" min="0.1" max="100" step="0.1">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div id="trig_dialog_input" class="dialog row right-menu-cont">
-                    <div class="col-xs-12 option-content">
-                        <div id="trig" class="right-menu-option close-trig-dialog trig">
-                            <img src="../assets/images/navigation_arrow_left.png"> INPUT
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content">
                         <div class="right-menu-option">
                             <span class="col-info" style="margin-top: -21px;">Source</span>
                             <select id="OSC_TRIG_SOURCE" class="form-control styled-select" style="margin-top: 10px;">
@@ -963,7 +910,60 @@
                             </label>
                         </div>
                     </div>
+                    <!-- <div class="col-xs-12 option-content">
+                        <div class="right-menu-option edit-mode-trig-input">INPUT</div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option edit-mode-trig-output">OUTPUT</div>
+                    </div> -->
+                    <div class="col-xs-12 option-content ext_trig_level">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Ext. trigger level / V</span>
+                            <div style="margin-top: 10px;">
+                                <input id="OSC_EXT_TRIG_LEVEL" class="setfield input-number" type="text" value="0.000" step="0.001" min="-1" max="1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Ext Trigger Debouncer (μS)</span>
+                            <div style="margin-top: 10px;">
+                                <input class="setfield input-number" id="SOUR_DEB" type="text" value="1.0" min="0.1" max="100" step="0.1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Time offset / ms</span>
+                            <!-- <input type="number" class="form-control no-up-down" maxlength="4" placeholder="DIN0" id=""> -->
+                            <!-- <input type="number" class="form-control no-up-down" min="1" maxlength="20" placeholder="1" value="1" id="time_offset_additional_label"> -->
+                            <div style="margin-top: 10px;">
+                                <input type="number" class="form-control no-up-down input-number no-lr-padding" step="0.001" id="time_offset_additional_label">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option">
+                            <div style="margin-top: 10px;">
+                                <div id="reset_time_offset_button" class="right-menu-option no-lr-padding">RESET</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+                <!-- <div id="trig_dialog_output" class="dialog row right-menu-cont">
+                    <div class="col-xs-12 option-content">
+                        <div id="trig" class="right-menu-option close-trig-dialog trig">
+                            <img src="../assets/images/navigation_arrow_left.png"> OUTPUT
+                        </div>
+                    </div>
+                </div>
+                <div id="trig_dialog_input" class="dialog row right-menu-cont">
+                    <div class="col-xs-12 option-content">
+                        <div id="trig" class="right-menu-option close-trig-dialog trig">
+                            <img src="../assets/images/navigation_arrow_left.png"> INPUT
+                        </div>
+                    </div>
+                </div> -->
                 <div id="slow_dac_dialog" class="dialog row right-menu-cont">
                     <div class="col-xs-12 option-content close-dialog">
                         <div class="right-menu-option out_e2">
