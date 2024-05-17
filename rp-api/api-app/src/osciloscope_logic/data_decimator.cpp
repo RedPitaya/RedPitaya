@@ -136,8 +136,8 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float *_data,vsize_t 
         float z = (float)i * dec - 1;
         int x = floor(z);
         *t = z - x;
-        if (x > _dataSize / 2.0) return INT32_MAX;
-        if (x < -_dataSize / 2.0) return INT32_MAX;
+        if (x > _dataSize) return INT32_MAX;
+        if (x < -_dataSize) return INT32_MAX;
         if (x >= 0){
             return x;
         }else{

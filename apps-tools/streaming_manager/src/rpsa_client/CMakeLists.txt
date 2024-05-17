@@ -49,6 +49,8 @@ endif()
 target_compile_options(${PROJECT_NAME}
     PRIVATE -std=c++17 -Wall -Wextra -fpermissive -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
+target_link_options(${PROJECT_NAME} PRIVATE --static)
+
 target_include_directories(${PROJECT_NAME}
     PUBLIC  ${PROJECT_SOURCE_DIR}
             ${CMAKE_BINARY_DIR}/bin/include

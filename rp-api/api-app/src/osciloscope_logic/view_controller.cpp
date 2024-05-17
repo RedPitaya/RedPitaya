@@ -163,7 +163,7 @@ auto CViewController::getTimeOffset() -> float{
     return m_timeOffet;
 }
 
-auto CViewController::calculateDecimation(float _scale,uint32_t *_decimation) -> int{
+auto CViewController::calculateDecimation(float _scale,uint32_t *_decimation,bool _continuesMode) -> int{
     static double rate = getADCRate();
     float maxDeltaSample = rate * _scale / 1000.0f / getSamplesPerDivision();
     float ratio = (float) ADC_BUFFER_SIZE / (float) getViewSize();
@@ -173,6 +173,7 @@ auto CViewController::calculateDecimation(float _scale,uint32_t *_decimation) ->
     }
     TRACE_SHORT("maxDeltaSample %f ratio %f _scale %f rate %f",maxDeltaSample,ratio,_scale,rate)
     // contition: viewBuffer cannot be larger than adcBuffer
+  //  ratio *= _continuesMode ? 1.0 : 0.9;
     ratio *= 0.9;
     if (maxDeltaSample <= ratio) {
         *_decimation = RP_DEC_1;
@@ -194,9 +195,9 @@ auto CViewController::calculateDecimation(float _scale,uint32_t *_decimation) ->
     return RP_OK;
 }
 
-auto CViewController::getCurrentDecimation() -> uint32_t{
+auto CViewController::getCurrentDecimation(bool _continuesMode) -> uint32_t{
     uint32_t dec;
-    if (calculateDecimation(getTimeScale(),&dec) != RP_OK){
+    if (calculateDecimation(getTimeScale(),&dec,_continuesMode) != RP_OK){
         dec = RP_DEC_1;
     }
     return dec;

@@ -38,6 +38,8 @@ add_executable(${PROJECT_NAME} ${INC_ALL})
 add_custom_target(install-rp-formatter DEPENDS rp-formatter-static)
 add_dependencies(${PROJECT_NAME} install-rp-formatter)
 
+target_link_options(${PROJECT_NAME} PRIVATE --static)
+
 if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
     target_compile_options(${PROJECT_NAME}
         PRIVATE -mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC -DRP_PLATFORM)

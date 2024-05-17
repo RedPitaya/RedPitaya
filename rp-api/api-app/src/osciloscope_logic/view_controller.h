@@ -65,8 +65,8 @@ public:
     auto setTimeOffset(float _offset) -> int;
     auto getTimeOffset() -> float;
 
-    auto calculateDecimation(float _scale,uint32_t *_decimation) -> int;
-    auto getCurrentDecimation() -> uint32_t;
+    auto calculateDecimation(float _scale,uint32_t *_decimation,bool _continuesMode) -> int;
+    auto getCurrentDecimation(bool _continuesMode) -> uint32_t;
 
     auto clearView() -> void;
 

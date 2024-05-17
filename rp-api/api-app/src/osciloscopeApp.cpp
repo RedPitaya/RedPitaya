@@ -216,21 +216,18 @@ int osc_isTriggered() {
 }
 
 int osc_setTimeScale(float _scale) {
-    std::lock_guard<std::mutex> lock(g_mutex);
+    g_adcController.requestResetWaitTrigger();
+    std::lock_guard lock(g_mutex);
     uint32_t newDecimation;
-    auto ret = g_viewController.calculateDecimation(_scale,&newDecimation);
+    bool contMode = !(_scale <= CONTIOUS_MODE_SCALE_THRESHOLD);
+    ECHECK_APP(g_adcController.setContinuousMode(contMode))
+    auto ret = g_viewController.calculateDecimation(_scale,&newDecimation,contMode);
     if (ret != RP_OK){
         WARNING("Can't calculate new decimation for scale %f",_scale)
         return ret;
     }
     g_viewController.setTimeScale(_scale);
     TRACE("NEW TS %f",_scale);
-    if (_scale < CONTIOUS_MODE_SCALE_THRESHOLD/* || sweep != RPAPP_OSC_TRIG_AUTO*/){
-        ECHECK_APP(g_adcController.setContinuousMode(false))
-    } else {
-        ECHECK_APP(g_adcController.setContinuousMode(true))
-    }
-    g_adcController.requestResetWaitTrigger();
     update_view();
     return RP_OK;
 }
@@ -241,7 +238,7 @@ int osc_getTimeScale(float *division) {
 }
 
 int osc_setTimeOffset(float _offset) {
-    std::lock_guard<std::mutex> lock(g_mutex);
+    std::lock_guard lock(g_mutex);
     auto ret = g_viewController.setTimeOffset(_offset);
     g_adcController.requestResetWaitTrigger();
     update_view();
@@ -421,7 +418,7 @@ int osc_getExtTriggerLevel(float *_level){
 
 int osc_setTriggerSweep(rpApp_osc_trig_sweep_t sweep) {
     g_adcController.setTriggerSweep(sweep);
-     if (g_viewController.getTimeScale() < CONTIOUS_MODE_SCALE_THRESHOLD){
+     if (g_viewController.getTimeScale() <= CONTIOUS_MODE_SCALE_THRESHOLD){
         ECHECK_APP(g_adcController.setContinuousMode(false))
     } else {
         ECHECK_APP(g_adcController.setContinuousMode(true))
@@ -979,17 +976,17 @@ double roundUpTo25(double data) {
     return (dataNorm * pow(10, power));         // unnormalize data
 }
 
-int waitToFillPreTriggerBuffer(float _timescale) {
+int waitToFillPreTriggerBuffer(float _timescale,bool *_isresetted) {
     auto contMode = g_adcController.getContinuousMode();
     auto trigSweep = g_adcController.getTriggerSweep();
+
     // Don't wait in continuos mode
-    if (contMode && trigSweep != RPAPP_OSC_TRIG_SINGLE) {
+    if (contMode && trigSweep == RPAPP_OSC_TRIG_AUTO) {
         return RP_OK;
     }
 
-    // Max timeout 1 second
-    auto ct = g_viewController.calculateTimeOut(_timescale) * 10;
-    auto timeOut  = MIN(ct,1000.0);
+    // Full screen timeout / 2 -> *1.5. Half screen + 50%
+    auto timeOut  = g_viewController.calculateTimeOut(_timescale) * 0.75;
 
     timeOut += g_viewController.getClock();
 
@@ -1003,15 +1000,20 @@ int waitToFillPreTriggerBuffer(float _timescale) {
     auto needWaitSamples = 0u;
     auto exitByTimout = false;
     auto exitByPreTrigger = false;
-
+    g_viewController.setTriggerState(false);
+    *_isresetted = false;
     do {
+        if (g_adcController.isNeedResetWaitTrigger()){
+            *_isresetted = true;
+            break;
+        }
         ECHECK_APP(rp_AcqGetTriggerDelayDirect(&triggerDelay));
         ECHECK_APP(rp_AcqGetPreTriggerCounter(&preTriggerCount));
         needWaitSamples = viewInSamples - triggerDelay + extraPoints;
         exitByTimout = timeOut > g_viewController.getClock();
         exitByPreTrigger = preTriggerCount < needWaitSamples;
     } while (exitByPreTrigger && exitByTimout);
-
+    //WARNING("preTriggerCount %d exitByTimout %d needWaitSamples %d exitByPreTrigger %d",preTriggerCount,exitByTimout,needWaitSamples,exitByPreTrigger)
     // fprintf(stderr,"TE %d TT %d , %d , %d, %f\n",exitByPreTrigger,exitByTimout,preTriggerCount,needWaitSamples,ct);
     return RP_OK;
 }
@@ -1021,10 +1023,11 @@ int waitTrigger(float _timescale,bool _disableTimeout,bool *_isresetted,bool *_e
     auto trig_state = RP_TRIG_STATE_WAITING;
     auto timeout_state = false;
     // Max timeout 1 second
-    auto timeOut  = MIN(g_viewController.calculateTimeOut(_timescale),1000.0);
+    auto curTimeout = g_viewController.calculateTimeOut(_timescale);
+    // Full screen timeout / 2 -> *1.5. Half screen + 50%
+    auto timeOut  = MIN(curTimeout,1000.0);
     timeOut += g_viewController.getClock();
 
-    g_adcController.resetWaitTriggerRequest();
     *_isresetted = false;
     *_exitByTimeout = false;
 
@@ -1037,24 +1040,30 @@ int waitTrigger(float _timescale,bool _disableTimeout,bool *_isresetted,bool *_e
         timeout_state = _disableTimeout ? true : timeOut > g_viewController.getClock();
         ECHECK_APP(rp_AcqGetTriggerState(&trig_state));
     } while ((trig_state != RP_TRIG_STATE_TRIGGERED) && timeout_state);
+    //WARNING("trig_state %d timeout_state %d _disableTimeout %d _isresetted %d",trig_state,timeout_state,_disableTimeout,*_isresetted)
     g_viewController.setTriggerState(trig_state == RP_TRIG_STATE_TRIGGERED);
     *_exitByTimeout = (!timeout_state) && (trig_state != RP_TRIG_STATE_TRIGGERED);
     return RP_OK;
 }
 
-int waitToFillAfterTriggerBuffer(float _timescale) {
+int waitToFillAfterTriggerBuffer(float _timescale,bool *_isresetted) {
     auto contMode = g_adcController.getContinuousMode();
     auto trigSweep = g_adcController.getTriggerSweep();
     // Don't wait in continuos mode
-    if (contMode && trigSweep != RPAPP_OSC_TRIG_SINGLE) {
+    if (contMode && trigSweep == RPAPP_OSC_TRIG_AUTO) {
         return RP_OK;
     }
 
-    // Max timeout 1 second
-    auto timeOut  = MIN(g_viewController.calculateTimeOut(_timescale),1000.0);
+    // Full screen timeout / 2 -> *1.5. Half screen + 50%
+    auto timeOut  = g_viewController.calculateTimeOut(_timescale) * 0.75;
     timeOut += g_viewController.getClock();
     bool bufferIsFill = false;
+    *_isresetted = false;
     do {
+        if (g_adcController.isNeedResetWaitTrigger()){
+            *_isresetted = true;
+            break;
+        }
         ECHECK_APP(rp_AcqGetBufferFillState(&bufferIsFill));
     } while (!bufferIsFill && timeOut > g_viewController.getClock());
     return RP_OK;
@@ -1173,14 +1182,12 @@ void checkAutoscale(bool fromThread) {
 
                 vpps[source][timeScaleIdx] = vpp;
                 vMeans[source][timeScaleIdx] = vMean;
-                WARNING("Source %d ts %d per %f vpp %f",source,timeScaleIdx,periods[source][timeScaleIdx],vpp);
             }
 
         }
 
 
         if(++timeScaleIdx >= AUTO_SCALE_NUM_OF_SCALE) {
-            WARNING("stop scale")
             g_viewController.setAutoScale(false);
 
             for (auto source = 0; source < channels; ++source) {
@@ -1281,12 +1288,14 @@ void mainThreadFun() {
         auto tScaleAcq = 0.0f;
         auto tOffsetAcq = 0.0f;
         auto initFromAcq = false;
+        g_adcController.resetWaitTriggerRequest();
 
         if (g_viewController.isNeedUpdateViewFromADC() && g_viewController.isOscRun()){
 
             g_viewController.lockView();
             initFromAcq = true;
-            auto decimationInACQ = g_viewController.getCurrentDecimation();
+            auto contMode = g_adcController.getContinuousMode();
+            auto decimationInACQ = g_viewController.getCurrentDecimation(contMode);
             tScaleAcq = g_viewController.getTimeScale();
             tOffsetAcq = g_viewController.getTimeOffset();
             // Need set before calculate trigger deleay
@@ -1297,25 +1306,23 @@ void mainThreadFun() {
 
             ECHECK_APP_NO_RET(threadSafe_acqStart());
             auto trigSweep = g_adcController.getTriggerSweep();
-            auto contMode = g_adcController.getContinuousMode();
             auto viewMode = g_viewController.getViewMode();
-            // fprintf(stderr,"%f delay %d decimationInACQ %d\n",tScaleAcq,delay,decimationInACQ);
-            ECHECK_APP_NO_RET(waitToFillPreTriggerBuffer(tScaleAcq));
-            ECHECK_APP_NO_RET(g_adcController.setTriggerToADC());
             auto isReset = false;
+            ECHECK_APP_NO_RET(waitToFillPreTriggerBuffer(tScaleAcq,&isReset));
+            if (isReset){
+                continue;
+            }
+            ECHECK_APP_NO_RET(g_adcController.setTriggerToADC());
             auto disableTimeout = false;
             auto exitByTimeout = false;
 
             if (trigSweep == RPAPP_OSC_TRIG_NORMAL || trigSweep == RPAPP_OSC_TRIG_SINGLE){
                 disableTimeout = true;
             }
-
             waitTrigger(tScaleAcq,disableTimeout,&isReset,&exitByTimeout);
-
             if (isReset){
                 continue;
             }
-
             if (exitByTimeout){
                 ECHECK_APP_NO_RET(rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW));
                 g_viewController.setDataWithTrigger(false);
@@ -1328,9 +1335,10 @@ void mainThreadFun() {
                     g_viewController.setDataWithTrigger(false);
                 }
             }
-
-            waitToFillAfterTriggerBuffer(tScaleAcq);
-
+            waitToFillAfterTriggerBuffer(tScaleAcq,&isReset);
+            if (isReset){
+                continue;
+            }
             if (viewMode == CViewController::ROLL && contMode){
                 ECHECK_APP_NO_RET(rp_AcqGetWritePointer(&pPosition));
             }else{
@@ -1341,13 +1349,9 @@ void mainThreadFun() {
             auto buff = g_viewController.getAcqBuffers();
             ECHECK_APP_NO_RET(rp_AcqGetData(pPosition,buff));
 
-            // float od[DAC_BUFFER_SIZE];
-            // fir3(buff->ch_f[0],od,buff->size);
-            // memcpy_neon(buff->ch_f[0],od,buff->size * sizeof(float));
-
             g_viewController.unlockView();
 
-            if (!contMode){
+            if (!contMode || trigSweep == RPAPP_OSC_TRIG_SINGLE || trigSweep == RPAPP_OSC_TRIG_NORMAL){
                 ECHECK_APP_NO_RET(threadSafe_acqStop());
             }
 

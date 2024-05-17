@@ -19,12 +19,12 @@ CADCController::~CADCController(){
 }
 
 auto CADCController::startAcq() -> int{
-    std::lock_guard<std::mutex> lock(m_acqMutex);
+    std::lock_guard lock(m_acqMutex);
     ECHECK(rp_AcqUnlockTrigger())
     if (m_isAdcRun)
         return RP_OK;
+    ECHECK(rp_AcqSetArmKeep(m_trigSweep == RPAPP_OSC_TRIG_AUTO && m_continuousMode));
     ECHECK(rp_AcqStart())
-    ECHECK(rp_AcqSetArmKeep(m_trigSweep != RPAPP_OSC_TRIG_SINGLE && m_continuousMode));
     m_isAdcRun = true;
     return RP_OK;
 }
@@ -42,7 +42,7 @@ auto CADCController::isAdcRun() -> bool{
 }
 
 auto CADCController::setContinuousMode(bool _enable) -> int{
-    std::lock_guard<std::mutex> lock(m_acqMutex);
+    std::lock_guard lock(m_acqMutex);
     ECHECK(rp_AcqSetArmKeep(_enable))
     m_continuousMode = _enable;
     return RP_OK;
@@ -53,7 +53,7 @@ auto CADCController::getContinuousMode() -> bool{
 }
 
 auto CADCController::setTriggerSweep(rpApp_osc_trig_sweep_t _mode) -> void{
-    std::lock_guard<std::mutex> lock(m_acqMutex);
+    std::lock_guard lock(m_acqMutex);
     m_trigSweep = _mode;
 }
 
@@ -66,7 +66,7 @@ auto CADCController::setTriggerSourceInFPGA() -> int{
 }
 
 auto CADCController::setTriggerSources(rpApp_osc_trig_source_t _source) -> int{
-    std::lock_guard<std::mutex> lock(m_acqMutex);
+    std::lock_guard lock(m_acqMutex);
     return setTriggerSourcesUnsafe(_source);
 }
 

@@ -487,7 +487,7 @@ auto updateOscParams(bool force) -> void{
     if (IS_NEW(inTimeScale) || force){
         if (rpApp_OscSetTimeScale(inTimeScale.NewValue() / 1000.0) == RP_OK){
             inTimeScale.Update();
-            std::lock_guard<std::mutex> lock(g_need_update_sig_gen_mtx);
+            std::lock_guard lock(g_need_update_sig_gen_mtx);
             g_need_update_sig_gen = true;
         }
     }
