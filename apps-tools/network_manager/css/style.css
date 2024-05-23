@@ -425,9 +425,8 @@ area:hover {
     color: #fff;
     background-color: #343433;
     background-image: none;
-    border: 0px none;
     box-shadow: none;
-    border-radius: 0px;
+    border-radius: 5px;
     height: 33px;
     cursor: pointer;
 }
