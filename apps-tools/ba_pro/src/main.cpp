@@ -25,6 +25,7 @@
 #include "main.h"
 
 #include "rpApp.h"
+#include "web/rp_client.h"
 
 /***************************************************************************************
 *                                     BODE ANALYSER                                    *
@@ -186,17 +187,21 @@ const char *rp_app_desc(void)
 int rp_app_init(void)
 {
 	fprintf(stderr, "Loading bode analyser version %s-%s.\n", VERSION_STR, REVISION_STR);
-	CDataManager::GetInstance()->SetParamInterval(50);
-	CDataManager::GetInstance()->SetSignalInterval(50);
 
-	rp_Init();
+    rp_Init();
     rp_AcqSetAC_DC(RP_CH_1,RP_DC);
     rp_AcqSetAC_DC(RP_CH_2,RP_DC);
     rpApp_BaInit();
     rpApp_BaReadCalibration();
     updateParametersByConfig();
 
+    rp_WC_Init();
+    rp_WC_UpdateParameters(true);
     g_thread = new std::thread(threadLoop);
+
+	CDataManager::GetInstance()->SetParamInterval(50);
+	CDataManager::GetInstance()->SetSignalInterval(50);
+
 	return 0;
 }
 
@@ -332,6 +337,7 @@ void UpdateParams(void)
         ba_calibrate_enable.SendValue(is_calib);
     }
 
+    rp_WC_UpdateParameters(false);
 }
 
 
@@ -371,6 +377,8 @@ void OnNewParams(void) {
     if (config_changed) {
         configSet(getHomeDirectory() + "/.config/redpitaya/apps/ba_pro", "config.json");
     }
+
+    rp_WC_OnNewParam();
 }
 
 void OnNewSignals(void)

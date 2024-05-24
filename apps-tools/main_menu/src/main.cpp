@@ -21,6 +21,7 @@
 #include "main.h"
 #include "rp.h"
 #include "web/rp_system.h"
+#include "web/rp_client.h"
 
 const char *rp_app_desc(void) {
     return (const char *)"Red Pitaya main menu application.\n";
@@ -38,6 +39,8 @@ int rp_app_init(void) {
     rp_WS_SetInterval(RP_WS_SENSOR_VOLT,2000);
     rp_WS_SetMode((rp_system_mode_t)(RP_WS_ALL & ~RP_WS_SLOW_DAC));
     rp_WS_UpdateParameters(true);
+    rp_WC_Init();
+    rp_WC_UpdateParameters(true);
     return 0;
 }
 
@@ -63,6 +66,7 @@ int rp_get_signals(float ***, int *, int *) {
 
 void UpdateParams(void) {
     rp_WS_UpdateParameters(false);
+    rp_WC_UpdateParameters(false);
 }
 
 void PostUpdateSignals(void){}
@@ -70,7 +74,7 @@ void PostUpdateSignals(void){}
 void UpdateSignals(void) {}
 
 void OnNewParams(void) {
-
+    rp_WC_OnNewParam();
 }
 
 void OnNewSignals(void){}

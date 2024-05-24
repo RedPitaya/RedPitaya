@@ -8,7 +8,7 @@
 
     // App configuration
     CLIENT.config = {};
-    CLIENT.config.app_id = 'main_menu';
+    CLIENT.config.app_id = 'ba_pro';
     CLIENT.config.server_ip = ''; // Leave empty on production, it is used for testing only
     CLIENT.config.search = "?type=run" //location.search
     CLIENT.config.start_app_url = (CLIENT.config.server_ip.length ? 'http://' + CLIENT.config.server_ip : '') + '/bazaar?start=' + CLIENT.config.app_id + '?' + CLIENT.config.search.substr(1);
@@ -78,6 +78,7 @@
             if (msg.trim() === CLIENT.client_id) {
                 location.reload();
             } else {
+                $('body').addClass('connection_lost');
                 $('body').removeClass('user_lost');
                 CLIENT.stopCheckStatus();
             }
@@ -260,7 +261,7 @@
     //Handlers
     var signalsHandler = function() {
         if (CLIENT.signalStack.length > 0) {
-            MAIN.processSignals(CLIENT.signalStack[0])
+            BA.drawSignals();
             CLIENT.signalStack.splice(0, 1);
         }
         if (CLIENT.signalStack.length > 2)
@@ -268,13 +269,14 @@
     }
 
     CLIENT.processParameters = function(new_params) {
+
         if (Object.keys(new_params).length > 0) {
             console.log(new_params)
         }
 
         for (var param_name in new_params) {
-            if (MAIN.param_callbacks[param_name] !== undefined)
-                MAIN.param_callbacks[param_name](new_params);
+            if (BA.param_callbacks[param_name] !== undefined)
+                BA.param_callbacks[param_name](new_params);
             CLIENT.params.orig[param_name] = new_params[param_name];
         }
         // Resize double-headed arrows showing the difference between cursors
@@ -289,8 +291,8 @@
 
 
     //Set handlers timers
-    setInterval(signalsHandler, 10);
-    setInterval(parametersHandler, 10);
+    setInterval(signalsHandler, 30);
+    setInterval(parametersHandler, 30);
 
 }(window.CLIENT = window.CLIENT || {}, jQuery));
 
@@ -301,6 +303,16 @@ $(function() {
         var r = Math.random() * 16 | 0,
             v = c == 'x' ? r : (r & 0x3 | 0x8);
         return v.toString(16);
+    });
+
+    // Stop the application when page is unloaded
+    $(window).on('beforeunload', function() {
+        CLIENT.ws.onclose = function() {}; // disable onclose handler first
+        CLIENT.ws.close();
+        $.ajax({
+            url: CLIENT.config.stop_app_url,
+            async: false
+        });
     });
 
     $.ajax({
@@ -318,4 +330,6 @@ $(function() {
             processData: false
         });
 
+
+    CLIENT.startApp();
 })

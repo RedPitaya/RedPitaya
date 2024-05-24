@@ -8,7 +8,7 @@
 
     // App configuration
     CLIENT.config = {};
-    CLIENT.config.app_id = 'main_menu';
+    CLIENT.config.app_id = 'arb_manager';
     CLIENT.config.server_ip = ''; // Leave empty on production, it is used for testing only
     CLIENT.config.search = "?type=run" //location.search
     CLIENT.config.start_app_url = (CLIENT.config.server_ip.length ? 'http://' + CLIENT.config.server_ip : '') + '/bazaar?start=' + CLIENT.config.app_id + '?' + CLIENT.config.search.substr(1);
@@ -78,6 +78,7 @@
             if (msg.trim() === CLIENT.client_id) {
                 location.reload();
             } else {
+                $('body').addClass('connection_lost');
                 $('body').removeClass('user_lost');
                 CLIENT.stopCheckStatus();
             }
@@ -173,6 +174,8 @@
             CLIENT.ws.onopen = function() {
                 console.log('Socket opened');
 
+                $('#main').removeAttr("style");
+
                 CLIENT.state.socket_opened = true;
                 CLIENT.parametersCache['in_command'] = {
                     value: 'send_all_params'
@@ -260,7 +263,6 @@
     //Handlers
     var signalsHandler = function() {
         if (CLIENT.signalStack.length > 0) {
-            MAIN.processSignals(CLIENT.signalStack[0])
             CLIENT.signalStack.splice(0, 1);
         }
         if (CLIENT.signalStack.length > 2)
@@ -268,13 +270,18 @@
     }
 
     CLIENT.processParameters = function(new_params) {
+
+        if (new_params['MAX_GAIN'] && SM.ss_max_gain === undefined){
+            SM.ss_max_gain = new_params['MAX_GAIN'].value;
+        }
+
         if (Object.keys(new_params).length > 0) {
             console.log(new_params)
         }
 
         for (var param_name in new_params) {
-            if (MAIN.param_callbacks[param_name] !== undefined)
-                MAIN.param_callbacks[param_name](new_params);
+            if (SM.param_callbacks[param_name] !== undefined)
+                SM.param_callbacks[param_name](new_params);
             CLIENT.params.orig[param_name] = new_params[param_name];
         }
         // Resize double-headed arrows showing the difference between cursors
@@ -289,8 +296,8 @@
 
 
     //Set handlers timers
-    setInterval(signalsHandler, 10);
-    setInterval(parametersHandler, 10);
+    setInterval(signalsHandler, 30);
+    setInterval(parametersHandler, 30);
 
 }(window.CLIENT = window.CLIENT || {}, jQuery));
 
@@ -318,4 +325,19 @@ $(function() {
             processData: false
         });
 
+
+    // Stop the application when page is unloaded
+    $(window).on('beforeunload', function(event) {
+        var target = document.activeElement.href
+        console.log(document.activeElement.href)
+        if (!target.includes("/arb_mananger/")){
+            CLIENT.ws.onclose = function() {}; // disable onclose handler first
+            CLIENT.ws.close();
+            $.get(
+                CLIENT.config.stop_app_url
+            )
+        }
+    });
+
+    CLIENT.startApp();
 })

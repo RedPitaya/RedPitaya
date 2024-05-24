@@ -23,6 +23,7 @@
 #include "osc_logic.h"
 #include "math_logic.h"
 #include "web/rp_system.h"
+#include "web/rp_client.h"
 
 
 /* -------------------------  debug parameter  --------------------------------- */
@@ -116,6 +117,8 @@ int rp_app_init(void) {
     rp_WS_SetMode((rp_system_mode_t)(RP_WS_ALL & (~RP_WS_DISK_SIZE) & ~RP_WS_SENSOR_VOLT));
     rp_WS_UpdateParameters(true);
 
+    rp_WC_Init();
+    rp_WC_UpdateParameters(true);
 
     rpApp_Init();
     rpApp_OscRun();
@@ -176,6 +179,7 @@ void UpdateParams(void) {
     updateSlowDAC(false);
 
     rp_WS_UpdateParameters(false);
+    rp_WC_UpdateParameters(false);
 
     if (g_config_changed && (g_save_counter++ % 40 == 0)){
         g_config_changed = false;
@@ -231,7 +235,7 @@ void OnNewParams(void) {
     updateGeneratorParameters(false);
     updateOscParams(false);
     updateMathParams(false);
-
+    rp_WC_OnNewParam();
 
 /* ------ UPDATE DEBUG PARAMETERS ------*/
 

@@ -27,24 +27,11 @@
 //Bode analyser
 (function(BA, $, undefined) {
 
-    // Params cache
-    BA.params = {
-        orig: {},
-        local: {}
-    };
 
     BA.scale = true;
     BA.curGraphScale = true;
     BA.param_callbacks = {};
 
-    // App configuration
-    BA.config = {};
-    BA.config.app_id = 'ba_pro';
-    BA.config.server_ip = ''; // Leave empty on production, it is used for testing only
-    BA.config.start_app_url = (BA.config.server_ip.length ? 'http://' + BA.config.server_ip : '') + '/bazaar?start=' + BA.config.app_id + '?' + location.search.substr(1);
-    BA.config.stop_app_url = (BA.config.server_ip.length ? 'http://' + BA.config.server_ip : '') + '/bazaar?stop=' + BA.config.app_id;
-    BA.config.socket_url = 'ws://' + (BA.config.server_ip.length ? BA.config.server_ip : window.location.hostname) + '/wss'; // WebSocket server URI
-    BA.client_id = undefined;
     // App state
     BA.state = {
         socket_opened: false,
@@ -68,9 +55,6 @@
     BA.currentFreq = 0;
     BA.currentStep = 0;
 
-    // Parameters cache
-    BA.parametersCache = {};
-
     //Graph cache
     BA.graphCache = undefined;
 
@@ -90,10 +74,6 @@
     BA.input_threshold = 0;
 
     var g_PacketsRecv = 0;
-    var g_CpuLoad = 100.0;
-    var g_TotalMemory = 256.0;
-    var g_FreeMemory = 256.0;
-
 
     BA.cursorsRelative = {
         x1: 0.33,
@@ -113,50 +93,13 @@
 
 
 
-
-    // Starts the body analyzer application on server
-    BA.startApp = function() {
-        $.get(
-                BA.config.start_app_url
-            )
-            .done(function(dresult) {
-                if (dresult.status == 'OK') {
-                    try {
-                        BA.connectWebSocket();
-                    } catch (e) {
-                        BA.startApp();
-                    }
-                } else if (dresult.status == 'ERROR') {
-                    console.log(dresult.reason ? dresult.reason : 'Could not start the application (ERR1)');
-                    BA.startApp();
-                } else {
-                    console.log('Could not start the application (ERR2)');
-                    BA.startApp();
-                }
-            })
-            .fail(function() {
-                console.log('Could not start the application (ERR3)');
-                BA.startApp();
-            });
-    };
-
-
-
-
-    //Show license dialog
-    var showLicenseDialog = function() {
-        if (BA.state.demo_label_visible)
-            $('#get_lic').modal('show');
-    }
-
-
     //Write email
     BA.formEmail = function() {
         //var file = new FileReader();
         var mail = "support@redpitaya.com";
         var subject = "Crash report Red Pitaya OS";
         var body = "%0D%0A%0D%0A------------------------------------%0D%0A" + "DEBUG INFO, DO NOT EDIT!%0D%0A" + "------------------------------------%0D%0A%0D%0A";
-        body += "Parameters:" + "%0D%0A" + JSON.stringify({ parameters: BA.parametersCache }) + "%0D%0A";
+        body += "Parameters:" + "%0D%0A" + JSON.stringify({ parameters: CLIENT.parametersCache }) + "%0D%0A";
         body += "Browser:" + "%0D%0A" + JSON.stringify({ parameters: $.browser }) + "%0D%0A";
 
         var url = 'info/info.json';
@@ -177,163 +120,6 @@
             document.location.href = "mailto:" + mail + "?subject=" + subject + ver + "&body=" + body;
         });
     }
-
-
-    BA.checkStatusTimer = undefined;
-    BA.changeStatusForRestart = false;
-    BA.changeStatusStep = 0;
-
-    BA.reloadPage = function() {
-        $.ajax({
-            method: "GET",
-            url: "/get_client_id",
-            timeout: 2000
-        }).done(function(msg) {
-            if (msg.trim() === BA.client_id) {
-                location.reload();
-            } else {
-                $('body').removeClass('user_lost');
-                BA.stopCheckStatus();
-            }
-        }).fail(function(msg) {
-            console.log(msg);
-            $('body').removeClass('connection_lost');
-        });
-    }
-
-    BA.startCheckStatus = function() {
-        if (BA.checkStatusTimer === undefined) {
-            BA.changeStatusStep = 0;
-            BA.checkStatusTimer = setInterval(BA.checkStatus, 4000);
-        }
-    }
-
-    BA.stopCheckStatus = function() {
-        if (BA.checkStatusTimer !== undefined) {
-            clearInterval(BA.checkStatusTimer);
-            BA.checkStatusTimer = undefined;
-        }
-    }
-
-    BA.checkStatus = function() {
-        $.ajax({
-            method: "GET",
-            url: "/check_status",
-            timeout: 2000
-        }).done(function(msg) {
-            switch (BA.changeStatusStep) {
-                case 0:
-                    BA.changeStatusStep = 1;
-                    break;
-                case 2:
-                    BA.reloadPage();
-                    break;
-            }
-        }).fail(function(msg) {
-            // check status. If don't have good state after start. We lock system.
-            $('body').removeClass('connection_lost');
-            switch (BA.changeStatusStep) {
-                case 0:
-                    BA.changeStatusStep = -1;
-                    break;
-                case 1:
-                    BA.changeStatusStep = 2;
-                    break;
-            }
-
-        });
-    }
-
-
-    // Creates a WebSocket connection with the web server
-    BA.connectWebSocket = function() {
-
-        if (window.WebSocket) {
-            BA.ws = new WebSocket(BA.config.socket_url);
-            BA.ws.binaryType = "arraybuffer";
-        } else if (window.MozWebSocket) {
-            BA.ws = new MozWebSocket(BA.config.socket_url);
-            BA.ws.binaryType = "arraybuffer";
-        } else {
-            console.log('Browser does not support WebSocket');
-        }
-
-        // Define WebSocket event listeners
-        if (BA.ws) {
-            BA.ws.onopen = function() {
-                console.log('Socket opened');
-
-                BA.state.socket_opened = true;
-
-                BA.sendParameters();
-
-                //setTimeout(showLicenseDialog, 2500);
-                BA.unexpectedClose = true;
-                $('body').addClass('loaded');
-                $('body').addClass('connection_lost');
-                $('body').addClass('user_lost');
-                BA.startCheckStatus();
-            };
-
-            BA.ws.onclose = function() {
-                BA.state.socket_opened = false;
-                $('#graph_amplitude .plot').hide(); // Hide all graphs
-                $('#graph_phase .plot').hide(); // Hide all graphs
-                console.log('Socket closed');
-                if (BA.unexpectedClose == true) {
-                    setTimeout(BA.reloadPage, '1000');
-                }
-            };
-
-            BA.ws.onerror = function(ev) {
-                if (!BA.state.socket_opened)
-                    BA.startApp();
-                console.log('Websocket error: ', ev);
-            };
-
-            var last_time = undefined;
-            BA.ws.onmessage = function(ev) {
-                var start_time = +new Date();
-                if (BA.state.processing) {
-                    return;
-                }
-                BA.state.processing = true;
-
-                try {
-                    var data = new Uint8Array(ev.data);
-                    BA.compressed_data += data.length;
-                    var inflate = pako.inflate(data);
-                    // var text = String.fromCharCode.apply(null, new Uint8Array(inflate));
-                    var bytes = new Uint8Array(inflate);
-                    var text = '';
-                    for(var i = 0; i < Math.ceil(bytes.length / 32768.0); i++) {
-                      text += String.fromCharCode.apply(null, bytes.slice(i * 32768, Math.min((i+1) * 32768, bytes.length)))
-                    }
-
-                    BA.decompressed_data += text.length;
-                    var receive = JSON.parse(text);
-
-                    //Recieving parameters
-                    if (receive.parameters) {
-                        BA.parameterStack.push(receive.parameters);
-                    }
-
-                    //Recieve signals
-                    if (receive.signals) {
-                        g_PacketsRecv++;
-                        BA.signalStack.push(receive.signals);
-                    }
-
-                    BA.state.processing = false;
-                } catch (e) {
-                    BA.state.processing = false;
-                    console.log(e);
-                } finally {
-                    BA.state.processing = false;
-                }
-            };
-        }
-    };
 
     // For Firefox
     function fireEvent(obj, evt) {
@@ -381,21 +167,6 @@
         fireEvent(a, 'click');
     }
 
-    // Sends to server parameters
-    BA.sendParameters = function() {
-        if (!BA.state.socket_opened) {
-            console.log('ERROR: Cannot save changes, socket not opened');
-            return false;
-        }
-        BA.ws.send(JSON.stringify({ parameters: BA.parametersCache }));
-        console.log("SEND: ", BA.parametersCache )
-        BA.parametersCache = {};
-        return true;
-    };
-
-
-
-
     // Draws grid on the lowest canvas layer
     BA.drawGrid = function() {
         var canvas_width = $('#graph_bode').width() - 2;
@@ -411,9 +182,6 @@
         return;
     };
 
-
-
-
     BA.enableX = function(cursor_name, new_params) {
         var old_params = $.extend(true, {}, BA.params.old);
         if (!BA.state.cursor_dragging && !BA.state.mouseover) {
@@ -427,9 +195,6 @@
             BA.updateXLinesAndArrows();
         }
     }
-
-
-
 
     BA.moveX = function(ui) {
 
@@ -450,9 +215,6 @@
         BA.updateXLinesAndArrows();
     }
 
-
-
-
     BA.enableY = function(cursor_name, new_params) {
         var old_params = $.extend(true, {}, BA.params.old);
         if (!BA.state.cursor_dragging && !BA.state.mouseover) {
@@ -466,9 +228,6 @@
             BA.updateYLinesAndArrows();
         }
     }
-
-
-
 
     BA.moveY = function(ui) {
 
@@ -489,9 +248,6 @@
         BA.updateYLinesAndArrows();
     }
 
-
-
-
     BA.enableZ = function(cursor_name, new_params) {
         var old_params = $.extend(true, {}, BA.params.old);
         if (!BA.state.cursor_dragging && !BA.state.mouseover) {
@@ -505,9 +261,6 @@
             BA.updateZLinesAndArrows();
         }
     }
-
-
-
 
     BA.moveZ = function(ui) {
 
@@ -528,9 +281,6 @@
         BA.updateZLinesAndArrows();
     }
 
-
-
-
     function funcxTickFormat(val, axis) {
 
         if (Math.abs(val) >= 0 && Math.abs(val) < 1000)
@@ -541,14 +291,11 @@
             return (val / 1000000).toFixed(2) + "M";
     }
 
-
-
-
     //Draw one signal
     BA.prepareOneSignal = function(signal_name) {
-        var one_signal = BA.signalStack[0][signal_name];
-        var bad_signal = BA.signalStack[0]['BA_BAD_SIGNAL'];
-        var signal_param = BA.signalStack[0]['BA_SIGNAL_PARAMETERS'];
+        var one_signal = CLIENT.signalStack[0][signal_name];
+        var bad_signal = CLIENT.signalStack[0]['BA_BAD_SIGNAL'];
+        var signal_param = CLIENT.signalStack[0]['BA_SIGNAL_PARAMETERS'];
 
         // Ignore empty signals
         if (one_signal.size == 0)
@@ -643,11 +390,11 @@
             $('#' + axis_name + '_MIN').val(min - size);
             yaxis.options.min = min - size;
 
-            BA.parametersCache["BA_GAIN_MIN"] = { value: $("#BA_GAIN_MIN").val() };
-            BA.parametersCache["BA_GAIN_MAX"] = { value: $("#BA_GAIN_MAX").val() };
-            BA.parametersCache["BA_PHASE_MIN"] = { value: $("#BA_PHASE_MIN").val() };
-            BA.parametersCache["BA_PHASE_MAX"] = { value: $("#BA_PHASE_MAX").val() };
-            BA.sendParameters();
+            CLIENT.parametersCache["BA_GAIN_MIN"] = { value: $("#BA_GAIN_MIN").val() };
+            CLIENT.parametersCache["BA_GAIN_MAX"] = { value: $("#BA_GAIN_MAX").val() };
+            CLIENT.parametersCache["BA_PHASE_MIN"] = { value: $("#BA_PHASE_MIN").val() };
+            CLIENT.parametersCache["BA_PHASE_MAX"] = { value: $("#BA_PHASE_MAX").val() };
+            CLIENT.sendParameters();
 
         }
     }
@@ -850,45 +597,6 @@
     };
 
 
-
-    //Handlers
-    var signalsHandler = function() {
-        if (BA.signalStack.length > 0) {
-            BA.drawSignals();
-            BA.signalStack.splice(0, 1);
-        }
-        if (BA.signalStack.length > 2)
-            BA.signalStack.length = [];
-    }
-
-    BA.processParameters = function(new_params) {
-        if (Object.keys(new_params).length > 0) {
-            console.log(new_params)
-        }
-
-        for (var param_name in new_params) {
-            if (BA.param_callbacks[param_name] !== undefined)
-                BA.param_callbacks[param_name](new_params);
-            BA.params.orig[param_name] = new_params[param_name];
-        }
-        // Resize double-headed arrows showing the difference between cursors
-    };
-
-    var parametersHandler = function() {
-        if (BA.parameterStack.length > 0) {
-            BA.processParameters(BA.parameterStack[0]);
-            BA.parameterStack.splice(0, 1);
-        }
-    }
-
-
-    //Set handlers timers
-    setInterval(signalsHandler, 10);
-    setInterval(parametersHandler, 10);
-
-
-
-
     BA.processStatus = function(new_params) {
         var status = new_params['BA_STATUS'].value
         if (status === 0 || status === 6 || status === 7) {
@@ -899,8 +607,8 @@
             $('#measuring-status').hide();
             BA.calibrating = false;
             BA.running = false;
-            BA.parametersCache["BA_STATUS"] = { value: 0 };
-            BA.sendParameters();
+            CLIENT.parametersCache["BA_STATUS"] = { value: 0 };
+            CLIENT.sendParameters();
         }
 
         if (status === 1 || status === 8) {
@@ -973,7 +681,7 @@
     }
 
     BA.setValue = function(param_name,new_params) {
-        var old_params = BA.params.orig;
+        var old_params = CLIENT.params.orig;
         if ((!BA.state.editing &&
             ((old_params[param_name] !== undefined && old_params[param_name].value !== new_params[param_name].value) ||
             (old_params[param_name] == undefined))
@@ -1002,7 +710,7 @@
 
     BA.setScale = function(new_params) {
         var param_name = "BA_SCALE"
-        var old_params = BA.params.orig;
+        var old_params = CLIENT.params.orig;
         if ((!BA.state.editing &&
             ((old_params[param_name] !== undefined && old_params[param_name].value !== new_params[param_name].value) ||
             (old_params[param_name] == undefined))
@@ -1015,7 +723,7 @@
 
     BA.setLogic = function(new_params) {
         var param_name = "BA_LOGIC_MODE"
-        var old_params = BA.params.orig;
+        var old_params = CLIENT.params.orig;
         if ((!BA.state.editing &&
             ((old_params[param_name] !== undefined && old_params[param_name].value !== new_params[param_name].value) ||
             (old_params[param_name] == undefined))
@@ -1074,7 +782,7 @@
 
     BA.setAutoScale = function(new_params){
         var param_name = "BA_AUTO_SCALE"
-        var old_params = BA.params.orig;
+        var old_params = CLIENT.params.orig;
         if (((old_params[param_name] !== undefined && old_params[param_name].value !== new_params[param_name].value) ||
             (old_params[param_name] == undefined))
             ) {
@@ -1088,7 +796,7 @@
 
     BA.setShowAll = function(new_params){
         var param_name = "BA_SHOW_ALL"
-        var old_params = BA.params.orig;
+        var old_params = CLIENT.params.orig;
         if (((old_params[param_name] !== undefined && old_params[param_name].value !== new_params[param_name].value) ||
             (old_params[param_name] == undefined))
             ) {
@@ -1099,7 +807,6 @@
                 }
         }
     }
-
 
     // X-cursors
     BA.updateXLinesAndArrows = function() {
@@ -1395,29 +1102,6 @@ $(function() {
         window.location.reload(true);
     }
 
-    BA.client_id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        var r = Math.random() * 16 | 0,
-            v = c == 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-
-    $.ajax({
-        url: '/set_client_id', //Server script to process data
-        type: 'POST',
-        //Ajax events
-        //beforeSend: beforeSendHandler,
-        success: function(e) { console.log(e); },
-        error: function(e) { console.log(e); },
-        // Form data
-        data: BA.client_id,
-        //Options to tell jQuery not to process data or worry about content-type.
-        cache: false,
-        contentType: false,
-        processData: false
-    });
-
-    BA.checkStatus();
-
     // X cursor arrows dragging
     $('#cur_x1_arrow, #cur_x2_arrow').draggable({
         axis: 'x',
@@ -1476,8 +1160,8 @@ $(function() {
     });
 
     $('#reset_settings').on('click', function() {
-        BA.parametersCache["BA_STATUS"] = { value: 4 };
-        BA.sendParameters();
+        CLIENT.parametersCache["BA_STATUS"] = { value: 4 };
+        CLIENT.sendParameters();
         location.reload();
     });
 
@@ -1506,11 +1190,11 @@ $(function() {
         //$('#BA_RUN').hide();
         //$('#BA_STOP').css('display', 'block');
         //$('#measuring-status').show();
-        BA.parametersCache["BA_START_FREQ"] = { value: $("#BA_START_FREQ").val() };
-        BA.parametersCache["BA_END_FREQ"] = { value: $('#BA_END_FREQ').val() };
-        BA.parametersCache["BA_STEPS"] = { value: $('#BA_STEPS').val() };
-        BA.parametersCache["BA_STATUS"] = { value: 1 };
-        BA.sendParameters();
+        CLIENT.parametersCache["BA_START_FREQ"] = { value: $("#BA_START_FREQ").val() };
+        CLIENT.parametersCache["BA_END_FREQ"] = { value: $('#BA_END_FREQ').val() };
+        CLIENT.parametersCache["BA_STEPS"] = { value: $('#BA_STEPS').val() };
+        CLIENT.parametersCache["BA_STATUS"] = { value: 1 };
+        CLIENT.sendParameters();
         //BA.running = true;
         BA.curGraphScale = BA.scale;
     });
@@ -1518,8 +1202,8 @@ $(function() {
     //Stop button
     $('#BA_STOP').on('click', function(ev) {
         ev.preventDefault();
-        BA.parametersCache["BA_STATUS"] = { value: 0 };
-        BA.sendParameters();
+        CLIENT.parametersCache["BA_STATUS"] = { value: 0 };
+        CLIENT.sendParameters();
     });
 
     //Loader wrapper
@@ -1528,8 +1212,8 @@ $(function() {
         if (BA.calibrating == true) {
             $('body').addClass('loaded');
             $('#calibration').hide();
-            BA.parametersCache["BA_STATUS"] = { value: 0 };
-            BA.sendParameters();
+            CLIENT.parametersCache["BA_STATUS"] = { value: 0 };
+            CLIENT.sendParameters();
             BA.calibrating = false;
         }
     });
@@ -1606,7 +1290,7 @@ $(function() {
         $('#graph_bode .plot').hide();
 
         if (BA.ws) {
-            BA.sendParameters();
+            CLIENT.sendParameters();
         }
 
         BA.updateGraphSize();
@@ -1626,21 +1310,6 @@ $(function() {
     }).resize();
 
 
-
-
-    // Stop the application when page is unloaded
-    $(window).on('beforeunload', function() {
-        BA.ws.onclose = function() {}; // disable onclose handler first
-        BA.ws.close();
-        $.ajax({
-            url: BA.config.stop_app_url,
-            async: false
-        });
-    });
-
-
-
-
     //Crash buttons
     $('#send_report_btn').on('click', function() { BA.formEmail() });
     $('#restart_app_btn').on('click', function() { location.reload() });
@@ -1648,26 +1317,26 @@ $(function() {
     $('#BA_AUTOSCALE_BTN').click(function() {
         if ($(this).hasClass('active')){
             $(this).removeClass('active');
-            BA.parametersCache["BA_AUTO_SCALE"] = { value: false };
-            BA.sendParameters();
+            CLIENT.parametersCache["BA_AUTO_SCALE"] = { value: false };
+            CLIENT.sendParameters();
         }
         else{
             $(this).addClass('active');
-            BA.parametersCache["BA_AUTO_SCALE"] = { value: true };
-            BA.sendParameters();
+            CLIENT.parametersCache["BA_AUTO_SCALE"] = { value: true };
+            CLIENT.sendParameters();
         }
     });
 
     $('#BA_SHOWALL_BTN').click(function() {
         if ($(this).hasClass('active')){
             $(this).removeClass('active');
-            BA.parametersCache["BA_SHOW_ALL"] = { value: false };
-            BA.sendParameters();
+            CLIENT.parametersCache["BA_SHOW_ALL"] = { value: false };
+            CLIENT.sendParameters();
         }
         else{
             $(this).addClass('active');
-            BA.parametersCache["BA_SHOW_ALL"] = { value: true };
-            BA.sendParameters();
+            CLIENT.parametersCache["BA_SHOW_ALL"] = { value: true };
+            CLIENT.sendParameters();
         }
     });
 
@@ -1731,20 +1400,8 @@ $(function() {
     Help.setState("idle");
 
     // Everything prepared, start application
-    BA.startApp();
-
     BA.previousPageUrl = document.referrer;
     console.log(`Previously visited page URL: ${BA.previousPageUrl}`);
     $("#back_button").attr("href", BA.previousPageUrl)
 
-    // // Start measuring after loading. Must be last in this file!
-    // setTimeout(function() {
-    //         //$('#BA_RUN').hide();
-    //         //$('#BA_STOP').css('display', 'block');
-    //         //$('#measuring-status').show();
-    //         BA.parametersCache["BA_MEASURE_START"] = { value: true };
-    //         BA.sendParameters();
-    //         //BA.running = true;
-    //     },
-    //     1000);
 });

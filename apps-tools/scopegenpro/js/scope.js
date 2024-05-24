@@ -173,7 +173,12 @@
     OSC.signalStack = [];
 
     OSC.lastSignals = [];
+
+
     OSC.client_id = undefined;
+    OSC.ping = undefined;
+    OSC.nginx_live = false;
+    OSC.nginx_live_timer = undefined;
 
     var g_counter = 0;
     var g_PacketsRecv = 0;
@@ -223,19 +228,19 @@
                     try {
                         OSC.connectWebSocket();
                     } catch (e) {
-                        OSC.startApp();
+                        setTimeout(OSC.startApp(), 2000);
                     }
                 } else if (dresult.status == 'ERROR') {
                     console.log(dresult.reason ? dresult.reason : 'Could not start the application (ERR1)');
-                    OSC.startApp();
+                    setTimeout(OSC.startApp(), 2000);
                 } else {
                     console.log('Could not start the application (ERR2)');
-                    OSC.startApp();
+                    setTimeout(OSC.startApp(), 2000);
                 }
             })
             .fail(function() {
                 console.log('Could not start the application (ERR3)');
-                OSC.startApp();
+                setTimeout(OSC.startApp(), 2000);
             });
     };
 
@@ -314,6 +319,7 @@
             if (msg.trim() === OSC.client_id) {
                 location.reload();
             } else {
+                $('body').addClass('connection_lost');
                 $('body').removeClass('user_lost');
                 OSC.stopCheckStatus();
             }
@@ -326,7 +332,7 @@
     OSC.startCheckStatus = function() {
         if (OSC.checkStatusTimer === undefined) {
             OSC.changeStatusStep = 0;
-            OSC.checkStatusTimer = setInterval(OSC.checkStatus, 4000);
+            OSC.checkStatusTimer = setInterval(OSC.checkStatus, 5000);
         }
     }
 
@@ -337,33 +343,56 @@
         }
     }
 
-    OSC.checkStatus = function() {
-        $.ajax({
-            method: "GET",
-            url: "/check_status",
-            timeout: 2000
-        }).done(function(msg) {
-            switch (OSC.changeStatusStep) {
-                case 0:
-                    OSC.changeStatusStep = 1;
-                    break;
-                case 2:
-                    OSC.reloadPage();
-                    break;
-            }
-        }).fail(function(msg) {
-            // check status. If don't have good state after start. We lock system.
-            $('body').removeClass('connection_lost');
-            switch (OSC.changeStatusStep) {
-                case 0:
-                    OSC.changeStatusStep = -1;
-                    break;
-                case 1:
-                    OSC.changeStatusStep = 2;
-                    break;
-            }
+    OSC.startCheckNginxStatus = function() {
+        if (OSC.nginx_live_timer === undefined) {
+            OSC.nginx_live_timer = setInterval(function(){
+                $.ajax({
+                    method: "GET",
+                    url: "/check_nginx_live",
+                    timeout: 2000
+                }).done(function(msg) {
+                    OSC.nginx_live = true
+                }).fail(function(msg) {
+                    OSC.nginx_live = false
+                });
+            }, 2000);
+        }
+    }
 
-        });
+    OSC.stopCheckNginxStatus = function() {
+        if (OSC.nginx_live_timer !== undefined) {
+            clearInterval(OSC.nginx_live_timer);
+            OSC.nginx_live_timer = undefined;
+        }
+    }
+
+    OSC.checkStatus = function() {
+        if (OSC.params.orig["RP_CLIENT_PING"] != undefined){
+            if (OSC.ping != OSC.params.orig["RP_CLIENT_PING"].value){
+                OSC.stopCheckNginxStatus()
+                switch (OSC.changeStatusStep) {
+                    case 0:
+                        OSC.changeStatusStep = 1;
+                        break;
+                }
+            }else{
+                OSC.startCheckNginxStatus()
+                $('body').removeClass('connection_lost');
+                switch (OSC.changeStatusStep) {
+                    case 0: // Do nothing, since after the timer started the data did not arrive.
+                    OSC.changeStatusStep = -1;
+                        break;
+                    case 1: // Go to the connection restoration check state.
+                    OSC.changeStatusStep = 2;
+                        break;
+                }
+            }
+            OSC.ping = OSC.params.orig["RP_CLIENT_PING"].value
+        }
+
+        if (OSC.changeStatusStep == 2 && OSC.nginx_live){
+            OSC.reloadPage();
+        }
     }
 
     setInterval(performanceHandler, 1000);
@@ -443,13 +472,13 @@
                 $('#graphs .plot').hide(); // Hide all graphs
                 console.log('Socket closed');
                 if (OSC.unexpectedClose == true) {
-                    setTimeout(OSC.reloadPage, '1000');
+                    setTimeout(OSC.reloadPage, 2000);
                 }
             };
 
             OSC.ws.onerror = function(ev) {
                 if (!OSC.state.socket_opened)
-                    OSC.startApp();
+                    setTimeout(OSC.startApp(), 2000);
                 console.log('Websocket error: ', ev);
             };
 
@@ -1523,48 +1552,10 @@
         var window_width = window.innerWidth;
         var window_height = window.innerHeight;
 
-        // if (window_width > 768 && window_height > 580) {
-        //     var global_width = window_width - 30,
-        //         global_height = global_width / 1.77885;
-        //     if (window_height < global_height) {
-        //         global_height = window_height - 70 * 1.77885;
-        //         global_width = global_height * 1.77885;
-        //     }
-
-        //     $('#global_container').css('width', global_width);
-        //     $('#global_container').css('height', global_height);
-
-
-        //     OSC.drawGraphGrid();
-        //     var main_width = $('#main').outerWidth(true);
-        //     var main_height = $('#main').outerHeight(true);
-        //     $('#global_container').css('width', main_width);
-        //     $('#global_container').css('height', main_height);
-
-        //     OSC.drawGraphGrid();
-        //     main_width = $('#main').outerWidth(true);
-        //     main_height = $('#main').outerHeight(true);
-        //     window_width = window.innerWidth;
-        //     window_height = window.innerHeight;
-        //     console.log("window_width = " + window_width);
-        //     console.log("window_height = " + window_height);
-        //     if (main_height > (window_height - 80)) {
-        //         $('#global_container').css('height', window_height - 80);
-        //         $('#global_container').css('width', 1.82 * (window_height - 80));
-        //         OSC.drawGraphGrid();
-        //         $('#global_container').css('width', $('#main').outerWidth(true) - 2);
-        //         $('#global_container').css('height', $('#main').outerHeight(true) - 2);
-        //         OSC.drawGraphGrid();
-        //     }
-        // }
-
         var global_width = window_width - 30,
             global_height = window_height - 200;
 
-        //     if (window_height < global_height) {
-        //         global_height = window_height - 70 * 1.77885;
-        //         global_width = global_height * 1.77885;
-        //     }
+
         $('#global_container').css('width', global_width);
         $('#global_container').css('height', global_height);
 
@@ -1641,9 +1632,6 @@ $(function() {
         contentType: false,
         processData: false
     });
-
-    OSC.checkStatus();
-
 
     $('#modal-warning').hide();
 

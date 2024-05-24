@@ -401,42 +401,6 @@
             OSC.changeXZoom(ev.target.id == 'jtk_left' ? '+' : '-');
         });
 
-        $('#load_csv').click(function() {
-            var formData = new FormData($('#form')[0]);
-            $.ajax({
-                url: '/upload_gen_ch1', //Server script to process data
-                type: 'POST',
-                //Ajax events
-                //beforeSend: beforeSendHandler,
-                success: function(e) { console.log(e); },
-                error: function(e) { console.log(e); },
-                // Form data
-                data: formData,
-                //Options to tell jQuery not to process data or worry about content-type.
-                cache: false,
-                contentType: false,
-                processData: false
-            });
-        });
-        $('#load_csv2').click(function() {
-            var formData = new FormData($('#form2')[0]);
-            $.ajax({
-                url: '/upload_gen_ch2', //Server script to process data
-                type: 'POST',
-                //Ajax events
-                //beforeSend: beforeSendHandler,
-                success: function(e) { console.log(e); },
-                error: function(e) { console.log(e); },
-                // Form data
-                data: formData,
-                //Options to tell jQuery not to process data or worry about content-type.
-                cache: false,
-                contentType: false,
-                processData: false
-            });
-        });
-
-
         $(".sweep_reset").on('click',function() {
             OSC.params.local['SWEEP_RESET'] = { value: true };
             OSC.sendParams();
