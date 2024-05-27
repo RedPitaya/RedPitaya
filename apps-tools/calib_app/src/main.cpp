@@ -26,6 +26,9 @@
 
 #include "filter_logic.h"
 #include "filter_logicNch.h"
+
+#include "web/rp_client.h"
+
 CFilter_logic::Ptr g_filter_logic = nullptr;
 CFilter_logicNch::Ptr g_filter_logicNch  = nullptr;
 int g_sub_progress = 0;
@@ -154,6 +157,8 @@ int rp_app_init(void)
 {
 	std::lock_guard<std::mutex> lock(g_mtx);
 	fprintf(stderr, "Loading calibraton app version %s-%s.\n", VERSION_STR, REVISION_STR);
+	rp_WC_Init();
+    rp_WC_UpdateParameters(true);
 	CDataManager::GetInstance()->SetParamInterval(100);
 	rp_Init();
 	auto dec = 64;
@@ -1040,6 +1045,8 @@ void UpdateParams(void)
 			getNewFilterCalib();
 		}
 
+		rp_WC_UpdateParameters(false);
+
 	}catch (std::exception& e)
 	{
 		ERROR("UpdateParams() %s",e.what());
@@ -1054,6 +1061,7 @@ void OnNewParams(void)
 	std::lock_guard<std::mutex> lock(g_mtx);
 	//Update parameters
 	UpdateParams();
+	rp_WC_OnNewParam();
 }
 
 void OnNewSignals(void)

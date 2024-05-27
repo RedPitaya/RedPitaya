@@ -26,30 +26,13 @@
 
 (function(SM, $, undefined) {
 
-    // Params cache
-    SM.params = {
-        orig: {},
-        local: {}
-    };
     SM.ss_status_last = -1;
     SM.ss_full_rate = undefined;
     SM.ss_rate = -1;
     SM.ss_max_rate = -1;
     SM.ss_max_rate_devider = -1;
     SM.param_callbacks = {};
-    SM.parameterStack = [];
-    SM.signalStack = [];
-    // Parameters cache
-    SM.parametersCache = {};
 
-    // App configuration
-    SM.config = {};
-    SM.config.app_id = 'streaming_manager';
-    SM.config.server_ip = ''; // Leave empty on production, it is used for testing only
-
-    SM.config.start_app_url = window.location.origin + '/bazaar?start=' + SM.config.app_id;
-    SM.config.stop_app_url = window.location.origin + '/bazaar?stop=' + SM.config.app_id;
-    SM.config.socket_url = 'ws://' + window.location.host + '/wss';
 
     SM.adc_channels = undefined;
     SM.dac_channels = undefined;
@@ -71,49 +54,13 @@
     };
 
 
-    SM.startApp = function() {
-        $.get(
-                SM.config.start_app_url
-            )
-            .done(function(dresult) {
-                if (dresult.status == 'OK') {
-                    try {
-                        SM.connectWebSocket();
-                        console.log("Load manager");
-                    } catch (e) {
-                        SM.startApp();
-                    }
-                } else if (dresult.status == 'ERROR') {
-                    console.log(dresult.reason ? dresult.reason : 'Could not start the application (ERR1)');
-                    SM.startApp();
-                } else {
-                    console.log('Could not start the application (ERR2)');
-                    SM.startApp();
-                }
-            })
-            .fail(function() {
-                console.log('Could not start the application (ERR3)');
-                SM.startApp();
-            });
-    };
-
-
-
-
-    //Show license dialog
-    var showLicenseDialog = function() {
-        if (SM.state.demo_label_visible)
-            $('#get_lic').modal('show');
-    }
-
-
     //Write email
     SM.formEmail = function() {
         //var file = new FileReader();
         var mail = "support@redpitaya.com";
         var subject = "Crash report Red Pitaya OS";
         var body = "%0D%0A%0D%0A------------------------------------%0D%0A" + "DEBUG INFO, DO NOT EDIT!%0D%0A" + "------------------------------------%0D%0A%0D%0A";
-        body += "Parameters:" + "%0D%0A" + JSON.stringify({ parameters: SM.parametersCache }) + "%0D%0A";
+        body += "Parameters:" + "%0D%0A" + JSON.stringify({ parameters: CLIENT.parametersCache }) + "%0D%0A";
         body += "Browser:" + "%0D%0A" + JSON.stringify({ parameters: $.browser }) + "%0D%0A";
 
         var url = 'info/info.json';
@@ -134,118 +81,6 @@
             document.location.href = "mailto:" + mail + "?subject=" + subject + ver + "&body=" + body;
         });
     }
-
-
-    // Creates a WebSocket connection with the web server
-    SM.connectWebSocket = function() {
-
-        if (window.WebSocket) {
-            SM.ws = new WebSocket(SM.config.socket_url);
-            SM.ws.binaryType = "arraybuffer";
-        } else if (window.MozWebSocket) {
-            SM.ws = new MozWebSocket(SM.config.socket_url);
-            SM.ws.binaryType = "arraybuffer";
-        } else {
-            console.log('Browser does not support WebSocket');
-        }
-
-        // Define WebSocket event listeners
-        if (SM.ws) {
-            SM.ws.onopen = function() {
-                console.log('Socket opened');
-                SM.GetIP();
-                var element = document.getElementById("loader-wrapper");
-                element.parentNode.removeChild(element);
-                $('#main').removeAttr("style");
-                SM.state.socket_opened = true;
-                SM.requestAllParameters();
-                SM.unexpectedClose = true;
-                SM.getClients();
-                SM.refreshFiles();
-            };
-
-            SM.ws.onclose = function() {
-                SM.state.socket_opened = false;
-                console.log('Socket closed');
-                if (SM.unexpectedClose == true)
-                    $('#feedback_error').modal('show');
-            };
-
-            SM.ws.onerror = function(ev) {
-                if (!SM.state.socket_opened)
-                    SM.startApp();
-                console.log('Websocket error: ', ev);
-            };
-
-            SM.ws.onmessage = function(ev) {
-                try {
-                    var data = new Uint8Array(ev.data);
-                    //   BA.compressed_data += data.length;
-                    var inflate = pako.inflate(data);
-                    var text = String.fromCharCode.apply(null, new Uint8Array(inflate));
-
-                    // BA.decompressed_data += text.length;
-                    var receive = JSON.parse(text);
-
-                    //Recieving parameters
-                    if (receive.parameters) {
-                        SM.parameterStack.push(receive.parameters);
-                        if (SM.ss_rate == -1 && SM.params.orig["SS_ACD_MAX"] != null) {
-                            $("#SS_RATE").val(SM.params.orig["SS_ACD_MAX"].value);
-                            rateFocusOut();
-                        }
-                    }
-
-                } catch (e) {
-                    //BA.state.processing = false;
-                    console.log(e);
-                } finally {
-                    //BA.state.processing = false;
-                }
-            };
-        }
-    };
-
-    // For Firefox
-    function fireEvent(obj, evt) {
-        var fireOnThis = obj;
-        if (document.createEvent) {
-            var evObj = document.createEvent('MouseEvents');
-            evObj.initEvent(evt, true, false);
-            fireOnThis.dispatchEvent(evObj);
-
-        } else if (document.createEventObject) {
-            var evObj = document.createEventObject();
-            fireOnThis.fireEvent('on' + evt, evObj);
-        }
-    }
-
-
-    // Sends to server parameters
-    SM.sendParameters = function() {
-        if (!SM.state.socket_opened) {
-            console.log('ERROR: Cannot save changes, socket not opened');
-            return false;
-        }
-
-        SM.ws.send(JSON.stringify({ parameters: SM.parametersCache }));
-        console.log(SM.parametersCache)
-        SM.parametersCache = {};
-        return true;
-    };
-
-    SM.requestAllParameters = function() {
-        if (!SM.state.socket_opened) {
-            console.log('ERROR: Cannot save changes, socket not opened');
-            return false;
-        }
-        SM.parametersCache = {};
-        SM.parametersCache["in_command"] = { value: "send_all_params" };
-        SM.ws.send(JSON.stringify({ parameters: SM.parametersCache }));
-        console.log(SM.parametersCache)
-        SM.parametersCache = {};
-        return true;
-    };
 
     SM.DeleteFiles = function() {
         $.ajax({
@@ -277,8 +112,8 @@
                 $('#svg-is-runnung').attr("src","./img/red_led.png")
                 $('#info_dialog_label').text("Out of free disk space");
                 $('#info_dialog').modal('show');
-                SM.parametersCache["SS_STATUS"] = { value: 0 };
-                SM.sendParameters();
+                CLIENT.parametersCache["SS_STATUS"] = { value: 0 };
+                CLIENT.sendParameters();
                 SM.refreshFiles();
             }
 
@@ -286,8 +121,8 @@
                 $('#svg-is-runnung').attr("src","./img/red_led.png")
                 $('#info_dialog_label').text("Data recording completed");
                 $('#info_dialog').modal('show');
-                SM.parametersCache["SS_STATUS"] = { value: 0 };
-                SM.sendParameters();
+                CLIENT.parametersCache["SS_STATUS"] = { value: 0 };
+                CLIENT.sendParameters();
                 SM.refreshFiles();
             }
 
@@ -334,24 +169,6 @@
     };
 
 
-    SM.processParameters = function(new_params) {
-        var old_params = $.extend(true, {}, SM.params.orig);
-        var send_all_params = Object.keys(new_params).indexOf('send_all_params') != -1;
-        SM.updateMaxLimits(new_params['SS_ACD_MAX']);
-
-        if (Object.keys(new_params).length !== 0)
-            console.log(new_params)
-
-        for (var param_name in new_params) {
-
-            SM.params.orig[param_name] = new_params[param_name];
-            var field = $('#' + param_name);
-
-            if (SM.param_callbacks[param_name] !== undefined)
-                SM.param_callbacks[param_name](new_params);
-        }
-
-    };
 
     SM.calcRateHz = function(val) {
         if (val <= 1)
@@ -378,12 +195,6 @@
         return Math.round(SM.ss_full_rate / SM.ss_rate);
     }
 
-    var parametersHandler = function() {
-        if (SM.parameterStack.length > 0) {
-            SM.processParameters(SM.parameterStack[0]);
-            SM.parameterStack.splice(0, 1);
-        }
-    }
 
     SM.GetIP = function() {
 
@@ -738,9 +549,6 @@
         }
     }
 
-    //Set handlers timers
-    setInterval(parametersHandler, 50);
-
     SM.param_callbacks["SS_STATUS"] = SM.change_status;
     SM.param_callbacks["SS_ADC_DATA_PASS"] = SM.change_adc_data_pass;
     SM.param_callbacks["SS_IS_MASTER"] = SM.setBoardMode;
@@ -780,16 +588,16 @@ $(function() {
 
     //Run button
     $('#SM_RUN').on('click', function(ev) {
-        SM.parametersCache["SS_START"] = { value: true };
-        SM.sendParameters();
+        CLIENT.parametersCache["SS_START"] = { value: true };
+        CLIENT.sendParameters();
         SM.ss_status_last = 0;
     });
 
     //Stop button
     $('#SM_STOP').on('click', function(ev) {
         ev.preventDefault();
-        SM.parametersCache["SS_START"] = { value: false };
-        SM.sendParameters();
+        CLIENT.parametersCache["SS_START"] = { value: false };
+        CLIENT.sendParameters();
     });
 
     $('#B_REFRESH').on('click', function(ev) {
@@ -814,28 +622,8 @@ $(function() {
 
     // Bind to the window resize event to redraw the graph; trigger that event to do the first drawing
     $(window).resize(function() {
-        if (SM.ws) {
-            SM.sendParameters();
-        }
+        CLIENT.sendParameters();
     }).resize();
-
-
-
-
-    // Stop the application when page is unloaded
-    $(window).on('beforeunload', function(event) {
-        var target = document.activeElement.href
-        console.log(document.activeElement.href)
-        if (!target.includes("/streaming_manager/")){
-            SM.ws.onclose = function() {}; // disable onclose handler first
-            SM.ws.close();
-            $.get(
-                SM.config.stop_app_url
-            )
-        }
-    });
-
-
 
     //Crash buttons
     $('#send_report_btn').on('click', function() { SM.formEmail() });
@@ -843,8 +631,5 @@ $(function() {
 
     $('#CLEAR_FILES').click(SM.DeleteFiles);
 
-
-    // Everything prepared, start application
-    SM.startApp();
 
 });

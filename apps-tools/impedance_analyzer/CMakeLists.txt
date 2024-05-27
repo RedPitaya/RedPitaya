@@ -66,6 +66,7 @@ list(APPEND libs_paths
 
 list(APPEND rp_libs
     rp-system
+    rp-client
     rpapp
     rpapp_lcr
     rp

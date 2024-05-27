@@ -199,6 +199,7 @@ auto installTermSignalHandler() -> void {
 auto rp_app_init(void) -> int {
 	fprintf(stderr, "Loading stream server version %s-%s.\n", VERSION_STR, REVISION_STR);
 	installTermSignalHandler();
+
 	CDataManager::GetInstance()->SetParamInterval(100);
 	g_serverRun = false;
 	try {
@@ -273,6 +274,9 @@ auto rp_app_init(void) -> int {
 		if (rp_HPGetIsAttenuatorControllerPresentOrDefault() && rp_HPGetFastADCIsAC_DCOrDefault() && rp_HPGetIsGainDACx5OrDefault()){
 	    	rp_max7311::rp_initController();
 		}
+
+		rp_WC_Init();
+    	rp_WC_UpdateParameters(true);
 
 	}catch (std::exception& e)
 	{
@@ -574,6 +578,9 @@ void UpdateParams(void) {
                 stopDACNonBlocking(dac_streaming_lib::CDACStreamingManager::NR_STOP);
 			}
 		}
+
+	    rp_WC_UpdateParameters(false);
+
 	}catch (std::exception& e)
 	{
         ERROR("UpdateParams() %s",e.what());
@@ -585,6 +592,7 @@ void PostUpdateSignals() {}
 void OnNewParams(void) {
 	//Update parameters
 	UpdateParams();
+    rp_WC_OnNewParam();
 }
 
 void OnNewSignals(void) {

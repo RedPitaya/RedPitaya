@@ -6,6 +6,7 @@
 #include "rp_math.h"
 #include "common.h"
 #include "common/rp_sweep.h"
+#include "web/rp_client.h"
 
 #define MAX_FREQ getMaxFreqRate()
 #define LEVEL_AMPS_MAX outAmpMax()
@@ -169,6 +170,8 @@ void UpdateParams(void)
 
     if (rp_HPIsFastDAC_PresentOrDefault())
 	    updateGen();
+
+    rp_WC_UpdateParameters(false);
 }
 
 void resetMinMax(int ch,int mode){
@@ -953,6 +956,7 @@ void OnNewParams(void)
         configSet(getHomeDirectory() + "/.config/redpitaya/apps/spectrumpro", "config.json");
     }
 
+	rp_WC_OnNewParam();
 }
 
 extern "C" void SpecIntervalInit()
@@ -967,6 +971,10 @@ extern "C" int rp_app_init(void)
 
     for(auto ch = 0u; ch < MAX_ADC_CHANNELS + 1; ch++)
         data[ch] = new float[CH_SIGNAL_DATA];
+
+	rp_WC_Init();
+    rp_WC_UpdateParameters(true);
+
 
     rp_Init();
     rp_Reset();

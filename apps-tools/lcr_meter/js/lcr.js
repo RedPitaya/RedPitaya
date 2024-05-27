@@ -34,12 +34,7 @@
 
     //Configure APP
     LCR.startTime = 0;
-    LCR.config = {};
-    LCR.config.app_id = 'lcr_meter';
-    LCR.config.server_ip = '';
-    LCR.config.start_app_url = window.location.origin + '/bazaar?start=' + LCR.config.app_id;
-    LCR.config.socket_url = 'ws://' + window.location.host + '/wss'; // WebSocket server URI
-    LCR.client_id = undefined;
+
     // App state
     LCR.state = {
         socket_opened: false,
@@ -57,17 +52,9 @@
         demo_modal_visible: false
     };
 
-    // Params cache
-    LCR.params = {
-        orig: {},
-        local: {}
-    };
 
     // Other global variables
-    LCR.ws = null;
     LCR.touch = {};
-
-    LCR.connect_time;
 
     LCR.displ_params = {
         prim: 'LCR_Z',
@@ -106,307 +93,41 @@
     LCR.module_disconnected = false;
     LCR.modal_opened = false;
 
-    //LCR.toClearLog = false;
+    $('#send_report_btn').on('click', function() {
+        //var file = new FileReader();
+        var mail = "support@redpitaya.com";
+        var subject = "Crash report Red Pitaya OS";
+        var body = "%0D%0A%0D%0A------------------------------------%0D%0A" + "DEBUG INFO, DO NOT EDIT!%0D%0A" + "------------------------------------%0D%0A%0D%0A";
+        body += "Parameters:" + "%0D%0A" + JSON.stringify({ parameters: CLIENT.params }) + "%0D%0A";
+        body += "Browser:" + "%0D%0A" + JSON.stringify({ parameters: $.browser }) + "%0D%0A";
 
-    LCR.startApp = function() {
-        $.get(LCR.config.start_app_url)
-            .done(function(dresult) {
-                if (dresult.status == 'OK') {
-                    try {
-                        LCR.connectWebSocket();
-                        console.log('Socket opened');
-                    } catch (e) {
-                        LCR.startApp();
-                    }
-                } else if (dresult.status == 'ERROR') {
-                    console.log(dresult.reason ? dresult.reason : 'Could not start the application (ERR1)');
-                    LCR.startApp();
-                } else {
-                    console.log('Could not start application (ERR2)');
-                    LCR.startApp();
-                }
-            })
-            .fail(function() {
-                console.log('Could not start the application (ERR3)');
-                LCR.startApp();
-            });
-    };
-
-
-    LCR.checkStatusTimer = undefined;
-    LCR.changeStatusForRestart = false;
-    LCR.changeStatusStep = 0;
-
-    LCR.reloadPage = function() {
+        var url = 'info/info.json';
         $.ajax({
             method: "GET",
-            url: "/get_client_id",
-            timeout: 2000
+            url: url
         }).done(function(msg) {
-            if (msg.trim() === LCR.client_id) {
-                location.reload();
-            } else {
-                $('body').removeClass('user_lost');
-                LCR.stopCheckStatus();
-            }
+            body += " info.json: " + "%0D%0A" + msg.responseText;
         }).fail(function(msg) {
-            console.log(msg);
-            $('body').removeClass('connection_lost');
+            var info_json = msg.responseText
+            var ver = '';
+            try {
+                var obj = JSON.parse(msg.responseText);
+                ver = " " + obj['version'];
+            } catch (e) {};
+
+            body += " info.json: " + "%0D%0A" + msg.responseText;
+            document.location.href = "mailto:" + mail + "?subject=" + subject + ver + "&body=" + body;
         });
-    }
+    });
 
-    LCR.startCheckStatus = function() {
-        if (LCR.checkStatusTimer === undefined) {
-            LCR.changeStatusStep = 0;
-            LCR.checkStatusTimer = setInterval(LCR.checkStatus, 4000);
-        }
-    }
-
-    LCR.stopCheckStatus = function() {
-        if (LCR.checkStatusTimer !== undefined) {
-            clearInterval(LCR.checkStatusTimer);
-            LCR.checkStatusTimer = undefined;
-        }
-    }
-
-    LCR.checkStatus = function() {
-        $.ajax({
-            method: "GET",
-            url: "/check_status",
-            timeout: 2000
-        }).done(function(msg) {
-            switch (LCR.changeStatusStep) {
-                case 0:
-                    LCR.changeStatusStep = 1;
-                    break;
-                case 2:
-                    LCR.reloadPage();
-                    break;
-            }
-        }).fail(function(msg) {
-            // check status. If don't have good state after start. We lock system.
-            $('body').removeClass('connection_lost');
-            switch (LCR.changeStatusStep) {
-                case 0:
-                    LCR.changeStatusStep = -1;
-                    break;
-                case 1:
-                    LCR.changeStatusStep = 2;
-                    break;
-            }
-
-        });
-    }
-
-    LCR.connectWebSocket = function() {
-        if (window.WebSocket) {
-            LCR.ws = new WebSocket(LCR.config.socket_url);
-            LCR.ws.binaryType = "arraybuffer";
-        } else if (window.MozWebSocket) {
-            LCR.ws = new MozWebSocket(LCR.config.socket_url);
-            LCR.ws.binaryType = "arraybuffer";
-        } else {
-            console.log('Browser does not support WebSocket');
-        }
-
-
-        //Define WebSocket event listeners
-        if (LCR.ws) {
-            LCR.ws.onopen = function() {
-                LCR.state.socket_opened = true;
-                console.log('Socket opened');
-
-                LCR.params.local['in_command'] = { value: 'send_all_params' };
-                LCR.ws.send(JSON.stringify({ parameters: LCR.params.local }));
-                LCR.params.local = {};
-                LCR.unexpectedClose = true;
-                LCR.startTime = performance.now();
-                $('body').addClass('loaded');
-                $('body').addClass('connection_lost');
-                $('body').addClass('user_lost');
-                LCR.startCheckStatus();
-            };
-
-            LCR.ws.onclose = function() {
-                LCR.state.socket_opened = false;
-                console.log('Socket closed');
-                $('#modal_socket_closed').modal('show');
-                if (LCR.unexpectedClose == true) {
-                    setTimeout(LCR.reloadPage, '1000');
-                }
-            };
-
-            $('#send_report_btn').on('click', function() {
-                //var file = new FileReader();
-                var mail = "support@redpitaya.com";
-                var subject = "Crash report Red Pitaya OS";
-                var body = "%0D%0A%0D%0A------------------------------------%0D%0A" + "DEBUG INFO, DO NOT EDIT!%0D%0A" + "------------------------------------%0D%0A%0D%0A";
-                body += "Parameters:" + "%0D%0A" + JSON.stringify({ parameters: LCR.params }) + "%0D%0A";
-                body += "Browser:" + "%0D%0A" + JSON.stringify({ parameters: $.browser }) + "%0D%0A";
-
-                var url = 'info/info.json';
-                $.ajax({
-                    method: "GET",
-                    url: url
-                }).done(function(msg) {
-                    body += " info.json: " + "%0D%0A" + msg.responseText;
-                }).fail(function(msg) {
-                    var info_json = msg.responseText
-                    var ver = '';
-                    try {
-                        var obj = JSON.parse(msg.responseText);
-                        ver = " " + obj['version'];
-                    } catch (e) {};
-
-                    body += " info.json: " + "%0D%0A" + msg.responseText;
-                    document.location.href = "mailto:" + mail + "?subject=" + subject + ver + "&body=" + body;
-                });
-            });
-
-            $('#restart_app_btn').on('click', function() {
-                location.reload();
-            });
-
-            LCR.ws.onerror = function(ev) {
-                if (!LCR.state.socket_opened)
-                    LCR.startApp();
-                console.log('Websocket error: ', ev);
-            };
-
-            LCR.ws.onmessage = function(ev) {
-                if (LCR.state.processing) {
-                    return;
-                }
-
-                var data = new Uint8Array(ev.data);
-                var inflate = pako.inflate(data);
-                var text = String.fromCharCode.apply(null, new Uint8Array(inflate));
-                var receive = JSON.parse(text);
-
-                LCR.state.processing = true;
-                if (receive.parameters) {
-                    if ((Object.keys(LCR.params.orig).length == 0) && (Object.keys(receive.parameters).length == 0)) {
-
-                        LCR.params.local['in_command'] = { value: 'send_all_params' };
-                        LCR.ws.send(JSON.stringify({ parameters: LCR.params.local }));
-                        LCR.params.local = {};
-                    } else {
-                        console.log(receive.parameters)
-                        LCR.processParameters(receive.parameters);
-                    }
-                    if (LCR.params.orig['is_demo']) {
-                        setTimeout(function() {
-                            if (!LCR.state.demo_modal_visible) {
-                                LCR.state.demo_modal_visible = true;
-                                $('#get_lic').modal('show');
-                            }
-                        }, 2500);
-                        if (!LCR.state.demo_label_visible) {
-                            LCR.state.demo_label_visible = true;
-                            //$('#demo_label').show();
-                            var htmlText = "<p id='browser_detect_text'>You are working in demo mode.</p>";
-                            PopupStack.add(htmlText);
-                            $('#demo_label').hide();
-                        }
-                    } else {
-                        if (LCR.state.demo_label_visible) {
-                            LCR.state.demo_label_visible = false;
-                            $('#demo_label').hide();
-                        }
-                    }
-                }
-                LCR.state.processing = false;
-            };
-        }
-    };
-
-    // LCR.checkAll = function() {
-    //     var trata = function(msg) {
-    //         console.log(msg);
-    //         if (msg != "\n") {
-    //             var callback = function(msg) {
-    //                 LCR.i2c0x20_res = msg + "";
-    //                 if (LCR.i2c0x20_res.indexOf("--") != -1 && !LCR.module_disconnected) {
-    //                     $('#modal_module_disconnected').modal('show');
-    //                     LCR.module_disconnected = true;
-    //                     LCR.startApp();
-    //                 } else //if (LCR.i2c0x20_res.indexOf("--") == -1 && LCR.module_disconnected)
-    //                 {
-    //                     LCR.module_disconnected = false;
-    //                     LCR.startApp();
-    //                 }
-    //             };
-    //             $.get('/check_0x20').done(callback).fail(callback);
-    //             LCR.i2ct_checked = true;
-    //         } else {
-    //             $("#i2c_install").modal('show');
-    //             LCR.i2ct_checked = false;
-    //         }
-    //     };
-
-    //     $.get('/check_i2c_tools').done(trata).fail(trata);
-    // }
-
-    // LCR.checkI2cTools = function() {
-    //     $.get('/check_i2c_tools').done(function(msg) {
-    //         console.log(msg);
-    //         if (msg != "\n")
-    //             LCR.i2ct_checked = true;
-    //         else
-    //             LCR.i2ct_checked = false;
-    //     }).fail(function(msg) {
-    //         console.log(msg);
-    //         if (msg != "\n")
-    //             LCR.i2ct_checked = true;
-    //         else
-    //             LCR.i2ct_checked = false;
-    //     });
-    // }
-
-    // LCR.installI2cTools = function() {
-    //     $.get('/install_i2c_tools').done(function(msg) {
-    //         console.log(msg);
-    //         if (LCR.unexpectedClose)
-    //             return;
-    //         var callback = function(msg) {
-    //             LCR.i2c0x20_res = msg + "";
-    //             if (!LCR.module_disconnected) {
-    //                 $('#modal_module_disconnected').modal('show');
-    //                 LCR.module_disconnected = true;
-    //             } else if (LCR.i2c0x20_res.indexOf("--") == -1 && LCR.module_disconnected) {
-    //                 LCR.module_disconnected = false;
-    //                 LCR.startApp();
-    //             }
-    //         };
-    //         $.get('/check_0x20').done(callback).fail(callback);
-    //         LCR.i2ct_checked = true;
-    //     }).fail(function(msg) {
-    //         console.log(msg);
-    //         if (LCR.unexpectedClose)
-    //             return;
-    //         // var callback = function(msg) {
-    //         //     LCR.i2c0x20_res = msg + "";
-    //         //     if (LCR.i2c0x20_res.indexOf("--") != -1 && !LCR.module_disconnected) {
-    //         //         $('#modal_module_disconnected').modal('show');
-    //         //         LCR.module_disconnected = true;
-    //         //     } else if (LCR.i2c0x20_res.indexOf("--") == -1 && LCR.module_disconnected) {
-    //         //         LCR.module_disconnected = false;
-    //         //         LCR.startApp();
-    //         //     }
-    //         // };
-    //         // $.get('/check_0x20').done(callback).fail(callback);
-    //         LCR.module_disconnected = true;
-    //         LCR.i2ct_checked = true;
-    //     });
-    // }
+    $('#restart_app_btn').on('click', function() {
+        location.reload();
+    });
 
     LCR.processParameters = function(new_params) {
 
-        var old_params = $.extend(true, {}, LCR.params.orig);
-
-        var send_all_params = Object.keys(new_params).indexOf('send_all_params') != -1;
         for (var param_name in new_params) {
-            LCR.params.orig[param_name] = new_params[param_name];
+            CLIENT.params.orig[param_name] = new_params[param_name];
 
             if (param_name == 'LCR_SHUNT') {
                 let shunt_text = "";
@@ -432,7 +153,7 @@
                 }
                 $('#lb_shunt').empty().append(shunt_text);
             }
-            
+
             if (param_name.includes("LCR_L")){
                 new_params[param_name].value /= 100000;
             }
@@ -455,7 +176,7 @@
                     LCR.module_disconnected = true;
                 } else {
                     if (LCR.module_disconnected == true) {
-                        LCR.startApp();
+                        CLIENT.startApp();
                         LCR.module_disconnected = false;
                         return;
                     }
@@ -554,7 +275,7 @@
                 console.log("CUrrent meas value: " + new_params[param_name].value);
             }
             if (param_name == 'is_demo')
-                LCR.params.orig['is_demo'] = new_params['is_demo'].value;
+                CLIENT.params.orig['is_demo'] = new_params['is_demo'].value;
 
             // console.log(LCR.displ_params.prim);
             var quantity = param_name.substr(0, param_name.length - 4);
@@ -589,18 +310,18 @@
 
     // Sends to server modified parameters
     LCR.sendParams = function() {
-        if ($.isEmptyObject(LCR.params.local)) {
+        if ($.isEmptyObject(CLIENT.params.local)) {
             return false;
         }
 
-        if (!LCR.state.socket_opened) {
+        if (!CLIENT.state.socket_opened) {
             console.log('ERROR: Cannot save changes, socket not opened');
             return false;
         }
 
-        LCR.params.local['in_command'] = { value: 'send_all_params' };
-        LCR.ws.send(JSON.stringify({ parameters: LCR.params.local }));
-        LCR.params.local = {};
+        CLIENT.params.local['in_command'] = { value: 'send_all_params' };
+        CLIENT.ws.send(JSON.stringify({ parameters: CLIENT.params.local }));
+        CLIENT.params.local = {};
 
         return true;
     };
@@ -609,14 +330,6 @@
 }(window.LCR = window.LCR || {}, jQuery));
 
 $(function() {
-    // $('#bt_install_i2c').click(function() {
-    //     LCR.installI2cTools();
-    // });
-
-    // $('#bt_close_app1, #bt_close_app2').click(function() {
-    //     //window.location.assign('/');
-    //     $('#modal_module_disconnected').modal('hide');
-    // });
 
     var reloaded = $.cookie("lcr_forced_reload");
     if (reloaded == undefined || reloaded == "false") {
@@ -624,30 +337,7 @@ $(function() {
         window.location.reload(true);
     }
 
-    LCR.client_id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        var r = Math.random() * 16 | 0,
-            v = c == 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-
-    $.ajax({
-        url: '/set_client_id', //Server script to process data
-        type: 'POST',
-        //Ajax events
-        //beforeSend: beforeSendHandler,
-        success: function(e) { console.log(e); },
-        error: function(e) { console.log(e); },
-        // Form data
-        data: LCR.client_id,
-        //Options to tell jQuery not to process data or worry about content-type.
-        cache: false,
-        contentType: false,
-        processData: false
-    });
-
-    LCR.checkStatus();
-
-    //Header options. Prevent aggressive firefox caching
+       //Header options. Prevent aggressive firefox caching
     $("html :checkbox").attr("autocomplete", "off");
 
     console.log('Processing on site events');
@@ -660,10 +350,10 @@ $(function() {
 
         //Get value
         var freq = parseInt($("#LCR_FREQUENCY").val());
-        LCR.params.local['LCR_FREQ'] = { value: freq };
+        CLIENT.params.local['LCR_FREQ'] = { value: freq };
         var shunt = parseInt($("#LCR_SHUNT").val());
-        LCR.params.local['LCR_SHUNT'] = { value: freq };
-        LCR.params.local['LCR_RUN'] = { value: true };
+        CLIENT.params.local['LCR_SHUNT'] = { value: freq };
+        CLIENT.params.local['LCR_RUN'] = { value: true };
         LCR.sendParams();
     });
 
@@ -672,7 +362,7 @@ $(function() {
         ev.preventDefault();
         $('#LCR_HOLD').hide();
         $('#LCR_START').css('display', 'block');
-        LCR.params.local['LCR_RUN'] = { value: false };
+        CLIENT.params.local['LCR_RUN'] = { value: false };
         LCR.displ_params.prim_val = $('#lb_prim_displ').text();
         LCR.displ_params.sec_val = $('#lb_sec_displ').text();
         LCR.sendParams();
@@ -680,7 +370,7 @@ $(function() {
 
     $('#btn_c_meas').on('click', function(ev) {
         //ev.preventDefault();
-        LCR.params.local['LCR_M_RESET'] = { value: true };
+        CLIENT.params.local['LCR_M_RESET'] = { value: true };
         LCR.sendParams();
     });
 
@@ -689,15 +379,15 @@ $(function() {
         ev.preventDefault();
         $('#LCR_HOLD').hide();
         $('#LCR_START').css('display', 'block');
-        LCR.params.local['LCR_RUN'] = { value: false };
+        CLIENT.params.local['LCR_RUN'] = { value: false };
         LCR.sendParams();
         $('#modal_calib_start').modal('show');
     });
 
     $('#bt_calib_start').on('click', function(ev) {
         ev.preventDefault();
-        LCR.params.local['LCR_CALIB_MODE'] = { value: 1 };
-        LCR.params.local['LCR_CALIBRATION'] = { value: true };
+        CLIENT.params.local['LCR_CALIB_MODE'] = { value: 1 };
+        CLIENT.params.local['LCR_CALIBRATION'] = { value: true };
         $('#modal_calib_start').modal('hide');
         $('#modal_calib_open').modal('show');
         LCR.sendParams();
@@ -705,16 +395,16 @@ $(function() {
 
     $('#bt_calib_open').on('click', function(ev) {
         ev.preventDefault();
-        LCR.params.local['LCR_CALIB_MODE'] = { value: 2 };
-        LCR.params.local['LCR_CALIBRATION'] = { value: true };
+        CLIENT.params.local['LCR_CALIB_MODE'] = { value: 2 };
+        CLIENT.params.local['LCR_CALIBRATION'] = { value: true };
         $('#modal_calib_open').modal('hide');
         $('#modal_calib_short').modal('show');
         LCR.sendParams();
         setTimeout(function() {
             return;
         }, 100);
-        LCR.params.local['LCR_CALIB_MODE'] = { value: 0 };
-        LCR.params.local['LCR_CALIBRATION'] = { value: true };
+        CLIENT.params.local['LCR_CALIB_MODE'] = { value: 0 };
+        CLIENT.params.local['LCR_CALIBRATION'] = { value: true };
         LCR.sendParams();
     });
 
@@ -742,12 +432,12 @@ $(function() {
 
     $('#LCR_FREQUENCY').change(function() {
         $('#meas_freq_d').empty().append($('option:selected', $(this)).text());
-        LCR.params.local['LCR_FREQ'] = { value: parseInt(this.value) };
+        CLIENT.params.local['LCR_FREQ'] = { value: parseInt(this.value) };
         LCR.sendParams();
     });
 
     $('#LCR_SHUNT').change(function() {
-        LCR.params.local['LCR_SHUNT'] = { value: parseInt(this.value) };
+        CLIENT.params.local['LCR_SHUNT'] = { value: parseInt(this.value) };
         LCR.sendParams();
     });
 
@@ -791,16 +481,16 @@ $(function() {
         }
 
         //Disable manual model, when switching quantities
-        LCR.params.local['LCR_RANGE'] = { value: 0 };
+        CLIENT.params.local['LCR_RANGE'] = { value: 0 };
         $('#cb_manual').prop("checked", false);
         $('#cb_auto').prop("checked", true);
 
-        if (LCR.params.orig['LCR_TOLERANCE'].value != 0) {
-            LCR.params.local['LCR_TOLERANCE'] = { value: LCR.selected_meas };
+        if (CLIENT.params.orig['LCR_TOLERANCE'].value != 0) {
+            CLIENT.params.local['LCR_TOLERANCE'] = { value: LCR.selected_meas };
         }
 
-        if (LCR.params.orig['LCR_RELATIVE'].value != 0) {
-            LCR.params.local['LCR_RELATIVE'] = { value: LCR.selected_meas };
+        if (CLIENT.params.orig['LCR_RELATIVE'].value != 0) {
+            CLIENT.params.local['LCR_RELATIVE'] = { value: LCR.selected_meas };
         }
 
         LCR.data_log.prim_display = this.id;
@@ -831,11 +521,11 @@ $(function() {
 
         if (!LCR.secondary_meas.apply_tolerance) {
             LCR.secondary_meas.apply_relative = false;
-            LCR.params.local['LCR_RELATIVE'] = { value: 0 };
+            CLIENT.params.local['LCR_RELATIVE'] = { value: 0 };
             $('#cb_rel').prop("checked", false);
             LCR.sendParams();
             LCR.secondary_meas.apply_tolerance = true;
-            LCR.params.local['LCR_TOLERANCE'] = { value: LCR.selected_meas };
+            CLIENT.params.local['LCR_TOLERANCE'] = { value: LCR.selected_meas };
             $('#lb_prim_displ').empty().append("100%");
             $('#lb_prim_displ_units').empty();
             $('#lb_sec_displ_units').empty();
@@ -843,7 +533,7 @@ $(function() {
             $('#rec_lb').css('display', 'block');
         } else {
             LCR.secondary_meas.apply_tolerance = false;
-            LCR.params.local['LCR_TOLERANCE'] = { value: 0 };
+            CLIENT.params.local['LCR_TOLERANCE'] = { value: 0 };
             $('#rec_image').css('display', 'none');
             $('#rec_lb').css('display', 'none');
             $('#cb_tol').prop("checked", false);
@@ -859,36 +549,36 @@ $(function() {
 
         if (!LCR.secondary_meas.apply_relative) {
             LCR.secondary_meas.apply_relative = true;
-            LCR.params.local['LCR_RELATIVE'] = { value: LCR.selected_meas };
+            CLIENT.params.local['LCR_RELATIVE'] = { value: LCR.selected_meas };
         } else {
             LCR.secondary_meas.apply_relative = false;
-            LCR.params.local['LCR_RELATIVE'] = { value: 0 };
+            CLIENT.params.local['LCR_RELATIVE'] = { value: 0 };
             $('#cb_rel').prop("checked", false);
         }
         LCR.sendParams();
     });
 
     $('#cb_ser').click(function() {
-        LCR.params.local['LCR_SERIES'] = { value: true };
+        CLIENT.params.local['LCR_SERIES'] = { value: true };
         LCR.sendParams();
     });
 
     $('#cb_paralel').click(function() {
-        LCR.params.local['LCR_SERIES'] = { value: false };
+        CLIENT.params.local['LCR_SERIES'] = { value: false };
         LCR.sendParams();
     });
 
     $('#cb_manual').click(function() {
 
-        LCR.params.local['LCR_RANGE'] = {
+        CLIENT.params.local['LCR_RANGE'] = {
             value: LCR.selected_meas
         }
 
-        LCR.params.local['LCR_RANGE_F'] = {
+        CLIENT.params.local['LCR_RANGE_F'] = {
             value: $('#sel_range_f :selected').val()
         }
 
-        LCR.params.local['LCR_RANGE_U'] = {
+        CLIENT.params.local['LCR_RANGE_U'] = {
             value: $('#sel_range_u :selected').val()
         }
 
@@ -899,21 +589,21 @@ $(function() {
     });
 
     $('#cb_auto').click(function() {
-        LCR.params.local['LCR_RANGE'] = { value: 0 };
+        CLIENT.params.local['LCR_RANGE'] = { value: 0 };
         $('#meas_mode_d').empty().append('Auto');
         LCR.sendParams();
     });
 
     $('#sel_range_u').change(function() {
-        if (LCR.params.orig['LCR_RANGE'].value != 0) {
+        if (CLIENT.params.orig['LCR_RANGE'].value != 0) {
             //LCR.displ_params.p_base_u = $('#sel_range_u :selected').text();
-            LCR.params.local['LCR_RANGE_U'] = { value: this.value };
+            CLIENT.params.local['LCR_RANGE_U'] = { value: this.value };
             LCR.sendParams();
         }
     });
 
     $('#sel_range_f').change(function() {
-        LCR.params.local['LCR_RANGE_F'] = { value: this.value };
+        CLIENT.params.local['LCR_RANGE_F'] = { value: this.value };
         LCR.sendParams();
     });
 
@@ -922,9 +612,6 @@ $(function() {
     Help.init(helpListLCR);
     Help.setState("idle");
 
-    // Everything prepared, start application
-    LCR.startApp();
-    //LCR.checkAll();
 });
 
 //TODO: This solution is ugly as fuck. Make it better!

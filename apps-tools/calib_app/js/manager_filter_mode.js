@@ -53,8 +53,8 @@ $(function() {
         $("#graph_cont").css("visibility", "hidden");
 
         OBJ.filterCalibChange = false;
-        SM.parametersCache["calib_sig"] = { value: 100 };
-        SM.sendParameters();
+        CLIENT.parametersCache["calib_sig"] = { value: 100 };
+        CLIENT.requestParameters();
         $('.filter_flipswitch').prop('checked', false);
         OBJ.filterHvLv = false;
         OBJ.filterHexMode = false;
@@ -192,9 +192,9 @@ $(function() {
         var x2_left = parseInt(x2.css('left'));
         OBJ.cursor_x1_Pos = (x1_left - 32) / (w - 40);
         OBJ.cursor_x2_Pos = (x2_left - 32) / (w - 40);
-        SM.parametersCache["cursor_x1"] = { value: OBJ.cursor_x1_Pos };
-        SM.parametersCache["cursor_x2"] = { value: OBJ.cursor_x2_Pos };
-        SM.sendParameters();
+        CLIENT.parametersCache["cursor_x1"] = { value: OBJ.cursor_x1_Pos };
+        CLIENT.parametersCache["cursor_x2"] = { value: OBJ.cursor_x2_Pos };
+        CLIENT.requestParameters();
         $('#cur_' + x + ', #cur_' + x + '_info').css('left', ui.position.left);
         OBJ.updateXCursorDiff();
 
@@ -248,8 +248,8 @@ $(function() {
 
     OBJ.filterSetMode = function(_mode, _state) {
         if (_mode == "FILTER_HV_LV_MODE") {
-            SM.parametersCache["filter_hv_lv_mode"] = { value: _state };
-            SM.sendParameters2("filter_hv_lv_mode");
+            CLIENT.parametersCache["filter_hv_lv_mode"] = { value: _state };
+            CLIENT.sendParameters();
             OBJ.filterHvLv = _state;
             if (OBJ.filterGraphCache !== undefined) {
                 delete OBJ.filterGraphCache;
@@ -261,9 +261,9 @@ $(function() {
             OBJ.filterUpdateCoff();
         }
         if (_mode == "FILTER_DAC_CH1") {
-            SM.parametersCache["filt_gen1_enable"] = { value: _state };
-            SM.parametersCache["filt_gen2_enable"] = { value: _state };
-            SM.sendParameters();
+            CLIENT.parametersCache["filt_gen1_enable"] = { value: _state };
+            CLIENT.parametersCache["filt_gen2_enable"] = { value: _state };
+            CLIENT.requestParameters();
         }
 
         if (_mode == "am_filt_switch") {
@@ -289,8 +289,8 @@ $(function() {
                 }
             }
             OBJ.filtAutoMode = _state;
-            SM.parametersCache["filt_calib_auto_mode"] = { value: OBJ.filtAutoMode };
-            SM.sendParameters();
+            CLIENT.parametersCache["filt_calib_auto_mode"] = { value: OBJ.filtAutoMode };
+            CLIENT.requestParameters();
         }
     }
 
@@ -368,8 +368,8 @@ $(function() {
 
     OBJ.filterConnectCallback = function() {
         $('#zoom_img').click(function() {
-            SM.parametersCache["zoom_mode"] = { value: OBJ.zoomMode ? false : true };
-            SM.sendParameters2("zoom_mode");
+            CLIENT.parametersCache["zoom_mode"] = { value: OBJ.zoomMode ? false : true };
+            CLIENT.sendParameters();
         });
 
         $("#B_FILTER_AUTO").click(function() {
@@ -381,7 +381,7 @@ $(function() {
                         $("#am_filt_dialog_text").text("Please set HV mode and connect IN1, IN2, IN3 and IN4 to reference signal source and set SQUARE SIGNAL 1kHz.");
                         $("#am_filt_dialog_input").show();
                         $("#SS_FILT_REF_VOLT").val(OBJ.filtAutoModeHVRef);
-                        SM.parametersCache["filt_calib_ref_amp"] = { value: OBJ.filtAutoModeHVRef };
+                        CLIENT.parametersCache["filt_calib_ref_amp"] = { value: OBJ.filtAutoModeHVRef };
                     }
                 } else {
                     {
@@ -389,7 +389,7 @@ $(function() {
                         $("#am_filt_dialog_text").text("Please set LV mode and connect IN1, IN2, IN3 and IN4 to reference signal source and set SQUARE SIGNAL 1kHz.");
                         $("#am_filt_dialog_input").show();
                         $("#SS_FILT_REF_VOLT").val(OBJ.filtAutoModeLVRef);
-                        SM.parametersCache["filt_calib_ref_amp"] = { value: OBJ.filtAutoModeLVRef };
+                        CLIENT.parametersCache["filt_calib_ref_amp"] = { value: OBJ.filtAutoModeLVRef };
                     }
                 }
             }else{
@@ -403,7 +403,7 @@ $(function() {
                         $("#am_filt_dialog_text").text("Please set HV mode and connect IN1 and IN2 to reference signal source and set SQUARE SIGNAL 1kHz.");
                         $("#am_filt_dialog_input").show();
                         $("#SS_FILT_REF_VOLT").val(OBJ.filtAutoModeHVRef);
-                        SM.parametersCache["filt_calib_ref_amp"] = { value: OBJ.filtAutoModeHVRef };
+                        CLIENT.parametersCache["filt_calib_ref_amp"] = { value: OBJ.filtAutoModeHVRef };
                     }
                 } else {
                     if ($("#am_filt_switch").is(':checked')) {
@@ -415,12 +415,12 @@ $(function() {
                         $("#am_filt_dialog_text").text("Please set LV mode and connect IN1 and IN2 to reference signal source and set SQUARE SIGNAL 1kHz.");
                         $("#am_filt_dialog_input").show();
                         $("#SS_FILT_REF_VOLT").val(OBJ.filtAutoModeLVRef);
-                        SM.parametersCache["filt_calib_ref_amp"] = { value: OBJ.filtAutoModeLVRef };
+                        CLIENT.parametersCache["filt_calib_ref_amp"] = { value: OBJ.filtAutoModeLVRef };
                     }
                 }
             }
-            SM.parametersCache["filt_calib_auto_mode"] = { value: OBJ.filtAutoMode };
-            SM.sendParameters();
+            CLIENT.parametersCache["filt_calib_auto_mode"] = { value: OBJ.filtAutoMode };
+            CLIENT.requestParameters();
 
 
             $("#am_filt_external_btn").off('click');
@@ -429,8 +429,8 @@ $(function() {
                 $('body').removeClass("loaded")
                 $('#PROGRESS').css("display", "block");
                 $('#PROGRESS').attr('value', 0);
-                SM.parametersCache["filt_calib_step"] = { value: 1 };
-                SM.sendParameters();
+                CLIENT.parametersCache["filt_calib_step"] = { value: 1 };
+                CLIENT.requestParameters();
                 $("#am_dialog_filter_calib").modal('hide');
             });
             $('#am_filt_cancel_btn').on('click', function() {});

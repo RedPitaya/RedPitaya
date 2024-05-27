@@ -73,7 +73,7 @@
         });
 
         $('#reset_settings').click(function() {
-            SPEC.params.local['RESET_CONFIG_SETTINGS'] = { value: 1 };
+            CLIENT.params.local['RESET_CONFIG_SETTINGS'] = { value: 1 };
             SPEC.sendParams();
         });
 

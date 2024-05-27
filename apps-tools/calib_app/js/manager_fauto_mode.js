@@ -253,8 +253,8 @@
                     $("#am_a_filt_dialog_text").text("Set jumpers to LV position and connect IN1 and IN2 to external signal generator 1kHz square signal.");
                     if (OBJ.famStates[OBJ.famCurrentTest].hasOwnProperty("input")) {
                         $("#SS_A_FILT_REF_VOLT").val(OBJ.famStates[OBJ.famCurrentTest].input);
-                        SM.parametersCache["f_ref_volt"] = { value: OBJ.famStates[OBJ.famCurrentTest].input };
-                        SM.sendParameters2("f_ref_volt");
+                        CLIENT.parametersCache["f_ref_volt"] = { value: OBJ.famStates[OBJ.famCurrentTest].input };
+                        CLIENT.sendParameters();
                     }
                     $("#am_a_filt_dialog_input").show();
                 }
@@ -268,8 +268,8 @@
                     $("#am_a_filt_dialog_text").text("Set jumpers to HV position and connect IN1 and IN2 to external signal generator 1kHz square signal.");
                     if (OBJ.famStates[OBJ.famCurrentTest].hasOwnProperty("input")) {
                         $("#SS_A_FILT_REF_VOLT").val(OBJ.famStates[OBJ.famCurrentTest].input);
-                        SM.parametersCache["f_ref_volt"] = { value: OBJ.famStates[OBJ.famCurrentTest].input };
-                        SM.sendParameters2("f_ref_volt");
+                        CLIENT.parametersCache["f_ref_volt"] = { value: OBJ.famStates[OBJ.famCurrentTest].input };
+                        CLIENT.sendParameters();
                     }
                     $("#am_a_filt_dialog_input").show();
                 }
@@ -301,10 +301,10 @@
     }
 
     OBJ.famSendState = function(_state) {
-        SM.parametersCache["F_SS_NEXTSTEP"] = { value: _state };
-        SM.parametersCache["F_SS_STATE"] = { value: _state - 1 };
+        CLIENT.parametersCache["F_SS_NEXTSTEP"] = { value: _state };
+        CLIENT.parametersCache["F_SS_STATE"] = { value: _state - 1 };
         OBJ.famCurrentSuccesTest = _state - 1;
-        SM.sendParameters();
+        CLIENT.requestParameters();
     }
 
     OBJ.famSetCalibAACh1 = function(_value) {
@@ -534,8 +534,8 @@
                     }
                 }
             }
-            SM.parametersCache["f_external_gen"] = { value: !_state };
-            SM.sendParameters2("f_external_gen");
+            CLIENT.parametersCache["f_external_gen"] = { value: !_state };
+            CLIENT.sendParameters();
         }
     }
 

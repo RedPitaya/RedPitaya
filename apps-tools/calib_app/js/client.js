@@ -8,7 +8,7 @@
 
     // App configuration
     CLIENT.config = {};
-    CLIENT.config.app_id = 'impedance_analyzer';
+    CLIENT.config.app_id = 'calib_app';
     CLIENT.config.server_ip = ''; // Leave empty on production, it is used for testing only
     CLIENT.config.search = "?type=run" //location.search
     CLIENT.config.start_app_url = (CLIENT.config.server_ip.length ? 'http://' + CLIENT.config.server_ip : '') + '/bazaar?start=' + CLIENT.config.app_id + '?' + CLIENT.config.search.substr(1);
@@ -269,7 +269,7 @@
     //Handlers
     var signalsHandler = function() {
         if (CLIENT.signalStack.length > 0) {
-            MAIN.processSignals(CLIENT.signalStack[0])
+            OBJ.filterSignal = CLIENT.signalStack[0].wave;
             CLIENT.signalStack.splice(0, 1);
         }
         if (CLIENT.signalStack.length > 2)
@@ -282,9 +282,18 @@
             console.log(new_params)
         }
 
+        if (!new_params['RP_MODEL_STR']){
+            if (SM.rp_model === ""){
+                CLIENT.requestParameters();
+                return;
+            }
+        }else{
+            SM.rp_model = new_params['RP_MODEL_STR'].value;
+        }
+
         for (var param_name in new_params) {
-            if (MAIN.param_callbacks[param_name] !== undefined)
-                MAIN.param_callbacks[param_name](new_params);
+            if (SM.param_callbacks[param_name] !== undefined)
+                SM.param_callbacks[param_name](new_params[param_name]);
             CLIENT.params.orig[param_name] = new_params[param_name];
         }
         // Resize double-headed arrows showing the difference between cursors
@@ -299,8 +308,8 @@
 
 
     //Set handlers timers
-    setInterval(signalsHandler, 10);
-    setInterval(parametersHandler, 10);
+    setInterval(signalsHandler, 30);
+    setInterval(parametersHandler, 30);
 
 }(window.CLIENT = window.CLIENT || {}, jQuery));
 

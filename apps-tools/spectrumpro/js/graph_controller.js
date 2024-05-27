@@ -323,18 +323,18 @@
     UI_GRAPH.resetZoom = function() {
         if (!(SPEC.graphs && SPEC.graphs.elem))
             return;
-        if (SPEC.params.orig['xmin'] == undefined) return;
-        if (SPEC.params.orig['xmax'] == undefined) return;
+        if (CLIENT.params.orig['xmin'] == undefined) return;
+        if (CLIENT.params.orig['xmax'] == undefined) return;
 
         var plot = SPEC.graphs.plot;
         var curr_options = plot.getOptions();
-        curr_options.xaxes[0].min = SPEC.params.orig['xmin'].value / Math.pow(1000,SPEC.config.unit);
-        curr_options.xaxes[0].max = SPEC.params.orig['xmax'].value / Math.pow(1000,SPEC.config.unit);
+        curr_options.xaxes[0].min = CLIENT.params.orig['xmin'].value / Math.pow(1000,SPEC.config.unit);
+        curr_options.xaxes[0].max = CLIENT.params.orig['xmax'].value / Math.pow(1000,SPEC.config.unit);
         curr_options.yaxes[0].min = UI_GRAPH.ymin;
         curr_options.yaxes[0].max = UI_GRAPH.ymax;
 
-        SPEC.sendParameters({'xmin':SPEC.params.orig['xmin'].value,
-                             'xmax':SPEC.params.orig['xmax'].value,
+        SPEC.sendParameters({'xmin':CLIENT.params.orig['xmin'].value,
+                             'xmax':CLIENT.params.orig['xmax'].value,
                              'view_port_start': SPEC.config.xmin,
                              'view_port_end': SPEC.config.xmax,
                             });
@@ -356,21 +356,21 @@
         if (SPEC.graphs && SPEC.graphs.elem) {
             var plot_elem = SPEC.graphs.elem;
 
-                if ((SPEC.params.orig['xmin'] === undefined) || (SPEC.params.orig['xmax'] === undefined)) return
+                if ((CLIENT.params.orig['xmin'] === undefined) || (CLIENT.params.orig['xmax'] === undefined)) return
                 var plot = SPEC.graphs.plot;
-                SPEC.params.local['xmin'] = { value: SPEC.params.orig['xmin'].value };
-                SPEC.params.local['xmax'] = { value: SPEC.params.orig['xmax'].value };
+                CLIENT.params.local['xmin'] = { value: CLIENT.params.orig['xmin'].value };
+                CLIENT.params.local['xmax'] = { value: CLIENT.params.orig['xmax'].value };
 
                 var axes = plot.getAxes();
                 var options = plot.getOptions();
 
-                options.xaxes[0].min = SPEC.params.local['xmin'].value / Math.pow(1000,SPEC.config.unit);
-                options.xaxes[0].max = SPEC.params.local['xmax'].value / Math.pow(1000,SPEC.config.unit);
+                options.xaxes[0].min = CLIENT.params.local['xmin'].value / Math.pow(1000,SPEC.config.unit);
+                options.xaxes[0].max = CLIENT.params.local['xmax'].value / Math.pow(1000,SPEC.config.unit);
                 options.yaxes[0].min = axes.yaxis.min;
                 options.yaxes[0].max = axes.yaxis.max;
                 SPEC.sendParameters({
-                    'view_port_start': SPEC.params.local['xmin'].value ,
-                    'view_port_end': SPEC.params.local['xmax'].value ,
+                    'view_port_start': CLIENT.params.local['xmin'].value ,
+                    'view_port_end': CLIENT.params.local['xmax'].value ,
                 });
                 plot.setupGrid();
                 plot.draw();

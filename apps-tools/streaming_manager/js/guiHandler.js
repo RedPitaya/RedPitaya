@@ -47,8 +47,8 @@ var portNumberChange = function(event) {
     else if ($("#SS_PORT_NUMBER").val() < 1)
         $("#SS_PORT_NUMBER").val(8900);
 
-    SM.parametersCache["SS_PORT_NUMBER"] = { value: $("#SS_PORT_NUMBER").val() };
-    SM.sendParameters();
+    CLIENT.parametersCache["SS_PORT_NUMBER"] = { value: $("#SS_PORT_NUMBER").val() };
+    CLIENT.sendParameters();
 }
 
 
@@ -65,12 +65,12 @@ var samplesNumberChange = function(event) {
             samples = max_val;
             $("#SS_SAMPLES").val(max_val);
         }
-        SM.parametersCache["SS_SAMPLES"] = { value: samples };
+        CLIENT.parametersCache["SS_SAMPLES"] = { value: samples };
     } else {
         $("#SS_SAMPLES").val("ALL");
-        SM.parametersCache["SS_SAMPLES"] = { value: -1 };
+        CLIENT.parametersCache["SS_SAMPLES"] = { value: -1 };
     }
-    SM.sendParameters();
+    CLIENT.sendParameters();
 }
 
 
@@ -82,38 +82,38 @@ var ipAddressChange = function(event) {
         return;
     }
 
-    SM.parametersCache["SS_IP_ADDR"] = { value: $("#SS_IP_ADDR").val() };
-    SM.sendParameters();
+    CLIENT.parametersCache["SS_IP_ADDR"] = { value: $("#SS_IP_ADDR").val() };
+    CLIENT.sendParameters();
 }
 
 
 var sendByNetChange = function(event) {
-    SM.parametersCache["SS_USE_FILE"] = { value: false };
-    SM.sendParameters();
+    CLIENT.parametersCache["SS_USE_FILE"] = { value: false };
+    CLIENT.sendParameters();
     SM.updateLimits();
 }
 
 var sendToFileChange = function(event) {
-    SM.parametersCache["SS_USE_FILE"] = { value: true };
-    SM.sendParameters();
+    CLIENT.parametersCache["SS_USE_FILE"] = { value: true };
+    CLIENT.sendParameters();
     SM.updateLimits();
 }
 
 var attenuatorChange = function(event) {
-    SM.parametersCache["SS_ATTENUATOR"] = { value: $("#SS_ATTENUATOR option:selected").val() };
-    SM.sendParameters();
+    CLIENT.parametersCache["SS_ATTENUATOR"] = { value: $("#SS_ATTENUATOR option:selected").val() };
+    CLIENT.sendParameters();
     SM.updateLimits();
 }
 
 var acdcChange = function(event) {
-    SM.parametersCache["SS_AC_DC"] = { value: $("#SS_AC_DC option:selected").val() };
-    SM.sendParameters();
+    CLIENT.parametersCache["SS_AC_DC"] = { value: $("#SS_AC_DC option:selected").val() };
+    CLIENT.sendParameters();
     SM.updateLimits();
 }
 
 var formatСhange = function(event) {
-    SM.parametersCache["SS_FORMAT"] = { value: $("#SS_FORMAT option:selected").val() };
-    SM.sendParameters();
+    CLIENT.parametersCache["SS_FORMAT"] = { value: $("#SS_FORMAT option:selected").val() };
+    CLIENT.sendParameters();
 }
 
 var rateFocusOut = function(event) {
@@ -123,8 +123,8 @@ var rateFocusOut = function(event) {
 
 var rateFocusOutValue = function() {
 
-    SM.parametersCache["SS_RATE"] = { value: SM.ss_rate };
-    SM.sendParameters();
+    CLIENT.parametersCache["SS_RATE"] = { value: SM.ss_rate };
+    CLIENT.sendParameters();
     console.log("SEND RATE " + SM.ss_rate);
 
     text = "";
@@ -149,96 +149,96 @@ var setMode = function(_mode, _state) {
     }
 
     if (_mode == "SS_PROTOCOL"){
-        SM.parametersCache["SS_PROTOCOL"] = { value: _state ? 1 : 0};
-        SM.sendParameters();
+        CLIENT.parametersCache["SS_PROTOCOL"] = { value: _state ? 1 : 0};
+        CLIENT.sendParameters();
     }
 
     if (_mode == "SS_USE_CALIB"){
-        SM.parametersCache["SS_USE_CALIB"] = { value: _state ? 1 : 0};
-        SM.sendParameters();
+        CLIENT.parametersCache["SS_USE_CALIB"] = { value: _state ? 1 : 0};
+        CLIENT.sendParameters();
     }
 
     if (_mode == "SS_RESOLUTION"){
-        SM.parametersCache["SS_RESOLUTION"] = { value: _state ? 1 : 0};
-        SM.sendParameters();
+        CLIENT.parametersCache["SS_RESOLUTION"] = { value: _state ? 1 : 0};
+        CLIENT.sendParameters();
     }
 
     if (_mode == "SS_SAVE_MODE"){
-        SM.parametersCache["SS_SAVE_MODE"] = { value: _state ? 1 : 0};
-        SM.sendParameters();
+        CLIENT.parametersCache["SS_SAVE_MODE"] = { value: _state ? 1 : 0};
+        CLIENT.sendParameters();
     }
 
     if (_mode == "SS_CH1_ENABLE"){
-        var curValue = SM.params.orig["SS_CHANNEL"] != undefined ? SM.params.orig["SS_CHANNEL"].value : 0;
-        SM.parametersCache["SS_CHANNEL"] = { value: (curValue & 0xE) | (_state ? 0x1 : 0x0) };
-        SM.sendParameters();
+        var curValue = CLIENT.params.orig["SS_CHANNEL"] != undefined ? CLIENT.params.orig["SS_CHANNEL"].value : 0;
+        CLIENT.parametersCache["SS_CHANNEL"] = { value: (curValue & 0xE) | (_state ? 0x1 : 0x0) };
+        CLIENT.sendParameters();
     }
 
     if (_mode == "SS_CH2_ENABLE"){
-        var curValue = SM.params.orig["SS_CHANNEL"] != undefined ? SM.params.orig["SS_CHANNEL"].value : 0;
-        SM.parametersCache["SS_CHANNEL"] = { value: (curValue & 0xD) | (_state ? 0x2 : 0x0) };
-        SM.sendParameters();
+        var curValue = CLIENT.params.orig["SS_CHANNEL"] != undefined ? CLIENT.params.orig["SS_CHANNEL"].value : 0;
+        CLIENT.parametersCache["SS_CHANNEL"] = { value: (curValue & 0xD) | (_state ? 0x2 : 0x0) };
+        CLIENT.sendParameters();
     }
 
     if (_mode == "SS_CH3_ENABLE"){
-        var curValue = SM.params.orig["SS_CHANNEL"] != undefined ? SM.params.orig["SS_CHANNEL"].value : 0;
-        SM.parametersCache["SS_CHANNEL"] = { value: (curValue & 0xB) | (_state ? 0x4 : 0x0) };
-        SM.sendParameters();
+        var curValue = CLIENT.params.orig["SS_CHANNEL"] != undefined ? CLIENT.params.orig["SS_CHANNEL"].value : 0;
+        CLIENT.parametersCache["SS_CHANNEL"] = { value: (curValue & 0xB) | (_state ? 0x4 : 0x0) };
+        CLIENT.sendParameters();
     }
 
     if (_mode == "SS_CH4_ENABLE"){
-        var curValue = SM.params.orig["SS_CHANNEL"] != undefined ? SM.params.orig["SS_CHANNEL"].value : 0;
-        SM.parametersCache["SS_CHANNEL"] = { value: (curValue & 0x7) | (_state ? 0x8 : 0x0) };
-        SM.sendParameters();
+        var curValue = CLIENT.params.orig["SS_CHANNEL"] != undefined ? CLIENT.params.orig["SS_CHANNEL"].value : 0;
+        CLIENT.parametersCache["SS_CHANNEL"] = { value: (curValue & 0x7) | (_state ? 0x8 : 0x0) };
+        CLIENT.sendParameters();
     }
 
     if (_mode == "SS_CH1_ATTENUATOR"){
-        var curValue = SM.params.orig["SS_ATTENUATOR"] != undefined ? SM.params.orig["SS_ATTENUATOR"].value : 0;
-        SM.parametersCache["SS_ATTENUATOR"] = { value: (curValue & 0xE) | (_state ? 0x1 : 0x0) };
-        SM.sendParameters();
+        var curValue = CLIENT.params.orig["SS_ATTENUATOR"] != undefined ? CLIENT.params.orig["SS_ATTENUATOR"].value : 0;
+        CLIENT.parametersCache["SS_ATTENUATOR"] = { value: (curValue & 0xE) | (_state ? 0x1 : 0x0) };
+        CLIENT.sendParameters();
     }
 
     if (_mode == "SS_CH2_ATTENUATOR"){
-        var curValue = SM.params.orig["SS_ATTENUATOR"] != undefined ? SM.params.orig["SS_ATTENUATOR"].value : 0;
-        SM.parametersCache["SS_ATTENUATOR"] = { value: (curValue & 0xD) | (_state ? 0x2 : 0x0) };
-        SM.sendParameters();
+        var curValue = CLIENT.params.orig["SS_ATTENUATOR"] != undefined ? CLIENT.params.orig["SS_ATTENUATOR"].value : 0;
+        CLIENT.parametersCache["SS_ATTENUATOR"] = { value: (curValue & 0xD) | (_state ? 0x2 : 0x0) };
+        CLIENT.sendParameters();
     }
 
     if (_mode == "SS_CH3_ATTENUATOR"){
-        var curValue = SM.params.orig["SS_ATTENUATOR"] != undefined ? SM.params.orig["SS_ATTENUATOR"].value : 0;
-        SM.parametersCache["SS_ATTENUATOR"] = { value: (curValue & 0xB) | (_state ? 0x4 : 0x0) };
-        SM.sendParameters();
+        var curValue = CLIENT.params.orig["SS_ATTENUATOR"] != undefined ? CLIENT.params.orig["SS_ATTENUATOR"].value : 0;
+        CLIENT.parametersCache["SS_ATTENUATOR"] = { value: (curValue & 0xB) | (_state ? 0x4 : 0x0) };
+        CLIENT.sendParameters();
     }
 
     if (_mode == "SS_CH4_ATTENUATOR"){
-        var curValue = SM.params.orig["SS_ATTENUATOR"] != undefined ? SM.params.orig["SS_ATTENUATOR"].value : 0;
-        SM.parametersCache["SS_ATTENUATOR"] = { value: (curValue & 0x7) | (_state ? 0x8 : 0x0) };
-        SM.sendParameters();
+        var curValue = CLIENT.params.orig["SS_ATTENUATOR"] != undefined ? CLIENT.params.orig["SS_ATTENUATOR"].value : 0;
+        CLIENT.parametersCache["SS_ATTENUATOR"] = { value: (curValue & 0x7) | (_state ? 0x8 : 0x0) };
+        CLIENT.sendParameters();
     }
 
 
     if (_mode == "SS_CH1_AC_DC"){
-        var curValue = SM.params.orig["SS_AC_DC"] != undefined ? SM.params.orig["SS_AC_DC"].value : 0;
-        SM.parametersCache["SS_AC_DC"] = { value: (curValue & 0xE) | (_state ? 0x1 : 0x0) };
-        SM.sendParameters();
+        var curValue = CLIENT.params.orig["SS_AC_DC"] != undefined ? CLIENT.params.orig["SS_AC_DC"].value : 0;
+        CLIENT.parametersCache["SS_AC_DC"] = { value: (curValue & 0xE) | (_state ? 0x1 : 0x0) };
+        CLIENT.sendParameters();
     }
 
     if (_mode == "SS_CH2_AC_DC"){
-        var curValue = SM.params.orig["SS_AC_DC"] != undefined ? SM.params.orig["SS_AC_DC"].value : 0;
-        SM.parametersCache["SS_AC_DC"] = { value: (curValue & 0xD) | (_state ? 0x2 : 0x0) };
-        SM.sendParameters();
+        var curValue = CLIENT.params.orig["SS_AC_DC"] != undefined ? CLIENT.params.orig["SS_AC_DC"].value : 0;
+        CLIENT.parametersCache["SS_AC_DC"] = { value: (curValue & 0xD) | (_state ? 0x2 : 0x0) };
+        CLIENT.sendParameters();
     }
 
     if (_mode == "SS_CH3_AC_DC"){
-        var curValue = SM.params.orig["SS_AC_DC"] != undefined ? SM.params.orig["SS_AC_DC"].value : 0;
-        SM.parametersCache["SS_AC_DC"] = { value: (curValue & 0xB) | (_state ? 0x4 : 0x0) };
-        SM.sendParameters();
+        var curValue = CLIENT.params.orig["SS_AC_DC"] != undefined ? CLIENT.params.orig["SS_AC_DC"].value : 0;
+        CLIENT.parametersCache["SS_AC_DC"] = { value: (curValue & 0xB) | (_state ? 0x4 : 0x0) };
+        CLIENT.sendParameters();
     }
 
     if (_mode == "SS_CH4_AC_DC"){
-        var curValue = SM.params.orig["SS_AC_DC"] != undefined ? SM.params.orig["SS_AC_DC"].value : 0;
-        SM.parametersCache["SS_AC_DC"] = { value: (curValue & 0x7) | (_state ? 0x8 : 0x0) };
-        SM.sendParameters();
+        var curValue = CLIENT.params.orig["SS_AC_DC"] != undefined ? CLIENT.params.orig["SS_AC_DC"].value : 0;
+        CLIENT.parametersCache["SS_AC_DC"] = { value: (curValue & 0x7) | (_state ? 0x8 : 0x0) };
+        CLIENT.sendParameters();
     }
 
 }

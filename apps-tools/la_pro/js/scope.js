@@ -581,7 +581,7 @@
     OSC.checkStatus = function() {
         $.ajax({
             method: "GET",
-            url: "/check_status",
+            url: "/la_check_status",
             timeout: 2000
         }).done(function(msg) {
             switch (OSC.changeStatusStep) {

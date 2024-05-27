@@ -9,6 +9,7 @@
 
 #include "common/version.h"
 #include "rp_hw-calib.h"
+#include "web/rp_client.h"
 
 #define CHECK_NAN_INF(X) if (std::isnan(X) || std::isinf(X)) X=0;
 
@@ -87,6 +88,9 @@ const char *rp_app_desc(void){
 int rp_app_init(void){
     fprintf(stderr, "Loading lcr meter version %s-%s.\n", VERSION_STR, REVISION_STR);
 
+	rp_WC_Init();
+    rp_WC_UpdateParameters(true);
+
     CDataManager::GetInstance()->SetParamInterval(parameterPeriiod.Value());
     lcrApp_lcrInit();
 
@@ -122,6 +126,9 @@ int rp_get_signals(float ***s, int *sig_num, int *sig_len) {
 void UpdateSignals(void){}
 
 void UpdateParams(void){
+
+	rp_WC_UpdateParameters(false);
+
     CDataManager::GetInstance()->SetParamInterval(parameterPeriiod.Value());
     CDataManager::GetInstance()->SendAllParams();
     bool moduleStatusFlag = false;
@@ -402,6 +409,7 @@ void OnNewParams(void){
     UpdateParams();
     //Returned changed data to the client.
     CDataManager::GetInstance()->SendAllParams();
+    rp_WC_OnNewParam();
 }
 
 void OnNewSignals(void){}

@@ -62,18 +62,16 @@
         SPEC.ch_max = [false,false,false,false];
         SPEC.ch_min = [false,false,false,false];
 
-        SPEC.startTime = 0;
-
         // App configuration
         SPEC.param_callbacks = {};
         SPEC.config = {};
-        SPEC.config.app_id = 'spectrumpro';
-        SPEC.config.server_ip = ''; // Leave empty on production, it is used for testing only
-        SPEC.config.start_app_url = window.location.origin + '/bazaar?start=' + SPEC.config.app_id;
-        SPEC.config.stop_app_url = window.location.origin + '/bazaar?stop=' + SPEC.config.app_id;
-        SPEC.config.socket_url = 'ws://' + window.location.host + '/wss';
+        // SPEC.config.app_id = 'spectrumpro';
+        // SPEC.config.server_ip = ''; // Leave empty on production, it is used for testing only
+        // SPEC.config.start_app_url = window.location.origin + '/bazaar?start=' + SPEC.config.app_id;
+        // SPEC.config.stop_app_url = window.location.origin + '/bazaar?stop=' + SPEC.config.app_id;
+        // SPEC.config.socket_url = 'ws://' + window.location.host + '/wss';
 
-        SPEC.config.socket_reconnect_timeout = 1000; // Milliseconds
+        // SPEC.config.socket_reconnect_timeout = 1000; // Milliseconds
         SPEC.config.graph_colors = {
             'ch1_view': '#f3ec1a',
             'ch2_view': '#31b44b',
@@ -112,12 +110,12 @@
         SPEC.arb_list = undefined;
 
 
-        SPEC.compressed_data = 0;
-        SPEC.decompressed_data = 0;
+        // SPEC.compressed_data = 0;
+        // SPEC.decompressed_data = 0;
         SPEC.refresh_times = [];
 
-        SPEC.parameterStack = [];
-        SPEC.signalStack = [];
+        // SPEC.parameterStack = [];
+        // SPEC.signalStack = [];
         SPEC.compressed_data = 0;
         SPEC.decompressed_data = 0;
 
@@ -139,60 +137,15 @@
             sweep_ch2_time:1
         };
 
-        // Params cache
-        SPEC.params = {
-            orig: {},
-            local: {}
-        };
-        // Other global variables
-        SPEC.ws = null;
         SPEC.graphs = {};
         SPEC.waterfalls = [];
 
         SPEC.datasets = [];
-        SPEC.unexpectedClose = false;
-
-
-        var g_PacketsRecv = 0;
-        var g_CpuLoad = 100.0;
-        var g_TotalMemory = 256.0;
-        var g_FreeMemory = 256.0;
 
         SPEC.result = {};
         SPEC.result.peakFreq = [-1,-1,-1,-1];
         SPEC.result.peakPower = [-1,-1,-1,-1];
 
-
-        SPEC.checkStatusTimer = undefined;
-        SPEC.changeStatusForRestart = false;
-        SPEC.changeStatusStep = 0;
-
-
-        // Starts the spectrum application on server
-        SPEC.startApp = function() {
-            $.get(
-                    SPEC.config.start_app_url
-                )
-                .done(function(dresult) {
-                    if (dresult.status == 'OK') {
-                        try {
-                            SPEC.connectWebSocket();
-                        } catch (e) {
-                            SPEC.startApp();
-                        }
-                    } else if (dresult.status == 'ERROR') {
-                        console.log(dresult.reason ? dresult.reason : 'Could not start the application (ERR1)');
-                        SPEC.startApp();
-                    } else {
-                        console.log('Could not start the application (ERR2)');
-                        SPEC.startApp();
-                    }
-                })
-                .fail(function() {
-                    console.log('Could not start the application (ERR3)');
-                    SPEC.startApp();
-                })
-        };
 
         SPEC.setModel = function(_value) {
             if (SPEC.rp_model === undefined) {
@@ -232,12 +185,12 @@
 
         };
 
-        var guiHandler = function() {
+        SPEC.guiHandler = function() {
 
-            if (SPEC.signalStack.length > 0) {
+            if (CLIENT.signalStack.length > 0) {
                 let p = performance.now();
                 if ((p - SPEC.lastUpdate) > SPEC.config.updateDelay){
-                    let signals = Object.assign({}, SPEC.signalStack[0]);
+                    let signals = Object.assign({}, CLIENT.signalStack[0]);
 
                     if (SPEC.clear) {
                         signals = [];
@@ -246,32 +199,23 @@
 
                     // create ch3, ch4, ch5, ch6 signals for min/max values
                     SPEC.processSignals(signals);
-                    SPEC.signalStack.splice(0, 1);
+                    CLIENT.signalStack.splice(0, 1);
                     SPEC.peakUnit();
 
                     SPEC.lastUpdate = p;
                 }
             }
-            if (SPEC.signalStack.length > 2)
-                SPEC.signalStack.length = [];
-        }
-
-        var parametersHandler = function() {
-            if (SPEC.parameterStack.length > 0) {
-                SPEC.processParameters(SPEC.parameterStack[0]);
-                SPEC.parameterStack.splice(0, 2);
-            }
+            if (CLIENT.signalStack.length > 2)
+                CLIENT.signalStack.length = [];
         }
 
         var performanceHandler = function() {
-            $('#throughput_view2').text((SPEC.compressed_data / 1024).toFixed(2) + "kB/s");
+            $('#throughput_view2').text((CLIENT.compressed_data / 1024).toFixed(2) + "kB/s");
             if ($('#connection_icon').attr('src') !== '../assets/images/good_net.png')
                 $('#connection_icon').attr('src', '../assets/images/good_net.png');
             $('#connection_meter').attr('title', 'It seems like your connection is ok');
-            //console.log("PPS: " + g_PacketsRecv)
-            g_PacketsRecv = 0;
-            SPEC.compressed_data = 0;
-            SPEC.decompressed_data = 0;
+            CLIENT.compressed_data = 0;
+            CLIENT.decompressed_data = 0;
         }
 
         SPEC.updateJoystickPosition = function(){
@@ -281,176 +225,104 @@
             $("#joystick").css('top',xpos);
         };
 
-        SPEC.reloadPage = function() {
-            $.ajax({
-                method: "GET",
-                url: "/get_client_id",
-                timeout: 2000
-            }).done(function(msg) {
-                if (msg.trim() === SPEC.client_id) {
-                    location.reload();
-                } else {
-                    $('body').removeClass('user_lost');
-                    SPEC.stopCheckStatus();
-                }
-            }).fail(function(msg) {
-                console.log(msg);
-                $('body').removeClass('connection_lost');
-            });
-        }
-
-        SPEC.startCheckStatus = function() {
-            if (SPEC.checkStatusTimer === undefined) {
-                SPEC.changeStatusStep = 0;
-                SPEC.checkStatusTimer = setInterval(SPEC.checkStatus, 4000);
-            }
-        }
-
-        SPEC.stopCheckStatus = function() {
-            if (SPEC.checkStatusTimer !== undefined) {
-                clearInterval(SPEC.checkStatusTimer);
-                SPEC.checkStatusTimer = undefined;
-            }
-        }
-
-        SPEC.checkStatus = function() {
-            $.ajax({
-                method: "GET",
-                url: "/check_status",
-                timeout: 2000
-            }).done(function(msg) {
-                switch (SPEC.changeStatusStep) {
-                    case 0:
-                        SPEC.changeStatusStep = 1;
-                        break;
-                    case 2:
-                        SPEC.reloadPage();
-                        break;
-                }
-            }).fail(function(msg) {
-                // check status. If don't have good state after start. We lock system.
-                $('body').removeClass('connection_lost');
-                switch (SPEC.changeStatusStep) {
-                    case 0:
-                        SPEC.changeStatusStep = -1;
-                        break;
-                    case 1:
-                        SPEC.changeStatusStep = 2;
-                        break;
-                }
-
-            });
-        }
-
         setInterval(performanceHandler, 1000);
-        setInterval(guiHandler, 40);
-        setInterval(parametersHandler, 40);
-
 
         // Creates a WebSocket connection with the web server
-        SPEC.connectWebSocket = function() {
+        // SPEC.connectWebSocket = function() {
 
-            if (window.WebSocket) {
-                SPEC.ws = new WebSocket(SPEC.config.socket_url);
-                SPEC.ws.binaryType = "arraybuffer";
-            } else if (window.MozWebSocket) {
-                SPEC.ws = new MozWebSocket(SPEC.config.socket_url);
-                SPEC.ws.binaryType = "arraybuffer";
-            } else {
-                console.log('Browser does not support WebSocket');
-            }
+        //     if (window.WebSocket) {
+        //         SPEC.ws = new WebSocket(SPEC.config.socket_url);
+        //         SPEC.ws.binaryType = "arraybuffer";
+        //     } else if (window.MozWebSocket) {
+        //         SPEC.ws = new MozWebSocket(SPEC.config.socket_url);
+        //         SPEC.ws.binaryType = "arraybuffer";
+        //     } else {
+        //         console.log('Browser does not support WebSocket');
+        //     }
 
-            // Define WebSocket event listeners
-            if (SPEC.ws) {
+        //     // Define WebSocket event listeners
+        //     if (SPEC.ws) {
 
-                SPEC.ws.onopen = function() {
-                    SPEC.state.socket_opened = true;
-                    console.log('Socket opened');
-                    SPEC.unexpectedClose = true;
-                    SPEC.startTime = performance.now();
-                    $('body').addClass('loaded');
-                    $('body').addClass('connection_lost');
-                    $('body').addClass('user_lost');
-                    SPEC.startCheckStatus();
-                    SPEC.params.local['in_command'] = { value: 'send_all_params' };
-                    SPEC.ws.send(JSON.stringify({ parameters: SPEC.params.local }));
-                    SPEC.params.local = {};
+        //         SPEC.ws.onopen = function() {
+        //             SPEC.state.socket_opened = true;
+        //             console.log('Socket opened');
+        //             SPEC.unexpectedClose = true;
+        //             $('body').addClass('loaded');
+        //             $('body').addClass('connection_lost');
+        //             $('body').addClass('user_lost');
+        //             SPEC.startCheckStatus();
+        //             SPEC.params.local['in_command'] = { value: 'send_all_params' };
+        //             SPEC.ws.send(JSON.stringify({ parameters: SPEC.params.local }));
+        //             SPEC.params.local = {};
 
-                };
+        //         };
 
-                SPEC.ws.onclose = function() {
-                    SPEC.state.socket_opened = false;
-                    $('#graphs .plot').hide(); // Hide all graphs
-                    SPEC.hideCursors();
-                    SPEC.hideInfo();
-                    console.log('Socket closed. Trying to reopen in ' + SPEC.config.socket_reconnect_timeout / 1000 + ' sec...');
-                    if (SPEC.unexpectedClose == true) {
-                        setTimeout(SPEC.reloadPage, '1000');
-                    }
-                };
+        //         SPEC.ws.onclose = function() {
+        //             SPEC.state.socket_opened = false;
+        //             $('#graphs .plot').hide(); // Hide all graphs
+        //             SPEC.hideCursors();
+        //             SPEC.hideInfo();
+        //             console.log('Socket closed. Trying to reopen in ' + SPEC.config.socket_reconnect_timeout / 1000 + ' sec...');
+        //             if (SPEC.unexpectedClose == true) {
+        //                 setTimeout(SPEC.reloadPage, '1000');
+        //             }
+        //         };
 
-                SPEC.ws.onerror = function(ev) {
-                    console.log('Websocket error: ', ev);
-                    if (!SPEC.state.socket_opened)
-                        SPEC.startApp();
-                };
+        //         SPEC.ws.onerror = function(ev) {
+        //             console.log('Websocket error: ', ev);
+        //             if (!SPEC.state.socket_opened)
+        //                 SPEC.startApp();
+        //         };
 
-                var g_count = 0;
-                var g_time = 0;
-                var g_iter = 10;
-                var g_delay = 200;
 
-                SPEC.ws.onmessage = function(ev) {
-                    ++g_count;
-                    var start_time = +new Date();
-                    if (SPEC.state.processing) {
-                        return;
-                    }
-                    SPEC.state.processing = true;
+        //         SPEC.ws.onmessage = function(ev) {
+        //             if (SPEC.state.processing) {
+        //                 return;
+        //             }
+        //             SPEC.state.processing = true;
 
-                    try {
-                        var data = new Uint8Array(ev.data);
-                        SPEC.compressed_data += data.length;
-                        var inflate = pako.inflate(data);
-                        // var text = SPEC.handleCodePoints(inflate);
+        //             try {
+        //                 var data = new Uint8Array(ev.data);
+        //                 SPEC.compressed_data += data.length;
+        //                 var inflate = pako.inflate(data);
+        //                 // var text = SPEC.handleCodePoints(inflate);
 
-                        var bytes = new Uint8Array(inflate);
-                        var text = '';
-                        for(var i = 0; i < Math.ceil(bytes.length / 32768.0); i++) {
-                          text += String.fromCharCode.apply(null, bytes.slice(i * 32768, Math.min((i+1) * 32768, bytes.length)))
-                        }
+        //                 var bytes = new Uint8Array(inflate);
+        //                 var text = '';
+        //                 for(var i = 0; i < Math.ceil(bytes.length / 32768.0); i++) {
+        //                   text += String.fromCharCode.apply(null, bytes.slice(i * 32768, Math.min((i+1) * 32768, bytes.length)))
+        //                 }
 
-                        SPEC.decompressed_data += text.length;
-                        var receive = JSON.parse(text);
+        //                 SPEC.decompressed_data += text.length;
+        //                 var receive = JSON.parse(text);
 
-                        if (receive.parameters) {
-                            //console.log(receive.parameters);
-                            SPEC.parameterStack.push(receive.parameters);
-                            if ((Object.keys(SPEC.params.orig).length == 0) && (Object.keys(receive.parameters).length == 0)) {
-                                SPEC.params.local['in_command'] = { value: 'send_all_params' };
-                                SPEC.ws.send(JSON.stringify({ parameters: SPEC.params.local }));
-                                SPEC.params.local = {};
-                            }
-                        }
+        //                 if (receive.parameters) {
+        //                     //console.log(receive.parameters);
+        //                     SPEC.parameterStack.push(receive.parameters);
+        //                     if ((Object.keys(SPEC.params.orig).length == 0) && (Object.keys(receive.parameters).length == 0)) {
+        //                         SPEC.params.local['in_command'] = { value: 'send_all_params' };
+        //                         SPEC.ws.send(JSON.stringify({ parameters: SPEC.params.local }));
+        //                         SPEC.params.local = {};
+        //                     }
+        //                 }
 
-                        if (receive.signals) {
-                            //console.log(receive.signals);
-                            if (!jQuery.isEmptyObject(receive.signals)){
-                                SPEC.latest_signal = Object.assign({}, receive.signals);
-                                g_PacketsRecv++;
-                                SPEC.signalStack.push(SPEC.latest_signal);
-                            }
-                        }
-                        SPEC.state.processing = false;
-                    } catch (e) {
-                        SPEC.state.processing = false;
-                        console.log(e);
-                    } finally {
-                        SPEC.state.processing = false;
-                    }
-                };
-            }
-        };
+        //                 if (receive.signals) {
+        //                     //console.log(receive.signals);
+        //                     if (!jQuery.isEmptyObject(receive.signals)){
+        //                         SPEC.latest_signal = Object.assign({}, receive.signals);
+        //                         SPEC.signalStack.push(SPEC.latest_signal);
+        //                     }
+        //                 }
+        //                 SPEC.state.processing = false;
+        //             } catch (e) {
+        //                 SPEC.state.processing = false;
+        //                 console.log(e);
+        //             } finally {
+        //                 SPEC.state.processing = false;
+        //             }
+        //         };
+        //     }
+        // };
 
         // For firefox
 
@@ -469,10 +341,10 @@
 
         SPEC.xMax = function(new_params) {
             if (new_params['xmax'].value > 5) {
-                if (SPEC.config.gen_enable === true && SPEC.params.orig['freq_unit'] && SPEC.params.orig['freq_unit'].value == 2) {
+                if (SPEC.config.gen_enable === true && CLIENT.params.orig['freq_unit'] && CLIENT.params.orig['freq_unit'].value == 2) {
                     $('#xmax').val(5);
                     new_params['xmax'].value = 5;
-                    SPEC.params.local['xmax'] = { value: 5 };
+                    CLIENT.params.local['xmax'] = { value: 5 };
                     SPEC.sendParams();
                 }
             }
@@ -567,7 +439,7 @@
         }
 
         SPEC.srcVoltOffset = function(ch, new_params) {
-            var old_params = $.extend(true, {}, SPEC.params.old);
+            var old_params = $.extend(true, {}, CLIENT.params.old);
             var param_name = 'SOUR' + ch + '_VOLT_OFFS';
             if ((!SPEC.state.editing && (old_params[param_name] !== undefined && old_params[param_name].value == new_params[param_name].value))) {
                 var value = $('#' + param_name).val();
@@ -770,7 +642,7 @@
 
         // Processes newly received values for parameters
         SPEC.processParameters = function(new_params) {
-            var old_params = $.extend(true, {}, SPEC.params.orig);
+            var old_params = $.extend(true, {}, CLIENT.params.orig);
 
             if (new_params['ARB_LIST'] && SPEC.arb_list === undefined){
                 SPEC.arb_list = new_params['ARB_LIST'].value;
@@ -819,7 +691,7 @@
             for (var param_name in new_params) {
                 // Save new parameter value
 
-                SPEC.params.orig[param_name] = new_params[param_name];
+                CLIENT.params.orig[param_name] = new_params[param_name];
                 var field = $('#' + param_name);
 
                 if (SPEC.param_callbacks[param_name] !== undefined)
@@ -905,7 +777,7 @@
             var reset_zoom_flag = false;
 
             // Do nothing if no parameters received yet
-            if ($.isEmptyObject(SPEC.params.orig)) {
+            if ($.isEmptyObject(CLIENT.params.orig)) {
                 return;
             }
 
@@ -1151,7 +1023,7 @@
             var needResetZoom = false;
             var needUpdateYAxis = false;
 
-            for (var key in SPEC.params.orig) {
+            for (var key in CLIENT.params.orig) {
                 var field = $('#' + key);
                 var value = undefined;
 
@@ -1200,9 +1072,9 @@
                     value = SPEC.state.sweep_ch2_time
                 }
 
-                if (value !== undefined && value != SPEC.params.orig[key].value) {
-                    console.log(key + ' changed from ' + SPEC.params.orig[key].value + ' to ' + ($.type(SPEC.params.orig[key].value) == 'boolean' ? !!value : value));
-                    SPEC.params.local[key] = { value: ($.type(SPEC.params.orig[key].value) == 'boolean' ? !!value : value) };
+                if (value !== undefined && value != CLIENT.params.orig[key].value) {
+                    console.log(key + ' changed from ' + CLIENT.params.orig[key].value + ' to ' + ($.type(CLIENT.params.orig[key].value) == 'boolean' ? !!value : value));
+                    CLIENT.params.local[key] = { value: ($.type(CLIENT.params.orig[key].value) == 'boolean' ? !!value : value) };
                 }
 
                 if (key == 'CH1_IN_GAIN') {
@@ -1258,51 +1130,51 @@
 
 
     SPEC.requestParameters = function() {
-        if (!SPEC.state.socket_opened) {
+        if (!CLIENT.state.socket_opened) {
             console.log('ERROR: Cannot save changes, socket not opened');
             return false;
         }
 
-        SPEC.params.local['in_command'] = { value: 'send_all_params' };
-        SPEC.ws.send(JSON.stringify({ parameters: SPEC.params.local }));
-        SPEC.parameterStack = [];
-        SPEC.params.local = {};
-        SPEC.params.orig = {};
+        CLIENT.params.local['in_command'] = { value: 'send_all_params' };
+        CLIENT.ws.send(JSON.stringify({ parameters: CLIENT.params.local }));
+        CLIENT.parameterStack = [];
+        CLIENT.params.local = {};
+        CLIENT.params.orig = {};
         return true;
     };
 
     // Sends to server modified parameters
     SPEC.sendParams = function() {
-        if ($.isEmptyObject(SPEC.params.local)) {
+        if ($.isEmptyObject(CLIENT.params.local)) {
             return false;
         }
 
-        if (!SPEC.state.socket_opened) {
+        if (!CLIENT.state.socket_opened) {
             console.log('ERROR: Cannot save changes, socket not opened');
             return false;
         }
-        console.log(SPEC.params.local);
-        SPEC.ws.send(JSON.stringify({ parameters: SPEC.params.local }));
-        SPEC.params.local = {};
+        console.log(CLIENT.params.local);
+        CLIENT.ws.send(JSON.stringify({ parameters: CLIENT.params.local }));
+        CLIENT.params.local = {};
         return true;
     };
 
     SPEC.sendParameters = function(values) {
         for (var k in values) {
-            SPEC.params.local[k] = { value: values[k] };
+            CLIENT.params.local[k] = { value: values[k] };
         }
 
-        if ($.isEmptyObject(SPEC.params.local)) {
+        if ($.isEmptyObject(CLIENT.params.local)) {
             return false;
         }
 
-        if (!SPEC.state.socket_opened) {
+        if (!CLIENT.state.socket_opened) {
             console.log('ERROR: Cannot save changes, socket not opened');
             return false;
         }
-        console.log(SPEC.params.local);
-        SPEC.ws.send(JSON.stringify({ parameters: SPEC.params.local }));
-        SPEC.params.local = {};
+        console.log(CLIENT.params.local);
+        CLIENT.ws.send(JSON.stringify({ parameters: CLIENT.params.local }));
+        CLIENT.params.local = {};
         return true;
     };
 
@@ -1388,7 +1260,7 @@
 
     SPEC.isVisibleChannels = function() {
         for(let i = 1; i <= SPEC.channelsCount ; i++){
-            if (SPEC.params.orig['CH'+i+'_SHOW'] && SPEC.params.orig['CH'+i+'_SHOW'].value == true)
+            if (CLIENT.params.orig['CH'+i+'_SHOW'] && CLIENT.params.orig['CH'+i+'_SHOW'].value == true)
                 return true;
         }
         return false;
@@ -1626,29 +1498,6 @@ $(function() {
         window.location.reload(true);
     }
 
-    SPEC.client_id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        var r = Math.random() * 16 | 0,
-            v = c == 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-
-    $.ajax({
-        url: '/set_client_id', //Server script to process data
-        type: 'POST',
-        //Ajax events
-        //beforeSend: beforeSendHandler,
-        success: function(e) { console.log(e); },
-        error: function(e) { console.log(e); },
-        // Form data
-        data: SPEC.client_id,
-        //Options to tell jQuery not to process data or worry about content-type.
-        cache: false,
-        contentType: false,
-        processData: false
-    });
-
-    SPEC.checkStatus();
-
     // Preload images which are not visible at the beginning
     $.preloadImages = function() {
         for (var i = 0; i < arguments.length; i++) {
@@ -1693,23 +1542,11 @@ $(function() {
 
 
 
-    // Stop the application when page is unloaded
-    window.onbeforeunload = function() {
-        SPEC.ws.onclose = function() {}; // disable onclose handler first
-        SPEC.ws.close();
-        $.ajax({
-            url: SPEC.config.stop_app_url,
-            async: false
-        });
-        SPEC.unexpectedClose = false;
-    };
-
     // Init help
     Help.init(helpListSpectrum);
     Help.setState("idle");
     UI_GRAPH.minMaxChange = SPEC.updateMinMaxPlot;
     // Everything prepared, start application
-    SPEC.startApp();
 
     SPEC.previousPageUrl = document.referrer;
     console.log(`Previously visited page URL: ${SPEC.previousPageUrl}`);

@@ -8,7 +8,7 @@
 
     // App configuration
     CLIENT.config = {};
-    CLIENT.config.app_id = 'impedance_analyzer';
+    CLIENT.config.app_id = 'lcr_meter';
     CLIENT.config.server_ip = ''; // Leave empty on production, it is used for testing only
     CLIENT.config.search = "?type=run" //location.search
     CLIENT.config.start_app_url = (CLIENT.config.server_ip.length ? 'http://' + CLIENT.config.server_ip : '') + '/bazaar?start=' + CLIENT.config.app_id + '?' + CLIENT.config.search.substr(1);
@@ -176,6 +176,7 @@
 
                 CLIENT.state.socket_opened = true;
                 CLIENT.requestParameters();
+                CLIENT.params.local = {};
 
                 //setTimeout(showLicenseDialog, 2500);
                 CLIENT.unexpectedClose = true;
@@ -269,7 +270,6 @@
     //Handlers
     var signalsHandler = function() {
         if (CLIENT.signalStack.length > 0) {
-            MAIN.processSignals(CLIENT.signalStack[0])
             CLIENT.signalStack.splice(0, 1);
         }
         if (CLIENT.signalStack.length > 2)
@@ -282,12 +282,7 @@
             console.log(new_params)
         }
 
-        for (var param_name in new_params) {
-            if (MAIN.param_callbacks[param_name] !== undefined)
-                MAIN.param_callbacks[param_name](new_params);
-            CLIENT.params.orig[param_name] = new_params[param_name];
-        }
-        // Resize double-headed arrows showing the difference between cursors
+        LCR.processParameters(new_params)
     };
 
     var parametersHandler = function() {
@@ -299,8 +294,8 @@
 
 
     //Set handlers timers
-    setInterval(signalsHandler, 10);
-    setInterval(parametersHandler, 10);
+    setInterval(signalsHandler, 30);
+    setInterval(parametersHandler, 30);
 
 }(window.CLIENT = window.CLIENT || {}, jQuery));
 
