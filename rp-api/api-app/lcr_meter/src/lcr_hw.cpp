@@ -82,7 +82,7 @@ auto CLCRHardware::setI2CShunt(lcr_shunt_t _shunt) -> lcr_error_t {
         }
     }
 
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard lock(m_mutex);
     if (m_shunt == _shunt) return RP_LCR_OK;
     int  dat;
     int  fd;

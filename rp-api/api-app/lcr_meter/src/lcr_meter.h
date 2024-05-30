@@ -112,6 +112,7 @@ int lcr_SetShuntMode(lcr_shunt_mode_t shunt_mode);
 int lcr_GetShuntMode(lcr_shunt_mode_t *shunt_mode);
 
 int lcr_CheckModuleConnection(bool _muteWarnings);
+int lcr_IsModuleConnected(bool *state);
 
 #endif //__LCRMETER_H
 

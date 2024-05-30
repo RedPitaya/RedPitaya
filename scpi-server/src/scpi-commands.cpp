@@ -28,6 +28,7 @@
 #include "spi.h"
 #include "i2c.h"
 #include "can.h"
+#include "lcr.h"
 #include "acquire.h"
 #include "acquire_axi.h"
 #include "generate.h"
@@ -484,6 +485,30 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "CAN#:Filter:Clear", .callback          = RP_CAN_ClearFilter,},
     {.pattern = "CAN#:Filter:Set", .callback            = RP_CAN_SetFilter,},
     {.pattern = "CAN#:SHOW:ERROR", .callback            = RP_CAN_ShowErrorFrames,},
+
+    /* LCR */
+
+    {.pattern = "LCR:START", .callback                  = RP_LCRStart,},
+    {.pattern = "LCR:START:GEN", .callback              = RP_LCRStartGen,},
+    {.pattern = "LCR:STOP", .callback                   = RP_LCRStop,},
+    {.pattern = "LCR:RESET", .callback                  = RP_LCRReset,},
+    {.pattern = "LCR:MEASURE?", .callback               = RP_LCRMeasureQ,},
+    {.pattern = "LCR:FREQ", .callback                   = RP_LCRFrequency,},
+    {.pattern = "LCR:FREQ?", .callback                  = RP_LCRFrequencyQ,},
+    {.pattern = "LCR:VOLT", .callback                   = RP_LCRAmplitude,},
+    {.pattern = "LCR:VOLT?", .callback                  = RP_LCRAmplitudeQ,},
+    {.pattern = "LCR:VOLT:OFFS", .callback              = RP_LCROffset,},
+    {.pattern = "LCR:VOLT:OFFS?", .callback             = RP_LCROffsetQ,},
+    {.pattern = "LCR:SHUNT", .callback                  = RP_LCRShunt,},
+    {.pattern = "LCR:SHUNT?", .callback                 = RP_LCRShuntQ,},
+    {.pattern = "LCR:SHUNT:CUSTOM", .callback           = RP_LCRCustomShunt,},
+    {.pattern = "LCR:SHUNT:CUSTOM?", .callback          = RP_LCRCustomShuntQ,},
+    {.pattern = "LCR:SHUNT:MODE", .callback             = RP_LCRShuntMode,},
+    {.pattern = "LCR:SHUNT:MODE?", .callback            = RP_LCRShuntModeQ,},
+    {.pattern = "LCR:SHUNT:AUTO", .callback             = RP_LCRShuntAuto,},
+    {.pattern = "LCR:CIRCUIT", .callback                = RP_LCRMeasSeries,},
+    {.pattern = "LCR:CIRCUIT?", .callback               = RP_LCRMeasSeriesQ,},
+    {.pattern = "LCR:EXT:MODULE?", .callback            = RP_LCRCheckExtensionModuleConnectioQ,},
 
     SCPI_CMD_LIST_END
 };

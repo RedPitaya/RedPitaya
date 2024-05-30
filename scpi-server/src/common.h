@@ -145,4 +145,6 @@ scpi_result_t RP_BoardName(scpi_t *context);
 scpi_result_t RP_ExtTriggerDebouncerUs(scpi_t *context);
 scpi_result_t RP_ExtTriggerDebouncerUsQ(scpi_t *context);
 
+void stopAllThreads(scpi_t *context);
+
 #endif /* COMMON_H_ */

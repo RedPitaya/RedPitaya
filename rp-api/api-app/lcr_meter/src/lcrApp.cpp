@@ -147,6 +147,10 @@ int lcrApp_LcrCheckExtensionModuleConnection(bool _muteWarnings) {
     return lcr_CheckModuleConnection(_muteWarnings);
 }
 
+int lcrApp_LcrIsModuleConnected(bool *state){
+    return lcr_IsModuleConnected(state);
+}
+
 const char* lcrApp_LcrGetError(lcr_error_t errorCode){
     switch (errorCode)
     {
@@ -157,11 +161,15 @@ const char* lcrApp_LcrGetError(lcr_error_t errorCode){
         case RP_LCR_HW_MISSING_DEVICE:
             return "LCR extension not connected";
         case RP_LCR_HW_ERROR:
-            return "Undefined error";
+            return "LCR undefined hardware error";
         case RP_LCR_HW_ERROR_DETECT:
             return "LCR extension detection error";
         case RP_LCR_ERROR_INVALID_VALUE:
             return "Invalid value";
+        case RP_LCR_UERROR:
+            return "LCR undefined error";
+        case RP_LCR_NOT_STARTED:
+            return "Api is not running";
         default:
             break;
     }
