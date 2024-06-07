@@ -136,6 +136,14 @@
                     </div>
                     <div class="col-xs-6 option-content">
                         <div class="right-menu-option">
+                            <button type="button" class="btn menu-btn x_y dbl" data-toggle="button" aria-pressed="false" autocomplete="off" disabled>X-Y</button>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div id="x_y" class="right-menu-option edit-mode"><img src="img/gear.png"></div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option">
                             <button type="button" class="btn menu-btn trig not-signal dbl" data-toggle="button" aria-pressed="false" autocomplete="off" disabled>TRIG</button>
                         </div>
                     </div>
@@ -524,6 +532,42 @@
                         </div>
                     </div>
                 </div>
+                <div id="x_y_dialog" class="dialog row right-menu-cont">
+                    <div class="col-xs-6 option-content close-dialog">
+                        <div class="right-menu-option math">
+                            <img src="../assets/images/navigation_arrow_left.png"> X-Y
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
+                        <div class="right-menu-option">
+                            <button id="X_Y_SHOW" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">ON</button>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">X-axis</span>
+                            <select id="X_AXIS_SOURCE" class="form-control styled-select" style="margin-top: 10px;">
+                                <option value="0">IN1</option>
+                                <option value="1">IN2</option>
+                                <option value="2">IN3</option>
+                                <option value="3">IN4</option>
+                                <option value="4">MATH</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Y-axis</span>
+                            <select id="Y_AXIS_SOURCE" class="form-control styled-select" style="margin-top: 10px;">
+                                <option value="0">IN1</option>
+                                <option value="1">IN2</option>
+                                <option value="2">IN3</option>
+                                <option value="3">IN4</option>
+                                <option value="4">MATH</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
                 <div id="trig_dialog" class="dialog row right-menu-cont">
                     <div class="col-xs-12 option-content close-dialog">
                         <div class="right-menu-option trig">
@@ -842,6 +886,41 @@
                         <span id="OSC_SAMPL_RATE"></span>
                     </div>
                     <div id="triginfo" style="color: green; display:none;">TEXT</div>
+                </div>
+            </div>
+            <div id="xy_main" style="display: none;">
+                <div id="xy_graphs_holder">
+                    <div id="xy_graphs">
+                        <canvas id="xy_graph_grid"></canvas>
+                        <img id="xy_cur_x1_arrow" class="xy_varrow" src="img/cursor-arrow-up.png">
+                        <div id="xy_cur_x1" class="vline"></div>
+                        <div id="xy_cur_x1_info" class="cur_info"></div>
+                        <img id="xy_cur_x2_arrow" class="xy_varrow" src="img/cursor-arrow-up.png">
+                        <div id="xy_cur_x2" class="vline"></div>
+                        <div id="xy_cur_x2_info" class="cur_info"></div>
+                        <img id="xy_cur_y1_arrow" class="xy_harrow" src="img/cursor-arrow-left.png">
+                        <div id="xy_cur_y1" class="hline"></div>
+                        <div id="xy_cur_y1_info" class="cur_info"></div>
+                        <img id="xy_cur_y2_arrow" class="xy_harrow" src="img/cursor-arrow-left.png">
+                        <div id="xy_cur_y2" class="hline"></div>
+                        <div id="xy_cur_y2_info" class="cur_info"></div>
+                        <div id="xy_cur_y_diff"></div>
+                        <div id="xy_cur_y_diff_info" class="cur_info"></div>
+                        <div id="xy_cur_x_diff"></div>
+                        <div id="xy_cur_x_diff_info" class="cur_info"></div>
+                    </div>
+                </div>
+                <div id="xy_info" class="clear">
+                    <div class="left-info">
+                        <div class="xy_info-title">
+                            <div id="OSC_XY_X_AXIS_NAME">X-AXIS</div>
+                            <div id="OSC_XY_Y_AXIS_NAME">Y-AXIS</div>
+                        </div>
+                        <div class="xy_info-value">
+                            <div><span id="OSC_XY_X_AXIS_SCALE">-</span><span id="OSC_XY_X_AXIS_SCALE_UNIT">/div</span></div>
+                            <div><span id="OSC_XY_Y_AXIS_SCALE">-</span><span id="OSC_XY_Y_AXIS_SCALE_UNIT">/div</span></div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div id="joystick">

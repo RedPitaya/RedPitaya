@@ -319,7 +319,7 @@
     }
 
     OSC.endTimeMove = function(new_left) {
-        if (!OSC.state.simulated_drag) {
+        if (!OSC.state.simulated_drag && OSC.params.orig['OSC_TIME_SCALE'] !== undefined) {
             var graph_width = $('#graph_grid').outerWidth();
             var elem_width = $('#time_offset_arrow').width();
             var zero_pos = (graph_width + 2) / 2;

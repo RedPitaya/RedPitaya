@@ -441,3 +441,34 @@ int rpApp_SpecSetImpedance(double value){
 int rpApp_SpecGetImpedance(double *value){
     return spec_getImpedance(value);
 }
+
+// X-Y mode
+
+int rpApp_OscSetEnableXY(bool _state){
+    return osc_setEnableXY(_state);
+}
+
+int rpApp_OscGetEnableXY(bool *_state){
+    return osc_getEnableXY(_state);
+}
+
+int rpApp_OscGetViewDataXY(float *dataX, float *dataY, uint32_t size){
+    return osc_getDataXY(dataX,dataY,size);
+}
+
+
+int rpApp_OscSetSrcXAxis(rpApp_osc_source channel){
+    return osc_setSrcXAxis(channel);
+}
+
+int rpApp_OscGetSrcXAxis(rpApp_osc_source *channel){
+    return osc_getSrcXAxis(channel);
+}
+
+int rpApp_OscSetSrcYAxis(rpApp_osc_source channel){
+    return osc_setSrcYAxis(channel);
+}
+
+int rpApp_OscGetSrcYAxis(rpApp_osc_source *channel){
+    return osc_getSrcYAxis(channel);
+}

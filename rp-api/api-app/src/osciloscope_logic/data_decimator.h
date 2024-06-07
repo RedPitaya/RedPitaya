@@ -9,10 +9,10 @@
 #include "constants.h"
 
 class CDataDecimator{
-    
+
 public:
 
-    typedef std::function<int(rpApp_osc_source source, float volts, float *res)> func_t;
+    typedef std::function<int(rpApp_osc_source source, float &coff1, float &coff2)> func_t;
 
     CDataDecimator();
     ~CDataDecimator();

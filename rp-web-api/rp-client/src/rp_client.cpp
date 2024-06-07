@@ -12,9 +12,12 @@
 using namespace std;
 using namespace std::chrono;
 
-CUIntParameter  g_wc_ping("RP_CLIENT_PING", CBaseParameter::RO, 0, 0, 0, std::numeric_limits<uint32_t>::max());
+CUIntParameter   g_wc_ping("RP_CLIENT_PING", CBaseParameter::RO, 0, 0, 0, std::numeric_limits<uint32_t>::max());
 CStringParameter g_wc_client_id("RP_CLIENT_ID",CBaseParameter::RW, "", 0);
-CUIntParameter  g_wc_client_request("RP_CLIENT_REQUEST", CBaseParameter::RW, 0, 0, 0, std::numeric_limits<uint32_t>::max());
+CUIntParameter   g_wc_client_request("RP_CLIENT_REQUEST", CBaseParameter::RW, 0, 0, 0, std::numeric_limits<uint32_t>::max());
+
+CIntParameter    g_signalPeriod("RP_SIGNAL_PERIOD", CBaseParameter::RW, 20, 0, 1, 10000);
+CIntParameter    g_parameterPeriod("RP_PARAM_PERIOD", CBaseParameter::RW, 50, 0, 1, 10000);
 
 time_point<system_clock> g_lastUpdateTime;
 uint32_t g_interval = 1000;
@@ -48,6 +51,9 @@ auto writeClientId(const std::string& id) -> bool  {
 void rp_WC_Init(){
     auto id = readClientId();
     g_wc_client_id.Set(id);
+
+    CDataManager::GetInstance()->SetParamInterval(g_parameterPeriod.Value());
+    CDataManager::GetInstance()->SetSignalInterval(g_signalPeriod.Value());
 }
 
 void rp_WC_SetPingInterval(uint32_t ms){
@@ -80,7 +86,6 @@ void rp_WC_OnNewParam(){
     if (g_wc_client_id.NewValue() != g_wc_client_id.Value()){
         auto old_value = g_wc_client_id.Value();
         auto new_value = g_wc_client_id.NewValue();
-        WARNING("WRITE id %s",new_value.c_str())
         if (writeClientId(new_value)){
             g_wc_client_id.Update();
         }
@@ -97,5 +102,16 @@ void rp_WC_OnNewParam(){
             }
         }
         g_wc_client_request.SendValue(0);
+    }
+
+    if (g_signalPeriod.NewValue() != g_signalPeriod.Value()){
+        g_signalPeriod.Update();
+        CDataManager::GetInstance()->SetSignalInterval(g_signalPeriod.Value());
+        WARNING("Set signal period %d ms",g_signalPeriod.Value())
+    }
+    if (g_parameterPeriod.NewValue() != g_parameterPeriod.Value()){
+        g_parameterPeriod.Update();
+        CDataManager::GetInstance()->SetParamInterval(g_parameterPeriod.Value());
+        WARNING("Set parameter period %d ms",g_parameterPeriod.Value())
     }
 }

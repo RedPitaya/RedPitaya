@@ -19,12 +19,12 @@ CDataDecimator::CDataDecimator():
 }
 
 CDataDecimator::~CDataDecimator(){
-    std::lock_guard<std::mutex> lock(m_settingsMutex);
+    std::lock_guard lock(m_settingsMutex);
     m_scaleFunc = NULL;
 }
 
 auto CDataDecimator::setViewSize(vsize_t _size) -> void{
-    std::lock_guard<std::mutex> lock(m_settingsMutex);
+    std::lock_guard lock(m_settingsMutex);
     m_viewSize = _size;
     m_decimatedData.resize(m_viewSize);
 }
@@ -39,7 +39,7 @@ auto CDataDecimator::getView() -> std::vector<float>*{
 
 
 auto CDataDecimator::setDecimationFactor(float _factor) -> void{
-    std::lock_guard<std::mutex> lock(m_settingsMutex);
+    std::lock_guard lock(m_settingsMutex);
     m_decimationFactor = _factor;
     if (m_decimationFactor <= 0){
         m_decimationFactor = 0.0000001f;
@@ -51,7 +51,7 @@ auto CDataDecimator::getDecimationFactor() const -> float{
 }
 
 auto CDataDecimator::setInterpolationMode(rp_channel_t _channel, rpApp_osc_interpolationMode _mode) -> void{
-    std::lock_guard<std::mutex> lock(m_settingsMutex);
+    std::lock_guard lock(m_settingsMutex);
     m_mode[_channel] = _mode;
 }
 
@@ -60,7 +60,7 @@ auto CDataDecimator::getInterpolationMode(rp_channel_t _channel) const -> rpApp_
 }
 
 auto CDataDecimator::setScaleFunction(func_t _func) -> void{
-    std::lock_guard<std::mutex> lock(m_settingsMutex);
+    std::lock_guard lock(m_settingsMutex);
     m_scaleFunc = _func;
 }
 
@@ -69,7 +69,7 @@ auto CDataDecimator::getScaleFunction() const -> func_t{
 }
 
 auto CDataDecimator::setTriggerLevel(float _level) -> void{
-    std::lock_guard<std::mutex> lock(m_settingsMutex);
+    std::lock_guard lock(m_settingsMutex);
     m_triggerLevel = _level;
 }
 
@@ -78,7 +78,7 @@ auto CDataDecimator::getTriggerLevel() const -> float{
 }
 
 auto CDataDecimator::precalculateOffset(const float *_data,vsize_t _dataSize) -> int{
-    std::lock_guard<std::mutex> lock(m_settingsMutex);
+    std::lock_guard lock(m_settingsMutex);
     if (_dataSize == 0) return -1;
     if (m_decimationFactor < 1){
         double offset = 0;
@@ -104,7 +104,7 @@ auto CDataDecimator::precalculateOffset(const float *_data,vsize_t _dataSize) ->
 }
 
 auto CDataDecimator::resetOffest() -> void{
-    std::lock_guard<std::mutex> lock(m_settingsMutex);
+    std::lock_guard lock(m_settingsMutex);
     m_dataOffset = 0;
 }
 
@@ -114,7 +114,7 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float *_data,vsize_t 
 }
 
 auto CDataDecimator::decimate(rp_channel_t _channel, const float *_data,vsize_t _dataSize, int _triggerPointPos,std::vector<float> *_view, std::vector<float> *_originalData) -> bool{
-    std::lock_guard<std::mutex> lock(m_settingsMutex);
+    std::lock_guard lock(m_settingsMutex);
 
     if (m_scaleFunc == NULL) return false;
 
@@ -154,6 +154,9 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float *_data,vsize_t 
     }
 
     int startView,stopView;
+
+    float scaleFuncCof1 = 1,scaleFuncCof2 = 1;
+    ECHECK_APP_NO_RET(m_scaleFunc((rpApp_osc_source)_channel,scaleFuncCof1, scaleFuncCof2))
 
     if (m_decimationFactor < 1){
         trigPostInView -= m_dataOffset;
@@ -202,8 +205,8 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float *_data,vsize_t 
                         break;
                 }
             }
-
-            ECHECK_APP_NO_RET(m_scaleFunc((rpApp_osc_source)_channel,y,&scaledValue))
+            // ECHECK_APP_NO_RET(m_scaleFunc((rpApp_osc_source)_channel,y,&scaledValue))
+            scaledValue = scaleAmplitude<float>(y,scaleFuncCof1,scaleFuncCof2);
             (*_view)[iView] = scaledValue;
         }
     }else{
@@ -215,7 +218,8 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float *_data,vsize_t 
         uint16_t iView = 0;
         for(int idx = startView ; idx < stopView ; idx++,iView++ ){
             int dataIndex = screenToBuffer(idx,m_decimationFactor,&t);
-            ECHECK_APP_NO_RET(m_scaleFunc((rpApp_osc_source)_channel,_data[dataIndex],&scaledValue))
+            // ECHECK_APP_NO_RET(m_scaleFunc((rpApp_osc_source)_channel,_data[dataIndex],&scaledValue))
+            scaledValue = scaleAmplitude<float>(_data[dataIndex],scaleFuncCof1,scaleFuncCof2);
             (*_view)[iView] = scaledValue;
         }
     }

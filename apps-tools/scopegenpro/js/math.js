@@ -145,6 +145,7 @@
             $('#munit').html(units[value_op] + '/div');
             $('#OSC_MATH_OFFSET_UNIT').html(units[value_op]);
         }
+        OSC.setXYAxisScale()
     }
 
 

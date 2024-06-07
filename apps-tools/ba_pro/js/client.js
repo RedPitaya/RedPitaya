@@ -91,7 +91,7 @@
     CLIENT.startCheckStatus = function() {
         if (CLIENT.checkStatusTimer === undefined) {
             CLIENT.changeStatusStep = 0;
-            CLIENT.checkStatusTimer = setInterval(CLIENT.checkStatus, 5000);
+            CLIENT.checkStatusTimer = setTimeout(CLIENT.checkStatus, 5000);
         }
     }
 
@@ -153,6 +153,7 @@
         if (CLIENT.changeStatusStep == 2 && CLIENT.nginx_live){
             CLIENT.reloadPage();
         }
+        CLIENT.checkStatusTimer = setTimeout(CLIENT.checkStatus, 5000);
     }
 
 

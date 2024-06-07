@@ -85,7 +85,8 @@
         'output1': '#9595ca',
         'output2': '#ee3739',
         'math': '#ab4d9d',
-        'trig': '#75cede'
+        'trig': '#75cede',
+        'xy': '#faa200'
     };
 
     // Time scale steps in millisecods
@@ -131,9 +132,12 @@
         time_dragging: false,
         trig_dragging: false,
         cursor_dragging: false,
+        xy_cursor_dragging: false,
         cursor_dragging_measure:false,
+        xy_cursor_dragging_measure:false,
         simulated_drag:false,
         mouseover: false,
+        xy_mouseover: false,
         resized: false,
         sel_sig_name: 'ch1',
         fine: false,
@@ -332,7 +336,7 @@
     OSC.startCheckStatus = function() {
         if (OSC.checkStatusTimer === undefined) {
             OSC.changeStatusStep = 0;
-            OSC.checkStatusTimer = setInterval(OSC.checkStatus, 5000);
+            OSC.checkStatusTimer = setTimeout(OSC.checkStatus, 5000);
         }
     }
 
@@ -388,11 +392,13 @@
                 }
             }
             OSC.ping = OSC.params.orig["RP_CLIENT_PING"].value
+            console.log("Check RP status")
         }
 
         if (OSC.changeStatusStep == 2 && OSC.nginx_live){
             OSC.reloadPage();
         }
+        OSC.checkStatusTimer = setTimeout(OSC.checkStatus, 5000);
     }
 
     setInterval(performanceHandler, 1000);
@@ -420,9 +426,11 @@
                     OSC.updateARBFunc(OSC.arb_list)
                 OSC.initUI();
                 OSC.initCursors();
+                OSC.initCursorsXY();
                 OSC.initOSCHandlers();
                 OSC.initOSCCursors();
                 OSC.drawGraphGrid();
+                OSC.drawGraphGridXY();
                 OSC.requestAllParam();
                 OSC.resize();
                 OSC.is_webpage_loaded = true;
@@ -755,8 +763,6 @@
     OSC.param_callbacks["CH3_SHOW_INVERTED"] = OSC.updateOscShowInverted;
     OSC.param_callbacks["CH4_SHOW_INVERTED"] = OSC.updateOscShowInverted;
 
-
-
     OSC.param_callbacks["OSC_MEAS_VAL1"] = OSC.measureHandler1Func;
     OSC.param_callbacks["OSC_MEAS_VAL2"] = OSC.measureHandler2Func;
     OSC.param_callbacks["OSC_MEAS_VAL3"] = OSC.measureHandler3Func;
@@ -784,7 +790,19 @@
     OSC.param_callbacks["RP_SYSTEM_SLOW_ADC2"] = OSC.setSlowADC3;
     OSC.param_callbacks["RP_SYSTEM_SLOW_ADC3"] = OSC.setSlowADC4;
 
+    OSC.param_callbacks["X_Y_SHOW"] = OSC.chShowXY;
+    OSC.param_callbacks["X_AXIS_SOURCE"] = OSC.updateXYSrcX;
+    OSC.param_callbacks["Y_AXIS_SOURCE"] = OSC.updateXYSrcY;
 
+    OSC.param_callbacks["OSC_XY_CURSOR_Y1"] = OSC.xyCursorY1;
+    OSC.param_callbacks["OSC_XY_CURSOR_Y2"] = OSC.xyCursorY2;
+    OSC.param_callbacks["OSC_XY_CURSOR_X1"] = OSC.xyCursorX1;
+    OSC.param_callbacks["OSC_XY_CURSOR_X2"] = OSC.xyCursorX2;
+
+    OSC.param_callbacks["OSC_XY_CUR1_X"] = OSC.xyCursorX1;
+    OSC.param_callbacks["OSC_XY_CUR2_X"] = OSC.xyCursorX2;
+    OSC.param_callbacks["OSC_XY_CUR1_Y"] = OSC.xyCursorY1;
+    OSC.param_callbacks["OSC_XY_CUR2_Y"] = OSC.xyCursorY2;
 
     // Processes newly received values for parameters
     OSC.processParameters = function(new_params) {
@@ -908,6 +926,13 @@
             return;
         }
 
+        var xysignals = [];
+        xysignals['X_AXIS_VALUES'] = new_signals['X_AXIS_VALUES']
+        xysignals['Y_AXIS_VALUES'] = new_signals['Y_AXIS_VALUES']
+
+        new_signals['X_AXIS_VALUES'].size = 0
+        new_signals['Y_AXIS_VALUES'].size = 0
+
         var pointArr = [];
         var colorsArr = [];
         $('#right_menu .menu-btn').not('.not-signal').prop('disabled', true);
@@ -1014,6 +1039,7 @@
         // Hide plots without signal
         $('#graphs .plot').not(visible_plots).hide();
 
+        OSC.drawSignalXY(xysignals)
         // Disable buttons related to inactive signals
         // $('#right_menu .menu-btn').not(visible_btns).not('.not-signal').prop('disabled', true);
 
@@ -1026,6 +1052,8 @@
         if (OSC.state.sel_sig_name && OSC.graphs[OSC.state.sel_sig_name] && !OSC.graphs[OSC.state.sel_sig_name].elem.is(':visible')) {
             $('#right_menu .menu-btn.active.' + OSC.state.sel_sig_name).removeClass('active');
         }
+
+
     };
 
 
@@ -1340,6 +1368,83 @@
         ctx.stroke();
     };
 
+    OSC.drawGraphGridXY = function() {
+        var graph = $('#xy_graphs')
+        var graph_grid = $('#xy_graph_grid')
+        if (graph.length === 0) return;
+        if (graph_grid.length  === 0) return;
+
+        var canvas_width = $('#xy_graphs').width() - 2;
+        var canvas_height = window.innerHeight - 300; // Math.round(canvas_width / 2.5);
+
+        var center_x = canvas_width / 2;
+        var center_y = canvas_height / 2;
+
+        var ctx = $('#xy_graph_grid')[0].getContext('2d');
+
+        var x_offset = 0;
+        var y_offset = 0;
+
+        // Set canvas size
+        ctx.canvas.width = canvas_width;
+        ctx.canvas.height = canvas_height;
+
+        // Set draw options
+        ctx.beginPath();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = '#5d5d5c';
+
+        // Draw ticks
+        for (var i = 1; i < 50; i++) {
+            x_offset = x_offset + (canvas_width / 50);
+            y_offset = y_offset + (canvas_height / 50);
+
+            if (i == 25) {
+                continue;
+            }
+
+            ctx.moveTo(x_offset, canvas_height - 3);
+            ctx.lineTo(x_offset, canvas_height);
+
+            ctx.moveTo(0, y_offset);
+            ctx.lineTo(3, y_offset);
+        }
+
+        // Draw lines
+        x_offset = 0;
+        y_offset = 0;
+
+        for (var i = 1; i < 10; i++) {
+            x_offset = x_offset + (canvas_height / 10);
+            y_offset = y_offset + (canvas_width / 10);
+
+            if (i == 5) {
+                continue;
+            }
+
+            ctx.moveTo(y_offset, 0);
+            ctx.lineTo(y_offset, canvas_height);
+
+            ctx.moveTo(0, x_offset);
+            ctx.lineTo(canvas_width, x_offset);
+        }
+
+        ctx.stroke();
+
+        // Draw central cross
+        ctx.beginPath();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = '#999';
+
+        ctx.moveTo(center_x, 0);
+        ctx.lineTo(center_x, canvas_height);
+
+        ctx.moveTo(0, center_y);
+        ctx.lineTo(canvas_width, center_y);
+
+        ctx.stroke();
+    };
+
     // Changes Y zoom/scale for the selected signal
     OSC.changeYZoom = function(direction, curr_scale, send_changes) {
 
@@ -1546,6 +1651,10 @@
     };
 
     OSC.resize = function() {
+        OSC.resizeEx(true)
+    }
+
+    OSC.resizeEx = function(requestAll) {
         if ($('#global_container').length === 0) return
         if ($('#main').length === 0) return
 
@@ -1559,18 +1668,24 @@
         $('#global_container').css('width', global_width);
         $('#global_container').css('height', global_height);
 
-        $('#main').css('width', global_width - 190);
+        var xymode = OSC.params.orig["X_Y_SHOW"] ? OSC.params.orig["X_Y_SHOW"].value : false
+        var devider = xymode ? 2.0 : 1.0;
+        console.log("Resize "+ xymode)
+        $('#main').css('width', (global_width - 190) / devider);
         $('#main').css('height', global_height);
 
+        $('#xy_main').css('width', (global_width - 190) / 2.0);
+        $('#xy_main').css('height', global_height);
+
         OSC.drawGraphGrid();
+        OSC.drawGraphGridXY();
 
         $(window).on('focus', function() {
-            // console.log("Tab FOCUS");
             OSC.drawGraphGrid();
+            OSC.drawGraphGridXY();
         });
 
         $(window).on('blur', function() {
-            // console.log("Tab BLUR");
         });
 
 
@@ -1584,10 +1699,22 @@
             $('#graphs .plot').hide();
         }
 
+        if ($('.xy_plot').length !== 0){
+            // Resize the graph holders
+            var gh = $('#xy_graph_grid').height()
+            var gw = $('#xy_graph_grid').width()
+            if (gh !== 0 && gw !== 0)
+                $('.xy_plot').css($('#xy_graph_grid').css(['height', 'width']));
+
+            // Hide all graphs, they will be shown next time signal data is received
+            $('#xy_graphs .xy_plot').hide();
+        }
+
         // Hide offset arrows, trigger level line and arrow
         $('.y-offset-arrow, #time_offset_arrow, #buf_time_offset, #trig_level_arrow, #trigger_level').hide();
 
-        OSC.requestAllParam();
+        if (requestAll)
+            OSC.requestAllParam();
 
         // Reset left position for trigger level arrow, it is added by jQ UI draggable
         $('#trig_level_arrow').css('left', '');

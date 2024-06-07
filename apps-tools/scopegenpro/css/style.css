@@ -90,7 +90,6 @@ input {
 }
 
 #triginfo {
-    position: absolute;
     width: 100%;
     text-align: center;
     padding-right: 222px;
@@ -215,7 +214,26 @@ area:hover {
 }
 
 #main {
-    margin-right: 188px;
+    float: left;
+}
+
+#xy_main {
+    float: left;
+    padding-top: 34px;
+    padding-left: 30px;
+    padding-right: 30px;
+    padding-bottom: 64px;
+}
+
+#xy_graphs_holder{
+    border: 1px solid #5d5d5c;
+    /* margin-bottom: 2px; */
+    width: 100%;
+    height: 100%;
+}
+
+#xy_graphs{
+    position: relative
 }
 
 #buffer {
@@ -322,6 +340,11 @@ area:hover {
     min-height: 100px;
 }
 
+#xy_info {
+    margin-top: 10px;
+    min-height: 100px;
+}
+
 .left-info {
     width: 160px;
     float: left;
@@ -332,7 +355,17 @@ area:hover {
     width: 46px;
 }
 
+.xy_info-title {
+    float: left;
+    width: 60px;
+}
+
 .info-value {
+    float: left;
+    width: 90px;
+}
+
+.xy_info-value {
     float: left;
     width: 90px;
 }
@@ -391,6 +424,12 @@ area:hover {
     color: #ab4d9d !important;
 }
 
+.x_y,
+.btn.x_y,
+.x_y.focus {
+    color: #faa200 !important;
+}
+
 .trig,
 .btn.trig,
 .trig.focus {
@@ -408,6 +447,7 @@ area:hover {
 .output1.active,
 .output2.active,
 .math.active,
+.x_y.active,
 .trig.active {
     color: #111 !important;
 }
@@ -534,6 +574,13 @@ btn:active {
     color: #cdcccc !important;
 }
 
+.x_y-radio-btn:disabled,
+.x_y-radio-btn.disabled {
+    background-image: none;
+    background-color: transparent;
+    color: #cdcccc !important;
+}
+
 #meas_list {
     margin-top: 10px;
     /* margin-bottom: 2px; */
@@ -649,6 +696,12 @@ btn:active {
     left: 0px;
 }
 
+.xy_plot {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+}
+
 .y-offset-arrow,
 #time_offset_arrow {
     position: absolute;
@@ -705,10 +758,29 @@ btn:active {
     z-index: 12;
 }
 
+.xy_harrow {
+    position: absolute;
+    right: 0;
+    top: 0;
+    margin-top: -7px;
+    display: none;
+    z-index: 12;
+}
+
 .varrow {
     position: absolute;
     left: 0;
     bottom: 8px;
+    margin-left: -7px;
+    margin-right: -7px;
+    display: none;
+    z-index: 12;
+}
+
+.xy_varrow {
+    position: absolute;
+    left: 0;
+    bottom: 5px;
     margin-left: -7px;
     margin-right: -7px;
     display: none;
@@ -750,6 +822,7 @@ btn:active {
     margin-top: -15px;
 }
 
+#xy_cur_x_diff,
 #cur_x_diff {
     font-family: "Glyphicons Halflings";
     font-size: 11px;
@@ -765,17 +838,20 @@ btn:active {
     z-index: 13;
 }
 
+#xy_cur_x_diff:before,
 #cur_x_diff:before {
     content: "\e079";
     margin-left: -5px;
 }
 
+#xy_cur_x_diff:after,
 #cur_x_diff:after {
     content: "\e080";
     margin-right: -5px;
     float: right;
 }
 
+#xy_cur_y_diff,
 #cur_y_diff {
     font-family: "Glyphicons Halflings";
     font-size: 11px;
@@ -789,6 +865,7 @@ btn:active {
     z-index: 13;
 }
 
+#xy_cur_y_diff:before,
 #cur_y_diff:before {
     content: "\e113";
     position: absolute;
@@ -797,6 +874,7 @@ btn:active {
     line-height: 1;
 }
 
+#xy_cur_y_diff:after,
 #cur_y_diff:after {
     content: "\e114";
     position: absolute;
@@ -805,13 +883,16 @@ btn:active {
     line-height: 1;
 }
 
+#xy_cur_y_diff_info.cur_info,
 #cur_y_diff_info.cur_info {
     left: 59px;
 }
 
+#xy_cur_x_diff_info.cur_info,
 #cur_x_diff_info.cur_info {
     top: 30px;
 }
+
 
 #info_box {
     position: absolute;

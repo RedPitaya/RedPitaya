@@ -79,8 +79,8 @@ typedef enum {
 * Type representing oscilloscope math and measure source
 */
 typedef enum {
-    RPAPP_OSC_SOUR_CH1  =   0,         //!< Trigger source ch1
-    RPAPP_OSC_SOUR_CH2  =   1,         //!< Trigger source ch2
+    RPAPP_OSC_SOUR_CH1  =   0,         //!< Trigger source channel 1
+    RPAPP_OSC_SOUR_CH2  =   1,         //!< Trigger source channel 2
     RPAPP_OSC_SOUR_CH3  =   2,         //!< Trigger source channel 3
     RPAPP_OSC_SOUR_CH4  =   3,         //!< Trigger source channel 4
     RPAPP_OSC_SOUR_MATH =   4          //!< Trigger source math
@@ -658,6 +658,20 @@ int rpApp_OscRefreshViewData();
 int rpApp_OscSetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode _mode);
 
 int rpApp_OscGetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode *_mode);
+
+int rpApp_OscSetEnableXY(bool _state);
+
+int rpApp_OscGetEnableXY(bool *_state);
+
+int rpApp_OscGetViewDataXY(float *dataX, float *dataY, uint32_t size);
+
+int rpApp_OscSetSrcXAxis(rpApp_osc_source channel);
+
+int rpApp_OscGetSrcXAxis(rpApp_osc_source *channel);
+
+int rpApp_OscSetSrcYAxis(rpApp_osc_source channel);
+
+int rpApp_OscGetSrcYAxis(rpApp_osc_source *channel);
 
 ///@}
 

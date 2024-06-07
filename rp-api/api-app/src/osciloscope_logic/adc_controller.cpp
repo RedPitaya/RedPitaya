@@ -173,7 +173,7 @@ auto CADCController::getTriggerSlope() -> rpApp_osc_trig_slope_t{
 }
 
 auto CADCController::setAttenuateAmplitudeChannelFunction(func_t _func) -> void{
-    std::lock_guard<std::mutex> lock(m_acqMutex);
+    std::lock_guard lock(m_acqMutex);
     m_attAmplFunc = _func;
 }
 
@@ -182,7 +182,7 @@ auto CADCController::getAttenuateAmplitudeChannelFunction() const -> func_t{
 }
 
 auto CADCController::setUnAttenuateAmplitudeChannelFunction(func_t _func) -> void{
-    std::lock_guard<std::mutex> lock(m_acqMutex);
+    std::lock_guard lock(m_acqMutex);
     m_UnAttAmplFunc = _func;
 }
 

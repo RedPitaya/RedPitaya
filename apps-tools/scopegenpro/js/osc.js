@@ -31,7 +31,6 @@
     }
 
     OSC.setScale = function(ch,new_params) {
-        var ch_name_l = ch.toLowerCase();
         var param_name = "OSC_"+ch+"_SCALE"
         var field = $('#' + param_name);
 
@@ -45,6 +44,7 @@
         $("#OSC_"+ch+"_OFFSET_UNIT").html(inp_units)
         if (!OSC.state.trig_dragging)
             OSC.updateTriggerDragHandle()
+        OSC.setXYAxisScale()
     }
 
 

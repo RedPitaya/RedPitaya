@@ -112,8 +112,10 @@ int threadSafe_acqStart();
 int threadSafe_acqStop();
 double scaleAmplitude(double volts, double ampScale, double probeAtt, double ampOffset, double invertFactor);
 int scaleAmplitudeChannel(rpApp_osc_source source, float volts, float *res);
+int scaleAmplitudeCalcCoffChannel(rpApp_osc_source _source, float &coff1, float &coff2);
 double unscaleAmplitude(double value, double ampScale, double probeAtt, double ampOffset, double invertFactor);
 int unscaleAmplitudeChannel(rpApp_osc_source source, float value, float *res);
+int unscaleAmplitudeCoffChannel(rpApp_osc_source _source, float &coff1, float &coff2);
 int attenuateAmplitudeChannel(rpApp_osc_source source, float value, float *res);
 int unattenuateAmplitudeChannel(rpApp_osc_source source, float value, float *res);
 double roundUpTo125(double data);
@@ -125,11 +127,22 @@ float calculateMath(float v1, float v2, rpApp_osc_math_oper_t op);
 double unOffsetAmplitude(double value, double ampScale, double ampOffset);
 int unscaleAmplitudeChannel(rpApp_osc_source source, float value, float *res);
 int unOffsetAmplitudeChannel(rpApp_osc_source source, float value, float *res);
+int unOffsetAmplitudeCoffChannel(rpApp_osc_source _source, float &coff1);
 
 // void clearView();
 // void clearMath();
 
 int osc_measureMax(rpApp_osc_source source, float *Max);
 int osc_measureMin(rpApp_osc_source source, float *Min);
+
+// XY mode
+
+int osc_setEnableXY(bool state);
+int osc_getEnableXY(bool *state);
+int osc_getDataXY(float *_dataX, float *_dataY, uint32_t _size);
+int osc_setSrcXAxis(rpApp_osc_source _channel);
+int osc_getSrcXAxis(rpApp_osc_source *_channel);
+int osc_setSrcYAxis(rpApp_osc_source _channel);
+int osc_getSrcYAxis(rpApp_osc_source *_channel);
 
 #endif //__OSCILOSCOPE_H
