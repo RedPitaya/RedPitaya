@@ -426,35 +426,49 @@ auto updateGeneratorParameters(bool force) -> void{
                         auto prevGainAPI = RP_GAIN_1X;
                         auto prevAmpAPI = 0.0f;
                         auto prevOffAPI = 0.0f;
+                        int res = 0;
+
+                        auto setAmpOff = [&](){
+                            auto newFpgaGain = RP_GAIN_1X;
+                            float Coff = outImp[ch].Value() == 1 ?  2.0 : 1.0; // 1 - 50Ohm. Coff = 2
+                            if ((fabs(outAmplitude[ch].NewValue())  + fabs(outOffset[ch].NewValue() )) * Coff > 1.0){
+                                newFpgaGain = RP_GAIN_5X;
+                                res |= rp_GenAmp((rp_channel_t)ch, outAmplitude[ch].NewValue() / 5.0 * Coff);
+                            } else {
+                                res |= rp_GenAmp((rp_channel_t)ch, outAmplitude[ch].NewValue() * Coff);
+                            }
+                            res |= rp_GenOffset((rp_channel_t)ch, (outOffset[ch].NewValue() * Coff) / (outGain[ch].Value() == 1 ? 5.0 : 1.0));
+
+                            auto curGenStatus = RP_GAIN_1X;
+                            rp_GenGetGainOut(ch,&curGenStatus);
+                            prevGainAPI = curGenStatus;
+                            if (curGenStatus != newFpgaGain && rp_GenSetGainOut((rp_channel_t)ch, newFpgaGain) == RP_OK) {
+                                outGain[ch].SendValue(newFpgaGain);
+                            }
+                        };
+
                         rp_GenGetAmp((rp_channel_t)ch,&prevAmpAPI);
                         rp_GenGetOffset((rp_channel_t)ch,&prevOffAPI);
-                        int res = 0;
-                        auto newFpgaGain = RP_GAIN_1X;
-                        float Coff = outImp[ch].Value() == 1 ?  2.0 : 1.0;
-                        if ((fabs(outAmplitude[ch].NewValue())  + fabs(outOffset[ch].NewValue() )) * Coff > 1.0){
-                            newFpgaGain = RP_GAIN_5X;
-                            res |= rp_GenAmp((rp_channel_t)ch, outAmplitude[ch].NewValue() / 5.0 * Coff);
-                        } else {
-                            res |= rp_GenAmp((rp_channel_t)ch, outAmplitude[ch].NewValue() * Coff);
-                        }
-                        res |= rp_GenOffset((rp_channel_t)ch, (outOffset[ch].NewValue() * Coff) / (outGain[ch].Value() == 1 ? 5.0 : 1.0));
 
-                        auto curGenStatus = RP_GAIN_1X;
-                        rp_GenGetGainOut(ch,&curGenStatus);
-                        prevGainAPI = curGenStatus;
-
-                        if (curGenStatus != newFpgaGain && rp_GenSetGainOut((rp_channel_t)ch, newFpgaGain) == RP_OK) {
-                            outGain[ch].SendValue(newFpgaGain);
-                        }
+                        setAmpOff();
 
                         if (res == RP_OK){
                             if (IS_NEW(outImp[ch]) && !force){
                                 float impCoff = outImp[ch].NewValue() == 1 ?  0.5 : 2.0;
                                 outImp[i].Update();
+                                // auto resetValues = false;
+                                if ((fabs(outAmplitude[ch].Value()) + fabs(outOffset[ch].Value())) <= 5.0){
+                                    impCoff = 1.0;
+                                    setAmpOff();
+                                    // resetValues = true;
+                                }
                                 outAmplitude[ch].Value() = outAmplitude[ch].Value() * impCoff;
                                 outAmplitude[ch].Update();
                                 outOffset[ch].Value() = outOffset[ch].Value() * impCoff;
                                 outOffset[ch].Update();
+                                // if (resetValues){
+
+                                // }
                             }
                         }else{
                             rp_GenAmp((rp_channel_t)ch,prevAmpAPI);
@@ -549,7 +563,7 @@ auto updateGeneratorParameters(bool force) -> void{
         if (IS_NEW(outScale[i]) || force)
         {
             outScale[i].Update();
-            std::lock_guard<std::mutex> lock(g_updateOutWaveFormCh_mtx);
+            std::lock_guard lock(g_updateOutWaveFormCh_mtx);
             g_updateOutWaveFormCh[i] = true;
         }
 
