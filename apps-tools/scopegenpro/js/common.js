@@ -91,6 +91,9 @@
             t = t * 1000000;
             unit = ' ns';
         }
+        if (abs_t === 0){
+            unit = ''
+        }
 
         if (print_units)
             return +(Number.parseFloat(t).toFixed(precision)) + ' ' + unit;

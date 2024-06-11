@@ -173,6 +173,7 @@
 
     OSC.setTimeScale = function(new_params){
         OSC.setTimeScaleOffset("OSC_TIME_SCALE")
+        OSC.updateTitileXAxisTicks()
     }
 
     OSC.trigSlope = function(new_params) {
@@ -300,6 +301,41 @@
         var field = $('#' + param_name);
         if (field.is('button')) {
             field[state === true? 'addClass' : 'removeClass']('active');
+        }
+    }
+
+    OSC.createXAxisTicks = function(){
+        var graphs = document.getElementById("main");
+        for(var i = -5; i <= 5; i++){
+            var tick = document.createElement('div');
+            tick.id = "xaxis_tick" + (i + 5)
+            tick.className = "x_axis_ticks"
+            tick.innerText = i;
+            graphs.appendChild(tick)
+        }
+        OSC.moveTitileXAxisTicks()
+    }
+
+    OSC.updateTitileXAxisTicks = function(){
+        var scale = 0
+        if (OSC.params.orig['OSC_TIME_SCALE']){
+            scale = OSC.params.orig['OSC_TIME_SCALE'].value * -1
+        }
+        for(var i = -5; i <= 5; i++){
+            var v = OSC.convertTime(i * scale)
+            $("#xaxis_tick" + (i + 5)).html(v)
+        }
+        OSC.moveTitileXAxisTicks()
+    }
+
+    OSC.moveTitileXAxisTicks = function(){
+        var gh = $('#graphs_holder').height()
+        var gw = $('#graphs_holder').width()
+        for(var i = -5; i <= 5; i++){
+            var ws = $("#xaxis_tick" + (i + 5)).width() / 2
+            if (i == -5) ws = 0
+            if (i ==  5) ws *= 2
+            $("#xaxis_tick" + (i + 5)).css('top',gh + 30).css('left', gw / 2.0 + (gw / 2.0) * i/5.0 + 20 - ws)
         }
     }
 

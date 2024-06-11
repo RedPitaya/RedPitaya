@@ -215,6 +215,7 @@ area:hover {
 
 #main {
     float: left;
+    padding-left: 20px;
 }
 
 #xy_main {
@@ -222,7 +223,8 @@ area:hover {
     padding-top: 34px;
     padding-left: 30px;
     padding-right: 30px;
-    padding-bottom: 64px;
+    padding-bottom: 94px;
+    position: relative;
 }
 
 #xy_graphs_holder{
@@ -230,6 +232,8 @@ area:hover {
     /* margin-bottom: 2px; */
     width: 100%;
     height: 100%;
+    margin-left: 20px;
+    /* padding-bottom: 20px; */
 }
 
 #xy_graphs{
@@ -678,6 +682,7 @@ btn:active {
     margin-top: 12px;
     padding-top: 8px;
     overflow: hidden;
+    padding-bottom: 20px;
 }
 
 #graphs {
@@ -719,6 +724,12 @@ btn:active {
 
 #osc_trig_edge_img {
     margin: -2px 0 0;
+}
+
+.x_axis_ticks {
+    position: absolute;
+    color: #ccc;
+    font-size:smaller;
 }
 
 .hline {

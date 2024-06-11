@@ -36,6 +36,7 @@
             field.val(new_params[param_name].value);
         }
         OSC.setXYAxisScale()
+        OSC.updateTitileXAxisTicksXY()
     }
 
     OSC.updateXYSrcY = function(new_params,param_name) {
@@ -172,6 +173,45 @@
             }
         }
         OSC.upda
+    }
+
+    OSC.createXAxisTicksXY = function(){
+        var graphs = document.getElementById("xy_main");
+        for(var i = -5; i <= 5; i++){
+            var tick = document.createElement('div');
+            tick.id = "xy_xaxis_tick" + (i + 5)
+            tick.className = "x_axis_ticks"
+            tick.innerText = i;
+            graphs.appendChild(tick)
+        }
+        OSC.moveTitileXAxisTicksXY()
+    }
+
+    OSC.updateTitileXAxisTicksXY = function(){
+        var scale = 0
+        var srcName = ""
+        if (OSC.params.orig['X_AXIS_SOURCE']){
+            var xsrc = OSC.params.orig['X_AXIS_SOURCE'].value;
+            srcName = OSC.xyGetCh(xsrc)
+            if (srcName !== ""){
+                scale = OSC.params.orig["OSC_"+srcName+"_SCALE"] ? OSC.params.orig["OSC_"+srcName+"_SCALE"].value : 0;
+            }
+        }
+        for(var i = -5; i <= 5; i++){
+            $("#xy_xaxis_tick" + (i + 5)).html(OSC.convertVoltage(-i * scale)+(srcName == "MATH" ? OSC.xyMathSuffix() : ""))
+        }
+        OSC.moveTitileXAxisTicksXY()
+    }
+
+    OSC.moveTitileXAxisTicksXY = function(){
+        var gh = $('#xy_main').height()
+        var gw = $('#xy_main').width()
+        for(var i = -5; i <= 5; i++){
+            var ws = $("#xy_xaxis_tick" + (i + 5)).width() / 2
+            if (i == -5) ws = 0
+            if (i ==  5) ws *= 2
+            $("#xy_xaxis_tick" + (i + 5)).css('top',gh + 36).css('left', gw / 2.0 + (gw / 2.0) * i/5.0 + 48 - ws)
+        }
     }
 
 

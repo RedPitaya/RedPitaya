@@ -432,6 +432,8 @@
                 OSC.drawGraphGrid();
                 OSC.drawGraphGridXY();
                 OSC.requestAllParam();
+                OSC.createXAxisTicks();
+                OSC.createXAxisTicksXY();
                 OSC.resize();
                 OSC.is_webpage_loaded = true;
             });
@@ -913,6 +915,10 @@
         }
     }
 
+    function funcxTickFormat(val, axis) {
+        return val
+    }
+
     // Processes newly received data for signals
     OSC.iterCnt = 0;
     OSC.processSignals = function(new_signals) {
@@ -989,6 +995,8 @@
             }
         }
 
+       // var x_ticks = [ -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5];
+
         if (OSC.graphs["ch1"]) {
             OSC.graphs["ch1"].elem.show();
             OSC.graphs["ch1"].plot.setColors(colorsArr);
@@ -1009,7 +1017,17 @@
                     max: 5
                 },
                 xaxis: {
-                    min: 0
+                    min: 0,
+                    tickColor: '#aaaaaa',
+                 //   ticks: x_ticks,
+                    transform: function(v) {
+                        var scale = 1
+                        if (OSC.params.orig['OSC_TIME_SCALE']){
+                            scale = OSC.params.orig['OSC_TIME_SCALE'].value
+                        }
+                        return v * scale;
+                    },
+                    tickFormatter: funcxTickFormat
                 },
                 grid: {
                     show: false
@@ -1298,7 +1316,7 @@
         if (graph_grid.length  === 0) return;
 
         var canvas_width = $('#graphs').width() - 2;
-        var canvas_height = window.innerHeight - 300; // Math.round(canvas_width / 2.5);
+        var canvas_height = window.innerHeight - 330; // Math.round(canvas_width / 2.5);
 
         var center_x = canvas_width / 2;
         var center_y = canvas_height / 2;
@@ -1375,7 +1393,7 @@
         if (graph_grid.length  === 0) return;
 
         var canvas_width = $('#xy_graphs').width() - 2;
-        var canvas_height = window.innerHeight - 300; // Math.round(canvas_width / 2.5);
+        var canvas_height = window.innerHeight - 330; // Math.round(canvas_width / 2.5);
 
         var center_x = canvas_width / 2;
         var center_y = canvas_height / 2;
@@ -1685,6 +1703,9 @@
             OSC.drawGraphGridXY();
         });
 
+        OSC.moveTitileXAxisTicks()
+        OSC.moveTitileXAxisTicksXY()
+
         $(window).on('blur', function() {
         });
 
@@ -1712,7 +1733,6 @@
 
         // Hide offset arrows, trigger level line and arrow
         $('.y-offset-arrow, #time_offset_arrow, #buf_time_offset, #trig_level_arrow, #trigger_level').hide();
-
         if (requestAll)
             OSC.requestAllParam();
 
