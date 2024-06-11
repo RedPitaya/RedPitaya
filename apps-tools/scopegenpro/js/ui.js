@@ -725,16 +725,16 @@
             //laAxesMoving = false;
         });
         $(".full-content").mousemove(function(event) {
-            if (OSC.state.trig_dragging || OSC.state.cursor_dragging || OSC.state.cursor_dragging_measure) {
+            if (OSC.state.trig_dragging || OSC.state.cursor_dragging || OSC.state.trig_in || OSC.state.cursor_dragging_measure) {
                 laAxesMoving = false;
                 return;
             }
             if (OSC.state.line_moving) return;
-            if (laAxesMoving && !OSC.state.cursor_dragging && !OSC.state.cursor_dragging_measure && !OSC.state.mouseover) {
+            if (laAxesMoving && !OSC.state.cursor_dragging && !OSC.state.trig_dragging &&!OSC.state.cursor_dragging_measure && !OSC.state.mouseover) {
                 if (!$.isEmptyObject(OSC.graphs)) {
                     var diff = event.pageX - curXPos;
                     curXPos = event.pageX;
-
+                    console.log("TEST move full",OSC.state.trig_dragging)
                     var graphs_width = $('#graphs').width();
                     var graphs_offset = $('#graphs').offset().left;
 

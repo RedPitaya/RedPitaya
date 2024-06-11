@@ -126,8 +126,7 @@
                 if (OSC.params.orig[ref_scale] !== undefined) {
                     var graph_height = $('#graph_grid').height();
                     var volt_per_px = (OSC.params.orig[ref_scale].value * 10) / graph_height;
-                    var new_value = (graph_height / 2 - ui.position.top - (ui.helper.height() - 2) / 2 - parseInt(ui.helper.css('margin-top'))) * volt_per_px - source_offset;
-
+                    var new_value = (graph_height / 2 - ui.position.top - ui.helper.height() / 2 - parseInt(ui.helper.css('margin-top')) + 2.5) * volt_per_px - source_offset;
                     if (OSC.params.orig['OSC_TRIG_LIMIT'] !== undefined && (new_value > OSC.params.orig['OSC_TRIG_LIMIT'].value || new_value < -OSC.params.orig['OSC_TRIG_LIMIT'].value)) {
                         $('#info_box').html('Trigger at its limit');
                         if (new_value > OSC.params.orig['OSC_TRIG_LIMIT'].value)
@@ -165,6 +164,14 @@
 
     OSC.updateTriggerDragHandle = function() {
         // Trigger level arrow dragging
+        $('#trig_level_arrow').on( "mouseenter", function() {
+            OSC.state.trig_in = true;
+        });
+
+        $('#trig_level_arrow').on( "mouseout", function() {
+            OSC.state.trig_out= false;
+        });
+
         $('#trig_level_arrow').draggable({
             axis: 'y',
             containment: OSC.calculateTrigLimit(),
@@ -197,7 +204,7 @@
             var px_limit = limit_value / volt_per_px;
             var max_value = (graph_height + 7) / 2 - px_offset + px_limit;
             var min_value = (graph_height + 7) / 2 - px_offset - px_limit;
-            var limits = [0,graph_top + min_value,0,graph_top + max_value];
+            var limits = [0,Math.max(graph_top + min_value,graph_top),0, Math.min(graph_top + max_value,graph_top + graph_height)];
             return limits;
         }
         return 'parent'
@@ -231,7 +238,11 @@
                     var graph_height = $('#graph_grid').outerHeight();
                     var volt_per_px = (scale_value * 10) / graph_height;
                     var px_offset = -((level_value + source_offset) / volt_per_px - parseInt($('#trig_level_arrow').css('margin-top')) / 2);
-                    $('#trig_level_arrow, #trigger_level').css('top', (graph_height + 7) / 2 + px_offset).show();
+                    var trig_position = (graph_height + 7) / 2 + px_offset;
+                    var limits = OSC.calculateTrigLimit()
+                    if (0 > trig_position) trig_position = 0
+                    if (graph_height < trig_position) trig_position = graph_height
+                    $('#trig_level_arrow, #trigger_level').css('top', trig_position).show();
                     $('.in_trigger_settings').show();
                     $('#right_menu .menu-btn.trig').prop('disabled', false);
                     $('#osc_trig_level_info').html(OSC.convertVoltage(level_value));
