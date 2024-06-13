@@ -57,7 +57,7 @@
 
             if (ref_scale_val !== undefined && ref_offset_val !=  undefined && ref_show_val !== undefined){
                 for(var i = 1 ; i <= 2; i++){
-                    var y = 'y'+i;
+                    var y = 'y' + i;
                     var c_out_name = 'OSC_CURSOR_Y' + i;
                     var c_pos_name = 'OSC_CUR'+i+'_V';
 
@@ -81,6 +81,7 @@
                             top = 0;
                             overflow = true;
                         }
+
                         if (top > graph_height) {
                             top = graph_height;
                             overflow = true;

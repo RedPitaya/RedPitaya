@@ -429,19 +429,19 @@ area:hover {
 }
 
 .x_y,
-.btn.x_y,
+.not_btn.x_y,
 .x_y.focus {
     color: #faa200 !important;
 }
 
 .trig,
-.btn.trig,
+.not_btn.trig,
 .trig.focus {
     color: #75cede !important;
 }
 
 .out_e2,
-.btn.out_e2,
+.not_btn.out_e2,
 .out_e2.focus {
     color: #c911b9 !important;
 }
@@ -549,6 +549,20 @@ area:hover {
     color: #cdcccc;
     height: 10px;
     text-shadow: 0px 1px 1px #111;
+}
+
+.not_btn {
+    background-image: none;
+    border: 0 solid transparent;
+    white-space: nowrap;
+    padding: 6px 12px;
+    line-height: 1.42857143;
+    border-radius: 0;
+    width: 100%;
+    background-color: transparent;
+    text-shadow: 0px 0px;
+    /*  box-shadow: 0 0 0 1px #777; */
+    color: #cdcccc !important;
 }
 
 .btn {
@@ -730,6 +744,25 @@ btn:active {
     position: absolute;
     color: #ccc;
     font-size:smaller;
+}
+
+.y_axis_ticks {
+    position: absolute;
+    color: #ccc;
+    font-size:smaller;
+}
+
+.rotate {
+    writing-mode: vertical-lr;
+    /* transform: translateX(-50%) translateY(-50%) rotate(180deg); */
+    /* Safari */
+    /* -webkit-transform: translateX(-50%) translateY(-50%) rotate(180deg); */
+    /* Firefox */
+    /* -moz-transform: translateX(-50%) translateY(-50%) rotate(180deg); */
+    /* IE */
+    /* -ms-transform: translateX(-50%) translateY(-50%) rotate(180deg); */
+    /* Opera */
+    /* -o-transform: translateX(-50%) translateY(-50%) rotate(180deg); */
 }
 
 .hline {

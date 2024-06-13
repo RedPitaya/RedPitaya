@@ -15,14 +15,14 @@
                 OSC.resize()
             }
             $('#xy_main').css("display", "");
-            $('#right_menu .menu-btn.x_y').prop('disabled', false);
+            $('#right_menu .menu-btn.x_y').removeAttr('disabled');
             OSC.drawGraphGridXY()
         }else{
             if ($('#xy_main').css("display") !== "none"){
                 OSC.resize()
             }
             $('#xy_main').css("display", "none");
-            $('#right_menu .menu-btn.x_y').prop('disabled', true);
+            $('#right_menu .menu-btn.x_y').attr('disabled', 'disabled');
         }
         // OSC.resize(false)
         // OSC.showInArrow(ch,state);
@@ -45,6 +45,7 @@
             field.val(new_params[param_name].value);
         }
         OSC.setXYAxisScale()
+        OSC.updateTitileYAxisTicksXY()
     }
 
     OSC.drawSignalXY = function(signals) {
@@ -175,6 +176,11 @@
         OSC.upda
     }
 
+    OSC.createAxisTicksXY = function(){
+        OSC.createXAxisTicksXY()
+        OSC.createYAxisTicksXY()
+    }
+
     OSC.createXAxisTicksXY = function(){
         var graphs = document.getElementById("xy_main");
         for(var i = -5; i <= 5; i++){
@@ -214,5 +220,42 @@
         }
     }
 
+    OSC.createYAxisTicksXY = function(){
+        var graphs = document.getElementById("xy_main");
+        for(var i = -5; i <= 5; i++){
+            var tick = document.createElement('div');
+            tick.id = "xy_yaxis_tick" + (i + 5)
+            tick.className = "y_axis_ticks rotate"
+            tick.innerText = i;
+            graphs.appendChild(tick)
+        }
+        OSC.moveTitileYAxisTicksXY()
+    }
+
+    OSC.updateTitileYAxisTicksXY = function(){
+        var scale = 0
+        var srcName = ""
+        if (OSC.params.orig['Y_AXIS_SOURCE']){
+            var xsrc = OSC.params.orig['Y_AXIS_SOURCE'].value;
+            srcName = OSC.xyGetCh(xsrc)
+            if (srcName !== ""){
+                scale = OSC.params.orig["OSC_"+srcName+"_SCALE"] ? OSC.params.orig["OSC_"+srcName+"_SCALE"].value : 0;
+            }
+        }
+        for(var i = -5; i <= 5; i++){
+            $("#xy_yaxis_tick" + (i + 5)).html(OSC.convertVoltage(-i * scale)+(srcName == "MATH" ? OSC.xyMathSuffix() : ""))
+        }
+        OSC.moveTitileYAxisTicksXY()
+    }
+
+    OSC.moveTitileYAxisTicksXY = function(){
+        var gh = $('#xy_main').height()
+        for(var i = -5; i <= 5; i++){
+            var ws = $("#xy_yaxis_tick" + (i + 5)).height() / 2
+            if (i == -5) ws = 0
+            if (i ==  5) ws *= 2
+            $("#xy_yaxis_tick" + (i + 5)).css('left',32).css('top', gh / 2.0 + (gh / 2.0) * i/5.0 + 33 - ws)
+        }
+    }
 
 }(window.OSC = window.OSC || {}, jQuery));

@@ -45,6 +45,7 @@
         if (!OSC.state.trig_dragging)
             OSC.updateTriggerDragHandle()
         OSC.setXYAxisScale()
+        OSC.updateTitileYAxisTicks()
     }
 
 
@@ -304,6 +305,11 @@
         }
     }
 
+    OSC.createAxisTicks = function(){
+        OSC.createXAxisTicks()
+        OSC.createYAxisTicks()
+    }
+
     OSC.createXAxisTicks = function(){
         var graphs = document.getElementById("main");
         for(var i = -5; i <= 5; i++){
@@ -336,6 +342,54 @@
             if (i == -5) ws = 0
             if (i ==  5) ws *= 2
             $("#xaxis_tick" + (i + 5)).css('top',gh + 30).css('left', gw / 2.0 + (gw / 2.0) * i/5.0 + 20 - ws)
+        }
+    }
+
+    OSC.createYAxisTicks = function(){
+        var graphs = document.getElementById("main");
+        for(var i = -5; i <= 5; i++){
+            var tick = document.createElement('div');
+            tick.id = "yaxis_tick" + (i + 5)
+            tick.className = "y_axis_ticks rotate"
+            tick.innerText = i
+            graphs.appendChild(tick)
+        }
+        OSC.updateTitileYAxisTicks()
+    }
+
+    OSC.updateTitileYAxisTicks = function(){
+
+        var selected = $('#right_menu .btn.menu-btn.active')
+
+        selected.each(function(idx, li) {
+            var itm = $(li).attr('channel')
+            var ref_scale = ''
+            var suffix = ''
+            if (itm == "MATH"){
+                ref_scale = 'OSC_MATH_SCALE'
+                suffix = OSC.xyMathSuffix()
+            }else{
+                ref_scale = 'OSC_'+ itm +'_SCALE';
+            }
+            var scale = 0
+            if (OSC.params.orig[ref_scale]){
+                scale = -OSC.params.orig[ref_scale].value
+            }
+            for(var i = -5; i <= 5; i++){
+                var v = OSC.convertVoltage(i * scale) + suffix
+                $("#yaxis_tick" + (i + 5)).html(v)
+            }
+        })
+        OSC.moveTitileYAxisTicks()
+    }
+
+    OSC.moveTitileYAxisTicks = function(){
+        var gh = $('#graphs').height() - 8
+        for(var i = -5; i <= 5; i++){
+            var ws = $("#yaxis_tick" + (i + 5)).height() / 2
+            if (i == -5) ws = 0
+            if (i ==  5) ws *= 2
+            $("#yaxis_tick" + (i + 5)).css('left',2).css('top', gh / 2.0 + (gh / 2.0) * i/5.0 + 33 - ws)
         }
     }
 

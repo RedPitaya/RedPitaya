@@ -20,6 +20,16 @@
         $(this).trigger('activeChanged', 'remove');
         return result;
     }
+    $.fn.onClassChange = function(cb) {
+        return $(this).each((_, el) => {
+          new MutationObserver(mutations => {
+            mutations.forEach(mutation => cb && cb(mutation.target, mutation.target.className));
+          }).observe(el, {
+            attributes: true,
+            attributeFilter: ['class'] // only listen for class attribute changes
+          });
+        });
+    }
 })();
 
 
@@ -410,7 +420,6 @@
             console.log("Model",_value.value)
             $('#BODY').load((_value.value === "Z20_125_4CH" ? "4ch_adc.html" : "2ch_adc.html"), function() {
                 $("#back_button").attr("href", OSC.previousPageUrl)
-
                 OSC.rp_model = _value.value;
                 console.log( "Load was performed." );
 
@@ -432,8 +441,8 @@
                 OSC.drawGraphGrid();
                 OSC.drawGraphGridXY();
                 OSC.requestAllParam();
-                OSC.createXAxisTicks();
-                OSC.createXAxisTicksXY();
+                OSC.createAxisTicks();
+                OSC.createAxisTicksXY();
                 OSC.resize();
                 OSC.is_webpage_loaded = true;
             });
@@ -1704,7 +1713,9 @@
         });
 
         OSC.moveTitileXAxisTicks()
+        OSC.moveTitileYAxisTicks()
         OSC.moveTitileXAxisTicksXY()
+        OSC.moveTitileYAxisTicksXY()
 
         $(window).on('blur', function() {
         });
@@ -1743,8 +1754,6 @@
         OSC.updateJoystickPosition();
 
     };
-
-
 
 
 }(window.OSC = window.OSC || {}, jQuery));

@@ -127,6 +127,12 @@
                     var graph_height = $('#graph_grid').height();
                     var volt_per_px = (OSC.params.orig[ref_scale].value * 10) / graph_height;
                     var new_value = (graph_height / 2 - ui.position.top - ui.helper.height() / 2 - parseInt(ui.helper.css('margin-top')) + 2.5) * volt_per_px - source_offset;
+
+                    if (OSC.params.orig['OSC_TRIG_LIMIT'] !== undefined){
+                        if (new_value > OSC.params.orig['OSC_TRIG_LIMIT'].value) new_value = OSC.params.orig['OSC_TRIG_LIMIT'].value
+                        if (new_value < -OSC.params.orig['OSC_TRIG_LIMIT'].value) new_value = -OSC.params.orig['OSC_TRIG_LIMIT'].value
+                    }
+
                     if (OSC.params.orig['OSC_TRIG_LIMIT'] !== undefined && (new_value > OSC.params.orig['OSC_TRIG_LIMIT'].value || new_value < -OSC.params.orig['OSC_TRIG_LIMIT'].value)) {
                         $('#info_box').html('Trigger at its limit');
                         if (new_value > OSC.params.orig['OSC_TRIG_LIMIT'].value)
@@ -202,9 +208,9 @@
             var volt_per_px = (scale_value * 10) / graph_height;
             var px_offset = ((source_offset) / volt_per_px - parseInt($('#trig_level_arrow').css('margin-top')) / 2);
             var px_limit = limit_value / volt_per_px;
-            var max_value = (graph_height + 7) / 2 - px_offset + px_limit;
-            var min_value = (graph_height + 7) / 2 - px_offset - px_limit;
-            var limits = [0,Math.max(graph_top + min_value,graph_top),0, Math.min(graph_top + max_value,graph_top + graph_height)];
+            var max_value = (graph_height + 8.0) / 2.0 - px_offset + px_limit;
+            var min_value = (graph_height + 8.0) / 2.0 - px_offset - px_limit;
+            var limits = [0,Math.max(graph_top + min_value - 1,graph_top),0, Math.min(graph_top + max_value + 1,graph_top + graph_height)];
             return limits;
         }
         return 'parent'

@@ -73,6 +73,7 @@ OSC.setSourVolt = function(ch){
     if (scale !== undefined){
         $('#SOUR'+ch+'_VOLT_info').html(OSC.convertVoltage(scale));
     }
+    OSC.updateTitileYAxisTicks()
 }
 
 OSC.src1Volt = function(new_params) {

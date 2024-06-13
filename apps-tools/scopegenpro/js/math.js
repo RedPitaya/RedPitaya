@@ -152,6 +152,7 @@
     OSC.updateMathScale = function(new_params) {
         OSC.setMathScale()
         OSC.chMathOffset()
+        OSC.updateTitileYAxisTicks()
     }
 
     OSC.updateMathOp = function(new_params,param_name) {

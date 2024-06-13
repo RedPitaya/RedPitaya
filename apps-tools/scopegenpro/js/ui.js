@@ -365,6 +365,11 @@
 
     OSC.initUI = function(){
 
+
+        $('.btn.menu-btn').onClassChange(function(el, newClass) {
+            OSC.updateTitileYAxisTicks()
+        } );
+
         // Joystick events
         $('#jtk_up').on('mousedown touchstart', function() { $('#jtk_btns').attr('src', 'img/node_up.png'); });
         $('#jtk_left').on('mousedown touchstart', function() { $('#jtk_btns').attr('src', 'img/node_left.png'); });
@@ -546,13 +551,16 @@
 
         // Selecting active signal
         $('.menu-btn').on('click', function() {
-            $('#right_menu .menu-btn').not(this).removeClass('active');
-            if (!$(this).hasClass('active'))
-                OSC.state.sel_sig_name = $(this).data('signal');
-            else
-                OSC.state.sel_sig_name = null;
-            $('.y-offset-arrow').css('z-index', 10);
-            $('#' + OSC.state.sel_sig_name + '_offset_arrow').css('z-index', 11);
+            if (!$(this).hasClass('not-signal')){
+                $('#right_menu .menu-btn').not(this).removeClass('active');
+                if (!$(this).hasClass('active'))
+                    OSC.state.sel_sig_name = $(this).data('signal');
+                else
+                    OSC.state.sel_sig_name = null;
+                $('.y-offset-arrow').css('z-index', 10);
+                $('#' + OSC.state.sel_sig_name + '_offset_arrow').css('z-index', 11);
+            }
+            OSC.updateTitileYAxisTicks()
         });
 
         // Opening a dialog for changing parameters
@@ -868,6 +876,8 @@
 
         // OSC.updateLimits();
         OSC.formatVals();
+
+
     }
 
 
