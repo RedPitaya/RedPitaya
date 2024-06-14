@@ -372,7 +372,6 @@ scpi_result_t RP_GenArbitraryWaveForm(scpi_t *context) {
         SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Failed to arbitrary waveform data parameter.");
         return SCPI_RES_ERR;
     }
-
     auto result = rp_GenArbWaveform(channel, buffer, size);
     if(result != RP_OK){
         RP_LOG_CRIT("Failed to set arbitrary waveform data: %s", rp_GetError(result));
@@ -398,7 +397,7 @@ scpi_result_t RP_GenArbitraryWaveFormQ(scpi_t *context) {
         return SCPI_RES_ERR;
     }
 
-    SCPI_ResultBufferFloat(context, buffer, size);
+    SCPI_ResultBufferFloat(context, buffer, ret_size);
     RP_LOG_INFO("%s",rp_GetError(result))
     return SCPI_RES_OK;
 }
