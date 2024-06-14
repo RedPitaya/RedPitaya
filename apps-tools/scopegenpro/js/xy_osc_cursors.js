@@ -14,6 +14,7 @@
            stop: function(ev, ui) {
                OSC.updateYCursorElemsXY(ui, true);
                OSC.state.xy_cursor_dragging_measure = false;
+               $(ui.helper[0]).css('left','')
            }
        });
 
@@ -64,10 +65,6 @@
                 var y_cur_v = OSC.params.orig[c_pos_name] != undefined ?  OSC.params.orig[c_pos_name].value : undefined
 
                 if (y_cur) {
-                    // var ocs = OSC.params.orig['OSC_CURSOR_SRC'].value;
-
-                    // var ref_scale = ocs == OSC.adc_channes ? 'OSC_MATH_SCALE' : 'OSC_CH'+ (ocs + 1) +'_SCALE';
-                    // var ref_offset = ocs == OSC.adc_channes ? 'OSC_MATH_OFFSET' : 'OSC_CH'+ (ocs + 1) +'_OFFSET';
 
                     var graph_height = $('#xy_graph_grid').height();
                     var volt_per_px = 10.0 / graph_height;
@@ -93,7 +90,7 @@
                             var y_cur_volt = y_cur_v * scale
                             $('#xy_cur_' + y + '_info').css('top', top - 14).show();
                             $('#xy_cur_' + y + '_info')
-                                .html(OSC.convertVoltage(y_cur_volt)+(srcName == "MATH" ? OSC.xyMathSuffix() : ""))
+                                .html(OSC.convertVoltage(y_cur_volt)+(srcName == "MATH" ? OSC.mathSuffix() : ""))
                                 .data('cleanval', y_cur_volt)
                                 .css('margin-top', (top < 16 ? 3 : ''));
                         }
@@ -165,7 +162,7 @@
                                 var x_cur_volt = -x_cur_t * scale
                                 $('#xy_cur_' + x + '_info').css('left', left + 2).show();
                                 $('#xy_cur_' + x + '_info')
-                                                .html(OSC.convertVoltage(x_cur_volt)+(srcName == "MATH" ? OSC.xyMathSuffix() : ""))
+                                                .html(OSC.convertVoltage(x_cur_volt)+(srcName == "MATH" ? OSC.mathSuffix() : ""))
                                                 .data('cleanval', x_cur_volt)
                                                 .css('margin-left', (left + msg_width > graph_width - 2 ? -msg_width - 1 : ''));
                             }
@@ -213,7 +210,7 @@
 
 
                 $('#xy_cur_' + y + '_info')
-                    .html(OSC.convertVoltage(+new_value * scale)+(srcName == "MATH" ? OSC.xyMathSuffix() : ""))
+                    .html(OSC.convertVoltage(+new_value * scale)+(srcName == "MATH" ? OSC.mathSuffix() : ""))
                     .data('cleanval', +new_value * scale)
                     .css('margin-top', (ui.position.top < 16 ? 3 : ''));
             }
@@ -239,12 +236,11 @@
                 var ms_per_px = 10.0 / graph_width;
                 var msg_width = $('#xy_cur_' + x + '_info').outerWidth();
                 var new_value = (graph_width / 2 - ui.position.left - (ui.helper.width() - 2) / 2 - parseInt(ui.helper.css('margin-left'))) * ms_per_px
-                console.log("TEST",scale,new_value)
                 $('#xy_cur_' + x + '_arrow, #xy_cur_' + x + ', #xy_cur_' + x + '_info').show();
                 $('#xy_cur_' + x).css('left', ui.position.left);
                 $('#xy_cur_' + x + '_info').css('left', ui.position.left + 2).show();
                 $('#xy_cur_' + x + '_info')
-                    .html(OSC.convertVoltage(-new_value * scale)+(srcName == "MATH" ? OSC.xyMathSuffix() : ""))
+                    .html(OSC.convertVoltage(-new_value * scale)+(srcName == "MATH" ? OSC.mathSuffix() : ""))
                     .data('cleanval', -new_value * scale)
                     .css('margin-left', (ui.position.left + msg_width > graph_width - 2 ? -msg_width - 1 : ''));
             }
@@ -279,7 +275,7 @@
                         .height(diff_px)
                         .show();
                     $('#xy_cur_y_diff_info')
-                        .html(OSC.convertVoltage(Math.abs(value))+(srcName == "MATH" ? OSC.xyMathSuffix() : ""))
+                        .html(OSC.convertVoltage(Math.abs(value))+(srcName == "MATH" ? OSC.mathSuffix() : ""))
                         .css('top', top + diff_px / 2 - 2)
                         .show();
                 } else {
@@ -309,7 +305,7 @@
                         .width(diff_px)
                         .show();
                     $('#xy_cur_x_diff_info')
-                        .html(OSC.convertVoltage(Math.abs(value))+(srcName == "MATH" ? OSC.xyMathSuffix() : ""))
+                        .html(OSC.convertVoltage(Math.abs(value))+(srcName == "MATH" ? OSC.mathSuffix() : ""))
                         .show()
                         .css('left', left + diff_px / 2 - $('#cur_x_diff_info').width() / 2 + 3);
                 } else {

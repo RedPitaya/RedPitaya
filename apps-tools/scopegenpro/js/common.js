@@ -145,6 +145,59 @@
         return +(v.toFixed(2)) + ' ' + unit;
     };
 
+    OSC.mathSuffix = function(){
+        var value_op = OSC.params.orig["OSC_MATH_OP"] ? OSC.params.orig["OSC_MATH_OP"].value : undefined;
+        if (value_op !== undefined){
+            var units = ['', '', '',  '^2', '', '',  '/s', 's'];
+            return units[value_op]
+        }
+        return ""
+    }
+
+    OSC.getCurrentActiveChannel = function() {
+        var selected = $('#right_menu .btn.menu-btn.active')
+        OSC.state.active_channel = ''
+        selected.each(function(idx, li) {
+            OSC.state.active_channel = $(li).attr('channel')
+        })
+    }
+
+    OSC.getSettingsActiveChannel = function() {
+        var name = OSC.state.active_channel
+        var scale = 0
+        var offset = 0
+        var suffix = ''
+        var ref_scale = ''
+        var ref_offset = ''
+
+        var itm = name
+        if (itm){
+            if (itm == "MATH"){
+                ref_scale = 'OSC_MATH_SCALE'
+                ref_offset = 'OSC_MATH_OFFSET'
+                suffix = OSC.mathSuffix()
+            }else if (itm.includes('OUTPUT')) {
+                ref_scale = 'OSC_'+ itm +'_SCALE';
+                ref_offset = itm + '_SHOW_OFF';
+            } else {
+                ref_scale = 'OSC_'+ itm +'_SCALE';
+                ref_offset = 'OSC_'+ itm +'_OFFSET';
+            }
+            if (OSC.params.orig[ref_scale]){
+                scale = OSC.params.orig[ref_scale].value
+            }
+            if (OSC.params.orig[ref_offset]){
+                offset = OSC.params.orig[ref_offset].value
+            }
+        }
+        return {
+            channel: name,
+            scale: scale,
+            offset: offset,
+            suffix: suffix
+          };
+    }
+
     OSC.formatInputValue = function(oldValue, attenuation, is_milis, is_hv) {
         var z = oldValue;
         if (is_milis)

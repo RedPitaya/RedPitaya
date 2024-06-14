@@ -110,15 +110,6 @@
         }
     }
 
-    OSC.xyMathSuffix = function(){
-        var value_op = OSC.params.orig["OSC_MATH_OP"] ? OSC.params.orig["OSC_MATH_OP"].value : undefined;
-        if (value_op !== undefined){
-            var units = ['', '', '',  '^2', '', '',  '/s', 's'];
-            return units[value_op]
-        }
-        return ""
-    }
-
     OSC.setXYAxisScale = function(){
 
         if (OSC.params.orig['X_AXIS_SOURCE']){
@@ -139,7 +130,7 @@
                 }
                 $('#OSC_XY_X_AXIS_SCALE , #OSC_XY_X_AXIS_SCALE_UNIT, #OSC_XY_X_AXIS_NAME').css('color', OSC.config.graph_colors[srcName.toLowerCase()])
                 $('#OSC_XY_X_AXIS_SCALE').html(value)
-                $("#OSC_XY_X_AXIS_SCALE_UNIT").html(unit + (srcName == "MATH" ? OSC.xyMathSuffix() : "") +"/div")
+                $("#OSC_XY_X_AXIS_SCALE_UNIT").html(unit + (srcName == "MATH" ? OSC.mathSuffix() : "") +"/div")
                 OSC.xyCursorX();
                 OSC.updateXCursorDiffXY()
             }else{
@@ -166,7 +157,7 @@
                 }
                 $('#OSC_XY_Y_AXIS_SCALE , #OSC_XY_Y_AXIS_SCALE_UNIT, #OSC_XY_Y_AXIS_NAME').css('color', OSC.config.graph_colors[srcName.toLowerCase()])
                 $('#OSC_XY_Y_AXIS_SCALE').html(value)
-                $("#OSC_XY_Y_AXIS_SCALE_UNIT").html(unit + (srcName == "MATH" ? OSC.xyMathSuffix() : "") + "/div")
+                $("#OSC_XY_Y_AXIS_SCALE_UNIT").html(unit + (srcName == "MATH" ? OSC.mathSuffix() : "") + "/div")
                 OSC.xyCursorY();
                 OSC.updateYCursorDiffXY()
             }else{
@@ -204,7 +195,7 @@
             }
         }
         for(var i = -5; i <= 5; i++){
-            $("#xy_xaxis_tick" + (i + 5)).html(OSC.convertVoltage(-i * scale)+(srcName == "MATH" ? OSC.xyMathSuffix() : ""))
+            $("#xy_xaxis_tick" + (i + 5)).html(OSC.convertVoltage(-i * scale)+(srcName == "MATH" ? OSC.mathSuffix() : ""))
         }
         OSC.moveTitileXAxisTicksXY()
     }
@@ -243,7 +234,7 @@
             }
         }
         for(var i = -5; i <= 5; i++){
-            $("#xy_yaxis_tick" + (i + 5)).html(OSC.convertVoltage(-i * scale)+(srcName == "MATH" ? OSC.xyMathSuffix() : ""))
+            $("#xy_yaxis_tick" + (i + 5)).html(OSC.convertVoltage(-i * scale)+(srcName == "MATH" ? OSC.mathSuffix() : ""))
         }
         OSC.moveTitileYAxisTicksXY()
     }

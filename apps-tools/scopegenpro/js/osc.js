@@ -358,28 +358,13 @@
     }
 
     OSC.updateTitileYAxisTicks = function(){
-
-        var selected = $('#right_menu .btn.menu-btn.active')
-
-        selected.each(function(idx, li) {
-            var itm = $(li).attr('channel')
-            var ref_scale = ''
-            var suffix = ''
-            if (itm == "MATH"){
-                ref_scale = 'OSC_MATH_SCALE'
-                suffix = OSC.xyMathSuffix()
-            }else{
-                ref_scale = 'OSC_'+ itm +'_SCALE';
-            }
-            var scale = 0
-            if (OSC.params.orig[ref_scale]){
-                scale = -OSC.params.orig[ref_scale].value
-            }
+        var itm = OSC.getSettingsActiveChannel()
+        if (itm.name !== ''){
             for(var i = -5; i <= 5; i++){
-                var v = OSC.convertVoltage(i * scale) + suffix
+                var v = OSC.convertVoltage(i * -itm.scale) + itm.suffix
                 $("#yaxis_tick" + (i + 5)).html(v)
             }
-        })
+        }
         OSC.moveTitileYAxisTicks()
     }
 

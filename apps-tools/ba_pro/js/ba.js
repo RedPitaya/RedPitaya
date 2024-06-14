@@ -183,7 +183,7 @@
     };
 
     BA.enableX = function(cursor_name, new_params) {
-        var old_params = $.extend(true, {}, BA.params.old);
+        var old_params = $.extend(true, {}, CLIENT.params.old);
         if (!BA.state.cursor_dragging && !BA.state.mouseover) {
             var x = (cursor_name == 'BA_CURSOR_X1' ? 'x1' : 'x2');
 
@@ -216,7 +216,7 @@
     }
 
     BA.enableY = function(cursor_name, new_params) {
-        var old_params = $.extend(true, {}, BA.params.old);
+        var old_params = $.extend(true, {}, CLIENT.params.old);
         if (!BA.state.cursor_dragging && !BA.state.mouseover) {
             var y = (cursor_name == 'BA_CURSOR_Y1' ? 'y1' : 'y2');
 
@@ -249,7 +249,7 @@
     }
 
     BA.enableZ = function(cursor_name, new_params) {
-        var old_params = $.extend(true, {}, BA.params.old);
+        var old_params = $.extend(true, {}, CLIENT.params.old);
         if (!BA.state.cursor_dragging && !BA.state.mouseover) {
             var z = (cursor_name == 'BA_CURSOR_Z1' ? 'z1' : 'z2');
 
@@ -550,24 +550,24 @@
             $('cur_' + x[0] + '_diff_info').show();
         }
 
-        BA.params.local['BA_CURSOR_' + x[0].toUpperCase() + '1'] = { value: 1 };
-        BA.params.local['BA_CURSOR_' + x[0].toUpperCase() + '2'] = { value: 1 };
+        CLIENT.params.local['BA_CURSOR_' + x[0].toUpperCase() + '1'] = { value: 1 };
+        CLIENT.params.local['BA_CURSOR_' + x[0].toUpperCase() + '2'] = { value: 1 };
 
-        BA.params.local['BA_CUR1_T'] = { value: 1 };
-        BA.params.local['BA_CUR2_T'] = { value: 1 };
+        CLIENT.params.local['BA_CUR1_T'] = { value: 1 };
+        CLIENT.params.local['BA_CUR2_T'] = { value: 1 };
 
         if (x[0] == 'x') {
-            BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, BA.params.local);
-            BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, BA.params.local);
+            BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
+            BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
         } else if (x[0] == 'y') {
-            BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, BA.params.local);
-            BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, BA.params.local);
+            BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
+            BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
         } else if (x[0] == 'z') {
-            BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, BA.params.local);
-            BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, BA.params.local);
+            BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
+            BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
         }
 
-        BA.params.local = {};
+        CLIENT.params.local = {};
     };
 
     BA.disableCursor = function(x) {
@@ -579,21 +579,21 @@
         $('cur_' + x[0] + '_diff').hide();
         $('cur_' + x[0] + '_diff_info').hide();
 
-        BA.params.local['BA_CURSOR_' + x[0].toUpperCase() + '1'] = { value: 0 };
-        BA.params.local['BA_CURSOR_' + x[0].toUpperCase() + '2'] = { value: 0 };
+        CLIENT.params.local['BA_CURSOR_' + x[0].toUpperCase() + '1'] = { value: 0 };
+        CLIENT.params.local['BA_CURSOR_' + x[0].toUpperCase() + '2'] = { value: 0 };
 
         if (x[0] == 'x') {
-            BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, BA.params.local);
-            BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, BA.params.local);
+            BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
+            BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
         } else if (x[0] == 'y') {
-            BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, BA.params.local);
-            BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, BA.params.local);
+            BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
+            BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
         } else if (x[0] == 'z') {
-            BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, BA.params.local);
-            BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, BA.params.local);
+            BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
+            BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
         }
 
-        BA.params.local = {};
+        CLIENT.params.local = {};
     };
 
 

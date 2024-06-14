@@ -28,7 +28,6 @@ CFloatParameter     measureValue[4]     = INIT("OSC_MEAS_VAL","", CBaseParameter
 /* --------------------------------  CURSORS  ------------------------------ */
 CBooleanParameter   cursorx[2]          = INIT2("OSC_CURSOR_X","", CBaseParameter::RW, false, 0,CONFIG_VAR);
 CBooleanParameter   cursory[2]          = INIT2("OSC_CURSOR_Y","", CBaseParameter::RW, false, 0,CONFIG_VAR);
-CIntParameter       cursorSrc("OSC_CURSOR_SRC", CBaseParameter::RW, RPAPP_OSC_SOUR_CH1, 0, RPAPP_OSC_SOUR_CH1, RPAPP_OSC_SOUR_MATH,CONFIG_VAR);
 
 CFloatParameter     cursorV[2]          = INIT2("OSC_CUR","_V", CBaseParameter::RW, -1, 0, -1000, 1000,CONFIG_VAR);
 CFloatParameter     cursorT[2]          = INIT2("OSC_CUR","_T", CBaseParameter::RW, -1, 0, -1000, 1000,CONFIG_VAR);
@@ -123,7 +122,7 @@ auto checkMathScale() -> void {
 }
 
 auto isMathShow() -> bool{
-    return mathShow.Value();   
+    return mathShow.Value();
 }
 
 auto updateMathSignal() -> void{
@@ -162,9 +161,6 @@ auto updateMathParams(bool force) -> void{
         if (IS_NEW(cursorT[i]) || force)
             cursorT[i].Update();
     }
-
-    if (IS_NEW(cursorSrc) || force)
-        cursorSrc.Update();
 
     setMathParams();
 

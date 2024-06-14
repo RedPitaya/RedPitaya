@@ -367,7 +367,9 @@
 
 
         $('.btn.menu-btn').onClassChange(function(el, newClass) {
+            OSC.getCurrentActiveChannel()
             OSC.updateTitileYAxisTicks()
+            OSC.cursorY()
         } );
 
         // Joystick events
@@ -742,7 +744,6 @@
                 if (!$.isEmptyObject(OSC.graphs)) {
                     var diff = event.pageX - curXPos;
                     curXPos = event.pageX;
-                    console.log("TEST move full",OSC.state.trig_dragging)
                     var graphs_width = $('#graphs').width();
                     var graphs_offset = $('#graphs').offset().left;
 

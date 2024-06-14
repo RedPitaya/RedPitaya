@@ -14,6 +14,7 @@
             stop: function(ev, ui) {
                 OSC.updateYCursorElems(ui, true);
                 OSC.state.cursor_dragging_measure = false;
+                $(ui.helper[0]).css('left','')
             }
         });
 
@@ -38,22 +39,21 @@
             stop: function(ev, ui) {
                 OSC.updateXCursorElems(ui, true);
                 OSC.state.cursor_dragging_measure = false;
+                $(ui.helper[0]).css('top','')
             }
         });
     }
 
     OSC.cursorY = function() {
         if (!OSC.state.cursor_dragging_measure) {
-            var ocs = OSC.params.orig['OSC_CURSOR_SRC'] !== undefined ? OSC.params.orig['OSC_CURSOR_SRC'].value : undefined
 
-            if (ocs === undefined) return;
-            var ref_show = ocs == OSC.adc_channes ? 'MATH_SHOW' : 'CH'+ (ocs + 1) +'_SHOW';
-            var ref_scale = ocs == OSC.adc_channes ? 'OSC_MATH_SCALE' : 'OSC_CH'+ (ocs + 1) +'_SCALE';
-            var ref_offset = ocs == OSC.adc_channes ? 'OSC_MATH_OFFSET' : 'OSC_CH'+ (ocs + 1) +'_OFFSET';
+            var itm = OSC.getSettingsActiveChannel()
 
-            var ref_scale_val = OSC.params.orig[ref_scale] != undefined ?  OSC.params.orig[ref_scale].value : undefined
-            var ref_offset_val = OSC.params.orig[ref_offset] != undefined ?  OSC.params.orig[ref_offset].value : undefined
-            var ref_show_val = OSC.params.orig[ref_show] != undefined ?  OSC.params.orig[ref_show].value : undefined
+
+            var ref_scale_val = itm.scale
+            var ref_offset_val = itm.offset
+            var ref_show_val = itm.name !== ''
+
 
             if (ref_scale_val !== undefined && ref_offset_val !=  undefined && ref_show_val !== undefined){
                 for(var i = 1 ; i <= 2; i++){
@@ -65,10 +65,6 @@
                     var y_cur_v = OSC.params.orig[c_pos_name] != undefined ?  OSC.params.orig[c_pos_name].value : undefined
 
                     if (y_cur && ref_show_val) {
-                        // var ocs = OSC.params.orig['OSC_CURSOR_SRC'].value;
-
-                        // var ref_scale = ocs == OSC.adc_channes ? 'OSC_MATH_SCALE' : 'OSC_CH'+ (ocs + 1) +'_SCALE';
-                        // var ref_offset = ocs == OSC.adc_channes ? 'OSC_MATH_OFFSET' : 'OSC_CH'+ (ocs + 1) +'_OFFSET';
 
                         var source_offset = ref_offset_val;
                         var graph_height = $('#graph_grid').height();
@@ -106,14 +102,6 @@
                 OSC.updateYCursorDiff();
             }
         }
-    }
-
-    OSC.setCursorSrc = function(new_params) {
-        var field = $('#OSC_CURSOR_SRC');
-        if (field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
-            field.val(OSC.params.orig['OSC_CURSOR_SRC'].value);
-        }
-        OSC.cursorY();
     }
 
     OSC.cursorY1 = function(new_params) {
@@ -191,14 +179,16 @@
     }
 
      // Updates all elements related to a Y cursor
-     OSC.updateYCursorElems = function(ui, save) {
+    OSC.updateYCursorElems = function(ui, save) {
+        var itm = OSC.getSettingsActiveChannel()
+
+
+        var ref_scale = itm.scale
+        var source_offset = itm.offset
+
         var y = (ui.helper[0].id == 'cur_y1_arrow' ? 'y1' : 'y2');
-        var ocs = OSC.params.orig['OSC_CURSOR_SRC'].value;
-        var ref_scale = ocs == OSC.adc_channes ? 'OSC_MATH_SCALE' : 'OSC_CH'+ (ocs + 1) +'_SCALE';
-        var ref_offset = ocs == OSC.adc_channes ? 'OSC_MATH_OFFSET' : 'OSC_CH'+ (ocs + 1) +'_OFFSET';
-        var source_offset = OSC.params.orig[ref_offset].value;
         var graph_height = $('#graph_grid').height();
-        var volt_per_px = (OSC.params.orig[ref_scale].value * 10) / graph_height;
+        var volt_per_px = (ref_scale * 10) / graph_height;
         var new_value = (graph_height / 2 - ui.position.top - (ui.helper.height() - 2) / 2 - parseInt(ui.helper.css('margin-top'))) * volt_per_px - source_offset;
 
         $('#cur_' + y + '_arrow, #cur_' + y + ', #cur_' + y + '_info').show();

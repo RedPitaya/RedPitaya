@@ -159,7 +159,8 @@
         sweep_ch1_time:1,
         sweep_ch2_time:1,
         burst_ch1:false,
-        burst_ch2:false
+        burst_ch2:false,
+        active_channel: ''
     };
 
     // Params cache
@@ -653,7 +654,6 @@
     OSC.param_callbacks["OSC_CURSOR_Y2"] = OSC.cursorY2;
     OSC.param_callbacks["OSC_CURSOR_X1"] = OSC.cursorX1;
     OSC.param_callbacks["OSC_CURSOR_X2"] = OSC.cursorX2;
-    OSC.param_callbacks["OSC_CURSOR_SRC"] = OSC.setCursorSrc;
 
     OSC.param_callbacks["OSC_CUR1_T"] = OSC.cursorX1;
     OSC.param_callbacks["OSC_CUR2_T"] = OSC.cursorX2;

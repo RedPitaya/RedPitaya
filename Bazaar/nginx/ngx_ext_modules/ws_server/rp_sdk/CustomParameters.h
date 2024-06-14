@@ -274,6 +274,95 @@ private:
 	bool m_Dirty;
 };
 
+template <typename Type> class CCustomBase64Signal : public CParameter<Type, std::vector<Type> >
+{
+public:
+	CCustomBase64Signal(std::string _name, int _size, Type _def_value)
+		:CParameter<Type, std::vector<Type> >(_name, CBaseParameter::RO, std::vector<Type>(_size, _def_value)),
+		m_Dirty(true){}
+
+	CCustomBase64Signal(std::string _name, CBaseParameter::AccessMode _access_mode, int _size, Type _def_value)
+		:CParameter<Type, std::vector<Type> >(_name, _access_mode, std::vector<Type>(_size, _def_value)),
+		m_Dirty(true) {}
+
+	~CCustomBase64Signal()
+	{
+/*		CDataManager * man = CDataManager::GetInstance();
+		if(man)
+			man->UnRegisterSignal(this->GetName());*/
+	}
+
+	JSONNode GetJSONObject()
+	{
+		JSONNode n(JSON_NODE);
+		n.set_name(this->m_Value.name);
+		n.push_back(JSONNode("size", this->m_Value.value.size()));
+
+		JSONNode child(JSON_STRING);
+		child.set_name("value");
+		child.set_binary(reinterpret_cast<const unsigned char*>(this->m_Value.value.data()),this->m_Value.value.size() * sizeof(Type));
+		n.push_back(child);
+		return n;
+	}
+
+	const Type& operator [](int _index) const
+	{
+		return this->m_Value.value.at(_index);
+	}
+
+	Type& operator [](int _index)
+	{
+		m_Dirty = true;
+		return this->m_Value.value.at(_index);
+	}
+
+	void Set(const std::vector<Type>& _value)
+	{
+		m_Dirty = true;
+		this->m_Value.value = _value;
+	}
+
+	void Set(const Type* _value, size_t _size)
+	{
+		m_Dirty = true;
+		this->m_Value.value.assign(_value, _value + _size);
+	}
+
+	void Resize(int _new_size)
+	{
+		m_Dirty = true;
+		this->m_Value.value.resize(_new_size);
+	}
+
+	void Update()
+	{
+		m_Dirty = false;
+	}
+
+	int GetSize()
+	{
+		return this->m_Value.value.size();
+	}
+
+	std::vector<Type> GetData()
+	{
+		return this->m_Value.value;
+	}
+
+	bool IsValueChanged() const
+	{
+		return m_Dirty;
+	}
+
+	bool ForceSend()
+	{
+		m_Dirty = true;
+		return true;
+	}
+private:
+	bool m_Dirty;
+};
+
 //custom CIntParameter
 class CIntParameter : public CCustomParameter<int>
 {
@@ -378,6 +467,16 @@ public:
 
 	CFloatSignal(std::string _name, CBaseParameter::AccessMode _access_mode, int _size, float _def_value)
 		:CCustomSignal(_name, _access_mode, _size, _def_value){};
+};
+
+class CFloatBase64Signal : public CCustomBase64Signal<float>
+{
+public:
+	CFloatBase64Signal(std::string _name, int _size, float _def_value)
+		:CCustomBase64Signal(_name, _size, _def_value){};
+
+	CFloatBase64Signal(std::string _name, CBaseParameter::AccessMode _access_mode, int _size, float _def_value)
+		:CCustomBase64Signal(_name, _access_mode, _size, _def_value){};
 };
 
 //custom CDoubleSignal
