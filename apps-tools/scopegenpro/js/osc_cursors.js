@@ -325,14 +325,14 @@
         var zero_pos = (graph_width + 2) / 2;
         var ms_per_px = (OSC.params.orig['OSC_TIME_SCALE'].value * 10) / graph_width;
         var new_value = +(((zero_pos - new_left - elem_width / 2 - 1) * ms_per_px).toFixed(6));
-        var buf_width = graph_width - 2;
+        var buf_width = graph_width + 2;
         var ratio = buf_width / (buf_width * OSC.params.orig['OSC_VIEV_PART'].value);
 
         OSC.params.local['OSC_TIME_OFFSET'] = { value: (zero_pos - new_left - elem_width / 2 - 1) * ms_per_px };
         OSC.sendParams();
 
         $('#info_box').html('Time offset ' + OSC.convertTime(new_value));
-        $('#buf_time_offset').css('left', buf_width / 2 - buf_width * OSC.params.orig['OSC_VIEV_PART'].value / 2 + new_left / ratio - 4).show();
+        $('#buf_time_offset').css('left', buf_width / 2 - buf_width * OSC.params.orig['OSC_VIEV_PART'].value / 2 + (new_left + 8) / ratio  - 5).show();
     }
 
     OSC.endTimeMove = function(new_left) {
@@ -363,11 +363,11 @@
         var ms_per_px = (ts * 10) / graph_width;
         var px_offset = -(toff / ms_per_px + $('#time_offset_arrow').width() / 2 + 1);
         var arrow_left = (graph_width + 2) / 2 + px_offset;
-        var buf_width = graph_width - 2;
+        var buf_width = graph_width + 2;
         var ratio = buf_width / (buf_width * vp);
         OSC.state.graph_grid_width = graph_width;
         $('#time_offset_arrow').css('left', arrow_left).show();
-        $('#buf_time_offset').css('left', buf_width / 2 - buf_width * vp / 2 + arrow_left / ratio - 4).show();
+        $('#buf_time_offset').css('left', buf_width / 2 - buf_width * vp / 2 + (arrow_left + 8)/ ratio - 5).show();
     }
 
 }(window.OSC = window.OSC || {}, jQuery));

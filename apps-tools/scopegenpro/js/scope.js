@@ -583,10 +583,10 @@
     }
 
     OSC.processViewPart = function(new_params) {
-        var full_width = $('#buffer').width() - 4;
+        var full_width = $('#buffer').width();
         var visible_width = full_width * new_params['OSC_VIEV_PART'].value;
 
-        $('#buffer .buf-red-line').width(visible_width).show();
+        $('#buffer .buf-red-line').width(visible_width - 2).show();
         $('#buffer .buf-red-line-holder').css('left', full_width / 2 - visible_width / 2);
         OSC.timeOffset()
     }
