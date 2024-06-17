@@ -39,7 +39,8 @@ CIntParameter       adc_rate("ADC_RATE", CBaseParameter::RO, getADCRate(), 0, ge
 ****************************************************************************************/
 
 /* --------------------------------  OUT SIGNALS  ------------------------------ */
-CFloatSignal        outCh[MAX_ADC_CHANNELS]   = INIT("ch","", 0, 0.0f);
+
+CFloatBase64Signal  outCh[MAX_ADC_CHANNELS]   = INIT("ch","", 0, 0.0f);
 
 /* ------------------------------- DATA PARAMETERS ------------------------------ */
 // CIntParameter       dataSize("OSC_DATA_SIZE", CBaseParameter::RW, CH_SIGNAL_SIZE_DEFAULT, 0, 1, 16*1024);

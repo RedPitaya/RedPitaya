@@ -297,6 +297,7 @@ public:
 		JSONNode n(JSON_NODE);
 		n.set_name(this->m_Value.name);
 		n.push_back(JSONNode("size", this->m_Value.value.size()));
+		n.push_back(JSONNode("type", typeid(Type).name()));
 
 		JSONNode child(JSON_STRING);
 		child.set_name("value");
@@ -469,16 +470,6 @@ public:
 		:CCustomSignal(_name, _access_mode, _size, _def_value){};
 };
 
-class CFloatBase64Signal : public CCustomBase64Signal<float>
-{
-public:
-	CFloatBase64Signal(std::string _name, int _size, float _def_value)
-		:CCustomBase64Signal(_name, _size, _def_value){};
-
-	CFloatBase64Signal(std::string _name, CBaseParameter::AccessMode _access_mode, int _size, float _def_value)
-		:CCustomBase64Signal(_name, _access_mode, _size, _def_value){};
-};
-
 //custom CDoubleSignal
 class CDoubleSignal : public CCustomSignal<double>
 {
@@ -489,6 +480,47 @@ public:
 	CDoubleSignal(std::string _name, CBaseParameter::AccessMode _access_mode, int _size, double _def_value)
 		:CCustomSignal(_name, _access_mode, _size, _def_value){};
 };
+
+class CIntBase64Signal : public CCustomBase64Signal<int>
+{
+public:
+	CIntBase64Signal(std::string _name, int _size, float _def_value)
+		:CCustomBase64Signal(_name, _size, _def_value){};
+
+	CIntBase64Signal(std::string _name, CBaseParameter::AccessMode _access_mode, int _size, float _def_value)
+		:CCustomBase64Signal(_name, _access_mode, _size, _def_value){};
+};
+
+class CByteBase64Signal : public CCustomBase64Signal<uint8_t>
+{
+public:
+	CByteBase64Signal(std::string _name, int _size, float _def_value)
+		:CCustomBase64Signal(_name, _size, _def_value){};
+
+	CByteBase64Signal(std::string _name, CBaseParameter::AccessMode _access_mode, int _size, float _def_value)
+		:CCustomBase64Signal(_name, _access_mode, _size, _def_value){};
+};
+
+class CFloatBase64Signal : public CCustomBase64Signal<float>
+{
+public:
+	CFloatBase64Signal(std::string _name, int _size, float _def_value)
+		:CCustomBase64Signal(_name, _size, _def_value){};
+
+	CFloatBase64Signal(std::string _name, CBaseParameter::AccessMode _access_mode, int _size, float _def_value)
+		:CCustomBase64Signal(_name, _access_mode, _size, _def_value){};
+};
+
+class CDoubleBase64Signal : public CCustomBase64Signal<double>
+{
+public:
+	CDoubleBase64Signal(std::string _name, int _size, float _def_value)
+		:CCustomBase64Signal(_name, _size, _def_value){};
+
+	CDoubleBase64Signal(std::string _name, CBaseParameter::AccessMode _access_mode, int _size, float _def_value)
+		:CCustomBase64Signal(_name, _access_mode, _size, _def_value){};
+};
+
 
 extern CBooleanParameter IsDemoParam;		// special default parameter to check mode (demo or not)
 extern CStringParameter InCommandParam;		// special default parameter to receive a string command from WEB UI

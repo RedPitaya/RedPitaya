@@ -264,11 +264,35 @@
         return dateFormat(this, mask, utc);
     };
 
+    function base64ToFloatArray(base64String) {
+        // Decode the base64 string to a byte array
+        const b64ToBuffer = (b64) => Uint8Array.from(atob(b64), c => c.charCodeAt(0)).buffer;
+        bytes = b64ToBuffer(base64String)
+        // Create a Float32Array from the byte array
+        const floatArray = new Float32Array(bytes.byteLength / 4);
+
+        // Convert the byte array to a Float32Array
+        for (let i = 0; i < floatArray.length; i++) {
+          const byteIndex = i * 4;
+          floatArray[i] = new DataView(bytes).getFloat32(byteIndex,true);
+        }
+
+        return floatArray;
+    }
+
     var guiHandler = function() {
         if (OSC.signalStack.length > 0) {
             var p = performance.now();
             if (OSC.is_webpage_loaded){
-                OSC.processSignals(OSC.signalStack[0]);
+                var signal = OSC.signalStack[0]
+                for (const property in signal) {
+                    if (signal[property]['type']){
+                        if (signal[property]['type'] == 'f'){
+                            signal[property]['value'] = base64ToFloatArray(signal[property]['value'] )
+                        }
+                    }
+                }
+                OSC.processSignals(signal);
             }
             // console.log(OSC.signalStack.length,OSC.signalStack[0]);
             OSC.signalStack.splice(0, 1);
@@ -429,7 +453,6 @@
                 });
 
                 ob.observe(document.querySelector("#menu-root"));
-
                 OSC.updateInterfaceFor250(OSC.rp_model);
                 OSC.updateInterfaceForZ20(OSC.rp_model);
                 if (OSC.arb_list !== undefined)
@@ -485,6 +508,8 @@
                 $('body').addClass('connection_lost');
                 $('body').addClass('user_lost');
                 OSC.startCheckStatus();
+                OSC.params.local['RP_SIGNAL_PERIOD'] = { value: 50 };
+                OSC.sendParams();
             };
 
             OSC.ws.onclose = function() {

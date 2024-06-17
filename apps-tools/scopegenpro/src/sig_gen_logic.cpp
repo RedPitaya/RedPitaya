@@ -21,7 +21,7 @@ float g_tscale_last = 0;
 std::mutex g_updateOutWaveFormCh_mtx;
 
 
-CFloatSignal outSignal[MAX_DAC_CHANNELS]           = INIT2("output","", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
+CFloatBase64Signal outSignal[MAX_DAC_CHANNELS]           = INIT2("output","", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
 
 CBooleanParameter outShow[MAX_DAC_CHANNELS]        = INIT2("OUTPUT","_SHOW", CBaseParameter::RW, true, 0,CONFIG_VAR);
 CBooleanParameter outState[MAX_DAC_CHANNELS]       = INIT2("OUTPUT","_STATE", CBaseParameter::RW, false, 0,CONFIG_VAR);
@@ -128,7 +128,7 @@ auto loadARBList() -> std::string{
 auto generate(rp_channel_t channel,float tscale) -> void {
     if (!rp_HPIsFastDAC_PresentOrDefault()) return;
 
-    CFloatSignal *signal;
+    CFloatBase64Signal *signal;
     std::string waveform;
     rp_waveform_t waveform_api = RP_WAVEFORM_SINE;
     rp_gen_sweep_mode_t sweep_mode;

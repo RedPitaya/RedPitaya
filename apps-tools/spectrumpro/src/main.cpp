@@ -30,18 +30,18 @@ CStringParameter redpitaya_model              ("RP_MODEL_STR", CBaseParameter::R
 CIntParameter    redpitaya_adc_count          ("ADC_COUNT", CBaseParameter::RO, getADCChannels(), 0, 0, 4);
 
 CIntSignal   signal_mode                      ("signal_mode", 1, 0.0f);
-CFloatSignal s_xaxis                          ("ch_xaxis", CH_SIGNAL_DATA, 0.0f);
-CFloatSignal s_xaxis_full                     ("ch_xaxis_full", CH_SIGNAL_DATA, 0.0f);
+CFloatBase64Signal s_xaxis                          ("ch_xaxis", CH_SIGNAL_DATA, 0.0f);
+CFloatBase64Signal s_xaxis_full                     ("ch_xaxis_full", CH_SIGNAL_DATA, 0.0f);
 
 // CFloatSignal s_waterfall[ADC_CHANNELS]  = INIT("ch","_waterfall",CH_SIGNAL_DATA, 0.0f);
-CFloatSignal s_view[MAX_ADC_CHANNELS]       = INIT("ch","_view", CH_SIGNAL_DATA, 0.0f);
-CFloatSignal s_view_min[MAX_ADC_CHANNELS]   = INIT("ch","_view_min", CH_SIGNAL_DATA, 0.0f);
-CFloatSignal s_view_max[MAX_ADC_CHANNELS]   = INIT("ch","_view_max", CH_SIGNAL_DATA, 0.0f);
+CFloatBase64Signal s_view[MAX_ADC_CHANNELS]       = INIT("ch","_view", CH_SIGNAL_DATA, 0.0f);
+CFloatBase64Signal s_view_min[MAX_ADC_CHANNELS]   = INIT("ch","_view_min", CH_SIGNAL_DATA, 0.0f);
+CFloatBase64Signal s_view_max[MAX_ADC_CHANNELS]   = INIT("ch","_view_max", CH_SIGNAL_DATA, 0.0f);
 
 
-CFloatSignal s_full[MAX_ADC_CHANNELS]       = INIT("ch","_full", CH_SIGNAL_DATA, 0.0f);
-CFloatSignal s_min_full[MAX_ADC_CHANNELS]   = INIT("ch","_min_full", CH_SIGNAL_DATA, 0.0f);
-CFloatSignal s_max_full[MAX_ADC_CHANNELS]   = INIT("ch","_max_full", CH_SIGNAL_DATA, 0.0f);
+CFloatBase64Signal s_full[MAX_ADC_CHANNELS]       = INIT("ch","_full", CH_SIGNAL_DATA, 0.0f);
+CFloatBase64Signal s_min_full[MAX_ADC_CHANNELS]   = INIT("ch","_min_full", CH_SIGNAL_DATA, 0.0f);
+CFloatBase64Signal s_max_full[MAX_ADC_CHANNELS]   = INIT("ch","_max_full", CH_SIGNAL_DATA, 0.0f);
 
 
 CIntParameter   view_port_width     ("view_port_width",   CBaseParameter::RW, 256, 0, 256, 4096);
@@ -246,7 +246,7 @@ int* prepareIndexArray(int start,int stop,int view_size,int log_mode){
     return idx;
 }
 
-void decimateDataMinMax(CFloatSignal &dest, float *src,int start,int stop,int view_size,int log_mode,int *indexArray){
+void decimateDataMinMax(CFloatBase64Signal &dest, float *src,int start,int stop,int view_size,int log_mode,int *indexArray){
 
     auto timeNowP1 = std::chrono::system_clock::now();
 
@@ -295,7 +295,7 @@ void decimateDataMinMax(CFloatSignal &dest, float *src,int start,int stop,int vi
     }
 }
 
-void decimateDataFirstN(CFloatSignal &dest, float *src,int start,int stop,int view_size,int log_mode,int *indexArray){
+void decimateDataFirstN(CFloatBase64Signal &dest, float *src,int start,int stop,int view_size,int log_mode,int *indexArray){
 
     // auto timeNowP1 = std::chrono::system_clock::now();
 
@@ -324,7 +324,7 @@ void decimateDataFirstN(CFloatSignal &dest, float *src,int start,int stop,int vi
     }
 }
 
-void decimateDataAvg(CFloatSignal &dest, float *src,int start,int stop,int view_size,int log_mode,int *indexArray){
+void decimateDataAvg(CFloatBase64Signal &dest, float *src,int start,int stop,int view_size,int log_mode,int *indexArray){
 
 //     auto timeNowP1 = std::chrono::system_clock::now();
 
@@ -355,7 +355,7 @@ void decimateDataAvg(CFloatSignal &dest, float *src,int start,int stop,int view_
     }
 }
 
-void decimateDataMax(CFloatSignal &dest, float *src,int start,int stop,int view_size,int log_mode,int *indexArray){
+void decimateDataMax(CFloatBase64Signal &dest, float *src,int start,int stop,int view_size,int log_mode,int *indexArray){
 
     auto timeNowP1 = std::chrono::system_clock::now();
 
@@ -396,7 +396,7 @@ void decimateDataMax(CFloatSignal &dest, float *src,int start,int stop,int view_
     }
 }
 
-void decimateData(CFloatSignal &dest, float *src,int start,int stop,int view_size,int log_mode,int *indexArray){
+void decimateData(CFloatBase64Signal &dest, float *src,int start,int stop,int view_size,int log_mode,int *indexArray){
 //    decimateDataMinMax(dest,src,start,stop,view_size,log_mode,indexArray);
 //    decimateDataFirstN(dest,src,start,stop,view_size,log_mode,indexArray);
 //    decimateDataAvg(dest,src,start,stop,view_size,log_mode,indexArray);
@@ -404,7 +404,7 @@ void decimateData(CFloatSignal &dest, float *src,int start,int stop,int view_siz
 }
 
 // use in waterfall
-void decimateDataByMax(CFloatSignal &dest, float *src,int start,int stop,int view_size){
+void decimateDataByMax(CFloatBase64Signal &dest, float *src,int start,int stop,int view_size){
     float koef = 1;
     int pointsNumOrig = stop - start;
     int pointsNum = pointsNumOrig;
@@ -426,7 +426,7 @@ void decimateDataByMax(CFloatSignal &dest, float *src,int start,int stop,int vie
     }
 }
 
-void copyData(CFloatSignal &dest, float *src,int size){
+void copyData(CFloatBase64Signal &dest, float *src,int size){
     if (dest.GetSize() != size) dest.Resize(size);
     memcpy_neon(&dest[0], src, size * sizeof(float));
 }

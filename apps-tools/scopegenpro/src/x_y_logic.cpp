@@ -8,8 +8,8 @@
 #include "main.h"
 
 
-CFloatSignal        x_axis("X_AXIS_VALUES", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
-CFloatSignal        y_axis("Y_AXIS_VALUES", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
+CFloatBase64Signal        x_axis("X_AXIS_VALUES", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
+CFloatBase64Signal        y_axis("Y_AXIS_VALUES", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
 
 CBooleanParameter   xyShow("X_Y_SHOW", CBaseParameter::RW, false, 0,CONFIG_VAR);
 

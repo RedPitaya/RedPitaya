@@ -11,7 +11,7 @@
 constexpr float DEF_MIN_SCALE = 1.f/1000.f;
 constexpr float DEF_MAX_SCALE = 5.f;
 
-CFloatSignal        math("math", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
+CFloatBase64Signal  math("math", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
 
 CBooleanParameter   mathShow("MATH_SHOW", CBaseParameter::RW, false, 0,CONFIG_VAR);
 CBooleanParameter   mathInvShow("MATH_SHOW_INVERTED", CBaseParameter::RW, false, 0,CONFIG_VAR);

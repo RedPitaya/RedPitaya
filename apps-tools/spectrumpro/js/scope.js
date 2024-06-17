@@ -185,6 +185,22 @@
 
         };
 
+        function base64ToFloatArray(base64String) {
+            // Decode the base64 string to a byte array
+            const b64ToBuffer = (b64) => Uint8Array.from(atob(b64), c => c.charCodeAt(0)).buffer;
+            bytes = b64ToBuffer(base64String)
+            // Create a Float32Array from the byte array
+            const floatArray = new Float32Array(bytes.byteLength / 4);
+
+            // Convert the byte array to a Float32Array
+            for (let i = 0; i < floatArray.length; i++) {
+              const byteIndex = i * 4;
+              floatArray[i] = new DataView(bytes).getFloat32(byteIndex,true);
+            }
+
+            return floatArray;
+        }
+
         SPEC.guiHandler = function() {
 
             if (CLIENT.signalStack.length > 0) {
@@ -193,10 +209,16 @@
                     let signals = Object.assign({}, CLIENT.signalStack[0]);
 
                     if (SPEC.clear) {
-                        signals = [];
+                        signals = {};
                         SPEC.clear = false;
                     }
-
+                    for (const property in signals) {
+                        if (signals[property]['type']){
+                            if (signals[property]['type'] == 'f'){
+                                signals[property]['value'] = base64ToFloatArray(signals[property]['value'] )
+                            }
+                        }
+                    }
                     // create ch3, ch4, ch5, ch6 signals for min/max values
                     SPEC.processSignals(signals);
                     CLIENT.signalStack.splice(0, 1);
