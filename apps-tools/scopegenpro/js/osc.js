@@ -359,7 +359,7 @@
 
     OSC.updateTitileYAxisTicks = function(){
         var itm = OSC.getSettingsActiveChannel()
-        if (itm.name !== ''){
+        if (itm.channel !== ''){
             for(var i = -5; i <= 5; i++){
                 var v = OSC.convertVoltage(i * -itm.scale) + itm.suffix
                 $("#yaxis_tick" + (i + 5)).html(v)

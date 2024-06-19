@@ -52,7 +52,7 @@
 
             var ref_scale_val = itm.scale
             var ref_offset_val = itm.offset
-            var ref_show_val = itm.name !== ''
+            var ref_show_val = itm.channel !== ''
 
 
             if (ref_scale_val !== undefined && ref_offset_val !=  undefined && ref_show_val !== undefined){
