@@ -58,6 +58,7 @@
                 if (listOfapplications[i]["id"] === 'marketplace' ||
                     listOfapplications[i]["id"] === 'ba_pro' ||
                     listOfapplications[i]["id"] === 'lcr_meter' ||
+                    listOfapplications[i]["id"] === 'pyrpl' ||
                     listOfapplications[i]["id"] === 'impedance_analyzer' ||
                     listOfapplications[i]["id"] === 'fpgaexamples' ||
                     listOfapplications[i]["id"] === 'activelearning' ||
@@ -77,6 +78,7 @@
         if (model == "STEM 250 12") {
             for (i = listOfapplications.length - 1; i >= 0; i -= 1) {
                 if (listOfapplications[i]["id"] === 'marketplace' ||
+                    listOfapplications[i]["id"] === 'pyrpl' ||
                     listOfapplications[i]["id"] === 'fpgaexamples' ||
                     listOfapplications[i]["id"] === 'activelearning' ||
                     listOfapplications[i]["id"] === 'sdr_receiver_hpsdr' ||
@@ -100,6 +102,7 @@
             for (i = listOfapplications.length - 1; i >= 0; i -= 1) {
                 if (listOfapplications[i]["id"] === 'marketplace' ||
                     listOfapplications[i]["id"] === 'ba_pro' ||
+                    listOfapplications[i]["id"] === 'pyrpl' ||
                     listOfapplications[i]["id"] === 'arb_manager' ||
                     listOfapplications[i]["id"] === 'lcr_meter' ||
                     listOfapplications[i]["id"] === 'impedance_analyzer' ||
