@@ -49,6 +49,7 @@ volatile rpApp_osc_math_oper_t operation;
 volatile rp_channel_t mathSource1, mathSource2;
 
 std::thread *g_thread = NULL;
+std::thread *g_threadView = NULL;
 
 std::mutex g_mutex;
 
@@ -59,6 +60,7 @@ CADCController g_adcController;
 CXYController g_xyController;
 
 void mainThreadFun();
+void mainViewThreadFun();
 
 void checkAutoscale(bool fromThread);
 
@@ -95,9 +97,10 @@ int osc_Init() {
 }
 
 int osc_RunMainThread(){
-    if (g_thread) return RP_EOOR;
+    if (g_thread || g_threadView) return RP_EOOR;
     g_threadRun = true;
     g_thread = new std::thread(mainThreadFun);
+    g_threadView = new std::thread(mainViewThreadFun);
     return RP_OK;
 }
 
@@ -108,6 +111,14 @@ int osc_Release() {
             g_thread->join();
             delete g_thread;
             g_thread = NULL;
+        }
+    }
+
+    if (g_threadView){
+        if (g_threadView->joinable()){
+            g_threadView->join();
+            delete g_threadView;
+            g_threadView = NULL;
         }
     }
     return RP_OK;
@@ -1395,24 +1406,18 @@ void checkAutoscale(bool fromThread) {
 
 void mainThreadFun() {
     auto pPosition = 0u;
-    auto trigLevel = 0.0f;
-    auto adc_channels = getADCChannels();
     // rp_EnableDebugReg();
     while (g_threadRun) {
 
         auto tScaleAcq = 0.0f;
-        auto tOffsetAcq = 0.0f;
-        auto initFromAcq = false;
         g_adcController.resetWaitTriggerRequest();
 
         if (g_viewController.isNeedUpdateViewFromADC() && g_viewController.isOscRun()){
 
             g_viewController.lockView();
-            initFromAcq = true;
             auto contMode = g_adcController.getContinuousMode();
             auto decimationInACQ = g_viewController.getCurrentDecimation(contMode);
             tScaleAcq = g_viewController.getTimeScale();
-            tOffsetAcq = g_viewController.getTimeOffset();
             // Need set before calculate trigger deleay
             ECHECK_APP_NO_RET(rp_AcqSetDecimationFactor(decimationInACQ));
             auto delay = g_viewController.getSampledAfterTriggerInView();
@@ -1477,7 +1482,15 @@ void mainThreadFun() {
                 osc_stop();
             }
         }
+    }
+}
 
+
+void mainViewThreadFun() {
+    auto trigLevel = 0.0f;
+    auto adc_channels = getADCChannels();
+
+    while (g_threadRun) {
         if (g_viewController.isNeedUpdateView()){
             g_mutex.lock();
             g_viewController.lockView();
@@ -1485,8 +1498,8 @@ void mainThreadFun() {
             auto contMode = g_adcController.getContinuousMode();
             auto viewMode =  g_viewController.getViewMode();
             auto spd = g_viewController.getSamplesPerDivision();
-            auto tScale = initFromAcq ? tScaleAcq : g_viewController.getTimeScale();
-            auto tOffset = initFromAcq ? tOffsetAcq : g_viewController.getTimeOffset();
+            auto tScale = g_viewController.getTimeScale();
+            auto tOffset = g_viewController.getTimeOffset();
             auto trigSource = g_adcController.getTriggerSources();
             auto _deltaSample = timeToIndexD(tScale) / (double)spd;
             ECHECK_APP_NO_RET(g_adcController.getTriggerLevel(&trigLevel));
