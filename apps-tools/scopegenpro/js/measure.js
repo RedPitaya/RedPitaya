@@ -150,7 +150,7 @@
 
     OSC.measSelN = function(new_params) {
         try {
-            if (new_params['OSC_MEAS_SELN'].value !== ""){
+            if (new_params['OSC_MEAS_SELN'] && new_params['OSC_MEAS_SELN'].value !== ""){
                 OSC.updateMeasureList(JSON.parse(new_params['OSC_MEAS_SELN'].value));
                 OSC.handleMeasureList();
             }
@@ -162,6 +162,7 @@
     OSC.updateMeasureList = function(measureList) {
         signalNameArray = ['CH1', 'CH2','CH3', 'CH4', 'MATH'];
         signalTextArray = ['IN1', 'IN2','IN3', 'IN4', 'MATH'];
+        signalClassArray = ['in1_channel_name', 'in2_channel_name','in3_channel_name', 'in4_channel_name', 'math_channel_name'];
 
         for (var i = 0; i < measureList.length; ++i) {
             var signal_index = measureList[i] % 10;
@@ -189,7 +190,7 @@
             }
 
             // Add new item
-            $('<div id="' + item_id + '" class="meas-item">' + operator_name + ' (' + signalTextArray[signal_index] + ')</div>').data({
+            $('<div id="' + item_id + '" class="meas-item">' + operator_name + ' (<caps class="'+ signalClassArray[signal_index] +'">' + signalTextArray[signal_index] + '</caps>)</div>').data({
                 value: measureList[i],
                 operator: operator_name,
                 signal: signalNameArray[signal_index]
@@ -209,15 +210,15 @@
                 ++mi_count;
                 var units = { 'P2P': 'V', 'MEAN': 'V', 'MAX': 'V', 'MIN': 'V', 'RMS': 'V', 'DUTY CYCLE': '%', 'PERIOD': 'ms', 'FREQ': 'Hz' };
                 OSC.params.local['OSC_MEAS_SEL' + mi_count] = { value: item_val };
-                var sig_name = 'MATH';
+                var sig_name =  OSC.params.orig['MATH_CHANNEL_NAME_INPUT'] ? OSC.params.orig['MATH_CHANNEL_NAME_INPUT'].value : 'MATH';
                 if ($elem.data('signal')[2] == '1')
-                    sig_name = 'IN1';
+                    sig_name = OSC.params.orig['IN1_CHANNEL_NAME_INPUT'] ? OSC.params.orig['IN1_CHANNEL_NAME_INPUT'].value : 'IN1';
                 else if ($elem.data('signal')[2] == '2')
-                    sig_name = 'IN2';
+                    sig_name = OSC.params.orig['IN2_CHANNEL_NAME_INPUT'] ? OSC.params.orig['IN2_CHANNEL_NAME_INPUT'].value : 'IN2';
                 else if ($elem.data('signal')[2] == '3')
-                    sig_name = 'IN3';
+                    sig_name = OSC.params.orig['IN3_CHANNEL_NAME_INPUT'] ? OSC.params.orig['IN3_CHANNEL_NAME_INPUT'].value : 'IN3';
                 else if ($elem.data('signal')[2] == '4')
-                    sig_name = 'IN4';
+                    sig_name = OSC.params.orig['IN4_CHANNEL_NAME_INPUT'] ? OSC.params.orig['IN4_CHANNEL_NAME_INPUT'].value : 'IN4';
 
                 // V/s or Vs unit for dy/dt and ydt
                 if (sig_name == 'MATH') {

@@ -58,6 +58,13 @@
         OSC.showMathArrow(state);
     }
 
+    OSC.mathName = function(new_params) {
+        $('#MATH_CHANNEL_NAME_INPUT').val(new_params['MATH_CHANNEL_NAME_INPUT'].value)
+        $('.math_channel_name').html(new_params['MATH_CHANNEL_NAME_INPUT'].value)
+        OSC.handleMeasureList();
+    }
+
+
     OSC.formatMathValue = function(oldValue) {
         var z = oldValue;
         var precision = 2;

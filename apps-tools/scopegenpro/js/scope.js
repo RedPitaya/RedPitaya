@@ -840,6 +840,15 @@
     OSC.param_callbacks["OSC_XY_CUR1_Y"] = OSC.xyCursorY1;
     OSC.param_callbacks["OSC_XY_CUR2_Y"] = OSC.xyCursorY2;
 
+    OSC.param_callbacks["OUT1_CHANNEL_NAME_INPUT"] = OSC.out1Name;
+    OSC.param_callbacks["OUT2_CHANNEL_NAME_INPUT"] = OSC.out2Name;
+    OSC.param_callbacks["IN1_CHANNEL_NAME_INPUT"] = OSC.in1Name;
+    OSC.param_callbacks["IN2_CHANNEL_NAME_INPUT"] = OSC.in2Name;
+    OSC.param_callbacks["IN3_CHANNEL_NAME_INPUT"] = OSC.in3Name;
+    OSC.param_callbacks["IN4_CHANNEL_NAME_INPUT"] = OSC.in4Name;
+    OSC.param_callbacks["MATH_CHANNEL_NAME_INPUT"] = OSC.mathName;
+
+
     // Processes newly received values for parameters
     OSC.processParameters = function(new_params) {
         // console.log(new_params);
@@ -1271,12 +1280,17 @@
                     }
                 }
             }
+            var skipSend = false;
+
+            if (key.includes('CHANNEL_NAME_INPUT') && value == ''){
+                skipSend = true;
+            }
 
             if (key == "OSC_MATH_OFFSET") {
                 value = OSC.convertMathUnitToValue();
             }
 
-            if (value !== undefined && value != OSC.params.orig[key].value) {
+            if (value !== undefined && value != OSC.params.orig[key].value && !skipSend) {
                 console.log(key + ' changed from ' + OSC.params.orig[key].value + ' to ' + ($.type(OSC.params.orig[key].value) == 'boolean' ? !!value : value));
                 OSC.params.local[key] = { value: ($.type(OSC.params.orig[key].value) == 'boolean' ? !!value : value) };
             }
@@ -1723,10 +1737,10 @@
         var xymode = OSC.params.orig["X_Y_SHOW"] ? OSC.params.orig["X_Y_SHOW"].value : false
         var devider = xymode ? 2.0 : 1.0;
         console.log("Resize "+ xymode)
-        $('#main').css('width', (global_width - 190) / devider);
+        $('#main').css('width', (global_width - 250) / devider);
         $('#main').css('height', global_height);
 
-        $('#xy_main').css('width', (global_width - 190) / 2.0);
+        $('#xy_main').css('width', (global_width - 250) / 2.0);
         $('#xy_main').css('height', global_height);
 
         OSC.drawGraphGrid();

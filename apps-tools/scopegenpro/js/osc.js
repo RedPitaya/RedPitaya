@@ -30,6 +30,30 @@
         OSC.chShow("CH4", new_params);
     }
 
+    OSC.in1Name = function(new_params) {
+        $('#IN1_CHANNEL_NAME_INPUT').val(new_params['IN1_CHANNEL_NAME_INPUT'].value)
+        $('.in1_channel_name').html(new_params['IN1_CHANNEL_NAME_INPUT'].value)
+        OSC.handleMeasureList();
+    }
+
+    OSC.in2Name = function(new_params) {
+        $('#IN2_CHANNEL_NAME_INPUT').val(new_params['IN2_CHANNEL_NAME_INPUT'].value)
+        $('.in2_channel_name').html(new_params['IN2_CHANNEL_NAME_INPUT'].value)
+        OSC.handleMeasureList();
+    }
+
+    OSC.in3Name = function(new_params) {
+        $('#IN3_CHANNEL_NAME_INPUT').val(new_params['IN3_CHANNEL_NAME_INPUT'].value)
+        $('.in3_channel_name').html(new_params['IN3_CHANNEL_NAME_INPUT'].value)
+        OSC.handleMeasureList();
+    }
+
+    OSC.in4Name = function(new_params) {
+        $('#IN4_CHANNEL_NAME_INPUT').val(new_params['IN4_CHANNEL_NAME_INPUT'].value)
+        $('.in4_channel_name').html(new_params['IN4_CHANNEL_NAME_INPUT'].value)
+        OSC.handleMeasureList();
+    }
+
     OSC.setScale = function(ch,new_params) {
         var param_name = "OSC_"+ch+"_SCALE"
         var field = $('#' + param_name);

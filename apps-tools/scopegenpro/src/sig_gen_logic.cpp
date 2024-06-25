@@ -47,6 +47,7 @@ CFloatParameter outRiseTime[MAX_DAC_CHANNELS]              = INIT2("SOUR","_RISE
 CFloatParameter outFallTime[MAX_DAC_CHANNELS]              = INIT2("SOUR","_FALL", CBaseParameter::RW, 1, 0, 0.1, 1000,CONFIG_VAR);
 
 CStringParameter outWaveform[MAX_DAC_CHANNELS]             = INIT2("SOUR","_FUNC", CBaseParameter::RW, "0", 0,CONFIG_VAR);
+CStringParameter outName[MAX_DAC_CHANNELS]                 = INIT2("OUT","_CHANNEL_NAME_INPUT", CBaseParameter::RW, "", 0,CONFIG_VAR);
 CIntParameter outTriggerSource[MAX_DAC_CHANNELS]           = INIT2("SOUR","_TRIG_SOUR", CBaseParameter::RW, RP_GEN_TRIG_SRC_INTERNAL, 0, RP_GEN_TRIG_SRC_INTERNAL, RP_GEN_TRIG_SRC_EXT_NE,CONFIG_VAR);
 
 CFloatParameter outShowOffset[MAX_DAC_CHANNELS]            = INIT2("OUTPUT","_SHOW_OFF", CBaseParameter::RW, 0, 0, -40, 40,CONFIG_VAR);
@@ -383,6 +384,14 @@ auto setNeedUpdateGenSignal() -> void{
     }
 }
 
+auto initGenBeforeLoadConfig() -> void{
+    for(int i = 0; i < g_dac_channels; i++){
+        auto ch = (rp_channel_t)i;
+        outName[ch].Value() = std::string("OUT") + std::to_string(i+1);
+    }
+}
+
+
 auto updateGeneratorParameters(bool force) -> void{
     auto requestSendScale = false;
 
@@ -581,6 +590,15 @@ auto updateGeneratorParameters(bool force) -> void{
                 checkBurstDelayChanged(ch);
         }
 
+        if (IS_NEW(outName[i]) || force) {
+            if (outName[i].NewValue() == ""){
+                auto str = outName[i].Value();
+                outName[i].Update();
+                outName[i].SendValue(str);
+            }else{
+                outName[i].Update();
+            }
+        }
 
         outShow[i].Update();
         outShowOffset[i].Update();

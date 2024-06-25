@@ -52,6 +52,7 @@ CIntParameter       samplingRate("OSC_SAMPL_RATE", CBaseParameter::RW, RP_DEC_1,
 /* --------------------------------  OUT PARAMETERS  ------------------------------ */
 CBooleanParameter   inShow[MAX_ADC_CHANNELS] = INIT("CH","_SHOW", CBaseParameter::RW, false, 0,CONFIG_VAR);
 CBooleanParameter   inInvShow[MAX_ADC_CHANNELS] = INIT("CH","_SHOW_INVERTED", CBaseParameter::RW, false, 0,CONFIG_VAR);
+CStringParameter    inName[MAX_ADC_CHANNELS] = INIT("IN","_CHANNEL_NAME_INPUT", CBaseParameter::RW, "", 0,CONFIG_VAR);
 
 
 CBooleanParameter   inReset("OSC_RST", CBaseParameter::RW, false, 0);
@@ -119,6 +120,13 @@ auto initOscAfterLoad() -> void{
         for(auto ch = 0u; ch < g_adc_channels ; ch++){
             rp_AcqSetGain((rp_channel_t)ch, inGain[ch].Value() == 0 ? RP_LOW : RP_HIGH);
         }
+    }
+}
+
+auto initOscBeforeLoadConfig() -> void{
+    for(int i = 0; i < g_adc_channels; i++){
+        auto ch = (rp_channel_t)i;
+        inName[ch].Value() = std::string("IN") + std::to_string(i+1);
     }
 }
 
@@ -552,6 +560,15 @@ auto updateOscParams(bool force) -> void{
             IF_VALUE_CHANGED_FORCE(inGain[i], rpApp_OscSetInputGain((rp_channel_t)i, (rpApp_osc_in_gain_t)RPAPP_OSC_IN_GAIN_LV),force)
         }
 
+        if (IS_NEW(inName[i]) || force) {
+            if (inName[i].NewValue() == ""){
+                auto str = inName[i].Value();
+                inName[i].Update();
+                inName[i].SendValue(str);
+            }else{
+                inName[i].Update();
+            }
+        }
     }
 
     IF_VALUE_CHANGED_FORCE(inTrigSweep, rpApp_OscSetTriggerSweep((rpApp_osc_trig_sweep_t) inTrigSweep.NewValue()),force)

@@ -96,7 +96,7 @@
                 <div id="right_menu" class="row right-menu-cont">
                     <div class="col-xs-6 option-content">
                         <div class="right-menu-option">
-                            <button type="button" class="btn menu-btn ch1 dbl" data-signal="ch1" data-toggle="button" aria-pressed="false" autocomplete="off" channel="CH1" disabled>IN1</button>
+                            <button type="button" class="btn menu-btn ch1 dbl in1_channel_name" data-signal="ch1" data-toggle="button" aria-pressed="false" autocomplete="off" channel="CH1" disabled>IN1</button>
                         </div>
                     </div>
                     <div class="col-xs-6 option-content">
@@ -104,7 +104,7 @@
                     </div>
                     <div class="col-xs-6 option-content">
                         <div class="right-menu-option">
-                            <button type="button" class="btn menu-btn ch2 dbl" data-signal="ch2" data-toggle="button" aria-pressed="false" autocomplete="off" channel="CH2" disabled>IN2</button>
+                            <button type="button" class="btn menu-btn ch2 dbl in2_channel_name" data-signal="ch2" data-toggle="button" aria-pressed="false" autocomplete="off" channel="CH2" disabled>IN2</button>
                         </div>
                     </div>
                     <div class="col-xs-6 option-content">
@@ -112,7 +112,7 @@
                     </div>
                     <div class="col-xs-6 option-content">
                         <div class="right-menu-option">
-                            <button type="button" class="btn menu-btn ch3 dbl" data-signal="ch3" data-toggle="button" aria-pressed="false" autocomplete="off" channel="CH3" disabled>IN3</button>
+                            <button type="button" class="btn menu-btn ch3 dbl in3_channel_name" data-signal="ch3" data-toggle="button" aria-pressed="false" autocomplete="off" channel="CH3" disabled>IN3</button>
                         </div>
                     </div>
                     <div class="col-xs-6 option-content">
@@ -120,7 +120,7 @@
                     </div>
                     <div class="col-xs-6 option-content">
                         <div class="right-menu-option">
-                            <button type="button" class="btn menu-btn ch4 dbl" data-signal="ch4" data-toggle="button" aria-pressed="false" autocomplete="off" channel="CH4" disabled>IN4</button>
+                            <button type="button" class="btn menu-btn ch4 dbl in4_channel_name" data-signal="ch4" data-toggle="button" aria-pressed="false" autocomplete="off" channel="CH4" disabled>IN4</button>
                         </div>
                     </div>
                     <div class="col-xs-6 option-content">
@@ -136,7 +136,7 @@
                     </div>
                     <div class="col-xs-6 option-content">
                         <div class="right-menu-option">
-                            <button type="button" class="btn menu-btn math dbl" data-signal="math" data-toggle="button" aria-pressed="false" autocomplete="off" channel="MATH" disabled>MATH</button>
+                            <button type="button" class="btn menu-btn math dbl math_channel_name" data-signal="math" data-toggle="button" aria-pressed="false" autocomplete="off" channel="MATH" disabled>MATH</button>
                         </div>
                     </div>
                     <div class="col-xs-6 option-content">
@@ -184,7 +184,13 @@
                             <button id="CH1_SHOW_INVERTED" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">INVERT</button>
                         </div>
                     </div>
-                    <div class="col-xs-12 option-content">
+                    <div class="col-xs-6 option-content">
+                        <span class="col-info" style="margin-top: -11px;">Name</span>
+                        <div class="right-menu-option" style="margin-top: 10px;">
+                            <input id="IN1_CHANNEL_NAME_INPUT" maxlength="4" class="input_name">
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
                         <span class="col-info" style="margin-top: -11px;">Probe attenuation</span>
                         <div class="right-menu-option" style="margin-top: 10px;">
                             <select id="OSC_CH1_PROBE" class="form-control styled-select">
@@ -256,7 +262,13 @@
                             <button id="CH2_SHOW_INVERTED" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">INVERT</button>
                         </div>
                     </div>
-                    <div class="col-xs-12 option-content">
+                    <div class="col-xs-6 option-content">
+                        <span class="col-info" style="margin-top: -11px;">Name</span>
+                        <div class="right-menu-option" style="margin-top: 10px;">
+                            <input id="IN2_CHANNEL_NAME_INPUT" maxlength="4" class="input_name">
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
                         <div class="right-menu-option">
                             <span class="col-info" style="margin-top: -21px;">Probe attenuation</span>
                             <select id="OSC_CH2_PROBE" class="form-control styled-select" style="margin-top: 10px;">
@@ -328,7 +340,13 @@
                             <button id="CH3_SHOW_INVERTED" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">INVERT</button>
                         </div>
                     </div>
-                    <div class="col-xs-12 option-content">
+                    <div class="col-xs-6 option-content">
+                        <span class="col-info" style="margin-top: -11px;">Name</span>
+                        <div class="right-menu-option" style="margin-top: 10px;">
+                            <input id="IN3_CHANNEL_NAME_INPUT" maxlength="4" class="input_name">
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
                         <div class="right-menu-option">
                             <span class="col-info" style="margin-top: -21px;">Probe attenuation</span>
                             <select id="OSC_CH3_PROBE" class="form-control styled-select" style="margin-top: 10px;">
@@ -400,7 +418,13 @@
                             <button id="CH4_SHOW_INVERTED" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">INVERT</button>
                         </div>
                     </div>
-                    <div class="col-xs-12 option-content">
+                    <div class="col-xs-6 option-content">
+                        <span class="col-info" style="margin-top: -11px;">Name</span>
+                        <div class="right-menu-option" style="margin-top: 10px;">
+                            <input id="IN4_CHANNEL_NAME_INPUT" maxlength="4" class="input_name">
+                        </div>
+                    </div>
+                    <div class="col-xs-6 option-content">
                         <div class="right-menu-option">
                             <span class="col-info" style="margin-top: -21px;">Probe attenuation</span>
                             <select id="OSC_CH4_PROBE" class="form-control styled-select" style="margin-top: 10px;">
@@ -473,24 +497,41 @@
                         </div>
                     </div>
                     <div class="col-xs-12 option-content">
+                        <span class="col-info" style="margin-top: -11px;">Name</span>
+                        <div class="right-menu-option" style="margin-top: 10px;">
+                            <input id="MATH_CHANNEL_NAME_INPUT" maxlength="4" class="input_name">
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Signal1</span>
+                            <select id = "OSC_MATH_SRC1" class="form-control styled-select" style="margin-top: 10px;">
+                                <option id="OSC_MATH_SRC11" name="OSC_MATH_SRC1" value="0" class="in1_channel_name">IN1</option>
+                                <option id="OSC_MATH_SRC12" name="OSC_MATH_SRC1" value="1" class="in2_channel_name">IN2</option>
+                                <option id="OSC_MATH_SRC13" name="OSC_MATH_SRC1" value="2" class="in3_channel_name">IN3</option>
+                                <option id="OSC_MATH_SRC14" name="OSC_MATH_SRC1" value="3" class="in4_channel_name">IN4</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- <div class="col-xs-12 option-content">
                         <div class="right-menu-option">
                             <span class="col-info" style="margin-top: -21px;">Signal1</span>
                             <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
                                 <label class="btn">
-                                    <input type="radio" value="0" name="OSC_MATH_SRC1" id="OSC_MATH_SRC1" autocomplete="off">IN1
+                                    <input type="radio" value="0" name="OSC_MATH_SRC1" id="OSC_MATH_SRC1" autocomplete="off"><caps class="in1_channel_name">IN1</caps>
                                 </label>
                                 <label class="btn">
-                                    <input type="radio" value="1" name="OSC_MATH_SRC1" id="OSC_MATH_SRC12" autocomplete="off">IN2
+                                    <input type="radio" value="1" name="OSC_MATH_SRC1" id="OSC_MATH_SRC12" autocomplete="off"><caps class="in2_channel_name">IN2</caps>
                                 </label>
                                 <label class="btn">
-                                    <input type="radio" value="2" name="OSC_MATH_SRC1" id="OSC_MATH_SRC13" autocomplete="off">IN3
+                                    <input type="radio" value="2" name="OSC_MATH_SRC1" id="OSC_MATH_SRC13" autocomplete="off"><caps class="in3_channel_name">IN3</caps>
                                 </label>
                                 <label class="btn">
-                                    <input type="radio" value="3" name="OSC_MATH_SRC1" id="OSC_MATH_SRC14" autocomplete="off">IN4
+                                    <input type="radio" value="3" name="OSC_MATH_SRC1" id="OSC_MATH_SRC14" autocomplete="off"><caps class="in4_channel_name">IN4</caps>
                                 </label>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
                     <div class="col-xs-12 option-content">
                         <div class="right-menu-option">
                             <span class="col-info" style="margin-top: -21px;">Operator</span>
@@ -507,22 +548,33 @@
                     <div class="col-xs-12 option-content">
                         <div class="right-menu-option">
                             <span class="col-info" style="margin-top: -21px;">Signal2</span>
+                            <select id = "OSC_MATH_SRC2" class="form-control styled-select" style="margin-top: 10px;">
+                                <option id="OSC_MATH_SRC21" name="OSC_MATH_SRC2" value="0" class="in1_channel_name">IN1</option>
+                                <option id="OSC_MATH_SRC22" name="OSC_MATH_SRC2" value="1" class="in2_channel_name">IN2</option>
+                                <option id="OSC_MATH_SRC23" name="OSC_MATH_SRC2" value="2" class="in3_channel_name">IN3</option>
+                                <option id="OSC_MATH_SRC24" name="OSC_MATH_SRC2" value="3" class="in4_channel_name">IN4</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- <div class="col-xs-12 option-content">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Signal2</span>
                             <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
                                 <label class="btn math-radio-btn">
-                                    <input type="radio" value="0" name="OSC_MATH_SRC2" id="OSC_MATH_SRC2" autocomplete="off">IN1
+                                    <input type="radio" value="0" name="OSC_MATH_SRC2" id="OSC_MATH_SRC2" autocomplete="off"><caps class="in1_channel_name">IN1</caps>
                                 </label>
                                 <label class="btn math-radio-btn">
-                                    <input type="radio" value="1" name="OSC_MATH_SRC2" id="OSC_MATH_SRC22" autocomplete="off">IN2
+                                    <input type="radio" value="1" name="OSC_MATH_SRC2" id="OSC_MATH_SRC22" autocomplete="off"><caps class="in2_channel_name">IN2</caps>
                                 </label>
                                 <label class="btn math-radio-btn">
-                                    <input type="radio" value="2" name="OSC_MATH_SRC2" id="OSC_MATH_SRC23" autocomplete="off">IN3
+                                    <input type="radio" value="2" name="OSC_MATH_SRC2" id="OSC_MATH_SRC23" autocomplete="off"><caps class="in3_channel_name">IN3</caps>
                                 </label>
                                 <label class="btn math-radio-btn">
-                                    <input type="radio" value="3" name="OSC_MATH_SRC2" id="OSC_MATH_SRC24" autocomplete="off">IN4
+                                    <input type="radio" value="3" name="OSC_MATH_SRC2" id="OSC_MATH_SRC24" autocomplete="off"><caps class="in4_channel_name">IN4</caps>
                                 </label>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
                     <div class="col-xs-12 option-content">
                         <div class="right-menu-option">
                             <div class="col-info" style="margin-top: -21px;">Vertical offset / <span id="OSC_MATH_OFFSET_UNIT">V</span></div>
@@ -547,11 +599,11 @@
                         <div class="right-menu-option">
                             <span class="col-info" style="margin-top: -21px;">X-axis</span>
                             <select id="X_AXIS_SOURCE" class="form-control styled-select" style="margin-top: 10px;">
-                                <option value="0">IN1</option>
-                                <option value="1">IN2</option>
-                                <option value="2">IN3</option>
-                                <option value="3">IN4</option>
-                                <option value="4">MATH</option>
+                                <option value="0" class="in1_channel_name">IN1</option>
+                                <option value="1" class="in2_channel_name">IN2</option>
+                                <option value="2" class="in3_channel_name">IN3</option>
+                                <option value="3" class="in4_channel_name">IN4</option>
+                                <option value="4" class="math_channel_name">MATH</option>
                             </select>
                         </div>
                     </div>
@@ -559,11 +611,11 @@
                         <div class="right-menu-option">
                             <span class="col-info" style="margin-top: -21px;">Y-axis</span>
                             <select id="Y_AXIS_SOURCE" class="form-control styled-select" style="margin-top: 10px;">
-                                <option value="0">IN1</option>
-                                <option value="1">IN2</option>
-                                <option value="2">IN3</option>
-                                <option value="3">IN4</option>
-                                <option value="4">MATH</option>
+                                <option value="0" class="in1_channel_name">IN1</option>
+                                <option value="1" class="in2_channel_name">IN2</option>
+                                <option value="2" class="in3_channel_name">IN3</option>
+                                <option value="3" class="in4_channel_name">IN4</option>
+                                <option value="4" class="math_channel_name">MATH</option>
                             </select>
                         </div>
                     </div>
@@ -598,10 +650,10 @@
                         <div class="right-menu-option">
                             <span class="col-info" style="margin-top: -21px;">Source</span>
                             <select id="OSC_TRIG_SOURCE" class="form-control styled-select" style="margin-top: 10px;">
-                                <option value="0">IN1</option>
-                                <option value="1">IN2</option>
-                                <option value="2">IN3</option>
-                                <option value="3">IN4</option>
+                                <option value="0" class="in1_channel_name">IN1</option>
+                                <option value="1" class="in2_channel_name">IN2</option>
+                                <option value="2" class="in3_channel_name">IN3</option>
+                                <option value="3" class="in4_channel_name">IN4</option>
                                 <option value="4">EXT</option>
                             </select>
                         </div>
@@ -734,11 +786,11 @@
                         <div class="right-menu-option">
                             <span class="col-info" style="margin-top: -21px;">Signal</span>
                             <select id = "meas_signal" class="form-control styled-select" style="margin-top: 10px;">
-                                <option name="meas_signal" value="CH1">IN1</option>
-                                <option name="meas_signal" value="CH2">IN2</option>
-                                <option name="meas_signal" value="CH3">IN3</option>
-                                <option name="meas_signal" value="CH4">IN4</option>
-                                <option name="meas_signal" value="MATH">MATH</option>
+                                <option name="meas_signal" value="CH1" class="in1_channel_name">IN1</option>
+                                <option name="meas_signal" value="CH2" class="in2_channel_name">IN2</option>
+                                <option name="meas_signal" value="CH3" class="in3_channel_name">IN3</option>
+                                <option name="meas_signal" value="CH4" class="in4_channel_name">IN4</option>
+                                <option name="meas_signal" value="MATH" class="math_channel_name">MATH</option>
                             </select>
                         </div>
                     </div>
@@ -832,11 +884,36 @@
                         <div id="cur_x_diff"></div>
                         <div id="cur_x_diff_info" class="cur_info"></div>
                         <img id="time_offset_arrow" src="img/time-offset-arrow.png">
-                        <img id="math_offset_arrow" class="y-offset-arrow" src="img/math-offset-arrow.png">
-                        <img id="ch1_offset_arrow" class="y-offset-arrow" src="img/ch1-offset-arrow.png">
-                        <img id="ch2_offset_arrow" class="y-offset-arrow" src="img/ch2-offset-arrow.png">
-                        <img id="ch3_offset_arrow" class="y-offset-arrow" src="img/ch3-offset-arrow.png">
-                        <img id="ch4_offset_arrow" class="y-offset-arrow" src="img/ch4-offset-arrow.png">
+                        <div id="ch1_offset_arrow" class="y-offset-arrow">
+                            <div style="position: relative;">
+                                <img src="img/ch1-offset-arrow-empty.png">
+                                <div class="in1_channel_name">IN1</div>
+                            </div>
+                        </div>
+                        <div id="ch2_offset_arrow" class="y-offset-arrow">
+                            <div style="position: relative;">
+                                <img src="img/ch2-offset-arrow-empty.png">
+                                <div class="in2_channel_name">IN2</div>
+                            </div>
+                        </div>
+                        <div id="ch3_offset_arrow" class="y-offset-arrow">
+                            <div style="position: relative;">
+                                <img src="img/ch3-offset-arrow-empty.png">
+                                <div class="in3_channel_name">IN3</div>
+                            </div>
+                        </div>
+                        <div id="ch4_offset_arrow" class="y-offset-arrow">
+                            <div style="position: relative;">
+                                <img src="img/ch4-offset-arrow-empty.png">
+                                <div class="in4_channel_name">IN4</div>
+                            </div>
+                        </div>
+                        <div id="math_offset_arrow" class="y-offset-arrow">
+                            <div style="position: relative;">
+                                <img src="img/math-offset-arrow-empty.png">
+                                <div class="math_channel_name">MATH</div>
+                            </div>
+                        </div>
                         <img id="trig_level_arrow" class="harrow" src="img/trigger-arrow.png">
                         <div id="trigger_level" class="hline"></div>
                         <div id="kostyl_footer"></div>
@@ -845,11 +922,11 @@
                 <div id="info" class="clear">
                     <div class="left-info">
                         <div class="info-title">
-                            <div class="ch1">IN1</div>
-                            <div class="ch2">IN2</div>
-                            <div class="ch3">IN3</div>
-                            <div class="ch4">IN4</div>
-                            <div class="math">MATH</div>
+                            <div class="ch1 in1_channel_name">IN1</div>
+                            <div class="ch2 in2_channel_name">IN2</div>
+                            <div class="ch3 in3_channel_name">IN3</div>
+                            <div class="ch4 in4_channel_name">IN4</div>
+                            <div class="math math_channel_name">MATH</div>
                         </div>
                         <div class="info-value">
                             <div class="ch1"><span id="OSC_CH1_SCALE">-</span>/div</div>

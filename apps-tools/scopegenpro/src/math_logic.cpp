@@ -29,13 +29,14 @@ CFloatParameter     measureValue[4]     = INIT("OSC_MEAS_VAL","", CBaseParameter
 CBooleanParameter   cursorx[2]          = INIT2("OSC_CURSOR_X","", CBaseParameter::RW, false, 0,CONFIG_VAR);
 CBooleanParameter   cursory[2]          = INIT2("OSC_CURSOR_Y","", CBaseParameter::RW, false, 0,CONFIG_VAR);
 
-CFloatParameter     cursorV[2]          = INIT2("OSC_CUR","_V", CBaseParameter::RW, -1, 0, -1000, 1000,CONFIG_VAR);
-CFloatParameter     cursorT[2]          = INIT2("OSC_CUR","_T", CBaseParameter::RW, -1, 0, -1000, 1000,CONFIG_VAR);
+CFloatParameter     cursorV[2]          = INIT2("OSC_CUR","_V", CBaseParameter::RW, -1, 0, -1000000000, 1000000000,CONFIG_VAR);
+CFloatParameter     cursorT[2]          = INIT2("OSC_CUR","_T", CBaseParameter::RW, -1, 0, -1000000000, 1000000000,CONFIG_VAR);
 
 /* ----------------------------------  MATH  -------------------------------- */
 CIntParameter mathOperation("OSC_MATH_OP", CBaseParameter::RW, RPAPP_OSC_MATH_ADD, RPAPP_OSC_MATH_ADD, RPAPP_OSC_MATH_ADD, RPAPP_OSC_MATH_INT,CONFIG_VAR);
 CIntParameter mathSource[2]             = INIT2("OSC_MATH_SRC","", CBaseParameter::RW, RP_CH_1, 0, RP_CH_1, RP_CH_4,CONFIG_VAR);
 
+CStringParameter    mathName("MATH_CHANNEL_NAME_INPUT", CBaseParameter::RW, "MATH", 0,CONFIG_VAR);
 
 
 auto initMathAfterLoad() -> void{
@@ -150,6 +151,16 @@ auto updateMathParams(bool force) -> void{
 
     if (IS_NEW(measureSelectN) || force)
         measureSelectN.Update();
+
+    if (IS_NEW(mathName) || force){
+        if (mathName.NewValue() == ""){
+            auto str = mathName.Value();
+            mathName.Update();
+            mathName.SendValue(str);
+        }else{
+            mathName.Update();
+        }
+    }
 
     for(int i = 0; i < 2 ; i++){
         if (IS_NEW(cursorx[i]) || force)

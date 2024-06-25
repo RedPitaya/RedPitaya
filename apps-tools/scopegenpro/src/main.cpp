@@ -46,6 +46,8 @@ const std::vector<std::string> g_savedParams = {"OSC_CH1_IN_GAIN","OSC_CH2_IN_GA
 void updateParametersByConfig(){
 
     initExtTriggerLimits();
+    initGenBeforeLoadConfig();
+    initOscBeforeLoadConfig();
 
     configGet(getHomeDirectory() + "/.config/redpitaya/apps/scopegenpro/config.json");
 

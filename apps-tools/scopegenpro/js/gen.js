@@ -58,6 +58,16 @@ OSC.setGenState2 = function(new_params){
     OSC.getSetState(param_name,"2")
 }
 
+OSC.out1Name = function(new_params) {
+    $('#OUT1_CHANNEL_NAME_INPUT').val(new_params['OUT1_CHANNEL_NAME_INPUT'].value)
+    $('.out1_channel_name').html(new_params['OUT1_CHANNEL_NAME_INPUT'].value)
+}
+
+OSC.out2Name = function(new_params) {
+    $('#OUT2_CHANNEL_NAME_INPUT').val(new_params['OUT2_CHANNEL_NAME_INPUT'].value)
+    $('.out2_channel_name').html(new_params['OUT2_CHANNEL_NAME_INPUT'].value)
+}
+
 OSC.setSourVolt = function(ch){
     var param_name = "SOUR" + ch + "_VOLT"
     var param_name_scale = "OSC_OUTPUT" + ch + "_SCALE"

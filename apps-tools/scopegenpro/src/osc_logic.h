@@ -2,6 +2,7 @@
 
 #include "rp.h"
 
+auto initOscBeforeLoadConfig() -> void;
 auto initExtTriggerLimits() -> void;
 auto initOscAfterLoad() -> void;
 auto updateOscParametersToWEB() -> void;
