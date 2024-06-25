@@ -29,8 +29,8 @@ CFloatParameter     measureValue[4]     = INIT("OSC_MEAS_VAL","", CBaseParameter
 CBooleanParameter   cursorx[2]          = INIT2("OSC_CURSOR_X","", CBaseParameter::RW, false, 0,CONFIG_VAR);
 CBooleanParameter   cursory[2]          = INIT2("OSC_CURSOR_Y","", CBaseParameter::RW, false, 0,CONFIG_VAR);
 
-CFloatParameter     cursorV[2]          = INIT2("OSC_CUR","_V", CBaseParameter::RW, -1, 0, -1000000000, 1000000000,CONFIG_VAR);
-CFloatParameter     cursorT[2]          = INIT2("OSC_CUR","_T", CBaseParameter::RW, -1, 0, -1000000000, 1000000000,CONFIG_VAR);
+CFloatParameter     cursorV[2]          = INIT2("OSC_CUR","_V", CBaseParameter::RW, -1, 0, -100000000000.0, 100000000000.0,CONFIG_VAR);
+CFloatParameter     cursorT[2]          = INIT2("OSC_CUR","_T", CBaseParameter::RW, -1, 0, -100000000000.0, 100000000000.0,CONFIG_VAR);
 
 /* ----------------------------------  MATH  -------------------------------- */
 CIntParameter mathOperation("OSC_MATH_OP", CBaseParameter::RW, RPAPP_OSC_MATH_ADD, RPAPP_OSC_MATH_ADD, RPAPP_OSC_MATH_ADD, RPAPP_OSC_MATH_INT,CONFIG_VAR);

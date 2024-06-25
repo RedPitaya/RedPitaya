@@ -877,9 +877,15 @@
         }
 
         // Hack for json limitation
-        if (new_params['OSC_TIME_SCALE']){
-            new_params['OSC_TIME_SCALE'].value = parseFloat(new_params['OSC_TIME_SCALE'].value) / 1000.0;
+
+        const listOfCursors = ['OSC_XY_CUR1_X','OSC_XY_CUR2_X','OSC_XY_CUR1_Y','OSC_XY_CUR2_Y','OSC_CUR1_T','OSC_CUR2_T','OSC_CUR1_V','OSC_CUR2_V','OSC_TIME_SCALE']
+
+        for (const param_name of listOfCursors) {
+            if (new_params[param_name]){
+                new_params[param_name].value = parseFloat(new_params[param_name].value) / 1000.0;
+            }
         }
+
 
         if (new_params['RP_MODEL_STR']){
             if (!OSC.setModel(new_params['RP_MODEL_STR']))
@@ -1328,11 +1334,14 @@
             window.location.reload(true);
         }
 
-        //if (!disable_defCur) OSC.setDefCursorVals();
-
         // Hack for json limitation
-        if ('OSC_TIME_SCALE' in OSC.params.local){
-            OSC.params.local['OSC_TIME_SCALE'].value = OSC.params.local['OSC_TIME_SCALE'].value * 1000;
+
+        const listOfCursors = ['OSC_XY_CUR1_X','OSC_XY_CUR2_X','OSC_XY_CUR1_Y','OSC_XY_CUR2_Y','OSC_CUR1_T','OSC_CUR2_T','OSC_CUR1_V','OSC_CUR2_V','OSC_TIME_SCALE']
+
+        for (const param_name of listOfCursors) {
+            if (OSC.params.local[param_name]){
+                OSC.params.local[param_name].value = OSC.params.local[param_name].value * 1000.0;
+            }
         }
 
         console.log("sendParams",OSC.params.local)

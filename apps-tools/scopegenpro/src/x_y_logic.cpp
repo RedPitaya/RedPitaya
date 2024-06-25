@@ -20,8 +20,8 @@ CIntParameter       ySrc("Y_AXIS_SOURCE", CBaseParameter::RW, 0, 0, RPAPP_OSC_SO
 CBooleanParameter   xyCursorXEnable[2]          = INIT2("OSC_XY_CURSOR_X","", CBaseParameter::RW, false, 0,CONFIG_VAR);
 CBooleanParameter   xyCursorYEnable[2]          = INIT2("OSC_XY_CURSOR_Y","", CBaseParameter::RW, false, 0,CONFIG_VAR);
 
-CFloatParameter     xyCursorX[2]          = INIT2("OSC_XY_CUR","_X", CBaseParameter::RW, -1, 0, -1000, 1000,CONFIG_VAR);
-CFloatParameter     xyCursorY[2]          = INIT2("OSC_XY_CUR","_Y", CBaseParameter::RW, -1, 0, -1000, 1000,CONFIG_VAR);
+CFloatParameter     xyCursorX[2]          = INIT2("OSC_XY_CUR","_X", CBaseParameter::RW, -1, 0, -1000000000000.0, 1000000000000.0,CONFIG_VAR);
+CFloatParameter     xyCursorY[2]          = INIT2("OSC_XY_CUR","_Y", CBaseParameter::RW, -1, 0, -1000000000000.0, 1000000000000.0,CONFIG_VAR);
 
 // /* ----------------------------------  MATH  -------------------------------- */
 // CIntParameter mathOperation("OSC_MATH_OP", CBaseParameter::RW, RPAPP_OSC_MATH_ADD, RPAPP_OSC_MATH_ADD, RPAPP_OSC_MATH_ADD, RPAPP_OSC_MATH_INT,CONFIG_VAR);
