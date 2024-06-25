@@ -17,7 +17,7 @@ CBooleanParameter   mathShow("MATH_SHOW", CBaseParameter::RW, false, 0,CONFIG_VA
 CBooleanParameter   mathInvShow("MATH_SHOW_INVERTED", CBaseParameter::RW, false, 0,CONFIG_VAR);
 
 CFloatParameter     inMathOffset("OSC_MATH_OFFSET", CBaseParameter::RW, 0, 0, -50000000, 50000000,CONFIG_VAR);
-CFloatParameter     inMathScale("OSC_MATH_SCALE", CBaseParameter::RW, 1, 0, 0.00005, 10000000,CONFIG_VAR);
+CFloatParameter     inMathScale("OSC_MATH_SCALE", CBaseParameter::RW, 1, 0, 0.00005, 1000000000000.0,CONFIG_VAR);
 
 
 /* --------------------------------  MEASURE  ------------------------------ */
@@ -29,8 +29,8 @@ CFloatParameter     measureValue[4]     = INIT("OSC_MEAS_VAL","", CBaseParameter
 CBooleanParameter   cursorx[2]          = INIT2("OSC_CURSOR_X","", CBaseParameter::RW, false, 0,CONFIG_VAR);
 CBooleanParameter   cursory[2]          = INIT2("OSC_CURSOR_Y","", CBaseParameter::RW, false, 0,CONFIG_VAR);
 
-CFloatParameter     cursorV[2]          = INIT2("OSC_CUR","_V", CBaseParameter::RW, -1, 0, -100000000000.0, 100000000000.0,CONFIG_VAR);
-CFloatParameter     cursorT[2]          = INIT2("OSC_CUR","_T", CBaseParameter::RW, -1, 0, -100000000000.0, 100000000000.0,CONFIG_VAR);
+CFloatParameter     cursorV[2]          = INIT2("OSC_CUR","_V", CBaseParameter::RW, -1, 0, -1000000000000.0, 1000000000000.0,CONFIG_VAR);
+CFloatParameter     cursorT[2]          = INIT2("OSC_CUR","_T", CBaseParameter::RW, -1, 0, -1000000000000.0, 1000000000000.0,CONFIG_VAR);
 
 /* ----------------------------------  MATH  -------------------------------- */
 CIntParameter mathOperation("OSC_MATH_OP", CBaseParameter::RW, RPAPP_OSC_MATH_ADD, RPAPP_OSC_MATH_ADD, RPAPP_OSC_MATH_ADD, RPAPP_OSC_MATH_INT,CONFIG_VAR);
@@ -55,10 +55,10 @@ auto updateMathParametersToWEB(bool is_auto_scale) -> void{
 
     double dvalue = 0;
     rpApp_OscGetAmplitudeScale(RPAPP_OSC_SOUR_MATH, &dvalue);
-//    fprintf(stderr,"\t\ttinMathScale %f dvalue %f min %f max %f\n",inMathScale.Value(), dvalue ,inMathScale.GetMin() , inMathScale.GetMax());
+    WARNING("\t\ttinMathScale %f dvalue %f min %f max %f",inMathScale.Value(), dvalue ,inMathScale.GetMin() , inMathScale.GetMax())
 
     if (dvalue < inMathScale.GetMin() || dvalue > inMathScale.GetMax()){
-//        fprintf(stderr,"Rescale\n");
+        WARNING("inMathScale Rescale");
         rpApp_OscScaleMath();
     }else{
         if(fabs(inMathScale.Value()) - fabs(dvalue) > 0.0005) {
@@ -104,11 +104,11 @@ auto checkMathScale() -> void {
     if(mathShow.Value()) {
         float vpp = 0;
         rpApp_OscMeasureVpp(RPAPP_OSC_SOUR_MATH, &vpp);
-        uint32_t mul = 10;
-        for(int i = 0 ; i < 6; i++ ){
+        double mul = 10;
+        for(int i = 0 ; i < 10; i++ ){
             if (mul > vpp)
                 break;
-            mul *= 10;
+            mul *= 10.0;
 
         }
 
