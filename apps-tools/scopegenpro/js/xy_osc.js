@@ -116,7 +116,7 @@
             var xsrc = OSC.params.orig['X_AXIS_SOURCE'].value;
             var srcName = OSC.xyGetCh(xsrc)
             if (srcName !== ""){
-                var value = OSC.params.orig["OSC_"+srcName+"_SCALE"] ? OSC.params.orig["OSC_"+srcName+"_SCALE"].value : 0;
+                var value = OSC.params.orig["GPOS_SCALE_"+srcName] ? OSC.params.orig["GPOS_SCALE_"+srcName].value : 0;
                 var unit = ' V';
                 if (Math.abs(value) < 1.0) {
                     value *= 1000;
@@ -142,7 +142,7 @@
             var xsrc = OSC.params.orig['Y_AXIS_SOURCE'].value;
             var srcName = OSC.xyGetCh(xsrc)
             if (srcName !== ""){
-                var value = OSC.params.orig["OSC_"+srcName+"_SCALE"] ? OSC.params.orig["OSC_"+srcName+"_SCALE"].value : 0;
+                var value = OSC.params.orig["GPOS_SCALE_"+srcName] ? OSC.params.orig["GPOS_SCALE_"+srcName].value : 0;
                 var unit = ' V';
                 OSC.div = 1;
                 if (Math.abs(value) < 1.0) {
@@ -191,11 +191,11 @@
             var xsrc = OSC.params.orig['X_AXIS_SOURCE'].value;
             srcName = OSC.xyGetCh(xsrc)
             if (srcName !== ""){
-                scale = OSC.params.orig["OSC_"+srcName+"_SCALE"] ? OSC.params.orig["OSC_"+srcName+"_SCALE"].value : 0;
+                scale = OSC.params.orig["GPOS_SCALE_"+srcName] ? OSC.params.orig["GPOS_SCALE_"+srcName].value : 0;
             }
         }
         for(var i = -5; i <= 5; i++){
-            $("#xy_xaxis_tick" + (i + 5)).html(OSC.convertVoltage(-i * scale)+(srcName == "MATH" ? OSC.mathSuffix() : ""))
+            $("#xy_xaxis_tick" + (i + 5)).html(OSC.convertVoltageForAxis(-i * scale)+(srcName == "MATH" ? OSC.mathSuffix() : ""))
         }
         OSC.moveTitileXAxisTicksXY()
     }
@@ -230,11 +230,11 @@
             var xsrc = OSC.params.orig['Y_AXIS_SOURCE'].value;
             srcName = OSC.xyGetCh(xsrc)
             if (srcName !== ""){
-                scale = OSC.params.orig["OSC_"+srcName+"_SCALE"] ? OSC.params.orig["OSC_"+srcName+"_SCALE"].value : 0;
+                scale = OSC.params.orig["GPOS_SCALE_"+srcName] ? OSC.params.orig["GPOS_SCALE_"+srcName].value : 0;
             }
         }
         for(var i = -5; i <= 5; i++){
-            $("#xy_yaxis_tick" + (i + 5)).html(OSC.convertVoltage(-i * scale)+(srcName == "MATH" ? OSC.mathSuffix() : ""))
+            $("#xy_yaxis_tick" + (i + 5)).html(OSC.convertVoltageForAxis(-i * scale)+(srcName == "MATH" ? OSC.mathSuffix() : ""))
         }
         OSC.moveTitileYAxisTicksXY()
     }

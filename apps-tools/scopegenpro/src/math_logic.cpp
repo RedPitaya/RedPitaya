@@ -16,8 +16,8 @@ CFloatBase64Signal  math("math", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
 CBooleanParameter   mathShow("MATH_SHOW", CBaseParameter::RW, false, 0,CONFIG_VAR);
 CBooleanParameter   mathInvShow("MATH_SHOW_INVERTED", CBaseParameter::RW, false, 0,CONFIG_VAR);
 
-CFloatParameter     inMathOffset("OSC_MATH_OFFSET", CBaseParameter::RW, 0, 0, -50000000, 50000000,CONFIG_VAR);
-CFloatParameter     inMathScale("OSC_MATH_SCALE", CBaseParameter::RW, 1, 0, 0.00005, 1000000000000.0,CONFIG_VAR);
+CFloatParameter     inMathOffset("GPOS_OFFSET_MATH", CBaseParameter::RW, 0, 0, -50000000, 50000000,CONFIG_VAR);
+CFloatParameter     inMathScale("GPOS_SCALE_MATH", CBaseParameter::RW, 1, 0, 0.00005, 1000000000000.0,CONFIG_VAR);
 
 
 /* --------------------------------  MEASURE  ------------------------------ */
@@ -55,14 +55,13 @@ auto updateMathParametersToWEB(bool is_auto_scale) -> void{
 
     double dvalue = 0;
     rpApp_OscGetAmplitudeScale(RPAPP_OSC_SOUR_MATH, &dvalue);
-    WARNING("\t\ttinMathScale %f dvalue %f min %f max %f",inMathScale.Value(), dvalue ,inMathScale.GetMin() , inMathScale.GetMax())
+//    WARNING("\t\ttinMathScale %f dvalue %f min %f max %f",inMathScale.Value(), dvalue ,inMathScale.GetMin() , inMathScale.GetMax())
 
     if (dvalue < inMathScale.GetMin() || dvalue > inMathScale.GetMax()){
-        WARNING("inMathScale Rescale");
+//        WARNING("inMathScale Rescale");
         rpApp_OscScaleMath();
     }else{
-        if(fabs(inMathScale.Value()) - fabs(dvalue) > 0.0005) {
-//            fprintf(stderr,"\tSend %f\n",inMathScale.Value());
+        if(fabs(inMathScale.Value() - dvalue) > 0.0005) {
             inMathScale.SendValue(dvalue);
         }
     }
@@ -71,7 +70,6 @@ auto updateMathParametersToWEB(bool is_auto_scale) -> void{
     if (inMathOffset.Value() != dvalue){
         inMathOffset.SendValue(dvalue);
     }
-
     checkMathScale();
 }
 
@@ -111,7 +109,6 @@ auto checkMathScale() -> void {
             mul *= 10.0;
 
         }
-
         if (inMathScale.GetMax() != mul){
             inMathScale.SetMax(mul);
         }

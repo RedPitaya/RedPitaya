@@ -145,6 +145,27 @@
         return +(v.toFixed(2)) + ' ' + unit;
     };
 
+    OSC.convertVoltageForAxis = function(v) {
+        var abs_v = Math.abs(v);
+        var unit = 'V';
+
+        if (abs_v >= 1000000) {
+            v = v / 1000000;
+            unit = 'MV';
+        } else if (abs_v >= 1000) {
+            v = v / 1000;
+            unit = 'kV';
+        } else if (abs_v >= 1) {
+            v = v * 1;
+            unit = 'V';
+        } else if (abs_v >= 0.001) {
+            v = v * 1000;
+            unit = 'mV';
+        }
+
+        return +(v.toFixed(2)) + ' ' + unit;
+    };
+
     OSC.mathSuffix = function(){
         var value_op = OSC.params.orig["OSC_MATH_OP"] ? OSC.params.orig["OSC_MATH_OP"].value : undefined;
         if (value_op !== undefined){
@@ -172,17 +193,14 @@
 
         var itm = name
         if (itm){
+
+            ref_scale = 'GPOS_SCALE_'+ itm
+            ref_offset = 'GPOS_OFFSET_'+ itm
+
             if (itm == "MATH"){
-                ref_scale = 'OSC_MATH_SCALE'
-                ref_offset = 'OSC_MATH_OFFSET'
                 suffix = OSC.mathSuffix()
-            }else if (itm.includes('OUTPUT')) {
-                ref_scale = 'OSC_'+ itm +'_SCALE';
-                ref_offset = itm + '_SHOW_OFF';
-            } else {
-                ref_scale = 'OSC_'+ itm +'_SCALE';
-                ref_offset = 'OSC_'+ itm +'_OFFSET';
             }
+
             if (OSC.params.orig[ref_scale]){
                 scale = OSC.params.orig[ref_scale].value
             }
@@ -252,9 +270,6 @@
     OSC.setValue = function(input, value) {
         input.val(value);
     };
-
-
-
 
     OSC.downloadDataAsCSV = function(filename) {
         var strings = "";

@@ -86,7 +86,7 @@
                         var xsrc = OSC.params.orig['Y_AXIS_SOURCE'].value;
                         var srcName = OSC.xyGetCh(xsrc)
                         if (srcName !== ""){
-                            var scale = OSC.params.orig["OSC_"+srcName+"_SCALE"] ? OSC.params.orig["OSC_"+srcName+"_SCALE"].value : 0;
+                            var scale = OSC.params.orig["GPOS_SCALE_"+srcName] ? OSC.params.orig["GPOS_SCALE_"+srcName].value : 0;
                             var y_cur_volt = y_cur_v * scale
                             $('#xy_cur_' + y + '_info').css('top', top - 14).show();
                             $('#xy_cur_' + y + '_info')
@@ -158,7 +158,7 @@
                             var xsrc = OSC.params.orig['X_AXIS_SOURCE'].value;
                             var srcName = OSC.xyGetCh(xsrc)
                             if (srcName !== ""){
-                                var scale = OSC.params.orig["OSC_"+srcName+"_SCALE"] ? OSC.params.orig["OSC_"+srcName+"_SCALE"].value : 0;
+                                var scale = OSC.params.orig["GPOS_SCALE_"+srcName] ? OSC.params.orig["GPOS_SCALE_"+srcName].value : 0;
                                 var x_cur_volt = -x_cur_t * scale
                                 $('#xy_cur_' + x + '_info').css('left', left + 2).show();
                                 $('#xy_cur_' + x + '_info')
@@ -198,7 +198,7 @@
             var xsrc = OSC.params.orig['Y_AXIS_SOURCE'].value;
             var srcName = OSC.xyGetCh(xsrc)
             if (srcName !== ""){
-                var scale = OSC.params.orig["OSC_"+srcName+"_SCALE"] ? OSC.params.orig["OSC_"+srcName+"_SCALE"].value : 0;
+                var scale = OSC.params.orig["GPOS_SCALE_"+srcName] ? OSC.params.orig["GPOS_SCALE_"+srcName].value : 0;
                 var y = (ui.helper[0].id == 'xy_cur_y1_arrow' ? 'y1' : 'y2');
                 var graph_height = $('#xy_graph_grid').height();
                 var volt_per_px = 10.0 / graph_height;
@@ -230,7 +230,7 @@
             var xsrc = OSC.params.orig['X_AXIS_SOURCE'].value;
             var srcName = OSC.xyGetCh(xsrc)
             if (srcName !== ""){
-                var scale = OSC.params.orig["OSC_"+srcName+"_SCALE"] ? OSC.params.orig["OSC_"+srcName+"_SCALE"].value : 0;
+                var scale = OSC.params.orig["GPOS_SCALE_"+srcName] ? OSC.params.orig["GPOS_SCALE_"+srcName].value : 0;
                 var x = (ui.helper[0].id == 'xy_cur_x1_arrow' ? 'x1' : 'x2');
                 var graph_width = $('#xy_graph_grid').width();
                 var ms_per_px = 10.0 / graph_width;

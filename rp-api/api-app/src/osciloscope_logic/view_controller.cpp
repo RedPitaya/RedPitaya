@@ -246,7 +246,7 @@ auto CViewController::getViewMode() -> EViewMode{
 }
 
 auto CViewController::setViewMode(EViewMode _mode) -> void{
-    std::lock_guard<std::mutex> lock(m_viewMutex);
+    std::lock_guard lock(m_viewMutex);
     m_ViewMode = _mode;
 }
 

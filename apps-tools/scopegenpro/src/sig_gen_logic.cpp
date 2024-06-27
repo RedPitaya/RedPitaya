@@ -28,7 +28,9 @@ CBooleanParameter outState[MAX_DAC_CHANNELS]       = INIT2("OUTPUT","_STATE", CB
 CFloatParameter outAmplitude[MAX_DAC_CHANNELS]     = INIT2("SOUR","_VOLT", CBaseParameter::RW, LEVEL_AMPS_DEF , 0, 0, LEVEL_AMPS_MAX,CONFIG_VAR);
 CFloatParameter outOffset[MAX_DAC_CHANNELS]        = INIT2("SOUR","_VOLT_OFFS", CBaseParameter::RW, 0, 0, -LEVEL_AMPS_MAX, LEVEL_AMPS_MAX,CONFIG_VAR);
 CIntParameter   outFrequancy[MAX_DAC_CHANNELS]     = INIT2("SOUR","_FREQ_FIX", CBaseParameter::RW, 1000, 0, 1, (int)getDACRate(),CONFIG_VAR);
-CFloatParameter outScale[MAX_DAC_CHANNELS]         = INIT2("OSC_OUTPUT","_SCALE", CBaseParameter::RW, 1, 0, 0.00005, 1000,CONFIG_VAR);
+
+CFloatParameter outShowOffset[MAX_DAC_CHANNELS]    = INIT2("GPOS_OFFSET_OUTPUT","", CBaseParameter::RW, 0, 0, -5000, 5000,CONFIG_VAR);
+CFloatParameter outScale[MAX_DAC_CHANNELS]         = INIT2("GPOS_SCALE_OUTPUT","", CBaseParameter::RW, 1, 0, 0.00005, 1000,CONFIG_VAR);
 
 rp_sweep_api::CSweepController *g_sweepController = new rp_sweep_api::CSweepController();
 
@@ -50,7 +52,6 @@ CStringParameter outWaveform[MAX_DAC_CHANNELS]             = INIT2("SOUR","_FUNC
 CStringParameter outName[MAX_DAC_CHANNELS]                 = INIT2("OUT","_CHANNEL_NAME_INPUT", CBaseParameter::RW, "", 0,CONFIG_VAR);
 CIntParameter outTriggerSource[MAX_DAC_CHANNELS]           = INIT2("SOUR","_TRIG_SOUR", CBaseParameter::RW, RP_GEN_TRIG_SRC_INTERNAL, 0, RP_GEN_TRIG_SRC_INTERNAL, RP_GEN_TRIG_SRC_EXT_NE,CONFIG_VAR);
 
-CFloatParameter outShowOffset[MAX_DAC_CHANNELS]            = INIT2("OUTPUT","_SHOW_OFF", CBaseParameter::RW, 0, 0, -40, 40,CONFIG_VAR);
 
 CIntParameter outTemperatureRuntime[MAX_DAC_CHANNELS]      = INIT2("SOUR","_TEMP_RUNTIME", CBaseParameter::RW, 0, 0, 0, 1);
 CIntParameter outTemperatureLatched[MAX_DAC_CHANNELS]      = INIT2("SOUR","_TEMP_LATCHED", CBaseParameter::RW, 0, 0, 0, 1);
@@ -145,7 +146,7 @@ auto generate(rp_channel_t channel,float tscale) -> void {
     phase = (float) (outPhase[channel].Value() / 180.0f * M_PI);
     amplitude = outAmplitude[channel].Value()/outScale[channel].Value();
     offset = outOffset[channel].Value() / outScale[channel].Value();
-    showOff = outShowOffset[channel].Value();
+    showOff = outShowOffset[channel].Value()/outScale[channel].Value();
     duty_cycle = outDCYC[channel].Value()/100;
     freqSweepStart = outSweepStartFrequancy[channel].Value();
     freqSweepEnd = outSweepEndFrequancy[channel].Value();

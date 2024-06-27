@@ -69,10 +69,10 @@
         var interval = null,
             timeout = null;
 
-        function ToggleValue(input) {
-            input.val(parseInt(input.val(), 10) + d);
-            console.log(input);
-        }
+        // function ToggleValue(input) {
+        //     input.val(parseInt(input.val(), 10) + d);
+        //     console.log(input);
+        // }
 
         $('body').on('mousedown', moreVal, function() {
             var el = $(this);
@@ -157,81 +157,26 @@
         function checkInputAttr(input) {
 
             value = parseFloat(input.val());
-
-
             if (!($.isNumeric(value))) {
                 value = 0;
             }
+
             if (input.attr('step')) {
                 step = parseFloat(input.attr('step'));
-                if (['OSC_CH1_OFFSET', 'OSC_CH2_OFFSET'].indexOf(input.attr('id')) != -1) {
-
-                    var ch = "";
-                    if (input.attr('id') == "OSC_CH1_OFFSET")
-                        ch = "CH1";
-                    else
-                        ch = "CH2";
-
-                    var probeAttenuation = parseInt($("#OSC_" + ch + "_PROBE option:selected").text());
-                    var jumperSettings = $("#OSC_" + ch + "_IN_GAIN").parent().hasClass("active") ? 1 : 20;
-                    var units = $('#OSC_' + ch + '_OFFSET_UNIT').html();
-                    var multiplier = units == "mV" ? 1000 : 1;
-
-                    if (multiplier == 1000) {
-                        step = 1;
-                        return;
-                    }
-                    if (jumperSettings == 20) {
-                        switch (probeAttenuation) {
-                            case 1:
-                                step = 0.01;
-                                return;
-                            case 10:
-                                step = 0.1;
-                                return;
-                            case 100:
-                                step = 1;
-                                return;
-                        }
-                    } else {
-                        switch (probeAttenuation) {
-                            case 1:
-                                step = 0.001;
-                                return;
-                            case 10:
-                                step = 0.01;
-                                return;
-                            case 100:
-                                step = 0.1;
-                        }
-                    }
-                }
-                if (['OSC_MATH_OFFSET'].indexOf(input.attr('id')) != -1) {
-
-                    var unit_holder = $('#OSC_MATH_OFFSET_UNIT');
-                    var unit = unit_holder.html().charAt(0);
-                    var scale_val = $("#OSC_MATH_SCALE").text();
-                    var math_vdiv = parseFloat(scale_val);
-                    step = math_vdiv / 100;
-                }
-
+                var signs = Math.log10(step)
+                value = parseFloat(value.toFixed(-signs));
             } else {
                 step = 1;
             }
         }
 
         $(newInput).change(function() {
-
             var input = $(this);
 
             checkInputAttr(input);
             var limits = getLimits(input);
             var min = limits.min;
             var max = limits.max;
-
-            var parts = step.toString().split('.');
-            var signs = parts.length < 2 ? 0 : parts[1].length;
-            value = parseFloat(value.toFixed(signs));
 
             if (value < min) {
                 value = min;
@@ -242,6 +187,7 @@
                 value = 0;
             }
             input.val(value);
+            OSC.exitEditing(true,this)
         });
 
         $(newInput).keydown(function(e) {
@@ -352,18 +298,18 @@
         // }
 
         { // OSC_MATH_OFFSET
-            var scale_val = $("#OSC_MATH_SCALE").text();
-            var units = $("#munit").text();
-            var math_vdiv = parseFloat(scale_val);
+            // var scale_val = $("#OSC_MATH_SCALE").text();
+            // var units = $("#munit").text();
+            // var math_vdiv = parseFloat(scale_val);
 
-            var munit = $('#munit').html().charAt(0);
-            var precision = 2;
-            if (munit == 'm')
-                precision = 0;
-            if (math_vdiv < 1)
-                precision = 3;
-            var math_value = parseFloat($("#OSC_MATH_OFFSET").val());
-            $("#OSC_MATH_OFFSET").val(math_value.toFixed(precision));
+            // var munit = $('#munit').html().charAt(0);
+            // var precision = 2;
+            // if (munit == 'm')
+            //     precision = 0;
+            // if (math_vdiv < 1)
+            //     precision = 3;
+            // var math_value = parseFloat($("#OSC_MATH_OFFSET").val());
+            // $("#OSC_MATH_OFFSET").val(math_value.toFixed(precision));
         }
 
         // { // OSC_TRIG_LEVEL_OFFSET
@@ -501,20 +447,24 @@
 
 
         $(".dbl").on('dblclick', function(event) {
-            var cls = $(this).attr('class');
+            var cls = $(this).attr('id');
             if (cls.indexOf('ch1') != -1)
-                $('#OSC_CH1_OFFSET').val(0);
+                OSC.params.local['GPOS_OFFSET_CH1'] = { value: 0 }
             if (cls.indexOf('ch2') != -1)
-                $('#OSC_CH2_OFFSET').val(0);
+                OSC.params.local['GPOS_OFFSET_CH2'] = { value: 0 }
             if (cls.indexOf('ch3') != -1)
-                $('#OSC_CH3_OFFSET').val(0);
+                OSC.params.local['GPOS_OFFSET_CH3'] = { value: 0 }
             if (cls.indexOf('ch4') != -1)
-                $('#OSC_CH4_OFFSET').val(0);
+                OSC.params.local['GPOS_OFFSET_CH4'] = { value: 0 }
             if (cls.indexOf('math') != -1)
-                $('#OSC_MATH_OFFSET').val(0);
+                OSC.params.local['GPOS_OFFSET_MATH'] = { value: 0 }
             if (cls.indexOf('trig') != -1)
-                $('#OSC_TRIG_LEVEL').val(0);
-            OSC.exitEditing(true,event);
+                OSC.params.local['OSC_TRIG_LEVEL'] = { value: 0 }
+            if (cls.indexOf('output1') != -1)
+                OSC.params.local['GPOS_OFFSET_OUTPUT1'] = { value: 0 }
+            if (cls.indexOf('output2') != -1)
+                OSC.params.local['GPOS_OFFSET_OUTPUT2'] = { value: 0 }
+            OSC.sendParams()
         });
 
         // Process clicks on top menu buttons
@@ -732,8 +682,8 @@
         });
 
         $('button').bind('activeChanged', function(event) { OSC.exitEditing(true,event); });
-        $('select, input').on('change', function(event) { OSC.exitEditing(true,event); });
-
+        $('select').on('change', function(event) { OSC.exitEditing(true,event); });
+        $("input[type='radio']").on('change', function(event) { OSC.exitEditing(true,event); });
 
 
         $('.input_name').focus( function() {
@@ -899,22 +849,22 @@
         // });
 
         // TODO need fix
-        $('#OSC_CH1_OFFSET_UNIT').bind("DOMSubtreeModified", function() {
-            // OSC.updateLimits();
-            OSC.formatVals();
-        });
+        // $('#OSC_CH1_OFFSET_UNIT').bind("DOMSubtreeModified", function() {
+        //     // OSC.updateLimits();
+        //     OSC.formatVals();
+        // });
 
-        // TODO need fix
-        $('#OSC_CH2_OFFSET_UNIT').bind("DOMSubtreeModified", function() {
-            // OSC.updateLimits();
-            OSC.formatVals();
-        });
+        // // TODO need fix
+        // $('#OSC_CH2_OFFSET_UNIT').bind("DOMSubtreeModified", function() {
+        //     // OSC.updateLimits();
+        //     OSC.formatVals();
+        // });
 
-        // TODO need fix
-        $("#OSC_MATH_SCALE").bind("DOMSubtreeModified", function() {
-            // OSC.updateLimits();
-            OSC.formatVals();
-        });
+        // // TODO need fix
+        // $("#OSC_MATH_SCALE").bind("DOMSubtreeModified", function() {
+        //     // OSC.updateLimits();
+        //     OSC.formatVals();
+        // });
 
         // // TODO need fix
         // $("#OSC_CH1_PROBE").change(function() {

@@ -591,11 +591,6 @@
         OSC.timeOffset()
     }
 
-
-    OSC.mathOffset = function(new_params) {
-        // OSC.chOffset("MATH", new_params);
-    }
-
     OSC.resetSettingsRequest = function(new_params){
         if (new_params['RESET_CONFIG_SETTINGS'].value === 2) {
             location.reload();
@@ -654,16 +649,11 @@
     OSC.param_callbacks["OSC_VIEV_PART"] = OSC.processViewPart;
     OSC.param_callbacks["OSC_SAMPL_RATE"] = OSC.processSampleRate;
     OSC.param_callbacks["OSC_TRIG_INFO"] = OSC.processTrigInfo;
-    OSC.param_callbacks["OSC_MATH_OFFSET"] = OSC.mathOffset;
-    OSC.param_callbacks["OUTPUT1_SHOW_OFF"] = OSC.out1ShowOffset;
-    OSC.param_callbacks["OUTPUT2_SHOW_OFF"] = OSC.out2ShowOffset;
 
     OSC.param_callbacks["OUTPUT1_SHOW"] = OSC.setGenShow1;
     OSC.param_callbacks["OUTPUT2_SHOW"] = OSC.setGenShow2;
     OSC.param_callbacks["OUTPUT1_STATE"] = OSC.setGenState1;
     OSC.param_callbacks["OUTPUT2_STATE"] = OSC.setGenState2;
-
-
 
     OSC.param_callbacks["OSC_TIME_OFFSET"] = OSC.timeOffset;
     OSC.param_callbacks["OSC_TRIG_LEVEL"] = OSC.trigLevel;
@@ -760,18 +750,6 @@
     OSC.param_callbacks["OSC_CH1_OUT_GAIN"] = OSC.processParametersZ250;
     OSC.param_callbacks["OSC_CH2_OUT_GAIN"] = OSC.processParametersZ250;
 
-    OSC.param_callbacks["OSC_OUTPUT1_SCALE"] = OSC.ch1SetGenScale;
-    OSC.param_callbacks["OSC_OUTPUT2_SCALE"] = OSC.ch2SetGenScale;
-
-    OSC.param_callbacks["OSC_CH1_OFFSET"] = OSC.ch1Offset;
-    OSC.param_callbacks["OSC_CH2_OFFSET"] = OSC.ch2Offset;
-    OSC.param_callbacks["OSC_CH3_OFFSET"] = OSC.ch3Offset;
-    OSC.param_callbacks["OSC_CH4_OFFSET"] = OSC.ch4Offset;
-
-    OSC.param_callbacks["OSC_CH1_SCALE"] = OSC.ch1SetScale;
-    OSC.param_callbacks["OSC_CH2_SCALE"] = OSC.ch2SetScale;
-    OSC.param_callbacks["OSC_CH3_SCALE"] = OSC.ch3SetScale;
-    OSC.param_callbacks["OSC_CH4_SCALE"] = OSC.ch4SetScale;
 
     OSC.param_callbacks["OSC_CH1_IN_GAIN"] = OSC.ch1SetGain;
     OSC.param_callbacks["OSC_CH2_IN_GAIN"] = OSC.ch2SetGain;
@@ -807,8 +785,6 @@
     OSC.param_callbacks["OSC_TIME_SCALE"] = OSC.setTimeScale;
 
     OSC.param_callbacks["MATH_SHOW"] = OSC.mathShow;
-    OSC.param_callbacks["OSC_MATH_OFFSET"] = OSC.chMathOffset;
-    OSC.param_callbacks["OSC_MATH_SCALE"] = OSC.updateMathScale;
     OSC.param_callbacks["OSC_MATH_OP"] = OSC.updateMathOp;
     OSC.param_callbacks["OSC_MATH_SRC1"] = OSC.updateMathSrc1;
     OSC.param_callbacks["OSC_MATH_SRC2"] = OSC.updateMathSrc2;
@@ -847,6 +823,25 @@
     OSC.param_callbacks["IN3_CHANNEL_NAME_INPUT"] = OSC.in3Name;
     OSC.param_callbacks["IN4_CHANNEL_NAME_INPUT"] = OSC.in4Name;
     OSC.param_callbacks["MATH_CHANNEL_NAME_INPUT"] = OSC.mathName;
+
+
+    OSC.param_callbacks["GPOS_OFFSET_OUTPUT1"] = OSC.out1ShowOffset;
+    OSC.param_callbacks["GPOS_OFFSET_OUTPUT2"] = OSC.out2ShowOffset;
+    OSC.param_callbacks["GPOS_SCALE_OUTPUT1"] = OSC.ch1SetGenScale;
+    OSC.param_callbacks["GPOS_SCALE_OUTPUT2"] = OSC.ch2SetGenScale;
+
+    OSC.param_callbacks["GPOS_OFFSET_CH1"] = OSC.ch1Offset;
+    OSC.param_callbacks["GPOS_OFFSET_CH2"] = OSC.ch2Offset;
+    OSC.param_callbacks["GPOS_OFFSET_CH3"] = OSC.ch3Offset;
+    OSC.param_callbacks["GPOS_OFFSET_CH4"] = OSC.ch4Offset;
+
+    OSC.param_callbacks["GPOS_SCALE_CH1"] = OSC.ch1SetScale;
+    OSC.param_callbacks["GPOS_SCALE_CH2"] = OSC.ch2SetScale;
+    OSC.param_callbacks["GPOS_SCALE_CH3"] = OSC.ch3SetScale;
+    OSC.param_callbacks["GPOS_SCALE_CH4"] = OSC.ch4SetScale;
+
+    OSC.param_callbacks["GPOS_OFFSET_MATH"] = OSC.chMathOffset;
+    OSC.param_callbacks["GPOS_SCALE_MATH"] = OSC.updateMathScale;
 
 
     // Processes newly received values for parameters
@@ -1137,7 +1132,6 @@
                 id = event.currentTarget.id
             }
         }
-
         var id_original = id
         console.log("exitEditing(id:",id,")")
         if ($('#math_dialog').is(':visible')) {
@@ -1193,30 +1187,34 @@
                 value = $('input[name="' + key + '"]:checked').val();
             }
 
-            if (key == "OSC_CH1_OFFSET") {
-                var units = $('#OSC_CH1_OFFSET_UNIT').html();
-                var divider = units == "mV" ? 1000 : 1;
-                value /= divider;
+            if (key == "GPOS_OFFSET_CH1") {
+                value = OSC.modifyForSendInOffsetPlot("1",value)
             }
 
-            if (key == "OSC_CH2_OFFSET") {
-                var units = $('#OSC_CH2_OFFSET_UNIT').html();
-                var divider = units == "mV" ? 1000 : 1;
-                value /= divider;
+            if (key == "GPOS_OFFSET_CH2") {
+                value = OSC.modifyForSendInOffsetPlot("2",value)
             }
 
             if (OSC.adc_channes > 2)
-            if (key == "OSC_CH3_OFFSET") {
-                var units = $('#OSC_CH3_OFFSET_UNIT').html();
-                var divider = units == "mV" ? 1000 : 1;
-                value /= divider;
+            if (key == "GPOS_OFFSET_CH3") {
+                value = OSC.modifyForSendInOffsetPlot("3",value)
             }
 
             if (OSC.adc_channes > 3)
-            if (key == "OSC_CH4_OFFSET") {
-                var units = $('#OSC_CH4_OFFSET_UNIT').html();
-                var divider = units == "mV" ? 1000 : 1;
-                value /= divider;
+            if (key == "GPOS_OFFSET_CH4") {
+                value = OSC.modifyForSendInOffsetPlot("4",value)
+            }
+
+            if (key == "GPOS_OFFSET_OUTPUT1") {
+                value = OSC.modifyForSendOutOffsetPlot("1",value)
+            }
+
+            if (key == "GPOS_OFFSET_OUTPUT2") {
+                value = OSC.modifyForSendOutOffsetPlot("2",value)
+            }
+
+            if (key == "GPOS_OFFSET_MATH") {
+                value = OSC.convertMathUnitToValue(value);
             }
 
             for(var i = 1 ; i <= OSC.adc_channes; i++){
@@ -1292,9 +1290,7 @@
                 skipSend = true;
             }
 
-            if (key == "OSC_MATH_OFFSET") {
-                value = OSC.convertMathUnitToValue();
-            }
+
 
             if (value !== undefined && value != OSC.params.orig[key].value && !skipSend) {
                 console.log(key + ' changed from ' + OSC.params.orig[key].value + ' to ' + ($.type(OSC.params.orig[key].value) == 'boolean' ? !!value : value));
@@ -1523,111 +1519,135 @@
     // Changes Y zoom/scale for the selected signal
     OSC.changeYZoom = function(direction, curr_scale, send_changes) {
 
-        // Output 1/2 signals do not have zoom
         if ($.inArray(OSC.state.sel_sig_name, ['ch1', 'ch2','ch3', 'ch4', 'math', 'output1', 'output2']) < 0) {
             return;
         }
 
-        var mult = 1;
-        var math_range = 10;
-        var math_min = 0;
+        var mult = 1; // Channel multiplier
+        var max_range = 10;
+        var min_range = 10;
+        // var math_min = 0;
         var scale_list = OSC.voltage_steps;
-        var math_sig = false;
+        var scale_name = 'GPOS_SCALE_' + OSC.state.sel_sig_name.toUpperCase()
 
         if (OSC.state.sel_sig_name.toUpperCase() === 'MATH') {
-            math_min = OSC.params.orig['OSC_MATH_SCALE'] !== undefined ?  OSC.params.orig['OSC_MATH_SCALE'].min  : 0;
-            math_range = OSC.params.orig['OSC_MATH_SCALE'] !== undefined ? OSC.params.orig['OSC_MATH_SCALE'].max   : 10;
-            mult = math_range;
-            math_sig = true;
+            // math_min = OSC.params.orig['OSC_MATH_SCALE'] !== undefined ?  OSC.params.orig['OSC_MATH_SCALE'].min  : 0;
+            max_range = OSC.params.orig[scale_name] !== undefined ? OSC.params.orig[scale_name].max   : 10;
+            min_range = OSC.params.orig[scale_name] !== undefined ? OSC.params.orig[scale_name].min   : 10;
+            mult = 1;
             scale_list = OSC.voltage_steps_math;
         }
 
         if (OSC.state.sel_sig_name.toUpperCase() === 'CH1') {
+            max_range = OSC.params.orig[scale_name] !== undefined ? OSC.params.orig[scale_name].max   : 1;
+            min_range = OSC.params.orig[scale_name] !== undefined ? OSC.params.orig[scale_name].min   : 0;
             var probeAttenuation = parseInt($("#OSC_CH1_PROBE option:selected").text());
             var jumperSettings = $("#OSC_CH1_IN_GAIN").parent().hasClass("active") ? 1 : 10;
             mult = probeAttenuation * jumperSettings;
         }
 
         if (OSC.state.sel_sig_name.toUpperCase() === 'CH2') {
+            max_range = OSC.params.orig[scale_name] !== undefined ? OSC.params.orig[scale_name].max   : 1;
+            min_range = OSC.params.orig[scale_name] !== undefined ? OSC.params.orig[scale_name].min   : 0;
             var probeAttenuation = parseInt($("#OSC_CH2_PROBE option:selected").text());
             var jumperSettings = $("#OSC_CH2_IN_GAIN").parent().hasClass("active") ? 1 : 10;
             mult = probeAttenuation * jumperSettings;
         }
 
         if (OSC.state.sel_sig_name.toUpperCase() === 'CH3') {
+            max_range = OSC.params.orig[scale_name] !== undefined ? OSC.params.orig[scale_name].max   : 1;
+            min_range = OSC.params.orig[scale_name] !== undefined ? OSC.params.orig[scale_name].min   : 0;
             var probeAttenuation = parseInt($("#OSC_CH3_PROBE option:selected").text());
             var jumperSettings = $("#OSC_CH3_IN_GAIN").parent().hasClass("active") ? 1 : 10;
             mult = probeAttenuation * jumperSettings;
         }
 
         if (OSC.state.sel_sig_name.toUpperCase() === 'CH4') {
+            max_range = OSC.params.orig[scale_name] !== undefined ? OSC.params.orig[scale_name].max   : 1;
+            min_range = OSC.params.orig[scale_name] !== undefined ? OSC.params.orig[scale_name].min   : 0;
             var probeAttenuation = parseInt($("#OSC_CH4_PROBE option:selected").text());
             var jumperSettings = $("#OSC_CH4_IN_GAIN").parent().hasClass("active") ? 1 : 10;
             mult = probeAttenuation * jumperSettings;
+        }
+
+        if (OSC.state.sel_sig_name.toUpperCase() === 'OUTPUT1') {
+            max_range = OSC.params.orig[scale_name] !== undefined ? OSC.params.orig[scale_name].max   : 1;
+            min_range = OSC.params.orig[scale_name] !== undefined ? OSC.params.orig[scale_name].min   : 0;
+            mult = 1;
+        }
+
+        if (OSC.state.sel_sig_name.toUpperCase() === 'OUTPUT2') {
+            max_range = OSC.params.orig[scale_name] !== undefined ? OSC.params.orig[scale_name].max   : 1;
+            min_range = OSC.params.orig[scale_name] !== undefined ? OSC.params.orig[scale_name].min   : 0;
+            mult = 1;
         }
 
         if (OSC.rp_model === "Z20_250_12" || OSC.rp_model == "Z20_250_12_120") {
             mult = 1;
         }
 
-        var curr_scale = (curr_scale === undefined ? OSC.params.orig['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_SCALE'].value : curr_scale) / mult;
-        curr_scale = curr_scale.toFixed(4)
+        var scale_value = (curr_scale === undefined ? OSC.params.orig['GPOS_SCALE_' + OSC.state.sel_sig_name.toUpperCase()].value : curr_scale) / mult;
 
-        var new_scale;
-
-        for (var i = 0; i < scale_list.length - 1; i++) {
-
-            if (OSC.state.fine && (curr_scale == scale_list[i] || (curr_scale > scale_list[i] && curr_scale < scale_list[i + 1]) || (curr_scale == scale_list[i + 1] && direction == '-'))) {
-                var dev = 100
-                if (scale_list[i + 1] <= (5 / 1000)) dev = 50
-                if (scale_list[i + 1] <= (2 / 1000)) dev = 20
-                new_scale = parseFloat(curr_scale) + (parseFloat(scale_list[i + 1]) / dev) * (direction == '-' ? -1 : 1);
-                // Do not allow values smaller than the lowest possible one
-                if (new_scale < scale_list[0]) {
-                    new_scale = scale_list[0];
-                }
-                break;
-            }
-
-            if (!OSC.state.fine && curr_scale == scale_list[i]) {
-                new_scale = scale_list[direction == '-' ? (i > 0 ? i - 1 : 0) : i + 1];
-                break;
-            } else if (!OSC.state.fine && ((curr_scale > scale_list[i] && curr_scale < scale_list[i + 1]) || (curr_scale == scale_list[i + 1] && i == scale_list.length - 2))) {
-                new_scale = scale_list[direction == '-' ? i : i + 1];
-                break;
+        var sign = direction == '-'  ? -1.0 : 1.0
+        var new_scale = undefined
+        var base_index = undefined
+        for (var i = 0; i < scale_list.length ; i++) {
+            if (i < scale_list.length - 1 && scale_list[i] <= scale_value && scale_value <= scale_list[i+1]){
+                base_index = i;
+            }else if (i == scale_list.length - 1 && scale_list[i] == scale_value){
+                base_index = i;
             }
         }
+        var fine_tune_dev = 100
+        var step = 0;
+        if (base_index !== undefined){
+            if (scale_list[base_index] <= (5 / 1000)) fine_tune_dev = 50
+            if (scale_list[base_index] <= (2 / 1000)) fine_tune_dev = 20
+            if (scale_list[base_index] <= (1 / 1000)) fine_tune_dev = 10
+            step = scale_list[base_index]
+        }
 
-        // if (OSC.rp_model != "Z20_250_12") {
+        if (OSC.state.fine){
+            new_scale = scale_value + (step / fine_tune_dev) * sign
+        }else{
+            var new_base_index = base_index + sign
+            if (new_base_index < 0) new_base_index = 0
+            if (new_base_index >= scale_list.length) new_base_index = scale_list.length-1
+            new_scale = scale_list[new_base_index];
+        }
+
+        if (new_scale < scale_list[0]) {
+            new_scale = scale_list[0]
+        }
+
+        if (new_scale > scale_list[scale_list.length-1] || new_scale > max_range || new_scale < min_range ) {
+            new_scale = scale_value
+        }
+
         if (new_scale === undefined) {
-            if (curr_scale < scale_list[0]) {
+            if (scale_value < scale_list[0]) {
                 new_scale = scale_list[0];
             }
-            if (curr_scale > scale_list[scale_list.length - 1]) {
+            if (scale_value > scale_list[scale_list.length - 1]) {
                 new_scale = scale_list[scale_list.length - 1];
             }
         }
-        // }
 
-
-        if (new_scale !== undefined && new_scale > 0 && new_scale != curr_scale) {
+        if (new_scale !== undefined && new_scale > 0 && new_scale != scale_value) {
             new_scale *= mult;
 
-            // Fix float length
-            //      new_scale = parseFloat(new_scale.toFixed(OSC.state.fine ? 5 : 3));
             if (send_changes !== false) {
-                OSC.params.local['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_SCALE'] = { value: new_scale };
-                if (OSC.params.orig['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_OFFSET'] != undefined) {
-                    var cur_offset = OSC.params.orig['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_OFFSET'].value;
-                    var new_offset = (cur_offset / curr_scale) * (new_scale / mult);
-                    if (!math_sig)
-                        OSC.params.local['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_OFFSET'] = { value: new_offset };
+                OSC.params.local['GPOS_SCALE_' + OSC.state.sel_sig_name.toUpperCase()] = { value: new_scale };
+
+                if (OSC.params.orig['GPOS_OFFSET_' + OSC.state.sel_sig_name.toUpperCase()]) {
+                    var cur_offset = OSC.params.orig['GPOS_OFFSET_' + OSC.state.sel_sig_name.toUpperCase()].value;
+                    var new_offset = (cur_offset / scale_value) * (new_scale / mult);
+                    OSC.params.local['GPOS_OFFSET_' + OSC.state.sel_sig_name.toUpperCase()] = { value: new_offset };
                 }
                 OSC.sendParams();
             }
             return new_scale;
         }
-
         return null;
     };
 
@@ -1671,59 +1691,6 @@
         return null;
     };
 
-
-    // Updates Y offset in the signal config dialog, if opened, or saves new value
-    OSC.updateYOffset = function(ui, save) {
-        var graph_height = $('#graph_grid').outerHeight();
-        var zero_pos = (graph_height + 7) / 2;
-        var new_value;
-
-        if (ui.helper[0].id == 'ch1_offset_arrow' || ui.helper[0].id == "ch2_offset_arrow" || ui.helper[0].id == "ch3_offset_arrow" || ui.helper[0].id == "ch4_offset_arrow") {
-            var ch_n = ''
-            if (ui.helper[0].id == 'ch1_offset_arrow') ch_n = "1"
-            if (ui.helper[0].id == 'ch2_offset_arrow') ch_n = "2"
-            if (ui.helper[0].id == 'ch3_offset_arrow') ch_n = "3"
-            if (ui.helper[0].id == 'ch4_offset_arrow') ch_n = "4"
-            // var ch_n = (ui.helper[0].id == 'ch1_offset_arrow') ? "1" : "2";
-
-            var volt_per_px = (OSC.params.orig['OSC_CH' + ch_n + '_SCALE'].value * 10) / graph_height;
-            new_value = (zero_pos - ui.position.top + parseInt(ui.helper.css('margin-top')) / 2) * volt_per_px;
-
-            $('#info_box').html('IN' + ch_n + ' zero offset ' + OSC.convertVoltage(new_value));
-
-            if ($('#in' + ch_n + '_dialog').is(':visible')) {
-                var units = $('#OSC_CH' + ch_n + '_OFFSET_UNIT').html();
-                var multiplier = units == "mV" ? 1000 : 1;
-
-                var probeAttenuation = parseInt($("#OSC_CH" + ch_n + "_PROBE option:selected").text());
-                var jumperSettings = $("#OSC_CH" + ch_n + "_IN_GAIN").parent().hasClass("active") ? 1 : 20;
-                OSC.setValue($('#OSC_CH' + ch_n + '_OFFSET'), OSC.formatInputValue(new_value * multiplier, probeAttenuation, units == "mV", jumperSettings == 20));
-            }
-            OSC.params.local['OSC_CH' + ch_n + '_OFFSET'] = { value: new_value };
-        } else if (ui.helper[0].id == 'output1_offset_arrow' || ui.helper[0].id == 'output2_offset_arrow') {
-            var volt_per_px = 10 / graph_height;
-            var ch_n = (ui.helper[0].id == 'output1_offset_arrow') ? "1" : "2";
-
-            new_value = (zero_pos - ui.position.top + parseInt(ui.helper.css('margin-top')) / 2) * volt_per_px;
-            $('#info_box').html('OUT' + ch_n + ' zero offset ' + OSC.convertVoltage(new_value));
-            if (save) {
-                OSC.params.local['OUTPUT' + ch_n + '_SHOW_OFF'] = { value: new_value };
-            }
-        } else if (ui.helper[0].id == 'math_offset_arrow') {
-            var volt_per_px = (OSC.params.orig['OSC_MATH_SCALE'].value * 10) / graph_height;
-
-            new_value = (zero_pos - ui.position.top + parseInt(ui.helper.css('margin-top')) / 2) * volt_per_px;
-            $('#info_box').html('MATH zero offset ' + OSC.convertVoltage(new_value));
-
-            if ($('#math_dialog').is(':visible'))
-                OSC.convertValueToMathUnit(new_value);
-
-            OSC.params.local['OSC_MATH_OFFSET'] = { value: new_value };
-        }
-
-        if (new_value !== undefined && save)
-            OSC.sendParams();
-    };
 
     OSC.resize = function() {
         OSC.resizeEx(true)
@@ -1840,171 +1807,8 @@ $(function() {
     $('#modal-warning').hide();
 
 
-
-
-    // Touch events
-    // $(document).on('touchstart', '.plot', function(ev) {
-    //     ev.preventDefault();
-
-    //     // Multi-touch is used for zooming
-    //     if (!OSC.touch.start && ev.originalEvent.touches.length > 1) {
-    //         OSC.touch.zoom_axis = null;
-    //         OSC.touch.start = [
-    //             { clientX: ev.originalEvent.touches[0].clientX, clientY: ev.originalEvent.touches[0].clientY },
-    //             { clientX: ev.originalEvent.touches[1].clientX, clientY: ev.originalEvent.touches[1].clientY }
-    //         ];
-    //     }
-    //     // Single touch is used for changing offset
-    //     else if (!OSC.state.simulated_drag) {
-    //         OSC.state.simulated_drag = true;
-    //         OSC.touch.offset_axis = null;
-    //         OSC.touch.start = [
-    //             { clientX: ev.originalEvent.touches[0].clientX, clientY: ev.originalEvent.touches[0].clientY }
-    //         ];
-    //     }
-    // });
-
-    // $(document).on('touchmove', '.plot', function(ev) {
-    //     ev.preventDefault();
-
-    //     // Multi-touch is used for zooming
-    //     if (ev.originalEvent.touches.length > 1) {
-
-    //         OSC.touch.curr = [
-    //             { clientX: ev.originalEvent.touches[0].clientX, clientY: ev.originalEvent.touches[0].clientY },
-    //             { clientX: ev.originalEvent.touches[1].clientX, clientY: ev.originalEvent.touches[1].clientY }
-    //         ];
-
-    //         // Find zoom axis
-    //         if (!OSC.touch.zoom_axis) {
-    //             var delta_x = Math.abs(OSC.touch.curr[0].clientX - OSC.touch.curr[1].clientX);
-    //             var delta_y = Math.abs(OSC.touch.curr[0].clientY - OSC.touch.curr[1].clientY);
-
-    //             if (Math.abs(delta_x - delta_y) > 10) {
-    //                 if (delta_x > delta_y) {
-    //                     OSC.touch.zoom_axis = 'x';
-    //                 } else if (delta_y > delta_x) {
-    //                     OSC.touch.zoom_axis = 'y';
-    //                 }
-    //             }
-    //         }
-
-    //         // Skip first touch event
-    //         if (OSC.touch.prev) {
-    //             // Time zoom
-    //             if (OSC.touch.zoom_axis == 'x') {
-    //                 var prev_delta_x = Math.abs(OSC.touch.prev[0].clientX - OSC.touch.prev[1].clientX);
-    //                 var curr_delta_x = Math.abs(OSC.touch.curr[0].clientX - OSC.touch.curr[1].clientX);
-
-    //                 if (OSC.state.fine || Math.abs(curr_delta_x - prev_delta_x) > $(this).width() * 0.9 / OSC.time_steps.length) {
-    //                     var new_scale = OSC.changeXZoom((curr_delta_x < prev_delta_x ? '+' : '-'), OSC.touch.new_scale_x, true);
-
-    //                     if (new_scale !== null) {
-    //                         OSC.touch.new_scale_x = new_scale;
-    //                         $('#info_box').html('Time scale ' + OSC.convertTime(new_scale) + '/div');
-    //                     }
-
-    //                     OSC.touch.prev = OSC.touch.curr;
-    //                 }
-    //             }
-    //             // Voltage zoom
-    //             else if (OSC.touch.zoom_axis == 'y' && OSC.state.sel_sig_name) {
-    //                 var prev_delta_y = Math.abs(OSC.touch.prev[0].clientY - OSC.touch.prev[1].clientY);
-    //                 var curr_delta_y = Math.abs(OSC.touch.curr[0].clientY - OSC.touch.curr[1].clientY);
-
-    //                 if (OSC.state.fine || Math.abs(curr_delta_y - prev_delta_y) > $(this).height() * 0.9 / OSC.voltage_steps.length) {
-    //                     var new_scale = OSC.changeYZoom((curr_delta_y < prev_delta_y ? '+' : '-'), OSC.touch.new_scale_y, true);
-
-    //                     if (new_scale !== null) {
-    //                         OSC.touch.new_scale_y = new_scale;
-    //                         $('#info_box').html('Vertical scale ' + OSC.convertVoltage(new_scale) + '/div');
-    //                     }
-
-    //                     OSC.touch.prev = OSC.touch.curr;
-    //                 }
-    //             }
-    //         } else if (OSC.touch.prev === undefined) {
-    //             OSC.touch.prev = OSC.touch.curr;
-    //         }
-    //     }
-    //     // Single touch is used for changing offset
-    //     else if (OSC.state.simulated_drag) {
-
-    //         // Find offset axis
-    //         if (!OSC.touch.offset_axis) {
-    //             var delta_x = Math.abs(OSC.touch.start[0].clientX - ev.originalEvent.touches[0].clientX);
-    //             var delta_y = Math.abs(OSC.touch.start[0].clientY - ev.originalEvent.touches[0].clientY);
-
-    //             if (delta_x > 5 || delta_y > 5) {
-    //                 if (delta_x > delta_y) {
-    //                     OSC.touch.offset_axis = 'x';
-    //                 } else if (delta_y > delta_x) {
-    //                     OSC.touch.offset_axis = 'y';
-    //                 }
-    //             }
-    //         }
-
-    //         if (OSC.touch.prev) {
-
-    //             // Time offset
-    //             if (OSC.touch.offset_axis == 'x') {
-    //                 var delta_x = ev.originalEvent.touches[0].clientX - OSC.touch.prev[0].clientX;
-    //                 if (delta_x != 0)
-    //                     $('#time_offset_arrow').simulate('drag', { dx: delta_x, dy: 0 });
-    //             }
-    //             // Voltage offset
-    //             else if (OSC.touch.offset_axis == 'y' && OSC.state.sel_sig_name) {
-    //                 var delta_y = ev.originalEvent.touches[0].clientY - OSC.touch.prev[0].clientY;
-    //                 if (delta_y != 0)
-    //                     $('#' + OSC.state.sel_sig_name + '_offset_arrow').simulate('drag', { dx: 0, dy: delta_y });
-    //             }
-    //         }
-
-    //         OSC.touch.prev = [
-    //             { clientX: ev.originalEvent.touches[0].clientX, clientY: ev.originalEvent.touches[0].clientY }
-    //         ];
-    //     }
-    // });
-
-    // $(document).on('touchend', '.plot', function(ev) {
-    //     ev.preventDefault();
-
-    //     if (OSC.state.simulated_drag) {
-    //         OSC.state.simulated_drag = false;
-
-    //         if (OSC.touch.offset_axis == 'x') {
-    //             //$('#time_offset_arrow').simulate('drag', { dx: 0, dy: 0 });
-    //             $('#buf_time_offset').simulate('drag', { dx: 0, dy: 0 });
-    //         } else if (OSC.touch.offset_axis == 'y' && OSC.state.sel_sig_name) {
-    //             $('#' + OSC.state.sel_sig_name + '_offset_arrow').simulate('drag', { dx: 0, dy: 0 });
-    //         }
-
-    //         delete OSC.touch.start;
-    //         delete OSC.touch.prev;
-    //     } else {
-    //         // Send new scale
-    //         if (OSC.touch.new_scale_y !== undefined) {
-    //             OSC.params.local['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_SCALE'] = { value: OSC.touch.new_scale_y };
-    //             OSC.sendParams();
-    //         } else if (OSC.touch.new_scale_x !== undefined) {
-    //             OSC.params.local['OSC_TIME_SCALE'] = { value: OSC.touch.new_scale_x };
-    //             OSC.sendParams();
-    //         }
-    //     }
-
-    //     // Reset touch information
-    //     OSC.touch = {};
-    //     $('#info_box').empty();
-    // });
-
-    // Bind to the window resize event to redraw the graph; trigger that event to do the first drawing
-
-
-
     $(window).resize(
         OSC.resize).resize();
-
-
 
     // Stop the application when page is unloaded
     $(window).on('beforeunload', function() {

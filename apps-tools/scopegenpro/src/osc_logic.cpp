@@ -61,8 +61,8 @@ CBooleanParameter   inAutoscale("OSC_AUTOSCALE", CBaseParameter::RW, false, 0);
 CBooleanParameter   inSingle("OSC_SINGLE", CBaseParameter::RW, false, 0);
 
 // 2500 - 5 step by 1000V max
-CFloatParameter     inOffset[MAX_ADC_CHANNELS] = INIT("OSC_CH","_OFFSET", CBaseParameter::RW, 0, 0, -5000, 5000,CONFIG_VAR);
-CFloatParameter     inScale[MAX_ADC_CHANNELS] = INIT("OSC_CH","_SCALE", CBaseParameter::RW, 1, 0, 0.00005, 1000,CONFIG_VAR);
+CFloatParameter     inOffset[MAX_ADC_CHANNELS] = INIT("GPOS_OFFSET_CH","", CBaseParameter::RW, 0, 0, -5000, 5000,CONFIG_VAR);
+CFloatParameter     inScale[MAX_ADC_CHANNELS] = INIT("GPOS_SCALE_CH","", CBaseParameter::RW, 1, 0, 0.00005, 1000,CONFIG_VAR);
 
 CFloatParameter     inProbe[MAX_ADC_CHANNELS] = INIT("OSC_CH","_PROBE", CBaseParameter::RW, 1, 0, 0, 1000,CONFIG_VAR);
 

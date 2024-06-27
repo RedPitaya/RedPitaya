@@ -49,11 +49,9 @@
 
             var itm = OSC.getSettingsActiveChannel()
 
-
             var ref_scale_val = itm.scale
             var ref_offset_val = itm.offset
             var ref_show_val = itm.channel !== ''
-
 
             if (ref_scale_val !== undefined && ref_offset_val !=  undefined && ref_show_val !== undefined){
                 for(var i = 1 ; i <= 2; i++){

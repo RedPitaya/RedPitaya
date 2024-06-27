@@ -1,26 +1,28 @@
 (function(OSC, $, undefined) {
 
     OSC.chMathOffset = function(new_params) {
+        OSC.setGposOffset("MATH")
+        OSC.setMathOffsetPlotCh()
         // var params = $.extend(true, {}, OSC.orig.old);
-        var ch_name = "MATH"
-        var param_name = "OSC_"+ ch_name+"_OFFSET";
-        var scale = OSC.params.orig["OSC_"+ch_name+"_SCALE"] ? OSC.params.orig["OSC_"+ch_name+"_SCALE"].value : undefined;
-        var offset = OSC.params.orig['OSC_' + ch_name + '_OFFSET'].value;
-        var ch_name_l = ch_name.toLowerCase();
+        // var ch_name = "MATH"
+        // var param_name = "OSC_"+ ch_name+"_OFFSET";
+        // var scale = OSC.params.orig["OSC_"+ch_name+"_SCALE"] ? OSC.params.orig["OSC_"+ch_name+"_SCALE"].value : undefined;
+        // var offset = OSC.params.orig['OSC_' + ch_name + '_OFFSET'].value;
+        // var ch_name_l = ch_name.toLowerCase();
 
-        //if ($('#' + ch_name_l + '_offset_arrow').is(':visible') || (OSC.state.graph_grid_height && OSC.state.graph_grid_height !== $('#graph_grid').outerHeight())) {
-            if (scale !== undefined && offset !== undefined && OSC.state.cursor_dragging === false){
-                var volt_per_px = (scale * 10) / $('#graph_grid').outerHeight();
-                var px_offset = -(offset / volt_per_px - parseInt($('#' + ch_name_l + '_offset_arrow').css('margin-top')) / 2);
-                OSC.state.graph_grid_height = $('#graph_grid').outerHeight();
-                $('#' + ch_name_l + '_offset_arrow').css('top', ($('#graph_grid').outerHeight() + 7) / 2 + px_offset);
-            }
-        //}
+        // //if ($('#' + ch_name_l + '_offset_arrow').is(':visible') || (OSC.state.graph_grid_height && OSC.state.graph_grid_height !== $('#graph_grid').outerHeight())) {
+        //     if (scale !== undefined && offset !== undefined && OSC.state.cursor_dragging === false){
+        //         var volt_per_px = (scale * 10) / $('#graph_grid').outerHeight();
+        //         var px_offset = -(offset / volt_per_px - parseInt($('#' + ch_name_l + '_offset_arrow').css('margin-top')) / 2);
+        //         OSC.state.graph_grid_height = $('#graph_grid').outerHeight();
+        //         $('#' + ch_name_l + '_offset_arrow').css('top', ($('#graph_grid').outerHeight() + 7) / 2 + px_offset);
+        //     }
+        // //}
 
-        var field = $('#' + param_name);
-        field.val(OSC.formatMathValue(OSC.params.orig[param_name].value));
+        // var field = $('#' + param_name);
+        // field.val(OSC.formatMathValue(OSC.params.orig[param_name].value));
 
-        OSC.cursorY();
+        // OSC.cursorY();
     }
 
     OSC.showMathArrow = function(state) {
@@ -69,7 +71,7 @@
         var z = oldValue;
         var precision = 2;
         var munit = $('#munit').html().charAt(0);
-        var scale_val = $("#OSC_MATH_SCALE").text();
+        var scale_val = $("#GPOS_SCALE_MATH").text();
         var math_vdiv = parseFloat(scale_val);
         if (munit == 'm')
             precision = 0;
@@ -79,53 +81,20 @@
         return z.toFixed(precision);
     }
 
-    OSC.convertValueToMathUnit = function(v) {
-        var value = v;
-        var unit = 'V';
-        var precision = 2;
-        var munit = $('#munit').html().charAt(0);
-        var scale_val = $("#OSC_MATH_SCALE").text();
-        var math_vdiv = parseFloat(scale_val);
-
-        if (OSC.params.orig['OSC_MATH_OP']) {
-            if (munit == 'm') {
-                value *= 1000;
-                unit = 'mV';
-                precision = 0;
-            } else if (munit == 'M') {
-                value /= 1000000;
-                unit = 'MV';
-            } else if (munit == 'k') {
-                value /= 1000;
-                unit = 'kV';
-            }
-            if (math_vdiv < 1)
-                precision = 3;
-
-            var units = ['', unit, unit, unit + '^2', '', unit, unit + '/s', unit + 's'];
-            $('#OSC_MATH_OFFSET_UNIT').html(units[OSC.params.orig['OSC_MATH_OP'].value]);
-        }
-        var value_holder = $('#OSC_MATH_OFFSET');
-        value_holder.val(OSC.formatMathValue(value));
-        value_holder.change();
-    };
-
-    OSC.convertMathUnitToValue = function() {
-        var value = parseFloat($('#OSC_MATH_OFFSET').val());
-        var unit = $('#OSC_MATH_OFFSET_UNIT').html().charAt(0);
-        var precision = 3;
+    OSC.convertMathUnitToValue = function(value) {
+        var unit = $('#GPOS_OFFSET_MATH_UNIT').html().charAt(0);
+        // var precision = 3;
         if (unit === 'm')
             value /= 1000;
         else if (unit === 'M')
             value *= 1000000;
         else if (unit === 'k')
             value *= 1000;
-
         return value;
     };
 
     OSC.setMathScale = function() {
-        var value = OSC.params.orig["OSC_MATH_SCALE"] ? OSC.params.orig["OSC_MATH_SCALE"].value : undefined;
+        var value = OSC.params.orig["GPOS_SCALE_MATH"] ? OSC.params.orig["GPOS_SCALE_MATH"].value : undefined;
         var value_op = OSC.params.orig["OSC_MATH_OP"] ? OSC.params.orig["OSC_MATH_OP"].value : undefined;
 
         var unit = 'V';
@@ -143,22 +112,26 @@
             OSC.div = 1000;
             unit = 'kV';
         }
-        var field = $('#OSC_MATH_SCALE');
+        var field = $('#GPOS_SCALE_MATH');
         if (field != undefined)
             field.html(value);
 
         if (value_op !== undefined){
             var units = ['', unit, unit, unit + '^2', '', unit, unit + '/s', unit + 's'];
             $('#munit').html(units[value_op] + '/div');
-            $('#OSC_MATH_OFFSET_UNIT').html(units[value_op]);
+            $('#GPOS_OFFSET_MATH_UNIT').html(units[value_op]);
         }
         OSC.setXYAxisScale()
+        OSC.updateTitileXAxisTicksXY()
+        OSC.updateTitileYAxisTicksXY()
+        OSC.setMathOffsetPlotChLimits()
     }
 
 
     OSC.updateMathScale = function(new_params) {
         OSC.setMathScale()
         OSC.chMathOffset()
+        OSC.setMathOffsetPlotCh()
         OSC.updateTitileYAxisTicks()
     }
 
@@ -169,6 +142,7 @@
         }
         OSC.setMathScale()
         OSC.chMathOffset()
+        OSC.setMathOffsetPlotCh()
         OSC.handleMeasureList()
     }
 

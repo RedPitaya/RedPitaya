@@ -1,14 +1,7 @@
 (function(OSC, $, undefined) {
 
+    // Init drag listeners for off cursors (IN,OUT,MATH)
     OSC.initOSCCursors = function() {
-        $('.y-offset-arrow').mousedown(function(event) {
-            OSC.state.cursor_dragging = true;
-        });
-
-        $('.y-offset-arrow').mouseup(function(event) {
-            OSC.state.cursor_dragging = true;
-        });
-
         // Voltage offset arrow dragging
         $('.y-offset-arrow').draggable({
             axis: 'y',
@@ -27,11 +20,13 @@
                     ui.position.top = max_top;
                 }
 
-                OSC.updateYOffset(ui, true);
+                OSC.updateYOffset(ui);
+                OSC.cursorY()
             },
             stop: function(ev, ui) {
                 if (!OSC.state.simulated_drag) {
-                    OSC.updateYOffset(ui, true);
+                    OSC.updateYOffset(ui);
+                    OSC.cursorY()
                     $('#info_box').empty();
                 }
                 OSC.state.cursor_dragging = false;
@@ -39,64 +34,68 @@
         });
     }
 
-    OSC.chOffset = function(ch_name) {
-        // var params = $.extend(true, {}, OSC.orig.old);
-        var param_name = "OSC_"+ ch_name+"_OFFSET";
-        var scale = OSC.params.orig["OSC_"+ch_name+"_SCALE"] ? OSC.params.orig["OSC_"+ch_name+"_SCALE"].value : undefined;
-        var offset = OSC.params.orig['OSC_' + ch_name + '_OFFSET'].value;
-        var ch_name_l = ch_name.toLowerCase();
+    // OSC.chOffset = function(ch_name) {
+    //     // var params = $.extend(true, {}, OSC.orig.old);
+    //     var param_name = "OSC_"+ ch_name+"_OFFSET";
+    //     var scale = OSC.params.orig["OSC_"+ch_name+"_SCALE"] ? OSC.params.orig["OSC_"+ch_name+"_SCALE"].value : undefined;
+    //     var offset = OSC.params.orig['OSC_' + ch_name + '_OFFSET'].value;
+    //     var ch_name_l = ch_name.toLowerCase();
+    //     console.log("Set cursor",scale,offset)
+    //     if (scale !== undefined && offset !== undefined && OSC.state.cursor_dragging === false){
+    //         var graph_height = $('#graph_grid').outerHeight();
+    //         OSC.state.graph_grid_height = graph_height
+    //         var volt_per_px = (scale * 10) / graph_height
+    //         var px_offset = -(offset / volt_per_px - parseInt($('#' + ch_name_l + '_offset_arrow').css('margin-top')) / 2);
+    //         $('#' + ch_name_l + '_offset_arrow').css('top', (graph_height + 7) / 2 + px_offset);
+    //     }
 
-        //if ($('#' + ch_name_l + '_offset_arrow').is(':visible') || (OSC.state.graph_grid_height && OSC.state.graph_grid_height !== $('#graph_grid').outerHeight())) {
-            if (scale !== undefined && offset !== undefined && OSC.state.cursor_dragging === false){
-                var volt_per_px = (scale * 10) / $('#graph_grid').outerHeight();
-                var px_offset = -(offset / volt_per_px - parseInt($('#' + ch_name_l + '_offset_arrow').css('margin-top')) / 2);
-                OSC.state.graph_grid_height = $('#graph_grid').outerHeight();
-                $('#' + ch_name_l + '_offset_arrow').css('top', ($('#graph_grid').outerHeight() + 7) / 2 + px_offset);
-            }
-        //}
+    //     var field = $('#' + param_name);
+    //     var units;
+    //     if (scale != undefined) {
+    //         if (Math.abs(scale) >= 1) {
+    //             units = 'V';
+    //         } else if (Math.abs(scale) >= 0.001) {
+    //             units = 'mV';
+    //         }
+    //     } else
+    //         units = $('#' + param_name+'_UNIT').html();
+    //     if (offset){
+    //         var multiplier = units == "mV" ? 1000 : 1;
 
-        var field = $('#' + param_name);
-        var units;
-        if (scale != undefined) {
-            if (Math.abs(scale) >= 1) {
-                units = 'V';
-            } else if (Math.abs(scale) >= 0.001) {
-                units = 'mV';
-            }
-        } else
-            units = $('#' + param_name+'_UNIT').html();
-        if (offset){
-            var multiplier = units == "mV" ? 1000 : 1;
+    //         var probeAttenuation = OSC.params.orig['OSC_' + ch_name + '_PROBE'] !== undefined ? OSC.params.orig['OSC_' + ch_name + '_PROBE'].value : 1;
+    //         var gain_mode = OSC.params.orig['OSC_' + ch_name + '_IN_GAIN'] !== undefined ? OSC.params.orig['OSC_' + ch_name + '_IN_GAIN'].value : 0;
 
-            var probeAttenuation = OSC.params.orig['OSC_' + ch_name + '_PROBE'] !== undefined ? OSC.params.orig['OSC_' + ch_name + '_PROBE'].value : 1;
-            var gain_mode = OSC.params.orig['OSC_' + ch_name + '_IN_GAIN'] !== undefined ? OSC.params.orig['OSC_' + ch_name + '_IN_GAIN'].value : 0;
+    //         field.val(OSC.formatInputValue(offset * multiplier, probeAttenuation, units == "mV", gain_mode !== 0));
+    //         field.attr("step",OSC.getStepValue(probeAttenuation, units == "mV", gain_mode !== 0));
 
-            field.val(OSC.formatInputValue(offset * multiplier, probeAttenuation, units == "mV", gain_mode !== 0));
-            field.attr("step",OSC.getStepValue(probeAttenuation, units == "mV", gain_mode !== 0));
-
-        }
+    //     }
 
 
-        OSC.triggerParam("")
-        if (!OSC.state.trig_dragging)
-            OSC.updateTriggerDragHandle()
-        OSC.cursorY();
-    }
+    //     OSC.triggerParam("")
+    //     if (!OSC.state.trig_dragging)
+    //         OSC.updateTriggerDragHandle()
+    //     OSC.cursorY();
+    // }
+
 
     OSC.ch1Offset = function(new_params) {
-        OSC.chOffset("CH1");
+        OSC.setGposOffset("CH1");
+        OSC.setInOffsetPlotCh("1")
     }
 
     OSC.ch2Offset = function(new_params) {
-        OSC.chOffset("CH2");
+        OSC.setGposOffset("CH2");
+        OSC.setInOffsetPlotCh("2")
     }
 
     OSC.ch3Offset = function(new_params) {
-        OSC.chOffset("CH3");
+        OSC.setGposOffset("CH3");
+        OSC.setInOffsetPlotCh("3")
     }
 
     OSC.ch4Offset = function(new_params) {
-        OSC.chOffset("CH4");
+        OSC.setGposOffset("CH4");
+        OSC.setInOffsetPlotCh("4")
     }
 
     OSC.showInArrow = function(ch_name,state) {
@@ -117,8 +116,8 @@
 
             if (OSC.params.orig['OSC_TRIG_SOURCE'].value < OSC.adc_channes) {
                 var ots = OSC.params.orig['OSC_TRIG_SOURCE'].value + 1;
-                var ref_scale = "OSC_CH"+ots+"_SCALE";
-                var source_offset = OSC.params.orig['OSC_CH'+ots+'_OFFSET'].value;
+                var ref_scale = "GPOS_SCALE_CH"+ots
+                var source_offset = OSC.params.orig['GPOS_OFFSET_CH'+ots].value;
 
                 // var ref_scale = (OSC.params.orig['OSC_TRIG_SOURCE'].value == 0 ? 'OSC_CH1_SCALE' : 'OSC_CH2_SCALE');
                 // var source_offset = (OSC.params.orig['OSC_TRIG_SOURCE'].value == 0 ? OSC.params.orig['OSC_CH1_OFFSET'].value : OSC.params.orig['OSC_CH2_OFFSET'].value);
@@ -198,8 +197,8 @@
     OSC.calculateTrigLimit = function(){
         var trig_sour = OSC.params.orig['OSC_TRIG_SOURCE'] == undefined ? undefined : OSC.params.orig['OSC_TRIG_SOURCE'].value;
         var ots = trig_sour + 1;
-        var source_offset = OSC.params.orig['OSC_CH'+ots+'_OFFSET'] === undefined ? undefined : OSC.params.orig['OSC_CH'+ots+'_OFFSET'].value;
-        var scale_value = OSC.params.orig['OSC_CH'+ots+'_SCALE'] === undefined ? undefined : OSC.params.orig['OSC_CH'+ots+'_SCALE'].value;
+        var source_offset = OSC.params.orig['GPOS_OFFSET_CH'+ots] === undefined ? undefined : OSC.params.orig['GPOS_OFFSET_CH'+ots].value;
+        var scale_value = OSC.params.orig['GPOS_SCALE_CH'+ots] === undefined ? undefined : OSC.params.orig['GPOS_SCALE_CH'+ots].value;
         var limit_value = OSC.params.orig['OSC_TRIG_LIMIT'] === undefined ? undefined : OSC.params.orig['OSC_TRIG_LIMIT'].value;
 
         if (source_offset !== undefined && scale_value !== undefined && limit_value !== undefined){
@@ -235,8 +234,8 @@
             } else {
 
                 var ots = trig_sour + 1;
-                var source_offset = OSC.params.orig['OSC_CH'+ots+'_OFFSET'] === undefined ? undefined : OSC.params.orig['OSC_CH'+ots+'_OFFSET'].value;
-                var scale_value = OSC.params.orig['OSC_CH'+ots+'_SCALE'] === undefined ? undefined : OSC.params.orig['OSC_CH'+ots+'_SCALE'].value;
+                var source_offset = OSC.params.orig['GPOS_OFFSET_CH'+ots] === undefined ? undefined : OSC.params.orig['GPOS_OFFSET_CH'+ots].value;
+                var scale_value = OSC.params.orig['GPOS_SCALE_CH'+ots] === undefined ? undefined : OSC.params.orig['GPOS_SCALE_CH'+ots].value;
                 var level_value = OSC.params.orig['OSC_TRIG_LEVEL'] === undefined ? undefined : OSC.params.orig['OSC_TRIG_LEVEL'].value;
 
                 if (source_offset != undefined && scale_value != undefined && level_value != undefined){

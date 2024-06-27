@@ -1,5 +1,13 @@
 (function(OSC, $, undefined) {
 
+OSC.showOutArrow = function(ch,state) {
+    if (state){
+       $('#output' + ch + '_offset_arrow').show();
+    }else{
+        $('#output' + ch + '_offset_arrow').hide();
+    }
+}
+
 OSC.getSetState = function(param_name,ch){
     var state = OSC.params.orig[param_name].value;
     var field = $('#' + param_name);
@@ -70,7 +78,7 @@ OSC.out2Name = function(new_params) {
 
 OSC.setSourVolt = function(ch){
     var param_name = "SOUR" + ch + "_VOLT"
-    var param_name_scale = "OSC_OUTPUT" + ch + "_SCALE"
+    var param_name_scale = "GPOS_SCALE_OUTPUT" + ch
     var volt = OSC.params.orig[param_name] !== undefined ? OSC.params.orig[param_name].value : undefined
     var scale = OSC.params.orig[param_name_scale] !== undefined ? OSC.params.orig[param_name_scale].value : undefined
 
@@ -81,9 +89,10 @@ OSC.setSourVolt = function(ch){
         }
     }
     if (scale !== undefined){
-        $('#SOUR'+ch+'_VOLT_info').html(OSC.convertVoltage(scale));
+        $('#GPOS_SCALE_OUTPUT'+ch).html(OSC.convertVoltage(scale));
     }
     OSC.updateTitileYAxisTicks()
+
 }
 
 OSC.src1Volt = function(new_params) {
@@ -93,8 +102,6 @@ OSC.src1Volt = function(new_params) {
 OSC.src2Volt = function(new_params) {
     OSC.setSourVolt("2")
 }
-
-
 
 OSC.sweepResetButton = function(new_params) {
     if ('SOUR1_SWEEP_STATE' in OSC.params.orig){
@@ -156,10 +163,16 @@ OSC.sweepTime = function(new_params) {
 
 OSC.ch1SetGenScale = function(new_params){
     OSC.setSourVolt("1")
+    OSC.out1ShowOffset(new_params)
+    OSC.setOutOffsetPlotChLimits("1")
+    OSC.updateTitileYAxisTicks()
 }
 
 OSC.ch2SetGenScale = function(new_params){
     OSC.setSourVolt("2")
+    OSC.out2ShowOffset(new_params)
+    OSC.setOutOffsetPlotChLimits("2")
+    OSC.updateTitileYAxisTicks()
 }
 
 OSC.riseFallTime = function(new_params) {

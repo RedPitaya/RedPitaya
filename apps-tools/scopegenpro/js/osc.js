@@ -55,7 +55,7 @@
     }
 
     OSC.setScale = function(ch,new_params) {
-        var param_name = "OSC_"+ch+"_SCALE"
+        var param_name = "GPOS_SCALE_"+ch
         var field = $('#' + param_name);
 
         var inp_units;
@@ -65,32 +65,38 @@
             inp_units = 'mV';
         }
         field.html(OSC.convertVoltage(new_params[param_name].value));
-        $("#OSC_"+ch+"_OFFSET_UNIT").html(inp_units)
+        $("#"+param_name+"_UNIT").html(inp_units)
         if (!OSC.state.trig_dragging)
             OSC.updateTriggerDragHandle()
         OSC.setXYAxisScale()
+        OSC.updateTitileXAxisTicksXY()
+        OSC.updateTitileYAxisTicksXY()
         OSC.updateTitileYAxisTicks()
     }
 
 
     OSC.ch1SetScale = function(new_params) {
         OSC.setScale("CH1",new_params);
-        OSC.chOffset("CH1")
+        OSC.setGposOffset("CH1")
+        OSC.setInOffsetPlotCh("1")
     }
 
     OSC.ch2SetScale = function(new_params) {
         OSC.setScale("CH2",new_params);
-        OSC.chOffset("CH2")
+        OSC.setGposOffset("CH2")
+        OSC.setInOffsetPlotCh("2")
     }
 
     OSC.ch3SetScale = function(new_params) {
         OSC.setScale("CH3",new_params);
-        OSC.chOffset("CH3")
+        OSC.setGposOffset("CH3")
+        OSC.setInOffsetPlotCh("3")
     }
 
     OSC.ch4SetScale = function(new_params) {
         OSC.setScale("CH4",new_params);
-        OSC.chOffset("CH4")
+        OSC.setGposOffset("CH4")
+        OSC.setInOffsetPlotCh("4")
     }
 
     OSC.processSampleRate = function(new_params) {
@@ -225,25 +231,25 @@
     OSC.ch1SetGain = function(new_params){
         OSC.setGain("OSC_CH1_IN_GAIN")
         OSC.updateOSCOffsetLimits("CH1");
-        OSC.chOffset("CH1");
+        OSC.setGposOffset("CH1");
     }
 
     OSC.ch2SetGain = function(new_params){
         OSC.setGain("OSC_CH2_IN_GAIN")
         OSC.updateOSCOffsetLimits("CH2");
-        OSC.chOffset("CH2");
+        OSC.setGposOffset("CH2");
     }
 
     OSC.ch3SetGain = function(new_params){
         OSC.setGain("OSC_CH3_IN_GAIN")
         OSC.updateOSCOffsetLimits("CH3");
-        OSC.chOffset("CH3");
+        OSC.setGposOffset("CH3");
     }
 
     OSC.ch4SetGain = function(new_params){
         OSC.setGain("OSC_CH4_IN_GAIN")
         OSC.updateOSCOffsetLimits("CH4");
-        OSC.chOffset("CH4");
+        OSC.setGposOffset("CH4");
     }
 
     OSC.setACDC = function(param_name){
@@ -269,14 +275,7 @@
     }
 
     OSC.updateOSCOffsetLimits = function(ch){
-        var probeAttenuation = parseInt($("#OSC_"+ch+"_PROBE option:selected").text());
-        var jumperSettings = $("#OSC_"+ch+"_IN_GAIN").parent().hasClass("active") ? 1 : 20;
-        var units = $("#OSC_"+ch+"_OFFSET_UNIT").html();
-        var multiplier = units == "mV" ? 1000 : 1;
-        var newMin = -1 * 10 * jumperSettings * probeAttenuation * multiplier;
-        var newMax = 1 * 10 * jumperSettings * probeAttenuation * multiplier;
-        $("#OSC_"+ch+"_OFFSET").attr("min", newMin);
-        $("#OSC_"+ch+"_OFFSET").attr("max", newMax);
+        OSC.setInOffsetPlotChLimits(ch)
     }
 
     OSC.setOscProbe = function(param_name){
@@ -289,28 +288,28 @@
     OSC.setOscProbe1 = function(new_params){
         OSC.setOscProbe("OSC_CH1_PROBE")
         OSC.updateOSCOffsetLimits("CH1")
-        OSC.chOffset("CH1");
+        OSC.setGposOffset("CH1");
         OSC.updateTriggerDragHandle();
     }
 
     OSC.setOscProbe2 = function(new_params){
         OSC.setOscProbe("OSC_CH2_PROBE")
         OSC.updateOSCOffsetLimits("CH2")
-        OSC.chOffset("CH2");
+        OSC.setGposOffset("CH2");
         OSC.updateTriggerDragHandle();
     }
 
     OSC.setOscProbe3 = function(new_params){
         OSC.setOscProbe("OSC_CH3_PROBE")
         OSC.updateOSCOffsetLimits("CH3")
-        OSC.chOffset("CH3");
+        OSC.setGposOffset("CH3");
         OSC.updateTriggerDragHandle();
     }
 
     OSC.setOscProbe4 = function(new_params){
         OSC.setOscProbe("OSC_CH4_PROBE")
         OSC.updateOSCOffsetLimits("CH4")
-        OSC.chOffset("CH4");
+        OSC.setGposOffset("CH4");
         OSC.updateTriggerDragHandle();
     }
 
@@ -385,8 +384,12 @@
         var itm = OSC.getSettingsActiveChannel()
         if (itm.channel !== ''){
             for(var i = -5; i <= 5; i++){
-                var v = OSC.convertVoltage(i * -itm.scale) + itm.suffix
+                var v = OSC.convertVoltageForAxis(i * -itm.scale) + itm.suffix
                 $("#yaxis_tick" + (i + 5)).html(v)
+            }
+        }else{
+            for(var i = -5; i <= 5; i++){
+                $("#yaxis_tick" + (i + 5)).html('')
             }
         }
         OSC.moveTitileYAxisTicks()
