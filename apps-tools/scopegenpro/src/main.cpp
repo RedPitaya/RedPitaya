@@ -105,6 +105,7 @@ int rp_app_init(void) {
     rp_WC_UpdateParameters(true);
 
     rpApp_Init();
+    rpApp_OscPrepareOscillogramBuffer(MAX_BUFFERS);  // 100 (buffers) * 16384 (samples) * 4 (float size) * 5 (channels) = 163840000 bytes
     rpApp_OscRun();
     // Need run after init parameters
     updateParametersByConfig();

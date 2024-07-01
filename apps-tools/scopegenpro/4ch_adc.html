@@ -952,6 +952,7 @@
                         <span id="OSC_SAMPL_RATE"></span>
                     </div>
                     <div id="triginfo" style="color: green; display:none;">TEXT</div>
+                    <div id="buffer_selector_info">TEXT</div>
                 </div>
             </div>
             <div id="xy_main" style="display: none;">
@@ -998,6 +999,18 @@
                     <area id="jtk_right" shape="poly" coords="111,44,132,27,143,42,147,56,149,76,148,93,141,107,132,123,112,104,119,94,122,76,119,58" />
                     <area id="jtk_down" shape="poly" coords="46,112,27,130,38,141,51,145,72,148,92,148,106,142,126,132,104,111,90,118,79,120,71,121,62,119,57,117" />
                 </map>
+            </div>
+            <div id="buffer_selector">
+                <div class="col-xs-6 option-content" style="border: 1px solid #999;">
+                    <div class="right-menu-option">
+                        <button id="OSC_PREV_BUFFER" type="button" class="btn" aria-pressed="false" autocomplete="off">&lt;&lt;</button>
+                    </div>
+                </div>
+                <div class="col-xs-6 option-content" style="border: 1px solid #999;">
+                    <div class="right-menu-option">
+                        <button id="OSC_NEXT_BUFFER" type="button" class="btn" aria-pressed="false" autocomplete="off">&gt;&gt;</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1048,7 +1061,7 @@
 </div>
 <div>
     <div id="sys_info_view" style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white;">
-        FPS:<span id="fps_view">0</span> Throughput:<span id="throughput_view">0</span> CPU Load:<span id="cpu_load">0</span>
+        FPS:<span id="fps_view">0</span> OPS:<span id="ops_view">0</span> Throughput:<span id="throughput_view">0</span> CPU Load:<span id="cpu_load">0</span>
         <br/> Memory total:<span id="totalmem_view">0</span> Free:<span id="freemem_view">0</span> Usage:<span id="usagemem_view">0</span>
     </div>
     <div id="slow_adc_info_view" style="display:none; position:fixed; bottom:0; right: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white;">

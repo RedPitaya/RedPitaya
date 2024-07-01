@@ -317,6 +317,8 @@
     var performanceHandler = function() {
 
         $('#fps_view').text(OSC.refresh_times.length);
+        $('#ops_view').text(OSC.params.orig["OSC_PER_SEC"] ? OSC.params.orig["OSC_PER_SEC"].value :0);
+
         $('#throughput_view').text((OSC.compressed_data / 1024).toFixed(2) + "kB/s");
         $('#throughput_view2').text((OSC.compressed_data / 1024).toFixed(2) + "kB/s");
         $('#cpu_load').text(OSC.g_CpuLoad.toFixed(2) + "%");
@@ -482,6 +484,7 @@
         height = Math.max(height,g_height);
         height = height > limit ? height : limit;
         $("#joystick").css('top',height + 10);
+        $("#buffer_selector").css('top',height + 20 + 160);
     };
 
     // Creates a WebSocket connection with the web server
@@ -576,9 +579,11 @@
         if (new_params['OSC_RUN'].value === true) {
             $('#OSC_RUN').hide();
             $('#OSC_STOP').css('display', 'block');
+            $('#buffer_selector, #buffer_selector_info').hide()
         } else {
             $('#OSC_STOP').hide();
             $('#OSC_RUN').show();
+            $('#buffer_selector, #buffer_selector_info').show()
         }
     }
 
@@ -842,6 +847,8 @@
 
     OSC.param_callbacks["GPOS_OFFSET_MATH"] = OSC.chMathOffset;
     OSC.param_callbacks["GPOS_SCALE_MATH"] = OSC.updateMathScale;
+
+    OSC.param_callbacks["OSC_BUFFER_CURRENT"] = OSC.setCurrentBuffer;
 
 
     // Processes newly received values for parameters

@@ -323,6 +323,29 @@ int rpApp_OscGetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode *_
     return osc_GetSmoothMode(_channel,_mode);
 }
 
+int rpApp_OscPrepareOscillogramBuffer(uint32_t count){
+    return osc_prepareOscillogramBuffer(count);
+}
+
+int rpApp_OscGetOscillogramBufferCount(uint32_t *count){
+    return osc_GetOscillogramBufferCount(count);
+}
+
+int rpApp_OscGetOscPerSec(uint32_t *count){
+    return osc_getOscPerSec(count);
+}
+
+int rpApp_OscBufferSelectNext(){
+    return osc_BufferSelectNext();
+}
+
+int rpApp_OscBufferSelectPrev(){
+    return osc_BufferSelectPrev();
+}
+
+int rpApp_OscBufferCurrent(int32_t *current){
+    return osc_BufferCurrent(current);
+}
 
 // SPECTRUM
 

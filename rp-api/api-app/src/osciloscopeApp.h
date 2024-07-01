@@ -45,6 +45,8 @@ int osc_single();
 int osc_autoScale();
 int osc_getAutoScale(bool *_state);
 int osc_isRunning(bool *running);
+int osc_prepareOscillogramBuffer(uint32_t count);
+int osc_GetOscillogramBufferCount(uint32_t *count);
 int osc_isTriggered();
 int osc_setTimeScale(float scale);
 int osc_getTimeScale(float *division);
@@ -103,6 +105,12 @@ int osc_getViewSize(uint32_t *size);
 int osc_getViewLimits(uint32_t* start, uint32_t* end);
 int osc_scaleMath();
 int osc_refreshViewData();
+int osc_getOscPerSec(uint32_t *counter);
+
+int osc_BufferSelectNext();
+int osc_BufferSelectPrev();
+int osc_BufferCurrent(int32_t *current);
+
 
 
 int osc_SetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode _mode);

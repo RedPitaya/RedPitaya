@@ -32,6 +32,7 @@ CIntParameter       inViewStartPos("OSC_VIEW_START_POS", CBaseParameter::RO, 0, 
 CIntParameter       inViewEndPos("OSC_VIEW_END_POS", CBaseParameter::RO, 0, 0, 0, 16384,CONFIG_VAR);
 CIntParameter       adc_count("ADC_COUNT", CBaseParameter::RO, getADCChannels(), 0, 0, 4,0);
 CIntParameter       adc_rate("ADC_RATE", CBaseParameter::RO, getADCRate(), 0, getADCRate(), getADCRate(),0);
+CIntParameter       osc_per_sec("OSC_PER_SEC", CBaseParameter::RW, 0 , 0, 0, 1000000,0);
 
 
 /***************************************************************************************
@@ -94,6 +95,9 @@ CBooleanParameter   request_normalize("REQUEST_NORMALIZE", CBaseParameter::RW,tr
 CBooleanParameter   request_view("REQUEST_VIEW", CBaseParameter::RW,true,0,CONFIG_VAR);
 
 CFloatParameter ext_trigger_level ("OSC_EXT_TRIG_LEVEL", CBaseParameter::RW, 0, 0, 0, 0,CONFIG_VAR);
+
+CIntParameter       bufferRequest("OSC_BUFFER_REQUEST", CBaseParameter::RW, 0, 0, -1, 1);
+CIntParameter       bufferSelected("OSC_BUFFER_CURRENT", CBaseParameter::RW, 0, 0, (MAX_BUFFERS-1) * -1, 0);
 
 
 auto initExtTriggerLimits() -> void{
@@ -308,6 +312,18 @@ auto updateOscParametersToWEB() -> void{
             inOffset[i].SendValue(dvalue);
         }
     }
+
+    uint32_t count;
+    rpApp_OscGetOscPerSec(&count);
+    if (osc_per_sec.Value() != count){
+        osc_per_sec.SendValue(count);
+    }
+
+    int32_t currentBuffer;
+    rpApp_OscBufferCurrent(&currentBuffer);
+    if (bufferSelected.Value() != currentBuffer){
+        bufferSelected.SendValue(currentBuffer);
+    }
 }
 
 auto getOscRunState() -> bool{
@@ -472,6 +488,18 @@ auto updateOscParams(bool force) -> void{
         rpApp_osc_trig_sweep_t sweep;
         rpApp_OscGetTriggerSweep(&sweep);
         inTrigSweep.Value() = sweep;
+    }
+
+    if (bufferRequest.NewValue() != 0){
+        if (bufferRequest.NewValue() == 1){
+            rpApp_OscBufferSelectNext();
+            WARNING("Press next")
+        }
+        if (bufferRequest.NewValue() == -1){
+            rpApp_OscBufferSelectPrev();
+            WARNING("Press prev")
+        }
+        bufferRequest.Value() = 0;
     }
 
 	inAutoscale.Update();

@@ -405,4 +405,24 @@
         }
     }
 
+    OSC.setCurrentBuffer = function(new_params){
+        if (OSC.params.orig['OSC_BUFFER_CURRENT']){
+            var cur = OSC.params.orig['OSC_BUFFER_CURRENT'].value
+            $('#buffer_selector_info').html('Current buffer: ' + cur)
+            var max = OSC.params.orig['OSC_BUFFER_CURRENT'].max
+            var min = OSC.params.orig['OSC_BUFFER_CURRENT'].min
+            if (cur == max){
+                $('#OSC_NEXT_BUFFER').prop('disabled', true);
+            }else{
+                $('#OSC_NEXT_BUFFER').prop('disabled', false);
+            }
+
+            if (cur == min){
+                $('#OSC_PREV_BUFFER').prop('disabled', true);
+            }else{
+                $('#OSC_PREV_BUFFER').prop('disabled', false);
+            }
+        }
+    }
+
 }(window.OSC = window.OSC || {}, jQuery));

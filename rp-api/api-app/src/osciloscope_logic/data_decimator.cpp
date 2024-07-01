@@ -1,4 +1,5 @@
 #include <math.h>
+#include <limits.h>
 #include "common.h"
 #include "data_decimator.h"
 #include "math/rp_interpolation.h"
@@ -110,10 +111,12 @@ auto CDataDecimator::resetOffest() -> void{
 
 
 auto CDataDecimator::decimate(rp_channel_t _channel, const float *_data,vsize_t _dataSize, int  _triggerPointPos) -> bool{
-    return decimate(_channel,_data,_dataSize,_triggerPointPos,&m_decimatedData,&m_originalData);
+    DataInfo view;
+    DataInfo viewRaw;
+    return decimate(_channel,_data,_dataSize,_triggerPointPos,&m_decimatedData,&m_originalData, &view, &viewRaw);
 }
 
-auto CDataDecimator::decimate(rp_channel_t _channel, const float *_data,vsize_t _dataSize, int _triggerPointPos,std::vector<float> *_view, std::vector<float> *_originalData) -> bool{
+auto CDataDecimator::decimate(rp_channel_t _channel, const float *_data,vsize_t _dataSize, int _triggerPointPos,std::vector<float> *_view, std::vector<float> *_originalData, DataInfo *_viewInfo,  DataInfo *_viewRawInfo) -> bool{
     std::lock_guard lock(m_settingsMutex);
 
     if (m_scaleFunc == NULL) return false;
@@ -155,6 +158,20 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float *_data,vsize_t 
 
     int startView,stopView;
 
+    _viewInfo->m_max = -std::numeric_limits<float>::max();
+    _viewInfo->m_min = std::numeric_limits<float>::max();
+    _viewInfo->m_mean = 0;
+    _viewInfo->m_maxUnscale = -std::numeric_limits<float>::max();
+    _viewInfo->m_minUnscale = std::numeric_limits<float>::max();
+    _viewInfo->m_meanUnscale = 0;
+
+    _viewRawInfo->m_max = 0;
+    _viewRawInfo->m_min = 0;
+    _viewRawInfo->m_mean = 0;
+    _viewRawInfo->m_maxUnscale = -std::numeric_limits<float>::max();
+    _viewRawInfo->m_minUnscale = std::numeric_limits<float>::max();
+    _viewRawInfo->m_meanUnscale = 0;
+
     float scaleFuncCof1 = 1,scaleFuncCof2 = 1;
     ECHECK_APP_NO_RET(m_scaleFunc((rpApp_osc_source)_channel,scaleFuncCof1, scaleFuncCof2))
 
@@ -166,7 +183,7 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float *_data,vsize_t 
         float t = 0;
         float scaledValue = 0;
         uint16_t iView = 0;
-
+        uint32_t count = 0;
         for(int idx = startView ; idx < stopView; idx++, iView++ ){
             int dataIndex1 = screenToBuffer(idx,m_decimationFactor, &t);
             float y = 0;
@@ -206,9 +223,18 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float *_data,vsize_t 
                 }
             }
             // ECHECK_APP_NO_RET(m_scaleFunc((rpApp_osc_source)_channel,y,&scaledValue))
+            if (_viewInfo->m_maxUnscale  < y) _viewInfo->m_maxUnscale = y;
+            if (_viewInfo->m_minUnscale  > y) _viewInfo->m_minUnscale = y;
+            _viewInfo->m_meanUnscale  += y;
             scaledValue = scaleAmplitude<float>(y,scaleFuncCof1,scaleFuncCof2);
             (*_view)[iView] = scaledValue;
+            if (_viewInfo->m_max < scaledValue) _viewInfo->m_max = scaledValue;
+            if (_viewInfo->m_min > scaledValue) _viewInfo->m_min = scaledValue;
+            _viewInfo->m_mean += scaledValue;
+            count++;
         }
+        _viewInfo->m_mean /= count ? count : 1;
+        _viewInfo->m_meanUnscale  /= count ? count : 1;
     }else{
         startView = 0 - trigPostInView;
         stopView = viewSize - trigPostInView;
@@ -216,12 +242,23 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float *_data,vsize_t 
         float t = 0;
         float scaledValue = 0;
         uint16_t iView = 0;
+        uint32_t count = 0;
         for(int idx = startView ; idx < stopView ; idx++,iView++ ){
             int dataIndex = screenToBuffer(idx,m_decimationFactor,&t);
             // ECHECK_APP_NO_RET(m_scaleFunc((rpApp_osc_source)_channel,_data[dataIndex],&scaledValue))
-            scaledValue = scaleAmplitude<float>(_data[dataIndex],scaleFuncCof1,scaleFuncCof2);
+            auto y = _data[dataIndex];
+            scaledValue = scaleAmplitude<float>(y,scaleFuncCof1,scaleFuncCof2);
             (*_view)[iView] = scaledValue;
+            if (_viewInfo->m_maxUnscale  < y) _viewInfo->m_maxUnscale = y;
+            if (_viewInfo->m_minUnscale  > y) _viewInfo->m_minUnscale = y;
+            _viewInfo->m_meanUnscale  += y;
+            if (_viewInfo->m_max < scaledValue) _viewInfo->m_max = scaledValue;
+            if (_viewInfo->m_min > scaledValue) _viewInfo->m_min = scaledValue;
+            _viewInfo->m_mean += scaledValue;
+            count++;
         }
+        _viewInfo->m_mean /= count ? count : 1;
+        _viewInfo->m_meanUnscale  /= count ? count : 1;
     }
 
     if (_originalData){
@@ -239,13 +276,18 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float *_data,vsize_t 
             dataIndexEnd = screenToBuffer(x,m_decimationFactor,&t);
             x--;
         }
-
+        uint32_t count = 0;
         for(int idx = dataIndexStart; idx != dataIndexEnd; idx = (idx + 1) % ADC_BUFFER_SIZE){
-            _originalData->push_back(_data[idx]);
+            auto y = _data[idx];
+            _originalData->push_back(y);
+            if (_viewRawInfo->m_maxUnscale  < y) _viewRawInfo->m_maxUnscale = y;
+            if (_viewRawInfo->m_minUnscale  > y) _viewRawInfo->m_minUnscale = y;
+            _viewRawInfo->m_meanUnscale  += y;
+            count++;
         }
         _originalData->push_back(_data[dataIndexEnd]);
+        _viewRawInfo->m_meanUnscale  /= count ? count : 1;
     }
-
 
     return true;
 }

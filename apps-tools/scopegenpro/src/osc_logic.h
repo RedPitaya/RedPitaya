@@ -2,6 +2,8 @@
 
 #include "rp.h"
 
+#define MAX_BUFFERS 150
+
 auto initOscBeforeLoadConfig() -> void;
 auto initExtTriggerLimits() -> void;
 auto initOscAfterLoad() -> void;

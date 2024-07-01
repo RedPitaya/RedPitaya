@@ -509,6 +509,17 @@
             OSC.sendParams();
         });
 
+        $('#OSC_PREV_BUFFER').on('click', function(ev) {
+            ev.preventDefault();
+            OSC.params.local['OSC_BUFFER_REQUEST'] = { value: -1 };
+            OSC.sendParams();
+        });
+
+        $('#OSC_NEXT_BUFFER').on('click', function(ev) {
+            ev.preventDefault();
+            OSC.params.local['OSC_BUFFER_REQUEST'] = { value: 1 };
+            OSC.sendParams();
+        });
 
         $('#OSC_SINGLE').on('click', function(ev) {
             ev.preventDefault();

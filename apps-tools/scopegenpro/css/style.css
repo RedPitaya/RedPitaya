@@ -95,6 +95,12 @@ input {
     padding-right: 222px;
 }
 
+#buffer_selector_info {
+    width: 100%;
+    text-align: center;
+    padding-right: 222px;
+}
+
 button:focus,
 button:active,
 select:focus,
@@ -677,6 +683,16 @@ btn:active {
 .btn.focus {
     color: #777;
     border: 0px solid transparent;
+}
+
+
+#buffer_selector {
+    position: absolute;
+    margin-left: 8px;
+    right: 10px;
+    top: 500px;
+    width: 150px;
+    height: 40px;
 }
 
 #joystick {

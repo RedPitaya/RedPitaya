@@ -673,6 +673,18 @@ int rpApp_OscSetSrcYAxis(rpApp_osc_source channel);
 
 int rpApp_OscGetSrcYAxis(rpApp_osc_source *channel);
 
+int rpApp_OscPrepareOscillogramBuffer(uint32_t count);
+
+int rpApp_OscGetOscillogramBufferCount(uint32_t *count);
+
+int rpApp_OscGetOscPerSec(uint32_t *count);
+
+int rpApp_OscBufferSelectNext();
+
+int rpApp_OscBufferSelectPrev();
+
+int rpApp_OscBufferCurrent(int32_t *current);
+
 ///@}
 
 // SPECTRUM

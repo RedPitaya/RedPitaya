@@ -6,6 +6,7 @@
 
 #define MAX_VIEW_CHANNELS (RPAPP_OSC_SOUR_MATH + 1)
 
+#define DEFAULT_OSCILOGRAMM_BUFFERS   1
 #define VIEW_SIZE_DEFAULT             1024
 #define VIEW_SIZE_MAX                 1024 * 8
 
