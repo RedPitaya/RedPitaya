@@ -66,7 +66,7 @@ static uint32_t g_adc_axi_size = 0;
 
 int osc_Init(int channels)
 {
-    cmn_Map(OSC_BASE_SIZE, OSC_BASE_ADDR, (void**)&osc_reg);
+    ECHECK(cmn_Map(OSC_BASE_SIZE, OSC_BASE_ADDR, (void**)&osc_reg))
     osc_cha = (uint32_t*)((char*)osc_reg + OSC_CHA_OFFSET);
     osc_chb = (uint32_t*)((char*)osc_reg + OSC_CHB_OFFSET);
 
@@ -80,12 +80,16 @@ int osc_Init(int channels)
 
     if (channels == 4){
         size_t base_addr = OSC_BASE_ADDR_4CH;
-        cmn_Map(OSC_BASE_SIZE, base_addr, (void**)&osc_reg_4ch);
+        ECHECK(cmn_Map(OSC_BASE_SIZE, base_addr, (void**)&osc_reg_4ch))
         osc_chc = (uint32_t*)((char*)osc_reg_4ch + OSC_CHA_OFFSET);
         osc_chd = (uint32_t*)((char*)osc_reg_4ch + OSC_CHB_OFFSET);
     }
 
-    cmn_GetReservedMemory(&g_adc_axi_start,&g_adc_axi_size);
+    ECHECK(cmn_GetReservedMemory(&g_adc_axi_start,&g_adc_axi_size))
+    if (g_adc_axi_start == 0 || g_adc_axi_size == 0){
+        ERROR("Error initializing memory region for axi mode.")
+        return RP_EOOR;
+    }
 
     return RP_OK;
 }

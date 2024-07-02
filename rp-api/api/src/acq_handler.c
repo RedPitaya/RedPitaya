@@ -1644,6 +1644,11 @@ int acq_axi_SetBufferSamples(rp_channel_t channel, uint32_t address, uint32_t _s
     uint32_t start,res_size;
     osc_axi_GetMemoryRegion(&start,&res_size);
 
+    if (address < 8){
+        ERROR("The address must be greater than 8 bytes. Address: 0x%X",address);
+        return RP_EOOR;
+    }
+
     if (address < start){
         ERROR("Start address lower than reserved. Address: 0x%X reserved 0x%X",address,start);
         return RP_EOOR;
@@ -1704,7 +1709,7 @@ int acq_SetDefaultAll()
         return RP_NOTS;
     }
     for(int i = 0; i < channels; i++){
-        acq_SetDefault(i);
+        ECHECK(acq_SetDefault(i))
     }
     return RP_OK;
 }

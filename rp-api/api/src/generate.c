@@ -24,18 +24,22 @@ static volatile int32_t *data_ch[2] = {NULL,NULL};
 
 
 int generate_Init() {
-    cmn_Map(GENERATE_BASE_SIZE, GENERATE_BASE_ADDR, (void **) &generate);
+    int ret = cmn_Map(GENERATE_BASE_SIZE, GENERATE_BASE_ADDR, (void **) &generate);
+    if (ret != RP_OK){
+        return ret;
+    }
     data_ch[0] = (int32_t *) ((char *) generate + (CHA_DATA_OFFSET));
     data_ch[1] = (int32_t *) ((char *) generate + (CHB_DATA_OFFSET));
-    return RP_OK;
+    return ret;
 }
 
 int generate_Release() {
+    int ret = RP_OK;
     if (generate)
-        cmn_Unmap(GENERATE_BASE_SIZE, (void **) &generate);
+        ret = cmn_Unmap(GENERATE_BASE_SIZE, (void **) &generate);
     data_ch[0] = NULL;
     data_ch[1] = NULL;
-    return RP_OK;
+    return ret;
 }
 
 int getChannelPropertiesAddress(volatile ch_properties_t **ch_properties, rp_channel_t channel) {

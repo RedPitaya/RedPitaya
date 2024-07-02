@@ -52,22 +52,72 @@ int rp_InitReset(bool reset)
 {
     if (g_api_state) return RP_EOOR;
     pthread_mutex_lock(&rp_init_mutex);
-    cmn_Init();
-
-    rp_CalibInit();
-    hk_Init(reset);
-    ams_Init();
-    daisy_Init();
-
-    if (rp_HPIsFastDAC_PresentOrDefault()){
-        generate_Init();
+    int ret = cmn_Init();
+    if (ret != RP_OK){
+        ERROR("Error open /dev/uio/api. Code:  %d",ret)
+        pthread_mutex_unlock(&rp_init_mutex);
+        rp_Release();
+        return ret;
     }
 
-    osc_Init(rp_HPGetFastADCChannelsCountOrDefault());
+    ret = rp_CalibInit();
+    if (ret != RP_HP_OK){
+        pthread_mutex_unlock(&rp_init_mutex);
+        rp_Release();
+        return ret;
+    }
+
+    ret = hk_Init(reset);
+    if (ret != RP_HP_OK){
+        ERROR("Error init HK. Code: %d",ret)
+        pthread_mutex_unlock(&rp_init_mutex);
+        rp_Release();
+        return ret;
+    }
+
+    ret = ams_Init();
+    if (ret != RP_OK){
+        ERROR("Error init ams regset. Code:  %d",ret)
+        pthread_mutex_unlock(&rp_init_mutex);
+        rp_Release();
+        return ret;
+    }
+
+    ret = daisy_Init();
+    if (ret != RP_OK){
+        ERROR("Error init daisy regset. Code:  %d",ret)
+        pthread_mutex_unlock(&rp_init_mutex);
+        rp_Release();
+        return ret;
+    }
+
+    if (rp_HPIsFastDAC_PresentOrDefault()){
+        ret = generate_Init();
+        if (ret != RP_OK){
+            ERROR("Error init generator regset. Code:  %d",ret)
+            pthread_mutex_unlock(&rp_init_mutex);
+            rp_Release();
+            return ret;
+        }
+    }
+
+    ret = osc_Init(rp_HPGetFastADCChannelsCountOrDefault());
+    if (ret != RP_OK){
+        ERROR("Error init osc regset. Code:  %d",ret)
+        pthread_mutex_unlock(&rp_init_mutex);
+        rp_Release();
+        return ret;
+    }
 
     // Set default configuration per handler
     if (reset){
-        rp_Reset();
+        ret = rp_Reset();
+        if (ret != RP_OK){
+            ERROR("Error reset regset. Code:  %d",ret)
+            pthread_mutex_unlock(&rp_init_mutex);
+            rp_Release();
+            return ret;
+        }
     }
     g_api_state = true;
     pthread_mutex_unlock(&rp_init_mutex);
@@ -78,8 +128,7 @@ int rp_IsApiInit(){
     return g_api_state;
 }
 
-int rp_Release()
-{
+int rp_Release(){
     pthread_mutex_lock(&rp_init_mutex);
     ECHECK_NO_RET(osc_Release())
     ECHECK_NO_RET(generate_Release())
@@ -92,17 +141,16 @@ int rp_Release()
     return RP_OK;
 }
 
-int rp_Reset()
-{
-    rp_DpinReset();
-    rp_AOpinReset();
+int rp_Reset(){
+    rp_DpinReset(); // No need check ret value
+    ECHECK(rp_AOpinReset())
 
     if (rp_HPIsFastDAC_PresentOrDefault()){
-        rp_GenReset();
+        ECHECK(rp_GenReset())
     }
 
-    rp_AcqReset();
-    return 0;
+    ECHECK(rp_AcqReset())
+    return RP_OK;
 }
 
 const char* rp_GetVersion()
@@ -806,7 +854,7 @@ int rp_AIpinGetValue(int unsigned pin, float* value, uint32_t* raw) {
 
 int rp_AOpinReset() {
     for (int unsigned pin=0; pin<4; pin++) {
-        rp_AOpinSetValueRaw(pin, 0);
+        ECHECK(rp_AOpinSetValueRaw(pin, 0))
     }
     return RP_OK;
 }
@@ -1444,9 +1492,9 @@ int rp_AcqStopCh(rp_channel_t channel)
     return RP_NOTS;
 }
 
-int rp_AcqReset()
-{
-    return acq_Reset(RP_CH_1);
+int rp_AcqReset(){
+    ECHECK(acq_SetDefaultAll())
+    return acq_ResetFpga();
 }
 
 int rp_AcqResetCh(rp_channel_t channel)
