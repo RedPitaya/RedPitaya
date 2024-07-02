@@ -899,15 +899,26 @@ int rp_AcqGetDataV(rp_channel_t channel, uint32_t pos, uint32_t* size, float* bu
 int rp_AcqGetDataVNP(rp_channel_t channel, uint32_t pos, float* np_buffer, int size);
 
 /**
- * Returns the ADC buffers from specified position and desired size.
- * Output buffer must be at least 'size' long.
+ * Returns the ADC buffers from specified position.
  * @param pos Starting position of the ADC buffer to retrieve
- * @param size Length of the ADC buffer to retrieve. Returns length of filled buffer. In case of too small buffer, required size is returned.
  * @param out The buffer will be filled according to the settings.
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 int rp_AcqGetData(uint32_t pos, buffers_t *out);
+
+/**
+ * Returns the ADC buffers from specified position and desired size.
+ * Output buffer must be at least 'size' long.
+ * @param pos Starting position of the ADC buffer to retrieve
+ * @param size Length of the ADC buffer to retrieve. Returns length of filled buffer. In case of too small buffer, required size is returned.
+ * @param offset Correcting data offset in the output buffer
+ * @param out The buffer will be filled according to the settings.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetDataWithCorrection(uint32_t pos, uint32_t* size, int32_t offset, buffers_t *out);
+
 
 /**
  * Returns the ADC buffer in Volt units from the oldest sample to the newest one.

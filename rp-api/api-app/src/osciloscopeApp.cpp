@@ -1106,28 +1106,22 @@ double roundUpTo25(double data) {
     return (dataNorm * pow(10, power));         // unnormalize data
 }
 
-int waitToFillPreTriggerBuffer(float _timescale,bool *_isresetted) {
+int waitToFillPreTriggerBuffer(float _timescale,bool *_isresetted, uint32_t *preTriggerCount, uint32_t *needWaitSamples) {
     auto contMode = g_adcController.getContinuousMode();
     auto trigSweep = g_adcController.getTriggerSweep();
-
-    // Don't wait in continuos mode
-    if (contMode && trigSweep == RPAPP_OSC_TRIG_AUTO) {
-        return RP_OK;
-    }
 
     // Full screen timeout / 2 -> *1.5. Half screen + 50%
     auto timeOut  = g_viewController.calculateTimeOut(_timescale) * 0.75;
 
     timeOut += g_viewController.getClock();
 
-    uint32_t preTriggerCount;
+    ;
     uint32_t triggerDelay;
     auto viewSize = g_viewController.getViewSize();
     auto samplesPerDivision = g_viewController.getSamplesPerDivision();
     auto deltaSample = timeToIndexD(_timescale) / samplesPerDivision;
     auto viewInSamples = viewSize * deltaSample;
-    auto extraPoints = g_viewController.calcExtraPoints();
-    auto needWaitSamples = 0u;
+    auto extraPoints = g_viewController.calcExtraPoints() + 4;
     auto exitByTimout = false;
     auto exitByPreTrigger = false;
     g_viewController.setTriggerState(false);
@@ -1138,10 +1132,14 @@ int waitToFillPreTriggerBuffer(float _timescale,bool *_isresetted) {
             break;
         }
         ECHECK_APP(rp_AcqGetTriggerDelayDirect(&triggerDelay));
-        ECHECK_APP(rp_AcqGetPreTriggerCounter(&preTriggerCount));
-        needWaitSamples = viewInSamples - triggerDelay + extraPoints;
+        ECHECK_APP(rp_AcqGetPreTriggerCounter(preTriggerCount));
+        *needWaitSamples = viewInSamples - triggerDelay + extraPoints;
+        // Don't wait in continuos mode and get value for needWaitSamples
+        if (contMode && trigSweep == RPAPP_OSC_TRIG_AUTO) {
+            return RP_OK;
+        }
         exitByTimout = timeOut > g_viewController.getClock();
-        exitByPreTrigger = preTriggerCount < needWaitSamples;
+        exitByPreTrigger = *preTriggerCount < *needWaitSamples;
     } while (exitByPreTrigger && exitByTimout);
     //WARNING("preTriggerCount %d exitByTimout %d needWaitSamples %d exitByPreTrigger %d",preTriggerCount,exitByTimout,needWaitSamples,exitByPreTrigger)
     // fprintf(stderr,"TE %d TT %d , %d , %d, %f\n",exitByPreTrigger,exitByTimout,preTriggerCount,needWaitSamples,ct);
@@ -1514,7 +1512,9 @@ void mainThreadFun() {
             auto trigSweep = g_adcController.getTriggerSweep();
             auto viewMode = g_viewController.getViewMode();
             auto isReset = false;
-            ECHECK_APP_NO_RET(waitToFillPreTriggerBuffer(tScaleAcq,&isReset));
+            uint32_t preTriggerCount = 0;
+            uint32_t needWaitSamples = 0;
+            ECHECK_APP_NO_RET(waitToFillPreTriggerBuffer(tScaleAcq,&isReset,&preTriggerCount,&needWaitSamples));
             if (isReset){
                 continue;
             }
@@ -1560,7 +1560,12 @@ void mainThreadFun() {
             data->m_viewMutex.lock();
             data->m_dataHasTrigger = dataHasTrigger;
             data->m_decimation = decimationInACQ;
-            ECHECK_APP_NO_RET(rp_AcqGetData(pPosition,data->m_data));
+            data->m_pointerPosition = pPosition;
+            data->m_validBeforeTrigger = MIN(preTriggerCount,needWaitSamples);
+            data->m_validAfterTrigger = delay;
+            uint32_t size = needWaitSamples + delay;
+            // WARNING("size %d needWaitSamples %d delay %d",size,needWaitSamples,delay)
+            ECHECK_APP_NO_RET(rp_AcqGetDataWithCorrection(pPosition,&size, -(int32_t)needWaitSamples, data->m_data));
             data->m_viewMutex.unlock();
             g_viewController.nextBuffer();
             g_viewController.addOscCounter();

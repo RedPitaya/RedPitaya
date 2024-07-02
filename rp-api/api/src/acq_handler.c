@@ -1156,7 +1156,7 @@ int acq_axi_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16
     return RP_OK;
 }
 
-int acq_GetDataInBuffer(rp_channel_t channel, uint32_t pos, uint32_t* size,buffers_t *out){
+int acq_GetDataInBuffer(rp_channel_t channel, uint32_t pos, uint32_t* size, int32_t offset, buffers_t *out){
 
     CHECK_CHANNEL
 
@@ -1234,16 +1234,15 @@ int acq_GetDataInBuffer(rp_channel_t channel, uint32_t pos, uint32_t* size,buffe
     int16_t* iPtr = out->ch_i[channel];
     float* fPtr = out->ch_f[channel];
     double* dPtr = out->ch_d[channel];
-
     for (uint32_t i = 0; i < (*size); ++i) {
 
-        uint32_t cnts = (raw_buffer[(pos + i) % ADC_BUFFER_SIZE]) & mask;
-
+        uint32_t cnts = (raw_buffer[(pos + i + offset) % ADC_BUFFER_SIZE]) & mask;
+        int32_t dataIndex = (i + offset + out->size) % out->size;
         if (is_need_raw){
             if (is_sign)
-                iPtr[i] = cmn_CalibCntsSigned(cnts,bits,gain_raw,g_base_raw,offset_raw);
+                iPtr[dataIndex] = cmn_CalibCntsSigned(cnts,bits,gain_raw,g_base_raw,offset_raw);
             else
-                iPtr[i] = cmn_CalibCntsUnsigned(cnts,bits,gain_raw,g_base_raw,offset_raw);
+                iPtr[dataIndex] = cmn_CalibCntsUnsigned(cnts,bits,gain_raw,g_base_raw,offset_raw);
         }
 
         if (is_need_vold_d || is_need_vold_f){
@@ -1252,8 +1251,8 @@ int acq_GetDataInBuffer(rp_channel_t channel, uint32_t pos, uint32_t* size,buffe
                 value = cmn_convertToVoltSigned(cnts,bits,fullScale,gain_volt,g_base_volt,offset_volt) * gainValue;
             else
                 value = cmn_convertToVoltUnsigned(cnts,bits,fullScale,gain_volt,g_base_volt,offset_volt) * gainValue;
-            if (is_need_vold_f) fPtr[i] = value;
-            if (is_need_vold_d) dPtr[i] = value;
+            if (is_need_vold_f) fPtr[dataIndex] = value;
+            if (is_need_vold_d) dPtr[dataIndex] = value;
         }
     }
 
@@ -1272,7 +1271,7 @@ int acq_GetData(uint32_t pos,buffers_t *out)
 
     if (channels > 0){
         uint32_t size = out->size;
-        int ret = acq_GetDataInBuffer(RP_CH_1,pos,&size,out);
+        int ret = acq_GetDataInBuffer(RP_CH_1,pos,&size,0,out);
         if (ret != RP_OK){
             return ret;
         }
@@ -1281,7 +1280,7 @@ int acq_GetData(uint32_t pos,buffers_t *out)
 
     if (channels > 1){
         uint32_t size = out->size;
-        int ret = acq_GetDataInBuffer(RP_CH_2,pos,&size,out);
+        int ret = acq_GetDataInBuffer(RP_CH_2,pos,&size,0,out);
         if (ret != RP_OK){
             return ret;
         }
@@ -1290,7 +1289,7 @@ int acq_GetData(uint32_t pos,buffers_t *out)
 
     if (channels > 2){
         uint32_t size = out->size;
-        int ret = acq_GetDataInBuffer(RP_CH_3,pos,&size,out);
+        int ret = acq_GetDataInBuffer(RP_CH_3,pos,&size,0,out);
         if (ret != RP_OK){
             return ret;
         }
@@ -1299,7 +1298,7 @@ int acq_GetData(uint32_t pos,buffers_t *out)
 
     if (channels > 3){
         uint32_t size = out->size;
-        int ret = acq_GetDataInBuffer(RP_CH_4,pos,&size,out);
+        int ret = acq_GetDataInBuffer(RP_CH_4,pos,&size,0,out);
         if (ret != RP_OK){
             return ret;
         }
@@ -1312,6 +1311,56 @@ int acq_GetData(uint32_t pos,buffers_t *out)
 
     return RP_OK;
 }
+
+int acq_GetDataWithCorrection(uint32_t pos, uint32_t* size, int32_t offset, buffers_t *out){
+    uint8_t channels = 0;
+    if (rp_HPGetFastADCChannelsCount(&channels) != RP_HP_OK){
+        channels = 0;
+    }
+
+    bool fillData = false;
+    out->size = MIN(out->size, ADC_BUFFER_SIZE);
+    *size = MIN(*size,out->size);
+
+    if (channels > 0){
+        int ret = acq_GetDataInBuffer(RP_CH_1,pos,size,offset,out);
+        if (ret != RP_OK){
+            return ret;
+        }
+        fillData = true;
+    }
+
+    if (channels > 1){
+        int ret = acq_GetDataInBuffer(RP_CH_2,pos,size,offset,out);
+        if (ret != RP_OK){
+            return ret;
+        }
+        fillData = true;
+    }
+
+    if (channels > 2){
+        int ret = acq_GetDataInBuffer(RP_CH_3,pos,size,offset,out);
+        if (ret != RP_OK){
+            return ret;
+        }
+        fillData = true;
+    }
+
+    if (channels > 3){
+        int ret = acq_GetDataInBuffer(RP_CH_4,pos,size,offset,out);
+        if (ret != RP_OK){
+            return ret;
+        }
+        fillData = true;
+    }
+
+    if (!fillData){
+        return RP_EOOR;
+    }
+
+    return RP_OK;
+}
+
 
 int acq_GetDataPosRaw(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, int16_t* buffer, uint32_t *buffer_size)
 {

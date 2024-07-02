@@ -106,6 +106,7 @@ uint32_t acq_GetNormalizedDataPos(uint32_t pos);
 
 
 int acq_GetData(uint32_t pos,buffers_t *out);
+int acq_GetDataWithCorrection(uint32_t pos, uint32_t* size, int32_t offset, buffers_t *out);
 
 int acq_SetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t mode);
 int acq_GetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t *status);

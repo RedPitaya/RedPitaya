@@ -353,7 +353,7 @@ auto CViewController::getSampledAfterTriggerInView() -> uint32_t{
 
 auto CViewController::calcExtraPoints() -> uint32_t{
     auto decFactor = timeToIndexD(m_timeScale) / (double)getSamplesPerDivision();
-    return floor((float)ADC_BUFFER_SIZE / (float)getViewSize()) * decFactor + 2;
+    return (floor((float)ADC_BUFFER_SIZE / (float)getViewSize())) * decFactor + 4.0;
 }
 
 // auto CViewController::setCapturedDecimation(uint32_t _dec) -> void{

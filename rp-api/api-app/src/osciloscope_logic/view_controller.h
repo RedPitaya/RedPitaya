@@ -35,6 +35,9 @@ public:
         uint32_t m_decimation;
         bool m_dataHasTrigger;
         int m_index;
+        uint32_t m_pointerPosition;
+        uint32_t m_validBeforeTrigger;
+        uint32_t m_validAfterTrigger;
         Oscillogram();
         ~Oscillogram();
         Oscillogram(Oscillogram &&) = delete;

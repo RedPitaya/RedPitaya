@@ -1574,6 +1574,11 @@ int rp_AcqGetData(uint32_t pos, buffers_t *out)
     return acq_GetData(pos, out);
 }
 
+int rp_AcqGetDataWithCorrection(uint32_t pos, uint32_t* size, int32_t offset, buffers_t *out)
+{
+    return acq_GetDataWithCorrection(pos, size, offset, out);
+}
+
 int rp_AcqGetOldestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer)
 {
     return acq_GetOldestDataRaw(channel, size, buffer);
