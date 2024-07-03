@@ -87,6 +87,7 @@ auto CAsioBroadcastSocket::closeSocket() -> void {
     try {
         if (m_pimpl->m_socket && m_pimpl->m_socket->is_open()) {
             m_pimpl->m_socket->shutdown(asio::socket_base::shutdown_type::shutdown_both);
+            m_pimpl->m_socket->cancel();
             m_pimpl->m_socket->close();
         }
     }catch (...){
@@ -102,7 +103,8 @@ auto CAsioBroadcastSocket::handlerReceive(const asio::error_code &error,size_t b
                         std::placeholders::_1,std::placeholders::_2)
                 );
     }else{
-        errorNotify(error);
+        if (error.value() != 995) // Mute "The I/O operation has been aborted because of either a thread exit or an application request"
+            errorNotify(error);
         closeSocket();
     }
 }
