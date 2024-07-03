@@ -21,13 +21,13 @@
 #include "common.h"
 #include "rp.h"
 
-int fd = 0;
+int fd = -1;
 
 bool g_DebugReg = false;
 
 int cmn_Init()
 {
-    if (!fd) {
+    if (fd == -1) {
         if((fd = open("/dev/uio/api", O_RDWR | O_SYNC)) == -1) {
             return RP_EOMD;
         }
@@ -37,12 +37,12 @@ int cmn_Init()
 
 int cmn_Release()
 {
-    if (fd) {
+    if (fd == -1) {
         if(close(fd) < 0) {
             return RP_ECMD;
         }
     }
-    fd = 0;
+    fd = -1;
     return RP_OK;
 }
 
