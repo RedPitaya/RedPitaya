@@ -433,6 +433,12 @@ public:
 	{
 		this->m_Value.value = _value;
 	}
+
+	void SendValue(const std::string& _value)
+	{
+		this->m_Value.value = _value;
+		m_NeedSend = true;
+	}
 };
 
 
