@@ -1565,6 +1565,7 @@ void mainThreadFun() {
             data->m_validAfterTrigger = delay;
             uint32_t size = needWaitSamples + delay;
             // WARNING("size %d needWaitSamples %d delay %d",size,needWaitSamples,delay)
+            // ECHECK_APP_NO_RET(rp_AcqGetData(pPosition, data->m_data));
             ECHECK_APP_NO_RET(rp_AcqGetDataWithCorrection(pPosition,&size, -(int32_t)needWaitSamples, data->m_data));
             data->m_viewMutex.unlock();
             g_viewController.nextBuffer();
@@ -1606,7 +1607,7 @@ void mainViewThreadFun() {
             // auto td = timeToIndexD(tScale);
             double td = ((double)speed / (double)buff->m_decimation) * tScale / 1000.0;
             auto _deltaSample =  td / (double)spd;
-            ECHECK_APP_NO_RET(g_adcController.getTriggerLevel(&trigLevel));
+            ECHECK_APP_NO_RET(g_adcController.getTriggerLevelRaw(&trigLevel));
             TRACE_SHORT("_deltaSample %f timeToIndexD(tScale) %f",_deltaSample,td)
             g_decimator.setDecimationFactor(_deltaSample);
             g_decimator.setTriggerLevel(trigLevel);

@@ -44,6 +44,7 @@ public:
 
     auto setTriggerLevel(float _level) -> int;
     auto getTriggerLevel(float *_level) -> int;
+    auto getTriggerLevelRaw(float *_level) -> int;
 
     auto setExternalTriggerLevel(float _level) -> int;
     auto getExternalTriggerLevel(float *_level) -> int;

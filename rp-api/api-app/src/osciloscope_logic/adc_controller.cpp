@@ -200,7 +200,6 @@ auto CADCController::setTriggerLevel(float _level) -> int{
         if (m_trigSource == RPAPP_OSC_TRIG_SRC_CH4) source = RPAPP_OSC_SOUR_CH4;
         ECHECK_APP(m_UnAttAmplFunc(source, _level, &_level));
     }
-
     if (m_trigSource == RPAPP_OSC_TRIG_SRC_CH1){
         ECHECK(rp_AcqSetTriggerLevel(RP_T_CH_1, _level));
     }
@@ -241,6 +240,27 @@ auto CADCController::getTriggerLevel(float *_level) -> int{
         if (m_trigSource == RPAPP_OSC_TRIG_SRC_CH4) source = RPAPP_OSC_SOUR_CH4;
         ECHECK_APP(m_attAmplFunc(source, *_level, _level));
     }
+    return RP_OK;
+}
+
+auto CADCController::getTriggerLevelRaw(float *_level) -> int{
+    std::lock_guard lock(m_acqMutex);
+
+    if (m_trigSource == RPAPP_OSC_TRIG_SRC_CH1){
+        ECHECK(rp_AcqGetTriggerLevel(RP_T_CH_1,_level));
+    }
+
+    if (m_trigSource == RPAPP_OSC_TRIG_SRC_CH2){
+        ECHECK(rp_AcqGetTriggerLevel(RP_T_CH_2,_level));
+    }
+    if (m_trigSource == RPAPP_OSC_TRIG_SRC_CH3){
+        ECHECK(rp_AcqGetTriggerLevel(RP_T_CH_3,_level));
+    }
+
+    if (m_trigSource == RPAPP_OSC_TRIG_SRC_CH4){
+        ECHECK(rp_AcqGetTriggerLevel(RP_T_CH_4,_level));
+    }
+
     return RP_OK;
 }
 
