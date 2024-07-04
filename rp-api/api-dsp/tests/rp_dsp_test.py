@@ -69,6 +69,14 @@ print("obj.getMode()")
 res = obj.getMode()
 print(res)
 
+print("obj.setProbe(0,10)")
+res = obj.setProbe(0,10)
+print(res)
+
+print("obj.getProbe(0)")
+res = obj.getProbe(0)
+print(res)
+
 print("obj.fftInit()")
 res = obj.fftInit()
 print(res)

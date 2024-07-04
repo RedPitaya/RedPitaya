@@ -86,6 +86,8 @@ public:
     void setMode(mode_t mode);
     mode_t getMode();
 
+    void setProbe(uint8_t channel,uint32_t value);
+    void getProbe(uint8_t channel,uint32_t *value);
 
     int prepareFreqVector(data_t *data, double adc_rate_f_s, float decimation);
     int prepareFreqVector(data_t *data, float decimation);

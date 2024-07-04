@@ -40,6 +40,10 @@ int spec_setWindow(rp_dsp_api::window_mode_t mode);
 
 int spec_getWindow(rp_dsp_api::window_mode_t *mode);
 
+int spec_setProbe(rp_channel_t channel, uint32_t probe);
+
+int spec_getProbe(rp_channel_t channel, uint32_t* probe);
+
 int spec_setADCBufferSize(size_t size);
 
 int spec_getADCBufferSize();

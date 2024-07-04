@@ -110,6 +110,7 @@ struct CDSP::Impl {
     kiss_fftr_cfg  m_kiss_fft_cfg = NULL;
     std::mutex m_channelMutex;
     std::map<uint8_t,bool> m_channelState;
+    std::map<uint8_t,uint32_t> m_channelProbe;
 };
 
 
@@ -129,6 +130,7 @@ CDSP::CDSP(uint8_t max_channels,uint32_t max_adc_buffer,uint32_t adc_max_speed) 
     m_pimpl->m_kiss_fft_cfg = NULL;
     for(uint8_t i = 0 ;i < max_channels; i++){
         m_pimpl->m_channelState[i] = true;
+        m_pimpl->m_channelProbe[i] = 1;
     }
 }
 
@@ -349,6 +351,14 @@ auto CDSP::getMode() -> mode_t {
     return m_pimpl->m_mode;
 }
 
+auto CDSP::setProbe(uint8_t channel,uint32_t value) -> void{
+    m_pimpl->m_channelProbe[channel] = value;
+}
+
+auto CDSP::getProbe(uint8_t channel,uint32_t *value) -> void{
+    *value = m_pimpl->m_channelProbe[channel];
+}
+
 
 auto CDSP::prepareFreqVector(data_t *data, double f_s, float decimation) -> int {
     if (!data || !data->m_freq_vector){
@@ -384,7 +394,7 @@ auto CDSP::windowFilter(data_t *data) -> int {
 
     for(j = 0; j < m_pimpl->m_max_channels; j++) {
         for(i = 0; i < getSignalLength(); i++) {
-            data->m_filtred[j][i] = data->m_in[j][i] * m_pimpl->m_window[i];
+            data->m_filtred[j][i] = data->m_in[j][i] * m_pimpl->m_window[i] * m_pimpl->m_channelProbe[j];
         }
     }
     data->m_is_data_filtred = true;

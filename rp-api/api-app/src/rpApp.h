@@ -721,6 +721,10 @@ int rpApp_SpecGetMode(rp_dsp_api::mode_t *mode);
 
 int rpApp_SpecSetMode(rp_dsp_api::mode_t mode);
 
+int rpApp_SpecGetProbe(rp_channel_t channel, uint32_t *probe);
+
+int rpApp_SpecSetProbe(rp_channel_t channel, uint32_t probe);
+
 int rpApp_SpecSetImpedance(double value);
 
 int rpApp_SpecGetImpedance(double *value);

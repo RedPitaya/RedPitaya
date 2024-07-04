@@ -210,7 +210,7 @@ int rp_spectr_worker_exit(void)
 
 int rp_spectr_worker_change_state(rp_spectr_worker_state_t new_state)
 {
-    std::lock_guard<std::mutex> lock(rp_spectr_ctrl_mutex);
+    std::lock_guard lock(rp_spectr_ctrl_mutex);
     if(new_state >= NONEXISTS_STATE)
         return -1;
     rp_spectr_ctrl = new_state;
@@ -219,7 +219,7 @@ int rp_spectr_worker_change_state(rp_spectr_worker_state_t new_state)
 
 int rp_spectr_get_signals_channel(float** signals, size_t size)
 {
-    std::lock_guard<std::mutex> lock(rp_spectr_sig_mutex);
+    std::lock_guard lock(rp_spectr_sig_mutex);
     if(rp_spectr_signals_dirty == 0) {
         return -1;
     }
@@ -233,7 +233,7 @@ int rp_spectr_get_signals_channel(float** signals, size_t size)
 
 int rp_spectr_get_params(rp_spectr_worker_res_t *result)
 {
-    std::lock_guard<std::mutex> lock(rp_spectr_sig_mutex);
+    std::lock_guard lock(rp_spectr_sig_mutex);
     auto adc_channels = getADCChannels();
     for(auto ch = 0u; ch < adc_channels;ch++){
         result->peak_pw_ch[ch] = rp_spectr_result.peak_pw_ch[ch];
@@ -244,7 +244,7 @@ int rp_spectr_get_params(rp_spectr_worker_res_t *result)
 
 int rp_spectr_set_signals(float *source_freq,float **source, rp_spectr_worker_res_t result)
 {
-    std::lock_guard<std::mutex> lock(rp_spectr_sig_mutex);
+    std::lock_guard lock(rp_spectr_sig_mutex);
     if (!g_dsp) return -1;
 
     memcpy_neon(rp_spectr_signals[0],source_freq, sizeof(float) * g_dsp->getOutSignalLength());
@@ -348,7 +348,7 @@ void *rp_spectr_worker_thread(void *args)
         }
 
         {
-            std::lock_guard<std::mutex> lock(rp_spectr_buf_size_mutex);
+            std::lock_guard lock(rp_spectr_buf_size_mutex);
             uint32_t trig_pos;
             rp_AcqGetWritePointerAtTrig(&trig_pos);
 
@@ -362,7 +362,7 @@ void *rp_spectr_worker_thread(void *args)
                 buff_out.ch_i[z] = NULL;
             }
 
-            rp_AcqGetData(trig_pos,&buff_out);
+            rp_AcqGetDataWithCorrection(trig_pos,&buffer_size,0,&buff_out);
 
             /* retrieve data and process it*/
 
@@ -386,7 +386,7 @@ void *rp_spectr_worker_thread(void *args)
 
             rp_spectr_set_signals(g_data->m_freq_vector, g_data->m_converted, tmp_result);
         }
-        usleep(100000);
+        usleep(10000);
     }
 
     return 0;
@@ -458,7 +458,7 @@ int spec_stop()
 }
 
 int spec_setWindow(rp_dsp_api::window_mode_t  mode){
-    std::lock_guard<std::mutex> lock(rp_spectr_window_mutex);
+    std::lock_guard lock(rp_spectr_window_mutex);
     if (!g_dsp) return -1;
     g_dsp->window_init(mode);
     rp_spectr_worker_change_state(RESET_STATE);
@@ -468,6 +468,18 @@ int spec_setWindow(rp_dsp_api::window_mode_t  mode){
 int spec_getWindow(rp_dsp_api::window_mode_t *mode){
     if (!g_dsp) return -1;
     *mode = g_dsp->getCurrentWindowMode();
+    return RP_OK;
+}
+
+int spec_setProbe(rp_channel_t channel, uint32_t probe){
+    if (!g_dsp) return -1;
+    g_dsp->setProbe(channel,probe);
+    return RP_OK;
+}
+
+int spec_getProbe(rp_channel_t channel, uint32_t* probe){
+    if (!g_dsp) return -1;
+    g_dsp->getProbe(channel,probe);
     return RP_OK;
 }
 
@@ -573,7 +585,7 @@ int spec_getFreqMin(float* freq) {
 }
 
 int spec_setADCBufferSize(size_t size){
-    std::lock_guard<std::mutex> lock(rp_spectr_buf_size_mutex);
+    std::lock_guard lock(rp_spectr_buf_size_mutex);
     if (!g_dsp) return -1;
 
     if (g_dsp->setSignalLength(size) != 0){
@@ -610,7 +622,7 @@ int spec_getVoltMode(rp_dsp_api::mode_t *mode){
 }
 
 int spec_setVoltMode(rp_dsp_api::mode_t mode){
-    std::lock_guard<std::mutex> lock(rp_spectr_buf_size_mutex);
+    std::lock_guard lock(rp_spectr_buf_size_mutex);
     g_dsp->setMode(mode);
     rp_spectr_worker_change_state(RESET_STATE);
     return RP_OK;

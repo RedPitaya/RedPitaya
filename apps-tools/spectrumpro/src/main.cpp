@@ -75,6 +75,8 @@ CBooleanParameter inFreeze[MAX_ADC_CHANNELS]    = INIT("CH","_FREEZE", CBasePara
 CBooleanParameter inShowMin[MAX_ADC_CHANNELS]   = INIT("CH","_SHOW_MIN", CBaseParameter::RW, false, 0,CONFIG_VAR);
 CBooleanParameter inShowMax[MAX_ADC_CHANNELS]   = INIT("CH","_SHOW_MAX", CBaseParameter::RW, false, 0,CONFIG_VAR);
 CIntParameter inGain[MAX_ADC_CHANNELS]          = INIT("CH","_IN_GAIN", CBaseParameter::RW, 0, 0, 0, 1, CONFIG_VAR);
+CIntParameter inProbe[MAX_ADC_CHANNELS]         = INIT("CH","_PROBE", CBaseParameter::RW, 1, 0, 1, 100, CONFIG_VAR);
+
 CIntParameter inAC_DC[MAX_ADC_CHANNELS]         = INIT("CH","_IN_AC_DC", CBaseParameter::RW, 0, 0, 0, 1, CONFIG_VAR);
 CFloatParameter peak_freq[MAX_ADC_CHANNELS]     = INIT("peak","_freq", CBaseParameter::ROSA, -1, 0, -1, +1e6f);
 CFloatParameter peak_power[MAX_ADC_CHANNELS]    = INIT("peak","_power", CBaseParameter::ROSA, 0, 0, -10000000, +10000000);
@@ -951,6 +953,16 @@ void OnNewParams(void)
             }
         }
     }
+
+    for(auto ch = 0u; ch < g_adc_count; ch++){
+        if (inProbe[ch].IsNewValue()) {
+            if (rpApp_SpecSetProbe((rp_channel_t)ch, inProbe[ch].NewValue()) == RP_OK){
+                inProbe[ch].Update();
+                rpApp_SpecReset();
+                RESEND(inProbe[ch])
+            }
+        }
+    }
        // Save the configuration file
     if (config_changed) {
         configSet(getHomeDirectory() + "/.config/redpitaya/apps/spectrumpro", "config.json");
@@ -1072,6 +1084,10 @@ void updateParametersByConfig(){
             rp_AcqSetGain((rp_channel_t)ch, inGain[ch].Value() == 0 ? RP_LOW : RP_HIGH);
         }
     }
+
+    for(auto ch = 0u; ch < g_adc_count ; ch++){
+            rpApp_SpecSetProbe((rp_channel_t)ch, inProbe[ch].Value());
+        }
 
     if (rp_HPIsFastDAC_PresentOrDefault()){
         UpdateGeneratorParameters(true);

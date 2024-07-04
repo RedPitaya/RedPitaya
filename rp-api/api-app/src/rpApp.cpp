@@ -457,6 +457,14 @@ int rpApp_SpecSetMode(rp_dsp_api::mode_t mode){
     return spec_setVoltMode(mode);
 }
 
+int rpApp_SpecGetProbe(rp_channel_t channel, uint32_t *probe){
+    return spec_getProbe(channel,probe);
+}
+
+int rpApp_SpecSetProbe(rp_channel_t channel, uint32_t probe){
+    return spec_setProbe(channel,probe);
+}
+
 int rpApp_SpecSetImpedance(double value){
     return spec_setImpedance(value);
 }
