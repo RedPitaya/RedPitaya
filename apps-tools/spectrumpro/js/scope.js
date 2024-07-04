@@ -698,6 +698,8 @@
                 if (new_params['y_axis_mode'].value ===3) z = "dbV";
                 if (new_params['y_axis_mode'].value ===2) z = "dbu";
                 if (new_params['y_axis_mode'].value ===1) z = "v";
+                if (new_params['y_axis_mode'].value ===5) z = "mW";
+                if (new_params['y_axis_mode'].value ===6) z = "dBW";
                 $('#BDM_DBU_FUNC').val(z);
                 UI_GRAPH.changeYAxisMode(z);
                 UI_GRAPH.updateYAxis();

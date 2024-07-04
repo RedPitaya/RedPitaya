@@ -65,6 +65,8 @@
         if (SPEC.config.y_axis_mode == "dbm") return "dBm"
         if (SPEC.config.y_axis_mode == "dbu") return "dBu"
         if (SPEC.config.y_axis_mode == "v")   return "V"
+        if (SPEC.config.y_axis_mode == "mW")   return "mW"
+        if (SPEC.config.y_axis_mode == "dBW")   return "dBW"
         return ""
     }
 
@@ -74,6 +76,8 @@
         if (SPEC.config.y_axis_mode == "dbm") return "dB"
         if (SPEC.config.y_axis_mode == "dbu") return "dB"
         if (SPEC.config.y_axis_mode == "v")   return "V"
+        if (SPEC.config.y_axis_mode == "mW")   return "mW"
+        if (SPEC.config.y_axis_mode == "dBW")   return "dB"
         return ""
     }
 
@@ -83,6 +87,8 @@
         if (SPEC.config.y_axis_mode == "dbu") return 2
         if (SPEC.config.y_axis_mode == "dbV") return 3
         if (SPEC.config.y_axis_mode == "dbuV") return 4
+        if (SPEC.config.y_axis_mode == "mW")   return 5
+        if (SPEC.config.y_axis_mode == "dBW")  return 6
         return ""
     }
 

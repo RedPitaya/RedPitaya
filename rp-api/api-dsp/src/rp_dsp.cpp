@@ -527,6 +527,7 @@ auto CDSP::decimate(data_t *data,uint32_t in_len, uint32_t out_len) -> int {
         step = 1;
 
     float wsumf = 1.0 / (float)m_pimpl->m_window_sum * 2.0;
+    auto mode = getMode();
 
     for(uint32_t c = 0; c < m_pimpl->m_max_channels; c++) {
         if (!m_pimpl->m_channelState[c]) continue;
@@ -542,31 +543,40 @@ auto CDSP::decimate(data_t *data,uint32_t in_len, uint32_t out_len) -> int {
             for(k=j; k < j+step; k++) {
 
                 double ch_p = 0;
-
                 //dBm
-                if (getMode() == DBM){
+                if (mode == DBM){
                     /* Conversion to power (Watts) */
                     // V -> RMS -> power
                     ch_p = pow((data->m_fft[c][k] * wsumf) / 1.414213562, 2) /m_pimpl->m_imp;
                 }
                 // V
-                if (getMode() == VOLT){
+                if (mode == VOLT){
                     ch_p = data->m_fft[c][k] * wsumf;
                 }
                 // dBu
-                if (getMode() == DBU){
+                if (mode == DBU){
                     ch_p = data->m_fft[c][k] * wsumf / 1.414213562;
                 }
 
                 // dBV
                 // V -> RMS
-                if (getMode() == DBV){
+                if (mode == DBV){
                     ch_p = data->m_fft[c][k] * wsumf  / 1.414213562;
                 }
 
                  // dBuV
-                if (getMode() == DBuV){
+                if (mode == DBuV){
                     ch_p = data->m_fft[c][k] * wsumf / 1.414213562;
+                }
+
+                // mW
+                if (mode == MW){
+                    ch_p = pow((data->m_fft[c][k] * wsumf) / 1.414213562, 2) /m_pimpl->m_imp;
+                }
+
+                // dBW
+                if (mode == DBW){
+                    ch_p = pow((data->m_fft[c][k] * wsumf) / 1.414213562, 2) /m_pimpl->m_imp;
                 }
 
                 data->m_decimated[c][i] += (double)ch_p;  // Summing the power expressed in Watts associated to each FFT bin
@@ -706,7 +716,7 @@ auto CDSP::cnvToMetric(data_t *data,uint32_t  decimation) -> int{
             }
         }
     }
-
+    auto mode = getMode();
     for(uint32_t c = 0; c < m_pimpl->m_max_channels; c++) {
         if (!m_pimpl->m_channelState[c]) continue;
         max_pw[c] = -10000;
@@ -714,7 +724,7 @@ auto CDSP::cnvToMetric(data_t *data,uint32_t  decimation) -> int{
         for(i = 0; i < getOutSignalLength(); i++) {
 
             /* Conversion to power (Watts) */
-            if (getMode() == DBM){
+            if (mode == DBM){
                 double ch_p=data->m_decimated[c][i];
                 if (ch_p * g_w2mw > 1.0e-12 )
                     data->m_converted[c][i] = 10 * log10f_neon(ch_p * g_w2mw);  // W -> mW -> dBm
@@ -722,11 +732,11 @@ auto CDSP::cnvToMetric(data_t *data,uint32_t  decimation) -> int{
                     data->m_converted[c][i] = -120;
             }
 
-            if (getMode() == VOLT){
+            if (mode == VOLT){
                 data->m_converted[c][i] = data->m_decimated[c][i];
             }
 
-            if (getMode() == DBU){
+            if (mode == DBU){
                 double ch_p = data->m_decimated[c][i];
                 // ( 20*log10( 0.686 / .775 ))
                 if (ch_p * g_w2mw > 1.0e-12 )
@@ -735,7 +745,7 @@ auto CDSP::cnvToMetric(data_t *data,uint32_t  decimation) -> int{
                     data->m_converted[c][i] = -120;
             }
 
-            if (getMode() == DBV){
+            if (mode == DBV){
                 double ch_p = data->m_decimated[c][i];
                 // ( 20*log10( RMS / 1.0 ))
                 if (ch_p * g_w2mw > 1.0e-12 )
@@ -744,13 +754,30 @@ auto CDSP::cnvToMetric(data_t *data,uint32_t  decimation) -> int{
                     data->m_converted[c][i] = -120;
             }
 
-            if (getMode() == DBuV){
+            if (mode == DBuV){
                   double ch_p = data->m_decimated[c][i];
                 // ( 20*log10( RMS / 1.0 )) + 120
                 if (ch_p * g_w2mw > 1.0e-12 )
                     data->m_converted[c][i] = 20 * log10f_neon(ch_p) + 120;
                 else
                     data->m_converted[c][i] = -10;
+            }
+
+            if (mode == MW){
+                  double ch_p = data->m_decimated[c][i];
+                // W -> mW
+                if (ch_p * g_w2mw > 1.0e-12 )
+                    data->m_converted[c][i] = ch_p * g_w2mw;
+                else
+                    data->m_converted[c][i] = 0;
+            }
+
+            if (mode == DBW){
+                 double ch_p=data->m_decimated[c][i];
+                if (ch_p  > 1.0e-12 )
+                    data->m_converted[c][i] = 10 * log10f_neon(ch_p);  // W -> dBW
+                else
+                    data->m_converted[c][i] = -120;
             }
 
             /* Find peaks */

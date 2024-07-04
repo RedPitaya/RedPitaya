@@ -32,7 +32,9 @@ namespace rp_dsp_api{
         VOLT            = 1,
         DBU             = 2,
         DBV             = 3,
-        DBuV            = 4
+        DBuV            = 4,
+        MW              = 5,
+        DBW             = 6
     } mode_t;
 
     typedef struct{
