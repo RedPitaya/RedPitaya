@@ -1,5 +1,7 @@
 (function(CLIENT, $, undefined) {
 
+
+
     // Params cache
     CLIENT.params = {
         orig: {},
@@ -14,6 +16,7 @@
     CLIENT.config.start_app_url = (CLIENT.config.server_ip.length ? 'http://' + CLIENT.config.server_ip : '') + '/bazaar?start=' + CLIENT.config.app_id + '?' + CLIENT.config.search.substr(1);
     CLIENT.config.stop_app_url = (CLIENT.config.server_ip.length ? 'http://' + CLIENT.config.server_ip : '') + '/bazaar?stop=' + CLIENT.config.app_id;
     CLIENT.config.socket_url = 'ws://' + (CLIENT.config.server_ip.length ? CLIENT.config.server_ip : window.location.hostname) + '/wss'; // WebSocket server URI
+    CLIENT.config.debug = false
 
     CLIENT.client_id = undefined;
     CLIENT.ping = undefined;
@@ -39,6 +42,13 @@
 
     CLIENT.compressed_data = 0;
     CLIENT.decompressed_data = 0;
+
+    CLIENT.client_log = function(...args) {
+        if (CLIENT.config.debug){
+            const d = new Date();
+            console.log("LOG:CLIENT.js",d.getHours() + ":" + d.getMinutes() + ":"+ d.getSeconds() + ":" + d.getMilliseconds() ,...args);
+        }
+    }
 
     CLIENT.startApp = function() {
         $.get(
@@ -76,8 +86,10 @@
             timeout: 2000
         }).done(function(msg) {
             if (msg.trim() === CLIENT.client_id) {
+                CLIENT.client_log("Need reload")
                 location.reload();
             } else {
+                CLIENT.client_log("Set user lost")
                 $('body').addClass('connection_lost');
                 $('body').removeClass('user_lost');
                 CLIENT.stopCheckStatus();
@@ -91,7 +103,8 @@
     CLIENT.startCheckStatus = function() {
         if (CLIENT.checkStatusTimer === undefined) {
             CLIENT.changeStatusStep = 0;
-            CLIENT.checkStatusTimer = setTimeout(CLIENT.checkStatus, 5000);
+            CLIENT.client_log("Set status step 0 (Need check status)")
+            CLIENT.checkStatusTimer = setInterval(CLIENT.checkStatus, 5000);
         }
     }
 
@@ -133,6 +146,7 @@
                 switch (CLIENT.changeStatusStep) {
                     case 0:
                         CLIENT.changeStatusStep = 1;
+                        CLIENT.client_log("Set status step 1 (Client connected)")
                         break;
                 }
             }else{
@@ -141,9 +155,11 @@
                 switch (CLIENT.changeStatusStep) {
                     case 0: // Do nothing, since after the timer started the data did not arrive.
                         CLIENT.changeStatusStep = -1;
+                        CLIENT.client_log("Set status step -1 (Do nothing, since after the timer started the data did not arrive.)")
                         break;
                     case 1: // Go to the connection restoration check state.
                         CLIENT.changeStatusStep = 2;
+                        CLIENT.client_log("Set status step 2 (Go to the connection restoration check state.)")
                         break;
                 }
             }
@@ -153,7 +169,7 @@
         if (CLIENT.changeStatusStep == 2 && CLIENT.nginx_live){
             CLIENT.reloadPage();
         }
-        CLIENT.checkStatusTimer = setTimeout(CLIENT.checkStatus, 5000);
+        CLIENT.client_log("checkStatus")
     }
 
 
@@ -173,7 +189,7 @@
         // Define WebSocket event listeners
         if (CLIENT.ws) {
             CLIENT.ws.onopen = function() {
-                console.log('Socket opened');
+                CLIENT.client_log('Socket opened');
 
                 CLIENT.state.socket_opened = true;
                 CLIENT.requestParameters();
@@ -189,7 +205,7 @@
 
             CLIENT.ws.onclose = function() {
                 CLIENT.state.socket_opened = false;
-                console.log('Socket closed');
+                CLIENT.client_log('Socket closed');
                 if (CLIENT.unexpectedClose == true) {
                     setTimeout(CLIENT.reloadPage, 2000);
                 }
@@ -198,7 +214,7 @@
             CLIENT.ws.onerror = function(ev) {
                 if (!CLIENT.state.socket_opened)
                     setTimeout(CLIENT.startApp(), 2000);
-                console.log('Websocket error: ', ev);
+                CLIENT.client_log('Websocket error: ', ev);
             };
 
             CLIENT.ws.onmessage = function(ev) {
@@ -251,7 +267,7 @@
             return false;
         }
         CLIENT.ws.send(JSON.stringify({ parameters: CLIENT.parametersCache }));
-        console.log("SEND: ", CLIENT.parametersCache )
+        CLIENT.client_log("SEND: ", CLIENT.parametersCache )
         CLIENT.parametersCache = {};
         return true;
     };
@@ -263,7 +279,7 @@
         }
         CLIENT.parametersCache["in_command"] = { value: "send_all_params" };
         CLIENT.ws.send(JSON.stringify({ parameters: CLIENT.parametersCache }));
-        console.log("SEND: ", CLIENT.parametersCache )
+        CLIENT.client_log("SEND: ", CLIENT.parametersCache )
         CLIENT.parametersCache = {};
         return true;
     };
@@ -280,7 +296,7 @@
     CLIENT.processParameters = function(new_params) {
 
         if (Object.keys(new_params).length > 0) {
-            console.log(new_params)
+            CLIENT.client_log(new_params)
         }
 
         LCR.processParameters(new_params)
@@ -288,8 +304,16 @@
 
     var parametersHandler = function() {
         if (CLIENT.parameterStack.length > 0) {
-            CLIENT.processParameters(CLIENT.parameterStack[0]);
-            CLIENT.parameterStack.splice(0, 1);
+            CLIENT.client_log(CLIENT.parameterStack.length)
+            var params = [...CLIENT.parameterStack]
+            var pack_params = []
+            for( var i = 0 ; i < params.length; i++){
+                for (var param_name in params[i]) {
+                    pack_params[param_name] = params[i][param_name]
+                }
+            }
+            CLIENT.processParameters(pack_params);
+            CLIENT.parameterStack = []
         }
     }
 

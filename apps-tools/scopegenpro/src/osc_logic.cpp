@@ -588,13 +588,26 @@ auto updateOscParams(bool force) -> void{
             IF_VALUE_CHANGED_FORCE(inGain[i], rpApp_OscSetInputGain((rp_channel_t)i, (rpApp_osc_in_gain_t)RPAPP_OSC_IN_GAIN_LV),force)
         }
 
+        auto trim = [](const std::string & source) {
+            std::string s(source);
+            s.erase(0,s.find_first_not_of(" \n\r\t"));
+            s.erase(s.find_last_not_of(" \n\r\t")+1);
+            return s;
+        };
+
         if (IS_NEW(inName[i]) || force) {
-            if (inName[i].NewValue() == ""){
+            auto nv = trim(inName[i].NewValue());
+            auto needResend = nv != inName[i].NewValue();
+            if (nv == ""){
                 auto str = inName[i].Value();
                 inName[i].Update();
                 inName[i].SendValue(str);
             }else{
                 inName[i].Update();
+                inName[i].Value() = nv;
+                if (needResend){
+                    inName[i].SendValue(nv);
+                }
             }
         }
     }

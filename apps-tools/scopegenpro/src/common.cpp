@@ -284,3 +284,4 @@ auto getMeasureValue(int measure) -> float {
     }
     return value;
 }
+

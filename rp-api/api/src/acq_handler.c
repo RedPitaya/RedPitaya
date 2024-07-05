@@ -961,7 +961,7 @@ int acq_axi_Enable(rp_channel_t channel, bool enable)
 
 
 int acq_ResetFpga(){
-    return osc_ResetWriteStateMachine();
+    return osc_ResetWriteStateMachine(RP_CH_1);
 }
 
 static const volatile uint32_t* getRawBuffer(rp_channel_t channel){

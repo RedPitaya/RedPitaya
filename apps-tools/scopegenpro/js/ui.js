@@ -702,7 +702,7 @@
         });
 
         $('.input_name').blur( function() {
-            if ($(this).val() === ''){
+            if ($(this).val().trim() === ''){
                 $(this).val($(this).attr('old_value'))
             }
         });

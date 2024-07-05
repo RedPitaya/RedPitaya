@@ -26,21 +26,21 @@
             var multiplier = units == "mV" ? 1000 : 1;
             inp_field.val(OSC.formatInputValue(offset * multiplier, probeAttenuation, units == "mV", gain_mode !== 0));
             inp_field.attr("step",OSC.getStepValue(probeAttenuation, units == "mV", gain_mode !== 0));
+            OSC.setInOffsetPlotChLimits(ch)
         }
     }
 
     OSC.setInOffsetPlotChLimits = function(ch){
         var param_name_offset = "GPOS_OFFSET_CH" + ch
         var scale = OSC.params.orig["GPOS_SCALE_CH" + ch] ? OSC.params.orig["GPOS_SCALE_CH" + ch].value : undefined;
-        var probeAttenuation = parseInt($("#OSC_"+ch+"_PROBE option:selected").text());
-        var jumperSettings = $("#OSC_"+ch+"_IN_GAIN").parent().hasClass("active") ? 1 : 20;
+
         if (scale !== undefined){
             var multiplier = 1
             if (Math.abs(scale) < 1) {
                 multiplier = 1000
             }
-            var newMin = -1 * 10 * jumperSettings * probeAttenuation * multiplier;
-            var newMax = 1 * 10 * jumperSettings * probeAttenuation * multiplier;
+            var newMin = -1 * 5 * multiplier * scale;
+            var newMax = 1 * 5 * multiplier * scale;
             $("#"+param_name_offset).attr("min", newMin).attr("max", newMax);
         }
     }

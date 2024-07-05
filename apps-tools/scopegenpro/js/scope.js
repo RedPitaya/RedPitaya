@@ -83,6 +83,7 @@
     OSC.adc_max_rate = 0;
     OSC.arb_list = undefined;
     OSC.previousPageUrl = undefined;
+    OSC.config.debug = false
 
     OSC.is_ext_trig_level_present = false;
     OSC.is_webpage_loaded = false;
@@ -98,6 +99,13 @@
         'trig': '#75cede',
         'xy': '#faa200'
     };
+
+    OSC.client_log = function(...args) {
+        if (OSC.config.debug){
+            const d = new Date();
+            console.log("LOG:OSC",d.getHours() + ":" + d.getMinutes() + ":"+ d.getSeconds() + ":" + d.getMilliseconds() ,...args);
+        }
+    }
 
     // Time scale steps in millisecods
     OSC.time_steps = [
@@ -306,11 +314,16 @@
     var parametersHandler = function() {
         if (OSC.parameterStack.length > 0) {
             var p = performance.now();
-            console.log(OSC.parameterStack.length,OSC.parameterStack[0]);
-            while(OSC.parameterStack.length){
-                OSC.processParameters(OSC.parameterStack[0]);
-                OSC.parameterStack.splice(0, 2);
+            OSC.client_log(OSC.parameterStack.length)
+            var params = [...OSC.parameterStack]
+            var pack_params = []
+            for( var i = 0 ; i < params.length; i++){
+                for (var param_name in params[i]) {
+                    pack_params[param_name] = params[i][param_name]
+                }
             }
+            OSC.processParameters(pack_params);
+            OSC.parameterStack = []
         }
     }
 
@@ -358,8 +371,10 @@
             timeout: 2000
         }).done(function(msg) {
             if (msg.trim() === OSC.client_id) {
+                OSC.client_log("Need reload")
                 location.reload();
             } else {
+                OSC.client_log("Set user lost")
                 $('body').addClass('connection_lost');
                 $('body').removeClass('user_lost');
                 OSC.stopCheckStatus();
@@ -373,7 +388,8 @@
     OSC.startCheckStatus = function() {
         if (OSC.checkStatusTimer === undefined) {
             OSC.changeStatusStep = 0;
-            OSC.checkStatusTimer = setTimeout(OSC.checkStatus, 5000);
+            OSC.client_log("Set status step 0 (Need check status)")
+            OSC.checkStatusTimer = setInterval(OSC.checkStatus, 5000);
         }
     }
 
@@ -414,6 +430,7 @@
                 switch (OSC.changeStatusStep) {
                     case 0:
                         OSC.changeStatusStep = 1;
+                        OSC.client_log("Set status step 1 (Client connected)")
                         break;
                 }
             }else{
@@ -421,21 +438,23 @@
                 $('body').removeClass('connection_lost');
                 switch (OSC.changeStatusStep) {
                     case 0: // Do nothing, since after the timer started the data did not arrive.
-                    OSC.changeStatusStep = -1;
+                        OSC.changeStatusStep = -1;
+                        OSC.client_log("Set status step -1 (Do nothing, since after the timer started the data did not arrive.)")
                         break;
                     case 1: // Go to the connection restoration check state.
-                    OSC.changeStatusStep = 2;
+                        OSC.changeStatusStep = 2;
+                        OSC.client_log("Set status step 2 (Go to the connection restoration check state.)")
                         break;
                 }
             }
             OSC.ping = OSC.params.orig["RP_CLIENT_PING"].value
-            console.log("Check RP status")
+            OSC.client_log("Check RP status")
         }
 
         if (OSC.changeStatusStep == 2 && OSC.nginx_live){
             OSC.reloadPage();
         }
-        OSC.checkStatusTimer = setTimeout(OSC.checkStatus, 5000);
+        OSC.client_log("checkStatus")
     }
 
     setInterval(performanceHandler, 1000);
@@ -503,7 +522,7 @@
         // Define WebSocket event listeners
         if (OSC.ws) {
             OSC.ws.onopen = function() {
-                console.log('Socket opened');
+                OSC.client_log('Socket opened');
                 OSC.state.socket_opened = true;
                 OSC.unexpectedClose = true;
                 OSC.startTime = performance.now();
@@ -518,7 +537,7 @@
             OSC.ws.onclose = function() {
                 OSC.state.socket_opened = false;
                 $('#graphs .plot').hide(); // Hide all graphs
-                console.log('Socket closed');
+                OSC.client_log('Socket closed');
                 if (OSC.unexpectedClose == true) {
                     setTimeout(OSC.reloadPage, 2000);
                 }
@@ -527,7 +546,7 @@
             OSC.ws.onerror = function(ev) {
                 if (!OSC.state.socket_opened)
                     setTimeout(OSC.startApp(), 2000);
-                console.log('Websocket error: ', ev);
+                OSC.client_log('Websocket error: ', ev);
             };
 
             var last_time = undefined;
@@ -853,7 +872,10 @@
 
     // Processes newly received values for parameters
     OSC.processParameters = function(new_params) {
-        // console.log(new_params);
+
+        if (Object.keys(new_params).length > 0) {
+            OSC.client_log(new_params)
+        }
 
         if (new_params['ADC_COUNT']){
             OSC.adc_channes = new_params['ADC_COUNT'].value;
@@ -1291,13 +1313,16 @@
                     }
                 }
             }
+
+            if (key.includes('_CHANNEL_NAME_INPUT')){
+                value = value.trim()
+            }
+
             var skipSend = false;
 
             if (key.includes('CHANNEL_NAME_INPUT') && value == ''){
                 skipSend = true;
             }
-
-
 
             if (value !== undefined && value != OSC.params.orig[key].value && !skipSend) {
                 console.log(key + ' changed from ' + OSC.params.orig[key].value + ' to ' + ($.type(OSC.params.orig[key].value) == 'boolean' ? !!value : value));

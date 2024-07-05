@@ -325,7 +325,7 @@
             return;
         if (CLIENT.params.orig['xmin'] == undefined) return;
         if (CLIENT.params.orig['xmax'] == undefined) return;
-
+        // UI_GRAPH.updateYAxis(); // Reset min max for Y-axis
         var plot = SPEC.graphs.plot;
         var curr_options = plot.getOptions();
         curr_options.xaxes[0].min = CLIENT.params.orig['xmin'].value / Math.pow(1000,SPEC.config.unit);

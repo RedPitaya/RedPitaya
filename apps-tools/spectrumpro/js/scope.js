@@ -638,6 +638,12 @@
         SPEC.param_callbacks["ADC_COUNT"] = SPEC.setADCCount;
         SPEC.param_callbacks["RESET_CONFIG_SETTINGS"] = SPEC.resetSettingsRequest;
 
+        SPEC.param_callbacks["CH1_PROBE"] = function(new_params){UI_GRAPH.updateYAxis(); UI_GRAPH.changeYZoom();}
+        SPEC.param_callbacks["CH2_PROBE"] = function(new_params){UI_GRAPH.updateYAxis(); UI_GRAPH.changeYZoom();}
+        SPEC.param_callbacks["CH3_PROBE"] = function(new_params){UI_GRAPH.updateYAxis(); UI_GRAPH.changeYZoom();}
+        SPEC.param_callbacks["CH4_PROBE"] = function(new_params){UI_GRAPH.updateYAxis(); UI_GRAPH.changeYZoom();}
+
+
         SPEC.param_callbacks["SOUR1_TEMP_RUNTIME"] = function(new_params){
             if ('SOUR1_TEMP_RUNTIME' in new_params && new_params['SOUR1_TEMP_RUNTIME'].value != undefined) {
                 SPEC.updateOverheatBlock(1, new_params['SOUR1_TEMP_RUNTIME'].value);
@@ -672,27 +678,27 @@
                     UI.updateARBFunc(SPEC.arb_list)
             }
 
-            if ('CH1_OUT_GAIN' in new_params && new_params['CH1_OUT_GAIN'].value != undefined) {
+            if (new_params['CH1_OUT_GAIN'] && new_params['CH1_OUT_GAIN'].value != undefined) {
                 SPEC.processParametersZ250('CH1_OUT_GAIN', new_params['CH1_OUT_GAIN'].value);
             }
 
-            if ('CH2_OUT_GAIN' in new_params && new_params['CH2_OUT_GAIN'].value != undefined) {
+            if (new_params['CH2_OUT_GAIN'] && new_params['CH2_OUT_GAIN'].value != undefined) {
                 SPEC.processParametersZ250('CH2_OUT_GAIN', new_params['CH2_OUT_GAIN'].value);
             }
 
-            if ('SOUR1_IMPEDANCE' in new_params && new_params['SOUR1_IMPEDANCE'].value != undefined) {
+            if (new_params['SOUR1_IMPEDANCE'] && new_params['SOUR1_IMPEDANCE'].value != undefined) {
                 SPEC.updateMaxLimitOnLoad("CH1", new_params['SOUR1_IMPEDANCE'].value);
             }
 
-            if ('SOUR2_IMPEDANCE' in new_params && new_params['SOUR2_IMPEDANCE'].value != undefined) {
+            if (new_params['SOUR2_IMPEDANCE'] && new_params['SOUR2_IMPEDANCE'].value != undefined) {
                 SPEC.updateMaxLimitOnLoad("CH2", new_params['SOUR2_IMPEDANCE'].value);
             }
 
-            if ('EXT_CLOCK_LOCKED' in new_params && new_params['EXT_CLOCK_LOCKED'].value != undefined) {
+            if (new_params['EXT_CLOCK_LOCKED'] && new_params['EXT_CLOCK_LOCKED'].value != undefined) {
                 SPEC.updateExtClockLocked(new_params['EXT_CLOCK_LOCKED'].value);
             }
 
-            if ('y_axis_mode' in new_params && new_params['y_axis_mode'].value != undefined) {
+            if (new_params['y_axis_mode'] && new_params['y_axis_mode'].value != undefined) {
                 var z = "dbm";
                 if (new_params['y_axis_mode'].value ===4) z = "dbuV";
                 if (new_params['y_axis_mode'].value ===3) z = "dbV";

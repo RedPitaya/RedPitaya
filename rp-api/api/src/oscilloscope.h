@@ -493,7 +493,7 @@ int osc_GetSplitTriggerMode(bool* enable);
 int osc_SetUnlockTrigger(rp_channel_t channel);
 int osc_GetUnlockTrigger(rp_channel_t channel, bool *state);
 int osc_WriteDataIntoMemory(rp_channel_t channel, bool enable);
-int osc_ResetWriteStateMachine();
+int osc_ResetWriteStateMachine(rp_channel_t channel);
 int osc_SetArmKeep(rp_channel_t channel, bool enable);
 int osc_GetArmKeep(rp_channel_t channel, bool *state);
 int osc_GetBufferFillState(rp_channel_t channel, bool *state);

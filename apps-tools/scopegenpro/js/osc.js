@@ -230,25 +230,25 @@
 
     OSC.ch1SetGain = function(new_params){
         OSC.setGain("OSC_CH1_IN_GAIN")
-        OSC.updateOSCOffsetLimits("CH1");
+        OSC.updateOSCOffsetLimits("1");
         OSC.setGposOffset("CH1");
     }
 
     OSC.ch2SetGain = function(new_params){
         OSC.setGain("OSC_CH2_IN_GAIN")
-        OSC.updateOSCOffsetLimits("CH2");
+        OSC.updateOSCOffsetLimits("2");
         OSC.setGposOffset("CH2");
     }
 
     OSC.ch3SetGain = function(new_params){
         OSC.setGain("OSC_CH3_IN_GAIN")
-        OSC.updateOSCOffsetLimits("CH3");
+        OSC.updateOSCOffsetLimits("3");
         OSC.setGposOffset("CH3");
     }
 
     OSC.ch4SetGain = function(new_params){
         OSC.setGain("OSC_CH4_IN_GAIN")
-        OSC.updateOSCOffsetLimits("CH4");
+        OSC.updateOSCOffsetLimits("4");
         OSC.setGposOffset("CH4");
     }
 
@@ -287,28 +287,28 @@
 
     OSC.setOscProbe1 = function(new_params){
         OSC.setOscProbe("OSC_CH1_PROBE")
-        OSC.updateOSCOffsetLimits("CH1")
+        OSC.updateOSCOffsetLimits("1")
         OSC.setGposOffset("CH1");
         OSC.updateTriggerDragHandle();
     }
 
     OSC.setOscProbe2 = function(new_params){
         OSC.setOscProbe("OSC_CH2_PROBE")
-        OSC.updateOSCOffsetLimits("CH2")
+        OSC.updateOSCOffsetLimits("2")
         OSC.setGposOffset("CH2");
         OSC.updateTriggerDragHandle();
     }
 
     OSC.setOscProbe3 = function(new_params){
         OSC.setOscProbe("OSC_CH3_PROBE")
-        OSC.updateOSCOffsetLimits("CH3")
+        OSC.updateOSCOffsetLimits("3")
         OSC.setGposOffset("CH3");
         OSC.updateTriggerDragHandle();
     }
 
     OSC.setOscProbe4 = function(new_params){
         OSC.setOscProbe("OSC_CH4_PROBE")
-        OSC.updateOSCOffsetLimits("CH4")
+        OSC.updateOSCOffsetLimits("4")
         OSC.setGposOffset("CH4");
         OSC.updateTriggerDragHandle();
     }

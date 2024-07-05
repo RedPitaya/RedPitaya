@@ -150,9 +150,9 @@ void UpdateParams(void)
         g_sweepController->pause(!inRun.Value());
     }
 
-	if (inRun.Value() == false){
-		return;
-    }
+	// if (inRun.Value() == false){
+	// 	return;
+    // }
 
     auto adc = rpApp_SpecGetADCFreq();
     auto buf = rpApp_SpecGetADCBufferSize();
