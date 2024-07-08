@@ -493,11 +493,9 @@ auto updateOscParams(bool force) -> void{
     if (bufferRequest.NewValue() != 0){
         if (bufferRequest.NewValue() == 1){
             rpApp_OscBufferSelectNext();
-            WARNING("Press next")
         }
         if (bufferRequest.NewValue() == -1){
             rpApp_OscBufferSelectPrev();
-            WARNING("Press prev")
         }
         bufferRequest.Value() = 0;
     }

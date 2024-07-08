@@ -171,7 +171,6 @@ void synthesis_square_burst(CFloatBase64Signal *signal, float freq, float phase,
         int periodCount = (int) sigSize * 1000 / (freq * tscale * 10);
         if (periodCount == 0) periodCount = 1;
         int phaseCount = phase * periodCount / (2 * M_PI) + periodCount; // + periodCount so that there is no error with a negative phase value.
-        fprintf(stderr,"phaseCount %d periodCount %d riseCount %d fallCount %d burstPerCount %f  burstPointCount %f reps %d\n",phaseCount,periodCount,riseCount,fallCount,burstPerCount,burstPointCount,reps);
         while(x < CH_SIGNAL_SIZE_DEFAULT && x < sigSize){
             if (rep < reps){
                 int t = 0;

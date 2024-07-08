@@ -758,11 +758,18 @@ int osc_getExportedData(rpApp_osc_source _source, rpApp_osc_exportMode _mode, bo
             *_size = 0;
             return ret;
         }
-
+        std::vector<float> data;
+        data.reserve(*_size);
         for(auto i = 0u; i < *_size; ++i){
-            unscaleAmplitudeChannel(_source, _data[i],&_data[i]);
+            if (!isnan(_data[i])){
+                float d = _data[i];
+                unscaleAmplitudeChannel(_source, d,&d);
+                data.push_back(d);
+            }
         }
-
+        ret_size = data.size();
+        *_size = data.size();
+        memcpy_neon(_data,data.data(), *_size  * sizeof(float));
         if (_normalize){
             norma(_data,ret_size);
         }
@@ -1495,10 +1502,9 @@ void mainThreadFun() {
 
         auto tScaleAcq = 0.0f;
         g_adcController.resetWaitTriggerRequest();
-
         if (g_viewController.isOscRun()){
 
-            g_viewController.lockControllerView();
+            // g_viewController.lockControllerView();
             auto contMode = g_adcController.getContinuousMode();
             auto decimationInACQ = g_viewController.getCurrentDecimation(contMode);
             tScaleAcq = g_viewController.getTimeScale();
@@ -1506,8 +1512,7 @@ void mainThreadFun() {
             ECHECK_APP_NO_RET(rp_AcqSetDecimationFactor(decimationInACQ));
             auto delay = g_viewController.getSampledAfterTriggerInView();
             ECHECK_APP_NO_RET(rp_AcqSetTriggerDelayDirect(delay));
-            g_viewController.unlockControllerView();
-
+            // g_viewController.unlockControllerView();
             ECHECK_APP_NO_RET(threadSafe_acqStart());
             auto trigSweep = g_adcController.getTriggerSweep();
             auto viewMode = g_viewController.getViewMode();
@@ -1555,7 +1560,6 @@ void mainThreadFun() {
             }else{
                 ECHECK_APP_NO_RET(rp_AcqGetWritePointerAtTrig(&pPosition));
             }
-
             auto data = g_viewController.getCurrentOscillogram();
             data->m_viewMutex.lock();
             data->m_dataHasTrigger = dataHasTrigger;
