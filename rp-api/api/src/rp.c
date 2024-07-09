@@ -1389,7 +1389,10 @@ int rp_AcqGetGainV(rp_channel_t channel, float* voltage)
 
 int rp_AcqSetGain(rp_channel_t channel, rp_pinState_t state)
 {
-    return acq_SetGain(channel, state);
+    if (rp_HPGetFastADCIsLV_HVOrDefault()){
+        return acq_SetGain(channel, state);
+    }
+    return RP_NOTS;
 }
 
 int rp_AcqGetTriggerLevel(rp_channel_trigger_t channel, float* voltage)

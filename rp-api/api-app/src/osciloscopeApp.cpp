@@ -148,8 +148,10 @@ int osc_SetDefaultValues() {
     ECHECK_APP(osc_setAmplitudeScale(RPAPP_OSC_SOUR_MATH, 1));
     ECHECK_APP(osc_setProbeAtt(RP_CH_1, 1));
     ECHECK_APP(osc_setProbeAtt(RP_CH_2, 1));
-    ECHECK_APP(osc_setInputGain(RP_CH_1, RPAPP_OSC_IN_GAIN_LV))
-    ECHECK_APP(osc_setInputGain(RP_CH_2, RPAPP_OSC_IN_GAIN_LV))
+    if (rp_HPGetFastADCIsLV_HVOrDefault()){
+        ECHECK_APP(osc_setInputGain(RP_CH_1, RPAPP_OSC_IN_GAIN_LV))
+        ECHECK_APP(osc_setInputGain(RP_CH_2, RPAPP_OSC_IN_GAIN_LV))
+    }
     ECHECK_APP(osc_setTimeOffset(0));
     ECHECK_APP(osc_setTriggerSlope(RPAPP_OSC_TRIG_SLOPE_PE));
 
@@ -172,14 +174,18 @@ int osc_SetDefaultValues() {
         ECHECK_APP(osc_setAmplitudeOffset(RPAPP_OSC_SOUR_CH3, 0));
         ECHECK_APP(osc_setAmplitudeScale(RPAPP_OSC_SOUR_CH3, 1));
         ECHECK_APP(osc_setProbeAtt(RP_CH_3, 1));
-        ECHECK_APP(osc_setInputGain(RP_CH_3, RPAPP_OSC_IN_GAIN_LV))
+        if (rp_HPGetFastADCIsLV_HVOrDefault()){
+            ECHECK_APP(osc_setInputGain(RP_CH_3, RPAPP_OSC_IN_GAIN_LV))
+        }
     }
 
     if (channels >= 4){
         ECHECK_APP(osc_setAmplitudeOffset(RPAPP_OSC_SOUR_CH4, 0));
         ECHECK_APP(osc_setAmplitudeScale(RPAPP_OSC_SOUR_CH4, 1));
         ECHECK_APP(osc_setProbeAtt(RP_CH_4, 1));
-        ECHECK_APP(osc_setInputGain(RP_CH_4, RPAPP_OSC_IN_GAIN_LV))
+        if (rp_HPGetFastADCIsLV_HVOrDefault()){
+            ECHECK_APP(osc_setInputGain(RP_CH_4, RPAPP_OSC_IN_GAIN_LV))
+        }
     }
 
     return RP_OK;

@@ -583,9 +583,6 @@ auto updateOscParams(bool force) -> void{
         if (rp_HPGetFastADCIsLV_HVOrDefault()){
             IF_VALUE_CHANGED_FORCE(inGain[i], rpApp_OscSetInputGain((rp_channel_t)i, (rpApp_osc_in_gain_t)inGain[i].NewValue()),force)
         }
-        else{
-            IF_VALUE_CHANGED_FORCE(inGain[i], rpApp_OscSetInputGain((rp_channel_t)i, (rpApp_osc_in_gain_t)RPAPP_OSC_IN_GAIN_LV),force)
-        }
 
         auto trim = [](const std::string & source) {
             std::string s(source);
