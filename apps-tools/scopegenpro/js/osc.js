@@ -79,24 +79,28 @@
         OSC.setScale("CH1",new_params);
         OSC.setGposOffset("CH1")
         OSC.setInOffsetPlotCh("1")
+        OSC.setInOffsetZeroPlotCh("1")
     }
 
     OSC.ch2SetScale = function(new_params) {
         OSC.setScale("CH2",new_params);
         OSC.setGposOffset("CH2")
         OSC.setInOffsetPlotCh("2")
+        OSC.setInOffsetZeroPlotCh("2")
     }
 
     OSC.ch3SetScale = function(new_params) {
         OSC.setScale("CH3",new_params);
         OSC.setGposOffset("CH3")
         OSC.setInOffsetPlotCh("3")
+        OSC.setInOffsetZeroPlotCh("3")
     }
 
     OSC.ch4SetScale = function(new_params) {
         OSC.setScale("CH4",new_params);
         OSC.setGposOffset("CH4")
         OSC.setInOffsetPlotCh("4")
+        OSC.setInOffsetZeroPlotCh("4")
     }
 
     OSC.processSampleRate = function(new_params) {
@@ -231,24 +235,28 @@
     OSC.ch1SetGain = function(new_params){
         OSC.setGain("OSC_CH1_IN_GAIN")
         OSC.updateOSCOffsetLimits("1");
+        OSC.updateOSCOffsetZeroLimits("1")
         OSC.setGposOffset("CH1");
     }
 
     OSC.ch2SetGain = function(new_params){
         OSC.setGain("OSC_CH2_IN_GAIN")
         OSC.updateOSCOffsetLimits("2");
+        OSC.updateOSCOffsetZeroLimits("2")
         OSC.setGposOffset("CH2");
     }
 
     OSC.ch3SetGain = function(new_params){
         OSC.setGain("OSC_CH3_IN_GAIN")
         OSC.updateOSCOffsetLimits("3");
+        OSC.updateOSCOffsetZeroLimits("3")
         OSC.setGposOffset("CH3");
     }
 
     OSC.ch4SetGain = function(new_params){
         OSC.setGain("OSC_CH4_IN_GAIN")
         OSC.updateOSCOffsetLimits("4");
+        OSC.updateOSCOffsetZeroLimits("4")
         OSC.setGposOffset("CH4");
     }
 
@@ -278,6 +286,10 @@
         OSC.setInOffsetPlotChLimits(ch)
     }
 
+    OSC.updateOSCOffsetZeroLimits = function(ch){
+        OSC.setInOffsetZeroPlotChLimits(ch)
+    }
+
     OSC.setOscProbe = function(param_name){
         var field = $('#' + param_name);
         if (field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
@@ -288,6 +300,7 @@
     OSC.setOscProbe1 = function(new_params){
         OSC.setOscProbe("OSC_CH1_PROBE")
         OSC.updateOSCOffsetLimits("1")
+        OSC.updateOSCOffsetZeroLimits("1")
         OSC.setGposOffset("CH1");
         OSC.updateTriggerDragHandle();
     }
@@ -295,6 +308,7 @@
     OSC.setOscProbe2 = function(new_params){
         OSC.setOscProbe("OSC_CH2_PROBE")
         OSC.updateOSCOffsetLimits("2")
+        OSC.updateOSCOffsetZeroLimits("2")
         OSC.setGposOffset("CH2");
         OSC.updateTriggerDragHandle();
     }
@@ -302,6 +316,7 @@
     OSC.setOscProbe3 = function(new_params){
         OSC.setOscProbe("OSC_CH3_PROBE")
         OSC.updateOSCOffsetLimits("3")
+        OSC.updateOSCOffsetZeroLimits("3")
         OSC.setGposOffset("CH3");
         OSC.updateTriggerDragHandle();
     }
@@ -309,6 +324,7 @@
     OSC.setOscProbe4 = function(new_params){
         OSC.setOscProbe("OSC_CH4_PROBE")
         OSC.updateOSCOffsetLimits("4")
+        OSC.updateOSCOffsetZeroLimits("4")
         OSC.setGposOffset("CH4");
         OSC.updateTriggerDragHandle();
     }

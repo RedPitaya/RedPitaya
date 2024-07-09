@@ -57,6 +57,8 @@ rp_acq_trig_src_t last_trig_src = RP_TRIG_SRC_DISABLED;
 
 float ch_hyst[4] = {0.005,0.005,0.005,0.005};
 float ch_trash[4] = {0.005,0.005,0.005,0.005};
+float ch_offset_input[4] = {0,0,0,0};
+float ch_offset_input_axi[4] = {0,0,0,0};
 
 /*----------------------------------------------------------------------------*/
 /**
@@ -556,14 +558,14 @@ int acq_axi_SetTriggerDelayNs(rp_channel_t channel, int64_t time_ns)
 
 int acq_GetTriggerDelay(rp_channel_t channel, int32_t* decimated_data_num){
     uint32_t trig_dly;
-    int r=osc_GetTriggerDelay(channel, &trig_dly);
+    int r = osc_GetTriggerDelay(channel, &trig_dly);
     *decimated_data_num=(int32_t)trig_dly - TRIG_DELAY_ZERO_OFFSET;
     return r;
 }
 
 int acq_GetTriggerDelayDirect(rp_channel_t channel, uint32_t* decimated_data_num){
     uint32_t trig_dly;
-    int r=osc_GetTriggerDelay(channel, &trig_dly);
+    int r = osc_GetTriggerDelay(channel, &trig_dly);
     *decimated_data_num=trig_dly;
     return r;
 }
@@ -1149,9 +1151,7 @@ int acq_axi_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16
             buffer[i] = cmn_CalibCntsSigned(cnts,bits,1,1,0);
         else
             buffer[i] = cmn_CalibCntsUnsigned(cnts,bits,1,1,0);
-        // printf("i %d pos %x value %d\n",i,(pos + i) % buffer_size,buffer[i] );
     }
-        // printf("\n");
 
     return RP_OK;
 }
@@ -1171,6 +1171,11 @@ int acq_GetDataInBuffer(rp_channel_t channel, uint32_t pos, uint32_t* size, int3
     rp_pinState_t mode;
     float fullScale;
     float gainValue;
+    float offset_value;
+
+    if (acq_GetOffset(channel, &offset_value) != RP_OK){
+        return RP_EOOR;
+    }
 
     if (acq_GetGainV(channel, &gainValue) != RP_OK){
         return RP_EOOR;
@@ -1248,9 +1253,9 @@ int acq_GetDataInBuffer(rp_channel_t channel, uint32_t pos, uint32_t* size, int3
         if (is_need_vold_d || is_need_vold_f){
             float value = 0;
             if (is_sign)
-                value = cmn_convertToVoltSigned(cnts,bits,fullScale,gain_volt,g_base_volt,offset_volt) * gainValue;
+                value = cmn_convertToVoltSigned(cnts,bits,fullScale,gain_volt,g_base_volt,offset_volt) * gainValue + offset_value;
             else
-                value = cmn_convertToVoltUnsigned(cnts,bits,fullScale,gain_volt,g_base_volt,offset_volt) * gainValue;
+                value = cmn_convertToVoltUnsigned(cnts,bits,fullScale,gain_volt,g_base_volt,offset_volt) * gainValue + offset_value;
             if (is_need_vold_f) fPtr[dataIndex] = value;
             if (is_need_vold_d) dPtr[dataIndex] = value;
         }
@@ -1424,7 +1429,12 @@ int acq_GetDataVEx(rp_channel_t channel,  uint32_t pos, uint32_t* size, void* in
 
     float fullScale;
     float gainValue;
+    float offset;
     rp_pinState_t mode;
+
+    if (acq_GetOffset(channel, &offset) != RP_OK){
+        return RP_EOOR;
+    }
 
     if (acq_GetGainV(channel, &gainValue) != RP_OK){
         return RP_EOOR;
@@ -1479,7 +1489,7 @@ int acq_GetDataVEx(rp_channel_t channel,  uint32_t pos, uint32_t* size, void* in
 
     for (uint32_t i = 0; i < (*size); ++i) {
         cnts = raw_buffer[(pos + i) % ADC_BUFFER_SIZE] & mask;
-        float value = cmn_convertToVoltSigned(cnts,bits,fullScale,calib.gain,calib.base,calib.offset) * gainValue;
+        float value = cmn_convertToVoltSigned(cnts,bits,fullScale,calib.gain,calib.base,calib.offset) * gainValue + offset;
         if (buffer_f) buffer_f[i] = value;
         if (buffer_d) buffer_d[i] = value;
     }
@@ -1513,7 +1523,12 @@ int acq_axi_GetDataVEx(rp_channel_t channel,  uint32_t pos, uint32_t* size, void
 
     float fullScale;
     float gainValue;
+    float offset;
     rp_pinState_t mode;
+
+    if (acq_axi_GetOffset(channel, &offset) != RP_OK){
+        return RP_EOOR;
+    }
 
     if (acq_GetGainV(channel, &gainValue) != RP_OK){
         return RP_EOOR;
@@ -1571,7 +1586,7 @@ int acq_axi_GetDataVEx(rp_channel_t channel,  uint32_t pos, uint32_t* size, void
 
     for (uint32_t i = 0; i < (*size); ++i) {
         cnts = raw_buffer[(pos + i) % buffer_size] & mask;
-        float value = cmn_convertToVoltSigned(cnts,bits,fullScale,calib.gain,calib.base,calib.offset) * gainValue;
+        float value = cmn_convertToVoltSigned(cnts,bits,fullScale,calib.gain,calib.base,calib.offset) * gainValue + offset;
         if (buffer_f) buffer_f[i] = value;
         if (buffer_d) buffer_d[i] = value;
     }
@@ -1839,5 +1854,97 @@ int acq_GetExtTriggerDebouncerUs(double *value){
     uint32_t samples = 0;
     osc_GetExtTriggerDebouncer(&samples);
     *value = (samples * sp) / 1000.0;
+    return RP_OK;
+}
+
+int acq_SetOffset(rp_channel_t channel, float voltage){
+    CHECK_CHANNEL
+
+    switch (channel)
+    {
+        case RP_CH_1:
+            ch_offset_input[0] = voltage;
+            break;
+        case RP_CH_2:
+            ch_offset_input[1] = voltage;
+            break;
+        case RP_CH_3:
+            ch_offset_input[2] = voltage;
+            break;
+        case RP_CH_4:
+            ch_offset_input[3] = voltage;
+            break;
+        default:
+            return RP_EIPV;
+    }
+    return RP_OK;
+}
+
+int acq_GetOffset(rp_channel_t channel, float *voltage){
+    CHECK_CHANNEL
+
+    switch (channel)
+    {
+        case RP_CH_1:
+            *voltage = ch_offset_input[0];
+            break;
+        case RP_CH_2:
+            *voltage = ch_offset_input[1];
+            break;
+        case RP_CH_3:
+            *voltage = ch_offset_input[2];
+            break;
+        case RP_CH_4:
+            *voltage = ch_offset_input[3];
+            break;
+        default:
+            return RP_EIPV;
+    }
+    return RP_OK;
+}
+
+int acq_axi_SetOffset(rp_channel_t channel, float voltage){
+    CHECK_CHANNEL
+
+    switch (channel)
+    {
+        case RP_CH_1:
+            ch_offset_input_axi[0] = voltage;
+            break;
+        case RP_CH_2:
+            ch_offset_input_axi[1] = voltage;
+            break;
+        case RP_CH_3:
+            ch_offset_input_axi[2] = voltage;
+            break;
+        case RP_CH_4:
+            ch_offset_input_axi[3] = voltage;
+            break;
+        default:
+            return RP_EIPV;
+    }
+    return RP_OK;
+}
+
+int acq_axi_GetOffset(rp_channel_t channel, float *voltage){
+    CHECK_CHANNEL
+
+    switch (channel)
+    {
+        case RP_CH_1:
+            *voltage = ch_offset_input_axi[0];
+            break;
+        case RP_CH_2:
+            *voltage = ch_offset_input_axi[1];
+            break;
+        case RP_CH_3:
+            *voltage = ch_offset_input_axi[2];
+            break;
+        case RP_CH_4:
+            *voltage = ch_offset_input_axi[3];
+            break;
+        default:
+            return RP_EIPV;
+    }
     return RP_OK;
 }

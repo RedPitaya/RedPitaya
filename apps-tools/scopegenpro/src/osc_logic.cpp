@@ -64,6 +64,7 @@ CBooleanParameter   inSingle("OSC_SINGLE", CBaseParameter::RW, false, 0);
 // 2500 - 5 step by 1000V max
 CFloatParameter     inOffset[MAX_ADC_CHANNELS] = INIT("GPOS_OFFSET_CH","", CBaseParameter::RW, 0, 0, -5000, 5000,CONFIG_VAR);
 CFloatParameter     inScale[MAX_ADC_CHANNELS] = INIT("GPOS_SCALE_CH","", CBaseParameter::RW, 1, 0, 0.00005, 1000,CONFIG_VAR);
+CFloatParameter     inOffsetZero[MAX_ADC_CHANNELS] = INIT("GPOS_OFFSET_ZERO_CH","", CBaseParameter::RW, 0, 0, -5000, 5000,CONFIG_VAR);
 
 CFloatParameter     inProbe[MAX_ADC_CHANNELS] = INIT("OSC_CH","_PROBE", CBaseParameter::RW, 1, 0, 0, 1000,CONFIG_VAR);
 
@@ -605,6 +606,25 @@ auto updateOscParams(bool force) -> void{
                 inName[i].Value() = nv;
                 if (needResend){
                     inName[i].SendValue(nv);
+                }
+            }
+        }
+
+/*
+   if (IS_NEW(inOffsetZero[i]) || force){
+            if (rpApp_OscSetAmplitudeOffsetZero((rpApp_osc_source)i,inOffsetZero[i].NewValue()) == RP_OK){
+                inOffsetZero[i].Update();
+            }
+        }
+*/
+        if (IS_NEW(inOffsetZero[i]) || force){
+
+            float att = 1;
+            if (rpApp_OscGetProbeAtt((rp_channel_t)i,&att) == RP_OK){
+
+                float value = inOffsetZero[i].NewValue() / att;
+                if (rp_AcqSetOffset((rp_channel_t)i,value) == RP_OK){
+                    inOffsetZero[i].Update();
                 }
             }
         }

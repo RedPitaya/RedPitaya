@@ -1097,6 +1097,22 @@ print("rp.rp_AcqAxiGetDecimationFactorCh(rp.RP_CH_1)")
 res = rp.rp_AcqAxiGetDecimationFactorCh(rp.RP_CH_1)
 print(res)
 
+print("rp.rp_AcqSetOffset(rp.RP_CH_1,0.5)")
+res = rp.rp_AcqSetOffset(rp.RP_CH_1,0.5)
+print(res)
+
+print("rp.rp_AcqGetOffset(rp.RP_CH_1)")
+res = rp.rp_AcqGetOffset(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqAxiSetOffset(rp.RP_CH_1,0.5)")
+res = rp.rp_AcqAxiSetOffset(rp.RP_CH_1,0.5)
+print(res)
+
+print("rp.rp_AcqAxiGetOffset(rp.RP_CH_1)")
+res = rp.rp_AcqAxiGetOffset(rp.RP_CH_1)
+print(res)
+
 print("rp.rp_Release()")
 res = rp.rp_Release()
 print(res)

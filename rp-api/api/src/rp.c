@@ -2326,3 +2326,18 @@ int rp_AcqGetSplitTriggerPass(bool* state){
     return RP_OK;
 }
 
+int rp_AcqSetOffset(rp_channel_t channel, float value){
+    return acq_SetOffset(channel,value);
+}
+
+int rp_AcqGetOffset(rp_channel_t channel, float *value){
+    return acq_GetOffset(channel,value);
+}
+
+int rp_AcqAxiSetOffset(rp_channel_t channel, float value){
+    return acq_axi_SetOffset(channel,value);
+}
+
+int rp_AcqAxiGetOffset(rp_channel_t channel, float *value){
+    return acq_axi_GetOffset(channel,value);
+}

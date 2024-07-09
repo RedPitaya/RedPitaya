@@ -252,6 +252,24 @@ int rp_AcqSetAveraging(bool enable);
 int rp_AcqGetAveraging(bool *enable);
 
 /**
+ * Adds a voltage offset when requesting data. Only affects float and double data types. Raw data remains unchanged.
+ * @param channel Channel A, B, C or D
+ * @param value Offset value in volts
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqSetOffset(rp_channel_t channel, float value);
+
+/**
+ * Returns the offset value.
+ * @param channel Channel A, B, C or D
+ * @param value Offset value in volts
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetOffset(rp_channel_t channel, float *value);
+
+/**
  * Enables or disables averaging of data between samples.
  * Data between samples can be averaged by setting the averaging flag in the Data decimation register.
  * This channel separation feature works with FPGA support.

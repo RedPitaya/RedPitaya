@@ -198,6 +198,24 @@ int rp_AcqAxiSetBufferSamples(rp_channel_t channel, uint32_t address, uint32_t s
  */
 int rp_AcqAxiSetBufferBytes(rp_channel_t channel, uint32_t address, uint32_t size);
 
+/**
+ * Adds a voltage offset when requesting data from AXI buffers. Only affects float and double data types. Raw data remains unchanged.
+ * @param channel Channel A, B, C or D
+ * @param value Offset value in volts
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqAxiSetOffset(rp_channel_t channel, float value);
+
+/**
+ * Returns the offset value.
+ * @param channel Channel A, B, C or D
+ * @param value Offset value in volts
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqAxiGetOffset(rp_channel_t channel, float *value);
+
 ///@}
 
 #endif //__RP_ACQ_AXI_H

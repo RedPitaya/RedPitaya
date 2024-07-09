@@ -859,6 +859,11 @@
     OSC.param_callbacks["GPOS_OFFSET_CH3"] = OSC.ch3Offset;
     OSC.param_callbacks["GPOS_OFFSET_CH4"] = OSC.ch4Offset;
 
+    OSC.param_callbacks["GPOS_OFFSET_ZERO_CH1"] = OSC.ch1OffsetZero;
+    OSC.param_callbacks["GPOS_OFFSET_ZERO_CH2"] = OSC.ch2OffsetZero;
+    OSC.param_callbacks["GPOS_OFFSET_ZERO_CH3"] = OSC.ch3OffsetZero;
+    OSC.param_callbacks["GPOS_OFFSET_ZERO_CH4"] = OSC.ch4OffsetZero;
+
     OSC.param_callbacks["GPOS_SCALE_CH1"] = OSC.ch1SetScale;
     OSC.param_callbacks["GPOS_SCALE_CH2"] = OSC.ch2SetScale;
     OSC.param_callbacks["GPOS_SCALE_CH3"] = OSC.ch3SetScale;
@@ -1220,18 +1225,36 @@
                 value = OSC.modifyForSendInOffsetPlot("1",value)
             }
 
+            if (key == "GPOS_OFFSET_ZERO_CH1") {
+                value = OSC.modifyForSendInOffsetZeroPlot("1",value)
+            }
+
             if (key == "GPOS_OFFSET_CH2") {
                 value = OSC.modifyForSendInOffsetPlot("2",value)
             }
 
-            if (OSC.adc_channes > 2)
-            if (key == "GPOS_OFFSET_CH3") {
-                value = OSC.modifyForSendInOffsetPlot("3",value)
+            if (key == "GPOS_OFFSET_ZERO_CH2") {
+                value = OSC.modifyForSendInOffsetZeroPlot("2",value)
             }
 
-            if (OSC.adc_channes > 3)
-            if (key == "GPOS_OFFSET_CH4") {
-                value = OSC.modifyForSendInOffsetPlot("4",value)
+            if (OSC.adc_channes > 2){
+                if (key == "GPOS_OFFSET_CH3") {
+                    value = OSC.modifyForSendInOffsetPlot("3",value)
+                }
+
+                if (key == "GPOS_OFFSET_ZERO_CH3") {
+                    value = OSC.modifyForSendInOffsetZeroPlot("3",value)
+                }
+            }
+
+            if (OSC.adc_channes > 3){
+                if (key == "GPOS_OFFSET_CH4") {
+                    value = OSC.modifyForSendInOffsetPlot("4",value)
+                }
+
+                if (key == "GPOS_OFFSET_ZERO_CH4") {
+                    value = OSC.modifyForSendInOffsetZeroPlot("4",value)
+                }
             }
 
             if (key == "GPOS_OFFSET_OUTPUT1") {
@@ -1676,6 +1699,13 @@
                     var new_offset = (cur_offset / scale_value) * (new_scale / mult);
                     OSC.params.local['GPOS_OFFSET_' + OSC.state.sel_sig_name.toUpperCase()] = { value: new_offset };
                 }
+
+                if (OSC.params.orig['GPOS_OFFSET_ZERO_' + OSC.state.sel_sig_name.toUpperCase()]) {
+                    var cur_offset = OSC.params.orig['GPOS_OFFSET_ZERO_' + OSC.state.sel_sig_name.toUpperCase()].value;
+                    var new_offset = (cur_offset / scale_value) * (new_scale / mult);
+                    OSC.params.local['GPOS_OFFSET_ZERO_' + OSC.state.sel_sig_name.toUpperCase()] = { value: new_offset };
+                }
+
                 OSC.sendParams();
             }
             return new_scale;

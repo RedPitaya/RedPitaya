@@ -118,4 +118,9 @@ int acq_GetFilterCalibValue(rp_channel_t channel,uint32_t* coef_aa, uint32_t* co
 int acq_SetExtTriggerDebouncerUs(double value);
 int acq_GetExtTriggerDebouncerUs(double *value);
 
+int acq_SetOffset(rp_channel_t channel, float voltage);
+int acq_GetOffset(rp_channel_t channel, float *voltage);
+int acq_axi_SetOffset(rp_channel_t channel, float voltage);
+int acq_axi_GetOffset(rp_channel_t channel, float *voltage);
+
 #endif /* SRC_ACQ_HANDLER_H_ */
