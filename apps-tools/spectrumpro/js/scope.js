@@ -446,7 +446,7 @@
 
                     var result = '';
                     var multiplier = (freq_unit1.charAt(0) == 'k') ? 1000 : (freq_unit1.charAt(0) == 'M') ? 1000000 : 1;
-                    if (SPEC.result.peakPower[ch] < -120 || SPEC.result.peakPower[ch] > 200)
+                    if (SPEC.result.peakPower[ch] < -120 || SPEC.result.peakPower[ch] > 2000)
                         result = 'OVER RANGE';
                     else if (((SPEC.result.peakFreq[ch]) < 0) || ((SPEC.result.peakFreq[ch]) > max_freq_value))
                         result = 'OVER RANGE';
