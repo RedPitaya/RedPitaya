@@ -1102,3 +1102,28 @@ a.list-group-item:hover:visited {
 .checkbox_export[data-checked="true"]:after {
     content: "✓";
 }
+
+.saved_settings {
+    display: flex;
+}
+
+.saved_settings>a {
+    padding-left: 10px;
+    padding-right: 10px;
+    text-align: left;
+    width: 100%;
+    /* max-width: 100px; */
+    /* min-width: 100px; */
+}
+
+.saved_settings>a>img {
+    width: 14px;
+    height: 14px;
+    margin: 3px;
+    float:right;
+}
+
+.saved_settings>a>img:hover {
+    transform: scale(1.3);
+}
+

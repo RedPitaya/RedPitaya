@@ -15,7 +15,6 @@
         var precision = 2;
         var munit = $('#GPOS_OFFSET_MATH_UNIT').html().charAt(0);
         var scale_val = OSC.params.orig['GPOS_SCALE_MATH'] ? OSC.params.orig['GPOS_SCALE_MATH'].value : undefined;
-        console.log('TEST',OSC.params.orig['GPOS_SCALE_MATH'] )
         if (OSC.params.orig['OSC_MATH_OP']) {
             if (munit == 'm') {
                 value *= 1000;

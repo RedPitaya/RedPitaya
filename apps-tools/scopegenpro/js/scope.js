@@ -243,28 +243,28 @@
 
     // Starts the oscilloscope application on server
     OSC.startApp = function() {
-        $.get(
-                OSC.config.start_app_url
-            )
-            .done(function(dresult) {
-                if (dresult.status == 'OK') {
-                    try {
-                        OSC.connectWebSocket();
-                    } catch (e) {
-                        setTimeout(OSC.startApp(), 2000);
-                    }
-                } else if (dresult.status == 'ERROR') {
-                    console.log(dresult.reason ? dresult.reason : 'Could not start the application (ERR1)');
-                    setTimeout(OSC.startApp(), 2000);
-                } else {
-                    console.log('Could not start the application (ERR2)');
+        $.ajax({
+            url: OSC.config.start_app_url,
+            timeout: 5000
+         }).done(function(dresult) {
+            if (dresult.status == 'OK') {
+                try {
+                    OSC.connectWebSocket();
+                } catch (e) {
                     setTimeout(OSC.startApp(), 2000);
                 }
-            })
-            .fail(function() {
-                console.log('Could not start the application (ERR3)');
+            } else if (dresult.status == 'ERROR') {
+                console.log(dresult.reason ? dresult.reason : 'Could not start the application (ERR1)');
                 setTimeout(OSC.startApp(), 2000);
-            });
+            } else {
+                console.log('Could not start the application (ERR2)');
+                setTimeout(OSC.startApp(), 2000);
+            }
+        })
+        .fail(function() {
+            console.log('Could not start the application (ERR3)');
+                setTimeout(OSC.startApp(), 2000);
+        })
     };
 
 
@@ -615,10 +615,51 @@
         OSC.timeOffset()
     }
 
-    OSC.resetSettingsRequest = function(new_params){
-        if (new_params['RESET_CONFIG_SETTINGS'].value === 2) {
+    OSC.controlSettingsRequest = function(new_params){
+        if (new_params['CONTROL_CONFIG_SETTINGS'].value === 2) {  // RESET_DONE
             location.reload();
         }
+
+        if (new_params['CONTROL_CONFIG_SETTINGS'].value === 7) {  // LOAD_DONE
+            location.reload();
+        }
+    }
+
+    OSC.listSettings = function(new_params){
+        var list = new_params['LIST_FILE_SATTINGS'].value
+        const splitLines = value => value.split(/\r?\n/);
+        $('#settings_dropdown').find('.saved_settings').remove();
+        splitLines(list).forEach(function(item){
+            var id = item.trim();
+            if (id !== ""){
+                var li = document.createElement('li')
+                var a = document.createElement('a')
+                var img = document.createElement('img')
+                a.innerHTML = id
+                li.appendChild(a)
+                a.appendChild(img)
+                li.classList.add("saved_settings");
+                a.style.paddingLeft = "10px"
+                a.style.paddingRight = "10px"
+                img.src = "img/delete.png"
+                a.setAttribute("file_name",id)
+                a.onclick = function() {
+                   OSC.params.local['FILE_SATTINGS'] = { value: $(this).attr('file_name') };
+                   OSC.params.local['CONTROL_CONFIG_SETTINGS'] = { value: 6 }; // LOAD
+                   OSC.sendParams();
+                };
+                img.onclick = function(event) {
+                    event.stopPropagation();
+                    OSC.params.local['FILE_SATTINGS'] = { value: $(this).parent().attr('file_name') };
+                    OSC.params.local['CONTROL_CONFIG_SETTINGS'] = { value: 5 }; // DELETE
+                    OSC.sendParams();
+                };
+                var r1 = document.getElementById('settings_dropdown');
+                if (r1!= null)
+                    r1.appendChild(li);
+
+            }
+        })
     }
 
     function download(url, filename) {
@@ -819,7 +860,10 @@
     OSC.param_callbacks["RP_SYSTEM_TOTAL_RAM"] = OSC.setRamTotal;
     OSC.param_callbacks["RP_SYSTEM_FREE_RAM"] = OSC.setFreeRam;
     OSC.param_callbacks["RP_SYSTEM_TEMPERATURE"] = OSC.setTemerature;
-    OSC.param_callbacks["RESET_CONFIG_SETTINGS"] = OSC.resetSettingsRequest;
+    OSC.param_callbacks["CONTROL_CONFIG_SETTINGS"] = OSC.controlSettingsRequest;
+    OSC.param_callbacks["LIST_FILE_SATTINGS"] = OSC.listSettings;
+
+
 
     OSC.param_callbacks["RP_SYSTEM_SLOW_ADC0"] = OSC.setSlowADC1;
     OSC.param_callbacks["RP_SYSTEM_SLOW_ADC1"] = OSC.setSlowADC2;

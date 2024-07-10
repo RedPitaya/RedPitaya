@@ -509,6 +509,15 @@
             OSC.sendParams();
         });
 
+        $('#OSC_REQ_SAVE_SETTINGS').on('click', function() {
+            var name = $("#SETTINGS_NEW_NAME").val().trim()
+            if (name !== ""){
+                OSC.params.local['FILE_SATTINGS'] = { value: name };
+                OSC.params.local['CONTROL_CONFIG_SETTINGS'] = { value: 4 }; // SAVE
+                OSC.sendParams();
+            }
+        });
+
         $('#OSC_PREV_BUFFER').on('click', function(ev) {
             ev.preventDefault();
             OSC.params.local['OSC_BUFFER_REQUEST'] = { value: -1 };
@@ -847,8 +856,15 @@
             }
         });
 
+        $('#save_settings').click(function() {
+            $('#save_settings_dialog').modal("show");
+
+            // OSC.params.local['CONTROL_CONFIG_SETTINGS'] = { value: 4 }; // SAVE
+            // OSC.sendParams();
+        });
+
         $('#reset_settings').click(function() {
-            OSC.params.local['RESET_CONFIG_SETTINGS'] = { value: 1 };
+            OSC.params.local['CONTROL_CONFIG_SETTINGS'] = { value: 1 }; // REQUEST_RESET
             OSC.sendParams();
         });
 

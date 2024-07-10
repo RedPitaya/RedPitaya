@@ -26,11 +26,22 @@
 
 
 
-
+enum controlSettings{
+    NONE            =   0,
+    REQUEST_RESET   =   1,
+    RESET_DONE      =   2,
+    REQUEST_LIST    =   3,
+    SAVE            =   4,
+    DELETE          =   5,
+    LOAD            =   6,
+    LOAD_DONE       =   7
+};
 
 CStringParameter redpitaya_model("RP_MODEL_STR", CBaseParameter::RO, getModelName(), 0);
 
-CIntParameter resetSettings("RESET_CONFIG_SETTINGS", CBaseParameter::RW, 0, 0, 0, 10);
+CIntParameter controlSettings("CONTROL_CONFIG_SETTINGS", CBaseParameter::RW, 0, 0, 0, 10);
+CStringParameter fileSettings("FILE_SATTINGS", CBaseParameter::RW, "", 0);
+CStringParameter listFileSettings("LIST_FILE_SATTINGS", CBaseParameter::RW, "", 0);
 
 CFloatParameter slow_dac0 ("OSC_SLOW_OUT_1", CBaseParameter::RW, 0, 0, 0, rp_HPGetSlowDACFullScaleOrDefault(0),CONFIG_VAR);
 CFloatParameter slow_dac1 ("OSC_SLOW_OUT_2", CBaseParameter::RW, 0, 0, 0, rp_HPGetSlowDACFullScaleOrDefault(1),CONFIG_VAR);
@@ -48,8 +59,9 @@ void updateParametersByConfig(){
     initExtTriggerLimits();
     initGenBeforeLoadConfig();
     initOscBeforeLoadConfig();
-
-    configGet(getHomeDirectory() + "/.config/redpitaya/apps/scopegenpro/config.json");
+    setHomeSettingsPath("/.config/redpitaya/apps/scopegenpro/");
+    listFileSettings.Value() = getListOfSettingsInStore();
+    configGet();
 
     initOscAfterLoad();
 
@@ -137,7 +149,6 @@ int rp_get_signals(float ***s, int *sig_num, int *sig_len) {
 }
 
 
-
 void UpdateParams(void) {
 
     // fprintf(stderr,"UpdateParams \n");
@@ -160,7 +171,7 @@ void UpdateParams(void) {
     if (g_config_changed && (g_save_counter++ % 40 == 0)){
         g_config_changed = false;
         // Save the configuration file
-        configSet(getHomeDirectory() + "/.config/redpitaya/apps/scopegenpro", "config.json");
+        configSet();
     }
 }
 
@@ -195,13 +206,38 @@ void UpdateSignals(void) {
 
 void OnNewParams(void) {
 
-    if (resetSettings.IsNewValue()){
-        if (resetSettings.NewValue() == 1){
-            deleteConfig(getHomeDirectory() + "/.config/redpitaya/apps/scopegenpro/config.json");
-            configSetWithList(getHomeDirectory() + "/.config/redpitaya/apps/scopegenpro", "config.json",g_savedParams);
-            resetSettings.Update();
-            resetSettings.SendValue(2);
+    if (controlSettings.IsNewValue()){
+        if (controlSettings.NewValue() == controlSettings::REQUEST_RESET){
+            deleteConfig();
+            configSetWithList(g_savedParams);
+            controlSettings.Update();
+            controlSettings.SendValue(controlSettings::RESET_DONE);
             return;
+        }
+
+        if (controlSettings.NewValue() == controlSettings::SAVE){
+            controlSettings.Update();
+            fileSettings.Update();
+            configSet();
+            saveCurrentSettingToStore(fileSettings.Value());
+            controlSettings.SendValue(controlSettings::NONE);
+            listFileSettings.SendValue(getListOfSettingsInStore());
+        }
+
+        if (controlSettings.NewValue() == controlSettings::LOAD){
+            controlSettings.Update();
+            fileSettings.Update();
+            loadSettingsFromStore(fileSettings.Value());
+            configGet();
+            controlSettings.SendValue(controlSettings::LOAD_DONE);
+        }
+
+        if (controlSettings.NewValue() == controlSettings::DELETE){
+            controlSettings.Update();
+            fileSettings.Update();
+            deleteStoredConfig(fileSettings.Value());
+            controlSettings.SendValue(controlSettings::NONE);
+            listFileSettings.SendValue(getListOfSettingsInStore());
         }
     }
     if (!g_config_changed)

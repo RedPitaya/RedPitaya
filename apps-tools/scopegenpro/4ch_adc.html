@@ -40,11 +40,16 @@
                     <ul class="nav navbar-nav">
                         <li class="dropdown">
                             <a class="btn btn-default dropdown-toggle" type="button" id="menu1" data-toggle="dropdown">SETTINGS<span class="caret"></span></a>
+                            <ul id="settings_dropdown" class="dropdown-menu" role="menu" aria-labelledby="menu1" style="background: #cdcccc; min-width: 0px;">
+                                <li><a id="save_settings" href="#">SAVE</a></li>
+                                <li><a id="reset_settings" href="#">RESET</a></li>
+                            </ul>
+                        </li>
+                        <li class="dropdown">
+                            <a class="btn btn-default dropdown-toggle" type="button" id="menu1" data-toggle="dropdown">MENU<span class="caret"></span></a>
                             <ul class="dropdown-menu" role="menu" aria-labelledby="menu1" style="background: #cdcccc; min-width: 0px;">
                                 <li><a id="sys_info" href="#">SYS INFO</a></li>
                                 <li><a id="slow_adc_info" href="#">IN/E2</a></li>
-                                <li class="250_12_block"><a id="ext_clock_enable" href="#">EXT. CLOCK</a></li>
-                                <li><a id="reset_settings" href="#">RESET</a></li>
                             </ul>
                         </li>
                         <li class="dropdown">
@@ -1161,6 +1166,35 @@
                 <div class="modal-footer">
                     <div class="bazaar-link">
                         <a id="OSC_REQ_EXPORT_FILE" href="#" data-dismiss="modal" class="list-group-item exp_but">DOWNLOAD FILE</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="save_settings_dialog" class="modal fade" role="dialog" tabindex="-1" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+        <div class="modal-dialog" style="width: 650px;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="bazaar_naLabel">Save current settings</h4>
+                </div>
+                <div class="modal-body" style="display: flex;">
+                    <div style="text-align: left;margin-left: 5%;">
+                        <table>
+                            <col width="400px">
+                            <col width="200px">
+                            <tr style="height:60px;">
+                                <td>Name:</td>
+                                <td>
+                                    <input id="SETTINGS_NEW_NAME" maxlength="11" class="input_name" style="border: 1px solid #ddd;">
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="bazaar-link">
+                        <a id="OSC_REQ_SAVE_SETTINGS" href="#" data-dismiss="modal" class="list-group-item exp_but">SAVE</a>
                     </div>
                 </div>
             </div>
