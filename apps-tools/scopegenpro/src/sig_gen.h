@@ -24,3 +24,4 @@ auto synthesis_DC_NEG_burst(CFloatBase64Signal *signal, float freq, float phase,
 auto synthesis_PWM(CFloatBase64Signal *signal, float freq, float phase, float amp, float off, float showOff, float ratio,float tscale) -> int;
 auto synthesis_PWM_burst(CFloatBase64Signal *signal, float freq, float phase, float amp, float off, float showOff, float ratio ,int burstCount, int burst_period, int reps,float tscale) -> void;
 auto synthesis_sweep(CFloatBase64Signal *signal,float frequency,float frequency_start,float frequency_end,rp_gen_sweep_mode_t mode,rp_gen_sweep_dir_t dir,float phase, float amp, float off, float showOff,float tscale) -> int;
+auto synthesis_noise(CFloatBase64Signal *signal, float amp, float off, float showOff) -> void;

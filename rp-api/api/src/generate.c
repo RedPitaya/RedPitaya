@@ -544,3 +544,37 @@ int generate_GetTriggerDebouncer(uint32_t *value){
     cmn_Debug("[generate_GetTriggerDebouncer] osc_reg.trig_dbc_t -> 0x%X",*value);
     return RP_OK;
 }
+
+int generate_setRandomSeed(rp_channel_t channel, uint32_t seed){
+    cmn_Debug("[Ch%d] generate->randomSeed_ch <- 0x%X",channel,seed);
+    CHANNEL_ACTION(channel,
+        generate->randomSeed_chA = seed,
+        generate->randomSeed_chB = seed)
+    return RP_OK;
+}
+
+int generate_getRandomSeed(rp_channel_t channel, uint32_t *seed){
+    uint32_t value;
+    CHANNEL_ACTION(channel,
+            value = generate->randomSeed_chA,
+            value = generate->randomSeed_chB)
+    *seed = value;
+    return RP_OK;
+}
+
+int generate_setEnableRandom(rp_channel_t channel, bool enable){
+    cmn_Debug("[Ch%d] generate->enableNoise_ch <- 0x%X",channel,enable);
+    CHANNEL_ACTION(channel,
+        generate->enableNoise_chA = enable,
+        generate->enableNoise_chB = enable)
+    return RP_OK;
+}
+
+int generate_getEnableRandom(rp_channel_t channel, bool *enable){
+    bool value;
+    CHANNEL_ACTION(channel,
+            value = generate->enableNoise_chA,
+            value = generate->enableNoise_chB)
+    *enable = value;
+    return RP_OK;
+}

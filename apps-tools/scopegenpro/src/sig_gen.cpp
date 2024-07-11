@@ -521,3 +521,11 @@ int synthesis_sweep(CFloatBase64Signal *signal,float frequency,float frequency_s
     }
     return RP_OK;
 }
+
+auto synthesis_noise(CFloatBase64Signal *signal, float amp, float off, float showOff) -> void{
+    auto sigSize = (*signal).GetSize();
+    for(int i = 0; i < signal->GetSize(); i++) {
+        auto r = ((double) rand() / (RAND_MAX));
+        (*signal)[i] = r * amp + off + showOff;
+    }
+}

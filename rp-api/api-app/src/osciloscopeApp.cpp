@@ -540,19 +540,16 @@ int osc_measureMin(rpApp_osc_source _source, float *_Min) {
     g_viewController.lockScreenView();
     auto *dataInfo = g_viewController.getViewInfo(_source);
     *_Min = dataInfo->m_minUnscale;
-//    auto *data = g_viewController.getView(_source);
-//    auto ret = g_measureController.measureMin(_source,data,_Min);
     g_viewController.unlockScreenView();
     return RP_OK;
 }
 
 int osc_measureMeanVoltage(rpApp_osc_source _source, float *_meanVoltage) {
     g_viewController.lockScreenView();
+    auto inverted = (_source != RPAPP_OSC_SOUR_MATH && ch_inverted[(int)_source]) || (_source == RPAPP_OSC_SOUR_MATH && math_inverted);
     auto *dataInfo = g_viewController.getViewInfo(_source);
-    *_meanVoltage = dataInfo->m_meanUnscale;
+    *_meanVoltage = dataInfo->m_meanUnscale * (inverted ? -1 : 1);
     attenuateAmplitudeChannel(_source,*_meanVoltage,_meanVoltage);
-    // auto *data = g_viewController.getView(_source);
-    // auto ret = g_measureController.measureMeanVoltage(_source,data,_meanVoltage);
     g_viewController.unlockScreenView();
     return RP_OK;
 }
@@ -560,19 +557,23 @@ int osc_measureMeanVoltage(rpApp_osc_source _source, float *_meanVoltage) {
 int osc_measureMaxVoltage(rpApp_osc_source _source, float *_Vmax) {
     g_viewController.lockScreenView();
     auto inverted = (_source != RPAPP_OSC_SOUR_MATH && ch_inverted[(int)_source]) || (_source == RPAPP_OSC_SOUR_MATH && math_inverted);
-    auto *data = g_viewController.getView(_source);
-    auto ret = g_measureController.measureMaxVoltage(_source,inverted,data,_Vmax);
+    auto *dataInfo = g_viewController.getViewInfo(_source);
+    auto max = dataInfo->m_maxUnscale * (inverted ? -1 : 1);
+    auto min = dataInfo->m_minUnscale * (inverted ? -1 : 1);
+    attenuateAmplitudeChannel(_source,MAX(max,min),_Vmax);
     g_viewController.unlockScreenView();
-    return ret;
+    return RP_OK;
 }
 
 int osc_measureMinVoltage(rpApp_osc_source _source, float *_Vmin) {
     g_viewController.lockScreenView();
     auto inverted = (_source != RPAPP_OSC_SOUR_MATH && ch_inverted[(int)_source]) || (_source == RPAPP_OSC_SOUR_MATH && math_inverted);
-    auto *data = g_viewController.getView(_source);
-    auto ret = g_measureController.measureMinVoltage(_source,inverted,data,_Vmin);
+    auto *dataInfo = g_viewController.getViewInfo(_source);
+    auto max = dataInfo->m_maxUnscale * (inverted ? -1 : 1);
+    auto min = dataInfo->m_minUnscale * (inverted ? -1 : 1);
+    attenuateAmplitudeChannel(_source,MIN(max,min),_Vmin);
     g_viewController.unlockScreenView();
-    return ret;
+    return RP_OK;
 }
 
 int osc_measureFrequency(rpApp_osc_source _source, float *_frequency) {
@@ -984,10 +985,10 @@ void calculateIntegral(rp_channel_t _channel, float _scale, float _offset, float
     auto viewSize = g_viewController.getViewSize();
     ECHECK_APP_NO_RET(unscaleAmplitudeChannel((rpApp_osc_source) _channel, (*view)[0], &v));
 	ECHECK_APP_NO_RET(attenuateAmplitudeChannel((rpApp_osc_source) _channel, v, &v));
-    viewInfo->m_max = std::numeric_limits<float>::min();
+    viewInfo->m_max = std::numeric_limits<float>::lowest();
     viewInfo->m_min = std::numeric_limits<float>::max();
     viewInfo->m_mean = 0;
-    viewInfo->m_maxUnscale = std::numeric_limits<float>::min();
+    viewInfo->m_maxUnscale = std::numeric_limits<float>::lowest();
     viewInfo->m_minUnscale = std::numeric_limits<float>::max();
     viewInfo->m_meanUnscale = 0;
     (*viewMath)[0] = ch_sign * v * dt;
@@ -999,8 +1000,8 @@ void calculateIntegral(rp_channel_t _channel, float _scale, float _offset, float
 		ECHECK_APP_NO_RET(attenuateAmplitudeChannel((rpApp_osc_source) _channel, v, &v));
         (*viewMath)[i] = (*viewMath)[i-1] + (ch_sign * v * dt);
         auto y = (*viewMath)[i-1];
-        if (viewInfo->m_maxUnscale  < y) viewInfo->m_max = y;
-        if (viewInfo->m_minUnscale  > y) viewInfo->m_min = y;
+        if (viewInfo->m_maxUnscale  < y) viewInfo->m_maxUnscale = y;
+        if (viewInfo->m_minUnscale  > y) viewInfo->m_minUnscale = y;
         viewInfo->m_meanUnscale  += y;
         (*viewMath)[i-1] = scaleAmplitude<float>(y, _scale, 1, _offset, _invertFactor);
         y = (*viewMath)[i-1];
@@ -1009,8 +1010,8 @@ void calculateIntegral(rp_channel_t _channel, float _scale, float _offset, float
         viewInfo->m_mean += y;
     }
     auto y = (*viewMath)[viewSize-1];
-    if (viewInfo->m_maxUnscale  < y) viewInfo->m_max = y;
-    if (viewInfo->m_minUnscale  > y) viewInfo->m_min = y;
+    if (viewInfo->m_maxUnscale  < y) viewInfo->m_maxUnscale = y;
+    if (viewInfo->m_minUnscale  > y) viewInfo->m_minUnscale = y;
     viewInfo->m_meanUnscale  += y;
     (*viewMath)[viewSize - 1] = scaleAmplitude<float>((*viewMath)[viewSize - 1], _scale, 1, _offset, _invertFactor);
      y = (*viewMath)[viewSize-1];
@@ -1037,10 +1038,10 @@ void calculateDevivative(rp_channel_t _channel, float _scale, float _offset, flo
     auto viewMath = g_viewController.getView(RPAPP_OSC_SOUR_MATH);
     auto viewInfo = g_viewController.getViewInfo(RPAPP_OSC_SOUR_MATH);
     auto viewSize = g_viewController.getViewSize();
-    viewInfo->m_max = std::numeric_limits<float>::min();
+    viewInfo->m_max = std::numeric_limits<float>::lowest();
     viewInfo->m_min = std::numeric_limits<float>::max();
     viewInfo->m_mean = 0;
-    viewInfo->m_maxUnscale = std::numeric_limits<float>::min();
+    viewInfo->m_maxUnscale = std::numeric_limits<float>::lowest();
     viewInfo->m_minUnscale = std::numeric_limits<float>::max();
     viewInfo->m_meanUnscale = 0;
     ECHECK_APP_NO_RET(unscaleAmplitudeChannel((rpApp_osc_source) _channel, (*view)[0], &v2));
@@ -1053,8 +1054,8 @@ void calculateDevivative(rp_channel_t _channel, float _scale, float _offset, flo
         v2 = unscaleAmplitude<float>((*view)[i + 1],unCoff[0],unCoff[1]);
 		ECHECK_APP_NO_RET(attenuateAmplitudeChannel((rpApp_osc_source) _channel, v2, &v2));
         auto y = ch_sign * (v2 - v1) / dt2;
-        if (viewInfo->m_maxUnscale  < y) viewInfo->m_max = y;
-        if (viewInfo->m_minUnscale  > y) viewInfo->m_min = y;
+        if (viewInfo->m_maxUnscale  < y) viewInfo->m_maxUnscale = y;
+        if (viewInfo->m_minUnscale  > y) viewInfo->m_minUnscale = y;
         viewInfo->m_meanUnscale  += y;
         (*viewMath)[i] = scaleAmplitude<float>(y, _scale, 1, _offset, _invertFactor);
         y = (*viewMath)[i];

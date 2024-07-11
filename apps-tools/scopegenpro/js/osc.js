@@ -342,6 +342,17 @@
         if (field.is('button')) {
             field[state === true? 'addClass' : 'removeClass']('active');
         }
+        var index = ""
+        if (param_name.includes("CH1")) index = "1"
+        if (param_name.includes("CH2")) index = "2"
+        if (param_name.includes("CH3")) index = "3"
+        if (param_name.includes("CH4")) index = "4"
+        if (index !== ""){
+            OSC.updateOSCOffsetLimits(index)
+            OSC.updateOSCOffsetZeroLimits(index)
+            OSC.setGposOffset("CH"+index);
+            OSC.updateTriggerDragHandle();
+        }
     }
 
     OSC.createAxisTicks = function(){

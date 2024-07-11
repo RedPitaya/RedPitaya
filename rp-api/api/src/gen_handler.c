@@ -12,6 +12,7 @@
 * for more details on the language used herein.
 */
 
+#include <time.h>
 #include <float.h>
 #include "math.h"
 #include "common.h"
@@ -407,7 +408,16 @@ int gen_setWaveform(rp_channel_t channel, rp_waveform_t type) {
     else{
         ch_size[channel] = DAC_BUFFER_SIZE;
     }
-    return synthesize_signal(channel);
+    if (type != RP_WAVEFORM_NOISE){
+        generate_setEnableRandom(channel,false);
+        return synthesize_signal(channel);
+    }
+    else{
+        clock_t start = clock();
+        generate_setRandomSeed(channel,(uint32_t)start);
+        generate_setEnableRandom(channel,true);
+        return RP_OK;
+    }
 }
 
 int gen_getWaveform(rp_channel_t channel, rp_waveform_t *type) {

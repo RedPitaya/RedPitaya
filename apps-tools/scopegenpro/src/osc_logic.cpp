@@ -52,7 +52,6 @@ CIntParameter       samplingRate("OSC_SAMPL_RATE", CBaseParameter::RW, RP_DEC_1,
 
 /* --------------------------------  OUT PARAMETERS  ------------------------------ */
 CBooleanParameter   inShow[MAX_ADC_CHANNELS] = INIT("CH","_SHOW", CBaseParameter::RW, false, 0,CONFIG_VAR);
-CBooleanParameter   inInvShow[MAX_ADC_CHANNELS] = INIT("CH","_SHOW_INVERTED", CBaseParameter::RW, false, 0,CONFIG_VAR);
 CStringParameter    inName[MAX_ADC_CHANNELS] = INIT("IN","_CHANNEL_NAME_INPUT", CBaseParameter::RW, "", 0,CONFIG_VAR);
 
 
@@ -65,6 +64,7 @@ CBooleanParameter   inSingle("OSC_SINGLE", CBaseParameter::RW, false, 0);
 CFloatParameter     inOffset[MAX_ADC_CHANNELS] = INIT("GPOS_OFFSET_CH","", CBaseParameter::RW, 0, 0, -250000, 250000,CONFIG_VAR);
 CFloatParameter     inScale[MAX_ADC_CHANNELS] = INIT("GPOS_SCALE_CH","", CBaseParameter::RW, 1, 0, 0.00005, 50000,CONFIG_VAR);
 CFloatParameter     inOffsetZero[MAX_ADC_CHANNELS] = INIT("GPOS_OFFSET_ZERO_CH","", CBaseParameter::RW, 0, 0, -250000, 250000,CONFIG_VAR);
+CBooleanParameter   inInvShow[MAX_ADC_CHANNELS] = INIT("GPOS_INVERTED_CH","", CBaseParameter::RW, false, 0,CONFIG_VAR);
 
 CFloatParameter     inProbe[MAX_ADC_CHANNELS] = INIT("OSC_CH","_PROBE", CBaseParameter::RW, 1, 0, 0, 1000,CONFIG_VAR);
 
@@ -571,7 +571,7 @@ auto updateOscParams(bool force) -> void{
             trig_invert = inInvShow[i].NewValue();
             trig_inversion_changed = inInvShow[i].Value() != trig_invert;
         }
-
+        bool needRecalcOffsetFromZero = inProbe[i].IsNewValue();
         IF_VALUE_CHANGED_FORCE(inProbe[i], rpApp_OscSetProbeAtt((rp_channel_t)i, inProbe[i].NewValue()),force)
 
         IF_VALUE_CHANGED_FORCE(inSmoothMode[i], rpApp_OscSetSmoothMode((rp_channel_t)i, (rpApp_osc_interpolationMode)inSmoothMode[i].NewValue()),force)
@@ -607,14 +607,7 @@ auto updateOscParams(bool force) -> void{
             }
         }
 
-/*
-   if (IS_NEW(inOffsetZero[i]) || force){
-            if (rpApp_OscSetAmplitudeOffsetZero((rpApp_osc_source)i,inOffsetZero[i].NewValue()) == RP_OK){
-                inOffsetZero[i].Update();
-            }
-        }
-*/
-        if (IS_NEW(inOffsetZero[i]) || force){
+        if (IS_NEW(inOffsetZero[i]) || force || needRecalcOffsetFromZero){
 
             float att = 1;
             if (rpApp_OscGetProbeAtt((rp_channel_t)i,&att) == RP_OK){

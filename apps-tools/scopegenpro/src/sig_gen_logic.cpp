@@ -233,6 +233,9 @@ auto generate(rp_channel_t channel,float tscale) -> void {
             case RP_WAVEFORM_SWEEP:
                 synthesis_sweep(signal, frequency, freqSweepStart,freqSweepEnd,sweep_mode,sweep_dir, phase, amplitude, offset, showOff, tscale);
                 break;
+            case RP_WAVEFORM_NOISE:
+                synthesis_noise(signal,amplitude,offset,showOff);
+                break;
             default:
                 break;
         }

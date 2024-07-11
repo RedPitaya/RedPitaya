@@ -130,7 +130,7 @@
         // Millivolts
         1 / 1000, 2 / 1000, 5 / 1000, 10 / 1000, 20 / 1000, 50 / 1000, 100 / 1000, 200 / 1000, 500 / 1000,
         // Volts
-        1 , 5 , 25 , 50, 100 , 250 , 500 , 1000, 2000, 5000, 10000, 20000, 50000, 100000 , 200000, 500000, 1000000
+        1 , 5 , 25 , 50, 100 , 250 , 500 , 1000, 2000, 5000, 10000, 20000, 50000, 100000 , 200000, 500000, 1000000, 10000000, 50000000, 100000000
     ];
 
     OSC.bad_connection = [false, false, false, false]; // time in s.
@@ -837,11 +837,6 @@
     OSC.param_callbacks["CH3_SHOW"] = OSC.ch3Show;
     OSC.param_callbacks["CH4_SHOW"] = OSC.ch4Show;
 
-    OSC.param_callbacks["CH1_SHOW_INVERTED"] = OSC.updateOscShowInverted;
-    OSC.param_callbacks["CH2_SHOW_INVERTED"] = OSC.updateOscShowInverted;
-    OSC.param_callbacks["CH3_SHOW_INVERTED"] = OSC.updateOscShowInverted;
-    OSC.param_callbacks["CH4_SHOW_INVERTED"] = OSC.updateOscShowInverted;
-
     OSC.param_callbacks["OSC_MEAS_VAL1"] = OSC.measureHandler1Func;
     OSC.param_callbacks["OSC_MEAS_VAL2"] = OSC.measureHandler2Func;
     OSC.param_callbacks["OSC_MEAS_VAL3"] = OSC.measureHandler3Func;
@@ -912,6 +907,12 @@
     OSC.param_callbacks["GPOS_SCALE_CH2"] = OSC.ch2SetScale;
     OSC.param_callbacks["GPOS_SCALE_CH3"] = OSC.ch3SetScale;
     OSC.param_callbacks["GPOS_SCALE_CH4"] = OSC.ch4SetScale;
+
+    OSC.param_callbacks["GPOS_INVERTED_CH1"] = OSC.updateOscShowInverted;
+    OSC.param_callbacks["GPOS_INVERTED_CH2"] = OSC.updateOscShowInverted;
+    OSC.param_callbacks["GPOS_INVERTED_CH3"] = OSC.updateOscShowInverted;
+    OSC.param_callbacks["GPOS_INVERTED_CH4"] = OSC.updateOscShowInverted;
+
 
     OSC.param_callbacks["GPOS_OFFSET_MATH"] = OSC.chMathOffset;
     OSC.param_callbacks["GPOS_SCALE_MATH"] = OSC.updateMathScale;
@@ -1686,8 +1687,9 @@
         }
 
         var scale_value = (curr_scale === undefined ? OSC.params.orig['GPOS_SCALE_' + OSC.state.sel_sig_name.toUpperCase()].value : curr_scale) / mult;
-
-        var sign = direction == '-'  ? -1.0 : 1.0
+        var sign = 0
+        if (direction == "-") sign = -1.0;
+        if (direction == "+") sign = 1.0;
         var new_scale = undefined
         var base_index = undefined
         for (var i = 0; i < scale_list.length ; i++) {

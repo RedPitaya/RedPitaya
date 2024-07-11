@@ -139,14 +139,15 @@
                 var ref_scale = "GPOS_SCALE_CH"+ots
                 var source_offset = OSC.params.orig['GPOS_OFFSET_CH'+ots].value;
                 var source_offset_zero = OSC.params.orig['GPOS_OFFSET_ZERO_CH'+ots].value;
+                var source_inverted = OSC.params.orig['GPOS_INVERTED_CH'+ots].value;
 
                 // var ref_scale = (OSC.params.orig['OSC_TRIG_SOURCE'].value == 0 ? 'OSC_CH1_SCALE' : 'OSC_CH2_SCALE');
                 // var source_offset = (OSC.params.orig['OSC_TRIG_SOURCE'].value == 0 ? OSC.params.orig['OSC_CH1_OFFSET'].value : OSC.params.orig['OSC_CH2_OFFSET'].value);
 
-                if (OSC.params.orig[ref_scale] !== undefined) {
+                if (OSC.params.orig[ref_scale] !== undefined && source_inverted !== undefined && source_offset !== undefined && source_offset_zero !== undefined) {
                     var graph_height = $('#graph_grid').height();
                     var volt_per_px = (OSC.params.orig[ref_scale].value * 10) / graph_height;
-                    var new_value = (graph_height / 2 - ui.position.top - ui.helper.height() / 2 - parseInt(ui.helper.css('margin-top')) + 2.5) * volt_per_px - source_offset - source_offset_zero;
+                    var new_value = (graph_height / 2 - ui.position.top - ui.helper.height() / 2 - parseInt(ui.helper.css('margin-top')) + 2.5) * volt_per_px - source_offset - source_offset_zero * (source_inverted ? -1 : 1);
 
                     if (OSC.params.orig['OSC_TRIG_LIMIT'] !== undefined){
                         if (new_value > OSC.params.orig['OSC_TRIG_LIMIT'].value) new_value = OSC.params.orig['OSC_TRIG_LIMIT'].value
@@ -222,13 +223,14 @@
         var source_offset_zero = OSC.params.orig['GPOS_OFFSET_ZERO_CH'+ots] === undefined ? undefined : OSC.params.orig['GPOS_OFFSET_ZERO_CH'+ots].value;
         var scale_value = OSC.params.orig['GPOS_SCALE_CH'+ots] === undefined ? undefined : OSC.params.orig['GPOS_SCALE_CH'+ots].value;
         var limit_value = OSC.params.orig['OSC_TRIG_LIMIT'] === undefined ? undefined : OSC.params.orig['OSC_TRIG_LIMIT'].value;
+        var source_inverted = OSC.params.orig['GPOS_INVERTED_CH'+ots] === undefined ? undefined : OSC.params.orig['GPOS_INVERTED_CH'+ots].value;
 
-        if (source_offset !== undefined && source_offset_zero !== undefined && scale_value !== undefined && limit_value !== undefined){
+        if (source_offset !== undefined && source_offset_zero !== undefined && scale_value !== undefined && limit_value !== undefined && source_inverted !== undefined){
             var graph_height = $('#graph_grid').outerHeight();
             var graph_top = $('#graph_grid').offset().top;
             var volt_per_px = (scale_value * 10) / graph_height;
-            var px_offset = ((source_offset + source_offset_zero) / volt_per_px - parseInt($('#trig_level_arrow').css('margin-top')) / 2);
-            var px_limit = limit_value / volt_per_px;
+            var px_offset = ((source_offset + source_offset_zero * (source_inverted ? -1 : 1)) / volt_per_px - parseInt($('#trig_level_arrow').css('margin-top')) / 2);
+            var px_limit = limit_value / volt_per_px ;
             var max_value = (graph_height + 8.0) / 2.0 - px_offset + px_limit;
             var min_value = (graph_height + 8.0) / 2.0 - px_offset - px_limit;
             var limits = [0,Math.max(graph_top + min_value - 1,graph_top),0, Math.min(graph_top + max_value + 1,graph_top + graph_height)];
@@ -258,14 +260,15 @@
                 var ots = trig_sour + 1;
                 var source_offset = OSC.params.orig['GPOS_OFFSET_CH'+ots] === undefined ? undefined : OSC.params.orig['GPOS_OFFSET_CH'+ots].value;
                 var source_offset_zero = OSC.params.orig['GPOS_OFFSET_ZERO_CH'+ots] === undefined ? undefined : OSC.params.orig['GPOS_OFFSET_ZERO_CH'+ots].value;
+                var source_inverted = OSC.params.orig['GPOS_INVERTED_CH'+ots] === undefined ? undefined : OSC.params.orig['GPOS_INVERTED_CH'+ots].value;
                 var scale_value = OSC.params.orig['GPOS_SCALE_CH'+ots] === undefined ? undefined : OSC.params.orig['GPOS_SCALE_CH'+ots].value;
                 var level_value = OSC.params.orig['OSC_TRIG_LEVEL'] === undefined ? undefined : OSC.params.orig['OSC_TRIG_LEVEL'].value;
 
-                if (source_offset != undefined  && source_offset_zero != undefined && scale_value != undefined && level_value != undefined){
+                if (source_offset != undefined  && source_offset_zero != undefined && scale_value != undefined && level_value != undefined && source_inverted != undefined){
 
                     var graph_height = $('#graph_grid').outerHeight();
                     var volt_per_px = (scale_value * 10) / graph_height;
-                    var px_offset = -((level_value + source_offset + source_offset_zero) / volt_per_px - parseInt($('#trig_level_arrow').css('margin-top')) / 2);
+                    var px_offset = -((level_value + source_offset + source_offset_zero * (source_inverted ? -1 : 1)) / volt_per_px - parseInt($('#trig_level_arrow').css('margin-top')) / 2);
                     var trig_position = (graph_height + 7) / 2 + px_offset;
                     var limits = OSC.calculateTrigLimit()
                     if (0 > trig_position) trig_position = 0

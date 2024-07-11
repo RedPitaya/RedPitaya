@@ -11,11 +11,18 @@
 constexpr float DEF_MIN_SCALE = 1.f/1000.f;
 constexpr float DEF_MAX_SCALE = 5.f;
 
+const std::vector<float> voltage_steps_math = {
+        // Millivolts
+        1.0 / 1000.0, 2.0f / 1000, 5 / 1000, 10 / 1000, 20 / 1000, 50 / 1000, 100 / 1000, 200 / 1000, 500 / 1000,
+        // Volts
+        1 , 5 , 25 , 50, 100 , 250 , 500 , 1000, 2000, 5000, 10000, 20000, 50000, 100000 , 200000, 500000, 1000000, 10000000, 50000000, 100000000
+};
+
 CFloatBase64Signal  math("math", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
 
 CBooleanParameter   mathShow("MATH_SHOW", CBaseParameter::RW, false, 0,CONFIG_VAR);
-CBooleanParameter   mathInvShow("MATH_SHOW_INVERTED", CBaseParameter::RW, false, 0,CONFIG_VAR);
 
+CBooleanParameter   mathInvShow("GPOS_INVERTED_MATH", CBaseParameter::RW, false, 0,CONFIG_VAR);
 CFloatParameter     inMathOffset("GPOS_OFFSET_MATH", CBaseParameter::RW, 0, 0, -50000000, 50000000,CONFIG_VAR);
 CFloatParameter     inMathScale("GPOS_SCALE_MATH", CBaseParameter::RW, 1, 0, 0.00005, 1000000000000.0,CONFIG_VAR);
 
@@ -102,12 +109,12 @@ auto checkMathScale() -> void {
     if(mathShow.Value()) {
         float vpp = 0;
         rpApp_OscMeasureVpp(RPAPP_OSC_SOUR_MATH, &vpp);
-        double mul = 10;
-        for(int i = 0 ; i < 10; i++ ){
-            if (mul > vpp)
+        float mul = voltage_steps_math[0];
+        for(int i = voltage_steps_math.size()-1 ; i >=0 ; i-- ){
+            if (vpp < voltage_steps_math[i])
+                mul = voltage_steps_math[i];
+            else
                 break;
-            mul *= 10.0;
-
         }
         if (inMathScale.GetMax() != mul){
             inMathScale.SetMax(mul);
