@@ -53,6 +53,7 @@ struct CSweepController::Impl {
     atomic_bool m_Pause;
     Settings    m_Settings[RP_CH_4 + 1];
     time_point<system_clock> m_lastLoop;
+    bool apiInit = false;
 };
 
 CSweepController::CSweepController()
@@ -61,10 +62,18 @@ CSweepController::CSweepController()
     m_pimpl->m_IsRun = false;
     m_pimpl->m_Pause = false;
     setDefault();
+    if (!rp_IsApiInit()){
+        if (rp_InitAdresses() == RP_OK){
+            m_pimpl->apiInit = true;
+        }
+    }
 }
 
 CSweepController::~CSweepController(){
     stop();
+    if (m_pimpl->apiInit){
+        rp_Release();
+    }
     delete m_pimpl;
 }
 
@@ -155,6 +164,7 @@ void CSweepController::Impl::loop()
             }else{
                 auto freq1 = getNewFreq(m_Settings[0]);
                 auto freq2 = getNewFreq(m_Settings[1]);
+
                 if (freq1 > 0){
                     rp_GenFreqDirect(RP_CH_1,freq1);
                     rp_GenTriggerOnly(RP_CH_1);

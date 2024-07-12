@@ -156,15 +156,16 @@ int house_SetPllControlEnable(bool enable);
 
 volatile housekeeping_control_t *hk = NULL;
 
-static int hk_Init(bool reset) {
+static int hk_Init() {
     int ret = cmn_Map(HOUSEKEEPING_BASE_SIZE, HOUSEKEEPING_BASE_ADDR, (void**)&hk);
-
-    if (rp_HPGetIsPLLControlEnableOrDefault()){
-        if (reset) {
-            house_SetPllControlEnable(false);
-        }
-    }
     return ret;
+}
+
+static int hk_Reset() {
+    if (rp_HPGetIsPLLControlEnableOrDefault()){
+        return house_SetPllControlEnable(false);
+    }
+    return RP_OK;
 }
 
 static hk_version_t house_getHKVersion() {

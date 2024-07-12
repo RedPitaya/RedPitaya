@@ -7,6 +7,10 @@ import numpy as np
 
 # rp.h
 
+print("rp.rp_InitAdresses()")
+res = rp.rp_InitAdresses()
+print(res)
+
 print("rp.rp_Init()")
 res = rp.rp_Init()
 print(res)

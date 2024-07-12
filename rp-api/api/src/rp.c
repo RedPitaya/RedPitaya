@@ -43,13 +43,7 @@ pthread_mutex_t rp_init_mutex = PTHREAD_MUTEX_INITIALIZER;
  * Global methods
  */
 
-int rp_Init()
-{
-    return rp_InitReset(true);
-}
-
-int rp_InitReset(bool reset)
-{
+int rp_InitAdresses(){
     if (g_api_state) return RP_EOOR;
     pthread_mutex_lock(&rp_init_mutex);
     int ret = cmn_Init();
@@ -60,14 +54,7 @@ int rp_InitReset(bool reset)
         return ret;
     }
 
-    ret = rp_CalibInit();
-    if (ret != RP_HP_OK){
-        pthread_mutex_unlock(&rp_init_mutex);
-        rp_Release();
-        return ret;
-    }
-
-    ret = hk_Init(reset);
+    ret = hk_Init();
     if (ret != RP_HP_OK){
         ERROR("Error init HK. Code: %d",ret)
         pthread_mutex_unlock(&rp_init_mutex);
@@ -108,19 +95,45 @@ int rp_InitReset(bool reset)
         rp_Release();
         return ret;
     }
+    g_api_state = true;
+    pthread_mutex_unlock(&rp_init_mutex);
+    return RP_OK;
+}
 
-    // Set default configuration per handler
+int rp_Init()
+{
+    if (!rp_IsApiInit()){
+        ECHECK(rp_InitAdresses())
+    }
+    int ret = rp_CalibInit();
+    if (ret != RP_HP_OK){
+        rp_Release();
+        return ret;
+    }
+
+    ret = rp_Reset();
+    if (ret != RP_OK){
+        ERROR("Error reset regset. Code:  %d",ret)
+        rp_Release();
+        return ret;
+    }
+
+    return ret;
+}
+
+int rp_InitReset(bool reset)
+{
+    if (!rp_IsApiInit()){
+        ECHECK(rp_InitAdresses())
+    }
     if (reset){
-        ret = rp_Reset();
+        int ret = rp_Reset();
         if (ret != RP_OK){
             ERROR("Error reset regset. Code:  %d",ret)
-            pthread_mutex_unlock(&rp_init_mutex);
             rp_Release();
             return ret;
         }
     }
-    g_api_state = true;
-    pthread_mutex_unlock(&rp_init_mutex);
     return RP_OK;
 }
 
@@ -143,6 +156,7 @@ int rp_Release(){
 
 int rp_Reset(){
     rp_DpinReset(); // No need check ret value
+    ECHECK(hk_Reset())
     ECHECK(rp_AOpinReset())
 
     if (rp_HPIsFastDAC_PresentOrDefault()){
