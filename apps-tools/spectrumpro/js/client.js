@@ -321,7 +321,7 @@
 
 
     //Set handlers timers
-    setInterval(signalsHandler, 40);
+    setInterval(signalsHandler, 30);
     setInterval(parametersHandler, 40);
 
 }(window.CLIENT = window.CLIENT || {}, jQuery));

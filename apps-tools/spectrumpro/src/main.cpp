@@ -24,7 +24,18 @@
 static uint8_t g_adc_count = getADCChannels();
 static uint8_t g_dac_count = getDACChannels();
 
-enum { INTERVAL = 50, CH_SIGNAL_DATA = (8*1024)};
+enum { CH_SIGNAL_DATA = (8*1024)};
+
+enum controlSettings{
+    NONE            =   0,
+    REQUEST_RESET   =   1,
+    RESET_DONE      =   2,
+    REQUEST_LIST    =   3,
+    SAVE            =   4,
+    DELETE          =   5,
+    LOAD            =   6,
+    LOAD_DONE       =   7
+};
 
 CStringParameter redpitaya_model              ("RP_MODEL_STR", CBaseParameter::RO, getModelName(), 0);
 CIntParameter    redpitaya_adc_count          ("ADC_COUNT", CBaseParameter::RO, getADCChannels(), 0, 0, 4);
@@ -122,7 +133,10 @@ CBooleanParameter outSweepReset         ("SWEEP_RESET", CBaseParameter::RW, fals
 
 /////////////////////////////
 
-CIntParameter resetSettings("RESET_CONFIG_SETTINGS", CBaseParameter::RW, 0, 0, 0, 10);
+CIntParameter controlSettings("CONTROL_CONFIG_SETTINGS", CBaseParameter::RW, 0, 0, 0, 10);
+CStringParameter fileSettings("FILE_SATTINGS", CBaseParameter::RW, "", 0);
+CStringParameter listFileSettings("LIST_FILE_SATTINGS", CBaseParameter::RW, "", 0);
+
 const std::vector<std::string> g_savedParams = {"OSC_CH1_IN_GAIN","OSC_CH2_IN_GAIN","OSC_CH3_IN_GAIN","OSC_CH4_IN_GAIN",
                                                 "OSC_CH1_IN_AC_DC","OSC_CH2_IN_AC_DC","OSC_CH3_IN_AC_DC","OSC_CH4_IN_AC_DC"};
 
@@ -137,6 +151,8 @@ static float        data_min[MAX_ADC_CHANNELS][CH_SIGNAL_DATA];
 static float        data_max[MAX_ADC_CHANNELS][CH_SIGNAL_DATA];
 static int          g_old_signalSize = 0;
 std::mutex          g_data_mutex;
+
+std::vector<int>    g_indexArray;
 
 void updateParametersByConfig();
 void resetAllMinMax();
@@ -177,7 +193,7 @@ void UpdateParams(void)
 }
 
 void resetMinMax(int ch,int mode){
-    std::lock_guard<std::mutex> lock(g_data_mutex);
+    std::lock_guard lock(g_data_mutex);
     auto size = CH_SIGNAL_DATA;
     for(int i = 0; i < size; ++i){
         if (mode == 0)
@@ -224,7 +240,7 @@ float koffInLogSpace(float start,float stop, float value){
     return value;
 }
 
-int* prepareIndexArray(int start,int stop,int view_size,int log_mode){
+void prepareIndexArray(std::vector<int> *data, int start,int stop,int view_size,int log_mode){
     float koef = 1;
     float koefMax = 1;
     int pointsNumOrig = stop - start;
@@ -235,7 +251,8 @@ int* prepareIndexArray(int start,int stop,int view_size,int log_mode){
         koefMax = (float)pointsNum / view_size;
         koef = (float)pointsNum / view_size;
     }
-    int *idx = new int[stop-start];
+    data->resize(stop-start);
+    // int *idx = new int[stop-start];
     for (size_t i = start, j = 0; i < stop; ++i, ++j)
     {
         int index = (j / koef);
@@ -243,9 +260,9 @@ int* prepareIndexArray(int start,int stop,int view_size,int log_mode){
             float z = stop - start;
             index = round(indexInLogSpace(1, view_size * 3 + 1, ((float)(j * view_size * 3)) / z + 1));
         }
-        idx[i-start] = index;
+        (*data)[i-start] = index;
     }
-    return idx;
+    // return idx;
 }
 
 void decimateDataMinMax(CFloatBase64Signal &dest, float *src,int start,int stop,int view_size,int log_mode,int *indexArray){
@@ -439,7 +456,6 @@ void UpdateSignals(void)
 	if (inRun.Value() == false) {
     	return;
     }
-
     size_t signal_size = 0;
     rpApp_SpecGetViewSize(&signal_size);
     bool isShow = true;
@@ -451,6 +467,7 @@ void UpdateSignals(void)
     if (ret != 0) {
         return;
     }
+
 
     auto mode = rp_dsp_api::mode_t::DBM;
     rpApp_SpecGetMode(&mode);
@@ -464,11 +481,12 @@ void UpdateSignals(void)
         }
     }
 
+
     if (g_old_signalSize != signal_size || inReset.Value()) {
         resetAllMinMax();
     }
 
-    std::lock_guard<std::mutex> lock(g_data_mutex);
+    std::lock_guard lock(g_data_mutex);
 
 
     int width = view_port_width.Value();
@@ -508,9 +526,9 @@ void UpdateSignals(void)
         i_stop_w = i;
     }
 
-    auto indexArray = prepareIndexArray(i_start,i_stop,width,xAxisLogMode.Value());
+    prepareIndexArray(&g_indexArray, i_start,i_stop,width,xAxisLogMode.Value());
 
-    decimateData(s_xaxis,data[0],i_start,i_stop,width,xAxisLogMode.Value(),indexArray);
+    decimateData(s_xaxis,data[0],i_start,i_stop,width,xAxisLogMode.Value(),g_indexArray.data());
     // End resize
 
     if (requestFullData.Value()){
@@ -564,14 +582,14 @@ void UpdateSignals(void)
 
 
         if (inShow[ch].Value()) {
-            decimateData(s_view[ch],data[ch + 1],i_start,i_stop,width,xAxisLogMode.Value(),indexArray);
+            decimateData(s_view[ch],data[ch + 1],i_start,i_stop,width,xAxisLogMode.Value(),g_indexArray.data());
             if (inShowMin[ch].Value()) {
-                decimateData(s_view_min[ch],data_min[ch],i_start,i_stop,width,xAxisLogMode.Value(),indexArray);
+                decimateData(s_view_min[ch],data_min[ch],i_start,i_stop,width,xAxisLogMode.Value(),g_indexArray.data());
             }else{
                 s_view_min[ch].Resize(0);
             }
             if (inShowMax[ch].Value()) {
-                decimateData(s_view_max[ch],data_max[ch],i_start,i_stop,width,xAxisLogMode.Value(),indexArray);
+                decimateData(s_view_max[ch],data_max[ch],i_start,i_stop,width,xAxisLogMode.Value(),g_indexArray.data());
             }else{
                 s_view_max[ch].Resize(0);
             }
@@ -582,7 +600,6 @@ void UpdateSignals(void)
         }
     }
 
-    delete[] indexArray;
     inReset.Value() = false;
     g_old_signalSize = signal_size;
 }
@@ -779,13 +796,38 @@ void resetAllMinMax(){
 void OnNewParams(void)
 {
 
-    if (resetSettings.IsNewValue()){
-        if (resetSettings.NewValue() == 1){
-            deleteConfig(getHomeDirectory() + "/.config/redpitaya/apps/spectrumpro/config.json");
-            configSetWithList(getHomeDirectory() + "/.config/redpitaya/apps/spectrumpro", "config.json",g_savedParams);
-            resetSettings.Update();
-            resetSettings.SendValue(2);
+    if (controlSettings.IsNewValue()){
+        if (controlSettings.NewValue() == controlSettings::REQUEST_RESET){
+            deleteConfig();
+            configSetWithList(g_savedParams);
+            controlSettings.Update();
+            controlSettings.SendValue(controlSettings::RESET_DONE);
             return;
+        }
+
+        if (controlSettings.NewValue() == controlSettings::SAVE){
+            controlSettings.Update();
+            fileSettings.Update();
+            configSet();
+            saveCurrentSettingToStore(fileSettings.Value());
+            controlSettings.SendValue(controlSettings::NONE);
+            listFileSettings.SendValue(getListOfSettingsInStore());
+        }
+
+        if (controlSettings.NewValue() == controlSettings::LOAD){
+            controlSettings.Update();
+            fileSettings.Update();
+            loadSettingsFromStore(fileSettings.Value());
+            configGet();
+            controlSettings.SendValue(controlSettings::LOAD_DONE);
+        }
+
+        if (controlSettings.NewValue() == controlSettings::DELETE){
+            controlSettings.Update();
+            fileSettings.Update();
+            deleteStoredConfig(fileSettings.Value());
+            controlSettings.SendValue(controlSettings::NONE);
+            listFileSettings.SendValue(getListOfSettingsInStore());
         }
     }
 
@@ -965,16 +1007,10 @@ void OnNewParams(void)
     }
        // Save the configuration file
     if (config_changed) {
-        configSet(getHomeDirectory() + "/.config/redpitaya/apps/spectrumpro", "config.json");
+        configSet();
     }
 
 	rp_WC_OnNewParam();
-}
-
-extern "C" void SpecIntervalInit()
-{
-	CDataManager::GetInstance()->SetParamInterval(INTERVAL);
-	CDataManager::GetInstance()->SetSignalInterval(INTERVAL);
 }
 
 extern "C" int rp_app_init(void)
@@ -983,6 +1019,10 @@ extern "C" int rp_app_init(void)
 
     for(auto ch = 0u; ch < MAX_ADC_CHANNELS + 1; ch++)
         data[ch] = new float[CH_SIGNAL_DATA];
+
+    g_indexArray.reserve(CH_SIGNAL_DATA);
+
+    setHomeSettingsPath("/.config/redpitaya/apps/spectrumpro/");
 
 	rp_WC_Init();
     rp_WC_UpdateParameters(true);
@@ -1000,7 +1040,9 @@ extern "C" int rp_app_init(void)
     rpApp_SpecRun();
 
     for(auto ch = 0u; ch < g_adc_count; ch++){
-        rp_AcqSetGain((rp_channel_t)ch,RP_LOW);
+        if (rp_HPGetFastADCIsLV_HVOrDefault()){
+            rp_AcqSetGain((rp_channel_t)ch,RP_LOW);
+        }
         if (rp_HPGetFastADCIsAC_DCOrDefault())
             rp_AcqSetAC_DC((rp_channel_t)ch, RP_AC);
         if (rp_HPGetFastDACIsTempProtectionOrDefault()){
@@ -1014,10 +1056,8 @@ extern "C" int rp_app_init(void)
     if (rp_HPGetIsPLLControlEnableOrDefault())
        rp_SetPllControlEnable(false);
 
+    listFileSettings.Value() = getListOfSettingsInStore();
     updateParametersByConfig();
-
-    CDataManager::GetInstance()->SetParamInterval(INTERVAL);
-    CDataManager::GetInstance()->SetSignalInterval(INTERVAL);
 
     return 0;
 }
@@ -1068,7 +1108,7 @@ void updateGen(void) {
 void PostUpdateSignals(void){}
 
 void updateParametersByConfig(){
-    configGet(getHomeDirectory() + "/.config/redpitaya/apps/spectrumpro/config.json");
+    configGet();
 
     if (rp_HPGetFastADCIsAC_DCOrDefault()){
         for(auto ch = 0u; ch < g_adc_count ; ch++){
@@ -1079,7 +1119,7 @@ void updateParametersByConfig(){
     if (rp_HPGetIsPLLControlEnableOrDefault())
         rp_SetPllControlEnable(pllControlEnable.Value());
 
-    if (rp_HPGetFastADCIsAC_DCOrDefault()){
+    if (rp_HPGetFastADCIsLV_HVOrDefault()){
         for(auto ch = 0u; ch < g_adc_count ; ch++){
             rp_AcqSetGain((rp_channel_t)ch, inGain[ch].Value() == 0 ? RP_LOW : RP_HIGH);
         }

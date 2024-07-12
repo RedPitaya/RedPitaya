@@ -598,10 +598,51 @@
             }
         }
 
-        SPEC.resetSettingsRequest = function(new_params){
-            if (new_params['RESET_CONFIG_SETTINGS'].value === 2) {
+        SPEC.controlSettingsRequest = function(new_params){
+            if (new_params['CONTROL_CONFIG_SETTINGS'].value === 2) {  // RESET_DONE
                 location.reload();
             }
+
+            if (new_params['CONTROL_CONFIG_SETTINGS'].value === 7) {  // LOAD_DONE
+                location.reload();
+            }
+        }
+
+        SPEC.listSettings = function(new_params){
+            var list = new_params['LIST_FILE_SATTINGS'].value
+            const splitLines = value => value.split(/\r?\n/);
+            $('#settings_dropdown').find('.saved_settings').remove();
+            splitLines(list).forEach(function(item){
+                var id = item.trim();
+                if (id !== ""){
+                    var li = document.createElement('li')
+                    var a = document.createElement('a')
+                    var img = document.createElement('img')
+                    a.innerHTML = id
+                    li.appendChild(a)
+                    a.appendChild(img)
+                    li.classList.add("saved_settings");
+                    a.style.paddingLeft = "10px"
+                    a.style.paddingRight = "10px"
+                    img.src = "img/delete.png"
+                    a.setAttribute("file_name",id)
+                    a.onclick = function() {
+                        CLIENT.params.local['FILE_SATTINGS'] = { value: $(this).attr('file_name') };
+                        CLIENT.params.local['CONTROL_CONFIG_SETTINGS'] = { value: 6 }; // LOAD
+                        SPEC.sendParams();
+                    };
+                    img.onclick = function(event) {
+                        event.stopPropagation();
+                        CLIENT.params.local['FILE_SATTINGS'] = { value: $(this).parent().attr('file_name') };
+                        CLIENT.params.local['CONTROL_CONFIG_SETTINGS'] = { value: 5 }; // DELETE
+                        SPEC.sendParams();
+                    };
+                    var r1 = document.getElementById('settings_dropdown');
+                    if (r1!= null)
+                        r1.appendChild(li);
+
+                }
+            })
         }
 
         SPEC.param_callbacks["CH1_SHOW"] = SPEC.ch1Visile;
@@ -636,7 +677,8 @@
         SPEC.param_callbacks["SOUR2_FALL"] = SPEC.riseFallTime;
         SPEC.param_callbacks["RP_MODEL_STR"] = SPEC.setModel;
         SPEC.param_callbacks["ADC_COUNT"] = SPEC.setADCCount;
-        SPEC.param_callbacks["RESET_CONFIG_SETTINGS"] = SPEC.resetSettingsRequest;
+        SPEC.param_callbacks["CONTROL_CONFIG_SETTINGS"] = SPEC.controlSettingsRequest;
+        SPEC.param_callbacks["LIST_FILE_SATTINGS"] = SPEC.listSettings;
 
         SPEC.param_callbacks["CH1_PROBE"] = function(new_params){UI_GRAPH.updateYAxis(); UI_GRAPH.changeYZoom();}
         SPEC.param_callbacks["CH2_PROBE"] = function(new_params){UI_GRAPH.updateYAxis(); UI_GRAPH.changeYZoom();}

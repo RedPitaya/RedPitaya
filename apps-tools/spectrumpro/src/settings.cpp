@@ -14,9 +14,13 @@
 #include <unistd.h>
 #include <pwd.h>
 #include <sys/stat.h>
+#include <filesystem>
 
 bool g_disableSaveSettings = false;
 std::mutex g_mutex;
+std::string g_workDirectory = "";
+
+const std::string default_config_name = "config.json";
 
 // Check the path is a directory.
 auto isDirectory(const std::string &_path) -> bool {
@@ -66,12 +70,22 @@ auto createDirectory(const std::string &_path) -> bool {
     return false;
 }
 
-auto deleteConfig(const std::string &_path) -> bool{
-    std::lock_guard<std::mutex> lock(g_mutex);
+auto deleteConfig() -> bool{
+    std::lock_guard lock(g_mutex);
     g_disableSaveSettings = true;
-    return std::remove(_path.c_str()) == 0;
+    std::string path = getHomeDirectory() + g_workDirectory + default_config_name;
+    return std::remove(path.c_str()) == 0;
 }
 
+auto deleteStoredConfig(const std::string &fileName) -> bool{
+    std::lock_guard lock(g_mutex);
+    std::string path = getHomeDirectory() + g_workDirectory + "saved/" +  fileName;
+    return std::remove(path.c_str()) == 0;
+}
+
+auto setHomeSettingsPath(std::string _path) -> void{
+    g_workDirectory = _path;
+}
 
 auto getHomeDirectory() -> std::string {
     // Use getpwuid
@@ -86,8 +100,9 @@ auto getHomeDirectory() -> std::string {
 }
 
 // Reads the configuration file
-auto configGet(const std::string &_path) -> void {
-    std::ifstream stream(_path.c_str(), std::ios_base::in | std::ios_base::binary);
+auto configGet() -> void {
+    std::string path = getHomeDirectory() + g_workDirectory + default_config_name;
+    std::ifstream stream(path.c_str(), std::ios_base::in | std::ios_base::binary);
 
     if (stream.is_open()) {
         std::stringstream buffer;
@@ -137,17 +152,18 @@ auto configGet(const std::string &_path) -> void {
             ERROR("JSON parse error");
         }
     } else {
-        ERROR("Can not open \"%s\"", _path.c_str());
+        ERROR("Can not open \"%s\"", path.c_str());
     }
 }
 
 
-auto configSetWithList(const std::string &_directory, const std::string &_filename,const std::vector<std::string> &_parameters) -> bool {
-    std::lock_guard<std::mutex> lock(g_mutex);
-    if (g_disableSaveSettings) return false;
+auto configSetWithList(const std::vector<std::string> &_parameters) -> bool {
 
-    if (createDirectory(_directory)) {
-        std::ofstream stream(_directory + "/" + _filename, std::ios_base::out | std::ios_base::trunc | std::ios_base::binary);
+    std::lock_guard lock(g_mutex);
+    if (g_disableSaveSettings) return false;
+    std::string directory = getHomeDirectory() + g_workDirectory;
+    if (createDirectory(directory)) {
+        std::ofstream stream(directory + "/" + default_config_name, std::ios_base::out | std::ios_base::trunc | std::ios_base::binary);
 
         if (stream.is_open()) {
             JSONNode root_node(JSON_NODE);
@@ -226,12 +242,12 @@ auto configSetWithList(const std::string &_directory, const std::string &_filena
 
 
 // Writes the configuration file
-auto configSet(const std::string &_directory, const std::string &_filename) -> bool {
-    std::lock_guard<std::mutex> lock(g_mutex);
+auto configSet() -> bool {
+    std::lock_guard lock(g_mutex);
     if (g_disableSaveSettings) return false;
-
-    if (createDirectory(_directory)) {
-        std::ofstream stream(_directory + "/" + _filename, std::ios_base::out | std::ios_base::trunc | std::ios_base::binary);
+    std::string directory = getHomeDirectory() + g_workDirectory;
+    if (createDirectory(directory)) {
+        std::ofstream stream(directory + "/" + default_config_name, std::ios_base::out | std::ios_base::trunc | std::ios_base::binary);
 
         if (stream.is_open()) {
             JSONNode root_node(JSON_NODE);
@@ -331,4 +347,45 @@ auto isChanged() -> bool {
         }
     }
     return false;
+}
+
+auto loadSettingsFromStore(const std::string &_fileName)  -> bool{
+    std::string directory = getHomeDirectory() + g_workDirectory;
+    std::string directoryForSave = getHomeDirectory() + g_workDirectory + "saved/";
+    if (createDirectory(directoryForSave)) {
+        return std::filesystem::copy_file(directoryForSave + _fileName, directory + default_config_name,std::filesystem::copy_options::overwrite_existing);
+    }
+    return false;
+}
+
+
+auto saveCurrentSettingToStore(const std::string &_newFileName) -> bool{
+    std::string directory = getHomeDirectory() + g_workDirectory;
+    std::string directoryForSave = getHomeDirectory() + g_workDirectory + "saved/";
+    if (createDirectory(directoryForSave)) {
+        return std::filesystem::copy_file(directory + default_config_name,directoryForSave + _newFileName,std::filesystem::copy_options::overwrite_existing);
+    }
+    return false;
+}
+
+auto deleteSettingInStore(const std::string &_newFileName) -> bool{
+    std::string directoryForSave = getHomeDirectory() + g_workDirectory + "saved/";
+    if (createDirectory(directoryForSave)) {
+        return std::filesystem::remove(directoryForSave + _newFileName);
+    }
+    return false;
+}
+
+auto getListOfSettingsInStore() -> std::string{
+    std::string list;
+    std::string directoryForSave = getHomeDirectory() + g_workDirectory + "saved/";
+    if (createDirectory(directoryForSave)) {
+        for (auto const& dir_entry : std::filesystem::directory_iterator{directoryForSave}){
+            if (dir_entry.is_regular_file()){
+                list += dir_entry.path().filename().c_str();
+                list += "\n";
+            }
+        }
+    }
+    return list;
 }

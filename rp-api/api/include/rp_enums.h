@@ -91,17 +91,17 @@ typedef enum {
 } rp_apin_t;
 
 typedef enum {
-    RP_WAVEFORM_SINE,       //!< Wave form sine
-    RP_WAVEFORM_SQUARE,     //!< Wave form square
-    RP_WAVEFORM_TRIANGLE,   //!< Wave form triangle
-    RP_WAVEFORM_RAMP_UP,    //!< Wave form sawtooth (/|)
-    RP_WAVEFORM_RAMP_DOWN,  //!< Wave form reversed sawtooth (|\)
-    RP_WAVEFORM_DC,         //!< Wave form dc
-    RP_WAVEFORM_PWM,        //!< Wave form pwm
-    RP_WAVEFORM_ARBITRARY,  //!< Use defined wave form
-    RP_WAVEFORM_DC_NEG,     //!< Wave form negative dc
-    RP_WAVEFORM_SWEEP,      //!< Wave form sweep
-    RP_WAVEFORM_NOISE       //!< Enables pseudo-random sequence generation
+    RP_WAVEFORM_SINE        =   0,  //!< Wave form sine
+    RP_WAVEFORM_SQUARE      =   1,  //!< Wave form square
+    RP_WAVEFORM_TRIANGLE    =   2,  //!< Wave form triangle
+    RP_WAVEFORM_RAMP_UP     =   3,  //!< Wave form sawtooth (/|)
+    RP_WAVEFORM_RAMP_DOWN   =   4,  //!< Wave form reversed sawtooth (|\)
+    RP_WAVEFORM_DC          =   5,  //!< Wave form dc
+    RP_WAVEFORM_PWM         =   6,  //!< Wave form pwm
+    RP_WAVEFORM_ARBITRARY   =   7,  //!< Use defined wave form
+    RP_WAVEFORM_DC_NEG      =   8,  //!< Wave form negative dc
+    RP_WAVEFORM_SWEEP       =   9,  //!< Wave form sweep
+    RP_WAVEFORM_NOISE       =   10  //!< Enables pseudo-random sequence generation
 } rp_waveform_t;
 
 typedef enum {
