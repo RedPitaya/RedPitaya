@@ -33,8 +33,12 @@ static volatile uint32_t *osc_chb = NULL;
 // The FPGA input signal buffer pointer for AXI channel A
 static volatile uint16_t *osc_axi_cha = NULL;
 
+static volatile uint32_t osc_axi_cha_size = 0;
+
 // The FPGA input signal buffer pointer for AXI channel B
 static volatile uint16_t *osc_axi_chb = NULL;
+
+static volatile uint32_t osc_axi_chb_size = 0;
 
 // The /dev/mem file descriptor
 static int mem_fd = 0;
@@ -50,9 +54,12 @@ static volatile uint32_t *osc_chd = NULL;
 // The FPGA input signal buffer pointer for AXI channel C
 static volatile uint16_t *osc_axi_chc = NULL;
 
+static volatile uint32_t osc_axi_chc_size = 0;
+
 // The FPGA input signal buffer pointer for AXI channel D
 static volatile uint16_t *osc_axi_chd = NULL;
 
+static volatile uint32_t osc_axi_chd_size = 0;
 
 static uint32_t g_adc_axi_start = 0;
 
@@ -937,7 +944,7 @@ const volatile uint32_t* osc_GetDataBufferChD()
  * AXI mode
  */
 
-int osc_axi_map(size_t size, size_t offset, void** mapped)
+int osc_axi_map(size_t size, size_t offset, void** mapped, uint32_t *mapped_size)
 {
     if (mem_fd == -1) {
         return RP_EMMD;
@@ -962,6 +969,8 @@ int osc_axi_map(size_t size, size_t offset, void** mapped)
         ERROR("Error osc_axi_map: %d\n",errno);
         return RP_EMMD;
     }
+
+    *mapped_size = size;
 
     return RP_OK;
 
@@ -1113,7 +1122,15 @@ int osc_axi_EnableChA(bool enable)
             return RP_EOOR;
         }
 
-        ret = osc_axi_map(ch_addr_high - ch_addr_low, ch_addr_low, (void**)&osc_axi_cha);
+        if (osc_axi_cha != NULL){
+            ret = osc_axi_unmap(osc_axi_cha_size, (void**)&osc_axi_cha);
+            if (ret != RP_OK)
+            {
+                return ret;
+            }
+        }
+
+        ret = osc_axi_map(ch_addr_high - ch_addr_low, ch_addr_low, (void**)&osc_axi_cha, &osc_axi_cha_size);
         if (ret != RP_OK)
         {
             return ret;
@@ -1121,7 +1138,8 @@ int osc_axi_EnableChA(bool enable)
         cmn_Debug("cmn_SetValue(&osc_reg->cha_axi_enable) mask 0x1 <- 0x%X", 1);
         return cmn_SetValue(&osc_reg->cha_axi_enable, 1, AXI_ENABLE_MASK, &tmp);
     }
-    ret = osc_axi_unmap(ch_addr_high - ch_addr_low, (void**)&osc_axi_cha);
+
+    ret = osc_axi_unmap(osc_axi_cha_size, (void**)&osc_axi_cha);
     if (ret != RP_OK)
     {
         cmn_Debug("cmn_SetValue(&osc_reg->cha_axi_enable) mask 0x1 <- 0x%X", 0);
@@ -1165,7 +1183,15 @@ int osc_axi_EnableChB(bool enable)
             return RP_EOOR;
         }
 
-        ret = osc_axi_map(ch_addr_high - ch_addr_low, ch_addr_low, (void**)&osc_axi_chb);
+        if (osc_axi_chb != NULL){
+            ret = osc_axi_unmap(osc_axi_chb_size, (void**)&osc_axi_chb);
+            if (ret != RP_OK)
+            {
+                return ret;
+            }
+        }
+
+        ret = osc_axi_map(ch_addr_high - ch_addr_low, ch_addr_low, (void**)&osc_axi_chb,&osc_axi_chb_size);
         if (ret != RP_OK)
         {
             return ret;
@@ -1173,7 +1199,7 @@ int osc_axi_EnableChB(bool enable)
         cmn_Debug("cmn_SetValue(&osc_reg->chb_axi_enable) mask 0x1 <- 0x%X", 1);
         return cmn_SetValue(&osc_reg->chb_axi_enable, 1, AXI_ENABLE_MASK, &tmp);
     }
-    ret = osc_axi_unmap(ch_addr_high - ch_addr_low, (void**)&osc_axi_chb);
+    ret = osc_axi_unmap(osc_axi_chb_size, (void**)&osc_axi_chb);
     if (ret != RP_OK)
     {
         cmn_Debug("cmn_SetValue(&osc_reg->chb_axi_enable) mask 0x1 <- 0x%X", 0);
@@ -1219,7 +1245,15 @@ int osc_axi_EnableChC(bool enable)
             return RP_EOOR;
         }
 
-        ret = osc_axi_map(ch_addr_high - ch_addr_low, ch_addr_low, (void**)&osc_axi_chc);
+        if (osc_axi_chc != NULL){
+            ret = osc_axi_unmap(osc_axi_chc_size, (void**)&osc_axi_chc);
+            if (ret != RP_OK)
+            {
+                return ret;
+            }
+        }
+
+        ret = osc_axi_map(ch_addr_high - ch_addr_low, ch_addr_low, (void**)&osc_axi_chc,&osc_axi_chc_size);
         if (ret != RP_OK)
         {
             return ret;
@@ -1227,7 +1261,7 @@ int osc_axi_EnableChC(bool enable)
         cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_axi_enable) mask 0x1 <- 0x%X", 1);
         return cmn_SetValue(&osc_reg_4ch->cha_axi_enable, 1, AXI_ENABLE_MASK, &tmp);
     }
-    ret = osc_axi_unmap(ch_addr_high - ch_addr_low, (void**)&osc_axi_chc);
+    ret = osc_axi_unmap(osc_axi_chc_size, (void**)&osc_axi_chc);
     if (ret != RP_OK)
     {
         cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_axi_enable) mask 0x1 <- 0x%X", 0);
@@ -1273,7 +1307,15 @@ int osc_axi_EnableChD(bool enable)
             return RP_EOOR;
         }
 
-        ret = osc_axi_map(ch_addr_high - ch_addr_low, ch_addr_low, (void**)&osc_axi_chd);
+        if (osc_axi_chd != NULL){
+            ret = osc_axi_unmap(osc_axi_chd_size, (void**)&osc_axi_chd);
+            if (ret != RP_OK)
+            {
+                return ret;
+            }
+        }
+
+        ret = osc_axi_map(ch_addr_high - ch_addr_low, ch_addr_low, (void**)&osc_axi_chd,&osc_axi_chd_size);
         if (ret != RP_OK)
         {
             return ret;
@@ -1281,7 +1323,7 @@ int osc_axi_EnableChD(bool enable)
         cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_axi_enable) mask 0x1 <- 0x%X", 1);
         return cmn_SetValue(&osc_reg_4ch->chb_axi_enable, 1, AXI_ENABLE_MASK, &tmp);
     }
-    ret = osc_axi_unmap(ch_addr_high - ch_addr_low, (void**)&osc_axi_chd);
+    ret = osc_axi_unmap(osc_axi_chd_size, (void**)&osc_axi_chd);
     if (ret != RP_OK)
     {
         cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_axi_enable) mask 0x1 <- 0x%X", 0);
