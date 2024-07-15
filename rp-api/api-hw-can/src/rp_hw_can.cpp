@@ -22,6 +22,8 @@
 #include "can_control.h"
 #include "can_socket.h"
 
+#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
+
 static char version[100];
 
 const char *can_states[RP_CAN_STATE_SLEEPING + 1] = {
@@ -216,8 +218,21 @@ int rp_CanSend(rp_can_interface_t _interface, uint32_t _canId, unsigned char *_d
     return socket_Send(_interface,_canId,_data,_dataSize,_isExtended,_rtr,_timeout);
 }
 
+int rp_CanSendNP(rp_can_interface_t interface, uint32_t canId, bool isExtended, bool rtr, uint32_t timeout, uint8_t* np_buffer, int size){
+    return socket_Send(interface,canId,static_cast<unsigned char *>(np_buffer),size,isExtended, rtr, timeout);
+}
+
 int rp_CanRead(rp_can_interface_t _interface, uint32_t _timeout, rp_can_frame_t *_frame){
     return socket_Read(_interface,_timeout,_frame);
+}
+
+int rp_CanReadNP(rp_can_interface_t interface, uint32_t timeout, uint32_t *can_id, uint32_t *read_size, uint8_t* np_buffer, int size){
+    rp_can_frame_t frame;
+    int ret = socket_Read(interface, timeout, &frame);
+    *can_id = frame.can_id;
+    *read_size = frame.can_dlc;
+    memcpy(np_buffer,frame.data,MIN(frame.can_dlc,size));
+    return ret;
 }
 
 int rp_CanAddFilter(rp_can_interface_t _interface, uint32_t _filter, uint32_t _mask){
