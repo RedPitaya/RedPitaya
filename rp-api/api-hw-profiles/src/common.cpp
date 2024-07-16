@@ -511,7 +511,7 @@ int hp_cmn_Init() {
 
     FILE* fp = fopen("/sys/bus/i2c/devices/0-0050/eeprom", "r");
     if (!fp) {
-        fprintf(stderr, "[hp_cmn_Init] Error open eeprom: %d\n", errno);
+        fprintf(stderr, "[hp_cmn_Init] Error open eeprom: %s\n", strerror(errno));
         return RP_HP_ERE;
     }
 
