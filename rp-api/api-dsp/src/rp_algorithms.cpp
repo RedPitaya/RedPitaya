@@ -557,7 +557,7 @@ int analysis(double *ch1, double *ch2,
 }
 
 int initFFT(uint32_t max_buffer,uint32_t adcRate){
-    std::lock_guard<std::mutex> lock(g_fft_mutex);
+    std::lock_guard lock(g_fft_mutex);
     if (g_fft != NULL){
         ERROR("Can't init memory")
         return RP_A_ERROR;
@@ -590,7 +590,7 @@ int analysisFFT(const T *ch1, const T *ch2,
                 T *phase_out,
                 float input_threshold)
 {
-    std::lock_guard<std::mutex> lock(g_fft_mutex);
+    std::lock_guard lock(g_fft_mutex);
     // T w_out = (T)_freq * 2.0 * M_PI;
     int ret_value = RP_A_OK;
     if (size > 0){
@@ -631,7 +631,6 @@ int analysisFFT(const T *ch1, const T *ch2,
     g_fft->getAmpAndPhase(g_fft_data, _freq, &amp[0],&phase[0],&amp[1],&phase[1]);
 
     TRACE_SHORT("A1 %f A2 %f P1 %f P2 %f",amp[0],amp[1],phase[0] * 180 / M_PI ,phase[1] * 180 / M_PI);
-    g_fft->fftClean();
     auto phase2 = phase[1] - phase[0];
     if (phase2 <= -M_PI)
         phase2 += 2 * M_PI;

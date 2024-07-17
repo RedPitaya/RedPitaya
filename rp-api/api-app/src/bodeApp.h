@@ -49,8 +49,7 @@ int rpApp_BaDataAnalysis(const rp_ba_buffer_t &buffer,uint32_t size,float sample
 int rpApp_BaSafeThreadAcqPrepare();
 int rpApp_BaSafeThreadGen(rp_channel_t _channel, float _frequency, float _ampl, float _dc_bias);
 int rpApp_BaSafeThreadAcqData(rp_ba_buffer_t &_buffer, int _decimation, int _acq_size, int _dec, float _trigger);
-int rpApp_BaGetAmplPhase(rp_ba_logic_t mode, float _amplitude_in, float _dc_bias, int _periods_number, rp_ba_buffer_t &_buffer, float* _amplitude, float* _phase, float _freq,float _input_threshold);
-
+int rpApp_BaGetAmplPhase(rp_ba_logic_t mode, float _amplitude_in, float _dc_bias, int _periods_number, rp_ba_buffer_t &_buffer, float* _amplitude, float* _phase, float _freq, float _probe,float _input_threshold);
 float rpApp_BaCalibGain(float _freq, float _ampl);
 float rpApp_BaCalibPhase(float _freq, float _phase);
 int rpApp_BaResetCalibration();

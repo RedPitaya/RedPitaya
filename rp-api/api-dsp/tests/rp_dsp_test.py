@@ -141,18 +141,9 @@ print("obj.remoteDCCount()")
 res = obj.remoteDCCount()
 print(res)
 
-print("obj.window_clean()")
-res = obj.window_clean()
-print(res)
-
 print("obj.deleteData()")
 res = obj.deleteData(data)
 print(res)
-
-print("obj.fftClean()")
-res = obj.fftClean()
-print(res)
-
 
 # Optimized math functions on arm neon
 # These functions can give a calculation error

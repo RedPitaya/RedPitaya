@@ -33,12 +33,12 @@ static volatile uint32_t *osc_chb = NULL;
 // The FPGA input signal buffer pointer for AXI channel A
 static volatile uint16_t *osc_axi_cha = NULL;
 
-static volatile uint32_t osc_axi_cha_size = 0;
+static uint32_t osc_axi_cha_size = 0;
 
 // The FPGA input signal buffer pointer for AXI channel B
 static volatile uint16_t *osc_axi_chb = NULL;
 
-static volatile uint32_t osc_axi_chb_size = 0;
+static uint32_t osc_axi_chb_size = 0;
 
 // The /dev/mem file descriptor
 static int mem_fd = 0;
@@ -54,12 +54,12 @@ static volatile uint32_t *osc_chd = NULL;
 // The FPGA input signal buffer pointer for AXI channel C
 static volatile uint16_t *osc_axi_chc = NULL;
 
-static volatile uint32_t osc_axi_chc_size = 0;
+static uint32_t osc_axi_chc_size = 0;
 
 // The FPGA input signal buffer pointer for AXI channel D
 static volatile uint16_t *osc_axi_chd = NULL;
 
-static volatile uint32_t osc_axi_chd_size = 0;
+static uint32_t osc_axi_chd_size = 0;
 
 static uint32_t g_adc_axi_start = 0;
 

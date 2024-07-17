@@ -241,6 +241,7 @@
 
                     //Recieving parameters
                     if (receive.parameters) {
+                        console.log(receive.parameters)
                         CLIENT.parameterStack.push(receive.parameters);
                     }
 
@@ -261,6 +262,39 @@
     };
 
 
+    CLIENT.base64ToFloatArray =function(base64String) {
+        // Decode the base64 string to a byte array
+        if (base64String.length === 0) return new Float32Array(0)
+        const b64ToBuffer = (b64) => Uint8Array.from(atob(b64), c => c.charCodeAt(0)).buffer;
+        bytes = b64ToBuffer(base64String)
+        // Create a Float32Array from the byte array
+        const floatArray = new Float32Array(bytes.byteLength / 4);
+
+        // Convert the byte array to a Float32Array
+        for (let i = 0; i < floatArray.length; i++) {
+          const byteIndex = i * 4;
+          floatArray[i] = new DataView(bytes).getFloat32(byteIndex,true);
+        }
+
+        return floatArray;
+    }
+
+    CLIENT.base64ToIntArray =function(base64String) {
+        // Decode the base64 string to a byte array
+        if (base64String.length === 0) return new Int32Array(0)
+        const b64ToBuffer = (b64) => Uint8Array.from(atob(b64), c => c.charCodeAt(0)).buffer;
+        bytes = b64ToBuffer(base64String)
+        // Create a Float32Array from the byte array
+        const intArray = new Int32Array(bytes.byteLength / 4);
+
+        // Convert the byte array to a Float32Array
+        for (let i = 0; i < intArray.length; i++) {
+          const byteIndex = i * 4;
+          intArray[i] = new DataView(bytes).getInt32(byteIndex,true);
+        }
+
+        return intArray;
+    }
 
     // Sends to server parameters
     CLIENT.sendParameters = function() {
@@ -292,9 +326,9 @@
         }
 
         for (var param_name in new_params) {
+            CLIENT.params.orig[param_name] = new_params[param_name];
             if (BA.param_callbacks[param_name] !== undefined)
                 BA.param_callbacks[param_name](new_params);
-            CLIENT.params.orig[param_name] = new_params[param_name];
         }
         // Resize double-headed arrows showing the difference between cursors
     };

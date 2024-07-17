@@ -292,12 +292,25 @@
 
     //Draw one signal
     BA.prepareOneSignal = function(signal_name) {
-        var one_signal = CLIENT.signalStack[0][signal_name];
-        var bad_signal = CLIENT.signalStack[0]['BA_BAD_SIGNAL'];
-        var signal_param = CLIENT.signalStack[0]['BA_SIGNAL_PARAMETERS'];
+        let signals = Object.assign({}, CLIENT.signalStack[0]);
+        for (const property in signals) {
+            if (signals[property]['type']){
+                if (signals[property]['type'] == 'f'){
+                    signals[property]['value'] = CLIENT.base64ToFloatArray(signals[property]['value'] )
+                    signals[property]['type'] = ''
+                }
+                if (signals[property]['type'] == 'i'){
+                    signals[property]['value'] = CLIENT.base64ToIntArray(signals[property]['value'] )
+                    signals[property]['type'] = ''
+                }
+            }
+        }
+        var one_signal = signals[signal_name];
+        var bad_signal = signals['BA_BAD_SIGNAL'];
+        var signal_param = signals['BA_SIGNAL_PARAMETERS'];
 
         // Ignore empty signals
-        if (one_signal.size == 0)
+        if (one_signal === undefined || one_signal.size == 0)
             return;
 
         // Create points mas
@@ -680,11 +693,8 @@
     }
 
     BA.setValue = function(param_name,new_params) {
-        var old_params = CLIENT.params.orig;
-        if ((!BA.state.editing &&
-            ((old_params[param_name] !== undefined && old_params[param_name].value !== new_params[param_name].value) ||
-            (old_params[param_name] == undefined))
-            )) {
+        // var old_params = CLIENT.params.orig;
+        if ((!BA.state.editing)) {
             var value = $('#' + param_name).val();
             if (value !== new_params[param_name].value) {
                 $('#' + param_name).val(new_params[param_name].value);
@@ -710,10 +720,7 @@
     BA.setScale = function(new_params) {
         var param_name = "BA_SCALE"
         var old_params = CLIENT.params.orig;
-        if ((!BA.state.editing &&
-            ((old_params[param_name] !== undefined && old_params[param_name].value !== new_params[param_name].value) ||
-            (old_params[param_name] == undefined))
-            )) {
+        if ((!BA.state.editing)) {
             var radios = $('input[name="' + param_name + '"]');
             radios.closest('.btn-group').children('.btn.active').removeClass('active');
             radios.eq([+new_params[param_name].value]).prop('checked', true).parent().addClass('active');
@@ -723,10 +730,7 @@
     BA.setLogic = function(new_params) {
         var param_name = "BA_LOGIC_MODE"
         var old_params = CLIENT.params.orig;
-        if ((!BA.state.editing &&
-            ((old_params[param_name] !== undefined && old_params[param_name].value !== new_params[param_name].value) ||
-            (old_params[param_name] == undefined))
-            )) {
+        if ((!BA.state.editing)) {
             var radios = $('input[name="' + param_name + '"]');
             radios.closest('.btn-group').children('.btn.active').removeClass('active');
             radios.eq([+new_params[param_name].value]).prop('checked', true).parent().addClass('active');
@@ -1048,14 +1052,48 @@
     };
 
     BA.modelProcess = function(value) {
-        if (value["RP_MODEL_STR"].value === "Z20_250_12") {
+        var model = value["RP_MODEL_STR"].value
+        if (model === "Z20_250_12") {
             $("#CALIB_BODE_IMG").attr("src", "img/bode_calib_250.png");
+            $("#BA_IN_GAIN_L").text("1:1");
+            $("#BA_IN_GAIN2_L").text("1:20");
+            $("#BA_IN_GAIN2_L").text("1:20");
         }
-        if (value["RP_MODEL_STR"].value === "Z20_250_12_120") {
+        if (model === "Z20_250_12_120") {
             $("#CALIB_BODE_IMG").attr("src", "img/bode_calib_250.png");
+            $("#BA_IN_GAIN_L").text("1:1");
+            $("#BA_IN_GAIN2_L").text("1:20");
+        }
+
+        if (model != "Z20_250_12" && model != "Z20_250_12_120") {
+            var nodes = document.getElementsByClassName("250_12_block");
+            [...nodes].forEach((element, index, array) => {
+                                    element.parentNode.removeChild(element);
+            });
         }
     }
 
+    BA.setGain = function(new_params){
+        var param_name = 'BA_IN_GAIN'
+        var radios = $('input[name="' + param_name + '"]');
+        radios.closest('.btn-group').children('.btn.active').removeClass('active');
+        radios.eq([+CLIENT.params.orig[param_name].value]).prop('checked', true).parent().addClass('active');
+    }
+
+    BA.setACDC = function(new_params){
+        var param_name = 'BA_IN_AC_DC'
+        var radios = $('input[name="' + param_name + '"]');
+        radios.closest('.btn-group').children('.btn.active').removeClass('active');
+        radios.eq([+CLIENT.params.orig[param_name].value]).prop('checked', true).parent().addClass('active');
+    }
+
+    BA.setProbe = function(new_params){
+        var param_name = 'BA_PROBE'
+        var field = $('#' + param_name);
+        if (field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
+            field.val(CLIENT.params.orig[param_name].value);
+        }
+    }
 
     BA.param_callbacks["BA_STATUS"] = BA.processStatus;
 
@@ -1085,6 +1123,11 @@
     BA.param_callbacks["BA_PHASE_MAX"] = BA.setPhaseMax;
     BA.param_callbacks["BA_AUTO_SCALE"] = BA.setAutoScale;
     BA.param_callbacks["BA_SHOW_ALL"] = BA.setShowAll;
+
+
+    BA.param_callbacks["BA_IN_GAIN"] = BA.setGain;
+    BA.param_callbacks["BA_IN_AC_DC"] = BA.setACDC;
+    BA.param_callbacks["BA_PROBE"] = BA.setProbe;
 
 
 }(window.BA = window.BA || {}, jQuery));

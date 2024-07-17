@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
-
+#include <chrono>
 #include <vector>
 #include <algorithm>
 #include <thread>
@@ -26,6 +26,7 @@
 
 #include "rpApp.h"
 #include "web/rp_client.h"
+#include "math/rp_math.h"
 
 /***************************************************************************************
 *                                     BODE ANALYSER                                    *
@@ -50,7 +51,7 @@ CIntParameter       ba_status(          "BA_STATUS",            CBaseParameter::
 //Parameters
 CIntParameter		ba_start_freq(		"BA_START_FREQ", 		CBaseParameter::RW, 1000, 	0, 		1, 		getMaxADC() , CONFIG_VAR);
 CIntParameter		ba_end_freq(		"BA_END_FREQ",			CBaseParameter::RW, 10000, 	0, 		2, 		getMaxADC() , CONFIG_VAR);
-CIntParameter		ba_steps(			"BA_STEPS",				CBaseParameter::RW, 25, 	0, 		2, 		3000 , CONFIG_VAR);
+CIntParameter		ba_steps(			"BA_STEPS",				CBaseParameter::RW, 25, 	0, 		2, 		CH_SIGNAL_SIZE_DEFAULT , CONFIG_VAR);
 CIntParameter		ba_periods_number(	"BA_PERIODS_NUMBER",	CBaseParameter::RW, 8,   	0, 		1, 		8 , CONFIG_VAR);
 CIntParameter		ba_averaging(		"BA_AVERAGING", 		CBaseParameter::RW, 1, 		0, 		1, 		10 , CONFIG_VAR);
 CFloatParameter 	ba_amplitude(		"BA_AMPLITUDE", 		CBaseParameter::RW, 1, 		0, 		0, 		2000000 , CONFIG_VAR);
@@ -65,6 +66,10 @@ CFloatParameter 	ba_input_threshold(	"BA_INPUT_THRESHOLD",	CBaseParameter::RW, 0
 CBooleanParameter 	ba_show_all(		"BA_SHOW_ALL",      	CBaseParameter::RW, true, 	0, CONFIG_VAR);
 CIntParameter		ba_logic_mode(		"BA_LOGIC_MODE", 		CBaseParameter::RW, 0, 		0, 		0, 		10 , CONFIG_VAR);
 
+CIntParameter       inGain(             "BA_IN_GAIN",           CBaseParameter::RW, RP_LOW, 0, 0, 1,CONFIG_VAR);
+CIntParameter       inAC_DC(            "BA_IN_AC_DC",          CBaseParameter::RW, RP_DC, 0, 0, 1,CONFIG_VAR);
+CIntParameter       inProbe(            "BA_PROBE",             CBaseParameter::RW, 1, 0, 0, 1000,CONFIG_VAR);
+
 // Status parameters
 CStringParameter 	redpitaya_model(	"RP_MODEL_STR", 		CBaseParameter::RO, getModelS(), 0);
 CFloatParameter 	ba_current_freq(	"BA_CURRENT_FREQ", 		CBaseParameter::RW, 1, 		0, 		0, 		getMaxADC());
@@ -72,19 +77,25 @@ CIntParameter		ba_current_step(	"BA_CURRENT_STEP", 		CBaseParameter::RW, 1, 		0,
 CBooleanParameter 	ba_calibrate_enable("BA_CALIBRATE_ENABLE", 	CBaseParameter::RW, false, 	0);
 
 //Singals
-CIntSignal   ba_bad_signal ("BA_BAD_SIGNAL" , CH_SIGNAL_SIZE_DEFAULT, 0);
-CFloatSignal ba_signal_1  ("BA_SIGNAL_1"   , CH_SIGNAL_SIZE_DEFAULT, 0.0f);
-CFloatSignal ba_signal_2  ("BA_SIGNAL_2"   , CH_SIGNAL_SIZE_DEFAULT, 0.0f);
-CIntSignal   ba_signal_parameters ("BA_SIGNAL_PARAMETERS" , 4, 0);
+CIntBase64Signal   ba_bad_signal ("BA_BAD_SIGNAL" , CH_SIGNAL_SIZE_DEFAULT, 0);
+CFloatBase64Signal ba_signal_1  ("BA_SIGNAL_1"   , CH_SIGNAL_SIZE_DEFAULT, 0.0f);
+CFloatBase64Signal ba_signal_2  ("BA_SIGNAL_2"   , CH_SIGNAL_SIZE_DEFAULT, 0.0f);
+CIntBase64Signal   ba_signal_parameters ("BA_SIGNAL_PARAMETERS" , 4, 0);
 
 static std::vector<float> signal;
 static std::vector<float> phase;
 static std::vector<int>   bad_signal;
 static std::vector<int>   signal_parameters;
 
+static std::vector<float> signalView;
+static std::vector<float> phaseView;
+static std::vector<int>   bad_signalView;
+static std::vector<int>   signal_parametersView;
+
 std::thread *g_thread = NULL;
 std::mutex   g_signalMutex;
 bool         g_exit_flag;
+bool         g_request_show;
 
 void threadLoop();
 
@@ -187,7 +198,10 @@ const char *rp_app_desc(void)
 int rp_app_init(void)
 {
 	fprintf(stderr, "Loading bode analyser version %s-%s.\n", VERSION_STR, REVISION_STR);
-
+    signal.reserve(CH_SIGNAL_SIZE_DEFAULT);
+    phase.reserve(CH_SIGNAL_SIZE_DEFAULT);
+    bad_signal.reserve(CH_SIGNAL_SIZE_DEFAULT);
+    signal_parameters.reserve(CH_SIGNAL_SIZE_DEFAULT);
     rp_Init();
     rp_AcqSetAC_DC(RP_CH_1,RP_DC);
     rp_AcqSetAC_DC(RP_CH_2,RP_DC);
@@ -239,11 +253,14 @@ int rp_get_signals(float ***s, int *sig_num, int *sig_len)
 //Update signals
 void UpdateSignals(void)
 {
-    std::lock_guard<std::mutex> lock(g_signalMutex);
-    ba_signal_1.Set(signal);
-    ba_signal_2.Set(phase);
-	ba_bad_signal.Set(bad_signal);
-    ba_signal_parameters.Set(signal_parameters);
+    if (g_request_show){
+        std::lock_guard lock(g_signalMutex);
+        ba_signal_1.Set(signal);
+        ba_signal_2.Set(phase);
+        ba_bad_signal.Set(bad_signal);
+        ba_signal_parameters.Set(signal_parameters);
+        g_request_show = false;
+    }
 }
 
 //Update parameters
@@ -317,6 +334,19 @@ void UpdateParams(void)
 
     if (ba_logic_mode.IsNewValue()) {
         ba_logic_mode.Update();
+    }
+
+
+    if (inProbe.IsNewValue()) {
+        inProbe.Update();
+    }
+
+    if (inAC_DC.IsNewValue()) {
+        inAC_DC.Update();
+    }
+
+    if (inGain.IsNewValue()) {
+        inGain.Update();
     }
 
 	//Scale update
@@ -405,19 +435,19 @@ void threadLoop(){
     float per_number = 0;
     float gen_ampl = 0;
     float dc_bias = 0;
+    float probe = 0;
     rp_ba_logic_t logic_mode = RP_BA_LOGIC_TRAP;
 
     while (!g_exit_flag)
     {
-        usleep(1000); // 1 ms
-
+        usleep(100);
 
         int status = ba_status.Value();
         // user start calibration
         if (status == BA_START_CALIB || status == BA_START_CALIB_PROCESS){
             if (status == BA_START_CALIB){
                 bode_ResetCalib();
-                std::lock_guard<std::mutex> lock(g_signalMutex);
+                std::lock_guard lock(g_signalMutex);
                 signal.clear();
                 phase.clear();
                 bad_signal.clear();
@@ -433,10 +463,21 @@ void threadLoop(){
                 per_number = ba_periods_number.Value();
                 gen_ampl = ba_amplitude.Value();
                 dc_bias = ba_dc_bias.Value();
+                probe = inProbe.Value();
                 signal_parameters.push_back(start_freq);
                 signal_parameters.push_back(end_freq);
                 signal_parameters.push_back(steps);
                 ba_status.SendValue(BA_START_CALIB_PROCESS);
+                if (rp_HPGetFastADCIsLV_HVOrDefault()){
+                    rp_AcqSetGain(RP_CH_1, inGain.Value() != 0 ? RP_HIGH : RP_LOW);
+                    rp_AcqSetGain(RP_CH_2, inGain.Value() != 0 ? RP_HIGH : RP_LOW);
+                }
+
+                if (rp_HPGetFastADCIsAC_DCOrDefault()){
+                    rp_AcqSetAC_DC(RP_CH_1, inAC_DC.Value() == 1 ? RP_DC : RP_AC);
+                    rp_AcqSetAC_DC(RP_CH_2, inAC_DC.Value() == 1 ? RP_DC : RP_AC);
+                }
+                g_request_show = true;
             }
 
             if (cur_step < steps){
@@ -469,7 +510,7 @@ void threadLoop(){
                     float ampl_step = 0;
                     float phase_step = 0;
                     rpApp_BaSafeThreadAcqPrepare();
-                    auto ret = rpApp_BaGetAmplPhase(logic_mode,gen_ampl, dc_bias, per_number , buffer, &ampl_step, &phase_step, current_freq,threshold);
+                    auto ret = rpApp_BaGetAmplPhase(logic_mode,gen_ampl, dc_bias, per_number , buffer, &ampl_step, &phase_step, current_freq, probe, threshold);
                     if (ret ==  RP_EOOR) { // isnan && isinf
                         cur_step++;
                         return;
@@ -489,7 +530,7 @@ void threadLoop(){
                 ba_current_step.SendValue(cur_step);
                 ba_current_freq.SendValue(current_freq);
 
-                std::lock_guard<std::mutex> lock(g_signalMutex);
+                std::lock_guard lock(g_signalMutex);
                 rpApp_BaWriteCalib(current_freq,amplitude,phase_out);
                 signal.push_back(rpApp_BaCalibGain(next_freq, amplitude));
                 phase.push_back(rpApp_BaCalibPhase(next_freq, phase_out));
@@ -499,6 +540,7 @@ void threadLoop(){
                 }else{
                     bad_signal.push_back(0);
                 }
+                g_request_show = true;
             }else{
                 rpApp_BaReadCalibration();
                 ba_calibrate_enable.SendValue(rpApp_BaGetCalibStatus());
@@ -509,7 +551,7 @@ void threadLoop(){
 
         if (status == BA_START || status == BA_START_PROCESS){
             if (status == BA_START){
-                std::lock_guard<std::mutex> lock(g_signalMutex);
+                std::lock_guard lock(g_signalMutex);
                 signal.clear();
                 phase.clear();
                 bad_signal.clear();
@@ -525,15 +567,27 @@ void threadLoop(){
                 per_number = ba_periods_number.Value();
                 gen_ampl = ba_amplitude.Value();
                 dc_bias = ba_dc_bias.Value();
+                probe = inProbe.Value();
 
                 signal_parameters.push_back(start_freq);
                 signal_parameters.push_back(end_freq);
                 signal_parameters.push_back(steps);
 
+                if (rp_HPGetFastADCIsLV_HVOrDefault()){
+                    rp_AcqSetGain(RP_CH_1, inGain.Value() != 0 ? RP_HIGH : RP_LOW);
+                    rp_AcqSetGain(RP_CH_2, inGain.Value() != 0 ? RP_HIGH : RP_LOW);
+                }
+
+                if (rp_HPGetFastADCIsAC_DCOrDefault()){
+                    rp_AcqSetAC_DC(RP_CH_1, inAC_DC.Value() == 1 ? RP_DC : RP_AC);
+                    rp_AcqSetAC_DC(RP_CH_2, inAC_DC.Value() == 1 ? RP_DC : RP_AC);
+                }
+
                 ba_status.SendValue(BA_START_PROCESS);
                 TRACE_SHORT("start_freq %f",start_freq);
                 TRACE_SHORT("end_freq %f",end_freq);
                 TRACE_SHORT("steps %f",steps);
+                g_request_show = true;
             }
 
             if (cur_step < steps){
@@ -560,13 +614,12 @@ void threadLoop(){
                 }
 
 
-
                 for (int i = 0; i < avaraging; ++i)
                 {
                     float ampl_step = 0;
                     float phase_step = 0;
                     rpApp_BaSafeThreadAcqPrepare();
-                    auto ret = rpApp_BaGetAmplPhase(logic_mode,gen_ampl, dc_bias, per_number , buffer, &ampl_step, &phase_step, current_freq,threshold);
+                    auto ret = rpApp_BaGetAmplPhase(logic_mode,gen_ampl, dc_bias, per_number , buffer, &ampl_step, &phase_step, current_freq, probe, threshold);
                     if (ret ==  RP_EOOR) { // isnan && isinf
                         cur_step++;
                         return;
@@ -586,7 +639,7 @@ void threadLoop(){
                 ba_current_step.SendValue(cur_step);
                 ba_current_freq.SendValue(current_freq);
 
-                std::lock_guard<std::mutex> lock(g_signalMutex);
+                std::lock_guard lock(g_signalMutex);
 
                 signal.push_back(rpApp_BaCalibGain(next_freq, amplitude));
                 phase.push_back(rpApp_BaCalibPhase(next_freq, phase_out));
@@ -596,12 +649,12 @@ void threadLoop(){
                 }else{
                     bad_signal.push_back(0);
                 }
+                g_request_show = true;
             }else{
                 ba_status.SendValue(BA_START_DONE);
             }
 
         }
-
     }
 
 }

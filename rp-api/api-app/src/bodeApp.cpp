@@ -50,7 +50,7 @@ typedef double data_t;
 static std::vector<float> calib_data;
 static pthread_mutex_t mutex;
 
-rp_dsp_api::CDSP    g_dsp_logic(adc_channels,ADC_BUFFER_SIZE,adc_rate);
+rp_dsp_api::CDSP    g_dsp_logic(adc_channels, ADC_BUFFER_SIZE, adc_rate, true);
 
 
 uint8_t rpApp_BaGetADCChannels(){
@@ -397,7 +397,7 @@ int rpApp_BaDataAnalysisFFT(const rp_ba_buffer_t &buffer,
                 if ((u2_max - u2_min) < input_threshold) ret_value = RP_EIPV;
         }
 
-        auto data = g_dsp_logic.createData();
+        auto data = g_dsp_logic.getStoredData();
         g_dsp_logic.setSignalLengthDiv2(size);
         g_dsp_logic.window_init(rp_dsp_api::FLAT_TOP);
         g_dsp_logic.fftInit();
@@ -418,8 +418,6 @@ int rpApp_BaDataAnalysisFFT(const rp_ba_buffer_t &buffer,
         g_dsp_logic.getAmpAndPhase(data,_freq,&amp[0],&phase[0],&amp[1],&phase[1]);
 
         TRACE_SHORT("A1 %f A2 %f P1 %f P2 %f",amp[0],amp[1],phase[0] * 180 / M_PI ,phase[1] * 180 / M_PI);
-        g_dsp_logic.deleteData(data);
-        g_dsp_logic.fftClean();
         auto phase2 = phase[1] - phase[0];
         if (phase2 <= -M_PI)
             phase2 += 2 * M_PI;
@@ -599,15 +597,14 @@ int rpApp_BaSafeThreadAcqPrepare()
 int rpApp_BaSafeThreadGen(rp_channel_t _channel, float _frequency, float _ampl, float _dc_bias)
 {
 	pthread_mutex_lock(&mutex);
-	EXEC_CHECK_MUTEX(rp_GenReset(), mutex);
+	// EXEC_CHECK_MUTEX(rp_GenReset(), mutex);
 	EXEC_CHECK_MUTEX(rp_GenAmp(_channel, _ampl), mutex);
 	EXEC_CHECK_MUTEX(rp_GenOffset(_channel, _dc_bias), mutex);
-	EXEC_CHECK_MUTEX(rp_GenWaveform(_channel, RP_WAVEFORM_SINE), mutex);
+	// EXEC_CHECK_MUTEX(rp_GenWaveform(_channel, RP_WAVEFORM_SINE), mutex);
 	EXEC_CHECK_MUTEX(rp_GenFreq(_channel, _frequency), mutex);
 	EXEC_CHECK_MUTEX(rp_GenOutEnable(_channel), mutex);
 	EXEC_CHECK_MUTEX(rp_GenResetTrigger(_channel), mutex);
 	TRACE_SHORT("Start GEN A: %f Off: %f Freq: %f",_ampl,_dc_bias,_frequency)
-	usleep(10000);
 	pthread_mutex_unlock(&mutex);
 	return RP_OK;
 }
@@ -671,23 +668,24 @@ int rpApp_BaSafeThreadAcqData(rp_ba_buffer_t &_buffer, int _decimation, int _acq
 }
 
 uint32_t increaseSmallBuffer(uint32_t _decimation, uint32_t _currentSize){
-    int half_size = ADC_BUFFER_SIZE / 2;
-    int rate = half_size / _currentSize;
-    if (_decimation < 16){
-        rate = rate / _decimation;
-        rate = rate < 1 ? 1 : rate;
-        _currentSize *= rate;
-    }
-    return _currentSize;
+	int half_size = ADC_BUFFER_SIZE / 2;
+	int rate = half_size / _currentSize;
+	if (_decimation < 16){
+		rate = rate / _decimation;
+		rate = rate < 1 ? 1 : rate;
+		_currentSize *= rate;
+	}
+	_currentSize = (_currentSize / 64) * 64;
+	if (_currentSize < 64) _currentSize = 64;
+	return _currentSize;
 }
 
-int rpApp_BaGetAmplPhase(rp_ba_logic_t mode, float _amplitude_in, float _dc_bias, int _periods_number, rp_ba_buffer_t &_buffer, float* _amplitude, float* _phase, float _freq,float _input_threshold)
+int rpApp_BaGetAmplPhase(rp_ba_logic_t mode, float _amplitude_in, float _dc_bias, int _periods_number, rp_ba_buffer_t &_buffer, float* _amplitude, float* _phase, float _freq, float _probe,float _input_threshold)
 {
     float gain = 0;
     float phase_out = 0;
     int ret = 0;
     int acq_size;
-
     //Generate a sinusoidal wave form
     rpApp_BaSafeThreadGen(RP_CH_1, _freq, _amplitude_in, _dc_bias);
     int size_buff_limit = ADC_BUFFER_SIZE / 4;
@@ -710,16 +708,20 @@ int rpApp_BaGetAmplPhase(rp_ba_logic_t mode, float _amplitude_in, float _dc_bias
     if (decimation > 65536){
         decimation = 65536;
     }
-
 	acq_size = round((static_cast<float>(_periods_number) * adc_rate) / (_freq * decimation));
     auto new_acq_size = increaseSmallBuffer(decimation,acq_size);
     TRACE_SHORT("Decimation: %d Gen freq: %f Buffer size %d Increase size %d",decimation,_freq,acq_size,new_acq_size);
-
     rpApp_BaSafeThreadAcqData(_buffer,decimation, new_acq_size,_amplitude_in);
     rp_GenOutDisable(RP_CH_1);
+
     // int ret = rp_BaDataAnalysis(_buffer, acq_size, ADC_SAMPLE_RATE / decimation,_freq, samples_period,  &gain, &phase_out,_input_threshold);
 	//int ret = dataAnalysisTrap(_buffer.ch1,_buffer.ch2, new_acq_size, _freq, decimation,rpApp_BaGetADCSpeed(),  &gain, &phase_out,_input_threshold);
     // int ret = rpApp_BaDataAnalysisFFT(_buffer, acq_size, _freq, decimation,  &gain, &phase_out,_input_threshold);
+
+	for(size_t i = 0; i < MIN(_buffer.ch1.size(),_buffer.ch2.size()); i++){
+		_buffer.ch1[i] *= _probe;
+		_buffer.ch2[i] *= _probe;
+	}
 
     if (mode == RP_BA_LOGIC_TRAP){
         float phase[2];
@@ -737,9 +739,6 @@ int rpApp_BaGetAmplPhase(rp_ba_logic_t mode, float _amplitude_in, float _dc_bias
         ,_input_threshold);
     }
 
-    // int ret = analysis(_buffer.ch1, _buffer.ch2, _freq,_periods_number,decimation,rpApp_BaGetADCSpeed(),&ampl[0],&ampl[1],&phase[0],&phase[1],&gain,&phase_out);
-
-
     *_amplitude = 20.*log10f(gain);
     *_phase = phase_out;
     TRACE_SHORT("Gain %f Diff phase %f",*_amplitude,*_phase)
@@ -749,6 +748,10 @@ int rpApp_BaGetAmplPhase(rp_ba_logic_t mode, float _amplitude_in, float _dc_bias
 }
 
 int rpApp_BaInit(){
+	int ret = rp_GenReset();
+	if (ret != RP_OK){
+		return ret;
+	}
     return initFFT(ADC_BUFFER_SIZE,adc_rate);
 }
 
