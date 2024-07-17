@@ -15,9 +15,12 @@
 #include <chrono>
 #include "rp_hw-profiles.h"
 
-using namespace rp_sweep_api;
 using namespace std;
 using namespace std::chrono;
+
+namespace rp_sweep_api{
+
+CSweepController *g_sweep = NULL;
 
 auto getDACChannels() -> uint8_t{
     uint8_t c = 0;
@@ -367,3 +370,127 @@ auto CSweepController::setDefault() -> void{
 }
 
 
+int rp_SWInit(){
+    if (g_sweep == NULL){
+        g_sweep = new CSweepController();
+        if (g_sweep == NULL){
+            return RP_EAM;
+        }
+    }
+    else{
+        g_sweep->setDefault();
+    }
+    return RP_OK;
+}
+
+int rp_SWRelease(){
+    if (g_sweep) {
+        delete g_sweep;
+        g_sweep = NULL;
+    }
+    return RP_OK;
+}
+
+int rp_SWRun(){
+    if (g_sweep == NULL) return RP_EANI;
+
+    g_sweep->run();
+    return RP_OK;
+}
+
+int rp_SWStop(){
+    if (g_sweep == NULL) return RP_EANI;
+
+    g_sweep->stop();
+    return RP_OK;
+}
+
+int rp_SWPause(bool state){
+    if (g_sweep == NULL) return RP_EANI;
+
+    g_sweep->pause(state);
+    return RP_OK;
+}
+
+int rp_SWGenSweep(rp_channel_t ch, bool enable){
+    if (g_sweep == NULL) return RP_EANI;
+
+    return g_sweep->genSweep(ch,enable);
+}
+
+int rp_SWIsGen(rp_channel_t ch, bool *state){
+    if (g_sweep == NULL) return RP_EANI;
+
+    return g_sweep->isGen(ch,state);
+}
+
+int rp_SWIsAllDisabled(bool *state){
+    if (g_sweep == NULL) return RP_EANI;
+
+    *state = g_sweep->isAllDisabled();
+    return RP_OK;
+}
+
+int rp_SWSetStartFreq(rp_channel_t ch, float freq){
+    if (g_sweep == NULL) return RP_EANI;
+    return g_sweep->setStartFreq(ch,freq);
+}
+
+int rp_SWGetStartFreq(rp_channel_t ch, float *freq){
+    if (g_sweep == NULL) return RP_EANI;
+    return g_sweep->getStartFreq(ch,freq);
+}
+
+int rp_SWSetStopFreq(rp_channel_t ch, float freq){
+    if (g_sweep == NULL) return RP_EANI;
+    return g_sweep->setStopFreq(ch,freq);
+}
+
+int rp_SWGetStopFreq(rp_channel_t ch, float *freq){
+    if (g_sweep == NULL) return RP_EANI;
+    return g_sweep->getStopFreq(ch,freq);
+}
+
+int rp_SWSetTime(rp_channel_t ch, int us){
+    if (g_sweep == NULL) return RP_EANI;
+    return g_sweep->setTime(ch,us);
+}
+
+int rp_SWGetTime(rp_channel_t ch, int *us){
+    if (g_sweep == NULL) return RP_EANI;
+    return g_sweep->getTime(ch,us);
+}
+
+int rp_SWSetMode(rp_channel_t ch, rp_gen_sweep_mode_t mode){
+    if (g_sweep == NULL) return RP_EANI;
+    return g_sweep->setMode(ch,mode);
+}
+
+int rp_SWGetMode(rp_channel_t ch, rp_gen_sweep_mode_t *mode){
+    if (g_sweep == NULL) return RP_EANI;
+    return g_sweep->getMode(ch,mode);
+}
+
+int rp_SWSetDir(rp_channel_t ch, rp_gen_sweep_dir_t dir){
+    if (g_sweep == NULL) return RP_EANI;
+    return g_sweep->setDir(ch,dir);
+}
+
+int rp_SWGetDir(rp_channel_t ch, rp_gen_sweep_dir_t *dir){
+    if (g_sweep == NULL) return RP_EANI;
+    return g_sweep->getDir(ch,dir);
+}
+
+int rp_SWResetAll(){
+    if (g_sweep == NULL) return RP_EANI;
+    g_sweep->resetAll();
+    return RP_OK;
+}
+
+int rp_SWSetDefault(){
+    if (g_sweep == NULL) return RP_EANI;
+    g_sweep->setDefault();
+    return RP_OK;
+}
+
+}

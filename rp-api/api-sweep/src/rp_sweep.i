@@ -12,8 +12,12 @@
 %apply bool *OUTPUT { bool *state };
 %apply float *OUTPUT { float *_freq };
 %apply int *OUTPUT { int *_us };
+%apply float *OUTPUT { float *freq };
+%apply int *OUTPUT { int *us };
 %apply int *OUTPUT { rp_gen_sweep_mode_t *_mode };
 %apply int *OUTPUT { rp_gen_sweep_dir_t *_dir };
+%apply int *OUTPUT { rp_gen_sweep_mode_t *mode };
+%apply int *OUTPUT { rp_gen_sweep_dir_t *dir };
 
 %inline %{
 typedef double *double_ptr;

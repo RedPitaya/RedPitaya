@@ -22,7 +22,7 @@
 #include "scpi/units.h"
 #include "common.h"
 #include "error.h"
-#include "sweep.h"
+#include "common/rp_sweep.h"
 #include "lcr.h"
 
 const scpi_choice_def_t scpi_RpLogMode[] = {
@@ -403,7 +403,7 @@ scpi_result_t RP_ExtTriggerLevelQ(scpi_t *context) {
 }
 
 void stopAllThreads(scpi_t *context){
-    stopSweep();
+    rp_sweep_api::rp_SWStop();
     RP_LOG_INFO("%s","Stopping the sweep generation service")
     stopLCR();
     RP_LOG_INFO("%s","Stopping the lcr service")

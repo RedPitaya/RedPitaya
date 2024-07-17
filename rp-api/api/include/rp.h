@@ -89,6 +89,10 @@ extern "C" {
 #define RP_EMNC   23
 /** Command not supported */
 #define RP_NOTS   24
+/** Error allocate memory */
+#define RP_EAM    26
+/** Api not initialized */
+#define RP_EANI   27
 
 #define SPECTR_OUT_SIG_LEN (2*1024)
 

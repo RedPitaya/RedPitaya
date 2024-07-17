@@ -199,7 +199,9 @@ const char* rp_GetError(int errorCode) {
         case RP_EFRB:  return "Failed to read from the bus";
         case RP_EFWB:  return "Failed to write to the bus";
         case RP_EMNC:  return "Extension module not connected";
-        case RP_NOTS:  return "Command not supported ";
+        case RP_NOTS:  return "Command not supported";
+        case RP_EAM:   return "Error allocate memory";
+        case RP_EANI:  return "Api not initialized";
         default:       return "Unknown error";
     }
 }

@@ -97,7 +97,7 @@ if(BUILD_SHARED)
             install(TARGETS rp_hw_can_py
                 LIBRARY DESTINATION ${INSTALL_DIR}/lib/python
                 ARCHIVE DESTINATION ${INSTALL_DIR}/lib/python)
-            install(FILES tests/rp_hw_can_test.py
+            install(FILES tests/rp_hw_can_test.py tests/rp_hw_can_loopback_test.py
                 DESTINATION ${INSTALL_DIR}/lib/python PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
                 GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_WRITE WORLD_EXECUTE)
         endif()
