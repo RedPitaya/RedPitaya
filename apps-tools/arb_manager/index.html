@@ -20,6 +20,8 @@
     <link rel="stylesheet" href="../assets/bootstrap/css/bootstrap.min.css?1" onerror="location.reload()">
     <link rel="stylesheet" href="../assets/popupstack.css?1" type="text/css" onerror="location.reload()" />
     <link rel="stylesheet" href="../assets/help-system/help-system.css?1" type="text/css" onerror="location.reload()" />
+    <link rel="stylesheet" href="../assets/lpulse.css?1" type="text/css" onerror="location.reload()" />
+    <link rel="stylesheet" href="../assets/usermis.css?1" type="text/css" onerror="location.reload()" />
     <link href="../assets/loader.css?1" rel="stylesheet" type="text/css" onerror="location.reload()" />
     <link rel="stylesheet" href="css/style.css?2" onerror="location.reload()">
     <script src="../assets/jquery/jquery-2.1.3.min.js?1" onerror="location.reload()"></script>
@@ -37,9 +39,18 @@
     <script src="js/guiHandler.js?1" onerror="location.reload()"></script>
     <script src="js/manager.js?1" onerror="location.reload()"></script>
     <script src="js/main.js?1" onerror="location.reload()"></script>
+    <script src="js/client.js?2" onerror="location.reload()"></script>
 </head>
 
-<body>
+<body class="user_lost connection_lost">
+    <div id="user-wrapper">
+        <div id="user"></div>
+        <div id="user-desc">Device is already in use by another user.</div>
+    </div>
+    <div id="pulse-wrapper">
+        <div id="pulse"></div>
+        <div id="pulse-desc">Connection with device is lost.</div>
+    </div>
     <div id="loader-wrapper">
         <div id="loader"></div>
     </div>
@@ -80,7 +91,7 @@
                         <div class="panels" style="width: 100%;">
                             <div style="height: 100%;display: flex;flex-flow: column;">
                                 <div id="files_table" style="height: 100%;display: flex;flex-wrap: wrap;align-content: flex-start; overflow-x: auto;">
-                                    <div class="filecell">
+                                    <!-- <div class="filecell">
                                         <div>
                                             <span>
                                                 <item5>
@@ -99,8 +110,7 @@
                                                 </plot>
                                             </span>
                                         </div>
-                                    </div>
-
+                                    </div> -->
                                 </div>
                                 <div style="width: 100%;height: 40px;display: flex;padding-top: 5px;padding-bottom: 5px;justify-content: flex-end;">
                                     <div style="width: 150px; margin-left: 10px">

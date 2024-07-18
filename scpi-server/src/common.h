@@ -82,18 +82,6 @@ const scpi_choice_def_t scpi_RpTrigSrc[] = {
 const scpi_choice_def_t scpi_RpTrigStat[] = {
     {"TD",   0},
     {"WAIT", 1},
-    {"WAIT", 2},
-    {"WAIT", 3},
-    {"WAIT", 4},
-    {"WAIT", 5},
-    {"WAIT", 6},
-    {"WAIT", 7},
-    {"WAIT", 8},
-    {"WAIT", 9},
-    {"WAIT", 10},
-    {"WAIT", 11},
-    {"WAIT", 12},
-    {"WAIT", 13},
     SCPI_CHOICE_LIST_END
 };
 
@@ -156,5 +144,7 @@ scpi_result_t RP_BoardName(scpi_t *context);
 
 scpi_result_t RP_ExtTriggerDebouncerUs(scpi_t *context);
 scpi_result_t RP_ExtTriggerDebouncerUsQ(scpi_t *context);
+
+void stopAllThreads(scpi_t *context);
 
 #endif /* COMMON_H_ */

@@ -218,8 +218,8 @@ $(function() {
 
     OBJ.adcInitRequest = function() {
         OBJ.adcCalibChange = false;
-        SM.parametersCache["calib_sig"] = { value: 1 };
-        SM.sendParameters();
+        CLIENT.parametersCache["calib_sig"] = { value: 1 };
+        CLIENT.requestParameters();
         $('.flipswitch').prop('checked', false);
     }
 
@@ -437,38 +437,38 @@ $(function() {
 
     OBJ.amSetMode = function(_mode, _state) {
         if (_mode == "dac_gain") {
-            SM.parametersCache["gen_gain"] = { value: _state };
-            SM.sendParameters2("gen_gain");
+            CLIENT.parametersCache["gen_gain"] = { value: _state };
+            CLIENT.sendParameters();
             setTimeout(OBJ.adcInitData, 1000);
         }
         if (_mode == "ch1_dac_enable") {
-            SM.parametersCache["gen1_enable"] = { value: _state };
-            SM.parametersCache["request_reset_avg_filter"] = {value: true};
-            SM.sendParameters2("gen1_enable");
+            CLIENT.parametersCache["gen1_enable"] = { value: _state };
+            CLIENT.parametersCache["request_reset_avg_filter"] = {value: true};
+            CLIENT.sendParameters();
             setTimeout(OBJ.adcInitData, 1000);
         }
         if (_mode == "ch2_dac_enable") {
-            SM.parametersCache["gen2_enable"] = { value: _state };
-            SM.parametersCache["request_reset_avg_filter"] = {value: true};
-            SM.sendParameters2("gen2_enable");
+            CLIENT.parametersCache["gen2_enable"] = { value: _state };
+            CLIENT.parametersCache["request_reset_avg_filter"] = {value: true};
+            CLIENT.sendParameters();
             setTimeout(OBJ.adcInitData, 1000);
         }
         if (_mode == "HV_LV_MODE") {
-            SM.parametersCache["hv_lv_mode"] = { value: _state };
-            SM.parametersCache["request_reset_avg_filter"] = {value: true};
-            SM.sendParameters2("hv_lv_mode");
+            CLIENT.parametersCache["hv_lv_mode"] = { value: _state };
+            CLIENT.parametersCache["request_reset_avg_filter"] = {value: true};
+            CLIENT.sendParameters();
             setTimeout(OBJ.adcInitData, 1000);
         }
         if (_mode == "AC_DC_MODE") {
-            SM.parametersCache["ac_dc_mode"] = { value: _state };
-            SM.parametersCache["request_reset_avg_filter"] = {value: true};
-            SM.sendParameters2("ac_dc_mode");
+            CLIENT.parametersCache["ac_dc_mode"] = { value: _state };
+            CLIENT.parametersCache["request_reset_avg_filter"] = {value: true};
+            CLIENT.sendParameters();
             setTimeout(OBJ.adcInitData, 1000);
         }
         if (_mode == "AVG_LAST_MODE") {
-            SM.parametersCache["avg_last_mode"] = { value: _state };
-            SM.parametersCache["request_reset_avg_filter"] = {value: true};
-            SM.sendParameters2("avg_last_mode");
+            CLIENT.parametersCache["avg_last_mode"] = { value: _state };
+            CLIENT.parametersCache["request_reset_avg_filter"] = {value: true};
+            CLIENT.sendParameters();
             setTimeout(OBJ.adcInitData, 1000);
         }
 
@@ -476,74 +476,74 @@ $(function() {
 
     OBJ.amSetNewCalib = function(_mode, _new_val) {
         if (_mode == "CH1_ADC_OFF") {
-            SM.parametersCache["ch1_off_adc_new"] = { value: parseInt($("#CH1_OFFSET").val()) + _new_val };
-            SM.sendParameters2("ch1_off_adc_new");
+            CLIENT.parametersCache["ch1_off_adc_new"] = { value: parseInt($("#CH1_OFFSET").val()) + _new_val };
+            CLIENT.sendParameters();
             OBJ.adcCalibChange = true;
         }
 
         if (_mode == "CH2_ADC_OFF") {
-            SM.parametersCache["ch2_off_adc_new"] = { value: parseInt($("#CH2_OFFSET").val()) + _new_val };
-            SM.sendParameters2("ch2_off_adc_new");
+            CLIENT.parametersCache["ch2_off_adc_new"] = { value: parseInt($("#CH2_OFFSET").val()) + _new_val };
+            CLIENT.sendParameters();
             OBJ.adcCalibChange = true;
         }
 
         if (_mode == "CH3_ADC_OFF") {
-            SM.parametersCache["ch3_off_adc_new"] = { value: parseInt($("#CH3_OFFSET").val()) + _new_val };
-            SM.sendParameters2("ch3_off_adc_new");
+            CLIENT.parametersCache["ch3_off_adc_new"] = { value: parseInt($("#CH3_OFFSET").val()) + _new_val };
+            CLIENT.sendParameters();
             OBJ.adcCalibChange = true;
         }
 
         if (_mode == "CH4_ADC_OFF") {
-            SM.parametersCache["ch4_off_adc_new"] = { value: parseInt($("#CH4_OFFSET").val()) + _new_val };
-            SM.sendParameters2("ch4_off_adc_new");
+            CLIENT.parametersCache["ch4_off_adc_new"] = { value: parseInt($("#CH4_OFFSET").val()) + _new_val };
+            CLIENT.sendParameters();
             OBJ.adcCalibChange = true;
         }
 
         if (_mode == "CH1_ADC_GAIN") {
-            SM.parametersCache["ch1_gain_adc_new"] = { value: parseFloat($("#CH1_GAIN").val()) + _new_val };
-            SM.sendParameters2("ch1_gain_adc_new");
+            CLIENT.parametersCache["ch1_gain_adc_new"] = { value: parseFloat($("#CH1_GAIN").val()) + _new_val };
+            CLIENT.sendParameters();
             OBJ.adcCalibChange = true;
         }
 
         if (_mode == "CH2_ADC_GAIN") {
-            SM.parametersCache["ch2_gain_adc_new"] = { value: parseFloat($("#CH2_GAIN").val()) + _new_val };
-            SM.sendParameters2("ch2_gain_adc_new");
+            CLIENT.parametersCache["ch2_gain_adc_new"] = { value: parseFloat($("#CH2_GAIN").val()) + _new_val };
+            CLIENT.sendParameters();
             OBJ.adcCalibChange = true;
         }
 
         if (_mode == "CH3_ADC_GAIN") {
-            SM.parametersCache["ch3_gain_adc_new"] = { value: parseInt($("#CH3_GAIN").val()) + _new_val };
-            SM.sendParameters2("ch3_gain_adc_new");parseFloat
+            CLIENT.parametersCache["ch3_gain_adc_new"] = { value: parseInt($("#CH3_GAIN").val()) + _new_val };
+            CLIENT.sendParameters();
             OBJ.adcCalibChange = true;
         }
 
         if (_mode == "CH4_ADC_GAIN") {
-            SM.parametersCache["ch4_gain_adc_new"] = { value: parseFloat($("#CH4_GAIN").val()) + _new_val };
-            SM.sendParameters2("ch4_gain_adc_new");
+            CLIENT.parametersCache["ch4_gain_adc_new"] = { value: parseFloat($("#CH4_GAIN").val()) + _new_val };
+            CLIENT.sendParameters();
             OBJ.adcCalibChange = true;
         }
 
         if (_mode == "CH1_DAC_OFF") {
-            SM.parametersCache["ch1_off_dac_new"] = { value: parseInt($("#CH1_DAC_OFFSET").val()) + _new_val };
-            SM.sendParameters2("ch1_off_dac_new");
+            CLIENT.parametersCache["ch1_off_dac_new"] = { value: parseInt($("#CH1_DAC_OFFSET").val()) + _new_val };
+            CLIENT.sendParameters();
             OBJ.adcCalibChange = true;
         }
 
         if (_mode == "CH2_DAC_OFF") {
-            SM.parametersCache["ch2_off_dac_new"] = { value: parseInt($("#CH2_DAC_OFFSET").val()) + _new_val };
-            SM.sendParameters2("ch2_off_dac_new");
+            CLIENT.parametersCache["ch2_off_dac_new"] = { value: parseInt($("#CH2_DAC_OFFSET").val()) + _new_val };
+            CLIENT.sendParameters();
             OBJ.adcCalibChange = true;
         }
 
         if (_mode == "CH1_DAC_GAIN") {
-            SM.parametersCache["ch1_gain_dac_new"] = { value: parseFloat($("#CH1_DAC_GAIN").val()) + _new_val };
-            SM.sendParameters2("ch1_gain_dac_new");
+            CLIENT.parametersCache["ch1_gain_dac_new"] = { value: parseFloat($("#CH1_DAC_GAIN").val()) + _new_val };
+            CLIENT.sendParameters();
             OBJ.adcCalibChange = true;
         }
 
         if (_mode == "CH2_DAC_GAIN") {
-            SM.parametersCache["ch2_gain_dac_new"] = { value: parseFloat($("#CH2_DAC_GAIN").val()) + _new_val };
-            SM.sendParameters2("ch2_gain_dac_new");
+            CLIENT.parametersCache["ch2_gain_dac_new"] = { value: parseFloat($("#CH2_DAC_GAIN").val()) + _new_val };
+            CLIENT.sendParameters();
             OBJ.adcCalibChange = true;
         }
     }

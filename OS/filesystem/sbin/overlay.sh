@@ -11,6 +11,8 @@ rmdir /configfs/device-tree/overlays/Full 2> /dev/null
 rm /tmp/loaded_fpga.inf 2> /dev/null
 
 sleep 0.5s
+echo -n "Commit "
+awk 'NR==2 {print $2}' $FPGAS/$MODEL/$1/git_info.txt
 
 /opt/redpitaya/bin/fpgautil -b $FPGAS/$MODEL/$1/fpga.bit.bin -o $FPGAS/$MODEL/$1/fpga.dtbo -n Full
 

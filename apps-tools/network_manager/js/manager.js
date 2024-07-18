@@ -231,7 +231,7 @@
         }).done(function(msg) {});
     };
 
-    var routingIsGot = false;
+    var routingIsGot = false
     WIZARD.GetEth0Status = function() {
         $.ajax({
             url: '/get_eth0_status',
@@ -239,18 +239,19 @@
         }).success(function(msg) {
             var info = WIZARD.ParseAddress(msg);
             var gateway = msg.split("gateway:")[1].split("\n")[0];
+            var config = msg.split("config:")[1];
 
             const $select = document.querySelector('#eth0_mode');
-            if (!routingIsGot)
-            {
-                if (msg.includes("dynamic")) {
+
+            if (!routingIsGot){
+                if (config.includes("DHCP=yes")){
                     $select.value = "#eth0_dhcp_mode";
-                    routingIsGot = true;
-                }
-                else {
+                } else if (config.includes("DHCPServer=yes")){
+                    $select.value = "#eth0_dhcp_server_mode";
+                } else {
                     $select.value = "#eth0_static_mode";
-                    routingIsGot = true;
                 }
+                routingIsGot = true;
             }
 
             if (!gateway) {
@@ -263,11 +264,35 @@
         }).done(function(msg) {});
     };
 
+    WIZARD.ValidateIPaddress = function(ipaddress) {
+        if (ipaddress == '')
+            return false;
+        if (/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ipaddress)) {
+            return (true);
+        }
+        return (false);
+    }
+
+    WIZARD.ValidateIPaddressPort = function(ipaddress) {
+        if (ipaddress == '')
+            return false;
+        if (/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/[0-9]{1,2}$/.test(ipaddress)) {
+            return (true);
+        }
+        return (false);
+    }
+
     WIZARD.ManualSetEth0 = function() {
         var IPaddr = $('#ip_address_and_mask_input').val();
         var Gateway = $("#gateway_input").val();
         var DNS = $("#dns_address_input").val();
+
+        var DHCP_ADDRES = $("#ip_address_and_mask_input_dhcp").val();
+        var DHCP_DNS = $("#dns_address_input_dhcp").val();
+
         var dhcp_flag = ($('#eth0_mode').val() === "#eth0_dhcp_mode") ? true : false;
+        var dhcp_server_flag = ($('#eth0_mode').val() === "#eth0_dhcp_server_mode") ? true : false;
+        var static_flag = ($('#eth0_mode').val() === "#eth0_static_mode") ? true : false;
 
         var params = [];
 
@@ -277,10 +302,50 @@
             params.push('gateway=' + Gateway);
         if (DNS !== "")
             params.push('dns=' + DNS);
-        if (dhcp_flag !== false)
-            params.push('dhcp=' + ((dhcp_flag) ? 'yes' : 'no'));
+        if (DHCP_DNS !== "")
+            params.push('dns=' + DHCP_DNS);
+        if (DHCP_ADDRES !== "")
+            params.push('address=' + DHCP_ADDRES);
 
-        var addr = '/set_eth0';
+        var addr = ''
+        if (static_flag) {
+            addr = '/set_static_eth0';
+            var error = false
+            if (WIZARD.ValidateIPaddressPort(IPaddr) == false) {
+                $('#ip_address_and_mask_input').fI();
+                error = true
+            }
+
+            if (WIZARD.ValidateIPaddress(Gateway) == false) {
+                $('#Gateway').fI();
+                error = true
+            }
+
+            if (WIZARD.ValidateIPaddress(DNS) == false) {
+                $('#dns_address_input').fI();
+                error = true
+            }
+            if (error) return
+        }
+
+        if (dhcp_flag) {
+            addr = '/set_dhcp_client_eth0';
+        }
+
+        if (dhcp_server_flag) {
+            addr = '/set_dhcp_server_eth0';
+            var error = false
+            if (WIZARD.ValidateIPaddressPort(DHCP_ADDRES) == false) {
+                $('#ip_address_and_mask_input_dhcp').fI();
+                error = true
+            }
+
+            if (WIZARD.ValidateIPaddress(DHCP_DNS) == false) {
+                $('#dns_address_input_dhcp').fI();
+                error = true
+            }
+            if (error) return
+        }
 
         if (params.length !== 0) {
             addr += '?';
@@ -474,10 +539,15 @@ $(document).ready(function() {
     });
 
     $('#eth0_mode').change(function() {
+        $("#eth0_static_mode").hide();
+        $("#eth0_dhcp_server_mode").hide();
+
         if ($(this).val() === "#eth0_static_mode") {
             $($(this).val()).show();
-        } else {
-            $("#eth0_static_mode").hide();
+        }
+
+        if ($(this).val() === "#eth0_dhcp_server_mode") {
+            $($(this).val()).show();
         }
     });
 

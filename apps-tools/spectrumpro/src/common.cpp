@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <chrono>
 #include "common.h"
 
 auto getADCChannels() -> uint8_t{
@@ -211,4 +212,11 @@ auto getModelName() -> std::string{
         }
     }
     return "";
+}
+
+
+auto getClock() -> int64_t {
+    auto now = std::chrono::system_clock::now();
+    auto curTime = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
+    return curTime.time_since_epoch().count();
 }

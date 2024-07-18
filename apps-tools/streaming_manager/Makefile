@@ -14,7 +14,7 @@ VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 
 
 INSTALL_DIR ?= .
 STREAMING_MODE ?= MASTER
-
+CLIENT_SUFFIX ?=
 
 JOBS=$(shell ./get_cpu_ram.sh)
 
@@ -48,7 +48,7 @@ install_servers:
 
 install_client:
 	cd src; \
-	cmake -B build -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release  -DVERSION=$(VERSION) -DREVISION=$(REVISION)  -DBUILD_WEB_APP_SERVER=OFF -DBUILD_CONSOLE_SERVER=OFF; \
+	cmake -B build -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=Release  -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DCLIENT_SUFFIX=$(CLIENT_SUFFIX) -DBUILD_WEB_APP_SERVER=OFF -DBUILD_CONSOLE_SERVER=OFF; \
 	make -C build -j $(JOBS) install
 
 install_client_win:

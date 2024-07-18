@@ -1,6 +1,6 @@
 #include "binary_stream.h"
 
-using namespace  TDMS;
+using namespace  rp_formatter_api::TDMS;
 
 BinaryStream::BinaryStream()
 {}

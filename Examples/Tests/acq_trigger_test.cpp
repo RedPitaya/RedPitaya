@@ -13,8 +13,10 @@
 #include <iostream>
 
 #include "rp.h"
+#include "rp_hw.h"
 #include "rp_hw-profiles.h"
 #include "rp_hw-calib.h"
+#include "common/common.h"
 
 #define DATA_SIZE 20
 #define OFFSET 10
@@ -25,12 +27,11 @@ using namespace std;
 
 list<string> g_result;
 
-typedef enum {
-    RP_125_14,
-    RP_250_12,
-    RP_125_14_4CH,
-    RP_122_16
-} models_t;
+struct testStep{
+    rp_channel_t channel;
+    rp_channel_trigger_t channel_t;
+    rp_acq_trig_src_t t_source;
+};
 
 struct settings{
     bool noDAC = false;
@@ -41,134 +42,11 @@ struct settings{
     bool testTrigDelay = false;
     bool testTrigSettingNow = false;
     bool testKeepArm = false;
+    bool testNoise = false;
     bool verbose = false;
     bool stopOnFail = false;
 };
 
-namespace Color {
-    enum Code {
-        FG_RED      = 31,
-        FG_GREEN    = 32,
-        FG_BLUE     = 34,
-        FG_DEFAULT  = 39,
-        BG_RED      = 41,
-        BG_GREEN    = 42,
-        BG_BLUE     = 44,
-        BG_DEFAULT  = 49
-    };
-    class Modifier {
-        Code code;
-    public:
-        Modifier(Code pCode) : code(pCode) {}
-        friend std::ostream&
-
-        operator<<(std::ostream& os, const Modifier& mod) {
-            return os << "\033[" << mod.code << "m";
-        }
-
-        operator std::string() const {
-            std::ostringstream out;
-            out << *this;
-            return out.str();
-        }
-
-        auto color(string &str) -> string{
-            Modifier def(FG_DEFAULT);
-            std::ostringstream out;
-            out << *this << str << def;
-            return out.str();
-        }
-
-        auto color(const char *str) -> string{
-            Modifier def(FG_DEFAULT);
-            std::ostringstream out;
-            out << *this << str << def;
-            return out.str();
-        }
-
-    };
-}
-
-auto getADCChannels() -> uint8_t{
-    uint8_t c = 0;
-    if (rp_HPGetFastADCChannelsCount(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get fast ADC channels count\n");
-        exit(-1);
-    }
-    return c;
-}
-
-auto getDACChannels() -> uint8_t{
-    uint8_t c = 0;
-    if (rp_HPGetFastDACChannelsCount(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get fast DAC channels count\n");
-        exit(-1);
-    }
-    return c;
-}
-
-auto getDACGainCh1() -> float{
-    float c = 0;
-    if (rp_HPGetFastDACGain(RP_CH_1, &c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get fast DAC gain\n");
-        exit(-1);
-    }
-    return c;
-}
-
-auto getADCRate() -> uint32_t{
-    uint32_t c = 0;
-    if (rp_HPGetBaseFastADCSpeedHz(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get fast ADC rate\n");
-        exit(-1);
-    }
-    return c;
-}
-
-auto getClock() -> double {
-    struct timespec tp;
-    clock_gettime(CLOCK_REALTIME, &tp);
-    return ((double)tp.tv_sec * 1000.f) + ((double)tp.tv_nsec / 1000000.f);
-}
-
-auto getModel() -> models_t{
-    rp_HPeModels_t c = STEM_125_14_v1_0;
-    if (rp_HPGetModel(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get board model\n");
-        exit(-1);
-    }
-
-    switch (c)
-    {
-        case STEM_125_10_v1_0:
-        case STEM_125_14_v1_0:
-        case STEM_125_14_v1_1:
-        case STEM_125_14_LN_v1_1:
-        case STEM_125_14_Z7020_v1_0:
-        case STEM_125_14_Z7020_LN_v1_1:
-            return RP_125_14;
-
-        case STEM_122_16SDR_v1_0:
-        case STEM_122_16SDR_v1_1:
-            return RP_122_16;
-
-        case STEM_125_14_Z7020_4IN_v1_0:
-        case STEM_125_14_Z7020_4IN_v1_2:
-        case STEM_125_14_Z7020_4IN_v1_3:
-            return RP_125_14_4CH;
-
-        case STEM_250_12_v1_0:
-        case STEM_250_12_v1_1:
-        case STEM_250_12_v1_2:
-        case STEM_250_12_v1_2a:
-        case STEM_250_12_v1_2b:
-            return RP_250_12;
-        default:
-            fprintf(stderr,"[Error] Can't get board model\n");
-            exit(-1);
-    }
-    return RP_125_14;
-}
 
 auto printHelp(char* prog) -> void {
     std::cout << prog << "[-t1] [-t2] [-t3] [-a] [-d] [-b] [-v] [-s]\n";
@@ -186,6 +64,7 @@ auto printHelp(char* prog) -> void {
                     "\t-t2 : Start test pretrigger and delay logic\n" \
                     "\t-t3 : Start test trigger setting now\n" \
                     "\t-t4 : Start test keep arm\n" \
+                    "\t-t5 : Start a noise test on a channels\n" \
                     "\t-a : Start all test\n" \
                     "\t-d : Enable debug register mode\n" \
                     "\t-b : Show captured buffer\n" \
@@ -229,11 +108,16 @@ auto parseOptions(int argc, char **argv) -> settings {
             s.testKeepArm = true;
         }
 
+        if (strcmp(argv[i],"-t5")==0){
+            s.testNoise = true;
+        }
+
         if (strcmp(argv[i],"-a")==0){
             s.testTrigDelay = true;
             s.testTrig = true;
             s.testTrigSettingNow = true;
             s.testKeepArm = true;
+            s.testNoise = true;
         }
 
         if (strcmp(argv[i],"-v")==0){
@@ -248,49 +132,6 @@ auto parseOptions(int argc, char **argv) -> settings {
     return s;
 }
 
-auto printBuffer(buffers_t *data,int indexOffset,int size) -> void {
-    for(int ch = 0 ; ch < data->channels ; ch++){
-        printf("Ch %d :",ch+1);
-        for(int i = 0; i < size; i++){
-            int pos = (data->size + i + indexOffset) % data->size;
-            printf("[%d = %d]", i + indexOffset, data->ch_i[ch][pos]);
-        }
-        printf("\n");
-    }
-}
-
-auto printBufferF(buffers_t *data,int indexOffset,int size) -> void {
-    for(int ch = 0 ; ch < data->channels ; ch++){
-        printf("Ch %d :",ch+1);
-        for(int i = 0; i < size; i++){
-            int pos = (data->size + i + indexOffset) % data->size;
-            printf("[%d = %f]", i + indexOffset, data->ch_f[ch][pos]);
-        }
-        printf("\n");
-    }
-}
-
-auto printTestResult(string _testName,bool result) -> void {
-    Color::Modifier red(Color::FG_RED);
-    Color::Modifier green(Color::FG_GREEN);
-
-    string ok = "[OK]";
-    string fail = "[FAIL]";
-
-    string res = string("Result of ") + _testName + " " + (result ?  green.color("[OK]") : red.color("[FAIL]"));
-    std::cout << res << "\n";
-    int allSize = 150;
-    allSize -= _testName.size();
-    allSize -= result ? ok.size() : fail.size();
-
-    g_result.push_back(_testName + string(allSize,'.') + (result ? green.color(ok) : red.color(fail)));
-}
-
-auto printAllResult() -> void {
-    for (auto const& i : g_result) {
-        std::cout << i << "\n";
-    }
-}
 
 auto startGenerator(rp_channel_t _channel, rp_waveform_t _wave, uint32_t _rate, float _volt, float _offset,bool _verbose) -> int {
     Color::Modifier red(Color::FG_RED);
@@ -478,8 +319,11 @@ auto testTrig(settings s) -> int {
             // }
 
             if (s.showBuffer || !bufferIsOk) {
-                if (!bufferIsOk)
+                if (!bufferIsOk){
                     printf("Fail in CHA_PE trigger\n");
+                    if (freq > 10000000)
+                        printf("\tCheck 50Ohm load on generator\n");
+                }
                 printBuffer(buffer,-5,10);
             }
             testResult |= !bufferIsOk;
@@ -497,14 +341,18 @@ auto testTrig(settings s) -> int {
             // }
 
             if (s.showBuffer || !bufferIsOk) {
-                if (!bufferIsOk)
+                if (!bufferIsOk){
                     printf("Fail in CHA_NE trigger\n");
+                    if (freq > 10000000)
+                        printf("\tCheck 50Ohm load on generator\n");
+
+                }
                 printBuffer(buffer,-5,10);
             }
             testResult |= !bufferIsOk;
             result |= testResult;
             if (s.verbose || testResult){
-                printTestResult(testName,testResult == 0);
+                printTestResult(g_result,testName,testResult == 0);
             }
 
             if (s.stopOnFail && result) {
@@ -619,7 +467,7 @@ auto testTrigSettingNow(settings s) -> int {
         if (s.verbose || ret){
             std::cout << "Trigger position " << trig_pos << "\n";
             std::cout << "Write position " << write_pos << "\n";
-            printTestResult(testName,ret == 0);
+            printTestResult(g_result,testName,ret == 0);
         }
 
         if (s.stopOnFail && result) {
@@ -756,7 +604,7 @@ auto testKeepArm(settings s) -> int {
         result |= ret;
 
         if (s.verbose || ret){
-            printTestResult(testName,ret == 0);
+            printTestResult(g_result,testName,ret == 0);
         }
 
         if (s.stopOnFail && result) {
@@ -887,7 +735,7 @@ auto testTrigDelay(settings s) -> int {
             }
 
             if (s.verbose || ret){
-                printTestResult(testName,ret == 0);
+                printTestResult(g_result,testName,ret == 0);
             }
 
             if (s.stopOnFail && ret) {
@@ -897,6 +745,130 @@ auto testTrigDelay(settings s) -> int {
         }
     }
 
+    rp_deleteBuffer(buffer);
+    rp_CalibrationSetParams(old_calib);
+    return result;
+}
+
+
+auto testNoise(settings s) -> int {
+
+    rp_SetLEDEthState(false);
+    rp_SetLEDHeartBeatState(false);
+    rp_SetLEDMMCState(false);
+
+    auto old_calib = rp_GetCalibrationSettings();
+    auto def_calib = rp_GetDefaultCalibrationSettings();
+    rp_CalibrationSetParams(def_calib);
+    uint32_t adcRate = getADCRate();
+    uint32_t minPointerPerPer = 8;
+    uint32_t maxPointerPerPer = 100;
+    uint32_t steps = 25;
+    auto model = getModel();
+    int result = 0;
+    list<uint32_t> dec_list;
+    for(uint32_t dec = RP_DEC_1; dec <= RP_DEC_65536; dec *= 2){
+        dec_list.push_back(dec);
+        if (dec >= RP_DEC_4096){
+            steps = 6;
+        }
+        if (dec >= 16 && dec < RP_DEC_65536){
+            dec_list.push_back(dec + 1);
+            dec_list.push_back(dec + 2);
+            dec_list.push_back(dec + 3);
+            dec_list.push_back(dec + 4);
+        }
+    }
+
+    map<uint32_t,vector<uint32_t>> test_list;
+
+    for(auto i : dec_list){
+        auto adcCurRate = adcRate / i;
+        auto maxFreq = adcCurRate / minPointerPerPer;
+        if (maxFreq > 17000000) { // DAC limitation
+            maxFreq = 17000000;
+        }
+
+        auto minFreq = adcCurRate / maxPointerPerPer;
+        minFreq = MAX(minFreq,1);
+        maxFreq = MAX(maxFreq,1);
+
+        auto freqSteps = MAX(1,(maxFreq - minFreq) / steps);
+        test_list[i] = {};
+        for(uint32_t freq = minFreq; freq < maxFreq; freq += freqSteps){
+            if (model == RP_122_16){
+                if (freq  < 100000)
+                    continue;
+            }
+            test_list[i].push_back(freq);
+        }
+    }
+    auto buffer = rp_createBuffer(getADCChannels(),ADC_BUFFER_SIZE,true,false,false);
+    if (!buffer){
+        printf("Can't allocate buffer\n");
+        exit(-1);
+    }
+
+    vector<testStep> trig_list = {{RP_CH_1,RP_T_CH_1,RP_TRIG_SRC_CHA_PE},
+                                  {RP_CH_2,RP_T_CH_2,RP_TRIG_SRC_CHB_PE}};
+
+
+    for(auto &i : test_list){
+        auto dec = i.first;
+        auto freq_list = i.second;
+        for(auto freq : freq_list){
+            int testResult = 0;
+            string testName = "Noise test. Decimate: " + to_string(dec) + ". Signal freq: " + to_string(freq);
+            if (s.verbose){
+                std::cout << testName << "\n";
+            }
+            testResult |= startGenerator(RP_CH_1,RP_WAVEFORM_SINE,freq,  0.9,0,s.verbose);
+
+            for(auto test_step : trig_list){
+                testResult |=  getData(test_step.channel_t,dec,ADC_BUFFER_SIZE, 0 ,test_step.t_source,s.verbose,buffer);
+
+                int ch = test_step.channel;
+                auto end = buffer->size - 1;
+                bool bufferIsOk = true;
+
+                unsigned int idx = 0;
+                for(; idx < end - 2; idx++){
+
+                    if (buffer->ch_i[ch][idx] > 0 && buffer->ch_i[ch][idx + 2] > 0){
+                        if (buffer->ch_i[ch][idx+1] <= 0){
+                            bufferIsOk = false;
+                            break;
+                        }
+                    }
+
+                    if (buffer->ch_i[ch][idx] < 0 && buffer->ch_i[ch][idx + 2] < 0){
+                        if (buffer->ch_i[ch][idx+1] >= 0){
+                            bufferIsOk = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (s.showBuffer || !bufferIsOk) {
+                    if (!bufferIsOk){
+                        printf("Fail in %s trigger\n",getTrigName(test_step.t_source).c_str());
+                        if (freq > 10000000)
+                            printf("\tCheck 50Ohm load on generator\n");
+                    }
+                    printBuffer(buffer,idx ,3);
+                }
+                testResult |= !bufferIsOk;
+            }
+            result |= testResult;
+            if (s.verbose || testResult){
+                printTestResult(g_result, testName,testResult == 0);
+            }
+
+            if (s.stopOnFail && result) {
+                exit(-1);
+            }
+        }
+    }
     rp_deleteBuffer(buffer);
     rp_CalibrationSetParams(old_calib);
     return result;
@@ -939,7 +911,12 @@ int main(int argc, char **argv){
         result |=  testKeepArm(s);
     }
 
-    printAllResult();
+
+    if (s.testNoise && !s.noDAC){
+        result |=  testNoise(s);
+    }
+
+    printAllResult(g_result);
 
     rp_Release();
     return result;

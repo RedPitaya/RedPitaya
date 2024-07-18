@@ -24,18 +24,22 @@ static volatile int32_t *data_ch[2] = {NULL,NULL};
 
 
 int generate_Init() {
-    cmn_Map(GENERATE_BASE_SIZE, GENERATE_BASE_ADDR, (void **) &generate);
+    int ret = cmn_Map(GENERATE_BASE_SIZE, GENERATE_BASE_ADDR, (void **) &generate);
+    if (ret != RP_OK){
+        return ret;
+    }
     data_ch[0] = (int32_t *) ((char *) generate + (CHA_DATA_OFFSET));
     data_ch[1] = (int32_t *) ((char *) generate + (CHB_DATA_OFFSET));
-    return RP_OK;
+    return ret;
 }
 
 int generate_Release() {
+    int ret = RP_OK;
     if (generate)
-        cmn_Unmap(GENERATE_BASE_SIZE, (void **) &generate);
+        ret = cmn_Unmap(GENERATE_BASE_SIZE, (void **) &generate);
     data_ch[0] = NULL;
     data_ch[1] = NULL;
-    return RP_OK;
+    return ret;
 }
 
 int getChannelPropertiesAddress(volatile ch_properties_t **ch_properties, rp_channel_t channel) {
@@ -47,11 +51,11 @@ int getChannelPropertiesAddress(volatile ch_properties_t **ch_properties, rp_cha
 
 int generate_setOutputDisable(rp_channel_t channel, bool disable) {
     if (channel == RP_CH_1) {
-        cmn_Debug("generate->AsetOutputTo0",disable ? 1 : 0);
+        cmn_Debug("generate->AsetOutputTo0 <- 0x%X",disable ? 1 : 0);
         generate->AsetOutputTo0 = disable ? 1 : 0;
     }
     else if (channel == RP_CH_2) {
-        cmn_Debug("generate->BsetOutputTo0",disable ? 1 : 0);
+        cmn_Debug("generate->BsetOutputTo0 <- 0x%X",disable ? 1 : 0);
         generate->BsetOutputTo0 = disable ? 1 : 0;
     }
     else {
@@ -73,10 +77,10 @@ int generate_setFrequency(rp_channel_t channel, float frequency,float baseFreq) 
     volatile ch_properties_t *ch_properties;
     getChannelPropertiesAddress(&ch_properties, channel);
     uint32_t value = (uint32_t) round(65536 * frequency / baseFreq * DAC_BUFFER_SIZE);
-    cmn_DebugCh("ch_properties->counterStep",channel,value);
+    cmn_Debug("[Ch%d] ch_properties->counterStep <- 0x%X",channel,value);
     ch_properties->counterStep = value;
     uint32_t wrap_flag = 1;
-    cmn_DebugCh("generate->_SM_WrapPointer",channel,wrap_flag);
+    cmn_Debug("[Ch%d] generate->_SM_WrapPointer <- 0x%X",channel,wrap_flag);
     channel == RP_CH_1 ? (generate->ASM_WrapPointer = wrap_flag) : (generate->BSM_WrapPointer = wrap_flag);
     return RP_OK;
 }
@@ -89,7 +93,7 @@ int generate_getFrequency(rp_channel_t channel, float *frequency,float baseFreq)
 }
 
 int generate_setWrapCounter(rp_channel_t channel, uint32_t size) {
-    cmn_DebugCh("generate->properties_ch_.counterWrap",channel,65536 * size - 1);
+    cmn_Debug("[Ch%d] generate->properties_ch_.counterWrap <- 0x%X",channel,65536 * size - 1);
     CHANNEL_ACTION(channel,
             generate->properties_chA.counterWrap = 65536 * size - 1,
             generate->properties_chB.counterWrap = 65536 * size - 1)
@@ -97,7 +101,7 @@ int generate_setWrapCounter(rp_channel_t channel, uint32_t size) {
 }
 
 int generate_setTriggerSource(rp_channel_t channel, unsigned short value) {
-    cmn_DebugCh("generate->_triggerSelector",channel,value);
+    cmn_Debug("[Ch%d] generate->_triggerSelector <- 0x%X",channel,value);
     CHANNEL_ACTION(channel,
             generate->AtriggerSelector = value,
             generate->BtriggerSelector = value)
@@ -112,7 +116,7 @@ int generate_getTriggerSource(rp_channel_t channel, uint32_t *value) {
 }
 
 int generate_setGatedBurst(rp_channel_t channel, uint32_t value) {
-    cmn_DebugCh("generate->_gatedBursts",channel,value);
+    cmn_Debug("[Ch%d] generate->_gatedBursts <- 0x%X",channel,value);
     CHANNEL_ACTION(channel,
             generate->AgatedBursts = value,
             generate->BgatedBursts = value)
@@ -129,7 +133,7 @@ int generate_getGatedBurst(rp_channel_t channel, uint32_t *value) {
 int generate_setBurstCount(rp_channel_t channel, uint32_t num) {
     volatile ch_properties_t *ch_properties;
     getChannelPropertiesAddress(&ch_properties, channel);
-    cmn_DebugCh("ch_properties->cyclesInOneBurs",channel,num);
+    cmn_Debug("[Ch%d] ch_properties->cyclesInOneBurs <- 0x%X",channel,num);
     ch_properties->cyclesInOneBurst = num;
     return RP_OK;
 }
@@ -144,7 +148,7 @@ int generate_getBurstCount(rp_channel_t channel, uint32_t *num) {
 int generate_setBurstRepetitions(rp_channel_t channel, uint32_t repetitions) {
     volatile ch_properties_t *ch_properties;
     getChannelPropertiesAddress(&ch_properties, channel);
-    cmn_DebugCh("ch_properties->burstRepetitions",channel,repetitions);
+    cmn_Debug("[Ch%d] ch_properties->burstRepetitions <- 0x%X",channel,repetitions);
     ch_properties->burstRepetitions = repetitions;
     return RP_OK;
 }
@@ -159,7 +163,7 @@ int generate_getBurstRepetitions(rp_channel_t channel, uint32_t *repetitions) {
 int generate_setBurstDelay(rp_channel_t channel, uint32_t delay) {
     volatile ch_properties_t *ch_properties;
     getChannelPropertiesAddress(&ch_properties, channel);
-    cmn_DebugCh("ch_properties->delayBetweenBurstRepetitions",channel,delay);
+    cmn_Debug("[Ch%d] ch_properties->delayBetweenBurstRepetitions <- 0x%X",channel,delay);
     ch_properties->delayBetweenBurstRepetitions = delay;
     return RP_OK;
 }
@@ -185,9 +189,9 @@ int generate_Trigger(rp_channel_t channel){
     }
     uint32_t curValue = 0;
     if (cmn_GetValue((uint32_t *) generate,&curValue,mask) == RP_OK){
-        cmn_DebugCh("cmn_UnsetBits((uint32_t *) generate) mask 0x000F000F",channel,curValue);
+        cmn_Debug("[Ch%d] cmn_UnsetBits((uint32_t *) generate) mask 0x000F000F <- 0x%X",channel,curValue);
         cmn_UnsetBits((uint32_t *) generate, curValue, mask);
-        cmn_DebugCh("cmn_SetBits((uint32_t *) generate) mask 0x000F000F",channel,curValue);
+        cmn_Debug("[Ch%d] cmn_SetBits((uint32_t *) generate) mask 0x000F000F <- 0x%X",channel,curValue);
         return cmn_SetBits((uint32_t *) generate, curValue, mask);
     }
     return RP_EOOR;
@@ -197,9 +201,9 @@ int generate_simultaneousTrigger() {
     uint32_t mask = 0x000F000F;
     uint32_t curValue = 0;
     if (cmn_GetValue((uint32_t *) generate,&curValue,mask) == RP_OK){
-        cmn_Debug("cmn_UnsetBits((uint32_t *) generate) mask 0x000F000F",curValue);
+        cmn_Debug("cmn_UnsetBits((uint32_t *) generate) mask 0x000F000F <- 0x%X",curValue);
         cmn_UnsetBits((uint32_t *) generate, curValue, mask);
-        cmn_Debug("cmn_SetBits((uint32_t *) generate) mask 0x000F000F",curValue);
+        cmn_Debug("cmn_SetBits((uint32_t *) generate) mask 0x000F000F <- 0x%X",curValue);
         return cmn_SetBits((uint32_t *) generate, curValue, mask);
     }
     return RP_EOOR;
@@ -207,10 +211,10 @@ int generate_simultaneousTrigger() {
 
 int generate_setOutputEnableSync(bool enable){
     if (enable) {
-         cmn_Debug("cmn_UnsetBits((uint32_t *) generate) mask 0x00800080",0x00800080);
+         cmn_Debug("cmn_UnsetBits((uint32_t *) generate) mask 0x00800080 <- 0x%X",0x00800080);
          return cmn_UnsetBits((uint32_t *) generate, 0x00800080 , 0x00800080);
     }else{
-         cmn_Debug("cmn_SetBits((uint32_t *) generate) mask 0x00800080",0x00800080);
+         cmn_Debug("cmn_SetBits((uint32_t *) generate) mask 0x00800080 <- 0x%X",0x00800080);
          return cmn_SetBits((uint32_t *) generate, 0x00800080 , 0x00800080);
     }
 }
@@ -218,18 +222,18 @@ int generate_setOutputEnableSync(bool enable){
 
 int generate_ResetSM() {
     // Both channels must be reset state machine
-    cmn_Debug("cmn_SetBits((uint32_t *) generate) mask 0x00400040",0x00400040);
+    cmn_Debug("cmn_SetBits((uint32_t *) generate) mask 0x00400040 <- 0x%X",0x00400040);
     cmn_SetBits((uint32_t *) generate, 0x00400040, 0x00400040);
-    cmn_Debug("cmn_UnsetBits((uint32_t *) generate) mask 0x00400040",0x00400040);
+    cmn_Debug("cmn_UnsetBits((uint32_t *) generate) mask 0x00400040 <- 0x%X",0x00400040);
     cmn_UnsetBits((uint32_t *) generate, 0x00400040, 0x00400040);
     return RP_OK;
 }
 
 int generate_ResetChannelSM(rp_channel_t channel){
     uint32_t value = channel == RP_CH_1 ? 0x00000040 : 0x00400000;
-    cmn_Debug("cmn_SetBits((uint32_t *) generate) mask 0x00400040",value);
+    cmn_Debug("cmn_SetBits((uint32_t *) generate) mask 0x00400040 <- 0x%X",value);
     cmn_SetBits((uint32_t *) generate, value, value);
-    cmn_Debug("cmn_UnsetBits((uint32_t *) generate) mask 0x00400040",value);
+    cmn_Debug("cmn_UnsetBits((uint32_t *) generate) mask 0x00400040 <- 0x%X",value);
     cmn_UnsetBits((uint32_t *) generate, value, value);
     return RP_OK;
 }
@@ -239,13 +243,13 @@ int generate_writeData(rp_channel_t channel, float *data, int32_t start, uint32_
 
     uint8_t bits = 0;
     if (rp_HPGetFastDACBits(&bits) != RP_HP_OK){
-        fprintf(stderr,"[Error:generate_writeData] Can't get fast DAC bits\n");
+        ERROR("Can't get fast DAC bits\n");
         return RP_NOTS;
     }
 
     bool is_sign = false;
     if (rp_HPGetFastDACIsSigned(&is_sign) != RP_HP_OK){
-        fprintf(stderr,"[Error:generate_writeData] Can't get fast DAC sign value\n");
+        ERROR("Can't get fast DAC sign value\n");
         return RP_NOTS;
     }
 
@@ -328,7 +332,7 @@ int generate_setAmplitude(rp_channel_t channel,rp_gen_gain_t gain, float amplitu
     // Spechal convert from Volt to RAW. 0x2000 = 1x
     int32_t value = cmn_convertToCnt(amplitude * gain_calib, bits, fsBase,is_sign,1, 0);
     //  fprintf(stderr,"Gain %f amplitude  %f ofcalb %d res %d bits %d fsBase %f\n",gain_calib,amplitude,0,value,bits,fsBase);
-    cmn_DebugCh("ch_properties->amplitudeScale",channel,value);
+    cmn_Debug("[Ch%d] ch_properties->amplitudeScale <- 0x%X",channel,value);
     ch_properties->amplitudeScale = value;
     return RP_OK;
 }
@@ -396,7 +400,7 @@ int generate_setDCOffset(rp_channel_t channel,rp_gen_gain_t gain, float offset) 
     getChannelPropertiesAddress(&ch_properties, channel);
     int32_t value = cmn_convertToCnt(offset * gain_calib,bits,fsBase,is_sign,1,offset_calib);
 //    fprintf(stderr,"Gain %f offset  %f ofcalb %d res %d bits %d fsBase %f\n",gain_calib,offset,offset_calib,value,bits,fsBase);
-    cmn_DebugCh("ch_properties->amplitudeOffset",channel,value);
+    cmn_Debug("[Ch%d] ch_properties->amplitudeOffset <- 0x%X",channel,value);
     ch_properties->amplitudeOffset = value;
     return RP_OK;
 }
@@ -413,11 +417,11 @@ int generate_getEnableTempProtection(rp_channel_t channel, bool *enable){
 
 int generate_setEnableTempProtection(rp_channel_t channel, bool enable) {
     if (channel == RP_CH_1) {
-        cmn_Debug("generate->AtempProtected",enable ? 1 : 0);
+        cmn_Debug("generate->AtempProtected <- 0x%X",enable ? 1 : 0);
         generate->AtempProtected = enable ? 1 : 0;
     }
     else if (channel == RP_CH_2) {
-        cmn_Debug("generate->BtempProtected",enable ? 1 : 0);
+        cmn_Debug("generate->BtempProtected <- 0x%X",enable ? 1 : 0);
         generate->BtempProtected = enable ? 1 : 0;
     }
     else {
@@ -437,11 +441,11 @@ int generate_getLatchTempAlarm(rp_channel_t channel, bool *state){
 
 int generate_setLatchTempAlarm(rp_channel_t channel, bool state) {
     if (channel == RP_CH_1) {
-        cmn_Debug("generate->AlatchedTempAlarm",state ? 1 : 0);
+        cmn_Debug("generate->AlatchedTempAlarm <- 0x%X",state ? 1 : 0);
         generate->AlatchedTempAlarm = state ? 1 : 0;
     }
     else if (channel == RP_CH_2) {
-        cmn_Debug("generate->BlatchedTempAlarm",state ? 1 : 0);
+        cmn_Debug("generate->BlatchedTempAlarm <- 0x%X",state ? 1 : 0);
         generate->BlatchedTempAlarm = state ? 1 : 0;
     }
     else {
@@ -484,7 +488,7 @@ int generate_setBurstLastValue(rp_channel_t channel,rp_gen_gain_t gain, float am
     }
 
     uint32_t cnt = cmn_convertToCnt(amplitude,bits,fsBase,is_sign,1.0,0);
-    cmn_DebugCh("generate->BurstFinalValue_ch",channel,cnt);
+    cmn_Debug("[Ch%d] generate->BurstFinalValue_ch <- 0x%X",channel,cnt);
     CHANNEL_ACTION(channel,
         generate->BurstFinalValue_chA = cnt,
         generate->BurstFinalValue_chB = cnt)
@@ -517,7 +521,7 @@ int generate_setInitGenValue(rp_channel_t channel,rp_gen_gain_t gain, float ampl
     }
 
     uint32_t cnt = cmn_convertToCnt(amplitude,bits,fsBase,is_sign,1.0,0);
-    cmn_DebugCh("generate->initGenValue_ch",channel,cnt);
+    cmn_Debug("[Ch%d] generate->initGenValue_ch <- 0x%X",channel,cnt);
     CHANNEL_ACTION(channel,
         generate->initGenValue_chA = cnt,
         generate->initGenValue_chB = cnt)
@@ -526,10 +530,10 @@ int generate_setInitGenValue(rp_channel_t channel,rp_gen_gain_t gain, float ampl
 
 int generate_SetTriggerDebouncer(uint32_t value){
     if (DEBAUNCER_MASK < value) {
-        cmn_Debug("[generate_SetTriggerDebouncer] Error: osc_reg.trig_dbc_t <- ",value);
+        cmn_Debug("[generate_SetTriggerDebouncer] Error: osc_reg.trig_dbc_t <- 0x%X",value);
         return RP_EIPV;
     }
-    cmn_Debug("[generate_SetTriggerDebouncer] osc_reg.trig_dbc_t <- ",value);
+    cmn_Debug("[generate_SetTriggerDebouncer] osc_reg.trig_dbc_t <- 0x%X",value);
     generate->trig_dbc_t = value;
 
     return RP_OK;
@@ -537,6 +541,40 @@ int generate_SetTriggerDebouncer(uint32_t value){
 
 int generate_GetTriggerDebouncer(uint32_t *value){
     *value = generate->trig_dbc_t;
-    cmn_Debug("[generate_GetTriggerDebouncer] osc_reg.trig_dbc_t ->",*value);
+    cmn_Debug("[generate_GetTriggerDebouncer] osc_reg.trig_dbc_t -> 0x%X",*value);
+    return RP_OK;
+}
+
+int generate_setRandomSeed(rp_channel_t channel, uint32_t seed){
+    cmn_Debug("[Ch%d] generate->randomSeed_ch <- 0x%X",channel,seed);
+    CHANNEL_ACTION(channel,
+        generate->randomSeed_chA = seed,
+        generate->randomSeed_chB = seed)
+    return RP_OK;
+}
+
+int generate_getRandomSeed(rp_channel_t channel, uint32_t *seed){
+    uint32_t value;
+    CHANNEL_ACTION(channel,
+            value = generate->randomSeed_chA,
+            value = generate->randomSeed_chB)
+    *seed = value;
+    return RP_OK;
+}
+
+int generate_setEnableRandom(rp_channel_t channel, bool enable){
+    cmn_Debug("[Ch%d] generate->enableNoise_ch <- 0x%X",channel,enable);
+    CHANNEL_ACTION(channel,
+        generate->enableNoise_chA = enable,
+        generate->enableNoise_chB = enable)
+    return RP_OK;
+}
+
+int generate_getEnableRandom(rp_channel_t channel, bool *enable){
+    bool value;
+    CHANNEL_ACTION(channel,
+            value = generate->enableNoise_chA,
+            value = generate->enableNoise_chB)
+    *enable = value;
     return RP_OK;
 }

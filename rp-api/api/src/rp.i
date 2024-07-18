@@ -5,6 +5,7 @@
 %include <cstring.i>
 %include <carrays.i>
 %include <cpointer.i>
+%include <stl.i>
 
 %apply int { rp_dpin_t }
 %apply int { rp_pinState_t }
@@ -25,6 +26,7 @@
 %apply int { rp_acq_trig_src_t }
 %apply int { rp_acq_trig_state_t }
 %apply int { rp_gen_gain_t }
+%apply int { rp_gen_load_mode_t }
 
 %apply int *OUTPUT { rp_pinState_t * state }
 %apply int *OUTPUT { rp_pinDirection_t * direction }
@@ -34,11 +36,12 @@
 %apply int *OUTPUT { rp_gen_sweep_dir_t * mode }
 %apply int *OUTPUT { rp_gen_mode_t * mode }
 %apply int *OUTPUT { rp_trig_src_t * src }
-%apply int *OUTPUT { rp_gen_gain_t * status }
+%apply int *OUTPUT { rp_gen_gain_t * mode }
 %apply int *OUTPUT { rp_acq_decimation_t * decimation }
 %apply int *OUTPUT { rp_acq_trig_src_t * source }
 %apply int *OUTPUT { rp_acq_trig_state_t * state }
 %apply int *OUTPUT { rp_acq_ac_dc_mode_t * status }
+%apply int *OUTPUT { rp_gen_load_mode_t * mode }
 
 %apply bool *OUTPUT { bool * status };
 %apply bool *OUTPUT { bool * state };
@@ -79,6 +82,7 @@
 %apply unsigned int *OUTPUT { uint32_t *coef_pp };
 %apply unsigned int *OUTPUT { uint32_t *_start };
 %apply unsigned int *OUTPUT { uint32_t *_size };
+%apply unsigned int *OUTPUT { uint32_t *size_out };
 
 %apply unsigned int *INOUT { uint32_t *size };
 %apply unsigned int *INOUT { uint32_t *buffer_size };
@@ -102,11 +106,24 @@
 %array_functions(double*,pdArr);
 
 %{
+#define SWIG_FILE_WITH_INIT
 /* Includes the header in the wrapper code */
 #include "rp.h"
 %}
 
+%include "numpy.i"
+
+%init %{
+import_array();
+%}
+
 %pointer_functions(buffers_t, p_buffers_t);
+
+%numpy_typemaps(int16_t,    NPY_INT16   , short)
+
+%apply (int16_t* IN_ARRAY1, int DIM1) {(int16_t* np_buffer, int size)};
+%apply (float* IN_ARRAY1, int DIM1) {(float* np_buffer, int size)};
+%apply (float* IN_ARRAY1, int DIM1) {(float* np_buffer, int size)};
 
 /* Parse the header file to generate wrappers */
 %include "rp_enums.h"

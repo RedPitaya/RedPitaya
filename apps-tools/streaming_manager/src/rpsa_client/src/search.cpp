@@ -1,4 +1,5 @@
 #include "search.h"
+#include "config.h"
 
 auto startSearch(ClientOpt::Options &option) -> void{
     ClientNetConfigManager client("",false);
@@ -21,11 +22,7 @@ auto startSearch(ClientOpt::Options &option) -> void{
         std::cout << std::flush;
         point++;
         if (point > 4) point = 0;
-#ifdef _WIN32
-        sleep(100);
-#else
-        usleep(100000);
-#endif // _WIN32
+        sleepMs(100);
         value = std::chrono::time_point_cast<std::chrono::milliseconds >(std::chrono::system_clock::now()).time_since_epoch();
     }
     std::cout << "\rSearch: DONE";

@@ -6,6 +6,7 @@
 %include <carrays.i>
 %include <cpointer.i>
 %include <std_string.i>
+%include <stl.i>
 
 %apply int { rp_channel_t }
 
@@ -27,8 +28,15 @@
 
 
 %{
+#define SWIG_FILE_WITH_INIT
 /* Includes the header in the wrapper code */
 #include "rp_arb.h"
+%}
+
+%include "numpy.i"
+
+%init %{
+import_array();
 %}
 
 %array_class(uint8_t, arrUInt8);
@@ -40,6 +48,8 @@
 %array_class(u16_ptr, arrpUInt16);
 %array_class(float_ptr, arrpFloat);
 %array_class(double_ptr, arrpDouble);
+
+%apply (float* IN_ARRAY1, int DIM1) {(float* _np_data, int _in_size)};
 
 /* Parse the header file to generate wrappers */
 %include "rp_arb.h"

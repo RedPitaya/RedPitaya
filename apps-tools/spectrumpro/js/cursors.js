@@ -55,8 +55,8 @@
     }
 
     SPEC.updateCursors = function(){
-        SPEC.cursorX(SPEC.params.orig)
-        SPEC.cursorY(SPEC.params.orig)
+        SPEC.cursorX(CLIENT.params.orig)
+        SPEC.cursorY(CLIENT.params.orig)
     }
 
     SPEC.cursorYUpdate = function(cursor,visible,value) {
@@ -101,7 +101,7 @@
 
         if (save) {
             new_value = 1.0 - (new_value  - axes.yaxis.min) / (axes.yaxis.max - axes.yaxis.min);
-            SPEC.params.local[y == 'y1' ? 'SPEC_CUR1_V' : 'SPEC_CUR2_V'] = { value: new_value };
+            CLIENT.params.local[y == 'y1' ? 'SPEC_CUR1_V' : 'SPEC_CUR2_V'] = { value: new_value };
             SPEC.sendParams();
         }
     };
@@ -185,7 +185,7 @@
 
         $('#cur_' + x + ', #cur_' + x + '_info').css('left', left);
 
-        var unit = SPEC.freq_unit[SPEC.params.orig['freq_unit'].value];
+        var unit = SPEC.freq_unit[CLIENT.params.orig['freq_unit'].value];
         if (UI_GRAPH.x_axis_mode === 1){
             new_value = UI_GRAPH.convertLog(new_value);
         }
@@ -198,7 +198,7 @@
         if (save) {
             // new_value = (new_value  - axes.xaxis.min) / (axes.xaxis.max - axes.xaxis.min);
             new_value = left / graph_width;
-            SPEC.params.local[x == 'x1' ? 'SPEC_CUR1_T' : 'SPEC_CUR2_T'] = { value: new_value };
+            CLIENT.params.local[x == 'x1' ? 'SPEC_CUR1_T' : 'SPEC_CUR2_T'] = { value: new_value };
             SPEC.sendParams();
         }
     };
@@ -213,7 +213,7 @@
         if (x1.is(':visible') && x2.is(':visible') && diff_px > 30) {
             var left = Math.min(x1_left, x2_left);
             var value = parseFloat($('#cur_x1_info').html()) - parseFloat($('#cur_x2_info').html());
-            var unit = SPEC.freq_unit[SPEC.params.orig['freq_unit'].value];
+            var unit = SPEC.freq_unit[CLIENT.params.orig['freq_unit'].value];
             var plot = SPEC.getPlot();
             var axes = plot.getAxes();
             var tickDec = axes.xaxis.tickDecimals + 1;

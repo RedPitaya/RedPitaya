@@ -3,8 +3,13 @@
 
 import rp
 import time
+import numpy as np
 
 # rp.h
+
+print("rp.rp_InitAdresses()")
+res = rp.rp_InitAdresses()
+print(res)
 
 print("rp.rp_Init()")
 res = rp.rp_Init()
@@ -338,10 +343,36 @@ print("rp.rp_GenArbWaveform(rp.RP_CH_1,buff.cast(),1024)")
 res = rp.rp_GenArbWaveform(rp.RP_CH_1,buff.cast(),1024)
 print(res)
 
-print("rp.rp_GenGetArbWaveform(rp.RP_CH_1,buff2.cast())")
-res = rp.rp_GenGetArbWaveform(rp.RP_CH_1,buff2.cast())
+print("rp.rp_GenGetArbWaveform(rp.RP_CH_1,buff2.cast(),1024)")
+res = rp.rp_GenGetArbWaveform(rp.RP_CH_1,buff2.cast(),1024)
 print(res,buff2[0],buff2[1],buff2[2],buff2[3],buff2[4],buff2[5])
 
+print("Testing numpy")
+
+N = 1024*16
+arr_f = np.zeros(N, dtype=np.float32)
+
+print("rp.rp_GenGetArbWaveformNP(rp.RP_CH_1,arr_f)")
+res = rp.rp_GenGetArbWaveformNP(rp.RP_CH_1,arr_f)
+print(res,arr_f)
+
+print("rp.rp_GenArbWaveformNP(rp.RP_CH_1,arr_f)")
+res = rp.rp_GenArbWaveformNP(rp.RP_CH_1,arr_f)
+print(res)
+
+print("End testing numpy")
+
+ibuff = rp.i16Buffer(1024)
+print("rp.rp_AcqGetDataRaw(rp.RP_CH_1,0,1024,ibuff.cast())")
+res = rp.rp_AcqGetDataRaw(rp.RP_CH_1,0,1024,ibuff.cast())
+print(res,ibuff[0],ibuff[1],ibuff[2],ibuff[3],ibuff[4])
+
+ibuff = rp.i16Buffer(1024)
+print("rp.rp_AcqGetDataRawWithCalib(rp.RP_CH_1,0,1024,ibuff.cast())")
+res = rp.rp_AcqGetDataRawWithCalib(rp.RP_CH_1,0,1024,ibuff.cast())
+print(res,ibuff[0],ibuff[1],ibuff[2],ibuff[3],ibuff[4])
+
+print("Testing numpy")
 
 print("rp.rp_GenDutyCycle(rp.RP_CH_1,0.2)")
 res = rp.rp_GenDutyCycle(rp.RP_CH_1,0.2)
@@ -659,6 +690,21 @@ print("rp.rp_AcqGetDataPosV(rp.RP_CH_1,0,1024,fbuff,1025)")
 res = rp.rp_AcqGetDataPosV(rp.RP_CH_1,0,1024,fbuff,1025)
 print(res,fbuff[0],fbuff[1],fbuff[2],fbuff[3],fbuff[4])
 
+print("Testing numpy")
+
+N = 128
+arr_i16 = np.zeros(N, dtype=np.int16)
+arr_f = np.zeros(N, dtype=np.float32)
+print("rp.rp_AcqGetDataPosRawNP(rp.RP_CH_1,0,128,arr_i16)")
+res = rp.rp_AcqGetDataPosRawNP(rp.RP_CH_1,0,128,arr_i16)
+print(arr_i16)
+
+print("rp.rp_AcqGetDataPosVNP(rp.RP_CH_1,0,128,arr_f)")
+res = rp.rp_AcqGetDataPosVNP(rp.RP_CH_1,0,128,arr_f)
+print(arr_f)
+
+print("End testing numpy")
+
 ibuff = rp.i16Buffer(1024)
 print("rp.rp_AcqGetDataRaw(rp.RP_CH_1,0,1024,ibuff.cast())")
 res = rp.rp_AcqGetDataRaw(rp.RP_CH_1,0,1024,ibuff.cast())
@@ -669,6 +715,17 @@ print("rp.rp_AcqGetDataRawWithCalib(rp.RP_CH_1,0,1024,ibuff.cast())")
 res = rp.rp_AcqGetDataRawWithCalib(rp.RP_CH_1,0,1024,ibuff.cast())
 print(res,ibuff[0],ibuff[1],ibuff[2],ibuff[3],ibuff[4])
 
+print("Testing numpy")
+
+print("rp.rp_AcqGetDataRawNP(rp.RP_CH_1,0,arr_i16)")
+res = rp.rp_AcqGetDataRawNP(rp.RP_CH_1,0,arr_i16)
+print(arr_i16)
+
+print("rp.rp_AcqGetDataRawWithCalibNP(rp.RP_CH_1,0,arr_i16)")
+res = rp.rp_AcqGetDataRawWithCalibNP(rp.RP_CH_1,0,arr_i16)
+print(arr_i16)
+
+print("End testing numpy")
 
 print("rp.rp_createBuffer(2,1024,True,False,False)")
 buff_t = rp.rp_createBuffer(2,1024,True,False,False)
@@ -676,6 +733,14 @@ print(buff_t)
 
 print("rp.rp_AcqGetData(0,buff_t)")
 res = rp.rp_AcqGetData(0,buff_t)
+print(res)
+print(buff_t.size)
+print(buff_t.channels)
+ch_1i = rp.i16Buffer.frompointer(rp.pi16Arr_getitem(buff_t.ch_i,0))
+print(ch_1i[0],ch_1i[1],ch_1i[2],ch_1i[3],ch_1i[4])
+
+print("rp.rp_AcqGetDataWithCorrection(0,10,-5,buff_t)")
+res = rp.rp_AcqGetDataWithCorrection(0,10,-5,buff_t)
 print(res)
 print(buff_t.size)
 print(buff_t.channels)
@@ -700,6 +765,22 @@ fbuff = rp.fBuffer(1025)
 print("rp.rp_AcqGetDataV(rp.RP_CH_1,0,1024,fbuff)")
 res = rp.rp_AcqGetDataV(rp.RP_CH_1,0,1024,fbuff)
 print(res,fbuff[0],fbuff[1],fbuff[2],fbuff[3],fbuff[4])
+
+print("Testing numpy")
+
+print("rp.rp_AcqGetOldestDataRawNP(rp.RP_CH_1,arr_i16)")
+res = rp.rp_AcqGetOldestDataRawNP(rp.RP_CH_1,arr_i16)
+print(arr_i16)
+
+print("rp.rp_AcqGetLatestDataRawNP(rp.RP_CH_1,arr_i16)")
+res = rp.rp_AcqGetLatestDataRawNP(rp.RP_CH_1,arr_i16)
+print(arr_i16)
+
+print("rp.rp_AcqGetDataVNP(rp.RP_CH_1,0,arr_f)")
+res = rp.rp_AcqGetDataVNP(rp.RP_CH_1,0,arr_f)
+print(arr_f)
+
+print("End testing numpy")
 
 print("rp.rp_createBuffer(2,1024,False,False,True)")
 buff_t = rp.rp_createBuffer(2,1024,False,False,True)
@@ -742,6 +823,18 @@ fbuff = rp.fBuffer(1024)
 print("rp.rp_AcqGetLatestDataV(rp.RP_CH_1,1024,fbuff.cast())")
 res = rp.rp_AcqGetLatestDataV(rp.RP_CH_1,1024,fbuff.cast())
 print(res,fbuff[0],fbuff[1],fbuff[2],fbuff[3],fbuff[4])
+
+print("Testing numpy")
+
+print("rp.rp_AcqGetOldestDataVNP(rp.RP_CH_1,arr_f)")
+res = rp.rp_AcqGetOldestDataVNP(rp.RP_CH_1,arr_f)
+print(arr_f)
+
+print("rp.rp_AcqGetOldestDataVNP(rp.RP_CH_1,arr_f)")
+res = rp.rp_AcqGetOldestDataVNP(rp.RP_CH_1,arr_f)
+print(arr_f)
+
+print("End testing numpy")
 
 x = 0
 print("rp.rp_AcqGetBufSize(x)")
@@ -850,6 +943,179 @@ fbuff = rp.fBuffer(128)
 print("rp.rp_AcqAxiGetDataV(rp.RP_CH_1,trig,128,fbuff.cast())")
 res = rp.rp_AcqAxiGetDataV(rp.RP_CH_1,trig,128,fbuff.cast())
 print(res,fbuff[0],fbuff[1],fbuff[2],fbuff[3],fbuff[4])
+
+print("Testing numpy")
+
+print("rp.rp_AcqAxiGetDataRawNP(rp.RP_CH_1,0,arr_i16)")
+res = rp.rp_AcqAxiGetDataRawNP(rp.RP_CH_1,0,arr_i16)
+print(arr_i16)
+
+print("rp.rp_AcqAxiGetDataVNP(rp.RP_CH_1,0,arr_f)")
+res = rp.rp_AcqAxiGetDataVNP(rp.RP_CH_1,0,arr_f)
+print(arr_f)
+
+print("End testing numpy")
+
+
+print("Testing split triiger functions")
+
+
+print("rp.rp_AcqSetSplitTrigger(True)")
+res = rp.rp_AcqSetSplitTrigger(True)
+print(res)
+
+print("rp.rp_AcqGetSplitTrigger()")
+res = rp.rp_AcqGetSplitTrigger()
+print(res)
+
+print("rp.rp_AcqSetSplitTriggerPass(False)")
+res = rp.rp_AcqSetSplitTriggerPass(False)
+print(res)
+
+print("rp.rp_AcqGetSplitTriggerPass()")
+res = rp.rp_AcqGetSplitTriggerPass()
+print(res)
+
+print("rp.rp_AcqSetArmKeepCh(rp.RP_CH_1, False)")
+res = rp.rp_AcqSetArmKeepCh(rp.RP_CH_1, False)
+print(res)
+
+print("rp.rp_AcqGetArmKeepCh(rp.RP_CH_1)")
+res = rp.rp_AcqGetArmKeepCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqGetBufferFillStateCh(rp.RP_CH_1)")
+res = rp.rp_AcqGetBufferFillStateCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqSetDecimationCh(rp.RP_CH_1, 1)")
+res = rp.rp_AcqSetDecimationCh(rp.RP_CH_1, 1)
+print(res)
+
+print("rp.rp_AcqGetDecimationCh(rp.RP_CH_1)")
+res = rp.rp_AcqGetDecimationCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqSetDecimationFactorCh(rp.RP_CH_1, 1)")
+res = rp.rp_AcqSetDecimationFactorCh(rp.RP_CH_1, 1)
+print(res)
+
+print("rp.rp_AcqGetDecimationFactorCh(rp.RP_CH_1)")
+res = rp.rp_AcqGetDecimationFactorCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqGetSamplingRateHzCh(rp.RP_CH_1)")
+res = rp.rp_AcqGetSamplingRateHzCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqSetTriggerSrcCh(rp.RP_CH_1, rp.RP_TRIG_SRC_NOW)")
+res = rp.rp_AcqSetTriggerSrcCh(rp.RP_CH_1, rp.RP_TRIG_SRC_NOW)
+print(res)
+
+print("rp.rp_AcqGetTriggerSrcCh(rp.RP_CH_1)")
+res = rp.rp_AcqGetTriggerSrcCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqGetTriggerStateCh(rp.RP_CH_1)")
+res = rp.rp_AcqGetTriggerStateCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqSetTriggerDelayCh(rp.RP_CH_1, 1)")
+res = rp.rp_AcqSetTriggerDelayCh(rp.RP_CH_1, 1)
+print(res)
+
+print("rp.rp_AcqGetTriggerDelayCh(rp.RP_CH_1)")
+res = rp.rp_AcqGetTriggerDelayCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqSetTriggerDelayDirectCh(rp.RP_CH_1, 1)")
+res = rp.rp_AcqSetTriggerDelayDirectCh(rp.RP_CH_1, 1)
+print(res)
+
+print("rp.rp_AcqGetTriggerDelayDirectCh(rp.RP_CH_1)")
+res = rp.rp_AcqGetTriggerDelayDirectCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqSetTriggerDelayNsCh(rp.RP_CH_1, 10000)")
+res = rp.rp_AcqSetTriggerDelayNsCh(rp.RP_CH_1, 10000)
+print(res)
+
+print("rp.rp_AcqGetTriggerDelayNsCh(rp.RP_CH_1)")
+res = rp.rp_AcqGetTriggerDelayNsCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqSetTriggerDelayNsDirectCh(rp.RP_CH_1, 10000)")
+res = rp.rp_AcqSetTriggerDelayNsDirectCh(rp.RP_CH_1, 10000)
+print(res)
+
+print("rp.rp_AcqGetTriggerDelayNsDirectCh(rp.RP_CH_1)")
+res = rp.rp_AcqGetTriggerDelayNsDirectCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqGetPreTriggerCounterCh(rp.RP_CH_1)")
+res = rp.rp_AcqGetPreTriggerCounterCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqGetWritePointerCh(rp.RP_CH_1)")
+res = rp.rp_AcqGetWritePointerCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqGetWritePointerAtTrigCh(rp.RP_CH_1)")
+res = rp.rp_AcqGetWritePointerAtTrigCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqStartCh(rp.RP_CH_1)")
+res = rp.rp_AcqStartCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqStopCh(rp.RP_CH_1)")
+res = rp.rp_AcqStopCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqResetCh(rp.RP_CH_1)")
+res = rp.rp_AcqResetCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqUnlockTriggerCh(rp.RP_CH_1)")
+res = rp.rp_AcqUnlockTriggerCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqGetUnlockTriggerCh(rp.RP_CH_1)")
+res = rp.rp_AcqGetUnlockTriggerCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqSetAveragingCh(rp.RP_CH_1,True)")
+res = rp.rp_AcqSetAveragingCh(rp.RP_CH_1,True)
+print(res)
+
+print("rp.rp_AcqGetAveragingCh(rp.RP_CH_1)")
+res = rp.rp_AcqGetAveragingCh(rp.RP_CH_1)
+print(res)
+
+
+print("rp.rp_AcqAxiSetDecimationFactorCh(rp.RP_CH_1, 1)")
+res = rp.rp_AcqAxiSetDecimationFactorCh(rp.RP_CH_1, 1)
+print(res)
+
+print("rp.rp_AcqAxiGetDecimationFactorCh(rp.RP_CH_1)")
+res = rp.rp_AcqAxiGetDecimationFactorCh(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqSetOffset(rp.RP_CH_1,0.5)")
+res = rp.rp_AcqSetOffset(rp.RP_CH_1,0.5)
+print(res)
+
+print("rp.rp_AcqGetOffset(rp.RP_CH_1)")
+res = rp.rp_AcqGetOffset(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqAxiSetOffset(rp.RP_CH_1,0.5)")
+res = rp.rp_AcqAxiSetOffset(rp.RP_CH_1,0.5)
+print(res)
+
+print("rp.rp_AcqAxiGetOffset(rp.RP_CH_1)")
+res = rp.rp_AcqAxiGetOffset(rp.RP_CH_1)
+print(res)
 
 print("rp.rp_Release()")
 res = rp.rp_Release()

@@ -2,7 +2,7 @@
 #define WAV_LIB_WAVRAEDER_H
 
 #include <fstream>
-#include <iostream>
+#include <stdint.h>
 
 using namespace std;
 

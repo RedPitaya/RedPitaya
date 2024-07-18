@@ -54,16 +54,13 @@
     }
 
     OSC.SaveGraphsPNG = function() {
-        html2canvas($('body'), {
-            background: '#343433', // Like background of BODY
-            onrendered: function(canvas) {
-                var a = document.createElement('a');
-                // toDataURL defaults to png, so we need to request a jpeg, then convert for file download.
-                a.href = canvas.toDataURL("image/jpeg").replace("image/jpeg", "image/octet-stream");
-                a.download = 'graphs.jpg';
-                // a.click(); // Not working with firefox
-                fireEvent(a, 'click');
-            }
+        html2canvas(document.querySelector("body"), {backgroundColor: '#343433'}).then(canvas => {
+            var a = document.createElement('a');
+            // toDataURL defaults to png, so we need to request a jpeg, then convert for file download.
+            a.href = canvas.toDataURL("image/jpeg").replace("image/jpeg", "image/octet-stream");
+            a.download = 'graphs.jpg';
+            // a.click(); // Not working with firefox
+            fireEvent(a, 'click');
         });
     }
 
@@ -90,6 +87,9 @@
         } else if (abs_t >= 0.000001) {
             t = t * 1000000;
             unit = ' ns';
+        }
+        if (abs_t === 0){
+            unit = ''
         }
 
         if (print_units)
@@ -141,6 +141,77 @@
 
         return +(v.toFixed(2)) + ' ' + unit;
     };
+
+    OSC.convertVoltageForAxis = function(v) {
+        var abs_v = Math.abs(v);
+        var unit = 'V';
+
+        if (abs_v >= 1000000) {
+            v = v / 1000000;
+            unit = 'MV';
+        } else if (abs_v >= 1000) {
+            v = v / 1000;
+            unit = 'kV';
+        } else if (abs_v >= 1) {
+            v = v * 1;
+            unit = 'V';
+        } else if (abs_v >= 0.001) {
+            v = v * 1000;
+            unit = 'mV';
+        }
+
+        return +(v.toFixed(2)) + ' ' + unit;
+    };
+
+    OSC.mathSuffix = function(){
+        var value_op = OSC.params.orig["OSC_MATH_OP"] ? OSC.params.orig["OSC_MATH_OP"].value : undefined;
+        if (value_op !== undefined){
+            var units = ['', '', '',  '^2', '', '',  '/s', 's'];
+            return units[value_op]
+        }
+        return ""
+    }
+
+    OSC.getCurrentActiveChannel = function() {
+        var selected = $('#right_menu .btn.menu-btn.active')
+        OSC.state.active_channel = ''
+        selected.each(function(idx, li) {
+            OSC.state.active_channel = $(li).attr('channel')
+        })
+    }
+
+    OSC.getSettingsActiveChannel = function() {
+        var name = OSC.state.active_channel
+        var scale = 0
+        var offset = 0
+        var suffix = ''
+        var ref_scale = ''
+        var ref_offset = ''
+
+        var itm = name
+        if (itm){
+
+            ref_scale = 'GPOS_SCALE_'+ itm
+            ref_offset = 'GPOS_OFFSET_'+ itm
+
+            if (itm == "MATH"){
+                suffix = OSC.mathSuffix()
+            }
+
+            if (OSC.params.orig[ref_scale]){
+                scale = OSC.params.orig[ref_scale].value
+            }
+            if (OSC.params.orig[ref_offset]){
+                offset = OSC.params.orig[ref_offset].value
+            }
+        }
+        return {
+            channel: name,
+            scale: scale,
+            offset: offset,
+            suffix: suffix
+          };
+    }
 
     OSC.formatInputValue = function(oldValue, attenuation, is_milis, is_hv) {
         var z = oldValue;
@@ -196,9 +267,6 @@
     OSC.setValue = function(input, value) {
         input.val(value);
     };
-
-
-
 
     OSC.downloadDataAsCSV = function(filename) {
         var strings = "";

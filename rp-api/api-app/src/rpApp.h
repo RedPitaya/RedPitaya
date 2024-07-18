@@ -79,8 +79,8 @@ typedef enum {
 * Type representing oscilloscope math and measure source
 */
 typedef enum {
-    RPAPP_OSC_SOUR_CH1  =   0,         //!< Trigger source ch1
-    RPAPP_OSC_SOUR_CH2  =   1,         //!< Trigger source ch2
+    RPAPP_OSC_SOUR_CH1  =   0,         //!< Trigger source channel 1
+    RPAPP_OSC_SOUR_CH2  =   1,         //!< Trigger source channel 2
     RPAPP_OSC_SOUR_CH3  =   2,         //!< Trigger source channel 3
     RPAPP_OSC_SOUR_CH4  =   3,         //!< Trigger source channel 4
     RPAPP_OSC_SOUR_MATH =   4          //!< Trigger source math
@@ -389,6 +389,22 @@ int rpApp_OscSetTriggerLevel(float level);
 int rpApp_OscGetTriggerLevel(float *level);
 
 /**
+* Sets external trigger level.
+* @param level Level determines value at witch is triggered.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscSetExtTriggerLevel(float level);
+
+/**
+* Gets external trigger level.
+* @param level Level pointer.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscGetExtTriggerLevel(float *level);
+
+/**
 * Sets source signal inverted.
 * @param inverted Determines if the signal is to be inverted or not.
 * @return If the function is successful, the return value is RP_OK.
@@ -643,6 +659,32 @@ int rpApp_OscSetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode _m
 
 int rpApp_OscGetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode *_mode);
 
+int rpApp_OscSetEnableXY(bool _state);
+
+int rpApp_OscGetEnableXY(bool *_state);
+
+int rpApp_OscGetViewDataXY(float *dataX, float *dataY, uint32_t size);
+
+int rpApp_OscSetSrcXAxis(rpApp_osc_source channel);
+
+int rpApp_OscGetSrcXAxis(rpApp_osc_source *channel);
+
+int rpApp_OscSetSrcYAxis(rpApp_osc_source channel);
+
+int rpApp_OscGetSrcYAxis(rpApp_osc_source *channel);
+
+int rpApp_OscPrepareOscillogramBuffer(uint32_t count);
+
+int rpApp_OscGetOscillogramBufferCount(uint32_t *count);
+
+int rpApp_OscGetOscPerSec(uint32_t *count);
+
+int rpApp_OscBufferSelectNext();
+
+int rpApp_OscBufferSelectPrev();
+
+int rpApp_OscBufferCurrent(int32_t *current);
+
 ///@}
 
 // SPECTRUM
@@ -678,6 +720,10 @@ int rpApp_SpecGetADCFreq();
 int rpApp_SpecGetMode(rp_dsp_api::mode_t *mode);
 
 int rpApp_SpecSetMode(rp_dsp_api::mode_t mode);
+
+int rpApp_SpecGetProbe(rp_channel_t channel, uint32_t *probe);
+
+int rpApp_SpecSetProbe(rp_channel_t channel, uint32_t probe);
 
 int rpApp_SpecSetImpedance(double value);
 

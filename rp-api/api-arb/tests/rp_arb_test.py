@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 from rp_arb import *
+import numpy as np
 
 print("rp_ARBInit()")
 res = rp_ARBInit()
@@ -36,6 +37,17 @@ print(res)
 d = arrFloat(1024 * 16)
 print("rp_ARBGetSignalByName('',d.cast())")
 res = rp_ARBGetSignalByName('',d.cast())
+print(res)
+
+N = 1024*16
+arr_f = np.zeros(N, dtype=np.float32)
+
+print("rp_ARBGetSignalNP(0,arr_f)")
+res = rp_ARBGetSignalNP(0,arr_f)
+print(res)
+
+print("rp_ARBGetSignalByNameNP('',arr_f)")
+res = rp_ARBGetSignalByNameNP('',arr_f)
 print(res)
 
 print("rp_ARBSetColor(0,123)")

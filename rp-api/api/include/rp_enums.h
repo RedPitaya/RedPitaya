@@ -20,30 +20,36 @@
  * Type representing digital input output pins.
  */
 typedef enum {
-    RP_LED0,       //!< LED 0
-    RP_LED1,       //!< LED 1
-    RP_LED2,       //!< LED 2
-    RP_LED3,       //!< LED 3
-    RP_LED4,       //!< LED 4
-    RP_LED5,       //!< LED 5
-    RP_LED6,       //!< LED 6
-    RP_LED7,       //!< LED 7
-    RP_DIO0_P,     //!< DIO_P 0
-    RP_DIO1_P,     //!< DIO_P 1
-    RP_DIO2_P,     //!< DIO_P 2
-    RP_DIO3_P,     //!< DIO_P 3
-    RP_DIO4_P,     //!< DIO_P 4
-    RP_DIO5_P,     //!< DIO_P 5
-    RP_DIO6_P,     //!< DIO_P 6
-    RP_DIO7_P,	   //!< DIO_P 7
-    RP_DIO0_N,     //!< DIO_N 0
-    RP_DIO1_N,     //!< DIO_N 1
-    RP_DIO2_N,     //!< DIO_N 2
-    RP_DIO3_N,     //!< DIO_N 3
-    RP_DIO4_N,     //!< DIO_N 4
-    RP_DIO5_N,     //!< DIO_N 5
-    RP_DIO6_N,     //!< DIO_N 6
-    RP_DIO7_N      //!< DIO_N 7
+    RP_LED0 = 0,       //!< LED 0
+    RP_LED1 = 1,       //!< LED 1
+    RP_LED2 = 2,       //!< LED 2
+    RP_LED3 = 3,       //!< LED 3
+    RP_LED4 = 4,       //!< LED 4
+    RP_LED5 = 5,       //!< LED 5
+    RP_LED6 = 6,       //!< LED 6
+    RP_LED7 = 7,       //!< LED 7
+    RP_DIO0_P = 8,     //!< DIO_P 0
+    RP_DIO1_P = 9,     //!< DIO_P 1
+    RP_DIO2_P = 10,    //!< DIO_P 2
+    RP_DIO3_P = 11,    //!< DIO_P 3
+    RP_DIO4_P = 12,    //!< DIO_P 4
+    RP_DIO5_P = 13,    //!< DIO_P 5
+    RP_DIO6_P = 14,    //!< DIO_P 6
+    RP_DIO7_P = 15,    //!< DIO_P 7
+    RP_DIO8_P = 16,    //!< DIO_P 8
+    RP_DIO9_P = 17,	   //!< DIO_P 9
+    RP_DIO10_P = 18,   //!< DIO_P 10
+    RP_DIO0_N = 19,    //!< DIO_N 0
+    RP_DIO1_N = 20,    //!< DIO_N 1
+    RP_DIO2_N = 21,    //!< DIO_N 2
+    RP_DIO3_N = 22,    //!< DIO_N 3
+    RP_DIO4_N = 23,    //!< DIO_N 4
+    RP_DIO5_N = 24,    //!< DIO_N 5
+    RP_DIO6_N = 25,    //!< DIO_N 6
+    RP_DIO7_N = 26,    //!< DIO_N 7
+    RP_DIO8_N = 27,    //!< DIO_N 8
+    RP_DIO9_N = 28,    //!< DIO_N 9
+    RP_DIO10_N = 29    //!< DIO_N 10
 } rp_dpin_t;
 
 /**
@@ -85,16 +91,17 @@ typedef enum {
 } rp_apin_t;
 
 typedef enum {
-    RP_WAVEFORM_SINE,       //!< Wave form sine
-    RP_WAVEFORM_SQUARE,     //!< Wave form square
-    RP_WAVEFORM_TRIANGLE,   //!< Wave form triangle
-    RP_WAVEFORM_RAMP_UP,    //!< Wave form sawtooth (/|)
-    RP_WAVEFORM_RAMP_DOWN,  //!< Wave form reversed sawtooth (|\)
-    RP_WAVEFORM_DC,         //!< Wave form dc
-    RP_WAVEFORM_PWM,        //!< Wave form pwm
-    RP_WAVEFORM_ARBITRARY,  //!< Use defined wave form
-    RP_WAVEFORM_DC_NEG,     //!< Wave form negative dc
-    RP_WAVEFORM_SWEEP       //!< Wave form sweep
+    RP_WAVEFORM_SINE        =   0,  //!< Wave form sine
+    RP_WAVEFORM_SQUARE      =   1,  //!< Wave form square
+    RP_WAVEFORM_TRIANGLE    =   2,  //!< Wave form triangle
+    RP_WAVEFORM_RAMP_UP     =   3,  //!< Wave form sawtooth (/|)
+    RP_WAVEFORM_RAMP_DOWN   =   4,  //!< Wave form reversed sawtooth (|\)
+    RP_WAVEFORM_DC          =   5,  //!< Wave form dc
+    RP_WAVEFORM_PWM         =   6,  //!< Wave form pwm
+    RP_WAVEFORM_ARBITRARY   =   7,  //!< Use defined wave form
+    RP_WAVEFORM_DC_NEG      =   8,  //!< Wave form negative dc
+    RP_WAVEFORM_SWEEP       =   9,  //!< Wave form sweep
+    RP_WAVEFORM_NOISE       =   10  //!< Enables pseudo-random sequence generation
 } rp_waveform_t;
 
 typedef enum {

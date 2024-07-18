@@ -733,3 +733,48 @@ bool rp_HPGetIsDMAinv0_94OrDefault(){
     profiles_t* p = getProfileDefualt();
     return p->is_dma_mode_v0_94;
 }
+
+int rp_HPGetFastADCIsSplitTrigger(bool *value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->is_split_osc_triggers;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+bool rp_HPGetFastADCIsSplitTriggerOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->is_split_osc_triggers;
+}
+
+int rp_HPGetGPIO_N_Count(uint8_t *value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->gpio_N_count;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+uint8_t rp_HPGetGPIO_N_CountOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->gpio_N_count;
+}
+
+int rp_HPGetGPIO_P_Count(uint8_t *value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->gpio_P_count;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+uint8_t rp_HPGetGPIO_P_CountOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->gpio_P_count;
+}

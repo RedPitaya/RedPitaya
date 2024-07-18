@@ -15,9 +15,7 @@
 
 #include "scpi/types.h"
 
-
-void stopSweep();
-
+scpi_result_t RP_GenSweepDefault(scpi_t * context);
 scpi_result_t RP_GenSweepState(scpi_t * context);
 scpi_result_t RP_GenSweepStateQ(scpi_t * context);
 scpi_result_t RP_GenSweepPause(scpi_t * context);

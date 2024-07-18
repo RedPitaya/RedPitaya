@@ -66,6 +66,7 @@ list(APPEND src_rpapp
         ${CMAKE_SOURCE_DIR}/src/osciloscope_logic/view_controller.cpp
         ${CMAKE_SOURCE_DIR}/src/osciloscope_logic/measure_controller.cpp
         ${CMAKE_SOURCE_DIR}/src/osciloscope_logic/adc_controller.cpp
+        ${CMAKE_SOURCE_DIR}/src/osciloscope_logic/xy_controller.cpp
         )
 
 list(APPEND header_rpapp
@@ -102,7 +103,7 @@ if(BUILD_SHARED)
     target_sources(rpapp-shared PRIVATE $<TARGET_OBJECTS:rpapp-obj>)
     target_link_options(rpapp-shared PRIVATE -shared -Wl,--version-script=${CMAKE_SOURCE_DIR}/src/exportmap)
     target_link_libraries(rpapp-shared -lrp -lm -lpthread)
-    target_link_libraries(rpapp-shared rp-hw-calib rp-hw-profiles rp-dsp rp-i2c rp-spi rp-gpio i2c)
+    target_link_libraries(rpapp-shared rp-hw-calib rp-dsp rp-hw-profiles rp-dsp rp-i2c rp-spi rp-gpio i2c)
 
     if(IS_INSTALL)
         install(TARGETS rpapp-shared

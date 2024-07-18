@@ -33,6 +33,8 @@
 #include "api250-12/rp-gpio-power.h"
 #include "api250-12/rp-i2c-max7311.h"
 
+#include "web/rp_client.h"
+
 #include "common/version.h"
 
 #include "uio_lib/oscilloscope.h"

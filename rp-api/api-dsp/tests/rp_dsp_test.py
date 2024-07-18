@@ -69,6 +69,14 @@ print("obj.getMode()")
 res = obj.getMode()
 print(res)
 
+print("obj.setProbe(0,10)")
+res = obj.setProbe(0,10)
+print(res)
+
+print("obj.getProbe(0)")
+res = obj.getProbe(0)
+print(res)
+
 print("obj.fftInit()")
 res = obj.fftInit()
 print(res)
@@ -133,18 +141,9 @@ print("obj.remoteDCCount()")
 res = obj.remoteDCCount()
 print(res)
 
-print("obj.window_clean()")
-res = obj.window_clean()
-print(res)
-
 print("obj.deleteData()")
 res = obj.deleteData(data)
 print(res)
-
-print("obj.fftClean()")
-res = obj.fftClean()
-print(res)
-
 
 # Optimized math functions on arm neon
 # These functions can give a calculation error

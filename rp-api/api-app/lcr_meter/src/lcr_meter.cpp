@@ -80,25 +80,17 @@ const double RANGE_UNITS[] =
 {1e-9, 1e-6, 1e-3, 1, 1e3, 1e6};
 
 
-void flog(char *s){
-    FILE *out = fopen("/tmp/debug.log", "a+");
-    fprintf(out, "%s", s);
-    fclose(out);
-}
-
-
 /* Init the main API structure */
 int lcr_Init()
 {
 
     if(rp_Init() != RP_OK) {
-        FATAL("Unable to inicialize the RPI API structure needed by impedance analyzer application")
-        return RP_EOOR;
+        FATAL("Unable to inicialize the RPI API structure")
+        return RP_LCR_UERROR;
     }
 
     /* Set default values of the lcr structure */
     lcr_SetDefaultValues();
-
 
     /* Set calibration values */
     // FILE* f_calib = fopen("/opt/redpitaya/www/apps/lcr_meter/CAPACITOR_CALIB", "rb");
@@ -112,7 +104,7 @@ int lcr_Init()
     //     fclose(f_calib);
     // }
     // pthread_mutex_unlock(&g_mutex);
-    return RP_OK;
+    return RP_LCR_OK;
 }
 
 /* Release resources used the main API structure */
@@ -121,26 +113,33 @@ int lcr_Release(){
     lcr_GenStop();
     rp_Release();
     TRACE_SHORT("Releasing Red Pitaya library resources.\n");
-    return RP_OK;
+    return RP_LCR_OK;
 }
 
 /* Set default values of all rpi resources */
 int lcr_Reset(){
-    std::lock_guard<std::mutex> lock(g_lcr_mutex);
-    rp_Reset();
+    std::lock_guard lock(g_lcr_mutex);
+    auto ret = rp_Reset();
+    if (ret != RP_OK){
+        ERROR("Reset to default failed")
+        return RP_LCR_UERROR;
+    }
     /* Set default values of the lcr_params structure */
-    lcr_SetDefaultValues();
-    return RP_OK;
+    return lcr_SetDefaultValues();
 }
 
 int lcr_SetPause(bool pause){
     g_lcr_threadPause = pause;
-    return RP_OK;
+    return RP_LCR_OK;
 }
 
 
 int lcr_SetDefaultValues(){
-    ECHECK_LCR_APP(lcr_setRShunt(RP_LCR_S_10));
+    if (main_params.shunt_mode == RP_LCR_S_EXTENSION){
+        ECHECK_LCR_APP(lcr_setRShunt(RP_LCR_S_10));
+    }else{
+        lcr_SetCustomShunt(100);
+    }
     ECHECK_LCR_APP(lcr_SetFrequency(10.0));
     ECHECK_LCR_APP(lcr_SetCalibMode(CALIB_NONE));
     ECHECK_LCR_APP(lcr_SetMeasTolerance(0));
@@ -148,32 +147,32 @@ int lcr_SetDefaultValues(){
     ECHECK_LCR_APP(lcr_SetRangeFormat(0));
     ECHECK_LCR_APP(lcr_SetRangeUnits(0));
     ECHECK_LCR_APP(lcr_SetMeasSeries(true));
-    return RP_OK;
+    return RP_LCR_OK;
 }
 
 int  lcr_GenRun(){
-    std::lock_guard<std::mutex> lock(g_lcr_mutex);
+    std::lock_guard lock(g_lcr_mutex);
     g_lcr_GenRun = true;
     return g_generator.start();
 }
 
 int  lcr_GenStop(){
-    std::lock_guard<std::mutex> lock(g_lcr_mutex);
+    std::lock_guard lock(g_lcr_mutex);
     g_lcr_GenRun = false;
     return g_generator.stop();
 }
 
 /* Main call function */
 int lcr_Run(){
-    std::lock_guard<std::mutex> lock(g_lcr_mutex);
-    if (g_lcr_thread) return RP_EOOR;
+    std::lock_guard lock(g_lcr_mutex);
+    if (g_lcr_thread) return RP_LCR_UERROR;
     g_lcr_threadRun = true;
     g_lcr_thread = new std::thread(lcr_MainThread);
-    return RP_OK;
+    return RP_LCR_OK;
 }
 
 int lcr_Stop(){
-    std::lock_guard<std::mutex> lock(g_lcr_mutex);
+    std::lock_guard lock(g_lcr_mutex);
     g_lcr_threadRun = false;
     if (g_lcr_thread){
         if (g_lcr_thread->joinable()){
@@ -182,17 +181,17 @@ int lcr_Stop(){
             g_lcr_thread = NULL;
         }
     }
-    return RP_OK;
+    return RP_LCR_OK;
 }
 
 int lcr_CopyParams(lcr_main_data_t *params){
-    std::lock_guard<std::mutex> lock(g_lcr_mutex);
-
-    if(lcr_CalculateData(g_th_params.z_out, g_th_params.phase_out, g_th_params.frequency) != RP_OK){
-         return RP_EOOR;
+    std::lock_guard lock(g_lcr_mutex);
+    if (!g_lcr_threadRun) return RP_LCR_NOT_STARTED;
+    if(lcr_CalculateData(g_th_params.z_out, g_th_params.phase_out, g_th_params.frequency) != RP_LCR_OK){
+         return RP_LCR_UERROR;
     }
     memcpy(params,&calc_data,sizeof(lcr_main_data_t));
-    return RP_OK;
+    return RP_LCR_OK;
 }
 
 /* Main Lcr meter thread */
@@ -210,7 +209,7 @@ void lcr_MainThread(){
             /* Main lcr meter algorithm */
             if (!g_lcr_threadPause)
             {
-                std::lock_guard<std::mutex> lock(g_lcr_mutex);
+                std::lock_guard lock(g_lcr_mutex);
                 if (g_lcr_GenRun){
                     int decimation;
                     float freq;
@@ -596,6 +595,11 @@ int lcr_GetRangeUnits(int *units){
 int lcr_CheckModuleConnection(bool _muteWarnings){
     if(g_lcr_hw.checkExtensionModuleConnection(_muteWarnings) != 0)
         return RP_EMNC;
+    return RP_LCR_OK;
+}
+
+int lcr_IsModuleConnected(bool *state){
+    *state = g_lcr_hw.isExtensionConnected();
     return RP_LCR_OK;
 }
 

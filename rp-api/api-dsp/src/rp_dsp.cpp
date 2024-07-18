@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <math.h>
 #include <stdlib.h>
+#include <vector>
 #include <mutex>
 #include <map>
 
@@ -103,17 +104,20 @@ struct CDSP::Impl {
     double   m_imp = 50;
     double   m_window_sum = 1;
     window_mode_t m_window_mode = HANNING;
-    double*  m_window = NULL;
+    std::vector<double>  m_window;
     bool     m_remove_DC = true;
     mode_t   m_mode = DBM;
-    kiss_fft_cpx** m_kiss_fft_out = NULL;
+    std::vector<kiss_fft_cpx> *m_kiss_fft_out = NULL;
     kiss_fftr_cfg  m_kiss_fft_cfg = NULL;
+    size_t m_kiss_fft_cfg_max_size = 0;
     std::mutex m_channelMutex;
     std::map<uint8_t,bool> m_channelState;
+    std::map<uint8_t,uint32_t> m_channelProbe;
+    data_t *m_data = NULL;
 };
 
 
-CDSP::CDSP(uint8_t max_channels,uint32_t max_adc_buffer,uint32_t adc_max_speed) {
+CDSP::CDSP(uint8_t max_channels,uint32_t max_adc_buffer,uint32_t adc_max_speed, bool createStoredData) {
     m_pimpl = new Impl();
     m_pimpl->m_max_adc_buffer_size = max_adc_buffer;
     m_pimpl->m_signal_length = max_adc_buffer;
@@ -122,27 +126,55 @@ CDSP::CDSP(uint8_t max_channels,uint32_t max_adc_buffer,uint32_t adc_max_speed) 
     m_pimpl->m_imp = 50;
     m_pimpl->m_window_sum = 1;
     m_pimpl->m_window_mode = HANNING;
-    m_pimpl->m_window = NULL;
     m_pimpl->m_remove_DC = true;
     m_pimpl->m_mode = DBM;
-    m_pimpl->m_kiss_fft_out = NULL;
     m_pimpl->m_kiss_fft_cfg = NULL;
+    m_pimpl->m_kiss_fft_out = new std::vector<kiss_fft_cpx>[max_channels];
+
     for(uint8_t i = 0 ;i < max_channels; i++){
         m_pimpl->m_channelState[i] = true;
+        m_pimpl->m_channelProbe[i] = 1;
+        m_pimpl->m_kiss_fft_out[i].reserve(max_adc_buffer);
+    }
+
+    m_pimpl->m_window.reserve(max_adc_buffer);
+    if (createStoredData){
+        m_pimpl->m_data = createData();
+    }
+
+    kiss_fftr_alloc(max_adc_buffer, 0, NULL, &m_pimpl->m_kiss_fft_cfg_max_size); // precalculate memory
+    if (m_pimpl->m_kiss_fft_cfg_max_size != 0){
+        uint8_t *memory = new uint8_t[m_pimpl->m_kiss_fft_cfg_max_size];
+        m_pimpl->m_kiss_fft_cfg = kiss_fftr_alloc(max_adc_buffer,0,(void*)memory,&m_pimpl->m_kiss_fft_cfg_max_size);
     }
 }
 
 CDSP::~CDSP(){
-    fftClean();
-    window_clean();
+    if(m_pimpl->m_kiss_fft_out) {
+        delete[] m_pimpl->m_kiss_fft_out;
+        m_pimpl->m_kiss_fft_out = NULL;
+
+    }
+
+    kiss_fft_cleanup();
+
+    if(m_pimpl->m_kiss_fft_cfg) {
+        delete[] (uint8_t *)m_pimpl->m_kiss_fft_cfg;
+        m_pimpl->m_kiss_fft_cfg = NULL;
+    }
+
+    deleteData(m_pimpl->m_data);
     delete m_pimpl;
 }
 
 auto CDSP::setChannel(uint8_t ch, bool enable) -> void{
-    std::lock_guard<std::mutex> lock(m_pimpl->m_channelMutex);
+    std::lock_guard lock(m_pimpl->m_channelMutex);
     m_pimpl->m_channelState[ch] = enable;
 }
 
+auto CDSP::getStoredData() -> data_t *{
+    return m_pimpl->m_data;
+}
 
 auto CDSP::setImpedance(double value) -> void {
     if (value > 0)
@@ -205,10 +237,14 @@ int CDSP::window_init(window_mode_t mode){
     uint32_t i;
     m_pimpl->m_window_sum  = 0;
     m_pimpl->m_window_mode = mode;
-    window_clean();
 
     try{
-        m_pimpl->m_window = new double[getSignalMaxLength()];
+        auto size = getSignalMaxLength();
+        m_pimpl->m_window.resize(size);
+        if (m_pimpl->m_window.size() != size){
+            ERROR("Can not allocate memory");
+            return -1;
+        }
     } catch (const std::bad_alloc& e) {
         ERROR("Can not allocate memory");
         return -1;
@@ -285,7 +321,6 @@ int CDSP::window_init(window_mode_t mode){
             break;
         }
         default:
-            window_clean();
             return -1;
     }
     return 0;
@@ -323,12 +358,6 @@ auto CDSP::remoteDCCount() -> uint8_t{
 }
 
 
-auto CDSP::window_clean() -> int {
-    delete m_pimpl->m_window;
-    m_pimpl->m_window = NULL;
-    return 0;
-}
-
 auto CDSP::getCurrentWindowMode() -> window_mode_t {
     return m_pimpl->m_window_mode;
 }
@@ -347,6 +376,14 @@ auto CDSP::setMode(mode_t mode) -> void {
 
 auto CDSP::getMode() -> mode_t {
     return m_pimpl->m_mode;
+}
+
+auto CDSP::setProbe(uint8_t channel,uint32_t value) -> void{
+    m_pimpl->m_channelProbe[channel] = value;
+}
+
+auto CDSP::getProbe(uint8_t channel,uint32_t *value) -> void{
+    *value = m_pimpl->m_channelProbe[channel];
 }
 
 
@@ -384,7 +421,7 @@ auto CDSP::windowFilter(data_t *data) -> int {
 
     for(j = 0; j < m_pimpl->m_max_channels; j++) {
         for(i = 0; i < getSignalLength(); i++) {
-            data->m_filtred[j][i] = data->m_in[j][i] * m_pimpl->m_window[i];
+            data->m_filtred[j][i] = data->m_in[j][i] * m_pimpl->m_window[i] * m_pimpl->m_channelProbe[j];
         }
     }
     data->m_is_data_filtred = true;
@@ -392,40 +429,16 @@ auto CDSP::windowFilter(data_t *data) -> int {
 }
 
 auto CDSP::fftInit() -> int {
-    if(m_pimpl->m_kiss_fft_out || m_pimpl->m_kiss_fft_cfg) {
-        fftClean();
-    }
+    auto sigLen = getSignalLength();
 
-    m_pimpl->m_kiss_fft_out  = new kiss_fft_cpx*[m_pimpl->m_max_channels];
     for(uint32_t j = 0; j < m_pimpl->m_max_channels; j++) {
-        m_pimpl->m_kiss_fft_out[j] = new kiss_fft_cpx[getSignalLength()];
+        m_pimpl->m_kiss_fft_out[j].resize(sigLen);
     }
 
-    m_pimpl->m_kiss_fft_cfg = kiss_fftr_alloc(getSignalLength(), 0, NULL, NULL);
+    size_t size = m_pimpl->m_kiss_fft_cfg_max_size;
+    m_pimpl->m_kiss_fft_cfg = kiss_fftr_alloc(sigLen, 0, m_pimpl->m_kiss_fft_cfg, &size);
     return 0;
 }
-
-
-auto CDSP::fftClean() -> int {
-    kiss_fft_cleanup();
-
-    if(m_pimpl->m_kiss_fft_out) {
-        for(uint32_t j = 0; j < m_pimpl->m_max_channels; j++) {
-            if (m_pimpl->m_kiss_fft_out[j])
-                delete[] m_pimpl->m_kiss_fft_out[j];
-        }
-        delete[] m_pimpl->m_kiss_fft_out;
-        m_pimpl->m_kiss_fft_out = NULL;
-
-    }
-    if(m_pimpl->m_kiss_fft_cfg) {
-        free(m_pimpl->m_kiss_fft_cfg);
-        m_pimpl->m_kiss_fft_cfg = NULL;
-    }
-    return 0;
-}
-
-
 
 auto CDSP::fft(data_t *data) -> int {
     if (!data || !data->m_in || !data->m_filtred || !data->m_fft){
@@ -441,7 +454,7 @@ auto CDSP::fft(data_t *data) -> int {
     auto _in = data->m_is_data_filtred ? data->m_filtred : data->m_in;
     for(uint32_t j = 0; j < m_pimpl->m_max_channels; j++) {
         if (!m_pimpl->m_channelState[j]) continue;
-        kiss_fftr(m_pimpl->m_kiss_fft_cfg, (kiss_fft_scalar *)_in[j], m_pimpl->m_kiss_fft_out[j]);
+        kiss_fftr(m_pimpl->m_kiss_fft_cfg, (kiss_fft_scalar *)_in[j], m_pimpl->m_kiss_fft_out[j].data());
     }
 
     for(uint32_t j = 0; j < m_pimpl->m_max_channels; j++) {
@@ -527,6 +540,7 @@ auto CDSP::decimate(data_t *data,uint32_t in_len, uint32_t out_len) -> int {
         step = 1;
 
     float wsumf = 1.0 / (float)m_pimpl->m_window_sum * 2.0;
+    auto mode = getMode();
 
     for(uint32_t c = 0; c < m_pimpl->m_max_channels; c++) {
         if (!m_pimpl->m_channelState[c]) continue;
@@ -542,31 +556,40 @@ auto CDSP::decimate(data_t *data,uint32_t in_len, uint32_t out_len) -> int {
             for(k=j; k < j+step; k++) {
 
                 double ch_p = 0;
-
                 //dBm
-                if (getMode() == DBM){
+                if (mode == DBM){
                     /* Conversion to power (Watts) */
                     // V -> RMS -> power
                     ch_p = pow((data->m_fft[c][k] * wsumf) / 1.414213562, 2) /m_pimpl->m_imp;
                 }
                 // V
-                if (getMode() == VOLT){
+                if (mode == VOLT){
                     ch_p = data->m_fft[c][k] * wsumf;
                 }
                 // dBu
-                if (getMode() == DBU){
+                if (mode == DBU){
                     ch_p = data->m_fft[c][k] * wsumf / 1.414213562;
                 }
 
                 // dBV
                 // V -> RMS
-                if (getMode() == DBV){
+                if (mode == DBV){
                     ch_p = data->m_fft[c][k] * wsumf  / 1.414213562;
                 }
 
                  // dBuV
-                if (getMode() == DBuV){
+                if (mode == DBuV){
                     ch_p = data->m_fft[c][k] * wsumf / 1.414213562;
+                }
+
+                // mW
+                if (mode == MW){
+                    ch_p = pow((data->m_fft[c][k] * wsumf) / 1.414213562, 2) /m_pimpl->m_imp;
+                }
+
+                // dBW
+                if (mode == DBW){
+                    ch_p = pow((data->m_fft[c][k] * wsumf) / 1.414213562, 2) /m_pimpl->m_imp;
                 }
 
                 data->m_decimated[c][i] += (double)ch_p;  // Summing the power expressed in Watts associated to each FFT bin
@@ -706,7 +729,7 @@ auto CDSP::cnvToMetric(data_t *data,uint32_t  decimation) -> int{
             }
         }
     }
-
+    auto mode = getMode();
     for(uint32_t c = 0; c < m_pimpl->m_max_channels; c++) {
         if (!m_pimpl->m_channelState[c]) continue;
         max_pw[c] = -10000;
@@ -714,7 +737,7 @@ auto CDSP::cnvToMetric(data_t *data,uint32_t  decimation) -> int{
         for(i = 0; i < getOutSignalLength(); i++) {
 
             /* Conversion to power (Watts) */
-            if (getMode() == DBM){
+            if (mode == DBM){
                 double ch_p=data->m_decimated[c][i];
                 if (ch_p * g_w2mw > 1.0e-12 )
                     data->m_converted[c][i] = 10 * log10f_neon(ch_p * g_w2mw);  // W -> mW -> dBm
@@ -722,11 +745,11 @@ auto CDSP::cnvToMetric(data_t *data,uint32_t  decimation) -> int{
                     data->m_converted[c][i] = -120;
             }
 
-            if (getMode() == VOLT){
+            if (mode == VOLT){
                 data->m_converted[c][i] = data->m_decimated[c][i];
             }
 
-            if (getMode() == DBU){
+            if (mode == DBU){
                 double ch_p = data->m_decimated[c][i];
                 // ( 20*log10( 0.686 / .775 ))
                 if (ch_p * g_w2mw > 1.0e-12 )
@@ -735,7 +758,7 @@ auto CDSP::cnvToMetric(data_t *data,uint32_t  decimation) -> int{
                     data->m_converted[c][i] = -120;
             }
 
-            if (getMode() == DBV){
+            if (mode == DBV){
                 double ch_p = data->m_decimated[c][i];
                 // ( 20*log10( RMS / 1.0 ))
                 if (ch_p * g_w2mw > 1.0e-12 )
@@ -744,13 +767,30 @@ auto CDSP::cnvToMetric(data_t *data,uint32_t  decimation) -> int{
                     data->m_converted[c][i] = -120;
             }
 
-            if (getMode() == DBuV){
+            if (mode == DBuV){
                   double ch_p = data->m_decimated[c][i];
                 // ( 20*log10( RMS / 1.0 )) + 120
                 if (ch_p * g_w2mw > 1.0e-12 )
                     data->m_converted[c][i] = 20 * log10f_neon(ch_p) + 120;
                 else
                     data->m_converted[c][i] = -10;
+            }
+
+            if (mode == MW){
+                  double ch_p = data->m_decimated[c][i];
+                // W -> mW
+                if (ch_p * g_w2mw > 1.0e-12 )
+                    data->m_converted[c][i] = ch_p * g_w2mw;
+                else
+                    data->m_converted[c][i] = 0;
+            }
+
+            if (mode == DBW){
+                 double ch_p=data->m_decimated[c][i];
+                if (ch_p  > 1.0e-12 )
+                    data->m_converted[c][i] = 10 * log10f_neon(ch_p);  // W -> dBW
+                else
+                    data->m_converted[c][i] = -120;
             }
 
             /* Find peaks */

@@ -102,14 +102,13 @@
     }
 
     MAIN.SaveGraphs = function() {
-        html2canvas($('body'), {
-            background: '#343433', // Like background of BODY
-            onrendered: function(canvas) {
-                var a = document.createElement('a');
-                a.href = canvas.toDataURL('image/jpeg').replace('image/jpeg', 'image/octet-stream');
-                a.download = 'graphs.jpg';
-                fireEvent(a, 'click');
-            }
+        html2canvas(document.querySelector("body"), {backgroundColor: '#343433'}).then(canvas => {
+            var a = document.createElement('a');
+            // toDataURL defaults to png, so we need to request a jpeg, then convert for file download.
+            a.href = canvas.toDataURL("image/jpeg").replace("image/jpeg", "image/octet-stream");
+            a.download = 'graphs.jpg';
+            // a.click(); // Not working with firefox
+            fireEvent(a, 'click');
         });
     }
 
@@ -722,22 +721,6 @@ $(function() {
 
     }).resize();
 
-
-
-
-    // Stop the application when page is unloaded
-    $(window).on('beforeunload', function() {
-        CLIENT.ws.onclose = function() {}; // disable onclose handler first
-        CLIENT.ws.close();
-        $.ajax({
-            url: CLIENT.config.stop_app_url,
-            async: false
-        });
-    });
-
-
-
-
     //Crash buttons
     $('#send_report_btn').on('click', function() { MAIN.formEmail() });
     $('#restart_app_btn').on('click', function() { location.reload() });
@@ -755,10 +738,6 @@ $(function() {
         }
     });
 
-
-    // Everything prepared, start application
-    CLIENT.startApp();
-
     MAIN.previousPageUrl = document.referrer;
     console.log(`Previously visited page URL: ${MAIN.previousPageUrl}`);
     const currentUrl = window.location.href;
@@ -766,6 +745,4 @@ $(function() {
         MAIN.previousPageUrl = '/'
     }
     $("#back_button").attr("href", MAIN.previousPageUrl)
-
-
 });

@@ -95,7 +95,11 @@ profiles_t stem_250_12_v1_2b = {
     .is_daisy_chain_clock_sync = false,
 
     .is_dma_mode_v0_94 = true,
-    .is_DAC_50_Ohm_mode = true
+    .is_DAC_50_Ohm_mode = true,
+    .is_split_osc_triggers = false,
+
+    .gpio_N_count = 9,
+    .gpio_P_count = 10
 };
 
 profiles_t* getProfile_STEM_250_12_v1_2b(){

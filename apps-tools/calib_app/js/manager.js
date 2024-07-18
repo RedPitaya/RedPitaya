@@ -178,7 +178,7 @@
                 OBJ.adcSetModel(_value);
                 OBJ.famSetModel(_value);
                 OBJ.filterSetModel(_value);
-                SM.sendParameters();
+                CLIENT.requestParameters();
             });
         }
 
@@ -280,8 +280,8 @@
             $("#reset_ok_btn").off('click');
             $('#reset_cancel_btn').off('click');
             $('#reset_ok_btn').on('click', function() {
-                SM.parametersCache["calib_sig"] = { value: 5 };
-                SM.sendParameters();
+                CLIENT.parametersCache["calib_sig"] = { value: 5 };
+                CLIENT.requestParameters();
                 OBJ.adcCalibChange = false;
                 OBJ.filterCalibChange = false;
             });
@@ -294,8 +294,8 @@
             $("#reset_ok_btn").off('click');
             $('#reset_cancel_btn').off('click');
             $('#reset_ok_btn').on('click', function() {
-                SM.parametersCache["calib_sig"] = { value: 3 };
-                SM.sendParameters();
+                CLIENT.parametersCache["calib_sig"] = { value: 3 };
+                CLIENT.requestParameters();
                 OBJ.adcCalibChange = false;
             });
             $('#reset_cancel_btn').on('click', function() {});
@@ -307,8 +307,8 @@
             $("#reset_ok_btn").off('click');
             $('#reset_cancel_btn').off('click');
             $('#reset_ok_btn').on('click', function() {
-                SM.parametersCache["calib_sig"] = { value: 4 };
-                SM.sendParameters();
+                CLIENT.parametersCache["calib_sig"] = { value: 4 };
+                CLIENT.requestParameters();
                 OBJ.adcCalibChange = false;
             });
             $('#reset_cancel_btn').on('click', function() {});
@@ -333,10 +333,10 @@
             SM.param_callbacks["ch4_min"] = undefined;
 
             OBJ.showMainMenu();
-            SM.parametersCache["SS_NEXTSTEP"] = { value: -2 };
-            SM.parametersCache["F_SS_NEXTSTEP"] = { value: -2};
-            SM.parametersCache["ref_volt"] = { value: 0 }; // SS_NEXTSTEP work only in pair ref_volt
-            SM.sendParameters();
+            CLIENT.parametersCache["SS_NEXTSTEP"] = { value: -2 };
+            CLIENT.parametersCache["F_SS_NEXTSTEP"] = { value: -2};
+            CLIENT.parametersCache["ref_volt"] = { value: 0 }; // SS_NEXTSTEP work only in pair ref_volt
+            CLIENT.requestParameters();
         });
 
         $('#B_CLOSE_ADC_CALIB').on('click', function(ev) {
@@ -345,10 +345,10 @@
                 $("#reset_ok_btn").off('click');
                 $('#reset_cancel_btn').off('click');
                 $('#reset_ok_btn').on('click', function() {
-                    SM.parametersCache["calib_sig"] = { value: 5 };
+                    CLIENT.parametersCache["calib_sig"] = { value: 5 };
                     OBJ.filterCalibChange = false;
                     OBJ.adcCalibChange = false;
-                    SM.sendParameters();
+                    CLIENT.requestParameters();
                     OBJ.closeManualMode();
                 });
                 $('#reset_cancel_btn').on('click', function() {
@@ -369,8 +369,8 @@
             $("#reset_ok_btn").off('click');
             $('#reset_cancel_btn').off('click');
             $('#reset_ok_btn').on('click', function() {
-                SM.parametersCache["calib_sig"] = { value: 6 };
-                SM.sendParameters();
+                CLIENT.parametersCache["calib_sig"] = { value: 6 };
+                CLIENT.requestParameters();
             });
 
             $('#reset_cancel_btn').on('click', function() {});

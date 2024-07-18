@@ -30,13 +30,11 @@ typedef struct analog_mixed_signals_control_s {
 static volatile analog_mixed_signals_control_t *ams = NULL;
 
 static int ams_Init() {
-    cmn_Map(ANALOG_MIXED_SIGNALS_BASE_SIZE, ANALOG_MIXED_SIGNALS_BASE_ADDR, (void**)&ams);
-    return RP_OK;
+    return cmn_Map(ANALOG_MIXED_SIGNALS_BASE_SIZE, ANALOG_MIXED_SIGNALS_BASE_ADDR, (void**)&ams);
 }
 
 static int ams_Release() {
-    cmn_Unmap(ANALOG_MIXED_SIGNALS_BASE_SIZE, (void**)&ams);
-    return RP_OK;
+    return cmn_Unmap(ANALOG_MIXED_SIGNALS_BASE_SIZE, (void**)&ams);
 }
 
 

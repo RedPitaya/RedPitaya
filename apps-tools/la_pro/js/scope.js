@@ -581,7 +581,7 @@
     OSC.checkStatus = function() {
         $.ajax({
             method: "GET",
-            url: "/check_status",
+            url: "/la_check_status",
             timeout: 2000
         }).done(function(msg) {
             switch (OSC.changeStatusStep) {
@@ -952,14 +952,13 @@
     }
 
     OSC.SaveGraphs = function() {
-        html2canvas($('body'), {
-            background: '#343433', // Like background of BODY
-            onrendered: function(canvas) {
-                var a = document.createElement('a');
-                a.href = canvas.toDataURL('image/jpeg').replace('image/jpeg', 'image/octet-stream');
-                a.download = 'graphs.jpg';
-                fireEvent(a, 'click');
-            }
+        html2canvas(document.querySelector("body"), {backgroundColor: '#343433'}).then(canvas => {
+            var a = document.createElement('a');
+            // toDataURL defaults to png, so we need to request a jpeg, then convert for file download.
+            a.href = canvas.toDataURL("image/jpeg").replace("image/jpeg", "image/octet-stream");
+            a.download = 'graphs.jpg';
+            // a.click(); // Not working with firefox
+            fireEvent(a, 'click');
         });
     }
 

@@ -24,7 +24,7 @@
             //ev.preventDefault();
             $('#SPEC_RUN').hide();
             $('#SPEC_STOP').css('display', 'block');
-            SPEC.params.local['SPEC_RUN'] = { value: true };
+            CLIENT.params.local['SPEC_RUN'] = { value: true };
             SPEC.sendParams();
         });
 
@@ -32,29 +32,29 @@
             //ev.preventDefault();
             $('#SPEC_STOP').hide();
             $('#SPEC_RUN').show();
-            SPEC.params.local['SPEC_RUN'] = { value: false };
+            CLIENT.params.local['SPEC_RUN'] = { value: false };
             SPEC.sendParams();
         });
 
         $('#SPEC_SINGLE').on('click', function() {
             ev.preventDefault();
-            SPEC.params.local['SPEC_SINGLE'] = { value: true };
+            CLIENT.params.local['SPEC_SINGLE'] = { value: true };
             SPEC.sendParams();
         });
 
         $('#SPEC_AUTSPECALE').on('click', function() {
             ev.preventDefault();
-            SPEC.params.local['SPEC_AUTSPECALE'] = { value: true };
+            CLIENT.params.local['SPEC_AUTSPECALE'] = { value: true };
             SPEC.sendParams();
         });
 
         $('#SPEC_BUFFER_SIZE').on('click', function() {
-            SPEC.params.local['SPEC_BUFFER_SIZE'] = { value: $("#SPEC_BUFFER_SIZE option:selected").val() };
+            CLIENT.params.local['SPEC_BUFFER_SIZE'] = { value: $("#SPEC_BUFFER_SIZE option:selected").val() };
             SPEC.sendParams();
         });
 
         $("#SWEEP_RESET").on('click',function() {
-            SPEC.params.local['SWEEP_RESET'] = { value: true };
+            CLIENT.params.local['SWEEP_RESET'] = { value: true };
             SPEC.sendParams();
         });
 
@@ -68,7 +68,7 @@
                 if (SPEC.state.sel_sig_name)
                     $('#right_menu .menu-btn.' + SPEC.state.sel_sig_name).removeClass('active');
                 if ($(this).data('signal') == 'output1' || $(this).data('signal') == 'output2') {
-                    var out_enabled = $(this).data('signal') == 'output1' ? SPEC.params.orig["OUTPUT1_STATE"].value : SPEC.params.orig["OUTPUT2_STATE"].value;
+                    var out_enabled = $(this).data('signal') == 'output1' ? CLIENT.params.orig["OUTPUT1_STATE"].value : CLIENT.params.orig["OUTPUT2_STATE"].value;
                     if (out_enabled) {
                         SPEC.state.sel_sig_name = $(this).data('signal');
                         $('#right_menu .menu-btn.' + SPEC.state.sel_sig_name).addClass('active');

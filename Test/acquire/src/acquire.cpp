@@ -85,6 +85,11 @@ int main(int argc, char *argv[])
         }
     }
 
+    if (option.enableDebug){
+        rp_EnableDebugReg();
+    }
+
+
     if (rp_InitReset(option.reset_hk) != RP_OK){
         fprintf(stderr,"Error init rp api\n");
         return -1;
@@ -220,7 +225,7 @@ int main(int argc, char *argv[])
     } else {
         rp_AcqGetWritePointerAtTrig(&pos);
     }
-
+    pos = (pos + option.offset + ADC_BUFFER_SIZE) % ADC_BUFFER_SIZE;
     int start_ch = 0;
     int end_ch = channels - 1;
     auto size = MAX(ADC_BUFFER_SIZE, option.dataSize);

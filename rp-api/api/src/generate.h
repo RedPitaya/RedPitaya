@@ -106,7 +106,14 @@ typedef struct generate_control_s {
     uint32_t reserv4; // 0x64
     uint32_t initGenValue_chA; // 0x68
     uint32_t initGenValue_chB; // 0x6C
+    uint32_t lengthLastValueState_chA; // 0x70
+    uint32_t lengthLastValueState_chB; // 0x74
 
+    uint32_t randomSeed_chA; // 0x78
+    uint32_t randomSeed_chB; // 0x7C
+
+    uint32_t enableNoise_chA :1,:31; // 0x80
+    uint32_t enableNoise_chB :1,:31; // 0x84
 
 } generate_control_t;
 
@@ -152,5 +159,11 @@ int generate_setInitGenValue(rp_channel_t channel,rp_gen_gain_t gain, float ampl
 
 int generate_SetTriggerDebouncer(uint32_t value);
 int generate_GetTriggerDebouncer(uint32_t *value);
+
+int generate_setRandomSeed(rp_channel_t channel, uint32_t seed);
+int generate_getRandomSeed(rp_channel_t channel, uint32_t *seed);
+
+int generate_setEnableRandom(rp_channel_t channel, bool enable);
+int generate_getEnableRandom(rp_channel_t channel, bool *enable);
 
 #endif

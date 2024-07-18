@@ -5,6 +5,7 @@
 #include <mutex>
 #include <atomic>
 #include <vector>
+#include <chrono>
 
 #include "rpApp.h"
 #include "constants.h"
@@ -12,6 +13,36 @@
 class CViewController{
 
 public:
+
+    struct OscillogramInfo{
+        float m_min = 0;
+        float m_max = 0;
+        float m_mean = 0;
+        float m_minUnscale = 0;
+        float m_maxUnscale = 0;
+        float m_meanUnscale = 0;
+        float m_minRaw = 0;
+        float m_maxRaw = 0;
+        float m_meanRaw = 0;
+        uint32_t m_decimatoion = 1;
+        bool m_dataHasTrigger;
+    };
+
+    struct Oscillogram
+    {
+        buffers_t* m_data;
+        std::mutex m_viewMutex;
+        uint32_t m_decimation;
+        bool m_dataHasTrigger;
+        int m_index;
+        uint32_t m_pointerPosition;
+        uint32_t m_validBeforeTrigger;
+        uint32_t m_validAfterTrigger;
+        Oscillogram();
+        ~Oscillogram();
+        Oscillogram(Oscillogram &&) = delete;
+    };
+
 
     enum EViewMode{
         NORMAL = 0,
@@ -32,16 +63,29 @@ public:
 
     auto getSamplesPerDivision() const -> float;
 
-    auto lockView() -> void;
-    auto unlockView() -> void;
+    auto prepareOscillogramBuffer(size_t _maxBuffers) -> void;
+    auto resetCurrentBuffer() -> void;
+    auto nextBuffer() -> void;
+    auto getOscillogramBufferCount() -> size_t;
+
+    auto lockScreenView() -> void;
+    auto unlockScreenView() -> void;
+
+    auto lockControllerView() -> void;
+    auto unlockControllerView() -> void;
+
+    // auto lockCurrentOscilogramm() -> void;
+    // auto unlockCurrentOscilogramm() -> void;
+
+    auto getCurrentOscillogram() -> Oscillogram*;
+    auto getOscillogramForView() -> Oscillogram*;
 
     auto getView(rpApp_osc_source _channel) -> std::vector<float>*;
     auto getOriginalData(rpApp_osc_source _channel) -> std::vector<float>*;
-    auto getAcqBuffers() -> buffers_t*;
+    auto getViewInfo(rpApp_osc_source _channel) -> OscillogramInfo*;
+    // auto getAcqBuffers() -> buffers_t*;
 
     auto getClock() -> double;
-
-    auto isSine(rpApp_osc_source _channel) -> bool;
 
     auto requestUpdateViewFromADC() -> void;
     auto updateViewFromADCDone() -> void;
@@ -65,10 +109,10 @@ public:
     auto setTimeOffset(float _offset) -> int;
     auto getTimeOffset() -> float;
 
-    auto calculateDecimation(float _scale,uint32_t *_decimation) -> int;
-    auto getCurrentDecimation() -> uint32_t;
+    auto calculateDecimation(float _scale,uint32_t *_decimation,bool _continuesMode) -> int;
+    auto getCurrentDecimation(bool _continuesMode) -> uint32_t;
 
-    auto clearView() -> void;
+    // auto clearView() -> void;
 
     auto runOsc() -> void;
     auto stopOsc() -> void;
@@ -76,8 +120,8 @@ public:
 
     auto setTriggerState(bool _state) -> void;
     auto isTriggered() const -> bool;
-    auto setDataWithTrigger(bool _state) -> void;
-    auto isDataWithTrigger() -> bool;
+    // auto setDataWithTrigger(bool _state) -> void;
+    // auto isDataWithTrigger() -> bool;
 
     auto getViewMode() -> EViewMode;
     auto setViewMode(EViewMode _mode) -> void;
@@ -85,8 +129,14 @@ public:
     auto getSampledAfterTriggerInView() -> uint32_t;
     auto calcExtraPoints() -> uint32_t;
 
-    auto setCapturedDecimation(uint32_t _dec) -> void;
-    auto getCapturedDecimation() -> uint32_t;
+    auto addOscCounter() -> void;
+    auto getOscPerSec() -> uint32_t;
+    auto bufferSelectNext() -> void;
+    auto bufferSelectPrev() -> void;
+    auto bufferCurrent(int32_t *current) -> void;
+
+    // auto setCapturedDecimation(uint32_t _dec) -> void;
+    // auto getCapturedDecimation() -> uint32_t;
 
 
 private:
@@ -97,13 +147,19 @@ private:
     uint16_t m_viewGridXCount;
     uint16_t m_viewGridYCount;
     vsize_t  m_viewSizeInPoints;
+
     std::vector<float> m_view[MAX_VIEW_CHANNELS];
-    std::vector<float> m_origialData[MAX_VIEW_CHANNELS];
+    std::vector<float> m_viewRaw[MAX_VIEW_CHANNELS];
+    OscillogramInfo m_viewInfo[MAX_VIEW_CHANNELS];
 
+    std::vector<Oscillogram*> m_origialData;
+
+    std::mutex m_viewControllerMutex;
     std::mutex m_viewMutex;
+    std::mutex m_viewBuffersMutex;
 
-    buffers_t *m_acqData;
-    bool       m_dataHasTrigger;
+    // buffers_t *m_acqData;
+    // bool       m_dataHasTrigger;
 
     std::atomic_bool m_updateViewFromADCRequest;
     std::atomic_bool m_updateViewRequest;
@@ -117,7 +173,13 @@ private:
 
     EViewMode m_ViewMode;
 
-    uint32_t m_capturedDecimation;
+    uint32_t m_currentBuffer;
+    uint32_t m_stoppedBuffer;
+
+    std::chrono::time_point<std::chrono::system_clock> m_lastTimeCapture;
+    uint32_t m_oscPerSec;
+    uint32_t m_oscPerSecCounter;
+
 };
 
 #endif // __VIEW_CONTROLLER_H

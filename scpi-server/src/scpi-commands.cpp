@@ -28,6 +28,7 @@
 #include "spi.h"
 #include "i2c.h"
 #include "can.h"
+#include "lcr.h"
 #include "acquire.h"
 #include "acquire_axi.h"
 #include "generate.h"
@@ -218,31 +219,55 @@ static const scpi_command_t scpi_commands[] = {
 
     /* Acquire */
     {.pattern = "ACQ:START", .callback                  = RP_AcqStart,},
+    {.pattern = "ACQ:START:CH#", .callback              = RP_AcqStartCh,},
     {.pattern = "ACQ:STOP", .callback                   = RP_AcqStop,},
+    {.pattern = "ACQ:STOP:CH#", .callback               = rp_AcqStopCh,},
     {.pattern = "ACQ:RST", .callback                    = RP_AcqReset,},
+    {.pattern = "ACQ:RST:CH#", .callback                = RP_AcqResetCh,},
+    {.pattern = "ACQ:SPLIT:TRig", .callback             = RP_AcqSplitTrigger,},
+    {.pattern = "ACQ:SPLIT:TRig?", .callback            = RP_AcqSplitTriggerQ,},
+
     {.pattern = "ACQ:DEC", .callback                    = RP_AcqDecimation,},
+    {.pattern = "ACQ:DEC:CH#", .callback                = RP_AcqDecimationCh,},
     {.pattern = "ACQ:DEC?", .callback                   = RP_AcqDecimationQ,},
+    {.pattern = "ACQ:DEC:CH#?", .callback               = RP_AcqDecimationChQ,},
     {.pattern = "ACQ:DEC:Factor", .callback             = RP_AcqDecimationFactor,},
+    {.pattern = "ACQ:DEC:Factor:CH#", .callback         = RP_AcqDecimationFactorCh,},
     {.pattern = "ACQ:DEC:Factor?", .callback            = RP_AcqDecimationFactorQ,},
+    {.pattern = "ACQ:DEC:Factor:CH#?", .callback        = RP_AcqDecimationFactorChQ,},
 
     {.pattern = "ACQ:SRATe?", .callback                 = RP_AcqSamplingRateHzQ,},
+    {.pattern = "ACQ:SRATe:CH#?", .callback             = RP_AcqSamplingRateHzChQ,},
     {.pattern = "ACQ:AVG", .callback                    = RP_AcqAveraging,},
     {.pattern = "ACQ:AVG?", .callback                   = RP_AcqAveragingQ,},
+    {.pattern = "ACQ:AVG:CH#", .callback                = RP_AcqAveragingCh,},
+    {.pattern = "ACQ:AVG:CH#?", .callback               = RP_AcqAveragingChQ,},
     {.pattern = "ACQ:TRig", .callback                   = RP_AcqTriggerSrc,},
-    {.pattern = "ACQ:TRig:STAT?", .callback             = RP_AcqTriggerSrcQ,},
+    {.pattern = "ACQ:TRig:CH#", .callback               = RP_AcqTriggerSrcCh,},
+    {.pattern = "ACQ:TRig:STAT?", .callback             = RP_AcqTriggerStateQ,},
+    {.pattern = "ACQ:TRig:STAT:CH#?", .callback         = RP_AcqTriggerStateChQ,},
     {.pattern = "ACQ:TRig:DLY", .callback               = RP_AcqTriggerDelay,},
     {.pattern = "ACQ:TRig:DLY?", .callback              = RP_AcqTriggerDelayQ,},
     {.pattern = "ACQ:TRig:DLY:NS", .callback            = RP_AcqTriggerDelayNs,},
     {.pattern = "ACQ:TRig:DLY:NS?", .callback           = RP_AcqTriggerDelayNsQ,},
+    {.pattern = "ACQ:TRig:DLY:CH#", .callback           = RP_AcqTriggerDelayCh,},
+    {.pattern = "ACQ:TRig:DLY:CH#?", .callback          = RP_AcqTriggerDelayChQ,},
+    {.pattern = "ACQ:TRig:DLY:NS:CH#", .callback        = RP_AcqTriggerDelayNsCh,},
+    {.pattern = "ACQ:TRig:DLY:NS:CH#?", .callback       = RP_AcqTriggerDelayNsChQ,},
     {.pattern = "ACQ:TRig:HYST", .callback              = RP_AcqTriggerHyst,},
     {.pattern = "ACQ:TRig:HYST?", .callback             = RP_AcqTriggerHystQ,},
     {.pattern = "ACQ:TRig:FILL?", .callback             = RP_AcqTriggerFillQ,},
+    {.pattern = "ACQ:TRig:FILL:CH#?", .callback         = RP_AcqTriggerFillChQ,},
     {.pattern = "ACQ:SOUR#:GAIN", .callback             = RP_AcqGain,},
     {.pattern = "ACQ:SOUR#:GAIN?", .callback            = RP_AcqGainQ,},
     {.pattern = "ACQ:TRig:LEV", .callback               = RP_AcqTriggerLevel,},
     {.pattern = "ACQ:TRig:LEV?", .callback              = RP_AcqTriggerLevelQ,},
+    {.pattern = "ACQ:TRig:LEV:CH#", .callback           = RP_AcqTriggerLevelCh,},
+    {.pattern = "ACQ:TRig:LEV:CH#?", .callback          = RP_AcqTriggerLevelChQ,},
     {.pattern = "ACQ:WPOS?", .callback                  = RP_AcqWritePointerQ,},
     {.pattern = "ACQ:TPOS?", .callback                  = RP_AcqWritePointerAtTrigQ,},
+    {.pattern = "ACQ:WPOS:CH#?", .callback              = RP_AcqWritePointerChQ,},
+    {.pattern = "ACQ:TPOS:CH#?", .callback              = RP_AcqWritePointerAtTrigChQ,},
     {.pattern = "ACQ:DATA:Units", .callback             = RP_AcqScpiDataUnits,},
     {.pattern = "ACQ:DATA:Units?", .callback            = RP_AcqScpiDataUnitsQ,},
     {.pattern = "ACQ:DATA:FORMAT", .callback            = RP_AcqDataFormat,},
@@ -262,6 +287,8 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "ACQ:AXI:DATA:Units?", .callback        = RP_AcqAxiScpiDataUnitsQ,},
     {.pattern = "ACQ:AXI:DEC", .callback                = RP_AcqAxiDecimation,},
     {.pattern = "ACQ:AXI:DEC?", .callback               = RP_AcqAxiDecimationQ,},
+    {.pattern = "ACQ:AXI:DEC:CH#", .callback            = RP_AcqAxiDecimationCh,},
+    {.pattern = "ACQ:AXI:DEC:CH#?", .callback           = RP_AcqAxiDecimationChQ,},
     {.pattern = "ACQ:AXI:START?", .callback             = RP_AcqAxiStartQ,},
     {.pattern = "ACQ:AXI:SIZE?", .callback              = RP_AcqAxiEndQ,},
     {.pattern = "ACQ:AXI:SOUR#:Trig:Fill?", .callback   = RP_AcqAxiTriggerFillQ,},
@@ -318,6 +345,7 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "SOUR#:BURS:INT:PER?", .callback        = RP_GenBurstPeriodQ,},
 
     {.pattern = "SOUR:SWeep:PAUSE", .callback           = RP_GenSweepPause,},
+    {.pattern = "SOUR:SWeep:DEFault", .callback         = RP_GenSweepDefault,},
     {.pattern = "SOUR:SWeep:RESET", .callback           = RP_GenSweepReset,},
     {.pattern = "SOUR#:SWeep:STATE", .callback          = RP_GenSweepState,},
     {.pattern = "SOUR#:SWeep:STATE?", .callback         = RP_GenSweepStateQ,},
@@ -374,7 +402,7 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "SPI:INIT", .callback                   = RP_SPI_Init,},
     {.pattern = "SPI:INIT:DEV", .callback               = RP_SPI_InitDev,},
     {.pattern = "SPI:RELEASE", .callback                = RP_SPI_Release,},
-    {.pattern = "SPI:SETtings:DEF", .callback           = RP_SPI_SetDefault,},
+    {.pattern = "SPI:SETtings:DEFault", .callback       = RP_SPI_SetDefault,},
     {.pattern = "SPI:SETtings:SET", .callback           = RP_SPI_SetSettings,},
     {.pattern = "SPI:SETtings:GET", .callback           = RP_SPI_GetSettings,},
 
@@ -457,6 +485,30 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "CAN#:Filter:Clear", .callback          = RP_CAN_ClearFilter,},
     {.pattern = "CAN#:Filter:Set", .callback            = RP_CAN_SetFilter,},
     {.pattern = "CAN#:SHOW:ERROR", .callback            = RP_CAN_ShowErrorFrames,},
+
+    /* LCR */
+
+    {.pattern = "LCR:START", .callback                  = RP_LCRStart,},
+    {.pattern = "LCR:START:GEN", .callback              = RP_LCRStartGen,},
+    {.pattern = "LCR:STOP", .callback                   = RP_LCRStop,},
+    {.pattern = "LCR:RESET", .callback                  = RP_LCRReset,},
+    {.pattern = "LCR:MEASURE?", .callback               = RP_LCRMeasureQ,},
+    {.pattern = "LCR:FREQ", .callback                   = RP_LCRFrequency,},
+    {.pattern = "LCR:FREQ?", .callback                  = RP_LCRFrequencyQ,},
+    {.pattern = "LCR:VOLT", .callback                   = RP_LCRAmplitude,},
+    {.pattern = "LCR:VOLT?", .callback                  = RP_LCRAmplitudeQ,},
+    {.pattern = "LCR:VOLT:OFFS", .callback              = RP_LCROffset,},
+    {.pattern = "LCR:VOLT:OFFS?", .callback             = RP_LCROffsetQ,},
+    {.pattern = "LCR:SHUNT", .callback                  = RP_LCRShunt,},
+    {.pattern = "LCR:SHUNT?", .callback                 = RP_LCRShuntQ,},
+    {.pattern = "LCR:SHUNT:CUSTOM", .callback           = RP_LCRCustomShunt,},
+    {.pattern = "LCR:SHUNT:CUSTOM?", .callback          = RP_LCRCustomShuntQ,},
+    {.pattern = "LCR:SHUNT:MODE", .callback             = RP_LCRShuntMode,},
+    {.pattern = "LCR:SHUNT:MODE?", .callback            = RP_LCRShuntModeQ,},
+    {.pattern = "LCR:SHUNT:AUTO", .callback             = RP_LCRShuntAuto,},
+    {.pattern = "LCR:CIRCUIT", .callback                = RP_LCRMeasSeries,},
+    {.pattern = "LCR:CIRCUIT?", .callback               = RP_LCRMeasSeriesQ,},
+    {.pattern = "LCR:EXT:MODULE?", .callback            = RP_LCRCheckExtensionModuleConnectioQ,},
 
     SCPI_CMD_LIST_END
 };

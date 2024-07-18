@@ -32,7 +32,9 @@ namespace rp_dsp_api{
         VOLT            = 1,
         DBU             = 2,
         DBV             = 3,
-        DBuV            = 4
+        DBuV            = 4,
+        MW              = 5,
+        DBW             = 6
     } mode_t;
 
     typedef struct{
@@ -57,11 +59,12 @@ class CDSP{
 public:
 
 
-    CDSP(uint8_t max_channels,uint32_t adc_buffer,uint32_t adc_max_speed);
+    CDSP(uint8_t max_channels,uint32_t adc_buffer,uint32_t adc_max_speed, bool createStoredData = false);
     ~CDSP();
 
     data_t * createData();
     void deleteData(data_t *data);
+    data_t * getStoredData();
 
     void setChannel(uint8_t ch, bool enable);
     int setSignalLength(uint32_t len);
@@ -72,7 +75,6 @@ public:
     uint32_t getOutSignalMaxLength();
 
     int window_init(window_mode_t mode);
-    int window_clean();
     window_mode_t getCurrentWindowMode();
 
     void setImpedance(double value);
@@ -84,13 +86,14 @@ public:
     void setMode(mode_t mode);
     mode_t getMode();
 
+    void setProbe(uint8_t channel,uint32_t value);
+    void getProbe(uint8_t channel,uint32_t *value);
 
     int prepareFreqVector(data_t *data, double adc_rate_f_s, float decimation);
     int prepareFreqVector(data_t *data, float decimation);
 
     int windowFilter(data_t *data);
     int fftInit();
-    int fftClean();
     int fft(data_t *data);
     int getAmpAndPhase(data_t *_data, double _freq, double *_amp1, double *_phase1, double *_amp2, double *_phase2);
 

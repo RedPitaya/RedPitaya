@@ -465,6 +465,35 @@ int rp_HPGetIsDMAinv0_94(bool *_out_value);
 bool rp_HPGetIsDMAinv0_94OrDefault();
 
 /**
+* Returns the ability to separate trigger logic for fast ADC for v0.94.
+* Function rp_HPGetFastADCIsSplitTriggerOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
+*/
+int rp_HPGetFastADCIsSplitTrigger(bool *_out_value);
+bool rp_HPGetFastADCIsSplitTriggerOrDefault();
+
+
+/**
+* Returns the number of available GPIO outputs N.
+* Function rp_HPGetGPIO_N_CountOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
+*/
+int rp_HPGetGPIO_N_Count(uint8_t *_out_value);
+uint8_t rp_HPGetGPIO_N_CountOrDefault();
+
+
+/**
+* Returns the number of available GPIO outputs P.
+* Function rp_HPGetGPIO_P_CountOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
+*/
+int rp_HPGetGPIO_P_Count(uint8_t *_out_value);
+uint8_t rp_HPGetGPIO_P_CountOrDefault();
+
+/**
  * Print all parameters for current profile
  */
 int rp_HPPrint();

@@ -23,7 +23,7 @@ CMeasureController::~CMeasureController(){
 }
 
 auto CMeasureController::setUnScaleFunction(func_t _func) -> void{
-    std::lock_guard<std::mutex> lock(m_settingsMutex);
+    std::lock_guard lock(m_settingsMutex);
     m_unscaleFunc = _func;
 }
 
@@ -32,7 +32,7 @@ auto CMeasureController::getUnScaleFunction() const -> func_t{
 }
 
 auto CMeasureController::setAttenuateAmplitudeChannelFunction(func_t _func) -> void{
-    std::lock_guard<std::mutex> lock(m_settingsMutex);
+    std::lock_guard lock(m_settingsMutex);
     m_attAmplFunc = _func;
 }
 
@@ -41,14 +41,13 @@ auto CMeasureController::getAttenuateAmplitudeChannelFunction() const -> func_t{
 }
 
 auto CMeasureController::setscaleFunction(func_t _func) -> void{
-    std::lock_guard<std::mutex> lock(m_settingsMutex);
+    std::lock_guard lock(m_settingsMutex);
     m_scaleFunc = _func;
 }
 
 auto CMeasureController::getscaleFunction() const -> func_t{
     return m_scaleFunc;
 }
-
 
 auto CMeasureController::check(const void *_data, vsize_t _sizeView) -> int{
     if (m_unscaleFunc == NULL) {
@@ -74,7 +73,7 @@ auto CMeasureController::check(const void *_data, vsize_t _sizeView) -> int{
 }
 
 auto CMeasureController::measureVpp(const rpApp_osc_source _channel, const std::vector<float> *_data, float *_Vpp) -> int{
-    std::lock_guard<std::mutex> lock(m_settingsMutex);
+    std::lock_guard lock(m_settingsMutex);
 
     auto ret = check(_data,_data->size());
     if (ret != RP_OK)
@@ -97,7 +96,7 @@ auto CMeasureController::measureVpp(const rpApp_osc_source _channel, const std::
 }
 
 auto CMeasureController::measureMax(const rpApp_osc_source _channel, const std::vector<float> *_data, float *_Max) -> int{
-    std::lock_guard<std::mutex> lock(m_settingsMutex);
+    std::lock_guard lock(m_settingsMutex);
 
     auto ret = check(_data,_data->size());
     if (ret != RP_OK)
@@ -116,7 +115,7 @@ auto CMeasureController::measureMax(const rpApp_osc_source _channel, const std::
 }
 
 auto CMeasureController::measureMin(const rpApp_osc_source _channel, const std::vector<float> *_data, float *_Min) -> int{
-    std::lock_guard<std::mutex> lock(m_settingsMutex);
+    std::lock_guard lock(m_settingsMutex);
 
     auto ret = check(_data,_data->size());
     if (ret != RP_OK)
@@ -134,7 +133,7 @@ auto CMeasureController::measureMin(const rpApp_osc_source _channel, const std::
 }
 
 auto CMeasureController::measureMeanVoltage(const rpApp_osc_source _channel, const std::vector<float> *_data, float *_meanVoltage) -> int{
-    std::lock_guard<std::mutex> lock(m_settingsMutex);
+    std::lock_guard lock(m_settingsMutex);
 
     auto ret = check(_data,_data->size());
     if (ret != RP_OK)
@@ -152,7 +151,7 @@ auto CMeasureController::measureMeanVoltage(const rpApp_osc_source _channel, con
 }
 
 auto CMeasureController::measureMaxVoltage(const rpApp_osc_source _channel, bool _inverted, const std::vector<float> *_data, float *_Vmax) -> int{
-    std::lock_guard<std::mutex> lock(m_settingsMutex);
+    std::lock_guard lock(m_settingsMutex);
 
     auto ret = check(_data,_data->size());
     if (ret != RP_OK)
@@ -173,7 +172,7 @@ auto CMeasureController::measureMaxVoltage(const rpApp_osc_source _channel, bool
 }
 
 auto CMeasureController::measureMinVoltage(const rpApp_osc_source _channel, bool _inverted, const std::vector<float> *_data, float *_Vmin) -> int{
-    std::lock_guard<std::mutex> lock(m_settingsMutex);
+    std::lock_guard lock(m_settingsMutex);
 
     auto ret = check(_data,_data->size());
     if (ret != RP_OK)
@@ -199,7 +198,7 @@ auto CMeasureController::measureDutyCycle(const rpApp_osc_source _channel, const
     ECHECK_APP(measureMeanVoltage(_channel, _data, &meanValue));
     ECHECK_APP(m_scaleFunc(_channel, meanValue, &meanValue))
 
-    std::lock_guard<std::mutex> lock(m_settingsMutex);
+    std::lock_guard lock(m_settingsMutex);
     auto ret = check(_data,_data->size());
     if (ret != RP_OK)
         return ret;
@@ -216,7 +215,7 @@ auto CMeasureController::measureDutyCycle(const rpApp_osc_source _channel, const
 }
 
 auto CMeasureController::measureRootMeanSquare(const rpApp_osc_source _channel, const std::vector<float> *_data, float *_rms) -> int{
-    std::lock_guard<std::mutex> lock(m_settingsMutex);
+    std::lock_guard lock(m_settingsMutex);
 
     auto ret = check(_data,_data->size());
     if (ret != RP_OK)

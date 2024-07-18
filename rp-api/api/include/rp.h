@@ -89,6 +89,10 @@ extern "C" {
 #define RP_EMNC   23
 /** Command not supported */
 #define RP_NOTS   24
+/** Error allocate memory */
+#define RP_EAM    26
+/** Api not initialized */
+#define RP_EANI   27
 
 #define SPECTR_OUT_SIG_LEN (2*1024)
 
@@ -99,6 +103,15 @@ extern "C" {
 /** @name General
  */
 ///@{
+
+
+/**
+ * Initializes addresses for accessing registers. Does not initialize calibration parameters.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+
+int rp_InitAdresses();
 
 
 /**

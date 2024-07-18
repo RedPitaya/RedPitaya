@@ -19,6 +19,8 @@
     <title>Red Pitaya</title>
     <link rel="stylesheet" href="../assets/bootstrap/css/bootstrap.min.css?1" onerror="location.reload()">
     <link rel="stylesheet" href="../assets/popupstack.css?1" type="text/css" onerror="location.reload()" />
+    <link rel="stylesheet" href="../assets/lpulse.css?1" type="text/css">
+    <link rel="stylesheet" href="../assets/usermis.css" type="text/css">
     <link rel="stylesheet" href="../assets/help-system/help-system.css?1" type="text/css" onerror="location.reload()" />
     <link href="../assets/loader.css?1" rel="stylesheet" type="text/css" onerror="location.reload()" />
     <link rel="stylesheet" href="css/style.css?2" onerror="location.reload()">
@@ -34,13 +36,21 @@
     <script src="../assets/pako.js?1" onerror="location.reload()"></script>
     <script src="js/help-sm.js?1" onerror="location.reload()"></script>
     <script src="js/guiHandler.js?1" onerror="location.reload()"></script>
-    <script src="js/rate_limitator.js?1" onerror="location.reload()"></script>
     <script src="js/sm.js?1" onerror="location.reload()"></script>
+    <script src="js/client.js?2" onerror="location.reload()"></script>
 </head>
 
-<body>
+<body class="user_lost connection_lost">
     <div id="loader-wrapper">
         <div id="loader"></div>
+    </div>
+    <div id="user-wrapper">
+        <div id="user"></div>
+        <div id="user-desc">Device is already in use by another user.</div>
+    </div>
+    <div id="pulse-wrapper">
+        <div id="pulse"></div>
+        <div id="pulse-desc">Connection with device is lost.</div>
     </div>
     <div id="header">
         <div id="description">&nbsp;</div>
@@ -282,6 +292,9 @@
                                     </a>
                                     <a id="PC_CON_LIN" target="_top">
                                         <img class="image_button" src="./img/ConLinGreen.png" loading="lazy" width="30px" height="30px" style="margin-right: 10px;">
+                                    </a>
+                                    <a id="RP_CON_LIN" target="_top">
+                                        <img class="image_button" src="./img/ConRPGreen.png" loading="lazy" width="30px" height="30px" style="margin-right: 10px;">
                                     </a>
                                 </div>
                             </div>

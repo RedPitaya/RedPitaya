@@ -120,7 +120,7 @@ $(function() {
     $('#SCPI_STOP').click(SCPI.StopServer);
 
     $('#SCPI_EXAMPLES').click(function(){
-        window.open('http://redpitaya.readthedocs.io/en/latest/appsFeatures/remoteControl/remoteControl.html','_blank');
+        window.open('https://redpitaya.readthedocs.io/en/latest/appsFeatures/remoteControl/remoteAndProg.html','_blank');
     });
 
     $("#ext_con_but").click(function(event) {

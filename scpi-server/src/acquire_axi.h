@@ -20,6 +20,8 @@
 scpi_result_t RP_AcqAxiTriggerFillQ(scpi_t *context);
 scpi_result_t RP_AcqAxiDecimation(scpi_t *context);
 scpi_result_t RP_AcqAxiDecimationQ(scpi_t *context);
+scpi_result_t RP_AcqAxiDecimationCh(scpi_t *context);
+scpi_result_t RP_AcqAxiDecimationChQ(scpi_t *context);
 scpi_result_t RP_AcqAxiTriggerDelay(scpi_t *context);
 scpi_result_t RP_AcqAxiTriggerDelayQ(scpi_t *context);
 scpi_result_t RP_AcqAxiWritePointerQ(scpi_t *context);

@@ -48,6 +48,7 @@
     <script src="js/help-ba.js?1" onerror="location.reload()"></script>
     <script src="js/ba.js?1" onerror="location.reload()"></script>
     <script src="js/guiHandler.js?1" onerror="location.reload()"></script>
+    <script src="js/client.js?2" onerror="location.reload()"></script>
 </head>
 
 <body class="user_lost connection_lost">
@@ -64,7 +65,6 @@
         <div id="calibration">Calibrating...</div>
     </div>
     <div id="header">
-        <div id="connection_meter" title="It seems like your connection is ok"><img src="../assets/images/good_net.png" id="connection_icon" width="20px"><span id="throughput_view2">0 kB/s</span></div>
     </div>
     <div id="img_loading" class="img-container">
         <div class="centerer"></div>
@@ -250,6 +250,49 @@
                             <span class="col-info">DC bias [V]</span>
                             <div class="right-menu-option" style="margin-top: 10px;">
                                 <input id="BA_DC_BIAS" class="setfield input-number" type="text" value="0" step="0.01" min="-1" max="1">
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <span class="col-info" style="margin-top: -11px;">Probe attenuation</span>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <select id="BA_PROBE" class="form-control styled-select">
+                                    <option>1</option>
+                                    <option>10</option>
+                                    <option>50</option>
+                                    <option>100</option>
+                                    <option>500</option>
+                                    <option>1000</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content 122_16_block_remove">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Input attenuation</span>
+                                <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                    <label id="BA_IN_GAIN" class="btn">
+                                        <input type="radio" value="0" name="BA_IN_GAIN" id="BA_IN_GAIN" autocomplete="off">
+                                        <div id="BA_IN_GAIN_L">LV</div>
+                                    </label>
+                                    <label id="BA_IN_GAIN1" class="btn">
+                                        <input type="radio" value="1" name="BA_IN_GAIN" id="BA_IN_GAIN1" autocomplete="off">
+                                        <div id="BA_IN_GAIN2_L">HV</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content 250_12_block">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Coupling</span>
+                                <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                    <label id="BA_IN_AC_DC" class="btn">
+                                        <input type="radio" value="0" name="BA_IN_AC_DC" id="BA_IN_AC_DC" autocomplete="off">
+                                        <div>AC</div>
+                                    </label>
+                                    <label id="BA_IN_AC_DC1" class="btn">
+                                        <input type="radio" value="1" name="BA_IN_AC_DC" id="BA_IN_AC_DC1" autocomplete="off">
+                                        <div>DC</div>
+                                    </label>
+                                </div>
                             </div>
                         </div>
                         <div class="col-xs-12 option-content">

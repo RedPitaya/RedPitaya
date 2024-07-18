@@ -9,6 +9,8 @@
 %apply int { window_mode_t }
 %apply int { mode_t }
 
+%apply uint32_t *OUTPUT { uint32_t *value };
+
 %inline %{
 typedef double *double_ptr;
 typedef float *float_ptr;

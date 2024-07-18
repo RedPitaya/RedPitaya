@@ -45,6 +45,8 @@ int osc_single();
 int osc_autoScale();
 int osc_getAutoScale(bool *_state);
 int osc_isRunning(bool *running);
+int osc_prepareOscillogramBuffer(uint32_t count);
+int osc_GetOscillogramBufferCount(uint32_t *count);
 int osc_isTriggered();
 int osc_setTimeScale(float scale);
 int osc_getTimeScale(float *division);
@@ -58,6 +60,7 @@ int osc_setAmplitudeScale(rpApp_osc_source source, double scale);
 int osc_getAmplitudeScale(rpApp_osc_source source, double *scale);
 int osc_setAmplitudeOffset(rpApp_osc_source source, double offset);
 int osc_getAmplitudeOffset(rpApp_osc_source source, double *offset);
+
 int osc_setTriggerSource(rpApp_osc_trig_source_t triggerSource);
 int osc_getTriggerSource(rpApp_osc_trig_source_t *triggerSource);
 int osc_setTriggerSlope(rpApp_osc_trig_slope_t slope);
@@ -66,6 +69,10 @@ int osc_setTriggerLevel(float level);
 int osc_getTriggerLevel(float *level);
 int osc_setTriggerSweep(rpApp_osc_trig_sweep_t mode);
 int osc_getTriggerSweep(rpApp_osc_trig_sweep_t *mode);
+
+int osc_setExtTriggerLevel(float level);
+int osc_getExtTriggerLevel(float *level);
+
 int osc_setInverted(rpApp_osc_source source, bool inverted);
 int osc_isInverted(rpApp_osc_source source, bool *inverted);
 int osc_getViewPart(float *ratio);
@@ -82,7 +89,7 @@ int osc_measureRootMeanSquare(rpApp_osc_source source, float *rms);
 int osc_getCursorVoltage(rpApp_osc_source source, uint32_t cursor, float *value);
 int osc_getCursorTime(uint32_t cursor, float *value);
 int osc_getCursorDeltaTime(uint32_t cursor1, uint32_t cursor2, float *value);
-int oscGetCursorDeltaAmplitude(rpApp_osc_source source, uint32_t cursor1, uint32_t cursor2, float *value);
+int osc_GetCursorDeltaAmplitude(rpApp_osc_source source, uint32_t cursor1, uint32_t cursor2, float *value);
 int osc_getCursorDeltaFrequency(uint32_t cursor1, uint32_t cursor2, float *value);
 int osc_getData(rpApp_osc_source source_t, float *data, uint32_t size);
 int osc_getRawData(rp_channel_t source, uint16_t *data, uint32_t size);
@@ -98,6 +105,12 @@ int osc_getViewSize(uint32_t *size);
 int osc_getViewLimits(uint32_t* start, uint32_t* end);
 int osc_scaleMath();
 int osc_refreshViewData();
+int osc_getOscPerSec(uint32_t *counter);
+
+int osc_BufferSelectNext();
+int osc_BufferSelectPrev();
+int osc_BufferCurrent(int32_t *current);
+
 
 
 int osc_SetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode _mode);
@@ -107,8 +120,10 @@ int threadSafe_acqStart();
 int threadSafe_acqStop();
 double scaleAmplitude(double volts, double ampScale, double probeAtt, double ampOffset, double invertFactor);
 int scaleAmplitudeChannel(rpApp_osc_source source, float volts, float *res);
+int scaleAmplitudeCalcCoffChannel(rpApp_osc_source _source, float &coff1, float &coff2);
 double unscaleAmplitude(double value, double ampScale, double probeAtt, double ampOffset, double invertFactor);
 int unscaleAmplitudeChannel(rpApp_osc_source source, float value, float *res);
+int unscaleAmplitudeCoffChannel(rpApp_osc_source _source, float &coff1, float &coff2);
 int attenuateAmplitudeChannel(rpApp_osc_source source, float value, float *res);
 int unattenuateAmplitudeChannel(rpApp_osc_source source, float value, float *res);
 double roundUpTo125(double data);
@@ -120,11 +135,22 @@ float calculateMath(float v1, float v2, rpApp_osc_math_oper_t op);
 double unOffsetAmplitude(double value, double ampScale, double ampOffset);
 int unscaleAmplitudeChannel(rpApp_osc_source source, float value, float *res);
 int unOffsetAmplitudeChannel(rpApp_osc_source source, float value, float *res);
+int unOffsetAmplitudeCoffChannel(rpApp_osc_source _source, float &coff1);
 
 // void clearView();
 // void clearMath();
 
 int osc_measureMax(rpApp_osc_source source, float *Max);
 int osc_measureMin(rpApp_osc_source source, float *Min);
+
+// XY mode
+
+int osc_setEnableXY(bool state);
+int osc_getEnableXY(bool *state);
+int osc_getDataXY(float *_dataX, float *_dataY, uint32_t _size);
+int osc_setSrcXAxis(rpApp_osc_source _channel);
+int osc_getSrcXAxis(rpApp_osc_source *_channel);
+int osc_setSrcYAxis(rpApp_osc_source _channel);
+int osc_getSrcYAxis(rpApp_osc_source *_channel);
 
 #endif //__OSCILOSCOPE_H

@@ -19,12 +19,12 @@ CADCController::~CADCController(){
 }
 
 auto CADCController::startAcq() -> int{
-    std::lock_guard<std::mutex> lock(m_acqMutex);
+    std::lock_guard lock(m_acqMutex);
     ECHECK(rp_AcqUnlockTrigger())
     if (m_isAdcRun)
         return RP_OK;
+    ECHECK(rp_AcqSetArmKeep(m_trigSweep == RPAPP_OSC_TRIG_AUTO && m_continuousMode));
     ECHECK(rp_AcqStart())
-    ECHECK(rp_AcqSetArmKeep(m_trigSweep != RPAPP_OSC_TRIG_SINGLE && m_continuousMode));
     m_isAdcRun = true;
     return RP_OK;
 }
@@ -42,7 +42,7 @@ auto CADCController::isAdcRun() -> bool{
 }
 
 auto CADCController::setContinuousMode(bool _enable) -> int{
-    std::lock_guard<std::mutex> lock(m_acqMutex);
+    std::lock_guard lock(m_acqMutex);
     ECHECK(rp_AcqSetArmKeep(_enable))
     m_continuousMode = _enable;
     return RP_OK;
@@ -53,7 +53,7 @@ auto CADCController::getContinuousMode() -> bool{
 }
 
 auto CADCController::setTriggerSweep(rpApp_osc_trig_sweep_t _mode) -> void{
-    std::lock_guard<std::mutex> lock(m_acqMutex);
+    std::lock_guard lock(m_acqMutex);
     m_trigSweep = _mode;
 }
 
@@ -66,7 +66,7 @@ auto CADCController::setTriggerSourceInFPGA() -> int{
 }
 
 auto CADCController::setTriggerSources(rpApp_osc_trig_source_t _source) -> int{
-    std::lock_guard<std::mutex> lock(m_acqMutex);
+    std::lock_guard lock(m_acqMutex);
     return setTriggerSourcesUnsafe(_source);
 }
 
@@ -173,7 +173,7 @@ auto CADCController::getTriggerSlope() -> rpApp_osc_trig_slope_t{
 }
 
 auto CADCController::setAttenuateAmplitudeChannelFunction(func_t _func) -> void{
-    std::lock_guard<std::mutex> lock(m_acqMutex);
+    std::lock_guard lock(m_acqMutex);
     m_attAmplFunc = _func;
 }
 
@@ -182,7 +182,7 @@ auto CADCController::getAttenuateAmplitudeChannelFunction() const -> func_t{
 }
 
 auto CADCController::setUnAttenuateAmplitudeChannelFunction(func_t _func) -> void{
-    std::lock_guard<std::mutex> lock(m_acqMutex);
+    std::lock_guard lock(m_acqMutex);
     m_UnAttAmplFunc = _func;
 }
 
@@ -190,14 +190,8 @@ auto CADCController::getUnAttenuateAmplitudeChannelFunction() const -> func_t{
     return m_UnAttAmplFunc;
 }
 
-auto CADCController::setTriggetLevel(float _level) -> int{
-    std::lock_guard<std::mutex> lock(m_acqMutex);
-    static auto IsExternalTriggerLevelPresent = rp_HPGetIsExternalTriggerLevelPresentOrDefault();
-    if (IsExternalTriggerLevelPresent){
-        if (m_trigSource == RPAPP_OSC_TRIG_SRC_EXTERNAL){
-            ECHECK(rp_SetExternalTriggerLevel(_level));
-        }
-    }
+auto CADCController::setTriggerLevel(float _level) -> int{
+    std::lock_guard lock(m_acqMutex);
 
     if(m_trigSource != RPAPP_OSC_TRIG_SRC_EXTERNAL) {
         rpApp_osc_source source = RPAPP_OSC_SOUR_CH1;
@@ -206,7 +200,6 @@ auto CADCController::setTriggetLevel(float _level) -> int{
         if (m_trigSource == RPAPP_OSC_TRIG_SRC_CH4) source = RPAPP_OSC_SOUR_CH4;
         ECHECK_APP(m_UnAttAmplFunc(source, _level, &_level));
     }
-
     if (m_trigSource == RPAPP_OSC_TRIG_SRC_CH1){
         ECHECK(rp_AcqSetTriggerLevel(RP_T_CH_1, _level));
     }
@@ -223,13 +216,7 @@ auto CADCController::setTriggetLevel(float _level) -> int{
 }
 
 auto CADCController::getTriggerLevel(float *_level) -> int{
-    std::lock_guard<std::mutex> lock(m_acqMutex);
-    static auto IsExternalTriggerLevelPresent = rp_HPGetIsExternalTriggerLevelPresentOrDefault();
-    if (IsExternalTriggerLevelPresent){
-        if (m_trigSource == RPAPP_OSC_TRIG_SRC_EXTERNAL){
-            ECHECK(rp_GetExternalTriggerLevel(_level));
-        }
-    }
+    std::lock_guard lock(m_acqMutex);
 
     if (m_trigSource == RPAPP_OSC_TRIG_SRC_CH1){
         ECHECK(rp_AcqGetTriggerLevel(RP_T_CH_1,_level));
@@ -252,6 +239,47 @@ auto CADCController::getTriggerLevel(float *_level) -> int{
         if (m_trigSource == RPAPP_OSC_TRIG_SRC_CH3) source = RPAPP_OSC_SOUR_CH3;
         if (m_trigSource == RPAPP_OSC_TRIG_SRC_CH4) source = RPAPP_OSC_SOUR_CH4;
         ECHECK_APP(m_attAmplFunc(source, *_level, _level));
+    }
+    return RP_OK;
+}
+
+auto CADCController::getTriggerLevelRaw(float *_level) -> int{
+    std::lock_guard lock(m_acqMutex);
+
+    if (m_trigSource == RPAPP_OSC_TRIG_SRC_CH1){
+        ECHECK(rp_AcqGetTriggerLevel(RP_T_CH_1,_level));
+    }
+
+    if (m_trigSource == RPAPP_OSC_TRIG_SRC_CH2){
+        ECHECK(rp_AcqGetTriggerLevel(RP_T_CH_2,_level));
+    }
+    if (m_trigSource == RPAPP_OSC_TRIG_SRC_CH3){
+        ECHECK(rp_AcqGetTriggerLevel(RP_T_CH_3,_level));
+    }
+
+    if (m_trigSource == RPAPP_OSC_TRIG_SRC_CH4){
+        ECHECK(rp_AcqGetTriggerLevel(RP_T_CH_4,_level));
+    }
+
+    return RP_OK;
+}
+
+auto CADCController::setExternalTriggerLevel(float _level) -> int{
+    std::lock_guard lock(m_acqMutex);
+    static auto IsExternalTriggerLevelPresent = rp_HPGetIsExternalTriggerLevelPresentOrDefault();
+    if (IsExternalTriggerLevelPresent){
+        ECHECK(rp_SetExternalTriggerLevel(_level));
+    }
+    return RP_OK;
+}
+
+auto CADCController::getExternalTriggerLevel(float *_level) -> int{
+    std::lock_guard lock(m_acqMutex);
+    static auto IsExternalTriggerLevelPresent = rp_HPGetIsExternalTriggerLevelPresentOrDefault();
+    if (IsExternalTriggerLevelPresent){
+        ECHECK(rp_GetExternalTriggerLevel(_level));
+    }else{
+        *_level = 0;
     }
     return RP_OK;
 }

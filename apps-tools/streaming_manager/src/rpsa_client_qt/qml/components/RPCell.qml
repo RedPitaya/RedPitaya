@@ -185,7 +185,7 @@ Row {
                         MultiSwitch {
                             anchors.fill: parent
                             anchors.leftMargin: 4 * mainVisibleRootWindowId.scaleFactor
-                            anchors.rightMargin: 4 * mainVisibleRootWindowId.scaleFactor                            
+                            anchors.rightMargin: 4 * mainVisibleRootWindowId.scaleFactor
                             buttonNames: ["CONSOLE", "SIGNAL"]
                             inactiveTextColor: baseGrayColor
                             activeTextColor: "#303030"
@@ -465,7 +465,7 @@ Row {
                             Item {
                                 height: parent.height
                                 width: parent.width * 0.3
-                                Text {                                    
+                                Text {
                                     anchors.fill: parent
                                     verticalAlignment: Text.AlignVCenter
                                     horizontalAlignment: Text.AlignHCenter
@@ -624,7 +624,7 @@ Row {
                             Item {
                                 height: parent.height
                                 width: parent.width * 0.3
-                                Text {                                    
+                                Text {
                                     anchors.fill: parent
                                     verticalAlignment: Text.AlignVCenter
                                     horizontalAlignment: Text.AlignHCenter

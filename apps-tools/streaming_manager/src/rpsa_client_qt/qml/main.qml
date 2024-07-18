@@ -1,5 +1,4 @@
 import QtQuick 2.15
-import QtQuick.Window 2.15
 import QtQuick.Controls 2.5
 
 ApplicationWindow {
@@ -8,7 +7,7 @@ ApplicationWindow {
     height: 1080
     visible: true
     title: qsTr("Red Pitaya X-Streaming")
-    visibility : Window.Maximized
+    // visibility : Window.Maximized
 
     property int nativeWidth: 1980
     property int nativeHeight: 1080

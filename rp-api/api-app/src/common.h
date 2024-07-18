@@ -161,4 +161,37 @@ auto convertChFromIndex(uint8_t index) -> rp_channel_t;
 auto convertPower(rp_acq_ac_dc_mode_t ch) -> rp_acq_ac_dc_mode_calib_t;
 auto convertCh(rpApp_osc_trig_source_t ts) -> int;
 
+template<typename X>
+inline X scaleAmplitude(X _volts, X _ampScale, X _probeAtt, X _ampOffset, X _invertFactor) {
+    // return (_volts * _invertFactor * _probeAtt + _ampOffset) / _ampScale;
+    return _volts * (_invertFactor * _probeAtt) / _ampScale + _ampOffset / _ampScale;
+}
+
+template<typename X>
+inline X scaleAmplitude(X _volts, X coff1, X coff2) {
+    // return (_volts * _invertFactor * _probeAtt + _ampOffset) / _ampScale;
+    return _volts * coff1 + coff2;
+}
+
+template<typename X>
+inline X unscaleAmplitude(X _value, X _ampScale, X _probeAtt, X _ampOffset, X _invertFactor) {
+    // return ((_value * _ampScale) - _ampOffset) / _probeAtt / _invertFactor;
+    return ((_value * _ampScale * _invertFactor) - _ampOffset * _invertFactor) / _probeAtt;
+}
+
+template<typename X>
+inline X unscaleAmplitude(X _value, X coff1, X coff2) {
+    return _value * coff1 - coff2;
+}
+
+template<typename X>
+inline X unOffsetAmplitude(X _value, X _ampScale, X _ampOffset) {
+    return _value - (_ampOffset / _ampScale);
+}
+
+template<typename X>
+inline X unOffsetAmplitude(X _value, X coff1) {
+    return _value - coff1;
+}
+
 #endif /* COMMON_APP_H_ */

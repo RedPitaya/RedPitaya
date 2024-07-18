@@ -7,7 +7,7 @@
 
 using namespace std;
 
-namespace TDMS
+namespace rp_formatter_api::TDMS
 {
     class BinaryStream
     {

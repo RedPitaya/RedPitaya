@@ -192,6 +192,14 @@ int rpApp_OscGetTriggerLevel(float *level) {
     return osc_getTriggerLevel(level);
 }
 
+int rpApp_OscSetExtTriggerLevel(float level) {
+    return osc_setExtTriggerLevel(level);
+}
+
+int rpApp_OscGetExtTriggerLevel(float *level) {
+    return osc_getExtTriggerLevel(level);
+}
+
 int rpApp_OscSetInverted(rpApp_osc_source source, bool inverted) {
     return osc_setInverted(source, inverted);
 }
@@ -280,7 +288,7 @@ int rpApp_OscGetCursorDeltaTime(uint32_t cursor1, uint32_t cursor2, float *value
 }
 
 int rpApp_OscGetCursorDeltaAmplitude(rpApp_osc_source source, uint32_t cursor1, uint32_t cursor2, float *value) {
-    return oscGetCursorDeltaAmplitude(source, cursor1, cursor2, value);
+    return osc_GetCursorDeltaAmplitude(source, cursor1, cursor2, value);
 }
 
 int rpApp_OscGetCursorDeltaFrequency(uint32_t cursor1, uint32_t cursor2, float *value) {
@@ -315,6 +323,29 @@ int rpApp_OscGetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode *_
     return osc_GetSmoothMode(_channel,_mode);
 }
 
+int rpApp_OscPrepareOscillogramBuffer(uint32_t count){
+    return osc_prepareOscillogramBuffer(count);
+}
+
+int rpApp_OscGetOscillogramBufferCount(uint32_t *count){
+    return osc_GetOscillogramBufferCount(count);
+}
+
+int rpApp_OscGetOscPerSec(uint32_t *count){
+    return osc_getOscPerSec(count);
+}
+
+int rpApp_OscBufferSelectNext(){
+    return osc_BufferSelectNext();
+}
+
+int rpApp_OscBufferSelectPrev(){
+    return osc_BufferSelectPrev();
+}
+
+int rpApp_OscBufferCurrent(int32_t *current){
+    return osc_BufferCurrent(current);
+}
 
 // SPECTRUM
 
@@ -426,10 +457,49 @@ int rpApp_SpecSetMode(rp_dsp_api::mode_t mode){
     return spec_setVoltMode(mode);
 }
 
+int rpApp_SpecGetProbe(rp_channel_t channel, uint32_t *probe){
+    return spec_getProbe(channel,probe);
+}
+
+int rpApp_SpecSetProbe(rp_channel_t channel, uint32_t probe){
+    return spec_setProbe(channel,probe);
+}
+
 int rpApp_SpecSetImpedance(double value){
     return spec_setImpedance(value);
 }
 
 int rpApp_SpecGetImpedance(double *value){
     return spec_getImpedance(value);
+}
+
+// X-Y mode
+
+int rpApp_OscSetEnableXY(bool _state){
+    return osc_setEnableXY(_state);
+}
+
+int rpApp_OscGetEnableXY(bool *_state){
+    return osc_getEnableXY(_state);
+}
+
+int rpApp_OscGetViewDataXY(float *dataX, float *dataY, uint32_t size){
+    return osc_getDataXY(dataX,dataY,size);
+}
+
+
+int rpApp_OscSetSrcXAxis(rpApp_osc_source channel){
+    return osc_setSrcXAxis(channel);
+}
+
+int rpApp_OscGetSrcXAxis(rpApp_osc_source *channel){
+    return osc_getSrcXAxis(channel);
+}
+
+int rpApp_OscSetSrcYAxis(rpApp_osc_source channel){
+    return osc_setSrcYAxis(channel);
+}
+
+int rpApp_OscGetSrcYAxis(rpApp_osc_source *channel){
+    return osc_getSrcYAxis(channel);
 }
