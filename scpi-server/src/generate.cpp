@@ -712,7 +712,7 @@ scpi_result_t RP_GenTriggerSourceQ(scpi_t *context) {
 
     int32_t trig_n = trig_src;
     if(!SCPI_ChoiceToName(scpi_RpGenTrig, trig_n, &trig_name)){
-        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Missing first parameter.");
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Parameter conversion error.");
         return SCPI_RES_ERR;
     }
 

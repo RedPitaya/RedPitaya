@@ -780,7 +780,10 @@ int gen_setTriggerSource(rp_channel_t channel, rp_trig_src_t src) {
 }
 
 int gen_getTriggerSource(rp_channel_t channel, rp_trig_src_t *src) {
-    return generate_getTriggerSource(channel, (uint32_t *) &src);
+    uint32_t val = 0;
+    int ret = generate_getTriggerSource(channel,  &val);
+    *src = val;
+    return ret;
 }
 
 int gen_Trigger(uint32_t channel) {
