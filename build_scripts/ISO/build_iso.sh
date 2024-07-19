@@ -19,7 +19,7 @@ REV="$(echo $1 | cut -d'-' -f2)"
 NUM="$(echo $1 | cut -d'-' -f3)"
 
 wget -N https://downloads.redpitaya.com/downloads/LinuxOS/red_pitaya_OS-beta_2.05.img.zip
-unzip -n red_pitaya_OS-beta_2.04.img.zip
+unzip -n red_pitaya_OS-beta_2.05.img.zip
 rm -f redpitaya.img
 mv *.img redpitaya.img
 
