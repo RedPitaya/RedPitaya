@@ -103,7 +103,7 @@ CFloatParameter cursorT[CURSORS_COUNT]       = INIT2("SPEC_CUR","_T", CBaseParam
 CBooleanParameter outState[MAX_DAC_CHANNELS]               = INIT2("OUTPUT","_STATE", CBaseParameter::RW, false, 0,CONFIG_VAR);
 CFloatParameter outAmplitude[MAX_DAC_CHANNELS]             = INIT2("SOUR","_VOLT", CBaseParameter::RW, LEVEL_AMPS_DEF  , 0, 0, LEVEL_AMPS_MAX,CONFIG_VAR);
 CFloatParameter outOffset[MAX_DAC_CHANNELS]                = INIT2("SOUR","_VOLT_OFFS", CBaseParameter::RW, 0, 0, -LEVEL_AMPS_MAX, LEVEL_AMPS_MAX,CONFIG_VAR);
-CFloatParameter outFrequancy[MAX_DAC_CHANNELS]             = INIT2("SOUR","_FREQ_FIX", CBaseParameter::RW, 1000, 0, 0.00005, MAX_FREQ,CONFIG_VAR);
+CFloatParameter outFrequancy[MAX_DAC_CHANNELS]             = INIT2("SOUR","_FREQ_FIX", CBaseParameter::RW, 1000, 0, 1, MAX_FREQ,CONFIG_VAR);
 CFloatParameter outPhase[MAX_DAC_CHANNELS]                 = INIT2("SOUR","_PHAS", CBaseParameter::RW, 0, 0, -360, 360,CONFIG_VAR);
 CFloatParameter outDCYC[MAX_DAC_CHANNELS]                  = INIT2("SOUR","_DCYC", CBaseParameter::RW, 50, 0, 0, 100,CONFIG_VAR);
 CFloatParameter outRiseTime[MAX_DAC_CHANNELS]              = INIT2("SOUR","_RISE", CBaseParameter::RW, 1, 0, 0.1, 1000,CONFIG_VAR);
@@ -1021,6 +1021,13 @@ extern "C" int rp_app_init(void)
         data[ch] = new float[CH_SIGNAL_DATA];
 
     g_indexArray.reserve(CH_SIGNAL_DATA);
+
+    if (getModelName() == "Z20"){
+        for(int i = 0; i < g_dac_count; i++){
+            auto ch = (rp_channel_t)i;
+            outFrequancy[ch].SetMin(300000);
+        }
+    }
 
     setHomeSettingsPath("/.config/redpitaya/apps/spectrumpro/");
 
