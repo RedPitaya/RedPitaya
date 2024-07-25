@@ -54,7 +54,10 @@
                 STEM_250_12_v1_2            = 13,
                 STEM_250_12_120             = 14,
                 STEM_250_12_v1_2a           = 15,
-                STEM_250_12_v1_2b           = 16
+                STEM_250_12_v1_2b           = 16,
+                STEM_125_14_LN_BO_v1_1      = 17,
+                STEM_125_14_LN_CE1_v1_1     = 18,
+                STEM_125_14_LN_CE2_v1_1     = 19
             }  rp_HPeModels_t;
         */
         if (model == 0){
@@ -107,6 +110,15 @@
         }
         if (model == 16){
             return "STEM 250 12"
+        }
+        if (model == 17){
+            return "STEM 14"
+        }
+        if (model == 18){
+            return "STEM 14"
+        }
+        if (model == 19){
+            return "STEM 14"
         }
         console.log("[FATAL ERROR] Unknown model: " + model)
         return ""
@@ -392,16 +404,30 @@
                     try {
                         const obj = JSON.parse(result);
                         var model = obj['model'];
-                        if (obj['model'].startsWith('STEM_125-10_v1.0')) model = 'STEMlab 125-10 v1.0';
-                        if (obj['model'].startsWith('STEM_125-14_v1.0')) model = 'STEMlab 125-14 v1.0';
-                        if (obj['model'].startsWith('STEM_125-14_Z7020_v1.0')) model = 'STEMlab 125-14-Z7020 v1.0';
-                        if (obj['model'].startsWith('STEM_250-12_V1.1')) model = 'SIGNALlab 250-12 v1.1';
-                        if (obj['model'].startsWith('STEM_250-12_V1.2')) model = 'SIGNALlab 250-12 v1.2';
-                        if (obj['model'].startsWith('STEM_250-12_V1.2a')) model = 'SIGNALlab 250-12 v1.2a';
-                        if (obj['model'].startsWith('STEM_122-16SDR_v1.0')) model = 'SDRlab 122-16 v1.0';
-                        if (obj['model'].startsWith('STEM_122-16SDR_v1.1')) model = 'SDRlab 122-16 v1.1';
-                        if (obj['model'].startsWith('STEM_125-14_Z7020_4IN_v1.0')) model = 'STEMlab 125-14 4-Input v1.0';
-                        if (obj['model'].includes('SLAVE')) model += " / Streaming Slave";
+                        var modelUp = obj['model'].toUpperCase()
+                        if (modelUp.startsWith('STEM_125-10_V1.0')) model = 'STEMlab 125-10 v1.0';
+                        if (modelUp.startsWith('STEM_14_B_V1.0')) model = 'STEMlab 125-14 v1.0';
+                        if (modelUp.startsWith('STEM_125-14_V1.0')) model = 'STEMlab 125-14 v1.0';
+                        if (modelUp.startsWith('STEM_125-14_V1.1')) model = 'STEMlab 125-14 v1.1';
+                        if (modelUp.startsWith('STEM_125-14_LN_V1.1')) model = 'STEMlab 125-14 LN v1.1';
+                        if (modelUp.startsWith('STEM_125-14_LN_BO_V1.1')) model = 'STEMlab 125-14 LN BO v1.1';
+                        if (modelUp.startsWith('STEM_125-14_LN_CE1_V1.1')) model = 'STEMlab 125-14 LN CE1 v1.1';
+                        if (modelUp.startsWith('STEM_125-14_LN_CE2_V1.1')) model = 'STEMlab 125-14 LN CE2 v1.1';
+                        if (modelUp.startsWith('STEM_125-14_Z7020_V1.0')) model = 'STEMlab 125-14-Z7020 v1.0';
+                        if (modelUp.startsWith('STEM_125-14_Z7020_LN_V1.1')) model = 'STEMlab 125-14-Z7020 LN v1.1';
+                        if (modelUp.startsWith('STEM_250-12_V1.0')) model = 'SIGNALlab 250-12 v1.0';
+                        if (modelUp.startsWith('STEM_250-12_V1.1')) model = 'SIGNALlab 250-12 v1.1';
+                        if (modelUp.startsWith('STEM_250-12_V1.2')) model = 'SIGNALlab 250-12 v1.2';
+                        if (modelUp.startsWith('STEM_250-12_V1.2a')) model = 'SIGNALlab 250-12 v1.2a';
+                        if (modelUp.startsWith('STEM_250-12_V1.2b')) model = 'SIGNALlab 250-12 v1.2b';
+                        if (modelUp.startsWith('STEM_250-12_120')) model = 'SIGNALlab 250-12/120';
+                        if (modelUp.startsWith('STEM_122-16SDR_V1.0')) model = 'SDRlab 122-16 v1.0';
+                        if (modelUp.startsWith('STEM_122-16SDR_V1.1')) model = 'SDRlab 122-16 v1.1';
+                        if (modelUp.startsWith('STEM_125-14_Z7020_4IN_V1.0')) model = 'STEMlab 125-14 4-Input v1.0';
+                        if (modelUp.startsWith('STEM_125-14_Z7020_4IN_V1.2')) model = 'STEMlab 125-14 4-Input v1.2';
+                        if (modelUp.startsWith('STEM_125-14_Z7020_4IN_V1.3')) model = 'STEMlab 125-14 4-Input v1.3';
+
+                        if (modelUp.includes('SLAVE')) model += " / Streaming Slave";
                         $('#SI_B_MODEL').text(model);
                         $('#SI_MAC').text(obj['mac']);
                         $('#SI_DNA').text(obj['dna']);

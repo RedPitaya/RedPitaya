@@ -1,12 +1,12 @@
-#include "stem_125_14_Z7020_LN_v1.1.h"
+#include "stem_125_14_LN_BO_v1.1.h"
 
 
-profiles_t stem_125_14_Z7020_LN_v1_1 = {
-    .boardModel = STEM_125_14_Z7020_LN_v1_1,
-    .boardName = "STEMlab 125-14-Z7020 LN v1.1",
+profiles_t stem_125_14_LN_BO_v1_1 = {
+    .boardModel = STEM_125_14_LN_BO_v1_1,
+    .boardName = "STEM_125-14 LN BO v1.1",
     .boardModelEEPROM = "",
     .boardETH_MAC =  "",
-    .zynqCPUModel = Z7020,
+    .zynqCPUModel = Z7010,
     .oscillator_rate = 125000000,
 
     .fast_adc_rate = 125000000,
@@ -102,6 +102,6 @@ profiles_t stem_125_14_Z7020_LN_v1_1 = {
     .gpio_P_count = 11
 };
 
-profiles_t* getProfile_STEM_125_14_Z7020_LN_v1_1(){
-    return &stem_125_14_Z7020_LN_v1_1;
+profiles_t* getProfile_STEM_125_14_LN_BO_v1_1(){
+    return &stem_125_14_LN_BO_v1_1;
 }
