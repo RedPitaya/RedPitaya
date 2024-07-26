@@ -391,7 +391,7 @@
             var ws = $("#xaxis_tick" + (i + 5)).width() / 2
             if (i == -5) ws = 0
             if (i ==  5) ws *= 2
-            $("#xaxis_tick" + (i + 5)).css('top',gh + 30).css('left', gw / 2.0 + (gw / 2.0) * i/5.0 + 20 - ws)
+            $("#xaxis_tick" + (i + 5)).css('top',gh + 35).css('left', gw / 2.0 + (gw / 2.0) * i/5.0 + 20 - ws)
         }
     }
 

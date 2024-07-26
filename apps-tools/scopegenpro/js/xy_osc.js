@@ -207,7 +207,7 @@
             var ws = $("#xy_xaxis_tick" + (i + 5)).width() / 2
             if (i == -5) ws = 0
             if (i ==  5) ws *= 2
-            $("#xy_xaxis_tick" + (i + 5)).css('top',gh + 36).css('left', gw / 2.0 + (gw / 2.0) * i/5.0 + 48 - ws)
+            $("#xy_xaxis_tick" + (i + 5)).css('top',gh + 41).css('left', gw / 2.0 + (gw / 2.0) * i/5.0 + 48 - ws)
         }
     }
 
