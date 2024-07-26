@@ -410,9 +410,10 @@
     OSC.updateTitileYAxisTicks = function(){
         var itm = OSC.getSettingsActiveChannel()
         if (itm.channel !== ''){
+            var color = OSC.config.graph_colors[itm.channel.toLowerCase()]
             for(var i = -5; i <= 5; i++){
                 var v = OSC.convertVoltageForAxis(i * -itm.scale) + itm.suffix
-                $("#yaxis_tick" + (i + 5)).html(v)
+                $("#yaxis_tick" + (i + 5)).html(v).css('color', color);
             }
         }else{
             for(var i = -5; i <= 5; i++){
