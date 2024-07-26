@@ -118,8 +118,8 @@ public:
 
     void clear()
     {
-        m_max =   0; // small number
-        m_min = 1e9; // big number
+        m_max = m_minAllowable;
+        m_min = m_maxAllowable;
         m_nActualVal = 0;
         for(int i = 0; i < m_buffSize; i++)
             m_buffer[i] = 0;

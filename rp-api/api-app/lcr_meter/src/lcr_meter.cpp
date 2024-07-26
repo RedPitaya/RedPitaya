@@ -1,3 +1,4 @@
+
 /**
 * $Id: $
 *
@@ -52,6 +53,7 @@ typedef struct impendace_params {
 std::thread *g_lcr_thread = NULL;
 std::mutex g_lcr_mutex;
 std::mutex g_lcr_mutex_analize;
+std::mutex g_lcr_mutex_data;
 std::atomic_bool g_lcr_threadRun = false;
 std::atomic_bool g_lcr_threadPause = false;
 std::atomic_bool g_lcr_GenRun = false;
@@ -67,17 +69,10 @@ bool                        g_isShuntAutoChange        = true;
 
 
 /* Init lcr params struct */
-lcr_params_t main_params = {CALIB_NONE, false, 0 , 0 , 0, true , RP_LCR_S_EXTENSION, 100};
+lcr_params_t main_params = {CALIB_NONE, false, RP_LCR_S_EXTENSION, 100};
 
 /* Main lcr data params */
 lcr_main_data_t calc_data;
-
-
-const int RANGE_FORMAT[] =
-{1, 10, 100, 1000};
-
-const double RANGE_UNITS[] =
-{1e-9, 1e-6, 1e-3, 1, 1e3, 1e6};
 
 
 /* Init the main API structure */
@@ -142,10 +137,6 @@ int lcr_SetDefaultValues(){
     }
     ECHECK_LCR_APP(lcr_SetFrequency(10.0));
     ECHECK_LCR_APP(lcr_SetCalibMode(CALIB_NONE));
-    ECHECK_LCR_APP(lcr_SetMeasTolerance(0));
-    ECHECK_LCR_APP(lcr_SetMeasRangeMode(0));
-    ECHECK_LCR_APP(lcr_SetRangeFormat(0));
-    ECHECK_LCR_APP(lcr_SetRangeUnits(0));
     ECHECK_LCR_APP(lcr_SetMeasSeries(true));
     return RP_LCR_OK;
 }
@@ -185,7 +176,7 @@ int lcr_Stop(){
 }
 
 int lcr_CopyParams(lcr_main_data_t *params){
-    std::lock_guard lock(g_lcr_mutex);
+    std::lock_guard lock(g_lcr_mutex_data);
     if (!g_lcr_threadRun) return RP_LCR_NOT_STARTED;
     if(lcr_CalculateData(g_th_params.z_out, g_th_params.phase_out, g_th_params.frequency) != RP_LCR_OK){
          return RP_LCR_UERROR;
@@ -224,7 +215,7 @@ void lcr_MainThread(){
                     }
                 }
             }
-            usleep(500);
+            usleep(50);
     }
     rp_deleteBuffer(buffer);
     releaseFFT();
@@ -479,7 +470,7 @@ int lcr_data_analysis(buffers_t *data,
     // WARNING("Amp %f\n",z_ampl);
     // WARNING("phase_z_deg %f\n",phase_z_deg);
 
-
+    std::lock_guard lockData(g_lcr_mutex_data);
     g_th_params.phase_out = phase_z_deg;
     auto phase_z_rad = phase_z_deg * M_PI / 180.0;
     g_th_params.z_out = (z_ampl * cosf(phase_z_rad)) + (z_ampl * sinf(phase_z_rad) * I);
@@ -549,46 +540,6 @@ int lcr_SetMeasSeries(bool series){
 
 int lcr_GetMeasSeries(bool *series){
     *series = main_params.series;
-    return RP_LCR_OK;
-}
-
-int lcr_SetMeasTolerance(int tolerance){
-    main_params.tolerance = tolerance;
-    return RP_LCR_OK;
-}
-
-int lcr_GetMeasTolerance(int *tolerance){
-    *tolerance = main_params.tolerance;
-    return RP_LCR_OK;
-}
-
-int lcr_SetMeasRangeMode(int range){
-    main_params.range = range;
-    return RP_LCR_OK;
-}
-
-int lcr_GetMeasRangeMode(int *range){
-    *range = main_params.range;
-    return RP_LCR_OK;
-}
-
-int lcr_SetRangeFormat(int format){
-    main_params.range_format = format;
-    return RP_LCR_OK;
-}
-
-int lcr_GetRangeFormat(int *format){
-    *format = main_params.range_format;
-    return RP_LCR_OK;
-}
-
-int lcr_SetRangeUnits(int units){
-    main_params.range_units = units;
-    return RP_LCR_OK;
-}
-
-int lcr_GetRangeUnits(int *units){
-    *units = main_params.range_units;
     return RP_LCR_OK;
 }
 
