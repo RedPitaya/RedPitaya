@@ -39,7 +39,7 @@ endif()
 
 
 target_compile_options(${PROJECT_NAME}
-    PRIVATE -std=c++17 -Wall -pedantic -Wextra -fpermissive $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+    PRIVATE -std=c++17 -Wall -pedantic -Wextra -fpermissive $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 
 target_include_directories(${PROJECT_NAME}

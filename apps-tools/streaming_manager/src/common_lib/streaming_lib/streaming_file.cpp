@@ -9,6 +9,7 @@
 #include "streaming_file.h"
 #include "data_lib/neon_asm.h"
 #include "data_lib/thread_cout.h"
+#include "logger_lib/file_logger.h"
 
 #ifdef _WIN32
 #include <dir.h>
@@ -64,12 +65,12 @@ auto CStreamingFile::makeEmptyDir(const std::string &_filePath) -> void{
     createDirTree(_filePath);
 }
 
-auto CStreamingFile::create(CStreamSettings::DataFormat _fileType,std::string &_filePath, uint64_t _samples, bool _v_mode,bool testMode) -> CStreamingFile::Ptr{
+auto CStreamingFile::create(CStreamSettings::DataFormat _fileType,std::string &_filePath, uint64_t _samples, bool _v_mode,bool testMode, bool _rp_mode) -> CStreamingFile::Ptr{
 
-    return std::make_shared<CStreamingFile>(_fileType, _filePath,_samples, _v_mode,testMode);
+    return std::make_shared<CStreamingFile>(_fileType, _filePath,_samples, _v_mode, testMode, _rp_mode);
 }
 
-CStreamingFile::CStreamingFile(CStreamSettings::DataFormat _fileType,std::string &_filePath, uint64_t _samples, bool _v_mode,bool testMode) :
+CStreamingFile::CStreamingFile(CStreamSettings::DataFormat _fileType,std::string &_filePath, uint64_t _samples, bool _v_mode,bool testMode, bool _rp_mode) :
     m_fileLogger(nullptr),
     m_ReadyToPass(0),
     m_SendData(0),
@@ -81,6 +82,7 @@ CStreamingFile::CStreamingFile(CStreamSettings::DataFormat _fileType,std::string
     m_testMode(testMode),
     m_volt_mode(_v_mode),
     m_disableNotify(false),
+    m_rp_mode(_rp_mode),
     m_fileType(_fileType)
 {
     m_file_manager = new FileQueueManager(testMode);
@@ -104,6 +106,7 @@ CStreamingFile::~CStreamingFile()
         delete m_waveWriter;
         m_waveWriter = nullptr;
     }
+    TRACE("Exit")
 }
 
 auto CStreamingFile::disableNotify() -> void{
@@ -175,12 +178,18 @@ auto CStreamingFile::convertBuffers(DataLib::CDataBuffersPack::Ptr pack, DataLib
     }
 
     if (!m_volt_mode) {
-        auto lostSizeBytes = src_buff->getLostSamplesInBytesLenght();
-        auto destSize = src_buff->getBufferLenght() + lostSizeBytes;
+        auto lostSamples = src_buff->getLostSamplesAll();
+        if (m_rp_mode) { // We cut off the lost values ​​if we save them to a memory card.
+            lostSamples = MIN(lostSamples,src_buff->getSamplesCount());
+        }
+        uint64_t lostSamplesInBytes = lostSamples * src_buff->getBitBySample() / 8;
+        uint64_t destSize = src_buff->getBufferLenght() + lostSamplesInBytes;
         auto dest = net_lib::createBuffer(destSize);
-        if(dest){
+        if(dest.get()){
             memcpy_neon(dest.get(), src_buff->getBuffer().get(), src_buff->getBufferLenght());
-            memset(dest.get() + src_buff->getBufferLenght(), 0 , sizeof(uint8_t) * lostSizeBytes);
+            memset(dest.get() + src_buff->getBufferLenght(), 0 , sizeof(uint8_t) * lostSamplesInBytes);
+        }else{
+            aprintf(stderr,"There is not enough memory to allocate a buffer Requred size: %lld bytes.\n",destSize);
         }
 //         short *wb2 = ((short*)dest.get());
 //         for(int i = 0 ;i < (destSize) /2 ;i ++)
@@ -189,23 +198,25 @@ auto CStreamingFile::convertBuffers(DataLib::CDataBuffersPack::Ptr pack, DataLib
         auto pbuff = SBuffPass();
         pbuff.buffer = dest;
         pbuff.bufferLen = destSize;
-        pbuff.samplesCount = src_buff->getSamplesCount() + src_buff->getLostSamplesAll();
+        pbuff.samplesCount = src_buff->getSamplesCount() + lostSamples;
         pbuff.bitsBySample = src_buff->getBitBySample();
         pbuff.adcSpeed = pack->getOSCRate();
         return pbuff;
     }else{
         auto samples = src_buff->getSamplesCount();
         auto lostSamples = src_buff->getLostSamplesAll();
+        if (m_rp_mode) { // We cut off the lost values ​​if we save them to a memory card.
+            lostSamples = MIN(lostSamples,src_buff->getSamplesCount());
+        }
         auto bitBySamp = src_buff->getBitBySample();
         auto adcMode = (src_buff->getADCMode() == DataLib::CDataBuffer::ATT_1_20 ? 20 : 1);
         if (lockADCTo1V){
             adcMode = 1;
         }
-        auto destSize = (samples + lostSamples) * sizeof(float);
+        uint64_t destSize = (samples + lostSamples) * sizeof(float);
         auto dest = net_lib::createBuffer(destSize);
-        if (dest){
+        if (dest.get()){
             auto dest_f = (float*)dest.get();
-
             for(uint32_t i = 0 ; i < samples; i++){
                 if (bitBySamp == 8) {
                     int8_t* src_buff_bytes = (int8_t*)src_buff->getBuffer().get();
@@ -220,6 +231,8 @@ auto CStreamingFile::convertBuffers(DataLib::CDataBuffersPack::Ptr pack, DataLib
                 }
             }
             memset(dest.get() + (samples * sizeof(float)), 0 , sizeof(float) * lostSamples);
+        }else{
+            aprintf(stderr,"There is not enough memory to allocate a buffer Requred size: %lld bytes.\n",destSize);
         }
         auto pbuff = SBuffPass();
         pbuff.buffer = dest;
@@ -249,6 +262,21 @@ auto CStreamingFile::getCSVFileName() -> std::string{
     return m_file_out;
 }
 
+auto CStreamingFile::getPassSamples() -> uint64_t{
+    uint64_t all = 0;
+     for(auto i = (int)DataLib::CH1; i <= (int)DataLib::CH4; i++){
+        DataLib::EDataBuffersPackChannel ch = (DataLib::EDataBuffersPackChannel)i;
+        all = MAX(all,m_passSizeSamples[ch]);
+    }
+    return all;
+}
+
+auto CStreamingFile::getWritedSize() -> uint64_t{
+    if (m_file_manager){
+        return m_file_manager->getWritedSize();
+    }
+    return 0;
+}
 
 auto CStreamingFile::passBuffers(DataLib::CDataBuffersPack::Ptr pack) -> int {
     if (!pack) return 0;
@@ -268,7 +296,7 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPack::Ptr pack) -> int {
         bool noMemoryException = false;
         for(auto i = (int)DataLib::CH1; i <= (int)DataLib::CH4; i++){
             DataLib::EDataBuffersPackChannel ch = (DataLib::EDataBuffersPackChannel)i;
-            if (map[ch].buffer == nullptr && map[ch].bufferLen){
+            if (map[ch].buffer.get() == nullptr && map[ch].bufferLen){
                 noMemoryException = true;
             }
         }
@@ -314,7 +342,8 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPack::Ptr pack) -> int {
         bool noMemoryException = false;
         for(auto i = (int)DataLib::CH1; i <= (int)DataLib::CH4; i++){
             DataLib::EDataBuffersPackChannel ch = (DataLib::EDataBuffersPackChannel)i;
-            if (map[ch].buffer == nullptr && map[ch].bufferLen){
+            if (map[ch].buffer.get() == nullptr && map[ch].bufferLen){
+                TRACE_SHORT("noMemoryException")
                 noMemoryException = true;
             }
         }
@@ -323,7 +352,7 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPack::Ptr pack) -> int {
             if (m_samples != 0){
                 for(auto i = (int)DataLib::CH1; i <= (int)DataLib::CH4; i++){
                     DataLib::EDataBuffersPackChannel ch = (DataLib::EDataBuffersPackChannel)i;
-                    if (map[ch].samplesCount + m_passSizeSamples[ch] > m_samples){
+                    if ((map[ch].samplesCount + m_passSizeSamples[ch]) > m_samples){
                         map[ch].samplesCount = m_samples - m_passSizeSamples[ch];
                         map[ch].bufferLen = map[ch].samplesCount * (map[ch].bitsBySample / 8);
                         m_passSizeSamples[ch] += map[ch].samplesCount;
@@ -351,7 +380,7 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPack::Ptr pack) -> int {
             for(auto i = (int)DataLib::CH1; i <= (int)DataLib::CH4; i++){
                 DataLib::EDataBuffersPackChannel ch = (DataLib::EDataBuffersPackChannel)i;
                 auto buff = pack->getBuffer(ch);
-                if (buff){
+                if (buff.get()){
                     if (m_passSizeSamples[ch] > m_samples){
                         buff->reset();
                         map[ch] = 0;

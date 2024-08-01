@@ -62,7 +62,7 @@ auto CStreamingNet::stopServer() -> void{
 
 auto CStreamingNet::runNonThread() -> void{
     std::lock_guard<std::mutex> lock(m_mtx);
-    startServer();    
+    startServer();
 }
 
 auto CStreamingNet::run() -> void {
@@ -91,16 +91,39 @@ auto CStreamingNet::getProtocol() -> net_lib::EProtocol{
     return m_protocol;
 }
 
+uint64_t packTime = 0;
+
 auto CStreamingNet::task() -> void{
+    // uint64_t sendSize = 0;
+    // uint64_t packs = 0;
+    // uint64_t lockTime = 0;
+    // uint64_t sendTIme = 0;
+    // packTime = 0;
+    // auto timeNowEnd = std::chrono::system_clock::now();
+    // auto p1 = std::chrono::time_point_cast<std::chrono::microseconds>(timeNowEnd).time_since_epoch();
     while(m_threadRun){
         if (getBuffer && unlockBufferF){
+            // timeNowEnd = std::chrono::system_clock::now();
+            // auto a1 = std::chrono::time_point_cast<std::chrono::microseconds>(timeNowEnd).time_since_epoch();
             auto pack = getBuffer();
+            // timeNowEnd = std::chrono::system_clock::now();
+            // auto a2 = std::chrono::time_point_cast<std::chrono::microseconds>(timeNowEnd).time_since_epoch();
             sendBuffers(pack);
-            if (pack)
+            // timeNowEnd = std::chrono::system_clock::now();
+            // auto a3 = std::chrono::time_point_cast<std::chrono::microseconds>(timeNowEnd).time_since_epoch();
+            // lockTime += a2.count() - a1.count();
+            // sendTIme += a3.count() - a2.count();
+            if (pack){
+                // sendSize += pack->getBuffersSamples();
+                // packs++;
                 unlockBufferF();
-            usleep(100);
+            }
         }
     }
+    // timeNowEnd = std::chrono::system_clock::now();
+    // auto p2 = std::chrono::time_point_cast<std::chrono::microseconds>(timeNowEnd).time_since_epoch();
+    // printf("Send samples %lld packs %lld\n",sendSize,packs);
+    // printf("Total time %lld lockTime %lld sendTIme %lld packTime %lld\n",p2.count() - p1.count(),lockTime,sendTIme,packTime);
 }
 
 
@@ -108,7 +131,12 @@ auto CStreamingNet::sendBuffers(DataLib::CDataBuffersPack::Ptr pack) -> void {
     if (m_asionet && pack){
         if (m_asionet->isConnected()) {
             uint32_t split_size = (getProtocol() == net_lib::EProtocol::P_TCP ? TCP_BUFFER_LIMIT : UDP_BUFFER_LIMIT);
-            auto packs = net_lib::buildPack(m_index_of_message++,pack,split_size);            
+            // auto timeNowEnd = std::chrono::system_clock::now();
+            // auto a1 = std::chrono::time_point_cast<std::chrono::microseconds>(timeNowEnd).time_since_epoch();
+            auto packs = net_lib::buildPack(m_index_of_message++,pack,split_size);
+            // timeNowEnd = std::chrono::system_clock::now();
+            // auto a2 = std::chrono::time_point_cast<std::chrono::microseconds>(timeNowEnd).time_since_epoch();
+            // packTime += a2.count() - a1.count();
             for(auto &buff : packs){
                 m_asionet->sendSyncData(buff);
             }

@@ -1,4 +1,5 @@
 #include <cstring>
+#include <limits>
 #include "asio_common.h"
 #include "data_lib/neon_asm.h"
 #include "data_lib/thread_cout.h"
@@ -13,20 +14,22 @@ constexpr uint8_t net_lib::ID_BUFFER[]      = {0xFF,0xFF,0xFF,0xFF,0x0A,0x0A,0x0
 
 auto net_lib::createBuffer(const char *buffer,size_t size) -> net_buffer{
     try{
-        auto p = std::shared_ptr<uint8_t[]>(new uint8_t[size]);
+        if ((uint64_t)std::numeric_limits<size_t>::max() <= size) return net_buffer(nullptr);;
+        auto p = std::shared_ptr<uint8_t[]>(new uint8_t[static_cast<size_t>(size)]);
         memcpy_neon(p.get(),buffer,size);
         return p;
-    } catch (const std::bad_alloc& e) {
-        return nullptr;
+    } catch (...) {
+        return net_buffer(nullptr);
     }
 }
 
 auto net_lib::createBuffer(uint64_t size) -> net_buffer{
     try{
-        auto p = std::shared_ptr<uint8_t[]>(new uint8_t[size]);
+        if ((uint64_t)std::numeric_limits<size_t>::max() <= size) return net_buffer(nullptr);;
+        auto p = std::shared_ptr<uint8_t[]>(new uint8_t[static_cast<size_t>(size)]);
         return p;
-    } catch (const std::bad_alloc& e) {
-        return nullptr;
+    } catch (...) {
+        return net_buffer(nullptr);;
     }
 }
 
@@ -53,7 +56,7 @@ auto createBeginPack(uint64_t _id,DataLib::CDataBuffersPack::Ptr pack) -> AsioBu
         buff64[3] = packId;
         buff64[4] = oscRate;
         buff64[5] = adcBits;
-        buff64[6] = buffersSize;          
+        buff64[6] = buffersSize;
         bh.headerLen = buffer_lenght;
         return bh;
     } catch (const std::bad_alloc& e) {
@@ -92,7 +95,7 @@ auto net_lib::extractBeginPack(uint8_t* _buffer,size_t _length,uint64_t *_id,siz
 }
 
 auto createEndPack(uint64_t _id) -> AsioBufferNolder{
-    AsioBufferNolder bh;    
+    AsioBufferNolder bh;
     bh.headerLen = 0;
     bh.dataPtr = nullptr;
     bh.dataLen = 0;
@@ -107,7 +110,7 @@ auto createEndPack(uint64_t _id) -> AsioBufferNolder{
         memcpy_neon(bh.header ,net_lib::ID_PACK_END,16);
         uint64_t* buff64 = reinterpret_cast<uint64_t*>(bh.header);
         buff64[2] = buffer_lenght;
-        buff64[3] = packId;        
+        buff64[3] = packId;
         bh.headerLen = buffer_lenght;
         return bh;
     } catch (const std::bad_alloc& e) {
@@ -144,7 +147,7 @@ auto createBufferPack(uint64_t _id,DataLib::EDataBuffersPackChannel channel,Data
         auto lenght = buffer->getBufferLenght();
         for(size_t bufferOffset = 0; bufferOffset < lenght; bufferOffset += split){
 
-            AsioBufferNolder bh;            
+            AsioBufferNolder bh;
             bh.headerLen = 0;
             bh.dataPtr = nullptr;
             bh.dataLen = 0;
@@ -166,7 +169,7 @@ auto createBufferPack(uint64_t _id,DataLib::EDataBuffersPackChannel channel,Data
             // auto buff = std::shared_ptr<uint8_t[]>(new uint8_t[prefix_size]);
             // memcpy_neon(buff.get() ,net_lib::ID_BUFFER,16);
             memcpy_neon(bh.header,net_lib::ID_BUFFER,16);
-            
+
             uint64_t* buff64 = reinterpret_cast<uint64_t*>(bh.header);
             buff64[2] = buffer_lenght;
             buff64[3] = packId;
@@ -177,7 +180,7 @@ auto createBufferPack(uint64_t _id,DataLib::EDataBuffersPackChannel channel,Data
             buff64[8] = buffSize;
             buff64[9] = lostFPGA;
             buff64[10] = lostINTERNAL;
-            
+
             bh.headerLen = prefix_size;
             bh.dataPtr = buffer->getBuffer().get() + bufferOffset;
             bh.dataLen = calcCopyLen;

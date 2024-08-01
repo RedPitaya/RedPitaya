@@ -11,8 +11,8 @@ auto CFileLogger::create(std::string _filePath,bool testMode) -> CFileLogger::Pt
 }
 
 CFileLogger::CFileLogger(std::string _filePath,bool testMode):
-m_filePath(_filePath),
-m_filePathLost(_filePath + ".lost"),
+m_filePath(_filePath + ".txt"),
+m_filePathLost(_filePath + ".lost.txt"),
 m_file_open(false),
 m_oscRate(0),
 m_udpLostRate(0),
@@ -91,7 +91,7 @@ auto CFileLogger::addMetric(DataLib::CDataBuffersPack::Ptr pack) -> void {
         for(auto i = (int)DataLib::CH1; i <= (int)DataLib::CH4; i++){
             DataLib::EDataBuffersPackChannel ch = (DataLib::EDataBuffersPackChannel)i;
             auto buff = pack->getBuffer(ch);
-            if (buff){                
+            if (buff){
                 m_fileLost << getName(ch) << ": Pos " << m_current_sample[ch] << " Get: " << buff->getSamplesCount() << " (" << buff->getLostSamplesAll() << ")\t";
                 m_current_sample[ch] += buff->getSamplesWithLost();
             }

@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <memory>
 #include <map>
+#include <mutex>
 #include "buffer.h"
 
 namespace DataLib {
@@ -38,7 +39,7 @@ public:
     auto getBuffersLenght() -> size_t;
     auto getBuffersSamples() -> size_t;
     auto getLenghtAllBuffers() -> uint64_t;
-    auto getLostAllBuffers() -> uint64_t;    
+    auto getLostAllBuffers() -> uint64_t;
     auto isChannelPresent(EDataBuffersPackChannel channel) -> bool;
 
 private:

@@ -95,7 +95,7 @@ target_include_directories(${PROJECT_NAME}
             )
 
 target_compile_options(${PROJECT_NAME}
-            PRIVATE -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+            PRIVATE -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 target_link_directories(${PROJECT_NAME}
             PRIVATE

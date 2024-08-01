@@ -72,6 +72,9 @@ private:
     bool             m_verbMode;
     bool             m_printDebugBuffer;
 
+    uint32_t         m_overFlowSumm;
+    uint32_t         m_overFlowSummCount;
+
     std::map<DataLib::EDataBuffersPackChannel,SADCsettings> m_adcSettings;
 
     auto oscWorker() -> void;

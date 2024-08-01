@@ -5,7 +5,7 @@
 
 FileQueueManager::FileQueueManager(bool testMode):Queue(){
     m_threadWork = false;
-    m_waitAllWrite = false;    
+    m_waitAllWrite = false;
     m_hasErrorWrite = false;
     m_IsOutOfSpace = false;
     th = nullptr;
@@ -107,6 +107,11 @@ auto FileQueueManager::stopWrite(bool waitAllWrite) -> void{
     stopNotify();
 }
 
+auto FileQueueManager::getWritedSize() -> uint64_t{
+    return m_hasWriteSize;
+}
+
+
 auto FileQueueManager::task() -> void{
     while (m_ThreadRun){
         writeToFile();
@@ -148,7 +153,7 @@ auto FileQueueManager::writeToFile() -> int{
 //        bstream->seekg(0, std::ios::end);
 //        auto Length = bstream->tellg();
         m_hasWriteSize += Length;
-    
+
         if (m_fileType == CStreamSettings::DataFormat::WAV){
             if (m_firstSectionWrite){
                 updateWavFile(Length);
@@ -189,7 +194,7 @@ auto FileQueueManager::outSpaceNotifyThread() -> void{
 auto FileQueueManager::updateWavFile(int _size) -> void{
     int offset1 = 4;
     int offset2 = 40;
-   
+
     auto cur_p = fs.tellp();
     auto cur_g = fs.tellg();
 
@@ -206,7 +211,7 @@ auto FileQueueManager::updateWavFile(int _size) -> void{
     fs.seekp(offset2, fs.beg);
     fs.write((char*)&size2, sizeof(size2));
 
- 
+
     fs.seekp(cur_p);
     fs.seekg(cur_g);
 }

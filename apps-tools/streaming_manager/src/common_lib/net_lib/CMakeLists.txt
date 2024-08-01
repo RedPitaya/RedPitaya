@@ -40,10 +40,10 @@ endif()
 
 if(NOT WIN32 )
     target_compile_options(${PROJECT_NAME}
-        PRIVATE -Wall -pedantic -Wextra -fpermissive $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+        PRIVATE -Wall -pedantic -Wextra -fpermissive $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 else()
     target_compile_options(${PROJECT_NAME}
-        PRIVATE $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+        PRIVATE $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 endif()
 
 
