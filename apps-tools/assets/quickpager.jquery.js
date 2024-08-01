@@ -31,16 +31,17 @@
             selector.wrap("<div class='simplePagerContainer'></div>");
 
             selector.parents(".simplePagerContainer").find("ul.simplePagerNav").remove();
-
+            var ps = options.pageSize
+            if (Desktop.getCurrentGroup() == undefined){
+                selector.parents(".simplePagerContainer").find(".app-item[key=0]").remove();
+            }
             selector.children().each(function(i) {
-
-                if (i < pageCounter * options.pageSize && i >= (pageCounter - 1) * options.pageSize) {
+                if (i < pageCounter * ps && i >= (pageCounter - 1) * ps) {
                     $(this).addClass("simplePagerPage" + pageCounter);
                 } else {
                     $(this).addClass("simplePagerPage" + (pageCounter + 1));
                     pageCounter++;
                 }
-
             });
 
             // show/hide the appropriate regions
@@ -108,7 +109,6 @@
                 //hide and show relevant links
                 selector.children().hide();
                 selector.find(".simplePagerPage" + clickedLink).show();
-
                 return false;
             });
         });
