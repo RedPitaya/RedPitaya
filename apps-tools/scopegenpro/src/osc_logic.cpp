@@ -126,6 +126,13 @@ auto initOscAfterLoad() -> void{
             rp_AcqSetGain((rp_channel_t)ch, inGain[ch].Value() == 0 ? RP_LOW : RP_HIGH);
         }
     }
+
+    for(int i = 0; i < g_adc_channels; i++){
+        auto ch = (rp_channel_t)i;
+        if (inName[ch].Value() == ""){
+            inName[ch].Value() = std::string("IN") + std::to_string(i+1);
+        }
+    }
 }
 
 auto initOscBeforeLoadConfig() -> void{

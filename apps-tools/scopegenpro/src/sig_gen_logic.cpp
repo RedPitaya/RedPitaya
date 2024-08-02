@@ -379,6 +379,13 @@ auto initGenAfterLoad() -> void{
             }
         }
     }
+
+    for(int i = 0; i < g_dac_channels; i++){
+        auto ch = (rp_channel_t)i;
+        if (outName[ch].Value() == ""){
+            outName[ch].Value() = std::string("OUT") + std::to_string(i+1);
+        }
+    }
 }
 
 auto setNeedUpdateGenSignal() -> void{
@@ -392,7 +399,6 @@ auto initGenBeforeLoadConfig() -> void{
     for(int i = 0; i < g_dac_channels; i++){
         auto ch = (rp_channel_t)i;
         outName[ch].Value() = std::string("OUT") + std::to_string(i+1);
-
     }
 
     if (getModelName() == "Z20"){
