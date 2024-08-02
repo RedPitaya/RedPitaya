@@ -1462,7 +1462,15 @@ int rp_AcqGetWritePointerAtTrig(uint32_t* pos)
 int rp_AcqGetWritePointerAtTrigCh(rp_channel_t channel, uint32_t* pos)
 {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
-        return acq_GetWritePointerAtTrig(channel, pos);
+        bool state;
+        int ret = rp_AcqGetSplitTrigger(&state);
+        if (ret != RP_OK){
+            return ret;
+        }
+        if(state)
+            return acq_GetWritePointerAtTrig(channel, pos);
+        else
+            return rp_AcqGetWritePointerAtTrig(pos);
     }
     else if (g_split_trig_function_pass){
         return rp_AcqGetWritePointerAtTrig(pos);

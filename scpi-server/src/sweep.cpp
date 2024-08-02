@@ -40,6 +40,12 @@ const scpi_choice_def_t scpi_sweep_dir[] = {
     SCPI_CHOICE_LIST_END
 };
 
+const scpi_choice_def_t scpi_SWEEP_Bool[] = {
+    {"OFF", 0},
+    {"ON", 1},
+    SCPI_CHOICE_LIST_END
+};
+
 scpi_result_t RP_GenSweepDefault(scpi_t *context) {
     rp_SWSetDefault();
     RP_LOG_INFO("%s",rp_GetError(RP_OK))
@@ -103,6 +109,7 @@ scpi_result_t RP_GenSweepState(scpi_t *context) {
 
 scpi_result_t RP_GenSweepStateQ(scpi_t *context){
 
+    const char *_name;
     bool enabled;
     rp_channel_t channel;
 
@@ -116,7 +123,11 @@ scpi_result_t RP_GenSweepStateQ(scpi_t *context){
         return SCPI_RES_ERR;
     }
 
-    SCPI_ResultBool(context, enabled);
+    if(!SCPI_ChoiceToName(scpi_SWEEP_Bool, (int32_t)enabled, &_name)){
+        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Failed to parse state.")
+        return SCPI_RES_ERR;
+    }
+    SCPI_ResultMnemonic(context, _name);
     RP_LOG_INFO("%s",rp_GetError(result))
     return SCPI_RES_OK;
 }

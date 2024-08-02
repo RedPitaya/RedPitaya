@@ -360,11 +360,15 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "SOUR#:SWeep:DIR", .callback            = RP_GenSweepDir,},
     {.pattern = "SOUR#:SWeep:DIR?", .callback           = RP_GenSweepDirQ,},
 
+    {.pattern = "SOUR#:BURS:INITValue", .callback       = RP_GenInitValue,},
+    {.pattern = "SOUR#:BURS:INITValue?", .callback      = RP_GenInitValueQ,},
+
     {.pattern = "SOUR#:BURS:LASTValue", .callback       = RP_GenBurstLastValue,},
     {.pattern = "SOUR#:BURS:LASTValue?", .callback      = RP_GenBurstLastValueQ,},
 
     {.pattern = "SOUR#:INITValue", .callback            = RP_GenInitValue,},
     {.pattern = "SOUR#:INITValue?", .callback           = RP_GenInitValueQ,},
+
 
     {.pattern = "SOUR#:TRig:SOUR", .callback            = RP_GenTriggerSource,},
     {.pattern = "SOUR#:TRig:SOUR?", .callback           = RP_GenTriggerSourceQ,},
