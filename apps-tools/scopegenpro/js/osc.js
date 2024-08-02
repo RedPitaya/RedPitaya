@@ -14,6 +14,15 @@
         OSC.triggerParam();
     }
 
+    OSC.chShowInvalid = function(ch,new_params) {
+        var param_name = ch+"_SHOW_INVALID";
+        var state = new_params[param_name].value;
+        var field = $('#' + param_name);
+        if (field.is('button')) {
+            field[state === true? 'addClass' : 'removeClass']('active');
+        }
+    }
+
     OSC.ch1Show = function(new_params) {
         OSC.chShow("CH1", new_params);
     }
@@ -29,6 +38,23 @@
     OSC.ch4Show = function(new_params) {
         OSC.chShow("CH4", new_params);
     }
+
+    OSC.ch1ShowInvalid = function(new_params) {
+        OSC.chShowInvalid("CH1", new_params);
+    }
+
+    OSC.ch2ShowInvalid = function(new_params) {
+        OSC.chShowInvalid("CH2", new_params);
+    }
+
+    OSC.ch3ShowInvalid = function(new_params) {
+        OSC.chShowInvalid("CH3", new_params);
+    }
+
+    OSC.ch4ShowInvalid = function(new_params) {
+        OSC.chShowInvalid("CH4", new_params);
+    }
+
 
     OSC.in1Name = function(new_params) {
         $('#IN1_CHANNEL_NAME_INPUT').val(new_params['IN1_CHANNEL_NAME_INPUT'].value)

@@ -111,6 +111,9 @@ int osc_BufferSelectNext();
 int osc_BufferSelectPrev();
 int osc_BufferCurrent(int32_t *current);
 
+int osc_setShowInvalid(rp_channel_t _channel, bool _state);
+int osc_getShowInvalid(rp_channel_t _channel, bool *_state);
+
 
 
 int osc_SetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode _mode);

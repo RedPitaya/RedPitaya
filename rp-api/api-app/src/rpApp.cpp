@@ -120,6 +120,14 @@ int rpApp_OscIsTriggered() {
     return osc_isTriggered();
 }
 
+int rpApp_OscSetShowInvalid(rp_channel_t _channel, bool _state){
+    return osc_setShowInvalid(_channel,_state);
+}
+
+int rpApp_OscGetShowInvalid(rp_channel_t _channel, bool *_state){
+    return osc_getShowInvalid(_channel,_state);
+}
+
 int rpApp_OscSetTimeScale(float scale) {
     return osc_setTimeScale(scale);
 }

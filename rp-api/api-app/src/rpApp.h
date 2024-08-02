@@ -219,6 +219,23 @@ int rpApp_OscIsRunning(bool *running);
 
 int rpApp_OscIsTriggered();
 
+/**
+* Enables or disables the mode for displaying invalid data remaining in the oscilloscope buffer.
+* @param channel Channel 1 or 2 for which we want to set amplitude offset.
+* @param state Sets the display mode
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscSetShowInvalid(rp_channel_t _channel, bool state);
+
+/**
+* Gets amplitude offset in volts.
+* @param channel Channel 1 or 2 for which we want to get amplitude offset.
+* @param state Returns the current display mode.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rpApp_OscGetShowInvalid(rp_channel_t _channel, bool *state);
 
 /**
 * Sets amplitude offset in volts.
