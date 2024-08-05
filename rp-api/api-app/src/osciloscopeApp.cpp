@@ -1584,7 +1584,7 @@ void mainThreadFun() {
             data->m_dataHasTrigger = dataHasTrigger;
             data->m_decimation = decimationInACQ;
             data->m_pointerPosition = pPosition;
-            data->m_validBeforeTrigger = MIN(preTriggerCount,needWaitSamples);
+            data->m_validBeforeTrigger = contMode  ? needWaitSamples : MIN(preTriggerCount,needWaitSamples);
             data->m_validAfterTrigger = delay;
             uint32_t size = needWaitSamples + delay;
             // WARNING("size %d needWaitSamples %d delay %d",size,needWaitSamples,delay)
