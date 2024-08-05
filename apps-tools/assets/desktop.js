@@ -501,17 +501,28 @@
             $('#ext_connections_dialog').modal("show");
         });
 
+        $("#bug_report").click(async function (event){
 
-        $("#bug_report").click(function(event) {
-            fetch('/get_bug_report')
-                .then(response => response.blob())
-                .then(blob => {
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(blob);
-                link.download = new Date().toJSON().slice(0,22) + ".zip";
-                link.click();
-            })
-            .catch(console.error);
+            const blob =  await fetch('/get_bug_report', {
+                    method: 'POST'
+                })
+                .then(resp => resp.blob());
+
+            if( window.showSaveFilePicker ) {
+                const handle = await showSaveFilePicker({
+                    suggestedName: new Date().toJSON().slice(0,22) + ".zip" });
+                const writable = await handle.createWritable();
+                await writable.write( blob );
+                writable.close();
+            }
+            else {
+                const saveImg = document.createElement( "a" );
+                saveImg.href = URL.createObjectURL( blob );;
+                saveImg.download= new Date().toJSON().slice(0,22) + ".zip";
+                saveImg.click();
+                setTimeout(() => URL.revokeObjectURL( saveImg.href ), 60000 );
+                alert("The debug file has been generated. Check the downloads section.");
+            }
         });
 
         $.ajax({
