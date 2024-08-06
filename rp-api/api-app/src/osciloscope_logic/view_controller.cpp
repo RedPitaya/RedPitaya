@@ -242,7 +242,8 @@ auto CViewController::calculateDecimation(float _scale,uint32_t *_decimation,boo
     TRACE_SHORT("maxDeltaSample %f ratio %f _scale %f rate %f",maxDeltaSample,ratio,_scale,rate)
     // contition: viewBuffer cannot be larger than adcBuffer
   //  ratio *= _continuesMode ? 1.0 : 0.9;
-    ratio *= 0.9;
+    ratio *= 0.5;
+    *_decimation = std::numeric_limits<uint32_t>::max();
     if (maxDeltaSample <= ratio) {
         *_decimation = RP_DEC_1;
     }
@@ -260,6 +261,8 @@ auto CViewController::calculateDecimation(float _scale,uint32_t *_decimation,boo
             }
         }
     }
+    if (*_decimation == std::numeric_limits<uint32_t>::max())
+        *_decimation = RP_DEC_65536;
     return RP_OK;
 }
 

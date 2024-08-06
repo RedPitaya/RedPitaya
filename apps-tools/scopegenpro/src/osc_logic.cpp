@@ -53,6 +53,7 @@ CIntParameter       samplingRate("OSC_SAMPL_RATE", CBaseParameter::RW, RP_DEC_1,
 /* --------------------------------  OUT PARAMETERS  ------------------------------ */
 CBooleanParameter   inShow[MAX_ADC_CHANNELS] = INIT("CH","_SHOW", CBaseParameter::RW, false, 0,CONFIG_VAR);
 CStringParameter    inName[MAX_ADC_CHANNELS] = INIT("IN","_CHANNEL_NAME_INPUT", CBaseParameter::RW, "", 0,CONFIG_VAR);
+CBooleanParameter   inShowInvalidData[MAX_ADC_CHANNELS] = INIT("CH","_SHOW_INVALID", CBaseParameter::RW, false, 0,CONFIG_VAR);
 
 
 CBooleanParameter   inReset("OSC_RST", CBaseParameter::RW, false, 0);
@@ -124,6 +125,13 @@ auto initOscAfterLoad() -> void{
     if (rp_HPGetFastADCIsLV_HVOrDefault()){
         for(auto ch = 0u; ch < g_adc_channels ; ch++){
             rp_AcqSetGain((rp_channel_t)ch, inGain[ch].Value() == 0 ? RP_LOW : RP_HIGH);
+        }
+    }
+
+    for(int i = 0; i < g_adc_channels; i++){
+        auto ch = (rp_channel_t)i;
+        if (inName[ch].Value() == ""){
+            inName[ch].Value() = std::string("IN") + std::to_string(i+1);
         }
     }
 }
@@ -465,15 +473,17 @@ auto updateOscParams(bool force) -> void{
 
     requestFile();
 
-/* ------ UPDATE OSCILLOSCOPE LOCAL PARAMETERS ------*/
-
     for(int i = 0; i <= g_adc_channels; i++){
         if (IS_NEW(inShow[i]) || force)
             inShow[i].Update();
+
+        if (IS_NEW(inShowInvalidData[i]) || force){
+            rpApp_OscSetShowInvalid((rp_channel_t)i,inShowInvalidData[i].NewValue());
+            inShowInvalidData[i].Update();
+        }
     }
 
 
-/* ------ SEND OSCILLOSCOPE PARAMETERS TO API ------*/
     IF_VALUE_CHANGED_BOOL(inRun, rpApp_OscRun(), rpApp_OscStop())
 
     if (inReset.NewValue()) {

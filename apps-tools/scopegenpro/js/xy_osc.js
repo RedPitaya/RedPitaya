@@ -187,15 +187,17 @@
     OSC.updateTitileXAxisTicksXY = function(){
         var scale = 0
         var srcName = ""
+        var color = "#333"
         if (OSC.params.orig['X_AXIS_SOURCE']){
             var xsrc = OSC.params.orig['X_AXIS_SOURCE'].value;
             srcName = OSC.xyGetCh(xsrc)
             if (srcName !== ""){
                 scale = OSC.params.orig["GPOS_SCALE_"+srcName] ? OSC.params.orig["GPOS_SCALE_"+srcName].value : 0;
+                color = OSC.config.graph_colors[srcName.toLowerCase()]
             }
         }
         for(var i = -5; i <= 5; i++){
-            $("#xy_xaxis_tick" + (i + 5)).html(OSC.convertVoltageForAxis(-i * scale)+(srcName == "MATH" ? OSC.mathSuffix() : ""))
+            $("#xy_xaxis_tick" + (i + 5)).html(OSC.convertVoltageForAxis(-i * scale)+(srcName == "MATH" ? OSC.mathSuffix() : "")).css('color', color);
         }
         OSC.moveTitileXAxisTicksXY()
     }
@@ -207,7 +209,7 @@
             var ws = $("#xy_xaxis_tick" + (i + 5)).width() / 2
             if (i == -5) ws = 0
             if (i ==  5) ws *= 2
-            $("#xy_xaxis_tick" + (i + 5)).css('top',gh + 36).css('left', gw / 2.0 + (gw / 2.0) * i/5.0 + 48 - ws)
+            $("#xy_xaxis_tick" + (i + 5)).css('top',gh + 41).css('left', gw / 2.0 + (gw / 2.0) * i/5.0 + 48 - ws)
         }
     }
 
@@ -226,15 +228,17 @@
     OSC.updateTitileYAxisTicksXY = function(){
         var scale = 0
         var srcName = ""
+        var color = "#333"
         if (OSC.params.orig['Y_AXIS_SOURCE']){
             var xsrc = OSC.params.orig['Y_AXIS_SOURCE'].value;
             srcName = OSC.xyGetCh(xsrc)
             if (srcName !== ""){
                 scale = OSC.params.orig["GPOS_SCALE_"+srcName] ? OSC.params.orig["GPOS_SCALE_"+srcName].value : 0;
+                color = OSC.config.graph_colors[srcName.toLowerCase()]
             }
         }
         for(var i = -5; i <= 5; i++){
-            $("#xy_yaxis_tick" + (i + 5)).html(OSC.convertVoltageForAxis(-i * scale)+(srcName == "MATH" ? OSC.mathSuffix() : ""))
+            $("#xy_yaxis_tick" + (i + 5)).html(OSC.convertVoltageForAxis(-i * scale)+(srcName == "MATH" ? OSC.mathSuffix() : "")).css('color', color);
         }
         OSC.moveTitileYAxisTicksXY()
     }

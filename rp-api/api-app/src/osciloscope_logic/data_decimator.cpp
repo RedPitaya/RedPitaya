@@ -113,10 +113,10 @@ auto CDataDecimator::resetOffest() -> void{
 auto CDataDecimator::decimate(rp_channel_t _channel, const float *_data,vsize_t _dataSize, int  _triggerPointPos) -> bool{
     DataInfo view;
     DataInfo viewRaw;
-    return decimate(_channel,_data,_dataSize,_triggerPointPos,&m_decimatedData,&m_originalData, &view, &viewRaw);
+    return decimate(_channel,_data,_dataSize,_triggerPointPos,&m_decimatedData,&m_originalData, &view, &viewRaw,ValidRange());
 }
 
-auto CDataDecimator::decimate(rp_channel_t _channel, const float *_data,vsize_t _dataSize, int _triggerPointPos,std::vector<float> *_view, std::vector<float> *_originalData, DataInfo *_viewInfo,  DataInfo *_viewRawInfo) -> bool{
+auto CDataDecimator::decimate(rp_channel_t _channel, const float *_data,vsize_t _dataSize, int _triggerPointPos,std::vector<float> *_view, std::vector<float> *_originalData, DataInfo *_viewInfo,  DataInfo *_viewRawInfo, ValidRange range) -> bool{
     std::lock_guard lock(m_settingsMutex);
 
     if (m_scaleFunc == NULL) return false;
@@ -141,6 +141,8 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float *_data,vsize_t 
         *t = z - x;
         if (x > _dataSize /2.0) return INT32_MAX;
         if (x < -_dataSize /2.0) return INT32_MAX;
+        if (range.m_validBeforeTrigger != -1 && -range.m_validBeforeTrigger > x) return INT32_MAX;
+        if (range.m_validAfterTrigger != -1 && range.m_validAfterTrigger < x) return INT32_MAX;
         if (x >= 0){
             return x;
         }else{
@@ -158,17 +160,17 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float *_data,vsize_t 
 
     int startView,stopView;
 
-    _viewInfo->m_max = -std::numeric_limits<float>::max();
+    _viewInfo->m_max = std::numeric_limits<float>::lowest();
     _viewInfo->m_min = std::numeric_limits<float>::max();
     _viewInfo->m_mean = 0;
-    _viewInfo->m_maxUnscale = -std::numeric_limits<float>::max();
+    _viewInfo->m_maxUnscale = std::numeric_limits<float>::lowest();
     _viewInfo->m_minUnscale = std::numeric_limits<float>::max();
     _viewInfo->m_meanUnscale = 0;
 
     _viewRawInfo->m_max = 0;
     _viewRawInfo->m_min = 0;
     _viewRawInfo->m_mean = 0;
-    _viewRawInfo->m_maxUnscale = -std::numeric_limits<float>::max();
+    _viewRawInfo->m_maxUnscale = std::numeric_limits<float>::lowest();
     _viewRawInfo->m_minUnscale = std::numeric_limits<float>::max();
     _viewRawInfo->m_meanUnscale = 0;
 

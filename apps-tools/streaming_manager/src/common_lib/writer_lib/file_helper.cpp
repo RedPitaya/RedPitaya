@@ -184,7 +184,7 @@ auto buildBINStream(DataLib::CDataBuffersPack::Ptr buff_pack,std::map<DataLib::E
     memset(header.sizeCh,0,sizeof(uint32_t) * 4);
 
     for(int i = 0; i < 4; i++){
-        if (ch[i]){
+        if (ch[i].get()){
             ch_samp[i] = ch[i]->getSamplesCount() < _samples[DataLib::CH1] ? ch[i]->getSamplesCount() : _samples[DataLib::CH1];
             auto bytes = ch[i]->getBitBySample() / 8;
             ch_size[i] = ch_samp[i] * bytes > ch[i]->getBufferLenght() ? ch[i]->getBufferLenght() : ch_samp[i] * bytes;
@@ -200,7 +200,7 @@ auto buildBINStream(DataLib::CDataBuffersPack::Ptr buff_pack,std::map<DataLib::E
     //Write header
     memory->write((const char*)&header,sizeof(header));
     for(int i = 0; i < 4; i++){
-        if (ch[i] && ch_size[i]) memory->write((const char*)ch[i]->getBuffer().get(), ch_size[i]);
+        if (ch[i].get() && ch_size[i]) memory->write((const char*)ch[i]->getBuffer().get(), ch_size[i]);
     }
     //Write end segment
     memory->write((const char*)g_endOfSegment,12);

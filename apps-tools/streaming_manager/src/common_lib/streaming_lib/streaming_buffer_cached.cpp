@@ -4,8 +4,10 @@
 #include <time.h>
 #include <functional>
 #include <cstdlib>
+#include <new>
 #include "streaming_buffer_cached.h"
 #include "data_lib/thread_cout.h"
+#include "logger_lib/file_logger.h"
 
 using namespace streaming_lib;
 
@@ -26,21 +28,24 @@ CStreamingBufferCached::CStreamingBufferCached(uint32_t maxRamSize) :
 
 CStreamingBufferCached::~CStreamingBufferCached()
 {
-    std::lock_guard<std::mutex> lock(m_mtx);
-    notifyToDestory();    
+    std::lock_guard lock(m_mtx);
+    notifyToDestory();
     m_buffers.clear();
+
+    TRACE("Exit")
 }
 
 auto CStreamingBufferCached::addChannel(DataLib::EDataBuffersPackChannel ch,size_t size,uint8_t bitBySample) -> void{
     m_channelsSize[ch] = {size,bitBySample};
 }
-    
+
 
 auto CStreamingBufferCached::generateBuffers() -> void{
     auto allSize = 0;
     m_ringStart = 0;
     m_ringEnd = 0;
     m_ringSize = 0;
+
     for(auto s:m_channelsSize){
         allSize += s.second.first;
     }
@@ -59,6 +64,8 @@ auto CStreamingBufferCached::generateBuffers() -> void{
         m_buffers.push_back(pack);
         m_ringSize++;
     }
+    sem_init(&m_countsem, 0, 0);
+    sem_init(&m_spacesem, 0, m_ringSize);
 }
 
 auto CStreamingBufferCached::getMaxRamSize() -> uint64_t{
@@ -91,41 +98,49 @@ auto CStreamingBufferCached::fullPercent() -> float{
 }
 
 auto CStreamingBufferCached::getFreeBuffer(uint64_t fpga_lost) -> DataLib::CDataBuffersPack::Ptr{
-    std::lock_guard<std::mutex> lock(m_mtx);
+
     if (m_ringSize == 0){
         return nullptr;
     }
-    if (((m_ringEnd + 1) % m_ringSize) != m_ringStart){
-        auto pack = m_buffers[m_ringEnd];
-        return pack;
-    }else{
-        for(int i = (int)DataLib::CH1; i <= (int)DataLib::CH4; i++){
-            auto pack = m_buffers[m_ringEnd];
-            auto buff = pack->getBuffer((DataLib::EDataBuffersPackChannel)i);
-            if (buff){
-                // increase lost data by one buffer + fpga lost
-                buff->setLostSamples(DataLib::RP_INTERNAL_BUFFER,buff->getLostSamples(DataLib::RP_INTERNAL_BUFFER) + buff->getSamplesCount() + fpga_lost);
-            }
-        }
+    if (sem_trywait(&m_spacesem) != 0){
+        return nullptr;
     }
-    return nullptr;
+    m_mtx.lock();
+    m_ringEnd = (m_ringEnd + 1) % m_ringSize;
+    auto pack = m_buffers[m_ringEnd];
+    m_mtx.unlock();
+    return pack;
 }
 
 auto CStreamingBufferCached::unlockBufferWrite() -> void{
-    std::lock_guard<std::mutex> lock(m_mtx);
-    m_ringEnd = (m_ringEnd + 1) % m_ringSize;
+    std::lock_guard lock(m_mtx);
+    sem_post(&m_countsem);
 }
 
 auto CStreamingBufferCached::unlockBufferRead() -> void{
-    std::lock_guard<std::mutex> lock(m_mtx);
-    m_ringStart = (m_ringStart + 1) % m_ringSize;
+    std::lock_guard lock(m_mtx);
+    sem_post(&m_spacesem);
 }
 
 auto CStreamingBufferCached::readBuffer() -> DataLib::CDataBuffersPack::Ptr{
-    std::lock_guard<std::mutex> lock(m_mtx);    
-    if (m_ringStart != m_ringEnd){
-        auto pack = m_buffers[m_ringStart];
-        return pack;
+
+    if (m_ringSize == 0){
+        return nullptr;
     }
-    return nullptr;
+
+    struct timespec ts;
+    if (clock_gettime(CLOCK_REALTIME, &ts) == -1){
+        return nullptr;
+    }
+
+    ts.tv_sec += 1;
+    if (sem_timedwait(&m_countsem,&ts) == ETIMEDOUT){
+        return nullptr;
+    }
+
+    m_mtx.lock();
+    m_ringStart = (m_ringStart + 1) % m_ringSize;
+    auto pack = m_buffers[m_ringStart];
+    m_mtx.unlock();
+    return pack;
 }

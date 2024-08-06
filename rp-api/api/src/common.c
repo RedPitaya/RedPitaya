@@ -332,7 +332,7 @@ int cmn_GetReservedMemory(uint32_t *_startAddress,uint32_t *_size){
         fprintf(stderr,"[FATAL ERROR] Error open: /sys/firmware/devicetree/base/reserved-memory/buffer@1000000/reg\n");
         return RP_EOMD;
     }
-    char data[8];
+    char data[8] = {0,0,0,0,0,0,0,0};
     int sz = read(fd, &data, 8);
 
     if (close(fd) < 0) {

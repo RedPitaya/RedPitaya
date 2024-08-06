@@ -599,7 +599,6 @@ bool CBoard::getCouplingVisible(){
     return m_model == broadcast_lib::EModel::RP_250_12;
 }
 
-
 bool CBoard::getTestMode(){
     return m_testMode;
 }

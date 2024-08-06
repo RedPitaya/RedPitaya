@@ -1,4 +1,4 @@
-#include "stem_125_14_Z7020_v1.0.h"
+#include "stem_125_14_Z7020_LN_v1.1.h"
 
 
 profiles_t stem_125_14_Z7020_LN_v1_1 = {

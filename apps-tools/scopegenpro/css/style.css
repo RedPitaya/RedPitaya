@@ -796,13 +796,13 @@ btn:active {
 .x_axis_ticks {
     position: absolute;
     color: #ccc;
-    font-size:smaller;
+    font-size:12px;
 }
 
 .y_axis_ticks {
     position: absolute;
     color: #ccc;
-    font-size:smaller;
+    font-size:12px;
 }
 
 .rotate {

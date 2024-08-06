@@ -193,6 +193,18 @@
                 stem_ver = "SIGNALlab 250-12 v1.2b"
                 break;
             }
+            case 17:{
+                stem_ver = "STEMlab 125-14 LN BO v1.1"
+                break;
+            }
+            case 18:{
+                stem_ver = "STEMlab 125-14 LN CE1 v1.1"
+                break;
+            }
+            case 19:{
+                stem_ver = "STEMlab 125-14 LN CE2 v1.1"
+                break;
+            }
             default:
                 stem_ver = "unknown"
         }

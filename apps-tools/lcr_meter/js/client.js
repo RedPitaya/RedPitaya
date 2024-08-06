@@ -16,7 +16,7 @@
     CLIENT.config.start_app_url = (CLIENT.config.server_ip.length ? 'http://' + CLIENT.config.server_ip : '') + '/bazaar?start=' + CLIENT.config.app_id + '?' + CLIENT.config.search.substr(1);
     CLIENT.config.stop_app_url = (CLIENT.config.server_ip.length ? 'http://' + CLIENT.config.server_ip : '') + '/bazaar?stop=' + CLIENT.config.app_id;
     CLIENT.config.socket_url = 'ws://' + (CLIENT.config.server_ip.length ? CLIENT.config.server_ip : window.location.hostname) + '/wss'; // WebSocket server URI
-    CLIENT.config.debug = false
+    CLIENT.config.debug = true
 
     CLIENT.client_id = undefined;
     CLIENT.ping = undefined;
@@ -258,7 +258,9 @@
         }
     };
 
-
+    CLIENT.getValue = function(name) {
+        return CLIENT.params.orig[name] !== undefined ? CLIENT.params.orig[name].value : undefined;
+    }
 
     // Sends to server parameters
     CLIENT.sendParameters = function() {

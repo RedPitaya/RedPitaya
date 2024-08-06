@@ -45,19 +45,19 @@ const scpi_choice_def_t scpi_CAN_Mode[] = {
 
 auto parseInterface(scpi_t * context,rp_can_interface_t *interface) -> bool{
     int32_t cmd[1] = {0};
-    
+
     if (!SCPI_CommandNumbers(context,cmd,1,-1)){
         SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Failed to get parameters.")
         return false;
     }
- 
+
     if (cmd[0] == -1){
         SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Failed to get interface number.")
         return false;
     }
     *interface = (rp_can_interface_t)cmd[0];
     return true;
-} 
+}
 
 
 scpi_result_t RP_CAN_FpgaEnable(scpi_t * context){
@@ -103,7 +103,7 @@ scpi_result_t RP_CAN_Start(scpi_t * context){
     auto itf = RP_CAN_0;
     if (!parseInterface(context,&itf)){
         return SCPI_RES_ERR;
-    } 
+    }
 
     auto result = rp_CanStart(itf);
 
@@ -120,7 +120,7 @@ scpi_result_t RP_CAN_Stop(scpi_t * context){
     auto itf = RP_CAN_0;
     if (!parseInterface(context,&itf)){
         return SCPI_RES_ERR;
-    } 
+    }
 
     auto result = rp_CanStop(itf);
 
@@ -137,7 +137,7 @@ scpi_result_t RP_CAN_Restart(scpi_t * context){
     auto itf = RP_CAN_0;
     if (!parseInterface(context,&itf)){
         return SCPI_RES_ERR;
-    } 
+    }
 
     auto result = rp_CanRestart(itf);
 
@@ -154,7 +154,7 @@ scpi_result_t RP_CAN_StateQ(scpi_t * context){
     auto itf = RP_CAN_0;
     if (!parseInterface(context,&itf)){
         return SCPI_RES_ERR;
-    } 
+    }
     rp_can_state_t state;
     auto result = rp_CanGetState(itf,&state);
 
@@ -235,14 +235,13 @@ scpi_result_t RP_CAN_BitrateSamplePointQ(scpi_t * context){
         return SCPI_RES_ERR;
     }
 
-    uint32_t bitrate;
-    float sp;
+    uint32_t bitrate = 0;
+    float sp = 0;
 
     auto result = rp_CanGetBitrateAndSamplePoint(itf,&bitrate,&sp);
 
     if (RP_HW_CAN_OK != result) {
-        RP_LOG_CRIT("%s" , rp_CanGetError(result));
-        return SCPI_RES_ERR;
+        RP_LOG_INFO("%s" , rp_CanGetError(result));
     }
 
     SCPI_ResultUInt32Base(context, bitrate, 10);
@@ -308,12 +307,12 @@ scpi_result_t RP_CAN_BitTimingQ(scpi_t * context){
     }
 
     rp_can_bittiming_t bt;
+    memset(&bt,0,sizeof(rp_can_bittiming_t));
 
     auto result = rp_CanGetBitTiming(itf,&bt);
 
     if (RP_HW_CAN_OK != result) {
-        RP_LOG_CRIT("%s" , rp_CanGetError(result));
-        return SCPI_RES_ERR;
+        RP_LOG_INFO("%s" , rp_CanGetError(result));
     }
 
     SCPI_ResultUInt32Base(context, bt.tq, 10);
@@ -359,7 +358,7 @@ scpi_result_t RP_CAN_ClockFreqQ(scpi_t * context){
     auto itf = RP_CAN_0;
     if (!parseInterface(context,&itf)){
         return SCPI_RES_ERR;
-    } 
+    }
     uint32_t freq;
     auto result = rp_CanGetClockFreq(itf,&freq);
 
@@ -378,7 +377,7 @@ scpi_result_t RP_CAN_BusErrorCountersQ(scpi_t * context){
     auto itf = RP_CAN_0;
     if (!parseInterface(context,&itf)){
         return SCPI_RES_ERR;
-    } 
+    }
     uint16_t tx,rx;
     auto result = rp_CanGetBusErrorCounters(itf,&tx,&rx);
 
@@ -509,7 +508,7 @@ scpi_result_t RP_CAN_Open(scpi_t * context){
     auto itf = RP_CAN_0;
     if (!parseInterface(context,&itf)){
         return SCPI_RES_ERR;
-    } 
+    }
 
     auto result = rp_CanOpen(itf);
 
@@ -526,7 +525,7 @@ scpi_result_t RP_CAN_Close(scpi_t * context){
     auto itf = RP_CAN_0;
     if (!parseInterface(context,&itf)){
         return SCPI_RES_ERR;
-    } 
+    }
 
     auto result = rp_CanClose(itf);
 
@@ -546,12 +545,12 @@ scpi_result_t RP_CAN_Send(scpi_t * context){
     int paramCount = isTimeout ? 3 : 2;
 
     int32_t cmd[3] = {0,0,0};
-    
+
     if (!SCPI_CommandNumbers(context,cmd,paramCount,-1)){
         SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Failed to get parameters.");
         return SCPI_RES_ERR;
     }
- 
+
     if (cmd[0] == -1){
         SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Failed to get interface number.");
         return SCPI_RES_ERR;
@@ -589,17 +588,17 @@ scpi_result_t RP_CAN_Send(scpi_t * context){
     RP_LOG_INFO("%s",rp_CanGetError(result))
     return SCPI_RES_OK;
 }
- 
+
 scpi_result_t RP_CAN_ReadQ(scpi_t * context){
     bool isTimeout = strstr(context->param_list.cmd_raw.data,":T") != NULL;
     int paramCount = isTimeout ? 2 : 1;
     int32_t cmd[2] = {0,0};
-    
+
     if (!SCPI_CommandNumbers(context,cmd,paramCount,-1)){
         SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Failed to get parameters.");
         return SCPI_RES_ERR;
     }
- 
+
     if (cmd[0] == -1){
         SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Failed to get interface number.");
         return SCPI_RES_ERR;

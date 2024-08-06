@@ -14,6 +14,15 @@
         OSC.triggerParam();
     }
 
+    OSC.chShowInvalid = function(ch,new_params) {
+        var param_name = ch+"_SHOW_INVALID";
+        var state = new_params[param_name].value;
+        var field = $('#' + param_name);
+        if (field.is('button')) {
+            field[state === true? 'addClass' : 'removeClass']('active');
+        }
+    }
+
     OSC.ch1Show = function(new_params) {
         OSC.chShow("CH1", new_params);
     }
@@ -29,6 +38,23 @@
     OSC.ch4Show = function(new_params) {
         OSC.chShow("CH4", new_params);
     }
+
+    OSC.ch1ShowInvalid = function(new_params) {
+        OSC.chShowInvalid("CH1", new_params);
+    }
+
+    OSC.ch2ShowInvalid = function(new_params) {
+        OSC.chShowInvalid("CH2", new_params);
+    }
+
+    OSC.ch3ShowInvalid = function(new_params) {
+        OSC.chShowInvalid("CH3", new_params);
+    }
+
+    OSC.ch4ShowInvalid = function(new_params) {
+        OSC.chShowInvalid("CH4", new_params);
+    }
+
 
     OSC.in1Name = function(new_params) {
         $('#IN1_CHANNEL_NAME_INPUT').val(new_params['IN1_CHANNEL_NAME_INPUT'].value)
@@ -391,7 +417,7 @@
             var ws = $("#xaxis_tick" + (i + 5)).width() / 2
             if (i == -5) ws = 0
             if (i ==  5) ws *= 2
-            $("#xaxis_tick" + (i + 5)).css('top',gh + 30).css('left', gw / 2.0 + (gw / 2.0) * i/5.0 + 20 - ws)
+            $("#xaxis_tick" + (i + 5)).css('top',gh + 35).css('left', gw / 2.0 + (gw / 2.0) * i/5.0 + 20 - ws)
         }
     }
 
@@ -410,9 +436,10 @@
     OSC.updateTitileYAxisTicks = function(){
         var itm = OSC.getSettingsActiveChannel()
         if (itm.channel !== ''){
+            var color = OSC.config.graph_colors[itm.channel.toLowerCase()]
             for(var i = -5; i <= 5; i++){
                 var v = OSC.convertVoltageForAxis(i * -itm.scale) + itm.suffix
-                $("#yaxis_tick" + (i + 5)).html(v)
+                $("#yaxis_tick" + (i + 5)).html(v).css('color', color);
             }
         }else{
             for(var i = -5; i <= 5; i++){

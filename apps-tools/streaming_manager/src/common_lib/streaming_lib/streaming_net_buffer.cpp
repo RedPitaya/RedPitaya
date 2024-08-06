@@ -24,7 +24,7 @@ CStreamingNetBuffer::~CStreamingNetBuffer()
 }
 
 auto CStreamingNetBuffer::addNewBuffer(uint8_t* buffer,size_t len) -> void {
-    std::lock_guard<std::mutex> lock(m_mtx);
+    std::lock_guard lock(m_mtx);
     uint64_t new_id = 0;
     size_t   buffersAllSize = 0;
     uint64_t packOrderId = 0;

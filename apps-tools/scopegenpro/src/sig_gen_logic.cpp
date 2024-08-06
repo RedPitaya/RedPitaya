@@ -379,6 +379,13 @@ auto initGenAfterLoad() -> void{
             }
         }
     }
+
+    for(int i = 0; i < g_dac_channels; i++){
+        auto ch = (rp_channel_t)i;
+        if (outName[ch].Value() == ""){
+            outName[ch].Value() = std::string("OUT") + std::to_string(i+1);
+        }
+    }
 }
 
 auto setNeedUpdateGenSignal() -> void{
@@ -393,6 +400,14 @@ auto initGenBeforeLoadConfig() -> void{
         auto ch = (rp_channel_t)i;
         outName[ch].Value() = std::string("OUT") + std::to_string(i+1);
     }
+
+    if (getModelName() == "Z20"){
+        for(int i = 0; i < g_dac_channels; i++){
+            auto ch = (rp_channel_t)i;
+            outFrequancy[ch].SetMin(300000);
+        }
+    }
+
 }
 
 
@@ -649,7 +664,7 @@ auto sendFreqInSweepMode() -> void{
             rp_GenGetFreq((rp_channel_t)i,&freq);
             if (freq != outFrequancy[i].Value()){
                 outFrequancy[i].SendValue(freq);
-                std::lock_guard<std::mutex> lock(g_updateOutWaveFormCh_mtx);
+                std::lock_guard lock(g_updateOutWaveFormCh_mtx);
                 g_updateOutWaveFormCh[i] = true;
             }
         }

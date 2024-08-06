@@ -71,6 +71,9 @@ CIntParameter		ss_adc_channels(	"SS_ADC_CHANNELS", 		CBaseParameter::RO, getADCC
 CIntParameter		ss_dac_channels(  	"SS_DAC_CHANNELS", 		CBaseParameter::RO, getDACChannels() ,0,	0,10);
 CBooleanParameter   ss_ac_dc_enable(  	"SS_IS_AC_DC", 			CBaseParameter::RO, getAC_DC() ,0);
 
+CDoubleParameter	ss_pass_samples(  	"SS_PASS_SAMPLES", 		CBaseParameter::RW, 0 ,0,	0, 1e20);
+CDoubleParameter	ss_writed_size(  	"SS_WRITED_SIZE", 		CBaseParameter::RW, 0 ,0,	0, 1e20);
+
 
 uio_lib::COscilloscope::Ptr g_osc = nullptr;
 uio_lib::CGenerator::Ptr    g_gen = nullptr;
@@ -150,6 +153,9 @@ auto getModel() -> broadcast_lib::EModel{
         case STEM_125_14_v1_0:
         case STEM_125_14_v1_1:
         case STEM_125_14_LN_v1_1:
+        case STEM_125_14_LN_BO_v1_1:
+        case STEM_125_14_LN_CE1_v1_1:
+        case STEM_125_14_LN_CE2_v1_1:
 			return broadcast_lib::EModel::RP_125_14;
         case STEM_125_14_Z7020_v1_0:
         case STEM_125_14_Z7020_LN_v1_1:
@@ -581,6 +587,12 @@ void UpdateParams(void) {
 
 	    rp_WC_UpdateParameters(false);
 
+		if (g_s_file){
+			ss_pass_samples.SendValue(g_s_file->getPassSamples());
+			ss_writed_size.SendValue(g_s_file->getWritedSize());
+		}
+
+
 	}catch (std::exception& e)
 	{
         ERROR("UpdateParams() %s",e.what());
@@ -607,11 +619,11 @@ void startServer(bool testMode) {
 	try{
         std::lock_guard<std::mutex> guard(g_adc_mutex);
 
+        g_s_fpga = nullptr;
+        g_s_buffer = nullptr;
+        g_osc = nullptr;
         g_s_file = nullptr;
         g_s_net = nullptr;
-        g_s_buffer = nullptr;
-        g_s_fpga = nullptr;
-        g_osc = nullptr;
 
 		CStreamSettings settings = testMode ? g_serverNetConfig->getTempSettings() : g_serverNetConfig->getSettings();
 		if (!settings.isSetted()) return;
@@ -736,7 +748,7 @@ void startServer(bool testMode) {
 
         if (use_file == CStreamSettings::FILE) {
             auto f_path = std::string(FILE_PATH);
-            g_s_file = streaming_lib::CStreamingFile::create(format,f_path,samples, save_mode == CStreamSettings::VOLT, testMode);
+            g_s_file = streaming_lib::CStreamingFile::create(format,f_path,samples, save_mode == CStreamSettings::VOLT, testMode, true);
             g_s_file->stopNotify.connect([](streaming_lib::CStreamingFile::EStopReason r){
                 switch (r) {
                     case streaming_lib::CStreamingFile::EStopReason::NORMAL:{
@@ -884,10 +896,10 @@ void stopServer(ServerNetConfigManager::EStopReason x){
 		}
 		if (g_s_buffer) g_s_buffer->notifyToDestory();
 		if (g_s_file) g_s_file->disableNotify();
-		g_s_net = nullptr;
-        g_s_file = nullptr;
-        g_s_buffer = nullptr;
         g_s_fpga = nullptr;
+        g_s_buffer = nullptr;
+        g_s_net = nullptr;
+        g_s_file = nullptr;
         TRACE("Stop server");
 	}catch (std::exception& e)
 	{

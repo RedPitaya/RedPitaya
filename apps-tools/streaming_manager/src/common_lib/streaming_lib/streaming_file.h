@@ -34,9 +34,9 @@ public:
     using Ptr = std::shared_ptr<CStreamingFile>;
 
 
-    static auto create(CStreamSettings::DataFormat _fileType,std::string &_filePath, uint64_t _samples, bool _v_mode,bool testMode) -> Ptr;
+    static auto create(CStreamSettings::DataFormat _fileType,std::string &_filePath, uint64_t _samples, bool _v_mode,bool testMode, bool _rp_mode = false) -> Ptr;
 
-    CStreamingFile(CStreamSettings::DataFormat _fileType,std::string &_filePath, uint64_t _samples, bool _v_mode,bool testMode);
+    CStreamingFile(CStreamSettings::DataFormat _fileType,std::string &_filePath, uint64_t _samples, bool _v_mode,bool testMode, bool _rp_mode);
     ~CStreamingFile();
 
 
@@ -55,6 +55,9 @@ public:
     auto getNetworkLost() -> uint64_t;
     auto getFileLost() -> uint64_t;
     auto getCSVFileName() -> std::string;
+
+    auto getPassSamples() -> uint64_t;
+    auto getWritedSize() -> uint64_t;
 
 private:
 
@@ -81,6 +84,7 @@ private:
     bool m_testMode;
     bool m_volt_mode;
     bool m_disableNotify;
+    bool m_rp_mode;
 
     CStreamSettings::DataFormat m_fileType;
 

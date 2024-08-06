@@ -44,6 +44,7 @@ volatile double ch_ampOffset[MAX_ADC_CHANNELS], math_ampOffset;
 volatile double ch_ampScale[MAX_ADC_CHANNELS],  math_ampScale = 1;
 volatile float ch_probeAtt[MAX_ADC_CHANNELS];
 volatile bool ch_inverted[MAX_ADC_CHANNELS], math_inverted = false;
+volatile bool ch_showInvalid[MAX_ADC_CHANNELS] = {false,false,false,false};
 
 volatile rpApp_osc_math_oper_t operation;
 volatile rp_channel_t mathSource1, mathSource2;
@@ -138,6 +139,7 @@ int osc_SetDefaultValues() {
 
     for(int i = 0; i< MAX_ADC_CHANNELS; i++){
         ch_inverted[i] = false;
+        ch_showInvalid[i] = false;
     }
 
     ECHECK_APP(osc_setAmplitudeOffset(RPAPP_OSC_SOUR_CH1, 0));
@@ -258,6 +260,16 @@ int osc_isRunning(bool *running) {
 
 int osc_isTriggered() {
     return g_viewController.isTriggered();
+}
+
+int osc_setShowInvalid(rp_channel_t _channel, bool _state){
+    ch_showInvalid[_channel] = _state;
+    return RP_OK;
+}
+
+int osc_getShowInvalid(rp_channel_t _channel, bool *_state){
+    *_state = ch_showInvalid[_channel];
+    return RP_OK;
 }
 
 int osc_setTimeScale(float _scale) {
@@ -1572,7 +1584,7 @@ void mainThreadFun() {
             data->m_dataHasTrigger = dataHasTrigger;
             data->m_decimation = decimationInACQ;
             data->m_pointerPosition = pPosition;
-            data->m_validBeforeTrigger = MIN(preTriggerCount,needWaitSamples);
+            data->m_validBeforeTrigger = contMode  ? needWaitSamples : MIN(preTriggerCount,needWaitSamples);
             data->m_validAfterTrigger = delay;
             uint32_t size = needWaitSamples + delay;
             // WARNING("size %d needWaitSamples %d delay %d",size,needWaitSamples,delay)
@@ -1639,7 +1651,12 @@ void mainViewThreadFun() {
                 }
                 CDataDecimator::DataInfo viewDecInfo;
                 CDataDecimator::DataInfo viewDecRawInfo;
-                g_decimator.decimate((rp_channel_t) channel,buff->m_data->ch_f[channel],ADC_BUFFER_SIZE,posInPoints,view ,orignalData,&viewDecInfo,&viewDecRawInfo);
+                CDataDecimator::ValidRange range;
+                if (!ch_showInvalid[channel]){
+                    range.m_validBeforeTrigger = buff->m_validBeforeTrigger;
+                    range.m_validAfterTrigger = buff->m_validAfterTrigger;
+                }
+                g_decimator.decimate((rp_channel_t) channel,buff->m_data->ch_f[channel],ADC_BUFFER_SIZE,posInPoints,view ,orignalData,&viewDecInfo,&viewDecRawInfo,range);
                 viewInfo->m_dataHasTrigger = buff->m_dataHasTrigger;
                 viewInfo->m_decimatoion = buff->m_decimation;
                 viewInfo->m_max = viewDecInfo.m_max;
