@@ -1395,8 +1395,15 @@ scpi_result_t RP_AcqTriggerDataQ(scpi_t *context) {
         SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Missing trigger mode parameter.");
         return SCPI_RES_ERR;
     }
+
     uint32_t trig_pos;
-    result = rp_AcqGetWritePointerAtTrigCh(channel,&trig_pos);
+
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()){
+        result = rp_AcqGetWritePointerAtTrigCh(channel, &trig_pos);
+    } else {
+        result =  rp_AcqGetWritePointerAtTrig(&trig_pos);
+    }
+
     if(result != RP_OK){
         RP_LOG_CRIT("Failed to get trigger position: %s", rp_GetError(result));
         return SCPI_RES_ERR;

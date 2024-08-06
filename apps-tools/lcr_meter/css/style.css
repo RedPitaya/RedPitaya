@@ -82,12 +82,6 @@ input {
     text-align: center;
 }
 
-#triginfo {
-    position: absolute;
-    width: 100%;
-    text-align: center;
-    padding-right: 222px;
-}
 
 area:hover {
     cursor: pointer;
@@ -98,10 +92,13 @@ area:hover {
     /*margin: 0 auto;*/
     position: relative;
     width: 100%;
+    height: 85vh;
 }
 
 .container-fluid {
     margin-top: 10px;
+    width: 100%;
+    height: 100%;
 }
 
 .container {
@@ -163,10 +160,11 @@ area:hover {
 }
 
 #cont {
-	margin-left:250px;
-	margin-right:250px;
 	padding-top:10px;
 	float:left;
+    width: 100%;
+    height: 100%;
+    display:flex;
 }
 
 @media only screen and (max-width: 1400px) {
@@ -308,10 +306,11 @@ area:hover {
 .data_wrapper {
     float: left;
     width: 60%;
-    height: 630px;
-    min-width: 455px;
+    min-width: 800px;
+    max-width: 900px;
     padding-right: 5px;
     background-color: transparent;
+    padding-right: 20px;
 }
 
 #data_displ {
@@ -322,7 +321,7 @@ area:hover {
 }
 
 #display {
-    width: 60%;
+    width: 55%;
     height: 100%;
     float: left;
     padding-left: 5px;
@@ -330,20 +329,30 @@ area:hover {
 
 #prim_displ {
     width: 100%;
-    height: 50%;
+    height: 40%;
     background-color: #dcdcdc;
     float: left;
     padding: 10px 10px 10px 10px;
-    font-size: 50px;
+    font-size: 40px;
 }
 
 #sec_displ {
     width: 100%;
-    height: 50%;
+    height: 40%;
     background-color: #dcdcdc;
     float: left;
     padding: 40px 10px 10px 10px;
-    font-size: 38px;
+    font-size: 34px;
+}
+
+#tol_rel_displ {
+    width: 100%;
+    height: 20%;
+    background-color: #dcdcdc;
+    float: left;
+    padding: 5px 10px 10px 10px;
+    font-size: 14px;
+    color: #000000;
 }
 
 #status_data {
@@ -366,7 +375,7 @@ area:hover {
 
 #meas_displ {
     padding: 5px 5px 5px 5px;
-    width: 40%;
+    width: 45%;
     min-width: 180px;
     height: 260px;
     background-color: #cccccc;
@@ -375,7 +384,7 @@ area:hover {
 
 #table_displ {
     width: 100%;
-    height: 348px;
+    height: 100%;
     background-color: #cccccc;
     overflow: scroll;
     color: #000000;
@@ -395,13 +404,15 @@ area:hover {
 
 #btn_export {
     float: left;
-    width: 30%;
+    width: 18%;
+    max-width: 120px;
 }
 
 #btn_clear,
 #btn_clear_all {
     float: right;
     width: 18%;
+    max-width: 120px;
 }
 
 th {
@@ -417,11 +428,16 @@ tr:nth-child(even) {
 }
 
 .global_container {
-    height: 653px;
-    width: 40%;
     border: 1px solid #999;
-    min-width: 328px;
     float: left;
+    display: flex;
+    align-content: stretch;
+    flex-direction: column;
+    padding-left: 15px;
+    padding-right: 15px;
+    padding-top: 15px;
+    padding-bottom: 10px;
+    width: 100%;
 }
 
 @media (min-width: 768px) {
@@ -500,6 +516,7 @@ tr:nth-child(even) {
 
 .separator {
     width: 100%;
+    background: #cccccc;
 }
 
 .form-control {
@@ -714,158 +731,10 @@ input.bt_check:checked + label {
     z-index: 10;
 }
 
-#time_offset_arrow {
-    margin-top: 0;
-    display: inline;
-}
 
-#osc_trig_edge_img {
-    margin: -2px 0 0;
-}
-
-.hline {
-    height: 2px;
-    border-top: 2px dashed #ccc;
-    position: absolute;
-    left: 1px;
-    right: 1px;
-    top: 0;
-    opacity: 0.8;
-    display: none;
-    z-index: 9;
-}
-
-.vline {
-    width: 2px;
-    border-right: 2px dashed #ccc;
-    position: absolute;
-    top: 1px;
-    bottom: 9px;
-    left: 0;
-    opacity: 0.8;
-    display: none;
-    z-index: 9;
-}
 
 #trigger_level.hline {
     border-top-style: solid;
-}
-
-.harrow {
-    position: absolute;
-    right: 0;
-    top: 0;
-    margin-top: -7px;
-    display: none;
-    z-index: 12;
-}
-
-.varrow {
-    position: absolute;
-    left: 0;
-    bottom: 8px;
-    margin-left: -7px;
-    margin-right: -7px;
-    display: none;
-    z-index: 12;
-}
-
-.cur_info {
-    position: absolute;
-    top: 0;
-    left: 0;
-    font-size: 10px;
-    color: #fff;
-    background-color: #000;
-    line-height: 12px;
-    padding: 1px 3px;
-    white-space: nowrap;
-    display: none;
-    z-index: 14;
-}
-
-#kostyl_footer {
-    position: absolute;
-    bottom: -4px;
-    width: 50%;
-    background: #343433;
-    height: 10px;
-    z-index: 15;
-}
-
-#cur_x1_info.cur_info,
-#cur_x2_info.cur_info {
-    top: 2px;
-    margin-left: 3px;
-}
-
-#cur_y1_info.cur_info,
-#cur_y2_info.cur_info {
-    left: 2px;
-    margin-top: -15px;
-}
-
-#cur_x_diff {
-    font-family: "Glyphicons Halflings";
-    font-size: 11px;
-    line-height: 1;
-    border-bottom: 2px solid #ccc;
-    margin: 0 5px;
-    width: 100px;
-    height: 7px;
-    position: absolute;
-    left: 0;
-    top: 40px;
-    display: none;
-    z-index: 13;
-}
-
-#cur_x_diff:before {
-    content: "\e079";
-    margin-left: -5px;
-}
-
-#cur_x_diff:after {
-    content: "\e080";
-    margin-right: -5px;
-    float: right;
-}
-
-#cur_y_diff {
-    font-family: "Glyphicons Halflings";
-    font-size: 11px;
-    border-right: 2px solid #ccc;
-    height: 100px;
-    width: 7px;
-    position: absolute;
-    left: 50px;
-    top: 0;
-    display: none;
-    z-index: 13;
-}
-
-#cur_y_diff:before {
-    content: "\e113";
-    position: absolute;
-    top: -5px;
-    left: 1px;
-    line-height: 1;
-}
-
-#cur_y_diff:after {
-    content: "\e114";
-    position: absolute;
-    bottom: -5px;
-    left: 0;
-    line-height: 1;
-}
-
-#cur_y_diff_info.cur_info {
-    left: 59px;
-}
-
-#cur_x_diff_info.cur_info {
-    top: 30px;
 }
 
 #info_box {
@@ -884,4 +753,14 @@ input.bt_check:checked + label {
     height: 30px;
     width: 100%;
     white-space: nowrap;
+}
+
+.row_number{
+    margin-left: 10px;
+    font-size: medium;
+}
+
+.table_num_w{
+    min-width: 100px;
+    max-width: 120px;
 }

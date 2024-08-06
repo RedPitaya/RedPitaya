@@ -144,7 +144,7 @@ auto runClient(std::string  host,StateRunnedHosts state) -> void{
                     brokenBuffer = testBuffer(ch1 ? ch1->getBuffer().get() : nullptr,ch2 ? ch2->getBuffer().get() : nullptr,ch3 ? ch3->getBuffer().get() : nullptr,ch4 ? ch4->getBuffer().get() : nullptr,sizeCh1,sizeCh2,sizeCh3,sizeCh4) ? 0 : 1;
                 }
                 auto h = host;
-                addStatisticSteaming(h,sizeCh1 + sizeCh2,sempCh1,sempCh2,sempCh3,sempCh4,lostRate, net, flost,brokenBuffer);
+                addStatisticSteaming(h,sizeCh1 + sizeCh2 + sizeCh3 + sizeCh4 ,sempCh1,sempCh2,sempCh3,sempCh4,lostRate, net, flost, brokenBuffer);
             }
           obj->passBuffers(pack);
         }

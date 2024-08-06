@@ -36,10 +36,6 @@
 /* Main lcr params structure */
 typedef struct params_e{
 	calib_t calibration;
-	bool    tolerance;
-	int     range;
-	int     range_format;
-	int     range_units;
 	bool    series;
     lcr_shunt_mode_t shunt_mode;
     int shunt;
@@ -98,14 +94,6 @@ int lcr_SetCalibMode(calib_t mode);
 int lcr_GetCalibMode(calib_t *mode);
 int lcr_SetMeasSeries(bool serial);
 int lcr_GetMeasSeries(bool *serial);
-int lcr_SetMeasTolerance(int tolerance);
-int lcr_GetMeasTolerance(int *tolerance);
-int lcr_SetMeasRangeMode(int range);
-int lcr_GetMeasRangeMode(int *range);
-int lcr_SetRangeFormat(int format);
-int lcr_GetRangeFormat(int *format);
-int lcr_SetRangeUnits(int units);
-int lcr_GetRangeUnits(int *units);
 int lcr_SetCustomShunt(int shunt);
 int lcr_GetCustomShunt(int *shunt);
 int lcr_SetShuntMode(lcr_shunt_mode_t shunt_mode);

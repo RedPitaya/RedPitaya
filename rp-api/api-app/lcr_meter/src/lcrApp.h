@@ -118,14 +118,6 @@ int lcrApp_LcrSetCalibMode(calib_t calib_mode);
 int lcrApp_LcrGetCalibMode(calib_t *calib_mode);
 int lcrApp_LcrSetMeasSeries(bool series);
 int lcrApp_LcrGetMeasSeries(bool *series);
-int lcrApp_LcrSetMeasTolerance(int tolerance);
-int lcrApp_LcrGetMeasTolerance(int *tolerance);
-int lcrApp_LcrSetMeasRangeMode(int range_mode);
-int lcrApp_LcrGetMeasRangeMode(int *range_mode);
-int lcrApp_LcrSetMeasRangeFormat(int format);
-int lcrApp_LcrGetMeasRangeFormat(int *format);
-int lcrApp_LcrSetMeasRangeUnits(int units);
-int lcrApp_LcrGetMeasRangeUnits(int *units);
 int lcrApp_LcrCheckExtensionModuleConnection(bool _muteWarnings);
 int lcrApp_LcrIsModuleConnected(bool *state);
 

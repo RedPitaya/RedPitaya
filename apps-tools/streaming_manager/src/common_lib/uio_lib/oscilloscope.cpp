@@ -8,7 +8,7 @@
 #include <string.h>
 #include <poll.h>
 #include <math.h>
-
+#include "logger_lib/file_logger.h"
 
 using namespace uio_lib;
 
@@ -87,6 +87,7 @@ COscilloscope::COscilloscope(int _fd, void *_regset, size_t _regsetSize, void *_
     m_OscMap(nullptr),
     m_OscBufferNumber(0),
     m_dec_factor(_dec_factor),
+    m_waitLock(),
     m_filterBypass(true),
     m_isMaster(_isMaster),
     m_adcMaxSpeed(_adcMaxSpeed),
@@ -112,6 +113,7 @@ COscilloscope::~COscilloscope()
     munmap(m_Regset, m_RegsetSize);
     munmap(m_Buffer, m_BufferSize);
     close(m_Fd);
+    TRACE("Exit")
 }
 
 auto COscilloscope::setReg(volatile OscilloscopeMapT *_OscMap) -> void {
@@ -303,14 +305,14 @@ auto COscilloscope::wait() -> bool{
 }
 
 auto COscilloscope::clearInterrupt() -> bool{
-    const std::lock_guard<std::mutex> lock(m_waitLock);
+    std::lock_guard lock(m_waitLock);
    //  fprintf(stderr,"clearInterrupt()\n");
     setRegister(m_OscMap,&(m_OscMap->dma_ctrl), 0x00000002 );
     return true;
 }
 
 auto COscilloscope::stop() -> void {
-    const std::lock_guard<std::mutex> lock(m_waitLock);
+    std::lock_guard lock(m_waitLock);
     if (m_OscMap != nullptr){
         setRegister(m_OscMap,&(m_OscMap->event_sts),UINT32_C(0x00000004));
     }else {

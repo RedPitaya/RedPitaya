@@ -46,6 +46,9 @@ auto getModel() -> models_t{
         case STEM_125_14_v1_0:
         case STEM_125_14_v1_1:
         case STEM_125_14_LN_v1_1:
+        case STEM_125_14_LN_BO_v1_1:
+        case STEM_125_14_LN_CE1_v1_1:
+        case STEM_125_14_LN_CE2_v1_1:
         case STEM_125_14_Z7020_v1_0:
         case STEM_125_14_Z7020_LN_v1_1:
             return RP_125_14;

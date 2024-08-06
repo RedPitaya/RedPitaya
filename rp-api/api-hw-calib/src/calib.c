@@ -67,6 +67,9 @@ rp_calib_error calib_InitModelEx(rp_HPeModels_t model,bool use_factory_zone,rp_c
             case STEM_125_14_v1_0:
             case STEM_125_14_v1_1:
             case STEM_125_14_LN_v1_1:
+            case STEM_125_14_LN_BO_v1_1:
+            case STEM_125_14_LN_CE1_v1_1:
+            case STEM_125_14_LN_CE2_v1_1:
             case STEM_125_14_Z7020_v1_0:
             case STEM_125_14_Z7020_LN_v1_1:{
                 uint16_t size = sizeof(rp_calib_params_v1_t);
@@ -204,6 +207,9 @@ rp_calib_error calib_WriteParams(rp_HPeModels_t model, rp_calib_params_t *calib_
             case STEM_125_14_v1_0:
             case STEM_125_14_v1_1:
             case STEM_125_14_LN_v1_1:
+            case STEM_125_14_LN_BO_v1_1:
+            case STEM_125_14_LN_CE1_v1_1:
+            case STEM_125_14_LN_CE2_v1_1:
             case STEM_125_14_Z7020_v1_0:
             case STEM_125_14_Z7020_LN_v1_1:{
 
@@ -589,6 +595,9 @@ rp_calib_error calib_ConvertToOld(rp_calib_params_t *out){
         case STEM_125_14_v1_0:
         case STEM_125_14_v1_1:
         case STEM_125_14_LN_v1_1:
+        case STEM_125_14_LN_BO_v1_1:
+        case STEM_125_14_LN_CE1_v1_1:
+        case STEM_125_14_LN_CE2_v1_1:
         case STEM_125_14_Z7020_v1_0:
         case STEM_125_14_Z7020_LN_v1_1:{
             // for ecosystem version 0.98

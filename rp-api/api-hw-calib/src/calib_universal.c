@@ -130,6 +130,9 @@ rp_calib_params_t convertUniversaltoCommon(rp_HPeModels_t model,rp_calib_params_
         case STEM_125_14_v1_0:
         case STEM_125_14_v1_1:
         case STEM_125_14_LN_v1_1:
+        case STEM_125_14_LN_BO_v1_1:
+        case STEM_125_14_LN_CE1_v1_1:
+        case STEM_125_14_LN_CE2_v1_1:
         case STEM_125_14_Z7020_v1_0:
         case STEM_125_14_Z7020_LN_v1_1:{
             calib.fast_adc_count_1_1 = 2;
@@ -389,6 +392,9 @@ bool convertUniversal(rp_HPeModels_t model,rp_calib_params_t *param,rp_calib_par
         case STEM_125_14_v1_0:
         case STEM_125_14_v1_1:
         case STEM_125_14_LN_v1_1:
+        case STEM_125_14_LN_BO_v1_1:
+        case STEM_125_14_LN_CE1_v1_1:
+        case STEM_125_14_LN_CE2_v1_1:
         case STEM_125_14_Z7020_v1_0:
         case STEM_125_14_Z7020_LN_v1_1:{
             if (param->fast_adc_count_1_1 != 2){
@@ -685,6 +691,9 @@ rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model){
     case STEM_125_14_v1_0:
     case STEM_125_14_v1_1:
     case STEM_125_14_LN_v1_1:
+    case STEM_125_14_LN_BO_v1_1:
+    case STEM_125_14_LN_CE1_v1_1:
+    case STEM_125_14_LN_CE2_v1_1:
     case STEM_125_14_Z7020_v1_0:
     case STEM_125_14_Z7020_LN_v1_1:
         calib.fast_adc_count_1_1 = 2;

@@ -837,6 +837,11 @@
     OSC.param_callbacks["CH3_SHOW"] = OSC.ch3Show;
     OSC.param_callbacks["CH4_SHOW"] = OSC.ch4Show;
 
+    OSC.param_callbacks["CH1_SHOW_INVALID"] = OSC.ch1ShowInvalid;
+    OSC.param_callbacks["CH2_SHOW_INVALID"] = OSC.ch2ShowInvalid;
+    OSC.param_callbacks["CH3_SHOW_INVALID"] = OSC.ch3ShowInvalid;
+    OSC.param_callbacks["CH4_SHOW_INVALID"] = OSC.ch4ShowInvalid;
+
     OSC.param_callbacks["OSC_MEAS_VAL1"] = OSC.measureHandler1Func;
     OSC.param_callbacks["OSC_MEAS_VAL2"] = OSC.measureHandler2Func;
     OSC.param_callbacks["OSC_MEAS_VAL3"] = OSC.measureHandler3Func;

@@ -329,11 +329,11 @@
                         if (files[baseName] == undefined){
                             files[baseName] = {}
                         }
-                        if (name.endsWith(".log.lost")){
+                        if (name.endsWith(".log.lost.txt")){
                             files[baseName]["log.lost"] = true
                         }
 
-                        if (name.endsWith(".log")){
+                        if (name.endsWith(".log.txt")){
                             files[baseName]["log"] = true
                         }
 
@@ -392,7 +392,8 @@
                     item4.append(li)
                     var a = document.createElement('a');
                     a.innerText = "LOG"
-                    a.setAttribute('href', "/streaming_manager/upload/" + key + "." + value["format"] + ".log");
+                    a.setAttribute('href', "/streaming_manager/upload/" + key + "." + value["format"] + ".log.txt");
+                    a.setAttribute("download", "");
                     li.append(a)
                 }
 
@@ -402,7 +403,8 @@
                     item4.append(li)
                     var a = document.createElement('a');
                     a.innerText = "LOST"
-                    a.setAttribute('href',"/streaming_manager/upload/" + key + "." + value["format"] + ".log.lost");
+                    a.setAttribute('href',"/streaming_manager/upload/" + key + "." + value["format"] + ".log.lost.txt");
+                    a.setAttribute("download", "");
                     li.append(a)
 
                 }
@@ -413,6 +415,7 @@
                 var a = document.createElement('a');
                 a.innerText = "🡇"
                 a.setAttribute('href', "/streaming_manager/upload/" + key + "." + value["format"]);
+                a.setAttribute("download", "");
                 li.append(a)
                 document.getElementById('files_table').appendChild(new_row);
 
@@ -466,9 +469,13 @@
         if (value){
             $(".net_use").hide();
             $(".file_use").show();
+            $("#SS_PASS_SAMPLES").show();
+            $("#SS_WRITED_SIZE").show();
         }else{
             $(".net_use").show();
             $(".file_use").hide();
+            $("#SS_PASS_SAMPLES").hide();
+            $("#SS_WRITED_SIZE").hide();
         }
     }
 
@@ -482,6 +489,7 @@
         $("#SS_SAMPLES").val(value)
     }
 
+
     SM.setFormat = function(param) {
         var value = param["SS_FORMAT"].value;
         $("#SS_FORMAT").val(value)
@@ -490,6 +498,23 @@
     SM.setResolution = function(param) {
         var value = param["SS_RESOLUTION"].value;
         $("#SS_RESOLUTION").prop('checked', value);
+    }
+
+    SM.setSamplesCount = function(param) {
+        var value = param["SS_PASS_SAMPLES"].value;
+        $("#SS_PASS_SAMPLES").html("Samples pass: " + value)
+    }
+
+    SM.setWritedSize = function(param) {
+        var value = param["SS_WRITED_SIZE"].value;
+        if (value < 1024){
+            value = value + " B"
+        }else if (value < 1024 * 1024){
+            value = (value/1024).toFixed(0) +" kB"
+        }else {
+            value = ((value / (1024 * 1024))).toFixed(0) +" MB"
+        }
+        $("#SS_WRITED_SIZE").html("Recorded to SD: " + value)
     }
 
     SM.setChannel = function(param) {
@@ -567,6 +592,8 @@
     SM.param_callbacks["SS_DAC_CHANNELS"] = SM.setDACChannel;
     SM.param_callbacks["SS_IS_AC_DC"] = SM.setISACDC;
     SM.param_callbacks["SS_RESOLUTION"] = SM.setResolution;
+    SM.param_callbacks["SS_PASS_SAMPLES"] = SM.setSamplesCount;
+    SM.param_callbacks["SS_WRITED_SIZE"] = SM.setWritedSize;
 
 
 

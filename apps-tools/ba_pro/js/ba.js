@@ -168,8 +168,8 @@
 
     // Draws grid on the lowest canvas layer
     BA.drawGrid = function() {
-        var canvas_width = $('#graph_bode').width() - 2;
-        var canvas_height = Math.round(canvas_width / 2);
+        var canvas_width = $('#main').width() - 90;
+        var canvas_height = $('#main').height() - 2;// Math.round(canvas_width / 2);
 
         //Draw grid
         var ctx = $('#graph_bode_grid')[0].getContext('2d');
@@ -1286,42 +1286,59 @@ $(function() {
 
     // Bind to the window resize event to redraw the graph; trigger that event to do the first drawing
     $(window).resize(function() {
-        var divider = 1.6;
-        var window_width = window.innerWidth;
-        var window_height = window.innerHeight;
+        // var divider = 1.6;
+        // var window_width = window.innerWidth;
+        // var window_height = window.innerHeight;
 
-        if (window_width > 768 && window_height > 580) {
+        // if (window_width > 768 && window_height > 580) {
+            // var global_width = window_width - 210,
+            //     global_height = global_width - 100;
+            // // if (window_height < global_height) {
+            // //     global_height = window_height - 70 * divider;
+            // //     global_width = global_height * divider;
+            // // }
+
+            // $('#global_container').css('width', global_width);
+            // $('#global_container').css('height', global_height);
+
+
+            // BA.drawGrid();
+            // var main_width = $('#main').outerWidth(true);
+            // var main_height = $('#main').outerHeight(true);
+            // $('#global_container').css('width', main_width);
+            // $('#global_container').css('height', main_height);
+
+            if ($('#global_container').length === 0) return
+            if ($('#main').length === 0) return
+
+            var window_width = window.innerWidth;
+            var window_height = window.innerHeight;
+
             var global_width = window_width - 30,
-                global_height = global_width / divider;
-            if (window_height < global_height) {
-                global_height = window_height - 70 * divider;
-                global_width = global_height * divider;
-            }
+                global_height = window_height - 200;
+
 
             $('#global_container').css('width', global_width);
             $('#global_container').css('height', global_height);
 
+            $('#main').css('width', (global_width - 170));
+            $('#main').css('height', global_height);
+
 
             BA.drawGrid();
-            var main_width = $('#main').outerWidth(true);
-            var main_height = $('#main').outerHeight(true);
-            $('#global_container').css('width', main_width);
-            $('#global_container').css('height', main_height);
-
-            BA.drawGrid();
-            main_width = $('#main').outerWidth(true);
-            main_height = $('#main').outerHeight(true);
-            window_width = window.innerWidth;
-            window_height = window.innerHeight;
-            if (main_height > (window_height - 80)) {
-                $('#global_container').css('height', window_height - 80);
-                $('#global_container').css('width', divider * (window_height - 80));
-                BA.drawGrid();
-                $('#global_container').css('width', $('#main').outerWidth(true) - 2);
-                $('#global_container').css('height', $('#main').outerHeight(true) - 2);
-                BA.drawGrid();
-            }
-        }
+        //     main_width = $('#main').outerWidth(true);
+        //     main_height = $('#main').outerHeight(true);
+        //     window_width = window.innerWidth;
+        //     window_height = window.innerHeight;
+        //     if (main_height > (window_height - 80)) {
+        //         $('#global_container').css('height', window_height - 80);
+        //         $('#global_container').css('width', divider * (window_height - 80));
+        //         BA.drawGrid();
+        //         $('#global_container').css('width', $('#main').outerWidth(true) - 2);
+        //         $('#global_container').css('height', $('#main').outerHeight(true) - 2);
+        //         BA.drawGrid();
+        //     }
+        // }
 
         $('#global_container').offset({ left: (window_width - $('#global_container').width()) / 2 });
 

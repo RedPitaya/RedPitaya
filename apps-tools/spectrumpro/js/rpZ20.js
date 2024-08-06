@@ -6,6 +6,8 @@
                     SPEC.config.xmax = 122/2;
                     $("#SOUR1_FREQ_FIX").attr("max", 122.880e6/2);
                     $("#SOUR2_FREQ_FIX").attr("max", 122.880e6/2);
+                    $("#SOUR1_FREQ_FIX").attr("min", 300000);
+                    $("#SOUR2_FREQ_FIX").attr("min", 300000);
                     $("#SOUR1_VOLT").attr("max", 0.5);
                     $("#SOUR2_VOLT").attr("max", 0.5);
                     $("#SOUR1_VOLT_OFFS").attr("max", 0.5);

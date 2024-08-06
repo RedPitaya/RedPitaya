@@ -30,6 +30,7 @@ class FileQueueManager:public Queue{
         auto updateWavFile(int _size) -> void;
         auto writeToFile() -> int;
         auto deleteFile() -> void;
+        auto getWritedSize() -> uint64_t;
 
         sigslot::signal<> outSpaceNotify;
         sigslot::signal<> stopNotify;

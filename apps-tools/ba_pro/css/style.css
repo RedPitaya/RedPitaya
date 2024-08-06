@@ -673,6 +673,7 @@ btn:active {
     -webkit-transform: rotate(-40deg); /* Для Safari, Chrome, iOS */
     -o-transform: rotate(-40deg); /* Для Opera */
     transform: rotate(-40deg);
+    margin-top: 10px;
 }
 
 .y-offset-arrow,
@@ -912,6 +913,7 @@ btn:active {
 
 #measuring-status{
     display: none;
+    overflow: hidden;
     position: relative;
     width: 170px;
     height: 200px;

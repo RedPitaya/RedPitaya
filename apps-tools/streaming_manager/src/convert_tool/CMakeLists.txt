@@ -53,7 +53,7 @@ if (RP_PLATFORM)
 endif()
 
 target_compile_options(${PROJECT_NAME}
-    PRIVATE -std=c++17 -Wall -Wextra -fpermissive  -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+    PRIVATE -std=c++17 -Wall -Wextra -fpermissive  -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC  ${PROJECT_SOURCE_DIR}

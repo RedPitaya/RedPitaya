@@ -135,6 +135,15 @@ int main(int argc, char **argv) {
 			case STEM_125_14_LN_v1_1:
 				printf("z10_125");
 				break;
+			case STEM_125_14_LN_BO_v1_1:
+				printf("z10_125");
+				break;
+			case STEM_125_14_LN_CE1_v1_1:
+				printf("z10_125");
+				break;
+			case STEM_125_14_LN_CE2_v1_1:
+				printf("z10_125");
+				break;
 			case STEM_122_16SDR_v1_0:
 				printf("z20_122");
 				break;

@@ -12,8 +12,8 @@
 
 struct SBuffPass{
     net_lib::net_buffer buffer;
-    size_t bufferLen;
-    size_t samplesCount;
+    uint64_t bufferLen;
+    uint64_t samplesCount;
     uint8_t bitsBySample;
     uint32_t adcSpeed;
 };
