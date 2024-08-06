@@ -2,7 +2,7 @@ jQuery.fn.table2CSV = function(options) {
     var options = jQuery.extend({
         separator: ',',
         header: [],
-        delivery: 'popup' // popup, value
+        delivery: 'value' // popup, value
     },
     options);
 
@@ -30,7 +30,13 @@ jQuery.fn.table2CSV = function(options) {
     $(el).find('tr').each(function() {
         var tmpRow = [];
         $(this).filter(':visible').find('td').each(function() {
-            if ($(this).css('display') != 'none') tmpRow[tmpRow.length] = formatData($(this).html());
+            if ($(this).css('display') != 'none') {
+                if ($(this).attr('value') !== undefined){
+                    tmpRow[tmpRow.length] = formatData($(this).attr('value'));
+                }else{
+                    tmpRow[tmpRow.length] = formatData($(this).html());
+                }
+            }
         });
         row2CSV(tmpRow);
     });
@@ -58,7 +64,7 @@ jQuery.fn.table2CSV = function(options) {
         var regexp = new RegExp(/\<[^\<]+\>/g);
         var output = output.replace(regexp, "");
         if (output == "") return '';
-        return '"' + output + '"';
+        return output;
     }
     function popup(data) {
         var generator = window.open('', 'csv', 'height=400,width=600');

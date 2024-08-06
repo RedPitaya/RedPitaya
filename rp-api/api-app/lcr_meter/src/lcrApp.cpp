@@ -111,38 +111,6 @@ int lcrApp_LcrGetMeasSeries(bool *series){
 	return lcr_GetMeasSeries(series);
 }
 
-int lcrApp_LcrSetMeasTolerance(int tolerance){
-	return lcr_SetMeasTolerance(tolerance);
-}
-
-int lcrApp_LcrGetMeasTolerance(int *tolerance){
-	return lcr_GetMeasTolerance(tolerance);
-}
-
-int lcrApp_LcrSetMeasRangeMode(int range){
-	return lcr_SetMeasRangeMode(range);
-}
-
-int lcrApp_LcrGetMeasRangeMode(int *range_mode){
-	return lcr_GetMeasRangeMode(range_mode);
-}
-
-int lcrApp_LcrSetMeasRangeFormat(int format){
-	return lcr_SetRangeFormat(format);
-}
-
-int lcrApp_LcrGetMeasRangeFormat(int *format){
-	return lcr_GetRangeFormat(format);
-}
-
-int lcrApp_LcrSetMeasRangeUnits(int units){
-	return lcr_SetRangeUnits(units);
-}
-
-int lcrApp_LcrGetMeasRangeUnits(int *units){
-	return lcr_GetRangeUnits(units);
-}
-
 int lcrApp_LcrCheckExtensionModuleConnection(bool _muteWarnings) {
     return lcr_CheckModuleConnection(_muteWarnings);
 }
