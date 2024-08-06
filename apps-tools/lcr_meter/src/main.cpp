@@ -15,6 +15,19 @@
 #define CHECK_NAN_INF(X) if (std::isnan(X) || std::isinf(X)) X = 0;
 #define MIN(X,Y) ((X < Y) ? X: Y)
 #define MAX(X,Y) ((X > Y) ? X: Y)
+
+
+enum controlSettings{
+    NONE            =   0,
+    REQUEST_RESET   =   1,
+    RESET_DONE      =   2,
+    REQUEST_LIST    =   3,
+    SAVE            =   4,
+    DELETE          =   5,
+    LOAD            =   6,
+    LOAD_DONE       =   7
+};
+
 /***************************************************************************************
 *                                     LCR METER                                        *
 ****************************************************************************************/
@@ -67,20 +80,25 @@ CIntParameter   rangeUnits("LCR_RANGE_U", CBaseParameter::RW, 0, 0, 0, 6,CONFIG_
 CIntParameter   primDisplay("LCR_PRIM_DISP", CBaseParameter::RW, 0, 0, 0, 3, CONFIG_VAR);
 CIntParameter   secDisplay("LCR_SEC_DISP", CBaseParameter::RW, 0, 0, 0, 3, CONFIG_VAR);
 
+CIntParameter   logInterval("LOG_INTERVAL", CBaseParameter::RW, 100, 0, 0, 30000000, CONFIG_VAR);
+
 CBooleanParameter moduleStatus("LCR_EXTMODULE_STATUS", CBaseParameter::RW, true, 0);
 
+CIntParameter controlSettings("CONTROL_CONFIG_SETTINGS", CBaseParameter::RW, 0, 0, 0, 10);
+
 // Cyclic Buffers for calculate averenge values
-const static int buffSize = 31; // NOTE: is it good value?
-CStatistics lcr_AmpBuff(buffSize, -1e9, 1e9);
-CStatistics lcr_IndBuff(buffSize, -1e9, 1e9);
-CStatistics lcr_ResBuff(buffSize, -1e9, 1e9);
-CStatistics lcr_CapBuff(buffSize, -1e9, 1e9);
+const static int buffSize = 32;
+CStatistics lcr_AmpBuff(buffSize, -1e15, 1e15);
+CStatistics lcr_IndBuff(buffSize, -1e15, 1e15);
+CStatistics lcr_ResBuff(buffSize, -1e15, 1e15);
+CStatistics lcr_CapBuff(buffSize, -1e15, 1e15);
 
 double toleranceSave[4] = {0,0,0,0};
 double relativeSave[4] = {0,0,0,0};
 bool requestSaveTolerance = false;
 bool requestSaveRelative = false;
 
+const std::vector<std::string> g_savedParams;
 
 bool g_config_changed = false;
 uint16_t g_save_counter = 0; // By default, a save check every 40 ticks. One tick 50 ms.
@@ -318,7 +336,6 @@ void updateFromFront(bool force){
             lcr_ResMin.SendValue(1e9);
             lcr_CapMin.SendValue(1e9);
 
-            //Reset max saved val
             lcr_AmpMax.SendValue(0);
             lcr_IndMax.SendValue(0);
             lcr_ResMax.SendValue(0);
@@ -338,7 +355,6 @@ void updateFromFront(bool force){
         resetMeasData.Update();
         resetMeasData.Value() = false;
     }
-
 
     //Set calibration
     if(IS_NEW(startCalibration) && calibMode.Value() != 0){
@@ -389,9 +405,23 @@ void updateFromFront(bool force){
         secDisplay.NeedSend(true);
     }
 
+    if (IS_NEW(logInterval) || force){
+        logInterval.Update();
+    }
+
 }
 
 void OnNewParams(void){
+    if (controlSettings.IsNewValue()){
+        if (controlSettings.NewValue() == controlSettings::REQUEST_RESET){
+            deleteConfig();
+            configSetWithList(g_savedParams);
+            controlSettings.Update();
+            controlSettings.SendValue(controlSettings::RESET_DONE);
+            return;
+        }
+    }
+
     if (!g_config_changed)
         g_config_changed = isChanged();
     updateFromFront(false);

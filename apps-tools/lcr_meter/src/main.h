@@ -77,7 +77,7 @@ public:
     {
         initialize(buffSize, minAllowable, maxAllowable);
     }
-    ~CStatistics() { delete m_buffer; }
+    ~CStatistics() { delete[] m_buffer; }
 
     void add(double element)
     {
@@ -115,6 +115,14 @@ public:
     double min() { return m_min; }
 
     double max() { return m_max; }
+
+    void clearMin() {
+        m_min = m_maxAllowable;
+    }
+
+    void clearMax() {
+        m_max = m_minAllowable;
+    }
 
     void clear()
     {

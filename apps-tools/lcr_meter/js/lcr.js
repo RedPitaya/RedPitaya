@@ -5,6 +5,26 @@
  *
  */
 
+(function() {
+    $.fn.rotate = function(degrees, step, current) {
+        var self = $(this);
+        current = current || 0;
+        step = step || 5;
+        current += step;
+        self.css({
+            '-webkit-transform' : 'rotate(' + current + 'deg)',
+            '-moz-transform' : 'rotate(' + current + 'deg)',
+            '-ms-transform' : 'rotate(' + current + 'deg)',
+            'transform' : 'rotate(' + current + 'deg)'
+        });
+        if (current != degrees) {
+            setTimeout(function() {
+                self.rotate(degrees, step, current);
+            }, 5);
+        }
+    };
+})();
+
 (function(LCR, $, undefined) {
 
     //Configure APP
@@ -43,7 +63,17 @@
         save_data: false,
         //How much data to be stored.
         max_store: 100000,
-        curr_store: 1
+        curr_store: 1,
+        last_log:0
+    }
+
+    LCR.precalculate = {
+        prim_value:'',
+        prim_units:'',
+        prim_raw:'',
+        sec_value:'',
+        sec_units:'',
+        sec_raw:''
     }
 
     LCR.selected_meas = 1;
@@ -157,43 +187,31 @@
                 LCR.param_callbacks[param_name](new_params,param_name);
                 continue;
             }
-
-            // console.log(LCR.displ_params.prim);
-            var precision = CLIENT.getValue('LCR_C_PREC')
-            var param_value = CLIENT.getValue(param_name)
-            if (precision !== undefined && param_value != undefined){
-                var quantity = param_name.substr(0, param_name.length - 4);
-                if (param_name == (quantity + "_MIN") && param_name == (LCR.displ_params.prim + "_MIN")) {
-                    // console.log(quantity);
-                    var format = formatRangeAuto(true, 1, precision, param_value);
-                    if (format == "OVER R.") $('#meas_min_d').empty().append(0);
-                    else $('#meas_min_d').empty().append(format);
-                }
-
-                if (param_name == (quantity + "_MAX") && param_name == (LCR.displ_params.prim + "_MAX")) {
-                    var format = formatRangeAuto(true, 1, precision, param_value);
-                    if (format == "OVER R.") $('#meas_max_d').empty().append(0);
-                    else $('#meas_max_d').empty().append(format);
-                }
-
-                if (param_name == (quantity + "_AVG") && param_name == (LCR.displ_params.prim + "_AVG")) {
-                    var format = formatRangeAuto(true, 1, precision, param_value);
-                    if (format == "OVER R.") $('#meas_avg_d').empty().append(0);
-                    else $('#meas_avg_d').empty().append(format);
-                }
-            }
         }
 
         if (LCR.data_log.save_data &&
             LCR.data_log.curr_store < LCR.data_log.max_store && $('#LCR_HOLD').is(':visible')) {
-            $('#m_table tbody').append('<tr>'+
-                '<td class="table_num_w"><input type="checkbox" name="data"><label class="row_number">' + LCR.data_log.curr_store + '</label></td>'+
-                '<td>' + LCR.getShuntName() + '</td>' +
-                '<td>' + LCR.getFreq() + '</td>' +
-                '<td>' + new_params[LCR.data_log.prim_display].value + '</td>' +
-                '<td>' + new_params[LCR.data_log.sec_display].value + '</td>' +
-                '</tr>');
-            LCR.data_log.curr_store++;
+
+            var interval = CLIENT.getValue('LOG_INTERVAL')
+            var disPrim = CLIENT.getValue('LCR_PRIM_DISP')
+            var disSec = CLIENT.getValue('LCR_SEC_DISP')
+
+            if (interval !== undefined && disPrim !== undefined && disSec !== undefined){
+                if (Date.now() - LCR.data_log.last_log > interval){
+                    const d = new Date();
+                    var date = d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0') + ":"+ d.getSeconds().toString().padStart(2, '0') + ":" + d.getMilliseconds().toString().padStart(3, '0');
+                    $('#m_table tbody').prepend('<tr>'+
+                        '<td class="table_num_w"><input type="checkbox" name="data"><label class="row_number">' + LCR.data_log.curr_store + '</label></td>'+
+                        '<td>' + date + '</td>' +
+                        '<td>' + LCR.getShuntName() + '</td>' +
+                        '<td>' + LCR.getFreq() + '</td>' +
+                        '<td value=' + LCR.precalculate.prim_raw  + '>' + LCR.precalculate.prim_display + ' ' + LCR.precalculate.prim_units + '</td>' +
+                        '<td value=' + LCR.precalculate.sec_raw  + '>' + LCR.precalculate.sec_display + ' ' + LCR.precalculate.sec_units + '</td>' +
+                        '</tr>');
+                    LCR.data_log.curr_store++;
+                    LCR.data_log.last_log = Date.now()
+                }
+            }
         }
     };
 
@@ -210,8 +228,83 @@
         }
     }
 
+    LCR.precalculateValues = function(){
+        var primDis = CLIENT.getValue('LCR_PRIM_DISP')
+        var secDis = CLIENT.getValue('LCR_SEC_DISP')
+
+        var key = LCR.getKeyByPrimDisplayIndex(primDis)
+        if (key !== ''){
+            var value = CLIENT.getValue('LCR_'+key)
+            if (value !== undefined){
+                var rangeMode = CLIENT.getValue('LCR_RANGE')
+                if (rangeMode !== undefined){
+                    if (rangeMode == 0) { // AUTO mode
+                        var new_value = formatRangeAuto(value);
+                        var over = checkOverrange(new_value.datanew,key)
+                        var rValue = new_value.datanew.toFixed(3)
+                        var unit = LCR.getKeyByPrimDisplayUnit(primDis)
+                        var valueLabel = rValue
+                        var unitLabel = new_value.units+unit
+                        if (over.overrange){
+                            valueLabel = "OVER R."
+                            unitLabel = ""
+                            if (over.overrange_dir == 1) unitLabel = "↑"
+                            if (over.overrange_dir == -1) unitLabel = "↓"
+                        }
+                        LCR.precalculate.prim_display = valueLabel
+                        LCR.precalculate.prim_units = unitLabel
+                        LCR.precalculate.prim_raw = value
+                    } else  {
+                        var new_value = formatRangeManual(value)
+                        var unit = LCR.getKeyByPrimDisplayUnit(primDis)
+                        var valueLabel = new_value.datanew
+                        var unitLabel = new_value.units+unit
+                        if (new_value.overrange){
+                            valueLabel = "OVER R."
+                            unitLabel = ""
+                            if (new_value.overrange_dir == 1) unitLabel = "↑"
+                            if (new_value.overrange_dir == -1) unitLabel = "↓"
+                        }
+                        LCR.precalculate.prim_display = valueLabel
+                        LCR.precalculate.prim_units = unitLabel
+                        LCR.precalculate.prim_raw = value
+                    }
+                }
+
+            }
+        }
+
+        var key = LCR.getKeyBySecDisplayIndex(secDis)
+        if (key !== ''){
+            var value = CLIENT.getValue('LCR_'+key)
+            if (value !== undefined){
+                var new_value = { data:value, datanew:value, units:''}
+                if (key !== 'P'){
+                    new_value = formatRangeAuto(value);
+                }
+                var over = checkOverrange(new_value.datanew,key)
+                var rValue = new_value.datanew.toFixed(3)
+                var unit = LCR.getKeyBySecDisplayUnit(secDis)
+                var valueLabel = rValue
+                var unitLabel = new_value.units+unit
+                // if (over.overrange){
+                //     valueLabel = "OVER R."
+                //     unitLabel = ""
+                //     if (over.overrange_dir == 1) unitLabel = "↑"
+                //     if (over.overrange_dir == -1) unitLabel = "↓"
+                // }
+                LCR.precalculate.sec_display = valueLabel
+                LCR.precalculate.sec_units = unitLabel
+                LCR.precalculate.sec_raw = value
+
+            }
+        }
+    }
+
     LCR.updateMainDisplay = function(){
+        LCR.precalculateValues()
         if ((Date.now() - LCR.last_update) > 300){ // 3 FPS
+
             var primDis = CLIENT.getValue('LCR_PRIM_DISP')
             var secDis = CLIENT.getValue('LCR_SEC_DISP')
 
@@ -222,69 +315,13 @@
             if(secDis !== undefined){
                 $("#meas_s_d").html(LCR.getKeyBySecDisplayIndex(secDis))
             }
-            var key = LCR.getKeyByPrimDisplayIndex(primDis)
-            if (key !== ''){
-                var value = CLIENT.getValue('LCR_'+key)
-                if (value !== undefined){
-                    var rangeMode = CLIENT.getValue('LCR_RANGE')
-                    if (rangeMode !== undefined){
-                        if (rangeMode == 0) { // AUTO mode
-                            var new_value = formatRangeAuto(value);
-                            var over = checkOverrange(new_value.datanew,key)
-                            var rValue = new_value.datanew.toFixed(3)
-                            var unit = LCR.getKeyByPrimDisplayUnit(primDis)
-                            var valueLabel = rValue
-                            var unitLabel = new_value.units+unit
-                            if (over.overrange){
-                                valueLabel = "OVER R."
-                                unitLabel = ""
-                                if (over.overrange_dir == 1) unitLabel = "↑"
-                                if (over.overrange_dir == -1) unitLabel = "↓"
-                            }
-                            $('#lb_prim_displ').html(valueLabel)
-                            $('#lb_prim_displ_units').html(unitLabel);
-                        } else  {
-                            var new_value = formatRangeManual(value)
-                            var unit = LCR.getKeyByPrimDisplayUnit(primDis)
-                            var valueLabel = new_value.datanew
-                            var unitLabel = new_value.units+unit
-                            if (new_value.overrange){
-                                valueLabel = "OVER R."
-                                unitLabel = ""
-                                if (new_value.overrange_dir == 1) unitLabel = "↑"
-                                if (new_value.overrange_dir == -1) unitLabel = "↓"
-                            }
-                            $('#lb_prim_displ').html(valueLabel)
-                            $('#lb_prim_displ_units').html(unitLabel);
-                        }
-                    }
 
-                }
-            }
 
-            var key = LCR.getKeyBySecDisplayIndex(secDis)
-            if (key !== ''){
-                var value = CLIENT.getValue('LCR_'+key)
-                if (value !== undefined){
-                    var new_value = { data:value, datanew:value, units:''}
-                    if (key !== 'P'){
-                        new_value = formatRangeAuto(value);
-                    }
-                    var over = checkOverrange(new_value.datanew,key)
-                    var rValue = new_value.datanew.toFixed(3)
-                    var unit = LCR.getKeyBySecDisplayUnit(secDis)
-                    var valueLabel = rValue
-                    var unitLabel = new_value.units+unit
-                    if (over.overrange){
-                        valueLabel = "OVER R."
-                        unitLabel = ""
-                        if (over.overrange_dir == 1) unitLabel = "↑"
-                        if (over.overrange_dir == -1) unitLabel = "↓"
-                    }
-                    $('#lb_sec_displ').html(valueLabel)
-                    $('#lb_sec_displ_units').html(unitLabel);
-                }
-            }
+            $('#lb_prim_displ').html(LCR.precalculate.prim_display)
+            $('#lb_prim_displ_units').html(LCR.precalculate.prim_units);
+
+            $('#lb_sec_displ').html(LCR.precalculate.sec_display)
+            $('#lb_sec_displ_units').html(LCR.precalculate.sec_units);
 
             LCR.updateMinMaxAVG()
             LCR.setToleranceValue()
@@ -295,18 +332,21 @@
     }
 
     LCR.setPrimDisplay = function(new_params,name) {
-        var primDis = CLIENT.getValue('LCR_PRIM_DISP')
+        var dis = CLIENT.getValue('LCR_PRIM_DISP')
         $('#prim_displ_choice').find('input[type=checkbox]').prop('checked', false);
-        $('#prim_displ_choice').find('input[index='+primDis+']').prop('checked', true);
+        $('#prim_displ_choice').find('input[index='+dis+']').prop('checked', true);
         LCR.updateMainDisplay()
         LCR.updateRangeByPrimDisplay()
+        document.getElementById('table_p_header').innerHTML = LCR.getKeyByPrimDisplayIndex(dis)
+
     }
 
     LCR.setSecondDisplay = function(new_params,name) {
-        var primDis = CLIENT.getValue('LCR_SEC_DISP')
+        var dis = CLIENT.getValue('LCR_SEC_DISP')
         $('#sec_displ_choice').find('input[type=checkbox]').prop('checked', false);
-        $('#sec_displ_choice').find('input[index='+primDis+']').prop('checked', true);
+        $('#sec_displ_choice').find('input[index='+dis+']').prop('checked', true);
         LCR.updateMainDisplay()
+        document.getElementById('table_s_header').innerHTML = LCR.getKeyBySecDisplayIndex(dis)
     }
 
     LCR.setRange = function(new_params,name) {
@@ -347,6 +387,13 @@
         var shunt = CLIENT.getValue('LCR_SHUNT_MODE')
         if (shunt !== undefined){
             $('#LCR_SHUNT_MODE').val(shunt);
+        }
+    }
+
+    LCR.setLogIntreval = function(new_params,name) {
+        var interval = CLIENT.getValue('LOG_INTERVAL')
+        if (interval !== undefined){
+            $('#LOG_INTERVAL').val(interval);
         }
     }
 
@@ -470,6 +517,16 @@
             LCR.updateMainDisplay()
     }
 
+    LCR.controlSettingsRequest = function(new_params){
+        if (new_params['CONTROL_CONFIG_SETTINGS'].value === 2) {  // RESET_DONE
+            location.reload();
+        }
+
+        if (new_params['CONTROL_CONFIG_SETTINGS'].value === 7) {  // LOAD_DONE
+            location.reload();
+        }
+    }
+
     LCR.updateMinMaxAVG = function() {
 
         function set(value,mode,key)
@@ -560,6 +617,11 @@
 
     LCR.param_callbacks["LCR_FREQ"] = LCR.setFreq;
 
+    LCR.param_callbacks["CONTROL_CONFIG_SETTINGS"] = LCR.controlSettingsRequest;
+
+    LCR.param_callbacks["LOG_INTERVAL"] = LCR.setLogIntreval;
+
+
 
 }(window.LCR = window.LCR || {}, jQuery));
 
@@ -585,12 +647,6 @@ $(function() {
         $('#LCR_HOLD').hide();
         $('#LCR_START').css('display', 'block');
         CLIENT.parametersCache['LCR_RUN'] = { value: false };
-        CLIENT.sendParameters();
-    });
-
-    $('#btn_c_meas').on('click', function(ev) {
-        //ev.preventDefault();
-        CLIENT.parametersCache['LCR_M_RESET'] = { value: true };
         CLIENT.sendParameters();
     });
 
@@ -660,22 +716,6 @@ $(function() {
         var index = $(this).attr('index')
         CLIENT.parametersCache['LCR_PRIM_DISP'] = { value: index };
         CLIENT.sendParameters();
-
-        // LCR.displ_params.prim = this.id;
-        // LCR.displ_params.p_base_u = this.value;
-
-        // if (CLIENT.params.orig['LCR_TOLERANCE'].value != 0) {
-        //     CLIENT.params.local['LCR_TOLERANCE'] = { value: LCR.selected_meas };
-        //     CLIENT.parametersCache['LCR_TOLERANCE'] = { value: LCR.selected_meas };
-        // }
-
-        // if (CLIENT.params.orig['LCR_RELATIVE'].value != 0) {
-        //     CLIENT.params.local['LCR_RELATIVE'] = { value: LCR.selected_meas };
-        //     CLIENT.parametersCache['LCR_RELATIVE'] = { value: LCR.selected_meas };
-        // }
-
-        // LCR.data_log.prim_display = this.id;
-        // document.getElementById('table_p_header').innerHTML = LCR.data_log.prim_display[4];
     });
 
     $('#sec_displ_choice :checkbox').click(function() {
@@ -683,59 +723,18 @@ $(function() {
         var index = $(this).attr('index')
         CLIENT.parametersCache['LCR_SEC_DISP'] = { value: index };
         CLIENT.sendParameters();
-
-        // LCR.displ_params.sec = this.id;
-        // LCR.displ_params.s_base_u = this.value;
-
-        // LCR.data_log.sec_display = this.id;
-
-        // document.getElementById('table_s_header').innerHTML = LCR.data_log.sec_display[4];
     });
 
     $('#LCR_LOG').on('click', function() {
-        document.getElementById('table_p_header').innerHTML = LCR.data_log.prim_display[4];
-        document.getElementById('table_s_header').innerHTML = LCR.data_log.sec_display[4];
         LCR.data_log.save_data = true;
     });
 
     $('#cb_tol').change(function() {
-
-        // if (!LCR.secondary_meas.apply_tolerance) {
-        //     LCR.secondary_meas.apply_relative = false;
-        //     CLIENT.parametersCache['LCR_RELATIVE'] = { value: 0 };
-        //     $('#cb_rel').prop("checked", false);
-        //     LCR.secondary_meas.apply_tolerance = true;
-        //     CLIENT.parametersCache['LCR_TOLERANCE'] = { value: LCR.selected_meas };
-        //     $('#lb_prim_displ').empty().append("100%");
-        //     $('#lb_prim_displ_units').empty();
-        //     $('#lb_sec_displ_units').empty();
-        //     $('#rec_image').css('display', 'block');
-        //     $('#rec_lb').css('display', 'block');
-        // } else {
-        //     LCR.secondary_meas.apply_tolerance = false;
-        //     CLIENT.parametersCache['LCR_TOLERANCE'] = { value: 0 };
-        //     $('#rec_image').css('display', 'none');
-        //     $('#rec_lb').css('display', 'none');
-        //     $('#cb_tol').prop("checked", false);
-        // }
         CLIENT.parametersCache['LCR_TOLERANCE'] = { value:  $( this ).is( ":checked" )  };
         CLIENT.sendParameters();
     });
 
     $('#cb_rel').change(function() {
-
-        // LCR.secondary_meas.apply_tolerance = false;
-        // $('#rec_image').css('display', 'none');
-        // $('#rec_lb').css('display', 'none');
-
-        // if (!LCR.secondary_meas.apply_relative) {
-        //     LCR.secondary_meas.apply_relative = true;
-        //     CLIENT.parametersCache['LCR_RELATIVE'] = { value: LCR.selected_meas };
-        // } else {
-        //     LCR.secondary_meas.apply_relative = false;
-        //     CLIENT.parametersCache['LCR_RELATIVE'] = { value: 0 };
-        //     $('#cb_rel').prop("checked", false);
-        // }
         CLIENT.parametersCache['LCR_RELATIVE'] = { value: $( this ).is( ":checked" ) };
         CLIENT.sendParameters();
     });
@@ -774,6 +773,21 @@ $(function() {
         CLIENT.sendParameters();
     });
 
+    $('#reset_settings').click(function() {
+        CLIENT.parametersCache['CONTROL_CONFIG_SETTINGS'] = { value: 1 }; // REQUEST_RESET
+        CLIENT.sendParameters();
+    });
+
+    $('#CLEAR_MIN_MAX').click(function() {
+        $(this).rotate(360)
+        CLIENT.parametersCache['LCR_M_RESET'] = { value: true };
+        CLIENT.sendParameters();
+    });
+
+    $('#LOG_INTERVAL').change(function() {
+        CLIENT.parametersCache['LOG_INTERVAL'] = { value: parseInt(this.value) };
+        CLIENT.sendParameters();
+    });
 
     // Init help
     Help.init(helpListLCR);
@@ -884,5 +898,9 @@ function clearTableAll() {
 function export_table() {
     //var csv = $("#m_table").table2CSV({delivery:'value'});
     //window.location.href = 'data:application/csv;charset=UTF-8,' + encodeURIComponent(csv);
-    $('#m_table').table2CSV();
+    var csv = $('#m_table').table2CSV()
+    const link = document.createElement("a");
+    link.href = 'data:text/csv;charset=UTF-8,' + encodeURIComponent(csv)
+    link.download = new Date().toJSON().slice(0,22) + ".csv";
+    link.click();
 }

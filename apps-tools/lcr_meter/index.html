@@ -91,6 +91,12 @@
                                     <img src="../assets/images/help.png" width=20px>
                                 </a>
                             </li>
+                            <li class="dropdown">
+                                <a class="dropdown-toggle" type="button" id="menu1" data-toggle="dropdown"  style="padding-left: 23px; white-space: nowrap;">SETTINGS<span class="caret"></span></a>
+                                <ul id="settings_dropdown" class="dropdown-menu" role="menu" aria-labelledby="menu1" style="background: #cdcccc; min-width: 0px;">
+                                    <li><a id="reset_settings" href="#">RESET</a></li>
+                                </ul>
+                            </li>
                             <li>
                                 <a id="LCR_LOG" href="#" style="padding-left: 23px; white-space: nowrap;" value="0">LOG DATA</a>
                                 <a id="LCR_LOG_STOP" href="#" style="padding-left: 23px; white-space: nowrap; display:none;" value="0">STOP</a>
@@ -110,42 +116,39 @@
                     <div id="data_displ">
                         <div id="meas_displ">
                             <div class="meas_data" style="float: left">
-                                <label class="col-xs-6" for="lb_mes_mode" style="color: #000000">P. DISP: </label>
+                                <label class="col-xs-5" for="lb_mes_mode" style="color: #000000">P. DISP: </label>
                                 <label class="col-xs-6" id="meas_p_d" for="lb_mes_mode" style="color: #000000">Z</label>
                             </div>
                             <div class="meas_data" style="float: left">
-                                <label class="col-xs-6" for="lb_mes_freq" style="color: #000000">S. DISP: </label>
+                                <label class="col-xs-5" for="lb_mes_freq" style="color: #000000">S. DISP: </label>
                                 <label class="col-xs-6" id="meas_s_d" for="lb_mes_freq" style="color: #000000">P</label>
                             </div>
                             <div class="meas_data" style="float: left">
-                                <label class="col-xs-6" for="lb_mes_min" style="color: #000000">MODE: </label>
+                                <label class="col-xs-5" for="lb_mes_min" style="color: #000000">MODE: </label>
                                 <label class="col-xs-6" id="meas_mode_d" for="lb_mes_min" style="color: #000000">AUTO</label>
                             </div>
                             <div class="meas_data" style="float: left">
-                                <label class="col-xs-6" for="lb_mes_max" style="color: #000000">FREQ.: </label>
+                                <label class="col-xs-5" for="lb_mes_max" style="color: #000000">FREQ.: </label>
                                 <label class="col-xs-6" id="meas_freq_d" for="lb_mes_max" style="color: #000000">100Hz</label>
                             </div>
                             <div class="meas_data" style="float: left">
-                                <label class="col-xs-6" for="lb_mes_avg" style="color: #000000">MIN: </label>
+                                <label class="col-xs-5" for="lb_mes_avg" style="color: #000000">SHUNT: </label>
+                                <label class="col-xs-6" id="lb_shunt" for="lb_mes_avg" style="color: #000000">-</label>
+                            </div>
+                            <div class="meas_data" style="float: left">
+                                <label class="col-xs-5" for="lb_mes_avg" style="color: #000000">MIN: </label>
                                 <label class="col-xs-6" id="meas_min_d" for="lb_mes_avg" style="color: #000000">-</label>
                             </div>
                             <div class="meas_data" style="float: left">
-                                <label class="col-xs-6" for="lb_mes_avg" style="color: #000000">MAX: </label>
+                                <label class="col-xs-5" for="lb_mes_avg" style="color: #000000">MAX: </label>
                                 <label class="col-xs-6" id="meas_max_d" for="lb_mes_avg" style="color: #000000">-</label>
                             </div>
                             <div class="meas_data" style="float: left">
-                                <label class="col-xs-6" for="lb_mes_avg" style="color: #000000">AVG: </label>
+                                <label class="col-xs-5" for="lb_mes_avg" style="color: #000000">AVG: </label>
                                 <label class="col-xs-6" id="meas_avg_d" for="lb_mes_avg" style="color: #000000">-</label>
-                            </div>
-                            <!--
-                            <div class="meas_data" style="float: left">
-                                <label class="col-xs-6" for="lb_mes_avg" style="color: #000000">SINE: </label>
-                                <label class="col-xs-6" id="lb_is_sine" for="lb_mes_avg" style="color: #000000">-</label>
-                            </div>
-                            -->
-                            <div class="meas_data" style="float: left">
-                                <label class="col-xs-6" for="lb_mes_avg" style="color: #000000">SHUNT: </label>
-                                <label class="col-xs-6" id="lb_shunt" for="lb_mes_avg" style="color: #000000">-</label>
+                                <div style="padding-bottom: 5px;">
+                                    <img id="CLEAR_MIN_MAX" src="img/reset2.png" style="width: 16px;">
+                                </div>
                             </div>
                         </div>
                         <div id="display">
@@ -160,11 +163,11 @@
                             <div id="tol_rel_displ">
                                 <div>
                                     <label id="TOL_CAPTION" style="width: 10%;font-weight: bold;">Tol:</label>
-                                    <label id="TOL_VALUE">21321321</label>
+                                    <label id="TOL_VALUE"></label>
                                 </div>
                                 <div>
                                     <label id="REL_CAPTION" style="width: 10%;font-weight: bold;">Rel:</label>
-                                    <label id="REL_VALUE">rwerwwrw</label>
+                                    <label id="REL_VALUE"></label>
                                 </div>
                             </div>
                         </div>
@@ -176,14 +179,13 @@
                                 <label for="lb_tag" style="color: #d43f3a">DATA OPTIONS</label>
                             </div>
                             <div class="separator col-xs-4">
-                                <hr>
                             </div>
                         </div>
-                        <div class="menu_wrapper col-xs-4">
+                        <div class="menu_wrapper col-xs-4" style="width: 50%;">
                             <form class="form-horizontal" role="form">
                                 <div>
-                                    <div style="float:left">
-                                        <label for="lb_pdi_primary" style="margin-bottom: 0px; margin-top:5px;">Primary Display</label>
+                                    <div style="float:left;width: 50%">
+                                        <label for="lb_pdi_primary" style="margin-bottom: 0px; margin-top:6px;float: right;">Primary Display:</label>
                                     </div>
                                     <div id="prim_displ_choice">
                                         <input style="display:none;" type="checkbox" id="LCR_R" name="LCR_R" class="bt_check" index="3" value="Ω" />
@@ -192,17 +194,17 @@
                                         <label for="LCR_C">C</label>
                                         <input style="display:none;" type="checkbox" id="LCR_L" name="LCR_L" class="bt_check" index="1" value="H" />
                                         <label for="LCR_L">L</label>
-                                        <input style="display:none;" type="checkbox" id="LCR_Z" name="LCR_Z" class="bt_check" index="0" checked="checked" value="Ω" />
+                                        <input style="display:none;" type="checkbox" id="LCR_Z" name="LCR_Z" class="bt_check" index="0" value="Ω" />
                                         <label for="LCR_Z">Z</label>
                                     </div>
                                 </div>
                             </form>
                         </div>
-                        <div class="menu_wrapper col-xs-4">
+                        <div class="menu_wrapper col-xs-4" style="width: 50%;">
                             <form class="form-horizontal" role="form">
                                 <div>
-                                    <div style="float:left">
-                                        <label for="lb_pdi_primary" style="margin-bottom: 0px; margin-top:5px;">Secondary Display</label>
+                                    <div style="float:left;width: 50%;">
+                                        <label for="lb_pdi_primary" style="margin-bottom: 0px; margin-top:6px;float: right;">Secondary Display:</label>
                                     </div>
                                     <div id="sec_displ_choice">
                                         <input style="display:none;" type="checkbox" id="LCR_ESR" name="LCR_ESR" class="bt_check" index="3" value="Ω" />
@@ -211,7 +213,7 @@
                                         <label for="LCR_Q">Q</label>
                                         <input style="display:none;" type="checkbox" id="LCR_D" name="LCR_D" class="bt_check" index="1" value="" />
                                         <label for="LCR_D">D</label>
-                                        <input style="display:none;" type="checkbox" id="LCR_P" name="LCR_P" class="bt_check" index="0" checked="checked" value="deg" />
+                                        <input style="display:none;" type="checkbox" id="LCR_P" name="LCR_P" class="bt_check" index="0" value="deg" />
                                         <label for="LCR_P">P</label>
                                     </div>
                                 </div>
@@ -222,10 +224,9 @@
                                 <label for="lb_tag" style="color: #d43f3a">MEASURMENT OPTIONS</label>
                             </div>
                             <div class="separator col-xs-4">
-                                <hr>
                             </div>
                         </div>
-                        <div class="menu_wrapper col-xs-4">
+                        <div class="menu_wrapper col-xs-4" style="width: 50%;">
                             <form class="form-horizontal" role="form">
                                 <div>
                                     <div style="float:left">
@@ -244,7 +245,7 @@
                                 </div>
                             </form>
                         </div>
-                        <div class="menu_wrapper col-xs-4">
+                        <div class="menu_wrapper col-xs-4" style="width: 50%;">
                             <form class="form-horizontal" role="form">
                                 <div>
                                     <div style="float:left">
@@ -264,8 +265,27 @@
                                 </div>
                             </form>
                         </div>
-
+                        <br> &nbsp;
                         <div class="menu_wrapper col-xs-4">
+                            <form class="form-horizontal" role="form">
+                                <div>
+                                    <div id="parl_ser" style="float: right" class="col-xs-12">
+                                        <input style="display:none;" type="checkbox" id="cb_ser" name="cb_ser"  index="1" class="bt_check" />
+                                        <label for="cb_ser" style="width: 50%">Series</label>
+                                        <input style="display:none;" type="checkbox" id="cb_paralel" name="cb_paralel" index="0" class="bt_check" />
+                                        <label for="cb_paralel" style="width: 50%">Parallel</label>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="menu_wrapper">
+                            <div class="col-xs-12 menu_header">
+                                <label for="lb_tag" style="color: #d43f3a">DISPLAY OPTIONS</label>
+                            </div>
+                            <div class="separator col-xs-4">
+                            </div>
+                        </div>
+                        <div class="menu_wrapper col-xs-4" style="width: 50%;">
                             <form class="form-horizontal" role="form">
                                 <div>
                                     <div style="float:left">
@@ -280,13 +300,13 @@
                                 </div>
                             </form>
                         </div>
-                        <div class="menu_wrapper col-xs-4">
+                        <div class="menu_wrapper col-xs-4" style="width: 50%;">
                             <form class="form-horizontal" role="form">
                                 <div>
                                     <div style="float:left">
                                         <label for="lb_range" style="margin-bottom: 0px; margin-top:5px;">Select Range: </label>
                                     </div>
-                                    <div class="col-xs-3" style="float: right">
+                                    <div style="float: right;width: 25%;padding-right: 15px;">
                                         <select id="sel_range_u" class="form-control">
                                             <option value="0">nΩ</option>
                                             <option value="1">uΩ</option>
@@ -320,37 +340,49 @@
                                 </div>
                             </form>
                         </div>
-                        <br> &nbsp;
-                        <div class="menu_wrapper col-xs-4">
-                            <form class="form-horizontal" role="form">
-                                <div>
-                                    <div id="parl_ser" style="float: right" class="col-xs-12">
-                                        <input style="display:none;" type="checkbox" id="cb_ser" name="cb_ser"  index="1" class="bt_check" />
-                                        <label for="cb_ser" style="width: 50%">Series</label>
-                                        <input style="display:none;" type="checkbox" id="cb_paralel" name="cb_paralel" index="0" class="bt_check" />
-                                        <label for="cb_paralel" style="width: 50%">Parallel</label>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
                     </div>
                 </div>
                 <!-- Main right menu -->
                 <div class="global_container">
                     <div id="table_displ">
                         <table id="m_table" class="table table-bordered table-fixed">
-                            <tr>
-                                <th class="table_num_w">#</th>
-                                <th class="table_num_w">SHUNT</th>
-                                <th class="table_num_w">FREQ</th>
-                                <th id="table_p_header" style="width: 50%;">Z</th>
-                                <th id="table_s_header" style="width: 50%;">P</th>
-                            </tr>
+                            <thead>
+                                <tr>
+                                    <th class="table_num_w">#</th>
+                                    <th class="table_num_w">DATE</th>
+                                    <th class="table_num_w">SHUNT</th>
+                                    <th class="table_num_w">FREQ</th>
+                                    <th id="table_p_header" style="width: 50%;">Z</th>
+                                    <th id="table_s_header" style="width: 50%;">P</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
                         </table>
                     </div>
                     <div id="table_cmd">
-                        <button id="btn_c_meas" type="button" class="btn">Clear Min/Max</button>
                         <button id="btn_export" type="button" class="btn" onclick="export_table()">Export Table</button>
+                        <div class="menu_wrapper col-xs-4" style="width: 25%;margin-top: 2px; max-width: 250px;min-width: 250px;">
+                            <form class="form-horizontal" role="form">
+                                <div>
+                                    <div style="float:left">
+                                        <label for="lb_freq" style="margin-bottom: 0px; margin-top:5px;max-width: 60px;">Interval: </label>
+                                    </div>
+                                    <div class="col-xs-7" style="float: right;min-width: 130px;">
+                                        <select id="LOG_INTERVAL" class="form-control">
+                                            <option value="100">100 ms</option>
+                                            <option value="500">500 ms</option>
+                                            <option value="1000">1.0 s</option>
+                                            <option value="1500">1.5 s</option>
+                                            <option value="2000">2.0 s</option>
+                                            <option value="2500">2.5 s</option>
+                                            <option value="3000">3.0 s</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
                         <button id="btn_clear" type="button" class="btn" onclick="clearRowTable()">Clear</button>
                         <button id="btn_clear_all" type="button" class="btn" onclick="clearTableAll()">Clear All</button>
                     </div>
