@@ -22,6 +22,8 @@
 #include "scpi/units.h"
 #include "common.h"
 #include "error.h"
+#include "common/rp_sweep.h"
+#include "lcr.h"
 
 const scpi_choice_def_t scpi_RpLogMode[] = {
     {"OFF", RP_SCPI_LOG_OFF},
@@ -172,37 +174,35 @@ rp_HPeModels_t getModel(scpi_t *context){
 
 scpi_result_t RP_Time(scpi_t *context){
     uint32_t hh, mm, ss;
+    hh = UINT32_MAX;
+    mm = UINT32_MAX;
+    ss = UINT32_MAX;
+    const char *buffer;
+    size_t len = 0;
 
-    if(!SCPI_ParamUInt32(context, &hh, true)){
-        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Unable to read HOURS parameter.")
-        return SCPI_RES_ERR;
-    }else{
-        if (hh > 23){
-            SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Invalid value for the HOURS. Parameter must be between 0 and 23.")
-            return SCPI_RES_ERR;
+    if (SCPI_ParamCharacters(context,&buffer,&len,true)){
+        if (len > 0){
+            sscanf(buffer,"%d:%d:%d",&hh,&mm,&ss);
+
+            if (hh > 23){
+                SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Invalid value for the HOURS. Parameter must be between 0 and 23.")
+                return SCPI_RES_ERR;
+            }
+
+            if (mm > 59){
+                SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Invalid value for the MINUTES. Parameter must be between 0 and 59.")
+                return SCPI_RES_ERR;
+            }
+
+            if (ss > 59){
+                SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Invalid value for the SECONDS. Parameter must be between 0 and 59.")
+                return SCPI_RES_ERR;
+            }
         }
-    }
-
-    if(!SCPI_ParamUInt32(context, &mm, true)){
-        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Unable to read MINUTES parameter.")
-        return SCPI_RES_ERR;
     }else{
-        if (mm > 59){
-            SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Invalid value for the MINUTES. Parameter must be between 0 and 59.")
-            return SCPI_RES_ERR;
-        }
-    }
-
-    if(!SCPI_ParamUInt32(context, &ss, true)){
-        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Unable to read SECONDS parameter.")
+        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Unable to read parameter.")
         return SCPI_RES_ERR;
-    }else{
-        if (ss > 59){
-            SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Invalid value for the SECONDS. Parameter must be between 0 and 59.")
-            return SCPI_RES_ERR;
-        }
     }
-
 
     struct timespec t_time;
     if (clock_gettime (CLOCK_REALTIME, & t_time)){
@@ -252,48 +252,47 @@ scpi_result_t RP_TimeQ(scpi_t *context){
 
 
 scpi_result_t RP_Date(scpi_t *context){
-    uint32_t year, m, d;
+    uint32_t y, m, d;
+    y = UINT32_MAX;
+    m = UINT32_MAX;
+    d = UINT32_MAX;
+    const char *buffer;
+    size_t len = 0;
 
-    if(!SCPI_ParamUInt32(context, &year, true)){
-        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Unable to read YEAR parameter.");
-        return SCPI_RES_ERR;
-    }else{
-        if (year < 1900){
-            SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Invalid value for the YEAR. The value must be greater 1900.");
-            return SCPI_RES_ERR;
+    if (SCPI_ParamCharacters(context,&buffer,&len,true)){
+        if (len > 0){
+            sscanf(buffer,"%d-%d-%d",&y,&m,&d);
+
+            if (y < 1900 || y > 3000){
+                SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Invalid value for the YEAR. The value must be between 1900 - 3000.");
+                return SCPI_RES_ERR;
+            }
+
+            if (m < 1 || m > 12){
+                SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Invalid value for the MONTH. Parameter must be between 1 and 12.");
+                return SCPI_RES_ERR;
+            }
+
+            if (d < 1 || d > 31){
+                SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Invalid value for the DAY. Parameter must be between 1 and 31.");
+                return SCPI_RES_ERR;
+            }
         }
-    }
-
-    if(!SCPI_ParamUInt32(context, &m, true)){
-        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Unable to read MONTH parameter.");
-        return SCPI_RES_ERR;
     }else{
-        if (m < 1 || m > 12){
-            SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Invalid value for the MONTH. Parameter must be between 1 and 12.");
-            return SCPI_RES_ERR;
-        }
-    }
-
-    if(!SCPI_ParamUInt32(context, &d, true)){
-        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Unable to read DAY parameter.");
+        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Unable to read parameter.")
         return SCPI_RES_ERR;
-    }else{
-        if (d < 1 || d > 31){
-            SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Invalid value for the DAY. Parameter must be between 1 and 31.");
-            return SCPI_RES_ERR;
-        }
     }
-
 
     struct timespec t_time;
     if (clock_gettime (CLOCK_REALTIME, & t_time)){
         SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Error getting current date.");
         return SCPI_RES_ERR;
     }
+
     time_t t_t = (time_t)t_time.tv_sec;
     struct tm *time = gmtime(&t_t);
 
-    time->tm_year = year - 1900;
+    time->tm_year = y - 1900;
     time->tm_mon  = m - 1;
     time->tm_mday = d;
 
@@ -398,4 +397,11 @@ scpi_result_t RP_ExtTriggerLevelQ(scpi_t *context) {
     SCPI_ResultFloat(context, value);
     RP_LOG_INFO("%s",rp_GetError(result))
     return SCPI_RES_OK;
+}
+
+void stopAllThreads(scpi_t *context){
+    rp_sweep_api::rp_SWStop();
+    RP_LOG_INFO("%s","Stopping the sweep generation service")
+    stopLCR();
+    RP_LOG_INFO("%s","Stopping the lcr service")
 }

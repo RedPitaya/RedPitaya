@@ -1,73 +1,44 @@
 /*
  * Red Pitaya LCR meter client
  *
- * Author: Luka Golinar <luka.golinar@gmail.com>
- *
  * (c) Red Pitaya  http://www.redpitaya.com
  *
  */
 
-
 (function() {
-
-    if ("performance" in window == false) {
-        window.performance = {};
-    }
-
-    Date.now = (Date.now || function() { // thanks IE8
-        return new Date().getTime();
-    });
-
-    if ("now" in window.performance == false) {
-        var nowOffset = Date.now();
-        if (performance.timing && performance.timing.navigationStart) {
-            nowOffset = performance.timing.navigationStart
+    $.fn.rotate = function(degrees, step, current) {
+        var self = $(this);
+        current = current || 0;
+        step = step || 5;
+        current += step;
+        self.css({
+            '-webkit-transform' : 'rotate(' + current + 'deg)',
+            '-moz-transform' : 'rotate(' + current + 'deg)',
+            '-ms-transform' : 'rotate(' + current + 'deg)',
+            'transform' : 'rotate(' + current + 'deg)'
+        });
+        if (current != degrees) {
+            setTimeout(function() {
+                self.rotate(degrees, step, current);
+            }, 5);
         }
-        window.performance.now = function now() {
-            return Date.now() - nowOffset;
-        }
-    }
-
+    };
 })();
 
 (function(LCR, $, undefined) {
 
     //Configure APP
     LCR.startTime = 0;
-    LCR.config = {};
-    LCR.config.app_id = 'lcr_meter';
-    LCR.config.server_ip = '';
-    LCR.config.start_app_url = window.location.origin + '/bazaar?start=' + LCR.config.app_id;
-    LCR.config.socket_url = 'ws://' + window.location.host + '/wss'; // WebSocket server URI
-    LCR.client_id = undefined;
+
     // App state
     LCR.state = {
         socket_opened: false,
-        processing: false,
-        editing: false,
-        trig_dragging: false,
-        cursor_dragging: false,
-        resized: false,
-        sel_sig_name: null,
-        fine: false,
-        graph_grid_height: null,
-        graph_grid_width: null,
-        calib: 0,
-        demo_label_visible: false,
-        demo_modal_visible: false
+        processing: false
     };
 
-    // Params cache
-    LCR.params = {
-        orig: {},
-        local: {}
-    };
 
     // Other global variables
-    LCR.ws = null;
     LCR.touch = {};
-
-    LCR.connect_time;
 
     LCR.displ_params = {
         prim: 'LCR_Z',
@@ -90,562 +61,571 @@
         prim_display: 'LCR_Z',
         sec_display: 'LCR_P',
         save_data: false,
-        //Web socket params have a very fast interval. Interval ought to be interpredted as
-        // something similar to decimation in oscilloscppe.
-        interval: 10,
         //How much data to be stored.
-        max_store: 1000,
-        curr_store: 1
+        max_store: 100000,
+        curr_store: 1,
+        last_log:0
+    }
+
+    LCR.precalculate = {
+        prim_value:'',
+        prim_units:'',
+        prim_raw:'',
+        sec_value:'',
+        sec_units:'',
+        sec_raw:''
     }
 
     LCR.selected_meas = 1;
-    LCR.unexpectedClose = false;
 
-    LCR.i2ct_checked = false;
-    LCR.i2c0x20_res = "";
     LCR.module_disconnected = false;
     LCR.modal_opened = false;
+    LCR.last_update = 0;
 
-    //LCR.toClearLog = false;
+    LCR.param_callbacks = {};
 
-    LCR.startApp = function() {
-        $.get(LCR.config.start_app_url)
-            .done(function(dresult) {
-                if (dresult.status == 'OK') {
-                    try {
-                        LCR.connectWebSocket();
-                        console.log('Socket opened');
-                    } catch (e) {
-                        LCR.startApp();
-                    }
-                } else if (dresult.status == 'ERROR') {
-                    console.log(dresult.reason ? dresult.reason : 'Could not start the application (ERR1)');
-                    LCR.startApp();
-                } else {
-                    console.log('Could not start application (ERR2)');
-                    LCR.startApp();
-                }
-            })
-            .fail(function() {
-                console.log('Could not start the application (ERR3)');
-                LCR.startApp();
-            });
-    };
+    LCR.recalc_params = ['LCR_Z','LCR_L','LCR_C',
+                        'LCR_R','LCR_P','LCR_D',
+                        'LCR_Q','LCR_ESR','LCR_Z_MIN',
+                        'LCR_Z_MAX','LCR_Z_AVG',
+                        'LCR_L_MIN','LCR_L_MAX',
+                        'LCR_L_AVG','LCR_C_MIN',
+                        'LCR_C_MAX','LCR_C_AVG',
+                        'LCR_R_MIN','LCR_R_MAX','LCR_R_AVG',
+                        'LCR_RELATIVE_VALUE'];
 
-
-    LCR.checkStatusTimer = undefined;
-    LCR.changeStatusForRestart = false;
-    LCR.changeStatusStep = 0;
-
-    LCR.reloadPage = function() {
-        $.ajax({
-            method: "GET",
-            url: "/get_client_id",
-            timeout: 2000
-        }).done(function(msg) {
-            if (msg.trim() === LCR.client_id) {
-                location.reload();
-            } else {
-                $('body').removeClass('user_lost');
-                LCR.stopCheckStatus();
-            }
-        }).fail(function(msg) {
-            console.log(msg);
-            $('body').removeClass('connection_lost');
-        });
-    }
-
-    LCR.startCheckStatus = function() {
-        if (LCR.checkStatusTimer === undefined) {
-            LCR.changeStatusStep = 0;
-            LCR.checkStatusTimer = setInterval(LCR.checkStatus, 4000);
-        }
-    }
-
-    LCR.stopCheckStatus = function() {
-        if (LCR.checkStatusTimer !== undefined) {
-            clearInterval(LCR.checkStatusTimer);
-            LCR.checkStatusTimer = undefined;
-        }
-    }
-
-    LCR.checkStatus = function() {
-        $.ajax({
-            method: "GET",
-            url: "/check_status",
-            timeout: 2000
-        }).done(function(msg) {
-            switch (LCR.changeStatusStep) {
+    LCR.getShuntName = function() {
+        let shunt_text = "ERROR";
+        if (CLIENT.params.orig['LCR_SHUNT'] !== undefined){
+            switch (CLIENT.params.orig['LCR_SHUNT'].value) {
                 case 0:
-                    LCR.changeStatusStep = 1;
-                    break;
-                case 2:
-                    LCR.reloadPage();
-                    break;
-            }
-        }).fail(function(msg) {
-            // check status. If don't have good state after start. We lock system.
-            $('body').removeClass('connection_lost');
-            switch (LCR.changeStatusStep) {
-                case 0:
-                    LCR.changeStatusStep = -1;
+                    shunt_text = "10 Ohm";
                     break;
                 case 1:
-                    LCR.changeStatusStep = 2;
+                    shunt_text = "100 Ohm";
+                    break;
+                case 2:
+                    shunt_text = "1 kOhm";
+                    break;
+                case 3:
+                    shunt_text = "10 kOhm";
+                    break;
+                case 4:
+                    shunt_text = "100 kOhm";
+                    break;
+                case 5:
+                    shunt_text = "1 MOhm";
                     break;
             }
-
-        });
+        }
+        return shunt_text
     }
 
-    LCR.connectWebSocket = function() {
-        if (window.WebSocket) {
-            LCR.ws = new WebSocket(LCR.config.socket_url);
-            LCR.ws.binaryType = "arraybuffer";
-        } else if (window.MozWebSocket) {
-            LCR.ws = new MozWebSocket(LCR.config.socket_url);
-            LCR.ws.binaryType = "arraybuffer";
-        } else {
-            console.log('Browser does not support WebSocket');
+    LCR.getKeyByPrimDisplayIndex = function(index){
+        switch(index){
+            case 0: return 'Z'
+            case 1: return 'L'
+            case 2: return 'C'
+            case 3: return 'R'
+            default: return ''
         }
+    }
 
-
-        //Define WebSocket event listeners
-        if (LCR.ws) {
-            LCR.ws.onopen = function() {
-                LCR.state.socket_opened = true;
-                console.log('Socket opened');
-
-                LCR.params.local['in_command'] = { value: 'send_all_params' };
-                LCR.ws.send(JSON.stringify({ parameters: LCR.params.local }));
-                LCR.params.local = {};
-                LCR.unexpectedClose = true;
-                LCR.startTime = performance.now();
-                $('body').addClass('loaded');
-                $('body').addClass('connection_lost');
-                $('body').addClass('user_lost');
-                LCR.startCheckStatus();
-            };
-
-            LCR.ws.onclose = function() {
-                LCR.state.socket_opened = false;
-                console.log('Socket closed');
-                $('#modal_socket_closed').modal('show');
-                if (LCR.unexpectedClose == true) {
-                    setTimeout(LCR.reloadPage, '1000');
-                }
-            };
-
-            $('#send_report_btn').on('click', function() {
-                //var file = new FileReader();
-                var mail = "support@redpitaya.com";
-                var subject = "Crash report Red Pitaya OS";
-                var body = "%0D%0A%0D%0A------------------------------------%0D%0A" + "DEBUG INFO, DO NOT EDIT!%0D%0A" + "------------------------------------%0D%0A%0D%0A";
-                body += "Parameters:" + "%0D%0A" + JSON.stringify({ parameters: LCR.params }) + "%0D%0A";
-                body += "Browser:" + "%0D%0A" + JSON.stringify({ parameters: $.browser }) + "%0D%0A";
-
-                var url = 'info/info.json';
-                $.ajax({
-                    method: "GET",
-                    url: url
-                }).done(function(msg) {
-                    body += " info.json: " + "%0D%0A" + msg.responseText;
-                }).fail(function(msg) {
-                    var info_json = msg.responseText
-                    var ver = '';
-                    try {
-                        var obj = JSON.parse(msg.responseText);
-                        ver = " " + obj['version'];
-                    } catch (e) {};
-
-                    body += " info.json: " + "%0D%0A" + msg.responseText;
-                    document.location.href = "mailto:" + mail + "?subject=" + subject + ver + "&body=" + body;
-                });
-            });
-
-            $('#restart_app_btn').on('click', function() {
-                location.reload();
-            });
-
-            LCR.ws.onerror = function(ev) {
-                if (!LCR.state.socket_opened)
-                    LCR.startApp();
-                console.log('Websocket error: ', ev);
-            };
-
-            LCR.ws.onmessage = function(ev) {
-                if (LCR.state.processing) {
-                    return;
-                }
-
-                var data = new Uint8Array(ev.data);
-                var inflate = pako.inflate(data);
-                var text = String.fromCharCode.apply(null, new Uint8Array(inflate));
-                var receive = JSON.parse(text);
-
-                LCR.state.processing = true;
-                if (receive.parameters) {
-                    if ((Object.keys(LCR.params.orig).length == 0) && (Object.keys(receive.parameters).length == 0)) {
-
-                        LCR.params.local['in_command'] = { value: 'send_all_params' };
-                        LCR.ws.send(JSON.stringify({ parameters: LCR.params.local }));
-                        LCR.params.local = {};
-                    } else {
-                        console.log(receive.parameters)
-                        LCR.processParameters(receive.parameters);
-                    }
-                    if (LCR.params.orig['is_demo']) {
-                        setTimeout(function() {
-                            if (!LCR.state.demo_modal_visible) {
-                                LCR.state.demo_modal_visible = true;
-                                $('#get_lic').modal('show');
-                            }
-                        }, 2500);
-                        if (!LCR.state.demo_label_visible) {
-                            LCR.state.demo_label_visible = true;
-                            //$('#demo_label').show();
-                            var htmlText = "<p id='browser_detect_text'>You are working in demo mode.</p>";
-                            PopupStack.add(htmlText);
-                            $('#demo_label').hide();
-                        }
-                    } else {
-                        if (LCR.state.demo_label_visible) {
-                            LCR.state.demo_label_visible = false;
-                            $('#demo_label').hide();
-                        }
-                    }
-                }
-                LCR.state.processing = false;
-            };
+    LCR.getKeyByPrimDisplayUnit = function(index){
+        switch(index){
+            case 0: return 'Ω'
+            case 1: return 'H'
+            case 2: return 'F'
+            case 3: return 'Ω'
+            default: return ''
         }
-    };
+    }
 
-    // LCR.checkAll = function() {
-    //     var trata = function(msg) {
-    //         console.log(msg);
-    //         if (msg != "\n") {
-    //             var callback = function(msg) {
-    //                 LCR.i2c0x20_res = msg + "";
-    //                 if (LCR.i2c0x20_res.indexOf("--") != -1 && !LCR.module_disconnected) {
-    //                     $('#modal_module_disconnected').modal('show');
-    //                     LCR.module_disconnected = true;
-    //                     LCR.startApp();
-    //                 } else //if (LCR.i2c0x20_res.indexOf("--") == -1 && LCR.module_disconnected)
-    //                 {
-    //                     LCR.module_disconnected = false;
-    //                     LCR.startApp();
-    //                 }
-    //             };
-    //             $.get('/check_0x20').done(callback).fail(callback);
-    //             LCR.i2ct_checked = true;
-    //         } else {
-    //             $("#i2c_install").modal('show');
-    //             LCR.i2ct_checked = false;
-    //         }
-    //     };
+    LCR.getKeyBySecDisplayIndex = function(index){
+        switch(index){
+            case 0: return 'P'
+            case 1: return 'D'
+            case 2: return 'Q'
+            case 3: return 'ESR'
+            default: return ''
+        }
+    }
 
-    //     $.get('/check_i2c_tools').done(trata).fail(trata);
-    // }
+    LCR.getKeyBySecDisplayUnit = function(index){
+        switch(index){
+            case 0: return 'deg'
+            case 1: return ''
+            case 2: return ''
+            case 3: return 'Ω'
+            default: return ''
+        }
+    }
 
-    // LCR.checkI2cTools = function() {
-    //     $.get('/check_i2c_tools').done(function(msg) {
-    //         console.log(msg);
-    //         if (msg != "\n")
-    //             LCR.i2ct_checked = true;
-    //         else
-    //             LCR.i2ct_checked = false;
-    //     }).fail(function(msg) {
-    //         console.log(msg);
-    //         if (msg != "\n")
-    //             LCR.i2ct_checked = true;
-    //         else
-    //             LCR.i2ct_checked = false;
-    //     });
-    // }
-
-    // LCR.installI2cTools = function() {
-    //     $.get('/install_i2c_tools').done(function(msg) {
-    //         console.log(msg);
-    //         if (LCR.unexpectedClose)
-    //             return;
-    //         var callback = function(msg) {
-    //             LCR.i2c0x20_res = msg + "";
-    //             if (!LCR.module_disconnected) {
-    //                 $('#modal_module_disconnected').modal('show');
-    //                 LCR.module_disconnected = true;
-    //             } else if (LCR.i2c0x20_res.indexOf("--") == -1 && LCR.module_disconnected) {
-    //                 LCR.module_disconnected = false;
-    //                 LCR.startApp();
-    //             }
-    //         };
-    //         $.get('/check_0x20').done(callback).fail(callback);
-    //         LCR.i2ct_checked = true;
-    //     }).fail(function(msg) {
-    //         console.log(msg);
-    //         if (LCR.unexpectedClose)
-    //             return;
-    //         // var callback = function(msg) {
-    //         //     LCR.i2c0x20_res = msg + "";
-    //         //     if (LCR.i2c0x20_res.indexOf("--") != -1 && !LCR.module_disconnected) {
-    //         //         $('#modal_module_disconnected').modal('show');
-    //         //         LCR.module_disconnected = true;
-    //         //     } else if (LCR.i2c0x20_res.indexOf("--") == -1 && LCR.module_disconnected) {
-    //         //         LCR.module_disconnected = false;
-    //         //         LCR.startApp();
-    //         //     }
-    //         // };
-    //         // $.get('/check_0x20').done(callback).fail(callback);
-    //         LCR.module_disconnected = true;
-    //         LCR.i2ct_checked = true;
-    //     });
-    // }
+    LCR.getFreq = function() {
+        let text = "ERROR";
+        if (CLIENT.params.orig['LCR_FREQ'] !== undefined){
+            var val = CLIENT.params.orig['LCR_FREQ'].value
+            if (val < 1000) {
+                text = val + " Hz"
+            } else if (val < 1000000){
+                text = val / 1000 + " kHz"
+            } else {
+                text = val / 1000000 + " MHz"
+            }
+        }
+        return text
+    }
 
     LCR.processParameters = function(new_params) {
 
-        var old_params = $.extend(true, {}, LCR.params.orig);
+        LCR.recalc_params.forEach((param) => {if (new_params[param]) new_params[param].value /= 100000.0});
 
-        var send_all_params = Object.keys(new_params).indexOf('send_all_params') != -1;
         for (var param_name in new_params) {
-            LCR.params.orig[param_name] = new_params[param_name];
+            CLIENT.params.orig[param_name] = new_params[param_name];
 
-            if (param_name == 'LCR_SHUNT') {
-                let shunt_text = "";
-                switch (new_params['LCR_SHUNT'].value) {
-                    case 0:
-                        shunt_text = "10 Ohm";
-                        break;
-                    case 1:
-                        shunt_text = "100 Ohm";
-                        break;
-                    case 2:
-                        shunt_text = "1 kOhm";
-                        break;
-                    case 3:
-                        shunt_text = "10 kOhm";
-                        break;
-                    case 4:
-                        shunt_text = "100 kOhm";
-                        break;
-                    case 5:
-                        shunt_text = "1 MOhm";
-                        break;
-                }
-                $('#lb_shunt').empty().append(shunt_text);
-            }
-            
-            if (param_name.includes("LCR_L")){
-                new_params[param_name].value /= 100000;
-            }
-
-            if (param_name == 'LCR_RUN') {
-                if (new_params['LCR_RUN'].value == false && new_params['LCR_TOLERANCE'].value == 0) {
-                    $('#lb_prim_displ').empty().append(LCR.displ_params.prim_val);
-                    $('#lb_prim_displ_units').empty().append(LCR.displ_params.p_units);
-
-                    $('#lb_sec_displ').empty().append(LCR.displ_params.sec_val);
-                    $('#lb_sec_displ_units').empty().append(LCR.displ_params.s_units);
-                }
-            }
-
-            if (param_name == 'LCR_EXTMODULE_STATUS') {
-                if (new_params['LCR_EXTMODULE_STATUS'].value === false) {
-                    $('body').removeClass('loaded');
-                    $('#text_message').show();
-                    $('#cont').hide();
-                    LCR.module_disconnected = true;
-                } else {
-                    if (LCR.module_disconnected == true) {
-                        LCR.startApp();
-                        LCR.module_disconnected = false;
-                        return;
-                    }
-                    $('#text_message').hide();
-                    $('#cont').show();
-                }
-            }
-
-            //Change primary display value
-            if (new_params['LCR_RUN'].value == true &&
-                param_name == LCR.displ_params.prim && LCR.secondary_meas.apply_tolerance == false) {
-
-                if (new_params['LCR_RANGE'].value == 0 && new_params['LCR_RELATIVE'].value == 0) {
-                    formatRangeAuto(false, 1, new_params['LCR_C_PREC'].value, new_params[param_name].value);
-                } else if (new_params['LCR_RELATIVE'].value == 0 && new_params['LCR_RANGE'].value != 0) {
-                    formatRangeManual(new_params['LCR_C_PREC'].value, $('#sel_range_f').val(), parseInt($('#sel_range_u').val(), 10), new_params[param_name].value);
-                } else {
-                    console.log(new_params[param_name].value);
-                    if (new_params['LCR_RELATIVE'].value < Math.abs(999)) {
-                        formatRangeAuto(false, 1, null, new_params[param_name].value);
-                    }
-                }
-
-                if (LCR.displ_params.prim_val < 0) {
-                    $('#lb_prim_displ').empty().append("OVER R.");
-                    $('#lb_prim_displ_units').empty();
-                } else {
-
-                    var units = LCR.displ_params.p_units;
-                    var data = LCR.displ_params.prim_val;
-
-                    if (data == "OVER R.") {
-                        $('#lb_prim_displ').css('font-size', '100%').css('width: 100%');
-                    } else {
-                        $('#lb_prim_displ').css('font-size', '100%');
-                    }
-
-                    $('#lb_prim_displ').empty().append(data);
-                    $('#lb_prim_displ_units').empty().append(units);
-                }
-            }
-
-            //Change secondary display value
-            if (new_params['LCR_RUN'].value == true && param_name == LCR.displ_params.sec && LCR.secondary_meas.apply_tolerance == false) {
-
-                formatRangeAuto(0, 2, null, new_params[param_name].value);
-
-                if (param_name == 'LCR_P') {
-
-                    if (new_params[param_name].value < -180 || new_params[param_name].value > 180) {
-                        $('#lb_sec_displ').empty().append("OVER R.");
-                        $('#lb_sec_displ_units').empty();
-                    }
-                    $('#lb_sec_displ').empty().append(new_params[param_name].value.toFixed(2));
-                    $('#lb_sec_displ_units').empty().append("deg");
-                } else {
-                    var units = LCR.displ_params.s_units;
-                    var data = LCR.displ_params.sec_val;
-                    $('#lb_sec_displ_units').empty().append(units);
-                    $('#lb_sec_displ').empty().append(data);
-                }
-
-            }
-
-            if (param_name == LCR.displ_params.prim && LCR.secondary_meas.apply_tolerance == true && new_params['LCR_RUN'].value == true) {
-
-
-                var diff = 100 - (new_params[param_name].value / Math.abs(new_params['LCR_TOL_SAVED'].value) * 100);
-                //var diff = (( - new_params[param_name].value)) /
-                //  ((new_params['LCR_TOL_SAVED'].value + new_params[param_name].value) / 2) * 100);
-
-                var str_diff = diff.toString().substr(0, 5);
-                diff = parseInt(diff);
-
-                formatRangeAuto(false, 1, null, new_params[param_name].value);
-                var units = LCR.displ_params.p_units;
-                var data = LCR.displ_params.prim_val;
-
-                if (Math.abs(diff) > 1 && Math.abs(diff) < 100) {
-                    console.log(diff.toFixed(2));
-                    $('#lb_sec_displ').empty().append(100 - diff + "%");
-                    $('#lb_prim_displ').empty().append(data);
-                    $('#lb_prim_displ_units').empty().append(units);
-                } else if (Math.abs(diff) > 100) {
-                    $('#lb_sec_displ').empty().append("0%");
-                    $('#lb_prim_displ').empty().append("0%");
-                    $('#lb_prim_displ_units').empty();
-                    $('#lb_sec_displ_units').empty();
-                } else {
-                    $('#lb_sec_displ').empty().append("100%");
-                    $('#lb_prim_displ').empty().append(data);
-                    $('#lb_prim_displ_units').empty().append(units);
-                }
-                console.log("selected_meas: " + LCR.selected_meas);
-                console.log("Saved val: " + new_params['LCR_TOL_SAVED'].value);
-                console.log("CUrrent meas value: " + new_params[param_name].value);
-            }
-            if (param_name == 'is_demo')
-                LCR.params.orig['is_demo'] = new_params['is_demo'].value;
-
-            // console.log(LCR.displ_params.prim);
-            var quantity = param_name.substr(0, param_name.length - 4);
-            if (param_name == (quantity + "_MIN") && param_name == (LCR.displ_params.prim + "_MIN")) {
-                // console.log(quantity);
-                var format = formatRangeAuto(true, 1, new_params['LCR_C_PREC'].value, new_params[param_name].value);
-                if (format == "OVER R.") $('#meas_min_d').empty().append(0);
-                else $('#meas_min_d').empty().append(format);
-            }
-
-            if (param_name == (quantity + "_MAX") && param_name == (LCR.displ_params.prim + "_MAX")) {
-                var format = formatRangeAuto(true, 1, new_params['LCR_C_PREC'].value, new_params[param_name].value);
-                if (format == "OVER R.") $('#meas_max_d').empty().append(0);
-                else $('#meas_max_d').empty().append(format);
-            }
-
-            if (param_name == (quantity + "_AVG") && param_name == (LCR.displ_params.prim + "_AVG")) {
-                var format = formatRangeAuto(true, 1, new_params['LCR_C_PREC'].value, new_params[param_name].value);
-                if (format == "OVER R.") $('#meas_avg_d').empty().append(0);
-                else $('#meas_avg_d').empty().append(format);
+            if (LCR.param_callbacks[param_name] !== undefined){
+                LCR.param_callbacks[param_name](new_params,param_name);
+                continue;
             }
         }
 
         if (LCR.data_log.save_data &&
             LCR.data_log.curr_store < LCR.data_log.max_store && $('#LCR_HOLD').is(':visible')) {
-            $('#m_table tbody').append('<tr><td><input type="checkbox" name="data">' + LCR.data_log.curr_store + '</td><td>' +
-                new_params[LCR.data_log.prim_display].value + '</td><td>' +
-                new_params[LCR.data_log.sec_display].value + '</td></tr>');
-            LCR.data_log.curr_store++;
+
+            var interval = CLIENT.getValue('LOG_INTERVAL')
+            var disPrim = CLIENT.getValue('LCR_PRIM_DISP')
+            var disSec = CLIENT.getValue('LCR_SEC_DISP')
+
+            if (interval !== undefined && disPrim !== undefined && disSec !== undefined){
+                if (Date.now() - LCR.data_log.last_log > interval){
+                    const d = new Date();
+                    var date = d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0') + ":"+ d.getSeconds().toString().padStart(2, '0') + ":" + d.getMilliseconds().toString().padStart(3, '0');
+                    $('#m_table tbody').prepend('<tr>'+
+                        '<td class="table_num_w"><input type="checkbox" name="data"><label class="row_number">' + LCR.data_log.curr_store + '</label></td>'+
+                        '<td>' + date + '</td>' +
+                        '<td>' + LCR.getShuntName() + '</td>' +
+                        '<td>' + LCR.getFreq() + '</td>' +
+                        '<td value=' + LCR.precalculate.prim_raw  + '>' + LCR.precalculate.prim_display + ' ' + LCR.precalculate.prim_units + '</td>' +
+                        '<td value=' + LCR.precalculate.sec_raw  + '>' + LCR.precalculate.sec_display + ' ' + LCR.precalculate.sec_units + '</td>' +
+                        '</tr>');
+                    LCR.data_log.curr_store++;
+                    LCR.data_log.last_log = Date.now()
+                }
+            }
         }
     };
 
-    // Sends to server modified parameters
-    LCR.sendParams = function() {
-        if ($.isEmptyObject(LCR.params.local)) {
-            return false;
+    LCR.updateRangeByPrimDisplay = function(){
+        var primDis = CLIENT.getValue('LCR_PRIM_DISP')
+        var name = LCR.getKeyByPrimDisplayIndex(primDis)
+        var unit = LCR.getKeyByPrimDisplayUnit(primDis)
+
+        var i;
+        var op = document.getElementById("sel_range_u").getElementsByTagName("option");
+        for (i = 0; i < 6; i++) {
+            if (i == 3) op[i].text = unit;
+            else op[i].text = op[i].text.substring(0, 1) + unit;
+        }
+    }
+
+    LCR.precalculateValues = function(){
+        var primDis = CLIENT.getValue('LCR_PRIM_DISP')
+        var secDis = CLIENT.getValue('LCR_SEC_DISP')
+
+        var key = LCR.getKeyByPrimDisplayIndex(primDis)
+        if (key !== ''){
+            var value = CLIENT.getValue('LCR_'+key)
+            if (value !== undefined){
+                var rangeMode = CLIENT.getValue('LCR_RANGE')
+                if (rangeMode !== undefined){
+                    if (rangeMode == 0) { // AUTO mode
+                        var new_value = formatRangeAuto(value);
+                        var over = checkOverrange(new_value.datanew,key)
+                        var rValue = new_value.datanew.toFixed(3)
+                        var unit = LCR.getKeyByPrimDisplayUnit(primDis)
+                        var valueLabel = rValue
+                        var unitLabel = new_value.units+unit
+                        if (over.overrange){
+                            valueLabel = "OVER R."
+                            unitLabel = ""
+                            if (over.overrange_dir == 1) unitLabel = "↑"
+                            if (over.overrange_dir == -1) unitLabel = "↓"
+                        }
+                        LCR.precalculate.prim_display = valueLabel
+                        LCR.precalculate.prim_units = unitLabel
+                        LCR.precalculate.prim_raw = value
+                    } else  {
+                        var new_value = formatRangeManual(value)
+                        var unit = LCR.getKeyByPrimDisplayUnit(primDis)
+                        var valueLabel = new_value.datanew
+                        var unitLabel = new_value.units+unit
+                        if (new_value.overrange){
+                            valueLabel = "OVER R."
+                            unitLabel = ""
+                            if (new_value.overrange_dir == 1) unitLabel = "↑"
+                            if (new_value.overrange_dir == -1) unitLabel = "↓"
+                        }
+                        LCR.precalculate.prim_display = valueLabel
+                        LCR.precalculate.prim_units = unitLabel
+                        LCR.precalculate.prim_raw = value
+                    }
+                }
+
+            }
         }
 
-        if (!LCR.state.socket_opened) {
-            console.log('ERROR: Cannot save changes, socket not opened');
-            return false;
+        var key = LCR.getKeyBySecDisplayIndex(secDis)
+        if (key !== ''){
+            var value = CLIENT.getValue('LCR_'+key)
+            if (value !== undefined){
+                var new_value = { data:value, datanew:value, units:''}
+                if (key !== 'P'){
+                    new_value = formatRangeAuto(value);
+                }
+                var over = checkOverrange(new_value.datanew,key)
+                var rValue = new_value.datanew.toFixed(3)
+                var unit = LCR.getKeyBySecDisplayUnit(secDis)
+                var valueLabel = rValue
+                var unitLabel = new_value.units+unit
+                // if (over.overrange){
+                //     valueLabel = "OVER R."
+                //     unitLabel = ""
+                //     if (over.overrange_dir == 1) unitLabel = "↑"
+                //     if (over.overrange_dir == -1) unitLabel = "↓"
+                // }
+                LCR.precalculate.sec_display = valueLabel
+                LCR.precalculate.sec_units = unitLabel
+                LCR.precalculate.sec_raw = value
+
+            }
+        }
+    }
+
+    LCR.updateMainDisplay = function(){
+        LCR.precalculateValues()
+        if ((Date.now() - LCR.last_update) > 300){ // 3 FPS
+
+            var primDis = CLIENT.getValue('LCR_PRIM_DISP')
+            var secDis = CLIENT.getValue('LCR_SEC_DISP')
+
+            if(primDis !== undefined){
+                $("#meas_p_d").html(LCR.getKeyByPrimDisplayIndex(primDis))
+            }
+
+            if(secDis !== undefined){
+                $("#meas_s_d").html(LCR.getKeyBySecDisplayIndex(secDis))
+            }
+
+
+            $('#lb_prim_displ').html(LCR.precalculate.prim_display)
+            $('#lb_prim_displ_units').html(LCR.precalculate.prim_units);
+
+            $('#lb_sec_displ').html(LCR.precalculate.sec_display)
+            $('#lb_sec_displ_units').html(LCR.precalculate.sec_units);
+
+            LCR.updateMinMaxAVG()
+            LCR.setToleranceValue()
+            LCR.setRelativeValue()
+
+            LCR.last_update = Date.now()
+        }
+    }
+
+    LCR.setPrimDisplay = function(new_params,name) {
+        var dis = CLIENT.getValue('LCR_PRIM_DISP')
+        $('#prim_displ_choice').find('input[type=checkbox]').prop('checked', false);
+        $('#prim_displ_choice').find('input[index='+dis+']').prop('checked', true);
+        LCR.updateMainDisplay()
+        LCR.updateRangeByPrimDisplay()
+        document.getElementById('table_p_header').innerHTML = LCR.getKeyByPrimDisplayIndex(dis)
+
+    }
+
+    LCR.setSecondDisplay = function(new_params,name) {
+        var dis = CLIENT.getValue('LCR_SEC_DISP')
+        $('#sec_displ_choice').find('input[type=checkbox]').prop('checked', false);
+        $('#sec_displ_choice').find('input[index='+dis+']').prop('checked', true);
+        LCR.updateMainDisplay()
+        document.getElementById('table_s_header').innerHTML = LCR.getKeyBySecDisplayIndex(dis)
+    }
+
+    LCR.setRange = function(new_params,name) {
+        var mode = CLIENT.getValue('LCR_RANGE')
+        $('#sel_mode').find('input[type=checkbox]').prop('checked', false);
+        $('#sel_mode').find('input[index='+mode+']').prop('checked', true);
+        $('#meas_mode_d').html(mode == 0 ? 'Auto' : 'Manual');
+    }
+
+    LCR.setRangeF = function(new_params,name) {
+        var mode = CLIENT.getValue('LCR_RANGE_F')
+        if (mode !== undefined){
+            $('#sel_range_f').val(mode);
+            LCR.updateMainDisplay()
+        }
+    }
+
+    LCR.setRangeU = function(new_params,name) {
+        var mode = CLIENT.getValue('LCR_RANGE_U')
+        if (mode !== undefined){
+            $('#sel_range_u').val(mode);
+            LCR.updateMainDisplay()
+        }
+    }
+
+    LCR.setSeries = function(new_params,name) {
+        var mode = CLIENT.getValue('LCR_SERIES')
+        $('#parl_ser').find('input[type=checkbox]').prop('checked', false);
+        $('#parl_ser').find('input[index='+mode+']').prop('checked', true);
+    }
+
+    LCR.setShunt = function(new_params,name) {
+        let shunt_text = LCR.getShuntName();
+        $('#lb_shunt').empty().append(shunt_text);
+    }
+
+    LCR.setShuntMode = function(new_params,name) {
+        var shunt = CLIENT.getValue('LCR_SHUNT_MODE')
+        if (shunt !== undefined){
+            $('#LCR_SHUNT_MODE').val(shunt);
+        }
+    }
+
+    LCR.setLogIntreval = function(new_params,name) {
+        var interval = CLIENT.getValue('LOG_INTERVAL')
+        if (interval !== undefined){
+            $('#LOG_INTERVAL').val(interval);
+        }
+    }
+
+    LCR.setRun = function(new_params,name) {
+
+    }
+
+    LCR.setFreq = function(new_params,name) {
+        var freq = CLIENT.getValue('LCR_FREQ')
+        if (freq !== undefined){
+            $('#meas_freq_d').html(LCR.getFreq());
+            $('#LCR_FREQUENCY').val(freq);
+        }
+    }
+
+    LCR.setTolerance = function(new_params,name) {
+        var status = CLIENT.getValue('LCR_TOLERANCE')
+        $("#TOL_CAPTION").css('opacity', status ? 1 : 0.3 );
+        $("#TOL_VALUE").css('opacity', status ? 1 : 0.3 );
+        if (!status)
+            $("#TOL_VALUE").html('-');
+    }
+
+    LCR.setToleranceValue = function() {
+        var status = CLIENT.getValue('LCR_TOLERANCE')
+        var value = CLIENT.getValue('LCR_TOLERANCE_VALUE')
+        if (value !== undefined){
+            value = Math.round(value)
+            if (value < -100)
+                value = -100
+            if (status)
+                $("#TOL_VALUE").html(value + ' %');
+            else
+                $("#TOL_VALUE").html('-');
+        }
+    }
+
+    LCR.setRelative = function(new_params,name) {
+        var status = CLIENT.getValue('LCR_RELATIVE')
+        $("#REL_CAPTION").css('opacity', status ? 1 : 0.3 );
+        $("#REL_VALUE").css('opacity', status ? 1 : 0.3 );
+        if (!status)
+            $("#REL_VALUE").html('-');
+    }
+
+    LCR.setRelativeValue = function() {
+        var primDis = CLIENT.getValue('LCR_PRIM_DISP')
+        var status = CLIENT.getValue('LCR_RELATIVE')
+        var value = CLIENT.getValue('LCR_RELATIVE_VALUE')
+        if (value !== undefined && primDis !== undefined){
+            if (status){
+                var new_value = formatRangeAuto(value);
+                var rValue = new_value.datanew.toFixed(3)
+                var unit = LCR.getKeyByPrimDisplayUnit(primDis)
+                var valueLabel = rValue
+                var unitLabel = new_value.units+unit
+                $('#REL_VALUE').html(valueLabel + ' ' + unitLabel)
+            }
+            else
+                $("#REL_VALUE").html('-');
+        }
+    }
+
+    LCR.setExtModule = function(new_params,name) {
+        var status = CLIENT.getValue('LCR_EXTMODULE_STATUS')
+        if (status !== undefined){
+            if (status === false) {
+                $('body').removeClass('loaded');
+                $('#text_message').show();
+                $('#cont').hide();
+                LCR.module_disconnected = true;
+            } else {
+                if (LCR.module_disconnected == true) {
+                    CLIENT.startApp();
+                    LCR.module_disconnected = false;
+                    return;
+                }
+                $('#text_message').hide();
+                $('#cont').show();
+            }
+        }
+    }
+
+    LCR.setLCRz = function(new_params,name) {
+        if (LCR.getKeyByPrimDisplayIndex(CLIENT.getValue('LCR_PRIM_DISP')) === 'Z')
+            LCR.updateMainDisplay()
+    }
+
+    LCR.setLCRl = function(new_params,name) {
+        if (LCR.getKeyByPrimDisplayIndex(CLIENT.getValue('LCR_PRIM_DISP')) === 'L')
+            LCR.updateMainDisplay()
+    }
+
+    LCR.setLCRc = function(new_params,name) {
+        if (LCR.getKeyByPrimDisplayIndex(CLIENT.getValue('LCR_PRIM_DISP')) === 'C')
+            LCR.updateMainDisplay()
+    }
+
+    LCR.setLCRr = function(new_params,name) {
+        if (LCR.getKeyByPrimDisplayIndex(CLIENT.getValue('LCR_PRIM_DISP')) === 'R')
+            LCR.updateMainDisplay()
+    }
+
+    LCR.setLCRp = function(new_params,name) {
+        if (LCR.getKeyBySecDisplayIndex(CLIENT.getValue('LCR_SEC_DISP')) === 'P')
+            LCR.updateMainDisplay()
+    }
+
+    LCR.setLCRd = function(new_params,name) {
+        if (LCR.getKeyBySecDisplayIndex(CLIENT.getValue('LCR_SEC_DISP')) === 'D')
+            LCR.updateMainDisplay()
+    }
+
+    LCR.setLCRq = function(new_params,name) {
+        if (LCR.getKeyBySecDisplayIndex(CLIENT.getValue('LCR_SEC_DISP')) === 'Q')
+            LCR.updateMainDisplay()
+    }
+
+    LCR.setLCResr = function(new_params,name) {
+        if (LCR.getKeyBySecDisplayIndex(CLIENT.getValue('LCR_SEC_DISP')) === 'ESR')
+            LCR.updateMainDisplay()
+    }
+
+    LCR.controlSettingsRequest = function(new_params){
+        if (new_params['CONTROL_CONFIG_SETTINGS'].value === 2) {  // RESET_DONE
+            location.reload();
         }
 
-        LCR.params.local['in_command'] = { value: 'send_all_params' };
-        LCR.ws.send(JSON.stringify({ parameters: LCR.params.local }));
-        LCR.params.local = {};
+        if (new_params['CONTROL_CONFIG_SETTINGS'].value === 7) {  // LOAD_DONE
+            location.reload();
+        }
+    }
 
-        return true;
-    };
+    LCR.updateMinMaxAVG = function() {
+
+        function set(value,mode,key)
+        {
+            if (value !== undefined){
+                var rangeMode = CLIENT.getValue('LCR_RANGE')
+                if (rangeMode !== undefined){
+                    if (rangeMode == 0) { // AUTO mode
+                        var new_value = formatRangeAuto(value);
+                        var over = checkOverrange(new_value.datanew,key)
+                        var rValue = new_value.datanew.toFixed(3)
+                        var unit = LCR.getKeyByPrimDisplayUnit(primDis)
+                        var valueLabel = rValue
+                        var unitLabel = new_value.units+unit
+                        if (over.overrange){
+                            valueLabel = "OVER R."
+                            unitLabel = ""
+                            if (over.overrange_dir == 1) unitLabel = "↑"
+                            if (over.overrange_dir == -1) unitLabel = "↓"
+                        }
+                        $('#meas_'+mode+'_d').html(valueLabel + " " + unitLabel)
+                    } else  {
+                        var new_value = formatRangeManual(value)
+                        var unit = LCR.getKeyByPrimDisplayUnit(primDis)
+                        var valueLabel = new_value.datanew
+                        var unitLabel = new_value.units+unit
+                        if (new_value.overrange){
+                            valueLabel = "OVER R."
+                            unitLabel = ""
+                            if (new_value.overrange_dir == 1) unitLabel = "↑"
+                            if (new_value.overrange_dir == -1) unitLabel = "↓"
+                        }
+                        $('#meas_'+mode+'_d').html(valueLabel + " " + unitLabel)
+                    }
+                }
+            }
+        }
+
+        var primDis = CLIENT.getValue('LCR_PRIM_DISP')
+        var key = LCR.getKeyByPrimDisplayIndex(primDis)
+        if (key !== ''){
+            set(CLIENT.getValue('LCR_'+key+"_MIN"),'min',key)
+            set(CLIENT.getValue('LCR_'+key+"_MAX"),'max',key)
+            set(CLIENT.getValue('LCR_'+key+"_AVG"),'avg',key)
+        }
+    }
+
+    LCR.param_callbacks["LCR_PRIM_DISP"] = LCR.setPrimDisplay;
+    LCR.param_callbacks["LCR_SEC_DISP"] = LCR.setSecondDisplay;
+    LCR.param_callbacks["LCR_SHUNT"] = LCR.setShunt;
+    LCR.param_callbacks["LCR_SHUNT_MODE"] = LCR.setShuntMode;
+    LCR.param_callbacks["LCR_RUN"] = LCR.setRun;
+    LCR.param_callbacks["LCR_TOLERANCE"] = LCR.setTolerance;
+    LCR.param_callbacks["LCR_TOLERANCE_VALUE"] = LCR.setPrimDisplay;
+    LCR.param_callbacks["LCR_RELATIVE"] = LCR.setRelative;
+    LCR.param_callbacks["LCR_RELATIVE_VALUE"] = LCR.setPrimDisplay;
+    LCR.param_callbacks["LCR_EXTMODULE_STATUS"] = LCR.setExtModule;
+    LCR.param_callbacks["LCR_RANGE"] = LCR.setRange;
+    LCR.param_callbacks["LCR_RANGE_F"] = LCR.setRangeF;
+    LCR.param_callbacks["LCR_RANGE_U"] = LCR.setRangeU;
+    LCR.param_callbacks["LCR_SERIES"] = LCR.setSeries;
+
+    LCR.param_callbacks["LCR_Z"] = LCR.setLCRz;
+    LCR.param_callbacks["LCR_L"] = LCR.setLCRl;
+    LCR.param_callbacks["LCR_C"] = LCR.setLCRc;
+    LCR.param_callbacks["LCR_R"] = LCR.setLCRr;
+
+    LCR.param_callbacks["LCR_Z_MAX"] = LCR.updateMainDisplay;
+    LCR.param_callbacks["LCR_L_MAX"] = LCR.updateMainDisplay;
+    LCR.param_callbacks["LCR_C_MAX"] = LCR.updateMainDisplay;
+    LCR.param_callbacks["LCR_R_MAX"] = LCR.updateMainDisplay;
+
+    LCR.param_callbacks["LCR_Z_MIN"] = LCR.updateMainDisplay;
+    LCR.param_callbacks["LCR_L_MIN"] = LCR.updateMainDisplay;
+    LCR.param_callbacks["LCR_C_MIN"] = LCR.updateMainDisplay;
+    LCR.param_callbacks["LCR_R_MIN"] = LCR.updateMainDisplay;
+
+
+    LCR.param_callbacks["LCR_Z_AVG"] = LCR.updateMainDisplay;
+    LCR.param_callbacks["LCR_L_AVG"] = LCR.updateMainDisplay;
+    LCR.param_callbacks["LCR_C_AVG"] = LCR.updateMainDisplay;
+    LCR.param_callbacks["LCR_R_AVG"] = LCR.updateMainDisplay;
+
+    LCR.param_callbacks["LCR_P"] = LCR.setLCRp;
+    LCR.param_callbacks["LCR_D"] = LCR.setLCRd;
+    LCR.param_callbacks["LCR_Q"] = LCR.setLCRq;
+    LCR.param_callbacks["LCR_ESR"] = LCR.setLCResr;
+
+    LCR.param_callbacks["LCR_FREQ"] = LCR.setFreq;
+
+    LCR.param_callbacks["CONTROL_CONFIG_SETTINGS"] = LCR.controlSettingsRequest;
+
+    LCR.param_callbacks["LOG_INTERVAL"] = LCR.setLogIntreval;
+
 
 
 }(window.LCR = window.LCR || {}, jQuery));
 
 $(function() {
-    // $('#bt_install_i2c').click(function() {
-    //     LCR.installI2cTools();
-    // });
-
-    // $('#bt_close_app1, #bt_close_app2').click(function() {
-    //     //window.location.assign('/');
-    //     $('#modal_module_disconnected').modal('hide');
-    // });
-
-    var reloaded = $.cookie("lcr_forced_reload");
-    if (reloaded == undefined || reloaded == "false") {
-        $.cookie("lcr_forced_reload", "true");
-        window.location.reload(true);
-    }
-
-    LCR.client_id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        var r = Math.random() * 16 | 0,
-            v = c == 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-
-    $.ajax({
-        url: '/set_client_id', //Server script to process data
-        type: 'POST',
-        //Ajax events
-        //beforeSend: beforeSendHandler,
-        success: function(e) { console.log(e); },
-        error: function(e) { console.log(e); },
-        // Form data
-        data: LCR.client_id,
-        //Options to tell jQuery not to process data or worry about content-type.
-        cache: false,
-        contentType: false,
-        processData: false
-    });
-
-    LCR.checkStatus();
 
     //Header options. Prevent aggressive firefox caching
     $("html :checkbox").attr("autocomplete", "off");
@@ -657,14 +637,8 @@ $(function() {
         ev.preventDefault();
         $('#LCR_START').hide();
         $('#LCR_HOLD').css('display', 'block');
-
-        //Get value
-        var freq = parseInt($("#LCR_FREQUENCY").val());
-        LCR.params.local['LCR_FREQ'] = { value: freq };
-        var shunt = parseInt($("#LCR_SHUNT").val());
-        LCR.params.local['LCR_SHUNT'] = { value: freq };
-        LCR.params.local['LCR_RUN'] = { value: true };
-        LCR.sendParams();
+        CLIENT.parametersCache['LCR_RUN'] = { value: true };
+        CLIENT.sendParameters();
     });
 
     //Freeze LCR data
@@ -672,16 +646,8 @@ $(function() {
         ev.preventDefault();
         $('#LCR_HOLD').hide();
         $('#LCR_START').css('display', 'block');
-        LCR.params.local['LCR_RUN'] = { value: false };
-        LCR.displ_params.prim_val = $('#lb_prim_displ').text();
-        LCR.displ_params.sec_val = $('#lb_sec_displ').text();
-        LCR.sendParams();
-    });
-
-    $('#btn_c_meas').on('click', function(ev) {
-        //ev.preventDefault();
-        LCR.params.local['LCR_M_RESET'] = { value: true };
-        LCR.sendParams();
+        CLIENT.parametersCache['LCR_RUN'] = { value: false };
+        CLIENT.sendParameters();
     });
 
     /* --------------------- CALIBRATION --------------------- */
@@ -689,44 +655,39 @@ $(function() {
         ev.preventDefault();
         $('#LCR_HOLD').hide();
         $('#LCR_START').css('display', 'block');
-        LCR.params.local['LCR_RUN'] = { value: false };
-        LCR.sendParams();
+        CLIENT.parametersCache['LCR_RUN'] = { value: false };
+        CLIENT.sendParameters();
         $('#modal_calib_start').modal('show');
     });
 
     $('#bt_calib_start').on('click', function(ev) {
         ev.preventDefault();
-        LCR.params.local['LCR_CALIB_MODE'] = { value: 1 };
-        LCR.params.local['LCR_CALIBRATION'] = { value: true };
+        CLIENT.parametersCache['LCR_CALIB_MODE'] = { value: 1 };
+        CLIENT.parametersCache['LCR_CALIBRATION'] = { value: true };
         $('#modal_calib_start').modal('hide');
         $('#modal_calib_open').modal('show');
-        LCR.sendParams();
+        CLIENT.sendParameters();
     });
 
     $('#bt_calib_open').on('click', function(ev) {
         ev.preventDefault();
-        LCR.params.local['LCR_CALIB_MODE'] = { value: 2 };
-        LCR.params.local['LCR_CALIBRATION'] = { value: true };
+        CLIENT.parametersCache['LCR_CALIB_MODE'] = { value: 2 };
+        CLIENT.parametersCache['LCR_CALIBRATION'] = { value: true };
         $('#modal_calib_open').modal('hide');
         $('#modal_calib_short').modal('show');
-        LCR.sendParams();
+        CLIENT.sendParameters();
         setTimeout(function() {
             return;
         }, 100);
-        LCR.params.local['LCR_CALIB_MODE'] = { value: 0 };
-        LCR.params.local['LCR_CALIBRATION'] = { value: true };
-        LCR.sendParams();
+        CLIENT.parametersCache['LCR_CALIB_MODE'] = { value: 0 };
+        CLIENT.parametersCache['LCR_CALIBRATION'] = { value: true };
+        CLIENT.sendParameters();
     });
 
     /* ------------------------------------------------------- */
 
     //Log data
     $('#LCR_LOG').click(function(ev) {
-        /*if (LCR.toClearLog) {
-            clearTableAll();
-            LCR.toClearLog = false;
-        }*/
-
         ev.preventDefault();
         $('#LCR_LOG').hide();
         $('#LCR_LOG_STOP').css('display', 'block');
@@ -741,429 +702,188 @@ $(function() {
     });
 
     $('#LCR_FREQUENCY').change(function() {
-        $('#meas_freq_d').empty().append($('option:selected', $(this)).text());
-        LCR.params.local['LCR_FREQ'] = { value: parseInt(this.value) };
-        LCR.sendParams();
+        CLIENT.parametersCache['LCR_FREQ'] = { value: parseInt(this.value) };
+        CLIENT.sendParameters();
     });
 
-    $('#LCR_SHUNT').change(function() {
-        LCR.params.local['LCR_SHUNT'] = { value: parseInt(this.value) };
-        LCR.sendParams();
+    $('#LCR_SHUNT_MODE').change(function() {
+        CLIENT.parametersCache['LCR_SHUNT_MODE'] = { value: parseInt(this.value) };
+        CLIENT.sendParameters();
     });
 
     $('#prim_displ_choice :checkbox').click(function() {
         clearTableAll();
-        //LCR.toClearLog = true;
-
-        LCR.displ_params.prim = this.id;
-        LCR.displ_params.p_base_u = this.value;
-
-        var i;
-        var op = document.getElementById("sel_range_u").getElementsByTagName("option");
-        for (i = 0; i < 6; i++) {
-            op[i].disabled = false;
-            if (i == 3) op[i].text = this.value;
-            else op[i].text = op[i].text.substr(0, 1) + this.value;
-        }
-
-        if (this.id == 'LCR_Z' || this.id == 'LCR_R') {
-            for (i = 0; i < 3; i++) {
-                op[i].disabled = true;
-            }
-            op[3].selected = true;
-        } else if (this.id == 'LCR_C' || this.id == 'LCR_L') {
-            for (i = 3; i < 6; i++) {
-                op[i].disabled = true;
-            }
-            op[0].selected = true;
-        }
-
-        $('#meas_p_d').empty().append($(this).next('label').text());
-
-        if (this.id == 'LCR_Z') {
-            LCR.selected_meas = 1;
-        } else if (this.id == 'LCR_L') {
-            LCR.selected_meas = 2;
-        } else if (this.id == 'LCR_C') {
-            LCR.selected_meas = 3;
-        } else if (this.id == 'LCR_R') {
-            LCR.selected_meas = 4;
-        }
-
-        //Disable manual model, when switching quantities
-        LCR.params.local['LCR_RANGE'] = { value: 0 };
-        $('#cb_manual').prop("checked", false);
-        $('#cb_auto').prop("checked", true);
-
-        if (LCR.params.orig['LCR_TOLERANCE'].value != 0) {
-            LCR.params.local['LCR_TOLERANCE'] = { value: LCR.selected_meas };
-        }
-
-        if (LCR.params.orig['LCR_RELATIVE'].value != 0) {
-            LCR.params.local['LCR_RELATIVE'] = { value: LCR.selected_meas };
-        }
-
-        LCR.data_log.prim_display = this.id;
-        LCR.sendParams();
-        document.getElementById('table_p_header').innerHTML = LCR.data_log.prim_display[4];
+        var index = $(this).attr('index')
+        CLIENT.parametersCache['LCR_PRIM_DISP'] = { value: index };
+        CLIENT.sendParameters();
     });
 
     $('#sec_displ_choice :checkbox').click(function() {
-        //LCR.toClearLog = true;
         clearTableAll();
-
-        LCR.displ_params.sec = this.id;
-        LCR.displ_params.s_base_u = this.value;
-
-        LCR.data_log.sec_display = this.id;
-
-        $('#meas_s_d').empty().append($(this).next('label').text());
-        document.getElementById('table_s_header').innerHTML = LCR.data_log.sec_display[4];
+        var index = $(this).attr('index')
+        CLIENT.parametersCache['LCR_SEC_DISP'] = { value: index };
+        CLIENT.sendParameters();
     });
 
     $('#LCR_LOG').on('click', function() {
-        document.getElementById('table_p_header').innerHTML = LCR.data_log.prim_display[4];
-        document.getElementById('table_s_header').innerHTML = LCR.data_log.sec_display[4];
         LCR.data_log.save_data = true;
     });
 
     $('#cb_tol').change(function() {
-
-        if (!LCR.secondary_meas.apply_tolerance) {
-            LCR.secondary_meas.apply_relative = false;
-            LCR.params.local['LCR_RELATIVE'] = { value: 0 };
-            $('#cb_rel').prop("checked", false);
-            LCR.sendParams();
-            LCR.secondary_meas.apply_tolerance = true;
-            LCR.params.local['LCR_TOLERANCE'] = { value: LCR.selected_meas };
-            $('#lb_prim_displ').empty().append("100%");
-            $('#lb_prim_displ_units').empty();
-            $('#lb_sec_displ_units').empty();
-            $('#rec_image').css('display', 'block');
-            $('#rec_lb').css('display', 'block');
-        } else {
-            LCR.secondary_meas.apply_tolerance = false;
-            LCR.params.local['LCR_TOLERANCE'] = { value: 0 };
-            $('#rec_image').css('display', 'none');
-            $('#rec_lb').css('display', 'none');
-            $('#cb_tol').prop("checked", false);
-        }
-        LCR.sendParams();
+        CLIENT.parametersCache['LCR_TOLERANCE'] = { value:  $( this ).is( ":checked" )  };
+        CLIENT.sendParameters();
     });
 
     $('#cb_rel').change(function() {
-        $('#cb_tol').prop("checked", false);
-        LCR.secondary_meas.apply_tolerance = false;
-        $('#rec_image').css('display', 'none');
-        $('#rec_lb').css('display', 'none');
-
-        if (!LCR.secondary_meas.apply_relative) {
-            LCR.secondary_meas.apply_relative = true;
-            LCR.params.local['LCR_RELATIVE'] = { value: LCR.selected_meas };
-        } else {
-            LCR.secondary_meas.apply_relative = false;
-            LCR.params.local['LCR_RELATIVE'] = { value: 0 };
-            $('#cb_rel').prop("checked", false);
-        }
-        LCR.sendParams();
+        CLIENT.parametersCache['LCR_RELATIVE'] = { value: $( this ).is( ":checked" ) };
+        CLIENT.sendParameters();
     });
 
     $('#cb_ser').click(function() {
-        LCR.params.local['LCR_SERIES'] = { value: true };
-        LCR.sendParams();
+        CLIENT.parametersCache['LCR_SERIES'] = { value: 1 };
+        CLIENT.sendParameters();
     });
 
     $('#cb_paralel').click(function() {
-        LCR.params.local['LCR_SERIES'] = { value: false };
-        LCR.sendParams();
+        CLIENT.parametersCache['LCR_SERIES'] = { value: 0 };
+        CLIENT.sendParameters();
     });
 
     $('#cb_manual').click(function() {
-
-        LCR.params.local['LCR_RANGE'] = {
-            value: LCR.selected_meas
-        }
-
-        LCR.params.local['LCR_RANGE_F'] = {
-            value: $('#sel_range_f :selected').val()
-        }
-
-        LCR.params.local['LCR_RANGE_U'] = {
-            value: $('#sel_range_u :selected').val()
-        }
-
-        //LCR.displ_params.p_base_u = $('#sel_range_u :selected').text();
-        $('#lb_prim_displ_units').empty().append($('#sel_range_u option:selected').text());
-        $('#meas_mode_d').empty().append('Manual');
-        LCR.sendParams();
+        CLIENT.parametersCache['LCR_RANGE'] = { value: 1 }
+        CLIENT.parametersCache['LCR_RANGE_F'] = { value: $('#sel_range_f :selected').val() }
+        CLIENT.parametersCache['LCR_RANGE_U'] = { value: $('#sel_range_u :selected').val() }
+        CLIENT.sendParameters();
     });
 
     $('#cb_auto').click(function() {
-        LCR.params.local['LCR_RANGE'] = { value: 0 };
-        $('#meas_mode_d').empty().append('Auto');
-        LCR.sendParams();
+        CLIENT.parametersCache['LCR_RANGE'] = { value: 0 };
+        CLIENT.sendParameters();
     });
 
     $('#sel_range_u').change(function() {
-        if (LCR.params.orig['LCR_RANGE'].value != 0) {
-            //LCR.displ_params.p_base_u = $('#sel_range_u :selected').text();
-            LCR.params.local['LCR_RANGE_U'] = { value: this.value };
-            LCR.sendParams();
+        if (CLIENT.params.orig['LCR_RANGE'].value != 0) {
+            CLIENT.parametersCache['LCR_RANGE_U'] = { value: this.value };
+            CLIENT.sendParameters();
         }
     });
 
     $('#sel_range_f').change(function() {
-        LCR.params.local['LCR_RANGE_F'] = { value: this.value };
-        LCR.sendParams();
+        CLIENT.parametersCache['LCR_RANGE_F'] = { value: this.value };
+        CLIENT.sendParameters();
     });
 
+    $('#reset_settings').click(function() {
+        CLIENT.parametersCache['CONTROL_CONFIG_SETTINGS'] = { value: 1 }; // REQUEST_RESET
+        CLIENT.sendParameters();
+    });
+
+    $('#CLEAR_MIN_MAX').click(function() {
+        $(this).rotate(360)
+        CLIENT.parametersCache['LCR_M_RESET'] = { value: true };
+        CLIENT.sendParameters();
+    });
+
+    $('#LOG_INTERVAL').change(function() {
+        CLIENT.parametersCache['LOG_INTERVAL'] = { value: parseInt(this.value) };
+        CLIENT.sendParameters();
+    });
 
     // Init help
     Help.init(helpListLCR);
     Help.setState("idle");
 
-    // Everything prepared, start application
-    LCR.startApp();
-    //LCR.checkAll();
 });
 
-//TODO: This solution is ugly as fuck. Make it better!
-function formatRangeAuto(meas_param, display, precision, meas_data) {
 
-
-    var data = 0;
-    var sub_idx = 1;
-    var units = "";
-    var base = "";
-    var inverse = 1;
-
-    if (meas_data < 0) {
-        meas_data = (Math.abs(meas_data));
-        inverse = -1;
-    } else {
-        meas_data = (Math.abs(meas_data));
-    }
-
-    if (display == 1 && meas_data != 0) {
-        base = LCR.displ_params.p_base_u;
-    } else if (display == 2 && meas_data != 0) {
-        base = LCR.displ_params.s_base_u;
-    }
-
-    if (precision != null && LCR.displ_params.prim == "LCR_C") {
-        meas_data = meas_data * Math.pow(10, -precision);
-        if (meas_data > 0.1) {
-            meas_data = "OVER R.";
-        }
-    }
-
-
-    if (meas_data < 0.00000000000010) {
-        data = "OVER R.";
-    } else if (meas_data > 0.00000000000010 && meas_data <= 0.00000000999990) {
-
-        data = (meas_data * Math.pow(10, 9)).toFixed(4);
-        units = "n" + base;
-
-    } else if (meas_data > 0.00000000999990 && meas_data <= 0.00000009999900) {
-
-        data = (meas_data * Math.pow(10, 9)).toFixed(3);
-        units = "n" + base;
-
-    } else if (meas_data > 0.00000009999900 && meas_data <= 0.00000099999000) {
-
-        data = (meas_data * Math.pow(10, 9)).toFixed(2);
-        units = "n" + base;
-
-    } else if (meas_data > 0.000000999990 && meas_data <= 0.00000999990) {
-
-        data = (meas_data * Math.pow(10, 6)).toFixed(4);
-        units = "u" + base;
-
-    } else if (meas_data > 0.000009999900 && meas_data <= 0.00009999900) {
-
-        data = (meas_data * Math.pow(10, 6)).toFixed(3);
-        units = "u" + base;
-
-    } else if (meas_data > 0.000099999000 && meas_data <= 0.00099999000) {
-
-        data = (meas_data * Math.pow(10, 6)).toFixed(2);
-        units = "u" + base;
-
-    } else if (meas_data > 0.000999990 && meas_data <= 0.00999990) {
-
-        data = (meas_data * Math.pow(10, 3)).toFixed(4);
-        units = "m" + base;
-
-    } else if (meas_data > 0.009999900 && meas_data <= 0.09999900) {
-
-        data = (meas_data * Math.pow(10, 3)).toFixed(3);
-        units = "m" + base;
-    } else if (meas_data > 0.099999000 && meas_data <= 0.99999000) {
-
-        data = (meas_data * Math.pow(10, 3)).toFixed(2);
-        units = "m" + base;
-
-    } else if (meas_data > 0.999990 && meas_data <= 9.99990) {
-
-        data = meas_data.toFixed(4);
-        units = base;
-
-    } else if (meas_data > 9.99990 && meas_data <= 99.9990) {
-
-        data = meas_data.toFixed(3);
-        units = base;
-
-    } else if (meas_data > 99.9990 && meas_data <= 999.990) {
-
-        data = meas_data.toFixed(2);
-        units = base;
-
-    } else if (meas_data > 999.990 && meas_data <= 9999.90) {
-
-        data = meas_data.toFixed(1);
-        units = base;
-
-    } else if (meas_data <= 99999.0 && meas_data > 9999.90) {
-
-        data = (meas_data / Math.pow(10, 3)).toFixed(3);
-        units = "k" + base;
-
-    } else if (meas_data <= 999990.0 && meas_data > 99999.0) {
-
-        data = (meas_data / Math.pow(10, 3)).toFixed(2);
-        units = "k" + base;
-
-    } else if (meas_data <= 9999900.0 && 999990.0) {
-
-        data = (meas_data / Math.pow(10, 6)).toFixed(1);
-        units = "M" + base;
-
-    } else if (meas_data > 9999900.0) {
-
-        data = "OVER R.";
-        units = "";
-    }
-
-    //If we are formatting log data, we do not want to change the main measurment
-    if (meas_param == true) {
-
-        if (data == "OVER R.") {
-            return data;
-        }
-
-        return (data * inverse + units);
-    }
-
-    switch (display) {
+function formatRangeAuto(meas_data) {
+    if (meas_data == 0) return { data:0, datanew:0, units:''}
+    var l = Math.log10(Math.abs(meas_data)) / 3
+    var z = Math.floor( l + (Math.abs(l - Math.round(l)) < 0.05 ? 0.05 : 0))
+    z = Math.min(Math.max(z,-4),2)
+    var devider = Math.pow(1000,z)
+    var new_meas_data = meas_data / devider
+    var unit = ''
+    switch(z){
+        case -4:
+            unit = 'p'
+            break;
+        case -3:
+            unit = 'n'
+            break;
+        case -2:
+            unit = 'µ'
+            break;
+        case -1:
+            unit = 'm'
+            break;
+        case 0:
+            unit = ''
+            break;
         case 1:
-            if (data == "OVER R.") {
-                LCR.displ_params.prim_val = data;
-                LCR.displ_params.p_units = "";
-                break;
-            }
-            LCR.displ_params.prim_val = data * inverse;
-            LCR.displ_params.p_units = units;
+            unit = 'k'
             break;
         case 2:
-            if (data == "OVER R.") {
-                LCR.displ_params.sec_val = data;
-                LCR.displ_params.s_units = "";
-                break;
-            }
-
-            LCR.displ_params.sec_val = data * inverse;
-            LCR.displ_params.s_units = units;
+            unit = 'M'
             break;
-    }
-
-    return 0;
+        }
+    return  { data:meas_data, datanew:new_meas_data, units:unit}
 }
 
-function formatRangeManual(precision, format, power, data) {
+function checkOverrange(value, param) {
+    var min = 0
+    var max = 1e9
+    var over = false
+    var overdir = 0
+    if (param == "P"){
+        min = -180
+        max = 180
+    }
+    if (value < min) {
+        over = true
+        overdir = -1
+    }
+    if (value > max) {
+        over = true
+        overdir = 1
+    }
+    return  { datanew:value, overrange: over, overrange_dir: overdir}
+}
+
+function formatRangeManual(data) {
+
+    var format = CLIENT.getValue('LCR_RANGE_F')
+    var power = CLIENT.getValue('LCR_RANGE_U')
+
+    if (format === undefined || power === undefined) return { data:0, datanew:0, units:'', overrange: true, overrange_dir:0}
 
     var suffixes = ['n', 'u', 'm', '', 'k', 'M'];
-    var formats = [1.0000, 10.000, 100.00, 1000.0];
-    //Direct formats mirror table
-    var limits = [9.999, 99.999, 999.99, 9999.9];
-    var format_size = 5;
-
-    if (precision != null && LCR.displ_params.prim == "LCR_C") {
-        data = data * Math.pow(10, -precision);
-    }
-
-    var i;
-    var c = 0;
-    for (i = 9; i > -7; i -= 3) {
-        if (c == power) {
-            data = (data * Math.pow(10, i));
-            break;
-        }
-        c++;
-    }
+    var limits = [10.0, 100.0, 1000.0, 10000.0];
+    var coff = 1e9 / Math.pow(1000,power);
+    var datanew = data * coff
 
     var limit = limits[parseInt(format)];
-    if (data < 0 || (data > limit)) {
-        LCR.displ_params.prim_val = "OVER R.";
-        LCR.displ_params.p_units = "";
-        return;
+    if (datanew > limit) {
+        return { data:data, datanew:datanew, units:'', overrange: true,overrange_dir:1};
     }
 
-    var string_data = data.toString();
-    var formatted_data = "";
-    var flt_idx = parseInt(format) + 1;
-    var string_flt;
-
-    //Divide whole and decimal part.
-    for (var j = 0; j < string_data.length; j++) {
-        if (string_data[j] == '.') {
-            string_flt = j;
-            break;
-        }
+    if (datanew < 0) {
+        return { data:data, datanew:datanew, units:'', overrange: true,overrange_dir:-1};
     }
 
-    var w = string_data.substr(0, j);
-    console.log("W: " + w);
-    var d = string_data.substr(j + 1, string_data.length - 1);
-    console.log("D: " + d);
-    var indicies = [0, 0, 0, 0, 0, 0];
+    var iFormat = format + 1
+    var dFormat = 5 - iFormat
 
-    for (var k = 0; k < w.length; k++) {
-        indicies[flt_idx - 1 - k] = w[w.length - 1 - k];
-    }
+    var formatFunc = new Intl.NumberFormat('en-US', {
+        minimumIntegerDigits: iFormat,
+        minimumFractionDigits: dFormat,
+        maximumFractionDigits:dFormat,
+        roundingMode:"trunc"
+    });
 
-    for (var n = 0; n < (4 - parseInt(format)); n++) {
-        indicies[n + flt_idx + 1] = d[n];
-    }
+    var formatedData = formatFunc.format(datanew).replaceAll(',','')
+    return { data:data, datanew:formatedData, units:suffixes[power], overrange: false, overrange_dir:0};
 
-    indicies[flt_idx] = '.';
-
-    console.log(indicies);
-    console.log(data);
-
-    for (var m = 0; m < 6; m++) {
-        if (m == 0) {
-            formatted_data += indicies[m];
-            continue;
-        }
-
-        //if(m < flt_idx && indicies[m] == 0){
-        //  continue;
-        //}
-        if (indicies[m] == undefined) formatted_data += '0';
-        else formatted_data += indicies[m];
-    }
-
-    if (parseFloat(formatted_data) == 0) {
-        LCR.displ_params.prim_val = "OVER R.";
-        LCR.displ_params.p_units = "";
-        return;
-    }
-
-    LCR.displ_params.prim_val = formatted_data;
-    LCR.displ_params.p_units = suffixes[c] + LCR.displ_params.p_base_u;
-
-    return data;
 }
 
 function clearRowTable() {
@@ -1178,5 +898,9 @@ function clearTableAll() {
 function export_table() {
     //var csv = $("#m_table").table2CSV({delivery:'value'});
     //window.location.href = 'data:application/csv;charset=UTF-8,' + encodeURIComponent(csv);
-    $('#m_table').table2CSV();
+    var csv = $('#m_table').table2CSV()
+    const link = document.createElement("a");
+    link.href = 'data:text/csv;charset=UTF-8,' + encodeURIComponent(csv)
+    link.download = new Date().toJSON().slice(0,22) + ".csv";
+    link.click();
 }

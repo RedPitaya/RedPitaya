@@ -111,40 +111,12 @@ int lcrApp_LcrGetMeasSeries(bool *series){
 	return lcr_GetMeasSeries(series);
 }
 
-int lcrApp_LcrSetMeasTolerance(int tolerance){
-	return lcr_SetMeasTolerance(tolerance);
-}
-
-int lcrApp_LcrGetMeasTolerance(int *tolerance){
-	return lcr_GetMeasTolerance(tolerance);
-}
-
-int lcrApp_LcrSetMeasRangeMode(int range){
-	return lcr_SetMeasRangeMode(range);
-}
-
-int lcrApp_LcrGetMeasRangeMode(int *range_mode){
-	return lcr_GetMeasRangeMode(range_mode);
-}
-
-int lcrApp_LcrSetMeasRangeFormat(int format){
-	return lcr_SetRangeFormat(format);
-}
-
-int lcrApp_LcrGetMeasRangeFormat(int *format){
-	return lcr_GetRangeFormat(format);
-}
-
-int lcrApp_LcrSetMeasRangeUnits(int units){
-	return lcr_SetRangeUnits(units);
-}
-
-int lcrApp_LcrGetMeasRangeUnits(int *units){
-	return lcr_GetRangeUnits(units);
-}
-
 int lcrApp_LcrCheckExtensionModuleConnection(bool _muteWarnings) {
     return lcr_CheckModuleConnection(_muteWarnings);
+}
+
+int lcrApp_LcrIsModuleConnected(bool *state){
+    return lcr_IsModuleConnected(state);
 }
 
 const char* lcrApp_LcrGetError(lcr_error_t errorCode){
@@ -157,11 +129,15 @@ const char* lcrApp_LcrGetError(lcr_error_t errorCode){
         case RP_LCR_HW_MISSING_DEVICE:
             return "LCR extension not connected";
         case RP_LCR_HW_ERROR:
-            return "Undefined error";
+            return "LCR undefined hardware error";
         case RP_LCR_HW_ERROR_DETECT:
             return "LCR extension detection error";
         case RP_LCR_ERROR_INVALID_VALUE:
             return "Invalid value";
+        case RP_LCR_UERROR:
+            return "LCR undefined error";
+        case RP_LCR_NOT_STARTED:
+            return "Api is not running";
         default:
             break;
     }

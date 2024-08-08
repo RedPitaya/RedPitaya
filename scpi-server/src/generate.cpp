@@ -23,6 +23,7 @@
 #include "rp.h"
 #include "rp_hw-profiles.h"
 #include "common.h"
+#include "sweep.h"
 #include "scpi/parser.h"
 #include "scpi/units.h"
 
@@ -63,6 +64,7 @@ const scpi_choice_def_t scpi_RpGenLoad[] = {
 };
 
 scpi_result_t RP_GenReset(scpi_t *context) {
+    RP_GenSweepDefault(context);
     auto result = rp_GenReset();
     if (RP_OK != result) {
         RP_LOG_CRIT("Failed to reset Red Pitaya generate: %s", rp_GetError(result));
@@ -370,7 +372,6 @@ scpi_result_t RP_GenArbitraryWaveForm(scpi_t *context) {
         SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Failed to arbitrary waveform data parameter.");
         return SCPI_RES_ERR;
     }
-
     auto result = rp_GenArbWaveform(channel, buffer, size);
     if(result != RP_OK){
         RP_LOG_CRIT("Failed to set arbitrary waveform data: %s", rp_GetError(result));
@@ -384,19 +385,19 @@ scpi_result_t RP_GenArbitraryWaveFormQ(scpi_t *context) {
 
     rp_channel_t channel;
     float buffer[DAC_BUFFER_SIZE];
-    uint32_t size;
+    uint32_t size = DAC_BUFFER_SIZE;
 
     if (RP_ParseChArgvDAC(context, &channel) != RP_OK){
         return SCPI_RES_ERR;
     }
-
-    auto result = rp_GenGetArbWaveform(channel, buffer, &size);
+    uint32_t ret_size = 0;
+    auto result = rp_GenGetArbWaveform(channel, buffer, size, &ret_size);
     if(result != RP_OK){
         RP_LOG_CRIT("Failed to get arbitrary waveform data: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
-    SCPI_ResultBufferFloat(context, buffer, size);
+    SCPI_ResultBufferFloat(context, buffer, ret_size);
     RP_LOG_INFO("%s",rp_GetError(result))
     return SCPI_RES_OK;
 }
@@ -711,7 +712,7 @@ scpi_result_t RP_GenTriggerSourceQ(scpi_t *context) {
 
     int32_t trig_n = trig_src;
     if(!SCPI_ChoiceToName(scpi_RpGenTrig, trig_n, &trig_name)){
-        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Missing first parameter.");
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER,"Parameter conversion error.");
         return SCPI_RES_ERR;
     }
 

@@ -6,8 +6,8 @@ var startFreqChange = function(event){
     else if (parseInt($("#BA_START_FREQ").val()) < 1)
         $("#BA_START_FREQ").val(1);
 
-    BA.parametersCache["BA_START_FREQ"] = { value: $("#BA_START_FREQ").val() };
-	BA.sendParameters();
+    CLIENT.parametersCache["BA_START_FREQ"] = { value: $("#BA_START_FREQ").val() };
+	CLIENT.sendParameters();
 }
 
 
@@ -18,8 +18,8 @@ var endFreqChange = function(event){
     else if (parseInt($("#BA_END_FREQ").val()) > 125e6)
         $("#BA_END_FREQ").val(125e6);
 
-	BA.parametersCache["BA_END_FREQ"] = { value: $("#BA_END_FREQ").val() };
-	BA.sendParameters();
+	CLIENT.parametersCache["BA_END_FREQ"] = { value: $("#BA_END_FREQ").val() };
+	CLIENT.sendParameters();
 }
 
 
@@ -30,8 +30,8 @@ var stepsChange = function(event){
     else if (parseInt($("#BA_STEPS").val()) > (parseInt($("#BA_END_FREQ").val()) - parseInt($("#BA_START_FREQ").val())))
         $("#BA_STEPS").val((parseInt($("#BA_END_FREQ").val()) - parseInt($("#BA_START_FREQ").val())));
 
-	BA.parametersCache["BA_STEPS"] = { value: $("#BA_STEPS").val() };
-	BA.sendParameters();
+	CLIENT.parametersCache["BA_STEPS"] = { value: $("#BA_STEPS").val() };
+	CLIENT.sendParameters();
 }
 
 //Periods number changed
@@ -40,8 +40,8 @@ var periodsNumberChange = function(event){
         $("#BA_PERIODS_NUMBER").val(24);
     else if ($("#BA_PERIODS_NUMBER").val() < 1)
         $("#BA_PERIODS_NUMBER").val(1);
-	BA.parametersCache["BA_PERIODS_NUMBER"] = { value: $("#BA_PERIODS_NUMBER").val() };
-	BA.sendParameters();
+	CLIENT.parametersCache["BA_PERIODS_NUMBER"] = { value: $("#BA_PERIODS_NUMBER").val() };
+	CLIENT.sendParameters();
 }
 
 //Input data threshold changed
@@ -51,8 +51,8 @@ var inputThresholdChange = function(event){
     else if ($("#BA_INPUT_THRESHOLD").val() < 0)
         $("#BA_INPUT_THRESHOLD").val(0);
 	BA.input_threshold = parseFloat($("#BA_INPUT_THRESHOLD").val());
-	BA.parametersCache["BA_INPUT_THRESHOLD"] = { value: $("#BA_INPUT_THRESHOLD").val() };
-	BA.sendParameters();
+	CLIENT.parametersCache["BA_INPUT_THRESHOLD"] = { value: $("#BA_INPUT_THRESHOLD").val() };
+	CLIENT.sendParameters();
 }
 
 //Averaging changed
@@ -62,15 +62,16 @@ var averChange = function(event){
     else if ($("#BA_AVERAGING").val() < 1)
         $("#BA_AVERAGING").val(1);
 
-	BA.parametersCache["BA_AVERAGING"] = { value: $("#BA_AVERAGING").val() };
-	BA.sendParameters();
+	CLIENT.parametersCache["BA_AVERAGING"] = { value: $("#BA_AVERAGING").val() };
+	CLIENT.sendParameters();
 }
 
 
 //Amplitude changed
 var amplChange = function(event){
-    if (parseFloat($("#BA_AMPLITUDE").val()) + parseFloat($("#BA_DC_BIAS").val()) > 1.0)
-        $("#BA_AMPLITUDE").val(1.0 - parseFloat($("#BA_DC_BIAS").val()));
+	var bias = parseFloat($("#BA_DC_BIAS").val());
+    if (parseFloat($("#BA_AMPLITUDE").val()) + Math.abs(bias) > 1.0)
+        $("#BA_AMPLITUDE").val(1.0 - Math.abs(bias));
     else if (parseFloat($("#BA_AMPLITUDE").val()) < 0.001)
         $("#BA_AMPLITUDE").val(0);
 
@@ -78,92 +79,126 @@ var amplChange = function(event){
 	if ($("#BA_AMPLITUDE").val().length > 4)
 		$("#BA_AMPLITUDE").val(parseFloat($("#BA_AMPLITUDE").val()).toFixed(2));
 
-	BA.parametersCache["BA_AMPLITUDE"] = { value: $("#BA_AMPLITUDE").val() };
-	BA.sendParameters();
+	CLIENT.parametersCache["BA_AMPLITUDE"] = { value: $("#BA_AMPLITUDE").val() };
+	CLIENT.sendParameters();
 }
 
 
 //DC bias changed
 var biasDCChange = function(event){
-    if (parseFloat($("#BA_AMPLITUDE").val()) + Math.abs(parseFloat($("#BA_DC_BIAS").val())) > 1.0)
-        $("#BA_DC_BIAS").val(1.0 - parseFloat($("#BA_AMPLITUDE").val()));
-    else if (parseFloat($("#BA_DC_BIAS").val()) < -1)
-        $("#BA_DC_BIAS").val(-1);
+    var bias = parseFloat($("#BA_DC_BIAS").val());
+	if (parseFloat($("#BA_AMPLITUDE").val()) + Math.abs(bias) > 1.0){
+		if (bias > 0)
+			$("#BA_DC_BIAS").val(1.0 - parseFloat($("#BA_AMPLITUDE").val()));
+		if (bias < 0)
+			$("#BA_DC_BIAS").val(-1.0 + parseFloat($("#BA_AMPLITUDE").val()));
+	}
 
 	if ($("#BA_DC_BIAS").val().length > 5)
 		$("#BA_DC_BIAS").val(parseFloat($("#BA_DC_BIAS").val()).toFixed(2));
 
-	BA.parametersCache["BA_DC_BIAS"] = { value: $("#BA_DC_BIAS").val() };
-	BA.sendParameters();
+	CLIENT.parametersCache["BA_DC_BIAS"] = { value: $("#BA_DC_BIAS").val() };
+	CLIENT.sendParameters();
 }
 
+var probeChange = function(event){
+	CLIENT.parametersCache["BA_PROBE"] = { value: $("#BA_PROBE").val() };
+	CLIENT.sendParameters();
+}
 
 //Min gain changed
 var gainMinChange = function(event){
-	BA.parametersCache["BA_GAIN_MIN"] = { value: $("#BA_GAIN_MIN").val() };
+	CLIENT.parametersCache["BA_GAIN_MIN"] = { value: $("#BA_GAIN_MIN").val() };
 	BA.graphCache.plot.getAxes().yaxis.options.min = parseInt($("#BA_GAIN_MIN").val() ) * 1;
     BA.graphCache.plot.setupGrid();
     BA.graphCache.plot.draw();
-	BA.sendParameters();
+	CLIENT.sendParameters();
 }
 
 
 //Max gain changed
 var gainMaxChange = function(event){
-	BA.parametersCache["BA_GAIN_MAX"] = { value: $("#BA_GAIN_MAX").val() };
+	CLIENT.parametersCache["BA_GAIN_MAX"] = { value: $("#BA_GAIN_MAX").val() };
 	BA.graphCache.plot.getAxes().yaxis.options.max = parseInt($("#BA_GAIN_MAX").val() ) * 1;
 	BA.graphCache.plot.setupGrid();
     BA.graphCache.plot.draw();
-	BA.sendParameters();
+	CLIENT.sendParameters();
 }
 
 
 //Min phase changed
 var phaseMinChange = function(event){
-	BA.parametersCache["BA_PHASE_MIN"] = { value: $("#BA_PHASE_MIN").val() };
+	CLIENT.parametersCache["BA_PHASE_MIN"] = { value: $("#BA_PHASE_MIN").val() };
 	BA.graphCache.plot.getAxes().y2axis.options.min = parseInt($("#BA_PHASE_MIN").val() ) * 1;
 	BA.graphCache.plot.setupGrid();
     BA.graphCache.plot.draw();
-	BA.sendParameters();
+	CLIENT.sendParameters();
 }
 
 
 //Max phase changed
 var phaseMaxChange = function(event){
-	BA.parametersCache["BA_PHASE_MAX"] = { value: $("#BA_PHASE_MAX").val() };
+	CLIENT.parametersCache["BA_PHASE_MAX"] = { value: $("#BA_PHASE_MAX").val() };
 	BA.graphCache.plot.getAxes().y2axis.options.max = parseInt($("#BA_PHASE_MAX").val() ) * 1;
 	BA.graphCache.plot.setupGrid();
     BA.graphCache.plot.draw();
-	BA.sendParameters();
+	CLIENT.sendParameters();
 }
 
 
 //Scale button 0 set
 var scale0Click = function(event){
-	BA.parametersCache["BA_SCALE"] = { value: false };
-	BA.sendParameters();
+	CLIENT.parametersCache["BA_SCALE"] = { value: false };
+	CLIENT.sendParameters();
 	BA.scale = false;
 }
 
 
 //Scale button 1 set
 var scale1Click = function(event){
-	BA.parametersCache["BA_SCALE"] = { value: true };
-	BA.sendParameters();
+	CLIENT.parametersCache["BA_SCALE"] = { value: true };
+	CLIENT.sendParameters();
 	BA.scale = true;
 }
 
 //Logic button 0 set
 var logic0Click = function(event){
-	BA.parametersCache["BA_LOGIC_MODE"] = { value: 0 };
-	BA.sendParameters();
+	CLIENT.parametersCache["BA_LOGIC_MODE"] = { value: 0 };
+	CLIENT.sendParameters();
 }
 
 
 //Logic button 1 set
 var logic1Click = function(event){
-	BA.parametersCache["BA_LOGIC_MODE"] = { value: 1 };
-	BA.sendParameters();
+	CLIENT.parametersCache["BA_LOGIC_MODE"] = { value: 1 };
+	CLIENT.sendParameters();
+}
+
+
+//Gain button 0 set
+var gain0Click = function(event){
+	CLIENT.parametersCache["BA_IN_GAIN"] = { value: 0 };
+	CLIENT.sendParameters();
+}
+
+
+//Gain button 1 set
+var gain1Click = function(event){
+	CLIENT.parametersCache["BA_IN_GAIN"] = { value: 1 };
+	CLIENT.sendParameters();
+}
+
+//ACDC button 0 set
+var acdc0Click = function(event){
+	CLIENT.parametersCache["BA_IN_AC_DC"] = { value: 0 };
+	CLIENT.sendParameters();
+}
+
+
+//ACDC button 1 set
+var acdc1Click = function(event){
+	CLIENT.parametersCache["BA_IN_AC_DC"] = { value: 1 };
+	CLIENT.sendParameters();
 }
 
 
@@ -176,8 +211,8 @@ var calibrateClick = function(event){
     $('body').removeClass('loaded');
     BA.curGraphScale = BA.scale;
     BA.calibrating = true;
-    BA.parametersCache["BA_STATUS"] = { value: 2 };
-    BA.sendParameters();
+    CLIENT.parametersCache["BA_STATUS"] = { value: 2 };
+    CLIENT.sendParameters();
 }
 
 
@@ -185,9 +220,9 @@ var calibrateClick = function(event){
 var calibrateResetClick = function(event){
 	if (BA.running)
 		return;
-    BA.parametersCache["BA_STATUS"] = { value: 3 };
+    CLIENT.parametersCache["BA_STATUS"] = { value: 3 };
     $('#calibration_dialog').modal('hide');
-	BA.sendParameters();
+	CLIENT.sendParameters();
 }
 
 
@@ -206,6 +241,7 @@ changeCallbacks["BA_GAIN_MIN"] = gainMinChange;
 changeCallbacks["BA_GAIN_MAX"] = gainMaxChange;
 changeCallbacks["BA_PHASE_MIN"] = phaseMinChange;
 changeCallbacks["BA_PHASE_MAX"] = phaseMaxChange;
+changeCallbacks["BA_PROBE"] = probeChange;
 
 
 var clickCallbacks={}
@@ -216,6 +252,10 @@ clickCallbacks["BA_LOGIC_MODE0"] = logic0Click;
 clickCallbacks["BA_LOGIC_MODE1"] = logic1Click;
 clickCallbacks["calib_btn"] = calibrateClick;
 clickCallbacks["calib_reset_btn"] = calibrateResetClick;
+clickCallbacks["BA_IN_GAIN"] = gain0Click;
+clickCallbacks["BA_IN_GAIN1"] = gain1Click;
+clickCallbacks["BA_IN_AC_DC"] = acdc0Click;
+clickCallbacks["BA_IN_AC_DC1"] = acdc1Click;
 
 
 

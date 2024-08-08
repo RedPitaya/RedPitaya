@@ -4,8 +4,6 @@
 #include <math.h>
 #include <algorithm>
 #include <istream>
-#include <iterator>
-#include <math.h>
 
 #include "main.h"
 #include "settings.h"
@@ -22,28 +20,28 @@
 #include "sig_gen_logic.h"
 #include "osc_logic.h"
 #include "math_logic.h"
+#include "x_y_logic.h"
 #include "web/rp_system.h"
-
-
-/* -------------------------  debug parameter  --------------------------------- */
-CIntParameter signalPeriod("DEBUG_SIGNAL_PERIOD", CBaseParameter::RW, 20, 0, 1, 10000);
-CIntParameter parameterPeriod("DEBUG_PARAM_PERIOD", CBaseParameter::RW, 50, 0, 1, 10000);
-CBooleanParameter digitalLoop("DIGITAL_LOOP", CBaseParameter::RW, false, 0);
+#include "web/rp_client.h"
 
 
 
-/***************************************************************************************
-*                                   SYSTEM STATUS                                      *
-****************************************************************************************/
-// long double cpu_values[4] = {0, 0, 0, 0}; /* reading only user, nice, system, idle */
-// CFloatParameter cpuLoad("CPU_LOAD", CBaseParameter::RW, 0, 0, 0, 100);
+enum controlSettings{
+    NONE            =   0,
+    REQUEST_RESET   =   1,
+    RESET_DONE      =   2,
+    REQUEST_LIST    =   3,
+    SAVE            =   4,
+    DELETE          =   5,
+    LOAD            =   6,
+    LOAD_DONE       =   7
+};
 
-// CFloatParameter memoryTotal("TOTAL_RAM", CBaseParameter::RW, 0, 0, 0, 1e15);
-// CFloatParameter memoryFree ("FREE_RAM", CBaseParameter::RW, 0, 0, 0, 1e15);
 CStringParameter redpitaya_model("RP_MODEL_STR", CBaseParameter::RO, getModelName(), 0);
 
-CIntParameter resetSettings("RESET_CONFIG_SETTINGS", CBaseParameter::RW, 0, 0, 0, 10);
-
+CIntParameter controlSettings("CONTROL_CONFIG_SETTINGS", CBaseParameter::RW, 0, 0, 0, 10);
+CStringParameter fileSettings("FILE_SATTINGS", CBaseParameter::RW, "", 0);
+CStringParameter listFileSettings("LIST_FILE_SATTINGS", CBaseParameter::RW, "", 0);
 
 CFloatParameter slow_dac0 ("OSC_SLOW_OUT_1", CBaseParameter::RW, 0, 0, 0, rp_HPGetSlowDACFullScaleOrDefault(0),CONFIG_VAR);
 CFloatParameter slow_dac1 ("OSC_SLOW_OUT_2", CBaseParameter::RW, 0, 0, 0, rp_HPGetSlowDACFullScaleOrDefault(1),CONFIG_VAR);
@@ -57,7 +55,13 @@ const std::vector<std::string> g_savedParams = {"OSC_CH1_IN_GAIN","OSC_CH2_IN_GA
                                                 "OSC_CH1_IN_AC_DC","OSC_CH2_IN_AC_DC","OSC_CH3_IN_AC_DC","OSC_CH4_IN_AC_DC"};
 
 void updateParametersByConfig(){
-    configGet(getHomeDirectory() + "/.config/redpitaya/apps/scopegenpro/config.json");
+
+    initExtTriggerLimits();
+    initGenBeforeLoadConfig();
+    initOscBeforeLoadConfig();
+    setHomeSettingsPath("/.config/redpitaya/apps/scopegenpro/");
+    listFileSettings.Value() = getListOfSettingsInStore();
+    configGet();
 
     initOscAfterLoad();
 
@@ -69,6 +73,7 @@ void updateParametersByConfig(){
 
     updateOscParams(true);
     updateMathParams(true);
+    updateXYParams(true);
     updateTriggerLimit(true);
     updateSlowDAC(true);
 }
@@ -102,16 +107,17 @@ const char *rp_app_desc(void) {
 int rp_app_init(void) {
     fprintf(stderr, "Loading scope version %s-%s.\n", VERSION_STR, REVISION_STR);
 
-    CDataManager::GetInstance()->SetParamInterval(parameterPeriod.Value());
-    CDataManager::GetInstance()->SetSignalInterval(signalPeriod.Value());
-
     rp_WS_Init();
     rp_WS_SetInterval(RP_WS_RAM,5000);
     rp_WS_SetInterval(RP_WS_SLOW_DAC,500);
     rp_WS_SetMode((rp_system_mode_t)(RP_WS_ALL & (~RP_WS_DISK_SIZE) & ~RP_WS_SENSOR_VOLT));
     rp_WS_UpdateParameters(true);
 
+    rp_WC_Init();
+    rp_WC_UpdateParameters(true);
+
     rpApp_Init();
+    rpApp_OscPrepareOscillogramBuffer(MAX_BUFFERS);  // 100 (buffers) * 16384 (samples) * 4 (float size) * 5 (channels) = 163840000 bytes
     rpApp_OscRun();
     // Need run after init parameters
     updateParametersByConfig();
@@ -143,67 +149,29 @@ int rp_get_signals(float ***s, int *sig_num, int *sig_len) {
 }
 
 
-
 void UpdateParams(void) {
 
     // fprintf(stderr,"UpdateParams \n");
     auto is_osc_running = getOscRunState();
 
     resumeSweepController(!is_osc_running);
-
-    // static int times = 0;
-	// if (times == 3)
-	// {
-	//     FILE *fp = fopen("/proc/stat","r");
-	//     if(fp)
-	//     {
-	//     	long double a[4];
-	//     	fscanf(fp,"%*s %Lf %Lf %Lf %Lf",&a[0],&a[1],&a[2],&a[3]);
-	//     	fclose(fp);
-
-	//     	long double divider = ((a[0]+a[1]+a[2]+a[3]) - (cpu_values[0]+cpu_values[1]+cpu_values[2]+cpu_values[3]));
-	//     	long double loadavg = 100;
-	//     	if(divider > 0.01)
-	// 		{
-	// 			loadavg = ((a[0]+a[1]+a[2]) - (cpu_values[0]+cpu_values[1]+cpu_values[2])) / divider;
-	// 		}
-	// 		cpuLoad.Value() = (float)(loadavg * 100);
-	// 		cpu_values[0]=a[0];cpu_values[1]=a[1];cpu_values[2]=a[2];cpu_values[3]=a[3];
-	//     }
-	//     times = 0;
-
-	// 	struct sysinfo memInfo;
-	//     sysinfo (&memInfo);
-    // 	memoryTotal.Value() = (float)memInfo.totalram;
-    // 	memoryFree.Value() = (float)memInfo.freeram;
-	// }
-	// times++;
-
     updateGenTempProtection();
 
-
-#ifdef DIGITAL_LOOP
-	rp_EnableDigitalLoop(digitalLoop.Value());
-#else
-	static bool inited_loop = false;
-	if (!inited_loop) {
-		rp_EnableDigitalLoop(digitalLoop.Value());
-		inited_loop = true;
-	}
-#endif
-
     auto is_auto_scale = isAutoScale();
+    // Update calculated values on web
     updateOscParametersToWEB();
     updateMathParametersToWEB(is_auto_scale);
+    updateXYParametersToWEB();
     sendFreqInSweepMode();
     updateSlowDAC(false);
 
     rp_WS_UpdateParameters(false);
+    rp_WC_UpdateParameters(false);
 
     if (g_config_changed && (g_save_counter++ % 40 == 0)){
         g_config_changed = false;
         // Save the configuration file
-        configSet(getHomeDirectory() + "/.config/redpitaya/apps/scopegenpro", "config.json");
+        configSet();
     }
 }
 
@@ -230,6 +198,7 @@ void updateSlowDAC(bool force){
 void UpdateSignals(void) {
     updateOscSignal();
     updateMathSignal();
+    updateXYSignal();
     float tscale = getOSCTimeScale();
     generateOutSignalForWeb(tscale);
 }
@@ -237,31 +206,48 @@ void UpdateSignals(void) {
 
 void OnNewParams(void) {
 
-    if (resetSettings.IsNewValue()){
-        if (resetSettings.NewValue() == 1){
-            deleteConfig(getHomeDirectory() + "/.config/redpitaya/apps/scopegenpro/config.json");
-            configSetWithList(getHomeDirectory() + "/.config/redpitaya/apps/scopegenpro", "config.json",g_savedParams);
-            resetSettings.Update();
-            resetSettings.SendValue(2);
+    if (controlSettings.IsNewValue()){
+        if (controlSettings.NewValue() == controlSettings::REQUEST_RESET){
+            deleteConfig();
+            configSetWithList(g_savedParams);
+            controlSettings.Update();
+            controlSettings.SendValue(controlSettings::RESET_DONE);
             return;
         }
+
+        if (controlSettings.NewValue() == controlSettings::SAVE){
+            controlSettings.Update();
+            fileSettings.Update();
+            configSet();
+            saveCurrentSettingToStore(fileSettings.Value());
+            controlSettings.SendValue(controlSettings::NONE);
+            listFileSettings.SendValue(getListOfSettingsInStore());
+        }
+
+        if (controlSettings.NewValue() == controlSettings::LOAD){
+            controlSettings.Update();
+            fileSettings.Update();
+            loadSettingsFromStore(fileSettings.Value());
+            configGet();
+            controlSettings.SendValue(controlSettings::LOAD_DONE);
+        }
+
+        if (controlSettings.NewValue() == controlSettings::DELETE){
+            controlSettings.Update();
+            fileSettings.Update();
+            deleteStoredConfig(fileSettings.Value());
+            controlSettings.SendValue(controlSettings::NONE);
+            listFileSettings.SendValue(getListOfSettingsInStore());
+        }
     }
-
-    // fprintf(stderr,"OnNewParams \n");
-    g_config_changed = isChanged();
-
+    if (!g_config_changed)
+        g_config_changed = isChanged();
     checkMathScale();
     updateGeneratorParameters(false);
     updateOscParams(false);
     updateMathParams(false);
-
-
-/* ------ UPDATE DEBUG PARAMETERS ------*/
-
-//    signalPeriiod.Update();
-//    parameterPeriiod.Update();
-//    digitalLoop.Update();
-//    fprintf(stderr,"OnNewParams End \n");
+    updateXYParams(false);
+    rp_WC_OnNewParam();
 }
 
 void OnNewSignals(void){}

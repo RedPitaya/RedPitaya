@@ -54,7 +54,10 @@
                 STEM_250_12_v1_2            = 13,
                 STEM_250_12_120             = 14,
                 STEM_250_12_v1_2a           = 15,
-                STEM_250_12_v1_2b           = 16
+                STEM_250_12_v1_2b           = 16,
+                STEM_125_14_LN_BO_v1_1      = 17,
+                STEM_125_14_LN_CE1_v1_1     = 18,
+                STEM_125_14_LN_CE2_v1_1     = 19
             }  rp_HPeModels_t;
         */
         if (model == 0){
@@ -107,6 +110,15 @@
         }
         if (model == 16){
             return "STEM 250 12"
+        }
+        if (model == 17){
+            return "STEM 14"
+        }
+        if (model == 18){
+            return "STEM 14"
+        }
+        if (model == 19){
+            return "STEM 14"
         }
         console.log("[FATAL ERROR] Unknown model: " + model)
         return ""
@@ -293,7 +305,8 @@
         { id: "activelearning", name: "Teaching materials", description: "Teaching materials for Red Pitaya", url: "https://redpitaya-knowledge-base.readthedocs.io/en/latest/learn_fpga/fpga_learn.html", image: "../assets/images/active-learning.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "warranty_ext", name: "Unlock new benefits", description: "Keep your Red Pitaya fresh for longer", url: "https://go.redpitaya.com/refresh", image: "../assets/images/WarrantyExt.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "jupyter", name: "Python programming", description: "Jupyter notebook server for running Python applications in a browser tab", url: "/jlab/lab/tree/RedPitaya/welcome.ipynb", image: "../jupyter_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "web_ssh", name: "Web Console", description: "SSH console based on the shellinabox", url: "http://" + window.location.hostname + ":4200", image: "../assets/images/ssh_icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' }
+        { id: "web_ssh", name: "Web Console", description: "SSH console based on the shellinabox", url: "http://" + window.location.hostname + ":4200", image: "../assets/images/ssh_icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "pyrpl", name: "PyRPL", description: "PyRPL turns your RedPitaya into a powerful DSP device", url: "https://redpitaya.readthedocs.io/en/latest/appsFeatures/applications/pyrpl/pyrpl.html", image: "../assets/images/pyrpl.png", check_online: false, licensable: false, callback: undefined, type: 'run' }
     ];
 
     var backButton = {
@@ -391,16 +404,30 @@
                     try {
                         const obj = JSON.parse(result);
                         var model = obj['model'];
-                        if (obj['model'].startsWith('STEM_125-10_v1.0')) model = 'STEMlab 125-10 v1.0';
-                        if (obj['model'].startsWith('STEM_125-14_v1.0')) model = 'STEMlab 125-14 v1.0';
-                        if (obj['model'].startsWith('STEM_125-14_Z7020_v1.0')) model = 'STEMlab 125-14-Z7020 v1.0';
-                        if (obj['model'].startsWith('STEM_250-12_V1.1')) model = 'SIGNALlab 250-12 v1.1';
-                        if (obj['model'].startsWith('STEM_250-12_V1.2')) model = 'SIGNALlab 250-12 v1.2';
-                        if (obj['model'].startsWith('STEM_250-12_V1.2a')) model = 'SIGNALlab 250-12 v1.2a';
-                        if (obj['model'].startsWith('STEM_122-16SDR_v1.0')) model = 'SDRlab 122-16 v1.0';
-                        if (obj['model'].startsWith('STEM_122-16SDR_v1.1')) model = 'SDRlab 122-16 v1.1';
-                        if (obj['model'].startsWith('STEM_125-14_Z7020_4IN_v1.0')) model = 'STEMlab 125-14 4-Input v1.0';
-                        if (obj['model'].includes('SLAVE')) model += " / Streaming Slave";
+                        var modelUp = obj['model'].toUpperCase()
+                        if (modelUp.startsWith('STEM_125-10_V1.0')) model = 'STEMlab 125-10 v1.0';
+                        if (modelUp.startsWith('STEM_14_B_V1.0')) model = 'STEMlab 125-14 v1.0';
+                        if (modelUp.startsWith('STEM_125-14_V1.0')) model = 'STEMlab 125-14 v1.0';
+                        if (modelUp.startsWith('STEM_125-14_V1.1')) model = 'STEMlab 125-14 v1.1';
+                        if (modelUp.startsWith('STEM_125-14_LN_V1.1')) model = 'STEMlab 125-14 LN v1.1';
+                        if (modelUp.startsWith('STEM_125-14_LN_BO_V1.1')) model = 'STEMlab 125-14 LN BO v1.1';
+                        if (modelUp.startsWith('STEM_125-14_LN_CE1_V1.1')) model = 'STEMlab 125-14 LN CE1 v1.1';
+                        if (modelUp.startsWith('STEM_125-14_LN_CE2_V1.1')) model = 'STEMlab 125-14 LN CE2 v1.1';
+                        if (modelUp.startsWith('STEM_125-14_Z7020_V1.0')) model = 'STEMlab 125-14-Z7020 v1.0';
+                        if (modelUp.startsWith('STEM_125-14_Z7020_LN_V1.1')) model = 'STEMlab 125-14-Z7020 LN v1.1';
+                        if (modelUp.startsWith('STEM_250-12_V1.0')) model = 'SIGNALlab 250-12 v1.0';
+                        if (modelUp.startsWith('STEM_250-12_V1.1')) model = 'SIGNALlab 250-12 v1.1';
+                        if (modelUp.startsWith('STEM_250-12_V1.2')) model = 'SIGNALlab 250-12 v1.2';
+                        if (modelUp.startsWith('STEM_250-12_V1.2a')) model = 'SIGNALlab 250-12 v1.2a';
+                        if (modelUp.startsWith('STEM_250-12_V1.2b')) model = 'SIGNALlab 250-12 v1.2b';
+                        if (modelUp.startsWith('STEM_250-12_120')) model = 'SIGNALlab 250-12/120';
+                        if (modelUp.startsWith('STEM_122-16SDR_V1.0')) model = 'SDRlab 122-16 v1.0';
+                        if (modelUp.startsWith('STEM_122-16SDR_V1.1')) model = 'SDRlab 122-16 v1.1';
+                        if (modelUp.startsWith('STEM_125-14_Z7020_4IN_V1.0')) model = 'STEMlab 125-14 4-Input v1.0';
+                        if (modelUp.startsWith('STEM_125-14_Z7020_4IN_V1.2')) model = 'STEMlab 125-14 4-Input v1.2';
+                        if (modelUp.startsWith('STEM_125-14_Z7020_4IN_V1.3')) model = 'STEMlab 125-14 4-Input v1.3';
+
+                        if (modelUp.includes('SLAVE')) model += " / Streaming Slave";
                         $('#SI_B_MODEL').text(model);
                         $('#SI_MAC').text(obj['mac']);
                         $('#SI_DNA').text(obj['dna']);
@@ -474,17 +501,28 @@
             $('#ext_connections_dialog').modal("show");
         });
 
+        $("#bug_report").click(async function (event){
 
-        $("#bug_report").click(function(event) {
-            fetch('/get_bug_report')
-                .then(response => response.blob())
-                .then(blob => {
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(blob);
-                link.download = new Date().toJSON().slice(0,22) + ".zip";
-                link.click();
-            })
-            .catch(console.error);
+            const blob =  await fetch('/get_bug_report', {
+                    method: 'POST'
+                })
+                .then(resp => resp.blob());
+
+            if( window.showSaveFilePicker ) {
+                const handle = await showSaveFilePicker({
+                    suggestedName: new Date().toJSON().slice(0,22) + ".zip" });
+                const writable = await handle.createWritable();
+                await writable.write( blob );
+                writable.close();
+            }
+            else {
+                const saveImg = document.createElement( "a" );
+                saveImg.href = URL.createObjectURL( blob );;
+                saveImg.download= new Date().toJSON().slice(0,22) + ".zip";
+                saveImg.click();
+                setTimeout(() => URL.revokeObjectURL( saveImg.href ), 60000 );
+                alert("The debug file has been generated. Check the downloads section.");
+            }
         });
 
         $.ajax({

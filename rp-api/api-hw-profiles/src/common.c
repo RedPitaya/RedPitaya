@@ -42,6 +42,9 @@
 #include "stem_250_12_v1.2a.h"
 #include "stem_250_12_v1.2b.h"
 #include "stem_250_12_120.h"
+#include "stem_125_14_LN_BO_v1.1.h"
+#include "stem_125_14_LN_CE1_v1.1.h"
+#include "stem_125_14_LN_CE2_v1.1.h"
 #include "stem_special.h"
 
 #define LINE_LENGTH 0x400
@@ -57,6 +60,7 @@ profiles_t *g_profile = NULL;
 // "STEM_125-14_Z7020_v1.0"
 // "STEM_125-14_Z7020_LN_v1.1"
 // "STEM_122-16SDR_v1.0"
+// "STEM_122-16SDR_v1.1"
 // "STEM_125-14_Z7020_4IN_v1.0"
 // "STEM_125-14_Z7020_4IN_v1.2"
 // "STEM_125-14_Z7020_4IN_v1.3"
@@ -66,8 +70,6 @@ profiles_t *g_profile = NULL;
 // "STEM_250-12_v1.2b"
 // "STEM_250-12_v1.0"
 // "STEM_250-12_120"
-
-// special boards
 // "STEM_125-14_LN_BO_v1.1"
 // "STEM_125-14_LN_CE1_v1.1"
 // "STEM_125-14_LN_CE2_v1.1"
@@ -233,7 +235,7 @@ void hp_checkModel(char *model,char *eth_mac){
 	}
 
 	if (strcmp(model,"stem_125-14_ln_bo_v1.1") == 0){
-		g_profile = getProfile_STEM_SPECIAL();
+		g_profile = getProfile_STEM_125_14_LN_BO_v1_1();
 		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);
@@ -241,7 +243,7 @@ void hp_checkModel(char *model,char *eth_mac){
 	}
 
 	if (strcmp(model,"stem_125-14_ln_ce1_v1.1") == 0){
-		g_profile = getProfile_STEM_SPECIAL();
+		g_profile = getProfile_STEM_125_14_LN_CE1_v1_1();
 		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);
@@ -249,7 +251,7 @@ void hp_checkModel(char *model,char *eth_mac){
 	}
 
 	if (strcmp(model,"stem_125-14_ln_ce2_v1.1") == 0){
-		g_profile = getProfile_STEM_SPECIAL();
+		g_profile = getProfile_STEM_125_14_LN_CE2_v1_1();
 		strcpy(g_profile->boardModelEEPROM,modelOrig);
 		if (eth_mac)
 			strcpy(g_profile->boardETH_MAC,eth_mac);
@@ -418,7 +420,12 @@ int hp_cmn_Print(profiles_t *p){
 	fprintf(stdout,"FAST ADC External trigger level is signed: %d\n",p->is_ext_trigger_signed);
 	fprintf(stdout,"FAST ADC DMA mode support (v0.94): %d\n",p->is_dma_mode_v0_94);
 
+	fprintf(stdout,"FAST ADC Split trigger mode (v0.94): %d\n",p->is_split_osc_triggers);
+
 	fprintf(stdout,"\nDaisy chain clock sync support: %u\n", p->is_daisy_chain_clock_sync);
+
+	fprintf(stdout,"GPIO DIO_N count: %u\n", p->gpio_N_count);
+	fprintf(stdout,"GPIO DIO_P count: %u\n", p->gpio_P_count);
 
 	fprintf(stdout,"***********************************************************************\n");
 	return RP_HP_OK;

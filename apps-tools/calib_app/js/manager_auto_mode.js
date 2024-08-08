@@ -314,11 +314,11 @@
     }
 
     OBJ.amSendState = function(_state, _ref_volt) {
-        SM.parametersCache["SS_NEXTSTEP"] = { value: _state };
-        SM.parametersCache["SS_STATE"] = { value: _state - 1 };
+        CLIENT.parametersCache["SS_NEXTSTEP"] = { value: _state };
+        CLIENT.parametersCache["SS_STATE"] = { value: _state - 1 };
         OBJ.amCurrentSuccesTest = _state - 1;
-        SM.parametersCache["ref_volt"] = { value: _ref_volt };
-        SM.sendParameters();
+        CLIENT.parametersCache["ref_volt"] = { value: _ref_volt };
+        CLIENT.requestParameters();
     }
 
     OBJ.amCheckInputRef = function() {

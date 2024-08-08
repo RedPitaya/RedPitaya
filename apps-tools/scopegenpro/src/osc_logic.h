@@ -2,6 +2,10 @@
 
 #include "rp.h"
 
+#define MAX_BUFFERS 300
+
+auto initOscBeforeLoadConfig() -> void;
+auto initExtTriggerLimits() -> void;
 auto initOscAfterLoad() -> void;
 auto updateOscParametersToWEB() -> void;
 auto getOscRunState() -> bool;

@@ -182,16 +182,16 @@ int rp_CanRestart(rp_can_interface_t interface);
 int rp_CanGetState(rp_can_interface_t interface,rp_can_state_t *state);
 
 /**
-* Returns the name of state 
+* Returns the name of state
 * @param state  interface state
 * @return If the function is successful, the return name of state.
 */
 const char * rp_CanGetStateName(rp_can_state_t state);
 
 /**
-* Sets the bitrate for the specified interface. Sample point is set automatically. 
+* Sets the bitrate for the specified interface. Sample point is set automatically.
 * @param interface  Selected interface
-* @param bitRate Bitrate in Hz (bits/second) 
+* @param bitRate Bitrate in Hz (bits/second)
 * @return If the function is successful, the return value is RP_HW_CAN_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_CAN_E* values that indicate an error.
 */
@@ -200,8 +200,8 @@ int rp_CanSetBitrate(rp_can_interface_t interface,uint32_t bitRate);
 /**
 * Sets the bitrate and sample point for the specified interface.
 * @param interface  Selected interface
-* @param bitRate Bitrate in Hz (bits/second) 
-* @param samplePoint Sample point must be from 0 to 0.999. Sample point in one-tenth of a percent 
+* @param bitRate Bitrate in Hz (bits/second)
+* @param samplePoint Sample point must be from 0 to 0.999. Sample point in one-tenth of a percent
 * @return If the function is successful, the return value is RP_HW_CAN_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_CAN_E* values that indicate an error.
 */
@@ -349,16 +349,30 @@ int rp_CanClose(rp_can_interface_t interface);
 * @param dataSize  The size of the data to be transmitted. From 0 to 8
 * @param isExtended Use an extended frame header
 * @param rtr Mark frame as remote transmission request
-* @param timeout Timeout when sending data. Needed if buffer is full. 0 - timeout is disabled. 
+* @param timeout Timeout when sending data. Needed if buffer is full. 0 - timeout is disabled.
 * @return If the function is successful, the return value is RP_HW_CAN_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_CAN_E* values that indicate an error.
 */
 int rp_CanSend(rp_can_interface_t interface, uint32_t canId, unsigned char *data, uint8_t dataSize, bool isExtended, bool rtr, uint32_t timeout);
 
 /**
-* Reads from socket 1 frame 
+* Sends the package to the specified address
 * @param interface  Selected interface
-* @param timeout Timeout when reading data. 0 - timeout is disabled. 
+* @param canId Address of the can device
+* @param isExtended Use an extended frame header
+* @param rtr Mark frame as remote transmission request
+* @param timeout Timeout when sending data. Needed if buffer is full. 0 - timeout is disabled.
+* @param np_buffer Dispatch data. The data must be up to 8 bytes. The rest of the data is ignored
+* @param size Dispatch data. The data must be up to 8 bytes. The rest of the data is ignored.
+* @return If the function is successful, the return value is RP_HW_CAN_OK.
+* If the function is unsuccessful, the return value is any of RP_HW_CAN_E* values that indicate an error.
+*/
+int rp_CanSendNP(rp_can_interface_t interface, uint32_t canId, bool isExtended, bool rtr, uint32_t timeout, uint8_t* np_buffer, int size);
+
+/**
+* Reads from socket 1 frame
+* @param interface  Selected interface
+* @param timeout Timeout when reading data. 0 - timeout is disabled.
 * @param frame Data frame
 * @return If the function is successful, the return value is RP_HW_CAN_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_CAN_E* values that indicate an error.
@@ -366,7 +380,20 @@ int rp_CanSend(rp_can_interface_t interface, uint32_t canId, unsigned char *data
 int rp_CanRead(rp_can_interface_t interface, uint32_t timeout, rp_can_frame_t *frame);
 
 /**
-* Adds another filter to the list of filters. 
+* Reads from socket 1 frame
+* @param interface  Selected interface
+* @param timeout Timeout when reading data. 0 - timeout is disabled.
+* @param can_id Return can id
+* @param read_size Return size of buffer
+* @param np_buffer Returns a data buffer
+* @param size Returns the size of the received data.
+* @return If the function is successful, the return value is RP_HW_CAN_OK.
+* If the function is unsuccessful, the return value is any of RP_HW_CAN_E* values that indicate an error.
+*/
+int rp_CanReadNP(rp_can_interface_t interface, uint32_t timeout, uint32_t *can_id, uint32_t *read_size, uint8_t* np_buffer, int size);
+
+/**
+* Adds another filter to the list of filters.
 * Once all filters have been added, the command to apply filters on the socket must be invoked rp_CanSetFilter.
 * A filter matches, when
 * <received_can_id> & mask == filter & mask
@@ -401,7 +428,7 @@ int rp_CanClearFilter(rp_can_interface_t interface);
 
 /**
 * Applies a list of filters to the socket connection.
-* To filter all frames, you must first call: rp_CanClearFilter 
+* To filter all frames, you must first call: rp_CanClearFilter
 * Important. In order to restore the filter, it is necessary to specify correct masks for frames. Otherwise it will filter on the whole header.
 * @param interface  Selected interface
 * @param isJoinFilter If True, the filter list is applied to the incoming packet with a logical AND operation. Otherwise, the OR operation will be used. Join mode NOT SUPPORTED driver yet.

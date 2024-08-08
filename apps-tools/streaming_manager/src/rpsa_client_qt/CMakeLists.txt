@@ -40,7 +40,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Quick Gui REQUIRED PATHS ${QT_DIR} ${CMAKE_PREFIX_PATH}  NO_DEFAULT_PATH)
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Quick Gui Qml REQUIRED PATHS ${QT_DIR} ${CMAKE_PREFIX_PATH}  NO_DEFAULT_PATH)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Quick Gui Charts Widgets REQUIRED PATHS ${QT_DIR} ${CMAKE_PREFIX_PATH} NO_DEFAULT_PATH)
 
 set(CMAKE_AUTOUIC OFF)
@@ -95,7 +95,7 @@ target_include_directories(${PROJECT_NAME}
             )
 
 target_compile_options(${PROJECT_NAME}
-            PRIVATE -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+            PRIVATE -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 target_link_directories(${PROJECT_NAME}
             PRIVATE
@@ -112,7 +112,7 @@ target_compile_definitions(rpsa_client_qt
   PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
 
 target_link_libraries(rpsa_client_qt
-  PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Quick Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Charts Qt${QT_VERSION_MAJOR}::Widgets)
+  PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Quick Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Charts Qt${QT_VERSION_MAJOR}::Qml  Qt${QT_VERSION_MAJOR}::Widgets)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE config_net_lib dac_streaming_lib converter_lib streaming_lib settings_lib)
 
@@ -148,8 +148,10 @@ endif()
 if(WIN32)
 #    install(CODE "execute_process(COMMAND cp /usr/x86_64-w64-mingw32/lib/libwinpthread-1.dll ${INSTALL_DIR}/streaming/rpsa_client-qt_${VERSION}-${REVISION}${WIN_SUFFIX}/lib/libwinpthread-1.dll)")
 #    install(CODE "execute_process(COMMAND cp -f /usr/lib/gcc/x86_64-w64-mingw32/9.3-posix/*.dll ${INSTALL_DIR}/streaming/rpsa_client-qt_${VERSION}-${REVISION}${WIN_SUFFIX}/lib/)")
+#    install(FILES /usr/x86_64-w64-mingw32/lib/libwinpthread-1.dll DESTINATION ${INSTALL_DIR}/streaming/rpsa_client-qt_${VERSION}-${REVISION}${WIN_SUFFIX}/lib/)
+#    install(DIRECTORY /usr/lib/gcc/x86_64-w64-mingw32/9.3-posix/ DESTINATION ${INSTALL_DIR}/streaming/rpsa_client-qt_${VERSION}-${REVISION}${WIN_SUFFIX}/lib/ FILES_MATCHING PATTERN "*.dll")
     install(FILES /usr/x86_64-w64-mingw32/lib/libwinpthread-1.dll DESTINATION ${INSTALL_DIR}/streaming/rpsa_client-qt_${VERSION}-${REVISION}${WIN_SUFFIX}/lib/)
-    install(DIRECTORY /usr/lib/gcc/x86_64-w64-mingw32/9.3-posix/ DESTINATION ${INSTALL_DIR}/streaming/rpsa_client-qt_${VERSION}-${REVISION}${WIN_SUFFIX}/lib/ FILES_MATCHING PATTERN "*.dll")
+    install(DIRECTORY /usr/lib/gcc/x86_64-w64-mingw32/12-posix/ DESTINATION ${INSTALL_DIR}/streaming/rpsa_client-qt_${VERSION}-${REVISION}${WIN_SUFFIX}/lib/ FILES_MATCHING PATTERN "*.dll")
 endif()
     install(CODE "execute_process(COMMAND rm -rf ${INSTALL_DIR}/streaming/out)")
 endif()

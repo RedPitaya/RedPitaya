@@ -23,6 +23,8 @@
     <link href="../assets/loader.css?1" rel="stylesheet" type="text/css" onerror="location.reload()" />
     <link rel="stylesheet" href="css/style.css?1" onerror="location.reload()" />
     <link rel="stylesheet" href="css/table.css?1" onerror="location.reload()" />
+    <link rel="stylesheet" href="../assets/lpulse.css?1" type="text/css">
+    <link rel="stylesheet" href="../assets/usermis.css" type="text/css">
     <script src="../assets/jquery/jquery-2.1.3.min.js?1" onerror="location.reload()"></script>
     <script src="../assets/jquery/jquery-ui.min.js?1" onerror="location.reload()"></script>
     <script src="../assets/jquery/jquery.ui.touch-punch.min.js?1" onerror="location.reload()"></script>
@@ -41,9 +43,10 @@
     <script src="js/manager_fauto_mode.js?1" onerror="location.reload()"></script>
     <script src="js/manager_adc_mode.js?1" onerror="location.reload()"></script>
     <script src="js/manager_filter_mode.js?1" onerror="location.reload()"></script>
+    <script src="js/client.js?2" onerror="location.reload()"></script>
 </head>
 
-<body id="BODY">
+<body id="BODY" class="user_lost connection_lost">
     <div id="loader-wrapper">
         <div style="width: 100%;height: 60%;">
             <div id="loader" style="top:70%"></div>
@@ -51,6 +54,14 @@
         <div align="center" style="font-size: 18pt;color: lightgray;padding-right: 20%;padding-left: 20%;padding-top: 5px;">
             LOADING...
         </div>
+    </div>
+    <div id="user-wrapper">
+        <div id="user"></div>
+        <div id="user-desc">Device is already in use by another user.</div>
+    </div>
+    <div id="pulse-wrapper">
+        <div id="pulse"></div>
+        <div id="pulse-desc">Connection with device is lost.</div>
     </div>
 </body>
 

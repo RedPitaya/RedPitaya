@@ -46,13 +46,13 @@ endif()
 if (RP_PLATFORM)
     target_compile_options(${PROJECT_NAME} PRIVATE -DRP_PLATFORM)
     target_include_directories(${PROJECT_NAME} PUBLIC ${INSTALL_DIR}/include ${INSTALL_DIR}/rp_sdk ${INSTALL_DIR}/rp_sdk/libjson)
-    target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib/ ${INSTALL_DIR}/rp_sdk)
+    target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib/ ${INSTALL_DIR}/lib/web ${INSTALL_DIR}/rp_sdk)
     target_link_libraries(${PROJECT_NAME} PUBLIC -Wl,--as-needed rp rp-hw rp_sdk rp-hw rp-hw-calib rp-hw-profiles -Wl,--no-as-needed)
-    target_link_libraries(${PROJECT_NAME} PRIVATE rp-i2c rp-spi rp-gpio i2c)
+    target_link_libraries(${PROJECT_NAME} PRIVATE rp-client rp-i2c rp-spi rp-gpio i2c)
 endif()
 
 target_compile_options(${PROJECT_NAME}
-    PRIVATE -Wall -Wno-reorder -fpermissive -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os -s>  -ffunction-sections -fdata-sections)
+    PRIVATE -Wall -Wno-reorder -fpermissive -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os -s>  -ffunction-sections -fdata-sections)
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC  ${PROJECT_SOURCE_DIR}

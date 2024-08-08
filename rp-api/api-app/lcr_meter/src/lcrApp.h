@@ -76,7 +76,9 @@ typedef enum lcr_error{
     RP_LCR_HW_MISSING_DEVICE = 2,
     RP_LCR_HW_ERROR = 3,
     RP_LCR_HW_ERROR_DETECT = 4,
-    RP_LCR_ERROR_INVALID_VALUE = 5
+    RP_LCR_ERROR_INVALID_VALUE = 5,
+	RP_LCR_UERROR = 6,
+	RP_LCR_NOT_STARTED = 7
 } lcr_error_t;
 
 
@@ -90,6 +92,7 @@ int lcrApp_LcrRelease();
 int lcrApp_LcrRun();
 int lcrApp_LcrStop();
 int lcrApp_LcrSetPause(bool pause);
+int lcrApp_LcrReset();
 
 int lcrApp_GenRun();
 int lcrApp_GenStop();
@@ -115,15 +118,8 @@ int lcrApp_LcrSetCalibMode(calib_t calib_mode);
 int lcrApp_LcrGetCalibMode(calib_t *calib_mode);
 int lcrApp_LcrSetMeasSeries(bool series);
 int lcrApp_LcrGetMeasSeries(bool *series);
-int lcrApp_LcrSetMeasTolerance(int tolerance);
-int lcrApp_LcrGetMeasTolerance(int *tolerance);
-int lcrApp_LcrSetMeasRangeMode(int range_mode);
-int lcrApp_LcrGetMeasRangeMode(int *range_mode);
-int lcrApp_LcrSetMeasRangeFormat(int format);
-int lcrApp_LcrGetMeasRangeFormat(int *format);
-int lcrApp_LcrSetMeasRangeUnits(int units);
-int lcrApp_LcrGetMeasRangeUnits(int *units);
 int lcrApp_LcrCheckExtensionModuleConnection(bool _muteWarnings);
+int lcrApp_LcrIsModuleConnected(bool *state);
 
 const char* lcrApp_LcrGetError(lcr_error_t errorCode);
 

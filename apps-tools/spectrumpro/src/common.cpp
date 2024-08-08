@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <chrono>
 #include "common.h"
 
 auto getADCChannels() -> uint8_t{
@@ -90,6 +91,9 @@ auto isZModePresent() -> bool{
         case STEM_125_14_v1_0:
         case STEM_125_14_v1_1:
         case STEM_125_14_LN_v1_1:
+        case STEM_125_14_LN_BO_v1_1:
+        case STEM_125_14_LN_CE1_v1_1:
+        case STEM_125_14_LN_CE2_v1_1:
         case STEM_125_14_Z7020_v1_0:
         case STEM_125_14_Z7020_LN_v1_1:
         case STEM_122_16SDR_v1_0:
@@ -120,6 +124,9 @@ auto outAmpDef() -> float{
         case STEM_125_14_v1_0:
         case STEM_125_14_v1_1:
         case STEM_125_14_LN_v1_1:
+        case STEM_125_14_LN_BO_v1_1:
+        case STEM_125_14_LN_CE1_v1_1:
+        case STEM_125_14_LN_CE2_v1_1:
         case STEM_125_14_Z7020_v1_0:
         case STEM_125_14_Z7020_LN_v1_1:
             return 0.9;
@@ -152,6 +159,9 @@ auto outAmpMax() -> float{
         case STEM_125_14_v1_0:
         case STEM_125_14_v1_1:
         case STEM_125_14_LN_v1_1:
+        case STEM_125_14_LN_BO_v1_1:
+        case STEM_125_14_LN_CE1_v1_1:
+        case STEM_125_14_LN_CE2_v1_1:
         case STEM_125_14_Z7020_v1_0:
         case STEM_125_14_Z7020_LN_v1_1:
             return 1;
@@ -186,6 +196,9 @@ auto getModelName() -> std::string{
         case STEM_125_14_v1_0:
         case STEM_125_14_v1_1:
         case STEM_125_14_LN_v1_1:
+        case STEM_125_14_LN_BO_v1_1:
+        case STEM_125_14_LN_CE1_v1_1:
+        case STEM_125_14_LN_CE2_v1_1:
             return "Z10";
         case STEM_125_14_Z7020_v1_0:
         case STEM_125_14_Z7020_LN_v1_1:
@@ -211,4 +224,11 @@ auto getModelName() -> std::string{
         }
     }
     return "";
+}
+
+
+auto getClock() -> int64_t {
+    auto now = std::chrono::system_clock::now();
+    auto curTime = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
+    return curTime.time_since_epoch().count();
 }

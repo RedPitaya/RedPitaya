@@ -28,7 +28,7 @@ if [ $RES == 1 ]; then
 	$RP_PATH/disconnect.sh
 	rw
 	wpa_passphrase $SSID $PASS > /opt/redpitaya/wpa_supplicant.conf
-	wpa_supplicant -B -c/etc/wpa_supplicant/wpa_supplicant.conf -iwlan0
+	wpa_supplicant -B -c/opt/redpitaya/wpa_supplicant.conf -iwlan0
 	sleep 1
 	systemctl restart wireless-mode-client.service
 	sleep 1

@@ -54,11 +54,11 @@ auto startServer(bool verbMode,bool testMode,bool is_master) -> void{
 	// Search oscilloscope
     if (!g_serverNetConfig) return;
 
-    g_s_file = nullptr;
-    g_s_net = nullptr;
-    g_s_buffer = nullptr;
-    g_s_fpga = nullptr;
-    g_osc = nullptr;
+    g_s_fpga = {nullptr};
+    g_osc = {nullptr};
+    g_s_buffer = {nullptr};
+    g_s_file = {nullptr};
+    g_s_net = {nullptr};
 
     g_verbMode = verbMode;
 	try{
@@ -105,8 +105,9 @@ auto startServer(bool verbMode,bool testMode,bool is_master) -> void{
 		uint32_t bb_ch[MAX_ADC_CHANNELS] = {0,0,0,0};
 		uint32_t kk_ch[MAX_ADC_CHANNELS] = {0xFFFFFF,0xFFFFFF,0xFFFFFF,0xFFFFFF};
 		uint32_t pp_ch[MAX_ADC_CHANNELS] = {0,0,0,0};
-
+        bool is_platform = false;
 #ifdef RP_PLATFORM
+        is_platform = true;
         filterBypass = !rp_HPGetFastADCIsFilterPresentOrDefault();
 		if (use_calib) {
             for(uint8_t ch = 0; ch < max_channels; ++ch){
@@ -200,7 +201,7 @@ auto startServer(bool verbMode,bool testMode,bool is_master) -> void{
 
         if (use_file == CStreamSettings::FILE) {
             auto f_path = std::string(FILE_PATH);
-            g_s_file = streaming_lib::CStreamingFile::create(format,f_path,samples, save_mode == CStreamSettings::VOLT, testMode);
+            g_s_file = streaming_lib::CStreamingFile::create(format,f_path,samples, save_mode == CStreamSettings::VOLT, testMode, is_platform);
             g_s_file->stopNotify.connect([](CStreamingFile::EStopReason r){
                 switch (r) {
                     case CStreamingFile::EStopReason::NORMAL:{
@@ -311,10 +312,10 @@ auto stopNonBlocking(ServerNetConfigManager::EStopReason x) -> void{
 auto stopServer(ServerNetConfigManager::EStopReason reason) -> void{
 	try{
         if (g_s_buffer) g_s_buffer->notifyToDestory();
+        g_s_fpga = nullptr;
+        g_s_buffer = nullptr;
         g_s_net = nullptr;
         g_s_file = nullptr;
-        g_s_buffer = nullptr;
-        g_s_fpga = nullptr;
 
         if (g_serverNetConfig){
             switch (reason)

@@ -27,29 +27,11 @@
 (function(SM, $, undefined) {
 
     // Params cache
-    SM.params = {
-        orig: {},
-        local: {}
-    };
-    SM.ss_status_last = -1;
-    SM.ss_rate = -1;
-    SM.ss_max_rate = -1;
-    SM.ss_max_rate_devider = -1;
+
     SM.ss_max_gain = undefined;
     SM.param_callbacks = {};
     SM.parameterStack = [];
     SM.signalStack = [];
-    // Parameters cache
-    SM.parametersCache = {};
-
-    // App configuration
-    SM.config = {};
-    SM.config.app_id = 'arb_manager';
-    SM.config.server_ip = ''; // Leave empty on production, it is used for testing only
-
-    SM.config.start_app_url = window.location.origin + '/bazaar?start=' + SM.config.app_id;
-    SM.config.stop_app_url = window.location.origin + '/bazaar?stop=' + SM.config.app_id;
-    SM.config.socket_url = 'ws://' + window.location.host + '/wss';
 
     SM.charts = [];
     SM.renamePrev = "";
@@ -84,134 +66,6 @@
         cursor_dragging: false
     };
 
-    SM.reconnect = function() {
-        setTimeout(() => {
-            SM.startApp();
-        }, 1000);
-    }
-    SM.startApp = function() {
-        $.get(
-                SM.config.start_app_url
-            )
-            .done(function(dresult) {
-                if (dresult.status == 'OK') {
-                    try {
-                        SM.connectWebSocket();
-                        console.log("Load manager");
-                    } catch (e) {
-                        SM.reconnect();
-                    }
-                } else if (dresult.status == 'ERROR') {
-                    console.log(dresult.reason ? dresult.reason : 'Could not start the application (ERR1)');
-                    SM.reconnect();
-                } else {
-                    console.log('Could not start the application (ERR2)');
-                    SM.reconnect();
-                }
-            })
-            .fail(function() {
-                console.log('Could not start the application (ERR3)');
-                SM.reconnect();
-            });
-    };
-
-
-
-    //Write email
-    SM.formEmail = function() {
-        //var file = new FileReader();
-        var mail = "support@redpitaya.com";
-        var subject = "Crash report Red Pitaya OS";
-        var body = "%0D%0A%0D%0A------------------------------------%0D%0A" + "DEBUG INFO, DO NOT EDIT!%0D%0A" + "------------------------------------%0D%0A%0D%0A";
-        body += "Parameters:" + "%0D%0A" + JSON.stringify({ parameters: SM.parametersCache }) + "%0D%0A";
-        body += "Browser:" + "%0D%0A" + JSON.stringify({ parameters: $.browser }) + "%0D%0A";
-
-        var url = 'info/info.json';
-        $.ajax({
-            method: "GET",
-            url: url
-        }).done(function(msg) {
-            body += " info.json: " + "%0D%0A" + msg.responseText;
-        }).fail(function(msg) {
-            var info_json = msg.responseText
-            var ver = '';
-            try {
-                var obj = JSON.parse(msg.responseText);
-                ver = " " + obj['version'];
-            } catch (e) {};
-
-            body += " info.json: " + "%0D%0A" + msg.responseText;
-            document.location.href = "mailto:" + mail + "?subject=" + subject + ver + "&body=" + body;
-        });
-    }
-
-
-    // Creates a WebSocket connection with the web server
-    SM.connectWebSocket = function() {
-
-        if (window.WebSocket) {
-            SM.ws = new WebSocket(SM.config.socket_url);
-            SM.ws.binaryType = "arraybuffer";
-        } else if (window.MozWebSocket) {
-            SM.ws = new MozWebSocket(SM.config.socket_url);
-            SM.ws.binaryType = "arraybuffer";
-        } else {
-            console.log('Browser does not support WebSocket');
-        }
-
-        // Define WebSocket event listeners
-        if (SM.ws) {
-            SM.ws.onopen = function() {
-                console.log('Socket opened');
-                var element = document.getElementById("loader-wrapper");
-                if (element !== null){
-                    element.parentNode.removeChild(element);
-                }
-                $('#main').removeAttr("style");
-                SM.state.socket_opened = true;
-                SM.requestAllParameters();
-                SM.unexpectedClose = true;
-            };
-
-            SM.ws.onclose = function() {
-                SM.state.socket_opened = false;
-                console.log('Socket closed');
-                SM.reconnect();
-            };
-
-            SM.ws.onerror = function(ev) {
-                if (!SM.state.socket_opened)
-                    SM.reconnect();
-                console.log('Websocket error: ', ev);
-            };
-
-            SM.ws.onmessage = function(ev) {
-                try {
-                    var data = new Uint8Array(ev.data);
-                    //   BA.compressed_data += data.length;
-                    var inflate = pako.inflate(data);
-                    var text = String.fromCharCode.apply(null, new Uint8Array(inflate));
-
-                    // BA.decompressed_data += text.length;
-                    var receive = JSON.parse(text);
-                    //Recieving parameters
-                    if (receive.parameters) {
-                        SM.parameterStack.push(receive.parameters);
-                    }
-
-                    if (receive.signals) {
-                        SM.signalStack.push(receive.signals);
-                    }
-
-                } catch (e) {
-                    //BA.state.processing = false;
-                    console.log(e);
-                } finally {
-                    //BA.state.processing = false;
-                }
-            };
-        }
-    };
 
     // For Firefox
     function fireEvent(obj, evt) {
@@ -227,71 +81,6 @@
         }
     }
 
-
-    // Sends to server parameters
-    SM.sendParameters = function() {
-        if (!SM.state.socket_opened) {
-            console.log('ERROR: Cannot save changes, socket not opened');
-            return false;
-        }
-
-        SM.ws.send(JSON.stringify({ parameters: SM.parametersCache }));
-        console.log("Send ", SM.parametersCache)
-        SM.parametersCache = {};
-        return true;
-    };
-
-    SM.requestAllParameters = function() {
-        if (!SM.state.socket_opened) {
-            console.log('ERROR: Cannot save changes, socket not opened');
-            return false;
-        }
-        SM.parametersCache = {};
-        SM.parametersCache["in_command"] = { value: "send_all_params" };
-        SM.ws.send(JSON.stringify({ parameters: SM.parametersCache }));
-        console.log("Send ", SM.parametersCache)
-        SM.parametersCache = {};
-        return true;
-    };
-
-
-    SM.change_status = function(new_params) {
-        console.log(new_params)
-    }
-
-    //Handlers
-    var signalsHandler = function() {
-        if (SM.signalStack.length > 0) {
-            SM.signalStack.splice(0, 1);
-        }
-        if (SM.signalStack.length > 2)
-            SM.signalStack.length = [];
-    }
-
-
-    SM.processParameters = function(new_params) {
-
-        if (new_params['MAX_GAIN'] && SM.ss_max_gain === undefined){
-            SM.ss_max_gain = new_params['MAX_GAIN'].value;
-        }
-
-        if (Object.keys(new_params).length !== 0)
-            console.log(new_params)
-
-        for (var param_name in new_params) {
-            SM.params.orig[param_name] = new_params[param_name];
-            if (SM.param_callbacks[param_name] !== undefined)
-                SM.param_callbacks[param_name](new_params);
-        }
-
-    };
-
-    var parametersHandler = function() {
-        if (SM.parameterStack.length > 0) {
-            SM.processParameters(SM.parameterStack[0]);
-            SM.parameterStack.splice(0, 1);
-        }
-    }
 
     SM.calcSize = function(x) {
         if (x  < 1024) {
@@ -473,8 +262,8 @@
                 console.log($(this).attr('fileName'), $(this).val())
                 SM.renameSend = true;
                 fname = $(this).attr('fileName')
-                SM.parametersCache["RP_CHANGE_COLOR"] = { value: fname + "\n" + SM.hexToUintColor($(this).val())};
-                SM.sendParameters();
+                CLIENT.parametersCache["RP_CHANGE_COLOR"] = { value: fname + "\n" + SM.hexToUintColor($(this).val())};
+                CLIENT.sendParameters();
                 SM.files[fname]["color"] = $(this).val()
                 SM.initPlot(SM.files[fname]["plot"],SM.files[fname]["values"],$(this).val())
             });
@@ -526,8 +315,8 @@
                 }).done(function(msg) {
                     console.log("File removed ",msg)
                     setTimeout(() => {
-                        SM.parametersCache["RP_FILES_LIST"] = { value: "req" };
-                        SM.sendParameters();
+                        CLIENT.parametersCache["RP_FILES_LIST"] = { value: "req" };
+                        CLIENT.sendParameters();
                     }, 1000);
                 });
 
@@ -537,8 +326,8 @@
                 // If the user presses the "Enter" key on the keyboard
                 if (event.key === "Enter") {
                     SM.renameSend = true;
-                    SM.parametersCache["RP_RENAME_FILE"] = { value: $(this).attr('fileName') + "\n" + $(this).val()};
-                    SM.sendParameters();
+                    CLIENT.parametersCache["RP_RENAME_FILE"] = { value: $(this).attr('fileName') + "\n" + $(this).val()};
+                    CLIENT.sendParameters();
                 }
             });
 
@@ -566,8 +355,8 @@
     SM.req_status = function(param) {
         var value = param["RP_REQ_STATUS"].value;
         if (SM.status.REQ_UPDATE === value){
-            SM.parametersCache["RP_FILES_LIST"] = { value: "req" };
-            SM.sendParameters();
+            CLIENT.parametersCache["RP_FILES_LIST"] = { value: "req" };
+            CLIENT.sendParameters();
         }
 
         if (SM.status.FILE_ERR === value){
@@ -601,10 +390,6 @@
 
     }
 
-    //Set handlers timers
-    setInterval(signalsHandler, 50);
-    setInterval(parametersHandler, 50);
-
     SM.param_callbacks["RP_REQ_STATUS"] = SM.req_status;
     SM.param_callbacks["RP_REQ_CHECK_FILE"] = SM.check_file;
     SM.param_callbacks["RP_FILES_LIST"] = SM.refreshFiles;
@@ -620,28 +405,14 @@ $(function() {
 
     // Bind to the window resize event to redraw the graph; trigger that event to do the first drawing
     $(window).resize(function() {
-        if (SM.ws) {
-            SM.sendParameters();
+        if (CLIENT.ws) {
+            CLIENT.sendParameters();
         }
         SM.redrawCharts()
     }).resize();
 
 
-    // Stop the application when page is unloaded
-    $(window).on('beforeunload', function(event) {
-        var target = document.activeElement.href
-        console.log(document.activeElement.href)
-        if (!target.includes("/arb_mananger/")){
-            SM.ws.onclose = function() {}; // disable onclose handler first
-            SM.ws.close();
-            $.get(
-                SM.config.stop_app_url
-            )
-        }
-    });
 
-    // Everything prepared, start application
-    SM.startApp();
 
     SM.previousPageUrl = document.referrer;
     console.log(`Previously visited page URL: ${SM.previousPageUrl}`);

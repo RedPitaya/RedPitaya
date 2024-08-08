@@ -14,6 +14,15 @@
         OSC.triggerParam();
     }
 
+    OSC.chShowInvalid = function(ch,new_params) {
+        var param_name = ch+"_SHOW_INVALID";
+        var state = new_params[param_name].value;
+        var field = $('#' + param_name);
+        if (field.is('button')) {
+            field[state === true? 'addClass' : 'removeClass']('active');
+        }
+    }
+
     OSC.ch1Show = function(new_params) {
         OSC.chShow("CH1", new_params);
     }
@@ -30,9 +39,49 @@
         OSC.chShow("CH4", new_params);
     }
 
+    OSC.ch1ShowInvalid = function(new_params) {
+        OSC.chShowInvalid("CH1", new_params);
+    }
+
+    OSC.ch2ShowInvalid = function(new_params) {
+        OSC.chShowInvalid("CH2", new_params);
+    }
+
+    OSC.ch3ShowInvalid = function(new_params) {
+        OSC.chShowInvalid("CH3", new_params);
+    }
+
+    OSC.ch4ShowInvalid = function(new_params) {
+        OSC.chShowInvalid("CH4", new_params);
+    }
+
+
+    OSC.in1Name = function(new_params) {
+        $('#IN1_CHANNEL_NAME_INPUT').val(new_params['IN1_CHANNEL_NAME_INPUT'].value)
+        $('.in1_channel_name').html(new_params['IN1_CHANNEL_NAME_INPUT'].value)
+        OSC.handleMeasureList();
+    }
+
+    OSC.in2Name = function(new_params) {
+        $('#IN2_CHANNEL_NAME_INPUT').val(new_params['IN2_CHANNEL_NAME_INPUT'].value)
+        $('.in2_channel_name').html(new_params['IN2_CHANNEL_NAME_INPUT'].value)
+        OSC.handleMeasureList();
+    }
+
+    OSC.in3Name = function(new_params) {
+        $('#IN3_CHANNEL_NAME_INPUT').val(new_params['IN3_CHANNEL_NAME_INPUT'].value)
+        $('.in3_channel_name').html(new_params['IN3_CHANNEL_NAME_INPUT'].value)
+        OSC.handleMeasureList();
+    }
+
+    OSC.in4Name = function(new_params) {
+        $('#IN4_CHANNEL_NAME_INPUT').val(new_params['IN4_CHANNEL_NAME_INPUT'].value)
+        $('.in4_channel_name').html(new_params['IN4_CHANNEL_NAME_INPUT'].value)
+        OSC.handleMeasureList();
+    }
+
     OSC.setScale = function(ch,new_params) {
-        var ch_name_l = ch.toLowerCase();
-        var param_name = "OSC_"+ch+"_SCALE"
+        var param_name = "GPOS_SCALE_"+ch
         var field = $('#' + param_name);
 
         var inp_units;
@@ -42,30 +91,42 @@
             inp_units = 'mV';
         }
         field.html(OSC.convertVoltage(new_params[param_name].value));
-        $("#OSC_"+ch+"_OFFSET_UNIT").html(inp_units)
+        $("#"+param_name+"_UNIT").html(inp_units)
         if (!OSC.state.trig_dragging)
             OSC.updateTriggerDragHandle()
+        OSC.setXYAxisScale()
+        OSC.updateTitileXAxisTicksXY()
+        OSC.updateTitileYAxisTicksXY()
+        OSC.updateTitileYAxisTicks()
     }
 
 
     OSC.ch1SetScale = function(new_params) {
         OSC.setScale("CH1",new_params);
-        OSC.chOffset("CH1")
+        OSC.setGposOffset("CH1")
+        OSC.setInOffsetPlotCh("1")
+        OSC.setInOffsetZeroPlotCh("1")
     }
 
     OSC.ch2SetScale = function(new_params) {
         OSC.setScale("CH2",new_params);
-        OSC.chOffset("CH2")
+        OSC.setGposOffset("CH2")
+        OSC.setInOffsetPlotCh("2")
+        OSC.setInOffsetZeroPlotCh("2")
     }
 
     OSC.ch3SetScale = function(new_params) {
         OSC.setScale("CH3",new_params);
-        OSC.chOffset("CH3")
+        OSC.setGposOffset("CH3")
+        OSC.setInOffsetPlotCh("3")
+        OSC.setInOffsetZeroPlotCh("3")
     }
 
     OSC.ch4SetScale = function(new_params) {
         OSC.setScale("CH4",new_params);
-        OSC.chOffset("CH4")
+        OSC.setGposOffset("CH4")
+        OSC.setInOffsetPlotCh("4")
+        OSC.setInOffsetZeroPlotCh("4")
     }
 
     OSC.processSampleRate = function(new_params) {
@@ -173,6 +234,7 @@
 
     OSC.setTimeScale = function(new_params){
         OSC.setTimeScaleOffset("OSC_TIME_SCALE")
+        OSC.updateTitileXAxisTicks()
     }
 
     OSC.trigSlope = function(new_params) {
@@ -198,26 +260,30 @@
 
     OSC.ch1SetGain = function(new_params){
         OSC.setGain("OSC_CH1_IN_GAIN")
-        OSC.updateOSCOffsetLimits("CH1");
-        OSC.chOffset("CH1");
+        OSC.updateOSCOffsetLimits("1");
+        OSC.updateOSCOffsetZeroLimits("1")
+        OSC.setGposOffset("CH1");
     }
 
     OSC.ch2SetGain = function(new_params){
         OSC.setGain("OSC_CH2_IN_GAIN")
-        OSC.updateOSCOffsetLimits("CH2");
-        OSC.chOffset("CH2");
+        OSC.updateOSCOffsetLimits("2");
+        OSC.updateOSCOffsetZeroLimits("2")
+        OSC.setGposOffset("CH2");
     }
 
     OSC.ch3SetGain = function(new_params){
         OSC.setGain("OSC_CH3_IN_GAIN")
-        OSC.updateOSCOffsetLimits("CH3");
-        OSC.chOffset("CH3");
+        OSC.updateOSCOffsetLimits("3");
+        OSC.updateOSCOffsetZeroLimits("3")
+        OSC.setGposOffset("CH3");
     }
 
     OSC.ch4SetGain = function(new_params){
         OSC.setGain("OSC_CH4_IN_GAIN")
-        OSC.updateOSCOffsetLimits("CH4");
-        OSC.chOffset("CH4");
+        OSC.updateOSCOffsetLimits("4");
+        OSC.updateOSCOffsetZeroLimits("4")
+        OSC.setGposOffset("CH4");
     }
 
     OSC.setACDC = function(param_name){
@@ -243,14 +309,11 @@
     }
 
     OSC.updateOSCOffsetLimits = function(ch){
-        var probeAttenuation = parseInt($("#OSC_"+ch+"_PROBE option:selected").text());
-        var jumperSettings = $("#OSC_"+ch+"_IN_GAIN").parent().hasClass("active") ? 1 : 20;
-        var units = $("#OSC_"+ch+"_OFFSET_UNIT").html();
-        var multiplier = units == "mV" ? 1000 : 1;
-        var newMin = -1 * 10 * jumperSettings * probeAttenuation * multiplier;
-        var newMax = 1 * 10 * jumperSettings * probeAttenuation * multiplier;
-        $("#OSC_"+ch+"_OFFSET").attr("min", newMin);
-        $("#OSC_"+ch+"_OFFSET").attr("max", newMax);
+        OSC.setInOffsetPlotChLimits(ch)
+    }
+
+    OSC.updateOSCOffsetZeroLimits = function(ch){
+        OSC.setInOffsetZeroPlotChLimits(ch)
     }
 
     OSC.setOscProbe = function(param_name){
@@ -262,29 +325,33 @@
 
     OSC.setOscProbe1 = function(new_params){
         OSC.setOscProbe("OSC_CH1_PROBE")
-        OSC.updateOSCOffsetLimits("CH1")
-        OSC.chOffset("CH1");
+        OSC.updateOSCOffsetLimits("1")
+        OSC.updateOSCOffsetZeroLimits("1")
+        OSC.setGposOffset("CH1");
         OSC.updateTriggerDragHandle();
     }
 
     OSC.setOscProbe2 = function(new_params){
         OSC.setOscProbe("OSC_CH2_PROBE")
-        OSC.updateOSCOffsetLimits("CH2")
-        OSC.chOffset("CH2");
+        OSC.updateOSCOffsetLimits("2")
+        OSC.updateOSCOffsetZeroLimits("2")
+        OSC.setGposOffset("CH2");
         OSC.updateTriggerDragHandle();
     }
 
     OSC.setOscProbe3 = function(new_params){
         OSC.setOscProbe("OSC_CH3_PROBE")
-        OSC.updateOSCOffsetLimits("CH3")
-        OSC.chOffset("CH3");
+        OSC.updateOSCOffsetLimits("3")
+        OSC.updateOSCOffsetZeroLimits("3")
+        OSC.setGposOffset("CH3");
         OSC.updateTriggerDragHandle();
     }
 
     OSC.setOscProbe4 = function(new_params){
         OSC.setOscProbe("OSC_CH4_PROBE")
-        OSC.updateOSCOffsetLimits("CH4")
-        OSC.chOffset("CH4");
+        OSC.updateOSCOffsetLimits("4")
+        OSC.updateOSCOffsetZeroLimits("4")
+        OSC.setGposOffset("CH4");
         OSC.updateTriggerDragHandle();
     }
 
@@ -300,6 +367,115 @@
         var field = $('#' + param_name);
         if (field.is('button')) {
             field[state === true? 'addClass' : 'removeClass']('active');
+        }
+        var index = ""
+        if (param_name.includes("CH1")) index = "1"
+        if (param_name.includes("CH2")) index = "2"
+        if (param_name.includes("CH3")) index = "3"
+        if (param_name.includes("CH4")) index = "4"
+        if (index !== ""){
+            OSC.updateOSCOffsetLimits(index)
+            OSC.updateOSCOffsetZeroLimits(index)
+            OSC.setGposOffset("CH"+index);
+            OSC.updateTriggerDragHandle();
+        }
+    }
+
+    OSC.createAxisTicks = function(){
+        OSC.createXAxisTicks()
+        OSC.createYAxisTicks()
+    }
+
+    OSC.createXAxisTicks = function(){
+        var graphs = document.getElementById("main");
+        for(var i = -5; i <= 5; i++){
+            var tick = document.createElement('div');
+            tick.id = "xaxis_tick" + (i + 5)
+            tick.className = "x_axis_ticks"
+            tick.innerText = i;
+            graphs.appendChild(tick)
+        }
+        OSC.moveTitileXAxisTicks()
+    }
+
+    OSC.updateTitileXAxisTicks = function(){
+        var scale = 0
+        if (OSC.params.orig['OSC_TIME_SCALE']){
+            scale = OSC.params.orig['OSC_TIME_SCALE'].value * -1
+        }
+        for(var i = -5; i <= 5; i++){
+            var v = OSC.convertTime(i * scale)
+            $("#xaxis_tick" + (i + 5)).html(v)
+        }
+        OSC.moveTitileXAxisTicks()
+    }
+
+    OSC.moveTitileXAxisTicks = function(){
+        var gh = $('#graphs_holder').height()
+        var gw = $('#graphs_holder').width()
+        for(var i = -5; i <= 5; i++){
+            var ws = $("#xaxis_tick" + (i + 5)).width() / 2
+            if (i == -5) ws = 0
+            if (i ==  5) ws *= 2
+            $("#xaxis_tick" + (i + 5)).css('top',gh + 35).css('left', gw / 2.0 + (gw / 2.0) * i/5.0 + 20 - ws)
+        }
+    }
+
+    OSC.createYAxisTicks = function(){
+        var graphs = document.getElementById("main");
+        for(var i = -5; i <= 5; i++){
+            var tick = document.createElement('div');
+            tick.id = "yaxis_tick" + (i + 5)
+            tick.className = "y_axis_ticks rotate"
+            tick.innerText = i
+            graphs.appendChild(tick)
+        }
+        OSC.updateTitileYAxisTicks()
+    }
+
+    OSC.updateTitileYAxisTicks = function(){
+        var itm = OSC.getSettingsActiveChannel()
+        if (itm.channel !== ''){
+            var color = OSC.config.graph_colors[itm.channel.toLowerCase()]
+            for(var i = -5; i <= 5; i++){
+                var v = OSC.convertVoltageForAxis(i * -itm.scale) + itm.suffix
+                $("#yaxis_tick" + (i + 5)).html(v).css('color', color);
+            }
+        }else{
+            for(var i = -5; i <= 5; i++){
+                $("#yaxis_tick" + (i + 5)).html('')
+            }
+        }
+        OSC.moveTitileYAxisTicks()
+    }
+
+    OSC.moveTitileYAxisTicks = function(){
+        var gh = $('#graphs').height() - 8
+        for(var i = -5; i <= 5; i++){
+            var ws = $("#yaxis_tick" + (i + 5)).height() / 2
+            if (i == -5) ws = 0
+            if (i ==  5) ws *= 2
+            $("#yaxis_tick" + (i + 5)).css('left',2).css('top', gh / 2.0 + (gh / 2.0) * i/5.0 + 33 - ws)
+        }
+    }
+
+    OSC.setCurrentBuffer = function(new_params){
+        if (OSC.params.orig['OSC_BUFFER_CURRENT']){
+            var cur = OSC.params.orig['OSC_BUFFER_CURRENT'].value
+            $('#buffer_selector_info').html('Current buffer: ' + cur)
+            var max = OSC.params.orig['OSC_BUFFER_CURRENT'].max
+            var min = OSC.params.orig['OSC_BUFFER_CURRENT'].min
+            if (cur == max){
+                $('#OSC_NEXT_BUFFER').prop('disabled', true);
+            }else{
+                $('#OSC_NEXT_BUFFER').prop('disabled', false);
+            }
+
+            if (cur == min){
+                $('#OSC_PREV_BUFFER').prop('disabled', true);
+            }else{
+                $('#OSC_PREV_BUFFER').prop('disabled', false);
+            }
         }
     }
 

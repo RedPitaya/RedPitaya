@@ -4,15 +4,7 @@
 #define  OFFSET_NEXT_SEGMENT    12
 #define  OFFSET_RAW_DATA        OFFSET_NEXT_SEGMENT + 8
 
-using namespace TDMS;
-
-
-void print_state (const std::ios& stream) {
-    std::cout << " good()=" << stream.good();
-    std::cout << " eof()=" << stream.eof();
-    std::cout << " fail()=" << stream.fail();
-    std::cout << " bad()=" << stream.bad();
-}
+using namespace rp_formatter_api::TDMS;
 
 auto WriterSegment::LoadMetadata(vector<shared_ptr<Metadata>> data) -> void{
     m_nodes = data;

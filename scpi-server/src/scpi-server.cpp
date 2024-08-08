@@ -34,7 +34,7 @@
 #include "scpi/parser.h"
 #include "rp.h"
 #include "api_cmd.h"
-#include "sweep.h"
+#include "common/rp_sweep.h"
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
@@ -293,8 +293,11 @@ int main(int argc, char *argv[])
         return (EXIT_FAILURE);
     }
 
-
-
+    result = rp_sweep_api::rp_SWInit();
+    if (result != RP_OK) {
+        rp_Log(nullptr,LOG_ERR, result, "Failed to initialize RP Sweep library: %s", rp_GetError(result));
+        return (EXIT_FAILURE);
+    }
 
 
     // RP_ResetAll(&scpi_context); // need for set default values of scpi
@@ -399,7 +402,7 @@ int main(int argc, char *argv[])
     }
 
     close(listenfd);
-    stopSweep();
+    rp_sweep_api::rp_SWRelease();
     result = rp_Release();
     if (result != RP_OK) {
         rp_Log(nullptr,LOG_ERR, result, "Failed to release RP App library: %s", rp_GetError(result));

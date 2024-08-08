@@ -1,5 +1,6 @@
 #include <cassert>
 #include <sstream>
+#include <iostream>
 #include <cstring>
 #include "wav_reader.h"
 

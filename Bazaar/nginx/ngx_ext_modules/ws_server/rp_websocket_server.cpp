@@ -11,7 +11,7 @@
 #include <streambuf>
 #include <string>
 #include <future>
-
+#include <unistd.h>
 #include <math.h>
 
 using websocketpp::lib::thread;
@@ -50,6 +50,7 @@ rp_websocket_server::rp_websocket_server(struct server_parameters* params)
     std::stringstream ss;
     ss << "default params: signal_interval = "<< params->signal_interval <<", param_interval =" << params->param_interval;
     m_endpoint.get_alog().write(websocketpp::log::alevel::app,ss.str());
+	m_OnClosed = true;
 }
 
 rp_websocket_server::~rp_websocket_server()
@@ -76,6 +77,7 @@ void rp_websocket_server::run(std::string docroot, uint16_t port) {
 	m_endpoint.start_accept();
 	// Start the ASIO io_service run loop
 	try {
+		m_OnClosed = false;
 		m_endpoint.run();
 	} catch (websocketpp::exception const & e) {
 		std::cout << e.what() << std::endl;
@@ -279,6 +281,11 @@ void rp_websocket_server::start(std::string docroot, uint16_t port)
 	m_thread = thread(bind(&rp_websocket_server::run,this, docroot,  port));
 	set_signal_timer();
 	set_param_timer();
+	int timeout = 0;
+	while(m_OnClosed && timeout < 5000){
+		usleep(1000);
+		timeout++;
+	}
 }
 
 void rp_websocket_server::join()

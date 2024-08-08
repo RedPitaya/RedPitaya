@@ -88,34 +88,9 @@ void cmn_enableDebugReg(){
     g_DebugReg = true;
 }
 
-
-void cmn_DebugReg(const char* msg,uint32_t value){
-    if (!g_DebugReg) return;
-    fprintf(stderr,"\tSet %s 0x%X\n",msg,value);
+int  cmn_isEnableDebugReg(){
+    return g_DebugReg;
 }
-
-void cmn_DebugRegCh(const char* msg,int ch,uint32_t value){
-    if (!g_DebugReg) return;
-    rp_channel_t chV = (rp_channel_t)ch;
-    switch(chV){
-        case RP_CH_1:
-            fprintf(stderr,"\tSet %s [CH1] 0x%X\n",msg,value);
-        break;
-        case RP_CH_2:
-            fprintf(stderr,"\tSet %s [CH2] 0x%X\n",msg,value);
-        break;
-        case RP_CH_3:
-            fprintf(stderr,"\tSet %s [CH2] 0x%X\n",msg,value);
-        break;
-        case RP_CH_4:
-            fprintf(stderr,"\tSet %s [CH2] 0x%X\n",msg,value);
-        break;
-        default:
-            fprintf(stderr,"\tSet %s [Error channel] 0x%X\n",msg,value);
-        break;
-    }
-}
-
 
 int cmn_SetShiftedValue(volatile uint32_t* field, uint32_t value, uint32_t mask, uint32_t bitsToSetShift,uint32_t *settedValue)
 {
@@ -357,7 +332,7 @@ int cmn_GetReservedMemory(uint32_t *_startAddress,uint32_t *_size){
         fprintf(stderr,"[FATAL ERROR] Error open: /sys/firmware/devicetree/base/reserved-memory/buffer@1000000/reg\n");
         return RP_EOMD;
     }
-    char data[8];
+    char data[8] = {0,0,0,0,0,0,0,0};
     int sz = read(fd, &data, 8);
 
     if (close(fd) < 0) {

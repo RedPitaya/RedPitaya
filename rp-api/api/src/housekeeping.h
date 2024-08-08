@@ -156,13 +156,14 @@ int house_SetPllControlEnable(bool enable);
 
 volatile housekeeping_control_t *hk = NULL;
 
-static int hk_Init(bool reset) {
-    cmn_Map(HOUSEKEEPING_BASE_SIZE, HOUSEKEEPING_BASE_ADDR, (void**)&hk);
+static int hk_Init() {
+    int ret = cmn_Map(HOUSEKEEPING_BASE_SIZE, HOUSEKEEPING_BASE_ADDR, (void**)&hk);
+    return ret;
+}
 
+static int hk_Reset() {
     if (rp_HPGetIsPLLControlEnableOrDefault()){
-        if (reset) {
-            house_SetPllControlEnable(false);
-        }
+        return house_SetPllControlEnable(false);
     }
     return RP_OK;
 }
@@ -179,6 +180,9 @@ static hk_version_t house_getHKVersion() {
         case STEM_125_14_v1_0:
         case STEM_125_14_v1_1:
         case STEM_125_14_LN_v1_1:
+        case STEM_125_14_LN_BO_v1_1:
+        case STEM_125_14_LN_CE1_v1_1:
+        case STEM_125_14_LN_CE2_v1_1:
         case STEM_125_14_Z7020_v1_0:
         case STEM_125_14_Z7020_LN_v1_1:
             return HK_V1;

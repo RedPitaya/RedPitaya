@@ -9,10 +9,23 @@
 #include "constants.h"
 
 class CDataDecimator{
-    
-public:
 
-    typedef std::function<int(rpApp_osc_source source, float volts, float *res)> func_t;
+public:
+    struct DataInfo{
+        float m_minUnscale = 0;
+        float m_maxUnscale  = 0;
+        float m_meanUnscale  = 0;
+        float m_min = 0;
+        float m_max = 0;
+        float m_mean = 0;
+    };
+
+    struct ValidRange{
+        int32_t m_validBeforeTrigger = -1;
+        int32_t m_validAfterTrigger = -1;
+    };
+
+    typedef std::function<int(rpApp_osc_source source, float &coff1, float &coff2)> func_t;
 
     CDataDecimator();
     ~CDataDecimator();
@@ -40,7 +53,7 @@ public:
     auto resetOffest() -> void;
 
     auto decimate(rp_channel_t _channel, const float *_data,vsize_t _dataSize, int _triggerPointPos) -> bool;
-    auto decimate(rp_channel_t _channel, const float *_data,vsize_t _dataSize, int _triggerPointPos,std::vector<float> *_view, std::vector<float> *_originalData) -> bool;
+    auto decimate(rp_channel_t _channel, const float *_data,vsize_t _dataSize, int _triggerPointPos,std::vector<float> *_view, std::vector<float> *_originalData, DataInfo *_viewInfo,  DataInfo *_viewRawInfo, ValidRange range) -> bool;
 
 private:
     float m_decimationFactor;

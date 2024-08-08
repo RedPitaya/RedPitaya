@@ -75,7 +75,10 @@ typedef struct {
     bool                is_dma_mode_v0_94;
     bool                is_DAC_50_Ohm_mode;
 
+    bool                is_split_osc_triggers;
 
+    uint8_t             gpio_N_count;
+    uint8_t             gpio_P_count;
 } profiles_t;
 
 

@@ -6,6 +6,7 @@
 
 #define MAX_VIEW_CHANNELS (RPAPP_OSC_SOUR_MATH + 1)
 
+#define DEFAULT_OSCILOGRAMM_BUFFERS   1
 #define VIEW_SIZE_DEFAULT             1024
 #define VIEW_SIZE_MAX                 1024 * 8
 
@@ -19,7 +20,7 @@ typedef uint16_t vsize_t;
 #define PERIOD_EXISTS_PEAK_THRESHOLD      0.99  // ratio
 
 
-#define CONTIOUS_MODE_SCALE_THRESHOLD 20 // ms
+#define CONTIOUS_MODE_SCALE_THRESHOLD 50 // ms
 #define WAIT_TO_FILL_BUF_TIMEOUT      500.f //(2*CLOCKS_PER_SEC)
 
 #endif // __CONSTANTS_H

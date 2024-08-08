@@ -14,7 +14,7 @@ VER := $(shell cat apps-tools/ecosystem/info/info.json | grep version | sed -e '
 BUILD_NUMBER ?= 0
 REVISION ?= $(shell git rev-parse --short HEAD)
 VERSION = $(VER)-$(BUILD_NUMBER)
-LINUX_VER = 2.04
+LINUX_VER = 2.05
 export BUILD_NUMBER
 export REVISION
 export VERSION
@@ -115,14 +115,19 @@ librparb: librp
 ################################################################################
 
 LIBRP_SYSTEM_DIR	= rp-web-api/rp-system
+LIBRP_CLIENT_DIR	= rp-web-api/rp-client
 
-.PHONY: librpsystem
+.PHONY: librpsystem librpclient
 
-web-api: librpsystem
+web-api: librpsystem librpclient
 
 librpsystem: api nginx
 	cmake -B$(abspath $(LIBRP_SYSTEM_DIR)/build) -S$(abspath $(LIBRP_SYSTEM_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(LIBRP_SYSTEM_DIR)/build install -j$(CPU_CORES)
+
+librpclient: api nginx
+	cmake -B$(abspath $(LIBRP_CLIENT_DIR)/build) -S$(abspath $(LIBRP_CLIENT_DIR)) $(CMAKEVAR)
+	$(MAKE) -C $(LIBRP_CLIENT_DIR)/build install -j$(CPU_CORES)
 
 ################################################################################
 # Red Pitaya ecosystem
@@ -275,13 +280,13 @@ $(SCPI_PARSER_DIR): $(SCPI_PARSER_TAR)
 	tar -xzf $< --strip-components=1 --directory=$@
 
 scpi: api $(INSTALL_DIR) $(SCPI_PARSER_DIR)
-	$(MAKE) -C $(SCPI_SERVER_DIR) clean
+	$(MAKE) -i -C $(SCPI_SERVER_DIR) clean
 	$(MAKE) -C $(SCPI_SERVER_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
 	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 scpi_clean:
 	rm -rf $(SCPI_PARSER_TAR)
-	$(MAKE) -C $(SCPI_SERVER_DIR) clean
+	$(MAKE) -i -C $(SCPI_SERVER_DIR) clean
 
 ################################################################################
 # SDR
@@ -289,7 +294,7 @@ scpi_clean:
 
 .PHONY: sdr
 
-SDR_ZIP = SDR-bundle-39-5eb6e37a.zip
+SDR_ZIP = SDR-bundle-59-1ba76002.zip
 SDR_URL = https://downloads.redpitaya.com/hamlab/sdr-bundle/$(SDR_ZIP)
 
 sdr: | $(DL)
@@ -307,6 +312,7 @@ LCR_DIR            = Test/lcr
 BODE_DIR           = Test/bode
 MONITOR_DIR        = Test/monitor
 ACQUIRE_DIR        = Test/acquire
+ACQUIRE_P_DIR      = Test/acquire_p
 CALIB_DIR          = Test/calib
 GENERATOR_DIR	   = Test/generate
 SPECTRUM_DIR       = Test/spectrum
@@ -319,9 +325,9 @@ FPGA_TESTS_DIR     = Examples/Tests
 STARTUPSH          = $(INSTALL_DIR)/sbin/startup.sh
 
 .PHONY: examples rp_communication fpgautils
-.PHONY: lcr bode monitor generator acquire calib laboardtest spectrum led_control daisy_tool fpga_tests
+.PHONY: lcr bode monitor generator acquire acquire_p calib laboardtest spectrum led_control daisy_tool fpga_tests
 
-examples: lcr bode monitor calib spectrum acquire generator led_control fpgautils daisy_tool fpga_tests
+examples: lcr bode monitor calib spectrum acquire acquire_p generator led_control fpgautils daisy_tool fpga_tests
 
 
 lcr: api
@@ -343,6 +349,10 @@ generator: api
 acquire: api
 	cmake -B$(abspath $(ACQUIRE_DIR)/build) -S$(abspath $(ACQUIRE_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(ACQUIRE_DIR)/build install -j$(CPU_CORES)
+
+acquire_p: api
+	cmake -B$(abspath $(ACQUIRE_P_DIR)/build) -S$(abspath $(ACQUIRE_P_DIR)) $(CMAKEVAR)
+	$(MAKE) -C $(ACQUIRE_P_DIR)/build install -j$(CPU_CORES)
 
 calib: api
 	cmake -B$(abspath $(CALIB_DIR)/build) -S$(abspath $(CALIB_DIR)) $(CMAKEVAR)
@@ -524,27 +534,19 @@ clean: nginx_clean scpi_clean
 	rm -rf $(abspath $(LIBRP_ARB_DIR)/build)
 
 	rm -rf $(abspath $(LIBRP_SYSTEM_DIR)/build)
+	rm -rf $(abspath $(LIBRP_CLIENT_DIR)/build)
 
 	rm -rf $(abspath $(LCR_DIR)/build)
 	rm -rf $(abspath $(CALIB_DIR)/build)
 	rm -rf $(abspath $(BODE_DIR)/build)
 	rm -rf $(abspath $(ACQUIRE_DIR)/build)
+	rm -rf $(abspath $(ACQUIRE_P_DIR)/build)
 	rm -rf $(abspath $(DAISY_TOOL_DIR)/build)
 	rm -rf $(abspath $(GENERATOR_DIR)/build)
 	rm -rf $(abspath $(LED_CONTROL_DIR)/build)
 	rm -rf $(abspath $(MONITOR_DIR)/build)
 	rm -rf $(abspath $(SPECTRUM_DIR)/build)
 	rm -rf $(abspath $(LIBRPAPP_DIR)/build)
-
-
-	$(MAKE) -C $(NGINX_DIR) clean
-	$(MAKE) -C $(SCPI_SERVER_DIR) clean
-	$(MAKE) -C $(COMM_DIR) clean
-	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) clean
-	$(MAKE) -C $(IDGEN_DIR) clean
-	$(MAKE) -C $(FPGA_TESTS_DIR) clean
-
-	rm -rf $(DL)
 
 	rm -rf $(abspath $(APP_ARB_MANAGER_DIR)/build)
 	rm -rf $(abspath $(APP_BA_PRO_DIR)/build)
@@ -558,6 +560,17 @@ clean: nginx_clean scpi_clean
 	rm -rf $(abspath $(APP_SCPIMANAGER_DIR)/build)
 	rm -rf $(abspath $(APP_SPECTRUMPRO_DIR)/build)
 	rm -rf $(abspath $(APP_UPDATER_DIR)/build)
+
+	$(MAKE) -C $(NGINX_DIR) clean
+	$(MAKE) -C $(SCPI_SERVER_DIR) clean
+	$(MAKE) -C $(COMM_DIR) clean
+	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) clean
+	$(MAKE) -C $(IDGEN_DIR) clean
+	$(MAKE) -C $(FPGA_TESTS_DIR) clean
+
+	rm -rf $(DL)
+
+
 
 
 

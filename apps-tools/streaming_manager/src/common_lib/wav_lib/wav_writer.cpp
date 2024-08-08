@@ -2,6 +2,7 @@
 #include <sstream>
 #include <vector>
 #include "wav_writer.h"
+#include "logger_lib/file_logger.h"
 
 CWaveWriter::CWaveWriter(){
     resetHeaderInit();
@@ -31,7 +32,7 @@ auto CWaveWriter::BuildWAVStream(std::map<DataLib::EDataBuffersPackChannel,SBuff
     std::vector<size_t>   channelsSamples;
 
 
-    if (ch1.buffer) {
+    if (ch1.buffer.get()) {
         m_numChannels++;
         maxSamples = maxSamples < ch1.samplesCount ? ch1.samplesCount : maxSamples;
         maxBitBySample = maxBitBySample < ch1.bitsBySample ? ch1.bitsBySample : maxBitBySample;
@@ -41,7 +42,7 @@ auto CWaveWriter::BuildWAVStream(std::map<DataLib::EDataBuffersPackChannel,SBuff
         channelsSamples.push_back(ch1.samplesCount);
     }
 
-    if (ch2.buffer) {
+    if (ch2.buffer.get()) {
         m_numChannels++;
         maxSamples = maxSamples < ch2.samplesCount ? ch2.samplesCount : maxSamples;
         maxBitBySample = maxBitBySample < ch2.bitsBySample ? ch2.bitsBySample : maxBitBySample;
@@ -51,7 +52,7 @@ auto CWaveWriter::BuildWAVStream(std::map<DataLib::EDataBuffersPackChannel,SBuff
         channelsSamples.push_back(ch2.samplesCount);
     }
 
-    if (ch3.buffer) {
+    if (ch3.buffer.get()) {
         m_numChannels++;
         maxSamples = maxSamples < ch3.samplesCount ? ch3.samplesCount : maxSamples;
         maxBitBySample = maxBitBySample < ch3.bitsBySample ? ch3.bitsBySample : maxBitBySample;
@@ -61,7 +62,7 @@ auto CWaveWriter::BuildWAVStream(std::map<DataLib::EDataBuffersPackChannel,SBuff
         channelsSamples.push_back(ch3.samplesCount);
     }
 
-    if (ch4.buffer) {
+    if (ch4.buffer.get()) {
         m_numChannels++;
         maxSamples = maxSamples < ch4.samplesCount ? ch4.samplesCount : maxSamples;
         maxBitBySample = maxBitBySample < ch4.bitsBySample ? ch4.bitsBySample : maxBitBySample;
@@ -75,7 +76,13 @@ auto CWaveWriter::BuildWAVStream(std::map<DataLib::EDataBuffersPackChannel,SBuff
     m_bitDepth = maxBitBySample;
     m_OSCRate = OSCRate;
 
-    std::stringstream *memory = new std::stringstream(std::ios_base::in | std::ios_base::out | std::ios_base::binary);
+    std::stringstream *memory = nullptr;
+    try{
+        memory = new std::stringstream(std::ios_base::in | std::ios_base::out | std::ios_base::binary);
+    }catch(...){
+        return nullptr;
+    }
+
     if (m_headerInit)
     {
         BuildHeader(memory);
@@ -123,8 +130,8 @@ auto CWaveWriter::BuildWAVStream(std::map<DataLib::EDataBuffersPackChannel,SBuff
 
     size_t buffLen = m_numChannels * maxSamples * (maxBitBySample / 8);
     try{
-        uint8_t* cross_buff = new uint8_t[buffLen];
-
+        std::vector<uint8_t> cross_buff;
+        cross_buff.resize(buffLen);
         for(size_t i = 0; i < maxSamples; i++){
             for(uint8_t ch = 0; ch < m_numChannels; ch++){
                 if (m_bitDepth == 8){
@@ -136,7 +143,7 @@ auto CWaveWriter::BuildWAVStream(std::map<DataLib::EDataBuffersPackChannel,SBuff
                 }
 
                 if (m_bitDepth == 16){
-                    auto cross_buff16 = (uint16_t*)cross_buff;
+                    auto cross_buff16 = (uint16_t*)cross_buff.data();
                     if (channelsSamples[ch] > i){
                         cross_buff16[i * m_numChannels + ch] = get16Bit(ch,i);
                     }else{
@@ -145,7 +152,7 @@ auto CWaveWriter::BuildWAVStream(std::map<DataLib::EDataBuffersPackChannel,SBuff
                 }
 
                 if (m_bitDepth == 32){
-                    auto cross_buff32 = (float*)cross_buff;
+                    auto cross_buff32 = (float*)cross_buff.data();
                     if (channelsSamples[ch] > i){
                         cross_buff32[i * m_numChannels + ch] = get32Bit(ch,i);
                     }else{
@@ -154,9 +161,13 @@ auto CWaveWriter::BuildWAVStream(std::map<DataLib::EDataBuffersPackChannel,SBuff
                 }
             }
         }
-        memory->write((const char*)cross_buff, buffLen);
-        delete [] cross_buff;
-        return memory;
+        TRACE_SHORT("Start write")
+        memory->write((const char*)cross_buff.data(), buffLen);
+        TRACE_SHORT("End write")
+        if (memory->good()){
+            memory->flush();
+            return memory;
+        }
     }catch(std::exception &e){
         fprintf(stderr,"[ERROR] CDataBuffer: %s\n",e.what());
     }
@@ -168,13 +179,13 @@ auto CWaveWriter::BuildHeader(std::stringstream *memory) -> void{
 
     int sampleRate = 44100;
     int32_t dataChunkSize = m_samplesPerChannel * m_numChannels * (m_bitDepth / 8);
-    int16_t data_format = m_bitDepth == 32 ? 0x0003: 0x0001; 
+    int16_t data_format = m_bitDepth == 32 ? 0x0003: 0x0001;
     addStringToFileData(memory,"RIFF");
-    
+
     int32_t fileSizeInBytes = 4 + 24 + 8 + dataChunkSize;
     addInt32ToFileData (memory, fileSizeInBytes);
     addStringToFileData(memory,"WAVE");
-    
+
 
     // -----------------------------------------------------------
     // FORMAT CHUNK
@@ -183,15 +194,15 @@ auto CWaveWriter::BuildHeader(std::stringstream *memory) -> void{
     addInt16ToFileData (memory, data_format); // audio format = 1
     addInt16ToFileData (memory, (int16_t)m_numChannels); // num channels
     addInt32ToFileData (memory, (int32_t)m_OSCRate); // sample rate
-    
+
     int32_t numBytesPerSecond = (int32_t) ((m_numChannels * sampleRate * m_bitDepth) / 8);
     addInt32ToFileData (memory, numBytesPerSecond);
-    
+
     int16_t numBytesPerBlock = m_numChannels * (m_bitDepth / 8);
     addInt16ToFileData (memory, numBytesPerBlock);
-    
+
     addInt16ToFileData (memory, (int16_t)m_bitDepth);
-    
+
     // -----------------------------------------------------------
     memory->write("data",4);
     addInt32ToFileData (memory, dataChunkSize);
@@ -208,7 +219,7 @@ auto CWaveWriter::addStringToFileData (std::stringstream *memory, std::string s)
 void CWaveWriter::addInt32ToFileData (std::stringstream *memory, int32_t i)
 {
     char bytes[4];
-    
+
     if (m_endianness == Endianness::LittleEndian)
     {
         bytes[3] = (i >> 24) & 0xFF;
@@ -224,13 +235,13 @@ void CWaveWriter::addInt32ToFileData (std::stringstream *memory, int32_t i)
         bytes[3] = i & 0xFF;
     }
     memory->write(bytes,4);
-    
+
 }
 
 void CWaveWriter::addInt16ToFileData (std::stringstream *memory, int16_t i)
 {
     char bytes[2];
-    
+
     if (m_endianness == Endianness::LittleEndian)
     {
         bytes[1] = (i >> 8) & 0xFF;
@@ -241,7 +252,7 @@ void CWaveWriter::addInt16ToFileData (std::stringstream *memory, int16_t i)
         bytes[0] = (i >> 8) & 0xFF;
         bytes[1] = i & 0xFF;
     }
-    
+
     memory->write(bytes,2);
 }
 

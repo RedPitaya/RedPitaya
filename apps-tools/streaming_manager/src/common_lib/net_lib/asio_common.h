@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <memory>
 #include <list>
+#include <vector>
 #include <utility>
 
 #include "data_lib/buffers_pack.h"

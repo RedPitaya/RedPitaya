@@ -27,24 +27,11 @@
 //Bode analyser
 (function(BA, $, undefined) {
 
-    // Params cache
-    BA.params = {
-        orig: {},
-        local: {}
-    };
 
     BA.scale = true;
     BA.curGraphScale = true;
     BA.param_callbacks = {};
 
-    // App configuration
-    BA.config = {};
-    BA.config.app_id = 'ba_pro';
-    BA.config.server_ip = ''; // Leave empty on production, it is used for testing only
-    BA.config.start_app_url = (BA.config.server_ip.length ? 'http://' + BA.config.server_ip : '') + '/bazaar?start=' + BA.config.app_id + '?' + location.search.substr(1);
-    BA.config.stop_app_url = (BA.config.server_ip.length ? 'http://' + BA.config.server_ip : '') + '/bazaar?stop=' + BA.config.app_id;
-    BA.config.socket_url = 'ws://' + (BA.config.server_ip.length ? BA.config.server_ip : window.location.hostname) + '/wss'; // WebSocket server URI
-    BA.client_id = undefined;
     // App state
     BA.state = {
         socket_opened: false,
@@ -68,9 +55,6 @@
     BA.currentFreq = 0;
     BA.currentStep = 0;
 
-    // Parameters cache
-    BA.parametersCache = {};
-
     //Graph cache
     BA.graphCache = undefined;
 
@@ -90,10 +74,6 @@
     BA.input_threshold = 0;
 
     var g_PacketsRecv = 0;
-    var g_CpuLoad = 100.0;
-    var g_TotalMemory = 256.0;
-    var g_FreeMemory = 256.0;
-
 
     BA.cursorsRelative = {
         x1: 0.33,
@@ -113,50 +93,13 @@
 
 
 
-
-    // Starts the body analyzer application on server
-    BA.startApp = function() {
-        $.get(
-                BA.config.start_app_url
-            )
-            .done(function(dresult) {
-                if (dresult.status == 'OK') {
-                    try {
-                        BA.connectWebSocket();
-                    } catch (e) {
-                        BA.startApp();
-                    }
-                } else if (dresult.status == 'ERROR') {
-                    console.log(dresult.reason ? dresult.reason : 'Could not start the application (ERR1)');
-                    BA.startApp();
-                } else {
-                    console.log('Could not start the application (ERR2)');
-                    BA.startApp();
-                }
-            })
-            .fail(function() {
-                console.log('Could not start the application (ERR3)');
-                BA.startApp();
-            });
-    };
-
-
-
-
-    //Show license dialog
-    var showLicenseDialog = function() {
-        if (BA.state.demo_label_visible)
-            $('#get_lic').modal('show');
-    }
-
-
     //Write email
     BA.formEmail = function() {
         //var file = new FileReader();
         var mail = "support@redpitaya.com";
         var subject = "Crash report Red Pitaya OS";
         var body = "%0D%0A%0D%0A------------------------------------%0D%0A" + "DEBUG INFO, DO NOT EDIT!%0D%0A" + "------------------------------------%0D%0A%0D%0A";
-        body += "Parameters:" + "%0D%0A" + JSON.stringify({ parameters: BA.parametersCache }) + "%0D%0A";
+        body += "Parameters:" + "%0D%0A" + JSON.stringify({ parameters: CLIENT.parametersCache }) + "%0D%0A";
         body += "Browser:" + "%0D%0A" + JSON.stringify({ parameters: $.browser }) + "%0D%0A";
 
         var url = 'info/info.json';
@@ -178,163 +121,6 @@
         });
     }
 
-
-    BA.checkStatusTimer = undefined;
-    BA.changeStatusForRestart = false;
-    BA.changeStatusStep = 0;
-
-    BA.reloadPage = function() {
-        $.ajax({
-            method: "GET",
-            url: "/get_client_id",
-            timeout: 2000
-        }).done(function(msg) {
-            if (msg.trim() === BA.client_id) {
-                location.reload();
-            } else {
-                $('body').removeClass('user_lost');
-                BA.stopCheckStatus();
-            }
-        }).fail(function(msg) {
-            console.log(msg);
-            $('body').removeClass('connection_lost');
-        });
-    }
-
-    BA.startCheckStatus = function() {
-        if (BA.checkStatusTimer === undefined) {
-            BA.changeStatusStep = 0;
-            BA.checkStatusTimer = setInterval(BA.checkStatus, 4000);
-        }
-    }
-
-    BA.stopCheckStatus = function() {
-        if (BA.checkStatusTimer !== undefined) {
-            clearInterval(BA.checkStatusTimer);
-            BA.checkStatusTimer = undefined;
-        }
-    }
-
-    BA.checkStatus = function() {
-        $.ajax({
-            method: "GET",
-            url: "/check_status",
-            timeout: 2000
-        }).done(function(msg) {
-            switch (BA.changeStatusStep) {
-                case 0:
-                    BA.changeStatusStep = 1;
-                    break;
-                case 2:
-                    BA.reloadPage();
-                    break;
-            }
-        }).fail(function(msg) {
-            // check status. If don't have good state after start. We lock system.
-            $('body').removeClass('connection_lost');
-            switch (BA.changeStatusStep) {
-                case 0:
-                    BA.changeStatusStep = -1;
-                    break;
-                case 1:
-                    BA.changeStatusStep = 2;
-                    break;
-            }
-
-        });
-    }
-
-
-    // Creates a WebSocket connection with the web server
-    BA.connectWebSocket = function() {
-
-        if (window.WebSocket) {
-            BA.ws = new WebSocket(BA.config.socket_url);
-            BA.ws.binaryType = "arraybuffer";
-        } else if (window.MozWebSocket) {
-            BA.ws = new MozWebSocket(BA.config.socket_url);
-            BA.ws.binaryType = "arraybuffer";
-        } else {
-            console.log('Browser does not support WebSocket');
-        }
-
-        // Define WebSocket event listeners
-        if (BA.ws) {
-            BA.ws.onopen = function() {
-                console.log('Socket opened');
-
-                BA.state.socket_opened = true;
-
-                BA.sendParameters();
-
-                //setTimeout(showLicenseDialog, 2500);
-                BA.unexpectedClose = true;
-                $('body').addClass('loaded');
-                $('body').addClass('connection_lost');
-                $('body').addClass('user_lost');
-                BA.startCheckStatus();
-            };
-
-            BA.ws.onclose = function() {
-                BA.state.socket_opened = false;
-                $('#graph_amplitude .plot').hide(); // Hide all graphs
-                $('#graph_phase .plot').hide(); // Hide all graphs
-                console.log('Socket closed');
-                if (BA.unexpectedClose == true) {
-                    setTimeout(BA.reloadPage, '1000');
-                }
-            };
-
-            BA.ws.onerror = function(ev) {
-                if (!BA.state.socket_opened)
-                    BA.startApp();
-                console.log('Websocket error: ', ev);
-            };
-
-            var last_time = undefined;
-            BA.ws.onmessage = function(ev) {
-                var start_time = +new Date();
-                if (BA.state.processing) {
-                    return;
-                }
-                BA.state.processing = true;
-
-                try {
-                    var data = new Uint8Array(ev.data);
-                    BA.compressed_data += data.length;
-                    var inflate = pako.inflate(data);
-                    // var text = String.fromCharCode.apply(null, new Uint8Array(inflate));
-                    var bytes = new Uint8Array(inflate);
-                    var text = '';
-                    for(var i = 0; i < Math.ceil(bytes.length / 32768.0); i++) {
-                      text += String.fromCharCode.apply(null, bytes.slice(i * 32768, Math.min((i+1) * 32768, bytes.length)))
-                    }
-
-                    BA.decompressed_data += text.length;
-                    var receive = JSON.parse(text);
-
-                    //Recieving parameters
-                    if (receive.parameters) {
-                        BA.parameterStack.push(receive.parameters);
-                    }
-
-                    //Recieve signals
-                    if (receive.signals) {
-                        g_PacketsRecv++;
-                        BA.signalStack.push(receive.signals);
-                    }
-
-                    BA.state.processing = false;
-                } catch (e) {
-                    BA.state.processing = false;
-                    console.log(e);
-                } finally {
-                    BA.state.processing = false;
-                }
-            };
-        }
-    };
-
     // For Firefox
     function fireEvent(obj, evt) {
         var fireOnThis = obj;
@@ -350,14 +136,13 @@
     }
 
     BA.SaveGraphs = function() {
-        html2canvas($('body'), {
-            background: '#343433', // Like background of BODY
-            onrendered: function(canvas) {
-                var a = document.createElement('a');
-                a.href = canvas.toDataURL('image/jpeg').replace('image/jpeg', 'image/octet-stream');
-                a.download = 'graphs.jpg';
-                fireEvent(a, 'click');
-            }
+        html2canvas(document.querySelector("body"), {backgroundColor: '#343433'}).then(canvas => {
+            var a = document.createElement('a');
+            // toDataURL defaults to png, so we need to request a jpeg, then convert for file download.
+            a.href = canvas.toDataURL("image/jpeg").replace("image/jpeg", "image/octet-stream");
+            a.download = 'graphs.jpg';
+            // a.click(); // Not working with firefox
+            fireEvent(a, 'click');
         });
     }
 
@@ -381,25 +166,10 @@
         fireEvent(a, 'click');
     }
 
-    // Sends to server parameters
-    BA.sendParameters = function() {
-        if (!BA.state.socket_opened) {
-            console.log('ERROR: Cannot save changes, socket not opened');
-            return false;
-        }
-        BA.ws.send(JSON.stringify({ parameters: BA.parametersCache }));
-        console.log("SEND: ", BA.parametersCache )
-        BA.parametersCache = {};
-        return true;
-    };
-
-
-
-
     // Draws grid on the lowest canvas layer
     BA.drawGrid = function() {
-        var canvas_width = $('#graph_bode').width() - 2;
-        var canvas_height = Math.round(canvas_width / 2);
+        var canvas_width = $('#main').width() - 90;
+        var canvas_height = $('#main').height() - 2;// Math.round(canvas_width / 2);
 
         //Draw grid
         var ctx = $('#graph_bode_grid')[0].getContext('2d');
@@ -411,11 +181,8 @@
         return;
     };
 
-
-
-
     BA.enableX = function(cursor_name, new_params) {
-        var old_params = $.extend(true, {}, BA.params.old);
+        var old_params = $.extend(true, {}, CLIENT.params.old);
         if (!BA.state.cursor_dragging && !BA.state.mouseover) {
             var x = (cursor_name == 'BA_CURSOR_X1' ? 'x1' : 'x2');
 
@@ -427,9 +194,6 @@
             BA.updateXLinesAndArrows();
         }
     }
-
-
-
 
     BA.moveX = function(ui) {
 
@@ -450,11 +214,8 @@
         BA.updateXLinesAndArrows();
     }
 
-
-
-
     BA.enableY = function(cursor_name, new_params) {
-        var old_params = $.extend(true, {}, BA.params.old);
+        var old_params = $.extend(true, {}, CLIENT.params.old);
         if (!BA.state.cursor_dragging && !BA.state.mouseover) {
             var y = (cursor_name == 'BA_CURSOR_Y1' ? 'y1' : 'y2');
 
@@ -466,9 +227,6 @@
             BA.updateYLinesAndArrows();
         }
     }
-
-
-
 
     BA.moveY = function(ui) {
 
@@ -489,11 +247,8 @@
         BA.updateYLinesAndArrows();
     }
 
-
-
-
     BA.enableZ = function(cursor_name, new_params) {
-        var old_params = $.extend(true, {}, BA.params.old);
+        var old_params = $.extend(true, {}, CLIENT.params.old);
         if (!BA.state.cursor_dragging && !BA.state.mouseover) {
             var z = (cursor_name == 'BA_CURSOR_Z1' ? 'z1' : 'z2');
 
@@ -505,9 +260,6 @@
             BA.updateZLinesAndArrows();
         }
     }
-
-
-
 
     BA.moveZ = function(ui) {
 
@@ -528,9 +280,6 @@
         BA.updateZLinesAndArrows();
     }
 
-
-
-
     function funcxTickFormat(val, axis) {
 
         if (Math.abs(val) >= 0 && Math.abs(val) < 1000)
@@ -541,17 +290,27 @@
             return (val / 1000000).toFixed(2) + "M";
     }
 
-
-
-
     //Draw one signal
     BA.prepareOneSignal = function(signal_name) {
-        var one_signal = BA.signalStack[0][signal_name];
-        var bad_signal = BA.signalStack[0]['BA_BAD_SIGNAL'];
-        var signal_param = BA.signalStack[0]['BA_SIGNAL_PARAMETERS'];
+        let signals = Object.assign({}, CLIENT.signalStack[0]);
+        for (const property in signals) {
+            if (signals[property]['type']){
+                if (signals[property]['type'] == 'f'){
+                    signals[property]['value'] = CLIENT.base64ToFloatArray(signals[property]['value'] )
+                    signals[property]['type'] = ''
+                }
+                if (signals[property]['type'] == 'i'){
+                    signals[property]['value'] = CLIENT.base64ToIntArray(signals[property]['value'] )
+                    signals[property]['type'] = ''
+                }
+            }
+        }
+        var one_signal = signals[signal_name];
+        var bad_signal = signals['BA_BAD_SIGNAL'];
+        var signal_param = signals['BA_SIGNAL_PARAMETERS'];
 
         // Ignore empty signals
-        if (one_signal.size == 0)
+        if (one_signal === undefined || one_signal.size == 0)
             return;
 
         // Create points mas
@@ -643,11 +402,11 @@
             $('#' + axis_name + '_MIN').val(min - size);
             yaxis.options.min = min - size;
 
-            BA.parametersCache["BA_GAIN_MIN"] = { value: $("#BA_GAIN_MIN").val() };
-            BA.parametersCache["BA_GAIN_MAX"] = { value: $("#BA_GAIN_MAX").val() };
-            BA.parametersCache["BA_PHASE_MIN"] = { value: $("#BA_PHASE_MIN").val() };
-            BA.parametersCache["BA_PHASE_MAX"] = { value: $("#BA_PHASE_MAX").val() };
-            BA.sendParameters();
+            CLIENT.parametersCache["BA_GAIN_MIN"] = { value: $("#BA_GAIN_MIN").val() };
+            CLIENT.parametersCache["BA_GAIN_MAX"] = { value: $("#BA_GAIN_MAX").val() };
+            CLIENT.parametersCache["BA_PHASE_MIN"] = { value: $("#BA_PHASE_MIN").val() };
+            CLIENT.parametersCache["BA_PHASE_MAX"] = { value: $("#BA_PHASE_MAX").val() };
+            CLIENT.sendParameters();
 
         }
     }
@@ -803,24 +562,24 @@
             $('cur_' + x[0] + '_diff_info').show();
         }
 
-        BA.params.local['BA_CURSOR_' + x[0].toUpperCase() + '1'] = { value: 1 };
-        BA.params.local['BA_CURSOR_' + x[0].toUpperCase() + '2'] = { value: 1 };
+        CLIENT.params.local['BA_CURSOR_' + x[0].toUpperCase() + '1'] = { value: 1 };
+        CLIENT.params.local['BA_CURSOR_' + x[0].toUpperCase() + '2'] = { value: 1 };
 
-        BA.params.local['BA_CUR1_T'] = { value: 1 };
-        BA.params.local['BA_CUR2_T'] = { value: 1 };
+        CLIENT.params.local['BA_CUR1_T'] = { value: 1 };
+        CLIENT.params.local['BA_CUR2_T'] = { value: 1 };
 
         if (x[0] == 'x') {
-            BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, BA.params.local);
-            BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, BA.params.local);
+            BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
+            BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
         } else if (x[0] == 'y') {
-            BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, BA.params.local);
-            BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, BA.params.local);
+            BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
+            BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
         } else if (x[0] == 'z') {
-            BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, BA.params.local);
-            BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, BA.params.local);
+            BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
+            BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
         }
 
-        BA.params.local = {};
+        CLIENT.params.local = {};
     };
 
     BA.disableCursor = function(x) {
@@ -832,61 +591,22 @@
         $('cur_' + x[0] + '_diff').hide();
         $('cur_' + x[0] + '_diff_info').hide();
 
-        BA.params.local['BA_CURSOR_' + x[0].toUpperCase() + '1'] = { value: 0 };
-        BA.params.local['BA_CURSOR_' + x[0].toUpperCase() + '2'] = { value: 0 };
+        CLIENT.params.local['BA_CURSOR_' + x[0].toUpperCase() + '1'] = { value: 0 };
+        CLIENT.params.local['BA_CURSOR_' + x[0].toUpperCase() + '2'] = { value: 0 };
 
         if (x[0] == 'x') {
-            BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, BA.params.local);
-            BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, BA.params.local);
+            BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
+            BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
         } else if (x[0] == 'y') {
-            BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, BA.params.local);
-            BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, BA.params.local);
+            BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
+            BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
         } else if (x[0] == 'z') {
-            BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, BA.params.local);
-            BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, BA.params.local);
+            BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
+            BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
         }
 
-        BA.params.local = {};
+        CLIENT.params.local = {};
     };
-
-
-
-    //Handlers
-    var signalsHandler = function() {
-        if (BA.signalStack.length > 0) {
-            BA.drawSignals();
-            BA.signalStack.splice(0, 1);
-        }
-        if (BA.signalStack.length > 2)
-            BA.signalStack.length = [];
-    }
-
-    BA.processParameters = function(new_params) {
-        if (Object.keys(new_params).length > 0) {
-            console.log(new_params)
-        }
-
-        for (var param_name in new_params) {
-            if (BA.param_callbacks[param_name] !== undefined)
-                BA.param_callbacks[param_name](new_params);
-            BA.params.orig[param_name] = new_params[param_name];
-        }
-        // Resize double-headed arrows showing the difference between cursors
-    };
-
-    var parametersHandler = function() {
-        if (BA.parameterStack.length > 0) {
-            BA.processParameters(BA.parameterStack[0]);
-            BA.parameterStack.splice(0, 1);
-        }
-    }
-
-
-    //Set handlers timers
-    setInterval(signalsHandler, 10);
-    setInterval(parametersHandler, 10);
-
-
 
 
     BA.processStatus = function(new_params) {
@@ -899,8 +619,8 @@
             $('#measuring-status').hide();
             BA.calibrating = false;
             BA.running = false;
-            BA.parametersCache["BA_STATUS"] = { value: 0 };
-            BA.sendParameters();
+            CLIENT.parametersCache["BA_STATUS"] = { value: 0 };
+            CLIENT.sendParameters();
         }
 
         if (status === 1 || status === 8) {
@@ -973,11 +693,8 @@
     }
 
     BA.setValue = function(param_name,new_params) {
-        var old_params = BA.params.orig;
-        if ((!BA.state.editing &&
-            ((old_params[param_name] !== undefined && old_params[param_name].value !== new_params[param_name].value) ||
-            (old_params[param_name] == undefined))
-            )) {
+        // var old_params = CLIENT.params.orig;
+        if ((!BA.state.editing)) {
             var value = $('#' + param_name).val();
             if (value !== new_params[param_name].value) {
                 $('#' + param_name).val(new_params[param_name].value);
@@ -1002,11 +719,8 @@
 
     BA.setScale = function(new_params) {
         var param_name = "BA_SCALE"
-        var old_params = BA.params.orig;
-        if ((!BA.state.editing &&
-            ((old_params[param_name] !== undefined && old_params[param_name].value !== new_params[param_name].value) ||
-            (old_params[param_name] == undefined))
-            )) {
+        var old_params = CLIENT.params.orig;
+        if ((!BA.state.editing)) {
             var radios = $('input[name="' + param_name + '"]');
             radios.closest('.btn-group').children('.btn.active').removeClass('active');
             radios.eq([+new_params[param_name].value]).prop('checked', true).parent().addClass('active');
@@ -1015,11 +729,8 @@
 
     BA.setLogic = function(new_params) {
         var param_name = "BA_LOGIC_MODE"
-        var old_params = BA.params.orig;
-        if ((!BA.state.editing &&
-            ((old_params[param_name] !== undefined && old_params[param_name].value !== new_params[param_name].value) ||
-            (old_params[param_name] == undefined))
-            )) {
+        var old_params = CLIENT.params.orig;
+        if ((!BA.state.editing)) {
             var radios = $('input[name="' + param_name + '"]');
             radios.closest('.btn-group').children('.btn.active').removeClass('active');
             radios.eq([+new_params[param_name].value]).prop('checked', true).parent().addClass('active');
@@ -1074,7 +785,7 @@
 
     BA.setAutoScale = function(new_params){
         var param_name = "BA_AUTO_SCALE"
-        var old_params = BA.params.orig;
+        var old_params = CLIENT.params.orig;
         if (((old_params[param_name] !== undefined && old_params[param_name].value !== new_params[param_name].value) ||
             (old_params[param_name] == undefined))
             ) {
@@ -1088,7 +799,7 @@
 
     BA.setShowAll = function(new_params){
         var param_name = "BA_SHOW_ALL"
-        var old_params = BA.params.orig;
+        var old_params = CLIENT.params.orig;
         if (((old_params[param_name] !== undefined && old_params[param_name].value !== new_params[param_name].value) ||
             (old_params[param_name] == undefined))
             ) {
@@ -1099,7 +810,6 @@
                 }
         }
     }
-
 
     // X-cursors
     BA.updateXLinesAndArrows = function() {
@@ -1342,14 +1052,48 @@
     };
 
     BA.modelProcess = function(value) {
-        if (value["RP_MODEL_STR"].value === "Z20_250_12") {
+        var model = value["RP_MODEL_STR"].value
+        if (model === "Z20_250_12") {
             $("#CALIB_BODE_IMG").attr("src", "img/bode_calib_250.png");
+            $("#BA_IN_GAIN_L").text("1:1");
+            $("#BA_IN_GAIN2_L").text("1:20");
+            $("#BA_IN_GAIN2_L").text("1:20");
         }
-        if (value["RP_MODEL_STR"].value === "Z20_250_12_120") {
+        if (model === "Z20_250_12_120") {
             $("#CALIB_BODE_IMG").attr("src", "img/bode_calib_250.png");
+            $("#BA_IN_GAIN_L").text("1:1");
+            $("#BA_IN_GAIN2_L").text("1:20");
+        }
+
+        if (model != "Z20_250_12" && model != "Z20_250_12_120") {
+            var nodes = document.getElementsByClassName("250_12_block");
+            [...nodes].forEach((element, index, array) => {
+                                    element.parentNode.removeChild(element);
+            });
         }
     }
 
+    BA.setGain = function(new_params){
+        var param_name = 'BA_IN_GAIN'
+        var radios = $('input[name="' + param_name + '"]');
+        radios.closest('.btn-group').children('.btn.active').removeClass('active');
+        radios.eq([+CLIENT.params.orig[param_name].value]).prop('checked', true).parent().addClass('active');
+    }
+
+    BA.setACDC = function(new_params){
+        var param_name = 'BA_IN_AC_DC'
+        var radios = $('input[name="' + param_name + '"]');
+        radios.closest('.btn-group').children('.btn.active').removeClass('active');
+        radios.eq([+CLIENT.params.orig[param_name].value]).prop('checked', true).parent().addClass('active');
+    }
+
+    BA.setProbe = function(new_params){
+        var param_name = 'BA_PROBE'
+        var field = $('#' + param_name);
+        if (field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
+            field.val(CLIENT.params.orig[param_name].value);
+        }
+    }
 
     BA.param_callbacks["BA_STATUS"] = BA.processStatus;
 
@@ -1381,6 +1125,11 @@
     BA.param_callbacks["BA_SHOW_ALL"] = BA.setShowAll;
 
 
+    BA.param_callbacks["BA_IN_GAIN"] = BA.setGain;
+    BA.param_callbacks["BA_IN_AC_DC"] = BA.setACDC;
+    BA.param_callbacks["BA_PROBE"] = BA.setProbe;
+
+
 }(window.BA = window.BA || {}, jQuery));
 
 
@@ -1394,29 +1143,6 @@ $(function() {
         $.cookie("ba_forced_reload", "true");
         window.location.reload(true);
     }
-
-    BA.client_id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        var r = Math.random() * 16 | 0,
-            v = c == 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-
-    $.ajax({
-        url: '/set_client_id', //Server script to process data
-        type: 'POST',
-        //Ajax events
-        //beforeSend: beforeSendHandler,
-        success: function(e) { console.log(e); },
-        error: function(e) { console.log(e); },
-        // Form data
-        data: BA.client_id,
-        //Options to tell jQuery not to process data or worry about content-type.
-        cache: false,
-        contentType: false,
-        processData: false
-    });
-
-    BA.checkStatus();
 
     // X cursor arrows dragging
     $('#cur_x1_arrow, #cur_x2_arrow').draggable({
@@ -1476,8 +1202,8 @@ $(function() {
     });
 
     $('#reset_settings').on('click', function() {
-        BA.parametersCache["BA_STATUS"] = { value: 4 };
-        BA.sendParameters();
+        CLIENT.parametersCache["BA_STATUS"] = { value: 4 };
+        CLIENT.sendParameters();
         location.reload();
     });
 
@@ -1506,11 +1232,11 @@ $(function() {
         //$('#BA_RUN').hide();
         //$('#BA_STOP').css('display', 'block');
         //$('#measuring-status').show();
-        BA.parametersCache["BA_START_FREQ"] = { value: $("#BA_START_FREQ").val() };
-        BA.parametersCache["BA_END_FREQ"] = { value: $('#BA_END_FREQ').val() };
-        BA.parametersCache["BA_STEPS"] = { value: $('#BA_STEPS').val() };
-        BA.parametersCache["BA_STATUS"] = { value: 1 };
-        BA.sendParameters();
+        CLIENT.parametersCache["BA_START_FREQ"] = { value: $("#BA_START_FREQ").val() };
+        CLIENT.parametersCache["BA_END_FREQ"] = { value: $('#BA_END_FREQ').val() };
+        CLIENT.parametersCache["BA_STEPS"] = { value: $('#BA_STEPS').val() };
+        CLIENT.parametersCache["BA_STATUS"] = { value: 1 };
+        CLIENT.sendParameters();
         //BA.running = true;
         BA.curGraphScale = BA.scale;
     });
@@ -1518,8 +1244,8 @@ $(function() {
     //Stop button
     $('#BA_STOP').on('click', function(ev) {
         ev.preventDefault();
-        BA.parametersCache["BA_STATUS"] = { value: 0 };
-        BA.sendParameters();
+        CLIENT.parametersCache["BA_STATUS"] = { value: 0 };
+        CLIENT.sendParameters();
     });
 
     //Loader wrapper
@@ -1528,8 +1254,8 @@ $(function() {
         if (BA.calibrating == true) {
             $('body').addClass('loaded');
             $('#calibration').hide();
-            BA.parametersCache["BA_STATUS"] = { value: 0 };
-            BA.sendParameters();
+            CLIENT.parametersCache["BA_STATUS"] = { value: 0 };
+            CLIENT.sendParameters();
             BA.calibrating = false;
         }
     });
@@ -1560,42 +1286,59 @@ $(function() {
 
     // Bind to the window resize event to redraw the graph; trigger that event to do the first drawing
     $(window).resize(function() {
-        var divider = 1.6;
-        var window_width = window.innerWidth;
-        var window_height = window.innerHeight;
+        // var divider = 1.6;
+        // var window_width = window.innerWidth;
+        // var window_height = window.innerHeight;
 
-        if (window_width > 768 && window_height > 580) {
+        // if (window_width > 768 && window_height > 580) {
+            // var global_width = window_width - 210,
+            //     global_height = global_width - 100;
+            // // if (window_height < global_height) {
+            // //     global_height = window_height - 70 * divider;
+            // //     global_width = global_height * divider;
+            // // }
+
+            // $('#global_container').css('width', global_width);
+            // $('#global_container').css('height', global_height);
+
+
+            // BA.drawGrid();
+            // var main_width = $('#main').outerWidth(true);
+            // var main_height = $('#main').outerHeight(true);
+            // $('#global_container').css('width', main_width);
+            // $('#global_container').css('height', main_height);
+
+            if ($('#global_container').length === 0) return
+            if ($('#main').length === 0) return
+
+            var window_width = window.innerWidth;
+            var window_height = window.innerHeight;
+
             var global_width = window_width - 30,
-                global_height = global_width / divider;
-            if (window_height < global_height) {
-                global_height = window_height - 70 * divider;
-                global_width = global_height * divider;
-            }
+                global_height = window_height - 200;
+
 
             $('#global_container').css('width', global_width);
             $('#global_container').css('height', global_height);
 
+            $('#main').css('width', (global_width - 170));
+            $('#main').css('height', global_height);
+
 
             BA.drawGrid();
-            var main_width = $('#main').outerWidth(true);
-            var main_height = $('#main').outerHeight(true);
-            $('#global_container').css('width', main_width);
-            $('#global_container').css('height', main_height);
-
-            BA.drawGrid();
-            main_width = $('#main').outerWidth(true);
-            main_height = $('#main').outerHeight(true);
-            window_width = window.innerWidth;
-            window_height = window.innerHeight;
-            if (main_height > (window_height - 80)) {
-                $('#global_container').css('height', window_height - 80);
-                $('#global_container').css('width', divider * (window_height - 80));
-                BA.drawGrid();
-                $('#global_container').css('width', $('#main').outerWidth(true) - 2);
-                $('#global_container').css('height', $('#main').outerHeight(true) - 2);
-                BA.drawGrid();
-            }
-        }
+        //     main_width = $('#main').outerWidth(true);
+        //     main_height = $('#main').outerHeight(true);
+        //     window_width = window.innerWidth;
+        //     window_height = window.innerHeight;
+        //     if (main_height > (window_height - 80)) {
+        //         $('#global_container').css('height', window_height - 80);
+        //         $('#global_container').css('width', divider * (window_height - 80));
+        //         BA.drawGrid();
+        //         $('#global_container').css('width', $('#main').outerWidth(true) - 2);
+        //         $('#global_container').css('height', $('#main').outerHeight(true) - 2);
+        //         BA.drawGrid();
+        //     }
+        // }
 
         $('#global_container').offset({ left: (window_width - $('#global_container').width()) / 2 });
 
@@ -1606,7 +1349,7 @@ $(function() {
         $('#graph_bode .plot').hide();
 
         if (BA.ws) {
-            BA.sendParameters();
+            CLIENT.sendParameters();
         }
 
         BA.updateGraphSize();
@@ -1626,21 +1369,6 @@ $(function() {
     }).resize();
 
 
-
-
-    // Stop the application when page is unloaded
-    $(window).on('beforeunload', function() {
-        BA.ws.onclose = function() {}; // disable onclose handler first
-        BA.ws.close();
-        $.ajax({
-            url: BA.config.stop_app_url,
-            async: false
-        });
-    });
-
-
-
-
     //Crash buttons
     $('#send_report_btn').on('click', function() { BA.formEmail() });
     $('#restart_app_btn').on('click', function() { location.reload() });
@@ -1648,26 +1376,26 @@ $(function() {
     $('#BA_AUTOSCALE_BTN').click(function() {
         if ($(this).hasClass('active')){
             $(this).removeClass('active');
-            BA.parametersCache["BA_AUTO_SCALE"] = { value: false };
-            BA.sendParameters();
+            CLIENT.parametersCache["BA_AUTO_SCALE"] = { value: false };
+            CLIENT.sendParameters();
         }
         else{
             $(this).addClass('active');
-            BA.parametersCache["BA_AUTO_SCALE"] = { value: true };
-            BA.sendParameters();
+            CLIENT.parametersCache["BA_AUTO_SCALE"] = { value: true };
+            CLIENT.sendParameters();
         }
     });
 
     $('#BA_SHOWALL_BTN').click(function() {
         if ($(this).hasClass('active')){
             $(this).removeClass('active');
-            BA.parametersCache["BA_SHOW_ALL"] = { value: false };
-            BA.sendParameters();
+            CLIENT.parametersCache["BA_SHOW_ALL"] = { value: false };
+            CLIENT.sendParameters();
         }
         else{
             $(this).addClass('active');
-            BA.parametersCache["BA_SHOW_ALL"] = { value: true };
-            BA.sendParameters();
+            CLIENT.parametersCache["BA_SHOW_ALL"] = { value: true };
+            CLIENT.sendParameters();
         }
     });
 
@@ -1731,20 +1459,8 @@ $(function() {
     Help.setState("idle");
 
     // Everything prepared, start application
-    BA.startApp();
-
     BA.previousPageUrl = document.referrer;
     console.log(`Previously visited page URL: ${BA.previousPageUrl}`);
     $("#back_button").attr("href", BA.previousPageUrl)
 
-    // // Start measuring after loading. Must be last in this file!
-    // setTimeout(function() {
-    //         //$('#BA_RUN').hide();
-    //         //$('#BA_STOP').css('display', 'block');
-    //         //$('#measuring-status').show();
-    //         BA.parametersCache["BA_MEASURE_START"] = { value: true };
-    //         BA.sendParameters();
-    //         //BA.running = true;
-    //     },
-    //     1000);
 });

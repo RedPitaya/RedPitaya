@@ -1,5 +1,13 @@
 (function(OSC, $, undefined) {
 
+OSC.showOutArrow = function(ch,state) {
+    if (state){
+       $('#output' + ch + '_offset_arrow').show();
+    }else{
+        $('#output' + ch + '_offset_arrow').hide();
+    }
+}
+
 OSC.getSetState = function(param_name,ch){
     var state = OSC.params.orig[param_name].value;
     var field = $('#' + param_name);
@@ -58,9 +66,19 @@ OSC.setGenState2 = function(new_params){
     OSC.getSetState(param_name,"2")
 }
 
+OSC.out1Name = function(new_params) {
+    $('#OUT1_CHANNEL_NAME_INPUT').val(new_params['OUT1_CHANNEL_NAME_INPUT'].value)
+    $('.out1_channel_name').html(new_params['OUT1_CHANNEL_NAME_INPUT'].value)
+}
+
+OSC.out2Name = function(new_params) {
+    $('#OUT2_CHANNEL_NAME_INPUT').val(new_params['OUT2_CHANNEL_NAME_INPUT'].value)
+    $('.out2_channel_name').html(new_params['OUT2_CHANNEL_NAME_INPUT'].value)
+}
+
 OSC.setSourVolt = function(ch){
     var param_name = "SOUR" + ch + "_VOLT"
-    var param_name_scale = "OSC_OUTPUT" + ch + "_SCALE"
+    var param_name_scale = "GPOS_SCALE_OUTPUT" + ch
     var volt = OSC.params.orig[param_name] !== undefined ? OSC.params.orig[param_name].value : undefined
     var scale = OSC.params.orig[param_name_scale] !== undefined ? OSC.params.orig[param_name_scale].value : undefined
 
@@ -71,8 +89,10 @@ OSC.setSourVolt = function(ch){
         }
     }
     if (scale !== undefined){
-        $('#SOUR'+ch+'_VOLT_info').html(OSC.convertVoltage(scale));
+        $('#GPOS_SCALE_OUTPUT'+ch).html(OSC.convertVoltage(scale));
     }
+    OSC.updateTitileYAxisTicks()
+
 }
 
 OSC.src1Volt = function(new_params) {
@@ -82,8 +102,6 @@ OSC.src1Volt = function(new_params) {
 OSC.src2Volt = function(new_params) {
     OSC.setSourVolt("2")
 }
-
-
 
 OSC.sweepResetButton = function(new_params) {
     if ('SOUR1_SWEEP_STATE' in OSC.params.orig){
@@ -145,37 +163,47 @@ OSC.sweepTime = function(new_params) {
 
 OSC.ch1SetGenScale = function(new_params){
     OSC.setSourVolt("1")
+    OSC.out1ShowOffset(new_params)
+    OSC.setOutOffsetPlotChLimits("1")
+    OSC.updateTitileYAxisTicks()
 }
 
 OSC.ch2SetGenScale = function(new_params){
     OSC.setSourVolt("2")
+    OSC.out2ShowOffset(new_params)
+    OSC.setOutOffsetPlotChLimits("2")
+    OSC.updateTitileYAxisTicks()
 }
 
 OSC.riseFallTime = function(new_params) {
-    if('SOUR1_RISE' in OSC.params.orig){
-        $("#SOUR1_RISE").val(OSC.params.orig['SOUR1_RISE'].value);
-        $("#SOUR1_RISE").attr("min", OSC.params.orig['SOUR1_RISE'].min);
-        $("#SOUR1_RISE").attr("max", OSC.params.orig['SOUR1_RISE'].max);
-        $("#SOUR1_RISE").attr("step", OSC.params.orig['SOUR1_RISE'].min);
+
+    function update(param) {
+        if(param in OSC.params.orig){
+            $("#"+param).val(OSC.params.orig[param].value);
+            $("#"+param).attr("min", OSC.params.orig[param].min);
+            $("#"+param).attr("max", OSC.params.orig[param].max);
+            $("#"+param).attr("step", OSC.params.orig[param].min);
+        }
     }
-    if('SOUR1_FALL' in OSC.params.orig){
-        $("#SOUR1_FALL").val(OSC.params.orig['SOUR1_FALL'].value);
-        $("#SOUR1_FALL").attr("min", OSC.params.orig['SOUR1_FALL'].min);
-        $("#SOUR1_FALL").attr("max", OSC.params.orig['SOUR1_FALL'].max);
-        $("#SOUR1_FALL").attr("step", OSC.params.orig['SOUR1_FALL'].min);
+
+    update("SOUR1_RISE")
+    update("SOUR1_FALL")
+    update("SOUR2_RISE")
+    update("SOUR2_FALL")
+}
+
+OSC.outExtTrigDeb = function(new_params) {
+
+    function update(param) {
+        if(param in OSC.params.orig){
+            $("#"+param).val(OSC.params.orig[param].value);
+            $("#"+param).attr("min", OSC.params.orig[param].min);
+            $("#"+param).attr("max", OSC.params.orig[param].max);
+            $("#"+param).attr("step", OSC.params.orig[param].min);
+        }
     }
-    if('SOUR2_RISE' in OSC.params.orig){
-        $("#SOUR2_RISE").val(OSC.params.orig['SOUR2_RISE'].value);
-        $("#SOUR2_RISE").attr("min", OSC.params.orig['SOUR2_RISE'].min);
-        $("#SOUR2_RISE").attr("max", OSC.params.orig['SOUR2_RISE'].max);
-        $("#SOUR2_RISE").attr("step", OSC.params.orig['SOUR2_RISE'].min);
-    }
-    if('SOUR2_FALL' in OSC.params.orig){
-        $("#SOUR2_FALL").val(OSC.params.orig['SOUR2_FALL'].value);
-        $("#SOUR2_FALL").attr("min", OSC.params.orig['SOUR2_FALL'].min);
-        $("#SOUR2_FALL").attr("max", OSC.params.orig['SOUR2_FALL'].max);
-        $("#SOUR2_FALL").attr("step", OSC.params.orig['SOUR2_FALL'].min);
-    }
+
+    update("SOUR_DEB")
 }
 
 OSC.setOutDCyc = function(param_name){

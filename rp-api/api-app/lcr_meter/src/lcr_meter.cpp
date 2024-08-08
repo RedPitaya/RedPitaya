@@ -1,3 +1,4 @@
+
 /**
 * $Id: $
 *
@@ -52,6 +53,7 @@ typedef struct impendace_params {
 std::thread *g_lcr_thread = NULL;
 std::mutex g_lcr_mutex;
 std::mutex g_lcr_mutex_analize;
+std::mutex g_lcr_mutex_data;
 std::atomic_bool g_lcr_threadRun = false;
 std::atomic_bool g_lcr_threadPause = false;
 std::atomic_bool g_lcr_GenRun = false;
@@ -67,24 +69,10 @@ bool                        g_isShuntAutoChange        = true;
 
 
 /* Init lcr params struct */
-lcr_params_t main_params = {CALIB_NONE, false, 0 , 0 , 0, true , RP_LCR_S_EXTENSION, 100};
+lcr_params_t main_params = {CALIB_NONE, false, RP_LCR_S_EXTENSION, 100};
 
 /* Main lcr data params */
 lcr_main_data_t calc_data;
-
-
-const int RANGE_FORMAT[] =
-{1, 10, 100, 1000};
-
-const double RANGE_UNITS[] =
-{1e-9, 1e-6, 1e-3, 1, 1e3, 1e6};
-
-
-void flog(char *s){
-    FILE *out = fopen("/tmp/debug.log", "a+");
-    fprintf(out, "%s", s);
-    fclose(out);
-}
 
 
 /* Init the main API structure */
@@ -92,13 +80,12 @@ int lcr_Init()
 {
 
     if(rp_Init() != RP_OK) {
-        FATAL("Unable to inicialize the RPI API structure needed by impedance analyzer application")
-        return RP_EOOR;
+        FATAL("Unable to inicialize the RPI API structure")
+        return RP_LCR_UERROR;
     }
 
     /* Set default values of the lcr structure */
     lcr_SetDefaultValues();
-
 
     /* Set calibration values */
     // FILE* f_calib = fopen("/opt/redpitaya/www/apps/lcr_meter/CAPACITOR_CALIB", "rb");
@@ -112,7 +99,7 @@ int lcr_Init()
     //     fclose(f_calib);
     // }
     // pthread_mutex_unlock(&g_mutex);
-    return RP_OK;
+    return RP_LCR_OK;
 }
 
 /* Release resources used the main API structure */
@@ -121,59 +108,62 @@ int lcr_Release(){
     lcr_GenStop();
     rp_Release();
     TRACE_SHORT("Releasing Red Pitaya library resources.\n");
-    return RP_OK;
+    return RP_LCR_OK;
 }
 
 /* Set default values of all rpi resources */
 int lcr_Reset(){
-    std::lock_guard<std::mutex> lock(g_lcr_mutex);
-    rp_Reset();
+    std::lock_guard lock(g_lcr_mutex);
+    auto ret = rp_Reset();
+    if (ret != RP_OK){
+        ERROR("Reset to default failed")
+        return RP_LCR_UERROR;
+    }
     /* Set default values of the lcr_params structure */
-    lcr_SetDefaultValues();
-    return RP_OK;
+    return lcr_SetDefaultValues();
 }
 
 int lcr_SetPause(bool pause){
     g_lcr_threadPause = pause;
-    return RP_OK;
+    return RP_LCR_OK;
 }
 
 
 int lcr_SetDefaultValues(){
-    ECHECK_LCR_APP(lcr_setRShunt(RP_LCR_S_10));
+    if (main_params.shunt_mode == RP_LCR_S_EXTENSION){
+        ECHECK_LCR_APP(lcr_setRShunt(RP_LCR_S_10));
+    }else{
+        lcr_SetCustomShunt(100);
+    }
     ECHECK_LCR_APP(lcr_SetFrequency(10.0));
     ECHECK_LCR_APP(lcr_SetCalibMode(CALIB_NONE));
-    ECHECK_LCR_APP(lcr_SetMeasTolerance(0));
-    ECHECK_LCR_APP(lcr_SetMeasRangeMode(0));
-    ECHECK_LCR_APP(lcr_SetRangeFormat(0));
-    ECHECK_LCR_APP(lcr_SetRangeUnits(0));
     ECHECK_LCR_APP(lcr_SetMeasSeries(true));
-    return RP_OK;
+    return RP_LCR_OK;
 }
 
 int  lcr_GenRun(){
-    std::lock_guard<std::mutex> lock(g_lcr_mutex);
+    std::lock_guard lock(g_lcr_mutex);
     g_lcr_GenRun = true;
     return g_generator.start();
 }
 
 int  lcr_GenStop(){
-    std::lock_guard<std::mutex> lock(g_lcr_mutex);
+    std::lock_guard lock(g_lcr_mutex);
     g_lcr_GenRun = false;
     return g_generator.stop();
 }
 
 /* Main call function */
 int lcr_Run(){
-    std::lock_guard<std::mutex> lock(g_lcr_mutex);
-    if (g_lcr_thread) return RP_EOOR;
+    std::lock_guard lock(g_lcr_mutex);
+    if (g_lcr_thread) return RP_LCR_UERROR;
     g_lcr_threadRun = true;
     g_lcr_thread = new std::thread(lcr_MainThread);
-    return RP_OK;
+    return RP_LCR_OK;
 }
 
 int lcr_Stop(){
-    std::lock_guard<std::mutex> lock(g_lcr_mutex);
+    std::lock_guard lock(g_lcr_mutex);
     g_lcr_threadRun = false;
     if (g_lcr_thread){
         if (g_lcr_thread->joinable()){
@@ -182,17 +172,17 @@ int lcr_Stop(){
             g_lcr_thread = NULL;
         }
     }
-    return RP_OK;
+    return RP_LCR_OK;
 }
 
 int lcr_CopyParams(lcr_main_data_t *params){
-    std::lock_guard<std::mutex> lock(g_lcr_mutex);
-
-    if(lcr_CalculateData(g_th_params.z_out, g_th_params.phase_out, g_th_params.frequency) != RP_OK){
-         return RP_EOOR;
+    std::lock_guard lock(g_lcr_mutex_data);
+    if (!g_lcr_threadRun) return RP_LCR_NOT_STARTED;
+    if(lcr_CalculateData(g_th_params.z_out, g_th_params.phase_out, g_th_params.frequency) != RP_LCR_OK){
+         return RP_LCR_UERROR;
     }
     memcpy(params,&calc_data,sizeof(lcr_main_data_t));
-    return RP_OK;
+    return RP_LCR_OK;
 }
 
 /* Main Lcr meter thread */
@@ -210,7 +200,7 @@ void lcr_MainThread(){
             /* Main lcr meter algorithm */
             if (!g_lcr_threadPause)
             {
-                std::lock_guard<std::mutex> lock(g_lcr_mutex);
+                std::lock_guard lock(g_lcr_mutex);
                 if (g_lcr_GenRun){
                     int decimation;
                     float freq;
@@ -225,7 +215,7 @@ void lcr_MainThread(){
                     }
                 }
             }
-            usleep(500);
+            usleep(50);
     }
     rp_deleteBuffer(buffer);
     releaseFFT();
@@ -313,10 +303,10 @@ int lcr_CalculateData(float _Complex z_measured, float phase_measured,float freq
     bool calibration = false;
 
     //Client depended parameters
-    double R_out, C_out, L_out, ESR_out;
+    // double R_out, C_out, L_out, ESR_out;
 
     //Client independed
-    data_t ampl_out, phase_out, Q_out, D_out;
+    // data_t ampl_out, phase_out, Q_out, D_out;
 
     const char *calibrations[] =
     {"/opt/redpitaya/www/apps/lcr_meter/CALIB_OPEN",
@@ -380,61 +370,108 @@ int lcr_CalculateData(float _Complex z_measured, float phase_measured,float freq
 
     data_t w_out = 2 * M_PI * freq;
 
+    auto Z = z_final;
+    auto Z_abs = cabs(z_final);
+    auto Rs_ESR = creal(z_final);
+    auto Xs = cimag(z_final);
     auto Y = 1.0 / z_final;
-    data_t G_p = creal(Y);
-    data_t B_p = cimag(Y);
-    data_t X_s = cimag(z_final);
+    auto Y_abs = 1.0 / Z_abs;
+    auto Gp = creal(Y);
+    auto Bp = cimag(Y);
+    auto Cs = -1.0 / (w_out * Xs);
+    auto Cp = Bp / w_out;
+    auto Ls = Xs / w_out;
+    auto Lp = -1.0 / (w_out * Bp);
+    auto Rp = 1.0 / Gp;
+    auto Qp = Bp / Gp;
+    auto Qs = Xs / Rs_ESR;
+    auto Dp = -1.0 / Qp;
+    auto Ds = -1.0 / Qs;
+    auto phase =  phase_measured;
+    auto phase_Y = - phase_measured;
 
-    /*  mode */
-    if(main_params.series){
-        R_out = creal(z_final);
-        C_out = -1.0 / (w_out * X_s);
-        L_out = X_s / w_out;
-        ESR_out = R_out;
-
-    } else {
-        /* Parallel mode */
-        R_out = 1.0 / G_p;
-        C_out = B_p / w_out;
-        L_out = -1.0 * (w_out * B_p);
-        ESR_out = 1.0; //TODO
-    }
-
-    Q_out = X_s / R_out;
-    D_out = -1 / Q_out;
-    ampl_out = cabs(z_final);
-    phase_out = phase_measured;
-    //Set output structure pointers
-    calc_data.lcr_amplitude = ampl_out;
-    calc_data.lcr_phase     = phase_out;
-    calc_data.lcr_D 	     = D_out;
-    calc_data.lcr_Q         = Q_out;
-    calc_data.lcr_ESR       = ESR_out;
-    calc_data.lcr_L         = L_out;
-    calc_data.lcr_C         = C_out;
-    calc_data.lcr_R         = R_out;
-
-    // Update data for conosle tool
-
-    calc_data.lcr_L_s = X_s / w_out;
-    calc_data.lcr_C_s = -1.0 / (w_out * X_s);
-    calc_data.lcr_R_s = creal(z_final);
-
-    calc_data.lcr_L_p = -1.0 * (w_out * B_p);
-    calc_data.lcr_C_p = B_p / w_out;
-    calc_data.lcr_R_p = 1.0 / G_p;
-
-    calc_data.lcr_Q_s = X_s / calc_data.lcr_R_s;
-    calc_data.lcr_D_s = -1.0 / calc_data.lcr_Q_s;
-    calc_data.lcr_Q_p = X_s / calc_data.lcr_R_p;
-    calc_data.lcr_D_p = -1.0 / calc_data.lcr_Q_p;
-
-    calc_data.lcr_X_s       = X_s;
-    calc_data.lcr_G_p       = G_p;
-    calc_data.lcr_B_p       = B_p;
-    calc_data.lcr_Y_abs     = sqrtf( powf( creal(Y), 2 ) + powf(cimag(Y), 2 ) );
-    calc_data.lcr_Phase_Y   = -phase_out;
     calc_data.lcr_freq = freq;
+    calc_data.lcr_amplitude = Z_abs;
+    calc_data.lcr_phase = phase;
+    calc_data.lcr_D = main_params.series ? Ds : Dp;
+    calc_data.lcr_Q = main_params.series ? Qs : Qp;
+    calc_data.lcr_ESR = main_params.series ? Rs_ESR : 1.0;
+    calc_data.lcr_L = main_params.series ? Ls :Lp;
+    calc_data.lcr_C = main_params.series ? Cs :Cp;
+    calc_data.lcr_R = main_params.series ? Rs_ESR :Rp;
+    calc_data.lcr_L_s = Ls;
+    calc_data.lcr_C_s = Cs;
+    calc_data.lcr_R_s = Rs_ESR;
+    calc_data.lcr_L_p = Lp;
+    calc_data.lcr_C_p = Cp;
+    calc_data.lcr_R_p = Rp;
+    calc_data.lcr_Q_s = Qs;
+    calc_data.lcr_Q_p = Qp;
+    calc_data.lcr_D_s = Ds;
+    calc_data.lcr_D_p = Dp;
+    calc_data.lcr_X_s = Xs;
+    calc_data.lcr_G_p = Gp;
+    calc_data.lcr_B_p = Bp;
+    calc_data.lcr_Y_abs = Y_abs;
+    calc_data.lcr_Phase_Y = phase_Y;
+
+
+    // auto Y = 1.0 / z_final;
+    // data_t G_p = creal(Y);
+    // data_t B_p = cimag(Y);
+    // data_t X_s = cimag(z_final);
+
+    // /*  mode */
+    // if(main_params.series){
+    //     R_out = creal(z_final);
+    //     C_out = -1.0 / (w_out * X_s);
+    //     L_out = X_s / w_out;
+    //     ESR_out = R_out;
+
+    // } else {
+    //     /* Parallel mode */
+    //     R_out = 1.0 / G_p;
+    //     C_out = B_p / w_out;
+    //     L_out = -1.0 * (w_out * B_p);
+    //     ESR_out = 1.0; //TODO
+    // }
+
+    // Q_out = X_s / R_out; // Quality factor
+    // D_out = -1 / Q_out;
+    // ampl_out = cabs(z_final);
+    // phase_out = phase_measured;
+    // //Set output structure pointers
+    // calc_data.lcr_amplitude = ampl_out; // |Z|
+    // calc_data.lcr_phase     = phase_out; // Phase angle of Z
+
+    // calc_data.lcr_D 	    = D_out;
+    // calc_data.lcr_Q         = Q_out;
+    // calc_data.lcr_ESR       = ESR_out;
+    // calc_data.lcr_L         = L_out;
+    // calc_data.lcr_C         = C_out;
+    // calc_data.lcr_R         = R_out;
+
+    // // Update data for conosle tool
+
+    // calc_data.lcr_L_s = X_s / w_out;
+    // calc_data.lcr_C_s = -1.0 / (w_out * X_s);
+    // calc_data.lcr_R_s = creal(z_final);
+
+    // calc_data.lcr_L_p = -1.0 * (w_out * B_p);
+    // calc_data.lcr_C_p = B_p / w_out;
+    // calc_data.lcr_R_p = 1.0 / G_p;
+
+    // calc_data.lcr_Q_s = X_s / calc_data.lcr_R_s;
+    // calc_data.lcr_D_s = -1.0 / calc_data.lcr_Q_s;
+    // calc_data.lcr_Q_p = X_s / calc_data.lcr_R_p;
+    // calc_data.lcr_D_p = -1.0 / calc_data.lcr_Q_p;
+
+    // calc_data.lcr_X_s       = X_s;
+    // calc_data.lcr_G_p       = G_p;
+    // calc_data.lcr_B_p       = B_p;
+    // calc_data.lcr_Y_abs     = sqrtf( powf( creal(Y), 2 ) + powf(cimag(Y), 2 ) );
+    // calc_data.lcr_Phase_Y   = -phase_out; // Phase angle of
+    // calc_data.lcr_freq = freq;
 
     //Close files, if calibration
     if(calibration) {
@@ -480,7 +517,7 @@ int lcr_data_analysis(buffers_t *data,
     // WARNING("Amp %f\n",z_ampl);
     // WARNING("phase_z_deg %f\n",phase_z_deg);
 
-
+    std::lock_guard lockData(g_lcr_mutex_data);
     g_th_params.phase_out = phase_z_deg;
     auto phase_z_rad = phase_z_deg * M_PI / 180.0;
     g_th_params.z_out = (z_ampl * cosf(phase_z_rad)) + (z_ampl * sinf(phase_z_rad) * I);
@@ -553,49 +590,14 @@ int lcr_GetMeasSeries(bool *series){
     return RP_LCR_OK;
 }
 
-int lcr_SetMeasTolerance(int tolerance){
-    main_params.tolerance = tolerance;
-    return RP_LCR_OK;
-}
-
-int lcr_GetMeasTolerance(int *tolerance){
-    *tolerance = main_params.tolerance;
-    return RP_LCR_OK;
-}
-
-int lcr_SetMeasRangeMode(int range){
-    main_params.range = range;
-    return RP_LCR_OK;
-}
-
-int lcr_GetMeasRangeMode(int *range){
-    *range = main_params.range;
-    return RP_LCR_OK;
-}
-
-int lcr_SetRangeFormat(int format){
-    main_params.range_format = format;
-    return RP_LCR_OK;
-}
-
-int lcr_GetRangeFormat(int *format){
-    *format = main_params.range_format;
-    return RP_LCR_OK;
-}
-
-int lcr_SetRangeUnits(int units){
-    main_params.range_units = units;
-    return RP_LCR_OK;
-}
-
-int lcr_GetRangeUnits(int *units){
-    *units = main_params.range_units;
-    return RP_LCR_OK;
-}
-
 int lcr_CheckModuleConnection(bool _muteWarnings){
     if(g_lcr_hw.checkExtensionModuleConnection(_muteWarnings) != 0)
         return RP_EMNC;
+    return RP_LCR_OK;
+}
+
+int lcr_IsModuleConnected(bool *state){
+    *state = g_lcr_hw.isExtensionConnected();
     return RP_LCR_OK;
 }
 

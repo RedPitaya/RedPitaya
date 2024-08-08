@@ -43,12 +43,36 @@ int rp_AcqAxiGetBufferFillState(rp_channel_t channel, bool* state);
 int rp_AcqAxiSetDecimationFactor(uint32_t decimation);
 
 /**
+ * Sets the decimation used at acquiring signal for AXI.
+ * You can specify values in the range (1,2,4,8,16-65536)
+ * This channel separation feature works with FPGA support.
+ * You can also enable function forwarding via rp_AcqSetSplitTriggerPass if this mode is not available.
+ * @param channel Channel A, B, C or D
+ * @param decimation Decimation values
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqAxiSetDecimationFactorCh(rp_channel_t channel, uint32_t decimation);
+
+/**
  * Gets the decimation used at acquiring signal.
  * @param decimation Decimation values
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 int rp_AcqAxiGetDecimationFactor(uint32_t *decimation);
+
+/**
+ * Gets the decimation used at acquiring signal.
+ * This channel separation feature works with FPGA support.
+ * You can also enable function forwarding via rp_AcqSetSplitTriggerPass if this mode is not available.
+ * @param channel Channel A, B, C or D
+ * @param decimation Decimation values
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqAxiGetDecimationFactorCh(rp_channel_t channel, uint32_t *decimation);
+
 /**
  * Sets the number of decimated data after trigger written into memory.
  * @param channel Channel index
@@ -116,6 +140,18 @@ int rp_AcqAxiEnable(rp_channel_t channel, bool enable);
 int rp_AcqAxiGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_t* buffer);
 
 /**
+ * Returns the AXI ADC buffer in raw units from specified position and desired size.
+ * Output buffer must be at least 'size' long.
+ * @param channel Channel A or B for which we want to retrieve the ADC buffer.
+ * @param pos Starting position of the ADC buffer to retrieve.
+ * @param buffer The output buffer gets filled with the selected part of the ADC buffer.
+ * @param size Length of the ADC buffer to retrieve. Returns length of filled buffer. In case of too small buffer, required size is returned.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqAxiGetDataRawNP(rp_channel_t channel,  uint32_t pos, int16_t* np_buffer,int size);
+
+/**
  * Returns the AXI ADC buffer in Volt units from specified position and desired size.
  * Output buffer must be at least 'size' long.
  * @param channel Channel A or B for which we want to retrieve the ADC buffer.
@@ -126,6 +162,18 @@ int rp_AcqAxiGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, int
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 int rp_AcqAxiGetDataV(rp_channel_t channel, uint32_t pos, uint32_t* size, float* buffer);
+
+/**
+ * Returns the AXI ADC buffer in Volt units from specified position and desired size.
+ * Output buffer must be at least 'size' long.
+ * @param channel Channel A or B for which we want to retrieve the ADC buffer.
+ * @param pos Starting position of the ADC buffer to retrieve
+ * @param buffer The output buffer gets filled with the selected part of the ADC buffer.
+ * @param size Length of the ADC buffer to retrieve. Returns length of filled buffer. In case of too small buffer, required size is returned.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqAxiGetDataVNP(rp_channel_t channel, uint32_t pos, float* np_buffer, int size);
 
 /**
  * Sets the AXI ADC buffer address and size in samples.
@@ -149,6 +197,24 @@ int rp_AcqAxiSetBufferSamples(rp_channel_t channel, uint32_t address, uint32_t s
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 int rp_AcqAxiSetBufferBytes(rp_channel_t channel, uint32_t address, uint32_t size);
+
+/**
+ * Adds a voltage offset when requesting data from AXI buffers. Only affects float and double data types. Raw data remains unchanged.
+ * @param channel Channel A, B, C or D
+ * @param value Offset value in volts
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqAxiSetOffset(rp_channel_t channel, float value);
+
+/**
+ * Returns the offset value.
+ * @param channel Channel A, B, C or D
+ * @param value Offset value in volts
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqAxiGetOffset(rp_channel_t channel, float *value);
 
 ///@}
 

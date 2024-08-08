@@ -21,14 +21,16 @@ float g_tscale_last = 0;
 std::mutex g_updateOutWaveFormCh_mtx;
 
 
-CFloatSignal outSignal[MAX_DAC_CHANNELS]           = INIT2("output","", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
+CFloatBase64Signal outSignal[MAX_DAC_CHANNELS]           = INIT2("output","", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
 
 CBooleanParameter outShow[MAX_DAC_CHANNELS]        = INIT2("OUTPUT","_SHOW", CBaseParameter::RW, true, 0,CONFIG_VAR);
 CBooleanParameter outState[MAX_DAC_CHANNELS]       = INIT2("OUTPUT","_STATE", CBaseParameter::RW, false, 0,CONFIG_VAR);
 CFloatParameter outAmplitude[MAX_DAC_CHANNELS]     = INIT2("SOUR","_VOLT", CBaseParameter::RW, LEVEL_AMPS_DEF , 0, 0, LEVEL_AMPS_MAX,CONFIG_VAR);
 CFloatParameter outOffset[MAX_DAC_CHANNELS]        = INIT2("SOUR","_VOLT_OFFS", CBaseParameter::RW, 0, 0, -LEVEL_AMPS_MAX, LEVEL_AMPS_MAX,CONFIG_VAR);
 CIntParameter   outFrequancy[MAX_DAC_CHANNELS]     = INIT2("SOUR","_FREQ_FIX", CBaseParameter::RW, 1000, 0, 1, (int)getDACRate(),CONFIG_VAR);
-CFloatParameter outScale[MAX_DAC_CHANNELS]         = INIT2("OSC_OUTPUT","_SCALE", CBaseParameter::RW, 1, 0, 0.00005, 1000,CONFIG_VAR);
+
+CFloatParameter outShowOffset[MAX_DAC_CHANNELS]    = INIT2("GPOS_OFFSET_OUTPUT","", CBaseParameter::RW, 0, 0, -5000, 5000,CONFIG_VAR);
+CFloatParameter outScale[MAX_DAC_CHANNELS]         = INIT2("GPOS_SCALE_OUTPUT","", CBaseParameter::RW, 1, 0, 0.00005, 1000,CONFIG_VAR);
 
 rp_sweep_api::CSweepController *g_sweepController = new rp_sweep_api::CSweepController();
 
@@ -47,9 +49,9 @@ CFloatParameter outRiseTime[MAX_DAC_CHANNELS]              = INIT2("SOUR","_RISE
 CFloatParameter outFallTime[MAX_DAC_CHANNELS]              = INIT2("SOUR","_FALL", CBaseParameter::RW, 1, 0, 0.1, 1000,CONFIG_VAR);
 
 CStringParameter outWaveform[MAX_DAC_CHANNELS]             = INIT2("SOUR","_FUNC", CBaseParameter::RW, "0", 0,CONFIG_VAR);
+CStringParameter outName[MAX_DAC_CHANNELS]                 = INIT2("OUT","_CHANNEL_NAME_INPUT", CBaseParameter::RW, "", 0,CONFIG_VAR);
 CIntParameter outTriggerSource[MAX_DAC_CHANNELS]           = INIT2("SOUR","_TRIG_SOUR", CBaseParameter::RW, RP_GEN_TRIG_SRC_INTERNAL, 0, RP_GEN_TRIG_SRC_INTERNAL, RP_GEN_TRIG_SRC_EXT_NE,CONFIG_VAR);
 
-CFloatParameter outShowOffset[MAX_DAC_CHANNELS]            = INIT2("OUTPUT","_SHOW_OFF", CBaseParameter::RW, 0, 0, -40, 40,CONFIG_VAR);
 
 CIntParameter outTemperatureRuntime[MAX_DAC_CHANNELS]      = INIT2("SOUR","_TEMP_RUNTIME", CBaseParameter::RW, 0, 0, 0, 1);
 CIntParameter outTemperatureLatched[MAX_DAC_CHANNELS]      = INIT2("SOUR","_TEMP_LATCHED", CBaseParameter::RW, 0, 0, 0, 1);
@@ -61,6 +63,8 @@ CIntParameter     outBurstRepetitions[MAX_DAC_CHANNELS]    = INIT2("SOUR","_BURS
 CBooleanParameter outBurstRepInf[MAX_DAC_CHANNELS]         = INIT2("SOUR","_BURST_INF", CBaseParameter::RW, false, 0,CONFIG_VAR);
 CIntParameter     outBurstDelay[MAX_DAC_CHANNELS]          = INIT2("SOUR","_BURST_DELAY", CBaseParameter::RW, 1, 0, 1, 2000000000,CONFIG_VAR);
 CBooleanParameter outGenSyncReset("SYNC_GEN", CBaseParameter::RW, false, 0);
+
+CFloatParameter outExtTrigDeb("SOUR_DEB", CBaseParameter::RW, 500, 0, 0.008, 8338,CONFIG_VAR);
 
 CIntParameter       outGain[MAX_DAC_CHANNELS] = INIT2("OSC_CH","_OUT_GAIN", CBaseParameter::RW, RP_GAIN_1X, 0, 0, 1,CONFIG_VAR);
 CStringParameter    outARBList                = CStringParameter("ARB_LIST", CBaseParameter::RW, loadARBList(), 0);
@@ -126,7 +130,7 @@ auto loadARBList() -> std::string{
 auto generate(rp_channel_t channel,float tscale) -> void {
     if (!rp_HPIsFastDAC_PresentOrDefault()) return;
 
-    CFloatSignal *signal;
+    CFloatBase64Signal *signal;
     std::string waveform;
     rp_waveform_t waveform_api = RP_WAVEFORM_SINE;
     rp_gen_sweep_mode_t sweep_mode;
@@ -142,7 +146,7 @@ auto generate(rp_channel_t channel,float tscale) -> void {
     phase = (float) (outPhase[channel].Value() / 180.0f * M_PI);
     amplitude = outAmplitude[channel].Value()/outScale[channel].Value();
     offset = outOffset[channel].Value() / outScale[channel].Value();
-    showOff = outShowOffset[channel].Value();
+    showOff = outShowOffset[channel].Value()/outScale[channel].Value();
     duty_cycle = outDCYC[channel].Value()/100;
     freqSweepStart = outSweepStartFrequancy[channel].Value();
     freqSweepEnd = outSweepEndFrequancy[channel].Value();
@@ -228,6 +232,9 @@ auto generate(rp_channel_t channel,float tscale) -> void {
                 break;
             case RP_WAVEFORM_SWEEP:
                 synthesis_sweep(signal, frequency, freqSweepStart,freqSweepEnd,sweep_mode,sweep_dir, phase, amplitude, offset, showOff, tscale);
+                break;
+            case RP_WAVEFORM_NOISE:
+                synthesis_noise(signal,amplitude,offset,showOff);
                 break;
             default:
                 break;
@@ -372,6 +379,13 @@ auto initGenAfterLoad() -> void{
             }
         }
     }
+
+    for(int i = 0; i < g_dac_channels; i++){
+        auto ch = (rp_channel_t)i;
+        if (outName[ch].Value() == ""){
+            outName[ch].Value() = std::string("OUT") + std::to_string(i+1);
+        }
+    }
 }
 
 auto setNeedUpdateGenSignal() -> void{
@@ -380,6 +394,22 @@ auto setNeedUpdateGenSignal() -> void{
         g_updateOutWaveFormCh[i] = true;
     }
 }
+
+auto initGenBeforeLoadConfig() -> void{
+    for(int i = 0; i < g_dac_channels; i++){
+        auto ch = (rp_channel_t)i;
+        outName[ch].Value() = std::string("OUT") + std::to_string(i+1);
+    }
+
+    if (getModelName() == "Z20"){
+        for(int i = 0; i < g_dac_channels; i++){
+            auto ch = (rp_channel_t)i;
+            outFrequancy[ch].SetMin(300000);
+        }
+    }
+
+}
+
 
 auto updateGeneratorParameters(bool force) -> void{
     auto requestSendScale = false;
@@ -424,35 +454,49 @@ auto updateGeneratorParameters(bool force) -> void{
                         auto prevGainAPI = RP_GAIN_1X;
                         auto prevAmpAPI = 0.0f;
                         auto prevOffAPI = 0.0f;
+                        int res = 0;
+
+                        auto setAmpOff = [&](){
+                            auto newFpgaGain = RP_GAIN_1X;
+                            float Coff = outImp[ch].Value() == 1 ?  2.0 : 1.0; // 1 - 50Ohm. Coff = 2
+                            if ((fabs(outAmplitude[ch].NewValue())  + fabs(outOffset[ch].NewValue() )) * Coff > 1.0){
+                                newFpgaGain = RP_GAIN_5X;
+                                res |= rp_GenAmp((rp_channel_t)ch, outAmplitude[ch].NewValue() / 5.0 * Coff);
+                            } else {
+                                res |= rp_GenAmp((rp_channel_t)ch, outAmplitude[ch].NewValue() * Coff);
+                            }
+                            res |= rp_GenOffset((rp_channel_t)ch, (outOffset[ch].NewValue() * Coff) / (outGain[ch].Value() == 1 ? 5.0 : 1.0));
+
+                            auto curGenStatus = RP_GAIN_1X;
+                            rp_GenGetGainOut(ch,&curGenStatus);
+                            prevGainAPI = curGenStatus;
+                            if (curGenStatus != newFpgaGain && rp_GenSetGainOut((rp_channel_t)ch, newFpgaGain) == RP_OK) {
+                                outGain[ch].SendValue(newFpgaGain);
+                            }
+                        };
+
                         rp_GenGetAmp((rp_channel_t)ch,&prevAmpAPI);
                         rp_GenGetOffset((rp_channel_t)ch,&prevOffAPI);
-                        int res = 0;
-                        auto newFpgaGain = RP_GAIN_1X;
-                        float Coff = outImp[ch].Value() == 1 ?  2.0 : 1.0;
-                        if ((fabs(outAmplitude[ch].NewValue())  + fabs(outOffset[ch].NewValue() )) * Coff > 1.0){
-                            newFpgaGain = RP_GAIN_5X;
-                            res |= rp_GenAmp((rp_channel_t)ch, outAmplitude[ch].NewValue() / 5.0 * Coff);
-                        } else {
-                            res |= rp_GenAmp((rp_channel_t)ch, outAmplitude[ch].NewValue() * Coff);
-                        }
-                        res |= rp_GenOffset((rp_channel_t)ch, (outOffset[ch].NewValue() * Coff) / (outGain[ch].Value() == 1 ? 5.0 : 1.0));
 
-                        auto curGenStatus = RP_GAIN_1X;
-                        rp_GenGetGainOut(ch,&curGenStatus);
-                        prevGainAPI = curGenStatus;
-
-                        if (curGenStatus != newFpgaGain && rp_GenSetGainOut((rp_channel_t)ch, newFpgaGain) == RP_OK) {
-                            outGain[ch].SendValue(newFpgaGain);
-                        }
+                        setAmpOff();
 
                         if (res == RP_OK){
                             if (IS_NEW(outImp[ch]) && !force){
                                 float impCoff = outImp[ch].NewValue() == 1 ?  0.5 : 2.0;
                                 outImp[i].Update();
+                                // auto resetValues = false;
+                                if ((fabs(outAmplitude[ch].Value()) + fabs(outOffset[ch].Value())) <= 5.0){
+                                    impCoff = 1.0;
+                                    setAmpOff();
+                                    // resetValues = true;
+                                }
                                 outAmplitude[ch].Value() = outAmplitude[ch].Value() * impCoff;
                                 outAmplitude[ch].Update();
                                 outOffset[ch].Value() = outOffset[ch].Value() * impCoff;
                                 outOffset[ch].Update();
+                                // if (resetValues){
+
+                                // }
                             }
                         }else{
                             rp_GenAmp((rp_channel_t)ch,prevAmpAPI);
@@ -547,7 +591,7 @@ auto updateGeneratorParameters(bool force) -> void{
         if (IS_NEW(outScale[i]) || force)
         {
             outScale[i].Update();
-            std::lock_guard<std::mutex> lock(g_updateOutWaveFormCh_mtx);
+            std::lock_guard lock(g_updateOutWaveFormCh_mtx);
             g_updateOutWaveFormCh[i] = true;
         }
 
@@ -565,6 +609,15 @@ auto updateGeneratorParameters(bool force) -> void{
                 checkBurstDelayChanged(ch);
         }
 
+        if (IS_NEW(outName[i]) || force) {
+            if (outName[i].NewValue() == ""){
+                auto str = outName[i].Value();
+                outName[i].Update();
+                outName[i].SendValue(str);
+            }else{
+                outName[i].Update();
+            }
+        }
 
         outShow[i].Update();
         outShowOffset[i].Update();
@@ -572,6 +625,11 @@ auto updateGeneratorParameters(bool force) -> void{
         if (requestSendScale){
             outScale[i].SendValue(outScale[i].Value());
         }
+    }
+
+    if (IS_NEW(outExtTrigDeb) || force){
+        rp_GenSetExtTriggerDebouncerUs(outExtTrigDeb.NewValue());
+        outExtTrigDeb.Update();
     }
 
     setBurstParameters(force);
@@ -606,7 +664,7 @@ auto sendFreqInSweepMode() -> void{
             rp_GenGetFreq((rp_channel_t)i,&freq);
             if (freq != outFrequancy[i].Value()){
                 outFrequancy[i].SendValue(freq);
-                std::lock_guard<std::mutex> lock(g_updateOutWaveFormCh_mtx);
+                std::lock_guard lock(g_updateOutWaveFormCh_mtx);
                 g_updateOutWaveFormCh[i] = true;
             }
         }

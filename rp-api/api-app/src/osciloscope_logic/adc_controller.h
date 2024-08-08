@@ -42,8 +42,12 @@ public:
     auto setTriggerSlope(rpApp_osc_trig_slope_t _slope) -> int;
     auto getTriggerSlope() -> rpApp_osc_trig_slope_t;
 
-    auto setTriggetLevel(float _level) -> int;
+    auto setTriggerLevel(float _level) -> int;
     auto getTriggerLevel(float *_level) -> int;
+    auto getTriggerLevelRaw(float *_level) -> int;
+
+    auto setExternalTriggerLevel(float _level) -> int;
+    auto getExternalTriggerLevel(float *_level) -> int;
 
     auto setAttenuateAmplitudeChannelFunction(func_t _func) -> void;
     auto getAttenuateAmplitudeChannelFunction() const -> func_t;

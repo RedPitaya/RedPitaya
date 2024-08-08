@@ -145,6 +145,9 @@ int getCalibSize(rp_HPeModels_t model){
         case STEM_125_14_v1_0:
         case STEM_125_14_v1_1:
         case STEM_125_14_LN_v1_1:
+        case STEM_125_14_LN_BO_v1_1:
+        case STEM_125_14_LN_CE1_v1_1:
+        case STEM_125_14_LN_CE2_v1_1:
         case STEM_125_14_Z7020_v1_0:
         case STEM_125_14_Z7020_LN_v1_1:
             return eCalParEnd_v1;
@@ -180,6 +183,9 @@ void RpPrintEepromCalData(rp_HPeModels_t model,rp_eepromWpData_t *_eepromData,bo
         case STEM_125_14_v1_0:
         case STEM_125_14_v1_1:
         case STEM_125_14_LN_v1_1:
+        case STEM_125_14_LN_BO_v1_1:
+        case STEM_125_14_LN_CE1_v1_1:
+        case STEM_125_14_LN_CE2_v1_1:
         case STEM_125_14_Z7020_v1_0:
         case STEM_125_14_Z7020_LN_v1_1:
         case STEM_122_16SDR_v1_0:
@@ -277,6 +283,9 @@ void print_eeprom(rp_HPeModels_t model,rp_eepromWpData_t *data,int mode){
                 case STEM_125_14_v1_0:
                 case STEM_125_14_v1_1:
                 case STEM_125_14_LN_v1_1:
+                case STEM_125_14_LN_BO_v1_1:
+                case STEM_125_14_LN_CE1_v1_1:
+                case STEM_125_14_LN_CE2_v1_1:
                 case STEM_125_14_Z7020_v1_0:
                 case STEM_125_14_Z7020_LN_v1_1:
                 case STEM_122_16SDR_v1_0:

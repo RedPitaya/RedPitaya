@@ -1,5 +1,7 @@
 (function(CLIENT, $, undefined) {
 
+
+
     // Params cache
     CLIENT.params = {
         orig: {},
@@ -10,10 +12,18 @@
     CLIENT.config = {};
     CLIENT.config.app_id = 'impedance_analyzer';
     CLIENT.config.server_ip = ''; // Leave empty on production, it is used for testing only
-    CLIENT.config.start_app_url = (CLIENT.config.server_ip.length ? 'http://' + CLIENT.config.server_ip : '') + '/bazaar?start=' + CLIENT.config.app_id + '?' + location.search.substr(1);
+    CLIENT.config.search = "?type=run" //location.search
+    CLIENT.config.start_app_url = (CLIENT.config.server_ip.length ? 'http://' + CLIENT.config.server_ip : '') + '/bazaar?start=' + CLIENT.config.app_id + '?' + CLIENT.config.search.substr(1);
     CLIENT.config.stop_app_url = (CLIENT.config.server_ip.length ? 'http://' + CLIENT.config.server_ip : '') + '/bazaar?stop=' + CLIENT.config.app_id;
     CLIENT.config.socket_url = 'ws://' + (CLIENT.config.server_ip.length ? CLIENT.config.server_ip : window.location.hostname) + '/wss'; // WebSocket server URI
+    CLIENT.config.debug = false
+
     CLIENT.client_id = undefined;
+    CLIENT.ping = undefined;
+    CLIENT.nginx_live = false;
+    CLIENT.nginx_live_timer = undefined;
+
+
     // App state
     CLIENT.state = {
         socket_opened: false,
@@ -33,6 +43,13 @@
     CLIENT.compressed_data = 0;
     CLIENT.decompressed_data = 0;
 
+    CLIENT.client_log = function(...args) {
+        if (CLIENT.config.debug){
+            const d = new Date();
+            console.log("LOG:CLIENT.js",d.getHours() + ":" + d.getMinutes() + ":"+ d.getSeconds() + ":" + d.getMilliseconds() ,...args);
+        }
+        }
+
     CLIENT.startApp = function() {
         $.get(
             CLIENT.config.start_app_url
@@ -42,19 +59,19 @@
                     try {
                         CLIENT.connectWebSocket();
                     } catch (e) {
-                        CLIENT.startApp();
+                        setTimeout(CLIENT.startApp(), 2000);
                     }
                 } else if (dresult.status == 'ERROR') {
                     console.log(dresult.reason ? dresult.reason : 'Could not start the application (ERR1)');
-                    CLIENT.startApp();
+                    setTimeout(CLIENT.startApp(), 2000);
                 } else {
                     console.log('Could not start the application (ERR2)');
-                    CLIENT.startApp();
+                    setTimeout(CLIENT.startApp(), 2000);
                 }
             })
             .fail(function() {
                 console.log('Could not start the application (ERR3)');
-                CLIENT.startApp();
+                setTimeout(CLIENT.startApp(), 2000);
             });
     };
 
@@ -69,8 +86,11 @@
             timeout: 2000
         }).done(function(msg) {
             if (msg.trim() === CLIENT.client_id) {
+                CLIENT.client_log("Need reload")
                 location.reload();
             } else {
+                CLIENT.client_log("Set user lost")
+                $('body').addClass('connection_lost');
                 $('body').removeClass('user_lost');
                 CLIENT.stopCheckStatus();
             }
@@ -83,7 +103,8 @@
     CLIENT.startCheckStatus = function() {
         if (CLIENT.checkStatusTimer === undefined) {
             CLIENT.changeStatusStep = 0;
-            CLIENT.checkStatusTimer = setInterval(CLIENT.checkStatus, 4000);
+            CLIENT.client_log("Set status step 0 (Need check status)")
+            CLIENT.checkStatusTimer = setInterval(CLIENT.checkStatus, 5000);
         }
     }
 
@@ -94,32 +115,61 @@
         }
     }
 
+    CLIENT.startCheckNginxStatus = function() {
+        if (CLIENT.nginx_live_timer === undefined) {
+            CLIENT.nginx_live_timer = setInterval(function(){
+                $.ajax({
+                    method: "GET",
+                    url: "/check_nginx_live",
+                    timeout: 2000
+                }).done(function(msg) {
+                    CLIENT.nginx_live = true
+                }).fail(function(msg) {
+                    CLIENT.nginx_live = false
+                });
+            }, 2000);
+        }
+    }
+
+    CLIENT.stopCheckNginxStatus = function() {
+        if (CLIENT.nginx_live_timer !== undefined) {
+            clearInterval(CLIENT.nginx_live_timer);
+            CLIENT.nginx_live_timer = undefined;
+        }
+    }
+
     CLIENT.checkStatus = function() {
-        $.ajax({
-            method: "GET",
-            url: "/check_status",
-            timeout: 2000
-        }).done(function(msg) {
-            switch (CLIENT.changeStatusStep) {
-                case 0:
-                    CLIENT.changeStatusStep = 1;
-                    break;
-                case 2:
-                    CLIENT.reloadPage();
-                    break;
+
+        if (CLIENT.params.orig["RP_CLIENT_PING"] != undefined){
+            if (CLIENT.ping != CLIENT.params.orig["RP_CLIENT_PING"].value){
+                CLIENT.stopCheckNginxStatus()
+                switch (CLIENT.changeStatusStep) {
+                    case 0:
+                        CLIENT.changeStatusStep = 1;
+                        CLIENT.client_log("Set status step 1 (Client connected)")
+                        break;
+                }
+            }else{
+                CLIENT.startCheckNginxStatus()
+                $('body').removeClass('connection_lost');
+                switch (CLIENT.changeStatusStep) {
+                    case 0: // Do nothing, since after the timer started the data did not arrive.
+                        CLIENT.changeStatusStep = -1;
+                        CLIENT.client_log("Set status step -1 (Do nothing, since after the timer started the data did not arrive.)")
+                        break;
+                    case 1: // Go to the connection restoration check state.
+                        CLIENT.changeStatusStep = 2;
+                        CLIENT.client_log("Set status step 2 (Go to the connection restoration check state.)")
+                        break;
+                }
             }
-        }).fail(function(msg) {
-            // check status. If don't have good state after start. We lock system.
-            $('body').removeClass('connection_lost');
-            switch (CLIENT.changeStatusStep) {
-                case 0:
-                    CLIENT.changeStatusStep = -1;
-                    break;
-                case 1:
-                    CLIENT.changeStatusStep = 2;
-                    break;
-            }
-        });
+            CLIENT.ping = CLIENT.params.orig["RP_CLIENT_PING"].value
+        }
+
+        if (CLIENT.changeStatusStep == 2 && CLIENT.nginx_live){
+            CLIENT.reloadPage();
+        }
+        CLIENT.client_log("checkStatus")
     }
 
 
@@ -139,11 +189,10 @@
         // Define WebSocket event listeners
         if (CLIENT.ws) {
             CLIENT.ws.onopen = function() {
-                console.log('Socket opened');
+                CLIENT.client_log('Socket opened');
 
                 CLIENT.state.socket_opened = true;
-
-                CLIENT.sendParameters();
+                CLIENT.requestParameters();
 
                 //setTimeout(showLicenseDialog, 2500);
                 CLIENT.unexpectedClose = true;
@@ -155,16 +204,16 @@
 
             CLIENT.ws.onclose = function() {
                 CLIENT.state.socket_opened = false;
-                console.log('Socket closed');
+                CLIENT.client_log('Socket closed');
                 if (CLIENT.unexpectedClose == true) {
-                    setTimeout(CLIENT.reloadPage, '1000');
+                    setTimeout(CLIENT.reloadPage, 2000);
                 }
             };
 
             CLIENT.ws.onerror = function(ev) {
                 if (!CLIENT.state.socket_opened)
-                    CLIENT.startApp();
-                console.log('Websocket error: ', ev);
+                    setTimeout(CLIENT.startApp(), 2000);
+                CLIENT.client_log('Websocket error: ', ev);
             };
 
             CLIENT.ws.onmessage = function(ev) {
@@ -217,11 +266,22 @@
             return false;
         }
         CLIENT.ws.send(JSON.stringify({ parameters: CLIENT.parametersCache }));
-        console.log("SEND: ", CLIENT.parametersCache )
+        CLIENT.client_log("SEND: ", CLIENT.parametersCache )
         CLIENT.parametersCache = {};
         return true;
     };
 
+    CLIENT.requestParameters = function() {
+        if (!CLIENT.state.socket_opened) {
+            console.log('ERROR: Cannot save changes, socket not opened');
+            return false;
+        }
+        CLIENT.parametersCache["in_command"] = { value: "send_all_params" };
+        CLIENT.ws.send(JSON.stringify({ parameters: CLIENT.parametersCache }));
+        CLIENT.client_log("SEND: ", CLIENT.parametersCache )
+        CLIENT.parametersCache = {};
+        return true;
+    };
 
     //Handlers
     var signalsHandler = function() {
@@ -234,8 +294,9 @@
     }
 
     CLIENT.processParameters = function(new_params) {
+
         if (Object.keys(new_params).length > 0) {
-            console.log(new_params)
+            CLIENT.client_log(new_params)
         }
 
         for (var param_name in new_params) {
@@ -248,8 +309,16 @@
 
     var parametersHandler = function() {
         if (CLIENT.parameterStack.length > 0) {
-            CLIENT.processParameters(CLIENT.parameterStack[0]);
-            CLIENT.parameterStack.splice(0, 1);
+            CLIENT.client_log(CLIENT.parameterStack.length)
+            var params = [...CLIENT.parameterStack]
+            var pack_params = []
+            for( var i = 0 ; i < params.length; i++){
+                for (var param_name in params[i]) {
+                    pack_params[param_name] = params[i][param_name]
+                }
+            }
+            CLIENT.processParameters(pack_params);
+            CLIENT.parameterStack = []
         }
     }
 
@@ -263,27 +332,37 @@
 
 // Page onload event handler
 $(function() {
-
     CLIENT.client_id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
         var r = Math.random() * 16 | 0,
             v = c == 'x' ? r : (r & 0x3 | 0x8);
         return v.toString(16);
     });
 
-    $.ajax({
-        url: '/set_client_id', //Server script to process data
-        type: 'POST',
-        //Ajax events
-        //beforeSend: beforeSendHandler,
-        success: function(e) { console.log(e); },
-        error: function(e) { console.log(e); },
-        // Form data
-        data: CLIENT.client_id,
-        //Options to tell jQuery not to process data or worry about content-type.
-        cache: false,
-        contentType: false,
-        processData: false
+    // Stop the application when page is unloaded
+    $(window).on('beforeunload', function() {
+        CLIENT.ws.onclose = function() {}; // disable onclose handler first
+        CLIENT.ws.close();
+        $.ajax({
+            url: CLIENT.config.stop_app_url,
+            async: false
+        });
     });
 
-    CLIENT.checkStatus();
+    $.ajax({
+            url: '/set_client_id', //Server script to process data
+            type: 'POST',
+            //Ajax events
+            //beforeSend: beforeSendHandler,
+            success: function(e) { console.log(e); },
+            error: function(e) { console.log(e); },
+            // Form data
+            data: CLIENT.client_id,
+            //Options to tell jQuery not to process data or worry about content-type.
+            cache: false,
+            contentType: false,
+            processData: false
+        });
+
+
+    CLIENT.startApp();
 })

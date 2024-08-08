@@ -92,7 +92,7 @@ KERNEL_HEADERS ?= YES
 
 # HWID=v1r0 - this value for 250-12 rev 1.0. In all other cases, this parameter is empty.
 
-FPGA_COMMIT ?= Release-2024.2
+FPGA_COMMIT ?= Release-2024.3
 
 
 HWID ?=
@@ -131,6 +131,9 @@ FPGA_AXI4LITE=
 # barebone
 FPGA_BAREBONE=
 
+# pyrpl
+FPGA_PYRPL=
+
 # project fpga for build uboot
 # Used with commit number or branch name
 # FPGA_UBOOT=c822622082e63ce943c3b22e706e0c35dbe8d2f5
@@ -148,6 +151,7 @@ ifeq ($(MODEL),Z10)
 	FPGA_MERCURY	= $(FPGA_COMMIT)
 	FPGA_AXI4LITE	= $(FPGA_COMMIT)
 	FPGA_BAREBONE = $(FPGA_COMMIT)
+	FPGA_PYRPL = $(FPGA_COMMIT)
 
 	FPGA_MODEL = Z10
 	FPGA_VERSION = z10_125
@@ -178,6 +182,7 @@ ifeq ($(MODEL),Z20_125)
 	FPGA_MERCURY	= $(FPGA_COMMIT)
 	FPGA_AXI4LITE	= $(FPGA_COMMIT)
 	FPGA_BAREBONE = $(FPGA_COMMIT)
+	FPGA_PYRPL = $(FPGA_COMMIT)
 
 	FPGA_MODEL = Z20_14
 	FPGA_VERSION = z20_125
@@ -219,7 +224,6 @@ ifeq ($(MODEL),Z20_250_12_1_0)
 	FPGA_LOGIC_250	= $(FPGA_COMMIT)
 	FPGA_BAREBONE_250 = $(FPGA_COMMIT)
 
-
 	FPGA_MODEL = Z20_250
 	FPGA_VERSION = z20_250_1_0
 	HWID=v1r0
@@ -234,7 +238,6 @@ ifeq ($(MODEL),Z20_250_12)
 	FPGA_0_94_250	= $(FPGA_COMMIT)
 	FPGA_LOGIC_250	= $(FPGA_COMMIT)
 	FPGA_BAREBONE_250 = $(FPGA_COMMIT)
-
 
 	FPGA_MODEL = Z20_250
 	FPGA_VERSION = z20_250
@@ -292,6 +295,12 @@ ifneq "$(FPGA_BAREBONE)" ""
 	$(call build_fpga,barebones,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_BAREBONE))
 	mkdir -p $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
 	cp -r fpga/$(FPGA_VERSION)/barebones/dts/*  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
+endif
+
+ifneq "$(FPGA_PYRPL)" ""
+	$(call build_fpga,pyrpl,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_PYRPL))
+	mkdir -p $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/pyrpl/dts_rp/
+	cp -r fpga/$(FPGA_VERSION)/pyrpl/dts/*  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/pyrpl/dts_rp/
 endif
 
 ifneq "$(FPGA_BAREBONE_250)" ""
@@ -621,7 +630,6 @@ gen_report_eco:
 ################################################################################
 
 APP_STREAMINGMANAGER_DIR = apps-tools/streaming_manager
-
 streaming:  streaming_client streaming_client_win
 
 streaming_client:

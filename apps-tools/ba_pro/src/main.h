@@ -9,7 +9,7 @@
 
 
 
-#define CH_SIGNAL_SIZE_DEFAULT      1024
+#define CH_SIGNAL_SIZE_DEFAULT      3000
 #define SAMPLING_RATE_DIV_MILLION   128
 
 #define EXEC_CHECK_MUTEX(x, mutex){ \

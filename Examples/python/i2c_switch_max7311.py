@@ -43,7 +43,7 @@ value = (value & ~0x0F);
 rp_s.tx_txt('I2C:S:W2 ' + str(value)) # write to i2c
 print("Write value for reg 0x2",value)
 
-rp_s.tx_txt('I2C:S:R2')
+rp_s.tx_txt('I2C:S:R2?')
 value = int(rp_s.rx_txt())
 print("Read value for reg 0x2",value)
 

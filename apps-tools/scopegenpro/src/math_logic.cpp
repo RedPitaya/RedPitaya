@@ -11,13 +11,20 @@
 constexpr float DEF_MIN_SCALE = 1.f/1000.f;
 constexpr float DEF_MAX_SCALE = 5.f;
 
-CFloatSignal        math("math", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
+const std::vector<float> voltage_steps_math = {
+        // Millivolts
+        1.0 / 1000.0, 2.0f / 1000, 5 / 1000, 10 / 1000, 20 / 1000, 50 / 1000, 100 / 1000, 200 / 1000, 500 / 1000,
+        // Volts
+        1 , 5 , 25 , 50, 100 , 250 , 500 , 1000, 2000, 5000, 10000, 20000, 50000, 100000 , 200000, 500000, 1000000, 10000000, 50000000, 100000000
+};
+
+CFloatBase64Signal  math("math", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
 
 CBooleanParameter   mathShow("MATH_SHOW", CBaseParameter::RW, false, 0,CONFIG_VAR);
-CBooleanParameter   mathInvShow("MATH_SHOW_INVERTED", CBaseParameter::RW, false, 0,CONFIG_VAR);
 
-CFloatParameter     inMathOffset("OSC_MATH_OFFSET", CBaseParameter::RW, 0, 0, -50000000, 50000000,CONFIG_VAR);
-CFloatParameter     inMathScale("OSC_MATH_SCALE", CBaseParameter::RW, 1, 0, 0.00005, 10000000,CONFIG_VAR);
+CBooleanParameter   mathInvShow("GPOS_INVERTED_MATH", CBaseParameter::RW, false, 0,CONFIG_VAR);
+CFloatParameter     inMathOffset("GPOS_OFFSET_MATH", CBaseParameter::RW, 0, 0, -50000000, 50000000,CONFIG_VAR);
+CFloatParameter     inMathScale("GPOS_SCALE_MATH", CBaseParameter::RW, 1, 0, 0.00005, 1000000000000.0,CONFIG_VAR);
 
 
 /* --------------------------------  MEASURE  ------------------------------ */
@@ -28,15 +35,15 @@ CFloatParameter     measureValue[4]     = INIT("OSC_MEAS_VAL","", CBaseParameter
 /* --------------------------------  CURSORS  ------------------------------ */
 CBooleanParameter   cursorx[2]          = INIT2("OSC_CURSOR_X","", CBaseParameter::RW, false, 0,CONFIG_VAR);
 CBooleanParameter   cursory[2]          = INIT2("OSC_CURSOR_Y","", CBaseParameter::RW, false, 0,CONFIG_VAR);
-CIntParameter       cursorSrc("OSC_CURSOR_SRC", CBaseParameter::RW, RPAPP_OSC_SOUR_CH1, 0, RPAPP_OSC_SOUR_CH1, RPAPP_OSC_SOUR_MATH,CONFIG_VAR);
 
-CFloatParameter     cursorV[2]          = INIT2("OSC_CUR","_V", CBaseParameter::RW, -1, 0, -1000, 1000,CONFIG_VAR);
-CFloatParameter     cursorT[2]          = INIT2("OSC_CUR","_T", CBaseParameter::RW, -1, 0, -1000, 1000,CONFIG_VAR);
+CFloatParameter     cursorV[2]          = INIT2("OSC_CUR","_V", CBaseParameter::RW, -1, 0, -1000000000000.0, 1000000000000.0,CONFIG_VAR);
+CFloatParameter     cursorT[2]          = INIT2("OSC_CUR","_T", CBaseParameter::RW, -1, 0, -1000000000000.0, 1000000000000.0,CONFIG_VAR);
 
 /* ----------------------------------  MATH  -------------------------------- */
 CIntParameter mathOperation("OSC_MATH_OP", CBaseParameter::RW, RPAPP_OSC_MATH_ADD, RPAPP_OSC_MATH_ADD, RPAPP_OSC_MATH_ADD, RPAPP_OSC_MATH_INT,CONFIG_VAR);
 CIntParameter mathSource[2]             = INIT2("OSC_MATH_SRC","", CBaseParameter::RW, RP_CH_1, 0, RP_CH_1, RP_CH_4,CONFIG_VAR);
 
+CStringParameter    mathName("MATH_CHANNEL_NAME_INPUT", CBaseParameter::RW, "MATH", 0,CONFIG_VAR);
 
 
 auto initMathAfterLoad() -> void{
@@ -55,14 +62,13 @@ auto updateMathParametersToWEB(bool is_auto_scale) -> void{
 
     double dvalue = 0;
     rpApp_OscGetAmplitudeScale(RPAPP_OSC_SOUR_MATH, &dvalue);
-//    fprintf(stderr,"\t\ttinMathScale %f dvalue %f min %f max %f\n",inMathScale.Value(), dvalue ,inMathScale.GetMin() , inMathScale.GetMax());
+//    WARNING("\t\ttinMathScale %f dvalue %f min %f max %f",inMathScale.Value(), dvalue ,inMathScale.GetMin() , inMathScale.GetMax())
 
     if (dvalue < inMathScale.GetMin() || dvalue > inMathScale.GetMax()){
-//        fprintf(stderr,"Rescale\n");
+//        WARNING("inMathScale Rescale");
         rpApp_OscScaleMath();
     }else{
-        if(fabs(inMathScale.Value()) - fabs(dvalue) > 0.0005) {
-//            fprintf(stderr,"\tSend %f\n",inMathScale.Value());
+        if(fabs(inMathScale.Value() - dvalue) > 0.0005) {
             inMathScale.SendValue(dvalue);
         }
     }
@@ -71,7 +77,6 @@ auto updateMathParametersToWEB(bool is_auto_scale) -> void{
     if (inMathOffset.Value() != dvalue){
         inMathOffset.SendValue(dvalue);
     }
-
     checkMathScale();
 }
 
@@ -104,14 +109,13 @@ auto checkMathScale() -> void {
     if(mathShow.Value()) {
         float vpp = 0;
         rpApp_OscMeasureVpp(RPAPP_OSC_SOUR_MATH, &vpp);
-        uint32_t mul = 10;
-        for(int i = 0 ; i < 6; i++ ){
-            if (mul > vpp)
+        float mul = voltage_steps_math[0];
+        for(int i = voltage_steps_math.size()-1 ; i >=0 ; i-- ){
+            if (vpp < voltage_steps_math[i])
+                mul = voltage_steps_math[i];
+            else
                 break;
-            mul *= 10;
-
         }
-
         if (inMathScale.GetMax() != mul){
             inMathScale.SetMax(mul);
         }
@@ -123,7 +127,7 @@ auto checkMathScale() -> void {
 }
 
 auto isMathShow() -> bool{
-    return mathShow.Value();   
+    return mathShow.Value();
 }
 
 auto updateMathSignal() -> void{
@@ -152,6 +156,16 @@ auto updateMathParams(bool force) -> void{
     if (IS_NEW(measureSelectN) || force)
         measureSelectN.Update();
 
+    if (IS_NEW(mathName) || force){
+        if (mathName.NewValue() == ""){
+            auto str = mathName.Value();
+            mathName.Update();
+            mathName.SendValue(str);
+        }else{
+            mathName.Update();
+        }
+    }
+
     for(int i = 0; i < 2 ; i++){
         if (IS_NEW(cursorx[i]) || force)
             cursorx[i].Update();
@@ -162,9 +176,6 @@ auto updateMathParams(bool force) -> void{
         if (IS_NEW(cursorT[i]) || force)
             cursorT[i].Update();
     }
-
-    if (IS_NEW(cursorSrc) || force)
-        cursorSrc.Update();
 
     setMathParams();
 

@@ -20,6 +20,8 @@
 #include "rp_hw-profiles.h"
 #include "rp_log.h"
 
+#include "web/rp_client.h"
+
 extern "C" {
 #include "la_acq.h"
 #include "rp_api.h"
@@ -47,10 +49,6 @@ int rp_app_exit(void);
 
 namespace {
 
-// enum STEM {
-// 	STEM_10,
-// 	STEM_14
-// };
 
 enum LA_MODE {
 //	DEMO,
@@ -117,6 +115,9 @@ std::map<std::string, std::shared_ptr<Decoder> > g_decoders;
         case STEM_125_14_v1_0:
         case STEM_125_14_v1_1:
         case STEM_125_14_LN_v1_1:
+        case STEM_125_14_LN_BO_v1_1:
+        case STEM_125_14_LN_CE1_v1_1:
+        case STEM_125_14_LN_CE2_v1_1:
         case STEM_125_14_Z7020_v1_0:
         case STEM_125_14_Z7020_LN_v1_1:
             return "Z10";
@@ -221,6 +222,9 @@ int rp_app_init(void) {
 	TRACE("openunit %d", s);
 	set_application_mode(BASIC_ONLY);
 
+    rp_WC_Init();
+    rp_WC_UpdateParameters(true);
+
 	time_t t;
 	srand((unsigned) time(&t));
 	fprintf(stderr, "Loading logic analyzer version %s-%s.\n", "0.00-0000", "unknow");
@@ -298,6 +302,8 @@ void UpdateParams(void)
     	memoryFree.Value() = (float)memInfo.freeram;
 	}
 	times++;
+
+	rp_WC_UpdateParameters(false);
 }
 
 
@@ -519,6 +525,8 @@ void OnNewParams(void)
 
     signalPeriiod.Update();
     parameterPeriiod.Update();
+
+	rp_WC_OnNewParam();
 }
 
 void OnNewSignals(void)

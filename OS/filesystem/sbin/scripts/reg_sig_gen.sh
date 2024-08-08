@@ -124,3 +124,22 @@ echo "Ch A Init value 0x40200068 : $X ($RET)"
 X=$(monitor 0x4020006c)
 hexToDec $X
 echo "Ch B Init value 0x4020006c : $X ($RET)"
+
+
+X=$(monitor 0x40200078)
+hexToDec $X
+echo "Ch A LFSR random seed 0x40200078 : $X ($RET)"
+
+X=$(monitor 0x4020007C)
+hexToDec $X
+echo "Ch B LFSR random seed 0x4020007C : $X ($RET)"
+
+
+X=$(monitor 0x40200080)
+hexToDec $X
+echo "Ch A enable noise generator 0x40200080 : $X ($RET)"
+
+X=$(monitor 0x40200084)
+hexToDec $X
+echo "Ch B enable noise generator 0x40200084 : $X ($RET)"
+

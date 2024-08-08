@@ -26,31 +26,14 @@
 
 (function(SM, $, undefined) {
 
-    // Params cache
-    SM.params = {
-        orig: {},
-        local: {}
-    };
     SM.ss_status_last = -1;
+    SM.ss_full_rate = undefined;
     SM.ss_rate = -1;
     SM.ss_max_rate = -1;
     SM.ss_max_rate_devider = -1;
     SM.param_callbacks = {};
-    SM.parameterStack = [];
-    SM.signalStack = [];
-    // Parameters cache
-    SM.parametersCache = {};
 
-    // App configuration
-    SM.config = {};
-    SM.config.app_id = 'streaming_manager';
-    SM.config.server_ip = ''; // Leave empty on production, it is used for testing only
 
-    SM.config.start_app_url = window.location.origin + '/bazaar?start=' + SM.config.app_id;
-    SM.config.stop_app_url = window.location.origin + '/bazaar?stop=' + SM.config.app_id;
-    SM.config.socket_url = 'ws://' + window.location.host + '/wss';
-
-    SM.rp_model = "";
     SM.adc_channels = undefined;
     SM.dac_channels = undefined;
     SM.is_acdc = undefined;
@@ -71,49 +54,13 @@
     };
 
 
-    SM.startApp = function() {
-        $.get(
-                SM.config.start_app_url
-            )
-            .done(function(dresult) {
-                if (dresult.status == 'OK') {
-                    try {
-                        SM.connectWebSocket();
-                        console.log("Load manager");
-                    } catch (e) {
-                        SM.startApp();
-                    }
-                } else if (dresult.status == 'ERROR') {
-                    console.log(dresult.reason ? dresult.reason : 'Could not start the application (ERR1)');
-                    SM.startApp();
-                } else {
-                    console.log('Could not start the application (ERR2)');
-                    SM.startApp();
-                }
-            })
-            .fail(function() {
-                console.log('Could not start the application (ERR3)');
-                SM.startApp();
-            });
-    };
-
-
-
-
-    //Show license dialog
-    var showLicenseDialog = function() {
-        if (SM.state.demo_label_visible)
-            $('#get_lic').modal('show');
-    }
-
-
     //Write email
     SM.formEmail = function() {
         //var file = new FileReader();
         var mail = "support@redpitaya.com";
         var subject = "Crash report Red Pitaya OS";
         var body = "%0D%0A%0D%0A------------------------------------%0D%0A" + "DEBUG INFO, DO NOT EDIT!%0D%0A" + "------------------------------------%0D%0A%0D%0A";
-        body += "Parameters:" + "%0D%0A" + JSON.stringify({ parameters: SM.parametersCache }) + "%0D%0A";
+        body += "Parameters:" + "%0D%0A" + JSON.stringify({ parameters: CLIENT.parametersCache }) + "%0D%0A";
         body += "Browser:" + "%0D%0A" + JSON.stringify({ parameters: $.browser }) + "%0D%0A";
 
         var url = 'info/info.json';
@@ -134,118 +81,6 @@
             document.location.href = "mailto:" + mail + "?subject=" + subject + ver + "&body=" + body;
         });
     }
-
-
-    // Creates a WebSocket connection with the web server
-    SM.connectWebSocket = function() {
-
-        if (window.WebSocket) {
-            SM.ws = new WebSocket(SM.config.socket_url);
-            SM.ws.binaryType = "arraybuffer";
-        } else if (window.MozWebSocket) {
-            SM.ws = new MozWebSocket(SM.config.socket_url);
-            SM.ws.binaryType = "arraybuffer";
-        } else {
-            console.log('Browser does not support WebSocket');
-        }
-
-        // Define WebSocket event listeners
-        if (SM.ws) {
-            SM.ws.onopen = function() {
-                console.log('Socket opened');
-                SM.GetIP();
-                var element = document.getElementById("loader-wrapper");
-                element.parentNode.removeChild(element);
-                $('#main').removeAttr("style");
-                SM.state.socket_opened = true;
-                SM.requestAllParameters();
-                SM.unexpectedClose = true;
-                SM.getClients();
-                SM.refreshFiles();
-            };
-
-            SM.ws.onclose = function() {
-                SM.state.socket_opened = false;
-                console.log('Socket closed');
-                if (SM.unexpectedClose == true)
-                    $('#feedback_error').modal('show');
-            };
-
-            SM.ws.onerror = function(ev) {
-                if (!SM.state.socket_opened)
-                    SM.startApp();
-                console.log('Websocket error: ', ev);
-            };
-
-            SM.ws.onmessage = function(ev) {
-                try {
-                    var data = new Uint8Array(ev.data);
-                    //   BA.compressed_data += data.length;
-                    var inflate = pako.inflate(data);
-                    var text = String.fromCharCode.apply(null, new Uint8Array(inflate));
-
-                    // BA.decompressed_data += text.length;
-                    var receive = JSON.parse(text);
-
-                    //Recieving parameters
-                    if (receive.parameters) {
-                        SM.parameterStack.push(receive.parameters);
-                        if (SM.ss_rate == -1 && SM.params.orig["SS_ACD_MAX"] != null) {
-                            $("#SS_RATE").val(SM.params.orig["SS_ACD_MAX"].value);
-                            rateFocusOut();
-                        }
-                    }
-
-                } catch (e) {
-                    //BA.state.processing = false;
-                    console.log(e);
-                } finally {
-                    //BA.state.processing = false;
-                }
-            };
-        }
-    };
-
-    // For Firefox
-    function fireEvent(obj, evt) {
-        var fireOnThis = obj;
-        if (document.createEvent) {
-            var evObj = document.createEvent('MouseEvents');
-            evObj.initEvent(evt, true, false);
-            fireOnThis.dispatchEvent(evObj);
-
-        } else if (document.createEventObject) {
-            var evObj = document.createEventObject();
-            fireOnThis.fireEvent('on' + evt, evObj);
-        }
-    }
-
-
-    // Sends to server parameters
-    SM.sendParameters = function() {
-        if (!SM.state.socket_opened) {
-            console.log('ERROR: Cannot save changes, socket not opened');
-            return false;
-        }
-
-        SM.ws.send(JSON.stringify({ parameters: SM.parametersCache }));
-        console.log(SM.parametersCache)
-        SM.parametersCache = {};
-        return true;
-    };
-
-    SM.requestAllParameters = function() {
-        if (!SM.state.socket_opened) {
-            console.log('ERROR: Cannot save changes, socket not opened');
-            return false;
-        }
-        SM.parametersCache = {};
-        SM.parametersCache["in_command"] = { value: "send_all_params" };
-        SM.ws.send(JSON.stringify({ parameters: SM.parametersCache }));
-        console.log(SM.parametersCache)
-        SM.parametersCache = {};
-        return true;
-    };
 
     SM.DeleteFiles = function() {
         $.ajax({
@@ -277,8 +112,8 @@
                 $('#svg-is-runnung').attr("src","./img/red_led.png")
                 $('#info_dialog_label').text("Out of free disk space");
                 $('#info_dialog').modal('show');
-                SM.parametersCache["SS_STATUS"] = { value: 0 };
-                SM.sendParameters();
+                CLIENT.parametersCache["SS_STATUS"] = { value: 0 };
+                CLIENT.sendParameters();
                 SM.refreshFiles();
             }
 
@@ -286,8 +121,8 @@
                 $('#svg-is-runnung').attr("src","./img/red_led.png")
                 $('#info_dialog_label').text("Data recording completed");
                 $('#info_dialog').modal('show');
-                SM.parametersCache["SS_STATUS"] = { value: 0 };
-                SM.sendParameters();
+                CLIENT.parametersCache["SS_STATUS"] = { value: 0 };
+                CLIENT.sendParameters();
                 SM.refreshFiles();
             }
 
@@ -312,69 +147,28 @@
         }
     }
 
-    //Handlers
-    var signalsHandler = function() {
-        if (SM.signalStack.length > 0) {
-
-            SM.signalStack.splice(0, 1);
-        }
-        if (SM.signalStack.length > 2)
-            SM.signalStack.length = [];
-    }
-
     SM.updateADCMode = function(state){
-        // if (new_params[param_name].value){
-        //     $(".network").hide();
-        //     $(".file").show();
-        // }else{
-        //     $(".network").show();
-        //     $(".file").hide();
-        // }
     }
 
-    SM.processParameters = function(new_params) {
-        var old_params = $.extend(true, {}, SM.params.orig);
-        var send_all_params = Object.keys(new_params).indexOf('send_all_params') != -1;
-        SM.updateMaxLimits(new_params['RP_MODEL_STR']);
-
-        if (Object.keys(new_params).length !== 0)
-
-            console.log(new_params)
-
-        for (var param_name in new_params) {
-
-            SM.params.orig[param_name] = new_params[param_name];
-            var field = $('#' + param_name);
-
-            if (SM.param_callbacks[param_name] !== undefined)
-                SM.param_callbacks[param_name](new_params);
-
-            // Do not change fields from dialogs when user is editing something
-            // if ((old_params[param_name] === undefined || old_params[param_name].value !== new_params[param_name].value)) {
-            //     if (field.is('select') || field.is('input:text')) {
-            //         if (param_name == "SS_RATE"){
-            //             SM.ss_rate = new_params[param_name].value;
-            //             rateFocusOutValue();
-            //         }else{
-            //             field.val(new_params[param_name].value)
-            //         }
-            //     } else if (field.is('button')) {
-            //         field[new_params[param_name].value === true ? 'addClass' : 'removeClass']('active');
-            //     } else if (field.is('input:radio')) {
-            //         if (param_name == "SS_USE_FILE"){
-            //             SM.updateADCMode(new_params[param_name].value);
-            //         }else{
-            //             var radios = $('input[name="' + param_name + '"]');
-            //             radios.closest('.btn-group').children('.btn.active').removeClass('active');
-            //             radios.eq([+new_params[param_name].value]).prop('checked', true).parent().addClass('active');
-            //         }
-            //     } else if (field.is('span')) {
-            //         field.html(new_params[param_name].value);
-            //     }
-            // }
+    SM.updateMaxLimits = function(adc_rate) {
+        if (adc_rate !== undefined) {
+            if (SM.ss_full_rate === undefined) {
+                SM.ss_full_rate = adc_rate.value;
+                SM.ss_max_rate = adc_rate.value;
+                SM.ss_max_rate_devider = 1;
+                SM.updateLimits();
+            }
         }
-
     };
+
+    SM.updateLimits = function() {
+        if (SM.ss_rate != -1) {
+            SM.calcRateHz(SM.ss_full_rate / SM.ss_rate);
+        }
+        rateFocusOutValue();
+    };
+
+
 
     SM.calcRateHz = function(val) {
         if (val <= 1)
@@ -401,12 +195,6 @@
         return Math.round(SM.ss_full_rate / SM.ss_rate);
     }
 
-    var parametersHandler = function() {
-        if (SM.parameterStack.length > 0) {
-            SM.processParameters(SM.parameterStack[0]);
-            SM.parameterStack.splice(0, 1);
-        }
-    }
 
     SM.GetIP = function() {
 
@@ -468,6 +256,8 @@
         $("#PC_CON_WIN > img").attr('src',"./img/ConWinRed.png")
         $("#PC_DESK_LIN > img").attr('src',"./img/DeskLinRed.png")
         $("#PC_CON_LIN > img").attr('src',"./img/ConLinRed.png")
+        $("#RP_CON_LIN > img").attr('src',"./img/ConRPRed.png")
+
         $.ajax({
             url: '/streaming_manager_get_clients_list',
             type: 'GET',
@@ -480,6 +270,7 @@
                 if (item !== ""){
                     console.log(item)
                     var is_win = item.includes("win.zip")
+                    var is_rp = item.includes("rp.zip")
                     var is_desktop = item.includes("rpsa_client-desktop")
                     if (is_desktop && is_win){
                         $("#PC_DESK_WIN > img").attr('src',"./img/DeskWinGreen.png")
@@ -490,6 +281,9 @@
                     } else if (is_win) {
                         $("#PC_CON_WIN > img").attr('src',"./img/ConWinGreen.png")
                         $("#PC_CON_WIN").attr('href',"/streaming_manager/clients/"+item)
+                    } else if (is_rp) {
+                        $("#RP_CON_LIN > img").attr('src',"./img/ConRPGreen.png")
+                        $("#RP_CON_LIN").attr('href',"/streaming_manager/clients/"+item)
                     } else {
                         $("#PC_CON_LIN > img").attr('src',"./img/ConLinGreen.png")
                         $("#PC_CON_LIN").attr('href',"/streaming_manager/clients/"+item)
@@ -535,11 +329,11 @@
                         if (files[baseName] == undefined){
                             files[baseName] = {}
                         }
-                        if (name.endsWith(".log.lost")){
+                        if (name.endsWith(".log.lost.txt")){
                             files[baseName]["log.lost"] = true
                         }
 
-                        if (name.endsWith(".log")){
+                        if (name.endsWith(".log.txt")){
                             files[baseName]["log"] = true
                         }
 
@@ -598,7 +392,8 @@
                     item4.append(li)
                     var a = document.createElement('a');
                     a.innerText = "LOG"
-                    a.setAttribute('href', "/streaming_manager/upload/" + key + "." + value["format"] + ".log");
+                    a.setAttribute('href', "/streaming_manager/upload/" + key + "." + value["format"] + ".log.txt");
+                    a.setAttribute("download", "");
                     li.append(a)
                 }
 
@@ -608,7 +403,8 @@
                     item4.append(li)
                     var a = document.createElement('a');
                     a.innerText = "LOST"
-                    a.setAttribute('href',"/streaming_manager/upload/" + key + "." + value["format"] + ".log.lost");
+                    a.setAttribute('href',"/streaming_manager/upload/" + key + "." + value["format"] + ".log.lost.txt");
+                    a.setAttribute("download", "");
                     li.append(a)
 
                 }
@@ -619,6 +415,7 @@
                 var a = document.createElement('a');
                 a.innerText = "🡇"
                 a.setAttribute('href', "/streaming_manager/upload/" + key + "." + value["format"]);
+                a.setAttribute("download", "");
                 li.append(a)
                 document.getElementById('files_table').appendChild(new_row);
 
@@ -672,9 +469,13 @@
         if (value){
             $(".net_use").hide();
             $(".file_use").show();
+            $("#SS_PASS_SAMPLES").show();
+            $("#SS_WRITED_SIZE").show();
         }else{
             $(".net_use").show();
             $(".file_use").hide();
+            $("#SS_PASS_SAMPLES").hide();
+            $("#SS_WRITED_SIZE").hide();
         }
     }
 
@@ -688,6 +489,7 @@
         $("#SS_SAMPLES").val(value)
     }
 
+
     SM.setFormat = function(param) {
         var value = param["SS_FORMAT"].value;
         $("#SS_FORMAT").val(value)
@@ -696,6 +498,23 @@
     SM.setResolution = function(param) {
         var value = param["SS_RESOLUTION"].value;
         $("#SS_RESOLUTION").prop('checked', value);
+    }
+
+    SM.setSamplesCount = function(param) {
+        var value = param["SS_PASS_SAMPLES"].value;
+        $("#SS_PASS_SAMPLES").html("Samples pass: " + value)
+    }
+
+    SM.setWritedSize = function(param) {
+        var value = param["SS_WRITED_SIZE"].value;
+        if (value < 1024){
+            value = value + " B"
+        }else if (value < 1024 * 1024){
+            value = (value/1024).toFixed(0) +" kB"
+        }else {
+            value = ((value / (1024 * 1024))).toFixed(0) +" MB"
+        }
+        $("#SS_WRITED_SIZE").html("Recorded to SD: " + value)
     }
 
     SM.setChannel = function(param) {
@@ -755,10 +574,6 @@
         }
     }
 
-    //Set handlers timers
-    //    setInterval(signalsHandler, 40);
-    setInterval(parametersHandler, 50);
-
     SM.param_callbacks["SS_STATUS"] = SM.change_status;
     SM.param_callbacks["SS_ADC_DATA_PASS"] = SM.change_adc_data_pass;
     SM.param_callbacks["SS_IS_MASTER"] = SM.setBoardMode;
@@ -777,6 +592,8 @@
     SM.param_callbacks["SS_DAC_CHANNELS"] = SM.setDACChannel;
     SM.param_callbacks["SS_IS_AC_DC"] = SM.setISACDC;
     SM.param_callbacks["SS_RESOLUTION"] = SM.setResolution;
+    SM.param_callbacks["SS_PASS_SAMPLES"] = SM.setSamplesCount;
+    SM.param_callbacks["SS_WRITED_SIZE"] = SM.setWritedSize;
 
 
 
@@ -798,16 +615,16 @@ $(function() {
 
     //Run button
     $('#SM_RUN').on('click', function(ev) {
-        SM.parametersCache["SS_START"] = { value: true };
-        SM.sendParameters();
+        CLIENT.parametersCache["SS_START"] = { value: true };
+        CLIENT.sendParameters();
         SM.ss_status_last = 0;
     });
 
     //Stop button
     $('#SM_STOP').on('click', function(ev) {
         ev.preventDefault();
-        SM.parametersCache["SS_START"] = { value: false };
-        SM.sendParameters();
+        CLIENT.parametersCache["SS_START"] = { value: false };
+        CLIENT.sendParameters();
     });
 
     $('#B_REFRESH').on('click', function(ev) {
@@ -832,28 +649,8 @@ $(function() {
 
     // Bind to the window resize event to redraw the graph; trigger that event to do the first drawing
     $(window).resize(function() {
-        if (SM.ws) {
-            SM.sendParameters();
-        }
+        CLIENT.sendParameters();
     }).resize();
-
-
-
-
-    // Stop the application when page is unloaded
-    $(window).on('beforeunload', function(event) {
-        var target = document.activeElement.href
-        console.log(document.activeElement.href)
-        if (!target.includes("/streaming_manager/")){
-            SM.ws.onclose = function() {}; // disable onclose handler first
-            SM.ws.close();
-            $.get(
-                SM.config.stop_app_url
-            )
-        }
-    });
-
-
 
     //Crash buttons
     $('#send_report_btn').on('click', function() { SM.formEmail() });
@@ -861,8 +658,5 @@ $(function() {
 
     $('#CLEAR_FILES').click(SM.DeleteFiles);
 
-
-    // Everything prepared, start application
-    SM.startApp();
 
 });

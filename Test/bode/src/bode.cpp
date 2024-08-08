@@ -54,7 +54,8 @@ void usage() {
                        "[count/steps] "
                        "[start freq] "
                        "[stop freq] "
-                       "[scale type]\n"
+                       "[scale type] "
+                       "[probe]\n"
             "or\n"
             "\t%s -calib\n"
             "\n"
@@ -67,6 +68,7 @@ void usage() {
             "\tstart freq         Lower frequency limit in Hz [3 - 62.5e6].\n"
             "\tstop freq          Upper frequency limit in Hz [3 - 62.5e6].\n"
             "\tscale type         0 - linear, 1 - logarithmic.\n"
+            "\tprobe              Probe value [1-1000].\n"
             "\t-calib             Starts calibration mode. The calibration values will be saved in:"
             BA_CALIB_FILENAME
             "\n"
@@ -89,6 +91,7 @@ int main(int argc, char *argv[]) {
     c_max_frequency = end_frequency;
     unsigned int scale_type = 1;
     int ignored __attribute__((unused));
+    int probe = 1;
 
     /** Set program name */
     g_argv0 = argv[0];
@@ -122,7 +125,7 @@ int main(int argc, char *argv[]) {
 
     if (!calibMode){
         /** Argument check */
-        if (argc<9) {
+        if (argc < 10) {
             fprintf(stderr, "Too few arguments!\n\n");
             usage();
             return -1;
@@ -191,6 +194,13 @@ int main(int argc, char *argv[]) {
         scale_type = strtod(argv[8], NULL);
         if ( scale_type > 1 ) {
             fprintf(stderr, "Invalid scale type!\n\n");
+            usage();
+            return -1;
+        }
+
+        probe = strtod(argv[9], NULL);
+        if ( probe < 1 || probe > 1000) {
+            fprintf(stderr, "Invalid probe value!\n\n");
             usage();
             return -1;
         }
@@ -266,10 +276,10 @@ int main(int argc, char *argv[]) {
 
     float old_freq = start_frequency;
     //float old_steps = steps;
-    rpApp_BaInit();
     rp_Init();
+    rpApp_BaInit();
     rpApp_BaSafeThreadAcqPrepare();
-
+    printf("[Hz]        [deg]       [dB]\n");
     while(steps > 0) {
 
 
@@ -291,7 +301,7 @@ int main(int argc, char *argv[]) {
         {
             float ampl_out = 0;
 
-            if (rpApp_BaGetAmplPhase(RP_BA_LOGIC_TRAP, ampl, DC_bias,periods_number, buffer, &ampl_out, &phase_out, current_freq,0) ==  RP_EOOR) // isnan && isinf
+            if (rpApp_BaGetAmplPhase(RP_BA_LOGIC_TRAP, ampl, DC_bias,periods_number, buffer, &ampl_out, &phase_out, current_freq, probe, 0) ==  RP_EOOR) // isnan && isinf
             {
                 --steps;
                 continue;

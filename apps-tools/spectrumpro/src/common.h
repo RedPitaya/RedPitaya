@@ -23,4 +23,7 @@ auto outAmpDef() -> float;
 auto outAmpMax() -> float;
 auto loadARBList() -> std::string;
 
+auto getClock() -> int64_t;
+
+
 #endif

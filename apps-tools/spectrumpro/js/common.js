@@ -13,47 +13,47 @@
 
     SPEC.isVisibleSignal = function(signame) {
         if (signame == 'ch1_view') {
-            return 'CH1_SHOW' in SPEC.params.orig && SPEC.params.orig['CH1_SHOW'].value;
+            return 'CH1_SHOW' in CLIENT.params.orig && CLIENT.params.orig['CH1_SHOW'].value;
         } else if (signame == 'ch2_view') {
-            return 'CH2_SHOW' in SPEC.params.orig && SPEC.params.orig['CH2_SHOW'].value;
+            return 'CH2_SHOW' in CLIENT.params.orig && CLIENT.params.orig['CH2_SHOW'].value;
         } else if (signame == 'ch3_view') {
-            return 'CH3_SHOW' in SPEC.params.orig && SPEC.params.orig['CH3_SHOW'].value;
+            return 'CH3_SHOW' in CLIENT.params.orig && CLIENT.params.orig['CH3_SHOW'].value;
         } else if (signame == 'ch4_view') {
-            return 'CH4_SHOW' in SPEC.params.orig && SPEC.params.orig['CH4_SHOW'].value;
+            return 'CH4_SHOW' in CLIENT.params.orig && CLIENT.params.orig['CH4_SHOW'].value;
         } else if (signame == 'ch1_view_min') {
-            return 'CH1_SHOW_MIN' in SPEC.params.orig && SPEC.params.orig['CH1_SHOW_MIN'].value;
+            return 'CH1_SHOW_MIN' in CLIENT.params.orig && CLIENT.params.orig['CH1_SHOW_MIN'].value;
         } else if (signame == 'ch2_view_min') {
-            return 'CH2_SHOW_MIN' in SPEC.params.orig && SPEC.params.orig['CH2_SHOW_MIN'].value;
+            return 'CH2_SHOW_MIN' in CLIENT.params.orig && CLIENT.params.orig['CH2_SHOW_MIN'].value;
         } else if (signame == 'ch3_view_min') {
-            return 'CH3_SHOW_MIN' in SPEC.params.orig && SPEC.params.orig['CH3_SHOW_MIN'].value;
+            return 'CH3_SHOW_MIN' in CLIENT.params.orig && CLIENT.params.orig['CH3_SHOW_MIN'].value;
         } else if (signame == 'ch4_view_min') {
-            return 'CH4_SHOW_MIN' in SPEC.params.orig && SPEC.params.orig['CH4_SHOW_MIN'].value;
+            return 'CH4_SHOW_MIN' in CLIENT.params.orig && CLIENT.params.orig['CH4_SHOW_MIN'].value;
         } else if (signame == 'ch1_view_max') {
-            return 'CH1_SHOW_MAX' in SPEC.params.orig && SPEC.params.orig['CH1_SHOW_MAX'].value;
+            return 'CH1_SHOW_MAX' in CLIENT.params.orig && CLIENT.params.orig['CH1_SHOW_MAX'].value;
         } else if (signame == 'ch2_view_max') {
-            return 'CH2_SHOW_MAX' in SPEC.params.orig && SPEC.params.orig['CH2_SHOW_MAX'].value;
+            return 'CH2_SHOW_MAX' in CLIENT.params.orig && CLIENT.params.orig['CH2_SHOW_MAX'].value;
         } else if (signame == 'ch3_view_max') {
-            return 'CH3_SHOW_MAX' in SPEC.params.orig && SPEC.params.orig['CH3_SHOW_MAX'].value;
+            return 'CH3_SHOW_MAX' in CLIENT.params.orig && CLIENT.params.orig['CH3_SHOW_MAX'].value;
         } else if (signame == 'ch4_view_max') {
-            return 'CH4_SHOW_MAX' in SPEC.params.orig && SPEC.params.orig['CH4_SHOW_MAX'].value;
+            return 'CH4_SHOW_MAX' in CLIENT.params.orig && CLIENT.params.orig['CH4_SHOW_MAX'].value;
         }
     }
 
     SPEC.visibleCount = function() {
         var count = 0;
-        if ('CH1_SHOW' in SPEC.params.orig && SPEC.params.orig['CH1_SHOW'].value && SPEC.channelsCount >= 1){
+        if ('CH1_SHOW' in CLIENT.params.orig && CLIENT.params.orig['CH1_SHOW'].value && SPEC.channelsCount >= 1){
             count += 1;
         }
 
-        if ('CH2_SHOW' in SPEC.params.orig && SPEC.params.orig['CH2_SHOW'].value && SPEC.channelsCount >= 2){
+        if ('CH2_SHOW' in CLIENT.params.orig && CLIENT.params.orig['CH2_SHOW'].value && SPEC.channelsCount >= 2){
             count += 1;
         }
 
-        if ('CH3_SHOW' in SPEC.params.orig && SPEC.params.orig['CH3_SHOW'].value && SPEC.channelsCount >= 3){
+        if ('CH3_SHOW' in CLIENT.params.orig && CLIENT.params.orig['CH3_SHOW'].value && SPEC.channelsCount >= 3){
             count += 1;
         }
 
-        if ('CH4_SHOW' in SPEC.params.orig && SPEC.params.orig['CH4_SHOW'].value && SPEC.channelsCount >= 4){
+        if ('CH4_SHOW' in CLIENT.params.orig && CLIENT.params.orig['CH4_SHOW'].value && SPEC.channelsCount >= 4){
             count += 1;
         }
         return count;
@@ -65,6 +65,8 @@
         if (SPEC.config.y_axis_mode == "dbm") return "dBm"
         if (SPEC.config.y_axis_mode == "dbu") return "dBu"
         if (SPEC.config.y_axis_mode == "v")   return "V"
+        if (SPEC.config.y_axis_mode == "mW")   return "mW"
+        if (SPEC.config.y_axis_mode == "dBW")   return "dBW"
         return ""
     }
 
@@ -74,6 +76,8 @@
         if (SPEC.config.y_axis_mode == "dbm") return "dB"
         if (SPEC.config.y_axis_mode == "dbu") return "dB"
         if (SPEC.config.y_axis_mode == "v")   return "V"
+        if (SPEC.config.y_axis_mode == "mW")   return "mW"
+        if (SPEC.config.y_axis_mode == "dBW")   return "dB"
         return ""
     }
 
@@ -83,6 +87,8 @@
         if (SPEC.config.y_axis_mode == "dbu") return 2
         if (SPEC.config.y_axis_mode == "dbV") return 3
         if (SPEC.config.y_axis_mode == "dbuV") return 4
+        if (SPEC.config.y_axis_mode == "mW")   return 5
+        if (SPEC.config.y_axis_mode == "dBW")  return 6
         return ""
     }
 

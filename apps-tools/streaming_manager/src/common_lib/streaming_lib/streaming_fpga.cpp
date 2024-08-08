@@ -8,6 +8,7 @@
 
 #include "streaming_fpga.h"
 #include "data_lib/neon_asm.h"
+#include "logger_lib/file_logger.h"
 
 #define UNUSED(x) [&x]{}()
 
@@ -32,11 +33,15 @@ CStreamingFPGA::CStreamingFPGA(uio_lib::COscilloscope::Ptr _osc, uint8_t _adc_bi
     getBuffF = nullptr;
     unlockBuffF = nullptr;
     m_testBuffer = nullptr;
+    if (!m_Osc_ch){
+        FATAL("Register controller is not initialized")
+    }
 }
 
 CStreamingFPGA::~CStreamingFPGA(){
     stop();
     delete[] m_testBuffer;
+    TRACE("Exit")
 }
 
 auto CStreamingFPGA::isRun() -> bool {
@@ -74,7 +79,7 @@ auto CStreamingFPGA::runNonBlock() -> void {
 
 auto CStreamingFPGA::stop() -> bool {
     std::lock_guard<std::mutex> lock(mtx);
-    aprintf(stderr,"stop\n");
+    TRACE("Stop")
     m_OscThreadRun = false;
     if (m_OscThread.joinable()) {
         m_OscThread.join();
@@ -121,19 +126,20 @@ void CStreamingFPGA::oscWorker(){
 
         uint64_t dataSize = 0;
         uint64_t lostSize = 0;
+        uint64_t totalPassRate = 0;
+        m_overFlowSumm = 0;
+        m_overFlowSummCount = 0;
         while (m_OscThreadRun)
         {
-            // auto timeNow = std::chrono::system_clock::now();
             bool state = true;
             DataLib::CDataBuffersPack::Ptr pack(nullptr);
 
             state = m_Osc_ch->wait();
-            // auto timeNowW = std::chrono::system_clock::now();
             if (state){
                 pack = this->passCh();
                 m_passRate++;
+                totalPassRate++;
             }
-            // auto timeNowP = std::chrono::system_clock::now();
             if (state){
 
 #ifndef RP_PLATFORM
@@ -144,7 +150,6 @@ void CStreamingFPGA::oscWorker(){
                     dataSize += pack->getLenghtAllBuffers();
                     lostSize += pack->getLostAllBuffers();
                 }
-                // auto timeNowS = std::chrono::system_clock::now();
                 if (m_verbMode){
                     timeNow = std::chrono::system_clock::now();
                     curTime = std::chrono::time_point_cast<std::chrono::milliseconds >(timeNow);
@@ -156,26 +161,12 @@ void CStreamingFPGA::oscWorker(){
                         timeBegin = value.count();
                     }
                 }
-                // auto timeNowEnd = std::chrono::system_clock::now();
-                // auto p1 = std::chrono::time_point_cast<std::chrono::nanoseconds>(timeNow).time_since_epoch();
-                // auto pW = std::chrono::time_point_cast<std::chrono::nanoseconds>(timeNowW).time_since_epoch();
-                // auto pP = std::chrono::time_point_cast<std::chrono::nanoseconds>(timeNowP).time_since_epoch();
-                // auto pS = std::chrono::time_point_cast<std::chrono::nanoseconds>(timeNowS).time_since_epoch();
-                // auto p2 = std::chrono::time_point_cast<std::chrono::nanoseconds>(timeNowEnd).time_since_epoch();
-                // if (pack){
-                //     aprintf(stderr,"Loop %lld lost %lld w: %lld p: %lld s: %lld \n",p2.count() - p1.count(),pack->getBuffer(DataLib::CH1)->getLostSamples(DataLib::FPGA)
-                //     ,pW.count() - p1.count()
-                //     ,pP.count() - pW.count()
-                //     ,pS.count() - pP.count());
-
-                // }
             }
         }
         auto timeNowEnd = std::chrono::system_clock::now();
         auto p1 = std::chrono::time_point_cast<std::chrono::milliseconds>(timeNow).time_since_epoch();
         auto p2 = std::chrono::time_point_cast<std::chrono::milliseconds>(timeNowEnd).time_since_epoch();
-        aprintf(stderr,"Loop %lld size %lld lost: %lld\n",p2.count() - p1.count(),dataSize,lostSize);
-
+        aprintf(stderr,"Loop %lld ms FPGA size %lld FPGA lost: %lld totalPassRate %lld\n",p2.count() - p1.count(),dataSize,lostSize,totalPassRate);
     }
     catch (std::exception& e)
     {
@@ -193,7 +184,6 @@ void CStreamingFPGA::oscWorker(){
     size_t   size = 0;
     bool success = false;
     uint32_t overFlow = 0;
-
     success = m_Osc_ch->next(buffer_ch1, buffer_ch2, buffer_ch3,buffer_ch4, size , overFlow );
 
     if (!success) {
@@ -228,13 +218,15 @@ void CStreamingFPGA::oscWorker(){
     if (pack){
         pack->setOSCRate(m_Osc_ch->getOSCRate());
         pack->setADCBits(m_adc_bits);
+        overFlow += m_overFlowSumm;
 
         if (m_adcSettings.find(DataLib::EDataBuffersPackChannel::CH1) != m_adcSettings.end()){
             auto settings = m_adcSettings.at(DataLib::EDataBuffersPackChannel::CH1);
             auto bCh1 = pack->getBuffer(DataLib::CH1);
             if (bCh1){
+
                 bCh1->setADCMode(settings.m_mode);
-                bCh1->setLostSamples(DataLib::FPGA,overFlow);
+                bCh1->setLostSamples(DataLib::FPGA,overFlow + bCh1->getSamplesCount() * m_overFlowSummCount);
                 memcpy_neon(bCh1->getBuffer().get(),buffer_ch1,size);
             }
         }
@@ -245,7 +237,7 @@ void CStreamingFPGA::oscWorker(){
             auto bCh2 = pack->getBuffer(DataLib::CH2);
             if (bCh2){
                 bCh2->setADCMode(settings.m_mode);
-                bCh2->setLostSamples(DataLib::FPGA,overFlow);
+                bCh2->setLostSamples(DataLib::FPGA,overFlow + bCh2->getSamplesCount() * m_overFlowSummCount);
                 memcpy_neon(bCh2->getBuffer().get(),buffer_ch2,size);
             }
         }
@@ -255,7 +247,7 @@ void CStreamingFPGA::oscWorker(){
             auto bCh3 = pack->getBuffer(DataLib::CH3);
             if (bCh3){
                 bCh3->setADCMode(settings.m_mode);
-                bCh3->setLostSamples(DataLib::FPGA,overFlow);
+                bCh3->setLostSamples(DataLib::FPGA,overFlow + bCh3->getSamplesCount() * m_overFlowSummCount);
                 memcpy_neon(bCh3->getBuffer().get(),buffer_ch3,size);
             }
         }
@@ -265,12 +257,16 @@ void CStreamingFPGA::oscWorker(){
             auto bCh4 = pack->getBuffer(DataLib::CH4);
             if (bCh4){
                 bCh4->setADCMode(settings.m_mode);
-                bCh4->setLostSamples(DataLib::FPGA,overFlow);
+                bCh4->setLostSamples(DataLib::FPGA,overFlow + bCh4->getSamplesCount() * m_overFlowSummCount);
                 memcpy_neon(bCh4->getBuffer().get(),buffer_ch4,size);
             }
         }
-
+        m_overFlowSumm = 0;
+        m_overFlowSummCount = 0;
         unlockBuffF();
+    }else{
+        m_overFlowSumm += overFlow;
+        m_overFlowSummCount++;
     }
     m_Osc_ch->clearBuffer();
     return pack;

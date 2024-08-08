@@ -12,7 +12,7 @@
 
 using namespace std;
 
-namespace TDMS
+namespace rp_formatter_api::TDMS
 {
     enum class TDMSType{
         Empty                   = 0x0000000F,

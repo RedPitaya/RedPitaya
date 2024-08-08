@@ -91,7 +91,8 @@
                             </dev>
                             <div style="height: 30px;"></div>
                             <select id="eth0_mode" class="form-control type_select">
-                                <option value="#eth0_dhcp_mode">DHCP</option>
+                                <option value="#eth0_dhcp_mode">DHCP Client</option>
+                                <option value="#eth0_dhcp_server_mode">DHCP Server</option>
                                 <option value="#eth0_static_mode">Static</option>
                             </select>
                             <div id="eth0_static_mode" style="display: none;">
@@ -103,13 +104,29 @@
                                     </div>
                                     <div id="eth0_inputs_entry" class="status_entry">
                                         <div style="padding-top: 6px;">
-                                            <input id="ip_address_and_mask_input" type="text" class="form-control inputs">
+                                            <input id="ip_address_and_mask_input" type="text" placeholder="xxx.xxx.xxx.xxx/xx" class="form-control inputs" style="border-width: 1px;">
                                         </div>
                                         <div style="padding-top: 6px;">
-                                            <input id="gateway_input" type="text" class="form-control inputs">
+                                            <input id="gateway_input" type="text" class="form-control inputs" placeholder="xxx.xxx.xxx.xxx" style="border-width: 1px;">
                                         </div>
                                         <div style="padding-top: 6px;">
-                                            <input id="dns_address_input" type="text" class="form-control inputs">
+                                            <input id="dns_address_input" type="text" class="form-control inputs" placeholder="xxx.xxx.xxx.xxx" style="border-width: 1px;">
+                                        </div>
+                                    </div>
+                                </dev>
+                            </div>
+                            <div id="eth0_dhcp_server_mode" style="display: none;">
+                                <dev id="eth0_inputs">
+                                    <div id="eth0_inputs_labels" class="status_labels">
+                                        <div style="font-size: 15pt; padding-top: 10px;">IP address:</div>
+                                        <div style="font-size: 15pt; padding-top: 10px;">DNS:</div>
+                                    </div>
+                                    <div id="eth0_inputs_entry" class="status_entry">
+                                        <div style="padding-top: 6px;">
+                                            <input id="ip_address_and_mask_input_dhcp" type="text" placeholder="xxx.xxx.xxx.xxx/xx" class="form-control inputs" style="border-width: 1px;">
+                                        </div>
+                                        <div style="padding-top: 6px;">
+                                            <input id="dns_address_input_dhcp" type="text" class="form-control inputs" placeholder="xxx.xxx.xxx.xxx" style="border-width: 1px;">
                                         </div>
                                     </div>
                                 </dev>

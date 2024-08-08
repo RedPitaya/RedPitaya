@@ -1,5 +1,44 @@
 (function(OSC, $, undefined) {
 
+    $.fn.fI = function(e) { //Flash Item
+        if (!e) { e = {} }
+        if (this) { e.e = this }
+        switch (e.f) {
+            case 0:
+                break;
+            default:
+                switch (e.css) {
+                    case 0:
+                        e.d = 'background-color'
+                        break;
+                    case undefined:
+                        e.d = 'border-color'
+                        break;
+                    default:
+                        e.d = e.css
+                        break;
+                }
+                if (!e.c1) { e.c1 = '#FF0000' }
+                if (!e.c2) { e.c2 = '#A00000' }
+                if (!e.p) { e.p = 200 }
+                e.e.css(e.d, e.c1)
+                setTimeout(function() {
+                    e.e.css(e.d, e.c2)
+                    setTimeout(function() {
+                        e.e.css(e.d, e.c1)
+                        setTimeout(function() {
+                            e.e.css(e.d, e.c2)
+                            setTimeout(function() {
+                                e.e.css(e.d, '')
+                            }, e.p)
+                        }, e.p)
+                    }, e.p)
+                }, e.p)
+                break;
+        }
+        return this
+    }
+
     $.fn.iLightInputNumber = function(options) {
 
         var inBox = '.input-number-box',
@@ -30,10 +69,10 @@
         var interval = null,
             timeout = null;
 
-        function ToggleValue(input) {
-            input.val(parseInt(input.val(), 10) + d);
-            console.log(input);
-        }
+        // function ToggleValue(input) {
+        //     input.val(parseInt(input.val(), 10) + d);
+        //     console.log(input);
+        // }
 
         $('body').on('mousedown', moreVal, function() {
             var el = $(this);
@@ -118,81 +157,26 @@
         function checkInputAttr(input) {
 
             value = parseFloat(input.val());
-
-
             if (!($.isNumeric(value))) {
                 value = 0;
             }
+
             if (input.attr('step')) {
                 step = parseFloat(input.attr('step'));
-                if (['OSC_CH1_OFFSET', 'OSC_CH2_OFFSET'].indexOf(input.attr('id')) != -1) {
-
-                    var ch = "";
-                    if (input.attr('id') == "OSC_CH1_OFFSET")
-                        ch = "CH1";
-                    else
-                        ch = "CH2";
-
-                    var probeAttenuation = parseInt($("#OSC_" + ch + "_PROBE option:selected").text());
-                    var jumperSettings = $("#OSC_" + ch + "_IN_GAIN").parent().hasClass("active") ? 1 : 20;
-                    var units = $('#OSC_' + ch + '_OFFSET_UNIT').html();
-                    var multiplier = units == "mV" ? 1000 : 1;
-
-                    if (multiplier == 1000) {
-                        step = 1;
-                        return;
-                    }
-                    if (jumperSettings == 20) {
-                        switch (probeAttenuation) {
-                            case 1:
-                                step = 0.01;
-                                return;
-                            case 10:
-                                step = 0.1;
-                                return;
-                            case 100:
-                                step = 1;
-                                return;
-                        }
-                    } else {
-                        switch (probeAttenuation) {
-                            case 1:
-                                step = 0.001;
-                                return;
-                            case 10:
-                                step = 0.01;
-                                return;
-                            case 100:
-                                step = 0.1;
-                        }
-                    }
-                }
-                if (['OSC_MATH_OFFSET'].indexOf(input.attr('id')) != -1) {
-
-                    var unit_holder = $('#OSC_MATH_OFFSET_UNIT');
-                    var unit = unit_holder.html().charAt(0);
-                    var scale_val = $("#OSC_MATH_SCALE").text();
-                    var math_vdiv = parseFloat(scale_val);
-                    step = math_vdiv / 100;
-                }
-
+                var signs = Math.log10(step)
+                value = parseFloat(value.toFixed(-signs));
             } else {
                 step = 1;
             }
         }
 
         $(newInput).change(function() {
-
             var input = $(this);
 
             checkInputAttr(input);
             var limits = getLimits(input);
             var min = limits.min;
             var max = limits.max;
-
-            var parts = step.toString().split('.');
-            var signs = parts.length < 2 ? 0 : parts[1].length;
-            value = parseFloat(value.toFixed(signs));
 
             if (value < min) {
                 value = min;
@@ -203,6 +187,7 @@
                 value = 0;
             }
             input.val(value);
+            OSC.exitEditing(true,this)
         });
 
         $(newInput).keydown(function(e) {
@@ -313,18 +298,18 @@
         // }
 
         { // OSC_MATH_OFFSET
-            var scale_val = $("#OSC_MATH_SCALE").text();
-            var units = $("#munit").text();
-            var math_vdiv = parseFloat(scale_val);
+            // var scale_val = $("#OSC_MATH_SCALE").text();
+            // var units = $("#munit").text();
+            // var math_vdiv = parseFloat(scale_val);
 
-            var munit = $('#munit').html().charAt(0);
-            var precision = 2;
-            if (munit == 'm')
-                precision = 0;
-            if (math_vdiv < 1)
-                precision = 3;
-            var math_value = parseFloat($("#OSC_MATH_OFFSET").val());
-            $("#OSC_MATH_OFFSET").val(math_value.toFixed(precision));
+            // var munit = $('#munit').html().charAt(0);
+            // var precision = 2;
+            // if (munit == 'm')
+            //     precision = 0;
+            // if (math_vdiv < 1)
+            //     precision = 3;
+            // var math_value = parseFloat($("#OSC_MATH_OFFSET").val());
+            // $("#OSC_MATH_OFFSET").val(math_value.toFixed(precision));
         }
 
         // { // OSC_TRIG_LEVEL_OFFSET
@@ -365,6 +350,13 @@
 
     OSC.initUI = function(){
 
+
+        $('.btn.menu-btn').onClassChange(function(el, newClass) {
+            OSC.getCurrentActiveChannel()
+            OSC.updateTitileYAxisTicks()
+            OSC.cursorY()
+        } );
+
         // Joystick events
         $('#jtk_up').on('mousedown touchstart', function() { $('#jtk_btns').attr('src', 'img/node_up.png'); });
         $('#jtk_left').on('mousedown touchstart', function() { $('#jtk_btns').attr('src', 'img/node_left.png'); });
@@ -400,42 +392,6 @@
             ev.stopPropagation();
             OSC.changeXZoom(ev.target.id == 'jtk_left' ? '+' : '-');
         });
-
-        $('#load_csv').click(function() {
-            var formData = new FormData($('#form')[0]);
-            $.ajax({
-                url: '/upload_gen_ch1', //Server script to process data
-                type: 'POST',
-                //Ajax events
-                //beforeSend: beforeSendHandler,
-                success: function(e) { console.log(e); },
-                error: function(e) { console.log(e); },
-                // Form data
-                data: formData,
-                //Options to tell jQuery not to process data or worry about content-type.
-                cache: false,
-                contentType: false,
-                processData: false
-            });
-        });
-        $('#load_csv2').click(function() {
-            var formData = new FormData($('#form2')[0]);
-            $.ajax({
-                url: '/upload_gen_ch2', //Server script to process data
-                type: 'POST',
-                //Ajax events
-                //beforeSend: beforeSendHandler,
-                success: function(e) { console.log(e); },
-                error: function(e) { console.log(e); },
-                // Form data
-                data: formData,
-                //Options to tell jQuery not to process data or worry about content-type.
-                cache: false,
-                contentType: false,
-                processData: false
-            });
-        });
-
 
         $(".sweep_reset").on('click',function() {
             OSC.params.local['SWEEP_RESET'] = { value: true };
@@ -491,20 +447,24 @@
 
 
         $(".dbl").on('dblclick', function(event) {
-            var cls = $(this).attr('class');
+            var cls = $(this).attr('id');
             if (cls.indexOf('ch1') != -1)
-                $('#OSC_CH1_OFFSET').val(0);
+                OSC.params.local['GPOS_OFFSET_CH1'] = { value: 0 }
             if (cls.indexOf('ch2') != -1)
-                $('#OSC_CH2_OFFSET').val(0);
+                OSC.params.local['GPOS_OFFSET_CH2'] = { value: 0 }
             if (cls.indexOf('ch3') != -1)
-                $('#OSC_CH3_OFFSET').val(0);
+                OSC.params.local['GPOS_OFFSET_CH3'] = { value: 0 }
             if (cls.indexOf('ch4') != -1)
-                $('#OSC_CH4_OFFSET').val(0);
+                OSC.params.local['GPOS_OFFSET_CH4'] = { value: 0 }
             if (cls.indexOf('math') != -1)
-                $('#OSC_MATH_OFFSET').val(0);
+                OSC.params.local['GPOS_OFFSET_MATH'] = { value: 0 }
             if (cls.indexOf('trig') != -1)
-                $('#OSC_TRIG_LEVEL').val(0);
-            OSC.exitEditing(true,event);
+                OSC.params.local['OSC_TRIG_LEVEL'] = { value: 0 }
+            if (cls.indexOf('output1') != -1)
+                OSC.params.local['GPOS_OFFSET_OUTPUT1'] = { value: 0 }
+            if (cls.indexOf('output2') != -1)
+                OSC.params.local['GPOS_OFFSET_OUTPUT2'] = { value: 0 }
+            OSC.sendParams()
         });
 
         // Process clicks on top menu buttons
@@ -549,6 +509,26 @@
             OSC.sendParams();
         });
 
+        $('#OSC_REQ_SAVE_SETTINGS').on('click', function() {
+            var name = $("#SETTINGS_NEW_NAME").val().trim()
+            if (name !== ""){
+                OSC.params.local['FILE_SATTINGS'] = { value: name };
+                OSC.params.local['CONTROL_CONFIG_SETTINGS'] = { value: 4 }; // SAVE
+                OSC.sendParams();
+            }
+        });
+
+        $('#OSC_PREV_BUFFER').on('click', function(ev) {
+            ev.preventDefault();
+            OSC.params.local['OSC_BUFFER_REQUEST'] = { value: -1 };
+            OSC.sendParams();
+        });
+
+        $('#OSC_NEXT_BUFFER').on('click', function(ev) {
+            ev.preventDefault();
+            OSC.params.local['OSC_BUFFER_REQUEST'] = { value: 1 };
+            OSC.sendParams();
+        });
 
         $('#OSC_SINGLE').on('click', function(ev) {
             ev.preventDefault();
@@ -582,13 +562,16 @@
 
         // Selecting active signal
         $('.menu-btn').on('click', function() {
-            $('#right_menu .menu-btn').not(this).removeClass('active');
-            if (!$(this).hasClass('active'))
-                OSC.state.sel_sig_name = $(this).data('signal');
-            else
-                OSC.state.sel_sig_name = null;
-            $('.y-offset-arrow').css('z-index', 10);
-            $('#' + OSC.state.sel_sig_name + '_offset_arrow').css('z-index', 11);
+            if (!$(this).hasClass('not-signal')){
+                $('#right_menu .menu-btn').not(this).removeClass('active');
+                if (!$(this).hasClass('active'))
+                    OSC.state.sel_sig_name = $(this).data('signal');
+                else
+                    OSC.state.sel_sig_name = null;
+                $('.y-offset-arrow').css('z-index', 10);
+                $('#' + OSC.state.sel_sig_name + '_offset_arrow').css('z-index', 11);
+            }
+            OSC.updateTitileYAxisTicks()
         });
 
         // Opening a dialog for changing parameters
@@ -628,6 +611,21 @@
         $('.edit-mode-burst').on('click', function() {
             $('#'+$(this).attr('id')+"_dialog").hide();
             $('#' + $(this).attr('id') + '_burst_dialog').show();
+        });
+
+        $('.edit-mode-trig-input').on('click', function() {
+            $('#trig_dialog').hide();
+            $('#trig_dialog_input').show();
+        });
+
+        $('.edit-mode-trig-output').on('click', function() {
+            $('#trig_dialog').hide();
+            $('#trig_dialog_output').show();
+        });
+
+        $('.close-trig-dialog').on('click', function() {
+            $('.dialog:visible').hide();
+            $('#'+$(this).attr('id')+"_dialog").show();
         });
 
         // Close parameters dialog after Enter key is pressed
@@ -704,7 +702,19 @@
         });
 
         $('button').bind('activeChanged', function(event) { OSC.exitEditing(true,event); });
-        $('select, input').on('change', function(event) { OSC.exitEditing(true,event); });
+        $('select').on('change', function(event) { OSC.exitEditing(true,event); });
+        $("input[type='radio']").on('change', function(event) { OSC.exitEditing(true,event); });
+
+
+        $('.input_name').focus( function() {
+            $(this).attr('old_value', $(this).val())
+        });
+
+        $('.input_name').blur( function() {
+            if ($(this).val().trim() === ''){
+                $(this).val($(this).attr('old_value'))
+            }
+        });
 
 
         $("#graphs").mousewheel(function(event) {
@@ -746,16 +756,15 @@
             //laAxesMoving = false;
         });
         $(".full-content").mousemove(function(event) {
-            if (OSC.state.trig_dragging || OSC.state.cursor_dragging || OSC.state.cursor_dragging_measure) {
+            if (OSC.state.trig_dragging || OSC.state.cursor_dragging || OSC.state.trig_in || OSC.state.cursor_dragging_measure) {
                 laAxesMoving = false;
                 return;
             }
             if (OSC.state.line_moving) return;
-            if (laAxesMoving && !OSC.state.cursor_dragging && !OSC.state.cursor_dragging_measure && !OSC.state.mouseover) {
+            if (laAxesMoving && !OSC.state.cursor_dragging && !OSC.state.trig_dragging &&!OSC.state.cursor_dragging_measure && !OSC.state.mouseover) {
                 if (!$.isEmptyObject(OSC.graphs)) {
                     var diff = event.pageX - curXPos;
                     curXPos = event.pageX;
-
                     var graphs_width = $('#graphs').width();
                     var graphs_offset = $('#graphs').offset().left;
 
@@ -847,8 +856,15 @@
             }
         });
 
+        $('#save_settings').click(function() {
+            $('#save_settings_dialog').modal("show");
+
+            // OSC.params.local['CONTROL_CONFIG_SETTINGS'] = { value: 4 }; // SAVE
+            // OSC.sendParams();
+        });
+
         $('#reset_settings').click(function() {
-            OSC.params.local['RESET_CONFIG_SETTINGS'] = { value: 1 };
+            OSC.params.local['CONTROL_CONFIG_SETTINGS'] = { value: 1 }; // REQUEST_RESET
             OSC.sendParams();
         });
 
@@ -860,22 +876,22 @@
         // });
 
         // TODO need fix
-        $('#OSC_CH1_OFFSET_UNIT').bind("DOMSubtreeModified", function() {
-            // OSC.updateLimits();
-            OSC.formatVals();
-        });
+        // $('#OSC_CH1_OFFSET_UNIT').bind("DOMSubtreeModified", function() {
+        //     // OSC.updateLimits();
+        //     OSC.formatVals();
+        // });
 
-        // TODO need fix
-        $('#OSC_CH2_OFFSET_UNIT').bind("DOMSubtreeModified", function() {
-            // OSC.updateLimits();
-            OSC.formatVals();
-        });
+        // // TODO need fix
+        // $('#OSC_CH2_OFFSET_UNIT').bind("DOMSubtreeModified", function() {
+        //     // OSC.updateLimits();
+        //     OSC.formatVals();
+        // });
 
-        // TODO need fix
-        $("#OSC_MATH_SCALE").bind("DOMSubtreeModified", function() {
-            // OSC.updateLimits();
-            OSC.formatVals();
-        });
+        // // TODO need fix
+        // $("#OSC_MATH_SCALE").bind("DOMSubtreeModified", function() {
+        //     // OSC.updateLimits();
+        //     OSC.formatVals();
+        // });
 
         // // TODO need fix
         // $("#OSC_CH1_PROBE").change(function() {
@@ -889,6 +905,8 @@
 
         // OSC.updateLimits();
         OSC.formatVals();
+
+
     }
 
 

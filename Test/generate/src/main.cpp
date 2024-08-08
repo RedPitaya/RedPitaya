@@ -27,7 +27,7 @@ const char format_125_14[] =
         "\tchannel         Channel to generate signal on [1, 2].\n"
         "\tamplitude       Peak-to-peak signal amplitude in Vpp [0.0 - %1.1f].\n"
         "\tfrequency       Signal frequency in Hz [%d - %d].\n"
-        "\ttype            Signal type [sine, sqr, tri, sweep, dc%s].\n"
+        "\ttype            Signal type [sine, sqr, tri, sweep, noise, dc%s].\n"
         "\tend frequency   Sweep-to frequency in Hz [%d - %d].\n"
         "\tcalib           Disable calibration [-c]. By default calibration enabled.\n"
         "\tdebug           Debug FPGA registers [-d].\n"
@@ -44,7 +44,7 @@ const char format_250_12[] =
         "\tamplitude       Peak-to-peak signal amplitude in Vpp [0.0 - %1.1f].\n"
         "\tfrequency       Signal frequency in Hz [%d - %d].\n"
         "\tgain            Gain output value [x1, x5] (default value x1).\n"
-        "\ttype            Signal type [sine, sqr, tri, sweep, dc%s].\n"
+        "\ttype            Signal type [sine, sqr, tri, sweep, noise, dc%s].\n"
         "\tend frequency   Sweep-to frequency in Hz [%d - %d].\n"
         "\tcalib           Disable calibration [-c]. By default calibration enabled.\n"
         "\tdebug           Debug FPGA registers [-d].\n"
@@ -168,6 +168,8 @@ int main(int argc, char *argv[])
             config.type = RP_WAVEFORM_TRIANGLE;
         } else if ( strcmp(argv[4 + PARAMETER_CORRECT], "dc") == 0) {
             config.type = RP_WAVEFORM_DC;
+        } else if ( strcmp(argv[4 + PARAMETER_CORRECT], "noise") == 0) {
+            config.type = RP_WAVEFORM_NOISE;
         } else if ( strcmp(argv[4 + PARAMETER_CORRECT], "sweep") == 0) {
             config.type = RP_WAVEFORM_SWEEP;
         } else {

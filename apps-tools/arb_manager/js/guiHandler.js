@@ -92,8 +92,8 @@ $(document).ready(function() {
                         success: function(e) {
                             console.log("Upload done " + e);
                             setTimeout(() => {
-                                SM.parametersCache["RP_REQ_CHECK_FILE"] = { value: e };
-                                SM.sendParameters();
+                                CLIENT.parametersCache["RP_REQ_CHECK_FILE"] = { value: e };
+                                CLIENT.sendParameters();
                             }, 1000);
                         },
                         error: function(e) { console.log(e); },

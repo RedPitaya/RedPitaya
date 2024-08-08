@@ -26,6 +26,8 @@
 #include "rpApp.h"
 #include "lcrApp.h"
 
+#include "web/rp_client.h"
+
 #define NAN_VALUE std::numeric_limits<float>::min()
 #define CHECK_NAN_INF(X) if (std::isnan(X) || std::isinf(X)) X = NAN_VALUE;
 #define NAN_INF(X) std::isnan(X) || std::isinf(X)
@@ -137,6 +139,9 @@ auto getModelS() -> std::string{
         case STEM_125_14_v1_0:
         case STEM_125_14_v1_1:
         case STEM_125_14_LN_v1_1:
+        case STEM_125_14_LN_BO_v1_1:
+        case STEM_125_14_LN_CE1_v1_1:
+        case STEM_125_14_LN_CE2_v1_1:
         case STEM_125_14_Z7020_v1_0:
         case STEM_125_14_Z7020_LN_v1_1:
             return "Z10";
@@ -179,6 +184,9 @@ auto getMaxADC() -> uint32_t{
         case STEM_125_14_v1_0:
         case STEM_125_14_v1_1:
         case STEM_125_14_LN_v1_1:
+        case STEM_125_14_LN_BO_v1_1:
+        case STEM_125_14_LN_CE1_v1_1:
+        case STEM_125_14_LN_CE2_v1_1:
         case STEM_125_14_Z7020_v1_0:
         case STEM_125_14_Z7020_LN_v1_1:
             dev = 2;
@@ -245,6 +253,9 @@ int rp_app_init(void)
 	fprintf(stderr, "Loading impedance analyser version %s-%s.\n", VERSION_STR, REVISION_STR);
 	CDataManager::GetInstance()->SetParamInterval(100);
 	CDataManager::GetInstance()->SetSignalInterval(100);
+
+    rp_WC_Init();
+    rp_WC_UpdateParameters(true);
 
 	lcrApp_lcrInit();
     rp_AcqSetAC_DC(RP_CH_1,RP_DC);
@@ -418,6 +429,8 @@ void UpdateParams(void)
         g_lastCheckExt = curT;
         setLCRExtState(state);
     }
+
+    rp_WC_UpdateParameters(false);
 }
 
 
@@ -442,6 +455,8 @@ void OnNewParams(void) {
     if (config_changed) {
         configSet(getHomeDirectory() + "/.config/redpitaya/apps/impedance_analyzer", "config.json");
     }
+
+    rp_WC_OnNewParam();
 }
 
 void OnNewSignals(void)

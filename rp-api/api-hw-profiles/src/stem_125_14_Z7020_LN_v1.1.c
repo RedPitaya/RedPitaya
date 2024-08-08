@@ -1,4 +1,4 @@
-#include "stem_125_14_Z7020_v1.0.h"
+#include "stem_125_14_Z7020_LN_v1.1.h"
 
 
 profiles_t stem_125_14_Z7020_LN_v1_1 = {
@@ -95,7 +95,11 @@ profiles_t stem_125_14_Z7020_LN_v1_1 = {
     .is_daisy_chain_clock_sync = false,
 
     .is_dma_mode_v0_94 = true,
-    .is_DAC_50_Ohm_mode = false
+    .is_DAC_50_Ohm_mode = false,
+    .is_split_osc_triggers = false,
+
+    .gpio_N_count = 11,
+    .gpio_P_count = 11
 };
 
 profiles_t* getProfile_STEM_125_14_Z7020_LN_v1_1(){

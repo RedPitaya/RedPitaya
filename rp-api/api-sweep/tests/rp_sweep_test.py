@@ -64,6 +64,10 @@ print("obj.getDir(rp.RP_CH_1)")
 res = obj.getDir(rp.RP_CH_1)
 print(res)
 
+print("obj.setDefault()")
+res = obj.setDefault()
+print(res)
+
 print("obj.resetAll()")
 res = obj.resetAll()
 print(res)

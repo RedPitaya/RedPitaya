@@ -184,7 +184,7 @@ auto buildBINStream(DataLib::CDataBuffersPack::Ptr buff_pack,std::map<DataLib::E
     memset(header.sizeCh,0,sizeof(uint32_t) * 4);
 
     for(int i = 0; i < 4; i++){
-        if (ch[i]){
+        if (ch[i].get()){
             ch_samp[i] = ch[i]->getSamplesCount() < _samples[DataLib::CH1] ? ch[i]->getSamplesCount() : _samples[DataLib::CH1];
             auto bytes = ch[i]->getBitBySample() / 8;
             ch_size[i] = ch_samp[i] * bytes > ch[i]->getBufferLenght() ? ch[i]->getBufferLenght() : ch_samp[i] * bytes;
@@ -192,6 +192,7 @@ auto buildBINStream(DataLib::CDataBuffersPack::Ptr buff_pack,std::map<DataLib::E
             header.sizeCh[i] = ch_size[i];
             header.sampleCh[i] = ch_samp[i];
             header.lostCount[i] = ch[i]->getLostSamples(DataLib::FPGA) + ch[i]->getLostSamples(DataLib::RP_INTERNAL_BUFFER);
+            header.oscRate[i] = buff_pack->getOSCRate();
         }
     }
 
@@ -199,7 +200,7 @@ auto buildBINStream(DataLib::CDataBuffersPack::Ptr buff_pack,std::map<DataLib::E
     //Write header
     memory->write((const char*)&header,sizeof(header));
     for(int i = 0; i < 4; i++){
-        if (ch[i] && ch_size[i]) memory->write((const char*)ch[i]->getBuffer().get(), ch_size[i]);
+        if (ch[i].get() && ch_size[i]) memory->write((const char*)ch[i]->getBuffer().get(), ch_size[i]);
     }
     //Write end segment
     memory->write((const char*)g_endOfSegment,12);
@@ -358,6 +359,40 @@ auto readCSV(std::iostream *buffer, int64_t *_position,int *_channels,uint64_t *
         *_position = -1;
     }
     return memory;
+}
+
+auto readBinData(std::iostream *buffer, int64_t *_position) -> SBinData*{
+    SBinData *data = nullptr;
+    uint32_t endSeg[] = { 0, 0 ,0};
+    buffer->seekg(*_position, std::ios::beg);
+    CBinInfo::BinHeader header;
+    buffer->read((char*)&header, sizeof(header));
+    buffer->seekg(*_position + sizeof(CBinInfo::BinHeader) + header.sigmentLength, std::ios::beg);
+    buffer->read((char*)endSeg , 12);
+    if (endSeg[0] == 0xFFFFFFFF && endSeg[1] == 0xFFFFFFFF && endSeg[2] == 0xFFFFFFFF){
+        data = new SBinData();
+        buffer->seekg(*_position + sizeof(CBinInfo::BinHeader), std::ios::beg);
+        for(int i = 0; i < 4; i++){
+            data->ch_size[i] = header.sizeCh[i];
+            data->ch_samples[i] = header.sampleCh[i];
+            data->ch_lost[i] = header.lostCount[i];
+            data->ch_bits[i] = header.dataFormatSize[i];
+            data->adcRate = max(header.oscRate[i],data->adcRate);
+            if (data->ch_size[i] > 0){
+                data->ch[i] = new uint8_t[data->ch_size[i]];
+                buffer->read(reinterpret_cast<char*>(data->ch[i]),data->ch_size[i]);
+            }
+        }
+        buffer->seekg(0, std::ios::end);
+        auto Length = buffer->tellg();
+        *_position = *_position + sizeof(CBinInfo::BinHeader) + header.sigmentLength + 12; // 12 - End segment len
+        if (*_position >= Length) {
+            *_position = -2;
+        }
+    }else{
+        *_position = -1;
+    }
+    return data;
 }
 
 auto readBinInfo(std::iostream *buffer) -> CBinInfo{

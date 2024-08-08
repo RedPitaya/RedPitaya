@@ -59,34 +59,29 @@ CDataBuffer::CDataBuffer(uint8_t *buffer,size_t lenght,uint8_t bits,bool simpleC
 {
     if (!simpleCopy){
         if (lenght % 2 != 0){
-            fprintf(stderr,"[FATAL ERROR] CDataBuffer: %s\n","Buffer must be an even size");
+            aprintf(stderr,"[FATAL ERROR] CDataBuffer: %s\n","Buffer must be an even size");
             return;
         }
 
         if (buffer && lenght > 0 && bits == 16){
             try{
-#ifdef ARM_NEON
                m_data = std::shared_ptr<uint8_t[]>(new uint8_t[lenght]);
-#else
-               m_data = std::shared_ptr<uint8_t[]>(new uint8_t[lenght]);
-#endif
                memcpy_neon(m_data.get(),buffer,lenght);
                m_lenght = lenght;
                m_bitBySample = 16;
-               m_samplesCount = lenght / 2;    
+               m_samplesCount = lenght / 2;
             }catch(std::exception &e){
-                fprintf(stderr,"[ERROR] CDataBuffer: %s\n",e.what());
+                aprintf(stderr,"[ERROR] CDataBuffer: %s\n",e.what());
             }
         }
 
         if (buffer && lenght > 0 && bits == 8){
 
             try{
-#ifdef ARM_NEON
                m_data = std::shared_ptr<uint8_t[]>(new uint8_t[lenght]);
+#ifdef ARM_NEON
                memcpy_stride_8bit_neon(m_data.get(),buffer,lenght);
 #else
-               m_data = std::shared_ptr<uint8_t[]>(new uint8_t[lenght]);
                auto b16 = reinterpret_cast<uint16_t*>(buffer);
                for(auto i = 0u; i < lenght /2 ;i++){
                    m_data[i] = b16[i] >> 8;
@@ -96,27 +91,23 @@ CDataBuffer::CDataBuffer(uint8_t *buffer,size_t lenght,uint8_t bits,bool simpleC
                m_bitBySample = bits;
                m_samplesCount = m_lenght;
             }catch(std::exception &e){
-                fprintf(stderr,"[ERROR] CDataBuffer: %s\n",e.what());
+                aprintf(stderr,"[ERROR] CDataBuffer: %s\n",e.what());
             }
         }
     }
     else{
         try{
             if (lenght % (bits / 8) != 0){
-                fprintf(stderr,"[FATAL ERROR] CDataBuffer: %s\n","Buffer must be an even size");
+                aprintf(stderr,"[FATAL ERROR] CDataBuffer: %s\n","Buffer must be an even size");
                 return;
             }
-#ifdef ARM_NEON
             m_data = std::shared_ptr<uint8_t[]>(new uint8_t[lenght]);
-#else
-            m_data = std::shared_ptr<uint8_t[]>(new uint8_t[lenght]);
-#endif
             memcpy_neon(m_data.get(),buffer,lenght);
             m_lenght = lenght;
             m_bitBySample = bits;
             m_samplesCount = lenght / (bits / 8);
         }catch(std::exception &e){
-            fprintf(stderr,"[ERROR] CDataBuffer: %s\n",e.what());
+            aprintf(stderr,"[ERROR] CDataBuffer: %s\n",e.what());
         }
     }
     setLostSamples(EDataLost::FPGA,0);

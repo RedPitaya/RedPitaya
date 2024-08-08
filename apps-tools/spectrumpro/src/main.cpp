@@ -6,6 +6,7 @@
 #include "rp_math.h"
 #include "common.h"
 #include "common/rp_sweep.h"
+#include "web/rp_client.h"
 
 #define MAX_FREQ getMaxFreqRate()
 #define LEVEL_AMPS_MAX outAmpMax()
@@ -23,24 +24,35 @@
 static uint8_t g_adc_count = getADCChannels();
 static uint8_t g_dac_count = getDACChannels();
 
-enum { INTERVAL = 50, CH_SIGNAL_DATA = (8*1024)};
+enum { CH_SIGNAL_DATA = (8*1024)};
+
+enum controlSettings{
+    NONE            =   0,
+    REQUEST_RESET   =   1,
+    RESET_DONE      =   2,
+    REQUEST_LIST    =   3,
+    SAVE            =   4,
+    DELETE          =   5,
+    LOAD            =   6,
+    LOAD_DONE       =   7
+};
 
 CStringParameter redpitaya_model              ("RP_MODEL_STR", CBaseParameter::RO, getModelName(), 0);
 CIntParameter    redpitaya_adc_count          ("ADC_COUNT", CBaseParameter::RO, getADCChannels(), 0, 0, 4);
 
 CIntSignal   signal_mode                      ("signal_mode", 1, 0.0f);
-CFloatSignal s_xaxis                          ("ch_xaxis", CH_SIGNAL_DATA, 0.0f);
-CFloatSignal s_xaxis_full                     ("ch_xaxis_full", CH_SIGNAL_DATA, 0.0f);
+CFloatBase64Signal s_xaxis                          ("ch_xaxis", CH_SIGNAL_DATA, 0.0f);
+CFloatBase64Signal s_xaxis_full                     ("ch_xaxis_full", CH_SIGNAL_DATA, 0.0f);
 
 // CFloatSignal s_waterfall[ADC_CHANNELS]  = INIT("ch","_waterfall",CH_SIGNAL_DATA, 0.0f);
-CFloatSignal s_view[MAX_ADC_CHANNELS]       = INIT("ch","_view", CH_SIGNAL_DATA, 0.0f);
-CFloatSignal s_view_min[MAX_ADC_CHANNELS]   = INIT("ch","_view_min", CH_SIGNAL_DATA, 0.0f);
-CFloatSignal s_view_max[MAX_ADC_CHANNELS]   = INIT("ch","_view_max", CH_SIGNAL_DATA, 0.0f);
+CFloatBase64Signal s_view[MAX_ADC_CHANNELS]       = INIT("ch","_view", CH_SIGNAL_DATA, 0.0f);
+CFloatBase64Signal s_view_min[MAX_ADC_CHANNELS]   = INIT("ch","_view_min", CH_SIGNAL_DATA, 0.0f);
+CFloatBase64Signal s_view_max[MAX_ADC_CHANNELS]   = INIT("ch","_view_max", CH_SIGNAL_DATA, 0.0f);
 
 
-CFloatSignal s_full[MAX_ADC_CHANNELS]       = INIT("ch","_full", CH_SIGNAL_DATA, 0.0f);
-CFloatSignal s_min_full[MAX_ADC_CHANNELS]   = INIT("ch","_min_full", CH_SIGNAL_DATA, 0.0f);
-CFloatSignal s_max_full[MAX_ADC_CHANNELS]   = INIT("ch","_max_full", CH_SIGNAL_DATA, 0.0f);
+CFloatBase64Signal s_full[MAX_ADC_CHANNELS]       = INIT("ch","_full", CH_SIGNAL_DATA, 0.0f);
+CFloatBase64Signal s_min_full[MAX_ADC_CHANNELS]   = INIT("ch","_min_full", CH_SIGNAL_DATA, 0.0f);
+CFloatBase64Signal s_max_full[MAX_ADC_CHANNELS]   = INIT("ch","_max_full", CH_SIGNAL_DATA, 0.0f);
 
 
 CIntParameter   view_port_width     ("view_port_width",   CBaseParameter::RW, 256, 0, 256, 4096);
@@ -48,7 +60,7 @@ CFloatParameter view_port_start     ("view_port_start",   CBaseParameter::RW, 0,
 CFloatParameter view_port_end       ("view_port_end",     CBaseParameter::RW, MAX_FREQ, 0, 0, MAX_FREQ);
 
 CIntParameter   freq_unit           ("freq_unit",    CBaseParameter::RWSA, 2, 0, 0, 2, CONFIG_VAR);
-CIntParameter   y_axis_mode         ("y_axis_mode",  CBaseParameter::RW, 0, 0, 0, 4, CONFIG_VAR); // 0 -dBm mode ; 1 - Volt mode ; 2 -dBu mode; 3 -dBV mode; 4 -dBuV mode
+CIntParameter   y_axis_mode         ("y_axis_mode",  CBaseParameter::RW, 0, 0, 0, 6, CONFIG_VAR); // 0 -dBm mode ; 1 - Volt mode ; 2 -dBu mode; 3 -dBV mode; 4 -dBuV mode; 5 - mW; 6 - dBW
 CIntParameter   adc_freq            ("ADC_FREQ",     CBaseParameter::RWSA, 0, 0, 0, getADCRate());
 CIntParameter   rbw                 ("RBW",          CBaseParameter::RWSA, 0, 0, 0, MAX_FREQ);
 CFloatParameter impedance           ("DBU_IMP_FUNC", CBaseParameter::RW, 50, 0, 0.1, 1000,CONFIG_VAR);
@@ -74,6 +86,8 @@ CBooleanParameter inFreeze[MAX_ADC_CHANNELS]    = INIT("CH","_FREEZE", CBasePara
 CBooleanParameter inShowMin[MAX_ADC_CHANNELS]   = INIT("CH","_SHOW_MIN", CBaseParameter::RW, false, 0,CONFIG_VAR);
 CBooleanParameter inShowMax[MAX_ADC_CHANNELS]   = INIT("CH","_SHOW_MAX", CBaseParameter::RW, false, 0,CONFIG_VAR);
 CIntParameter inGain[MAX_ADC_CHANNELS]          = INIT("CH","_IN_GAIN", CBaseParameter::RW, 0, 0, 0, 1, CONFIG_VAR);
+CIntParameter inProbe[MAX_ADC_CHANNELS]         = INIT("CH","_PROBE", CBaseParameter::RW, 1, 0, 1, 1000, CONFIG_VAR);
+
 CIntParameter inAC_DC[MAX_ADC_CHANNELS]         = INIT("CH","_IN_AC_DC", CBaseParameter::RW, 0, 0, 0, 1, CONFIG_VAR);
 CFloatParameter peak_freq[MAX_ADC_CHANNELS]     = INIT("peak","_freq", CBaseParameter::ROSA, -1, 0, -1, +1e6f);
 CFloatParameter peak_power[MAX_ADC_CHANNELS]    = INIT("peak","_power", CBaseParameter::ROSA, 0, 0, -10000000, +10000000);
@@ -89,7 +103,7 @@ CFloatParameter cursorT[CURSORS_COUNT]       = INIT2("SPEC_CUR","_T", CBaseParam
 CBooleanParameter outState[MAX_DAC_CHANNELS]               = INIT2("OUTPUT","_STATE", CBaseParameter::RW, false, 0,CONFIG_VAR);
 CFloatParameter outAmplitude[MAX_DAC_CHANNELS]             = INIT2("SOUR","_VOLT", CBaseParameter::RW, LEVEL_AMPS_DEF  , 0, 0, LEVEL_AMPS_MAX,CONFIG_VAR);
 CFloatParameter outOffset[MAX_DAC_CHANNELS]                = INIT2("SOUR","_VOLT_OFFS", CBaseParameter::RW, 0, 0, -LEVEL_AMPS_MAX, LEVEL_AMPS_MAX,CONFIG_VAR);
-CFloatParameter outFrequancy[MAX_DAC_CHANNELS]             = INIT2("SOUR","_FREQ_FIX", CBaseParameter::RW, 1000, 0, 0.00005, MAX_FREQ,CONFIG_VAR);
+CFloatParameter outFrequancy[MAX_DAC_CHANNELS]             = INIT2("SOUR","_FREQ_FIX", CBaseParameter::RW, 1000, 0, 1, MAX_FREQ,CONFIG_VAR);
 CFloatParameter outPhase[MAX_DAC_CHANNELS]                 = INIT2("SOUR","_PHAS", CBaseParameter::RW, 0, 0, -360, 360,CONFIG_VAR);
 CFloatParameter outDCYC[MAX_DAC_CHANNELS]                  = INIT2("SOUR","_DCYC", CBaseParameter::RW, 50, 0, 0, 100,CONFIG_VAR);
 CFloatParameter outRiseTime[MAX_DAC_CHANNELS]              = INIT2("SOUR","_RISE", CBaseParameter::RW, 1, 0, 0.1, 1000,CONFIG_VAR);
@@ -119,7 +133,10 @@ CBooleanParameter outSweepReset         ("SWEEP_RESET", CBaseParameter::RW, fals
 
 /////////////////////////////
 
-CIntParameter resetSettings("RESET_CONFIG_SETTINGS", CBaseParameter::RW, 0, 0, 0, 10);
+CIntParameter controlSettings("CONTROL_CONFIG_SETTINGS", CBaseParameter::RW, 0, 0, 0, 10);
+CStringParameter fileSettings("FILE_SATTINGS", CBaseParameter::RW, "", 0);
+CStringParameter listFileSettings("LIST_FILE_SATTINGS", CBaseParameter::RW, "", 0);
+
 const std::vector<std::string> g_savedParams = {"OSC_CH1_IN_GAIN","OSC_CH2_IN_GAIN","OSC_CH3_IN_GAIN","OSC_CH4_IN_GAIN",
                                                 "OSC_CH1_IN_AC_DC","OSC_CH2_IN_AC_DC","OSC_CH3_IN_AC_DC","OSC_CH4_IN_AC_DC"};
 
@@ -135,6 +152,8 @@ static float        data_max[MAX_ADC_CHANNELS][CH_SIGNAL_DATA];
 static int          g_old_signalSize = 0;
 std::mutex          g_data_mutex;
 
+std::vector<int>    g_indexArray;
+
 void updateParametersByConfig();
 void resetAllMinMax();
 void resetMinMax();
@@ -147,9 +166,9 @@ void UpdateParams(void)
         g_sweepController->pause(!inRun.Value());
     }
 
-	if (inRun.Value() == false){
-		return;
-    }
+	// if (inRun.Value() == false){
+	// 	return;
+    // }
 
     auto adc = rpApp_SpecGetADCFreq();
     auto buf = rpApp_SpecGetADCBufferSize();
@@ -169,10 +188,12 @@ void UpdateParams(void)
 
     if (rp_HPIsFastDAC_PresentOrDefault())
 	    updateGen();
+
+    rp_WC_UpdateParameters(false);
 }
 
 void resetMinMax(int ch,int mode){
-    std::lock_guard<std::mutex> lock(g_data_mutex);
+    std::lock_guard lock(g_data_mutex);
     auto size = CH_SIGNAL_DATA;
     for(int i = 0; i < size; ++i){
         if (mode == 0)
@@ -219,7 +240,7 @@ float koffInLogSpace(float start,float stop, float value){
     return value;
 }
 
-int* prepareIndexArray(int start,int stop,int view_size,int log_mode){
+void prepareIndexArray(std::vector<int> *data, int start,int stop,int view_size,int log_mode){
     float koef = 1;
     float koefMax = 1;
     int pointsNumOrig = stop - start;
@@ -230,7 +251,8 @@ int* prepareIndexArray(int start,int stop,int view_size,int log_mode){
         koefMax = (float)pointsNum / view_size;
         koef = (float)pointsNum / view_size;
     }
-    int *idx = new int[stop-start];
+    data->resize(stop-start);
+    // int *idx = new int[stop-start];
     for (size_t i = start, j = 0; i < stop; ++i, ++j)
     {
         int index = (j / koef);
@@ -238,12 +260,12 @@ int* prepareIndexArray(int start,int stop,int view_size,int log_mode){
             float z = stop - start;
             index = round(indexInLogSpace(1, view_size * 3 + 1, ((float)(j * view_size * 3)) / z + 1));
         }
-        idx[i-start] = index;
+        (*data)[i-start] = index;
     }
-    return idx;
+    // return idx;
 }
 
-void decimateDataMinMax(CFloatSignal &dest, float *src,int start,int stop,int view_size,int log_mode,int *indexArray){
+void decimateDataMinMax(CFloatBase64Signal &dest, float *src,int start,int stop,int view_size,int log_mode,int *indexArray){
 
     auto timeNowP1 = std::chrono::system_clock::now();
 
@@ -292,7 +314,7 @@ void decimateDataMinMax(CFloatSignal &dest, float *src,int start,int stop,int vi
     }
 }
 
-void decimateDataFirstN(CFloatSignal &dest, float *src,int start,int stop,int view_size,int log_mode,int *indexArray){
+void decimateDataFirstN(CFloatBase64Signal &dest, float *src,int start,int stop,int view_size,int log_mode,int *indexArray){
 
     // auto timeNowP1 = std::chrono::system_clock::now();
 
@@ -321,7 +343,7 @@ void decimateDataFirstN(CFloatSignal &dest, float *src,int start,int stop,int vi
     }
 }
 
-void decimateDataAvg(CFloatSignal &dest, float *src,int start,int stop,int view_size,int log_mode,int *indexArray){
+void decimateDataAvg(CFloatBase64Signal &dest, float *src,int start,int stop,int view_size,int log_mode,int *indexArray){
 
 //     auto timeNowP1 = std::chrono::system_clock::now();
 
@@ -352,7 +374,7 @@ void decimateDataAvg(CFloatSignal &dest, float *src,int start,int stop,int view_
     }
 }
 
-void decimateDataMax(CFloatSignal &dest, float *src,int start,int stop,int view_size,int log_mode,int *indexArray){
+void decimateDataMax(CFloatBase64Signal &dest, float *src,int start,int stop,int view_size,int log_mode,int *indexArray){
 
     auto timeNowP1 = std::chrono::system_clock::now();
 
@@ -393,7 +415,7 @@ void decimateDataMax(CFloatSignal &dest, float *src,int start,int stop,int view_
     }
 }
 
-void decimateData(CFloatSignal &dest, float *src,int start,int stop,int view_size,int log_mode,int *indexArray){
+void decimateData(CFloatBase64Signal &dest, float *src,int start,int stop,int view_size,int log_mode,int *indexArray){
 //    decimateDataMinMax(dest,src,start,stop,view_size,log_mode,indexArray);
 //    decimateDataFirstN(dest,src,start,stop,view_size,log_mode,indexArray);
 //    decimateDataAvg(dest,src,start,stop,view_size,log_mode,indexArray);
@@ -401,7 +423,7 @@ void decimateData(CFloatSignal &dest, float *src,int start,int stop,int view_siz
 }
 
 // use in waterfall
-void decimateDataByMax(CFloatSignal &dest, float *src,int start,int stop,int view_size){
+void decimateDataByMax(CFloatBase64Signal &dest, float *src,int start,int stop,int view_size){
     float koef = 1;
     int pointsNumOrig = stop - start;
     int pointsNum = pointsNumOrig;
@@ -423,7 +445,7 @@ void decimateDataByMax(CFloatSignal &dest, float *src,int start,int stop,int vie
     }
 }
 
-void copyData(CFloatSignal &dest, float *src,int size){
+void copyData(CFloatBase64Signal &dest, float *src,int size){
     if (dest.GetSize() != size) dest.Resize(size);
     memcpy_neon(&dest[0], src, size * sizeof(float));
 }
@@ -434,7 +456,6 @@ void UpdateSignals(void)
 	if (inRun.Value() == false) {
     	return;
     }
-
     size_t signal_size = 0;
     rpApp_SpecGetViewSize(&signal_size);
     bool isShow = true;
@@ -446,6 +467,7 @@ void UpdateSignals(void)
     if (ret != 0) {
         return;
     }
+
 
     auto mode = rp_dsp_api::mode_t::DBM;
     rpApp_SpecGetMode(&mode);
@@ -459,11 +481,12 @@ void UpdateSignals(void)
         }
     }
 
+
     if (g_old_signalSize != signal_size || inReset.Value()) {
         resetAllMinMax();
     }
 
-    std::lock_guard<std::mutex> lock(g_data_mutex);
+    std::lock_guard lock(g_data_mutex);
 
 
     int width = view_port_width.Value();
@@ -503,9 +526,9 @@ void UpdateSignals(void)
         i_stop_w = i;
     }
 
-    auto indexArray = prepareIndexArray(i_start,i_stop,width,xAxisLogMode.Value());
+    prepareIndexArray(&g_indexArray, i_start,i_stop,width,xAxisLogMode.Value());
 
-    decimateData(s_xaxis,data[0],i_start,i_stop,width,xAxisLogMode.Value(),indexArray);
+    decimateData(s_xaxis,data[0],i_start,i_stop,width,xAxisLogMode.Value(),g_indexArray.data());
     // End resize
 
     if (requestFullData.Value()){
@@ -559,14 +582,14 @@ void UpdateSignals(void)
 
 
         if (inShow[ch].Value()) {
-            decimateData(s_view[ch],data[ch + 1],i_start,i_stop,width,xAxisLogMode.Value(),indexArray);
+            decimateData(s_view[ch],data[ch + 1],i_start,i_stop,width,xAxisLogMode.Value(),g_indexArray.data());
             if (inShowMin[ch].Value()) {
-                decimateData(s_view_min[ch],data_min[ch],i_start,i_stop,width,xAxisLogMode.Value(),indexArray);
+                decimateData(s_view_min[ch],data_min[ch],i_start,i_stop,width,xAxisLogMode.Value(),g_indexArray.data());
             }else{
                 s_view_min[ch].Resize(0);
             }
             if (inShowMax[ch].Value()) {
-                decimateData(s_view_max[ch],data_max[ch],i_start,i_stop,width,xAxisLogMode.Value(),indexArray);
+                decimateData(s_view_max[ch],data_max[ch],i_start,i_stop,width,xAxisLogMode.Value(),g_indexArray.data());
             }else{
                 s_view_max[ch].Resize(0);
             }
@@ -577,7 +600,6 @@ void UpdateSignals(void)
         }
     }
 
-    delete[] indexArray;
     inReset.Value() = false;
     g_old_signalSize = signal_size;
 }
@@ -774,13 +796,38 @@ void resetAllMinMax(){
 void OnNewParams(void)
 {
 
-    if (resetSettings.IsNewValue()){
-        if (resetSettings.NewValue() == 1){
-            deleteConfig(getHomeDirectory() + "/.config/redpitaya/apps/spectrumpro/config.json");
-            configSetWithList(getHomeDirectory() + "/.config/redpitaya/apps/spectrumpro", "config.json",g_savedParams);
-            resetSettings.Update();
-            resetSettings.SendValue(2);
+    if (controlSettings.IsNewValue()){
+        if (controlSettings.NewValue() == controlSettings::REQUEST_RESET){
+            deleteConfig();
+            configSetWithList(g_savedParams);
+            controlSettings.Update();
+            controlSettings.SendValue(controlSettings::RESET_DONE);
             return;
+        }
+
+        if (controlSettings.NewValue() == controlSettings::SAVE){
+            controlSettings.Update();
+            fileSettings.Update();
+            configSet();
+            saveCurrentSettingToStore(fileSettings.Value());
+            controlSettings.SendValue(controlSettings::NONE);
+            listFileSettings.SendValue(getListOfSettingsInStore());
+        }
+
+        if (controlSettings.NewValue() == controlSettings::LOAD){
+            controlSettings.Update();
+            fileSettings.Update();
+            loadSettingsFromStore(fileSettings.Value());
+            configGet();
+            controlSettings.SendValue(controlSettings::LOAD_DONE);
+        }
+
+        if (controlSettings.NewValue() == controlSettings::DELETE){
+            controlSettings.Update();
+            fileSettings.Update();
+            deleteStoredConfig(fileSettings.Value());
+            controlSettings.SendValue(controlSettings::NONE);
+            listFileSettings.SendValue(getListOfSettingsInStore());
         }
     }
 
@@ -948,17 +995,22 @@ void OnNewParams(void)
             }
         }
     }
+
+    for(auto ch = 0u; ch < g_adc_count; ch++){
+        if (inProbe[ch].IsNewValue()) {
+            if (rpApp_SpecSetProbe((rp_channel_t)ch, inProbe[ch].NewValue()) == RP_OK){
+                inProbe[ch].Update();
+                rpApp_SpecReset();
+                RESEND(inProbe[ch])
+            }
+        }
+    }
        // Save the configuration file
     if (config_changed) {
-        configSet(getHomeDirectory() + "/.config/redpitaya/apps/spectrumpro", "config.json");
+        configSet();
     }
 
-}
-
-extern "C" void SpecIntervalInit()
-{
-	CDataManager::GetInstance()->SetParamInterval(INTERVAL);
-	CDataManager::GetInstance()->SetSignalInterval(INTERVAL);
+	rp_WC_OnNewParam();
 }
 
 extern "C" int rp_app_init(void)
@@ -967,6 +1019,21 @@ extern "C" int rp_app_init(void)
 
     for(auto ch = 0u; ch < MAX_ADC_CHANNELS + 1; ch++)
         data[ch] = new float[CH_SIGNAL_DATA];
+
+    g_indexArray.reserve(CH_SIGNAL_DATA);
+
+    if (getModelName() == "Z20"){
+        for(int i = 0; i < g_dac_count; i++){
+            auto ch = (rp_channel_t)i;
+            outFrequancy[ch].SetMin(300000);
+        }
+    }
+
+    setHomeSettingsPath("/.config/redpitaya/apps/spectrumpro/");
+
+	rp_WC_Init();
+    rp_WC_UpdateParameters(true);
+
 
     rp_Init();
     rp_Reset();
@@ -980,7 +1047,9 @@ extern "C" int rp_app_init(void)
     rpApp_SpecRun();
 
     for(auto ch = 0u; ch < g_adc_count; ch++){
-        rp_AcqSetGain((rp_channel_t)ch,RP_LOW);
+        if (rp_HPGetFastADCIsLV_HVOrDefault()){
+            rp_AcqSetGain((rp_channel_t)ch,RP_LOW);
+        }
         if (rp_HPGetFastADCIsAC_DCOrDefault())
             rp_AcqSetAC_DC((rp_channel_t)ch, RP_AC);
         if (rp_HPGetFastDACIsTempProtectionOrDefault()){
@@ -994,10 +1063,8 @@ extern "C" int rp_app_init(void)
     if (rp_HPGetIsPLLControlEnableOrDefault())
        rp_SetPllControlEnable(false);
 
+    listFileSettings.Value() = getListOfSettingsInStore();
     updateParametersByConfig();
-
-    CDataManager::GetInstance()->SetParamInterval(INTERVAL);
-    CDataManager::GetInstance()->SetSignalInterval(INTERVAL);
 
     return 0;
 }
@@ -1048,7 +1115,7 @@ void updateGen(void) {
 void PostUpdateSignals(void){}
 
 void updateParametersByConfig(){
-    configGet(getHomeDirectory() + "/.config/redpitaya/apps/spectrumpro/config.json");
+    configGet();
 
     if (rp_HPGetFastADCIsAC_DCOrDefault()){
         for(auto ch = 0u; ch < g_adc_count ; ch++){
@@ -1059,11 +1126,15 @@ void updateParametersByConfig(){
     if (rp_HPGetIsPLLControlEnableOrDefault())
         rp_SetPllControlEnable(pllControlEnable.Value());
 
-    if (rp_HPGetFastADCIsAC_DCOrDefault()){
+    if (rp_HPGetFastADCIsLV_HVOrDefault()){
         for(auto ch = 0u; ch < g_adc_count ; ch++){
             rp_AcqSetGain((rp_channel_t)ch, inGain[ch].Value() == 0 ? RP_LOW : RP_HIGH);
         }
     }
+
+    for(auto ch = 0u; ch < g_adc_count ; ch++){
+            rpApp_SpecSetProbe((rp_channel_t)ch, inProbe[ch].Value());
+        }
 
     if (rp_HPIsFastDAC_PresentOrDefault()){
         UpdateGeneratorParameters(true);

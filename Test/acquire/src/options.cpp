@@ -14,7 +14,7 @@
 static constexpr uint32_t g_dec[DEC_MAX] = { 1,  2,  4,  8,  16 };
 
 
-static constexpr char optstring_250_12[64] = "esx1:2:d:vht:l:orcka";
+static constexpr char optstring_250_12[64] = "esx1:2:d:vht:l:orckag";
 static struct option long_options_250_12[32] = {
         /* These options set a flag. */
         {"equalization", no_argument,       0, 'e'},
@@ -32,6 +32,8 @@ static struct option long_options_250_12[32] = {
         {"calib",        no_argument,       0, 'c'},
         {"hk",           no_argument,       0, 'k'},
         {"axi",          no_argument,       0, 'a'},
+        {"debug",        no_argument,       0, 'g'},
+        {"offset",       required_argument, 0,  0 },
         {0, 0, 0, 0}
 };
 
@@ -56,12 +58,14 @@ static constexpr char g_format_250_12[2048] =
         "  --calib         -c    Disable calibration parameters\n"
         "  --hk            -k    Reset houskeeping (Reset state for GPIO). Default: disabled\n"
         "  --axi           -a    Enable AXI interface. Also enable housekeeping reset. Default: disabled\n"
+        "  --debug         -g    Debug registers. Default: disabled\n"
+        "  --offset              Offset relative to the trigger pointer [-16384 .. 16384]\n"
         "    SIZE                Number of samples to acquire [0 - %u].\n"
         "    DEC                 Decimation [%u,%u,%u,%u,%u,...] (default: 1). Valid values are from 1 to 65536\n"
         "\n";
 
 
-static constexpr char optstring_125_14[64] = "esx1:2:vht:l:ocka";
+static constexpr char optstring_125_14[64] = "esx1:2:vht:l:ockag";
 static struct option long_options_125_14[32] = {
         /* These options set a flag. */
         {"equalization", no_argument,       0, 'e'},
@@ -77,6 +81,8 @@ static struct option long_options_125_14[32] = {
         {"calib",        no_argument,       0, 'c'},
         {"hk",           no_argument,       0, 'k'},
         {"axi",          no_argument,       0, 'a'},
+        {"debug",        no_argument,       0, 'g'},
+        {"offset",       required_argument, 0,  0 },
         {0, 0, 0, 0}
 };
 
@@ -98,12 +104,14 @@ static constexpr char g_format_125_14[2048] =
         "  --calib         -c    Disable calibration parameters\n"
         "  --hk            -k    Reset houskeeping (Reset state for GPIO). Default: disabled\n"
         "  --axi           -a    Enable AXI interface. Also enable housekeeping reset. Default: disabled\n"
+        "  --debug         -g    Debug registers. Default: disabled\n"
+        "  --offset              Offset relative to the trigger pointer [-16384 .. 16384]\n"
         "    SIZE                Number of samples to acquire [0 - %u].\n"
         "    DEC                 Decimation [%u,%u,%u,%u,%u,...] (default: 1). Valid values are from 1 to 65536\n"
         "\n";
 
 
-static constexpr char optstring_125_14_4ch[64] = "esx1:2:3:4:vht:l:ock";
+static constexpr char optstring_125_14_4ch[64] = "esx1:2:3:4:vht:l:ockg";
 static struct option long_options_125_14_4ch[32] = {
         /* These options set a flag. */
         {"equalization", no_argument,       0, 'e'},
@@ -120,6 +128,8 @@ static struct option long_options_125_14_4ch[32] = {
         {"volt",         no_argument,       0, 'o'},
         {"calib",        no_argument,       0, 'c'},
         {"hk",           no_argument,       0, 'k'},
+        {"debug",        no_argument,       0, 'g'},
+        {"offset",       required_argument, 0,  0 },
         {0, 0, 0, 0}
 };
 
@@ -142,6 +152,8 @@ static constexpr char g_format_125_14_4ch[2048] =
         "  --volt          -o    Print value in volt.\n"
         "  --calib         -c    Disable calibration parameters\n"
         "  --hk            -k    Reset houskeeping (Reset state for GPIO). Default: disabled\n"
+        "  --debug         -g    Debug registers. Default: disabled\n"
+        "  --offset              Offset relative to the trigger pointer [-16384 .. 16384]\n"
         "    SIZE                Number of samples to acquire [0 - %u].\n"
         "    DEC                 Decimation [%u,%u,%u,%u,%u,...] (default: 1). Valid values are from 1 to 65536\n"
         "\n";
@@ -260,6 +272,20 @@ auto parse(int argc, char* argv[]) -> Options{
 
     while ((ch = getopt_long(argc, argv, (char*)optstring, (option*)long_options, &option_index)) != -1) {
         switch (ch) {
+            case 0: {
+                if (strcmp((*long_options)[option_index].name , "offset") == 0){
+                    float offset = 0;
+                    if (get_float(&offset, optarg, "Error get offset",-1024 * 16, 1024 * 16) != 0) {
+                        opt.error = true;
+                        return opt;
+                    }
+                    opt.offset = offset;
+                    break;
+                }
+                fprintf(stderr, "Error --%s: %s\n",long_options[option_index]->name , optarg);
+                opt.error = true;
+                return opt;
+            }
 
             case '1': {
                 if (model == RP_125_14 || model == RP_125_14_4CH){
@@ -478,6 +504,11 @@ auto parse(int argc, char* argv[]) -> Options{
                 break;
             }
 
+            case 'g': {
+                opt.enableDebug = true;
+                break;
+            }
+
             case 'a': {
                 if (!rp_HPGetIsDMAinv0_94OrDefault()){
                     opt.error = true;
@@ -564,6 +595,9 @@ models_t getModel(){
         case STEM_125_14_v1_0:
         case STEM_125_14_v1_1:
         case STEM_125_14_LN_v1_1:
+        case STEM_125_14_LN_BO_v1_1:
+        case STEM_125_14_LN_CE1_v1_1:
+        case STEM_125_14_LN_CE2_v1_1:
         case STEM_125_14_Z7020_v1_0:
         case STEM_125_14_Z7020_LN_v1_1:
             return RP_125_14;

@@ -170,15 +170,39 @@
                 break;
             }
             case 11:{
-                stem_ver = "SIGNALlab 250-12 v1.1"
+                stem_ver = "SIGNALlab 250-12 v1.0"
                 break;
             }
             case 12:{
-                stem_ver = "SIGNALlab 250-12 v1.2"
+                stem_ver = "SIGNALlab 250-12 v1.1"
                 break;
             }
             case 13:{
-                sstem_ver = "SIGNALlab 250-12/120"
+                stem_ver = "SIGNALlab 250-12 v1.2"
+                break;
+            }
+            case 14:{
+                stem_ver = "SIGNALlab 250-12/120"
+                break;
+            }
+            case 15:{
+                stem_ver = "SIGNALlab 250-12 v1.2a"
+                break;
+            }
+            case 16:{
+                stem_ver = "SIGNALlab 250-12 v1.2b"
+                break;
+            }
+            case 17:{
+                stem_ver = "STEMlab 125-14 LN BO v1.1"
+                break;
+            }
+            case 18:{
+                stem_ver = "STEMlab 125-14 LN CE1 v1.1"
+                break;
+            }
+            case 19:{
+                stem_ver = "STEMlab 125-14 LN CE2 v1.1"
                 break;
             }
             default:

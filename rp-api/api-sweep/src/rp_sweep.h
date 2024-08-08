@@ -40,6 +40,7 @@ public:
     auto setDir(rp_channel_t _ch,rp_gen_sweep_dir_t _dir) -> int;
     auto getDir(rp_channel_t _ch,rp_gen_sweep_dir_t *_dir) -> int;
     auto resetAll() -> void;
+    auto setDefault() -> void;
 private:
 
     CSweepController(const CSweepController &) = delete;
@@ -51,6 +52,28 @@ private:
     // Pointer to the internal implementation
     Impl *m_pimpl;
 };
+
+int rp_SWInit();
+int rp_SWRelease();
+int rp_SWRun();
+int rp_SWStop();
+int rp_SWPause(bool state);
+int rp_SWResetAll();
+int rp_SWSetDefault();
+int rp_SWGenSweep(rp_channel_t ch, bool enable);
+int rp_SWIsGen(rp_channel_t ch, bool *state);
+int rp_SWIsAllDisabled(bool *state);
+int rp_SWSetStartFreq(rp_channel_t ch, float freq);
+int rp_SWGetStartFreq(rp_channel_t ch, float *freq);
+int rp_SWSetStopFreq(rp_channel_t ch, float freq);
+int rp_SWGetStopFreq(rp_channel_t ch, float *freq);
+int rp_SWSetTime(rp_channel_t ch, int us);
+int rp_SWGetTime(rp_channel_t ch, int *us);
+int rp_SWSetMode(rp_channel_t ch, rp_gen_sweep_mode_t mode);
+int rp_SWGetMode(rp_channel_t ch, rp_gen_sweep_mode_t *mode);
+int rp_SWSetDir(rp_channel_t ch, rp_gen_sweep_dir_t dir);
+int rp_SWGetDir(rp_channel_t ch, rp_gen_sweep_dir_t *dir);
+
 
 }
 

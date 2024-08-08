@@ -3,6 +3,8 @@
 
 #include <string>
 #include <map>
+#include <stdint.h>
+
 
 class CStreamSettings {
 

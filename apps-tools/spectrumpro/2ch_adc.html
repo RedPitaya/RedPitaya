@@ -40,12 +40,18 @@
                     </a>
                 </li>
                 <li class="dropdown">
+                    <a class="btn btn-default dropdown-toggle" type="button" id="menu1" data-toggle="dropdown">SETTINGS<span class="caret"></span></a>
+                    <ul id="settings_dropdown" class="dropdown-menu" role="menu" aria-labelledby="menu1" style="background: #cdcccc; min-width: 0px;">
+                        <li><a id="save_settings" href="#">SAVE</a></li>
+                        <li><a id="reset_settings" href="#">RESET</a></li>
+                    </ul>
+                </li>
+                <li class="dropdown">
                     <a class="btn btn-default dropdown-toggle" type="button" id="dd_menu" data-toggle="dropdown" style="padding-left: 20px;">MENU<span class="caret"></span></a>
                     <ul class="dropdown-menu" role="menu" aria-labelledby="menu1" style="background: #cdcccc; min-width: 0px;">
                         <li><a id="arb_manager" href="/arb_manager">ARB Manager</a></li>
                         <li><a id="downl_graph" href="#">Graph</a></li>
                         <li><a id="downl_csv" href="#">Data in CSV</a></li>
-                        <li><a id="reset_settings" href="#">RESET</a></li>
                     </ul>
                 </li>
                 <li>
@@ -185,6 +191,19 @@
                         <button id="CH1_SHOW_MAX" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">MAX</button>
                     </div>
                 </div>
+                <div class="col-xs-12 option-content">
+                    <span class="col-info" style="margin-top: -11px;">Probe attenuation</span>
+                    <div class="right-menu-option" style="margin-top: 10px;">
+                        <select id="CH1_PROBE" class="form-control styled-select">
+                            <option>1</option>
+                            <option>10</option>
+                            <option>50</option>
+                            <option>100</option>
+                            <option>500</option>
+                            <option>1000</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="col-xs-12 option-content 122_16_block_remove" id="GAIN_SELECTOR_CH1">
                     <div class="right-menu-option">
                         <span class="col-info" style="margin-top: -21px;">Input attenuation</span>
@@ -239,6 +258,19 @@
                 <div class="col-xs-6 option-content">
                     <div class="right-menu-option">
                         <button id="CH2_SHOW_MAX" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">MAX</button>
+                    </div>
+                </div>
+                <div class="col-xs-12 option-content">
+                    <span class="col-info" style="margin-top: -11px;">Probe attenuation</span>
+                    <div class="right-menu-option" style="margin-top: 10px;">
+                        <select id="CH2_PROBE" class="form-control styled-select">
+                            <option>1</option>
+                            <option>10</option>
+                            <option>50</option>
+                            <option>100</option>
+                            <option>500</option>
+                            <option>1000</option>
+                        </select>
                     </div>
                 </div>
                 <div class="col-xs-12 option-content 122_16_block_remove" id="GAIN_SELECTOR_CH2">
@@ -345,6 +377,8 @@
                             <option value="dbV">dBV</option>
                             <option value="dbuV">dBμV</option>
                             <option value="v">V</option>
+                            <option value="mW">mW</option>
+                            <option value="dBW">dBW</option>
                         </select>
                     </div>
                 </div>
@@ -430,7 +464,7 @@
                             <option value="5" class="122_16_block_remove">DC</option>
                             <option value="8" class="122_16_block_remove">DC NEG</option>
                             <option value="6" class="122_16_block_remove">PWM</option>
-                            <!--option value="7">ARB</option-->
+                            <option value="10" class="122_16_block_remove">NOISE</option>
                         </select>
                     </div>
                 </div>
@@ -535,6 +569,7 @@
                             <option value="5" class="122_16_block_remove">DC</option>
                             <option value="8" class="122_16_block_remove">DC NEG</option>
                             <option value="6" class="122_16_block_remove">PWM</option>
+                            <option value="10" class="122_16_block_remove">NOISE</option>
                         </select>
                     </div>
                 </div>
@@ -784,6 +819,35 @@
             <div class="modal-footer">
                 <div class="bazaar-link">
                     <a href="#" data-dismiss="modal" id="disable_analytics" class="list-group-item exp_btn">Close</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="save_settings_dialog" class="modal fade" role="dialog" tabindex="-1" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+    <div class="modal-dialog" style="width: 650px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="bazaar_naLabel">Save current settings</h4>
+            </div>
+            <div class="modal-body" style="display: flex;">
+                <div style="text-align: left;margin-left: 5%;">
+                    <table>
+                        <col width="400px">
+                        <col width="200px">
+                        <tr style="height:60px;">
+                            <td>Name:</td>
+                            <td>
+                                <input id="SETTINGS_NEW_NAME" maxlength="11" class="input_name" style="border: 1px solid #ddd;background: #343433;">
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="bazaar-link">
+                    <a id="OSC_REQ_SAVE_SETTINGS" href="#" data-dismiss="modal" class="list-group-item exp_but">SAVE</a>
                 </div>
             </div>
         </div>

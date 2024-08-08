@@ -2,6 +2,7 @@
 
 import math
 from rp_formatter import *
+import numpy as np
 
 print("CFormatter(RP_F_WAV,44100)")
 obj = CFormatter(RP_F_WAV,44100)
@@ -17,6 +18,27 @@ print(res)
 
 print("obj.clearBuffer()")
 res = obj.clearBuffer()
+print(res)
+
+N = 1024*16
+arr_f = np.zeros(N, dtype=np.float32)
+print("obj.setChannelFNP(RP_F_CH1,arr_f)")
+res = obj.setChannelFNP(RP_F_CH1,arr_f)
+print(res)
+
+arr_d = np.zeros(N, dtype=np.double)
+print("obj.setChannelDNP(RP_F_CH1,arr_d)")
+res = obj.setChannelDNP(RP_F_CH1,arr_d)
+print(res)
+
+arr_ui8 = np.zeros(N, dtype=np.uint8)
+print("obj.setChannelUI8NP(RP_F_CH1,arr_ui8)")
+res = obj.setChannelUI8NP(RP_F_CH1,arr_ui8)
+print(res)
+
+arr_ui16 = np.zeros(N, dtype=np.uint16)
+print("obj.setChannelUI16NP(RP_F_CH1,arr_ui16)")
+res = obj.setChannelUI16NP(RP_F_CH1,arr_ui16)
 print(res)
 
 ch1 = arrFloat(1024)
@@ -210,7 +232,6 @@ print(res)
 
 print("obj.writeToFile()")
 res = obj.writeToFile()
-res = obj.writeToFile()
 print(res)
 
 print("obj.closeFile()")
@@ -241,7 +262,6 @@ res = obj.openFile("test_2ch.wav")
 print(res)
 
 print("obj.writeToFile()")
-res = obj.writeToFile()
 res = obj.writeToFile()
 print(res)
 
@@ -276,7 +296,6 @@ res = obj.openFile("test_3ch.wav")
 print(res)
 
 print("obj.writeToFile()")
-res = obj.writeToFile()
 res = obj.writeToFile()
 print(res)
 
@@ -315,7 +334,6 @@ res = obj.openFile("test_4ch.wav")
 print(res)
 
 print("obj.writeToFile()")
-res = obj.writeToFile()
 res = obj.writeToFile()
 print(res)
 
@@ -440,9 +458,6 @@ res = obj2.openFile("test_10ch.tdms")
 print(res)
 
 print("obj2.writeToFile()")
-res = obj2.writeToFile()
-res = obj2.writeToFile()
-res = obj2.writeToFile()
 res = obj2.writeToFile()
 print(res)
 

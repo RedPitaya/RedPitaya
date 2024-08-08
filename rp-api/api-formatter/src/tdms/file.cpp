@@ -1,6 +1,6 @@
 #include "file.h"
 
-using namespace TDMS;
+using namespace rp_formatter_api::TDMS;
 
 template <typename T, typename Key>
 bool key_exists(const T& container, const Key& key){

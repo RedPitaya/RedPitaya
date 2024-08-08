@@ -60,7 +60,7 @@ file(GLOB PR_HW_SOURCES "src/*.cpp")
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
-add_compile_options(-Wall -pedantic -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+add_compile_options(-Wall -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 add_library(${PROJECT_NAME}-obj OBJECT ${PR_HW_SOURCES})
 
@@ -97,7 +97,7 @@ if(BUILD_SHARED)
             install(TARGETS rp_hw_can_py
                 LIBRARY DESTINATION ${INSTALL_DIR}/lib/python
                 ARCHIVE DESTINATION ${INSTALL_DIR}/lib/python)
-            install(FILES tests/rp_hw_can_test.py
+            install(FILES tests/rp_hw_can_test.py tests/rp_hw_can_loopback_test.py
                 DESTINATION ${INSTALL_DIR}/lib/python PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
                 GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_WRITE WORLD_EXECUTE)
         endif()

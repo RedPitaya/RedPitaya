@@ -5,7 +5,7 @@
 #include <list>
 #include <deque>
 #include <map>
-
+#include <semaphore.h>
 
 #include "data_lib/signal.hpp"
 #include "data_lib/buffers_pack.h"
@@ -17,14 +17,14 @@ class CStreamingBufferCached
 public:
 
     using Ptr = std::shared_ptr<CStreamingBufferCached>;
-    
+
     static auto create(uint32_t maxRamSize = 1024 * 1024 * 50) -> Ptr;
-    
+
     CStreamingBufferCached(uint32_t maxRamSize);
     ~CStreamingBufferCached();
-    
+
     auto addChannel(DataLib::EDataBuffersPackChannel ch,size_t size,uint8_t bitBySample) -> void;
-        
+
     auto generateBuffers() -> void;
 
     auto getFreeBuffer(uint64_t fpga_lost) -> DataLib::CDataBuffersPack::Ptr;
@@ -53,6 +53,7 @@ private:
     auto getFreeSize() -> uint32_t;
 
     std::vector<DataLib::CDataBuffersPack::Ptr> m_buffers;
+
     uint32_t m_ringStart;
     uint32_t m_ringEnd;
     uint32_t m_ringSize;
@@ -62,6 +63,9 @@ private:
     bool     m_needDestroy;
     DataLib::CDataBuffersPack::Ptr m_dropedPack;
     std::mutex m_mtx;
+    sem_t m_countsem;
+    sem_t m_spacesem;
+
 };
 
 }
