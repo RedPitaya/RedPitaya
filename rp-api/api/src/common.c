@@ -37,7 +37,7 @@ int cmn_Init()
 
 int cmn_Release()
 {
-    if (fd == -1) {
+    if (fd != -1) {
         if(close(fd) < 0) {
             return RP_ECMD;
         }
