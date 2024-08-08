@@ -1,4 +1,51 @@
-# Beta version (2.00-35)
+# Beta version (2.00-37)
+
+
+- **Lots of improvements done on WEB apps**
+- **Added new SCPI features like LCR meter** 
+- **Impedance anlyzer app added to official OS**
+- **PyRPL now works with latest OS**
+
+
+APIs & SCPI Enhancements: 
+- Added LCR functionality
+- Fix trgger state SCPI commands
+- Output impedance & ext. trigger level setting added for SIGNALlab
+- Other improvements and bugfixes
+ 
+WEB apps:
+ 
+- Improved logic to test connection for WEB apps
+
+
+Oscilloscope:
+- XY mode added
+- Improved cursors 
+- Fixed problem with trigger cursor in oscilloscope
+- Added captions to the grid on the X axis
+- Y-axis units
+- Possibility to rename signals
+- Fixed trigger indicator position
+- Other improvements and bugfixes
+
+
+Spectrum analyzer:
+- mW and dBW added to spectrum app
+- Probe attenuation setting added
+
+
+Bode analyzer:
+- Improved measurement speed for Bode analyzer app
+
+
+Impedance analyzer app
+- Will from now on be available in official OS release
+
+
+New Red Pitaya Beta OS can be downloaded for free from here. https://redpitaya.readthedocs.io/en/latest/quickStart/SDcard/SDcard.html     
+Notice that full SD card installation is required and it is recommended to clear browser cache after installation.  
+  
+# Stable version (2.00-35)
 
 - **New WEB Impedance Analyzer app**
 - **System health status added to WEB interface**
