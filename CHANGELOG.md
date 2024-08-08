@@ -1,4 +1,140 @@
-# Beta version (1.04-28)
+# Beta version (2.00-35)
+
+- **New WEB Impedance Analyzer app**
+- **System health status added to WEB interface**
+- **SCPI sweep generator support**
+
+
+General
+
+- Support for SIGNALlab 250-12 1.2b 
+- General performance and stability improvements
+- Fixed a critical bug that prevented OS 2.0 from loading on some boards.
+
+  
+APIs & SCPI
+
+- Sweep generator support
+- Added missing SCPI command for SIGNALlab 250-12 PLL, load and ext. trigger level setting
+- External trigger debouncer command fix
+- SCPI servers now retains settings even after disconnection
+- Added OS/ecosystem version command
+- Added command that lists all available and supported SCPI commands
+- Changing freq. doesn’t restart generator anymore
+- Added DMA mode for STEMlab 125-14 4 Inputs
+
+  
+WEB apps
+
+- There is a new WEB Impedance Analyzer app available
+- System health status is now also available through WEB interface, it displays voltages and temperature
+- Fine button amplitude scaling button fixed for oscilloscope app
+- Missing ext. trigger level setting added for SIGNALlab 250-12 
+- Added SDR transceiver app
+- Improvements for AWG manager
+- Fixed 3&4 ch bug in oscilloscope app for STEMlab 125-14 4 Inputs
+
+
+
+# Stable version (2.00-30)
+
+- **Jupyter Lab is now supported on all Red Pitaya products using common Python API**
+- **Acquisition into DDR is now also supported for all Red Pitaya models** 
+- **Streaming is now also supported for STEMlab 125-14 4 Input**
+
+
+General 
+- Added possibility to convert from new calibration to old calibration using caliber tool.
+- External connector descriptions can be opened from the WEB interface 
+ 
+APIs & SCPI 
+- Added missing trigger states in SCPI for 4ch.
+- Support for the CAN interface 
+- SCPI server refactoring
+- SCPI server error handling improvement
+- New SCPI commands added like time, date
+- SCPI now supports more decimations
+- Added internal trigger debouncer in API
+ 
+WEB apps 
+- A new ARB manager app was implemented for importing custom waveforms for signal generator
+- Interpolation added to Oscilloscope and signal generator app
+- Improved data export for Oscilloscope and signal generator app
+- Improved decimation for the Oscilloscope and signal generator app
+- Improved calibration application
+- Bode WEB app improvement
+- Added DVB and dBuV in the Spectrum analyzer app
+- Fixed an issue with limiting the number of samples recorded in BIN format for streaming
+- Fix BIN/CSV mode in the streaming manager
+- Fixed a bug where the buffers were not written to the file after stopping streaming
+
+# Stable version (2.00-23)
+General 
+- Support for old board models
+
+
+APIs & SCPI 
+- Possibility to acquire >256MB of ADC data into DDR
+- Multi-channel acquisition/generation synchronization through SATA connectors or external triggers 
+- New SCPI commands added (SCPI time, board identifier, synchronization and DDR acquisition)
+- SCPI server updated to the latest version
+- Added python wrapper for RP API
+- Other bug fixes and general improvements 
+
+
+WEB apps 
+- 125-14 4 Input oscilloscope traces and trigger issues are fixed
+- Fixed waterfall and zoom mode in SA app
+- Refactoring UI of oscilloscope app
+- Released WEB apps source code 
+- Logic analyzer bug fixes
+- Other bug fixes and general improvements 
+
+
+# Stable version (2.00-18)    
+- Added python wrapper for api (v0.94) (Not for all libs)
+- Updated streaming app for 4-ch boards (Streaming to 4 channels in beta. There are known bugs with calibration parameters.)
+- Fixed bug in calibration for 4-ch boards
+- Added new coammds in SCPI
+- Improved UI in spectrumpro and scopegenpro
+- There is a known bug in 0.94 for boards 250-12 (Amplitude at decimation 4 and 8 is much less than the input signal)
+
+
+# Stable version (2.00-15)
+
+- Added support for sdr_receiver_hpsdr, sdr_transceiver_hpsdr, vna (not for all boards)
+- Completely redesigned API for all boards.
+- Added board profile API
+- Added calibration API (changed the calibration mechanism, but kept backward compatibility)
+- Streaming unified (one image for master and slave boards)
+- Improved console applications for the new api
+- Upgrading to Uboot 2022.1
+- Transition to the Xilinx 2022.1 kernel (5.15.0)
+- Unification of the image. One image for all boards
+    - STEM 125-10 v1.0
+    - STEM 125-14 v1.0
+    - STEM 125-14 v1.1
+    - STEM 125-14 LN v1.1
+    - STEM 125-14 Z7020 v1.0
+    - STEM 125-14 Z7020 LN v1.1
+    - STEM 122-16 SDR v1.0
+    - STEM 125-14 Z7020 4IN v1.0
+    - STEM 125-14 Z7020 4IN v1.2
+    - STEM 125-14 Z7020 4IN v1.3
+    - STEM 250-12 v1.1
+    - STEM 250-12 v1.2
+    - STEM 250-12-120
+
+Requred a Linux OS upgrade to 22.04 (minimum SD card requirement is 8 GB)
+Changes in Linux OS:
+
+- Upgrading to python 3.10.6
+- Switch from Jupyter to JupyterLab
+- Added WebConsole
+- Added support for modules for the system kernel
+
+
+# Stable version (1.04-28)
 
 - Streaming application now supports X-channel system
 - Bode analyzer bug fixes
