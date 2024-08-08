@@ -15,6 +15,7 @@ message(STATUS "Is install ${IS_INSTALL}")
 message(STATUS "Install path ${INSTALL_DIR}")
 message(STATUS "VERSION=${VERSION}")
 message(STATUS "REVISION=${REVISION}")
+message(STATUS "BUILD_NUMBER=${BUILD_NUMBER}")
 message(STATUS "CLIENT_SUFFIX=${CLIENT_SUFFIX}")
 
 message(STATUS "Compiler С path: ${CMAKE_C_COMPILER}")

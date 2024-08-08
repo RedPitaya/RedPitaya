@@ -9,13 +9,12 @@ APP=$(notdir $(CURDIR:%/=%))
 # Versioning system
 BUILD_NUMBER ?= 0
 REVISION ?= devbuild
-VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
-
+LINUX_VER ?= dev
 INSTALL_DIR ?= /opt/redpitaya/
 
 CONTROLLERHF = controllerhf.so
 
-CFLAGS += -DVERSION=$(VER)-$(BUILD_NUMBER) -DREVISION=$(REVISION)
+CFLAGS += -DVERSION=$(LINUX_VER)-$(BUILD_NUMBER) -DREVISION=$(REVISION)
 export CFLAGS
 
 all: $(CONTROLLERHF)

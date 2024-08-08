@@ -9,8 +9,7 @@ APP=$(notdir $(CURDIR:%/=%))
 # Versioning system
 BUILD_NUMBER ?= 0
 REVISION ?= devbuild
-VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
-
+LINUX_VER ?= dev
 INSTALL_DIR ?= ../
 
 all: zip
@@ -21,14 +20,14 @@ install:
 	sed -i $(INSTALL_DIR)/www/apps/info/info.json -e 's/REVISION/$(REVISION)/'
 	sed -i $(INSTALL_DIR)/www/apps/info/info.json -e 's/BUILD_NUMBER/$(BUILD_NUMBER)/'
 	sed -i $(INSTALL_DIR)/www/apps/info/info.json -e 's/LINUX_VER/$(LINUX_VER)/'
-	
+
 zip:
 	mkdir -p target/www/apps/
 	cp -r ../assets images info ui *.html favicon.ico style.css target/www/apps/
 	sed -i target/www/apps/info/info.json -e 's/REVISION/$(REVISION)/'
 	sed -i target/www/apps/info/info.json -e 's/BUILD_NUMBER/$(BUILD_NUMBER)/'
 	sed -i target/www/apps/info/info.json -e 's/LINUX_VER/$(LINUX_VER)/'
-	cd target; zip -r $(INSTALL_DIR)/redpitaya-$(APP)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip *
+	cd target; zip -r $(INSTALL_DIR)/redpitaya-$(APP)-$(LINUX_VER)-$(BUILD_NUMBER)-$(REVISION).zip *
 	rm target -rf
 
 clean:

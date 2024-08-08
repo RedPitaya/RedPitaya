@@ -10,18 +10,18 @@ CPU_CORES = $(shell ./get_cpu_ram.sh)
 # versioning system
 ################################################################################
 
-VER := $(shell cat apps-tools/ecosystem/info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
-BUILD_NUMBER ?= 0
-REVISION ?= $(shell git rev-parse --short HEAD)
-VERSION = $(VER)-$(BUILD_NUMBER)
+# Required OS version
 LINUX_VER = 2.05
+BUILD_NUMBER ?= dev
+REVISION ?= $(shell git rev-parse --short HEAD)
+VERSION = $(LINUX_VER)-$(BUILD_NUMBER)
 export BUILD_NUMBER
 export REVISION
 export VERSION
 export LINUX_VER
 BUILD_MODE ?= Release
 VERBOSE = OFF
-CMAKEVAR=-DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)  -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
+CMAKEVAR=-DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)  -DVERSION=$(VERSION) -DBUILD_NUMBER=$(BUILD_NUMBER) -DREVISION=$(REVISION) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
 ################################################################################
 #
 ################################################################################
@@ -435,8 +435,8 @@ scpi_manager: ecosystem web-api api $(NGINX)
 
 streaming_manager: web-api api $(NGINX)
 	$(MAKE) -i -C $(APP_STREAMINGMANAGER_DIR) clean
-	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) BUILD_NUMBER=$(BUILD_NUMBER)
+	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR)) BUILD_NUMBER=$(BUILD_NUMBER)
 
 calib_app: web-api api  $(NGINX)
 	cmake -B$(abspath $(APP_CALIB_DIR)/build) -S$(abspath $(APP_CALIB_DIR)) $(CMAKEVAR)

@@ -9,15 +9,14 @@ APP=$(notdir $(CURDIR:%/=%))
 # Versioning system
 BUILD_NUMBER ?= 0
 REVISION ?= devbuild
-VER:=$(shell cat info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
-
+LINUX_VER ?= dev
 INSTALL_DIR ?= .
 
 CONTROLLERHF = controllerhf.so
-ZIP = ../../$(APP)-$(VER)-$(BUILD_NUMBER)-$(REVISION).zip
+ZIP = ../../$(APP)-$(LINUX_VER)-$(BUILD_NUMBER)-$(REVISION).zip
 BODE         = $(INSTALL_DIR)/bin/bode
 
-CFLAGS += -DVERSION=$(VER)-$(BUILD_NUMBER) -DREVISION=$(REVISION)
+CFLAGS += -DVERSION=$(LINUX_VER)-$(BUILD_NUMBER) -DREVISION=$(REVISION)
 export CFLAGS
 
 all: $(CONTROLLERHF)
@@ -34,6 +33,7 @@ $(ZIP): $(CONTROLLERHF)
 	cp -r $(CONTROLLERHF) $(BODE) fpga.conf info index.html style.css images target/$(APP)
 	sed -i target/$(APP)/info/info.json -e 's/REVISION/$(REVISION)/'
 	sed -i target/$(APP)/info/info.json -e 's/BUILD_NUMBER/$(BUILD_NUMBER)/'
+	sed -i target/$(APP)/info/info.json -e 's/LINUX_VER/$(LINUX_VER)/'
 	cd target; zip -r ../$(ZIP) *
 	$(RM) target -rf
 
