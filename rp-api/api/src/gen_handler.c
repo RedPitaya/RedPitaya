@@ -323,7 +323,9 @@ int gen_getFrequency(rp_channel_t channel, float *frequency) {
         return RP_NOTS;
     }
 
-    return generate_getFrequency(channel, frequency,base_freq);
+    *frequency = ch_frequency[channel];
+    return RP_OK;
+    // return generate_getFrequency(channel, frequency,base_freq);
 }
 
 int gen_setSweepStartFrequency(rp_channel_t channel, float frequency){

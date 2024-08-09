@@ -76,9 +76,15 @@ int generate_getOutputEnabled(rp_channel_t channel, bool *enabled) {
 int generate_setFrequency(rp_channel_t channel, float frequency,float baseFreq) {
     volatile ch_properties_t *ch_properties;
     getChannelPropertiesAddress(&ch_properties, channel);
-    uint32_t value = (uint32_t) round(65536 * frequency / baseFreq * DAC_BUFFER_SIZE);
+    double valuef  = 65536.0 * (double)frequency / (double)baseFreq * (double)DAC_BUFFER_SIZE;
+    uint32_t value = floor(valuef);
     cmn_Debug("[Ch%d] ch_properties->counterStep <- 0x%X",channel,value);
     ch_properties->counterStep = value;
+    cmn_Debug("[Ch%d] ch_properties->cunterStepChLower <- 0x%X",channel,value);
+    if (channel == RP_CH_1)
+        generate->cunterStepChALower = (valuef - (float)value) * 0xFFFFFFFF;
+    if (channel == RP_CH_2)
+        generate->cunterStepChBLower = (valuef - (float)value) * 0xFFFFFFFF;
     uint32_t wrap_flag = 1;
     cmn_Debug("[Ch%d] generate->_SM_WrapPointer <- 0x%X",channel,wrap_flag);
     channel == RP_CH_1 ? (generate->ASM_WrapPointer = wrap_flag) : (generate->BSM_WrapPointer = wrap_flag);

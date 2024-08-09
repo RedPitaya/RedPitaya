@@ -46,9 +46,9 @@ typedef struct ch_properties {
     unsigned int                    :2;
     unsigned int amplitudeOffset    :14;
     unsigned int                    :2;
-    uint32_t counterWrap;
-    uint32_t startOffset;
-    uint32_t counterStep;
+    uint32_t counterWrap; // 0x8
+    uint32_t startOffset; // 0xC
+    uint32_t counterStep; // 0x10
     unsigned int                    :2;
     uint32_t buffReadPointer        :14;
     unsigned int                    :16;
@@ -91,8 +91,8 @@ typedef struct generate_control_s {
     // NOT WORK with 250-12
     uint32_t     BurstFinalValue_chA; // 0x44
     uint32_t     BurstFinalValue_chB; // 0x48
-    uint32_t     cunterStepChA;       // 0x4C
-    uint32_t     cunterStepChB;       // 0x50
+    uint32_t     cunterStepChALower;  // 0x4C
+    uint32_t     cunterStepChBLower;  // 0x50
     /**@brief Trigger debuncer time
     * bits [19:0] Number of ADC clock periods
     * trigger is disabled after activation

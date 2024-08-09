@@ -116,6 +116,13 @@ X=$(monitor 0x40200048)
 hexToDec $X
 echo "Ch B last value after burst 0x40200048 : $X ($RET)"
 
+X=$(monitor 0x4020004C)
+hexToDec $X
+echo "Ch A Counter step lower 0x4020004C : $X ($RET)"
+
+X=$(monitor 0x40200050)
+hexToDec $X
+echo "Ch B Counter step lower 0x40200050 : $X ($RET)"
 
 X=$(monitor 0x40200068)
 hexToDec $X

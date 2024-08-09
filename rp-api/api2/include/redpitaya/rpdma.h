@@ -43,9 +43,9 @@ ioctl macro definitions
 /*
  * SGMNT_CNT*SGMNT_SIZE should never be larger than second reg argument
  * in DT
- * 	rprx_reserverd: labuf@1c000000 {
- *		reg = <0x1c000000 0x2000000>;
- *	};
+ * dma_region: buffer@1000000 {
+ *  	reg = <0x1000000 0x2000000>;
+ * };
  * and SGMNT_SIZE should not be larger then 0x400000
  * */
 #define SGMNT_CNT 8
