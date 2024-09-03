@@ -655,11 +655,6 @@ int rp_DpinSetState(rp_dpin_t pin, rp_pinState_t state) {
 
     uint32_t tmp;
 
-    rp_pinDirection_t direction;
-    rp_DpinGetDirection(pin, &direction);
-    if (!direction) {
-        return RP_EWIP;
-    }
     if (pin < RP_DIO0_P) {
         // LEDS
         rp_LEDGetState(&tmp);
