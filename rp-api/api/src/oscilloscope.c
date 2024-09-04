@@ -77,14 +77,6 @@ int osc_Init(int channels)
     osc_cha = (uint32_t*)((char*)osc_reg + OSC_CHA_OFFSET);
     osc_chb = (uint32_t*)((char*)osc_reg + OSC_CHB_OFFSET);
 
-    if (mem_fd == -1) {
-        mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
-        if (mem_fd < 0) {
-            return RP_EOMD;
-        }
-    }
-
-
     if (channels == 4){
         size_t base_addr = OSC_BASE_ADDR_4CH;
         ECHECK(cmn_Map(OSC_BASE_SIZE, base_addr, (void**)&osc_reg_4ch))
@@ -946,10 +938,6 @@ const volatile uint32_t* osc_GetDataBufferChD()
 
 int osc_axi_map(size_t size, size_t offset, void** mapped, uint32_t *mapped_size)
 {
-    if (mem_fd == -1) {
-        return RP_EMMD;
-    }
-
     if (offset < g_adc_axi_start) {
         return RP_EOOR;
     }
@@ -961,6 +949,13 @@ int osc_axi_map(size_t size, size_t offset, void** mapped, uint32_t *mapped_size
     if (offset % sysconf(_SC_PAGESIZE) != 0) {
         ERROR("Error size. offset %% sysconf(_SC_PAGESIZE) = %ld  must be zero. sysconf(_SC_PAGESIZE) = %ld\n",offset % sysconf(_SC_PAGESIZE),sysconf(_SC_PAGESIZE));
         return RP_EMMD;
+    }
+
+    if (mem_fd == -1) {
+        mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
+        if (mem_fd < 0) {
+            return RP_EOMD;
+        }
     }
 
     *mapped = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, mem_fd, offset);
