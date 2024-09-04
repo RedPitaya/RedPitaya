@@ -41,7 +41,7 @@ static volatile uint16_t *osc_axi_chb = NULL;
 static uint32_t osc_axi_chb_size = 0;
 
 // The /dev/mem file descriptor
-static int mem_fd = 0;
+static int mem_fd = -1;
 
 static volatile osc_control_t *osc_reg_4ch = NULL;
 
@@ -77,7 +77,7 @@ int osc_Init(int channels)
     osc_cha = (uint32_t*)((char*)osc_reg + OSC_CHA_OFFSET);
     osc_chb = (uint32_t*)((char*)osc_reg + OSC_CHB_OFFSET);
 
-    if (!mem_fd) {
+    if (mem_fd == -1) {
         mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
         if (mem_fd < 0) {
             return RP_EOMD;
@@ -113,12 +113,12 @@ int osc_Release()
     osc_chb = NULL;
     osc_chc = NULL;
     osc_chd = NULL;
-    if (mem_fd) {
+    if (mem_fd != -1) {
         if(close(mem_fd) < 0) {
             return RP_ECMD;
         }
     }
-    mem_fd = 0;
+    mem_fd = -1;
     return RP_OK;
 }
 
