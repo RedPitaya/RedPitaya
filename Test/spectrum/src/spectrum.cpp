@@ -88,6 +88,7 @@ static void spectrum_worker(cli_args_t args) {
     auto data = g_dsp.createData();
     auto max_signals = createArray<float>(g_dsp.getOutSignalMaxLength());
     auto min_signals = createArray<float>(g_dsp.getOutSignalMaxLength());
+    auto measure_signals = createArray<float>(g_dsp.getOutSignalMaxLength());
 
     auto peak_pw_max = new float[MAX_CHANNELS];
     auto peak_pw_freq_max = new float[MAX_CHANNELS];
@@ -120,77 +121,88 @@ static void spectrum_worker(cli_args_t args) {
     bool is_infinity = count < 0;
     uint32_t buffer_size = ADC_BUFFER_SIZE;
     while (!g_quit_requested && ((count > 0) || is_infinity)) {
-        rp_AcqSetDecimationFactor(decimation);
-        rp_AcqSetTriggerDelay(buffer_size - ADC_BUFFER_SIZE / 2.0);
-        rp_AcqStart();
-        usleep(10);
-        rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW);
+        int avg_count = args.average_for_10 ? 10 : 1;
+        while (avg_count)
+        {
+            rp_AcqSetDecimationFactor(decimation);
+            rp_AcqSetTriggerDelay(buffer_size - ADC_BUFFER_SIZE / 2.0);
+            rp_AcqStart();
+            usleep(10);
+            rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW);
 
-         rp_acq_trig_state_t stateTrig = RP_TRIG_STATE_WAITING;
-        /* polling until data is ready */
-        while(1) {
-            if (rp_AcqGetTriggerState(&stateTrig)) exit(1);
-            if(stateTrig == RP_TRIG_STATE_TRIGGERED) break;
-        }
+            rp_acq_trig_state_t stateTrig = RP_TRIG_STATE_WAITING;
+            /* polling until data is ready */
+            while(1) {
+                if (rp_AcqGetTriggerState(&stateTrig)) exit(1);
+                if(stateTrig == RP_TRIG_STATE_TRIGGERED) break;
+            }
 
-        bool fillState = false;
-        while(!fillState){
-            if(rp_AcqGetBufferFillState(&fillState)) exit(1);
-        }
-        rp_AcqStop();
+            bool fillState = false;
+            while(!fillState){
+                if(rp_AcqGetBufferFillState(&fillState)) exit(1);
+            }
+            rp_AcqStop();
 
 
-        // Retrieve data and process it
-        uint32_t trig_pos;
-        rp_AcqGetWritePointerAtTrig(&trig_pos);
-        buffers_t buff;
-        buff.size = buffer_size;
-        buff.use_calib_for_volts = true;
-        for(int i = 0; i < MAX_CHANNELS; i++){
-            buff.ch_f[i] = NULL;
-            buff.ch_i[i] = NULL;
-            buff.ch_d[i] = data->m_in[i];
-        }
+            // Retrieve data and process it
+            uint32_t trig_pos;
+            rp_AcqGetWritePointerAtTrig(&trig_pos);
+            buffers_t buff;
+            buff.size = buffer_size;
+            buff.use_calib_for_volts = true;
+            for(int i = 0; i < MAX_CHANNELS; i++){
+                buff.ch_f[i] = NULL;
+                buff.ch_i[i] = NULL;
+                buff.ch_d[i] = data->m_in[i];
+            }
 
-        rp_AcqGetData(trig_pos,&buff);
+            rp_AcqGetData(trig_pos,&buff);
 
-        g_dsp.windowFilter(data);
+            g_dsp.windowFilter(data);
 
-        if (g_dsp.fft(data)){
-            fprintf(stderr,"Error in g_dsp.fft\n");
-            return;
-        }
+            if (g_dsp.fft(data)){
+                fprintf(stderr,"Error in g_dsp.fft\n");
+                return;
+            }
 
-        g_dsp.decimate(data,g_dsp.getOutSignalMaxLength(),g_dsp.getOutSignalMaxLength());
-        g_dsp.cnvToDBMMaxValueRanged(data,decimation,args.freq_min,args.freq_max);
+            g_dsp.decimate(data,g_dsp.getOutSignalMaxLength(),g_dsp.getOutSignalMaxLength());
+            g_dsp.cnvToDBMMaxValueRanged(data,decimation,args.freq_min,args.freq_max);
 
-        // Summary peak calculation
-        if (peak_set) {
-            if (args.csv_limit) {
-                for(uint32_t ch = 0; ch < MAX_CHANNELS; ch++){
-                    for (uint32_t i = 0; i < g_dsp.getOutSignalMaxLength(); ++i) {
-                        min_signals[ch][i] = std::min(min_signals[ch][i],data->m_converted[ch][i]);
-                        max_signals[ch][i] = std::max(max_signals[ch][i],data->m_converted[ch][i]);
+            // Summary peak calculation
+            if (peak_set) {
+                if (args.csv_limit) {
+                    for(uint32_t ch = 0; ch < MAX_CHANNELS; ch++){
+                        for (uint32_t i = 0; i < g_dsp.getOutSignalMaxLength(); ++i) {
+                            min_signals[ch][i] = std::min(min_signals[ch][i],data->m_converted[ch][i]);
+                            max_signals[ch][i] = std::max(max_signals[ch][i],data->m_converted[ch][i]);
+                        }
                     }
                 }
-            }
-        } else {
-            if (args.csv_limit) {
-                for(uint32_t ch = 0; ch < MAX_CHANNELS; ch++){
-                    for (uint32_t i = 0; i < g_dsp.getOutSignalMaxLength(); ++i) {
-                        min_signals[ch][i] = data->m_converted[ch][i];
-                        max_signals[ch][i] = data->m_converted[ch][i];
+            } else {
+                if (args.csv_limit) {
+                    for(uint32_t ch = 0; ch < MAX_CHANNELS; ch++){
+                        for (uint32_t i = 0; i < g_dsp.getOutSignalMaxLength(); ++i) {
+                            min_signals[ch][i] = data->m_converted[ch][i];
+                            max_signals[ch][i] = data->m_converted[ch][i];
+                        }
                     }
                 }
+                peak_set = true;
             }
-            peak_set = true;
-        }
 
-        for(uint32_t ch = 0; ch < MAX_CHANNELS; ch++){
-            if (data->m_peak_power[ch] >= peak_pw_max[ch]){
-                peak_pw_max[ch] = data->m_peak_power[ch];
-                peak_pw_freq_max[ch] = data->m_peak_freq[ch];
+            for(uint32_t ch = 0; ch < MAX_CHANNELS; ch++){
+                for (uint32_t i = 0; i < g_dsp.getOutSignalMaxLength(); ++i) {
+                    measure_signals[ch][i] += data->m_converted[ch][i];
+                }
             }
+
+            for(uint32_t ch = 0; ch < MAX_CHANNELS; ch++){
+                if (data->m_peak_power[ch] >= peak_pw_max[ch]){
+                    peak_pw_max[ch] = data->m_peak_power[ch];
+                    peak_pw_freq_max[ch] = data->m_peak_freq[ch];
+                }
+            }
+            avg_count--;
         }
 
         if (!args.csv && !args.csv_limit) {
@@ -206,6 +218,12 @@ static void spectrum_worker(cli_args_t args) {
         usleep(10000);
     }
 
+    for(uint32_t ch = 0; ch < MAX_CHANNELS; ch++){
+        for (uint32_t i = 0; i < g_dsp.getOutSignalMaxLength(); ++i) {
+            measure_signals[ch][i] /= args.average_for_10 ? 10 : 1;
+        }
+    }
+
 	const float current_freq_range = ADC_SAMPLE_RATE  / (decimation * 2);
     const float freq_step = current_freq_range / (g_dsp.getOutSignalMaxLength() - 1);
     const size_t freq_index_min = std::floor(args.freq_min / freq_step);
@@ -217,7 +235,7 @@ static void spectrum_worker(cli_args_t args) {
             for (size_t i = 0; i < (freq_index_max - freq_index_min + 1); ++i) {
                 std::cout << (freq_step * (freq_index_min + i));
                 for(uint32_t ch = 0; ch < MAX_CHANNELS; ch++){
-                    std::cout << ", " << data->m_converted[ch][i + freq_index_min];
+                    std::cout << ", " << measure_signals[ch][i + freq_index_min];
                 }
                 std::cout << "\n";
             }
@@ -240,6 +258,7 @@ static void spectrum_worker(cli_args_t args) {
 
     deleteArray<float>(max_signals);
     deleteArray<float>(min_signals);
+    deleteArray<float>(measure_signals);
     g_dsp.deleteData(data);
 }
 

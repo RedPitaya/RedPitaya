@@ -370,7 +370,7 @@ int lcr_CalculateData(float _Complex z_measured, float phase_measured,float freq
 
     data_t w_out = 2 * M_PI * freq;
 
-    auto Z = z_final;
+    // auto Z = z_final;
     auto Z_abs = cabs(z_final);
     auto Rs_ESR = creal(z_final);
     auto Xs = cimag(z_final);
