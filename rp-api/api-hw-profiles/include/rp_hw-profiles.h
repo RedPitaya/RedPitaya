@@ -131,6 +131,15 @@ int rp_HPGetZynqModel(rp_HPeZynqModels_t *_out_value);
 rp_HPeZynqModels_t rp_HPGetZynqModelOrDefault();
 
 /**
+* Returns the size of DDR memory on the chip in MB
+* Function rp_HPGetDDRSizeOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
+*/
+int rp_HPGetDDRSize(uint32_t *_out_value);
+uint32_t rp_HPGetDDRSizeOrDefault();
+
+/**
 * Returns the clock frequency for FPGA
 * Function rp_HPGetBaseSpeedHzOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
 * @return If the function is successful, the return value is RP_OK.

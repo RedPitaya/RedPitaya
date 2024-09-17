@@ -163,6 +163,10 @@
                                 <td><a id="RAM_SIZE_ID">-</a></td>
                             </tr>
                             <tr style="height:40px;">
+                                <td>DMA RAM:</td>
+                                <td><a id="DMA_RAM_SIZE_ID">-</a></td>
+                            </tr>
+                            <tr style="height:40px;">
                                 <td>Temperature:</td>
                                 <td><a id="TEMP_ID">-</a></td>
                             </tr>
@@ -247,6 +251,18 @@
                                     <label  class="control control-checkbox">Enable<input id="led_chbox" type="checkbox" checked="checked" style=" margin-left: 10px; " />
                                         <div class="control_indicator"></div>
                                     </label>
+                                </td>
+                            </tr>
+                            <tr style="height:60px;">
+                                <td>Reserved memory size for DMA mode. (Requires reboot):</td>
+                                <td>
+                                    <select id="RP_DMA_RAM" style="width: 100%;height: 42px;color: silver;" class="list-group-item btn">
+                                        <option value="32">32 Mb</option>
+                                        <option value="64">64 Mb</option>
+                                        <option value="128" class="ram256">128 Mb</option>
+                                        <option value="256" class="ram256">256 Mb</option>
+                                        <option value="512" class="ram512">512 Mb</option>
+                                    </select>
                                 </td>
                             </tr>
                         </table>

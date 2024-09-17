@@ -1,7 +1,7 @@
 #include <ctime>
 #include "file_queue_manager.h"
 #include "file_helper.h"
-#include "data_lib/thread_cout.h"
+#include "logger_lib/file_logger.h"
 
 FileQueueManager::FileQueueManager(bool testMode):Queue(){
     m_threadWork = false;
@@ -11,6 +11,7 @@ FileQueueManager::FileQueueManager(bool testMode):Queue(){
     th = nullptr;
     m_testMode = testMode;
     m_fileName = "";
+    m_hasWriteSize = 0;
 }
 
 FileQueueManager::~FileQueueManager(){
@@ -154,7 +155,7 @@ auto FileQueueManager::writeToFile() -> int{
 //        auto Length = bstream->tellg();
         m_hasWriteSize += Length;
 
-        if (m_fileType == CStreamSettings::DataFormat::WAV){
+        if (m_fileType.value == CStreamSettings::DataFormat::WAV){
             if (m_firstSectionWrite){
                 updateWavFile(Length);
             }
@@ -210,7 +211,6 @@ auto FileQueueManager::updateWavFile(int _size) -> void{
     size2 += _size;
     fs.seekp(offset2, fs.beg);
     fs.write((char*)&size2, sizeof(size2));
-
 
     fs.seekp(cur_p);
     fs.seekg(cur_g);

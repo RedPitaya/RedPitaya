@@ -135,6 +135,21 @@ rp_HPeZynqModels_t rp_HPGetZynqModelOrDefault(){
     return p->zynqCPUModel;
 }
 
+int rp_HPGetDDRSize(uint32_t *value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->ramMB;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+uint32_t rp_HPGetDDRSizeOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->ramMB;
+}
+
 int rp_HPGetBaseSpeedHz(uint32_t *value){
     int state;
     profiles_t* p = getProfile(&state);

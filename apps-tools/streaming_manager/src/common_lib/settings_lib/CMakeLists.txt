@@ -27,7 +27,7 @@ set (JSONCPP_WITH_TESTS OFF CACHE INTERNAL "Turn off jsontest")
 set (JSONCPP_WITH_POST_BUILD_UNITTEST OFF CACHE INTERNAL "Turn off JSONCPP_WITH_POST_BUILD_UNITTEST")
 set (JSONCPP_WITH_PKGCONFIG_SUPPORT OFF CACHE INTERNAL "Turn off JSONCPP_WITH_PKGCONFIG_SUPPORT")
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations -Wno-deprecated")
 
@@ -67,12 +67,12 @@ target_include_directories(${PROJECT_NAME}
             ${json_SOURCE_DIR}/include)
 
 list(APPEND headers
-            ${PROJECT_SOURCE_DIR}/dac_settings.h
+            ${PROJECT_SOURCE_DIR}/enums.h
+            ${PROJECT_SOURCE_DIR}/dac_settings_client.h
             ${PROJECT_SOURCE_DIR}/stream_settings.h
         )
 
-list(APPEND src
-            ${PROJECT_SOURCE_DIR}/dac_settings.cpp
+    list(APPEND src
             ${PROJECT_SOURCE_DIR}/stream_settings.cpp
         )
 
@@ -83,7 +83,7 @@ target_sources(${PROJECT_NAME} PRIVATE ${src})
 #        IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/bin/libjsoncpp.a)
 
 target_link_libraries(${PROJECT_NAME}
-    PRIVATE pthread stdc++ jsoncpp)
+    PUBLIC pthread stdc++ jsoncpp)
 
 file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin/include/${PROJECT_NAME}")
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD

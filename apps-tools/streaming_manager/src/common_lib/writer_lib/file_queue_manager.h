@@ -10,7 +10,6 @@
 #include <fstream>
 #include <iostream>
 #include "w_queue.h"
-#include "data_lib/thread_cout.h"
 #include "data_lib/signal.hpp"
 #include "settings_lib/stream_settings.h"
 
@@ -48,7 +47,7 @@ class FileQueueManager:public Queue{
         std::mutex       m_waitLock;
         std::mutex       m_threadControl;
         bool m_hasErrorWrite;
-        CStreamSettings::DataFormat m_fileType;
+        CStreamSettings::DataFormat m_fileType = CStreamSettings::DataFormat::BIN;
         bool m_firstSectionWrite; // Need for detect first section of wav file
         bool m_IsOutOfSpace;
         uint64_t m_freeSize;

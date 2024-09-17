@@ -360,6 +360,7 @@ int hp_cmn_Print(profiles_t *p){
 	fprintf(stdout,"\t* Board model from eeprom: %s\n",p->boardModelEEPROM);
 	fprintf(stdout,"\t* Board MAC address from eeprom: %s\n",p->boardETH_MAC);
 	fprintf(stdout,"\t* Zynq model (rp_HPeZynqModels_t) %d\n",p->zynqCPUModel);
+	fprintf(stdout,"\t* RAM size: %d MB\n",p->ramMB);
 	fprintf(stdout,"\t* Oscillator Rate: %u\n",p->oscillator_rate);
 	fprintf(stdout,"\t* ADC chip Full Scale: %f\n",p->fast_adc_full_scale);
 	fprintf(stdout,"\t* DAC chip Full Scale: %f\n",p->fast_dac_full_scale);

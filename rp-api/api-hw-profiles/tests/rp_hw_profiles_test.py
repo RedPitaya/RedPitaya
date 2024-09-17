@@ -26,6 +26,10 @@ print("rp_hw_profiles.rp_HPGetZynqModelOrDefault()")
 res = rp_hw_profiles.rp_HPGetZynqModelOrDefault()
 print(res)
 
+print("rp_hw_profiles.rp_HPGetDDRSize()")
+res = rp_hw_profiles.rp_HPGetDDRSize()
+print(res)
+
 print("rp_hw_profiles.rp_HPGetBaseSpeedHz()")
 res = rp_hw_profiles.rp_HPGetBaseSpeedHz()
 print(res)

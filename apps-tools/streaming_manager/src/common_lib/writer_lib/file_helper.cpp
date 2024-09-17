@@ -10,9 +10,9 @@
 #include <sstream>
 
 #include "file_helper.h"
-#include "data_lib/thread_cout.h"
 #include "tdms_lib/file.h"
 #include "w_binary.h"
+#include "logger_lib/file_logger.h"
 
 static constexpr uint8_t g_endOfSegment[12] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};
 
@@ -170,10 +170,10 @@ auto buildTDMSStream(std::map<DataLib::EDataBuffersPackChannel,SBuffPass> new_bu
     return memory;
 }
 
-auto buildBINStream(DataLib::CDataBuffersPack::Ptr buff_pack,std::map<DataLib::EDataBuffersPackChannel,uint32_t> _samples) -> std::iostream *{
+auto buildBINStream(DataLib::CDataBuffersPackDMA::Ptr buff_pack,std::map<DataLib::EDataBuffersPackChannel,uint32_t> _samples) -> std::iostream *{
     stringstream *memory = new stringstream(ios_base::in | ios_base::out | ios_base::binary);
     CBinInfo::BinHeader header;
-    DataLib::CDataBuffer::Ptr ch[4] = {NULL,NULL,NULL,NULL};
+    DataLib::CDataBufferDMA::Ptr ch[4] = {NULL,NULL,NULL,NULL};
     ch[0] = buff_pack->getBuffer(DataLib::CH1);
     ch[1] = buff_pack->getBuffer(DataLib::CH2);
     ch[2] = buff_pack->getBuffer(DataLib::CH3);
@@ -187,12 +187,12 @@ auto buildBINStream(DataLib::CDataBuffersPack::Ptr buff_pack,std::map<DataLib::E
         if (ch[i].get()){
             ch_samp[i] = ch[i]->getSamplesCount() < _samples[DataLib::CH1] ? ch[i]->getSamplesCount() : _samples[DataLib::CH1];
             auto bytes = ch[i]->getBitBySample() / 8;
-            ch_size[i] = ch_samp[i] * bytes > ch[i]->getBufferLenght() ? ch[i]->getBufferLenght() : ch_samp[i] * bytes;
+            ch_size[i] = ch_samp[i] * bytes > ch[i]->getDataLenght() ? ch[i]->getDataLenght() : ch_samp[i] * bytes;
             header.dataFormatSize[i] = ch[i]->getBitBySample() / 8;
             header.sizeCh[i] = ch_size[i];
             header.sampleCh[i] = ch_samp[i];
-            header.lostCount[i] = ch[i]->getLostSamples(DataLib::FPGA) + ch[i]->getLostSamples(DataLib::RP_INTERNAL_BUFFER);
-            header.oscRate[i] = buff_pack->getOSCRate();
+            header.lostCount[i] = ch[i]->getLostSamples(DataLib::FPGA);
+            header.oscRate[i] = ch[i]->getADCBaseRate();
         }
     }
 
@@ -200,7 +200,7 @@ auto buildBINStream(DataLib::CDataBuffersPack::Ptr buff_pack,std::map<DataLib::E
     //Write header
     memory->write((const char*)&header,sizeof(header));
     for(int i = 0; i < 4; i++){
-        if (ch[i].get() && ch_size[i]) memory->write((const char*)ch[i]->getBuffer().get(), ch_size[i]);
+        if (ch[i].get() && ch_size[i]) memory->write((const char*)ch[i]->getMappedDataMemory(), ch_size[i]);
     }
     //Write end segment
     memory->write((const char*)g_endOfSegment,12);

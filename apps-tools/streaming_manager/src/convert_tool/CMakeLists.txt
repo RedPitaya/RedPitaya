@@ -24,7 +24,7 @@ message(STATUS "Compiler С++version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Compiler С++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 FILE(GLOB_RECURSE INC_ALL "*.h")
 
@@ -39,7 +39,9 @@ add_executable(${PROJECT_NAME} ${INC_ALL})
 add_custom_target(install-rp-formatter DEPENDS rp-formatter-static)
 add_dependencies(${PROJECT_NAME} install-rp-formatter)
 
-target_link_options(${PROJECT_NAME} PRIVATE --static)
+if (${CMAKE_BUILD_TYPE} STREQUAL "Release")
+    target_link_options(${PROJECT_NAME} PRIVATE --static)
+endif()
 
 if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
     target_compile_options(${PROJECT_NAME}
@@ -54,7 +56,7 @@ if (RP_PLATFORM)
 endif()
 
 target_compile_options(${PROJECT_NAME}
-    PRIVATE -std=c++17 -Wall -Wextra -fpermissive  -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+    PRIVATE -Wall -Wextra -fpermissive  -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC  ${PROJECT_SOURCE_DIR}
@@ -77,10 +79,14 @@ target_link_directories(${PROJECT_NAME}
     ${CMAKE_BINARY_DIR}/output/
     )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC converter_lib writer_lib rp-formatter)
+target_link_libraries(${PROJECT_NAME} PUBLIC converter_lib writer_lib rp-formatter logger_lib)
 
 if(NOT WIN32 )
-    target_link_libraries(${PROJECT_NAME} PRIVATE pthread -static-libstdc++ -static-libgcc)
+    if (${CMAKE_BUILD_TYPE} STREQUAL "Release")
+        target_link_libraries(${PROJECT_NAME} PRIVATE pthread -static-libstdc++ -static-libgcc)
+    else()
+        target_link_libraries(${PROJECT_NAME} PRIVATE pthread -lstdc++ -lgcc)
+    endif()
 else()
     set(WIN_SUFFIX -win)
     target_link_libraries(${PROJECT_NAME} PRIVATE -static pthread wsock32 ws2_32)

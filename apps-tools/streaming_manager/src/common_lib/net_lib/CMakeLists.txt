@@ -21,7 +21,7 @@ message(STATUS "Compiler С++version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Compiler С++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 FILE(GLOB_RECURSE INC_ALL "*.h")
 
@@ -62,17 +62,16 @@ list(APPEND headers
             ${PROJECT_SOURCE_DIR}/asio_service.h
             ${PROJECT_SOURCE_DIR}/asio_net.h
             ${PROJECT_SOURCE_DIR}/asio_net_simple.h
-            ${PROJECT_SOURCE_DIR}/asio_socket.h
+            ${PROJECT_SOURCE_DIR}/asio_socket_dma.h
             ${PROJECT_SOURCE_DIR}/asio_socket_simple.h
             ${PROJECT_SOURCE_DIR}/asio_common.h
-            ${PROJECT_SOURCE_DIR}/event_handlers.h
         )
 
 list(APPEND src
             ${PROJECT_SOURCE_DIR}/asio_service.cpp
             ${PROJECT_SOURCE_DIR}/asio_net.cpp
             ${PROJECT_SOURCE_DIR}/asio_net_simple.cpp
-            ${PROJECT_SOURCE_DIR}/asio_socket.cpp
+            ${PROJECT_SOURCE_DIR}/asio_socket_dma.cpp
             ${PROJECT_SOURCE_DIR}/asio_socket_simple.cpp
             ${PROJECT_SOURCE_DIR}/asio_common.cpp
         )

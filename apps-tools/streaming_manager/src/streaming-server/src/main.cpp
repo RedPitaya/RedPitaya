@@ -18,18 +18,20 @@
 #include <string.h>
 
 #include <sys/stat.h>
-#include <errno.h>
 #ifndef _WIN32
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <syslog.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 #endif
+
 #include <signal.h>
 #include <unistd.h>
-#include <regex>
 #include <mutex>
 #include <unistd.h>
 #include <signal.h>
+#include <regex>
 
 //#ifndef __APPLE__
 //#include <sys/prctl.h>
@@ -37,7 +39,6 @@
 
 #include "broadcast_lib/asio_broadcast_socket.h"
 #include "config_net_lib/server_net_config_manager.h"
-#include "data_lib/thread_cout.h"
 #include "streaming_lib/streaming_file.h"
 
 #include "options.h"
@@ -107,6 +108,9 @@ std::string exec(const char* cmd) {
 
 int main(int argc, char *argv[])
 {
+#ifndef _WIN32
+    setpriority(PRIO_PROCESS, 0, -20);
+#endif
     uio_lib::BoardMode isMaster = uio_lib::BoardMode::UNKNOWN;
 
     g_argv0 = argv[0];
@@ -190,42 +194,36 @@ int main(int argc, char *argv[])
         auto mode = isMaster != uio_lib::BoardMode::SLAVE ? broadcast_lib::EMode::AB_SERVER_MASTER : broadcast_lib::EMode::AB_SERVER_SLAVE;
         auto model = ClientOpt::getBroadcastModel();
 
-		con_server = std::make_shared<ServerNetConfigManager>(opt.conf_file,mode,"127.0.0.1",opt.config_port);
+		con_server = std::make_shared<ServerNetConfigManager>(opt.conf_file,mode,"127.0.0.1",NET_CONFIG_PORT);
+        uio_lib::CMemoryManager::instance()->setMemoryBlockSize(con_server->getSettings().getMemoryBlockSize());
+        uio_lib::CMemoryManager::instance()->reallocateBlocks();
         setServer(con_server);
         setDACServer(con_server);
-        con_server->startBroadcast(model, brchost,opt.broadcast_port);
+        con_server->startBroadcast(model, brchost,NET_BROADCAST_PORT);
         con_server->getNewSettingsNofiy.connect([verbMode](){
-            std::lock_guard<std::mutex> lock(g_print_mtx);
+            std::lock_guard lock(g_print_mtx);
             if (verbMode){
                 printWithLog(LOG_INFO,stdout,"Get new settings\n");
-                printWithLog(LOG_INFO,stdout,"%s",con_server->getSettingsRef().String().c_str());
+                printWithLog(LOG_INFO,stdout,"%s",con_server->getSettings().toString().c_str());
             }
         });
+
 
 //        con_server->clientConnectedNofiy.connect([verbMode](){
 //            aprintf(stderr, "clientConnectedNofiy\n");
 //        });
 
         con_server->startStreamingNofiy.connect([verbMode,isMaster](){
-            aprintf(stderr, "startStreamingNofiy\n");
             startServer(verbMode,false,isMaster != uio_lib::BoardMode::SLAVE);
         });
 
-        con_server->startDacStreamingNofiy.connect([verbMode](){
-            startDACServer(verbMode,false);
+        con_server->startDacStreamingNofiy.connect([verbMode](auto activeChannels) {
+            uint8_t ac = stoi(activeChannels);
+            startDACServer(verbMode, ac);
         });
 
-        con_server->startStreamingTestNofiy.connect([verbMode,isMaster](){
-            startServer(verbMode,true,isMaster != uio_lib::BoardMode::SLAVE);
-        });
-
-        con_server->startDacStreamingTestNofiy.connect([verbMode](){
-            startDACServer(verbMode,true);
-        });
-
-        con_server->stopStreamingNofiy.connect([](){
-            stopNonBlocking(ServerNetConfigManager::NORMAL);
-        });
+        con_server->stopStreamingNofiy.connect(
+            []() { stopNonBlocking(ServerNetConfigManager::EStopReason::NORMAL); });
 
         con_server->stopDacStreamingNofiy.connect([](){
             stopDACNonBlocking(dac_streaming_lib::CDACStreamingManager::NR_STOP);
@@ -234,6 +232,13 @@ int main(int argc, char *argv[])
         con_server->startADCNofiy.connect([](){
             startADC();
             con_server->sendADCStarted();
+        });
+
+        con_server->memoryBlockSizeChangeNofiy.connect([]() {
+            stopServer(ServerNetConfigManager::EStopReason::MEM_MODIFY);
+            stopDACServer(dac_streaming_lib::CDACStreamingManager::NP_MEM_MODIFY);
+            uio_lib::CMemoryManager::instance()->setMemoryBlockSize(con_server->getSettings().getMemoryBlockSize());
+            uio_lib::CMemoryManager::instance()->reallocateBlocks();
         });
 
     }catch (std::exception& e)

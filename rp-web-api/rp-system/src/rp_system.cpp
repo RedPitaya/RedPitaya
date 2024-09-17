@@ -4,6 +4,7 @@
 #include <map>
 #include <fstream>
 #include <iostream>
+#include <fcntl.h>
 #include <numeric>
 #include <unistd.h>
 #include <vector>
@@ -15,13 +16,20 @@
 #include <inttypes.h>
 #include "rp.h"
 #include "rp_hw.h"
+#include "rp_hw-profiles.h"
 
 using namespace std;
 using namespace std::chrono;
 
+uint32_t getReservedMemory();
+
 CFloatParameter g_ws_cpuLoad("RP_SYSTEM_CPU_LOAD", CBaseParameter::RO, 0, 0, 0, 1000);
 CFloatParameter g_ws_memoryTotal("RP_SYSTEM_TOTAL_RAM", CBaseParameter::RO, 0, 0, 0, 1e15);
 CFloatParameter g_ws_memoryFree ("RP_SYSTEM_FREE_RAM", CBaseParameter::RO, 0, 0, 0, 1e15);
+CFloatParameter g_ws_memoryDMARam ("RP_SYSTEM_DMA_RAM", CBaseParameter::RO, getReservedMemory(), 0, 0, 1e15);
+CFloatParameter g_ws_memoryMAXDDR ("RP_SYSTEM_DDR_MAX", CBaseParameter::RO, rp_HPGetDDRSizeOrDefault(), 0, 0, 1e15);
+
+
 CFloatParameter g_ws_temperature ("RP_SYSTEM_TEMPERATURE", CBaseParameter::RO, -100, 0, -100, 1000);
 CFloatParameter g_ws_slow_adc0 ("RP_SYSTEM_SLOW_ADC0", CBaseParameter::RO, 0, 0, -20, 20);
 CFloatParameter g_ws_slow_adc1 ("RP_SYSTEM_SLOW_ADC1", CBaseParameter::RO, 0, 0, -20, 20);
@@ -71,6 +79,24 @@ bool get_ram(float *_total, float *_freeram){
     *_total = (float)memInfo.totalram;
     *_freeram = (float)memInfo.freeram;
     return !ret;
+}
+
+uint32_t getReservedMemory(){
+    int fd = 0;
+    if((fd = open("/sys/firmware/devicetree/base/reserved-memory/buffer@1000000/reg", O_RDONLY)) == -1) {
+        fprintf(stderr,"[FATAL ERROR] Error open: /sys/firmware/devicetree/base/reserved-memory/buffer@1000000/reg\n");
+        return 0;
+    }
+    char data[8] = {0,0,0,0,0,0,0,0};
+    int sz = read(fd, &data, 8);
+
+    if (close(fd) < 0) {
+        return 0;
+    }
+    if (sz == 8){
+        return data[4] << 24 | data[5] << 16 | data[6] << 8 | data[7];
+    }
+    return 0;
 }
 
 auto availableSpace(std::string dst,  uint64_t* availableSize, uint64_t* fullSize) -> int {
@@ -166,6 +192,7 @@ void rp_WS_UpdateParameters(bool force){
                 g_lastUpdateTime[RP_WS_RAM] = curTime;
             }
         }
+
     }
 
     if (g_modes & RP_WS_TEMPERATURE){

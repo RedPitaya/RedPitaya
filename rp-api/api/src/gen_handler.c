@@ -317,11 +317,11 @@ int gen_getFrequency(rp_channel_t channel, float *frequency) {
 
     CHECK_CHANNEL
 
-    uint32_t base_freq = 0;
-    if (rp_HPGetBaseFastDACSpeedHz(&base_freq) != RP_HP_OK){
-        ERROR("Can't get fast ADC base rate");
-        return RP_NOTS;
-    }
+    // uint32_t base_freq = 0;
+    // if (rp_HPGetBaseFastDACSpeedHz(&base_freq) != RP_HP_OK){
+    //     ERROR("Can't get fast ADC base rate");
+    //     return RP_NOTS;
+    // }
 
     *frequency = ch_frequency[channel];
     return RP_OK;

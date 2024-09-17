@@ -17,6 +17,7 @@
     MAIN.unexpectedClose = false;
     MAIN.totalRam = undefined;
     MAIN.freeRam = undefined;
+    MAIN.dmaRam = undefined;
     MAIN.totalSD = undefined;
     MAIN.freeSD = undefined;
     MAIN.cpuLoad = undefined;
@@ -54,6 +55,33 @@
         if (MAIN.freeRam != undefined){
             $('#RAM_SIZE_ID').text(MAIN.convertBytesRAM(MAIN.freeRam) + " / " +  MAIN.convertBytesRAM(MAIN.totalRam));
         }
+    }
+
+    MAIN.processDMARam= function(new_params) {
+        MAIN.dmaRam = new_params['RP_SYSTEM_DMA_RAM'].value
+        if (MAIN.dmaRam != undefined){
+            $('#DMA_RAM_SIZE_ID').text(MAIN.convertBytesRAM(MAIN.dmaRam));
+            $('#RP_DMA_RAM').val(MAIN.dmaRam / (1024 * 1024));
+        }
+    }
+
+    MAIN.processDDRMAXRam= function(new_params) {
+        var maxRam = new_params['RP_SYSTEM_DDR_MAX'].value
+
+        if (maxRam < 1024){
+            var nodes = document.getElementsByClassName("ram512");
+            [...nodes].forEach((element, index, array) => {
+                                        element.parentNode.removeChild(element);
+                                    });
+        }
+
+        if (maxRam < 512){
+            var nodes = document.getElementsByClassName("ram256");
+            [...nodes].forEach((element, index, array) => {
+                                        element.parentNode.removeChild(element);
+                                    });
+        }
+
     }
 
     MAIN.processTSD= function(new_params) {
@@ -129,6 +157,8 @@
 
     MAIN.param_callbacks["RP_SYSTEM_TOTAL_RAM"] = MAIN.processTRam;
     MAIN.param_callbacks["RP_SYSTEM_FREE_RAM"] = MAIN.processFRam;
+    MAIN.param_callbacks["RP_SYSTEM_DMA_RAM"] = MAIN.processDMARam;
+    MAIN.param_callbacks["RP_SYSTEM_DDR_MAX"] = MAIN.processDDRMAXRam;
     MAIN.param_callbacks["RP_SYSTEM_CPU_LOAD"] = MAIN.processCPULoad;
     MAIN.param_callbacks["RP_SYSTEM_TEMPERATURE"] = MAIN.processTemp;
 
@@ -160,6 +190,17 @@ $(function() {
             async: false
         });
     });
+
+    $("#RP_DMA_RAM").change(function() {
+        var newSize = "0x"+($("#RP_DMA_RAM option:selected").val() * 1024 * 1024).toString(16);
+        console.log("Set new DMA size " + newSize )
+        $.ajax({
+            url: '/resizeDMA?new_size=' + newSize,
+            type: 'GET'
+        })
+    });
+
+
 
     // Everything prepared, start application
     CLIENT.startApp();

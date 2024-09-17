@@ -79,6 +79,8 @@ typedef struct {
 
     uint8_t             gpio_N_count;
     uint8_t             gpio_P_count;
+
+    uint16_t            ramMB;
 } profiles_t;
 
 

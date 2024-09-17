@@ -87,6 +87,13 @@
                             <div style="height: 100%;display: flex;flex-flow: column;">
                                 <label style="width: 100%;text-align: center;height: 30px;font-size: 14pt">Configuration</label>
                                 <div style="height: 100%;display: flex;flex-wrap: wrap;align-content: flex-start; overflow-x: auto;">
+                                    <div class="configcell_long" style="display: flex; justify-content: space-evenly;height: 25px;">
+                                        <div style="width: 100%" class="ch1">
+                                            <div>
+                                                <label style="width: 100%;text-align: center;">ADC</label>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div class="configcell">
                                         <div>
                                             <label style="width: 100%;">Mode</label>
@@ -97,26 +104,10 @@
                                     </div>
                                     <div class="configcell net_use">
                                         <div>
-                                            <label style="width: 100%;">Protocol</label>
-                                        </div>
-                                        <div class="flipswitch_div" style="width: 100%;height: 50%;">
-                                            <input id="SS_PROTOCOL" type="checkbox" style="margin: 0;" class="man_flipswitch flipswitch" data-on="UDP" data-off="TCP" value="true"/>
-                                        </div>
-                                    </div>
-                                    <div class="configcell net_use">
-                                        <div>
                                             <label style="width: 100%;">IP</label>
                                         </div>
                                         <div class="flipswitch_div" style="width: 100%;height: 50%;">
                                             <input id="SS_IP_ADDR" class="ipaddress" type="text" minlength="7" maxlength="15" size="15" placeholder="xxx.xxx.xxx.xxx" pattern="^((\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$">
-                                        </div>
-                                    </div>
-                                    <div class="configcell net_use">
-                                        <div>
-                                            <label style="width: 100%;">Port</label>
-                                        </div>
-                                        <div class="flipswitch_div" style="width: 100%;height: 50%;">
-                                            <input id="SS_PORT_NUMBER" type="text" size="5" style="width: 100%;" value="8900" step="1" min="1" max="65535">
                                         </div>
                                     </div>
                                     <div class="configcell file_use">
@@ -124,7 +115,7 @@
                                             <label style="width: 100%;">Samples</label>
                                         </div>
                                         <div class="flipswitch_div" style="width: 100%;height: 50%;">
-                                            <input id="SS_SAMPLES"  type="text" size="15" style="width: 100%;" value="20000000" step="1" min="1" max="20000000">
+                                            <input id="SS_SAMPLES"  type="text" size="15" style="width: 100%;" value="20000000" step="1" min="0" max="20000000">
                                         </div>
                                     </div>
                                     <div class="configcell">
@@ -274,7 +265,6 @@
                                             </div>
                                         </div>
                                     </div>
-
                                 </div>
                                 <div style="width: 100%;height: 40px;display: flex;padding-top: 5px;padding-bottom: 5px;">
                                     <a href="https://redpitaya.readthedocs.io/en/latest/appsFeatures/applications/streaming/appStreaming.html" target="_blank">
@@ -299,11 +289,169 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="panels" style="width: 400px;">
+                            <div style="height: 100%;display: flex;flex-flow: column;">
+                                <div style="height: 100%;display: flex;flex-wrap: wrap;align-content: flex-start; overflow-x: auto;">
+                                    <div class="configcell_long" style="display: flex; justify-content: space-evenly;height: 25px;">
+                                        <div style="width: 100%" class="ch1">
+                                            <div>
+                                                <label style="width: 100%;text-align: center;">DAC</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="configcell">
+                                        <div>
+                                            <label style="width: 100%;">Mode</label>
+                                        </div>
+                                        <div class="flipswitch_div" style="width: 100%;height: 50%;">
+                                            <input id="SS_DAC_MODE" type="checkbox" style="margin: 0;" class="man_flipswitch flipswitch" data-on="Local" data-off="Network" value="true"/>
+                                        </div>
+                                    </div>
+                                    <div class="configcell">
+                                        <div>
+                                            <label style="width: 100%;">Rate</label>
+                                        </div>
+                                        <div class="flipswitch_div" style="width: 100%;height: 50%;">
+                                            <input id="SS_DAC_HZ" type="text" size="5" style="width: 100%;" value="" step="1" min="1" max="65535">
+                                        </div>
+                                    </div>
+                                    <div class="configcell_long dac_file_use">
+                                        <div>
+                                            <label style="width: 100%;">File name</label>
+                                        </div>
+                                        <div class="flipswitch_div" style="width: 100%;height: 50%;display: inline-flex;">
+                                            <select id="SS_DAC_FILE" style="width: 80%;" name="rate">
+                                                <option value="0">file.wav</option>
+                                            </select>
+                                            <div style="width: 8%; margin-left: 10px">
+                                                <li class="run_buttons2" id="SM_DAC_LOAD" style="width: 100%;height: 100%;">
+                                                    <!-- <a style="display: block;">+</a> -->
+                                                    <img class="image_button" src="./img/upload.png" loading="lazy" width="100%" height="100%" style="vertical-align:baseline">
+                                                </li>
+                                            </div>
+                                            <div style="width: 8%; margin-left: 10px">
+                                                <li class="run_buttons2" id="SM_DAC_DELETE" style="width: 100%;height: 100%;">
+                                                    <!-- <a style="display: block;">+</a> -->
+                                                    <img class="image_button" src="./img/delete.png" loading="lazy" width="100%" height="100%" style="vertical-align:baseline">
+                                                </li>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="configcell dac_file_use">
+                                        <div>
+                                            <label style="width: 100%;">File format</label>
+                                        </div>
+                                        <div class="flipswitch_div" style="width: 100%;height: 50%;">
+                                            <select id="SS_DAC_FILE_TYPE" style="width: 100%;" name="rate">
+                                                <option value="0">wav</option>
+                                                <option value="1">tdms</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="configcell dac_file_use">
+                                        <div>
+                                            <label style="width: 100%;">Repeat count</label>
+                                        </div>
+                                        <div class="flipswitch_div" style="width: 100%;height: 50%;">
+                                            <input id="SS_DAC_REPEAT_COUNT"  type="text" size="15" style="width: 100%;" value="20000" step="1" min="1" max="2000000000">
+                                        </div>
+                                    </div>
+                                    <div class="configcell dac_file_use">
+                                        <div>
+                                            <label style="width: 100%;">Repeat mode</label>
+                                        </div>
+                                        <div class="flipswitch_div" style="width: 100%;height: 50%;">
+                                            <select id="SS_DAC_REPEAT" style="width: 100%;" name="rate">
+                                                <option value="-1">Off</option>
+                                                <option value="0">On</option>
+                                                <option value="-2">Infinity</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="configcell_long dac_gain" style="display: flex; justify-content: space-evenly;">
+                                        <div style="width: 25%" class="ch1">
+                                            <div>
+                                                <label style="width: 100%;text-align: center;">CH 1</label>
+                                            </div>
+                                            <div style="width: 100%;height: 50%;padding-left: 5px;padding-right: 5px;">
+                                                <div class="flipswitch_div" style="width: 100%;height: 100%;">
+                                                    <input id="SS_CH1_DAC_GAIN" type="checkbox" style="margin: 0;" class="man_flipswitch flipswitch" data-on="x5" data-off="x1" value="false"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style="width: 25%;" class="ch2">
+                                            <div>
+                                                <label style="width: 100%;text-align: center;">CH 2</label>
+                                            </div>
+                                            <div style="width: 100%;height: 50%;padding-left: 5px;padding-right: 5px;">
+                                                <div class="flipswitch_div" style="width: 100%;height: 100%;">
+                                                    <input id="SS_CH2_DAC_GAIN" type="checkbox" style="margin: 0;" class="man_flipswitch flipswitch" data-on="x5" data-off="x1" value="false"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="configcell_long" style="display: flex; justify-content: space-evenly;height: 25px;">
+                                        <div style="width: 100%" class="ch1">
+                                            <div>
+                                                <label style="width: 100%;text-align: center;">DMA Memory</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="configcell">
+                                        <div>
+                                            <label style="width: 100%;">Block size</label>
+                                        </div>
+                                        <div class="flipswitch_div" style="width: 100%;height: 50%;">
+                                            <select id="MM_BLOCK_SIZE" style="width: 100%;">
+                                                <option value="2048">2kB</option>
+                                                <option value="4096">4kB</option>
+                                                <option value="16384">16kB</option>
+                                                <option value="32768">32kB</option>
+                                                <option value="65536">64kB</option>
+                                                <option value="131072">128kB</option>
+                                                <option value="262144">256kB</option>
+                                                <option value="524288">512kB</option>
+                                                <option value="1048576">1MB</option>
+                                                <option value="2097152">2MB</option>
+                                                <option value="4194304">4MB</option>
+                                                <option value="8388608">8MB</option>
+
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="configcell">
+                                        <div>
+                                            <label id="ADC_SIZE_TITLE" style="width: 100%;">ADC: 1MB</label>
+                                        </div>
+                                        <div class="flipswitch_div" style="width: 100%;height: 50%;margin-top: 2px;">
+                                            <input id="MM_ADC_SIZE" type="range" min="0" max="100" value="50" class="slider">
+                                        </div>
+                                    </div>
+                                    <div class="configcell">
+                                        <div>
+                                            <label id="DAC_SIZE_TITLE" style="width: 100%;">DAC: 1MB</label>
+                                        </div>
+                                        <div class="flipswitch_div" style="width: 100%;height: 50%;margin-top: 2px;">
+                                            <input id="MM_DAC_SIZE" type="range" min="0" max="100" value="50" class="slider">
+                                        </div>
+                                    </div>
+                                    <div class="configcell">
+                                        <div>
+                                            <label id="GPIO_SIZE_TITLE" style="width: 100%;">GPIO: 1MB</label>
+                                        </div>
+                                        <div class="flipswitch_div" style="width: 100%;height: 50%;margin-top: 2px;">
+                                            <input id="MM_GPIO_SIZE" type="range" min="0" max="100" value="50" class="slider">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <div class="panels" style="width: 100%;">
                             <div style="height: 100%;display: flex;flex-flow: column;">
                                 <div style="width: 100%;height: 40px;display: flex;padding-top: 5px;padding-bottom: 5px;">
+                                    <label style="width: 100px;line-height: 2; text-align: center;height: 30px;font-size: 12pt;">ADC:</label>
                                     <div>
-                                        <img id="svg-is-runnung" src="./img/red_led.png" width="30px" height="30px" style="margin-right: 10px;">
+                                        <img id="ADC_STATUS_LED" src="./img/red_led.png" width="30px" height="30px" style="margin-right: 10px;">
                                     </div>
                                     <div style="width: 100px; margin-left: 10px">
                                         <li class="run_buttons2" id="SM_RUN" style="width: 100%">
@@ -315,9 +463,46 @@
                                             <a style="display: block;">Stop</a>
                                         </li>
                                     </div>
-                                    <label id="svg-is-data-pass"  style="width: 100px;line-height: 2; text-align: center;height: 30px;font-size: 12pt;color: green;">Data pass</label>
+                                    <label id="ADC_STATUS"  style="margin-left: 10px;margin-right: 10px; line-height: 2; text-align: center;height: 30px;font-size: 12pt;"></label>
+                                    <label id="ADC_DATA_PASS"  style="width: 100px;line-height: 2; text-align: center;height: 30px;font-size: 12pt;color: green;">Data pass</label>
                                 </div>
-                                <label style="width: 100%;text-align: center;height: 30px;font-size: 14pt;">Files on SD card</label>
+                                <div style="width: 100%;height: 40px;display: flex;padding-top: 5px;padding-bottom: 5px;">
+                                    <label style="width: 100px;line-height: 2; text-align: center;height: 30px;font-size: 12pt;">DAC:</label>
+                                    <div>
+                                        <img id="DAC_STATUS_LED" src="./img/red_led.png" width="30px" height="30px" style="margin-right: 10px;">
+                                    </div>
+                                    <div style="width: 100px; margin-left: 10px">
+                                        <li class="run_buttons2" id="SM_DAC_RUN" style="width: 100%">
+                                            <a style="display: block;">Start</a>
+                                        </li>
+                                    </div>
+                                    <div style="width: 100px; margin-left: 10px">
+                                        <li class="run_buttons2" id="SM_DAC_STOP" style="width: 100%">
+                                            <a style="display: block;">Stop</a>
+                                        </li>
+                                    </div>
+                                    <label id="DAC_STATUS"  style="margin-left: 10px;margin-right: 10px; line-height: 2; text-align: center;height: 30px;font-size: 12pt;"></label>
+                                    <label id="DAC_DATA_PASS"  style="width: 100px;line-height: 2; text-align: center;height: 30px;font-size: 12pt;color: green;">Data pass</label>
+                                </div>
+                                <div style="width: 100%;height: 40px;display: flex;padding-top: 5px;padding-bottom: 5px;display: none;">
+                                    <label  style="width: 100px;line-height: 2; text-align: center;height: 30px;font-size: 12pt;">GPIO:</label>
+                                    <div>
+                                        <img id="GPIO_STATUS_LED" src="./img/red_led.png" width="30px" height="30px" style="margin-right: 10px;">
+                                    </div>
+                                    <div style="width: 100px; margin-left: 10px">
+                                        <li class="run_buttons2" id="SM_GPIO_RUN" style="width: 100%">
+                                            <a style="display: block;">Start</a>
+                                        </li>
+                                    </div>
+                                    <div style="width: 100px; margin-left: 10px">
+                                        <li class="run_buttons2" id="SM_GPIO_STOP" style="width: 100%">
+                                            <a style="display: block;">Stop</a>
+                                        </li>
+                                    </div>
+                                    <label id="GPIO_STATUS"  style="margin-left: 10px;margin-right: 10px; line-height: 2; text-align: center;height: 30px;font-size: 12pt;"></label>
+                                    <label id="GPIO_DATA_PASS"  style="width: 100px;line-height: 2; text-align: center;height: 30px;font-size: 12pt;color: green;">Data pass</label>
+                                </div>
+                                <label style="width: 100%;text-align: center;height: 30px;font-size: 14pt;margin-top: 10px;">Files on SD card</label>
                                 <div id="files_table" style="height: 100%;display: flex;flex-wrap: wrap;align-content: flex-start; overflow-x: auto;">
                                     <div class="filecell">
                                         <div>

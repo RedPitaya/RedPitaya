@@ -99,7 +99,9 @@ profiles_t stem_125_14_LN_v1_1 = {
     .is_split_osc_triggers = false,
 
     .gpio_N_count = 8,
-    .gpio_P_count = 8
+    .gpio_P_count = 8,
+
+    .ramMB = 512
 
 };
 

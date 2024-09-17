@@ -20,7 +20,7 @@ message(STATUS "Compiler С++version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Compiler С++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 FILE(GLOB_RECURSE INC_ALL "*.h")
 
@@ -43,7 +43,7 @@ if (RP_PLATFORM)
 endif()
 
 target_compile_options(${PROJECT_NAME}
-    PRIVATE -std=c++17 -Wall -pedantic -Wextra -fpermissive $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+    PRIVATE -Wall -pedantic -Wextra -fpermissive $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 
 target_include_directories(${PROJECT_NAME}
@@ -54,16 +54,18 @@ target_include_directories(${PROJECT_NAME}
 list(APPEND headers
             ${PROJECT_SOURCE_DIR}/buffer.h
             ${PROJECT_SOURCE_DIR}/buffers_pack.h
+            ${PROJECT_SOURCE_DIR}/buffers_cached.h
+            ${PROJECT_SOURCE_DIR}/network_header.h
             ${PROJECT_SOURCE_DIR}/neon_asm.h
-            ${PROJECT_SOURCE_DIR}/thread_cout.h
             ${PROJECT_SOURCE_DIR}/signal.hpp
         )
 
 list(APPEND src
             ${PROJECT_SOURCE_DIR}/buffer.cpp
             ${PROJECT_SOURCE_DIR}/buffers_pack.cpp
+            ${PROJECT_SOURCE_DIR}/buffers_cached.cpp
+            ${PROJECT_SOURCE_DIR}/network_header.cpp
             ${PROJECT_SOURCE_DIR}/neon_asm.cpp
-            ${PROJECT_SOURCE_DIR}/thread_cout.cpp
         )
 
 target_sources(${PROJECT_NAME} PRIVATE ${src})

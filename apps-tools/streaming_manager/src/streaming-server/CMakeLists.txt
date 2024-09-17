@@ -29,7 +29,7 @@ list(APPEND r_paths
 set(CMAKE_INSTALL_RPATH ${r_paths})
 set(CMAKE_BUILD_RPATH ${r_paths})
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 FILE(GLOB_RECURSE INC_ALL "*.h")
 

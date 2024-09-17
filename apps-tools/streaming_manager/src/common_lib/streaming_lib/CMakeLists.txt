@@ -48,25 +48,19 @@ target_include_directories(${PROJECT_NAME}
             ${CMAKE_SOURCE_DIR}
             )
 
-target_compile_definitions(${PROJECT_NAME}
+        target_compile_definitions(${PROJECT_NAME}
     PUBLIC ASIO_STANDALONE)
 
 list(APPEND headers
             ${PROJECT_SOURCE_DIR}/streaming_fpga.h
-            ${PROJECT_SOURCE_DIR}/streaming_buffer.h
-            ${PROJECT_SOURCE_DIR}/streaming_buffer_cached.h
             ${PROJECT_SOURCE_DIR}/streaming_net.h
             ${PROJECT_SOURCE_DIR}/streaming_file.h
-            ${PROJECT_SOURCE_DIR}/streaming_net_buffer.h
         )
 
 list(APPEND src
             ${PROJECT_SOURCE_DIR}/streaming_fpga.cpp
-            ${PROJECT_SOURCE_DIR}/streaming_buffer.cpp
-            ${PROJECT_SOURCE_DIR}/streaming_buffer_cached.cpp
             ${PROJECT_SOURCE_DIR}/streaming_net.cpp
             ${PROJECT_SOURCE_DIR}/streaming_file.cpp
-            ${PROJECT_SOURCE_DIR}/streaming_net_buffer.cpp
          )
 
 target_sources(${PROJECT_NAME} PRIVATE ${src})
