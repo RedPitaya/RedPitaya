@@ -20,7 +20,7 @@ message(STATUS "Compiler С++version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Compiler С++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 FILE(GLOB_RECURSE INC_ALL "*.h")
 
@@ -39,7 +39,7 @@ if (RP_PLATFORM)
 endif()
 
 target_compile_options(${PROJECT_NAME}
-    PRIVATE -std=c++17 -Wall -Wextra -fpermissive $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+    PRIVATE -Wall -Wextra -Wno-unused-result -fpermissive $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC  ${PROJECT_SOURCE_DIR}
@@ -50,6 +50,7 @@ target_include_directories(${PROJECT_NAME}
 list(APPEND headers
             ${PROJECT_SOURCE_DIR}/generator.h
             ${PROJECT_SOURCE_DIR}/oscilloscope.h
+            ${PROJECT_SOURCE_DIR}/memory_manager.h
             ${PROJECT_SOURCE_DIR}/uio_parser.h
       )
 
@@ -57,21 +58,17 @@ if(RP_PLATFORM)
     list(APPEND src
             ${PROJECT_SOURCE_DIR}/generator.cpp
             ${PROJECT_SOURCE_DIR}/oscilloscope.cpp
+            ${PROJECT_SOURCE_DIR}/memory_manager.cpp
             ${PROJECT_SOURCE_DIR}/uio_parser.cpp
         )
 else()
     list(APPEND src
             ${PROJECT_SOURCE_DIR}/generator_dummy.cpp
             ${PROJECT_SOURCE_DIR}/oscilloscope_dummy.cpp
+            ${PROJECT_SOURCE_DIR}/memory_manager_dummy.cpp
             ${PROJECT_SOURCE_DIR}/uio_parser.cpp
         )
 endif()
-
-#list(APPEND src
-#        ${PROJECT_SOURCE_DIR}/generator.cpp
-#        ${PROJECT_SOURCE_DIR}/oscilloscope.cpp
-#        ${PROJECT_SOURCE_DIR}/uio_parser.cpp
-#    )
 
 target_sources(${PROJECT_NAME} PRIVATE ${src})
 

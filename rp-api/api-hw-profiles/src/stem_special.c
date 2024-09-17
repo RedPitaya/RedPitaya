@@ -99,7 +99,9 @@ profiles_t stem_special = {
     .is_split_osc_triggers = false,
 
     .gpio_N_count = 8,
-    .gpio_P_count = 8
+    .gpio_P_count = 8,
+
+    .ramMB = 512
 };
 
 profiles_t* getProfile_STEM_SPECIAL(){

@@ -1,80 +1,60 @@
 #ifndef NET_LIB_ASIO_NET_H
 #define NET_LIB_ASIO_NET_H
 
-#include <iostream>
-#include <sstream>
-#include <cstring>
 #include <string>
-#include <functional>
-#include <system_error>
-#include <cstdint>
-#include <memory>
-#include <deque>
 
 #include "asio_common.h"
-#include "event_handlers.h"
-#include "data_lib/neon_asm.h"
 #include "data_lib/signal.hpp"
+#include "data_lib/buffers_cached.h"
 
-//#define  SOCKET_BUFFER_SIZE 65536
-//#define  FIFO_BUFFER_SIZE  SOCKET_BUFFER_SIZE * 3
+using namespace std;
 
-using  namespace std;
+namespace net_lib {
 
-namespace  net_lib {
+class CAsioSocketDMA;
 
-class CAsioSocket;
-
-class CAsioNet {
+class CAsioNet
+{
 public:
+	using Ptr = shared_ptr<CAsioNet>;
 
-    using Ptr = shared_ptr<CAsioNet>;
+	static auto create(net_lib::EMode _mode, string _host, uint16_t _port, DataLib::CBuffersCached::Ptr buffers) -> CAsioNet::Ptr;
 
-    static auto create(net_lib::EMode _mode,net_lib::EProtocol _protocol,string _host , string _port) -> CAsioNet::Ptr;
+	CAsioNet(net_lib::EMode _mode, string _host, uint16_t _port, DataLib::CBuffersCached::Ptr buffers);
+	~CAsioNet();
 
-    CAsioNet(net_lib::EMode _mode,net_lib::EProtocol _protocol,string _host , string _port);
-    ~CAsioNet();
+	auto start() -> void;
+	auto stop() -> void;
+	auto cancel() -> void;
+	auto disconnect() -> void;
 
-    auto start() -> void;
-    auto stop()  -> void;
-    auto disconnect()  -> void;
+	auto sendSyncData(DataLib::CDataBuffersPackDMA::Ptr _buffer) -> bool;
+	auto isConnected() -> bool;
 
-    auto sendData(bool async,net_buffer _buffer,size_t _size) -> bool;
-    auto sendSyncData(AsioBufferNolder &_buffer) -> bool;
-    auto getProtocol() -> net_lib::EProtocol;
-    auto isConnected() -> bool;
+	sigslot::signal<string &> serverConnectNotify;
+	sigslot::signal<string &> serverDisconnectNotify;
+	sigslot::signal<error_code> serverErrorNotify;
 
-    sigslot::signal<string&>    serverConnectNotify;
-    sigslot::signal<string&>    serverDisconnectNotify;
-    sigslot::signal<error_code> serverErrorNotify;
+	sigslot::signal<string &> clientConnectNotify;
+	sigslot::signal<string &> clientDisconnectNotify;
+	sigslot::signal<error_code> clientErrorNotify;
 
-    sigslot::signal<string&>    clientConnectNotify;
-    sigslot::signal<string&>    clientDisconnectNotify;
-    sigslot::signal<error_code> clientErrorNotify;
-
-    sigslot::signal<error_code,size_t>          sendNotify;
-    sigslot::signal<error_code,uint8_t*,size_t> reciveNotify;
-
+	sigslot::signal<error_code, size_t> sendNotify;
+	sigslot::signal<error_code, DataLib::CDataBuffersPackDMA::Ptr> reciveNotify;
 
 private:
+	CAsioNet(const CAsioNet &) = delete;
+	CAsioNet(CAsioNet &&) = delete;
+	CAsioNet &operator=(const CAsioNet &) = delete;
+	CAsioNet &operator=(const CAsioNet &&) = delete;
 
-    CAsioNet(const CAsioNet &) = delete;
-    CAsioNet(CAsioNet &&) = delete;
-    CAsioNet& operator=(const CAsioNet&) =delete;
-    CAsioNet& operator=(const CAsioNet&&) =delete;
-
-    void sendServerStop();
-
-    net_lib::EMode m_mode;
-    net_lib::EProtocol m_protocol;
-    string m_host;
-    string m_port;
-    bool m_IsRun;
-    shared_ptr<CAsioSocket> m_server;
+	net_lib::EMode m_mode;
+	string m_host;
+	uint16_t m_port;
+	bool m_IsRun;
+	shared_ptr<CAsioSocketDMA> m_server;
 };
 
-}
+} // namespace net_lib
 
 #endif
-
-

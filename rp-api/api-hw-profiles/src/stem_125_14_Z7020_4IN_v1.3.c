@@ -99,7 +99,9 @@ profiles_t stem_125_14_Z7020_4IN_v1_3 = {
     .is_split_osc_triggers = true,
 
     .gpio_N_count = 11,
-    .gpio_P_count = 11
+    .gpio_P_count = 11,
+
+    .ramMB = 512
 };
 
 profiles_t* getProfile_STEM_125_14_Z7020_4IN_v1_3(){

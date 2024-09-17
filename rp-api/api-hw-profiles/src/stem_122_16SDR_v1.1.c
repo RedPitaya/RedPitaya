@@ -99,7 +99,9 @@ profiles_t stem_122_16SDR_v1_1 = {
     .is_split_osc_triggers = false,
 
     .gpio_N_count = 11,
-    .gpio_P_count = 11
+    .gpio_P_count = 11,
+
+    .ramMB = 512
 };
 
 profiles_t* getProfile_STEM_122_16SDR_v1_1(){

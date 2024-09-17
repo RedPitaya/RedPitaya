@@ -6,21 +6,19 @@
 
 class DeviceLogic : public QObject
 {
-    Q_OBJECT
+	Q_OBJECT
 public:
-    static DeviceLogic *instance();
+	static DeviceLogic *instance();
 
-    auto getNewBoards() -> void;
+	auto getNewBoards() -> void;
 
 private:
-    DeviceLogic();
-   ~DeviceLogic();
-    Q_DISABLE_COPY_MOVE(DeviceLogic);
+	DeviceLogic();
+	~DeviceLogic();
+	Q_DISABLE_COPY_MOVE(DeviceLogic);
 
-    QTimer        *m_timer;
-    ClientNetConfigManager *m_client;
-
-
+	QTimer *m_timer;
+	ClientNetConfigManager *m_client;
 };
 
 #endif // DEVICE_LOGIC_H

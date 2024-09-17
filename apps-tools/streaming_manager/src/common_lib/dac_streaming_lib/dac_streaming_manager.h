@@ -2,74 +2,93 @@
 #define STREAMING_ROOT_DACSTREAMING_MANAGER_H
 
 #include <atomic>
-#include <condition_variable>
 #include <mutex>
 #include <thread>
-#include <vector>
 #include <string>
-#include <functional>
 
-#include "dac_net_controller.h"
-#include "uio_lib/generator.h"
-#include "settings_lib/dac_settings.h"
-#include "reader_lib/reader_controller.h"
+#include "data_lib/buffers_cached.h"
 #include "data_lib/signal.hpp"
+#include "net_lib/asio_net.h"
+#include "reader_lib/reader_controller.h"
 
 namespace dac_streaming_lib {
 
 class CDACStreamingManager
 {
-    public:
-        enum NotifyResult{
-            NR_ENDED,
-            NR_BROKEN,
-            NR_EMPTY,
-            NR_MISSING_FILE,
-            NR_STOP
-        };
+public:
+	enum NotifyResult {
+		NR_ENDED,
+		NR_BROKEN,
+		NR_EMPTY,
+		NR_MISSING_FILE,
+		NR_STOP,
+		NP_MEM_ERROR,
+		NP_MEM_MODIFY
+	};
 
-        enum DACStream_FileType{
-            TDMS_TYPE,
-            WAV_TYPE
-        };
-           
-        using Ptr = std::shared_ptr<CDACStreamingManager>;
+	enum DACStream_FileType {
+		TDMS_TYPE,
+		WAV_TYPE
+	};
 
-        static Ptr Create(DACStream_FileType _fileType, std::string _filePath, CStreamSettings::DACRepeat _repeat,int32_t _rep_count,int64_t memoryCacheSize);
-        CDACStreamingManager(DACStream_FileType _fileType, std::string _filePath, CStreamSettings::DACRepeat _repeat,int32_t _rep_count,int64_t memoryCacheSize);
+	using Ptr = std::shared_ptr<CDACStreamingManager>;
 
-        static Ptr Create(std::string _host, std::string _port);
-        CDACStreamingManager(std::string _host, std::string _port);
+	static Ptr Create(DACStream_FileType _fileType,
+					  std::string _filePath,
+					  CStreamSettings::DACRepeat _repeat,
+					  int32_t _rep_count,
+					  uint32_t blockSize,
+					  bool verbose);
+	CDACStreamingManager(DACStream_FileType _fileType,
+						 std::string _filePath,
+						 CStreamSettings::DACRepeat _repeat,
+						 int32_t _rep_count,
+						 uint32_t blockSize,
+						 bool verbose);
 
-        ~CDACStreamingManager();
-        CDACStreamingManager(const CDACStreamingManager &) = delete;
-        CDACStreamingManager(CDACStreamingManager &&) = delete;
-    
+	static Ptr Create(std::string _host, bool verbose);
+	CDACStreamingManager(std::string _host, bool verbose);
 
-        auto run() -> void;
-        auto stop() -> void;
-        auto isLocalMode() -> bool;
-        auto getBuffer() -> const CDACAsioNetController::BufferPack;
+	~CDACStreamingManager();
+	CDACStreamingManager(const CDACStreamingManager &) = delete;
+	CDACStreamingManager(CDACStreamingManager &&) = delete;
 
-        sigslot::signal<NotifyResult> notifyStop;
-        
+	auto run() -> void;
+	auto stop() -> void;
+	auto isLocalMode() -> bool;
+
+	auto getBufferManager() -> DataLib::CBuffersCached::Ptr;
+	auto getBuffer() -> const DataLib::CDataBuffersPackDMA::Ptr;
+	auto unlockBuffer() -> void;
+
+	auto getChannels(bool *ch1Active, bool *ch2Active) -> bool;
+
+	sigslot::signal<NotifyResult> notifyStop;
+
 private:
-                       bool m_use_local_file;
-         DACStream_FileType m_fileType;
-                std::string m_host;
-                std::string m_port;
-                std::string m_filePath;
- CDACAsioNetController::Ptr m_asionet;
+	auto startServer() -> void;
+	auto stopServer() -> void;
+	auto threadFunc() -> void;
 
- CStreamSettings::DACRepeat m_repeat;
-                    int32_t m_rep_count;
-                    int64_t m_memoryCacheSize;
-         CReaderController *m_readerController;
+	bool m_use_local_file;
+	DACStream_FileType m_fileType;
+	std::string m_host;
+	std::string m_filePath;
+	net_lib::CAsioNet::Ptr m_asionet;
 
-        auto startServer() -> void;
-        auto stopServer() -> void;
+	CStreamSettings::DACRepeat m_repeat;
+	int32_t m_rep_count;
+	CReaderController *m_readerController;
+
+	DataLib::CBuffersCached::Ptr m_buffer;
+	std::thread m_Thread;
+	std::atomic_bool m_isRun;
+	std::atomic_bool m_isThreadRun;
+	std::mutex m_mtx;
+	bool m_verbose;
+	uint32_t m_blockSize;
 };
 
-}
+} // namespace dac_streaming_lib
 
 #endif

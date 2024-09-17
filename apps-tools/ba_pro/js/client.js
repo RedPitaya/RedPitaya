@@ -335,7 +335,6 @@
 
     var parametersHandler = function() {
         if (CLIENT.parameterStack.length > 0) {
-            CLIENT.client_log(CLIENT.parameterStack.length)
             var params = [...CLIENT.parameterStack]
             var pack_params = []
             for( var i = 0 ; i < params.length; i++){

@@ -20,7 +20,7 @@ message(STATUS "Compiler С++version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Compiler С++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 FILE(GLOB_RECURSE INC_ALL "*.h")
 
@@ -39,7 +39,7 @@ if (RP_PLATFORM)
 endif()
 
 target_compile_options(${PROJECT_NAME}
-    PRIVATE -std=c++17 -Wall -pedantic -Wextra -fpermissive $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+    PRIVATE -Wall -pedantic -Wextra -fpermissive $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 
 target_include_directories(${PROJECT_NAME}
@@ -54,13 +54,11 @@ target_compile_definitions(${PROJECT_NAME}
 list(APPEND headers
             ${PROJECT_SOURCE_DIR}/dac_streaming_manager.h
             ${PROJECT_SOURCE_DIR}/dac_streaming_application.h
-            ${PROJECT_SOURCE_DIR}/dac_net_controller.h
         )
 
 list(APPEND src
             ${PROJECT_SOURCE_DIR}/dac_streaming_manager.cpp
             ${PROJECT_SOURCE_DIR}/dac_streaming_application.cpp
-            ${PROJECT_SOURCE_DIR}/dac_net_controller.cpp
          )
 
 target_sources(${PROJECT_NAME} PRIVATE ${src})

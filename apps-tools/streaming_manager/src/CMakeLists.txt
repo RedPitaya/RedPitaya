@@ -8,12 +8,14 @@ project(streaming)
 
 option(IS_INSTALL   "Install" ON)
 option(RP_PLATFORM  "Redpitaya platform" OFF)
+option(PROFILE_ENABLED "Profile enabled" OFF)
 
 option(BUILD_WEB_APP_SERVER "Web app server" ON)
 option(BUILD_CONSOLE_SERVER "Console server" ON)
 option(BUILD_RPSA_CLIENT "RPSA client" ON)
 option(BUILD_RPSA_CLIENT_QT "RPSA client QT" OFF)
 option(BUILD_CONVERT_TOOL "Convert tool" ON)
+
 
 if(NOT DEFINED INSTALL_DIR)
     message(WARNING,"Installation path not set. Installation will be skipped")
@@ -51,8 +53,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install_dir")
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_FLAGS -Wno-psabi)
 #set(CMAKE_CXX_FLAGS -fsanitize=address)
 
 

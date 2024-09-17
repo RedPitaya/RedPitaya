@@ -10,30 +10,29 @@ Item {
         target: board
         function onGetNewSettingSignal() {
             saveTypeId.stateIndex = board.getSaveType()
-            protocolId.stateIndex = board.getProtocol()
             decId.text = board.getDecimation()
             sampLimitId.text = board.getSampleLimit()
             resolutionId.stateIndex = board.getResolution()
             calibId.stateIndex = board.getCalibration()
 
-            channelsEn1Id.stateIndex = (board.getChannels() & 0x1) > 0
-            channelsEn2Id.stateIndex = (board.getChannels() & 0x2) > 0
-            channelsEn3Id.stateIndex = (board.getChannels() & 0x4) > 0
-            channelsEn4Id.stateIndex = (board.getChannels() & 0x8) > 0
+            channelsEn1Id.stateIndex = (board.getChannels(1)) > 0
+            channelsEn2Id.stateIndex = (board.getChannels(2)) > 0
+            channelsEn3Id.stateIndex = (board.getChannels(3)) > 0
+            channelsEn4Id.stateIndex = (board.getChannels(4)) > 0
 
 
-            channelsAtt1Id.stateIndex = (board.getAttenuator() & 0x1) > 0
-            channelsAtt2Id.stateIndex = (board.getAttenuator() & 0x2) > 0
-            channelsAtt3Id.stateIndex = (board.getAttenuator() & 0x4) > 0
-            channelsAtt4Id.stateIndex = (board.getAttenuator() & 0x8) > 0
+            channelsAtt1Id.stateIndex = (board.getAttenuator(1)) > 0
+            channelsAtt2Id.stateIndex = (board.getAttenuator(2)) > 0
+            channelsAtt3Id.stateIndex = (board.getAttenuator(3)) > 0
+            channelsAtt4Id.stateIndex = (board.getAttenuator(4)) > 0
 
-            channelsCup1Id.stateIndex = (board.getCoupling() & 0x1) > 0
-            channelsCup2Id.stateIndex = (board.getCoupling() & 0x2) > 0
-            channelsCup3Id.stateIndex = (board.getCoupling() & 0x4) > 0
-            channelsCup4Id.stateIndex = (board.getCoupling() & 0x8) > 0
+            channelsCup1Id.stateIndex = (board.getCoupling(1)) > 0
+            channelsCup2Id.stateIndex = (board.getCoupling(2)) > 0
+            channelsCup3Id.stateIndex = (board.getCoupling(3)) > 0
+            channelsCup4Id.stateIndex = (board.getCoupling(4)) > 0
 
             dataId.stateIndex = board.getDataFormat()
-            saveRawVoltId.stateIndex = board.getSaveMode()
+            saveRawVoltId.stateIndex = board.getType()
         }
     }
 
@@ -96,52 +95,6 @@ Item {
                                         maxTextHeight: height * 0.6
                                         onClickIndex: function (i) {
                                             board.setSaveType(i)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    Item {
-                        height: parent.height
-                        width: parent.width / 3.0
-                        Item {
-                            anchors.fill: parent
-                            anchors.margins: 2 * mainVisibleRootWindowId.scaleFactor
-                            Column {
-                                anchors.fill: parent
-                                Item {
-                                    width: parent.width
-                                    height: parent.height * 0.3
-                                    Text {
-                                        anchors.fill: parent
-                                        verticalAlignment: Text.AlignVCenter
-                                        horizontalAlignment: Text.AlignHCenter
-                                        color: baseTextColor
-                                        font.pixelSize: height * headerTextSize
-                                        font.family: applicationFont.name
-                                        text: qsTr("PROTOCOL")
-                                    }
-                                }
-
-                                Item {
-                                    width: parent.width
-                                    height: parent.height * 0.7
-                                    MultiSwitch {
-                                        id: protocolId
-                                        anchors.fill: parent
-                                        anchors.leftMargin: 10 * mainVisibleRootWindowId.scaleFactor
-                                        anchors.rightMargin: 10 * mainVisibleRootWindowId.scaleFactor
-                                        stateIndex: board.getProtocol()
-                                        buttonNames: ["TCP", "UDP"]
-                                        inactiveTextColor: baseTextColor
-                                        activeTextColor: "#303030"
-                                        buttonColor: baseRedSwitchColor
-                                        fontFamaly: applicationFont.name
-                                        radiusVal: 0
-                                        maxTextHeight: height * 0.5
-                                        onClickIndex: function (i) {
-                                            board.setProtocol(i)
                                         }
                                     }
                                 }
@@ -435,7 +388,7 @@ Item {
                                         anchors.fill: parent
                                         anchors.leftMargin: 10 * mainVisibleRootWindowId.scaleFactor
                                         anchors.rightMargin: 10 * mainVisibleRootWindowId.scaleFactor
-                                        stateIndex: board.getSaveMode()
+                                        stateIndex: board.getType()
                                         buttonNames: ["RAW", "VOLT"]
                                         inactiveTextColor: baseGrayColor
                                         activeTextColor: "#303030"
@@ -444,7 +397,7 @@ Item {
                                         radiusVal: 0
                                         maxTextHeight: parent.height * 0.5
                                         onClickIndex: function (i) {
-                                            board.setSaveMode(i)
+                                            board.setType(i)
                                         }
                                     }
                                 }
@@ -541,8 +494,8 @@ Item {
                                             anchors.fill: parent
                                             anchors.leftMargin: 10 * mainVisibleRootWindowId.scaleFactor
                                             anchors.rightMargin: 10 * mainVisibleRootWindowId.scaleFactor
-                                            stateIndex: (board.getChannels(
-                                                            ) & 0x1) > 0
+                                            stateIndex: (board.getChannels(1
+                                                            )) > 0
                                             buttonNames: ["Off", "On"]
                                             inactiveTextColor: baseGrayColor
                                             activeTextColor: "#303030"
@@ -551,9 +504,7 @@ Item {
                                             radiusVal: 0
                                             maxTextHeight: parent.height * 0.5
                                             onClickIndex: function (i) {
-                                                var curValue = board.getChannels()
-                                                board.setChannels(
-                                                            (curValue & 0xE) | (i ? 0x1 : 0x0))
+                                                board.setChannels(1,(i ? 0x1 : 0x0))
                                             }
                                         }
                                     }
@@ -592,8 +543,8 @@ Item {
                                             anchors.fill: parent
                                             anchors.leftMargin: 10 * mainVisibleRootWindowId.scaleFactor
                                             anchors.rightMargin: 10 * mainVisibleRootWindowId.scaleFactor
-                                            stateIndex: (board.getChannels(
-                                                            ) & 0x2) > 0
+                                            stateIndex: (board.getChannels(2
+                                                            )) > 0
                                             buttonNames: ["Off", "On"]
                                             inactiveTextColor: baseGrayColor
                                             activeTextColor: "#303030"
@@ -602,9 +553,7 @@ Item {
                                             radiusVal: 0
                                             maxTextHeight: parent.height * 0.5
                                             onClickIndex: function (i) {
-                                                var curValue = board.getChannels()
-                                                board.setChannels(
-                                                            (curValue & 0xD) | (i ? 0x2 : 0x0))
+                                                board.setChannels(2,(i ? 0x1 : 0x0))
                                             }
                                         }
                                     }
@@ -642,8 +591,8 @@ Item {
                                             anchors.fill: parent
                                             anchors.leftMargin: 10 * mainVisibleRootWindowId.scaleFactor
                                             anchors.rightMargin: 10 * mainVisibleRootWindowId.scaleFactor
-                                            stateIndex: (board.getChannels(
-                                                            ) & 0x4) > 0
+                                            stateIndex: (board.getChannels(3
+                                                            )) > 0
                                             buttonNames: ["Off", "On"]
                                             inactiveTextColor: baseGrayColor
                                             activeTextColor: "#303030"
@@ -652,9 +601,7 @@ Item {
                                             radiusVal: 0
                                             maxTextHeight: parent.height * 0.5
                                             onClickIndex: function (i) {
-                                                var curValue = board.getChannels()
-                                                board.setChannels(
-                                                            (curValue & 0xB) | (i ? 0x4 : 0x0))
+                                                board.setChannels(3,(i ? 0x1 : 0x0))
                                             }
                                         }
                                     }
@@ -692,8 +639,8 @@ Item {
                                             anchors.fill: parent
                                             anchors.leftMargin: 10 * mainVisibleRootWindowId.scaleFactor
                                             anchors.rightMargin: 10 * mainVisibleRootWindowId.scaleFactor
-                                            stateIndex: (board.getChannels(
-                                                            ) & 0x8) > 0
+                                            stateIndex: (board.getChannels(4
+                                                            )) > 0
                                             buttonNames: ["Off", "On"]
                                             inactiveTextColor: baseGrayColor
                                             activeTextColor: "#303030"
@@ -702,9 +649,7 @@ Item {
                                             radiusVal: 0
                                             maxTextHeight: parent.height * 0.5
                                             onClickIndex: function (i) {
-                                                var curValue = board.getChannels()
-                                                board.setChannels(
-                                                            (curValue & 0x7) | (i ? 0x8 : 0x0))
+                                                board.setChannels(4,(i ? 0x1 : 0x0))
                                             }
                                         }
                                     }
@@ -748,8 +693,7 @@ Item {
                                             anchors.fill: parent
                                             anchors.leftMargin: 10 * mainVisibleRootWindowId.scaleFactor
                                             anchors.rightMargin: 10 * mainVisibleRootWindowId.scaleFactor
-                                            stateIndex: (board.getAttenuator(
-                                                            ) & 0x1) > 0
+                                            stateIndex: (board.getAttenuator(1)) > 0
                                             buttonNames: ["1:1", "1:20"]
                                             inactiveTextColor: baseGrayColor
                                             activeTextColor: "#303030"
@@ -758,9 +702,7 @@ Item {
                                             radiusVal: 0
                                             maxTextHeight: parent.height * 0.5
                                             onClickIndex: function (i) {
-                                                var curValue = board.getAttenuator()
-                                                board.setAttenuator(
-                                                            (curValue & 0xE) | (i ? 0x1 : 0x0))
+                                                board.setAttenuator(1,(i ? 0x1 : 0x0))
                                             }
                                         }
                                     }
@@ -799,8 +741,7 @@ Item {
                                             anchors.fill: parent
                                             anchors.leftMargin: 10 * mainVisibleRootWindowId.scaleFactor
                                             anchors.rightMargin: 10 * mainVisibleRootWindowId.scaleFactor
-                                            stateIndex: (board.getAttenuator(
-                                                            ) & 0x2) > 0
+                                            stateIndex: (board.getAttenuator(2)) > 0
                                             buttonNames: ["1:1", "1:20"]
                                             inactiveTextColor: baseGrayColor
                                             activeTextColor: "#303030"
@@ -809,9 +750,7 @@ Item {
                                             radiusVal: 0
                                             maxTextHeight: parent.height * 0.5
                                             onClickIndex: function (i) {
-                                                var curValue = board.getAttenuator()
-                                                board.setAttenuator(
-                                                            (curValue & 0xD) | (i ? 0x2 : 0x0))
+                                                board.setAttenuator(2,(i ? 0x1 : 0x0))
                                             }
                                         }
                                     }
@@ -849,8 +788,7 @@ Item {
                                             anchors.fill: parent
                                             anchors.leftMargin: 10 * mainVisibleRootWindowId.scaleFactor
                                             anchors.rightMargin: 10 * mainVisibleRootWindowId.scaleFactor
-                                            stateIndex: (board.getAttenuator(
-                                                            ) & 0x4) > 0
+                                            stateIndex: (board.getAttenuator(3)) > 0
                                             buttonNames: ["1:1", "1:20"]
                                             inactiveTextColor: baseGrayColor
                                             activeTextColor: "#303030"
@@ -859,9 +797,7 @@ Item {
                                             radiusVal: 0
                                             maxTextHeight: parent.height * 0.5
                                             onClickIndex: function (i) {
-                                                var curValue = board.getAttenuator()
-                                                board.setAttenuator(
-                                                            (curValue & 0xB) | (i ? 0x4 : 0x0))
+                                                board.setAttenuator(3,(i ? 0x1 : 0x0))
                                             }
                                         }
                                     }
@@ -899,8 +835,7 @@ Item {
                                             anchors.fill: parent
                                             anchors.leftMargin: 10 * mainVisibleRootWindowId.scaleFactor
                                             anchors.rightMargin: 10 * mainVisibleRootWindowId.scaleFactor
-                                            stateIndex: (board.getAttenuator(
-                                                            ) & 0x8) > 0
+                                            stateIndex: (board.getAttenuator(4)) > 0
                                             buttonNames: ["1:1", "1:20"]
                                             inactiveTextColor: baseGrayColor
                                             activeTextColor: "#303030"
@@ -909,9 +844,7 @@ Item {
                                             radiusVal: 0
                                             maxTextHeight: parent.height * 0.5
                                             onClickIndex: function (i) {
-                                                var curValue = board.getAttenuator()
-                                                board.setAttenuator(
-                                                            (curValue & 0x7) | (i ? 0x8 : 0x0))
+                                                board.setAttenuator(4,(i ? 0x1 : 0x0))
                                             }
                                         }
                                     }
@@ -955,8 +888,7 @@ Item {
                                             anchors.fill: parent
                                             anchors.leftMargin: 10 * mainVisibleRootWindowId.scaleFactor
                                             anchors.rightMargin: 10 * mainVisibleRootWindowId.scaleFactor
-                                            stateIndex: (board.getCoupling(
-                                                            ) & 0x1) > 0
+                                            stateIndex: (board.getCoupling(1)) > 0
                                             buttonNames: ["AC", "DC"]
                                             inactiveTextColor: baseGrayColor
                                             activeTextColor: "#303030"
@@ -965,9 +897,7 @@ Item {
                                             radiusVal: 0
                                             maxTextHeight: parent.height * 0.5
                                             onClickIndex: function (i) {
-                                                var curValue = board.getCoupling()
-                                                board.setCoupling(
-                                                            (curValue & 0xE) | (i ? 0x1 : 0x0))
+                                                board.setCoupling(1,(i ? 0x1 : 0x0))
                                             }
                                         }
                                     }
@@ -1006,8 +936,7 @@ Item {
                                             anchors.fill: parent
                                             anchors.leftMargin: 10 * mainVisibleRootWindowId.scaleFactor
                                             anchors.rightMargin: 10 * mainVisibleRootWindowId.scaleFactor
-                                            stateIndex: (board.getCoupling(
-                                                            ) & 0x2) > 0
+                                            stateIndex: (board.getCoupling(2)) > 0
                                             buttonNames: ["AC", "DC"]
                                             inactiveTextColor: baseGrayColor
                                             activeTextColor: "#303030"
@@ -1016,9 +945,7 @@ Item {
                                             radiusVal: 0
                                             maxTextHeight: parent.height * 0.5
                                             onClickIndex: function (i) {
-                                                var curValue = board.getCoupling()
-                                                board.setCoupling(
-                                                            (curValue & 0xD) | (i ? 0x2 : 0x0))
+                                                board.setCoupling(2,(i ? 0x1 : 0x0))
                                             }
                                         }
                                     }
@@ -1056,8 +983,7 @@ Item {
                                             anchors.fill: parent
                                             anchors.leftMargin: 10 * mainVisibleRootWindowId.scaleFactor
                                             anchors.rightMargin: 10 * mainVisibleRootWindowId.scaleFactor
-                                            stateIndex: (board.getCoupling(
-                                                            ) & 0x4) > 0
+                                            stateIndex: (board.getCoupling(3)) > 0
                                             buttonNames: ["AC", "DC"]
                                             inactiveTextColor: baseGrayColor
                                             activeTextColor: "#303030"
@@ -1066,9 +992,7 @@ Item {
                                             radiusVal: 0
                                             maxTextHeight: parent.height * 0.5
                                             onClickIndex: function (i) {
-                                                var curValue = board.getCoupling()
-                                                board.setCoupling(
-                                                            (curValue & 0xB) | (i ? 0x4 : 0x0))
+                                                board.setCoupling(3,(i ? 0x1 : 0x0))
                                             }
                                         }
                                     }
@@ -1106,8 +1030,7 @@ Item {
                                             anchors.fill: parent
                                             anchors.leftMargin: 10 * mainVisibleRootWindowId.scaleFactor
                                             anchors.rightMargin: 10 * mainVisibleRootWindowId.scaleFactor
-                                            stateIndex: (board.getCoupling(
-                                                            ) & 0x8) > 0
+                                            stateIndex: (board.getCoupling(4)) > 0
                                             buttonNames: ["AC", "DC"]
                                             inactiveTextColor: baseGrayColor
                                             activeTextColor: "#303030"
@@ -1116,9 +1039,7 @@ Item {
                                             radiusVal: 0
                                             maxTextHeight: parent.height * 0.5
                                             onClickIndex: function (i) {
-                                                var curValue = board.getCoupling()
-                                                board.setCoupling(
-                                                            (curValue & 0x7) | (i ? 0x8 : 0x0))
+                                                board.setCoupling(4,(i ? 0x1 : 0x0))
                                             }
                                         }
                                     }

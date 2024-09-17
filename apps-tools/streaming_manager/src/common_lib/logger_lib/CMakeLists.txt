@@ -8,6 +8,7 @@ message(STATUS "RedPitaya platform=${RP_PLATFORM}")
 message(STATUS "VERSION=${VERSION}")
 message(STATUS "REVISION=${REVISION}")
 message(STATUS "BUILD_NUMBER=${BUILD_NUMBER}")
+message(STATUS "PROFILE_ENABLED=${PROFILE_ENABLED}")
 
 message(STATUS "Compiler С path: ${CMAKE_C_COMPILER}")
 message(STATUS "Compiler С ID: ${CMAKE_C_COMPILER_ID}")
@@ -20,7 +21,7 @@ message(STATUS "Compiler С++version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Compiler С++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 FILE(GLOB_RECURSE INC_ALL "*.h")
 
@@ -38,8 +39,12 @@ if (RP_PLATFORM)
     target_compile_options(${PROJECT_NAME} PRIVATE -DRP_PLATFORM)
 endif()
 
+if (PROFILE_ENABLED)
+    target_compile_options(${PROJECT_NAME} PRIVATE -DPROFILE_ENABLED)
+endif()
+
 target_compile_options(${PROJECT_NAME}
-    PRIVATE -std=c++17 -Wall -pedantic -Wextra -fpermissive $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+    PRIVATE -Wall -pedantic -Wextra -fpermissive $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 
 target_include_directories(${PROJECT_NAME}
@@ -50,10 +55,12 @@ target_include_directories(${PROJECT_NAME}
 
 list(APPEND headers
             ${PROJECT_SOURCE_DIR}/file_logger.h
+            ${PROJECT_SOURCE_DIR}/profiler.h
         )
 
 list(APPEND src
             ${PROJECT_SOURCE_DIR}/file_logger.cpp
+            ${PROJECT_SOURCE_DIR}/profiler.cpp
         )
 
 target_sources(${PROJECT_NAME} PRIVATE ${src})
