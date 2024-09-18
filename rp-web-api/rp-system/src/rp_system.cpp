@@ -22,12 +22,13 @@ using namespace std;
 using namespace std::chrono;
 
 uint32_t getReservedMemory();
+uint32_t getCurrentRAMSize();
 
 CFloatParameter g_ws_cpuLoad("RP_SYSTEM_CPU_LOAD", CBaseParameter::RO, 0, 0, 0, 1000);
 CFloatParameter g_ws_memoryTotal("RP_SYSTEM_TOTAL_RAM", CBaseParameter::RO, 0, 0, 0, 1e15);
 CFloatParameter g_ws_memoryFree ("RP_SYSTEM_FREE_RAM", CBaseParameter::RO, 0, 0, 0, 1e15);
 CFloatParameter g_ws_memoryDMARam ("RP_SYSTEM_DMA_RAM", CBaseParameter::RO, getReservedMemory(), 0, 0, 1e15);
-CFloatParameter g_ws_memoryMAXDDR ("RP_SYSTEM_DDR_MAX", CBaseParameter::RO, rp_HPGetDDRSizeOrDefault(), 0, 0, 1e15);
+CFloatParameter g_ws_memoryMAXDDR ("RP_SYSTEM_DDR_MAX", CBaseParameter::RO, getCurrentRAMSize(), 0, 0, 1e15);
 
 
 CFloatParameter g_ws_temperature ("RP_SYSTEM_TEMPERATURE", CBaseParameter::RO, -100, 0, -100, 1000);
@@ -80,6 +81,20 @@ bool get_ram(float *_total, float *_freeram){
     *_freeram = (float)memInfo.freeram;
     return !ret;
 }
+
+uint32_t getCurrentRAMSize(){
+    auto ram = rp_HPGetDDRSizeOrDefault();
+    float total = 0, freeram = 0;
+    if (get_ram(&total, &freeram)){
+        auto reserve = getReservedMemory();
+        // Fix for 250-12 where two modes of operation are possible with 512 and 1024 MB of memory
+        if (ram == 1024 && (reserve + total < (512 * 1024 * 1024))){
+            ram = 512;
+        }
+    }
+    return ram;
+}
+
 
 uint32_t getReservedMemory(){
     int fd = 0;
