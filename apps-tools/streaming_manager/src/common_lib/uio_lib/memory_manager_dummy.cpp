@@ -1,7 +1,13 @@
 #include <algorithm>
 #include <fcntl.h>
 #include <stdint.h>
+
+#ifndef _WIN32
+#include <sys/statvfs.h>
 #include <unistd.h>
+#else
+#include <windows.h>
+#endif
 
 #include "memory_manager.h"
 

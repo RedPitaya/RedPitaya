@@ -2,6 +2,7 @@
 #include "logger_lib/file_logger.h"
 #include <atomic>
 #include <chrono>
+#include <algorithm>
 #include <math.h>
 
 ClientOpt::Options g_hoption;

@@ -1,6 +1,7 @@
 #ifndef TEST_HELPER_H
 #define TEST_HELPER_H
 
+#include <sstream>
 #include "options.h"
 
 auto setOptions(ClientOpt::Options option) -> void;
