@@ -296,7 +296,7 @@ auto ClientOpt::usage(char const *progName) -> void
 		"\tThis mode allows you to control streaming as a client, and also captures data in network streaming mode.\n"
 		"\n"
 		"\tOptions:\n"
-		"\t\t%s -s [-h IPs] -f tdms|wav|csv|bin [-d NAME] [-m raw|volt] [-l SAMPLES] [-t MSEC] [-v] [-b TD|F]\n"
+		"\t\t%s -s [-h IPs] -f tdms|wav|csv|bin [-d NAME] [-m raw|volt] [-l SAMPLES] [-t MSEC] [-v]\n"
 		"\t\t%s --streaming [--hosts=IPs] --format=tdms|wav|csv|bin [--dir=NAME] [--limit=SAMPLES] [--mode=raw|volt] [--timeout=MSEC] "
 		"[--verbose]\n"
 		"\n"
