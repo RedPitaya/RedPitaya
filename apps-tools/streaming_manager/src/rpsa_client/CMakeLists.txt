@@ -9,8 +9,9 @@ if(NOT DEFINED RP_PLATFORM)
   set(RP_PLATFORM OFF)
 endif()
 
-message(STATUS "Project=${PROJECT_NAME}")
+message(STATUS "${Yellow}Project=${PROJECT_NAME}${ColourReset}")
 message(STATUS "RedPitaya platform=${RP_PLATFORM}")
+message(STATUS "CPU ARCH=${CMAKE_SYSTEM_PROCESSOR}")
 message(STATUS "Is install ${IS_INSTALL}")
 message(STATUS "Install path ${INSTALL_DIR}")
 message(STATUS "VERSION=${VERSION}")
@@ -107,12 +108,8 @@ else()
 endif()
 
 if(IS_INSTALL)
-       install(TARGETS ${PROJECT_NAME}
-              DESTINATION ${INSTALL_DIR}/streaming/rpsa_client-${VERSION}-${REVISION}${WIN_SUFFIX}${CLIENT_SUFFIX})
-
-
-       install(FILES ${JSON_FILES}
-              DESTINATION ${INSTALL_DIR}/streaming/rpsa_client-${VERSION}-${REVISION}${WIN_SUFFIX}${CLIENT_SUFFIX})
+        install(TARGETS ${PROJECT_NAME}
+            DESTINATION ${INSTALL_DIR}/streaming/rpsa_client-${VERSION}-${REVISION}${WIN_SUFFIX}${CLIENT_SUFFIX})
 
         install(CODE "execute_process(COMMAND zip -urj ${INSTALL_DIR}/streaming/rpsa_client-${VERSION}-${REVISION}${WIN_SUFFIX}${CLIENT_SUFFIX}.zip ${INSTALL_DIR}/streaming/rpsa_client-${VERSION}-${REVISION}${WIN_SUFFIX}${CLIENT_SUFFIX})")
         install(CODE "execute_process(COMMAND rm -rf ${INSTALL_DIR}/streaming/rpsa_client-${VERSION}-${REVISION}${WIN_SUFFIX}${CLIENT_SUFFIX})")

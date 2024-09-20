@@ -3,8 +3,9 @@ cmake_minimum_required(VERSION 3.18)
 project(uio_lib)
 
 
-message(STATUS "Project=${PROJECT_NAME}")
+message(STATUS "${Yellow}Project=${PROJECT_NAME}${ColourReset}")
 message(STATUS "RedPitaya platform=${RP_PLATFORM}")
+message(STATUS "CPU ARCH=${CMAKE_SYSTEM_PROCESSOR}")
 message(STATUS "VERSION=${VERSION}")
 message(STATUS "REVISION=${REVISION}")
 message(STATUS "BUILD_NUMBER=${BUILD_NUMBER}")
@@ -58,14 +59,14 @@ if(RP_PLATFORM)
     list(APPEND src
             ${PROJECT_SOURCE_DIR}/generator.cpp
             ${PROJECT_SOURCE_DIR}/oscilloscope.cpp
-            ${PROJECT_SOURCE_DIR}/memory_manager.cpp
+            ${PROJECT_SOURCE_DIR}/memory_manager_static.cpp
             ${PROJECT_SOURCE_DIR}/uio_parser.cpp
         )
 else()
     list(APPEND src
             ${PROJECT_SOURCE_DIR}/generator_dummy.cpp
             ${PROJECT_SOURCE_DIR}/oscilloscope_dummy.cpp
-            ${PROJECT_SOURCE_DIR}/memory_manager_dummy.cpp
+            ${PROJECT_SOURCE_DIR}/memory_manager_dynamic.cpp
             ${PROJECT_SOURCE_DIR}/uio_parser.cpp
         )
 endif()

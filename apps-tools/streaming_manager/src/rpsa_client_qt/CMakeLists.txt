@@ -9,8 +9,9 @@ if(NOT DEFINED RP_PLATFORM)
 endif()
 
 
-message(STATUS "Project=${PROJECT_NAME}")
+message(STATUS "${Yellow}Project=${PROJECT_NAME}${ColourReset}")
 message(STATUS "RedPitaya platform=${RP_PLATFORM}")
+message(STATUS "CPU ARCH=${CMAKE_SYSTEM_PROCESSOR}")
 message(STATUS "Is install ${IS_INSTALL}")
 message(STATUS "Install path ${INSTALL_DIR}")
 message(STATUS "VERSION=${VERSION}")

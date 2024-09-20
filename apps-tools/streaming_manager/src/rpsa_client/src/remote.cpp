@@ -514,7 +514,7 @@ auto stopStreaming(std::shared_ptr<ClientNetConfigManager> cl,
 	cl->serverStoppedNofiy.connect([&](std::string host) {
 		const std::lock_guard<std::mutex> lock(g_rmutex);
 		if (g_roption.verbous)
-			aprintf(stdout, "%s Streaming stopped: %s [OK ]\n", getTS(": ").c_str(), host.c_str());
+			aprintf(stdout, "%s Streaming stopped: %s [OK]\n", getTS(": ").c_str(), host.c_str());
 		masterHosts.remove(host);
 		slaveHosts.remove(host);
 		rstop_counter--;

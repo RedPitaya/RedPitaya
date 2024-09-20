@@ -3,8 +3,9 @@ cmake_minimum_required(VERSION 3.18)
 project(logger_lib)
 
 
-message(STATUS "Project=${PROJECT_NAME}")
+message(STATUS "${Yellow}Project=${PROJECT_NAME}${ColourReset}")
 message(STATUS "RedPitaya platform=${RP_PLATFORM}")
+message(STATUS "CPU ARCH=${CMAKE_SYSTEM_PROCESSOR}")
 message(STATUS "VERSION=${VERSION}")
 message(STATUS "REVISION=${REVISION}")
 message(STATUS "BUILD_NUMBER=${BUILD_NUMBER}")

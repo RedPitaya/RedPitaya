@@ -3,7 +3,7 @@ project(web_server)
 
 set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY true)
 
-message(STATUS "Project=${PROJECT_NAME}")
+message(STATUS "${Yellow}Project=${PROJECT_NAME}${ColourReset}")
 message(STATUS "RedPitaya platform=${RP_PLATFORM}")
 message(STATUS "Is install ${IS_INSTALL}")
 message(STATUS "Install path ${INSTALL_DIR}")

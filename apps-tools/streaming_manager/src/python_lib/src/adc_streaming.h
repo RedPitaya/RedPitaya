@@ -1,0 +1,37 @@
+#ifndef ADC_STREAMING_H
+#define ADC_STREAMING_H
+
+#include <vector>
+#include <string>
+
+class ADCCallback;
+
+class ADCStreamClient{
+    public:
+        ADCStreamClient();
+        ~ADCStreamClient();
+
+        auto connect() -> bool;
+        auto connect(std::vector<std::string> hosts) -> bool;
+
+        auto startStreaming() -> bool;
+        auto stopStreaming() -> bool;
+
+        auto sendConfig(std::string key, std::string value) -> bool;
+        auto sendConfig(std::string host, std::string key, std::string value) -> bool;
+        auto getConfig(std::string key) -> std::string;
+        auto getConfig(std::string host, std::string key) -> std::string;
+
+        auto setVerbose(bool enable) -> void;
+
+        auto setReciveDataFunction(ADCCallback *callback) -> void;
+        auto removeReciveDataFunction() -> void;
+
+    private:
+
+    struct Impl;
+    // Pointer to the internal implementation
+    Impl *m_pimpl;
+};
+
+#endif
