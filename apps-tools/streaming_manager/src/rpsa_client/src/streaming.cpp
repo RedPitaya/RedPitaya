@@ -233,6 +233,7 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Optio
 	runned_hosts.clear();
 	remote_opt.remote_mode = ClientOpt::RemoteMode::START;
 	if (startRemote(cl, remote_opt, nullptr, &runned_hosts)) {
+		g_runClientCounter = runned_hosts.size();
 		for (auto kv : runned_hosts) {
 			if (kv.second == StateRunnedHosts::TCP && activeChannels[kv.first] > 0)
 				clients.push_back(std::thread(runClient, kv.first, kv.second, blockSizes[kv.first], activeChannels[kv.first]));

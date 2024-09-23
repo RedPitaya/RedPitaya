@@ -274,7 +274,7 @@ auto startServer(bool verbMode, bool testMode, bool is_master) -> void
 
 		if (reservedBlocks == 0) {
 			printWithLog(LOG_ERR, stdout, "Can't reserve memory via memory manager\n")
-				stopNonBlocking(ServerNetConfigManager::EStopReason::MEM_ERROR);
+			stopNonBlocking(ServerNetConfigManager::EStopReason::MEM_ERROR);
 			return;
 		}
 

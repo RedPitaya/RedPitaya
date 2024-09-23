@@ -6,13 +6,23 @@
 #include <vector>
 #include "logger_lib/file_logger.h"
 
+struct ADCChannel{
+    uint32_t samples = 0;
+    uint8_t bitsBySample = 0;
+    uint64_t fpgaLost = 0;
+    bool attenuator_1_20 = 0;
+    uint32_t baseRate = 0;
+    uint8_t adcBaseBits = 0;
+    uint64_t packId = 0;
+    std::vector<int16_t> raw;
+};
+
 struct ADCPack{
     std::string host;
-    uint64_t fpgaLost;
-    std::vector<int16_t> ch1_raw;
-    std::vector<int16_t> ch2_raw;
-    std::vector<int16_t> ch3_raw;
-    std::vector<int16_t> ch4_raw;
+    ADCChannel channel1;
+    ADCChannel channel2;
+    ADCChannel channel3;
+    ADCChannel channel4;
 };
 
 class ADCCallback

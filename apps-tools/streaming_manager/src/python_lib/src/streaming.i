@@ -16,6 +16,7 @@
 
 %feature("director") ADCCallback;
 
+
 %template(StringVector) std::vector<std::string>;
 %template(Int16Vector) std::vector<int16_t>;
 
@@ -23,7 +24,7 @@
     $result = PyList_New($1->size()); // Create outer Python list of correct size
     for(size_t i = 0; i < $1->size(); ++i)
     {
-        PyList_SET_ITEM($result,i,PyFloat_FromDouble((*$1)[i]));
+        PyList_SET_ITEM($result,i,PyLong_FromLong((*$1)[i]));
     }
 %}
 

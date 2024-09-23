@@ -22,6 +22,12 @@ class ADCStreamClient{
         auto getConfig(std::string key) -> std::string;
         auto getConfig(std::string host, std::string key) -> std::string;
 
+        auto sendFileConfig(std::string config) -> bool;
+        auto sendFileConfig(std::string host, std::string config) -> bool;
+        auto getFileConfig() -> std::string;
+        auto getFileConfig(std::string host) -> std::string;
+
+
         auto setVerbose(bool enable) -> void;
 
         auto setReciveDataFunction(ADCCallback *callback) -> void;

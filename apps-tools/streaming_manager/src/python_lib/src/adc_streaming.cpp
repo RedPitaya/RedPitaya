@@ -62,11 +62,38 @@ auto ADCStreamClient::Impl::runClient(std::string host, uint32_t size, uint32_t 
                 if(m_callback){
                     ADCPack pack_py;
                     pack_py.host = host;
-                    pack_py.fpgaLost = pack->getLostAll();
-                    pack_py.ch1_raw.push_back(1);
-                    pack_py.ch1_raw.push_back(2);
-                    pack_py.ch1_raw.push_back(3);
-                    pack_py.ch2_raw.push_back(666);
+
+                    auto setChannelData = [](ADCChannel &channel, DataLib::CDataBufferDMA::Ptr buff){
+                        if (buff){
+                            channel.bitsBySample = buff->getBitBySample();
+                            channel.fpgaLost = buff->getLostSamples(DataLib::FPGA);
+                            channel.samples = buff->getSamplesCount();
+                            channel.adcBaseBits = buff->getADCBaseBits();
+                            channel.baseRate = buff->getADCBaseRate();
+                            channel.attenuator_1_20 = buff->getADCMode();
+                            channel.packId = buff->getADCPackId();
+                            channel.raw.reserve(channel.samples);
+                            if (channel.bitsBySample == 8){
+                                auto data = reinterpret_cast<int8_t*>(buff->getMappedDataMemory());
+                                for(size_t k = 0 ; k < channel.samples;k++){
+                                    channel.raw.push_back(data[k]);
+                                }
+                            }
+
+                            if (channel.bitsBySample == 16){
+                                auto data = reinterpret_cast<int16_t*>(buff->getMappedDataMemory());
+                                for(size_t k = 0 ; k < channel.samples;k++){
+                                    channel.raw.push_back(data[k]);
+                                }
+                            }
+                        }
+                    };
+
+                    setChannelData(pack_py.channel1,pack->getBuffer(DataLib::EDataBuffersPackChannel::CH1));
+                    setChannelData(pack_py.channel2,pack->getBuffer(DataLib::EDataBuffersPackChannel::CH2));
+                    setChannelData(pack_py.channel3,pack->getBuffer(DataLib::EDataBuffersPackChannel::CH3));
+                    setChannelData(pack_py.channel4,pack->getBuffer(DataLib::EDataBuffersPackChannel::CH4));
+
                     m_callback->recievePack(pack_py);
                 }
 				obj->unlockBufferRead();
@@ -193,11 +220,11 @@ auto ADCStreamClient::startStreaming() -> bool{
 	std::map<string, StateRunnedHosts> runned_hosts;
     stopStreaming();
     if (requestStartStreaming(m_pimpl->m_configClient, masterHosts,slaveHosts,&runned_hosts,m_pimpl->m_verbose)) {
+       	m_pimpl->m_runClientCounter = runned_hosts.size();
 		for (auto kv : runned_hosts) {
 			if (kv.second == StateRunnedHosts::TCP && activeChannels[kv.first] > 0)
 				m_pimpl->clients.push_back(new std::thread(&ADCStreamClient::Impl::runClient,m_pimpl, kv.first, blockSizes[kv.first], activeChannels[kv.first]));
 		}
-
         auto beginTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count();
         auto timeout = false;
         while (!timeout && m_pimpl->m_runClientCounter  > 0) {
@@ -276,23 +303,265 @@ auto ADCStreamClient::setVerbose(bool enable) -> void{
 }
 
 auto ADCStreamClient::sendConfig(std::string key, std::string value) -> bool{
-    printf("Send %s %s\n",key.c_str(),value.c_str());
-    return true;
+    auto connected_hosts = m_pimpl->m_configClient->getHosts();
+    if (connected_hosts.size() != 1){
+        const char *msg  = connected_hosts.size() == 0 ? "The server is not connected" : "More than 1 server connected";
+        aprintf(stderr,"%s %s\n",getTS(": ").c_str(), msg);
+        return false;
+    }else{
+        return sendConfig(connected_hosts.front(),key,value);
+    };
 }
 
 auto ADCStreamClient::sendConfig(std::string host, std::string key, std::string value) -> bool{
-     printf("Send %s %s\n",key.c_str(),value.c_str());
-    return true;
+    std::atomic<int> set_counter;
+	m_pimpl->m_configClient->successSendConfigNofiy.connect([&](std::string host) {
+		const std::lock_guard lock(m_pimpl->m_smutex);
+        if (m_pimpl->m_verbose){
+            aprintf(stdout, "%s SET: %s [OK]\n", getTS(": ").c_str(), host.c_str());
+            aprintf(stdout, "%s Send configuration save command to: %s\n", getTS(": ").c_str(), host.c_str());
+        }
+        m_pimpl->m_configClient->sendSaveToFile(host);
+	});
+
+	m_pimpl->m_configClient->failSendConfigNofiy.connect([&](std::string host) {
+		const std::lock_guard lock(m_pimpl->m_smutex);
+		if (m_pimpl->m_verbose)
+			aprintf(stdout, "%s SET: %s [FAIL]\n", getTS(": ").c_str(), host.c_str());
+		set_counter--;
+	});
+
+	m_pimpl->m_configClient->successSaveConfigNofiy.connect([&](std::string host) {
+		const std::lock_guard lock(m_pimpl->m_smutex);
+		if (m_pimpl->m_verbose)
+			aprintf(stdout, "%s SAVE TO FILE: %s [OK]\n", getTS(": ").c_str(), host.c_str());
+		set_counter--;
+	});
+
+	m_pimpl->m_configClient->failSaveConfigNofiy.connect([&](std::string host) {
+		const std::lock_guard lock(m_pimpl->m_smutex);
+		if (m_pimpl->m_verbose)
+			aprintf(stdout, "%s SAVE TO FILE: %s [FAIL]\n", getTS(": ").c_str(), host.c_str());
+		set_counter--;
+	});
+
+	m_pimpl->m_configClient->errorNofiy.connect([&](ClientNetConfigManager::Errors errors, std::string host, error_code err) {
+		const std::lock_guard lock(m_pimpl->m_smutex);
+		if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
+			aprintf(stderr, "%s Error: %s %s\n", getTS(": ").c_str(), host.c_str(), err.message().c_str());
+			set_counter--;
+		}
+
+		if (errors == ClientNetConfigManager::Errors::ERROR_SEND_CONFIG) {
+			if (m_pimpl->m_verbose)
+				aprintf(stderr, "%s Error send configuration: %s %s\n", getTS(": ").c_str(), host.c_str(), err.message().c_str());
+			set_counter--;
+		}
+	});
+
+    set_counter = 1;
+    if (m_pimpl->m_verbose)
+        aprintf(stdout, "%s Send configuration to: %s\n", getTS(": ").c_str(), host.c_str());
+    if (!m_pimpl->m_configClient->sendConfigVariable(host,key,value)) {
+        set_counter--;
+    }
+
+    auto beginTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count();
+	auto timeout = false;
+	while (!timeout && set_counter > 0) {
+		sleepMs(100);
+		timeout = (std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count() - beginTime  > 5000);
+	}
+	m_pimpl->m_configClient->removeHadlers();
+	return !timeout;
 }
 
 
 auto ADCStreamClient::getConfig(std::string key) -> std::string{
-    return "test";
+    auto connected_hosts = m_pimpl->m_configClient->getHosts();
+    if (connected_hosts.size() != 1){
+        const char *msg  = connected_hosts.size() == 0 ? "The server is not connected" : "More than 1 server connected";
+        aprintf(stderr,"%s %s\n",getTS(": ").c_str(), msg);
+        return "";
+    }else{
+        return getConfig(connected_hosts.front(),key);
+    };
 }
 
 auto ADCStreamClient::getConfig(std::string host, std::string key) -> std::string{
+    std::string config;
+    std::atomic<int> get_counter;
+	m_pimpl->m_configClient->getNewSettingsItemNofiy.connect([&](std::string host) {
+		const std::lock_guard lock(m_pimpl->m_smutex);
+		if (m_pimpl->m_verbose)
+			aprintf(stdout, "%s Get settings from: %s\n", getTS(": ").c_str(), host.c_str());
+		CStreamSettings *s = m_pimpl->m_configClient->getLocalSettingsOfHost(host);
+		config = s->getValue(key);
+		get_counter--;
+	});
 
-    return "test";
+	m_pimpl->m_configClient->errorNofiy.connect([&](ClientNetConfigManager::Errors errors, std::string host, error_code err) {
+		const std::lock_guard lock(m_pimpl->m_smutex);
+		if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
+			aprintf(stderr, "%s Error: %s %s\n", getTS(": ").c_str(), host.c_str(), err.message().c_str());
+			get_counter--;
+		}
+
+		if (errors == ClientNetConfigManager::Errors::CANNT_SET_DATA_TO_CONFIG) {
+			if (m_pimpl->m_verbose)
+				aprintf(stderr, "%s Error get settings from: %s\n", getTS(": ").c_str(), host.c_str());
+			get_counter--;
+		}
+	});
+
+	get_counter = 1;
+    if (m_pimpl->m_verbose)
+        aprintf(stdout, "%s Send configuration request: %s\n", getTS(": ").c_str(), host.c_str());
+    if (!m_pimpl->m_configClient->requestConfigVariable(host,key)) {
+        get_counter--;
+    }
+
+    auto beginTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count();
+	auto timeout = false;
+	while (!timeout && get_counter > 0) {
+		sleepMs(100);
+		timeout = (std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count() - beginTime  > 5000);
+	}
+	m_pimpl->m_configClient->removeHadlers();
+	return config;
+}
+
+auto ADCStreamClient::sendFileConfig(std::string config) -> bool{
+    auto connected_hosts = m_pimpl->m_configClient->getHosts();
+    if (connected_hosts.size() != 1){
+        const char *msg  = connected_hosts.size() == 0 ? "The server is not connected" : "More than 1 server connected";
+        aprintf(stderr,"%s %s\n",getTS(": ").c_str(), msg);
+        return false;
+    }else{
+        return sendFileConfig(connected_hosts.front(),config);
+    }
+}
+
+auto ADCStreamClient::sendFileConfig(std::string host, std::string config) -> bool{
+
+    if (!m_pimpl->m_configClient->parseJson(config)){
+        aprintf(stdout, "%s Error applying settings for host: %s\n", getTS(": ").c_str(), host.c_str());
+        return false;
+    }
+
+    std::atomic<int> set_counter;
+	m_pimpl->m_configClient->successSendConfigNofiy.connect([&](std::string host) {
+		const std::lock_guard lock(m_pimpl->m_smutex);
+		if (m_pimpl->m_verbose)
+			aprintf(stdout, "%s SET: %s [OK]\n", getTS(": ").c_str(), host.c_str());
+            aprintf(stdout, "%s Send configuration save command to: %s\n", getTS(": ").c_str(), host.c_str());
+        m_pimpl->m_configClient->sendSaveToFile(host);
+	});
+
+	m_pimpl->m_configClient->failSendConfigNofiy.connect([&](std::string host) {
+		const std::lock_guard lock(m_pimpl->m_smutex);
+		if (m_pimpl->m_verbose)
+			aprintf(stdout, "%s SET: %s [FAIL]\n", getTS(": ").c_str(), host.c_str());
+		set_counter--;
+	});
+
+	m_pimpl->m_configClient->successSaveConfigNofiy.connect([&](std::string host) {
+		const std::lock_guard lock(m_pimpl->m_smutex);
+		if (m_pimpl->m_verbose)
+			aprintf(stdout, "%s SAVE TO FILE: %s [OK]\n", getTS(": ").c_str(), host.c_str());
+		set_counter--;
+	});
+
+	m_pimpl->m_configClient->failSaveConfigNofiy.connect([&](std::string host) {
+		const std::lock_guard lock(m_pimpl->m_smutex);
+		if (m_pimpl->m_verbose)
+			aprintf(stdout, "%s SAVE TO FILE: %s [FAIL]\n", getTS(": ").c_str(), host.c_str());
+		set_counter--;
+	});
+
+	m_pimpl->m_configClient->errorNofiy.connect([&](ClientNetConfigManager::Errors errors, std::string host, error_code err) {
+		const std::lock_guard lock(m_pimpl->m_smutex);
+		if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
+			aprintf(stderr, "%s Error: %s %s\n", getTS(": ").c_str(), host.c_str(), err.message().c_str());
+			set_counter--;
+		}
+
+		if (errors == ClientNetConfigManager::Errors::ERROR_SEND_CONFIG) {
+			if (m_pimpl->m_verbose)
+				aprintf(stderr, "%s Error send configuration: %s %s\n", getTS(": ").c_str(), host.c_str(), err.message().c_str());
+			set_counter--;
+		}
+	});
+
+    set_counter = 1;
+    if (m_pimpl->m_verbose)
+        aprintf(stdout, "%s Send configuration to: %s\n", getTS(": ").c_str(), host.c_str());
+    if (!m_pimpl->m_configClient->sendConfig(host)) {
+        set_counter--;
+    }
+
+    auto beginTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count();
+	auto timeout = false;
+	while (!timeout && set_counter > 0) {
+		sleepMs(100);
+		timeout = (std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count() - beginTime  > 5000);
+	}
+	m_pimpl->m_configClient->removeHadlers();
+	return !timeout;
+}
+
+auto ADCStreamClient::getFileConfig() -> std::string{
+    auto connected_hosts = m_pimpl->m_configClient->getHosts();
+    if (connected_hosts.size() != 1){
+        const char *msg  = connected_hosts.size() == 0 ? "The server is not connected" : "More than 1 server connected";
+        aprintf(stderr,"%s %s\n",getTS(": ").c_str(), msg);
+        return "";
+    }else{
+        return getFileConfig(connected_hosts.front());
+    }
+}
+
+auto ADCStreamClient::getFileConfig(std::string host) -> std::string{
+    std::atomic<int> get_counter;
+    std::string config = "";
+	m_pimpl->m_configClient->getNewSettingsNofiy.connect([&](std::string host) {
+		const std::lock_guard lock(m_pimpl->m_smutex);
+		if (m_pimpl->m_verbose)
+			aprintf(stdout, "%s Get settings from: %s\n", getTS(": ").c_str(), host.c_str());
+		    CStreamSettings *s = m_pimpl->m_configClient->getLocalSettingsOfHost(host);
+			config = s->toJson();
+		get_counter--;
+	});
+
+	m_pimpl->m_configClient->errorNofiy.connect([&](ClientNetConfigManager::Errors errors, std::string host, error_code err) {
+		const std::lock_guard lock(m_pimpl->m_smutex);
+		if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
+			aprintf(stderr, "%s Error: %s %s\n", getTS(": ").c_str(), host.c_str(), err.message().c_str());
+			get_counter--;
+		}
+        if (errors == ClientNetConfigManager::Errors::CANNT_SET_DATA_TO_CONFIG) {
+			if (m_pimpl->m_verbose)
+				aprintf(stderr, "%s Error get settings from: %s\n", getTS(": ").c_str(), host.c_str());
+			get_counter--;
+		}
+	});
+
+
+	get_counter = 1;
+    if (m_pimpl->m_verbose)
+        aprintf(stdout, "%s Send configuration request: %s\n", getTS(": ").c_str(), host.c_str());
+    if (!m_pimpl->m_configClient->requestConfig(host)) {
+        get_counter--;
+    }
+
+    auto beginTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count();
+	auto timeout = false;
+	while (!timeout && get_counter > 0) {
+		sleepMs(100);
+		timeout = (std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count() - beginTime  > 5000);
+	}
+	m_pimpl->m_configClient->removeHadlers();
+	return config;
 }
 
 
