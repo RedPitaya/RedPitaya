@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION ${CMAKEVERS})
 project(web_server)
 
 set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY true)
@@ -30,19 +30,9 @@ list(APPEND r_paths
 set(CMAKE_INSTALL_RPATH ${r_paths})
 set(CMAKE_BUILD_RPATH ${r_paths})
 
-set(CMAKE_CXX_STANDARD 17)
-
 FILE(GLOB_RECURSE INC_ALL "*.h")
 
 add_library(${PROJECT_NAME} SHARED ${INC_ALL})
-
-if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
-    target_compile_options(${PROJECT_NAME}
-        PRIVATE -mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC -DRP_PLATFORM)
-
-    target_compile_definitions(${PROJECT_NAME}
-        PRIVATE ARCH_ARM)
-endif()
 
 if (RP_PLATFORM)
     target_compile_options(${PROJECT_NAME} PRIVATE -DRP_PLATFORM)
@@ -52,8 +42,7 @@ if (RP_PLATFORM)
     target_link_libraries(${PROJECT_NAME} PRIVATE rp-client rp-i2c rp-spi rp-gpio i2c)
 endif()
 
-target_compile_options(${PROJECT_NAME}
-    PRIVATE -Wall -Wno-reorder -fpermissive -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os -s>  -ffunction-sections -fdata-sections)
+target_compile_options(${PROJECT_NAME} PRIVATE -Wno-reorder -Wno-pedantic -Wno-unused-parameter)
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC  ${PROJECT_SOURCE_DIR}
@@ -75,7 +64,6 @@ target_link_directories(${PROJECT_NAME}
     ${CMAKE_BINARY_DIR}/bin/
     ${CMAKE_BINARY_DIR}/lib/
     )
-
 
 target_link_libraries(${PROJECT_NAME} PUBLIC config_net_lib dac_streaming_lib streaming_lib settings_lib pthread stdc++)
 

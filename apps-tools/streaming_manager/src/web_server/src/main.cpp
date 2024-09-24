@@ -941,7 +941,7 @@ bool startServer(bool testMode)
 
 		auto g_s_file_w = std::weak_ptr<streaming_lib::CStreamingFile>(g_s_file);
 		auto g_s_net_w = std::weak_ptr<streaming_lib::CStreamingNet>(g_s_net);
-		g_s_fpga->oscNotify.connect([g_s_net_w, g_s_file_w, rate, g_s_buffer_w](DataLib::CDataBuffersPackDMA::Ptr pack) {
+		g_s_fpga->oscNotify.connect([g_s_net_w, g_s_file_w, rate, g_s_buffer_w](__attribute__((unused)) DataLib::CDataBuffersPackDMA::Ptr pack) {
 			auto f_obj = g_s_file_w.lock();
 			auto b_obj = g_s_buffer_w.lock();
 			if (f_obj && b_obj) {
@@ -1053,7 +1053,7 @@ void stopServer(ServerNetConfigManager::EStopReason x)
 	}
 }
 
-auto startDACServer(bool testMode, uint8_t activeChannels) -> bool
+auto startDACServer(__attribute__((unused)) bool testMode, uint8_t activeChannels) -> bool
 {
 	if (!g_serverNetConfig)
 		return false;

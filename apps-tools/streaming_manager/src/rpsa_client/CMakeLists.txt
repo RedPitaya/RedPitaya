@@ -1,9 +1,7 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION ${CMAKEVERS})
 project(rpsa_client)
 
 set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY true)
-
-
 
 if(NOT DEFINED RP_PLATFORM)
   set(RP_PLATFORM OFF)
@@ -34,26 +32,9 @@ if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     message(STATUS "debug mode")
 endif()
 
-set(CMAKE_CXX_STANDARD 20)
-
 FILE(GLOB_RECURSE INC_ALL "*.h")
 
 add_executable(${PROJECT_NAME} ${INC_ALL})
-
-if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
-    target_compile_options(${PROJECT_NAME}
-        PRIVATE -mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
-
-    target_compile_definitions(${PROJECT_NAME}
-        PRIVATE ARCH_ARM)
-endif()
-
-if (RP_PLATFORM)
-    target_compile_options(${PROJECT_NAME} PRIVATE -DRP_PLATFORM)
-endif()
-
-target_compile_options(${PROJECT_NAME}
-    PRIVATE -Wall -Wextra -fpermissive -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 if (${CMAKE_BUILD_TYPE} STREQUAL "Release")
     target_link_options(${PROJECT_NAME} PRIVATE --static)

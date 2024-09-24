@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.19)
+cmake_minimum_required(VERSION ${CMAKEVERS})
 
 project(rpsa_client_qt VERSION 0.1 LANGUAGES CXX)
 
@@ -39,7 +39,6 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Quick Gui Qml REQUIRED PATHS ${QT_DIR} ${CMAKE_PREFIX_PATH}  NO_DEFAULT_PATH)
@@ -95,9 +94,6 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC  ${PROJECT_SOURCE_DIR}
             ${CMAKE_BINARY_DIR}/bin/include
             )
-
-target_compile_options(${PROJECT_NAME}
-            PRIVATE -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 target_link_directories(${PROJECT_NAME}
             PRIVATE

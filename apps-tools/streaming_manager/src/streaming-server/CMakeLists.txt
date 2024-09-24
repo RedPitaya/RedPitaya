@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION ${CMAKEVERS})
 project(streaming-server)
 
 set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY true)
@@ -29,19 +29,9 @@ list(APPEND r_paths
 set(CMAKE_INSTALL_RPATH ${r_paths})
 set(CMAKE_BUILD_RPATH ${r_paths})
 
-set(CMAKE_CXX_STANDARD 20)
-
 FILE(GLOB_RECURSE INC_ALL "*.h")
 
 add_executable(${PROJECT_NAME} ${INC_ALL})
-
-if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
-    target_compile_options(${PROJECT_NAME}
-        PRIVATE -mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
-
-    target_compile_definitions(${PROJECT_NAME}
-        PRIVATE ARCH_ARM)
-endif()
 
 if (RP_PLATFORM)
     target_compile_options(${PROJECT_NAME} PRIVATE -DRP_PLATFORM)
@@ -50,9 +40,6 @@ if (RP_PLATFORM)
     target_link_libraries(${PROJECT_NAME} PUBLIC rp rp-hw rp-hw-calib rp-hw-profiles)
     target_link_libraries(${PROJECT_NAME} PUBLIC rp-i2c rp-spi rp-gpio i2c)
 endif()
-
-target_compile_options(${PROJECT_NAME}
-    PRIVATE -Wall -Wextra -fpermissive -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os -s> -ffunction-sections -fdata-sections)
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC  ${PROJECT_SOURCE_DIR}
@@ -72,7 +59,7 @@ list(APPEND src
             ${PROJECT_SOURCE_DIR}/src/main.cpp
         )
 
-    target_sources(${PROJECT_NAME} PRIVATE ${src})
+target_sources(${PROJECT_NAME} PRIVATE ${src})
 
 target_link_directories(${PROJECT_NAME}
     PRIVATE

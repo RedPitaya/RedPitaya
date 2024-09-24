@@ -1,7 +1,6 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION ${CMAKEVERS})
 
 project(uio_lib)
-
 
 message(STATUS "${Yellow}Project=${PROJECT_NAME}${ColourReset}")
 message(STATUS "RedPitaya platform=${RP_PLATFORM}")
@@ -20,27 +19,12 @@ message(STATUS "Compiler С++ ID: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "Compiler С++version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Compiler С++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
-
-set(CMAKE_CXX_STANDARD 20)
-
 FILE(GLOB_RECURSE INC_ALL "*.h")
 
 add_library(${PROJECT_NAME} ${INC_ALL})
 
-if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
-    target_compile_options(${PROJECT_NAME}
-        PRIVATE -mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
-
-    target_compile_definitions(${PROJECT_NAME}
-        PRIVATE ARCH_ARM)
-endif()
-
-if (RP_PLATFORM)
-    target_compile_options(${PROJECT_NAME} PRIVATE -DRP_PLATFORM)
-endif()
-
 target_compile_options(${PROJECT_NAME}
-    PRIVATE -Wall -Wextra -Wno-unused-result -fpermissive $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+    PRIVATE -Wno-unused-result)
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC  ${PROJECT_SOURCE_DIR}
@@ -75,7 +59,6 @@ target_sources(${PROJECT_NAME} PRIVATE ${src})
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE pthread stdc++)
-
 
 file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin/include/${PROJECT_NAME}")
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD

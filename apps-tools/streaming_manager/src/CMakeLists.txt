@@ -1,4 +1,6 @@
-cmake_minimum_required(VERSION 3.18)
+set(CMAKEVERS 3.22)
+
+cmake_minimum_required(VERSION ${CMAKEVERS})
 project(streaming)
 
 if(NOT WIN32)
@@ -79,9 +81,27 @@ set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install_dir")
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_FLAGS -Wno-psabi)
-#set(CMAKE_CXX_FLAGS -fsanitize=address)
 
+#add_compile_options(-fsanitize=address)
+add_compile_options(-DVERSION=${VERSION} -DREVISION=${REVISION})
+add_compile_options(-Wno-psabi $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+
+if(NOT WIN32 )
+    add_compile_options(-Wall -pedantic -Wextra)
+endif()
+
+if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcpu=cortex-a9 -mfpu=neon-fp16")
+    add_compile_definitions(ARCH_ARM)
+endif()
+
+if(NOT WIN32)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+endif()
+
+if (RP_PLATFORM)
+    add_compile_options(-DRP_PLATFORM)
+endif()
 
 add_subdirectory(common_lib)
 

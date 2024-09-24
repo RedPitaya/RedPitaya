@@ -1,9 +1,7 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION ${CMAKEVERS})
 project(python_lib)
 
 set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY true)
-
-
 
 if(NOT DEFINED RP_PLATFORM)
   set(RP_PLATFORM OFF)
@@ -42,26 +40,11 @@ find_package(SWIG REQUIRED)
 INCLUDE(${SWIG_USE_FILE})
 find_package(PythonLibs)
 
-
 set_property(SOURCE src/streaming.i PROPERTY CPLUSPLUS ON)
 
 set(CMAKE_SWIG_FLAGS -threads)
 
 SWIG_ADD_LIBRARY(${PROJECT_NAME} LANGUAGE python SOURCES src/streaming.i ${src})
-
-if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
-    target_compile_options(${PROJECT_NAME}
-        PRIVATE -mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
-    target_compile_definitions(${PROJECT_NAME}
-        PRIVATE ARCH_ARM)
-endif()
-
-if (RP_PLATFORM)
-    target_compile_options(${PROJECT_NAME} PRIVATE -DRP_PLATFORM)
-endif()
-
-target_compile_options(${PROJECT_NAME}
-    PRIVATE -Wall -Wextra -fpermissive -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 list(APPEND src
             ${PROJECT_SOURCE_DIR}/src/adc_streaming.cpp
@@ -71,6 +54,8 @@ list(APPEND src
 include_directories(${PYTHON_INCLUDE_PATH}
                     ${CMAKE_BINARY_DIR}/bin/include
                     ${PROJECT_SOURCE_DIR}/src)
+
+target_compile_options(${PROJECT_NAME} PRIVATE -Wno-unused-parameter)
 
 target_sources(${PROJECT_NAME} PRIVATE ${src})
 

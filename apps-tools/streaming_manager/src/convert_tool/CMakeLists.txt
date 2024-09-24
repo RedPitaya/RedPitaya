@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION ${CMAKEVERS})
 project(convert_tool)
 
 set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY true)
@@ -25,8 +25,6 @@ message(STATUS "Compiler С++version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Compiler С++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
 
-set(CMAKE_CXX_STANDARD 20)
-
 FILE(GLOB_RECURSE INC_ALL "*.h")
 
 
@@ -44,28 +42,10 @@ if (${CMAKE_BUILD_TYPE} STREQUAL "Release")
     target_link_options(${PROJECT_NAME} PRIVATE --static)
 endif()
 
-if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
-    target_compile_options(${PROJECT_NAME}
-        PRIVATE -mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC -DRP_PLATFORM)
-
-    target_compile_definitions(${PROJECT_NAME}
-        PRIVATE ARCH_ARM)
-endif()
-
-if (RP_PLATFORM)
-    target_compile_options(${PROJECT_NAME} PRIVATE -DRP_PLATFORM)
-endif()
-
-target_compile_options(${PROJECT_NAME}
-    PRIVATE -Wall -Wextra -fpermissive  -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
-
 target_include_directories(${PROJECT_NAME}
     PUBLIC  ${PROJECT_SOURCE_DIR}
             ${CMAKE_BINARY_DIR}/bin/include
             )
-
-list(APPEND headers
-        )
 
 list(APPEND src
             ${PROJECT_SOURCE_DIR}/src/main.cpp

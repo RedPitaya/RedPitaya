@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION ${CMAKEVERS})
 
 project(settings_lib)
 
@@ -28,13 +28,15 @@ set (JSONCPP_WITH_TESTS OFF CACHE INTERNAL "Turn off jsontest")
 set (JSONCPP_WITH_POST_BUILD_UNITTEST OFF CACHE INTERNAL "Turn off JSONCPP_WITH_POST_BUILD_UNITTEST")
 set (JSONCPP_WITH_PKGCONFIG_SUPPORT OFF CACHE INTERNAL "Turn off JSONCPP_WITH_PKGCONFIG_SUPPORT")
 
-set(CMAKE_CXX_STANDARD 20)
-
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations -Wno-deprecated")
 
-if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC -Wno-deprecated-declarations -Wno-deprecated")
-endif()
+# if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
+#     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcpu=cortex-a9 -mfpu=neon-fp16 -Wno-deprecated-declarations -Wno-deprecated")
+# endif()
+
+# if(NOT WIN32)
+#     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+# endif()
 
 FetchContent_Declare(json
         GIT_REPOSITORY https://github.com/open-source-parsers/jsoncpp
@@ -45,22 +47,6 @@ FetchContent_MakeAvailable(json)
 FILE(GLOB_RECURSE INC_ALL "*.h")
 
 add_library(${PROJECT_NAME} ${INC_ALL})
-
-if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
-    target_compile_options(${PROJECT_NAME}
-        PRIVATE -mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
-
-    target_compile_definitions(${PROJECT_NAME}
-        PRIVATE ARCH_ARM)
-endif()
-
-if (RP_PLATFORM)
-    target_compile_options(${PROJECT_NAME} PRIVATE -DRP_PLATFORM)
-endif()
-
-target_compile_options(${PROJECT_NAME}
-    PRIVATE -Wall -pedantic -Wextra -fpermissive  $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
-
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC  ${PROJECT_SOURCE_DIR}
