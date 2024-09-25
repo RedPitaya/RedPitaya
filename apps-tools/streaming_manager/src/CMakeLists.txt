@@ -127,7 +127,7 @@ endif()
 
 if (BUILD_PYTHON_LIB)
     add_subdirectory(python_lib)
-    add_dependencies(python_lib common_lib)
+    add_dependencies(python_lib_project common_lib)
 endif()
 
 if (BUILD_CONVERT_TOOL)
