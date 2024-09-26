@@ -1,5 +1,5 @@
-#ifndef ADC_CALLBACK_H
-#define ADC_CALLBACK_H
+#ifndef CALLBACKS_H
+#define CALLBACKS_H
 
 #include <string>
 #include <stdint.h>
@@ -25,11 +25,13 @@ struct ADCPack{
     ADCChannel channel4;
 };
 
+class ADCStreamClient;
+
 class ADCCallback
 {
    public:
       virtual ~ADCCallback(){}
-      virtual void recievePack(ADCPack&){}
+      virtual void recievePack(ADCStreamClient*, ADCPack&){}
 };
 
 #endif

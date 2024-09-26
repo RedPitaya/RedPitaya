@@ -4,7 +4,7 @@ import time
 import streaming
 
 class Callback(streaming.ADCCallback):
-    def recievePack(self,n):
+    def recievePack(self,client,n):
         print(n.host)
         print(n.channel1.samples)
         print(n.channel1.fpgaLost)

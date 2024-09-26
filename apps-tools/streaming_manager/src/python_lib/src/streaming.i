@@ -9,7 +9,7 @@
 %include <cpointer.i>
 
 %{
-#include "adc_callback.h"
+#include "callbacks.h"
 #include "adc_streaming.h"
 %}
 
@@ -30,4 +30,4 @@
 
 /* Parse the header file to generate wrappers */
 %include "adc_streaming.h"
-%include "adc_callback.h"
+%include "callbacks.h"

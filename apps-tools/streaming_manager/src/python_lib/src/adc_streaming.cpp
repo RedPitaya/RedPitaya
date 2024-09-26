@@ -22,7 +22,7 @@ struct ADCStreamClient::Impl {
 };
 
 
-auto ADCStreamClient::Impl::runClient(std::string host, uint32_t size, uint32_t activeChannels) -> void
+auto ADCStreamClient::Impl::runClient(ADCStreamClient *client, std::string host, uint32_t size, uint32_t activeChannels) -> void
 {
 	auto memoryManager = new uio_lib::CMemoryManager();
 	auto buffers = DataLib::CBuffersCached::create();
@@ -94,7 +94,7 @@ auto ADCStreamClient::Impl::runClient(std::string host, uint32_t size, uint32_t 
                     setChannelData(pack_py.channel3,pack->getBuffer(DataLib::EDataBuffersPackChannel::CH3));
                     setChannelData(pack_py.channel4,pack->getBuffer(DataLib::EDataBuffersPackChannel::CH4));
 
-                    m_callback->recievePack(pack_py);
+                    m_callback->recievePack(client,pack_py);
                 }
 				obj->unlockBufferRead();
 			}
@@ -223,7 +223,7 @@ auto ADCStreamClient::startStreaming() -> bool{
        	m_pimpl->m_runClientCounter = runned_hosts.size();
 		for (auto kv : runned_hosts) {
 			if (kv.second == StateRunnedHosts::TCP && activeChannels[kv.first] > 0)
-				m_pimpl->clients.push_back(new std::thread(&ADCStreamClient::Impl::runClient,m_pimpl, kv.first, blockSizes[kv.first], activeChannels[kv.first]));
+				m_pimpl->clients.push_back(new std::thread(&ADCStreamClient::Impl::runClient,m_pimpl, this, kv.first, blockSizes[kv.first], activeChannels[kv.first]));
 		}
         auto beginTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count();
         auto timeout = false;
