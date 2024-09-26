@@ -57,8 +57,6 @@ auto search() -> std::string
 	return "";
 }
 
-
-
 auto requestMemoryBlockSize(ClientNetConfigManager::Ptr cl,
 							const std::list<std::string> &hosts,
 							std::map<std::string, uint32_t> *sizes,
@@ -120,7 +118,7 @@ auto requestActiveChannels(ClientNetConfigManager::Ptr cl,
 	cl->getActiveChannelsNofiy.connect([&](std::string host, std::string size) {
 		const std::lock_guard<std::mutex> lock(g_rmutex);
 		if (verbose)
-			aprintf(stdout, "%s %s Active channels: %s\n", getTS(": ").c_str(), host.c_str(), size.c_str());
+			aprintf(stdout, "%s Active channels %s for %s\n", getTS(": ").c_str(), size.c_str(),host.c_str());
 		rstart_counter--;
 		if (channels)
 			(*channels)[host] = atoi(size.c_str());
@@ -176,6 +174,15 @@ auto requestStartStreaming(ClientNetConfigManager::Ptr cl,
 		const std::lock_guard lock(g_rmutex);
 		if (verbous)
 			aprintf(stdout, "%s Streaming started: %s memory error [FAIL]\n", getTS(": ").c_str(), host.c_str());
+		rstart_counter--;
+		masterHosts.remove(host);
+		slaveHosts.remove(host);
+	});
+
+	cl->serverStoppedNoActiveChannelsNofiy.connect([&](std::string host) {
+		const std::lock_guard lock(g_rmutex);
+		if (verbous)
+			aprintf(stdout, "%s Streaming started: %s No active channels [FAIL]\n", getTS(": ").c_str(), host.c_str());
 		rstart_counter--;
 		masterHosts.remove(host);
 		slaveHosts.remove(host);

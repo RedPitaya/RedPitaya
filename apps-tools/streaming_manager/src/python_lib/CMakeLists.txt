@@ -109,9 +109,14 @@ if(IS_INSTALL)
             LIBRARY DESTINATION ${INSTALL_DIR}/streaming/${PROJECT_NAME}/python
             ARCHIVE DESTINATION ${INSTALL_DIR}/streaming/${PROJECT_NAME}/python)
 
-        install(FILES test/streaming_test.py
+        # install(FILES test/streaming_test.py
+        #     DESTINATION ${INSTALL_DIR}/streaming/${PROJECT_NAME}/python PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+        #     GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_WRITE WORLD_EXECUTE)
+
+        install(FILES examples/adc_example_1.py examples/adc_example_2.py
             DESTINATION ${INSTALL_DIR}/streaming/${PROJECT_NAME}/python PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
             GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_WRITE WORLD_EXECUTE)
+
         install(CODE "execute_process(COMMAND zip -urj ${INSTALL_DIR}/streaming/rpsa_client-${VERSION}-${REVISION}${WIN_SUFFIX}${CLIENT_SUFFIX}.zip ${INSTALL_DIR}/streaming/${PROJECT_NAME})")
         install(CODE "execute_process(COMMAND rm -rf ${INSTALL_DIR}/streaming/${PROJECT_NAME})")
 endif()

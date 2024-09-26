@@ -31,7 +31,22 @@ class ADCCallback
 {
    public:
       virtual ~ADCCallback(){}
-      virtual void recievePack(ADCStreamClient*, ADCPack&){}
+      virtual void recievePack(ADCStreamClient*, ADCPack& pack){}
+      virtual void connected(ADCStreamClient*, std::string){}
+      virtual void disconnected(ADCStreamClient*, std::string){}
+      virtual void error(ADCStreamClient*, std::string, int){}
+      virtual void stopped(ADCStreamClient*, std::string){}
+      virtual void stoppedNoActiveChannels(ADCStreamClient*, std::string){}
+      virtual void stoppedMemError(ADCStreamClient*, std::string){}
+      virtual void stoppedMemModify(ADCStreamClient*, std::string){}
+      virtual void stoppedSDFull(ADCStreamClient*, std::string){}
+      virtual void stoppedSDDone(ADCStreamClient*, std::string){}
+
+
+      virtual void configConnected(ADCStreamClient*, std::string){}
+      virtual void configError(ADCStreamClient*, std::string, int){}
+      virtual void configErrorTimeout(ADCStreamClient*, std::string){}
+
 };
 
 #endif

@@ -1,14 +1,22 @@
 #include <memory>
 #include <map>
 #include <string>
+#include <csignal>
+#include <functional>
 #include "adc_streaming.h"
 #include "common.h"
-#include "adc_callback.h"
+#include "callbacks.h"
 #include "config_net_lib/client_net_config_manager.h"
 #include "data_lib/buffers_cached.h"
 #include "uio_lib/memory_manager.h"
 #include "logger_lib/file_logger.h"
 #include "net_lib/asio_net.h"
+
+std::function<void(int)> shutdown_handler;
+
+void signal_handler(int signal) {
+	shutdown_handler(signal);
+}
 
 struct ADCStreamClient::Impl {
     ClientNetConfigManager::Ptr m_configClient = nullptr;
@@ -17,10 +25,9 @@ struct ADCStreamClient::Impl {
     std::map<std::string, bool> m_terminate;
     std::mutex m_smutex;
     std::atomic<int> m_runClientCounter;
-    auto runClient(std::string host, uint32_t size, uint32_t activeChannels) -> void;
+    auto runClient(ADCStreamClient *client, std::string host, uint32_t size, uint32_t activeChannels) -> void;
     std::vector<std::thread*> clients;
 };
-
 
 auto ADCStreamClient::Impl::runClient(ADCStreamClient *client, std::string host, uint32_t size, uint32_t activeChannels) -> void
 {
@@ -43,16 +50,26 @@ auto ADCStreamClient::Impl::runClient(ADCStreamClient *client, std::string host,
 		const std::lock_guard lock(m_smutex);
 		if (m_verbose)
 			aprintf(stdout, "%s Connect %s\n", getTS(": ").c_str(), host.c_str());
+		if (m_callback) m_callback->connected(client,host);
         m_runClientCounter--;
+	});
+
+	g_asionet->clientDisconnectNotify.connect([&](std::string host) {
+		const std::lock_guard lock(m_smutex);
+		if (m_verbose)
+			aprintf(stdout, "%s Disconnected %s\n", getTS(": ").c_str(), host.c_str());
+		if (m_callback) m_callback->disconnected(client,host);
 	});
 
 	g_asionet->clientErrorNotify.connect([&](std::error_code err) {
 		const std::lock_guard lock(m_smutex);
 		if (m_verbose)
 			aprintf(stdout, "%s Error %s %s\n", getTS(": ").c_str(), host.c_str(), err.message().c_str());
+		if (m_callback) m_callback->error(client,host,err.value());
         m_runClientCounter--;
 		m_terminate[host] = true;
 	});
+
     g_asionet->reciveNotify.connect([&](std::error_code error, DataLib::CDataBuffersPackDMA::Ptr pack) {
         const std::lock_guard lock(m_smutex);
 		if (!error) {
@@ -100,7 +117,6 @@ auto ADCStreamClient::Impl::runClient(ADCStreamClient *client, std::string host,
 			}
 		}
 	});
-
 	g_asionet->start();
 	while (!m_terminate[host]) {
 		sleepMs(100);
@@ -113,7 +129,11 @@ auto ADCStreamClient::Impl::runClient(ADCStreamClient *client, std::string host,
 ADCStreamClient::ADCStreamClient(){
     m_pimpl = new Impl();
     m_pimpl->m_configClient = std::make_shared<ClientNetConfigManager>("", false);
-
+	auto sigInt = [&](int){
+		notifyStop();
+	};
+	shutdown_handler = sigInt;
+	std::signal(SIGINT, signal_handler);
 }
 
 ADCStreamClient::~ADCStreamClient(){
@@ -132,29 +152,35 @@ auto ADCStreamClient::connect() -> bool{
 
 auto ADCStreamClient::connect(std::vector<std::string> hosts) -> bool{
     std::atomic<int> connect_counter;
+    std::atomic<uint16_t> connected;
 
 	m_pimpl->m_configClient->serverConnectedNofiy.connect([&](std::string host) {
 		const std::lock_guard lock(m_pimpl->m_smutex);
 		if (m_pimpl->m_verbose)
 			aprintf(stderr, "%s Connected: %s\n", getTS(": ").c_str(), host.c_str());
+		if (m_pimpl->m_callback) m_pimpl->m_callback->configConnected(this, host);
 		connect_counter--;
+		connected++;
 	});
 
 	m_pimpl->m_configClient->errorNofiy.connect([&](ClientNetConfigManager::Errors errors, std::string host, error_code err) {
 		const std::lock_guard lock(m_pimpl->m_smutex);
 		if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
 			aprintf(stderr, "%s Error: %s %s\n", getTS(": ").c_str(), host.c_str(), err.message().c_str());
+			if (m_pimpl->m_callback) m_pimpl->m_callback->configError(this, host,err.value());
 			connect_counter--;
 		}
 
 		if (errors == ClientNetConfigManager::Errors::CONNECT_TIMEOUT) {
 			if (m_pimpl->m_verbose)
 				aprintf(stderr, "%s Connect timeout: %s\n", getTS(": ").c_str(), host.c_str());
+			if (m_pimpl->m_callback) m_pimpl->m_callback->configErrorTimeout(this, host);
 			connect_counter--;
 		}
 	});
 
 	connect_counter = hosts.size();
+	connected = 0;
 	m_pimpl->m_configClient->connectToServers(hosts, NET_CONFIG_PORT);
 
 	auto beginTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count();
@@ -164,7 +190,7 @@ auto ADCStreamClient::connect(std::vector<std::string> hosts) -> bool{
 		timeout = (std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count() - beginTime  > 5000);
 	}
 	m_pimpl->m_configClient->removeHadlers();
-	return !timeout;
+	return !timeout && connected == hosts.size();
 }
 
 auto ADCStreamClient::setReciveDataFunction(ADCCallback *callback) -> void{
@@ -219,12 +245,17 @@ auto ADCStreamClient::startStreaming() -> bool{
 
 	std::map<string, StateRunnedHosts> runned_hosts;
     stopStreaming();
+
     if (requestStartStreaming(m_pimpl->m_configClient, masterHosts,slaveHosts,&runned_hosts,m_pimpl->m_verbose)) {
        	m_pimpl->m_runClientCounter = runned_hosts.size();
 		for (auto kv : runned_hosts) {
 			if (kv.second == StateRunnedHosts::TCP && activeChannels[kv.first] > 0)
 				m_pimpl->clients.push_back(new std::thread(&ADCStreamClient::Impl::runClient,m_pimpl, this, kv.first, blockSizes[kv.first], activeChannels[kv.first]));
+			else{
+				m_pimpl->m_runClientCounter--;
+			}
 		}
+
         auto beginTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count();
         auto timeout = false;
         while (!timeout && m_pimpl->m_runClientCounter  > 0) {
@@ -236,6 +267,7 @@ auto ADCStreamClient::startStreaming() -> bool{
 		for (const auto &[key, _] : runned_hosts) {
 			runnedThreads.push_back(key);
 		}
+
 		if (!requestStartADC(m_pimpl->m_configClient, masterHosts,slaveHosts,&runned_hosts,m_pimpl->m_verbose)) {
 			aprintf(stdout, "%s Can't start ADC on remote machines\n", getTS(": ").c_str());
 			for (auto &h : runnedThreads) {
@@ -248,12 +280,19 @@ auto ADCStreamClient::startStreaming() -> bool{
 			if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
 				aprintf(stderr, "%s Error: %s %s\n", getTS(": ").c_str(), host.c_str(), err.message().c_str());
 			}
+			if (m_pimpl->m_callback) m_pimpl->m_callback->configError(this, host,err.value());
 			m_pimpl->m_terminate[host] = true;
 		});
 
 		m_pimpl->m_configClient->serverStoppedNofiy.connect([&](std::string host) {
 			if (m_pimpl->m_verbose)
 				aprintf(stderr, "%s Streaming stopped: %s [OK]\n", getTS(": ").c_str(), host.c_str());
+			m_pimpl->m_terminate[host] = true;
+		});
+
+		m_pimpl->m_configClient->serverStoppedNoActiveChannelsNofiy.connect([&](std::string host) {
+			if (m_pimpl->m_verbose)
+				aprintf(stderr, "%s Streaming stopped: %s [OK]. No active channels.\n", getTS(": ").c_str(), host.c_str());
 			m_pimpl->m_terminate[host] = true;
 		});
 
@@ -284,7 +323,7 @@ auto ADCStreamClient::startStreaming() -> bool{
     return true;
 }
 
-auto ADCStreamClient::stopStreaming() -> bool{
+auto ADCStreamClient::stopStreaming() -> void{
     for(auto &kv : m_pimpl->m_terminate){
         kv.second = true;
     }
@@ -295,7 +334,27 @@ auto ADCStreamClient::stopStreaming() -> bool{
         delete t;
     }
     m_pimpl->clients.clear();
-    return 0;
+}
+
+auto ADCStreamClient::wait() -> void{
+	for (auto t : m_pimpl->clients) {
+        if (t->joinable()) {
+            t->join();
+        }
+    }
+}
+
+auto ADCStreamClient::notifyStop() -> void{
+    for(auto &kv : m_pimpl->m_terminate){
+        kv.second = true;
+    }
+}
+
+auto ADCStreamClient::notifyStop(std::string host) -> void{
+	for(auto &kv : m_pimpl->m_terminate){
+		if (host == kv.first)
+		    kv.second = true;
+    }
 }
 
 auto ADCStreamClient::setVerbose(bool enable) -> void{
@@ -452,9 +511,10 @@ auto ADCStreamClient::sendFileConfig(std::string host, std::string config) -> bo
     std::atomic<int> set_counter;
 	m_pimpl->m_configClient->successSendConfigNofiy.connect([&](std::string host) {
 		const std::lock_guard lock(m_pimpl->m_smutex);
-		if (m_pimpl->m_verbose)
+		if (m_pimpl->m_verbose){
 			aprintf(stdout, "%s SET: %s [OK]\n", getTS(": ").c_str(), host.c_str());
             aprintf(stdout, "%s Send configuration save command to: %s\n", getTS(": ").c_str(), host.c_str());
+		}
         m_pimpl->m_configClient->sendSaveToFile(host);
 	});
 

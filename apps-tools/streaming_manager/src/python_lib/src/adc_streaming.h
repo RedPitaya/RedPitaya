@@ -15,7 +15,10 @@ class ADCStreamClient{
         auto connect(std::vector<std::string> hosts) -> bool;
 
         auto startStreaming() -> bool;
-        auto stopStreaming() -> bool;
+        auto stopStreaming() -> void;
+        auto wait() -> void;
+        auto notifyStop() -> void;
+        auto notifyStop(std::string host) -> void;
 
         auto sendConfig(std::string key, std::string value) -> bool;
         auto sendConfig(std::string host, std::string key, std::string value) -> bool;
