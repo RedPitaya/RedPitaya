@@ -20,7 +20,9 @@ public:
 		SD_FULL = 1,
 		DONE = 2,
 		MEM_ERROR = 3,
-		MEM_MODIFY = 4
+		MEM_MODIFY = 4,
+		NO_CHANNELS = 5
+
 	};
 
 	using Ptr = std::shared_ptr<ServerNetConfigManager>;
@@ -47,6 +49,7 @@ public:
 	auto sendServerStopped() -> bool;
 	auto sendServerStoppedSDFull() -> bool;
 	auto sendServerStoppedDone() -> bool;
+	auto sendServerNoChannelsStopped() -> bool;
 	auto sendServerMemoryErrorStopped() -> bool;
 	auto sendServerMemoryModifyStopped() -> bool;
 

@@ -903,7 +903,7 @@ bool startServer(bool testMode)
 
 		if (channelsActive == 0) {
 			WARNING("No active channels")
-			stopNonBlocking(ServerNetConfigManager::MEM_ERROR);
+			stopNonBlocking(ServerNetConfigManager::NO_CHANNELS);
 			return false;
 		}
 
@@ -1031,6 +1031,10 @@ void stopServer(ServerNetConfigManager::EStopReason x)
 			case ServerNetConfigManager::EStopReason::MEM_MODIFY:
 				g_serverNetConfig->sendServerMemoryModifyStopped();
 				ss_status.SendValue(5);
+				break;
+			case ServerNetConfigManager::EStopReason::NO_CHANNELS:
+				g_serverNetConfig->sendServerNoChannelsStopped();
+				ss_status.SendValue(6);
 				break;
 			default:
 				throw runtime_error("Unknown state");

@@ -123,6 +123,13 @@ CBoard::CBoard(QString ip)
 		Q_EMIT isADCStartedChanged();
 	});
 
+	m_configManager->serverStoppedNoActiveChannelsNofiy.connect([=](auto host) {
+		addLog("Streaming stopped. No active channels.");
+		m_isADCStarted = false;
+		ChartDataHolder::instance()->removeRP(ip);
+		Q_EMIT isADCStartedChanged();
+	});
+
 	m_configManager->getMemBlockSizeNofiy.connect([=](auto host, auto size) {
 		addLog(" Memory block size of " + QString::fromStdString(size));
 		m_blockSize = std::stoi(size);
@@ -265,7 +272,7 @@ auto CBoard::createStreaming() -> void
 	m_asionet->clientConnectNotify.connect([=](std::string host) {
 		QString msg = "Connect for streaming";
 		addLog(msg);
-		startADCFPGAStreaming();		
+		startADCFPGAStreaming();
 	});
 
 	m_asionet->clientErrorNotify.connect([=](std::error_code err) {

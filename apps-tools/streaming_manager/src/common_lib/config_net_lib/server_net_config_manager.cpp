@@ -237,6 +237,11 @@ auto ServerNetConfigManager::sendServerStopped() -> bool
 	return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_ADC_SERVER_STOPPED);
 }
 
+auto ServerNetConfigManager::sendServerNoChannelsStopped() -> bool
+{
+	return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_ADC_SERVER_STOPPED_NO_CHANNELS);
+}
+
 auto ServerNetConfigManager::sendServerMemoryErrorStopped() -> bool
 {
 	return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_ADC_SERVER_STOPPED_MEM_ERROR);

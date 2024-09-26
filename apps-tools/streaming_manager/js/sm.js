@@ -174,6 +174,12 @@ function promptFile(contentType, multiple) {
                 CLIENT.sendParameters();
             }
 
+            if (ss_status == 6) { // No channels
+                $('#ADC_STATUS_LED').attr("src","./img/red_led.png")
+                $('#ADC_STATUS').html("Status: No active channels").css("color","#cdcccc")
+                CLIENT.parametersCache["SS_STATUS"] = { value: 0 };
+                CLIENT.sendParameters();
+            }
         }
         SM.ss_status_last = ss_status;
     }

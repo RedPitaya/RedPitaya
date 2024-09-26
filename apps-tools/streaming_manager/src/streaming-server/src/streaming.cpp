@@ -268,7 +268,7 @@ auto startServer(bool verbMode, bool testMode, bool is_master) -> void
 		auto reservedBlocks = memmanager->reserveMemory(MM_ADC, freeblocks, channelsActive);
 
 		if (channelsActive == 0) {
-			printWithLog(LOG_ERR, stdout, "No active channels\n") stopNonBlocking(ServerNetConfigManager::EStopReason::MEM_ERROR);
+			printWithLog(LOG_ERR, stdout, "No active channels\n") stopNonBlocking(ServerNetConfigManager::EStopReason::NO_CHANNELS);
 			return;
 		}
 
@@ -388,6 +388,9 @@ auto stopServer(ServerNetConfigManager::EStopReason reason) -> void
 					break;
 				case ServerNetConfigManager::EStopReason::MEM_MODIFY:
 					g_serverNetConfig->sendServerMemoryModifyStopped();
+					break;
+				case ServerNetConfigManager::EStopReason::NO_CHANNELS:
+					g_serverNetConfig->sendServerNoChannelsStopped();
 					break;
 				default:
 					throw runtime_error("Unknown state");

@@ -283,6 +283,12 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Optio
 			stopStreaming(host);
 		});
 
+		cl->serverStoppedNoActiveChannelsNofiy.connect([](std::string host) {
+			if (g_soption.verbous)
+				aprintf(stderr, "%s Streaming stopped: %s [OK]. No active channels.\n", getTS(": ").c_str(), host.c_str());
+			stopStreaming(host);
+		});
+
 		cl->serverStoppedSDFullNofiy.connect([](std::string host) {
 			if (g_soption.verbous)
 				aprintf(stderr, "%s Streaming stopped: %s SD is full [OK]\n", getTS(": ").c_str(), host.c_str());

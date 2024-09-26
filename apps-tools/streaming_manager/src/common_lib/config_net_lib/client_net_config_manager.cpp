@@ -222,6 +222,10 @@ auto ClientNetConfigManager::receiveCommand(uint32_t command, std::string tag, s
 		serverStoppedNofiy(sender->m_manager->getHost());
 	}
 
+	if (c == CNetConfigManager::ECommands::CS_RESPONSE_ADC_SERVER_STOPPED_NO_CHANNELS) {
+		serverStoppedNoActiveChannelsNofiy(sender->m_manager->getHost());
+	}
+
 	if (c == CNetConfigManager::ECommands::CS_RESPONSE_ADC_SERVER_STOPPED_MEM_ERROR) {
 		serverStoppedMemErrorNofiy(sender->m_manager->getHost());
 	}

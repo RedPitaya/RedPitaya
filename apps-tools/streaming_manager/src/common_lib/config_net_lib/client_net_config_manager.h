@@ -73,6 +73,7 @@ public:
 	sigslot::signal<std::string &> serverStartedTCPNofiy;
 	sigslot::signal<std::string &> serverStartedSDNofiy;
 	sigslot::signal<std::string &> serverStoppedNofiy;
+	sigslot::signal<std::string &> serverStoppedNoActiveChannelsNofiy;
 	sigslot::signal<std::string &> serverStoppedMemErrorNofiy;
 	sigslot::signal<std::string &> serverStoppedMemModifyNofiy;
 	sigslot::signal<std::string &> serverStoppedSDFullNofiy;

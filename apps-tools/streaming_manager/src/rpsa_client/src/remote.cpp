@@ -127,7 +127,7 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl,
 	std::atomic<int> rstart_counter;
 
 	cl->errorNofiy.connect([&](ClientNetConfigManager::Errors errors, std::string host, error_code err) {
-		const std::lock_guard<std::mutex> lock(g_rmutex);
+		const std::lock_guard lock(g_rmutex);
 		if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
 			aprintf(stderr, "%s Error: %s %s\n", getTS(": ").c_str(), host.c_str(), err.message().c_str());
 			rstart_counter--;
@@ -137,7 +137,7 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl,
 	});
 
 	cl->configFileMissedNotify.connect([&](std::string host) {
-		const std::lock_guard<std::mutex> lock(g_rmutex);
+		const std::lock_guard lock(g_rmutex);
 		if (g_roption.verbous)
 			aprintf(stdout, "%s Streaming started: %s config file is missed [FAIL]\n", getTS(": ").c_str(), host.c_str());
 		rstart_counter--;
@@ -146,7 +146,7 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl,
 	});
 
 	cl->serverStoppedMemErrorNofiy.connect([&](std::string host) {
-		const std::lock_guard<std::mutex> lock(g_rmutex);
+		const std::lock_guard lock(g_rmutex);
 		if (g_roption.verbous)
 			aprintf(stdout, "%s Streaming started: %s memory error [FAIL]\n", getTS(": ").c_str(), host.c_str());
 		rstart_counter--;
@@ -155,7 +155,7 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl,
 	});
 
 	cl->serverStoppedMemModifyNofiy.connect([&](std::string host) {
-		const std::lock_guard<std::mutex> lock(g_rmutex);
+		const std::lock_guard lock(g_rmutex);
 		if (g_roption.verbous)
 			aprintf(stdout, "%s Streaming started: %s memory modify [FAIL]\n", getTS(": ").c_str(), host.c_str());
 		rstart_counter--;
@@ -163,8 +163,17 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl,
 		slaveHosts.remove(host);
 	});
 
+	cl->serverStoppedNoActiveChannelsNofiy.connect([&](std::string host) {
+		const std::lock_guard lock(g_rmutex);
+		if (g_roption.verbous)
+			aprintf(stderr, "%s Streaming started: %s. No active channels. [FAIL]\n", getTS(": ").c_str(), host.c_str());
+		rstart_counter--;
+		masterHosts.remove(host);
+		slaveHosts.remove(host);
+	});
+
 	cl->serverStartedTCPNofiy.connect([&](std::string host) {
-		const std::lock_guard<std::mutex> lock(g_rmutex);
+		const std::lock_guard lock(g_rmutex);
 		if (g_roption.verbous)
 			aprintf(stdout, "%s Streaming started: %s TCP mode [OK]\n", getTS(": ").c_str(), host.c_str());
 		rstart_counter--;
@@ -173,7 +182,7 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl,
 	});
 
 	cl->serverStartedSDNofiy.connect([&](std::string host) {
-		const std::lock_guard<std::mutex> lock(g_rmutex);
+		const std::lock_guard lock(g_rmutex);
 		if (g_roption.verbous)
 			aprintf(stdout, "%s Streaming started: %s Local mode [OK]\n", getTS(": ").c_str(), host.c_str());
 		rstart_counter--;
@@ -338,6 +347,15 @@ auto startADC(std::shared_ptr<ClientNetConfigManager> cl,
 		slaveHosts.remove(host);
 	});
 
+	cl->serverStoppedNoActiveChannelsNofiy.connect([&](std::string host) {
+		const std::lock_guard lock(g_rmutex);
+		if (g_roption.verbous)
+			aprintf(stderr, "%s Streaming started: %s. No active channels. [FAIL]\n", getTS(": ").c_str(), host.c_str());
+		rstart_counter--;
+		masterHosts.remove(host);
+		slaveHosts.remove(host);
+	});
+
 	cl->startADCDoneNofiy.connect([&](std::string host) {
 		const std::lock_guard lock(g_rmutex);
 		if (g_roption.verbous)
@@ -392,7 +410,7 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl,
 	std::atomic<int> rstart_counter;
 
 	cl->errorNofiy.connect([&](ClientNetConfigManager::Errors errors, std::string host, error_code err) {
-		const std::lock_guard<std::mutex> lock(g_rmutex);
+		const std::lock_guard lock(g_rmutex);
 		if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
 			aprintf(stderr, "%s Error: %s %s\n", getTS(": ").c_str(), host.c_str(), err.message().c_str());
 			rstart_counter--;
@@ -402,7 +420,7 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl,
 	});
 
 	cl->serverStoppedMemErrorNofiy.connect([&](std::string host) {
-		const std::lock_guard<std::mutex> lock(g_rmutex);
+		const std::lock_guard lock(g_rmutex);
 		if (g_roption.verbous)
 			aprintf(stdout, "%s Streaming started: %s memory error [FAIL]\n", getTS(": ").c_str(), host.c_str());
 		rstart_counter--;
@@ -411,7 +429,7 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl,
 	});
 
 	cl->serverStoppedMemModifyNofiy.connect([&](std::string host) {
-		const std::lock_guard<std::mutex> lock(g_rmutex);
+		const std::lock_guard lock(g_rmutex);
 		if (g_roption.verbous)
 			aprintf(stdout, "%s Streaming started: %s memory modify [FAIL]\n", getTS(": ").c_str(), host.c_str());
 		rstart_counter--;
@@ -419,8 +437,17 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl,
 		slaveHosts.remove(host);
 	});
 
+	cl->serverStoppedNoActiveChannelsNofiy.connect([&](std::string host) {
+		const std::lock_guard lock(g_rmutex);
+		if (g_roption.verbous)
+			aprintf(stderr, "%s Streaming started: %s. No active channels. [FAIL]\n", getTS(": ").c_str(), host.c_str());
+		rstart_counter--;
+		masterHosts.remove(host);
+		slaveHosts.remove(host);
+	});
+
 	cl->configFileMissedNotify.connect([&](std::string host) {
-		const std::lock_guard<std::mutex> lock(g_rmutex);
+		const std::lock_guard lock(g_rmutex);
 		if (g_roption.verbous)
 			aprintf(stdout, "%s Streaming started: %s config file is missed [FAIL]\n", getTS(": ").c_str(), host.c_str());
 		rstart_counter--;
@@ -429,7 +456,7 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl,
 	});
 
 	cl->serverDacStartedNofiy.connect([&](std::string host) {
-		const std::lock_guard<std::mutex> lock(g_rmutex);
+		const std::lock_guard lock(g_rmutex);
 		if (g_roption.verbous)
 			aprintf(stdout, "%s DAC streaming started: %s TCP mode [OK]\n", getTS(": ").c_str(), host.c_str());
 		rstart_counter--;
@@ -438,7 +465,7 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl,
 	});
 
 	cl->serverDacStartedSDNofiy.connect([&](std::string host) {
-		const std::lock_guard<std::mutex> lock(g_rmutex);
+		const std::lock_guard lock(g_rmutex);
 		if (g_roption.verbous)
 			aprintf(stdout, "%s DAC streaming started: %s Local mode [OK]\n", getTS(": ").c_str(), host.c_str());
 		rstart_counter--;
