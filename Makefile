@@ -116,10 +116,12 @@ librparb: librp
 
 LIBRP_SYSTEM_DIR	= rp-web-api/rp-system
 LIBRP_CLIENT_DIR	= rp-web-api/rp-client
+LIBRP_WEBSOCKET_DIR	= rp-web-api/rp-websocket
 
-.PHONY: librpsystem librpclient
 
-web-api: librpsystem librpclient
+.PHONY: librpsystem librpclient librpwebsocket
+
+web-api: librpsystem librpclient librpwebsocket
 
 librpsystem: api nginx
 	cmake -B$(abspath $(LIBRP_SYSTEM_DIR)/build) -S$(abspath $(LIBRP_SYSTEM_DIR)) $(CMAKEVAR)
@@ -128,6 +130,11 @@ librpsystem: api nginx
 librpclient: api nginx
 	cmake -B$(abspath $(LIBRP_CLIENT_DIR)/build) -S$(abspath $(LIBRP_CLIENT_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(LIBRP_CLIENT_DIR)/build install -j$(CPU_CORES)
+
+librpwebsocket:
+	cmake -B$(abspath $(LIBRP_WEBSOCKET_DIR)/build) -S$(abspath $(LIBRP_WEBSOCKET_DIR)) $(CMAKEVAR)
+	$(MAKE) -C $(LIBRP_WEBSOCKET_DIR)/build install -j$(CPU_CORES)
+
 
 ################################################################################
 # Red Pitaya ecosystem
