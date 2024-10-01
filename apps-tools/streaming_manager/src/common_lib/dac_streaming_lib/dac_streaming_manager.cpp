@@ -205,7 +205,7 @@ auto CDACStreamingManager::threadFunc() -> void
 							// for (int i = 0; i < size1_read / 2; i++) {
 							// 	((uint16_t *) ch1->getMappedDataMemory())[i] = ((1 << 15) * i) / (size1_read / 2);
 							// }
-							DataLib::setHeaderDAC(ch1, 1, size_actual[0], onePackMode, repeatCount);
+							DataLib::setHeaderDAC(ch1, 1, size_actual[0], onePackMode, repeatCount == -1, repeatCount);
 							// TRACE_SHORT("Copy channel 1 dest size %zu src size %zu", ch1->getDataLenght(), size1_read)
 						}
 						if (size_buffer[1] != 0) {
@@ -217,7 +217,7 @@ auto CDACStreamingManager::threadFunc() -> void
 							// for (int i = 0; i < size2_read; i++) {
 							// 	((uint16_t *) ch2->getMappedDataMemory())[i] = i % 8;
 							// }
-							DataLib::setHeaderDAC(ch2, 2, size_actual[1], onePackMode, repeatCount);
+							DataLib::setHeaderDAC(ch2, 2, size_actual[1], onePackMode, repeatCount == -1, repeatCount);
 							// TRACE_SHORT("Copy channel 2 dest size %zu src size %zu", ch2->getDataLenght(), size2_read)
 						}
 						m_buffer->unlockBufferWrite();

@@ -63,6 +63,9 @@ public:
 	auto getDACRepeatCount() -> int64_t;
 	auto decDACRepeatCount() -> void;
 
+	auto setDACInfMode(bool enable) -> void;
+	auto getDACInfMode() -> bool;
+
 	auto setDACChannelSize(uint32_t size) -> void;
 	auto getDACChannelSize() -> uint32_t;
 
@@ -101,6 +104,7 @@ private:
 	uint64_t m_packId;
 
 	bool m_onePackModeDAC;
+	bool m_infModeDAC;
 	int64_t m_repeatCountDAC;
 	uint32_t m_channelSizeDAC;
 };

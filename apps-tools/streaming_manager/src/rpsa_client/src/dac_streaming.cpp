@@ -177,7 +177,6 @@ auto dac_runClient(DACSettingsClient conf, uint32_t blockSize) -> void
 			auto pack = g_dac_manger[conf.host]->getBuffer();
 			if (pack) {
 				g_dac_asionet[conf.host]->sendSyncData(pack);
-				aprintf(stdout, "%s Send \n", getTS(": ").c_str());
 				auto ch1 = pack->getBuffer(DataLib::EDataBuffersPackChannel::CH1);
 				auto ch2 = pack->getBuffer(DataLib::EDataBuffersPackChannel::CH2);
 
@@ -191,11 +190,12 @@ auto dac_runClient(DACSettingsClient conf, uint32_t blockSize) -> void
 					g_dac_BytesCount[conf.host] += ch2->getDataLenght();
 				}
 				g_dac_manger[conf.host]->unlockBuffer();
-			} else {
-				if (g_dac_terminate[conf.host]) {
-					break;
-				}
 			}
+
+			if (g_dac_terminate[conf.host]) {
+				break;
+			}
+
 			std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
 			auto curTime = std::chrono::time_point_cast<std::chrono::milliseconds>(timeNow);
 			auto value = curTime.time_since_epoch();
@@ -257,7 +257,6 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Op
 		}
 		conf.dac_file = g_dac_soption.dac_file;
 		conf.dac_repeat = 0;
-		conf.dac_memory = 0;
 		conf.verbous = false;
 		auto ac = getActiveChannels(conf);
 		acMap[item] = ac;
@@ -286,7 +285,6 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Op
 				}
 				conf.dac_file = g_dac_soption.dac_file;
 				conf.dac_repeat = g_dac_soption.dac_repeat;
-				conf.dac_memory = g_dac_soption.dac_memory;
 				conf.verbous = g_dac_soption.verbous;
 				dac_clients.push_back(std::thread(dac_runClient, conf, blockSizes[kv.first]));
 			}
@@ -327,8 +325,5 @@ auto stopDACStreaming() -> void
 {
 	for (auto &kv : g_dac_terminate) {
 		kv.second = true;
-		if (g_dac_asionet[kv.first]) {
-			g_dac_asionet[kv.first]->disconnect();
-		}
 	}
 }

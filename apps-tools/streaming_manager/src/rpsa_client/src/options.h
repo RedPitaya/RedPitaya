@@ -66,8 +66,7 @@ enum class SaveType {
 };
 
 enum class RepeatDAC {
-	NONE = -1,
-	INF = -2
+	INF = -1
 };
 
 // enum class TestMode{
@@ -92,8 +91,7 @@ struct Options
 	// streaming
 	std::string save_dir{""};
 	std::string dac_file{""};			   // For DAC streaming
-	int dac_repeat{(int) RepeatDAC::NONE}; // For DAC streaming
-	int64_t dac_memory{1048576};		   // For DAC streaming
+	int64_t dac_repeat{1}; // For DAC streaming
 
 	StreamingType streamign_type;
 	SaveType save_type{SaveType::NONE};

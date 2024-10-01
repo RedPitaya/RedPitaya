@@ -53,12 +53,13 @@ auto DataLib::setHeaderADC(DataLib::CDataBufferDMA::Ptr buffer, uint64_t _id) ->
 	header->adc.lostFPGA = buffer->getLostSamples(DataLib::EDataLost::FPGA);
 }
 
-auto DataLib::setHeaderDAC(CDataBufferDMA::Ptr buffer, uint8_t channel, uint32_t channelSize, bool onePackMode, int64_t repeatCount) -> void
+auto DataLib::setHeaderDAC(CDataBufferDMA::Ptr buffer, uint8_t channel, uint32_t channelSize, bool onePackMode, bool infMode, int64_t repeatCount) -> void
 {
 	auto header = reinterpret_cast<NetworkPackHeader *>(buffer->getMappedMemory());
 	header->dac.channel = channel;
 	header->dac.channelSize = channelSize;
 	header->dac.onePackMode = onePackMode;
+	header->dac.infMode = infMode;
 	header->dac.repeatCount = repeatCount;
 }
 
@@ -103,5 +104,6 @@ auto DataLib::printDACHeader(uint8_t *data) -> void
 	printf("dac.channel: %d\n", nph.dac.channel);
 	printf("dac.channelSize: %d\n", nph.dac.channelSize);
 	printf("dac.onePackMode: %d\n", nph.dac.onePackMode);
-	printf("dac.repeatCount: %" PRIu64 "\n", nph.dac.repeatCount);
+	printf("dac.infMode: %d\n", nph.dac.infMode);
+	printf("dac.repeatCount: %" PRId64 "\n", nph.dac.repeatCount);
 }

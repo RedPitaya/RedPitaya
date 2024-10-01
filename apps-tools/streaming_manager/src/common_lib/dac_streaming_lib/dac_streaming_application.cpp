@@ -72,8 +72,10 @@ void CDACStreamingApplication::genWorker()
 	try {
 		while (m_GenThreadRun) {
 			int64_t repeatInOpenPackMode = 0;
+			bool one_pack_inf_mode = false;
 			buffer = !onePackMode || buffer == nullptr ? m_streamingManager->getBuffer() : buffer;
 			if (buffer) {
+
 				auto ch1 = buffer->getBuffer(DataLib::EDataBuffersPackChannel::CH1);
 				auto ch2 = buffer->getBuffer(DataLib::EDataBuffersPackChannel::CH2);
 				uint32_t ch1Address = 0;
@@ -84,6 +86,7 @@ void CDACStreamingApplication::genWorker()
 					if (ch1->getDACOnePackMode()) {
 						chSize = std::max(ch1->getDACChannelSize(), chSize);
 						repeatInOpenPackMode = std::max(repeatInOpenPackMode, ch1->getDACRepeatCount());
+						one_pack_inf_mode = ch1->getDACInfMode();
 						ch1->decDACRepeatCount();
 						onePackMode = true;
 					} else {
@@ -96,6 +99,7 @@ void CDACStreamingApplication::genWorker()
 					if (ch2->getDACOnePackMode()) {
 						chSize = std::max(ch2->getDACChannelSize(), chSize);
 						repeatInOpenPackMode = std::max(repeatInOpenPackMode, ch2->getDACRepeatCount());
+						one_pack_inf_mode = ch2->getDACInfMode();
 						ch2->decDACRepeatCount();
 						onePackMode = true;
 					} else {
@@ -103,7 +107,7 @@ void CDACStreamingApplication::genWorker()
 					}
 				}
 
-				if (onePackMode && repeatInOpenPackMode == 0) {
+				if (onePackMode && repeatInOpenPackMode == 0 && one_pack_inf_mode == false) {
 					break;
 				}
 

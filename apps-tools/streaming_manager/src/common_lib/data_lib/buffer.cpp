@@ -32,6 +32,7 @@ CDataBufferDMA::CDataBufferDMA(uint8_t bitsBySample)
 	, m_lost()
 	, m_packId(0)
 	, m_onePackModeDAC(false)
+	, m_infModeDAC(false)
 	, m_repeatCountDAC(0)
 	, m_channelSizeDAC(0)
 {
@@ -52,6 +53,7 @@ CDataBufferDMA::CDataBufferDMA(uint32_t startAddress, size_t lenght, void *mappe
 	, m_lost()
 	, m_packId(0)
 	, m_onePackModeDAC(false)
+	, m_infModeDAC(false)
 	, m_repeatCountDAC(0)
 	, m_channelSizeDAC(0)
 {
@@ -72,6 +74,7 @@ CDataBufferDMA::CDataBufferDMA(uint8_t *buffer, size_t lenght, uint8_t bits)
 	, m_lost()
 	, m_packId(0)
 	, m_onePackModeDAC(false)
+	, m_infModeDAC(false)
 	, m_repeatCountDAC(0)
 	, m_channelSizeDAC(0)
 {
@@ -252,6 +255,14 @@ auto CDataBufferDMA::setDACOnePackMode(bool enable) -> void
 auto CDataBufferDMA::getDACOnePackMode() -> bool
 {
 	return m_onePackModeDAC;
+}
+
+auto CDataBufferDMA::setDACInfMode(bool enable) -> void{
+	enable = m_infModeDAC;
+}
+
+auto CDataBufferDMA::getDACInfMode() -> bool{
+	return m_infModeDAC;
 }
 
 auto CDataBufferDMA::setDACRepeatCount(int64_t count) -> void

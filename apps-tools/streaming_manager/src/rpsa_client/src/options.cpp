@@ -63,11 +63,10 @@ static struct option long_options_dac_streaming[] = {
 	{"format", required_argument, 0, 'f'},
 	{"data", required_argument, 0, 'd'},
 	{"repeat", required_argument, 0, 'r'},
-	{"memory", required_argument, 0, 'm'},
 	{"verbose", no_argument, 0, 'v'},
 	{0, 0, 0, 0}};
 
-static constexpr char optstring_dac_streaming[] = "oh:c:f:d:r:m:v";
+static constexpr char optstring_dac_streaming[] = "oh:c:f:d:r:v";
 
 auto getTS(std::string suffix) -> std::string
 {
@@ -708,16 +707,6 @@ auto ClientOpt::parse(int argc, char *argv[]) -> ClientOpt::Options
 				case 'v':
 					opt.verbous = true;
 					break;
-
-				case 'm': {
-					int64_t memory = 0;
-					if (get_memory(&memory, optarg, "Error get memory size") != 0) {
-						opt.mode = Mode::ERROR_PARAM;
-						return opt;
-					}
-					opt.dac_memory = 0;
-					break;
-				}
 
 				case 'h': {
 					opt.hosts = split(optarg, ',');
