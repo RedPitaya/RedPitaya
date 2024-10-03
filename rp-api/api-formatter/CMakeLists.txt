@@ -95,7 +95,7 @@ if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
         PRIVATE ARCH_ARM)
 endif()
 
-target_compile_options(${PROJECT_NAME}-obj PRIVATE -Wall -pedantic -Wextra -Wno-unused-parameter -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+target_compile_options(${PROJECT_NAME}-obj PRIVATE -Wno-psabi -Wall -pedantic -Wextra -Wno-unused-parameter -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 
 if(BUILD_SHARED)

@@ -15,39 +15,118 @@
     var new_firmware_timer = null;
 
     var getListOfApps = function() {
-        $('#loader-desc').html('Getting the list of applications');
-        $('body').removeClass('loaded');
-        $.ajax({
-            url: 'bazaar?apps=',
-            cache: false,
-            async: true
-        }).done(function(result) {
-            var url_arr = window.location.href.split("/");
-            var url = url_arr[0] + '//' + url_arr[2] + '/';
-            apps = [];
-            $.each(result, function(key, value) {
-                var obj = {};
-                obj['id'] = key;
-                obj['name'] = value['name'];
-                obj['description'] = value['description'];
-                obj['url'] = url + key + '/?type=run';
-                obj['image'] = url + key + '/info/icon.png';
+        setTimeout(function(){
+            $('#loader-desc').html('Getting the list of applications');
+            $('body').removeClass('loaded');
+            $.ajax({
+                url: 'bazaar?apps=',
+                cache: false,
+                async: true,
+                timeout:2000
+            }).done(function(result) {
+                var url_arr = window.location.href.split("/");
+                var url = url_arr[0] + '//' + url_arr[2] + '/';
+                apps = [];
+                $.each(result, function(key, value) {
+                    var obj = {};
+                    obj['id'] = key;
+                    obj['name'] = value['name'];
+                    obj['description'] = value['description'];
+                    obj['url'] = url + key + '/?type=run';
+                    obj['image'] = url + key + '/info/icon.png';
 
-                $.ajax({
-                    url: obj['image'],
-                    cache: false,
-                    async: true
-                }).fail(function(msg) {
-                    getListOfApps();
+                    $.ajax({
+                        url: obj['image'],
+                        cache: false,
+                        async: true
+                    }).fail(function(msg) {
+                        getListOfApps();
+                    });
+                    obj['licensable'] = false;
+
+                    obj['type'] = value['type'];
+                    apps.push(obj);
                 });
-                obj['licensable'] = false;
 
-                obj['type'] = value['type'];
-                apps.push(obj);
+                Desktop.setApplications(apps);
+            }).fail(function(msg) { getListOfApps(); });
+        },2000);
+    }
+
+    var getInfo = function(){
+        setTimeout(function(){
+            $.ajax({
+                method: "GET",
+                url: '/get_info',
+                timeout:2000
+            })
+            .done(function(msg) {
+                setTimeout(printRpVersion(msg),2000);
+                stem_ver = msg['stem_ver'];
+                var board_type = "Unify/ecosystems";
+                var linux_path = "LinuxOS";
+
+                if (parseFloat(msg["linux_ver"]) !== parseFloat(msg["sd_linux_ver"])) {
+                    $("#CUR_VER").text(msg["sd_linux_ver"]);
+                    $("#REQ_VER").text(msg["linux_ver"]);
+                    $("#NEED_UPDATE_LINUX_ID").attr("hidden", false);
+                    var _href = $("#NEW_FIRMWARE_LINK_ID").attr("href");
+                    $("#NEW_FIRMWARE_LINK_ID").attr("href", _href + linux_path);
+                }
+
+                if (board_type != "") {
+                    $.ajax({
+                            method: "GET",
+                            url: '/update_list?type=' + board_type
+                        })
+                        .done(function(msg) {
+                            var list = [];
+                            var arr = msg.split('\n');
+                            // example - distro  as array entry: ecosystem-0.97-13-f9094af.zip
+                            // example - version as array entry: 12933621
+                            for (var i = 0; i < arr.length; i += 2) {
+                                if (arr[i] != "" && arr[i].startsWith("ecosystem")) {
+                                    list.push(arr[i]);
+                                }
+                            }
+
+                            if (list.length == 0) return;
+                            list.sort();
+                            var es_distro_vers = { vers_as_str: '0.00', build: 0, ver_full: '' };
+                            // example of list entry: ecosystem-0.97-13-f9094af.zip-12.23M
+                            for (var i = list.length - 1; i >= 0; i--) {
+                                var item = list[i].split('-');
+                                var ver = item[1];
+                                var build = item[2];
+                                // select latest version according to common version and build
+                                if (RedPitayaOS.compareVersions(ver + "." + build, es_distro_vers.vers_as_str + "." + es_distro_vers.build) === -1) {
+                                    es_distro_vers.vers_as_str = ver;
+                                    es_distro_vers.build = build;
+                                    es_distro_vers.ver_full = item.slice(0, 4).join('-');
+                                }
+                            }
+
+                            if (new_firmware_timer != null) {
+                                clearInterval(new_firmware_timer);
+                                new_firmware_timer = null;
+                            }
+
+                            if (RedPitayaOS.compareVersions(version, es_distro_vers.vers_as_str + "-" + es_distro_vers.build) == 1) {
+
+                                $("#NEW_FIRMWARE_ID").attr("hidden", false);
+                                $("#NEED_UPDATE_LINUX_ID").attr("hidden", true);
+                                if (new_firmware_timer == null)
+                                    new_firmware_timer = setInterval(blink_NewFirmware, 2000);
+                            }
+                        });
+                }
+
+            })
+            .fail(function(msg) {
+                console.log(msg)
+                getInfo()
             });
-
-            Desktop.setApplications(apps);
-        }).fail(function(msg) { getListOfApps(); });
+        },2000);
     }
 
     var checkUpdates = function(current) {
@@ -222,75 +301,7 @@
 
     $(document).ready(function($) {
         getListOfApps();
-
-        $.ajax({
-                method: "GET",
-                url: '/get_info'
-            })
-            .done(function(msg) {
-                setTimeout(printRpVersion(msg),2000);
-                stem_ver = msg['stem_ver'];
-                var board_type = "Unify/ecosystems";
-                var linux_path = "LinuxOS";
-
-                if (parseFloat(msg["linux_ver"]) !== parseFloat(msg["sd_linux_ver"])) {
-                    $("#CUR_VER").text(msg["sd_linux_ver"]);
-                    $("#REQ_VER").text(msg["linux_ver"]);
-                    $("#NEED_UPDATE_LINUX_ID").attr("hidden", false);
-                    var _href = $("#NEW_FIRMWARE_LINK_ID").attr("href");
-                    $("#NEW_FIRMWARE_LINK_ID").attr("href", _href + linux_path);
-                }
-
-                if (board_type != "") {
-                    $.ajax({
-                            method: "GET",
-                            url: '/update_list?type=' + board_type
-                        })
-                        .done(function(msg) {
-                            var list = [];
-                            var arr = msg.split('\n');
-                            // example - distro  as array entry: ecosystem-0.97-13-f9094af.zip
-                            // example - version as array entry: 12933621
-                            for (var i = 0; i < arr.length; i += 2) {
-                                if (arr[i] != "" && arr[i].startsWith("ecosystem")) {
-                                    list.push(arr[i]);
-                                }
-                            }
-
-                            if (list.length == 0) return;
-                            list.sort();
-                            var es_distro_vers = { vers_as_str: '0.00', build: 0, ver_full: '' };
-                            // example of list entry: ecosystem-0.97-13-f9094af.zip-12.23M
-                            for (var i = list.length - 1; i >= 0; i--) {
-                                var item = list[i].split('-');
-                                var ver = item[1];
-                                var build = item[2];
-                                // select latest version according to common version and build
-                                if (RedPitayaOS.compareVersions(ver + "." + build, es_distro_vers.vers_as_str + "." + es_distro_vers.build) === -1) {
-                                    es_distro_vers.vers_as_str = ver;
-                                    es_distro_vers.build = build;
-                                    es_distro_vers.ver_full = item.slice(0, 4).join('-');
-                                }
-                            }
-
-                            if (new_firmware_timer != null) {
-                                clearInterval(new_firmware_timer);
-                                new_firmware_timer = null;
-                            }
-
-                            if (RedPitayaOS.compareVersions(version, es_distro_vers.vers_as_str + "-" + es_distro_vers.build) == 1) {
-
-                                $("#NEW_FIRMWARE_ID").attr("hidden", false);
-                                $("#NEED_UPDATE_LINUX_ID").attr("hidden", true);
-                                if (new_firmware_timer == null)
-                                    new_firmware_timer = setInterval(blink_NewFirmware, 2000);
-                            }
-                        });
-                }
-
-            })
-            .fail(printRpVersion);
-
+        getInfo();
 
         $('#ignore_link').click(function(event) {
             var elem = $(this)

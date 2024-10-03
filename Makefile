@@ -127,13 +127,13 @@ librpsystem: api nginx
 	cmake -B$(abspath $(LIBRP_SYSTEM_DIR)/build) -S$(abspath $(LIBRP_SYSTEM_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(LIBRP_SYSTEM_DIR)/build install -j$(CPU_CORES)
 
-librpclient: api nginx
+librpclient: librpwebsocket api
 	cmake -B$(abspath $(LIBRP_CLIENT_DIR)/build) -S$(abspath $(LIBRP_CLIENT_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(LIBRP_CLIENT_DIR)/build install -j$(CPU_CORES)
 
-librpwebsocket:
+librpwebsocket: api
 	cmake -B$(abspath $(LIBRP_WEBSOCKET_DIR)/build) -S$(abspath $(LIBRP_WEBSOCKET_DIR)) $(CMAKEVAR)
-	$(MAKE) -C $(LIBRP_WEBSOCKET_DIR)/build install -j$(CPU_CORES)
+	$(MAKE) -C $(LIBRP_WEBSOCKET_DIR)/build install
 
 
 ################################################################################

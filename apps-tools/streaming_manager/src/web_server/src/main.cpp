@@ -315,8 +315,6 @@ auto rp_app_init(void) -> int
 		}
 
 		rp_WC_Init();
-		rp_WC_UpdateParameters(true);
-
 	} catch (std::exception &e) {
 		ERROR_LOG("%s", e.what());
 	}
@@ -672,8 +670,6 @@ void UpdateParams(void)
 			}
 		}
 
-		rp_WC_UpdateParameters(false);
-
 		if (g_s_file) {
 			ss_pass_samples.SendValue(g_s_file->getPassSamples());
 			ss_writed_size.SendValue(g_s_file->getWritedSize());
@@ -690,7 +686,6 @@ void OnNewParams(void)
 {
 	//Update parameters
 	UpdateParams();
-	rp_WC_OnNewParam();
 }
 
 void OnNewSignals(void)

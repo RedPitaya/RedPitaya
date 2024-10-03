@@ -181,16 +181,6 @@
 // Page onload event handler
 $(function() {
 
-    // Stop the application when page is unloaded
-    $(window).on('beforeunload', function() {
-        CLIENT.ws.onclose = function() {}; // disable onclose handler first
-        CLIENT.ws.close();
-        $.ajax({
-            url: CLIENT.config.stop_app_url,
-            async: false
-        });
-    });
-
     $("#RP_DMA_RAM").change(function() {
         var newSize = "0x"+($("#RP_DMA_RAM option:selected").val() * 1024 * 1024).toString(16);
         console.log("Set new DMA size " + newSize )
@@ -200,8 +190,4 @@ $(function() {
         })
     });
 
-
-
-    // Everything prepared, start application
-    CLIENT.startApp();
 });

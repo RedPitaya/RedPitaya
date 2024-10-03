@@ -258,7 +258,7 @@ auto CDataBufferDMA::getDACOnePackMode() -> bool
 }
 
 auto CDataBufferDMA::setDACInfMode(bool enable) -> void{
-	enable = m_infModeDAC;
+	m_infModeDAC = enable;
 }
 
 auto CDataBufferDMA::getDACInfMode() -> bool{

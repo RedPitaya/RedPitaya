@@ -8,6 +8,8 @@
     <meta http-equiv="Expires" content="0">
     <link href="../assets/bootstrap-3.0.0/css/bootstrap.css?1" rel="stylesheet" type="text/css" onerror="location.reload()" />
     <link href="../assets/style.css?6" rel="stylesheet" type="text/css" onerror="location.reload()" />
+    <link href="../assets/lpulse.css?1" rel="stylesheet" type="text/css">
+    <link href="../assets/usermis.css?1" rel="stylesheet" type="text/css">
     <link href="../assets/loader.css?1" rel="stylesheet" type="text/css" onerror="location.reload()" />
     <link href="./style.css?1" rel="stylesheet" type="text/css" onerror="location.reload()" />
     <script src="../assets/bootstrap-3.0.0/js/jquery.js?1" onerror="location.reload()"></script>
@@ -24,6 +26,7 @@
     <script src="../assets/ecosystem.js?1" onerror="location.reload()"></script>
     <script src="../assets/popupstack.js?1" onerror="location.reload()"></script>
     <script src="../assets/jquery.browser.js?1" onerror="location.reload()"></script>
+    <script src="../main_menu/js/rp_client.js?1" onerror="location.reload()"></script>
     <script src="../main_menu/js/client.js?1" onerror="location.reload()"></script>
     <script src="../main_menu/js/main.js?1" onerror="location.reload()"></script>
     <link href="./assets/popupstack.css?1" rel="stylesheet" type="text/css" onerror="location.reload()" />
@@ -32,10 +35,18 @@
     <title>My Red Pitaya</title>
 </head>
 
-<body class="demo">
+<body class="user_lost connection_lost">
     <div id="loader-wrapper">
         <div id="loader"></div>
         <div id="loader-desc">Getting the list of applications</div>
+    </div>
+    <div id="user-wrapper">
+        <div id="user"></div>
+        <div id="user-desc">Device is already in use by another user.</div>
+    </div>
+    <div id="pulse-wrapper">
+        <div id="pulse"></div>
+        <div id="pulse-desc">Connection with device is lost.</div>
     </div>
     <div id="main_content">
         <div id="header">
