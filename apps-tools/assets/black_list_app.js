@@ -9,7 +9,8 @@
     Desktop.filterApps = function(listOfapplications,model) {
         if (model == "STEM 10") {
             for (i = listOfapplications.length - 1; i >= 0; i -= 1) {
-                if (listOfapplications[i]["id"] === 'sdr_receiver_hpsdr_z20' ||
+                if (listOfapplications[i]["id"] === 'marketplace' ||
+                    listOfapplications[i]["id"] === 'sdr_receiver_hpsdr_z20' ||
                     listOfapplications[i]["id"] === 'sdr_receiver_hpsdr_122_88' ||
                     listOfapplications[i]["id"] === 'sdr_transceiver_hpsdr_z20' ||
                     listOfapplications[i]["id"] === 'sdr_transceiver_hpsdr_122_88' ||
@@ -24,7 +25,8 @@
 
         if (model == "STEM 14") {
             for (i = listOfapplications.length - 1; i >= 0; i -= 1) {
-                if (listOfapplications[i]["id"] === 'sdr_receiver_hpsdr_z20' ||
+                if (listOfapplications[i]["id"] === 'marketplace' ||
+                    listOfapplications[i]["id"] === 'sdr_receiver_hpsdr_z20' ||
                     listOfapplications[i]["id"] === 'sdr_receiver_hpsdr_122_88' ||
                     listOfapplications[i]["id"] === 'sdr_transceiver_hpsdr_z20' ||
                     listOfapplications[i]["id"] === 'sdr_transceiver_hpsdr_122_88' ||
