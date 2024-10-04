@@ -62,7 +62,7 @@
         $.ajax({
             method: "GET",
             url: "/get_client_id",
-            timeout: 2000
+            timeout: 5000
         }).done(function(msg) {
             if (msg.trim() === RP_CLIENT.client_id) {
                 RP_CLIENT.client_log("Need reload")
@@ -189,7 +189,7 @@
                       text += String.fromCharCode.apply(null, bytes.slice(i * 32768, Math.min((i+1) * 32768, bytes.length)))
                     }
                     var receive = JSON.parse(text);
-                    RP_CLIENT.parameterStack.push(receive);
+                    RP_CLIENT.processParameters(receive);
 
                 } catch (e) {
                     console.log(e);
@@ -207,22 +207,6 @@
         }
     };
 
-    var parametersHandler = function() {
-        if (RP_CLIENT.parameterStack.length > 0) {
-            var params = [...RP_CLIENT.parameterStack]
-            var pack_params = []
-            for( var i = 0 ; i < params.length; i++){
-                for (var param_name in params[i]) {
-                    pack_params[param_name] = params[i][param_name]
-                }
-            }
-            RP_CLIENT.processParameters(pack_params);
-            RP_CLIENT.parameterStack = []
-        }
-    }
-
-    setInterval(parametersHandler, 500);
-
 }(window.RP_CLIENT = window.RP_CLIENT || {}, jQuery));
 
 
@@ -236,7 +220,7 @@ $(function() {
 
     $.ajax({
             url: '/set_client_id', //Server script to process data
-            timeout: 10000,
+            timeout: 5000,
             type: 'POST',
             success: function(e) { console.log(e); },
             error: function(e) { console.log(e); },

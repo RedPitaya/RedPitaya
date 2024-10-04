@@ -223,7 +223,6 @@ int rp_app_init(void) {
 	set_application_mode(BASIC_ONLY);
 
     rp_WC_Init();
-    rp_WC_UpdateParameters(true);
 
 	time_t t;
 	srand((unsigned) time(&t));
@@ -302,8 +301,6 @@ void UpdateParams(void)
     	memoryFree.Value() = (float)memInfo.freeram;
 	}
 	times++;
-
-	rp_WC_UpdateParameters(false);
 }
 
 
@@ -526,7 +523,6 @@ void OnNewParams(void)
     signalPeriiod.Update();
     parameterPeriiod.Update();
 
-	rp_WC_OnNewParam();
 }
 
 void OnNewSignals(void)

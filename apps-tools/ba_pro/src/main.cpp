@@ -216,7 +216,6 @@ int rp_app_init(void)
     updateParametersByConfig();
 
     rp_WC_Init();
-    rp_WC_UpdateParameters(true);
     g_thread = new std::thread(threadLoop);
 
 	CDataManager::GetInstance()->SetParamInterval(50);
@@ -373,7 +372,6 @@ void UpdateParams(void)
         ba_calibrate_enable.SendValue(is_calib);
     }
 
-    rp_WC_UpdateParameters(false);
 }
 
 
@@ -414,7 +412,6 @@ void OnNewParams(void) {
         configSet(getHomeDirectory() + "/.config/redpitaya/apps/ba_pro", "config.json");
     }
 
-    rp_WC_OnNewParam();
 }
 
 void OnNewSignals(void)

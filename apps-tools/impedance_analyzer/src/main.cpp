@@ -255,7 +255,6 @@ int rp_app_init(void)
 	CDataManager::GetInstance()->SetSignalInterval(100);
 
     rp_WC_Init();
-    rp_WC_UpdateParameters(true);
 
 	lcrApp_lcrInit();
     rp_AcqSetAC_DC(RP_CH_1,RP_DC);
@@ -429,8 +428,6 @@ void UpdateParams(void)
         g_lastCheckExt = curT;
         setLCRExtState(state);
     }
-
-    rp_WC_UpdateParameters(false);
 }
 
 
@@ -455,8 +452,6 @@ void OnNewParams(void) {
     if (config_changed) {
         configSet(getHomeDirectory() + "/.config/redpitaya/apps/impedance_analyzer", "config.json");
     }
-
-    rp_WC_OnNewParam();
 }
 
 void OnNewSignals(void)

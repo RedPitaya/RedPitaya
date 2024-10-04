@@ -121,7 +121,6 @@ int rp_app_init(void){
     CDataManager::GetInstance()->SetParamInterval(20);
 
 	rp_WC_Init();
-    rp_WC_UpdateParameters(true);
 
     lcrApp_lcrInit();
 
@@ -157,7 +156,6 @@ void UpdateSignals(void){}
 
 // Send values to frontend
 void UpdateParams(void){
-    rp_WC_UpdateParameters(false);
     bool moduleStatusFlag = lcrApp_LcrCheckExtensionModuleConnection(false) == RP_OK;
     if(moduleStatus.Value() != moduleStatusFlag) {
         moduleStatus.SendValue(moduleStatusFlag);
@@ -425,7 +423,6 @@ void OnNewParams(void){
     if (!g_config_changed)
         g_config_changed = isChanged();
     updateFromFront(false);
-    rp_WC_OnNewParam();
 }
 
 void OnNewSignals(void){}

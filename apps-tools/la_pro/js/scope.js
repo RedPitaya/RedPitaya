@@ -198,24 +198,29 @@
         // Delete old datalogic file
         $.get("/lapro_rm_datafile");
 
-        $.get(
-                OSC.config.start_app_url
-            )
-            .done(function(dresult) {
-                if (dresult.status == 'OK') {
+        $.ajax({
+            url: OSC.config.start_app_url,
+            type: 'GET',
+            timeout: 5000
+        }).done(function(res) {
+            if (res.status == 'OK') {
+                try {
                     OSC.connectWebSocket();
-                } else if (dresult.status == 'ERROR') {
-                    console.log(dresult.reason ? dresult.reason : 'Could not start the application (ERR1)');
-                    OSC.startApp();
-                } else {
-                    console.log('Could not start the application (ERR2)');
-                    OSC.startApp();
+                    RP_CLIENT.connectWebSocket();
+                } catch (e) {
+                    setTimeout(OSC.startApp, 2000);
                 }
-            })
-            .fail(function() {
-                console.log('Could not start the application (ERR3)');
-                OSC.startApp();
-            });
+            } else if (res.status == 'ERROR') {
+                console.log(res.reason ? res.reason : 'Could not start the application (ERR1)');
+                setTimeout(OSC.startApp, 2000);
+            } else {
+                console.log('Could not start the application (ERR2)');
+                setTimeout(OSC.startApp, 2000);
+            }
+        }).fail(function(msg) {
+            console.log('Could not start the application (ERR3)');
+            setTimeout(OSC.startApp, 2000);
+        });
     };
 
     Date.prototype.format = function(mask, utc) {
@@ -542,71 +547,6 @@
         // $.cookie(pref + 'triggers_count', JSON.stringify(OSC.triggers_count), { expires: expiresDate });
     }
 
-    OSC.checkStatusTimer = undefined;
-    OSC.changeStatusForRestart = false;
-    OSC.changeStatusStep = 0;
-
-    OSC.reloadPage = function() {
-        $.ajax({
-            method: "GET",
-            url: "/get_client_id",
-            timeout: 2000
-        }).done(function(msg) {
-            if (msg.trim() === OSC.client_id) {
-                location.reload();
-            } else {
-                $('body').removeClass('user_lost');
-                OSC.stopCheckStatus();
-            }
-        }).fail(function(msg) {
-            console.log(msg);
-            $('body').removeClass('connection_lost');
-        });
-    }
-
-    OSC.startCheckStatus = function() {
-        if (OSC.checkStatusTimer === undefined) {
-            OSC.changeStatusStep = 0;
-            OSC.checkStatusTimer = setInterval(OSC.checkStatus, 4000);
-        }
-    }
-
-    OSC.stopCheckStatus = function() {
-        if (OSC.checkStatusTimer !== undefined) {
-            clearInterval(OSC.checkStatusTimer);
-            OSC.checkStatusTimer = undefined;
-        }
-    }
-
-    OSC.checkStatus = function() {
-        $.ajax({
-            method: "GET",
-            url: "/la_check_status",
-            timeout: 2000
-        }).done(function(msg) {
-            switch (OSC.changeStatusStep) {
-                case 0:
-                    OSC.changeStatusStep = 1;
-                    break;
-                case 2:
-                    OSC.reloadPage();
-                    break;
-            }
-        }).fail(function(msg) {
-            // check status. If don't have good state after start. We lock system.
-            $('body').removeClass('connection_lost');
-            switch (OSC.changeStatusStep) {
-                case 0:
-                    OSC.changeStatusStep = -1;
-                    break;
-                case 1:
-                    OSC.changeStatusStep = 2;
-                    break;
-            }
-
-        });
-    }
-
     OSC.connectWebSocket = function() {
         if (window.WebSocket) {
             OSC.ws = new WebSocket(OSC.config.socket_url);
@@ -634,10 +574,6 @@
                 OSC.time_offset(OSC.params.local);
                 OSC.startTime = performance.now();
                 OSC.params.local = {};
-                $('body').addClass('loaded');
-                $('body').addClass('connection_lost');
-                $('body').addClass('user_lost');
-                OSC.startCheckStatus();
                 var obj = $.cookie('measure_mode')
                 if (obj === undefined)
                     obj = 1;
@@ -650,9 +586,7 @@
                 OSC.state.socket_opened = false;
                 $('#graphs .plot').hide(); // Hide all graphs
                 console.log('Socket closed');
-                if (OSC.unexpectedClose == true) {
-                    setTimeout(OSC.reloadPage, '1000');
-                }
+                setTimeout(RP_CLIENT.reloadPage, 2000);
             };
 
             $('#send_report_btn').on('click', function() {
@@ -683,6 +617,7 @@
 
             OSC.ws.onerror = function(ev) {
                 console.log('Websocket error: ', ev);
+                setTimeout(RP_CLIENT.reloadPage, 2000);
             };
 
             var last_time = undefined;
@@ -2318,29 +2253,6 @@ $(function() {
         });
     }
 
-    OSC.client_id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        var r = Math.random() * 16 | 0,
-            v = c == 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-
-    $.ajax({
-        url: '/set_client_id', //Server script to process data
-        type: 'POST',
-        //Ajax events
-        //beforeSend: beforeSendHandler,
-        success: function(e) { console.log(e); },
-        error: function(e) { console.log(e); },
-        // Form data
-        data: OSC.client_id,
-        //Options to tell jQuery not to process data or worry about content-type.
-        cache: false,
-        contentType: false,
-        processData: false
-    });
-
-    OSC.checkStatus();
-
     $('#porblemsLink').click(function() {
         $('#decodehelp_dialog').modal('show');
     });
@@ -3123,9 +3035,6 @@ $(function() {
     // Init help
     Help.init(helpListLA);
     Help.setState("idle");
-
-    // Everything prepared, start application
-    OSC.startApp();
 
     $('#protocol_selector').change(function() {
         $('.decoder-window').hide();
@@ -4110,4 +4019,5 @@ $(function() {
         OSC.load_params();
     }
 
+    setTimeout(OSC.startApp,2000)
 });

@@ -189,7 +189,6 @@ void UpdateParams(void)
     if (rp_HPIsFastDAC_PresentOrDefault())
 	    updateGen();
 
-    rp_WC_UpdateParameters(false);
 }
 
 void resetMinMax(int ch,int mode){
@@ -1009,8 +1008,6 @@ void OnNewParams(void)
     if (config_changed) {
         configSet();
     }
-
-	rp_WC_OnNewParam();
 }
 
 extern "C" int rp_app_init(void)
@@ -1032,7 +1029,6 @@ extern "C" int rp_app_init(void)
     setHomeSettingsPath("/.config/redpitaya/apps/spectrumpro/");
 
 	rp_WC_Init();
-    rp_WC_UpdateParameters(true);
 
 
     rp_Init();

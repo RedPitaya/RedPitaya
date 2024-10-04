@@ -28,7 +28,7 @@ auto isSineTester(float *data, uint32_t size,uint32_t dec) -> bool{
         double T = (dec / g_adc_smpl_freq);
         double ch_rms[size];
         double ch_avr[size];
-        for(int i = 0; i < size; i++) {
+        for(uint32_t i = 0; i < size; i++) {
                 ch_rms[i] = data[i] * data[i];
                 ch_avr[i] = fabs(data[i]);
         }
@@ -558,7 +558,7 @@ void COscilloscope::acquireAutoFilter(){
 
     DataPassAutoFilter localDP;
     uint32_t            pos = 0;
-    int16_t             timeout = 1000000; // timeout 1 second
+    uint32_t            timeout = 1000000; // timeout 1 second
     int16_t             repeat_count = 0;
     bool                fillState = false;
     uint32_t            aa,bb,pp,kk;
@@ -630,14 +630,14 @@ void COscilloscope::acquireAutoFilter(){
 
         auto *ch = m_buffer.ch_f[m_channel];
         auto *ch_raw = m_buffer.ch_i[m_channel];
-        for(int i = 0 ; i < acq_u_size ; i++){
+        for(uint32_t i = 0 ; i < acq_u_size ; i++){
             m_acu_buffer[i] += ch[i];
             m_acu_buffer_raw[i] += ch_raw[i];
         }
         repeat_count++;
     }
 
-    for(int i = 0 ; i < acq_u_size ; i++){
+    for(uint32_t i = 0 ; i < acq_u_size ; i++){
         m_acu_buffer[i] /= (double)repeat_count;
         m_acu_buffer_raw[i] /= (double)repeat_count;
     }
@@ -670,7 +670,7 @@ void COscilloscope::acquireAutoFilterSync(){
 
     DataPassAutoFilterSync localDP;
     uint32_t            pos = 0;
-    int16_t             timeout = 1000000; // timeout 1 second
+    uint32_t            timeout = 1000000; // timeout 1 second
     int16_t             repeat_count = 0;
     bool                fillState = false;
     uint32_t            aa[MAX_ADC_CHANNELS],bb[MAX_ADC_CHANNELS],pp[MAX_ADC_CHANNELS],kk[MAX_ADC_CHANNELS];
@@ -748,7 +748,7 @@ void COscilloscope::acquireAutoFilterSync(){
         }
         if (exitFlag) return;
         for(auto j = 0u; j < m_channels; j++){
-            for(int i = 0 ; i < acq_u_size ; i++){
+            for(uint32_t i = 0 ; i < acq_u_size ; i++){
                 m_acu_buffer[j][i] += m_buffer.ch_f[j][i];
                 m_acu_buffer_raw[j][i] += m_buffer.ch_i[j][i];
             }
@@ -756,7 +756,7 @@ void COscilloscope::acquireAutoFilterSync(){
         repeat_count++;
     }
     for(auto j = 0u; j < m_channels; j++){
-        for(int i = 0 ; i < acq_u_size ; i++){
+        for(uint32_t i = 0 ; i < acq_u_size ; i++){
             m_acu_buffer[j][i] /= (double)repeat_count;
             m_acu_buffer_raw[j][i] /= (double)repeat_count;
         }

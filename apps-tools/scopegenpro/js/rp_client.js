@@ -206,7 +206,6 @@
             RP_CLIENT.ping_from_server = new_params.ping.value;
         }
     };
-
 }(window.RP_CLIENT = window.RP_CLIENT || {}, jQuery));
 
 

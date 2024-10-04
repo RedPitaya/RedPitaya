@@ -82,7 +82,6 @@ int rp_app_init(void) {
     }
     rp_ARBInit();
     rp_WC_Init();
-    rp_WC_UpdateParameters(true);
 
     CDataManager::GetInstance()->SetParamInterval(50);
     CDataManager::GetInstance()->SetSignalInterval(50);
@@ -188,7 +187,6 @@ std::vector<std::string> split(std::string s, std::string delimiter) {
 void UpdateParams(void) {
     req_check_file.Update();
     req_files_list.Update();
-    rp_WC_UpdateParameters(false);
 }
 
 void PostUpdateSignals(void){}
@@ -286,7 +284,6 @@ void OnNewParams(void) {
         }
     }
 
-    rp_WC_OnNewParam();
 }
 
 void OnNewSignals(void){}

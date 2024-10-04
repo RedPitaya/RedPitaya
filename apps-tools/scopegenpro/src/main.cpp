@@ -114,7 +114,6 @@ int rp_app_init(void) {
     rp_WS_UpdateParameters(true);
 
     rp_WC_Init();
-    rp_WC_UpdateParameters(true);
 
     rpApp_Init();
     rpApp_OscPrepareOscillogramBuffer(MAX_BUFFERS);  // 100 (buffers) * 16384 (samples) * 4 (float size) * 5 (channels) = 163840000 bytes
@@ -166,7 +165,6 @@ void UpdateParams(void) {
     updateSlowDAC(false);
 
     rp_WS_UpdateParameters(false);
-    rp_WC_UpdateParameters(false);
 
     if (g_config_changed && (g_save_counter++ % 40 == 0)){
         g_config_changed = false;
@@ -247,7 +245,6 @@ void OnNewParams(void) {
     updateOscParams(false);
     updateMathParams(false);
     updateXYParams(false);
-    rp_WC_OnNewParam();
 }
 
 void OnNewSignals(void){}
