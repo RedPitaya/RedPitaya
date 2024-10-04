@@ -184,7 +184,7 @@
                     }
                     var distro_desc = es_distro_vers.vers_as_str + '-' + es_distro_vers.build + '(' + es_distro_size + ')';
                     var distro_desc_short = es_distro_vers.vers_as_str + '-' + es_distro_vers.build;
-                    if (UPD.compareVersions(distro_desc_short,UPD.currentVer) === 1) {
+                    if (UPD.compareVersions(distro_desc_short,UPD.currentVer) >= 0) {
                         $('#used_last_version').show();
                         $('#select_ver').hide();
                         $('#step_4').hide();
