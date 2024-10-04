@@ -313,40 +313,51 @@
 
     }
 
+    UPD.showReboot = function(){
+        $('#step_' + UPD.currentStep).find('.reboot_msg').show();
+        setTimeout(function() {
+            var prepare_check = setInterval(function() {
+                $.ajax({
+                        url: '/get_info',
+                        type: 'GET',
+                        timeout: 1500
+                    })
+                    .done(function(msg) {
+                        if (msg != undefined && msg['version'] !== undefined) {
+                            var eco = UPD.ecosystems[UPD.chosen_eco];
+                            var arr = eco.split('-');
+                            var ver = arr[1] + '-' + arr[2];
+                            if (msg['version'] == ver) {
+                                UPD.nextStep();
+                                $('#step_' + UPD.currentStep).find('.warn_msg').hide();
+                                clearInterval(prepare_check);
+                            } else {
+                                $('#step_' + UPD.currentStep).find('.step_icon').find('img').show()
+                                $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                                $('#step_' + UPD.currentStep).find('.error_msg').show();
+                                $('#step_' + UPD.currentStep).find('.warn_msg').hide();
+                                clearInterval(prepare_check);
+                            }
+
+                        }
+                    })
+            }, 2500);
+        }, 15000);
+    }
 
     UPD.prepareToRun = function() {
         setTimeout(function() {
             $('#step_' + UPD.currentStep).find('.warn_msg').show();
+            $('#step_' + UPD.currentStep).find('.step_icon').find('img').hide()
             $.ajax({
                     url: '/update_ecosystem',
                     type: 'GET',
                 })
-                .always(function() {
-                    setTimeout(function() {
-                        var prepare_check = setInterval(function() {
-                            $.ajax({
-                                    url: '/get_info',
-                                    type: 'GET',
-                                    timeout: 1500
-                                })
-                                .done(function(msg) {
-                                    if (msg != undefined && msg['version'] !== undefined) {
-                                        var eco = UPD.ecosystems[UPD.chosen_eco];
-                                        var arr = eco.split('-');
-                                        var ver = arr[1] + '-' + arr[2];
-                                        if (msg['version'] == ver) {
-                                            UPD.nextStep();
-                                            clearInterval(prepare_check);
-                                        } else {
-                                            $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
-                                            $('#step_' + UPD.currentStep).find('.error_msg').show();
-                                            clearInterval(prepare_check);
-                                        }
-
-                                    }
-                                })
-                        }, 2500);
-                    }, 15000);
+                .done(function(msg) {
+                    RP_CLIENT.client_log(msg)
+                    setTimeout(function(){
+                        RP_CLIENT.connectWebSocket()
+                    },1000);
                 });
         }, 500);
     }

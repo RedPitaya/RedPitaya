@@ -14,6 +14,12 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BUILD_PATH})
 
 project(daemon)
 
+include(FetchContent)
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(JSONCPP jsoncpp)
+
+
 if(NOT DEFINED INSTALL_DIR)
     message(FATAL_ERROR,"Installation path not set.")
 endif()
@@ -67,25 +73,6 @@ list(APPEND libs_paths
     ${INSTALL_DIR}/rp_sdk
 )
 
-list(APPEND rp_libs
-    rp-system
-    rpapp
-    rpapp_lcr
-    rp
-    rp-arb
-    rp-dsp
-    rp-sweep
-    rp-formatter
-    rp-hw-calib
-    rp-hw-can
-    rp-hw-profiles
-    rp-hw
-    rp-i2c
-    rp-spi
-    rp-gpio
-    i2c
-)
-
 set(CMAKE_INSTALL_RPATH ${r_paths})
 set(CMAKE_BUILD_RPATH ${r_paths})
 include_directories(${include_paths})
@@ -95,12 +82,12 @@ file(GLOB SOURCES "src/*.cpp")
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
-add_compile_options(-Wall -Wno-reorder -Wno-cpp -Wextra $<$<CONFIG:Release>:-Wno-unused-parameter> $<$<CONFIG:Release>:-Wno-unused-variable>)
+add_compile_options(-Wall -Wno-unused-result -Wno-reorder -Wno-cpp -Wextra $<$<CONFIG:Release>:-Wno-unused-parameter> $<$<CONFIG:Release>:-Wno-unused-variable>)
 add_compile_options(-DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os>  -ffunction-sections -fdata-sections)
 
 
 add_executable(${PROJECT_NAME} ${SOURCES})
-target_link_libraries(${PROJECT_NAME} PRIVATE cryptopp rp_sdk ${rp_libs} pthread)
+target_link_libraries(${PROJECT_NAME} PRIVATE  librp-websocket.a pthread ${JSONCPP_LIBRARIES})
 set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")
 
 

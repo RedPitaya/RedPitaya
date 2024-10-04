@@ -38,6 +38,7 @@
     <script src="../assets/popupstack.js"></script>
     <script src="../assets/help-system/help-system.js"></script>
     <script src="js/help-updater.js"></script>
+    <script src="js/websocket.js?3"></script>
     <script src="js/scope.js?3"></script>
     <script src="js/analytics-main.js"></script>
 
@@ -91,7 +92,7 @@
                                     <td class="step_desc">Step 3. Checking for updates
                                         <div id="used_last_version" style="display:none">
                                             <p>You are using the latest ecosystem</p>
-                                        </div>                                       
+                                        </div>
                                         <div id="select_ver">
                                             <table style="width: 100%;">
                                                 <tr>
@@ -101,13 +102,13 @@
                                                 </tr>
 											    <tr>
                                                     <td><a id="change_log_link" target="_blank" href="https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md">Release notes</a></td>
-                                                </tr>                
+                                                </tr>
                                             </table>
                                         </div>
                                         <div id="not_supported_linux" style="display:none;color: red;font-size: medium;">
                                             <p>The latest Ecosystem is not supported by the current Linux version,</p>
                                             <p>please re-install the SD card image <a id="change_log_link" target="_blank" href="https://redpitaya.readthedocs.io/en/latest/quickStart/SDcard/SDcard.html">manually</a>.</p>
-                                            
+
                                         </div>
                                         <p class="error_msg">Unable to connect to update server. Please check your internet connection or try again later.<button id="retry">Retry</button></p>
                                     </td>
@@ -121,17 +122,18 @@
                                         <p id="percent" style="display: none;">0%</p><img style="display: none" src=""></td>
                                 </tr>
                                 <tr id="step_5" class="step">
-                                    <td class="step_desc">Step 5. Updating the OS
+                                    <td class="step_desc">Step 5. Extract files
                                         <p class="error_msg">Can not extract file. Check your SD-card empty space or try to redownload it</p>
                                     </td>
                                     <td class="step_icon"><img style="display: none" src=""></td>
                                 </tr>
                                 <tr id="step_6" class="step">
-                                    <td class="step_desc">Step 6. Preparing to run
+                                    <td class="step_desc">Step 6. Copy files
                                         <p class="error_msg">Versions mismatch</p>
                                         <p class="warn_msg">Patience... This may take up to 5 minutes!</p>
+                                        <p class="reboot_msg">Reboot</p>
                                     </td>
-                                    <td class="step_icon"><img style="display: none" src=""></td>
+                                    <td class="step_icon"><p id="percent_copy" style="display: none;">0%</p><img style="display: none" src=""></td>
                                 </tr>
                                 <tr id="step_7" class="step">
                                     <td class="step_desc">Step 7. Done</td>

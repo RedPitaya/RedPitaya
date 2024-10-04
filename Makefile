@@ -424,7 +424,7 @@ ecosystem:
 	$(MAKE) -C $(APP_ECOSYSTEM_DIR) clean
 	$(MAKE) -C $(APP_ECOSYSTEM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-updater: ecosystem web-api $(NGINX)
+updater: web-api
 	cmake -B$(abspath $(APP_UPDATER_DIR)/build) -S$(abspath $(APP_UPDATER_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(APP_UPDATER_DIR)/build install -j$(CPU_CORES)
 
