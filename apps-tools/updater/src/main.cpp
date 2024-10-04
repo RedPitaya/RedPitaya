@@ -59,6 +59,7 @@ void createDir(const char* dir)
 
 std::vector<std::string> dirs;
 std::vector<std::pair<std::string,std::string>> files;
+std::vector<std::string> files_for_delete;
 
 
 void listdir(const char *root, const char *d_name, int level) {
@@ -100,6 +101,48 @@ void listdir(const char *root, const char *d_name, int level) {
     closedir(dir);
 }
 
+void listdirForDelete(const char *root, const char *d_name, int level) {
+    DIR *dir;
+    struct dirent *entry;
+
+    char name[1024];
+    int len = snprintf(name, sizeof(name)-1, "%s%s", root, d_name);
+    name[len] = 0;
+
+    if (!(dir = opendir(name)))
+        return;
+    if (!(entry = readdir(dir)))
+        return;
+
+    do {
+        if (entry->d_type == DT_DIR) {
+            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+                continue;
+
+            char path[1024];
+            int len = snprintf(path, sizeof(path)-1, "%s/%s", d_name, entry->d_name);
+            path[len] = 0;
+            listdirForDelete(root, path, level + 1);
+        }
+        else
+        {
+            std::string from(name);
+            from = from + "/"+ entry->d_name;
+            bool add = true;
+            for(size_t i = 0; i < files.size(); i++){
+                if (files[i].second == from){
+                    add = false;
+                    break;
+                }
+            }
+            if (add) files_for_delete.push_back(from);
+
+        }
+    } while ((entry = readdir(dir)));
+
+    closedir(dir);
+}
+
 void copy() {
     for(auto item:dirs){
         createDir(item.c_str());
@@ -109,6 +152,12 @@ void copy() {
         copyFile(files[i].first.c_str(), files[i].second.c_str());
         g_server->send("copy_index",(int)i);
         usleep(1000);
+    }
+}
+
+void deleteFiles() {
+    for(auto item:files_for_delete){
+        std::remove(item.c_str());
     }
 }
 
@@ -162,7 +211,9 @@ int main(int argc, char *argv[])
     dirs.clear();
     files.clear();
     listdir(SRC_ROOT, "",0);
+    listdirForDelete(DST_ROOT,"",0);
     copy();
+    deleteFiles();
 
     system("nohup reboot & disown");
     g_server->send("reboot","start");
