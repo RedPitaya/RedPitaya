@@ -54,20 +54,14 @@ FetchContent_Declare(websocketpp
 )
 FetchContent_MakeAvailable(websocketpp)
 
-# FetchContent_GetProperties(websocketapp)
 
-# if(NOT websocketpp_POPULATED)
-#     FetchContent_Populate(websocketpp)
-#     add_subdirectory(${websocketpp_SOURCE_DIR} ${websocketpp_BINARY_DIR} EXCLUDE_FROM_ALL)
+# set(Boost_USE_STATIC_LIBS ON)
+# set(Boost_USE_MULTITHREAD ON)
+# find_package(Boost 1.74.0 REQUIRED COMPONENTS system thread regex)
+# if(Boost_FOUND)
+#     include_directories(${Boost_INCLUDE_DIRS})
+#     link_directories(${Boost_LIBRARY_DIRS})
 # endif()
-
-set(Boost_USE_STATIC_LIBS ON)
-set(Boost_USE_MULTITHREAD ON)
-find_package(Boost 1.74.0 REQUIRED COMPONENTS system thread regex)
-if(Boost_FOUND)
-    include_directories(${Boost_INCLUDE_DIRS})
-    link_directories(${Boost_LIBRARY_DIRS})
-endif()
 
 include_directories(${websocketpp_SOURCE_DIR})
 
@@ -102,7 +96,7 @@ if(BUILD_SHARED)
     add_library(${PROJECT_NAME}-shared SHARED)
     set_property(TARGET ${PROJECT_NAME}-shared PROPERTY OUTPUT_NAME ${PROJECT_NAME})
     target_sources(${PROJECT_NAME}-shared PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-obj>)
-    target_link_libraries(${PROJECT_NAME}-shared ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${JSONCPP_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME}-shared ${JSONCPP_LIBRARIES})
 
     if(IS_INSTALL)
         install(TARGETS ${PROJECT_NAME}-shared
@@ -118,7 +112,7 @@ if(BUILD_STATIC)
     add_library(${PROJECT_NAME}-static STATIC)
     set_property(TARGET ${PROJECT_NAME}-static PROPERTY OUTPUT_NAME ${PROJECT_NAME})
     target_sources(${PROJECT_NAME}-static PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-obj>)
-    target_link_libraries(${PROJECT_NAME}-static ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${JSONCPP_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME}-static ${JSONCPP_LIBRARIES})
 
     if(IS_INSTALL)
         install(TARGETS ${PROJECT_NAME}-static
