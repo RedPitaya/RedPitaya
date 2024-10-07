@@ -14,12 +14,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BUILD_PATH})
 
 project(daemon)
 
-include(FetchContent)
-
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(JSONCPP jsoncpp)
-
-
 if(NOT DEFINED INSTALL_DIR)
     message(FATAL_ERROR,"Installation path not set.")
 endif()
@@ -51,6 +45,8 @@ message(STATUS "Compiler C++ ID: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "Compiler C++version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations -Wno-psabi")
+
 set(ZIP_FILE ../../../${APP}-${VERSION}-${REVISION}.zip)
 
 list(APPEND r_paths
@@ -63,14 +59,11 @@ list(APPEND include_paths
     ${INSTALL_DIR}/include/api2
     ${INSTALL_DIR}/include/apiApp
     ${INSTALL_DIR}/include/redpitaya
-    ${INSTALL_DIR}/rp_sdk
-    ${INSTALL_DIR}/rp_sdk/libjson
 )
 
 list(APPEND libs_paths
     ${INSTALL_DIR}/lib
     ${INSTALL_DIR}/lib/web
-    ${INSTALL_DIR}/rp_sdk
 )
 
 set(CMAKE_INSTALL_RPATH ${r_paths})
@@ -87,7 +80,7 @@ add_compile_options(-DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug
 
 
 add_executable(${PROJECT_NAME} ${SOURCES})
-target_link_libraries(${PROJECT_NAME} PRIVATE  librp-websocket.a pthread ${JSONCPP_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PRIVATE  librp-websocket.a pthread)
 set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")
 
 

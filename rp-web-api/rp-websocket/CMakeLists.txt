@@ -46,24 +46,33 @@ message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
 include(FetchContent)
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(JSONCPP jsoncpp)
-
 FetchContent_Declare(websocketpp
-        GIT_REPOSITORY https://github.com/RedPitaya/websocketpp.git
+    GIT_REPOSITORY https://github.com/RedPitaya/websocketpp.git
+    EXCLUDE_FROM_ALL
 )
-FetchContent_MakeAvailable(websocketpp)
+
+if(NOT websocketpp_POPULATED)
+    FetchContent_Populate(websocketpp)
+    add_subdirectory(${websocketpp_SOURCE_DIR} ${websocketpp_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif()
 
 
-# set(Boost_USE_STATIC_LIBS ON)
-# set(Boost_USE_MULTITHREAD ON)
-# find_package(Boost 1.74.0 REQUIRED COMPONENTS system thread regex)
-# if(Boost_FOUND)
-#     include_directories(${Boost_INCLUDE_DIRS})
-#     link_directories(${Boost_LIBRARY_DIRS})
-# endif()
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations -Wno-psabi")
+
+
+FetchContent_Declare(json
+    GIT_REPOSITORY https://github.com/open-source-parsers/jsoncpp
+    GIT_TAG 1.9.4
+    EXCLUDE_FROM_ALL
+)
+
+if(NOT json_POPULATED)
+    FetchContent_Populate(json)
+    add_subdirectory(${json_SOURCE_DIR} ${json_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif()
 
 include_directories(${websocketpp_SOURCE_DIR})
+include_directories(${json_SOURCE_DIR}/include)
 
 list(APPEND r_paths
     /opt/redpitaya/lib
@@ -75,6 +84,9 @@ set(CMAKE_INSTALL_RPATH ${r_paths})
 list(APPEND src
     ${CMAKE_SOURCE_DIR}/src/rp_websocket.cpp
     ${CMAKE_SOURCE_DIR}/src/websocket_server.cpp
+    ${json_SOURCE_DIR}/src/lib_json/json_reader.cpp
+    ${json_SOURCE_DIR}/src/lib_json/json_writer.cpp
+    ${json_SOURCE_DIR}/src/lib_json/json_value.cpp
 )
 
 list(APPEND header
@@ -82,10 +94,11 @@ list(APPEND header
     ${CMAKE_SOURCE_DIR}/src/signal.hpp
 )
 
+
 #add_compile_options(-fsanitize=address)
 add_compile_options(-DVERSION=${VERSION} -DREVISION=${REVISION})
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
-add_compile_options(-Wno-psabi $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+add_compile_options($<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 add_compile_definitions(ARCH_ARM)
 
 add_library(${PROJECT_NAME}-obj OBJECT ${src})
@@ -96,7 +109,7 @@ if(BUILD_SHARED)
     add_library(${PROJECT_NAME}-shared SHARED)
     set_property(TARGET ${PROJECT_NAME}-shared PROPERTY OUTPUT_NAME ${PROJECT_NAME})
     target_sources(${PROJECT_NAME}-shared PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-obj>)
-    target_link_libraries(${PROJECT_NAME}-shared ${JSONCPP_LIBRARIES})
+    # target_link_libraries(${PROJECT_NAME}-shared)
 
     if(IS_INSTALL)
         install(TARGETS ${PROJECT_NAME}-shared
@@ -112,7 +125,7 @@ if(BUILD_STATIC)
     add_library(${PROJECT_NAME}-static STATIC)
     set_property(TARGET ${PROJECT_NAME}-static PROPERTY OUTPUT_NAME ${PROJECT_NAME})
     target_sources(${PROJECT_NAME}-static PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-obj>)
-    target_link_libraries(${PROJECT_NAME}-static ${JSONCPP_LIBRARIES})
+    # target_link_libraries(${PROJECT_NAME}-static)
 
     if(IS_INSTALL)
         install(TARGETS ${PROJECT_NAME}-static
