@@ -130,7 +130,7 @@ void threadLoop();
 auto getModelS() -> std::string{
     rp_HPeModels_t c = STEM_125_14_v1_0;
     if (rp_HPGetModel(&c) != RP_HP_OK){
-        ERROR("Can't get board model");
+        ERROR_LOG("Can't get board model");
     }
 
     switch (c)
@@ -165,7 +165,7 @@ auto getModelS() -> std::string{
             return "Z20_250_12_120";
 
         default:
-            ERROR("Can't get board model");
+            ERROR_LOG("Can't get board model");
             exit(-1);
     }
     return "Z10";
@@ -175,7 +175,7 @@ auto getMaxADC() -> uint32_t{
     rp_HPeModels_t c = STEM_125_14_v1_0;
     int dev = 0;
     if (rp_HPGetModel(&c) != RP_HP_OK){
-        ERROR("Can't get board model");
+        ERROR_LOG("Can't get board model");
     }
 
     switch (c)
@@ -215,7 +215,7 @@ auto getMaxADC() -> uint32_t{
             break;
 
         default:
-            ERROR("Can't get board model");
+            ERROR_LOG("Can't get board model");
             exit(-1);
     }
     uint32_t adc = rp_HPGetBaseFastADCSpeedHzOrDefault();

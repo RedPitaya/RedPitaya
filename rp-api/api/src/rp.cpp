@@ -48,7 +48,7 @@ int rp_InitAdresses(){
     pthread_mutex_lock(&rp_init_mutex);
     int ret = cmn_Init();
     if (ret != RP_OK){
-        ERROR("Error open /dev/uio/api. Code:  %d",ret)
+        ERROR_LOG("Error open /dev/uio/api. Code:  %d",ret)
         pthread_mutex_unlock(&rp_init_mutex);
         rp_Release();
         return ret;
@@ -56,7 +56,7 @@ int rp_InitAdresses(){
 
     ret = hk_Init();
     if (ret != RP_HP_OK){
-        ERROR("Error init HK. Code: %d",ret)
+        ERROR_LOG("Error init HK. Code: %d",ret)
         pthread_mutex_unlock(&rp_init_mutex);
         rp_Release();
         return ret;
@@ -64,7 +64,7 @@ int rp_InitAdresses(){
 
     ret = ams_Init();
     if (ret != RP_OK){
-        ERROR("Error init ams regset. Code:  %d",ret)
+        ERROR_LOG("Error init ams regset. Code:  %d",ret)
         pthread_mutex_unlock(&rp_init_mutex);
         rp_Release();
         return ret;
@@ -72,7 +72,7 @@ int rp_InitAdresses(){
 
     ret = daisy_Init();
     if (ret != RP_OK){
-        ERROR("Error init daisy regset. Code:  %d",ret)
+        ERROR_LOG("Error init daisy regset. Code:  %d",ret)
         pthread_mutex_unlock(&rp_init_mutex);
         rp_Release();
         return ret;
@@ -81,7 +81,7 @@ int rp_InitAdresses(){
     if (rp_HPIsFastDAC_PresentOrDefault()){
         ret = generate_Init();
         if (ret != RP_OK){
-            ERROR("Error init generator regset. Code:  %d",ret)
+            ERROR_LOG("Error init generator regset. Code:  %d",ret)
             pthread_mutex_unlock(&rp_init_mutex);
             rp_Release();
             return ret;
@@ -90,7 +90,7 @@ int rp_InitAdresses(){
 
     ret = osc_Init(rp_HPGetFastADCChannelsCountOrDefault());
     if (ret != RP_OK){
-        ERROR("Error init osc regset. Code:  %d",ret)
+        ERROR_LOG("Error init osc regset. Code:  %d",ret)
         pthread_mutex_unlock(&rp_init_mutex);
         rp_Release();
         return ret;
@@ -113,7 +113,7 @@ int rp_Init()
 
     ret = rp_Reset();
     if (ret != RP_OK){
-        ERROR("Error reset regset. Code:  %d",ret)
+        ERROR_LOG("Error reset regset. Code:  %d",ret)
         rp_Release();
         return ret;
     }
@@ -129,7 +129,7 @@ int rp_InitReset(bool reset)
     if (reset){
         int ret = rp_Reset();
         if (ret != RP_OK){
-            ERROR("Error reset regset. Code:  %d",ret)
+            ERROR_LOG("Error reset regset. Code:  %d",ret)
             rp_Release();
             return ret;
         }
@@ -566,16 +566,17 @@ int rp_DpinReset() {
     return RP_NOTS;
 }
 
-int rp_DpinSetDirection(rp_dpin_t pin, rp_pinDirection_t direction) {
+int rp_DpinSetDirection(rp_dpin_t _pin, rp_pinDirection_t direction) {
+    int pin = _pin;
     uint8_t gpio_N,gpio_P;
     int retval = rp_HPGetGPIO_N_Count(&gpio_N);
     if (retval != RP_HP_OK){
-        ERROR("Get GPIO N count %d",retval)
+        ERROR_LOG("Get GPIO N count %d",retval)
         return retval;
     }
     retval = rp_HPGetGPIO_P_Count(&gpio_P);
     if (retval != RP_HP_OK){
-        ERROR("Get GPIO P count %d",retval)
+        ERROR_LOG("Get GPIO P count %d",retval)
         return retval;
     }
 
@@ -585,7 +586,7 @@ int rp_DpinSetDirection(rp_dpin_t pin, rp_pinDirection_t direction) {
         return (direction == RP_OUT ? RP_OK : RP_ELID);
     } else if (pin < RP_DIO0_N) {
         // DIO_P
-        pin -= RP_DIO0_P;
+        pin -= (int)RP_DIO0_P;
         if (pin >= gpio_P){
             return RP_EUF;
         }
@@ -593,7 +594,7 @@ int rp_DpinSetDirection(rp_dpin_t pin, rp_pinDirection_t direction) {
         rp_GPIOpSetDirection((tmp & ~(1 << pin)) | ((direction << pin) & (1 << pin)));
     } else {
         // DIO_N
-        pin -= RP_DIO0_N;
+        pin -= (int)RP_DIO0_N;
         if (pin >= gpio_N){
             return RP_EUF;
         }
@@ -603,16 +604,17 @@ int rp_DpinSetDirection(rp_dpin_t pin, rp_pinDirection_t direction) {
     return RP_OK;
 }
 
-int rp_DpinGetDirection(rp_dpin_t pin, rp_pinDirection_t* direction) {
+int rp_DpinGetDirection(rp_dpin_t _pin, rp_pinDirection_t* direction) {
+    int pin = _pin;
     uint8_t gpio_N,gpio_P;
     int retval = rp_HPGetGPIO_N_Count(&gpio_N);
     if (retval != RP_HP_OK){
-        ERROR("Get GPIO N count %d",retval)
+        ERROR_LOG("Get GPIO N count %d",retval)
         return retval;
     }
     retval = rp_HPGetGPIO_P_Count(&gpio_P);
     if (retval != RP_HP_OK){
-        ERROR("Get GPIO P count %d",retval)
+        ERROR_LOG("Get GPIO P count %d",retval)
         return retval;
     }
 
@@ -622,34 +624,35 @@ int rp_DpinGetDirection(rp_dpin_t pin, rp_pinDirection_t* direction) {
         *direction = RP_OUT;
     } else if (pin < RP_DIO0_N) {
         // DIO_P
-        pin -= RP_DIO0_P;
+        pin -= (int)RP_DIO0_P;
         if (pin >= gpio_P){
             return RP_EUF;
         }
         rp_GPIOpGetDirection(&tmp);
-        *direction = (tmp >> pin) & 0x1;
+        *direction = (rp_pinDirection_t)((tmp >> pin) & 0x1);
     } else {
         // DIO_N
-        pin -= RP_DIO0_N;
+        pin -= (int)RP_DIO0_N;
         if (pin >= gpio_N){
             return RP_EUF;
         }
         rp_GPIOnGetDirection(&tmp);
-        *direction = (tmp >> pin) & 0x1;
+        *direction = (rp_pinDirection_t)((tmp >> pin) & 0x1);
     }
     return RP_OK;
 }
 
-int rp_DpinSetState(rp_dpin_t pin, rp_pinState_t state) {
+int rp_DpinSetState(rp_dpin_t _pin, rp_pinState_t state) {
+    int pin = _pin;
     uint8_t gpio_N,gpio_P;
     int retval = rp_HPGetGPIO_N_Count(&gpio_N);
     if (retval != RP_HP_OK){
-        ERROR("Get GPIO N count %d",retval)
+        ERROR_LOG("Get GPIO N count %d",retval)
         return retval;
     }
     retval = rp_HPGetGPIO_P_Count(&gpio_P);
     if (retval != RP_HP_OK){
-        ERROR("Get GPIO P count %d",retval)
+        ERROR_LOG("Get GPIO P count %d",retval)
         return retval;
     }
 
@@ -661,7 +664,7 @@ int rp_DpinSetState(rp_dpin_t pin, rp_pinState_t state) {
         rp_LEDSetState((tmp & ~(1 << pin)) | ((state << pin) & (1 << pin)));
     } else if (pin < RP_DIO0_N) {
         // DIO_P
-        pin -= RP_DIO0_P;
+        pin -= (int)RP_DIO0_P;
         if (pin >= gpio_P){
             return RP_EUF;
         }
@@ -669,7 +672,7 @@ int rp_DpinSetState(rp_dpin_t pin, rp_pinState_t state) {
         rp_GPIOpSetState((tmp & ~(1 << pin)) | ((state << pin) & (1 << pin)));
     } else {
         // DIO_N
-        pin -= RP_DIO0_N;
+        pin -= (int)RP_DIO0_N;
         if (pin >= gpio_N){
             return RP_EUF;
         }
@@ -679,16 +682,17 @@ int rp_DpinSetState(rp_dpin_t pin, rp_pinState_t state) {
     return RP_OK;
 }
 
-int rp_DpinGetState(rp_dpin_t pin, rp_pinState_t* state) {
+int rp_DpinGetState(rp_dpin_t _pin, rp_pinState_t* state) {
+    int pin = _pin;
     uint8_t gpio_N,gpio_P;
     int retval = rp_HPGetGPIO_N_Count(&gpio_N);
     if (retval != RP_HP_OK){
-        ERROR("Get GPIO N count %d",retval)
+        ERROR_LOG("Get GPIO N count %d",retval)
         return retval;
     }
     retval = rp_HPGetGPIO_P_Count(&gpio_P);
     if (retval != RP_HP_OK){
-        ERROR("Get GPIO P count %d",retval)
+        ERROR_LOG("Get GPIO P count %d",retval)
         return retval;
     }
 
@@ -696,23 +700,23 @@ int rp_DpinGetState(rp_dpin_t pin, rp_pinState_t* state) {
     if (pin < RP_DIO0_P) {
         // LEDS
         rp_LEDGetState(&tmp);
-        *state = (tmp >> pin) & 0x1;
+        *state = (rp_pinState_t)((tmp >> pin) & 0x1);
     } else if (pin < RP_DIO0_N) {
         // DIO_P
-        pin -= RP_DIO0_P;
+        pin -= (int)RP_DIO0_P;
         if (pin >= gpio_P){
             return RP_EUF;
         }
         rp_GPIOpGetState(&tmp);
-        *state = (tmp >> pin) & 0x1;
+        *state = (rp_pinState_t)((tmp >> pin) & 0x1);
     } else {
         // DIO_N
-        pin -= RP_DIO0_N;
+        pin -= (int)RP_DIO0_N;
         if (pin >= gpio_N){
             return RP_EUF;
         }
         rp_GPIOnGetState(&tmp);
-        *state = (tmp >> pin) & 0x1;
+        *state = (rp_pinState_t)((tmp >> pin) & 0x1);
     }
     return RP_OK;
 }
@@ -790,14 +794,14 @@ int rp_ApinSetValueRaw(rp_apin_t pin, uint32_t value) {
 
 int rp_ApinGetRange(rp_apin_t pin, float* min_val, float* max_val) {
     rp_channel_calib_t ch = convertPINCh(pin);
-    if (pin <= RP_AOUT3) {
+    if (pin >= RP_AOUT0 && pin <= RP_AOUT3) {
         float fs = rp_HPGetSlowDACFullScaleOrDefault(ch);
         *min_val = rp_HPGetSlowDACIsSignedOrDefault(ch) ? -fs: 0;
         *max_val = fs;
         return RP_OK;
     }
 
-    if (pin <= RP_AIN3) {
+    if (pin >= RP_AIN0 && pin <= RP_AIN3) {
         float fs = rp_HPGetSlowADCFullScaleOrDefault(ch);
         *min_val = rp_HPGetSlowADCIsSignedOrDefault(ch) ? -fs: 0;
         *max_val = fs;
@@ -830,23 +834,23 @@ int rp_AIpinGetValueRaw(int unsigned pin, uint32_t* value) {
 int rp_AIpinGetValue(int unsigned pin, float* value, uint32_t* raw) {
     uint32_t value_raw;
     int result = rp_AIpinGetValueRaw(pin, &value_raw);
-    rp_channel_calib_t ch = convertPINCh(pin);
+    rp_channel_calib_t ch = convertPINCh((rp_apin_t)pin);
 
     float fs = 0;
     if (rp_HPGetSlowADCFullScale(ch,&fs) != RP_HP_OK){
-        ERROR("Can't get slow ADC full scale");
+        ERROR_LOG("Can't get slow ADC full scale");
         return RP_EOOR;
     }
 
     bool is_signed = false;
     if (rp_HPGetSlowADCIsSigned(ch,&is_signed) != RP_HP_OK){
-        ERROR("Can't get slow ADC sign state");
+        ERROR_LOG("Can't get slow ADC sign state");
         return RP_EOOR;
     }
 
     uint8_t bits = 0;
     if (rp_HPGetSlowADCBits(ch,&bits) != RP_HP_OK){
-        ERROR("Can't get slow ADC bits");
+        ERROR_LOG("Can't get slow ADC bits");
         return RP_EOOR;
     }
     if (is_signed){
@@ -875,11 +879,11 @@ int rp_AOpinSetValueRaw(int unsigned pin, uint32_t value) {
         return RP_EPN;
     }
 
-    rp_channel_calib_t ch = convertPINCh(pin);
+    rp_channel_calib_t ch = convertPINCh((rp_apin_t)pin);
 
     uint8_t bits = 0;
     if (rp_HPGetSlowADCBits(ch,&bits) != RP_HP_OK){
-        ERROR("Can't get slow DAC bits");
+        ERROR_LOG("Can't get slow DAC bits");
         return RP_EOOR;
     }
     uint32_t max_value = (1 << bits);
@@ -892,23 +896,23 @@ int rp_AOpinSetValueRaw(int unsigned pin, uint32_t value) {
 }
 
 int rp_AOpinSetValue(int unsigned pin, float value) {
-    rp_channel_calib_t ch = convertPINCh(pin);
+    rp_channel_calib_t ch = convertPINCh((rp_apin_t)pin);
 
     float fs = 0;
     if (rp_HPGetSlowDACFullScale(ch,&fs) != RP_HP_OK){
-        ERROR("Can't get slow ADC full scale");
+        ERROR_LOG("Can't get slow ADC full scale");
         return RP_EOOR;
     }
 
     bool is_signed = false;
     if (rp_HPGetSlowDACIsSigned(ch,&is_signed) != RP_HP_OK){
-        ERROR("Can't get slow ADC sign state");
+        ERROR_LOG("Can't get slow ADC sign state");
         return RP_EOOR;
     }
 
     uint8_t bits = 0;
     if (rp_HPGetSlowDACBits(ch,&bits) != RP_HP_OK){
-        ERROR("Can't get slow ADC bits");
+        ERROR_LOG("Can't get slow ADC bits");
         return RP_EOOR;
     }
 
@@ -921,11 +925,11 @@ int rp_AOpinGetValueRaw(int unsigned pin, uint32_t* value) {
         return RP_EPN;
     }
 
-    rp_channel_calib_t ch = convertPINCh(pin);
+    rp_channel_calib_t ch = convertPINCh((rp_apin_t)pin);
 
     uint8_t bits = 0;
     if (rp_HPGetSlowADCBits(ch,&bits) != RP_HP_OK){
-        ERROR("Can't get slow DAC bits");
+        ERROR_LOG("Can't get slow DAC bits");
         return RP_EOOR;
     }
     uint32_t max_value = (1 << bits);
@@ -939,23 +943,23 @@ int rp_AOpinGetValue(int unsigned pin, float* value, uint32_t* raw) {
 
     uint32_t value_raw;
     int result = rp_AOpinGetValueRaw(pin, &value_raw);
-    rp_channel_calib_t ch = convertPINCh(pin);
+    rp_channel_calib_t ch = convertPINCh((rp_apin_t)pin);
 
     float fs = 0;
     if (rp_HPGetSlowDACFullScale(ch,&fs) != RP_HP_OK){
-        ERROR("Can't get slow ADC full scale");
+        ERROR_LOG("Can't get slow ADC full scale");
         return RP_EOOR;
     }
 
     bool is_signed = false;
     if (rp_HPGetSlowDACIsSigned(ch,&is_signed) != RP_HP_OK){
-        ERROR("Can't get slow ADC sign state");
+        ERROR_LOG("Can't get slow ADC sign state");
         return RP_EOOR;
     }
 
     uint8_t bits = 0;
     if (rp_HPGetSlowDACBits(ch,&bits) != RP_HP_OK){
-        ERROR("Can't get slow ADC bits");
+        ERROR_LOG("Can't get slow ADC bits");
         return RP_EOOR;
     }
     if (is_signed){
@@ -969,7 +973,7 @@ int rp_AOpinGetValue(int unsigned pin, float* value, uint32_t* raw) {
 }
 
 int rp_AOpinGetRange(int unsigned pin, float* min_val,  float* max_val) {
-    rp_channel_calib_t ch = convertPINCh(pin);
+    rp_channel_calib_t ch = convertPINCh((rp_apin_t)pin);
     if (pin <= RP_AOUT3) {
         float fs = rp_HPGetSlowDACFullScaleOrDefault(ch);
         *min_val = rp_HPGetSlowDACIsSignedOrDefault(ch) ? -fs: 0;
@@ -2231,11 +2235,11 @@ int rp_EnableDebugReg(){
 
 buffers_t* rp_createBuffer(uint8_t maxChannels,uint32_t length,bool initInt16, bool initDouble, bool initFloat){
     if (maxChannels > 4) {
-        ERROR("The number of channels is more than allowed");
+        ERROR_LOG("The number of channels is more than allowed");
         return NULL;
     }
 
-    buffers_t * b = malloc(sizeof(buffers_t));
+    buffers_t * b = (buffers_t*)malloc(sizeof(buffers_t));
     if (b == NULL) return NULL;
     b->channels = maxChannels;
     b->size = length;
@@ -2248,21 +2252,21 @@ buffers_t* rp_createBuffer(uint8_t maxChannels,uint32_t length,bool initInt16, b
         b->ch_f[i] = NULL;
         b->ch_i[i] = NULL;
         if (initInt16 && i < maxChannels){
-            b->ch_i[i] = malloc(length * sizeof(int16_t));
+            b->ch_i[i] = (int16_t*)malloc(length * sizeof(int16_t));
             if (b->ch_i[i] == NULL){
                 NeedFree = true;
                 break;
             }
         }
         if (initDouble && i < maxChannels){
-            b->ch_d[i] = malloc(length * sizeof(double));
+            b->ch_d[i] = (double*)malloc(length * sizeof(double));
             if (b->ch_d[i] == NULL){
                 NeedFree = true;
                 break;
             }
         }
         if (initFloat && i < maxChannels){
-            b->ch_f[i] = malloc(length * sizeof(float));
+            b->ch_f[i] = (float*)malloc(length * sizeof(float));
             if (b->ch_f[i] == NULL){
                 NeedFree = true;
                 break;
@@ -2293,7 +2297,7 @@ int rp_SetExternalTriggerLevel(float value){
         bool is_signed = rp_HPGetIsExternalTriggerIsSignedOrDefault();
         float min = (is_signed ? -fullScale : 0);
         if (value <  min || value > fullScale){
-            ERROR("Value out of range %f. Min %f Max %f",value,min,fullScale)
+            ERROR_LOG("Value out of range %f. Min %f Max %f",value,min,fullScale)
             return RP_EOOR;
         }
         int ret = rp_setExtTriggerLevel(value);

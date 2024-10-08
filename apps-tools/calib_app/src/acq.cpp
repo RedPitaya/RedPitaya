@@ -110,7 +110,7 @@ void COscilloscope::startThread(){
     }
     catch (std::exception& e)
     {
-        ERROR("%s",e.what())
+        ERROR_LOG("%s",e.what())
     }
 }
 
@@ -165,7 +165,7 @@ void COscilloscope::updateAcqFilter(rp_channel_t _ch){
         rp_AcqUpdateAcqFilter(_ch);
         pthread_mutex_unlock(&m_funcSelector);
     }else{
-        ERROR("Filter not present in board");
+        ERROR_LOG("Filter not present in board");
     }
 }
 
@@ -223,7 +223,7 @@ void COscilloscope::oscWorker(){
         }
     }catch (std::exception& e)
     {
-        ERROR("%s",e.what());
+        ERROR_LOG("%s",e.what());
     }
 }
 

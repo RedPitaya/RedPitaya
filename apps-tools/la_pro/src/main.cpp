@@ -106,7 +106,7 @@ std::map<std::string, std::shared_ptr<Decoder> > g_decoders;
  auto getModelS() -> std::string{
     rp_HPeModels_t c = STEM_125_14_v1_0;
     if (rp_HPGetModel(&c) != RP_HP_OK){
-       ERROR("Can't get board model");
+       ERROR_LOG("Can't get board model");
     }
 
     switch (c)
@@ -141,7 +141,7 @@ std::map<std::string, std::shared_ptr<Decoder> > g_decoders;
             return "Z20_250_12_120";
 
         default:
-            ERROR("Can't get board model");
+            ERROR_LOG("Can't get board model");
             exit(-1);
     }
     return "Z10";
@@ -466,7 +466,7 @@ void OnNewParams(void)
 		    delete[] buf1;
 
             if (s != RP_API_OK){
-                ERROR("Error api2 %d",s);
+                ERROR_LOG("Error api2 %d",s);
             }
 		}).detach();
 	}

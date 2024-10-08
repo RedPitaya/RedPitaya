@@ -34,7 +34,7 @@ auto CWEBServer::startServer(uint16_t port) -> void{
         const auto rawJsonLength = static_cast<int>(msg.length());
         const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
         if (!reader->parse(msg.c_str(), msg.c_str() + rawJsonLength, &root, &err)) {
-            ERROR("Error parse json: %s",msg.c_str())
+            ERROR_LOG("Error parse json: %s",msg.c_str())
             return;
         }
         try{
@@ -82,7 +82,7 @@ auto CWEBServer::startServer(uint16_t port) -> void{
                 }
             }
         }catch(...){
-            ERROR("Error parse json: %s",msg.c_str())
+            ERROR_LOG("Error parse json: %s",msg.c_str())
             return;
         }
     });

@@ -35,7 +35,7 @@ void websocket_server::run(uint16_t port) {
 		m_endpoint.run();
 		m_isRun = false;
 	} catch (websocketpp::exception const & e) {
-		ERROR("%s",e.what())
+		ERROR_LOG("%s",e.what())
 	}
 	sem_post(&m_runSem);
 }
@@ -64,7 +64,7 @@ auto websocket_server::send(const char *buffer, size_t size) -> bool{
 			return true;
 		}
 	}catch(websocketpp::lib::error_code ec){
-		ERROR("%s",ec.message().c_str())
+		ERROR_LOG("%s",ec.message().c_str())
     }
 	return false;
 }
@@ -84,21 +84,21 @@ auto websocket_server::stop() -> void {
 	try{
 		m_endpoint.stop_listening();
 	} catch (websocketpp::exception const & e) {
-		ERROR("%s",e.what())
+		ERROR_LOG("%s",e.what())
 	}
 	for (auto it = m_connections.begin(); it != m_connections.end(); ++it) {
 		connection_hdl hdl = *it;
 		try{
             m_endpoint.close(hdl, websocketpp::close::status::normal, "shutdown");
         }catch(websocketpp::lib::error_code ec){
-			ERROR("%s",ec.message().c_str())
+			ERROR_LOG("%s",ec.message().c_str())
         }
 	}
 	try{
 		m_connections.clear();
 		m_endpoint.stop();
     } catch (websocketpp::exception const & e) {
-		ERROR("%s",e.what())
+		ERROR_LOG("%s",e.what())
 	}
 	if (m_thread.joinable())
     	m_thread.join();

@@ -139,24 +139,24 @@ int cmn_AreBitsSet(volatile uint32_t field, uint32_t bits, uint32_t mask, bool* 
     return RP_OK;
 }
 
-/* 32 bit integer comparator */
-int intcmp(const void *v1, const void *v2)
-{
-    return (*(int *)v1 - *(int *)v2);
-}
+// /* 32 bit integer comparator */
+// int intcmp(const void *v1, const void *v2)
+// {
+//     return (*(int *)v1 - *(int *)v2);
+// }
 
-/* 16 bit integer comparator */
-int int16cmp(const void *aa, const void *bb)
-{
-    const int16_t *a = aa, *b = bb;
-    return (*a < *b) ? -1 : (*a > *b);
-}
+// /* 16 bit integer comparator */
+// int int16cmp(const void *aa, const void *bb)
+// {
+//     const int16_t *a = aa, *b = bb;
+//     return (*a < *b) ? -1 : (*a > *b);
+// }
 
-/* Float comparator */
-int floatCmp(const void *a, const void *b) {
-    float fa = *(const float*) a, fb = *(const float*) b;
-    return (fa > fb) - (fa < fb);
-}
+// /* Float comparator */
+// int floatCmp(const void *a, const void *b) {
+//     float fa = *(const float*) a, fb = *(const float*) b;
+//     return (fa > fb) - (fa < fb);
+// }
 
 rp_channel_calib_t convertCh(rp_channel_t ch){
     switch (ch)
@@ -171,10 +171,9 @@ rp_channel_calib_t convertCh(rp_channel_t ch){
         return RP_CH_4_CALIB;
 
     default:
-        ERROR("Convert from %d",ch);
-        assert(false);
+        FATAL("Convert from %d",ch);
     }
-    return RP_EOOR;
+    return RP_CH_1_CALIB;
 }
 
 rp_channel_t convertChFromIndex(uint8_t index){
@@ -183,32 +182,30 @@ rp_channel_t convertChFromIndex(uint8_t index){
     if (index == 2)  return RP_CH_3;
     if (index == 3)  return RP_CH_4;
 
-    ERROR("Convert from %d",index);
-    assert(false);
+    FATAL("Convert from %d",index);
     return RP_CH_1;
 }
 
 rp_channel_calib_t convertPINCh(rp_apin_t pin){
     switch (pin)
     {
-    case RP_AIN0:
-    case RP_AOUT0:
-        return RP_CH_1_CALIB;
-    case RP_AIN1:
-    case RP_AOUT1:
-        return RP_CH_2_CALIB;
-    case RP_AIN2:
-    case RP_AOUT2:
-        return RP_CH_3_CALIB;
-    case RP_AIN3:
-    case RP_AOUT3:
-        return RP_CH_4_CALIB;
+        case RP_AIN0:
+        case RP_AOUT0:
+            return RP_CH_1_CALIB;
+        case RP_AIN1:
+        case RP_AOUT1:
+            return RP_CH_2_CALIB;
+        case RP_AIN2:
+        case RP_AOUT2:
+            return RP_CH_3_CALIB;
+        case RP_AIN3:
+        case RP_AOUT3:
+            return RP_CH_4_CALIB;
 
     default:
-        ERROR("Convert from PIN %d",pin);
-        assert(false);
+        FATAL("Convert from PIN %d",pin);
     }
-    return RP_EOOR;
+    return RP_CH_1_CALIB;
 }
 
 rp_acq_ac_dc_mode_calib_t convertPower(rp_acq_ac_dc_mode_t ch){
@@ -219,10 +216,9 @@ rp_acq_ac_dc_mode_calib_t convertPower(rp_acq_ac_dc_mode_t ch){
     case RP_DC:
         return RP_DC_CALIB;
     default:
-        ERROR("Convert from %d",ch);
-        assert(false);
+        FATAL("Convert from %d",ch);
     }
-    return RP_EOOR;
+    return RP_AC_CALIB;
 }
 
 
@@ -230,13 +226,11 @@ uint32_t cmn_convertToCnt(float voltage,uint8_t bits,float fullScale,bool is_sig
     uint32_t mask = ((uint64_t)1 << bits) - 1;
 
     if (gain == 0){
-        ERROR("convertToCnt devide by zero");
-        assert(false);
+        FATAL("convertToCnt devide by zero")
     }
 
     if (fullScale == 0){
-        ERROR("convertToCnt devide by zero");
-        assert(false);
+        FATAL("convertToCnt devide by zero")
     }
 
     voltage /= gain;

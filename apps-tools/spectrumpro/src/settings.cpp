@@ -149,10 +149,10 @@ auto configGet() -> void {
             }
         } catch (std::invalid_argument &) {
             // Parse error
-            ERROR("JSON parse error");
+            ERROR_LOG("JSON parse error");
         }
     } else {
-        ERROR("Can not open \"%s\"", path.c_str());
+        ERROR_LOG("Can not open \"%s\"", path.c_str());
     }
 }
 

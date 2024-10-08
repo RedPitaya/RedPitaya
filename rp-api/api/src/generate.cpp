@@ -249,13 +249,13 @@ int generate_writeData(rp_channel_t channel, float *data, int32_t start, uint32_
 
     uint8_t bits = 0;
     if (rp_HPGetFastDACBits(&bits) != RP_HP_OK){
-        ERROR("Can't get fast DAC bits\n");
+        ERROR_LOG("Can't get fast DAC bits\n");
         return RP_NOTS;
     }
 
     bool is_sign = false;
     if (rp_HPGetFastDACIsSigned(&is_sign) != RP_HP_OK){
-        ERROR("Can't get fast DAC sign value\n");
+        ERROR_LOG("Can't get fast DAC sign value\n");
         return RP_NOTS;
     }
 
@@ -276,35 +276,35 @@ int generate_setAmplitude(rp_channel_t channel,rp_gen_gain_t gain, float amplitu
 
     float fsBase = 0;
     if (rp_HPGetHWDACFullScale(&fsBase) != RP_HP_OK){
-        ERROR("Can't get fast HW DAC full scale");
+        ERROR_LOG("Can't get fast HW DAC full scale");
         return RP_NOTS;
     }
 
     if (fsBase == 0){
-        ERROR("HW DAC Full Scale is zero");
+        ERROR_LOG("HW DAC Full Scale is zero");
         return RP_NOTS;
     }
 
     uint8_t bits = 0;
     if (rp_HPGetFastDACBits(&bits) != RP_HP_OK){
-        ERROR("Can't get fast DAC bits");
+        ERROR_LOG("Can't get fast DAC bits");
         return RP_NOTS;
     }
 
     bool is_sign = false;
     if (rp_HPGetFastDACIsSigned(&is_sign) != RP_HP_OK){
-        ERROR("Can't get fast DAC sign value");
+        ERROR_LOG("Can't get fast DAC sign value");
         return RP_NOTS;
     }
 
     bool x5_gain = false;
     if (rp_HPGetIsGainDACx5(&x5_gain) != RP_HP_OK) {
-        ERROR("Can't get fast DAC x5 gain");
+        ERROR_LOG("Can't get fast DAC x5 gain");
         return RP_NOTS;
     }
 
     if (!x5_gain && gain == RP_GAIN_5X){
-        ERROR("Can't set gain on unsupported board");
+        ERROR_LOG("Can't set gain on unsupported board");
         return RP_NOTS;
     }
 
@@ -320,13 +320,13 @@ int generate_setAmplitude(rp_channel_t channel,rp_gen_gain_t gain, float amplitu
             ret = rp_CalibGetFastDACCalibValue(convertCh(channel),RP_GAIN_CALIB_5X,&gain_calib,&offset);
         break;
         default:
-            ERROR("Unknown gain: %d",gain);
+            ERROR_LOG("Unknown gain: %d",gain);
             return RP_EOOR;
             break;
     }
 
     if (ret != RP_HW_CALIB_OK){
-        ERROR("Get calibaration: %d",ret);
+        ERROR_LOG("Get calibaration: %d",ret);
         return RP_EOOR;
     }
 
@@ -348,35 +348,35 @@ int generate_setDCOffset(rp_channel_t channel,rp_gen_gain_t gain, float offset) 
 
     float fsBase = 0;
     if (rp_HPGetHWDACFullScale(&fsBase) != RP_HP_OK){
-        ERROR("Can't get fast HW DAC full scale");
+        ERROR_LOG("Can't get fast HW DAC full scale");
         return RP_NOTS;
     }
 
     if (fsBase == 0){
-        ERROR("HW DAC Full Scale is zero");
+        ERROR_LOG("HW DAC Full Scale is zero");
         return RP_NOTS;
     }
 
     uint8_t bits = 0;
     if (rp_HPGetFastDACBits(&bits) != RP_HP_OK){
-        ERROR("Can't get fast DAC bits");
+        ERROR_LOG("Can't get fast DAC bits");
         return RP_NOTS;
     }
 
     bool is_sign = false;
     if (rp_HPGetFastDACIsSigned(&is_sign) != RP_HP_OK){
-        ERROR("Can't get fast DAC sign value");
+        ERROR_LOG("Can't get fast DAC sign value");
         return RP_NOTS;
     }
 
     bool x5_gain = false;
     if (rp_HPGetIsGainDACx5(&x5_gain) != RP_HP_OK) {
-        ERROR("Can't get fast DAC x5 gain");
+        ERROR_LOG("Can't get fast DAC x5 gain");
         return RP_NOTS;
     }
 
     if (!x5_gain && gain == RP_GAIN_5X){
-        ERROR("Can't set gain on unsupported board");
+        ERROR_LOG("Can't set gain on unsupported board");
         return RP_NOTS;
     }
 
@@ -392,13 +392,13 @@ int generate_setDCOffset(rp_channel_t channel,rp_gen_gain_t gain, float offset) 
             ret = rp_CalibGetFastDACCalibValue(convertCh(channel),RP_GAIN_CALIB_5X,&gain_calib,&offset_calib);
         break;
         default:
-            ERROR("Unknown gain: %d",gain);
+            ERROR_LOG("Unknown gain: %d",gain);
             return RP_EOOR;
             break;
     }
 
     if (ret != RP_HW_CALIB_OK){
-        ERROR("Get calibaration: %d",ret);
+        ERROR_LOG("Get calibaration: %d",ret);
         return RP_EOOR;
     }
 
@@ -472,24 +472,24 @@ int generate_getRuntimeTempAlarm(rp_channel_t channel, bool *state){
 int generate_setBurstLastValue(rp_channel_t channel,rp_gen_gain_t gain, float amplitude){
     float fsBase = 0;
     if (rp_HPGetHWDACFullScale(&fsBase) != RP_HP_OK){
-        ERROR("Can't get fast HW DAC full scale");
+        ERROR_LOG("Can't get fast HW DAC full scale");
         return RP_NOTS;
     }
 
     if (fsBase == 0){
-        ERROR("HW DAC Full Scale is zero");
+        ERROR_LOG("HW DAC Full Scale is zero");
         return RP_NOTS;
     }
 
     uint8_t bits = 0;
     if (rp_HPGetFastDACBits(&bits) != RP_HP_OK){
-        ERROR("Can't get fast DAC bits");
+        ERROR_LOG("Can't get fast DAC bits");
         return RP_NOTS;
     }
 
     bool is_sign = false;
     if (rp_HPGetFastDACIsSigned(&is_sign) != RP_HP_OK){
-        ERROR("Can't get fast DAC sign value");
+        ERROR_LOG("Can't get fast DAC sign value");
         return RP_NOTS;
     }
 
@@ -505,24 +505,24 @@ int generate_setBurstLastValue(rp_channel_t channel,rp_gen_gain_t gain, float am
 int generate_setInitGenValue(rp_channel_t channel,rp_gen_gain_t gain, float amplitude){
     float fsBase = 0;
     if (rp_HPGetHWDACFullScale(&fsBase) != RP_HP_OK){
-        ERROR("Can't get fast HW DAC full scale");
+        ERROR_LOG("Can't get fast HW DAC full scale");
         return RP_NOTS;
     }
 
     if (fsBase == 0){
-        ERROR("HW DAC Full Scale is zero");
+        ERROR_LOG("HW DAC Full Scale is zero");
         return RP_NOTS;
     }
 
     uint8_t bits = 0;
     if (rp_HPGetFastDACBits( &bits) != RP_HP_OK){
-        ERROR("Can't get fast DAC bits");
+        ERROR_LOG("Can't get fast DAC bits");
         return RP_NOTS;
     }
 
     bool is_sign = false;
     if (rp_HPGetFastDACIsSigned(&is_sign) != RP_HP_OK){
-        ERROR("Can't get fast DAC sign value");
+        ERROR_LOG("Can't get fast DAC sign value");
         return RP_NOTS;
     }
 

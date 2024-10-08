@@ -113,7 +113,7 @@ void rp_WC_UpdateParameters(){
         g_wc_ping++;
         if (g_websocket_server){
             if (!g_websocket_server->send("ping",g_wc_ping)){
-                ERROR("Fail send ping")
+                ERROR_LOG("Fail send ping")
             }
         }
         g_lastUpdateTime = curTime;

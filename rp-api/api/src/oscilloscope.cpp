@@ -20,6 +20,7 @@
 #include "common.h"
 #include "oscilloscope.h"
 #include "rp.h"
+#include "axi_manager.h"
 
 // The FPGA register structure for oscilloscope
 static volatile osc_control_t *osc_reg = NULL;
@@ -30,18 +31,15 @@ static volatile uint32_t *osc_cha = NULL;
 // The FPGA input signal buffer pointer for channel B
 static volatile uint32_t *osc_chb = NULL;
 
-// The FPGA input signal buffer pointer for AXI channel A
-static volatile uint16_t *osc_axi_cha = NULL;
+// // The FPGA input signal buffer pointer for AXI channel A
+static volatile uint64_t osc_axi_mem_reserved_index[4] = {0,0,0,0};
 
-static uint32_t osc_axi_cha_size = 0;
+// static uint32_t osc_axi_cha_size = 0;
 
-// The FPGA input signal buffer pointer for AXI channel B
-static volatile uint16_t *osc_axi_chb = NULL;
+// // The FPGA input signal buffer pointer for AXI channel B
+// static volatile uint16_t *osc_axi_chb = NULL;
 
-static uint32_t osc_axi_chb_size = 0;
-
-// The /dev/mem file descriptor
-static int mem_fd = 0;
+// static uint32_t osc_axi_chb_size = 0;
 
 static volatile osc_control_t *osc_reg_4ch = NULL;
 
@@ -51,19 +49,15 @@ static volatile uint32_t *osc_chc = NULL;
 // The FPGA input signal buffer pointer for channel D
 static volatile uint32_t *osc_chd = NULL;
 
-// The FPGA input signal buffer pointer for AXI channel C
-static volatile uint16_t *osc_axi_chc = NULL;
+// // The FPGA input signal buffer pointer for AXI channel C
+// static volatile uint16_t *osc_axi_chc = NULL;
 
-static uint32_t osc_axi_chc_size = 0;
+// static uint32_t osc_axi_chc_size = 0;
 
-// The FPGA input signal buffer pointer for AXI channel D
-static volatile uint16_t *osc_axi_chd = NULL;
+// // The FPGA input signal buffer pointer for AXI channel D
+// static volatile uint16_t *osc_axi_chd = NULL;
 
-static uint32_t osc_axi_chd_size = 0;
-
-static uint32_t g_adc_axi_start = 0;
-
-static uint32_t g_adc_axi_size = 0;
+// static uint32_t osc_axi_chd_size = 0;
 
 #define RESERV_DMA_BYTES 8
 
@@ -77,25 +71,11 @@ int osc_Init(int channels)
     osc_cha = (uint32_t*)((char*)osc_reg + OSC_CHA_OFFSET);
     osc_chb = (uint32_t*)((char*)osc_reg + OSC_CHB_OFFSET);
 
-    if (!mem_fd) {
-        mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
-        if (mem_fd < 0) {
-            return RP_EOMD;
-        }
-    }
-
-
     if (channels == 4){
         size_t base_addr = OSC_BASE_ADDR_4CH;
         ECHECK(cmn_Map(OSC_BASE_SIZE, base_addr, (void**)&osc_reg_4ch))
         osc_chc = (uint32_t*)((char*)osc_reg_4ch + OSC_CHA_OFFSET);
         osc_chd = (uint32_t*)((char*)osc_reg_4ch + OSC_CHB_OFFSET);
-    }
-
-    ECHECK(cmn_GetReservedMemory(&g_adc_axi_start,&g_adc_axi_size))
-    if (g_adc_axi_start == 0 || g_adc_axi_size == 0){
-        ERROR("Error initializing memory region for axi mode.")
-        return RP_EOOR;
     }
 
     return RP_OK;
@@ -113,18 +93,6 @@ int osc_Release()
     osc_chb = NULL;
     osc_chc = NULL;
     osc_chd = NULL;
-    if (mem_fd) {
-        if(close(mem_fd) < 0) {
-            return RP_ECMD;
-        }
-    }
-    mem_fd = 0;
-    return RP_OK;
-}
-
-int osc_axi_GetMemoryRegion(uint32_t *_start,uint32_t *_size){
-    *_start = g_adc_axi_start;
-    *_size = g_adc_axi_size;
     return RP_OK;
 }
 
@@ -148,7 +116,7 @@ int osc_SetDecimation(rp_channel_t channel, uint32_t decimation)
                 cmn_Debug("cmn_SetValue(&osc_reg_4ch->data_dec) mask 0x1FFFF <- 0x%X", decimation);
                 return cmn_SetValue(&osc_reg_4ch->data_dec, decimation, DATA_DEC_MASK,&currentValue);
             }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
+                ERROR_LOG("Registers for channels 3 and 4 are not initialized")
                 return RP_NOTS;
             }
             break;
@@ -157,12 +125,12 @@ int osc_SetDecimation(rp_channel_t channel, uint32_t decimation)
                 cmn_Debug("cmn_SetValue(&osc_reg_4ch->data_dec_ch2) mask 0x1FFFF <- 0x%X", decimation);
                 return cmn_SetValue(&osc_reg_4ch->data_dec_ch2, decimation, DATA_DEC_MASK,&currentValue);
             }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
+                ERROR_LOG("Registers for channels 3 and 4 are not initialized")
                 return RP_NOTS;
             }
             break;
         default:
-            ERROR("Wrong channel %d",channel)
+            ERROR_LOG("Wrong channel %d",channel)
             break;
     }
     return RP_EOOR;
@@ -180,7 +148,7 @@ int osc_GetDecimation(rp_channel_t channel, uint32_t* decimation)
             if (osc_reg_4ch){
                return cmn_GetValue(&osc_reg_4ch->data_dec, decimation, DATA_DEC_MASK);
             }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
+                ERROR_LOG("Registers for channels 3 and 4 are not initialized")
                 return RP_NOTS;
             }
             break;
@@ -188,12 +156,12 @@ int osc_GetDecimation(rp_channel_t channel, uint32_t* decimation)
             if (osc_reg_4ch){
                 return cmn_GetValue(&osc_reg_4ch->data_dec_ch2, decimation, DATA_DEC_MASK);
             }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
+                ERROR_LOG("Registers for channels 3 and 4 are not initialized")
                 return RP_NOTS;
             }
             break;
         default:
-            ERROR("Wrong channel %d",channel)
+            ERROR_LOG("Wrong channel %d",channel)
             break;
     }
     return RP_EOOR;
@@ -215,7 +183,7 @@ int osc_SetAveraging(rp_channel_t channel, bool enable)
             cmn_Debug("[Write] osc_reg->average <- 0x%X",  config.reg_full);
             return RP_OK;
         default:
-            ERROR("Wrong channel %d",channel)
+            ERROR_LOG("Wrong channel %d",channel)
             break;
     }
     return RP_EOOR;
@@ -234,7 +202,7 @@ int osc_GetAveraging(rp_channel_t channel, bool* enable)
             *enable = config.reg[channel].average;
             return RP_OK;
         default:
-            ERROR("Wrong channel %d",channel)
+            ERROR_LOG("Wrong channel %d",channel)
             break;
     }
     return RP_EOOR;
@@ -259,7 +227,7 @@ int osc_SetTriggerSource(rp_channel_t channel, uint32_t source)
             cmn_Debug("[Write] osc_reg->trig_source <- 0x%X", control.reg_full);
             return RP_OK;
         default:
-            ERROR("Wrong channel %d",channel)
+            ERROR_LOG("Wrong channel %d",channel)
             break;
     }
     return RP_EOOR;
@@ -278,7 +246,7 @@ int osc_GetTriggerSource(rp_channel_t channel, uint32_t* source)
             *source = control.reg[channel].trig_source;
             return RP_OK;
         default:
-            ERROR("Wrong channel %d",channel)
+            ERROR_LOG("Wrong channel %d",channel)
             break;
     }
     return RP_EOOR;
@@ -323,7 +291,7 @@ int osc_SetUnlockTrigger(rp_channel_t channel)
             cmn_Debug("[Write] osc_reg->trigger_lock_ctr <- 0x%X", config.reg_full);
             return RP_OK;
         default:
-            ERROR("Wrong channel %d",channel)
+            ERROR_LOG("Wrong channel %d",channel)
             break;
     }
     return RP_EOOR;
@@ -341,7 +309,7 @@ int osc_GetUnlockTrigger(rp_channel_t channel, bool *state){
             *state = control.reg[channel].trig_lock;
             return RP_OK;
         default:
-            ERROR("Wrong channel %d",channel)
+            ERROR_LOG("Wrong channel %d",channel)
             break;
     }
     return RP_EOOR;
@@ -363,7 +331,7 @@ int osc_WriteDataIntoMemory(rp_channel_t channel, bool enable)
             cmn_Debug("[Write] osc_reg->config <- 0x%X",config.reg_full);
             return RP_OK;
         default:
-            ERROR("Wrong channel %d",channel)
+            ERROR_LOG("Wrong channel %d",channel)
             break;
     }
     return RP_EOOR;
@@ -384,7 +352,7 @@ int osc_ResetWriteStateMachine(rp_channel_t channel)
             cmn_Debug("[Write] osc_reg->config <- 0x%X",config.reg_full);
             return RP_OK;
         default:
-            ERROR("Wrong channel %d",channel)
+            ERROR_LOG("Wrong channel %d",channel)
             break;
     }
     return RP_EOOR;
@@ -405,7 +373,7 @@ int osc_SetArmKeep(rp_channel_t channel, bool enable)
             cmn_Debug("[Write] osc_reg->config <- 0x%X",config.reg_full);
             return RP_OK;
         default:
-            ERROR("Wrong channel %d",channel)
+            ERROR_LOG("Wrong channel %d",channel)
             break;
     }
     return RP_EOOR;
@@ -424,7 +392,7 @@ int osc_GetArmKeep(rp_channel_t channel, bool *state){
             cmn_Debug("[Read] osc_reg->config -> 0x%X",config.reg_full);
             return RP_OK;
         default:
-            ERROR("Wrong channel %d",channel)
+            ERROR_LOG("Wrong channel %d",channel)
             break;
     }
     return RP_EOOR;
@@ -468,7 +436,7 @@ int osc_GetBufferFillState(rp_channel_t channel, bool *state)
             cmn_Debug("[Read] osc_reg->config -> 0x%X",config.reg_full);
             return RP_OK;
         default:
-            ERROR("Wrong channel %d",channel)
+            ERROR_LOG("Wrong channel %d",channel)
             break;
     }
     return RP_EOOR;
@@ -488,7 +456,7 @@ int osc_GetTriggerState(rp_channel_t channel, bool *received)
             cmn_Debug("[Read] osc_reg->config -> 0x%X",config.reg_full);
             return RP_OK;
         default:
-            ERROR("Wrong channel %d",channel)
+            ERROR_LOG("Wrong channel %d",channel)
             break;
     }
     return RP_EOOR;
@@ -506,7 +474,7 @@ int osc_GetPreTriggerCounter(rp_channel_t channel, uint32_t *value)
             if (osc_reg_4ch){
                     return cmn_GetValue(&osc_reg_4ch->pre_trigger_counter, value, PRE_TRIGGER_COUNTER);
             }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
+                ERROR_LOG("Registers for channels 3 and 4 are not initialized")
                 return RP_NOTS;
             }
             break;
@@ -514,12 +482,12 @@ int osc_GetPreTriggerCounter(rp_channel_t channel, uint32_t *value)
             if (osc_reg_4ch){
                     return cmn_GetValue(&osc_reg_4ch->pre_trigger_counter_ch2, value, PRE_TRIGGER_COUNTER);
             }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
+                ERROR_LOG("Registers for channels 3 and 4 are not initialized")
                 return RP_NOTS;
             }
             break;
         default:
-            ERROR("Wrong channel %d",channel)
+            ERROR_LOG("Wrong channel %d",channel)
             break;
     }
     return RP_EOOR;
@@ -545,7 +513,7 @@ int osc_SetTriggerDelay(rp_channel_t channel, uint32_t decimated_data_num)
                 cmn_Debug("cmn_SetValue(&osc_reg_4ch->trigger_delay) mask 0xFFFFFFFF <- 0x%X", decimated_data_num);
                 return cmn_SetValue(&osc_reg_4ch->trigger_delay, decimated_data_num, TRIG_DELAY_MASK, &currentValue);
             }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
+                ERROR_LOG("Registers for channels 3 and 4 are not initialized")
                 return RP_NOTS;
             }
             break;
@@ -554,12 +522,12 @@ int osc_SetTriggerDelay(rp_channel_t channel, uint32_t decimated_data_num)
                 cmn_Debug("cmn_SetValue(&osc_reg_4ch->trigger_delay_ch2) mask 0xFFFFFFFF <- 0x%X", decimated_data_num);
                 return cmn_SetValue(&osc_reg_4ch->trigger_delay_ch2, decimated_data_num, TRIG_DELAY_MASK, &currentValue);
             }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
+                ERROR_LOG("Registers for channels 3 and 4 are not initialized")
                 return RP_NOTS;
             }
             break;
         default:
-            ERROR("Wrong channel %d",channel)
+            ERROR_LOG("Wrong channel %d",channel)
             break;
     }
     return RP_EOOR;
@@ -577,7 +545,7 @@ int osc_GetTriggerDelay(rp_channel_t channel, uint32_t* decimated_data_num)
             if (osc_reg_4ch){
                 return cmn_GetValue(&osc_reg_4ch->trigger_delay, decimated_data_num, TRIG_DELAY_MASK);
             }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
+                ERROR_LOG("Registers for channels 3 and 4 are not initialized")
                 return RP_NOTS;
             }
             break;
@@ -585,12 +553,12 @@ int osc_GetTriggerDelay(rp_channel_t channel, uint32_t* decimated_data_num)
             if (osc_reg_4ch){
                 return cmn_GetValue(&osc_reg_4ch->trigger_delay_ch2, decimated_data_num, TRIG_DELAY_MASK);
             }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
+                ERROR_LOG("Registers for channels 3 and 4 are not initialized")
                 return RP_NOTS;
             }
             break;
         default:
-            ERROR("Wrong channel %d",channel)
+            ERROR_LOG("Wrong channel %d",channel)
             break;
     }
     return RP_EOOR;
@@ -851,18 +819,18 @@ int osc_GetWritePointer(rp_channel_t channel, uint32_t* pos)
             if (osc_reg_4ch){
                 return cmn_GetValue(&osc_reg_4ch->wr_ptr_cur, pos, WRITE_POINTER_MASK);
             }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
+                ERROR_LOG("Registers for channels 3 and 4 are not initialized")
             }
             break;
         case RP_CH_4:
             if (osc_reg_4ch){
                 return cmn_GetValue(&osc_reg_4ch->wr_ptr_cur_ch2, pos, WRITE_POINTER_MASK);
             }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
+                ERROR_LOG("Registers for channels 3 and 4 are not initialized")
             }
             break;
         default:
-            ERROR("Wrong channel %d",channel)
+            ERROR_LOG("Wrong channel %d",channel)
             break;
     }
     return RP_EOOR;
@@ -880,18 +848,18 @@ int osc_GetWritePointerAtTrig(rp_channel_t channel, uint32_t* pos)
             if (osc_reg_4ch){
                 return cmn_GetValue(&osc_reg_4ch->wr_ptr_trigger, pos, WRITE_POINTER_MASK);
             }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
+                ERROR_LOG("Registers for channels 3 and 4 are not initialized")
             }
             break;
         case RP_CH_4:
             if (osc_reg_4ch){
                 return cmn_GetValue(&osc_reg_4ch->wr_ptr_trigger_ch2, pos, WRITE_POINTER_MASK);
             }else{
-                ERROR("Registers for channels 3 and 4 are not initialized")
+                ERROR_LOG("Registers for channels 3 and 4 are not initialized")
             }
             break;
         default:
-            ERROR("Wrong channel %d",channel)
+            ERROR_LOG("Wrong channel %d",channel)
             break;
     }
     return RP_EOOR;
@@ -899,7 +867,7 @@ int osc_GetWritePointerAtTrig(rp_channel_t channel, uint32_t* pos)
 
 int osc_SetExtTriggerDebouncer(uint32_t value){
     if (DEBAUNCER_MASK < value) {
-        ERROR("Error value 0x%X very big",value)
+        ERROR_LOG("Error value 0x%X very big",value)
         return RP_EIPV;
     }
     cmn_Debug("[osc_SetExtTriggerDebouncer] osc_reg.ext_trig_dbc_t <- 0x%X",value);
@@ -944,207 +912,26 @@ const volatile uint32_t* osc_GetDataBufferChD()
  * AXI mode
  */
 
-int osc_axi_map(size_t size, size_t offset, void** mapped, uint32_t *mapped_size)
-{
-    if (mem_fd == -1) {
-        return RP_EMMD;
-    }
-
-    if (offset < g_adc_axi_start) {
-        return RP_EOOR;
-    }
-
-    if (offset + size > (g_adc_axi_start + g_adc_axi_size)) {
-        return RP_EOOR;
-    }
-
-    if (offset % sysconf(_SC_PAGESIZE) != 0) {
-        ERROR("Error size. offset %% sysconf(_SC_PAGESIZE) = %ld  must be zero. sysconf(_SC_PAGESIZE) = %ld\n",offset % sysconf(_SC_PAGESIZE),sysconf(_SC_PAGESIZE));
-        return RP_EMMD;
-    }
-
-    *mapped = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, mem_fd, offset);
-
-    if (*mapped == MAP_FAILED) {
-        ERROR("Error osc_axi_map: %d\n",errno);
-        return RP_EMMD;
-    }
-
-    *mapped_size = size;
-
-    return RP_OK;
-
-}
-
-int osc_axi_unmap(size_t size, void** mapped)
-{
-    if(mem_fd == -1) {
-        return RP_EUMD;
-    }
-
-    if((mapped == (void *) -1) || (mapped == NULL)) {
-        return RP_EUMD;
-    }
-
-    if((*mapped == (void *) -1) || (*mapped == NULL)) {
-        return RP_EUMD;
-    }
-
-    if(munmap(*mapped, size) < 0){
-        return RP_EUMD;
-    }
-    *mapped = NULL;
-    return RP_OK;
-}
-
-bool checkBufferOverlap(rp_channel_t _channel,uint32_t _start,uint32_t _end) {
-    int maxSize = 0;
-    uint32_t start[RP_CH_4 + 1];
-    uint32_t end[RP_CH_4 + 1];
-
-    uint32_t ch_en = 0;
-    int ret = 0;
-
-    ret = cmn_GetValue(&osc_reg->cha_axi_enable, &ch_en, AXI_ENABLE_MASK);
-    if (ret != RP_OK){
-        return true;
-    }
-
-    if (ch_en && _channel != RP_CH_1) {
-        ret = cmn_GetValue(&osc_reg->cha_axi_addr_high, &end[maxSize], FULL_MASK);
-        if (ret != RP_OK) {
-            return true;
-        }
-        ret = cmn_GetValue(&osc_reg->cha_axi_addr_low, &start[maxSize], FULL_MASK);
-        if (ret != RP_OK) {
-            return true;
-        }
-        maxSize++;
-    }
-
-    ret = cmn_GetValue(&osc_reg->chb_axi_enable, &ch_en, AXI_ENABLE_MASK);
-    if (ret != RP_OK){
-        return true;
-    }
-
-    if (ch_en && _channel != RP_CH_2) {
-        ret = cmn_GetValue(&osc_reg->chb_axi_addr_high, &end[maxSize], FULL_MASK);
-        if (ret != RP_OK) {
-            return true;
-        }
-        ret = cmn_GetValue(&osc_reg->chb_axi_addr_low, &start[maxSize], FULL_MASK);
-        if (ret != RP_OK) {
-            return true;
-        }
-        maxSize++;
-    }
-
-    if (osc_reg_4ch){
-        ret = cmn_GetValue(&osc_reg_4ch->cha_axi_enable, &ch_en, AXI_ENABLE_MASK);
-        if (ret != RP_OK){
-            return true;
-        }
-
-        if (ch_en && _channel != RP_CH_3) {
-            ret = cmn_GetValue(&osc_reg_4ch->cha_axi_addr_high, &end[maxSize], FULL_MASK);
-            if (ret != RP_OK) {
-                return true;
-            }
-            ret = cmn_GetValue(&osc_reg_4ch->cha_axi_addr_low, &start[maxSize], FULL_MASK);
-            if (ret != RP_OK) {
-                return true;
-            }
-            maxSize++;
-        }
-
-        ret = cmn_GetValue(&osc_reg_4ch->chb_axi_enable, &ch_en, AXI_ENABLE_MASK);
-        if (ret != RP_OK){
-            return true;
-        }
-
-        if (ch_en && _channel != RP_CH_4) {
-            ret = cmn_GetValue(&osc_reg_4ch->chb_axi_addr_high, &end[maxSize], FULL_MASK);
-            if (ret != RP_OK) {
-                return true;
-            }
-            ret = cmn_GetValue(&osc_reg_4ch->chb_axi_addr_low, &start[maxSize], FULL_MASK);
-            if (ret != RP_OK) {
-                return true;
-            }
-            maxSize++;
-        }
-    }
-    bool overlaped = false;
-    for(int i = 0 ; i < maxSize; i++) {
-        if (start[i] <= _start && _start <= end[i]){
-            overlaped |= true;
-        }
-        if (start[i] <= _end && _end <= end[i]){
-            overlaped |= true;
-        }
-        if (_start <= start[i] && end[i] <= _end){
-            overlaped |= true;
-        }
-    }
-    return overlaped;
-}
-
 int osc_axi_EnableChA(bool enable)
 {
-    int ret = 0;
     uint32_t tmp;
-    uint32_t ch_addr_high, ch_addr_low;
-    ret = cmn_GetValue(&osc_reg->cha_axi_addr_high, &ch_addr_high, FULL_MASK);
-    if (ret != RP_OK) {
-        return ret;
-    }
-    ret = cmn_GetValue(&osc_reg->cha_axi_addr_low, &ch_addr_low, FULL_MASK);
-    if (ret != RP_OK) {
-        return ret;
-    }
-
-    if (enable)
-    {
-        if (ch_addr_low > ch_addr_high)
-        {
+    uint32_t ch_addr_end, ch_addr_start;
+    ECHECK(cmn_GetValue(&osc_reg->cha_axi_addr_high, &ch_addr_end, FULL_MASK))
+    ECHECK(cmn_GetValue(&osc_reg->cha_axi_addr_low, &ch_addr_start, FULL_MASK))
+    if (enable){
+        ECHECK(axi_initManager())
+        axi_releaseMemory(osc_axi_mem_reserved_index[0]);
+        if (ch_addr_start > ch_addr_end){
             return RP_EOOR;
         }
-        if (ch_addr_low < g_adc_axi_start)
-        {
-            return RP_EOOR;
-        }
-        if (ch_addr_high > (g_adc_axi_start + g_adc_axi_size))
-        {
-            return RP_EOOR;
-        }
-
-        if (checkBufferOverlap(RP_CH_1,ch_addr_low,ch_addr_high)){
-            return RP_EOOR;
-        }
-
-        if (osc_axi_cha != NULL){
-            ret = osc_axi_unmap(osc_axi_cha_size, (void**)&osc_axi_cha);
-            if (ret != RP_OK)
-            {
-                return ret;
-            }
-        }
-
-        ret = osc_axi_map(ch_addr_high - ch_addr_low, ch_addr_low, (void**)&osc_axi_cha, &osc_axi_cha_size);
-        if (ret != RP_OK)
-        {
-            return ret;
-        }
+        uint64_t index;
+        ECHECK(axi_reserveMemory(ch_addr_start,ch_addr_end - ch_addr_start,&index))
+        osc_axi_mem_reserved_index[0] = index;
         cmn_Debug("cmn_SetValue(&osc_reg->cha_axi_enable) mask 0x1 <- 0x%X", 1);
         return cmn_SetValue(&osc_reg->cha_axi_enable, 1, AXI_ENABLE_MASK, &tmp);
-    }
-
-    ret = osc_axi_unmap(osc_axi_cha_size, (void**)&osc_axi_cha);
-    if (ret != RP_OK)
-    {
-        cmn_Debug("cmn_SetValue(&osc_reg->cha_axi_enable) mask 0x1 <- 0x%X", 0);
-        cmn_SetValue(&osc_reg->cha_axi_enable, 0, AXI_ENABLE_MASK, &tmp);
-        return ret;
+    }else{
+        axi_releaseMemory(osc_axi_mem_reserved_index[0]);
+        osc_axi_mem_reserved_index[0] = 0;
     }
     cmn_Debug("cmn_SetValue(&osc_reg->cha_axi_enable) mask 0x1 <- 0x%X", 0);
     return cmn_SetValue(&osc_reg->cha_axi_enable, 0, AXI_ENABLE_MASK, &tmp);
@@ -1152,59 +939,24 @@ int osc_axi_EnableChA(bool enable)
 
 int osc_axi_EnableChB(bool enable)
 {
-    int ret = 0;
     uint32_t tmp;
-    uint32_t ch_addr_high, ch_addr_low;
-    ret = cmn_GetValue(&osc_reg->chb_axi_addr_high, &ch_addr_high, FULL_MASK);
-    if (ret != RP_OK) {
-        return ret;
-    }
-    ret = cmn_GetValue(&osc_reg->chb_axi_addr_low, &ch_addr_low, FULL_MASK);
-    if (ret != RP_OK) {
-        return ret;
-    }
-
-    if (enable)
-    {
-        if (ch_addr_low > ch_addr_high)
-        {
+    uint32_t ch_addr_end, ch_addr_start;
+    ECHECK(cmn_GetValue(&osc_reg->chb_axi_addr_high, &ch_addr_end, FULL_MASK))
+    ECHECK(cmn_GetValue(&osc_reg->chb_axi_addr_low, &ch_addr_start, FULL_MASK))
+    if (enable){
+        ECHECK(axi_initManager())
+        axi_releaseMemory(osc_axi_mem_reserved_index[1]);
+        if (ch_addr_start > ch_addr_end){
             return RP_EOOR;
         }
-        if (ch_addr_low < g_adc_axi_start)
-        {
-            return RP_EOOR;
-        }
-        if (ch_addr_high > (g_adc_axi_start + g_adc_axi_size))
-        {
-            return RP_EOOR;
-        }
-
-        if (checkBufferOverlap(RP_CH_2,ch_addr_low,ch_addr_high)){
-            return RP_EOOR;
-        }
-
-        if (osc_axi_chb != NULL){
-            ret = osc_axi_unmap(osc_axi_chb_size, (void**)&osc_axi_chb);
-            if (ret != RP_OK)
-            {
-                return ret;
-            }
-        }
-
-        ret = osc_axi_map(ch_addr_high - ch_addr_low, ch_addr_low, (void**)&osc_axi_chb,&osc_axi_chb_size);
-        if (ret != RP_OK)
-        {
-            return ret;
-        }
+        uint64_t index;
+        ECHECK(axi_reserveMemory(ch_addr_start,ch_addr_end - ch_addr_start,&index))
+        osc_axi_mem_reserved_index[1] = index;
         cmn_Debug("cmn_SetValue(&osc_reg->chb_axi_enable) mask 0x1 <- 0x%X", 1);
         return cmn_SetValue(&osc_reg->chb_axi_enable, 1, AXI_ENABLE_MASK, &tmp);
-    }
-    ret = osc_axi_unmap(osc_axi_chb_size, (void**)&osc_axi_chb);
-    if (ret != RP_OK)
-    {
-        cmn_Debug("cmn_SetValue(&osc_reg->chb_axi_enable) mask 0x1 <- 0x%X", 0);
-        cmn_SetValue(&osc_reg->chb_axi_enable, 0, AXI_ENABLE_MASK, &tmp);
-        return ret;
+    }else{
+        axi_releaseMemory(osc_axi_mem_reserved_index[1]);
+        osc_axi_mem_reserved_index[1] = 0;
     }
     cmn_Debug("cmn_SetValue(&osc_reg->chb_axi_enable) mask 0x1 <- 0x%X", 0);
     return cmn_SetValue(&osc_reg->chb_axi_enable, 0, AXI_ENABLE_MASK, &tmp);
@@ -1214,59 +966,24 @@ int osc_axi_EnableChC(bool enable)
 {
     if (!osc_reg_4ch)
         return RP_NOTS;
-    int ret = 0;
     uint32_t tmp;
-    uint32_t ch_addr_high, ch_addr_low;
-    ret = cmn_GetValue(&osc_reg_4ch->cha_axi_addr_high, &ch_addr_high, FULL_MASK);
-    if (ret != RP_OK) {
-        return ret;
-    }
-    ret = cmn_GetValue(&osc_reg_4ch->cha_axi_addr_low, &ch_addr_low, FULL_MASK);
-    if (ret != RP_OK) {
-        return ret;
-    }
-
-    if (enable)
-    {
-        if (ch_addr_low > ch_addr_high)
-        {
+    uint32_t ch_addr_end, ch_addr_start;
+    ECHECK(cmn_GetValue(&osc_reg_4ch->cha_axi_addr_high, &ch_addr_end, FULL_MASK))
+    ECHECK(cmn_GetValue(&osc_reg_4ch->cha_axi_addr_low, &ch_addr_start, FULL_MASK))
+    if (enable){
+        ECHECK(axi_initManager())
+        axi_releaseMemory(osc_axi_mem_reserved_index[2]);
+        if (ch_addr_start > ch_addr_end){
             return RP_EOOR;
         }
-        if (ch_addr_low < g_adc_axi_start)
-        {
-            return RP_EOOR;
-        }
-        if (ch_addr_high > (g_adc_axi_start + g_adc_axi_size))
-        {
-            return RP_EOOR;
-        }
-
-        if (checkBufferOverlap(RP_CH_3,ch_addr_low,ch_addr_high)){
-            return RP_EOOR;
-        }
-
-        if (osc_axi_chc != NULL){
-            ret = osc_axi_unmap(osc_axi_chc_size, (void**)&osc_axi_chc);
-            if (ret != RP_OK)
-            {
-                return ret;
-            }
-        }
-
-        ret = osc_axi_map(ch_addr_high - ch_addr_low, ch_addr_low, (void**)&osc_axi_chc,&osc_axi_chc_size);
-        if (ret != RP_OK)
-        {
-            return ret;
-        }
+        uint64_t index;
+        ECHECK(axi_reserveMemory(ch_addr_start,ch_addr_end - ch_addr_start,&index))
+        osc_axi_mem_reserved_index[2] = index;
         cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_axi_enable) mask 0x1 <- 0x%X", 1);
         return cmn_SetValue(&osc_reg_4ch->cha_axi_enable, 1, AXI_ENABLE_MASK, &tmp);
-    }
-    ret = osc_axi_unmap(osc_axi_chc_size, (void**)&osc_axi_chc);
-    if (ret != RP_OK)
-    {
-        cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_axi_enable) mask 0x1 <- 0x%X", 0);
-        cmn_SetValue(&osc_reg_4ch->cha_axi_enable, 0, AXI_ENABLE_MASK, &tmp);
-        return ret;
+    }else{
+        axi_releaseMemory(osc_axi_mem_reserved_index[2]);
+        osc_axi_mem_reserved_index[2] = 0;
     }
     cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_axi_enable) mask 0x1 <- 0x%X", 0);
     return cmn_SetValue(&osc_reg_4ch->cha_axi_enable, 0, AXI_ENABLE_MASK, &tmp);
@@ -1276,59 +993,24 @@ int osc_axi_EnableChD(bool enable)
 {
     if (!osc_reg_4ch)
         return RP_NOTS;
-    int ret = 0;
     uint32_t tmp;
-    uint32_t ch_addr_high, ch_addr_low;
-    ret = cmn_GetValue(&osc_reg_4ch->chb_axi_addr_high, &ch_addr_high, FULL_MASK);
-    if (ret != RP_OK) {
-        return ret;
-    }
-    ret = cmn_GetValue(&osc_reg_4ch->chb_axi_addr_low, &ch_addr_low, FULL_MASK);
-    if (ret != RP_OK) {
-        return ret;
-    }
-
-    if (enable)
-    {
-        if (ch_addr_low > ch_addr_high)
-        {
+    uint32_t ch_addr_end, ch_addr_start;
+    ECHECK(cmn_GetValue(&osc_reg_4ch->chb_axi_addr_high, &ch_addr_end, FULL_MASK))
+    ECHECK(cmn_GetValue(&osc_reg_4ch->chb_axi_addr_low, &ch_addr_start, FULL_MASK))
+    if (enable){
+        ECHECK(axi_initManager())
+        axi_releaseMemory(osc_axi_mem_reserved_index[3]);
+        if (ch_addr_start > ch_addr_end){
             return RP_EOOR;
         }
-        if (ch_addr_low < g_adc_axi_start)
-        {
-            return RP_EOOR;
-        }
-        if (ch_addr_high > (g_adc_axi_start + g_adc_axi_size))
-        {
-            return RP_EOOR;
-        }
-
-        if (checkBufferOverlap(RP_CH_4,ch_addr_low,ch_addr_high)){
-            return RP_EOOR;
-        }
-
-        if (osc_axi_chd != NULL){
-            ret = osc_axi_unmap(osc_axi_chd_size, (void**)&osc_axi_chd);
-            if (ret != RP_OK)
-            {
-                return ret;
-            }
-        }
-
-        ret = osc_axi_map(ch_addr_high - ch_addr_low, ch_addr_low, (void**)&osc_axi_chd,&osc_axi_chd_size);
-        if (ret != RP_OK)
-        {
-            return ret;
-        }
+        uint64_t index;
+        ECHECK(axi_reserveMemory(ch_addr_start,ch_addr_end - ch_addr_start,&index))
+        osc_axi_mem_reserved_index[3] = index;
         cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_axi_enable) mask 0x1 <- 0x%X", 1);
         return cmn_SetValue(&osc_reg_4ch->chb_axi_enable, 1, AXI_ENABLE_MASK, &tmp);
-    }
-    ret = osc_axi_unmap(osc_axi_chd_size, (void**)&osc_axi_chd);
-    if (ret != RP_OK)
-    {
-        cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_axi_enable) mask 0x1 <- 0x%X", 0);
-        cmn_SetValue(&osc_reg_4ch->chb_axi_enable, 0, AXI_ENABLE_MASK, &tmp);
-        return ret;
+    }else{
+        axi_releaseMemory(osc_axi_mem_reserved_index[3]);
+        osc_axi_mem_reserved_index[3] = 0;
     }
     cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_axi_enable) mask 0x1 <- 0x%X", 0);
     return cmn_SetValue(&osc_reg_4ch->chb_axi_enable, 0, AXI_ENABLE_MASK, &tmp);
@@ -1588,22 +1270,15 @@ int osc_axi_GetTriggerDelayChD(uint32_t* decimated_data_num)
     return cmn_GetValue(&osc_reg_4ch->chb_axi_delay, decimated_data_num, TRIG_DELAY_MASK);
 }
 
-const volatile uint16_t* osc_axi_GetDataBufferChA()
-{
-    return osc_axi_cha;
-}
-
-const volatile uint16_t* osc_axi_GetDataBufferChB()
-{
-    return osc_axi_chb;
-}
-
-const volatile uint16_t* osc_axi_GetDataBufferChC()
-{
-    return osc_axi_chc;
-}
-
-const volatile uint16_t* osc_axi_GetDataBufferChD()
-{
-    return osc_axi_chd;
+const uint16_t* osc_axi_GetDataBufferCh(rp_channel_t channel){
+    auto idx = osc_axi_mem_reserved_index[channel];
+    if (idx == 0){
+        ERROR_LOG("Buffer for channel %d not mapped", channel + 1)
+    }
+    uint16_t* buffer = NULL;
+    if (axi_getMapped(idx,&buffer) != RP_OK){
+        ERROR_LOG("Buffer for channel %d not mapped", channel + 1)
+        return NULL;
+    }
+    return buffer;
 }

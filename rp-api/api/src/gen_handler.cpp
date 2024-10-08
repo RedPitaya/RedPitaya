@@ -27,11 +27,11 @@
 #define CHECK_CHANNEL \
     uint8_t channels_rp_HPGetFastDACChannelsCount = 0; \
     if (rp_HPGetFastDACChannelsCount(&channels_rp_HPGetFastDACChannelsCount) != RP_HP_OK){ \
-        ERROR("Can't get fast DAC channels count"); \
+        ERROR_LOG("Can't get fast DAC channels count"); \
         return RP_NOTS; \
     } \
     if (channel >= channels_rp_HPGetFastDACChannelsCount){ \
-        ERROR("Channel is larger than allowed"); \
+        ERROR_LOG("Channel is larger than allowed"); \
         return RP_NOTS; \
     }
 
@@ -71,13 +71,13 @@ int gen_SetDefaultValues() {
 
     uint8_t channels = 0;
     if (rp_HPGetFastDACChannelsCount(&channels) != RP_HP_OK){
-        ERROR("Can't get fast DAC channels count");
+        ERROR_LOG("Can't get fast DAC channels count");
         return RP_NOTS;
     }
 
     bool x5_gain = false;
     if (rp_HPGetIsGainDACx5(&x5_gain) != RP_HP_OK){
-        ERROR("Can't get fast DAC gain mode");
+        ERROR_LOG("Can't get fast DAC gain mode");
         return RP_NOTS;
     }
 
@@ -101,13 +101,13 @@ int gen_SetDefaultValues() {
 
         float fs = 0;
         if (rp_HPGetFastDACGain(convertCh(ch), &fs) != RP_HP_OK){
-            ERROR("Can't get fast DAC gain");
+            ERROR_LOG("Can't get fast DAC gain");
             return RP_NOTS;
         }
 
         float fsBase = 0;
         if (rp_HPGetHWDACFullScale(&fsBase) != RP_HP_OK){
-            ERROR("Can't get fast HW DAC full scale");
+            ERROR_LOG("Can't get fast HW DAC full scale");
             return RP_NOTS;
         }
 
@@ -164,7 +164,7 @@ int gen_IsEnable(rp_channel_t channel, bool *value) {
 int gen_checkAmplitudeAndOffset(rp_channel_t channel,float amplitude, float offset) {
     float fs = 0;
     if (rp_HPGetFastDACGain(convertCh(channel), &fs) != RP_HP_OK){
-        ERROR("Can't get fast DAC full scale");
+        ERROR_LOG("Can't get fast DAC full scale");
         return RP_NOTS;
     }
 
@@ -273,7 +273,7 @@ int gen_setFrequency(rp_channel_t channel, float frequency) {
 
     uint32_t base_freq = 0;
     if (rp_HPGetBaseFastDACSpeedHz(&base_freq) != RP_HP_OK){
-        ERROR("Can't get fast ADC base rate");
+        ERROR_LOG("Can't get fast ADC base rate");
         return RP_NOTS;
     }
 
@@ -297,7 +297,7 @@ int gen_setFrequencyDirect(rp_channel_t channel, float frequency){
 
     uint32_t base_freq = 0;
     if (rp_HPGetBaseFastDACSpeedHz(&base_freq) != RP_HP_OK){
-        ERROR("Can't get fast ADC base rate");
+        ERROR_LOG("Can't get fast ADC base rate");
         return RP_NOTS;
     }
 
@@ -319,7 +319,7 @@ int gen_getFrequency(rp_channel_t channel, float *frequency) {
 
     // uint32_t base_freq = 0;
     // if (rp_HPGetBaseFastDACSpeedHz(&base_freq) != RP_HP_OK){
-    //     ERROR("Can't get fast ADC base rate");
+    //     ERROR_LOG("Can't get fast ADC base rate");
     //     return RP_NOTS;
     // }
 
@@ -334,7 +334,7 @@ int gen_setSweepStartFrequency(rp_channel_t channel, float frequency){
 
     uint32_t base_freq = 0;
     if (rp_HPGetBaseFastDACSpeedHz(&base_freq) != RP_HP_OK){
-        ERROR("Can't get fast ADC base rate");
+        ERROR_LOG("Can't get fast ADC base rate");
         return RP_NOTS;
     }
 
@@ -359,7 +359,7 @@ int gen_setSweepEndFrequency(rp_channel_t channel, float frequency){
 
     uint32_t base_freq = 0;
     if (rp_HPGetBaseFastDACSpeedHz(&base_freq) != RP_HP_OK){
-        ERROR("Can't get fast ADC base rate");
+        ERROR_LOG("Can't get fast ADC base rate");
         return RP_NOTS;
     }
 
@@ -468,13 +468,13 @@ int gen_setArbWaveform(rp_channel_t channel, float *data, uint32_t length) {
 
     float fs = 0;
     if (rp_HPGetFastDACGain(channel,&fs) != RP_HP_OK){
-        ERROR("Can't get fast DAC full scale");
+        ERROR_LOG("Can't get fast DAC full scale");
         return RP_NOTS;
     }
 
     bool is_sign = false;
     if (rp_HPGetFastDACIsSigned(&is_sign) != RP_HP_OK){
-        ERROR("Can't get fast DAC sign value");
+        ERROR_LOG("Can't get fast DAC sign value");
         return RP_NOTS;
     }
 
@@ -488,7 +488,7 @@ int gen_setArbWaveform(rp_channel_t channel, float *data, uint32_t length) {
             max = data[i];
     }
     if (min < (is_sign ? -fs : 0) || max > fs) {
-        ERROR("The signal is greater than acceptable.");
+        ERROR_LOG("The signal is greater than acceptable.");
         return RP_ENN;
     }
 
@@ -784,7 +784,7 @@ int gen_setTriggerSource(rp_channel_t channel, rp_trig_src_t src) {
 int gen_getTriggerSource(rp_channel_t channel, rp_trig_src_t *src) {
     uint32_t val = 0;
     int ret = generate_getTriggerSource(channel,  &val);
-    *src = val;
+    *src = (rp_trig_src_t)val;
     return ret;
 }
 
@@ -793,8 +793,8 @@ int gen_Trigger(uint32_t channel) {
     switch (channel) {
         case RP_CH_1:
         case RP_CH_2:
-            gen_ResetChannelSM(channel);
-            return generate_Trigger(channel);
+            gen_ResetChannelSM((rp_channel_t)channel);
+            return generate_Trigger((rp_channel_t)channel);
 
         default:
             return RP_EOOR;
@@ -806,7 +806,7 @@ int gen_TriggerOnly(uint32_t channel){
     switch (channel) {
         case RP_CH_1:
         case RP_CH_2:
-            return generate_Trigger(channel);
+            return generate_Trigger((rp_channel_t)channel);
 
         default:
             return RP_EOOR;

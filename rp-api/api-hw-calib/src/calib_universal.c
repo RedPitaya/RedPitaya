@@ -9,7 +9,7 @@
                                     bool err = false; \
                                     int32_t val = getParameter(Z,Y,&err); \
                                     if (err) { \
-                                        ERROR("Missing calib item %s (%d) .\n",getNameOfUniversalId(Y),Y); \
+                                        ERROR_LOG("Missing calib item %s (%d) .\n",getNameOfUniversalId(Y),Y); \
                                     } \
                                     X = val; \
                                 }
@@ -374,7 +374,7 @@ rp_calib_params_t convertUniversaltoCommon(rp_HPeModels_t model,rp_calib_params_
         }
 
         default:
-            ERROR("Unknown model: %d.",model);
+            ERROR_LOG("Unknown model: %d.",model);
             break;
     }
 
@@ -675,7 +675,7 @@ bool convertUniversal(rp_HPeModels_t model,rp_calib_params_t *param,rp_calib_par
         }
 
         default:
-            ERROR("Unknown model: %d.",model);
+            ERROR_LOG("Unknown model: %d.",model);
             return false;
     }
     out->count = count;
@@ -842,7 +842,7 @@ rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model){
         break;
 
     default:
-        ERROR("Unknown model: %d.",model);
+        ERROR_LOG("Unknown model: %d.",model);
         break;
     }
     return calib;

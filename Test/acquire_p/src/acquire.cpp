@@ -72,8 +72,9 @@ int main(int argc, char *argv[])
 
     if (!rp_HPGetFastADCIsSplitTriggerOrDefault()){
         fprintf(stderr,"Split trigger mode not supported\n");
-
+        exit(0);
     }
+
     g_argv0 = argv[0];
     auto option = parse(argc,argv);
 

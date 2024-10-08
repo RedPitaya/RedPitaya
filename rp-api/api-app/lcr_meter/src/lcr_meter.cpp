@@ -116,7 +116,7 @@ int lcr_Reset(){
     std::lock_guard lock(g_lcr_mutex);
     auto ret = rp_Reset();
     if (ret != RP_OK){
-        ERROR("Reset to default failed")
+        ERROR_LOG("Reset to default failed")
         return RP_LCR_UERROR;
     }
     /* Set default values of the lcr_params structure */

@@ -74,7 +74,7 @@ auto getDACChannels() -> uint8_t{
     uint8_t c = 0;
 
     if (rp_HPGetFastDACChannelsCount(&c) != RP_HP_OK){
-        ERROR("Can't get fast DAC channels count\n");
+        ERROR_LOG("Can't get fast DAC channels count\n");
     }
     return c;
 }

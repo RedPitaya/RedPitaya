@@ -14,7 +14,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(C_STANDARD 11)
 
 
@@ -68,13 +68,14 @@ include_directories(${INSTALL_DIR}/include)
 
 
 list(APPEND src
-            ${CMAKE_SOURCE_DIR}/src/common.c
-            ${CMAKE_SOURCE_DIR}/src/oscilloscope.c
-            ${CMAKE_SOURCE_DIR}/src/acq_handler.c
-            ${CMAKE_SOURCE_DIR}/src/rp.c
-            ${CMAKE_SOURCE_DIR}/src/generate.c
-            ${CMAKE_SOURCE_DIR}/src/gen_handler.c
-            ${CMAKE_SOURCE_DIR}/src/daisy.c
+            ${CMAKE_SOURCE_DIR}/src/common.cpp
+            ${CMAKE_SOURCE_DIR}/src/oscilloscope.cpp
+            ${CMAKE_SOURCE_DIR}/src/acq_handler.cpp
+            ${CMAKE_SOURCE_DIR}/src/rp.cpp
+            ${CMAKE_SOURCE_DIR}/src/generate.cpp
+            ${CMAKE_SOURCE_DIR}/src/gen_handler.cpp
+            ${CMAKE_SOURCE_DIR}/src/axi_manager.cpp
+            ${CMAKE_SOURCE_DIR}/src/daisy.cpp
     )
 
 
@@ -94,7 +95,7 @@ list(APPEND header_rp_common
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
-add_compile_options(-Wall -Wextra -Wno-unused-parameter -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+add_compile_options(-Wall -Wno-psabi -Wextra -Wno-unused-parameter -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 if(DEBUG_REG)
 add_compile_options(-DDEBUG_REG)

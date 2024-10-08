@@ -559,12 +559,12 @@ int analysis(double *ch1, double *ch2,
 int initFFT(uint32_t max_buffer,uint32_t adcRate){
     std::lock_guard lock(g_fft_mutex);
     if (g_fft != NULL){
-        ERROR("Can't init memory")
+        ERROR_LOG("Can't init memory")
         return RP_A_ERROR;
     }
     g_fft = new rp_dsp_api::CDSP(2,max_buffer,adcRate);
     if (g_fft == NULL){
-        ERROR("Can't init memory")
+        ERROR_LOG("Can't init memory")
         return RP_A_ERROR;
     }
     g_fft_data = g_fft->createData();
@@ -611,12 +611,12 @@ int analysisFFT(const T *ch1, const T *ch2,
     }
 
     if (g_fft->setSignalLengthDiv2(size)){
-        ERROR("Can't set buffer size for FFT")
+        ERROR_LOG("Can't set buffer size for FFT")
         return RP_A_ERROR;
     }
 
     if (g_fft->window_init(rp_dsp_api::FLAT_TOP)){
-        ERROR("Can't init window")
+        ERROR_LOG("Can't init window")
         return RP_A_ERROR;
     }
 

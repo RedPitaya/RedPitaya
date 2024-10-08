@@ -171,7 +171,7 @@ static int hk_Reset() {
 static hk_version_t house_getHKVersion() {
     rp_HPeModels_t c = STEM_125_14_v1_0;
     if (rp_HPGetModel(&c) != RP_HP_OK){
-        ERROR("Can't get board model");
+        ERROR_LOG("Can't get board model");
     }
 
     switch (c)
@@ -204,7 +204,7 @@ static hk_version_t house_getHKVersion() {
         case STEM_250_12_120:
             return HK_V3;
         default:
-            ERROR("Can't get board model");
+            ERROR_LOG("Can't get board model");
     }
     return HK_V1;
 }
@@ -408,17 +408,17 @@ int house_GetSourceTrigOutput(rp_outTiggerMode_t *mode){
     {
         case HK_V1:{
             volatile housekeeping_control_v1_t *hk_v1 = (volatile housekeeping_control_v1_t*)hk;
-            *mode = hk_v1->ext_trigger.out_selector;
+            *mode = (rp_outTiggerMode_t)hk_v1->ext_trigger.out_selector;
             return RP_OK;
         }
         case HK_V2:{
             volatile housekeeping_control_v2_t *hk_v2 = (volatile housekeeping_control_v2_t*)hk;
-            *mode = hk_v2->ext_trigger.out_selector;
+            *mode = (rp_outTiggerMode_t)hk_v2->ext_trigger.out_selector;
             return RP_OK;
         }
         case HK_V3:{
             volatile housekeeping_control_v3_t *hk_v3 = (volatile housekeeping_control_v3_t*)hk;
-            *mode = hk_v3->ext_trigger.out_selector;
+            *mode = (rp_outTiggerMode_t)hk_v3->ext_trigger.out_selector;
             return RP_OK;
         }
         default:

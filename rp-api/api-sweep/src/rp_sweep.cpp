@@ -26,7 +26,7 @@ auto getDACChannels() -> uint8_t{
     uint8_t c = 0;
 
     if (rp_HPGetFastDACChannelsCount(&c) != RP_HP_OK){
-        ERROR("Can't get fast DAC channels count")
+        ERROR_LOG("Can't get fast DAC channels count")
     }
     return c;
 }
@@ -97,7 +97,7 @@ int convertIndex(rp_channel_t _ch){
                 break;
         }
     }
-    ERROR("Unsupported generator channel %d",_ch)
+    ERROR_LOG("Unsupported generator channel %d",_ch)
     return -1;
 }
 
@@ -111,7 +111,7 @@ void CSweepController::run(){
         m_pimpl->m_Thread = std::thread(&CSweepController::Impl::loop, this->m_pimpl);
     }
     catch (const std::exception& e){
-        ERROR("Thread cannot be started %s",e.what())
+        ERROR_LOG("Thread cannot be started %s",e.what())
     }
 
 }
@@ -184,7 +184,7 @@ void CSweepController::Impl::loop()
 
     }catch (std::exception& e)
 	{
-		ERROR("Runtime error %s",e.what())
+		ERROR_LOG("Runtime error %s",e.what())
 	}
 }
 
@@ -222,7 +222,7 @@ auto CSweepController::isGen(rp_channel_t _ch,bool *state) -> int{
 
 int CSweepController::setStartFreq(rp_channel_t _ch,float _freq){
     if (_freq == 0) {
-        ERROR("Frequency cannot be zero")
+        ERROR_LOG("Frequency cannot be zero")
         return RP_EOOR;
     }
     lock_guard<std::mutex> lock(m_pimpl->mtx);
@@ -237,7 +237,7 @@ int CSweepController::setStartFreq(rp_channel_t _ch,float _freq){
 
 int CSweepController::setStopFreq(rp_channel_t _ch,float _freq){
     if (_freq == 0) {
-        ERROR("Frequency cannot be zero")
+        ERROR_LOG("Frequency cannot be zero")
         return RP_EOOR;
     }
     lock_guard<std::mutex> lock(m_pimpl->mtx);
@@ -272,7 +272,7 @@ auto CSweepController::getStopFreq(rp_channel_t _ch,float *_freq) -> int{
 
 int CSweepController::setTime(rp_channel_t _ch,int _time){
     if (_time == 0) {
-        ERROR("Time cannot be zero")
+        ERROR_LOG("Time cannot be zero")
         return RP_EOOR;
     }
     lock_guard<std::mutex> lock(m_pimpl->mtx);

@@ -23,7 +23,7 @@
 #define ECHECK_LCR_APP(x) { \
     int retval = (x); \
     if (retval != RP_OK) { \
-        ERROR("%s returned \"%s\"", #x, lcrApp_LcrGetError(static_cast<lcr_error_t>(retval))); \
+        ERROR_LOG("%s returned \"%s\"", #x, lcrApp_LcrGetError(static_cast<lcr_error_t>(retval))); \
         return retval; \
     } \
 }
@@ -32,7 +32,7 @@
 #define ECHECK_LCR_APP_NO_RET(x) { \
     int retval = (x); \
     if (retval != RP_OK) { \
-        ERROR("%s returned \"%s\"", #x, lcrApp_LcrGetError(static_cast<lcr_error_t>(retval))); \
+        ERROR_LOG("%s returned \"%s\"", #x, lcrApp_LcrGetError(static_cast<lcr_error_t>(retval))); \
     } \
 }
 

@@ -47,7 +47,7 @@ int spi_InitDevice(const char *_device){
     spi_fd = open(_device, O_RDONLY);
 
     if(spi_fd == -1){
-        ERROR("Failed to open SPI dev: %s.",_device);
+        ERROR_LOG("Failed to open SPI dev: %s.",_device);
         return RP_HW_EIS;
     }
     return read_spi_configuration(spi_fd,&g_settings);
@@ -56,7 +56,7 @@ int spi_InitDevice(const char *_device){
 int spi_SetDefaultSettings(){
 
     if(spi_fd == -1){
-        ERROR("Failed SPI not init");
+        ERROR_LOG("Failed SPI not init");
         return RP_HW_EIS;
     }
 
@@ -78,7 +78,7 @@ int spi_SetDefaultSettings(){
 
 int spi_GetSettings(){
     if(spi_fd == -1){
-        ERROR("Failed SPI not init");
+        ERROR_LOG("Failed SPI not init");
         return RP_HW_EIS;
     }
     return read_spi_configuration(spi_fd,&g_settings);
@@ -86,7 +86,7 @@ int spi_GetSettings(){
 
 int spi_SetSettings(){
     if(spi_fd == -1){
-        ERROR("Failed SPI not init");
+        ERROR_LOG("Failed SPI not init");
         return RP_HW_EIS;
     }
     return write_spi_configuration(spi_fd,&g_settings);
@@ -96,7 +96,7 @@ int spi_SetSettings(){
 int spi_Release(){
     if (spi_fd != -1){
         if (close(spi_fd) != 0){
-            ERROR("Failed to close SPI dev.");
+            ERROR_LOG("Failed to close SPI dev.");
             return RP_HW_EIS;
         }
         spi_fd = -1;
@@ -111,14 +111,14 @@ int spi_CreateMessage(size_t len){
     g_spi_data = malloc(sizeof(spi_data_t));
 
     if (!g_spi_data){
-		ERROR("Can't allocate memory for spi_data_t");
+		ERROR_LOG("Can't allocate memory for spi_data_t");
 		return RP_HW_EAL;
 	}
 
     g_spi_data->messages = calloc(len,sizeof(spi_message_t));
 
     if (!g_spi_data){
-		ERROR("Can't allocate memory for spi_message_t");
+		ERROR_LOG("Can't allocate memory for spi_message_t");
         free(g_spi_data);
         g_spi_data = NULL;
 		return RP_HW_EAL;
@@ -219,7 +219,7 @@ int spi_SetBufferForMessage(size_t msg,const uint8_t *tx_buffer,bool init_rx_buf
         if (init_rx_buffer) {
             g_spi_data->messages[msg].rx_buffer = malloc(len);
             if (!g_spi_data->messages[msg].rx_buffer){
-		        ERROR("Can't allocate memory for rx_buffer");
+		        ERROR_LOG("Can't allocate memory for rx_buffer");
                 pthread_mutex_unlock(&spi_mutex);
 	        	return RP_HW_EAL;
     	    }
@@ -232,7 +232,7 @@ int spi_SetBufferForMessage(size_t msg,const uint8_t *tx_buffer,bool init_rx_buf
         if (tx_buffer){
             g_spi_data->messages[msg].tx_buffer = malloc(len);
             if (!g_spi_data->messages[msg].tx_buffer){
-		        ERROR("Can't allocate memory for tx_buffer");
+		        ERROR_LOG("Can't allocate memory for tx_buffer");
                 pthread_mutex_unlock(&spi_mutex);
 	        	return RP_HW_EAL;
     	    }
@@ -250,7 +250,7 @@ int spi_SetBufferForMessage(size_t msg,const uint8_t *tx_buffer,bool init_rx_buf
 
 int spi_GetMode(rp_spi_mode_t *mode){
     if(spi_fd == -1){
-        ERROR("Failed SPI not init");
+        ERROR_LOG("Failed SPI not init");
         return RP_HW_EIS;
     }
 
@@ -260,7 +260,7 @@ int spi_GetMode(rp_spi_mode_t *mode){
 
 int spi_SetMode(rp_spi_mode_t mode){
     if(spi_fd == -1){
-        ERROR("Failed SPI not init");
+        ERROR_LOG("Failed SPI not init");
         return RP_HW_EIS;
     }
 
@@ -270,7 +270,7 @@ int spi_SetMode(rp_spi_mode_t mode){
 
 int spi_GetState(rp_spi_state_t *state){
     if(spi_fd == -1){
-        ERROR("Failed SPI not init");
+        ERROR_LOG("Failed SPI not init");
         return RP_HW_EIS;
     }
 
@@ -280,7 +280,7 @@ int spi_GetState(rp_spi_state_t *state){
 
 int spi_SetState(rp_spi_state_t state){
     if(spi_fd == -1){
-        ERROR("Failed SPI not init");
+        ERROR_LOG("Failed SPI not init");
         return RP_HW_EIS;
     }
 
@@ -290,7 +290,7 @@ int spi_SetState(rp_spi_state_t state){
 
 int spi_GetCSMode(rp_spi_cs_mode_t  *mode){
     if(spi_fd == -1){
-        ERROR("Failed SPI not init");
+        ERROR_LOG("Failed SPI not init");
         return RP_HW_EIS;
     }
 
@@ -300,7 +300,7 @@ int spi_GetCSMode(rp_spi_cs_mode_t  *mode){
 
 int spi_SetCSMode(rp_spi_cs_mode_t mode){
     if(spi_fd == -1){
-        ERROR("Failed SPI not init");
+        ERROR_LOG("Failed SPI not init");
         return RP_HW_EIS;
     }
 
@@ -310,7 +310,7 @@ int spi_SetCSMode(rp_spi_cs_mode_t mode){
 
 int spi_GetOrderBit(rp_spi_order_bit_t *order){
     if(spi_fd == -1){
-        ERROR("Failed SPI not init");
+        ERROR_LOG("Failed SPI not init");
         return RP_HW_EIS;
     }
 
@@ -320,7 +320,7 @@ int spi_GetOrderBit(rp_spi_order_bit_t *order){
 
 int spi_SetOrderBit(rp_spi_order_bit_t order){
     if(spi_fd == -1){
-        ERROR("Failed SPI not init");
+        ERROR_LOG("Failed SPI not init");
         return RP_HW_EIS;
     }
 
@@ -330,7 +330,7 @@ int spi_SetOrderBit(rp_spi_order_bit_t order){
 
 int spi_GetSpeed(int *speed){
     if(spi_fd == -1){
-        ERROR("Failed SPI not init");
+        ERROR_LOG("Failed SPI not init");
         return RP_HW_EIS;
     }
 
@@ -340,7 +340,7 @@ int spi_GetSpeed(int *speed){
 
 int spi_SetSpeed(int speed){
     if(spi_fd == -1){
-        ERROR("Failed SPI not init");
+        ERROR_LOG("Failed SPI not init");
         return RP_HW_EIS;
     }
 
@@ -354,7 +354,7 @@ int spi_SetSpeed(int speed){
 
 int spi_GetWordLen(int *len){
     if(spi_fd == -1){
-        ERROR("Failed SPI not init");
+        ERROR_LOG("Failed SPI not init");
         return RP_HW_EIS;
     }
 
@@ -364,7 +364,7 @@ int spi_GetWordLen(int *len){
 
 int spi_SetWordLen(int len){
     if(spi_fd == -1){
-        ERROR("Failed SPI not init");
+        ERROR_LOG("Failed SPI not init");
         return RP_HW_EIS;
     }
 
@@ -378,7 +378,7 @@ int spi_SetWordLen(int len){
 
 int spi_ReadWrite(){
     if(spi_fd == -1){
-        ERROR("Failed SPI not init");
+        ERROR_LOG("Failed SPI not init");
         return RP_HW_EIS;
     }
    	pthread_mutex_lock(&spi_mutex);

@@ -536,11 +536,11 @@ const volatile uint32_t* osc_GetDataBufferChB();
 const volatile uint32_t* osc_GetDataBufferChC();
 const volatile uint32_t* osc_GetDataBufferChD();
 
-int osc_axi_GetMemoryRegion(uint32_t *_start,uint32_t *_size);
 int osc_axi_EnableChA(bool enable);
 int osc_axi_EnableChB(bool enable);
 int osc_axi_EnableChC(bool enable);
 int osc_axi_EnableChD(bool enable);
+
 int osc_axi_SetAddressStartChA(uint32_t address);
 int osc_axi_SetAddressStartChB(uint32_t address);
 int osc_axi_SetAddressStartChC(uint32_t address);
@@ -581,9 +581,6 @@ int osc_axi_GetTriggerDelayChB(uint32_t* decimated_data_num);
 int osc_axi_GetTriggerDelayChC(uint32_t* decimated_data_num);
 int osc_axi_GetTriggerDelayChD(uint32_t* decimated_data_num);
 
-const volatile uint16_t* osc_axi_GetDataBufferChA();
-const volatile uint16_t* osc_axi_GetDataBufferChB();
-const volatile uint16_t* osc_axi_GetDataBufferChC();
-const volatile uint16_t* osc_axi_GetDataBufferChD();
+const uint16_t* osc_axi_GetDataBufferCh(rp_channel_t channel);
 
 #endif /* SRC_OSCILLOSCOPE_H_ */

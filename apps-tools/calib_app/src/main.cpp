@@ -224,7 +224,7 @@ void UpdateSignals(void)
 		}
 	}catch (std::exception& e)
 	{
-		ERROR("UpdateSignals() %s",e.what());
+		ERROR_LOG("UpdateSignals() %s",e.what());
 	}
 }
 
@@ -1045,7 +1045,7 @@ void UpdateParams(void)
 		}
 	}catch (std::exception& e)
 	{
-		ERROR("UpdateParams() %s",e.what());
+		ERROR_LOG("UpdateParams() %s",e.what());
 	}
 
 }

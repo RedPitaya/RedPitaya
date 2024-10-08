@@ -1,5 +1,5 @@
 INSTALL_DIR ?= /opt/redpitaya
-CFLAGS  = -std=gnu11 -Wall ## -Werror
+CFLAGS  = -std=gnu11 -Wall -Wno-psabi ## -Werror
 CFLAGS += -I$(INSTALL_DIR)/include
 LDFLAGS = -L$(INSTALL_DIR)/lib
 LDLIBS = -static -lrp-dsp -lrp -lrp-hw -lrp-hw-calib -lrp-hw-profiles
@@ -8,7 +8,7 @@ INCLUDE += -I$(INSTALL_DIR)/include/api250-12
 LDLIBS += -lrp-gpio -lrp-i2c
 LDLIBS += -lrp-hw -lm -lstdc++ -lpthread -li2c
 
-CXXFLAGS  = -std=c++17 -Wall ## -Werror
+CXXFLAGS  = -std=c++17 -Wall -Wno-psabi ## -Werror
 CXXFLAGS += -I$(INSTALL_DIR)/include
 
 SCPI_LIBRARY = libscpi.a

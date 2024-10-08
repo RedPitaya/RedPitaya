@@ -139,7 +139,7 @@ int phy_read(uint16_t *_val)
 	int err = __phy_op(&eth, _val, SIOCGMIIREG);
 
 	if (err) {
-		ERROR("phy_read (%d)", err);
+		ERROR_LOG("phy_read (%d)", err);
 		return err;
 	}
 	return RP_HW_OK;
@@ -150,7 +150,7 @@ int phy_write(uint16_t val)
 	int err = __phy_op(&eth, &val, SIOCSMIIREG);
 
 	if (err)
-		ERROR("phy_write (%d)", err);
+		ERROR_LOG("phy_write (%d)", err);
 
 	return err;
 }

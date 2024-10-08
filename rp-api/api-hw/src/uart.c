@@ -63,7 +63,7 @@ int uart_InitDevice(char *_device){
     uart_fd = open(_device, O_RDWR | O_NOCTTY);
 
     if(uart_fd == -1){
-        ERROR("Failed to open UART.");
+        ERROR_LOG("Failed to open UART.");
         return RP_HW_EIU;
     }
 
@@ -167,7 +167,7 @@ int uart_SetSettings(){
 
         return RP_HW_OK;
     }else{
-        ERROR("Failed setup settings to UART.");
+        ERROR_LOG("Failed setup settings to UART.");
         return RP_HW_EIU;
     }
 
@@ -176,14 +176,14 @@ int uart_SetSettings(){
 int uart_read(unsigned char *_buffer,int *size){
 
     if (_buffer == NULL || *size <= 0){
-        ERROR("Failed read from UART. Buffer is null");
+        ERROR_LOG("Failed read from UART. Buffer is null");
         return RP_HW_EIPV;
     }
 
     if (uart_fd != -1){
         while(1){
             if(uart_fd == -1){
-                ERROR("Failed to read from UART. UART is closed.");
+                ERROR_LOG("Failed to read from UART. UART is closed.");
                 return RP_HW_ERU;
             }
             errno = 0;
@@ -194,7 +194,7 @@ int uart_read(unsigned char *_buffer,int *size){
                      continue;
                  /* Error differs */
                  }else{
-                    ERROR("Error read from UART. Errno: %d", errno);
+                    ERROR_LOG("Error read from UART. Errno: %d", errno);
                     return RP_HW_ERU;
                 }
 
@@ -211,7 +211,7 @@ int uart_read(unsigned char *_buffer,int *size){
         }
         return RP_HW_OK;
     }else{
-        ERROR("Failed read from UART.");
+        ERROR_LOG("Failed read from UART.");
         return RP_HW_EIU;
     }
 }
@@ -219,7 +219,7 @@ int uart_read(unsigned char *_buffer,int *size){
 int uart_write(unsigned char *_buffer, int size){
     int count = 0;
     if (_buffer == NULL || size <= 0){
-        ERROR("Failed write to UART.");
+        ERROR_LOG("Failed write to UART.");
         return RP_HW_EIPV;
     }
 
@@ -229,18 +229,18 @@ int uart_write(unsigned char *_buffer, int size){
         if(uart_fd != -1){
             count = write(uart_fd, _buffer, size);
         }else{
-            ERROR("Failed write to UART.");
+            ERROR_LOG("Failed write to UART.");
             return RP_HW_EIU;
         }
 
         if(count < 0){
-            ERROR("Failed write to UART.");
+            ERROR_LOG("Failed write to UART.");
             return RP_HW_EWU;
         }
 
         return RP_HW_OK;
     }else{
-        ERROR("Failed write to UART.");
+        ERROR_LOG("Failed write to UART.");
         return RP_HW_EWU;
     }
     return 0;

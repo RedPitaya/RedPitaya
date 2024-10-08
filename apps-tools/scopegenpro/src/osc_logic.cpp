@@ -174,7 +174,7 @@ auto updateTriggerLimit(bool force) -> void {
             is_signed = rp_HPGetIsExternalTriggerIsSignedOrDefault();
         break;
         default:
-            ERROR("Unknown trigger source: %d",t_channel);
+            ERROR_LOG("Unknown trigger source: %d",t_channel);
             rp_AcqGetGainV(RP_CH_1, &trigg_limit);
             trigg_limit = trigg_limit;
     }

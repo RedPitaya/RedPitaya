@@ -244,7 +244,7 @@ double CCalibMan::getCalibValue(rp_channel_t ch,ClalibValue _type){
         }
 
         default:
-            ERROR("Unknow mode");
+            ERROR_LOG("Unknow mode");
     }
     return 0;
 }
@@ -366,7 +366,7 @@ int CCalibMan::setCalibValue(rp_channel_t ch,ClalibValue _type, double _value){
 
 int CCalibMan::enableGen(rp_channel_t _ch,bool _enable){
     if (getDACChannels() == 0){
-        ERROR("Wrong channel");
+        ERROR_LOG("Wrong channel");
         return -1;
     }
     m_acq->enableGen(_ch,_enable);
@@ -376,7 +376,7 @@ int CCalibMan::enableGen(rp_channel_t _ch,bool _enable){
 
 int CCalibMan::setFreq(rp_channel_t _ch,int _freq){
     if (getDACChannels() == 0){
-        ERROR("Wrong channel");
+        ERROR_LOG("Wrong channel");
         return -1;
     }
     return m_acq->setFreq(_ch,_freq);
@@ -384,7 +384,7 @@ int CCalibMan::setFreq(rp_channel_t _ch,int _freq){
 
 int CCalibMan::setAmp(rp_channel_t _ch,float _ampl){
     if (getDACChannels() == 0){
-        ERROR("Wrong channel");
+        ERROR_LOG("Wrong channel");
         return -1;
     }
     return m_acq->setAmp(_ch,_ampl);
@@ -392,7 +392,7 @@ int CCalibMan::setAmp(rp_channel_t _ch,float _ampl){
 
 int CCalibMan::setOffset(rp_channel_t _ch,float _offset){
     if (getDACChannels() == 0){
-        ERROR("Wrong channel");
+        ERROR_LOG("Wrong channel");
         return -1;
     }
     return m_acq->setOffset(_ch,_offset);
@@ -400,7 +400,7 @@ int CCalibMan::setOffset(rp_channel_t _ch,float _offset){
 
 int CCalibMan::setGenType(rp_channel_t _ch,int _type){
     if (getDACChannels() == 0){
-        ERROR("Wrong channel");
+        ERROR_LOG("Wrong channel");
         return -1;
     }
     return m_acq->setGenType(_ch,_type);
@@ -418,13 +418,13 @@ void CCalibMan::updateAcqFilter(rp_channel_t _ch){
 int CCalibMan::setDefualtFilter(rp_channel_t _ch){
 
     if (!rp_HPGetFastADCIsFilterPresentOrDefault()){
-        ERROR("Filter not present in board");
+        ERROR_LOG("Filter not present in board");
         return -1;
 
     }
 
     if (getADCChannels() <= _ch){
-        ERROR("Wrong channel");
+        ERROR_LOG("Wrong channel");
         return -1;
     }
 

@@ -25,7 +25,7 @@
 #define ECHECK_APP(x) { \
     int retval = (x); \
     if (retval != RP_OK) { \
-        ERROR("%s returned \"%s\"", #x, rp_CanGetError(retval)); \
+        ERROR_LOG("%s returned \"%s\"", #x, rp_CanGetError(retval)); \
         return retval; \
     } \
 }
@@ -34,7 +34,7 @@
 #define ECHECK_APP_NO_RET(x) { \
     int retval = (x); \
     if (retval != RP_OK) { \
-        ERROR("%s returned \"%s\"", #x, rp_CanGetError(retval)); \
+        ERROR_LOG("%s returned \"%s\"", #x, rp_CanGetError(retval)); \
     } \
 }
 

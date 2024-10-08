@@ -57,10 +57,10 @@ auto timeToIndexD(float time) -> double {
 auto getADCChannels() -> uint8_t{
     uint8_t c = 0;
     if (rp_HPGetFastADCChannelsCount(&c) != RP_HP_OK){
-        ERROR("Can't get fast ADC channels count");
+        ERROR_LOG("Can't get fast ADC channels count");
     }
     if (c > MAX_ADC_CHANNELS){
-        ERROR("The number of channels is more than allowed");
+        ERROR_LOG("The number of channels is more than allowed");
         exit(-1);
     }
     return c;
@@ -70,11 +70,11 @@ auto getDACChannels() -> uint8_t{
     uint8_t c = 0;
 
     if (rp_HPGetFastDACChannelsCount(&c) != RP_HP_OK){
-        ERROR("Can't get fast DAC channels count");
+        ERROR_LOG("Can't get fast DAC channels count");
     }
 
     if (c > MAX_DAC_CHANNELS){
-        ERROR("The number of channels is more than allowed");
+        ERROR_LOG("The number of channels is more than allowed");
         exit(-1);
     }
     return c;
@@ -83,7 +83,7 @@ auto getDACChannels() -> uint8_t{
 auto getDACRate() -> uint32_t{
     uint32_t c = 0;
     if (rp_HPGetBaseFastDACSpeedHz(&c) != RP_HP_OK){
-        ERROR("Can't get fast DAC channels count");
+        ERROR_LOG("Can't get fast DAC channels count");
     }
     return c;
 }
@@ -91,7 +91,7 @@ auto getDACRate() -> uint32_t{
 auto getADCRate() -> uint32_t{
     uint32_t c = 0;
     if (rp_HPGetBaseFastADCSpeedHz(&c) != RP_HP_OK){
-        ERROR("Can't get fast ADC channels count");
+        ERROR_LOG("Can't get fast ADC channels count");
     }
     return c;
 }
@@ -99,7 +99,7 @@ auto getADCRate() -> uint32_t{
  auto getModel() -> rp_HPeModels_t{
     rp_HPeModels_t c = STEM_125_14_v1_0;
     if (rp_HPGetModel(&c) != RP_HP_OK){
-        ERROR("Can't get board model");
+        ERROR_LOG("Can't get board model");
     }
     return c;
 }
@@ -111,7 +111,7 @@ auto getADCSamplePeriod(double *value) -> int{
     if (ret == RP_HP_OK){
         *value = (double)1e9/speed;
     }else{
-        ERROR("Can't get FAST ADC Rate");
+        ERROR_LOG("Can't get FAST ADC Rate");
     }
     return ret;
 }
@@ -153,7 +153,7 @@ auto getModelName() -> std::string{
         case STEM_250_12_120:
             return "Z20_250_12_120";
         default:{
-            ERROR("Unknown model: %d.",model);
+            ERROR_LOG("Unknown model: %d.",model);
             return "";
         }
     }
@@ -204,7 +204,7 @@ auto convertCh(rp_channel_t ch) -> rp_channel_calib_t{
         return RP_CH_4_CALIB;
 
     default:
-        ERROR("Convert from %d",ch);
+        ERROR_LOG("Convert from %d",ch);
         assert(false);
     }
     return RP_CH_1_CALIB;
@@ -216,7 +216,7 @@ auto convertChFromIndex(uint8_t index) -> rp_channel_t{
     if (index == 2)  return RP_CH_3;
     if (index == 3)  return RP_CH_4;
 
-    ERROR("Convert from %d",index);
+    ERROR_LOG("Convert from %d",index);
     assert(false);
     return RP_CH_1;
 }
@@ -229,7 +229,7 @@ auto convertPower(rp_acq_ac_dc_mode_t ch) -> rp_acq_ac_dc_mode_calib_t{
     case RP_DC:
         return RP_DC_CALIB;
     default:
-        ERROR("Convert from %d",ch);
+        ERROR_LOG("Convert from %d",ch);
         assert(false);
     }
     return RP_DC_CALIB;
