@@ -108,4 +108,12 @@ int gen_getRuntimeTempAlarm(rp_channel_t channel, bool *status);
 int gen_SetExtTriggerDebouncerUs(double value);
 int gen_GetExtTriggerDebouncerUs(double *value);
 
+int gen_axi_SetEnable(rp_channel_t channel, bool enable);
+int gen_axi_GetEnable(rp_channel_t channel, bool *enable);
+int gen_axi_ReserveMemory(rp_channel_t channel, uint32_t start, uint32_t end);
+int gen_axi_ReleaseMemory(rp_channel_t channel);
+int gen_axi_SetDecimation(rp_channel_t channel, uint32_t decimation);
+int gen_axi_GetDecimation(rp_channel_t channel, uint32_t *decimation);
+int gen_axi_WriteWaveform(rp_channel_t channel, float *data, uint32_t length);
+
 #endif

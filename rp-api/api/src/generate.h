@@ -58,6 +58,18 @@ typedef struct ch_properties {
 } ch_properties_t;
 
 
+typedef struct asg_axi_state {
+    uint32_t trig_recive_read_req_ChA   :1;
+    uint32_t first_read_out_ChA         :1;
+    uint32_t fifo_read_enable_ChA       :1;
+    uint32_t fifo_being_reset_ChA       :1;
+    uint32_t                            :12;
+    uint32_t trig_recive_read_req_ChB   :1;
+    uint32_t first_read_out_ChB         :1;
+    uint32_t fifo_read_enable_ChB       :1;
+    uint32_t fifo_being_reset_ChB       :1;
+    uint32_t                            :12;
+} asg_axi_state_t;
 
 typedef struct generate_control_s {
     unsigned int AtriggerSelector   :4;
@@ -115,6 +127,51 @@ typedef struct generate_control_s {
     uint32_t enableNoise_chA :1,:31; // 0x80
     uint32_t enableNoise_chB :1,:31; // 0x84
 
+    uint32_t reserved[30];
+
+    asg_axi_state_t axi_state;      // 0x100 (R)
+
+    uint32_t enableAXI_ChA :1,:31;  // 0x104 (R/W)
+
+    // Buffer start address
+    // Reads are performed in chunks of 16*64 bit.
+    // The buffer size must therefore be N*0x80.
+
+    uint32_t axi_start_address_ChA; // 0x108 (R/W)
+
+    // Buffer end address
+    // Where the read pointer must pass no further.
+    // The last read is performed at
+    // [VALUE of this reg]-8 before wrapping around
+
+    uint32_t axi_end_address_ChA;   // 0x10C (R/W)
+
+    uint32_t reserved_1;            // 0x110
+
+    uint32_t enableAXI_ChB :1,:31;  // 0x114 (R/W)
+
+    // Buffer start address
+    // Reads are performed in chunks of 16*64 bit.
+    // The buffer size must therefore be N*0x80.
+
+    uint32_t axi_start_address_ChB; // 0x118 (R/W)
+
+    // Buffer end address
+    // Where the read pointer must pass no further.
+    // The last read is performed at
+    // [VALUE of this reg]-8 before wrapping around
+
+    uint32_t axi_end_address_ChB;   // 0x11C
+
+    uint32_t axi_error_read_count_ChA;  // 0x120 (R)
+    uint32_t axi_transfer_count_ChA;    // 0x124 (R)
+
+    uint32_t axi_error_read_count_ChB;  // 0x128 (R)
+    uint32_t axi_transfer_count_ChB;    // 0x12C (R)
+
+    uint32_t axi_decimation_ChA;        // 0x130 (R/W)
+    uint32_t axi_decimation_ChB;        // 0x134 (R/W)
+
 } generate_control_t;
 
 int generate_Init();
@@ -165,5 +222,12 @@ int generate_getRandomSeed(rp_channel_t channel, uint32_t *seed);
 
 int generate_setEnableRandom(rp_channel_t channel, bool enable);
 int generate_getEnableRandom(rp_channel_t channel, bool *enable);
+
+int generate_axi_SetEnable(rp_channel_t channel, bool enable);
+int generate_axi_GetEnable(rp_channel_t channel, bool *enable);
+int generate_axi_SetStartAddress(rp_channel_t channel, uint32_t address);
+int generate_axi_SetEndAddress(rp_channel_t channel, uint32_t address);
+int generate_axi_SetDecimation(rp_channel_t channel, uint32_t decimation);
+int generate_axi_GetDecimation(rp_channel_t channel, uint32_t *decimation);
 
 #endif

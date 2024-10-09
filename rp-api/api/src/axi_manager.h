@@ -23,6 +23,6 @@ int axi_releaseManager();
 int axi_getOSReservedRegion(uint32_t *_startAddress, uint32_t *_size);
 int axi_reserveMemory(uint32_t _startAddress, uint32_t _size, uint64_t *_index);
 int axi_releaseMemory(uint64_t _index);
-int axi_getMapped(uint64_t _index, uint16_t** _mapped);
+int axi_getMapped(uint64_t _index, uint16_t** _mapped, uint32_t *size);
 
 #endif /* AXI_MANAGER_H */

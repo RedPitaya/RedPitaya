@@ -1276,7 +1276,8 @@ const uint16_t* osc_axi_GetDataBufferCh(rp_channel_t channel){
         ERROR_LOG("Buffer for channel %d not mapped", channel + 1)
     }
     uint16_t* buffer = NULL;
-    if (axi_getMapped(idx,&buffer) != RP_OK){
+    uint32_t size = 0;
+    if (axi_getMapped(idx,&buffer,&size) != RP_OK){
         ERROR_LOG("Buffer for channel %d not mapped", channel + 1)
         return NULL;
     }

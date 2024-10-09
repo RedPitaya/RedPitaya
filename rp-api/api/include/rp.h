@@ -25,6 +25,7 @@ extern "C" {
 #include "rp_enums.h"
 #include "rp_acq.h"
 #include "rp_acq_axi.h"
+#include "rp_asg_axi.h"
 #include "rp_gen.h"
 #include "common/rp_log.h"
 

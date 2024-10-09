@@ -21,6 +21,7 @@
 
 static volatile generate_control_t *generate = NULL;
 static volatile int32_t *data_ch[2] = {NULL,NULL};
+static volatile uint64_t asg_axi_mem_reserved_index[4] = {0,0,0,0};
 
 
 int generate_Init() {
@@ -582,5 +583,55 @@ int generate_getEnableRandom(rp_channel_t channel, bool *enable){
             value = generate->enableNoise_chA,
             value = generate->enableNoise_chB)
     *enable = value;
+    return RP_OK;
+}
+
+int generate_axi_SetEnable(rp_channel_t channel, bool enable){
+    cmn_Debug("[Ch%d] generate->enableAXI_Ch <- 0x%X",channel,enable);
+    CHANNEL_ACTION(channel,
+        generate->enableAXI_ChA = enable,
+        generate->enableAXI_ChB = enable)
+    return RP_OK;
+}
+
+int generate_axi_GetEnable(rp_channel_t channel, bool *enable){
+    bool value;
+    CHANNEL_ACTION(channel,
+            value = generate->enableAXI_ChA,
+            value = generate->enableAXI_ChB)
+    *enable = value;
+    return RP_OK;
+}
+
+int generate_axi_SetStartAddress(rp_channel_t channel, uint32_t address){
+    cmn_Debug("[Ch%d] generate->axi_start_address_Ch <- 0x%X",channel,address);
+    CHANNEL_ACTION(channel,
+        generate->axi_start_address_ChA = address,
+        generate->axi_start_address_ChB = address)
+    return RP_OK;
+}
+
+int generate_axi_SetEndAddress(rp_channel_t channel, uint32_t address){
+    cmn_Debug("[Ch%d] generate->axi_end_address_Ch <- 0x%X",channel,address);
+    CHANNEL_ACTION(channel,
+        generate->axi_end_address_ChA = address,
+        generate->axi_end_address_ChB = address)
+    return RP_OK;
+}
+
+int generate_axi_SetDecimation(rp_channel_t channel, uint32_t decimation){
+    cmn_Debug("[Ch%d] generate->axi_decimation_Ch <- 0x%X",channel,decimation);
+    CHANNEL_ACTION(channel,
+        generate->axi_decimation_ChA = decimation,
+        generate->axi_decimation_ChB = decimation)
+    return RP_OK;
+}
+
+int generate_axi_GetDecimation(rp_channel_t channel, uint32_t *decimation){
+    bool value;
+    CHANNEL_ACTION(channel,
+            value = generate->axi_decimation_ChA,
+            value = generate->axi_decimation_ChB)
+    *decimation = value;
     return RP_OK;
 }

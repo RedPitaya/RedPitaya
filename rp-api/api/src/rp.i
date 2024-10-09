@@ -131,3 +131,4 @@ import_array();
 %include "rp_gen.h"
 %include "rp_acq.h"
 %include "rp_acq_axi.h"
+%include "rp_asg_axi.h"

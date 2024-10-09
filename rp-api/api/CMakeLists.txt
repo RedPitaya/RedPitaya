@@ -83,6 +83,7 @@ list(APPEND header_rp
     ${CMAKE_SOURCE_DIR}/include/rp.h
     ${CMAKE_SOURCE_DIR}/include/rp_acq.h
     ${CMAKE_SOURCE_DIR}/include/rp_acq_axi.h
+    ${CMAKE_SOURCE_DIR}/include/rp_asg_axi.h
     ${CMAKE_SOURCE_DIR}/include/rp_enums.h
     ${CMAKE_SOURCE_DIR}/include/rp_gen.h
 )

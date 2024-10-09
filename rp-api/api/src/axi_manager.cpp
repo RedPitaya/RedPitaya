@@ -162,6 +162,7 @@ int axi_reserveMemory(uint32_t _startAddress, uint32_t _size, uint64_t *_index){
     *_index = ++g_index;
     block_t block{_startAddress,_size,*_index};
     if (axi_checkOverlapped(block)){
+        ERROR_LOG("Memory overlapped")
         return -1;
     }
 
@@ -201,11 +202,12 @@ int axi_releaseMemory(uint64_t _index){
     return -1;
 }
 
-int axi_getMapped(uint64_t _index, uint16_t** _mapped){
+int axi_getMapped(uint64_t _index, uint16_t** _mapped, uint32_t *size){
     std::lock_guard lock(g_mutex);
     auto position = std::find_if(g_reserved.begin(), g_reserved.end(), [_index](const block_t& m) -> bool { return _index == m.index; });
     if (position != g_reserved.end()){
         *_mapped = position->mapped;
+        *size = position->size;
         return RP_OK;
     }
     *_mapped = (uint16_t*)MAP_FAILED;

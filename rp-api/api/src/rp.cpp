@@ -2367,3 +2367,45 @@ int rp_AcqAxiSetOffset(rp_channel_t channel, float value){
 int rp_AcqAxiGetOffset(rp_channel_t channel, float *value){
     return acq_axi_GetOffset(channel,value);
 }
+
+int rp_GenAxiSetEnable(rp_channel_t channel, bool state){
+    if (!rp_HPGetIsDMAinv0_94OrDefault())
+        return RP_NOTS;
+    return gen_axi_SetEnable(channel,state);
+}
+
+int rp_GenAxiGetEnable(rp_channel_t channel, bool* state){
+    if (!rp_HPGetIsDMAinv0_94OrDefault())
+        return RP_NOTS;
+    return gen_axi_GetEnable(channel,state);
+}
+
+int rp_GenAxiReserveMemory(rp_channel_t channel, uint32_t start, uint32_t end){
+    if (!rp_HPGetIsDMAinv0_94OrDefault())
+        return RP_NOTS;
+    return gen_axi_ReserveMemory(channel,start,end);
+}
+
+int rp_GenAxiReleaseMemory(rp_channel_t channel){
+    if (!rp_HPGetIsDMAinv0_94OrDefault())
+        return RP_NOTS;
+    return gen_axi_ReleaseMemory(channel);
+}
+
+int rp_GenAxiSetDecimationFactor(rp_channel_t channel, uint32_t decimation){
+    if (!rp_HPGetIsDMAinv0_94OrDefault())
+        return RP_NOTS;
+    return gen_axi_SetDecimation(channel,decimation);
+}
+
+int rp_GenAxiGetDecimationFactor(rp_channel_t channel, uint32_t *decimation){
+    if (!rp_HPGetIsDMAinv0_94OrDefault())
+        return RP_NOTS;
+    return gen_axi_GetDecimation(channel,decimation);
+}
+
+int rp_GenAxiWriteWaveform(rp_channel_t channel, float* np_buffer, int size){
+    if (!rp_HPGetIsDMAinv0_94OrDefault())
+        return RP_NOTS;
+    return gen_axi_WriteWaveform(channel,np_buffer,size);
+}

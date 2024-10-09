@@ -19,6 +19,7 @@
 #include "generate.h"
 #include "gen_handler.h"
 #include "rp-i2c-max7311-c.h"
+#include "axi_manager.h"
 
 #ifndef M_PI
     #define M_PI 3.14159265358979323846
@@ -66,6 +67,7 @@ bool          ch_LatchTempAlarm[2]       = {0,0};
 rp_gen_gain_t ch_gain[2] = {RP_GAIN_1X,RP_GAIN_1X};
 
 float ch_arbitraryData[2][DAC_BUFFER_SIZE];
+uint64_t asg_axi_mem_reserved_index[4] = {0,0,0,0};
 
 int gen_SetDefaultValues() {
 
@@ -1147,3 +1149,123 @@ int gen_getLoadMode(rp_channel_t channel, rp_gen_load_mode_t *mode){
     return RP_OK;
 }
 
+int gen_axi_SetEnable(rp_channel_t channel, bool enable){
+
+    CHECK_CHANNEL
+
+    if (asg_axi_mem_reserved_index[channel] == 0){
+        ERROR_LOG("Memory not reserved.")
+    }
+
+    return generate_axi_SetEnable(channel,enable);
+}
+
+int gen_axi_GetEnable(rp_channel_t channel, bool *enable){
+
+    CHECK_CHANNEL
+
+    return generate_axi_GetEnable(channel,enable);
+}
+
+int gen_axi_ReserveMemory(rp_channel_t channel, uint32_t start, uint32_t end){
+
+    CHECK_CHANNEL
+
+    ECHECK(axi_initManager())
+
+    axi_releaseMemory(asg_axi_mem_reserved_index[channel]);
+    if ((start + 8) >= end){
+        ERROR_LOG("The start address may be greater than the end address.")
+        return RP_EOOR;
+    }
+
+    int size = end - start;
+    if (size % 0x80){
+        ERROR_LOG("Memory size must be a multiple of 0x80.")
+        return RP_EOOR;
+    }
+
+    uint64_t index;
+    ECHECK(axi_reserveMemory(start, end - start,&index))
+    asg_axi_mem_reserved_index[channel] = index;
+
+    generate_axi_SetStartAddress(channel,start);
+    generate_axi_SetEndAddress(channel,end - 8);
+    return RP_OK;
+}
+
+int gen_axi_ReleaseMemory(rp_channel_t channel){
+
+    CHECK_CHANNEL
+
+    axi_releaseMemory(asg_axi_mem_reserved_index[channel]);
+    asg_axi_mem_reserved_index[channel] = 0;
+    return RP_OK;
+}
+
+int gen_axi_SetDecimation(rp_channel_t channel, uint32_t decimation){
+
+    CHECK_CHANNEL
+
+    return generate_axi_SetDecimation(channel,decimation);
+}
+
+int gen_axi_GetDecimation(rp_channel_t channel, uint32_t *decimation){
+
+    CHECK_CHANNEL
+
+    return generate_axi_GetDecimation(channel,decimation);
+}
+
+int gen_axi_WriteWaveform(rp_channel_t channel, float *data, uint32_t length){
+
+    CHECK_CHANNEL
+
+    if (asg_axi_mem_reserved_index[channel] == 0){
+        ERROR_LOG("Memory not reserved.")
+        return RP_EOOR;
+    }
+
+    float fs = 0;
+    if (rp_HPGetFastDACGain(channel,&fs) != RP_HP_OK){
+        ERROR_LOG("Can't get fast DAC full scale");
+        return RP_NOTS;
+    }
+
+    bool is_sign = false;
+    if (rp_HPGetFastDACIsSigned(&is_sign) != RP_HP_OK){
+        ERROR_LOG("Can't get fast DAC sign value");
+        return RP_NOTS;
+    }
+
+    uint8_t bits = 0;
+    if (rp_HPGetFastDACBits(&bits) != RP_HP_OK){
+        ERROR_LOG("Can't get fast DAC bits\n");
+        return RP_NOTS;
+    }
+
+    uint16_t* buffer = NULL;
+    uint32_t size = 0;
+    if (axi_getMapped(asg_axi_mem_reserved_index[channel],&buffer,&size) == RP_OK){
+        if (size / 2 !=  length){
+            WARNING("Input buffer size does not match memory size")
+        }
+        if (size / 2 <  length){
+            ERROR_LOG("The input buffer is larger than the reserved memory.")
+            return RP_EOOR;
+        }
+
+        for(uint32_t i = 0 ; i < length; i++){
+            if (data[i] < (is_sign ? -fs : 0) || data[i] > fs) {
+                ERROR_LOG("The signal is greater than acceptable. Min %f Max %f",(is_sign ? -fs : 0),fs);
+                return RP_ENN;
+            }
+            buffer[i] = cmn_convertToCnt(data[i],bits,1.0,is_sign,1,0);
+        }
+
+        return RP_OK;
+    }else{
+        ERROR_LOG("Error getting memory region.");
+    }
+    return RP_EOOR;
+}
