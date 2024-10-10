@@ -47,8 +47,8 @@ rp.rp_GenAxiSetDecimationFactor(rp.RP_CH_2,1)
 rp.rp_GenAxiSetEnable(rp.RP_CH_1,True)
 rp.rp_GenAxiSetEnable(rp.RP_CH_2,True)
 
-rp.rp_GenAmp(rp.RP_CH_1, 1)
-rp.rp_GenAmp(rp.RP_CH_2, 0.8)
+rp.rp_GenSetAmplitudeAndOffsetOrigin(rp.RP_CH_1)
+rp.rp_GenSetAmplitudeAndOffsetOrigin(rp.RP_CH_2)
 
 rp.rp_GenTriggerSource(rp.RP_CH_1, rp.RP_GEN_TRIG_SRC_INTERNAL)
 

@@ -20,7 +20,7 @@ rp.rp_GenMode(rp.RP_CH_1, rp.RP_GEN_MODE_BURST)
 rp.rp_GenMode(rp.RP_CH_2, rp.RP_GEN_MODE_BURST)
 rp.rp_GenBurstCount(rp.RP_CH_1, 1)
 rp.rp_GenBurstCount(rp.RP_CH_2, 1)
-rp.rp_GenBurstRepetitions(rp.RP_CH_1, 5);
+rp.rp_GenBurstRepetitions(rp.RP_CH_1, 3);
 rp.rp_GenBurstPeriod(rp.RP_CH_1, 500000);
 
 cycles = 1 # how many sine cycles

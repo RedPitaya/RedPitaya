@@ -1813,6 +1813,12 @@ int rp_GenOutIsEnabled(rp_channel_t channel, bool *value) {
     return gen_IsEnable(channel, value);
 }
 
+int rp_GenSetAmplitudeAndOffsetOrigin(rp_channel_t channel) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
+    return gen_setAmplitudeAndOffsetOrigin(channel);
+}
+
 int rp_GenAmp(rp_channel_t channel, float amplitude) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;

@@ -176,6 +176,13 @@ int gen_checkAmplitudeAndOffset(rp_channel_t channel,float amplitude, float offs
     return RP_OK;
 }
 
+int gen_setAmplitudeAndOffsetOrigin(rp_channel_t channel){
+
+    CHECK_CHANNEL
+
+    return generate_setAmplitudeAndOffsetOrigin(channel, ch_gain[channel]);
+}
+
 int gen_setAmplitude(rp_channel_t channel, float amplitude) {
 
     CHECK_CHANNEL

@@ -412,6 +412,49 @@ int generate_setDCOffset(rp_channel_t channel,rp_gen_gain_t gain, float offset) 
     return RP_OK;
 }
 
+int generate_setAmplitudeAndOffsetOrigin(rp_channel_t channel,rp_gen_gain_t gain){
+
+    bool x5_gain = false;
+    if (rp_HPGetIsGainDACx5(&x5_gain) != RP_HP_OK) {
+        ERROR_LOG("Can't get fast DAC x5 gain");
+        return RP_NOTS;
+    }
+
+    if (!x5_gain && gain == RP_GAIN_5X){
+        ERROR_LOG("Can't set gain on unsupported board");
+        return RP_NOTS;
+    }
+
+    double gain_calib;
+    int32_t offset;
+    int ret = 0;
+    switch (gain)
+    {
+        case RP_GAIN_1X:
+            ret = rp_CalibGetFastDACCalibValue(convertCh(channel),RP_GAIN_CALIB_1X,&gain_calib,&offset);
+        break;
+        case RP_GAIN_5X:
+            ret = rp_CalibGetFastDACCalibValue(convertCh(channel),RP_GAIN_CALIB_5X,&gain_calib,&offset);
+        break;
+        default:
+            ERROR_LOG("Unknown gain: %d",gain);
+            return RP_EOOR;
+            break;
+    }
+
+    if (ret != RP_HW_CALIB_OK){
+        ERROR_LOG("Get calibaration: %d",ret);
+        return RP_EOOR;
+    }
+    volatile ch_properties_t *ch_properties;
+    getChannelPropertiesAddress(&ch_properties, channel);
+    int32_t value = 0x2000 * gain_calib;
+    cmn_Debug("[Ch%d] ch_properties->amplitudeScale <- 0x%X",channel,value);
+    ch_properties->amplitudeScale = value;
+    cmn_Debug("[Ch%d] ch_properties->amplitudeOffset <- 0x%X",channel,offset);
+    ch_properties->amplitudeOffset = offset;
+    return RP_OK;
+}
 
 int generate_getEnableTempProtection(rp_channel_t channel, bool *enable){
     bool value;

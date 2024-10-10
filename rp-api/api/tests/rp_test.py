@@ -258,6 +258,10 @@ print("rp.rp_GenOutIsEnabled(rp.RP_CH_1)")
 res = rp.rp_GenOutIsEnabled(rp.RP_CH_1)
 print(res)
 
+print("rp.rp_GenSetAmplitudeAndOffsetOrigin(rp.RP_CH_1)")
+res = rp.rp_GenSetAmplitudeAndOffsetOrigin(rp.RP_CH_1)
+print(res)
+
 print("rp.rp_GenAmp(rp.RP_CH_1,0.5)")
 res = rp.rp_GenAmp(rp.RP_CH_1,0.5)
 print(res)

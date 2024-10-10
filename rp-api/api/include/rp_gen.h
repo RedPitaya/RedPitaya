@@ -63,6 +63,14 @@ int rp_GenOutDisable(rp_channel_t channel);
 int rp_GenOutIsEnabled(rp_channel_t channel, bool *value);
 
 /**
+* Sets the amplitude multiplier to 1 and the offset to 0, taking into account the calibration. This is necessary so that the signal from the buffer is fed to the generator without changes.
+* @param channel Channel A or B for witch we want to set amplitude
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenSetAmplitudeAndOffsetOrigin(rp_channel_t channel);
+
+/**
 * Sets channel signal peak to peak amplitude.
 * @param channel Channel A or B for witch we want to set amplitude
 * @param amplitude Amplitude of the generated signal. From 0 to max value. Max amplitude is 1
