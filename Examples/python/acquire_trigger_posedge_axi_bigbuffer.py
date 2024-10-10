@@ -4,7 +4,7 @@ import sys
 import redpitaya_scpi as scpi
 import matplotlib.pyplot as plot
 import struct
-import numpy as np 
+import numpy as np
 
 rp_s = scpi.scpi(sys.argv[1])
 
@@ -54,7 +54,7 @@ rp_s.tx_txt('ACQ:STOP')
 
 trig = int(rp_s.txrx_txt('ACQ:AXI:SOUR1:Trig:Pos?'))
 
-# It is quite difficult for the server to transfer a large amount of data at once, and there may not be enough memory with a very large capture buffer. 
+# It is quite difficult for the server to transfer a large amount of data at once, and there may not be enough memory with a very large capture buffer.
 # Therefore, we request data from the server in parts
 
 received_size = 0

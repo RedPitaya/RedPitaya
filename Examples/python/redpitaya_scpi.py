@@ -78,6 +78,9 @@ class scpi (object):
         while len(data) < numOfBytes:
             r_size = min(numOfBytes - len(data),4096)
             data += (self._socket.recv(r_size))
+
+        self._socket.recv(2) # recive \r\n
+
         return data
 
     def rx_arb_check_error(self,stop = True):
@@ -164,12 +167,12 @@ class scpi (object):
                 Defaults to `None`.
             burst (bool, optional) :
                 Enable/disable Burst mode. (`True` - BURST, `False` - CONINUOUS)
-                Generate "nor" number of "ncyc" periods with total time "period". 
+                Generate "nor" number of "ncyc" periods with total time "period".
                 Defaults to `False`.
-            ncyc (int, optional) : 
+            ncyc (int, optional) :
                 Number of periods in one burst.
                 Defaults to 1.
-            nor (int, optional) : 
+            nor (int, optional) :
                 Number of repeated bursts.
                 Defaults to 1.
             period (_type_, optional) :
@@ -193,7 +196,7 @@ class scpi (object):
         ------
 
         Raises errors if the input parameters are out of range.
-        
+
         """
 
         ### Constants ###
@@ -354,7 +357,7 @@ class scpi (object):
         Parameters
         -----------
 
-            dec (int, optional) : 
+            dec (int, optional) :
                 Decimation (1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048,
                 4096, 8192, 16384, 32768, 65536)
                 Defaults to 1.
@@ -380,7 +383,7 @@ class scpi (object):
                 samples.
                 Defaults to True.
             gain (list(str), optional) :
-                HV / LV - (High (1:20) or Low (1:1 attenuation)) 
+                HV / LV - (High (1:20) or Low (1:1 attenuation))
                 The first element in list applies to the SOUR1 and the second to SOUR2.
                 Refers to jumper settings on Red Pitaya fast analog inputs.
                 (1:20 and 1:1 attenuator for SIGNALlab 250-12)
@@ -655,7 +658,7 @@ class scpi (object):
         ------
 
             Raises errors if the input parameters do not match one of the options.
-        
+
         """
 
         low_lim = 0

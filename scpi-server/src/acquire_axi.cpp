@@ -316,8 +316,6 @@ scpi_result_t RP_AcqAxiDataQ(scpi_t *context) {
         return SCPI_RES_ERR;
     }
     auto result = 0;
-    uint32_t size_buff;
-    rp_AcqGetBufSize(&size_buff);
     if(axi_unit == RP_SCPI_VOLTS){
         float *buffer = nullptr;
         try{
