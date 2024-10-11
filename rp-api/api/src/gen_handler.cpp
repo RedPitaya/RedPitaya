@@ -85,6 +85,7 @@ int gen_SetDefaultValues() {
 
     for(int ch_i = 0; ch_i < channels; ch_i++){
         rp_channel_t ch = convertChFromIndex(ch_i);
+        gen_axi_SetEnable(ch,false);
         gen_Disable(ch);
         gen_setFrequency(ch, 1000);
         gen_setRiseFallMin(ch, 0.1);
@@ -1159,9 +1160,10 @@ int gen_getLoadMode(rp_channel_t channel, rp_gen_load_mode_t *mode){
 int gen_axi_SetEnable(rp_channel_t channel, bool enable){
 
     CHECK_CHANNEL
-
-    if (asg_axi_mem_reserved_index[channel] == 0){
-        ERROR_LOG("Memory not reserved.")
+    if (enable){
+        if (asg_axi_mem_reserved_index[channel] == 0){
+            ERROR_LOG("Memory not reserved.")
+        }
     }
 
     return generate_axi_SetEnable(channel,enable);
