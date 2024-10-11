@@ -111,7 +111,7 @@ void CDACStreamingApplication::genWorker()
 					break;
 				}
 
-				// buffer->debugPackDAC();
+				buffer->debugPackDAC();
 
 				bool ret = false;
 				do {

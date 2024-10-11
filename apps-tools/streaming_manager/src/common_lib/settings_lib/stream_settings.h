@@ -93,9 +93,9 @@ public:
 	auto setGPIOSize(uint32_t size) -> void;
 	auto getGPIOSize() const -> uint32_t;
 
-	static auto setDirPath(std::string &_path) -> void;
-	static auto getDirPath() -> std::string;
-	static auto getFiles() -> std::string;
+	static auto setDACDirPath(std::string &_path) -> void;
+	static auto getDACDirPath() -> std::string;
+	static auto getDACFiles() -> std::string;
 
 private:
 	CStreamSettings(CStreamSettings &&) = delete;

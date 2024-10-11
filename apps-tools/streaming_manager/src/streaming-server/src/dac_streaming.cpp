@@ -104,14 +104,14 @@ auto startDACServer(bool verbMode, uint8_t activeChannels) -> void
 			auto dacRepeatCount = settings.getDACRepeatCount();
 			if (format.value == CStreamSettings::DataFormat::WAV) {
 				g_dac_manger = CDACStreamingManager::Create(CDACStreamingManager::WAV_TYPE,
-															CStreamSettings::getDirPath() + "/" + filePath,
+															CStreamSettings::getDACDirPath() + "/" + filePath,
 															dacRepeatMode,
 															dacRepeatCount,
 															settings.getMemoryBlockSize(),
 															verbMode);
 			} else if (format.value == CStreamSettings::DataFormat::TDMS) {
 				g_dac_manger = CDACStreamingManager::Create(CDACStreamingManager::TDMS_TYPE,
-															CStreamSettings::getDirPath() + "/" + filePath,
+															CStreamSettings::getDACDirPath() + "/" + filePath,
 															dacRepeatMode,
 															dacRepeatCount,
 															settings.getMemoryBlockSize(),

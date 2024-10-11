@@ -368,7 +368,7 @@ auto saveConfigInFile() -> void
 void updateUI()
 {
 	auto fileName = g_serverNetConfig->getSettingsRef().getDACFile();
-	auto files = CStreamSettings::getFiles();
+	auto files = CStreamSettings::getDACFiles();
 
 	ss_dac_file.SendValue(fileName + "*" + files);
 
@@ -433,7 +433,7 @@ void setConfig(bool _force)
 		ss_dac_file.Update();
 		g_serverNetConfig->getSettingsRef().setDACFile(ss_dac_file.Value());
 		auto fileName = g_serverNetConfig->getSettingsRef().getDACFile();
-		auto files = CStreamSettings::getFiles();
+		auto files = CStreamSettings::getDACFiles();
 		ss_dac_file.SendValue(fileName + "*" + files);
 		needUpdate = true;
 	}
@@ -442,12 +442,12 @@ void setConfig(bool _force)
 		ss_dac_file_ctr.Update();
 		if (ss_dac_file_ctr.Value() == 1) {
 			auto fileName = g_serverNetConfig->getSettingsRef().getDACFile();
-			auto files = CStreamSettings::getFiles();
+			auto files = CStreamSettings::getDACFiles();
 			ss_dac_file.SendValue(fileName + "*" + files);
 		}
 
 		if (ss_dac_file_ctr.Value() == 2) {
-			auto path = CStreamSettings::getDirPath();
+			auto path = CStreamSettings::getDACDirPath();
 			auto file = g_serverNetConfig->getSettingsRef().getDACFile();
 			try {
 				std::filesystem::remove(path + "/" + file);
@@ -455,7 +455,7 @@ void setConfig(bool _force)
 			}
 			g_serverNetConfig->getSettingsRef().setDACFile("");
 			auto fileName = g_serverNetConfig->getSettingsRef().getDACFile();
-			auto files = CStreamSettings::getFiles();
+			auto files = CStreamSettings::getDACFiles();
 			ss_dac_file.SendValue(fileName + "*" + files);
 		}
 
@@ -1122,14 +1122,14 @@ auto startDACServer(__attribute__((unused)) bool testMode, uint8_t activeChannel
 			auto dacRepeatCount = settings.getDACRepeatCount();
 			if (format.value == CStreamSettings::DataFormat::WAV) {
 				g_dac_manger = dac_streaming_lib::CDACStreamingManager::Create(dac_streaming_lib::CDACStreamingManager::WAV_TYPE,
-																			   CStreamSettings::getDirPath() + "/" + filePath,
+																			   CStreamSettings::getDACDirPath() + "/" + filePath,
 																			   dacRepeatMode,
 																			   dacRepeatCount,
 																			   settings.getMemoryBlockSize(),
 																			   false);
 			} else if (format.value == CStreamSettings::DataFormat::TDMS) {
 				g_dac_manger = dac_streaming_lib::CDACStreamingManager::Create(dac_streaming_lib::CDACStreamingManager::TDMS_TYPE,
-																			   CStreamSettings::getDirPath() + "/" + filePath,
+																			   CStreamSettings::getDACDirPath() + "/" + filePath,
 																			   dacRepeatMode,
 																			   dacRepeatCount,
 																			   settings.getMemoryBlockSize(),

@@ -828,27 +828,33 @@ auto CStreamSettings::getHelp() -> std::string
 	return s;
 }
 
-auto CStreamSettings::setDirPath(std::string &_path) -> void
+auto CStreamSettings::setDACDirPath(std::string &_path) -> void
 {
 	g_dirPath = _path;
 }
 
-auto CStreamSettings::getDirPath() -> std::string
+auto CStreamSettings::getDACDirPath() -> std::string
 {
 #ifdef RP_PLATFORM
-	if (g_dirPath == "")
+	if (g_dirPath == ""){
+		if (!std::filesystem::exists(FILE_PATH)){
+			std::filesystem::create_directories(FILE_PATH);
+		}
 		return FILE_PATH;
+	}
+	if (!std::filesystem::exists(g_dirPath)){
+		std::filesystem::create_directories(g_dirPath);
+	}
 	return g_dirPath;
 #else
 	return ".";
 #endif
 }
 
-auto CStreamSettings::getFiles() -> std::string
+auto CStreamSettings::getDACFiles() -> std::string
 {
-	std::filesystem::create_directory(getDirPath());
 	std::string s = "";
-	for (const auto &entry : std::filesystem::directory_iterator(getDirPath()))
+	for (const auto &entry : std::filesystem::directory_iterator(getDACDirPath()))
 		s += entry.path().filename().generic_string() + "\n";
 	return s;
 }
