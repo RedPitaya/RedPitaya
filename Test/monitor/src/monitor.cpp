@@ -183,6 +183,18 @@ int main(int argc, char **argv) {
 			case STEM_250_12_120:
 				printf("z20_250");
 				break;
+			case STEM_125_14_v2_0:
+				printf("z10_125_v2");
+				break;
+			case STEM_125_14_Pro_v2_0:
+				printf("z10_125_pro_v2");
+				break;
+			case STEM_125_14_Z7020_Pro_v2_0:
+				printf("z20_125_v2");
+				break;
+			case STEM_125_14_Z7020_Ind_v2_0:
+				printf("z20_125_v2");
+				break;
 			default:
 				printf("undefined");
 				break;

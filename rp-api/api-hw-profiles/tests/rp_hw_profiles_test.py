@@ -384,6 +384,29 @@ print("rp_hw_profiles.rp_HPGetGPIO_P_CountOrDefault()")
 res = rp_hw_profiles.rp_HPGetGPIO_P_CountOrDefault()
 print(res)
 
+print("rp_hw_profiles.rp_HPGetIsE3HighSpeedGPIO()")
+res = rp_hw_profiles.rp_HPGetIsE3HighSpeedGPIO()
+print(res)
+
+print("rp_hw_profiles.rp_HPGetIsE3HighSpeedGPIOOrDefault()")
+res = rp_hw_profiles.rp_HPGetIsE3HighSpeedGPIOOrDefault()
+print(res)
+
+print("rp_hw_profiles.rp_HPGetIsE3HighSpeedGPIORate()")
+res = rp_hw_profiles.rp_HPGetIsE3HighSpeedGPIORate()
+print(res)
+
+print("rp_hw_profiles.rp_HPGetIsE3HighSpeedGPIORateOrDefault()")
+res = rp_hw_profiles.rp_HPGetIsE3HighSpeedGPIORateOrDefault()
+print(res)
+
+print("rp_hw_profiles.rp_HPGetIsE3QSPIeMMC()")
+res = rp_hw_profiles.rp_HPGetIsE3QSPIeMMC()
+print(res)
+
+print("rp_hw_profiles.rp_HPGetIsE3QSPIeMMCOrDefault()")
+res = rp_hw_profiles.rp_HPGetIsE3QSPIeMMCOrDefault()
+print(res)
 
 print("rp_hw_profiles.rp_HPPrint()")
 rp_hw_profiles.rp_HPPrint()

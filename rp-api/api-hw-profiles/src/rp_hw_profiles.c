@@ -20,6 +20,10 @@
 #include "stem_125_14_LN_BO_v1.1.h"
 #include "stem_125_14_LN_CE1_v1.1.h"
 #include "stem_125_14_LN_CE2_v1.1.h"
+#include "stem_125_14_v2.0.h"
+#include "stem_125_14_Pro_v2.0.h"
+#include "stem_125_14_Z7020_Pro_v2.0.h"
+#include "stem_125_14_Z7020_Ind_v2.0.h"
 
 profiles_t* getProfile(int *state){
     profiles_t *p = hp_cmn_GetLoadedProfile();
@@ -77,6 +81,10 @@ int rp_HPPrintAll(){
     hp_cmn_Print(getProfile_STEM_125_14_LN_BO_v1_1());
     hp_cmn_Print(getProfile_STEM_125_14_LN_CE1_v1_1());
     hp_cmn_Print(getProfile_STEM_125_14_LN_CE2_v1_1());
+    hp_cmn_Print(getProfile_STEM_125_14_v2_0());
+    hp_cmn_Print(getProfile_STEM_125_14_Pro_v2_0());
+    hp_cmn_Print(getProfile_STEM_125_14_Z7020_Pro_v2_0());
+    hp_cmn_Print(getProfile_STEM_125_14_Z7020_Ind_v2_0());
     return RP_HP_OK;
 }
 
@@ -798,4 +806,49 @@ int rp_HPGetGPIO_P_Count(uint8_t *value){
 uint8_t rp_HPGetGPIO_P_CountOrDefault(){
     profiles_t* p = getProfileDefualt();
     return p->gpio_P_count;
+}
+
+int rp_HPGetIsE3HighSpeedGPIO(bool *value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->is_E3_high_speed_gpio;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+bool rp_HPGetIsE3HighSpeedGPIOOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->is_E3_high_speed_gpio;
+}
+
+int rp_HPGetIsE3HighSpeedGPIORate(uint32_t *value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->E3_high_speed_gpio_rate;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+uint32_t rp_HPGetIsE3HighSpeedGPIORateOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->E3_high_speed_gpio_rate;
+}
+
+int rp_HPGetIsE3QSPIeMMC(bool *value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->is_E3_mcc_qspi;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+bool rp_HPGetIsE3QSPIeMMCOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->is_E3_mcc_qspi;
 }

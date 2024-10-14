@@ -101,7 +101,12 @@ profiles_t stem_122_16SDR_v1_1 = {
     .gpio_N_count = 11,
     .gpio_P_count = 11,
 
-    .ramMB = 512
+    .ramMB = 512,
+
+    .is_E3_high_speed_gpio = false,
+    .is_E3_mcc_qspi = false,
+    .E3_high_speed_gpio_rate = 0
+
 };
 
 profiles_t* getProfile_STEM_122_16SDR_v1_1(){

@@ -101,7 +101,12 @@ profiles_t stem_125_10_v1_0 = {
     .gpio_N_count = 8,
     .gpio_P_count = 8,
 
-    .ramMB = 256
+    .ramMB = 256,
+
+    .is_E3_high_speed_gpio = false,
+    .is_E3_mcc_qspi = false,
+    .E3_high_speed_gpio_rate = 0
+
 };
 
 profiles_t* getProfile_STEM_125_10_v1_0(){

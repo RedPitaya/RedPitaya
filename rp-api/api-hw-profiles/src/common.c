@@ -46,6 +46,11 @@
 #include "stem_125_14_LN_CE1_v1.1.h"
 #include "stem_125_14_LN_CE2_v1.1.h"
 #include "stem_special.h"
+#include "stem_125_14_v2.0.h"
+#include "stem_125_14_Pro_v2.0.h"
+#include "stem_125_14_Pro_v2.0.h"
+#include "stem_125_14_Z7020_Pro_v2.0.h"
+#include "stem_125_14_Z7020_Ind_v2.0.h"
 
 #define LINE_LENGTH 0x400
 
@@ -74,6 +79,12 @@ profiles_t *g_profile = NULL;
 // "STEM_125-14_LN_CE1_v1.1"
 // "STEM_125-14_LN_CE2_v1.1"
 
+// Gen2
+
+// "STEM_125-14_v2.0"
+// "STEM_125-14_Pro_v2.0"
+// "STEM_125-14_Z7020_Pro_v2.0"
+// "STEM_125-14_Ind_v2.0"
 
 void convertToLowerCase(char *buff){
 	int size = strlen(buff);
@@ -258,6 +269,39 @@ void hp_checkModel(char *model,char *eth_mac){
 		return;
 	}
 
+	if (strcmp(model,"stem_125-14_v2.0") == 0){ // STEM_125-14_v2.0
+		g_profile = getProfile_STEM_125_14_v2_0();
+		strcpy(g_profile->boardModelEEPROM,modelOrig);
+		if (eth_mac)
+			strcpy(g_profile->boardETH_MAC,eth_mac);
+		return;
+	}
+
+	if (strcmp(model,"stem_125-14_pro_v2.0") == 0){ // STEM_125-14_Pro_v2.0
+		g_profile = getProfile_STEM_125_14_Pro_v2_0();
+		strcpy(g_profile->boardModelEEPROM,modelOrig);
+		if (eth_mac)
+			strcpy(g_profile->boardETH_MAC,eth_mac);
+		return;
+	}
+
+	if (strcmp(model,"stem_125-14_z7020_pro_v2.0") == 0){ // STEM_125-14_Z7020_Pro_v2.0
+		g_profile = getProfile_STEM_125_14_Z7020_Pro_v2_0();
+		strcpy(g_profile->boardModelEEPROM,modelOrig);
+		if (eth_mac)
+			strcpy(g_profile->boardETH_MAC,eth_mac);
+		return;
+	}
+
+	if (strcmp(model,"stem_125-14_ind_v2.0") == 0){ // STEM_125-14_Ind_v2.0
+		g_profile = getProfile_STEM_125_14_Z7020_Ind_v2_0();
+		strcpy(g_profile->boardModelEEPROM,modelOrig);
+		if (eth_mac)
+			strcpy(g_profile->boardETH_MAC,eth_mac);
+		return;
+	}
+
+
 	fprintf(stderr,"[Fatal error] Unknown model \"%s\"",model);
 }
 
@@ -427,6 +471,10 @@ int hp_cmn_Print(profiles_t *p){
 
 	fprintf(stdout,"GPIO DIO_N count: %u\n", p->gpio_N_count);
 	fprintf(stdout,"GPIO DIO_P count: %u\n", p->gpio_P_count);
+
+	fprintf(stdout,"\nE3 High speed GPIO support: %d\n", p->is_E3_high_speed_gpio);
+	fprintf(stdout,"E3 High speed GPIO rate: %u\n", p->E3_high_speed_gpio_rate);
+	fprintf(stdout,"E3 QSPI for eMMC support: %d\n", p->is_E3_high_speed_gpio);
 
 	fprintf(stdout,"***********************************************************************\n");
 	return RP_HP_OK;

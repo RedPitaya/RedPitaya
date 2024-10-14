@@ -81,6 +81,11 @@ typedef struct {
     uint8_t             gpio_P_count;
 
     uint16_t            ramMB;
+
+    bool                is_E3_high_speed_gpio;
+    bool                is_E3_mcc_qspi;
+    uint32_t            E3_high_speed_gpio_rate;
+
 } profiles_t;
 
 

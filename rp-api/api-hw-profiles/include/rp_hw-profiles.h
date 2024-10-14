@@ -69,7 +69,12 @@ typedef enum {
     STEM_250_12_v1_2b           = 16,
     STEM_125_14_LN_BO_v1_1      = 17,
     STEM_125_14_LN_CE1_v1_1     = 18,
-    STEM_125_14_LN_CE2_v1_1     = 19
+    STEM_125_14_LN_CE2_v1_1     = 19,
+
+    STEM_125_14_v2_0            = 20,
+    STEM_125_14_Pro_v2_0        = 21,
+    STEM_125_14_Z7020_Pro_v2_0  = 22,
+    STEM_125_14_Z7020_Ind_v2_0  = 23
 }  rp_HPeModels_t;
 
 /**
@@ -504,6 +509,34 @@ uint8_t rp_HPGetGPIO_N_CountOrDefault();
 */
 int rp_HPGetGPIO_P_Count(uint8_t *_out_value);
 uint8_t rp_HPGetGPIO_P_CountOrDefault();
+
+
+/**
+* Returns the presence of the E3 connector, as well as support for the high-speed GPIO connector.
+* Function rp_HPGetIsE3HighSpeedGPIOOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
+*/
+int rp_HPGetIsE3HighSpeedGPIO(bool *_out_value);
+bool rp_HPGetIsE3HighSpeedGPIOOrDefault();
+
+/**
+* Returns the maximum frequency of the HS GPIO at the E3 output.
+* Function rp_HPGetIsExtClockSelectorOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
+*/
+int rp_HPGetIsE3HighSpeedGPIORate(uint32_t *_out_value);
+uint32_t rp_HPGetIsE3HighSpeedGPIORateOrDefault();
+
+/**
+* Returns the presence of the E3 connector, as well as QSPI support for eMMC.
+* Function rp_HPGetIsE3QSPIeMMCOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
+*/
+int rp_HPGetIsE3QSPIeMMC(bool *_out_value);
+bool rp_HPGetIsE3QSPIeMMCOrDefault();
 
 /**
  * Print all parameters for current profile

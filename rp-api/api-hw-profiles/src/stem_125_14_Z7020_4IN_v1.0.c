@@ -101,7 +101,11 @@ profiles_t stem_125_14_Z7020_4IN_v1_0 = {
     .gpio_N_count = 11,
     .gpio_P_count = 11,
 
-    .ramMB = 512
+    .ramMB = 512,
+
+    .is_E3_high_speed_gpio = false,
+    .is_E3_mcc_qspi = false,
+    .E3_high_speed_gpio_rate = 0
 
 };
 
