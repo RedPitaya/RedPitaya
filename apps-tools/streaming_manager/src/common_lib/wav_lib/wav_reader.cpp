@@ -43,7 +43,7 @@ auto CWaveReader::getHeader() -> WavHeader_t
 	return m_header;
 }
 
-auto CWaveReader::getBuffers(uint8_t **ch1, size_t *size_ch1, uint8_t **ch2, size_t *size_ch2) -> bool
+auto CWaveReader::getBuffers(uint8_t **ch1, size_t *size_ch1, uint8_t **ch2, size_t *size_ch2, uint8_t *bits) -> bool
 {
 	auto delFunc = [=]() {
 		if (*size_ch1 == 0) {
@@ -64,37 +64,55 @@ auto CWaveReader::getBuffers(uint8_t **ch1, size_t *size_ch1, uint8_t **ch2, siz
 			return false;
 		int channels = m_header.NumOfChan;
 		int dataBitSize = m_header.bitsPerSample;
-		if (dataBitSize != 16)
+		if (dataBitSize != 16 || dataBitSize != 8)
 			return false;
+		*bits = dataBitSize;
 		if (channels == 1 || channels == 2) {
 			*ch1 = new uint8_t[32 * 1024];
 		}
 		if (channels == 2) {
 			*ch2 = new uint8_t[32 * 1024];
 		}
-		int size = 16 * 1024;
+		int size = 0;
+		if (dataBitSize == 16) size = 16 * 1024;
+		if (dataBitSize == 8) size = 32 * 1024;
+
 		for (int i = 0; i < size; i++) {
 			uint16_t value = 0;
-			m_read_fs.read((char *) &value, sizeof(value));
+			m_read_fs.read((char *) &value, dataBitSize);
 			if (!m_read_fs) {
 				delFunc();
 				return true;
 			}
 			if (*ch1) {
-				((uint16_t *) *ch1)[i] = value;
-				*size_ch1 += 2;
+				if (dataBitSize == 8){
+					((uint8_t *) *ch1)[i] = (uint8_t)value;
+					*size_ch1++;
+				}
+
+				if (dataBitSize == 16){
+					((uint16_t *) *ch1)[i] = value;
+					*size_ch1 += 2;
+				}
 			}
 
 			if (channels == 2) {
 				value = 0;
-				m_read_fs.read((char *) &value, sizeof(value));
+				m_read_fs.read((char *) &value, dataBitSize);
 				if (!m_read_fs) {
 					delFunc();
 					return true;
 				}
 				if (*ch2) {
-					((uint16_t *) *ch2)[i] = value;
-					*size_ch2 += 2;
+					if (dataBitSize == 8){
+						((uint8_t *) *ch2)[i] = (uint8_t)value;
+						*size_ch2++;
+					}
+
+					if (dataBitSize == 16){
+						((uint16_t *) *ch2)[i] = value;
+						*size_ch2 += 2;
+					}
 				}
 			}
 		}

@@ -69,6 +69,9 @@ public:
 	auto setDACChannelSize(uint32_t size) -> void;
 	auto getDACChannelSize() -> uint32_t;
 
+	auto setDACBits(uint8_t bits) -> void;
+	auto getDACBits() -> uint8_t;
+
 	auto setLostSamples(EDataLost mode, uint64_t value) -> void;
 	auto getLostSamples(EDataLost mode) const -> uint64_t;
 	auto getLostSamplesAll() const -> uint64_t;
@@ -107,6 +110,7 @@ private:
 	bool m_infModeDAC;
 	int64_t m_repeatCountDAC;
 	uint32_t m_channelSizeDAC;
+	uint8_t m_dacBits;
 };
 
 } // namespace DataLib

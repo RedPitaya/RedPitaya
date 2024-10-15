@@ -33,7 +33,7 @@ public:
 	auto openFile(string fileName) -> bool;
 	auto getHeader() -> WavHeader_t;
 	auto getDataSize() -> uint64_t;
-	auto getBuffers(uint8_t **ch1, size_t *size_ch1, uint8_t **ch2, size_t *size_ch2) -> bool;
+	auto getBuffers(uint8_t **ch1, size_t *size_ch1, uint8_t **ch2, size_t *size_ch2, uint8_t *bits) -> bool;
 
 private:
 	std::fstream m_read_fs;

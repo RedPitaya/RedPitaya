@@ -215,6 +215,7 @@ auto CDataBuffersPackDMA::getInfoFromHeaderDAC() -> void
 		item.second->setDACRepeatCount(header->dac.repeatCount);
 		item.second->setDACChannelSize(header->dac.channelSize);
 		item.second->setDACInfMode(header->dac.infMode);
+		item.second->setDACBits(header->dac.bits);
 	}
 }
 

@@ -509,13 +509,13 @@ auto CStreamSettings::getDACRepeat() const -> DACRepeat
 
 auto CStreamSettings::setDACSpeed(uint32_t _value) -> bool
 {
-	m_dacsettings.m_decimation = _value;
+	m_dacsettings.m_rate = _value;
 	return true;
 }
 
 auto CStreamSettings::getDACSpeed() const -> uint32_t
 {
-	return m_dacsettings.m_decimation;
+	return m_dacsettings.m_rate;
 }
 
 auto CStreamSettings::setDACRepeatCount(uint32_t _value) -> void

@@ -132,7 +132,7 @@ private:
 		DACRepeat m_repeat = DACRepeat::DAC_REP_OFF;
 		uint64_t m_memoryUsage = 1024 * 1024;
 		uint32_t m_repeatCount = 0;
-		uint32_t m_decimation = 1;
+		uint32_t m_rate = 125000000;
 	};
 
 	ADCSettings m_adcsettings;

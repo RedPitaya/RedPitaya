@@ -17,6 +17,13 @@ using namespace std;
 class CReaderController
 {
 public:
+	struct Data{
+		uint8_t *ch[2] = {nullptr,nullptr};
+		size_t size[2] = {0,0};
+		size_t real_size[2] = {0,0};
+		uint8_t bits = {0};
+	};
+
 	enum OpenResult {
 		OR_OK = 0,
 		OR_MISSING_CHANNELS = 1,
@@ -47,8 +54,7 @@ public:
 
 	auto isOpen() -> CReaderController::OpenResult;
 	auto checkFile() -> OpenResult;
-	auto getBufferPrepared(
-		uint8_t **ch1, size_t *size_ch1, size_t *actual_size_ch1, uint8_t **ch2, size_t *size_ch2, size_t *actual_size_ch2) -> BufferResult;
+	auto getBufferPrepared(Data &data) -> BufferResult;
 	auto getChannels(bool *ch1Active, bool *ch2Active) -> void;
 	auto getChannelsSize(size_t *ch1Size, size_t *ch2Size) -> void;
 	auto disableRepeatMode() -> void;
@@ -73,10 +79,10 @@ private:
 
 	auto checkTDMSFile() -> OpenResult;
 	auto checkWavFile() -> OpenResult;
-	auto getBufferFull(uint8_t **ch1, size_t *size_ch1, uint8_t **ch2, size_t *size_ch2) -> void;
-	auto getBuffer(uint8_t **ch1, size_t *size_ch1, uint8_t **ch2, size_t *size_ch2) -> bool;
-	auto getBufferWav(uint8_t **ch1, size_t *size_ch1, uint8_t **ch2, size_t *size_ch2) -> bool;
-	auto getBufferTdms(uint8_t **ch1, size_t *size_ch1, uint8_t **ch2, size_t *size_ch2) -> bool;
+	// auto getBufferFull(uint8_t **ch1, size_t *size_ch1, uint8_t **ch2, size_t *size_ch2) -> void;
+	auto getBuffer(Data &data) -> bool;
+	auto getBufferWav(Data &data) -> bool;
+	auto getBufferTdms(Data &data) -> bool;
 	auto openWav() -> bool;
 	auto openTDMS() -> bool;
 	auto moveNextMetadata() -> bool;

@@ -183,42 +183,30 @@ auto CDACStreamingManager::threadFunc() -> void
 					}
 					notifyStop(CDACStreamingManager::NR_BROKEN);
 				}
-				uint8_t *ch_buffers[2] = {nullptr, nullptr};
-				size_t size_buffer[2] = {0, 0};
-				size_t size_actual[2] = {0, 0};
+				// uint8_t *ch_buffers[2] = {nullptr, nullptr};
+				// size_t size_buffer[2] = {0, 0};
+				// size_t size_actual[2] = {0, 0};
 
 				auto pack = m_buffer->writeBuffer(true);
 				if (pack){
-					auto res = m_readerController->getBufferPrepared(&ch_buffers[0],
-																	 &size_buffer[0],
-																	 &size_actual[0],
-																	 &ch_buffers[1],
-																	 &size_buffer[1],
-																	 &size_actual[1]);
-					if (size_buffer[0] != 0 || size_buffer[1] != 0) {
-						if (size_buffer[0] != 0) {
+					CReaderController::Data data;
+					auto res = m_readerController->getBufferPrepared(data);
+					if (data.size[0] != 0 || data.size[1] != 0) {
+						if (data.size[0]!= 0) {
 							auto ch1 = pack->getBuffer(DataLib::CH1);
-							if (ch1->getDataLenght() != size_buffer[0]) {
-								FATAL("DMA CH1 buffer has diffrent size src: %zu dst: %zu", size_buffer[0], ch1->getDataLenght())
+							if (ch1->getDataLenght() != data.size[0]) {
+								FATAL("DMA CH1 buffer has diffrent size src: %zu dst: %zu", data.size[0], ch1->getDataLenght())
 							}
-							memcpy_neon(ch1->getMappedDataMemory(), ch_buffers[0], size_buffer[0]);
-							// for (int i = 0; i < size1_read / 2; i++) {
-							// 	((uint16_t *) ch1->getMappedDataMemory())[i] = ((1 << 15) * i) / (size1_read / 2);
-							// }
-							DataLib::setHeaderDAC(ch1, 1, size_actual[0], onePackMode, repeatCount == -1, repeatCount);
-							// TRACE_SHORT("Copy channel 1 dest size %zu src size %zu", ch1->getDataLenght(), size1_read)
+							memcpy_neon(ch1->getMappedDataMemory(), data.ch[0], data.size[0]);
+							DataLib::setHeaderDAC(ch1, 1, data.real_size[0], onePackMode, repeatCount == -1, repeatCount, data.bits);
 						}
-						if (size_buffer[1] != 0) {
+						if (data.size[1] != 0) {
 							auto ch2 = pack->getBuffer(DataLib::CH2);
-							if (ch2->getDataLenght() != size_buffer[1]) {
-								FATAL("DMA CH2 buffer has diffrent size src: %zu dst: %zu", size_buffer[1], ch2->getDataLenght())
+							if (ch2->getDataLenght() != data.size[1]) {
+								FATAL("DMA CH2 buffer has diffrent size src: %zu dst: %zu", data.size[1], ch2->getDataLenght())
 							}
-							memcpy_neon(ch2->getMappedDataMemory(), ch_buffers[1], size_buffer[1]);
-							// for (int i = 0; i < size2_read; i++) {
-							// 	((uint16_t *) ch2->getMappedDataMemory())[i] = i % 8;
-							// }
-							DataLib::setHeaderDAC(ch2, 2, size_actual[1], onePackMode, repeatCount == -1, repeatCount);
-							// TRACE_SHORT("Copy channel 2 dest size %zu src size %zu", ch2->getDataLenght(), size2_read)
+							memcpy_neon(ch2->getMappedDataMemory(), data.ch[1], data.size[1]);
+							DataLib::setHeaderDAC(ch2, 2, data.real_size[1], onePackMode, repeatCount == -1, repeatCount, data.bits);
 						}
 						m_buffer->unlockBufferWrite();
 					}

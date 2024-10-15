@@ -336,6 +336,7 @@ auto ClientOpt::usage(char const *progName) -> void
 		"\t\t                                       Keys: tdsm = NI TDMS File Format.\n"
 		"\t\t                                             wav = Waveform Audio File Format.\n"
 		"\t\t--data=FILE_NAME       -d FILE_NAME    Path to the file for streaming.\n"
+		"\t\t                                       Important! Data must be a multiple of 128 bytes, otherwise there will be artifacts on the signal.\n"
 		"\t\t--repeat=inf|COUNT     -r inf|COUNT    The number of times the file has been resent.\n"
 		"\t\t                                       Keys: inf is an infinite number of times.\n"
 		"\t\t                                          COUNT - value from [1 ... 1000000]\n"

@@ -43,6 +43,7 @@ auto DataLib::initHeaderDAC(CDataBufferDMA::Ptr buffer, uint64_t buffersSize, ui
 	nph.dac.sizeOfAllChannels = buffersSize;
 	nph.dac.onePackMode = false;
 	nph.dac.repeatCount = 0;
+	nph.dac.bits = 0;
 	memcpy_neon(buffer->getMappedMemory(), &nph, sizeof(NetworkPackHeader));
 }
 
@@ -53,7 +54,7 @@ auto DataLib::setHeaderADC(DataLib::CDataBufferDMA::Ptr buffer, uint64_t _id) ->
 	header->adc.lostFPGA = buffer->getLostSamples(DataLib::EDataLost::FPGA);
 }
 
-auto DataLib::setHeaderDAC(CDataBufferDMA::Ptr buffer, uint8_t channel, uint32_t channelSize, bool onePackMode, bool infMode, int64_t repeatCount) -> void
+auto DataLib::setHeaderDAC(CDataBufferDMA::Ptr buffer, uint8_t channel, uint32_t channelSize, bool onePackMode, bool infMode, int64_t repeatCount, uint8_t bits) -> void
 {
 	auto header = reinterpret_cast<NetworkPackHeader *>(buffer->getMappedMemory());
 	header->dac.channel = channel;
@@ -61,6 +62,7 @@ auto DataLib::setHeaderDAC(CDataBufferDMA::Ptr buffer, uint8_t channel, uint32_t
 	header->dac.onePackMode = onePackMode;
 	header->dac.infMode = infMode;
 	header->dac.repeatCount = repeatCount;
+	header->dac.bits = bits;
 }
 
 auto DataLib::sizeHeader() -> uint16_t
@@ -106,4 +108,5 @@ auto DataLib::printDACHeader(uint8_t *data) -> void
 	printf("dac.onePackMode: %d\n", nph.dac.onePackMode);
 	printf("dac.infMode: %d\n", nph.dac.infMode);
 	printf("dac.repeatCount: %" PRId64 "\n", nph.dac.repeatCount);
+	printf("dac.bits: %d\n", nph.dac.bits);
 }

@@ -291,3 +291,11 @@ auto CDataBufferDMA::getDACChannelSize() -> uint32_t
 {
 	return m_channelSizeDAC;
 }
+
+auto CDataBufferDMA::setDACBits(uint8_t bits) -> void{
+	m_dacBits = bits;
+}
+
+auto CDataBufferDMA::getDACBits() -> uint8_t{
+	return m_dacBits;
+}

@@ -236,7 +236,7 @@ int main(int argc, char *argv[])
 
         con_server->memoryBlockSizeChangeNofiy.connect([]() {
             stopServer(ServerNetConfigManager::EStopReason::MEM_MODIFY);
-            stopDACServer(dac_streaming_lib::CDACStreamingManager::NP_MEM_MODIFY);
+            stopDACServer(dac_streaming_lib::CDACStreamingManager::NR_MEM_MODIFY);
             uio_lib::CMemoryManager::instance()->setMemoryBlockSize(con_server->getSettings().getMemoryBlockSize());
             uio_lib::CMemoryManager::instance()->reallocateBlocks();
         });

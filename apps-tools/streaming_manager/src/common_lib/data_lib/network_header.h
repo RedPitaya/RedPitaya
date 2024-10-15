@@ -31,6 +31,7 @@ struct __attribute__((packed)) DACHeader
 	bool onePackMode = false;
 	bool infMode = false;
 	int64_t repeatCount = {0};
+	uint8_t bits = {16};
 	DACHeader(){};
 };
 
@@ -58,7 +59,7 @@ struct __attribute__((packed)) NetworkPackHeader
 auto initHeaderADC(CDataBufferDMA::Ptr buffer, uint64_t oscRate, uint64_t adcBits, uint64_t buffersSize, uint8_t channel) -> void;
 auto initHeaderDAC(CDataBufferDMA::Ptr buffer, uint64_t buffersSize, uint8_t channels) -> void;
 auto setHeaderADC(CDataBufferDMA::Ptr buffer, uint64_t _id) -> void;
-auto setHeaderDAC(CDataBufferDMA::Ptr buffer, uint8_t channel, uint32_t channelSize, bool onePackMode, bool infMode, int64_t repeatCount) -> void;
+auto setHeaderDAC(CDataBufferDMA::Ptr buffer, uint8_t channel, uint32_t channelSize, bool onePackMode, bool infMode, int64_t repeatCount, uint8_t bits) -> void;
 auto sizeHeader() -> uint16_t;
 auto printADCHeader(uint8_t *data) -> void;
 auto printDACHeader(uint8_t *data) -> void;

@@ -47,10 +47,12 @@ auto CGenerator::prepare() -> void {}
 
 auto CGenerator::setCalibration(int32_t, float, int32_t, float) -> void {}
 
-auto CGenerator::setDataAddress(uint8_t, uint32_t, uint32_t, uint32_t, bool) -> bool
+auto CGenerator::setDataAddress(uint8_t, uint32_t, uint32_t, uint32_t) -> bool
 {
 	return true;
 }
+
+auto CGenerator::setDataBits(bool,bool) -> void{}
 
 auto CGenerator::setDataSize(uint32_t) -> void {}
 

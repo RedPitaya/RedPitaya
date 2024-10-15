@@ -12,9 +12,50 @@ constexpr uint32_t gen0_event_id = 0x1;
 constexpr uint32_t gen1_event_id = 0x2;
 // constexpr uint32_t dac_buf_size = (65536)/2;
 
+typedef struct GenConfig{
+	uint32_t trig_chA		:4;
+	uint32_t 				:2;
+	uint32_t use8Bit_chA	:1;
+	uint32_t output0_chA	:1;
+	uint32_t 				:8;
+	uint32_t trig_chB		:4;
+	uint32_t 				:2;
+	uint32_t use8Bit_chB	:1;
+	uint32_t output0_chB	:1;
+	uint32_t 				:8;
+} GenConfig_t;
+
+typedef struct GenDMAStatus{
+	uint32_t wait_FIFO_buff1_chA	:1; //  Wait for receive FIFO to empty out buffer 1
+	uint32_t wait_Fill_buff1_chA	:1; //  Wait for buffer 1 to fill up
+	uint32_t wait_FIFO_buff2_chA	:1; //  Wait for receive FIFO to empty out buffer 2
+	uint32_t wait_Fill_buff2_chA	:1; //  Wait for buffer 2 to fill up
+
+	uint32_t reset_chA				:1; //  Reset state
+	uint32_t active_read_buff1_chA	:1; //  Active read of buffer 1 state
+	uint32_t active_read_buff2_chA	:1; //  Active read of buffer 2 state
+	uint32_t read_done_buff1_chA	:1; //  Buffer 1 may be written to
+
+	uint32_t read_done_buff2_chA	:1; //  Buffer 2 may be written to
+	uint32_t						:7;
+
+	uint32_t wait_FIFO_buff1_chB	:1; //  Wait for receive FIFO to empty out buffer 1
+	uint32_t wait_Fill_buff1_chB	:1; //  Wait for buffer 1 to fill up
+	uint32_t wait_FIFO_buff2_chB	:1; //  Wait for receive FIFO to empty out buffer 2
+	uint32_t wait_Fill_buff2_chB	:1; //  Wait for buffer 2 to fill up
+
+	uint32_t reset_chB				:1; //  Reset state
+	uint32_t active_read_buff1_chB	:1; //  Active read of buffer 1 state
+	uint32_t active_read_buff2_chB	:1; //  Active read of buffer 2 state
+	uint32_t read_done_buff1_chB	:1; //  Buffer 1 may be written to
+
+	uint32_t read_done_buff2_chB	:1; //  Buffer 2 may be written to
+	uint32_t						:7;
+} GenDMAStatus_t;
+
 struct GeneratorMapT
 {
-	uint32_t config;		   // 0   - offset
+	GenConfig_t config;		   // 0   - offset
 	uint32_t chA_calib;		   // 4   - offset
 	uint32_t chA_counter_step; // 8   - offset
 	uint32_t chA_read_pointer; // 12   - offset 0x0C
@@ -54,8 +95,9 @@ public:
 
 	auto prepare() -> void;
 
-	auto setDataAddress(uint8_t index, uint32_t ch1, uint32_t ch2, uint32_t size, bool skipCheck) -> bool;
+	auto setDataAddress(uint8_t index, uint32_t ch1, uint32_t ch2, uint32_t size) -> bool;
 	auto setDataSize(uint32_t size) -> void;
+	auto setDataBits(bool is8BitCh1,bool is8BitCh2) -> void;
 	auto setCalibration(int32_t ch1_offset, float ch1_gain, int32_t ch2_offset, float ch2_gain) -> void;
 	auto start(bool enableCh1, bool enableCh2) -> void;
 	auto stop() -> void;

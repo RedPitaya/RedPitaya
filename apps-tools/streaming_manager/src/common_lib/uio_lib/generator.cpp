@@ -19,9 +19,16 @@ void *MmapNumberGen(int _fd, size_t _size, size_t _number)
 
 inline void setRegister(__attribute__((unused)) volatile GeneratorMapT *baseOsc_addr, volatile uint32_t *reg, int32_t value, __attribute__((unused)) const char *info = nullptr)
 {
-    acprintf(stderr, PColor::RED, "\tSet register 0x%X <- 0x%X %s\n",(uint32_t)reg-(uint32_t)baseOsc_addr,value,info ? info : "");
+//    acprintf(stderr, PColor::RED, "\tSet register 0x%X <- 0x%X %s\n",(uint32_t)reg-(uint32_t)baseOsc_addr,value,info ? info : "");
 	*reg = value;
 }
+
+#define XSTR(s) STR(s)
+#define STR(s) #s
+#define setRegisterVal(X,Y,Z) { \
+								/* acprintf(stderr, PColor::RED, "\tSet %s <- 0x%X %s\n",XSTR(X),Y, Z); */ \
+								X = Y; \
+							  }
 
 CGenerator::Ptr CGenerator::create(const UioT &_uio, bool _channel1Enable, bool _channel2Enable, uint32_t dacHz, uint32_t maxDacHz)
 {
@@ -120,7 +127,8 @@ void CGenerator::setReg(volatile GeneratorMapT *_Map)
 	setRegister(_Map, &(_Map->trig_mask), 1);
 
 	// Set trigger immediatly
-	setRegister(_Map, &(_Map->config), 0x10001, "Set trigger immediatly");
+	setRegisterVal(_Map->config.trig_chA,0x1,"Set trig immediately chA");
+	setRegisterVal(_Map->config.trig_chB,0x1,"Set trig immediately chB");
 
 	// Set calib for chA
 	setRegister(_Map, &(_Map->chA_calib), m_calib_offset_ch1 << 16 | m_calib_gain_ch1, "Set calib for chA");
@@ -167,21 +175,19 @@ auto CGenerator::setCalibration(int32_t ch1_offset, float ch1_gain, int32_t ch2_
 	m_calib_gain_ch2 = ch2_gain * 0x2000;
 }
 
-auto CGenerator::setDataAddress(uint8_t index, uint32_t ch1, uint32_t ch2, uint32_t size, bool skipCheck) -> bool
+
+auto CGenerator::setDataAddress(uint8_t index, uint32_t ch1, uint32_t ch2, uint32_t size) -> bool
 {
 	bool ret = false;
 	const std::lock_guard lock(m_waitLock);
-	auto status = m_Map->ch_dma_status;
-	uint32_t chBuf1Wait[2] = {status & 0x2u || skipCheck, status & 0x20000u || skipCheck};
-	uint32_t chBuf2Wait[2] = {status & 0x4u || skipCheck, status & 0x40000u || skipCheck};
-	// WARNING("status 0x%X",status)
-	// WARNING("diag_reg1 0x%X",m_Map->diag_reg1)
-	// WARNING("diag_reg2 0x%X",m_Map->diag_reg2)
-	// WARNING("diag_reg3 0x%X",m_Map->diag_reg3)
-	// WARNING("diag_reg4 0x%X",m_Map->diag_reg4)
+	uint32_t status = m_Map->ch_dma_status;
+	GenDMAStatus_t *sts = (GenDMAStatus_t*)&status;
+
+	uint32_t chBuf1Wait[2] = {sts->read_done_buff1_chA && ch1, sts->read_done_buff1_chB && ch2};
+	uint32_t chBuf2Wait[2] = {sts->read_done_buff2_chA && ch1, sts->read_done_buff2_chB && ch2};
 	if (index == 0){
 		if (chBuf1Wait[0] || chBuf1Wait[1]){
-			WARNING("status B1 0x%X",status)
+			// WARNING("status B1 0x%X",status)
 			if (chBuf1Wait[0] && ch1 != 0) setRegister(m_Map, &(m_Map->chA_dma_addr1), ch1, "Address chA buff 1");
 			if (chBuf1Wait[1] && ch2 != 0) setRegister(m_Map, &(m_Map->chB_dma_addr1), ch2, "Address chB buff 1");
 			setRegister(m_Map, &(m_Map->dma_size), size, "Buffer size");
@@ -193,7 +199,7 @@ auto CGenerator::setDataAddress(uint8_t index, uint32_t ch1, uint32_t ch2, uint3
 
 	if (index == 1){
 		if (chBuf2Wait[0] || chBuf2Wait[1]){
-			WARNING("status B2 0x%X",status)
+			// WARNING("status B2 0x%X",status)
 			if (chBuf2Wait[0] && ch1 != 0) setRegister(m_Map, &(m_Map->chA_dma_addr2), ch1, "Address chA buff 2");
 			if (chBuf2Wait[1] && ch2 != 0) setRegister(m_Map, &(m_Map->chB_dma_addr2), ch2, "Address chB buff 2");
 			setRegister(m_Map, &(m_Map->dma_size), size, "Buffer size");
@@ -202,31 +208,13 @@ auto CGenerator::setDataAddress(uint8_t index, uint32_t ch1, uint32_t ch2, uint3
 			ret = true;
 		}
 	}
-
-	// if (status != 0x10001)
-	// 	WARNING("Status %X",status)
-	// if (index == 0) {
-	// 	if (status & 0x00030003 || skipCheck) {
-	// 		// printReg();
-	// 		setRegister(m_Map, &(m_Map->chA_dma_addr2), ch1, "Address chA buff 2");
-	// 		setRegister(m_Map, &(m_Map->chB_dma_addr2), ch2, "Address chB buff 2");
-	// 		setRegister(m_Map, &(m_Map->dma_size), size, "Buffer size");
-	// 		int command = (ch1 ? 1 << 7 : 0) | ( ch2 ? 1 << 15 : 0);
-	// 		setRegister(m_Map, &(m_Map->dma_control), command , "Reset index 0");
-	// 		ret = true;
-	// 	}
-	// } else {
-	// 	if (status & 0x000C000C || skipCheck) {
-	// 		// printReg();
-	// 		setRegister(m_Map, &(m_Map->chA_dma_addr1), ch1, "Address chA buff 1");
-	// 		setRegister(m_Map, &(m_Map->chB_dma_addr1), ch2, "Address chB buff 1");
-	// 		setRegister(m_Map, &(m_Map->dma_size), size, "Buffer size");
-	// 		int command = (ch1 ? 1 << 6 : 0) | ( ch2 ? 1 << 14 : 0);
-	// 		setRegister(m_Map, &(m_Map->dma_control), command ,  "Reset index 1");
-	// 		ret = true;
-	// 	}
-	// }
+	// if (!ret) WARNING("status 0x%X index %d",status,index)
 	return ret;
+}
+
+auto CGenerator::setDataBits(bool is8BitCh1,bool is8BitCh2) -> void{
+	setRegisterVal(m_Map->config.use8Bit_chA,is8BitCh1 ? 0x1 : 0,"Set trig immediately chA");
+	setRegisterVal(m_Map->config.use8Bit_chB,is8BitCh2 ? 0x1 : 0,"Set trig immediately chB");
 }
 
 auto CGenerator::setDataSize(uint32_t size) -> void
@@ -260,8 +248,9 @@ auto CGenerator::stop() -> void
 
 auto CGenerator::printReg() -> void
 {
+	uint32_t *config = (uint32_t*)&(m_Map->config);
 	fprintf(stderr, "printReg\n");
-	fprintf(stderr, "0x00 Config = 0x%X\n", m_Map->config);
+	fprintf(stderr, "0x00 Config = 0x%X\n", *config);
 	fprintf(stderr, "0x04 chA_calib = 0x%X\n", m_Map->chA_calib);
 	fprintf(stderr, "0x08 chA_counter_step = 0x%X\n", m_Map->chA_counter_step);
 	fprintf(stderr, "0x0C chA_read_pointer = 0x%X\n", m_Map->chA_read_pointer);

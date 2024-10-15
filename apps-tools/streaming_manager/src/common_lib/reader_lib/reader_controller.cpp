@@ -172,8 +172,7 @@ auto CReaderController::writeFromTemp(uint8_t **buff, size_t max_size, size_t *w
 	temp_buf->current_pos += sizeWrite;
 }
 
-auto CReaderController::getBufferPrepared(
-	uint8_t **ch1, size_t *size_ch1, size_t *actual_size_ch1, uint8_t **ch2, size_t *size_ch2, size_t *actual_size_ch2) -> BufferResult
+auto CReaderController::getBufferPrepared(Data &data) -> BufferResult
 {
 	auto fillZero = [&](uint8_t **ch, size_t *size) {
 		if (*ch) {
@@ -183,78 +182,76 @@ auto CReaderController::getBufferPrepared(
 			}
 		}
 	};
-	*size_ch1 = 0;
-	*size_ch2 = 0;
+	data.size[0] = data.size[1] = 0;
 	if (m_channel1Present) {
-		*ch1 = m_dataBuffers[0];
+		data.ch[0] = m_dataBuffers[0];
 	} else {
-		*ch1 = nullptr;
+		data.ch[0] = nullptr;
 	}
 	if (m_channel2Present) {
-		*ch2 = m_dataBuffers[1];
+		data.ch[1] = m_dataBuffers[1];
 	} else {
-		*ch2 = nullptr;
+		data.ch[1] = nullptr;
 	}
 
 	while (1) {
-		if (*ch1) {
+		if (data.ch[0]) {
 			if (m_tempBuffer[0].size > 0 && !m_tempBuffer[0].isEnded()) {
-				writeFromTemp(ch1, m_blockSize, size_ch1, &m_tempBuffer[0]);
-				*actual_size_ch1 += m_tempBuffer[0].size;
+				writeFromTemp(&data.ch[0], m_blockSize, &data.size[0], &m_tempBuffer[0]);
+				data.real_size[0] += m_tempBuffer[0].size;
 			}
 		}
 
-		if (*ch2) {
+		if (data.ch[1]) {
 			if (m_tempBuffer[1].size > 0 && !m_tempBuffer[1].isEnded()) {
-				writeFromTemp(ch2, m_blockSize, size_ch2, &m_tempBuffer[1]);
-				*actual_size_ch2 += m_tempBuffer[1].size;
+				writeFromTemp(&data.ch[1], m_blockSize, &data.size[1], &m_tempBuffer[1]);
+				data.real_size[1] += m_tempBuffer[1].size;
 			}
 		}
 
-		if (*ch1 && *ch2) {
-			if (*size_ch1 == m_blockSize && *size_ch2 == m_blockSize) {
+		if (data.ch[0] && data.ch[1]) {
+			if (data.size[0] == m_blockSize && data.size[1] == m_blockSize) {
 				return BR_OK;
 			} else {
 				if (m_fileType.value == CStreamSettings::DataFormat::WAV) {
-					if (*size_ch1 != *size_ch2) {
+					if (data.size[0] != data.size[1]) {
 						return BR_BROKEN;
 					}
 				}
 			}
-		} else if (*ch1) {
-			if (*size_ch1 == m_blockSize)
+		} else if (data.ch[0]) {
+			if (data.size[0] == m_blockSize)
 				return BR_OK;
-		} else if (*ch2) {
-			if (*size_ch2 == m_blockSize)
+		} else if (data.ch[1]) {
+			if (data.size[1] == m_blockSize)
 				return BR_OK;
 		}
 
 		if (m_tempBuffer[0].isEnded() || m_tempBuffer[1].isEnded()) {
-			uint8_t *ch1_read = nullptr, *ch2_read = nullptr;
-			size_t size1_read = 0, size2_read = 0;
-			auto res = getBuffer(&ch1_read, &size1_read, &ch2_read, &size2_read);
+			Data data_read;
+			auto res = getBuffer(data_read);
 
 			if (m_checkEmptyFile) {
-				if (size1_read || size2_read) {
+				if (data_read.size[0] || data_read.size[1]) {
 					m_checkEmptyFile = false;
 				} else {
-					delete[] ch1_read;
-					delete[] ch2_read;
+					delete[] data_read.ch[0];
+					delete[] data_read.ch[1];
 					return BR_EMPTY;
 				}
 			}
 
 			if (res) { // if don't use memory cache
-				if (ch1_read) {
+				if (data_read.ch[0]) {
 					m_tempBuffer[0].deleteBuffer();
-					m_tempBuffer[0].buffer = ch1_read;
-					m_tempBuffer[0].size = size1_read;
+					m_tempBuffer[0].buffer = data_read.ch[0];
+					m_tempBuffer[0].size = data_read.size[0];
 				}
 
-				if (ch2_read) {
+				if (data_read.ch[1]) {
 					m_tempBuffer[1].deleteBuffer();
-					m_tempBuffer[1].buffer = ch2_read;
-					m_tempBuffer[1].size = size2_read;
+					m_tempBuffer[1].buffer = data_read.ch[1];
+					m_tempBuffer[1].size = data_read.size[1];
 				}
 			} else {
 				if (m_repeat.value != CStreamSettings::DACRepeat::DAC_REP_OFF) {
@@ -262,8 +259,8 @@ auto CReaderController::getBufferPrepared(
 						if (m_repeat.value != CStreamSettings::DACRepeat::DAC_REP_INF) {
 							m_rep_count--;
 							if (m_rep_count <= 0) {
-								fillZero(ch1, size_ch1);
-								fillZero(ch2, size_ch2);
+								fillZero(&data.ch[0], &data.size[0]);
+								fillZero(&data.ch[1], &data.size[1]);
 								return BR_ENDED;
 							}
 						}
@@ -271,8 +268,8 @@ auto CReaderController::getBufferPrepared(
 						return BR_BROKEN;
 					}
 				} else {
-					fillZero(ch1, size_ch1);
-					fillZero(ch2, size_ch2);
+					fillZero(&data.ch[0], &data.size[0]);
+					fillZero(&data.ch[1], &data.size[1]);
 					return BR_ENDED;
 				}
 			}
@@ -280,100 +277,97 @@ auto CReaderController::getBufferPrepared(
 	}
 }
 
-auto CReaderController::getBuffer(uint8_t **ch1, size_t *size_ch1, uint8_t **ch2, size_t *size_ch2) -> bool
+auto CReaderController::getBuffer(Data &data) -> bool
 {
 	if (m_fileType.value == CStreamSettings::DataFormat::WAV) {
-		return getBufferWav(ch1, size_ch1, ch2, size_ch2);
+		return getBufferWav(data);
 	}
 	if (m_fileType.value == CStreamSettings::DataFormat::TDMS) {
-		return getBufferTdms(ch1, size_ch1, ch2, size_ch2);
+		return getBufferTdms(data);
 	}
 	return false;
 }
 
-auto CReaderController::getBufferWav(uint8_t **ch1, size_t *size_ch1, uint8_t **ch2, size_t *size_ch2) -> bool
+auto CReaderController::getBufferWav(Data &data) -> bool
 {
 	try {
 		if (m_wavReader && m_fileType.value == CStreamSettings::DataFormat::WAV) {
-			if (m_wavReader->getBuffers(ch1, size_ch1, ch2, size_ch2)) {
-				if (*size_ch1 == 0 && *size_ch2 == 0) {
+			if (m_wavReader->getBuffers(&data.ch[0], &data.size[0], &data.ch[1], &data.size[1],&data.bits)) {
+				if (data.size[0] == 0 && data.size[1] == 0) {
 					return false;
 				}
 				return true;
 			}
 		}
 	} catch (const std::bad_alloc &e) {
-		if (*ch1)
-			delete[] *ch1;
-		*ch1 = nullptr;
-		if (*ch2)
-			delete[] *ch2;
-		*ch2 = nullptr;
-		*size_ch1 = 0;
-		*size_ch2 = 0;
+		for(int i = 0 ; i < 2; i++){
+			delete[] data.ch[i];
+			data.ch[i] = nullptr;
+			data.size[i] = 0;
+		}
 		std::cout << "[CReaderController]: Error Allocation failed: " << e.what() << '\n';
 	}
 	return false;
 }
 
-auto CReaderController::getBufferFull(uint8_t **ch1, size_t *size_ch1, uint8_t **ch2, size_t *size_ch2) -> void
-{
-	try {
-		if (m_channel1Present) {
-			*ch1 = new uint8_t[m_channel1Size];
-			*size_ch1 = m_channel1Size;
-		}
-		if (m_channel2Present) {
-			*ch2 = new uint8_t[m_channel2Size];
-			*size_ch2 = m_channel2Size;
-		}
-		uint8_t *ch1_read = nullptr;
-		uint8_t *ch2_read = nullptr;
-		size_t size1_read = 0;
-		size_t size2_read = 0;
-		size_t lastPos1 = 0;
-		size_t lastPos2 = 0;
+// auto CReaderController::getBufferFull(uint8_t **ch1, size_t *size_ch1, uint8_t **ch2, size_t *size_ch2) -> void
+// {
+// 	try {
+// 		if (m_channel1Present) {
+// 			*ch1 = new uint8_t[m_channel1Size];
+// 			*size_ch1 = m_channel1Size;
+// 		}
+// 		if (m_channel2Present) {
+// 			*ch2 = new uint8_t[m_channel2Size];
+// 			*size_ch2 = m_channel2Size;
+// 		}
+// 		uint8_t *ch1_read = nullptr;
+// 		uint8_t *ch2_read = nullptr;
+// 		size_t size1_read = 0;
+// 		size_t size2_read = 0;
+// 		size_t lastPos1 = 0;
+// 		size_t lastPos2 = 0;
 
-		while (getBuffer(&ch1_read, &size1_read, &ch2_read, &size2_read)) {
-			if (ch1_read && size1_read > 0) {
-				if (lastPos1 + size1_read > m_channel1Size) {
-					size1_read = m_channel1Size - lastPos1;
-				}
-				memcpy_neon((&(**ch1) + lastPos1), ch1_read, size1_read);
-				lastPos1 += size1_read;
-			}
-			if (ch2_read && size2_read > 0) {
-				if (lastPos2 + size2_read > m_channel2Size) {
-					size2_read = m_channel2Size - lastPos2;
-				}
-				memcpy_neon((&(**ch2) + lastPos2), ch2_read, size2_read);
-				lastPos2 += size2_read;
-			}
-			if (ch1_read) {
-				delete[] ch1_read;
-				ch1_read = nullptr;
-				size1_read = 0;
-			}
-			if (ch2_read) {
-				delete[] ch2_read;
-				ch2_read = nullptr;
-				size2_read = 0;
-			}
-		}
-	} catch (const std::bad_alloc &e) {
-		if (*ch1)
-			delete[] *ch1;
-		*ch1 = nullptr;
-		if (*ch2)
-			delete[] *ch2;
-		*ch2 = nullptr;
-		*size_ch1 = 0;
-		*size_ch2 = 0;
-		std::cout << "[CReaderController]: Error Allocation failed: " << e.what() << '\n';
-	}
-}
+// 		while (getBuffer(&ch1_read, &size1_read, &ch2_read, &size2_read)) {
+// 			if (ch1_read && size1_read > 0) {
+// 				if (lastPos1 + size1_read > m_channel1Size) {
+// 					size1_read = m_channel1Size - lastPos1;
+// 				}
+// 				memcpy_neon((&(**ch1) + lastPos1), ch1_read, size1_read);
+// 				lastPos1 += size1_read;
+// 			}
+// 			if (ch2_read && size2_read > 0) {
+// 				if (lastPos2 + size2_read > m_channel2Size) {
+// 					size2_read = m_channel2Size - lastPos2;
+// 				}
+// 				memcpy_neon((&(**ch2) + lastPos2), ch2_read, size2_read);
+// 				lastPos2 += size2_read;
+// 			}
+// 			if (ch1_read) {
+// 				delete[] ch1_read;
+// 				ch1_read = nullptr;
+// 				size1_read = 0;
+// 			}
+// 			if (ch2_read) {
+// 				delete[] ch2_read;
+// 				ch2_read = nullptr;
+// 				size2_read = 0;
+// 			}
+// 		}
+// 	} catch (const std::bad_alloc &e) {
+// 		if (*ch1)
+// 			delete[] *ch1;
+// 		*ch1 = nullptr;
+// 		if (*ch2)
+// 			delete[] *ch2;
+// 		*ch2 = nullptr;
+// 		*size_ch1 = 0;
+// 		*size_ch2 = 0;
+// 		std::cout << "[CReaderController]: Error Allocation failed: " << e.what() << '\n';
+// 	}
+// }
 
-auto CReaderController::getBufferTdms(uint8_t **ch1, size_t *size_ch1, uint8_t **ch2, size_t *size_ch2) -> bool
+auto CReaderController::getBufferTdms(Data &data) -> bool
 {
 	if (m_tdmsFile && m_fileType.value == CStreamSettings::DataFormat::TDMS) {
 		if (m_channel1Present == false && m_channel2Present == false) {
@@ -384,8 +378,8 @@ auto CReaderController::getBufferTdms(uint8_t **ch1, size_t *size_ch1, uint8_t *
 		size_t size2 = 0;
 
 		if (!m_currentMetadataPtr) {
-			*size_ch1 = size1;
-			*size_ch2 = size2;
+			data.size[0] = size1;
+			data.size[1] = size2;
 			return false;
 		}
 
@@ -394,11 +388,17 @@ auto CReaderController::getBufferTdms(uint8_t **ch1, size_t *size_ch1, uint8_t *
 				size_t sizeCh1 = 0;
 				for (auto &m : m_currentMetadataPtr->RawData.DataType.GetRawVector()) {
 					sizeCh1 += m->size;
+					if (m->dataType == TDMS::TDMSType::Integer8){
+						data.bits = 8;
+					}
+					if (m->dataType == TDMS::TDMSType::Integer16){
+						data.bits = 16;
+					}
 				}
-				*ch1 = new uint8_t[sizeCh1];
-				*size_ch1 = sizeCh1;
-				*size_ch2 = 0;
-				uint8_t *buffer = *ch1;
+				data.ch[0]  = new uint8_t[sizeCh1];
+				data.size[0] = sizeCh1;
+				data.size[1] = 0;
+				uint8_t *buffer = data.ch[0];
 				size_t pos = 0;
 				for (auto &m : m_currentMetadataPtr->RawData.DataType.GetRawVector()) {
 					memcpy_neon((&(*buffer) + pos), m->data.get(), m->size);
@@ -412,11 +412,17 @@ auto CReaderController::getBufferTdms(uint8_t **ch1, size_t *size_ch1, uint8_t *
 				size_t sizeCh2 = 0;
 				for (auto &m : m_currentMetadataPtr->RawData.DataType.GetRawVector()) {
 					sizeCh2 += m->size;
+					if (m->dataType == TDMS::TDMSType::Integer8){
+						data.bits = 8;
+					}
+					if (m->dataType == TDMS::TDMSType::Integer16){
+						data.bits = 16;
+					}
 				}
-				*ch2 = new uint8_t[sizeCh2];
-				*size_ch1 = 0;
-				*size_ch2 = sizeCh2;
-				uint8_t *buffer = *ch2;
+				data.ch[1] = new uint8_t[sizeCh2];
+				data.size[0] = 0;
+				data.size[1] = sizeCh2;
+				uint8_t *buffer = data.ch[1];
 				size_t pos = 0;
 				for (auto &m : m_currentMetadataPtr->RawData.DataType.GetRawVector()) {
 					memcpy_neon((&(*buffer) + pos), m->data.get(), m->size);
@@ -427,8 +433,8 @@ auto CReaderController::getBufferTdms(uint8_t **ch1, size_t *size_ch1, uint8_t *
 			}
 
 			moveNextMetadata();
-			*size_ch1 = size1;
-			*size_ch2 = size2;
+			data.size[0] = size1;
+			data.size[1] = size2;
 			return true;
 		} else {
 			moveNextMetadata();

@@ -63,7 +63,7 @@ auto CDACStreamingApplication::stop() -> bool
 void CDACStreamingApplication::genWorker()
 {
 	int indexForWrite = 0;
-	bool isInitFirst[2] = {false,false};
+	uint64_t skipCount = 0;
 	DataLib::CDataBuffersPackDMA::Ptr buffer = nullptr;
 	bool onePackMode = false;
 	bool notRun = true;
@@ -81,6 +81,8 @@ void CDACStreamingApplication::genWorker()
 				uint32_t ch1Address = 0;
 				uint32_t ch2Address = 0;
 				uint32_t chSize = 0;
+				bool ch18Bit = false;
+				bool ch28Bit = false;
 				if (ch1) {
 					ch1Address = ch1->getDataAddress();
 					if (ch1->getDACOnePackMode()) {
@@ -88,6 +90,7 @@ void CDACStreamingApplication::genWorker()
 						repeatInOpenPackMode = std::max(repeatInOpenPackMode, ch1->getDACRepeatCount());
 						one_pack_inf_mode = ch1->getDACInfMode();
 						ch1->decDACRepeatCount();
+						ch18Bit = ch1->getDACBits() == 8;
 						onePackMode = true;
 					} else {
 						chSize = std::max((uint32_t) ch1->getDataLenght(), chSize);
@@ -101,6 +104,7 @@ void CDACStreamingApplication::genWorker()
 						repeatInOpenPackMode = std::max(repeatInOpenPackMode, ch2->getDACRepeatCount());
 						one_pack_inf_mode = ch2->getDACInfMode();
 						ch2->decDACRepeatCount();
+						ch28Bit = ch2->getDACBits() == 8;
 						onePackMode = true;
 					} else {
 						chSize = std::max((uint32_t) ch2->getDataLenght(), chSize);
@@ -110,20 +114,20 @@ void CDACStreamingApplication::genWorker()
 				if (onePackMode && repeatInOpenPackMode == 0 && one_pack_inf_mode == false) {
 					break;
 				}
-
-				buffer->debugPackDAC();
+				if (notRun) {
+					m_gen->setDataBits(ch18Bit,ch28Bit);
+					m_gen->start(ch1Address,ch2Address);
+					notRun = false;
+				}
+				// buffer->debugPackDAC();
 				bool ret = false;
 				do {
-					ret = m_gen->setDataAddress(indexForWrite, ch1Address, ch2Address, chSize, !isInitFirst[indexForWrite]);
-					if (notRun) {
-						m_gen->start(ch1Address,ch2Address);
-						notRun = false;
-					}
+					ret = m_gen->setDataAddress(indexForWrite, ch1Address, ch2Address, chSize);
+					if (!ret) skipCount++;
 					if (!m_GenThreadRun)
 						break;
 				} while (!ret);
 
-				isInitFirst[indexForWrite] = true;
 				indexForWrite = indexForWrite == 0 ? 1 : 0;
 
 				if (!onePackMode) {
@@ -137,7 +141,7 @@ void CDACStreamingApplication::genWorker()
 	} catch (std::exception &e) {
 		ERROR_LOG("%s", e.what())
 	}
-
+	WARNING("skipCount %lld",skipCount);
 	m_isRun = false;
 }
 
