@@ -290,7 +290,7 @@ auto rp_app_init(void) -> int
 
 			g_serverNetConfig->memoryBlockSizeChangeNofiy.connect([]() {
 				stopServer(ServerNetConfigManager::EStopReason::MEM_MODIFY);
-				stopDACServer(dac_streaming_lib::CDACStreamingManager::NP_MEM_MODIFY);
+				stopDACServer(dac_streaming_lib::CDACStreamingManager::NR_MEM_MODIFY);
 				uio_lib::CMemoryManager::instance()->setMemoryBlockSize(g_serverNetConfig->getSettings().getMemoryBlockSize());
 				uio_lib::CMemoryManager::instance()->reallocateBlocks();
 			});
@@ -324,7 +324,7 @@ auto rp_app_init(void) -> int
 void stopAll()
 {
 	stopServer(ServerNetConfigManager::EStopReason::MEM_MODIFY);
-	stopDACServer(dac_streaming_lib::CDACStreamingManager::NotifyResult::NP_MEM_MODIFY);
+	stopDACServer(dac_streaming_lib::CDACStreamingManager::NotifyResult::NR_MEM_MODIFY);
 }
 
 //Application exit
@@ -1099,14 +1099,18 @@ auto startDACServer(__attribute__((unused)) bool testMode, uint8_t activeChannel
 			if (uio.nodeName == "rp_dac") {
 				g_gen = uio_lib::CGenerator::create(uio, true, true, dac_speed, getDACRate());
 				g_gen->setCalibration(ch_off[0], ch_gain[0], ch_off[1], ch_gain[1]);
-				g_gen->setDacHz(dac_speed);
+				if (!g_gen->setDacHz(dac_speed)){
+					ERROR_LOG("DAC rate cannot be set.");
+					stopDACNonBlocking(dac_streaming_lib::CDACStreamingManager::NR_SETTINGS_ERROR);
+					return false;
+				}
 				break;
 			}
 		}
 
 		if (!g_gen) {
 			ERROR_LOG("Error init generator module");
-			stopDACNonBlocking(dac_streaming_lib::CDACStreamingManager::NP_MEM_ERROR);
+			stopDACNonBlocking(dac_streaming_lib::CDACStreamingManager::NR_MEM_ERROR);
 			return false;
 		}
 
@@ -1155,7 +1159,7 @@ auto startDACServer(__attribute__((unused)) bool testMode, uint8_t activeChannel
 		auto ramSize = memmanager->getReserverdMemory(uio_lib::MM_DAC);
 		if (ramSize < memmanager->getMinRAMSize(uio_lib::MM_DAC)) {
 			ERROR_LOG("Not enough memory for DAC mode")
-			stopDACNonBlocking(dac_streaming_lib::CDACStreamingManager::NP_MEM_ERROR);
+			stopDACNonBlocking(dac_streaming_lib::CDACStreamingManager::NR_MEM_ERROR);
 			return false;
 		}
 		auto freeblocks = ramSize / mbSize;
@@ -1163,13 +1167,13 @@ auto startDACServer(__attribute__((unused)) bool testMode, uint8_t activeChannel
 
 		if (activeChannels == 0) {
 			WARNING("No active channels")
-			stopDACNonBlocking(dac_streaming_lib::CDACStreamingManager::NP_MEM_ERROR);
+			stopDACNonBlocking(dac_streaming_lib::CDACStreamingManager::NR_MEM_ERROR);
 			return false;
 		}
 
 		if (reservedBlocks == 0) {
 			WARNING("Can't reserve memory via memory manager")
-			stopDACNonBlocking(dac_streaming_lib::CDACStreamingManager::NP_MEM_ERROR);
+			stopDACNonBlocking(dac_streaming_lib::CDACStreamingManager::NR_MEM_ERROR);
 			return false;
 		}
 
@@ -1232,13 +1236,17 @@ auto stopDACServer(dac_streaming_lib::CDACStreamingManager::NotifyResult x) -> v
 					g_serverNetConfig->sendDACServerStoppedSDMissingFile();
 					ss_dac_status.SendValue(5);
 					break;
-				case dac_streaming_lib::CDACStreamingManager::NP_MEM_ERROR:
+				case dac_streaming_lib::CDACStreamingManager::NR_MEM_ERROR:
 					g_serverNetConfig->sendDACServerMemoryErrorStopped();
 					ss_dac_status.SendValue(6);
 					break;
-				case dac_streaming_lib::CDACStreamingManager::NP_MEM_MODIFY:
+				case dac_streaming_lib::CDACStreamingManager::NR_MEM_MODIFY:
 					g_serverNetConfig->sendDACServerMemoryModifyStopped();
 					ss_dac_status.SendValue(7);
+					break;
+				case dac_streaming_lib::CDACStreamingManager::NR_SETTINGS_ERROR:
+					g_serverNetConfig->sendDACServerMemoryModifyStopped();
+					ss_dac_status.SendValue(2);
 					break;
 				default:
 					throw runtime_error("Unknown state");

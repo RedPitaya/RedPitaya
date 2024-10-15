@@ -19,7 +19,7 @@ void *MmapNumberGen(int _fd, size_t _size, size_t _number)
 
 inline void setRegister(__attribute__((unused)) volatile GeneratorMapT *baseOsc_addr, volatile uint32_t *reg, int32_t value, __attribute__((unused)) const char *info = nullptr)
 {
-    // acprintf(stderr, PColor::RED, "\tSet register 0x%X <- 0x%X %s\n",(uint32_t)reg-(uint32_t)baseOsc_addr,value,info ? info : "");
+    acprintf(stderr, PColor::RED, "\tSet register 0x%X <- 0x%X %s\n",(uint32_t)reg-(uint32_t)baseOsc_addr,value,info ? info : "");
 	*reg = value;
 }
 
@@ -94,6 +94,11 @@ auto CGenerator::setDacHz(uint32_t hz) -> bool
 	if ((hz <= m_maxDacSpeedHz) && (((double) hz / (double) m_maxDacSpeedHz) * (1 << 16) < 1))
 		return false;
 	m_dacSpeedHz = hz;
+	double coff = (double) m_dacSpeedHz / (double) m_maxDacSpeedHz;
+	uint32_t step = (1 << 16) * coff;
+	if (step == 0){
+		return false;
+	}
 	return true;
 }
 
@@ -115,7 +120,7 @@ void CGenerator::setReg(volatile GeneratorMapT *_Map)
 	setRegister(_Map, &(_Map->trig_mask), 1);
 
 	// Set trigger immediatly
-	setRegister(_Map, &(_Map->config), 0x10001);
+	setRegister(_Map, &(_Map->config), 0x10001, "Set trigger immediatly");
 
 	// Set calib for chA
 	setRegister(_Map, &(_Map->chA_calib), m_calib_offset_ch1 << 16 | m_calib_gain_ch1, "Set calib for chA");
@@ -126,11 +131,11 @@ void CGenerator::setReg(volatile GeneratorMapT *_Map)
 	// Set step for pointer
 	double coff = (double) m_dacSpeedHz / (double) m_maxDacSpeedHz;
 	uint32_t step = (1 << 16) * coff;
-	setRegister(_Map, &(_Map->chA_counter_step), step);
-	setRegister(_Map, &(_Map->chB_counter_step), step);
+	setRegister(_Map, &(_Map->chA_counter_step), step , "Set step for pointer chA");
+	setRegister(_Map, &(_Map->chB_counter_step), step , "Set step for pointer chB");
 
 	// Set streaming DMA, reset Buffers and flags
-	setRegister(_Map, &(_Map->dma_control), 0x2222);
+	setRegister(_Map, &(_Map->dma_control), 0x2222,"Set streaming DMA, reset Buffers and flags");
 }
 
 auto CGenerator::prepare() -> void
@@ -167,27 +172,60 @@ auto CGenerator::setDataAddress(uint8_t index, uint32_t ch1, uint32_t ch2, uint3
 	bool ret = false;
 	const std::lock_guard lock(m_waitLock);
 	auto status = m_Map->ch_dma_status;
-	if (index == 0) {
-		if (status & 0x00030003 || skipCheck) {
-			// printReg();
-			setRegister(m_Map, &(m_Map->chA_dma_addr2), ch1, "Address chA buff 2");
-			setRegister(m_Map, &(m_Map->chB_dma_addr2), ch2, "Address chB buff 2");
+	uint32_t chBuf1Wait[2] = {status & 0x2u || skipCheck, status & 0x20000u || skipCheck};
+	uint32_t chBuf2Wait[2] = {status & 0x4u || skipCheck, status & 0x40000u || skipCheck};
+	// WARNING("status 0x%X",status)
+	// WARNING("diag_reg1 0x%X",m_Map->diag_reg1)
+	// WARNING("diag_reg2 0x%X",m_Map->diag_reg2)
+	// WARNING("diag_reg3 0x%X",m_Map->diag_reg3)
+	// WARNING("diag_reg4 0x%X",m_Map->diag_reg4)
+	if (index == 0){
+		if (chBuf1Wait[0] || chBuf1Wait[1]){
+			WARNING("status B1 0x%X",status)
+			if (chBuf1Wait[0] && ch1 != 0) setRegister(m_Map, &(m_Map->chA_dma_addr1), ch1, "Address chA buff 1");
+			if (chBuf1Wait[1] && ch2 != 0) setRegister(m_Map, &(m_Map->chB_dma_addr1), ch2, "Address chB buff 1");
 			setRegister(m_Map, &(m_Map->dma_size), size, "Buffer size");
-			int command = (ch1 ? 1 << 7 : 0) | ( ch2 ? 1 << 15 : 0);
-			setRegister(m_Map, &(m_Map->dma_control), command , "Reset index 0");
-			ret = true;
-		}
-	} else {
-		if (status & 0x000C000C || skipCheck) {
-			// printReg();
-			setRegister(m_Map, &(m_Map->chA_dma_addr1), ch1, "Address chA buff 1");
-			setRegister(m_Map, &(m_Map->chB_dma_addr1), ch2, "Address chB buff 1");
-			setRegister(m_Map, &(m_Map->dma_size), size, "Buffer size");
-			int command = (ch1 ? 1 << 6 : 0) | ( ch2 ? 1 << 14 : 0);
+			int command = (ch1 != 0 ? 1 << 6 : 0)  | (ch2 != 0 ? 1 << 14 : 0);
 			setRegister(m_Map, &(m_Map->dma_control), command ,  "Reset index 1");
 			ret = true;
 		}
 	}
+
+	if (index == 1){
+		if (chBuf2Wait[0] || chBuf2Wait[1]){
+			WARNING("status B2 0x%X",status)
+			if (chBuf2Wait[0] && ch1 != 0) setRegister(m_Map, &(m_Map->chA_dma_addr2), ch1, "Address chA buff 2");
+			if (chBuf2Wait[1] && ch2 != 0) setRegister(m_Map, &(m_Map->chB_dma_addr2), ch2, "Address chB buff 2");
+			setRegister(m_Map, &(m_Map->dma_size), size, "Buffer size");
+			int command =  (ch1 != 0 ? 1 << 7 : 0)  | (ch2 != 0 ? 1 << 15 : 0);
+			setRegister(m_Map, &(m_Map->dma_control), command ,  "Reset index 2");
+			ret = true;
+		}
+	}
+
+	// if (status != 0x10001)
+	// 	WARNING("Status %X",status)
+	// if (index == 0) {
+	// 	if (status & 0x00030003 || skipCheck) {
+	// 		// printReg();
+	// 		setRegister(m_Map, &(m_Map->chA_dma_addr2), ch1, "Address chA buff 2");
+	// 		setRegister(m_Map, &(m_Map->chB_dma_addr2), ch2, "Address chB buff 2");
+	// 		setRegister(m_Map, &(m_Map->dma_size), size, "Buffer size");
+	// 		int command = (ch1 ? 1 << 7 : 0) | ( ch2 ? 1 << 15 : 0);
+	// 		setRegister(m_Map, &(m_Map->dma_control), command , "Reset index 0");
+	// 		ret = true;
+	// 	}
+	// } else {
+	// 	if (status & 0x000C000C || skipCheck) {
+	// 		// printReg();
+	// 		setRegister(m_Map, &(m_Map->chA_dma_addr1), ch1, "Address chA buff 1");
+	// 		setRegister(m_Map, &(m_Map->chB_dma_addr1), ch2, "Address chB buff 1");
+	// 		setRegister(m_Map, &(m_Map->dma_size), size, "Buffer size");
+	// 		int command = (ch1 ? 1 << 6 : 0) | ( ch2 ? 1 << 14 : 0);
+	// 		setRegister(m_Map, &(m_Map->dma_control), command ,  "Reset index 1");
+	// 		ret = true;
+	// 	}
+	// }
 	return ret;
 }
 
@@ -196,12 +234,12 @@ auto CGenerator::setDataSize(uint32_t size) -> void
 	m_BufferSize = size;
 }
 
-auto CGenerator::start() -> void
+auto CGenerator::start(bool enableCh1, bool enableCh2) -> void
 {
 	const std::lock_guard lock(m_waitLock);
 	if (m_Map != nullptr) {
 		setRegister(m_Map, &(m_Map->event_status), 0x2 , "Start event");
-		setRegister(m_Map, &(m_Map->dma_control), 0x101, "Start DMA");
+		setRegister(m_Map, &(m_Map->dma_control), (enableCh1 ? 0x1 : 0) | (enableCh2 ? 0x100 : 0), "Start DMA");
 	} else {
 		FATAL("Memory map not initialized")
 	}

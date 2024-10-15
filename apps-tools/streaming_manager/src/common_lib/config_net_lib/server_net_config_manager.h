@@ -56,6 +56,7 @@ public:
 	auto sendDACServerStopped() -> bool;
 	auto sendDACServerMemoryErrorStopped() -> bool;
 	auto sendDACServerMemoryModifyStopped() -> bool;
+	auto sendDACServerConfigErrorStopped() -> bool;
 	auto sendDACServerStoppedSDDone() -> bool;
 	auto sendDACServerStoppedSDEmpty() -> bool;
 	auto sendDACServerStoppedSDBroken() -> bool;

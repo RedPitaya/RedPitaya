@@ -277,6 +277,10 @@ auto ServerNetConfigManager::sendDACServerMemoryModifyStopped() -> bool
 	return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_DAC_SERVER_STOPPED_MEM_MODIFY);
 }
 
+auto ServerNetConfigManager::sendDACServerConfigErrorStopped() -> bool{
+	return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_DAC_SERVER_STOPPED_CONFIG_ERROR);
+}
+
 auto ServerNetConfigManager::sendDACServerStoppedSDDone() -> bool
 {
 	return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_DAC_SERVER_STOPPED_SD_DONE);

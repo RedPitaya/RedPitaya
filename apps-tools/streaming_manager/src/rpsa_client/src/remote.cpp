@@ -419,7 +419,7 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl,
 		}
 	});
 
-	cl->serverStoppedMemErrorNofiy.connect([&](std::string host) {
+	cl->serverDacStoppedMemErrorNofiy.connect([&](std::string host) {
 		const std::lock_guard lock(g_rmutex);
 		if (g_roption.verbous)
 			aprintf(stdout, "%s Streaming started: %s memory error [FAIL]\n", getTS(": ").c_str(), host.c_str());
@@ -428,7 +428,7 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl,
 		slaveHosts.remove(host);
 	});
 
-	cl->serverStoppedMemModifyNofiy.connect([&](std::string host) {
+	cl->serverDacStoppedMemModifyNofiy.connect([&](std::string host) {
 		const std::lock_guard lock(g_rmutex);
 		if (g_roption.verbous)
 			aprintf(stdout, "%s Streaming started: %s memory modify [FAIL]\n", getTS(": ").c_str(), host.c_str());
@@ -437,10 +437,10 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl,
 		slaveHosts.remove(host);
 	});
 
-	cl->serverStoppedNoActiveChannelsNofiy.connect([&](std::string host) {
+	cl->serverDacStoppedConfigErrorNofiy.connect([&](std::string host) {
 		const std::lock_guard lock(g_rmutex);
 		if (g_roption.verbous)
-			aprintf(stderr, "%s Streaming started: %s. No active channels. [FAIL]\n", getTS(": ").c_str(), host.c_str());
+			aprintf(stdout, "%s Streaming started: %s config error [FAIL]\n", getTS(": ").c_str(), host.c_str());
 		rstart_counter--;
 		masterHosts.remove(host);
 		slaveHosts.remove(host);

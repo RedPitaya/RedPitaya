@@ -84,6 +84,7 @@ public:
 	sigslot::signal<std::string &> serverDacStoppedNofiy;
 	sigslot::signal<std::string &> serverDacStoppedMemErrorNofiy;
 	sigslot::signal<std::string &> serverDacStoppedMemModifyNofiy;
+	sigslot::signal<std::string &> serverDacStoppedConfigErrorNofiy;
 	sigslot::signal<std::string &> serverDacStoppedSDDoneNofiy;
 	sigslot::signal<std::string &> serverDacStoppedSDEmptyNofiy;
 	sigslot::signal<std::string &> serverDacStoppedSDBrokenNofiy;

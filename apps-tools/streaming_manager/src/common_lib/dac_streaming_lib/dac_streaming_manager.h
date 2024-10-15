@@ -22,8 +22,9 @@ public:
 		NR_EMPTY,
 		NR_MISSING_FILE,
 		NR_STOP,
-		NP_MEM_ERROR,
-		NP_MEM_MODIFY
+		NR_MEM_ERROR,
+		NR_MEM_MODIFY,
+		NR_SETTINGS_ERROR
 	};
 
 	enum DACStream_FileType {

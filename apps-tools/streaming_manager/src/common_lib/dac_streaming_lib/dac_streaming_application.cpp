@@ -62,12 +62,12 @@ auto CDACStreamingApplication::stop() -> bool
 
 void CDACStreamingApplication::genWorker()
 {
-	int indexForWrite = 1;
+	int indexForWrite = 0;
 	bool isInitFirst[2] = {false,false};
 	DataLib::CDataBuffersPackDMA::Ptr buffer = nullptr;
 	bool onePackMode = false;
+	bool notRun = true;
 	m_gen->prepare();
-	m_gen->start();
 	m_GenThreadRun = true;
 	try {
 		while (m_GenThreadRun) {
@@ -95,7 +95,7 @@ void CDACStreamingApplication::genWorker()
 				}
 
 				if (ch2) {
-					ch1Address = ch2->getDataAddress();
+					ch2Address = ch2->getDataAddress();
 					if (ch2->getDACOnePackMode()) {
 						chSize = std::max(ch2->getDACChannelSize(), chSize);
 						repeatInOpenPackMode = std::max(repeatInOpenPackMode, ch2->getDACRepeatCount());
@@ -112,13 +112,17 @@ void CDACStreamingApplication::genWorker()
 				}
 
 				buffer->debugPackDAC();
-
 				bool ret = false;
 				do {
 					ret = m_gen->setDataAddress(indexForWrite, ch1Address, ch2Address, chSize, !isInitFirst[indexForWrite]);
+					if (notRun) {
+						m_gen->start(ch1Address,ch2Address);
+						notRun = false;
+					}
 					if (!m_GenThreadRun)
 						break;
 				} while (!ret);
+
 				isInitFirst[indexForWrite] = true;
 				indexForWrite = indexForWrite == 0 ? 1 : 0;
 

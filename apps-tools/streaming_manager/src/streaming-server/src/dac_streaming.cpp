@@ -83,7 +83,11 @@ auto startDACServer(bool verbMode, uint8_t activeChannels) -> void
 			if (uio.nodeName == "rp_dac") {
 				g_gen = CGenerator::create(uio, true, true, dac_speed, ClientOpt::getDACRate());
 				g_gen->setCalibration(ch_off[0], ch_gain[0], ch_off[1], ch_gain[1]);
-				g_gen->setDacHz(dac_speed);
+				if (!g_gen->setDacHz(dac_speed)){
+					printWithLog(LOG_ERR, stdout, "DAC rate cannot be set.\n");
+					stopDACNonBlocking(CDACStreamingManager::NR_SETTINGS_ERROR);
+					return;
+				}
 			}
 		}
 #else
@@ -135,7 +139,7 @@ auto startDACServer(bool verbMode, uint8_t activeChannels) -> void
 		auto mbSize = memmanager->getMemoryBlockSize();
 		auto ramSize = memmanager->getReserverdMemory(MM_DAC);
 		if (ramSize < memmanager->getMinRAMSize(MM_DAC)) {
-			printWithLog(LOG_ERR, stdout, "Not enough memory for MM_DAC mode\n") stopDACNonBlocking(CDACStreamingManager::NP_MEM_ERROR);
+			printWithLog(LOG_ERR, stdout, "Not enough memory for MM_DAC mode\n") stopDACNonBlocking(CDACStreamingManager::NR_MEM_ERROR);
 			return;
 		}
 		auto freeblocks = ramSize / mbSize;
@@ -148,7 +152,7 @@ auto startDACServer(bool verbMode, uint8_t activeChannels) -> void
 
 		if (reservedBlocks == 0) {
 			printWithLog(LOG_ERR, stdout, "Can't reserve memory via memory manager\n");
-			stopDACNonBlocking(CDACStreamingManager::NP_MEM_ERROR);
+			stopDACNonBlocking(CDACStreamingManager::NR_MEM_ERROR);
 			return;
 		}
 
@@ -208,11 +212,14 @@ auto stopDACServer(CDACStreamingManager::NotifyResult x) -> void
 				case CDACStreamingManager::NR_MISSING_FILE:
 					g_serverDACNetConfig->sendDACServerStoppedSDMissingFile();
 					break;
-				case CDACStreamingManager::NP_MEM_ERROR:
+				case CDACStreamingManager::NR_MEM_ERROR:
 					g_serverDACNetConfig->sendDACServerMemoryErrorStopped();
 					break;
-				case CDACStreamingManager::NP_MEM_MODIFY:
-					g_serverDACNetConfig->sendDACServerMemoryModifyStopped();
+				case CDACStreamingManager::NR_MEM_MODIFY:
+					g_serverDACNetConfig->sendDACServerConfigErrorStopped();
+					break;
+				case CDACStreamingManager::NR_SETTINGS_ERROR:
+					g_serverDACNetConfig->sendDACServerConfigErrorStopped();
 					break;
 				default:
 					throw runtime_error("Unknown state");

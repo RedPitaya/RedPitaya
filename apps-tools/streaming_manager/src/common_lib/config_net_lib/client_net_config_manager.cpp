@@ -52,6 +52,7 @@ auto ClientNetConfigManager::removeHadlers() -> void
 	serverDacStoppedNofiy.disconnect_all();
 	serverDacStoppedMemErrorNofiy.disconnect_all();
 	serverDacStoppedMemModifyNofiy.disconnect_all();
+	serverDacStoppedConfigErrorNofiy.disconnect_all();
 	serverDacStoppedSDDoneNofiy.disconnect_all();
 	serverDacStoppedSDEmptyNofiy.disconnect_all();
 	serverDacStoppedSDBrokenNofiy.disconnect_all();
@@ -260,6 +261,10 @@ auto ClientNetConfigManager::receiveCommand(uint32_t command, std::string tag, s
 
 	if (c == CNetConfigManager::ECommands::CS_RESPONSE_DAC_SERVER_STOPPED_MEM_MODIFY) {
 		serverDacStoppedMemModifyNofiy(sender->m_manager->getHost());
+	}
+
+	if (c == CNetConfigManager::ECommands::CS_RESPONSE_DAC_SERVER_STOPPED_CONFIG_ERROR) {
+		serverDacStoppedConfigErrorNofiy(sender->m_manager->getHost());
 	}
 
 	if (c == CNetConfigManager::ECommands::CS_RESPONSE_DAC_SERVER_STOPPED_SD_DONE) {

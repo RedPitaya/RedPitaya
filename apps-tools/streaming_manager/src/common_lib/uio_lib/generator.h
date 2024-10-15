@@ -32,6 +32,11 @@ struct GeneratorMapT
 	uint32_t chA_dma_addr2;	   // 60   - offset 0x3C
 	uint32_t chB_dma_addr1;	   // 64   - offset 0x40
 	uint32_t chB_dma_addr2;	   // 68   - offset 0x44
+	uint32_t reserv[10];
+	uint32_t diag_reg1;		   // 112  - offset 0x70
+	uint32_t diag_reg2;		   // 114  - offset 0x74
+	uint32_t diag_reg3;		   // 118  - offset 0x78
+	uint32_t diag_reg4;		   // 122  - offset 0x7C
 };
 
 class CGenerator
@@ -52,7 +57,7 @@ public:
 	auto setDataAddress(uint8_t index, uint32_t ch1, uint32_t ch2, uint32_t size, bool skipCheck) -> bool;
 	auto setDataSize(uint32_t size) -> void;
 	auto setCalibration(int32_t ch1_offset, float ch1_gain, int32_t ch2_offset, float ch2_gain) -> void;
-	auto start() -> void;
+	auto start(bool enableCh1, bool enableCh2) -> void;
 	auto stop() -> void;
 	auto printReg() -> void;
 

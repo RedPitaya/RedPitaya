@@ -54,7 +54,7 @@ auto CGenerator::setDataAddress(uint8_t, uint32_t, uint32_t, uint32_t, bool) -> 
 
 auto CGenerator::setDataSize(uint32_t) -> void {}
 
-auto CGenerator::start() -> void {}
+auto CGenerator::start(bool, bool) -> void {}
 
 auto CGenerator::stop() -> void {}
 
