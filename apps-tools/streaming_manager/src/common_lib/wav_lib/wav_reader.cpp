@@ -64,7 +64,7 @@ auto CWaveReader::getBuffers(uint8_t **ch1, size_t *size_ch1, uint8_t **ch2, siz
 			return false;
 		int channels = m_header.NumOfChan;
 		int dataBitSize = m_header.bitsPerSample;
-		if (dataBitSize != 16 || dataBitSize != 8)
+		if (!(dataBitSize == 16 || dataBitSize == 8))
 			return false;
 		*bits = dataBitSize;
 		if (channels == 1 || channels == 2) {
@@ -79,7 +79,7 @@ auto CWaveReader::getBuffers(uint8_t **ch1, size_t *size_ch1, uint8_t **ch2, siz
 
 		for (int i = 0; i < size; i++) {
 			uint16_t value = 0;
-			m_read_fs.read((char *) &value, dataBitSize);
+			m_read_fs.read((char *) &value, dataBitSize / 8);
 			if (!m_read_fs) {
 				delFunc();
 				return true;
@@ -87,7 +87,7 @@ auto CWaveReader::getBuffers(uint8_t **ch1, size_t *size_ch1, uint8_t **ch2, siz
 			if (*ch1) {
 				if (dataBitSize == 8){
 					((uint8_t *) *ch1)[i] = (uint8_t)value;
-					*size_ch1++;
+					*size_ch1 += 1;
 				}
 
 				if (dataBitSize == 16){
@@ -98,7 +98,7 @@ auto CWaveReader::getBuffers(uint8_t **ch1, size_t *size_ch1, uint8_t **ch2, siz
 
 			if (channels == 2) {
 				value = 0;
-				m_read_fs.read((char *) &value, dataBitSize);
+				m_read_fs.read((char *) &value, dataBitSize / 8);
 				if (!m_read_fs) {
 					delFunc();
 					return true;
@@ -106,7 +106,7 @@ auto CWaveReader::getBuffers(uint8_t **ch1, size_t *size_ch1, uint8_t **ch2, siz
 				if (*ch2) {
 					if (dataBitSize == 8){
 						((uint8_t *) *ch2)[i] = (uint8_t)value;
-						*size_ch2++;
+						*size_ch2 += 1;
 					}
 
 					if (dataBitSize == 16){

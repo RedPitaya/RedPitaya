@@ -67,7 +67,8 @@ auto DataLib::setHeaderDAC(CDataBufferDMA::Ptr buffer, uint8_t channel, uint32_t
 
 auto DataLib::sizeHeader() -> uint16_t
 {
-	return sizeof(NetworkPackHeader);
+	int s = sizeof(NetworkPackHeader) / 128;
+	return (s + 1) * 128;
 }
 
 auto DataLib::printADCHeader(uint8_t *data) -> void

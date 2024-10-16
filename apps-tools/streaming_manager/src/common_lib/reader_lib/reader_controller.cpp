@@ -47,10 +47,8 @@ CReaderController::CReaderController(CStreamSettings::DataFormat _fileType,
 
 void CReaderController::TemperaryBuffer::deleteBuffer()
 {
-	if (buffer) {
-		delete[] buffer;
-		buffer = nullptr;
-	}
+	delete[] buffer;
+	buffer = nullptr;
 	size = 0;
 	current_pos = 0;
 }
@@ -161,8 +159,8 @@ CReaderController::Ptr CReaderController::Create(CStreamSettings::DataFormat _fi
 	return std::make_shared<CReaderController>(_fileType, _filePath, _repeat, _rep_count, blockSize);
 }
 
-auto CReaderController::writeFromTemp(uint8_t **buff, size_t max_size, size_t *write_pos, CReaderController::TemperaryBuffer *temp_buf)
-	-> void
+auto CReaderController::writeFromTemp(
+	uint8_t **buff, size_t max_size, size_t *write_pos, CReaderController::TemperaryBuffer *temp_buf, size_t *realSize) -> void
 {
 	size_t sizeForWrite = temp_buf->size - temp_buf->current_pos;
 	size_t aviableSize = max_size - *write_pos;
@@ -170,6 +168,7 @@ auto CReaderController::writeFromTemp(uint8_t **buff, size_t max_size, size_t *w
 	memcpy((&(**buff) + *write_pos), (&(*temp_buf->buffer) + temp_buf->current_pos), sizeWrite);
 	*write_pos += sizeWrite;
 	temp_buf->current_pos += sizeWrite;
+	*realSize += sizeWrite;
 }
 
 auto CReaderController::getBufferPrepared(Data &data) -> BufferResult
@@ -197,15 +196,15 @@ auto CReaderController::getBufferPrepared(Data &data) -> BufferResult
 	while (1) {
 		if (data.ch[0]) {
 			if (m_tempBuffer[0].size > 0 && !m_tempBuffer[0].isEnded()) {
-				writeFromTemp(&data.ch[0], m_blockSize, &data.size[0], &m_tempBuffer[0]);
-				data.real_size[0] += m_tempBuffer[0].size;
+				writeFromTemp(&data.ch[0], m_blockSize, &data.size[0], &m_tempBuffer[0], &data.real_size[0]);
+				data.bits = m_tempBuffer[0].bits;
 			}
 		}
 
 		if (data.ch[1]) {
 			if (m_tempBuffer[1].size > 0 && !m_tempBuffer[1].isEnded()) {
-				writeFromTemp(&data.ch[1], m_blockSize, &data.size[1], &m_tempBuffer[1]);
-				data.real_size[1] += m_tempBuffer[1].size;
+				writeFromTemp(&data.ch[1], m_blockSize, &data.size[1], &m_tempBuffer[1], &data.real_size[1]);
+				data.bits = m_tempBuffer[0].bits;
 			}
 		}
 
@@ -230,7 +229,7 @@ auto CReaderController::getBufferPrepared(Data &data) -> BufferResult
 		if (m_tempBuffer[0].isEnded() || m_tempBuffer[1].isEnded()) {
 			Data data_read;
 			auto res = getBuffer(data_read);
-
+			data.bits = data_read.bits;
 			if (m_checkEmptyFile) {
 				if (data_read.size[0] || data_read.size[1]) {
 					m_checkEmptyFile = false;
@@ -246,12 +245,14 @@ auto CReaderController::getBufferPrepared(Data &data) -> BufferResult
 					m_tempBuffer[0].deleteBuffer();
 					m_tempBuffer[0].buffer = data_read.ch[0];
 					m_tempBuffer[0].size = data_read.size[0];
+					m_tempBuffer[0].bits = data_read.bits;
 				}
 
 				if (data_read.ch[1]) {
 					m_tempBuffer[1].deleteBuffer();
 					m_tempBuffer[1].buffer = data_read.ch[1];
 					m_tempBuffer[1].size = data_read.size[1];
+					m_tempBuffer[1].bits = data_read.bits;
 				}
 			} else {
 				if (m_repeat.value != CStreamSettings::DACRepeat::DAC_REP_OFF) {
@@ -493,7 +494,7 @@ auto CReaderController::checkWavFile() -> OpenResult
 
 		int channels = header.NumOfChan;
 		int dataBitSize = header.bitsPerSample;
-		if (dataBitSize != 16)
+		if (!(dataBitSize == 16 || dataBitSize == 8))
 			return OpenResult::OR_WRONG_DATA_TYPE;
 		if (channels == 1 || channels == 2) {
 			m_channel1Present = true;

@@ -176,8 +176,12 @@ auto CDataBuffersPackDMA::debugPackDAC() -> void
 			printf("%X,", ((uint8_t *) item.second->getMappedMemory())[i]);
 		}
 		printf("\n\t\t\tData: ");
-		for (size_t i = 0; i < 200 && i < item.second->getDataLenght() / 2; i++) {
-			printf("%X,", ((uint16_t *) item.second->getMappedDataMemory())[i]);
+		int dev = item.second->getDACBits() / 8;
+		for (size_t i = 0; /*i < 200 &&*/ i < item.second->getDataLenght() / dev; i++) {
+			if (dev == 2)
+				printf("%X,", ((uint16_t *) item.second->getMappedDataMemory())[i]);
+			if (dev == 1)
+				printf("%X,", ((uint8_t *) item.second->getMappedDataMemory())[i]);
 		}
 		printf("\n");
 	}

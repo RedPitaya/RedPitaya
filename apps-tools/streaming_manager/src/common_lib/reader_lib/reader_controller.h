@@ -65,6 +65,7 @@ private:
 		uint8_t *buffer = nullptr;
 		size_t size = 0;
 		size_t current_pos = 0;
+		uint8_t bits = 0;
 		void deleteBuffer();
 		bool isEnded() { return size == current_pos; }
 		TemperaryBuffer(){};
@@ -87,7 +88,8 @@ private:
 	auto openTDMS() -> bool;
 	auto moveNextMetadata() -> bool;
 	auto resetReadFromBuffer() -> bool;
-	auto writeFromTemp(uint8_t **buff, size_t max_size, size_t *write_pos, CReaderController::TemperaryBuffer *temp_buf) -> void;
+	auto writeFromTemp(uint8_t **buff, size_t max_size, size_t *write_pos, CReaderController::TemperaryBuffer *temp_buf, size_t *realSize)
+		-> void;
 
 	CStreamSettings::DataFormat m_fileType;
 	string m_filePath;

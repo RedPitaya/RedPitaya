@@ -171,7 +171,7 @@ auto CDACStreamingManager::threadFunc() -> void
 			m_readerController->getChannelsSize(&chSizes[0], &chSizes[1]);
 			if (m_blockSize >= (chSizes[0] + chSizes[1])) {
 				onePackMode = true;
-				m_readerController->disableRepeatMode();
+				m_readerController->disableRepeatMode(); // Disable for one pack mode
 			}
 		}
 		while (m_isThreadRun) {
