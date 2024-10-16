@@ -183,10 +183,29 @@ auto CGenerator::setDataAddress(uint8_t index, uint32_t ch1, uint32_t ch2, uint3
 	uint32_t status = m_Map->ch_dma_status;
 	GenDMAStatus_t *sts = (GenDMAStatus_t*)&status;
 
-	uint32_t chBuf1Wait[2] = {sts->read_done_buff1_chA && ch1, sts->read_done_buff1_chB && ch2};
-	uint32_t chBuf2Wait[2] = {sts->read_done_buff2_chA && ch1, sts->read_done_buff2_chB && ch2};
-	if (index == 0){
-		if (chBuf1Wait[0] || chBuf1Wait[1]){
+	uint32_t chBuf1Wait[2] = {sts->read_done_buff1_chA, sts->read_done_buff1_chB};
+	uint32_t chBuf2Wait[2] = {sts->read_done_buff2_chA, sts->read_done_buff2_chB};
+
+	bool b1Wait = false;
+	if (ch1 && ch2) {
+		b1Wait = chBuf1Wait[0] && chBuf1Wait[1];
+	} else if (ch1) {
+		b1Wait = chBuf1Wait[0];
+	} else if (ch2) {
+		b1Wait = chBuf1Wait[1];
+	}
+
+	bool b2Wait = false;
+	if (ch1 && ch2) {
+		b2Wait = chBuf2Wait[0] && chBuf2Wait[1];
+	} else if (ch1) {
+		b2Wait = chBuf2Wait[0];
+	} else if (ch2) {
+		b2Wait = chBuf2Wait[1];
+	}
+
+	if (index == 0) {
+		if (b1Wait) {
 			// WARNING("status B1 0x%X",status)
 			if (chBuf1Wait[0] && ch1 != 0) setRegister(m_Map, &(m_Map->chA_dma_addr1), ch1, "Address chA buff 1");
 			if (chBuf1Wait[1] && ch2 != 0) setRegister(m_Map, &(m_Map->chB_dma_addr1), ch2, "Address chB buff 1");
@@ -198,7 +217,7 @@ auto CGenerator::setDataAddress(uint8_t index, uint32_t ch1, uint32_t ch2, uint3
 	}
 
 	if (index == 1){
-		if (chBuf2Wait[0] || chBuf2Wait[1]){
+		if (b2Wait) {
 			// WARNING("status B2 0x%X",status)
 			if (chBuf2Wait[0] && ch1 != 0) setRegister(m_Map, &(m_Map->chA_dma_addr2), ch1, "Address chA buff 2");
 			if (chBuf2Wait[1] && ch2 != 0) setRegister(m_Map, &(m_Map->chB_dma_addr2), ch2, "Address chB buff 2");

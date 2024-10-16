@@ -63,10 +63,10 @@ auto CDACStreamingApplication::stop() -> bool
 void CDACStreamingApplication::genWorker()
 {
 	int indexForWrite = 0;
-	uint64_t skipCount = 0;
 	DataLib::CDataBuffersPackDMA::Ptr buffer = nullptr;
 	bool onePackMode = false;
 	bool notRun = true;
+	m_gen->stop();
 	m_gen->prepare();
 	m_GenThreadRun = true;
 	try {
@@ -123,7 +123,6 @@ void CDACStreamingApplication::genWorker()
 				bool ret = false;
 				do {
 					ret = m_gen->setDataAddress(indexForWrite, ch1Address, ch2Address, chSize);
-					if (!ret) skipCount++;
 					if (!m_GenThreadRun)
 						break;
 				} while (!ret);
@@ -141,7 +140,7 @@ void CDACStreamingApplication::genWorker()
 	} catch (std::exception &e) {
 		ERROR_LOG("%s", e.what())
 	}
-	WARNING("skipCount %lld",skipCount);
+	m_gen->stop();
 	m_isRun = false;
 }
 

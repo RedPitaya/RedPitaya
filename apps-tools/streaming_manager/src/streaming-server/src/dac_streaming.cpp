@@ -194,6 +194,8 @@ auto stopDACServer(CDACStreamingManager::NotifyResult x) -> void
 		}
 
 		g_dac_manger = nullptr;
+		auto memmanager = uio_lib::CMemoryManager::instance();
+		memmanager->releaseMemory(MM_DAC);
 
 		if (g_serverDACNetConfig) {
 			switch (x) {

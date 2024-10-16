@@ -49,6 +49,7 @@ target_include_directories(${PROJECT_NAME}
 
 list(APPEND src
             ${PROJECT_SOURCE_DIR}/src/main.cpp
+            ${PROJECT_SOURCE_DIR}/src/testGen.cpp
         )
 
     target_sources(${PROJECT_NAME} PRIVATE ${src})
@@ -60,7 +61,7 @@ target_link_directories(${PROJECT_NAME}
     ${CMAKE_BINARY_DIR}/output/
     )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC converter_lib writer_lib rp-formatter logger_lib)
+target_link_libraries(${PROJECT_NAME} PUBLIC converter_lib wav_lib writer_lib rp-formatter logger_lib)
 
 if(NOT WIN32 )
     if (${CMAKE_BUILD_TYPE} STREQUAL "Release")

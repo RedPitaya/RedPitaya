@@ -16,6 +16,8 @@ using namespace rp_formatter_api;
 bool g_stopWrite = false;
 converter_lib::CConverter::Ptr g_converter = nullptr;
 
+void createTestFiels();
+
 char *getCmdOption(char **begin, char **end, const std::string &option)
 {
 	char **itr = std::find(begin, end, option);
@@ -45,6 +47,7 @@ void UsingArgs(char const *progName)
 	std::cout << "\t-i get info about file\n";
 	std::cout << "\t-s Segment from which the conversion starts\n";
 	std::cout << "\t-e Segment where the conversion will end\n";
+	std::cout << "\t-t Creates test data files for DAC streaming\n";
 }
 
 void sigHandlerStopCSV(int)
@@ -186,6 +189,13 @@ int main(int argc, char *argv[])
 	}
 
 	bool check_info = cmdOptionExists(argv, argv + argc, "-i");
+	bool gen_test = cmdOptionExists(argv, argv + argc, "-t");
+
+	if (gen_test) {
+		createTestFiels();
+		return 0;
+	}
+
 	int32_t s = -2;
 	int32_t e = -2;
 	if (cmdOptionExists(argv, argv + argc, "-s")) {
