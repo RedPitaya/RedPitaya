@@ -324,17 +324,15 @@ CALIB_DIR          = Test/calib
 GENERATOR_DIR	   = Test/generate
 SPECTRUM_DIR       = Test/spectrum
 LED_CONTROL_DIR    = Test/led_control
-COMM_DIR           = Examples/Communication/C
 XADC_DIR           = Test/xadc
 LA_TEST_DIR        = rp-api/api2/test
 DAISY_TOOL_DIR     = Test/daisy_tool
-FPGA_TESTS_DIR     = Examples/Tests
 STARTUPSH          = $(INSTALL_DIR)/sbin/startup.sh
 
-.PHONY: examples rp_communication fpgautils
-.PHONY: lcr bode monitor generator acquire acquire_p calib laboardtest spectrum led_control daisy_tool fpga_tests
+.PHONY: examples fpgautils
+.PHONY: lcr bode monitor generator acquire acquire_p calib laboardtest spectrum led_control daisy_tool
 
-examples: lcr bode monitor calib spectrum acquire acquire_p generator led_control fpgautils daisy_tool fpga_tests
+examples: lcr bode monitor calib spectrum acquire acquire_p generator led_control fpgautils daisy_tool
 
 
 lcr: api
@@ -384,17 +382,9 @@ laboardtest: api2
 	cp rp-api/api2/test/laboardtest $(abspath $(INSTALL_DIR))/bin/laboardtest
 	cp rp-api/api2/test/install.sh $(abspath $(INSTALL_DIR))/install.sh
 
-rp_communication:
-	make -C $(COMM_DIR)
-
 fpgautils:
 	mkdir -p $(abspath $(INSTALL_DIR))/bin
 	$(CC) tools/fpgautils/fpgautil.c -o $(abspath $(INSTALL_DIR))/bin/fpgautil
-
-fpga_tests: api
-	$(MAKE) -C $(FPGA_TESTS_DIR) clean
-	$(MAKE) -C $(FPGA_TESTS_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(FPGA_TESTS_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
 startupsh:
 	cp -f patches/startup/startup.sh $(STARTUPSH)
@@ -570,10 +560,8 @@ clean: nginx_clean scpi_clean
 
 	$(MAKE) -C $(NGINX_DIR) clean
 	$(MAKE) -C $(SCPI_SERVER_DIR) clean
-	$(MAKE) -C $(COMM_DIR) clean
 	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) clean
 	$(MAKE) -C $(IDGEN_DIR) clean
-	$(MAKE) -C $(FPGA_TESTS_DIR) clean
 
 	rm -rf $(DL)
 
