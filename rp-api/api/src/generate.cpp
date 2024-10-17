@@ -546,6 +546,7 @@ int generate_setBurstLastValue(rp_channel_t channel,rp_gen_gain_t gain, float am
         return RP_NOTS;
     }
 
+    /// !!! No calibration required, calibration occurs at the FPGA level
     uint32_t cnt = cmn_convertToCnt(amplitude,bits,fsBase,is_sign,1.0,0);
     cmn_Debug("[Ch%d] generate->BurstFinalValue_ch <- 0x%X",channel,cnt);
     CHANNEL_ACTION(channel,
@@ -587,7 +588,8 @@ int generate_setInitGenValue(rp_channel_t channel,rp_gen_gain_t gain, float ampl
         ERROR_LOG("Can't get fast DAC sign value");
         return RP_NOTS;
     }
-    WARNING("fsBase %f amplitude %f",fsBase,amplitude)
+
+    /// !!! No calibration required, calibration occurs at the FPGA level
     uint32_t cnt = cmn_convertToCnt(amplitude,bits,fsBase,is_sign,1.0,0);
     cmn_Debug("[Ch%d] generate->initGenValue_ch <- 0x%X",channel,cnt);
     CHANNEL_ACTION(channel,

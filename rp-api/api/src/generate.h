@@ -100,7 +100,7 @@ typedef struct generate_control_s {
 
     ch_properties_t properties_chA;
     ch_properties_t properties_chB;
-    // NOT WORK with 250-12
+
     uint32_t     BurstFinalValue_chA; // 0x44
     uint32_t     BurstFinalValue_chB; // 0x48
     uint32_t     cunterStepChALower;  // 0x4C
