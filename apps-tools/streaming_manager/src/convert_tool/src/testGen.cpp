@@ -3,6 +3,10 @@
 #include <math.h>
 #include <vector>
 
+#ifndef M_PI
+    #define M_PI 3.14159265358979323846
+#endif
+
 void createTestFiels()
 {
 	auto func = [](size_t size, std::string suffix, std::iostream *s) {
