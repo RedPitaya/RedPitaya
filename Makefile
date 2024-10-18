@@ -28,7 +28,7 @@ CMAKEVAR=-DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE
 
 CUR_DIR = $(PWD)
 
-all: api nginx examples  apps-tools apps-pro startupsh scpi rp_communication sdr
+all: api nginx examples  apps-tools apps-pro startupsh scpi sdr
 
 
 $(DL):
