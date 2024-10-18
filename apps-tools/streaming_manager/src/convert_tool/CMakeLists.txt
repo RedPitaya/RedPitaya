@@ -32,11 +32,8 @@ option(BUILD_PYTHON_MODULE "" OFF)
 option(BUILD_SHARED "" OFF)
 set(IS_INSTALL_CUR IS_INSTALL)
 set(IS_INSTALL OFF CACHE INTERNAL "")
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../../../rp-api/api-formatter ${CMAKE_CURRENT_BINARY_DIR}/api-formatter)
 set(IS_INSTALL IS_INSTALL_CUR CACHE INTERNAL "")
 add_executable(${PROJECT_NAME} ${INC_ALL})
-add_custom_target(install-rp-formatter DEPENDS rp-formatter-static)
-add_dependencies(${PROJECT_NAME} install-rp-formatter)
 
 if (${CMAKE_BUILD_TYPE} STREQUAL "Release")
     target_link_options(${PROJECT_NAME} PRIVATE --static)
@@ -61,7 +58,7 @@ target_link_directories(${PROJECT_NAME}
     ${CMAKE_BINARY_DIR}/output/
     )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC converter_lib wav_lib writer_lib rp-formatter logger_lib)
+target_link_libraries(${PROJECT_NAME} PUBLIC converter_lib wav_lib writer_lib logger_lib)
 
 if(NOT WIN32 )
     if (${CMAKE_BUILD_TYPE} STREQUAL "Release")

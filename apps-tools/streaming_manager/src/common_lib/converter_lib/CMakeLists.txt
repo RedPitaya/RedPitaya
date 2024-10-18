@@ -43,7 +43,7 @@ list(APPEND src
 target_sources(${PROJECT_NAME} PRIVATE ${src})
 
 target_link_libraries(${PROJECT_NAME}
-    PUBLIC data_lib
+    PUBLIC data_lib streaming_lib
     PRIVATE pthread stdc++)
 
 
