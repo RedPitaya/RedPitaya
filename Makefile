@@ -305,11 +305,9 @@ SDR_ZIP = SDR-bundle-59-1ba76002.zip
 SDR_URL = https://downloads.redpitaya.com/hamlab/sdr-bundle/$(SDR_ZIP)
 
 sdr: | $(DL)
-ifeq ($(MODEL),$(filter $(MODEL),Z10))
 	wget $(SDR_URL) -O $(DL)/$(SDR_ZIP) --show-progress
 	mkdir -p $(INSTALL_DIR)/www/apps
 	unzip -o $(DL)/$(SDR_ZIP) -d $(INSTALL_DIR)/www/apps
-endif
 
 ################################################################################
 # Red Pitaya tools
