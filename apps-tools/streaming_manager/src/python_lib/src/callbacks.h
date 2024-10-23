@@ -26,6 +26,7 @@ struct ADCPack{
 };
 
 class ADCStreamClient;
+class DACStreamClient;
 
 class ADCCallback
 {
@@ -49,4 +50,24 @@ class ADCCallback
 
 };
 
+class DACCallback
+{
+public:
+	virtual ~DACCallback() {}
+	virtual void sendedPack(DACStreamClient *, uint32_t ch1_size, uint32_t ch2_size) {}
+	virtual void connected(DACStreamClient *, std::string) {}
+	virtual void disconnected(DACStreamClient *, std::string) {}
+	virtual void error(DACStreamClient *, std::string, int) {}
+	virtual void stopped(DACStreamClient *, std::string) {}
+	virtual void stoppedFileEnd(DACStreamClient *, std::string) {}
+	virtual void stoppedFileBroken(DACStreamClient *, std::string) {}
+	virtual void stoppedEmpty(DACStreamClient *, std::string) {}
+	virtual void stoppedMissingFile(DACStreamClient *, std::string) {}
+	virtual void stoppedMemError(DACStreamClient *, std::string) {}
+	virtual void stoppedMemModify(DACStreamClient *, std::string) {}
+
+	virtual void configConnected(DACStreamClient *, std::string) {}
+	virtual void configError(DACStreamClient *, std::string, int) {}
+	virtual void configErrorTimeout(DACStreamClient *, std::string) {}
+};
 #endif

@@ -17,7 +17,16 @@ using namespace std;
 class CReaderController
 {
 public:
-	struct Data{
+	struct DataIn
+	{
+		uint8_t *ch[2] = {nullptr, nullptr};
+		size_t size[2] = {0, 0};
+		uint8_t bits = {0};
+		size_t readPosition = 0;
+	};
+
+	struct Data
+	{
 		uint8_t *ch[2] = {nullptr,nullptr};
 		size_t size[2] = {0,0};
 		size_t real_size[2] = {0,0};
@@ -45,11 +54,17 @@ public:
 					  CStreamSettings::DACRepeat _repeat,
 					  uint32_t _rep_count,
 					  uint32_t blockSize);
+
+	static Ptr Create(DataIn *dataIn, CStreamSettings::DACRepeat _repeat, uint32_t _rep_count, uint32_t blockSize);
+
 	CReaderController(CStreamSettings::DataFormat _fileType,
 					  string _filePath,
 					  CStreamSettings::DACRepeat _repeat,
 					  uint32_t _rep_count,
 					  uint32_t blockSize);
+
+	CReaderController(DataIn *dataIn, CStreamSettings::DACRepeat _repeat, uint32_t _rep_count, uint32_t blockSize);
+
 	~CReaderController();
 
 	auto isOpen() -> CReaderController::OpenResult;
@@ -66,6 +81,7 @@ private:
 		size_t size = 0;
 		size_t current_pos = 0;
 		uint8_t bits = 0;
+		bool memoryMode = false;
 		void deleteBuffer();
 		bool isEnded() { return size == current_pos; }
 		TemperaryBuffer(){};
@@ -80,7 +96,7 @@ private:
 
 	auto checkTDMSFile() -> OpenResult;
 	auto checkWavFile() -> OpenResult;
-	// auto getBufferFull(uint8_t **ch1, size_t *size_ch1, uint8_t **ch2, size_t *size_ch2) -> void;
+	auto checkMemory() -> OpenResult;
 	auto getBuffer(Data &data) -> bool;
 	auto getBufferWav(Data &data) -> bool;
 	auto getBufferTdms(Data &data) -> bool;
@@ -112,6 +128,7 @@ private:
 	size_t m_channel2Size;
 	uint32_t m_blockSize;
 	uint8_t *m_dataBuffers[2];
+	DataIn *m_genData;
 };
 
 #endif

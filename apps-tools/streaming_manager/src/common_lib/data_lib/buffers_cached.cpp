@@ -142,6 +142,13 @@ auto CBuffersCached::isWaitToDestory() -> bool
 	return m_needDestroy;
 }
 
+auto CBuffersCached::isEmpty() -> bool
+{
+	int sval;
+	sem_getvalue(&m_countsem, &sval);
+	return sval == 0;
+}
+
 inline auto CBuffersCached::getFreeSize() -> uint32_t
 {
 	return m_ringSize - (m_ringEnd < m_ringStart ? ((m_ringEnd + m_ringSize) - m_ringStart) : (m_ringEnd - m_ringSize));

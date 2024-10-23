@@ -56,9 +56,11 @@ include_directories(
         ${PROJECT_SOURCE_DIR}/src)
 
 list(APPEND src
-            ${PROJECT_SOURCE_DIR}/src/adc_streaming.cpp
-            ${PROJECT_SOURCE_DIR}/src/common.cpp
-        )
+        ${PROJECT_SOURCE_DIR}/src/adc_streaming.cpp
+        ${PROJECT_SOURCE_DIR}/src/dac_streaming.cpp
+        ${PROJECT_SOURCE_DIR}/src/config.cpp
+        ${PROJECT_SOURCE_DIR}/src/common.cpp
+)
 
 if(WIN32)
     set(WIN_SUFFIX -win)
@@ -69,7 +71,7 @@ endif()
 
 function(BuildLibrary PyVerName PyVer)
 
-SWIG_ADD_LIBRARY(${PROJECT_NAME}${PyVerName} LANGUAGE python SOURCES src/streaming.i ${src})
+SWIG_ADD_LIBRARY(${PROJECT_NAME}${PyVerName} LANGUAGE python SOURCES src/streaming.i ${src} ${INC_ALL})
 
 if(JENKINS_BUILD)
     target_include_directories(${PROJECT_NAME}${PyVerName} PRIVATE /opt/python/${OS_PATH}/include/python${PyVer})
@@ -113,7 +115,7 @@ if(IS_INSTALL)
         #     DESTINATION ${INSTALL_DIR}/streaming/${PROJECT_NAME}/python PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
         #     GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_WRITE WORLD_EXECUTE)
 
-        install(FILES examples/adc_example_1.py examples/adc_example_2.py
+        install(FILES examples/adc_example_1.py examples/adc_example_2.py examples/dac_example_1.py examples/dac_example_2.py examples/dac_example_3.py
             DESTINATION ${INSTALL_DIR}/streaming/${PROJECT_NAME}/python PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
             GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_WRITE WORLD_EXECUTE)
 

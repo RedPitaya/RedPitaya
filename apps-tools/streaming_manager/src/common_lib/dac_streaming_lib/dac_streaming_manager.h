@@ -50,6 +50,21 @@ public:
 	static Ptr Create(std::string _host, bool verbose);
 	CDACStreamingManager(std::string _host, bool verbose);
 
+	static Ptr Create(uint8_t *ch[2],
+					  size_t size[2],
+					  uint8_t bytesPerSamp,
+					  CStreamSettings::DACRepeat _repeat,
+					  int32_t _rep_count,
+					  uint32_t blockSize,
+					  bool verbose);
+	CDACStreamingManager(uint8_t *ch[2],
+						 size_t size[2],
+						 uint8_t bytesPerSamp,
+						 CStreamSettings::DACRepeat _repeat,
+						 int32_t _rep_count,
+						 uint32_t blockSize,
+						 bool verbose);
+
 	~CDACStreamingManager();
 	CDACStreamingManager(const CDACStreamingManager &) = delete;
 	CDACStreamingManager(CDACStreamingManager &&) = delete;
@@ -61,6 +76,8 @@ public:
 	auto getBufferManager() -> DataLib::CBuffersCached::Ptr;
 	auto getBuffer() -> const DataLib::CDataBuffersPackDMA::Ptr;
 	auto unlockBuffer() -> void;
+	auto isEmptyBuffer() -> bool;
+	auto isRunned() -> bool;
 
 	auto getChannels(bool *ch1Active, bool *ch2Active) -> bool;
 

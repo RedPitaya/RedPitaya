@@ -69,6 +69,47 @@ CDACStreamingManager::CDACStreamingManager(std::string _host, bool verbose)
 	, m_verbose(verbose)
 {}
 
+CDACStreamingManager::Ptr CDACStreamingManager::Create(uint8_t *ch[2],
+													   size_t size[2],
+													   uint8_t bytesPerSamp,
+													   CStreamSettings::DACRepeat _repeat,
+													   int32_t _rep_count,
+													   uint32_t blockSize,
+													   bool verbose)
+{
+	return std::make_shared<CDACStreamingManager>(ch, size, bytesPerSamp, _repeat, _rep_count, blockSize, verbose);
+}
+
+CDACStreamingManager::CDACStreamingManager(uint8_t *ch[2],
+										   size_t size[2],
+										   uint8_t bytesPerSamp,
+										   CStreamSettings::DACRepeat _repeat,
+										   int32_t _rep_count,
+										   uint32_t blockSize,
+										   bool verbose)
+	: m_use_local_file(true)
+	, m_fileType()
+	, m_host("")
+	, m_filePath("")
+	, m_asionet(nullptr)
+	, m_repeat(_repeat)
+	, m_rep_count(_rep_count)
+	, m_readerController(nullptr)
+	, m_buffer(DataLib::CBuffersCached::create())
+	, m_isRun(false)
+	, m_verbose(verbose)
+	, m_blockSize(blockSize)
+{
+	CReaderController::DataIn *data = new CReaderController::DataIn();
+	data->ch[0] = ch[0];
+	data->ch[1] = ch[1];
+	data->size[0] = size[0];
+	data->size[1] = size[1];
+	data->bits = bytesPerSamp * 8;
+	data->readPosition = 0;
+	m_readerController = new CReaderController(data, m_repeat, m_rep_count, blockSize);
+}
+
 CDACStreamingManager::~CDACStreamingManager()
 {
 	this->stop();
@@ -157,6 +198,11 @@ auto CDACStreamingManager::getBufferManager() -> DataLib::CBuffersCached::Ptr
 	return m_buffer;
 }
 
+auto CDACStreamingManager::isEmptyBuffer() -> bool
+{
+	return m_buffer->isEmpty();
+}
+
 auto CDACStreamingManager::threadFunc() -> void
 {
 	try {
@@ -235,6 +281,11 @@ auto CDACStreamingManager::threadFunc() -> void
 	} catch (std::exception &e) {
 		ERROR_LOG("%s", e.what())
 	}
+}
+
+auto CDACStreamingManager::isRunned() -> bool
+{
+	return m_isThreadRun;
 }
 
 auto CDACStreamingManager::isLocalMode() -> bool

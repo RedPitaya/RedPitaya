@@ -1,7 +1,22 @@
 #include "reader_controller.h"
 #include "data_lib/neon_asm.h"
+#include "logger_lib/file_logger.h"
 
 // constexpr size_t g_max_buff = 32 * 1024;
+
+CReaderController::Ptr CReaderController::Create(CStreamSettings::DataFormat _fileType,
+												 std::string _filePath,
+												 CStreamSettings::DACRepeat _repeat,
+												 uint32_t _rep_count,
+												 uint32_t blockSize)
+{
+	return std::make_shared<CReaderController>(_fileType, _filePath, _repeat, _rep_count, blockSize);
+}
+
+CReaderController::Ptr CReaderController::Create(DataIn *dataIn, CStreamSettings::DACRepeat _repeat, uint32_t _rep_count, uint32_t blockSize)
+{
+	return std::make_shared<CReaderController>(dataIn, _repeat, _rep_count, blockSize);
+}
 
 CReaderController::CReaderController(CStreamSettings::DataFormat _fileType,
 									 std::string _filePath,
@@ -26,9 +41,12 @@ CReaderController::CReaderController(CStreamSettings::DataFormat _fileType,
 	, m_channel1Size(0)
 	, m_channel2Size(0)
 	, m_blockSize(blockSize)
+	, m_genData(nullptr)
 {
 	m_dataBuffers[0] = new uint8_t[blockSize];
 	m_dataBuffers[1] = new uint8_t[blockSize];
+	m_tempBuffer[0].memoryMode = false;
+	m_tempBuffer[1].memoryMode = false;
 
 	if (m_repeat.value == CStreamSettings::DACRepeat::DAC_REP_ON && m_rep_count == 0) {
 		m_rep_count = 1;
@@ -45,9 +63,51 @@ CReaderController::CReaderController(CStreamSettings::DataFormat _fileType,
 	resetReadFromBuffer();
 }
 
+CReaderController::CReaderController(DataIn *dataIn, CStreamSettings::DACRepeat _repeat, uint32_t _rep_count, uint32_t blockSize)
+	: m_fileType(CStreamSettings::DataFormat::BIN)
+	, m_filePath("")
+	, m_repeat(_repeat)
+	, m_rep_count(_rep_count)
+	, m_wavReader(nullptr)
+	, m_tdmsFile(nullptr)
+	, m_tdmsSegments()
+	, m_currentSegment(0)
+	, m_currentMetadata(0)
+	, m_currentVecMetadataPtr()
+	, m_currentMetadataPtr()
+	, m_result(OpenResult::OR_CLOSE)
+	, m_channel1Present(false)
+	, m_channel2Present(false)
+	, m_checkEmptyFile(false)
+	, m_channel1Size(0)
+	, m_channel2Size(0)
+	, m_blockSize(blockSize)
+	, m_genData(dataIn)
+{
+	m_dataBuffers[0] = new uint8_t[blockSize];
+	m_dataBuffers[1] = new uint8_t[blockSize];
+	m_tempBuffer[0].memoryMode = true;
+	m_tempBuffer[1].memoryMode = true;
+
+	if (m_repeat.value == CStreamSettings::DACRepeat::DAC_REP_ON && m_rep_count == 0) {
+		m_rep_count = 1;
+	}
+	if (dataIn) {
+		if (dataIn->ch[0] && dataIn->ch[1] && dataIn->size[0] != dataIn->size[1])
+			FATAL("The buffers of the first and second channels must be equal.")
+		if (dataIn->size[0] & 0x1 || dataIn->size[1] & 0x1)
+			FATAL("Data buffers must be a multiple of 2")
+	} else {
+		FATAL("Memory not initialized")
+	}
+	m_result = checkFile();
+	resetReadFromBuffer();
+}
+
 void CReaderController::TemperaryBuffer::deleteBuffer()
 {
-	delete[] buffer;
+	if (!memoryMode)
+		delete[] buffer;
 	buffer = nullptr;
 	size = 0;
 	current_pos = 0;
@@ -61,6 +121,7 @@ CReaderController::~CReaderController()
 	delete m_tdmsFile;
 	delete[] m_dataBuffers[0];
 	delete[] m_dataBuffers[1];
+	delete m_genData;
 }
 
 auto CReaderController::getChannels(bool *ch1Active, bool *ch2Active) -> void
@@ -97,7 +158,7 @@ auto CReaderController::openWav() -> bool
 			return true;
 		}
 	} catch (const std::bad_alloc &e) {
-		std::cout << "[CReaderController]: Error Allocation failed: " << e.what() << '\n';
+		ERROR_LOG("Error Allocation failed: %s ", e.what());
 	}
 	return false;
 }
@@ -124,7 +185,7 @@ auto CReaderController::openTDMS() -> bool
 			return true;
 		}
 	} catch (const std::bad_alloc &e) {
-		std::cout << "[CReaderController]: Error Allocation failed: " << e.what() << '\n';
+		ERROR_LOG("Error Allocation failed: %s ", e.what());
 	}
 	return false;
 }
@@ -133,30 +194,27 @@ auto CReaderController::resetReadFromBuffer() -> bool
 {
 	m_tempBuffer[0].deleteBuffer();
 	m_tempBuffer[1].deleteBuffer();
-	m_checkEmptyFile = true;
-
-	if (m_fileType.value == CStreamSettings::DataFormat::WAV) {
-		return openWav();
-	}
-
-	if (m_fileType.value == CStreamSettings::DataFormat::TDMS) {
-		m_currentSegment = 0;
-		m_currentMetadata = -1;
-		if (m_tdmsFile)
-			m_tdmsFile->clearPrevMetadata();
-		moveNextMetadata();
+	if (m_genData) {
+		m_genData->readPosition = 0;
+		m_result = OpenResult::OR_OK;
 		return true;
-	}
-	return false;
-}
+	} else {
+		m_checkEmptyFile = true;
 
-CReaderController::Ptr CReaderController::Create(CStreamSettings::DataFormat _fileType,
-												 std::string _filePath,
-												 CStreamSettings::DACRepeat _repeat,
-												 uint32_t _rep_count,
-												 uint32_t blockSize)
-{
-	return std::make_shared<CReaderController>(_fileType, _filePath, _repeat, _rep_count, blockSize);
+		if (m_fileType.value == CStreamSettings::DataFormat::WAV) {
+			return openWav();
+		}
+
+		if (m_fileType.value == CStreamSettings::DataFormat::TDMS) {
+			m_currentSegment = 0;
+			m_currentMetadata = -1;
+			if (m_tdmsFile)
+				m_tdmsFile->clearPrevMetadata();
+			moveNextMetadata();
+			return true;
+		}
+		return false;
+	}
 }
 
 auto CReaderController::writeFromTemp(
@@ -229,18 +287,20 @@ auto CReaderController::getBufferPrepared(Data &data) -> BufferResult
 		if (m_tempBuffer[0].isEnded() || m_tempBuffer[1].isEnded()) {
 			Data data_read;
 			auto res = getBuffer(data_read);
-			data.bits = data_read.bits;
 			if (m_checkEmptyFile) {
 				if (data_read.size[0] || data_read.size[1]) {
 					m_checkEmptyFile = false;
 				} else {
-					delete[] data_read.ch[0];
-					delete[] data_read.ch[1];
+					if (m_genData == nullptr) {
+						delete[] data_read.ch[0];
+						delete[] data_read.ch[1];
+					}
 					return BR_EMPTY;
 				}
 			}
 
 			if (res) { // if don't use memory cache
+				data.bits = data_read.bits;
 				if (data_read.ch[0]) {
 					m_tempBuffer[0].deleteBuffer();
 					m_tempBuffer[0].buffer = data_read.ch[0];
@@ -280,10 +340,22 @@ auto CReaderController::getBufferPrepared(Data &data) -> BufferResult
 
 auto CReaderController::getBuffer(Data &data) -> bool
 {
-	if (m_fileType.value == CStreamSettings::DataFormat::WAV) {
+	if (m_genData) {
+		data.bits = m_genData->bits;
+		for (int i = 0; i < 2; i++) {
+			if (m_genData->ch[i]) {
+				data.ch[i] = m_genData->ch[i] + m_genData->readPosition;
+				data.size[i] = std::min(m_genData->size[i] > m_genData->readPosition ? m_genData->size[i] - m_genData->readPosition : 0,
+										(size_t) m_blockSize);
+			} else {
+				data.size[i] = 0;
+			}
+		}
+		m_genData->readPosition += std::max(data.size[0], data.size[1]);
+		return data.size[0] > 0 || data.size[1] > 0;
+	} else if (m_fileType.value == CStreamSettings::DataFormat::WAV) {
 		return getBufferWav(data);
-	}
-	if (m_fileType.value == CStreamSettings::DataFormat::TDMS) {
+	} else if (m_fileType.value == CStreamSettings::DataFormat::TDMS) {
 		return getBufferTdms(data);
 	}
 	return false;
@@ -310,63 +382,6 @@ auto CReaderController::getBufferWav(Data &data) -> bool
 	}
 	return false;
 }
-
-// auto CReaderController::getBufferFull(uint8_t **ch1, size_t *size_ch1, uint8_t **ch2, size_t *size_ch2) -> void
-// {
-// 	try {
-// 		if (m_channel1Present) {
-// 			*ch1 = new uint8_t[m_channel1Size];
-// 			*size_ch1 = m_channel1Size;
-// 		}
-// 		if (m_channel2Present) {
-// 			*ch2 = new uint8_t[m_channel2Size];
-// 			*size_ch2 = m_channel2Size;
-// 		}
-// 		uint8_t *ch1_read = nullptr;
-// 		uint8_t *ch2_read = nullptr;
-// 		size_t size1_read = 0;
-// 		size_t size2_read = 0;
-// 		size_t lastPos1 = 0;
-// 		size_t lastPos2 = 0;
-
-// 		while (getBuffer(&ch1_read, &size1_read, &ch2_read, &size2_read)) {
-// 			if (ch1_read && size1_read > 0) {
-// 				if (lastPos1 + size1_read > m_channel1Size) {
-// 					size1_read = m_channel1Size - lastPos1;
-// 				}
-// 				memcpy_neon((&(**ch1) + lastPos1), ch1_read, size1_read);
-// 				lastPos1 += size1_read;
-// 			}
-// 			if (ch2_read && size2_read > 0) {
-// 				if (lastPos2 + size2_read > m_channel2Size) {
-// 					size2_read = m_channel2Size - lastPos2;
-// 				}
-// 				memcpy_neon((&(**ch2) + lastPos2), ch2_read, size2_read);
-// 				lastPos2 += size2_read;
-// 			}
-// 			if (ch1_read) {
-// 				delete[] ch1_read;
-// 				ch1_read = nullptr;
-// 				size1_read = 0;
-// 			}
-// 			if (ch2_read) {
-// 				delete[] ch2_read;
-// 				ch2_read = nullptr;
-// 				size2_read = 0;
-// 			}
-// 		}
-// 	} catch (const std::bad_alloc &e) {
-// 		if (*ch1)
-// 			delete[] *ch1;
-// 		*ch1 = nullptr;
-// 		if (*ch2)
-// 			delete[] *ch2;
-// 		*ch2 = nullptr;
-// 		*size_ch1 = 0;
-// 		*size_ch2 = 0;
-// 		std::cout << "[CReaderController]: Error Allocation failed: " << e.what() << '\n';
-// 	}
-// }
 
 auto CReaderController::getBufferTdms(Data &data) -> bool
 {
@@ -478,6 +493,9 @@ auto CReaderController::checkFile() -> OpenResult
 	m_channel2Present = false;
 	m_channel1Size = 0;
 	m_channel2Size = 0;
+	if (m_genData) {
+		return checkMemory();
+	}
 	if (m_fileType.value == CStreamSettings::DataFormat::TDMS) {
 		return checkTDMSFile();
 	}
@@ -485,6 +503,18 @@ auto CReaderController::checkFile() -> OpenResult
 		return checkWavFile();
 	}
 	return OpenResult::OR_CLOSE;
+}
+
+auto CReaderController::checkMemory() -> OpenResult
+{
+	m_channel1Present = m_genData->ch[0] != nullptr;
+	m_channel2Present = m_genData->ch[1] != nullptr;
+	m_channel1Size = m_genData->size[0];
+	m_channel2Size = m_genData->size[0];
+	if (m_channel1Present || m_channel2Present) {
+		return OpenResult::OR_OK;
+	}
+	return OpenResult::OR_MISSING_CHANNELS;
 }
 
 auto CReaderController::checkWavFile() -> OpenResult
@@ -549,6 +579,8 @@ auto CReaderController::checkTDMSFile() -> OpenResult
 					channel1DataSize += m->RawData.Size;
 					auto type = m->RawData.DataType.GetDataType();
 					switch (type) {
+						case TDMS::TDMSType::Integer8:
+						case TDMS::TDMSType::UnsignedInteger8:
 						case TDMS::TDMSType::Integer16:
 						case TDMS::TDMSType::UnsignedInteger16:
 							break;
@@ -562,6 +594,8 @@ auto CReaderController::checkTDMSFile() -> OpenResult
 					channel2DataSize += m->RawData.Size;
 					auto type = m->RawData.DataType.GetDataType();
 					switch (type) {
+						case TDMS::TDMSType::Integer8:
+						case TDMS::TDMSType::UnsignedInteger8:
 						case TDMS::TDMSType::Integer16:
 						case TDMS::TDMSType::UnsignedInteger16:
 							break;

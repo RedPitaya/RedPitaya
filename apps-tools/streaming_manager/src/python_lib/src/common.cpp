@@ -429,3 +429,79 @@ auto requestStartADC(ClientNetConfigManager::Ptr cl,
 	cl->removeHadlers();
 	return !timeout;
 }
+
+auto requestStartDACStreaming(ClientNetConfigManager::Ptr cl, std::string host, uint8_t ac, StateRunnedHosts *runned_host, bool verbous)
+	-> bool
+{
+	std::atomic<int> rstart_counter;
+
+	cl->errorNofiy.connect([&](ClientNetConfigManager::Errors errors, std::string host, error_code err) {
+		const std::lock_guard lock(g_rmutex);
+		if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
+			aprintf(stderr, "%s Error: %s %s\n", getTS(": ").c_str(), host.c_str(), err.message().c_str());
+			rstart_counter--;
+		}
+	});
+
+	cl->serverDacStoppedMemErrorNofiy.connect([&](std::string host) {
+		const std::lock_guard lock(g_rmutex);
+		if (verbous)
+			aprintf(stdout, "%s Streaming started: %s memory error [FAIL]\n", getTS(": ").c_str(), host.c_str());
+		rstart_counter--;
+	});
+
+	cl->serverDacStoppedMemModifyNofiy.connect([&](std::string host) {
+		const std::lock_guard lock(g_rmutex);
+		if (verbous)
+			aprintf(stdout, "%s Streaming started: %s memory modify [FAIL]\n", getTS(": ").c_str(), host.c_str());
+		rstart_counter--;
+	});
+
+	cl->serverDacStoppedConfigErrorNofiy.connect([&](std::string host) {
+		const std::lock_guard lock(g_rmutex);
+		if (verbous)
+			aprintf(stdout, "%s Streaming started: %s config error [FAIL]\n", getTS(": ").c_str(), host.c_str());
+		rstart_counter--;
+	});
+
+	cl->configFileMissedNotify.connect([&](std::string host) {
+		const std::lock_guard lock(g_rmutex);
+		if (verbous)
+			aprintf(stdout, "%s Streaming started: %s config file is missed [FAIL]\n", getTS(": ").c_str(), host.c_str());
+		rstart_counter--;
+	});
+
+	cl->serverDacStartedNofiy.connect([&](std::string host) {
+		const std::lock_guard lock(g_rmutex);
+		if (verbous)
+			aprintf(stdout, "%s DAC streaming started: %s TCP mode [OK]\n", getTS(": ").c_str(), host.c_str());
+		rstart_counter--;
+		*runned_host = StateRunnedHosts::TCP;
+	});
+
+	cl->serverDacStartedSDNofiy.connect([&](std::string host) {
+		const std::lock_guard lock(g_rmutex);
+		if (verbous)
+			aprintf(stdout, "%s DAC streaming started: %s Local mode [OK]\n", getTS(": ").c_str(), host.c_str());
+		rstart_counter--;
+		*runned_host = StateRunnedHosts::LOCAL;
+	});
+
+	rstart_counter = 1;
+	if (verbous)
+		aprintf(stdout, "%s Send start command to master board: %s\n", getTS(": ").c_str(), host.c_str());
+	if (!cl->sendDACServerStart(host, std::to_string(ac))) {
+		rstart_counter--;
+	}
+	auto beginTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count();
+	auto timeout = false;
+	while (!timeout && rstart_counter > 0) {
+		sleepMs(100);
+		timeout = (std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count()
+					   - beginTime
+				   > 5000);
+	}
+
+	cl->removeHadlers();
+	return !timeout;
+}

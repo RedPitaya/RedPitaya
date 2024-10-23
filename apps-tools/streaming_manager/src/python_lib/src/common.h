@@ -36,4 +36,7 @@ auto requestStopStreaming(ClientNetConfigManager::Ptr cl,
 				   std::list<std::string> masterHosts,
 				   std::list<std::string> slaveHosts,
 				   bool verbous) -> bool;
+
+auto requestStartDACStreaming(ClientNetConfigManager::Ptr cl, std::string host, uint8_t ac, StateRunnedHosts *runned_host, bool verbous)
+	-> bool;
 #endif

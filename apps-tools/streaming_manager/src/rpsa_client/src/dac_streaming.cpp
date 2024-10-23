@@ -18,6 +18,7 @@ std::atomic<bool> dac_sig_exit_flag(false);
 std::map<std::string, long long int> g_dac_timeBegin;
 std::map<std::string, bool> g_dac_terminate;
 std::map<std::string, bool> g_dac_connected;
+std::map<std::string, bool> g_dac_fileEnded;
 std::map<std::string, uint64_t> g_dac_BytesCount;
 std::map<std::string, uint64_t> g_dac_packCounter_ch1;
 std::map<std::string, uint64_t> g_dac_packCounter_ch2;
@@ -64,6 +65,7 @@ auto dac_runClient(DACSettingsClient conf, uint32_t blockSize) -> void
 	g_dac_packCounter_ch2[conf.host] = 0;
 	g_dac_BytesCount[conf.host] = 0;
 	g_dac_terminate[conf.host] = false;
+	g_dac_fileEnded[conf.host] = false;
 
 	auto file_type = CDACStreamingManager::WAV_TYPE;
 
@@ -131,6 +133,7 @@ auto dac_runClient(DACSettingsClient conf, uint32_t blockSize) -> void
 			case CDACStreamingManager::NotifyResult::NR_ENDED: {
 				if (conf.verbous)
 					aprintf(stdout, "%s All data from the file has been read: %s\n", getTS(": ").c_str(), conf.dac_file.c_str());
+				g_dac_fileEnded[conf.host] = true;
 				break;
 			}
 			default:
@@ -193,7 +196,16 @@ auto dac_runClient(DACSettingsClient conf, uint32_t blockSize) -> void
 			}
 
 			if (g_dac_terminate[conf.host]) {
-				break;
+				if (g_dac_connected[conf.host]) {
+					if (g_dac_fileEnded[conf.host]) {
+						if (g_dac_manger[conf.host]->isEmptyBuffer())
+							break;
+					} else {
+						break;
+					}
+				} else {
+					break;
+				}
 			}
 
 			std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();

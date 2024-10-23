@@ -37,6 +37,7 @@ public:
 	auto notifyToDestory() -> bool;
 	auto isWaitToDestory() -> bool;
 	auto getDataSize() -> uint32_t;
+	auto isEmpty() -> bool;
 
 	auto setOSCRate(uint64_t rate) -> void;
 	auto setADCBits(uint8_t bits) -> void;

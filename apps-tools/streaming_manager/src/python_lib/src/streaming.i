@@ -1,3 +1,4 @@
+// clang-format off
 %module(directors="1") streaming
 
 %include <stdint.i>
@@ -11,14 +12,17 @@
 %{
 #include "callbacks.h"
 #include "adc_streaming.h"
+#include "dac_streaming.h"
 %}
 
 
 %feature("director") ADCCallback;
+%feature("director") DACCallback;
 
 
 %template(StringVector) std::vector<std::string>;
 %template(Int16Vector) std::vector<int16_t>;
+%template(Int8Vector) std::vector<int8_t>;
 
 %typemap(out) std::vector<int16_t>* %{
     $result = PyList_New($1->size()); // Create outer Python list of correct size
@@ -30,4 +34,5 @@
 
 /* Parse the header file to generate wrappers */
 %include "adc_streaming.h"
+%include "dac_streaming.h"
 %include "callbacks.h"
