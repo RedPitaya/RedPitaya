@@ -70,7 +70,7 @@ CDACStreamingManager::CDACStreamingManager(std::string _host, bool verbose)
 {}
 
 CDACStreamingManager::Ptr CDACStreamingManager::Create(uint8_t *ch[2],
-													   size_t size[2],
+													   uint64_t size[2],
 													   uint8_t bytesPerSamp,
 													   CStreamSettings::DACRepeat _repeat,
 													   int32_t _rep_count,
@@ -81,7 +81,7 @@ CDACStreamingManager::Ptr CDACStreamingManager::Create(uint8_t *ch[2],
 }
 
 CDACStreamingManager::CDACStreamingManager(uint8_t *ch[2],
-										   size_t size[2],
+										   uint64_t size[2],
 										   uint8_t bytesPerSamp,
 										   CStreamSettings::DACRepeat _repeat,
 										   int32_t _rep_count,

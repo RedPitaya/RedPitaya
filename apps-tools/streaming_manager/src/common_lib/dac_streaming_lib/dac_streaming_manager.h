@@ -51,14 +51,14 @@ public:
 	CDACStreamingManager(std::string _host, bool verbose);
 
 	static Ptr Create(uint8_t *ch[2],
-					  size_t size[2],
+					  uint64_t size[2],
 					  uint8_t bytesPerSamp,
 					  CStreamSettings::DACRepeat _repeat,
 					  int32_t _rep_count,
 					  uint32_t blockSize,
 					  bool verbose);
 	CDACStreamingManager(uint8_t *ch[2],
-						 size_t size[2],
+						 uint64_t size[2],
 						 uint8_t bytesPerSamp,
 						 CStreamSettings::DACRepeat _repeat,
 						 int32_t _rep_count,

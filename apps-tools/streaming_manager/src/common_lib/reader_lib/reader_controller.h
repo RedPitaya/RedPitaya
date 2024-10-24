@@ -28,8 +28,8 @@ public:
 	struct Data
 	{
 		uint8_t *ch[2] = {nullptr,nullptr};
-		size_t size[2] = {0,0};
-		size_t real_size[2] = {0,0};
+		size_t size[2] = {0, 0};
+		size_t real_size[2] = {0, 0};
 		uint8_t bits = {0};
 	};
 
