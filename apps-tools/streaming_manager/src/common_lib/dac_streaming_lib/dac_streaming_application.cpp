@@ -114,15 +114,15 @@ void CDACStreamingApplication::genWorker()
 				if (onePackMode && repeatInOpenPackMode == 0 && one_pack_inf_mode == false) {
 					break;
 				}
-				if (notRun) {
-					m_gen->setDataBits(ch18Bit,ch28Bit);
-					m_gen->start(ch1Address,ch2Address);
-					notRun = false;
-				}
 				// buffer->debugPackDAC();
 				bool ret = false;
 				do {
 					ret = m_gen->setDataAddress(indexForWrite, ch1Address, ch2Address, chSize);
+					if (notRun) {
+						m_gen->setDataBits(ch18Bit,ch28Bit);
+						m_gen->start(ch1Address,ch2Address);
+						notRun = false;
+					}
 					if (!m_GenThreadRun)
 						break;
 				} while (!ret);

@@ -299,7 +299,6 @@ scpi_clean:
 # SDR
 ################################################################################
 
-.PHONY: sdr
 
 SDR_ZIP = SDR-bundle-59-1ba76002.zip
 SDR_URL = https://downloads.redpitaya.com/hamlab/sdr-bundle/$(SDR_ZIP)

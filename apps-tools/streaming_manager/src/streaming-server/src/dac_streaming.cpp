@@ -134,8 +134,8 @@ auto startDACServer(bool verbMode, uint8_t activeChannels) -> void
 			activeChannels = (int) chActive[0] + (int) chActive[1];
 		}
 
-		memmanager->setReserverdMemory(uio_lib::MM_DAC, settings.getDACSize());
 		memmanager->releaseMemory(MM_DAC);
+		memmanager->setReserverdMemory(uio_lib::MM_DAC, settings.getDACSize());
 		auto mbSize = memmanager->getMemoryBlockSize();
 		auto ramSize = memmanager->getReserverdMemory(MM_DAC);
 		if (ramSize < memmanager->getMinRAMSize(MM_DAC)) {

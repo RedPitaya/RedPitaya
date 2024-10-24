@@ -251,8 +251,8 @@ auto startServer(bool verbMode, bool testMode, bool is_master) -> void
 				channelsActive++;
 			}
 		}
-		memmanager->setReserverdMemory(uio_lib::MM_ADC, settings.getADCSize());
 		memmanager->releaseMemory(MM_ADC);
+		memmanager->setReserverdMemory(uio_lib::MM_ADC, settings.getADCSize());
 		auto mbSize = memmanager->getMemoryBlockSize();
 		auto ramSize = memmanager->getReserverdMemory(MM_ADC);
 		if (ramSize < memmanager->getMinRAMSize(MM_ADC)) {
