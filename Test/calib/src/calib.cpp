@@ -1,10 +1,9 @@
 /**
- * $Id: calib.c 1246 2014-02-22 19:05:19Z ales.bardorfer $
+ * $Id: calib.cpp 1246 2024-02-22 $
  *
  * @brief Red Pitaya FE & BE calibration utility.
  *
- * @Author Ales Bardorfer <ales.bardorfer@redpitaya.com>
- *
+
  * (c) Red Pitaya  http://www.redpitaya.com
  *
  * This part of code is written in C programming language.
@@ -12,12 +11,13 @@
  * for more details on the language used herein.
  */
 
-#define _GNU_SOURCE
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <string.h>
+#include <string>
+#include <vector>
+#include <set>
 #include <sys/param.h>
 
 #include "rp_eeprom.h"
@@ -28,6 +28,27 @@
 
 /** Minimal number of command line arguments */
 #define MINARGS 2
+
+using namespace std;
+
+vector<string> split(const string& text, const vector<char>& delimiters) {
+    vector<string> result;
+    string current_token;
+    for (char c : text) {
+        if (find(delimiters.begin(), delimiters.end(), c) != delimiters.end()) {
+            if (!current_token.empty()) {
+                result.push_back(current_token);
+                current_token.clear();
+            }
+        } else {
+            current_token += c;
+        }
+    }
+    if (!current_token.empty()) {
+    result.push_back(current_token);
+    }
+    return result;
+}
 
 /** Program name */
 const char *g_argv0 = NULL;
@@ -70,8 +91,9 @@ void usage()
 /** Write calibration data, obtained from stdin, to eeprom */
 int WriteCalib(rp_HPeModels_t model, bool factory,bool is_new,bool is_modify)
 {
-    const char delimiters[] = " ,:;\t";
-    char buf[2048];
+    std::vector<char> delimiter = {' ', ',',':',';','\t','\n','\r'};
+
+    char buf[4096];
 
     uint8_t *buff = NULL;
     uint16_t size = 0;
@@ -85,7 +107,6 @@ int WriteCalib(rp_HPeModels_t model, bool factory,bool is_new,bool is_modify)
     uint8_t dataStruct = buff[0];
     uint8_t wp = buff[1];
 
-
     rp_eepromWpData_t eeprom;
     rp_eepromUniData_t new_eeprom;
 
@@ -94,68 +115,66 @@ int WriteCalib(rp_HPeModels_t model, bool factory,bool is_new,bool is_modify)
         return -1;
     }
 
+    std::vector<std::string> in_params = split(buf, delimiter);
+
     if (is_modify && !is_new){
         free(buff);
         fprintf(stderr, "ERROR: Invalid flag combination!\n");
         return -1;
     }
+
+    if (is_new && in_params.size () & 0x1){
+        free(buff);
+        fprintf(stderr, "ERROR: Invalid number of parameters. Must be a multiple of 2!\n");
+        return -1;
+    }
+
+    if (in_params.size() == 0){
+        free(buff);
+        fprintf(stderr, "ERROR: No calibration parameters\n");
+        return -1;
+    }
+
     int calibSize = 0;
     if (!is_modify){
-        const char *p = strtok( buf, delimiters );
-        int i = 0;
+
         calibSize = is_new ? MAX_UNIVERSAL_ITEMS_COUNT : getCalibSize(model);
         if (calibSize < 0) return -1;
-        while ( p && i < calibSize ) {
-            long int x = strtol(p, NULL, 0);
+
+        size_t i = 0;
+        size_t j = 0;
+        for(i = 0; i < in_params.size() && i < (size_t)calibSize; i++, j++){
             if (is_new){
-                new_eeprom.item[i].id = x;
-                p = strtok( 0, delimiters );
-                if (!p){
-                    free(buff);
-                    fprintf(stderr, "ERROR: Read calib value failed!\n");
-                    return -1;
-                }
-                long int val = strtol(p, NULL, 0);
-                new_eeprom.item[i].value = val;
+                new_eeprom.item[j].id = stoi(in_params[i]);
+                i++;
+                new_eeprom.item[j].value = stoi(in_params[i]);;
             }else{
-                eeprom.feCalPar[i] = x;
+                eeprom.feCalPar[j] = stoi(in_params[i]);
             }
-            p = strtok( 0, delimiters );
-            i++;
         }
-        new_eeprom.count = i;
+        new_eeprom.count = j;
     }else{
         memcpy(&new_eeprom,buff,size);
-        const char *p = strtok( buf, delimiters );
-        int i = 0;
+
         calibSize = is_new ? MAX_UNIVERSAL_ITEMS_COUNT : getCalibSize(model);
         if (calibSize < 0) return -1;
-        while ( p && i < calibSize ) {
-            long int x = strtol(p, NULL, 0);
+
+        size_t i = 0;
+        for(i = 0; i < in_params.size() && i < (size_t)calibSize; i++){
             int idx = -1;
             for(int z = 0; z < new_eeprom.count; z++){
-                if (new_eeprom.item[z].id == x){
+                if (new_eeprom.item[z].id == stoi(in_params[i])){
                     idx = z;
                     break;
                 }
+                if (idx == -1){
+                    free(buff);
+                    fprintf(stderr, "ERROR: Can't find calibration parameter id = %s\n",in_params[i].c_str());
+                    return -1;
+                }
+                i++;
+                new_eeprom.item[idx].value = stoi(in_params[i]);;
             }
-            if (idx == -1){
-                free(buff);
-                fprintf(stderr, "ERROR: Can't find calibration parameter!\n");
-                return -1;
-            }
-            new_eeprom.item[idx].id = x;
-            p = strtok( 0, delimiters );
-            if (!p){
-                free(buff);
-                fprintf(stderr, "ERROR: Read calib value failed!\n");
-                return -1;
-            }
-            long int val = strtol(p, NULL, 0);
-            new_eeprom.item[idx].value = val;
-
-            p = strtok( 0, delimiters );
-            i++;
         }
     }
 #ifdef DEBUG
@@ -175,7 +194,6 @@ int WriteCalib(rp_HPeModels_t model, bool factory,bool is_new,bool is_modify)
     new_eeprom.dataStructureId = RP_HW_PACK_ID_V5;
     eeprom.wpCheck = wp + 1;
     new_eeprom.wpCheck = wp + 1;
-
     rp_calib_params_t calib;
     uint8_t *wbuff = is_new ? (uint8_t*)&new_eeprom : (uint8_t*)&eeprom;
     size = is_new ? sizeof(rp_eepromUniData_t) : sizeof(rp_eepromWpData_t);
@@ -185,7 +203,8 @@ int WriteCalib(rp_HPeModels_t model, bool factory,bool is_new,bool is_modify)
         return ret;
     }
     free(buff);
-    return rp_CalibrationWriteParams(calib,factory);
+    ret =  rp_CalibrationWriteParams(calib,factory);
+    return ret;
 }
 
 int main(int argc, char **argv)

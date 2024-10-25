@@ -35,7 +35,7 @@
 #define DEFAULT_1_20_FILT_KK 0xd9999a
 
 #define CHECK_GAIN_LIMIT(X) (X < 0 ? 0 : (X > 50 ? 50 : X))
-
+#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 #define CHECK_VALID_GAIN_LIMIT(X) (X >= 0.5 && X <= 1.5)
 
 uint8_t* readFromEpprom(uint16_t *size);

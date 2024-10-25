@@ -490,26 +490,28 @@ rp_calib_error calib_ConvertEEPROM(uint8_t *data,uint16_t size,rp_calib_params_t
     switch (dataStructureId)
     {
         case RP_HW_PACK_ID_V1:{
+            // data - must be rp_eepromWpData_t
             uint16_t ssize = sizeof(rp_calib_params_v1_t);
             if (ssize > size){
                 ERROR_LOG("Invalid data size: %d required %d.",size,ssize);
                 return RP_HW_CALIB_EDM;
             }
             rp_calib_params_v1_t p_v1;
-            memcpy(&p_v1,data,size);
+            memcpy(&p_v1,data,MIN(ssize,size));
             *out = convertV1toCommon(&p_v1,false);
             recalculateGain(out);
             return RP_HW_CALIB_OK;
         }
 
         case RP_HW_PACK_ID_V3:{
+            // data - must be rp_eepromWpData_t
             uint16_t ssize = sizeof(rp_calib_params_v2_t);
             if (ssize > size){
                 ERROR_LOG("Invalid data size: %d required %d.",size,ssize);
                 return RP_HW_CALIB_EDM;
             }
             rp_calib_params_v2_t p_v2;
-            memcpy(&p_v2,data,size);
+            memcpy(&p_v2,data,MIN(ssize,size));
             *out = convertV2toCommon(&p_v2,false);
             recalculateGain(out);
             return RP_HW_CALIB_OK;
@@ -517,32 +519,35 @@ rp_calib_error calib_ConvertEEPROM(uint8_t *data,uint16_t size,rp_calib_params_t
 
 
         case RP_HW_PACK_ID_V2:{
+            // data - must be rp_eepromWpData_t
             uint16_t ssize = sizeof(rp_calib_params_v3_t);
             if (ssize > size){
                 ERROR_LOG("Invalid data size: %d required %d.",size,ssize);
                 return RP_HW_CALIB_EDM;
             }
             rp_calib_params_v3_t p_v3;
-            memcpy(&p_v3,data,size);
+            memcpy(&p_v3,data,MIN(ssize,size));
             *out = convertV3toCommon(&p_v3,false);
             recalculateGain(out);
             return RP_HW_CALIB_OK;
         }
 
         case RP_HW_PACK_ID_V4:{
+            // data - must be rp_eepromWpData_t
             uint16_t ssize = sizeof(rp_calib_params_v1_t);
             if (ssize > size){
                 ERROR_LOG("Invalid data size: %d required %d.",size,ssize);
                 return RP_HW_CALIB_EDM;
             }
             rp_calib_params_v1_t p_v1;
-            memcpy(&p_v1,data,size);
+            memcpy(&p_v1,data,MIN(ssize,size));
             *out = convertV4toCommon(&p_v1,false);
             recalculateGain(out);
             return RP_HW_CALIB_OK;
         }
 
         case RP_HW_PACK_ID_V5:{
+            // data - must be rp_eepromUniData_t
             rp_HPeModels_t model = STEM_125_14_v1_1; // Default model
             int res = rp_HPGetModel(&model);
             if (res != RP_HP_OK){
@@ -556,7 +561,7 @@ rp_calib_error calib_ConvertEEPROM(uint8_t *data,uint16_t size,rp_calib_params_t
                 return RP_HW_CALIB_EDM;
             }
             rp_calib_params_universal_t p_u;
-            memcpy(&p_u,data,size);
+            memcpy(&p_u,data,MIN(ssize,size));
             *out = convertUniversaltoCommon(model,&p_u);
             recalculateGain(out);
             return RP_HW_CALIB_OK;

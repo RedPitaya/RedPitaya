@@ -2,8 +2,7 @@ cmake_minimum_required(VERSION 3.14)
 
 set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
-set(CMAKE_CXX_STANDARD 11)
-set(C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 
 project(calib)
@@ -44,11 +43,11 @@ list(APPEND r_paths
     /opt/redpitaya/lib/web
 )
 
-set(CMAKE_INSTALL_RPATH ${r_paths})
+# set(CMAKE_INSTALL_RPATH ${r_paths})
 
 include_directories(${INSTALL_DIR}/include)
 
-file(GLOB SOURCES "src/*.c")
+file(GLOB SOURCES "src/*.cpp")
 file(GLOB RP_HEADERS "src/*.h")
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
@@ -59,7 +58,7 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 
 
 target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib)
-target_link_libraries(${PROJECT_NAME} PRIVATE rp-hw-calib rp-hw-profiles m)
+target_link_libraries(${PROJECT_NAME} PRIVATE -static rp-hw-calib rp-hw-profiles m)
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${INSTALL_DIR}/bin)
 
