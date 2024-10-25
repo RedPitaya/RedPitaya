@@ -73,7 +73,7 @@ librp_hw_can: librp
 	cmake -B$(abspath $(LIBRP_HW_CAN_DIR)/build) -S$(abspath $(LIBRP_HW_CAN_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(LIBRP_HW_CAN_DIR)/build install -j$(CPU_CORES)
 
-librp_hw_calibration: librp_hw_profiles librp
+librp_hw_calibration: librp_hw_profiles
 	cmake -B$(abspath $(LIBRP_HW_CALIB_DIR)/build) -S$(abspath $(LIBRP_HW_CALIB_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(LIBRP_HW_CALIB_DIR)/build install -j$(CPU_CORES)
 

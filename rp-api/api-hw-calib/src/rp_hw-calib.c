@@ -17,7 +17,6 @@
 
 #include "rp_hw-calib.h"
 #include "calib.h"
-#include "rp.h"
 #include "calib_universal.h"
 
 
