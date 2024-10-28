@@ -5,6 +5,7 @@
 #include <windows.h>
 #endif
 
+#include <filesystem>
 #include <cstring>
 #include <limits>
 #include <sstream>
@@ -30,33 +31,18 @@ auto getTotalSystemMemory() -> uint64_t{
 #endif
 }
 
+
 auto availableSpace(std::string dst,  uint64_t* availableSize) -> int {
-#ifdef _WIN32
-    *availableSize = UINT64_MAX;
-    return 0;
-#else
-    int result = -1;
-    try {
-        struct statvfs devData;
-        memset(&devData, 0, sizeof (struct statvfs));
-        if ((statvfs(dst.c_str(), &devData)) >= 0) {
-            if (availableSize != NULL) {
-                //I don't know if it's right, but I'll set availableSize only if the available size doesn't pass the ulong limit.
-                if (devData.f_bavail  > (std::numeric_limits<uint64_t>::max() / devData.f_bsize)) {
-                    *availableSize = std::numeric_limits<uint64_t>::max();
-                } else {
-                    *availableSize = (uint64_t)devData.f_bavail * (uint64_t)devData.f_bsize;
-                }
-            }
-            result = 0;
-        }
+    std::error_code ec;
+    const std::filesystem::space_info si = std::filesystem::space(dst, ec);
+    if (!ec){
+        *availableSize = si.available;
+        return 0;
+    }else{
+        WARNING("Error in AvailableSpace(): %s\n",ec.message().c_str());
+        *availableSize = 0;
     }
-    catch (std::exception& e)
-    {
-        aprintf(stderr,"Error in AvailableSpace(): %s\n",e.what());
-    }
-    return result;
-#endif
+    return -1;
 }
 
 auto getFreeSpaceDisk(std::string _filePath) -> uint64_t{

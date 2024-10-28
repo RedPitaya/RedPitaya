@@ -199,11 +199,9 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Optio
 	strftime(time_str, sizeof(time_str), "%Y-%m-%d_%H-%M-%S", timenow);
 	g_filenameDate = time_str;
 
-#ifndef _WIN32
 	auto size = getFreeSpaceDisk(option.save_dir != "" ? option.save_dir : ".");
 	if (g_soption.verbous)
-		aprintf(stdout, "%s Free disk space:  %d Mb\n", getTS(": ").c_str(), size / (1024 * 1024));
-#endif
+		aprintf(stdout, "%s Free disk space:  %lld Mb\n", getTS(": ").c_str(), size / (1024 * 1024));
 
 	resetStreamingCounter();
 

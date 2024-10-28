@@ -51,10 +51,12 @@ int main(int argc, char *argv[])
 
 	if (opt.mode == ClientOpt::Mode::ERROR_MODE) {
 		ClientOpt::usage(g_argv0);
+		return 0;
 	}
 
 	if (opt.mode == ClientOpt::Mode::SEARCH) {
 		startSearch(opt);
+		return 0;
 	}
 
 	if (opt.hosts.size() == 0) {

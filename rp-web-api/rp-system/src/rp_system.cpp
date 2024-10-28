@@ -14,6 +14,7 @@
 #include <sys/statvfs.h>
 #include <unistd.h>
 #include <inttypes.h>
+#include <filesystem>
 #include "rp.h"
 #include "rp_hw.h"
 #include "rp_hw-profiles.h"
@@ -115,31 +116,18 @@ uint32_t getReservedMemory(){
 }
 
 auto availableSpace(std::string dst,  uint64_t* availableSize, uint64_t* fullSize) -> int {
-    int result = -1;
-    try {
-        struct statvfs devData;
-        memset(&devData, 0, sizeof (struct statvfs));
-        if ((statvfs(dst.c_str(), &devData)) >= 0) {
-            //I don't know if it's right, but I'll set availableSize only if the available size doesn't pass the ulong limit.
-            if (devData.f_bavail  > (std::numeric_limits<uint64_t>::max() / devData.f_bsize)) {
-                *availableSize = std::numeric_limits<uint64_t>::max();
-            } else {
-                *availableSize = (uint64_t)devData.f_bavail * (uint64_t)devData.f_bsize;
-            }
-
-            if (devData.f_blocks  > (std::numeric_limits<uint64_t>::max() / devData.f_bsize)) {
-                *fullSize = std::numeric_limits<uint64_t>::max();
-            } else {
-                *fullSize = (uint64_t)devData.f_blocks * (uint64_t)devData.f_bsize;
-            }
-            result = 0;
-        }
+    std::error_code ec;
+    const std::filesystem::space_info si = std::filesystem::space(dst, ec);
+    if (!ec){
+        *fullSize = si.capacity;
+        *availableSize = si.available;
+        return 0;
+    }else{
+        WARNING("Error in AvailableSpace(): %s\n",ec.message().c_str());
+        *fullSize = 0;
+        *availableSize = 0;
     }
-    catch (std::exception& e)
-    {
-        WARNING("Error in AvailableSpace(): %s\n",e.what());
-    }
-    return result;
+    return -1;
 }
 
 void rp_WS_Init(){
