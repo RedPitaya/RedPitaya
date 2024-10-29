@@ -71,7 +71,13 @@ rp_calib_error calib_InitModelEx(rp_HPeModels_t model,bool use_factory_zone,rp_c
             case STEM_125_14_LN_CE1_v1_1:
             case STEM_125_14_LN_CE2_v1_1:
             case STEM_125_14_Z7020_v1_0:
-            case STEM_125_14_Z7020_LN_v1_1:{
+            case STEM_125_14_Z7020_LN_v1_1:
+
+            case STEM_125_14_v2_0:
+            case STEM_125_14_Pro_v2_0:
+            case STEM_125_14_Z7020_Pro_v2_0:
+            case STEM_125_14_Z7020_Ind_v2_0:
+            {
                 uint16_t size = sizeof(rp_calib_params_v1_t);
                 uint8_t* buffer = use_factory_zone ? readFromFactoryEpprom(&size) : readFromEpprom(&size);
                 if (buffer && size == sizeof(rp_calib_params_v1_t)){
@@ -211,7 +217,13 @@ rp_calib_error calib_WriteParams(rp_HPeModels_t model, rp_calib_params_t *calib_
             case STEM_125_14_LN_CE1_v1_1:
             case STEM_125_14_LN_CE2_v1_1:
             case STEM_125_14_Z7020_v1_0:
-            case STEM_125_14_Z7020_LN_v1_1:{
+            case STEM_125_14_Z7020_LN_v1_1:
+
+            case STEM_125_14_v2_0:
+            case STEM_125_14_Pro_v2_0:
+            case STEM_125_14_Z7020_Pro_v2_0:
+            case STEM_125_14_Z7020_Ind_v2_0:
+            {
 
                 uint16_t size = sizeof(rp_calib_params_v1_t);
                 uint8_t* buf = (uint8_t *)malloc(size);
@@ -604,7 +616,13 @@ rp_calib_error calib_ConvertToOld(rp_calib_params_t *out){
         case STEM_125_14_LN_CE1_v1_1:
         case STEM_125_14_LN_CE2_v1_1:
         case STEM_125_14_Z7020_v1_0:
-        case STEM_125_14_Z7020_LN_v1_1:{
+        case STEM_125_14_Z7020_LN_v1_1:
+
+        case STEM_125_14_v2_0:
+        case STEM_125_14_Pro_v2_0:
+        case STEM_125_14_Z7020_Pro_v2_0:
+        case STEM_125_14_Z7020_Ind_v2_0:
+        {
             // for ecosystem version 0.98
             out->dataStructureId = RP_HW_PACK_ID_V1;
             for(int i = 0; i < 2; ++i){
