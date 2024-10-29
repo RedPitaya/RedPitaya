@@ -57,7 +57,12 @@
                 STEM_250_12_v1_2b           = 16,
                 STEM_125_14_LN_BO_v1_1      = 17,
                 STEM_125_14_LN_CE1_v1_1     = 18,
-                STEM_125_14_LN_CE2_v1_1     = 19
+                STEM_125_14_LN_CE2_v1_1     = 19,
+
+                STEM_125_14_v2_0            = 20,
+                STEM_125_14_Pro_v2_0        = 21,
+                STEM_125_14_Z7020_Pro_v2_0  = 22,
+                STEM_125_14_Z7020_Ind_v2_0  = 23
             }  rp_HPeModels_t;
         */
         if (model == 0){
@@ -119,6 +124,18 @@
         }
         if (model == 19){
             return "STEM 14"
+        }
+        if (model == 20){
+            return "STEM 14"
+        }
+        if (model == 21){
+            return "STEM 14"
+        }
+        if (model == 22){
+            return "STEM 14-Z20"
+        }
+        if (model == 23){
+            return "STEM 14-Z20"
         }
         console.log("[FATAL ERROR] Unknown model: " + model)
         return ""

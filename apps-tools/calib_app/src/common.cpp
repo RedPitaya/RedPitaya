@@ -69,9 +69,13 @@ auto getModelName() -> std::string{
         case STEM_125_14_LN_BO_v1_1:
         case STEM_125_14_LN_CE1_v1_1:
         case STEM_125_14_LN_CE2_v1_1:
+        case STEM_125_14_v2_0:
+        case STEM_125_14_Pro_v2_0:
             return "Z10";
         case STEM_125_14_Z7020_v1_0:
         case STEM_125_14_Z7020_LN_v1_1:
+        case STEM_125_14_Z7020_Pro_v2_0:
+        case STEM_125_14_Z7020_Ind_v2_0:
             return "Z20_125";
         case STEM_122_16SDR_v1_0:
         case STEM_122_16SDR_v1_1:

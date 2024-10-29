@@ -12,9 +12,6 @@
 #include "math_logic.h"
 #include "common/rp_formatter.h"
 
-#define MAX_FREQ getMaxFreqRate()
-#define MAX_TRIGGER_LEVEL getMaxTriggerLevel()
-
 enum request_mode{
     NONE = 0x0,
     WAV  = 0x1,
