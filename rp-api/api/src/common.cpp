@@ -293,10 +293,10 @@ int32_t cmn_CalibCntsSigned(uint32_t cnts, uint8_t bits, uint32_t gain, uint32_t
     m = ((int32_t)gain * m) / (int32_t)base;
 
     /* check limits */
-    if(m < -(1 << (bits - 1)))
-        m = -(1 << (bits - 1));
-    else if(m > (1 << (bits - 1)))
-        m = (1 << (bits - 1));
+    // if(m < -(1 << (bits - 1)))
+    //     m = -(1 << (bits - 1));
+    // else if(m > (1 << (bits - 1)))
+    //     m = (1 << (bits - 1));
 
     return m;
 }
@@ -310,10 +310,10 @@ uint32_t cmn_CalibCntsUnsigned(uint32_t cnts, uint8_t bits, uint32_t gain, uint3
     m = (gain * m) / base;
 
     /* check limits */
-    if(m < 0)
-        m = 0;
-    else if(m > (1 << bits))
-        m = (1 << bits);
+    // if(m < 0)
+    //     m = 0;
+    // else if(m > (1 << bits))
+    //     m = (1 << bits);
 
     return m;
 }
