@@ -39,7 +39,7 @@ public:
 		CStreamSettings::DataFormat _fileType, std::string &_filePath, uint64_t _samples, bool _v_mode, bool testMode, bool _rp_mode);
 	~CStreamingFile();
 
-	auto run(std::string _prefix) -> void;
+	auto run(std::string _prefix, std::string fileName = "") -> void;
 	auto stopAndFlush() -> void;
 	auto stopImmediately() -> void;
 	auto disableNotify() -> void;

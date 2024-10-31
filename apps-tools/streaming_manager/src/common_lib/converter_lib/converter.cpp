@@ -161,8 +161,6 @@ bool CConverter::convertToWAV(std::string _file_name, int32_t start_seg, int32_t
 		}
 		aprintf(stdout, "%s Started converting to WAV\n", _prefix.c_str());
 		std::string wav_file = _file_name.substr(0, _file_name.size() - 4);
-
-		aprintf(stdout, "%s %s\n", _prefix.c_str(), wav_file.c_str());
 		std::string dir = ".";
 		CStreamingFile::Ptr file_writer = CStreamingFile::create(CStreamSettings::DataFormat::WAV, dir, 0, false, false);
 		file_writer->stopNotify.connect([&](CStreamingFile::EStopReason r) {
@@ -175,7 +173,7 @@ bool CConverter::convertToWAV(std::string _file_name, int32_t start_seg, int32_t
 				m_stopWriteWAV = true;
 			}
 		});
-		file_writer->run(wav_file);
+		file_writer->run("", wav_file + ".wav");
 
 		std::fstream fs_in;
 		std::fstream fs_out;
@@ -274,10 +272,8 @@ bool CConverter::convertToTDMS(std::string _file_name, int32_t start_seg, int32_
 		if (_prefix != "") {
 			_prefix = "[" + _prefix + "] ";
 		}
-		aprintf(stdout, "%s Started converting to TDMS\n", _prefix.c_str());
-		std::string wav_file = _file_name.substr(0, _file_name.size() - 4);
-
-		aprintf(stdout, "%s %s\n", _prefix.c_str(), wav_file.c_str());
+		aprintf(stdout, "%s Started converting to TDMS\n", _file_name.c_str());
+		std::string tdms_file = _file_name.substr(0, _file_name.size() - 4);
 		std::string dir = ".";
 		CStreamingFile::Ptr file_writer = CStreamingFile::create(CStreamSettings::DataFormat::TDMS, dir, 0, false, false);
 		file_writer->stopNotify.connect([&](CStreamingFile::EStopReason r) {
@@ -290,7 +286,7 @@ bool CConverter::convertToTDMS(std::string _file_name, int32_t start_seg, int32_
 				m_stopWriteWAV = true;
 			}
 		});
-		file_writer->run(wav_file);
+		file_writer->run("", tdms_file + ".tdms");
 
 		std::fstream fs_in;
 		std::fstream fs_out;

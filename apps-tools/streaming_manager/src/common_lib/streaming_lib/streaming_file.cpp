@@ -131,7 +131,7 @@ auto CStreamingFile::isOutOfSpace() -> bool
 	return false;
 }
 
-auto CStreamingFile::run(std::string _prefix) -> void
+auto CStreamingFile::run(std::string _prefix, std::string _fileName) -> void
 {
 	m_passSizeSamples.clear();
 	m_passSizeSamples[DataLib::CH1] = 0;
@@ -139,7 +139,7 @@ auto CStreamingFile::run(std::string _prefix) -> void
 	m_passSizeSamples[DataLib::CH3] = 0;
 	m_passSizeSamples[DataLib::CH4] = 0;
 
-	m_file_out = getNewFileName(m_fileType, m_filePath, _prefix);
+	m_file_out = _fileName == "" ? getNewFileName(m_fileType, m_filePath, _prefix) : _fileName;
 	m_fileLogger = CFileLogger::create(m_file_out + ".log", m_testMode);
 	aprintf(stdout, "Run write to: %s\n", m_file_out.c_str());
 	m_file_manager->openFile(m_file_out, false);
