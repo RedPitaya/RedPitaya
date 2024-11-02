@@ -16,7 +16,7 @@ struct OutputPacket
 					 // anyway control byte specifies meaning of the “data” byte
     uint32_t data;
 	uint16_t length; // RLE, how many counts takes this byte
-	
+
 };
 
 class Decoder

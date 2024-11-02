@@ -53,11 +53,12 @@ LIBRP_SWEEP_DIR  		= rp-api/api-sweep
 LIBRPAPP_DIR    		= rp-api/api-app
 LIBRP_FORMATTER_DIR   	= rp-api/api-formatter
 LIBRP_ARB_DIR		   	= rp-api/api-arb
+LIBRP_LA_DIR		   	= rp-api/api-la
 ECOSYSTEM_DIR   		= Applications/ecosystem
 
-.PHONY: api api2 librp librp250_12 librp_hw librp_dsp librp_hw_profiles librp_hw_calibration librp_hw_can librparb librp_sweep librpapp
+.PHONY: api api2 librp librp250_12 librp_hw librp_dsp librp_hw_profiles librp_hw_calibration librp_hw_can librparb librp_sweep librpapp librpla
 
-api: librp librp_hw librp_hw_can librp_dsp librpapp librp_formatter librparb librp_sweep
+api: librp librp_hw librp_hw_can librp_dsp librpapp librp_formatter librparb librp_sweep librpla
 
 api2: librp2
 
@@ -108,6 +109,11 @@ librpapp: librp librp_dsp
 librparb: librp
 	cmake -B$(abspath $(LIBRP_ARB_DIR)/build) -S$(abspath $(LIBRP_ARB_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(LIBRP_ARB_DIR)/build install -j$(CPU_CORES)
+
+
+librpla: librp
+	cmake -B$(abspath $(LIBRP_LA_DIR)/build) -S$(abspath $(LIBRP_LA_DIR)) $(CMAKEVAR)
+	$(MAKE) -C $(LIBRP_LA_DIR)/build install -j$(CPU_CORES)
 
 
 ################################################################################
@@ -312,6 +318,7 @@ sdr: | $(DL)
 # Red Pitaya tools
 ################################################################################
 
+LA_DIR             = Test/la
 LCR_DIR            = Test/lcr
 BODE_DIR           = Test/bode
 MONITOR_DIR        = Test/monitor
@@ -327,14 +334,18 @@ DAISY_TOOL_DIR     = Test/daisy_tool
 STARTUPSH          = $(INSTALL_DIR)/sbin/startup.sh
 
 .PHONY: examples fpgautils
-.PHONY: lcr bode monitor generator acquire acquire_p calib laboardtest spectrum led_control daisy_tool
+.PHONY: lcr bode monitor generator acquire acquire_p calib laboardtest spectrum led_control daisy_tool la
 
-examples: lcr bode monitor calib spectrum acquire acquire_p generator led_control fpgautils daisy_tool
+examples: lcr bode monitor calib spectrum acquire acquire_p generator led_control fpgautils daisy_tool la
 
 
 lcr: api
 	cmake -B$(abspath $(LCR_DIR)/build) -S$(abspath $(LCR_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(LCR_DIR)/build install -j$(CPU_CORES)
+
+la: api
+	cmake -B$(abspath $(LA_DIR)/build) -S$(abspath $(LA_DIR)) $(CMAKEVAR)
+	$(MAKE) -C $(LA_DIR)/build install -j$(CPU_CORES)
 
 bode: api
 	cmake -B$(abspath $(BODE_DIR)/build) -S$(abspath $(BODE_DIR)) $(CMAKEVAR)
@@ -531,6 +542,7 @@ clean: nginx_clean scpi_clean
 	rm -rf $(abspath $(LIBRP_CLIENT_DIR)/build)
 
 	rm -rf $(abspath $(LCR_DIR)/build)
+	rm -rf $(abspath $(LA_DIR)/build)
 	rm -rf $(abspath $(CALIB_DIR)/build)
 	rm -rf $(abspath $(BODE_DIR)/build)
 	rm -rf $(abspath $(ACQUIRE_DIR)/build)
