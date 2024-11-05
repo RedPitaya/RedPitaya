@@ -94,6 +94,8 @@ extern "C" {
 #define RP_EAM    26
 /** Api not initialized */
 #define RP_EANI   27
+/** Execution error */
+#define RP_EOP    28
 
 #define SPECTR_OUT_SIG_LEN (2*1024)
 

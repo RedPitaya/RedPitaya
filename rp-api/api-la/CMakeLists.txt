@@ -87,6 +87,10 @@ link_directories(${INSTALL_DIR}/lib)
 
 list(APPEND src
             ${CMAKE_SOURCE_DIR}/src/rp_la.cpp
+            ${CMAKE_SOURCE_DIR}/src/rp_api.cpp
+            ${CMAKE_SOURCE_DIR}/src/la_acq.cpp
+            ${CMAKE_SOURCE_DIR}/src/common/dma.cpp
+            ${CMAKE_SOURCE_DIR}/src/common/common.cpp
             ${CMAKE_SOURCE_DIR}/src/decoders/can_decoder.cpp
             ${CMAKE_SOURCE_DIR}/src/decoders/can_settings.cpp
             ${CMAKE_SOURCE_DIR}/src/decoders/uart_decoder.cpp

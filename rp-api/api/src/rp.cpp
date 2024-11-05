@@ -202,6 +202,7 @@ const char* rp_GetError(int errorCode) {
         case RP_NOTS:  return "Command not supported";
         case RP_EAM:   return "Error allocate memory";
         case RP_EANI:  return "Api not initialized";
+        case RP_EOP:   return "Execution error";
         default:       return "Unknown error";
     }
 }
