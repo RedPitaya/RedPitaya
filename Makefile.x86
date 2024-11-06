@@ -256,6 +256,59 @@ ifeq ($(MODEL),Z20_250_12a)
 endif
 
 
+ifeq ($(MODEL),Z10_V2)
+
+	# Used in board: stream_app classic logic v0.94 mercury axi4lite barebones
+
+	FPGA_STREAM_APP = $(FPGA_COMMIT)
+	FPGA_CLASSIC 	= $(FPGA_COMMIT)
+	FPGA_LOGIC	= $(FPGA_COMMIT)
+	FPGA_0_94	= $(FPGA_COMMIT)
+	FPGA_MERCURY	= $(FPGA_COMMIT)
+	FPGA_AXI4LITE	= $(FPGA_COMMIT)
+	FPGA_BAREBONE = $(FPGA_COMMIT)
+	FPGA_PYRPL = $(FPGA_COMMIT)
+
+	FPGA_MODEL = Z10
+	FPGA_VERSION = z10_125_v2
+endif
+
+ifeq ($(MODEL),Z10_PRO_V2)
+
+	# Used in board: stream_app classic logic v0.94 mercury axi4lite barebones
+
+	FPGA_STREAM_APP = $(FPGA_COMMIT)
+	FPGA_CLASSIC 	= $(FPGA_COMMIT)
+	FPGA_LOGIC	= $(FPGA_COMMIT)
+	FPGA_0_94	= $(FPGA_COMMIT)
+	FPGA_MERCURY	= $(FPGA_COMMIT)
+	FPGA_AXI4LITE	= $(FPGA_COMMIT)
+	FPGA_BAREBONE = $(FPGA_COMMIT)
+	FPGA_PYRPL = $(FPGA_COMMIT)
+
+	FPGA_MODEL = Z10
+	FPGA_VERSION = z10_125_pro_v2
+endif
+
+ifeq ($(MODEL),Z20_125_V2)
+
+	# Used in board: stream_app classic logic v0.94 mercury axi4lite
+
+	FPGA_STREAM_APP = $(FPGA_COMMIT)
+	FPGA_CLASSIC 	= $(FPGA_COMMIT)
+	FPGA_LOGIC	= $(FPGA_COMMIT)
+	FPGA_0_94	= $(FPGA_COMMIT)
+	FPGA_MERCURY	= $(FPGA_COMMIT)
+	FPGA_AXI4LITE	= $(FPGA_COMMIT)
+	FPGA_BAREBONE = $(FPGA_COMMIT)
+	FPGA_PYRPL = $(FPGA_COMMIT)
+
+	FPGA_MODEL = Z20_14
+	FPGA_VERSION = z20_125_v2
+
+endif
+
+
 .PHONY: fpga $(INSTALL_DIR)/fpga
 
 fpga: dtc_compiler $(INSTALL_DIR)/fpga
