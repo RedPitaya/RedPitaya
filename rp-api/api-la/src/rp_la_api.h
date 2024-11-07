@@ -1,6 +1,6 @@
 
-#ifndef _RP_API_H_
-#define _RP_API_H_
+#ifndef _RP_LA_API_H_
+#define _RP_LA_API_H_
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -69,10 +69,13 @@ int rp_SetTriggerDigitalPortProperties(RP_DIGITAL_CHANNEL_DIRECTIONS * direction
 
 int rp_EnableDigitalPortDataRLE(bool enable);
 
+int rp_IsRLEEnable(bool *enable);
+
 int rp_SoftwareTrigger();
+
 int rp_SetPolarity(uint32_t reg);
 
-int rp_GetTimebase(uint32_t timebase, double * timeIntervalNanoseconds);
+int rp_GetTimebase(uint32_t decimation, double * timeIntervalNanoseconds);
 
 /**
  * Set data buffer
@@ -83,7 +86,7 @@ int rp_GetTimebase(uint32_t timebase, double * timeIntervalNanoseconds);
  * @param size       The size of the buffer array (notice that one sample is 16 bits)
  *
  */
-int rp_SetDataBuffer(int16_t * buffer, size_t size);
+int rp_SetDataBuffer(int16_t *buffer, size_t size);
 
 /**
  *
@@ -98,16 +101,18 @@ int rp_SetDataBuffer(int16_t * buffer, size_t size);
  *                                     If a trigger condition has been set, this specifies the number of
  *                                     samples to be taken after a trigger has fired, and the number of samples
  *                                     to be collected is then: noOfPreTriggerSamples + noOfPostTriggerSamples
- * @param timebase                     Timebase
+ * @param decimation                   Decimation
  * @param timeIndisposedS            On exit, the time, in milliseconds, that the scope will spend collecting samples.
  *
  */
-int rp_RunBlock(uint32_t noOfPreTriggerSamples,
+int rp_Run(uint32_t noOfPreTriggerSamples,
                 uint32_t noOfPostTriggerSamples,
-                uint32_t timebase,
+                uint32_t decimation,
                 double * timeIndisposedMs);
 
-int rp_GetTrigPosition(uint32_t * tigger_pos);
+int rp_WaitData(int timeout);
+
+int rp_GetTrigPosition(uint32_t *tigger_pos);
 
 /**
  * This function returns block-mode data, with or without down-sampling, starting at the
@@ -120,7 +125,7 @@ int rp_GetTrigPosition(uint32_t * tigger_pos);
  *                          The number of samples retrieved will not be more than the number requested,
  *                          and the data retrieved starts at startIndex.
  */
-int rp_GetValues(uint32_t * noOfSamples);
+int rp_GetValues(uint32_t *noOfSamples);
 
 /**
  * Stops the scope device from sampling data. If this function is called
@@ -130,4 +135,4 @@ int rp_GetValues(uint32_t * noOfSamples);
 int rp_Stop(void);
 
 
-#endif // _RP_API_H_
+#endif // _RP_LA_API_H_

@@ -14,11 +14,13 @@
 
 // For more information see: /doc/logic/README.md & la_top.sv
 
-#ifndef __LA_ACQ_H
-#define __LA_ACQ_H
+#ifndef __RP_LA_ACQ_H
+#define __RP_LA_ACQ_H
 
 #include <stdint.h>
 #include <stdbool.h>
+
+#include "common/structs.h"
 
 #define LA_ACQ_BASE_SIZE 0x00010000
 
@@ -52,7 +54,7 @@ typedef struct {
 
 /** Decimation  */
 typedef struct {
-    uint32_t dec;  ///<  sample rate = 125Msps/(dec+1)
+    uint32_t dec;  ///<  sample rate = BASE FPGA RATE Msps / (dec+1)
 } rp_la_decimation_regset_t;
 
 /** Data buf. pointers  */
@@ -101,6 +103,7 @@ int rp_LaAcqTriggerAcq(rp_handle_uio_t *handle);
 int rp_LaAcqAcqIsStopped(rp_handle_uio_t *handle, bool * status);
 int rp_LaAcqGlobalTrigSet(rp_handle_uio_t *handle, uint32_t mask);
 int rp_LaAcqBlockingRead(rp_handle_uio_t *handle);
+int rp_LaAcqRead(rp_handle_uio_t *handle,int timeout_ms);
 
 int rp_LaAcqSetConfig(rp_handle_uio_t *handle, uint32_t mask);
 int rp_LaAcqSetCntConfig(rp_handle_uio_t *handle, rp_la_cfg_regset_t a_reg);
@@ -119,8 +122,5 @@ int rp_LaAcqGetRLEStatus(rp_handle_uio_t *handle, uint32_t * current, uint32_t *
 int rp_LaAcqIsRLE(rp_handle_uio_t *handle, bool * state);
 
 uint32_t rp_LaAcqBufLenInSamples(rp_handle_uio_t *handle);
-
-//int rp_LaAcqGetDataPointers(rp_handle_uio_t *handle, rp_data_ptrs_regset_t * a_reg);
-int rp_LaAcqFpgaRegDump(rp_handle_uio_t *handle);
 
 #endif // __LA_ACQ_H

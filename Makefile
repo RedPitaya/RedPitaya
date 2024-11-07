@@ -46,7 +46,7 @@ LIBRP_HW_DIR    		= rp-api/api-hw
 LIBRP_HW_CAN_DIR  		= rp-api/api-hw-can
 LIBRP_HW_PROFILES_DIR	= rp-api/api-hw-profiles
 LIBRP_HW_CALIB_DIR		= rp-api/api-hw-calib
-LIBRP2_DIR      		= rp-api/api2
+# LIBRP2_DIR      		= rp-api/api2
 LIBRP250_12_DIR 		= rp-api/api-250-12
 LIBRP_DSP_DIR   		= rp-api/api-dsp
 LIBRP_SWEEP_DIR  		= rp-api/api-sweep
@@ -56,11 +56,11 @@ LIBRP_ARB_DIR		   	= rp-api/api-arb
 LIBRP_LA_DIR		   	= rp-api/api-la
 ECOSYSTEM_DIR   		= Applications/ecosystem
 
-.PHONY: api api2 librp librp250_12 librp_hw librp_dsp librp_hw_profiles librp_hw_calibration librp_hw_can librparb librp_sweep librpapp librpla
+.PHONY: api librp librp250_12 librp_hw librp_dsp librp_hw_profiles librp_hw_calibration librp_hw_can librparb librp_sweep librpapp librpla
 
 api: librp librp_hw librp_hw_can librp_dsp librpapp librp_formatter librparb librp_sweep librpla
 
-api2: librp2
+# api2: librp2
 
 librp: librp250_12 librp_hw_calibration librp_hw_profiles
 	cmake -B$(abspath $(LIBRP_DIR)/build) -S$(abspath $(LIBRP_DIR)) $(CMAKEVAR)
@@ -94,9 +94,9 @@ librp_formatter: librp
 	cmake -B$(abspath $(LIBRP_FORMATTER_DIR)/build) -S$(abspath $(LIBRP_FORMATTER_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(LIBRP_FORMATTER_DIR)/build install -j$(CPU_CORES)
 
-librp2:
-	cmake -B$(abspath $(LIBRP2_DIR)/build) -S$(abspath $(LIBRP2_DIR)) $(CMAKEVAR)
-	$(MAKE) -C $(LIBRP2_DIR)/build install -j$(CPU_CORES)
+# librp2:
+# 	cmake -B$(abspath $(LIBRP2_DIR)/build) -S$(abspath $(LIBRP2_DIR)) $(CMAKEVAR)
+# 	$(MAKE) -C $(LIBRP2_DIR)/build install -j$(CPU_CORES)
 
 librp250_12: librp_hw
 	cmake -B$(LIBRP250_12_DIR)/build -S$(LIBRP250_12_DIR) $(CMAKEVAR)
@@ -329,12 +329,12 @@ GENERATOR_DIR	   = Test/generate
 SPECTRUM_DIR       = Test/spectrum
 LED_CONTROL_DIR    = Test/led_control
 XADC_DIR           = Test/xadc
-LA_TEST_DIR        = rp-api/api2/test
+#LA_TEST_DIR        = rp-api/api2/test
 DAISY_TOOL_DIR     = Test/daisy_tool
 STARTUPSH          = $(INSTALL_DIR)/sbin/startup.sh
 
 .PHONY: examples fpgautils
-.PHONY: lcr bode monitor generator acquire acquire_p calib laboardtest spectrum led_control daisy_tool la
+.PHONY: lcr bode monitor generator acquire acquire_p calib spectrum led_control daisy_tool la
 
 examples: lcr bode monitor calib spectrum acquire acquire_p generator led_control fpgautils daisy_tool la
 
@@ -382,13 +382,6 @@ spectrum: api
 led_control: api
 	cmake -B$(abspath $(LED_CONTROL_DIR)/build) -S$(abspath $(LED_CONTROL_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(LED_CONTROL_DIR)/build install -j$(CPU_CORES)
-
-laboardtest: api2
-	$(MAKE) -C $(LA_TEST_DIR) clean
-	$(MAKE) -C $(LA_TEST_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	mkdir -p $(abspath $(INSTALL_DIR))/bin
-	cp rp-api/api2/test/laboardtest $(abspath $(INSTALL_DIR))/bin/laboardtest
-	cp rp-api/api2/test/install.sh $(abspath $(INSTALL_DIR))/install.sh
 
 fpgautils:
 	mkdir -p $(abspath $(INSTALL_DIR))/bin
@@ -454,30 +447,6 @@ network_manager: ecosystem
 jupyter_manager:
 	$(MAKE) -C $(APP_JUPYTERMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
 
-################################################################################
-# Red Pitaya ecosystem and free applications
-################################################################################
-
-APPS_FREE_DIR = apps-free
-VNA_DIR = $(APPS_FREE_DIR)/stemlab_vna
-
-.PHONY: apps-free
-
-apps-free: lcr bode
-	$(MAKE) -C $(APPS_FREE_DIR) clean
-	$(MAKE) -C $(APPS_FREE_DIR) all INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(APPS_FREE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
-
-apps-free-vna: api2
-ifeq ($(MODEL),$(filter $(MODEL),Z10))
-	$(MAKE) -C $(VNA_DIR) clean
-	$(MAKE) -C $(VNA_DIR) all INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(VNA_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
-endif
-
-apps-free-clean:
-	$(MAKE) -i -C $(APPS_FREE_DIR) clean
-	$(MAKE) -i -C $(VNA_DIR) clean
 
 ################################################################################
 # Red Pitaya applications
@@ -506,7 +475,7 @@ lcr_meter: web-api api $(NGINX)
 	cmake -B$(abspath $(APP_LCRMETER_DIR)/build) -S$(abspath $(APP_LCRMETER_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(APP_LCRMETER_DIR)/build install -j$(CPU_CORES)
 
-la_pro: web-api api api2 $(NGINX)
+la_pro: web-api api $(NGINX)
 	cmake -B$(abspath $(APP_LA_PRO_DIR)/build) -S$(abspath $(APP_LA_PRO_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(APP_LA_PRO_DIR)/build install -j$(CPU_CORES)
 
@@ -527,7 +496,7 @@ impedance_analyzer: web-api api $(NGINX)
 clean: nginx_clean scpi_clean
 
 	rm -rf $(abspath $(LIBRP_DIR)/build)
-	rm -rf $(abspath $(LIBRP2_DIR)/build)
+#	rm -rf $(abspath $(LIBRP2_DIR)/build)
 	rm -rf $(abspath $(LIBRP_HW_DIR)/build)
 	rm -rf $(abspath $(LIBRP_HW_CAN_DIR)/build)
 	rm -rf $(abspath $(LIBRP_HW_PROFILES_DIR)/build)

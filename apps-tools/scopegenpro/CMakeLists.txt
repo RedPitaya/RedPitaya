@@ -97,6 +97,7 @@ file(GLOB SOURCES "src/*.cpp")
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC -D_FILE_OFFSET_BITS=64)
 add_compile_definitions(ARCH_ARM)
 add_compile_options(-Wall -Wno-reorder -Wno-cpp -Wextra $<$<CONFIG:Release>:-Wno-unused-parameter> $<$<CONFIG:Release>:-Wno-unused-variable>)
+add_compile_options($<$<CONFIG:Debug>:-DTRACE_ENABLE>)
 add_compile_options(-DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os>  -ffunction-sections -fdata-sections)
 
 

@@ -1,5 +1,6 @@
 #include "spi_decoder.h"
 #include <limits>
+#include <climits>
 #include <cassert>
 #include "rp.h"
 

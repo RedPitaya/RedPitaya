@@ -3,7 +3,7 @@ project(rp-la)
 
 option(BUILD_SHARED "Builds shared library" ON)
 option(BUILD_STATIC "Builds static library" ON)
-option(BUILD_PYTHON_MODULE "Builds python module" OFF)
+option(BUILD_PYTHON_MODULE "Builds python module" ON)
 
 option(IS_INSTALL "Install library" ON)
 option(BUILD_DOC "Build documentation" ON)
@@ -80,15 +80,14 @@ set(CMAKE_INSTALL_RPATH ${r_paths})
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/src)
-include_directories(${CMAKE_SOURCE_DIR}/src)
 include_directories(${INSTALL_DIR}/include)
 include_directories(${INSTALL_DIR}/include/common)
 link_directories(${INSTALL_DIR}/lib)
 
 list(APPEND src
             ${CMAKE_SOURCE_DIR}/src/rp_la.cpp
-            ${CMAKE_SOURCE_DIR}/src/rp_api.cpp
-            ${CMAKE_SOURCE_DIR}/src/la_acq.cpp
+            ${CMAKE_SOURCE_DIR}/src/rp_la_api.cpp
+            ${CMAKE_SOURCE_DIR}/src/rp_la_acq.cpp
             ${CMAKE_SOURCE_DIR}/src/common/dma.cpp
             ${CMAKE_SOURCE_DIR}/src/common/common.cpp
             ${CMAKE_SOURCE_DIR}/src/decoders/can_decoder.cpp
@@ -109,10 +108,12 @@ list(APPEND src
 
 list(APPEND header
     ${CMAKE_SOURCE_DIR}/src/rp_la.h
+    ${CMAKE_SOURCE_DIR}/src/rp_la_api.h
 )
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
+add_compile_options($<$<CONFIG:Debug>:-DTRACE_ENABLE>)
 add_compile_options(-Wall -pedantic -Wextra -Wno-unused-parameter -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 add_library(${PROJECT_NAME}-obj OBJECT ${src})
@@ -127,17 +128,17 @@ if(BUILD_SHARED)
         find_package(PythonLibs)
         include_directories(${PYTHON_INCLUDE_PATH})
 
-        set_property(SOURCE src/rp_arb.i PROPERTY CPLUSPLUS ON)
+        set_property(SOURCE src/rp_la.i PROPERTY CPLUSPLUS ON)
         ## SET_SOURCE_FILES_PROPERTIES(src/rp_dsp.i PROPERTIES SWIG_FLAGS "-includeall")
 
-        SWIG_ADD_LIBRARY(rp_arb_py LANGUAGE python SOURCES src/rp_arb.i ${src})
-        SWIG_LINK_LIBRARIES(rp_arb_py ${PYTHON_LIBRARIES} rp rp-hw-calib rp-hw-profiles rp-i2c rp-spi rp-gpio rp-hw i2c -lm -lpthread)
+        SWIG_ADD_LIBRARY(rp_la_py LANGUAGE python SOURCES src/rp_la.i ${src})
+        SWIG_LINK_LIBRARIES(rp_la_py ${PYTHON_LIBRARIES} rp rp-hw-calib rp-hw-profiles rp-i2c rp-spi rp-gpio rp-hw i2c -lm -lpthread)
      endif()
 
     add_library(${PROJECT_NAME}-shared SHARED)
     set_property(TARGET ${PROJECT_NAME}-shared PROPERTY OUTPUT_NAME ${PROJECT_NAME})
     target_sources(${PROJECT_NAME}-shared PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-obj>)
-    target_link_libraries(${PROJECT_NAME}-shared -lrp -lm -lpthread jsoncpp)
+    target_link_libraries(${PROJECT_NAME}-shared -lrp -lrp-hw-profiles -lm -lpthread jsoncpp)
 
     if(IS_INSTALL)
         install(TARGETS ${PROJECT_NAME}-shared
@@ -145,14 +146,14 @@ if(BUILD_SHARED)
             ARCHIVE DESTINATION ${INSTALL_DIR}/lib)
 
         install(FILES ${header}
-            DESTINATION ${INSTALL_DIR}/include/common)
+            DESTINATION ${INSTALL_DIR}/include/la)
 
         if (BUILD_PYTHON_MODULE)
-            install(FILES $<TARGET_PROPERTY:rp_arb_py,SWIG_SUPPORT_FILES> DESTINATION ${INSTALL_DIR}/lib/python)
-            install(TARGETS rp_arb_py
+            install(FILES $<TARGET_PROPERTY:rp_la_py,SWIG_SUPPORT_FILES> DESTINATION ${INSTALL_DIR}/lib/python)
+            install(TARGETS rp_la_py
                 LIBRARY DESTINATION ${INSTALL_DIR}/lib/python
                 ARCHIVE DESTINATION ${INSTALL_DIR}/lib/python)
-            install(FILES tests/rp_arb_test.py
+            install(FILES tests/rp_la_test.py
                 DESTINATION ${INSTALL_DIR}/lib/python PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
                 GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_WRITE WORLD_EXECUTE)
         endif()
@@ -164,7 +165,7 @@ if(BUILD_STATIC)
     add_library(${PROJECT_NAME}-static STATIC)
     set_property(TARGET ${PROJECT_NAME}-static PROPERTY OUTPUT_NAME ${PROJECT_NAME})
     target_sources(${PROJECT_NAME}-static PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-obj>)
-    target_link_libraries(${PROJECT_NAME}-static -lrp -lm -lpthread)
+    target_link_libraries(${PROJECT_NAME}-static -lrp -lrp-hw-profiles -lm -lpthread)
 
     if(IS_INSTALL)
         install(TARGETS ${PROJECT_NAME}-static
@@ -172,7 +173,7 @@ if(BUILD_STATIC)
             ARCHIVE DESTINATION ${INSTALL_DIR}/lib)
 
         install(FILES ${header}
-            DESTINATION ${INSTALL_DIR}/include/common)
+            DESTINATION ${INSTALL_DIR}/include/la)
     endif()
 endif()
 

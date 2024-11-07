@@ -21,46 +21,21 @@
 #include "rp_log.h"
 
 #include "web/rp_client.h"
+#include "rp_la_api.h"
+#include "rp_la.h"
+#include "main.h"
 
-extern "C" {
-#include "la_acq.h"
-#include "rp_api.h"
-
-
-typedef struct rp_app_params_s {
-	char  *name;
-	float  value;
-	int    fpga_update;
-	int    read_only;
-	float  min_val;
-	float  max_val;
-} rp_app_params_t;
-
-int rp_set_params(rp_app_params_t *p, int len);
-int rp_get_params(rp_app_params_t **p);
-int rp_get_signals(float ***s, int *sig_num, int *sig_len);
-const char *rp_app_desc(void);
-int rp_app_init(void);
-int rp_app_exit(void);
-}
-
- auto getModelS() -> std::string;
-
-
-namespace {
-
+auto getModelS() -> std::string;
 
 enum LA_MODE {
-//	DEMO,
-	BASIC_ONLY,
-	PRO_ONLY
-//	BOTH
+	LA_BASIC_ONLY,
+	LA_PRO_ONLY
 };
 
 enum MEASURE_MODE {
-	NONE,
-	BASIC,
-	PRO
+	LA_NONE,
+	LA_BASIC,
+	LA_PRO
 };
 
 CBooleanParameter 	inRun("LA_RUN", CBaseParameter::RW, false, 0);
@@ -99,11 +74,9 @@ const float DEF_MIN_SCALE = 1.f/1000.f;
 const float DEF_MAX_SCALE = 5.f;
 
 std::map<std::string, std::shared_ptr<Decoder> > g_decoders;
-} // end namespace
 
 
-
- auto getModelS() -> std::string{
+auto getModelS() -> std::string{
     rp_HPeModels_t c = STEM_125_14_v1_0;
     if (rp_HPGetModel(&c) != RP_HP_OK){
        ERROR_LOG("Can't get board model");
@@ -157,12 +130,12 @@ std::map<std::string, std::shared_ptr<Decoder> > g_decoders;
 void set_measure_mode(MEASURE_MODE mode)
 {
 	fprintf(stderr, "Set measure mode: ");
-	if (mode == BASIC)
+	if (mode == LA_BASIC)
 	{
 		fprintf(stderr, "Basic\n");
 		rp_SetPolarity(0);
 	}
-	else if (mode == PRO)
+	else if (mode == LA_PRO)
 	{
 		fprintf(stderr, "Pro\n");
 		rp_SetPolarity(0xffff);
@@ -173,14 +146,14 @@ void set_measure_mode(MEASURE_MODE mode)
 // Set application mode
 void set_application_mode(LA_MODE mode)
 {
-	if (mode == BASIC_ONLY)
+	if (mode == LA_BASIC_ONLY)
 	{
-		set_measure_mode(BASIC);
+		set_measure_mode(LA_BASIC);
 		laMode.SendValue(mode);
 	}
-	else if (mode == PRO_ONLY)
+	else if (mode == LA_PRO_ONLY)
 	{
-		set_measure_mode(PRO);
+		set_measure_mode(LA_PRO);
 		laMode.SendValue(mode);
 	}
 }
@@ -204,15 +177,15 @@ std::string exec(const char* cmd) {
     return result;
 }
 
-int rp_set_params(rp_app_params_t *p, int len) {
+int rp_set_params(rp_app_params_t *, int) {
 	return 0;
 }
 
-int rp_get_params(rp_app_params_t **p) {
+int rp_get_params(rp_app_params_t **) {
 	return 0;
 }
 
-int rp_get_signals(float ***s, int *sig_num, int *sig_len) {
+int rp_get_signals(float ***, int *, int *) {
 	return 0;
 }
 
@@ -224,7 +197,7 @@ int rp_app_init(void) {
 
 	int s = rp_OpenUnit();
 	TRACE("openunit %d", s);
-	set_application_mode(BASIC_ONLY);
+	set_application_mode(LA_BASIC_ONLY);
 
     rp_WC_Init();
 
@@ -244,11 +217,6 @@ int rp_app_exit(void) {
 	rp_CloseUnit();
 
 	return 0;
-}
-
-void rpReadyCallback(RP_STATUS status, void * pParameter)
-{
-	TRACE("ACQ_CALLBACK");
 }
 
 static size_t readFile(const char* _fname, uint8_t* _buf, size_t _buf_size)
@@ -322,10 +290,10 @@ void PostUpdateSignals(void)
 	}
 }
 
-void* trigAcq(void *arg)
+void* trigAcq(void *)
 {
     sleep(2);
-    if(rp_SoftwareTrigger() != RP_API_OK){
+    if(rp_SoftwareTrigger() != RP_OK){
     	rp_Stop();
 		measureState.SendValue(4);
     }
@@ -333,7 +301,7 @@ void* trigAcq(void *arg)
 }
 
 
-void DoDecode(bool fpgaDataReceived, uint8_t* file_buf)
+void DoDecode(bool fpgaDataReceived, uint8_t*)
 {
 	for (auto& decoder : g_decoders)
     {
@@ -362,9 +330,9 @@ void OnNewParams(void)
 	{
 		measureSelect.Update();
 		if (measureSelect.Value() == 1)
-			set_application_mode(BASIC_ONLY);
+			set_application_mode(LA_BASIC_ONLY);
 		if (measureSelect.Value() == 2)
-			set_application_mode(PRO_ONLY);
+			set_application_mode(LA_PRO_ONLY);
 	}
 
 	g_fpgaDataReceived = false;
@@ -411,7 +379,7 @@ void OnNewParams(void)
 			int pre = preSampleBuf.Value();
 			uint32_t POST = BUF_SIZE - pre;
 			uint32_t samples = 0;
-            RP_STATUS s;
+            int s;
 			// buffers for fpga
 			auto buf = new uint8_t[BUF_SIZE*2];
 			auto buf1 = new int16_t[BUF_SIZE];
@@ -419,24 +387,31 @@ void OnNewParams(void)
 			rp_Stop();
 			uint8_t decimateRate = decimate.Value();
 
-			if (triggers.empty())
-			{
+			// Set triggers
+			if (triggers.empty()){
 				RP_DIGITAL_CHANNEL_DIRECTIONS d = {RP_DIGITAL_CHANNEL_0, RP_DIGITAL_DONT_CARE};
 				s = rp_SetTriggerDigitalPortProperties(&d, 0);
 				pthread_create(&g_tid2, NULL, &trigAcq, NULL);
 			}
-			else
-			{
+			else{
 				s = rp_SetTriggerDigitalPortProperties(triggers.data(), triggers.size());
 			}
 
 			s = rp_EnableDigitalPortDataRLE(1);
 			double timeIndisposedMs;
 			TRACE("pre = %d post = %d buf_size = %zu", pre, POST, BUF_SIZE);
-			s = rp_RunBlock(pre, POST, decimateRate, &timeIndisposedMs, &rpReadyCallback, NULL);
-			s = rp_SetDataBuffer(buf1, BUF_SIZE, RP_RATIO_MODE_NONE);
+			// run non blocking
+			s = rp_Run(pre, POST, decimateRate, &timeIndisposedMs);
+
+			if (triggers.empty()){
+				rp_SoftwareTrigger();
+			}
+
+			s = rp_WaitData(0);
+
+			s = rp_SetDataBuffer(buf1, BUF_SIZE);
 			samples = BUF_SIZE;
-			s = rp_GetValues(0, &samples, 1, RP_RATIO_MODE_NONE, NULL);
+			s = rp_GetValues(&samples);
 
 			uint32_t trigPos = 0;
 			uint32_t sum = 0;
@@ -469,7 +444,7 @@ void OnNewParams(void)
 		    delete[] buf;
 		    delete[] buf1;
 
-            if (s != RP_API_OK){
+            if (s != RP_OK){
                 ERROR_LOG("Error api2 %d",s);
             }
 		}).detach();
