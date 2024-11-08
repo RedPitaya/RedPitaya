@@ -347,6 +347,10 @@ ifneq "$(FPGA_BAREBONE)" ""
 	$(call build_fpga,barebones,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_BAREBONE))
 	mkdir -p $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
 	cp -r fpga/$(FPGA_VERSION)/barebones/dts/*  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
+
+# Build overlay for barebone
+	$(TMP)/dtc $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/led-system.dtso -I dts -O dtb -o $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/led-system.dtbo
+
 endif
 
 ifneq "$(FPGA_PYRPL)" ""
@@ -360,6 +364,10 @@ ifneq "$(FPGA_BAREBONE_250)" ""
 	mv $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones_250 $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones
 	mkdir -p $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
 	cp -r fpga/$(FPGA_VERSION)/barebones_250/dts_250/*  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
+
+# Build overlay for barebone
+	$(TMP)/dtc $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/led-system.dtso -I dts -O dtb -o $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/led-system.dtbo
+
 endif
 
 ifneq "$(FPGA_BAREBONE_250_A)" ""
@@ -367,6 +375,10 @@ ifneq "$(FPGA_BAREBONE_250_A)" ""
 	mv $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones_250 $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones
 	mkdir -p $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
 	cp -r fpga/$(FPGA_VERSION)/barebones_250/dts_250a/*  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
+
+# Build overlay for barebone
+	$(TMP)/dtc $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/led-system.dtso -I dts -O dtb -o $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/led-system.dtbo
+
 endif
 
 ifneq "$(FPGA_STREAM_APP)" ""
@@ -505,6 +517,7 @@ $(FSBL): $(DEVICETREE_UB)
 	echo $@
 	make -C fpga/uboot PRJ=fsbl MODEL=Z10 DEFINES= HWID= DTS_VER=2022.1
 	cp  fpga/uboot/prj/fsbl/sdk/fsbl/executable.elf $@
+
 
 ################################################################################
 # FSBL for uboot 1Gb RAM processing
