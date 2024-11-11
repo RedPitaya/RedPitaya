@@ -138,7 +138,7 @@ if(BUILD_SHARED)
     add_library(${PROJECT_NAME}-shared SHARED)
     set_property(TARGET ${PROJECT_NAME}-shared PROPERTY OUTPUT_NAME ${PROJECT_NAME})
     target_sources(${PROJECT_NAME}-shared PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-obj>)
-    target_link_libraries(${PROJECT_NAME}-shared -lrp -lrp-hw-profiles -lm -lpthread jsoncpp)
+    target_link_libraries(${PROJECT_NAME}-shared -lrp -lrp-hw-profiles -lm -lpthread)
 
     if(IS_INSTALL)
         install(TARGETS ${PROJECT_NAME}-shared
