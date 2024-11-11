@@ -538,6 +538,14 @@ uint32_t rp_HPGetIsE3HighSpeedGPIORateOrDefault();
 int rp_HPGetIsE3QSPIeMMC(bool *_out_value);
 bool rp_HPGetIsE3QSPIeMMCOrDefault();
 
+
+/**
+* Returns the name for the path to the FPGA files.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
+*/
+int rp_HPGetFPGAVersion(char **_no_free_value);
+
 /**
  * Print all parameters for current profile
  */

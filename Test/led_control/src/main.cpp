@@ -48,7 +48,7 @@ int get_state(bool *state, const char *str)
 void usage() {
     const char *format =
             "\n"
-            "Usage: %s -y[=State] | -r[=State] | -e [=State]   \n"
+            "Usage: %s -y[=State] | -r[=State] | -e[=State]   \n"
             "\n"
             "   -y    9 Yellow LED. Responsible for the status of reading the memory card.\n"
             "   -r    Red LED, which is responsible for the heartbeat.\n"

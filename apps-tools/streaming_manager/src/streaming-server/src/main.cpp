@@ -29,8 +29,6 @@
 #include <signal.h>
 #include <unistd.h>
 #include <mutex>
-#include <unistd.h>
-#include <signal.h>
 #include <regex>
 
 //#ifndef __APPLE__

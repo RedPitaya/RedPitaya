@@ -852,3 +852,92 @@ bool rp_HPGetIsE3QSPIeMMCOrDefault(){
     profiles_t* p = getProfileDefualt();
     return p->is_E3_mcc_qspi;
 }
+
+int rp_HPGetFPGAVersion(char **_no_free_value){
+    rp_HPeModels_t model;
+    int ret = rp_HPGetModel(&model);
+    if (ret != RP_HP_OK){
+        *_no_free_value = "";
+        return RP_HP_EMU;
+    }
+    switch (model)
+    {
+        case STEM_125_10_v1_0:
+            *_no_free_value = "z10_125";
+            break;
+        case STEM_125_14_v1_0:
+            *_no_free_value = "z10_125";
+            break;
+        case STEM_125_14_v1_1:
+            *_no_free_value = "z10_125";
+            break;
+        case STEM_125_14_LN_v1_1:
+            *_no_free_value = "z10_125";
+            break;
+        case STEM_125_14_LN_BO_v1_1:
+            *_no_free_value = "z10_125";
+            break;
+        case STEM_125_14_LN_CE1_v1_1:
+            *_no_free_value = "z10_125";
+            break;
+        case STEM_125_14_LN_CE2_v1_1:
+            *_no_free_value = "z10_125";
+            break;
+        case STEM_122_16SDR_v1_0:
+            *_no_free_value = "z20_122";
+            break;
+        case STEM_122_16SDR_v1_1:
+            *_no_free_value = "z20_122";
+            break;
+        case STEM_125_14_Z7020_v1_0:
+            *_no_free_value = "z20_125";
+            break;
+        case STEM_125_14_Z7020_LN_v1_1:
+            *_no_free_value = "z20_125";
+            break;
+        case STEM_125_14_Z7020_4IN_v1_0:
+            *_no_free_value = "z20_125_4ch";
+            break;
+        case STEM_125_14_Z7020_4IN_v1_2:
+            *_no_free_value = "z20_125_4ch";
+            break;
+        case STEM_125_14_Z7020_4IN_v1_3:
+            *_no_free_value = "z20_125_4ch";
+            break;
+        case STEM_250_12_v1_0:
+            *_no_free_value = "z20_250_1_0";
+            break;
+        case STEM_250_12_v1_1:
+            *_no_free_value = "z20_250";
+            break;
+        case STEM_250_12_v1_2:
+            *_no_free_value = "z20_250";
+            break;
+        case STEM_250_12_v1_2a:
+            *_no_free_value = "z20_250";
+            break;
+        case STEM_250_12_v1_2b:
+            *_no_free_value = "z20_250";
+            break;
+        case STEM_250_12_120:
+            *_no_free_value = "z20_250";
+            break;
+        case STEM_125_14_v2_0:
+            *_no_free_value = "z10_125_v2";
+            break;
+        case STEM_125_14_Pro_v2_0:
+            *_no_free_value = "z10_125_pro_v2";
+            break;
+        case STEM_125_14_Z7020_Pro_v2_0:
+            *_no_free_value = "z20_125_v2";
+            break;
+        case STEM_125_14_Z7020_Ind_v2_0:
+            *_no_free_value = "z20_125_v2";
+            break;
+        default:
+            *_no_free_value = "";
+            return RP_HP_EMU;
+            break;
+    }
+    return RP_HP_OK;
+}

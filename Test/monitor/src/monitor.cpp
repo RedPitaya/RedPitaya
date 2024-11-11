@@ -119,85 +119,12 @@ int main(int argc, char **argv) {
 	}
 
 	if (strncmp(argv[1], "-f", 2) == 0) {
-		rp_HPeModels_t model;
-		auto ret = rp_HPGetModel(&model);
-		switch (model)
-		{
-			case STEM_125_10_v1_0:
-				printf("z10_125");
-				break;
-			case STEM_125_14_v1_0:
-				printf("z10_125");
-				break;
-			case STEM_125_14_v1_1:
-				printf("z10_125");
-				break;
-			case STEM_125_14_LN_v1_1:
-				printf("z10_125");
-				break;
-			case STEM_125_14_LN_BO_v1_1:
-				printf("z10_125");
-				break;
-			case STEM_125_14_LN_CE1_v1_1:
-				printf("z10_125");
-				break;
-			case STEM_125_14_LN_CE2_v1_1:
-				printf("z10_125");
-				break;
-			case STEM_122_16SDR_v1_0:
-				printf("z20_122");
-				break;
-			case STEM_122_16SDR_v1_1:
-				printf("z20_122");
-				break;
-			case STEM_125_14_Z7020_v1_0:
-				printf("z20_125");
-				break;
-			case STEM_125_14_Z7020_LN_v1_1:
-				printf("z20_125");
-				break;
-			case STEM_125_14_Z7020_4IN_v1_0:
-				printf("z20_125_4ch");
-				break;
-			case STEM_125_14_Z7020_4IN_v1_2:
-				printf("z20_125_4ch");
-				break;
-			case STEM_125_14_Z7020_4IN_v1_3:
-				printf("z20_125_4ch");
-				break;
-			case STEM_250_12_v1_0:
-				printf("z20_250_1_0");
-				break;
-			case STEM_250_12_v1_1:
-				printf("z20_250");
-				break;
-			case STEM_250_12_v1_2:
-				printf("z20_250");
-				break;
-			case STEM_250_12_v1_2a:
-				printf("z20_250");
-				break;
-			case STEM_250_12_v1_2b:
-				printf("z20_250");
-				break;
-			case STEM_250_12_120:
-				printf("z20_250");
-				break;
-			case STEM_125_14_v2_0:
-				printf("z10_125_v2");
-				break;
-			case STEM_125_14_Pro_v2_0:
-				printf("z10_125_pro_v2");
-				break;
-			case STEM_125_14_Z7020_Pro_v2_0:
-				printf("z20_125_v2");
-				break;
-			case STEM_125_14_Z7020_Ind_v2_0:
-				printf("z20_125_v2");
-				break;
-			default:
-				printf("undefined");
-				break;
+		char *modelFPGA = NULL;
+		auto ret = rp_HPGetFPGAVersion(&modelFPGA);
+		if (ret == RP_HP_OK){
+			printf("%s",modelFPGA);
+		}else{
+			printf("undefined");
 		}
 		return ret;
 	}
