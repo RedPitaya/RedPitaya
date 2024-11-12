@@ -476,91 +476,115 @@ int main(int argc, char** argv)
     setlogmask (LOG_UPTO (LOG_INFO));
 
     openlog ("e3_led_controller", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
-    if (is_background && rp_HPGetIsE3PresentOrDefault()){
-        pid_t process_id = fork();
-        if (process_id < 0){
-            fprintf(stderr,"Fork failed!\n");
-            exit(1);
-        } else if (process_id > 0){
-            exit(0);
-        }
+    if (rp_HPGetIsE3PresentOrDefault()){
+        if (is_background){
+            pid_t process_id = fork();
+            if (process_id < 0){
+                fprintf(stderr,"Fork failed!\n");
+                exit(1);
+            } else if (process_id > 0){
+                exit(0);
+            }
 
-        umask(0);
-        if(setsid() < 0){
-            exit(1);
-        }
+            umask(0);
+            if(setsid() < 0){
+                exit(1);
+            }
 
-        close(STDIN_FILENO);
-        close(STDOUT_FILENO);
-        close(STDERR_FILENO);
+            close(STDIN_FILENO);
+            close(STDOUT_FILENO);
+            close(STDERR_FILENO);
 
-        installTermSignalHandler();
-        handleCloseChildEvents();
+            installTermSignalHandler();
+            handleCloseChildEvents();
 
-        while(g_run){
-            sleep(1);
-            bool is_ext = checkExtensionModuleConnection(true);
-            if (is_ext){
-                if (isOverlayLoaded()){
-                    removeOverlay();
-                    printWithLog(LOG_INFO,stdout,"[INFO] Remove overlay.\n");
-                }
-                bool is_export = false;
-                gpio_is_export(YELLOW_LED8,&is_export);
-                if (!is_export) {
-                    int ret = gpio_export(YELLOW_LED8);
-                    if (ret != 0){
-                        printWithLog(LOG_ERR,stderr,"[ERROR] Can't export GPIO %d\n",YELLOW_LED8);
-                        continue;
+            while(g_run){
+                sleep(1);
+                bool is_ext = checkExtensionModuleConnection(true);
+                if (is_ext){
+                    if (isOverlayLoaded()){
+                        removeOverlay();
+                        printWithLog(LOG_INFO,stdout,"[INFO] Remove overlay.\n");
                     }
-                    ret = gpio_pin_direction(YELLOW_LED8, RP_GPIO_IN);
-                    if (ret != 0){
-                        printWithLog(LOG_ERR,stderr,"[ERROR] Can't set IN mode for GPIO %d\n",YELLOW_LED8);
-                        continue;
-                    }
-                }
-                int ret = gpio_read(YELLOW_LED8);
-                if (ret == -1){
-                    printWithLog(LOG_ERR,stderr,"[ERROR] Can't read value for GPIO %d\n",YELLOW_LED8);
-                    continue;
-                }
-                if (ret == 1){
-                    printWithLog(LOG_INFO,stdout,"[INFO] Run poweroff command\n");
-                    ret = system("poweroff");
-                    if (ret != 0){
-                        printWithLog(LOG_ERR,stderr,"[ERROR] Error executing poweroff command\n");
-                        continue;
-                    }
-                }
-            }else{
-                if (!isOverlayLoaded()){
                     bool is_export = false;
                     gpio_is_export(YELLOW_LED8,&is_export);
-                    int ret = 0;
-                    if(!is_export){
-                        ret = gpio_export(YELLOW_LED8);
-                        if (ret == -1) {
+                    if (!is_export) {
+                        int ret = gpio_export(YELLOW_LED8);
+                        if (ret != 0){
                             printWithLog(LOG_ERR,stderr,"[ERROR] Can't export GPIO %d\n",YELLOW_LED8);
                             continue;
                         }
+                        ret = gpio_pin_direction(YELLOW_LED8, RP_GPIO_IN);
+                        if (ret != 0){
+                            printWithLog(LOG_ERR,stderr,"[ERROR] Can't set IN mode for GPIO %d\n",YELLOW_LED8);
+                            continue;
+                        }
                     }
-                    ret = gpio_pin_direction(YELLOW_LED8,RP_GPIO_IN);
-                    if (ret != 0){
-                        printWithLog(LOG_ERR,stderr,"[ERROR] Can't set OUT mode for GPIO %d\n",YELLOW_LED8);
+                    int ret = gpio_read(YELLOW_LED8);
+                    if (ret == -1){
+                        printWithLog(LOG_ERR,stderr,"[ERROR] Can't read value for GPIO %d\n",YELLOW_LED8);
                         continue;
                     }
-                    ret = gpio_unexport(YELLOW_LED8);
-                    if (ret == -1) {
-                        printWithLog(LOG_ERR,stderr,"[ERROR] Can't unexport GPIO %d\n",YELLOW_LED8);
-                        continue;
+                    if (ret == 1){
+                        printWithLog(LOG_INFO,stdout,"[INFO] Run poweroff command\n");
+                        ret = system("poweroff");
+                        if (ret != 0){
+                            printWithLog(LOG_ERR,stderr,"[ERROR] Error executing poweroff command\n");
+                            continue;
+                        }
                     }
-                    loadOverlay();
-                    printWithLog(LOG_INFO,stdout,"[INFO] Loaded overlay.\n");
+                }else{
+                    if (!isOverlayLoaded()){
+                        bool is_export = false;
+                        gpio_is_export(YELLOW_LED8,&is_export);
+                        int ret = 0;
+                        if(!is_export){
+                            ret = gpio_export(YELLOW_LED8);
+                            if (ret == -1) {
+                                printWithLog(LOG_ERR,stderr,"[ERROR] Can't export GPIO %d\n",YELLOW_LED8);
+                                continue;
+                            }
+                        }
+                        ret = gpio_pin_direction(YELLOW_LED8,RP_GPIO_IN);
+                        if (ret != 0){
+                            printWithLog(LOG_ERR,stderr,"[ERROR] Can't set OUT mode for GPIO %d\n",YELLOW_LED8);
+                            continue;
+                        }
+                        ret = gpio_unexport(YELLOW_LED8);
+                        if (ret == -1) {
+                            printWithLog(LOG_ERR,stderr,"[ERROR] Can't unexport GPIO %d\n",YELLOW_LED8);
+                            continue;
+                        }
+                        loadOverlay();
+                        printWithLog(LOG_INFO,stdout,"[INFO] Loaded overlay.\n");
+                    }
                 }
             }
         }
+    }else{
+        if (!isOverlayLoaded()){
+            bool is_export = false;
+            gpio_is_export(YELLOW_LED8,&is_export);
+            int ret = 0;
+            if(!is_export){
+                ret = gpio_export(YELLOW_LED8);
+                if (ret == -1) {
+                    printWithLog(LOG_ERR,stderr,"[ERROR] Can't export GPIO %d\n",YELLOW_LED8);
+                }
+            }
+            ret = gpio_pin_direction(YELLOW_LED8,RP_GPIO_IN);
+            if (ret != 0){
+                printWithLog(LOG_ERR,stderr,"[ERROR] Can't set OUT mode for GPIO %d\n",YELLOW_LED8);
+            }
+            ret = gpio_unexport(YELLOW_LED8);
+            if (ret == -1) {
+                printWithLog(LOG_ERR,stderr,"[ERROR] Can't unexport GPIO %d\n",YELLOW_LED8);
+            }
+            loadOverlay();
+            printWithLog(LOG_INFO,stdout,"[INFO] Loaded overlay.\n");
+        }
     }
-
+    printWithLog(LOG_INFO,stdout,"[INFO] Exit.\n");
     closelog ();
     return (EXIT_SUCCESS);
 }

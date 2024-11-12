@@ -27,5 +27,4 @@ then
 
 fi
 
-/opt/redpitaya/bin/e3_led_controller -b
 # Here you can specify commands for autorun at system startup
