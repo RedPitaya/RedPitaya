@@ -472,7 +472,8 @@ int hp_cmn_Print(profiles_t *p){
 	fprintf(stdout,"GPIO DIO_N count: %u\n", p->gpio_N_count);
 	fprintf(stdout,"GPIO DIO_P count: %u\n", p->gpio_P_count);
 
-	fprintf(stdout,"\nE3 High speed GPIO support: %d\n", p->is_E3_high_speed_gpio);
+	fprintf(stdout,"\nE3 Is present: %u\n", p->is_E3_present);
+	fprintf(stdout,"E3 High speed GPIO support: %d\n", p->is_E3_high_speed_gpio);
 	fprintf(stdout,"E3 High speed GPIO rate: %u\n", p->E3_high_speed_gpio_rate);
 	fprintf(stdout,"E3 QSPI for eMMC support: %d\n", p->is_E3_high_speed_gpio);
 

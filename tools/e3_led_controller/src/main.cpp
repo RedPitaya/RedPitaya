@@ -27,9 +27,9 @@ using namespace std;
 	fprintf(Y, __VA_ARGS__); \
 	SYS(X, __VA_ARGS__);
 
-#define OVERLAY_PATH "/configfs/device-tree/overlays/Led"
+#define OVERLAY_PATH "/sys/kernel/config/device-tree/overlays/Led"
 #define I2C_SLAVE_FORCE 		   		0x0706
-#define EXPANDER_ADDR            	   	0x20
+#define EXPANDER_ADDR            	   	0x70
 #define VALUE_MAX 40
 #define RP_GPIO_IN  0
 #define RP_GPIO_OUT 1
@@ -58,14 +58,20 @@ static void installTermSignalHandler()
     signal(SIGTERM, termSignalHandler);
 }
 
-int removeOverlay(){
-    char command[2048];
+bool isOverlayLoaded(){
     struct stat sb;
     if (((stat(OVERLAY_PATH, &sb) == 0) && S_ISDIR(sb.st_mode))) {
-		snprintf(command, sizeof(command), "rmdir %s", OVERLAY_PATH);
-		return system(command);
+		return true;
 	}
-	return 0;
+	return false;
+}
+
+void removeOverlay(){
+    char command[2048];
+    if (isOverlayLoaded()) {
+		snprintf(command, sizeof(command), "rmdir %s", OVERLAY_PATH);
+		system(command);
+	}
 }
 
 std::string getPathToOverlay(){
@@ -81,26 +87,11 @@ std::string getPathToOverlay(){
     return path;
 }
 
-bool isOverlayLoaded(){
-    struct stat sb;
-    if (((stat(OVERLAY_PATH, &sb) == 0) && S_ISDIR(sb.st_mode))) {
-        printf("1\n");
-		return true;
-	}
-        printf("0\n");
-	return false;
-}
-
 int loadOverlay(){
     char command[2048];
-    struct stat sb;
-    if (!((stat(OVERLAY_PATH, &sb) == 0) && S_ISDIR(sb.st_mode))) {
+    if (!isOverlayLoaded()) {
 		snprintf(command, sizeof(command), "mkdir -p %s", OVERLAY_PATH);
-        int ret = system(command);
-        if (ret != EXIT_SUCCESS){
-            printWithLog(LOG_ERR,stderr,"Error creating folder for overlay\n");
-            return ret;
-        }
+        system(command);
     }
     auto overlay_file = getPathToOverlay();
 	snprintf(command, sizeof(command), "cat %s > %s/dtbo", overlay_file.c_str(), OVERLAY_PATH);
@@ -131,7 +122,6 @@ bool checkExtensionModuleConnection(bool _muteWarnings){
 
     int retVal = read(fd, buf, 1);
     close(fd);
-    printf("retVal %d\n",retVal);
     if(retVal < 0) {
         return false;
     }
@@ -411,7 +401,8 @@ int main(int argc, char** argv)
     }
 
     if (need_remove){
-        exit(removeOverlay());
+        removeOverlay();
+        exit(EXIT_SUCCESS);
     }
 
     if (need_load){
@@ -485,23 +476,23 @@ int main(int argc, char** argv)
     setlogmask (LOG_UPTO (LOG_INFO));
 
     openlog ("e3_led_controller", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
-    if (is_background){
-        // pid_t process_id = fork();
-        // if (process_id < 0){
-        //     fprintf(stderr,"Fork failed!\n");
-        //     exit(1);
-        // } else if (process_id > 0){
-        //     exit(0);
-        // }
+    if (is_background && rp_HPGetIsE3PresentOrDefault()){
+        pid_t process_id = fork();
+        if (process_id < 0){
+            fprintf(stderr,"Fork failed!\n");
+            exit(1);
+        } else if (process_id > 0){
+            exit(0);
+        }
 
-        // umask(0);
-        // if(setsid() < 0){
-        //     exit(1);
-        // }
+        umask(0);
+        if(setsid() < 0){
+            exit(1);
+        }
 
-        // close(STDIN_FILENO);
-        // close(STDOUT_FILENO);
-        // close(STDERR_FILENO);
+        close(STDIN_FILENO);
+        close(STDOUT_FILENO);
+        close(STDERR_FILENO);
 
         installTermSignalHandler();
         handleCloseChildEvents();
@@ -511,12 +502,8 @@ int main(int argc, char** argv)
             bool is_ext = checkExtensionModuleConnection(true);
             if (is_ext){
                 if (isOverlayLoaded()){
-                    int ret = removeOverlay();
-                    if (ret != 0){
-                        printWithLog(LOG_ERR,stderr,"[ERROR] Can't unload overlay\n");
-                        continue;
-                    }
-                    printWithLog(LOG_INFO,stdout,"[INFO] Remove overlay. Set IN mode for GPIO\n");
+                    removeOverlay();
+                    printWithLog(LOG_INFO,stdout,"[INFO] Remove overlay.\n");
                 }
                 bool is_export = false;
                 gpio_is_export(YELLOW_LED8,&is_export);
@@ -557,7 +544,7 @@ int main(int argc, char** argv)
                             continue;
                         }
                     }
-                    ret = gpio_pin_direction(YELLOW_LED8,RP_GPIO_OUT);
+                    ret = gpio_pin_direction(YELLOW_LED8,RP_GPIO_IN);
                     if (ret != 0){
                         printWithLog(LOG_ERR,stderr,"[ERROR] Can't set OUT mode for GPIO %d\n",YELLOW_LED8);
                         continue;

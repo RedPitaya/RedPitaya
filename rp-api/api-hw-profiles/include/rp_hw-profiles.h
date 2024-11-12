@@ -512,6 +512,15 @@ uint8_t rp_HPGetGPIO_P_CountOrDefault();
 
 
 /**
+* Returns the presence of the E3 connector.
+* Function rp_HPGetIsE3PresentOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
+*/
+int rp_HPGetIsE3Present(bool *_out_value);
+bool rp_HPGetIsE3PresentOrDefault();
+
+/**
 * Returns the presence of the E3 connector, as well as support for the high-speed GPIO connector.
 * Function rp_HPGetIsE3HighSpeedGPIOOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
 * @return If the function is successful, the return value is RP_OK.

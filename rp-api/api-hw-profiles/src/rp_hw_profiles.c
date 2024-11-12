@@ -853,6 +853,21 @@ bool rp_HPGetIsE3QSPIeMMCOrDefault(){
     return p->is_E3_mcc_qspi;
 }
 
+int rp_HPGetIsE3Present(bool *value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->is_E3_present;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+bool rp_HPGetIsE3PresentOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->is_E3_present;
+}
+
 int rp_HPGetFPGAVersion(char **_no_free_value){
     rp_HPeModels_t model;
     int ret = rp_HPGetModel(&model);

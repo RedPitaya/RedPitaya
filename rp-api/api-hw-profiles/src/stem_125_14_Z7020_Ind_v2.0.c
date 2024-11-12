@@ -105,7 +105,8 @@ profiles_t stem_125_14_Z7020_Ind_v2_0 = {
 
     .is_E3_high_speed_gpio = true,
     .is_E3_mcc_qspi = true,
-    .E3_high_speed_gpio_rate = 1000000000
+    .E3_high_speed_gpio_rate = 1000000000,
+    .is_E3_present = true
 
 };
 

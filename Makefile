@@ -331,7 +331,7 @@ LED_CONTROL_DIR    = Test/led_control
 XADC_DIR           = Test/xadc
 #LA_TEST_DIR        = rp-api/api2/test
 DAISY_TOOL_DIR     = Test/daisy_tool
-E2_LED_CON_DIR     = tools/e3_led_controller
+E3_LED_CON_DIR     = tools/e3_led_controller
 STARTUPSH          = $(INSTALL_DIR)/sbin/startup.sh
 
 .PHONY: examples fpgautils
@@ -388,9 +388,9 @@ fpgautils:
 	mkdir -p $(abspath $(INSTALL_DIR))/bin
 	$(CC) tools/fpgautils/fpgautil.c -o $(abspath $(INSTALL_DIR))/bin/fpgautil
 
-e3_led_controller:
-	cmake -B$(abspath $(E2_LED_CON_DIR)/build) -S$(abspath $(E2_LED_CON_DIR)) $(CMAKEVAR)
-	$(MAKE) -C $(E2_LED_CON_DIR)/build install -j$(CPU_CORES)
+e3_led_controller: api
+	cmake -B$(abspath $(E3_LED_CON_DIR)/build) -S$(abspath $(E3_LED_CON_DIR)) $(CMAKEVAR)
+	$(MAKE) -C $(E3_LED_CON_DIR)/build install -j$(CPU_CORES)
 
 startupsh:
 	cp -f patches/startup/startup.sh $(STARTUPSH)
@@ -528,7 +528,7 @@ clean: nginx_clean scpi_clean
 	rm -rf $(abspath $(MONITOR_DIR)/build)
 	rm -rf $(abspath $(SPECTRUM_DIR)/build)
 	rm -rf $(abspath $(LIBRPAPP_DIR)/build)
-	rm -rf $(abspath $(E2_LED_CON_DIR)/build)
+	rm -rf $(abspath $(E3_LED_CON_DIR)/build)
 
 
 	rm -rf $(abspath $(APP_ARB_MANAGER_DIR)/build)

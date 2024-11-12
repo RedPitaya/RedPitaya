@@ -85,6 +85,7 @@ typedef struct {
     bool                is_E3_high_speed_gpio;
     bool                is_E3_mcc_qspi;
     uint32_t            E3_high_speed_gpio_rate;
+    bool                is_E3_present;
 
 } profiles_t;
 

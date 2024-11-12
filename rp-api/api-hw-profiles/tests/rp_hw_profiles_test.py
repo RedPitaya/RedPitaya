@@ -408,6 +408,14 @@ print("rp_hw_profiles.rp_HPGetIsE3QSPIeMMCOrDefault()")
 res = rp_hw_profiles.rp_HPGetIsE3QSPIeMMCOrDefault()
 print(res)
 
+print("rp_hw_profiles.rp_HPGetIsE3Present()")
+res = rp_hw_profiles.rp_HPGetIsE3Present()
+print(res)
+
+print("rp_hw_profiles.rp_HPGetIsE3PresentOrDefault()")
+res = rp_hw_profiles.rp_HPGetIsE3PresentOrDefault()
+print(res)
+
 print("rp_hw_profiles.rp_HPPrint()")
 rp_hw_profiles.rp_HPPrint()
 
