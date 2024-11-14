@@ -3,6 +3,7 @@
 if [[ -f /opt/redpitaya/sbin/auto_resize.sh ]]
 then
     /opt/redpitaya/sbin/auto_resize.sh
+    echo 'REBOOT AFTER RESIZE SD CARD' > /dev/kmsg
 fi
 
 if [[ ! -f /opt/redpitaya/bin/production_testing_script.sh ]]
