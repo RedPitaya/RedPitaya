@@ -112,7 +112,7 @@ if(BUILD_SHARED)
 
         SWIG_ADD_LIBRARY(rp_formatter_py LANGUAGE python SOURCES src/rp_formatter.i ${src})
         SWIG_LINK_LIBRARIES(rp_formatter_py ${PYTHON_LIBRARIES} -lm -lpthread)
-        set_property(TARGET rp_formatter_py PROPERTY INCLUDE_DIRECTORIES ${PROJECT_SOURCE_DIR}/src ${PYTHON_INCLUDE_PATH})
+        set_property(TARGET rp_formatter_py PROPERTY INCLUDE_DIRECTORIES ${PROJECT_SOURCE_DIR}/src ${PYTHON_INCLUDE_PATH} /usr/local/lib/python3.10/dist-packages/numpy/_core/include)
      endif()
 
     add_library(${PROJECT_NAME}-shared SHARED)

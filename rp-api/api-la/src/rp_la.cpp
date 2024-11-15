@@ -14,6 +14,7 @@
 
 #include <map>
 #include <memory>
+#include <mutex>
 #include "decoders/decoder.h"
 #include "decoders/can_decoder.h"
 #include "decoders/uart_decoder.h"
@@ -35,6 +36,9 @@ struct CLAController::Impl {
     bool m_isOpen = false;
     RP_DIGITAL_CHANNEL_DIRECTIONS m_triggers[RP_MAX_DIGITAL_CHANNELS];
     std::map<std::string, std::shared_ptr<Decoder>> m_decoders;
+    std::mutex m_decoder_mutex;
+    uint32_t m_decimation;
+    bool m_isRun = false;
 };
 
 CLAController::CLAController()
@@ -162,15 +166,37 @@ auto CLAController::isRLEEnable() -> bool{
 }
 
 auto CLAController::addDecoder(std::string name, la_Decoder_t decoder) -> bool{
+    std::lock_guard lock(m_pimpl->m_decoder_mutex);
+    switch (decoder)
+    {
+        case LA_DECODER_CAN:
+            m_pimpl->m_decoders[name] = std::make_shared<can::CANDecoder>();
+            break;
+        case LA_DECODER_I2C:
+            m_pimpl->m_decoders[name] = std::make_shared<i2c::I2CDecoder>();
+            break;
+        case LA_DECODER_SPI:
+            m_pimpl->m_decoders[name] = std::make_shared<spi::SPIDecoder>();
+            break;
+        case LA_DECODER_UART:
+            m_pimpl->m_decoders[name] = std::make_shared<uart::UARTDecoder>();
+            break;
 
+    default:
+        FATAL("Unknown decoder")
+        break;
+    }
+    return true;
 }
 
 auto CLAController::removeDecoder(std::string name) -> bool{
-
+    std::lock_guard lock(m_pimpl->m_decoder_mutex);
+    return m_pimpl->m_decoders.erase(name);
 }
 
 auto CLAController::removeAllDecoders() -> void{
-
+    std::lock_guard lock(m_pimpl->m_decoder_mutex);
+    m_pimpl->m_decoders.clear();
 }
 
 auto CLAController::Impl::open() -> void{
@@ -183,6 +209,23 @@ auto CLAController::Impl::close() -> void{
     if (rp_CloseUnit() == RP_OK){
         m_isOpen = false;
     }
+}
+
+auto CLAController::setDecimation(uint32_t decimation) -> void{
+    m_pimpl->m_decimation = decimation;
+}
+
+auto CLAController::getDecimation() -> uint32_t{
+    return m_pimpl->m_decimation;
+}
+
+
+auto CLAController::run() -> void{
+
+}
+
+auto CLAController::runAsync() -> void{
+
 }
 
 

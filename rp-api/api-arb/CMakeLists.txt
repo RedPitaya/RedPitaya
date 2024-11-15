@@ -91,6 +91,7 @@ if(BUILD_SHARED)
 
         find_package(PythonLibs)
         include_directories(${PYTHON_INCLUDE_PATH})
+        include_directories(/usr/local/lib/python3.10/dist-packages/numpy/_core/include)
 
         set_property(SOURCE src/rp_arb.i PROPERTY CPLUSPLUS ON)
         # SET_SOURCE_FILES_PROPERTIES(src/rp_dsp.i PROPERTIES SWIG_FLAGS "-includeall")

@@ -64,7 +64,11 @@ public:
     auto removeDecoder(std::string name) -> bool;
     auto removeAllDecoders() -> void;
 
-    auto run() -> bool;
+    auto setDecimation(uint32_t decimation) -> void;
+    auto getDecimation() -> uint32_t;
+
+    auto run() -> void;
+    auto runAsync() -> void;
 
 
 
