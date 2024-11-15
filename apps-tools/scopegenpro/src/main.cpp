@@ -107,6 +107,9 @@ const char *rp_app_desc(void) {
 int rp_app_init(void) {
     fprintf(stderr, "Loading scope version %s-%s.\n", VERSION_STR, REVISION_STR);
 
+    CDataManager::GetInstance()->SetParamInterval(50);
+    CDataManager::GetInstance()->SetSignalInterval(20);
+
     rp_WS_Init();
     rp_WS_SetInterval(RP_WS_RAM,5000);
     rp_WS_SetInterval(RP_WS_SLOW_DAC,500);

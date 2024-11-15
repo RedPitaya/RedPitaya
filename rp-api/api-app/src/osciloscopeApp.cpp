@@ -1137,21 +1137,21 @@ int waitToFillPreTriggerBuffer(float _timescale,bool *_isresetted, uint32_t *pre
     auto trigSweep = g_adcController.getTriggerSweep();
 
     // Full screen timeout / 2 -> *1.5. Half screen + 50%
-    auto timeOut  = g_viewController.calculateTimeOut(_timescale) * 0.75;
-
-    timeOut += g_viewController.getClock();
-
-    ;
+    auto reqTimeout = g_viewController.calculateTimeOut(_timescale) * 0.75;
     uint32_t triggerDelay;
     auto viewSize = g_viewController.getViewSize();
     auto samplesPerDivision = g_viewController.getSamplesPerDivision();
     auto deltaSample = timeToIndexD(_timescale) / samplesPerDivision;
     auto viewInSamples = viewSize * deltaSample;
     auto extraPoints = g_viewController.calcExtraPoints() + 4;
-    auto exitByTimout = false;
+    auto exitByTimout = true;
     auto exitByPreTrigger = false;
     g_viewController.setTriggerState(false);
     *_isresetted = false;
+    double lastTime = 0;
+    auto timeOut = g_viewController.getClock() + reqTimeout;
+    uint32_t prevPreTrigger = 0;
+    // auto startTime = g_viewController.getClock();
     do {
         if (g_adcController.isNeedResetWaitTrigger()){
             *_isresetted = true;
@@ -1164,14 +1164,20 @@ int waitToFillPreTriggerBuffer(float _timescale,bool *_isresetted, uint32_t *pre
         if (contMode && trigSweep == RPAPP_OSC_TRIG_AUTO) {
             return RP_OK;
         }
-        exitByTimout = timeOut > g_viewController.getClock();
+        lastTime = g_viewController.getClock();
+        if (prevPreTrigger == *preTriggerCount && prevPreTrigger){
+            exitByTimout = timeOut > lastTime;
+        }else{
+            timeOut = g_viewController.getClock() + reqTimeout;
+        }
         exitByPreTrigger = *preTriggerCount < *needWaitSamples;
+        prevPreTrigger = *preTriggerCount;
     } while (exitByPreTrigger && exitByTimout);
-    //WARNING("preTriggerCount %d exitByTimout %d needWaitSamples %d exitByPreTrigger %d",preTriggerCount,exitByTimout,needWaitSamples,exitByPreTrigger)
-    // fprintf(stderr,"TE %d TT %d , %d , %d, %f\n",exitByPreTrigger,exitByTimout,preTriggerCount,needWaitSamples,ct);
+    // auto stopTime = g_viewController.getClock();
+    // if (!exitByTimout)
+    // WARNING("preTriggerCount %d exitByTimout %d needWaitSamples %d exitByPreTrigger %d reqTimeout %f %f %f while time %f",*preTriggerCount,exitByTimout,*needWaitSamples,exitByPreTrigger,reqTimeout,timeOut,lastTime, stopTime - startTime)
     return RP_OK;
 }
-
 
 int waitTrigger(float _timescale,bool _disableTimeout,bool *_isresetted,bool *_exitByTimeout) {
     auto trig_state = RP_TRIG_STATE_WAITING;
@@ -1528,7 +1534,13 @@ void mainThreadFun() {
             auto decimationInACQ = g_viewController.getCurrentDecimation(contMode);
             tScaleAcq = g_viewController.getTimeScale();
             // Need set before calculate trigger deleay
-            ECHECK_APP_NO_RET(rp_AcqSetDecimationFactor(decimationInACQ));
+            uint32_t prevDec = 0;
+            rp_AcqGetDecimationFactor(&prevDec);
+            // Stop before change decimation;
+            if (prevDec != decimationInACQ){
+                ECHECK_APP_NO_RET(threadSafe_acqStop());
+                ECHECK_APP_NO_RET(rp_AcqSetDecimationFactor(decimationInACQ));
+            }
             auto delay = g_viewController.getSampledAfterTriggerInView();
             ECHECK_APP_NO_RET(rp_AcqSetTriggerDelayDirect(delay));
             // g_viewController.unlockControllerView();
@@ -1556,18 +1568,14 @@ void mainThreadFun() {
             bool dataHasTrigger = false;
             if (exitByTimeout){
                 ECHECK_APP_NO_RET(rp_AcqSetTriggerSrc(RP_TRIG_SRC_NOW));
-                // g_viewController.setDataWithTrigger(false);
                 dataHasTrigger = false;
             }else{
                 if (g_adcController.isInternalTrigger()){
                     dataHasTrigger = true;
-                    // g_viewController.setDataWithTrigger(true);
                 }else if (g_adcController.isExternalHasLevel()){
                     dataHasTrigger = true;
-                    // g_viewController.setDataWithTrigger(true);
                 }else{
                     dataHasTrigger = false;
-                    // g_viewController.setDataWithTrigger(false);
                 }
             }
             waitToFillAfterTriggerBuffer(tScaleAcq,&isReset);
