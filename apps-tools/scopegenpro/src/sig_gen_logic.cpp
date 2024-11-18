@@ -607,6 +607,7 @@ auto updateGeneratorParameters(bool force) -> void{
             outFrequancy[i].Update();
             if (!force)
                 checkBurstDelayChanged(ch);
+            rp_GenTriggerOnly(ch);
         }
 
         if (IS_NEW(outName[i]) || force) {
@@ -662,8 +663,8 @@ auto sendFreqInSweepMode() -> void{
         for(int i = 0; i < g_dac_channels;i++){
             float freq = 0;
             rp_GenGetFreq((rp_channel_t)i,&freq);
-            if (freq != outFrequancy[i].Value()){
-                outFrequancy[i].SendValue(freq);
+            if ((int)freq != outFrequancy[i].Value()){
+                outFrequancy[i].SendValue((int)freq);
                 std::lock_guard lock(g_updateOutWaveFormCh_mtx);
                 g_updateOutWaveFormCh[i] = true;
             }

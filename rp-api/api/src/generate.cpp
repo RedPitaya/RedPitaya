@@ -81,11 +81,9 @@ int generate_setFrequency(rp_channel_t channel, float frequency,float baseFreq) 
     uint32_t value = floor(valuef);
     cmn_Debug("[Ch%d] ch_properties->counterStep <- 0x%X",channel,value);
     ch_properties->counterStep = value;
-    cmn_Debug("[Ch%d] ch_properties->cunterStepChLower <- 0x%X",channel,value);
-    if (channel == RP_CH_1)
-        generate->cunterStepChALower = (valuef - (float)value) * 0xFFFFFFFF;
-    if (channel == RP_CH_2)
-        generate->cunterStepChBLower = (valuef - (float)value) * 0xFFFFFFFF;
+    value = (valuef - (float)value) * 0xFFFFFFFF;
+    cmn_Debug("[Ch%d] ch_properties->counterStepLower <- 0x%X",channel,value);
+    ch_properties->counterStepLower = value;
     uint32_t wrap_flag = 1;
     cmn_Debug("[Ch%d] generate->_SM_WrapPointer <- 0x%X",channel,wrap_flag);
     channel == RP_CH_1 ? (generate->ASM_WrapPointer = wrap_flag) : (generate->BSM_WrapPointer = wrap_flag);

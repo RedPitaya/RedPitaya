@@ -661,6 +661,7 @@ static void UpdateGeneratorParameters(bool force)
             outFallTime[ch].Update();
             rp_GenFreq((rp_channel_t)ch, outFrequancy[ch].NewValue());
             outFrequancy[ch].Update();
+            rp_GenTriggerOnly((rp_channel_t)ch);
             RESEND(outFrequancy[ch])
             RESEND(outRiseTime[ch])
             RESEND(outFallTime[ch])
@@ -1102,8 +1103,8 @@ void updateGen(void) {
     for(auto ch = 0u; ch < g_dac_count ; ch++){
         float freq = 0;
         rp_GenGetFreq((rp_channel_t)ch,&freq);
-        if (freq != outFrequancy[ch].Value()){
-            outFrequancy[ch].SendValue(freq);
+        if ((int)freq != outFrequancy[ch].Value()){
+            outFrequancy[ch].SendValue((int)freq);
         }
     }
 }

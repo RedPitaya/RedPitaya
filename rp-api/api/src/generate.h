@@ -49,9 +49,7 @@ typedef struct ch_properties {
     uint32_t counterWrap; // 0x8
     uint32_t startOffset; // 0xC
     uint32_t counterStep; // 0x10
-    unsigned int                    :2;
-    uint32_t buffReadPointer        :14;
-    unsigned int                    :16;
+    uint32_t counterStepLower; // 0x14
     uint32_t cyclesInOneBurst;
     uint32_t burstRepetitions;
     uint32_t delayBetweenBurstRepetitions;
@@ -103,8 +101,8 @@ typedef struct generate_control_s {
 
     uint32_t     BurstFinalValue_chA; // 0x44
     uint32_t     BurstFinalValue_chB; // 0x48
-    uint32_t     cunterStepChALower;  // 0x4C
-    uint32_t     cunterStepChBLower;  // 0x50
+    uint32_t     reserv1;             // 0x4C
+    uint32_t     reserv2;             // 0x50
     /**@brief Trigger debuncer time
     * bits [19:0] Number of ADC clock periods
     * trigger is disabled after activation
@@ -112,10 +110,10 @@ typedef struct generate_control_s {
     * or equivalent to 0.5ms
     */
     uint32_t trig_dbc_t:20,:12; // 0x54
-    uint32_t reserv1; // 0x58
-    uint32_t reserv2; // 0x5C
-    uint32_t reserv3; // 0x60
-    uint32_t reserv4; // 0x64
+    uint32_t reserv3; // 0x58
+    uint32_t reserv4; // 0x5C
+    uint32_t reserv5; // 0x60
+    uint32_t reserv6; // 0x64
     uint32_t initGenValue_chA; // 0x68
     uint32_t initGenValue_chB; // 0x6C
     uint32_t lengthLastValueState_chA; // 0x70
@@ -146,7 +144,7 @@ typedef struct generate_control_s {
 
     uint32_t axi_end_address_ChA;   // 0x10C (R/W)
 
-    uint32_t reserved_1;            // 0x110
+    uint32_t reserv7;               // 0x110
 
     uint32_t enableAXI_ChB :1,:31;  // 0x114 (R/W)
 
