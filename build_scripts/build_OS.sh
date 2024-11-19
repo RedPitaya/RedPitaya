@@ -2,7 +2,7 @@
 
 PATH_XILINX_SDK=/opt/Xilinx/Xilinx/SDK/2019.1
 PATH_XILINX_VIVADO=/opt/Xilinx/Xilinx/Vivado/2020.1
-RP_UBUNTU=redpitaya_OS_12-38-21_10-Oct-2023.tar.gz  
+RP_UBUNTU=redpitaya_OS_14-36-57_13-Nov-2024.tar.gz 
 SCHROOT_CONF_PATH=/etc/schroot/chroot.d/red-pitaya-ubuntu.conf
 
 function print_ok(){
@@ -178,6 +178,10 @@ make -f Makefile.x86 fpga MODEL=Z20 STREAMING=MASTER
 make -f Makefile.x86 fpga MODEL=Z20_125 STREAMING=MASTER
 make -f Makefile.x86 fpga MODEL=Z20_125_4CH STREAMING=MASTER
 make -f Makefile.x86 fpga MODEL=Z20_250_12 STREAMING=MASTER
+make -f Makefile.x86 fpga MODEL=Z20_250_12a STREAMING=MASTER
+make -f Makefile.x86 fpga MODEL=Z10_V2 STREAMING=MASTER
+make -f Makefile.x86 fpga MODEL=Z10_PRO_V2 STREAMING=MASTER
+make -f Makefile.x86 fpga MODEL=Z20_125_V2 STREAMING=MASTER
 
 make -f Makefile.x86
 
