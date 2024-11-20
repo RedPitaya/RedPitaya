@@ -424,7 +424,7 @@ rp_calib_error calib_LoadFromFactoryZone(bool convert_to_new){
 }
 
 rp_calib_error calib_SetParams(rp_calib_params_t *calib_params){
-    g_calib = *calib_params;
+    memcpy(&g_calib,calib_params,sizeof(rp_calib_params_t));
     //calib_PrintEx(stderr,&g_calib);
     return RP_HW_CALIB_OK;
 }
