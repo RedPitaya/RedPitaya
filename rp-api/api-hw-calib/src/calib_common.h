@@ -34,6 +34,11 @@
 #define DEFAULT_1_20_FILT_PP 0x2666
 #define DEFAULT_1_20_FILT_KK 0xd9999a
 
+#define DISABLE_FILT_AA 0
+#define DISABLE_FILT_BB 0
+#define DISABLE_FILT_PP 0
+#define DISABLE_FILT_KK 0xffffff
+
 #define CHECK_GAIN_LIMIT(X) (X < 0 ? 0 : (X > 50 ? 50 : X))
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 #define CHECK_VALID_GAIN_LIMIT(X) (X >= 0.5 && X <= 1.5)
@@ -55,7 +60,7 @@ rp_calib_params_t convertV2toCommon(rp_calib_params_v2_t *param, bool adjust);
 rp_calib_params_t convertV3toCommon(rp_calib_params_v3_t *param, bool adjust);
 rp_calib_params_t convertV4toCommon(rp_calib_params_v1_t *param, bool adjust);
 
-rp_calib_params_t getDefault(rp_HPeModels_t model);
+rp_calib_params_t getDefault(rp_HPeModels_t model, bool setFilterZero);
 
 uint_gain_calib_t convertFloatToInt(channel_calib_t *param,uint8_t precision);
 

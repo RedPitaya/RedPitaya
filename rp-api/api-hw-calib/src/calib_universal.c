@@ -694,7 +694,17 @@ bool convertUniversal(rp_HPeModels_t model,rp_calib_params_t *param,rp_calib_par
     return true;
 }
 
-rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model){
+rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model, bool setFilterZero){
+
+    uint32_t aa = setFilterZero ? DISABLE_FILT_AA : DEFAULT_1_1_FILT_AA;
+    uint32_t bb = setFilterZero ? DISABLE_FILT_BB : DEFAULT_1_1_FILT_BB;
+    uint32_t kk = setFilterZero ? DISABLE_FILT_KK : DEFAULT_1_1_FILT_KK;
+    uint32_t pp = setFilterZero ? DISABLE_FILT_PP : DEFAULT_1_1_FILT_PP;
+    uint32_t aa20 = setFilterZero ? DISABLE_FILT_AA : DEFAULT_1_20_FILT_AA;
+    uint32_t bb20 = setFilterZero ? DISABLE_FILT_BB : DEFAULT_1_20_FILT_BB;
+    uint32_t kk20 = setFilterZero ? DISABLE_FILT_KK : DEFAULT_1_20_FILT_KK;
+    uint32_t pp20 = setFilterZero ? DISABLE_FILT_PP : DEFAULT_1_20_FILT_PP;
+
     rp_calib_params_t calib;
     memset(&calib,0,sizeof(rp_calib_params_t));
     switch (model)
@@ -730,15 +740,15 @@ rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model){
             calib.fast_adc_1_20[i].baseScale = 1.0;
             calib.fast_adc_1_20[i].gainCalc = 1.0;
 
-            calib.fast_adc_filter_1_1[i].aa = DEFAULT_1_1_FILT_AA;
-            calib.fast_adc_filter_1_1[i].bb = DEFAULT_1_1_FILT_BB;
-            calib.fast_adc_filter_1_1[i].kk = DEFAULT_1_1_FILT_KK;
-            calib.fast_adc_filter_1_1[i].pp = DEFAULT_1_1_FILT_PP;
+            calib.fast_adc_filter_1_1[i].aa = aa;
+            calib.fast_adc_filter_1_1[i].bb = bb;
+            calib.fast_adc_filter_1_1[i].kk = kk;
+            calib.fast_adc_filter_1_1[i].pp = pp;
 
-            calib.fast_adc_filter_1_20[i].aa = DEFAULT_1_20_FILT_AA;
-            calib.fast_adc_filter_1_20[i].bb = DEFAULT_1_20_FILT_BB;
-            calib.fast_adc_filter_1_20[i].kk = DEFAULT_1_20_FILT_KK;
-            calib.fast_adc_filter_1_20[i].pp = DEFAULT_1_20_FILT_PP;
+            calib.fast_adc_filter_1_20[i].aa = aa20;
+            calib.fast_adc_filter_1_20[i].bb = bb20;
+            calib.fast_adc_filter_1_20[i].kk = kk20;
+            calib.fast_adc_filter_1_20[i].pp = pp20;
 
             calib.fast_dac_x1[i].calibValue = calibBaseScaleFromVoltage(1.0,true);
             calib.fast_dac_x1[i].offset = 0;
@@ -765,10 +775,10 @@ rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model){
             calib.fast_dac_x1[i].baseScale = 1.0;
             calib.fast_dac_x1[i].gainCalc = 1.0;
 
-            calib.fast_adc_filter_1_1[i].aa = DEFAULT_1_1_FILT_AA;
-            calib.fast_adc_filter_1_1[i].bb = DEFAULT_1_1_FILT_BB;
-            calib.fast_adc_filter_1_1[i].kk = DEFAULT_1_1_FILT_KK;
-            calib.fast_adc_filter_1_1[i].pp = DEFAULT_1_1_FILT_PP;
+            calib.fast_adc_filter_1_1[i].aa = aa;
+            calib.fast_adc_filter_1_1[i].bb = bb;
+            calib.fast_adc_filter_1_1[i].kk = kk;
+            calib.fast_adc_filter_1_1[i].pp = pp;
         }
         break;
 
@@ -790,15 +800,15 @@ rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model){
             calib.fast_adc_1_20[i].baseScale = 1.0;
             calib.fast_adc_1_20[i].gainCalc = 1.0;
 
-            calib.fast_adc_filter_1_1[i].aa = DEFAULT_1_1_FILT_AA;
-            calib.fast_adc_filter_1_1[i].bb = DEFAULT_1_1_FILT_BB;
-            calib.fast_adc_filter_1_1[i].kk = DEFAULT_1_1_FILT_KK;
-            calib.fast_adc_filter_1_1[i].pp = DEFAULT_1_1_FILT_PP;
+            calib.fast_adc_filter_1_1[i].aa = aa;
+            calib.fast_adc_filter_1_1[i].bb = bb;
+            calib.fast_adc_filter_1_1[i].kk = kk;
+            calib.fast_adc_filter_1_1[i].pp = pp;
 
-            calib.fast_adc_filter_1_20[i].aa = DEFAULT_1_20_FILT_AA;
-            calib.fast_adc_filter_1_20[i].bb = DEFAULT_1_20_FILT_BB;
-            calib.fast_adc_filter_1_20[i].kk = DEFAULT_1_20_FILT_KK;
-            calib.fast_adc_filter_1_20[i].pp = DEFAULT_1_20_FILT_PP;
+            calib.fast_adc_filter_1_20[i].aa = aa20;
+            calib.fast_adc_filter_1_20[i].bb = bb20;
+            calib.fast_adc_filter_1_20[i].kk = kk20;
+            calib.fast_adc_filter_1_20[i].pp = pp20;
         }
         break;
 
@@ -847,15 +857,15 @@ rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model){
             calib.fast_dac_x5[i].baseScale = 1.0;
             calib.fast_dac_x5[i].gainCalc = 1.0;
 
-            calib.fast_adc_filter_1_1[i].aa = DEFAULT_1_1_FILT_AA;
-            calib.fast_adc_filter_1_1[i].bb = DEFAULT_1_1_FILT_BB;
-            calib.fast_adc_filter_1_1[i].kk = DEFAULT_1_1_FILT_KK;
-            calib.fast_adc_filter_1_1[i].pp = DEFAULT_1_1_FILT_PP;
+            calib.fast_adc_filter_1_1[i].aa = aa;
+            calib.fast_adc_filter_1_1[i].bb = bb;
+            calib.fast_adc_filter_1_1[i].kk = kk;
+            calib.fast_adc_filter_1_1[i].pp = pp;
 
-            calib.fast_adc_filter_1_20[i].aa = DEFAULT_1_20_FILT_AA;
-            calib.fast_adc_filter_1_20[i].bb = DEFAULT_1_20_FILT_BB;
-            calib.fast_adc_filter_1_20[i].kk = DEFAULT_1_20_FILT_KK;
-            calib.fast_adc_filter_1_20[i].pp = DEFAULT_1_20_FILT_PP;
+            calib.fast_adc_filter_1_20[i].aa = aa20;
+            calib.fast_adc_filter_1_20[i].bb = bb20;
+            calib.fast_adc_filter_1_20[i].kk = kk20;
+            calib.fast_adc_filter_1_20[i].pp = pp20;
         }
         break;
 

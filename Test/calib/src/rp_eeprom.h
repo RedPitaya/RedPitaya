@@ -24,17 +24,18 @@
 
 /** Bit flags to represent options on the command-line. */
 typedef enum {
-	WANT_READ       = 0x01,
-	WANT_WRITE      = 0x02,
-	WANT_DEFAULTS   = 0x04,
-	WANT_VERBOSE    = 0x08,
-	WANT_Z_MODE     = 0x10,
-    WANT_HEX        = 0x20,
-    WANT_INIT       = 0x40,
-    WANT_PRINT      = 0x80,
-    WANT_NEW_FORMAT = 0x100,
-    WANT_MODIFY     = 0x200,
-    WANT_TO_OLD     = 0x400
+	WANT_READ         = 0x01,
+	WANT_WRITE        = 0x02,
+	WANT_DEFAULTS     = 0x04,
+	WANT_VERBOSE      = 0x08,
+	WANT_Z_MODE       = 0x10,
+    WANT_HEX          = 0x20,
+    WANT_INIT         = 0x40,
+    WANT_PRINT        = 0x80,
+    WANT_NEW_FORMAT   = 0x100,
+    WANT_MODIFY       = 0x200,
+    WANT_TO_OLD       = 0x400,
+    WANT_FILTER_ZERO  = 0x800
 
 } WANT_FLAGS;
 

@@ -32,7 +32,7 @@ rp_calib_error calib_InitModelEx(rp_HPeModels_t model,bool use_factory_zone,rp_c
     uint16_t header_size = 8;
     uint8_t *header = readHeader(&header_size,use_factory_zone);
     if (!header){
-        *calib = getDefault(model);
+        *calib = getDefault(model,false);
         ERROR_LOG("Can't read calibration header. Set by default.");
         return RP_HW_CALIB_ERE;
     }
@@ -42,7 +42,7 @@ rp_calib_error calib_InitModelEx(rp_HPeModels_t model,bool use_factory_zone,rp_c
 
     if (dataStructureId == RP_HW_PACK_ID_V5){
         if (itemCount > MAX_UNIVERSAL_ITEMS_COUNT){
-            *calib = getDefault(model);
+            *calib = getDefault(model,false);
             ERROR_LOG("More elements for universal calibration than allowed %d max %d. Set by default.",itemCount,MAX_UNIVERSAL_ITEMS_COUNT);
             return RP_HW_CALIB_ERE;
         }
@@ -56,7 +56,7 @@ rp_calib_error calib_InitModelEx(rp_HPeModels_t model,bool use_factory_zone,rp_c
             free(buffer);
         }else{
             free(buffer);
-            *calib = getDefault(model);
+            *calib = getDefault(model,false);
             ERROR_LOG("Can't load universal calibration. Set by default.");
             return RP_HW_CALIB_ERE;
         }
@@ -87,7 +87,7 @@ rp_calib_error calib_InitModelEx(rp_HPeModels_t model,bool use_factory_zone,rp_c
                     free(buffer);
                 }else{
                     free(buffer);
-                    *calib = getDefault(model);
+                    *calib = getDefault(model,false);
                     ERROR_LOG("Can't load calibration v1. Set by default.");
                     return RP_HW_CALIB_ERE;
                 }
@@ -105,7 +105,7 @@ rp_calib_error calib_InitModelEx(rp_HPeModels_t model,bool use_factory_zone,rp_c
                     free(buffer);
                 }else{
                     free(buffer);
-                    *calib = getDefault(model);
+                    *calib = getDefault(model,false);
                     ERROR_LOG("Can't load calibration v1. Set by default.");
                     return RP_HW_CALIB_ERE;
                 }
@@ -122,7 +122,7 @@ rp_calib_error calib_InitModelEx(rp_HPeModels_t model,bool use_factory_zone,rp_c
                     memcpy(&calib_v2,buffer,size);
                     *calib = convertV2toCommon(&calib_v2,adjust);
                 }else{
-                    *calib = getDefault(model);
+                    *calib = getDefault(model,false);
                     ERROR_LOG("Can't load calibration v2. Set by default.");
                     return RP_HW_CALIB_ERE;
                 }
@@ -144,7 +144,7 @@ rp_calib_error calib_InitModelEx(rp_HPeModels_t model,bool use_factory_zone,rp_c
                     free(buffer);
                 }else{
                     free(buffer);
-                    *calib = getDefault(model);
+                    *calib = getDefault(model,false);
                     ERROR_LOG("Can't load calibration v3. Set by default.");
                     return RP_HW_CALIB_ERE;
                 }
@@ -346,28 +346,28 @@ rp_calib_params_t calib_GetParams()
     return g_calib;
 }
 
-rp_calib_params_t calib_GetDefaultCalib(){
+rp_calib_params_t calib_GetDefaultCalib(bool setFilterZero){
     if (!g_model_loaded){
         rp_HPeModels_t model = STEM_125_14_v1_1; // Default model
         int res = rp_HPGetModel(&model);
         if (res != RP_HP_OK){
             ERROR_LOG("Can't load RP model version. Err: %d",res);
         }
-        return getDefault(model);
+        return getDefault(model,setFilterZero);
     }
-    return getDefault(g_model);
+    return getDefault(g_model,setFilterZero);
 }
 
-rp_calib_params_t calib_GetUniversalDefaultCalib(){
+rp_calib_params_t calib_GetUniversalDefaultCalib(bool setFilterZero){
     if (!g_model_loaded){
         rp_HPeModels_t model = STEM_125_14_v1_1; // Default model
         int res = rp_HPGetModel(&model);
         if (res != RP_HP_OK){
             ERROR_LOG("Can't load RP model version. Err: %d",res);
         }
-        return getDefaultUniversal(model);
+        return getDefaultUniversal(model,setFilterZero);
     }
-    return getDefaultUniversal(g_model);
+    return getDefaultUniversal(g_model,setFilterZero);
 }
 
 rp_calib_error calib_WriteDirectlyParams(rp_calib_params_t *calib_params,bool use_factory_zone, bool skip_recalculate){
@@ -385,17 +385,17 @@ rp_calib_error calib_WriteDirectlyParams(rp_calib_params_t *calib_params,bool us
     return calib_WriteParams(model,calib_params,use_factory_zone,skip_recalculate);
 }
 
-void calib_SetToZero(bool is_new_format) {
+void calib_SetToZero(bool is_new_format,bool setFilterZero) {
     if (is_new_format)
-        g_calib = calib_GetUniversalDefaultCalib();
+        g_calib = calib_GetUniversalDefaultCalib(setFilterZero);
     else
-        g_calib = calib_GetDefaultCalib();
+        g_calib = calib_GetDefaultCalib(setFilterZero);
 }
 
-rp_calib_error calib_Reset(bool use_factory_zone,bool is_new_format) {
+rp_calib_error calib_Reset(bool use_factory_zone,bool is_new_format,bool setFilterZero) {
     if (g_model_loaded){
         rp_calib_params_t calib = g_calib;
-        calib_SetToZero(is_new_format);
+        calib_SetToZero(is_new_format,setFilterZero);
         int res = calib_WriteParams(g_model,&g_calib,use_factory_zone,false);
         if (res != RP_HW_CALIB_OK){
             g_calib = calib;

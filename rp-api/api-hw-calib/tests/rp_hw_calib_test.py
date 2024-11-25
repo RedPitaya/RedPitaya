@@ -21,8 +21,8 @@ print("rp_hw_calib.rp_GetDefaultCalibrationSettings()")
 res = rp_hw_calib.rp_GetDefaultCalibrationSettings()
 print(res.fast_adc_count_1_1)
 
-print("rp_hw_calib.rp_CalibrationReset()")
-res = rp_hw_calib.rp_CalibrationReset(False,False)
+print("rp_hw_calib.rp_CalibrationReset(False,False,False)")
+res = rp_hw_calib.rp_CalibrationReset(False,False,False)
 print(res)
 
 print("rp_hw_calib.rp_CalibrationFactoryReset()")

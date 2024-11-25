@@ -113,7 +113,7 @@ typedef enum {
 char* getNameOfUniversalId(uint16_t id);
 bool convertUniversal(rp_HPeModels_t model,rp_calib_params_t *param,rp_calib_params_universal_t *out);
 rp_calib_params_t convertUniversaltoCommon(rp_HPeModels_t model, rp_calib_params_universal_t *param);
-rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model);
+rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model,bool setFilterZero);
 int recalculateToUniversal(rp_calib_params_t *param);
 
 #endif

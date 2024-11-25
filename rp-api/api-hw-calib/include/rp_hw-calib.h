@@ -204,7 +204,7 @@ rp_calib_params_t rp_GetDefaultCalibrationSettings();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-rp_calib_error rp_CalibrationReset(bool use_factory_zone,bool is_new_format);
+rp_calib_error rp_CalibrationReset(bool use_factory_zone, bool is_new_format, bool setFilterZero);
 
 /**
 * Copy factory calibration values into user eeprom.

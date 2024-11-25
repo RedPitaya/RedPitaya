@@ -83,6 +83,7 @@ void usage()
         "\n"
         " -m    Modify specific parameter in universal calibration\n"
         " -n    Flag for working with the new calibration storage format.\n"
+        " -e    Disables the ADC filter completely in the FPGA when the calibration is reset to default.\n"
         "\n";
 
     fprintf(stderr, format, g_argv0, VERSION_STR, REVISION_STR, g_argv0);
@@ -218,7 +219,7 @@ int main(int argc, char **argv)
     }
 
     /* Parse options */
-    const char *optstring = "rwfdvhzxiunmo";
+    const char *optstring = "rwfdvhzxiunmoe";
     unsigned int want_bits = 0;
     bool factory = false;
 
@@ -273,6 +274,10 @@ int main(int argc, char **argv)
 
         case 'o':
                 want_bits |= WANT_TO_OLD;
+            break;
+
+        case 'e':
+                want_bits |= WANT_FILTER_ZERO;
             break;
 
         case 'h':
@@ -348,7 +353,7 @@ int main(int argc, char **argv)
             fprintf(stderr, "ERROR: Init failed!\n");
             return ret;
         }
-        ret = rp_CalibrationReset(factory,want_bits & WANT_NEW_FORMAT);
+        ret = rp_CalibrationReset(factory,want_bits & WANT_NEW_FORMAT , want_bits & WANT_FILTER_ZERO);
         if (ret) {
             fprintf(stderr, "ERROR: Reset failed!\n");
             return ret;

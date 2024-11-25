@@ -26,7 +26,7 @@ CCalib::~CCalib()
 }
 
 int CCalib::resetCalibToZero(){
-    return rp_CalibrationReset(false,true);
+    return rp_CalibrationReset(false,true,false);
 }
 
 int CCalib::resetCalibToFactory(){
