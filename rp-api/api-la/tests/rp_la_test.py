@@ -1,71 +1,23 @@
 #!/usr/bin/python3
 
-from rp_la import *
-import numpy as np
+import rp_la
 
-print("rp_ARBInit()")
-res = rp_ARBInit()
-print(res)
+class Callback(rp_la.CLACallback):
+    def captureStatus(self,controller,isTimeout):
+        print("captureStatus timeout =",isTimeout)
 
-print("rp_ARBLoadFiles()")
-res = rp_ARBLoadFiles()
-print(res)
 
-print("rp_ARBGenFile('')")
-res = rp_ARBGenFile('')
-print(res)
+obj = rp_la.CLAController()
 
-print("rp_ARBGetCount()")
-res = rp_ARBGetCount()
-print(res)
+callback = Callback()
+obj.setDelegate(callback.__disown__())
 
-s = ""
-print("rp_ARBGetName(0)")
-res = rp_ARBGetName(0)
-print(res)
-
-print("rp_ARBGetFileName(0)")
-res = rp_ARBGetFileName(0)
-print(res)
-
-# Max 16k samples
-d = arrFloat(1024 * 16)
-print("rp_ARBGetSignal(0,d.cast())")
-res = rp_ARBGetSignal(0,d.cast())
-print(res)
-
-d = arrFloat(1024 * 16)
-print("rp_ARBGetSignalByName('',d.cast())")
-res = rp_ARBGetSignalByName('',d.cast())
-print(res)
-
-N = 1024*16
-arr_f = np.zeros(N, dtype=np.float32)
-
-print("rp_ARBGetSignalNP(0,arr_f)")
-res = rp_ARBGetSignalNP(0,arr_f)
-print(res)
-
-print("rp_ARBGetSignalByNameNP('',arr_f)")
-res = rp_ARBGetSignalByNameNP('',arr_f)
-print(res)
-
-print("rp_ARBSetColor(0,123)")
-res = rp_ARBSetColor(0,123)
-print(res)
-
-print("rp_ARBGetColor(0)")
-res = rp_ARBGetColor(0)
-print(res)
-
-print("rp_ARBRenameFile(0,'')")
-res = rp_ARBRenameFile(0,'')
-print(res)
-
-print("rp_ARBLoadToFPGA(0,'')")
-res = rp_ARBLoadToFPGA(0,'')
-print(res)
-
-print("rp_ARBIsValid('')")
-res = rp_ARBIsValid('')
-print(res)
+obj.setEnableRLE(True)
+obj.setDecimation(1)
+obj.setTrigger(0,rp_la.LA_RISING_OR_FALLING)
+obj.setPreTriggerSamples(1024)
+obj.setPostTriggerSamples(1024)
+obj.runAsync(0)
+print(obj.wait(10000))
+obj.saveCaptureDataToFile("/tmp/data.bin")
+del obj

@@ -94,20 +94,20 @@ int rp_dmaRead(rp_handle_uio_t *handle, int timeout_ms) {
 
     if (timeout_ms <= 0){
         TRACE_SHORT("Read without timeout")
-        uint32_t info;
-        int s = read(handle->dma_fd, &info, sizeof(info));
+        int s = read(handle->dma_fd, NULL, 1);
         if (s < 0) {
             ERROR_LOG("Read error");
             return -1;
         }
         return RP_OK;
     }
-
-    struct pollfd pfd = {.fd = handle->dma_fd, .events = POLLIN, .revents = 0};
+    TRACE_SHORT("Read with timeout = %d",timeout_ms)
+    FATAL("NOT WORK")
+    struct pollfd pfd = {.fd = handle->dma_fd, .events = POLLPRI, .revents = 0};
     int rv = poll(&pfd, 1, timeout_ms);
     if (rv >= 1) {
-        uint32_t info;
-        size_t s = read(handle->dma_fd, &info, sizeof(info));
+        TRACE_SHORT("Read")
+        size_t s = read(handle->dma_fd, NULL, 1);
         if (s == 1)
             return RP_OK;
     } else if (rv == 0) {

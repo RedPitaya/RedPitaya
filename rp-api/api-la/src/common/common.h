@@ -39,4 +39,6 @@ uint32_t getMaxFreq();
 const double c_max_dig_sampling_rate = getMaxFreq();
 const double c_max_dig_sampling_rate_time_interval_ns = 1e9 / c_max_dig_sampling_rate;
 
+auto getClockMs() -> double;
+
 #endif

@@ -43,6 +43,15 @@ typedef enum {
     LA_RISING_OR_FALLING   = 5
 } la_Trigger_Mode_t;
 
+class CLAController;
+
+class CLACallback
+{
+   public:
+      virtual ~CLACallback(){}
+      virtual void captureStatus(CLAController* controller,bool isTimeout){}
+};
+
 class CLAController
 {
 
@@ -54,6 +63,7 @@ public:
 
     auto setTrigger(uint8_t channel, la_Trigger_Mode_t mode) -> void;
     auto getTrigger(uint8_t channel) -> la_Trigger_Mode_t;
+    auto isNoTriggers() -> bool;
     auto resetTriggers() -> void;
     auto softwareTrigger() -> bool;
 
@@ -67,10 +77,31 @@ public:
     auto setDecimation(uint32_t decimation) -> void;
     auto getDecimation() -> uint32_t;
 
-    auto run() -> void;
-    auto runAsync() -> void;
+    auto setPreTriggerSamples(uint32_t value) -> void;
+    auto getPreTriggerSamples() -> uint32_t;
+    auto setPostTriggerSamples(uint32_t value) -> void;
+    auto getPostTriggerSamples() -> uint32_t;
 
 
+	auto setDelegate(CLACallback *callbacks) -> void;
+	auto removeDelegate() -> void;
+
+    auto isCaptureRun() -> bool;
+
+    // TODO timeout
+    // timeout - Timeout in mS. 0 - Disable
+    // auto run(uint32_t timeoutMs) -> void;
+
+    // TODO
+    // timeout - Timeout in mS. 0 - Disable
+    auto runAsync(uint32_t timeoutMs) -> void;
+
+    auto wait(uint32_t timeoutMs, bool *isTimeout) -> void;
+
+    // TODO
+    // auto wait() -> void;
+
+    auto saveCaptureDataToFile(std::string file) -> bool;
 
 private:
 

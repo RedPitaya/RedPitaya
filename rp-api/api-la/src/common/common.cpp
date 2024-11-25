@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
+#include <time.h>
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -66,3 +67,8 @@ uint32_t getMaxFreq(){
     return c;
 }
 
+auto getClockMs() -> double {
+    struct timespec tp;
+    clock_gettime(CLOCK_REALTIME, &tp);
+    return ((double)tp.tv_sec * 1000.f) + ((double)tp.tv_nsec / 1000000.f);
+}

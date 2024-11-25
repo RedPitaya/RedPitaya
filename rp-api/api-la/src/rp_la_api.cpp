@@ -116,6 +116,7 @@ int rp_SoftwareTrigger(){
     std::lock_guard lock(g_trigger_mtx);
     std::lock_guard lock2(g_data_mtx);
 	if(g_acq_data.inProcess){
+        TRACE_SHORT("Call softwere trigger")
 		rp_LaAcqTriggerAcq(&g_la_acq_handle);
 	}
     return RP_OK;
@@ -197,19 +198,21 @@ int rp_WaitData(int timeout){
 
     std::lock_guard lock(g_data_mtx);
     g_acq_data.inProcess = false;
+
     if (ret == -1){
         ERROR_LOG("Read error")
         g_acq_data.isCapture = false;
         return RP_EOP;
     }
+
     if (ret == -2){
         g_acq_data.isCapture = false;
         g_acq_data.isTimeout = true;
         return RP_OK;
     }
 
-    uint32_t trig_sample;
-    uint32_t last_sample;
+    uint32_t trig_sample = 0;
+    uint32_t last_sample = 0;
 
     bool rle;
     rp_LaAcqIsRLE(&g_la_acq_handle,&rle);
@@ -248,9 +251,16 @@ int rp_GetTrigPosition(uint32_t * tigger_pos){
 	return RP_OK;
 }
 
+int rp_GetIsTimeout(bool *isTimeout){
+    std::lock_guard lock(g_data_mtx);
+    *isTimeout = g_acq_data.isTimeout;
+    return RP_OK;
+}
+
 
 int rp_GetValues(uint32_t *noOfSamples){
     std::lock_guard lock(g_data_mtx);
+    TRACE_SHORT("Dma size %d dev %s",g_la_acq_handle.dma_size,g_la_acq_handle.dma_dev.c_str())
     int16_t *map = (int16_t *)mmap(NULL, g_la_acq_handle.dma_size, PROT_READ | PROT_WRITE, MAP_SHARED, g_la_acq_handle.dma_fd, 0);
     if (map == NULL) {
         ERROR_LOG("Failed to mmap");
@@ -276,6 +286,9 @@ int rp_GetValues(uint32_t *noOfSamples){
         uint32_t i = 0;
         uint32_t index = g_acq_data.last_sample;
         uint32_t total = g_acq_data.pre_samples + g_acq_data.post_samples;
+        TRACE_SHORT("Samples total %d pre %d post %d",total,g_acq_data.pre_samples,g_acq_data.post_samples)
+        TRACE_SHORT("Post trig %d last %d",g_acq_data.trig_sample,g_acq_data.last_sample)
+
         bool trig_sample_found = false;
         while(1){
             i++;

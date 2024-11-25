@@ -112,6 +112,8 @@ int rp_Run(uint32_t noOfPreTriggerSamples,
 
 int rp_WaitData(int timeout);
 
+int rp_GetIsTimeout(bool *isTimeout);
+
 int rp_GetTrigPosition(uint32_t *tigger_pos);
 
 /**

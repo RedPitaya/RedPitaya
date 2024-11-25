@@ -1,4 +1,4 @@
-%module rp_la
+%module(directors="1") rp_la
 
 %include <stdint.i>
 %include <typemaps.i>
@@ -10,6 +10,7 @@
 
 %apply int { la_Mode_t }
 %apply int { la_Trigger_Mode_t }
+%apply bool *OUTPUT { bool * isTimeout };
 
 
 %{
@@ -23,6 +24,8 @@
 %init %{
 import_array();
 %}
+
+%feature("director") CLACallback;
 
 /* Parse the header file to generate wrappers */
 %include "rp_la.h"
