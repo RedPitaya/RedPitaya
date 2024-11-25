@@ -47,6 +47,11 @@ then
   setenv dts_path z20_250
 fi
 
+if test ${hw_rev} == 'STEM_125-14_Z7020_Pro_v1.0'
+then
+  setenv dts_path z20_125_v2
+fi
+
 if test ${hw_rev} == 'STEM_125-14_Z7020_Pro_v2.0'
 then
   setenv dts_path z20_125_v2

@@ -43,7 +43,7 @@ echo \"ecosystem\": $(cat /opt/redpitaya/www/apps/info/info.json ), >> /tmp/sysi
 echo \"linux\": \"$(cat /root/.version)\",  >> /tmp/sysinfo.json
 echo \"mem_size\":\"$(($(getconf _PHYS_PAGES) * $(getconf PAGE_SIZE) / (1024 * 1024)))\",  >> /tmp/sysinfo.json
 
-if [ "$FPGA_VER" == "z20_250" ]; then
+if [ "$FPGA_VER" == "z20_250" || "$FPGA_VER" == "z20_125_v2" ]; then
 echo \"mem_upgrade\":\"1\",  >> /tmp/sysinfo.json
 else
 echo \"mem_upgrade\":\"0\",  >> /tmp/sysinfo.json

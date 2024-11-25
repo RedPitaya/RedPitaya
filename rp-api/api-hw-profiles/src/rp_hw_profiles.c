@@ -83,6 +83,7 @@ int rp_HPPrintAll(){
     hp_cmn_Print(getProfile_STEM_125_14_LN_CE2_v1_1());
     hp_cmn_Print(getProfile_STEM_125_14_v2_0());
     hp_cmn_Print(getProfile_STEM_125_14_Pro_v2_0());
+    hp_cmn_Print(getProfile_STEM_125_14_Z7020_Pro_v1_0());
     hp_cmn_Print(getProfile_STEM_125_14_Z7020_Pro_v2_0());
     hp_cmn_Print(getProfile_STEM_125_14_Z7020_Ind_v2_0());
     return RP_HP_OK;
@@ -942,6 +943,9 @@ int rp_HPGetFPGAVersion(char **_no_free_value){
             break;
         case STEM_125_14_Pro_v2_0:
             *_no_free_value = "z10_125_pro_v2";
+            break;
+        case STEM_125_14_Z7020_Pro_v1_0:
+            *_no_free_value = "z20_125_v2";
             break;
         case STEM_125_14_Z7020_Pro_v2_0:
             *_no_free_value = "z20_125_v2";

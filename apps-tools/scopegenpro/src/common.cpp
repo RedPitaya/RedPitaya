@@ -75,6 +75,7 @@ auto isZModePresent() -> bool{
             return false;
         case STEM_125_14_v2_0:
         case STEM_125_14_Pro_v2_0:
+        case STEM_125_14_Z7020_Pro_v1_0:
         case STEM_125_14_Z7020_Pro_v2_0:
         case STEM_125_14_Z7020_Ind_v2_0:
         case STEM_250_12_v1_0:
@@ -106,6 +107,7 @@ auto outAmpDef() -> float{
         case STEM_125_14_Z7020_LN_v1_1:
         case STEM_125_14_v2_0:
         case STEM_125_14_Pro_v2_0:
+        case STEM_125_14_Z7020_Pro_v1_0:
         case STEM_125_14_Z7020_Pro_v2_0:
         case STEM_125_14_Z7020_Ind_v2_0:
             return 0.9;
@@ -146,6 +148,7 @@ auto outAmpMax() -> float{
             return 1;
         case STEM_125_14_v2_0:
         case STEM_125_14_Pro_v2_0:
+        case STEM_125_14_Z7020_Pro_v1_0:
         case STEM_125_14_Z7020_Pro_v2_0:
         case STEM_125_14_Z7020_Ind_v2_0:
             return 2;
@@ -188,6 +191,7 @@ auto getModelName() -> std::string{
             return "Z10";
         case STEM_125_14_Z7020_v1_0:
         case STEM_125_14_Z7020_LN_v1_1:
+        case STEM_125_14_Z7020_Pro_v1_0:
         case STEM_125_14_Z7020_Pro_v2_0:
         case STEM_125_14_Z7020_Ind_v2_0:
             return "Z20_125";
