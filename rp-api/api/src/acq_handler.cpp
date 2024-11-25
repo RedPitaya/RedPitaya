@@ -20,6 +20,7 @@
 #include <assert.h>
 
 #include "common.h"
+#include "convert.hpp"
 #include "oscilloscope.h"
 #include "acq_handler.h"
 #include "axi_manager.h"

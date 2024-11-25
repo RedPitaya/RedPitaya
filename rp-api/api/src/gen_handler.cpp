@@ -16,6 +16,7 @@
 #include <float.h>
 #include "math.h"
 #include "common.h"
+#include "convert.hpp"
 #include "generate.h"
 #include "gen_handler.h"
 #include "rp-i2c-max7311-c.h"

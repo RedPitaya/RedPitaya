@@ -27,6 +27,7 @@
 #include "generate.h"
 #include "gen_handler.h"
 #include "daisy.h"
+#include "convert.hpp"
 
 #include "rp-i2c-mcp47x6-c.h"
 #include "rp-i2c-max7311-c.h"

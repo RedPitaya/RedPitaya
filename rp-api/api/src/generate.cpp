@@ -18,6 +18,7 @@
 #include <math.h>
 #include "common.h"
 #include "generate.h"
+#include "convert.hpp"
 
 static volatile generate_control_t *generate = NULL;
 static volatile int32_t *data_ch[2] = {NULL,NULL};
