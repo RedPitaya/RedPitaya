@@ -1,7 +1,7 @@
 #!/bin/sh
 
 FPGAS=/opt/redpitaya/fpga
-MODEL=$(/opt/redpitaya/bin/monitor -f)
+MODEL=$(/opt/redpitaya/bin/profiles -f)
 
 if [ "$?" = "0" ]
 then

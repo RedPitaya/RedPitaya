@@ -101,7 +101,7 @@ typedef enum {
 /**
 * Returns the model read from eeprom
 * @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
+* If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error..
 */
 int rp_HPGetModel(rp_HPeModels_t *_out_value);
 

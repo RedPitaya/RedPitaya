@@ -4,7 +4,7 @@ READ_HWREV=""
 DNA_1=""
 DNA_2=""
 C=10
-FPGA_VER=$(monitor -f)
+FPGA_VER=$(profiles -f)
 IS_512_BOOT=$(cmp /opt/redpitaya/boot.bin /opt/redpitaya/uboot/boot_512Mb_ram.bin)
 SLAVE=$(cat /opt/redpitaya/bin/.streaming_mode 2> /dev/null)
 

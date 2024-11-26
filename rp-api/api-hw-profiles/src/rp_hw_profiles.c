@@ -22,6 +22,7 @@
 #include "stem_125_14_LN_CE2_v1.1.h"
 #include "stem_125_14_v2.0.h"
 #include "stem_125_14_Pro_v2.0.h"
+#include "stem_125_14_Z7020_Pro_v1.0.h"
 #include "stem_125_14_Z7020_Pro_v2.0.h"
 #include "stem_125_14_Z7020_Ind_v2.0.h"
 

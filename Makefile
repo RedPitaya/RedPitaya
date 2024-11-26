@@ -322,6 +322,7 @@ LA_DIR             = Test/la
 LCR_DIR            = Test/lcr
 BODE_DIR           = Test/bode
 MONITOR_DIR        = Test/monitor
+PROFILES_DIR       = Test/profiles
 ACQUIRE_DIR        = Test/acquire
 ACQUIRE_P_DIR      = Test/acquire_p
 CALIB_DIR          = Test/calib
@@ -335,9 +336,9 @@ E3_LED_CON_DIR     = tools/e3_led_controller
 STARTUPSH          = $(INSTALL_DIR)/sbin/startup.sh
 
 .PHONY: examples fpgautils
-.PHONY: lcr bode monitor generator acquire acquire_p calib spectrum led_control daisy_tool la e3_led_controller
+.PHONY: lcr bode monitor profiles generator acquire acquire_p calib spectrum led_control daisy_tool la e3_led_controller
 
-examples: lcr bode monitor calib spectrum acquire acquire_p generator led_control fpgautils daisy_tool la e3_led_controller
+examples: lcr bode monitor profiles calib spectrum acquire acquire_p generator led_control fpgautils daisy_tool la e3_led_controller
 
 
 lcr: api
@@ -355,6 +356,10 @@ bode: api
 monitor: api
 	cmake -B$(abspath $(MONITOR_DIR)/build) -S$(abspath $(MONITOR_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(MONITOR_DIR)/build install -j$(CPU_CORES)
+
+profiles: api
+	cmake -B$(abspath $(PROFILES_DIR)/build) -S$(abspath $(PROFILES_DIR)) $(CMAKEVAR)
+	$(MAKE) -C $(PROFILES_DIR)/build install -j$(CPU_CORES)
 
 generator: api
 	cmake -B$(abspath $(GENERATOR_DIR)/build) -S$(abspath $(GENERATOR_DIR)) $(CMAKEVAR)
@@ -526,6 +531,7 @@ clean: nginx_clean scpi_clean
 	rm -rf $(abspath $(GENERATOR_DIR)/build)
 	rm -rf $(abspath $(LED_CONTROL_DIR)/build)
 	rm -rf $(abspath $(MONITOR_DIR)/build)
+	rm -rf $(abspath $(PROFILES_DIR)/build)
 	rm -rf $(abspath $(SPECTRUM_DIR)/build)
 	rm -rf $(abspath $(LIBRPAPP_DIR)/build)
 	rm -rf $(abspath $(E3_LED_CON_DIR)/build)
