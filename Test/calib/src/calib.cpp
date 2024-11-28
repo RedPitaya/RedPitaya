@@ -168,14 +168,14 @@ int WriteCalib(rp_HPeModels_t model, bool factory,bool is_new,bool is_modify)
                     idx = z;
                     break;
                 }
-                if (idx == -1){
-                    free(buff);
-                    fprintf(stderr, "ERROR: Can't find calibration parameter id = %s\n",in_params[i].c_str());
-                    return -1;
-                }
-                i++;
-                new_eeprom.item[idx].value = stoi(in_params[i]);;
             }
+            if (idx == -1){
+                free(buff);
+                fprintf(stderr, "ERROR: Can't find calibration parameter id = %s\n",in_params[i].c_str());
+                return -1;
+            }
+            i++;
+            new_eeprom.item[idx].value = stoi(in_params[i]);;
         }
     }
 #ifdef DEBUG
