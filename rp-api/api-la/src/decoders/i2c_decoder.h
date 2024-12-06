@@ -12,13 +12,16 @@ class I2CDecoder : public Decoder
 	class Impl;
 
 public:
-    I2CDecoder(const std::string& _name = "i2c");
+    I2CDecoder(int decoderType,const std::string& _name = "i2c");
     ~I2CDecoder();
 
-    void setParameters(const I2CParameters& _new_params);
-    void decode(const uint8_t* _input, uint32_t _size) override;
-
-    std::vector<OutputPacket> getSignal();
+    auto setParameters(const I2CParameters& _new_params) -> void;
+    auto getParametersInJSON() -> std::string override;
+    auto setParametersInJSON(const std::string &parameter) -> void override;
+    auto getMemoryUsage() -> uint64_t override;
+    auto decode(const uint8_t* _input, uint32_t _size) -> void override;
+    auto getSignal() -> std::vector<OutputPacket> override;
+    auto reset() -> void override;
 
 private:
 

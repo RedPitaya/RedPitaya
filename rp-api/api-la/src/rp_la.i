@@ -6,6 +6,7 @@
 %include <carrays.i>
 %include <cpointer.i>
 %include <std_string.i>
+%include <std_vector.i>
 %include <stl.i>
 
 %apply int { la_Mode_t }
@@ -27,5 +28,22 @@ import_array();
 
 %feature("director") CLACallback;
 
+%numpy_typemaps(uint8_t,    NPY_UINT8   , short)
+%apply (uint8_t* IN_ARRAY1, int DIM1) {(uint8_t* np_buffer, int size)};
+
+%typemap(out) std::vector<rp_la::OutputPacket> {
+    PyObject* list = PyList_New( $1.size() );
+    for (size_t i = 0; i < $1.size(); ++i) {
+        PyObject* d = PyDict_New();
+        PyDict_SetItemString(d, "control", PyInt_FromLong($1.at(i).control));
+        PyDict_SetItemString(d, "data", PyInt_FromLong($1.at(i).data));
+        PyDict_SetItemString(d, "length", PyInt_FromLong($1.at(i).length));
+        PyDict_SetItemString(d, "annotation", PyString_FromString($1.at(i).annotation.c_str()));
+        PyList_SetItem(list, i, d);
+    }
+    $result = list;
+}
+
 /* Parse the header file to generate wrappers */
 %include "rp_la.h"
+

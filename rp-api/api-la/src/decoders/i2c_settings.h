@@ -44,7 +44,7 @@ namespace i2c {
 		auto toJson() -> std::string;
     	auto fromJson(const std::string &json) -> bool;
 
-		static constexpr std::string_view getI2CAnnotationsString(I2CAnnotations value);
+		static std::string getI2CAnnotationsString(I2CAnnotations value);
 	};
 
 }

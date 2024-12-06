@@ -77,26 +77,26 @@ auto UARTParameters::fromJson(const std::string &json) -> bool{
 
 		return true;
 	} catch (...) {
-		ERROR_LOG("Error parse json. Invalid file")
+		ERROR_LOG("Error parse json. Invalid data")
 		return false;
 	}
 	return false;
 }
 
- constexpr std::string_view UARTParameters::getUARTAnnotationsString(UARTAnnotations value){
+std::string UARTParameters::getUARTAnnotationsString(UARTAnnotations value){
 	switch (value)
 	{
 		case NO: return "";
-		case RX_DATA: return "";
-		case RX_START: return "";
-		case RX_PARITY_OK: return "";
-		case RX_PARITY_ERR: return "";
-		case RX_STOP: return "";
-		case RX_WARNING: return "";
-		case RX_DATA_BITS: return "";
+		case RX_DATA: return "Data";
+		case RX_START: return "Start";
+		case RX_PARITY_OK: return "Parity ok";
+		case RX_PARITY_ERR: return "Parity err";
+		case RX_STOP: return "Stop";
+		case RX_WARNING: return "Warning";
+		case RX_DATA_BITS: return "Data bits";
 
 	default:
-		ERROR_LOG("Unknown id = %d",(int)value)
+		TRACE_SHORT("Unknown id = %d",(int)value)
 		break;
 	}
 	return "";

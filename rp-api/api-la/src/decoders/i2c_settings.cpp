@@ -59,13 +59,13 @@ auto I2CParameters::fromJson(const std::string &json) -> bool{
 		if (!parseUInt32(m_invert_bit,"invert_bit")) return false;
 		return true;
 	} catch (...) {
-		ERROR_LOG("Error parse json. Invalid file")
+		ERROR_LOG("Error parse json. Invalid data")
 		return false;
 	}
 	return false;
 }
 
- constexpr std::string_view I2CParameters::getI2CAnnotationsString(I2CAnnotations value){
+std::string I2CParameters::getI2CAnnotationsString(I2CAnnotations value){
 	switch (value)
 	{
 		case START: return "Start";

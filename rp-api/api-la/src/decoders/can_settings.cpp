@@ -11,6 +11,7 @@ CANParameters::CANParameters(){
 	m_sample_point = 87.5;
 	m_invert_bit = 0;
 	m_frame_limit = 500;
+	m_acq_speed = 125e6;
 }
 
 auto CANParameters::toJson() -> std::string{
@@ -22,6 +23,7 @@ auto CANParameters::toJson() -> std::string{
 	root["sample_point"] = m_sample_point;
 	root["invert_bit"] = m_invert_bit;
 	root["frame_limit"] = m_frame_limit;
+	root["acq_speed"] = m_acq_speed;
 
 	Json::StreamWriterBuilder builder;
 	const std::string json = Json::writeString(builder, root);
@@ -72,13 +74,13 @@ auto CANParameters::fromJson(const std::string &json) -> bool{
 
 		return true;
 	} catch (...) {
-		ERROR_LOG("Error parse json. Invalid file")
+		ERROR_LOG("Error parse json. Invalid data")
 		return false;
 	}
 	return false;
 }
 
- constexpr std::string_view CANParameters::getCANAnnotationsString(CANAnnotations value){
+std::string CANParameters::getCANAnnotationsString(CANAnnotations value){
 	switch (value)
 	{
 		case PAYLOAD_DATA: return "Payload data";

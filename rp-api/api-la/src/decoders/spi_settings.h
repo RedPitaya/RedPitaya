@@ -51,7 +51,7 @@ namespace spi {
 		auto toJson() -> std::string;
     	auto fromJson(const std::string &json) -> bool;
 
-		static constexpr std::string_view getSPIAnnotationsString(SPIAnnotations value);
+		static std::string getSPIAnnotationsString(SPIAnnotations value);
 	};
 }
 

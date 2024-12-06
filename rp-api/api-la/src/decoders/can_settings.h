@@ -64,7 +64,7 @@ namespace can {
 		auto toJson() -> std::string;
     	auto fromJson(const std::string &json) -> bool;
 
-		static constexpr std::string_view getCANAnnotationsString(CANAnnotations value);
+		static std::string getCANAnnotationsString(CANAnnotations value);
 	};
 }
 

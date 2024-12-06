@@ -77,7 +77,8 @@ list(APPEND src
             ${CMAKE_SOURCE_DIR}/src/axi_manager.cpp
             ${CMAKE_SOURCE_DIR}/src/daisy.cpp
             ${CMAKE_SOURCE_DIR}/src/convert.hpp
-    )
+            ${CMAKE_SOURCE_DIR}/src/profiler.cpp
+)
 
 
 list(APPEND header_rp
@@ -92,6 +93,7 @@ list(APPEND header_rp
 list(APPEND header_rp_common
     ${CMAKE_SOURCE_DIR}/include/common/version.h
     ${CMAKE_SOURCE_DIR}/include/common/rp_log.h
+    ${CMAKE_SOURCE_DIR}/include/common/profiler.h
 )
 
 

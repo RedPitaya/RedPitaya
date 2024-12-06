@@ -27,7 +27,6 @@ class I2CDecoder::Impl{
 	Impl();
 
 	I2CParameters m_options;
-	std::string m_name;
 
 	bool m_oldScl;
 	bool m_oldSda;
@@ -74,18 +73,47 @@ I2CDecoder::Impl::Impl(){
 
 }
 
-I2CDecoder::I2CDecoder(const std::string& _name){
+I2CDecoder::I2CDecoder(int decoderType, const std::string& _name){
+	m_decoderType = decoderType;
+	m_name = _name;
 	m_impl = new Impl();
-	m_impl->m_name = _name;
 	m_impl->resetDecoder();
+	setParameters(i2c::I2CParameters());
 }
 
 I2CDecoder::~I2CDecoder(){
 	delete m_impl;
 }
 
+auto I2CDecoder::reset() -> void{
+	m_impl->resetDecoder();
+}
+
+auto I2CDecoder::getMemoryUsage() -> uint64_t{
+	uint64_t size = sizeof(Impl);
+	size += m_impl->m_bits.size() * sizeof(std::deque<std::vector<uint32_t>>);
+	for(auto itm : m_impl->m_bits){
+		size += itm.size() * sizeof(uint32_t);
+	}
+	size += m_impl->m_result.size() * sizeof(OutputPacket);
+	return size;
+}
+
 void I2CDecoder::setParameters(const I2CParameters& _new_params){
 	m_impl->m_options = _new_params;
+}
+
+auto I2CDecoder::getParametersInJSON() -> std::string{
+	return m_impl->m_options.toJson();
+}
+
+auto I2CDecoder::setParametersInJSON(const std::string &parameter) -> void{
+	I2CParameters param;
+	if (param.fromJson(parameter)){
+		setParameters(param);
+	}else{
+		ERROR_LOG("Error set parameters")
+	}
 }
 
 std::vector<OutputPacket> I2CDecoder::getSignal(){
@@ -121,9 +149,9 @@ void I2CDecoder::Impl::addNothing(){
 		--len;
 	if (len < 0)
 		return;
-	while(len > 0xFFFF){
-		len -= 0xFFFF;
-		m_result.push_back(OutputPacket{NOTHING, 0, (uint16_t)0xFFFF});
+	while(len > 0x7FFFFFFF){
+		len -= 0x7FFFFFFF;
+		m_result.push_back(OutputPacket{NOTHING, 0, (uint16_t)0x7FFFFFFF});
 	}
 	m_result.push_back(OutputPacket{NOTHING, 0, (uint16_t)len});
 }

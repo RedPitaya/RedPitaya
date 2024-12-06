@@ -68,28 +68,6 @@
             }, 200);
         });
 
-        $("#ext_con_but").click(function(event) {
-            $('#ext_connections_dialog').modal("show");
-        });
-
-        $('#save_settings').click(function() {
-            $('#save_settings_dialog').modal("show");
-        });
-
-        $('#reset_settings').click(function() {
-            CLIENT.params.local['CONTROL_CONFIG_SETTINGS'] = { value: 1 }; // REQUEST_RESET
-            SPEC.sendParams();
-        });
-
-        $('#OSC_REQ_SAVE_SETTINGS').on('click', function() {
-            var name = $("#SETTINGS_NEW_NAME").val().trim()
-            if (name !== ""){
-                CLIENT.params.local['FILE_SATTINGS'] = { value: name };
-                CLIENT.params.local['CONTROL_CONFIG_SETTINGS'] = { value: 4 }; // SAVE
-                SPEC.sendParams();
-            }
-        });
-
         $(moreVal + ', ' + lessVal).on("mouseup mouseout", function() {
             clearTimeout(timeout);
             clearInterval(interval);
@@ -191,6 +169,28 @@
             }
         });
     }
+
+    $("#ext_con_but").click(function(event) {
+        $('#ext_connections_dialog').modal("show");
+    });
+
+    $('#save_settings').click(function() {
+        $('#save_settings_dialog').modal("show");
+    });
+
+    $('#reset_settings').click(function() {
+        CLIENT.params.local['CONTROL_CONFIG_SETTINGS'] = { value: 1 }; // REQUEST_RESET
+        SPEC.sendParams();
+    });
+
+    $('#OSC_REQ_SAVE_SETTINGS').on('click', function() {
+        var name = $("#SETTINGS_NEW_NAME").val().trim()
+        if (name !== ""){
+            CLIENT.params.local['FILE_SATTINGS'] = { value: name };
+            CLIENT.params.local['CONTROL_CONFIG_SETTINGS'] = { value: 4 }; // SAVE
+            SPEC.sendParams();
+        }
+    });
 
     UI.initHandlers = function() {
         $(".btn").mouseup(function() {

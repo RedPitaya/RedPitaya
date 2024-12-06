@@ -20,8 +20,6 @@ class SPIDecoder::Impl{
 
 	Impl();
 
-	std::string m_name;
-
 	SPIParameters m_options;
 
 	int m_oldclk = 1;
@@ -51,19 +49,43 @@ SPIDecoder::Impl::Impl(){
 
 }
 
-SPIDecoder::SPIDecoder(const std::string& _name){
+SPIDecoder::SPIDecoder(int decoderType, const std::string& _name){
+	m_decoderType = decoderType;
+	m_name = _name;
 	m_impl = new Impl();
-	m_impl->m_name = _name;
 	m_impl->resetDecoder();
+	setParameters(spi::SPIParameters());
 }
 
 SPIDecoder::~SPIDecoder(){
 	delete m_impl;
 }
 
-void SPIDecoder::setParameters(const SPIParameters& _new_params)
-{
+auto SPIDecoder::reset() -> void{
+	m_impl->resetDecoder();
+}
+
+auto SPIDecoder::getMemoryUsage() -> uint64_t{
+	uint64_t size = sizeof(Impl);
+	size += m_impl->m_result.size() * sizeof(OutputPacket);
+	return size;
+}
+
+void SPIDecoder::setParameters(const SPIParameters& _new_params){
 	m_impl->m_options = _new_params;
+}
+
+auto SPIDecoder::getParametersInJSON() -> std::string{
+	return m_impl->m_options.toJson();
+}
+
+auto SPIDecoder::setParametersInJSON(const std::string &parameter) -> void{
+	SPIParameters param;
+	if (param.fromJson(parameter)){
+		setParameters(param);
+	}else{
+		ERROR_LOG("Error set parameters")
+	}
 }
 
 std::vector<OutputPacket> SPIDecoder::getSignal(){
@@ -193,7 +215,7 @@ void SPIDecoder::Impl::handleBit(bool data, bool clk, bool cs)
 		nothing_count = 0;
 	while (nothing_count)
 	{
-		m_result.push_back(OutputPacket{NOTHING, 0, nothing_count >= size16 ? size16 : (uint16_t)nothing_count});
+		m_result.push_back({NOTHING, 0, nothing_count >= size16 ? size16 : (uint16_t)nothing_count});
 		nothing_count -= std::min<uint32_t>(nothing_count, size16);
 	}
 	m_oldSamplenum = m_samplenum;

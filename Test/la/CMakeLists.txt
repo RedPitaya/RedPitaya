@@ -70,6 +70,6 @@ target_link_libraries(la_rle PRIVATE i2c)
 target_link_libraries(la_rle PRIVATE pthread)
 
 
-install(TARGETS la_rle RUNTIME DESTINATION ${INSTALL_DIR}/bin/la_tools)
+install(TARGETS la_rle RUNTIME DESTINATION ${INSTALL_DIR}/bin)
 
 unset(INSTALL_DIR CACHE)

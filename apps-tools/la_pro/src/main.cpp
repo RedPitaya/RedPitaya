@@ -1,6 +1,4 @@
 #include <stdio.h>
-#include <sys/types.h>
-#include <sys/sysinfo.h>
 #include <unistd.h>
 
 #include <string>
@@ -8,174 +6,82 @@
 #include <list>
 #include <memory>
 #include <thread>
+#include <atomic>
 
-#include <DataManager.h>
-#include <CustomParameters.h>
-
-#include "decoder.h"
-#include "i2c_decoder.h"
-#include "spi_decoder.h"
-#include "uart_decoder.h"
-#include "can_decoder.h"
-#include "rp_hw-profiles.h"
+#include "rp.h"
 #include "rp_log.h"
-
+#include "decoder.h"
 #include "web/rp_client.h"
-#include "rp_la_api.h"
-#include "rp_la.h"
+#include "web/rp_system.h"
+
 #include "main.h"
+#include "common.h"
+#include "settings.h"
 
-auto getModelS() -> std::string;
 
-enum LA_MODE {
-	LA_BASIC_ONLY,
-	LA_PRO_ONLY
-};
 
-enum MEASURE_MODE {
-	LA_NONE,
-	LA_BASIC,
-	LA_PRO
-};
+CBooleanParameter 	inRun			("LA_RUN", CBaseParameter::RW, false, 0);
+CIntParameter 		measureState	("LA_MEASURE_STATE", CBaseParameter::RW, 1, 0, 1, 4);
+CIntParameter 		measureSelect	("LA_MEASURE_MODE", CBaseParameter::RW, 1, 0, 1, 2, CONFIG_VAR);
+CIntParameter 		controlSettings ("CONTROL_CONFIG_SETTINGS", CBaseParameter::RW, 0, 0, 0, 10);
 
-CBooleanParameter 	inRun("LA_RUN", CBaseParameter::RW, false, 0);
-CIntParameter 		measureState("MEASURE_STATE", CBaseParameter::RW, 1, 0, 1, 4);
-CIntParameter 		laMode("LA_MODE", CBaseParameter::RW, 0, 0, 0, 3);
-CIntParameter 		measureMode("MEASURE_MODE", CBaseParameter::RW, 0, 0, 0, 2);
-CIntParameter 		measureSelect("MEASURE_SELECT", CBaseParameter::RW, 1, 0, 1, 2);
+CIntParameter 		max_freq		("LA_MAX_FREQ", CBaseParameter::RO, getMAXFreq(), 0, 1, 1e9);
+CIntParameter 		cur_freq		("LA_CUR_FREQ", CBaseParameter::RO, getMAXFreq(), 0, 1, 1e9);
 
-CByteSignal 		ch1("ch1", CBaseParameter::RO, 1024*1024, 0); // FIXME opt
-CIntParameter 		decimate("DECIMATE", CBaseParameter::RW, 1, 0, 0, 128);
+CByteBase64Signal	data_rle		("data_rle", CBaseParameter::RO, 0, 0);
 
-CIntParameter 		signalPeriiod("DEBUG_SIGNAL_PERIOD", CBaseParameter::RW, 300, 0, 0, 10000);
-CIntParameter 		parameterPeriiod("DEBUG_PARAM_PERIOD", CBaseParameter::RW, 300, 0, 0, 10000);
-long double cpu_values[4] = {0, 0, 0, 0}; /* reading only user, nice, system, idle */
-CFloatParameter 	cpuLoad("CPU_LOAD", CBaseParameter::RW, 0, 0, 0, 100);
-CFloatParameter 	memoryTotal("TOTAL_RAM", CBaseParameter::RW, 0, 0, 0, 1e15);
-CFloatParameter 	memoryFree ("FREE_RAM", CBaseParameter::RW, 0, 0, 0, 1e15);
+CBooleanParameter 	dins_enable[8] 	= INIT8("LA_DIN_","", CBaseParameter::RW, true, 0, CONFIG_VAR);
+CStringParameter 	dins_name[8] 	= INIT8("LA_DIN_NAME_","", CBaseParameter::RW, "", 0, CONFIG_VAR);
+CIntParameter	 	dins_trigger[8] = INIT8("LA_DIN_","_TRIGGER", CBaseParameter::RW, 0, 0, 0 , 5 , CONFIG_VAR);
+CFloatParameter	 	dins_position[8] = INIT8("LA_DIN_","_POS", CBaseParameter::RW, -1, 0, 0 , 9 , CONFIG_VAR);
 
-CStringParameter 	createDecoder("CREATE_DECODER", CBaseParameter::RW, "", 1);
-CStringParameter 	destroyDecoder("DESTROY_DECODER", CBaseParameter::RW, "", 1);
-CStringParameter 	decoderName("DECODER_NAME", CBaseParameter::RW, "", 1);
-CFloatParameter 	scale("SCALE", CBaseParameter::RW, 1, 0, -100, 100);
-CIntParameter 		preSampleBuf("PRE_SAMPLE_BUFFER", CBaseParameter::RW, 200000, 0, 0, 500000000);
-CIntParameter 		samplesSum("SAMPLES_SUM", CBaseParameter::RW, 512, 0, 0, 2000000000);
-CStringParameter 	dins("DINS", CBaseParameter::RW, "", 1);
+CIntParameter 		decimate		("LA_DECIMATE", CBaseParameter::RW, 1, 0, 0, 1024, CONFIG_VAR);
+CDoubleParameter    timeScale		("LA_SCALE", CBaseParameter::RW, 1, 0,0.01,100,CONFIG_VAR);
+CIntParameter 		preSampleBufMs	("LA_PRE_TRIGGER_BUFFER_MS", CBaseParameter::RW, 1, 0, 1, 360000, CONFIG_VAR);
+CIntParameter 		postSampleBufMs	("LA_POST_TRIGGER_BUFFER_MS", CBaseParameter::RW, 1, 0, 1, 360000, CONFIG_VAR);
 
-CStringParameter redpitaya_model("RP_MODEL_STR", CBaseParameter::RO, getModelS(), 10);
+CIntParameter 		preSampleCount	("LA_PRE_TRIGGER_SAMPLES", CBaseParameter::RO, 0, 0, 0, 2000000000);
+CIntParameter 		postSampleCount	("LA_POST_TRIGGER_SAMPLES", CBaseParameter::RO, 0, 0, 0, 2000000000);
+CFloatParameter 	view_port_pos	("LA_VIEW_PORT_POS", CBaseParameter::RW, 0.5, 0, 0, 1, CONFIG_VAR);
 
-std::vector<RP_DIGITAL_CHANNEL_DIRECTIONS> triggers;
+
+CStringParameter    decoders[4] =  INIT4("DECODER_NAME_", "", CBaseParameter::RW, "", 0, CONFIG_VAR);
+CBooleanParameter   decoders_enabled[4] =  INIT4("DECODER_ENABLED_", "", CBaseParameter::RW, false, 0, CONFIG_VAR);
+CStringParameter    decoders_params[4] =  INIT4("DECODER_PARAMETERS_", "", CBaseParameter::RW, "", 0, CONFIG_VAR);
+
+
+CBooleanParameter   cursorx[2]      = INIT2("LA_CURSOR_X","", CBaseParameter::RW, false, 0 ,CONFIG_VAR);
+CFloatParameter     cursorx_pos[2]  = INIT2("LA_CURSOR_X","_POS", CBaseParameter::RW, 0.25, 0, 0, 1, CONFIG_VAR);
+
+
+// CStringParameter 	createDecoder("CREATE_DECODER", CBaseParameter::RW, "", 1);
+// CStringParameter 	destroyDecoder("DESTROY_DECODER", CBaseParameter::RW, "", 1);
+// CStringParameter 	decoderName("DECODER_NAME", CBaseParameter::RW, "", 1);
+
+
+// std::vector<RP_DIGITAL_CHANNEL_DIRECTIONS> triggers;
 
 pthread_t g_tid2;
 
-bool g_fpgaDataReceived;
+std::atomic_bool g_needUpdateSignals = false;
+std::atomic_bool g_needUpdateDecoders = false;
+std::atomic_bool g_config_changed = false;
+std::atomic_int32_t g_save_counter = 0;
 
-const float DEF_MIN_SCALE = 1.f/1000.f;
-const float DEF_MAX_SCALE = 5.f;
-
-std::map<std::string, std::shared_ptr<Decoder> > g_decoders;
-
-
-auto getModelS() -> std::string{
-    rp_HPeModels_t c = STEM_125_14_v1_0;
-    if (rp_HPGetModel(&c) != RP_HP_OK){
-       ERROR_LOG("Can't get board model");
-    }
-
-    switch (c)
-    {
-        case STEM_125_10_v1_0:
-        case STEM_125_14_v1_0:
-        case STEM_125_14_v1_1:
-        case STEM_125_14_LN_v1_1:
-        case STEM_125_14_LN_BO_v1_1:
-        case STEM_125_14_LN_CE1_v1_1:
-        case STEM_125_14_LN_CE2_v1_1:
-        case STEM_125_14_Z7020_v1_0:
-        case STEM_125_14_Z7020_LN_v1_1:
-        case STEM_125_14_v2_0:
-        case STEM_125_14_Pro_v2_0:
-        case STEM_125_14_Z7020_Pro_v1_0:
-        case STEM_125_14_Z7020_Pro_v2_0:
-        case STEM_125_14_Z7020_Ind_v2_0:
-            return "Z10";
-
-        case STEM_122_16SDR_v1_0:
-        case STEM_122_16SDR_v1_1:
-            return "Z20";
-
-        case STEM_125_14_Z7020_4IN_v1_0:
-        case STEM_125_14_Z7020_4IN_v1_2:
-        case STEM_125_14_Z7020_4IN_v1_3:
-            return "Z10";
-
-	    case STEM_250_12_v1_0:
-        case STEM_250_12_v1_1:
-        case STEM_250_12_v1_2:
-		case STEM_250_12_v1_2a:
-        case STEM_250_12_v1_2b:
-            return "Z20_250_12";
-        case STEM_250_12_120:
-            return "Z20_250_12_120";
-
-        default:
-            ERROR_LOG("Can't get board model");
-            exit(-1);
-    }
-    return "Z10";
-}
-
-
+std::shared_ptr<rp_la::CLAController> g_la_controller = nullptr;
+CLACallbackHandler g_la_callback;
+const std::vector<std::string> g_savedParams;
 
 // Set measure mode
-void set_measure_mode(MEASURE_MODE mode)
-{
-	fprintf(stderr, "Set measure mode: ");
-	if (mode == LA_BASIC)
-	{
-		fprintf(stderr, "Basic\n");
-		rp_SetPolarity(0);
+void set_measure_mode(MEASURE_MODE mode){
+	if (mode == LA_APP_BASIC){
+		WARNING("Set measure mode: Basic")
+		g_la_controller->setMode(rp_la::LA_BASIC);
 	}
-	else if (mode == LA_PRO)
-	{
-		fprintf(stderr, "Pro\n");
-		rp_SetPolarity(0xffff);
+	else if (mode == LA_APP_PRO){
+		WARNING("Set measure mode: Pro")
+		g_la_controller->setMode(rp_la::LA_PRO);
 	}
-	measureMode.SendValue(mode);
-}
-
-// Set application mode
-void set_application_mode(LA_MODE mode)
-{
-	if (mode == LA_BASIC_ONLY)
-	{
-		set_measure_mode(LA_BASIC);
-		laMode.SendValue(mode);
-	}
-	else if (mode == LA_PRO_ONLY)
-	{
-		set_measure_mode(LA_PRO);
-		laMode.SendValue(mode);
-	}
-}
-
-// Execute system command
-std::string exec(const char* cmd) {
-    char buffer[128];
-    std::string result = "";
-    FILE* pipe = popen(cmd, "r");
-    if (!pipe) throw std::runtime_error("popen() failed!");
-    try {
-        while (!feof(pipe)) {
-            if (fgets(buffer, 128, pipe) != NULL)
-                result += buffer;
-        }
-    } catch (...) {
-        pclose(pipe);
-        throw;
-    }
-    pclose(pipe);
-    return result;
 }
 
 int rp_set_params(rp_app_params_t *, int) {
@@ -191,317 +97,463 @@ int rp_get_signals(float ***, int *, int *) {
 }
 
 const char *rp_app_desc(void) {
-	return (const char *)"Red Pitaya osciloscope application.\n";
+	return (const char *)"Red Pitaya Logic analizer application.\n";
+}
+
+void CLACallbackHandler::captureStatus(rp_la::CLAController* controller,
+										bool isTimeout,
+										uint32_t numBytes,
+										uint64_t numSamples,
+										uint64_t preSamples,
+										uint64_t postSamples){
+	if (isTimeout == false){
+		if (numSamples)
+			controller->saveCaptureDataToFile("/tmp/logicData.bin");
+		g_needUpdateSignals = true;
+		preSampleCount.SendValue(preSamples);
+		postSampleCount.SendValue(postSamples);
+		measureState.SendValue(LA_APP_DONE);
+		TRACE("Done")
+	}else{
+		measureState.SendValue(LA_APP_TIMEOUT);
+		TRACE("Timeout")
+	}
+	inRun.SendValue(false);
+}
+
+void CLACallbackHandler::decodeDone(rp_la::CLAController* controller, std::string name){
+	g_needUpdateDecoders = true;
+}
+
+void updateParametersByConfig(){
+    configGet();
+	for(int i = 0 ; i < 8; i++){
+		if (dins_name[i].Value() == ""){
+			dins_name[i].Set("DIN"+std::to_string(i));
+		}
+		if (dins_position[i].Value() == -1){
+			dins_position[i].Set(i + 1);
+		}
+	}
+    updateFromFront(true);
 }
 
 int rp_app_init(void) {
-
-	int s = rp_OpenUnit();
-	TRACE("openunit %d", s);
-	set_application_mode(LA_BASIC_ONLY);
-
+    setHomeSettingsPath("/.config/redpitaya/apps/la_pro/");
+	data_rle.Reserve(BUFFER_MAX_SIZE);
+	g_la_controller = std::make_shared<rp_la::CLAController>();
+	g_la_controller->setDelegate(&g_la_callback);
+	g_la_controller->setEnableRLE(true);
     rp_WC_Init();
-
-	time_t t;
-	srand((unsigned) time(&t));
-	fprintf(stderr, "Loading logic analyzer version %s-%s.\n", "0.00-0000", "unknow");
-
-	CDataManager::GetInstance()->SetParamInterval(parameterPeriiod.Value());
-	CDataManager::GetInstance()->SetSignalInterval(signalPeriiod.Value());
-
+	rp_WS_Init();
+	rp_WS_SetInterval(RP_WS_CPU,1000);
+    rp_WS_SetInterval(RP_WS_RAM,1000);
+	rp_WS_SetMode((rp_system_mode_t)(RP_WS_CPU | RP_WS_RAM));
+    rp_WS_UpdateParameters(true);
+	CDataManager::GetInstance()->SetParamInterval(DEBUG_PARAM_PERIOD);
+	CDataManager::GetInstance()->SetSignalInterval(DEBUG_SIGNAL_PERIOD);
+	updateParametersByConfig();
+	fprintf(stderr, "Loading logic analyzer version.\n");
 	return 0;
 }
 
 int rp_app_exit(void) {
-	fprintf(stderr, "Unloading scope version %s-%s.\n", "0.00-0000", "unknow");
-
-	rp_CloseUnit();
-
+	fprintf(stderr, "Unloading logic analyzer version.\n");
+	g_la_controller = nullptr;
 	return 0;
 }
 
-static size_t readFile(const char* _fname, uint8_t* _buf, size_t _buf_size)
-{
-	FILE* f = fopen(_fname, "rb");
-	fseek(f, 0, SEEK_END);
-	size_t flen = std::min<size_t>(ftell(f), _buf_size);
-	fseek(f, 0, SEEK_SET);
+void UpdateParams(void) {
+	rp_WS_UpdateParameters(false);
 
-	flen = fread(_buf, sizeof(*_buf), flen, f);
-	fclose(f);
-
-	return flen;
+	if (g_config_changed && (g_save_counter++ % 40 == 0)){
+        g_config_changed = false;
+        // Save the configuration file
+        configSet();
+    }
 }
 
-static void writeToFile(const char* _fname, uint8_t* _buf, size_t _buf_size)
-{
-	TRACE("Data was got, writing to file: %s", _fname);
-	FILE* f = fopen(_fname, "wb");
-	fwrite(_buf, sizeof(uint8_t), _buf_size, f);
-	fclose(f);
-}
 
-void UpdateParams(void)
-{
-	CDataManager::GetInstance()->SetParamInterval(parameterPeriiod.Value());
-	CDataManager::GetInstance()->SetSignalInterval(signalPeriiod.Value());
-
-    static int times = 0;
-
-	if (times == 3)
-	{
-	    FILE *fp = fopen("/proc/stat","r");
-	    if(fp)
-	    {
-	    	long double a[4];
-	    	fscanf(fp,"%*s %Lf %Lf %Lf %Lf",&a[0],&a[1],&a[2],&a[3]);
-	    	fclose(fp);
-
-	    	long double divider = ((a[0]+a[1]+a[2]+a[3]) - (cpu_values[0]+cpu_values[1]+cpu_values[2]+cpu_values[3]));
-	    	long double loadavg = 100;
-	    	if(divider > 0.01)
-			{
-				loadavg = ((a[0]+a[1]+a[2]) - (cpu_values[0]+cpu_values[1]+cpu_values[2])) / divider;
-			}
-			cpuLoad.Value() = (float)(loadavg * 100);
-			cpu_values[0]=a[0];cpu_values[1]=a[1];cpu_values[2]=a[2];cpu_values[3]=a[3];
-	    }
-	    times = 0;
-
-		struct sysinfo memInfo;
-	    sysinfo (&memInfo);
-    	memoryTotal.Value() = (float)memInfo.totalram;
-    	memoryFree.Value() = (float)memInfo.freeram;
+void UpdateSignals(void) {
+	if (g_needUpdateSignals){
+		g_needUpdateSignals = false;
+		auto size = g_la_controller->getCapturedDataSize();
+		data_rle.Resize(size);
+		g_la_controller->getDataNP(data_rle.GetDataPtr()->data(),size);
+		data_rle.ForceSend();
 	}
-	times++;
-}
-
-
-void UpdateSignals(void)
-{
-    CDataManager::GetInstance()->SetSignalInterval(signalPeriiod.Value());
 }
 
 void PostUpdateSignals(void)
 {
-	ch1.Update();
-	for (auto& decoder : g_decoders)
-	{
-		decoder.second->UpdateSignals();
-	}
+	// ch1.Update();
+	// for (auto& decoder : g_decoders)
+	// {
+	// 	decoder.second->UpdateSignals();
+	// }
 }
 
-void* trigAcq(void *)
-{
-    sleep(2);
-    if(rp_SoftwareTrigger() != RP_OK){
-    	rp_Stop();
-		measureState.SendValue(4);
-    }
-    return NULL;
-}
+// void* trigAcq(void *) {
+// 	bool isTimeout = false;
+// 	g_la_controller->wait(2000, &isTimeout);
+// 	if (isTimeout){
+// 		measureState.SendValue(LA_APP_TIMEOUT);
+// 	}
+//     return NULL;
+// }
 
 
-void DoDecode(bool fpgaDataReceived, uint8_t*)
-{
-	for (auto& decoder : g_decoders)
-    {
-        if (decoder.second->IsParametersChanged() || fpgaDataReceived)
-        {
-            if(ch1.GetSize())
-            {
-            	uint8_t buffer[ch1.GetSize()];
-            	for(int i=0; i<ch1.GetSize(); i++)
-            		buffer[i] = ch1[i];
-            	decoder.second->Decode(buffer, ch1.GetSize());
-            }
-            else
-            {
-            	decoder.second->UpdateParameters();
-            }
-        }
-    }
-}
+// void DoDecode(bool fpgaDataReceived, uint8_t*) {
+// 	for (auto& decoder : g_decoders)
+//     {
+//         if (decoder.second->IsParametersChanged() || fpgaDataReceived)
+//         {
+//             if(ch1.GetSize())
+//             {
+//             	uint8_t buffer[ch1.GetSize()];
+//             	for(int i=0; i<ch1.GetSize(); i++)
+//             		buffer[i] = ch1[i];
+//             	decoder.second->Decode(buffer, ch1.GetSize());
+//             }
+//             else
+//             {
+//             	decoder.second->UpdateParameters();
+//             }
+//         }
+//     }
+// }
 
-void OnNewParams(void)
-{
+void updateFromFront(bool force){
+
+	bool needRedecode = false;
+
+	auto getName = [](rp_la::la_Decoder_t tp){
+		switch (tp)
+		{
+		case LA_DECODER_CAN: return "can";
+		case LA_DECODER_I2C: return "i2c";
+		case LA_DECODER_SPI: return "spi";
+		case LA_DECODER_UART: return "uart";
+		default:
+			break;
+		}
+		return "";
+	};
+
+	auto getType= [](std::string name){
+		if (name == "can") return LA_DECODER_CAN;
+		if (name == "i2c") return LA_DECODER_I2C;
+		if (name == "spi") return LA_DECODER_SPI;
+		if (name == "uart") return LA_DECODER_UART;
+		return LA_DECODER_NONE;
+	};
 
 	// Update measure select
-	if (measureSelect.IsNewValue())
-	{
+	if (IS_NEW(measureSelect) || force){
 		measureSelect.Update();
 		if (measureSelect.Value() == 1)
-			set_application_mode(LA_BASIC_ONLY);
+			set_measure_mode(LA_APP_BASIC);
 		if (measureSelect.Value() == 2)
-			set_application_mode(LA_PRO_ONLY);
+			set_measure_mode(LA_APP_PRO);
 	}
 
-	g_fpgaDataReceived = false;
+    for(int i = 0; i < 2 ; i++){
+        if (IS_NEW(cursorx[i]) || force)
+            cursorx[i].Update();
+        if (IS_NEW(cursorx_pos[i]) || force)
+            cursorx_pos[i].Update();
+    }
 
-	// collect data from JS
-	if (dins.IsNewValue())
-	{
-		dins.Update();
-		triggers.clear();
-		for (size_t i = 0; i < dins.Value().size()/2; ++i)
-		{
-			int pin = dins.Value()[i*2] - '0';
-			int dir = dins.Value()[i*2 + 1] - '0' + 1;
+	if (IS_NEW(view_port_pos) || force){
+		view_port_pos.Update();
+	}
 
-			RP_DIGITAL_CHANNEL_DIRECTIONS d;
-			d.channel = (RP_DIGITAL_CHANNEL)pin;
-			d.direction = (RP_DIGITAL_DIRECTION)dir;
-			triggers.push_back(d);
+	bool reqRecalcPresample = false;
+
+	if (IS_NEW(decimate) || force){
+		decimate.Update();
+		g_la_controller->setDecimation(decimate.Value());
+		auto freq = max_freq.Value() / decimate.Value();
+		cur_freq.SendValue(freq);
+		reqRecalcPresample = true;
+	}
+
+	if (IS_NEW(timeScale) || force){
+		timeScale.Update();
+	}
+
+	if (IS_NEW(preSampleBufMs) || IS_NEW(postSampleBufMs) || force || reqRecalcPresample){
+		preSampleBufMs.Update();
+		postSampleBufMs.Update();
+        double val = preSampleBufMs.Value() / 1000.0; // to sec convert
+        val *= cur_freq.Value();
+        if (val > 750000) {
+			val = 750000;
+            uint32_t newVal = (750000.0 * 1000.0) / (double)cur_freq.Value();
+			preSampleBufMs.SendValue(newVal);
+		}
+
+        double valPost = postSampleBufMs.Value() / 1000.0; // to sec convert
+        valPost *= cur_freq.Value();
+        if (valPost > 750000) {
+			valPost = 750000;
+            uint32_t newVal = (750000.0 * 1000.0) / (double)cur_freq.Value();
+			postSampleBufMs.SendValue(newVal);
+		}
+
+		g_la_controller->setPreTriggerSamples(val);
+		g_la_controller->setPostTriggerSamples(valPost);
+	}
+
+	for(size_t i = 0 ; i < 8; i++){
+		if (IS_NEW(dins_enable[i]) || IS_NEW(dins_trigger[i]) || force){
+			dins_enable[i].Update();
+			dins_trigger[i].Update();
+
+			auto enabled = dins_enable[i].Value();
+			auto dins_t = dins_trigger[i].Value();
+
+			if (enabled){
+				g_la_controller->setTrigger(i, (la_Trigger_Mode_t)dins_t);
+			}else{
+				g_la_controller->setTrigger(i, LA_NONE);
+			}
+		}
+
+		if (IS_NEW(dins_name[i]) || force){
+			dins_name[i].Update();
+		}
+
+		if (IS_NEW(dins_position[i]) || force){
+			dins_position[i].Update();
+		}
+
+	}
+
+
+	for(size_t i = 0 ; i < 4; i++){
+		if (IS_NEW(decoders[i]) || force){
+			decoders[i].Update();
+			auto name = decoders[i].Value();
+			if (name == ""){
+				g_la_controller->removeDecoder(std::to_string(i));
+			}else{
+				if (g_la_controller->isDecoderExist(std::to_string(i))){
+					auto curDecoder = getName(g_la_controller->getDecoderType(std::to_string(i)));
+					if (curDecoder != name){
+						g_la_controller->removeDecoder(std::to_string(i));
+						g_la_controller->addDecoder(std::to_string(i),getType(name));
+						g_la_controller->setDecoderEnable(std::to_string(i),decoders_enabled[i].Value());
+						auto settings = g_la_controller->getDecoderSettings(std::to_string(i));
+						decoders_params[i].SendValue(settings);
+					}
+				}else{
+					g_la_controller->addDecoder(std::to_string(i),getType(name));
+					g_la_controller->setDecoderEnable(std::to_string(i),decoders_enabled[i].Value());
+					auto settings = g_la_controller->getDecoderSettings(std::to_string(i));
+					decoders_params[i].SendValue(settings);
+				}
+			}
+		}
+
+		if (IS_NEW(decoders_params[i]) || force){
+			auto oldParams = g_la_controller->getDecoderSettings(std::to_string(i));
+			if (decoders_params[i].NewValue() != ""){
+				if (g_la_controller->setDecoderSettings(std::to_string(i),decoders_params[i].NewValue())){
+					decoders_params[i].Update();
+					if (oldParams != decoders_params[i].Value()){
+						needRedecode = true;
+					}
+				}else{
+					ERROR_LOG("Can't setup settings %s for decoder %s",decoders_params[i].NewValue().c_str(),
+						getName(g_la_controller->getDecoderType(std::to_string(i))))
+				}
+			}
+		}
+
+		if (IS_NEW(decoders_enabled[i]) || force){
+			decoders_enabled[i].Update();
+			if (g_la_controller->getDecoderType(std::to_string(i)) != LA_DECODER_NONE)
+				g_la_controller->setDecoderEnable(std::to_string(i),decoders_enabled[i].Value());
 		}
 	}
 
-	preSampleBuf.Update();
-	decimate.Update();
-	ch1.Update();
 
-	static bool need_reload = true;
-	// buffers for file
-	const size_t file_size = 102400;
-	static uint8_t file_buf[file_size];
-
-	if (!inRun.NewValue() && inRun.Value())
-	{
+	bool needRunCapture = false;
+	if (IS_NEW(inRun)){
 		inRun.Update();
-		rp_Stop();
-		sleep(2);
-		measureState.SendValue(1);
+		if (inRun.Value()){
+			needRunCapture = true;
+		}else{
+			g_la_controller->softwareTrigger();
+			measureState.SendValue(LA_APP_STOP);
+		}
 	}
-	else if (inRun.NewValue() && !inRun.Value()) // FPGA mode
-	{
-		inRun.Update();
-		measureState.SendValue(2);
-		std::thread([&]{
-			size_t BUF_SIZE = 1024*1024;
-			int pre = preSampleBuf.Value();
-			uint32_t POST = BUF_SIZE - pre;
-			uint32_t samples = 0;
-            int s;
-			// buffers for fpga
-			auto buf = new uint8_t[BUF_SIZE*2];
-			auto buf1 = new int16_t[BUF_SIZE];
 
-			rp_Stop();
-			uint8_t decimateRate = decimate.Value();
-
-			// Set triggers
-			if (triggers.empty()){
-				RP_DIGITAL_CHANNEL_DIRECTIONS d = {RP_DIGITAL_CHANNEL_0, RP_DIGITAL_DONT_CARE};
-				s = rp_SetTriggerDigitalPortProperties(&d, 0);
-				pthread_create(&g_tid2, NULL, &trigAcq, NULL);
-			}
-			else{
-				s = rp_SetTriggerDigitalPortProperties(triggers.data(), triggers.size());
-			}
-
-			s = rp_EnableDigitalPortDataRLE(1);
-			double timeIndisposedMs;
-			TRACE("pre = %d post = %d buf_size = %zu", pre, POST, BUF_SIZE);
-			// run non blocking
-			s = rp_Run(pre, POST, decimateRate, &timeIndisposedMs);
-
-			if (triggers.empty()){
-				rp_SoftwareTrigger();
-			}
-
-			s = rp_WaitData(0);
-
-			s = rp_SetDataBuffer(buf1, BUF_SIZE);
-			samples = BUF_SIZE;
-			s = rp_GetValues(&samples);
-
-			uint32_t trigPos = 0;
-			uint32_t sum = 0;
-			rp_GetTrigPosition(&trigPos);
-
-			for (size_t i = 0; i < samples; ++i)
-			{
-				buf[i*2] = buf1[i] >> 8;
-				buf[i*2 + 1] = buf1[i];
-
-				if(i < trigPos)
-					sum += buf[i*2] + 1;
-			}
-
-			TRACE("ch1 samples %d sum %d", samples, trigPos);
-			TRACE("%x\n-->%x\n%x", buf[pre*2-1], buf[pre*2+1], buf[pre*2+3]);
-			ch1.Set(buf, samples*2);
-
-			uint8_t fileBuf[ch1.GetSize()];
-	        for(int i=0; i<ch1.GetSize(); i++)
-	        	fileBuf[i] = ch1[i];
-	        writeToFile("/tmp/logicData.bin", fileBuf, ch1.GetSize());
-
-			g_fpgaDataReceived = true;
-			inRun.SendValue(false); // send always
-			samplesSum.SendValue(sum); // send always
-			measureState.SendValue(3);
-			DoDecode(g_fpgaDataReceived, NULL);
-
-		    delete[] buf;
-		    delete[] buf1;
-
-            if (s != RP_OK){
-                ERROR_LOG("Error api2 %d",s);
-            }
-		}).detach();
+	if (needRunCapture){
+		g_needUpdateSignals = false;
+		g_la_controller->runAsync(0);
+		measureState.SendValue(LA_APP_RUNNED);
+	}else if (needRedecode){
+		g_needUpdateDecoders = false;
+		g_la_controller->decodeAsync();
 	}
-	else if (!createDecoder.IsNewValue() && !decoderName.IsNewValue() && !destroyDecoder.IsNewValue() && !g_decoders.size() && !ch1.GetSize()) // nothing
-	{
-		inRun.Update();
-		return;
-	}
+}
+
+void OnNewParams(void) {
+
+    if (IS_NEW(controlSettings)){
+        if (controlSettings.NewValue() == controlSettings::REQUEST_RESET){
+            deleteConfig();
+            configSetWithList(g_savedParams);
+            controlSettings.Update();
+            controlSettings.SendValue(controlSettings::RESET_DONE);
+            return;
+        }
+    }
+
+    if (!g_config_changed)
+        g_config_changed = isChanged();
+    updateFromFront(false);
+
+	return;
+
+
+
+
+	// ch1.Update();
+
+	// // buffers for file
+	// const size_t file_size = 102400;
+	// static uint8_t file_buf[file_size];
+
+	// if (!inRun.NewValue() && inRun.Value())
+	// {
+	// 	inRun.Update();
+	// 	rp_Stop();
+	// 	sleep(2);
+	// 	measureState.SendValue(1);
+	// }
+	// else if (inRun.NewValue() && !inRun.Value()) // FPGA mode
+	// {
+	// 	inRun.Update();
+	// 	measureState.SendValue(2);
+
+	// 	std::thread([&]{
+	// 		size_t BUF_SIZE = 1024*1024;
+	// 		int pre = preSampleBuf.Value();
+	// 		uint32_t POST = BUF_SIZE - pre;
+	// 		uint32_t samples = 0;
+    //         int s;
+	// 		// buffers for fpga
+	// 		auto buf = new uint8_t[BUF_SIZE*2];
+	// 		auto buf1 = new int16_t[BUF_SIZE];
+
+	// 		rp_Stop();
+	// 		uint8_t decimateRate = decimate.Value();
+
+
+	// 		double timeIndisposedMs;
+	// 		TRACE("pre = %d post = %d buf_size = %zu", pre, POST, BUF_SIZE);
+	// 		// run non blocking
+	// 		s = rp_Run(pre, POST, decimateRate, &timeIndisposedMs);
+
+	// 		if (triggers.empty()){
+	// 			rp_SoftwareTrigger();
+	// 		}
+
+	// 		s = rp_WaitData(0);
+
+	// 		s = rp_SetDataBuffer(buf1, BUF_SIZE);
+	// 		samples = BUF_SIZE;
+	// 		s = rp_GetValues(&samples);
+
+	// 		uint32_t trigPos = 0;
+	// 		uint32_t sum = 0;
+	// 		rp_GetTrigPosition(&trigPos);
+
+	// 		for (size_t i = 0; i < samples; ++i)
+	// 		{
+	// 			buf[i*2] = buf1[i] >> 8;
+	// 			buf[i*2 + 1] = buf1[i];
+
+	// 			if(i < trigPos)
+	// 				sum += buf[i*2] + 1;
+	// 		}
+
+	// 		TRACE("ch1 samples %d sum %d", samples, trigPos);
+	// 		TRACE("%x\n-->%x\n%x", buf[pre*2-1], buf[pre*2+1], buf[pre*2+3]);
+	// 		ch1.Set(buf, samples*2);
+
+	// 		uint8_t fileBuf[ch1.GetSize()];
+	//         for(int i=0; i<ch1.GetSize(); i++)
+	//         	fileBuf[i] = ch1[i];
+	//         writeToFile("/tmp/logicData.bin", fileBuf, ch1.GetSize());
+
+	// 		g_fpgaDataReceived = true;
+	// 		inRun.SendValue(false); // send always
+	// 		samplesSum.SendValue(sum); // send always
+	// 		measureState.SendValue(3);
+	// 		// DoDecode(g_fpgaDataReceived, NULL);
+
+	// 	    delete[] buf;
+	// 	    delete[] buf1;
+
+    //         if (s != RP_OK){
+    //             ERROR_LOG("Error api2 %d",s);
+    //         }
+	// 	}).detach();
+	// }
+	// else if (!createDecoder.IsNewValue() && !decoderName.IsNewValue() && !destroyDecoder.IsNewValue() && !g_decoders.size() && !ch1.GetSize()) // nothing
+	// {
+	// 	inRun.Update();
+	// 	return;
+	// }
 
     // Create decoders
-	if (createDecoder.IsNewValue() && decoderName.IsNewValue())
-	{
-		TRACE("CREATE DECODER...");
+	// if (createDecoder.IsNewValue() && decoderName.IsNewValue())
+	// {
+	// 	TRACE("CREATE DECODER...");
 
-		createDecoder.Update();
-		decoderName.Update();
+	// 	createDecoder.Update();
+	// 	decoderName.Update();
 
-		const auto name = decoderName.Value();
-		if (createDecoder.Value() == "i2c")
-		{
-			g_decoders[name] = std::make_shared<I2CDecoder>(name);
-            TRACE("createDecoder: %s", createDecoder.Value().c_str());
-		}
-		else if (createDecoder.Value() == "spi")
-		{
-			g_decoders[name] = std::make_shared<SpiDecoder>(name);
-            TRACE("createDecoder: %s", createDecoder.Value().c_str());
-		}
-		else if (createDecoder.Value() == "can")
-		{
-			g_decoders[name] = std::make_shared<CANDecoder>(name);
-            TRACE("createDecoder: %s", createDecoder.Value().c_str());
-		}
-		else if (createDecoder.Value() == "uart")
-		{
-			g_decoders[name] = std::make_shared<UARTDecoder>(name);
-            TRACE("createDecoder: %s", createDecoder.Value().c_str());
-		}
+	// 	const auto name = decoderName.Value();
+	// 	if (createDecoder.Value() == "i2c")
+	// 	{
+	// 		g_decoders[name] = std::make_shared<I2CDecoder>(name);
+    //         TRACE("createDecoder: %s", createDecoder.Value().c_str());
+	// 	}
+	// 	else if (createDecoder.Value() == "spi")
+	// 	{
+	// 		g_decoders[name] = std::make_shared<SpiDecoder>(name);
+    //         TRACE("createDecoder: %s", createDecoder.Value().c_str());
+	// 	}
+	// 	else if (createDecoder.Value() == "can")
+	// 	{
+	// 		g_decoders[name] = std::make_shared<CANDecoder>(name);
+    //         TRACE("createDecoder: %s", createDecoder.Value().c_str());
+	// 	}
+	// 	else if (createDecoder.Value() == "uart")
+	// 	{
+	// 		g_decoders[name] = std::make_shared<UARTDecoder>(name);
+    //         TRACE("createDecoder: %s", createDecoder.Value().c_str());
+	// 	}
 
-		createDecoder.Value() = name;
-        TRACE("Value: %s", name.c_str());
-	}
+	// 	createDecoder.Value() = name;
+    //     TRACE("Value: %s", name.c_str());
+	// }
 
-	// Delete decoders
-	if (destroyDecoder.IsNewValue())
-	{
-		destroyDecoder.Update();
-        TRACE("destroyDecoder: %s", destroyDecoder.Value().c_str());
-		g_decoders.erase(destroyDecoder.Value());
-	}
+	// // Delete decoders
+	// if (destroyDecoder.IsNewValue())
+	// {
+	// 	destroyDecoder.Update();
+    //     TRACE("destroyDecoder: %s", destroyDecoder.Value().c_str());
+	// 	g_decoders.erase(destroyDecoder.Value());
+	// }
 
-	DoDecode(false, file_buf);
+	// DoDecode(false, file_buf);
 
-    signalPeriiod.Update();
-    parameterPeriiod.Update();
 
 }
 

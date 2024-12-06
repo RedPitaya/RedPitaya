@@ -49,8 +49,10 @@ typedef struct {
     size_t         buf_size;
     uint32_t       pre_samples;
     uint32_t       post_samples;
-    uint32_t       trig_sample;
-    uint32_t       last_sample;
+    uint32_t       trig_blockIndexRLE;  // RLE: index of pair (count,value).
+    uint32_t       trig_indexNonRLE;
+    uint32_t       last_blockIndexRLE;
+    uint32_t       last_indexNonRLE;
 
     auto reset() {
         inProcess = false;
@@ -60,8 +62,10 @@ typedef struct {
         buf_size = 0;
         pre_samples = 0;
         post_samples = 0;
-        trig_sample = 0;
-        last_sample = 0;
+        trig_blockIndexRLE = 0;
+        trig_indexNonRLE = 0;
+        last_blockIndexRLE = 0;
+        last_indexNonRLE = 0;
     }
 } rp_acq_data_t;
 
@@ -75,6 +79,7 @@ typedef struct {
 #define SIMPLE_TX 17  //blocking until complete
 #define SIMPLE 12 //blocking until complete
 #define STATUS 20
+#define TIMEOUT 21
 
 #define STATUS_STOPPED 0
 #define STATUS_READY 1

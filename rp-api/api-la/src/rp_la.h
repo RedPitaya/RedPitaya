@@ -18,8 +18,18 @@
 
 #include <stdint.h>
 #include <string>
+#include <vector>
 
 namespace rp_la{
+
+struct OutputPacket
+{
+    uint8_t control; // 0 when data, elsewise represents specific state
+					 // anyway control byte specifies meaning of the “data” byte
+    uint32_t data;
+	uint32_t length; // RLE, how many counts takes this byte
+	std::string annotation;
+};
 
 typedef enum {
     LA_BASIC = 0,
@@ -27,6 +37,7 @@ typedef enum {
 } la_Mode_t;
 
 typedef enum {
+    LA_DECODER_NONE = 0,
     LA_DECODER_CAN = 1,
     LA_DECODER_I2C = 2,
     LA_DECODER_SPI = 3,
@@ -49,7 +60,13 @@ class CLACallback
 {
    public:
       virtual ~CLACallback(){}
-      virtual void captureStatus(CLAController* controller,bool isTimeout){}
+      virtual void captureStatus(CLAController* controller,
+                                bool isTimeout,
+                                uint32_t numBytes,
+                                uint64_t numSamples,
+                                uint64_t preTriggerSamples,
+                                uint64_t postTriggerSamples){}
+      virtual void decodeDone(CLAController* controller, std::string name){}
 };
 
 class CLAController
@@ -71,6 +88,15 @@ public:
     auto isRLEEnable() -> bool;
 
     auto addDecoder(std::string name, la_Decoder_t decoder) -> bool;
+    auto setDecoderSettings(std::string name,std::string json) -> bool;
+    auto getDecoderSettings(std::string name) -> std::string;
+    auto getDefaultSettings(la_Decoder_t decoder) -> std::string;
+    auto getDecoders() -> std::vector<std::string>;
+    auto getDecodedData(std::string name) -> std::vector<rp_la::OutputPacket>;
+    auto setDecoderEnable(std::string name, bool enable) -> void;
+    auto getDecoderEnable(std::string name) -> bool;
+    auto getDecoderType(std::string name) -> la_Decoder_t;
+    auto isDecoderExist(std::string name) -> bool;
     auto removeDecoder(std::string name) -> bool;
     auto removeAllDecoders() -> void;
 
@@ -82,6 +108,9 @@ public:
     auto setPostTriggerSamples(uint32_t value) -> void;
     auto getPostTriggerSamples() -> uint32_t;
 
+    auto getDMAMemorySize() -> uint32_t;
+    auto getCapturedDataSize() -> uint32_t;
+    auto getCapturedSamples() -> uint64_t;
 
 	auto setDelegate(CLACallback *callbacks) -> void;
 	auto removeDelegate() -> void;
@@ -95,13 +124,22 @@ public:
     // TODO
     // timeout - Timeout in mS. 0 - Disable
     auto runAsync(uint32_t timeoutMs) -> void;
-
+    auto decodeAsync() -> void;
     auto wait(uint32_t timeoutMs, bool *isTimeout) -> void;
 
     // TODO
     // auto wait() -> void;
 
     auto saveCaptureDataToFile(std::string file) -> bool;
+
+
+    auto getDataNP(uint8_t* np_buffer, int size) -> uint32_t;
+    auto getUnpackedRLEDataNP(uint8_t* np_buffer, int size) -> uint64_t;
+
+    auto printRLE(bool useHex) -> void;
+    auto printRLENP(uint8_t* np_buffer, int size, bool useHex) -> void;
+
+    auto decodeNP(la_Decoder_t decoder, std::string json_settings, uint8_t* np_buffer, int size) -> std::vector<rp_la::OutputPacket>;
 
 private:
 

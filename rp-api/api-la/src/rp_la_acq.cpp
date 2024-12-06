@@ -190,18 +190,11 @@ int rp_LaAcqGlobalTrigSet(rp_handle_uio_t *handle, uint32_t mask){
     return RP_OK;
 }
 
-int rp_LaAcqBlockingRead(rp_handle_uio_t *handle) {
+int rp_LaAcqRead(rp_handle_uio_t *handle,int timeout_s, bool *isTimeout){
 
     CHECK_REGSET
 
-    return rp_dmaRead(handle, 0);
-}
-
-int rp_LaAcqRead(rp_handle_uio_t *handle,int timeout_ms){
-
-    CHECK_REGSET
-
-    return rp_dmaRead(handle, timeout_ms);
+    return rp_dmaRead(handle, timeout_s, isTimeout);
 }
 
 int rp_LaAcqSetConfig(rp_handle_uio_t *handle, uint32_t mask){
@@ -246,26 +239,28 @@ int rp_LaAcqGetCntStatus(rp_handle_uio_t *handle, uint32_t * trig_addr, uint32_t
     rp_la_cfg_regset_t reg;
     reg.pre = ioread32(&regset->pre);
     reg.pst = ioread32(&regset->pst);
+    uint32_t sample_size = 0;
+    rp_LaAcqBufLenInSamples(handle,&sample_size);
 
-    if(*trig_addr >= rp_LaAcqBufLenInSamples(handle)){
+    if(*trig_addr >= sample_size){
     	*buf_ovfl = true;
     }
     else{
         *buf_ovfl = false;
     }
 
-    *trig_addr=(reg.pre % rp_LaAcqBufLenInSamples(handle));
+    *trig_addr=(reg.pre % sample_size);
     *pst_length=reg.pst;
 
     // calc. real trigger address
     if(*trig_addr < TRIG_DELAY_SAMPLES){
-        *trig_addr = rp_LaAcqBufLenInSamples(handle)-TRIG_DELAY_SAMPLES+*trig_addr;
+        *trig_addr = sample_size-TRIG_DELAY_SAMPLES+*trig_addr;
     }
     else{
         *trig_addr -= TRIG_DELAY_SAMPLES;
     }
 
-    if(!(inrangeUint32 (*trig_addr, 0, (rp_LaAcqBufLenInSamples(handle)-1)))){
+    if(!(inrangeUint32 (*trig_addr, 0, (sample_size-1)))){
         return RP_EOOR;
     }
 
@@ -366,22 +361,25 @@ int rp_LaAcqIsRLE(rp_handle_uio_t *handle, bool * state) {
     return RP_OK;
 }
 
-int rp_LaAcqGetRLEStatus(rp_handle_uio_t *handle, uint32_t * current, uint32_t * last, bool * buf_ovfl) {
+int rp_LaAcqGetRLEStatus(rp_handle_uio_t *handle, uint32_t *current, uint32_t *last, bool * buf_ovfl) {
 
     CHECK_REGSET
 
     rp_la_acq_regset_t *regset = (rp_la_acq_regset_t *) handle->regset;
     *current = ioread32(&regset->sts_cur);
 
-    if(*last >= rp_LaAcqBufLenInSamples(handle)){
+    uint32_t size;
+    rp_LaAcqBufLenInSamples(handle,&size);
+
+    if(*last >= size){
     	*buf_ovfl = true;
     }
     else{
         *buf_ovfl = false;
     }
 
-    *last = (ioread32(&regset->sts_lst)%rp_LaAcqBufLenInSamples(handle));
-    if(*last>0){
+    *last = (ioread32(&regset->sts_lst) % size);
+    if(*last > 0){
         *last -= 1;
         return RP_OK;
     }
@@ -390,9 +388,19 @@ int rp_LaAcqGetRLEStatus(rp_handle_uio_t *handle, uint32_t * current, uint32_t *
     }
 }
 
-uint32_t rp_LaAcqBufLenInSamples(rp_handle_uio_t *handle) {
+int rp_LaAcqBufLenInSamples(rp_handle_uio_t *handle, uint32_t *size) {
 
     CHECK_REGSET
 
-    return (handle->dma_size / (sizeof(int16_t)));
+    *size = (handle->dma_size / (sizeof(int16_t)));
+
+    return RP_OK;
+}
+
+int rp_LaAcqGetFullBufferSize(rp_handle_uio_t *handle, uint32_t *size){
+
+    CHECK_REGSET
+
+    *size = handle->dma_size;
+    return RP_OK;
 }

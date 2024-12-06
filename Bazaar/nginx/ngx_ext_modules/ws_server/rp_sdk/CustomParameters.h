@@ -335,6 +335,11 @@ public:
 		this->m_Value.value.resize(_new_size);
 	}
 
+	void Reserve(int _new_size)
+	{
+		this->m_Value.value.reserve(_new_size);
+	}
+
 	void Update()
 	{
 		m_Dirty = false;
@@ -348,6 +353,11 @@ public:
 	std::vector<Type> GetData()
 	{
 		return this->m_Value.value;
+	}
+
+	std::vector<Type>* GetDataPtr()
+	{
+		return &this->m_Value.value;
 	}
 
 	bool IsValueChanged() const

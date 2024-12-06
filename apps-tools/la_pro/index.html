@@ -37,22 +37,28 @@
     <script src="../assets/jquery/jquery.browser.js?1" onerror="location.reload()"></script>
     <script src="../assets/bootstrap/js/bootstrap.min.js?1" onerror="location.reload()"></script>
     <script src="../assets/browsercheck.js?1" onerror="location.reload()"></script>
-    <script src="../assets/zlib_and_gzip.min.js?1" onerror="location.reload()"></script>
+    <script src="../assets/pako.js?1" onerror="location.reload()"></script>
     <script src="../assets/popupstack.js?1" onerror="location.reload()"></script>
     <script src="../assets/help-system/help-system.js?1" onerror="location.reload()"></script>
     <script src="js/html2canvas.min.js?1" onerror="location.reload()"></script>
     <script src="js/baseConverter.js?3" onerror="location.reload()"></script>
     <script src="js/FileSaver.min.js?1" onerror="location.reload()"></script>
     <script src="js/help-la.js?1" onerror="location.reload()"></script>
-    <script src="js/rp250.js?2" onerror="location.reload()"></script>
-    <script src="js/rpZ20.js?2" onerror="location.reload()"></script>
-    <script src="js/rp_client.js?5" onerror="location.reload()"></script>
-    <script src="js/scope.js?4" onerror="location.reload()"></script>
+    <!-- <script src="js/rp250.js?2" onerror="location.reload()"></script>
+    <script src="js/rpZ20.js?2" onerror="location.reload()"></script> -->
+    <script src="js/common.js?3" onerror="location.reload()"></script>
+    <script src="js/ui.js?3" onerror="location.reload()"></script>
+    <script src="js/handlers.js?3" onerror="location.reload()"></script>
+    <script src="js/cursors.js?3" onerror="location.reload()"></script>
+    <script src="js/graph.js?3" onerror="location.reload()"></script>
     <script src="js/scope.decoder.js?3" onerror="location.reload()"></script>
     <script src="js/scope.spi.js?3" onerror="location.reload()"></script>
     <script src="js/scope.i2c.js?3" onerror="location.reload()"></script>
     <script src="js/scope.can.js?3" onerror="location.reload()"></script>
     <script src="js/scope.uart.js?3" onerror="location.reload()"></script>
+    <script src="js/scope.js?4" onerror="location.reload()"></script>
+    <script src="js/rp_client.js?5" onerror="location.reload()"></script>
+    <script src="js/client.js?3" onerror="location.reload()"></script>
 </head>
 
 <body class="user_lost connection_lost">
@@ -128,15 +134,15 @@
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="menu1" style="background: #cdcccc; min-width: 0px;">
                                     <li><a id="reset_to_default" href="#" data-toggle="modal" data-target="#areusure">DEFAULT</a></li>
                                     <li><a id="sys_info" href="#">SYS INFO</a></li>
-                                    <li><a id="select_mode" href="#">Ext. module used</a></li>
+                                    <li><a id="select_mode" href="#">Ext. module</a></li>
                                 </ul>
                             </li>
                             <li>
                                 <a class="btn btn-default" type="button" id="AUTO_BUTTON" href="#">AUTO</a>
                             </li>
                             <li>
-                                <a id="OSC_STOP" href="#" style="display:none;">STOP</a>
-                                <a id="OSC_RUN" href="#">RUN</a>
+                                <a id="LA_STOP" href="#" style="display:none;">STOP</a>
+                                <a id="LA_RUN" href="#">RUN</a>
                             </li>
                         </ul>
                     </div>
@@ -401,7 +407,7 @@
                             <div class="col-xs-12 option-content">
                                 <span class="col-info" style="z-index: 1000;">Sample speed</span>
                                 <div class="right-menu-option">
-                                    <select id="ACQ_SPEED" class="form-control styled-select">
+                                    <select id="LA_DECIMATE" class="form-control styled-select">
                                         <option class="speed_val" value="1" selected="">125 MS/s</option>
                                         <option class="speed_val" value="2">64 MS/s</option>
                                         <option class="speed_val" value="4">32 MS/s</option>
@@ -412,11 +418,16 @@
                                         <option class="speed_val" value="128">1 MS/s</option>
                                     </select>
                                 </div>
-                                <!-- Pre-sample buffer settings -->
-                                <span class="col-info" style="z-index: 5000;">Pre-sample data buffer, ms</span>
+                                <span class="col-info" style="z-index: 5000;">Pre-trigger buffer, mS</span>
                                 <div class="right-menu-option">
                                     <div>
-                                        <input type="number" class="form-control no-up-down" min="1" maxlength="20" placeholder="1" value="1" id="pre-sample-buf-val">
+                                        <input type="number" class="form-control no-up-down" min="1" max="360000" maxlength="20" placeholder="1" value="1" id="LA_PRE_TRIGGER_BUFFER_MS">
+                                    </div>
+                                </div>
+                                <span class="col-info" style="z-index: 5000;">Post-trigger buffer, mS</span>
+                                <div class="right-menu-option">
+                                    <div>
+                                        <input type="number" class="form-control no-up-down" min="1" max="360000" maxlength="20" placeholder="1" value="1" id="LA_POST_TRIGGER_BUFFER_MS">
                                     </div>
                                 </div>
                             </div>
@@ -440,12 +451,12 @@
                             <div class="col-xs-8 option-content no-lr-padding">
                                 <div class="right-menu-option">
                                     <select id="" name="din0" class="form-control styled-select no-lr-padding trigger_type">
-                                        <option value="-1">X - Ignore</option>
-                                        <option value="0">0 - Low</option>
-                                        <option value="1">1 - High</option>
-                                        <option value="2">R - Rising</option>
-                                        <option value="3">F - Falling</option>
-                                        <option value="4">E - Either</option>
+                                        <option value="0">X - Ignore</option>
+                                        <option value="1">0 - Low</option>
+                                        <option value="2">1 - High</option>
+                                        <option value="3">R - Rising</option>
+                                        <option value="4">F - Falling</option>
+                                        <option value="5">E - Either</option>
                                     </select>
                                 </div>
                             </div>
@@ -458,12 +469,12 @@
                             <div class="col-xs-8 option-content no-lr-padding">
                                 <div class="right-menu-option">
                                     <select id="" name="din1" class="form-control styled-select no-lr-padding trigger_type">
-                                        <option value="-1">X - Ignore</option>
-                                        <option value="0">0 - Low</option>
-                                        <option value="1">1 - High</option>
-                                        <option value="2">R - Rising</option>
-                                        <option value="3">F - Falling</option>
-                                        <option value="4">E - Either</option>
+                                        <option value="0">X - Ignore</option>
+                                        <option value="1">0 - Low</option>
+                                        <option value="2">1 - High</option>
+                                        <option value="3">R - Rising</option>
+                                        <option value="4">F - Falling</option>
+                                        <option value="5">E - Either</option>
                                     </select>
                                 </div>
                             </div>
@@ -476,12 +487,12 @@
                             <div class="col-xs-8 option-content no-lr-padding">
                                 <div class="right-menu-option">
                                     <select id="" name="din2" class="form-control styled-select no-lr-padding trigger_type">
-                                        <option value="-1">X - Ignore</option>
-                                        <option value="0">0 - Low</option>
-                                        <option value="1">1 - High</option>
-                                        <option value="2">R - Rising</option>
-                                        <option value="3">F - Falling</option>
-                                        <option value="4">E - Either</option>
+                                        <option value="0">X - Ignore</option>
+                                        <option value="1">0 - Low</option>
+                                        <option value="2">1 - High</option>
+                                        <option value="3">R - Rising</option>
+                                        <option value="4">F - Falling</option>
+                                        <option value="5">E - Either</option>
                                     </select>
                                 </div>
                             </div>
@@ -494,12 +505,12 @@
                             <div class="col-xs-8 option-content no-lr-padding">
                                 <div class="right-menu-option">
                                     <select id="" name="din3" class="form-control styled-select no-lr-padding trigger_type">
-                                        <option value="-1">X - Ignore</option>
-                                        <option value="0">0 - Low</option>
-                                        <option value="1">1 - High</option>
-                                        <option value="2">R - Rising</option>
-                                        <option value="3">F - Falling</option>
-                                        <option value="4">E - Either</option>
+                                        <option value="0">X - Ignore</option>
+                                        <option value="1">0 - Low</option>
+                                        <option value="2">1 - High</option>
+                                        <option value="3">R - Rising</option>
+                                        <option value="4">F - Falling</option>
+                                        <option value="5">E - Either</option>
                                     </select>
                                 </div>
                             </div>
@@ -512,12 +523,12 @@
                             <div class="col-xs-8 option-content no-lr-padding">
                                 <div class="right-menu-option">
                                     <select id="" name="din4" class="form-control styled-select no-lr-padding trigger_type">
-                                        <option value="-1">X - Ignore</option>
-                                        <option value="0">0 - Low</option>
-                                        <option value="1">1 - High</option>
-                                        <option value="2">R - Rising</option>
-                                        <option value="3">F - Falling</option>
-                                        <option value="4">E - Either</option>
+                                        <option value="0">X - Ignore</option>
+                                        <option value="1">0 - Low</option>
+                                        <option value="2">1 - High</option>
+                                        <option value="3">R - Rising</option>
+                                        <option value="4">F - Falling</option>
+                                        <option value="5">E - Either</option>
                                     </select>
                                 </div>
                             </div>
@@ -530,12 +541,12 @@
                             <div class="col-xs-8 option-content no-lr-padding">
                                 <div class="right-menu-option">
                                     <select id="" name="din5" class="form-control styled-select no-lr-padding trigger_type">
-                                        <option value="-1">X - Ignore</option>
-                                        <option value="0">0 - Low</option>
-                                        <option value="1">1 - High</option>
-                                        <option value="2">R - Rising</option>
-                                        <option value="3">F - Falling</option>
-                                        <option value="4">E - Either</option>
+                                        <option value="0">X - Ignore</option>
+                                        <option value="1">0 - Low</option>
+                                        <option value="2">1 - High</option>
+                                        <option value="3">R - Rising</option>
+                                        <option value="4">F - Falling</option>
+                                        <option value="5">E - Either</option>
                                     </select>
                                 </div>
                             </div>
@@ -548,12 +559,12 @@
                             <div class="col-xs-8 option-content no-lr-padding">
                                 <div class="right-menu-option">
                                     <select id="" name="din6" class="form-control styled-select no-lr-padding trigger_type">
-                                        <option value="-1">X - Ignore</option>
-                                        <option value="0">0 - Low</option>
-                                        <option value="1">1 - High</option>
-                                        <option value="2">R - Rising</option>
-                                        <option value="3">F - Falling</option>
-                                        <option value="4">E - Either</option>
+                                        <option value="0">X - Ignore</option>
+                                        <option value="1">0 - Low</option>
+                                        <option value="2">1 - High</option>
+                                        <option value="3">R - Rising</option>
+                                        <option value="4">F - Falling</option>
+                                        <option value="5">E - Either</option>
                                     </select>
                                 </div>
                             </div>
@@ -566,12 +577,12 @@
                             <div class="col-xs-8 option-content no-lr-padding">
                                 <div class="right-menu-option">
                                     <select id="" name="din7" class="form-control styled-select no-lr-padding trigger_type">
-                                        <option value="-1">X - Ignore</option>
-                                        <option value="0">0 - Low</option>
-                                        <option value="1">1 - High</option>
-                                        <option value="2">R - Rising</option>
-                                        <option value="3">F - Falling</option>
-                                        <option value="4">E - Either</option>
+                                        <option value="0">X - Ignore</option>
+                                        <option value="1">0 - Low</option>
+                                        <option value="2">1 - High</option>
+                                        <option value="3">R - Rising</option>
+                                        <option value="4">F - Falling</option>
+                                        <option value="5">E - Either</option>
                                     </select>
                                 </div>
                             </div>
@@ -592,12 +603,12 @@
                         </div>
                         <div class="col-xs-6 option-content">
                             <div class="right-menu-option">
-                                <button id="OSC_CURSOR_X1" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">X1</button>
+                                <button id="LA_CURSOR_X1" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">X1</button>
                             </div>
                         </div>
                         <div class="col-xs-6 option-content">
                             <div class="right-menu-option">
-                                <button id="OSC_CURSOR_X2" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">X2</button>
+                                <button id="LA_CURSOR_X2" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">X2</button>
                             </div>
                         </div>
                     </div>
@@ -626,24 +637,23 @@
                             <img id="math_offset_arrow" class="y-offset-arrow" src="img/math-offset-arrow.png">
                             <img id="output2_offset_arrow" class="y-offset-arrow" src="img/out2-offset-arrow.png">
                             <img id="output1_offset_arrow" class="y-offset-arrow" src="img/out1-offset-arrow.png">
-                            <div id="ch8_offset_arrow" class="y-offset-arrow"><img class="ch_arrow" src="img/ch8-offset-arrow.png"><span class="ch_name" id="CH8_LABEL">DIN7</span><span id="ch8_tooltip" class="tooltips"></span><img id="img_info_arrow8" class="ch_info_arrow" src="img/ch8-offset-arrow2.png"
+                            <div id="ch8_offset_arrow" class="y-offset-arrow" index="8"><img class="ch_arrow" src="img/ch8-offset-arrow.png"><span class="ch_name" id="CH8_LABEL">DIN7</span><span id="ch8_tooltip" class="tooltips"></span><img id="img_info_arrow8" class="ch_info_arrow" src="img/ch8-offset-arrow2.png"
                                     style="display: none;"><span id="ch8_info" class="ch_name ch_info"></span></div>
-                            <div id="ch7_offset_arrow" class="y-offset-arrow"><img class="ch_arrow" src="img/ch7-offset-arrow.png"><span class="ch_name" id="CH7_LABEL">DIN6</span><span id="ch7_tooltip" class="tooltips"></span><img id="img_info_arrow7" class="ch_info_arrow" src="img/ch7-offset-arrow2.png"
+                            <div id="ch7_offset_arrow" class="y-offset-arrow" index="7"><img class="ch_arrow" src="img/ch7-offset-arrow.png"><span class="ch_name" id="CH7_LABEL">DIN6</span><span id="ch7_tooltip" class="tooltips"></span><img id="img_info_arrow7" class="ch_info_arrow" src="img/ch7-offset-arrow2.png"
                                     style="display: none;"><span id="ch7_info" class="ch_name ch_info"></span></div>
-                            <div id="ch6_offset_arrow" class="y-offset-arrow"><img class="ch_arrow" src="img/ch6-offset-arrow.png"><span class="ch_name" id="CH6_LABEL">DIN5</span><span id="ch6_tooltip" class="tooltips"></span><img id="img_info_arrow6" class="ch_info_arrow" src="img/ch6-offset-arrow2.png"
+                            <div id="ch6_offset_arrow" class="y-offset-arrow" index="6"><img class="ch_arrow" src="img/ch6-offset-arrow.png"><span class="ch_name" id="CH6_LABEL">DIN5</span><span id="ch6_tooltip" class="tooltips"></span><img id="img_info_arrow6" class="ch_info_arrow" src="img/ch6-offset-arrow2.png"
                                     style="display: none;"><span id="ch6_info" class="ch_name ch_info"></span></div>
-                            <div id="ch5_offset_arrow" class="y-offset-arrow"><img class="ch_arrow" src="img/ch5-offset-arrow.png"><span class="ch_name" id="CH5_LABEL">DIN4</span><span id="ch5_tooltip" class="tooltips"></span><img id="img_info_arrow5" class="ch_info_arrow" src="img/ch5-offset-arrow2.png"
+                            <div id="ch5_offset_arrow" class="y-offset-arrow" index="5"><img class="ch_arrow" src="img/ch5-offset-arrow.png"><span class="ch_name" id="CH5_LABEL">DIN4</span><span id="ch5_tooltip" class="tooltips"></span><img id="img_info_arrow5" class="ch_info_arrow" src="img/ch5-offset-arrow2.png"
                                     style="display: none;"><span id="ch5_info" class="ch_name ch_info"></span></div>
-                            <div id="ch4_offset_arrow" class="y-offset-arrow"><img class="ch_arrow" src="img/ch4-offset-arrow.png"><span class="ch_name" id="CH4_LABEL">DIN3</span><span id="ch4_tooltip" class="tooltips"></span><img id="img_info_arrow4" class="ch_info_arrow" src="img/ch4-offset-arrow2.png"
+                            <div id="ch4_offset_arrow" class="y-offset-arrow" index="4"><img class="ch_arrow" src="img/ch4-offset-arrow.png"><span class="ch_name" id="CH4_LABEL">DIN3</span><span id="ch4_tooltip" class="tooltips"></span><img id="img_info_arrow4" class="ch_info_arrow" src="img/ch4-offset-arrow2.png"
                                     style="display: none;"><span id="ch4_info" class="ch_name ch_info"></span></div>
-                            <div id="ch3_offset_arrow" class="y-offset-arrow"><img class="ch_arrow" src="img/ch3-offset-arrow.png"><span class="ch_name" id="CH3_LABEL">DIN2</span><span id="ch3_tooltip" class="tooltips"></span><img id="img_info_arrow3" class="ch_info_arrow" src="img/ch3-offset-arrow2.png"
+                            <div id="ch3_offset_arrow" class="y-offset-arrow" index="3"><img class="ch_arrow" src="img/ch3-offset-arrow.png"><span class="ch_name" id="CH3_LABEL">DIN2</span><span id="ch3_tooltip" class="tooltips"></span><img id="img_info_arrow3" class="ch_info_arrow" src="img/ch3-offset-arrow2.png"
                                     style="display: none;"><span id="ch3_info" class="ch_name ch_info"></span></div>
-                            <div id="ch2_offset_arrow" class="y-offset-arrow"><img class="ch_arrow" src="img/ch2-offset-arrow.png"><span class="ch_name" id="CH2_LABEL">DIN1</span><span id="ch2_tooltip" class="tooltips"></span><img id="img_info_arrow2" class="ch_info_arrow" src="img/ch2-offset-arrow2.png"
+                            <div id="ch2_offset_arrow" class="y-offset-arrow" index="2"><img class="ch_arrow" src="img/ch2-offset-arrow.png"><span class="ch_name" id="CH2_LABEL">DIN1</span><span id="ch2_tooltip" class="tooltips"></span><img id="img_info_arrow2" class="ch_info_arrow" src="img/ch2-offset-arrow2.png"
                                     style="display: none;"><span id="ch2_info" class="ch_name ch_info"></span></div>
-                            <div id="ch1_offset_arrow" class="y-offset-arrow"><img class="ch_arrow" src="img/ch1-offset-arrow.png"><span class="ch_name" id="CH1_LABEL">DIN0</span><span id="ch1_tooltip" class="tooltips"></span><img id="img_info_arrow1" class="ch_info_arrow" src="img/ch1-offset-arrow2.png"
+                            <div id="ch1_offset_arrow" class="y-offset-arrow" index="1"><img class="ch_arrow" src="img/ch1-offset-arrow.png"><span class="ch_name" id="CH1_LABEL">DIN0</span><span id="ch1_tooltip" class="tooltips"></span><img id="img_info_arrow1" class="ch_info_arrow" src="img/ch1-offset-arrow2.png"
                                     style="display: none;"><span id="ch1_info" class="ch_name ch_info"></span></div>
                             <img id="trig_level_arrow" class="harrow" src="img/trigger-arrow.png">
-                            <div id="trigger_level" class="hline"></div>
                             <div id="kostyl_footer"></div>
                         </div>
                     </div>
@@ -657,17 +667,17 @@
                         </div>
                         <div id="info-meas" style="position: absolute; left: 200px;"></div>
                         <div class="pull-right">
-                            Time <span id="OSC_TIME_SCALE">-</span>/div
-                            <br /> <img src="img/time-offset-info.png"> <span id="OSC_TIME_OFFSET">0 ns</span>
+                            Time <span id="LA_TIME_SCALE">-</span>/div
+                            <br /> <img src="img/time-offset-info.png"> <span id="LA_TIME_OFFSET">0 ns</span>
                             <br />
-                            <span id="OSC_SAMPL_RATE"></span>
+                            <span id="LA_SAMPLE_RATE"></span>
                         </div>
                         <div id="triginfo" style="color: green; display:none;">TEXT</div>
                     </div>
                 </div>
                 <div id="joystick">
                     <img id="jtk_fine" src="img/fine.png" />
-                    <img id="jtk_btns" src="img/node_fine.png" usemap="#jtk_btns_map" />
+                    <img id="jtk_btns" src="img/navigation.png" usemap="#jtk_btns_map" />
                     <map name="jtk_btns_map">
                         <area id="jtk_left" shape="poly" coords="19,28,37,45,32,56,28,69,29,84,36,101,30,112,18,122,11,114,8,104,4,91,1,77,3,59,9,41,19,27" />
                         <area id="jtk_up" shape="poly" coords="27,17,42,7,61,3,78,3,89,4,102,7,116,13,124,20,105,37,87,29,64,29,56,33,46,37" />

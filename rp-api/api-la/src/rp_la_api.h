@@ -6,6 +6,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+namespace rp_la{
+
 typedef enum rpDigitalChannel {
     RP_DIGITAL_CHANNEL_0,
     RP_DIGITAL_CHANNEL_1,
@@ -110,9 +112,13 @@ int rp_Run(uint32_t noOfPreTriggerSamples,
                 uint32_t decimation,
                 double * timeIndisposedMs);
 
+int rp_WaitDataRLE(int timeout);
+
 int rp_WaitData(int timeout);
 
 int rp_GetIsTimeout(bool *isTimeout);
+
+int rp_GetTrigBlockPositionRLE(uint32_t *tigger_pos);
 
 int rp_GetTrigPosition(uint32_t *tigger_pos);
 
@@ -123,10 +129,12 @@ int rp_GetTrigPosition(uint32_t *tigger_pos);
  *
  * This function tells the driver where to store the data.
  *
- * @param noOfSamples          On entry, the number of samples required. On exit, the actual number retrieved.
+ * @param noOfBlocks         On entry, the number of samples required. On exit, the actual number retrieved.
  *                          The number of samples retrieved will not be more than the number requested,
  *                          and the data retrieved starts at startIndex.
  */
+int rp_GetValuesRLE(uint32_t *noOfBlocks, uint64_t *noOfSamples);
+
 int rp_GetValues(uint32_t *noOfSamples);
 
 /**
@@ -136,5 +144,11 @@ int rp_GetValues(uint32_t *noOfSamples);
  */
 int rp_Stop(void);
 
+
+int rp_GetFullBufferSize(uint32_t *size);
+
+
+
+}
 
 #endif // _RP_LA_API_H_

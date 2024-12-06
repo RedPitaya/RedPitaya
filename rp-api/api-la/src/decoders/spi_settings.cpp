@@ -80,20 +80,20 @@ auto SPIParameters::fromJson(const std::string &json) -> bool{
 
 		return true;
 	} catch (...) {
-		ERROR_LOG("Error parse json. Invalid file")
+		ERROR_LOG("Error parse json. Invalid data")
 		return false;
 	}
 	return false;
 }
 
- constexpr std::string_view SPIParameters::getSPIAnnotationsString(SPIAnnotations value){
+std::string SPIParameters::getSPIAnnotationsString(SPIAnnotations value){
 	switch (value)
 	{
 		case DATA: return "Data";
 		case NOTHING: return "";
 
 	default:
-		ERROR_LOG("Unknown id = %d",(int)value)
+		TRACE_SHORT("Unknown id = %d",(int)value)
 		break;
 	}
 	return "";

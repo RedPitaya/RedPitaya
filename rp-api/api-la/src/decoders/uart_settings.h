@@ -72,6 +72,6 @@ namespace uart {
 		auto toJson() -> std::string;
     	auto fromJson(const std::string &json) -> bool;
 
-		static constexpr std::string_view getUARTAnnotationsString(UARTAnnotations value);
+		static std::string getUARTAnnotationsString(UARTAnnotations value);
 	};
 }
