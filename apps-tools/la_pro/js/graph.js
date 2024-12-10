@@ -9,6 +9,7 @@
 
     LA.scaleWasChanged = false
     LA.graphs = undefined;
+    LA.graphs_buffer = undefined;
     LA.graph_colors = {
         'ch1': '#dc1809',
         'ch2': '#e6890c',
@@ -20,10 +21,17 @@
         'ch8': '#ebf1e7'
     };
 
+    LA.trigger_color = '#75cede'
+
+    LA.lastData = undefined;
+    LA.lastDataRepacked = undefined;
+    LA.region_view_moving = false;
+    LA.region_samples = {start:0 , end:0}
+
     LA.initGraph = function() {
         if (LA.graphs === undefined) {
             LA.graphs = {};
-            LA.graphs.elem = $('<div class="plot" />').css($('#graph_grid').css(['height', 'width'])).appendTo('#graphs');
+            LA.graphs.elem = $('<div class="plot" id="plot_main"/>').css($('#graph_grid').css(['height', 'width'])).appendTo('#graphs');
             LA.graphs.plot = $.plot(LA.graphs.elem, [], {
                 name: "ch1",
                 series: {
@@ -32,6 +40,36 @@
                 yaxis: {
                     min: 0,
                     max: 9
+                },
+                xaxis: {
+                    min: 0,
+                    max: 0
+                },
+                grid: {
+                    show: false
+                },
+                colors: [
+                ]
+            });
+        }
+    }
+
+    LA.initGraphBuffer = function() {
+        if (LA.graphs_buffer === undefined) {
+            LA.graphs_buffer = {};
+            LA.graphs_buffer.elem = $('<div class="plot" id="plot_buff"/>').css($('#graphs_buffer').css(['height', 'width'])).appendTo('#graphs_buffer');
+            LA.graphs_buffer.plot = $.plot(LA.graphs_buffer.elem, [], {
+                name: "ch1",
+                series: {
+                    shadowSize: 0, // Drawing is faster without shadows
+                    lineWidth: 1.5,
+                    lines: {
+                        lineWidth: 1.5
+                    }
+                },
+                yaxis: {
+                    min: 0,
+                    max: 100
                 },
                 xaxis: {
                     min: 0
@@ -45,22 +83,245 @@
         }
     }
 
-    // Draws the grid on the lowest canvas layer
-    LA.drawGraphGrid = function() {
+    LA.resizePlots = function(){
+
+        var g_h = $('#main').height() - $('#buffer').height() - $('#info').height()
+        $('#graphs_holder').height(g_h)
+
+        if (LA.graphs === undefined){
+            LA.initGraph()
+        }
+
         var canvas_width = $('#graphs').width() - 2;
-        var canvas_height = Math.round(canvas_width / 2);
-
-        // var center_x = canvas_width / 2;
-        // var center_y = canvas_height / 2;
-
+        var canvas_height = $("#graphs").height() - 2;
         var ctx = $('#graph_grid')[0].getContext('2d');
-
-        var x_offset = 0;
-        var y_offset = 0;
-
         // Set canvas size
         ctx.canvas.width = canvas_width;
         ctx.canvas.height = canvas_height;
+
+        $('#plot_main').css($('#graph_grid').css(['height', 'width']))
+        LA.graphs.plot.resize();
+        LA.graphs.plot.setupGrid();
+        LA.graphs.plot.draw();
+
+        if (LA.graphs_buffer === undefined){
+            LA.initGraphBuffer()
+        }
+        $('#plot_buff').css($('#graphs_buffer').css(['height', 'width']))
+        LA.graphs_buffer.plot.resize();
+        LA.graphs_buffer.plot.setupGrid();
+        LA.graphs_buffer.plot.draw();
+
+        LA.updatePositionBufferViewport()
+    }
+
+    LA.resizeAxisGraphBufferFromCount = function(x_count) {
+        if (LA.graphs_buffer === undefined) {
+            LA.initGraphBuffer()
+        }
+        var plot = LA.getPlotBuffer()
+        if (plot !== undefined){
+            var axes = plot.getAxes();
+            axes.xaxis.options.min = 0
+            axes.xaxis.options.max = x_count
+            plot.setupGrid();
+            plot.draw();
+        }
+    }
+
+    LA.setupDataToBufferGraph = function() {
+
+        var preTriggerCount = CLIENT.getValue("LA_PRE_TRIGGER_SAMPLES")
+        if (preTriggerCount === undefined) return
+        if (LA.lastDataRepacked === undefined) return
+
+        var channel_list = ['ch1', 'ch2', 'ch3', 'ch4', 'ch5', 'ch6', 'ch7', 'ch8'];
+        var pointArr = [];
+        var colorsArr = [];
+        var sig_h = 5; // px
+
+        for (var sig_name in LA.lastDataRepacked) {
+
+            var index_channel = channel_list.indexOf(sig_name);
+
+            // Ignore empty signals
+            if (LA.lastDataRepacked[sig_name].size == 0)
+                continue;
+
+            var points = [];
+            var color = LA.graph_colors[sig_name];
+            var start_point = 0;
+            var offset = 11;
+            for (var u = 0; u < LA.lastDataRepacked[sig_name].value.length; u += 2) {
+                var start_x = start_point;
+                var start_y = (LA.lastDataRepacked[sig_name].value[u + 1] === 1 ? sig_h : 0);
+                start_y += (index_channel + 1) * offset;
+                points.push([start_x, start_y]);
+
+                start_point += LA.lastDataRepacked[sig_name].value[u];
+
+                var end_x = start_point;
+                var end_y = start_y;
+                points.push([end_x, end_y]);
+            }
+            pointArr.push(points);
+            colorsArr.push(color);
+
+        }
+
+
+        // Added trigger v line
+        if (pointArr.length > 0){
+            pointArr.push([[preTriggerCount,0],[preTriggerCount,100]])
+            colorsArr.push(LA.trigger_color)
+        }
+
+        if (LA.graphs_buffer) {
+            LA.graphs_buffer.elem.show();
+            LA.graphs_buffer.plot.setColors(colorsArr);
+            LA.graphs_buffer.plot.resize();
+            LA.graphs_buffer.plot.setupGrid();
+            LA.graphs_buffer.plot.setData(pointArr);
+            LA.graphs_buffer.plot.draw();
+        }
+    }
+
+    LA.setupDataToGraph = function() {
+
+        var preTriggerCount = CLIENT.getValue("LA_PRE_TRIGGER_SAMPLES")
+        if (preTriggerCount === undefined) return
+        if (LA.lastDataRepacked === undefined) return
+
+        var channel_list = ['ch1', 'ch2', 'ch3', 'ch4', 'ch5', 'ch6', 'ch7', 'ch8'];
+        var pointArr = [];
+        var colorsArr = [];
+        var sig_h = 0.5;
+
+        for (var sig_name in LA.lastDataRepacked) {
+
+            var index_channel = channel_list.indexOf(sig_name);
+
+            // Ignore empty signals
+            if (LA.lastDataRepacked[sig_name].size == 0)
+                continue;
+
+            if (CLIENT.getValue('LA_DIN_' + (index_channel + 1)) !== true)
+                continue;
+
+            var points = [];
+            var color = LA.graph_colors[sig_name];
+            var start_point = 0;
+            var offset = CLIENT.getValue("LA_DIN_" +(index_channel+1)+ "_POS")
+            for (var u = 0; u < LA.lastDataRepacked[sig_name].value.length; u += 2) {
+                var start_x = start_point;
+                var start_y = (LA.lastDataRepacked[sig_name].value[u + 1] === 1 ? sig_h : 0);
+                start_y += offset;
+                points.push([start_x, start_y]);
+
+                start_point += LA.lastDataRepacked[sig_name].value[u];
+
+                var end_x = start_point;
+                var end_y = start_y;
+                points.push([end_x, end_y]);
+            }
+            pointArr.push(points);
+            colorsArr.push(color);
+        }
+
+
+        // Added trigger v line
+        if (pointArr.length > 0){
+            pointArr.push([[preTriggerCount,0],[preTriggerCount,9]])
+            colorsArr.push(LA.trigger_color)
+        }
+
+        if (LA.graphs) {
+            LA.graphs.elem.show();
+            LA.graphs.plot.setColors(colorsArr);
+            LA.graphs.plot.resize();
+            LA.graphs.plot.setupGrid();
+            LA.graphs.plot.setData(pointArr);
+            LA.graphs.plot.draw();
+            console.log(pointArr)
+        }
+    }
+
+    LA.updatePositionBufferViewport = function(){
+        var samples =  CLIENT.getValue('LA_TOTAL_SAMPLES')
+        var pos = CLIENT.getValue('LA_VIEW_PORT_POS')
+        var scale = CLIENT.getValue('LA_SCALE')
+        var samplerate = CLIENT.getValue('LA_CUR_FREQ')
+        var graph_width = $('#graph_grid').outerWidth();
+
+        if (samples === undefined || samples === 0){
+            $("#buffer_time_region").hide()
+            return
+        }
+
+        if (pos !== undefined && samplerate !== undefined && scale !== undefined && samples !== undefined){
+            var timePerDevInMs = (((graph_width / scale) / samplerate) * 1000);
+            var totalTime = samples / samplerate * 1000
+            var totalWidth = $('#graphs_buffer').width()
+            var viewPortWidth = Math.ceil((timePerDevInMs / totalTime * totalWidth)/2.0) * 2
+            $("#buffer_time_region").width(viewPortWidth).height($('#buffer').height())
+            $("#buffer_time_region").show()
+
+            var centerPosX = totalWidth * pos
+            centerPosX = (centerPosX - viewPortWidth/2 < 0 ? viewPortWidth / 2: centerPosX)
+            centerPosX = (centerPosX + viewPortWidth/2 > totalWidth ? totalWidth - viewPortWidth / 2: centerPosX)
+            var leftPos = centerPosX - viewPortWidth/2
+            var rightPos = Math.ceil(centerPosX + viewPortWidth/2)
+            $("#buffer_time_region").css({left: leftPos});
+
+            var l = leftPos / totalWidth * samples
+            var r = rightPos / totalWidth * samples
+            LA.region_samples = {start: l , end:r}
+            console.log("viewPortWidth",viewPortWidth)
+            console.log(LA.region_samples, 'TW', totalWidth, 'CP',centerPosX, 'LP' ,leftPos, 'RP' ,rightPos)
+
+            LA.updateMainView()
+
+            if ((centerPosX / totalWidth) !== pos){
+                CLIENT.parametersCache['LA_VIEW_PORT_POS'] = {value: centerPosX / totalWidth}
+                CLIENT.sendParameters()
+            }
+        }
+    }
+
+    LA.updateMainView = function() {
+        if (LA.graphs === undefined) {
+            LA.initGraph()
+        }
+
+        var plot = LA.getPlot()
+        if (plot !== undefined){
+            var axes = plot.getAxes();
+            var min = LA.region_samples.start
+            var max = LA.region_samples.end
+            axes.xaxis.options.min = min
+            axes.xaxis.options.max = max
+            plot.setupGrid();
+            plot.draw();
+        }
+    }
+
+    LA.moveViewPort = function(dir){
+        var pos = CLIENT.getValue('LA_VIEW_PORT_POS')
+        var viewWidth = $('#buffer_time_region').width()
+        var totalWidth = $('#graphs_buffer').width()
+        var moveDelta = (viewWidth / ((OSC.state.fine == false) ? 2 : 8)) / totalWidth * (dir == '+' ? 1 : -1)
+        CLIENT.params.orig['LA_VIEW_PORT_POS'] = {value: pos + moveDelta}
+        LA.updatePositionBufferViewport()
+    }
+
+    // Draws the grid on the lowest canvas layer
+    LA.drawGraphGrid = function() {
+
+        var ctx = $('#graph_grid')[0].getContext('2d');
+        var canvas_width = $('#graph_grid').width()
+        var canvas_height = $('#graph_grid').height()
+        var x_offset = 0;
+        var y_offset = 0;
 
         // Set draw options
         ctx.beginPath();
@@ -88,35 +349,28 @@
             ctx.moveTo(0, x_offset);
             ctx.lineTo(canvas_width, x_offset);
         }
-
         ctx.stroke();
-
         for (var i = 1; i < 10; i++) {
             y_offset = y_offset + (canvas_width / 10);
             ctx.moveTo(y_offset, 0);
             ctx.lineTo(y_offset, canvas_height);
         }
-
         ctx.stroke();
-
-        // Draw central cross
-        // ctx.beginPath();
-        // ctx.lineWidth = 1;
-        // ctx.strokeStyle = '#999';
-
-        // ctx.moveTo(center_x, 0);
-        // ctx.lineTo(center_x, canvas_height);
-
-        // ctx.moveTo(0, center_y);
-        // ctx.lineTo(canvas_width, center_y);
-
-        // ctx.stroke();
     };
 
     LA.getPlot = function() {
 
         if (LA.graphs && LA.graphs.elem) {
             var plot = LA.graphs.plot;
+            return plot;
+        }
+        return undefined;
+    };
+
+    LA.getPlotBuffer = function() {
+
+        if (LA.graphs_buffer && LA.graphs_buffer.elem) {
+            var plot = LA.graphs_buffer.plot;
             return plot;
         }
         return undefined;
@@ -137,7 +391,7 @@
                 // OSC.allSignalShown = false; // Reset 'do not change time_scale' flag
             } else if (direction == '-') {
                 newScaleMul = scale / ((OSC.state.fine == false) ? 2 : 1.1);
-                if (newScaleMul < 0.01) newScaleMul = 0.01
+                if (newScaleMul < 0.005) newScaleMul = 0.005
             } else if (direction == '1') {
                 newScaleMul = 1;
             }

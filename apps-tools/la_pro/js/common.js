@@ -237,11 +237,11 @@
             res["ch" + i]["size"] = 0;
         }
 
-        for (var i = 0; i < signals["ch1"].size; i += 2) {
-            var length = signals["ch1"].value[i] + 1;
+        for (var i = 0; i < signals["data_rle"].size; i += 2) {
+            var length = signals["data_rle"].value[i] + 1;
             for (var chn = 0; chn < 8; chn++) {
                 var ch = "ch" + (chn + 1);
-                var val = (signals["ch1"].value[i + 1] >> chn) & 1;
+                var val = (signals["data_rle"].value[i + 1] >> chn) & 1;
                 if (res[ch].value.length > 0) {
                     if (val == (res[ch].value[res[ch].value.length - 1]))
                         res[ch].value[res[ch].value.length - 2] += length;

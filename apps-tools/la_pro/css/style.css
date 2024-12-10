@@ -2,6 +2,8 @@ body {
     color: #cdcccc;
     overflow: auto;
     padding-right: 0 !important;
+    min-height: 100vh;
+    width: 100%;
 }
 
 * {
@@ -149,6 +151,7 @@ area:hover {
     /*min-width: 1024px;*/
     margin: 0 auto;
     position: relative;
+    height: 100%;
 }
 
 .container-fluid {
@@ -252,13 +255,22 @@ area:hover {
 
 #main {
     margin-right: 188px;
+    height: 100%;
 }
 
 #buffer {
     border: 1px solid #999;
     position: relative;
-    height: 14px;
+    height: 100px;
     overflow: hidden;
+}
+
+#buffer_time_region {
+    position: absolute;
+    top: 0;
+    border-left: 1px solid #999;
+    border-right: 1px solid #999;
+    background-color: #99999925;
 }
 
 .buf-main-line {
@@ -589,9 +601,18 @@ area:hover {
     position: absolute;
     margin-left: 8px;
     right: 10px;
-    bottom: 10px;
+    bottom: 40px;
     width: 150px;
     height: auto;
+}
+
+#stem {
+    position: absolute;
+    margin-left: 8px;
+    right: 10px;
+    bottom: 10px;
+    width: 150px;
+    height: 20px;
 }
 
 #jtk_btns {
@@ -619,6 +640,23 @@ area:hover {
 }
 
 #graph_grid {
+    border: 1px solid #5d5d5c;
+    margin-bottom: 2px;
+}
+
+/* #graphs_holder_buffer {
+    margin-top: 12px;
+    padding-top: 8px;
+    overflow: hidden;
+} */
+
+#graphs_buffer {
+    position: relative;
+    overflow: hidden;
+    height: 100px;
+}
+
+#graph_grid_buffer {
     border: 1px solid #5d5d5c;
     margin-bottom: 2px;
 }
@@ -688,7 +726,7 @@ area:hover {
 .varrow {
     position: absolute;
     left: 0;
-    bottom: 8px;
+    bottom: 0px;
     margin-left: -7px;
     margin-right: -7px;
     display: none;
@@ -895,7 +933,7 @@ body.modal-open .full-content {
     left: 1px;
     font-size: 10px;
     color: #000;
-    cursor: move;
+    cursor: auto;
 }
 
 .alert-warning {
@@ -1046,3 +1084,27 @@ body.modal-open .full-content {
     background-color: #999;
     color: #111 !important;
   }
+
+.saved_settings {
+    display: flex;
+}
+
+.saved_settings>a {
+    padding-left: 10px;
+    padding-right: 10px;
+    text-align: left;
+    width: 100%;
+    /* max-width: 100px; */
+    /* min-width: 100px; */
+}
+
+.saved_settings>a>img {
+    width: 14px;
+    height: 14px;
+    margin: 3px;
+    float:right;
+}
+
+.saved_settings>a>img:hover {
+    transform: scale(1.3);
+}

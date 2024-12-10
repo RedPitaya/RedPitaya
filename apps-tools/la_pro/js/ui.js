@@ -7,6 +7,7 @@
 
 (function(OSC, $, undefined) {
 
+
     OSC.setDecimation = function(param) {
         var param_name = "LA_DECIMATE"
         var field = $('#' + param_name);
@@ -19,6 +20,7 @@
         var param_name = "LA_PRE_TRIGGER_BUFFER_MS"
         var field = $('#' + param_name);
         if (field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
+            field.attr('max',param[param_name].max);
             field.val(param[param_name].value);
         }
     }
@@ -27,6 +29,7 @@
         var param_name = "LA_POST_TRIGGER_BUFFER_MS"
         var field = $('#' + param_name);
         if (field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
+            field.attr('max',param[param_name].max);
             field.val(param[param_name].value);
         }
     }
@@ -43,6 +46,7 @@
             img.hide()
             $('#ch' + (ch + 1) + '_offset_arrow').hide();
         }
+        LA.setupDataToGraph()
     }
 
     OSC.setDINName= function(param,idx) {
@@ -154,34 +158,42 @@
 
     OSC.setDIN1Pos = function(param){
         LA.updateChVisibility(0)
+        LA.setupDataToGraph()
     }
 
     OSC.setDIN2Pos = function(param){
         LA.updateChVisibility(1)
+        LA.setupDataToGraph()
     }
 
     OSC.setDIN3Pos = function(param){
         LA.updateChVisibility(2)
+        LA.setupDataToGraph()
     }
 
     OSC.setDIN4Pos = function(param){
         LA.updateChVisibility(3)
+        LA.setupDataToGraph()
     }
 
     OSC.setDIN5Pos = function(param){
         LA.updateChVisibility(4)
+        LA.setupDataToGraph()
     }
 
     OSC.setDIN6Pos = function(param){
         LA.updateChVisibility(5)
+        LA.setupDataToGraph()
     }
 
     OSC.setDIN7Pos = function(param){
         LA.updateChVisibility(6)
+        LA.setupDataToGraph()
     }
 
     OSC.setDIN8Pos = function(param){
         LA.updateChVisibility(7)
+        LA.setupDataToGraph()
     }
 
     OSC.enableChannel = function() {
@@ -409,7 +421,6 @@
             var new_value = OSC.trigger_position * ms_per_px;
 
             $('#LA_TIME_SCALE').text(OSC.convertTime(timePerDevInMs));
-            $('#LA_TIME_OFFSET').text(OSC.convertTime(new_value));
 
             const round = (n, dp) => {
                 const h = +('1'.padEnd(dp + 1, '0')) // 10 or 100 or 1000 or etc
@@ -427,6 +438,7 @@
 
             $('#LA_SAMPLE_RATE').text(samplerate + " " + suff + "S/s");
         }
+        LA.updatePositionBufferViewport()
     }
 
     OSC.updateTimeScale = function(){
@@ -437,6 +449,7 @@
         OSC.updateTimeScale()
         OSC.setCurrentFreq(param)
         LA.updateXInfo()
+        LA.updatePositionBufferViewport()
     }
 
     // Changes Y zoom/scale for the selected signal
@@ -463,6 +476,87 @@
                 $('#LA_RUN').show();
             }
         }
+    }
+
+    OSC.setPreTriggerCountCaptured = function(){
+        LA.setupDataToBufferGraph()
+        LA.setupDataToGraph()
+    }
+
+    OSC.setPostTriggerCountCaptured = function(){
+
+    }
+
+    OSC.setSampleCountCaptured = function(param){
+        LA.resizeAxisGraphBufferFromCount(param['LA_TOTAL_SAMPLES'].value)
+        LA.updatePositionBufferViewport()
+    }
+
+    OSC.setViewPortPos = function(param) {
+        LA.updatePositionBufferViewport()
+    }
+
+    OSC.setControlConfig = function(new_params) {
+        if (new_params['CONTROL_CONFIG_SETTINGS'].value === 2) {  // RESET_DONE
+            location.reload();
+        }
+
+        if (new_params['CONTROL_CONFIG_SETTINGS'].value === 7) {  // LOAD_DONE
+            location.reload();
+        }
+    }
+
+    OSC.setCpu = function(new_params){
+        OSC.g_CpuLoad = new_params['RP_SYSTEM_CPU_LOAD'].value
+    }
+
+    OSC.setCpuTemp = function(new_params){
+        OSC.g_CpuTemp = new_params['RP_SYSTEM_TEMPERATURE'].value
+    }
+
+    OSC.setFreeRAM = function(new_params){
+        OSC.g_FreeMemory = new_params['RP_SYSTEM_FREE_RAM'].value
+    }
+
+    OSC.setTotalRAM = function(new_params){
+        OSC.g_TotalMemory = new_params['RP_SYSTEM_TOTAL_RAM'].value
+    }
+
+    OSC.listSettings = function(new_params){
+        var list = new_params['LIST_FILE_SATTINGS'].value
+        const splitLines = value => value.split(/\r?\n/);
+        $('#settings_dropdown').find('.saved_settings').remove();
+        splitLines(list).forEach(function(item){
+            var id = item.trim();
+            if (id !== ""){
+                var li = document.createElement('li')
+                var a = document.createElement('a')
+                var img = document.createElement('img')
+                a.innerHTML = id
+                li.appendChild(a)
+                a.appendChild(img)
+                li.classList.add("saved_settings");
+                a.style.paddingLeft = "10px"
+                a.style.paddingRight = "10px"
+                img.src = "img/delete.png"
+                a.setAttribute("file_name",id)
+                a.onclick = function() {
+                   CLIENT.parametersCache['FILE_SATTINGS'] = { value: $(this).attr('file_name') };
+                   CLIENT.parametersCache['CONTROL_CONFIG_SETTINGS'] = { value: 6 }; // LOAD
+                   CLIENT.sendParameters();
+                };
+                img.onclick = function(event) {
+                    event.stopPropagation();
+                    CLIENT.parametersCache['FILE_SATTINGS'] = { value: $(this).parent().attr('file_name') };
+                    CLIENT.parametersCache['CONTROL_CONFIG_SETTINGS'] = { value: 5 }; // DELETE
+                    CLIENT.sendParameters();
+                };
+                var r1 = document.getElementById('settings_dropdown');
+                if (r1!= null)
+                    r1.appendChild(li);
+
+            }
+        })
     }
 
 }(window.OSC = window.OSC || {}, jQuery));

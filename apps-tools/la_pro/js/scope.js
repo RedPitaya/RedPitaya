@@ -69,14 +69,7 @@
     // OSC.voltage_offset = [4, 3, 2, 1, 0, -1, -2, -3];
     OSC.counts_offset = 0;
 
-    OSC.bad_connection = [false, false, false, false]; // time in s.
 
-    OSC.compressed_data = 0;
-    OSC.decompressed_data = 0;
-    OSC.refresh_times = [
-        [],
-        []
-    ];
     OSC.ch_names = ["DIN0", "DIN1", "DIN2", "DIN3", "DIN4", "DIN5", "DIN6", "DIN7"];
     OSC.log_buses = [false, false, false, false];
 
@@ -148,9 +141,6 @@
     OSC.scrollLogContainer = 0;
     OSC.ch1_size = 0;
 
-    OSC.parameterStack = [];
-    OSC.signalStack = [];
-
     OSC.trigger_position = 0;
     OSC.flagWheelHandled = false;
     OSC.allSignalShown = false;
@@ -167,34 +157,21 @@
 
 
     OSC.guiHandler = function() {
-        if (OSC.signalStack.length > 0) {
-            OSC.recv_signals = OSC.signalStack[OSC.signalStack.length - 1];
-            OSC.signalStack.splice(0, 1);
-        } else {
-            if (OSC.latest_signal['ch1'] != undefined)
-                OSC.recv_signals = OSC.latest_signal;
-            else
-                return;
+        if (CLIENT.signalStack.length > 0) {
+            let signals = Object.assign({}, CLIENT.signalStack[0]);
+            for (const property in signals) {
+                if (signals[property]['type']){
+                    if (signals[property]['type'] == 'h'){
+                        signals[property]['value'] = CLIENT.base64ToByteArray(signals[property]['value'])
+                    }
+                }
+            }
+            LA.lastData = signals
+            LA.lastDataRepacked = OSC.repackSignals(LA.lastData)
+            CLIENT.signalStack.splice(0, 1);
+            LA.setupDataToBufferGraph()
+            LA.setupDataToGraph()
         }
-        if (OSC.scaleWasChanged && OSC.time_scale < 0.25) {
-            var base = 1 / OSC.time_scale;
-            OSC.splittedAvgSignal = OSC.repackSignalsAVG(OSC.recv_signals, base);
-            OSC.splitted_signal = OSC.splitSignals(OSC.recv_signals);
-        } else {
-            OSC.splitted_signal = OSC.splitSignals(OSC.recv_signals);
-        }
-
-        OSC.processSignals(OSC.splitted_signal);
-        OSC.refresh_times.push("tick");
-        if (OSC.scaleWasChanged)
-            OSC.scrollDataArea();
-        OSC.scaleWasChanged = false;
-        if (OSC.signalStack.length > 2)
-            OSC.signalStack.length = [];
-
-        $('.data_row').unbind('click', clickDivListedData);
-        $('.data_row').bind('click', clickDivListedData);
-        OSC.flagWheelHandled = false;
     }
 
     OSC.scrollDataArea = function() {
@@ -212,66 +189,18 @@
 
 
 
-    var clickDivListedData = function() {
-        var offset = $(this).attr('offset');
-        OSC.counts_offset = parseInt(offset);
-        var trigPosInPoints = (OSC.samples_sum * OSC.time_scale - OSC.counts_offset) * $('#graphs').width() / 1024 - $('#time_offset_arrow').width() / 2;
-        $('#time_offset_arrow').css('left', trigPosInPoints);
-        // I cry when I see this code :'(
-        OSC.guiHandler();
-        $('#OSC_TIME_OFFSET').text(OSC.convertTime(5 * (($('#time_offset_arrow').position().left + $('#time_offset_arrow').width() / 2) / ($('#graphs').width() / 2) - 1) * 102400 / OSC.time_scale / OSC.state.acq_speed));
-    }
 
-
-    var g_count = 0;
-    var g_time = 0;
-    var g_iter = 10;
-    var g_delay = 200;
-    var g_counter = 0;
-    var g_CpuLoad = 100.0;
-    var g_TotalMemory = 256.0;
-    var g_FreeMemory = 256.0;
+    OSC.g_CpuLoad = 100.0;
+    OSC.g_CpuTemp = 100.0;
+    OSC.g_TotalMemory = 256.0;
+    OSC.g_FreeMemory = 256.0;
 
     setInterval(function() {
-        if (!OSC.state.socket_opened)
-            return;
-        var now = new Date();
-        var now_str = now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + ":" + now.getMilliseconds();
-        var times = "";
-        for (var i = 0; i < OSC.refresh_times.length; i++)
-            times += OSC.refresh_times[i] + " ";
-
-        $('#fps_view').text(OSC.refresh_times.length);
-        $('#throughput_view').text((OSC.compressed_data / 1024).toFixed(2) + "kB/s");
-        $('#cpu_load').text(g_CpuLoad.toFixed(2) + "%");
-        $('#totalmem_view').text((g_TotalMemory / (1024 * 1024)).toFixed(2) + "Mb");
-        $('#freemem_view').text((g_FreeMemory / (1024 * 1024)).toFixed(2) + "Mb");
-        $('#usagemem_view').text(((g_TotalMemory - g_FreeMemory) / (1024 * 1024)).toFixed(2) + "Mb");
-
-
-        if (OSC.refresh_times.length < 3)
-            OSC.bad_connection[g_counter] = true;
-        else
-            OSC.bad_connection[g_counter] = false;
-        g_counter++;
-        if (g_counter == 4) g_counter = 0;
-
-
-        if ($('#weak_conn_msg').is(':visible')) {
-            if (!OSC.bad_connection[0] && !OSC.bad_connection[1] && !OSC.bad_connection[2] && !OSC.bad_connection[3])
-                $('#weak_conn_msg').hide();
-        } else {
-            if (OSC.bad_connection[0] && OSC.bad_connection[1] && OSC.bad_connection[2] && OSC.bad_connection[3]) {
-                if ($('#sys_info_view').is(':visible')) {
-                    $('#weak_conn_msg').css('bottom', 45);
-                }
-            }
-        }
-
-
-        OSC.compressed_data = 0;
-        OSC.decompressed_data = 0;
-        OSC.refresh_times = [];
+        $('#cpu_load').text(OSC.g_CpuLoad.toFixed(2) + "%");
+        $('#cpu_temp').text(OSC.g_CpuTemp.toFixed(0));
+        $('#totalmem_view').text((OSC.g_TotalMemory / (1024 * 1024)).toFixed(2) + "Mb");
+        $('#freemem_view').text((OSC.g_FreeMemory / (1024 * 1024)).toFixed(2) + "Mb");
+        $('#usagemem_view').text(((OSC.g_TotalMemory - OSC.g_FreeMemory) / (1024 * 1024)).toFixed(2) + "Mb");
     }, 1000);
 
 
@@ -621,115 +550,6 @@
 
 
 
-    OSC.view_part = function(new_params) {
-        var full_width = $('#buffer').width() - 4;
-        var visible_width = full_width * new_params['OSC_VIEV_PART'].value;
-
-        $('#buffer .buf-red-line').width(visible_width).show();
-        $('#buffer .buf-red-line-holder').css('left', full_width / 2 - visible_width / 2);
-    }
-
-
-
-    OSC.auto_set_trig = function() {
-        if (OSC.samples_first /* || OSC.demo_mode*/ ) {
-            OSC.samples_first = false;
-            return;
-        }
-
-        var trig_pos = ($('#time_offset_arrow').position().left + $('#time_offset_arrow').width() * 0.5) / $('#graphs').width() * 1024;
-        OSC.time_scale = 1;
-        OSC.scaleWasChanged = true;
-        OSC.counts_offset = OSC.samples_sum - 512;
-
-        while (OSC.samples_sum * OSC.time_scale < trig_pos) {
-            $("#jtk_right").click();
-        }
-
-        var trigPosInPoints = (OSC.samples_sum * OSC.time_scale - OSC.counts_offset) * $('#graphs').width() / 1024 - $('#time_offset_arrow').width() / 2;
-        $('#time_offset_arrow').css('left', trigPosInPoints);
-
-        $('#OSC_SAMPL_RATE').text($('#ACQ_SPEED option:selected').text());
-
-        // Calculate time per division
-        var samplerate = OSC.state.acq_speed;
-        var samples = 1024;
-        var mul = 1000;
-        var scale = OSC.time_scale;
-        var dev_num = 10;
-        var timePerDevInMs = (((samples / scale) / samplerate) * mul) / dev_num;
-        $('#OSC_TIME_SCALE').text(OSC.convertTime(timePerDevInMs));
-
-        // I cry when I see this code :'(
-        $('#OSC_TIME_OFFSET').text(OSC.convertTime(5 * (($('#time_offset_arrow').position().left + $('#time_offset_arrow').width() / 2) / ($('#graphs').width() / 2) - 1) * 102400 / OSC.time_scale / OSC.state.acq_speed));
-        OSC.guiHandler();
-    }
-
-    OSC.set_trig = function(new_params) {
-        if (OSC.samples_first) {
-            OSC.samples_first = false;
-            return;
-        }
-        OSC.samples_sum = new_params['SAMPLES_SUM'].value;
-
-
-        // OSC.time_scale = 1;
-        // OSC.counts_offset = OSC.samples_sum - 512;
-        var trig_pos = ($('#time_offset_arrow').position().left + $('#time_offset_arrow').width() * 0.5) / $('#graphs').width() * 1024;
-        if (((OSC.samples_sum * OSC.time_scale) - OSC.counts_offset) >= trig_pos) {
-            OSC.counts_offset = (OSC.samples_sum * OSC.time_scale) - parseInt(trig_pos);
-        } else {
-            OSC.time_scale = 1;
-            OSC.counts_offset = OSC.samples_sum - 512;
-            while (OSC.samples_sum * OSC.time_scale < trig_pos) {
-                $("#jtk_right").click();
-            }
-        }
-
-        // while (OSC.samples_sum * OSC.time_scale < trig_pos) {
-        //     $("#jtk_right").click();
-        // }
-        // OSC.counts_offset = OSC.samples_sum * OSC.time_scale - trig_pos;
-
-        var trigPosInPoints = (OSC.samples_sum * OSC.time_scale - OSC.counts_offset) * $('#graphs').width() / 1024 - $('#time_offset_arrow').width() / 2;
-        $('#time_offset_arrow').css('left', trigPosInPoints);
-
-        $('#OSC_SAMPL_RATE').text($('#ACQ_SPEED option:selected').text());
-
-        // Calculate time per division
-        var samplerate = OSC.state.acq_speed;
-        var samples = 1024;
-        var mul = 1000;
-        var scale = OSC.time_scale;
-        var dev_num = 10;
-        var timePerDevInMs = (((samples / scale) / samplerate) * mul) / dev_num;
-        $('#OSC_TIME_SCALE').text(OSC.convertTime(timePerDevInMs));
-        OSC.checkAndShowArrows();
-
-        // I cry when I see this code :'(
-        $('#OSC_TIME_OFFSET').text(OSC.convertTime(5 * (($('#time_offset_arrow').position().left + $('#time_offset_arrow').width() / 2) / ($('#graphs').width() / 2) - 1) * 102400 / OSC.time_scale / OSC.state.acq_speed));
-        OSC.guiHandler();
-    }
-
-    OSC.time_offset = function(new_params) {
-        var graph_width = $('#graph_grid').outerWidth();
-
-        // Calculate time per division
-        var samplerate = OSC.state.acq_speed;
-        var samples = 1024;
-        var mul = 1000;
-        var scale = OSC.time_scale;
-        var timePerDevInMs = ((samples / scale) / samplerate) * mul;
-
-        var ms_per_px = timePerDevInMs / graph_width;
-        var px_offset = -(new_params['OSC_TIME_OFFSET'].value / ms_per_px + $('#time_offset_arrow').width() / 2 + 1);
-        var arrow_left = (graph_width + 2) / 2 + px_offset;
-        var buf_width = graph_width - 2;
-        var ratio = buf_width / (buf_width * new_params['OSC_VIEV_PART'].value);
-        OSC.state.graph_grid_width = graph_width;
-        $('#time_offset_arrow').css('left', arrow_left).show();
-        $('#buf_time_offset').css('left', buf_width / 2 - buf_width * new_params['OSC_VIEV_PART'].value / 2 + arrow_left / ratio - 4).show();
-    }
 
     OSC.getBusByDecoderName = function(decoder_name) {
         for (var i = 1; i < 5; i++) {
@@ -1188,15 +1008,19 @@
 
     OSC.param_callbacks["LA_RUN"] = OSC.processRun;
 
-    OSC.param_callbacks["OSC_VIEV_PART"] = OSC.view_part;
     OSC.param_callbacks["LA_CUR_FREQ"] = OSC.setCurrentFreq;
-    OSC.param_callbacks["SAMPLES_SUM"] = OSC.set_trig;
-    OSC.param_callbacks["OSC_TIME_OFFSET"] = OSC.time_offset;
     OSC.param_callbacks["LA_DECIMATE"] = OSC.setDecimation;
     OSC.param_callbacks["LA_SCALE"] = OSC.setTimeScale;
+    OSC.param_callbacks["LA_VIEW_PORT_POS"] = OSC.setViewPortPos;
+    OSC.param_callbacks["LA_VIEW_PORT_POS"] = OSC.setViewPortPos;
 
     OSC.param_callbacks["LA_PRE_TRIGGER_BUFFER_MS"] = OSC.setPresample;
-    OSC.param_callbacks["LA_POST_TRIGGER_BUFFER_MS"] = OSC.setPostsample;
+    OSC.param_callbacks["CONTROL_CONFIG_SETTINGS"] = OSC.setControlConfig;
+    OSC.param_callbacks["LIST_FILE_SATTINGS"] = OSC.listSettings;
+
+    OSC.param_callbacks["LA_PRE_TRIGGER_SAMPLES"] = OSC.setPreTriggerCountCaptured;
+    OSC.param_callbacks["LA_POST_TRIGGER_SAMPLES"] = OSC.setPostTriggerCountCaptured;
+    OSC.param_callbacks["LA_TOTAL_SAMPLES"] = OSC.setSampleCountCaptured;
 
     OSC.param_callbacks["LA_MEASURE_MODE"] = OSC.updateMeasureMode;
 
@@ -1245,6 +1069,12 @@
 
     OSC.param_callbacks["CREATE_DECODER"] = OSC.decoder_created;
     OSC.param_callbacks["LA_MEASURE_STATE"] = OSC.show_step;
+
+    OSC.param_callbacks["RP_SYSTEM_CPU_LOAD"] = OSC.setCpu;
+    OSC.param_callbacks["RP_SYSTEM_TEMPERATURE"] = OSC.setCpuTemp;
+    OSC.param_callbacks["RP_SYSTEM_FREE_RAM"] = OSC.setFreeRAM;
+    OSC.param_callbacks["RP_SYSTEM_TOTAL_RAM"] = OSC.setTotalRAM;
+
 
 }(window.OSC = window.OSC || {}, jQuery));
 
@@ -1379,18 +1209,6 @@ $(function() {
     $('.close-dialog').on('click', function() {
         OSC.exitEditing();
     });
-
-    $('#AUTO_BUTTON').on('click', function() {
-        OSC.auto_set_trig();
-    });
-
-
-
-
-
-
-
-
 
     // Time offset arrow dragging
     $('#time_offset_arrow').draggable({
@@ -1726,84 +1544,7 @@ $(function() {
         'node_down.png',
         'fine_active.png'
     );
-    // Bind to the window resize event to redraw the graph; trigger that event to do the first drawing
-    $(window).resize(function() {
 
-        // var window_width = window.innerWidth;
-        // var window_height = window.innerHeight;
-        // if (window_width > 768 && window_height > 580) {
-        //     var global_width = window_width - 30,
-        //         global_height = global_width / 1.77885;
-        //     if (window_height < global_height) {
-        //         global_height = window_height - 70 * 1.77885;
-        //         global_width = global_height * 1.77885;
-        //     }
-
-        //     $('#global_container').css('width', global_width);
-        //     $('#global_container').css('height', global_height);
-
-
-        //     OSC.drawGraphGrid();
-        //     var main_width = $('#main').outerWidth(true);
-        //     var main_height = $('#main').outerHeight(true);
-        //     $('#global_container').css('width', main_width);
-        //     $('#global_container').css('height', main_height);
-
-        //     OSC.drawGraphGrid();
-        //     main_width = $('#main').outerWidth(true);
-        //     main_height = $('#main').outerHeight(true);
-        //     window_width = window.innerWidth;
-        //     window_height = window.innerHeight;
-        //     console.log("window_width = " + window_width);
-        //     console.log("window_height = " + window_height);
-        //     if (main_height > (window_height - 80)) {
-
-        //         $('#global_container').css('height', window_height - 80);
-        //         $('#global_container').css('width', 1.82 * (window_height - 80));
-        //         OSC.drawGraphGrid();
-        //         $('#global_container').css('width', $('#main').outerWidth(true) - 2);
-        //         $('#global_container').css('height', $('#main').outerHeight(true) - 2);
-        //         OSC.drawGraphGrid();
-        //     }
-        // }
-        // OSC.checkAndShowArrows();
-        // setTimeout(function() { OSC.checkAndShowArrows(); }, 500);
-
-        // $('#global_container').offset({
-        //     left: (window_width - $('#global_container').width()) / 2
-        // });
-
-        // // Resize the graph holders
-        // $('.plot').css($('#graph_grid').css(['height', 'width']));
-
-        // // Hide all graphs, they will be shown next time signal data is received
-        // $('#graphs .plot').hide();
-
-        // // Hide offset arrows, trigger level line and arrow
-        // $('.y-offset-arrow, #time_offset_arrow, #buf_time_offset, #trig_level_arrow, #trigger_level').hide();
-
-        // if (OSC.ws) {
-        //     OSC.params.local['in_command'] = {
-        //         value: 'send_all_params'
-        //     };
-        //     OSC.sendParams();
-        // }
-
-        // // Reset left position for trigger level arrow, it is added by jQ UI draggable
-        // $('#trig_level_arrow').css('left', '');
-        // //$('#graphs').height($('#graph_grid').height() - 5);
-        // // Set the resized flag
-
-        // // TODO
-        // // for (var i = 0; i < 8; i++) {
-        // //     if (OSC.enabled_channels[i])
-        // //         OSC.updateChVisibility(i);
-        // // }
-        // OSC.state.resized = true;
-
-        LA.initCursors()
-
-    }).resize();
 
     // Init help
     Help.init(helpListLA);
@@ -2239,77 +1980,44 @@ $(function() {
         OSC.guiHandler();
     });
 
-    $("#graphs").mousewheel(function(event) {
-        if (OSC.mouseWheelEventFired)
-            return;
-        // console.log(event);
-        if (!laAxesMoving) {
-            if (Math.abs(event.deltaY) >= 40)
-                event.deltaY /= 40;
-            if (Math.abs(event.deltaX) >= 40)
-                event.deltaX /= 40;
-            time_zoom(event.deltaY > 0 ? '+' : '-', event.pageX - parseInt($('#graphs').offset().left), true);
-            OSC.flagWheelHandled = true;
-            OSC.mouseWheelEventFired = true;
-            // I cry when I see this code :'(
-            $('#OSC_TIME_OFFSET').text(OSC.convertTime(5 * (($('#time_offset_arrow').position().left + $('#time_offset_arrow').width() / 2) / ($('#graphs').width() / 2) - 1) * 102400 / OSC.time_scale / OSC.state.acq_speed));
-            setTimeout(function() { OSC.mouseWheelEventFired = false; }, 300);
-            OSC.guiHandler();
-        }
-    });
+    // $("#graphs").mousedown(function(event) {
+    //     laAxesMoving = true;
+    //     curXPos = event.pageX;
+    // });
 
-    $("#graphs").dblclick(function(event) {
-        time_zoom('+', event.pageX - parseInt($('#graphs').offset().left), true);
-        OSC.flagWheelHandled = true;
-        $('#OSC_TIME_OFFSET').text(OSC.convertTime(5 * (($('#time_offset_arrow').position().left + $('#time_offset_arrow').width() / 2) / ($('#graphs').width() / 2) - 1) * 102400 / OSC.time_scale / OSC.state.acq_speed));
-        OSC.checkAndShowArrows();
-    });
+    // $("#graphs").mouseup(function(event) {
+    //     laAxesMoving = false;
+    // });
 
-    $("#graphs").mousedown(function(event) {
-        laAxesMoving = true;
-        curXPos = event.pageX;
-    });
+    // $("#graphs").mouseout(function(event) {
+    //     laAxesMoving = false;
+    // });
 
-    $("#graphs").mouseup(function(event) {
-        laAxesMoving = false;
-    });
 
-    $("#graphs").mouseout(function(event) {
-        laAxesMoving = false;
-    });
+    // $("#graphs").mousemove(function(event) {
+    //     if (OSC.state.line_moving) return;
+    //     if (laAxesMoving) {
+    //         if (!$.isEmptyObject(OSC.graphs)) {
+    //             var graph_width = $('#graph_grid').width();
+    //             var pxPerPoint = graph_width / 1024;
+    //             var diff = event.pageX - curXPos;
+    //             if (diff < 0 && (OSC.ch1_size <= ((OSC.counts_offset + 1024 - diff) / OSC.time_scale)))
+    //                 diff = -1 * (OSC.ch1_size * OSC.time_scale - OSC.counts_offset - 1024);
 
-    var afterScroll = function() {
-        var trigPosInPoints = (OSC.samples_sum * OSC.time_scale - OSC.counts_offset) * $('#graphs').width() / 1024 - $('#time_offset_arrow').width() / 2;
-        $('#time_offset_arrow').css('left', trigPosInPoints);
-        $('#OSC_TIME_OFFSET').text(OSC.convertTime(5 * (($('#time_offset_arrow').position().left + $('#time_offset_arrow').width() / 2) / ($('#graphs').width() / 2) - 1) * 102400 / OSC.time_scale / OSC.state.acq_speed));
-        OSC.guiHandler();
-        OSC.scrollDataArea();
-    }
+    //             var signalDiff = diff / pxPerPoint;
+    //             OSC.counts_offset -= signalDiff;
 
-    $("#graphs").mousemove(function(event) {
-        if (OSC.state.line_moving) return;
-        if (laAxesMoving) {
-            if (!$.isEmptyObject(OSC.graphs)) {
-                var graph_width = $('#graph_grid').width();
-                var pxPerPoint = graph_width / 1024;
-                var diff = event.pageX - curXPos;
-                if (diff < 0 && (OSC.ch1_size <= ((OSC.counts_offset + 1024 - diff) / OSC.time_scale)))
-                    diff = -1 * (OSC.ch1_size * OSC.time_scale - OSC.counts_offset - 1024);
+    //             curXPos = event.pageX;
 
-                var signalDiff = diff / pxPerPoint;
-                OSC.counts_offset -= signalDiff;
-
-                curXPos = event.pageX;
-
-                if (OSC.counts_offset <= 0) {
-                    diff = (signalDiff + OSC.counts_offset) * pxPerPoint;
-                    OSC.counts_offset = 0;
-                }
-                OSC.offsetForDecoded = OSC.counts_offset;
-                OSC.redrawTimeout = setTimeout(afterScroll, 1);
-            }
-        }
-    });
+    //             if (OSC.counts_offset <= 0) {
+    //                 diff = (signalDiff + OSC.counts_offset) * pxPerPoint;
+    //                 OSC.counts_offset = 0;
+    //             }
+    //             OSC.offsetForDecoded = OSC.counts_offset;
+    //             OSC.redrawTimeout = setTimeout(afterScroll, 1);
+    //         }
+    //     }
+    // });
 
     // var applyAcqSpeed = function() {
     //     OSC.state.acq_speed = (OSC.state.acq_speed / $(this).val()) ;
@@ -2560,6 +2268,5 @@ $(function() {
     LA.initGraph()
     LA.initHandlers()
     LA.drawGraphGrid();
-
-
+    LA.initGraphBuffer();
 });

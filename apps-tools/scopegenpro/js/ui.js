@@ -858,9 +858,6 @@
 
         $('#save_settings').click(function() {
             $('#save_settings_dialog').modal("show");
-
-            // OSC.params.local['CONTROL_CONFIG_SETTINGS'] = { value: 4 }; // SAVE
-            // OSC.sendParams();
         });
 
         $('#reset_settings').click(function() {

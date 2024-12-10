@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <stdint.h>
 
 enum LA_MODE {
 	LA_APP_BASIC_ONLY,
@@ -28,3 +29,5 @@ auto getMAXFreq() -> uint32_t;
 #define DEBUG_SIGNAL_PERIOD 50
 #define DEBUG_PARAM_PERIOD  50
 #define BUFFER_MAX_SIZE 1024 * 1024 * 2
+#define MAX_SAMPLES 750000.0
+

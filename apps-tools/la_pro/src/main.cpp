@@ -24,6 +24,8 @@ CBooleanParameter 	inRun			("LA_RUN", CBaseParameter::RW, false, 0);
 CIntParameter 		measureState	("LA_MEASURE_STATE", CBaseParameter::RW, 1, 0, 1, 4);
 CIntParameter 		measureSelect	("LA_MEASURE_MODE", CBaseParameter::RW, 1, 0, 1, 2, CONFIG_VAR);
 CIntParameter 		controlSettings ("CONTROL_CONFIG_SETTINGS", CBaseParameter::RW, 0, 0, 0, 10);
+CStringParameter 	fileSettings	("FILE_SATTINGS", CBaseParameter::RW, "", 0);
+CStringParameter 	listFileSettings("LIST_FILE_SATTINGS", CBaseParameter::RW, "", 0);
 
 CIntParameter 		max_freq		("LA_MAX_FREQ", CBaseParameter::RO, getMAXFreq(), 0, 1, 1e9);
 CIntParameter 		cur_freq		("LA_CUR_FREQ", CBaseParameter::RO, getMAXFreq(), 0, 1, 1e9);
@@ -36,12 +38,13 @@ CIntParameter	 	dins_trigger[8] = INIT8("LA_DIN_","_TRIGGER", CBaseParameter::RW
 CFloatParameter	 	dins_position[8] = INIT8("LA_DIN_","_POS", CBaseParameter::RW, -1, 0, 0 , 9 , CONFIG_VAR);
 
 CIntParameter 		decimate		("LA_DECIMATE", CBaseParameter::RW, 1, 0, 0, 1024, CONFIG_VAR);
-CDoubleParameter    timeScale		("LA_SCALE", CBaseParameter::RW, 1, 0,0.01,100,CONFIG_VAR);
+CDoubleParameter    timeScale		("LA_SCALE", CBaseParameter::RW, 1, 0,0.005,100,CONFIG_VAR);
 CIntParameter 		preSampleBufMs	("LA_PRE_TRIGGER_BUFFER_MS", CBaseParameter::RW, 1, 0, 1, 360000, CONFIG_VAR);
 CIntParameter 		postSampleBufMs	("LA_POST_TRIGGER_BUFFER_MS", CBaseParameter::RW, 1, 0, 1, 360000, CONFIG_VAR);
 
 CIntParameter 		preSampleCount	("LA_PRE_TRIGGER_SAMPLES", CBaseParameter::RO, 0, 0, 0, 2000000000);
 CIntParameter 		postSampleCount	("LA_POST_TRIGGER_SAMPLES", CBaseParameter::RO, 0, 0, 0, 2000000000);
+CIntParameter 		sampleCount		("LA_TOTAL_SAMPLES", CBaseParameter::RO, 0, 0, 0, 2000000000);
 CFloatParameter 	view_port_pos	("LA_VIEW_PORT_POS", CBaseParameter::RW, 0.5, 0, 0, 1, CONFIG_VAR);
 
 
@@ -112,7 +115,10 @@ void CLACallbackHandler::captureStatus(rp_la::CLAController* controller,
 		g_needUpdateSignals = true;
 		preSampleCount.SendValue(preSamples);
 		postSampleCount.SendValue(postSamples);
+		sampleCount.SendValue(numSamples);
 		measureState.SendValue(LA_APP_DONE);
+		view_port_pos.SendValue((double)preSamples/(double)numSamples);
+		controller->printRLE(false);
 		TRACE("Done")
 	}else{
 		measureState.SendValue(LA_APP_TIMEOUT);
@@ -126,6 +132,7 @@ void CLACallbackHandler::decodeDone(rp_la::CLAController* controller, std::strin
 }
 
 void updateParametersByConfig(){
+    listFileSettings.Value() = getListOfSettingsInStore();
     configGet();
 	for(int i = 0 ; i < 8; i++){
 		if (dins_name[i].Value() == ""){
@@ -148,7 +155,7 @@ int rp_app_init(void) {
 	rp_WS_Init();
 	rp_WS_SetInterval(RP_WS_CPU,1000);
     rp_WS_SetInterval(RP_WS_RAM,1000);
-	rp_WS_SetMode((rp_system_mode_t)(RP_WS_CPU | RP_WS_RAM));
+	rp_WS_SetMode((rp_system_mode_t)(RP_WS_CPU | RP_WS_RAM | RP_WS_TEMPERATURE));
     rp_WS_UpdateParameters(true);
 	CDataManager::GetInstance()->SetParamInterval(DEBUG_PARAM_PERIOD);
 	CDataManager::GetInstance()->SetSignalInterval(DEBUG_SIGNAL_PERIOD);
@@ -286,18 +293,21 @@ void updateFromFront(bool force){
 		preSampleBufMs.Update();
 		postSampleBufMs.Update();
         double val = preSampleBufMs.Value() / 1000.0; // to sec convert
+		double maxValue = (MAX_SAMPLES * 1000.0) / (double)cur_freq.Value();
+		preSampleBufMs.SetMax(maxValue);
+		postSampleBufMs.SetMax(maxValue);
         val *= cur_freq.Value();
-        if (val > 750000) {
-			val = 750000;
-            uint32_t newVal = (750000.0 * 1000.0) / (double)cur_freq.Value();
+        if (val > MAX_SAMPLES) {
+			val = MAX_SAMPLES;
+            uint32_t newVal = (MAX_SAMPLES * 1000.0) / (double)cur_freq.Value();
 			preSampleBufMs.SendValue(newVal);
 		}
 
         double valPost = postSampleBufMs.Value() / 1000.0; // to sec convert
         valPost *= cur_freq.Value();
-        if (valPost > 750000) {
-			valPost = 750000;
-            uint32_t newVal = (750000.0 * 1000.0) / (double)cur_freq.Value();
+        if (valPost > MAX_SAMPLES) {
+			valPost = MAX_SAMPLES;
+            uint32_t newVal = (MAX_SAMPLES * 1000.0) / (double)cur_freq.Value();
 			postSampleBufMs.SendValue(newVal);
 		}
 
@@ -403,13 +413,40 @@ void updateFromFront(bool force){
 void OnNewParams(void) {
 
     if (IS_NEW(controlSettings)){
-        if (controlSettings.NewValue() == controlSettings::REQUEST_RESET){
-            deleteConfig();
-            configSetWithList(g_savedParams);
-            controlSettings.Update();
-            controlSettings.SendValue(controlSettings::RESET_DONE);
-            return;
-        }
+		if (controlSettings.IsNewValue()){
+			if (controlSettings.NewValue() == controlSettings::REQUEST_RESET){
+				deleteConfig();
+				configSetWithList(g_savedParams);
+				controlSettings.Update();
+				controlSettings.SendValue(controlSettings::RESET_DONE);
+				return;
+			}
+
+			if (controlSettings.NewValue() == controlSettings::SAVE){
+				controlSettings.Update();
+				fileSettings.Update();
+				// configSet();
+				saveCurrentSettingToStore(fileSettings.Value());
+				controlSettings.SendValue(controlSettings::NONE);
+				listFileSettings.SendValue(getListOfSettingsInStore());
+			}
+
+			if (controlSettings.NewValue() == controlSettings::LOAD){
+				controlSettings.Update();
+				fileSettings.Update();
+				loadSettingsFromStore(fileSettings.Value());
+				// configGet();
+				controlSettings.SendValue(controlSettings::LOAD_DONE);
+			}
+
+			if (controlSettings.NewValue() == controlSettings::DELETE){
+				controlSettings.Update();
+				fileSettings.Update();
+				deleteStoredConfig(fileSettings.Value());
+				controlSettings.SendValue(controlSettings::NONE);
+				listFileSettings.SendValue(getListOfSettingsInStore());
+			}
+	    }
     }
 
     if (!g_config_changed)
@@ -417,7 +454,6 @@ void OnNewParams(void) {
     updateFromFront(false);
 
 	return;
-
 
 
 

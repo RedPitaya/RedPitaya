@@ -17,8 +17,22 @@
             mobile: false
         });
 
-        $('#reset_to_default').click(function() {
-            console.log("TODO reset settings")
+        $('#save_settings').click(function() {
+            $('#save_settings_dialog').modal("show");
+        });
+
+        $('#reset_settings').click(function() {
+            CLIENT.parametersCache["CONTROL_CONFIG_SETTINGS"] = { value: 1 };
+            CLIENT.sendParameters()
+        });
+
+        $('#LA_REQ_SAVE_SETTINGS').on('click', function() {
+            var name = $("#SETTINGS_NEW_NAME").val().trim()
+            if (name !== ""){
+                CLIENT.parametersCache['FILE_SATTINGS'] = { value: name };
+                CLIENT.parametersCache['CONTROL_CONFIG_SETTINGS'] = { value: 4 }; // SAVE
+                CLIENT.sendParameters()
+            }
         });
 
         $('.enable-ch').click(OSC.enableChannel);
@@ -121,6 +135,37 @@
             }
         });
 
+        $('#buffer_time_region').draggable({
+            axis: 'x',
+            containment: 'parent',
+            start: function(ev, ui) {
+                LA.region_view_moving = true
+               // OSC.state.line_moving = true;
+            },
+            drag: function(ev, ui) {
+                LA.region_view_moving = true
+                var w =$('#buffer_time_region').width()
+                var fw = $('#graphs_buffer').width()
+                var newPos = (ui.position.left + w/2.0) / fw
+                CLIENT.params.orig['LA_VIEW_PORT_POS'] = {value: newPos}
+                LA.updatePositionBufferViewport()
+            },
+            stop: function(ev, ui) {
+                LA.region_view_moving = false
+                CLIENT.parametersCache['LA_VIEW_PORT_POS'] = {value: CLIENT.getValue('LA_VIEW_PORT_POS')}
+                CLIENT.sendParameters()
+            }
+        });
+
+        $('#buffer').on('click', function(ev) {
+            var fw = $('#graphs_buffer').width()
+            var left = ev.currentTarget.getBoundingClientRect().left
+            CLIENT.parametersCache['LA_VIEW_PORT_POS'] = {value: (ev.clientX - left) / fw}
+            CLIENT.sendParameters()
+            ev.preventDefault();
+            ev.stopPropagation();
+        });
+
             // Joystick events
         $('#jtk_up').on('mousedown touchstart', function() {
             $('#jtk_btns').attr('src', 'img/navigation_up.png');
@@ -162,11 +207,10 @@
             OSC.guiHandler();
         });
 
-
         $('#jtk_left, #jtk_right').on('click', function(ev) {
             ev.preventDefault();
             ev.stopPropagation();
-            // time_zoom(ev.target.id == 'jtk_left' ? '-' : '+', 0, false)
+            LA.moveViewPort(ev.target.id == 'jtk_left' ? '-' : '+');
         });
 
             // Process clicks on top menu buttons
@@ -181,6 +225,41 @@
             CLIENT.parametersCache['LA_RUN'] = { value: false };
             CLIENT.sendParameters();
         });
+
+        $(window).resize(function() {
+            var window_height = window.innerHeight;
+            $('#main_block').css('height', window_height - 200);
+
+            LA.initCursors()
+            LA.resizePlots()
+            LA.drawGraphGrid()
+            LA.updateCursors()
+            LA.updateChannels()
+            OSC.setCurrentFreq()
+
+        }).resize();
+
+        $('#graphs').dblclick(function(event) {
+            event.stopPropagation();
+            var s = CLIENT.getValue('LA_TOTAL_SAMPLES')
+            var pre = CLIENT.getValue('LA_PRE_TRIGGER_SAMPLES')
+            if (s !== undefined && pre !== undefined){
+                CLIENT.parametersCache['LA_VIEW_PORT_POS'] = {value: pre / s}
+                CLIENT.sendParameters()
+            }
+        });
+
+        $('#sys_info').click(function() {
+            var elem = $(this);
+            if (elem.text() == 'SYS INFO') {
+                elem.html('&check; SYS INFO');
+                $('#sys_info_view').show();
+            } else {
+                elem.text('SYS INFO');
+                $('#sys_info_view').hide();
+            }
+        });
+
     }
 
 }(window.LA = window.LA || {}, jQuery));

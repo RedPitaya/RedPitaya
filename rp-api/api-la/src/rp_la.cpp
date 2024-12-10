@@ -713,9 +713,9 @@ auto CLAController::printRLENP(uint8_t* np_buffer, int size, bool useHex) -> voi
 
     for(size_t i = 0; i < count_vec.size(); i++){
         if (useHex)
-            printf("%llu\t: 0x%X\n",count_vec[i],data_vec[i]);
+            fprintf(stderr, "%llu\t: 0x%X\n",count_vec[i],data_vec[i]);
         else
-            printf("%llu\t: %08d\n",count_vec[i],binary(data_vec[i],0));
+            fprintf(stderr, "%llu\t: %08d\n",count_vec[i],binary(data_vec[i],0));
     }
 }
 

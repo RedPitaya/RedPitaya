@@ -136,6 +136,38 @@
         }
     };
 
+    CLIENT.base64ToFloatArray = function(base64String) {
+        // Decode the base64 string to a byte array
+        const b64ToBuffer = (b64) => Uint8Array.from(atob(b64), c => c.charCodeAt(0)).buffer;
+        bytes = b64ToBuffer(base64String)
+        // Create a Float32Array from the byte array
+        const floatArray = new Float32Array(bytes.byteLength / 4);
+
+        // Convert the byte array to a Float32Array
+        for (let i = 0; i < floatArray.length; i++) {
+          const byteIndex = i * 4;
+          floatArray[i] = new DataView(bytes).getFloat32(byteIndex,true);
+        }
+
+        return floatArray;
+    }
+
+    CLIENT.base64ToByteArray = function(base64String) {
+        // Decode the base64 string to a byte array
+        const b64ToBuffer = (b64) => Uint8Array.from(atob(b64), c => c.charCodeAt(0)).buffer;
+        bytes = b64ToBuffer(base64String)
+        // Create a Float32Array from the byte array
+        const byteArray = new Uint8Array(bytes.byteLength);
+
+        // Convert the byte array to a Float32Array
+        for (let i = 0; i < byteArray.length; i++) {
+          const byteIndex = i;
+          byteArray[i] = new DataView(bytes).getUint8(byteIndex,true);
+        }
+
+        return byteArray;
+    }
+
     CLIENT.getValue = function(name){
         return CLIENT.params.orig[name] ? CLIENT.params.orig[name].value : undefined
     }

@@ -16,7 +16,7 @@
 
     LA.initCursors = function() {
         var plot = LA.getPlot();
-        if (!(plot)) {
+        if (plot === undefined) {
             return;
         }
         var offset = plot.getPlotOffset();
@@ -147,7 +147,7 @@
         if (x1.is(':visible') && x2.is(':visible') && diff_px > 30) {
             var left = Math.min(x1_left, x2_left);
             var value = parseFloat($('#cur_x1_info').attr('value')) - parseFloat($('#cur_x2_info').attr('value'));
-            var plot = LA.getPlot();
+            // var plot = LA.getPlot();
 
             $('#cur_x_diff')
                 .css('left', left + 1)
@@ -436,14 +436,21 @@
         CLIENT.sendParameters();
     };
 
+    LA.updateChannels = function(){
+        for(var i = 0 ; i < 8; i++){
+            LA.updateChVisibility(i)
+        }
+    }
+
     LA.updateChVisibility = function(ch) {
+        var visible = CLIENT.getValue("LA_DIN_" + (ch + 1))
         var arrow = $('#ch' + (ch + 1) + '_offset_arrow');
-        if (!arrow.is(':visible')) {
+        if (visible === true) {
             var pos = CLIENT.getValue("LA_DIN_" +(ch+1)+ "_POS")
             if (pos !== undefined){
                 var grid = $('#graph_grid');
                 var volt_per_px = grid.height() / 9;
-                var px_offset = (pos * volt_per_px);
+                var px_offset = grid.height() - (pos * volt_per_px);
                 OSC.state.graph_grid_height = grid.height();
                 arrow.css('top', px_offset).show();
             }
@@ -480,22 +487,25 @@
 
     OSC.updateYOffset = function(ui, save) {
         var graph_height = $('#graph_grid').height();
-        var new_value = 0;
+        // var new_value = 0;
 
         var arrows = ["ch1_offset_arrow", "ch2_offset_arrow", "ch3_offset_arrow", "ch4_offset_arrow",
             "ch5_offset_arrow", "ch6_offset_arrow", "ch7_offset_arrow", "ch8_offset_arrow"
         ];
         var ch = arrows.indexOf(ui.helper[0].id);
         if (ch != -1) {
-            var volt_per_px = 9 / graph_height;
+            // var volt_per_px = 9 / graph_height;
             var mtop = parseFloat(ui.helper.css('top')) * 9.0 / graph_height
-            new_value = mtop ///ui.position.top + parseInt(ui.helper.css('margin-top')) / 2 * volt_per_px;
+            var new_value = 9 - mtop ///ui.position.top + parseInt(ui.helper.css('margin-top')) / 2 * volt_per_px;
 
             OSC.guiHandler(); // Update signals
             if (new_value !== undefined && save) {
                 CLIENT.parametersCache["LA_DIN_" +(ch+1)+ "_POS"] = { value : new_value }
                 CLIENT.sendParameters();
+            }else{
+                CLIENT.params.orig["LA_DIN_" +(ch+1)+ "_POS"] = { value : new_value }
             }
+            LA.setupDataToGraph()
         }
     };
 
