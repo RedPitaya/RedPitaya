@@ -14,13 +14,6 @@
 using namespace std;
 using namespace std::chrono;
 
-// CUIntParameter   g_wc_ping("RP_CLIENT_PING", CBaseParameter::RO, 0, 0, 0, std::numeric_limits<uint32_t>::max());
-// CStringParameter g_wc_client_id("RP_CLIENT_ID",CBaseParameter::RW, "", 0);
-// CUIntParameter   g_wc_client_request("RP_CLIENT_REQUEST", CBaseParameter::RW, 0, 0, 0, std::numeric_limits<uint32_t>::max());
-
-// CIntParameter    g_signalPeriod("RP_SIGNAL_PERIOD", CBaseParameter::RW, 20, 0, 1, 10000);
-// CIntParameter    g_parameterPeriod("RP_PARAM_PERIOD", CBaseParameter::RW, 50, 0, 1, 10000);
-
 uint32_t    g_wc_ping = 0;
 std::string g_wc_client_id = "";
 uint32_t    g_wc_client_request = 0;

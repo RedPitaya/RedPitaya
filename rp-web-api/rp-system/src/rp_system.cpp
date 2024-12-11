@@ -26,10 +26,10 @@ uint32_t getReservedMemory();
 uint32_t getCurrentRAMSize();
 
 CFloatParameter g_ws_cpuLoad("RP_SYSTEM_CPU_LOAD", CBaseParameter::RO, 0, 0, 0, 1000);
-CFloatParameter g_ws_memoryTotal("RP_SYSTEM_TOTAL_RAM", CBaseParameter::RO, 0, 0, 0, 1e15);
-CFloatParameter g_ws_memoryFree ("RP_SYSTEM_FREE_RAM", CBaseParameter::RO, 0, 0, 0, 1e15);
-CFloatParameter g_ws_memoryDMARam ("RP_SYSTEM_DMA_RAM", CBaseParameter::RO, getReservedMemory(), 0, 0, 1e15);
-CFloatParameter g_ws_memoryMAXDDR ("RP_SYSTEM_DDR_MAX", CBaseParameter::RO, getCurrentRAMSize(), 0, 0, 1e15);
+CIntParameter g_ws_memoryTotal("RP_SYSTEM_TOTAL_RAM", CBaseParameter::RO, 0, 0, 0, 2147483647);
+CIntParameter g_ws_memoryFree ("RP_SYSTEM_FREE_RAM", CBaseParameter::RO, 0, 0, 0, 2147483647);
+CIntParameter g_ws_memoryDMARam ("RP_SYSTEM_DMA_RAM", CBaseParameter::RO, getReservedMemory(), 0, 0, 2147483647);
+CIntParameter g_ws_memoryMAXDDR ("RP_SYSTEM_DDR_MAX", CBaseParameter::RO, getCurrentRAMSize(), 0, 0, 2147483647);
 
 
 CFloatParameter g_ws_temperature ("RP_SYSTEM_TEMPERATURE", CBaseParameter::RO, -100, 0, -100, 1000);
@@ -75,17 +75,41 @@ bool get_cpu_usage(unsigned long long* total_cpu_time,
     return true;
 }
 
-bool get_ram(float *_total, float *_freeram){
-    struct sysinfo memInfo;
-    int ret = sysinfo (&memInfo);
-    *_total = (float)memInfo.totalram;
-    *_freeram = (float)memInfo.totalram - (float)memInfo.freeram - (float)memInfo.bufferram - (float)memInfo.sharedram;
-    return !ret;
+bool get_ram(unsigned long *_total, unsigned long *_freeram){
+    std::ifstream file("/proc/meminfo");
+    std::string line;
+    unsigned long totalRAM = 0;
+    unsigned long freeRAM = 0;
+
+    if (file.is_open()) {
+        while (std::getline(file, line)) {
+            std::istringstream iss(line);
+            std::string key;
+            long long value;
+            char unit;
+
+            if (!(iss >> key >> value >> unit)) continue;
+
+            if (key == "MemTotal:") {
+                totalRAM = value * 1024;
+            }
+
+            if (key == "MemAvailable:") {
+                freeRAM = value * 1024;
+            }
+        }
+
+        *_total = totalRAM;
+        *_freeram = freeRAM;
+        file.close();
+        return 1;
+    }
+    return 0;
 }
 
 uint32_t getCurrentRAMSize(){
     auto ram = rp_HPGetDDRSizeOrDefault();
-    float total = 0, freeram = 0;
+    unsigned long total = 0, freeram = 0;
     if (get_ram(&total, &freeram)){
         auto reserve = getReservedMemory();
         // Fix for 250-12 where two modes of operation are possible with 512 and 1024 MB of memory
@@ -184,7 +208,7 @@ void rp_WS_UpdateParameters(bool force){
     }
 
     if (g_modes & RP_WS_RAM){
-        float total = 0, freeram = 0;
+        unsigned long total = 0, freeram = 0;
         if (get_ram(&total, &freeram)){
             auto lastUpdate = time_point_cast<milliseconds>(g_lastUpdateTime[RP_WS_RAM]);
             auto diff = curTime - lastUpdate;

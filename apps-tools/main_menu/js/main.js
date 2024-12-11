@@ -45,7 +45,7 @@
     MAIN.processTRam= function(new_params) {
         MAIN.totalRam  = new_params['RP_SYSTEM_TOTAL_RAM'].value
         if (MAIN.freeRam != undefined){
-            $('#RAM_SIZE_ID').text(MAIN.convertBytesRAM(MAIN.freeRam) + " / " +  MAIN.convertBytesRAM(MAIN.totalRam));
+            $('#RAM_SIZE_ID').text(MAIN.convertBytesRAM(MAIN.totalRam - MAIN.freeRam) + " / " +  MAIN.convertBytesRAM(MAIN.totalRam));
         }
 
     }
@@ -53,7 +53,7 @@
     MAIN.processFRam= function(new_params) {
         MAIN.freeRam = new_params['RP_SYSTEM_FREE_RAM'].value
         if (MAIN.freeRam != undefined){
-            $('#RAM_SIZE_ID').text(MAIN.convertBytesRAM(MAIN.freeRam) + " / " +  MAIN.convertBytesRAM(MAIN.totalRam));
+            $('#RAM_SIZE_ID').text(MAIN.convertBytesRAM(MAIN.totalRam - MAIN.freeRam) + " / " +  MAIN.convertBytesRAM(MAIN.totalRam));
         }
     }
 

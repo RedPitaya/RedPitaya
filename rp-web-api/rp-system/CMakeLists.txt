@@ -85,25 +85,10 @@ add_compile_options(-Wall -Wno-psabi -Wno-pedantic -Wno-reorder -Wextra -Wno-unu
 
 add_library(${PROJECT_NAME}-obj OBJECT ${src})
 
-
-if(BUILD_SHARED)
-
-    add_library(${PROJECT_NAME}-shared SHARED)
-    set_property(TARGET ${PROJECT_NAME}-shared PROPERTY OUTPUT_NAME ${PROJECT_NAME})
-    target_sources(${PROJECT_NAME}-shared PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-obj>)
-    target_link_libraries(${PROJECT_NAME}-shared -lrp-hw -lrp_sdk -lcryptopp -lm -lpthread)
-
-    if(IS_INSTALL)
-        install(TARGETS ${PROJECT_NAME}-shared
-            LIBRARY DESTINATION ${INSTALL_DIR}/lib/web
-            ARCHIVE DESTINATION ${INSTALL_DIR}/lib/web)
-
-        install(FILES ${header}
-            DESTINATION ${INSTALL_DIR}/include/web)
-
-    endif()
-endif()
-
+# WARNING
+# It is forbidden to create a dynamic library with a variable for Bazaar.
+# The algorithm for searching for plugins and loading libraries leads to unexpected behavior of the program.
+# It is extremely important to link such libraries statically.
 
 if(BUILD_STATIC)
     add_library(${PROJECT_NAME}-static STATIC)
