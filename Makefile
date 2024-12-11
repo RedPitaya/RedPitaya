@@ -19,7 +19,7 @@ export BUILD_NUMBER
 export REVISION
 export VERSION
 export LINUX_VER
-BUILD_MODE ?= Debug
+BUILD_MODE ?= Release
 VERBOSE = OFF
 CMAKEVAR=-DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)  -DVERSION=$(VERSION) -DBUILD_NUMBER=$(BUILD_NUMBER) -DREVISION=$(REVISION) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
 ################################################################################
