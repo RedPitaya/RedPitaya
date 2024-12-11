@@ -79,7 +79,7 @@ bool get_ram(float *_total, float *_freeram){
     struct sysinfo memInfo;
     int ret = sysinfo (&memInfo);
     *_total = (float)memInfo.totalram;
-    *_freeram = (float)memInfo.freeram;
+    *_freeram = (float)memInfo.totalram - (float)memInfo.freeram - (float)memInfo.bufferram - (float)memInfo.sharedram;
     return !ret;
 }
 

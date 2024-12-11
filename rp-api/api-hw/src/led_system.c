@@ -30,8 +30,8 @@
 #include "led_system.h"
 #include "rp_log.h"
 
-const char mmc_Led[]="/sys/devices/soc0/led-system/leds/led8";
-const char heartbeat_Led[]="/sys/devices/soc0/led-system/leds/led9";
+const char mmc_Led[]="/sys/devices/platform/led-system/leds/led8";
+const char heartbeat_Led[]="/sys/devices/soc0/led-system-red/leds/led9";
 const int  MAX_LINE_LENGTH = 512;
 
 typedef struct {

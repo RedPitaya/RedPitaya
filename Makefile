@@ -138,7 +138,8 @@ librpclient: librpwebsocket api
 	$(MAKE) -C $(LIBRP_CLIENT_DIR)/build install -j$(CPU_CORES)
 
 librpwebsocket: api
-	cmake -B$(abspath $(LIBRP_WEBSOCKET_DIR)/build) -S$(abspath $(LIBRP_WEBSOCKET_DIR)) $(CMAKEVAR)
+# Release build mode is enabled because there is not enough RAM when building on RP
+	cmake -B$(abspath $(LIBRP_WEBSOCKET_DIR)/build) -S$(abspath $(LIBRP_WEBSOCKET_DIR)) $(CMAKEVAR) -DCMAKE_BUILD_TYPE=Release
 	$(MAKE) -C $(LIBRP_WEBSOCKET_DIR)/build install
 
 

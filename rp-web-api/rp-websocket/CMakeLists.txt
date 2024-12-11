@@ -44,6 +44,10 @@ message(STATUS "Compiler C++ ID: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "Compiler C++version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
+if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    message(STATUS "Debug mode")
+endif()
+
 include(FetchContent)
 
 FetchContent_Declare(websocketpp
@@ -98,10 +102,14 @@ list(APPEND header
 #add_compile_options(-fsanitize=address)
 add_compile_options(-DVERSION=${VERSION} -DREVISION=${REVISION})
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
-add_compile_options($<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+add_compile_options($<$<CONFIG:Debug>:-g3>)
+add_compile_options($<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 add_compile_definitions(ARCH_ARM)
 
 add_library(${PROJECT_NAME}-obj OBJECT ${src})
+
+# Need for optimize RAM
+set_property(TARGET ${PROJECT_NAME}-obj PROPERTY EXCLUDE_FROM_DEFAULT_BUILD_DEBUG TRUE)
 
 target_include_directories(${PROJECT_NAME}-obj PUBLIC ${INSTALL_DIR}/include)
 
