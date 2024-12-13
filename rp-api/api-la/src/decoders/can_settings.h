@@ -45,7 +45,8 @@ namespace can {
 		CRC_LEN         = 26, // 'Crc type
 		RESERV_BIT_FLEX	= 27, // 'Flexible data'
 		NOTHING			= 28,
-		SYNC			= 29
+		SYNC			= 29,
+		ENUM_END
 	};
 
 	class CANParameters : public DecoderParameters

@@ -5,13 +5,14 @@
 using namespace uart;
 
 UARTParameters::UARTParameters(){
-	m_rx = 1; 	    // 1...8
+	m_rx = 0; 	    // 1...8, 0 if is not set
+	m_tx = 0; 	    // 1...8, 0 if is not set
 	m_baudrate = 9600;
-    m_invert_rx = 0;
+    m_invert = 0;
     m_bitOrder = LSB_FIRST;
     m_num_data_bits = DATA_BITS_8;
     m_parity = NONE;
-    m_num_stop_bits = STOP_BITS_NO;
+    m_num_stop_bits = STOP_BITS_10;
     m_samplerate = 0;
 }
 
@@ -19,8 +20,9 @@ auto UARTParameters::toJson() -> std::string{
 	Json::Value root;
 
 	root["rx"] = m_rx;
+	root["tx"] = m_tx;
 	root["baudrate"] = m_baudrate;
-	root["invert_rx"] = m_invert_rx;
+	root["invert"] = m_invert;
 	root["bitOrder"] = m_bitOrder;
 	root["num_data_bits"] = m_num_data_bits;
 	root["parity"] = m_parity;
@@ -57,8 +59,9 @@ auto UARTParameters::fromJson(const std::string &json) -> bool{
 		};
 
 		if (!parseUInt32(m_rx,"rx")) return false;
+		if (!parseUInt32(m_tx,"tx")) return false;
 		if (!parseUInt32(m_baudrate,"baudrate")) return false;
-		if (!parseUInt32(m_invert_rx,"invert_rx")) return false;
+		if (!parseUInt32(m_invert,"invert")) return false;
 
 		uint32_t x;
 		if (!parseUInt32(x,"bitOrder")) return false;

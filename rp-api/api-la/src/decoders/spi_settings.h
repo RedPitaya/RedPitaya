@@ -28,15 +28,17 @@ namespace spi {
 
 	enum SPIAnnotations
 	{
-		DATA = 0,
-		NOTHING = 10
+		NOTHING = 0,
+		DATA 	= 1,
+		ENUM_END
 	};
 
 	class SPIParameters : public DecoderParameters
 	{
 		public:
 			uint32_t m_clk; 	// 1...8 	ch Number
-			uint32_t m_data; 	// 1...8
+			uint32_t m_miso; 	// 1...8
+			uint32_t m_mosi; 	// 1...8
 			uint32_t m_cs;  	// 0...8, 	0 if is not set
 			uint32_t m_cpol = 0;
 			uint32_t m_cpha = 0;

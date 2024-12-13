@@ -5,11 +5,12 @@
 using namespace spi;
 
 SPIParameters::SPIParameters(){
-	m_clk = 1; 	// 1...8 	ch Number
-	m_data = 1; 	// 1...8
-	m_cs = 0;  	// 0...8, 	0 if is not set
-	m_cpol = 0;
-	m_cpha = 0;
+	m_clk = 0;		// 0...8, 	0 if is not set
+	m_miso = 0; 	// 0...8,	0 if is not set
+	m_mosi = 0; 	// 0...8,	0 if is not set
+	m_cs = 0;  		// 0...8, 	0 if is not set
+	m_cpol = 0;		// 0...1
+	m_cpha = 0;		// 0...1
 	m_word_size = 8;
 	m_acq_speed = 0;
 	m_cs_polarity = ActiveLow;
@@ -21,7 +22,8 @@ auto SPIParameters::toJson() -> std::string{
 	Json::Value root;
 
 	root["clk"] = m_clk;
-	root["data"] = m_data;
+	root["miso"] = m_miso;
+	root["mosi"] = m_mosi;
 	root["cs"] = m_cs;
 	root["cpol"] = m_cpol;
 	root["cpha"] = m_cpha;
@@ -61,7 +63,8 @@ auto SPIParameters::fromJson(const std::string &json) -> bool{
 		};
 
 		if (!parseUInt32(m_clk,"clk")) return false;
-		if (!parseUInt32(m_data,"data")) return false;
+		if (!parseUInt32(m_miso,"miso")) return false;
+		if (!parseUInt32(m_mosi,"mosi")) return false;
 		if (!parseUInt32(m_cs,"cs")) return false;
 
 		if (!parseUInt32(m_cpol,"cpol")) return false;

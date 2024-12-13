@@ -48,14 +48,25 @@ CIntParameter 		sampleCount		("LA_TOTAL_SAMPLES", CBaseParameter::RO, 0, 0, 0, 2
 CFloatParameter 	view_port_pos	("LA_VIEW_PORT_POS", CBaseParameter::RW, 0.5, 0, 0, 1, CONFIG_VAR);
 
 
-CStringParameter    decoders[4] =  INIT4("DECODER_NAME_", "", CBaseParameter::RW, "", 0, CONFIG_VAR);
+CStringParameter    decoders[4] =  INIT4("DECODER_", "", CBaseParameter::RW, "", 0, CONFIG_VAR);
 CBooleanParameter   decoders_enabled[4] =  INIT4("DECODER_ENABLED_", "", CBaseParameter::RW, false, 0, CONFIG_VAR);
-CStringParameter    decoders_params[4] =  INIT4("DECODER_PARAMETERS_", "", CBaseParameter::RW, "", 0, CONFIG_VAR);
+
+CStringParameter 	decoder_def_settings_uart 	("DECODER_DEF_UART", CBaseParameter::RO,"", 0);
+CStringParameter 	decoder_def_settings_can 	("DECODER_DEF_CAN", CBaseParameter::RO,"", 0);
+CStringParameter 	decoder_def_settings_spi 	("DECODER_DEF_SPI", CBaseParameter::RO,"", 0);
+CStringParameter 	decoder_def_settings_i2c 	("DECODER_DEF_I2C", CBaseParameter::RO,"", 0);
+
+CStringParameter 	decoder_anno_uart 	("DECODER_ANNOTATION_UART", CBaseParameter::RO,"", 0);
+CStringParameter 	decoder_anno_can 	("DECODER_ANNOTATION_CAN", CBaseParameter::RO,"", 0);
+CStringParameter 	decoder_anno_spi 	("DECODER_ANNOTATION_SPI", CBaseParameter::RO,"", 0);
+CStringParameter 	decoder_anno_i2c 	("DECODER_ANNOTATION_I2C", CBaseParameter::RO,"", 0);
 
 
 CBooleanParameter   cursorx[2]      = INIT2("LA_CURSOR_X","", CBaseParameter::RW, false, 0 ,CONFIG_VAR);
 CFloatParameter     cursorx_pos[2]  = INIT2("LA_CURSOR_X","_POS", CBaseParameter::RW, 0.25, 0, 0, 1, CONFIG_VAR);
 
+
+CIntParameter 		display_radix	("LA_DISPLAY_RADIX", CBaseParameter::RW, 1, 0, 1, 20, CONFIG_VAR);
 
 // CStringParameter 	createDecoder("CREATE_DECODER", CBaseParameter::RW, "", 1);
 // CStringParameter 	destroyDecoder("DESTROY_DECODER", CBaseParameter::RW, "", 1);
@@ -151,6 +162,17 @@ int rp_app_init(void) {
 	g_la_controller = std::make_shared<rp_la::CLAController>();
 	g_la_controller->setDelegate(&g_la_callback);
 	g_la_controller->setEnableRLE(true);
+
+	decoder_def_settings_uart.SendValue(g_la_controller->getDefaultSettings(LA_DECODER_UART));
+	decoder_def_settings_spi.SendValue(g_la_controller->getDefaultSettings(LA_DECODER_SPI));
+	decoder_def_settings_i2c.SendValue(g_la_controller->getDefaultSettings(LA_DECODER_I2C));
+	decoder_def_settings_can.SendValue(g_la_controller->getDefaultSettings(LA_DECODER_CAN));
+
+	decoder_anno_uart.SendValue(annoToJSON(g_la_controller->getAnnotationList(LA_DECODER_UART)));
+	decoder_anno_can.SendValue(annoToJSON(g_la_controller->getAnnotationList(LA_DECODER_CAN)));
+	decoder_anno_spi.SendValue(annoToJSON(g_la_controller->getAnnotationList(LA_DECODER_SPI)));
+	decoder_anno_i2c.SendValue(annoToJSON(g_la_controller->getAnnotationList(LA_DECODER_I2C)));
+
     rp_WC_Init();
 	rp_WS_Init();
 	rp_WS_SetInterval(RP_WS_CPU,1000);
@@ -237,10 +259,10 @@ void updateFromFront(bool force){
 	auto getName = [](rp_la::la_Decoder_t tp){
 		switch (tp)
 		{
-		case LA_DECODER_CAN: return "can";
-		case LA_DECODER_I2C: return "i2c";
-		case LA_DECODER_SPI: return "spi";
-		case LA_DECODER_UART: return "uart";
+		case LA_DECODER_CAN: return "CAN";
+		case LA_DECODER_I2C: return "I2C";
+		case LA_DECODER_SPI: return "SPI";
+		case LA_DECODER_UART: return "UART";
 		default:
 			break;
 		}
@@ -248,10 +270,10 @@ void updateFromFront(bool force){
 	};
 
 	auto getType= [](std::string name){
-		if (name == "can") return LA_DECODER_CAN;
-		if (name == "i2c") return LA_DECODER_I2C;
-		if (name == "spi") return LA_DECODER_SPI;
-		if (name == "uart") return LA_DECODER_UART;
+		if (name == "CAN") return LA_DECODER_CAN;
+		if (name == "I2C") return LA_DECODER_I2C;
+		if (name == "SPI") return LA_DECODER_SPI;
+		if (name == "UART") return LA_DECODER_UART;
 		return LA_DECODER_NONE;
 	};
 
@@ -273,6 +295,10 @@ void updateFromFront(bool force){
 
 	if (IS_NEW(view_port_pos) || force){
 		view_port_pos.Update();
+	}
+
+	if (IS_NEW(display_radix) || force){
+		display_radix.Update();
 	}
 
 	bool reqRecalcPresample = false;
@@ -340,13 +366,14 @@ void updateFromFront(bool force){
 
 	}
 
-
 	for(size_t i = 0 ; i < 4; i++){
 		if (IS_NEW(decoders[i]) || force){
 			decoders[i].Update();
-			auto name = decoders[i].Value();
+			auto decoder_config = decoders[i].Value();
+			auto name = getNameFromConfig(decoder_config);
 			if (name == ""){
 				g_la_controller->removeDecoder(std::to_string(i));
+				TRACE("Remove decoder %d",i)
 			}else{
 				if (g_la_controller->isDecoderExist(std::to_string(i))){
 					auto curDecoder = getName(g_la_controller->getDecoderType(std::to_string(i)));
@@ -354,37 +381,60 @@ void updateFromFront(bool force){
 						g_la_controller->removeDecoder(std::to_string(i));
 						g_la_controller->addDecoder(std::to_string(i),getType(name));
 						g_la_controller->setDecoderEnable(std::to_string(i),decoders_enabled[i].Value());
-						auto settings = g_la_controller->getDecoderSettings(std::to_string(i));
-						decoders_params[i].SendValue(settings);
+						auto settings = getParamFromConfig(decoder_config);
+						if (g_la_controller->setDecoderSettings(std::to_string(i),settings)){
+							TRACE("Change decoder with config %s = %s",name.c_str(), settings.c_str())
+						}else{
+							ERROR_LOG("Error set config %s = %s",name.c_str(),settings.c_str())
+							settings = g_la_controller->getDecoderSettings(std::to_string(i));
+							auto newConfig = getConfig(name,settings);
+							TRACE("Change decoder with config %s",newConfig.c_str())
+							decoders[i].SendValue(newConfig);
+						}
+					}else{
+						auto settings = getParamFromConfig(decoder_config);
+						if (g_la_controller->setDecoderSettings(std::to_string(i),settings)){
+							TRACE("Set new config from frontend %s = %s",name.c_str(), settings.c_str())
+						}else{
+							ERROR_LOG("Error set config %d : %s = %s",i, name.c_str(),settings.c_str())
+							settings = g_la_controller->getDecoderSettings(std::to_string(i));
+							TRACE("Wrong config. Get default")
+							auto newConfig = getConfig(name,settings);
+							TRACE("Send config back  %s",newConfig.c_str())
+							decoders[i].SendValue(newConfig);
+						}
 					}
 				}else{
+					TRACE("Crate decoder %d = %s",i,name.c_str())
 					g_la_controller->addDecoder(std::to_string(i),getType(name));
 					g_la_controller->setDecoderEnable(std::to_string(i),decoders_enabled[i].Value());
-					auto settings = g_la_controller->getDecoderSettings(std::to_string(i));
-					decoders_params[i].SendValue(settings);
-				}
-			}
-		}
-
-		if (IS_NEW(decoders_params[i]) || force){
-			auto oldParams = g_la_controller->getDecoderSettings(std::to_string(i));
-			if (decoders_params[i].NewValue() != ""){
-				if (g_la_controller->setDecoderSettings(std::to_string(i),decoders_params[i].NewValue())){
-					decoders_params[i].Update();
-					if (oldParams != decoders_params[i].Value()){
-						needRedecode = true;
+					auto settings = getParamFromConfig(decoder_config);
+					if (settings == ""){
+						settings = g_la_controller->getDecoderSettings(std::to_string(i));
+						TRACE("Missing config. Get default")
+					}else{
+						if (g_la_controller->setDecoderSettings(std::to_string(i),settings)){
+							TRACE("Set new config from frontend %s = %s",name.c_str(), settings.c_str())
+						}else{
+							ERROR_LOG("Error set config %s = %s",name.c_str(),settings.c_str())
+							settings = g_la_controller->getDecoderSettings(std::to_string(i));
+							TRACE("Missing config. Get default")
+						}
 					}
-				}else{
-					ERROR_LOG("Can't setup settings %s for decoder %s",decoders_params[i].NewValue().c_str(),
-						getName(g_la_controller->getDecoderType(std::to_string(i))))
+					auto newConfig = getConfig(name,settings);
+					TRACE("Send config back  %s",newConfig.c_str())
+					decoders[i].SendValue(newConfig);
 				}
 			}
 		}
 
 		if (IS_NEW(decoders_enabled[i]) || force){
 			decoders_enabled[i].Update();
-			if (g_la_controller->getDecoderType(std::to_string(i)) != LA_DECODER_NONE)
+			if (g_la_controller->getDecoderType(std::to_string(i)) != LA_DECODER_NONE){
 				g_la_controller->setDecoderEnable(std::to_string(i),decoders_enabled[i].Value());
+			}else{
+				decoders_enabled[i].SendValue(false);
+			}
 		}
 	}
 

@@ -5,7 +5,7 @@
 using namespace can;
 
 CANParameters::CANParameters(){
-	m_can_rx = 1;
+	m_can_rx = 0;		// 0...8, 	0 if is not set
 	m_nominal_bitrate = 1000000;
 	m_fast_bitrate = 2000000;
 	m_sample_point = 87.5;
@@ -17,7 +17,7 @@ CANParameters::CANParameters(){
 auto CANParameters::toJson() -> std::string{
 	Json::Value root;
 
-	root["can_rx"] = m_can_rx;
+	root["rx"] = m_can_rx;
 	root["nominal_bitrate"] = m_nominal_bitrate;
 	root["fast_bitrate"] = m_fast_bitrate;
 	root["sample_point"] = m_sample_point;
@@ -64,7 +64,7 @@ auto CANParameters::fromJson(const std::string &json) -> bool{
 			return true;
 		};
 
-		if (!parseUInt32(m_can_rx,"can_rx")) return false;
+		if (!parseUInt32(m_can_rx,"rx")) return false;
 		if (!parseUInt32(m_nominal_bitrate,"nominal_bitrate")) return false;
 		if (!parseUInt32(m_fast_bitrate,"fast_bitrate")) return false;
 		if (!parseFloat(m_sample_point,"sample_point")) return false;

@@ -49,6 +49,21 @@
         LA.setupDataToGraph()
     }
 
+    OSC.setBUSEnabled = function(param,idx,ch) {
+        var param_name = "DECODER_ENABLED_"+idx
+        var el = "BUS"+idx+"_ENABLED"
+        var img = $("#"+el).find('img');
+        if (param[param_name].value){
+            img.show()
+//            LA.updateChVisibility(ch)
+        }else{
+            img.hide()
+//            $('#ch' + (ch + 1) + '_offset_arrow').hide();
+        }
+        LA.updateUIFromConfig()
+//        LA.setupDataToGraph()
+    }
+
     OSC.setDINName= function(param,idx) {
         var param_name = "LA_DIN_NAME_"+idx
         var el = "CH"+idx+"_NAME"
@@ -90,6 +105,22 @@
 
     OSC.setDIN8Enabled = function(param) {
         OSC.setDINEnabled(param,"8",7)
+    }
+
+    OSC.setBUS1Enabled = function(param) {
+        OSC.setBUSEnabled(param,"1",0)
+    }
+
+    OSC.setBUS2Enabled = function(param) {
+        OSC.setBUSEnabled(param,"2",1)
+    }
+
+    OSC.setBUS3Enabled = function(param) {
+        OSC.setBUSEnabled(param,"3",2)
+    }
+
+    OSC.setBUS4Enabled = function(param) {
+        OSC.setBUSEnabled(param,"4",3)
     }
 
     OSC.setDIN1Name = function(param) {
@@ -196,7 +227,7 @@
         LA.setupDataToGraph()
     }
 
-    OSC.enableChannel = function() {
+    OSC.enableChannelDIN = function() {
         var element = $(this);
         var img = $(this).find('img');
         var arr = ["CH1_ENABLED", "CH2_ENABLED", "CH3_ENABLED", "CH4_ENABLED", "CH5_ENABLED", "CH6_ENABLED", "CH7_ENABLED", "CH8_ENABLED"];
@@ -354,6 +385,161 @@
         // OSC.guiHandler();
     }
 
+    OSC.enableChannelBUS = function() {
+        var element = $(this);
+        var img = $(this).find('img');
+        var bus_array = ["BUS1_ENABLED", "BUS2_ENABLED", "BUS3_ENABLED", "BUS4_ENABLED"];
+        var ch = bus_array.indexOf(element.attr('id'));
+
+        if (img.is(":visible")) {
+            // img.hide();
+            if (ch != -1) {
+                CLIENT.parametersCache["DECODER_ENABLED_"+(ch+1)] = { value: false };
+            }
+
+            // // TODO ON CHECK CHANGED
+            // if (ch != -1) {
+            //     OSC.enabled_channels[ch] = false;
+            //     $('#ch' + (ch + 1) + '_offset_arrow').hide();
+            // }
+            // if (bn != -1) {
+            //     if (OSC.buses["bus" + (bn + 1)].enabled !== undefined) {
+            //         OSC.destroyDecoder("bus" + (bn + 1), "-");
+            //         OSC.buses["bus" + (bn + 1)].enabled = false;
+            //     }
+            // }
+        } else {
+            // img.show();
+            if (ch != -1) {
+                CLIENT.parametersCache["DECODER_ENABLED_"+(ch+1)] = { value: true };
+            }
+            // if (ch != -1) {
+            //     if (inp.val() == undefined || inp.val() == "")
+            //         inp.val("DIN" + ch);
+            //     OSC.enabled_channels[ch] = true;
+            //     OSC.updateChVisibility(ch)
+            //     img.show();
+            // }
+            // if (bn != -1) {
+            //     if ($('#BUS' + (bn + 1) + '_NAME').text() == ('BUS' + bn)) {
+            //         OSC.startEditBus('BUS' + (bn + 1) + '_SETTINGS');
+            //     } else {
+            //         var bus = "bus" + (bn + 1);
+            //         if (OSC.buses[bus] != undefined && OSC.buses[bus].name != undefined) {
+            //             switch (OSC.buses[bus].name) {
+            //                 case "UART":
+            //                     if (OSC.buses[bus].serial != -1 && !isChannelInUse(OSC.buses[bus].serial, bus)) {
+            //                         OSC.params.local['CREATE_DECODER'] = {
+            //                             value: 'uart'
+            //                         };
+
+            //                         OSC.buses[bus].decoder = 'uart' + OSC.state.decoder_id;
+            //                         OSC.state.decoder_id++;
+            //                         OSC.params.local['DECODER_NAME'] = {
+            //                             value: OSC.buses[bus].decoder
+            //                         };
+
+            //                         OSC.sendParams();
+            //                     } else
+            //                         OSC.startEditBus('BUS' + (bn + 1) + '_SETTINGS');
+            //                     break;
+            //                 case "CAN":
+            //                     if (OSC.buses[bus].serial != -1 && !isChannelInUse(OSC.buses[bus].serial, bus)) {
+            //                         OSC.params.local['CREATE_DECODER'] = {
+            //                             value: 'can'
+            //                         };
+
+            //                         OSC.buses[bus].decoder = 'can' + OSC.state.decoder_id;
+            //                         OSC.state.decoder_id++;
+            //                         OSC.params.local['DECODER_NAME'] = {
+            //                             value: OSC.buses[bus].decoder
+            //                         };
+
+            //                         OSC.sendParams();
+            //                     } else
+            //                         OSC.startEditBus('BUS' + (bn + 1) + '_SETTINGS');
+            //                     break;
+            //                 case "I2C":
+            //                     if (OSC.buses[bus].sda != -1 && !isChannelInUse(OSC.buses[bus].sda, bus)) {
+            //                         if (OSC.buses[bus].scl != -1 && !isChannelInUse(OSC.buses[bus].scl, bus)) {
+            //                             OSC.params.local['CREATE_DECODER'] = {
+            //                                 value: 'i2c'
+            //                             };
+            //                             OSC.buses[bus].decoder = 'i2c' + OSC.state.decoder_id;
+            //                             OSC.state.decoder_id++;
+            //                             OSC.params.local['DECODER_NAME'] = {
+            //                                 value: OSC.buses[bus].decoder
+            //                             };
+
+            //                             OSC.sendParams();
+            //                         } else
+            //                             OSC.startEditBus('BUS' + (bn + 1) + '_SETTINGS');
+            //                     } else
+            //                         OSC.startEditBus('BUS' + (bn + 1) + '_SETTINGS');
+
+            //                     break;
+            //                 case "SPI":
+            //                     if (OSC.buses[bus].clk != -1 && !isChannelInUse(OSC.buses[bus].clk, bus)) {
+            //                         var miso_ok = false,
+            //                             mosi_ok = false,
+            //                             cs_ok;
+
+            //                         if (OSC.buses[bus].miso != -1 && !isChannelInUse(OSC.buses[bus].miso, bus)) {
+            //                             miso_ok = true;
+            //                         } else if (OSC.buses[bus].miso == -1)
+            //                             miso_ok = true;
+
+            //                         if (OSC.buses[bus].mosi != -1 && !isChannelInUse(OSC.buses[bus].mosi, bus)) {
+            //                             mosi_ok = true;
+            //                         } else if (OSC.buses[bus].mosi == -1)
+            //                             mosi_ok = true;
+
+            //                         if (OSC.buses[bus].cs != -1 && !isChannelInUse(OSC.buses[bus].cs, bus)) {
+            //                             cs_ok = true;
+            //                         } else if (OSC.buses[bus].cs == -1)
+            //                             cs_ok = true;
+
+            //                         if (miso_ok && mosi_ok && cs_ok) {
+            //                             if (OSC.buses[bus].mosi != -1) {
+            //                                 OSC.buses[bus].mosi_decoder = 'spi' + OSC.state.decoder_id;
+            //                                 OSC.params.local['CREATE_DECODER'] = {
+            //                                     value: 'spi'
+            //                                 };
+            //                                 OSC.params.local['DECODER_NAME'] = {
+            //                                     value: 'spi' + OSC.state.decoder_id
+            //                                 };
+            //                                 OSC.state.decoder_id++;
+            //                             }
+
+
+            //                             if (OSC.buses[bus].miso != -1) {
+            //                                 OSC.buses[bus].miso_decoder = 'spi' + OSC.state.decoder_id;
+            //                                 OSC.params.local['CREATE_DECODER'] = {
+            //                                     value: 'spi'
+            //                                 };
+            //                                 OSC.params.local['DECODER_NAME'] = {
+            //                                     value: 'spi' + OSC.state.decoder_id
+            //                                 };
+            //                                 OSC.state.decoder_id++;
+            //                             }
+            //                             OSC.sendParams();
+
+            //                         } else
+            //                             OSC.startEditBus('BUS' + (bn + 1) + '_SETTINGS');
+            //                     } else
+            //                         OSC.startEditBus('BUS' + (bn + 1) + '_SETTINGS');
+            //                     break;
+            //             }
+            //         }
+            //         img.show();
+            //     }
+            // }
+        }
+        CLIENT.sendParameters();
+
+        // OSC.guiHandler();
+    }
+
     OSC.sendAllTrig = function() {
 
         for (var i = 0; i < OSC.triggers_list.length; i++) {
@@ -365,6 +551,7 @@
     OSC.setDINTrigger= function(param,idx) {
         var param_name = "LA_DIN_" + idx + "_TRIGGER"
         $('.trigger_type[name=\'din' + (idx - 1) + '\']').val(param[param_name].value);
+        LA.updateChVisibility(idx - 1)
     }
 
 
@@ -443,6 +630,10 @@
 
     OSC.updateTimeScale = function(){
 
+    }
+
+    OSC.updateDisplayRadix = function(new_params){
+        $('#DISPLAY_RADIX').val(new_params['LA_DISPLAY_RADIX'].value)
     }
 
     OSC.setTimeScale = function(param){

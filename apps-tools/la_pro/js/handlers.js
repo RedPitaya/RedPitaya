@@ -35,7 +35,9 @@
             }
         });
 
-        $('.enable-ch').click(OSC.enableChannel);
+        $('.enable-ch').click(OSC.enableChannelDIN);
+
+        $('.enable-ch-bus').click(OSC.enableChannelBUS);
 
         $('.ch-name-inp').change(function() {
             var arr = ["CH1_NAME", "CH2_NAME", "CH3_NAME", "CH4_NAME", "CH5_NAME", "CH6_NAME", "CH7_NAME", "CH8_NAME"];
@@ -258,6 +260,28 @@
                 elem.text('SYS INFO');
                 $('#sys_info_view').hide();
             }
+        });
+
+        $('#apply_decoder').click(LA.applyDecoder);
+
+        $('#DISPLAY_RADIX').change(function() {
+            CLIENT.parametersCache['LA_DISPLAY_RADIX'] = {value : $(this).val()}
+            CLIENT.sendParameters()
+            OSC.guiHandler();
+        });
+
+        $('#EXPORT_RADIX').change(function() {
+            OSC.state.export_radix = $(this).val();
+            OSC.guiHandler();
+        });
+
+
+        $('#protocol_selector').change(function() {
+            LA.loadBUSSettingsFromConfig()
+        });
+
+        $('.bus-settings-btn').click(function() {
+            LA.startEditBus($(this).attr('id'));
         });
 
     }

@@ -5,8 +5,8 @@
 using namespace i2c;
 
 I2CParameters::I2CParameters(){
-	m_scl = 1;
-	m_sda = 1;
+	m_scl = 0;		// 0...8, 	0 if is not set
+	m_sda = 0;		// 0...8, 	0 if is not set
 	m_acq_speed = 0;
 	m_address_format = Shifted;
 	m_invert_bit = 0;

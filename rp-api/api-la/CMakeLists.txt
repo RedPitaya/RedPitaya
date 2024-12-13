@@ -149,6 +149,11 @@ if(BUILD_SHARED)
         install(FILES ${header}
             DESTINATION ${INSTALL_DIR}/include/la)
 
+        file(GLOB JSON_INCLUDE_FILES ${json_SOURCE_DIR}/include/json/*.h)
+        install(FILES ${JSON_INCLUDE_FILES}
+            DESTINATION ${INSTALL_DIR}/include/la/json)
+
+
         if (BUILD_PYTHON_MODULE)
             install(FILES $<TARGET_PROPERTY:rp_la_py,SWIG_SUPPORT_FILES> DESTINATION ${INSTALL_DIR}/lib/python)
             install(TARGETS rp_la_py

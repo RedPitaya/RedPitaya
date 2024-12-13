@@ -48,6 +48,8 @@ class UARTDecoder::Impl{
 
 	UARTParameters m_options;
 
+    std::string m_line;
+
 	std::string m_name;
 	std::vector<OutputPacket> m_result;
 
@@ -72,36 +74,46 @@ UARTDecoder::Impl::Impl(){
 
 UARTDecoder::UARTDecoder(int decoderType, const std::string& _name){
     m_decoderType = decoderType;
-	m_impl = new Impl();
-	m_impl->m_name = _name;
-	m_impl->resetDecoder();
+	m_name = _name;
+	m_impl_rx = new Impl();
+	m_impl_tx = new Impl();
+    m_impl_rx->m_line = "rx";
+    m_impl_rx->m_line = "tx";
+	m_impl_rx->resetDecoder();
+	m_impl_tx->resetDecoder();
     setParameters(uart::UARTParameters());
 }
 
 UARTDecoder::~UARTDecoder(){
-	delete m_impl;
+	delete m_impl_rx;
+	delete m_impl_tx;
 }
 
 auto UARTDecoder::reset() -> void{
-	m_impl->resetDecoder();
+	m_impl_tx->resetDecoder();
+	m_impl_rx->resetDecoder();
 }
 
 auto UARTDecoder::getMemoryUsage() -> uint64_t{
 	uint64_t size = sizeof(Impl);
-	size += m_impl->m_result.size() * sizeof(OutputPacket);
+	size += m_impl_rx->m_result.size() * sizeof(OutputPacket);
+	size += m_impl_tx->m_result.size() * sizeof(OutputPacket);
 	return size;
 }
 
 void UARTDecoder::setParameters(const UARTParameters& _new_params)
 {
     if (_new_params.m_baudrate == 0) FATAL("baudrate should not be equal to 0")
-	m_impl->m_options = _new_params;
-    m_impl->m_bitWidth = (float)_new_params.m_samplerate / (float)_new_params.m_baudrate;
-    m_impl->m_countOfStop = 0;
+	m_impl_rx->m_options = _new_params;
+	m_impl_tx->m_options = _new_params;
+    m_impl_rx->m_bitWidth = (float)_new_params.m_samplerate / (float)_new_params.m_baudrate;
+    m_impl_rx->m_countOfStop = 0;
+    m_impl_tx->m_bitWidth = (float)_new_params.m_samplerate / (float)_new_params.m_baudrate;
+    m_impl_tx->m_countOfStop = 0;
 }
 
 auto UARTDecoder::getParametersInJSON() -> std::string{
-	return m_impl->m_options.toJson();
+	return m_impl_rx->m_options.toJson();
 }
 
 auto UARTDecoder::setParametersInJSON(const std::string &parameter) -> void{
@@ -114,7 +126,10 @@ auto UARTDecoder::setParametersInJSON(const std::string &parameter) -> void{
 }
 
 std::vector<OutputPacket> UARTDecoder::getSignal(){
-	return m_impl->m_result;
+	auto vec = m_impl_rx->m_result;
+	auto vec2 = m_impl_tx->m_result;
+	vec.insert(vec.end(), vec2.begin(), vec2.end());
+	return vec;
 }
 
 void UARTDecoder::Impl::resetDecoder()
@@ -139,7 +154,8 @@ void UARTDecoder::Impl::resetDecoder()
 
 void UARTDecoder::decode(const uint8_t* _input, uint32_t _size)
 {
-    m_impl->decode(_input,_size);
+    m_impl_rx->decode(_input,_size);
+    m_impl_tx->decode(_input,_size);
 }
 
 void UARTDecoder::Impl::decode(const uint8_t* _input, uint32_t _size)
@@ -148,11 +164,21 @@ void UARTDecoder::Impl::decode(const uint8_t* _input, uint32_t _size)
 	assert(_size > 0 && "input vector size == 0");
 	assert(_size % 2 == 0 && "odd size");
 	if (m_options.m_rx > 8) FATAL("RX line more than 8")
-	if (m_options.m_rx == 0) FATAL("RX line should not be equal to 0")
+	if (m_options.m_tx > 8) FATAL("RX line more than 8")
 
     resetDecoder();
 
     uint32_t savedSampleNum = 0;
+
+    uint8_t rx_line = 0;
+
+    if (m_line == "rx")
+        rx_line = m_options.m_rx - 1;
+
+    if (m_line == "tx")
+        rx_line = m_options.m_tx - 1;
+
+    if (rx_line == 0) return;
 
     for (uint32_t i = 0; i < _size; i += 2)
     {
@@ -160,7 +186,7 @@ void UARTDecoder::Impl::decode(const uint8_t* _input, uint32_t _size)
         const uint8_t count = _input[i];
         const uint8_t data = _input[i + 1];
 
-        uint8_t rx_line = m_options.m_rx - 1;
+
 
         for(uint16_t j = 0; j < count + 1; ++j)
         {
@@ -169,7 +195,7 @@ void UARTDecoder::Impl::decode(const uint8_t* _input, uint32_t _size)
             assert(m_samplenum < std::numeric_limits<decltype(m_samplenum)>::max() && "m_samplenum overflow");
             savedSampleNum += 1;
 
-            if(m_options.m_invert_rx)
+            if(m_options.m_invert)
                 newBit = !newBit;
 
             // State machine for RX line
@@ -217,7 +243,7 @@ void UARTDecoder::Impl::waitForStartBit(bool bit, uint32_t sampleNum)
         {
             uint8_t controlByteInOutput = NO;
             controlByteInOutput = (1 << 4);
-            m_result.push_back({controlByteInOutput, 0, m_silenceLength});
+            m_result.push_back({m_line ,controlByteInOutput, 0, m_silenceLength});
             m_silenceLength = 0;
         }
 
@@ -228,7 +254,7 @@ void UARTDecoder::Impl::waitForStartBit(bool bit, uint32_t sampleNum)
     {
         uint8_t controlByteInOutput = NO;
         controlByteInOutput = (1 << 4);
-        m_result.push_back({controlByteInOutput, 0, m_silenceLength});
+        m_result.push_back({m_line ,controlByteInOutput, 0, m_silenceLength});
         m_silenceLength = 0;
     }
 
@@ -260,7 +286,7 @@ void UARTDecoder::Impl::getStartBit(bool bit, uint32_t sampleNum)
     m_dataByte = 0;
 
     controlByteInOutput |= (1 << 5);
-    m_result.push_back(OutputPacket{controlByteInOutput, 0, (uint16_t)m_bitWidth}); // TODO: Calculate length
+    m_result.push_back(OutputPacket{m_line ,controlByteInOutput, 0, (uint16_t)m_bitWidth}); // TODO: Calculate length
 
     m_state = GET_DATA_BITS;
 }
@@ -374,18 +400,18 @@ void UARTDecoder::Impl::getStopBits(bool bit, uint32_t sampleNum)
         if(m_options.m_num_data_bits == DATA_BITS_9)
             controlDataWriting = ((m_dataByte >> 8) & 0x01) | 0x80;  // 0x80 means that 9 bit data received
         length = m_options.m_num_data_bits * (uint16_t)m_bitWidth; // TODO: Data writing need to rewrite
-        m_result.push_back({controlDataWriting, (uint8_t)m_dataByte, length});
+        m_result.push_back({m_line,controlDataWriting, (uint8_t)m_dataByte, length});
 
         if(m_options.m_parity != NONE)
         {
 	    	controlByteInOutput |= (1 << 7);
 	    	if(!m_parityOk)
 	    	    controlByteInOutput |= (1 << 1);
-	      	m_result.push_back({controlByteInOutput, 0, (uint16_t)m_bitWidth}); // TODO: Calculate length
+	      	m_result.push_back({m_line,controlByteInOutput, 0, (uint16_t)m_bitWidth}); // TODO: Calculate length
     	}
 
         controlByteInOutput |= (1 << 6);
-        m_result.push_back({controlByteInOutput, 0, (uint16_t)(m_bitWidth/2)}); // TODO: Calculate length
+        m_result.push_back({m_line,controlByteInOutput, 0, (uint16_t)(m_bitWidth/2)}); // TODO: Calculate length
     }
 
     // Get 1.0 Stop Bit
@@ -411,18 +437,18 @@ void UARTDecoder::Impl::getStopBits(bool bit, uint32_t sampleNum)
         if(m_options.m_num_data_bits == DATA_BITS_9)
             controlDataWriting = ((m_dataByte >> 8) & 0x01) | 0x80;  // 0x80 means that 9 bit data received
         length = m_options.m_num_data_bits * (uint16_t)m_bitWidth; // TODO: Data writing need to rewrite
-        m_result.push_back({controlDataWriting, (uint8_t)m_dataByte, length});
+        m_result.push_back({m_line,controlDataWriting, (uint8_t)m_dataByte, length});
 
         if(m_options.m_parity != NONE)
         {
 	    	controlByteInOutput |= (1 << 7);
 	    	if(!m_parityOk)
 	    	    controlByteInOutput |= (1 << 1);
-	       	m_result.push_back({controlByteInOutput, 0, (uint16_t)m_bitWidth}); // TODO: Calculate length
+	       	m_result.push_back({m_line,controlByteInOutput, 0, (uint16_t)m_bitWidth}); // TODO: Calculate length
     	}
 
         controlByteInOutput |= (1 << 6);
-        m_result.push_back({controlByteInOutput, 0, (uint16_t)m_bitWidth}); // TODO: Calculate length
+        m_result.push_back({m_line,controlByteInOutput, 0, (uint16_t)m_bitWidth}); // TODO: Calculate length
     }
 
     // Get 1.5 Stop Bits
@@ -450,17 +476,17 @@ void UARTDecoder::Impl::getStopBits(bool bit, uint32_t sampleNum)
                 if(m_options.m_num_data_bits == DATA_BITS_9)
                     controlDataWriting = ((m_dataByte >> 8) & 0x01) | 0x80;  // 0x80 means that 9 bit data received
                 length = m_options.m_num_data_bits * (uint16_t)m_bitWidth; // TODO: Data writing need to rewrite
-                m_result.push_back({controlDataWriting, (uint8_t)m_dataByte, length});
+                m_result.push_back({m_line,controlDataWriting, (uint8_t)m_dataByte, length});
 
 		        if(m_options.m_parity != NONE){
 			    	controlByteInOutput |= (1 << 7);
 			    	if(!m_parityOk)
 			    	    controlByteInOutput |= (1 << 1);
-			    	m_result.push_back({controlByteInOutput, 0, (uint16_t)m_bitWidth}); // TODO: Calculate length
+			    	m_result.push_back({m_line,controlByteInOutput, 0, (uint16_t)m_bitWidth}); // TODO: Calculate length
 		    	}
 
                 controlByteInOutput |= (1 << 6);
-                m_result.push_back({controlByteInOutput, 0, (uint16_t)m_bitWidth}); // TODO: Calculate length
+                m_result.push_back({m_line,controlByteInOutput, 0, (uint16_t)m_bitWidth}); // TODO: Calculate length
             }
         }
         // Get second half stop-bit
@@ -486,17 +512,17 @@ void UARTDecoder::Impl::getStopBits(bool bit, uint32_t sampleNum)
             if(m_options.m_num_data_bits == DATA_BITS_9)
                 controlDataWriting = ((m_dataByte >> 8) & 0x01) | 0x80;  // 0x80 means that 9 bit data received
             length = m_options.m_num_data_bits * (uint16_t)m_bitWidth; // TODO: Data writing need to rewrite
-            m_result.push_back({controlDataWriting, (uint8_t)m_dataByte, length});
+            m_result.push_back({m_line,controlDataWriting, (uint8_t)m_dataByte, length});
 
 	        if(m_options.m_parity != NONE){
 		    	controlByteInOutput |= (1 << 7);
 		    	if(!m_parityOk)
 		    	    controlByteInOutput |= (1 << 1);
-		    	m_result.push_back({controlByteInOutput, 0, (uint16_t)m_bitWidth}); // TODO: Calculate length
+		    	m_result.push_back({m_line,controlByteInOutput, 0, (uint16_t)m_bitWidth}); // TODO: Calculate length
 	    	}
 
             controlByteInOutput |= (1 << 6);
-            m_result.push_back({controlByteInOutput, 0, (uint16_t)(m_bitWidth/2)}); // TODO: Calculate length
+            m_result.push_back({m_line,controlByteInOutput, 0, (uint16_t)(m_bitWidth/2)}); // TODO: Calculate length
         }
     }
 
@@ -524,17 +550,17 @@ void UARTDecoder::Impl::getStopBits(bool bit, uint32_t sampleNum)
                 if(m_options.m_num_data_bits == DATA_BITS_9)
                     controlDataWriting = ((m_dataByte >> 8) & 0x01) | 0x80;  // 0x80 means that 9 bit data received
                 length = m_options.m_num_data_bits * (uint16_t)m_bitWidth; // TODO: Data writing need to rewrite
-                m_result.push_back({controlDataWriting, (uint8_t)m_dataByte, length});
+                m_result.push_back({m_line,controlDataWriting, (uint8_t)m_dataByte, length});
 
 		        if(m_options.m_parity != NONE){
 			    	controlByteInOutput |= (1 << 7);
 			    	if(!m_parityOk)
 			    	    controlByteInOutput |= (1 << 1);
-			    	m_result.push_back({controlByteInOutput, 0, (uint16_t)m_bitWidth}); // TODO: Calculate length
+			    	m_result.push_back({m_line,controlByteInOutput, 0, (uint16_t)m_bitWidth}); // TODO: Calculate length
 		    	}
 
                 controlByteInOutput |= (1 << 6);
-                m_result.push_back({controlByteInOutput, 0, (uint16_t)m_bitWidth}); // TODO: Calculate length
+                m_result.push_back({m_line,controlByteInOutput, 0, (uint16_t)m_bitWidth}); // TODO: Calculate length
             }
         }
         // Get second full stop-bit
@@ -559,18 +585,18 @@ void UARTDecoder::Impl::getStopBits(bool bit, uint32_t sampleNum)
             if(m_options.m_num_data_bits == DATA_BITS_9)
                 controlDataWriting = ((m_dataByte >> 8) & 0x01) | 0x80;  // 0x80 means that 9 bit data received
             length = m_options.m_num_data_bits * (uint16_t)m_bitWidth; // TODO: Data writing need to rewrite
-            m_result.push_back({controlDataWriting, (uint8_t)m_dataByte, length});
+            m_result.push_back({m_line,controlDataWriting, (uint8_t)m_dataByte, length});
 
 	        if(m_options.m_parity != NONE)
 	        {
 		    	controlByteInOutput |= (1 << 7);
 		    	if(!m_parityOk)
 		    	    controlByteInOutput |= (1 << 1);
-		    	m_result.push_back({controlByteInOutput, 0, (uint16_t)m_bitWidth}); // TODO: Calculate length
+		    	m_result.push_back({m_line,controlByteInOutput, 0, (uint16_t)m_bitWidth}); // TODO: Calculate length
 	    	}
 
             controlByteInOutput |= (1 << 6);
-            m_result.push_back({controlByteInOutput, 0, (uint16_t)m_bitWidth}); // TODO: Calculate length
+            m_result.push_back({m_line,controlByteInOutput, 0, (uint16_t)m_bitWidth}); // TODO: Calculate length
         }
     }
 
@@ -584,14 +610,14 @@ void UARTDecoder::Impl::getStopBits(bool bit, uint32_t sampleNum)
         if(m_options.m_num_data_bits == DATA_BITS_9)
             controlDataWriting = ((m_dataByte >> 8) & 0x01) | 0x80;  // 0x80 means that 9 bit data received
         length = m_options.m_num_data_bits * (uint16_t)m_bitWidth; // TODO: Data writing need to rewrite
-        m_result.push_back({controlDataWriting, (uint8_t)m_dataByte, length});
+        m_result.push_back({m_line,controlDataWriting, (uint8_t)m_dataByte, length});
 
         if(m_options.m_parity != NONE)
         {
 	    	controlByteInOutput |= (1 << 7);
 	    	if(!m_parityOk)
 	    	    controlByteInOutput |= (1 << 1);
-	    	m_result.push_back({controlByteInOutput, 0, (uint16_t)m_bitWidth}); // TODO: Calculate length
+	    	m_result.push_back({m_line,controlByteInOutput, 0, (uint16_t)m_bitWidth}); // TODO: Calculate length
     	}
     }
 }

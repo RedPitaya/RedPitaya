@@ -190,27 +190,7 @@
         }
     };
 
-    OSC.isChannelInUse = function(ch, ex_bus) {
-        for (var i = 1; i < 5; i++) {
-            if (ex_bus !== undefined && ex_bus == i)
-                continue;
-            var bus = 'bus' + i;
-            if (OSC.buses[bus] !== undefined && OSC.buses[bus].name !== undefined && OSC.buses[bus].enabled) {
-                if (OSC.buses[bus].name == "UART" && (OSC.buses[bus].rx == ch || OSC.buses[bus].rx == ch))
-                    return i;
 
-                if (OSC.buses[bus].name == "SPI" &&
-                    (OSC.buses[bus].scl == ch || OSC.buses[bus].miso == ch || OSC.buses[bus].mosi == ch || OSC.buses[bus].cs == ch))
-                    return i;
-
-                if (OSC.buses[bus].name == "I2C" && (OSC.buses[bus].scl == ch || OSC.buses[bus].sda == ch))
-                    return i;
-                if (OSC.buses[bus].name == "CAN" && (OSC.buses[bus].can_rx == ch))
-                    return i;
-            }
-        }
-        return -1;
-    }
 
     OSC.convertUnpacked = function(array) {
         var CHUNK_SIZE = 0x8000; // arbitrary number here, not too small, not too big
@@ -499,67 +479,71 @@
         return -1;
     }
 
-    OSC.getDecoderByChannelNum = function(ch) {
-        for (var i = 1; i < 5; i++) {
-            var bus = "bus" + i;
-            if (OSC.buses[bus] != undefined && OSC.buses[bus].name != undefined) {
-                switch (OSC.buses[bus].name) {
-                    case "UART":
-                        if (OSC.buses[bus].rx == ch)
-                            return OSC.buses[bus].decoder;
-                        break;
-                    case "I2C":
-                        if (OSC.buses[bus].sda == ch)
-                            return OSC.buses[bus].decoder;
-                        break;
-                    case "CAN":
-                        if (OSC.buses[bus].can_rx == ch)
-                            return OSC.buses[bus].decoder;
-                        break;
-                    case "SPI":
-                        if (OSC.buses[bus].miso == ch)
-                            return OSC.buses[bus].miso_decoder;
-                        if (OSC.buses[bus].mosi == ch)
-                            return OSC.buses[bus].mosi_decoder;
-                        break;
-                }
-            }
-        }
-        return "";
-    }
+    // OSC.getDecoderByChannelNum = function(ch) {
+    //     for (var i = 1; i < 5; i++) {
+    //         var bus = "bus" + i;
+    //         if (LA.buses[bus] != undefined && LA.buses[bus].name != undefined) {
+    //             switch (LA.buses[bus].name) {
+    //                 case "UART":
+    //                     if (LA.buses[bus].rx == ch)
+    //                         return LA.buses[bus].decoder;
+    //                     if (LA.buses[bus].rx == ch)
+    //                         return LA.buses[bus].decoder;
+    //                     break;
+    //                 case "I2C":
+    //                     if (LA.buses[bus].sda == ch)
+    //                         return LA.buses[bus].decoder;
+    //                     break;
+    //                 case "CAN":
+    //                     if (LA.buses[bus].can_rx == ch)
+    //                         return LA.buses[bus].decoder;
+    //                     break;
+    //                 case "SPI":
+    //                     if (LA.buses[bus].miso == ch)
+    //                         return LA.buses[bus].miso_decoder;
+    //                     if (LA.buses[bus].mosi == ch)
+    //                         return LA.buses[bus].mosi_decoder;
+    //                     break;
+    //             }
+    //         }
+    //     }
+    //     return "";
+    // }
 
-    OSC.getBusByChNum = function(ch) {
-        for (var i = 1; i < 5; i++) {
-            var bus = "bus" + i;
-            if (OSC.buses[bus] != undefined && OSC.buses[bus].name != undefined) {
-                switch (OSC.buses[bus].name) {
-                    case "UART":
-                        if (OSC.buses[bus].rx == ch)
-                            return bus;
-                        break;
-                    case "I2C":
-                        if (OSC.buses[bus].sda == ch)
-                            return bus;
-                        break;
-                    case "CAN":
-                        if (OSC.buses[bus].can_rx == ch)
-                            return bus;
-                        break;
-                    case "SPI":
-                        if (OSC.buses[bus].miso == ch)
-                            return bus;
-                        if (OSC.buses[bus].mosi == ch)
-                            return bus;
-                        break;
-                }
-            }
-        }
-        return "";
-    }
+    // OSC.getBusByChNum = function(ch) {
+    //     for (var i = 1; i < 5; i++) {
+    //         var bus = "bus" + i;
+    //         if (LA.buses[bus] != undefined && LA.buses[bus].name != undefined) {
+    //             switch (LA.buses[bus].name) {
+    //                 case "UART":
+    //                     if (LA.buses[bus].rx == ch)
+    //                         return bus;
+    //                     if (LA.buses[bus].tx == ch)
+    //                         return bus;
+    //                     break;
+    //                 case "I2C":
+    //                     if (LA.buses[bus].sda == ch)
+    //                         return bus;
+    //                     break;
+    //                 case "CAN":
+    //                     if (LA.buses[bus].can_rx == ch)
+    //                         return bus;
+    //                     break;
+    //                 case "SPI":
+    //                     if (LA.buses[bus].miso == ch)
+    //                         return bus;
+    //                     if (LA.buses[bus].mosi == ch)
+    //                         return bus;
+    //                     break;
+    //             }
+    //         }
+    //     }
+    //     return "";
+    // }
 
-    OSC.getRandomArbitary = function(min, max) {
-        return Math.random() * (max - min) + min;
-    }
+    // OSC.getRandomArbitary = function(min, max) {
+    //     return Math.random() * (max - min) + min;
+    // }
 
     // Converts time from milliseconds to a more 'user friendly' time unit; returned value includes units
     OSC.convertTime = function(t) {
@@ -620,36 +604,37 @@
     OSC.accordingChanName = function(chan_number) {
         for (var i = 1; i < 5; i++) {
             var bus = 'bus' + i;
-            if (OSC.buses[bus] !== undefined && OSC.buses[bus].name !== undefined && OSC.buses[bus].enabled) {
+            var enable = CLIENT.getValue('DECODER_ENABLED_'+i)
+            if (LA.buses[bus] !== undefined && LA.buses[bus].name !== undefined && enable) {
                 // Check UART
-                if (OSC.buses[bus].name == "UART" && OSC.buses[bus].rx == chan_number) {
-                    if (OSC.buses[bus].rxtxstr == "RX")
+                if (LA.buses[bus].name == "UART"){
+                    if (LA.buses[bus].config.rx == chan_number)
                         return "UART: RX";
-                    else if (OSC.buses[bus].rxtxstr == "TX")
+                    if (LA.buses[bus].config.tx == chan_number)
                         return "UART: TX";
                 }
 
-                if (OSC.buses[bus].name == "CAN" && OSC.buses[bus].can_rx == chan_number) {
+                if (LA.buses[bus].name == "CAN" && LA.buses[bus].config.rx == chan_number) {
                     return "CAN: RX";
                 }
 
                 // Check I2C
-                if (OSC.buses[bus].name == "I2C") {
-                    if (OSC.buses[bus].scl == chan_number)
+                if (LA.buses[bus].name == "I2C") {
+                    if (LA.buses[bus].config.scl == chan_number)
                         return "I2C: SCL";
-                    else if (OSC.buses[bus].sda == chan_number)
+                    else if (LA.buses[bus].config.sda == chan_number)
                         return "I2C: SDA";
                 }
 
                 // Check SPI
-                if (OSC.buses[bus].name == "SPI") {
-                    if (OSC.buses[bus].clk == chan_number)
+                if (LA.buses[bus].name == "SPI") {
+                    if (LA.buses[bus].config.clk == chan_number)
                         return "SPI: SCK";
-                    else if (OSC.buses[bus].miso == chan_number)
+                    else if (LA.buses[bus].config.miso == chan_number)
                         return "SPI: MISO";
-                    else if (OSC.buses[bus].mosi == chan_number)
+                    else if (LA.buses[bus].config.mosi == chan_number)
                         return "SPI: MOSI";
-                    else if (OSC.buses[bus].cs == chan_number)
+                    else if (LA.buses[bus].config.cs == chan_number)
                         return "SPI: CS";
                 }
             }

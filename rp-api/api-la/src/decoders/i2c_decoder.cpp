@@ -151,9 +151,9 @@ void I2CDecoder::Impl::addNothing(){
 		return;
 	while(len > 0x7FFFFFFF){
 		len -= 0x7FFFFFFF;
-		m_result.push_back(OutputPacket{NOTHING, 0, (uint16_t)0x7FFFFFFF});
+		m_result.push_back(OutputPacket{"sda",NOTHING, 0, (uint16_t)0x7FFFFFFF});
 	}
-	m_result.push_back(OutputPacket{NOTHING, 0, (uint16_t)len});
+	m_result.push_back(OutputPacket{"sda",NOTHING, 0, (uint16_t)len});
 }
 
 void I2CDecoder::decode(const uint8_t* _input, uint32_t _size){
@@ -220,7 +220,7 @@ void I2CDecoder::Impl::decode(const uint8_t* _input, uint32_t _size)
 			if (m_state != m_oldState)
 			{
 				addNothing();
-				m_result.push_back(OutputPacket{(uint8_t)m_cmd, m_dataByte, (uint16_t)(m_es - m_ss)});
+				m_result.push_back(OutputPacket{"sda", (uint8_t)m_cmd, m_dataByte, (uint16_t)(m_es - m_ss)});
 				m_oldState = m_state;
 				m_oldSamplenum = m_samplenum;
 			}

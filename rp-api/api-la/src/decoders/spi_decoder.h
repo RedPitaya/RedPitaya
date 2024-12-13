@@ -24,7 +24,8 @@ public:
     auto reset() -> void override;
 
 private:
-	Impl *m_impl;
+	Impl *m_impl_miso;
+	Impl *m_impl_mosi;
 };
 
 }

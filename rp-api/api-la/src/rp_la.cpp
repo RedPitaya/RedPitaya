@@ -70,6 +70,7 @@ struct CLAController::Impl {
     auto resetAllDecoders() -> void;
     auto decode(const uint8_t* _input, uint32_t _size) -> void;
     auto getAnnotation(la_Decoder_t decoder,uint8_t control) -> std::string;
+    auto getAnnotationSize(la_Decoder_t decoder) -> uint8_t;
 
     bool m_isOpen = false;
     std::map<std::string, std::shared_ptr<Decoder>> m_decoders;
@@ -241,6 +242,23 @@ auto CLAController::Impl::getAnnotation(la_Decoder_t decoder,uint8_t control) ->
     return "";
 }
 
+auto CLAController::Impl::getAnnotationSize(la_Decoder_t decoder) -> uint8_t{
+    switch (decoder)
+    {
+        case LA_DECODER_CAN:
+            return can::CANAnnotations::ENUM_END;
+        case LA_DECODER_I2C:
+            return i2c::I2CAnnotations::ENUM_END;
+        case LA_DECODER_SPI:
+            return spi::SPIAnnotations::ENUM_END;
+        case LA_DECODER_UART:
+            return uart::UARTAnnotations::ENUM_END;
+        default:
+            break;
+    }
+    return 0;
+}
+
 
 auto CLAController::isNoTriggers() -> bool{
     return m_pimpl->isNoTriggers();
@@ -410,14 +428,15 @@ auto CLAController::getDecodedData(std::string name) -> std::vector<rp_la::Outpu
     std::lock_guard lock(m_pimpl->m_decoder_mutex);
     if (m_pimpl->m_decoders.find(name) != m_pimpl->m_decoders.end()){
         auto items = m_pimpl->m_decoders[name]->getSignal();
-        auto type = m_pimpl->m_decoders[name]->getDecoderType();
+        // auto type = m_pimpl->m_decoders[name]->getDecoderType();
         std::vector<rp_la::OutputPacket> new_vect;
         for(auto &itm:items){
             rp_la::OutputPacket pack;
+            pack.line_name = itm.line_name;
             pack.control = itm.control;
             pack.data = itm.data;
             pack.length = itm.length;
-            pack.annotation = m_pimpl->getAnnotation((la_Decoder_t)type,itm.control);
+            // pack.annotation = m_pimpl->getAnnotation((la_Decoder_t)type,itm.control);
             new_vect.push_back(pack);
         }
         return new_vect;
@@ -508,8 +527,8 @@ auto CLAController::Impl::run(uint32_t timeoutMs) -> void{
     }
     std::future<void> fut;
     if (isNoTriggers()){
-        timeoutMs = 1000;
-        fut = std::async(std::launch::async,trig, timeoutMs); // Fix for bug in FPGA
+        auto timeoutTrigMs = 1000;
+        fut = std::async(std::launch::async, trig, timeoutTrigMs); // Fix for bug in FPGA
     }
 
     ECHECK_NO_RET(rp_WaitDataRLE(timeoutMs))
@@ -719,6 +738,19 @@ auto CLAController::printRLENP(uint8_t* np_buffer, int size, bool useHex) -> voi
     }
 }
 
+auto CLAController::getAnnotationList(la_Decoder_t decoder) -> std::map<uint8_t,std::string>{
+    uint8_t count = m_pimpl->getAnnotationSize(decoder);
+    std::map<uint8_t,std::string> map;
+    for(uint8_t i = 0; i < count; i++){
+        map[i] = getAnnotation(decoder,i);
+    }
+    return map;
+}
+
+auto CLAController::getAnnotation(la_Decoder_t decoder, uint8_t control) -> std::string{
+    return m_pimpl->getAnnotation(decoder,control);
+}
+
 auto CLAController::getDefaultSettings(la_Decoder_t decoder) -> std::string{
     std::shared_ptr<Decoder> ptr = nullptr;
     switch (decoder)
@@ -778,10 +810,11 @@ auto CLAController::decodeNP(la_Decoder_t decoder, std::string json_settings, ui
     std::vector<rp_la::OutputPacket> new_vect;
     for(auto &itm:items){
         rp_la::OutputPacket pack;
+        pack.line_name = itm.line_name;
         pack.control = itm.control;
         pack.data = itm.data;
         pack.length = itm.length;
-        pack.annotation = m_pimpl->getAnnotation(decoder,itm.control);
+        //pack.annotation = m_pimpl->getAnnotation(decoder,itm.control);
         new_vect.push_back(pack);
     }
     return new_vect;

@@ -26,6 +26,11 @@ constexpr float DEF_MAX_SCALE = 5.f;
 
 auto getMAXFreq() -> uint32_t;
 
+auto getNameFromConfig(std::string &json) -> std::string;
+auto getParamFromConfig(std::string &json) -> std::string;
+auto getConfig(std::string &name, std::string &param_json) -> std::string;
+auto annoToJSON(std::map<uint8_t,std::string> map) -> std::string;
+
 #define DEBUG_SIGNAL_PERIOD 50
 #define DEBUG_PARAM_PERIOD  50
 #define BUFFER_MAX_SIZE 1024 * 1024 * 2

@@ -44,14 +44,15 @@ namespace uart {
 
 	enum UARTAnnotations
 	{
-		NO,
-		RX_DATA,
-		RX_START,
-		RX_PARITY_OK,
-		RX_PARITY_ERR,
-		RX_STOP,
-		RX_WARNING,
-		RX_DATA_BITS
+		NO				= 0,
+		RX_DATA 		= 1,
+		RX_START		= 2,
+		RX_PARITY_OK	= 3,
+		RX_PARITY_ERR	= 4,
+		RX_STOP			= 5,
+		RX_WARNING		= 6,
+		RX_DATA_BITS	= 7,
+		ENUM_END
 	};
 
 	class UARTParameters : public DecoderParameters
@@ -59,8 +60,9 @@ namespace uart {
 		public:
 
 			uint32_t 		m_rx; 		// 1..8
+			uint32_t 		m_tx; 		// 1..8
 			uint32_t 		m_baudrate;
-			uint32_t 		m_invert_rx;
+			uint32_t 		m_invert;
 			UartBitOrder 	m_bitOrder;
 			NumDataBits 	m_num_data_bits; // 5..9
 			Parity 			m_parity;

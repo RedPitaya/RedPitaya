@@ -25,6 +25,7 @@ class SPIDecoder::Impl{
 	int m_oldclk = 1;
 	uint32_t m_bitcount = 0;
 	uint32_t m_data = 0;
+	std::string m_line = "";
 	int m_oldcs = -1;
 	int m_oldpins = -1;
 	int m_have_cs = -1;
@@ -52,31 +53,39 @@ SPIDecoder::Impl::Impl(){
 SPIDecoder::SPIDecoder(int decoderType, const std::string& _name){
 	m_decoderType = decoderType;
 	m_name = _name;
-	m_impl = new Impl();
-	m_impl->resetDecoder();
+	m_impl_miso = new Impl();
+	m_impl_mosi = new Impl();
+	m_impl_miso->m_line = "miso";
+	m_impl_mosi->m_line = "mosi";
+	m_impl_miso->resetDecoder();
+	m_impl_mosi->resetDecoder();
 	setParameters(spi::SPIParameters());
 }
 
 SPIDecoder::~SPIDecoder(){
-	delete m_impl;
+	delete m_impl_miso;
+	delete m_impl_mosi;
 }
 
 auto SPIDecoder::reset() -> void{
-	m_impl->resetDecoder();
+	m_impl_miso->resetDecoder();
+	m_impl_mosi->resetDecoder();
 }
 
 auto SPIDecoder::getMemoryUsage() -> uint64_t{
 	uint64_t size = sizeof(Impl);
-	size += m_impl->m_result.size() * sizeof(OutputPacket);
+	size += m_impl_miso->m_result.size() * sizeof(OutputPacket);
+	size += m_impl_mosi->m_result.size() * sizeof(OutputPacket);
 	return size;
 }
 
 void SPIDecoder::setParameters(const SPIParameters& _new_params){
-	m_impl->m_options = _new_params;
+	m_impl_miso->m_options = _new_params;
+	m_impl_mosi->m_options = _new_params;
 }
 
 auto SPIDecoder::getParametersInJSON() -> std::string{
-	return m_impl->m_options.toJson();
+	return m_impl_miso->m_options.toJson();
 }
 
 auto SPIDecoder::setParametersInJSON(const std::string &parameter) -> void{
@@ -89,7 +98,10 @@ auto SPIDecoder::setParametersInJSON(const std::string &parameter) -> void{
 }
 
 std::vector<OutputPacket> SPIDecoder::getSignal(){
-	return m_impl->m_result;
+	auto vec = m_impl_miso->m_result;
+	auto vec2 = m_impl_mosi->m_result;
+	vec.insert(vec.end(), vec2.begin(), vec2.end());
+	return vec;
 }
 
 void SPIDecoder::Impl::resetDecoder(){
@@ -107,7 +119,8 @@ void SPIDecoder::Impl::resetDecoder(){
 }
 
 void SPIDecoder::decode(const uint8_t* _input, uint32_t _size){
-	m_impl->decode(_input,_size);
+	m_impl_miso->decode(_input,_size);
+	m_impl_mosi->decode(_input,_size);
 }
 
 void SPIDecoder::Impl::decode(const uint8_t* _input, uint32_t _size){
@@ -117,9 +130,10 @@ void SPIDecoder::Impl::decode(const uint8_t* _input, uint32_t _size){
 	if (_size & 0x1) FATAL("Input value is odd")
 	if (m_options.m_clk > 8) FATAL("clk line more than 8")
 	if (m_options.m_clk == 0) FATAL("clk line should not be equal to 0")
-	if (m_options.m_data > 8) FATAL("miso/mosi line more than 8")
-	if (m_options.m_data == 0) FATAL("miso/mosi line should not be equal to 0")
+	if (m_options.m_mosi > 8) FATAL("mosi line more than 8")
+	if (m_options.m_miso > 8) FATAL("miso line more than 8")
 	if (m_options.m_cs > 8) FATAL("incorrect cs")
+	if (m_options.m_cs == 0) FATAL("cs line should not be equal to 0")
 
 	if (m_options.m_cpol > 1) FATAL("incorrect cpol")
 	if (m_options.m_cpha > 1) FATAL("incorrect cpha")
@@ -129,9 +143,20 @@ void SPIDecoder::Impl::decode(const uint8_t* _input, uint32_t _size){
 	// Either MISO or MOSI can be omitted (but not both). CS# is optional.
 	m_have_cs = m_options.m_cs != 0;
 
+	uint8_t data_line = 0;
+	if (m_line == "miso"){
+		data_line = m_options.m_miso;
+	}
+
+	if (m_line == "mosi"){
+		data_line = m_options.m_mosi;
+	}
+
+	if (data_line == 0) return;
+
 	uint8_t clk_line = m_options.m_clk - 1;
-	uint8_t data_line = m_options.m_data - 1;
 	uint8_t cs_line = m_options.m_cs - 1;
+	data_line = data_line - 1;
 
 	for (size_t i = 0; i < _size; i += 2)
 	{
@@ -215,13 +240,13 @@ void SPIDecoder::Impl::handleBit(bool data, bool clk, bool cs)
 		nothing_count = 0;
 	while (nothing_count)
 	{
-		m_result.push_back({NOTHING, 0, nothing_count >= size16 ? size16 : (uint16_t)nothing_count});
+		m_result.push_back({m_line , NOTHING, 0, nothing_count >= size16 ? size16 : (uint16_t)nothing_count});
 		nothing_count -= std::min<uint32_t>(nothing_count, size16);
 	}
 	m_oldSamplenum = m_samplenum;
 
 	const uint16_t data_len = m_samplenum - m_startDataSamplenum;
-	m_result.push_back({DATA, (uint8_t)m_data, data_len});
+	m_result.push_back({m_line , DATA, (uint8_t)m_data, data_len});
 	m_state = FIND_DATA;
 
 	resetDecoderState();

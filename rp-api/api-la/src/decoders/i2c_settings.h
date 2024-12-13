@@ -16,6 +16,7 @@ namespace i2c {
 
 	enum I2CAnnotations
 	{
+		NOTHING			= 0,
 		START 			= 1,
 		REPEAT_START	= 2,
 		STOP			= 3,
@@ -25,7 +26,7 @@ namespace i2c {
 		WRITE_ADDRESS	= 7,
 		DATA_READ		= 8,
 		DATA_WRITE		= 9,
-		NOTHING			= 10
+		ENUM_END
 	};
 
 	class I2CParameters : public DecoderParameters

@@ -44,7 +44,7 @@ public:
 			node.push_back(JSONNode("control", res.control));
 			node.push_back(JSONNode("data", res.data));
 			node.push_back(JSONNode("length", res.length));
-			node.push_back(JSONNode("annotation", res.annotation));
+			node.push_back(JSONNode("line_name", res.line_name));
 
 			child.push_back(node);
 		}
@@ -118,7 +118,7 @@ public:
 			node.push_back(JSONNode("control", res.control));
 			node.push_back(JSONNode("data", res.data));
 			node.push_back(JSONNode("length", res.length));
-			node.push_back(JSONNode("annotation", res.annotation));
+			node.push_back(JSONNode("line_name", res.line_name));
 
 			child.push_back(node);
 		}
@@ -145,9 +145,9 @@ inline std::vector<OutputPacket> GetValueFromJSON<std::vector<OutputPacket> >(JS
 		uint8_t control = i->at("control").as_int();
 		uint32_t data = i->at("data").as_int();
 		uint32_t length = i->at("length").as_int();
-		std::string annotation = i->at("annotation").as_string();
+		std::string line_name = i->at("line_name").as_string();
 
-		res.push_back(OutputPacket{control, data, length, annotation});
+		res.push_back(OutputPacket{line_name , control, data, length});
 	}
 
 	return res;

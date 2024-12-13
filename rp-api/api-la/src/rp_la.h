@@ -24,11 +24,11 @@ namespace rp_la{
 
 struct OutputPacket
 {
+    std::string line_name;
     uint8_t control; // 0 when data, elsewise represents specific state
 					 // anyway control byte specifies meaning of the “data” byte
     uint32_t data;
 	uint32_t length; // RLE, how many counts takes this byte
-	std::string annotation;
 };
 
 typedef enum {
@@ -138,6 +138,8 @@ public:
 
     auto printRLE(bool useHex) -> void;
     auto printRLENP(uint8_t* np_buffer, int size, bool useHex) -> void;
+    auto getAnnotationList(la_Decoder_t decoder) -> std::map<uint8_t,std::string>;
+    auto getAnnotation(la_Decoder_t decoder, uint8_t control) -> std::string;
 
     auto decodeNP(la_Decoder_t decoder, std::string json_settings, uint8_t* np_buffer, int size) -> std::vector<rp_la::OutputPacket>;
 

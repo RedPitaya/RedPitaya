@@ -39,19 +39,16 @@
     <script src="../assets/browsercheck.js?1" onerror="location.reload()"></script>
     <script src="../assets/pako.js?1" onerror="location.reload()"></script>
     <script src="../assets/popupstack.js?1" onerror="location.reload()"></script>
-    <script src="../assets/help-system/help-system.js?1" onerror="location.reload()"></script>
     <script src="js/html2canvas.min.js?1" onerror="location.reload()"></script>
     <script src="js/baseConverter.js?3" onerror="location.reload()"></script>
     <script src="js/FileSaver.min.js?1" onerror="location.reload()"></script>
-    <script src="js/help-la.js?1" onerror="location.reload()"></script>
-    <!-- <script src="js/rp250.js?2" onerror="location.reload()"></script>
-    <script src="js/rpZ20.js?2" onerror="location.reload()"></script> -->
     <script src="js/common.js?3" onerror="location.reload()"></script>
     <script src="js/ui.js?3" onerror="location.reload()"></script>
     <script src="js/handlers.js?3" onerror="location.reload()"></script>
     <script src="js/cursors.js?3" onerror="location.reload()"></script>
     <script src="js/graph.js?3" onerror="location.reload()"></script>
     <script src="js/scope.decoder.js?3" onerror="location.reload()"></script>
+    <script src="js/decoders_settings.js?3" onerror="location.reload()"></script>
     <script src="js/scope.spi.js?3" onerror="location.reload()"></script>
     <script src="js/scope.i2c.js?3" onerror="location.reload()"></script>
     <script src="js/scope.can.js?3" onerror="location.reload()"></script>
@@ -77,27 +74,6 @@
         <div id="ext_con_but"><img src="../assets/images/ext_conections_w.png" style="padding-top: 0px;width: 36px;height: 20px;padding-left: 0px;margin-left: 2px;margin-top: 2px;"></div>
         <div id="connection_meter" title="It seems like your connection is ok"></div>
     </div>
-
-    <!-- <div class="modal fade" id="modal_module_disconnected" role="dialog" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h4 class="modal-title">Logic Analyser mode</h4>
-                </div>
-                <div class="modal-body" style="padding: 15px 0 15px 0px">
-                    <div class="modal-body">
-                        <div>
-                            <h5 style="text-align: center;">Select mode</h5>
-                        </div>
-                    </div>
-                    <div class="modal-footer" style="width: 100%;">
-                        <a href="/" style="border: 1px solid; width: 40%; float:left;" id="stem10_btn" data-dismiss="modal" class="list-group-item btn">Basic</a>
-                        <a href="/" style="border: 1px solid; width: 40%; float:right;" id="stem14_btn" data-dismiss="modal" class="list-group-item btn">Pro</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div> -->
 
     <div class="full-content">
         <div class="container-fluid">
@@ -312,7 +288,7 @@
                             <div id="bus_tab" class="decoder-tab" style="display:none">
                                 <div class="col-xs-12 option-content">
                                     <div class="col-xs-3 option-content no-lr-padding">
-                                        <div class="right-menu-option enable-ch" id="BUS1_ENABLED"><img style="display:none" src="img/check.png" /></div>
+                                        <div class="right-menu-option enable-ch-bus" id="BUS1_ENABLED"><img style="display:none" src="img/check.png" /></div>
                                     </div>
                                     <div class="col-xs-6 no-lr-padding">
                                         <div class="right-menu-option" id="BUS1_NAME">BUS0</div>
@@ -323,7 +299,7 @@
                                 </div>
                                 <div class="col-xs-12 option-content">
                                     <div class="col-xs-3 option-content no-lr-padding">
-                                        <div class="right-menu-option enable-ch" id="BUS2_ENABLED"><img style="display:none" src="img/check.png" /></div>
+                                        <div class="right-menu-option enable-ch-bus" id="BUS2_ENABLED"><img style="display:none" src="img/check.png" /></div>
                                     </div>
                                     <div class="col-xs-6 no-lr-padding">
                                         <div class="right-menu-option" id="BUS2_NAME">BUS1</div>
@@ -334,7 +310,7 @@
                                 </div>
                                 <div class="col-xs-12 option-content">
                                     <div class="col-xs-3 option-content no-lr-padding">
-                                        <div class="right-menu-option enable-ch" id="BUS3_ENABLED"><img style="display:none" src="img/check.png" /></div>
+                                        <div class="right-menu-option enable-ch-bus" id="BUS3_ENABLED"><img style="display:none" src="img/check.png" /></div>
                                     </div>
                                     <div class="col-xs-6 no-lr-padding">
                                         <div class="right-menu-option" id="BUS3_NAME">BUS2</div>
@@ -345,7 +321,7 @@
                                 </div>
                                 <div class="col-xs-12 option-content">
                                     <div class="col-xs-3 option-content no-lr-padding">
-                                        <div class="right-menu-option enable-ch" id="BUS4_ENABLED"><img style="display:none" src="img/check.png" /></div>
+                                        <div class="right-menu-option enable-ch-bus" id="BUS4_ENABLED"><img style="display:none" src="img/check.png" /></div>
                                     </div>
                                     <div class="col-xs-6 no-lr-padding">
                                         <div class="right-menu-option" id="BUS4_NAME">BUS3</div>
@@ -447,8 +423,6 @@
                                 <!-- DIN0 -->
                                 <div class="col-xs-4 option-content no-lr-padding">
                                     <div class="right-menu-option">
-                                        <!-- <select id="TRIGGER_CHANNEL" class="form-control styled-select no-lr-padding">
-                                        </select> -->
                                         DIN0
                                     </div>
                                 </div>
@@ -590,13 +564,6 @@
                                         </select>
                                     </div>
                                 </div>
-                                <!-- <div class="col-xs-12 option-content">
-                                    <button id="add_trigger" type="button" class="btn">ADD</button>
-                                </div>
-                                <div class="col-xs-12 option-content">
-                                    <span class="col-info">List (click to clear meas.)</span>
-                                    <div id="meas_list"></div>
-                                </div> -->
                             </div>
                         </div>
                         <div id="cursor_dialog" class="dialog row right-menu-cont">
@@ -641,22 +608,26 @@
                                 <div id="cur_x2_info" class="cur_info"></div>
                                 <div id="cur_x_diff"></div>
                                 <div id="cur_x_diff_info" class="cur_info"></div>
-                                <div id="ch8_offset_arrow" class="y-offset-arrow" index="8"><img class="ch_arrow" src="img/ch8-offset-arrow.png"><span class="ch_name" id="CH8_LABEL">DIN7</span><span id="ch8_tooltip" class="tooltips"></span><img id="img_info_arrow8" class="ch_info_arrow" src="img/ch8-offset-arrow2.png"
-                                        style="display: none;"><span id="ch8_info" class="ch_name ch_info"></span></div>
-                                <div id="ch7_offset_arrow" class="y-offset-arrow" index="7"><img class="ch_arrow" src="img/ch7-offset-arrow.png"><span class="ch_name" id="CH7_LABEL">DIN6</span><span id="ch7_tooltip" class="tooltips"></span><img id="img_info_arrow7" class="ch_info_arrow" src="img/ch7-offset-arrow2.png"
-                                        style="display: none;"><span id="ch7_info" class="ch_name ch_info"></span></div>
-                                <div id="ch6_offset_arrow" class="y-offset-arrow" index="6"><img class="ch_arrow" src="img/ch6-offset-arrow.png"><span class="ch_name" id="CH6_LABEL">DIN5</span><span id="ch6_tooltip" class="tooltips"></span><img id="img_info_arrow6" class="ch_info_arrow" src="img/ch6-offset-arrow2.png"
-                                        style="display: none;"><span id="ch6_info" class="ch_name ch_info"></span></div>
-                                <div id="ch5_offset_arrow" class="y-offset-arrow" index="5"><img class="ch_arrow" src="img/ch5-offset-arrow.png"><span class="ch_name" id="CH5_LABEL">DIN4</span><span id="ch5_tooltip" class="tooltips"></span><img id="img_info_arrow5" class="ch_info_arrow" src="img/ch5-offset-arrow2.png"
-                                        style="display: none;"><span id="ch5_info" class="ch_name ch_info"></span></div>
-                                <div id="ch4_offset_arrow" class="y-offset-arrow" index="4"><img class="ch_arrow" src="img/ch4-offset-arrow.png"><span class="ch_name" id="CH4_LABEL">DIN3</span><span id="ch4_tooltip" class="tooltips"></span><img id="img_info_arrow4" class="ch_info_arrow" src="img/ch4-offset-arrow2.png"
-                                        style="display: none;"><span id="ch4_info" class="ch_name ch_info"></span></div>
-                                <div id="ch3_offset_arrow" class="y-offset-arrow" index="3"><img class="ch_arrow" src="img/ch3-offset-arrow.png"><span class="ch_name" id="CH3_LABEL">DIN2</span><span id="ch3_tooltip" class="tooltips"></span><img id="img_info_arrow3" class="ch_info_arrow" src="img/ch3-offset-arrow2.png"
-                                        style="display: none;"><span id="ch3_info" class="ch_name ch_info"></span></div>
-                                <div id="ch2_offset_arrow" class="y-offset-arrow" index="2"><img class="ch_arrow" src="img/ch2-offset-arrow.png"><span class="ch_name" id="CH2_LABEL">DIN1</span><span id="ch2_tooltip" class="tooltips"></span><img id="img_info_arrow2" class="ch_info_arrow" src="img/ch2-offset-arrow2.png"
-                                        style="display: none;"><span id="ch2_info" class="ch_name ch_info"></span></div>
-                                <div id="ch1_offset_arrow" class="y-offset-arrow" index="1"><img class="ch_arrow" src="img/ch1-offset-arrow.png"><span class="ch_name" id="CH1_LABEL">DIN0</span><span id="ch1_tooltip" class="tooltips"></span><img id="img_info_arrow1" class="ch_info_arrow" src="img/ch1-offset-arrow2.png"
-                                        style="display: none;"><span id="ch1_info" class="ch_name ch_info"></span></div>
+                                <div id="ch8_offset_arrow" class="y-offset-arrow" index="8"><img class="ch_arrow" src="img/ch8-offset-arrow.png"><span class="ch_name" id="CH8_LABEL">DIN7</span><img id="img_info_arrow8" class="ch_info_arrow" src="img/ch8-offset-arrow2.png"
+                                        style="display: none;"><span id="ch8_info" class="ch_name ch_info" style="text-align: left;"></span></div>
+                                <div id="ch7_offset_arrow" class="y-offset-arrow" index="7"><img class="ch_arrow" src="img/ch7-offset-arrow.png"><span class="ch_name" id="CH7_LABEL">DIN6</span><img id="img_info_arrow7" class="ch_info_arrow" src="img/ch7-offset-arrow2.png"
+                                        style="display: none;"><span id="ch7_info" class="ch_name ch_info" style="text-align: left;"></span></div>
+                                <div id="ch6_offset_arrow" class="y-offset-arrow" index="6"><img class="ch_arrow" src="img/ch6-offset-arrow.png"><span class="ch_name" id="CH6_LABEL">DIN5</span><img id="img_info_arrow6" class="ch_info_arrow" src="img/ch6-offset-arrow2.png"
+                                        style="display: none;"><span id="ch6_info" class="ch_name ch_info" style="text-align: left;"></span></div>
+                                <div id="ch5_offset_arrow" class="y-offset-arrow" index="5"><img class="ch_arrow" src="img/ch5-offset-arrow.png"><span class="ch_name" id="CH5_LABEL">DIN4</span><img id="img_info_arrow5" class="ch_info_arrow" src="img/ch5-offset-arrow2.png"
+                                        style="display: none;"><span id="ch5_info" class="ch_name ch_info" style="text-align: left;"></span></div>
+                                <div id="ch4_offset_arrow" class="y-offset-arrow" index="4"><img class="ch_arrow" src="img/ch4-offset-arrow.png"><span class="ch_name" id="CH4_LABEL">DIN3</span><img id="img_info_arrow4" class="ch_info_arrow" src="img/ch4-offset-arrow2.png"
+                                        style="display: none;"><span id="ch4_info" class="ch_name ch_info" style="text-align: left;"></span></div>
+                                <div id="ch3_offset_arrow" class="y-offset-arrow" index="3"><img class="ch_arrow" src="img/ch3-offset-arrow.png"><span class="ch_name" id="CH3_LABEL">DIN2</span><img id="img_info_arrow3" class="ch_info_arrow" src="img/ch3-offset-arrow2.png"
+                                        style="display: none;"><span id="ch3_info" class="ch_name ch_info" style="text-align: left;"></span></div>
+                                <div id="ch2_offset_arrow" class="y-offset-arrow" index="2"><img class="ch_arrow" src="img/ch2-offset-arrow.png"><span class="ch_name" id="CH2_LABEL">DIN1</span><img id="img_info_arrow2" class="ch_info_arrow" src="img/ch2-offset-arrow2.png"
+                                        style="display: none;"><span id="ch2_info" class="ch_name ch_info" style="text-align: left;"></span></div>
+                                <div id="ch1_offset_arrow" class="y-offset-arrow" index="1">
+                                    <img class="ch_arrow" src="img/ch1-offset-arrow.png">
+                                    <span class="ch_name" id="CH1_LABEL">DIN0</span>
+                                    <img id="img_info_arrow1" class="ch_info_arrow" src="img/ch1-offset-arrow2.png" style="display: none;">
+                                    <span id="ch1_info" class="ch_name ch_info" style="text-align: left;"></span>
+                                </div>
                             </div>
                         </div>
                         <div id="info" class="clear">
@@ -729,6 +700,7 @@
                         <div class="protocol-label">Protocol:</div>
                         <div class="protocol-dropdown dropdown decoder-drop">
                             <select class="form-control" id="protocol_selector">
+                                <option value="#none_decoder">-</option>
                                 <option value="#i2c_decoder">I2C</option>
                                 <option value="#spi_decoder">SPI</option>
                                 <option value="#uart_decoder">UART</option>
@@ -885,18 +857,19 @@
                     </div>
                     <div style="display:none;" class="decoder-window" id="uart_decoder">
                         <div class="row">
-                            <div class="col-sm-3 padding-top-5">Serial</div>
-                            <div class="col-sm-2 decoder-drop">
+                            <div class="col-sm-3 padding-top-5">RX</div>
+                            <div class="col-sm-9 decoder-drop">
                                 <div class="dropdown decoder-option-dropdown ">
-                                    <select class="form-control" id="uart_rxtx">
-                                        <option value="RX">RX</option>
-                                        <option value="TX">TX</option>
+                                    <select class="form-control channels_selector" id="uart_rx">
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-sm-7 decoder-drop">
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-3 padding-top-5">TX</div>
+                            <div class="col-sm-9 decoder-drop">
                                 <div class="dropdown decoder-option-dropdown ">
-                                    <select class="form-control channels_selector" id="uart_serial">
+                                    <select class="form-control channels_selector" id="uart_tx">
                                     </select>
                                 </div>
                             </div>
@@ -942,11 +915,11 @@
                             <div class="col-sm-9 decoder-drop">
                                 <div class="dropdown decoder-option-dropdown ">
                                     <select class="form-control" id="uart_stop_bits">
-                                        <option value="-1">No stop bits</option>
-                                        <option value="0">0.5 stop bits</option>
-                                        <option value="1" selected>1 stop bit (standard)</option>
-                                        <option value="2">1.5 stop bits</option>
-                                        <option value="3">2 stop bits</option>
+                                        <option value="0">No stop bits</option>
+                                        <option value="1">0.5 stop bits</option>
+                                        <option value="2" selected>1 stop bit (standard)</option>
+                                        <option value="3">1.5 stop bits</option>
+                                        <option value="4">2 stop bits</option>
                                     </select>
                                 </div>
                             </div>
