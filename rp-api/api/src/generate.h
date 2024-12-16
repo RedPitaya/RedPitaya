@@ -52,7 +52,7 @@ typedef struct ch_properties {
     uint32_t counterStepLower; // 0x14
     uint32_t cyclesInOneBurst;
     uint32_t burstRepetitions;
-    uint32_t delayBetweenBurstRepetitions;
+    uint32_t delayBetweenBurstRepetitions; // 1 uS
 } ch_properties_t;
 
 

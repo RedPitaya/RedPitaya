@@ -69,6 +69,8 @@ rp_gen_gain_t ch_gain[2] = {RP_GAIN_1X,RP_GAIN_1X};
 
 float ch_arbitraryData[2][DAC_BUFFER_SIZE];
 uint64_t asg_axi_mem_reserved_index[4] = {0,0,0,0};
+uint32_t asg_axi_reserved_samples_count[4] = {0,0,0,0};
+
 
 int gen_SetDefaultValues() {
 
@@ -732,22 +734,44 @@ int gen_setBurstPeriod(rp_channel_t channel, uint32_t period) {
 
     CHECK_CHANNEL
 
+    bool axi_enable = false;
+    uint32_t axi_decimation = 0;
+    generate_axi_GetEnable(channel,&axi_enable);
+    generate_axi_GetDecimation(channel,&axi_decimation);
+
     rp_gen_mode_t mode = ch_mode[channel];
 
     if (period < BURST_PERIOD_MIN || period > BURST_PERIOD_MAX) {
         return RP_EOOR;
     }
+
+    if (axi_decimation == 0 && axi_enable){
+        ERROR_LOG("Decimation is not set for AXI mode")
+        return RP_EOOR;
+    }
+
+    if (asg_axi_reserved_samples_count[channel] == 0 && axi_enable){
+        ERROR_LOG("Memory size not set for AXI mode")
+        return RP_EOOR;
+    }
+
+    // For non-axi mode, the buffer length is taken as 1. Since the calculation is carried out through the frequency of the signal, which is generated in 1 time.
+    int samplesCount = axi_enable ? asg_axi_reserved_samples_count[channel] : 1;
+    double freq = axi_enable ? rp_HPGetBaseFastDACSpeedHzOrDefault() / axi_decimation : ch_frequency[channel];
+
     int burstCount = ch_burstCount[channel];
     int delay = 0;
-    double freq = ch_frequency[channel];
 
-    int sigLen = ((1.0 * MICRO) / freq ) * burstCount;
+
+    int sigLen = (((double)samplesCount) / freq ) * burstCount * MICRO;
     // period = signal_time * burst_count + delay_time
     if ((int)period - sigLen <= 0){
         period = sigLen + 1;
     }
 
     delay = period - sigLen;
+
+    TRACE("freq %f sigLen %d burstCount %d period %d delay %d" ,freq,sigLen,burstCount,period,delay)
 
     ch_burstPeriod[channel] = period;
 
@@ -1198,7 +1222,7 @@ int gen_axi_ReserveMemory(rp_channel_t channel, uint32_t start, uint32_t end){
     uint64_t index;
     ECHECK(axi_reserveMemory(start, end - start,&index))
     asg_axi_mem_reserved_index[channel] = index;
-
+    asg_axi_reserved_samples_count[channel] = size / 2;
     generate_axi_SetStartAddress(channel,start);
     generate_axi_SetEndAddress(channel,end - 8);
     return RP_OK;
