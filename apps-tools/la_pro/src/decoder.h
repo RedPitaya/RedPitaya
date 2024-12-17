@@ -89,6 +89,13 @@ public:
 	{
 		return m_Dirty;
 	}
+
+	bool ForceSend()
+	{
+		m_Dirty = true;
+		return true;
+	}
+
 protected:
 	bool m_Dirty;
 };

@@ -156,7 +156,7 @@ void SPIDecoder::Impl::decode(const uint8_t* _input, uint32_t _size){
 
 	uint8_t clk_line = m_options.m_clk - 1;
 	uint8_t cs_line = m_options.m_cs - 1;
-	data_line = data_line - 1;
+	data_line--;
 
 	for (size_t i = 0; i < _size; i += 2)
 	{

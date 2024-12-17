@@ -89,14 +89,14 @@ auto UARTParameters::fromJson(const std::string &json) -> bool{
 std::string UARTParameters::getUARTAnnotationsString(UARTAnnotations value){
 	switch (value)
 	{
-		case NO: return "";
-		case RX_DATA: return "Data";
-		case RX_START: return "Start";
-		case RX_PARITY_OK: return "Parity ok";
-		case RX_PARITY_ERR: return "Parity err";
-		case RX_STOP: return "Stop";
-		case RX_WARNING: return "Warning";
-		case RX_DATA_BITS: return "Data bits";
+		case DATA: return "Data";
+		case NOTHING: return "";
+		case START_BIT: return "Start bit";
+		case STOP_BIT: return "Stop ok";
+		case PARITY_ERR: return "Parity bit error";
+		case PARITY_BIT: return "Parity bit";
+		case STOP_BIT_ERR: return "Stop bit error";
+		case START_BIT_ERR: return "Start bit error";
 
 	default:
 		TRACE_SHORT("Unknown id = %d",(int)value)

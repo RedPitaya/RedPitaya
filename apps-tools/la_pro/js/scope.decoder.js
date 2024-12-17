@@ -6,10 +6,9 @@
     COMMON.hiddenDataArr = [];
     COMMON.oldResult = "";
     COMMON.savedResultArr = [];
+    COMMON.decoderAnno = {};
 
-    COMMON.drawHexagon = function(index, plot, canvascontext, series, begin, length, fillcolor, textVal) {
-        if (!OSC.enabled_channels[index])
-            return;
+    COMMON.drawHexagon = function(plot, canvascontext, series, begin, length, fillcolor, textVal) {
 
         if (length < 10)
             return;
@@ -48,21 +47,23 @@
         }
     }
 
-    COMMON.drawCircle = function(index, plot, canvascontext, series, begin, length, fillcolor, textVal) {
-        if (!OSC.enabled_channels[index])
+    COMMON.drawCircle = function(plot, canvascontext, offset, begin, length, fillcolor, textVal) {
+
+        var len_in_pix = LA.calculateSamplesToPixels(length)
+        if (len_in_pix < 16)
             return;
 
-        if (length < 0.125 / 4.0)
-            return;
-
-        if (begin > 1024) return;
+        // var scale = LA.calculateScale()
+        // var X = LA.calculateXBySamples(begin)
+        // if (LA.calculatePixelInbound(X,8) !== 0)
+        //     return;
 
         canvascontext.font = "15px Arial";
         canvascontext.textAlign = "center";
 
         var o = plot.pointOffset({
             x: begin,
-            y: series + OSC.voltage_steps[OSC.voltage_index] / 2
+            y: offset + 0.25
 
         });
         o.top -= 8;
@@ -76,9 +77,7 @@
         canvascontext.fillText(textVal, o.left + 5, o.top + 12);
     }
 
-    COMMON.drawTopCircle = function(index, plot, canvascontext, series, begin, length, fillcolor, textVal) {
-        if (!OSC.enabled_channels[index])
-            return;
+    COMMON.drawTopCircle = function(plot, canvascontext, series, begin, length, fillcolor, textVal) {
 
         if (length < 0.125 / 4.0)
             return;
@@ -90,7 +89,7 @@
 
         var o = plot.pointOffset({
             x: begin,
-            y: series + OSC.voltage_steps[OSC.voltage_index] / 2
+            y: series + 1
 
         });
         o.top += 8;
@@ -281,6 +280,22 @@
         $('.data_row').unbind('click');
         $('#log-container').empty();
         $('#hidden-log-container').empty();
+    }
+
+    COMMON.setAnnoSetUART = function(new_params){
+        COMMON.decoderAnno['UART'] = JSON.parse(new_params['DECODER_ANNOTATION_UART'].value)
+    }
+
+    COMMON.setAnnoSetCAN = function(new_params){
+        COMMON.decoderAnno['CAN'] = JSON.parse(new_params['DECODER_ANNOTATION_CAN'].value)
+    }
+
+    COMMON.setAnnoSetSPI = function(new_params){
+        COMMON.decoderAnno['SPI'] = JSON.parse(new_params['DECODER_ANNOTATION_SPI'].value)
+    }
+
+    COMMON.setAnnoSetI2C = function(new_params){
+        COMMON.decoderAnno['I2C'] = JSON.parse(new_params['DECODER_ANNOTATION_I2C'].value)
     }
 
 }(window.COMMON = window.COMMON || {}, jQuery));

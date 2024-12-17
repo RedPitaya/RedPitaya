@@ -44,15 +44,15 @@ namespace uart {
 
 	enum UARTAnnotations
 	{
-		NO				= 0,
-		RX_DATA 		= 1,
-		RX_START		= 2,
-		RX_PARITY_OK	= 3,
-		RX_PARITY_ERR	= 4,
-		RX_STOP			= 5,
-		RX_WARNING		= 6,
-		RX_DATA_BITS	= 7,
-		ENUM_END
+		DATA			= 1,
+		PARITY_ERR		= 2,
+		START_BIT_ERR	= 4,
+		STOP_BIT_ERR	= 8,
+		NOTHING			= 16,
+		START_BIT		= 32,
+		STOP_BIT		= 64,
+		PARITY_BIT		= 128,
+		ENUM_END		= 256
 	};
 
 	class UARTParameters : public DecoderParameters

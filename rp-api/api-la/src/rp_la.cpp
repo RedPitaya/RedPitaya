@@ -70,7 +70,7 @@ struct CLAController::Impl {
     auto resetAllDecoders() -> void;
     auto decode(const uint8_t* _input, uint32_t _size) -> void;
     auto getAnnotation(la_Decoder_t decoder,uint8_t control) -> std::string;
-    auto getAnnotationSize(la_Decoder_t decoder) -> uint8_t;
+    auto getAnnotationSize(la_Decoder_t decoder) -> uint16_t;
 
     bool m_isOpen = false;
     std::map<std::string, std::shared_ptr<Decoder>> m_decoders;
@@ -242,7 +242,7 @@ auto CLAController::Impl::getAnnotation(la_Decoder_t decoder,uint8_t control) ->
     return "";
 }
 
-auto CLAController::Impl::getAnnotationSize(la_Decoder_t decoder) -> uint8_t{
+auto CLAController::Impl::getAnnotationSize(la_Decoder_t decoder) -> uint16_t{
     switch (decoder)
     {
         case LA_DECODER_CAN:
@@ -741,8 +741,14 @@ auto CLAController::printRLENP(uint8_t* np_buffer, int size, bool useHex) -> voi
 auto CLAController::getAnnotationList(la_Decoder_t decoder) -> std::map<uint8_t,std::string>{
     uint8_t count = m_pimpl->getAnnotationSize(decoder);
     std::map<uint8_t,std::string> map;
-    for(uint8_t i = 0; i < count; i++){
-        map[i] = getAnnotation(decoder,i);
+    if (decoder != LA_DECODER_UART){
+        for(uint8_t i = 0; i < count; i++){
+            map[i] = getAnnotation(decoder,i);
+        }
+    } else if (decoder == LA_DECODER_UART){
+        for(uint16_t i = 1; i < count; i*=2){
+            map[i] = getAnnotation(decoder,i);
+        }
     }
     return map;
 }

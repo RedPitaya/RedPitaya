@@ -25,6 +25,7 @@
 
     LA.lastData = undefined;
     LA.lastDataRepacked = undefined;
+    LA.decodedData = {}
     LA.region_view_moving = false;
     LA.region_samples = {start:0 , end:0}
 
@@ -302,6 +303,7 @@
             axes.xaxis.options.max = max
             plot.setupGrid();
             plot.draw();
+            LA.drawAllSeries()
         }
     }
 
@@ -425,6 +427,109 @@
         OSC.state.resized = true;
         LA.scaleWasChanged = LA.changeXZoom(ev);
         OSC.guiHandler();
+    }
+
+    // channel - 1..8
+    LA.calculateOffset = function(channel){
+        if (LA.graphs === undefined) {
+            LA.initGraph()
+        }
+        var pos = CLIENT.getValue("LA_DIN_" + channel + "_POS")
+        if (pos !== undefined){
+            // var grid = $('#graph_grid');
+            // var volt_per_px = grid.height() / 9;
+            // var px_offset = grid.height() - (pos * volt_per_px);
+            // OSC.state.graph_grid_height = grid.height();
+            return pos
+        }
+        return -1
+    }
+
+    LA.calculateXBySamples = function(sample){
+        var min = LA.region_samples.start
+        var max = LA.region_samples.end
+        var grid = $('#graph_grid');
+        var sample_per_px = (max - min) / grid.width();
+        return (sample - min) / sample_per_px;
+    }
+
+    LA.calculateSamplesToPixels = function(samples){
+        var min = LA.region_samples.start
+        var max = LA.region_samples.end
+        var grid = $('#graph_grid');
+        var sample_per_px = (max - min) / grid.width();
+        if (sample_per_px == 0) return 0;
+        return samples / sample_per_px;
+    }
+
+    LA.calculateScale = function(){
+        var min = LA.region_samples.start
+        var max = LA.region_samples.end
+        var grid = $('#graph_grid');
+        if ((max - min) == 0) return 0;
+        return grid.width() / (max - min);
+    }
+
+    LA.calculatePixelInbound = function(point, size){
+        if (point !== undefined && point.x !== undefined){
+            var x = point.x
+            var grid = $('#graph_grid')
+            if ((x + size) < 0) return -1
+            if ((x + size)  >= 0 && (x - size) <= grid.width()) return 0
+            if ((x - size)  > grid.width()) return 1
+        }else{
+            console.error("Point not defined")
+        }
+        return 0
+    }
+
+    LA.drawSeries = function(idx, plot, canvascontext) {
+
+        var data = LA.decodedData[idx]
+
+        if (data.values !== undefined && data.name !== undefined){
+            for (var line in data.values) {
+                var offset = LA.calculateOffset(line)
+                if (offset == -1) continue;
+                if (data.name == 'CAN'){
+                    // CAN.drawDecoded(plot, canvascontext, offset, data.values[line]);
+                }else if (data.name == 'I2C'){
+                    // I2C.drawDecoded(plot, canvascontext, offset, data.values[line]);
+                }else if (data.name == 'SPI'){
+                    // SPI.drawDecoded(plot, canvascontext, offset, data.values[line], OSC.accordingChanName(ch + 1));
+                }else if (data.name == 'UART'){
+                    UART.drawDecoded(plot, canvascontext, offset, data.values[line]);
+                }
+            }
+        }
+
+        // if (signal in OSC.recv_signals) {
+        //     OSC.current_bus = OSC.getBusByChNum(ch + 1);
+        //     if (decoder.startsWith('can'))
+        //         CAN.drawDecoded(ch, plot, canvascontext, OSC.voltage_offset[ch], OSC.recv_signals[signal]);
+        //     else if (decoder.startsWith('i2c'))
+        //         I2C.drawDecoded(ch, plot, canvascontext, OSC.voltage_offset[ch], OSC.recv_signals[signal]);
+        //     else if (decoder.startsWith('spi'))
+        //         SPI.drawDecoded(ch, plot, canvascontext, OSC.voltage_offset[ch], OSC.recv_signals[signal], OSC.accordingChanName(ch + 1));
+        //     else if (decoder.startsWith('uart'))
+        //         UART.drawDecoded(ch, plot, canvascontext, OSC.voltage_offset[ch], OSC.recv_signals[signal], OSC.current_bus, OSC.accordingChanName(ch + 1));
+        // }
+        // OSC.current_bus = "bus-1";
+    }
+
+    LA.drawAllSeries = function(){
+        if (LA.graphs === undefined) {
+            LA.initGraph()
+        }
+        var plot = LA.getPlot()
+        if (plot !== undefined){
+            for(var ch = 1; ch <= 4; ch++){
+                var enable = CLIENT.getValue('DECODER_ENABLED_' + ch)
+                if (enable){
+                    LA.drawSeries(ch, plot, plot.getCanvas().getContext("2d"))
+                }
+            }
+        }
     }
 
 }(window.LA = window.LA || {}, jQuery));

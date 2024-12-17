@@ -11,7 +11,14 @@
     LA.buses.def = {}
     LA.state.bus_editing = 0
 
+
+    LA.getDecoderName = function(ch){
+        var bus = 'bus' + ch;
+        return LA.buses[bus] ? LA.buses[bus].name : ""
+    }
+
     LA.isChannelInUse = function(ch, ex_bus) {
+        if (ch == 0) return -1
         for (var i = 1; i < 5; i++) {
             if (ex_bus !== undefined && ex_bus == i)
                 continue;
@@ -46,6 +53,85 @@
         }else{
             arrow_info.text("");
             arrow_img.hide();
+        }
+    }
+
+    LA.repackDecodedData = function(data, idx){
+        var settings = LA.buses['bus'+idx]
+        if (settings !== undefined){
+            if (settings.name !== undefined){
+                if (settings.name == "UART"){
+                    var rx = settings.config.rx
+                    var tx = settings.config.tx
+                    var rx_data = []
+                    var tx_data = []
+                    for (let i = 0; i < data.value.length; i++) {
+                        var item = data.value[i];
+                        if (item.line_name === 'rx'){
+                            rx_data.push(item)
+                        }
+                        if (item.line_name === 'tx'){
+                            tx_data.push(item)
+                        }
+                    }
+                    var ret = {}
+                    if (rx !== 0)
+                        ret[rx] = rx_data
+                    if (tx !== 0)
+                        ret[tx] = tx_data
+                    return ret
+                }
+
+                if (settings.name == "CAN"){
+                    var rx = settings.config.rx
+                    var rx_data = []
+                    for (let i = 0; i < data.value.length; i++) {
+                        var item = data.value[i];
+                        if (item.line_name === 'rx'){
+                            rx_data.push(item)
+                        }
+                    }
+                    var ret = {}
+                    ret[rx] = rx_data
+                    return ret
+                }
+
+                if (settings.name == "I2C"){
+                    var sda = settings.config.sda
+                    var sda_data = []
+                    for (let i = 0; i < data.value.length; i++) {
+                        var item = data.value[i];
+                        if (item.line_name === 'sda'){
+                            sda_data.push(item)
+                        }
+                    }
+                    var ret = {}
+                    ret[sda] = sda_data
+                    return ret
+                }
+
+                if (settings.name == "SPI"){
+                    var miso = settings.config.miso
+                    var mosi = settings.config.mosi
+                    var miso_data = []
+                    var mosi_data = []
+                    for (let i = 0; i < data.value.length; i++) {
+                        var item = data.value[i];
+                        if (item.line_name === 'miso'){
+                            miso_data.push(item)
+                        }
+                        if (item.line_name === 'mosi'){
+                            mosi_data.push(item)
+                        }
+                    }
+                    var ret = {}
+                    if (miso !== 0)
+                        ret[miso] = miso_data
+                    if (mosi !== 0)
+                        ret[mosi] = mosi_data
+                    return ret
+                }
+            }
         }
     }
 

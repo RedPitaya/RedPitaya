@@ -68,6 +68,8 @@ CFloatParameter     cursorx_pos[2]  = INIT2("LA_CURSOR_X","_POS", CBaseParameter
 
 CIntParameter 		display_radix	("LA_DISPLAY_RADIX", CBaseParameter::RW, 1, 0, 1, 20, CONFIG_VAR);
 
+CDecodedSignal		decoder_signal[4] = INIT4("DECODER_SIGNAL_","", CBaseParameter::RO, 0, rp_la::OutputPacket());
+
 // CStringParameter 	createDecoder("CREATE_DECODER", CBaseParameter::RW, "", 1);
 // CStringParameter 	destroyDecoder("DESTROY_DECODER", CBaseParameter::RW, "", 1);
 // CStringParameter 	decoderName("DECODER_NAME", CBaseParameter::RW, "", 1);
@@ -210,6 +212,15 @@ void UpdateSignals(void) {
 		data_rle.Resize(size);
 		g_la_controller->getDataNP(data_rle.GetDataPtr()->data(),size);
 		data_rle.ForceSend();
+	}
+
+	if (g_needUpdateDecoders){
+		for(int i = 0 ;i < 4; i++){
+			auto vec = g_la_controller->getDecodedData(std::to_string(i));
+			decoder_signal[i].Value() = vec;
+			decoder_signal[i].ForceSend();
+		}
+		g_needUpdateDecoders = false;
 	}
 }
 
@@ -425,6 +436,7 @@ void updateFromFront(bool force){
 					TRACE("Send config back  %s",newConfig.c_str())
 					decoders[i].SendValue(newConfig);
 				}
+				needRedecode = true;
 			}
 		}
 

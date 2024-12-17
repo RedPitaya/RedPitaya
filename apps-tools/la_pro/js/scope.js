@@ -66,7 +66,6 @@
     // Voltage scale steps in minorgrid values
     OSC.voltage_steps = [0.2, 0.4, 0.8, 1.6];
     OSC.voltage_index = 2;
-    // OSC.voltage_offset = [4, 3, 2, 1, 0, -1, -2, -3];
     OSC.counts_offset = 0;
 
 
@@ -158,11 +157,25 @@
                     }
                 }
             }
-            LA.lastData = signals
-            LA.lastDataRepacked = OSC.repackSignals(LA.lastData)
+            CLIENT.client_log(signals)
+            if (signals['data_rle']){
+                LA.lastData = signals
+                LA.lastDataRepacked = OSC.repackSignals(LA.lastData)
+            }
+            var needRedraw = false
+            for(var ch = 1; ch <= 4; ch++){
+                if (signals['DECODER_SIGNAL_' + ch]){
+                    var name = LA.getDecoderName(ch)
+                    LA.decodedData[ch] = {name : name, values: LA.repackDecodedData(signals['DECODER_SIGNAL_' + ch],ch)}
+                    needRedraw = true
+                }
+            }
+
             CLIENT.signalStack.splice(0, 1);
             LA.setupDataToBufferGraph()
             LA.setupDataToGraph()
+            if (needRedraw)
+                LA.drawAllSeries()
         }
     }
 
@@ -196,353 +209,6 @@
     }, 1000);
 
 
-    // OSC.load_params = function() {
-    //     var pref = 'full_';
-
-    //     var obj;
-    //     obj = $.cookie(pref + 'la_voltage_index');
-    //     if (obj !== undefined)
-    //         OSC.voltage_index = JSON.parse(obj);
-    //     // obj = $.cookie(pref + 'la_counts_offset')
-    //     // if (obj !== undefined)
-    //     //     OSC.counts_offset = JSON.parse(obj);
-    //     // obj = $.cookie(pref + 'la_time_scale')
-    //     // if (obj !== undefined)
-    //     //     OSC.time_scale = JSON.parse(obj);
-    //     obj = $.cookie(pref + 'la_voltage_offset')
-    //     if (obj !== undefined)
-    //         OSC.voltage_offset = JSON.parse(obj);
-
-    //     obj = $.cookie(pref + 'la_enabled_channels');
-    //     if (obj !== undefined)
-    //         OSC.enabled_channels = JSON.parse(obj);
-    //     obj = $.cookie(pref + 'la_ch_names')
-    //     if (obj !== undefined)
-    //         OSC.ch_names = JSON.parse(obj);
-    //     obj = $.cookie(pref + 'la_bus');
-    //     if (obj !== undefined)
-    //         OSC.buses = JSON.parse(obj);
-
-    //     obj = $.cookie(pref + 'la_decoder_id');
-    //     if (obj !== undefined)
-    //         OSC.state.decoder_id = JSON.parse(obj);
-    //     obj = $.cookie(pref + 'la_radix');
-    //     if (obj !== undefined) {
-    //         OSC.state.radix = JSON.parse(obj);
-
-    //         $('#DISPLAY_RADIX option').removeAttr('selected');
-    //         $('#DISPLAY_RADIX option[value=' + OSC.state.radix + "]").attr('selected', 'selected');
-    //         $('#DISPLAY_RADIX').val(OSC.state.radix);
-    //     }
-    //     obj = $.cookie(pref + 'la_export_radix');
-    //     if (obj !== undefined) {
-    //         OSC.state.export_radix = JSON.parse(obj);
-    //         $('#EXPORT_RADIX option').removeAttr('selected');
-    //         $('#EXPORT_RADIX option[value=' + OSC.state.export_radix + "]").attr('selected', 'selected');
-    //         $('#EXPORT_RADIX').val(OSC.state.export_radix);
-    //     }
-
-    //     obj = $.cookie(pref + 'la_export_buses');
-    //     if (obj !== undefined)
-    //         OSC.log_buses = JSON.parse(obj);
-
-    //     obj = $.cookie(pref + 'la_acq_speed_value');
-    //     if (obj !== undefined) {
-    //         obj = (obj == 0) ? 1 : obj;
-    //         OSC.state.acq_speed = OSC.max_freq / obj;
-    //         OSC.state.decimate = obj;
-    //         $('#ACQ_SPEED').prop('selectedIndex', Math.log2(obj));
-
-    //         // Calculate time per division
-    //         var samplerate = OSC.state.acq_speed;
-    //         var samples = 1024;
-    //         var mul = 1000;
-    //         var scale = OSC.time_scale;
-    //         var dev_num = 10;
-    //         var timePerDevInMs = (((samples / scale) / samplerate) * mul) / dev_num;
-    //         $('#OSC_TIME_SCALE').text(OSC.convertTime(timePerDevInMs));
-    //         OSC.sendACQ();
-    //     }
-
-    //     obj = $.cookie(pref + 'triggers_list');
-    //     if (obj !== undefined) {
-    //         OSC.triggers_list = JSON.parse(obj);
-    //         for (var i = 0; i < OSC.triggers_list.length; i++) {
-    //             $('select[name="din' + i + '"]').val(OSC.triggers_list[i]);
-    //         }
-    //     }
-
-    //     OSC.sendTrigInfo();
-
-    //     for (var i = 0; i < OSC.enabled_channels.length; i++) {
-    //         var ch_val = 1;
-    //         obj = $.cookie(pref + 'la_osc_ch_val');
-    //         if (obj !== undefined)
-    //             ch_val = JSON.parse(obj);
-    //         if (OSC.enabled_channels[i]) {
-    //             $('#CH' + (i + 1) + '_ENABLED').find('img').show();
-    //             $('#CH' + (i + 1) + '_NAME').val(OSC.ch_names[i]);
-    //             $('#ch' + (i + 1) + '_offset_arrow').show();
-    //             OSC.updateChVisibility(i);
-    //         } else {
-    //             if (OSC.ch_names[i] != ("DIN" + i))
-    //                 $('#CH' + (i + 1) + '_NAME').val(OSC.ch_names[i]);
-    //             $('#ch' + (i + 1) + '_offset_arrow').hide();
-    //             $('#CH' + (i + 1) + '_ENABLED').find('img').hide();
-    //         }
-    //     }
-
-    //     for (var i = 1; i < 5; i++) {
-    //         var decoder_obj = {};
-    //         var bus = "bus" + i;
-
-    //         if (OSC.buses[bus].name !== undefined) {
-    //             if (OSC.buses[bus].enabled) {
-    //                 if (OSC.buses[bus].name == "UART" || OSC.buses[bus].name == "I2C" || OSC.buses[bus].name == "CAN") {
-    //                     decoder_obj['key'] = OSC.buses[bus].name.toLowerCase();
-    //                     decoder_obj['val'] = OSC.buses[bus].decoder;
-    //                     OSC.decoders_array.push(decoder_obj);
-    //                 } else {
-    //                     if (OSC.buses[bus].miso_decoder !== undefined && OSC.buses[bus].miso_decoder != "") {
-    //                         decoder_obj['key'] = OSC.buses[bus].name.toLowerCase();
-    //                         decoder_obj['val'] = OSC.buses[bus].miso_decoder;
-    //                         OSC.decoders_array.push(decoder_obj);
-    //                     }
-    //                     if (OSC.buses[bus].mosi_decoder !== undefined && OSC.buses[bus].mosi_decoder != "") {
-    //                         decoder_obj['key'] = OSC.buses[bus].name.toLowerCase();
-    //                         decoder_obj['val'] = OSC.buses[bus].mosi_decoder;
-    //                         OSC.decoders_array.push(decoder_obj);
-    //                     }
-    //                 }
-    //             }
-    //             $('#BUS' + i + '_NAME').text(OSC.buses[bus].name);
-    //             $('#DATA_BUS' + (i - 1)).text(OSC.buses[bus].name);
-    //             if (OSC.log_buses[i - 1])
-    //                 $('#DATA_BUS' + (i - 1)).addClass('active');
-    //         }
-    //     }
-
-    //     OSC.was_loaded = true;
-    //     OSC.guiHandler();
-
-    //     setInterval(function() {
-    //         if (OSC.loaded_ind >= OSC.decoders_array.length)
-    //             return;
-
-    //         var params = {};
-
-    //         params['CREATE_DECODER'] = {
-    //             value: OSC.decoders_array[OSC.loaded_ind]['key']
-    //         }
-    //         params['DECODER_NAME'] = {
-    //             value: OSC.decoders_array[OSC.loaded_ind]['val']
-    //         }
-
-    //         OSC.ws.send(JSON.stringify({
-    //             parameters: params
-    //         }));
-
-    //         $('#BUS' + (OSC.loaded_ind + 1) + '_ENABLED').find('img').show();
-
-    //         OSC.loaded_ind++;
-    //     }, 500);
-    //     OSC.updateChVisibility();
-    // }
-
-    // OSC.save_params = function() {
-    //     var pref = 'full_';
-    //     // if (OSC.params.orig['is_demo'].value)
-    //     //     pref = 'demo_';
-
-    //     var expiresDate = new Date(2220, 1, 1, 0, 0, 0, 0);
-
-    //     $.cookie(pref + 'la_voltage_index', JSON.stringify(OSC.voltage_index), { expires: expiresDate });
-    //     $.cookie(pref + 'la_counts_offset', JSON.stringify(OSC.counts_offset), { expires: expiresDate });
-    //     $.cookie(pref + 'la_time_scale', JSON.stringify(OSC.time_scale), { expires: expiresDate });
-    //     $.cookie(pref + 'la_voltage_offset', JSON.stringify(OSC.voltage_offset), { expires: expiresDate });
-
-    //     $.cookie(pref + 'la_enabled_channels', JSON.stringify(OSC.enabled_channels), { expires: expiresDate });
-    //     $.cookie(pref + 'la_ch_names', JSON.stringify(OSC.ch_names), { expires: expiresDate });
-    //     $.cookie(pref + 'la_bus', JSON.stringify(OSC.buses), { expires: expiresDate });
-
-    //     $.cookie(pref + 'la_decoder_id', JSON.stringify(OSC.state.decoder_id), { expires: expiresDate });
-    //     $.cookie(pref + 'la_radix', JSON.stringify(OSC.state.radix), { expires: expiresDate });
-    //     $.cookie(pref + 'la_export_radix', JSON.stringify(OSC.state.export_radix), { expires: expiresDate });
-
-    //     $.cookie(pref + 'la_acq_speed', JSON.stringify(OSC.state.acq_speed), { expires: expiresDate });
-    //     $.cookie(pref + 'la_export_buses', JSON.stringify(OSC.log_buses), { expires: expiresDate });
-
-    //     $.cookie(pref + 'la_acq_speed_value', OSC.state.decimate, { expires: expiresDate });
-
-
-    //     $.cookie(pref + 'triggers_list', JSON.stringify(OSC.triggers_list), { expires: expiresDate });
-    //     // $.cookie(pref + 'triggers_list_id', JSON.stringify(OSC.triggers_list_id), { expires: expiresDate });
-    //     // $.cookie(pref + 'triggers_list_action', JSON.stringify(OSC.triggers_list_action), { expires: expiresDate });
-    //     // $.cookie(pref + 'triggers_list_channel', JSON.stringify(OSC.triggers_list_channel), { expires: expiresDate });
-    //     // $.cookie(pref + 'triggers_count', JSON.stringify(OSC.triggers_count), { expires: expiresDate });
-    // }
-
-    // OSC.connectWebSocket = function() {
-    //     if (window.WebSocket) {
-    //         OSC.ws = new WebSocket(OSC.config.socket_url);
-    //         OSC.ws.binaryType = "arraybuffer";
-    //     } else if (window.MozWebSocket) {
-    //         OSC.ws = new MozWebSocket(OSC.config.socket_url);
-    //         OSC.ws.binaryType = "arraybuffer";
-    //     } else {
-    //         console.log('Browser does not support WebSocket');
-    //     }
-
-    //     // Define WebSocket event listeners
-    //     if (OSC.ws) {
-    //         OSC.ws.onopen = function() {
-    //             OSC.state.socket_opened = true;
-    //             console.log('Socket opened');
-
-    //             OSC.params.local['in_command'] = {
-    //                 value: 'send_all_params'
-    //             };
-    //             OSC.sendParams();
-
-    //             OSC.params.local['OSC_TIME_OFFSET'] = { value: 0 };
-    //             OSC.params.local['OSC_VIEV_PART'] = { value: 0 };
-    //             OSC.time_offset(OSC.params.local);
-    //             OSC.startTime = performance.now();
-    //             OSC.params.local = {};
-    //             var obj = $.cookie('measure_mode')
-    //             if (obj === undefined)
-    //                 obj = 1;
-    //             OSC.setMeasureMode(obj);
-    //             setTimeout(OSC.load_params, 1000);
-    //         };
-
-    //         OSC.ws.onclose = function() {
-
-    //             OSC.state.socket_opened = false;
-    //             $('#graphs .plot').hide(); // Hide all graphs
-    //             console.log('Socket closed');
-    //             setTimeout(RP_CLIENT.reloadPage, 2000);
-    //         };
-
-    //         $('#send_report_btn').on('click', function() {
-    //             var mail = "support@redpitaya.com";
-    //             var subject = "Feedback";
-    //             var body = "%0D%0A%0D%0A------------------------------------%0D%0A" + "DEBUG INFO, DO NOT EDIT!%0D%0A" + "------------------------------------%0D%0A%0D%0A";
-    //             body += "Parameters:" + "%0D%0A" + JSON.stringify({ parameters: OSC.params }) + "%0D%0A";
-    //             body += "Browser:" + "%0D%0A" + JSON.stringify({ parameters: $.browser }) + "%0D%0A";
-
-    //             var url = 'info/info.json';
-    //             $.ajax({
-    //                 method: "GET",
-    //                 url: url
-    //             }).done(function(msg) {
-    //                 console.log(msg.responseText);
-    //                 body += " info.json: " + "%0D%0A" + msg.responseText;
-    //                 document.location.href = "mailto:" + mail + "?subject=" + subject + "&body=" + body;
-    //             }).fail(function(msg) {
-    //                 console.log(msg.responseText);
-    //                 body += " info.json: " + "%0D%0A" + msg.responseText;
-    //                 document.location.href = "mailto:" + mail + "?subject=" + subject + "&body=" + body;
-    //             });
-    //         });
-
-    //         $('#restart_app_btn').on('click', function() {
-    //             location.reload();
-    //         });
-
-    //         OSC.ws.onerror = function(ev) {
-    //             console.log('Websocket error: ', ev);
-    //             setTimeout(RP_CLIENT.reloadPage, 2000);
-    //         };
-
-    //         var last_time = undefined;
-    //         OSC.ws.onmessage = function(ev) {
-    //             var start_time = +new Date();
-    //             var data = new Uint8Array(ev.data);
-    //             OSC.compressed_data += data.length;
-
-    //             var inflate = new Zlib.Gunzip(data);
-    //             var decompressed = inflate.decompress();
-    //             var arr = new Uint16Array(decompressed)
-    //             var text = OSC.convertUnpacked(arr);
-    //             OSC.decompressed_data += text.length;
-
-    //             var receive = JSON.parse(text);
-
-    //             if (receive.parameters) {
-    //                 if ((Object.keys(OSC.params.orig).length == 0) && (Object.keys(receive.parameters).length == 0)) {
-    //                     OSC.params.local['in_command'] = {
-    //                         value: 'send_all_params'
-    //                     };
-    //                     OSC.sendParams();
-    //                 } else {
-    //                     // if ('LA_MODE' in receive.parameters && receive.parameters['LA_MODE'].value != undefined) {
-    //                     //     OSC.laMode = receive.parameters['LA_MODE'].value;
-    //                     //     if (OSC.laMode == 3) {
-    //                     //         if (!$.cookie('measure_mode'))
-    //                     //             $('#modal_module_disconnected').modal('show');
-    //                     //         else {
-    //                     //             OSC.setMeasureMode(+$.cookie('measure_mode'));
-    //                     //         }
-    //                     //         $('#select_mode').parent().show();
-    //                     //     }
-    //                     // }
-
-    //                     if ('MEASURE_MODE' in receive.parameters && receive.parameters['MEASURE_MODE'].value != undefined) {
-    //                         OSC.measureMode = receive.parameters['MEASURE_MODE'].value;
-    //                         OSC.updateMeasureMode(OSC.measureMode);
-    //                     }
-
-    //                     if ('CPU_LOAD' in receive.parameters && receive.parameters['CPU_LOAD'].value != undefined)
-    //                         g_CpuLoad = receive.parameters['CPU_LOAD'].value;
-
-    //                     if ('TOTAL_RAM' in receive.parameters && receive.parameters['TOTAL_RAM'].value != undefined)
-    //                         g_TotalMemory = receive.parameters['TOTAL_RAM'].value;
-
-    //                     if ('FREE_RAM' in receive.parameters && receive.parameters['FREE_RAM'].value != undefined)
-    //                         g_FreeMemory = receive.parameters['FREE_RAM'].value;
-    //                     OSC.parameterStack.push(receive.parameters);
-    //                 }
-    //             }
-
-    //             if (receive.signals) {
-    //                 ++g_count;
-    //                 var changed = false;
-    //                 for (var k in receive.signals) {
-    //                     changed = true;
-    //                     OSC.latest_signal[k] = JSON.parse(JSON.stringify(receive.signals[k]));
-    //                 }
-    //                 if ('ch1' in receive.signals) {
-    //                     var split = OSC.repackSignals(OSC.latest_signal);
-    //                     for (var k in split) {
-    //                         OSC.latest_signal[k] = JSON.parse(JSON.stringify(split[k]));
-    //                     }
-    //                 }
-    //                 if (changed) {
-
-    //                     setTimeout(function() {
-    //                         OSC.scaleWasChanged = true;
-    //                         OSC.guiHandler();
-    //                         OSC.checkAndShowArrows();
-    //                     }, 50);
-
-    //                 }
-
-    //                 OSC.signalStack.push(OSC.latest_signal);
-    //                 OSC.ch1_size = 0;
-    //                 for (var i = 0; i < OSC.latest_signal['ch1'].size; i += 2) {
-    //                     OSC.ch1_size += OSC.latest_signal['ch1'].value[i] + 1;
-    //                 }
-    //             }
-
-    //         };
-    //     }
-    // };
-
-
-
-
-
     OSC.getBusByDecoderName = function(decoder_name) {
         for (var i = 1; i < 5; i++) {
             var bus_name = "bus" + i;
@@ -572,27 +238,7 @@
         console.log(param);
     }
 
-    OSC.drawSeries = function(ch, plot, canvascontext) {
-        if (ch == -1)
-            return;
-        var decoder = OSC.getDecoderByChannelNum(ch + 1);
-        if (decoder == "")
-            return;
-        var signal = decoder + "_signal";
 
-        if (signal in OSC.recv_signals) {
-            OSC.current_bus = OSC.getBusByChNum(ch + 1);
-            if (decoder.startsWith('can'))
-                CAN.drawDecoded(ch, plot, canvascontext, OSC.voltage_offset[ch], OSC.recv_signals[signal]);
-            else if (decoder.startsWith('i2c'))
-                I2C.drawDecoded(ch, plot, canvascontext, OSC.voltage_offset[ch], OSC.recv_signals[signal]);
-            else if (decoder.startsWith('spi'))
-                SPI.drawDecoded(ch, plot, canvascontext, OSC.voltage_offset[ch], OSC.recv_signals[signal], OSC.accordingChanName(ch + 1));
-            else if (decoder.startsWith('uart'))
-                UART.drawDecoded(ch, plot, canvascontext, OSC.voltage_offset[ch], OSC.recv_signals[signal], OSC.current_bus, OSC.accordingChanName(ch + 1));
-        }
-        OSC.current_bus = "bus-1";
-    }
 
     OSC.processParameters = function(new_params) {
 
@@ -890,6 +536,7 @@
     OSC.param_callbacks["LA_VIEW_PORT_POS"] = OSC.setViewPortPos;
 
     OSC.param_callbacks["LA_PRE_TRIGGER_BUFFER_MS"] = OSC.setPresample;
+    OSC.param_callbacks["LA_POST_TRIGGER_BUFFER_MS"] = OSC.setPostsample;
     OSC.param_callbacks["CONTROL_CONFIG_SETTINGS"] = OSC.setControlConfig;
     OSC.param_callbacks["LIST_FILE_SATTINGS"] = OSC.listSettings;
 
@@ -951,6 +598,11 @@
     OSC.param_callbacks["DECODER_DEF_CAN"] =  LA.setDefSetCAN;
     OSC.param_callbacks["DECODER_DEF_SPI"] =  LA.setDefSetSPI;
     OSC.param_callbacks["DECODER_DEF_I2C"] =  LA.setDefSetI2C;
+
+    OSC.param_callbacks["DECODER_ANNOTATION_UART"] = COMMON.setAnnoSetUART;
+    OSC.param_callbacks["DECODER_ANNOTATION_CAN"] =  COMMON.setAnnoSetCAN;
+    OSC.param_callbacks["DECODER_ANNOTATION_SPI"] =  COMMON.setAnnoSetSPI;
+    OSC.param_callbacks["DECODER_ANNOTATION_I2C"] =  COMMON.setAnnoSetI2C;
 
     OSC.param_callbacks["LA_CURSOR_X1"] = LA.cursorX;
     OSC.param_callbacks["LA_CURSOR_X2"] = LA.cursorX;
@@ -1547,143 +1199,6 @@ $(function() {
     //     }
     // });
 
-    // var resetAllParams = function() {
-    //     time_zoom('1', 0, false);
-    //     // Reset trigger position to center
-    //     OSC.params.local['OSC_TIME_OFFSET'] = { value: 0 };
-    //     OSC.params.local['OSC_VIEV_PART'] = { value: 0 };
-    //     OSC.time_offset(OSC.params.local);
-    //     OSC.params.local = {};
-
-    //     // Disable cursors
-    //     OSC.disableCursor('x1');
-    //     OSC.disableCursor('x2');
-
-    //     // Remove triggers
-    //     $('.trig-item').remove();
-    //     for (var i = 0; i < OSC.triggers_list_id.length; i++)
-    //         delete_trigger(i);
-
-    //     for (var i = 0; i < 8; i++) {
-    //         // Reset channels names
-    //         var txt = "DIN" + i;
-    //         $('#CH' + (i + 1) + '_NAME').val(txt);
-
-    //         if (OSC.enabled_channels[i])
-    //             OSC.updateChVisibility(i);
-    //     }
-
-    //     // Disable all enabled channels
-    //     // for (var i = 0; i < 8; i++) {
-    //     //     $('#ch' + (i + 1) + "_offset_arrow").hide();
-    //     //     OSC.enabled_channels[i] = false;
-    //     //     $('#CH' + (i + 1) + "_ENABLED").find('img').hide();
-    //     // }
-
-    //     // Disable all enabled decoders
-    //     for (var i = 0; i < 4; i++) {
-    //         if (OSC.buses["bus" + (i + 1)].enabled !== undefined) {
-    //             OSC.destroyDecoder("bus" + (i + 1), "-");
-    //             OSC.buses["bus" + (i + 1)].enabled = false;
-
-    //             $("#BUS" + (i + 1) + "_ENABLED").find('img').hide();
-    //             $("#BUS" + (i + 1) + "_NAME").text("BUS" + i);
-    //         }
-    //     }
-
-    //     var arr = ["DATA_BUS0", "DATA_BUS1", "DATA_BUS2", "DATA_BUS3"];
-
-    //     for (var i = 0; i < 4; i++) {
-    //         $('#' + arr[i]).removeClass('active');
-    //         $('#' + arr[i]).text('BUS' + i);
-    //     }
-
-    //     // Reset SPI setting in dialog
-    //     $('#spi_order').val("1");
-    //     $('#spi_length').val("8");
-    //     $('#spi_cpol').val("0");
-    //     $('#spi_cpha').val("0");
-    //     $('#spi_state').val("0");
-    //     $('#spi_invert').val("0");
-    //     $('#spi_decoder').hide();
-
-    //     // Reset UART setting in dialog
-    //     $('#uart_baudrate').val("9600");
-    //     $('#uart_rxtx').val("RX");
-    //     $('#uart_data_length').val("8");
-    //     $('#uart_stop_bits').val("1");
-    //     $('#uart_parity').val("0");
-    //     $('#uart_invert').val("0");
-    //     $('#uart_decoder').hide();
-
-    //     // Reset CAN setting in dialog
-    //     $('#can_rx').val("0");
-    //     $('#can_nom_bitrate').val("500000");
-    //     $('#can_fast_bitrate').val("1000000");
-    //     $('#sample_point').val("87.5");
-    //     $('#can_frame_limit').val("50");
-    //     $('#can_invert').val("0");
-    //     $('#can_decoder').hide();
-
-    //     // Reset I2C setting in dialog
-    //     $('#i2c_addr').val("0");
-    //     $('#i2c_invert').val("0");
-    //     $('#i2c_decoder').show();
-
-    //     // Reset protocol selector
-    //     $('#protocol_selector').val("#i2c_decoder");
-
-    //     OSC.voltage_index = 2;
-    //     OSC.counts_offset = 0;
-    //     OSC.ch_names = ["DIN0", "DIN1", "DIN2", "DIN3", "DIN4", "DIN5", "DIN6", "DIN7"];
-    //     OSC.state = {
-    //         socket_opened: false,
-    //         processing: false,
-    //         editing: false,
-    //         trig_dragging: false,
-    //         cursor_dragging: false,
-    //         resized: false,
-    //         sel_sig_name: 'ch1',
-    //         fine: false,
-    //         graph_grid_height: null,
-    //         graph_grid_width: null,
-    //         calib: 0,
-    //         bus_editing: 0,
-    //         decoder_id: 1,
-    //         radix: 17,
-    //         export_radix: 16,
-    //         acq_speed: OSC.max_freq,
-    //         line_moving: false
-    //     };
-    //     OSC.enabled_channels = [true, true, true, true, true, true, true, true];
-    //     OSC.buses = {};
-    //     OSC.buses.bus1 = {};
-    //     OSC.buses.bus2 = {};
-    //     OSC.buses.bus3 = {};
-    //     OSC.buses.bus4 = {};
-    //     OSC.bad_connection = [false, false, false, false]; // time in s.
-    //     OSC.log_buses = [false, false, false, false];
-    //     OSC.voltage_offset = [4, 3, 2, 1, 0, -1, -2, -3];
-    //     OSC.sample_rate();
-    //     OSC.state.decimate = 1;
-    //     OSC.state.acq_speed = OSC.max_freq;
-    //     OSC.scaleWasChanged = true;
-    //     $('#pre-sample-buf-val').val(1);
-    //     setTimeout(function() { $('#pre-sample-buf-val').change(); }, 100);
-    //     OSC.guiHandler();
-    // }
-
-
-
-
-
-    // var applyPreSampleBufVal = function(val) {
-    //     OSC.params.local['PRE_SAMPLE_BUFFER'] = {
-    //         value: val
-    //     };
-
-    //     OSC.sendParams();
-    // }
 
     // $("#ext_con_but").click(function(event) {
     //     $('#ext_connections_dialog').modal("show");

@@ -78,7 +78,7 @@ UARTDecoder::UARTDecoder(int decoderType, const std::string& _name){
 	m_impl_rx = new Impl();
 	m_impl_tx = new Impl();
     m_impl_rx->m_line = "rx";
-    m_impl_rx->m_line = "tx";
+    m_impl_tx->m_line = "tx";
 	m_impl_rx->resetDecoder();
 	m_impl_tx->resetDecoder();
     setParameters(uart::UARTParameters());
@@ -173,13 +173,14 @@ void UARTDecoder::Impl::decode(const uint8_t* _input, uint32_t _size)
     uint8_t rx_line = 0;
 
     if (m_line == "rx")
-        rx_line = m_options.m_rx - 1;
+        rx_line = m_options.m_rx;
 
     if (m_line == "tx")
-        rx_line = m_options.m_tx - 1;
+        rx_line = m_options.m_tx;
 
     if (rx_line == 0) return;
 
+    rx_line--;
     for (uint32_t i = 0; i < _size; i += 2)
     {
         // Read count and data for decode RLE
@@ -239,22 +240,16 @@ void UARTDecoder::Impl::waitForStartBit(bool bit, uint32_t sampleNum)
         // Write silence length to output if need.
         m_silenceLength += 1;
 
-        if(m_silenceLength == 0x7FFFFFFF)
-        {
-            uint8_t controlByteInOutput = NO;
-            controlByteInOutput = (1 << 4);
-            m_result.push_back({m_line ,controlByteInOutput, 0, m_silenceLength});
+        if(m_silenceLength == 0x7FFFFFFF){
+            m_result.push_back({m_line ,NOTHING, 0, m_silenceLength});
             m_silenceLength = 0;
         }
 
         return;
     }
 
-    if(m_silenceLength != 0)
-    {
-        uint8_t controlByteInOutput = NO;
-        controlByteInOutput = (1 << 4);
-        m_result.push_back({m_line ,controlByteInOutput, 0, m_silenceLength});
+    if(m_silenceLength != 0){
+        m_result.push_back({m_line ,NOTHING, 0, m_silenceLength});
         m_silenceLength = 0;
     }
 
@@ -374,7 +369,7 @@ void UARTDecoder::Impl::getStopBits(bool bit, uint32_t sampleNum)
     uint8_t skip_parity = (m_options.m_parity == NONE) ? 0 : 1;
     uint8_t bitNum = m_options.m_num_data_bits + 1 + skip_parity;
     uint8_t controlByteInOutput = 0;
-    uint8_t controlDataWriting = 0;
+    uint8_t controlDataWriting = DATA;
     uint16_t length = 0;
 
     // Get 0.5 Stop Bit
@@ -397,8 +392,8 @@ void UARTDecoder::Impl::getStopBits(bool bit, uint32_t sampleNum)
         m_frameStop = sampleNum;
 
         // After STOP bits receiving we save data.
-        if(m_options.m_num_data_bits == DATA_BITS_9)
-            controlDataWriting = ((m_dataByte >> 8) & 0x01) | 0x80;  // 0x80 means that 9 bit data received
+        // if(m_options.m_num_data_bits == DATA_BITS_9)
+        //     controlDataWriting = ((m_dataByte >> 8) & 0x01) | 0x80;  // 0x80 means that 9 bit data received
         length = m_options.m_num_data_bits * (uint16_t)m_bitWidth; // TODO: Data writing need to rewrite
         m_result.push_back({m_line,controlDataWriting, (uint8_t)m_dataByte, length});
 
@@ -434,8 +429,8 @@ void UARTDecoder::Impl::getStopBits(bool bit, uint32_t sampleNum)
         m_frameStop = sampleNum;
 
         // After STOP bits receiving we save data.
-        if(m_options.m_num_data_bits == DATA_BITS_9)
-            controlDataWriting = ((m_dataByte >> 8) & 0x01) | 0x80;  // 0x80 means that 9 bit data received
+        // if(m_options.m_num_data_bits == DATA_BITS_9)
+        //     controlDataWriting = ((m_dataByte >> 8) & 0x01) | 0x80;  // 0x80 means that 9 bit data received
         length = m_options.m_num_data_bits * (uint16_t)m_bitWidth; // TODO: Data writing need to rewrite
         m_result.push_back({m_line,controlDataWriting, (uint8_t)m_dataByte, length});
 
@@ -473,8 +468,8 @@ void UARTDecoder::Impl::getStopBits(bool bit, uint32_t sampleNum)
                 m_frameStop = sampleNum;
 
                 // After STOP bits receiving we save data.
-                if(m_options.m_num_data_bits == DATA_BITS_9)
-                    controlDataWriting = ((m_dataByte >> 8) & 0x01) | 0x80;  // 0x80 means that 9 bit data received
+                // if(m_options.m_num_data_bits == DATA_BITS_9)
+                //     controlDataWriting = ((m_dataByte >> 8) & 0x01) | 0x80;  // 0x80 means that 9 bit data received
                 length = m_options.m_num_data_bits * (uint16_t)m_bitWidth; // TODO: Data writing need to rewrite
                 m_result.push_back({m_line,controlDataWriting, (uint8_t)m_dataByte, length});
 
@@ -509,8 +504,8 @@ void UARTDecoder::Impl::getStopBits(bool bit, uint32_t sampleNum)
             m_frameStop = sampleNum;
 
             // After STOP bits receiving we save data.
-            if(m_options.m_num_data_bits == DATA_BITS_9)
-                controlDataWriting = ((m_dataByte >> 8) & 0x01) | 0x80;  // 0x80 means that 9 bit data received
+            // if(m_options.m_num_data_bits == DATA_BITS_9)
+            //     controlDataWriting = ((m_dataByte >> 8) & 0x01) | 0x80;  // 0x80 means that 9 bit data received
             length = m_options.m_num_data_bits * (uint16_t)m_bitWidth; // TODO: Data writing need to rewrite
             m_result.push_back({m_line,controlDataWriting, (uint8_t)m_dataByte, length});
 
@@ -547,8 +542,8 @@ void UARTDecoder::Impl::getStopBits(bool bit, uint32_t sampleNum)
                 m_frameStop = sampleNum;
 
                 // After STOP bits receiving we save data.
-                if(m_options.m_num_data_bits == DATA_BITS_9)
-                    controlDataWriting = ((m_dataByte >> 8) & 0x01) | 0x80;  // 0x80 means that 9 bit data received
+                // if(m_options.m_num_data_bits == DATA_BITS_9)
+                //     controlDataWriting = ((m_dataByte >> 8) & 0x01) | 0x80;  // 0x80 means that 9 bit data received
                 length = m_options.m_num_data_bits * (uint16_t)m_bitWidth; // TODO: Data writing need to rewrite
                 m_result.push_back({m_line,controlDataWriting, (uint8_t)m_dataByte, length});
 
@@ -582,8 +577,8 @@ void UARTDecoder::Impl::getStopBits(bool bit, uint32_t sampleNum)
             m_frameStop = sampleNum;
 
             // After STOP bits receiving we save data.
-            if(m_options.m_num_data_bits == DATA_BITS_9)
-                controlDataWriting = ((m_dataByte >> 8) & 0x01) | 0x80;  // 0x80 means that 9 bit data received
+            // if(m_options.m_num_data_bits == DATA_BITS_9)
+            //     controlDataWriting = ((m_dataByte >> 8) & 0x01) | 0x80;  // 0x80 means that 9 bit data received
             length = m_options.m_num_data_bits * (uint16_t)m_bitWidth; // TODO: Data writing need to rewrite
             m_result.push_back({m_line,controlDataWriting, (uint8_t)m_dataByte, length});
 
@@ -607,8 +602,8 @@ void UARTDecoder::Impl::getStopBits(bool bit, uint32_t sampleNum)
         m_frameStop = sampleNum;
 
         // Save data.
-        if(m_options.m_num_data_bits == DATA_BITS_9)
-            controlDataWriting = ((m_dataByte >> 8) & 0x01) | 0x80;  // 0x80 means that 9 bit data received
+        // if(m_options.m_num_data_bits == DATA_BITS_9)
+        //     controlDataWriting = ((m_dataByte >> 8) & 0x01) | 0x80;  // 0x80 means that 9 bit data received
         length = m_options.m_num_data_bits * (uint16_t)m_bitWidth; // TODO: Data writing need to rewrite
         m_result.push_back({m_line,controlDataWriting, (uint8_t)m_dataByte, length});
 
