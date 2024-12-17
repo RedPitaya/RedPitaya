@@ -122,50 +122,6 @@ auto getDACDevider() -> double{
     return 2;
 }
 
-auto getModelName() -> std::string{
-    auto model = getModel();
-    switch (model)
-    {
-        case STEM_125_10_v1_0:
-        case STEM_125_14_v1_0:
-        case STEM_125_14_v1_1:
-        case STEM_125_14_LN_v1_1:
-        case STEM_125_14_LN_BO_v1_1:
-        case STEM_125_14_LN_CE1_v1_1:
-        case STEM_125_14_LN_CE2_v1_1:
-        case STEM_125_14_v2_0:
-        case STEM_125_14_Pro_v2_0:
-            return "Z10";
-        case STEM_125_14_Z7020_v1_0:
-        case STEM_125_14_Z7020_LN_v1_1:
-        case STEM_125_14_Z7020_Pro_v1_0:
-        case STEM_125_14_Z7020_Pro_v2_0:
-        case STEM_125_14_Z7020_Ind_v2_0:
-            return "Z20_125";
-        case STEM_122_16SDR_v1_0:
-        case STEM_122_16SDR_v1_1:
-            return "Z20";
-        case STEM_125_14_Z7020_4IN_v1_0:
-        case STEM_125_14_Z7020_4IN_v1_2:
-        case STEM_125_14_Z7020_4IN_v1_3:
-            return "Z20_125_4CH";
-        case STEM_250_12_v1_0:
-        case STEM_250_12_v1_1:
-        case STEM_250_12_v1_2:
-        case STEM_250_12_v1_2a:
-        case STEM_250_12_v1_2b:
-            return "Z20_250_12";
-        case STEM_250_12_120:
-            return "Z20_250_12_120";
-        default:{
-            ERROR_LOG("Unknown model: %d.",model);
-            return "";
-        }
-    }
-    return "";
-}
-
-
 auto convertToVoltSigned(uint32_t cnts, uint8_t bits, float fullScale, uint32_t gain, uint32_t base, int32_t offset) -> float {
     int32_t calib_cnts = calibCntsSigned(cnts, bits, gain, base, offset);
     float ret_val = ((float)calib_cnts * fullScale / (float)(1 << (bits - 1)));

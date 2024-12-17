@@ -55,41 +55,7 @@ auto getADCRate() -> uint32_t{
 }
 
 auto isZModePresent() -> bool{
-    auto model = getModel();
-    switch (model)
-    {
-        case STEM_125_10_v1_0:
-        case STEM_125_14_v1_0:
-        case STEM_125_14_v1_1:
-        case STEM_125_14_LN_v1_1:
-        case STEM_125_14_LN_BO_v1_1:
-        case STEM_125_14_LN_CE1_v1_1:
-        case STEM_125_14_LN_CE2_v1_1:
-        case STEM_125_14_Z7020_v1_0:
-        case STEM_125_14_Z7020_LN_v1_1:
-        case STEM_122_16SDR_v1_0:
-        case STEM_122_16SDR_v1_1:
-        case STEM_125_14_Z7020_4IN_v1_0:
-        case STEM_125_14_Z7020_4IN_v1_2:
-        case STEM_125_14_Z7020_4IN_v1_3:
-            return false;
-        case STEM_125_14_v2_0:
-        case STEM_125_14_Pro_v2_0:
-        case STEM_125_14_Z7020_Pro_v1_0:
-        case STEM_125_14_Z7020_Pro_v2_0:
-        case STEM_125_14_Z7020_Ind_v2_0:
-        case STEM_250_12_v1_0:
-        case STEM_250_12_v1_1:
-        case STEM_250_12_v1_2:
-        case STEM_250_12_v1_2a:
-        case STEM_250_12_v1_2b:
-        case STEM_250_12_120:
-            return true;
-        default:{
-            ERROR_LOG("Unknown model: %d.",model);
-            return false;
-        }
-    }
+    return rp_HPGetIsDAC50OhmModeOrDefault();
 }
 
 auto outAmpDef() -> float{
@@ -110,6 +76,8 @@ auto outAmpDef() -> float{
         case STEM_125_14_Z7020_Pro_v1_0:
         case STEM_125_14_Z7020_Pro_v2_0:
         case STEM_125_14_Z7020_Ind_v2_0:
+        case STEM_125_14_Z7020_LL_v1_1:
+        case STEM_65_16_Z7020_LL_v1_1:
             return 0.9;
         case STEM_122_16SDR_v1_0:
         case STEM_122_16SDR_v1_1:
@@ -151,6 +119,8 @@ auto outAmpMax() -> float{
         case STEM_125_14_Z7020_Pro_v1_0:
         case STEM_125_14_Z7020_Pro_v2_0:
         case STEM_125_14_Z7020_Ind_v2_0:
+        case STEM_125_14_Z7020_LL_v1_1:
+        case STEM_65_16_Z7020_LL_v1_1:
             return 2;
         case STEM_122_16SDR_v1_0:
         case STEM_122_16SDR_v1_1:
@@ -194,6 +164,7 @@ auto getModelName() -> std::string{
         case STEM_125_14_Z7020_Pro_v1_0:
         case STEM_125_14_Z7020_Pro_v2_0:
         case STEM_125_14_Z7020_Ind_v2_0:
+        case STEM_125_14_Z7020_LL_v1_1:
             return "Z20_125";
         case STEM_122_16SDR_v1_0:
         case STEM_122_16SDR_v1_1:
@@ -210,6 +181,8 @@ auto getModelName() -> std::string{
             return "Z20_250_12";
         case STEM_250_12_120:
             return "Z20_250_12_120";
+        case STEM_65_16_Z7020_LL_v1_1:
+            return "Z20_65";
         default:{
             ERROR_LOG("Unknown model: %d.",model);
             return "";

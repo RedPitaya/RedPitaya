@@ -26,6 +26,14 @@ then
     /opt/redpitaya/bin/rp_power_on -C
     fi
 
+    if [ "$MODEL" = "z20_125_ll" ]; then
+    /opt/redpitaya/bin/rp_power_on -C1
+    fi
+
+    if [ "$MODEL" = "z20_65_ll" ]; then
+    /opt/redpitaya/bin/rp_power_on -C2
+    fi
+
     PROD_MODE=$(cat /root/production_start_mode.conf 2> /dev/null)
 
     if [ "$PROD_MODE" = "gen1" ]; then

@@ -63,7 +63,10 @@
                 STEM_125_14_Pro_v2_0        = 21,
                 STEM_125_14_Z7020_Pro_v2_0  = 22,
                 STEM_125_14_Z7020_Ind_v2_0  = 23,
-                STEM_125_14_Z7020_Pro_v1_0  = 24
+                STEM_125_14_Z7020_Pro_v1_0  = 24,
+
+                STEM_125_14_Z7020_LL_v1_1   = 25,
+                STEM_65_16_Z7020_LL_v1_1    = 26
             }  rp_HPeModels_t;
         */
         if (model == 0){
@@ -141,6 +144,13 @@
         if (model == 24){
             return "STEM 14-Z20"
         }
+        if (model == 25){
+            return "STEM 14-Z20-LL"
+        }
+        if (model == 26){
+            return "STEM 16-Z20-LL"
+        }
+
         console.log("[FATAL ERROR] Unknown model: " + model)
         return ""
     }
@@ -452,6 +462,8 @@
                         if (modelUp.startsWith('STEM_125-14_Z7020_PRO_V1.0')) model = 'STEMlab 125-14-Z7020 Pro v1.0';
                         if (modelUp.startsWith('STEM_125-14_Z7020_PRO_V2.0')) model = 'STEMlab 125-14-Z7020 Pro v2.0';
                         if (modelUp.startsWith('STEM_125-14_IND_V2.0')) model = 'STEMlab 125-14 Ind v2.0';
+                        if (modelUp.startsWith('STEM_125-14_Z7020_LL_v1.1')) model = 'STEMlab 125-14 LL v1.1';
+                        if (modelUp.startsWith('STEM_65-16_LL_v1.1')) model = 'STEMlab 65-16 LL v1.1';
 
                         if (modelUp.includes('SLAVE')) model += " / Streaming Slave";
                         $('#SI_B_MODEL').text(model);

@@ -141,6 +141,8 @@ rp_calib_params_t convertUniversaltoCommon(rp_HPeModels_t model,rp_calib_params_
         case STEM_125_14_Z7020_Pro_v1_0:
         case STEM_125_14_Z7020_Pro_v2_0:
         case STEM_125_14_Z7020_Ind_v2_0:
+        case STEM_125_14_Z7020_LL_v1_1:
+        case STEM_65_16_Z7020_LL_v1_1:
         {
             calib.fast_adc_count_1_1 = 2;
             calib.fast_adc_count_1_20 = 2;
@@ -410,6 +412,8 @@ bool convertUniversal(rp_HPeModels_t model,rp_calib_params_t *param,rp_calib_par
         case STEM_125_14_Z7020_Pro_v1_0:
         case STEM_125_14_Z7020_Pro_v2_0:
         case STEM_125_14_Z7020_Ind_v2_0:
+        case STEM_125_14_Z7020_LL_v1_1:
+        case STEM_65_16_Z7020_LL_v1_1:
         {
             if (param->fast_adc_count_1_1 != 2){
                 return false;
@@ -726,6 +730,9 @@ rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model, bool setFilterZero){
     case STEM_125_14_Z7020_Pro_v1_0:
     case STEM_125_14_Z7020_Pro_v2_0:
     case STEM_125_14_Z7020_Ind_v2_0:
+
+    case STEM_125_14_Z7020_LL_v1_1:
+    case STEM_65_16_Z7020_LL_v1_1:
 
         calib.fast_adc_count_1_1 = 2;
         calib.fast_adc_count_1_20 = 2;

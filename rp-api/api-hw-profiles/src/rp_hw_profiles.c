@@ -25,6 +25,8 @@
 #include "stem_125_14_Z7020_Pro_v1.0.h"
 #include "stem_125_14_Z7020_Pro_v2.0.h"
 #include "stem_125_14_Z7020_Ind_v2.0.h"
+#include "stem_125_14_Z7020_LL_v1.1.h"
+#include "stem_65_16_Z7020_LL_v1.1.h"
 
 profiles_t* getProfile(int *state){
     profiles_t *p = hp_cmn_GetLoadedProfile();
@@ -87,6 +89,8 @@ int rp_HPPrintAll(){
     hp_cmn_Print(getProfile_STEM_125_14_Z7020_Pro_v1_0());
     hp_cmn_Print(getProfile_STEM_125_14_Z7020_Pro_v2_0());
     hp_cmn_Print(getProfile_STEM_125_14_Z7020_Ind_v2_0());
+    hp_cmn_Print(getProfile_STEM_125_14_Z7020_LL_v1_1());
+    hp_cmn_Print(getProfile_STEM_65_16_Z7020_LL_v1_1());
     return RP_HP_OK;
 }
 
@@ -953,6 +957,12 @@ int rp_HPGetFPGAVersion(char **_no_free_value){
             break;
         case STEM_125_14_Z7020_Ind_v2_0:
             *_no_free_value = "z20_125_v2";
+            break;
+        case STEM_125_14_Z7020_LL_v1_1:
+            *_no_free_value = "z20_125_ll";
+            break;
+        case STEM_65_16_Z7020_LL_v1_1:
+            *_no_free_value = "z20_65_ll";
             break;
         default:
             *_no_free_value = "";

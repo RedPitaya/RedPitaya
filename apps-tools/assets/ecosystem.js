@@ -300,6 +300,18 @@
                 stem_ver = "STEMlab 125-14-Z7020 Ind v2.0"
                 break;
             }
+            case 24:{
+                stem_ver = "STEMlab 125-14-Z7020 Pro v1.0"
+                break;
+            }
+            case 25:{
+                stem_ver = "STEMlab 125-14-Z7020 LL v1.1"
+                break;
+            }
+            case 26:{
+                stem_ver = "STEMlab 65-16-Z7020 LL v1.1"
+                break;
+            }
             default:
                 stem_ver = "unknown"
         }

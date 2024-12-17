@@ -150,7 +150,6 @@ auto getDACRate() -> uint32_t;
 auto getADCRate() -> uint32_t;
 auto getModel() -> rp_HPeModels_t;
 auto getDACDevider() -> double;
-auto getModelName() -> std::string;
 
 auto convertToVoltSigned(uint32_t cnts, uint8_t bits, float fullScale, uint32_t gain, uint32_t base, int32_t offset) -> float;
 auto calibCntsSigned(uint32_t cnts, uint8_t bits, uint32_t gain, uint32_t base, int32_t offset) -> int32_t;

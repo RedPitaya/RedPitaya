@@ -1,0 +1,25 @@
+<!--
+    The "write" attribute is used to pass the value on the i2c bus. May take the following values:
+        - value
+        - default
+        - none
+-->
+<configuration>
+    <bus_name>/dev/mem</bus_name>
+    <fpga_base address="0x40000000"/>
+    <device_on_bus address="0x60"/> <!-- offset in register of fpga (0x40000060) -->
+    <reg_set>
+        <register address="0x00" value="0x80" write="none"   default="0x00" decription="SPI Control"/>
+        <register address="0x02" value="0x00" write="none"   default="0x00" decription="Data control"/>
+        <register address="0x03" value="0x00" write="none"   default="0x00" decription="Power Down"/>
+        <register address="0x0A" value="0x00" write="none"   default="0x00" decription="DAC Model Select"/>
+        <register address="0x0B" value="0xF9" write="none"   default="0xF9" decription="DAC1 Gain LSB"/>
+        <register address="0x0C" value="0x01" write="none"   default="0x01" decription="DAC1 Gain MSB"/>
+        <register address="0x0D" value="0x00" write="none"   default="0x00" decription="AUX DAC1 LSB"/>
+        <register address="0x0E" value="0x00" write="none"   default="0x00" decription="AUX DAC1 MSB"/>
+        <register address="0x0F" value="0xF9" write="none"   default="0xF9" decription="DAC2 Gain LSB"/>
+        <register address="0x10" value="0x01" write="none"   default="0x01" decription="DAC2 Gain MSB"/>
+        <register address="0x11" value="0x00" write="none"   default="0x00" decription="AUX DAC2 LSB"/>
+        <register address="0x12" value="0x00" write="none"   default="0x00" decription="AUX DAC2 MSB"/>
+    </reg_set>
+</configuration>

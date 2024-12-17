@@ -75,7 +75,10 @@ typedef enum {
     STEM_125_14_Pro_v2_0        = 21,
     STEM_125_14_Z7020_Pro_v2_0  = 22,
     STEM_125_14_Z7020_Ind_v2_0  = 23,
-    STEM_125_14_Z7020_Pro_v1_0  = 24     // Prototype
+    STEM_125_14_Z7020_Pro_v1_0  = 24,     // Prototype
+
+    STEM_125_14_Z7020_LL_v1_1   = 25,
+    STEM_65_16_Z7020_LL_v1_1    = 26
 }  rp_HPeModels_t;
 
 /**

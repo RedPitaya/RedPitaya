@@ -11,7 +11,6 @@ typedef enum {
     RP_125_14_4CH
 } models_t;
 
-models_t getModel();
 uint8_t getChannels();
 bool getIsExtTrigLevel();
 bool getIsSplitTriggers();
