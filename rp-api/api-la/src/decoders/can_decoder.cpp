@@ -231,7 +231,7 @@ void CANDecoder::Impl::decode(const uint8_t* _input, uint32_t _size)
 				}else{
 					uint32_t c = (uint32_t)count + 1 - j;
 					j = count + 1;
-					pushAndPack(m_tempResult,{"rx", NOTHING, can_rx, c});
+					pushAndPack(m_tempResult,{"rx", NOTHING, can_rx, c, 0});
 					if (m_bitwidth * 8 < m_samplenum  && disableSynOnStart) {
 						m_syncMode = false;
 						disableSynOnStart = false;
@@ -254,7 +254,7 @@ void CANDecoder::Impl::decode(const uint8_t* _input, uint32_t _size)
 						m_syncBits = m_syncBits << 1;
 						m_syncBits |= can_rx ? 0x1 : 0;
 						m_curBit++;
-						pushAndPack(m_tempResult,{"rx", SYNC, can_rx, 1});
+						pushAndPack(m_tempResult,{"rx", SYNC, can_rx, 1, 0});
 						if ((m_syncBits & 0x7F) == 0x7F){
 							m_state = IDLE;
 							m_syncMode = false;
@@ -275,7 +275,7 @@ void CANDecoder::Impl::decode(const uint8_t* _input, uint32_t _size)
 						}
 					}
 				}else{
-					pushAndPack(m_tempResult,{"rx", NOTHING, can_rx, 1});
+					pushAndPack(m_tempResult,{"rx", NOTHING, can_rx, 1, 0});
 				}
 
 				if (m_sampleSkip > 0){
@@ -397,19 +397,19 @@ bool CANDecoder::Impl::handleBit(const bool _can_rx){
 	// If this is a stuff bit, remove it from self.bits and ignore it.
 
 	if (isStuffBit()){
-		pushAndPack(m_tempResult,{"rx", STUFF_BIT, _can_rx, 1});
+		pushAndPack(m_tempResult,{"rx", STUFF_BIT, _can_rx, 1, 1});
 		m_curBit ++; // Increase curbit (bitnum is not affected).
 		return false;
 	}else{
-		pushAndPack(m_tempResult,{"rx", BIT, _can_rx, 1}); // Put bit
+		pushAndPack(m_tempResult,{"rx", BIT, _can_rx, 1, 1}); // Put bit
 	}
 
 
  	// Bit 0: Start of frame (SOF) bit
     if (bitnum == 0) {
-		pushAndPack(m_tempResult,{"rx", START_OF_FRAME, _can_rx, 1});
+		pushAndPack(m_tempResult,{"rx", START_OF_FRAME, _can_rx, 1, 1});
         if (_can_rx != 0){
-			pushAndPack(m_tempResult,{"rx", ERROR_1, _can_rx, 1});
+			pushAndPack(m_tempResult,{"rx", ERROR_1, _can_rx, 1, 0});
 		}
 	}
 
@@ -423,9 +423,9 @@ bool CANDecoder::Impl::handleBit(const bool _can_rx){
     if (bitnum == 11) {
 		std::vector<bool> id_bits(m_bits.begin() + 1, m_bits.end());
 		m_id = convert(id_bits);
-		pushAndPack(m_tempResult,{"rx", ID, _can_rx, 1});
+		pushAndPack(m_tempResult,{"rx", ID, _can_rx, 1, 1});
 		if ((m_id & 0x7f0) == 0x7f0){
-			pushAndPack(m_tempResult,{"rx", WARNING_1, _can_rx, 1});
+			pushAndPack(m_tempResult,{"rx", WARNING_1, _can_rx, 1, 0});
 		}
 	}
 
@@ -440,7 +440,7 @@ bool CANDecoder::Impl::handleBit(const bool _can_rx){
 	{
 		m_frameType = Standart;
 		if (_can_rx == 1) m_frameType = Extended;
-		pushAndPack(m_tempResult,{"rx", IDE, _can_rx, 1});
+		pushAndPack(m_tempResult,{"rx", IDE, _can_rx, 1, 1});
 	}
 
 	if (bitnum >= 14){
@@ -464,10 +464,10 @@ bool CANDecoder::Impl::decodeStandardFrame(const bool _can_rx, uint32_t bitnum){
 		m_isFlexibleData = false;
 		if (_can_rx) m_isFlexibleData = true;
 		if (m_isFlexibleData){
-			pushAndPack(m_tempResult,{"rx", RESERV_BIT_FLEX, _can_rx, 1});
-			pushAndPack(m_tempResult,{"rx", RESERV_BIT, _can_rx, 1});
+			pushAndPack(m_tempResult,{"rx", RESERV_BIT_FLEX, _can_rx, 1, 1});
+			pushAndPack(m_tempResult,{"rx", RESERV_BIT, _can_rx, 1, 1});
 		}else{
-			pushAndPack(m_tempResult,{"rx", RESERV_BIT, _can_rx, 1});
+			pushAndPack(m_tempResult,{"rx", RESERV_BIT, _can_rx, 1, 1});
 		}
 		if (m_isFlexibleData){
 			//  Bit 12: Substitute remote request (SRR) bit
@@ -477,22 +477,22 @@ bool CANDecoder::Impl::decodeStandardFrame(const bool _can_rx, uint32_t bitnum){
          	//  Bit 12: Remote transmission request (RTR) bit
             //  Data frame: dominant, remote frame: recessive
             //  Remote frames do not contain a data field.
-			pushAndPack(m_tempResult,{"rx", RTR, m_bits[12], 1});
+			pushAndPack(m_tempResult,{"rx", RTR, m_bits[12], 1, 1});
 			m_dlcStart = 15;
 		}
 	}
 
 	if (bitnum == 15 && m_isFlexibleData){
-		pushAndPack(m_tempResult,{"rx", RESERV_BIT, _can_rx, 1});
+		pushAndPack(m_tempResult,{"rx", RESERV_BIT, _can_rx, 1, 1});
 	}
 
 
 	if (bitnum == 16 && m_isFlexibleData){
-		pushAndPack(m_tempResult,{"rx", BRS, _can_rx, 1});
+		pushAndPack(m_tempResult,{"rx", BRS, _can_rx, 1, 1});
 	}
 
     if (bitnum == 17 && m_isFlexibleData){
-		pushAndPack(m_tempResult,{"rx", ESI, _can_rx, 1});
+		pushAndPack(m_tempResult,{"rx", ESI, _can_rx, 1, 1});
  	}
 
 	// Remember start of DLC (see below).
@@ -504,10 +504,10 @@ bool CANDecoder::Impl::decodeStandardFrame(const bool _can_rx, uint32_t bitnum){
     if (bitnum == m_dlcStart + 3){
 		std::vector<bool> dlc_bits(m_bits.begin() + m_dlcStart, m_bits.begin() + m_dlcStart + 4);
 		m_dataLenghtCode = convert(dlc_bits);
-		pushAndPack(m_tempResult,{"rx", DLC, m_dataLenghtCode, 1});
+		pushAndPack(m_tempResult,{"rx", DLC, m_dataLenghtCode, 1, 1});
 		m_lastDatabit = m_dlcStart + 3 + dlc2Len(m_dataLenghtCode) * 8;
 		if (m_dataLenghtCode > 8 && !m_isFlexibleData){
-			pushAndPack(m_tempResult,{"rx", ERROR_2, m_dataLenghtCode, 1});
+			pushAndPack(m_tempResult,{"rx", ERROR_2, m_dataLenghtCode, 1, 0});
 		}
 	}
 
@@ -517,7 +517,7 @@ bool CANDecoder::Impl::decodeStandardFrame(const bool _can_rx, uint32_t bitnum){
 		if (m_dataBits.size() == 8){
 			std::vector<bool> data_bits(m_bits.end() - 8, m_bits.end());
 			uint32_t value = convert(data_bits);
-			pushAndPack(m_tempResult,{"rx", PAYLOAD_DATA, value, 1});
+			pushAndPack(m_tempResult,{"rx", PAYLOAD_DATA, value, 1, 8});
 		}
 	}
 
@@ -540,11 +540,11 @@ bool CANDecoder::Impl::decodeExtendedFrame(const bool _can_rx,uint32_t bitnum){
     if (bitnum == 31){
 		std::vector<bool> id_bits(m_bits.begin() + 14, m_bits.end());
 		uint32_t eid = convert(id_bits);
-		pushAndPack(m_tempResult,{"rx", EXT_ID, eid, 1});
+		pushAndPack(m_tempResult,{"rx", EXT_ID, eid, 1, 0});
 		uint32_t fullid = m_id << 18 | eid;
-		pushAndPack(m_tempResult,{"rx", FULL_ID, fullid, 1});
+		pushAndPack(m_tempResult,{"rx", FULL_ID, fullid, 1, 0});
 		// Bit 12: Substitute remote request (SRR) bit
-		pushAndPack(m_tempResult,{"rx", SRR, m_bits[12], 1});
+		pushAndPack(m_tempResult,{"rx", SRR, m_bits[12], 1, 0});
 	}
 
 	// Bit 32: Remote transmission request (RTR) bit
@@ -556,7 +556,7 @@ bool CANDecoder::Impl::decodeExtendedFrame(const bool _can_rx,uint32_t bitnum){
 		m_ssBit12 = m_samplenum;
 		m_rtr = _can_rx;
 		if (!m_isFlexibleData){
-			pushAndPack(m_tempResult,{"rx", RTR, _can_rx, 1});
+			pushAndPack(m_tempResult,{"rx", RTR, _can_rx, 1, 0});
 		}
 	}
 
@@ -567,25 +567,25 @@ bool CANDecoder::Impl::decodeExtendedFrame(const bool _can_rx,uint32_t bitnum){
 		if (_can_rx) m_isFlexibleData = true;
 		if (m_isFlexibleData) {
 			m_dlcStart = 37;
-			pushAndPack(m_tempResult,{"rx", RESERV_BIT_FLEX, _can_rx, 1});
-			pushAndPack(m_tempResult,{"rx", RESERV_BIT, _can_rx, 1});
+			pushAndPack(m_tempResult,{"rx", RESERV_BIT_FLEX, _can_rx, 1, 1});
+			pushAndPack(m_tempResult,{"rx", RESERV_BIT, _can_rx, 1, 1});
 		}else{
-			pushAndPack(m_tempResult,{"rx", RESERV_BIT, _can_rx, 1});
+			pushAndPack(m_tempResult,{"rx", RESERV_BIT, _can_rx, 1, 1});
 		}
 	}
 
 
 	// Bit 34: RB0 (reserved bit)
     if (bitnum == 34){
-		pushAndPack(m_tempResult,{"rx", RESERV_BIT, _can_rx, 1});
+		pushAndPack(m_tempResult,{"rx", RESERV_BIT, _can_rx, 1, 1});
 	}
 
 	if (bitnum == 35 && m_isFlexibleData){
-		pushAndPack(m_tempResult,{"rx", BRS, _can_rx, 1});
+		pushAndPack(m_tempResult,{"rx", BRS, _can_rx, 1, 1});
 	}
 
     if (bitnum == 36 && m_isFlexibleData){
-		pushAndPack(m_tempResult,{"rx", ESI, _can_rx, 1});
+		pushAndPack(m_tempResult,{"rx", ESI, _can_rx, 1, 1});
  	}
 
 	// Remember start of DLC (see below).
@@ -597,10 +597,10 @@ bool CANDecoder::Impl::decodeExtendedFrame(const bool _can_rx,uint32_t bitnum){
 	 if (bitnum == m_dlcStart + 3){
 		std::vector<bool> dlc_bits(m_bits.begin() + m_dlcStart, m_bits.begin() + m_dlcStart + 4);
 		m_dataLenghtCode = convert(dlc_bits);
-		pushAndPack(m_tempResult,{"rx", DLC, m_dataLenghtCode, 1});
+		pushAndPack(m_tempResult,{"rx", DLC, m_dataLenghtCode, 1, 1});
 		m_lastDatabit = m_dlcStart + 3 + dlc2Len(m_dataLenghtCode) * 8;
 		if (m_dataLenghtCode > 8 && !m_isFlexibleData){
-			pushAndPack(m_tempResult,{"rx", ERROR_2, m_dataLenghtCode, 1});
+			pushAndPack(m_tempResult,{"rx", ERROR_2, m_dataLenghtCode, 1, 0});
 		}
 	}
 
@@ -610,7 +610,7 @@ bool CANDecoder::Impl::decodeExtendedFrame(const bool _can_rx,uint32_t bitnum){
 		if (m_dataBits.size() == 8){
 			std::vector<bool> data_bits(m_bits.end() - 8, m_bits.end());
 			uint32_t value = convert(data_bits);
-			pushAndPack(m_tempResult,{"rx", PAYLOAD_DATA, value, 1});
+			pushAndPack(m_tempResult,{"rx", PAYLOAD_DATA, value, 1, 8});
 		}
 	}
 
@@ -641,25 +641,25 @@ bool CANDecoder::Impl::decodeEndFrame(const bool _can_rx,uint32_t bitnum){
 	if (bitnum == m_lastDatabit + m_crcLen){
 		if (m_isFlexibleData) {
 			if (dlc2Len(m_dataLenghtCode) < 16) {
-				pushAndPack(m_tempResult,{"rx", CRC_LEN, 17, 1});
+				pushAndPack(m_tempResult,{"rx", CRC_LEN, 17, 1, 1});
 			}else{
-				pushAndPack(m_tempResult,{"rx", CRC_LEN, 21, 1});
+				pushAndPack(m_tempResult,{"rx", CRC_LEN, 21, 1, 1});
 			}
 		}else{
-			pushAndPack(m_tempResult,{"rx", CRC_LEN, 15, 1});
+			pushAndPack(m_tempResult,{"rx", CRC_LEN, 15, 1, 1});
 		}
 
 		uint32_t x = m_lastDatabit + 1;
 		std::vector<bool> crc_bits(m_bits.begin() + x, m_bits.begin() + x + m_crcLen);
 		m_crc = convert(crc_bits);
-		pushAndPack(m_tempResult,{"rx",CRC_SEQ, m_crc, 1});
+		pushAndPack(m_tempResult,{"rx",CRC_SEQ, m_crc, 1, (float)m_crcLen});
 	}
 
     // CRC delimiter bit (recessive)
     if (bitnum == m_lastDatabit + m_crcLen + 1){
-		pushAndPack(m_tempResult,{"rx",CRC_DELIMITER, _can_rx, 1});
+		pushAndPack(m_tempResult,{"rx",CRC_DELIMITER, _can_rx, 1, 1});
 		if (_can_rx != 1) {
-			pushAndPack(m_tempResult,{"rx",WARNING_2, _can_rx, 1});
+			pushAndPack(m_tempResult,{"rx",WARNING_2, _can_rx, 1, 0});
 		}
 		if (m_isFlexibleData) {
 			setNominalBitrate();
@@ -668,14 +668,14 @@ bool CANDecoder::Impl::decodeEndFrame(const bool _can_rx,uint32_t bitnum){
 
  	// ACK slot bit (dominant: ACK, recessive: NACK)
     if (bitnum == m_lastDatabit + m_crcLen + 2){
-		pushAndPack(m_tempResult,{"rx",ACK_SLOT, _can_rx, 1});
+		pushAndPack(m_tempResult,{"rx",ACK_SLOT, _can_rx, 1, 1});
 	}
 
  	// ACK delimiter bit (recessive)
     if (bitnum == m_lastDatabit + m_crcLen + 3){
-		pushAndPack(m_tempResult,{"rx",ACK_DELIMITER, _can_rx, 1});
+		pushAndPack(m_tempResult,{"rx",ACK_DELIMITER, _can_rx, 1, 1});
 		if (_can_rx != 1) {
-			pushAndPack(m_tempResult,{"rx",WARNING_3, _can_rx, 1});
+			pushAndPack(m_tempResult,{"rx",WARNING_3, _can_rx, 1, 0});
 		}
 	}
 
@@ -686,11 +686,11 @@ bool CANDecoder::Impl::decodeEndFrame(const bool _can_rx,uint32_t bitnum){
 
 	// End of frame (EOF), 7 recessive bits
     if (bitnum == m_lastDatabit + m_crcLen + 10){
-		pushAndPack(m_tempResult,{"rx",END_OF_FRAME, _can_rx, 1});
+		pushAndPack(m_tempResult,{"rx",END_OF_FRAME, _can_rx, 1, 1});
 		std::vector<uint32_t> last_7_bits(m_rawBits.end() - 7, m_rawBits.end());
 		std::vector<uint32_t> data { 1, 1, 1, 1, 1, 1, 1 };
 		if (last_7_bits != data){
-			pushAndPack(m_tempResult,{"rx",ERROR_3, 0, 1});
+			pushAndPack(m_tempResult,{"rx",ERROR_3, 0, 1, 0});
 		}
 		resetState();
 		return true;

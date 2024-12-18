@@ -111,7 +111,7 @@ librparb: librp
 	$(MAKE) -C $(LIBRP_ARB_DIR)/build install -j$(CPU_CORES)
 
 
-librpla: librp
+librpla: #librp
 	cmake -B$(abspath $(LIBRP_LA_DIR)/build) -S$(abspath $(LIBRP_LA_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(LIBRP_LA_DIR)/build install -j$(CPU_CORES)
 

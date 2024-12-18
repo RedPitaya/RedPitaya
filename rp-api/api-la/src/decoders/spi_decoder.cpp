@@ -240,13 +240,13 @@ void SPIDecoder::Impl::handleBit(bool data, bool clk, bool cs)
 		nothing_count = 0;
 	while (nothing_count)
 	{
-		m_result.push_back({m_line , NOTHING, 0, nothing_count >= size16 ? size16 : (uint16_t)nothing_count});
+		m_result.push_back({m_line , NOTHING, 0, nothing_count >= size16 ? size16 : (uint16_t)nothing_count, 0});
 		nothing_count -= std::min<uint32_t>(nothing_count, size16);
 	}
 	m_oldSamplenum = m_samplenum;
 
 	const uint16_t data_len = m_samplenum - m_startDataSamplenum;
-	m_result.push_back({m_line , DATA, (uint8_t)m_data, data_len});
+	m_result.push_back({m_line , DATA, (uint8_t)m_data, data_len, (float)m_bitcount});
 	m_state = FIND_DATA;
 
 	resetDecoderState();

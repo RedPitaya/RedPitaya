@@ -45,7 +45,7 @@ CIntParameter 		postSampleBufMs	("LA_POST_TRIGGER_BUFFER_MS", CBaseParameter::RW
 CIntParameter 		preSampleCount	("LA_PRE_TRIGGER_SAMPLES", CBaseParameter::RO, 0, 0, 0, 2000000000);
 CIntParameter 		postSampleCount	("LA_POST_TRIGGER_SAMPLES", CBaseParameter::RO, 0, 0, 0, 2000000000);
 CIntParameter 		sampleCount		("LA_TOTAL_SAMPLES", CBaseParameter::RO, 0, 0, 0, 2000000000);
-CFloatParameter 	view_port_pos	("LA_VIEW_PORT_POS", CBaseParameter::RW, 0.5, 0, 0, 1, CONFIG_VAR);
+CStringParameter 	view_port_pos	("LA_VIEW_PORT_POS", CBaseParameter::RW, "0.5",0, CONFIG_VAR); // For greater accuracy, double the value is required.
 
 
 CStringParameter    decoders[4] =  INIT4("DECODER_", "", CBaseParameter::RW, "", 0, CONFIG_VAR);
@@ -130,7 +130,7 @@ void CLACallbackHandler::captureStatus(rp_la::CLAController* controller,
 		postSampleCount.SendValue(postSamples);
 		sampleCount.SendValue(numSamples);
 		measureState.SendValue(LA_APP_DONE);
-		view_port_pos.SendValue((double)preSamples/(double)numSamples);
+		view_port_pos.SendValue(std::to_string((double)preSamples/(double)numSamples));
 		controller->printRLE(false);
 		TRACE("Done")
 	}else{

@@ -41,10 +41,12 @@ public:
 			OutputPacket res = this->m_Value.value.at(i);
 
 			JSONNode node(JSON_NODE);
-			node.push_back(JSONNode("control", res.control));
-			node.push_back(JSONNode("data", res.data));
-			node.push_back(JSONNode("length", res.length));
-			node.push_back(JSONNode("line_name", res.line_name));
+			node.push_back(JSONNode("c", res.control));
+			node.push_back(JSONNode("d", res.data));
+			node.push_back(JSONNode("l", res.length));
+			node.push_back(JSONNode("ln", res.line_name));
+			node.push_back(JSONNode("b", res.bitsInPack));
+			node.push_back(JSONNode("s", res.sampleStart));
 
 			child.push_back(node);
 		}
@@ -122,10 +124,12 @@ public:
 			OutputPacket res = this->m_Value.value.at(i);
 
 			JSONNode node(JSON_NODE);
-			node.push_back(JSONNode("control", res.control));
-			node.push_back(JSONNode("data", res.data));
-			node.push_back(JSONNode("length", res.length));
-			node.push_back(JSONNode("line_name", res.line_name));
+			node.push_back(JSONNode("c", res.control));
+			node.push_back(JSONNode("d", res.data));
+			node.push_back(JSONNode("l", res.length));
+			node.push_back(JSONNode("ln", res.line_name));
+			node.push_back(JSONNode("b", res.bitsInPack));
+			node.push_back(JSONNode("s", res.sampleStart));
 
 			child.push_back(node);
 		}
@@ -149,12 +153,14 @@ inline std::vector<OutputPacket> GetValueFromJSON<std::vector<OutputPacket> >(JS
 	std::vector<OutputPacket> res;
 	for (auto i = n.begin(); i != n.end(); ++i)
 	{
-		uint8_t control = i->at("control").as_int();
-		uint32_t data = i->at("data").as_int();
-		uint32_t length = i->at("length").as_int();
-		std::string line_name = i->at("line_name").as_string();
+		uint8_t control = i->at("c").as_int();
+		uint32_t data = i->at("d").as_int();
+		uint32_t length = i->at("l").as_int();
+		std::string line_name = i->at("ln").as_string();
+		float bits = i->at("b").as_float();
+		uint32_t sampleStart = i->at("s").as_float();
 
-		res.push_back(OutputPacket{line_name , control, data, length});
+		res.push_back(OutputPacket{line_name , control, data, length, bits, sampleStart});
 	}
 
 	return res;

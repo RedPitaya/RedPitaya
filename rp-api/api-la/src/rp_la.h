@@ -29,6 +29,8 @@ struct OutputPacket
 					 // anyway control byte specifies meaning of the “data” byte
     uint32_t data;
 	uint32_t length; // RLE, how many counts takes this byte
+    float    bitsInPack;  // Number of bits
+    uint32_t sampleStart;
 };
 
 typedef enum {

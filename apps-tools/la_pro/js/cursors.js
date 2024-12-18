@@ -41,8 +41,7 @@
         var line_margin_bottom = offset.bottom - 2 + 'px';
 
         $('.varrow').css('margin-left', margin_left);
-        $('.harrow').css('margin-top', margin_top);
-        $('.harrow').css('margin-bottom', margin_bottom);
+        $('.varrow').css('margin-top', margin_bottom);
         $('.vline').css('margin-left', line_margin_left);
         $('.hline').css('margin-top', line_margin_top);
         $('.hline').css('margin-bottom', line_margin_bottom);
@@ -106,16 +105,20 @@
         }
         var samplerate = CLIENT.getValue("LA_CUR_FREQ")
         var scale = CLIENT.getValue("LA_SCALE")
-        if (samplerate !== undefined && scale !== undefined){
+        var trigPos = CLIENT.getValue("LA_PRE_TRIGGER_SAMPLES")
+        if (samplerate !== undefined && scale !== undefined && trigPos !== undefined){
             var axes = plot.getAxes();
-            var offset = plot.getPlotOffset();
-            var graph_width = $('#graph_grid').width() - offset.left - offset.right;
+            var graph_width = $('#graph_grid').width();
             var mul = 1000;
-            var dev_num = 10;
-            var timePerDevInMs = (((graph_width / scale) / samplerate) * mul) / dev_num;
-            var ms_per_px = (timePerDevInMs * 10) / graph_width;
+
+            var plot_samples = axes.xaxis.max - axes.xaxis.min
+            var plot_trig_off = (trigPos) - axes.xaxis.min
+            var cursor_left_samp = left / graph_width * plot_samples
+            var diff_trig = cursor_left_samp - plot_trig_off
+            var timePerWInMs = ((plot_samples  / samplerate) * mul);
+            var ms_per_px = timePerWInMs / plot_samples;
             var msg_width = $('#cur_' + x + '_info').outerWidth();
-            var new_value = axes.xaxis.min + left * ms_per_px;
+            var new_value = diff_trig * ms_per_px;
             $('#cur_' + x + ', #cur_' + x + '_info').css('left', left);
 
             $('#cur_' + x + '_info')
@@ -242,6 +245,7 @@
                 CLIENT.params.orig["LA_DIN_" +(ch+1)+ "_POS"] = { value : new_value }
             }
             LA.setupDataToGraph()
+            LA.drawAllSeries()
         }
     };
 

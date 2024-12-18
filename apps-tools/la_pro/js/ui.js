@@ -47,6 +47,7 @@
             $('#ch' + (ch + 1) + '_offset_arrow').hide();
         }
         LA.setupDataToGraph()
+        LA.drawAllSeries()
     }
 
     OSC.setBUSEnabled = function(param,idx,ch) {
@@ -61,6 +62,7 @@
 //            $('#ch' + (ch + 1) + '_offset_arrow').hide();
         }
         LA.updateUIFromConfig()
+        LA.drawAllSeries()
 //        LA.setupDataToGraph()
     }
 
@@ -190,41 +192,49 @@
     OSC.setDIN1Pos = function(param){
         LA.updateChVisibility(0)
         LA.setupDataToGraph()
+        LA.drawAllSeries()
     }
 
     OSC.setDIN2Pos = function(param){
         LA.updateChVisibility(1)
         LA.setupDataToGraph()
+        LA.drawAllSeries()
     }
 
     OSC.setDIN3Pos = function(param){
         LA.updateChVisibility(2)
         LA.setupDataToGraph()
+        LA.drawAllSeries()
     }
 
     OSC.setDIN4Pos = function(param){
         LA.updateChVisibility(3)
         LA.setupDataToGraph()
+        LA.drawAllSeries()
     }
 
     OSC.setDIN5Pos = function(param){
         LA.updateChVisibility(4)
         LA.setupDataToGraph()
+        LA.drawAllSeries()
     }
 
     OSC.setDIN6Pos = function(param){
         LA.updateChVisibility(5)
         LA.setupDataToGraph()
+        LA.drawAllSeries()
     }
 
     OSC.setDIN7Pos = function(param){
         LA.updateChVisibility(6)
         LA.setupDataToGraph()
+        LA.drawAllSeries()
     }
 
     OSC.setDIN8Pos = function(param){
         LA.updateChVisibility(7)
         LA.setupDataToGraph()
+        LA.drawAllSeries()
     }
 
     OSC.enableChannelDIN = function() {
@@ -599,16 +609,6 @@
         var scale = CLIENT.getValue("LA_SCALE")
         if (samplerate !== undefined && scale !== undefined){
             OSC.state.acq_speed = samplerate
-            var graph_width = $('#graph_grid').outerWidth();
-            var mul = 1000;
-            var dev_num = 10;
-            var timePerDevInMs = (((graph_width / scale) / samplerate) * mul) / dev_num;
-
-            ms_per_px = (timePerDevInMs * 10) / graph_width;
-            var new_value = OSC.trigger_position * ms_per_px;
-
-            $('#LA_TIME_SCALE').text(OSC.convertTime(timePerDevInMs));
-
             const round = (n, dp) => {
                 const h = +('1'.padEnd(dp + 1, '0')) // 10 or 100 or 1000 or etc
                 return Math.round(n * h) / h
@@ -626,10 +626,20 @@
             $('#LA_SAMPLE_RATE').text(samplerate + " " + suff + "S/s");
         }
         LA.updatePositionBufferViewport()
+        OSC.updateTimeScale()
     }
 
     OSC.updateTimeScale = function(){
-
+        var samplerate = CLIENT.getValue("LA_CUR_FREQ")
+        var plot = LA.getPlot()
+        if (plot !== undefined && samplerate !== undefined){
+            var axes = plot.getAxes();
+            var mul = 1000;
+            var dev_num = 10;
+            var plot_samples = axes.xaxis.max - axes.xaxis.min
+            var timePerWInMs = ((plot_samples  / samplerate) * mul) / dev_num;
+            $('#LA_TIME_SCALE').text(OSC.convertTime(timePerWInMs));
+        }
     }
 
     OSC.updateDisplayRadix = function(new_params){
@@ -684,6 +694,7 @@
     }
 
     OSC.setViewPortPos = function(param) {
+        CLIENT.params.orig['LA_VIEW_PORT_POS'].value = parseFloat(CLIENT.params.orig['LA_VIEW_PORT_POS'].value)
         LA.updatePositionBufferViewport()
     }
 

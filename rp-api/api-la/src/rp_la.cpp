@@ -436,6 +436,8 @@ auto CLAController::getDecodedData(std::string name) -> std::vector<rp_la::Outpu
             pack.control = itm.control;
             pack.data = itm.data;
             pack.length = itm.length;
+            pack.bitsInPack = itm.bitsInPack;
+            pack.sampleStart = itm.sampleStart;
             // pack.annotation = m_pimpl->getAnnotation((la_Decoder_t)type,itm.control);
             new_vect.push_back(pack);
         }
@@ -729,26 +731,21 @@ auto CLAController::printRLENP(uint8_t* np_buffer, int size, bool useHex) -> voi
         }
         return j;
     };
-
+    uint64_t samples = 0;
     for(size_t i = 0; i < count_vec.size(); i++){
         if (useHex)
-            fprintf(stdout, "%llu\t: 0x%X\n",count_vec[i],data_vec[i]);
+            fprintf(stderr, "%llu/%llu\t: 0x%X\n",samples,count_vec[i],data_vec[i]);
         else
-            fprintf(stdout, "%llu\t: %08d\n",count_vec[i],binary(data_vec[i],0));
+            fprintf(stderr, "%llu/%llu\t: %08d\n",samples,count_vec[i],binary(data_vec[i],0));
+        samples += count_vec[i];
     }
 }
 
 auto CLAController::getAnnotationList(la_Decoder_t decoder) -> std::map<uint8_t,std::string>{
     uint8_t count = m_pimpl->getAnnotationSize(decoder);
     std::map<uint8_t,std::string> map;
-    if (decoder != LA_DECODER_UART){
-        for(uint8_t i = 0; i < count; i++){
-            map[i] = getAnnotation(decoder,i);
-        }
-    } else if (decoder == LA_DECODER_UART){
-        for(uint16_t i = 1; i < count; i*=2){
-            map[i] = getAnnotation(decoder,i);
-        }
+    for(uint8_t i = 0; i < count; i++){
+        map[i] = getAnnotation(decoder,i);
     }
     return map;
 }
@@ -820,6 +817,8 @@ auto CLAController::decodeNP(la_Decoder_t decoder, std::string json_settings, ui
         pack.control = itm.control;
         pack.data = itm.data;
         pack.length = itm.length;
+        pack.bitsInPack = itm.bitsInPack;
+        pack.sampleStart = itm.sampleStart;
         //pack.annotation = m_pimpl->getAnnotation(decoder,itm.control);
         new_vect.push_back(pack);
     }

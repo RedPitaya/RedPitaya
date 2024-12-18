@@ -161,6 +161,7 @@
             if (signals['data_rle']){
                 LA.lastData = signals
                 LA.lastDataRepacked = OSC.repackSignals(LA.lastData)
+                needRedraw = true
             }
             var needRedraw = false
             for(var ch = 1; ch <= 4; ch++){
@@ -532,7 +533,6 @@
     OSC.param_callbacks["LA_CUR_FREQ"] = OSC.setCurrentFreq;
     OSC.param_callbacks["LA_DECIMATE"] = OSC.setDecimation;
     OSC.param_callbacks["LA_SCALE"] = OSC.setTimeScale;
-    OSC.param_callbacks["LA_VIEW_PORT_POS"] = OSC.setViewPortPos;
     OSC.param_callbacks["LA_VIEW_PORT_POS"] = OSC.setViewPortPos;
 
     OSC.param_callbacks["LA_PRE_TRIGGER_BUFFER_MS"] = OSC.setPresample;

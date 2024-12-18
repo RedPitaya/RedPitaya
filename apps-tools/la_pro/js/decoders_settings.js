@@ -67,10 +67,10 @@
                     var tx_data = []
                     for (let i = 0; i < data.value.length; i++) {
                         var item = data.value[i];
-                        if (item.line_name === 'rx'){
+                        if (item.ln === 'rx'){
                             rx_data.push(item)
                         }
-                        if (item.line_name === 'tx'){
+                        if (item.ln === 'tx'){
                             tx_data.push(item)
                         }
                     }
@@ -87,7 +87,7 @@
                     var rx_data = []
                     for (let i = 0; i < data.value.length; i++) {
                         var item = data.value[i];
-                        if (item.line_name === 'rx'){
+                        if (item.ln === 'rx'){
                             rx_data.push(item)
                         }
                     }
@@ -101,7 +101,7 @@
                     var sda_data = []
                     for (let i = 0; i < data.value.length; i++) {
                         var item = data.value[i];
-                        if (item.line_name === 'sda'){
+                        if (item.ln === 'sda'){
                             sda_data.push(item)
                         }
                     }
@@ -117,10 +117,10 @@
                     var mosi_data = []
                     for (let i = 0; i < data.value.length; i++) {
                         var item = data.value[i];
-                        if (item.line_name === 'miso'){
+                        if (item.ln === 'miso'){
                             miso_data.push(item)
                         }
-                        if (item.line_name === 'mosi'){
+                        if (item.ln === 'mosi'){
                             mosi_data.push(item)
                         }
                     }
@@ -614,7 +614,7 @@
             $('#uart_stop_bits option[value=' + LA.buses[bus].config.num_stop_bits + ']').attr('selected', 'selected');
             $('#uart_parity option[value=' + LA.buses[bus].config.parity + ']').attr('selected', 'selected');
             $('#uart_order option[value=' + LA.buses[bus].config.bitOrder + ']').attr('selected', 'selected');
-            $('#uart_order option[value=' + LA.buses[bus].config.invert + ']').attr('selected', 'selected');
+            $('#uart_invert option[value=' + LA.buses[bus].config.invert + ']').attr('selected', 'selected');
             $('#uart_rx option[value=' + (LA.buses[bus].config.rx) + ']').attr('selected', 'selected');
             $('#uart_tx option[value=' + (LA.buses[bus].config.tx) + ']').attr('selected', 'selected');
             $('#uart_baudrate').val(LA.buses[bus].config.baudrate);

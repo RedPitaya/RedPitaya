@@ -173,7 +173,7 @@
 
         // Added trigger v line
         if (pointArr.length > 0){
-            pointArr.push([[preTriggerCount,0],[preTriggerCount,100]])
+            pointArr.push([[preTriggerCount + 1,0],[preTriggerCount + 1,100]])
             colorsArr.push(LA.trigger_color)
         }
 
@@ -232,7 +232,7 @@
 
         // Added trigger v line
         if (pointArr.length > 0){
-            pointArr.push([[preTriggerCount,0],[preTriggerCount,9]])
+            pointArr.push([[preTriggerCount + 1,0],[preTriggerCount + 1,9]])
             colorsArr.push(LA.trigger_color)
         }
 
@@ -252,7 +252,7 @@
         var pos = CLIENT.getValue('LA_VIEW_PORT_POS')
         var scale = CLIENT.getValue('LA_SCALE')
         var samplerate = CLIENT.getValue('LA_CUR_FREQ')
-        var graph_width = $('#graph_grid').outerWidth();
+        var graph_width = $('#graph_grid').width()
 
         if (samples === undefined || samples === 0){
             $("#buffer_time_region").hide()
@@ -260,30 +260,37 @@
         }
 
         if (pos !== undefined && samplerate !== undefined && scale !== undefined && samples !== undefined){
-            var timePerDevInMs = (((graph_width / scale) / samplerate) * 1000);
-            var totalTime = samples / samplerate * 1000
-            var totalWidth = $('#graphs_buffer').width()
-            var viewPortWidth = Math.ceil((timePerDevInMs / totalTime * totalWidth)/2.0) * 2
+            var timePerDevInMs = (((graph_width / scale) / samplerate) * 1000.0); // Main view
+            // var totalTime = samples / samplerate * 1000.0
+            var totalWidthBuffer = $('#graphs_buffer').width()
+            var viewPortWidth = timePerDevInMs * 10 // totalTime * totalWidth
             $("#buffer_time_region").width(viewPortWidth).height($('#buffer').height())
             $("#buffer_time_region").show()
 
-            var centerPosX = totalWidth * pos
-            centerPosX = (centerPosX - viewPortWidth/2 < 0 ? viewPortWidth / 2: centerPosX)
-            centerPosX = (centerPosX + viewPortWidth/2 > totalWidth ? totalWidth - viewPortWidth / 2: centerPosX)
-            var leftPos = centerPosX - viewPortWidth/2
-            var rightPos = Math.ceil(centerPosX + viewPortWidth/2)
+            var centerPosX = totalWidthBuffer * pos
+            if (centerPosX - viewPortWidth/2.0 < 0 && centerPosX + viewPortWidth/2.0 > totalWidthBuffer){
+                centerPosX = totalWidthBuffer * 0.5
+                $('#buffer_time_region').draggable('disable');
+            }else{
+                centerPosX = (centerPosX - viewPortWidth / 2.0 < 0 ? viewPortWidth / 2: centerPosX)
+                centerPosX = (centerPosX + viewPortWidth / 2.0 > totalWidthBuffer ? totalWidthBuffer - viewPortWidth / 2.0: centerPosX)
+                $('#buffer_time_region').draggable('enable');
+            }
+            var leftPos = centerPosX - viewPortWidth / 2.0
+            var rightPos = centerPosX + viewPortWidth / 2.0
             $("#buffer_time_region").css({left: leftPos});
 
-            var l = leftPos / totalWidth * samples
-            var r = rightPos / totalWidth * samples
+            var l = Math.floor(leftPos / graph_width * samples)
+            var r = Math.ceil(rightPos / graph_width * samples)
             LA.region_samples = {start: l , end:r}
             console.log("viewPortWidth",viewPortWidth)
-            console.log(LA.region_samples, 'TW', totalWidth, 'CP',centerPosX, 'LP' ,leftPos, 'RP' ,rightPos)
+            console.log(LA.region_samples, 'TW', totalWidthBuffer, 'CP',centerPosX, 'LP' ,leftPos, 'RP' ,rightPos)
 
             LA.updateMainView()
-
-            if ((centerPosX / totalWidth) !== pos){
-                CLIENT.parametersCache['LA_VIEW_PORT_POS'] = {value: centerPosX / totalWidth}
+            OSC.updateTimeScale()
+            LA.updateXInfo()
+            if ((centerPosX / totalWidthBuffer) !== pos){
+                CLIENT.parametersCache['LA_VIEW_PORT_POS'] = {value: centerPosX / totalWidthBuffer}
                 CLIENT.sendParameters()
             }
         }
@@ -483,6 +490,7 @@
         return 0
     }
 
+
     LA.drawSeries = function(idx, plot, canvascontext) {
 
         var data = LA.decodedData[idx]
@@ -523,9 +531,11 @@
         }
         var plot = LA.getPlot()
         if (plot !== undefined){
+            plot.draw()
             for(var ch = 1; ch <= 4; ch++){
                 var enable = CLIENT.getValue('DECODER_ENABLED_' + ch)
-                if (enable){
+                var enable_din = CLIENT.getValue('LA_DIN_' + ch)
+                if (enable && enable_din){
                     LA.drawSeries(ch, plot, plot.getCanvas().getContext("2d"))
                 }
             }

@@ -28,9 +28,11 @@ namespace uart {
 
 	enum Parity
 	{
-		NONE,
-		ODD,
-		EVEN
+		NONE 	 = 0,
+		EVEN 	 = 1,
+		ODD  	 = 2,
+		ALWAYS_0 = 3,
+		ALWAYS_1 = 4
 	};
 
 	enum NumStopBits
@@ -44,15 +46,17 @@ namespace uart {
 
 	enum UARTAnnotations
 	{
-		DATA			= 1,
-		PARITY_ERR		= 2,
-		START_BIT_ERR	= 4,
-		STOP_BIT_ERR	= 8,
-		NOTHING			= 16,
-		START_BIT		= 32,
-		STOP_BIT		= 64,
-		PARITY_BIT		= 128,
-		ENUM_END		= 256
+		NOTHING			= 0,
+		PARITY_ERR		= 1,
+		START_BIT_ERR	= 2,
+		STOP_BIT_ERR	= 3,
+		DATA			= 4,
+		START_BIT		= 5,
+		STOP_BIT		= 6,
+		PARITY_BIT		= 7,
+		// WAIT_HALF		= 8,
+		// WAIT_FULL		= 9,
+		ENUM_END
 	};
 
 	class UARTParameters : public DecoderParameters

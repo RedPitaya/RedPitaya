@@ -8,41 +8,50 @@
     COMMON.savedResultArr = [];
     COMMON.decoderAnno = {};
 
-    COMMON.drawHexagon = function(plot, canvascontext, series, begin, length, fillcolor, textVal) {
+    COMMON.addAlpha = function(color, opacity) {
+        // coerce values so it is between 0 and 1.
+        var _opacity = Math.round(Math.min(Math.max(opacity ?? 1, 0), 1) * 255);
+        return color + _opacity.toString(16).toUpperCase();
+    }
 
-        if (length < 10)
+    COMMON.drawHexagon = function(plot, canvascontext, offset, begin, length, fillcolor, data) {
+
+        var len_in_pix = LA.calculateSamplesToPixels(length)
+        if (len_in_pix < 24)
             return;
 
-        if (begin > 1024) return;
 
-        canvascontext.font = "15px Arial";
-        canvascontext.textAlign = "center";
-        canvascontext.fillStyle = fillcolor;
 
-        var o = plot.pointOffset({
+
+        var start = plot.pointOffset({
             x: begin,
-            y: series + OSC.voltage_steps[OSC.voltage_index] / 2
+            y: offset + 0.1
+
         });
-        var q = plot.pointOffset({
-            x: length,
-            y: series + OSC.voltage_steps[OSC.voltage_index] / 2
+
+        var stop = plot.pointOffset({
+            x: begin + length,
+            y: offset + 0.4
+
         });
-        o.top -= 8;
-        q.top -= 8;
 
-        canvascontext.fillRect(o.left, o.top, q.left, 16);
-        canvascontext.fillStyle = fillcolor;
-
-        canvascontext.fillStyle = "#fff";
-
-        for (var t in textVal) {
-            // Calculate width of text
-            txtWidth = canvascontext.measureText(textVal[t]).width;
-
-            // Draw text if can
-            if (q.left >= txtWidth) {
-                canvascontext.fillText(textVal[t], o.left + q.left / 2, o.top + 12);
-                break;
+        canvascontext.fillStyle = COMMON.addAlpha(fillcolor,0.3);
+        canvascontext.fillRect(start.left + 10, start.top, stop.left - start.left - 20, stop.top - start.top);
+        var tw = (stop.left - start.left - 20) * 0.9
+        var th = (start.top - stop.top) -4
+        canvascontext.fillStyle = "#fff"
+        canvascontext.textAlign = "center";
+        for (var t in data) {
+            for(var z = 15; z > 0; z--){
+                canvascontext.font = z+"px Arial";
+                var mes = canvascontext.measureText(data[t])
+                var txtH = mes.actualBoundingBoxAscent + mes.actualBoundingBoxDescent;
+                var txtHA = mes.actualBoundingBoxAscent
+                var txtW = mes.width;
+                if (tw >= txtW && th >= txtH) {
+                    canvascontext.fillText(data[t], start.left + (stop.left - start.left) / 2, stop.top + (start.top - stop.top) / 2 + txtHA / 2);
+                    return;
+                }
             }
         }
     }
@@ -50,31 +59,92 @@
     COMMON.drawCircle = function(plot, canvascontext, offset, begin, length, fillcolor, textVal) {
 
         var len_in_pix = LA.calculateSamplesToPixels(length)
-        if (len_in_pix < 16)
+        if (len_in_pix < 24)
             return;
 
-        // var scale = LA.calculateScale()
-        // var X = LA.calculateXBySamples(begin)
-        // if (LA.calculatePixelInbound(X,8) !== 0)
-        //     return;
 
         canvascontext.font = "15px Arial";
         canvascontext.textAlign = "center";
 
         var o = plot.pointOffset({
-            x: begin,
+            x: begin + length / 2.0,
             y: offset + 0.25
 
         });
-        o.top -= 8;
 
         canvascontext.beginPath();
-        canvascontext.arc(o.left + 5, o.top + 8, 8, 0, 2 * Math.PI, false);
+        canvascontext.arc(o.left - 1, o.top - 4, 8, 0, 2 * Math.PI, false);
         canvascontext.fillStyle = fillcolor;
         canvascontext.fill();
 
         canvascontext.fillStyle = "#fff";
-        canvascontext.fillText(textVal, o.left + 5, o.top + 12);
+        canvascontext.fillText(textVal, o.left - 1, o.top + 1);
+    }
+
+
+    COMMON.drawBitsBars = function(plot, canvascontext, offset, begin, length, fillcolor, bits) {
+
+
+        var start = plot.pointOffset({
+            x: begin ,
+            y: offset - 0.03
+
+        });
+
+        var stop_point = plot.pointOffset({
+            x: begin + length,
+            y: offset - 0.03
+
+        });
+
+        var stop = plot.pointOffset({
+            x: begin + length,
+            y: offset - 0.05
+
+        });
+
+        canvascontext.fillStyle = COMMON.addAlpha(fillcolor,1);
+        canvascontext.fillRect(start.left, start.top, stop.left - start.left, stop.top - start.top);
+
+        canvascontext.strokeStyle = "#ccc"
+        canvascontext.beginPath();
+        canvascontext.moveTo(start.left, start.top+3);
+        canvascontext.lineTo(start.left, start.top-3);
+        canvascontext.stroke();
+
+        canvascontext.beginPath();
+        canvascontext.moveTo(stop_point.left, stop_point.top+3);
+        canvascontext.lineTo(stop_point.left, stop_point.top-3);
+        canvascontext.stroke();
+
+        if (bits !== 0){
+            var step = length / bits
+            for(var pos = 0; pos < length; pos += step){
+                var p = plot.pointOffset({
+                    x: begin + pos,
+                    y: offset - 0.03
+                });
+
+                canvascontext.beginPath();
+                canvascontext.moveTo(p.left, p.top);
+                canvascontext.lineTo(p.left, p.top-3);
+                canvascontext.stroke();
+            }
+        }
+        var rate = CLIENT.getValue('LA_CUR_FREQ')
+        if (rate !== undefined){
+            var time = 1 / rate * length
+            if (time !== 0){
+                var text = OSC.convertTime(time)
+                canvascontext.font = "10px Arial";
+                canvascontext.textAlign = "center";
+                canvascontext.fillStyle = "#fff";
+                if (canvascontext.measureText(text).width * 1.1 < stop.left - start.left){
+                    canvascontext.fillText(text, start.left + (stop.left - start.left )/ 2, stop.top + 10);
+                }
+            }
+        }
+
     }
 
     COMMON.drawTopCircle = function(plot, canvascontext, series, begin, length, fillcolor, textVal) {

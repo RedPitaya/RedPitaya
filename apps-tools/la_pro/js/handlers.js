@@ -126,7 +126,6 @@
                 }
 
                 OSC.updateYOffset(ui, false);
-
             },
             stop: function(ev, ui) {
                 OSC.state.line_moving = false;
