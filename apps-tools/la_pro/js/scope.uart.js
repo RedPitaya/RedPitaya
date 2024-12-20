@@ -1,23 +1,13 @@
 (function(UART, $, undefined) {
-    // UART.ANNOTATIONS = {
-    //     PARITY_ERR: 2,
-    //     START_BIT_ERR: 4,
-    //     STOP_BIT_ERR: 8,
-    //     NOTHING: 16,
-    //     START_BIT: 32,
-    //     STOP_BIT: 64,
-    //     PARITY_BIT: 128,
-    // };
 
     UART.ANNOTATIONS = {
-        NOTHING: 0,
-        PARITY_ERR: 1,
-        START_BIT_ERR: 2,
-        STOP_BIT_ERR: 3,
-        DATA: 4,
-        START_BIT: 5,
-        STOP_BIT: 6,
-        PARITY_BIT: 7,
+        PARITY_ERR: 0,
+        START_BIT_ERR: 1,
+        STOP_BIT_ERR: 2,
+        DATA: 3,
+        START_BIT: 4,
+        STOP_BIT: 5,
+        PARITY_BIT: 6,
     };
 
     UART.data_arr = [];

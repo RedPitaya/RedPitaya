@@ -46,16 +46,13 @@ namespace uart {
 
 	enum UARTAnnotations
 	{
-		NOTHING			= 0,
-		PARITY_ERR		= 1,
-		START_BIT_ERR	= 2,
-		STOP_BIT_ERR	= 3,
-		DATA			= 4,
-		START_BIT		= 5,
-		STOP_BIT		= 6,
-		PARITY_BIT		= 7,
-		// WAIT_HALF		= 8,
-		// WAIT_FULL		= 9,
+		PARITY_ERR		= 0,
+		START_BIT_ERR	= 1,
+		STOP_BIT_ERR	= 2,
+		DATA			= 3,
+		START_BIT		= 4,
+		STOP_BIT		= 5,
+		PARITY_BIT		= 6,
 		ENUM_END
 	};
 
@@ -75,9 +72,13 @@ namespace uart {
 
 		UARTParameters();
 
-		auto toJson() -> std::string;
-    	auto fromJson(const std::string &json) -> bool;
+		auto toJson() -> std::string override;
+    	auto fromJson(const std::string &json) -> bool override;
 
 		static std::string getUARTAnnotationsString(UARTAnnotations value);
+
+		auto setDecoderSettingsUInt(std::string& key, uint32_t value) -> bool override;
+		auto getDecoderSettingsUInt(std::string& key, uint32_t *value) -> bool override;
+
 	};
 }

@@ -29,7 +29,6 @@ struct OutputPacket
 	uint32_t length; // RLE, how many counts takes this byte
     float    bitsInPack; // How many bits detected
     uint32_t sampleStart;
-	// std::string annotation;
 };
 
 class Decoder
@@ -37,19 +36,25 @@ class Decoder
 public:
     virtual void decode(const uint8_t* _input, uint32_t _size) = 0;
     virtual ~Decoder() {}
-    virtual std::string getParametersInJSON() { return ""; };
-    virtual void setParametersInJSON(const std::string &) {};
-    virtual uint64_t getMemoryUsage() { return 0;};
-    virtual std::vector<OutputPacket> getSignal() {return {};};
-    virtual void reset() {};
-    std::string name() { return m_name;};
-    int  getDecoderType() {return m_decoderType;};
-    bool getEnabled() {return m_enabled;};
-    void setEnabled(bool enabled) { m_enabled = enabled;};
+    virtual auto getParametersInJSON() -> std::string { return ""; };
+    virtual auto setParametersInJSON(const std::string &) -> void {};
+    virtual auto getMemoryUsage() -> uint64_t { return 0;};
+    virtual auto getSignal() -> std::vector<OutputPacket> {return {};};
+    virtual auto reset() -> void {};
+
+    virtual auto setDecoderSettingsUInt(std::string&, uint32_t ) -> bool {return false;};
+    virtual auto setDecoderSettingsFloat(std::string&, float ) -> bool {return false;};
+    virtual auto getDecoderSettingsUInt(std::string&, uint32_t *) -> bool {return false;};
+    virtual auto getDecoderSettingsFloat(std::string&, float *) -> bool {return false;};
+
+    auto name() -> std::string { return m_name;};
+    auto getDecoderType() -> int {return m_decoderType;};
+    auto getEnabled() -> bool {return m_enabled;};
+    auto setEnabled(bool enabled) -> void { m_enabled = enabled;};
 
 protected:
     int m_decoderType = 0;
-    std::string m_name;
+    std::string m_name = "";
     bool m_enabled = true;
 };
 
@@ -59,6 +64,12 @@ public:
     virtual std::string toJson() = 0;
     virtual bool fromJson(const std::string &) = 0;
     virtual ~DecoderParameters() {}
+
+    virtual auto setDecoderSettingsUInt(std::string& , uint32_t ) -> bool {return false;};
+    virtual auto setDecoderSettingsFloat(std::string& , float ) -> bool {return false;};
+
+    virtual auto getDecoderSettingsUInt(std::string& , uint32_t *) -> bool {return false;};
+    virtual auto getDecoderSettingsFloat(std::string& , float *) -> bool {return false;};
 };
 
 #endif // __DECODER_API_H

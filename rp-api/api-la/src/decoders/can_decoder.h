@@ -22,6 +22,11 @@ public:
     auto getSignal() -> std::vector<OutputPacket> override;
     auto reset() -> void override;
 
+    auto setDecoderSettingsUInt(std::string& key, uint32_t value) -> bool override;
+	auto setDecoderSettingsFloat(std::string& key, float value) -> bool override;
+	auto getDecoderSettingsUInt(std::string& key, uint32_t *value) -> bool override;
+    auto getDecoderSettingsFloat(std::string& key, float *value) -> bool override;
+
 private:
 	Impl *m_impl;
 };

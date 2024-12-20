@@ -18,8 +18,6 @@ class UARTDecoder::Impl{
 		GET_DATA_BITS,
 		GET_PARITY_BIT,
 		GET_STOP_BITS
-		// WAIT_END_OF_HALF_STOP,
-		// WAIT_END_OF_FULL_STOP
 	};
 
 	public:
@@ -28,25 +26,17 @@ class UARTDecoder::Impl{
 
 
     bool        m_oldBit;
-    // uint32_t    m_frameStart;
     uint32_t    m_prevBitStart;
     uint32_t    m_startDataBits;
-    // uint32_t    m_frameStop;
-    // uint8_t     m_startBit;
     uint8_t     m_curDataBit;
     uint16_t    m_dataByte;
     uint8_t     m_parityBit;
     bool        m_parityOk;
-    // uint8_t     m_stopBit1;
-    // uint8_t     m_stopBit2;
 	uint32_t    m_samplenum;
 	uint32_t    m_silenceLength;
     uint16_t    m_bitAccumulate;
 
-	// bool        m_stopBit1_Get;
-
 	double      m_bitWidth;
-	// uint16_t    m_countOfStop;
 
 	State       m_state;
 
@@ -107,9 +97,21 @@ void UARTDecoder::setParameters(const UARTParameters& _new_params)
 	m_impl_rx->m_options = _new_params;
 	m_impl_tx->m_options = _new_params;
     m_impl_rx->m_bitWidth = (double)_new_params.m_samplerate / (double)_new_params.m_baudrate;
-    // m_impl_rx->m_countOfStop = 0;
     m_impl_tx->m_bitWidth = (double)_new_params.m_samplerate / (double)_new_params.m_baudrate;
-    // m_impl_tx->m_countOfStop = 0;
+}
+
+auto UARTDecoder::setDecoderSettingsUInt(std::string& key, uint32_t value) -> bool{
+	auto opt_tx = m_impl_tx->m_options;
+    auto opt_rx = m_impl_rx->m_options;
+	if (opt_tx.setDecoderSettingsUInt(key,value) && opt_rx.setDecoderSettingsUInt(key,value)){
+		setParameters(opt_tx);
+		return true;
+	}
+	return false;
+}
+
+auto UARTDecoder::getDecoderSettingsUInt(std::string& key, uint32_t *value) -> bool{
+	return m_impl_tx->m_options.getDecoderSettingsUInt(key,value);
 }
 
 auto UARTDecoder::getParametersInJSON() -> std::string{
@@ -156,11 +158,23 @@ void UARTDecoder::decode(const uint8_t* _input, uint32_t _size)
 
 void UARTDecoder::Impl::decode(const uint8_t* _input, uint32_t _size)
 {
-	assert(_input && "null ptr");
-	assert(_size > 0 && "input vector size == 0");
-	assert(_size % 2 == 0 && "odd size");
-	if (m_options.m_rx > 8) FATAL("RX line more than 8")
-	if (m_options.m_tx > 8) FATAL("RX line more than 8")
+	if (!_input) FATAL("Input value is null")
+	if (_size == 0) FATAL("Input value size == 0")
+	if (_size & 0x1) FATAL("Input value is odd")
+	if (m_options.m_rx > 8) {
+        ERROR_LOG("RX not specified. Valid values from 0 to 8")
+        return;
+    }
+
+	if (m_options.m_tx > 8) {
+        ERROR_LOG("TX not specified. Valid values from 0 to 8")
+        return;
+    }
+
+	if (m_options.m_rx == 0 && m_options.m_tx == 0) {
+        ERROR_LOG("RX or TX not specified. Valid values from 0 to 8")
+        return;
+    }
 
     resetDecoder();
 
@@ -174,8 +188,8 @@ void UARTDecoder::Impl::decode(const uint8_t* _input, uint32_t _size)
     if (m_line == "tx")
         rx_line = m_options.m_tx;
 
-    if (rx_line == 0) return;
     rx_line--;
+
     for (uint32_t i = 0; i < _size; i += 2)
     {
         // Read count and data for decode RLE
@@ -220,14 +234,14 @@ void UARTDecoder::Impl::waitForStartBit(bool bit, uint32_t sampleNum)
         // Write silence length to output if need.
         m_silenceLength += 1;
         if(m_silenceLength == 0x7FFFFFFF){
-            m_result.push_back({m_line ,NOTHING, 0, m_silenceLength, 0, sampleNum - m_silenceLength});
+            //m_result.push_back({m_line ,NOTHING, 0, m_silenceLength, 0, sampleNum - m_silenceLength});
             m_silenceLength = 0;
         }
         return;
     }
 
     if(m_silenceLength != 0){
-        m_result.push_back({m_line ,NOTHING, 0, m_silenceLength, 0 , sampleNum - m_silenceLength});
+        //m_result.push_back({m_line ,NOTHING, 0, m_silenceLength, 0 , sampleNum - m_silenceLength});
         m_silenceLength = 0;
     }
 

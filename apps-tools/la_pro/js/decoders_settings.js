@@ -204,7 +204,7 @@
             LA.buses[bus].config.bitOrder = parseInt($('#uart_order').val())
             LA.buses[bus].config.invert = parseInt($('#uart_invert').val())
 
-            LA.buses[bus].config.samplerate = CLIENT.getValue('LA_CUR_FREQ')
+            LA.buses[bus].config.acq_speed = CLIENT.getValue('LA_CUR_FREQ')
 
             CLIENT.parametersCache['DECODER_' + LA.state.bus_editing] = {value:JSON.stringify(LA.buses[bus])}
             CLIENT.parametersCache['DECODER_ENABLED_' + LA.state.bus_editing] = {value: true}
@@ -464,7 +464,6 @@
             var nom_bitrate = $('#can_nom_bitrate').val();
             var fast_bitrate = $('#can_fast_bitrate').val();
             var sample_point = $('#sample_point').val();
-            var frame_limit = $('#can_frame_limit').val();
             var can_rx = $('#can_rx').val();
             var invert_bit = $('#can_invert').val();
 
@@ -488,12 +487,6 @@
 
             if (sample_point < 0 || sample_point > 99.99 || sample_point == "") {
                 $('#warn-message').text("Sample point value is incorrect. Must in (0-99.99)%");
-                $('#warning-dialog').show();
-                return;
-            }
-
-            if (frame_limit < 10 || frame_limit > 500 || frame_limit == "") {
-                $('#warn-message').text("Meximum detected frames must in (10-500)");
                 $('#warning-dialog').show();
                 return;
             }
@@ -525,7 +518,6 @@
             LA.buses[bus].config.sample_point = parseFloat(sample_point)
             LA.buses[bus].config.acq_speed = CLIENT.getValue('LA_CUR_FREQ')
             LA.buses[bus].config.invert_bit = parseInt(invert_bit)
-            LA.buses[bus].config.frame_limit = parseInt(frame_limit)
 
             CLIENT.parametersCache['DECODER_' + LA.state.bus_editing] = {value:JSON.stringify(LA.buses[bus])}
             CLIENT.parametersCache['DECODER_ENABLED_' + LA.state.bus_editing] = {value: true}
@@ -642,7 +634,6 @@
             $('#can_nom_bitrate').val(LA.buses[bus].config.nominal_bitrate);
             $('#can_fast_bitrate').val(LA.buses[bus].config.fast_bitrate);
             $('#sample_point').val(LA.buses[bus].config.sample_point);
-            $('#can_frame_limit').val(LA.buses[bus].config.frame_limit);
             $('#can_invert option[value=' + LA.buses[bus].config.invert_bit + ']').attr('selected', 'selected');
         }
 

@@ -567,6 +567,27 @@
         return +(t.toFixed(2)) + ' ' + unit;
     };
 
+    OSC.convertTimeFromSec = function(t) {
+        var abs_t = Math.abs(t);
+        var unit = 's';
+        if (abs_t >= 1) {
+            t = t;
+            unit = 's';
+        } else if (abs_t >= 0.001) {
+            t = t * 1000;
+            unit = 'ms';
+        } else if (abs_t >= 0.000001) {
+            t = t * 1000000;
+            unit = 'us';
+        } else if (abs_t >= 0.000000001) {
+            t = t * 1000000000;
+            unit = ' ns';
+        }
+
+        return +(t.toFixed(2)) + ' ' + unit;
+    };
+
+
     OSC.getTimePerDiv = function(t) {
         var abs_t = Math.abs(t);
         if (abs_t >= 1000) {
@@ -629,7 +650,7 @@
                 // Check SPI
                 if (LA.buses[bus].name == "SPI") {
                     if (LA.buses[bus].config.clk == chan_number)
-                        return "SPI: SCK";
+                        return "SPI: CLK";
                     else if (LA.buses[bus].config.miso == chan_number)
                         return "SPI: MISO";
                     else if (LA.buses[bus].config.mosi == chan_number)

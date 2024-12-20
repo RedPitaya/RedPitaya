@@ -23,13 +23,9 @@ namespace spi {
 		LsbFirst
 	};
 
-	// // For control byte
-	// #define SPI_DATA_ERROR 0x80
-
 	enum SPIAnnotations
 	{
-		NOTHING = 0,
-		DATA 	= 1,
+		DATA 	= 0,
 		ENUM_END
 	};
 
@@ -50,10 +46,13 @@ namespace spi {
 
 		SPIParameters();
 
-		auto toJson() -> std::string;
-    	auto fromJson(const std::string &json) -> bool;
+		auto toJson() -> std::string override;
+    	auto fromJson(const std::string &json) -> bool override;
 
 		static std::string getSPIAnnotationsString(SPIAnnotations value);
+
+		auto setDecoderSettingsUInt(std::string& key, uint32_t value) -> bool override;
+		auto getDecoderSettingsUInt(std::string& key, uint32_t *value) -> bool override;
 	};
 }
 

@@ -92,6 +92,13 @@ public:
     auto addDecoder(std::string name, la_Decoder_t decoder) -> bool;
     auto setDecoderSettings(std::string name,std::string json) -> bool;
     auto getDecoderSettings(std::string name) -> std::string;
+
+    auto setDecoderSettingsUInt(std::string name, std::string key, uint32_t value) -> bool;
+    auto setDecoderSettingsFloat(std::string name, std::string key, float value) -> bool;
+
+    auto getDecoderSettingsUInt(std::string name, std::string key, uint32_t *value) -> bool;
+    auto getDecoderSettingsFloat(std::string name, std::string key, float *value) -> bool;
+
     auto getDefaultSettings(la_Decoder_t decoder) -> std::string;
     auto getDecoders() -> std::vector<std::string>;
     auto getDecodedData(std::string name) -> std::vector<rp_la::OutputPacket>;

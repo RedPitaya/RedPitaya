@@ -56,6 +56,44 @@
         }
     }
 
+
+    COMMON.drawTextTop = function(plot, canvascontext, offset, begin, length, fillcolor, data) {
+
+        var len_in_pix = LA.calculateSamplesToPixels(length)
+        if (len_in_pix < 24)
+            return;
+
+        var start = plot.pointOffset({
+            x: begin,
+            y: offset + 0.2 + 0.5
+
+        });
+
+        var stop = plot.pointOffset({
+            x: begin + length,
+            y: offset + 0.4 + 0.5
+
+        });
+
+        var tw = (stop.left - start.left - 20) * 0.9
+        var th = (start.top - stop.top) -4
+        canvascontext.fillStyle = "#fff"
+        canvascontext.textAlign = "center";
+        for (var t in data) {
+            for(var z = 13; z > 0; z--){
+                canvascontext.font = z+"px Arial";
+                var mes = canvascontext.measureText(data[t])
+                var txtH = mes.actualBoundingBoxAscent + mes.actualBoundingBoxDescent;
+                var txtHA = mes.actualBoundingBoxAscent
+                var txtW = mes.width;
+                if (tw >= txtW && th >= txtH) {
+                    canvascontext.fillText(data[t], start.left + (stop.left - start.left) / 2, stop.top + (start.top - stop.top) / 2 + txtHA / 2);
+                    return;
+                }
+            }
+        }
+    }
+
     COMMON.drawCircle = function(plot, canvascontext, offset, begin, length, fillcolor, textVal) {
 
         var len_in_pix = LA.calculateSamplesToPixels(length)
@@ -69,6 +107,27 @@
         var o = plot.pointOffset({
             x: begin + length / 2.0,
             y: offset + 0.25
+
+        });
+
+        canvascontext.beginPath();
+        canvascontext.arc(o.left - 1, o.top - 4, 8, 0, 2 * Math.PI, false);
+        canvascontext.fillStyle = fillcolor;
+        canvascontext.fill();
+
+        canvascontext.fillStyle = "#fff";
+        canvascontext.fillText(textVal, o.left - 1, o.top + 1);
+    }
+
+    COMMON.drawCircleTop = function(plot, canvascontext, offset, begin, length, fillcolor, textVal) {
+
+
+        canvascontext.font = "15px Arial";
+        canvascontext.textAlign = "center";
+
+        var o = plot.pointOffset({
+            x: begin,
+            y: offset + 0.65
 
         });
 
@@ -135,7 +194,7 @@
         if (rate !== undefined){
             var time = 1 / rate * length
             if (time !== 0){
-                var text = OSC.convertTime(time)
+                var text = OSC.convertTimeFromSec(time)
                 canvascontext.font = "10px Arial";
                 canvascontext.textAlign = "center";
                 canvascontext.fillStyle = "#fff";
@@ -144,33 +203,71 @@
                 }
             }
         }
-
     }
 
-    COMMON.drawTopCircle = function(plot, canvascontext, series, begin, length, fillcolor, textVal) {
 
-        if (length < 0.125 / 4.0)
-            return;
+    COMMON.drawBitsBarsTop = function(plot, canvascontext, offset, begin, length, fillcolor, bits, show_time) {
 
-        if (begin > 1024) return;
 
-        canvascontext.font = "15px Arial";
-        canvascontext.textAlign = "center";
-
-        var o = plot.pointOffset({
-            x: begin,
-            y: series + 1
+        var start = plot.pointOffset({
+            x: begin ,
+            y: offset + 0.03 + 0.5
 
         });
-        o.top += 8;
+
+        var stop_point = plot.pointOffset({
+            x: begin + length,
+            y: offset + 0.03 + 0.5
+
+        });
+
+        var stop = plot.pointOffset({
+            x: begin + length,
+            y: offset + 0.05 + 0.5
+
+        });
+
+        canvascontext.fillStyle = COMMON.addAlpha(fillcolor,1);
+        canvascontext.fillRect(start.left, start.top, stop.left - start.left, stop.top - start.top);
+
+        canvascontext.strokeStyle = "#ccc"
+        canvascontext.beginPath();
+        canvascontext.moveTo(start.left, start.top+3);
+        canvascontext.lineTo(start.left, start.top-3);
+        canvascontext.stroke();
 
         canvascontext.beginPath();
-        canvascontext.arc(o.left + 5, o.top + 8, 8, 0, 2 * Math.PI, false);
-        canvascontext.fillStyle = fillcolor;
-        canvascontext.fill();
+        canvascontext.moveTo(stop_point.left, stop_point.top+3);
+        canvascontext.lineTo(stop_point.left, stop_point.top-3);
+        canvascontext.stroke();
 
-        canvascontext.fillStyle = "#fff";
-        canvascontext.fillText(textVal, o.left + 5, o.top + 12);
+        if (bits !== 0){
+            var step = length / bits
+            for(var pos = 0; pos < length; pos += step){
+                var p = plot.pointOffset({
+                    x: begin + pos,
+                    y: offset + 0.03
+                });
+
+                canvascontext.beginPath();
+                canvascontext.moveTo(p.left, p.top);
+                canvascontext.lineTo(p.left, p.top-3);
+                canvascontext.stroke();
+            }
+        }
+        var rate = CLIENT.getValue('LA_CUR_FREQ')
+        if (rate !== undefined && show_time){
+            var time = 1 / rate * length
+            if (time !== 0){
+                var text = OSC.convertTimeFromSec(time)
+                canvascontext.font = "10px Arial";
+                canvascontext.textAlign = "center";
+                canvascontext.fillStyle = "#fff";
+                if (canvascontext.measureText(text).width * 1.1 < stop.left - start.left){
+                    canvascontext.fillText(text, start.left + (stop.left - start.left )/ 2, stop.top - 10);
+                }
+            }
+        }
     }
 
     COMMON.appendPrefixPostfix = function(value, prefix, postfix) {

@@ -1,8 +1,34 @@
+#include <array>
+#include <algorithm>
 #include "spi_settings.h"
 #include "json/json.h"
 #include "rp_log.h"
 
 using namespace spi;
+
+constexpr const std::array<uint32_t,2> g_eCsPolArray {ActiveLow,ActiveHigh};
+constexpr const std::array<uint32_t,2> g_eBitOrderArray {MsbFirst, LsbFirst};
+
+#define IS(X,Y) (std::find(std::begin(X), std::end(X), Y) != std::end(X))
+#define CHECK_ENUM(X,Y) \
+	if (!IS(X,Y)){ \
+			ERROR_LOG("Invalid value: %d. Valid parameters: %s",Y,getValues(X).c_str()) \
+			return false; \
+	}
+
+template<typename X>
+auto getValues(X array) -> std::string{
+	std::string values = "";
+	bool skip = true;
+	for(size_t i = 0; i < array.size(); i++){
+		if (!skip){
+			values += ",";
+		}
+		values += std::to_string(array[i]);
+		skip = false;
+	}
+	return values;
+}
 
 SPIParameters::SPIParameters(){
 	m_clk = 0;		// 0...8, 	0 if is not set
@@ -16,6 +42,104 @@ SPIParameters::SPIParameters(){
 	m_cs_polarity = ActiveLow;
 	m_bit_order = MsbFirst;
 	m_invert_bit = 0;
+}
+
+auto SPIParameters::setDecoderSettingsUInt(std::string& key, uint32_t value) -> bool {
+	if (key == "clk"){
+		m_clk = value;
+		return true;
+	}
+	if (key == "miso"){
+		m_miso = value;
+		return true;
+	}
+	if (key == "mosi"){
+		m_mosi = value;
+		return true;
+	}
+	if (key == "cs"){
+		m_cs = value;
+		return true;
+	}
+	if (key == "cpol"){
+		m_cpol = value;
+		return true;
+	}
+	if (key == "cpha"){
+		m_cpha = value;
+		return true;
+	}
+	if (key == "word_size"){
+		m_word_size = value;
+		return true;
+	}
+	if (key == "acq_speed"){
+		m_acq_speed = value;
+		return true;
+	}
+	if (key == "cs_polarity"){
+		CHECK_ENUM(g_eCsPolArray,value)
+		m_cs_polarity = (CsPolartiy)value;
+		return true;
+	}
+	if (key == "bit_order"){
+		CHECK_ENUM(g_eBitOrderArray,value)
+		m_bit_order = (BitOrder)value;
+		return true;
+	}
+	if (key == "invert_bit"){
+		m_invert_bit = value;
+		return true;
+	}
+	return false;
+}
+
+auto SPIParameters::getDecoderSettingsUInt(std::string& key, uint32_t *value) -> bool {
+	if (key == "clk"){
+		*value = m_clk;
+		return true;
+	}
+	if (key == "miso"){
+		*value = m_miso;
+		return true;
+	}
+	if (key == "mosi"){
+		*value = m_mosi;
+		return true;
+	}
+	if (key == "cs"){
+		*value = m_cs;
+		return true;
+	}
+	if (key == "cpol"){
+		*value = m_cpol;
+		return true;
+	}
+	if (key == "cpha"){
+		*value = m_cpha;
+		return true;
+	}
+	if (key == "word_size"){
+		*value = m_word_size;
+		return true;
+	}
+	if (key == "acq_speed"){
+		*value = m_acq_speed;
+		return true;
+	}
+	if (key == "cs_polarity"){
+		*value = m_cs_polarity;
+		return true;
+	}
+	if (key == "bit_order"){
+		*value = m_bit_order;
+		return true;
+	}
+	if (key == "invert_bit"){
+		*value = m_invert_bit;
+		return true;
+	}
+	return false;
 }
 
 auto SPIParameters::toJson() -> std::string{
@@ -74,9 +198,11 @@ auto SPIParameters::fromJson(const std::string &json) -> bool{
 
 		uint32_t x;
 		if (!parseUInt32(x,"cs_polarity")) return false;
+		CHECK_ENUM(g_eCsPolArray,x)
 		m_cs_polarity = (CsPolartiy)x;
 
 		if (!parseUInt32(x,"bit_order")) return false;
+		CHECK_ENUM(g_eBitOrderArray,x)
 		m_bit_order = (BitOrder)x;
 
 		if (!parseUInt32(m_invert_bit,"invert_bit")) return false;
@@ -93,8 +219,6 @@ std::string SPIParameters::getSPIAnnotationsString(SPIAnnotations value){
 	switch (value)
 	{
 		case DATA: return "Data";
-		case NOTHING: return "";
-
 	default:
 		TRACE_SHORT("Unknown id = %d",(int)value)
 		break;

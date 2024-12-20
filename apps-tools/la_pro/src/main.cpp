@@ -464,6 +464,11 @@ void updateFromFront(bool force){
 
 	if (needRunCapture){
 		g_needUpdateSignals = false;
+		for(int i = 0; i < 4; i++){
+			if (decoders_enabled[i].Value()){
+				g_la_controller->setDecoderSettingsUInt(std::to_string(i),"acq_speed", cur_freq.Value());
+			}
+		}
 		g_la_controller->runAsync(0);
 		measureState.SendValue(LA_APP_RUNNED);
 	}else if (needRedecode){

@@ -27,25 +27,21 @@ namespace can {
 		RTR 			= 8,  // 'Remote transmission request'
 		SRR				= 9,  // 'Substitute remote request'
 		DLC             = 10, // 'Data length count'
-		CRC_SEQ			= 11, // 'CRC sequence'
-		CRC_DELIMITER   = 12, // 'CRC delimiter'
-		ACK_SLOT		= 13, // 'ACK slot'
-		ACK_DELIMITER	= 14, // 'ACK delimiter'
-		STUFF_BIT	 	= 15, // 'Stuff bit'
-		WARNING			= 16, // 'Warning unknow'
-		BIT				= 17, // 'Bit'
-		ERROR_1 		= 18, // 'Start of frame (SOF) must be a dominant bit'
-		ERROR_2			= 19, // 'Data length code (DLC) > 8 is not allowed'
-		ERROR_3			= 20, // 'End of frame (EOF) must be 7 recessive bits'
-		WARNING_1       = 21, // 'Identifier bits 10..4 must not be all recessive'
-		WARNING_2		= 22, // 'CRC delimiter must be a recessive bit'
-		WARNING_3		= 23, // 'ACK delimiter must be a recessive bit'
-		BRS				= 24, // 'Bit rate switch'
-		ESI 			= 25, // 'Error state indicator'
-		CRC_LEN         = 26, // 'Crc type
-		RESERV_BIT_FLEX	= 27, // 'Flexible data'
-		NOTHING			= 28,
-		SYNC			= 29,
+		CRC_DELIMITER   = 11, // 'CRC delimiter'
+		ACK_SLOT		= 12, // 'ACK slot'
+		ACK_DELIMITER	= 13, // 'ACK delimiter'
+		STUFF_BIT	 	= 14, // 'Stuff bit'
+		ERROR_3			= 15, // 'End of frame (EOF) must be 7 recessive bits'
+		WARNING_1       = 16, // 'Identifier bits 10..4 must not be all recessive'
+		WARNING_2		= 17, // 'CRC delimiter must be a recessive bit'
+		WARNING_3		= 18, // 'ACK delimiter must be a recessive bit'
+		BRS				= 19, // 'Bit rate switch'
+		ESI 			= 20, // 'Error state indicator'
+		RESERV_BIT_FLEX	= 21, // 'Flexible data'
+		STUFF_BIT_ERROR	= 22, // 'Stuff bit error'
+		CRC_VAL			= 23, // CRC Value
+		FSB				= 24, // fixed stuff-bit (FSB)
+		SBC				= 25, // Stuff bits before CRC in FD mode
 		ENUM_END
 	};
 
@@ -56,16 +52,22 @@ namespace can {
 			uint32_t m_nominal_bitrate;  	// default value  1000000 (bits/s)
 			uint32_t m_fast_bitrate; 		// default value  2000000 (bits/s)
 			float    m_sample_point; 		// default value  70.0 (%)
-			uint32_t m_frame_limit;
 			uint32_t m_acq_speed;
 			uint32_t m_invert_bit;
 
 		CANParameters();
 
-		auto toJson() -> std::string;
-    	auto fromJson(const std::string &json) -> bool;
+		auto toJson() -> std::string override;
+    	auto fromJson(const std::string &json) -> bool override;
 
 		static std::string getCANAnnotationsString(CANAnnotations value);
+
+		auto setDecoderSettingsUInt(std::string& key, uint32_t value) -> bool override;
+		auto setDecoderSettingsFloat(std::string& key, float value) -> bool override;
+
+		auto getDecoderSettingsUInt(std::string& key, uint32_t *value) -> bool override;
+		auto getDecoderSettingsFloat(std::string& key, float *value) -> bool override;
+
 	};
 }
 

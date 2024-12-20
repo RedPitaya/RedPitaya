@@ -16,16 +16,15 @@ namespace i2c {
 
 	enum I2CAnnotations
 	{
-		NOTHING			= 0,
-		START 			= 1,
-		REPEAT_START	= 2,
-		STOP			= 3,
-		ACK				= 4,
-		NACK			= 5,
-		READ_ADDRESS	= 6,
-		WRITE_ADDRESS	= 7,
-		DATA_READ		= 8,
-		DATA_WRITE		= 9,
+		START 			= 0,
+		REPEAT_START	= 1,
+		STOP			= 2,
+		ACK				= 3,
+		NACK			= 4,
+		READ_ADDRESS	= 5,
+		WRITE_ADDRESS	= 6,
+		DATA_READ		= 7,
+		DATA_WRITE		= 8,
 		ENUM_END
 	};
 
@@ -42,10 +41,14 @@ namespace i2c {
 
 		I2CParameters();
 
-		auto toJson() -> std::string;
-    	auto fromJson(const std::string &json) -> bool;
+		auto toJson() -> std::string override;
+    	auto fromJson(const std::string &json) -> bool override;
 
 		static std::string getI2CAnnotationsString(I2CAnnotations value);
+
+		auto setDecoderSettingsUInt(std::string& key, uint32_t value) -> bool override;
+		auto getDecoderSettingsUInt(std::string& key, uint32_t *value) -> bool override;
+
 	};
 
 }

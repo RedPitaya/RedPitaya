@@ -31,6 +31,7 @@ class I2CDecoder::Impl{
 	bool m_oldScl;
 	bool m_oldSda;
 	bool m_oldPins;
+	bool m_needPush;
 	uint32_t m_ss;
 	uint32_t m_es;
 	uint32_t m_ssByte;
@@ -41,6 +42,9 @@ class I2CDecoder::Impl{
 	uint32_t m_samplenum;
 	uint32_t m_oldSamplenum;
 	uint32_t m_bitcount;
+	float    m_bitCountDetect;
+	uint32_t m_nothing;
+	uint32_t m_nothingStart;
 
 	int m_wr;
 	uint32_t m_is_repeat_start;
@@ -64,7 +68,7 @@ class I2CDecoder::Impl{
 
 	void getAck(bool scl, bool sda);
 	void foundStart(bool scl, bool sda);
-	void foundAddressOrData(bool scl, bool sda);
+	bool foundAddressOrData(bool scl, bool sda);
 	void foundStop(bool scl, bool sda);
 
 };
@@ -103,6 +107,20 @@ void I2CDecoder::setParameters(const I2CParameters& _new_params){
 	m_impl->m_options = _new_params;
 }
 
+
+auto I2CDecoder::setDecoderSettingsUInt(std::string& key, uint32_t value) -> bool{
+	auto opt = m_impl->m_options;
+	if (opt.setDecoderSettingsUInt(key,value)){
+		setParameters(opt);
+		return true;
+	}
+	return false;
+}
+
+auto I2CDecoder::getDecoderSettingsUInt(std::string& key, uint32_t *value) -> bool{
+	return m_impl->m_options.getDecoderSettingsUInt(key,value);
+}
+
 auto I2CDecoder::getParametersInJSON() -> std::string{
 	return m_impl->m_options.toJson();
 }
@@ -124,13 +142,17 @@ void I2CDecoder::Impl::resetDecoder(){
 	m_oldScl = 1;
 	m_oldSda = 1;
 	m_oldPins = 0;
+	m_nothing = 0;
+	m_nothingStart = 0;
 	m_ss = -1;
 	m_es = -1;
 	m_ssByte = -1;
+	m_needPush = false;
 	m_dataByte = 0;
 	m_samplerate = 0;
 	m_samplenum = 0;
 	m_oldSamplenum = 0;
+	m_bitCountDetect = 0;
 	m_bitcount = 0;
 	m_wr = 1;
 	m_is_repeat_start = 0;
@@ -143,17 +165,8 @@ void I2CDecoder::Impl::resetDecoder(){
 }
 
 void I2CDecoder::Impl::addNothing(){
-
-	int len = (int)m_samplenum - (int)m_oldSamplenum - (int)(m_es - m_ss);
-	if(m_state == FIND_ACK)
-		--len;
-	if (len < 0)
-		return;
-	while(len > 0x7FFFFFFF){
-		len -= 0x7FFFFFFF;
-		m_result.push_back(OutputPacket{"sda",NOTHING, 0, (uint16_t)0x7FFFFFFF, 0});
-	}
-	m_result.push_back(OutputPacket{"sda",NOTHING, 0, (uint16_t)len, 0});
+	// m_result.push_back(OutputPacket{"sda", NOTHING, 0, m_nothing, 0 , m_nothingStart});
+	m_nothing = 0;
 }
 
 void I2CDecoder::decode(const uint8_t* _input, uint32_t _size){
@@ -162,13 +175,21 @@ void I2CDecoder::decode(const uint8_t* _input, uint32_t _size){
 
 void I2CDecoder::Impl::decode(const uint8_t* _input, uint32_t _size)
 {
+
+	auto push = [&](){
+		m_result.push_back(OutputPacket{"sda", (uint8_t)m_cmd, m_dataByte, (m_es - m_ss),m_bitCountDetect, m_ss});
+		m_bitCountDetect = 0;
+		m_dataByte = 0;
+		m_needPush = false;
+	};
+
 	if (!_input) FATAL("Input value is null")
 	if (_size == 0) FATAL("Input value size == 0")
 	if (_size & 0x1) FATAL("Input value is odd")
-	if (m_options.m_scl > 8) FATAL("SCL line more than 8")
-	if (m_options.m_scl == 0) FATAL("SCL line should not be equal to 0")
-	if (m_options.m_sda > 8) FATAL("SDA line more than 8")
-	if (m_options.m_sda == 0) FATAL("SDA line should not be equal to 0")
+	if (m_options.m_scl == 0 || m_options.m_sda == 0 || m_options.m_scl > 8 || m_options.m_sda > 8){
+		ERROR_LOG("SCL and SDA not specified. Valid values from 1 to 8")
+		return;
+	}
 
 	TRACE_SHORT("Input data size %d",_size)
 
@@ -194,33 +215,70 @@ void I2CDecoder::Impl::decode(const uint8_t* _input, uint32_t _size)
 			// state machine
 			if (m_state == FIND_START)
 			{
-				if (isStartCondition(scl, sda))
+				if (isStartCondition(scl, sda)){
+					if (m_nothing > 0){
+						addNothing();
+					}
 					foundStart(scl, sda);
+					m_needPush = true;
+				}
+				else{
+					m_nothing++;
+				}
 			}
-			else if (m_state == FIND_ADDRESS)
-			{
-				if (isDataBit(scl, sda))
-					foundAddressOrData(scl, sda);
+			else if (m_state == FIND_ADDRESS){
+				if (isDataBit(scl, sda)){
+					if (m_needPush){
+						push();
+					}
+					if (foundAddressOrData(scl, sda)){
+						m_needPush = true;
+					}
+				}
+				else
+					m_es++;
 			}
-			else if (m_state == FIND_DATA)
-			{
-				if (isDataBit(scl, sda))
-					foundAddressOrData(scl, sda);
-				else if (isStartCondition(scl, sda))
+			else if (m_state == FIND_DATA){
+				if (isDataBit(scl, sda)){
+					if (m_needPush){
+						push();
+
+					}
+					if (foundAddressOrData(scl, sda)){
+						m_needPush = true;
+					}
+				}
+				else if (isStartCondition(scl, sda)){
+					if (m_needPush){
+						push();
+					}
 					foundStart(scl, sda);
-				else if (isStopCondition(scl, sda))
+					m_needPush = true;
+				}
+				else if (isStopCondition(scl, sda)){
+					if (m_needPush){
+						push();
+					}
 					foundStop(scl, sda);
+					push();
+				}
+				else
+					m_es++;
 			}
 			else if (m_state == FIND_ACK)
 			{
-				if (isDataBit(scl, sda))
+				if (isDataBit(scl, sda)){
+					if (m_needPush){
+						push();
+					}
 					getAck(scl, sda);
+					m_needPush = true;
+				}else{
+					m_es++;
+				}
 			}
 
-			if (m_state != m_oldState)
-			{
-				addNothing();
-				m_result.push_back(OutputPacket{"sda", (uint8_t)m_cmd, m_dataByte, (uint16_t)(m_es - m_ss),(float)m_bitcount});
+			if (m_state != m_oldState){
 				m_oldState = m_state;
 				m_oldSamplenum = m_samplenum;
 			}
@@ -248,17 +306,15 @@ bool I2CDecoder::Impl::isStopCondition(bool scl, bool sda) const{
 }
 
 void I2CDecoder::Impl::getAck(bool scl, bool sda){
-	m_ss = m_samplenum;
-	m_es = m_samplenum + m_bitwidth;
+	m_es = m_ss = m_samplenum;
 	m_cmd = (sda == 1) ? NACK : ACK;
 	// There could be multiple data bytes in a row, so either find
 	// another data byte or a STOP condition next.
 	m_state = FIND_DATA;
-
-	assert(m_bitwidth <= std::numeric_limits<uint16_t>::max() && "m_Bitwidth overflow");
 }
 
 void I2CDecoder::Impl::foundStart(bool scl, bool sda){
+	m_nothingStart = m_es;
 	m_ss = m_es = m_samplenum;
 
 	m_pdu_start = m_samplenum;
@@ -271,7 +327,7 @@ void I2CDecoder::Impl::foundStart(bool scl, bool sda){
 	m_bits.clear();
 }
 
-void I2CDecoder::Impl::foundAddressOrData(bool scl, bool sda){
+bool I2CDecoder::Impl::foundAddressOrData(bool scl, bool sda){
 	// Address and data are transmitted MSB-first.
 	m_dataByte <<= 1;
 	m_dataByte |= sda;
@@ -300,7 +356,7 @@ void I2CDecoder::Impl::foundAddressOrData(bool scl, bool sda){
 
 	if (m_bitcount < 7){
 		m_bitcount += 1;
-		return;
+		return false;
 	}
 
 	if (m_state == FIND_ADDRESS)
@@ -312,41 +368,29 @@ void I2CDecoder::Impl::foundAddressOrData(bool scl, bool sda){
 	}
 
 	m_cmd = WRITE_ADDRESS;
-	if (m_state == FIND_ADDRESS && m_wr == 1)
-	{
+	if (m_state == FIND_ADDRESS && m_wr == 1){
 		m_cmd = WRITE_ADDRESS;
 	}
-	else if (m_state == FIND_ADDRESS && m_wr == 0)
-	{
+	else if (m_state == FIND_ADDRESS && m_wr == 0){
 		m_cmd = READ_ADDRESS;
 	}
-	else if (m_state == FIND_DATA && m_wr == 1)
-	{
+	else if (m_state == FIND_DATA && m_wr == 1){
 		m_cmd = DATA_WRITE;
 	}
-	else if (m_state == FIND_DATA && m_wr == 0)
-	{
+	else if (m_state == FIND_DATA && m_wr == 0){
 		m_cmd = DATA_READ;
 	}
-	else
-	{
-		assert(0 && "incorrect i2c decoder state");
+	else{
+		FATAL("incorrect i2c decoder state");
 	}
-
+	m_bitCountDetect = m_bitcount + 1;
 	m_ss = m_ssByte;
-	m_es = m_samplenum + m_bitwidth;
-
-	assert(m_es >= m_ss && "END < START");
-
-	if (m_cmd == READ_ADDRESS || m_cmd == WRITE_ADDRESS)
-	{
-		m_es = m_samplenum;
-	}
-
+	m_es = m_samplenum;
 	// Done with this packet.
 	m_bitcount = 0;
 	m_bits.clear();
 	m_state = FIND_ACK;
+	return true;
 }
 
 void I2CDecoder::Impl::foundStop(bool scl, bool sda){

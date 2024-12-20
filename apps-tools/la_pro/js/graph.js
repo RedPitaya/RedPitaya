@@ -497,14 +497,16 @@
 
         if (data.values !== undefined && data.name !== undefined){
             for (var line in data.values) {
+                var enable_din = CLIENT.getValue('LA_DIN_' + line)
                 var offset = LA.calculateOffset(line)
                 if (offset == -1) continue;
+                if (enable_din != true) continue;
                 if (data.name == 'CAN'){
-                    // CAN.drawDecoded(plot, canvascontext, offset, data.values[line]);
+                    CAN.drawDecoded(plot, canvascontext, offset, data.values[line]);
                 }else if (data.name == 'I2C'){
-                    // I2C.drawDecoded(plot, canvascontext, offset, data.values[line]);
+                    I2C.drawDecoded(plot, canvascontext, offset, data.values[line]);
                 }else if (data.name == 'SPI'){
-                    // SPI.drawDecoded(plot, canvascontext, offset, data.values[line], OSC.accordingChanName(ch + 1));
+                    SPI.drawDecoded(plot, canvascontext, offset, data.values[line]);
                 }else if (data.name == 'UART'){
                     UART.drawDecoded(plot, canvascontext, offset, data.values[line]);
                 }
@@ -534,8 +536,7 @@
             plot.draw()
             for(var ch = 1; ch <= 4; ch++){
                 var enable = CLIENT.getValue('DECODER_ENABLED_' + ch)
-                var enable_din = CLIENT.getValue('LA_DIN_' + ch)
-                if (enable && enable_din){
+                if (enable){
                     LA.drawSeries(ch, plot, plot.getCanvas().getContext("2d"))
                 }
             }

@@ -158,12 +158,12 @@
                 }
             }
             CLIENT.client_log(signals)
+            var needRedraw = false
             if (signals['data_rle']){
                 LA.lastData = signals
                 LA.lastDataRepacked = OSC.repackSignals(LA.lastData)
                 needRedraw = true
             }
-            var needRedraw = false
             for(var ch = 1; ch <= 4; ch++){
                 if (signals['DECODER_SIGNAL_' + ch]){
                     var name = LA.getDecoderName(ch)

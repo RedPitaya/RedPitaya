@@ -110,10 +110,10 @@ typedef enum {
  */
 
 typedef enum {
-    RP_SPI_MODE_LISL = 0,   //!< Clock low idle level, Sample on leading edge
-    RP_SPI_MODE_LIST = 1,   //!< Clock low idle level, sample on trailing edge
-    RP_SPI_MODE_HISL = 2,   //!< Clock high idle level, sample on leading edge
-    RP_SPI_MODE_HIST = 3    //!< Clock high idle level, sample on trailing edge
+    RP_SPI_MODE_LISL = 0,   //!< Clock low idle level, Sample on leading edge. CPOL = 0, CPHA = 0
+    RP_SPI_MODE_LIST = 1,   //!< Clock low idle level, sample on trailing edge. CPOL = 0, CPHA = 1
+    RP_SPI_MODE_HISL = 2,   //!< Clock high idle level, sample on leading edge. CPOL = 1, CPHA = 0
+    RP_SPI_MODE_HIST = 3    //!< Clock high idle level, sample on trailing edge. CPOL = 1, CPHA = 1
 } rp_spi_mode_t;
 
 /**

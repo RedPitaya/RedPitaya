@@ -240,6 +240,10 @@
 
         }).resize();
 
+        $("#ext_con_but").click(function(event) {
+            $('#ext_connections_dialog').modal("show");
+        });
+
         $('#graphs').dblclick(function(event) {
             event.stopPropagation();
             var s = CLIENT.getValue('LA_TOTAL_SAMPLES')

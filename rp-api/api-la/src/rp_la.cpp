@@ -352,6 +352,38 @@ auto CLAController::getDecoderSettings(std::string name) -> std::string{
     return "";
 }
 
+auto CLAController::setDecoderSettingsUInt(std::string name, std::string key, uint32_t value) -> bool{
+    std::lock_guard lock(m_pimpl->m_decoder_mutex);
+    if (m_pimpl->m_decoders.find(name) != m_pimpl->m_decoders.end()){
+        return m_pimpl->m_decoders[name]->setDecoderSettingsUInt(key,value);
+    }
+    return false;
+}
+
+auto CLAController::setDecoderSettingsFloat(std::string name, std::string key, float value) -> bool{
+    std::lock_guard lock(m_pimpl->m_decoder_mutex);
+    if (m_pimpl->m_decoders.find(name) != m_pimpl->m_decoders.end()){
+        return m_pimpl->m_decoders[name]->setDecoderSettingsFloat(key,value);
+    }
+    return false;
+}
+
+auto CLAController::getDecoderSettingsUInt(std::string name, std::string key, uint32_t *value) -> bool{
+    std::lock_guard lock(m_pimpl->m_decoder_mutex);
+    if (m_pimpl->m_decoders.find(name) != m_pimpl->m_decoders.end()){
+        return m_pimpl->m_decoders[name]->getDecoderSettingsUInt(key,value);
+    }
+    return false;
+}
+
+auto CLAController::getDecoderSettingsFloat(std::string name, std::string key, float *value) -> bool{
+    std::lock_guard lock(m_pimpl->m_decoder_mutex);
+    if (m_pimpl->m_decoders.find(name) != m_pimpl->m_decoders.end()){
+        return m_pimpl->m_decoders[name]->getDecoderSettingsFloat(key,value);
+    }
+    return false;
+}
+
 auto CLAController::isDecoderExist(std::string name) -> bool{
     std::lock_guard lock(m_pimpl->m_decoder_mutex);
     if (m_pimpl->m_decoders.find(name) != m_pimpl->m_decoders.end()){
@@ -734,9 +766,9 @@ auto CLAController::printRLENP(uint8_t* np_buffer, int size, bool useHex) -> voi
     uint64_t samples = 0;
     for(size_t i = 0; i < count_vec.size(); i++){
         if (useHex)
-            fprintf(stderr, "%llu/%llu\t: 0x%X\n",samples,count_vec[i],data_vec[i]);
+            fprintf(stderr, "%06llu/%06llu\t: 0x%X\n",samples,count_vec[i],data_vec[i]);
         else
-            fprintf(stderr, "%llu/%llu\t: %08d\n",samples,count_vec[i],binary(data_vec[i],0));
+            fprintf(stderr, "%06llu/%06llu\t: %08d\n",samples,count_vec[i],binary(data_vec[i],0));
         samples += count_vec[i];
     }
 }
