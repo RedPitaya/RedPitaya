@@ -46,7 +46,8 @@ typedef struct can_control_s {
 typedef enum {
     HK_V1,
     HK_V2,
-    HK_V3
+    HK_V3,
+    HK_V4
 } hk_version_t;
 
 typedef struct housekeeping_control_s {
@@ -142,6 +143,34 @@ typedef struct housekeeping_control_s_v3 {
 
 } housekeeping_control_v3_t;
 
+// For Low Latency board
+typedef struct housekeeping_control_s_v4 {
+    uint32_t id;                            // 0x0
+    uint32_t dna_lo;                        // 0x4 **DNA part 1**
+    uint32_t dna_hi;                        // 0x8 **DNA part 2**
+    uint32_t digital_loop;                  // 0xC **Digital Loopback**
+    uint32_t ex_cd_p;                       // 0x10 **Expansion connector direction P**
+    uint32_t ex_cd_n;                       // 0x14 **Expansion connector direction N**
+    uint32_t ex_co_p;                       // 0x18 **Expansion connector output P**
+    uint32_t ex_co_n;                       // 0x1c **Expansion connector output N**
+    uint32_t ex_ci_p;                       // 0x20 **Expansion connector input P**
+    uint32_t ex_ci_n;                       // 0x24 **Expansion connector input N**
+    uint32_t reserved_2;                    // 0x28
+    uint32_t reserved_3;                    // 0x2C
+    uint32_t led_control;                   // 0x30 **LED control**
+    // TODO - missing in FPGA?
+    can_control_t can_control;              // 0x34 **CAN control**
+    uint32_t reserved_4;                    // 0x38
+    uint32_t reserved_5;                    // 0x3C
+    uint32_t idelay_control;                // 0x40
+    uint32_t reserved_6;                    // 0x44
+    uint32_t reserved_7;                    // 0x48
+    uint32_t reserved_8;                    // 0x4C
+    uint32_t adc_spi_cw;                    // 0x50 **ADC SPI Control word**
+    uint32_t adc_spi_wd;                    // 0x54 **ADC SPI Write data / start transfer**
+    uint32_t adc_spi_rd;                    // 0x58 **ADC SPI Read data / Transfer busy**
+} housekeeping_control_v4_t;
+
 static const uint32_t LED_CONTROL_MASK = 0xFF;
 static const uint32_t DIGITAL_LOOP_MASK = 0x1;
 static const uint32_t EX_CD_P_MASK = 0xFF;
@@ -208,6 +237,10 @@ static hk_version_t house_getHKVersion() {
         case STEM_250_12_v1_2b:
         case STEM_250_12_120:
             return HK_V3;
+
+        case STEM_125_14_Z7020_LL_v1_1:
+        case STEM_65_16_Z7020_LL_v1_1:
+            return HK_V4;
         default:
             ERROR_LOG("Can't get board model");
     }

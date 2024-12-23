@@ -41,8 +41,8 @@ void UsingArgs(){
     printf("Usage with file: [-P]|[-C]|[-C1]|[-C2]\n");
     printf("\t-P Power on ADC and DAC. Initialization MAX7311.\n");
     printf("\t-С Load configuration of ADC and DAC. \n");
-    printf("\t-С1 Load configuration of ADC and DAC for 125-14 LL v1.1. \n");
-    printf("\t-С2 Load configuration of ADC and DAC for 65-16 LL v1.1. \n");
+    printf("\t-С1 Load configuration of ADC for 125-14 LL v1.1. \n");
+    printf("\t-С2 Load configuration of ADC for 65-16 LL v1.1. \n");
     printf("\tDo not use flags together");
 
     exit(-1);
@@ -77,11 +77,9 @@ int main(int argc, char* argv[])
     }
     if (mode3) {
         rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/ADC3664-125.xml");
-        rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/DAC2904-125.xml");
     }
     if (mode4) {
         rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/ADC3663-65.xml");
-        rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/DAC2904-125.xml");
     }
 
     return 0;

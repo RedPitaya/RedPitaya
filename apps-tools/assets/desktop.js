@@ -130,19 +130,19 @@
             return "STEM 14"
         }
         if (model == 20){
-            return "STEM 14"
+            return "STEM 14-G2"
         }
         if (model == 21){
-            return "STEM 14"
+            return "STEM 14-G2"
         }
         if (model == 22){
-            return "STEM 14-Z20"
+            return "STEM 14-Z20-G2"
         }
         if (model == 23){
-            return "STEM 14-Z20"
+            return "STEM 14-Z20-G2"
         }
         if (model == 24){
-            return "STEM 14-Z20"
+            return "STEM 14-Z20-G2"
         }
         if (model == 25){
             return "STEM 14-Z20-LL"
