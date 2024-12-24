@@ -243,7 +243,40 @@
             LA.graphs.plot.setupGrid();
             LA.graphs.plot.setData(pointArr);
             LA.graphs.plot.draw();
-            console.log(pointArr)
+        }
+    }
+
+    LA.updatePositionBufferViewportOnly = function(){
+        var samples =  CLIENT.getValue('LA_TOTAL_SAMPLES')
+        var pos = CLIENT.getValue('LA_VIEW_PORT_POS')
+        var scale = CLIENT.getValue('LA_SCALE')
+        var samplerate = CLIENT.getValue('LA_CUR_FREQ')
+        var graph_width = $('#graph_grid').width()
+
+        if (samples === undefined || samples === 0){
+            $("#buffer_time_region").hide()
+            return
+        }
+
+        if (pos !== undefined && samplerate !== undefined && scale !== undefined && samples !== undefined){
+            var timePerDevInMs = (((graph_width / scale) / samplerate) * 1000.0); // Main view
+            // var totalTime = samples / samplerate * 1000.0
+            var totalWidthBuffer = $('#graphs_buffer').width()
+            var viewPortWidth = timePerDevInMs * 10 // totalTime * totalWidth
+            $("#buffer_time_region").width(viewPortWidth).height($('#buffer').height())
+            $("#buffer_time_region").show()
+
+            var centerPosX = totalWidthBuffer * pos
+            if (centerPosX - viewPortWidth/2.0 < 0 && centerPosX + viewPortWidth/2.0 > totalWidthBuffer){
+                centerPosX = totalWidthBuffer * 0.5
+                $('#buffer_time_region').draggable('disable');
+            }else{
+                centerPosX = (centerPosX - viewPortWidth / 2.0 < 0 ? viewPortWidth / 2: centerPosX)
+                centerPosX = (centerPosX + viewPortWidth / 2.0 > totalWidthBuffer ? totalWidthBuffer - viewPortWidth / 2.0: centerPosX)
+                $('#buffer_time_region').draggable('enable');
+            }
+            var leftPos = centerPosX - viewPortWidth / 2.0
+            $("#buffer_time_region").css({left: leftPos});
         }
     }
 
@@ -283,8 +316,6 @@
             var l = Math.floor(leftPos / graph_width * samples)
             var r = Math.ceil(rightPos / graph_width * samples)
             LA.region_samples = {start: l , end:r}
-            console.log("viewPortWidth",viewPortWidth)
-            console.log(LA.region_samples, 'TW', totalWidthBuffer, 'CP',centerPosX, 'LP' ,leftPos, 'RP' ,rightPos)
 
             LA.updateMainView()
             OSC.updateTimeScale()
@@ -311,6 +342,7 @@
             plot.setupGrid();
             plot.draw();
             LA.drawAllSeries()
+            LOGGER.scrollDataArea()
         }
     }
 
@@ -413,24 +445,42 @@
         return false;
     };
 
+    LA.getPoltRect = function(){
+        var plot = LA.getPlot();
+        if (!plot) {
+            return {l:0,t:0,w:0,h:0};
+        }
+        var gPosition = $('#graph_grid').offset();
+        var gLeft = gPosition.left;
+        var gTop = gPosition.top;
+        var gWidth = $('#graph_grid').width();
+        var gHeight = $('#graph_grid').height();
+        var plotOffset = plot.getPlotOffset();
+
+        gLeft += plotOffset.left
+        gTop += plotOffset.top
+        gWidth = gWidth - plotOffset.left - plotOffset.right
+        gHeight = gHeight - plotOffset.top - plotOffset.bottom
+        return {l:gLeft,t:gTop,w:gWidth,h:gHeight}
+    }
+
+    LA.boundCursor = function(rect,pos){
+        if (pos.x < rect.l){
+            pos.x = rect.l
+        }
+        if (pos.x > (rect.l + rect.w)){
+            pos.x = (rect.l + rect.w)
+        }
+        if (pos.y < rect.t){
+            pos.y = rect.t
+        }
+        if (pos.y > (rect.t + rect.h)){
+            pos.y = (rect.t + rect.h)
+        }
+        return pos
+    }
+
     LA.time_zoom = function(ev, offsetPx, byMouseWheel) {
-
-        // for (var i = 1; i < 5; i++) {
-        //     var bus = "bus" + i;
-        //     if (OSC.buses[bus].name !== undefined && OSC.buses[bus].name == "UART" && OSC.buses[bus].enabled) {
-        //         OSC.buses[bus].samplerate = OSC.state.acq_speed;
-        //         OSC.params.local[OSC.buses[bus].decoder + "_parameters"] = {
-        //             value: OSC.buses[bus]
-        //         };
-        //     }
-        //     if (OSC.buses[bus].name !== undefined && OSC.buses[bus].name == "CAN" && OSC.buses[bus].enabled) {
-        //         OSC.buses[bus].acq_speed = OSC.state.acq_speed;
-        //         OSC.params.local[OSC.buses[bus].decoder + "_parameters"] = {
-        //             value: OSC.buses[bus]
-        //         };
-        //     }
-        // }
-
         OSC.state.resized = true;
         LA.scaleWasChanged = LA.changeXZoom(ev);
         OSC.guiHandler();
@@ -443,10 +493,6 @@
         }
         var pos = CLIENT.getValue("LA_DIN_" + channel + "_POS")
         if (pos !== undefined){
-            // var grid = $('#graph_grid');
-            // var volt_per_px = grid.height() / 9;
-            // var px_offset = grid.height() - (pos * volt_per_px);
-            // OSC.state.graph_grid_height = grid.height();
             return pos
         }
         return -1
@@ -512,19 +558,6 @@
                 }
             }
         }
-
-        // if (signal in OSC.recv_signals) {
-        //     OSC.current_bus = OSC.getBusByChNum(ch + 1);
-        //     if (decoder.startsWith('can'))
-        //         CAN.drawDecoded(ch, plot, canvascontext, OSC.voltage_offset[ch], OSC.recv_signals[signal]);
-        //     else if (decoder.startsWith('i2c'))
-        //         I2C.drawDecoded(ch, plot, canvascontext, OSC.voltage_offset[ch], OSC.recv_signals[signal]);
-        //     else if (decoder.startsWith('spi'))
-        //         SPI.drawDecoded(ch, plot, canvascontext, OSC.voltage_offset[ch], OSC.recv_signals[signal], OSC.accordingChanName(ch + 1));
-        //     else if (decoder.startsWith('uart'))
-        //         UART.drawDecoded(ch, plot, canvascontext, OSC.voltage_offset[ch], OSC.recv_signals[signal], OSC.current_bus, OSC.accordingChanName(ch + 1));
-        // }
-        // OSC.current_bus = "bus-1";
     }
 
     LA.drawAllSeries = function(){

@@ -49,7 +49,6 @@
 
     OSC.redrawTimeout = undefined;
     OSC.latest_signal = {};
-    OSC.mouseWheelEventFired = false;
 
     // Time scale steps in millisecods
     OSC.time_steps = [
@@ -72,8 +71,6 @@
     // OSC.ch_names = ["DIN0", "DIN1", "DIN2", "DIN3", "DIN4", "DIN5", "DIN6", "DIN7"];
     OSC.log_buses = [false, false, false, false];
 
-    // Sampling rates
-    OSC.max_freq = undefined;
 
 
     // OSC.triggers_list_id = [];
@@ -161,7 +158,7 @@
             var needRedraw = false
             if (signals['data_rle']){
                 LA.lastData = signals
-                LA.lastDataRepacked = OSC.repackSignals(LA.lastData)
+                LA.lastDataRepacked = COMMON.repackSignals(LA.lastData)
                 needRedraw = true
             }
             for(var ch = 1; ch <= 4; ch++){
@@ -175,23 +172,13 @@
             CLIENT.signalStack.splice(0, 1);
             LA.setupDataToBufferGraph()
             LA.setupDataToGraph()
+            LOGGER.setupDataToLogger()
             if (needRedraw)
                 LA.drawAllSeries()
         }
     }
 
-    OSC.scrollDataArea = function() {
-        // Scroll
-        var div_index = 0;
-        COMMON.oldResult = [];
-        for (var i = 0; i < COMMON.savedResultArr.length; i++) {
-            if ((COMMON.savedResultArr[i].abspos) < OSC.counts_offset)
-                div_index++;
-            else
-                break;
-        }
-        $('#log-container').scrollTop(20 * div_index);
-    }
+
 
 
 
@@ -249,7 +236,7 @@
         }
 
         if (new_params['LA_MAX_FREQ'])
-            OSC.updateMaxFreq(new_params['LA_MAX_FREQ'].value)
+            COMMON.updateMaxFreq(new_params['LA_MAX_FREQ'].value)
 
         if (new_params['LA_CUR_FREQ']) // Need set before other parameters
             OSC.setCurrentFreq(new_params['LA_CUR_FREQ'].value)
@@ -352,7 +339,7 @@
     // Exits from editing mode
     OSC.exitEditing = function(noclose) {
 
-        var key_for_send = ['LA_DECIMATE','LA_PRE_TRIGGER_BUFFER_MS','LA_POST_TRIGGER_BUFFER_MS']
+        var key_for_send = ['LA_DECIMATE','LA_PRE_TRIGGER_BUFFER_MS','LA_POST_TRIGGER_BUFFER_MS','LA_WIN_SHOW']
 
         for (var key in CLIENT.params.orig) {
             if (!(key_for_send.includes(key)))
@@ -599,10 +586,10 @@
     OSC.param_callbacks["DECODER_DEF_SPI"] =  LA.setDefSetSPI;
     OSC.param_callbacks["DECODER_DEF_I2C"] =  LA.setDefSetI2C;
 
-    OSC.param_callbacks["DECODER_ANNOTATION_UART"] = COMMON.setAnnoSetUART;
-    OSC.param_callbacks["DECODER_ANNOTATION_CAN"] =  COMMON.setAnnoSetCAN;
-    OSC.param_callbacks["DECODER_ANNOTATION_SPI"] =  COMMON.setAnnoSetSPI;
-    OSC.param_callbacks["DECODER_ANNOTATION_I2C"] =  COMMON.setAnnoSetI2C;
+    OSC.param_callbacks["DECODER_ANNOTATION_UART"] = SERIES.setAnnoSetUART;
+    OSC.param_callbacks["DECODER_ANNOTATION_CAN"] =  SERIES.setAnnoSetCAN;
+    OSC.param_callbacks["DECODER_ANNOTATION_SPI"] =  SERIES.setAnnoSetSPI;
+    OSC.param_callbacks["DECODER_ANNOTATION_I2C"] =  SERIES.setAnnoSetI2C;
 
     OSC.param_callbacks["LA_CURSOR_X1"] = LA.cursorX;
     OSC.param_callbacks["LA_CURSOR_X2"] = LA.cursorX;
@@ -615,6 +602,20 @@
     OSC.param_callbacks["RP_SYSTEM_TEMPERATURE"] = OSC.setCpuTemp;
     OSC.param_callbacks["RP_SYSTEM_FREE_RAM"] = OSC.setFreeRAM;
     OSC.param_callbacks["RP_SYSTEM_TOTAL_RAM"] = OSC.setTotalRAM;
+
+
+    OSC.param_callbacks["LA_WIN_SHOW"] = LA.setWinShow;
+    OSC.param_callbacks["LA_WIN_X"] = LA.setWinX;
+    OSC.param_callbacks["LA_WIN_Y"] = LA.setWinY;
+    OSC.param_callbacks["LA_WIN_W"] = LA.setWinW;
+    OSC.param_callbacks["LA_WIN_H"] = LA.setWinH;
+
+    OSC.param_callbacks["LA_LOGGER_BUS_1"] = LOGGER.setLoggerBUS1;
+    OSC.param_callbacks["LA_LOGGER_BUS_2"] = LOGGER.setLoggerBUS2;
+    OSC.param_callbacks["LA_LOGGER_BUS_3"] = LOGGER.setLoggerBUS3;
+    OSC.param_callbacks["LA_LOGGER_BUS_4"] = LOGGER.setLoggerBUS4;
+    OSC.param_callbacks["LA_LOGGER_RADIX"] = LOGGER.setLoggerRadix;
+
 
 
 }(window.OSC = window.OSC || {}, jQuery));
@@ -664,10 +665,8 @@ $(function() {
         OSC.exitEditing(true);
     });
 
-    // Export
-    $('#downl_graph').on('click', function() {
-        setTimeout(OSC.SaveGraphs, 30);
-    });
+
+
 
     $('#downl_csv').on('click', function() {
         OSC.downloadDataAsCSV("laData.csv");
@@ -714,355 +713,206 @@ $(function() {
         }
     });
 
-    // Close parameters dialog after Enter key is pressed
-    $('input').keyup(function(event) {
-        if (event.keyCode == 13) {
-            OSC.exitEditing(true);
-        }
-    });
-
-    // Close parameters dialog on close button click
-    //  $('.close-dialog').on('click touchstart', function() {
-    $('.close-dialog').on('click', function() {
-        OSC.exitEditing();
-    });
-
-    // Time offset arrow dragging
-    $('#time_offset_arrow').draggable({
-        axis: 'x',
-        containment: 'parent',
-        drag: function(ev, ui) {
-            OSC.state.line_moving = true;
-            var graph_width = $('#graph_grid').outerWidth();
-            var zero_pos = (graph_width + 2) / 2;
-
-            // Dragging signals
-            if (!$.isEmptyObject(OSC.graphs)) {
-                var graph_width = $('#graph_grid').width();
-                var pxPerPoint = graph_width / 1024;
-                var diff = event.pageX - curXPos;
-
-                if (diff < 0 && (OSC.ch1_size <= ((OSC.counts_offset + 1024) / OSC.time_scale)))
-                    return;
-
-                var signalDiff = diff / pxPerPoint;
-                OSC.counts_offset -= signalDiff;
-
-                curXPos = event.pageX;
-                if (OSC.counts_offset <= 0) {
-                    OSC.counts_offset = 0;
-                    ev.preventDefault();
-                }
 
 
-                OSC.offsetForDecoded = OSC.counts_offset;
+    // // Touch events
+    // $(document).on('touchstart', '.plot', function(ev) {
+    //     ev.preventDefault();
 
-                console.log(OSC.counts_offset);
+    //     // Multi-touch is used for zooming
+    //     if (!OSC.touch.start && ev.originalEvent.touches.length > 1) {
+    //         OSC.touch.zoom_axis = null;
+    //         OSC.touch.start = [{
+    //             clientX: ev.originalEvent.touches[0].clientX,
+    //             clientY: ev.originalEvent.touches[0].clientY
+    //         }, {
+    //             clientX: ev.originalEvent.touches[1].clientX,
+    //             clientY: ev.originalEvent.touches[1].clientY
+    //         }];
+    //     }
+    //     // Single touch is used for changing offset
+    //     else if (!OSC.state.simulated_drag) {
+    //         OSC.state.simulated_drag = true;
+    //         OSC.touch.offset_axis = null;
+    //         OSC.touch.start = [{
+    //             clientX: ev.originalEvent.touches[0].clientX,
+    //             clientY: ev.originalEvent.touches[0].clientY
+    //         }];
+    //     }
+    // });
 
-                // Scroll
-                OSC.scrollDataArea();
-                var trigPosInPoints = (OSC.samples_sum * OSC.time_scale - OSC.counts_offset) * $('#graphs').width() / 1024 - $('#time_offset_arrow').width() / 2;
-                $('#time_offset_arrow').css('left', trigPosInPoints);
-                // I cry when I see this code :'(
-                $('#OSC_TIME_OFFSET').text(OSC.convertTime(5 * (($('#time_offset_arrow').position().left + $('#time_offset_arrow').width() / 2) / ($('#graphs').width() / 2) - 1) * 102400 / OSC.time_scale / OSC.state.acq_speed));
+    // $(document).on('touchmove', '.plot', function(ev) {
+    //     ev.preventDefault();
 
-            }
+    //     // Multi-touch is used for zooming
+    //     if (ev.originalEvent.touches.length > 1) {
 
-            // Calculate time per division
-            var samplerate = OSC.state.acq_speed;
-            var samples = 1024;
-            var mul = 1000;
-            var scale = OSC.time_scale;
-            var dev_num = 10;
-            var timeInMs = (((samples / scale) / samplerate) * mul);
+    //         OSC.touch.curr = [{
+    //             clientX: ev.originalEvent.touches[0].clientX,
+    //             clientY: ev.originalEvent.touches[0].clientY
+    //         }, {
+    //             clientX: ev.originalEvent.touches[1].clientX,
+    //             clientY: ev.originalEvent.touches[1].clientY
+    //         }];
 
-            ms_per_px = timeInMs / graph_width;
-            OSC.trigger_position = (zero_pos - ui.position.left - ui.helper.width() / 2 - 1);
-            var new_value = +(((zero_pos - ui.position.left - ui.helper.width() / 2 - 1) * ms_per_px).toFixed(6));
-            var buf_width = graph_width - 2;
+    //         // Find zoom axis
+    //         if (!OSC.touch.zoom_axis) {
+    //             var delta_x = Math.abs(OSC.touch.curr[0].clientX - OSC.touch.curr[1].clientX);
+    //             var delta_y = Math.abs(OSC.touch.curr[0].clientY - OSC.touch.curr[1].clientY);
 
-            $('#info_box').html('Time offset ' + OSC.convertTime(new_value));
-            $('#OSC_TIME_OFFSET').text(OSC.convertTime(new_value));
-            OSC.time_offset_str = OSC.convertTime(new_value);
-            OSC.guiHandler();
-        },
-        stop: function(ev, ui) {
-            OSC.state.line_moving = false;
-            if (!OSC.state.simulated_drag) {
-                var graph_width = $('#graph_grid').outerWidth();
-                var zero_pos = (graph_width + 2) / 2;
+    //             if (Math.abs(delta_x - delta_y) > 10) {
+    //                 if (delta_x > delta_y) {
+    //                     OSC.touch.zoom_axis = 'x';
+    //                 } else if (delta_y > delta_x) {
+    //                     OSC.touch.zoom_axis = 'y';
+    //                 }
+    //             }
+    //         }
 
-                // Calculate time per division
-                var samplerate = OSC.state.acq_speed;
-                var samples = 1024;
-                var mul = 1000;
-                var scale = OSC.time_scale;
-                var dev_num = 10;
-                var timeInMs = (((samples / scale) / samplerate) * mul);
+    //         // Skip first touch event
+    //         if (OSC.touch.prev) {
 
-                ms_per_px = timeInMs / graph_width;
+    //             // Time zoom
+    //             if (OSC.touch.zoom_axis == 'x') {
+    //                 var prev_delta_x = Math.abs(OSC.touch.prev[0].clientX - OSC.touch.prev[1].clientX);
+    //                 var curr_delta_x = Math.abs(OSC.touch.curr[0].clientX - OSC.touch.curr[1].clientX);
 
-                OSC.params.local['OSC_TIME_OFFSET'] = {
-                    value: (zero_pos - ui.position.left - ui.helper.width() / 2 - 1) * ms_per_px
-                };
-                OSC.sendParams();
-                $('#info_box').empty();
-                OSC.guiHandler();
-            }
-        }
-    });
+    //                 if (OSC.state.fine || Math.abs(curr_delta_x - prev_delta_x) > $(this).width() * 0.9 / OSC.time_steps.length) {
+    //                     var new_scale = OSC.changeXZoom((curr_delta_x < prev_delta_x ? '+' : '-'), OSC.touch.new_scale_x, true);
 
-    // Time offset rectangle dragging
-    $('#buf_time_offset').draggable({
-        axis: 'x',
-        containment: 'parent',
-        drag: function(ev, ui) {
-            OSC.state.line_moving = true;
-            var buf_width = $('#buffer').width();
-            var zero_pos = (buf_width + 2) / 2;
+    //                     if (new_scale !== null) {
+    //                         OSC.touch.new_scale_x = new_scale;
+    //                         $('#info_box').html('Time scale ' + OSC.convertTime(new_scale) + '/div');
+    //                     }
 
-            // Calculate time per division
-            var samplerate = OSC.state.acq_speed;
-            var samples = 1024;
-            var mul = 1000;
-            var scale = OSC.time_scale;
-            var dev_num = 10;
-            var timeInMs = (((samples / scale) / samplerate) * mul);
+    //                     OSC.touch.prev = OSC.touch.curr;
+    //                 }
+    //             }
+    //             // Voltage zoom
+    //             else if (OSC.touch.zoom_axis == 'y' && OSC.state.sel_sig_name) {
+    //                 var prev_delta_y = Math.abs(OSC.touch.prev[0].clientY - OSC.touch.prev[1].clientY);
+    //                 var curr_delta_y = Math.abs(OSC.touch.curr[0].clientY - OSC.touch.curr[1].clientY);
 
-            var ms_per_px = timeInMs / buf_width;
-            var ratio = buf_width / (buf_width * OSC.params.orig['OSC_VIEV_PART'].value);
-            var new_value = +(((zero_pos - ui.position.left - ui.helper.width() / 2 - 1) * ms_per_px * ratio).toFixed(2));
-            var px_offset = -(new_value / ms_per_px + $('#time_offset_arrow').width() / 2 + 1);
+    //                 if (OSC.state.fine || Math.abs(curr_delta_y - prev_delta_y) > $(this).height() * 0.9 / OSC.voltage_steps.length) {
+    //                     var new_scale = OSC.changeYZoom((curr_delta_y < prev_delta_y ? '+' : '-'), OSC.touch.new_scale_y, true);
 
-            $('#info_box').html('Time offset ' + OSC.convertTime(new_value));
-            $('#OSC_TIME_OFFSET').text(OSC.convertTime(new_value));
-            OSC.time_offset_str = OSC.convertTime(new_value);
-            $('#time_offset_arrow').css('left', (buf_width + 2) / 2 + px_offset);
+    //                     if (new_scale !== null) {
+    //                         OSC.touch.new_scale_y = new_scale;
+    //                         $('#info_box').html('Vertical scale ' + COMMON.convertVoltage(new_scale) + '/div');
+    //                     }
 
-            // I cry when I see this code :'(
-            $('#OSC_TIME_OFFSET').text(OSC.convertTime(5 * (($('#time_offset_arrow').position().left + $('#time_offset_arrow').width() / 2) / ($('#graphs').width() / 2) - 1) * 102400 / OSC.time_scale / OSC.state.acq_speed));
-            OSC.guiHandler();
-        },
-        stop: function(ev, ui) {
-            if (!OSC.state.simulated_drag) {
-                var buf_width = $('#buffer').width();
-                var zero_pos = (buf_width + 2) / 2;
-                OSC.state.line_moving = false;
-                // Calculate time per division
-                var samplerate = OSC.state.acq_speed;
-                var samples = 1024;
-                var mul = 1000;
-                var scale = OSC.time_scale;
-                var dev_num = 10;
-                var timeInMs = (((samples / scale) / samplerate) * mul);
+    //                     OSC.touch.prev = OSC.touch.curr;
+    //                 }
+    //             }
+    //         } else if (OSC.touch.prev === undefined) {
+    //             OSC.touch.prev = OSC.touch.curr;
+    //         }
+    //     }
+    //     // Single touch is used for changing offset
+    //     else if (OSC.state.simulated_drag) {
 
-                var ms_per_px = timeInMs / buf_width;
-                $('#info_box').empty();
-                OSC.guiHandler();
-            }
-        }
-    });
+    //         // Find offset axis
+    //         if (!OSC.touch.offset_axis) {
+    //             var delta_x = Math.abs(OSC.touch.start[0].clientX - ev.originalEvent.touches[0].clientX);
+    //             var delta_y = Math.abs(OSC.touch.start[0].clientY - ev.originalEvent.touches[0].clientY);
 
-    // Touch events
-    $(document).on('touchstart', '.plot', function(ev) {
-        ev.preventDefault();
+    //             if (delta_x > 5 || delta_y > 5) {
+    //                 if (delta_x > delta_y) {
+    //                     OSC.touch.offset_axis = 'x';
+    //                 } else if (delta_y > delta_x) {
+    //                     OSC.touch.offset_axis = 'y';
+    //                 }
+    //             }
+    //         }
 
-        // Multi-touch is used for zooming
-        if (!OSC.touch.start && ev.originalEvent.touches.length > 1) {
-            OSC.touch.zoom_axis = null;
-            OSC.touch.start = [{
-                clientX: ev.originalEvent.touches[0].clientX,
-                clientY: ev.originalEvent.touches[0].clientY
-            }, {
-                clientX: ev.originalEvent.touches[1].clientX,
-                clientY: ev.originalEvent.touches[1].clientY
-            }];
-        }
-        // Single touch is used for changing offset
-        else if (!OSC.state.simulated_drag) {
-            OSC.state.simulated_drag = true;
-            OSC.touch.offset_axis = null;
-            OSC.touch.start = [{
-                clientX: ev.originalEvent.touches[0].clientX,
-                clientY: ev.originalEvent.touches[0].clientY
-            }];
-        }
-    });
+    //         if (OSC.touch.prev) {
 
-    $(document).on('touchmove', '.plot', function(ev) {
-        ev.preventDefault();
+    //             // Time offset
+    //             if (OSC.touch.offset_axis == 'x') {
+    //                 var delta_x = ev.originalEvent.touches[0].clientX - OSC.touch.prev[0].clientX;
 
-        // Multi-touch is used for zooming
-        if (ev.originalEvent.touches.length > 1) {
+    //                 if (delta_x != 0) {
+    //                     //$('#time_offset_arrow').simulate('drag', { dx: delta_x, dy: 0 });
+    //                     $('#time_offset_arrow').simulate('drag', {
+    //                         dx: delta_x,
+    //                         dy: 0
+    //                     });
+    //                 }
+    //             }
+    //             // Voltage offset
+    //             else if (OSC.touch.offset_axis == 'y' && OSC.state.sel_sig_name) {
+    //                 var delta_y = ev.originalEvent.touches[0].clientY - OSC.touch.prev[0].clientY;
 
-            OSC.touch.curr = [{
-                clientX: ev.originalEvent.touches[0].clientX,
-                clientY: ev.originalEvent.touches[0].clientY
-            }, {
-                clientX: ev.originalEvent.touches[1].clientX,
-                clientY: ev.originalEvent.touches[1].clientY
-            }];
+    //                 if (delta_y != 0) {
+    //                     $('#' + OSC.state.sel_sig_name + '_offset_arrow').simulate('drag', {
+    //                         dx: 0,
+    //                         dy: delta_y
+    //                     });
+    //                 }
+    //             }
+    //         }
 
-            // Find zoom axis
-            if (!OSC.touch.zoom_axis) {
-                var delta_x = Math.abs(OSC.touch.curr[0].clientX - OSC.touch.curr[1].clientX);
-                var delta_y = Math.abs(OSC.touch.curr[0].clientY - OSC.touch.curr[1].clientY);
+    //         OSC.touch.prev = [{
+    //             clientX: ev.originalEvent.touches[0].clientX,
+    //             clientY: ev.originalEvent.touches[0].clientY
+    //         }];
+    //     }
+    // });
 
-                if (Math.abs(delta_x - delta_y) > 10) {
-                    if (delta_x > delta_y) {
-                        OSC.touch.zoom_axis = 'x';
-                    } else if (delta_y > delta_x) {
-                        OSC.touch.zoom_axis = 'y';
-                    }
-                }
-            }
+    // $(document).on('touchend', '.plot', function(ev) {
+    //     ev.preventDefault();
 
-            // Skip first touch event
-            if (OSC.touch.prev) {
+    //     if (OSC.state.simulated_drag) {
+    //         OSC.state.simulated_drag = false;
 
-                // Time zoom
-                if (OSC.touch.zoom_axis == 'x') {
-                    var prev_delta_x = Math.abs(OSC.touch.prev[0].clientX - OSC.touch.prev[1].clientX);
-                    var curr_delta_x = Math.abs(OSC.touch.curr[0].clientX - OSC.touch.curr[1].clientX);
+    //         if (OSC.touch.offset_axis == 'x') {
+    //             //$('#time_offset_arrow').simulate('drag', { dx: 0, dy: 0 });
+    //             $('#buf_time_offset').simulate('drag', {
+    //                 dx: 0,
+    //                 dy: 0
+    //             });
+    //         } else if (OSC.touch.offset_axis == 'y' && OSC.state.sel_sig_name) {
+    //             $('#' + OSC.state.sel_sig_name + '_offset_arrow').simulate('drag', {
+    //                 dx: 0,
+    //                 dy: 0
+    //             });
+    //         }
 
-                    if (OSC.state.fine || Math.abs(curr_delta_x - prev_delta_x) > $(this).width() * 0.9 / OSC.time_steps.length) {
-                        var new_scale = OSC.changeXZoom((curr_delta_x < prev_delta_x ? '+' : '-'), OSC.touch.new_scale_x, true);
+    //         delete OSC.touch.start;
+    //         delete OSC.touch.prev;
+    //     } else {
+    //         // Send new scale
+    //         if (OSC.touch.new_scale_y !== undefined) {
+    //             OSC.params.local['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_SCALE'] = {
+    //                 value: OSC.touch.new_scale_y
+    //             };
+    //             OSC.sendParams();
+    //         } else if (OSC.touch.new_scale_x !== undefined) {
+    //             OSC.params.local['OSC_TIME_SCALE'] = {
+    //                 value: OSC.touch.new_scale_x
+    //             };
+    //             OSC.sendParams();
+    //         }
+    //     }
 
-                        if (new_scale !== null) {
-                            OSC.touch.new_scale_x = new_scale;
-                            $('#info_box').html('Time scale ' + OSC.convertTime(new_scale) + '/div');
-                        }
-
-                        OSC.touch.prev = OSC.touch.curr;
-                    }
-                }
-                // Voltage zoom
-                else if (OSC.touch.zoom_axis == 'y' && OSC.state.sel_sig_name) {
-                    var prev_delta_y = Math.abs(OSC.touch.prev[0].clientY - OSC.touch.prev[1].clientY);
-                    var curr_delta_y = Math.abs(OSC.touch.curr[0].clientY - OSC.touch.curr[1].clientY);
-
-                    if (OSC.state.fine || Math.abs(curr_delta_y - prev_delta_y) > $(this).height() * 0.9 / OSC.voltage_steps.length) {
-                        var new_scale = OSC.changeYZoom((curr_delta_y < prev_delta_y ? '+' : '-'), OSC.touch.new_scale_y, true);
-
-                        if (new_scale !== null) {
-                            OSC.touch.new_scale_y = new_scale;
-                            $('#info_box').html('Vertical scale ' + OSC.convertVoltage(new_scale) + '/div');
-                        }
-
-                        OSC.touch.prev = OSC.touch.curr;
-                    }
-                }
-            } else if (OSC.touch.prev === undefined) {
-                OSC.touch.prev = OSC.touch.curr;
-            }
-        }
-        // Single touch is used for changing offset
-        else if (OSC.state.simulated_drag) {
-
-            // Find offset axis
-            if (!OSC.touch.offset_axis) {
-                var delta_x = Math.abs(OSC.touch.start[0].clientX - ev.originalEvent.touches[0].clientX);
-                var delta_y = Math.abs(OSC.touch.start[0].clientY - ev.originalEvent.touches[0].clientY);
-
-                if (delta_x > 5 || delta_y > 5) {
-                    if (delta_x > delta_y) {
-                        OSC.touch.offset_axis = 'x';
-                    } else if (delta_y > delta_x) {
-                        OSC.touch.offset_axis = 'y';
-                    }
-                }
-            }
-
-            if (OSC.touch.prev) {
-
-                // Time offset
-                if (OSC.touch.offset_axis == 'x') {
-                    var delta_x = ev.originalEvent.touches[0].clientX - OSC.touch.prev[0].clientX;
-
-                    if (delta_x != 0) {
-                        //$('#time_offset_arrow').simulate('drag', { dx: delta_x, dy: 0 });
-                        $('#time_offset_arrow').simulate('drag', {
-                            dx: delta_x,
-                            dy: 0
-                        });
-                    }
-                }
-                // Voltage offset
-                else if (OSC.touch.offset_axis == 'y' && OSC.state.sel_sig_name) {
-                    var delta_y = ev.originalEvent.touches[0].clientY - OSC.touch.prev[0].clientY;
-
-                    if (delta_y != 0) {
-                        $('#' + OSC.state.sel_sig_name + '_offset_arrow').simulate('drag', {
-                            dx: 0,
-                            dy: delta_y
-                        });
-                    }
-                }
-            }
-
-            OSC.touch.prev = [{
-                clientX: ev.originalEvent.touches[0].clientX,
-                clientY: ev.originalEvent.touches[0].clientY
-            }];
-        }
-    });
-
-    $(document).on('touchend', '.plot', function(ev) {
-        ev.preventDefault();
-
-        if (OSC.state.simulated_drag) {
-            OSC.state.simulated_drag = false;
-
-            if (OSC.touch.offset_axis == 'x') {
-                //$('#time_offset_arrow').simulate('drag', { dx: 0, dy: 0 });
-                $('#buf_time_offset').simulate('drag', {
-                    dx: 0,
-                    dy: 0
-                });
-            } else if (OSC.touch.offset_axis == 'y' && OSC.state.sel_sig_name) {
-                $('#' + OSC.state.sel_sig_name + '_offset_arrow').simulate('drag', {
-                    dx: 0,
-                    dy: 0
-                });
-            }
-
-            delete OSC.touch.start;
-            delete OSC.touch.prev;
-        } else {
-            // Send new scale
-            if (OSC.touch.new_scale_y !== undefined) {
-                OSC.params.local['OSC_' + OSC.state.sel_sig_name.toUpperCase() + '_SCALE'] = {
-                    value: OSC.touch.new_scale_y
-                };
-                OSC.sendParams();
-            } else if (OSC.touch.new_scale_x !== undefined) {
-                OSC.params.local['OSC_TIME_SCALE'] = {
-                    value: OSC.touch.new_scale_x
-                };
-                OSC.sendParams();
-            }
-        }
-
-        // Reset touch information
-        OSC.touch = {};
-        $('#info_box').empty();
-    });
+    //     // Reset touch information
+    //     OSC.touch = {};
+    //     $('#info_box').empty();
+    // });
 
     // Preload images which are not visible at the beginning
-    $.preloadImages = function() {
-        for (var i = 0; i < arguments.length; i++) {
-            $('<img />').attr('src', 'img/' + arguments[i]);
-        }
-    }
-    $.preloadImages(
-        'node_up.png',
-        'node_left.png',
-        'node_right.png',
-        'node_down.png',
-        'fine_active.png'
-    );
-
-
+    // $.preloadImages = function() {
+    //     for (var i = 0; i < arguments.length; i++) {
+    //         $('<img />').attr('src', 'img/' + arguments[i]);
+    //     }
+    // }
+    // $.preloadImages(
+    //     'node_up.png',
+    //     'node_left.png',
+    //     'node_right.png',
+    //     'node_down.png',
+    //     'fine_active.png'
+    // );
 
 
     $('.btn-less').click(function() {
@@ -1074,173 +924,9 @@ $(function() {
 
 
 
-
-
-    var laAxesMoving = false;
-    var curXPos = 0;
-
-
-    // $(window).on('focus', function() {
-    //     OSC.checkAndShowArrows();
-    //     setTimeout(function() { OSC.checkAndShowArrows(); }, 750);
-    //     OSC.drawGraphGrid();
-    // });
-
-    // $(window).on('blur', function() {
-    //     OSC.checkAndShowArrows();
-    //     setTimeout(function() { OSC.checkAndShowArrows(); }, 750);
-    // });
-
-    // $("#graphs").mousedown(function(event) {
-    //     laAxesMoving = true;
-    //     curXPos = event.pageX;
-    // });
-
-    // $("#graphs").mouseup(function(event) {
-    //     laAxesMoving = false;
-    // });
-
-    // $("#graphs").mouseout(function(event) {
-    //     laAxesMoving = false;
-    // });
-
-
-    // $("#graphs").mousemove(function(event) {
-    //     if (OSC.state.line_moving) return;
-    //     if (laAxesMoving) {
-    //         if (!$.isEmptyObject(OSC.graphs)) {
-    //             var graph_width = $('#graph_grid').width();
-    //             var pxPerPoint = graph_width / 1024;
-    //             var diff = event.pageX - curXPos;
-    //             if (diff < 0 && (OSC.ch1_size <= ((OSC.counts_offset + 1024 - diff) / OSC.time_scale)))
-    //                 diff = -1 * (OSC.ch1_size * OSC.time_scale - OSC.counts_offset - 1024);
-
-    //             var signalDiff = diff / pxPerPoint;
-    //             OSC.counts_offset -= signalDiff;
-
-    //             curXPos = event.pageX;
-
-    //             if (OSC.counts_offset <= 0) {
-    //                 diff = (signalDiff + OSC.counts_offset) * pxPerPoint;
-    //                 OSC.counts_offset = 0;
-    //             }
-    //             OSC.offsetForDecoded = OSC.counts_offset;
-    //             OSC.redrawTimeout = setTimeout(afterScroll, 1);
-    //         }
-    //     }
-    // });
-
-    // var applyAcqSpeed = function() {
-    //     OSC.state.acq_speed = (OSC.state.acq_speed / $(this).val()) ;
-    //     OSC.state.decimate = $(this).val();
-
-    //     var val = $('#pre-sample-buf-val').val();
-    //     val /= 1000;
-    //     val *= OSC.state.acq_speed;
-    //     if (val > 750000) {
-    //         var newVal = ((750000 / OSC.state.acq_speed) * 1000).toFixed(0);
-    //         $('#pre-sample-buf-val').val(newVal);
-    //         setTimeout(function() { $('#pre-sample-buf-val').change(); }, 100);
-
-    //     }
-
-    //     OSC.sendACQ();
-
-    //     for (var i = 1; i < 5; i++) {
-    //         var bus = "bus" + i;
-    //         if (OSC.buses[bus].name !== undefined && OSC.buses[bus].name == "UART" && OSC.buses[bus].enabled) {
-    //             OSC.buses[bus].samplerate = OSC.state.acq_speed;
-    //             OSC.params.local[OSC.buses[bus].decoder + "_parameters"] = {
-    //                 value: OSC.buses[bus]
-    //             };
-    //         }
-    //     }
-
-    //     OSC.sendParams();
-
-    // }
-
-    // $('#ACQ_SPEED').change(applyAcqSpeed);
-
-    $(".data-bus").click(function() {
-        var arr = ["DATA_BUS0", "DATA_BUS1", "DATA_BUS2", "DATA_BUS3"];
-        var bus = arr.indexOf($(this).attr('id'));
-        OSC.log_buses[bus] = !$(this).hasClass('active');
-        OSC.guiHandler();
-        if (OSC.log_buses.indexOf(true) === -1)
-            $('#log-container').html('');
-        OSC.scaleWasChanged = true;
-    });
-
-    // $('.y-offset-arrow').mouseenter(function() {
-    //     var idStr = $(this).attr('id');
-    //     for (var i = 1; i < 9; i++) {
-    //         var tmp = 'ch' + i + '_offset_arrow';
-    //         if (tmp == idStr) {
-    //             var tooltip = 'ch' + i + '_tooltip';
-    //             text = OSC.accordingChanName(i);
-    //             if (text != "") {
-    //                 $("#" + tooltip).text(text);
-    //                 $("#" + tooltip).css('visibility', 'visible');
-    //             }
-    //         }
-    //     }
-    // });
-
-    // $('.y-offset-arrow').mouseleave(function() {
-    //     var idStr = $(this).attr('id');
-    //     for (var i = 1; i < 9; i++) {
-    //         var tmp = 'ch' + i + '_offset_arrow';
-    //         if (tmp == idStr) {
-    //             var tooltip = 'ch' + i + '_tooltip';
-    //             $("#" + tooltip).text("");
-    //             $("#" + tooltip).css('visibility', 'hidden');
-    //         }
-    //     }
-    // });
-
-
-    // $("#ext_con_but").click(function(event) {
-    //     $('#ext_connections_dialog').modal("show");
-    // });
-
-    // $('#pre-sample-buf-val').change(function(e) {
-    //     var val = $('#pre-sample-buf-val').val();
-    //     if (val == "") {
-    //         val = 1;
-    //         $('#pre-sample-buf-val').val("1");
-    //     } else
-    //         val = parseInt(val);
-
-    //     if (val < 1) {
-    //         val = 1;
-    //         $('#pre-sample-buf-val').val(val);
-    //     }
-
-    //     val /= 1000; // Convert milliseconds to seconds
-    //     val *= OSC.state.acq_speed; // Convert to samples number
-
-    //     if (val > 750000) {
-    //         var newVal = ((750000 / OSC.state.acq_speed) * 1000).toFixed(0);
-    //         $('#pre-sample-buf-val').val(newVal);
-    //         newVal /= 1000;
-    //         newVal *= OSC.state.acq_speed;
-    //         val = newVal;
-    //     }
-
-    //     applyPreSampleBufVal(val);
-    // });
-
-    // $('#stem10_btn').click(function() {
-    //     OSC.setMeasureMode(1);
-    //     $.cookie('measure_mode', 1, new Date(2220, 1, 1, 0, 0, 0, 0));
-    // });
-
-    // $('#stem14_btn').click(function() {
-
-    // });
     LA.initGraph()
     LA.initHandlers()
     LA.drawGraphGrid();
     LA.initGraphBuffer();
+    LA.initSubWindow()
 });

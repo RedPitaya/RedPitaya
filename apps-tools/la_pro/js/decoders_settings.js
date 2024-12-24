@@ -45,7 +45,7 @@
     LA.showInfoArrow = function(ch) {
         var arrow_info = $('#ch' + (ch + 1) + '_info');
         var arrow_img = $('#img_info_arrow' + (ch + 1));
-        var info_text = OSC.accordingChanName(ch + 1);
+        var info_text = COMMON.accordingChanName(ch + 1);
 
         if (info_text !== "") {
             arrow_info.text(info_text);
@@ -135,14 +135,6 @@
         }
     }
 
-    // LA.hideInfoArrow = function(ch) {
-    //     var arrow_info = $('#ch' + (ch + 1) + '_info');
-    //     var arrow_img = $('#img_info_arrow' + (ch + 1));
-
-    //     arrow_info.text("");
-    //     arrow_img.hide();
-    // }
-
     LA.applyDecoder = function() {
         var protocol = $('#protocol_selector option:selected').text();
         $('#warning-dialog').hide();
@@ -183,17 +175,6 @@
                 return;
             }
 
-            // OSC.destroyDecoder(bus, "UART");
-            // var upd = OSC.needUpdateDecoder(bus, "UART");
-
-            // if (!upd)
-            //     OSC.buses[bus] = {};
-            // else
-            //     OSC.hideInfoArrow(parseInt(OSC.buses[bus].rx) - 1);
-
-            // OSC.buses[bus].name = "UART";
-            // OSC.buses[bus].enabled = true;
-
             LA.buses[bus].config.rx = parseInt(rx);
             LA.buses[bus].config.tx = parseInt(tx);
 
@@ -209,27 +190,6 @@
             CLIENT.parametersCache['DECODER_' + LA.state.bus_editing] = {value:JSON.stringify(LA.buses[bus])}
             CLIENT.parametersCache['DECODER_ENABLED_' + LA.state.bus_editing] = {value: true}
             CLIENT.sendParameters()
-            // OSC.showInfoArrow(parseInt(OSC.buses[bus].rx) - 1);
-
-            // if (!upd) {
-            //     OSC.buses[bus].decoder = 'uart' + OSC.state.decoder_id;
-            //     OSC.state.decoder_id++;
-            // }
-
-            // if (!upd) {
-            //     OSC.params.local['CREATE_DECODER'] = {
-            //         value: 'uart'
-            //     };
-            //     OSC.params.local['DECODER_NAME'] = {
-            //         value: OSC.buses[bus].decoder
-            //     };
-            // } else {
-            //     OSC.params.local[OSC.buses[bus].decoder + "_parameters"] = {
-            //         value: OSC.buses[bus]
-            //     };
-            // }
-
-            // OSC.sendParams();
         }
 
         if (protocol == "SPI") {
@@ -283,34 +243,11 @@
                 return;
             }
 
-            // OSC.destroyDecoder(bus, "SPI");
-            // var upd = OSC.needUpdateDecoder(bus, "SPI");
-
-            // if (!upd)
-            //     OSC.buses[bus] = {};
-            // else {
-            //     if (OSC.buses[bus].clk !== clk)
-            //         OSC.hideInfoArrow(parseInt(OSC.buses[bus].clk) - 1);
-            //     if (OSC.buses[bus].miso !== miso)
-            //         OSC.hideInfoArrow(parseInt(OSC.buses[bus].miso) - 1);
-            //     if (OSC.buses[bus].mosi !== mosi)
-            //         OSC.hideInfoArrow(parseInt(OSC.buses[bus].mosi) - 1);
-            //     if (OSC.buses[bus].cs !== cs)
-            //         OSC.hideInfoArrow(parseInt(OSC.buses[bus].cs) - 1);
-            // }
-
-            // OSC.buses[bus].name = "SPI";
-
             LA.buses[bus].config.clk = parseInt(clk)
             LA.buses[bus].config.miso = parseInt(miso)
             LA.buses[bus].config.mosi = parseInt(mosi)
             LA.buses[bus].config.cs = parseInt(cs)
             LA.buses[bus].config.invert_bit = parseInt(invert_bit)
-
-            // OSC.showInfoArrow(parseInt(OSC.buses[bus].clk) - 1);
-            // OSC.showInfoArrow(parseInt(OSC.buses[bus].miso) - 1);
-            // OSC.showInfoArrow(parseInt(OSC.buses[bus].mosi) - 1);
-            // OSC.showInfoArrow(parseInt(OSC.buses[bus].cs) - 1);
 
             LA.buses[bus].config.bit_order = parseInt($('#spi_order').val())
             LA.buses[bus].config.word_size = parseInt($('#spi_length').val())
@@ -322,68 +259,6 @@
             CLIENT.parametersCache['DECODER_' + LA.state.bus_editing] = {value:JSON.stringify(LA.buses[bus])}
             CLIENT.parametersCache['DECODER_ENABLED_' + LA.state.bus_editing] = {value: true}
             CLIENT.sendParameters()
-
-            // if (miso != -1) {
-            //     if (OSC.buses[bus].miso_decoder == undefined || OSC.buses[bus].miso_decoder == "") {
-            //         OSC.buses[bus].miso_decoder = 'spi' + OSC.state.decoder_id;
-            //         OSC.params.local['CREATE_DECODER'] = {
-            //             value: 'spi'
-            //         };
-            //         OSC.params.local['DECODER_NAME'] = {
-            //             value: 'spi' + OSC.state.decoder_id
-            //         };
-            //         OSC.state.decoder_id++;
-            //     } else {
-            //         var p = OSC.buses[bus];
-            //         p['data'] = OSC.buses[bus].miso;
-            //         OSC.params.local[OSC.buses[bus].miso_decoder + "_parameters"] = {
-            //             value: p
-            //         };
-            //     }
-            //     OSC.sendParams();
-            // } else {
-            //     if (OSC.buses[bus].miso_decoder != undefined && OSC.buses[bus].miso_decoder != "") {
-            //         var p = {};
-            //         p['DESTROY_DECODER'] = {
-            //             value: OSC.buses[bus].miso_decoder
-            //         };
-            //         OSC.ws.send(JSON.stringify({
-            //             parameters: p
-            //         }));
-            //         OSC.buses[bus].miso_decoder = "";
-            //     }
-            // }
-            // if (mosi != -1) {
-            //     if (OSC.buses[bus].mosi_decoder == undefined || OSC.buses[bus].mosi_decoder == "") {
-            //         OSC.buses[bus].mosi_decoder = 'spi' + OSC.state.decoder_id;
-            //         OSC.params.local['CREATE_DECODER'] = {
-            //             value: 'spi'
-            //         };
-            //         OSC.params.local['DECODER_NAME'] = {
-            //             value: 'spi' + OSC.state.decoder_id
-            //         };
-            //         OSC.state.decoder_id++;
-            //     } else {
-            //         var p = OSC.buses[bus];
-            //         p['data'] = OSC.buses[bus].mosi;
-            //         OSC.params.local[OSC.buses[bus].mosi_decoder + "_parameters"] = {
-            //             value: p
-            //         };
-            //     }
-            //     OSC.sendParams();
-            // } else {
-            //     if (OSC.buses[bus].mosi_decoder != undefined && OSC.buses[bus].mosi_decoder != "") {
-            //         var p = {};
-            //         p['DESTROY_DECODER'] = {
-            //             value: OSC.buses[bus].miso_decoder
-            //         };
-            //         OSC.ws.send(JSON.stringify({
-            //             parameters: p
-            //         }));
-            //         OSC.buses[bus].mosi_decoder = "";
-            //     }
-            // }
-
         }
 
         if (protocol == "I2C") {
@@ -415,18 +290,6 @@
                 return;
             }
 
-            // OSC.destroyDecoder(bus, "I2C");
-            // var upd = OSC.needUpdateDecoder(bus, "I2C");
-
-            // if (!upd)
-            //     OSC.buses[bus] = {};
-            // else {
-            //     if (OSC.buses[bus].scl !== scl)
-            //         OSC.hideInfoArrow(parseInt(OSC.buses[bus].scl) - 1);
-            //     if (OSC.buses[bus].sda !== sda)
-            //         OSC.hideInfoArrow(parseInt(OSC.buses[bus].sda) - 1);
-            // }
-
             LA.buses[bus].config.scl = parseInt(scl)
             LA.buses[bus].config.sda = parseInt(sda)
             LA.buses[bus].config.address_format = parseInt($('#i2c_addr').val())
@@ -436,28 +299,6 @@
             CLIENT.parametersCache['DECODER_' + LA.state.bus_editing] = {value:JSON.stringify(LA.buses[bus])}
             CLIENT.parametersCache['DECODER_ENABLED_' + LA.state.bus_editing] = {value: true}
             CLIENT.sendParameters()
-            // OSC.showInfoArrow(parseInt(OSC.buses[bus].scl) - 1);
-            // OSC.showInfoArrow(parseInt(OSC.buses[bus].sda) - 1);
-
-            // if (!upd) {
-            //     OSC.buses[bus].decoder = 'i2c' + OSC.state.decoder_id;
-            //     OSC.state.decoder_id++;
-            // }
-
-            // if (!upd) {
-            //     OSC.params.local['CREATE_DECODER'] = {
-            //         value: 'i2c'
-            //     };
-            //     OSC.params.local['DECODER_NAME'] = {
-            //         value: OSC.buses[bus].decoder
-            //     };
-            // } else {
-            //     OSC.params.local[OSC.buses[bus].decoder + "_parameters"] = {
-            //         value: OSC.buses[bus]
-            //     };
-            // }
-            // OSC.sendParams();
-
         }
 
         if (protocol == "CAN") {
@@ -503,15 +344,6 @@
                 return;
             }
 
-
-            // OSC.destroyDecoder(bus, "CAN");
-            // var upd = OSC.needUpdateDecoder(bus, "CAN");
-
-            // if (!upd)
-            //     OSC.buses[bus] = {};
-            // else
-            //     OSC.hideInfoArrow(parseInt(OSC.buses[bus].can_rx) - 1);
-
             LA.buses[bus].config.rx = parseInt(can_rx)
             LA.buses[bus].config.nominal_bitrate = parseInt(nom_bitrate)
             LA.buses[bus].config.fast_bitrate = parseInt(fast_bitrate)
@@ -523,27 +355,6 @@
             CLIENT.parametersCache['DECODER_ENABLED_' + LA.state.bus_editing] = {value: true}
             CLIENT.sendParameters()
 
-            // LA.showInfoArrow(parseInt(OSC.buses[bus].can_rx) - 1);
-
-            // if (!upd) {
-            //     OSC.buses[bus].decoder = 'can' + OSC.state.decoder_id;
-            //     OSC.state.decoder_id++;
-            // }
-
-            // if (!upd) {
-            //     OSC.params.local['CREATE_DECODER'] = {
-            //         value: 'can'
-            //     };
-            //     OSC.params.local['DECODER_NAME'] = {
-            //         value: OSC.buses[bus].decoder
-            //     };
-            // } else {
-            //     OSC.params.local[OSC.buses[bus].decoder + "_parameters"] = {
-            //         value: OSC.buses[bus]
-            //     };
-            // }
-
-            // OSC.sendParams();
         }
 
         if (protocol == '-') {
@@ -551,10 +362,6 @@
             CLIENT.parametersCache["DECODER_ENABLED_" + LA.state.bus_editing ] = { value : false }
             CLIENT.sendParameters();
         }
-
-        // $("#BUS" + OSC.state.bus_editing + "_ENABLED").find('img').show();
-        // $("#BUS" + OSC.state.bus_editing + "_NAME").text(protocol);
-        // $("#DATA_BUS" + (OSC.state.bus_editing - 1)).text(protocol);
 
         $('#decoder_dialog').modal('hide');
         LA.state.bus_editing = 0;
@@ -682,89 +489,6 @@
             LA.loadBUSSettingsFromConfig()
 
             $('#decoder_dialog').modal('show');
-
-            // if ($("BUS" + bn + "_NAME").text() != "BUS" + bn) {
-            //     var bus = 'bus' + bn;
-
-            //     $('.decoder-window').hide();
-
-            //     // if (LA.buses[bus].name === undefined){
-
-            //     // }
-
-            //     if (LA.buses[bus].name !== undefined) {
-
-            //         if (LA.buses[bus].name == "UART") {
-            //             $('#protocol_selector option').removeAttr('selected');
-            //             $('#protocol_selector option[value=#uart_decoder]').attr('selected', 'selected');
-            //             $('#protocol_selector').val("#uart_decoder");
-            //             $('#uart_decoder').show();
-
-
-
-            //             $('#uart_data_length option[value=' + LA.buses[bus].num_data_bits + ']').attr('selected', 'selected');
-            //             $('#uart_stop_bits option[value=' + LA.buses[bus].num_stop_bits + ']').attr('selected', 'selected');
-            //             $('#uart_parity option[value=' + LA.buses[bus].parity + ']').attr('selected', 'selected');
-            //             $('#uart_order option[value=' + LA.buses[bus].bitOrder + ']').attr('selected', 'selected');
-            //             $('#uart_order option[value=' + LA.buses[bus].invert_rx + ']').attr('selected', 'selected');
-
-            //             $('#uart_serial option[value=' + (LA.buses[bus].rx) + ']').attr('selected', 'selected');
-            //             $('#uart_baudrate').val(LA.buses[bus].baudrate);
-            //         } else if (LA.buses[bus].name == "CAN") {
-            //             $('#protocol_selector option').removeAttr('selected');
-            //             $('#protocol_selector option[value=#can_decoder]').attr('selected', 'selected');
-            //             $('#protocol_selector').val("#can_decoder");
-            //             $('#can_decoder').show();
-
-            //             $('#can_rx option[value=' + (parseInt(OSC.buses[bus].can_rx)) + ']').attr('selected', 'selected');
-            //             $('#can_nom_bitrate').val(LA.buses[bus].nominal_bitrate);
-            //             $('#can_fast_bitrate').val(LA.buses[bus].fast_bitrate);
-            //             $('#sample_point').val(LA.buses[bus].sample_point);
-            //             $('#can_frame_limit').val(LA.buses[bus].frame_limit);
-            //             $('#can_invert option[value=' + LA.buses[bus].invert_bit + ']').attr('selected', 'selected');
-
-            //         } else if (LA.buses[bus].name == "I2C") {
-            //             $('#protocol_selector option').removeAttr('selected');
-            //             $('#protocol_selector option[value=#i2c_decoder]').attr('selected', 'selected');
-            //             $('#protocol_selector').val("#i2c_decoder");
-            //             $('#i2c_decoder').show();
-
-            //             $('#i2c_sda option[value=' + (parseInt(LA.buses[bus].sda)) + ']').attr('selected', 'selected');
-            //             $('#i2c_scl option[value=' + (parseInt(LA.buses[bus].scl)) + ']').attr('selected', 'selected');
-
-            //             $('#i2c_addr option[value=' + LA.buses[bus].address_format + ']').attr('selected', 'selected');
-            //             $('#i2c_invert option[value=' + LA.buses[bus].invert_bit + ']').attr('selected', 'selected');
-
-            //         } else if (LA.buses[bus].name == "SPI") {
-            //             $('#protocol_selector option').removeAttr('selected');
-            //             $('#protocol_selector option[value=#spi_decoder]').attr('selected', 'selected');
-            //             $('#protocol_selector').val("#spi_decoder");
-            //             $('#spi_decoder').show();
-
-            //             $('#spi_clk option[value=' + (LA.buses[bus].clk) + ']').attr('selected', 'selected');
-            //             $('#spi_mosi option[value=' + (LA.buses[bus].mosi) + ']').attr('selected', 'selected');
-            //             $('#spi_miso option[value=' + (LA.buses[bus].miso) + ']').attr('selected', 'selected');
-            //             $('#spi_cs option[value=' + (LA.buses[bus].cs) + ']').attr('selected', 'selected');
-
-            //             $('#spi_order option[value=' + LA.buses[bus].word_size + ']').attr('selected', 'selected');
-            //             $('#spi_length option[value=' + LA.buses[bus].data_length + ']').attr('selected', 'selected');
-            //             $('#spi_cpol option[value=' + LA.buses[bus].cpol + ']').attr('selected', 'selected');
-            //             $('#spi_cpha option[value=' + LA.buses[bus].cpha + ']').attr('selected', 'selected');
-            //             $('#spi_state option[value=' + LA.buses[bus].cs_polarity + ']').attr('selected', 'selected');
-            //             $('#spi_invert option[value=' + LA.buses[bus].invert_bit + ']').attr('selected', 'selected');
-            //         }
-            //     }
-            // }
-            // $('#decoder_dialog').modal('show');
-
-            // // Check enabled decoders, check existing logic data file and show help link
-            // $.get("/lapro_copy_datafile");
-            // $.get("/check_datafile_exists").done(function(res) {
-            //     if (res == "OK\n")
-            //         $('#porblemsLink').show();
-            //     else
-            //         $('#porblemsLink').hide();
-            // }).fail(function(res) {});
         }
     }
 

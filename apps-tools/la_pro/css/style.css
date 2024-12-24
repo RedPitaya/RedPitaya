@@ -341,6 +341,11 @@ area:hover {
     float: right;
 }
 
+.menu-content-left {
+    width: 190px;
+    float:left;
+}
+
 .right-menu-option {
     margin: 1px 1px 2px 1px;
     height: 31px;
@@ -1108,3 +1113,7 @@ body.modal-open .full-content {
 .saved_settings>a>img:hover {
     transform: scale(1.3);
 }
+
+
+
+

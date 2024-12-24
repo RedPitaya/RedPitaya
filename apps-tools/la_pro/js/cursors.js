@@ -122,7 +122,7 @@
             $('#cur_' + x + ', #cur_' + x + '_info').css('left', left);
 
             $('#cur_' + x + '_info')
-                .html(OSC.convertTime(new_value))
+                .html(COMMON.convertTime(new_value))
                 .attr('value',new_value)
                 .css('margin-left', (left + msg_width > graph_width - 2 ? -msg_width - 1 : ''));
 
@@ -153,7 +153,7 @@
                 .width(diff_px)
                 .show();
             $('#cur_x_diff_info')
-                .html(OSC.convertTime(Math.abs(value)))
+                .html(COMMON.convertTime(Math.abs(value)))
                 .show()
                 .css('left', left + diff_px / 2 - $('#cur_x_diff_info').width() / 2 + 3);
         } else {

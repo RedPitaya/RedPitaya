@@ -7,6 +7,10 @@
 
 (function(LA, $, undefined) {
 
+    LA.mouseWheelEventFired = false;
+    LA.move_mode = undefined;
+
+
     LA.initHandlers = function() {
 
         $('.trigger_type').change(function(e) {
@@ -73,6 +77,72 @@
                 CLIENT.sendParameters()
             }
         });
+
+        $("#graphs").mousewheel(function(event) {
+            if (LA.mouseWheelEventFired)
+                return;
+            LA.changeXZoom(event.deltaY > 0 ? '+' : '-');
+            LA.mouseWheelEventFired = true;
+            setTimeout(function() { LA.mouseWheelEventFired = false; }, 300);
+        });
+
+        $(document).on('mousedown', '.plot', function(ev) {
+            ev.preventDefault();
+            // ev.stopPropagation();
+            if (!LA.move_mode) {
+                var rect = LA.getPoltRect()
+                var newPos = LA.boundCursor(rect,{ x: ev.clientX, y: ev.clientY })
+                LA.move_mode = newPos;
+            }
+        });
+
+        $(document).on('mousemove', '.plot', function(ev) {
+            ev.preventDefault();
+            // ev.stopPropagation();
+            if (!LA.move_mode) {
+                return;
+            }
+            var plot = LA.getPlot()
+            if (plot == undefined) return
+            var rect = LA.getPoltRect()
+            var newPos = LA.boundCursor(rect,{ x: ev.clientX, y: ev.clientY })
+
+            var x = LA.move_mode.x - newPos.x;
+            // var y = LA.move_mode.y - newPos.y;
+            var options = plot.getOptions();
+            var range_x   = options.xaxes[0].max - options.xaxes[0].min;
+            // var range_y   = options.yaxes[0].max - options.yaxes[0].min;
+            LA.move_mode  = newPos;
+            var offset = x * range_x / $(this).width();
+            var max = options.xaxes[0].max + offset;
+            var min = options.xaxes[0].min + offset;
+            var samples =  CLIENT.getValue('LA_TOTAL_SAMPLES')
+            if (samples !== undefined && samples !== 0){
+                LA.region_samples.start = min
+                LA.region_samples.end = max
+                CLIENT.params.orig['LA_VIEW_PORT_POS'] = {value: ((max - min) / 2 + min) / samples}
+                LA.updatePositionBufferViewportOnly()
+                LA.updateMainView()
+                LA.updateXInfo()
+            }
+        });
+
+        $(document).on('mouseup', '.plot', function(ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            LA.move_mode = undefined;
+            CLIENT.parametersCache['LA_VIEW_PORT_POS'] = {value: CLIENT.getValue('LA_VIEW_PORT_POS')}
+            CLIENT.sendParameters()
+        });
+
+        $(document).on('mouseup', function(ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            LA.move_mode = undefined;
+            CLIENT.parametersCache['LA_VIEW_PORT_POS'] = {value: CLIENT.getValue('LA_VIEW_PORT_POS')}
+            CLIENT.sendParameters()
+        });
+
 
         $('#cur_x1_arrow, #cur_x2_arrow').draggable({
             axis: 'x',
@@ -236,6 +306,7 @@
             LA.drawGraphGrid()
             LA.updateCursors()
             LA.updateChannels()
+            LA.checkSubWindowPosition()
             OSC.setCurrentFreq()
 
         }).resize();
@@ -273,10 +344,15 @@
             OSC.guiHandler();
         });
 
-        $('#EXPORT_RADIX').change(function() {
-            OSC.state.export_radix = $(this).val();
-            OSC.guiHandler();
+        $('#LOGGER_RADIX').change(function() {
+            CLIENT.parametersCache['LA_LOGGER_RADIX'] = {value : $(this).val()}
+            CLIENT.sendParameters()
         });
+
+        // $('#LOGGER_RADIX').change(function() {
+        //     OSC.state.export_radix = $(this).val();
+        //     OSC.guiHandler();
+        // });
 
 
         $('#protocol_selector').change(function() {
@@ -287,6 +363,28 @@
             LA.startEditBus($(this).attr('id'));
         });
 
+        $('#downl_graph').on('click', function() {
+            setTimeout(COMMON.saveGraphs, 30);
+        });
+
+        // Close parameters dialog after Enter key is pressed
+        $('input').keyup(function(event) {
+            if (event.keyCode == 13) {
+                OSC.exitEditing(true);
+            }
+        });
+
+        // Close parameters dialog on close button click
+        $('.close-dialog').on('click', function() {
+            OSC.exitEditing();
+        });
+
+        $(".data-bus").click(function() {
+            var arr = ["DATA_BUS0", "DATA_BUS1", "DATA_BUS2", "DATA_BUS3"];
+            var bus = arr.indexOf($(this).attr('id'));
+            CLIENT.parametersCache['LA_LOGGER_BUS_' + (bus +1)] = {value:!$(this).hasClass('active')}
+            CLIENT.sendParameters()
+        });
     }
 
 }(window.LA = window.LA || {}, jQuery));

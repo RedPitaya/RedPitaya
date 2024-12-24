@@ -5,7 +5,11 @@
  */
 
 
-(function(OSC, $, undefined) {
+(function(COMMON, $, undefined) {
+
+    // Sampling rates
+    COMMON.max_freq = undefined;
+
 
     $.fn.iLightInputNumber = function(options) {
         var inBox = '.input-number-box';
@@ -166,9 +170,9 @@
         return dateFormat(this, mask, utc);
     };
 
-    OSC.updateMaxFreq = function(value) {
-        if (OSC.max_freq == undefined) {
-            OSC.max_freq = value;
+    COMMON.updateMaxFreq = function(value) {
+        if (COMMON.max_freq == undefined) {
+            COMMON.max_freq = value;
             const round = (n, dp) => {
                 const h = +('1'.padEnd(dp + 1, '0')) // 10 or 100 or 1000 or etc
                 return Math.round(n * h) / h
@@ -176,7 +180,7 @@
             var nodes = document.getElementsByClassName("speed_val");
             [...nodes].forEach((element, index, array) => {
                 dec = parseInt(element.attributes.getNamedItem("value").value);
-                val = OSC.max_freq / dec
+                val = COMMON.max_freq / dec
                 item = val
                 if (item >= 1e6){
                     suff = "M"
@@ -190,24 +194,7 @@
         }
     };
 
-
-
-    OSC.convertUnpacked = function(array) {
-        var CHUNK_SIZE = 0x8000; // arbitrary number here, not too small, not too big
-        var index = 0;
-        var length = array.length;
-        var result = '';
-        var slice;
-        while (index < length) {
-            slice = Array.prototype.slice.call(array, index, Math.min(index + CHUNK_SIZE, length));
-            //slice = array.slice(index, Math.min(index + CHUNK_SIZE, length)); // `Math.min` is not really necessary here I think
-            result += String.fromCharCode.apply(null, slice);
-            index += CHUNK_SIZE;
-        }
-        return result;
-    }
-
-    OSC.repackSignals = function(signals) {
+    COMMON.repackSignals = function(signals) {
         var vals = {};
         var res = {};
         var hasData = false;
@@ -242,154 +229,20 @@
         return res;
     }
 
-    OSC.repackSignalsAVG = function(signals, base) {
-        BLOCK_SIZE = (base == undefined) ? 32 : base;
-        BLOCK_SIZE = (BLOCK_SIZE >= 32) ? BLOCK_SIZE * 2 : BLOCK_SIZE;
+    COMMON.saveGraphs = function() {
+        const fireEvent = function (obj, evt) {
+            var fireOnThis = obj;
+            if (document.createEvent) {
+                var evObj = document.createEvent('MouseEvents');
+                evObj.initEvent(evt, true, false);
+                fireOnThis.dispatchEvent(evObj);
 
-        var vals = {};
-        var res = {};
-        var hasData = false;
-        for (var i = 1; i < 9; i++) {
-            var ch = "ch" + i;
-            var ch_avg = ch; // + "_avg";
-
-            res[ch_avg] = {};
-            res[ch_avg]["value"] = [];
-            res[ch_avg]["size"] = 0;
-
-            var srcValues = signals[ch].value;
-            var lastValue = undefined;
-            var sum = 0;
-            var counted = 0;
-            var overflow = false;
-
-            for (var j = 0; j < srcValues.length; j += 2) {
-                if (srcValues[j] + counted >= BLOCK_SIZE) {
-                    var diff = BLOCK_SIZE - counted;
-                    counted += diff;
-                    if (srcValues[j + 1] == 1)
-                        sum += diff;
-                    var coeff = sum / BLOCK_SIZE;
-                    var averagedValue = 0;
-                    if (coeff > 0.5)
-                        averagedValue = 1;
-
-                    res[ch_avg]["value"].push(BLOCK_SIZE);
-                    res[ch_avg]["value"].push(averagedValue);
-
-                    var toCount = srcValues[j] - diff;
-                    while (toCount > BLOCK_SIZE) {
-                        res[ch_avg]["value"].push(BLOCK_SIZE);
-                        if (srcValues[j + 1] == 1)
-                            res[ch_avg]["value"].push(1);
-                        else
-                            res[ch_avg]["value"].push(0);
-                        toCount -= BLOCK_SIZE;
-                    }
-                    counted = toCount;
-                    sum = (srcValues[j + 1] == 1) ? toCount : 0;
-                } else {
-                    counted += srcValues[j];
-                    if (srcValues[j + 1] == 1)
-                        sum += srcValues[j];
-                }
-            }
-            if (counted > 0) {
-                var coeff = sum / BLOCK_SIZE;
-                var averagedValue = 0;
-                if (coeff > 0.5)
-                    averagedValue = 1;
-
-                res[ch_avg]["value"].push(counted);
-                res[ch_avg]["value"].push(averagedValue);
+            } else if (document.createEventObject) {
+                var evObj = document.createEventObject();
+                fireOnThis.fireEvent('on' + evt, evObj);
             }
         }
-        for (var k in res) {
-            res[k]['size'] = res[k].value.length;
-        }
-        return res;
-    }
 
-    OSC.splitSignals = function(signals) {
-        var vals = {};
-        for (var i = 1; i < 9; i++)
-            vals["ch" + i] = [];
-
-        var offset = OSC.counts_offset;
-        OSC.offsetForDecoded = OSC.counts_offset;
-
-        for (var chn = 0; chn < 8; chn++) {
-            if (!OSC.enabled_channels[chn])
-                continue;
-
-
-            var overflow = false;
-            var encoded = 0;
-            var skip = 0;
-            var first_skip = true;
-
-            var ch_get = "ch" + (chn + 1); // + "_avg";
-            var ch_set = "ch" + (chn + 1);
-
-            var amount = 0;
-
-            for (var i = 0; i < signals[ch_get].value.length; i += 2) {
-                var length = signals[ch_get].value[i] * OSC.time_scale;
-
-                if ((skip + length) >= offset) {
-                    if (first_skip) {
-                        length = (skip + length) - offset;
-                        skip = offset;
-                        first_skip = false;
-                        encoded = amount = length;
-
-                    } else {
-                        if ((encoded + length) >= 1024) {
-                            overflow = true;
-                            amount = 1024 - encoded;
-                        } else
-                            amount = length;
-                        encoded += amount;
-                    }
-                } else {
-                    skip += length;
-                    continue;
-                }
-                var amp = OSC.voltage_steps[OSC.voltage_index];
-                var offset1 = OSC.voltage_offset[chn];
-                var val = signals[ch_get].value[i + 1] * amp + offset1;
-                vals[ch_set].push(amount);
-                vals[ch_set].push(val);
-                if (overflow)
-                    break;
-            }
-
-        }
-        signals = {};
-        for (var channel in vals) {
-            signals[channel] = {};
-            signals[channel].size = vals[channel].length;
-            signals[channel].value = vals[channel];
-        }
-        return signals;
-    }
-
-    // Export
-    // Firefox
-    function fireEvent(obj, evt) {
-        var fireOnThis = obj;
-        if (document.createEvent) {
-            var evObj = document.createEvent('MouseEvents');
-            evObj.initEvent(evt, true, false);
-            fireOnThis.dispatchEvent(evObj);
-
-        } else if (document.createEventObject) {
-            var evObj = document.createEventObject();
-            fireOnThis.fireEvent('on' + evt, evObj);
-        }
-    }
-
-    OSC.SaveGraphs = function() {
         html2canvas(document.querySelector("body"), {backgroundColor: '#343433'}).then(canvas => {
             var a = document.createElement('a');
             // toDataURL defaults to png, so we need to request a jpeg, then convert for file download.
@@ -400,7 +253,7 @@
         });
     }
 
-    OSC.downloadDataAsCSV = function(filename) {
+    COMMON.downloadDataAsCSV = function(filename) {
         var strings = ['i'];
         var col_delim = ', ';
         var row_delim = '\n';
@@ -469,84 +322,8 @@
         saveAs(new Blob([strings.join('')], { type: "text/plain;charset=utf-8" }), filename);
     };
 
-    OSC.getChByColor = function(color) {
-        for (var i = 1; i < 9; i++) {
-            var ch = "ch" + i;
-            if (OSC.config.graph_colors[ch] == color) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    // OSC.getDecoderByChannelNum = function(ch) {
-    //     for (var i = 1; i < 5; i++) {
-    //         var bus = "bus" + i;
-    //         if (LA.buses[bus] != undefined && LA.buses[bus].name != undefined) {
-    //             switch (LA.buses[bus].name) {
-    //                 case "UART":
-    //                     if (LA.buses[bus].rx == ch)
-    //                         return LA.buses[bus].decoder;
-    //                     if (LA.buses[bus].rx == ch)
-    //                         return LA.buses[bus].decoder;
-    //                     break;
-    //                 case "I2C":
-    //                     if (LA.buses[bus].sda == ch)
-    //                         return LA.buses[bus].decoder;
-    //                     break;
-    //                 case "CAN":
-    //                     if (LA.buses[bus].can_rx == ch)
-    //                         return LA.buses[bus].decoder;
-    //                     break;
-    //                 case "SPI":
-    //                     if (LA.buses[bus].miso == ch)
-    //                         return LA.buses[bus].miso_decoder;
-    //                     if (LA.buses[bus].mosi == ch)
-    //                         return LA.buses[bus].mosi_decoder;
-    //                     break;
-    //             }
-    //         }
-    //     }
-    //     return "";
-    // }
-
-    // OSC.getBusByChNum = function(ch) {
-    //     for (var i = 1; i < 5; i++) {
-    //         var bus = "bus" + i;
-    //         if (LA.buses[bus] != undefined && LA.buses[bus].name != undefined) {
-    //             switch (LA.buses[bus].name) {
-    //                 case "UART":
-    //                     if (LA.buses[bus].rx == ch)
-    //                         return bus;
-    //                     if (LA.buses[bus].tx == ch)
-    //                         return bus;
-    //                     break;
-    //                 case "I2C":
-    //                     if (LA.buses[bus].sda == ch)
-    //                         return bus;
-    //                     break;
-    //                 case "CAN":
-    //                     if (LA.buses[bus].can_rx == ch)
-    //                         return bus;
-    //                     break;
-    //                 case "SPI":
-    //                     if (LA.buses[bus].miso == ch)
-    //                         return bus;
-    //                     if (LA.buses[bus].mosi == ch)
-    //                         return bus;
-    //                     break;
-    //             }
-    //         }
-    //     }
-    //     return "";
-    // }
-
-    // OSC.getRandomArbitary = function(min, max) {
-    //     return Math.random() * (max - min) + min;
-    // }
-
     // Converts time from milliseconds to a more 'user friendly' time unit; returned value includes units
-    OSC.convertTime = function(t) {
+    COMMON.convertTime = function(t) {
         var abs_t = Math.abs(t);
         var unit = 'ms';
 
@@ -567,7 +344,7 @@
         return +(t.toFixed(2)) + ' ' + unit;
     };
 
-    OSC.convertTimeFromSec = function(t) {
+    COMMON.convertTimeFromSec = function(t) {
         var abs_t = Math.abs(t);
         var unit = 's';
         if (abs_t >= 1) {
@@ -588,7 +365,7 @@
     };
 
 
-    OSC.getTimePerDiv = function(t) {
+    COMMON.getTimePerDiv = function(t) {
         var abs_t = Math.abs(t);
         if (abs_t >= 1000) {
             return t / 1000;
@@ -602,7 +379,7 @@
     };
 
     // Converts voltage from volts to a more 'user friendly' unit; returned value includes units
-    OSC.convertVoltage = function(v) {
+    COMMON.convertVoltage = function(v) {
         var abs_v = Math.abs(v);
         var unit = 'V';
 
@@ -617,12 +394,7 @@
         return +(v.toFixed(2)) + ' ' + unit;
     };
 
-    OSC.setValue = function(input, value) {
-        input.val(value);
-        //input.change();
-    };
-
-    OSC.accordingChanName = function(chan_number) {
+    COMMON.accordingChanName = function(chan_number) {
         for (var i = 1; i < 5; i++) {
             var bus = 'bus' + i;
             var enable = CLIENT.getValue('DECODER_ENABLED_'+i)
@@ -663,5 +435,108 @@
         return "";
     }
 
+    COMMON.formatData = function(data, prefix, postfix, radix) {
 
-}(window.OSC = window.OSC || {}, jQuery));
+        const appendPrefixPostfix = function(value, prefix, postfix) {
+            var res = "";
+            if (prefix != undefined) res += prefix;
+            res += value;
+            if (postfix != undefined)
+                res += postfix;
+            return res;
+        }
+
+        var ch = "";
+        var ch1 = '\'' + String.fromCharCode(data) + '\'';
+        var hex = ConvertBase.dec2hex(data);
+        if (hex.length < 2) hex = '0' + hex;
+        var ch17 = '\'' + String.fromCharCode(data) + '\'' + "(" + "0x" + hex + ")";
+        var ch10 = data;
+        ch = ConvertBase.dec2bin(data);
+        if (ch.length < 8) {
+            var howMany = 8 - ch.length;
+            var appString = "";
+            for (var i = 0; i < howMany; i++)
+                appString += '0';
+            appString += ch;
+            ch = appString;
+        }
+        var ch2 = "0b" + ch;
+        ch = ConvertBase.dec2hex(data);
+        if (ch.length < 2)
+            ch = '0' + ch;
+        var ch16 = "0x" + ch;
+        var res = [];
+        switch (parseInt(radix)) {
+            case 1: //ASCII
+                res.push(appendPrefixPostfix(ch1, prefix, postfix));
+                res.push(appendPrefixPostfix(ch1, "", ""));
+                break;
+            case 17: // ASCII & HEX
+                res.push(appendPrefixPostfix(ch17, prefix, postfix));
+                res.push(appendPrefixPostfix(ch16, prefix, postfix));
+                res.push(appendPrefixPostfix(ch16, "", ""));
+                break;
+            case 10: //DEC
+                res.push(appendPrefixPostfix(ch10, prefix, postfix));
+                res.push(appendPrefixPostfix(ch16, prefix, postfix));
+                res.push(appendPrefixPostfix(ch16, "", ""));
+                break;
+            case 2: //BIN
+                res.push(appendPrefixPostfix(ch2, prefix, postfix));
+                res.push(appendPrefixPostfix(ch16, prefix, postfix));
+                res.push(appendPrefixPostfix(ch16, "", ""));
+                break;
+            case 16: //HEX
+                res.push(appendPrefixPostfix(ch16, prefix, postfix));
+                res.push(appendPrefixPostfix(ch16, "", ""));
+                break;
+        }
+        if (res.length === 0) res = [""];
+        return res;
+    }
+
+    // COMMON.formatExportData = function(data, prefix, postfix) {
+    //     var ch = "";
+    //     switch (parseInt(OSC.state.export_radix)) {
+    //         case 1: //ASCII
+    //             ch = '\'' + String.fromCharCode(data) + '\'';
+    //             break;
+    //         case 17: // ASCII & HEX
+    //             var hex = ConvertBase.dec2hex(data);
+    //             if (hex.length < 2)
+    //                 hex = '0' + hex;
+    //             ch = '\'' + String.fromCharCode(data) + '\'' + "(" + "0x" + hex + ")";
+    //             break;
+    //         case 10: //DEC
+    //             ch = "" + data;
+    //             break;
+    //         case 2: //BIN
+    //             ch = ConvertBase.dec2bin(data);
+    //             if (ch.length < 8) {
+    //                 var howMany = 8 - ch.length;
+    //                 var appString = "";
+    //                 for (var i = 0; i < howMany; i++)
+    //                     appString += '0';
+    //                 appString += ch;
+    //                 ch = appString;
+    //             }
+    //             ch = "0b" + ch;
+    //             break;
+    //         case 16: //HEX
+    //             ch = ConvertBase.dec2hex(data);
+    //             if (ch.length < 2)
+    //                 ch = '0' + ch;
+    //             ch = "0x" + ch;
+    //             break;
+    //     }
+    //     var res = "";
+    //     if (prefix != undefined)
+    //         res += prefix;
+    //     res += ch;
+    //     if (postfix != undefined)
+    //         res += postfix;
+    //     return res;
+    // }
+
+}(window.COMMON = window.COMMON || {}, jQuery));

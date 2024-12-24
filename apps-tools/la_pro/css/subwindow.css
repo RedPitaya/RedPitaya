@@ -1,0 +1,128 @@
+.subwindow {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    /* transform: translate(-50%, -50%); */
+    padding-left: 15px;
+    padding-right: 15px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 200;
+    display: none;
+    background-color: #343433;
+    border: 1px solid #999;
+    border-radius: 0px;
+    outline: 0;
+    overflow: hidden;
+    min-height: 200px;
+    min-width: 350px;
+}
+
+.subwindow-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.subwindow-header div{
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.close-button {
+cursor: pointer;
+    font-size: 1.5em;
+}
+
+
+.subwindow.show {
+    display: block;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Resize Handle Styles */
+.resize-handle {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    cursor: nwse-resize; /* Default cursor */
+}
+
+.resize-handle.bottom-right{
+    bottom: 0;
+    right: 0;
+    cursor: se-resize;
+}
+
+.resizable-main {
+    height: 100%;
+    overflow: scroll;
+    border: 1px solid #555555;
+    scrollbar-color: #999 #555555;
+}
+
+.subwindow-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+
+
+/* TABLE CSS */
+
+table {
+    width: 100%;
+    height: 100%;
+    margin-bottom: 40px;
+    table-layout: auto;
+}
+
+thead, tbody, tr, td, th { display: block; }
+
+tr:after {
+    content: ' ';
+    display: block;
+    visibility: hidden;
+    clear: both;
+}
+
+thead th {
+    height: 30px;
+
+    /*text-align: left;*/
+}
+
+tbody {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: auto;
+}
+
+thead {
+}
+
+.table-striped>tbody>tr:nth-child(odd) {
+    background-color: #3f3f3f;
+}
+
+tbody td, thead th {
+    /* width: 19.2%; */
+    float: left;
+    white-space:nowrap;
+}
+
+
+tbody td {
+    font-size: 12px;
+    border: solid 1px #6464647d;
+    padding-left: 5px;
+}
+
+tbody tr:hover {background-color: #6464647d;}
+

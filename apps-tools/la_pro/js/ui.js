@@ -56,14 +56,11 @@
         var img = $("#"+el).find('img');
         if (param[param_name].value){
             img.show()
-//            LA.updateChVisibility(ch)
         }else{
             img.hide()
-//            $('#ch' + (ch + 1) + '_offset_arrow').hide();
         }
         LA.updateUIFromConfig()
         LA.drawAllSeries()
-//        LA.setupDataToGraph()
     }
 
     OSC.setDINName= function(param,idx) {
@@ -638,12 +635,14 @@
             var dev_num = 10;
             var plot_samples = axes.xaxis.max - axes.xaxis.min
             var timePerWInMs = ((plot_samples  / samplerate) * mul) / dev_num;
-            $('#LA_TIME_SCALE').text(OSC.convertTime(timePerWInMs));
+            $('#LA_TIME_SCALE').text(COMMON.convertTime(timePerWInMs));
         }
     }
 
     OSC.updateDisplayRadix = function(new_params){
         $('#DISPLAY_RADIX').val(new_params['LA_DISPLAY_RADIX'].value)
+        COMMON.radix = new_params['LA_DISPLAY_RADIX'].value
+        LA.drawAllSeries()
     }
 
     OSC.setTimeScale = function(param){
@@ -682,6 +681,7 @@
     OSC.setPreTriggerCountCaptured = function(){
         LA.setupDataToBufferGraph()
         LA.setupDataToGraph()
+        LOGGER.loadDecoderValues()
     }
 
     OSC.setPostTriggerCountCaptured = function(){
@@ -690,11 +690,17 @@
 
     OSC.setSampleCountCaptured = function(param){
         LA.resizeAxisGraphBufferFromCount(param['LA_TOTAL_SAMPLES'].value)
+        LA.setupDataToBufferGraph()
+        LA.setupDataToGraph()
+        LOGGER.loadDecoderValues()
         LA.updatePositionBufferViewport()
     }
 
     OSC.setViewPortPos = function(param) {
         CLIENT.params.orig['LA_VIEW_PORT_POS'].value = parseFloat(CLIENT.params.orig['LA_VIEW_PORT_POS'].value)
+        LA.setupDataToBufferGraph()
+        LA.setupDataToGraph()
+        LOGGER.loadDecoderValues()
         LA.updatePositionBufferViewport()
     }
 

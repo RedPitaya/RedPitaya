@@ -66,18 +66,21 @@ CBooleanParameter   cursorx[2]      = INIT2("LA_CURSOR_X","", CBaseParameter::RW
 CFloatParameter     cursorx_pos[2]  = INIT2("LA_CURSOR_X","_POS", CBaseParameter::RW, 0.25, 0, 0, 1, CONFIG_VAR);
 
 
-CIntParameter 		display_radix	("LA_DISPLAY_RADIX", CBaseParameter::RW, 1, 0, 1, 20, CONFIG_VAR);
+CIntParameter 		display_radix	("LA_DISPLAY_RADIX", CBaseParameter::RW, 16, 0, 1, 20, CONFIG_VAR);
 
 CDecodedSignal		decoder_signal[4] = INIT4("DECODER_SIGNAL_","", CBaseParameter::RO, 0, rp_la::OutputPacket());
 
-// CStringParameter 	createDecoder("CREATE_DECODER", CBaseParameter::RW, "", 1);
-// CStringParameter 	destroyDecoder("DESTROY_DECODER", CBaseParameter::RW, "", 1);
-// CStringParameter 	decoderName("DECODER_NAME", CBaseParameter::RW, "", 1);
+CBooleanParameter 	decoded_window_show	("LA_WIN_SHOW", CBaseParameter::RW, false, 0, CONFIG_VAR);
+CIntParameter 		decoded_window_x	("LA_WIN_X", CBaseParameter::RW, 300, 0, 0, 65536, CONFIG_VAR);
+CIntParameter 		decoded_window_y	("LA_WIN_Y", CBaseParameter::RW, 300, 0, 0, 65536, CONFIG_VAR);
+CIntParameter 		decoded_window_w	("LA_WIN_W", CBaseParameter::RW, 400, 0, 0, 65536, CONFIG_VAR);
+CIntParameter 		decoded_window_h	("LA_WIN_H", CBaseParameter::RW, 400, 0, 0, 65536, CONFIG_VAR);
 
 
-// std::vector<RP_DIGITAL_CHANNEL_DIRECTIONS> triggers;
+/// LOGGER settings
+CBooleanParameter   log_bus_enabled[4] =  INIT4("LA_LOGGER_BUS_", "", CBaseParameter::RW, false, 0, CONFIG_VAR);
+CIntParameter 		log_radix				("LA_LOGGER_RADIX", CBaseParameter::RW, 16, 0, 1, 20, CONFIG_VAR);
 
-pthread_t g_tid2;
 
 std::atomic_bool g_needUpdateSignals = false;
 std::atomic_bool g_needUpdateDecoders = false;
@@ -224,44 +227,8 @@ void UpdateSignals(void) {
 	}
 }
 
-void PostUpdateSignals(void)
-{
-	// ch1.Update();
-	// for (auto& decoder : g_decoders)
-	// {
-	// 	decoder.second->UpdateSignals();
-	// }
-}
+void PostUpdateSignals(void){}
 
-// void* trigAcq(void *) {
-// 	bool isTimeout = false;
-// 	g_la_controller->wait(2000, &isTimeout);
-// 	if (isTimeout){
-// 		measureState.SendValue(LA_APP_TIMEOUT);
-// 	}
-//     return NULL;
-// }
-
-
-// void DoDecode(bool fpgaDataReceived, uint8_t*) {
-// 	for (auto& decoder : g_decoders)
-//     {
-//         if (decoder.second->IsParametersChanged() || fpgaDataReceived)
-//         {
-//             if(ch1.GetSize())
-//             {
-//             	uint8_t buffer[ch1.GetSize()];
-//             	for(int i=0; i<ch1.GetSize(); i++)
-//             		buffer[i] = ch1[i];
-//             	decoder.second->Decode(buffer, ch1.GetSize());
-//             }
-//             else
-//             {
-//             	decoder.second->UpdateParameters();
-//             }
-//         }
-//     }
-// }
 
 void updateFromFront(bool force){
 
@@ -287,6 +254,36 @@ void updateFromFront(bool force){
 		if (name == "UART") return LA_DECODER_UART;
 		return LA_DECODER_NONE;
 	};
+
+	for(size_t i = 0; i < 4; i++){
+		if (IS_NEW(log_bus_enabled[i]) || force){
+			log_bus_enabled[i].Update();
+		}
+	}
+
+	if (IS_NEW(log_radix) || force){
+		log_radix.Update();
+	}
+
+	if (IS_NEW(decoded_window_show) || force){
+		decoded_window_show.Update();
+	}
+
+	if (IS_NEW(decoded_window_x) || force){
+		decoded_window_x.Update();
+	}
+
+	if (IS_NEW(decoded_window_y) || force){
+		decoded_window_y.Update();
+	}
+
+	if (IS_NEW(decoded_window_h) || force){
+		decoded_window_h.Update();
+	}
+
+	if (IS_NEW(decoded_window_w) || force){
+		decoded_window_w.Update();
+	}
 
 	// Update measure select
 	if (IS_NEW(measureSelect) || force){
@@ -519,148 +516,6 @@ void OnNewParams(void) {
     if (!g_config_changed)
         g_config_changed = isChanged();
     updateFromFront(false);
-
-	return;
-
-
-
-	// ch1.Update();
-
-	// // buffers for file
-	// const size_t file_size = 102400;
-	// static uint8_t file_buf[file_size];
-
-	// if (!inRun.NewValue() && inRun.Value())
-	// {
-	// 	inRun.Update();
-	// 	rp_Stop();
-	// 	sleep(2);
-	// 	measureState.SendValue(1);
-	// }
-	// else if (inRun.NewValue() && !inRun.Value()) // FPGA mode
-	// {
-	// 	inRun.Update();
-	// 	measureState.SendValue(2);
-
-	// 	std::thread([&]{
-	// 		size_t BUF_SIZE = 1024*1024;
-	// 		int pre = preSampleBuf.Value();
-	// 		uint32_t POST = BUF_SIZE - pre;
-	// 		uint32_t samples = 0;
-    //         int s;
-	// 		// buffers for fpga
-	// 		auto buf = new uint8_t[BUF_SIZE*2];
-	// 		auto buf1 = new int16_t[BUF_SIZE];
-
-	// 		rp_Stop();
-	// 		uint8_t decimateRate = decimate.Value();
-
-
-	// 		double timeIndisposedMs;
-	// 		TRACE("pre = %d post = %d buf_size = %zu", pre, POST, BUF_SIZE);
-	// 		// run non blocking
-	// 		s = rp_Run(pre, POST, decimateRate, &timeIndisposedMs);
-
-	// 		if (triggers.empty()){
-	// 			rp_SoftwareTrigger();
-	// 		}
-
-	// 		s = rp_WaitData(0);
-
-	// 		s = rp_SetDataBuffer(buf1, BUF_SIZE);
-	// 		samples = BUF_SIZE;
-	// 		s = rp_GetValues(&samples);
-
-	// 		uint32_t trigPos = 0;
-	// 		uint32_t sum = 0;
-	// 		rp_GetTrigPosition(&trigPos);
-
-	// 		for (size_t i = 0; i < samples; ++i)
-	// 		{
-	// 			buf[i*2] = buf1[i] >> 8;
-	// 			buf[i*2 + 1] = buf1[i];
-
-	// 			if(i < trigPos)
-	// 				sum += buf[i*2] + 1;
-	// 		}
-
-	// 		TRACE("ch1 samples %d sum %d", samples, trigPos);
-	// 		TRACE("%x\n-->%x\n%x", buf[pre*2-1], buf[pre*2+1], buf[pre*2+3]);
-	// 		ch1.Set(buf, samples*2);
-
-	// 		uint8_t fileBuf[ch1.GetSize()];
-	//         for(int i=0; i<ch1.GetSize(); i++)
-	//         	fileBuf[i] = ch1[i];
-	//         writeToFile("/tmp/logicData.bin", fileBuf, ch1.GetSize());
-
-	// 		g_fpgaDataReceived = true;
-	// 		inRun.SendValue(false); // send always
-	// 		samplesSum.SendValue(sum); // send always
-	// 		measureState.SendValue(3);
-	// 		// DoDecode(g_fpgaDataReceived, NULL);
-
-	// 	    delete[] buf;
-	// 	    delete[] buf1;
-
-    //         if (s != RP_OK){
-    //             ERROR_LOG("Error api2 %d",s);
-    //         }
-	// 	}).detach();
-	// }
-	// else if (!createDecoder.IsNewValue() && !decoderName.IsNewValue() && !destroyDecoder.IsNewValue() && !g_decoders.size() && !ch1.GetSize()) // nothing
-	// {
-	// 	inRun.Update();
-	// 	return;
-	// }
-
-    // Create decoders
-	// if (createDecoder.IsNewValue() && decoderName.IsNewValue())
-	// {
-	// 	TRACE("CREATE DECODER...");
-
-	// 	createDecoder.Update();
-	// 	decoderName.Update();
-
-	// 	const auto name = decoderName.Value();
-	// 	if (createDecoder.Value() == "i2c")
-	// 	{
-	// 		g_decoders[name] = std::make_shared<I2CDecoder>(name);
-    //         TRACE("createDecoder: %s", createDecoder.Value().c_str());
-	// 	}
-	// 	else if (createDecoder.Value() == "spi")
-	// 	{
-	// 		g_decoders[name] = std::make_shared<SpiDecoder>(name);
-    //         TRACE("createDecoder: %s", createDecoder.Value().c_str());
-	// 	}
-	// 	else if (createDecoder.Value() == "can")
-	// 	{
-	// 		g_decoders[name] = std::make_shared<CANDecoder>(name);
-    //         TRACE("createDecoder: %s", createDecoder.Value().c_str());
-	// 	}
-	// 	else if (createDecoder.Value() == "uart")
-	// 	{
-	// 		g_decoders[name] = std::make_shared<UARTDecoder>(name);
-    //         TRACE("createDecoder: %s", createDecoder.Value().c_str());
-	// 	}
-
-	// 	createDecoder.Value() = name;
-    //     TRACE("Value: %s", name.c_str());
-	// }
-
-	// // Delete decoders
-	// if (destroyDecoder.IsNewValue())
-	// {
-	// 	destroyDecoder.Update();
-    //     TRACE("destroyDecoder: %s", destroyDecoder.Value().c_str());
-	// 	g_decoders.erase(destroyDecoder.Value());
-	// }
-
-	// DoDecode(false, file_buf);
-
-
 }
 
-void OnNewSignals(void)
-{
-
-}
+void OnNewSignals(void){}
