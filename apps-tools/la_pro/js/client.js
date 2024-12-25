@@ -13,7 +13,7 @@
     CLIENT.config.start_app_url = (CLIENT.config.server_ip.length ? 'http://' + CLIENT.config.server_ip : '') + '/bazaar?start=' + CLIENT.config.app_id + '?' + CLIENT.config.search.substr(1);
     CLIENT.config.stop_app_url = (CLIENT.config.server_ip.length ? 'http://' + CLIENT.config.server_ip : '') + '/bazaar?stop=' + CLIENT.config.app_id;
     CLIENT.config.socket_url = 'ws://' + (CLIENT.config.server_ip.length ? CLIENT.config.server_ip : window.location.hostname) + '/wss'; // WebSocket server URI
-    CLIENT.config.debug = true
+    CLIENT.config.debug = false
 
     // App state
     CLIENT.state = {
@@ -25,7 +25,6 @@
 
     // Other global variables
     CLIENT.ws = null;
-    CLIENT.unexpectedClose = false;
 
     CLIENT.parameterStack = [];
     CLIENT.signalStack = [];
@@ -198,7 +197,7 @@
 
     //Handlers
     var signalsHandler = function() {
-        OSC.guiHandler()
+        LA.guiHandler()
     }
 
     CLIENT.processParameters = function(new_params) {
@@ -206,7 +205,7 @@
         if (Object.keys(new_params).length > 0) {
             CLIENT.client_log(new_params)
         }
-        OSC.processParameters(new_params);
+        LA.processParameters(new_params);
     };
 
     var parametersHandler = function() {

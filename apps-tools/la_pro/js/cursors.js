@@ -200,7 +200,6 @@
                 var grid = $('#graph_grid');
                 var volt_per_px = grid.height() / 9;
                 var px_offset = grid.height() - (pos * volt_per_px);
-                OSC.state.graph_grid_height = grid.height();
                 arrow.css('top', px_offset).show();
             }
         }
@@ -227,7 +226,7 @@
         LA.showInfoArrow(ch);
     }
 
-    OSC.updateYOffset = function(ui, save) {
+    LA.updateYOffset = function(ui, save) {
         var graph_height = $('#graph_grid').height();
         var arrows = ["ch1_offset_arrow", "ch2_offset_arrow", "ch3_offset_arrow", "ch4_offset_arrow",
             "ch5_offset_arrow", "ch6_offset_arrow", "ch7_offset_arrow", "ch8_offset_arrow"
@@ -237,7 +236,7 @@
             var mtop = parseFloat(ui.helper.css('top')) * 9.0 / graph_height
             var new_value = 9 - mtop
 
-            OSC.guiHandler(); // Update signals
+            LA.guiHandler(); // Update signals
             if (new_value !== undefined && save) {
                 CLIENT.parametersCache["LA_DIN_" +(ch+1)+ "_POS"] = { value : new_value }
                 CLIENT.sendParameters();

@@ -25,12 +25,6 @@ body {
     clear: both;
 }
 
-.calib-button {
-    display: inline-block;
-    border: 1px solid gray;
-    margin: 0 29px;
-}
-
 .decoder-button {
     display: inline-block;
     border: 1px solid gray;
@@ -99,11 +93,6 @@ input {
     text-align: left;
 }
 
-#throughput_view2 {
-    text-align: right;
-    width: 150px;
-}
-
 .input-number-more,
 .input-number-less {
     position: absolute;
@@ -121,10 +110,6 @@ input {
 .input-number-less {
     bottom: 0px;
     border-color: gray transparent transparent transparent;
-}
-
-#myModal {
-    text-align: center;
 }
 
 #triginfo {
@@ -200,17 +185,6 @@ area:hover {
     color: #E5D5D5;
 }
 
-#OSC_RUN,
-#OSC_RUN:hover {
-    color: #31b44b;
-}
-
-#OSC_STOP,
-#OSC_STOP:hover {
-    display: none;
-    color: #ee3739;
-}
-
 .navbar {
     border-radius: 0px;
     background-color: #343433;
@@ -271,39 +245,6 @@ area:hover {
     border-left: 1px solid #999;
     border-right: 1px solid #999;
     background-color: #99999925;
-}
-
-.buf-main-line {
-    margin: 5px 1px 5px 1px;
-    background-color: #cdcccc;
-    height: 2px;
-}
-
-.buf-red-line-holder {
-    height: 12px;
-    border-left: 1px solid #999;
-    border-right: 1px solid #999;
-    position: absolute;
-    top: 0;
-    left: 100px;
-}
-
-.buf-red-line {
-    width: 100px;
-    height: 2px;
-    background-color: #ce3234;
-    margin-top: 5px;
-    display: none;
-}
-
-#buf_time_offset {
-    height: 12px;
-    width: 8px;
-    position: absolute;
-    top: 0;
-    left: 0;
-    background-color: #75cede;
-    display: none;
 }
 
 .right-menu-cont {
@@ -400,51 +341,6 @@ area:hover {
     float: left;
     max-height: 82px;
     overflow: hidden;
-}
-
-.ch1,
-.btn.ch1,
-.ch1.focus {
-    color: #f3ec1a !important;
-}
-
-.ch2,
-.btn.ch2,
-.ch2.focus {
-    color: #31b44b !important;
-}
-
-.output1,
-.btn.output1,
-.output1.focus {
-    color: #9595ca !important;
-}
-
-.output2,
-.btn.output2,
-.output2.focus {
-    color: #ee3739 !important;
-}
-
-.math,
-.btn.math,
-.math.focus {
-    color: #ab4d9d !important;
-}
-
-.trig,
-.btn.trig,
-.trig.focus {
-    color: #75cede !important;
-}
-
-.ch1.active,
-.ch2.active,
-.output1.active,
-.output2.active,
-.math.active,
-.trig.active {
-    color: #111 !important;
 }
 
 .menu-btn:disabled {
@@ -545,33 +441,6 @@ area:hover {
     background-image: none;
 }
 
-.math-radio-btn:disabled,
-.math-radio-btn.disabled {
-    background-image: none;
-    background-color: transparent;
-    color: #cdcccc !important;
-}
-
-#meas_list {
-    margin-top: 10px;
-    /* margin-bottom: 2px; */
-    min-height: 30px;
-    max-height: 128px;
-    overflow: hidden;
-}
-
-.meas-item {
-    margin: 0px 1px 1px 1px;
-    height: 31px;
-    border: 1px solid #999;
-    cursor: pointer;
-}
-
-.meas-item:hover {
-    background-color: #444;
-    color: #fff;
-}
-
 .setfield {
     color: #999;
     background-color: transparent;
@@ -648,12 +517,6 @@ area:hover {
     border: 1px solid #5d5d5c;
     margin-bottom: 2px;
 }
-
-/* #graphs_holder_buffer {
-    margin-top: 12px;
-    padding-top: 8px;
-    overflow: hidden;
-} */
 
 #graphs_buffer {
     position: relative;
@@ -750,15 +613,6 @@ area:hover {
     white-space: nowrap;
     display: none;
     z-index: 14;
-}
-
-#kostyl_footer {
-    position: absolute;
-    bottom: -4px;
-    width: 100%;
-    background: #343433;
-    height: 10px;
-    z-index: 15;
 }
 
 #cur_x1_info.cur_info,
@@ -1116,5 +970,16 @@ body.modal-open .full-content {
 }
 
 
+.ch1,
+.btn.ch1,
+.ch1.focus {
+    color: #f3ec1a !important;
+}
+
+.trig,
+.btn.trig,
+.trig.focus {
+    color: #75cede !important;
+}
 
 

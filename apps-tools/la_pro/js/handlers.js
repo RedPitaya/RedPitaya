@@ -31,7 +31,7 @@
     LA.initHandlers = function() {
 
         $('.trigger_type').change(function(e) {
-            OSC.sendTriggerFromUI(this)
+            LA.sendTriggerFromUI(this)
         });
 
         $('input[type=text]:not([readonly]):not(.no-arrows)[step]').iLightInputNumber({
@@ -56,9 +56,9 @@
             }
         });
 
-        $('.enable-ch').click(OSC.enableChannelDIN);
+        $('.enable-ch').click(LA.enableChannelDIN);
 
-        $('.enable-ch-bus').click(OSC.enableChannelBUS);
+        $('.enable-ch-bus').click(LA.enableChannelBUS);
 
         $('.ch-name-inp').change(function() {
             var arr = ["CH1_NAME", "CH2_NAME", "CH3_NAME", "CH4_NAME", "CH5_NAME", "CH6_NAME", "CH7_NAME", "CH8_NAME"];
@@ -165,25 +165,15 @@
             axis: 'x',
             containment: 'parent',
             start: function(ev, ui) {
-                LA.state.line_moving = true;
                 LA.state.cursor_dragging = true;
             },
             drag: function(ev, ui) {
                 LA.updateXCursorElems(ui, false);
             },
             stop: function(ev, ui) {
-                LA.state.line_moving = false;
                 LA.updateXCursorElems(ui, true);
                 LA.state.cursor_dragging = false;
             }
-        });
-
-        $('.y-offset-arrow').on('mousedown', function() {
-            OSC.state.line_moving = true;
-        });
-
-        $('.y-offset-arrow').on('mouseup', function() {
-            OSC.state.line_moving = false;
         });
 
         $('.y-offset-arrow').dblclick(function(event) {
@@ -198,10 +188,8 @@
             axis: 'y',
             containment: 'parent',
             start: function(ev, ui) {
-                OSC.state.line_moving = true;
             },
             drag: function(ev, ui) {
-                OSC.state.line_moving = true;
                 var margin_top = Math.abs(parseInt(ui.helper.css('marginTop')));
                 var min_top = ((ui.helper.height() / 2) + margin_top) * -1;
                 var max_top = $('#graphs').height() - margin_top;
@@ -212,12 +200,11 @@
                     ui.position.top = max_top;
                 }
 
-                OSC.updateYOffset(ui, false);
+                LA.updateYOffset(ui, false);
             },
             stop: function(ev, ui) {
-                OSC.state.line_moving = false;
-                if (!OSC.state.simulated_drag) {
-                    OSC.updateYOffset(ui, true);
+                if (!LA.state.simulated_drag) {
+                    LA.updateYOffset(ui, true);
                     $('#info_box').empty();
                 }
             }
@@ -228,7 +215,6 @@
             containment: 'parent',
             start: function(ev, ui) {
                 LA.region_view_moving = true
-               // OSC.state.line_moving = true;
             },
             drag: function(ev, ui) {
                 LA.region_view_moving = true
@@ -274,10 +260,10 @@
 
             if (img.attr('src') == 'img/fine.png') {
                 img.attr('src', 'img/fine_active.png');
-                OSC.state.fine = true;
+                LA.state.fine = true;
             } else {
                 img.attr('src', 'img/fine.png');
-                OSC.state.fine = false;
+                LA.state.fine = false;
             }
 
             ev.preventDefault();
@@ -292,7 +278,7 @@
             ev.preventDefault();
             ev.stopPropagation();
             LA.time_zoom(ev.target.id == 'jtk_down' ? '-' : '+', 0, false)
-            OSC.guiHandler();
+            LA.guiHandler();
         });
 
         $('#jtk_left, #jtk_right').on('click', function(ev) {
@@ -324,7 +310,7 @@
             LA.updateCursors()
             LA.updateChannels()
             LA.checkSubWindowPosition()
-            OSC.setCurrentFreq()
+            LA.setCurrentFreq()
 
         }).resize();
 
@@ -358,7 +344,7 @@
         $('#DISPLAY_RADIX').change(function() {
             CLIENT.parametersCache['LA_DISPLAY_RADIX'] = {value : $(this).val()}
             CLIENT.sendParameters()
-            OSC.guiHandler();
+            LA.guiHandler();
         });
 
         $('#LOGGER_RADIX').change(function() {
@@ -381,13 +367,13 @@
         // Close parameters dialog after Enter key is pressed
         $('input').keyup(function(event) {
             if (event.keyCode == 13) {
-                OSC.exitEditing(true);
+                LA.exitEditing(true);
             }
         });
 
         // Close parameters dialog on close button click
         $('.close-dialog').on('click', function() {
-            OSC.exitEditing();
+            LA.exitEditing();
         });
 
         $(".data-bus").click(function() {
@@ -439,6 +425,61 @@
                     console.log("No file selected")
             });
         });
+
+        var sendLogicData = function() {
+            var mail = "support@redpitaya.com";
+            var subject = "Decoding Help";
+            var body = "DON'T FORGET TO ATTACH FILE!%0D%0A I need help for decoding this data%0D%0A";
+            body += "%0D%0A%0D%0A------------------------------------%0D%0A" + "DEBUG INFO, DO NOT EDIT!%0D%0A" + "------------------------------------%0D%0A%0D%0A";
+            body += "Parameters:" + "%0D%0A" + JSON.stringify({ parameters: LA.params }) + "%0D%0A";
+            body += "Browser:" + "%0D%0A" + JSON.stringify({ parameters: $.browser }) + "%0D%0A";
+
+            var url = 'info/info.json';
+            $.ajax({
+                method: "GET",
+                url: url
+            }).done(function(msg) {
+                console.log(msg.responseText);
+                body += " info.json: " + "%0D%0A" + msg.responseText;
+                document.location.href = "mailto:" + mail + "?subject=" + subject + "&body=" + body;
+            }).fail(function(msg) {
+                console.log(msg.responseText);
+                body += " info.json: " + "%0D%0A" + msg.responseText;
+                document.location.href = "mailto:" + mail + "?subject=" + subject + "&body=" + body;
+            });
+        }
+
+        $('#porblemsLink').click(function() {
+            $('#decodehelp_dialog').modal('show');
+        });
+
+        $('#download_logicdata').click(function() {
+            $('#hidden_link_logicdata').get(0).click();
+        });
+
+        $('#generate_help_email').click(function() {
+            sendLogicData();
+        });
+
+        $('button').bind('activeChanged', function() {
+            LA.exitEditing(true);
+        });
+        $('select, input').on('change', function() {
+            LA.exitEditing(true);
+        });
+
+        $('.edit-mode').on('click', function() {
+            LA.state.editing = true;
+            $('#right_menu').hide();
+            $('#' + $(this).attr('id') + '_dialog').show();
+        });
+
+        $('.btn-less').click(function() {
+            var inp = $(this).find('input');
+            $('.decoder-tab').hide();
+            $(inp.attr('data-attr')).show();
+        });
+
     }
 
 }(window.LA = window.LA || {}, jQuery));

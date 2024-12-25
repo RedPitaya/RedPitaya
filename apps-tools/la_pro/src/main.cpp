@@ -135,7 +135,7 @@ void CLACallbackHandler::captureStatus(rp_la::CLAController* controller,
 		sampleCount.SendValue(numSamples);
 		measureState.SendValue(LA_APP_DONE);
 		view_port_pos.SendValue(std::to_string((double)preSamples/(double)numSamples));
-		controller->printRLE(false);
+		// controller->printRLE(false);
 		FILE* f = fopen(FILE_NAME_TRIGGER, "wb");
 		if (!f){
 			ERROR_LOG("File opening failed %s",FILE_NAME_TRIGGER);
@@ -201,7 +201,9 @@ int rp_app_init(void) {
 	if (!f){
 		ERROR_LOG("File opening failed %s",FILE_NAME_TRIGGER);
 	}else{
-		fread(&preSamples, sizeof(uint64_t), 1, f);
+		if (fread(&preSamples, sizeof(uint64_t), 1, f) != 1){
+			preSamples = 0;
+		}
 		fclose(f);
 	}
 	g_la_controller->loadFromFile(FILE_NAME, preSamples);

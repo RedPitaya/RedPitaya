@@ -7,7 +7,6 @@
 
 (function(LA, $, undefined) {
 
-    LA.scaleWasChanged = false
     LA.graphs = undefined;
     LA.graphs_buffer = undefined;
     LA.graph_colors = {
@@ -318,7 +317,7 @@
             LA.region_samples = {start: l , end:r}
 
             LA.updateMainView()
-            OSC.updateTimeScale()
+            LA.updateTimeScale()
             LA.updateXInfo()
             if ((centerPosX / totalWidthBuffer) !== pos){
                 CLIENT.parametersCache['LA_VIEW_PORT_POS'] = {value: centerPosX / totalWidthBuffer}
@@ -350,7 +349,7 @@
         var pos = CLIENT.getValue('LA_VIEW_PORT_POS')
         var viewWidth = $('#buffer_time_region').width()
         var totalWidth = $('#graphs_buffer').width()
-        var moveDelta = (viewWidth / ((OSC.state.fine == false) ? 2 : 8)) / totalWidth * (dir == '+' ? 1 : -1)
+        var moveDelta = (viewWidth / ((LA.state.fine == false) ? 2 : 8)) / totalWidth * (dir == '+' ? 1 : -1)
         CLIENT.params.orig['LA_VIEW_PORT_POS'] = {value: pos + moveDelta}
         LA.updatePositionBufferViewport()
     }
@@ -427,11 +426,10 @@
             var newScaleMul = 1;
 
             if (direction == '+') {
-                newScaleMul = scale * ((OSC.state.fine == false) ? 2 : 1.1);
+                newScaleMul = scale * ((LA.state.fine == false) ? 2 : 1.1);
                 if (newScaleMul > 100) newScaleMul = 100
-                // OSC.allSignalShown = false; // Reset 'do not change time_scale' flag
             } else if (direction == '-') {
-                newScaleMul = scale / ((OSC.state.fine == false) ? 2 : 1.1);
+                newScaleMul = scale / ((LA.state.fine == false) ? 2 : 1.1);
                 if (newScaleMul < 0.005) newScaleMul = 0.005
             } else if (direction == '1') {
                 newScaleMul = 1;
@@ -481,9 +479,8 @@
     }
 
     LA.time_zoom = function(ev, offsetPx, byMouseWheel) {
-        OSC.state.resized = true;
-        LA.scaleWasChanged = LA.changeXZoom(ev);
-        OSC.guiHandler();
+        LA.changeXZoom(ev);
+        LA.guiHandler();
     }
 
     // channel - 1..8

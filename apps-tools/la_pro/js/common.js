@@ -556,47 +556,4 @@
         return res;
     }
 
-    // COMMON.formatExportData = function(data, prefix, postfix) {
-    //     var ch = "";
-    //     switch (parseInt(OSC.state.export_radix)) {
-    //         case 1: //ASCII
-    //             ch = '\'' + String.fromCharCode(data) + '\'';
-    //             break;
-    //         case 17: // ASCII & HEX
-    //             var hex = ConvertBase.dec2hex(data);
-    //             if (hex.length < 2)
-    //                 hex = '0' + hex;
-    //             ch = '\'' + String.fromCharCode(data) + '\'' + "(" + "0x" + hex + ")";
-    //             break;
-    //         case 10: //DEC
-    //             ch = "" + data;
-    //             break;
-    //         case 2: //BIN
-    //             ch = ConvertBase.dec2bin(data);
-    //             if (ch.length < 8) {
-    //                 var howMany = 8 - ch.length;
-    //                 var appString = "";
-    //                 for (var i = 0; i < howMany; i++)
-    //                     appString += '0';
-    //                 appString += ch;
-    //                 ch = appString;
-    //             }
-    //             ch = "0b" + ch;
-    //             break;
-    //         case 16: //HEX
-    //             ch = ConvertBase.dec2hex(data);
-    //             if (ch.length < 2)
-    //                 ch = '0' + ch;
-    //             ch = "0x" + ch;
-    //             break;
-    //     }
-    //     var res = "";
-    //     if (prefix != undefined)
-    //         res += prefix;
-    //     res += ch;
-    //     if (postfix != undefined)
-    //         res += postfix;
-    //     return res;
-    // }
-
 }(window.COMMON = window.COMMON || {}, jQuery));
