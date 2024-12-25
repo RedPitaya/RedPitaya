@@ -668,10 +668,11 @@
     OSC.processRun = function(new_params) {
         var run = CLIENT.getValue("LA_RUN")
         if (run !== undefined){
-            if (run === true) {
+            if (run === 1) {
                 $('#LA_RUN').hide();
                 $('#LA_STOP').css('display', 'block');
-            } else {
+            }
+            if (run === 0) {
                 $('#LA_STOP').hide();
                 $('#LA_RUN').show();
             }

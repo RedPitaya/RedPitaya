@@ -11,6 +11,10 @@
     LA.buses.def = {}
     LA.state.bus_editing = 0
 
+    LA.requestRedecode = function(){
+        CLIENT.parametersCache['LA_RUN'] = { value: 2 };
+        CLIENT.sendParameters();
+    }
 
     LA.getDecoderName = function(ch){
         var bus = 'bus' + ch;

@@ -916,6 +916,7 @@ body.modal-open .full-content {
 
 .log-container {
     overflow-y: scroll;
+    scrollbar-color: #888888 #3f3f3f;
     height: 180px;
     text-align: left !important;
     font-size: 10px !important;

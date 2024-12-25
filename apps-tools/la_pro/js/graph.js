@@ -172,7 +172,7 @@
 
 
         // Added trigger v line
-        if (pointArr.length > 0){
+        if (pointArr.length > 0 && preTriggerCount !== 0){
             pointArr.push([[preTriggerCount + 1,0],[preTriggerCount + 1,100]])
             colorsArr.push(LA.trigger_color)
         }
@@ -231,7 +231,7 @@
 
 
         // Added trigger v line
-        if (pointArr.length > 0){
+        if (pointArr.length > 0 && preTriggerCount !== 0){
             pointArr.push([[preTriggerCount + 1,0],[preTriggerCount + 1,9]])
             colorsArr.push(LA.trigger_color)
         }

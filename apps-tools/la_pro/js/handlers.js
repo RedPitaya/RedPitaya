@@ -10,6 +10,23 @@
     LA.mouseWheelEventFired = false;
     LA.move_mode = undefined;
 
+    LA.promptFile = function(contentType, multiple) {
+        var input = document.createElement("input");
+        input.type = "file";
+        input.accept = '.bin';
+        return new Promise(function(resolve) {
+            document.activeElement.onfocus = function() {
+            document.activeElement.onfocus = null;
+                setTimeout(resolve, 500);
+            };
+            input.onchange = function() {
+                var files = Array.from(input.files);
+                resolve(files[0]);
+            };
+            input.click();
+        });
+    }
+
 
     LA.initHandlers = function() {
 
@@ -287,13 +304,13 @@
             // Process clicks on top menu buttons
         $('#LA_RUN').on('click', function(ev) {
             ev.preventDefault();
-            CLIENT.parametersCache['LA_RUN'] = { value: true };
+            CLIENT.parametersCache['LA_RUN'] = { value: 1 };
             CLIENT.sendParameters();
         });
 
         $('#LA_STOP').on('click', function(ev) {
             ev.preventDefault();
-            CLIENT.parametersCache['LA_RUN'] = { value: false };
+            CLIENT.parametersCache['LA_RUN'] = { value: 0 };
             CLIENT.sendParameters();
         });
 
@@ -349,12 +366,6 @@
             CLIENT.sendParameters()
         });
 
-        // $('#LOGGER_RADIX').change(function() {
-        //     OSC.state.export_radix = $(this).val();
-        //     OSC.guiHandler();
-        // });
-
-
         $('#protocol_selector').change(function() {
             LA.loadBUSSettingsFromConfig()
         });
@@ -384,6 +395,49 @@
             var bus = arr.indexOf($(this).attr('id'));
             CLIENT.parametersCache['LA_LOGGER_BUS_' + (bus +1)] = {value:!$(this).hasClass('active')}
             CLIENT.sendParameters()
+        });
+
+
+        $('#downl_lines').on('click', function() {
+            COMMON.downloadDataAsCSV("laDataLines.csv");
+        });
+
+        $('#downl_data').on('click', function() {
+            COMMON.downloadDecodedDataAsCSV("laDataProtocols.csv");
+        });
+
+        $('#upload_rle').click(function() {
+            LA.promptFile().then(function(file) {
+                if(file){
+                    const fileReader = new FileReader(); // initialize the object
+                    fileReader.readAsArrayBuffer(file); // read file as array buffer
+                    fileReader.onload = (event) => {
+                        console.log('Complete File read successfully!')
+                        $.ajax({
+                            url: '/la_pro_upload_rle_file', //Server script to process data
+                            type: 'POST',
+                            //Ajax events
+                            //beforeSend: beforeSendHandler,
+                            success: function(e) {
+                                console.log("Upload done " + e);
+                                setTimeout(() => {
+                                    CLIENT.parametersCache["LA_RUN"] = { value: 3 };
+                                    CLIENT.sendParameters();
+                                }, 1000);
+                            },
+                            error: function(e) { console.log(e); },
+                            // Form data
+                            data: event.target.result,
+                            //Options to tell jQuery not to process data or worry about content-type.
+                            cache: false,
+                            contentType: false,
+                            processData: false
+                        });
+                    }
+                }
+                else
+                    console.log("No file selected")
+            });
         });
     }
 

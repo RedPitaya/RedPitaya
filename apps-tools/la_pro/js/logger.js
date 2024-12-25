@@ -24,12 +24,15 @@
                     var new_item = values[item]
                     new_item['bus'] = ch
                     new_item['protocol'] = data['name']
+                    new_item['line'] = line
                     LOGGER.log_data_raw.push(new_item)
                 }
             }
         }
         LOGGER.log_data_raw.sort((a, b) => {
-            return a.s < b.s;
+            if (a.s < b.s) return -1
+            if (a.s > b.s) return 1
+            return 0
         });
 
         LOGGER.buildLog()
@@ -49,7 +52,9 @@
             }
         }
         log.sort((a, b) => {
-            return a.s < b.s;
+            if (a.s < b.s) return -1
+            if (a.s > b.s) return 1
+            return 0
         });
 
         for(var idx in log){
@@ -66,7 +71,7 @@
             if (log[idx].protocol == "I2C"){
                 value = I2C.getValue(log[idx],radix)
             }
-            value = '[' + log[idx].protocol + '] ' + value
+            value = '[' + log[idx].protocol + '<' + log[idx].line  +'>] ' + value
             divArray.push("<div class='data_row' offset='" + log[idx].s + "'>" + value + "</div>")
         }
         LOGGER.log_array = log
@@ -76,9 +81,7 @@
     }
 
     LOGGER.clearLog = function() {
-        // $('.data_row').unbind('click');
         $('#log-container').empty();
-        // $('#hidden-log-container').empty();
     }
 
     LOGGER.getColumns = function(width){
@@ -363,7 +366,7 @@
             }
 
             if (LOGGER.log_header.includes(LOGGER.COLUMNS.LINE_NAME)){
-                var x = item.protocol.toUpperCase() + '/' + item.ln.toUpperCase()
+                var x = item.protocol.toUpperCase() + '/' + item.ln.toUpperCase() + ' <' + item.line + '>'
                 var td = document.createElement("td");
                 td.classList.add("column_"+LOGGER.COLUMNS.LINE_NAME);
                 td.innerText = x
@@ -504,172 +507,5 @@
         $('#log-container').scrollTop(20 * div_index);
     }
 
-    // COMMON.appendHead = function(value) {
-    //     var bus = parseInt(OSC.current_bus.substr(3)) * 1;
-    //     if (bus != -1 && OSC.log_buses[bus - 1])
-    //         COMMON.hidden_log_data += value + "\n";
-    // }
-
-    // COMMON.appendLog = function(start_pos, value) {
-    //     var bus = parseInt(OSC.current_bus.substr(3)) * 1;
-    //     if (bus != -1 && OSC.log_buses[bus - 1]) {
-    //         var samplerate = OSC.state.acq_speed * OSC.scales[OSC.scale_index];
-    //         var s = start_pos / samplerate;
-
-    //         var dataObj = {
-    //             time: s,
-    //             value: "<div class='data_row' offset='" + (start_pos + OSC.counts_offset) + "'>" + value + "</div>"
-    //         };
-
-    //         var dataHiddenObj = {
-    //             time: s,
-    //             value: "s;" + value + '\n',
-    //             startpos: start_pos,
-    //             abspos: start_pos + OSC.counts_offset
-    //         };
-
-    //         COMMON.dataArr.push(dataObj);
-    //         COMMON.hiddenDataArr.push(dataHiddenObj);
-    //     }
-    // }
-
-    // COMMON.compare = function(a, b) {
-    //     if (a.time > b.time)
-    //         return 1;
-    //     if (a.time < b.time)
-    //         return -1;
-    //     return 0;
-    // }
-
-    // COMMON.fflushLog = function() {
-    //     var bus = parseInt(OSC.current_bus.substr(3)) * 1;
-
-    //     var sortedDataArr = COMMON.dataArr.sort(COMMON.compare);
-    //     var hiddenSortedDataArr = COMMON.hiddenDataArr.sort(COMMON.compare);
-    //     var result = "";
-    //     var hiddenResult = "";
-
-    //     for (var item in sortedDataArr) {
-    //         result += sortedDataArr[item].value;
-    //     }
-
-    //     for (var item in hiddenSortedDataArr) {
-    //         hiddenResult += hiddenSortedDataArr[item].time.toFixed(6) + hiddenSortedDataArr[item].value;
-    //     }
-
-    //     if (hiddenResult != COMMON.oldResult) {
-    //         COMMON.clearLog();
-    //         $('#log-container').html(result);
-    //         $('#hidden-log-container').text(hiddenResult);
-    //         COMMON.oldResult = hiddenResult;
-    //         COMMON.savedResultArr = COMMON.hiddenDataArr;
-    //     }
-
-    //     COMMON.log_data = "";
-    //     COMMON.hidden_log_data = "";
-
-    //     result = "";
-    //     COMMON.dataArr = [];
-    //     hiddenResult = "";
-    //     COMMON.hiddenDataArr = [];
-    // }
-
-    // COMMON.clearLog = function() {
-    //     $('.data_row').unbind('click');
-    //     $('#log-container').empty();
-    //     $('#hidden-log-container').empty();
-    // }
-
-
-
-
-    // COMMON.appendHead = function(value) {
-    //     var bus = parseInt(OSC.current_bus.substr(3)) * 1;
-    //     if (bus != -1 && OSC.log_buses[bus - 1])
-    //         COMMON.hidden_log_data += value + "\n";
-    // }
-
-    // COMMON.appendLog = function(start_pos, value) {
-    //     var bus = parseInt(OSC.current_bus.substr(3)) * 1;
-    //     if (bus != -1 && OSC.log_buses[bus - 1]) {
-    //         var samplerate = OSC.state.acq_speed * OSC.scales[OSC.scale_index];
-    //         var s = start_pos / samplerate;
-
-    //         var dataObj = {
-    //             time: s,
-    //             value: "<div class='data_row' offset='" + (start_pos + OSC.counts_offset) + "'>" + value + "</div>"
-    //         };
-
-    //         var dataHiddenObj = {
-    //             time: s,
-    //             value: "s;" + value + '\n',
-    //             startpos: start_pos,
-    //             abspos: start_pos + OSC.counts_offset
-    //         };
-
-    //         COMMON.dataArr.push(dataObj);
-    //         COMMON.hiddenDataArr.push(dataHiddenObj);
-    //     }
-    // }
-
-    // COMMON.compare = function(a, b) {
-    //     if (a.time > b.time)
-    //         return 1;
-    //     if (a.time < b.time)
-    //         return -1;
-    //     return 0;
-    // }
-
-    // COMMON.fflushLog = function() {
-    //     var bus = parseInt(OSC.current_bus.substr(3)) * 1;
-
-    //     var sortedDataArr = COMMON.dataArr.sort(COMMON.compare);
-    //     var hiddenSortedDataArr = COMMON.hiddenDataArr.sort(COMMON.compare);
-    //     var result = "";
-    //     var hiddenResult = "";
-
-    //     for (var item in sortedDataArr) {
-    //         result += sortedDataArr[item].value;
-    //     }
-
-    //     for (var item in hiddenSortedDataArr) {
-    //         hiddenResult += hiddenSortedDataArr[item].time.toFixed(6) + hiddenSortedDataArr[item].value;
-    //     }
-
-    //     if (hiddenResult != COMMON.oldResult) {
-    //         COMMON.clearLog();
-    //         $('#log-container').html(result);
-    //         $('#hidden-log-container').text(hiddenResult);
-    //         COMMON.oldResult = hiddenResult;
-    //         COMMON.savedResultArr = COMMON.hiddenDataArr;
-    //     }
-
-    //     COMMON.log_data = "";
-    //     COMMON.hidden_log_data = "";
-
-    //     result = "";
-    //     COMMON.dataArr = [];
-    //     hiddenResult = "";
-    //     COMMON.hiddenDataArr = [];
-    // }
-
-    // COMMON.clearLog = function() {
-    //     $('.data_row').unbind('click');
-    //     $('#log-container').empty();
-    //     $('#hidden-log-container').empty();
-    // }
-
-    // OSC.scrollDataArea = function() {
-    //     // Scroll
-    //     var div_index = 0;
-    //     COMMON.oldResult = [];
-    //     for (var i = 0; i < COMMON.savedResultArr.length; i++) {
-    //         if ((COMMON.savedResultArr[i].abspos) < OSC.counts_offset)
-    //             div_index++;
-    //         else
-    //             break;
-    //     }
-    //     $('#log-container').scrollTop(20 * div_index);
-    // }
 
 }(window.LOGGER = window.LOGGER || {}, jQuery));

@@ -76,53 +76,46 @@ cursor: pointer;
 
 /* TABLE CSS */
 
-table {
+.decoded_table {
     width: 100%;
     height: 100%;
     margin-bottom: 40px;
     table-layout: auto;
 }
 
-thead, tbody, tr, td, th { display: block; }
+.decoded_table thead,.decoded_table  tbody,.decoded_table  tr,.decoded_table  td,.decoded_table  th { display: block; }
 
-tr:after {
+.decoded_table  tr:after {
     content: ' ';
     display: block;
     visibility: hidden;
     clear: both;
 }
 
-thead th {
+.decoded_table thead th {
     height: 30px;
-
-    /*text-align: left;*/
 }
 
-tbody {
+.decoded_table tbody {
     height: 100%;
     overflow-y: auto;
     overflow-x: auto;
+    scrollbar-color: #888888 #3f3f3f;
 }
 
-thead {
-}
 
-.table-striped>tbody>tr:nth-child(odd) {
-    background-color: #3f3f3f;
-}
 
-tbody td, thead th {
-    /* width: 19.2%; */
+.decoded_table tbody td, thead th {
     float: left;
     white-space:nowrap;
 }
 
 
-tbody td {
+.decoded_table  tbody td {
     font-size: 12px;
     border: solid 1px #6464647d;
     padding-left: 5px;
 }
 
-tbody tr:hover {background-color: #6464647d;}
+.decoded_table tbody tr:hover {background-color: #9191917d;}
 

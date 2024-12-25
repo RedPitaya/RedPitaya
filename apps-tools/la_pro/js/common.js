@@ -229,6 +229,55 @@
         return res;
     }
 
+
+
+    COMMON.splitSignals = function(signals) {
+        var new_data = []
+        for (var i = 0; i < signals["data_rle"].size; i += 2) {
+            var data = signals["data_rle"].value[i + 1]
+            var length = signals["data_rle"].value[i] + 1
+
+            if (new_data.length > 0){
+                if (new_data[new_data.length - 1] == data){
+                    new_data[new_data.length - 2] += length
+                }else{
+                    new_data.push(length)
+                    new_data.push(data)
+                }
+            }else{
+                new_data.push(length)
+                new_data.push(data)
+            }
+        }
+        var res = {};
+        for (var i = 1; i < 9; i++) {
+            res["ch" + i] = {};
+            res["ch" + i]["value"] = [];
+            res["ch" + i]["size"] = 0;
+        }
+
+        res["raw"] = {};
+        res["raw"]["value"] = [];
+        res["raw"]["size"] = 0;
+
+        for (var i = 0; i < new_data.length; i += 2) {
+            var length = new_data[i];
+            for (var chn = 0; chn < 8; chn++) {
+                var ch = "ch" + (chn + 1);
+                var val = (new_data[i + 1] >> chn) & 1;
+                res[ch].value.push(length);
+                res[ch].value.push(val);
+            }
+            res["raw"].value.push(length)
+            res["raw"].value.push(new_data[i + 1])
+        }
+        res["raw"]["size"] = res["raw"].value.length;
+        for (var k in res) {
+            res[k]['size'] = res[k].value.length;
+        }
+        return res;
+    }
+
     COMMON.saveGraphs = function() {
         const fireEvent = function (obj, evt) {
             var fireOnThis = obj;
@@ -254,72 +303,83 @@
     }
 
     COMMON.downloadDataAsCSV = function(filename) {
-        var strings = ['i'];
+        var strings = "";
         var col_delim = ', ';
         var row_delim = '\n';
 
-        // Do nothing if no parameters received yet
-        if ($.isEmptyObject(OSC.params.orig))
-            return;
 
-        var signal_names = ['ch1', 'ch2', 'ch3', 'ch4', 'ch5', 'ch6', 'ch7', 'ch8'];
-        var points_all = [];
-        var size_max = 0;
-
-        for (var sig_name in OSC.recv_signals) {
-            var index = signal_names.indexOf(sig_name);
-
-            // Ignore empty signals
-            if (OSC.recv_signals[sig_name].size == 0)
-                continue;
-
-            if (!OSC.enabled_channels[index])
-                continue;
-
-            var points = [];
-            var start_x = 0;
-
-            for (var u = 0; u < OSC.recv_signals[sig_name].value.length; u += 2) {
-                // Start, end, value
-                var size_x = OSC.recv_signals[sig_name].value[u];
-                points.push([start_x, start_x + size_x, OSC.recv_signals[sig_name].value[u + 1]]);
-                start_x += size_x;
+        if (LA.lastData === undefined) return
+        var d = COMMON.splitSignals(LA.lastData)
+        var signal_names = ['ch1', 'ch2', 'ch3', 'ch4', 'ch5', 'ch6', 'ch7', 'ch8']
+        strings = "POSITION" + col_delim + "LENGTH" + col_delim + "RAW VALUE"
+        for (var sig_name in signal_names) {
+            var en = CLIENT.getValue('LA_DIN_'+ (parseInt(sig_name) + 1))
+            if (en == true){
+                strings += col_delim + signal_names[sig_name].toUpperCase()
             }
-
-            if (start_x > size_max) {
-                size_max = start_x;
-            }
-
-            strings.push(col_delim, sig_name);
-            points_all.push(points);
         }
-
-        strings.push(row_delim);
-
-        for (var i = 0; i < size_max; ++i) {
-            strings.push(i);
-
-            for (var sig_i = 0; sig_i < points_all.length; ++sig_i) {
-                var points = points_all[sig_i];
-                var is_valid_value = false;
-
-                for (var point_i = 0; point_i < points.length; ++point_i) {
-                    if ((i >= points[point_i][0]) && (i < points[point_i][1])) {
-                        strings.push(col_delim, points[point_i][2]);
-                        is_valid_value = true;
-                        break;
-                    }
-                }
-
-                if (!is_valid_value) {
-                    strings.push(col_delim, '-1');
+        strings += row_delim
+        var start = 0;
+        for(var i = 0; i < d["raw"].value.length; i+=2){
+            strings += start + col_delim + d["raw"].value[i] + col_delim + '0x' + ConvertBase.dec2hex(d["raw"].value[i + 1])
+            for (var sig_name in signal_names) {
+                var en = CLIENT.getValue('LA_DIN_'+ (parseInt(sig_name) + 1))
+                if (en == true){
+                    strings += col_delim +  d[signal_names[sig_name]].value[i + 1]
                 }
             }
-
-            strings.push(row_delim);
+            start += d["raw"].value[i]
+            strings += row_delim
         }
 
-        saveAs(new Blob([strings.join('')], { type: "text/plain;charset=utf-8" }), filename);
+        saveAs(new Blob([strings], { type: "text/plain;charset=utf-8" }), filename);
+    };
+
+    COMMON.downloadDecodedDataAsCSV = function(filename) {
+        var strings = "";
+        var col_delim = ', ';
+        var row_delim = '\n';
+
+        var ts = CLIENT.getValue('LA_PRE_TRIGGER_SAMPLES')
+        const radix = CLIENT.getValue('LA_LOGGER_RADIX')
+        var samplerate = CLIENT.getValue("LA_CUR_FREQ")
+
+        if (LOGGER.log_array === undefined) return
+        ts = (ts === undefined) ? 0 : ts
+
+        strings = "START TIME" + col_delim + "TIME" + col_delim + "LINE" + col_delim + "INFO" + col_delim + "DATA" + col_delim + "SAMPLE START" + col_delim + "SAMPLE COUNT" + row_delim
+
+        for(var z = 0; z < LOGGER.log_array.length; z++){
+            const item =  LOGGER.log_array[z]
+            var x = 1.0 / samplerate * (item.s - ts)
+            strings += x + col_delim
+            x = 1.0 / samplerate * (item.l)
+            strings += x + col_delim
+            x = item.protocol.toUpperCase() + '/' + item.ln.toUpperCase() + ' <' + item.line + '>'
+            strings += x + col_delim
+
+            x = "ERROR"
+            if (item.protocol == "SPI"){
+                x = SPI.getAnnotation(item.c)
+            }
+            if (item.protocol == "CAN"){
+                x = CAN.getAnnotation(item.c)
+            }
+            if (item.protocol == "UART"){
+                x = UART.getAnnotation(item.c)
+            }
+            if (item.protocol == "I2C"){
+                x = I2C.getAnnotation(item.c)
+            }
+            strings += x + col_delim
+
+            strings += COMMON.formatData(item.d, "", "", radix)[0] + col_delim
+            strings += item.s + col_delim
+            strings += item.l + col_delim
+            strings += row_delim
+        }
+
+        saveAs(new Blob([strings], { type: "text/plain;charset=utf-8" }), filename);
     };
 
     // Converts time from milliseconds to a more 'user friendly' time unit; returned value includes units

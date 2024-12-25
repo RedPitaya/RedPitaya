@@ -218,23 +218,23 @@ int rp_IdGetID(uint32_t *id) {
     switch (ver)
     {
         case HK_V1:{
-            housekeeping_control_v1_t *hk = (housekeeping_control_v1_t*)hk;
-            *id = ioread32(&hk->id);
+            housekeeping_control_v1_t *hk_loc = (housekeeping_control_v1_t*)hk;
+            *id = ioread32(&hk_loc->id);
             return RP_OK;
         }
         case HK_V2:{
-            housekeeping_control_v2_t *hk = (housekeeping_control_v2_t*)hk;
-            *id = ioread32(&hk->id);
+            housekeeping_control_v2_t *hk_loc = (housekeeping_control_v2_t*)hk;
+            *id = ioread32(&hk_loc->id);
             return RP_OK;
         }
         case HK_V3:{
-            housekeeping_control_v3_t *hk = (housekeeping_control_v3_t*)hk;
-            *id = ioread32(&hk->id);
+            housekeeping_control_v3_t *hk_loc = (housekeeping_control_v3_t*)hk;
+            *id = ioread32(&hk_loc->id);
             return RP_OK;
         }
         case HK_V4:{
-            housekeeping_control_v4_t *hk = (housekeeping_control_v4_t*)hk;
-            *id = ioread32(&hk->id);
+            housekeeping_control_v4_t *hk_loc = (housekeeping_control_v4_t*)hk;
+            *id = ioread32(&hk_loc->id);
             return RP_OK;
         }
         default:
@@ -248,27 +248,27 @@ int rp_IdGetDNA(uint64_t *dna) {
     switch (ver)
     {
         case HK_V1:{
-            housekeeping_control_v1_t *hk = (housekeeping_control_v1_t*)hk;
-            *dna = ((uint64_t) ioread32(&hk->dna_hi) << 32)
-                 | ((uint64_t) ioread32(&hk->dna_lo) <<  0);
+            housekeeping_control_v1_t *hk_loc = (housekeeping_control_v1_t*)hk;
+            *dna = ((uint64_t) ioread32(&hk_loc->dna_hi) << 32)
+                 | ((uint64_t) ioread32(&hk_loc->dna_lo) <<  0);
             return RP_OK;
         }
         case HK_V2:{
-            housekeeping_control_v2_t *hk = (housekeeping_control_v2_t*)hk;
-            *dna = ((uint64_t) ioread32(&hk->dna_hi) << 32)
-                 | ((uint64_t) ioread32(&hk->dna_lo) <<  0);
+            housekeeping_control_v2_t *hk_loc = (housekeeping_control_v2_t*)hk;
+            *dna = ((uint64_t) ioread32(&hk_loc->dna_hi) << 32)
+                 | ((uint64_t) ioread32(&hk_loc->dna_lo) <<  0);
             return RP_OK;
         }
         case HK_V3:{
-            housekeeping_control_v3_t *hk = (housekeeping_control_v3_t*)hk;
-            *dna = ((uint64_t) ioread32(&hk->dna_hi) << 32)
-                 | ((uint64_t) ioread32(&hk->dna_lo) <<  0);
+            housekeeping_control_v3_t *hk_loc = (housekeeping_control_v3_t*)hk;
+            *dna = ((uint64_t) ioread32(&hk_loc->dna_hi) << 32)
+                 | ((uint64_t) ioread32(&hk_loc->dna_lo) <<  0);
             return RP_OK;
         }
         case HK_V4:{
-            housekeeping_control_v4_t *hk = (housekeeping_control_v4_t*)hk;
-            *dna = ((uint64_t) ioread32(&hk->dna_hi) << 32)
-                 | ((uint64_t) ioread32(&hk->dna_lo) <<  0);
+            housekeeping_control_v4_t *hk_loc = (housekeeping_control_v4_t*)hk;
+            *dna = ((uint64_t) ioread32(&hk_loc->dna_hi) << 32)
+                 | ((uint64_t) ioread32(&hk_loc->dna_lo) <<  0);
             return RP_OK;
         }
         default:
@@ -286,23 +286,23 @@ int rp_LEDSetState(uint32_t state) {
     switch (ver)
     {
         case HK_V1:{
-            housekeeping_control_v1_t *hk = (housekeeping_control_v1_t*)hk;
-            iowrite32(state, &hk->led_control);
+            housekeeping_control_v1_t *hk_loc = (housekeeping_control_v1_t*)hk;
+            iowrite32(state, &hk_loc->led_control);
             return RP_OK;
         }
         case HK_V2:{
-            housekeeping_control_v2_t *hk = (housekeeping_control_v2_t*)hk;
-            iowrite32(state, &hk->led_control);
+            housekeeping_control_v2_t *hk_loc = (housekeeping_control_v2_t*)hk;
+            iowrite32(state, &hk_loc->led_control);
             return RP_OK;
         }
         case HK_V3:{
-            housekeeping_control_v3_t *hk = (housekeeping_control_v3_t*)hk;
-            iowrite32(state, &hk->led_control);
+            housekeeping_control_v3_t *hk_loc = (housekeeping_control_v3_t*)hk;
+            iowrite32(state, &hk_loc->led_control);
             return RP_OK;
         }
         case HK_V4:{
-            housekeeping_control_v4_t *hk = (housekeeping_control_v4_t*)hk;
-            iowrite32(state, &hk->led_control);
+            housekeeping_control_v4_t *hk_loc = (housekeeping_control_v4_t*)hk;
+            iowrite32(state, &hk_loc->led_control);
             return RP_OK;
         }
         default:
@@ -316,23 +316,23 @@ int rp_LEDGetState(uint32_t *state) {
     switch (ver)
     {
         case HK_V1:{
-            housekeeping_control_v1_t *hk = (housekeeping_control_v1_t*)hk;
-            *state = ioread32(&hk->led_control);
+            housekeeping_control_v1_t *hk_loc = (housekeeping_control_v1_t*)hk;
+            *state = ioread32(&hk_loc->led_control);
             return RP_OK;
         }
         case HK_V2:{
-            housekeeping_control_v2_t *hk = (housekeeping_control_v2_t*)hk;
-            *state = ioread32(&hk->led_control);
+            housekeeping_control_v2_t *hk_loc = (housekeeping_control_v2_t*)hk;
+            *state = ioread32(&hk_loc->led_control);
             return RP_OK;
         }
         case HK_V3:{
-            housekeeping_control_v3_t *hk = (housekeeping_control_v3_t*)hk;
-            *state = ioread32(&hk->led_control);
+            housekeeping_control_v3_t *hk_loc = (housekeeping_control_v3_t*)hk;
+            *state = ioread32(&hk_loc->led_control);
             return RP_OK;
         }
         case HK_V4:{
-            housekeeping_control_v4_t *hk = (housekeeping_control_v4_t*)hk;
-            *state = ioread32(&hk->led_control);
+            housekeeping_control_v4_t *hk_loc = (housekeeping_control_v4_t*)hk;
+            *state = ioread32(&hk_loc->led_control);
             return RP_OK;
         }
         default:
@@ -350,23 +350,23 @@ int rp_GPIOnSetDirection(uint32_t direction) {
     switch (ver)
     {
         case HK_V1:{
-            housekeeping_control_v1_t *hk = (housekeeping_control_v1_t*)hk;
-            iowrite32(direction, &hk->ex_cd_n);
+            housekeeping_control_v1_t *hk_loc = (housekeeping_control_v1_t*)hk;
+            iowrite32(direction, &hk_loc->ex_cd_n);
             return RP_OK;
         }
         case HK_V2:{
-            housekeeping_control_v2_t *hk = (housekeeping_control_v2_t*)hk;
-            iowrite32(direction, &hk->ex_cd_n);
+            housekeeping_control_v2_t *hk_loc = (housekeeping_control_v2_t*)hk;
+            iowrite32(direction, &hk_loc->ex_cd_n);
             return RP_OK;
         }
         case HK_V3:{
-            housekeeping_control_v3_t *hk = (housekeeping_control_v3_t*)hk;
-            iowrite32(direction, &hk->ex_cd_n);
+            housekeeping_control_v3_t *hk_loc = (housekeeping_control_v3_t*)hk;
+            iowrite32(direction, &hk_loc->ex_cd_n);
             return RP_OK;
         }
         case HK_V4:{
-            housekeeping_control_v4_t *hk = (housekeeping_control_v4_t*)hk;
-            iowrite32(direction, &hk->ex_cd_n);
+            housekeeping_control_v4_t *hk_loc = (housekeeping_control_v4_t*)hk;
+            iowrite32(direction, &hk_loc->ex_cd_n);
             return RP_OK;
         }
         default:
@@ -380,23 +380,23 @@ int rp_GPIOnGetDirection(uint32_t *direction) {
     switch (ver)
     {
         case HK_V1:{
-            housekeeping_control_v1_t *hk = (housekeeping_control_v1_t*)hk;
-            *direction = ioread32(&hk->ex_cd_n);
+            housekeeping_control_v1_t *hk_loc = (housekeeping_control_v1_t*)hk;
+            *direction = ioread32(&hk_loc->ex_cd_n);
             return RP_OK;
         }
         case HK_V2:{
-            housekeeping_control_v2_t *hk = (housekeeping_control_v2_t*)hk;
-            *direction = ioread32(&hk->ex_cd_n);
+            housekeeping_control_v2_t *hk_loc = (housekeeping_control_v2_t*)hk;
+            *direction = ioread32(&hk_loc->ex_cd_n);
             return RP_OK;
         }
         case HK_V3:{
-            housekeeping_control_v3_t *hk = (housekeeping_control_v3_t*)hk;
-            *direction = ioread32(&hk->ex_cd_n);
+            housekeeping_control_v3_t *hk_loc = (housekeeping_control_v3_t*)hk;
+            *direction = ioread32(&hk_loc->ex_cd_n);
             return RP_OK;
         }
         case HK_V4:{
-            housekeeping_control_v4_t *hk = (housekeeping_control_v4_t*)hk;
-            *direction = ioread32(&hk->ex_cd_n);
+            housekeeping_control_v4_t *hk_loc = (housekeeping_control_v4_t*)hk;
+            *direction = ioread32(&hk_loc->ex_cd_n);
             return RP_OK;
         }
         default:
@@ -410,23 +410,23 @@ int rp_GPIOnSetState(uint32_t state) {
     switch (ver)
     {
         case HK_V1:{
-            housekeeping_control_v1_t *hk = (housekeeping_control_v1_t*)hk;
-            iowrite32(state, &hk->ex_co_n);
+            housekeeping_control_v1_t *hk_loc = (housekeeping_control_v1_t*)hk;
+            iowrite32(state, &hk_loc->ex_co_n);
             return RP_OK;
         }
         case HK_V2:{
-            housekeeping_control_v2_t *hk = (housekeeping_control_v2_t*)hk;
-            iowrite32(state, &hk->ex_co_n);
+            housekeeping_control_v2_t *hk_loc = (housekeeping_control_v2_t*)hk;
+            iowrite32(state, &hk_loc->ex_co_n);
             return RP_OK;
         }
         case HK_V3:{
-            housekeeping_control_v3_t *hk = (housekeeping_control_v3_t*)hk;
-            iowrite32(state, &hk->ex_co_n);
+            housekeeping_control_v3_t *hk_loc = (housekeeping_control_v3_t*)hk;
+            iowrite32(state, &hk_loc->ex_co_n);
             return RP_OK;
         }
         case HK_V4:{
-            housekeeping_control_v4_t *hk = (housekeeping_control_v4_t*)hk;
-            iowrite32(state, &hk->ex_co_n);
+            housekeeping_control_v4_t *hk_loc = (housekeeping_control_v4_t*)hk;
+            iowrite32(state, &hk_loc->ex_co_n);
             return RP_OK;
         }
         default:
@@ -440,23 +440,23 @@ int rp_GPIOnGetState(uint32_t *state) {
     switch (ver)
     {
         case HK_V1:{
-            housekeeping_control_v1_t *hk = (housekeeping_control_v1_t*)hk;
-            *state = ioread32(&hk->ex_ci_n);
+            housekeeping_control_v1_t *hk_loc = (housekeeping_control_v1_t*)hk;
+            *state = ioread32(&hk_loc->ex_ci_n);
             return RP_OK;
         }
         case HK_V2:{
-            housekeeping_control_v2_t *hk = (housekeeping_control_v2_t*)hk;
-            *state = ioread32(&hk->ex_ci_n);
+            housekeeping_control_v2_t *hk_loc = (housekeeping_control_v2_t*)hk;
+            *state = ioread32(&hk_loc->ex_ci_n);
             return RP_OK;
         }
         case HK_V3:{
-            housekeeping_control_v3_t *hk = (housekeeping_control_v3_t*)hk;
-            *state = ioread32(&hk->ex_ci_n);
+            housekeeping_control_v3_t *hk_loc = (housekeeping_control_v3_t*)hk;
+            *state = ioread32(&hk_loc->ex_ci_n);
             return RP_OK;
         }
         case HK_V4:{
-            housekeeping_control_v4_t *hk = (housekeeping_control_v4_t*)hk;
-            *state = ioread32(&hk->ex_ci_n);
+            housekeeping_control_v4_t *hk_loc = (housekeeping_control_v4_t*)hk;
+            *state = ioread32(&hk_loc->ex_ci_n);
             return RP_OK;
         }
         default:
@@ -470,23 +470,23 @@ int rp_GPIOpSetDirection(uint32_t direction) {
     switch (ver)
     {
         case HK_V1:{
-            housekeeping_control_v1_t *hk = (housekeeping_control_v1_t*)hk;
-            iowrite32(direction, &hk->ex_cd_p);
+            housekeeping_control_v1_t *hk_loc = (housekeeping_control_v1_t*)hk;
+            iowrite32(direction, &hk_loc->ex_cd_p);
             return RP_OK;
         }
         case HK_V2:{
-            housekeeping_control_v2_t *hk = (housekeeping_control_v2_t*)hk;
-            iowrite32(direction, &hk->ex_cd_p);
+            housekeeping_control_v2_t *hk_loc = (housekeeping_control_v2_t*)hk;
+            iowrite32(direction, &hk_loc->ex_cd_p);
             return RP_OK;
         }
         case HK_V3:{
-            housekeeping_control_v3_t *hk = (housekeeping_control_v3_t*)hk;
-            iowrite32(direction, &hk->ex_cd_p);
+            housekeeping_control_v3_t *hk_loc = (housekeeping_control_v3_t*)hk;
+            iowrite32(direction, &hk_loc->ex_cd_p);
             return RP_OK;
         }
         case HK_V4:{
-            housekeeping_control_v4_t *hk = (housekeeping_control_v4_t*)hk;
-            iowrite32(direction, &hk->ex_cd_p);
+            housekeeping_control_v4_t *hk_loc = (housekeeping_control_v4_t*)hk;
+            iowrite32(direction, &hk_loc->ex_cd_p);
             return RP_OK;
         }
         default:
@@ -500,23 +500,23 @@ int rp_GPIOpGetDirection(uint32_t *direction) {
     switch (ver)
     {
         case HK_V1:{
-            housekeeping_control_v1_t *hk = (housekeeping_control_v1_t*)hk;
-            *direction = ioread32(&hk->ex_cd_p);
+            housekeeping_control_v1_t *hk_loc = (housekeeping_control_v1_t*)hk;
+            *direction = ioread32(&hk_loc->ex_cd_p);
             return RP_OK;
         }
         case HK_V2:{
-            housekeeping_control_v2_t *hk = (housekeeping_control_v2_t*)hk;
-            *direction = ioread32(&hk->ex_cd_p);
+            housekeeping_control_v2_t *hk_loc = (housekeeping_control_v2_t*)hk;
+            *direction = ioread32(&hk_loc->ex_cd_p);
             return RP_OK;
         }
         case HK_V3:{
-            housekeeping_control_v3_t *hk = (housekeeping_control_v3_t*)hk;
-            *direction = ioread32(&hk->ex_cd_p);
+            housekeeping_control_v3_t *hk_loc = (housekeeping_control_v3_t*)hk;
+            *direction = ioread32(&hk_loc->ex_cd_p);
             return RP_OK;
         }
         case HK_V4:{
-            housekeeping_control_v4_t *hk = (housekeeping_control_v4_t*)hk;
-            *direction = ioread32(&hk->ex_cd_p);
+            housekeeping_control_v4_t *hk_loc = (housekeeping_control_v4_t*)hk;
+            *direction = ioread32(&hk_loc->ex_cd_p);
             return RP_OK;
         }
         default:
@@ -530,23 +530,23 @@ int rp_GPIOpSetState(uint32_t state) {
     switch (ver)
     {
         case HK_V1:{
-            housekeeping_control_v1_t *hk = (housekeeping_control_v1_t*)hk;
-            iowrite32(state, &hk->ex_co_p);
+            housekeeping_control_v1_t *hk_loc = (housekeeping_control_v1_t*)hk;
+            iowrite32(state, &hk_loc->ex_co_p);
             return RP_OK;
         }
         case HK_V2:{
-            housekeeping_control_v2_t *hk = (housekeeping_control_v2_t*)hk;
-            iowrite32(state, &hk->ex_co_p);
+            housekeeping_control_v2_t *hk_loc = (housekeeping_control_v2_t*)hk;
+            iowrite32(state, &hk_loc->ex_co_p);
             return RP_OK;
         }
         case HK_V3:{
-            housekeeping_control_v3_t *hk = (housekeeping_control_v3_t*)hk;
-            iowrite32(state, &hk->ex_co_p);
+            housekeeping_control_v3_t *hk_loc = (housekeeping_control_v3_t*)hk;
+            iowrite32(state, &hk_loc->ex_co_p);
             return RP_OK;
         }
         case HK_V4:{
-            housekeeping_control_v4_t *hk = (housekeeping_control_v4_t*)hk;
-            iowrite32(state, &hk->ex_co_p);
+            housekeeping_control_v4_t *hk_loc = (housekeeping_control_v4_t*)hk;
+            iowrite32(state, &hk_loc->ex_co_p);
             return RP_OK;
         }
         default:
@@ -560,23 +560,23 @@ int rp_GPIOpGetState(uint32_t *state) {
     switch (ver)
     {
         case HK_V1:{
-            housekeeping_control_v1_t *hk = (housekeeping_control_v1_t*)hk;
-            *state = ioread32(&hk->ex_ci_p);
+            housekeeping_control_v1_t *hk_loc = (housekeeping_control_v1_t*)hk;
+            *state = ioread32(&hk_loc->ex_ci_p);
             return RP_OK;
         }
         case HK_V2:{
-            housekeeping_control_v2_t *hk = (housekeeping_control_v2_t*)hk;
-            *state = ioread32(&hk->ex_ci_p);
+            housekeeping_control_v2_t *hk_loc = (housekeeping_control_v2_t*)hk;
+            *state = ioread32(&hk_loc->ex_ci_p);
             return RP_OK;
         }
         case HK_V3:{
-            housekeeping_control_v3_t *hk = (housekeeping_control_v3_t*)hk;
-            *state = ioread32(&hk->ex_ci_p);
+            housekeeping_control_v3_t *hk_loc = (housekeeping_control_v3_t*)hk;
+            *state = ioread32(&hk_loc->ex_ci_p);
             return RP_OK;
         }
         case HK_V4:{
-            housekeeping_control_v4_t *hk = (housekeeping_control_v4_t*)hk;
-            *state = ioread32(&hk->ex_ci_p);
+            housekeeping_control_v4_t *hk_loc = (housekeeping_control_v4_t*)hk;
+            *state = ioread32(&hk_loc->ex_ci_p);
             return RP_OK;
         }
         default:
@@ -594,43 +594,43 @@ int rp_DpinReset() {
     switch (ver)
     {
         case HK_V1:{
-            housekeeping_control_v1_t *hk = (housekeeping_control_v1_t*)hk;
-            iowrite32(0, &hk->ex_cd_p);
-            iowrite32(0, &hk->ex_cd_n);
-            iowrite32(0, &hk->ex_co_p);
-            iowrite32(0, &hk->ex_co_n);
-            iowrite32(0, &hk->led_control);
-            iowrite32(0, &hk->digital_loop);
+            housekeeping_control_v1_t *hk_loc = (housekeeping_control_v1_t*)hk;
+            iowrite32(0, &hk_loc->ex_cd_p);
+            iowrite32(0, &hk_loc->ex_cd_n);
+            iowrite32(0, &hk_loc->ex_co_p);
+            iowrite32(0, &hk_loc->ex_co_n);
+            iowrite32(0, &hk_loc->led_control);
+            iowrite32(0, &hk_loc->digital_loop);
             return RP_OK;
         }
         case HK_V2:{
-            housekeeping_control_v2_t *hk = (housekeeping_control_v2_t*)hk;
-            iowrite32(0, &hk->ex_cd_p);
-            iowrite32(0, &hk->ex_cd_n);
-            iowrite32(0, &hk->ex_co_p);
-            iowrite32(0, &hk->ex_co_n);
-            iowrite32(0, &hk->led_control);
-            iowrite32(0, &hk->digital_loop);
+            housekeeping_control_v2_t *hk_loc = (housekeeping_control_v2_t*)hk;
+            iowrite32(0, &hk_loc->ex_cd_p);
+            iowrite32(0, &hk_loc->ex_cd_n);
+            iowrite32(0, &hk_loc->ex_co_p);
+            iowrite32(0, &hk_loc->ex_co_n);
+            iowrite32(0, &hk_loc->led_control);
+            iowrite32(0, &hk_loc->digital_loop);
             return RP_OK;
         }
         case HK_V3:{
-            housekeeping_control_v3_t *hk = (housekeeping_control_v3_t*)hk;
-            iowrite32(0, &hk->ex_cd_p);
-            iowrite32(0, &hk->ex_cd_n);
-            iowrite32(0, &hk->ex_co_p);
-            iowrite32(0, &hk->ex_co_n);
-            iowrite32(0, &hk->led_control);
-            iowrite32(0, &hk->digital_loop);
+            housekeeping_control_v3_t *hk_loc = (housekeeping_control_v3_t*)hk;
+            iowrite32(0, &hk_loc->ex_cd_p);
+            iowrite32(0, &hk_loc->ex_cd_n);
+            iowrite32(0, &hk_loc->ex_co_p);
+            iowrite32(0, &hk_loc->ex_co_n);
+            iowrite32(0, &hk_loc->led_control);
+            iowrite32(0, &hk_loc->digital_loop);
             return RP_OK;
         }
         case HK_V4:{
-            housekeeping_control_v4_t *hk = (housekeeping_control_v4_t*)hk;
-            iowrite32(0, &hk->ex_cd_p);
-            iowrite32(0, &hk->ex_cd_n);
-            iowrite32(0, &hk->ex_co_p);
-            iowrite32(0, &hk->ex_co_n);
-            iowrite32(0, &hk->led_control);
-            iowrite32(0, &hk->digital_loop);
+            housekeeping_control_v4_t *hk_loc = (housekeeping_control_v4_t*)hk;
+            iowrite32(0, &hk_loc->ex_cd_p);
+            iowrite32(0, &hk_loc->ex_cd_n);
+            iowrite32(0, &hk_loc->ex_co_p);
+            iowrite32(0, &hk_loc->ex_co_n);
+            iowrite32(0, &hk_loc->led_control);
+            iowrite32(0, &hk_loc->digital_loop);
             return RP_OK;
         }
         default:
@@ -804,23 +804,23 @@ int rp_EnableDigitalLoop(bool enable) {
     switch (ver)
     {
         case HK_V1:{
-            housekeeping_control_v1_t *hk = (housekeeping_control_v1_t*)hk;
-            iowrite32((uint32_t) enable, &hk->digital_loop);
+            housekeeping_control_v1_t *hk_loc = (housekeeping_control_v1_t*)hk;
+            iowrite32((uint32_t) enable, &hk_loc->digital_loop);
             return RP_OK;
         }
         case HK_V2:{
-            housekeeping_control_v2_t *hk = (housekeeping_control_v2_t*)hk;
-            iowrite32((uint32_t) enable, &hk->digital_loop);
+            housekeeping_control_v2_t *hk_loc = (housekeeping_control_v2_t*)hk;
+            iowrite32((uint32_t) enable, &hk_loc->digital_loop);
             return RP_OK;
         }
         case HK_V3:{
-            housekeeping_control_v3_t *hk = (housekeeping_control_v3_t*)hk;
-            iowrite32((uint32_t) enable, &hk->digital_loop);
+            housekeeping_control_v3_t *hk_loc = (housekeeping_control_v3_t*)hk;
+            iowrite32((uint32_t) enable, &hk_loc->digital_loop);
             return RP_OK;
         }
         case HK_V4:{
-            housekeeping_control_v4_t *hk = (housekeeping_control_v4_t*)hk;
-            iowrite32((uint32_t) enable, &hk->digital_loop);
+            housekeeping_control_v4_t *hk_loc = (housekeeping_control_v4_t*)hk;
+            iowrite32((uint32_t) enable, &hk_loc->digital_loop);
             return RP_OK;
         }
         default:

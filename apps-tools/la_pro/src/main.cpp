@@ -18,9 +18,10 @@
 #include "common.h"
 #include "settings.h"
 
+#define FILE_NAME "/tmp/logic/rle_logic_data.bin"
+#define FILE_NAME_TRIGGER "/tmp/logic/trig.bin"
 
-
-CBooleanParameter 	inRun			("LA_RUN", CBaseParameter::RW, false, 0);
+CIntParameter 		inRun			("LA_RUN", CBaseParameter::RW, 0, 0, 0, 3);
 CIntParameter 		measureState	("LA_MEASURE_STATE", CBaseParameter::RW, 1, 0, 1, 4);
 CIntParameter 		measureSelect	("LA_MEASURE_MODE", CBaseParameter::RW, 1, 0, 1, 2, CONFIG_VAR);
 CIntParameter 		controlSettings ("CONTROL_CONFIG_SETTINGS", CBaseParameter::RW, 0, 0, 0, 10);
@@ -127,7 +128,7 @@ void CLACallbackHandler::captureStatus(rp_la::CLAController* controller,
 										uint64_t postSamples){
 	if (isTimeout == false){
 		if (numSamples)
-			controller->saveCaptureDataToFile("/tmp/logicData.bin");
+			controller->saveCaptureDataToFile(FILE_NAME);
 		g_needUpdateSignals = true;
 		preSampleCount.SendValue(preSamples);
 		postSampleCount.SendValue(postSamples);
@@ -135,16 +136,24 @@ void CLACallbackHandler::captureStatus(rp_la::CLAController* controller,
 		measureState.SendValue(LA_APP_DONE);
 		view_port_pos.SendValue(std::to_string((double)preSamples/(double)numSamples));
 		controller->printRLE(false);
+		FILE* f = fopen(FILE_NAME_TRIGGER, "wb");
+		if (!f){
+			ERROR_LOG("File opening failed %s",FILE_NAME_TRIGGER);
+		}else{
+			fwrite(&preSamples, sizeof(uint64_t), 1, f);
+			fclose(f);
+		}
 		TRACE("Done")
 	}else{
 		measureState.SendValue(LA_APP_TIMEOUT);
 		TRACE("Timeout")
 	}
-	inRun.SendValue(false);
+	inRun.SendValue(0);
 }
 
 void CLACallbackHandler::decodeDone(rp_la::CLAController* controller, std::string name){
 	g_needUpdateDecoders = true;
+	inRun.SendValue(0);
 }
 
 void updateParametersByConfig(){
@@ -187,6 +196,15 @@ int rp_app_init(void) {
 	CDataManager::GetInstance()->SetParamInterval(DEBUG_PARAM_PERIOD);
 	CDataManager::GetInstance()->SetSignalInterval(DEBUG_SIGNAL_PERIOD);
 	updateParametersByConfig();
+	uint64_t preSamples = 0;
+	FILE* f = fopen(FILE_NAME_TRIGGER, "rb");
+	if (!f){
+		ERROR_LOG("File opening failed %s",FILE_NAME_TRIGGER);
+	}else{
+		fread(&preSamples, sizeof(uint64_t), 1, f);
+		fclose(f);
+	}
+	g_la_controller->loadFromFile(FILE_NAME, preSamples);
 	fprintf(stderr, "Loading logic analyzer version.\n");
 	return 0;
 }
@@ -413,7 +431,7 @@ void updateFromFront(bool force){
 						}
 					}
 				}else{
-					TRACE("Crate decoder %d = %s",i,name.c_str())
+					TRACE("Create decoder %d = %s",i,name.c_str())
 					g_la_controller->addDecoder(std::to_string(i),getType(name));
 					g_la_controller->setDecoderEnable(std::to_string(i),decoders_enabled[i].Value());
 					auto settings = getParamFromConfig(decoder_config);
@@ -451,9 +469,17 @@ void updateFromFront(bool force){
 	bool needRunCapture = false;
 	if (IS_NEW(inRun)){
 		inRun.Update();
-		if (inRun.Value()){
+		if (inRun.Value() == 3){
+			g_la_controller->loadFromFile(FILE_NAME, 0);
+			needRedecode = true;
+		}
+		if (inRun.Value() == 2){
+			needRedecode = true;
+		}
+		if (inRun.Value() == 1){
 			needRunCapture = true;
-		}else{
+		}
+		if (inRun.Value() == 0){
 			g_la_controller->softwareTrigger();
 			measureState.SendValue(LA_APP_STOP);
 		}

@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <thread>
 #include <future>
+#include <filesystem>
 #include "decoders/decoder.h"
 #include "decoders/can_decoder.h"
 #include "decoders/uart_decoder.h"
@@ -32,6 +33,12 @@
 #include "rp_la.h"
 #include "rp_la_api.h"
 #include "rp.h"
+
+#ifdef _WIN32
+#include <dir.h>
+#else
+#include <sys/stat.h>
+#endif
 
 namespace rp_la{
 
@@ -66,6 +73,7 @@ struct CLAController::Impl {
     auto close() -> void;
     auto isNoTriggers() -> bool;
     auto run(uint32_t timeoutMs) -> void;
+    auto loadFromBytes(std::vector<uint8_t> data, bool isRLE, uint64_t triggerSamplePosition) -> void;
     auto runDecode() -> void;
     auto resetAllDecoders() -> void;
     auto decode(const uint8_t* _input, uint32_t _size) -> void;
@@ -93,6 +101,30 @@ struct CLAController::Impl {
     CLAController *m_parent = nullptr;
     std::thread *m_captureThread = nullptr;
 };
+
+auto createDir(const std::string &dir) -> bool{
+#ifdef _WIN32
+	mkdir(dir.c_str());
+#else
+	mkdir(dir.c_str(), 0777);
+#endif
+	return true;
+}
+
+auto createDirTree(const std::string &full_path) -> bool{
+	char ch = '/';
+#ifdef _WIN32
+	ch = '\\';
+#endif
+
+	size_t pos = 0;
+	bool ret_val = true;
+	while (ret_val == true && pos != std::string::npos) {
+		pos = full_path.find(ch, pos + 1);
+		ret_val = createDir(full_path.substr(0, pos));
+	}
+	return ret_val;
+}
 
 CLAController::CLAController()
 {
@@ -602,6 +634,45 @@ auto CLAController::Impl::run(uint32_t timeoutMs) -> void{
     TRACE_SHORT("Done")
 }
 
+auto CLAController::Impl::loadFromBytes(std::vector<uint8_t> data, bool isRLE, uint64_t triggerSamplePosition) -> void{
+     if (!m_parent) {
+        m_isRun = false;
+        return;
+    }
+    std::lock_guard lock(m_run_mutex);
+
+    m_data.m_buffer = data;
+    uint64_t numSamples = 0;
+    if (isRLE){
+        if (data.size() % 2) {
+            ERROR_LOG("The buffer must be a multiple of 2")
+            m_isRun = false;
+            return;
+        }
+        for(size_t i = 0; i < data.size() / 2; i++){
+            numSamples += data[i * 2] + 1;
+        }
+        m_data.m_capturedBytes = data.size();
+        m_data.m_samplesBeforeTrigger = triggerSamplePosition;
+        m_data.m_capturedSamples = numSamples;
+        m_data.m_isRLE = true;
+
+    }else{
+        ERROR_LOG("Unsupported mode")
+    }
+    decode(m_data.m_buffer.data(),m_data.m_capturedBytes);
+    m_isRun = false;
+    std::lock_guard lock_delegate(m_delegate_mutex);
+    if (m_delegate){
+        m_delegate->captureStatus(m_parent,
+                                  false,
+                                  m_data.m_capturedBytes,
+                                  m_data.m_capturedSamples,
+                                  m_data.m_samplesBeforeTrigger,
+                                  m_data.m_capturedSamples - m_data.m_samplesBeforeTrigger);
+    }
+    TRACE_SHORT("Done")
+}
 
 auto CLAController::Impl::runDecode() -> void{
     if (!m_parent) {
@@ -631,6 +702,18 @@ auto CLAController::runAsync(uint32_t timeoutMs) -> void{
     timeoutMs = 0;
     m_pimpl->m_isRun = true;
     m_pimpl->m_captureThread = new std::thread(&CLAController::Impl::run, m_pimpl, timeoutMs);
+}
+
+auto CLAController::runAsync(std::vector<uint8_t> data, bool isRLE, uint64_t triggerSamplePosition) -> void{
+    std::lock_guard lock_thread(m_pimpl->m_thread_mutex);
+    if (m_pimpl->m_isRun) return;
+
+    if (m_pimpl->m_captureThread && m_pimpl->m_captureThread->joinable()){
+        m_pimpl->m_captureThread->join();
+    }
+    delete m_pimpl->m_captureThread;
+    m_pimpl->m_isRun = true;
+    m_pimpl->m_captureThread = new std::thread(&CLAController::Impl::loadFromBytes, m_pimpl, data, isRLE, triggerSamplePosition);
 }
 
 auto CLAController::decodeAsync() -> void{
@@ -673,6 +756,8 @@ auto CLAController::wait(uint32_t timeoutMs, bool *isTimeout) -> void{
 // }
 
 auto CLAController::saveCaptureDataToFile(std::string file) -> bool{
+    std::filesystem::path path(file);
+    createDirTree(path.parent_path().string());
 	FILE* f = fopen(file.c_str(), "wb");
     if (!f){
         ERROR_LOG("File opening failed");
@@ -685,6 +770,41 @@ auto CLAController::saveCaptureDataToFile(std::string file) -> bool{
     TRACE("Data writed to file: %s size: %d", file.c_str(),bytesForWrite);
     return true;
 }
+
+auto CLAController::loadFromFile(std::string file, uint64_t triggerSamplePosition) -> bool{
+    FILE* f = fopen(file.c_str(), "rb");
+    if (!f){
+        ERROR_LOG("File opening failed");
+        return false;
+    }
+
+    fseek(f, 0, SEEK_END);
+    int64_t fileSize = ftell(f);
+    rewind(f);
+    if(fileSize < 0){
+        ERROR_LOG("Error getting file size for: %s",file.c_str())
+        fclose(f);
+        return false;
+    }
+    std::vector<uint8_t> buffer;
+    buffer.resize(fileSize); // Resize the vector to hold the whole file
+
+    int64_t bytesRead = fread(buffer.data(), 1, fileSize, f);
+    if (bytesRead != fileSize) {
+        ERROR_LOG("Error reading file. Read: %lld expected: %lld", bytesRead, fileSize)
+        buffer.clear();
+        return false;
+    }
+
+    fclose(f);
+    if (buffer.size() == 0){
+        ERROR_LOG("File is empty");
+        return false;
+    }
+    runAsync(buffer,true,triggerSamplePosition);
+    return true;
+}
+
 
 auto CLAController::getDataNP(uint8_t* np_buffer, int size) -> uint32_t{
     uint32_t copySize = (size_t)size < m_pimpl->m_data.m_buffer.size() ? size : m_pimpl->m_data.m_buffer.size();

@@ -105,7 +105,9 @@
                                 <a class="btn btn-default dropdown-toggle" type="button" id="dd_menu" data-toggle="dropdown" style="padding-left: 20px;">EXPORT<span class="caret"></span></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="menu1" style="background: #cdcccc; min-width: 0px;">
                                     <li><a id="downl_graph" href="#">Graph</a></li>
-                                    <li><a id="downl_csv" href="#">Data in CSV</a></li>
+                                    <li><a id="downl_rle" href="./files/rle_logic_data.bin" target="_blank" rel="noopener noreferrer">RLE</a></li>
+                                    <li><a id="downl_lines" href="#">Lines</a></li>
+                                    <li><a id="downl_data" href="#">Data</a></li>
                                 </ul>
                             </li>
                             <li class="dropdown">
@@ -118,6 +120,7 @@
                             <li class="dropdown">
                                 <a class="btn btn-default dropdown-toggle" type="button" id="menu1" data-toggle="dropdown">MENU<span class="caret"></span></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="menu1" style="background: #cdcccc; min-width: 0px;">
+                                    <li><a id="upload_rle">Upload RLE</a></li>
                                     <li><a id="sys_info" href="#">SYS INFO</a></li>
                                     <li><a id="select_mode" href="#">Ext. module</a></li>
                                 </ul>
@@ -131,7 +134,7 @@
                 </div>
             </div>
             <!-- Modal export-->
-            <div class="modal" id="export" tabindex="-1" role="dialog" aria-labelledby="export" aria-hidden="true">
+            <!-- <div class="modal" id="export" tabindex="-1" role="dialog" aria-labelledby="export" aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -143,9 +146,9 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> -->
             <!-- Modal settings-->
-            <div class="modal" id="settings" tabindex="-1" role="dialog" aria-labelledby="export" aria-hidden="true">
+            <!-- <div class="modal" id="settings" tabindex="-1" role="dialog" aria-labelledby="export" aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -157,7 +160,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> -->
             <div id="main_block">
                 <div id="global_container" style="position: relative;height: 100%;">
                     <div class="menu-content">
@@ -372,10 +375,6 @@
                                     </div>
                                 </div>
                                 <div class="col-xs-12 option-content log-container" id="log-container">
-                                </div>
-                                <div id="hidden-log-container" style="display: none;"></div>
-                                <div class="col-xs-12 option-content">
-                                    <button id="export-data" type="button" class="btn">EXPORT</button>
                                 </div>
                                 <div class="col-xs-12 option-content">
                                     <span class="col-info" style="z-index: 1000;">Display</span>
@@ -1202,7 +1201,7 @@
                 <div>Decoded data</div>
                 <span class="close-button" onclick="LA.closeSubWindow()">&times;</span>
             </div>
-            <table id="decoded_table">
+            <table id="decoded_table" class="decoded_table">
                 <thead id="decoded_header">
                     <tr>
                         <th>Make</th>
@@ -1288,56 +1287,4 @@
         </div>
       </div>
 </body>
-
-<!-- <script type="text/javascript">
-    var fileName = 'bus.txt';
-
-    function downloadInnerHtml(filename, elId, mimeType) {
-        var fname = "";
-        var names = [];
-        for (var i = 0; i < 4; i++) {
-            if (OSC.log_buses[i])
-                names.push($('#DATA_BUS' + i).text());
-        }
-
-        if (names.length > 0) {
-            for (var i = 0; i < names.length; i++) {
-                if (i + 1 == names.length)
-                    fname += names[i]
-                else
-                    fname += names[i] + "_";
-            }
-            fname += ".csv";
-        } else
-            return;
-
-        var elHtml = document.getElementById(elId).innerHTML;
-        var link = document.createElement('a');
-        mimeType = mimeType || 'text/plain';
-        elHtml = elHtml.replace(/[<]br[^>]*[>]/gi, "");
-
-        link.setAttribute('download', fname);
-        link.setAttribute('href', 'data:' + mimeType + ';charset=utf-8,' + encodeURIComponent(elHtml));
-        link.click();
-    }
-    $('#export-data').click(function() {
-        downloadInnerHtml(fileName, 'hidden-log-container', 'text/html');
-    });
-
-    $('#get_key').click(function() {
-        window.open('http://store.redpitaya.com/logic-analyzer.html', '_blank');
-        $('#get_lic').modal('hide');
-    });
-    $('#apply_key').click(function() {
-        window.open('http://store.redpitaya.com/myequipment/list/', '_blank');
-        $('#get_lic').modal('hide');
-    });
-    $('#uart_baudrate').on("change", function() {
-        var min_br = 9;
-        var max_br = 4000000;
-        if ($('#uart_baudrate').val() < min_br) $('#uart_baudrate').val(min_br);
-        else if ($('#uart_baudrate').val() > max_br) $('#uart_baudrate').val(max_br);
-    });
-</script> -->
-
 </html>

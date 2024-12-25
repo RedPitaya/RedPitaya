@@ -504,6 +504,8 @@ function promptFile(contentType, multiple) {
                     a.innerText = "LOG"
                     a.setAttribute('href', "/streaming_manager/upload/adc/" + key + "." + value["format"] + ".log.txt");
                     a.setAttribute("download", "");
+                    a.setAttribute("target","_blank")
+                    a.setAttribute("rel","noopener noreferrer")
                     li.append(a)
                 }
 
@@ -515,6 +517,8 @@ function promptFile(contentType, multiple) {
                     a.innerText = "LOST"
                     a.setAttribute('href',"/streaming_manager/upload/adc/" + key + "." + value["format"] + ".log.lost.txt");
                     a.setAttribute("download", "");
+                    a.setAttribute("target","_blank")
+                    a.setAttribute("rel","noopener noreferrer")
                     li.append(a)
 
                 }
@@ -526,6 +530,8 @@ function promptFile(contentType, multiple) {
                 a.innerText = "🡇"
                 a.setAttribute('href', "/streaming_manager/upload/adc/" + key + "." + value["format"]);
                 a.setAttribute("download", "");
+                a.setAttribute("target","_blank")
+                a.setAttribute("rel","noopener noreferrer")
                 li.append(a)
                 document.getElementById('files_table').appendChild(new_row);
 

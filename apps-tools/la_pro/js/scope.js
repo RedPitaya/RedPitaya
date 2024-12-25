@@ -95,7 +95,6 @@
         graph_grid_height: null,
         graph_grid_width: null,
         radix: 17,
-        export_radix: 16,
         acq_speed: undefined,
         line_moving: false
     };
@@ -229,10 +228,11 @@
 
 
     OSC.processParameters = function(new_params) {
-
+        var requestRedecode = false;
         // First init after reset
         if (CLIENT.getValue("LA_MAX_FREQ") == undefined){
             LA.initCursors()
+            requestRedecode = true
         }
 
         if (new_params['LA_MAX_FREQ'])
@@ -245,6 +245,11 @@
             CLIENT.params.orig[param_name] = new_params[param_name];
             if (OSC.param_callbacks[param_name] !== undefined)
                 OSC.param_callbacks[param_name](new_params);
+        }
+
+        // Need resend decoded data after first init UI
+        if (requestRedecode){
+            LA.requestRedecode()
         }
     };
 
@@ -663,13 +668,6 @@ $(function() {
     });
     $('select, input').on('change', function() {
         OSC.exitEditing(true);
-    });
-
-
-
-
-    $('#downl_csv').on('click', function() {
-        OSC.downloadDataAsCSV("laData.csv");
     });
 
     // Selecting active signal

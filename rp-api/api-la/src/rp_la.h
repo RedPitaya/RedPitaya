@@ -133,6 +133,7 @@ public:
     // TODO
     // timeout - Timeout in mS. 0 - Disable
     auto runAsync(uint32_t timeoutMs) -> void;
+    auto runAsync(std::vector<uint8_t> data, bool isRLE, uint64_t triggerSamplePosition) -> void;
     auto decodeAsync() -> void;
     auto wait(uint32_t timeoutMs, bool *isTimeout) -> void;
 
@@ -140,6 +141,7 @@ public:
     // auto wait() -> void;
 
     auto saveCaptureDataToFile(std::string file) -> bool;
+    auto loadFromFile(std::string file, uint64_t triggerSamplePosition) -> bool;
 
 
     auto getDataNP(uint8_t* np_buffer, int size) -> uint32_t;
