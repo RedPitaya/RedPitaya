@@ -148,6 +148,14 @@
             var baudrate = $('#uart_baudrate').val();
             var rx = $('#uart_rx').val();
             var tx = $('#uart_tx').val();
+            // var uart_speed = $('#uart_adc_speed').val();
+
+
+            // if (uart_speed <= 0) {
+            //     $('#warn-message').text("Samplerate must be greater than 0");
+            //     $('#warning-dialog').show();
+            //     return;
+            // }
 
             if (baudrate <= 0) {
                 $('#warn-message').text("Baudrate value is incorrect");
@@ -188,8 +196,7 @@
             LA.buses[bus].config.parity = parseInt($('#uart_parity').val())
             LA.buses[bus].config.bitOrder = parseInt($('#uart_order').val())
             LA.buses[bus].config.invert = parseInt($('#uart_invert').val())
-
-            LA.buses[bus].config.acq_speed = CLIENT.getValue('LA_CUR_FREQ')
+            // LA.buses[bus].config.acq_speed = parseInt(uart_speed)
 
             CLIENT.parametersCache['DECODER_' + LA.state.bus_editing] = {value:JSON.stringify(LA.buses[bus])}
             CLIENT.parametersCache['DECODER_ENABLED_' + LA.state.bus_editing] = {value: true}
@@ -203,6 +210,7 @@
             var clk = $('#spi_clk').val();
             var cs = $('#spi_cs').val();
             var invert_bit = $('#spi_invert').val();
+            // var spi_speed = $('#spi_adc_speed').val();
 
             if (miso == 0 && mosi == 0) {
                 $('#warn-message').text("You have to specify MISO or MOSI for decoding");
@@ -215,6 +223,13 @@
                 $('#warning-dialog').show();
                 return;
             }
+
+            // if (spi_speed <= 0) {
+            //     $('#warn-message').text("Samplerate must be greater than 0");
+            //     $('#warning-dialog').show();
+            //     return;
+            // }
+
 
             if (miso == mosi || miso == clk || miso == cs ||
                 mosi == clk || mosi == cs || clk == cs) {
@@ -258,7 +273,7 @@
             LA.buses[bus].config.cpol = parseInt($('#spi_cpol').val())
             LA.buses[bus].config.cpha = parseInt($('#spi_cpha').val())
             LA.buses[bus].config.cs_polarity = parseInt($('#spi_state').val())
-            LA.buses[bus].config.acq_speed = CLIENT.getValue('LA_CUR_FREQ')
+            // LA.buses[bus].config.acq_speed = parseInt(spi_speed)
 
             CLIENT.parametersCache['DECODER_' + LA.state.bus_editing] = {value:JSON.stringify(LA.buses[bus])}
             CLIENT.parametersCache['DECODER_ENABLED_' + LA.state.bus_editing] = {value: true}
@@ -269,6 +284,14 @@
             var scl = $('#i2c_scl').val();
             var sda = $('#i2c_sda').val();
             var invert_bit = $('#i2c_invert').val();
+            // var i2c_speed = $('#i2c_adc_speed').val();
+
+            // if (i2c_speed <= 0) {
+            //     $('#warn-message').text("Samplerate must be greater than 0");
+            //     $('#warning-dialog').show();
+            //     return;
+            // }
+
 
             if (scl == 0 || sda == 0) {
                 $('#warn-message').text("You have to specify both lines for decoding");
@@ -297,7 +320,7 @@
             LA.buses[bus].config.scl = parseInt(scl)
             LA.buses[bus].config.sda = parseInt(sda)
             LA.buses[bus].config.address_format = parseInt($('#i2c_addr').val())
-            LA.buses[bus].config.acq_speed = CLIENT.getValue('LA_CUR_FREQ')
+            // LA.buses[bus].config.acq_speed = parseInt(i2c_speed)
             LA.buses[bus].config.invert_bit = parseInt(invert_bit)
 
             CLIENT.parametersCache['DECODER_' + LA.state.bus_editing] = {value:JSON.stringify(LA.buses[bus])}
@@ -311,7 +334,14 @@
             var sample_point = $('#sample_point').val();
             var can_rx = $('#can_rx').val();
             var invert_bit = $('#can_invert').val();
+            // var can_speed = $('#can_adc_speed').val();
 
+
+            // if (can_speed <= 0) {
+            //     $('#warn-message').text("Samplerate must be greater than 0");
+            //     $('#warning-dialog').show();
+            //     return;
+            // }
 
             if (nom_bitrate <= 0) {
                 $('#warn-message').text("Nominal bitrate value is incorrect");
@@ -352,7 +382,7 @@
             LA.buses[bus].config.nominal_bitrate = parseInt(nom_bitrate)
             LA.buses[bus].config.fast_bitrate = parseInt(fast_bitrate)
             LA.buses[bus].config.sample_point = parseFloat(sample_point)
-            LA.buses[bus].config.acq_speed = CLIENT.getValue('LA_CUR_FREQ')
+            // LA.buses[bus].config.acq_speed = parseInt(can_speed)
             LA.buses[bus].config.invert_bit = parseInt(invert_bit)
 
             CLIENT.parametersCache['DECODER_' + LA.state.bus_editing] = {value:JSON.stringify(LA.buses[bus])}
@@ -421,6 +451,7 @@
             $('#uart_rx option[value=' + (LA.buses[bus].config.rx) + ']').attr('selected', 'selected');
             $('#uart_tx option[value=' + (LA.buses[bus].config.tx) + ']').attr('selected', 'selected');
             $('#uart_baudrate').val(LA.buses[bus].config.baudrate);
+            // $('#uart_adc_speed').val(LA.buses[bus].config.acq_speed);
         }
 
         if (name === 'SPI'){
@@ -437,6 +468,8 @@
             $('#spi_cpha option[value=' + LA.buses[bus].config.cpha + ']').attr('selected', 'selected');
             $('#spi_state option[value=' + LA.buses[bus].config.cs_polarity + ']').attr('selected', 'selected');
             $('#spi_invert option[value=' + LA.buses[bus].config.invert_bit + ']').attr('selected', 'selected');
+            // $('#spi_adc_speed').val(LA.buses[bus].config.acq_speed);
+
         }
 
         if (name === 'CAN'){
@@ -446,6 +479,8 @@
             $('#can_fast_bitrate').val(LA.buses[bus].config.fast_bitrate);
             $('#sample_point').val(LA.buses[bus].config.sample_point);
             $('#can_invert option[value=' + LA.buses[bus].config.invert_bit + ']').attr('selected', 'selected');
+            // $('#can_adc_speed').val(LA.buses[bus].config.acq_speed);
+
         }
 
         if (name === 'I2C'){
@@ -455,6 +490,8 @@
             $('#i2c_scl option[value=' + (parseInt(LA.buses[bus].config.scl)) + ']').attr('selected', 'selected');
             $('#i2c_addr option[value=' + LA.buses[bus].config.address_format + ']').attr('selected', 'selected');
             $('#i2c_invert option[value=' + LA.buses[bus].config.invert_bit + ']').attr('selected', 'selected');
+            // $('#i2c_adc_speed').val(LA.buses[bus].config.acq_speed);
+
         }
     }
 

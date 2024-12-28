@@ -130,7 +130,7 @@
         }
 
         if (col == LOGGER.COLUMNS.DATA){
-            return 120;
+            return 180;
         }
 
         if (col == LOGGER.COLUMNS.SAMPLES_START){
@@ -344,6 +344,7 @@
             if (LOGGER.log_header.includes(LOGGER.COLUMNS.TIME_OFFSET)){
                 var td = document.createElement("td");
                 td.classList.add("column_"+LOGGER.COLUMNS.TIME_OFFSET);
+                td.classList.add("text-clip")
                 if (samplerate !== undefined){
                     var t = 1.0 / samplerate * (item.s - ts)
                     td.innerText = COMMON.convertTimeFromSec(t)
@@ -356,6 +357,7 @@
             if (LOGGER.log_header.includes(LOGGER.COLUMNS.TIME_LEN)){
                 var td = document.createElement("td");
                 td.classList.add("column_"+LOGGER.COLUMNS.TIME_LEN);
+                td.classList.add("text-clip")
                 if (samplerate !== undefined){
                     var t = 1.0 / samplerate * (item.l)
                     td.innerText = COMMON.convertTimeFromSec(t)
@@ -369,6 +371,7 @@
                 var x = item.protocol.toUpperCase() + '/' + item.ln.toUpperCase() + ' <' + item.line + '>'
                 var td = document.createElement("td");
                 td.classList.add("column_"+LOGGER.COLUMNS.LINE_NAME);
+                td.classList.add("text-clip")
                 td.innerText = x
                 tr.appendChild(td)
             }
@@ -377,18 +380,19 @@
                 var x = "ERROR"
                 var td = document.createElement("td");
                 td.classList.add("column_"+LOGGER.COLUMNS.DATA_COMMAND);
+                td.classList.add("text-clip")
 
                 if (item.protocol == "SPI"){
-                    x = SPI.getValue(item,radix)
+                    x = SPI.getValue(item,radix).replace(/(\r\n|\r|\n)/g, '');
                 }
                 if (item.protocol == "CAN"){
-                    x = CAN.getValue(item,radix)
+                    x = CAN.getValue(item,radix).replace(/(\r\n|\r|\n)/g, '');
                 }
                 if (item.protocol == "UART"){
-                    x = UART.getValue(item,radix)
+                    x = UART.getValue(item,radix).replace(/(\r\n|\r|\n)/g, '');
                 }
                 if (item.protocol == "I2C"){
-                    x = I2C.getValue(item,radix)
+                    x = I2C.getValue(item,radix).replace(/(\r\n|\r|\n)/g, '');
                 }
                 td.innerText = x
                 tr.appendChild(td)
@@ -398,6 +402,7 @@
                 var x = "ERROR"
                 var td = document.createElement("td");
                 td.classList.add("column_"+LOGGER.COLUMNS.COMMAND);
+                td.classList.add("text-clip")
 
                 if (item.protocol == "SPI"){
                     x = SPI.getAnnotation(item.c)
@@ -417,16 +422,17 @@
             }
 
             if (LOGGER.log_header.includes(LOGGER.COLUMNS.DATA)){
-                var x = item.protocol.toUpperCase() + '/' + item.ln.toUpperCase()
                 var td = document.createElement("td");
                 td.classList.add("column_"+LOGGER.COLUMNS.DATA);
-                td.innerText = COMMON.formatData(item.d, "", "", radix)[0]
+                td.classList.add("text-clip")
+                td.innerText = COMMON.formatData(item.d, "", "", radix)[0].replace(/(\r\n|\r|\n)/g, '');
                 tr.appendChild(td)
             }
 
             if (LOGGER.log_header.includes(LOGGER.COLUMNS.SAMPLES_START)){
                 var td = document.createElement("td");
                 td.classList.add("column_"+LOGGER.COLUMNS.SAMPLES_START);
+                td.classList.add("text-clip")
                 td.innerText = item.s
                 tr.appendChild(td)
             }
@@ -434,6 +440,7 @@
             if (LOGGER.log_header.includes(LOGGER.COLUMNS.SAMPLES_LEN)){
                 var td = document.createElement("td");
                 td.classList.add("column_"+LOGGER.COLUMNS.SAMPLES_LEN);
+                td.classList.add("text-clip")
                 td.innerText = item.l
                 tr.appendChild(td)
             }

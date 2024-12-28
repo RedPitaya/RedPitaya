@@ -57,19 +57,19 @@ add_compile_options($<$<CONFIG:Debug>:-DTRACE_ENABLE>)
 add_compile_options(-Wall -pedantic -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os>  -ffunction-sections -fdata-sections)
 
 
-add_executable(la_rle "./src/rle.cpp")
+add_executable(la_rle_tool "./src/rle.cpp")
 
-target_link_directories(la_rle PRIVATE ${INSTALL_DIR}/lib)
+target_link_directories(la_rle_tool PRIVATE ${INSTALL_DIR}/lib)
 
-target_link_libraries(la_rle PRIVATE rp rp-hw-calib rp-hw-profiles)
+target_link_libraries(la_rle_tool PRIVATE rp rp-hw-calib rp-hw-profiles)
 
-target_link_libraries(la_rle PRIVATE rp-hw rp-i2c rp-spi rp-gpio)
+target_link_libraries(la_rle_tool PRIVATE rp-hw rp-i2c rp-spi rp-gpio)
 
-target_link_libraries(la_rle PRIVATE i2c)
+target_link_libraries(la_rle_tool PRIVATE i2c)
 
-target_link_libraries(la_rle PRIVATE pthread)
+target_link_libraries(la_rle_tool PRIVATE pthread)
 
 
-install(TARGETS la_rle RUNTIME DESTINATION ${INSTALL_DIR}/bin)
+install(TARGETS la_rle_tool RUNTIME DESTINATION ${INSTALL_DIR}/bin)
 
 unset(INSTALL_DIR CACHE)

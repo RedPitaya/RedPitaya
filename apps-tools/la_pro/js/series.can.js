@@ -23,9 +23,12 @@
 		ESI 			: 20, // 'Error state indicator'
 		RESERV_BIT_FLEX	: 21, // 'Flexible data'
 		STUFF_BIT_ERROR	: 22, // 'Stuff bit error'
-		CRC_VAL			: 23, // CRC Value
-		FSB				: 24, // fixed stuff-bit (FSB)
-		SBC				: 25, // Stuff bits before CRC in FD mode
+		CRC_15_VAL		: 23, // CRC-15 Value
+		CRC_17_VAL		: 24, // CRC-17 Value
+		CRC_21_VAL		: 25, // CRC-21 Value
+		FSB				: 26, // fixed stuff-bit (FSB)
+		SBC				: 27, // Stuff bits before CRC in FD mode
+		CRC_FSB_SBC		: 29, // Stuff bits before CRC in FD mode + FSB + CRC
 
     };
 
@@ -39,16 +42,21 @@
         STUFF_BIT:"#94670d",
         FSB:"#94670d",
         RTR:"#cfccc8",
+        BRS:"#cfccc8",
+        ESI:"#cfccc8",
         SRR:"#cfccc8",
         RESERV_BIT:"#cfccc8",
         RESERV_BIT_FLEX:"#cfccc8",
         IDE:"#b5c4b5",
         DLC:"#a82895",
-        CRC_VAL: "#d1323f",
+        CRC_15_VAL: "#d1323f",
+        CRC_17_VAL: "#d1323f",
+        CRC_21_VAL: "#d1323f",
         SBC: "#a87b28",
         CRC_DELIMITER:"#cfccc8",
         ACK_SLOT:"#cfccc8",
         ACK_DELIMITER:"#cfccc8",
+        CRC_FSB_SBC: "#d1323f",
     }
 
     CAN.getAnnotation = function(value){
@@ -60,7 +68,7 @@
             return "Start";
         }
 
-        if (item.c == CAN.ANNOTATIONS.START_OF_FRAME) {
+        if (item.c == CAN.ANNOTATIONS.END_OF_FRAME) {
             return COMMON.formatData(item.d, "End: ", "", radix)[0]
         }
 
@@ -104,16 +112,36 @@
             return "IDE"
         }
 
+        if (item.c == CAN.ANNOTATIONS.BRS) {
+            return "Bit rate switch"
+        }
+
+        if (item.c == CAN.ANNOTATIONS.ESI) {
+            return "Error state indicator"
+        }
+
         if (item.c == CAN.ANNOTATIONS.RESERV_BIT_FLEX) {
             return "Enable FD mode"
+        }
+
+        if (item.c == CAN.ANNOTATIONS.STUFF_BIT_ERROR) {
+            return "Stuff bit error"
         }
 
         if (item.c == CAN.ANNOTATIONS.DLC) {
             return COMMON.formatData(item.d,"DLC: ", "", radix )[0]
         }
 
-        if (item.c == CAN.ANNOTATIONS.CRC_VAL) {
-            return COMMON.formatData(item.d,"CRC: ", "", radix)[0]
+        if (item.c == CAN.ANNOTATIONS.CRC_15_VAL) {
+            return COMMON.formatData(item.d,"CRC-15: ", "", radix)[0]
+        }
+
+        if (item.c == CAN.ANNOTATIONS.CRC_17_VAL) {
+            return COMMON.formatData(item.d,"CRC-17: ", "", radix)[0]
+        }
+
+        if (item.c == CAN.ANNOTATIONS.CRC_21_VAL) {
+            return COMMON.formatData(item.d,"CRC-21: ", "", radix)[0]
         }
 
         if (item.c == CAN.ANNOTATIONS.SBC) {
@@ -131,13 +159,22 @@
         if (item.c == CAN.ANNOTATIONS.ACK_DELIMITER) {
             return "ACK delimiter"
         }
+
+        if (item.c == CAN.ANNOTATIONS.CRC_FSB_SBC) {
+            return COMMON.formatData(item.d,"Full CRC: ", "", radix)[0]
+        }
+
     }
 
     CAN.drawDecoded = function(plot, canvascontext, offset, decoded_data) {
-
+        var axes = plot.getAxes();
+        var min = axes.xaxis.options.min
+        var max = axes.xaxis.options.max
         var dd = decoded_data;
-        // Remained data after offset
         for (var i = 0; i < dd.length; i++) {
+            if (dd[i].s + dd[i].l < min) continue;
+            if (dd[i].s > max) continue;
+
             if (dd[i].c == CAN.ANNOTATIONS.START_OF_FRAME) {
                 SERIES.drawCircle(plot, canvascontext, offset, dd[i].s, dd[i].l,CAN.colors.START_OF_FRAME, "S");
                 SERIES.drawBitsBars(plot,canvascontext,offset, dd[i].s, dd[i].l,CAN.colors.START_OF_FRAME,dd[i].b)
@@ -168,6 +205,11 @@
                 SERIES.drawBitsBarsTop(plot,canvascontext,offset, dd[i].s, dd[i].l,CAN.colors.STUFF_BIT,dd[i].b, false)
             }
 
+            if (dd[i].c == CAN.ANNOTATIONS.STUFF_BIT_ERROR) {
+                SERIES.drawTextTop(plot, canvascontext, offset, dd[i].s, dd[i].l, CAN.colors.STUFF_BIT, ["Stuff error"])
+                SERIES.drawBitsBarsTop(plot,canvascontext,offset, dd[i].s, dd[i].l,CAN.colors.STUFF_BIT,dd[i].b, false)
+            }
+
             if (dd[i].c == CAN.ANNOTATIONS.FSB) {
                 SERIES.drawTextTop(plot, canvascontext, offset, dd[i].s, dd[i].l, CAN.colors.FSB, ["FSB"])
                 SERIES.drawBitsBarsTop(plot,canvascontext,offset, dd[i].s, dd[i].l,CAN.colors.FSB, dd[i].b, false)
@@ -176,6 +218,16 @@
             if (dd[i].c == CAN.ANNOTATIONS.RTR) {
                 SERIES.drawHexagon(plot, canvascontext, offset, dd[i].s, dd[i].l,CAN.colors.RTR, ["RTR"])
                 SERIES.drawBitsBars(plot,canvascontext,offset, dd[i].s, dd[i].l,CAN.colors.RTR,dd[i].b)
+            }
+
+            if (dd[i].c == CAN.ANNOTATIONS.BRS) {
+                SERIES.drawHexagon(plot, canvascontext, offset, dd[i].s, dd[i].l,CAN.colors.BRS, ["BRS"])
+                SERIES.drawBitsBars(plot,canvascontext,offset, dd[i].s, dd[i].l,CAN.colors.BRS,dd[i].b)
+            }
+
+            if (dd[i].c == CAN.ANNOTATIONS.ESI) {
+                SERIES.drawHexagon(plot, canvascontext, offset, dd[i].s, dd[i].l,CAN.colors.ESI, ["ESI"])
+                SERIES.drawBitsBars(plot,canvascontext,offset, dd[i].s, dd[i].l,CAN.colors.ESI,dd[i].b)
             }
 
             if (dd[i].c == CAN.ANNOTATIONS.SRR) {
@@ -202,9 +254,19 @@
                 SERIES.drawBitsBars(plot,canvascontext,offset, dd[i].s, dd[i].l,CAN.colors.DLC,dd[i].b)
             }
 
-            if (dd[i].c == CAN.ANNOTATIONS.CRC_VAL) {
-                SERIES.drawHexagon(plot, canvascontext, offset, dd[i].s, dd[i].l, CAN.colors.CRC_VAL, COMMON.formatData(dd[i].d,"CRC: ", "", COMMON.radix))
-                SERIES.drawBitsBars(plot,canvascontext,offset, dd[i].s, dd[i].l,CAN.colors.CRC_VAL,dd[i].b)
+            if (dd[i].c == CAN.ANNOTATIONS.CRC_15_VAL) {
+                SERIES.drawHexagon(plot, canvascontext, offset, dd[i].s, dd[i].l, CAN.colors.CRC_15_VAL, COMMON.formatData(dd[i].d,"CRC-15: ", "", COMMON.radix))
+                SERIES.drawBitsBars(plot,canvascontext,offset, dd[i].s, dd[i].l,CAN.colors.CRC_15_VAL,dd[i].b)
+            }
+
+            if (dd[i].c == CAN.ANNOTATIONS.CRC_17_VAL) {
+                SERIES.drawHexagon(plot, canvascontext, offset, dd[i].s, dd[i].l, CAN.colors.CRC_17_VAL, COMMON.formatData(dd[i].d,"CRC-17: ", "", COMMON.radix))
+                SERIES.drawBitsBars(plot,canvascontext,offset, dd[i].s, dd[i].l,CAN.colors.CRC_17_VAL,dd[i].b)
+            }
+
+            if (dd[i].c == CAN.ANNOTATIONS.CRC_21_VAL) {
+                SERIES.drawHexagon(plot, canvascontext, offset, dd[i].s, dd[i].l, CAN.colors.CRC_21_VAL, COMMON.formatData(dd[i].d,"CRC-21: ", "", COMMON.radix))
+                SERIES.drawBitsBars(plot,canvascontext,offset, dd[i].s, dd[i].l,CAN.colors.CRC_21_VAL,dd[i].b)
             }
 
             if (dd[i].c == CAN.ANNOTATIONS.SBC) {

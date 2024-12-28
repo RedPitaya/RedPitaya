@@ -68,6 +68,11 @@ class CLACallback
                                 uint64_t numSamples,
                                 uint64_t preTriggerSamples,
                                 uint64_t postTriggerSamples){}
+      virtual void decodeStatus(CLAController* controller,
+                                uint32_t numBytes,
+                                uint64_t numSamples,
+                                uint64_t preTriggerSamples,
+                                uint64_t postTriggerSamples){}
       virtual void decodeDone(CLAController* controller, std::string name){}
 };
 
@@ -77,6 +82,8 @@ class CLAController
 public:
     CLAController();
     ~CLAController();
+
+    auto initFpga() -> bool;
 
     auto setMode(la_Mode_t mode) -> void;
 
@@ -137,11 +144,14 @@ public:
     auto decodeAsync() -> void;
     auto wait(uint32_t timeoutMs, bool *isTimeout) -> void;
 
+    auto decode(std::string name) -> std::vector<rp_la::OutputPacket>;
+
     // TODO
     // auto wait() -> void;
 
     auto saveCaptureDataToFile(std::string file) -> bool;
-    auto loadFromFile(std::string file, uint64_t triggerSamplePosition) -> bool;
+    auto loadFromFile(std::string file, bool isRLE, uint64_t triggerSamplePosition) -> bool;
+    auto loadFromFileAndDecode(std::string file, bool isRLE, uint64_t triggerSamplePosition) -> bool;
 
 
     auto getDataNP(uint8_t* np_buffer, int size) -> uint32_t;

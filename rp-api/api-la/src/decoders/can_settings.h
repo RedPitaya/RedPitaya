@@ -39,9 +39,12 @@ namespace can {
 		ESI 			= 20, // 'Error state indicator'
 		RESERV_BIT_FLEX	= 21, // 'Flexible data'
 		STUFF_BIT_ERROR	= 22, // 'Stuff bit error'
-		CRC_VAL			= 23, // CRC Value
-		FSB				= 24, // fixed stuff-bit (FSB)
-		SBC				= 25, // Stuff bits before CRC in FD mode
+		CRC_15_VAL		= 23, // CRC Value
+		CRC_17_VAL		= 24, // CRC Value
+		CRC_21_VAL		= 25, // CRC Value
+		FSB				= 26, // fixed stuff-bit (FSB)
+		SBC				= 27, // Stuff bits before CRC in FD mode
+		CRC_FSB_SBC		= 28, // Stuff bits before CRC in FD mode + FSB + CRC
 		ENUM_END
 	};
 

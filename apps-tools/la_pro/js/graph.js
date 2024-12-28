@@ -427,7 +427,7 @@
 
             if (direction == '+') {
                 newScaleMul = scale * ((LA.state.fine == false) ? 2 : 1.1);
-                if (newScaleMul > 100) newScaleMul = 100
+                if (newScaleMul >= 1000) newScaleMul = 1000
             } else if (direction == '-') {
                 newScaleMul = scale / ((LA.state.fine == false) ? 2 : 1.1);
                 if (newScaleMul < 0.005) newScaleMul = 0.005

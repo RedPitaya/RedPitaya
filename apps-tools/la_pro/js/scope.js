@@ -95,7 +95,7 @@
     // Exits from editing mode
     LA.exitEditing = function(noclose) {
 
-        var key_for_send = ['LA_DECIMATE','LA_PRE_TRIGGER_BUFFER_MS','LA_POST_TRIGGER_BUFFER_MS','LA_WIN_SHOW']
+        var key_for_send = ['LA_DECIMATE','LA_PRE_TRIGGER_BUFFER_MS','LA_POST_TRIGGER_BUFFER_MS','LA_WIN_SHOW','LA_CUR_FREQ']
 
         for (var key in CLIENT.params.orig) {
             if (!(key_for_send.includes(key)))

@@ -63,10 +63,26 @@ input {
     position: relative;
 }
 
+.input-number-box-decoder {
+    display: inline-block;
+    position: relative;
+    width: 100%;
+}
+
 .input-number {
     line-height: 35px;
     height: 35px;
     padding-right: 25px;
+}
+
+.input-number-decoder {
+    line-height: 35px;
+    height: 35px;
+    padding-right: 25px;
+}
+
+.input-number-decoder::-webkit-calendar-picker-indicator {
+    display: none !important;
 }
 
 .centerer {
@@ -108,6 +124,25 @@ input {
 }
 
 .input-number-less {
+    bottom: 0px;
+    border-color: gray transparent transparent transparent;
+}
+
+.input-number-more-decoder,
+.input-number-less-decoder {
+    position: absolute;
+    right: 8px;
+    border-width: 7px;
+    border-style: solid;
+    cursor: pointer;
+}
+
+.input-number-more-decoder {
+    top: 0px;
+    border-color: transparent transparent gray transparent;
+}
+
+.input-number-less-decoder {
     bottom: 0px;
     border-color: gray transparent transparent transparent;
 }
@@ -982,4 +1017,8 @@ body.modal-open .full-content {
     color: #75cede !important;
 }
 
-
+.setstyle-decoder {
+    text-align: left;
+    color: #fff;
+    padding-left: 13px;
+}

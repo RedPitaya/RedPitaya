@@ -119,3 +119,7 @@ cursor: pointer;
 
 .decoded_table tbody tr:hover {background-color: #9191917d;}
 
+.text-clip {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

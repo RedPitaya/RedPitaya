@@ -94,10 +94,6 @@ librp_formatter: librp
 	cmake -B$(abspath $(LIBRP_FORMATTER_DIR)/build) -S$(abspath $(LIBRP_FORMATTER_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(LIBRP_FORMATTER_DIR)/build install -j$(CPU_CORES)
 
-# librp2:
-# 	cmake -B$(abspath $(LIBRP2_DIR)/build) -S$(abspath $(LIBRP2_DIR)) $(CMAKEVAR)
-# 	$(MAKE) -C $(LIBRP2_DIR)/build install -j$(CPU_CORES)
-
 librp250_12: librp_hw
 	cmake -B$(LIBRP250_12_DIR)/build -S$(LIBRP250_12_DIR) $(CMAKEVAR)
 	$(MAKE) -C $(LIBRP250_12_DIR)/build install -j$(CPU_CORES)
@@ -111,7 +107,7 @@ librparb: librp
 	$(MAKE) -C $(LIBRP_ARB_DIR)/build install -j$(CPU_CORES)
 
 
-librpla: librp
+librpla:  librp
 	cmake -B$(abspath $(LIBRP_LA_DIR)/build) -S$(abspath $(LIBRP_LA_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(LIBRP_LA_DIR)/build install -j$(CPU_CORES)
 
@@ -331,7 +327,6 @@ GENERATOR_DIR	   = Test/generate
 SPECTRUM_DIR       = Test/spectrum
 LED_CONTROL_DIR    = Test/led_control
 XADC_DIR           = Test/xadc
-#LA_TEST_DIR        = rp-api/api2/test
 DAISY_TOOL_DIR     = Test/daisy_tool
 E3_LED_CON_DIR     = tools/e3_led_controller
 STARTUPSH          = $(INSTALL_DIR)/sbin/startup.sh

@@ -157,7 +157,7 @@
                                 <div id="cursor" class="right-menu-option edit-mode">CURSOR</div>
                             </div>
                             <div class="col-xs-12 option-content">
-                                <button id="LA_WIN_SHOW" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">SHOW DATA</button>
+                                <button id="LA_WIN_SHOW" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">DATA</button>
                             </div>
                         </div>
                         <div id="in1_dialog" class="dialog row right-menu-cont">
@@ -268,6 +268,12 @@
                             </div>
                             <div id="bus_tab" class="decoder-tab" style="display:none">
                                 <div class="col-xs-12 option-content">
+                                    <div class="col-info" style="margin-top: -11px;">Data samplerate, Hz</div>
+                                    <div class="right-menu-option" style="margin-top: 10px;">
+                                        <input id="LA_CUR_FREQ" class="setfield input-number" type="text" value="1" step="1" min="1" max="2000000000">
+                                    </div>
+                                </div>
+                                <div class="col-xs-12 option-content">
                                     <div class="col-xs-3 option-content no-lr-padding">
                                         <div class="right-menu-option enable-ch-bus" id="BUS1_ENABLED"><img style="display:none" src="img/check.png" /></div>
                                     </div>
@@ -312,8 +318,8 @@
                                     </div>
                                 </div>
                                 <div class="col-xs-12 option-content">
-                                    <span class="col-info" style="z-index: 1000;">Display radix</span>
-                                    <div class="right-menu-option">
+                                    <div class="col-info" style="margin-top: -11px;">Display radix</div>
+                                    <div class="right-menu-option" style="margin-top: 10px;">
                                         <select id="DISPLAY_RADIX" class="form-control styled-select">
                                             <option value="1">ASCII</option>
                                             <option value="17" selected="">ASCII & HEX</option>
@@ -348,8 +354,8 @@
                                 <div class="col-xs-12 option-content log-container" id="log-container">
                                 </div>
                                 <div class="col-xs-12 option-content">
-                                    <span class="col-info" style="z-index: 1000;">Display</span>
-                                    <div class="right-menu-option">
+                                    <div class="col-info" style="margin-top: -11px;">Display radix</div>
+                                    <div class="right-menu-option" style="margin-top: 10px;">
                                         <select id="LOGGER_RADIX" class="form-control styled-select">
                                             <option value="1">ASCII</option>
                                             <option value="17" selected="">ASCII & HEX</option>
@@ -362,8 +368,8 @@
                             </div>
                             <div id="acq_tab" class="decoder-tab" style="display:none">
                                 <div class="col-xs-12 option-content">
-                                    <span class="col-info" style="z-index: 1000;">Sample speed</span>
-                                    <div class="right-menu-option">
+                                    <div class="col-info" style="margin-top: -11px;">FPGA Samplerate speed</div>
+                                    <div class="right-menu-option" style="margin-top: 10px;">
                                         <select id="LA_DECIMATE" class="form-control styled-select">
                                             <option class="speed_val" value="1" selected="">125 MS/s</option>
                                             <option class="speed_val" value="2">64 MS/s</option>
@@ -375,17 +381,17 @@
                                             <option class="speed_val" value="128">1 MS/s</option>
                                         </select>
                                     </div>
-                                    <span class="col-info" style="z-index: 5000;">Pre-trigger buffer, mS</span>
-                                    <div class="right-menu-option">
-                                        <div>
-                                            <input type="number" class="form-control no-up-down" min="1" max="360000" maxlength="20" placeholder="1" value="1" id="LA_PRE_TRIGGER_BUFFER_MS">
-                                        </div>
+                                </div>
+                                <div class="col-xs-12 option-content">
+                                    <div class="col-info" style="margin-top: -11px;">Pre-trigger buffer, mS</div>
+                                    <div class="right-menu-option" style="margin-top: 10px;">
+                                        <input id="LA_PRE_TRIGGER_BUFFER_MS" class="setfield input-number" type="text" value="1" step="1" min="1" max="360000">
                                     </div>
-                                    <span class="col-info" style="z-index: 5000;">Post-trigger buffer, mS</span>
-                                    <div class="right-menu-option">
-                                        <div>
-                                            <input type="number" class="form-control no-up-down" min="1" max="360000" maxlength="20" placeholder="1" value="1" id="LA_POST_TRIGGER_BUFFER_MS">
-                                        </div>
+                                </div>
+                                <div class="col-xs-12 option-content">
+                                    <div class="col-info" style="margin-top: -11px;">Post-trigger buffer, mS</div>
+                                    <div class="right-menu-option" style="margin-top: 10px;">
+                                        <input id="LA_POST_TRIGGER_BUFFER_MS" class="setfield input-number" type="text" value="1" step="1" min="1" max="360000">
                                     </div>
                                 </div>
                             </div>
@@ -654,6 +660,12 @@
                         </div>
                     </div>
                     <div style="display:none;" class="decoder-window" id="spi_decoder">
+                        <!-- <div class="row">
+                            <div class="col-sm-3 padding-top-5">Samplerate</div>
+                            <div class="col-sm-9  decoder-drop">
+                                <input type="number" class="form-control" id="spi_adc_speed" autocomplete="off" spellcheck="off" min="" />
+                            </div>
+                        </div> -->
                         <div class="row">
                             <div class="col-sm-3 padding-top-5">MISO</div>
                             <div class="col-sm-9 decoder-drop">
@@ -729,8 +741,8 @@
                             <div class="col-sm-9 decoder-drop">
                                 <div class="dropdown decoder-option-dropdown ">
                                     <select class="form-control" id="spi_cpha">
-                                        <option value="1">CPHA=0</option>
-                                        <option value="0">CPHA=1</option>
+                                        <option value="0">CPHA=0</option>
+                                        <option value="1">CPHA=1</option>
                                     </select>
                                 </div>
                             </div>
@@ -759,6 +771,12 @@
                         </div>
                     </div>
                     <div style="display:block;" class="decoder-window" id="i2c_decoder">
+                        <!-- <div class="row">
+                            <div class="col-sm-3 padding-top-5">Samplerate</div>
+                            <div class="col-sm-9  decoder-drop">
+                                <input type="number" class="form-control" id="i2c_adc_speed" autocomplete="off" spellcheck="off" min="" />
+                            </div>
+                        </div> -->
                         <div class="row">
                             <div class="col-sm-3 padding-top-5">SDA</div>
                             <div class="col-sm-9 decoder-drop">
@@ -801,6 +819,12 @@
                         </div>
                     </div>
                     <div style="display:none;" class="decoder-window" id="uart_decoder">
+                        <!-- <div class="row">
+                            <div class="col-sm-3 padding-top-5">Samplerate</div>
+                            <div class="col-sm-9  decoder-drop">
+                                <input type="number" class="form-control" id="uart_adc_speed" autocomplete="off" spellcheck="off" min="" />
+                            </div>
+                        </div> -->
                         <div class="row">
                             <div class="col-sm-3 padding-top-5">RX</div>
                             <div class="col-sm-9 decoder-drop">
@@ -822,7 +846,7 @@
                         <div class="row">
                             <div class="col-sm-3 padding-top-5">Baudrate</div>
                             <div class="col-sm-9  decoder-drop">
-                                <input type="number" class="form-control" id="uart_baudrate" list="baudrates" autocomplete="off" spellcheck="off" min="0" max="921600" />
+                                <input id="uart_baudrate" class="setstyle-decoder setfield input-number-decoder" list="baudrates"  type="text" value="1" step="1" min="1" max="921600">
                                 <datalist id="baudrates">
                                     <option value="110">110</option>
                                     <option value="150">150</option>
@@ -907,6 +931,12 @@
                         </div>
                     </div>
                     <div style="display:none;" class="decoder-window" id="can_decoder">
+                        <!-- <div class="row">
+                            <div class="col-sm-3 padding-top-5">Samplerate</div>
+                            <div class="col-sm-9  decoder-drop">
+                                <input type="number" class="form-control" id="can_adc_speed" autocomplete="off" spellcheck="off" min="" />
+                            </div>
+                        </div> -->
                         <div class="row">
                             <div class="col-sm-3 padding-top-5">CAN_RX</div>
                             <div class="col-sm-9 decoder-drop">
@@ -919,7 +949,7 @@
                         <div class="row">
                             <div class="col-sm-3 padding-top-5">Nominal bitrate</div>
                             <div class="col-sm-9  decoder-drop">
-                                <input type="number" class="form-control" id="can_nom_bitrate" list="bitrates" autocomplete="off" spellcheck="off" min="1" />
+                                <input id="can_nom_bitrate" class="setstyle-decoder setfield input-number-decoder" list="bitrates"  type="text" value="1" step="1" min="1">
                                 <datalist id="bitrates">
                                     <option value="110">110</option>
                                     <option value="150">150</option>
@@ -943,7 +973,7 @@
                         <div class="row">
                             <div class="col-sm-3 padding-top-5">Fast bitrate</div>
                             <div class="col-sm-9  decoder-drop">
-                                <input type="number" class="form-control" id="can_fast_bitrate" list="fbitrates" autocomplete="off" spellcheck="off" min="1" />
+                                <input id="can_fast_bitrate" class="setstyle-decoder setfield input-number-decoder" list="fbitrates"  type="text" value="1" step="1" min="1">
                                 <datalist id="fbitrates">
                                     <option value="110">110</option>
                                     <option value="150">150</option>
@@ -970,7 +1000,7 @@
                             <div class="row">
                                 <div class="col-sm-3 padding-top-5">Sample point</div>
                                 <div class="col-sm-9  decoder-drop">
-                                    <input type="number" class="form-control" id="sample_point" list="s_points" autocomplete="off" spellcheck="off" min="0" max="99.99" step="0.01" />
+                                    <input id="sample_point" class="setstyle-decoder setfield input-number-decoder" list="s_points"  type="text" value="1" step="0.01" min="0.01" max="99.99">
                                     <datalist id="s_points">
                                         <option value="0">0</option>
                                         <option value="10">10</option>

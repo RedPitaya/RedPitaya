@@ -28,7 +28,43 @@ size_t writeFile(const char* _fname, const uint8_t* _buf, size_t _size)
 	return len;
 }
 
-void SrToRle(const char* _in, const char* _out)
+void Sr16ToRle8(const char* _in, const char* _out)
+{
+	uint8_t* buf = nullptr;
+	auto bufSize = readFile(_in, buf);
+
+	if (!buf || !bufSize) {
+		puts("read error");
+		return;
+	}
+
+	vector<uint8_t> result;
+	int seqLen = 0;
+	uint16_t* buf16 = (uint16_t*)buf;
+	uint8_t oldValue = buf16[0];
+	for (size_t i = 0; i < bufSize / 2; ++i)
+	{
+		if (oldValue == (uint8_t)buf16[i] && seqLen < 255)
+		{
+			++seqLen;
+		}
+		else
+		{
+			result.push_back(seqLen);
+			result.push_back(oldValue);
+			seqLen = 0;
+		}
+		oldValue = (uint8_t)buf16[i];
+	}
+	result.push_back(seqLen);
+	result.push_back(oldValue);
+
+	if (!writeFile(_out, result.data(), result.size()))
+		puts("write error");
+	delete[] buf;
+}
+
+void Sr8ToRle8(const char* _in, const char* _out)
 {
 	uint8_t* buf = nullptr;
 	auto bufSize = readFile(_in, buf);
@@ -88,7 +124,7 @@ void Split(const char* _in, const char* _out, const char* _out2)
 	delete[] buf;
 }
 
-void RleToSr(const char* _in, const char* _out)
+void Rle8ToSr8(const char* _in, const char* _out)
 {
 	uint8_t* buf = nullptr;
 	auto bufSize = readFile(_in, buf);
@@ -116,12 +152,21 @@ void RleToSr(const char* _in, const char* _out)
 
 int main(int argc, char** argv)
 {
-	if (argc == 4 && string("s2r") == argv[1])
-		SrToRle(argv[2], argv[3]);
+	if (argc == 4 && string("s8-r8") == argv[1])
+		Sr8ToRle8(argv[2], argv[3]);
+	else if (argc == 4 && string("s16-r8") == argv[1])
+		Sr16ToRle8(argv[2], argv[3]);
 	else if (argc == 5 && string("split") == argv[1])
 		Split(argv[2], argv[3], argv[4]);
-	else if (argc == 4 && string("r2s") == argv[1])
-		RleToSr(argv[2], argv[3]);
+	else if (argc == 4 && string("r8-s8") == argv[1])
+		Rle8ToSr8(argv[2], argv[3]);
 	else
-		puts("SR to RLE converter args:\n\ts2r input_file output_file\n\tsplit input_file output_file output_file2\n\tr2s input_file output_file\n");
+		printf("RLE converter tool.\n" \
+			   "\tUnpacks RLE data into a byte array.\n" \
+			   "\tUsage:\n" \
+			   "\t\ts8-r8 input_file output_file. Convert 8 bit samples to 8 bit RLE\n" \
+			   "\t\ts16-r8 input_file output_file. Convert 16 bit samples to 8 bit RLE. The least significant bits are used.\n" \
+			   "\t\tr8-s8 input_file output_file. Convert 8 bit RLE to 8 bit samples.\n" \
+			   "\t\tsplit input_file output_file output_file2\n" \
+			   "\t\tsplit - Splits RLE file into two equal parts\n");
 }

@@ -130,7 +130,7 @@ auto I2CDecoder::setParametersInJSON(const std::string &parameter) -> void{
 	if (param.fromJson(parameter)){
 		setParameters(param);
 	}else{
-		ERROR_LOG("Error set parameters")
+		ERROR_LOG("Error set parameters %s", parameter.c_str())
 	}
 }
 
@@ -197,6 +197,7 @@ void I2CDecoder::Impl::decode(const uint8_t* _input, uint32_t _size)
 
 	uint8_t scl_line = m_options.m_scl - 1;
 	uint8_t sda_line = m_options.m_sda - 1;
+	bool needInit = true;
 
 	for (size_t i = 0; i < _size; i += 2)
 	{
@@ -204,12 +205,19 @@ void I2CDecoder::Impl::decode(const uint8_t* _input, uint32_t _size)
 		const uint8_t data = _input[i + 1];
 		for (uint16_t j = 0; j < count + 1; ++j)
 		{
+			bool isEnd = (i + 2 >= _size) && j == count;
 			bool scl = (data & 1 << scl_line);
 			bool sda = (data & 1 << sda_line);
 
 			if (m_options.m_invert_bit != 0){
 				scl = !scl;
 				sda = !sda;
+			}
+
+			if (needInit){
+				m_oldScl = scl;
+				m_oldSda = sda;
+				needInit = false;
 			}
 
 			// state machine
@@ -289,6 +297,10 @@ void I2CDecoder::Impl::decode(const uint8_t* _input, uint32_t _size)
 
 			assert(m_samplenum < std::numeric_limits<decltype(m_samplenum)>::max() && "m_samplenum overflow");
 			++m_samplenum;
+
+			if (m_needPush && isEnd){
+				push();
+			}
 		}
 	}
 }

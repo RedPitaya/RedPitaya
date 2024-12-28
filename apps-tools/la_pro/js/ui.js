@@ -328,6 +328,13 @@
         var samplerate = CLIENT.getValue("LA_CUR_FREQ")
         var scale = CLIENT.getValue("LA_SCALE")
         if (samplerate !== undefined && scale !== undefined){
+
+            var param_name = "LA_CUR_FREQ"
+            var field = $('#' + param_name);
+            if (field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
+                field.val(samplerate);
+            }
+
             const round = (n, dp) => {
                 const h = +('1'.padEnd(dp + 1, '0')) // 10 or 100 or 1000 or etc
                 return Math.round(n * h) / h

@@ -28,8 +28,8 @@ CIntParameter 		controlSettings ("CONTROL_CONFIG_SETTINGS", CBaseParameter::RW, 
 CStringParameter 	fileSettings	("FILE_SATTINGS", CBaseParameter::RW, "", 0);
 CStringParameter 	listFileSettings("LIST_FILE_SATTINGS", CBaseParameter::RW, "", 0);
 
-CIntParameter 		max_freq		("LA_MAX_FREQ", CBaseParameter::RO, getMAXFreq(), 0, 1, 1e9);
-CIntParameter 		cur_freq		("LA_CUR_FREQ", CBaseParameter::RO, getMAXFreq(), 0, 1, 1e9);
+CIntParameter 		max_freq		("LA_MAX_FREQ", CBaseParameter::RO, getMAXFreq(), 0, 1, 2e9);
+CIntParameter 		cur_freq		("LA_CUR_FREQ", CBaseParameter::RW, getMAXFreq(), 0, 1, 2e9, CONFIG_VAR);
 
 CByteBase64Signal	data_rle		("data_rle", CBaseParameter::RO, 0, 0);
 
@@ -39,7 +39,7 @@ CIntParameter	 	dins_trigger[8] = INIT8("LA_DIN_","_TRIGGER", CBaseParameter::RW
 CFloatParameter	 	dins_position[8] = INIT8("LA_DIN_","_POS", CBaseParameter::RW, -1, 0, 0 , 9 , CONFIG_VAR);
 
 CIntParameter 		decimate		("LA_DECIMATE", CBaseParameter::RW, 1, 0, 0, 1024, CONFIG_VAR);
-CDoubleParameter    timeScale		("LA_SCALE", CBaseParameter::RW, 1, 0,0.005,100,CONFIG_VAR);
+CDoubleParameter    timeScale		("LA_SCALE", CBaseParameter::RW, 1, 0,0.005,1000,CONFIG_VAR);
 CIntParameter 		preSampleBufMs	("LA_PRE_TRIGGER_BUFFER_MS", CBaseParameter::RW, 1, 0, 1, 360000, CONFIG_VAR);
 CIntParameter 		postSampleBufMs	("LA_POST_TRIGGER_BUFFER_MS", CBaseParameter::RW, 1, 0, 1, 360000, CONFIG_VAR);
 
@@ -127,22 +127,24 @@ void CLACallbackHandler::captureStatus(rp_la::CLAController* controller,
 										uint64_t preSamples,
 										uint64_t postSamples){
 	if (isTimeout == false){
-		if (numSamples)
+		if (numSamples){
 			controller->saveCaptureDataToFile(FILE_NAME);
+			FILE* f = fopen(FILE_NAME_TRIGGER, "wb");
+			if (!f){
+				ERROR_LOG("File opening failed %s",FILE_NAME_TRIGGER);
+			}else{
+				fwrite(&preSamples, sizeof(uint64_t), 1, f);
+				fclose(f);
+			}
+		}
 		g_needUpdateSignals = true;
 		preSampleCount.SendValue(preSamples);
 		postSampleCount.SendValue(postSamples);
 		sampleCount.SendValue(numSamples);
 		measureState.SendValue(LA_APP_DONE);
 		view_port_pos.SendValue(std::to_string((double)preSamples/(double)numSamples));
+		cur_freq.SendValue(max_freq.Value() / g_la_controller->getDecimation());
 		// controller->printRLE(false);
-		FILE* f = fopen(FILE_NAME_TRIGGER, "wb");
-		if (!f){
-			ERROR_LOG("File opening failed %s",FILE_NAME_TRIGGER);
-		}else{
-			fwrite(&preSamples, sizeof(uint64_t), 1, f);
-			fclose(f);
-		}
 		TRACE("Done")
 	}else{
 		measureState.SendValue(LA_APP_TIMEOUT);
@@ -151,9 +153,35 @@ void CLACallbackHandler::captureStatus(rp_la::CLAController* controller,
 	inRun.SendValue(0);
 }
 
+void CLACallbackHandler::decodeStatus(rp_la::CLAController* controller,
+										uint32_t numBytes,
+										uint64_t numSamples,
+										uint64_t preSamples,
+										uint64_t postSamples){
+	if (numSamples){
+		controller->saveCaptureDataToFile(FILE_NAME);
+		FILE* f = fopen(FILE_NAME_TRIGGER, "wb");
+		if (!f){
+			ERROR_LOG("File opening failed %s",FILE_NAME_TRIGGER);
+		}else{
+			fwrite(&preSamples, sizeof(uint64_t), 1, f);
+			fclose(f);
+		}
+	}
+	g_needUpdateSignals = true;
+	preSampleCount.SendValue(preSamples);
+	postSampleCount.SendValue(postSamples);
+	sampleCount.SendValue(numSamples);
+	measureState.SendValue(LA_APP_DONE);
+	view_port_pos.SendValue(std::to_string((double)preSamples/(double)numSamples));
+	// controller->printRLE(false);
+	TRACE("Done")
+}
+
 void CLACallbackHandler::decodeDone(rp_la::CLAController* controller, std::string name){
 	g_needUpdateDecoders = true;
 	inRun.SendValue(0);
+	TRACE("Done")
 }
 
 void updateParametersByConfig(){
@@ -174,6 +202,7 @@ int rp_app_init(void) {
     setHomeSettingsPath("/.config/redpitaya/apps/la_pro/");
 	data_rle.Reserve(BUFFER_MAX_SIZE);
 	g_la_controller = std::make_shared<rp_la::CLAController>();
+	g_la_controller->initFpga();
 	g_la_controller->setDelegate(&g_la_callback);
 	g_la_controller->setEnableRLE(true);
 
@@ -206,7 +235,7 @@ int rp_app_init(void) {
 		}
 		fclose(f);
 	}
-	g_la_controller->loadFromFile(FILE_NAME, preSamples);
+	g_la_controller->loadFromFileAndDecode(FILE_NAME,true, preSamples);
 	fprintf(stderr, "Loading logic analyzer version.\n");
 	return 0;
 }
@@ -329,13 +358,16 @@ void updateFromFront(bool force){
 		display_radix.Update();
 	}
 
+	if (IS_NEW(cur_freq) || force){
+		cur_freq.Update();
+		needRedecode = true;
+	}
+
 	bool reqRecalcPresample = false;
 
 	if (IS_NEW(decimate) || force){
 		decimate.Update();
 		g_la_controller->setDecimation(decimate.Value());
-		auto freq = max_freq.Value() / decimate.Value();
-		cur_freq.SendValue(freq);
 		reqRecalcPresample = true;
 	}
 
@@ -344,24 +376,25 @@ void updateFromFront(bool force){
 	}
 
 	if (IS_NEW(preSampleBufMs) || IS_NEW(postSampleBufMs) || force || reqRecalcPresample){
+		auto freq = max_freq.Value() / decimate.Value();
 		preSampleBufMs.Update();
 		postSampleBufMs.Update();
         double val = preSampleBufMs.Value() / 1000.0; // to sec convert
-		double maxValue = (MAX_SAMPLES * 1000.0) / (double)cur_freq.Value();
+		double maxValue = (MAX_SAMPLES * 1000.0) / (double)freq;
 		preSampleBufMs.SetMax(maxValue);
 		postSampleBufMs.SetMax(maxValue);
-        val *= cur_freq.Value();
+        val *= freq;
         if (val > MAX_SAMPLES) {
 			val = MAX_SAMPLES;
-            uint32_t newVal = (MAX_SAMPLES * 1000.0) / (double)cur_freq.Value();
+            uint32_t newVal = (MAX_SAMPLES * 1000.0) / (double)freq;
 			preSampleBufMs.SendValue(newVal);
 		}
 
         double valPost = postSampleBufMs.Value() / 1000.0; // to sec convert
-        valPost *= cur_freq.Value();
+        valPost *= freq;
         if (valPost > MAX_SAMPLES) {
 			valPost = MAX_SAMPLES;
-            uint32_t newVal = (MAX_SAMPLES * 1000.0) / (double)cur_freq.Value();
+            uint32_t newVal = (MAX_SAMPLES * 1000.0) / (double)freq;
 			postSampleBufMs.SendValue(newVal);
 		}
 
@@ -472,7 +505,7 @@ void updateFromFront(bool force){
 	if (IS_NEW(inRun)){
 		inRun.Update();
 		if (inRun.Value() == 3){
-			g_la_controller->loadFromFile(FILE_NAME, 0);
+			g_la_controller->loadFromFileAndDecode(FILE_NAME, true, 0);
 			needRedecode = true;
 		}
 		if (inRun.Value() == 2){
@@ -490,14 +523,17 @@ void updateFromFront(bool force){
 	if (needRunCapture){
 		g_needUpdateSignals = false;
 		for(int i = 0; i < 4; i++){
-			if (decoders_enabled[i].Value()){
-				g_la_controller->setDecoderSettingsUInt(std::to_string(i),"acq_speed", cur_freq.Value());
-			}
+			auto freq = max_freq.Value() / g_la_controller->getDecimation();
+			g_la_controller->setDecoderSettingsUInt(std::to_string(i),"acq_speed", freq);
 		}
 		g_la_controller->runAsync(0);
 		measureState.SendValue(LA_APP_RUNNED);
 	}else if (needRedecode){
+		TRACE_SHORT("Decode async")
 		g_needUpdateDecoders = false;
+		for(int i = 0; i < 4; i++){
+			g_la_controller->setDecoderSettingsUInt(std::to_string(i),"acq_speed", cur_freq.Value());
+		}
 		g_la_controller->decodeAsync();
 	}
 }
@@ -517,7 +553,6 @@ void OnNewParams(void) {
 			if (controlSettings.NewValue() == controlSettings::SAVE){
 				controlSettings.Update();
 				fileSettings.Update();
-				// configSet();
 				saveCurrentSettingToStore(fileSettings.Value());
 				controlSettings.SendValue(controlSettings::NONE);
 				listFileSettings.SendValue(getListOfSettingsInStore());
@@ -527,7 +562,6 @@ void OnNewParams(void) {
 				controlSettings.Update();
 				fileSettings.Update();
 				loadSettingsFromStore(fileSettings.Value());
-				// configGet();
 				controlSettings.SendValue(controlSettings::LOAD_DONE);
 			}
 

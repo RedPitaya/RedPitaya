@@ -34,7 +34,11 @@
             LA.sendTriggerFromUI(this)
         });
 
-        $('input[type=text]:not([readonly]):not(.no-arrows)[step]').iLightInputNumber({
+        $('input[type=text]:not([readonly]):not(.no-arrows):not(.input-number-decoder)[step]').iLightInputNumber({
+            mobile: false
+        });
+
+        $('.input-number-decoder').iLightInputNumberDecoder({
             mobile: false
         });
 

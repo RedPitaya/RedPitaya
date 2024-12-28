@@ -57,10 +57,13 @@
     }
 
     I2C.drawDecoded = function( plot, canvascontext, offset, decoded_data) {
+        var axes = plot.getAxes();
+        var min = axes.xaxis.options.min
+        var max = axes.xaxis.options.max
         var dd = decoded_data;
-        // Remained data after offset
         for (var i = 0; i < dd.length; i++) {
-
+            if (dd[i].s + dd[i].l < min) continue;
+            if (dd[i].s > max) continue;
             switch (dd[i].c) {
 
                 case I2C.ANNOTATIONS.START:

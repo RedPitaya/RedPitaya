@@ -82,6 +82,9 @@ class CANDecoder::Impl{
 	uint32_t m_fsbCounter;
 	uint32_t m_stuffBitCounter;
 	uint8_t	 m_dlc;
+	uint32_t m_fullFDCrc;
+	uint32_t m_fullFDCrcBits;
+	uint32_t m_fullFDCrcStart;
 
 	bool	 m_bitDetect;
 	bool	 m_samplePointValue;
@@ -187,6 +190,10 @@ auto CANDecoder::Impl::resetState() -> void{
 	m_dlc = 0;
 	m_curByte = 0;
 	m_stuffBitCounter = 0;
+	m_fullFDCrc = 0;
+	m_fullFDCrcStart = 0;
+	m_fullFDCrcBits = 0;
+	setNominalBitrate();
 }
 
 auto CANDecoder::reset() -> void{
@@ -202,7 +209,7 @@ auto CANDecoder::setParametersInJSON(const std::string &parameter) -> void{
 	if (param.fromJson(parameter)){
 		setParameters(param);
 	}else{
-		ERROR_LOG("Error set parameters")
+		ERROR_LOG("Error set parameters %s", parameter.c_str())
 	}
 }
 
@@ -245,14 +252,17 @@ auto CANDecoder::Impl::getBit(bool bit) -> bool{
 	else{
 		if (m_bitDetect){
 			m_bitAccumulate += bit;
-			if (m_oldCanRX == bit){
-				if ((uint32_t)m_samplenum < (uint32_t)m_samplePoint + m_startBitSamplePoint){
+			// Skip bit state change to SAMPLE POINT position
+			if (m_oldCanRX == bit || ((uint32_t)m_samplenum <= (uint32_t)m_samplePoint + m_startBitSamplePoint)){
+				if ((uint32_t)m_samplenum <= (uint32_t)m_samplePoint + m_startBitSamplePoint){
 					m_samplePointValue = bit;
 					m_bitSamplePointPos = m_samplenum;
 				}
 				if ((m_samplenum < m_bitwidth + m_startBitSamplePoint)){
 					return false;
 				}
+			}else{
+				m_bitAccumulate -= bit;
 			}
 			m_bitValue = round((float)m_bitAccumulate / (float)(m_samplenum - m_startBitSamplePoint));
 			m_bitBegin = m_startBitSamplePoint;
@@ -332,6 +342,9 @@ auto CANDecoder::Impl::handleBit(const bool bit) -> bool{
 	if (isStuff && m_state != S_END){
 		if (isStuffError){
 			m_result.push_back(OutputPacket{"rx", STUFF_BIT_ERROR, 0, m_bitEnd - m_bitBegin, 1 , m_bitBegin});
+			resetState();
+			m_bitDetect = false;
+			return false;
 		}
 		else{
 			m_result.push_back(OutputPacket{"rx", STUFF_BIT, 0, m_bitEnd - m_bitBegin, 1 , m_bitBegin});
@@ -434,7 +447,8 @@ auto CANDecoder::Impl::decodeStandardFrame(const bool bit) -> bool{
 
 	if (m_state == S_BRS){
 		m_result.push_back(OutputPacket{"rx", BRS, bit, m_bitEnd - m_bitBegin, 1 , m_bitBegin});
-		setFastBitrate();
+		if (bit)
+			setFastBitrate();
 		m_state = S_ESI;
 		return true;
 	}
@@ -465,7 +479,7 @@ auto CANDecoder::Impl::decodeStandardFrame(const bool bit) -> bool{
 												m_bitEnd - (uint32_t)m_startBlockSamplePoint,
 												(float)(m_bitsArrayCount - m_bitsArrayCountSaved) + m_stuffBitCounter,
 												(uint32_t)m_startBlockSamplePoint});
-			m_state = S_DATA;
+			m_state = m_dlc != 0 ? S_DATA : S_CRC;
 			m_curByte = 0;
 			m_startBlockSamplePoint = -1;
 		}
@@ -489,6 +503,8 @@ auto CANDecoder::Impl::decodeStandardFrame(const bool bit) -> bool{
 			m_curByte++;
 			if (m_curByte == m_dlc){
 				m_state = S_CRC;
+				m_fullFDCrc = 0;
+				m_fullFDCrcBits = 0;
 			}
 			m_startBlockSamplePoint = -1;
 		}
@@ -563,7 +579,8 @@ auto CANDecoder::Impl::decodeExtendedFrame(const bool bit) -> bool{
 
 	if (m_state == S_BRS){
 		m_result.push_back(OutputPacket{"rx", BRS, bit, m_bitEnd - m_bitBegin, 1 , m_bitBegin});
-		setFastBitrate();
+		if (bit)
+			setFastBitrate();
 		m_state = S_ESI;
 		return true;
 	}
@@ -594,7 +611,7 @@ auto CANDecoder::Impl::decodeExtendedFrame(const bool bit) -> bool{
 												m_bitEnd - (uint32_t)m_startBlockSamplePoint,
 												(float)(m_bitsArrayCount - m_bitsArrayCountSaved) + m_stuffBitCounter,
 												(uint32_t)m_startBlockSamplePoint});
-			m_state = S_DATA;
+			m_state = m_dlc != 0 ? S_DATA : S_CRC;
 			m_curByte = 0;
 			m_startBlockSamplePoint = -1;
 		}
@@ -618,6 +635,8 @@ auto CANDecoder::Impl::decodeExtendedFrame(const bool bit) -> bool{
 			m_curByte++;
 			if (m_curByte == m_dlc){
 				m_state = S_CRC;
+				m_fullFDCrc = 0;
+				m_fullFDCrcBits = 0;
 			}
 			m_startBlockSamplePoint = -1;
 		}
@@ -634,6 +653,9 @@ auto CANDecoder::Impl::decodeEndFrame(const bool bit) -> bool{
 		if (m_isFlexibleData) {
 			m_result.push_back(OutputPacket{"rx", FSB, bit, m_bitEnd - m_bitBegin, 1 , m_bitBegin});
 			m_state = S_STUFF_BITS;
+			m_fullFDCrc = m_fullFDCrc << 1 | bit;
+			m_fullFDCrcStart = m_bitBegin;
+			m_fullFDCrcBits++;
 			return true;
 		}else{
 			m_state = S_CRC_15;
@@ -650,7 +672,7 @@ auto CANDecoder::Impl::decodeEndFrame(const bool bit) -> bool{
 
 		if ((m_bitsArrayCount - m_bitsArrayCountSaved) >= 15){
 			m_crc = m_bitsArray & 0x7FFF;
-			m_result.push_back(OutputPacket{"rx", CRC_VAL, m_crc,
+			m_result.push_back(OutputPacket{"rx", CRC_15_VAL, m_crc,
 												m_bitEnd - (uint32_t)m_startBlockSamplePoint,
 												(float)(m_bitsArrayCount - m_bitsArrayCountSaved) + m_stuffBitCounter,
 												(uint32_t)m_startBlockSamplePoint});
@@ -666,6 +688,8 @@ auto CANDecoder::Impl::decodeEndFrame(const bool bit) -> bool{
 			m_bitsArrayCountSaved = m_bitsArrayCount - 1;
 			m_stuffBitCounter = 0;
 		}
+		m_fullFDCrc = m_fullFDCrc << 1 | bit;
+		m_fullFDCrcBits++;
 		if ((m_bitsArrayCount - m_bitsArrayCountSaved) >= 4){
 			auto sb = m_bitsArray & 0xF;
 			m_result.push_back(OutputPacket{"rx", SBC, sb,
@@ -686,7 +710,8 @@ auto CANDecoder::Impl::decodeEndFrame(const bool bit) -> bool{
 			m_fsbCounter = 0;
 			m_stuffBitCounter = 0;
 		}
-
+		m_fullFDCrc = m_fullFDCrc << 1 | bit;
+		m_fullFDCrcBits++;
 		if ((m_bitsArrayCount - m_bitsArrayCountSaved) == 1 + (m_fsbCounter * 5)){
 			m_result.push_back(OutputPacket{"rx", FSB, bit, m_bitEnd - m_bitBegin, 1 , m_bitBegin});
 			m_fsbCounter++;
@@ -696,10 +721,14 @@ auto CANDecoder::Impl::decodeEndFrame(const bool bit) -> bool{
 		}
 		uint32_t l = m_state == S_CRC_17 ? 22 : 27;
 		if ((m_bitsArrayCount - m_bitsArrayCountSaved) >= l){
-			m_result.push_back(OutputPacket{"rx", CRC_VAL, m_crc,
+			m_result.push_back(OutputPacket{"rx", (m_state == S_CRC_17 ? CRC_17_VAL : CRC_21_VAL), m_crc,
 												m_bitEnd - (uint32_t)m_startBlockSamplePoint,
 												(float)(m_bitsArrayCount - m_bitsArrayCountSaved) + m_stuffBitCounter,
 												(uint32_t)m_startBlockSamplePoint});
+			m_result.push_back(OutputPacket{"rx", CRC_FSB_SBC, m_fullFDCrc,
+												m_bitEnd - (uint32_t)m_fullFDCrcStart,
+												(float)(m_fullFDCrcBits),
+												(uint32_t)m_fullFDCrcStart});
 			m_state = S_CRC_DEL;
 			m_startBlockSamplePoint = -1;
 		}
@@ -760,7 +789,7 @@ auto CANDecoder::Impl::decodeEndFrame(const bool bit) -> bool{
 }
 
 auto CANDecoder::Impl::isStuffBit(bool bit) -> std::tuple<bool,bool>{
-	if (m_bitsArrayCountWithStuff >=5){
+	if (m_bitsArrayCountWithStuff >= 5){
 		if ((m_bitsArrayWithStuff & 0x1F) == 0){
 			if (bit)
 				return std::make_tuple(true,false);

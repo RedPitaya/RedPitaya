@@ -193,9 +193,12 @@ std::string CANParameters::getCANAnnotationsString(CANAnnotations value){
 		case ESI: return "Error state indicator";
 		case RESERV_BIT_FLEX: return "Flexible data";
 		case STUFF_BIT_ERROR: return "Stuff bit error";
-		case CRC_VAL: return "CRC";
+		case CRC_15_VAL: return "CRC-15";
+		case CRC_17_VAL: return "CRC-17";
+		case CRC_21_VAL: return "CRC-21";
 		case FSB: return "Fixed stuff bit";
 		case SBC: return "Stuff bits";
+		case CRC_FSB_SBC: return "SBC + FSB + CRC";
 
 	default:
 		ERROR_LOG("Unknown id = %d",(int)value)

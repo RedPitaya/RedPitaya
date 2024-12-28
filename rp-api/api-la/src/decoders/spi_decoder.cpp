@@ -106,7 +106,7 @@ auto SPIDecoder::setParametersInJSON(const std::string &parameter) -> void{
 	if (param.fromJson(parameter)){
 		setParameters(param);
 	}else{
-		ERROR_LOG("Error set parameters")
+		ERROR_LOG("Error set parameters %s", parameter.c_str())
 	}
 }
 
@@ -134,8 +134,10 @@ void SPIDecoder::Impl::resetDecoder(){
 }
 
 void SPIDecoder::decode(const uint8_t* _input, uint32_t _size){
-	m_impl_miso->decode(_input,_size);
-	m_impl_mosi->decode(_input,_size);
+	if (m_impl_miso->m_options.m_miso != 0)
+		m_impl_miso->decode(_input,_size);
+	if (m_impl_mosi->m_options.m_mosi != 0)
+		m_impl_mosi->decode(_input,_size);
 }
 
 void SPIDecoder::Impl::decode(const uint8_t* _input, uint32_t _size){
@@ -234,13 +236,13 @@ bool SPIDecoder::Impl::findClkEdge(bool data, bool clk, bool cs){
 
 	m_oldclk = clk;
 
-	if(m_options.m_cpol == 0 && m_options.m_cpha == 0 && clk == 1)
+	if(m_options.m_cpol == 0 && m_options.m_cpha == 1 && clk == 1)
 		return false;
-	else if(m_options.m_cpol == 0 && m_options.m_cpha == 1 && clk == 0)
+	else if(m_options.m_cpol == 0 && m_options.m_cpha == 0 && clk == 0)
 		return false;
-	else if(m_options.m_cpol == 1 && m_options.m_cpha == 0 && clk == 0)
+	else if(m_options.m_cpol == 1 && m_options.m_cpha == 1 && clk == 0)
 		return false;
-	else if(m_options.m_cpol == 1 && m_options.m_cpha == 1 && clk == 1)
+	else if(m_options.m_cpol == 1 && m_options.m_cpha == 0 && clk == 1)
 		return false;
 	TRACE_SHORT("State %d m_nothing_count %d", m_state,m_nothing_count)
 	if (m_nothing_count > 0 && m_state == FIND_DATA){

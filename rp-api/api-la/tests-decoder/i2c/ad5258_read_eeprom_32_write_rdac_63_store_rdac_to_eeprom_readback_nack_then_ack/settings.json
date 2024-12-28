@@ -1,0 +1,7 @@
+{
+	"acq_speed" : 4000000,
+	"address_format" : 0,
+	"invert_bit" : 0,
+	"scl" : 1,
+	"sda" : 2
+}

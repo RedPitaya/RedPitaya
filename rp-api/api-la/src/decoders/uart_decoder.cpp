@@ -24,7 +24,7 @@ class UARTDecoder::Impl{
 
 	Impl();
 
-
+    bool        m_isEnd;
     bool        m_oldBit;
     uint32_t    m_prevBitStart;
     uint32_t    m_startDataBits;
@@ -123,7 +123,7 @@ auto UARTDecoder::setParametersInJSON(const std::string &parameter) -> void{
 	if (param.fromJson(parameter)){
 		setParameters(param);
 	}else{
-		ERROR_LOG("Error set parameters")
+		ERROR_LOG("Error set parameters %s", parameter.c_str())
 	}
 }
 
@@ -147,13 +147,16 @@ void UARTDecoder::Impl::resetDecoder()
     m_oldBit = 1;
     m_silenceLength = 0;
     m_bitAccumulate = 0;
+    m_isEnd = 0;
 	m_result.clear();
 }
 
 void UARTDecoder::decode(const uint8_t* _input, uint32_t _size)
 {
-    m_impl_rx->decode(_input,_size);
-    m_impl_tx->decode(_input,_size);
+    if (m_impl_rx->m_options.m_rx != 0)
+        m_impl_rx->decode(_input,_size);
+    if (m_impl_tx->m_options.m_tx != 0)
+        m_impl_tx->decode(_input,_size);
 }
 
 void UARTDecoder::Impl::decode(const uint8_t* _input, uint32_t _size)
@@ -201,6 +204,7 @@ void UARTDecoder::Impl::decode(const uint8_t* _input, uint32_t _size)
         for(uint16_t j = 0; j < count + 1; ++j)
         {
             bool newBit = data & (1 << (rx_line));
+            m_isEnd = (i + 2 >= _size) && j == count;
             uint32_t sampleNum = savedSampleNum;
             assert(m_samplenum < std::numeric_limits<decltype(m_samplenum)>::max() && "m_samplenum overflow");
             savedSampleNum++;
@@ -257,9 +261,11 @@ void UARTDecoder::Impl::getStartBit(bool bit, uint32_t sampleNum)
 {
     m_bitAccumulate += bit;
     if (m_oldBit == bit){
-        if ((sampleNum < m_bitWidth + m_prevBitStart)){
+        if (((double)sampleNum < m_bitWidth + (double)m_prevBitStart) && !m_isEnd){
             return;
         }
+    }else{
+        m_bitAccumulate -= bit;
     }
 
     int bitValue = round((float)m_bitAccumulate / (float)(sampleNum - m_prevBitStart));
@@ -284,9 +290,11 @@ void UARTDecoder::Impl::getDataBits(bool bit, uint32_t sampleNum)
 {
     m_bitAccumulate += bit;
     if (m_oldBit == bit){
-        if ((sampleNum < m_bitWidth + m_prevBitStart)){
+        if (((double)sampleNum < m_bitWidth + (double)m_prevBitStart) && !m_isEnd){
             return;
         }
+    }else{
+        m_bitAccumulate -= bit;
     }
 
     int bitValue = round((float)m_bitAccumulate / (float)(sampleNum - m_prevBitStart));
@@ -308,7 +316,7 @@ void UARTDecoder::Impl::getDataBits(bool bit, uint32_t sampleNum)
         return;
     }
 
-    m_result.push_back({m_line, DATA, (uint8_t)m_dataByte, sampleNum - m_startDataBits, (float)m_curDataBit + 1, m_startDataBits});
+    m_result.push_back({m_line, DATA, m_dataByte, sampleNum - m_startDataBits, (float)m_curDataBit + 1, m_startDataBits});
     m_bitAccumulate = 0;
     m_prevBitStart = sampleNum;
 
@@ -322,9 +330,11 @@ void UARTDecoder::Impl::getParityBit(bool bit, uint32_t sampleNum){
 
     m_bitAccumulate += bit;
     if (m_oldBit == bit){
-        if ((sampleNum < m_bitWidth + m_prevBitStart)){
+        if (((double)sampleNum < m_bitWidth + (double)m_prevBitStart) && !m_isEnd){
             return;
         }
+    }else{
+        m_bitAccumulate -= bit;
     }
 
     int bitValue = round((float)m_bitAccumulate / (float)(sampleNum - m_prevBitStart));
@@ -372,9 +382,11 @@ void UARTDecoder::Impl::getStopBits(bool bit, uint32_t sampleNum){
 
     m_bitAccumulate += bit;
     if (m_oldBit == bit){
-        if ((sampleNum < m_bitWidth * bitWait + m_prevBitStart)){
+        if (((double)sampleNum < m_bitWidth * bitWait + (double)m_prevBitStart) && !m_isEnd){
             return;
         }
+    }else{
+        m_bitAccumulate -= bit;
     }
 
     int bitValue = round((float)m_bitAccumulate / (float)(sampleNum - m_prevBitStart));

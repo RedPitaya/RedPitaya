@@ -80,6 +80,9 @@ class CLACallbackHandler : public rp_la::CLACallback
         void captureStatus(rp_la::CLAController* controller, bool isTimeout, uint32_t numBytes, uint64_t numSamples,
                                 uint64_t preTriggerSamples,
                                 uint64_t postTriggerSamples) override;
+        void decodeStatus(rp_la::CLAController* controller, uint32_t numBytes, uint64_t numSamples,
+                                uint64_t preTriggerSamples,
+                                uint64_t postTriggerSamples) override;
         void decodeDone(rp_la::CLAController* controller, std::string name) override;
 };
 

@@ -234,12 +234,12 @@
             for(var pos = 0; pos < length; pos += step){
                 var p = plot.pointOffset({
                     x: begin + pos,
-                    y: offset + 0.03
+                    y: offset + 0.5 + 0.03
                 });
 
                 canvascontext.beginPath();
                 canvascontext.moveTo(p.left, p.top);
-                canvascontext.lineTo(p.left, p.top-3);
+                canvascontext.lineTo(p.left, p.top+3);
                 canvascontext.stroke();
             }
         }
