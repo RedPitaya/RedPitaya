@@ -374,7 +374,7 @@ void UARTDecoder::Impl::getStopBits(bit_decoder::Bit &bit){
         m_state = GET_START_BIT;
         m_bitdecoder.setBoundRate(m_options.m_baudrate);
         m_bitdecoder.setIdle();
-        m_bitdecoder.setErrorState();
+        m_bitdecoder.detectBitChange();
         return;
     }
 

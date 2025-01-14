@@ -24,7 +24,7 @@ class BitDecoderOneLine
 		auto reset() -> void;
 		auto setIdle() -> void;
 		auto syncLastBit() -> void;
-		auto setErrorState() -> void;
+		auto detectBitChange() -> void;
 		auto getNextBit(Bit *value) -> bool;
 		auto setSampleRate(uint64_t rate) -> void;
 		auto setBoundRate(uint64_t rate) -> void;

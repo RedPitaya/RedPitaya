@@ -46,7 +46,7 @@ class BitDecoderOneLine::Impl{
 	bool	 m_detectEdge = false;
 	double   m_oldSampleBitEnd  = 0;
 	bool     m_skipActiveStateAtFirst = true;
-	bool	 m_errorState = false;
+	bool	 m_reqBitChangeState = false;
 
     const uint8_t* m_data = nullptr;
     size_t   m_size = 0;
@@ -73,7 +73,7 @@ auto BitDecoderOneLine::Impl::reset() -> void {
 	m_foundSamplePointValue = false;
 	m_samplePointValue = false;
 	m_skipActiveStateAtFirst = true;
-	m_errorState = false;
+	m_reqBitChangeState = false;
 	m_i = 0;
 	m_j = 0;
 }
@@ -101,7 +101,7 @@ auto BitDecoderOneLine::setBoundRate(uint64_t rate) -> void{
 
 auto BitDecoderOneLine::setSamplePoint(float value) -> void{
 	if (value < 0 || value > 1) {
-		ERROR_LOG("The sample point value must be in the range from 0 to 1")
+		ERROR_LOG("The sample point value (%f) must be in the range from 0 to 1",value)
 		return;
 	}
 	m_impl->m_samplePoint = value;
@@ -110,7 +110,7 @@ auto BitDecoderOneLine::setSamplePoint(float value) -> void{
 
 auto BitDecoderOneLine::setBitIndex(uint8_t bit) -> void{
 	if (bit >= 8){
-		ERROR_LOG("The bit number must be in the range from 0 to 7")
+		ERROR_LOG("The bit number (%d) must be in the range from 0 to 7", bit)
 		return;
 	}
 	m_impl->m_index = bit;
@@ -128,8 +128,8 @@ auto BitDecoderOneLine::setIdle() -> void {
 	m_impl->m_detectBit = false;
 }
 
-auto BitDecoderOneLine::setErrorState() -> void{
-	m_impl->m_errorState = true;
+auto BitDecoderOneLine::detectBitChange() -> void{
+	m_impl->m_reqBitChangeState = true;
 }
 
 auto BitDecoderOneLine::syncLastBit() -> void{
@@ -186,10 +186,10 @@ auto BitDecoderOneLine::Impl::findBit(const uint8_t *_input, size_t _size, Bit *
 				detectBit = handleBit(bit);
 			} else {
 				auto checkError = false;
-				if (m_errorState){
+				if (m_reqBitChangeState){
 					if (m_oldSampleBit != bit && m_mode == bit){
 						checkError = true;
-						m_errorState = false;
+						m_reqBitChangeState = false;
 					}
 				}else{
 					checkError = true;
@@ -210,7 +210,7 @@ auto BitDecoderOneLine::Impl::findBit(const uint8_t *_input, size_t _size, Bit *
 				value->bitSampleEnd = !m_detectEdge ? m_startSample + m_bitWidth : m_sampleBit - 1;
 				value->bitValue = m_samplePointValue;
 				value->valid = true;
-				m_startSample += m_bitWidth;
+				m_startSample += !m_detectEdge ? m_bitWidth : m_sampleBit - 1 - m_startSample; //m_bitWidth;
 				m_foundSamplePointValue = false;
 				m_oldSampleBitEnd = value->bitSampleEnd;
 				m_detectEdge = false;
