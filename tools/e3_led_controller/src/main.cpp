@@ -29,7 +29,7 @@ using namespace std;
 
 #define OVERLAY_PATH "/sys/kernel/config/device-tree/overlays/Led"
 #define I2C_SLAVE_FORCE 		   		0x0706
-#define EXPANDER_ADDR            	   	0x70
+#define EXPANDER_ADDR            	   	0x10
 #define VALUE_MAX 40
 #define RP_GPIO_IN  0
 #define RP_GPIO_OUT 1
@@ -338,7 +338,7 @@ void usage(const char *args) {
             "\t\t-g    Sets the mode for the GPIO. Required value is IN or OUT.\n"
             "\t\t-v    Reads or sets the value depending on the GPIO mode.\n"
             "Optional parameter:\n"
-            "    Value = [0 | 1]  Sets the value on the GPIO in OUT mode";
+            "    Value = [0 | 1]  Sets the value on the GPIO in OUT mode\n";
 
     fprintf( stderr, format, args, EXPANDER_ADDR);
 }
