@@ -144,7 +144,7 @@ void CLACallbackHandler::captureStatus(rp_la::CLAController* controller,
 		measureState.SendValue(LA_APP_DONE);
 		view_port_pos.SendValue(std::to_string((double)preSamples/(double)numSamples));
 		cur_freq.SendValue(max_freq.Value() / g_la_controller->getDecimation());
-		// controller->printRLE(false);
+		controller->printRLE(false);
 		TRACE("Done")
 	}else{
 		measureState.SendValue(LA_APP_TIMEOUT);
@@ -174,7 +174,7 @@ void CLACallbackHandler::decodeStatus(rp_la::CLAController* controller,
 	sampleCount.SendValue(numSamples);
 	measureState.SendValue(LA_APP_DONE);
 	view_port_pos.SendValue(std::to_string((double)preSamples/(double)numSamples));
-	// controller->printRLE(false);
+	controller->printRLE(false);
 	TRACE("Done")
 }
 

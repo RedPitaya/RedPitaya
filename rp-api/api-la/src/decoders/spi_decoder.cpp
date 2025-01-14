@@ -283,7 +283,7 @@ void SPIDecoder::Impl::handleBit(bool data, bool clk, bool cs)
 	// m_oldSamplenum = m_samplenum;
 
 	auto data_len = m_samplenum - m_startSamplenum;
-	m_result.push_back(OutputPacket{m_line , DATA, m_data, data_len, (float)m_bitcount, m_startSamplenum});
+	m_result.push_back(OutputPacket{m_line , DATA, m_data, (float)m_bitcount, (double)m_startSamplenum , (double)data_len});
 	resetDecoderState();
 }
 

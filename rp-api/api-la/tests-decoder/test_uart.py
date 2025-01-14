@@ -21,6 +21,9 @@ for x in res:
         print('uart-1: Stop bit')
     if x['control'] == 6:
         print('uart-1: Parity bit')
+    if x['control'] == 2:
+        print('uart-1: Frame error')
+        print('uart-1: Stop bit')
     if x['control'] == 3:
         if (bits < 9):
             print('uart-1: {:02X}'.format(x['data']))

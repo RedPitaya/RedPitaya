@@ -4,6 +4,7 @@
 #include <cassert>
 #include <math.h>
 #include "rp.h"
+#include "bit_decoder/bit_decoder_one_line_rle.h"
 
 
 using namespace uart;
@@ -26,9 +27,14 @@ class UARTDecoder::Impl{
 
     bool        m_isEnd;
     bool        m_oldBit;
-    uint32_t    m_prevBitStart;
-    uint32_t    m_startDataBits;
+    // uint32_t    m_prevBitStart;
+    // uint32_t    m_startDataBits;
+    bool        m_initStartFirst;
+    bool        m_initStopFirst;
+    bit_decoder::Bit m_startDataBit;
+    bit_decoder::Bit m_startStopDataBit;
     uint8_t     m_curDataBit;
+    uint8_t     m_curStopBit;
     uint16_t    m_dataByte;
     uint8_t     m_parityBit;
     bool        m_parityOk;
@@ -41,6 +47,7 @@ class UARTDecoder::Impl{
 	State       m_state;
 
 	UARTParameters m_options;
+    bit_decoder::BitDecoderOneLine m_bitdecoder;
 
     std::string m_line;
 
@@ -50,12 +57,18 @@ class UARTDecoder::Impl{
     void resetDecoder();
     void decode(const uint8_t* _input, uint32_t _size);
 
-	void waitForStartBit(bool bit, uint32_t sampleNum);
-    void getStartBit(bool bit, uint32_t sampleNum);
-    void getDataBits(bool bit, uint32_t sampleNum);
-    void getParityBit(bool bit, uint32_t sampleNum);
-    void getStopBits(bool bit, uint32_t sampleNum);
+	// void waitForStartBit(bool bit, uint32_t sampleNum);
+    // void getStartBit(bool bit, uint32_t sampleNum);
+    void getStartBit(bit_decoder::Bit &bit);
+    // void getDataBits(bool bit, uint32_t sampleNum);
+    void getDataBits(bit_decoder::Bit &bit);
+    // void getParityBit(bool bit, uint32_t sampleNum);
+    void getParityBit(bit_decoder::Bit &bit);
+    // void getStopBits(bool bit, uint32_t sampleNum);
+    void getStopBits(bit_decoder::Bit &bit);
     bool parityOk();
+
+
 };
 
 UARTDecoder::Impl::Impl(){
@@ -137,10 +150,11 @@ std::vector<OutputPacket> UARTDecoder::getSignal(){
 void UARTDecoder::Impl::resetDecoder()
 {
     m_samplenum = 0;
-    m_state = WAIT_FOR_START_BIT;
-    m_startDataBits = 0;
-    m_prevBitStart = 0;
+    m_state = GET_START_BIT;
+    // m_startDataBits = 0;
+    // m_prevBitStart = 0;
     m_curDataBit = 0;
+    m_curStopBit = 0;
     m_dataByte = 0;
     m_parityBit = 0;
     m_parityOk = false;
@@ -148,6 +162,7 @@ void UARTDecoder::Impl::resetDecoder()
     m_silenceLength = 0;
     m_bitAccumulate = 0;
     m_isEnd = 0;
+    m_bitdecoder.reset();
 	m_result.clear();
 }
 
@@ -161,6 +176,26 @@ void UARTDecoder::decode(const uint8_t* _input, uint32_t _size)
 
 void UARTDecoder::Impl::decode(const uint8_t* _input, uint32_t _size)
 {
+    auto parseBit = [&](bit_decoder::Bit &bit){
+        // TODO Add IDLE and BREAK frame support
+        // https://deepbluembedded.com/stm32-usart-uart-tutorial/#:~:text=STM32%20UART%20Data%20Packet
+        // https://sigrok.org/gitweb/?p=libsigrokdecode.git;a=blob_plain;f=decoders/uart/pd.py;hb=HEAD#:~:text=def%20handle_break(self%2C%20rxtx%2C%20ss%2C%20es)%3A
+
+        if(m_state == GET_START_BIT)
+            getStartBit(bit);
+        else if(m_state == GET_DATA_BITS)
+            getDataBits(bit);
+        else if(m_state == GET_PARITY_BIT)
+            getParityBit(bit);
+        else if(m_state == GET_STOP_BITS)
+            getStopBits(bit);
+
+        if (m_state == WAIT_FOR_START_BIT){
+            m_bitdecoder.setIdle();
+            m_state = GET_START_BIT;
+        }
+    };
+
 	if (!_input) FATAL("Input value is null")
 	if (_size == 0) FATAL("Input value size == 0")
 	if (_size & 0x1) FATAL("Input value is odd")
@@ -181,8 +216,6 @@ void UARTDecoder::Impl::decode(const uint8_t* _input, uint32_t _size)
 
     resetDecoder();
 
-    uint32_t savedSampleNum = 0;
-
     uint8_t rx_line = 0;
 
     if (m_line == "rx")
@@ -193,186 +226,141 @@ void UARTDecoder::Impl::decode(const uint8_t* _input, uint32_t _size)
 
     rx_line--;
 
-    for (uint32_t i = 0; i < _size; i += 2)
-    {
-        // Read count and data for decode RLE
-        const uint8_t count = _input[i];
-        const uint8_t data = _input[i + 1];
-
-
-
-        for(uint16_t j = 0; j < count + 1; ++j)
-        {
-            bool newBit = data & (1 << (rx_line));
-            m_isEnd = (i + 2 >= _size) && j == count;
-            uint32_t sampleNum = savedSampleNum;
-            assert(m_samplenum < std::numeric_limits<decltype(m_samplenum)>::max() && "m_samplenum overflow");
-            savedSampleNum++;
-
-            if(m_options.m_invert)
-                newBit = !newBit;
-
-            // State machine for RX line
-            if(m_state == WAIT_FOR_START_BIT)
-                waitForStartBit(newBit, sampleNum);
-            else if(m_state == GET_START_BIT)
-                getStartBit(newBit, sampleNum);
-            else if(m_state == GET_DATA_BITS)
-                getDataBits(newBit, sampleNum);
-            else if(m_state == GET_PARITY_BIT)
-                getParityBit(newBit, sampleNum);
-            else if(m_state == GET_STOP_BITS)
-                getStopBits(newBit, sampleNum);
-            // Save current values of lines for next round
-            m_oldBit = newBit;
-        }
+    m_bitdecoder.setData(_input,_size);
+    m_bitdecoder.setBitIndex(rx_line);
+    m_bitdecoder.setSamplePoint(0.5);
+    m_bitdecoder.setInvertMode(m_options.m_invert);
+    m_bitdecoder.setStartMode(bit_decoder::LOW);
+    m_bitdecoder.setSampleRate(m_options.m_samplerate);
+    m_bitdecoder.setBoundRate(m_options.m_baudrate);
+    bit_decoder::Bit bit;
+    while (m_bitdecoder.getNextBit(&bit)){
+        // bit_decoder::Bit::print(bit);
+        parseBit(bit);
+    }
+    if (bit.valid){
+        // bit_decoder::Bit::print(bit);
+        parseBit(bit);
     }
 }
 
-void UARTDecoder::Impl::waitForStartBit(bool bit, uint32_t sampleNum)
-{
-    // The start bit is always 0 (low). As the idle UART (and the stop bit)
-    // level is 1 (high), the beginning of a start bit is a falling edge.
-    if(bit != 0){
-        // Silence length calculating and return.
-        // Write silence length to output if need.
-        m_silenceLength += 1;
-        if(m_silenceLength == 0x7FFFFFFF){
-            //m_result.push_back({m_line ,NOTHING, 0, m_silenceLength, 0, sampleNum - m_silenceLength});
-            m_silenceLength = 0;
-        }
-        return;
-    }
-
-    if(m_silenceLength != 0){
-        //m_result.push_back({m_line ,NOTHING, 0, m_silenceLength, 0 , sampleNum - m_silenceLength});
-        m_silenceLength = 0;
-    }
-
-    // Save the sample number where the start bit begins.
-    m_prevBitStart = sampleNum;
-    m_silenceLength = 0;
-    m_bitAccumulate = 0;
-    m_startDataBits = 0;
-    m_state = GET_START_BIT;
-}
-
-void UARTDecoder::Impl::getStartBit(bool bit, uint32_t sampleNum)
-{
-    m_bitAccumulate += bit;
-    if (m_oldBit == bit){
-        if (((double)sampleNum < m_bitWidth + (double)m_prevBitStart) && !m_isEnd){
-            return;
-        }
-    }else{
-        m_bitAccumulate -= bit;
-    }
-
-    int bitValue = round((float)m_bitAccumulate / (float)(sampleNum - m_prevBitStart));
+void UARTDecoder::Impl::getStartBit(bit_decoder::Bit &bit){
     // The startbit must be 0. If not, we report an error.
-    if(bitValue != 0){
+    if(bit.bitValue != 0){
         // START-bit error
-        m_result.push_back(OutputPacket{m_line ,START_BIT_ERR, 0, sampleNum - m_prevBitStart, 0, m_prevBitStart});
+        m_result.push_back(OutputPacket{m_line ,START_BIT_ERR, 0, 0, bit.bitSampleStart , bit.bitSampleEnd - bit.bitSampleStart});
+        m_bitdecoder.setIdle();
         m_state = WAIT_FOR_START_BIT;
         return;
     }
 
-    m_result.push_back(OutputPacket{m_line ,START_BIT, 0, sampleNum - m_prevBitStart, 1, m_prevBitStart});
+    m_result.push_back(OutputPacket{m_line ,START_BIT, 0, 0, bit.bitSampleStart, bit.bitSampleEnd - bit.bitSampleStart});
     m_curDataBit = 0;
     m_dataByte = 0;
     m_bitAccumulate = 0;
-    m_prevBitStart = sampleNum;
-    m_startDataBits = sampleNum;
+    m_initStartFirst = false;
     m_state = GET_DATA_BITS;
 }
 
-void UARTDecoder::Impl::getDataBits(bool bit, uint32_t sampleNum)
-{
-    m_bitAccumulate += bit;
-    if (m_oldBit == bit){
-        if (((double)sampleNum < m_bitWidth + (double)m_prevBitStart) && !m_isEnd){
-            return;
-        }
-    }else{
-        m_bitAccumulate -= bit;
-    }
 
-    int bitValue = round((float)m_bitAccumulate / (float)(sampleNum - m_prevBitStart));
+void UARTDecoder::Impl::getDataBits(bit_decoder::Bit &bit){
+
+    if (!m_initStartFirst){
+        m_startDataBit = bit;
+        m_initStartFirst = true;
+    }
 
     if(m_options.m_bitOrder == MSB_FIRST){
         m_dataByte <<= 1;
-        m_dataByte |= (bitValue << 0);
+        m_dataByte |= (bit.bitValue << 0);
     }
     else if(m_options.m_bitOrder == LSB_FIRST){
         m_dataByte >>= 1;
-        m_dataByte |= (bitValue << (m_options.m_num_data_bits - 1));
+        m_dataByte |= (bit.bitValue << (m_options.m_num_data_bits - 1));
     }
 
     // Return here, unless we already received all data bits.
     if(m_curDataBit < (m_options.m_num_data_bits - 1)){
         m_bitAccumulate = 0;
         m_curDataBit++;
-        m_prevBitStart = sampleNum;
         return;
     }
 
-    m_result.push_back({m_line, DATA, m_dataByte, sampleNum - m_startDataBits, (float)m_curDataBit + 1, m_startDataBits});
-    m_bitAccumulate = 0;
-    m_prevBitStart = sampleNum;
+    m_result.push_back({m_line, DATA, m_dataByte, (float)m_curDataBit + 1, m_startDataBit.bitSampleStart, bit.bitSampleEnd - m_startDataBit.bitSampleStart });
 
-    if(m_options.m_parity == NONE)
+
+    if(m_options.m_parity == NONE){
         m_state = GET_STOP_BITS;
+        m_curStopBit = 0;
+        if (m_options.m_num_stop_bits == STOP_BITS_05 || m_options.m_num_stop_bits == STOP_BITS_15){
+            m_bitdecoder.setBoundRate(m_options.m_baudrate * 2);
+        }else{
+            m_bitdecoder.setBoundRate(m_options.m_baudrate);
+        }
+        m_initStopFirst = false;
+        m_bitdecoder.syncLastBit();
+    }
     else
         m_state = GET_PARITY_BIT;
 }
 
-void UARTDecoder::Impl::getParityBit(bool bit, uint32_t sampleNum){
-
-    m_bitAccumulate += bit;
-    if (m_oldBit == bit){
-        if (((double)sampleNum < m_bitWidth + (double)m_prevBitStart) && !m_isEnd){
-            return;
-        }
-    }else{
-        m_bitAccumulate -= bit;
-    }
-
-    int bitValue = round((float)m_bitAccumulate / (float)(sampleNum - m_prevBitStart));
-    m_parityBit = bitValue;
+void UARTDecoder::Impl::getParityBit(bit_decoder::Bit &bit){
+    m_parityBit = bit.bitValue;
     m_parityOk = parityOk();
     if (m_parityOk)
-        m_result.push_back(OutputPacket{m_line, PARITY_BIT, 0, sampleNum - m_prevBitStart, 1, m_prevBitStart});
-    else
-        m_result.push_back(OutputPacket{m_line, PARITY_ERR, 0, sampleNum - m_prevBitStart, 1, m_prevBitStart});
+        m_result.push_back(OutputPacket{m_line, PARITY_BIT, 0, 1, bit.bitSampleStart, bit.bitSampleEnd - bit.bitSampleStart});
+    else{
+        m_result.push_back(OutputPacket{m_line, PARITY_ERR, 0, 1, bit.bitSampleStart, bit.bitSampleEnd - bit.bitSampleStart});
+    }
     m_bitAccumulate = 0;
-    m_prevBitStart = sampleNum;
     m_state = GET_STOP_BITS;
+    m_curStopBit = 0;
+    if (m_options.m_num_stop_bits == STOP_BITS_05 || m_options.m_num_stop_bits == STOP_BITS_15){
+        m_bitdecoder.setBoundRate(m_options.m_baudrate * 2);
+    }else{
+        m_bitdecoder.setBoundRate(m_options.m_baudrate);
+    }
+    m_initStopFirst = false;
+    m_bitdecoder.syncLastBit();
 }
 
-void UARTDecoder::Impl::getStopBits(bool bit, uint32_t sampleNum){
-    State nextState = WAIT_FOR_START_BIT;
+void UARTDecoder::Impl::getStopBits(bit_decoder::Bit &bit){
+
+    if (!m_initStopFirst){
+        m_startStopDataBit = bit;
+        m_initStopFirst = true;
+    }
+
     float bitWait = 1;
+    uint8_t bits = 0;
 
     switch (m_options.m_num_stop_bits)
     {
         case STOP_BITS_05:
             bitWait = 0.5;
+            bits = 1;
         break;
 
         case STOP_BITS_10:
             bitWait = 1;
+            bits = 1;
         break;
 
         case STOP_BITS_15:
             bitWait = 1.5;
+            bits = 3; // 3 * 0.5
         break;
 
         case STOP_BITS_20:
             bitWait = 2;
+            bits = 2; // 2 * 1
         break;
 
         case STOP_BITS_NO:
-            m_prevBitStart = sampleNum;
+            m_state = GET_START_BIT;
+            m_bitdecoder.setBoundRate(m_options.m_baudrate);
+            m_bitdecoder.setIdle();
+            m_bitdecoder.syncLastBit();
             return;
 
     default:
@@ -380,30 +368,25 @@ void UARTDecoder::Impl::getStopBits(bool bit, uint32_t sampleNum){
     }
 
 
-    m_bitAccumulate += bit;
-    if (m_oldBit == bit){
-        if (((double)sampleNum < m_bitWidth * bitWait + (double)m_prevBitStart) && !m_isEnd){
-            return;
-        }
-    }else{
-        m_bitAccumulate -= bit;
-    }
-
-    int bitValue = round((float)m_bitAccumulate / (float)(sampleNum - m_prevBitStart));
-
-    if(bitValue != 1){
+    if(bit.bitValue == false){
         // STOP-bit error
-        m_result.push_back({m_line, STOP_BIT_ERR, 0, sampleNum - m_prevBitStart, 1, m_prevBitStart});
-        m_state = WAIT_FOR_START_BIT;
-        m_bitAccumulate = 0;
-        m_prevBitStart = sampleNum;
+        m_result.push_back({m_line, STOP_BIT_ERR, 0, 1, m_startStopDataBit.bitSampleStart, bit.bitSampleEnd - m_startStopDataBit.bitSampleStart});
+        m_state = GET_START_BIT;
+        m_bitdecoder.setBoundRate(m_options.m_baudrate);
+        m_bitdecoder.setIdle();
+        m_bitdecoder.setErrorState();
         return;
     }
 
+    if(m_curStopBit < bits - 1){
+        m_curStopBit++;
+        return;
+    }
 
-    m_result.push_back({m_line, STOP_BIT, 0, sampleNum - m_prevBitStart, bitWait, m_prevBitStart});
-    m_state = nextState;
-    m_prevBitStart = sampleNum;
+    m_result.push_back({m_line, STOP_BIT, 0, bitWait, m_startStopDataBit.bitSampleStart, bit.bitSampleEnd - m_startStopDataBit.bitSampleStart});
+    m_state = GET_START_BIT;
+    m_bitdecoder.setBoundRate(m_options.m_baudrate);
+    m_bitdecoder.setIdle();
 }
 
 bool UARTDecoder::Impl::parityOk(){

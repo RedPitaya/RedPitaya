@@ -71,6 +71,8 @@
                     var tx_data = []
                     for (let i = 0; i < data.value.length; i++) {
                         var item = data.value[i];
+                        item.l = parseFloat(item.l)
+                        item.s = parseFloat(item.s)
                         if (item.ln === 'rx'){
                             rx_data.push(item)
                         }
@@ -91,6 +93,8 @@
                     var rx_data = []
                     for (let i = 0; i < data.value.length; i++) {
                         var item = data.value[i];
+                        item.l = parseFloat(item.l)
+                        item.s = parseFloat(item.s)
                         if (item.ln === 'rx'){
                             rx_data.push(item)
                         }
@@ -105,6 +109,8 @@
                     var sda_data = []
                     for (let i = 0; i < data.value.length; i++) {
                         var item = data.value[i];
+                        item.l = parseFloat(item.l)
+                        item.s = parseFloat(item.s)
                         if (item.ln === 'sda'){
                             sda_data.push(item)
                         }
@@ -121,6 +127,8 @@
                     var mosi_data = []
                     for (let i = 0; i < data.value.length; i++) {
                         var item = data.value[i];
+                        item.l = parseFloat(item.l)
+                        item.s = parseFloat(item.s)
                         if (item.ln === 'miso'){
                             miso_data.push(item)
                         }

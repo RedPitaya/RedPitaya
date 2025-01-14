@@ -43,10 +43,10 @@ public:
 			JSONNode node(JSON_NODE);
 			node.push_back(JSONNode("c", res.control));
 			node.push_back(JSONNode("d", res.data));
-			node.push_back(JSONNode("l", res.length));
 			node.push_back(JSONNode("ln", res.line_name));
 			node.push_back(JSONNode("b", res.bitsInPack));
-			node.push_back(JSONNode("s", res.sampleStart));
+			node.push_back(JSONNode("s", std::to_string(res.sampleStart)));
+			node.push_back(JSONNode("l", std::to_string(res.length)));
 
 			child.push_back(node);
 		}
@@ -126,11 +126,10 @@ public:
 			JSONNode node(JSON_NODE);
 			node.push_back(JSONNode("c", res.control));
 			node.push_back(JSONNode("d", res.data));
-			node.push_back(JSONNode("l", res.length));
 			node.push_back(JSONNode("ln", res.line_name));
 			node.push_back(JSONNode("b", res.bitsInPack));
-			node.push_back(JSONNode("s", res.sampleStart));
-
+			node.push_back(JSONNode("s", std::to_string(res.sampleStart)));
+			node.push_back(JSONNode("l", std::to_string(res.length)));
 			child.push_back(node);
 		}
 		n.push_back(child);
@@ -155,12 +154,11 @@ inline std::vector<OutputPacket> GetValueFromJSON<std::vector<OutputPacket> >(JS
 	{
 		uint8_t control = i->at("c").as_int();
 		uint32_t data = i->at("d").as_int();
-		uint32_t length = i->at("l").as_int();
 		std::string line_name = i->at("ln").as_string();
 		float bits = i->at("b").as_float();
-		uint32_t sampleStart = i->at("s").as_float();
-
-		res.push_back(OutputPacket{line_name , control, data, length, bits, sampleStart});
+		double sampleStart = i->at("s").as_float();
+		double length = i->at("l").as_float();
+		res.push_back(OutputPacket{line_name , control, data, bits, sampleStart, length});
 	}
 
 	return res;

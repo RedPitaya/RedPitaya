@@ -98,6 +98,7 @@ list(APPEND src
             ${CMAKE_SOURCE_DIR}/src/decoders/spi_settings.cpp
             ${CMAKE_SOURCE_DIR}/src/decoders/i2c_decoder.cpp
             ${CMAKE_SOURCE_DIR}/src/decoders/i2c_settings.cpp
+            ${CMAKE_SOURCE_DIR}/src/bit_decoder/bit_decoder_one_line_rle.cpp
         )
 
 list(APPEND src

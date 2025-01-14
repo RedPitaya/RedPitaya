@@ -28,6 +28,7 @@
 #include "decoders/uart_decoder.h"
 #include "decoders/spi_decoder.h"
 #include "decoders/i2c_decoder.h"
+#include "bit_decoder/bit_decoder_one_line_rle.h"
 #include "common/common.h"
 #include "common/profiler.h"
 #include "rp_la.h"
@@ -1014,9 +1015,9 @@ auto CLAController::printRLENP(uint8_t* np_buffer, int size, bool useHex) -> voi
     uint64_t samples = 0;
     for(size_t i = 0; i < count_vec.size(); i++){
         if (useHex)
-            fprintf(stdout, "%06llu/%06llu\t: 0x%X\n",samples,count_vec[i],data_vec[i]);
+            fprintf(stderr, "%06llu/%06llu\t: 0x%X\n",samples,count_vec[i],data_vec[i]);
         else
-            fprintf(stdout, "%06llu/%06llu\t: %08d\n",samples,count_vec[i],binary(data_vec[i],0));
+            fprintf(stderr, "%06llu/%06llu\t: %08d\n",samples,count_vec[i],binary(data_vec[i],0));
         samples += count_vec[i];
     }
 }
@@ -1105,5 +1106,25 @@ auto CLAController::decodeNP(la_Decoder_t decoder, std::string json_settings, ui
     return new_vect;
 }
 
+auto CLAController::parseBitsNP(uint8_t line, uint64_t boudrate, uint64_t acq_rate, float sample_point, bool invert, uint8_t* np_buffer, int size) -> std::vector<rp_la::BitPacket>{
+    std::vector<rp_la::BitPacket> new_vect;
+    auto bit_decoder = std::make_shared<bit_decoder::BitDecoderOneLine>();
+    bit_decoder->setBitIndex(line);
+    bit_decoder->setBoundRate(boudrate);
+    bit_decoder->setSampleRate(acq_rate);
+    bit_decoder->setInvertMode(invert);
+    bit_decoder->setSamplePoint(sample_point);
+    bit_decoder->setData(np_buffer, size);
+    bit_decoder->reset();
+    bit_decoder::Bit bit;
+    while (bit_decoder->getNextBit(&bit)){
+        rp_la::BitPacket bit_pack;
+        bit_pack.value = bit.bitValue;
+        bit_pack.start = bit.bitSampleStart;
+        bit_pack.end = bit.bitSampleEnd;
+        new_vect.push_back(bit_pack);
+    }
+    return new_vect;
+}
 
 }

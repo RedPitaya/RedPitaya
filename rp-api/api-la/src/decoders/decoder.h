@@ -23,12 +23,12 @@
 struct OutputPacket
 {
     std::string line_name;
-    uint8_t control; // 0 when data, elsewise represents specific state
-					 // anyway control byte specifies meaning of the “data” byte
+    uint8_t control;                // 0 when data, elsewise represents specific state
+					                // anyway control byte specifies meaning of the “data” byte
     uint32_t data;
-	uint32_t length; // RLE, how many counts takes this byte
-    float    bitsInPack; // How many bits detected
-    uint32_t sampleStart;
+    float    bitsInPack;            // How many bits detected
+    double   sampleStart;
+    double   length;
 };
 
 class Decoder

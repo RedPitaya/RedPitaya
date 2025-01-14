@@ -177,7 +177,7 @@ void I2CDecoder::Impl::decode(const uint8_t* _input, uint32_t _size)
 {
 
 	auto push = [&](){
-		m_result.push_back(OutputPacket{"sda", (uint8_t)m_cmd, m_dataByte, (m_es - m_ss),m_bitCountDetect, m_ss});
+		m_result.push_back(OutputPacket{"sda", (uint8_t)m_cmd, m_dataByte, m_bitCountDetect, (double)m_ss,(double)(m_es - m_ss)});
 		m_bitCountDetect = 0;
 		m_dataByte = 0;
 		m_needPush = false;

@@ -28,9 +28,16 @@ struct OutputPacket
     uint8_t control; // 0 when data, elsewise represents specific state
 					 // anyway control byte specifies meaning of the “data” byte
     uint32_t data;
-	uint32_t length; // RLE, how many counts takes this byte
     float    bitsInPack;  // Number of bits
-    uint32_t sampleStart;
+    double   sampleStart;
+	double   length;
+};
+
+struct BitPacket
+{
+    bool value;
+    uint64_t start;
+    uint64_t end;
 };
 
 typedef enum {
@@ -163,6 +170,7 @@ public:
     auto getAnnotation(la_Decoder_t decoder, uint8_t control) -> std::string;
 
     auto decodeNP(la_Decoder_t decoder, std::string json_settings, uint8_t* np_buffer, int size) -> std::vector<rp_la::OutputPacket>;
+    auto parseBitsNP(uint8_t line, uint64_t boudrate, uint64_t acq_rate, float sample_point, bool invert, uint8_t* np_buffer, int size) -> std::vector<rp_la::BitPacket>;
 
 private:
 
