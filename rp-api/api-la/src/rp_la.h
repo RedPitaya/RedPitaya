@@ -129,8 +129,6 @@ public:
 
     /*
         Initializes the FPGA registers and the reserved memory area.
-        When creating an object, the registers are not initialized, but when starting data capture, they are initialized automatically.
-        There is no need to call this function separately, only if it is necessary to optimize the speed of starting capture.
     */
     auto initFpga() -> bool;
 

@@ -13,14 +13,14 @@ namespace spi {
 
 	enum CsPolartiy
 	{
-		ActiveLow,
-		ActiveHigh
+		ActiveLow	= 0,
+		ActiveHigh	= 1
 	};
 
 	enum BitOrder
 	{
-		MsbFirst,
-		LsbFirst
+		MsbFirst	= 0,
+		LsbFirst	= 1
 	};
 
 	enum SPIAnnotations

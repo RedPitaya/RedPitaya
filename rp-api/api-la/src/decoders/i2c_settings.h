@@ -8,6 +8,7 @@
 #include <deque>
 
 namespace i2c {
+
 	enum AddressFormat
 	{
 		Shifted		= 0,

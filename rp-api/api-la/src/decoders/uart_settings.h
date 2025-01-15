@@ -13,17 +13,17 @@ namespace uart {
 
 	enum UartBitOrder
 	{
-		LSB_FIRST,
-		MSB_FIRST
+		LSB_FIRST = 0,
+		MSB_FIRST = 1
 	};
 
 	enum NumDataBits
 	{
 		DATA_BITS_5 = 5,
-		DATA_BITS_6,
-		DATA_BITS_7,
-		DATA_BITS_8,
-		DATA_BITS_9
+		DATA_BITS_6 = 6,
+		DATA_BITS_7 = 7,
+		DATA_BITS_8 = 8,
+		DATA_BITS_9 = 9
 	};
 
 	enum Parity
@@ -38,10 +38,10 @@ namespace uart {
 	enum NumStopBits
 	{
 		STOP_BITS_NO = 0,
-		STOP_BITS_05,
-		STOP_BITS_10,
-		STOP_BITS_15,
-		STOP_BITS_20
+		STOP_BITS_05 = 1,
+		STOP_BITS_10 = 2,
+		STOP_BITS_15 = 3,
+		STOP_BITS_20 = 4
 	};
 
 	enum UARTAnnotations

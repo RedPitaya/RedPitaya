@@ -39,8 +39,10 @@ import_array();
         PyObject* d = PyDict_New();
         PyDict_SetItemString(d, "control", PyInt_FromLong($1.at(i).control));
         PyDict_SetItemString(d, "data", PyInt_FromLong($1.at(i).data));
-        PyDict_SetItemString(d, "length", PyInt_FromLong($1.at(i).length));
         PyDict_SetItemString(d, "line_name", PyString_FromString($1.at(i).line_name.c_str()));
+        PyDict_SetItemString(d, "sampleStart", PyFloat_FromDouble($1.at(i).sampleStart));
+        PyDict_SetItemString(d, "length", PyFloat_FromDouble($1.at(i).length));
+        PyDict_SetItemString(d, "bitsInPack", PyFloat_FromDouble($1.at(i).bitsInPack));
         PyList_SetItem(list, i, d);
     }
     $result = list;
