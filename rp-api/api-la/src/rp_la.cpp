@@ -212,7 +212,7 @@ auto CLAController::setMode(la_Mode_t mode) -> void{
 }
 
 auto CLAController::setTrigger(uint8_t channel, la_Trigger_Mode_t mode) -> void{
-    if (channel > MAX_LINES) {
+    if (channel >= MAX_LINES) {
         ERROR_LOG("The line is larger than acceptable")
         return;
     }
@@ -249,7 +249,7 @@ auto CLAController::setTrigger(uint8_t channel, la_Trigger_Mode_t mode) -> void{
 }
 
 auto CLAController::getTrigger(uint8_t channel) -> la_Trigger_Mode_t{
-    if (channel > MAX_LINES) {
+    if (channel >= MAX_LINES) {
         ERROR_LOG("The line is larger than acceptable")
         return LA_ERROR;
     }
@@ -722,13 +722,7 @@ auto CLAController::Impl::runDecode() -> void{
     TRACE_SHORT("Decode done")
 }
 
-
-// auto CLAController::run(uint32_t timeoutMs) -> void{
-//     if (m_pimpl->m_isRun) return;
-//     m_isRun = true;
-//     m_pimpl->run(timeoutMs);
-// }
-
+// TODO Timeout support should be implemented. Timeout is currently ignored.
 auto CLAController::runAsync(uint32_t timeoutMs) -> void{
     std::lock_guard lock_thread(m_pimpl->m_thread_mutex);
     if (m_pimpl->m_isRun) return;
@@ -823,14 +817,6 @@ auto CLAController::wait(uint32_t timeoutMs, bool *isTimeout) -> void{
     delete m_pimpl->m_captureThread;
     m_pimpl->m_captureThread = nullptr;
 }
-
-// auto CLAController::wait() -> void{
-//     if (m_pimpl->m_catureThread && m_pimpl->m_catureThread->joinable()){
-//         m_pimpl->m_catureThread->join();
-//         delete m_pimpl->m_catureThread;
-//         m_pimpl->m_catureThread = nullptr;
-//     }
-// }
 
 auto CLAController::saveCaptureDataToFile(std::string file) -> bool{
     std::filesystem::path path(file);
@@ -1015,9 +1001,9 @@ auto CLAController::printRLENP(uint8_t* np_buffer, int size, bool useHex) -> voi
     uint64_t samples = 0;
     for(size_t i = 0; i < count_vec.size(); i++){
         if (useHex)
-            fprintf(stderr, "%06llu/%06llu\t: 0x%X\n",samples,count_vec[i],data_vec[i]);
+            fprintf(stdout, "%06llu/%06llu\t: 0x%X\n",samples,count_vec[i],data_vec[i]);
         else
-            fprintf(stderr, "%06llu/%06llu\t: %08d\n",samples,count_vec[i],binary(data_vec[i],0));
+            fprintf(stdout, "%06llu/%06llu\t: %08d\n",samples,count_vec[i],binary(data_vec[i],0));
         samples += count_vec[i];
     }
 }
@@ -1102,27 +1088,6 @@ auto CLAController::decodeNP(la_Decoder_t decoder, std::string json_settings, ui
         pack.sampleStart = itm.sampleStart;
         //pack.annotation = m_pimpl->getAnnotation(decoder,itm.control);
         new_vect.push_back(pack);
-    }
-    return new_vect;
-}
-
-auto CLAController::parseBitsNP(uint8_t line, uint64_t boudrate, uint64_t acq_rate, float sample_point, bool invert, uint8_t* np_buffer, int size) -> std::vector<rp_la::BitPacket>{
-    std::vector<rp_la::BitPacket> new_vect;
-    auto bit_decoder = std::make_shared<bit_decoder::BitDecoderOneLine>();
-    bit_decoder->setBitIndex(line);
-    bit_decoder->setBoundRate(boudrate);
-    bit_decoder->setSampleRate(acq_rate);
-    bit_decoder->setInvertMode(invert);
-    bit_decoder->setSamplePoint(sample_point);
-    bit_decoder->setData(np_buffer, size);
-    bit_decoder->reset();
-    bit_decoder::Bit bit;
-    while (bit_decoder->getNextBit(&bit)){
-        rp_la::BitPacket bit_pack;
-        bit_pack.value = bit.bitValue;
-        bit_pack.start = bit.bitSampleStart;
-        bit_pack.end = bit.bitSampleEnd;
-        new_vect.push_back(bit_pack);
     }
     return new_vect;
 }
