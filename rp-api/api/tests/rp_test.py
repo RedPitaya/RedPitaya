@@ -49,6 +49,10 @@ res = rp.rp_IdGetDNA()
 print(res)
 
 
+print("rp.rp_GetFreqCounter()")
+res = rp.rp_GetFreqCounter()
+print(res)
+
 print("rp.rp_LEDGetState()")
 res = rp.rp_LEDGetState()
 print(res)

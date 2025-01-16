@@ -207,6 +207,12 @@ int rp_LEDSetState(uint32_t state);
 int rp_LEDGetState(uint32_t *state);
 
 /**
+ * Clock frequency meter
+ */
+
+int rp_GetFreqCounter(uint32_t *value);
+
+/**
  * GPIO methods
  */
 

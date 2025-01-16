@@ -72,7 +72,8 @@ typedef struct housekeeping_control_s_v1 {
     can_control_t can_control;              // 0x34 **CAN control**
     uint32_t reserved_4[50];                // 0x38 - 0x100
     uint32_t fpga_ready;                    // 0x100 **FPGA ready**
-    uint32_t reserved_5[959];               // 0x104 - 0x1000
+    uint32_t acq_clock_counter;             // 0x104 **ADC clock frequency meter**
+    uint32_t reserved_5[958];               // 0x108 - 0x1000
     ext_trigger_t ext_trigger;              // 0x1000 **External trigger override**
 } housekeeping_control_v1_t;
 
@@ -102,7 +103,8 @@ typedef struct housekeeping_control_s_v2 {
     uint32_t idelay_chd;                    // 0x54 **IDELAY CHD**
     uint32_t reserved_6[42];                // 0x58 - 0x100
     uint32_t fpga_ready;                    // 0x100 **FPGA ready**
-    uint32_t reserved_7[959];               // 0x104 - 0x1000
+    uint32_t acq_clock_counter;             // 0x104 **ADC clock frequency meter**
+    uint32_t reserved_7[958];               // 0x108 - 0x1000
     ext_trigger_t ext_trigger;              // 0x1000 **External trigger override**
 
 } housekeeping_control_v2_t;
@@ -138,7 +140,8 @@ typedef struct housekeeping_control_s_v3 {
     uint32_t dac_spi_rd;                    // 0x68 **DAC SPI Read data / Transfer busy**
     uint32_t reserved_7[37];                // 0x6C - 0x100
     uint32_t fpga_ready;                    // 0x100 **FPGA ready**
-    uint32_t reserved_8[959];               // 0x104 - 0x1000
+    uint32_t acq_clock_counter;             // 0x104 **ADC clock frequency meter**
+    uint32_t reserved_8[958];               // 0x104 - 0x1000
     ext_trigger_t ext_trigger;              // 0x1000 **External trigger override**
 
 } housekeeping_control_v3_t;
@@ -158,7 +161,6 @@ typedef struct housekeeping_control_s_v4 {
     uint32_t reserved_2;                    // 0x28
     uint32_t reserved_3;                    // 0x2C
     uint32_t led_control;                   // 0x30 **LED control**
-    // TODO - missing in FPGA?
     can_control_t can_control;              // 0x34 **CAN control**
     uint32_t reserved_4;                    // 0x38
     uint32_t reserved_5;                    // 0x3C
@@ -169,6 +171,9 @@ typedef struct housekeeping_control_s_v4 {
     uint32_t adc_spi_cw;                    // 0x50 **ADC SPI Control word**
     uint32_t adc_spi_wd;                    // 0x54 **ADC SPI Write data / start transfer**
     uint32_t adc_spi_rd;                    // 0x58 **ADC SPI Read data / Transfer busy**
+    uint32_t reserved_9[41];                // 0x5C - 0x100
+    uint32_t fpga_ready;                    // 0x100 **FPGA ready**
+    uint32_t acq_clock_counter;             // 0x104 **ADC clock frequency meter**
 } housekeeping_control_v4_t;
 
 static const uint32_t LED_CONTROL_MASK = 0xFF;

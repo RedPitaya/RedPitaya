@@ -57,8 +57,7 @@ int main(int argc, char **argv) {
             "\twrite addr: address value\n"
 			"\tread analog mixed signals: -ams\n"
 			"\tset slow DAC: -sdac AO0 AO1 AO2 AO3 [V]\n"
-			"\tShow current profile: -p\n"
-			"\tShow all profiles: -pa\n"
+			"\tClock frequency meter: -с\n"
 			"\tPrint fpga version: -f\n"
 			"\tPrint model name: -n\n"
 			"\tPrint model id: -i\n"
@@ -94,12 +93,13 @@ int main(int argc, char **argv) {
 		return 0;
 	}
 
-	if (strncmp(argv[1], "-pa", 3) == 0) {
-		return rp_HPPrintAll();
-	}
-
-	if (strncmp(argv[1], "-p", 2) == 0) {
-		return rp_HPPrint();
+	if (strncmp(argv[1], "-c", 2) == 0) {
+		rp_InitReset(false);
+		uint32_t val = 0;
+		auto ret = rp_GetFreqCounter(&val);
+		printf("%d",val);
+		rp_Release();
+		return ret;
 	}
 
 	if (strncmp(argv[1], "-r", 2) == 0) {

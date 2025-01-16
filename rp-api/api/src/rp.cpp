@@ -277,6 +277,37 @@ int rp_IdGetDNA(uint64_t *dna) {
     return RP_NOTS;
 }
 
+int rp_GetFreqCounter(uint32_t *value){
+    hk_version_t ver = house_getHKVersion();
+    switch (ver)
+    {
+        case HK_V1:{
+            housekeeping_control_v1_t *hk_loc = (housekeeping_control_v1_t*)hk;
+            *value = hk_loc->acq_clock_counter;
+            return RP_OK;
+        }
+        case HK_V2:{
+            housekeeping_control_v2_t *hk_loc = (housekeeping_control_v2_t*)hk;
+            *value = hk_loc->acq_clock_counter;
+            return RP_OK;
+        }
+        case HK_V3:{
+            housekeeping_control_v3_t *hk_loc = (housekeeping_control_v3_t*)hk;
+            *value = hk_loc->acq_clock_counter;
+            return RP_OK;
+        }
+        case HK_V4:{
+            housekeeping_control_v4_t *hk_loc = (housekeeping_control_v4_t*)hk;
+            *value = hk_loc->acq_clock_counter;
+            return RP_OK;
+        }
+        default:
+            return RP_NOTS;
+    }
+    return RP_NOTS;
+}
+
+
 /**
  * LED methods
  */
