@@ -557,14 +557,3 @@ scpi_t* initContext(){
     // ctx->binary_output = false;
     return ctx;
 }
-
-// scpi_t scpi_context = {
-//     .cmdlist = scpi_commands,
-//     .buffer = {
-//         .length = SCPI_INPUT_BUFFER_LENGTH,
-//         .data = scpi_input_buffer,
-//     },
-//     .interface = &scpi_interface,
-//     .units = scpi_units_def,
-//     .idn = {"REDPITAYA", "INSTR2023", NULL, "05-03"},
-// };

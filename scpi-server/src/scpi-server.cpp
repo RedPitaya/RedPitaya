@@ -27,6 +27,9 @@
 #include <thread>
 #include <vector>
 #include <mutex>
+#include <termios.h>
+#include <sys/ioctl.h>
+#include <fcntl.h>
 
 #include "scpi-commands.h"
 #include "common.h"
@@ -36,14 +39,20 @@
 #include "api_cmd.h"
 #include "common/rp_sweep.h"
 
-#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
-#define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
 
 #define LISTEN_BACKLOG 50
 #define LISTEN_PORT 5000
 #define MAX_BUFF_SIZE 1024
+#define UART_RATE 115200
 
 #define SCPI_ERROR_QUEUE_SIZE 16
+
+constexpr char id0[] = "REDPITAYA";
+constexpr char id1[] = "INSTR2025";
+constexpr char id2[] = "";
+constexpr char id3[] = "01-16";
+
+constexpr char device[] = "/dev/ttyPS1";
 
 
 static bool app_exit = false;
@@ -114,7 +123,7 @@ void LogMessage(char *m, size_t len) {
     const size_t buff_len = 50;
     char buff[buff_len];
 
-    len = MIN(len, buff_len);
+    len = std::min(len, buff_len);
     strncpy(buff, m, len);
     buff[len - 1] = '\0';
 
@@ -208,10 +217,6 @@ static int handleConnection(scpi_t *ctx, int connfd) {
 
 std::thread* threadConnection(int connId){
     auto func = [](int connId) {
-        const char* id0 = "REDPITAYA";
-        const char* id1 = "INSTR2024";
-        const char* id2 = NULL;
-        const char* id3 = "01-16";
         int sockId = connId;
         scpi_error_t scpi_error_queue_data[SCPI_ERROR_QUEUE_SIZE];
         auto ctx = initContext();
@@ -251,61 +256,15 @@ std::thread* threadConnection(int connId){
     return th;
 }
 
-/**
- * Main daemon entrance point. Opens a socket and listens for any incoming connection.
- * When client connects, if forks the conversation into a new socket and the daemon (parent process)
- * waits for another connection. It can handle multiple connections simultaneously.
- * @param argc  not used
- * @param argv  not used
- * @return
- */
-int main(int argc, char *argv[])
-{
 
+auto startTCP() -> int {
     std::vector<std::thread*> clients;
-
-    // Open logging into "/var/log/messages" or /var/log/syslog" or other configured...
-    setlogmask (LOG_UPTO (LOG_INFO));
-    openlog ("scpi-server", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
-
-    rp_Log (nullptr, LOG_NOTICE, 0, "scpi-server started");
-
-    installTermSignalHandler();
-
-    prctl( 1, SIGTERM );
-
     int listenfd = 0, connfd = 0;
     struct sockaddr_in serv_addr;
 
-    // Handle close child events
-    handleCloseChildEvents();
-
-
-    int result = rp_Init();
-    if (result != RP_OK) {
-        rp_Log(nullptr,LOG_ERR, result, "Failed to initialize RP APP library: %s", rp_GetError(result));
-        return (EXIT_FAILURE);
-    }
-
-    result = rp_Reset();
-    if (result != RP_OK) {
-        rp_Log(nullptr,LOG_ERR, result, "Failed to reset RP APP: %s", rp_GetError(result));
-        return (EXIT_FAILURE);
-    }
-
-    result = rp_sweep_api::rp_SWInit();
-    if (result != RP_OK) {
-        rp_Log(nullptr,LOG_ERR, result, "Failed to initialize RP Sweep library: %s", rp_GetError(result));
-        return (EXIT_FAILURE);
-    }
-
-
-    // RP_ResetAll(&scpi_context); // need for set default values of scpi
-
     // Create a socket
     listenfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (listenfd == -1)
-    {
+    if (listenfd == -1){
         rp_Log(nullptr,LOG_ERR, 0, "Failed to create a socket (%s)", strerror(errno));
         perror("Failed to create a socket");
         return (EXIT_FAILURE);
@@ -347,8 +306,7 @@ int main(int argc, char *argv[])
     rp_Log(nullptr,LOG_INFO, 0, "Server is listening on port %d", LISTEN_PORT);
 
     // Socket is opened and listening on port. Now we can accept connections
-    while(1)
-    {
+    while(1){
         struct sockaddr_in cliaddr;
         socklen_t clilen;
         clilen = sizeof(cliaddr);
@@ -367,33 +325,6 @@ int main(int argc, char *argv[])
 
         auto cth = threadConnection(connfd);
         clients.push_back(cth);
-        /*
-        // Fork a child process, which will talk to the client
-        if (!fork()) {
-
-            rp_Log(nullptr,LOG_INFO, 0, "Connection with client ip %s established.", inet_ntoa(cliaddr.sin_addr));
-
-            // this is the child process
-            close(listenfd); // child doesn't need the listener
-
-            scpi_context.user_context = &connfd;
-
-            result = handleConnection(connfd);
-
-            close(connfd);
-
-            rp_Log(nullptr,LOG_INFO, 0, "Closing connection with client ip %s.", inet_ntoa(cliaddr.sin_addr));
-
-            if (result == 0) {
-                return(EXIT_SUCCESS);
-            }
-            else {
-                return(EXIT_FAILURE);
-            }
-        }
-
-        close(connfd);
-        */
     }
 
     for (auto th: clients){
@@ -402,16 +333,196 @@ int main(int argc, char *argv[])
     }
 
     close(listenfd);
+
+    return (EXIT_SUCCESS);
+}
+
+
+auto startUART() -> int {
+
+    int read_size;
+    struct termios g_settings;
+
+    size_t message_len = MAX_BUFF_SIZE;
+
+    int uart_fd = open(device, O_RDWR | O_NOCTTY);
+
+    if(uart_fd == -1){
+        ERROR_LOG("Failed to open %s.",device);
+        return (EXIT_FAILURE);
+    }
+
+    tcflush(uart_fd, TCIFLUSH);
+    tcflush(uart_fd, TCIOFLUSH);
+    tcgetattr(uart_fd, &g_settings);
+    g_settings.c_cflag &= ~CSIZE;
+    g_settings.c_cflag |= CS8 | CLOCAL | CREAD; /* 8 bits */
+    g_settings.c_cflag &= ~CRTSCTS; // Disable flow control
+    g_settings.c_iflag &= ~(IXON | IXOFF | IXANY);          // Disable XON/XOFF flow control both input & output
+    g_settings.c_iflag &= ~(ICANON | ECHO | ECHOE | ISIG);  // Non Cannonical mode
+    g_settings.c_iflag &= ~ICRNL;
+    g_settings.c_oflag &= ~OPOST; /* raw output */
+
+    g_settings.c_lflag = 0;               //  enable raw input instead of canonical,
+    g_settings.c_cc[VMIN]  = 1;           // Read at least 1 character
+    cfsetspeed(&g_settings, UART_RATE);
+    tcsetattr(uart_fd, TCSANOW, &g_settings);
+
+
+    scpi_error_t scpi_error_queue_data[SCPI_ERROR_QUEUE_SIZE];
+    auto ctx = initContext();
+    if (ctx == NULL) {
+        close(uart_fd);
+        return (EXIT_FAILURE);
+    }
+
+    SCPI_Init(ctx,
+            ctx->cmdlist,
+            ctx->interface,
+            ctx->units,
+            id0,
+            id1,
+            id2,
+            id3,
+            ctx->buffer.data,
+            ctx->buffer.length,
+            scpi_error_queue_data,
+            SCPI_ERROR_QUEUE_SIZE);
+
+    ctx->user_context = &uart_fd;
+
+
+    std::vector<uint8_t> message_buff;
+    std::vector<uint8_t> buffer;
+    message_buff.resize(message_len);
+    buffer.resize(message_len);
+
+    size_t msg_end = 0;
+    //Receive a message from client
+    while( (read_size = read(uart_fd , buffer.data() , buffer.size())) > 0 )
+    {
+        if (app_exit) {
+            break;
+        }
+        // First make sure that message buffer is large enough
+        auto new_message_size = msg_end + read_size;
+        if (new_message_size >= message_buff.size()) {
+            message_buff.resize(new_message_size);
+            if (message_buff.size() != new_message_size){
+                rp_Log(nullptr,LOG_ERR, 0, "Not enough memory for buffer.");
+                break;
+            }
+        }
+
+        // Copy read buffer into message buffer
+        memcpy(&(message_buff.data()[msg_end]), buffer.data(), read_size);
+        msg_end += read_size;
+
+        // Now try to parse each command out
+        char *m = (char*)(message_buff.data());
+        size_t pos = 0;
+        while ((pos = getNextCommand(m, msg_end)) != 0) {
+            // Log out message
+            LogMessage(m, pos);
+
+            //Parse the message and return response
+            SCPI_Input(ctx, m, pos);
+            m += pos;
+            msg_end -= pos;
+        }
+
+        // Move the rest of the message to the beginning of the buffer
+        if ((char*)message_buff.data() != m && msg_end > 0) {
+            memmove(message_buff.data(), m, msg_end);
+        }
+
+        rp_Log(nullptr,LOG_INFO, 0, "Waiting for next client request.");
+    }
+
+    if(read_size == -1){
+        rp_Log(nullptr,LOG_ERR, 0, "Receive message failed (%s)", strerror(errno));
+        perror("Receive message failed");
+    }
+
+    if (uart_fd != -1){
+        tcflush(uart_fd, TCIFLUSH);
+        close(uart_fd);
+    }
+
+    delete[] ctx->buffer.data;
+    delete ctx;
+
+    return (EXIT_SUCCESS);
+}
+
+/**
+ * Main daemon entrance point. Opens a socket and listens for any incoming connection.
+ * When client connects, if forks the conversation into a new socket and the daemon (parent process)
+ * waits for another connection. It can handle multiple connections simultaneously.
+ * @param argc  not used
+ * @param argv  not used
+ * @return
+ */
+int main(int argc, char *argv[]){
+
+    bool start_tcp = true;
+
+    if (argc > 1){
+        if (strncmp(argv[1], "-u", 2) == 0) {
+            start_tcp = false;
+        }
+    }
+
+    // Open logging into "/var/log/messages" or /var/log/syslog" or other configured...
+    setlogmask (LOG_UPTO (LOG_INFO));
+    openlog ("scpi-server", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
+
+    rp_Log (nullptr, LOG_NOTICE, 0, "scpi-server started");
+
+    installTermSignalHandler();
+
+    prctl( 1, SIGTERM );
+
+    // Handle close child events
+    handleCloseChildEvents();
+
+
+    int result = rp_Init();
+    if (result != RP_OK) {
+        rp_Log(nullptr,LOG_ERR, result, "Failed to initialize RP APP library: %s", rp_GetError(result));
+        return (EXIT_FAILURE);
+    }
+
+    result = rp_Reset();
+    if (result != RP_OK) {
+        rp_Log(nullptr,LOG_ERR, result, "Failed to reset RP APP: %s", rp_GetError(result));
+        return (EXIT_FAILURE);
+    }
+
+    result = rp_sweep_api::rp_SWInit();
+    if (result != RP_OK) {
+        rp_Log(nullptr,LOG_ERR, result, "Failed to initialize RP Sweep library: %s", rp_GetError(result));
+        return (EXIT_FAILURE);
+    }
+
+    int ret = 0;
+
+    if (start_tcp){
+        ret = startTCP();
+    }else{
+        ret = startUART();
+    }
+
     rp_sweep_api::rp_SWRelease();
+
     result = rp_Release();
     if (result != RP_OK) {
         rp_Log(nullptr,LOG_ERR, result, "Failed to release RP App library: %s", rp_GetError(result));
     }
 
-
     rp_Log(nullptr,LOG_INFO, 0, "scpi-server stopped.");
 
     closelog ();
 
-    return (EXIT_SUCCESS);
+    return ret;
 }
