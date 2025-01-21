@@ -325,7 +325,7 @@ int rp_GetLEDEthState(bool *_out_value);
 int rp_SetLEDEthState(bool _state);
 
 /**
- * Open the SPI device (/dev/spidev1.0).
+ * Open the SPI device (/dev/spidev2.0).
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
  */

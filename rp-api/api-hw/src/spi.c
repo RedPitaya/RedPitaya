@@ -32,7 +32,7 @@ spi_data_t *g_spi_data = NULL;
 pthread_mutex_t spi_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 int spi_Init(){
-    return spi_InitDevice("/dev/spidev1.0");
+    return spi_InitDevice("/dev/spidev2.0");
 }
 
 int spi_InitDevice(const char *_device){
