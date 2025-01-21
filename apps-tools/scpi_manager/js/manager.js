@@ -16,22 +16,44 @@
             })
             .fail(function(msg) {
                 if (msg.responseText.split('\n')[0] == "active") {
-                    $('#SCPI_RUN').hide();
+                    $('#SCPI_RUN_TCP').hide();
+                    $('#SCPI_RUN_UART').hide();
                     $('#SCPI_STOP').css('display', 'block');
-                    $('#label-is-runnung').hide();
-                    $('#label-is-not-runnung').show();
-                } else {
-                    $('#SCPI_STOP').hide();
-                    $('#SCPI_RUN').css('display', 'block');
                     $('#label-is-not-runnung').hide();
+                    $('#label-is-runnung-uart').hide();
                     $('#label-is-runnung').show();
+                } else if (msg.responseText.split('\n')[0] == "active_uart"){
+                    $('#SCPI_RUN_TCP').hide();
+                    $('#SCPI_RUN_UART').hide();
+                    $('#SCPI_STOP').css('display', 'block');
+                    $('#label-is-not-runnung').hide();
+                    $('#label-is-runnung').hide();
+                    $('#label-is-runnung-uart').show();
+                }else {
+                    $('#SCPI_STOP').hide();
+                    $('#SCPI_RUN_TCP').css('display', 'block');
+                    $('#SCPI_RUN_UART').css('display', 'block');
+                    $('#label-is-runnung').hide();
+                    $('#label-is-runnung-uart').hide();
+                    $('#label-is-not-runnung').show();
                 }
             })
     }
 
     SCPI.StartServer = function() {
         $.ajax({
-                url: '/start_scpi_manager',
+                url: '/start_scpi_manager_tcp',
+                type: 'GET',
+                timeout: 1500
+            })
+            .fail(function(msg) {
+                if (msg.responseText) {} else {}
+            })
+    }
+
+    SCPI.StartServerUart = function() {
+        $.ajax({
+                url: '/start_scpi_manager_uart',
                 type: 'GET',
                 timeout: 1500
             })
@@ -115,7 +137,9 @@ $(function() {
     setInterval(SCPI.GetIP, 1000);
     setInterval(SCPI.CheckServerStatus, 3000);
 
-    $('#SCPI_RUN').click(SCPI.StartServer);
+    $('#SCPI_RUN_TCP').click(SCPI.StartServer);
+
+    $('#SCPI_RUN_UART').click(SCPI.StartServerUart);
 
     $('#SCPI_STOP').click(SCPI.StopServer);
 

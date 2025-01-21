@@ -85,16 +85,22 @@
                         <img src="img/apps.png" width="200%">
                     </div>
                     <div>
-                        <div id="label-is-runnung" align=center style="font-size: 16pt; color: red;">
+                        <div id="label-is-not-runnung" align=center style="font-size: 16pt; color: red;">
                             SCPI server is not running, press RUN button to start it
                         </div>
-                        <div id="label-is-not-runnung" align=center style="font-size: 16pt; color: green; display: none;">
+                        <div id="label-is-runnung" align=center style="font-size: 16pt; color: green; display: none;">
                             SCPI server is running... (IP="<span id="ip-addr">127.0.0.1</span>", port="5000")
                         </div>
+                        <div id="label-is-runnung-uart" align=center style="font-size: 16pt; color: green; display: none;">
+                            SCPI server is running in UART mode
+                        </div>
                         <div align="center">
-                            <ul class="">
-                                <li class="run_buttons" id="SCPI_RUN">
-                                    <a href="#" id="a_run" style="">RUN</a>
+                            <ul class="" style="display: flex;justify-content: center;">
+                                <li class="run_buttons" id="SCPI_RUN_TCP">
+                                    <a href="#" style="">RUN TCP</a>
+                                </li>
+                                <li class="run_buttons" id="SCPI_RUN_UART">
+                                    <a href="#" style="">RUN UART</a>
                                 </li>
                                 <li class="run_buttons" id="SCPI_STOP" style="display:none;">
                                     <a href="#" id="a_stop">STOP</a>

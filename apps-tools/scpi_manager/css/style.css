@@ -271,7 +271,8 @@ area:hover {
     margin-bottom: 15px;
     font-size: 16pt;
     padding: 6px 20px 6px 20px;
-    width: 120px;
+    width: 200px;
+    margin: 10px;
 }
 
 .run_buttons:hover {

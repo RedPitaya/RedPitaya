@@ -54,7 +54,7 @@ install(DIRECTORY ${CMAKE_SOURCE_DIR}/js DESTINATION ${BUILD_PATH})
 
 file(GLOB HTML "*.html")
 install(FILES ${HTML} DESTINATION ${BUILD_PATH})
-install(FILES nginx.conf fpga.conf fpga.sh DESTINATION ${BUILD_PATH})
+install(FILES nginx.conf fpga.conf fpga.sh check_service.sh DESTINATION ${BUILD_PATH})
 
 install(CODE "execute_process(COMMAND sed -i ${BUILD_PATH}/info/info.json -e \"s/REVISION/${REVISION}/\")")
 install(CODE "execute_process(COMMAND sed -i ${BUILD_PATH}/info/info.json -e \"s/VERSION/${VERSION}/\")")

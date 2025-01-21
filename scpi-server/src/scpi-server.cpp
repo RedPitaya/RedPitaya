@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <fstream>
 
 #include <netinet/in.h>
 #include <sys/prctl.h>
@@ -46,11 +47,12 @@
 #define UART_RATE 115200
 
 #define SCPI_ERROR_QUEUE_SIZE 16
+#define CONFIG_FILE "/root/.scpi_uart"
 
 constexpr char id0[] = "REDPITAYA";
 constexpr char id1[] = "INSTR2025";
 constexpr char id2[] = "";
-constexpr char id3[] = "01-16";
+constexpr char id3[] = "01-21";
 
 constexpr char device[] = "/dev/ttyPS1";
 
@@ -471,6 +473,12 @@ int main(int argc, char *argv[]){
         if (strncmp(argv[1], "-u", 2) == 0) {
             start_tcp = false;
         }
+    }
+
+    std::ifstream conf(CONFIG_FILE);
+    if (conf.is_open()) {
+        start_tcp = false;
+        conf.close();
     }
 
     // Open logging into "/var/log/messages" or /var/log/syslog" or other configured...
