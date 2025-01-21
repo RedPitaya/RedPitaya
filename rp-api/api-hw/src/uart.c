@@ -148,7 +148,7 @@ int uart_SetSettings(){
         g_settings.c_oflag &= ~OPOST; /* raw output */
 
         g_settings.c_lflag = 0;               //  enable raw input instead of canonical,
-        g_settings.c_cc[VMIN]  = 1;           // Read at least 1 character
+        g_settings.c_cc[VMIN]  = 0;           // Read at least 1 character
         g_settings.c_cc[VTIME] = g_timeout;          // Wait indefinetly
 
         /* Baud rate fuctions
