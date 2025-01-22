@@ -117,6 +117,8 @@ CIntParameter outTemperatureRuntime[MAX_DAC_CHANNELS]      = INIT2("SOUR","_TEMP
 CIntParameter outTemperatureLatched[MAX_DAC_CHANNELS]      = INIT2("SOUR","_TEMP_LATCHED", CBaseParameter::RWSA, 0, 0, 0, 1);
 CIntParameter outImp[MAX_DAC_CHANNELS]                     = INIT2("SOUR","_IMPEDANCE", CBaseParameter::RW, 0, 0, 0, 1,isZModePresent() ? CONFIG_VAR : 0);
 
+CBooleanParameter outImpExt("SOUR_IMPEDANCE_EXT", CBaseParameter::RO, isZModePresent(), 0);
+
 CBooleanParameter pllControlEnable  ("EXT_CLOCK_ENABLE", CBaseParameter::RW, 0, 0,CONFIG_VAR);
 CIntParameter pllControlLocked      ("EXT_CLOCK_LOCKED", CBaseParameter::ROSA, 0, 0, 0, 1);
 

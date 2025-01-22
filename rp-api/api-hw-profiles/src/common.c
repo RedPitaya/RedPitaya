@@ -490,7 +490,7 @@ int hp_cmn_Print(profiles_t *p){
 	}
 
 	fprintf(stdout,"FAST DAC x5 gain: %d\n",p->is_DAC_gain_x5);
-	fprintf(stdout,"FAST DAC 50 Ohm mode: %d\n",p->is_DAC_50_Ohm_mode);
+	fprintf(stdout,"FAST DAC 50 Ohm mode (Hi-Z): %d\n",p->is_DAC_50_Ohm_mode);
 	fprintf(stdout,"FAST DAC overheating protection: %d\n",p->is_fast_dac_temp_protection);
 	fprintf(stdout,"FAST ADC/DAC calibration: %d\n",p->is_fast_calibration);
 	fprintf(stdout,"FAST ADC attenuator controller: %d\n",p->is_attenuator_controller_present);

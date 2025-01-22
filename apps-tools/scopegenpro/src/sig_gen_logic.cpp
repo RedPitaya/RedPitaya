@@ -29,6 +29,8 @@ CFloatParameter outAmplitude[MAX_DAC_CHANNELS]     = INIT2("SOUR","_VOLT", CBase
 CFloatParameter outOffset[MAX_DAC_CHANNELS]        = INIT2("SOUR","_VOLT_OFFS", CBaseParameter::RW, 0, 0, -LEVEL_AMPS_MAX, LEVEL_AMPS_MAX,CONFIG_VAR);
 CIntParameter   outFrequancy[MAX_DAC_CHANNELS]     = INIT2("SOUR","_FREQ_FIX", CBaseParameter::RW, 1000, 0, 1, (int)getDACRate(),CONFIG_VAR);
 
+
+
 CFloatParameter outShowOffset[MAX_DAC_CHANNELS]    = INIT2("GPOS_OFFSET_OUTPUT","", CBaseParameter::RW, 0, 0, -5000, 5000,CONFIG_VAR);
 CFloatParameter outScale[MAX_DAC_CHANNELS]         = INIT2("GPOS_SCALE_OUTPUT","", CBaseParameter::RW, 1, 0, 0.00005, 1000,CONFIG_VAR);
 
@@ -65,6 +67,8 @@ CIntParameter     outBurstDelay[MAX_DAC_CHANNELS]          = INIT2("SOUR","_BURS
 CBooleanParameter outGenSyncReset("SYNC_GEN", CBaseParameter::RW, false, 0);
 
 CFloatParameter outExtTrigDeb("SOUR_DEB", CBaseParameter::RW, 500, 0, 0.008, 8338,CONFIG_VAR);
+
+CBooleanParameter outImpExt("SOUR_IMPEDANCE_EXT", CBaseParameter::RO, is_z_present, 0);
 
 CIntParameter       outGain[MAX_DAC_CHANNELS] = INIT2("OSC_CH","_OUT_GAIN", CBaseParameter::RW, RP_GAIN_1X, 0, 0, 1,CONFIG_VAR);
 CStringParameter    outARBList                = CStringParameter("ARB_LIST", CBaseParameter::RW, loadARBList(), 0);

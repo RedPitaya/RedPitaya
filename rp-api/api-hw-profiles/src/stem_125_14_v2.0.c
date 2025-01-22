@@ -29,8 +29,8 @@ profiles_t stem_125_14_v2_0 = {
     .fast_dac_count_channels = 2,
     .fast_dac_is_sign = true,
     .fast_dac_bits = 14,
-    .fast_dac_gain[0] = 1,
-    .fast_dac_gain[1] = 1,
+    .fast_dac_gain[0] = 2,
+    .fast_dac_gain[1] = 2,
     .fast_dac_gain[2] = 0,
     .fast_dac_gain[3] = 0,
 
@@ -90,12 +90,12 @@ profiles_t stem_125_14_v2_0 = {
     .fast_adc_spectrum_resolution = 62500000,
 
     .fast_adc_full_scale = 1,
-    .fast_dac_full_scale = 1,
+    .fast_dac_full_scale = 2,
 
     .is_daisy_chain_clock_sync = false,
 
     .is_dma_mode_v0_94 = true,
-    .is_DAC_50_Ohm_mode = false,
+    .is_DAC_50_Ohm_mode = true,
     .is_split_osc_triggers = false,
 
     .gpio_N_count = 8,
