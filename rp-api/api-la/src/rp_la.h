@@ -94,6 +94,21 @@ typedef enum {
     LA_RISING_OR_FALLING   = 5
 } la_Trigger_Mode_t;
 
+
+/**
+ * Type representing digital input output pins.
+ */
+typedef enum {
+    LA_T_CHANNEL_1 = 0,  //!< DIO0_P
+    LA_T_CHANNEL_2 = 1,  //!< DIO1_P
+    LA_T_CHANNEL_3 = 2,  //!< DIO2_P
+    LA_T_CHANNEL_4 = 3,  //!< DIO3_P
+    LA_T_CHANNEL_5 = 4,  //!< DIO4_P
+    LA_T_CHANNEL_6 = 5,  //!< DIO5_P
+    LA_T_CHANNEL_7 = 6,  //!< DIO6_P
+    LA_T_CHANNEL_8 = 7,  //!< DIO7_P
+} la_Trigger_Channel_t;
+
 class CLAController;
 
 class CLACallback {
@@ -139,10 +154,10 @@ public:
     auto setMode(la_Mode_t mode) -> void;
 
     // Sets the trigger for the FPGA. Valid channels are 0 to 7
-    auto setTrigger(uint8_t channel, la_Trigger_Mode_t mode) -> void;
+    auto setTrigger(la_Trigger_Channel_t channel, la_Trigger_Mode_t mode) -> void;
 
     // Returns the trigger setting for the specified channel. Valid channels are 0 to 7
-    auto getTrigger(uint8_t channel) -> la_Trigger_Mode_t;
+    auto getTrigger(la_Trigger_Channel_t channel) -> la_Trigger_Mode_t;
 
     // Returns True if triggers on all channels are set to LA_NONE mode
     auto isNoTriggers() -> bool;

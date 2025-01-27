@@ -11,6 +11,8 @@
 
 %apply int { la_Mode_t }
 %apply int { la_Trigger_Mode_t }
+%apply int { la_Trigger_Channel_t }
+
 %apply bool *OUTPUT { bool * isTimeout };
 %apply int *OUTPUT { uint32_t * value };
 %apply float *OUTPUT { float * value };

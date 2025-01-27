@@ -211,7 +211,7 @@ auto CLAController::setMode(la_Mode_t mode) -> void{
     }
 }
 
-auto CLAController::setTrigger(uint8_t channel, la_Trigger_Mode_t mode) -> void{
+auto CLAController::setTrigger(la_Trigger_Channel_t channel, la_Trigger_Mode_t mode) -> void{
     if (channel >= MAX_LINES) {
         ERROR_LOG("The line is larger than acceptable")
         return;
@@ -248,7 +248,7 @@ auto CLAController::setTrigger(uint8_t channel, la_Trigger_Mode_t mode) -> void{
     }
 }
 
-auto CLAController::getTrigger(uint8_t channel) -> la_Trigger_Mode_t{
+auto CLAController::getTrigger(la_Trigger_Channel_t channel) -> la_Trigger_Mode_t{
     if (channel >= MAX_LINES) {
         ERROR_LOG("The line is larger than acceptable")
         return LA_ERROR;
