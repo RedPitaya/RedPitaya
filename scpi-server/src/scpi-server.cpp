@@ -45,9 +45,11 @@
 #define LISTEN_PORT 5000
 #define MAX_BUFF_SIZE 1024
 #define UART_RATE 115200
+#define UART_ARDUINO_RATE 115200
 
 #define SCPI_ERROR_QUEUE_SIZE 16
-#define CONFIG_FILE "/root/.scpi_uart"
+#define CONFIG_FILE_UART "/root/.scpi_uart"
+#define CONFIG_FILE_ARDUINO "/root/.scpi_arduino"
 
 constexpr char id0[] = "REDPITAYA";
 constexpr char id1[] = "INSTR2025";
@@ -221,7 +223,7 @@ std::thread* threadConnection(int connId){
     auto func = [](int connId) {
         int sockId = connId;
         scpi_error_t scpi_error_queue_data[SCPI_ERROR_QUEUE_SIZE];
-        auto ctx = initContext();
+        auto ctx = initContext(false);
         if (ctx == NULL) {
             close(sockId);
             return;
@@ -372,7 +374,7 @@ auto startUART() -> int {
 
 
     scpi_error_t scpi_error_queue_data[SCPI_ERROR_QUEUE_SIZE];
-    auto ctx = initContext();
+    auto ctx = initContext(false);
     if (ctx == NULL) {
         close(uart_fd);
         return (EXIT_FAILURE);
@@ -457,6 +459,127 @@ auto startUART() -> int {
     return (EXIT_SUCCESS);
 }
 
+
+auto startArduinoApi() -> int {
+
+    int read_size;
+    struct termios g_settings;
+
+    size_t message_len = MAX_BUFF_SIZE;
+
+    int uart_fd = open(device, O_RDWR | O_NOCTTY);
+
+    if(uart_fd == -1){
+        ERROR_LOG("Failed to open %s.",device);
+        return (EXIT_FAILURE);
+    }
+
+    tcflush(uart_fd, TCIFLUSH);
+    tcflush(uart_fd, TCIOFLUSH);
+    tcgetattr(uart_fd, &g_settings);
+    g_settings.c_cflag &= ~CSIZE;
+    g_settings.c_cflag |= CS8 | CLOCAL | CREAD; /* 8 bits */
+    g_settings.c_cflag &= ~CRTSCTS; // Disable flow control
+    g_settings.c_iflag &= ~(IXON | IXOFF | IXANY);          // Disable XON/XOFF flow control both input & output
+    g_settings.c_iflag &= ~(ICANON | ECHO | ECHOE | ISIG);  // Non Cannonical mode
+    g_settings.c_iflag &= ~ICRNL;
+    g_settings.c_oflag &= ~OPOST; /* raw output */
+
+    g_settings.c_lflag = 0;               //  enable raw input instead of canonical,
+    g_settings.c_cc[VMIN]  = 1;           // Read at least 1 character
+    g_settings.c_cc[VTIME]  = 0;
+    cfsetspeed(&g_settings, UART_ARDUINO_RATE);
+    tcsetattr(uart_fd, TCSANOW, &g_settings);
+
+
+    scpi_error_t scpi_error_queue_data[SCPI_ERROR_QUEUE_SIZE];
+    auto ctx = initContext(true);
+    if (ctx == NULL) {
+        close(uart_fd);
+        return (EXIT_FAILURE);
+    }
+
+    SCPI_Init(ctx,
+            ctx->cmdlist,
+            ctx->interface,
+            ctx->units,
+            id0,
+            id1,
+            id2,
+            id3,
+            ctx->buffer.data,
+            ctx->buffer.length,
+            scpi_error_queue_data,
+            SCPI_ERROR_QUEUE_SIZE);
+
+    ctx->user_context = &uart_fd;
+    ctx->binary_output = false;
+
+
+    std::vector<uint8_t> message_buff;
+    std::vector<uint8_t> buffer;
+    message_buff.resize(message_len);
+    buffer.resize(message_len);
+
+    // auto uart_protocol = getUARTProtocol();
+    // uart_protocol->setTimeout(5000);
+    size_t msg_end = 0;
+    //Receive a message from client
+    while( (read_size = read(uart_fd , buffer.data() , buffer.size())) > 0 )
+    {
+        if (app_exit) {
+            break;
+        }
+        // First make sure that message buffer is large enough
+        auto new_message_size = msg_end + read_size;
+        if (new_message_size >= message_buff.size()) {
+            message_buff.resize(new_message_size);
+            if (message_buff.size() != new_message_size){
+                rp_Log(nullptr,LOG_ERR, 0, "Not enough memory for buffer.");
+                break;
+            }
+        }
+
+        // Copy read buffer into message buffer
+        memcpy(&(message_buff.data()[msg_end]), buffer.data(), read_size);
+        msg_end += read_size;
+
+        // Now try to parse each command out
+        char *m = (char*)(message_buff.data());
+        size_t pos = 0;
+        while ((pos = getNextCommand(m, msg_end)) != 0) {
+            // Log out message
+            LogMessage(m, pos);
+
+            //Parse the message and return response
+            SCPI_Input(ctx, m, pos);
+            m += pos;
+            msg_end -= pos;
+        }
+        // Move the rest of the message to the beginning of the buffer
+        if ((char*)message_buff.data() != m && msg_end > 0) {
+            memmove(message_buff.data(), m, msg_end);
+        }
+
+        rp_Log(nullptr,LOG_INFO, 0, "Waiting for next client request.");
+    }
+
+    if(read_size == -1){
+        rp_Log(nullptr,LOG_ERR, 0, "Receive message failed (%s)", strerror(errno));
+        perror("Receive message failed");
+    }
+
+    if (uart_fd != -1){
+        tcflush(uart_fd, TCIFLUSH);
+        close(uart_fd);
+    }
+
+    delete[] ctx->buffer.data;
+    delete ctx;
+
+    return (EXIT_SUCCESS);
+}
+
 /**
  * Main daemon entrance point. Opens a socket and listens for any incoming connection.
  * When client connects, if forks the conversation into a new socket and the daemon (parent process)
@@ -468,17 +591,29 @@ auto startUART() -> int {
 int main(int argc, char *argv[]){
 
     bool start_tcp = true;
+    bool start_arduino = false;
 
     if (argc > 1){
         if (strncmp(argv[1], "-u", 2) == 0) {
             start_tcp = false;
         }
+        if (strncmp(argv[1], "-a", 2) == 0) {
+            start_tcp = false;
+            start_arduino = true;
+        }
     }
 
-    std::ifstream conf(CONFIG_FILE);
+    std::ifstream conf(CONFIG_FILE_UART);
     if (conf.is_open()) {
         start_tcp = false;
         conf.close();
+    }else{
+        std::ifstream conf(CONFIG_FILE_ARDUINO);
+        if (conf.is_open()) {
+            start_tcp = false;
+            start_arduino = true;
+            conf.close();
+        }
     }
 
     // Open logging into "/var/log/messages" or /var/log/syslog" or other configured...
@@ -518,7 +653,10 @@ int main(int argc, char *argv[]){
     if (start_tcp){
         ret = startTCP();
     }else{
-        ret = startUART();
+        if (start_arduino == false)
+            ret = startUART();
+        else
+            ret = startArduinoApi();
     }
 
     rp_sweep_api::rp_SWRelease();

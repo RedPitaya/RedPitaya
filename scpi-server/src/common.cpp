@@ -17,6 +17,7 @@
 #include <string>
 #include <math.h>
 #include <time.h>
+#include <sys/time.h>
 
 #include "scpi/parser.h"
 #include "scpi/units.h"
@@ -77,7 +78,7 @@ scpi_result_t RP_SetLogMode(scpi_t *context) {
     /* Set global units for acq scpi */
     g_logMode = (rp_scpi_log)choice;
 
-    RP_LOG_INFO("Successfully set scpi units.");
+    RP_LOG_INFO("Successfully set log mode %d.",g_logMode);
     return SCPI_RES_OK;
 }
 
@@ -204,13 +205,9 @@ scpi_result_t RP_Time(scpi_t *context){
         return SCPI_RES_ERR;
     }
 
-    struct timespec t_time;
-    if (clock_gettime (CLOCK_REALTIME, & t_time)){
-        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Error getting current time.");
-        return SCPI_RES_ERR;
-    }
-    time_t t_t = (time_t)t_time.tv_sec;
-    struct tm *time = gmtime(&t_t);
+    time_t rawtime;
+    time(&rawtime);
+    struct tm* time = localtime(&rawtime);
 
     time->tm_hour = hh;
     time->tm_min  = mm;
@@ -218,8 +215,8 @@ scpi_result_t RP_Time(scpi_t *context){
 
     time_t t = mktime(time);
     if (t != (time_t)(-1)){
-        struct timespec new_time = {t,0};
-        if (clock_settime(CLOCK_REALTIME, &new_time)){
+        struct timeval new_time = {t,0};
+        if (settimeofday(&new_time,nullptr) == -1){
             SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Error setting new time.");
             return SCPI_RES_ERR;
         }
@@ -234,13 +231,9 @@ scpi_result_t RP_Time(scpi_t *context){
 
 scpi_result_t RP_TimeQ(scpi_t *context){
 
-    struct timespec t_time;
-    if (clock_gettime (CLOCK_REALTIME, & t_time)){
-        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Error getting current time.");
-        return SCPI_RES_ERR;
-    }
-
-    struct tm *time = gmtime(&t_time.tv_sec);
+    time_t rawtime;
+    time(&rawtime);
+    struct tm* time = localtime(&rawtime);
 
     char buff[10];
     sprintf(buff,"%02d:%02d:%02d",time->tm_hour,time->tm_min,time->tm_sec);
@@ -283,14 +276,9 @@ scpi_result_t RP_Date(scpi_t *context){
         return SCPI_RES_ERR;
     }
 
-    struct timespec t_time;
-    if (clock_gettime (CLOCK_REALTIME, & t_time)){
-        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Error getting current date.");
-        return SCPI_RES_ERR;
-    }
-
-    time_t t_t = (time_t)t_time.tv_sec;
-    struct tm *time = gmtime(&t_t);
+    time_t rawtime;
+    time(&rawtime);
+    struct tm* time = localtime(&rawtime);
 
     time->tm_year = y - 1900;
     time->tm_mon  = m - 1;
@@ -298,8 +286,8 @@ scpi_result_t RP_Date(scpi_t *context){
 
     time_t t = mktime(time);
     if (t != (time_t)(-1)){
-        struct timespec new_time = {t,0};
-        if (clock_settime(CLOCK_REALTIME, &new_time)){
+        struct timeval new_time = {t,0};
+        if (settimeofday(&new_time,nullptr) == -1){
             SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Error setting new date.");
             return SCPI_RES_ERR;
         }
@@ -314,13 +302,9 @@ scpi_result_t RP_Date(scpi_t *context){
 
 scpi_result_t RP_DateQ(scpi_t *context){
 
-    struct timespec t_time;
-    if (clock_gettime (CLOCK_REALTIME, & t_time)){
-        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR,"Error getting current date.");
-        return SCPI_RES_ERR;
-    }
-
-    struct tm *time = gmtime(&t_time.tv_sec);
+    time_t rawtime;
+    time(&rawtime);
+    struct tm* time = localtime(&rawtime);
 
     char buff[40];
     sprintf(buff,"%d-%02d-%02d",time->tm_year + 1900,time->tm_mon + 1,time->tm_mday);

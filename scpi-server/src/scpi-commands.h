@@ -13,9 +13,11 @@
 #define SCPI_COMMANDS_H_
 
 #include "scpi/scpi.h"
+#include "uart_protocol.h"
 
 // extern scpi_t scpi_context;
 
-scpi_t* initContext();
+scpi_t* initContext(bool arduinoMode);
+UARTProtocol* getUARTProtocol();
 
 #endif /* SCPI_COMMANDS_H_ */

@@ -11,7 +11,8 @@
 <html lang="en">
 
 <head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"></meta>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    </meta>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -40,7 +41,9 @@
         <div id="loader"></div>
     </div>
     <div id="header">
-        <div id="ext_con_but"><img src="../assets/images/ext_conections_w.png" style="padding-top: 0px;width: 36px;height: 20px;padding-left: 0px;margin-left: 2px;margin-top: 2px;"></div>
+        <div id="ext_con_but"><img src="../assets/images/ext_conections_w.png"
+                style="padding-top: 0px;width: 36px;height: 20px;padding-left: 0px;margin-left: 2px;margin-top: 2px;">
+        </div>
         <div id="description">&nbsp;</div>
     </div>
     <div class="full-content">
@@ -48,7 +51,8 @@
             <div class="navbar navbar-inverse" role="navigation">
                 <div class="container">
                     <div class="navbar-header">
-                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                        <button type="button" class="navbar-toggle" data-toggle="collapse"
+                            data-target=".navbar-collapse">
                             <span class="sr-only">T</span>
                             <span class="icon-bar"></span>
                             <span class="icon-bar"></span>
@@ -73,7 +77,8 @@
                             <ul>
                                 <li>Enables remote control of Red Pitaya using MATLAB, Python, LabVIEW, or Scilab</li>
                                 <li>Provides complete access to Red Pitaya hardware functionalities
-                                    <br/> &nbsp;&nbsp;&nbsp;(GPIO, slow and fast DACs and ADCs, I2C, SPI, and UART)</li>
+                                    <br /> &nbsp;&nbsp;&nbsp;(GPIO, slow and fast DACs and ADCs, I2C, SPI, and UART)
+                                </li>
                                 <li>Supports WiFi or LAN remote interface</li>
                             </ul>
                         </div>
@@ -91,8 +96,13 @@
                         <div id="label-is-runnung" align=center style="font-size: 16pt; color: green; display: none;">
                             SCPI server is running... (IP="<span id="ip-addr">127.0.0.1</span>", port="5000")
                         </div>
-                        <div id="label-is-runnung-uart" align=center style="font-size: 16pt; color: green; display: none;">
+                        <div id="label-is-runnung-uart" align=center
+                            style="font-size: 16pt; color: green; display: none;">
                             SCPI server is running in UART mode
+                        </div>
+                        <div id="label-is-runnung-arduino" align=center
+                            style="font-size: 16pt; color: green; display: none;">
+                            SCPI server is running in Arduino mode
                         </div>
                         <div align="center">
                             <ul class="" style="display: flex;justify-content: center;">
@@ -102,13 +112,17 @@
                                 <li class="run_buttons" id="SCPI_RUN_UART">
                                     <a href="#" style="">RUN UART</a>
                                 </li>
+                                <li class="run_buttons" id="SCPI_RUN_ARDUINO">
+                                    <a href="#" style="">RUN ARDUINO</a>
+                                </li>
                                 <li class="run_buttons" id="SCPI_STOP" style="display:none;">
                                     <a href="#" id="a_stop">STOP</a>
                                 </li>
                             </ul>
                         </div>
                         <div align=center>
-                            Examples of how to control your Red Pitaya using MATLAB, Python, LabVIEW, or Scilab are available on the link below.
+                            Examples of how to control your Red Pitaya using MATLAB, Python, LabVIEW, or Scilab are
+                            available on the link below.
                             <div align="center">
                                 <ul class="">
                                     <li class="example_button" id="SCPI_EXAMPLES">
@@ -123,16 +137,21 @@
         </div>
     </div>
     <div>
-        <div id="sys_info_view" style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white; ">
-            FPS:<span id="fps_view">0</span> Throughput:<span id="throughput_view">0</span> CPU Load:<span id="cpu_load">0</span>
-            <br/> Memory total:<span id="totalmem_view">0</span> Free:<span id="freemem_view">0</span> Usage:<span id="usagemem_view">0</span>
+        <div id="sys_info_view"
+            style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white; ">
+            FPS:<span id="fps_view">0</span> Throughput:<span id="throughput_view">0</span> CPU Load:<span
+                id="cpu_load">0</span>
+            <br /> Memory total:<span id="totalmem_view">0</span> Free:<span id="freemem_view">0</span> Usage:<span
+                id="usagemem_view">0</span>
         </div>
     </div>
-    <div class="modal fade" id="feedback_error" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+    <div class="modal fade" id="feedback_error" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
                     <h4 class="modal-title" id="oops_label">Oops, something went wrong</h4>
                 </div>
                 <div class="modal-body" style="text-align: center; font-size: 18px;">
@@ -141,20 +160,24 @@
                 </div>
                 <div class="modal-footer">
                     <div class="bazaar-link" style="float: left; width: 50%;">
-                        <a href="#" style="border: 1px solid;  width: 100%" id="send_report_btn" data-dismiss="modal" class="list-group-item btn">Send report</a>
+                        <a href="#" style="border: 1px solid;  width: 100%" id="send_report_btn" data-dismiss="modal"
+                            class="list-group-item btn">Send report</a>
                     </div>
                     <div class="bazaar-link" style="float: left; width: 50%;">
-                        <a href="#" style="border: 1px solid;  width: 100%" id="restart_app_btn" data-dismiss="modal" class="list-group-item btn">Restart Application</a>
+                        <a href="#" style="border: 1px solid;  width: 100%" id="restart_app_btn" data-dismiss="modal"
+                            class="list-group-item btn">Restart Application</a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="modal fade" id="ext_connections_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+    <div class="modal fade" id="ext_connections_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel"
+        aria-hidden="true">
         <div class="modal-dialog" style="width: 700px;">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
                     <h4 class="modal-title" id="bazaar_naLabel">External Connections</h4>
                 </div>
                 <div class="modal-body" style="display: flex;">
@@ -162,7 +185,8 @@
                 </div>
                 <div class="modal-footer">
                     <div class="bazaar-link">
-                        <a href="#" data-dismiss="modal" id="disable_analytics" class="list-group-item exp_btn">Close</a>
+                        <a href="#" data-dismiss="modal" id="disable_analytics"
+                            class="list-group-item exp_btn">Close</a>
                     </div>
                 </div>
             </div>

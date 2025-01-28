@@ -40,7 +40,11 @@
 #include "scpi/units.h"
 #include "scpi/parser.h"
 
+#include "scpi-commands.h"
+
 bool RST_executed = FALSE;
+
+UARTProtocol g_arduino_protocol;
 
 /**
  * Interface general commands
@@ -54,7 +58,29 @@ size_t SCPI_Write(scpi_t * context, const char * data, size_t len) {
             size_t written =  write(fd, data, len);
             if (written < 0) {
                 syslog(LOG_ERR,
-                    "Failed to write into the socket. Should send %zu bytes. Could send only %zu bytes",
+                    "Failed to write. Should send %zu bytes. Could send only %zu bytes",
+                    len, written);
+                return total;
+            }
+
+            len -= written;
+            data += written;
+            total += written;
+        }
+    }
+    return total;
+}
+
+size_t SCPI_WriteUartProtocol(scpi_t * context, const char * data, size_t len) {
+
+    size_t total = 0;
+    if (context->user_context != NULL) {
+        int fd = *(int *)(context->user_context);
+        while (len > 0) {
+            size_t written = g_arduino_protocol.writeTo(fd,(uint8_t*)data,len);
+            if (written != len) {
+                syslog(LOG_ERR,
+                    "Failed to write into the uart protocol. Should send %zu bytes. Could send only %zu bytes",
                     len, written);
                 return total;
             }
@@ -525,11 +551,19 @@ static scpi_interface_t scpi_interface = {
     .reset   = SCPI_Reset,
 };
 
+static scpi_interface_t scpi_arduino_interface = {
+    .error   = SCPI_Error,
+    .write   = SCPI_WriteUartProtocol,
+    .control = SCPI_Control,
+    .flush   = SCPI_Flush,
+    .reset   = SCPI_Reset,
+};
+
 #define SCPI_INPUT_BUFFER_LENGTH 1024 * 512
 // static char scpi_input_buffer[SCPI_INPUT_BUFFER_LENGTH];
 
 
-scpi_t* initContext(){
+scpi_t* initContext(bool arduinoMode){
     _scpi_t *ctx = NULL;
     char *buffer = NULL;
     try{
@@ -550,10 +584,14 @@ scpi_t* initContext(){
     ctx->cmdlist = scpi_commands;
     ctx->buffer.data = buffer;
     ctx->buffer.length = SCPI_INPUT_BUFFER_LENGTH;
-    ctx->interface = &scpi_interface;
+    ctx->interface = arduinoMode ? & scpi_arduino_interface : &scpi_interface;
     ctx->units = scpi_units_def;
     // user_context will be pointer to socket
     ctx->user_context = NULL;
     // ctx->binary_output = false;
     return ctx;
+}
+
+UARTProtocol* getUARTProtocol(){
+    return &g_arduino_protocol;
 }
