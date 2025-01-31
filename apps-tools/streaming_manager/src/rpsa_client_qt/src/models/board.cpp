@@ -396,7 +396,7 @@ auto CBoard::getModel() -> QString
 
 auto CBoard::configManagerConnected(std::string host) -> void
 {
-	addLog("Connected to configuration server");
+	addLog("Connected to the configuration server");
 	Q_EMIT configManagerConnectedChanged();
 	getConfig();
 }
@@ -454,7 +454,7 @@ auto CBoard::getNewSettings(std::string host) -> void
 
 auto CBoard::sendSettings(std::string host) -> void
 {
-	QString msg = "Setted settings to server";
+	QString msg = "Settings sent to server";
 	addLog(msg);
 	m_configManager->sendSaveToFile(m_ip.toStdString());
 }
