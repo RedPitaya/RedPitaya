@@ -411,9 +411,9 @@ void updateFromFront(bool force){
 			auto dins_t = dins_trigger[i].Value();
 
 			if (enabled){
-				g_la_controller->setTrigger(i, (la_Trigger_Mode_t)dins_t);
+				g_la_controller->setTrigger((la_Trigger_Channel_t)i, (la_Trigger_Mode_t)dins_t);
 			}else{
-				g_la_controller->setTrigger(i, LA_NONE);
+				g_la_controller->setTrigger((la_Trigger_Channel_t)i, LA_NONE);
 			}
 		}
 
