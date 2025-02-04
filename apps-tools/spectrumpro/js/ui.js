@@ -247,4 +247,58 @@
         });
     }
 
+    UI.initUIItems = function(params) {
+        if (params['SOUR_IMPEDANCE_Z_MODE'] !== undefined){
+            if (params['SOUR_IMPEDANCE_Z_MODE'].value == false){
+                var nodes = document.getElementsByClassName("hi-z-mode");
+                [...nodes].forEach((element, index, array) => {
+                                        element.parentNode.removeChild(element);
+                                    });
+
+            }
+        }
+    };
+
+    UI.updateMaxLimitOnLoad = function(ch, value) {
+        if (SPEC.hi_z_mode == true) {
+            var max_amp = SPEC.gen_max_amp;
+            if (ch == "CH1") {
+                if (value == 0) {
+                    // Hi-Z mode
+                    $("#SOUR1_VOLT").attr("max", max_amp);
+                    $("#SOUR1_VOLT_OFFS").attr("max", max_amp);
+                    $("#SOUR1_VOLT_OFFS").attr("min", -1 * max_amp);
+                }else{
+                    // 50 omh mode
+                    $("#SOUR1_VOLT").attr("max", max_amp/ 2.0);
+                    $("#SOUR1_VOLT_OFFS").attr("max", max_amp / 2.0);
+                    $("#SOUR1_VOLT_OFFS").attr("min", -1 * max_amp / 2.0);
+                }
+            }
+    
+            if (ch == "CH2") {
+                if (value == 0) {
+                   // Hi-Z mode
+                    $("#SOUR2_VOLT").attr("max", max_amp);
+                    $("#SOUR2_VOLT_OFFS").attr("max", max_amp);
+                    $("#SOUR2_VOLT_OFFS").attr("min", -1 * max_amp);
+                }else{
+                    // 50 omh mode
+                    $("#SOUR2_VOLT").attr("max", max_amp / 2.0);
+                    $("#SOUR2_VOLT_OFFS").attr("max", max_amp / 2.0);
+                    $("#SOUR2_VOLT_OFFS").attr("min", -1 * max_amp / 2.0);
+                }
+    
+            }
+        }else{
+            var max_amp = SPEC.gen_max_amp;
+            $("#SOUR1_VOLT").attr("max", max_amp);
+            $("#SOUR1_VOLT_OFFS").attr("max", max_amp);
+            $("#SOUR1_VOLT_OFFS").attr("min", -1 * max_amp);
+            $("#SOUR2_VOLT").attr("max", max_amp);
+            $("#SOUR2_VOLT_OFFS").attr("max", max_amp);
+            $("#SOUR2_VOLT_OFFS").attr("min", -1 * max_amp);
+        }
+    }
+
 }(window.UI = window.UI || {}, jQuery));

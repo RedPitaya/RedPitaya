@@ -108,6 +108,8 @@
         SPEC.config.gen_enable = undefined;
         SPEC.channelsCount = 2;
         SPEC.arb_list = undefined;
+        SPEC.hi_z_mode = false;
+        SPEC.gen_max_amp = 1;
 
 
         // SPEC.compressed_data = 0;
@@ -171,6 +173,7 @@
                         UI.updateARBFunc(SPEC.arb_list)
 
                     UI.initHandlers();
+                    UI.initUIItems(_value);
                     SPEC.initHandlers();
                     SPEC.waterfalls[0] = $.createWaterfall($("#waterfall_ch1"), $('#waterfall-holder_ch1').width(), 60);
                     SPEC.waterfalls[1] = $.createWaterfall($("#waterfall_ch2"), $('#waterfall-holder_ch2').width(), 60);
@@ -407,19 +410,7 @@
             }
         }
 
-        SPEC.sweepResetButton = function(new_params) {
-            if ('SOUR1_SWEEP_STATE' in new_params){
-                SPEC.state.sweep_ch1 = new_params['SOUR1_SWEEP_STATE'].value
-            }
-            if ('SOUR2_SWEEP_STATE' in new_params){
-                SPEC.state.sweep_ch2 = new_params['SOUR2_SWEEP_STATE'].value
-            }
-            if (SPEC.state.sweep_ch1 || SPEC.state.sweep_ch2){
-                $(".sweep_button").show();
-            }else{
-                $(".sweep_button").hide();
-            }
-        }
+        
 
         SPEC.sweepTime = function(new_params) {
             if ('SOUR1_SWEEP_TIME' in new_params){
@@ -570,9 +561,11 @@
         SPEC.param_callbacks["SOUR3_VOLT_OFFS"] = SPEC.src3VoltOffset;
         SPEC.param_callbacks["SOUR4_VOLT_OFFS"] = SPEC.src4VoltOffset;
         SPEC.param_callbacks["xAxisLogMode"] = SPEC.setXAxisMode;
-        SPEC.param_callbacks["EXT_CLOCK_ENABLE"] = SPEC.setPllMode;
-        SPEC.param_callbacks["SOUR1_SWEEP_STATE"] = SPEC.sweepResetButton;
-        SPEC.param_callbacks["SOUR2_SWEEP_STATE"] = SPEC.sweepResetButton;
+        SPEC.param_callbacks["EXT_CLOCK_ENABLE"] = SPEC.setPllMode;       
+        SPEC.param_callbacks["SOUR1_IMPEDANCE"] = GEN.sour1Imp;
+        SPEC.param_callbacks["SOUR2_IMPEDANCE"] = GEN.sour2Imp;
+        SPEC.param_callbacks["SOUR1_SWEEP_STATE"] = GEN.sweepResetButton;
+        SPEC.param_callbacks["SOUR2_SWEEP_STATE"] = GEN.sweepResetButton;
         SPEC.param_callbacks["SOUR1_SWEEP_TIME"] = SPEC.sweepTime;
         SPEC.param_callbacks["SOUR2_SWEEP_TIME"] = SPEC.sweepTime;
         SPEC.param_callbacks["SOUR1_RISE"] = SPEC.riseFallTime;
@@ -618,6 +611,14 @@
         SPEC.processParameters = function(new_params) {
             var old_params = $.extend(true, {}, CLIENT.params.orig);
 
+            if (new_params['SOUR_VOLT_MAX']){
+                SPEC.gen_max_amp = new_params['SOUR_VOLT_MAX'].value
+            }
+
+            if (new_params['SOUR_IMPEDANCE_Z_MODE']){
+                SPEC.hi_z_mode = new_params['SOUR_IMPEDANCE_Z_MODE'].value
+            }
+
             if (new_params['ARB_LIST'] && SPEC.arb_list === undefined){
                 SPEC.arb_list = new_params['ARB_LIST'].value;
                 if (SPEC.arb_list !== "")
@@ -633,11 +634,11 @@
             }
 
             if (new_params['SOUR1_IMPEDANCE'] && new_params['SOUR1_IMPEDANCE'].value != undefined) {
-                SPEC.updateMaxLimitOnLoad("CH1", new_params['SOUR1_IMPEDANCE'].value);
+                UI.updateMaxLimitOnLoad("CH1", new_params['SOUR1_IMPEDANCE'].value);
             }
 
             if (new_params['SOUR2_IMPEDANCE'] && new_params['SOUR2_IMPEDANCE'].value != undefined) {
-                SPEC.updateMaxLimitOnLoad("CH2", new_params['SOUR2_IMPEDANCE'].value);
+                UI.updateMaxLimitOnLoad("CH2", new_params['SOUR2_IMPEDANCE'].value);
             }
 
             if (new_params['EXT_CLOCK_LOCKED'] && new_params['EXT_CLOCK_LOCKED'].value != undefined) {

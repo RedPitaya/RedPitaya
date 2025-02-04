@@ -1,19 +1,13 @@
 (function(SPEC, $, undefined) {
     SPEC.updateInterfaceForZ20 = function(model) {
         if (model !== undefined) {
-                if (model === "Z20") {
+                if (model === "Z20_122_16") {
                     SPEC.rp_model = model;
                     SPEC.config.xmax = 122/2;
                     $("#SOUR1_FREQ_FIX").attr("max", 122.880e6/2);
                     $("#SOUR2_FREQ_FIX").attr("max", 122.880e6/2);
                     $("#SOUR1_FREQ_FIX").attr("min", 300000);
                     $("#SOUR2_FREQ_FIX").attr("min", 300000);
-                    $("#SOUR1_VOLT").attr("max", 0.5);
-                    $("#SOUR2_VOLT").attr("max", 0.5);
-                    $("#SOUR1_VOLT_OFFS").attr("max", 0.5);
-                    $("#SOUR2_VOLT_OFFS").attr("max", 0.5);
-                    $("#SOUR1_VOLT_OFFS").attr("min", -0.5);
-                    $("#SOUR2_VOLT_OFFS").attr("min", -0.5);
 
                     var nodes = document.getElementsByClassName("122_16_block_remove");
                     [...nodes].forEach((element, index, array) => {

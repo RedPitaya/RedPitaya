@@ -379,6 +379,14 @@ OSC.updateMaxLimitOnLoad = function(ch, value) {
             }
 
         }
+    }else{
+        var max_amp = SPEC.gen_max_amp;
+        $("#SOUR1_VOLT").attr("max", max_amp);
+        $("#SOUR1_VOLT_OFFS").attr("max", max_amp);
+        $("#SOUR1_VOLT_OFFS").attr("min", -1 * max_amp);
+        $("#SOUR2_VOLT").attr("max", max_amp);
+        $("#SOUR2_VOLT_OFFS").attr("max", max_amp);
+        $("#SOUR2_VOLT_OFFS").attr("min", -1 * max_amp);
     }
 }
 
