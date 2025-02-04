@@ -906,5 +906,16 @@
 
     }
 
+    OSC.initUIItems = function(params) {
+        if (params['SOUR_IMPEDANCE_Z_MODE'] !== undefined){
+            if (params['SOUR_IMPEDANCE_Z_MODE'].value == false){
+                var nodes = document.getElementsByClassName("hi-z-mode");
+                [...nodes].forEach((element, index, array) => {
+                                        element.parentNode.removeChild(element);
+                                    });
+
+            }
+        }
+    };    
 
 }(window.OSC = window.OSC || {}, jQuery));

@@ -44,52 +44,7 @@
         }
     }
 
-    OSC.updateMaxLimitOnLoadHandler = function(new_params , param_name) {
-        if (param_name === "SOUR1_IMPEDANCE"){
-            OSC.updateMaxLimitOnLoad("CH1",new_params['SOUR1_IMPEDANCE'].value);
-        }
-
-        if (param_name === "SOUR2_IMPEDANCE"){
-            OSC.updateMaxLimitOnLoad("CH2",new_params['SOUR2_IMPEDANCE'].value);
-        }
-        var field = $('#' + param_name);
-        if (field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
-            field.val(new_params[param_name].value);
-        }
-    }
-
-    OSC.updateMaxLimitOnLoad = function(ch,value) {
-        if (OSC.rp_model == "Z20_250_12" || OSC.rp_model == "Z20_250_12_120") {
-            if (ch == "CH1") {
-                if (value == 0) {
-                    // Hi-Z mode
-                    $("#SOUR1_VOLT").attr("max", 10);
-                    $("#SOUR1_VOLT_OFFS").attr("max", 10);
-                    $("#SOUR1_VOLT_OFFS").attr("min", -10);
-                }else{
-                    // 50 omh mode
-                    $("#SOUR1_VOLT").attr("max", 5);
-                    $("#SOUR1_VOLT_OFFS").attr("max", 5);
-                    $("#SOUR1_VOLT_OFFS").attr("min", -5);
-                }
-            }
-
-            if (ch == "CH2") {
-                if (value == 0) {
-                   // Hi-Z mode
-                   $("#SOUR2_VOLT").attr("max", 10);
-                    $("#SOUR2_VOLT_OFFS").attr("max", 10);
-                    $("#SOUR2_VOLT_OFFS").attr("min", -10);
-                }else{
-                    // 50 omh mode
-                    $("#SOUR2_VOLT").attr("max", 5);
-                    $("#SOUR2_VOLT_OFFS").attr("max", 5);
-                    $("#SOUR2_VOLT_OFFS").attr("min", -5);
-                }
-
-            }
-        }
-    }
+    
 
 
 

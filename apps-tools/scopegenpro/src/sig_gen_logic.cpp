@@ -57,7 +57,7 @@ CIntParameter outTriggerSource[MAX_DAC_CHANNELS]           = INIT2("SOUR","_TRIG
 
 CIntParameter outTemperatureRuntime[MAX_DAC_CHANNELS]      = INIT2("SOUR","_TEMP_RUNTIME", CBaseParameter::RW, 0, 0, 0, 1);
 CIntParameter outTemperatureLatched[MAX_DAC_CHANNELS]      = INIT2("SOUR","_TEMP_LATCHED", CBaseParameter::RW, 0, 0, 0, 1);
-CIntParameter outImp[MAX_DAC_CHANNELS]                     = INIT2("SOUR","_IMPEDANCE", CBaseParameter::RW, 0, 0, 0, 1,is_z_present ? CONFIG_VAR : 0);
+CIntParameter outImp[MAX_DAC_CHANNELS]                     = INIT2("SOUR","_IMPEDANCE", CBaseParameter::RW, 0, 0, 0, 1, is_z_present ? CONFIG_VAR : 0);
 
 CBooleanParameter outBurstState[MAX_DAC_CHANNELS]          = INIT2("SOUR","_BURST_STATE", CBaseParameter::RW, false, 0,CONFIG_VAR);
 CIntParameter     outBurstCount[MAX_DAC_CHANNELS]          = INIT2("SOUR","_BURST_COUNT", CBaseParameter::RW, 1, 0, 1, 50000,CONFIG_VAR);
@@ -68,7 +68,8 @@ CBooleanParameter outGenSyncReset("SYNC_GEN", CBaseParameter::RW, false, 0);
 
 CFloatParameter outExtTrigDeb("SOUR_DEB", CBaseParameter::RW, 500, 0, 0.008, 8338,CONFIG_VAR);
 
-CBooleanParameter outImpExt("SOUR_IMPEDANCE_EXT", CBaseParameter::RO, is_z_present, 0);
+CBooleanParameter outImpZmode("SOUR_IMPEDANCE_Z_MODE", CBaseParameter::RO, is_z_present, 0);
+CFloatParameter outAmplitudeMax("SOUR_VOLT_MAX", CBaseParameter::RO, LEVEL_AMPS_MAX , 0, LEVEL_AMPS_MAX, LEVEL_AMPS_MAX);
 
 CIntParameter       outGain[MAX_DAC_CHANNELS] = INIT2("OSC_CH","_OUT_GAIN", CBaseParameter::RW, RP_GAIN_1X, 0, 0, 1,CONFIG_VAR);
 CStringParameter    outARBList                = CStringParameter("ARB_LIST", CBaseParameter::RW, loadARBList(), 0);

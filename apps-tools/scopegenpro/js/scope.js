@@ -81,6 +81,8 @@
     OSC.rp_model = "";
     OSC.adc_channes = 2;
     OSC.adc_max_rate = 0;
+    OSC.high_z_mode = false;
+    OSC.gen_max_amp = 0;
     OSC.arb_list = undefined;
     OSC.previousPageUrl = undefined;
     OSC.config.debug = false
@@ -356,7 +358,7 @@
     setInterval(guiHandler, 2);
     setInterval(parametersHandler, 2);
 
-    OSC.setModel = function(_value) {
+    OSC.setModel = function(_value,params) {
         if (OSC.rp_model === "") {
             console.log("Model",_value.value)
             $('#BODY').load((_value.value === "Z20_125_4CH" ? "4ch_adc.html" : "2ch_adc.html"), function() {
@@ -374,6 +376,7 @@
                 if (OSC.arb_list !== undefined)
                     OSC.updateARBFunc(OSC.arb_list)
                 OSC.initUI();
+                OSC.initUIItems(params);
                 OSC.initCursors();
                 OSC.initCursorsXY();
                 OSC.initOSCHandlers();
@@ -828,6 +831,14 @@
             OSC.adc_max_rate = new_params['ADC_RATE'].value;
         }
 
+        if (new_params['SOUR_IMPEDANCE_Z_MODE']){
+            OSC.high_z_mode = new_params['SOUR_IMPEDANCE_Z_MODE'].value;
+        }
+
+        if (new_params['SOUR_VOLT_MAX']){
+            OSC.gen_max_amp = new_params['SOUR_VOLT_MAX'].value;
+        }
+
         if (new_params['ARB_LIST'] && OSC.arb_list === undefined){
             OSC.arb_list = new_params['ARB_LIST'].value;
             if (OSC.arb_list !== "")
@@ -855,7 +866,7 @@
 
 
         if (new_params['RP_MODEL_STR']){
-            if (!OSC.setModel(new_params['RP_MODEL_STR']))
+            if (!OSC.setModel(new_params['RP_MODEL_STR'],new_params))
                 return
         }else{
             if (OSC.rp_model === ""){
