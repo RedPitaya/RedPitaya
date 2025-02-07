@@ -20,9 +20,9 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 /** @name Error codes
  *  Various error codes returned by the API.
@@ -30,19 +30,19 @@ extern "C" {
 ///@{
 
 /** Success */
-#define RP_HP_OK     0
+#define RP_HP_OK 0
 /** Bad alloc */
-#define RP_HP_EAL    1
+#define RP_HP_EAL 1
 /** Unknown error */
-#define RP_HP_EU     2
+#define RP_HP_EU 2
 /** Error read eeprom */
-#define RP_HP_ERE    3
+#define RP_HP_ERE 3
 /** Error read model */
-#define RP_HP_ERM    4
+#define RP_HP_ERM 4
 /** Error model undefined */
-#define RP_HP_EMU    5
+#define RP_HP_EMU 5
 /** Error channel index */
-#define RP_HP_ECI    6
+#define RP_HP_ECI 6
 
 ///@}
 
@@ -50,52 +50,49 @@ extern "C" {
  * List of board models
  */
 typedef enum {
-    STEM_125_10_v1_0            = 0,
-    STEM_125_14_v1_0            = 1,
-    STEM_125_14_v1_1            = 2,
-    STEM_122_16SDR_v1_0         = 3,
-    STEM_122_16SDR_v1_1         = 4,
-    STEM_125_14_LN_v1_1         = 5,
-    STEM_125_14_Z7020_v1_0      = 6,
-    STEM_125_14_Z7020_LN_v1_1   = 7,
-    STEM_125_14_Z7020_4IN_v1_0  = 8,
-    STEM_125_14_Z7020_4IN_v1_2  = 9,
-    STEM_125_14_Z7020_4IN_v1_3  = 10,
-    STEM_250_12_v1_0            = 11,
-    STEM_250_12_v1_1            = 12,
-    STEM_250_12_v1_2            = 13,
-    STEM_250_12_120             = 14,
-    STEM_250_12_v1_2a           = 15,
-    STEM_250_12_v1_2b           = 16,
-    STEM_125_14_LN_BO_v1_1      = 17,
-    STEM_125_14_LN_CE1_v1_1     = 18,
-    STEM_125_14_LN_CE2_v1_1     = 19,
+    STEM_125_10_v1_0 = 0,
+    STEM_125_14_v1_0 = 1,
+    STEM_125_14_v1_1 = 2,
+    STEM_122_16SDR_v1_0 = 3,
+    STEM_122_16SDR_v1_1 = 4,
+    STEM_125_14_LN_v1_1 = 5,
+    STEM_125_14_Z7020_v1_0 = 6,
+    STEM_125_14_Z7020_LN_v1_1 = 7,
+    STEM_125_14_Z7020_4IN_v1_0 = 8,
+    STEM_125_14_Z7020_4IN_v1_2 = 9,
+    STEM_125_14_Z7020_4IN_v1_3 = 10,
+    STEM_250_12_v1_0 = 11,
+    STEM_250_12_v1_1 = 12,
+    STEM_250_12_v1_2 = 13,
+    STEM_250_12_120 = 14,
+    STEM_250_12_v1_2a = 15,
+    STEM_250_12_v1_2b = 16,
+    STEM_125_14_LN_BO_v1_1 = 17,
+    STEM_125_14_LN_CE1_v1_1 = 18,
+    STEM_125_14_LN_CE2_v1_1 = 19,
 
-    STEM_125_14_v2_0            = 20,
-    STEM_125_14_Pro_v2_0        = 21,
-    STEM_125_14_Z7020_Pro_v2_0  = 22,
-    STEM_125_14_Z7020_Ind_v2_0  = 23,
-    STEM_125_14_Z7020_Pro_v1_0  = 24,     // Prototype
+    STEM_125_14_v2_0 = 20,
+    STEM_125_14_Pro_v2_0 = 21,
+    STEM_125_14_Z7020_Pro_v2_0 = 22,
+    STEM_125_14_Z7020_Ind_v2_0 = 23,
+    STEM_125_14_Z7020_Pro_v1_0 = 24,  // Prototype
 
-    STEM_125_14_Z7020_LL_v1_1   = 25,
-    STEM_65_16_Z7020_LL_v1_1    = 26
-}  rp_HPeModels_t;
+    STEM_125_14_Z7020_LL_v1_1 = 25,
+    STEM_65_16_Z7020_LL_v1_1 = 26
+} rp_HPeModels_t;
 
 /**
  * List of CPU models
  */
-typedef enum {
-    Z7010 = 0,
-    Z7020 = 1
-}  rp_HPeZynqModels_t;
+typedef enum { Z7010 = 0, Z7020 = 1 } rp_HPeZynqModels_t;
 
 /**
  * List of gain mode
  */
 typedef enum {
-    RP_HP_ADC_GAIN_NORMAL  = 0, // LV mode, used by default
-    RP_HP_ADC_GAIN_HIGH    = 1
-}  rp_HPADCGainMode_t;
+    RP_HP_ADC_GAIN_NORMAL = 0,  // LV mode, used by default
+    RP_HP_ADC_GAIN_HIGH = 1
+} rp_HPADCGainMode_t;
 
 /** @name General
  */
@@ -106,29 +103,28 @@ typedef enum {
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error..
 */
-int rp_HPGetModel(rp_HPeModels_t *_out_value);
+int rp_HPGetModel(rp_HPeModels_t* _out_value);
 
 /**
 * Returns the model name. Return char array with zero terminate value.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetModelName(char **_no_free_value);
+int rp_HPGetModelName(char** _no_free_value);
 
 /**
 * Returns the model for eeprom. Return char array with zero terminate value.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetModelEEPROM(char **_no_free_value);
-
+int rp_HPGetModelEEPROM(char** _no_free_value);
 
 /**
 * Returns the mac address  fro ethernet stored in eeprom. Return char array with zero terminate value.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetModelETH_MAC_Address(char **_no_free_value);
+int rp_HPGetModelETH_MAC_Address(char** _no_free_value);
 
 /**
 * Returns the zynq model
@@ -136,7 +132,7 @@ int rp_HPGetModelETH_MAC_Address(char **_no_free_value);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetZynqModel(rp_HPeZynqModels_t *_out_value);
+int rp_HPGetZynqModel(rp_HPeZynqModels_t* _out_value);
 rp_HPeZynqModels_t rp_HPGetZynqModelOrDefault();
 
 /**
@@ -145,7 +141,7 @@ rp_HPeZynqModels_t rp_HPGetZynqModelOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetDDRSize(uint32_t *_out_value);
+int rp_HPGetDDRSize(uint32_t* _out_value);
 uint32_t rp_HPGetDDRSizeOrDefault();
 
 /**
@@ -154,9 +150,8 @@ uint32_t rp_HPGetDDRSizeOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetBaseSpeedHz(uint32_t *_out_value);
+int rp_HPGetBaseSpeedHz(uint32_t* _out_value);
 uint32_t rp_HPGetBaseSpeedHzOrDefault();
-
 
 /**
 * Returns Full Scale of ADC chip
@@ -164,7 +159,7 @@ uint32_t rp_HPGetBaseSpeedHzOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetHWADCFullScale(float *_out_value);
+int rp_HPGetHWADCFullScale(float* _out_value);
 float rp_HPGetHWADCFullScaleOrDefault();
 
 /**
@@ -173,7 +168,7 @@ float rp_HPGetHWADCFullScaleOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetHWDACFullScale(float *_out_value);
+int rp_HPGetHWDACFullScale(float* _out_value);
 float rp_HPGetHWDACFullScaleOrDefault();
 
 /**
@@ -182,7 +177,7 @@ float rp_HPGetHWDACFullScaleOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetBaseFastADCSpeedHz(uint32_t *_out_value);
+int rp_HPGetBaseFastADCSpeedHz(uint32_t* _out_value);
 uint32_t rp_HPGetBaseFastADCSpeedHzOrDefault();
 
 /**
@@ -191,7 +186,7 @@ uint32_t rp_HPGetBaseFastADCSpeedHzOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetSpectrumFastADCSpeedHz(uint32_t *_out_value);
+int rp_HPGetSpectrumFastADCSpeedHz(uint32_t* _out_value);
 uint32_t rp_HPGetSpectrumFastADCSpeedHzOrDefault();
 
 /**
@@ -200,7 +195,7 @@ uint32_t rp_HPGetSpectrumFastADCSpeedHzOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetFastADCChannelsCount(uint8_t *_out_value);
+int rp_HPGetFastADCChannelsCount(uint8_t* _out_value);
 uint8_t rp_HPGetFastADCChannelsCountOrDefault();
 
 /**
@@ -209,7 +204,7 @@ uint8_t rp_HPGetFastADCChannelsCountOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetFastADCIsSigned(bool *_out_value);
+int rp_HPGetFastADCIsSigned(bool* _out_value);
 bool rp_HPGetFastADCIsSignedOrDefault();
 
 /**
@@ -218,7 +213,7 @@ bool rp_HPGetFastADCIsSignedOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetFastADCBits(uint8_t *_out_value);
+int rp_HPGetFastADCBits(uint8_t* _out_value);
 uint8_t rp_HPGetFastADCBitsOrDefault();
 
 /**
@@ -227,8 +222,8 @@ uint8_t rp_HPGetFastADCBitsOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetFastADCGain(uint8_t _in_channel,rp_HPADCGainMode_t _in_mode,float *_out_value);
-float rp_HPGetFastADCGainOrDefault(uint8_t channel,rp_HPADCGainMode_t mode);
+int rp_HPGetFastADCGain(uint8_t _in_channel, rp_HPADCGainMode_t _in_mode, float* _out_value);
+float rp_HPGetFastADCGainOrDefault(uint8_t channel, rp_HPADCGainMode_t mode);
 
 /**
 * Returns the generator presence flag
@@ -236,7 +231,7 @@ float rp_HPGetFastADCGainOrDefault(uint8_t channel,rp_HPADCGainMode_t mode);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPIsFastDAC_Present(bool *_out_value);
+int rp_HPIsFastDAC_Present(bool* _out_value);
 bool rp_HPIsFastDAC_PresentOrDefault();
 
 /**
@@ -245,7 +240,7 @@ bool rp_HPIsFastDAC_PresentOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetFastDACIsTempProtection(bool *_out_value);
+int rp_HPGetFastDACIsTempProtection(bool* _out_value);
 bool rp_HPGetFastDACIsTempProtectionOrDefault();
 
 /**
@@ -254,7 +249,7 @@ bool rp_HPGetFastDACIsTempProtectionOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetBaseFastDACSpeedHz(uint32_t *_out_value);
+int rp_HPGetBaseFastDACSpeedHz(uint32_t* _out_value);
 uint32_t rp_HPGetBaseFastDACSpeedHzOrDefault();
 
 /**
@@ -263,7 +258,7 @@ uint32_t rp_HPGetBaseFastDACSpeedHzOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetFastDACChannelsCount(uint8_t *_out_value);
+int rp_HPGetFastDACChannelsCount(uint8_t* _out_value);
 uint8_t rp_HPGetFastDACChannelsCountOrDefault();
 
 /**
@@ -272,7 +267,7 @@ uint8_t rp_HPGetFastDACChannelsCountOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetFastDACIsSigned(bool *_out_value);
+int rp_HPGetFastDACIsSigned(bool* _out_value);
 bool rp_HPGetFastDACIsSignedOrDefault();
 
 /**
@@ -281,18 +276,17 @@ bool rp_HPGetFastDACIsSignedOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetFastDACBits(uint8_t *_out_value);
+int rp_HPGetFastDACBits(uint8_t* _out_value);
 uint8_t rp_HPGetFastDACBitsOrDefault();
 
 /**
-* Returns the gain for each channel in Volt
-* Function rp_HPGetFastDACGainOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* Returns Full Scale for output, without additional multipliers.
+* Function rp_HPGetFastDACOutFullScaleOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetFastDACGain(uint8_t channel,float *_out_value);
-float rp_HPGetFastDACGainOrDefault(uint8_t channel);
-
+int rp_HPGetFastDACOutFullScale(uint8_t channel, float* _out_value);
+float rp_HPGetFastDACOutFullScaleOrDefault(uint8_t channel);
 
 /**
 * Returns AC and DC mode support for ADC inputs
@@ -300,7 +294,7 @@ float rp_HPGetFastDACGainOrDefault(uint8_t channel);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetFastADCIsLV_HV(bool *_out_value);
+int rp_HPGetFastADCIsLV_HV(bool* _out_value);
 bool rp_HPGetFastADCIsLV_HVOrDefault();
 
 /**
@@ -309,7 +303,7 @@ bool rp_HPGetFastADCIsLV_HVOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetFastADCIsAC_DC(bool *_out_value);
+int rp_HPGetFastADCIsAC_DC(bool* _out_value);
 bool rp_HPGetFastADCIsAC_DCOrDefault();
 
 /**
@@ -318,9 +312,8 @@ bool rp_HPGetFastADCIsAC_DCOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetFastADCIsFilterPresent(bool *_out_value);
+int rp_HPGetFastADCIsFilterPresent(bool* _out_value);
 bool rp_HPGetFastADCIsFilterPresentOrDefault();
-
 
 /**
 * Returns the number of channels for slow ADC
@@ -328,7 +321,7 @@ bool rp_HPGetFastADCIsFilterPresentOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetSlowADCChannelsCount(uint8_t *_out_value);
+int rp_HPGetSlowADCChannelsCount(uint8_t* _out_value);
 uint8_t rp_HPGetSlowADCChannelsCountOrDefault();
 
 /**
@@ -337,7 +330,7 @@ uint8_t rp_HPGetSlowADCChannelsCountOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetSlowADCIsSigned(uint8_t channel,bool *_out_value);
+int rp_HPGetSlowADCIsSigned(uint8_t channel, bool* _out_value);
 bool rp_HPGetSlowADCIsSignedOrDefault(uint8_t channel);
 
 /**
@@ -346,7 +339,7 @@ bool rp_HPGetSlowADCIsSignedOrDefault(uint8_t channel);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetSlowADCBits(uint8_t channel,uint8_t *_out_value);
+int rp_HPGetSlowADCBits(uint8_t channel, uint8_t* _out_value);
 uint8_t rp_HPGetSlowADCBitsOrDefault(uint8_t channel);
 
 /**
@@ -355,7 +348,7 @@ uint8_t rp_HPGetSlowADCBitsOrDefault(uint8_t channel);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetSlowADCFullScale(uint8_t channel,float *_out_value);
+int rp_HPGetSlowADCFullScale(uint8_t channel, float* _out_value);
 float rp_HPGetSlowADCFullScaleOrDefault(uint8_t channel);
 
 /**
@@ -364,7 +357,7 @@ float rp_HPGetSlowADCFullScaleOrDefault(uint8_t channel);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetSlowDACChannelsCount(uint8_t *_out_value);
+int rp_HPGetSlowDACChannelsCount(uint8_t* _out_value);
 uint8_t rp_HPGetSlowDACChannelsCountOrDefault();
 
 /**
@@ -373,7 +366,7 @@ uint8_t rp_HPGetSlowDACChannelsCountOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetSlowDACIsSigned(uint8_t channel,bool *_out_value);
+int rp_HPGetSlowDACIsSigned(uint8_t channel, bool* _out_value);
 bool rp_HPGetSlowDACIsSignedOrDefault(uint8_t channel);
 
 /**
@@ -382,7 +375,7 @@ bool rp_HPGetSlowDACIsSignedOrDefault(uint8_t channel);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetSlowDACBits(uint8_t channel,uint8_t *_out_value);
+int rp_HPGetSlowDACBits(uint8_t channel, uint8_t* _out_value);
 uint8_t rp_HPGetSlowDACBitsOrDefault(uint8_t channel);
 
 /**
@@ -391,9 +384,8 @@ uint8_t rp_HPGetSlowDACBitsOrDefault(uint8_t channel);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetSlowDACFullScale(uint8_t channel,float *_out_value);
+int rp_HPGetSlowDACFullScale(uint8_t channel, float* _out_value);
 float rp_HPGetSlowDACFullScaleOrDefault(uint8_t channel);
-
 
 /**
 * Returns the presence of the generator amplifier at x5
@@ -401,7 +393,7 @@ float rp_HPGetSlowDACFullScaleOrDefault(uint8_t channel);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetIsGainDACx5(bool *_out_value);
+int rp_HPGetIsGainDACx5(bool* _out_value);
 bool rp_HPGetIsGainDACx5OrDefault();
 
 /**
@@ -410,7 +402,7 @@ bool rp_HPGetIsGainDACx5OrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetIsDAC50OhmMode(bool *_out_value);
+int rp_HPGetIsDAC50OhmMode(bool* _out_value);
 bool rp_HPGetIsDAC50OhmModeOrDefault();
 
 /**
@@ -419,7 +411,7 @@ bool rp_HPGetIsDAC50OhmModeOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetIsCalibrationLogicPresent(bool *_out_value);
+int rp_HPGetIsCalibrationLogicPresent(bool* _out_value);
 bool rp_HPGetIsCalibrationLogicPresentOrDefault();
 
 /**
@@ -428,7 +420,7 @@ bool rp_HPGetIsCalibrationLogicPresentOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetIsPLLControlEnable(bool *_out_value);
+int rp_HPGetIsPLLControlEnable(bool* _out_value);
 bool rp_HPGetIsPLLControlEnableOrDefault();
 
 /**
@@ -437,7 +429,7 @@ bool rp_HPGetIsPLLControlEnableOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetIsAttenuatorControllerPresent(bool *_out_value);
+int rp_HPGetIsAttenuatorControllerPresent(bool* _out_value);
 bool rp_HPGetIsAttenuatorControllerPresentOrDefault();
 
 /**
@@ -446,7 +438,7 @@ bool rp_HPGetIsAttenuatorControllerPresentOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetIsExternalTriggerLevelPresent(bool *_out_value);
+int rp_HPGetIsExternalTriggerLevelPresent(bool* _out_value);
 bool rp_HPGetIsExternalTriggerLevelPresentOrDefault();
 
 /**
@@ -455,7 +447,7 @@ bool rp_HPGetIsExternalTriggerLevelPresentOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetIsExternalTriggerFullScale(float *_out_value);
+int rp_HPGetIsExternalTriggerFullScale(float* _out_value);
 float rp_HPGetIsExternalTriggerFullScalePresentOrDefault();
 
 /**
@@ -464,7 +456,7 @@ float rp_HPGetIsExternalTriggerFullScalePresentOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetIsExternalTriggerIsSigned(bool *_out_value);
+int rp_HPGetIsExternalTriggerIsSigned(bool* _out_value);
 bool rp_HPGetIsExternalTriggerIsSignedOrDefault();
 
 /**
@@ -473,7 +465,7 @@ bool rp_HPGetIsExternalTriggerIsSignedOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetIsDaisyChainClockAvailable(bool *_out_value);
+int rp_HPGetIsDaisyChainClockAvailable(bool* _out_value);
 bool rp_HPGetIsDaisyChainClockAvailableOrDefault();
 
 /**
@@ -482,7 +474,7 @@ bool rp_HPGetIsDaisyChainClockAvailableOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetIsDMAinv0_94(bool *_out_value);
+int rp_HPGetIsDMAinv0_94(bool* _out_value);
 bool rp_HPGetIsDMAinv0_94OrDefault();
 
 /**
@@ -491,9 +483,8 @@ bool rp_HPGetIsDMAinv0_94OrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetFastADCIsSplitTrigger(bool *_out_value);
+int rp_HPGetFastADCIsSplitTrigger(bool* _out_value);
 bool rp_HPGetFastADCIsSplitTriggerOrDefault();
-
 
 /**
 * Returns the number of available GPIO outputs N.
@@ -501,9 +492,8 @@ bool rp_HPGetFastADCIsSplitTriggerOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetGPIO_N_Count(uint8_t *_out_value);
+int rp_HPGetGPIO_N_Count(uint8_t* _out_value);
 uint8_t rp_HPGetGPIO_N_CountOrDefault();
-
 
 /**
 * Returns the number of available GPIO outputs P.
@@ -511,9 +501,8 @@ uint8_t rp_HPGetGPIO_N_CountOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetGPIO_P_Count(uint8_t *_out_value);
+int rp_HPGetGPIO_P_Count(uint8_t* _out_value);
 uint8_t rp_HPGetGPIO_P_CountOrDefault();
-
 
 /**
 * Returns the presence of the E3 connector.
@@ -521,7 +510,7 @@ uint8_t rp_HPGetGPIO_P_CountOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetIsE3Present(bool *_out_value);
+int rp_HPGetIsE3Present(bool* _out_value);
 bool rp_HPGetIsE3PresentOrDefault();
 
 /**
@@ -530,7 +519,7 @@ bool rp_HPGetIsE3PresentOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetIsE3HighSpeedGPIO(bool *_out_value);
+int rp_HPGetIsE3HighSpeedGPIO(bool* _out_value);
 bool rp_HPGetIsE3HighSpeedGPIOOrDefault();
 
 /**
@@ -539,7 +528,7 @@ bool rp_HPGetIsE3HighSpeedGPIOOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetIsE3HighSpeedGPIORate(uint32_t *_out_value);
+int rp_HPGetIsE3HighSpeedGPIORate(uint32_t* _out_value);
 uint32_t rp_HPGetIsE3HighSpeedGPIORateOrDefault();
 
 /**
@@ -548,16 +537,15 @@ uint32_t rp_HPGetIsE3HighSpeedGPIORateOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetIsE3QSPIeMMC(bool *_out_value);
+int rp_HPGetIsE3QSPIeMMC(bool* _out_value);
 bool rp_HPGetIsE3QSPIeMMCOrDefault();
-
 
 /**
 * Returns the name for the path to the FPGA files.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetFPGAVersion(char **_no_free_value);
+int rp_HPGetFPGAVersion(char** _no_free_value);
 
 /**
  * Print all parameters for current profile
@@ -573,4 +561,4 @@ int rp_HPPrintAll();
 }
 #endif
 
-#endif // RP_HW_PROFILES_H
+#endif  // RP_HW_PROFILES_H

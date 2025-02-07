@@ -163,12 +163,12 @@ res = rp_hw_profiles.rp_HPGetFastDACBitsOrDefault()
 print(res)
 
 
-print("rp_hw_profiles.rp_HPGetFastDACGain(0)")
-res = rp_hw_profiles.rp_HPGetFastDACGain(0)
+print("rp_hw_profiles.rp_HPGetFastDACOutFullScale(0)")
+res = rp_hw_profiles.rp_HPGetFastDACOutFullScale(0)
 print(res)
 
-print("rp_hw_profiles.rp_HPGetFastDACGainOrDefault(0)")
-res = rp_hw_profiles.rp_HPGetFastDACGainOrDefault(0)
+print("rp_hw_profiles.rp_HPGetFastDACOutFullScaleOrDefault(0)")
+res = rp_hw_profiles.rp_HPGetFastDACOutFullScaleOrDefault(0)
 print(res)
 
 

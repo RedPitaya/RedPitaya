@@ -397,25 +397,25 @@ uint8_t rp_HPGetFastDACBitsOrDefault(){
     return p->fast_dac_bits;
 }
 
-int rp_HPGetFastDACGain(uint8_t channel,float *value){
+int rp_HPGetFastDACOutFullScale(uint8_t channel,float *value){
     int state;
     profiles_t* p = getProfile(&state);
     if (p){
         if (p->fast_dac_count_channels < channel || channel >= MAX_CHANNELS){
             return RP_HP_ECI;
         }
-        *value = p->fast_dac_gain[channel];
+        *value = p->fast_dac_out_full_scale[channel];
         return RP_HP_OK;
     }
     return state;
 }
 
-float rp_HPGetFastDACGainOrDefault(uint8_t channel){
+float rp_HPGetFastDACOutFullScaleOrDefault(uint8_t channel){
     profiles_t* p = getProfileDefualt();
     if (p->fast_dac_count_channels < channel || channel >= MAX_CHANNELS){
         return 0;
     }
-    return p->fast_dac_gain[channel];
+    return p->fast_dac_out_full_scale[channel];
 }
 
 int rp_HPGetFastADCIsLV_HV(bool *value){

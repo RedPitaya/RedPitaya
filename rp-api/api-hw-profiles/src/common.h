@@ -51,7 +51,7 @@ typedef struct {
     bool                fast_dac_is_sign;
     uint8_t             fast_dac_bits;
     uint8_t             fast_dac_count_channels;
-    float               fast_dac_gain[MAX_CHANNELS];
+    float               fast_dac_out_full_scale[MAX_CHANNELS]; // Without multipliers like x5 as in 250-12
 
     bool                is_LV_HV_mode; // Mode 1:1 and 1:20
     bool                is_AC_DC_mode; // Support for AC and DC modes

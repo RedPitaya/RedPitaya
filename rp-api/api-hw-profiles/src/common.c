@@ -468,7 +468,7 @@ int hp_cmn_Print(profiles_t *p){
 	fprintf(stdout,"\t* Bits: %u\n",p->fast_dac_bits);
 
 	for(int i = 0 ; i < p->fast_dac_count_channels; i++){
-		fprintf(stdout,"\t\t- Channel: %d Gain %f\n",i + 1, p->fast_dac_gain[i]);
+		fprintf(stdout,"\t\t- Channel: %d Out full scale %f\n",i + 1, p->fast_dac_out_full_scale[i]);
 	}
 
 	fprintf(stdout,"SLOW ADC\n");
