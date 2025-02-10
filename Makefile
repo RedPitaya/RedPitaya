@@ -273,7 +273,7 @@ nginx_clean:
 # SCPI server
 ################################################################################
 
-SCPI_PARSER_TAG = redpitaya
+SCPI_PARSER_TAG = master
 
 SCPI_PARSER_URL = https://github.com/RedPitaya/scpi-parser/archive/$(SCPI_PARSER_TAG).tar.gz
 SCPI_PARSER_TAR = $(DL)/scpi-parser-$(SCPI_PARSER_TAG).tar.gz

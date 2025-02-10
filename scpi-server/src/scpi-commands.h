@@ -18,6 +18,5 @@
 // extern scpi_t scpi_context;
 
 scpi_t* initContext(bool arduinoMode);
-UARTProtocol* getUARTProtocol();
 
 #endif /* SCPI_COMMANDS_H_ */

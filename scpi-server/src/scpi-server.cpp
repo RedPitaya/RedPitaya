@@ -12,34 +12,34 @@
  * for more details on the language used herein.
  */
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <string.h>
 #include <fstream>
 
-#include <netinet/in.h>
-#include <sys/prctl.h>
-#include <errno.h>
 #include <arpa/inet.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <netinet/in.h>
 #include <signal.h>
-#include <unistd.h>
+#include <sys/ioctl.h>
+#include <sys/prctl.h>
 #include <syslog.h>
+#include <termios.h>
+#include <unistd.h>
+#include <mutex>
 #include <thread>
 #include <vector>
-#include <mutex>
-#include <termios.h>
-#include <sys/ioctl.h>
-#include <fcntl.h>
 
-#include "scpi-commands.h"
 #include "common.h"
+#include "scpi-commands.h"
+#include "scpi-parser-ext.h"
 
-#include "scpi/parser.h"
-#include "rp.h"
 #include "api_cmd.h"
 #include "common/rp_sweep.h"
-
+#include "rp.h"
+#include "scpi/parser.h"
 
 #define LISTEN_BACKLOG 50
 #define LISTEN_PORT 5000
@@ -58,13 +58,10 @@ constexpr char id3[] = "01-21";
 
 constexpr char device[] = "/dev/ttyPS1";
 
-
 static bool app_exit = false;
 static char delimiter[] = "\r\n";
 
-
-static void handleCloseChildEvents()
-{
+static void handleCloseChildEvents() {
     struct sigaction sigchld_action;
     memset(&sigchld_action, 0, sizeof(struct sigaction));
     sigchld_action.sa_handler = SIG_DFL;
@@ -72,16 +69,12 @@ static void handleCloseChildEvents()
     sigaction(SIGCHLD, &sigchld_action, NULL);
 }
 
-
-static void termSignalHandler(int signum)
-{
+static void termSignalHandler(int signum) {
     app_exit = true;
-    syslog (LOG_NOTICE, "Received terminate signal. Exiting...");
+    syslog(LOG_NOTICE, "Received terminate signal. Exiting...");
 }
 
-
-static void installTermSignalHandler()
-{
+static void installTermSignalHandler() {
     struct sigaction action;
     memset(&action, 0, sizeof(struct sigaction));
     action.sa_handler = termSignalHandler;
@@ -95,9 +88,8 @@ static void installTermSignalHandler()
  * @param bufferLen  Input buffer length
  * @return Position of next command within buffer, or -1 if not found.
  */
-static size_t getNextCommand(const char* buffer, size_t bufferLen)
-{
-    size_t delimiterLen = sizeof(delimiter) - 1; // dont count last null char.
+static size_t getNextCommand(const char* buffer, size_t bufferLen) {
+    size_t delimiterLen = sizeof(delimiter) - 1;  // dont count last null char.
     size_t i = 0;
     for (i = 0; i < bufferLen; i++) {
 
@@ -111,7 +103,7 @@ static size_t getNextCommand(const char* buffer, size_t bufferLen)
                     break;
                 }
                 if (delimiterLen - dist - 1 == 0) {
-                    return i + 1; // Position of next command
+                    return i + 1;  // Position of next command
                 }
 
                 dist++;
@@ -123,7 +115,7 @@ static size_t getNextCommand(const char* buffer, size_t bufferLen)
     return 0;
 }
 
-void LogMessage(char *m, size_t len) {
+void LogMessage(char* m, size_t len) {
     const size_t buff_len = 50;
     char buff[buff_len];
 
@@ -131,7 +123,7 @@ void LogMessage(char *m, size_t len) {
     strncpy(buff, m, len);
     buff[len - 1] = '\0';
 
-    rp_Log(nullptr,LOG_INFO, 0, "Processing command: %s", buff);
+    rp_Log(nullptr, LOG_INFO, 0, "Processing command: %s", buff);
 }
 
 /**
@@ -139,12 +131,12 @@ void LogMessage(char *m, size_t len) {
  * @param connfd The communication port
  * @return
  */
-static int handleConnection(scpi_t *ctx, int connfd) {
+static int handleConnection(scpi_t* ctx, int connfd) {
     static std::mutex mtx;
     int read_size;
 
     size_t message_len = MAX_BUFF_SIZE;
-    char *message_buff = (char *)malloc(message_len);
+    char* message_buff = (char*)malloc(message_len);
     char buffer[MAX_BUFF_SIZE];
     size_t msg_end = 0;
 
@@ -152,19 +144,18 @@ static int handleConnection(scpi_t *ctx, int connfd) {
 
     // prctl( 1, SIGTERM );
 
-    rp_Log(nullptr,LOG_INFO, 0,  "Waiting for first client request.");
+    rp_Log(nullptr, LOG_INFO, 0, "Waiting for first client request.");
     int buf = 1024 * 16;
     if (setsockopt(connfd, SOL_SOCKET, SO_RCVBUF, &buf, sizeof(int)) == -1) {
-        rp_Log(nullptr,LOG_ERR, 0, "Error setting socket opts: %s", strerror(errno));
+        rp_Log(nullptr, LOG_ERR, 0, "Error setting socket opts: %s", strerror(errno));
     }
 
     buf = 1024 * 16;
     if (setsockopt(connfd, SOL_SOCKET, SO_SNDBUF, &buf, sizeof(int)) == -1) {
-        rp_Log(nullptr,LOG_ERR, 0, "Error setting socket opts: %s", strerror(errno));
+        rp_Log(nullptr, LOG_ERR, 0, "Error setting socket opts: %s", strerror(errno));
     }
     //Receive a message from client
-    while( (read_size = recv(connfd , buffer , MAX_BUFF_SIZE , 0)) > 0 )
-    {
+    while ((read_size = recv(connfd, buffer, MAX_BUFF_SIZE, 0)) > 0) {
         if (app_exit) {
             break;
         }
@@ -172,7 +163,7 @@ static int handleConnection(scpi_t *ctx, int connfd) {
         // First make sure that message buffer is large enough
         while (msg_end + read_size >= message_len) {
             message_len *= 2;
-            message_buff = (char *)realloc(message_buff, message_len);
+            message_buff = (char*)realloc(message_buff, message_len);
         }
 
         // Copy read buffer into message buffer
@@ -180,7 +171,7 @@ static int handleConnection(scpi_t *ctx, int connfd) {
         msg_end += read_size;
 
         // Now try to parse each command out
-        char *m = message_buff;
+        char* m = message_buff;
         size_t pos = 0;
         while ((pos = getNextCommand(m, msg_end)) != 0) {
             std::lock_guard<std::mutex> lock(mtx);
@@ -198,30 +189,28 @@ static int handleConnection(scpi_t *ctx, int connfd) {
             memmove(message_buff, m, msg_end);
         }
 
-        rp_Log(nullptr,LOG_INFO, 0, "Waiting for next client request.");
+        rp_Log(nullptr, LOG_INFO, 0, "Waiting for next client request.");
     }
 
     free(message_buff);
 
-    rp_Log(nullptr,LOG_INFO, 0, "Closing client connection...");
+    rp_Log(nullptr, LOG_INFO, 0, "Closing client connection...");
 
-    if(read_size == 0)
-    {
-        rp_Log(nullptr,LOG_INFO, 0, "Client is disconnected");
+    if (read_size == 0) {
+        rp_Log(nullptr, LOG_INFO, 0, "Client is disconnected");
         return 0;
-    }
-    else if(read_size == -1)
-    {
-        rp_Log(nullptr,LOG_ERR, 0, "Receive message failed (%s)", strerror(errno));
+    } else if (read_size == -1) {
+        rp_Log(nullptr, LOG_ERR, 0, "Receive message failed (%s)", strerror(errno));
         perror("Receive message failed");
         return 1;
     }
     return 0;
 }
 
-std::thread* threadConnection(int connId){
+std::thread* threadConnection(int connId) {
     auto func = [](int connId) {
         int sockId = connId;
+        user_context_t uc;
         scpi_error_t scpi_error_queue_data[SCPI_ERROR_QUEUE_SIZE];
         auto ctx = initContext(false);
         if (ctx == NULL) {
@@ -232,34 +221,24 @@ std::thread* threadConnection(int connId){
         ctx->idn[1] = id1;
         ctx->idn[2] = id2;
         ctx->idn[3] = id3;
-        SCPI_Init(ctx,
-                ctx->cmdlist,
-                ctx->interface,
-                ctx->units,
-                id0,
-                id1,
-                id2,
-                id3,
-                ctx->buffer.data,
-                ctx->buffer.length,
-                scpi_error_queue_data,
-                SCPI_ERROR_QUEUE_SIZE);
+        SCPI_Init(ctx, ctx->cmdlist, ctx->interface, ctx->units, id0, id1, id2, id3, ctx->buffer.data, ctx->buffer.length, scpi_error_queue_data,
+                  SCPI_ERROR_QUEUE_SIZE);
 
-        ctx->user_context = &sockId;
+        uc.fd = sockId;
+        ctx->user_context = &uc;
 
-        handleConnection(ctx,sockId);
+        handleConnection(ctx, sockId);
 
         close(sockId);
         delete[] ctx->buffer.data;
         delete ctx;
 
-        rp_Log(nullptr,LOG_INFO, 0, "Closing connection with client");
+        rp_Log(nullptr, LOG_INFO, 0, "Closing connection with client");
     };
 
-    auto th = new std::thread(func,connId);
+    auto th = new std::thread(func, connId);
     return th;
 }
-
 
 auto startTCP() -> int {
     std::vector<std::thread*> clients;
@@ -268,8 +247,8 @@ auto startTCP() -> int {
 
     // Create a socket
     listenfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (listenfd == -1){
-        rp_Log(nullptr,LOG_ERR, 0, "Failed to create a socket (%s)", strerror(errno));
+    if (listenfd == -1) {
+        rp_Log(nullptr, LOG_ERR, 0, "Failed to create a socket (%s)", strerror(errno));
         perror("Failed to create a socket");
         return (EXIT_FAILURE);
     }
@@ -281,48 +260,46 @@ auto startTCP() -> int {
     serv_addr.sin_port = htons(LISTEN_PORT);
     int buf = 1024 * 16;
     if (setsockopt(listenfd, SOL_SOCKET, SO_RCVBUF, &buf, sizeof(int)) == -1) {
-        rp_Log(nullptr,LOG_ERR, 0, "Error setting socket opts: %s", strerror(errno));
+        rp_Log(nullptr, LOG_ERR, 0, "Error setting socket opts: %s", strerror(errno));
     }
 
     buf = 1024 * 16;
     if (setsockopt(listenfd, SOL_SOCKET, SO_SNDBUF, &buf, sizeof(int)) == -1) {
-        rp_Log(nullptr,LOG_ERR, 0, "Error setting socket opts: %s", strerror(errno));
+        rp_Log(nullptr, LOG_ERR, 0, "Error setting socket opts: %s", strerror(errno));
     }
     int enable = 1;
-    if (setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable)) < 0){
-        rp_Log(nullptr,LOG_ERR, 0, "Error setting socket opts: %s", strerror(errno));
+    if (setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable)) < 0) {
+        rp_Log(nullptr, LOG_ERR, 0, "Error setting socket opts: %s", strerror(errno));
     }
 
-    if (bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == -1)
-    {
-        rp_Log(nullptr,LOG_ERR, 0, "Failed to bind the socket (%s)", strerror(errno));
+    if (bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == -1) {
+        rp_Log(nullptr, LOG_ERR, 0, "Failed to bind the socket (%s)", strerror(errno));
         perror("Failed to bind the socket");
         return (EXIT_FAILURE);
     }
 
-    if (listen(listenfd, LISTEN_BACKLOG) == -1)
-    {
-        rp_Log(nullptr,LOG_ERR, 0, "Failed to listen on the socket (%s)", strerror(errno));
+    if (listen(listenfd, LISTEN_BACKLOG) == -1) {
+        rp_Log(nullptr, LOG_ERR, 0, "Failed to listen on the socket (%s)", strerror(errno));
         perror("Failed to listen on the socket");
         return (EXIT_FAILURE);
     }
 
-    rp_Log(nullptr,LOG_INFO, 0, "Server is listening on port %d", LISTEN_PORT);
+    rp_Log(nullptr, LOG_INFO, 0, "Server is listening on port %d", LISTEN_PORT);
 
     // Socket is opened and listening on port. Now we can accept connections
-    while(1){
+    while (1) {
         struct sockaddr_in cliaddr;
         socklen_t clilen;
         clilen = sizeof(cliaddr);
 
-        connfd = accept(listenfd, (struct sockaddr *)&cliaddr, &clilen);
+        connfd = accept(listenfd, (struct sockaddr*)&cliaddr, &clilen);
 
         if (app_exit == true) {
             break;
         }
 
         if (connfd == -1) {
-            rp_Log(nullptr,LOG_ERR, 0, "Failed to accept connection (%s)", strerror(errno));
+            rp_Log(nullptr, LOG_ERR, 0, "Failed to accept connection (%s)", strerror(errno));
             perror("Failed to accept connection\n");
             return (EXIT_FAILURE);
         }
@@ -331,7 +308,7 @@ auto startTCP() -> int {
         clients.push_back(cth);
     }
 
-    for (auto th: clients){
+    for (auto th : clients) {
         if (th->joinable())
             th->join();
     }
@@ -341,18 +318,18 @@ auto startTCP() -> int {
     return (EXIT_SUCCESS);
 }
 
-
 auto startUART() -> int {
 
     int read_size;
     struct termios g_settings;
+    user_context_t uc;
 
     size_t message_len = MAX_BUFF_SIZE;
 
     int uart_fd = open(device, O_RDWR | O_NOCTTY);
 
-    if(uart_fd == -1){
-        ERROR_LOG("Failed to open %s.",device);
+    if (uart_fd == -1) {
+        ERROR_LOG("Failed to open %s.", device);
         return (EXIT_FAILURE);
     }
 
@@ -360,18 +337,17 @@ auto startUART() -> int {
     tcflush(uart_fd, TCIOFLUSH);
     tcgetattr(uart_fd, &g_settings);
     g_settings.c_cflag &= ~CSIZE;
-    g_settings.c_cflag |= CS8 | CLOCAL | CREAD; /* 8 bits */
-    g_settings.c_cflag &= ~CRTSCTS; // Disable flow control
+    g_settings.c_cflag |= CS8 | CLOCAL | CREAD;             /* 8 bits */
+    g_settings.c_cflag &= ~CRTSCTS;                         // Disable flow control
     g_settings.c_iflag &= ~(IXON | IXOFF | IXANY);          // Disable XON/XOFF flow control both input & output
     g_settings.c_iflag &= ~(ICANON | ECHO | ECHOE | ISIG);  // Non Cannonical mode
     g_settings.c_iflag &= ~ICRNL;
     g_settings.c_oflag &= ~OPOST; /* raw output */
 
-    g_settings.c_lflag = 0;               //  enable raw input instead of canonical,
-    g_settings.c_cc[VMIN]  = 1;           // Read at least 1 character
+    g_settings.c_lflag = 0;     //  enable raw input instead of canonical,
+    g_settings.c_cc[VMIN] = 1;  // Read at least 1 character
     cfsetspeed(&g_settings, UART_RATE);
     tcsetattr(uart_fd, TCSANOW, &g_settings);
-
 
     scpi_error_t scpi_error_queue_data[SCPI_ERROR_QUEUE_SIZE];
     auto ctx = initContext(false);
@@ -380,21 +356,10 @@ auto startUART() -> int {
         return (EXIT_FAILURE);
     }
 
-    SCPI_Init(ctx,
-            ctx->cmdlist,
-            ctx->interface,
-            ctx->units,
-            id0,
-            id1,
-            id2,
-            id3,
-            ctx->buffer.data,
-            ctx->buffer.length,
-            scpi_error_queue_data,
-            SCPI_ERROR_QUEUE_SIZE);
-
-    ctx->user_context = &uart_fd;
-
+    SCPI_Init(ctx, ctx->cmdlist, ctx->interface, ctx->units, id0, id1, id2, id3, ctx->buffer.data, ctx->buffer.length, scpi_error_queue_data,
+              SCPI_ERROR_QUEUE_SIZE);
+    uc.fd = uart_fd;
+    ctx->user_context = &uc;
 
     std::vector<uint8_t> message_buff;
     std::vector<uint8_t> buffer;
@@ -403,8 +368,7 @@ auto startUART() -> int {
 
     size_t msg_end = 0;
     //Receive a message from client
-    while( (read_size = read(uart_fd , buffer.data() , buffer.size())) > 0 )
-    {
+    while ((read_size = read(uart_fd, buffer.data(), buffer.size())) > 0) {
         if (app_exit) {
             break;
         }
@@ -412,8 +376,8 @@ auto startUART() -> int {
         auto new_message_size = msg_end + read_size;
         if (new_message_size >= message_buff.size()) {
             message_buff.resize(new_message_size);
-            if (message_buff.size() != new_message_size){
-                rp_Log(nullptr,LOG_ERR, 0, "Not enough memory for buffer.");
+            if (message_buff.size() != new_message_size) {
+                rp_Log(nullptr, LOG_ERR, 0, "Not enough memory for buffer.");
                 break;
             }
         }
@@ -423,7 +387,7 @@ auto startUART() -> int {
         msg_end += read_size;
 
         // Now try to parse each command out
-        char *m = (char*)(message_buff.data());
+        char* m = (char*)(message_buff.data());
         size_t pos = 0;
         while ((pos = getNextCommand(m, msg_end)) != 0) {
             // Log out message
@@ -440,15 +404,15 @@ auto startUART() -> int {
             memmove(message_buff.data(), m, msg_end);
         }
 
-        rp_Log(nullptr,LOG_INFO, 0, "Waiting for next client request.");
+        rp_Log(nullptr, LOG_INFO, 0, "Waiting for next client request.");
     }
 
-    if(read_size == -1){
-        rp_Log(nullptr,LOG_ERR, 0, "Receive message failed (%s)", strerror(errno));
+    if (read_size == -1) {
+        rp_Log(nullptr, LOG_ERR, 0, "Receive message failed (%s)", strerror(errno));
         perror("Receive message failed");
     }
 
-    if (uart_fd != -1){
+    if (uart_fd != -1) {
         tcflush(uart_fd, TCIFLUSH);
         close(uart_fd);
     }
@@ -459,18 +423,18 @@ auto startUART() -> int {
     return (EXIT_SUCCESS);
 }
 
-
 auto startArduinoApi() -> int {
 
     int read_size;
     struct termios g_settings;
+    user_context_t uc;
 
     size_t message_len = MAX_BUFF_SIZE;
 
     int uart_fd = open(device, O_RDWR | O_NOCTTY);
 
-    if(uart_fd == -1){
-        ERROR_LOG("Failed to open %s.",device);
+    if (uart_fd == -1) {
+        ERROR_LOG("Failed to open %s.", device);
         return (EXIT_FAILURE);
     }
 
@@ -478,19 +442,18 @@ auto startArduinoApi() -> int {
     tcflush(uart_fd, TCIOFLUSH);
     tcgetattr(uart_fd, &g_settings);
     g_settings.c_cflag &= ~CSIZE;
-    g_settings.c_cflag |= CS8 | CLOCAL | CREAD; /* 8 bits */
-    g_settings.c_cflag &= ~CRTSCTS; // Disable flow control
+    g_settings.c_cflag |= CS8 | CLOCAL | CREAD;             /* 8 bits */
+    g_settings.c_cflag &= ~CRTSCTS;                         // Disable flow control
     g_settings.c_iflag &= ~(IXON | IXOFF | IXANY);          // Disable XON/XOFF flow control both input & output
     g_settings.c_iflag &= ~(ICANON | ECHO | ECHOE | ISIG);  // Non Cannonical mode
     g_settings.c_iflag &= ~ICRNL;
     g_settings.c_oflag &= ~OPOST; /* raw output */
 
-    g_settings.c_lflag = 0;               //  enable raw input instead of canonical,
-    g_settings.c_cc[VMIN]  = 1;           // Read at least 1 character
-    g_settings.c_cc[VTIME]  = 0;
+    g_settings.c_lflag = 0;     //  enable raw input instead of canonical,
+    g_settings.c_cc[VMIN] = 1;  // Read at least 1 character
+    g_settings.c_cc[VTIME] = 0;
     cfsetspeed(&g_settings, UART_ARDUINO_RATE);
     tcsetattr(uart_fd, TCSANOW, &g_settings);
-
 
     scpi_error_t scpi_error_queue_data[SCPI_ERROR_QUEUE_SIZE];
     auto ctx = initContext(true);
@@ -499,22 +462,11 @@ auto startArduinoApi() -> int {
         return (EXIT_FAILURE);
     }
 
-    SCPI_Init(ctx,
-            ctx->cmdlist,
-            ctx->interface,
-            ctx->units,
-            id0,
-            id1,
-            id2,
-            id3,
-            ctx->buffer.data,
-            ctx->buffer.length,
-            scpi_error_queue_data,
-            SCPI_ERROR_QUEUE_SIZE);
-
-    ctx->user_context = &uart_fd;
-    ctx->binary_output = false;
-
+    SCPI_Init(ctx, ctx->cmdlist, ctx->interface, ctx->units, id0, id1, id2, id3, ctx->buffer.data, ctx->buffer.length, scpi_error_queue_data,
+              SCPI_ERROR_QUEUE_SIZE);
+    uc.fd = uart_fd;
+    uc.binary_format = false;
+    ctx->user_context = &uc;
 
     std::vector<uint8_t> message_buff;
     std::vector<uint8_t> buffer;
@@ -525,8 +477,7 @@ auto startArduinoApi() -> int {
     // uart_protocol->setTimeout(5000);
     size_t msg_end = 0;
     //Receive a message from client
-    while( (read_size = read(uart_fd , buffer.data() , buffer.size())) > 0 )
-    {
+    while ((read_size = read(uart_fd, buffer.data(), buffer.size())) > 0) {
         if (app_exit) {
             break;
         }
@@ -534,8 +485,8 @@ auto startArduinoApi() -> int {
         auto new_message_size = msg_end + read_size;
         if (new_message_size >= message_buff.size()) {
             message_buff.resize(new_message_size);
-            if (message_buff.size() != new_message_size){
-                rp_Log(nullptr,LOG_ERR, 0, "Not enough memory for buffer.");
+            if (message_buff.size() != new_message_size) {
+                rp_Log(nullptr, LOG_ERR, 0, "Not enough memory for buffer.");
                 break;
             }
         }
@@ -545,7 +496,7 @@ auto startArduinoApi() -> int {
         msg_end += read_size;
 
         // Now try to parse each command out
-        char *m = (char*)(message_buff.data());
+        char* m = (char*)(message_buff.data());
         size_t pos = 0;
         while ((pos = getNextCommand(m, msg_end)) != 0) {
             // Log out message
@@ -561,15 +512,15 @@ auto startArduinoApi() -> int {
             memmove(message_buff.data(), m, msg_end);
         }
 
-        rp_Log(nullptr,LOG_INFO, 0, "Waiting for next client request.");
+        rp_Log(nullptr, LOG_INFO, 0, "Waiting for next client request.");
     }
 
-    if(read_size == -1){
-        rp_Log(nullptr,LOG_ERR, 0, "Receive message failed (%s)", strerror(errno));
+    if (read_size == -1) {
+        rp_Log(nullptr, LOG_ERR, 0, "Receive message failed (%s)", strerror(errno));
         perror("Receive message failed");
     }
 
-    if (uart_fd != -1){
+    if (uart_fd != -1) {
         tcflush(uart_fd, TCIFLUSH);
         close(uart_fd);
     }
@@ -588,12 +539,12 @@ auto startArduinoApi() -> int {
  * @param argv  not used
  * @return
  */
-int main(int argc, char *argv[]){
+int main(int argc, char* argv[]) {
 
     bool start_tcp = true;
     bool start_arduino = false;
 
-    if (argc > 1){
+    if (argc > 1) {
         if (strncmp(argv[1], "-u", 2) == 0) {
             start_tcp = false;
         }
@@ -607,7 +558,7 @@ int main(int argc, char *argv[]){
     if (conf.is_open()) {
         start_tcp = false;
         conf.close();
-    }else{
+    } else {
         std::ifstream conf(CONFIG_FILE_ARDUINO);
         if (conf.is_open()) {
             start_tcp = false;
@@ -617,42 +568,41 @@ int main(int argc, char *argv[]){
     }
 
     // Open logging into "/var/log/messages" or /var/log/syslog" or other configured...
-    setlogmask (LOG_UPTO (LOG_INFO));
-    openlog ("scpi-server", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
+    setlogmask(LOG_UPTO(LOG_INFO));
+    openlog("scpi-server", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
 
-    rp_Log (nullptr, LOG_NOTICE, 0, "scpi-server started");
+    rp_Log(nullptr, LOG_NOTICE, 0, "scpi-server started");
 
     installTermSignalHandler();
 
-    prctl( 1, SIGTERM );
+    prctl(1, SIGTERM);
 
     // Handle close child events
     handleCloseChildEvents();
 
-
     int result = rp_Init();
     if (result != RP_OK) {
-        rp_Log(nullptr,LOG_ERR, result, "Failed to initialize RP APP library: %s", rp_GetError(result));
+        rp_Log(nullptr, LOG_ERR, result, "Failed to initialize RP APP library: %s", rp_GetError(result));
         return (EXIT_FAILURE);
     }
 
     result = rp_Reset();
     if (result != RP_OK) {
-        rp_Log(nullptr,LOG_ERR, result, "Failed to reset RP APP: %s", rp_GetError(result));
+        rp_Log(nullptr, LOG_ERR, result, "Failed to reset RP APP: %s", rp_GetError(result));
         return (EXIT_FAILURE);
     }
 
     result = rp_sweep_api::rp_SWInit();
     if (result != RP_OK) {
-        rp_Log(nullptr,LOG_ERR, result, "Failed to initialize RP Sweep library: %s", rp_GetError(result));
+        rp_Log(nullptr, LOG_ERR, result, "Failed to initialize RP Sweep library: %s", rp_GetError(result));
         return (EXIT_FAILURE);
     }
 
     int ret = 0;
 
-    if (start_tcp){
+    if (start_tcp) {
         ret = startTCP();
-    }else{
+    } else {
         if (start_arduino == false)
             ret = startUART();
         else
@@ -663,12 +613,12 @@ int main(int argc, char *argv[]){
 
     result = rp_Release();
     if (result != RP_OK) {
-        rp_Log(nullptr,LOG_ERR, result, "Failed to release RP App library: %s", rp_GetError(result));
+        rp_Log(nullptr, LOG_ERR, result, "Failed to release RP App library: %s", rp_GetError(result));
     }
 
-    rp_Log(nullptr,LOG_INFO, 0, "scpi-server stopped.");
+    rp_Log(nullptr, LOG_INFO, 0, "scpi-server stopped.");
 
-    closelog ();
+    closelog();
 
     return ret;
 }
