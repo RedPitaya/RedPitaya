@@ -110,11 +110,6 @@ fi
 if test ${hw_rev} == 'STEM_250-12_v1.0'
 then
 
-# Init DDR
-  mw.l 0XF8006000 0x00000080
-# FINISH: LOCK DDR
-  mw.l 0XF8006004 0x00001081
-
 # Unlock Slcr registers
   mw 0xF8000008 0xDF0D
 # Pull-up MIO2
@@ -124,8 +119,8 @@ then
 # Lock registers
   mw 0XF8000004 0x767B
 
-  setenv bootargs ${bootargs} mem=1G
-  setenv high     0x40000000
+  setenv bootargs ${bootargs} mem=512M
+  setenv high     0x20000000
   setenv dts_path z20_250_1_0
   setenv zynq z7020
 fi
@@ -133,11 +128,6 @@ fi
 if test ${hw_rev} == 'STEM_250-12_v1.1'
 then
 
-# Init DDR
-  mw.l 0XF8006000 0x00000080
-# FINISH: LOCK DDR
-  mw.l 0XF8006004 0x00001081
-
 # Unlock Slcr registers
   mw 0xF8000008 0xDF0D
 # Pull-up MIO2
@@ -147,8 +137,8 @@ then
 # Lock registers
   mw 0XF8000004 0x767B
 
-  setenv bootargs ${bootargs} mem=1G
-  setenv high     0x40000000
+  setenv bootargs ${bootargs} mem=512M
+  setenv high     0x20000000
   setenv dts_path z20_250
   setenv zynq z7020
 fi
@@ -156,11 +146,6 @@ fi
 if test ${hw_rev} == 'STEM_250-12_v1.2'
 then
 
-# Init DDR
-  mw.l 0XF8006000 0x00000080
-# FINISH: LOCK DDR
-  mw.l 0XF8006004 0x00001081
-
 # Unlock Slcr registers
   mw 0xF8000008 0xDF0D
 # Pull-up MIO2
@@ -170,8 +155,8 @@ then
 # Lock registers
   mw 0XF8000004 0x767B
 
-  setenv bootargs ${bootargs} mem=1G
-  setenv high     0x40000000
+  setenv bootargs ${bootargs} mem=512M
+  setenv high     0x20000000
   setenv dts_path z20_250
   setenv zynq z7020
 fi
@@ -179,11 +164,6 @@ fi
 if test ${hw_rev} == 'STEM_250-12_v1.2a'
 then
 
-# Init DDR
-  mw.l 0XF8006000 0x00000080
-# FINISH: LOCK DDR
-  mw.l 0XF8006004 0x00001081
-
 # Unlock Slcr registers
   mw 0xF8000008 0xDF0D
 # Pull-up MIO2
@@ -193,8 +173,8 @@ then
 # Lock registers
   mw 0XF8000004 0x767B
 
-  setenv bootargs ${bootargs} mem=1G
-  setenv high     0x40000000
+  setenv bootargs ${bootargs} mem=512M
+  setenv high     0x20000000
   setenv dts_path z20_250a
   setenv zynq z7020
 fi
@@ -202,11 +182,6 @@ fi
 if test ${hw_rev} == 'STEM_250-12_v1.2b'
 then
 
-# Init DDR
-  mw.l 0XF8006000 0x00000080
-# FINISH: LOCK DDR
-  mw.l 0XF8006004 0x00001081
-
 # Unlock Slcr registers
   mw 0xF8000008 0xDF0D
 # Pull-up MIO2
@@ -216,19 +191,14 @@ then
 # Lock registers
   mw 0XF8000004 0x767B
 
-  setenv bootargs ${bootargs} mem=1G
-  setenv high     0x40000000
+  setenv bootargs ${bootargs} mem=512M
+  setenv high     0x20000000
   setenv dts_path z20_250
   setenv zynq z7020
 fi
 
 if test ${hw_rev} == 'STEM_250-12_120'
 then
-
-# Init DDR
-  mw.l 0XF8006000 0x00000080
-# FINISH: LOCK DDR
-  mw.l 0XF8006004 0x00001081
 
 # Unlock Slcr registers
   mw 0xF8000008 0xDF0D
@@ -239,8 +209,8 @@ then
 # Lock registers
   mw 0XF8000004 0x767B
   
-  setenv bootargs ${bootargs} mem=1G
-  setenv high     0x40000000
+  setenv bootargs ${bootargs} mem=512M
+  setenv high     0x20000000
   setenv dts_path z20_250
   setenv zynq z7020
 fi
@@ -277,42 +247,24 @@ fi
 
 if test ${hw_rev} == 'STEM_125-14_Z7020_Pro_v1.0'
 then
-
-# Init DDR
-  mw.l 0XF8006000 0x00000080
-# FINISH: LOCK DDR
-  mw.l 0XF8006004 0x00001081
-
-  setenv bootargs ${bootargs} mem=1G
-  setenv high     0x40000000
+  setenv bootargs ${bootargs} mem=512M
+  setenv high     0x20000000
   setenv dts_path z20_125_v2
   setenv zynq z7020
 fi
 
 if test ${hw_rev} == 'STEM_125-14_Z7020_Pro_v2.0'
 then
-
-# Init DDR
-  mw.l 0XF8006000 0x00000080
-# FINISH: LOCK DDR
-  mw.l 0XF8006004 0x00001081
-
-  setenv bootargs ${bootargs} mem=1G
-  setenv high     0x40000000
+  setenv bootargs ${bootargs} mem=512M
+  setenv high     0x20000000
   setenv dts_path z20_125_v2
   setenv zynq z7020
 fi
 
 if test ${hw_rev} == 'STEM_125-14_Ind_v2.0'
 then
-
-# Init DDR
-  mw.l 0XF8006000 0x00000080
-# FINISH: LOCK DDR
-  mw.l 0XF8006004 0x00001081
-
-  setenv bootargs ${bootargs} mem=1G
-  setenv high     0x40000000
+  setenv bootargs ${bootargs} mem=512M
+  setenv high     0x20000000
   setenv dts_path z20_125_v2
   setenv zynq z7020
 fi
