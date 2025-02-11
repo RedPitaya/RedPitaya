@@ -19,31 +19,90 @@ setenv bootargs console=ttyPS0,115200 root=/dev/mmcblk0p2 ro rootfstype=ext4 ear
 
 if test ${hw_rev} == 'STEM_250-12_v1.0'
 then
+# Unlock Slcr registers
+  mw 0xF8000008 0xDF0D
+# Pull-up MIO2
+  mw.l 0xF8000708 0x00000600
+# Pull-up MIO3
+  mw.l 0xF800070C 0x00000600
+# Lock registers
+  mw 0XF8000004 0x767B
+
   setenv dts_path z20_250_1_0
 fi
 
 if test ${hw_rev} == 'STEM_250-12_v1.1'
 then
+
+# Unlock Slcr registers
+  mw 0xF8000008 0xDF0D
+# Pull-up MIO2
+  mw.l 0xF8000708 0x00000600
+# Pull-up MIO3
+  mw.l 0xF800070C 0x00000600
+# Lock registers
+  mw 0XF8000004 0x767B
+
   setenv dts_path z20_250
 fi
 
 if test ${hw_rev} == 'STEM_250-12_v1.2'
 then
+
+# Unlock Slcr registers
+  mw 0xF8000008 0xDF0D
+# Pull-up MIO2
+  mw.l 0xF8000708 0x00000600
+# Pull-up MIO3
+  mw.l 0xF800070C 0x00000600
+# Lock registers
+  mw 0XF8000004 0x767B
+
   setenv dts_path z20_250
 fi
 
 if test ${hw_rev} == 'STEM_250-12_v1.2a'
 then
+
+# Unlock Slcr registers
+  mw 0xF8000008 0xDF0D
+# Pull-up MIO2
+  mw.l 0xF8000708 0x00000600
+# Pull-up MIO3
+  mw.l 0xF800070C 0x00000600
+# Lock registers
+  mw 0XF8000004 0x767B
+
   setenv dts_path z20_250a
 fi
 
 if test ${hw_rev} == 'STEM_250-12_v1.2b'
 then
+
+# Unlock Slcr registers
+  mw 0xF8000008 0xDF0D
+# Pull-up MIO2
+  mw.l 0xF8000708 0x00000600
+# Pull-up MIO3
+  mw.l 0xF800070C 0x00000600
+# Lock registers
+  mw 0XF8000004 0x767B
+
   setenv dts_path z20_250
 fi
 
 if test ${hw_rev} == 'STEM_250-12_120'
 then
+
+# Unlock Slcr registers
+  mw 0xF8000008 0xDF0D
+# Pull-up MIO2
+  mw.l 0xF8000708 0x00000600
+# Pull-up MIO3
+  mw.l 0xF800070C 0x00000600
+# Lock registers
+  mw 0XF8000004 0x767B
+
   setenv dts_path z20_250
 fi
 
