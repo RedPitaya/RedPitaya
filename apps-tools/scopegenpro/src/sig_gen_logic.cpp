@@ -444,7 +444,7 @@ auto updateGeneratorParameters(bool force) -> void {
 
             if (outAmplitude[ch].IsNewValue() || outOffset[ch].IsNewValue() || outImp[ch].IsNewValue() || force) {
 
-                if (rp_HPGetIsGainDACx5OrDefault()) {
+                if (rp_HPGetIsGainDACx5OrDefault() && rp_HPGetIsDAC50OhmModeOrDefault()) {
                     auto prevGain = outGain[ch].Value();
                     auto prevAmp = outAmplitude[ch].Value();
                     auto prevOff = outOffset[ch].Value();
@@ -482,7 +482,7 @@ auto updateGeneratorParameters(bool force) -> void {
                             float impCoff = outImp[ch].NewValue() == 1 ? 0.5 : 2.0;
                             outImp[i].Update();
                             // auto resetValues = false;
-                            if ((fabs(outAmplitude[ch].Value()) + fabs(outOffset[ch].Value())) <= 5.0) {
+                            if ((fabs(outAmplitude[ch].Value()) + fabs(outOffset[ch].Value())) <= outAmpMax() / 2.0) {
                                 impCoff = 1.0;
                                 setAmpOff();
                                 // resetValues = true;
@@ -497,7 +497,7 @@ auto updateGeneratorParameters(bool force) -> void {
                         }
                     } else {
                         rp_GenAmp((rp_channel_t)ch, prevAmpAPI);
-                        rp_GenOffset((rp_channel_t)ch, prevGainAPI);
+                        rp_GenOffset((rp_channel_t)ch, prevOff);
                         rp_GenSetGainOut((rp_channel_t)ch, prevGainAPI);
                         outGain[ch].Update();
                         outOffset[ch].Update();
@@ -510,15 +510,60 @@ auto updateGeneratorParameters(bool force) -> void {
                     outOffset[ch].Update();
                     outAmplitude[ch].Update();
                 } else {
-                    if (rp_GenAmp((rp_channel_t)ch, outAmplitude[ch].NewValue()) == RP_OK) {
+                    if (rp_HPGetIsDAC50OhmModeOrDefault()) {
+                        auto prevAmp = outAmplitude[ch].Value();
+                        auto prevOff = outOffset[ch].Value();
+                        auto prevAmpAPI = 0.0f;
+                        auto prevOffAPI = 0.0f;
+                        int res = 0;
+
+                        auto setAmpOff = [&]() {
+                            float Coff = outImp[ch].Value() == 1 ? 2.0 : 1.0;  // 1 - 50Ohm. Coff = 2
+                            res |= rp_GenAmp((rp_channel_t)ch, outAmplitude[ch].NewValue() * Coff);
+                            res |= rp_GenOffset((rp_channel_t)ch, (outOffset[ch].NewValue() * Coff));
+                        };
+
+                        rp_GenGetAmp((rp_channel_t)ch, &prevAmpAPI);
+                        rp_GenGetOffset((rp_channel_t)ch, &prevOffAPI);
+
+                        setAmpOff();
+
+                        if (res == RP_OK) {
+                            if (IS_NEW(outImp[ch]) && !force) {
+                                float impCoff = outImp[ch].NewValue() == 1 ? 0.5 : 2.0;
+                                outImp[i].Update();
+                                if ((fabs(outAmplitude[ch].Value()) + fabs(outOffset[ch].Value())) <= outAmpMax() / 2.0) {
+                                    impCoff = 1.0;
+                                    setAmpOff();
+                                }
+                                outAmplitude[ch].Value() = outAmplitude[ch].Value() * impCoff;
+                                outAmplitude[ch].Update();
+                                outOffset[ch].Value() = outOffset[ch].Value() * impCoff;
+                                outOffset[ch].Update();
+                            }
+                        } else {
+                            rp_GenAmp((rp_channel_t)ch, prevAmpAPI);
+                            rp_GenOffset((rp_channel_t)ch, prevOff);
+                            outGain[ch].Update();
+                            outOffset[ch].Update();
+                            outAmplitude[ch].Update();
+                            outAmplitude[ch].SendValue(prevAmp);
+                            outOffset[ch].SendValue(prevOff);
+                        }
+                        outGain[ch].Update();
+                        outOffset[ch].Update();
                         outAmplitude[ch].Update();
                     } else {
-                        outAmplitude[ch].SendValue(outAmplitude[ch].Value());
-                    }
-                    if (rp_GenOffset((rp_channel_t)ch, outOffset[ch].NewValue()) == RP_OK) {
-                        outOffset[ch].Update();
-                    } else {
-                        outOffset[ch].SendValue(outOffset[ch].Value());
+                        if (rp_GenAmp((rp_channel_t)ch, outAmplitude[ch].NewValue()) == RP_OK) {
+                            outAmplitude[ch].Update();
+                        } else {
+                            outAmplitude[ch].SendValue(outAmplitude[ch].Value());
+                        }
+                        if (rp_GenOffset((rp_channel_t)ch, outOffset[ch].NewValue()) == RP_OK) {
+                            outOffset[ch].Update();
+                        } else {
+                            outOffset[ch].SendValue(outOffset[ch].Value());
+                        }
                     }
                 }
                 requestSendScale = true;
