@@ -470,6 +470,7 @@ auto updateGeneratorParameters(bool force) -> void {
                         if (curGenStatus != newFpgaGain && rp_GenSetGainOut((rp_channel_t)ch, newFpgaGain) == RP_OK) {
                             outGain[ch].SendValue(newFpgaGain);
                         }
+                        TRACE_SHORT("CH %d Coff %f Amp %f Off %f", ch, Coff, outAmplitude[ch].NewValue(), outOffset[ch].NewValue())
                     };
 
                     rp_GenGetAmp((rp_channel_t)ch, &prevAmpAPI);
@@ -491,6 +492,7 @@ auto updateGeneratorParameters(bool force) -> void {
                             outAmplitude[ch].Update();
                             outOffset[ch].Value() = outOffset[ch].Value() * impCoff;
                             outOffset[ch].Update();
+                            TRACE_SHORT("CH %d impCoff %f max %f", ch, impCoff, outAmpMax())
                             // if (resetValues){
 
                             // }
@@ -521,13 +523,13 @@ auto updateGeneratorParameters(bool force) -> void {
                             float Coff = outImp[ch].Value() == 1 ? 2.0 : 1.0;  // 1 - 50Ohm. Coff = 2
                             res |= rp_GenAmp((rp_channel_t)ch, outAmplitude[ch].NewValue() * Coff);
                             res |= rp_GenOffset((rp_channel_t)ch, (outOffset[ch].NewValue() * Coff));
+                            TRACE_SHORT("CH %d Coff %f Amp %f Off %f", ch, Coff, outAmplitude[ch].NewValue(), outOffset[ch].NewValue())
                         };
 
                         rp_GenGetAmp((rp_channel_t)ch, &prevAmpAPI);
                         rp_GenGetOffset((rp_channel_t)ch, &prevOffAPI);
 
                         setAmpOff();
-
                         if (res == RP_OK) {
                             if (IS_NEW(outImp[ch]) && !force) {
                                 float impCoff = outImp[ch].NewValue() == 1 ? 0.5 : 2.0;
@@ -540,6 +542,7 @@ auto updateGeneratorParameters(bool force) -> void {
                                 outAmplitude[ch].Update();
                                 outOffset[ch].Value() = outOffset[ch].Value() * impCoff;
                                 outOffset[ch].Update();
+                                TRACE_SHORT("CH %d impCoff %f max %f", ch, impCoff, outAmpMax())
                             }
                         } else {
                             rp_GenAmp((rp_channel_t)ch, prevAmpAPI);
