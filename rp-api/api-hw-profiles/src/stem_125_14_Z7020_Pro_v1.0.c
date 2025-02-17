@@ -77,7 +77,7 @@ profiles_t stem_125_14_Z7020_Pro_v1_0 = {
 
     .is_pll_control_present = false,
 
-    .is_fast_adc_filter_present = true,
+    .is_fast_adc_filter_present = false,
 
     .is_fast_dac_temp_protection = false,
 

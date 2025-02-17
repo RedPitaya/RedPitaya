@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
         calib = rp_GetDefaultCalibrationSettings();
     }
 
-    if (model == RP_125_14 || model == RP_125_14_4CH){
+    if (rp_HPGetFastADCIsFilterPresentOrDefault()){
         if (!option.enableEqualization){
             for(int i = 0; i < calib.fast_adc_count_1_1; ++i){
                 calib.fast_adc_filter_1_1[i].aa = 0;
