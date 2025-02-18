@@ -167,6 +167,7 @@ scpi_result_t RP_I2C_SMBUS_ReadBufferQ(scpi_t* context) {
     size_t reg = 0;
     size_t size = 0;
     uint8_t* buffer = NULL;
+    bool error = false;
     int32_t cmd[2] = {0, 0};
 
     if (!SCPI_CommandNumbers(context, cmd, 2, -1)) {
@@ -201,14 +202,21 @@ scpi_result_t RP_I2C_SMBUS_ReadBufferQ(scpi_t* context) {
         return SCPI_RES_ERR;
     }
 
-    SCPI_ResultBufferUInt8(context, buffer, read_size);
+    SCPI_ResultBufferUInt8(context, buffer, read_size, &error);
     free(buffer);
+
+    if (error) {
+        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
+        return SCPI_RES_ERR;
+    }
+
     RP_LOG_INFO("%s", rp_HwGetError(result))
     return SCPI_RES_OK;
 }
 
 scpi_result_t RP_I2C_IOCTL_ReadBufferQ(scpi_t* context) {
     size_t size = 0;
+    bool error = false;
     uint8_t* buffer = NULL;
     int32_t cmd[1] = {0};
 
@@ -238,8 +246,14 @@ scpi_result_t RP_I2C_IOCTL_ReadBufferQ(scpi_t* context) {
         return SCPI_RES_ERR;
     }
 
-    SCPI_ResultBufferUInt8(context, buffer, read_size);
+    SCPI_ResultBufferUInt8(context, buffer, read_size, &error);
     free(buffer);
+
+    if (error) {
+        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
+        return SCPI_RES_ERR;
+    }
+
     RP_LOG_INFO("%s", rp_HwGetError(result))
     return SCPI_RES_OK;
 }

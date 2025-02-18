@@ -1132,6 +1132,8 @@ scpi_result_t RP_AcqDataPosQ(scpi_t* context) {
     }
 
     uint32_t size_buff;
+    bool error = false;
+
     rp_AcqGetBufSize(&size_buff);
 
     uint32_t size = ((end + size_buff) - start) % size_buff + 1;
@@ -1152,8 +1154,13 @@ scpi_result_t RP_AcqDataPosQ(scpi_t* context) {
             return SCPI_RES_ERR;
         }
 
-        SCPI_ResultBufferFloat(context, buffer, size);
+        SCPI_ResultBufferFloat(context, buffer, size, &error);
         delete[] buffer;
+
+        if (error) {
+            SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
+            return SCPI_RES_ERR;
+        }
     } else {
         int16_t* buffer = nullptr;
         try {
@@ -1171,8 +1178,13 @@ scpi_result_t RP_AcqDataPosQ(scpi_t* context) {
             return SCPI_RES_ERR;
         }
 
-        SCPI_ResultBufferInt16(context, buffer, size);
+        SCPI_ResultBufferInt16(context, buffer, size, &error);
         delete[] buffer;
+
+        if (error) {
+            SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
+            return SCPI_RES_ERR;
+        }
     }
     RP_LOG_INFO("%s", rp_GetError(result))
     return SCPI_RES_OK;
@@ -1181,7 +1193,7 @@ scpi_result_t RP_AcqDataPosQ(scpi_t* context) {
 scpi_result_t RP_AcqDataQ(scpi_t* context) {
 
     uint32_t start, size;
-    int result;
+    int result = 0;
 
     rp_channel_t channel;
 
@@ -1202,6 +1214,8 @@ scpi_result_t RP_AcqDataQ(scpi_t* context) {
     }
 
     uint32_t size_buff;
+    bool error = false;
+
     rp_AcqGetBufSize(&size_buff);
     if (unit == RP_SCPI_VOLTS) {
         float* buffer = nullptr;
@@ -1218,9 +1232,12 @@ scpi_result_t RP_AcqDataQ(scpi_t* context) {
             return SCPI_RES_ERR;
         }
 
-        SCPI_ResultBufferFloat(context, buffer, size);
+        SCPI_ResultBufferFloat(context, buffer, size, &error);
         delete[] buffer;
-
+        if (error) {
+            SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
+            return SCPI_RES_ERR;
+        }
     } else {
         int16_t* buffer = nullptr;
         try {
@@ -1237,8 +1254,12 @@ scpi_result_t RP_AcqDataQ(scpi_t* context) {
             return SCPI_RES_ERR;
         }
 
-        SCPI_ResultBufferInt16(context, buffer, size);
+        SCPI_ResultBufferInt16(context, buffer, size, &error);
         delete[] buffer;
+        if (error) {
+            SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
+            return SCPI_RES_ERR;
+        }
     }
     RP_LOG_INFO("%s", rp_GetError(result))
     return SCPI_RES_OK;
@@ -1246,7 +1267,8 @@ scpi_result_t RP_AcqDataQ(scpi_t* context) {
 
 scpi_result_t RP_AcqDataOldestAllQ(scpi_t* context) {
 
-    uint32_t size;
+    uint32_t size = 0;
+    bool error = false;
     auto result = 0;
 
     rp_channel_t channel;
@@ -1264,8 +1286,11 @@ scpi_result_t RP_AcqDataOldestAllQ(scpi_t* context) {
             RP_LOG_CRIT("Failed to get data in volt: %s", rp_GetError(result));
             return SCPI_RES_ERR;
         }
-        SCPI_ResultBufferFloat(context, buffer, size);
-
+        SCPI_ResultBufferFloat(context, buffer, size, &error);
+        if (error) {
+            SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
+            return SCPI_RES_ERR;
+        }
     } else {
         int16_t buffer[size];
         result = rp_AcqGetOldestDataRaw(channel, &size, buffer);
@@ -1273,7 +1298,11 @@ scpi_result_t RP_AcqDataOldestAllQ(scpi_t* context) {
             RP_LOG_CRIT("Failed to get raw data: %s", rp_GetError(result));
             return SCPI_RES_ERR;
         }
-        SCPI_ResultBufferInt16(context, buffer, size);
+        SCPI_ResultBufferInt16(context, buffer, size, &error);
+        if (error) {
+            SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
+            return SCPI_RES_ERR;
+        }
     }
     RP_LOG_INFO("%s", rp_GetError(result))
     return SCPI_RES_OK;
@@ -1281,7 +1310,8 @@ scpi_result_t RP_AcqDataOldestAllQ(scpi_t* context) {
 
 scpi_result_t RP_AcqOldestDataQ(scpi_t* context) {
 
-    uint32_t size;
+    uint32_t size = 0;
+    bool error = false;
     auto result = 0;
 
     rp_channel_t channel;
@@ -1304,7 +1334,12 @@ scpi_result_t RP_AcqOldestDataQ(scpi_t* context) {
             return SCPI_RES_ERR;
         }
 
-        SCPI_ResultBufferFloat(context, buffer, size);
+        SCPI_ResultBufferFloat(context, buffer, size, &error);
+
+        if (error) {
+            SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
+            return SCPI_RES_ERR;
+        }
 
     } else {
         int16_t buffer[size];
@@ -1314,7 +1349,12 @@ scpi_result_t RP_AcqOldestDataQ(scpi_t* context) {
             return SCPI_RES_ERR;
         }
 
-        SCPI_ResultBufferInt16(context, buffer, size);
+        SCPI_ResultBufferInt16(context, buffer, size, &error);
+
+        if (error) {
+            SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
+            return SCPI_RES_ERR;
+        }
     }
     RP_LOG_INFO("%s", rp_GetError(result))
     return SCPI_RES_OK;
@@ -1322,8 +1362,9 @@ scpi_result_t RP_AcqOldestDataQ(scpi_t* context) {
 
 scpi_result_t RP_AcqLatestDataQ(scpi_t* context) {
 
-    uint32_t size;
+    uint32_t size = 0;
     auto result = 0;
+    bool error = false;
 
     rp_channel_t channel;
 
@@ -1345,7 +1386,13 @@ scpi_result_t RP_AcqLatestDataQ(scpi_t* context) {
             return SCPI_RES_ERR;
         }
 
-        SCPI_ResultBufferFloat(context, buffer, size);
+        SCPI_ResultBufferFloat(context, buffer, size, &error);
+
+        if (error) {
+            SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
+            return SCPI_RES_ERR;
+        }
+
     } else {
         int16_t buffer[size];
         result = rp_AcqGetLatestDataRaw(channel, &size, buffer);
@@ -1354,7 +1401,12 @@ scpi_result_t RP_AcqLatestDataQ(scpi_t* context) {
             RP_LOG_CRIT("Failed to get raw data: %s", rp_GetError(result));
         }
 
-        SCPI_ResultBufferInt16(context, buffer, size);
+        SCPI_ResultBufferInt16(context, buffer, size, &error);
+
+        if (error) {
+            SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
+            return SCPI_RES_ERR;
+        }
     }
     RP_LOG_INFO("%s", rp_GetError(result))
     return SCPI_RES_OK;
@@ -1397,8 +1449,9 @@ scpi_result_t RP_AcqTriggerDataQ(scpi_t* context) {
     uint32_t size_buff;
     rp_AcqGetBufSize(&size_buff);
 
-    uint32_t data_start;
-    uint32_t data_size;
+    uint32_t data_start = 0;
+    uint32_t data_size = 0;
+    bool error = false;
 
     switch (trig_request) {
         case 1:  // Pre trigger mode
@@ -1433,8 +1486,13 @@ scpi_result_t RP_AcqTriggerDataQ(scpi_t* context) {
             return SCPI_RES_ERR;
         }
 
-        SCPI_ResultBufferFloat(context, buffer, data_size);
+        SCPI_ResultBufferFloat(context, buffer, data_size, &error);
         delete[] buffer;
+
+        if (error) {
+            SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
+            return SCPI_RES_ERR;
+        }
 
     } else {
         int16_t* buffer = nullptr;
@@ -1452,8 +1510,13 @@ scpi_result_t RP_AcqTriggerDataQ(scpi_t* context) {
             return SCPI_RES_ERR;
         }
 
-        SCPI_ResultBufferInt16(context, buffer, data_size);
+        SCPI_ResultBufferInt16(context, buffer, data_size, &error);
         delete[] buffer;
+
+        if (error) {
+            SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
+            return SCPI_RES_ERR;
+        }
     }
     RP_LOG_INFO("%s", rp_GetError(result))
     return SCPI_RES_OK;

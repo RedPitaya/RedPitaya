@@ -314,6 +314,8 @@ scpi_result_t RP_AcqAxiDataQ(scpi_t* context) {
         return SCPI_RES_ERR;
     }
     auto result = 0;
+    bool error = false;
+
     if (axi_unit == RP_SCPI_VOLTS) {
         float* buffer = nullptr;
         try {
@@ -328,8 +330,12 @@ scpi_result_t RP_AcqAxiDataQ(scpi_t* context) {
             return SCPI_RES_ERR;
         }
 
-        SCPI_ResultBufferFloat(context, buffer, size);
+        SCPI_ResultBufferFloat(context, buffer, size, &error);
         delete[] buffer;
+        if (error) {
+            SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
+            return SCPI_RES_ERR;
+        }
     } else {
         int16_t* buffer = nullptr;
         try {
@@ -345,8 +351,12 @@ scpi_result_t RP_AcqAxiDataQ(scpi_t* context) {
             return SCPI_RES_ERR;
         }
 
-        SCPI_ResultBufferInt16(context, buffer, size);
+        SCPI_ResultBufferInt16(context, buffer, size, &error);
         delete[] buffer;
+        if (error) {
+            SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
+            return SCPI_RES_ERR;
+        }
     }
     RP_LOG_INFO("%s", rp_GetError(result))
     return SCPI_RES_OK;

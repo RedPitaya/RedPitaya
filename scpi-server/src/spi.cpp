@@ -154,6 +154,7 @@ scpi_result_t RP_SPI_GetRXBufferQ(scpi_t* context) {
     const uint8_t* buffer = 0;
     size_t index = 0;
     size_t size = 0;
+    bool error = false;
     int32_t cmd[1] = {0};
 
     if (!SCPI_CommandNumbers(context, cmd, 1, -1)) {
@@ -179,7 +180,13 @@ scpi_result_t RP_SPI_GetRXBufferQ(scpi_t* context) {
         return SCPI_RES_ERR;
     }
 
-    SCPI_ResultBufferUInt8(context, buffer, size);
+    SCPI_ResultBufferUInt8(context, buffer, size, &error);
+
+    if (error) {
+        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
+        return SCPI_RES_ERR;
+    }
+
     RP_LOG_INFO("%s", rp_HwGetError(result))
     return SCPI_RES_OK;
 }
@@ -188,6 +195,7 @@ scpi_result_t RP_SPI_GetTXBufferQ(scpi_t* context) {
     const uint8_t* buffer = 0;
     size_t index = 0;
     size_t size = 0;
+    bool error = false;
     int32_t cmd[1] = {0};
 
     if (!SCPI_CommandNumbers(context, cmd, 1, -1)) {
@@ -213,7 +221,13 @@ scpi_result_t RP_SPI_GetTXBufferQ(scpi_t* context) {
         return SCPI_RES_ERR;
     }
 
-    SCPI_ResultBufferUInt8(context, buffer, size);
+    SCPI_ResultBufferUInt8(context, buffer, size, &error);
+
+    if (error) {
+        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
+        return SCPI_RES_ERR;
+    }
+
     RP_LOG_INFO("%s", rp_HwGetError(result))
     return SCPI_RES_OK;
 }

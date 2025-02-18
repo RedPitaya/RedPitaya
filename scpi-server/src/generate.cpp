@@ -358,6 +358,7 @@ scpi_result_t RP_GenArbitraryWaveForm(scpi_t* context) {
 
 scpi_result_t RP_GenArbitraryWaveFormQ(scpi_t* context) {
 
+    bool error = false;
     rp_channel_t channel;
     float buffer[DAC_BUFFER_SIZE];
     uint32_t size = DAC_BUFFER_SIZE;
@@ -372,7 +373,13 @@ scpi_result_t RP_GenArbitraryWaveFormQ(scpi_t* context) {
         return SCPI_RES_ERR;
     }
 
-    SCPI_ResultBufferFloat(context, buffer, ret_size);
+    SCPI_ResultBufferFloat(context, buffer, ret_size, &error);
+
+    if (error) {
+        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
+        return SCPI_RES_ERR;
+    }
+
     RP_LOG_INFO("%s", rp_GetError(result))
     return SCPI_RES_OK;
 }

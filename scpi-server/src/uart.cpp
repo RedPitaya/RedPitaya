@@ -294,6 +294,7 @@ scpi_result_t RP_Uart_SendBuffer(scpi_t* context) {
 scpi_result_t RP_Uart_ReadBufferQ(scpi_t* context) {
     uint8_t* buffer = 0;
     size_t size = 0;
+    bool error = false;
     int32_t read_size = 0;
     int32_t cmd[1] = {0};
 
@@ -322,8 +323,14 @@ scpi_result_t RP_Uart_ReadBufferQ(scpi_t* context) {
         return SCPI_RES_ERR;
     }
 
-    SCPI_ResultBufferUInt8(context, buffer, read_size);
+    SCPI_ResultBufferUInt8(context, buffer, read_size, &error);
     free(buffer);
+
+    if (error) {
+        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
+        return SCPI_RES_ERR;
+    }
+
     RP_LOG_INFO("%s", rp_HwGetError(result))
     return SCPI_RES_OK;
 }

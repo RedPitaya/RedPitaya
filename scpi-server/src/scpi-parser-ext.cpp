@@ -19,28 +19,6 @@
 #include <string.h>
 #include <unistd.h>
 
-// #include "acquire.h"
-// #include "acquire_axi.h"
-// #include "api_cmd.h"
-// #include "apin.h"
-// #include "can.h"
-// #include "common.h"
-// #include "dpin.h"
-// #include "error.h"
-// #include "generate.h"
-// #include "i2c.h"
-// #include "lcr.h"
-// #include "led.h"
-// #include "spi.h"
-// #include "sweep.h"
-// #include "uart.h"
-
-// #include "scpi/error.h"
-// #include "scpi/ieee488.h"
-// #include "scpi/minimal.h"
-// #include "scpi/parser.h"
-// #include "scpi/units.h"
-
 #include "common.h"
 #include "error.h"
 #include "scpi-parser-ext.h"
@@ -104,20 +82,22 @@ size_t SCPI_WriteUartProtocol(scpi_t* context, const char* data, size_t len) {
     return total;
 }
 
-size_t writeDataEx(scpi_t* context, const char* data, size_t len) {
+size_t writeDataEx(scpi_t* context, const char* data, size_t len, bool* error) {
+    *error = true;
     if ((len > 0) && (data != NULL)) {
-        return context->interface->write(context, data, len);
-    } else {
-        return 0;
+        auto res = context->interface->write(context, data, len);
+        *error = res != len;
+        return res;
     }
+    return 0;
 }
 
-size_t writeDelimiterEx(scpi_t* context) {
+size_t writeDelimiterEx(scpi_t* context, bool* error) {
+    *error = true;
     if (context->output_count > 0) {
-        return writeDataEx(context, ",", 1);
-    } else {
-        return 0;
+        return writeDataEx(context, ",", 1, error);
     }
+    return 0;
 }
 
 scpi_result_t SCPI_Flush(scpi_t* context) {
@@ -182,7 +162,7 @@ UARTProtocol* getUARTProtocol() {
  * @param sizeOfElem - size of each item [sizeof(float), sizeof(int), ...]
  * @return number of characters written
  */
-size_t writeBinHeader(scpi_t* context, uint32_t numElems, size_t sizeOfElem) {
+size_t writeBinHeader(scpi_t* context, uint32_t numElems, size_t sizeOfElem, bool* error) {
 
     size_t result = 0;
     char numBytes[9 + 1];
@@ -202,21 +182,24 @@ size_t writeBinHeader(scpi_t* context, uint32_t numElems, size_t sizeOfElem) {
     // Convert len to sting
     SCPI_UInt32ToStrBase(len, numOfNumBytes, sizeof(numOfNumBytes), 10);
 
-    result += writeDataEx(context, "#", 1);
-    result += writeDataEx(context, numOfNumBytes, 1);
-    result += writeDataEx(context, numBytes, len);
+    result += writeDataEx(context, "#", 1, error);
+    CHECK_ERROR_PTR
+
+    result += writeDataEx(context, numOfNumBytes, 1, error);
+    CHECK_ERROR_PTR
+
+    result += writeDataEx(context, numBytes, len, error);
+    CHECK_ERROR_PTR
 
     return result;
 }
 
-static size_t resultBufferInt16Bin(scpi_t* context, const int16_t* data, size_t size) {
+static size_t resultBufferInt16Bin(scpi_t* context, const int16_t* data, size_t size, bool* error) {
     size_t result = 0;
 
-    result += writeBinHeader(context, size, sizeof(int16_t));
+    result += writeBinHeader(context, size, sizeof(int16_t), error);
+    CHECK_ERROR_PTR
 
-    if (result == 0) {
-        return result;
-    }
     static const size_t pack_size = 0x20000;
     size_t i;
     uint16_t new_buff[pack_size];
@@ -225,107 +208,101 @@ static size_t resultBufferInt16Bin(scpi_t* context, const int16_t* data, size_t 
         for (i = 0; i < send_size; i++) {
             new_buff[i] = htons((uint16_t)data[i + j]);
         }
-        result += writeDataEx(context, (char*)new_buff, sizeof(int16_t) * send_size);
+        result += writeDataEx(context, (char*)new_buff, sizeof(int16_t) * send_size, error);
+        CHECK_ERROR_PTR
     }
     return result;
 }
 
-static size_t resultBufferUInt8Bin(scpi_t* context, const uint8_t* data, size_t size) {
+static size_t resultBufferUInt8Bin(scpi_t* context, const uint8_t* data, size_t size, bool* error) {
     size_t result = 0;
 
-    result += writeBinHeader(context, size, sizeof(uint8_t));
-
-    if (result == 0) {
-        return result;
-    }
-
-    result += writeDataEx(context, (char*)data, sizeof(uint8_t) * size);
+    result += writeBinHeader(context, size, sizeof(uint8_t), error);
+    CHECK_ERROR_PTR
+    result += writeDataEx(context, (char*)data, sizeof(uint8_t) * size, error);
     return result;
 }
 
-static size_t resultBufferInt16Ascii(scpi_t* context, const int16_t* data, size_t size) {
+static size_t resultBufferInt16Ascii(scpi_t* context, const int16_t* data, size_t size, bool* error) {
     size_t result = 0;
-    result += writeDelimiterEx(context);
-    result += writeDataEx(context, "{", 1);
+    result += writeDelimiterEx(context, error);
+    CHECK_ERROR_PTR
+    result += writeDataEx(context, "{", 1, error);
+    CHECK_ERROR_PTR
 
-    size_t i;
-    size_t len;
-    char buffer[12];
-    char send_buff[13 * size];
-    int ptr = 0;
-    for (i = 0; i < size; i++) {
+    char buffer[20];
+    for (size_t i = 0; i < size; i++) {
         snprintf(buffer, sizeof(buffer), "%" PRIi16, data[i]);
-        len = strlen(buffer);
-        for (size_t j = 0; j < len; j++) {
-            send_buff[ptr + j] = buffer[j];
-        }
-        ptr += len;
+        auto len = strlen(buffer);
+        result += writeDataEx(context, buffer, len, error);
+        CHECK_ERROR_PTR
+
         if (i < size - 1) {
-            send_buff[ptr] = ',';
-            ptr++;
+            result += writeDataEx(context, ",", 1, error);
+            CHECK_ERROR_PTR
         }
     }
-    result += writeDataEx(context, send_buff, ptr);
-    result += writeDataEx(context, "}", 1);
+
+    result += writeDataEx(context, "}", 1, error);
+    CHECK_ERROR_PTR
+
     context->output_count++;
     return result;
 }
 
-static size_t resultBufferUInt8Ascii(scpi_t* context, const uint8_t* data, size_t size) {
+static size_t resultBufferUInt8Ascii(scpi_t* context, const uint8_t* data, size_t size, bool* error) {
     size_t result = 0;
-    result += writeDelimiterEx(context);
-    result += writeDataEx(context, "{", 1);
 
-    size_t i;
-    size_t len;
-    char buffer[12];
-    char send_buff[13 * size];
-    int ptr = 0;
-    for (i = 0; i < size; i++) {
+    result += writeDelimiterEx(context, error);
+    CHECK_ERROR_PTR
+
+    result += writeDataEx(context, "{", 1, error);
+    CHECK_ERROR_PTR
+
+    char buffer[20];
+    for (size_t i = 0; i < size; i++) {
         snprintf(buffer, sizeof(buffer), "%" PRIi8, data[i]);
-        len = strlen(buffer);
-        for (size_t j = 0; j < len; j++) {
-            send_buff[ptr + j] = buffer[j];
-        }
-        ptr += len;
+        auto len = strlen(buffer);
+        result += writeDataEx(context, buffer, len, error);
+        CHECK_ERROR_PTR
+
         if (i < size - 1) {
-            send_buff[ptr] = ',';
-            ptr++;
+            result += writeDataEx(context, ",", 1, error);
+            CHECK_ERROR_PTR
         }
     }
-    result += writeDataEx(context, send_buff, ptr);
-    result += writeDataEx(context, "}", 1);
+
+    result += writeDataEx(context, "}", 1, error);
+    CHECK_ERROR_PTR
+
     context->output_count++;
     return result;
 }
 
-size_t SCPI_ResultBufferInt16(scpi_t* context, const int16_t* data, size_t size) {
+size_t SCPI_ResultBufferInt16(scpi_t* context, const int16_t* data, size_t size, bool* error) {
     user_context_t* uc = (user_context_t*)context->user_context;
     if (uc->binary_format == true) {
-        return resultBufferInt16Bin(context, data, size);
+        return resultBufferInt16Bin(context, data, size, error);
     } else {
-        return resultBufferInt16Ascii(context, data, size);
+        return resultBufferInt16Ascii(context, data, size, error);
     }
 }
 
-size_t SCPI_ResultBufferUInt8(scpi_t* context, const uint8_t* data, size_t size) {
+size_t SCPI_ResultBufferUInt8(scpi_t* context, const uint8_t* data, size_t size, bool* error) {
     user_context_t* uc = (user_context_t*)context->user_context;
 
     if (uc->binary_format == true) {
-        return resultBufferUInt8Bin(context, data, size);
+        return resultBufferUInt8Bin(context, data, size, error);
     } else {
-        return resultBufferUInt8Ascii(context, data, size);
+        return resultBufferUInt8Ascii(context, data, size, error);
     }
 }
 
-static size_t resultBufferFloatBin(scpi_t* context, const float* data, size_t size) {
+static size_t resultBufferFloatBin(scpi_t* context, const float* data, size_t size, bool* error) {
     size_t result = 0;
 
-    result += writeBinHeader(context, size, sizeof(float));
-
-    if (result == 0) {
-        return result;
-    }
+    result += writeBinHeader(context, size, sizeof(float), error);
+    CHECK_ERROR_PTR
 
     static const size_t pack_size = 0x20000;
     size_t i;
@@ -335,32 +312,38 @@ static size_t resultBufferFloatBin(scpi_t* context, const float* data, size_t si
         for (i = 0; i < send_size; i++) {
             new_buff[i] = hton_f((uint8_t)data[i + j]);
         }
-        result += writeDataEx(context, (char*)new_buff, sizeof(float) * send_size);
+        result += writeDataEx(context, (char*)new_buff, sizeof(float) * send_size, error);
+        CHECK_ERROR_PTR
     }
     return result;
 }
 
-static size_t resultBufferFloatAscii(scpi_t* context, const float* data, size_t size) {
+static size_t resultBufferFloatAscii(scpi_t* context, const float* data, size_t size, bool* error) {
     size_t result = 0;
-    result += writeDataEx(context, "{", 1);
+    result += writeDataEx(context, "{", 1, error);
+    CHECK_ERROR_PTR
 
     size_t i;
     char buffer[128];
     for (i = 0; i < size; i++) {
         snprintf(buffer, 128, "%f%s", data[i], (i < size - 1 ? "," : ""));
-        result += writeDataEx(context, buffer, strlen(buffer));
+        result += writeDataEx(context, buffer, strlen(buffer), error);
+        CHECK_ERROR_PTR
     }
-    result += writeDataEx(context, "}", 1);
+
+    result += writeDataEx(context, "}", 1, error);
+    CHECK_ERROR_PTR
+
     context->output_count++;
     return result;
 }
 
-size_t SCPI_ResultBufferFloat(scpi_t* context, const float* data, uint32_t size) {
+size_t SCPI_ResultBufferFloat(scpi_t* context, const float* data, uint32_t size, bool* error) {
     user_context_t* uc = (user_context_t*)context->user_context;
     if (uc->binary_format == true) {
-        return resultBufferFloatBin(context, data, size);
+        return resultBufferFloatBin(context, data, size, error);
     } else {
-        return resultBufferFloatAscii(context, data, size);
+        return resultBufferFloatAscii(context, data, size, error);
     }
 }
 

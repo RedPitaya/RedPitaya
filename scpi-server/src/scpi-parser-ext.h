@@ -15,6 +15,14 @@
 #include "scpi/scpi.h"
 #include "uart_protocol.h"
 
+#define CHECK_ERROR \
+    if (error)      \
+        return result;
+
+#define CHECK_ERROR_PTR \
+    if (*error)         \
+        return result;
+
 struct user_context_t {
     int fd = -1;
     bool binary_format = false;
@@ -22,7 +30,7 @@ struct user_context_t {
 
 int SCPI_Error(scpi_t* context, int_fast16_t err);
 
-size_t writeDataEx(scpi_t* context, const char* data, size_t len);
+size_t writeDataEx(scpi_t* context, const char* data, size_t len, bool* error);
 size_t SCPI_Write(scpi_t* context, const char* data, size_t len);
 size_t SCPI_WriteUartProtocol(scpi_t* context, const char* data, size_t len);
 
@@ -38,11 +46,11 @@ scpi_bool_t SCPI_ParamUInt8(scpi_t* context, uint8_t* value, scpi_bool_t mandato
 scpi_bool_t SCPI_ParamBufferFloat(scpi_t* context, float* data, uint32_t* size, scpi_bool_t mandatory);
 scpi_bool_t SCPI_ParamBufferUInt8(scpi_t* context, uint8_t* data, uint32_t* size, scpi_bool_t mandatory);
 
-size_t SCPI_ResultBufferInt16(scpi_t* context, const int16_t* data, size_t size);
-size_t SCPI_ResultBufferUInt8(scpi_t* context, const uint8_t* data, size_t size);
-size_t SCPI_ResultBufferFloat(scpi_t* context, const float* data, uint32_t size);
+size_t SCPI_ResultBufferInt16(scpi_t* context, const int16_t* data, size_t size, bool* error);
+size_t SCPI_ResultBufferUInt8(scpi_t* context, const uint8_t* data, size_t size, bool* error);
+size_t SCPI_ResultBufferFloat(scpi_t* context, const float* data, uint32_t size, bool* error);
 
-size_t writeBinHeader(scpi_t* context, uint32_t numElems, size_t sizeOfElem);
+size_t writeBinHeader(scpi_t* context, uint32_t numElems, size_t sizeOfElem, bool* error);
 
 UARTProtocol* getUARTProtocol();
 

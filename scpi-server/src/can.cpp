@@ -577,6 +577,7 @@ scpi_result_t RP_CAN_ReadQ(scpi_t* context) {
     bool isTimeout = strstr(context->param_list.cmd_raw.data, ":T") != NULL;
     int paramCount = isTimeout ? 2 : 1;
     int32_t cmd[2] = {0, 0};
+    bool error = false;
 
     if (!SCPI_CommandNumbers(context, cmd, paramCount, -1)) {
         SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Failed to get parameters.");
@@ -610,7 +611,12 @@ scpi_result_t RP_CAN_ReadQ(scpi_t* context) {
     SCPI_ResultBool(context, fm.is_error_frame);
     SCPI_ResultBool(context, fm.is_remote_request);
     SCPI_ResultUInt32Base(context, fm.can_dlc, 10);
-    SCPI_ResultBufferUInt8(context, fm.data, fm.can_dlc);
+    SCPI_ResultBufferUInt8(context, fm.data, fm.can_dlc, &error);
+
+    if (error) {
+        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
+        return SCPI_RES_ERR;
+    }
 
     RP_LOG_INFO("%s", rp_CanGetError(result))
     return SCPI_RES_OK;
