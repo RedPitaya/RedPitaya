@@ -225,22 +225,16 @@ static size_t resultBufferUInt8Bin(scpi_t* context, const uint8_t* data, size_t 
 
 static size_t resultBufferInt16Ascii(scpi_t* context, const int16_t* data, size_t size, bool* error) {
     size_t result = 0;
-    result += writeDelimiterEx(context, error);
-    CHECK_ERROR_PTR
+
     result += writeDataEx(context, "{", 1, error);
     CHECK_ERROR_PTR
 
     char buffer[20];
     for (size_t i = 0; i < size; i++) {
-        snprintf(buffer, sizeof(buffer), "%" PRIi16, data[i]);
+        snprintf(buffer, sizeof(buffer), "%" PRIi16 "%s", data[i], (i < size - 1 ? "," : ""));
         auto len = strlen(buffer);
         result += writeDataEx(context, buffer, len, error);
         CHECK_ERROR_PTR
-
-        if (i < size - 1) {
-            result += writeDataEx(context, ",", 1, error);
-            CHECK_ERROR_PTR
-        }
     }
 
     result += writeDataEx(context, "}", 1, error);
@@ -253,23 +247,15 @@ static size_t resultBufferInt16Ascii(scpi_t* context, const int16_t* data, size_
 static size_t resultBufferUInt8Ascii(scpi_t* context, const uint8_t* data, size_t size, bool* error) {
     size_t result = 0;
 
-    result += writeDelimiterEx(context, error);
-    CHECK_ERROR_PTR
-
     result += writeDataEx(context, "{", 1, error);
     CHECK_ERROR_PTR
 
     char buffer[20];
     for (size_t i = 0; i < size; i++) {
-        snprintf(buffer, sizeof(buffer), "%" PRIi8, data[i]);
+        snprintf(buffer, sizeof(buffer), "%" PRIi8 "%s", data[i], (i < size - 1 ? "," : ""));
         auto len = strlen(buffer);
         result += writeDataEx(context, buffer, len, error);
         CHECK_ERROR_PTR
-
-        if (i < size - 1) {
-            result += writeDataEx(context, ",", 1, error);
-            CHECK_ERROR_PTR
-        }
     }
 
     result += writeDataEx(context, "}", 1, error);

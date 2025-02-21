@@ -1578,7 +1578,7 @@ scpi_result_t RP_AcqAC_DCQ(scpi_t* context) {
 
     auto result = rp_AcqGetAC_DC(channel, &state);
     if (result != RP_OK) {
-        RP_LOG_CRIT("Failed to get gain: %s", rp_GetError(result));
+        RP_LOG_CRIT("Failed to get AC/DC mode: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
 
