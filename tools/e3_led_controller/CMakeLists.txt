@@ -8,7 +8,9 @@ set(CMAKE_VERBOSE_MAKEFILE OFF)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 
-project(e3_led_controller)
+project(e3_controller)
+set(e3_led e3_led_controller)
+set(e3_i2c e3_i2c_controller)
 
 if(NOT DEFINED INSTALL_DIR)
     message(FATAL_ERROR,"Installation path not set.")
@@ -55,11 +57,16 @@ add_compile_definitions(ARCH_ARM)
 add_compile_options($<$<CONFIG:Debug>:-DTRACE_ENABLE>)
 add_compile_options(-Wall -pedantic -Wno-unused-result -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os>  -ffunction-sections -fdata-sections)
 
-add_executable(${PROJECT_NAME} "./src/main.cpp")
+add_executable(${e3_led} "./src/e3_led_controller.cpp")
+add_executable(${e3_i2c} "./src/e3_i2c_controller.cpp")
 
-target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib)
-target_link_libraries(${PROJECT_NAME} PRIVATE rp-hw-profiles.a pthread)
+target_link_directories(${e3_led} PRIVATE ${INSTALL_DIR}/lib)
+target_link_libraries(${e3_led} PRIVATE rp-hw-profiles.a pthread)
 
-install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${INSTALL_DIR}/bin)
+target_link_directories(${e3_i2c} PRIVATE ${INSTALL_DIR}/lib)
+target_link_libraries(${e3_i2c} PRIVATE rp-hw-profiles.a pthread)
+
+install(TARGETS ${e3_led} RUNTIME DESTINATION ${INSTALL_DIR}/bin)
+install(TARGETS ${e3_i2c} RUNTIME DESTINATION ${INSTALL_DIR}/bin)
 
 unset(INSTALL_DIR CACHE)
