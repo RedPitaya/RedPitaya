@@ -82,16 +82,18 @@ bool writeData(uint8_t hw_id, uint8_t code) {
 void usage(const char* args) {
     const char* format =
         "Usage: %s -w hw_id Value\n"
+        "Usage: %s -wd Value\n"
         "Usage: %s -r [-v]\n"
 
         "\t\t-w    Writes a value to the device at the address: 0x%X.\n"
+        "\t\t-wd   Writes a value to the device at the address: 0x%X. HW version is determined automatically.\n"
         "\t\t-r    Reads a value from a device.\n"
         "\t\t-v    Decodes the received values.\n"
         "Parameters:\n"
         "    hw_id = Expansion board version. The value must be in HEX format. (For example 0x01)\n"
         "    Value = Value in HEX format or in string format. (For example 0x01 or PWR_OFF)\n";
 
-    fprintf(stderr, format, args, args, EXPANDER_ADDR);
+    fprintf(stderr, format, args, args, args, EXPANDER_ADDR, EXPANDER_ADDR);
 
     const char* format_2 =
         "\nValue:\n"
@@ -108,6 +110,8 @@ void usage(const char* args) {
         "\nExamples:\n"
         "\t\te3_i2c_controller -w 0x02 PWR_UP\n"
         "\t\te3_i2c_controller -w 0x1 0x2\n"
+        "\t\te3_i2c_controller -wd 0x2\n"
+        "\t\te3_i2c_controller -wd PWR_UP\n"
         "\t\te3_i2c_controller -r -v\n"
         "\t\te3_i2c_controller -r\n";
 
@@ -154,8 +158,8 @@ int main(int argc, char** argv) {
         usage(argv[0]);
         exit(EXIT_FAILURE);
     }
-
-    if (strncmp(argv[1], "-w", 2) == 0) {
+    std::string param = argv[1];
+    if (param == "-w") {
         if (argc < 4) {
             usage(argv[0]);
             exit(EXIT_FAILURE);
@@ -182,7 +186,32 @@ int main(int argc, char** argv) {
         exit(EXIT_FAILURE);
     }
 
-    if (strncmp(argv[1], "-r", 2) == 0) {
+    if (param == "-wd") {
+        if (argc < 3) {
+            usage(argv[0]);
+            exit(EXIT_FAILURE);
+        }
+        auto data = readData();
+        if (data.size() == 4) {
+            hw_id = data[2];
+            auto codeEnum = parseEnum(argv[2]);
+            if (codeEnum == -1) {
+                auto result = sscanf(argv[2], "%hhx", &code);
+                if (result != 1) {
+                    usage(argv[0]);
+                    exit(EXIT_FAILURE);
+                }
+            } else {
+                code = codeEnum;
+            }
+            if (writeData(hw_id, code)) {
+                exit(EXIT_SUCCESS);
+            }
+        }
+        exit(EXIT_FAILURE);
+    }
+
+    if (param == "-r") {
         if (argc >= 3) {
             if (strncmp(argv[2], "-v", 2) == 0) {
                 verb = true;
