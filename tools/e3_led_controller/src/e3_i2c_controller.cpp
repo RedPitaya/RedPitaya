@@ -89,8 +89,8 @@ void usage(const char* args) {
 
         "\t\t-w    Writes a value to the device at the address: 0x%X.\n"
         "\t\t-wd   Writes a value to the device at the address: 0x%X. HW version is determined automatically.\n"
-        "\t\t-we   Writes a value to the device at the address: 0x%X and check error. Tool return 0 - not error. 1 - error presend.\n"
-        "\t\t-wde  Writes a value to the device at the address: 0x%X and check error. Tool return 0 - not error. 1 - error presend. HW version is determined "
+        "\t\t-we   Writes a value to the device at the address: 0x10 and check error. Tool return 0 - no error. 1 - error present.\n"
+        "\t\t-wde  Writes a value to the device at the address: 0x10 and check error. Tool return 0 - no error. 1 - error present. HW version is determined "
         "automatically.\n"
         "\t\t-r    Reads a value from a device.\n"
         "\t\t-v    Decodes the received values.\n"
@@ -307,6 +307,7 @@ int main(int argc, char** argv) {
             for (size_t i = 0; i < data.size(); i++) {
                 printf("%02X", data[i]);
             }
+            printf("\n");
         }
 
         exit(EXIT_SUCCESS);
