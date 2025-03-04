@@ -3,9 +3,10 @@
 
 #include <map>
 
+#include "asio.hpp"
 #include "asio_common.h"
-#include "data_lib/signal.hpp"
 #include "asio_service.h"
+#include "data_lib/signal.hpp"
 
 namespace net_lib {
 
@@ -45,7 +46,7 @@ private:
 
 	auto handlerReceive(const asio::error_code &error, size_t bytes_transferred) -> void;
 	auto handlerAccept(const asio::error_code &_error) -> void;
-	auto handlerConnect(const asio::error_code &_error, asio::ip::tcp::resolver::iterator endpoint_iterator) -> void;
+	auto handlerConnect(const asio::error_code &ec) -> void;
 	auto handlerSend(const asio::error_code &_error, size_t _bytesTransferred) -> void;
 	auto handlerSend2(const asio::error_code &_error, size_t _bytesTransferred, uint64_t bufferId) -> void;
 	auto handlerReceiveFromServer(const asio::error_code &ErrorCode, size_t bytes_transferred) -> void;
@@ -57,6 +58,7 @@ private:
 	std::shared_ptr<asio::ip::tcp::socket> m_tcp_socket;
 	std::shared_ptr<asio::ip::tcp::acceptor> m_tcp_acceptor;
 	asio::ip::tcp::endpoint m_tcp_endpoint;
+	asio::ip::tcp::resolver::results_type m_endpoints;
 	CAsioService *m_asio;
 	asio::steady_timer m_timoutTimer;
 	uint8_t *m_SocketReadBuffer;

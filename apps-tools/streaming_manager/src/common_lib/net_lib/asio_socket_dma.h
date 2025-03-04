@@ -48,7 +48,7 @@ private:
 	CAsioSocketDMA &operator=(const CAsioSocketDMA &&) = delete;
 
 	auto handlerAcceptFromClient(const asio::error_code &_error) -> void;
-	auto handlerConnectToServer(const asio::error_code &_error, asio::ip::tcp::resolver::iterator endpoint_iterator) -> void;
+	auto handlerConnectToServer(const asio::error_code &_error) -> void;
 	auto handlerSend(const asio::error_code &_error, size_t _bytesTransferred) -> void;
 	auto handlerReceive(const asio::error_code &ErrorCode, size_t bytes_transferred) -> void;
 
@@ -62,6 +62,7 @@ private:
 	shared_ptr<asio::ip::tcp::socket> m_tcp_socket;
 	shared_ptr<asio::ip::tcp::acceptor> m_tcp_acceptor;
 	asio::ip::tcp::endpoint m_tcp_endpoint;
+	asio::ip::tcp::resolver::results_type m_endpoints;
 
 	std::mutex m_mtx;
 	CAsioService *m_asio;

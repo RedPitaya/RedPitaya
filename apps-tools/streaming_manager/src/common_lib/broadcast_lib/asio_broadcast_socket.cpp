@@ -12,13 +12,11 @@ class CAsioBroadcastSocket::Impl
 public:
 	Impl()
 		: m_Ios()
-		, m_Work(m_Ios)
 		, m_asio_th(nullptr)
 		, m_socket(0){};
 
-	asio::io_service m_Ios;
-	asio::io_service::work m_Work;
-	asio::thread *m_asio_th;
+	asio::io_context m_Ios;
+	std::thread *m_asio_th;
 	std::shared_ptr<asio::ip::udp::socket> m_socket;
 };
 
@@ -36,8 +34,10 @@ CAsioBroadcastSocket::CAsioBroadcastSocket(EModel model, std::string host, uint1
 {
 	m_model = model;
 	m_SocketReadBuffer = new uint8_t[SOCKET_BUFFER_SIZE];
-	auto func = std::bind(static_cast<size_t (asio::io_service::*)()>(&asio::io_service::run), &(m_pimpl->m_Ios));
-	m_pimpl->m_asio_th = new asio::thread(func);
+	m_pimpl->m_asio_th = new std::thread([this]() {
+		asio::executor_work_guard<asio::io_context::executor_type> m_work = asio::make_work_guard(this->m_pimpl->m_Ios);
+		this->m_pimpl->m_Ios.run();
+	});
 }
 
 CAsioBroadcastSocket::~CAsioBroadcastSocket()
@@ -81,7 +81,7 @@ auto CAsioBroadcastSocket::initServer(EMode mode, int sleep_time_ms) -> void
 auto CAsioBroadcastSocket::initClient() -> void
 {
 	std::error_code error;
-	asio::ip::udp::endpoint senderEndpoint(asio::ip::address_v4::any(), m_port);
+	asio::ip::udp::endpoint senderEndpoint(asio::ip::udp::v4(), m_port);
 	m_pimpl->m_socket = std::make_shared<asio::ip::udp::socket>(m_pimpl->m_Ios, senderEndpoint);
 	m_mode = EMode::AB_CLIENT;
 	m_pimpl->m_socket->set_option(asio::ip::udp::socket::reuse_address(true));

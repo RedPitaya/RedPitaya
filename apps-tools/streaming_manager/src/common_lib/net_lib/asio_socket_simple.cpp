@@ -57,10 +57,12 @@ auto CAsioSocketSimple::initClient() -> void
 	m_tcp_acceptor = nullptr;
 	m_tcp_socket = std::make_shared<asio::ip::tcp::socket>(m_asio->getIO());
 	asio::ip::tcp::resolver resolver(m_asio->getIO());
-	asio::ip::tcp::resolver::query query(m_host, std::to_string(m_port));
-	asio::ip::tcp::resolver::iterator iter = resolver.resolve(query);
-	m_tcp_endpoint = *iter;
-	m_tcp_socket->async_connect(m_tcp_endpoint, std::bind(&CAsioSocketSimple::handlerConnect, this, std::placeholders::_1, iter));
+	// asio::ip::tcp::resolver::query query(m_host, std::to_string(m_port));
+	m_endpoints = resolver.resolve(m_host, std::to_string(m_port));
+	// asio::ip::tcp::resolver::iterator iter = resolver.resolve(query);
+
+	m_tcp_endpoint = *m_endpoints.begin();
+	m_tcp_socket->async_connect(m_tcp_endpoint, std::bind(&CAsioSocketSimple::handlerAccept, this, std::placeholders::_1));
 	m_mode = EMode::M_CLIENT;
 	m_timoutTimer.expires_after(std::chrono::seconds(CONNECT_TIMEOUT));
 	m_timoutTimer.async_wait([this](std::error_code er) {
@@ -75,7 +77,7 @@ auto CAsioSocketSimple::initClient() -> void
 	});
 }
 
-auto CAsioSocketSimple::handlerConnect(const asio::error_code &_error, asio::ip::tcp::resolver::iterator endpoint_iterator) -> void
+auto CAsioSocketSimple::handlerConnect(const asio::error_code &_error) -> void
 {
 	try {
 		this->m_timoutTimer.cancel();
@@ -86,14 +88,6 @@ auto CAsioSocketSimple::handlerConnect(const asio::error_code &_error, asio::ip:
 				m_tcp_socket
 					->async_receive(asio::buffer(m_SocketReadBuffer, SOCKET_BUFFER_SIZE),
 									std::bind(&CAsioSocketSimple::handlerReceive, this, std::placeholders::_1, std::placeholders::_2));
-			}
-		} else if (endpoint_iterator != asio::ip::tcp::resolver::iterator()) {
-			std::lock_guard lock(m_mtx);
-			if (m_tcp_socket) {
-				m_tcp_socket->close();
-				m_tcp_endpoint = *endpoint_iterator;
-				m_tcp_socket->async_connect(m_tcp_endpoint,
-											std::bind(&CAsioSocketSimple::handlerConnect, this, std::placeholders::_1, ++endpoint_iterator));
 			}
 		} else {
 			errorNotify(_error);
