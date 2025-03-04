@@ -25,7 +25,7 @@ add_custom_command(TARGET asio PRE_BUILD
    COMMAND ${CMAKE_COMMAND} -E tar xzf ${PROJECT_SOURCE_DIR}/asio.zip
 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 DEPENDS ${PROJECT_SOURCE_DIR}/asio.zip
-COMMENT "Unpacking abc.zip"
+COMMENT "Unpacking asio.zip"
 VERBATIM)
 
 add_dependencies(broadcast_lib asio)
