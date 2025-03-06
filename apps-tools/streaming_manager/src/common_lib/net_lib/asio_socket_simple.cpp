@@ -113,9 +113,9 @@ auto CAsioSocketSimple::closeSocket() -> void {
 }
 
 auto CAsioSocketSimple::handlerReceive(const asio::error_code& error, size_t bytes_transferred) -> void {
-    // Operation aborted
-    if (error.value() == 125)
-        return;
+    // // Operation aborted
+    // if (error.value() == 125)
+    //     return;
 
     if (!error) {
         recivedNotify(error, m_SocketReadBuffer, bytes_transferred);

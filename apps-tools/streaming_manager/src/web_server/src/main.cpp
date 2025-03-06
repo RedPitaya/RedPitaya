@@ -282,7 +282,6 @@ auto rp_app_init(void) -> int {
 
             g_serverNetConfig->getNewSettingsNofiy.connect([]() { WARNING("Info: Get new settigns from client\n"); });
             g_serverNetConfig->startBroadcast(getModel(), ss_ip_addr.Value(), NET_BROADCAST_PORT);
-
         } catch (std::exception& e) {
             WARNING("Init ServerNetConfigManager() %s\n", e.what());
         }

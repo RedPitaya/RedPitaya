@@ -1,9 +1,9 @@
-#include <ctime>
 #include "file_queue_manager.h"
+#include <ctime>
 #include "file_helper.h"
 #include "logger_lib/file_logger.h"
 
-FileQueueManager::FileQueueManager(bool testMode):Queue(){
+FileQueueManager::FileQueueManager(bool testMode) : Queue() {
     m_threadWork = false;
     m_waitAllWrite = false;
     m_hasErrorWrite = false;
@@ -14,70 +14,65 @@ FileQueueManager::FileQueueManager(bool testMode):Queue(){
     m_hasWriteSize = 0;
 }
 
-FileQueueManager::~FileQueueManager(){
+FileQueueManager::~FileQueueManager() {
     this->stopWrite(false);
 }
 
-auto FileQueueManager::deleteFile() -> void{
+auto FileQueueManager::deleteFile() -> void {
     try {
         std::remove(m_fileName.c_str());
-    }
-    catch (std::exception& e)
-    {
-        aprintf(stderr,"Error delete file: %s err: %s \n",m_fileName.c_str(),e.what());
+    } catch (std::exception& e) {
+        aprintf(stderr, "Error delete file: %s err: %s \n", m_fileName.c_str(), e.what());
     }
 }
 
-auto FileQueueManager::addBufferToWrite(std::iostream *buffer) -> bool{
-    if (!buffer){
+auto FileQueueManager::addBufferToWrite(std::iostream* buffer) -> bool {
+    if (!buffer) {
         return false;
     }
- //   acout() << "m_threadWork: " << m_threadWork << " m_useMemory: " << m_useMemory << " m_aviablePhyMemory: " << m_aviablePhyMemory << '\n';
- //   aprintf(stdout,"m_useMemory %lld m_aviablePhyMemory %lld\n",m_useMemory,m_aviablePhyMemory);
-    if (m_threadWork && (m_useMemory < m_aviablePhyMemory)){
+    //   acout() << "m_threadWork: " << m_threadWork << " m_useMemory: " << m_useMemory << " m_aviablePhyMemory: " << m_aviablePhyMemory << '\n';
+    //   aprintf(stdout,"m_useMemory %lld m_aviablePhyMemory %lld\n",m_useMemory,m_aviablePhyMemory);
+    if (m_threadWork && (m_useMemory < m_aviablePhyMemory)) {
         pushQueue(buffer);
         return true;
-    }
-    else{
+    } else {
         delete buffer;
         return false;
     }
 }
 
-
-
-auto FileQueueManager::openFile(std::string FileName,bool Append) -> void{
-    fs.open(FileName, std::ios::binary | std::ofstream::out| std::ofstream::in | (Append? std::ofstream::binary  : std::ofstream::trunc));
+auto FileQueueManager::openFile(std::string FileName, bool Append) -> void {
+    fs.open(FileName, std::ios::binary | std::ofstream::out | std::ofstream::in | (Append ? std::ofstream::binary : std::ofstream::trunc));
     if (fs.fail()) {
-        fs.open(FileName, std::ios::binary | std::ofstream::out| std::ofstream::in |  std::ofstream::trunc);
+        fs.open(FileName, std::ios::binary | std::ofstream::out | std::ofstream::in | std::ofstream::trunc);
         if (fs.fail()) {
-            aprintf(stderr,"File: %s  not exist\n",FileName.c_str());
+            aprintf(stderr, "File: %s  not exist\n", FileName.c_str());
             return;
         }
     }
     m_fileName = FileName;
     auto dirName = dirNameOf(FileName);
-    if (dirName == ""){
+    if (dirName == "") {
         dirName = ".";
     }
 
     m_freeSize = getFreeSpaceDisk(dirName);
-    if (m_testMode){
+    if (m_testMode) {
         m_freeSize = std::numeric_limits<unsigned long long>::max();
     }
     m_aviablePhyMemory = getTotalSystemMemory();
-    aprintf(stdout,"Available physical memory: %d Mb\n",m_aviablePhyMemory / (1024 * 1024));
+    aprintf(stdout, "Available physical memory: %d Mb\n", m_aviablePhyMemory / (1024 * 1024));
     m_aviablePhyMemory /= 2;
-    aprintf(stdout,"Used physical memory: %d Mb\n", m_aviablePhyMemory / (1024 * 1024));
+    aprintf(stdout, "Used physical memory: %d Mb\n", m_aviablePhyMemory / (1024 * 1024));
     m_hasWriteSize = 0;
 }
 
-auto FileQueueManager::closeFile() -> void{
+auto FileQueueManager::closeFile() -> void {
     if (fs.is_open())
         fs.close();
 }
 
-auto FileQueueManager::startWrite(CStreamSettings::DataFormat _fileType) -> void{
+auto FileQueueManager::startWrite(CStreamSettings::DataFormat _fileType) -> void {
     m_ThreadRun = true;
     m_threadWork = true;
     m_fileType = _fileType;
@@ -85,10 +80,10 @@ auto FileQueueManager::startWrite(CStreamSettings::DataFormat _fileType) -> void
     m_waitAllWrite = true;
     m_hasErrorWrite = false;
     m_IsOutOfSpace = false;
-    th = new std::thread(&FileQueueManager::task,this);
+    th = new std::thread(&FileQueueManager::task, this);
 }
 
-auto FileQueueManager::stopWrite(bool waitAllWrite) -> void{
+auto FileQueueManager::stopWrite(bool waitAllWrite) -> void {
     if (m_threadWork) {
         m_waitLock.lock();
         m_waitAllWrite = waitAllWrite;
@@ -97,8 +92,7 @@ auto FileQueueManager::stopWrite(bool waitAllWrite) -> void{
     }
     m_threadControl.lock();
     if (th) {
-        if (th->joinable())
-        {
+        if (th->joinable()) {
             th->join();
         }
         delete th;
@@ -108,21 +102,21 @@ auto FileQueueManager::stopWrite(bool waitAllWrite) -> void{
     stopNotify();
 }
 
-auto FileQueueManager::getWritedSize() -> uint64_t{
+auto FileQueueManager::getWritedSize() -> uint64_t {
     return m_hasWriteSize;
 }
 
-
-auto FileQueueManager::task() -> void{
-    while (m_ThreadRun){
+auto FileQueueManager::task() -> void {
+    while (m_ThreadRun) {
         writeToFile();
     }
     m_waitLock.lock();
     if (this->m_waitAllWrite) {
-        while (writeToFile() == 0);
-    }else{
+        while (writeToFile() == 0)
+            ;
+    } else {
         auto bstream = popQueue();
-        while(bstream){
+        while (bstream) {
             delete bstream;
             bstream = popQueue();
         }
@@ -131,7 +125,7 @@ auto FileQueueManager::task() -> void{
     m_waitLock.unlock();
 }
 
-auto FileQueueManager::writeToFile() -> int{
+auto FileQueueManager::writeToFile() -> int {
     auto bstream = popQueue();
     if (bstream == nullptr)
         return -1;
@@ -151,28 +145,28 @@ auto FileQueueManager::writeToFile() -> int{
         }
         fs << bstream->rdbuf();
         fs.flush();
-//        bstream->seekg(0, std::ios::end);
-//        auto Length = bstream->tellg();
+        //        bstream->seekg(0, std::ios::end);
+        //        auto Length = bstream->tellg();
         m_hasWriteSize += Length;
 
-        if (m_fileType.value == CStreamSettings::DataFormat::WAV){
-            if (m_firstSectionWrite){
+        if (m_fileType.value == CStreamSettings::DataFormat::WAV) {
+            if (m_firstSectionWrite) {
                 updateWavFile(Length);
             }
 
-            if (m_firstSectionWrite == false){
+            if (m_firstSectionWrite == false) {
                 m_firstSectionWrite = true;
             }
         }
 
-    } else{
-        m_IsOutOfSpace  = true;
+    } else {
+        m_IsOutOfSpace = true;
         m_hasErrorWrite = true;
         m_hasWriteSize += Length;
-        if (!(m_hasWriteSize < m_freeSize)){
-            aprintf(stdout,"The disc has reached the write limit\n");
-        }else {
-            aprintf(stdout,"Disk is full or error state\n");
+        if (!(m_hasWriteSize < m_freeSize)) {
+            aprintf(stdout, "The disc has reached the write limit\n");
+        } else {
+            aprintf(stdout, "Disk is full or error state\n");
         }
         outSpaceNotifyThread();
         return 1;
@@ -181,18 +175,14 @@ auto FileQueueManager::writeToFile() -> int{
     return 0;
 }
 
-auto FileQueueManager::outSpaceNotifyThread() -> void{
-    try{
-        std::thread th([this](){
-            outSpaceNotify();
-        });
+auto FileQueueManager::outSpaceNotifyThread() -> void {
+    try {
+        std::thread th([this]() { outSpaceNotify(); });
         th.detach();
-    }catch (std::exception& e)
-    {
-    }
+    } catch (std::exception& e) {}
 }
 
-auto FileQueueManager::updateWavFile(int _size) -> void{
+auto FileQueueManager::updateWavFile(int _size) -> void {
     int offset1 = 4;
     int offset2 = 40;
 
@@ -202,12 +192,12 @@ auto FileQueueManager::updateWavFile(int _size) -> void{
     int32_t size1 = 0;
     int32_t size2 = 0;
     fs.seekg(offset1, fs.beg);
-    fs.read ((char*)&size1, sizeof(size1));
+    fs.read((char*)&size1, sizeof(size1));
     size1 += _size;
     fs.seekp(offset1, fs.beg);
     fs.write((char*)&size1, sizeof(size1));
     fs.seekg(offset2, fs.beg);
-    fs.read ((char*)&size2, sizeof(size2));
+    fs.read((char*)&size2, sizeof(size2));
     size2 += _size;
     fs.seekp(offset2, fs.beg);
     fs.write((char*)&size2, sizeof(size2));
@@ -215,4 +205,3 @@ auto FileQueueManager::updateWavFile(int _size) -> void{
     fs.seekp(cur_p);
     fs.seekg(cur_g);
 }
-

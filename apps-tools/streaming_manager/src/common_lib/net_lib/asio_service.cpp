@@ -3,14 +3,11 @@
 
 using namespace net_lib;
 
-CAsioService::CAsioService()
-	: m_Ios()
-	, m_asio_th(nullptr)
-{
-	m_asio_th = new std::thread([this]() {
-		asio::executor_work_guard<asio::io_context::executor_type> m_work = asio::make_work_guard(this->m_Ios);
-		this->m_Ios.run();
-	});
+CAsioService::CAsioService() : m_Ios(), m_asio_th(nullptr) {
+    m_asio_th = new std::thread([this]() {
+        asio::executor_work_guard<asio::io_context::executor_type> m_work = asio::make_work_guard(this->m_Ios);
+        this->m_Ios.run();
+    });
 }
 
 CAsioService::~CAsioService() {
