@@ -50,6 +50,9 @@
 #define SCPI_ERROR_QUEUE_SIZE 16
 #define CONFIG_FILE_UART "/root/.scpi_uart"
 #define CONFIG_FILE_ARDUINO "/root/.scpi_arduino"
+#define CONFIG_FILE_ARDUINO_TCP "/root/.scpi_arduino_tcp"
+
+enum START_MODE { TCP, UART, ARDUINO, ARDUINO_TCP };
 
 constexpr char id0[] = "REDPITAYA";
 constexpr char id1[] = "INSTR2025";
@@ -207,24 +210,24 @@ static int handleConnection(scpi_t* ctx, int connfd) {
     return 0;
 }
 
-std::thread* threadConnection(int connId) {
+std::thread* threadConnection(int connId, bool isArduino) {
     auto func = [](int connId) {
         int sockId = connId;
         user_context_t uc;
         scpi_error_t scpi_error_queue_data[SCPI_ERROR_QUEUE_SIZE];
-        auto ctx = initContext(false);
+        auto ctx = initContext(isArduino);
         if (ctx == NULL) {
             close(sockId);
             return;
         }
-        ctx->idn[0] = id0;
-        ctx->idn[1] = id1;
-        ctx->idn[2] = id2;
-        ctx->idn[3] = id3;
+
         SCPI_Init(ctx, ctx->cmdlist, ctx->interface, ctx->units, id0, id1, id2, id3, ctx->buffer.data, ctx->buffer.length, scpi_error_queue_data,
                   SCPI_ERROR_QUEUE_SIZE);
 
         uc.fd = sockId;
+        if (isArduino) {
+            uc.binary_format = false;
+        }
         ctx->user_context = &uc;
 
         handleConnection(ctx, sockId);
@@ -240,7 +243,7 @@ std::thread* threadConnection(int connId) {
     return th;
 }
 
-auto startTCP() -> int {
+auto startTCP(bool isArduino) -> int {
     std::vector<std::thread*> clients;
     int listenfd = 0, connfd = 0;
     struct sockaddr_in serv_addr;
@@ -304,7 +307,7 @@ auto startTCP() -> int {
             return (EXIT_FAILURE);
         }
 
-        auto cth = threadConnection(connfd);
+        auto cth = threadConnection(connfd, isArduino);
         clients.push_back(cth);
     }
 
@@ -541,29 +544,37 @@ auto startArduinoApi() -> int {
  */
 int main(int argc, char* argv[]) {
 
-    bool start_tcp = true;
-    bool start_arduino = false;
+    START_MODE mode = TCP;
 
     if (argc > 1) {
-        if (strncmp(argv[1], "-u", 2) == 0) {
-            start_tcp = false;
+        std::string param = argv[1];
+        if (param == "-u") {
+            mode = UART;
         }
-        if (strncmp(argv[1], "-a", 2) == 0) {
-            start_tcp = false;
-            start_arduino = true;
+        if (param == "-a") {
+            mode = ARDUINO;
+        }
+
+        if (param == "-at") {
+            mode = ARDUINO_TCP;
         }
     }
 
     std::ifstream conf(CONFIG_FILE_UART);
     if (conf.is_open()) {
-        start_tcp = false;
+        mode = UART;
         conf.close();
     } else {
         std::ifstream conf(CONFIG_FILE_ARDUINO);
         if (conf.is_open()) {
-            start_tcp = false;
-            start_arduino = true;
+            mode = ARDUINO;
             conf.close();
+        } else {
+            std::ifstream conf(CONFIG_FILE_ARDUINO_TCP);
+            if (conf.is_open()) {
+                mode = ARDUINO_TCP;
+                conf.close();
+            }
         }
     }
 
@@ -600,13 +611,22 @@ int main(int argc, char* argv[]) {
 
     int ret = 0;
 
-    if (start_tcp) {
-        ret = startTCP();
-    } else {
-        if (start_arduino == false)
+    switch (mode) {
+        case TCP:
+            ret = startTCP(false);
+            break;
+        case UART:
             ret = startUART();
-        else
+            break;
+        case ARDUINO:
             ret = startArduinoApi();
+            break;
+        case ARDUINO_TCP:
+            ret = startTCP(true);
+            break;
+        default:
+            rp_Log(nullptr, LOG_ERR, 0, "Scpi-server stopped. [Unknown mode]");
+            break;
     }
 
     rp_sweep_api::rp_SWRelease();
