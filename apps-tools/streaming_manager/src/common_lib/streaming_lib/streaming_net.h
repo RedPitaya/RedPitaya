@@ -13,47 +13,46 @@
 
 namespace streaming_lib {
 
-class CStreamingNet
-{
-public:
-	using Ptr = std::shared_ptr<CStreamingNet>;
-	typedef std::function<DataLib::CDataBuffersPackDMA::Ptr()> getBufferFunc;
-	typedef std::function<void()> unlockBufferFunc;
+class CStreamingNet {
+   public:
+    using Ptr = std::shared_ptr<CStreamingNet>;
+    typedef std::function<DataLib::CDataBuffersPackDMA::Ptr()> getBufferFunc;
+    typedef std::function<void()> unlockBufferFunc;
 
-	static auto create(std::string &_host, uint16_t _port) -> Ptr;
+    static auto create(std::string& _host, uint16_t _port) -> Ptr;
 
-	CStreamingNet(std::string &_host, uint16_t _port);
-	~CStreamingNet();
+    CStreamingNet(std::string& _host, uint16_t _port);
+    ~CStreamingNet();
 
-	auto run() -> void;
-	auto runNonThread() -> void;
-	auto stop() -> void;
-	auto sendBuffers(DataLib::CDataBuffersPackDMA::Ptr pack) -> void;
+    auto run() -> void;
+    auto runNonThread() -> void;
+    auto stop() -> void;
+    auto sendBuffers(DataLib::CDataBuffersPackDMA::Ptr pack) -> void;
 
-	getBufferFunc getBuffer;
-	unlockBufferFunc unlockBufferF;
+    getBufferFunc getBuffer;
+    unlockBufferFunc unlockBufferF;
 
-private:
-	CStreamingNet(const CStreamingNet &) = delete;
-	CStreamingNet(CStreamingNet &&) = delete;
-	CStreamingNet &operator=(const CStreamingNet &) = delete;
-	CStreamingNet &operator=(const CStreamingNet &&) = delete;
+   private:
+    CStreamingNet(const CStreamingNet&) = delete;
+    CStreamingNet(CStreamingNet&&) = delete;
+    CStreamingNet& operator=(const CStreamingNet&) = delete;
+    CStreamingNet& operator=(const CStreamingNet&&) = delete;
 
-	std::string m_host;
-	uint16_t m_port;
+    std::string m_host;
+    uint16_t m_port;
 
-	net_lib::CAsioNet *m_asionet;
+    net_lib::CAsioNet* m_asionet;
 
-	uint64_t m_index_of_message;
-	std::thread m_thread;
-	std::atomic_bool m_threadRun;
-	std::mutex m_mtx;
+    uint64_t m_index_of_message;
+    std::thread m_thread;
+    std::atomic_bool m_threadRun;
+    std::mutex m_mtx;
 
-	auto startServer() -> void;
-	auto stopServer() -> void;
-	auto task() -> void;
+    auto startServer() -> void;
+    auto stopServer() -> void;
+    auto task() -> void;
 };
 
-} // namespace streaming_lib
+}  // namespace streaming_lib
 
 #endif

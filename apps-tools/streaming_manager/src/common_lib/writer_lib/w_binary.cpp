@@ -1,9 +1,6 @@
-#include <cstring>
 #include "w_binary.h"
+#include <cstring>
 
-CBinInfo::CBinInfo(){
-}
+CBinInfo::CBinInfo() {}
 
-
-CBinInfo::BinHeader::BinHeader(){
-}
+CBinInfo::BinHeader::BinHeader() {}

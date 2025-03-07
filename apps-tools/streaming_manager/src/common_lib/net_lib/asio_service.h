@@ -7,25 +7,24 @@ using namespace std;
 
 namespace net_lib {
 
-class CAsioService
-{
-public:
-	auto getIO() -> asio::io_service &;
+class CAsioService {
+   public:
+    auto getIO() -> asio::io_context&;
 
-	CAsioService();
-	~CAsioService();
+    CAsioService();
+    ~CAsioService();
 
-private:
-	CAsioService(const CAsioService &) = delete;
-	CAsioService(CAsioService &&) = delete;
-	CAsioService &operator=(const CAsioService &) = delete;
-	CAsioService &operator=(const CAsioService &&) = delete;
+   private:
+    CAsioService(const CAsioService&) = delete;
+    CAsioService(CAsioService&&) = delete;
+    CAsioService& operator=(const CAsioService&) = delete;
+    CAsioService& operator=(const CAsioService&&) = delete;
 
-	asio::io_service m_Ios;
-	asio::io_service::work m_Work;
-	asio::thread *m_asio_th;
+    asio::io_context m_Ios;
+    // asio::io_service::work m_Work;
+    std::thread* m_asio_th;
 };
 
-} // namespace net_lib
+}  // namespace net_lib
 
 #endif
