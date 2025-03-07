@@ -143,9 +143,9 @@ static int handleConnection(scpi_t* ctx, int connfd) {
     char buffer[MAX_BUFF_SIZE];
     size_t msg_end = 0;
 
-    // installTermSignalHandler();
+    installTermSignalHandler();
 
-    // prctl( 1, SIGTERM );
+    prctl(1, SIGTERM);
 
     rp_Log(nullptr, LOG_INFO, 0, "Waiting for first client request.");
     int buf = 1024 * 16;
@@ -211,7 +211,7 @@ static int handleConnection(scpi_t* ctx, int connfd) {
 }
 
 std::thread* threadConnection(int connId, bool isArduino) {
-    auto func = [](int connId) {
+    auto func = [isArduino](int connId) {
         int sockId = connId;
         user_context_t uc;
         scpi_error_t scpi_error_queue_data[SCPI_ERROR_QUEUE_SIZE];

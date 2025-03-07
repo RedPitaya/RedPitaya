@@ -104,16 +104,24 @@
                             style="font-size: 16pt; color: green; display: none;">
                             SCPI server is running in Arduino mode
                         </div>
+                        <div id="label-is-runnung-arduino-tcp" align=center
+                            style="font-size: 16pt; color: green; display: none;">
+                            SCPI server is running in Arduino TCP mode (IP="<span id="ip-addr">127.0.0.1</span>",
+                            port="5000")
+                        </div>
                         <div align="center">
                             <ul class="" style="display: flex;justify-content: center;">
                                 <li class="run_buttons" id="SCPI_RUN_TCP">
-                                    <a href="#" style="">RUN TCP</a>
+                                    <a href="#" style="">TCP</a>
                                 </li>
                                 <li class="run_buttons" id="SCPI_RUN_UART">
-                                    <a href="#" style="">RUN UART</a>
+                                    <a href="#" style="">UART</a>
                                 </li>
                                 <li class="run_buttons" id="SCPI_RUN_ARDUINO">
-                                    <a href="#" style="">RUN ARDUINO</a>
+                                    <a href="#" style="">ARDUINO</a>
+                                </li>
+                                <li class="run_buttons" id="SCPI_RUN_ARDUINO_TCP">
+                                    <a href="#" style="">ARDUINO TCP</a>
                                 </li>
                                 <li class="run_buttons" id="SCPI_STOP" style="display:none;">
                                     <a href="#" id="a_stop">STOP</a>

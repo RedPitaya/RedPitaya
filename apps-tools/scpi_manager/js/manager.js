@@ -19,38 +19,56 @@
                     $('#SCPI_RUN_TCP').hide();
                     $('#SCPI_RUN_UART').hide();
                     $('#SCPI_RUN_ARDUINO').hide();
+                    $('#SCPI_RUN_ARDUINO_TCP').hide();
                     $('#SCPI_STOP').css('display', 'block');
                     $('#label-is-not-runnung').hide();
                     $('#label-is-runnung-uart').hide();
                     $('#label-is-runnung-arduino').hide();
                     $('#label-is-runnung').show();
+                    $('#label-is-runnung-arduino-tcp').hide();
                 } else if (msg.responseText.split('\n')[0] == "active_uart") {
                     $('#SCPI_RUN_TCP').hide();
                     $('#SCPI_RUN_UART').hide();
                     $('#SCPI_RUN_ARDUINO').hide();
+                    $('#SCPI_RUN_ARDUINO_TCP').hide();
                     $('#SCPI_STOP').css('display', 'block');
                     $('#label-is-not-runnung').hide();
                     $('#label-is-runnung').hide();
                     $('#label-is-runnung-uart').show();
                     $('#label-is-runnung-arduino').hide();
+                    $('#label-is-runnung-arduino-tcp').hide();
                 } else if (msg.responseText.split('\n')[0] == "active_uart_arduino") {
                     $('#SCPI_RUN_TCP').hide();
                     $('#SCPI_RUN_UART').hide();
                     $('#SCPI_RUN_ARDUINO').hide();
+                    $('#SCPI_RUN_ARDUINO_TCP').hide();
                     $('#SCPI_STOP').css('display', 'block');
                     $('#label-is-not-runnung').hide();
                     $('#label-is-runnung').hide();
                     $('#label-is-runnung-uart').hide();
                     $('#label-is-runnung-arduino').show();
-                }
-                else {
+                    $('#label-is-runnung-arduino-tcp').hide();
+                } else if (msg.responseText.split('\n')[0] == "active_tcp_arduino") {
+                    $('#SCPI_RUN_TCP').hide();
+                    $('#SCPI_RUN_UART').hide();
+                    $('#SCPI_RUN_ARDUINO').hide();
+                    $('#SCPI_RUN_ARDUINO_TCP').hide();
+                    $('#SCPI_STOP').css('display', 'block');
+                    $('#label-is-not-runnung').hide();
+                    $('#label-is-runnung').hide();
+                    $('#label-is-runnung-uart').hide();
+                    $('#label-is-runnung-arduino').hide();
+                    $('#label-is-runnung-arduino-tcp').show();
+                } else {
                     $('#SCPI_STOP').hide();
                     $('#SCPI_RUN_TCP').css('display', 'block');
                     $('#SCPI_RUN_UART').css('display', 'block');
                     $('#SCPI_RUN_ARDUINO').css('display', 'block');
+                    $('#SCPI_RUN_ARDUINO_TCP').css('display', 'block');
                     $('#label-is-runnung').hide();
                     $('#label-is-runnung-uart').hide();
                     $('#label-is-runnung-arduino').hide();
+                    $('#label-is-runnung-arduino-tcp').hide();
                     $('#label-is-not-runnung').show();
                 }
             })
@@ -81,6 +99,17 @@
     SCPI.StartServerUartArduino = function () {
         $.ajax({
             url: '/start_scpi_manager_uart_arduino',
+            type: 'GET',
+            timeout: 1500
+        })
+            .fail(function (msg) {
+                if (msg.responseText) { } else { }
+            })
+    }
+
+    SCPI.StartServerTcpArduino = function () {
+        $.ajax({
+            url: '/start_scpi_manager_tcp_arduino',
             type: 'GET',
             timeout: 1500
         })
@@ -169,6 +198,8 @@ $(function () {
     $('#SCPI_RUN_UART').click(SCPI.StartServerUart);
 
     $('#SCPI_RUN_ARDUINO').click(SCPI.StartServerUartArduino);
+
+    $('#SCPI_RUN_ARDUINO_TCP').click(SCPI.StartServerTcpArduino);
 
     $('#SCPI_STOP').click(SCPI.StopServer);
 
