@@ -37,8 +37,13 @@ auto availableSpace(std::string dst, uint64_t* availableSize) -> int {
         *availableSize = si.available;
         return 0;
     } else {
-        WARNING("Error in AvailableSpace(): %s\n", ec.message().c_str());
-        *availableSize = 0;
+        std::filesystem::path path = dst;
+        if (path.has_parent_path()) {
+            return availableSpace(path.parent_path().generic_string(), availableSize);
+        } else {
+            WARNING("Error in AvailableSpace(): %s\n", ec.message().c_str());
+            *availableSize = 0;
+        }
     }
     return -1;
 }
