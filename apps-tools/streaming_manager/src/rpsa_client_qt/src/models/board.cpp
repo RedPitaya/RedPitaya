@@ -20,13 +20,13 @@ auto convertBtoS(uint64_t value) -> std::string {
     std::string s = "";
     if (value >= 1024 * 1024) {
         d = round(((double)value * 1000.0) / (1024 * 1024)) / 1000;
-        s = to_string_with_precision(d, 3) + " Mb";
-    } else if (value >= 1024) {
+		s = to_string_with_precision(d, 3) + " MB";
+	} else if (value >= 1024) {
         d = round(((double)value * 1000.0) / (1024)) / 1000;
-        s = to_string_with_precision(d, 3) + " kb";
-    } else {
-        s = std::to_string(value) + " b";
-    }
+		s = to_string_with_precision(d, 3) + " kB";
+	} else {
+		s = std::to_string(value) + " B";
+	}
     return s;
 }
 
