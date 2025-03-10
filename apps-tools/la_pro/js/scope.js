@@ -259,9 +259,9 @@
     setInterval(function() {
         $('#cpu_load').text(LA.g_CpuLoad.toFixed(2) + "%");
         $('#cpu_temp').text(LA.g_CpuTemp.toFixed(0));
-        $('#totalmem_view').text((LA.g_TotalMemory / (1024 * 1024)).toFixed(2) + "Mb");
-        $('#freemem_view').text((LA.g_FreeMemory / (1024 * 1024)).toFixed(2) + "Mb");
-        $('#usagemem_view').text(((LA.g_TotalMemory - LA.g_FreeMemory) / (1024 * 1024)).toFixed(2) + "Mb");
+        $('#totalmem_view').text((LA.g_TotalMemory / (1024 * 1024)).toFixed(2) + "MB");
+        $('#freemem_view').text((LA.g_FreeMemory / (1024 * 1024)).toFixed(2) + "MB");
+        $('#usagemem_view').text(((LA.g_TotalMemory - LA.g_FreeMemory) / (1024 * 1024)).toFixed(2) + "MB");
     }, 1000);
 
 

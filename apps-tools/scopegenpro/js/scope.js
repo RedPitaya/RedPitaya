@@ -327,9 +327,9 @@
         $('#throughput_view2').text((OSC.compressed_data / 1024).toFixed(2) + "kB/s");
         $('#cpu_load').text(OSC.g_CpuLoad.toFixed(2) + "%");
         $('#cpu_temp').text(OSC.g_Temperature.toFixed(0));
-        $('#totalmem_view').text((OSC.g_TotalMemory / (1024 * 1024)).toFixed(2) + "Mb");
-        $('#freemem_view').text((OSC.g_FreeMemory / (1024 * 1024)).toFixed(2) + "Mb");
-        $('#usagemem_view').text(((OSC.g_TotalMemory - OSC.g_FreeMemory) / (1024 * 1024)).toFixed(2) + "Mb");
+        $('#totalmem_view').text((OSC.g_TotalMemory / (1024 * 1024)).toFixed(2) + "MB");
+        $('#freemem_view').text((OSC.g_FreeMemory / (1024 * 1024)).toFixed(2) + "MB");
+        $('#usagemem_view').text(((OSC.g_TotalMemory - OSC.g_FreeMemory) / (1024 * 1024)).toFixed(2) + "MB");
         if ($('#connection_icon').attr('src') !== '../assets/images/good_net.png')
             $('#connection_icon').attr('src', '../assets/images/good_net.png');
         $('#connection_meter').attr('title', 'It seems like your connection is ok');

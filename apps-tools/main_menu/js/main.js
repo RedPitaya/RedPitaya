@@ -28,18 +28,18 @@
 
     MAIN.convertBytes = function(x){
         var z = 0;
-        if (x < 1024) return x + " b"
-        if (x < (1024 * 1024)) return (x/1024).toFixed(3) +" kb"
-        if (x < (1024 * 1024 * 1024)) return (x/(1024 * 1024)).toFixed(3) +" Mb"
-        return (x/(1024 * 1024 * 1024)).toFixed(3) +" Gb"
+        if (x < 1024) return x + " B"
+        if (x < (1024 * 1024)) return (x/1024).toFixed(3) +" kB"
+        if (x < (1024 * 1024 * 1024)) return (x/(1024 * 1024)).toFixed(3) +" MB"
+        return (x/(1024 * 1024 * 1024)).toFixed(3) +" GB"
     }
 
     MAIN.convertBytesRAM = function(x){
         var z = 0;
         if (x < 1024) return x + " b"
-        if (x < (1024 * 1024)) return (x/1024).toFixed() +" kb"
-        if (x < (1024 * 1024 * 1024)) return (x/(1024 * 1024)).toFixed() +" Mb"
-        return (x/(1024 * 1024 * 1024)).toFixed() +" Gb"
+        if (x < (1024 * 1024)) return (x/1024).toFixed() +" kB"
+        if (x < (1024 * 1024 * 1024)) return (x/(1024 * 1024)).toFixed() +" MB"
+        return (x/(1024 * 1024 * 1024)).toFixed() +" GB"
     }
 
     MAIN.processTRam= function(new_params) {

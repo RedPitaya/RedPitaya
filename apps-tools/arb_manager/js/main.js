@@ -84,12 +84,12 @@
 
     SM.calcSize = function(x) {
         if (x  < 1024) {
-            return x + " b"
+            return x + " B"
         }
         if (x  < 1024 * 1024) {
-            return (x / 1024).toFixed(3)  + " kb"
+            return (x / 1024).toFixed(3)  + " kB"
         }
-        return (x / (1024 * 1024)).toFixed(3)  + " Mb"
+        return (x / (1024 * 1024)).toFixed(3)  + " MB"
     }
 
     SM.initPlot = function(item,values,color) {
