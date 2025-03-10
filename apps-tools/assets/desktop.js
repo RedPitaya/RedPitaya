@@ -9,6 +9,8 @@
     var applications = [];
     var sys_info_obj = undefined;
 
+    var base_ram = "512"
+
     var groups = [{
         name: "System",
         description: "System tools for configuring your Red Pitaya",
@@ -407,8 +409,8 @@
                     })
                     .done(function(result) {
                         console.log("/copy_bootbin_1G: res" + result);
-                        $('#up_boot_id a').text("Make Unify")
-                        $('#UBOOT_MODE_ID').text("BOOT mode: SIGNALlab");
+                        $('#up_boot_id a').text( base_ram + "MB RAM")
+                        $('#UBOOT_MODE_ID').text("BOOT mode: 1GB RAM");
                     });
                 }else{
                     $.ajax({
@@ -417,8 +419,8 @@
                     })
                     .done(function(result) {
                         console.log("/copy_bootbin_512: res" + result);
-                        $('#up_boot_id a').text("Up to 1Gb RAM")
-                        $('#UBOOT_MODE_ID').text("BOOT mode: Unify");
+                        $('#up_boot_id a').text("Up to 1GB RAM")
+                        $('#UBOOT_MODE_ID').text("BOOT mode: " + base_ram + "MB RAM");
                     });
                 }
             });
@@ -436,7 +438,7 @@
                         const obj = JSON.parse(result);
                         var model = obj['model'];
                         var modelUp = obj['model'].toUpperCase()
-                        if (modelUp.startsWith('STEM_125-10_V1.0')) model = 'STEMlab 125-10 v1.0';
+                        if (modelUp.startsWith('STEM_125-10_V1.0')) {model = 'STEMlab 125-10 v1.0'; base_ram = "256"; }
                         if (modelUp.startsWith('STEM_14_B_V1.0')) model = 'STEMlab 125-14 v1.0';
                         if (modelUp.startsWith('STEM_125-14_V1.0')) model = 'STEMlab 125-14 v1.0';
                         if (modelUp.startsWith('STEM_125-14_V1.1')) model = 'STEMlab 125-14 v1.1';
@@ -471,10 +473,10 @@
                         $('#SI_DNA').text(obj['dna']);
                         $('#SI_ECOSYSTEM').text(obj['ecosystem']['version'] + '-' + obj['ecosystem']['revision']);
                         $('#SI_LINUX').text(obj['linux']);
-                        $('#UBOOT_MODE_ID').text(obj['boot_512'] == "1"?"BOOT mode: Unify":"BOOT mode: SIGNALlab");
+                        $('#UBOOT_MODE_ID').text(obj['boot_512'] == "1" ? "BOOT mode: " + base_ram + "MB RAM" : "BOOT mode: 1GB RAM");
 
                         if (obj['mem_upgrade'] == "1"){
-                            $('#up_boot_id a').text(obj['boot_512'] == "1"?"Up to 1Gb RAM":"Make Unify")
+                            $('#up_boot_id a').text(obj['boot_512'] == "1" ? "Up to 1GB RAM" : base_ram + "MB RAM")
                             $('#up_boot_id').show()
                         }else{
                             $('#up_boot_id').hide()
