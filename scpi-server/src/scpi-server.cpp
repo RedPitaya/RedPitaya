@@ -28,6 +28,7 @@
 #include <syslog.h>
 #include <termios.h>
 #include <unistd.h>
+#include <atomic>
 #include <mutex>
 #include <thread>
 #include <vector>
@@ -61,7 +62,8 @@ constexpr char id3[] = "01-21";
 
 constexpr char device[] = "/dev/ttyPS1";
 
-static bool app_exit = false;
+std::atomic_bool app_exit = false;
+
 static char delimiter[] = "\r\n";
 
 static void handleCloseChildEvents() {
@@ -143,9 +145,7 @@ static int handleConnection(scpi_t* ctx, int connfd) {
     char buffer[MAX_BUFF_SIZE];
     size_t msg_end = 0;
 
-    installTermSignalHandler();
-
-    prctl(1, SIGTERM);
+    // prctl(PR_SET_PDEATHSIG, SIGTERM);
 
     rp_Log(nullptr, LOG_INFO, 0, "Waiting for first client request.");
     int buf = 1024 * 16;
@@ -312,6 +312,7 @@ auto startTCP(bool isArduino) -> int {
     }
 
     for (auto th : clients) {
+        pthread_kill(th->native_handle(), SIGTERM);
         if (th->joinable())
             th->join();
     }
@@ -586,7 +587,7 @@ int main(int argc, char* argv[]) {
 
     installTermSignalHandler();
 
-    prctl(1, SIGTERM);
+    prctl(PR_SET_PDEATHSIG, SIGTERM);
 
     // Handle close child events
     handleCloseChildEvents();
