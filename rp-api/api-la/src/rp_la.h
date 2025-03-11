@@ -12,15 +12,15 @@
  * for more details on the language used herein.
  */
 
-
 #ifndef __RP_LA_H
 #define __RP_LA_H
 
 #include <stdint.h>
+#include <map>
 #include <string>
 #include <vector>
 
-namespace rp_la{
+namespace rp_la {
 
 struct OutputPacket {
     /* Line name according to the protocol for which the data was decoded.
@@ -34,7 +34,7 @@ struct OutputPacket {
         - getAnnotation
         - getAnnotationList
     */
-    uint8_t     control;
+    uint8_t control;
 
     /*
         Data contained in the protocol:
@@ -43,11 +43,11 @@ struct OutputPacket {
         - CRC
         ...
         etc. */
-    uint32_t    data;
+    uint32_t data;
 
     // Number of recognized data bits. Multiple of 0.5.
     // 0, 0.5, 1, 1.5, 2, etc.
-    float       bitsInPack;
+    float bitsInPack;
 
     /*
     Starting position in the data to be recognized in samples.
@@ -55,27 +55,20 @@ struct OutputPacket {
     1 = second sample
     etc
     The value is not an integer, since the bit width can be real depending on the protocol. */
-    double      sampleStart;
+    double sampleStart;
 
     // Length of the recognized block in samples
-	double      length;
+    double length;
 };
 
 typedef enum {
     // Enables the mode without an external logic analyzer block
     LA_BASIC = 0,
     // Must be installed when using an external unit.
-    LA_PRO   = 1
+    LA_PRO = 1
 } la_Mode_t;
 
-
-typedef enum {
-    LA_DECODER_NONE = 0,
-    LA_DECODER_CAN = 1,
-    LA_DECODER_I2C = 2,
-    LA_DECODER_SPI = 3,
-    LA_DECODER_UART = 4
-} la_Decoder_t;
+typedef enum { LA_DECODER_NONE = 0, LA_DECODER_CAN = 1, LA_DECODER_I2C = 2, LA_DECODER_SPI = 3, LA_DECODER_UART = 4 } la_Decoder_t;
 
 /*
     Trigger settings for data capture.
@@ -84,16 +77,7 @@ typedef enum {
     Settings: LA_LOW, LA_HIGH can be used together with the settings for changing the signal edge.
     For example: In SPI, you can set line 1 (CS) to LA_LOW, and line 2 (CLK) to LA_RISING_OR_FALLING
 */
-typedef enum {
-    LA_ERROR               = -1,
-    LA_NONE                = 0,
-    LA_LOW                 = 1,
-    LA_HIGH                = 2,
-    LA_RISING              = 3,
-    LA_FALLING             = 4,
-    LA_RISING_OR_FALLING   = 5
-} la_Trigger_Mode_t;
-
+typedef enum { LA_ERROR = -1, LA_NONE = 0, LA_LOW = 1, LA_HIGH = 2, LA_RISING = 3, LA_FALLING = 4, LA_RISING_OR_FALLING = 5 } la_Trigger_Mode_t;
 
 /**
  * Type representing digital input output pins.
@@ -112,33 +96,24 @@ typedef enum {
 class CLAController;
 
 class CLACallback {
-    public:
-        virtual ~CLACallback(){}
-        // A callback function that is called after data is captured on the FPGA.
-        // Called after the function: runAsync(uint32_t timeoutMs)
-        virtual void captureStatus(CLAController* controller,
-                                bool isTimeout,
-                                uint32_t numBytes,
-                                uint64_t numSamples,
-                                uint64_t preTriggerSamples,
-                                uint64_t postTriggerSamples){}
+   public:
+    virtual ~CLACallback() {}
+    // A callback function that is called after data is captured on the FPGA.
+    // Called after the function: runAsync(uint32_t timeoutMs)
+    virtual void captureStatus(CLAController* controller, bool isTimeout, uint32_t numBytes, uint64_t numSamples, uint64_t preTriggerSamples,
+                               uint64_t postTriggerSamples) {}
 
-        // A callback function that is called after a block of data uploaded by the user has been decoded.
-        // Called after the function: loadFromFileAndDecode(std::string file, bool isRLE, uint64_t triggerSamplePosition)
-        virtual void decodeStatus(CLAController* controller,
-                                uint32_t numBytes,
-                                uint64_t numSamples,
-                                uint64_t preTriggerSamples,
-                                uint64_t postTriggerSamples){}
+    // A callback function that is called after a block of data uploaded by the user has been decoded.
+    // Called after the function: loadFromFileAndDecode(std::string file, bool isRLE, uint64_t triggerSamplePosition)
+    virtual void decodeStatus(CLAController* controller, uint32_t numBytes, uint64_t numSamples, uint64_t preTriggerSamples, uint64_t postTriggerSamples) {}
 
-        // A callback function that is called after each of the configured decoders has been decoded.
-        virtual void decodeDone(CLAController* controller, std::string name){}
+    // A callback function that is called after each of the configured decoders has been decoded.
+    virtual void decodeDone(CLAController* controller, std::string name) {}
 };
 
-class CLAController
-{
+class CLAController {
 
-public:
+   public:
     CLAController();
     ~CLAController();
 
@@ -226,8 +201,8 @@ public:
     auto setDecoderSettingsFloat(std::string name, std::string key, float value) -> bool;
 
     // Returns the value for the specified key, if the key is not found the function returns false
-    auto getDecoderSettingsUInt(std::string name, std::string key, uint32_t *value) -> bool;
-    auto getDecoderSettingsFloat(std::string name, std::string key, float *value) -> bool;
+    auto getDecoderSettingsUInt(std::string name, std::string key, uint32_t* value) -> bool;
+    auto getDecoderSettingsFloat(std::string name, std::string key, float* value) -> bool;
 
     // Sets decimation when capturing data via FPGA
     auto setDecimation(uint32_t decimation) -> void;
@@ -259,8 +234,8 @@ public:
     auto getCapturedSamples() -> uint64_t;
 
     // Sets an object with callback functions.
-	auto setDelegate(CLACallback *callbacks) -> void;
-	auto removeDelegate() -> void;
+    auto setDelegate(CLACallback* callbacks) -> void;
+    auto removeDelegate() -> void;
 
     // Shows whether data capture is running or not.
     auto isCaptureRun() -> bool;
@@ -276,7 +251,7 @@ public:
 
     // Waits for an asynchronous function to complete or times out
     // All asynchronous functions cannot work
-    auto wait(uint32_t timeoutMs, bool *isTimeout) -> void;
+    auto wait(uint32_t timeoutMs, bool* isTimeout) -> void;
 
     // Synchronous decoding of data via the specified decoder.
     // A copy of the decoder is created and the decoder settings are used, the data in the decoder itself is not changed.
@@ -304,26 +279,23 @@ public:
     // Otherwise nothing will be returned
     auto getUnpackedRLEDataNP(uint8_t* np_buffer, int size) -> uint64_t;
 
-
     auto printRLE(bool useHex) -> void;
     auto printRLENP(uint8_t* np_buffer, int size, bool useHex) -> void;
 
-
-    auto getAnnotationList(la_Decoder_t decoder) -> std::map<uint8_t,std::string>;
+    auto getAnnotationList(la_Decoder_t decoder) -> std::map<uint8_t, std::string>;
     auto getAnnotation(la_Decoder_t decoder, uint8_t control) -> std::string;
 
-private:
-
-    CLAController(const CLAController &) = delete;
-    CLAController(CLAController &&) = delete;
+   private:
+    CLAController(const CLAController&) = delete;
+    CLAController(CLAController&&) = delete;
     CLAController& operator=(const CLAController&) = delete;
     CLAController& operator=(const CLAController&&) = delete;
 
     struct Impl;
     // Pointer to the internal implementation
-    Impl *m_pimpl;
+    Impl* m_pimpl;
 };
 
-}
+}  // namespace rp_la
 
-#endif // __RP_LA_H
+#endif  // __RP_LA_H

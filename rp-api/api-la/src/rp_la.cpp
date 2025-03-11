@@ -12,28 +12,28 @@
  * for more details on the language used herein.
  */
 
+#include "rp_la.h"
+#include <signal.h>
+#include <unistd.h>
+#include <atomic>
+#include <csignal>
+#include <filesystem>
+#include <functional>
+#include <future>
 #include <map>
 #include <memory>
 #include <mutex>
-#include <atomic>
-#include <functional>
-#include <signal.h>
-#include <csignal>
-#include <unistd.h>
 #include <thread>
-#include <future>
-#include <filesystem>
-#include "decoders/decoder.h"
-#include "decoders/can_decoder.h"
-#include "decoders/uart_decoder.h"
-#include "decoders/spi_decoder.h"
-#include "decoders/i2c_decoder.h"
 #include "bit_decoder/bit_decoder_one_line_rle.h"
 #include "common/common.h"
 #include "common/profiler.h"
-#include "rp_la.h"
-#include "rp_la_api.h"
+#include "decoders/can_decoder.h"
+#include "decoders/decoder.h"
+#include "decoders/i2c_decoder.h"
+#include "decoders/spi_decoder.h"
+#include "decoders/uart_decoder.h"
 #include "rp.h"
+#include "rp_la_api.h"
 
 #ifdef _WIN32
 #include <dir.h>
@@ -41,22 +41,23 @@
 #include <sys/stat.h>
 #endif
 
-namespace rp_la{
+namespace rp_la {
 
 #define MAX_LINES 8
 #define MAX_BUFFER_SIZE 1024 * 1024
 
 #ifdef TRACE_ENABLE
-#define TRACE_CODE(X) { X;}
+#define TRACE_CODE(X) \
+    { X; }
 #else
-#define TRACE_CODE(X) { }
+#define TRACE_CODE(X) \
+    {}
 #endif
 
 std::function<void(int)> shutdown_handler;
 
-void signal_handler(int signal)
-{
-	shutdown_handler(signal);
+void signal_handler(int signal) {
+    shutdown_handler(signal);
 }
 
 struct CapturedData {
@@ -65,7 +66,7 @@ struct CapturedData {
     uint32_t m_trigerPosistion;
     uint32_t m_capturedBytes;
     uint64_t m_capturedSamples;
-    bool     m_isRLE;
+    bool m_isRLE;
 };
 
 struct CLAController::Impl {
@@ -78,7 +79,7 @@ struct CLAController::Impl {
     auto runDecode() -> void;
     auto resetAllDecoders() -> void;
     auto decode(const uint8_t* _input, uint32_t _size) -> void;
-    auto getAnnotation(la_Decoder_t decoder,uint8_t control) -> std::string;
+    auto getAnnotation(la_Decoder_t decoder, uint8_t control) -> std::string;
     auto getAnnotationSize(la_Decoder_t decoder) -> uint16_t;
     auto initFpga() -> bool;
 
@@ -99,61 +100,59 @@ struct CLAController::Impl {
 
     CapturedData m_data;
 
-    CLACallback *m_delegate = nullptr;
-    CLAController *m_parent = nullptr;
-    std::thread *m_captureThread = nullptr;
+    CLACallback* m_delegate = nullptr;
+    CLAController* m_parent = nullptr;
+    std::thread* m_captureThread = nullptr;
 };
 
-auto createDir(const std::string &dir) -> bool{
+auto createDir(const std::string& dir) -> bool {
 #ifdef _WIN32
-	mkdir(dir.c_str());
+    mkdir(dir.c_str());
 #else
-	mkdir(dir.c_str(), 0777);
+    mkdir(dir.c_str(), 0777);
 #endif
-	return true;
+    return true;
 }
 
-auto createDirTree(const std::string &full_path) -> bool{
-	char ch = '/';
+auto createDirTree(const std::string& full_path) -> bool {
+    char ch = '/';
 #ifdef _WIN32
-	ch = '\\';
+    ch = '\\';
 #endif
 
-	size_t pos = 0;
-	bool ret_val = true;
-	while (ret_val == true && pos != std::string::npos) {
-		pos = full_path.find(ch, pos + 1);
-		ret_val = createDir(full_path.substr(0, pos));
-	}
-	return ret_val;
+    size_t pos = 0;
+    bool ret_val = true;
+    while (ret_val == true && pos != std::string::npos) {
+        pos = full_path.find(ch, pos + 1);
+        ret_val = createDir(full_path.substr(0, pos));
+    }
+    return ret_val;
 }
 
-CLAController::CLAController()
-{
+CLAController::CLAController() {
     m_pimpl = new Impl();
     m_pimpl->m_parent = this;
 
-    for(int i = 0; i < RP_MAX_DIGITAL_CHANNELS; i++){
+    for (int i = 0; i < RP_MAX_DIGITAL_CHANNELS; i++) {
         m_pimpl->m_triggers[i].channel = (RP_DIGITAL_CHANNEL)i;
         m_pimpl->m_triggers[i].direction = RP_DIGITAL_DONT_CARE;
     }
 
-  	auto sigInt = [&](int) {
-        if (m_pimpl->m_isOpen){
+    auto sigInt = [&](int) {
+        if (m_pimpl->m_isOpen) {
             rp_Stop();
-        }else{
+        } else {
             ERROR_LOG("LA device not open")
         }
     };
-	shutdown_handler = sigInt;
-	std::signal(SIGINT, signal_handler);
-
+    shutdown_handler = sigInt;
+    std::signal(SIGINT, signal_handler);
 }
 
-CLAController::~CLAController(){
+CLAController::~CLAController() {
     std::lock_guard lock_thread(m_pimpl->m_thread_mutex);
     TRACE_SHORT("Start destroy")
-    if (m_pimpl->m_captureThread && m_pimpl->m_captureThread->joinable()){
+    if (m_pimpl->m_captureThread && m_pimpl->m_captureThread->joinable()) {
         m_pimpl->m_captureThread->join();
     }
     delete m_pimpl->m_captureThread;
@@ -167,18 +166,18 @@ CLAController::~CLAController(){
     TRACE_SHORT("End destroy")
 }
 
-auto CLAController::initFpga() -> bool{
+auto CLAController::initFpga() -> bool {
     return m_pimpl->initFpga();
 }
 
-auto CLAController::Impl::initFpga() -> bool{
+auto CLAController::Impl::initFpga() -> bool {
     std::lock_guard lock(m_run_mutex);
-    if (!m_isOpen){
+    if (!m_isOpen) {
         open();
         uint32_t dmaSize = 0;
         rp_GetFullBufferSize(&dmaSize);
         m_data.m_buffer.resize(dmaSize);
-        if (m_data.m_buffer.size() != dmaSize){
+        if (m_data.m_buffer.size() != dmaSize) {
             ERROR_LOG("Can't allocate buffer")
             m_data.m_buffer.resize(0);
             close();
@@ -188,15 +187,13 @@ auto CLAController::Impl::initFpga() -> bool{
     return true;
 }
 
-
-auto CLAController::setMode(la_Mode_t mode) -> void{
-    if (!m_pimpl->m_isOpen){
+auto CLAController::setMode(la_Mode_t mode) -> void {
+    if (!m_pimpl->m_isOpen) {
         ERROR_LOG("The LA device is not open")
         return;
     }
 
-    switch (mode)
-    {
+    switch (mode) {
         case LA_BASIC:
             rp_SetPolarity(0);
             break;
@@ -211,13 +208,12 @@ auto CLAController::setMode(la_Mode_t mode) -> void{
     }
 }
 
-auto CLAController::setTrigger(la_Trigger_Channel_t channel, la_Trigger_Mode_t mode) -> void{
+auto CLAController::setTrigger(la_Trigger_Channel_t channel, la_Trigger_Mode_t mode) -> void {
     if (channel >= MAX_LINES) {
         ERROR_LOG("The line is larger than acceptable")
         return;
     }
-    switch (mode)
-    {
+    switch (mode) {
         case LA_NONE:
             m_pimpl->m_triggers[channel].direction = RP_DIGITAL_DONT_CARE;
             break;
@@ -248,20 +244,25 @@ auto CLAController::setTrigger(la_Trigger_Channel_t channel, la_Trigger_Mode_t m
     }
 }
 
-auto CLAController::getTrigger(la_Trigger_Channel_t channel) -> la_Trigger_Mode_t{
+auto CLAController::getTrigger(la_Trigger_Channel_t channel) -> la_Trigger_Mode_t {
     if (channel >= MAX_LINES) {
         ERROR_LOG("The line is larger than acceptable")
         return LA_ERROR;
     }
 
-    switch (m_pimpl->m_triggers[channel].direction)
-    {
-        case RP_DIGITAL_DONT_CARE: return LA_NONE;
-        case RP_DIGITAL_DIRECTION_LOW: return LA_LOW;
-        case RP_DIGITAL_DIRECTION_HIGH: return LA_HIGH;
-        case RP_DIGITAL_DIRECTION_RISING: return LA_RISING;
-        case RP_DIGITAL_DIRECTION_FALLING: return LA_FALLING;
-        case RP_DIGITAL_DIRECTION_RISING_OR_FALLING: return LA_RISING_OR_FALLING;
+    switch (m_pimpl->m_triggers[channel].direction) {
+        case RP_DIGITAL_DONT_CARE:
+            return LA_NONE;
+        case RP_DIGITAL_DIRECTION_LOW:
+            return LA_LOW;
+        case RP_DIGITAL_DIRECTION_HIGH:
+            return LA_HIGH;
+        case RP_DIGITAL_DIRECTION_RISING:
+            return LA_RISING;
+        case RP_DIGITAL_DIRECTION_FALLING:
+            return LA_FALLING;
+        case RP_DIGITAL_DIRECTION_RISING_OR_FALLING:
+            return LA_RISING_OR_FALLING;
         default:
             ERROR_LOG("Undefined trigger")
             break;
@@ -269,18 +270,17 @@ auto CLAController::getTrigger(la_Trigger_Channel_t channel) -> la_Trigger_Mode_
     return LA_ERROR;
 }
 
-auto CLAController::Impl::isNoTriggers() -> bool{
-    for(int i = 0; i < RP_MAX_DIGITAL_CHANNELS; i++){
-        if (m_triggers[i].direction != RP_DIGITAL_DONT_CARE){
+auto CLAController::Impl::isNoTriggers() -> bool {
+    for (int i = 0; i < RP_MAX_DIGITAL_CHANNELS; i++) {
+        if (m_triggers[i].direction != RP_DIGITAL_DONT_CARE) {
             return false;
         }
     }
     return true;
 }
 
-auto CLAController::Impl::getAnnotation(la_Decoder_t decoder,uint8_t control) -> std::string{
-    switch (decoder)
-    {
+auto CLAController::Impl::getAnnotation(la_Decoder_t decoder, uint8_t control) -> std::string {
+    switch (decoder) {
         case LA_DECODER_CAN:
             return can::CANParameters::getCANAnnotationsString((can::CANAnnotations)control);
         case LA_DECODER_I2C:
@@ -295,9 +295,8 @@ auto CLAController::Impl::getAnnotation(la_Decoder_t decoder,uint8_t control) ->
     return "";
 }
 
-auto CLAController::Impl::getAnnotationSize(la_Decoder_t decoder) -> uint16_t{
-    switch (decoder)
-    {
+auto CLAController::Impl::getAnnotationSize(la_Decoder_t decoder) -> uint16_t {
+    switch (decoder) {
         case LA_DECODER_CAN:
             return can::CANAnnotations::ENUM_END;
         case LA_DECODER_I2C:
@@ -312,62 +311,60 @@ auto CLAController::Impl::getAnnotationSize(la_Decoder_t decoder) -> uint16_t{
     return 0;
 }
 
-
-auto CLAController::isNoTriggers() -> bool{
+auto CLAController::isNoTriggers() -> bool {
     return m_pimpl->isNoTriggers();
 }
 
-auto CLAController::resetTriggers() -> void{
-    for(int i = 0; i < RP_MAX_DIGITAL_CHANNELS; i++){
+auto CLAController::resetTriggers() -> void {
+    for (int i = 0; i < RP_MAX_DIGITAL_CHANNELS; i++) {
         m_pimpl->m_triggers[i].direction = RP_DIGITAL_DONT_CARE;
     }
 }
 
-auto CLAController::softwareTrigger() -> bool{
-    if (!m_pimpl->m_isOpen){
+auto CLAController::softwareTrigger() -> bool {
+    if (!m_pimpl->m_isOpen) {
         ERROR_LOG("The LA device is not open")
         return false;
     }
     return rp_SoftwareTrigger();
 }
 
-auto CLAController::setEnableRLE(bool enable) -> bool{
-    if (!m_pimpl->m_isOpen){
+auto CLAController::setEnableRLE(bool enable) -> bool {
+    if (!m_pimpl->m_isOpen) {
         ERROR_LOG("The LA device is not open")
         return false;
     }
     return rp_EnableDigitalPortDataRLE(enable);
 }
 
-auto CLAController::setDecoderEnable(std::string name, bool enable) -> void{
+auto CLAController::setDecoderEnable(std::string name, bool enable) -> void {
     std::lock_guard lock(m_pimpl->m_decoder_mutex);
-    if (m_pimpl->m_decoders.find(name) != m_pimpl->m_decoders.end()){
+    if (m_pimpl->m_decoders.find(name) != m_pimpl->m_decoders.end()) {
         m_pimpl->m_decoders[name]->setEnabled(enable);
-    }else{
-        ERROR_LOG("Decoder %s not found",name.c_str())
+    } else {
+        ERROR_LOG("Decoder %s not found", name.c_str())
     }
 }
 
-auto CLAController::getDecoderEnable(std::string name) -> bool{
+auto CLAController::getDecoderEnable(std::string name) -> bool {
     std::lock_guard lock(m_pimpl->m_decoder_mutex);
-    if (m_pimpl->m_decoders.find(name) != m_pimpl->m_decoders.end()){
+    if (m_pimpl->m_decoders.find(name) != m_pimpl->m_decoders.end()) {
         return m_pimpl->m_decoders[name]->getEnabled();
-    }else{
-        ERROR_LOG("Decoder %s not found",name.c_str())
+    } else {
+        ERROR_LOG("Decoder %s not found", name.c_str())
     }
     return false;
 }
 
-auto CLAController::isRLEEnable() -> bool{
+auto CLAController::isRLEEnable() -> bool {
     bool enable;
     rp_IsRLEEnable(&enable);
     return enable;
 }
 
-auto CLAController::addDecoder(std::string name, la_Decoder_t decoder) -> bool{
+auto CLAController::addDecoder(std::string name, la_Decoder_t decoder) -> bool {
     std::lock_guard lock(m_pimpl->m_decoder_mutex);
-    switch (decoder)
-    {
+    switch (decoder) {
         case LA_DECODER_CAN:
             m_pimpl->m_decoders[name] = std::make_shared<can::CANDecoder>(LA_DECODER_CAN);
             break;
@@ -381,141 +378,141 @@ auto CLAController::addDecoder(std::string name, la_Decoder_t decoder) -> bool{
             m_pimpl->m_decoders[name] = std::make_shared<uart::UARTDecoder>(LA_DECODER_UART);
             break;
 
-    default:
-        FATAL("Unknown decoder")
-        break;
+        default:
+            FATAL("Unknown decoder")
+            break;
     }
     return true;
 }
 
-auto CLAController::setDecoderSettings(std::string name,std::string json) -> bool{
+auto CLAController::setDecoderSettings(std::string name, std::string json) -> bool {
     std::lock_guard lock(m_pimpl->m_decoder_mutex);
-    if (m_pimpl->m_decoders.find(name) != m_pimpl->m_decoders.end()){
+    if (m_pimpl->m_decoders.find(name) != m_pimpl->m_decoders.end()) {
         m_pimpl->m_decoders[name]->setParametersInJSON(json);
         return true;
     }
     return false;
 }
 
-auto CLAController::getDecoderSettings(std::string name) -> std::string{
+auto CLAController::getDecoderSettings(std::string name) -> std::string {
     std::lock_guard lock(m_pimpl->m_decoder_mutex);
-    if (m_pimpl->m_decoders.find(name) != m_pimpl->m_decoders.end()){
+    if (m_pimpl->m_decoders.find(name) != m_pimpl->m_decoders.end()) {
         return m_pimpl->m_decoders[name]->getParametersInJSON();
     }
     return "";
 }
 
-auto CLAController::setDecoderSettingsUInt(std::string name, std::string key, uint32_t value) -> bool{
+auto CLAController::setDecoderSettingsUInt(std::string name, std::string key, uint32_t value) -> bool {
     std::lock_guard lock(m_pimpl->m_decoder_mutex);
-    if (m_pimpl->m_decoders.find(name) != m_pimpl->m_decoders.end()){
-        return m_pimpl->m_decoders[name]->setDecoderSettingsUInt(key,value);
+    if (m_pimpl->m_decoders.find(name) != m_pimpl->m_decoders.end()) {
+        return m_pimpl->m_decoders[name]->setDecoderSettingsUInt(key, value);
     }
     return false;
 }
 
-auto CLAController::setDecoderSettingsFloat(std::string name, std::string key, float value) -> bool{
+auto CLAController::setDecoderSettingsFloat(std::string name, std::string key, float value) -> bool {
     std::lock_guard lock(m_pimpl->m_decoder_mutex);
-    if (m_pimpl->m_decoders.find(name) != m_pimpl->m_decoders.end()){
-        return m_pimpl->m_decoders[name]->setDecoderSettingsFloat(key,value);
+    if (m_pimpl->m_decoders.find(name) != m_pimpl->m_decoders.end()) {
+        return m_pimpl->m_decoders[name]->setDecoderSettingsFloat(key, value);
     }
     return false;
 }
 
-auto CLAController::getDecoderSettingsUInt(std::string name, std::string key, uint32_t *value) -> bool{
+auto CLAController::getDecoderSettingsUInt(std::string name, std::string key, uint32_t* value) -> bool {
     std::lock_guard lock(m_pimpl->m_decoder_mutex);
-    if (m_pimpl->m_decoders.find(name) != m_pimpl->m_decoders.end()){
-        return m_pimpl->m_decoders[name]->getDecoderSettingsUInt(key,value);
+    if (m_pimpl->m_decoders.find(name) != m_pimpl->m_decoders.end()) {
+        return m_pimpl->m_decoders[name]->getDecoderSettingsUInt(key, value);
     }
     return false;
 }
 
-auto CLAController::getDecoderSettingsFloat(std::string name, std::string key, float *value) -> bool{
+auto CLAController::getDecoderSettingsFloat(std::string name, std::string key, float* value) -> bool {
     std::lock_guard lock(m_pimpl->m_decoder_mutex);
-    if (m_pimpl->m_decoders.find(name) != m_pimpl->m_decoders.end()){
-        return m_pimpl->m_decoders[name]->getDecoderSettingsFloat(key,value);
+    if (m_pimpl->m_decoders.find(name) != m_pimpl->m_decoders.end()) {
+        return m_pimpl->m_decoders[name]->getDecoderSettingsFloat(key, value);
     }
     return false;
 }
 
-auto CLAController::isDecoderExist(std::string name) -> bool{
+auto CLAController::isDecoderExist(std::string name) -> bool {
     std::lock_guard lock(m_pimpl->m_decoder_mutex);
-    if (m_pimpl->m_decoders.find(name) != m_pimpl->m_decoders.end()){
+    if (m_pimpl->m_decoders.find(name) != m_pimpl->m_decoders.end()) {
         return true;
     }
     return false;
 }
 
-auto CLAController::getDecoderType(std::string name) -> la_Decoder_t{
+auto CLAController::getDecoderType(std::string name) -> la_Decoder_t {
     std::lock_guard lock(m_pimpl->m_decoder_mutex);
-    if (m_pimpl->m_decoders.find(name) != m_pimpl->m_decoders.end()){
+    if (m_pimpl->m_decoders.find(name) != m_pimpl->m_decoders.end()) {
         return (la_Decoder_t)m_pimpl->m_decoders[name]->getDecoderType();
     }
     return LA_DECODER_NONE;
 }
 
-auto CLAController::removeDecoder(std::string name) -> bool{
+auto CLAController::removeDecoder(std::string name) -> bool {
     std::lock_guard lock(m_pimpl->m_decoder_mutex);
     return m_pimpl->m_decoders.erase(name);
 }
 
-auto CLAController::removeAllDecoders() -> void{
+auto CLAController::removeAllDecoders() -> void {
     std::lock_guard lock(m_pimpl->m_decoder_mutex);
     m_pimpl->m_decoders.clear();
 }
 
-auto CLAController::Impl::open() -> void{
-    if (rp_OpenUnit() == RP_OK){
+auto CLAController::Impl::open() -> void {
+    if (rp_OpenUnit() == RP_OK) {
         m_isOpen = true;
     }
 }
 
-auto CLAController::Impl::close() -> void{
-    if (rp_CloseUnit() == RP_OK){
+auto CLAController::Impl::close() -> void {
+    if (rp_CloseUnit() == RP_OK) {
         m_isOpen = false;
     }
 }
 
-auto CLAController::Impl::resetAllDecoders() -> void{
+auto CLAController::Impl::resetAllDecoders() -> void {
     std::lock_guard lock(m_decoder_mutex);
-    for(auto decoder: m_decoders){
+    for (auto decoder : m_decoders) {
         decoder.second->reset();
     }
 }
 
-auto CLAController::Impl::decode(const uint8_t* _input, uint32_t _size) -> void{
+auto CLAController::Impl::decode(const uint8_t* _input, uint32_t _size) -> void {
     std::lock_guard lock(m_decoder_mutex);
-    for(auto decoder: m_decoders){
-        if(!decoder.second->getEnabled()) continue;
+    for (auto decoder : m_decoders) {
+        if (!decoder.second->getEnabled())
+            continue;
         TRACE_CODE(profiler::clearHistory(decoder.first))
         TRACE_CODE(profiler::setTimePoint(decoder.first))
-        decoder.second->decode(_input,_size);
-        TRACE_CODE(profiler::saveTimePointuS(decoder.first,"Decoder %s. Data size %d",decoder.first.c_str(),_size))
-        TRACE_SHORT("Decoder %s. Memory usage %llu",decoder.first.c_str(),decoder.second->getMemoryUsage())
+        decoder.second->decode(_input, _size);
+        TRACE_CODE(profiler::saveTimePointuS(decoder.first, "Decoder %s. Data size %d", decoder.first.c_str(), _size))
+        TRACE_SHORT("Decoder %s. Memory usage %llu", decoder.first.c_str(), decoder.second->getMemoryUsage())
         std::lock_guard lock_delegate(m_delegate_mutex);
-        if (m_delegate){
-            m_delegate->decodeDone(m_parent,decoder.first);
+        if (m_delegate) {
+            m_delegate->decodeDone(m_parent, decoder.first);
         }
     }
     TRACE_CODE(profiler::print())
 }
 
-auto CLAController::getDecoders() -> std::vector<std::string>{
+auto CLAController::getDecoders() -> std::vector<std::string> {
     std::lock_guard lock(m_pimpl->m_decoder_mutex);
     std::vector<std::string> list;
-    for(auto decoder: m_pimpl->m_decoders){
+    for (auto decoder : m_pimpl->m_decoders) {
         list.push_back(decoder.first);
     }
     return list;
 }
 
-
-auto CLAController::getDecodedData(std::string name) -> std::vector<rp_la::OutputPacket>{
+auto CLAController::getDecodedData(std::string name) -> std::vector<rp_la::OutputPacket> {
     std::lock_guard lock(m_pimpl->m_decoder_mutex);
-    if (m_pimpl->m_decoders.find(name) != m_pimpl->m_decoders.end()){
+    if (m_pimpl->m_decoders.find(name) != m_pimpl->m_decoders.end()) {
         auto items = m_pimpl->m_decoders[name]->getSignal();
         // auto type = m_pimpl->m_decoders[name]->getDecoderType();
         std::vector<rp_la::OutputPacket> new_vect;
-        for(auto &itm:items){
+        for (auto& itm : items) {
             rp_la::OutputPacket pack;
             pack.line_name = itm.line_name;
             pack.control = itm.control;
@@ -531,59 +528,57 @@ auto CLAController::getDecodedData(std::string name) -> std::vector<rp_la::Outpu
     return {};
 }
 
-
-auto CLAController::setDecimation(uint32_t decimation) -> void{
+auto CLAController::setDecimation(uint32_t decimation) -> void {
     m_pimpl->m_decimation = decimation;
 }
 
-auto CLAController::getDecimation() -> uint32_t{
+auto CLAController::getDecimation() -> uint32_t {
     return m_pimpl->m_decimation;
 }
 
-auto CLAController::setPreTriggerSamples(uint32_t value) -> void{
+auto CLAController::setPreTriggerSamples(uint32_t value) -> void {
     m_pimpl->m_preTriggerSamples = value;
 }
 
-auto CLAController::getPreTriggerSamples() -> uint32_t{
+auto CLAController::getPreTriggerSamples() -> uint32_t {
     return m_pimpl->m_preTriggerSamples;
 }
 
-auto CLAController::setPostTriggerSamples(uint32_t value) -> void{
+auto CLAController::setPostTriggerSamples(uint32_t value) -> void {
     m_pimpl->m_postTriggerSamples = value;
 }
 
-auto CLAController::getPostTriggerSamples() -> uint32_t{
+auto CLAController::getPostTriggerSamples() -> uint32_t {
     return m_pimpl->m_postTriggerSamples;
 }
 
-auto CLAController::setDelegate(CLACallback *callbacks) -> void{
+auto CLAController::setDelegate(CLACallback* callbacks) -> void {
     std::lock_guard lock(m_pimpl->m_delegate_mutex);
     m_pimpl->m_delegate = callbacks;
 }
 
-auto CLAController::removeDelegate() -> void{
+auto CLAController::removeDelegate() -> void {
     std::lock_guard lock(m_pimpl->m_delegate_mutex);
     m_pimpl->m_delegate = nullptr;
 }
 
-auto CLAController::isCaptureRun() -> bool{
+auto CLAController::isCaptureRun() -> bool {
     return m_pimpl->m_isRun;
 }
 
-auto CLAController::Impl::run(uint32_t timeoutMs) -> void{
+auto CLAController::Impl::run(uint32_t timeoutMs) -> void {
 
     static auto trig = [](uint32_t timeoutMs) {
         usleep(timeoutMs * 1000);
         rp_SoftwareTrigger();
     };
 
-
     if (!m_parent) {
         m_isRun = false;
         return;
     }
 
-    if (!initFpga()){
+    if (!initFpga()) {
         ERROR_LOG("The LA device is not open")
         m_isRun = false;
         return;
@@ -595,34 +590,33 @@ auto CLAController::Impl::run(uint32_t timeoutMs) -> void{
 
     int trigger_check = 0;
 
-    for(size_t i = 0; i < RP_MAX_DIGITAL_CHANNELS; i++){
-        if (m_triggers[i].direction == RP_DIGITAL_DIRECTION_RISING ||
-            m_triggers[i].direction == RP_DIGITAL_DIRECTION_FALLING ||
-            m_triggers[i].direction == RP_DIGITAL_DIRECTION_RISING_OR_FALLING){
-                trigger_check++;
-            }
+    for (size_t i = 0; i < RP_MAX_DIGITAL_CHANNELS; i++) {
+        if (m_triggers[i].direction == RP_DIGITAL_DIRECTION_RISING || m_triggers[i].direction == RP_DIGITAL_DIRECTION_FALLING ||
+            m_triggers[i].direction == RP_DIGITAL_DIRECTION_RISING_OR_FALLING) {
+            trigger_check++;
+        }
     }
 
-    if (trigger_check > 1){
+    if (trigger_check > 1) {
         ERROR_LOG("Incorrect combination of triggers. You cannot use triggers at the same time: RISING, FALLING, RISING_OR_FALLING")
         m_isRun = false;
         return;
     }
 
-    ECHECK_NO_RET(rp_SetTriggerDigitalPortProperties(m_triggers,RP_MAX_DIGITAL_CHANNELS))
+    ECHECK_NO_RET(rp_SetTriggerDigitalPortProperties(m_triggers, RP_MAX_DIGITAL_CHANNELS))
 
     double timeIndisposedMs;
 
     auto ret = rp_Run(m_preTriggerSamples, m_postTriggerSamples, m_decimation, &timeIndisposedMs);
-    if (ret != RP_OK){
+    if (ret != RP_OK) {
         ERROR_LOG("Error starting data capture")
         m_isRun = false;
         return;
     }
     std::future<void> fut;
-    if (isNoTriggers()){
+    if (isNoTriggers()) {
         auto timeoutTrigMs = 1000;
-        fut = std::async(std::launch::async, trig, timeoutTrigMs); // Fix for bug in FPGA
+        fut = std::async(std::launch::async, trig, timeoutTrigMs);  // Fix for bug in FPGA
     }
 
     ECHECK_NO_RET(rp_WaitDataRLE(timeoutMs))
@@ -633,11 +627,11 @@ auto CLAController::Impl::run(uint32_t timeoutMs) -> void{
     // Need check buffer size for DMA
     uint32_t dmaSize = 0;
     rp_GetFullBufferSize(&dmaSize);
-    if (m_data.m_buffer.size() != dmaSize){
+    if (m_data.m_buffer.size() != dmaSize) {
         m_data.m_buffer.resize(dmaSize);
     }
 
-    if (m_data.m_buffer.size() != dmaSize){
+    if (m_data.m_buffer.size() != dmaSize) {
         ERROR_LOG("Can't allocate buffer")
         m_data.m_buffer.resize(0);
     }
@@ -645,17 +639,17 @@ auto CLAController::Impl::run(uint32_t timeoutMs) -> void{
     rp_SetDataBuffer((int16_t*)m_data.m_buffer.data(), m_data.m_buffer.size());
     bool isTimeout = false;
     rp_GetIsTimeout(&isTimeout);
-    if (!isTimeout){
+    if (!isTimeout) {
         uint32_t blockCount = 0;
         uint64_t numSamples = 0;
-        ECHECK_NO_RET(rp_GetValuesRLE(&blockCount,&numSamples))
+        ECHECK_NO_RET(rp_GetValuesRLE(&blockCount, &numSamples))
         m_data.m_capturedBytes = blockCount * 2;
         rp_GetTrigBlockPositionRLE(&m_data.m_trigerPosistion);
         m_data.m_samplesBeforeTrigger = m_preTriggerSamples;
         m_data.m_capturedSamples = numSamples;
         m_data.m_isRLE = true;
-        decode(m_data.m_buffer.data(),m_data.m_capturedBytes);
-    }else{
+        decode(m_data.m_buffer.data(), m_data.m_capturedBytes);
+    } else {
         m_data.m_trigerPosistion = 0;
         m_data.m_samplesBeforeTrigger = 0;
         m_data.m_capturedSamples = 0;
@@ -663,32 +657,28 @@ auto CLAController::Impl::run(uint32_t timeoutMs) -> void{
     }
     m_isRun = false;
     std::lock_guard lock_delegate(m_delegate_mutex);
-    if (m_delegate){
-        m_delegate->captureStatus(m_parent,
-                                  isTimeout,
-                                  m_data.m_capturedBytes,
-                                  m_data.m_capturedSamples,
-                                  m_data.m_samplesBeforeTrigger,
+    if (m_delegate) {
+        m_delegate->captureStatus(m_parent, isTimeout, m_data.m_capturedBytes, m_data.m_capturedSamples, m_data.m_samplesBeforeTrigger,
                                   m_data.m_capturedSamples - m_data.m_samplesBeforeTrigger);
     }
     TRACE_SHORT("Done")
 }
 
-auto CLAController::Impl::loadFromBytes(std::vector<uint8_t> data, bool isRLE, uint64_t triggerSamplePosition) -> void{
-     if (!m_parent) {
+auto CLAController::Impl::loadFromBytes(std::vector<uint8_t> data, bool isRLE, uint64_t triggerSamplePosition) -> void {
+    if (!m_parent) {
         m_isRun = false;
         return;
     }
     std::lock_guard lock(m_run_mutex);
     m_data.m_buffer = data;
     uint64_t numSamples = 0;
-    if (isRLE){
+    if (isRLE) {
         if (data.size() % 2) {
             ERROR_LOG("The buffer must be a multiple of 2")
             m_isRun = false;
             return;
         }
-        for(size_t i = 0; i < data.size(); i+=2){
+        for (size_t i = 0; i < data.size(); i += 2) {
             numSamples += data[i] + 1;
         }
         m_data.m_capturedBytes = data.size();
@@ -696,38 +686,36 @@ auto CLAController::Impl::loadFromBytes(std::vector<uint8_t> data, bool isRLE, u
         m_data.m_capturedSamples = numSamples;
         m_data.m_isRLE = true;
 
-    }else{
+    } else {
         ERROR_LOG("Unsupported mode")
     }
-    decode(m_data.m_buffer.data(),m_data.m_capturedBytes);
+    decode(m_data.m_buffer.data(), m_data.m_capturedBytes);
     m_isRun = false;
     std::lock_guard lock_delegate(m_delegate_mutex);
-    if (m_delegate){
-        m_delegate->decodeStatus(m_parent,
-                                  m_data.m_capturedBytes,
-                                  m_data.m_capturedSamples,
-                                  m_data.m_samplesBeforeTrigger,
-                                  m_data.m_capturedSamples - m_data.m_samplesBeforeTrigger);
+    if (m_delegate) {
+        m_delegate->decodeStatus(m_parent, m_data.m_capturedBytes, m_data.m_capturedSamples, m_data.m_samplesBeforeTrigger,
+                                 m_data.m_capturedSamples - m_data.m_samplesBeforeTrigger);
     }
     TRACE_SHORT("Done")
 }
 
-auto CLAController::Impl::runDecode() -> void{
+auto CLAController::Impl::runDecode() -> void {
     if (!m_parent) {
         return;
     }
     std::lock_guard lock(m_run_mutex);
     if (m_data.m_isRLE && m_data.m_capturedBytes)
-        decode(m_data.m_buffer.data(),m_data.m_capturedBytes);
+        decode(m_data.m_buffer.data(), m_data.m_capturedBytes);
     TRACE_SHORT("Decode done")
 }
 
 // TODO Timeout support should be implemented. Timeout is currently ignored.
-auto CLAController::runAsync(uint32_t timeoutMs) -> void{
+auto CLAController::runAsync(uint32_t timeoutMs) -> void {
     std::lock_guard lock_thread(m_pimpl->m_thread_mutex);
-    if (m_pimpl->m_isRun) return;
+    if (m_pimpl->m_isRun)
+        return;
 
-    if (m_pimpl->m_captureThread && m_pimpl->m_captureThread->joinable()){
+    if (m_pimpl->m_captureThread && m_pimpl->m_captureThread->joinable()) {
         m_pimpl->m_captureThread->join();
     }
     delete m_pimpl->m_captureThread;
@@ -736,11 +724,12 @@ auto CLAController::runAsync(uint32_t timeoutMs) -> void{
     m_pimpl->m_captureThread = new std::thread(&CLAController::Impl::run, m_pimpl, timeoutMs);
 }
 
-auto CLAController::runAsync(std::vector<uint8_t> data, bool isRLE, uint64_t triggerSamplePosition) -> void{
+auto CLAController::runAsync(std::vector<uint8_t> data, bool isRLE, uint64_t triggerSamplePosition) -> void {
     std::lock_guard lock_thread(m_pimpl->m_thread_mutex);
-    if (m_pimpl->m_isRun) return;
+    if (m_pimpl->m_isRun)
+        return;
 
-    if (m_pimpl->m_captureThread && m_pimpl->m_captureThread->joinable()){
+    if (m_pimpl->m_captureThread && m_pimpl->m_captureThread->joinable()) {
         m_pimpl->m_captureThread->join();
     }
     delete m_pimpl->m_captureThread;
@@ -748,20 +737,19 @@ auto CLAController::runAsync(std::vector<uint8_t> data, bool isRLE, uint64_t tri
     m_pimpl->m_captureThread = new std::thread(&CLAController::Impl::loadFromBytes, m_pimpl, data, isRLE, triggerSamplePosition);
 }
 
-auto CLAController::decodeAsync() -> void{
+auto CLAController::decodeAsync() -> void {
     std::lock_guard lock_thread(m_pimpl->m_thread_mutex);
-    if (m_pimpl->m_captureThread && m_pimpl->m_captureThread->joinable()){
+    if (m_pimpl->m_captureThread && m_pimpl->m_captureThread->joinable()) {
         m_pimpl->m_captureThread->join();
     }
     delete m_pimpl->m_captureThread;
     m_pimpl->m_captureThread = new std::thread(&CLAController::Impl::runDecode, m_pimpl);
 }
 
-auto CLAController::decode(std::string name) -> std::vector<rp_la::OutputPacket>{
+auto CLAController::decode(std::string name) -> std::vector<rp_la::OutputPacket> {
     auto decoder = getDecoderType(name);
     std::shared_ptr<Decoder> decoder_ptr = nullptr;
-    switch (decoder)
-    {
+    switch (decoder) {
         case LA_DECODER_CAN:
             decoder_ptr = std::make_shared<can::CANDecoder>(LA_DECODER_CAN);
             break;
@@ -769,21 +757,21 @@ auto CLAController::decode(std::string name) -> std::vector<rp_la::OutputPacket>
             decoder_ptr = std::make_shared<i2c::I2CDecoder>(LA_DECODER_I2C);
             break;
         case LA_DECODER_SPI:
-            decoder_ptr= std::make_shared<spi::SPIDecoder>(LA_DECODER_SPI);
+            decoder_ptr = std::make_shared<spi::SPIDecoder>(LA_DECODER_SPI);
             break;
         case LA_DECODER_UART:
             decoder_ptr = std::make_shared<uart::UARTDecoder>(LA_DECODER_UART);
             break;
 
-    default:
-        return {};
+        default:
+            return {};
     }
 
     decoder_ptr->setParametersInJSON(getDecoderSettings(name));
-    decoder_ptr->decode(m_pimpl->m_data.m_buffer.data(),m_pimpl->m_data.m_capturedBytes);
+    decoder_ptr->decode(m_pimpl->m_data.m_buffer.data(), m_pimpl->m_data.m_capturedBytes);
     auto items = decoder_ptr->getSignal();
     std::vector<rp_la::OutputPacket> new_vect;
-    for(auto &itm:items){
+    for (auto& itm : items) {
         rp_la::OutputPacket pack;
         pack.line_name = itm.line_name;
         pack.control = itm.control;
@@ -796,13 +784,13 @@ auto CLAController::decode(std::string name) -> std::vector<rp_la::OutputPacket>
     return new_vect;
 }
 
-auto CLAController::wait(uint32_t timeoutMs, bool *isTimeout) -> void{
+auto CLAController::wait(uint32_t timeoutMs, bool* isTimeout) -> void {
 
     *isTimeout = false;
     auto startTime = getClockMs();
-    while(m_pimpl->m_isRun){
-        if (timeoutMs != 0){
-            if (getClockMs() - startTime > timeoutMs){
+    while (m_pimpl->m_isRun) {
+        if (timeoutMs != 0) {
+            if (getClockMs() - startTime > timeoutMs) {
                 rp_Stop();
                 TRACE_SHORT("Exit by timeout")
                 *isTimeout = true;
@@ -811,32 +799,32 @@ auto CLAController::wait(uint32_t timeoutMs, bool *isTimeout) -> void{
         }
     }
     TRACE_SHORT("Stop wait")
-    if (m_pimpl->m_captureThread && m_pimpl->m_captureThread->joinable()){
+    if (m_pimpl->m_captureThread && m_pimpl->m_captureThread->joinable()) {
         m_pimpl->m_captureThread->join();
     }
     delete m_pimpl->m_captureThread;
     m_pimpl->m_captureThread = nullptr;
 }
 
-auto CLAController::saveCaptureDataToFile(std::string file) -> bool{
+auto CLAController::saveCaptureDataToFile(std::string file) -> bool {
     std::filesystem::path path(file);
     createDirTree(path.parent_path().string());
-	FILE* f = fopen(file.c_str(), "wb");
-    if (!f){
+    FILE* f = fopen(file.c_str(), "wb");
+    if (!f) {
         ERROR_LOG("File opening failed");
         return false;
     }
     uint32_t bytes = getCapturedDataSize();
-    size_t bytesForWrite = std::min((size_t)bytes,m_pimpl->m_data.m_buffer.size());
-	fwrite(m_pimpl->m_data.m_buffer.data(), sizeof(uint8_t), bytesForWrite, f);
-	fclose(f);
-    TRACE("Data writed to file: %s size: %d", file.c_str(),bytesForWrite);
+    size_t bytesForWrite = std::min((size_t)bytes, m_pimpl->m_data.m_buffer.size());
+    fwrite(m_pimpl->m_data.m_buffer.data(), sizeof(uint8_t), bytesForWrite, f);
+    fclose(f);
+    TRACE("Data writed to file: %s size: %d", file.c_str(), bytesForWrite);
     return true;
 }
 
-auto CLAController::loadFromFile(std::string file, bool isRLE, uint64_t triggerSamplePosition) -> bool{
+auto CLAController::loadFromFile(std::string file, bool isRLE, uint64_t triggerSamplePosition) -> bool {
     FILE* f = fopen(file.c_str(), "rb");
-    if (!f){
+    if (!f) {
         ERROR_LOG("File opening failed");
         return false;
     }
@@ -844,13 +832,13 @@ auto CLAController::loadFromFile(std::string file, bool isRLE, uint64_t triggerS
     fseek(f, 0, SEEK_END);
     int64_t fileSize = ftell(f);
     rewind(f);
-    if(fileSize < 0){
-        ERROR_LOG("Error getting file size for: %s",file.c_str())
+    if (fileSize < 0) {
+        ERROR_LOG("Error getting file size for: %s", file.c_str())
         fclose(f);
         return false;
     }
     std::vector<uint8_t> buffer;
-    buffer.resize(fileSize); // Resize the vector to hold the whole file
+    buffer.resize(fileSize);  // Resize the vector to hold the whole file
 
     int64_t bytesRead = fread(buffer.data(), 1, fileSize, f);
     if (bytesRead != fileSize) {
@@ -860,19 +848,19 @@ auto CLAController::loadFromFile(std::string file, bool isRLE, uint64_t triggerS
     }
 
     fclose(f);
-    if (buffer.size() == 0){
+    if (buffer.size() == 0) {
         ERROR_LOG("File is empty");
         return false;
     }
 
     m_pimpl->m_data.m_buffer = buffer;
     uint64_t numSamples = 0;
-    if (isRLE){
+    if (isRLE) {
         if (buffer.size() % 2) {
             ERROR_LOG("The buffer must be a multiple of 2")
             return false;
         }
-        for(size_t i = 0; i < buffer.size(); i+=2){
+        for (size_t i = 0; i < buffer.size(); i += 2) {
             numSamples += buffer[i] + 1;
         }
         m_pimpl->m_data.m_capturedBytes = buffer.size();
@@ -880,16 +868,16 @@ auto CLAController::loadFromFile(std::string file, bool isRLE, uint64_t triggerS
         m_pimpl->m_data.m_capturedSamples = numSamples;
         m_pimpl->m_data.m_isRLE = true;
 
-    }else{
+    } else {
         ERROR_LOG("Unsupported mode")
         return false;
     }
     return true;
 }
 
-auto CLAController::loadFromFileAndDecode(std::string file, bool isRLE, uint64_t triggerSamplePosition) -> bool{
+auto CLAController::loadFromFileAndDecode(std::string file, bool isRLE, uint64_t triggerSamplePosition) -> bool {
     FILE* f = fopen(file.c_str(), "rb");
-    if (!f){
+    if (!f) {
         ERROR_LOG("File opening failed");
         return false;
     }
@@ -897,13 +885,13 @@ auto CLAController::loadFromFileAndDecode(std::string file, bool isRLE, uint64_t
     fseek(f, 0, SEEK_END);
     int64_t fileSize = ftell(f);
     rewind(f);
-    if(fileSize < 0){
-        ERROR_LOG("Error getting file size for: %s",file.c_str())
+    if (fileSize < 0) {
+        ERROR_LOG("Error getting file size for: %s", file.c_str())
         fclose(f);
         return false;
     }
     std::vector<uint8_t> buffer;
-    buffer.resize(fileSize); // Resize the vector to hold the whole file
+    buffer.resize(fileSize);  // Resize the vector to hold the whole file
 
     int64_t bytesRead = fread(buffer.data(), 1, fileSize, f);
     if (bytesRead != fileSize) {
@@ -913,32 +901,32 @@ auto CLAController::loadFromFileAndDecode(std::string file, bool isRLE, uint64_t
     }
 
     fclose(f);
-    if (buffer.size() == 0){
+    if (buffer.size() == 0) {
         ERROR_LOG("File is empty");
         return false;
     }
-    runAsync(buffer,isRLE ,triggerSamplePosition);
+    runAsync(buffer, isRLE, triggerSamplePosition);
     return true;
 }
 
-auto CLAController::getDataNP(uint8_t* np_buffer, int size) -> uint32_t{
+auto CLAController::getDataNP(uint8_t* np_buffer, int size) -> uint32_t {
     uint32_t copySize = (size_t)size < m_pimpl->m_data.m_buffer.size() ? size : m_pimpl->m_data.m_buffer.size();
-    memcpy(np_buffer,m_pimpl->m_data.m_buffer.data(),copySize);
+    memcpy(np_buffer, m_pimpl->m_data.m_buffer.data(), copySize);
     return copySize;
 }
 
-auto CLAController::getUnpackedRLEDataNP(uint8_t* np_buffer, int size) -> uint64_t{
-    if (!m_pimpl->m_data.m_isRLE){
+auto CLAController::getUnpackedRLEDataNP(uint8_t* np_buffer, int size) -> uint64_t {
+    if (!m_pimpl->m_data.m_isRLE) {
         ERROR_LOG("Missing RLE data")
         return 0;
     }
 
     uint64_t samples = 0;
-    for(uint32_t index = 0; index < m_pimpl->m_data.m_capturedBytes; index++){
+    for (uint32_t index = 0; index < m_pimpl->m_data.m_capturedBytes; index++) {
         uint16_t count = m_pimpl->m_data.m_buffer[index++] + 1;
         uint8_t data = m_pimpl->m_data.m_buffer[index];
-        for (uint16_t j = 0 ; j < count; j++){
-            if ((uint64_t)size < samples){
+        for (uint16_t j = 0; j < count; j++) {
+            if ((uint64_t)size < samples) {
                 WARNING("There was not enough buffer to decompress the data")
                 return samples;
             }
@@ -948,83 +936,83 @@ auto CLAController::getUnpackedRLEDataNP(uint8_t* np_buffer, int size) -> uint64
     return samples;
 }
 
-
-auto CLAController::getDMAMemorySize() -> uint32_t{
+auto CLAController::getDMAMemorySize() -> uint32_t {
     uint32_t size;
     rp_GetFullBufferSize(&size);
     return size;
 }
 
-auto CLAController::getCapturedDataSize() -> uint32_t{
+auto CLAController::getCapturedDataSize() -> uint32_t {
     return m_pimpl->m_data.m_capturedBytes;
 }
 
-auto CLAController::getCapturedSamples() -> uint64_t{
+auto CLAController::getCapturedSamples() -> uint64_t {
     return m_pimpl->m_data.m_capturedSamples;
 }
 
-auto CLAController::printRLE(bool useHex) -> void{
-    if (!m_pimpl->m_data.m_isRLE){
+auto CLAController::printRLE(bool useHex) -> void {
+    if (!m_pimpl->m_data.m_isRLE) {
         ERROR_LOG("Missing RLE data")
         return;
     }
-    printRLENP(m_pimpl->m_data.m_buffer.data(),m_pimpl->m_data.m_capturedBytes,useHex);
+    printRLENP(m_pimpl->m_data.m_buffer.data(), m_pimpl->m_data.m_capturedBytes, useHex);
 }
 
-auto CLAController::printRLENP(uint8_t* np_buffer, int size, bool useHex) -> void{
+auto CLAController::printRLENP(uint8_t* np_buffer, int size, bool useHex) -> void {
     std::vector<uint64_t> count_vec;
     std::vector<uint8_t> data_vec;
-    for(uint32_t index = 0; index < (uint32_t)size - 1; index++){
+    for (uint32_t index = 0; index < (uint32_t)size - 1; index++) {
         uint16_t count = np_buffer[index++] + 1;
         uint8_t data = np_buffer[index];
-        if (data_vec.size() == 0){
+        if (data_vec.size() == 0) {
             count_vec.push_back(count);
             data_vec.push_back(data);
-        } else if (data_vec.back() != data){
+        } else if (data_vec.back() != data) {
             count_vec.push_back(count);
             data_vec.push_back(data);
-        } else{
+        } else {
             count_vec.back() += count;
         }
     }
 
-    auto binary = [](uint8_t i,int bigEndian){
-        int j=0,m = bigEndian ? 1 : 10000000;
-        while (i)
-        {
-            j+=m*(i%2);
-            if (bigEndian) m*=10; else m/=10;
+    auto binary = [](uint8_t i, int bigEndian) {
+        int j = 0, m = bigEndian ? 1 : 10000000;
+        while (i) {
+            j += m * (i % 2);
+            if (bigEndian)
+                m *= 10;
+            else
+                m /= 10;
             i >>= 1;
         }
         return j;
     };
     uint64_t samples = 0;
-    for(size_t i = 0; i < count_vec.size(); i++){
+    for (size_t i = 0; i < count_vec.size(); i++) {
         if (useHex)
-            fprintf(stdout, "%06llu/%06llu\t: 0x%X\n",samples,count_vec[i],data_vec[i]);
+            fprintf(stdout, "%06llu/%06llu\t: 0x%X\n", samples, count_vec[i], data_vec[i]);
         else
-            fprintf(stdout, "%06llu/%06llu\t: %08d\n",samples,count_vec[i],binary(data_vec[i],0));
+            fprintf(stdout, "%06llu/%06llu\t: %08d\n", samples, count_vec[i], binary(data_vec[i], 0));
         samples += count_vec[i];
     }
 }
 
-auto CLAController::getAnnotationList(la_Decoder_t decoder) -> std::map<uint8_t,std::string>{
+auto CLAController::getAnnotationList(la_Decoder_t decoder) -> std::map<uint8_t, std::string> {
     uint8_t count = m_pimpl->getAnnotationSize(decoder);
-    std::map<uint8_t,std::string> map;
-    for(uint8_t i = 0; i < count; i++){
-        map[i] = getAnnotation(decoder,i);
+    std::map<uint8_t, std::string> map;
+    for (uint8_t i = 0; i < count; i++) {
+        map[i] = getAnnotation(decoder, i);
     }
     return map;
 }
 
-auto CLAController::getAnnotation(la_Decoder_t decoder, uint8_t control) -> std::string{
-    return m_pimpl->getAnnotation(decoder,control);
+auto CLAController::getAnnotation(la_Decoder_t decoder, uint8_t control) -> std::string {
+    return m_pimpl->getAnnotation(decoder, control);
 }
 
-auto CLAController::getDefaultSettings(la_Decoder_t decoder) -> std::string{
+auto CLAController::getDefaultSettings(la_Decoder_t decoder) -> std::string {
     std::shared_ptr<Decoder> ptr = nullptr;
-    switch (decoder)
-    {
+    switch (decoder) {
         case LA_DECODER_CAN:
             ptr = std::make_shared<can::CANDecoder>(LA_DECODER_CAN);
             break;
@@ -1038,18 +1026,16 @@ auto CLAController::getDefaultSettings(la_Decoder_t decoder) -> std::string{
             ptr = std::make_shared<uart::UARTDecoder>(LA_DECODER_UART);
             break;
 
-    default:
-        FATAL("Unknown decoder")
-        break;
+        default:
+            FATAL("Unknown decoder")
+            break;
     }
     return ptr->getParametersInJSON();
 }
 
-
-auto CLAController::decodeNP(la_Decoder_t decoder, std::string json_settings, uint8_t* np_buffer, int size) -> std::vector<rp_la::OutputPacket>{
+auto CLAController::decodeNP(la_Decoder_t decoder, std::string json_settings, uint8_t* np_buffer, int size) -> std::vector<rp_la::OutputPacket> {
     std::shared_ptr<Decoder> ptr = nullptr;
-    switch (decoder)
-    {
+    switch (decoder) {
         case LA_DECODER_CAN:
             ptr = std::make_shared<can::CANDecoder>(LA_DECODER_CAN);
             break;
@@ -1063,22 +1049,22 @@ auto CLAController::decodeNP(la_Decoder_t decoder, std::string json_settings, ui
             ptr = std::make_shared<uart::UARTDecoder>(LA_DECODER_UART);
             break;
 
-    default:
-        FATAL("Unknown decoder")
-        break;
+        default:
+            FATAL("Unknown decoder")
+            break;
     }
 
     ptr->setParametersInJSON(json_settings);
     TRACE_CODE(profiler::clearHistory("decodeNP"))
     TRACE_CODE(profiler::setTimePoint("decodeNP"))
-    ptr->decode(np_buffer,size);
-    TRACE_CODE(profiler::saveTimePointuS("decodeNP","Data size %d",size))
-    TRACE_CODE(profiler::printuS("decodeNP","Decoder %s",ptr->name().c_str()))
+    ptr->decode(np_buffer, size);
+    TRACE_CODE(profiler::saveTimePointuS("decodeNP", "Data size %d", size))
+    TRACE_CODE(profiler::printuS("decodeNP", "Decoder %s", ptr->name().c_str()))
 
-    TRACE_SHORT("Memory usage %llu",ptr->getMemoryUsage())
+    TRACE_SHORT("Memory usage %llu", ptr->getMemoryUsage())
     auto items = ptr->getSignal();
     std::vector<rp_la::OutputPacket> new_vect;
-    for(auto &itm:items){
+    for (auto& itm : items) {
         rp_la::OutputPacket pack;
         pack.line_name = itm.line_name;
         pack.control = itm.control;
@@ -1092,4 +1078,4 @@ auto CLAController::decodeNP(la_Decoder_t decoder, std::string json_settings, ui
     return new_vect;
 }
 
-}
+}  // namespace rp_la

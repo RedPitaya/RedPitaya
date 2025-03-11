@@ -2,11 +2,11 @@
 #ifndef _RP_LA_API_H_
 #define _RP_LA_API_H_
 
-#include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
-namespace rp_la{
+namespace rp_la {
 
 typedef enum rpDigitalChannel {
     RP_DIGITAL_CHANNEL_0,
@@ -38,12 +38,10 @@ typedef enum rpDigitalDirection {
     RP_DIGITAL_MAX_DIRECTION
 } RP_DIGITAL_DIRECTION;
 
-
 typedef struct tPS3000ADigitalChannelDirections {
     RP_DIGITAL_CHANNEL channel;
     RP_DIGITAL_DIRECTION direction;
 } RP_DIGITAL_CHANNEL_DIRECTIONS;
-
 
 int rp_OpenUnit();
 
@@ -65,19 +63,17 @@ int rp_CloseUnit();
  *                      passed to the driver.
  *
  */
-int rp_SetTriggerDigitalPortProperties(RP_DIGITAL_CHANNEL_DIRECTIONS * directions,
-                                            uint16_t nDirections);
-
+int rp_SetTriggerDigitalPortProperties(RP_DIGITAL_CHANNEL_DIRECTIONS* directions, uint16_t nDirections);
 
 int rp_EnableDigitalPortDataRLE(bool enable);
 
-int rp_IsRLEEnable(bool *enable);
+int rp_IsRLEEnable(bool* enable);
 
 int rp_SoftwareTrigger();
 
 int rp_SetPolarity(uint32_t reg);
 
-int rp_GetTimebase(uint32_t decimation, double * timeIntervalNanoseconds);
+int rp_GetTimebase(uint32_t decimation, double* timeIntervalNanoseconds);
 
 /**
  * Set data buffer
@@ -88,7 +84,7 @@ int rp_GetTimebase(uint32_t decimation, double * timeIntervalNanoseconds);
  * @param size       The size of the buffer array (notice that one sample is 16 bits)
  *
  */
-int rp_SetDataBuffer(int16_t *buffer, size_t size);
+int rp_SetDataBuffer(int16_t* buffer, size_t size);
 
 /**
  *
@@ -107,20 +103,17 @@ int rp_SetDataBuffer(int16_t *buffer, size_t size);
  * @param timeIndisposedS            On exit, the time, in milliseconds, that the scope will spend collecting samples.
  *
  */
-int rp_Run(uint32_t noOfPreTriggerSamples,
-                uint32_t noOfPostTriggerSamples,
-                uint32_t decimation,
-                double * timeIndisposedMs);
+int rp_Run(uint32_t noOfPreTriggerSamples, uint32_t noOfPostTriggerSamples, uint32_t decimation, double* timeIndisposedMs);
 
 int rp_WaitDataRLE(int timeout);
 
 int rp_WaitData(int timeout);
 
-int rp_GetIsTimeout(bool *isTimeout);
+int rp_GetIsTimeout(bool* isTimeout);
 
-int rp_GetTrigBlockPositionRLE(uint32_t *tigger_pos);
+int rp_GetTrigBlockPositionRLE(uint32_t* tigger_pos);
 
-int rp_GetTrigPosition(uint32_t *tigger_pos);
+int rp_GetTrigPosition(uint32_t* tigger_pos);
 
 /**
  * This function returns block-mode data, with or without down-sampling, starting at the
@@ -133,9 +126,9 @@ int rp_GetTrigPosition(uint32_t *tigger_pos);
  *                          The number of samples retrieved will not be more than the number requested,
  *                          and the data retrieved starts at startIndex.
  */
-int rp_GetValuesRLE(uint32_t *noOfBlocks, uint64_t *noOfSamples);
+int rp_GetValuesRLE(uint32_t* noOfBlocks, uint64_t* noOfSamples);
 
-int rp_GetValues(uint32_t *noOfSamples);
+int rp_GetValues(uint32_t* noOfSamples);
 
 /**
  * Stops the scope device from sampling data. If this function is called
@@ -144,11 +137,8 @@ int rp_GetValues(uint32_t *noOfSamples);
  */
 int rp_Stop(void);
 
+int rp_GetFullBufferSize(uint32_t* size);
 
-int rp_GetFullBufferSize(uint32_t *size);
+}  // namespace rp_la
 
-
-
-}
-
-#endif // _RP_LA_API_H_
+#endif  // _RP_LA_API_H_

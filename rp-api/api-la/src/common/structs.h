@@ -15,44 +15,40 @@
 #ifndef __RP_LA_STRUCTS_H
 #define __RP_LA_STRUCTS_H
 
-#include <stdint.h>
-#include <stddef.h>
-#include <string>
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <string>
 
 typedef struct {
-    std::string     name;
-    std::string     dev;
-    size_t          length;
-    int             fd;
-    volatile void  *regset = NULL;
-    void           *context;
-    int             struct_size; ///< only used to reserve dummy memory space for testing
+    std::string name;
+    std::string dev;
+    size_t length;
+    int fd;
+    volatile void* regset = NULL;
+    void* context;
+    int struct_size;  ///< only used to reserve dummy memory space for testing
 
-    std::string     dma_dev;
-    size_t          dma_size;
-    int             dma_fd;
+    std::string dma_dev;
+    size_t dma_size;
+    int dma_fd;
     //volatile void *dma_mem;
 } rp_handle_uio_t;
 
-typedef enum {
-    RP_DMA_SINGLE,
-    RP_DMA_CYCLIC,
-    RP_DMA_STOP_RX
-} RP_DMA_CTRL;
+typedef enum { RP_DMA_SINGLE, RP_DMA_CYCLIC, RP_DMA_STOP_RX } RP_DMA_CTRL;
 
 typedef struct {
-    bool           inProcess;
-    bool           isCapture;
-    bool           isTimeout;
-    int16_t *      buf = NULL;
-    size_t         buf_size;
-    uint32_t       pre_samples;
-    uint32_t       post_samples;
-    uint32_t       trig_blockIndexRLE;  // RLE: index of pair (count,value).
-    uint32_t       trig_indexNonRLE;
-    uint32_t       last_blockIndexRLE;
-    uint32_t       last_indexNonRLE;
+    bool inProcess;
+    bool isCapture;
+    bool isTimeout;
+    int16_t* buf = NULL;
+    size_t buf_size;
+    uint32_t pre_samples;
+    uint32_t post_samples;
+    uint32_t trig_blockIndexRLE;  // RLE: index of pair (count,value).
+    uint32_t trig_indexNonRLE;
+    uint32_t last_blockIndexRLE;
+    uint32_t last_indexNonRLE;
 
     auto reset() {
         inProcess = false;
@@ -77,7 +73,7 @@ typedef struct {
 #define SINGLE_TX 11
 #define SIMPLE_RX 18  //blocking until complete
 #define SIMPLE_TX 17  //blocking until complete
-#define SIMPLE 12 //blocking until complete
+#define SIMPLE 12     //blocking until complete
 #define STATUS 20
 #define TIMEOUT 21
 
@@ -107,20 +103,18 @@ typedef struct {
 #define TX_SGMNT_CNT 0
 #define TX_SGMNT_SIZE SGMNT_SIZE
 
-#define RP_SGMNT_CNT 8 // 240/RP_SGMNT_CNT must be int
-#define RP_SGMNT_SIZE (256*1024)
+#define RP_SGMNT_CNT 8  // 240/RP_SGMNT_CNT must be int
+#define RP_SGMNT_SIZE (256 * 1024)
 
+#define RP_TRG_LOA_PAT_MASK (1 << 1)  ///< logic analyzer pattern trigger
+#define RP_TRG_LOA_SWE_MASK (1 << 0)  ///< logic analyzer software trigger
 
-#define RP_TRG_LOA_PAT_MASK      (1<<1)   ///< logic analyzer pattern trigger
-#define RP_TRG_LOA_SWE_MASK      (1<<0)   ///< logic analyzer software trigger
-
-#define RP_TRG_ALL_MASK         0
+#define RP_TRG_ALL_MASK 0
 
 // /** control register masks  */
-#define RP_CTL_STO_MASK         (1<<3) ///< 1 - ACQ: stops / aborts the acq. ; returns 1 when acq. is stopped
-#define RP_CTL_STA_MASK         (1<<2) ///< 1 - ACQ: starts acq.
-#define RP_CTL_SWT_MASK         (1<<1) ///< 1 - sw trigger bit (sw trigger must be enabled)
-#define RP_CTL_RST_MASK         (1<<0) ///< 1 - reset state machine so that it is in known state
-
+#define RP_CTL_STO_MASK (1 << 3)  ///< 1 - ACQ: stops / aborts the acq. ; returns 1 when acq. is stopped
+#define RP_CTL_STA_MASK (1 << 2)  ///< 1 - ACQ: starts acq.
+#define RP_CTL_SWT_MASK (1 << 1)  ///< 1 - sw trigger bit (sw trigger must be enabled)
+#define RP_CTL_RST_MASK (1 << 0)  ///< 1 - reset state machine so that it is in known state
 
 #endif
