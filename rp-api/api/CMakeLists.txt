@@ -75,6 +75,7 @@ list(APPEND src
             ${CMAKE_SOURCE_DIR}/src/generate.cpp
             ${CMAKE_SOURCE_DIR}/src/gen_handler.cpp
             ${CMAKE_SOURCE_DIR}/src/axi_manager.cpp
+            ${CMAKE_SOURCE_DIR}/src/housekeeping.cpp
             ${CMAKE_SOURCE_DIR}/src/daisy.cpp
             ${CMAKE_SOURCE_DIR}/src/convert.hpp
             ${CMAKE_SOURCE_DIR}/src/profiler.cpp

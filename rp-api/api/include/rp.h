@@ -20,20 +20,20 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
 #include <stdbool.h>
-#include "rp_enums.h"
+#include <stdint.h>
+#include "common/rp_log.h"
 #include "rp_acq.h"
 #include "rp_acq_axi.h"
 #include "rp_asg_axi.h"
+#include "rp_enums.h"
 #include "rp_gen.h"
-#include "common/rp_log.h"
 
-#define ADC_BUFFER_SIZE         (16 * 1024)
-#define DAC_BUFFER_SIZE         (16 * 1024)
+#define ADC_BUFFER_SIZE (16 * 1024)
+#define DAC_BUFFER_SIZE (16 * 1024)
 
-#define RISE_FALL_MIN_RATIO     0.0001      // ratio of rise/fall time to period
-#define RISE_FALL_MAX_RATIO     0.1
+#define RISE_FALL_MIN_RATIO 0.0001  // ratio of rise/fall time to period
+#define RISE_FALL_MAX_RATIO 0.1
 
 /** @name Error codes
  *  Various error codes returned by the API.
@@ -41,72 +41,69 @@ extern "C" {
 ///@{
 
 /** Success */
-#define RP_OK     0
+#define RP_OK 0
 /** Failed to Open EEPROM Device */
-#define RP_EOED   1
+#define RP_EOED 1
 /** Failed to Open Memory Device */
-#define RP_EOMD   2
+#define RP_EOMD 2
 /** Failed to Close Memory Device*/
-#define RP_ECMD   3
+#define RP_ECMD 3
 /** Failed to Map Memory Device */
-#define RP_EMMD   4
+#define RP_EMMD 4
 /** Failed to Unmap Memory Device */
-#define RP_EUMD   5
+#define RP_EUMD 5
 /** Value Out Of Range */
-#define RP_EOOR   6
+#define RP_EOOR 6
 /** LED Input Direction is not valid */
-#define RP_ELID   7
+#define RP_ELID 7
 /** Modifying Read Only field */
-#define RP_EMRO   8
+#define RP_EMRO 8
 /** Writing to Input Pin is not valid */
-#define RP_EWIP   9
+#define RP_EWIP 9
 /** Invalid Pin number */
-#define RP_EPN    10
+#define RP_EPN 10
 /** Uninitialized Input Argument */
-#define RP_UIA    11
+#define RP_UIA 11
 /** Failed to Find Calibration Parameters */
-#define RP_FCA    12
+#define RP_FCA 12
 /** Failed to Read Calibration Parameters */
-#define RP_RCA    13
+#define RP_RCA 13
 /** Buffer too small */
-#define RP_BTS    14
+#define RP_BTS 14
 /** Invalid parameter value */
-#define RP_EIPV   15
+#define RP_EIPV 15
 /** Unsupported Feature */
-#define RP_EUF    16
+#define RP_EUF 16
 /** Data not normalized */
-#define RP_ENN    17
+#define RP_ENN 17
 /** Failed to open bus */
-#define RP_EFOB   18
+#define RP_EFOB 18
 /** Failed to close bus */
-#define RP_EFCB   19
+#define RP_EFCB 19
 /** Failed to acquire bus access */
-#define RP_EABA   20
+#define RP_EABA 20
 /** Failed to read from the bus */
-#define RP_EFRB   21
+#define RP_EFRB 21
 /** Failed to write to the bus */
-#define RP_EFWB   22
+#define RP_EFWB 22
 /** Extension module not connected */
-#define RP_EMNC   23
+#define RP_EMNC 23
 /** Command not supported */
-#define RP_NOTS   24
+#define RP_NOTS 24
 /** Error allocate memory */
-#define RP_EAM    26
+#define RP_EAM 26
 /** Api not initialized */
-#define RP_EANI   27
+#define RP_EANI 27
 /** Execution error */
-#define RP_EOP    28
+#define RP_EOP 28
 
-#define SPECTR_OUT_SIG_LEN (2*1024)
+#define SPECTR_OUT_SIG_LEN (2 * 1024)
 
 ///@}
-
-
 
 /** @name General
  */
 ///@{
-
 
 /**
  * Initializes addresses for accessing registers. Does not initialize calibration parameters.
@@ -115,7 +112,6 @@ extern "C" {
  */
 
 int rp_InitAdresses();
-
 
 /**
  * Initializes the library. It must be called first, before any other library method.
@@ -165,6 +161,40 @@ const char* rp_GetVersion();
  */
 const char* rp_GetError(int errorCode);
 
+/**
+ * Prints a set of registers for Housekeeping.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_PrintHouseRegset();
+
+/**
+ * Prints a set of registers for Oscilloscope.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_PrintOscRegset();
+
+/**
+ * Prints a set of registers for Arbitrary Signal Generator.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_PrintAsgRegset();
+
+/**
+ * Prints a set of registers for Analog Mixed Signals (AMS).
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_PrintAmsRegset();
+
+/**
+ * Prints a set of registers for Daisy Chain.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_PrintDaisyRegset();
 
 ///@}
 /** @name Digital loop
@@ -178,9 +208,7 @@ const char* rp_GetError(int errorCode);
 */
 int rp_EnableDigitalLoop(bool enable);
 
-
 ///@}
-
 
 /** @name Identification
  */
@@ -189,41 +217,40 @@ int rp_EnableDigitalLoop(bool enable);
 /**
 * Gets FPGA Synthesized ID
 */
-int rp_IdGetID(uint32_t *id);
+int rp_IdGetID(uint32_t* id);
 
 /**
 * Gets FPGA Unique DNA
 */
-int rp_IdGetDNA(uint64_t *dna);
+int rp_IdGetDNA(uint64_t* dna);
 
 ///@}
-
 
 /**
  * LED methods
  */
 
 int rp_LEDSetState(uint32_t state);
-int rp_LEDGetState(uint32_t *state);
+int rp_LEDGetState(uint32_t* state);
 
 /**
  * Clock frequency meter
  */
 
-int rp_GetFreqCounter(uint32_t *value);
+int rp_GetFreqCounter(uint32_t* value);
 
 /**
  * GPIO methods
  */
 
 int rp_GPIOnSetDirection(uint32_t direction);
-int rp_GPIOnGetDirection(uint32_t *direction);
+int rp_GPIOnGetDirection(uint32_t* direction);
 int rp_GPIOnSetState(uint32_t state);
-int rp_GPIOnGetState(uint32_t *state);
+int rp_GPIOnGetState(uint32_t* state);
 int rp_GPIOpSetDirection(uint32_t direction);
-int rp_GPIOpGetDirection(uint32_t *direction);
+int rp_GPIOpGetDirection(uint32_t* direction);
 int rp_GPIOpSetState(uint32_t state);
-int rp_GPIOpGetState(uint32_t *state);
+int rp_GPIOpGetState(uint32_t* state);
 
 int rp_EnableDebugReg();
 
@@ -243,7 +270,7 @@ int rp_SetCANModeEnable(bool enable);
 * @param state True if this mode is enabled
 * @return If the function is successful, the return value is RP_OK.
 */
-int rp_GetCANModeEnable(bool *state);
+int rp_GetCANModeEnable(bool* state);
 ///@}
 
 /** @name Digital Input/Output
@@ -295,7 +322,6 @@ int rp_DpinGetDirection(rp_dpin_t pin, rp_pinDirection_t* direction);
 
 ///@}
 
-
 /** @name Daisy chain clocks and triggers
  */
 ///@{
@@ -318,7 +344,7 @@ int rp_SetEnableDaisyChainTrigSync(bool enable);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_GetEnableDaisyChainTrigSync(bool *status);
+int rp_GetEnableDaisyChainTrigSync(bool* status);
 
 /**
  * Function turns GPION_0 into trigger output for selected source - acquisition or generation
@@ -335,7 +361,7 @@ int rp_SetDpinEnableTrigOutput(bool enable);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_GetDpinEnableTrigOutput(bool *state);
+int rp_GetDpinEnableTrigOutput(bool* state);
 
 /**
  * Sets the trigger source mode. ADC/DAC
@@ -352,7 +378,7 @@ int rp_SetSourceTrigOutput(rp_outTiggerMode_t mode);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_GetSourceTrigOutput(rp_outTiggerMode_t *mode);
+int rp_GetSourceTrigOutput(rp_outTiggerMode_t* mode);
 
 /**
  * Enables clock sync over SATA daisy chain connectors. Primary board will start generating clock for secondary unit and so on.
@@ -369,11 +395,9 @@ int rp_SetEnableDiasyChainClockSync(bool enable);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_GetEnableDiasyChainClockSync(bool *state);
-
+int rp_GetEnableDiasyChainClockSync(bool* state);
 
 ///@}
-
 
 /** @name Analog Inputs/Outputs
  */
@@ -429,8 +453,7 @@ int rp_ApinSetValueRaw(rp_apin_t pin, uint32_t value);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_ApinGetRange(rp_apin_t pin, float* min_val,  float* max_val);
-
+int rp_ApinGetRange(rp_apin_t pin, float* min_val, float* max_val);
 
 /** @name Analog Inputs
  */
@@ -452,7 +475,6 @@ int rp_AIpinGetValue(int unsigned pin, float* value, uint32_t* raw);
  * @return       RP_OK - successful, RP_E* - failure
  */
 int rp_AIpinGetValueRaw(int unsigned pin, uint32_t* value);
-
 
 /** @name Analog Outputs
  */
@@ -503,8 +525,7 @@ int rp_AOpinSetValueRaw(int unsigned pin, uint32_t value);
  * @param max_val  Maximum value in volts on given pin.
  * @return       RP_OK - successful, RP_E* - failure
  */
-int rp_AOpinGetRange(int unsigned pin, float* min_val,  float* max_val);
-
+int rp_AOpinGetRange(int unsigned pin, float* min_val, float* max_val);
 
 ///@}
 
@@ -518,7 +539,7 @@ int rp_AOpinGetRange(int unsigned pin, float* min_val,  float* max_val);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GetPllControlEnable(bool *enable);
+int rp_GetPllControlEnable(bool* enable);
 
 /**
 * Only works with Redpitaya 250-12 otherwise returns RP_NOTS
@@ -534,7 +555,7 @@ int rp_SetPllControlEnable(bool enable);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GetPllControlLocked(bool *status);
+int rp_GetPllControlLocked(bool* status);
 ///@}
 
 /** @name PLL Control for 250-12
@@ -555,7 +576,7 @@ int rp_SetExternalTriggerLevel(float value);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GetExternalTriggerLevel(float *value);
+int rp_GetExternalTriggerLevel(float* value);
 
 ///@}
 
@@ -563,4 +584,4 @@ int rp_GetExternalTriggerLevel(float *value);
 }
 #endif
 
-#endif //__RP_H
+#endif  //__RP_H
