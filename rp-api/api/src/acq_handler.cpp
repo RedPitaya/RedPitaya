@@ -1360,6 +1360,20 @@ int acq_GetAC_DC(rp_channel_t channel, rp_acq_ac_dc_mode_t* status) {
     return RP_OK;
 }
 
+int acq_SetEqFilterBypass(rp_channel_t channel, bool enable) {
+
+    CHECK_CHANNEL
+
+    return osc_SetEqFilterBypass(channel, enable);
+}
+
+int acq_GetEqFilterBypass(rp_channel_t channel, bool* enable) {
+
+    CHECK_CHANNEL
+
+    return osc_GetEqFilterBypass(channel, enable);
+}
+
 int acq_UpdateAcqFilter(rp_channel_t channel) {
 
     CHECK_CHANNEL

@@ -137,6 +137,20 @@ typedef union {
     ext_trig_dbc_t reg;
 } ext_trig_dbc_u_t;
 
+typedef struct {
+    uint32_t bypass_ch1 : 1;
+    uint32_t bypass_ch2 : 1;
+    void print() volatile {
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "bypass_ch1", bypass_ch1);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "bypass_ch2", bypass_ch2);
+    };
+} rec_filter_bypass_t;
+
+typedef union {
+    uint32_t reg_full;
+    rec_filter_bypass_t reg;
+} rec_filter_bypass_u_t;
+
 // Oscilloscope structure declaration
 typedef struct osc_control_s {
 
@@ -451,11 +465,19 @@ typedef struct osc_control_s {
      * bit[24] - (W) Write 1 for unlock trigger - ch4
      * bit[31:25] - reserved
     */
-    uint32_t trigger_lock_ctr;  // 0x94
+    uint32_t trigger_lock_ctr;
+
+    /**
+     * Offset 0x98 - Reconstruction filter bypass
+     * bit[0] - (R/W) Bypass ch1
+     * bit[1] - (R/W) Bypass ch2
+     * bit[31:2] - reserved
+    */
+    uint32_t filter_bypass;
 
     /** @brief Offset 0x98 - reserved
      */
-    uint32_t reserved_98[30];
+    uint32_t reserved_98[29];
 
     /** @brief Offset 0x110 - After trigger delay register
      *
@@ -575,6 +597,8 @@ int osc_SetTriggerDelay(rp_channel_t channel, uint32_t decimated_data_num);
 int osc_GetTriggerDelay(rp_channel_t channel, uint32_t* decimated_data_num);
 int osc_GetWritePointer(rp_channel_t channel, uint32_t* pos);
 int osc_GetWritePointerAtTrig(rp_channel_t channel, uint32_t* pos);
+int osc_SetEqFilterBypass(rp_channel_t channel, bool enable);
+int osc_GetEqFilterBypass(rp_channel_t channel, bool* enable);
 int osc_SetEqFiltersChA(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp);
 int osc_GetEqFiltersChA(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
 int osc_SetEqFiltersChB(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp);

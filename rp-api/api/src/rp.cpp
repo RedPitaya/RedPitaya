@@ -1781,6 +1781,14 @@ int rp_AcqGetAC_DC(rp_channel_t channel, rp_acq_ac_dc_mode_t* status) {
     return acq_GetAC_DC(channel, status);
 }
 
+int rp_AcqSetBypassFilter(rp_channel_t channel, bool enable) {
+    return acq_SetEqFilterBypass(channel, enable);
+}
+
+int rp_AcqGetBypassFilter(rp_channel_t channel, bool* enable) {
+    return acq_GetEqFilterBypass(channel, enable);
+}
+
 int rp_AcqUpdateAcqFilter(rp_channel_t channel) {
     if (!rp_HPGetFastADCIsFilterPresentOrDefault())
         return RP_NOTS;

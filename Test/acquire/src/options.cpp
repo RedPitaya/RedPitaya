@@ -1,219 +1,198 @@
-#include <iostream>
 #include <getopt.h>
-#include <vector>
-#include <cstring>
 #include <algorithm>
-#include <ctime>
 #include <chrono>
+#include <cstring>
+#include <ctime>
+#include <iostream>
+#include <vector>
 
 #include "common/version.h"
 #include "options.h"
 
 #define DEC_MAX 5
 
-static constexpr uint32_t g_dec[DEC_MAX] = { 1,  2,  4,  8,  16 };
+static constexpr uint32_t g_dec[DEC_MAX] = {1, 2, 4, 8, 16};
 
-
-static constexpr char optstring_250_12[64] = "esx1:2:d:vht:l:orckag";
+static constexpr char optstring_250_12[64] = "esbx1:2:d:vht:l:orckag";
 static struct option long_options_250_12[32] = {
-        /* These options set a flag. */
-        {"equalization", no_argument,       0, 'e'},
-        {"shaping",      no_argument,       0, 's'},
-        {"atten1",       required_argument, 0, '1'},
-        {"atten2",       required_argument, 0, '2'},
-        {"dc",           required_argument, 0, 'd'},
-        {"tr_ch",        required_argument, 0, 't'},
-        {"tr_level",     required_argument, 0, 'l'},
-        {"version",      no_argument,       0, 'v'},
-        {"help",         no_argument,       0, 'h'},
-        {"hex",          no_argument,       0, 'x'},
-        {"volt",         no_argument,       0, 'o'},
-        {"no_reg",       no_argument,       0, 'r'},
-        {"calib",        no_argument,       0, 'c'},
-        {"hk",           no_argument,       0, 'k'},
-        {"axi",          no_argument,       0, 'a'},
-        {"debug",        no_argument,       0, 'g'},
-        {"offset",       required_argument, 0,  0 },
-        {0, 0, 0, 0}
-};
+    /* These options set a flag. */
+    {"equalization", no_argument, 0, 'e'},
+    {"shaping", no_argument, 0, 's'},
+    {"bypass", no_argument, 0, 'b'},
+    {"atten1", required_argument, 0, '1'},
+    {"atten2", required_argument, 0, '2'},
+    {"dc", required_argument, 0, 'd'},
+    {"tr_ch", required_argument, 0, 't'},
+    {"tr_level", required_argument, 0, 'l'},
+    {"version", no_argument, 0, 'v'},
+    {"help", no_argument, 0, 'h'},
+    {"hex", no_argument, 0, 'x'},
+    {"volt", no_argument, 0, 'o'},
+    {"no_reg", no_argument, 0, 'r'},
+    {"calib", no_argument, 0, 'c'},
+    {"hk", no_argument, 0, 'k'},
+    {"axi", no_argument, 0, 'a'},
+    {"debug", no_argument, 0, 'g'},
+    {"offset", required_argument, 0, 0},
+    {0, 0, 0, 0}};
 
 static constexpr char g_format_250_12[2048] =
-        "\n"
-        "Usage: %s [OPTION]... SIZE <DEC>\n"
-        "\n"
-        "  --equalization  -e    Use equalization filter in FPGA (default: disabled).\n"
-        "  --shaping       -s    Use shaping filter in FPGA (default: disabled).\n"
-        "  --atten1=a      -1 a  Use Channel 1 attenuator setting a [1, 20] (default: 1).\n"
-        "  --atten2=a      -2 a  Use Channel 2 attenuator setting a [1, 20] (default: 1).\n"
-        "  --dc=c          -d c  Enable DC mode. Setting c use for channels [1, 2, B(Both channels)].\n"
-        "                        By default, AC mode is turned on.\n"
-        "  --tr_ch=c       -t c  Enable trigger by channel. Setting c use for channels [1P, 1N, 2P, 2N, EP (external channel), EN (external channel)].\n"
-        "                        P - positive edge, N -negative edge. By default trigger no set\n"
-        "  --tr_level=c    -l c  Set trigger level (default: 0).\n"
-        "  --version       -v    Print version info.\n"
-        "  --help          -h    Print this message.\n"
-        "  --hex           -x    Print value in hex.\n"
-        "  --volt          -o    Print value in volt.\n"
-        "  --no_reg        -r    Disable load registers config (XML) for DAC and ADC.\n"
-        "  --calib         -c    Disable calibration parameters\n"
-        "  --hk            -k    Reset houskeeping (Reset state for GPIO). Default: disabled\n"
-        "  --axi           -a    Enable AXI interface. Also enable housekeeping reset. Default: disabled\n"
-        "  --debug         -g    Debug registers. Default: disabled\n"
-        "  --offset              Offset relative to the trigger pointer [-16384 .. 16384]\n"
-        "    SIZE                Number of samples to acquire [0 - %u].\n"
-        "    DEC                 Decimation [%u,%u,%u,%u,%u,...] (default: 1). Valid values are from 1 to 65536\n"
-        "\n";
+    "\n"
+    "Usage: %s [OPTION]... SIZE <DEC>\n"
+    "\n"
+    "  --equalization  -e    Use equalization filter in FPGA (default: disabled).\n"
+    "  --shaping       -s    Use shaping filter in FPGA (default: disabled).\n"
+    "  --bypass        -b    Bypass shaping filter in FPGA.\n"
+    "  --atten1=a      -1 a  Use Channel 1 attenuator setting a [1, 20] (default: 1).\n"
+    "  --atten2=a      -2 a  Use Channel 2 attenuator setting a [1, 20] (default: 1).\n"
+    "  --dc=c          -d c  Enable DC mode. Setting c use for channels [1, 2, B(Both channels)].\n"
+    "                        By default, AC mode is turned on.\n"
+    "  --tr_ch=c       -t c  Enable trigger by channel. Setting c use for channels [1P, 1N, 2P, 2N, EP (external channel), EN (external channel)].\n"
+    "                        P - positive edge, N -negative edge. By default trigger no set\n"
+    "  --tr_level=c    -l c  Set trigger level (default: 0).\n"
+    "  --version       -v    Print version info.\n"
+    "  --help          -h    Print this message.\n"
+    "  --hex           -x    Print value in hex.\n"
+    "  --volt          -o    Print value in volt.\n"
+    "  --no_reg        -r    Disable load registers config (XML) for DAC and ADC.\n"
+    "  --calib         -c    Disable calibration parameters\n"
+    "  --hk            -k    Reset houskeeping (Reset state for GPIO). Default: disabled\n"
+    "  --axi           -a    Enable AXI interface. Also enable housekeeping reset. Default: disabled\n"
+    "  --debug         -g    Debug registers. Default: disabled\n"
+    "  --offset              Offset relative to the trigger pointer [-16384 .. 16384]\n"
+    "    SIZE                Number of samples to acquire [0 - %u].\n"
+    "    DEC                 Decimation [%u,%u,%u,%u,%u,...] (default: 1). Valid values are from 1 to 65536\n"
+    "\n";
 
-
-static constexpr char optstring_125_14[64] = "esx1:2:vht:l:ockag";
+static constexpr char optstring_125_14[64] = "esbx1:2:vht:l:ockag";
 static struct option long_options_125_14[32] = {
-        /* These options set a flag. */
-        {"equalization", no_argument,       0, 'e'},
-        {"shaping",      no_argument,       0, 's'},
-        {"gain1",        required_argument, 0, '1'},
-        {"gain2",        required_argument, 0, '2'},
-        {"tr_ch",        required_argument, 0, 't'},
-        {"tr_level",     required_argument, 0, 'l'},
-        {"version",      no_argument,       0, 'v'},
-        {"help",         no_argument,       0, 'h'},
-        {"hex",          no_argument,       0, 'x'},
-        {"volt",         no_argument,       0, 'o'},
-        {"calib",        no_argument,       0, 'c'},
-        {"hk",           no_argument,       0, 'k'},
-        {"axi",          no_argument,       0, 'a'},
-        {"debug",        no_argument,       0, 'g'},
-        {"offset",       required_argument, 0,  0 },
-        {0, 0, 0, 0}
-};
+    /* These options set a flag. */
+    {"equalization", no_argument, 0, 'e'},
+    {"shaping", no_argument, 0, 's'},
+    {"bypass", no_argument, 0, 'b'},
+    {"gain1", required_argument, 0, '1'},
+    {"gain2", required_argument, 0, '2'},
+    {"tr_ch", required_argument, 0, 't'},
+    {"tr_level", required_argument, 0, 'l'},
+    {"version", no_argument, 0, 'v'},
+    {"help", no_argument, 0, 'h'},
+    {"hex", no_argument, 0, 'x'},
+    {"volt", no_argument, 0, 'o'},
+    {"calib", no_argument, 0, 'c'},
+    {"hk", no_argument, 0, 'k'},
+    {"axi", no_argument, 0, 'a'},
+    {"debug", no_argument, 0, 'g'},
+    {"offset", required_argument, 0, 0},
+    {0, 0, 0, 0}};
 
 static constexpr char g_format_125_14[2048] =
-        "\n"
-        "Usage: %s [OPTION]... SIZE <DEC>\n"
-        "\n"
-        "  --equalization  -e    Use equalization filter in FPGA (default: disabled).\n"
-        "  --shaping       -s    Use shaping filter in FPGA (default: disabled).\n"
-        "  --gain1=g       -1 g  Use Channel 1 gain setting g [lv, hv] (default: lv).\n"
-        "  --gain2=g       -2 g  Use Channel 2 gain setting g [lv, hv] (default: lv).\n"
-        "  --tr_ch=c       -t c  Enable trigger by channel. Setting c use for channels [1P, 1N, 2P, 2N, EP (external channel), EN (external channel)].\n"
-        "                        P - positive edge, N -negative edge. By default trigger no set\n"
-        "  --tr_level=c    -l c  Set trigger level (default: 0).\n"
-        "  --version       -v    Print version info.\n"
-        "  --help          -h    Print this message.\n"
-        "  --hex           -x    Print value in hex.\n"
-        "  --volt          -o    Print value in volt.\n"
-        "  --calib         -c    Disable calibration parameters\n"
-        "  --hk            -k    Reset houskeeping (Reset state for GPIO). Default: disabled\n"
-        "  --axi           -a    Enable AXI interface. Also enable housekeeping reset. Default: disabled\n"
-        "  --debug         -g    Debug registers. Default: disabled\n"
-        "  --offset              Offset relative to the trigger pointer [-16384 .. 16384]\n"
-        "    SIZE                Number of samples to acquire [0 - %u].\n"
-        "    DEC                 Decimation [%u,%u,%u,%u,%u,...] (default: 1). Valid values are from 1 to 65536\n"
-        "\n";
+    "\n"
+    "Usage: %s [OPTION]... SIZE <DEC>\n"
+    "\n"
+    "  --equalization  -e    Use equalization filter in FPGA (default: disabled).\n"
+    "  --shaping       -s    Use shaping filter in FPGA (default: disabled).\n"
+    "  --bypass        -b    Bypass shaping filter in FPGA.\n"
+    "  --gain1=g       -1 g  Use Channel 1 gain setting g [lv, hv] (default: lv).\n"
+    "  --gain2=g       -2 g  Use Channel 2 gain setting g [lv, hv] (default: lv).\n"
+    "  --tr_ch=c       -t c  Enable trigger by channel. Setting c use for channels [1P, 1N, 2P, 2N, EP (external channel), EN (external channel)].\n"
+    "                        P - positive edge, N -negative edge. By default trigger no set\n"
+    "  --tr_level=c    -l c  Set trigger level (default: 0).\n"
+    "  --version       -v    Print version info.\n"
+    "  --help          -h    Print this message.\n"
+    "  --hex           -x    Print value in hex.\n"
+    "  --volt          -o    Print value in volt.\n"
+    "  --calib         -c    Disable calibration parameters\n"
+    "  --hk            -k    Reset houskeeping (Reset state for GPIO). Default: disabled\n"
+    "  --axi           -a    Enable AXI interface. Also enable housekeeping reset. Default: disabled\n"
+    "  --debug         -g    Debug registers. Default: disabled\n"
+    "  --offset              Offset relative to the trigger pointer [-16384 .. 16384]\n"
+    "    SIZE                Number of samples to acquire [0 - %u].\n"
+    "    DEC                 Decimation [%u,%u,%u,%u,%u,...] (default: 1). Valid values are from 1 to 65536\n"
+    "\n";
 
-
-static constexpr char optstring_125_14_4ch[64] = "esx1:2:3:4:vht:l:ockg";
+static constexpr char optstring_125_14_4ch[64] = "esbx1:2:3:4:vht:l:ockg";
 static struct option long_options_125_14_4ch[32] = {
-        /* These options set a flag. */
-        {"equalization", no_argument,       0, 'e'},
-        {"shaping",      no_argument,       0, 's'},
-        {"gain1",        required_argument, 0, '1'},
-        {"gain2",        required_argument, 0, '2'},
-        {"gain3",        required_argument, 0, '3'},
-        {"gain4",        required_argument, 0, '4'},
-        {"tr_ch",        required_argument, 0, 't'},
-        {"tr_level",     required_argument, 0, 'l'},
-        {"version",      no_argument,       0, 'v'},
-        {"help",         no_argument,       0, 'h'},
-        {"hex",          no_argument,       0, 'x'},
-        {"volt",         no_argument,       0, 'o'},
-        {"calib",        no_argument,       0, 'c'},
-        {"hk",           no_argument,       0, 'k'},
-        {"debug",        no_argument,       0, 'g'},
-        {"offset",       required_argument, 0,  0 },
-        {0, 0, 0, 0}
-};
+    /* These options set a flag. */
+    {"equalization", no_argument, 0, 'e'}, {"shaping", no_argument, 0, 's'},     {"bypass", no_argument, 0, 'b'},
+    {"gain1", required_argument, 0, '1'},  {"gain2", required_argument, 0, '2'}, {"gain3", required_argument, 0, '3'},
+    {"gain4", required_argument, 0, '4'},  {"tr_ch", required_argument, 0, 't'}, {"tr_level", required_argument, 0, 'l'},
+    {"version", no_argument, 0, 'v'},      {"help", no_argument, 0, 'h'},        {"hex", no_argument, 0, 'x'},
+    {"volt", no_argument, 0, 'o'},         {"calib", no_argument, 0, 'c'},       {"hk", no_argument, 0, 'k'},
+    {"debug", no_argument, 0, 'g'},        {"offset", required_argument, 0, 0},  {0, 0, 0, 0}};
 
 static constexpr char g_format_125_14_4ch[2048] =
-        "\n"
-        "Usage: %s [OPTION]... SIZE <DEC>\n"
-        "\n"
-        "  --equalization  -e    Use equalization filter in FPGA (default: disabled).\n"
-        "  --shaping       -s    Use shaping filter in FPGA (default: disabled).\n"
-        "  --gain1=g       -1 g  Use Channel 1 gain setting g [lv, hv] (default: lv).\n"
-        "  --gain2=g       -2 g  Use Channel 2 gain setting g [lv, hv] (default: lv).\n"
-        "  --gain3=g       -3 g  Use Channel 3 gain setting g [lv, hv] (default: lv).\n"
-        "  --gain4=g       -4 g  Use Channel 4 gain setting g [lv, hv] (default: lv).\n"
-        "  --tr_ch=c       -t c  Enable trigger by channel. Setting c use for channels [1P, 1N, 2P, 2N, 3P, 3N, 4P, 4N, EP (external channel), EN (external channel)].\n"
-        "                        P - positive edge, N -negative edge. By default trigger no set\n"
-        "  --tr_level=c    -l c  Set trigger level (default: 0).\n"
-        "  --version       -v    Print version info.\n"
-        "  --help          -h    Print this message.\n"
-        "  --hex           -x    Print value in hex.\n"
-        "  --volt          -o    Print value in volt.\n"
-        "  --calib         -c    Disable calibration parameters\n"
-        "  --hk            -k    Reset houskeeping (Reset state for GPIO). Default: disabled\n"
-        "  --debug         -g    Debug registers. Default: disabled\n"
-        "  --offset              Offset relative to the trigger pointer [-16384 .. 16384]\n"
-        "    SIZE                Number of samples to acquire [0 - %u].\n"
-        "    DEC                 Decimation [%u,%u,%u,%u,%u,...] (default: 1). Valid values are from 1 to 65536\n"
-        "\n";
+    "\n"
+    "Usage: %s [OPTION]... SIZE <DEC>\n"
+    "\n"
+    "  --equalization  -e    Use equalization filter in FPGA (default: disabled).\n"
+    "  --shaping       -s    Use shaping filter in FPGA (default: disabled).\n"
+    "  --bypass        -b    Bypass shaping filter in FPGA.\n"
+    "  --gain1=g       -1 g  Use Channel 1 gain setting g [lv, hv] (default: lv).\n"
+    "  --gain2=g       -2 g  Use Channel 2 gain setting g [lv, hv] (default: lv).\n"
+    "  --gain3=g       -3 g  Use Channel 3 gain setting g [lv, hv] (default: lv).\n"
+    "  --gain4=g       -4 g  Use Channel 4 gain setting g [lv, hv] (default: lv).\n"
+    "  --tr_ch=c       -t c  Enable trigger by channel. Setting c use for channels [1P, 1N, 2P, 2N, 3P, 3N, 4P, 4N, EP (external channel), EN (external "
+    "channel)].\n"
+    "                        P - positive edge, N -negative edge. By default trigger no set\n"
+    "  --tr_level=c    -l c  Set trigger level (default: 0).\n"
+    "  --version       -v    Print version info.\n"
+    "  --help          -h    Print this message.\n"
+    "  --hex           -x    Print value in hex.\n"
+    "  --volt          -o    Print value in volt.\n"
+    "  --calib         -c    Disable calibration parameters\n"
+    "  --hk            -k    Reset houskeeping (Reset state for GPIO). Default: disabled\n"
+    "  --debug         -g    Debug registers. Default: disabled\n"
+    "  --offset              Offset relative to the trigger pointer [-16384 .. 16384]\n"
+    "    SIZE                Number of samples to acquire [0 - %u].\n"
+    "    DEC                 Decimation [%u,%u,%u,%u,%u,...] (default: 1). Valid values are from 1 to 65536\n"
+    "\n";
 
-
-
-std::vector<std::string> split(const std::string& s, char seperator)
-{
+std::vector<std::string> split(const std::string& s, char seperator) {
     std::vector<std::string> output;
     std::string::size_type prev_pos = 0, pos = 0;
-    while((pos = s.find(seperator, pos)) != std::string::npos)
-    {
-        std::string substring( s.substr(prev_pos, pos-prev_pos) );
+    while ((pos = s.find(seperator, pos)) != std::string::npos) {
+        std::string substring(s.substr(prev_pos, pos - prev_pos));
         output.push_back(substring);
         prev_pos = ++pos;
     }
-    output.push_back(s.substr(prev_pos, pos-prev_pos)); // Last word
+    output.push_back(s.substr(prev_pos, pos - prev_pos));  // Last word
     return output;
 }
 
-
-int get_float(float *value, const char *str,const char *message,int min_value, int max_value)
-{
-    try
-    {
-        if ( str == NULL || *str == '\0' )
+int get_float(float* value, const char* str, const char* message, int min_value, int max_value) {
+    try {
+        if (str == NULL || *str == '\0')
             throw std::invalid_argument("null string");
-        if (sscanf (str,"%f",value) != 1){
+        if (sscanf(str, "%f", value) != 1) {
             throw std::invalid_argument("invalid input string");
         }
-    }
-    catch (...)
-    {
-        fprintf(stderr, "%s: %s\n",message, str);
+    } catch (...) {
+        fprintf(stderr, "%s: %s\n", message, str);
         return -1;
     }
-    if (*value < min_value){
-        fprintf(stderr, "%s: %s\n",message, str);
+    if (*value < min_value) {
+        fprintf(stderr, "%s: %s\n", message, str);
         return -1;
     }
-    if (*value > max_value){
-        fprintf(stderr, "%s: %s\n",message, str);
+    if (*value > max_value) {
+        fprintf(stderr, "%s: %s\n", message, str);
         return -1;
     }
     return 0;
 }
 
-int get_dc_mode(int *value, const char *str)
-{
-    if  (strncmp(str, "1", 1) == 0) {
+int get_dc_mode(int* value, const char* str) {
+    if (strncmp(str, "1", 1) == 0) {
         *value = 1;
         return 0;
     }
 
-    if  (strncmp(str, "2", 1) == 0)  {
+    if (strncmp(str, "2", 1) == 0) {
         *value = 2;
         return 0;
     }
 
-    if  ((strncmp(str, "B", 1) == 0) || (strncmp(str, "b", 1) == 0))  {
+    if ((strncmp(str, "B", 1) == 0) || (strncmp(str, "b", 1) == 0)) {
         *value = 3;
         return 0;
     }
@@ -222,50 +201,45 @@ int get_dc_mode(int *value, const char *str)
     return -1;
 }
 
-
 /** Print usage information */
-auto usage(char const* progName) -> void{
+auto usage(char const* progName) -> void {
 
-    auto arr = split(std::string(progName),'/');
+    auto arr = split(std::string(progName), '/');
 
     std::string name = "";
     if (arr.size() > 0)
-        name = arr[arr.size()-1];
+        name = arr[arr.size() - 1];
 
     auto n = name.c_str();
 
-    auto *g_format = &g_format_125_14;
+    auto* g_format = &g_format_125_14;
     auto model = getModel();
     if (model == RP_125_14_4CH)
         g_format = &g_format_125_14_4ch;
     if (model == RP_250_12)
         g_format = &g_format_250_12;
 
-    fprintf(stderr,"%s Version: %s-%s\n",n,VERSION_STR, REVISION_STR);
-    fprintf(stderr, (char*)g_format, n, ADC_BUFFER_SIZE,
-            g_dec[0],
-            g_dec[1],
-            g_dec[2],
-            g_dec[3],
-            g_dec[4]);
+    fprintf(stderr, "%s Version: %s-%s\n", n, VERSION_STR, REVISION_STR);
+    fprintf(stderr, (char*)g_format, n, ADC_BUFFER_SIZE, g_dec[0], g_dec[1], g_dec[2], g_dec[3], g_dec[4]);
 }
 
-auto parse(int argc, char* argv[]) -> Options{
+auto parse(int argc, char* argv[]) -> Options {
     Options opt;
-    if (argc < 2) return opt;
+    if (argc < 2)
+        return opt;
     int option_index = 0;
     int ch = -1;
 
     opt.error = false;
 
-    auto *optstring = &optstring_125_14;
-    auto *long_options = &long_options_125_14;
+    auto* optstring = &optstring_125_14;
+    auto* long_options = &long_options_125_14;
     auto model = getModel();
-    if (model == RP_125_14_4CH){
+    if (model == RP_125_14_4CH) {
         optstring = &optstring_125_14_4ch;
         long_options = &long_options_125_14_4ch;
     }
-    if (model == RP_250_12){
+    if (model == RP_250_12) {
         optstring = &optstring_250_12;
         long_options = &long_options_250_12;
     }
@@ -273,22 +247,22 @@ auto parse(int argc, char* argv[]) -> Options{
     while ((ch = getopt_long(argc, argv, (char*)optstring, (option*)long_options, &option_index)) != -1) {
         switch (ch) {
             case 0: {
-                if (strcmp((*long_options)[option_index].name , "offset") == 0){
+                if (strcmp((*long_options)[option_index].name, "offset") == 0) {
                     float offset = 0;
-                    if (get_float(&offset, optarg, "Error get offset",-1024 * 16, 1024 * 16) != 0) {
+                    if (get_float(&offset, optarg, "Error get offset", -1024 * 16, 1024 * 16) != 0) {
                         opt.error = true;
                         return opt;
                     }
                     opt.offset = offset;
                     break;
                 }
-                fprintf(stderr, "Error --%s: %s\n",long_options[option_index]->name , optarg);
+                fprintf(stderr, "Error --%s: %s\n", long_options[option_index]->name, optarg);
                 opt.error = true;
                 return opt;
             }
 
             case '1': {
-                if (model == RP_125_14 || model == RP_125_14_4CH){
+                if (model == RP_125_14 || model == RP_125_14_4CH) {
                     if (strcmp(optarg, "lv") == 0) {
                         opt.attenuator_mode[0] = RP_LOW;
                     } else if (strcmp(optarg, "hv") == 0) {
@@ -300,7 +274,7 @@ auto parse(int argc, char* argv[]) -> Options{
                     }
                 }
 
-                if (model == RP_250_12){
+                if (model == RP_250_12) {
                     if (strcmp(optarg, "1") == 0) {
                         opt.attenuator_mode[0] = RP_LOW;
                     } else if (strcmp(optarg, "20") == 0) {
@@ -315,7 +289,7 @@ auto parse(int argc, char* argv[]) -> Options{
             }
 
             case '2': {
-                if (model == RP_125_14 || model == RP_125_14_4CH){
+                if (model == RP_125_14 || model == RP_125_14_4CH) {
                     if (strcmp(optarg, "lv") == 0) {
                         opt.attenuator_mode[1] = RP_LOW;
                     } else if (strcmp(optarg, "hv") == 0) {
@@ -327,7 +301,7 @@ auto parse(int argc, char* argv[]) -> Options{
                     }
                 }
 
-                if (model == RP_250_12){
+                if (model == RP_250_12) {
                     if (strcmp(optarg, "1") == 0) {
                         opt.attenuator_mode[1] = RP_LOW;
                     } else if (strcmp(optarg, "20") == 0) {
@@ -341,9 +315,8 @@ auto parse(int argc, char* argv[]) -> Options{
                 break;
             }
 
-
             case '3': {
-                if (model == RP_125_14_4CH){
+                if (model == RP_125_14_4CH) {
                     if (strcmp(optarg, "lv") == 0) {
                         opt.attenuator_mode[2] = RP_LOW;
                     } else if (strcmp(optarg, "hv") == 0) {
@@ -358,7 +331,7 @@ auto parse(int argc, char* argv[]) -> Options{
             }
 
             case '4': {
-                if (model == RP_125_14_4CH){
+                if (model == RP_125_14_4CH) {
                     if (strcmp(optarg, "lv") == 0) {
                         opt.attenuator_mode[3] = RP_LOW;
                     } else if (strcmp(optarg, "hv") == 0) {
@@ -373,8 +346,7 @@ auto parse(int argc, char* argv[]) -> Options{
             }
 
             /* DC mode */
-            case 'd':
-            {
+            case 'd': {
                 int dc_mode;
                 if (get_dc_mode(&dc_mode, optarg) != 0) {
                     fprintf(stderr, "Error key --get: %s\n", optarg);
@@ -426,7 +398,7 @@ auto parse(int argc, char* argv[]) -> Options{
                     break;
                 }
 
-                if (model == RP_125_14_4CH){
+                if (model == RP_125_14_4CH) {
                     if (strcmp(optarg, "3P") == 0) {
                         opt.trigger_mode = RP_TRIG_SRC_CHC_PE;
                         break;
@@ -453,10 +425,9 @@ auto parse(int argc, char* argv[]) -> Options{
                 return opt;
             }
 
-
             case 'l': {
                 float trig_level = 0;
-                if (get_float(&trig_level, optarg, "Error get trigger level",-10, 10) != 0) {
+                if (get_float(&trig_level, optarg, "Error get trigger level", -10, 10) != 0) {
                     opt.error = true;
                     return opt;
                 }
@@ -471,6 +442,11 @@ auto parse(int argc, char* argv[]) -> Options{
 
             case 'e': {
                 opt.enableEqualization = true;
+                break;
+            }
+
+            case 'b': {
+                opt.bypassFilter = true;
                 break;
             }
 
@@ -510,16 +486,14 @@ auto parse(int argc, char* argv[]) -> Options{
             }
 
             case 'a': {
-                if (!rp_HPGetIsDMAinv0_94OrDefault()){
+                if (!rp_HPGetIsDMAinv0_94OrDefault()) {
                     opt.error = true;
                     fprintf(stderr, "[ERROR] AXI mode not supported\n");
-                }
-                else{
+                } else {
                     opt.enableAXI = true;
                 }
                 break;
             }
-
 
             default: {
                 fprintf(stderr, "[ERROR] Unknown parameter\n");
@@ -531,7 +505,7 @@ auto parse(int argc, char* argv[]) -> Options{
     if (opt.error || opt.showHelp || opt.showVersion)
         return opt;
 
-     /* Acquisition size */
+    /* Acquisition size */
     uint32_t size = 0;
     if (optind < argc) {
         opt.dataSize = atoi(argv[optind]);
@@ -551,7 +525,7 @@ auto parse(int argc, char* argv[]) -> Options{
     if (optind < argc) {
         opt.decimation = atoi(argv[optind]);
 
-        if (opt.decimation <= 16){
+        if (opt.decimation <= 16) {
             auto findDec = false;
             for (int idx = 0; idx < DEC_MAX; idx++) {
                 if (opt.decimation == g_dec[idx]) {
@@ -559,38 +533,37 @@ auto parse(int argc, char* argv[]) -> Options{
                 }
             }
 
-            if(!findDec){
+            if (!findDec) {
                 fprintf(stderr, "Invalid decimation DEC: %s\n", argv[optind]);
                 opt.error = true;
                 return opt;
             }
         }
         if (opt.decimation > 65536) {
-                fprintf(stderr, "Invalid decimation DEC: %s\n", argv[optind]);
-                opt.error = true;
-                return opt;
+            fprintf(stderr, "Invalid decimation DEC: %s\n", argv[optind]);
+            opt.error = true;
+            return opt;
         }
     }
 
     return opt;
 }
 
-uint8_t getChannels(){
+uint8_t getChannels() {
     uint8_t c = 0;
-    if (rp_HPGetFastADCChannelsCount(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get fast ADC channels count\n");
+    if (rp_HPGetFastADCChannelsCount(&c) != RP_HP_OK) {
+        fprintf(stderr, "[Error] Can't get fast ADC channels count\n");
     }
     return c;
 }
 
-models_t getModel(){
+models_t getModel() {
     rp_HPeModels_t c = STEM_125_14_v1_0;
-    if (rp_HPGetModel(&c) != RP_HP_OK){
-        fprintf(stderr,"[Error] Can't get board model\n");
+    if (rp_HPGetModel(&c) != RP_HP_OK) {
+        fprintf(stderr, "[Error] Can't get board model\n");
     }
 
-    switch (c)
-    {
+    switch (c) {
         case STEM_125_10_v1_0:
         case STEM_125_14_v1_0:
         case STEM_125_14_v1_1:
@@ -623,7 +596,7 @@ models_t getModel(){
         case STEM_250_12_v1_2b:
             return RP_250_12;
         default:
-            fprintf(stderr,"[Error] Can't get board model\n");
+            fprintf(stderr, "[Error] Can't get board model\n");
             exit(-1);
     }
     return RP_125_14;

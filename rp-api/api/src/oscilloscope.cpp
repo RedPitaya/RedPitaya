@@ -228,6 +228,11 @@ int osc_printRegset() {
             }
         }
 
+        rec_filter_bypass_u_t rec_filter;
+        rec_filter.reg_full = reg->filter_bypass;
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Filter bypass", baseOffset + offsetof(osc_control_t, filter_bypass), reg->filter_bypass);
+        rec_filter.reg.print();
+
         printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d trigger delay", baseCh + 1).c_str(),
                  baseOffset + offsetof(osc_control_t, trigger_delay_ch2), reg->trigger_delay_ch2);
         printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d decimation", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, data_dec_ch2),
@@ -251,9 +256,9 @@ int osc_printRegset() {
         return ret;
     }
     if (channels == 4) {
-        cmn_ReleaseClose(fd1, OSC_BASE_SIZE, (void**)&osc_reg);
         ret = cmn_InitMap(OSC_BASE_SIZE, OSC_BASE_ADDR, (void**)&osc_reg_4ch, &fd2);
         if (ret != RP_OK) {
+            cmn_ReleaseClose(fd1, OSC_BASE_SIZE, (void**)&osc_reg);
             return ret;
         }
     }
@@ -795,6 +800,86 @@ int osc_GetHysteresisChD(uint32_t* hysteresis) {
     if (!osc_reg_4ch)
         return RP_NOTS;
     return cmn_GetValue(&osc_reg_4ch->chb_hystersis, hysteresis, HYSTERESIS_MASK);
+}
+
+int osc_SetEqFilterBypass(rp_channel_t channel, bool enable) {
+    rec_filter_bypass_u_t bypass;
+    switch (channel) {
+        case RP_CH_1:
+            bypass.reg_full = osc_reg->filter_bypass;
+            bypass.reg.bypass_ch1 = enable;
+            osc_reg->filter_bypass = bypass.reg_full;
+            return RP_OK;
+        case RP_CH_2:
+            bypass.reg_full = osc_reg->filter_bypass;
+            bypass.reg.bypass_ch2 = enable;
+            osc_reg->filter_bypass = bypass.reg_full;
+            return RP_OK;
+        case RP_CH_3:
+            if (osc_reg_4ch) {
+                bypass.reg_full = osc_reg_4ch->filter_bypass;
+                bypass.reg.bypass_ch1 = enable;
+                osc_reg_4ch->filter_bypass = bypass.reg_full;
+                return RP_OK;
+            } else {
+                ERROR_LOG("Registers for channels 3 and 4 are not initialized")
+                return RP_NOTS;
+            }
+            break;
+        case RP_CH_4:
+            if (osc_reg_4ch) {
+                bypass.reg_full = osc_reg_4ch->filter_bypass;
+                bypass.reg.bypass_ch2 = enable;
+                osc_reg_4ch->filter_bypass = bypass.reg_full;
+                return RP_OK;
+            } else {
+                ERROR_LOG("Registers for channels 3 and 4 are not initialized")
+                return RP_NOTS;
+            }
+            break;
+        default:
+            ERROR_LOG("Wrong channel %d", channel)
+            break;
+    }
+    return RP_EOOR;
+}
+
+int osc_GetEqFilterBypass(rp_channel_t channel, bool* enable) {
+    rec_filter_bypass_u_t bypass;
+    switch (channel) {
+        case RP_CH_1:
+            bypass.reg_full = osc_reg->filter_bypass;
+            *enable = bypass.reg.bypass_ch1;
+            return RP_OK;
+        case RP_CH_2:
+            bypass.reg_full = osc_reg->filter_bypass;
+            *enable = bypass.reg.bypass_ch2;
+            return RP_OK;
+        case RP_CH_3:
+            if (osc_reg_4ch) {
+                bypass.reg_full = osc_reg_4ch->filter_bypass;
+                *enable = bypass.reg.bypass_ch1;
+                return RP_OK;
+            } else {
+                ERROR_LOG("Registers for channels 3 and 4 are not initialized")
+                return RP_NOTS;
+            }
+            break;
+        case RP_CH_4:
+            if (osc_reg_4ch) {
+                bypass.reg_full = osc_reg_4ch->filter_bypass;
+                *enable = bypass.reg.bypass_ch2;
+                return RP_OK;
+            } else {
+                ERROR_LOG("Registers for channels 3 and 4 are not initialized")
+                return RP_NOTS;
+            }
+            break;
+        default:
+            ERROR_LOG("Wrong channel %d", channel)
+            break;
+    }
+    return RP_EOOR;
 }
 
 /**

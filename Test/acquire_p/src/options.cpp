@@ -1,228 +1,198 @@
+#include <algorithm>
+#include <chrono>
+#include <cstring>
+#include <ctime>
 #include <iostream>
 #include <vector>
-#include <cstring>
-#include <algorithm>
-#include <ctime>
-#include <chrono>
-#include <algorithm>
 
 #include "common/version.h"
 #include "options.h"
 
 #define DEC_MAX 5
 
-static constexpr uint32_t g_dec[DEC_MAX] = { 1,  2,  4,  8,  16 };
+static constexpr uint32_t g_dec[DEC_MAX] = {1, 2, 4, 8, 16};
 
 static constexpr char g_format_common[] =
-        "\n"
-        "Usage: acquire_p [OPTION]... SIZE <DEC>\n"
-        "    SIZE                Number of samples to acquire [1 - 16384].\n"
-        "    DEC                 Decimation [1,2,4,8,16,17,18...65536] (default: 1). Valid values are from 1 to 65536\n"
-        "\n";
+    "\n"
+    "Usage: acquire_p [OPTION]... SIZE <DEC>\n"
+    "    SIZE                Number of samples to acquire [1 - 16384].\n"
+    "    DEC                 Decimation [1,2,4,8,16,17,18...65536] (default: 1). Valid values are from 1 to 65536\n"
+    "\n";
 
 static constexpr char g_format_common_settings[] =
-        "  --equalization  -e    Use equalization filter in FPGA (default: disabled).\n"
-        "  --shaping       -s    Use shaping filter in FPGA (default: disabled).\n"
-        "  --version       -v    Print version info.\n"
-        "  --help          -h    Print this message.\n"
-        "  --hex           -x    Print value in hex.\n"
-        "  --volt          -o    Print value in volt.\n"
-        "  --calib         -c    Disable calibration parameters\n"
-        "  --hk            -k    Reset houskeeping (Reset state for GPIO). Default: disabled\n"
-        "  --debug         -g    Debug registers. Default: disabled\n"
-        "  --offset              Offset relative to the trigger pointer [-16384 .. 16384]\n"
-        "\n";
-
+    "  --equalization  -e    Use equalization filter in FPGA (default: disabled).\n"
+    "  --shaping       -s    Use shaping filter in FPGA (default: disabled).\n"
+    "  --bypass        -b    Bypass shaping filter in FPGA.\n"
+    "  --version       -v    Print version info.\n"
+    "  --help          -h    Print this message.\n"
+    "  --hex           -x    Print value in hex.\n"
+    "  --volt          -o    Print value in volt.\n"
+    "  --calib         -c    Disable calibration parameters\n"
+    "  --hk            -k    Reset houskeeping (Reset state for GPIO). Default: disabled\n"
+    "  --debug         -g    Debug registers. Default: disabled\n"
+    "  --offset              Offset relative to the trigger pointer [-16384 .. 16384]\n"
+    "\n";
 
 static constexpr char g_format_common_settings_gain_2ch[] =
-        "  --att1=a              Use Channel 1 attenuator setting a [1, 20] (default: 1).\n"
-        "  --att2=a              Use Channel 2 attenuator setting a [1, 20] (default: 1).\n"
-        "\n";
+    "  --att1=a              Use Channel 1 attenuator setting a [1, 20] (default: 1).\n"
+    "  --att2=a              Use Channel 2 attenuator setting a [1, 20] (default: 1).\n"
+    "\n";
 
 static constexpr char g_format_common_settings_gain_4ch[] =
-        "  --att1=a              Use Channel 1 attenuator setting a [1, 20] (default: 1).\n"
-        "  --att2=a              Use Channel 2 attenuator setting a [1, 20] (default: 1).\n"
-        "  --att3=a              Use Channel 3 attenuator setting a [1, 20] (default: 1).\n"
-        "  --att4=a              Use Channel 4 attenuator setting a [1, 20] (default: 1).\n"
-        "\n";
+    "  --att1=a              Use Channel 1 attenuator setting a [1, 20] (default: 1).\n"
+    "  --att2=a              Use Channel 2 attenuator setting a [1, 20] (default: 1).\n"
+    "  --att3=a              Use Channel 3 attenuator setting a [1, 20] (default: 1).\n"
+    "  --att4=a              Use Channel 4 attenuator setting a [1, 20] (default: 1).\n"
+    "\n";
 
 static constexpr char g_format_common_settings_trig_2ch[] =
-        "  --tr_ch1=c      -1 c  Enable trigger for ch 1. Setting c use for channels [N (now), 1P, 1N, 2P, 2N, EP (ext channel), EN (ext channel)].\n"
-        "  --tr_ch2=c      -2 c  Enable trigger for ch 2. Setting c use for channels [N (now), 1P, 1N, 2P, 2N, EP (ext channel), EN (ext channel)].\n"
-        "  --tr_lev1=c           Set trigger level for ch 1 (default: 0).\n"
-        "  --tr_lev2=c           Set trigger level for ch 2 (default: 0).\n"
-        "\n";
+    "  --tr_ch1=c      -1 c  Enable trigger for ch 1. Setting c use for channels [N (now), 1P, 1N, 2P, 2N, EP (ext channel), EN (ext channel)].\n"
+    "  --tr_ch2=c      -2 c  Enable trigger for ch 2. Setting c use for channels [N (now), 1P, 1N, 2P, 2N, EP (ext channel), EN (ext channel)].\n"
+    "  --tr_lev1=c           Set trigger level for ch 1 (default: 0).\n"
+    "  --tr_lev2=c           Set trigger level for ch 2 (default: 0).\n"
+    "\n";
 
 static constexpr char g_format_common_settings_trig_4ch[] =
-        "  --tr_ch1=c      -1 c  Enable trigger for ch 1. Setting c use for channels [N (now), 1P, 1N, 2P, 2N, 3P, 3N, 4P, 4N, EP (ext channel), EN (ext channel)].\n"
-        "  --tr_ch2=c      -2 c  Enable trigger for ch 2. Setting c use for channels [N (now), 1P, 1N, 2P, 2N, 3P, 3N, 4P, 4N, EP (ext channel), EN (ext channel)].\n"
-        "  --tr_ch3=c      -3 c  Enable trigger for ch 3. Setting c use for channels [N (now), 1P, 1N, 2P, 2N, 3P, 3N, 4P, 4N, EP (ext channel), EN (ext channel)].\n"
-        "  --tr_ch4=c      -4 c  Enable trigger for ch 4. Setting c use for channels [N (now), 1P, 1N, 2P, 2N, 3P, 3N, 4P, 4N, EP (ext channel), EN (ext channel)].\n"
-        "  --tr_lev1=c           Set trigger level for ch 1 (default: 0).\n"
-        "  --tr_lev2=c           Set trigger level for ch 2 (default: 0).\n"
-        "  --tr_lev3=c           Set trigger level for ch 3 (default: 0).\n"
-        "  --tr_lev4=c           Set trigger level for ch 4 (default: 0).\n"
-        "\n";
+    "  --tr_ch1=c      -1 c  Enable trigger for ch 1. Setting c use for channels [N (now), 1P, 1N, 2P, 2N, 3P, 3N, 4P, 4N, EP (ext channel), EN (ext "
+    "channel)].\n"
+    "  --tr_ch2=c      -2 c  Enable trigger for ch 2. Setting c use for channels [N (now), 1P, 1N, 2P, 2N, 3P, 3N, 4P, 4N, EP (ext channel), EN (ext "
+    "channel)].\n"
+    "  --tr_ch3=c      -3 c  Enable trigger for ch 3. Setting c use for channels [N (now), 1P, 1N, 2P, 2N, 3P, 3N, 4P, 4N, EP (ext channel), EN (ext "
+    "channel)].\n"
+    "  --tr_ch4=c      -4 c  Enable trigger for ch 4. Setting c use for channels [N (now), 1P, 1N, 2P, 2N, 3P, 3N, 4P, 4N, EP (ext channel), EN (ext "
+    "channel)].\n"
+    "  --tr_lev1=c           Set trigger level for ch 1 (default: 0).\n"
+    "  --tr_lev2=c           Set trigger level for ch 2 (default: 0).\n"
+    "  --tr_lev3=c           Set trigger level for ch 3 (default: 0).\n"
+    "  --tr_lev4=c           Set trigger level for ch 4 (default: 0).\n"
+    "\n";
 
 static constexpr char g_format_common_settings_ac_dc[] =
-        "  --dc=c          -d c  Enable DC mode. Setting c use for channels [1, 2, B(Both channels)].\n"
-        "\n";
+    "  --dc=c          -d c  Enable DC mode. Setting c use for channels [1, 2, B(Both channels)].\n"
+    "\n";
 
 static constexpr char g_format_common_settings_trig_ext_level[] =
-        "  --tr_ext_level=c      Set trigger external level (default: 0).\n"
-        "\n";
+    "  --tr_ext_level=c      Set trigger external level (default: 0).\n"
+    "\n";
 
-
-static constexpr char optstring_settings[] = "esvxockgh";
-
+static constexpr char optstring_settings[] = "esbvxockgh";
 
 static struct std::vector<option> long_options_settings = {
-        /* These options set a flag. */
-        {"equalization", no_argument,       0, 'e'},
-        {"shaping",      no_argument,       0, 's'},
-        {"version",      no_argument,       0, 'v'},
-        {"help",         no_argument,       0, 'h'},
-        {"hex",          no_argument,       0, 'x'},
-        {"volt",         no_argument,       0, 'o'},
-        {"calib",        no_argument,       0, 'c'},
-        {"hk",           no_argument,       0, 'k'},
-        {"debug",        no_argument,       0, 'g'},
-        {"offset",       required_argument, 0,  0 }
+    /* These options set a flag. */
+    {"equalization", no_argument, 0, 'e'}, {"shaping", no_argument, 0, 's'}, {"bypass", no_argument, 0, 'b'}, {"version", no_argument, 0, 'v'},
+        {"help", no_argument, 0, 'h'}, {"hex", no_argument, 0, 'x'}, {"volt", no_argument, 0, 'o'}, {"calib", no_argument, 0, 'c'}, {"hk", no_argument, 0, 'k'},
+        {"debug", no_argument, 0, 'g'}, {
+        "offset", required_argument, 0, 0
+    }
 };
 
-static struct std::vector<option>  long_options_settings_gain_2ch = {
-        /* These options set a flag. */
-        {"att1",         required_argument,  0, 0},
-        {"att2",         required_argument,  0, 0}
+static struct std::vector<option> long_options_settings_gain_2ch = {
+    /* These options set a flag. */
+    {"att1", required_argument, 0, 0}, { "att2", required_argument, 0, 0 }
 };
 
-static struct std::vector<option>  long_options_settings_gain_4ch = {
-        /* These options set a flag. */
-        {"att1",         required_argument,  0, 0},
-        {"att2",         required_argument,  0, 0},
-        {"att3",         required_argument,  0, 0},
-        {"att4",         required_argument,  0, 0}
+static struct std::vector<option> long_options_settings_gain_4ch = {
+    /* These options set a flag. */
+    {"att1", required_argument, 0, 0}, {"att2", required_argument, 0, 0}, {"att3", required_argument, 0, 0}, { "att4", required_argument, 0, 0 }
 };
 
 static constexpr char optstring_settings_trig_2ch[] = "1:2:";
 
-static struct std::vector<option>  long_options_settings_trig_2ch = {
-        /* These options set a flag. */
-        {"tr_ch1",         required_argument,  0, '1'},
-        {"tr_ch2",         required_argument,  0, '2'},
-        {"tr_lev1",        required_argument,  0,  0 },
-        {"tr_lev2",        required_argument,  0,  0 }
+static struct std::vector<option> long_options_settings_trig_2ch = {
+    /* These options set a flag. */
+    {"tr_ch1", required_argument, 0, '1'}, {"tr_ch2", required_argument, 0, '2'}, {"tr_lev1", required_argument, 0, 0}, { "tr_lev2", required_argument, 0, 0 }
 };
 
 static constexpr char optstring_settings_trig_4ch[] = "1:2:3:4:";
 
-static struct std::vector<option>  long_options_settings_trig_4ch = {
-        /* These options set a flag. */
-        {"tr_ch1",         required_argument,  0, '1'},
-        {"tr_ch2",         required_argument,  0, '2'},
-        {"tr_ch3",         required_argument,  0, '3'},
-        {"tr_ch4",         required_argument,  0, '4'},
-        {"tr_lev1",        required_argument,  0,  0 },
-        {"tr_lev2",        required_argument,  0,  0 },
-        {"tr_lev3",        required_argument,  0,  0 },
-        {"tr_lev4",        required_argument,  0,  0 }
+static struct std::vector<option> long_options_settings_trig_4ch = {
+    /* These options set a flag. */
+    {"tr_ch1", required_argument, 0, '1'}, {"tr_ch2", required_argument, 0, '2'}, {"tr_ch3", required_argument, 0, '3'}, {"tr_ch4", required_argument, 0, '4'},
+        {"tr_lev1", required_argument, 0, 0}, {"tr_lev2", required_argument, 0, 0}, {"tr_lev3", required_argument, 0, 0}, {
+        "tr_lev4", required_argument, 0, 0
+    }
 };
 
 static constexpr char optstring_settings_ac_dc[] = "d:";
 
-static struct std::vector<option>  long_options_settings_ac_dc = {
-        /* These options set a flag. */
-        {"dc",              required_argument,  0, 'd'}
+static struct std::vector<option> long_options_settings_ac_dc = {
+    /* These options set a flag. */
+    { "dc", required_argument, 0, 'd' }
 };
 
-static struct std::vector<option>  long_options_settings_ext_trig_level = {
-        /* These options set a flag. */
-        {"tr_ext_level",    required_argument,  0, 0 }
+static struct std::vector<option> long_options_settings_ext_trig_level = {
+    /* These options set a flag. */
+    { "tr_ext_level", required_argument, 0, 0 }
 };
 
-
-
-std::vector<std::string> split(const std::string& s, char seperator)
-{
+std::vector<std::string> split(const std::string& s, char seperator) {
     std::vector<std::string> output;
     std::string::size_type prev_pos = 0, pos = 0;
-    while((pos = s.find(seperator, pos)) != std::string::npos)
-    {
-        std::string substring( s.substr(prev_pos, pos-prev_pos) );
+    while ((pos = s.find(seperator, pos)) != std::string::npos) {
+        std::string substring(s.substr(prev_pos, pos - prev_pos));
         output.push_back(substring);
         prev_pos = ++pos;
     }
-    output.push_back(s.substr(prev_pos, pos-prev_pos)); // Last word
+    output.push_back(s.substr(prev_pos, pos - prev_pos));  // Last word
     return output;
 }
 
-
-int get_float(float *value, const char *str,const char *message,int min_value, int max_value)
-{
-    try
-    {
-        if ( str == NULL || *str == '\0' )
+int get_float(float* value, const char* str, const char* message, int min_value, int max_value) {
+    try {
+        if (str == NULL || *str == '\0')
             throw std::invalid_argument("null string");
-        if (sscanf (str,"%f",value) != 1){
+        if (sscanf(str, "%f", value) != 1) {
             throw std::invalid_argument("invalid input string");
         }
-    }
-    catch (...)
-    {
-        fprintf(stderr, "%s: %s\n",message, str);
+    } catch (...) {
+        fprintf(stderr, "%s: %s\n", message, str);
         return -1;
     }
-    if (*value < min_value){
-        fprintf(stderr, "%s: %s\n",message, str);
+    if (*value < min_value) {
+        fprintf(stderr, "%s: %s\n", message, str);
         return -1;
     }
-    if (*value > max_value){
-        fprintf(stderr, "%s: %s\n",message, str);
+    if (*value > max_value) {
+        fprintf(stderr, "%s: %s\n", message, str);
         return -1;
     }
     return 0;
 }
 
-
-int get_int(int *value, const char *str,const char *message,int min_value, int max_value)
-{
-    try
-    {
-        if ( str == NULL || *str == '\0' )
+int get_int(int* value, const char* str, const char* message, int min_value, int max_value) {
+    try {
+        if (str == NULL || *str == '\0')
             throw std::invalid_argument("null string");
-        if (sscanf (str,"%d",value) != 1){
+        if (sscanf(str, "%d", value) != 1) {
             throw std::invalid_argument("invalid input string");
         }
-    }
-    catch (...)
-    {
-        fprintf(stderr, "%s: %s\n",message, str);
+    } catch (...) {
+        fprintf(stderr, "%s: %s\n", message, str);
         return -1;
     }
-    if (*value < min_value){
-        fprintf(stderr, "%s: %s\n",message, str);
+    if (*value < min_value) {
+        fprintf(stderr, "%s: %s\n", message, str);
         return -1;
     }
-    if (*value > max_value){
-        fprintf(stderr, "%s: %s\n",message, str);
+    if (*value > max_value) {
+        fprintf(stderr, "%s: %s\n", message, str);
         return -1;
     }
     return 0;
 }
 
-int get_dc_mode(int *value, const char *str)
-{
-    if  (strncmp(str, "1", 1) == 0) {
+int get_dc_mode(int* value, const char* str) {
+    if (strncmp(str, "1", 1) == 0) {
         *value = 1;
         return 0;
     }
 
-    if  (strncmp(str, "2", 1) == 0)  {
+    if (strncmp(str, "2", 1) == 0) {
         *value = 2;
         return 0;
     }
 
-    if  ((strncmp(str, "B", 1) == 0) || (strncmp(str, "b", 1) == 0))  {
+    if ((strncmp(str, "B", 1) == 0) || (strncmp(str, "b", 1) == 0)) {
         *value = 3;
         return 0;
     }
@@ -231,7 +201,7 @@ int get_dc_mode(int *value, const char *str)
     return -1;
 }
 
-auto parseTrigger(char *value,int channels) -> int {
+auto parseTrigger(char* value, int channels) -> int {
     if (strcmp(value, "N") == 0) {
         return RP_TRIG_SRC_NOW;
     }
@@ -260,7 +230,7 @@ auto parseTrigger(char *value,int channels) -> int {
         return RP_TRIG_SRC_EXT_NE;
     }
 
-    if (channels == 4){
+    if (channels == 4) {
         if (strcmp(value, "3P") == 0) {
             return RP_TRIG_SRC_CHC_PE;
         }
@@ -281,12 +251,12 @@ auto parseTrigger(char *value,int channels) -> int {
 }
 
 /** Print usage information */
-auto usage(Options &opt) -> void{
-    fprintf(stderr,"Version: %s-%s\n",VERSION_STR, REVISION_STR);
-    fprintf(stderr,"%s",opt.usage.c_str());
+auto usage(Options& opt) -> void {
+    fprintf(stderr, "Version: %s-%s\n", VERSION_STR, REVISION_STR);
+    fprintf(stderr, "%s", opt.usage.c_str());
 }
 
-auto parse(int argc, char* argv[]) -> Options{
+auto parse(int argc, char* argv[]) -> Options {
     Options opt;
     int option_index = 0;
     int ch = -1;
@@ -296,9 +266,9 @@ auto parse(int argc, char* argv[]) -> Options{
     opt.is_ac_dc = getIsACDC();
 
     opt.usage = g_format_common;
-    opt.opts =  optstring_settings;
+    opt.opts = optstring_settings;
     opt.options.insert(opt.options.end(), long_options_settings.cbegin(), long_options_settings.cend());
-    if (opt.channels == 2){
+    if (opt.channels == 2) {
         opt.usage += g_format_common_settings_gain_2ch;
         opt.usage += g_format_common_settings_trig_2ch;
         opt.opts += optstring_settings_trig_2ch;
@@ -306,7 +276,7 @@ auto parse(int argc, char* argv[]) -> Options{
         opt.options.insert(opt.options.end(), long_options_settings_trig_2ch.cbegin(), long_options_settings_trig_2ch.cend());
     }
 
-    if (opt.channels == 4){
+    if (opt.channels == 4) {
         opt.usage += g_format_common_settings_gain_4ch;
         opt.usage += g_format_common_settings_trig_4ch;
         opt.opts += optstring_settings_trig_4ch;
@@ -314,20 +284,21 @@ auto parse(int argc, char* argv[]) -> Options{
         opt.options.insert(opt.options.end(), long_options_settings_trig_4ch.cbegin(), long_options_settings_trig_4ch.cend());
     }
 
-    if (opt.is_ac_dc){
+    if (opt.is_ac_dc) {
         opt.usage += g_format_common_settings_ac_dc;
         opt.opts += optstring_settings_ac_dc;
         opt.options.insert(opt.options.end(), long_options_settings_ac_dc.cbegin(), long_options_settings_ac_dc.cend());
     }
 
-    if (opt.is_ext_trig_lev){
+    if (opt.is_ext_trig_lev) {
         opt.usage += g_format_common_settings_trig_ext_level;
         opt.options.insert(opt.options.end(), long_options_settings_ext_trig_level.cbegin(), long_options_settings_ext_trig_level.cend());
     }
     opt.usage += g_format_common_settings;
-    opt.options.push_back({0,0,0,0});
+    opt.options.push_back({0, 0, 0, 0});
 
-    if (argc < 2) return opt;
+    if (argc < 2)
+        return opt;
 
     opt.error = false;
 
@@ -335,9 +306,9 @@ auto parse(int argc, char* argv[]) -> Options{
         switch (ch) {
 
             case 0: {
-                if (strcmp(opt.options[option_index].name , "offset") == 0){
+                if (strcmp(opt.options[option_index].name, "offset") == 0) {
                     float offset = 0;
-                    if (get_float(&offset, optarg, "Error get offset",-1024 * 16, 1024 * 16) != 0) {
+                    if (get_float(&offset, optarg, "Error get offset", -1024 * 16, 1024 * 16) != 0) {
                         opt.error = true;
                         return opt;
                     }
@@ -345,7 +316,7 @@ auto parse(int argc, char* argv[]) -> Options{
                     break;
                 }
 
-                if (strcmp(opt.options[option_index].name , "att1") == 0){
+                if (strcmp(opt.options[option_index].name, "att1") == 0) {
                     if (strcmp(optarg, "1") == 0) {
                         opt.attenuator_mode[0] = RP_LOW;
                     } else if (strcmp(optarg, "20") == 0) {
@@ -358,7 +329,7 @@ auto parse(int argc, char* argv[]) -> Options{
                     break;
                 }
 
-                if (strcmp(opt.options[option_index].name , "att2") == 0){
+                if (strcmp(opt.options[option_index].name, "att2") == 0) {
                     if (strcmp(optarg, "1") == 0) {
                         opt.attenuator_mode[1] = RP_LOW;
                     } else if (strcmp(optarg, "20") == 0) {
@@ -371,9 +342,9 @@ auto parse(int argc, char* argv[]) -> Options{
                     break;
                 }
 
-                if (strcmp(opt.options[option_index].name , "tr_lev1") == 0){
+                if (strcmp(opt.options[option_index].name, "tr_lev1") == 0) {
                     float trig_level = 0;
-                    if (get_float(&trig_level, optarg, "Error get trigger level",-10, 10) != 0) {
+                    if (get_float(&trig_level, optarg, "Error get trigger level", -10, 10) != 0) {
                         opt.error = true;
                         return opt;
                     }
@@ -381,9 +352,9 @@ auto parse(int argc, char* argv[]) -> Options{
                     break;
                 }
 
-                if (strcmp(opt.options[option_index].name , "tr_lev2") == 0){
+                if (strcmp(opt.options[option_index].name, "tr_lev2") == 0) {
                     float trig_level = 0;
-                    if (get_float(&trig_level, optarg, "Error get trigger level",-10, 10) != 0) {
+                    if (get_float(&trig_level, optarg, "Error get trigger level", -10, 10) != 0) {
                         opt.error = true;
                         return opt;
                     }
@@ -391,7 +362,7 @@ auto parse(int argc, char* argv[]) -> Options{
                     break;
                 }
 
-                if (strcmp(opt.options[option_index].name , "tr_ext_level") == 0){
+                if (strcmp(opt.options[option_index].name, "tr_ext_level") == 0) {
                     float trig_level = 0;
                     if (get_float(&trig_level, optarg, "Error get trigger level", 0, 10) != 0) {
                         opt.error = true;
@@ -401,8 +372,8 @@ auto parse(int argc, char* argv[]) -> Options{
                     break;
                 }
 
-                if (opt.channels == 4){
-                    if (strcmp(opt.options[option_index].name , "att3") == 0){
+                if (opt.channels == 4) {
+                    if (strcmp(opt.options[option_index].name, "att3") == 0) {
                         if (strcmp(optarg, "1") == 0) {
                             opt.attenuator_mode[2] = RP_LOW;
                         } else if (strcmp(optarg, "20") == 0) {
@@ -415,7 +386,7 @@ auto parse(int argc, char* argv[]) -> Options{
                         break;
                     }
 
-                    if (strcmp(opt.options[option_index].name , "att4") == 0){
+                    if (strcmp(opt.options[option_index].name, "att4") == 0) {
                         if (strcmp(optarg, "1") == 0) {
                             opt.attenuator_mode[3] = RP_LOW;
                         } else if (strcmp(optarg, "20") == 0) {
@@ -428,9 +399,9 @@ auto parse(int argc, char* argv[]) -> Options{
                         break;
                     }
 
-                    if (strcmp(opt.options[option_index].name , "tr_lev3") == 0){
+                    if (strcmp(opt.options[option_index].name, "tr_lev3") == 0) {
                         float trig_level = 0;
-                        if (get_float(&trig_level, optarg, "Error get trigger level",-10, 10) != 0) {
+                        if (get_float(&trig_level, optarg, "Error get trigger level", -10, 10) != 0) {
                             opt.error = true;
                             return opt;
                         }
@@ -438,26 +409,24 @@ auto parse(int argc, char* argv[]) -> Options{
                         break;
                     }
 
-                    if (strcmp(opt.options[option_index].name , "tr_lev4") == 0){
+                    if (strcmp(opt.options[option_index].name, "tr_lev4") == 0) {
                         float trig_level = 0;
-                        if (get_float(&trig_level, optarg, "Error get trigger level",-10, 10) != 0) {
+                        if (get_float(&trig_level, optarg, "Error get trigger level", -10, 10) != 0) {
                             opt.error = true;
                             return opt;
                         }
                         opt.trigger_level[3] = trig_level;
                         break;
                     }
-
                 }
 
-                fprintf(stderr, "Error --%s: %s\n",opt.options[option_index].name, optarg);
+                fprintf(stderr, "Error --%s: %s\n", opt.options[option_index].name, optarg);
                 opt.error = true;
                 return opt;
             }
 
             /* DC mode */
-            case 'd':
-            {
+            case 'd': {
                 int dc_mode;
                 if (get_dc_mode(&dc_mode, optarg) != 0) {
                     fprintf(stderr, "Error key --get: %s\n", optarg);
@@ -474,10 +443,10 @@ auto parse(int argc, char* argv[]) -> Options{
             }
 
             case '1': {
-                int trig = parseTrigger(optarg,opt.channels);
-                if (trig != -1){
+                int trig = parseTrigger(optarg, opt.channels);
+                if (trig != -1) {
                     opt.trigger_mode[0] = (rp_acq_trig_src_t)trig;
-                }else{
+                } else {
                     fprintf(stderr, "Error key --get: %s\n", optarg);
                     opt.error = true;
                     return opt;
@@ -486,10 +455,10 @@ auto parse(int argc, char* argv[]) -> Options{
             }
 
             case '2': {
-                int trig = parseTrigger(optarg,opt.channels);
-                if (trig != -1){
+                int trig = parseTrigger(optarg, opt.channels);
+                if (trig != -1) {
                     opt.trigger_mode[1] = (rp_acq_trig_src_t)trig;
-                }else{
+                } else {
                     fprintf(stderr, "Error key --get: %s\n", optarg);
                     opt.error = true;
                     return opt;
@@ -498,10 +467,10 @@ auto parse(int argc, char* argv[]) -> Options{
             }
 
             case '3': {
-                int trig = parseTrigger(optarg,opt.channels);
-                if (trig != -1){
+                int trig = parseTrigger(optarg, opt.channels);
+                if (trig != -1) {
                     opt.trigger_mode[2] = (rp_acq_trig_src_t)trig;
-                }else{
+                } else {
                     fprintf(stderr, "Error key --get: %s\n", optarg);
                     opt.error = true;
                     return opt;
@@ -510,10 +479,10 @@ auto parse(int argc, char* argv[]) -> Options{
             }
 
             case '4': {
-                int trig = parseTrigger(optarg,opt.channels);
-                if (trig != -1){
+                int trig = parseTrigger(optarg, opt.channels);
+                if (trig != -1) {
                     opt.trigger_mode[3] = (rp_acq_trig_src_t)trig;
-                }else{
+                } else {
                     fprintf(stderr, "Error key --get: %s\n", optarg);
                     opt.error = true;
                     return opt;
@@ -528,6 +497,11 @@ auto parse(int argc, char* argv[]) -> Options{
 
             case 'e': {
                 opt.enableEqualization = true;
+                break;
+            }
+
+            case 'b': {
+                opt.bypassFilter = true;
                 break;
             }
 
@@ -566,7 +540,6 @@ auto parse(int argc, char* argv[]) -> Options{
                 break;
             }
 
-
             default: {
                 fprintf(stderr, "[ERROR] Unknown parameter\n");
                 exit(EXIT_FAILURE);
@@ -577,7 +550,7 @@ auto parse(int argc, char* argv[]) -> Options{
     if (opt.error || opt.showHelp || opt.showVersion)
         return opt;
 
-     /* Acquisition size */
+    /* Acquisition size */
     uint32_t size = 0;
     if (optind < argc) {
         opt.dataSize = atoi(argv[optind]);
@@ -597,7 +570,7 @@ auto parse(int argc, char* argv[]) -> Options{
     if (optind < argc) {
         opt.decimation = atoi(argv[optind]);
 
-        if (opt.decimation <= 16){
+        if (opt.decimation <= 16) {
             auto findDec = false;
             for (int idx = 0; idx < DEC_MAX; idx++) {
                 if (opt.decimation == g_dec[idx]) {
@@ -605,49 +578,49 @@ auto parse(int argc, char* argv[]) -> Options{
                 }
             }
 
-            if(!findDec){
+            if (!findDec) {
                 fprintf(stderr, "Invalid decimation DEC: %s\n", argv[optind]);
                 opt.error = true;
                 return opt;
             }
         }
         if (opt.decimation > 65536) {
-                fprintf(stderr, "Invalid decimation DEC: %s\n", argv[optind]);
-                opt.error = true;
-                return opt;
+            fprintf(stderr, "Invalid decimation DEC: %s\n", argv[optind]);
+            opt.error = true;
+            return opt;
         }
     }
 
     return opt;
 }
 
-uint8_t getChannels(){
+uint8_t getChannels() {
     uint8_t c = 0;
-    if (rp_HPGetFastADCChannelsCount(&c) != RP_HP_OK){
+    if (rp_HPGetFastADCChannelsCount(&c) != RP_HP_OK) {
         FATAL("Can't get profile")
     }
     return c;
 }
 
-bool getIsExtTrigLevel(){
+bool getIsExtTrigLevel() {
     bool c = 0;
-    if (rp_HPGetIsExternalTriggerLevelPresent(&c) != RP_HP_OK){
+    if (rp_HPGetIsExternalTriggerLevelPresent(&c) != RP_HP_OK) {
         FATAL("Can't get profile")
     }
     return c;
 }
 
-bool getIsSplitTriggers(){
+bool getIsSplitTriggers() {
     bool c = 0;
-    if (rp_HPGetFastADCIsSplitTrigger(&c) != RP_HP_OK){
+    if (rp_HPGetFastADCIsSplitTrigger(&c) != RP_HP_OK) {
         FATAL("Can't get profile")
     }
     return c;
 }
 
-bool getIsACDC(){
+bool getIsACDC() {
     bool c = 0;
-    if (rp_HPGetFastADCIsAC_DC(&c) != RP_HP_OK){
+    if (rp_HPGetFastADCIsAC_DC(&c) != RP_HP_OK) {
         FATAL("Can't get profile")
     }
     return c;
