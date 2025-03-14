@@ -156,6 +156,26 @@ res = rp.rp_EnableDebugReg()
 print(res)
 
 
+print("rp.rp_PrintHouseRegset()")
+res = rp.rp_PrintHouseRegset()
+print(res)
+
+print("rp.rp_PrintOscRegset()")
+res = rp.rp_PrintOscRegset()
+print(res)
+
+print("rp.rp_PrintAsgRegset()")
+res = rp.rp_PrintAsgRegset()
+print(res)
+
+print("rp.rp_PrintAmsRegset()")
+res = rp.rp_PrintAmsRegset()
+print(res)
+
+print("rp.rp_PrintDaisyRegset()")
+res = rp.rp_PrintDaisyRegset()
+print(res)
+
 
 print("rp.rp_ApinReset()")
 res = rp.rp_ApinReset()
@@ -573,6 +593,14 @@ print(res)
 
 print("rp.rp_AcqGetAveraging()")
 res = rp.rp_AcqGetAveraging()
+print(res)
+
+print("rp.rp_AcqSetBypassFilter(rp.RP_CH_1,False)")
+res = rp.rp_AcqSetBypassFilter(rp.RP_CH_1,False)
+print(res)
+
+print("rp.rp_AcqGetBypassFilter(rp.RP_CH_1)")
+res = rp.rp_AcqGetBypassFilter(rp.RP_CH_1)
 print(res)
 
 print("rp.rp_AcqSetTriggerSrc(rp.RP_TRIG_SRC_DISABLED)")

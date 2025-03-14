@@ -505,6 +505,50 @@ scpi_result_t RP_AcqAveragingChQ(scpi_t* context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_AcqBypassFilterCh(scpi_t* context) {
+    rp_channel_t channel;
+
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK) {
+        return SCPI_RES_ERR;
+    }
+
+    scpi_bool_t value;
+
+    if (!SCPI_ParamBool(context, &value, false)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+
+    auto result = rp_AcqSetBypassFilter(channel, value);
+
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to set filter bypass: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqBypassFilterChQ(scpi_t* context) {
+    rp_channel_t channel;
+
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK) {
+        return SCPI_RES_ERR;
+    }
+
+    bool value;
+    auto result = rp_AcqGetBypassFilter(channel, &value);
+
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to get filter bypass: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultMnemonic(context, value ? "ON" : "OFF");
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_AcqTriggerSrc(scpi_t* context) {
 
     int32_t trig_src;

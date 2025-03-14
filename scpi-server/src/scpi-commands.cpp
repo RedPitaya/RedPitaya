@@ -402,6 +402,14 @@ static const scpi_command_t scpi_commands[] = {
         .callback = RP_AcqAveragingChQ,
     },
     {
+        .pattern = "ACQ:FILTER:BYPASS:CH#",
+        .callback = RP_AcqBypassFilterCh,
+    },
+    {
+        .pattern = "ACQ:FILTER:BYPASS:CH#?",
+        .callback = RP_AcqBypassFilterChQ,
+    },
+    {
         .pattern = "ACQ:TRig",
         .callback = RP_AcqTriggerSrc,
     },
