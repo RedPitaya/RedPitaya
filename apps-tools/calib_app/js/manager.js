@@ -18,6 +18,7 @@
             $("#B_APPLY_CONT").hide();
             $("#B_CLOSE_CONT").hide();
             $("#B_DEFAULT_CONT").hide();
+            $("#B_DISABLE_CONT").hide();
             $("#B_AUTO_CLOSE_CONT").hide();
             $("#B_RESET_CONT").hide();
         } else {
@@ -87,6 +88,7 @@
                 $("#B_APPLY_CONT").show();
                 $("#B_CLOSE_CONT").show();
                 $("#B_DEFAULT_CONT").show();
+                $("#B_DISABLE_CONT").show();
             } else {
                 $("#filter_mode_body").hide();
             }
@@ -370,6 +372,20 @@
             $('#reset_cancel_btn').off('click');
             $('#reset_ok_btn').on('click', function() {
                 CLIENT.parametersCache["calib_sig"] = { value: 6 };
+                CLIENT.requestParameters();
+            });
+
+            $('#reset_cancel_btn').on('click', function() {});
+            $("#dialog_reset").modal('show');
+        });
+
+        $('#B_DISABLE').on('click', function(ev) {
+
+            $("#dialog_reset_text").text("Set parameters that turn off the filter?");
+            $("#reset_ok_btn").off('click');
+            $('#reset_cancel_btn').off('click');
+            $('#reset_ok_btn').on('click', function() {
+                CLIENT.parametersCache["calib_sig"] = { value: 7 };
                 CLIENT.requestParameters();
             });
 

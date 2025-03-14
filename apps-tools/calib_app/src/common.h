@@ -15,6 +15,6 @@ auto getADCRate() -> uint32_t;
 auto getModel() -> rp_HPeModels_t;
 auto getDACDevider() -> double;
 auto getModelName() -> std::string;
-auto getADCSamplePeriod(double *value) -> int;
+auto getADCSamplePeriod(double* value) -> int;
 
 #endif

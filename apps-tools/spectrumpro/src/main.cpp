@@ -63,7 +63,7 @@ CBooleanParameter inShowMin[MAX_ADC_CHANNELS] = INIT("CH", "_SHOW_MIN", CBasePar
 CBooleanParameter inShowMax[MAX_ADC_CHANNELS] = INIT("CH", "_SHOW_MAX", CBaseParameter::RW, false, 0, CONFIG_VAR);
 CIntParameter inGain[MAX_ADC_CHANNELS] = INIT("CH", "_IN_GAIN", CBaseParameter::RW, 0, 0, 0, 1, CONFIG_VAR);
 CIntParameter inProbe[MAX_ADC_CHANNELS] = INIT("CH", "_PROBE", CBaseParameter::RW, 1, 0, 1, 1000, CONFIG_VAR);
-
+CIntParameter inFilter[MAX_ADC_CHANNELS] = INIT("CH", "_IN_FILTER", CBaseParameter::RW, 1, 0, 0, 1, CONFIG_VAR);
 CIntParameter inAC_DC[MAX_ADC_CHANNELS] = INIT("CH", "_IN_AC_DC", CBaseParameter::RW, 0, 0, 0, 1, CONFIG_VAR);
 CFloatParameter peak_freq[MAX_ADC_CHANNELS] = INIT("peak", "_freq", CBaseParameter::ROSA, -1, 0, -1, +1e6f);
 CFloatParameter peak_power[MAX_ADC_CHANNELS] = INIT("peak", "_power", CBaseParameter::ROSA, 0, 0, -10000000, +10000000);
@@ -84,8 +84,8 @@ CIntParameter controlSettings("CONTROL_CONFIG_SETTINGS", CBaseParameter::RW, 0, 
 CStringParameter fileSettings("FILE_SATTINGS", CBaseParameter::RW, "", 0);
 CStringParameter listFileSettings("LIST_FILE_SATTINGS", CBaseParameter::RW, "", 0);
 
-const std::vector<std::string> g_savedParams = {"OSC_CH1_IN_GAIN",  "OSC_CH2_IN_GAIN",  "OSC_CH3_IN_GAIN",  "OSC_CH4_IN_GAIN",
-                                                "OSC_CH1_IN_AC_DC", "OSC_CH2_IN_AC_DC", "OSC_CH3_IN_AC_DC", "OSC_CH4_IN_AC_DC"};
+const std::vector<std::string> g_savedParams = {"CH1_IN_GAIN",   "CH2_IN_GAIN",   "CH3_IN_GAIN",  "CH4_IN_GAIN",  "CH1_IN_FILTER", "CH2_IN_FILTER",
+                                                "CH3_IN_FILTER", "CH4_IN_FILTER", "CH1_IN_AC_DC", "CH2_IN_AC_DC", "CH3_IN_AC_DC",  "CH4_IN_AC_DC"};
 
 static float* data[MAX_ADC_CHANNELS + 1];
 static float data_freeze[MAX_ADC_CHANNELS][CH_SIGNAL_DATA];
@@ -720,6 +720,17 @@ void OnNewParams(void) {
         }
     }
 
+    if (rp_HPGetFastADCIsFilterPresentOrDefault()) {
+        for (auto ch = 0u; ch < g_adc_count; ch++) {
+            if (inFilter[ch].IsNewValue()) {
+                if (rp_AcqSetBypassFilter((rp_channel_t)ch, inFilter[ch].NewValue() == 0) == RP_OK) {
+                    inFilter[ch].Update();
+                    RESEND(inFilter[ch])
+                }
+            }
+        }
+    }
+
     if (rp_HPGetIsPLLControlEnableOrDefault()) {
         if (pllControlEnable.IsNewValue()) {
             if (rp_SetPllControlEnable(pllControlEnable.NewValue()) == RP_OK) {
@@ -830,6 +841,12 @@ void updateParametersByConfig() {
     if (rp_HPGetFastADCIsAC_DCOrDefault()) {
         for (auto ch = 0u; ch < g_adc_count; ch++) {
             rp_AcqSetAC_DC((rp_channel_t)ch, inAC_DC[ch].Value() == 0 ? RP_AC : RP_DC);
+        }
+    }
+
+    if (rp_HPGetFastADCIsFilterPresentOrDefault()) {
+        for (auto ch = 0u; ch < g_adc_count; ch++) {
+            rp_AcqSetBypassFilter((rp_channel_t)ch, inFilter[ch].Value() == 0);
         }
     }
 

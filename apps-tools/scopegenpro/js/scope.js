@@ -712,6 +712,11 @@
     OSC.param_callbacks["OSC_CH3_IN_GAIN"] = OSC.ch3SetGain;
     OSC.param_callbacks["OSC_CH4_IN_GAIN"] = OSC.ch4SetGain;
 
+    OSC.param_callbacks["OSC_CH1_IN_FILTER"] = OSC.ch1SetBypassFilter;
+    OSC.param_callbacks["OSC_CH2_IN_FILTER"] = OSC.ch2SetBypassFilter;
+    OSC.param_callbacks["OSC_CH3_IN_FILTER"] = OSC.ch3SetBypassFilter;
+    OSC.param_callbacks["OSC_CH4_IN_FILTER"] = OSC.ch4SetBypassFilter;
+
     OSC.param_callbacks["OSC_CH1_IN_AC_DC"] = OSC.ch1SetACDC;
     OSC.param_callbacks["OSC_CH2_IN_AC_DC"] = OSC.ch2SetACDC;
     OSC.param_callbacks["OSC_CH3_IN_AC_DC"] = OSC.ch3SetACDC;
@@ -1150,6 +1155,11 @@
             if (id.startsWith("OSC_CH"+i+"_IN_GAIN")){
                 id = "OSC_CH"+i+"_IN_GAIN"
             }
+            
+            if (id.startsWith("OSC_CH"+i+"_IN_FILTER")){
+                id = "OSC_CH"+i+"_IN_FILTER"
+            }
+
             if (id.startsWith("OSC_CH"+i+"_IN_AC_DC")){
                 id = "OSC_CH"+i+"_IN_AC_DC"
             }

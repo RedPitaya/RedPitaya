@@ -60,6 +60,7 @@ CBooleanParameter inInvShow[MAX_ADC_CHANNELS] = INIT("GPOS_INVERTED_CH", "", CBa
 CFloatParameter inProbe[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_PROBE", CBaseParameter::RW, 1, 0, 0, 1000, CONFIG_VAR);
 
 CIntParameter inGain[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_IN_GAIN", CBaseParameter::RW, RP_LOW, 0, 0, 1, CONFIG_VAR);
+CIntParameter inFilter[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_IN_FILTER", CBaseParameter::RW, 1, 0, 0, 1, CONFIG_VAR);
 CIntParameter inAC_DC[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_IN_AC_DC", CBaseParameter::RW, RP_DC, 0, 0, 1, CONFIG_VAR);
 
 CIntParameter inSmoothMode[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_SMOOTH", CBaseParameter::RW, RP_DC, 0, 0, 3, CONFIG_VAR);
@@ -564,6 +565,10 @@ auto updateOscParams(bool force) -> void {
 
         if (rp_HPGetFastADCIsAC_DCOrDefault()) {
             IF_VALUE_CHANGED_FORCE(inAC_DC[i], rp_AcqSetAC_DC((rp_channel_t)i, inAC_DC[i].NewValue() == 0 ? RP_AC : RP_DC), force)
+        }
+
+        if (rp_HPGetFastADCIsFilterPresentOrDefault()) {
+            IF_VALUE_CHANGED_FORCE(inFilter[i], rp_AcqSetBypassFilter((rp_channel_t)i, inFilter[i].NewValue() == 0), force)
         }
 
         if (rp_HPGetFastADCIsLV_HVOrDefault()) {

@@ -286,6 +286,28 @@
         OSC.setGposOffset("CH4");
     }
 
+    OSC.setBypassFilter = function(param_name){
+        var radios = $('input[name="' + param_name + '"]');
+        radios.closest('.btn-group').children('.btn.active').removeClass('active');
+        radios.eq([+OSC.params.orig[param_name].value]).prop('checked', true).parent().addClass('active');
+    }
+
+    OSC.ch1SetBypassFilter = function(new_params){
+        OSC.setBypassFilter("OSC_CH1_IN_FILTER")
+    }
+
+    OSC.ch2SetBypassFilter = function(new_params){
+        OSC.setBypassFilter("OSC_CH2_IN_FILTER")
+    }
+
+    OSC.ch3SetBypassFilter = function(new_params){
+        OSC.setBypassFilter("OSC_CH3_IN_FILTER")
+    }
+
+    OSC.ch4SetBypassFilter = function(new_params){
+        OSC.setBypassFilter("OSC_CH4_IN_FILTER")
+    }
+
     OSC.setACDC = function(param_name){
         var radios = $('input[name="' + param_name + '"]');
         radios.closest('.btn-group').children('.btn.active').removeClass('active');
