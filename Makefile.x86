@@ -647,6 +647,7 @@ $(ZIPFILE):
 	# create version file
 	@echo "$$GREET_MSG" >  $(INSTALL_DIR)/version.txt
 	# build zip file
+	cd $(INSTALL_DIR); md5sum boot.bin u-boot.scr uImage >  md5.txt
 	cd $(INSTALL_DIR); zip -r ../$(ZIPFILE) *
 
 zip_fpga: $(ZIP_FPGA_FILE)
