@@ -53,13 +53,13 @@ LIBRP_SWEEP_DIR  		= rp-api/api-sweep
 LIBRPAPP_DIR    		= rp-api/api-app
 LIBRP_FORMATTER_DIR   	= rp-api/api-formatter
 LIBRP_ARB_DIR		   	= rp-api/api-arb
+LIBRP_UPDATER_DIR		= rp-api/api-updater
 LIBRP_LA_DIR		   	= rp-api/api-la
 ECOSYSTEM_DIR   		= Applications/ecosystem
 
 .PHONY: api librp librp250_12 librp_hw librp_dsp librp_hw_profiles librp_hw_calibration librp_hw_can librparb librp_sweep librpapp librpla
 
-api: librp librp_hw librp_hw_can librp_dsp librpapp librp_formatter librparb librp_sweep librpla
-
+api: librp librp_hw librp_hw_can librp_dsp librpapp librp_formatter librparb librp_sweep librpla librpupdater
 # api2: librp2
 
 librp: librp250_12 librp_hw_calibration librp_hw_profiles
@@ -106,6 +106,9 @@ librparb: librp
 	cmake -B$(abspath $(LIBRP_ARB_DIR)/build) -S$(abspath $(LIBRP_ARB_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(LIBRP_ARB_DIR)/build install -j$(CPU_CORES)
 
+librpupdater:
+	cmake -B$(abspath $(LIBRP_UPDATER_DIR)/build) -S$(abspath $(LIBRP_UPDATER_DIR)) $(CMAKEVAR)
+	$(MAKE) -C $(LIBRP_UPDATER_DIR)/build install -j$(CPU_CORES)
 
 librpla:  librp
 	cmake -B$(abspath $(LIBRP_LA_DIR)/build) -S$(abspath $(LIBRP_LA_DIR)) $(CMAKEVAR)
@@ -327,14 +330,15 @@ GENERATOR_DIR	   = Test/generate
 SPECTRUM_DIR       = Test/spectrum
 LED_CONTROL_DIR    = Test/led_control
 XADC_DIR           = Test/xadc
+UPDATER_DIR        = Test/updater
 DAISY_TOOL_DIR     = Test/daisy_tool
 E3_LED_CON_DIR     = tools/e3_led_controller
 STARTUPSH          = $(INSTALL_DIR)/sbin/startup.sh
 
 .PHONY: examples fpgautils
-.PHONY: lcr bode monitor profiles generator acquire acquire_p calib spectrum led_control daisy_tool la e3_led_controller
+.PHONY: lcr bode monitor profiles generator acquire acquire_p calib spectrum led_control daisy_tool la e3_led_controller updater_tool
 
-examples: lcr bode monitor profiles calib spectrum acquire acquire_p generator led_control fpgautils daisy_tool la e3_led_controller
+examples: lcr bode monitor profiles calib spectrum acquire acquire_p generator led_control fpgautils daisy_tool la e3_led_controller updater_tool
 
 
 lcr: api
@@ -392,6 +396,10 @@ fpgautils:
 e3_led_controller: api
 	cmake -B$(abspath $(E3_LED_CON_DIR)/build) -S$(abspath $(E3_LED_CON_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(E3_LED_CON_DIR)/build install -j$(CPU_CORES)
+
+updater_tool: librpupdater
+	cmake -B$(abspath $(UPDATER_DIR)/build) -S$(abspath $(UPDATER_DIR)) $(CMAKEVAR)
+	$(MAKE) -C $(UPDATER_DIR)/build install -j$(CPU_CORES)
 
 startupsh:
 	cp -f patches/startup/startup.sh $(STARTUPSH)
@@ -512,6 +520,7 @@ clean: nginx_clean scpi_clean
 	rm -rf $(abspath $(LIBRP_FORMATTER_DIR)/build)
 	rm -rf $(abspath $(LIBRP_HW_CALIB_DIR)/build)
 	rm -rf $(abspath $(LIBRP_ARB_DIR)/build)
+	rm -rf $(abspath $(LIBRP_UPDATER_DIR)/build)
 
 	rm -rf $(abspath $(LIBRP_SYSTEM_DIR)/build)
 	rm -rf $(abspath $(LIBRP_CLIENT_DIR)/build)
@@ -526,6 +535,7 @@ clean: nginx_clean scpi_clean
 	rm -rf $(abspath $(DAISY_TOOL_DIR)/build)
 	rm -rf $(abspath $(GENERATOR_DIR)/build)
 	rm -rf $(abspath $(LED_CONTROL_DIR)/build)
+	rm -rf $(abspath $(UPDATER_DIR)/build)
 	rm -rf $(abspath $(MONITOR_DIR)/build)
 	rm -rf $(abspath $(PROFILES_DIR)/build)
 	rm -rf $(abspath $(SPECTRUM_DIR)/build)
