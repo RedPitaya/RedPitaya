@@ -4,7 +4,7 @@
 
 BUILD_NUMBER ?= dev
 # Required OS version
-LINUX_VER ?= 2.06
+LINUX_VER ?= 2.07
 GIT_MODE ?= GITHUB
 GITLAB_TOKEN ?= NONE
 
