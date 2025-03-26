@@ -127,13 +127,13 @@ res = rp_hw_calib.rp_CalibGetFastADCCalibValue_1_20I(0,0,t)
 print(res,t)
 print(t.gain,t.base,t.precision,t.offset)
 
-print("rp_hw_calib.rp_CalibGetFastDACCalibValue(0,0)")
-res = rp_hw_calib.rp_CalibGetFastDACCalibValue(0,0)
+print("rp_hw_calib.rp_CalibGetFastDACCalibValue(0,0,0)")
+res = rp_hw_calib.rp_CalibGetFastDACCalibValue(0,0,0)
 print(res)
 
 t = rp_hw_calib.new_p_uint_gain_calib_t()
-print("rp_hw_calib.rp_CalibGetFastDACCalibValueI(0,0,t)")
-res = rp_hw_calib.rp_CalibGetFastDACCalibValueI(0,0,t)
+print("rp_hw_calib.rp_CalibGetFastDACCalibValueI(0,0,0,t)")
+res = rp_hw_calib.rp_CalibGetFastDACCalibValueI(0,0,0,t)
 print(res,t)
 print(t.gain,t.base,t.precision,t.offset)
 

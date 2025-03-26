@@ -35,6 +35,7 @@ struct Options {
     std::string installNumber = "";
 
     bool listOflocal = false;
+    bool listOfNB = false;
 
     bool verbose = false;
 };

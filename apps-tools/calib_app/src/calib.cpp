@@ -161,13 +161,13 @@ int CCalib::calib_board_z10(uint16_t _step, float _refdc) {
 
             auto bits = rp_HPGetFastADCBitsOrDefault();
 
-            m_calib_parameters.fast_dac_x1[0].offset = x.ch_avg[0] * -(1 << (bits - 1));
-            m_calib_parameters.fast_dac_x1[1].offset = x.ch_avg[1] * -(1 << (bits - 1));
+            m_calib_parameters.fast_dac_x1_HiZ[0].offset = x.ch_avg[0] * -(1 << (bits - 1));
+            m_calib_parameters.fast_dac_x1_HiZ[1].offset = x.ch_avg[1] * -(1 << (bits - 1));
             rp_CalibrationWriteParams(m_calib_parameters, false);
             rp_CalibInit();
             m_calib_parameters = rp_GetCalibrationSettings();
-            m_pass_data.ch[0] = m_calib_parameters.fast_dac_x1[0].offset;
-            m_pass_data.ch[1] = m_calib_parameters.fast_dac_x1[1].offset;
+            m_pass_data.ch[0] = m_calib_parameters.fast_dac_x1_HiZ[0].offset;
+            m_pass_data.ch[1] = m_calib_parameters.fast_dac_x1_HiZ[1].offset;
             return 0;
         }
 
@@ -185,13 +185,13 @@ int CCalib::calib_board_z10(uint16_t _step, float _refdc) {
             auto x = getData(30);
             // uint32_t ch1_calib = calibFullScaleFromVoltage(1.f * x.ch_avg[0] / 0.5);
             // uint32_t ch2_calib = calibFullScaleFromVoltage(1.f * x.ch_avg[1] / 0.5);
-            m_calib_parameters.fast_dac_x1[0].gainCalc = 0.5 / x.ch_avg[0];
-            m_calib_parameters.fast_dac_x1[1].gainCalc = 0.5 / x.ch_avg[1];
+            m_calib_parameters.fast_dac_x1_HiZ[0].gainCalc = 0.5 / x.ch_avg[0];
+            m_calib_parameters.fast_dac_x1_HiZ[1].gainCalc = 0.5 / x.ch_avg[1];
             rp_CalibrationWriteParams(m_calib_parameters, false);
             rp_CalibInit();
             m_calib_parameters = rp_GetCalibrationSettings();
-            m_pass_data.ch[0] = m_calib_parameters.fast_dac_x1[0].calibValue;
-            m_pass_data.ch[1] = m_calib_parameters.fast_dac_x1[1].calibValue;
+            m_pass_data.ch[0] = m_calib_parameters.fast_dac_x1_HiZ[0].calibValue;
+            m_pass_data.ch[1] = m_calib_parameters.fast_dac_x1_HiZ[1].calibValue;
             m_acq->setGEN0_5();
             std::this_thread::sleep_for(std::chrono::microseconds(1000));
             return 0;
@@ -395,13 +395,15 @@ int CCalib::calib_board_z20_250_12(uint16_t _step, float _refdc) {
             auto x = getData(30);
             auto bits = rp_HPGetFastADCBitsOrDefault();
 
-            m_calib_parameters.fast_dac_x1[0].offset = x.ch_avg[0] * -(1 << (bits - 1));
-            m_calib_parameters.fast_dac_x1[1].offset = x.ch_avg[1] * -(1 << (bits - 1));
+            m_calib_parameters.fast_dac_x1_HiZ[0].offset = x.ch_avg[0] * -(1 << (bits - 1));
+            m_calib_parameters.fast_dac_x1_HiZ[1].offset = x.ch_avg[1] * -(1 << (bits - 1));
+            m_calib_parameters.fast_dac_x1_50Ohm[0].offset = m_calib_parameters.fast_dac_x1_HiZ[0].offset;
+            m_calib_parameters.fast_dac_x1_50Ohm[1].offset = m_calib_parameters.fast_dac_x1_HiZ[1].offset;
             rp_CalibrationWriteParams(m_calib_parameters, false);
             rp_CalibInit();
             m_calib_parameters = rp_GetCalibrationSettings();
-            m_pass_data.ch[0] = m_calib_parameters.fast_dac_x1[0].offset;
-            m_pass_data.ch[1] = m_calib_parameters.fast_dac_x1[1].offset;
+            m_pass_data.ch[0] = m_calib_parameters.fast_dac_x1_HiZ[0].offset;
+            m_pass_data.ch[1] = m_calib_parameters.fast_dac_x1_HiZ[1].offset;
             return 0;
         }
 
@@ -421,13 +423,15 @@ int CCalib::calib_board_z20_250_12(uint16_t _step, float _refdc) {
             m_acq->setLV();
             std::this_thread::sleep_for(std::chrono::microseconds(1000));
             auto x = getData(30);
-            m_calib_parameters.fast_dac_x1[0].gainCalc = 0.5 / x.ch_avg[0];
-            m_calib_parameters.fast_dac_x1[1].gainCalc = 0.5 / x.ch_avg[1];
+            m_calib_parameters.fast_dac_x1_HiZ[0].gainCalc = 0.5 / x.ch_avg[0];
+            m_calib_parameters.fast_dac_x1_HiZ[1].gainCalc = 0.5 / x.ch_avg[1];
+            m_calib_parameters.fast_dac_x1_50Ohm[0].gainCalc = m_calib_parameters.fast_dac_x1_HiZ[0].gainCalc;
+            m_calib_parameters.fast_dac_x1_50Ohm[1].gainCalc = m_calib_parameters.fast_dac_x1_HiZ[1].gainCalc;
             rp_CalibrationWriteParams(m_calib_parameters, false);
             rp_CalibInit();
             m_calib_parameters = rp_GetCalibrationSettings();
-            m_pass_data.ch[0] = m_calib_parameters.fast_dac_x1[0].calibValue;
-            m_pass_data.ch[1] = m_calib_parameters.fast_dac_x1[1].calibValue;
+            m_pass_data.ch[0] = m_calib_parameters.fast_dac_x1_HiZ[0].calibValue;
+            m_pass_data.ch[1] = m_calib_parameters.fast_dac_x1_HiZ[1].calibValue;
             m_acq->setGEN0_5();
             std::this_thread::sleep_for(std::chrono::microseconds(1000));
             return 0;
@@ -450,13 +454,15 @@ int CCalib::calib_board_z20_250_12(uint16_t _step, float _refdc) {
             auto x = getData(30);
             auto bits = rp_HPGetFastADCBitsOrDefault();
 
-            m_calib_parameters.fast_dac_x5[0].offset = x.ch_avg[0] * -(1 << (bits - 1));
-            m_calib_parameters.fast_dac_x5[1].offset = x.ch_avg[1] * -(1 << (bits - 1));
+            m_calib_parameters.fast_dac_x5_HiZ[0].offset = x.ch_avg[0] * -(1 << (bits - 1));
+            m_calib_parameters.fast_dac_x5_HiZ[1].offset = x.ch_avg[1] * -(1 << (bits - 1));
+            m_calib_parameters.fast_dac_x5_50Ohm[0].offset = m_calib_parameters.fast_dac_x5_HiZ[0].offset;
+            m_calib_parameters.fast_dac_x5_50Ohm[1].offset = m_calib_parameters.fast_dac_x5_HiZ[1].offset;
             rp_CalibrationWriteParams(m_calib_parameters, false);
             rp_CalibInit();
             m_calib_parameters = rp_GetCalibrationSettings();
-            m_pass_data.ch[0] = m_calib_parameters.fast_dac_x5[0].offset;
-            m_pass_data.ch[1] = m_calib_parameters.fast_dac_x5[1].offset;
+            m_pass_data.ch[0] = m_calib_parameters.fast_dac_x5_HiZ[0].offset;
+            m_pass_data.ch[1] = m_calib_parameters.fast_dac_x5_HiZ[1].offset;
             return 0;
         }
 
@@ -476,13 +482,15 @@ int CCalib::calib_board_z20_250_12(uint16_t _step, float _refdc) {
             m_acq->setHV();
             std::this_thread::sleep_for(std::chrono::microseconds(1000));
             auto x = getData(30);
-            m_calib_parameters.fast_dac_x5[0].gainCalc = 2.5 / x.ch_avg[0];
-            m_calib_parameters.fast_dac_x5[1].gainCalc = 2.5 / x.ch_avg[1];
+            m_calib_parameters.fast_dac_x5_HiZ[0].gainCalc = 2.5 / x.ch_avg[0];
+            m_calib_parameters.fast_dac_x5_HiZ[1].gainCalc = 2.5 / x.ch_avg[1];
+            m_calib_parameters.fast_dac_x5_50Ohm[0].gainCalc = m_calib_parameters.fast_dac_x5_HiZ[0].gainCalc;
+            m_calib_parameters.fast_dac_x5_50Ohm[1].gainCalc = m_calib_parameters.fast_dac_x5_HiZ[1].gainCalc;
             rp_CalibrationWriteParams(m_calib_parameters, false);
             rp_CalibInit();
             m_calib_parameters = rp_GetCalibrationSettings();
-            m_pass_data.ch[0] = m_calib_parameters.fast_dac_x5[0].calibValue;
-            m_pass_data.ch[1] = m_calib_parameters.fast_dac_x5[1].calibValue;
+            m_pass_data.ch[0] = m_calib_parameters.fast_dac_x5_HiZ[0].calibValue;
+            m_pass_data.ch[1] = m_calib_parameters.fast_dac_x5_HiZ[1].calibValue;
             m_acq->setGEN0_5();
             std::this_thread::sleep_for(std::chrono::microseconds(1000));
             return 0;

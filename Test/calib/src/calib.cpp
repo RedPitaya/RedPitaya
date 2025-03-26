@@ -11,18 +11,17 @@
  * for more details on the language used herein.
  */
 
-
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/param.h>
 #include <unistd.h>
+#include <set>
 #include <string>
 #include <vector>
-#include <set>
-#include <sys/param.h>
 
-#include "rp_eeprom.h"
 #include "common/version.h"
 #include "rp.h"
+#include "rp_eeprom.h"
 #include "rp_hw-profiles.h"
 // #define DEBUG
 
@@ -45,18 +44,17 @@ vector<string> split(const string& text, const vector<char>& delimiters) {
         }
     }
     if (!current_token.empty()) {
-    result.push_back(current_token);
+        result.push_back(current_token);
     }
     return result;
 }
 
 /** Program name */
-const char *g_argv0 = NULL;
+const char* g_argv0 = NULL;
 
 /** Print usage information */
-void usage()
-{
-    const char *format =
+void usage() {
+    const char* format =
         "%s version %s-%s\n"
         "\n"
         "Usage: %s [OPTION]...\n"
@@ -90,15 +88,14 @@ void usage()
 }
 
 /** Write calibration data, obtained from stdin, to eeprom */
-int WriteCalib(rp_HPeModels_t model, bool factory,bool is_new,bool is_modify)
-{
-    std::vector<char> delimiter = {' ', ',',':',';','\t','\n','\r'};
+int WriteCalib(rp_HPeModels_t model, bool factory, bool is_new, bool is_modify) {
+    std::vector<char> delimiter = {' ', ',', ':', ';', '\t', '\n', '\r'};
 
     char buf[4096];
 
-    uint8_t *buff = NULL;
+    uint8_t* buff = NULL;
     uint16_t size = 0;
-    int ret = rp_CalibGetEEPROM(&buff,&size,factory);
+    int ret = rp_CalibGetEEPROM(&buff, &size, factory);
 
     if (ret || !buff || !size) {
         free(buff);
@@ -112,208 +109,210 @@ int WriteCalib(rp_HPeModels_t model, bool factory,bool is_new,bool is_modify)
     rp_eepromUniData_t new_eeprom;
 
     /* Get new values from stdin - up to eCalParEnd */
-    if (fgets(buf, sizeof(buf), stdin) == NULL){
+    if (fgets(buf, sizeof(buf), stdin) == NULL) {
         return -1;
     }
 
     std::vector<std::string> in_params = split(buf, delimiter);
 
-    if (is_modify && !is_new){
+    if (is_modify && !is_new) {
         free(buff);
         fprintf(stderr, "ERROR: Invalid flag combination!\n");
         return -1;
     }
 
-    if (is_new && in_params.size () & 0x1){
+    if (is_new && in_params.size() & 0x1) {
         free(buff);
         fprintf(stderr, "ERROR: Invalid number of parameters. Must be a multiple of 2!\n");
         return -1;
     }
 
-    if (in_params.size() == 0){
+    if (in_params.size() == 0) {
         free(buff);
         fprintf(stderr, "ERROR: No calibration parameters\n");
         return -1;
     }
 
     int calibSize = 0;
-    if (!is_modify){
+    if (!is_modify) {
 
         calibSize = is_new ? MAX_UNIVERSAL_ITEMS_COUNT : getCalibSize(model);
-        if (calibSize < 0) return -1;
+        if (calibSize < 0)
+            return -1;
 
         size_t i = 0;
         size_t j = 0;
-        for(i = 0; i < in_params.size() && i < (size_t)calibSize; i++, j++){
-            if (is_new){
+        for (i = 0; i < in_params.size() && i < (size_t)calibSize; i++, j++) {
+            if (is_new) {
                 new_eeprom.item[j].id = stoi(in_params[i]);
                 i++;
-                new_eeprom.item[j].value = stoi(in_params[i]);;
-            }else{
+                new_eeprom.item[j].value = stoi(in_params[i]);
+                ;
+            } else {
                 eeprom.feCalPar[j] = stoi(in_params[i]);
             }
         }
         new_eeprom.count = j;
-    }else{
-        memcpy(&new_eeprom,buff,size);
+    } else {
+        memcpy(&new_eeprom, buff, size);
 
         calibSize = is_new ? MAX_UNIVERSAL_ITEMS_COUNT : getCalibSize(model);
-        if (calibSize < 0) return -1;
+        if (calibSize < 0)
+            return -1;
 
         size_t i = 0;
-        for(i = 0; i < in_params.size() && i < (size_t)calibSize; i++){
+        for (i = 0; i < in_params.size() && i < (size_t)calibSize; i++) {
             int idx = -1;
-            for(int z = 0; z < new_eeprom.count; z++){
-                if (new_eeprom.item[z].id == stoi(in_params[i])){
+            for (int z = 0; z < new_eeprom.count; z++) {
+                if (new_eeprom.item[z].id == stoi(in_params[i])) {
                     idx = z;
                     break;
                 }
             }
-            if (idx == -1){
+            if (idx == -1) {
                 free(buff);
-                fprintf(stderr, "ERROR: Can't find calibration parameter id = %s\n",in_params[i].c_str());
+                fprintf(stderr, "ERROR: Can't find calibration parameter id = %s\n", in_params[i].c_str());
                 return -1;
             }
             i++;
-            new_eeprom.item[idx].value = stoi(in_params[i]);;
+            new_eeprom.item[idx].value = stoi(in_params[i]);
+            ;
         }
     }
 #ifdef DEBUG
     // Debug output
-    if (is_new){
-        for(int i = 0; i < new_eeprom.count; i++) {
-            fprintf(stdout, "(%20d,%20d)", new_eeprom.item[i].id,new_eeprom.item[i].value);
+    if (is_new) {
+        for (int i = 0; i < new_eeprom.count; i++) {
+            fprintf(stdout, "(%20d,%20d)", new_eeprom.item[i].id, new_eeprom.item[i].value);
         }
-    }else{
-        for(int i = 0; i < calibSize; i++) {
+    } else {
+        for (int i = 0; i < calibSize; i++) {
             fprintf(stdout, "%20d", eeprom.feCalPar[i]);
         }
         fprintf(stdout, "\n");
     }
 #endif
     eeprom.dataStructureId = dataStruct;
-    new_eeprom.dataStructureId = RP_HW_PACK_ID_V5;
+    new_eeprom.dataStructureId = RP_HW_PACK_ID_V6;
     eeprom.wpCheck = wp + 1;
     new_eeprom.wpCheck = wp + 1;
     rp_calib_params_t calib;
-    uint8_t *wbuff = is_new ? (uint8_t*)&new_eeprom : (uint8_t*)&eeprom;
+    uint8_t* wbuff = is_new ? (uint8_t*)&new_eeprom : (uint8_t*)&eeprom;
     size = is_new ? sizeof(rp_eepromUniData_t) : sizeof(rp_eepromWpData_t);
-    ret =  rp_CalibConvertEEPROM(wbuff,size,&calib);
+    ret = rp_CalibConvertEEPROM(wbuff, size, &calib);
     if (ret) {
         fprintf(stderr, "ERROR: Convert data failed!\n");
         return ret;
     }
     free(buff);
-    ret =  rp_CalibrationWriteParams(calib,factory);
+    ret = rp_CalibrationWriteParams(calib, factory);
     return ret;
 }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char** argv) {
     g_argv0 = argv[0];
     int ret = 0;
 
-    if ( argc < MINARGS ) {
+    if (argc < MINARGS) {
         usage();
-        exit ( EXIT_FAILURE );
+        exit(EXIT_FAILURE);
     }
 
     /* Parse options */
-    const char *optstring = "rwfdvhzxiunmoe";
+    const char* optstring = "rwfdvhzxiunmoe";
     unsigned int want_bits = 0;
     bool factory = false;
 
     int ch = -1;
-    while ( (ch = getopt( argc, argv, optstring )) != -1 ) {
-        switch ( ch ) {
+    while ((ch = getopt(argc, argv, optstring)) != -1) {
+        switch (ch) {
 
-        case 'r':
-            want_bits |= WANT_READ;
-            break;
+            case 'r':
+                want_bits |= WANT_READ;
+                break;
 
-        case 'w':
-            want_bits |= WANT_WRITE;
-            break;
+            case 'w':
+                want_bits |= WANT_WRITE;
+                break;
 
-        case 'd':
-            want_bits |= WANT_DEFAULTS;
-            break;
+            case 'd':
+                want_bits |= WANT_DEFAULTS;
+                break;
 
-        case 'i':
-            want_bits |= WANT_INIT;
-            break;
+            case 'i':
+                want_bits |= WANT_INIT;
+                break;
 
-        case 'f':
-            factory = true;
-            break;
+            case 'f':
+                factory = true;
+                break;
 
-        case 'v':
-            want_bits |= WANT_VERBOSE;
-            break;
+            case 'v':
+                want_bits |= WANT_VERBOSE;
+                break;
 
-        case 'u':
-            want_bits |= WANT_PRINT;
-            break;
+            case 'u':
+                want_bits |= WANT_PRINT;
+                break;
 
-        case 'x':
-            want_bits |= WANT_HEX;
-            break;
+            case 'x':
+                want_bits |= WANT_HEX;
+                break;
 
-        // Specal mode for 125/122 production script
-        case 'z':
+            // Specal mode for 125/122 production script
+            case 'z':
                 want_bits |= WANT_Z_MODE;
-            break;
+                break;
 
-        case 'n':
+            case 'n':
                 want_bits |= WANT_NEW_FORMAT;
-            break;
+                break;
 
-        case 'm':
+            case 'm':
                 want_bits |= WANT_MODIFY;
-            break;
+                break;
 
-        case 'o':
+            case 'o':
                 want_bits |= WANT_TO_OLD;
-            break;
+                break;
 
-        case 'e':
+            case 'e':
                 want_bits |= WANT_FILTER_ZERO;
-            break;
+                break;
 
-        case 'h':
-            usage();
-            exit ( EXIT_SUCCESS );
-            break;
+            case 'h':
+                usage();
+                exit(EXIT_SUCCESS);
+                break;
 
-        default:
-            usage();
-            exit( EXIT_FAILURE );
+            default:
+                usage();
+                exit(EXIT_FAILURE);
         }
     }
 
-
     /* Sanity check */
-    if ( (want_bits & WANT_WRITE) && (want_bits & WANT_DEFAULTS) ) {
+    if ((want_bits & WANT_WRITE) && (want_bits & WANT_DEFAULTS)) {
         fprintf(stderr, "Cannot do both: write and reset factory defaults.\n");
         usage();
-        exit( EXIT_FAILURE );
+        exit(EXIT_FAILURE);
     }
 
-    if ((want_bits & WANT_TO_OLD) && (want_bits != WANT_TO_OLD) ) {
+    if ((want_bits & WANT_TO_OLD) && (want_bits != WANT_TO_OLD)) {
         fprintf(stderr, "Flag -o cannot be combined with other flags.\n");
         usage();
-        exit( EXIT_FAILURE );
+        exit(EXIT_FAILURE);
     }
 
     rp_HPeModels_t model;
-    if (rp_HPGetModel(&model) != RP_HP_OK){
-        fprintf(stderr,"ERROR: Unknown model: %d.\n",model);
-        exit( EXIT_FAILURE);
+    if (rp_HPGetModel(&model) != RP_HP_OK) {
+        fprintf(stderr, "ERROR: Unknown model: %d.\n", model);
+        exit(EXIT_FAILURE);
     }
 
     /* Write */
     if (want_bits & WANT_WRITE) {
-        ret = WriteCalib(model,factory, want_bits & WANT_NEW_FORMAT,want_bits & WANT_MODIFY);
+        ret = WriteCalib(model, factory, want_bits & WANT_NEW_FORMAT, want_bits & WANT_MODIFY);
         if (ret) {
             fprintf(stderr, "ERROR: Write failed!\n");
             return ret;
@@ -330,15 +329,15 @@ int main(int argc, char **argv)
     }
 
     if (want_bits & WANT_PRINT) {
-        uint8_t *buff = NULL;
+        uint8_t* buff = NULL;
         uint16_t size = 0;
-        int ret = rp_CalibGetEEPROM(&buff,&size,factory);
+        int ret = rp_CalibGetEEPROM(&buff, &size, factory);
         if (ret) {
             fprintf(stderr, "ERROR: Read failed!\n");
             return ret;
         }
         rp_calib_params_t calib;
-        ret =  rp_CalibConvertEEPROM(buff,size,&calib);
+        ret = rp_CalibConvertEEPROM(buff, size, &calib);
         if (ret) {
             fprintf(stderr, "ERROR: Convert data failed!\n");
             return ret;
@@ -348,42 +347,41 @@ int main(int argc, char **argv)
 
     /* Reset to defaults */
     if (want_bits & WANT_INIT) {
-        ret= rp_CalibInit();
+        ret = rp_CalibInit();
         if (ret) {
             fprintf(stderr, "ERROR: Init failed!\n");
             return ret;
         }
-        ret = rp_CalibrationReset(factory,want_bits & WANT_NEW_FORMAT , want_bits & WANT_FILTER_ZERO);
+        ret = rp_CalibrationReset(factory, want_bits & WANT_NEW_FORMAT, want_bits & WANT_FILTER_ZERO);
         if (ret) {
             fprintf(stderr, "ERROR: Reset failed!\n");
             return ret;
         }
     }
 
-     /* Read */
+    /* Read */
     if (want_bits & WANT_READ) {
-        uint8_t *buff = NULL;
+        uint8_t* buff = NULL;
         uint16_t size = 0;
 
-        int ret = rp_CalibGetEEPROM(&buff,&size,factory);
+        int ret = rp_CalibGetEEPROM(&buff, &size, factory);
 
         if (ret) {
             fprintf(stderr, "ERROR: Read failed!\n");
             return ret;
         }
-        if (buff[0] != RP_HW_PACK_ID_V5){
-            print_eeprom(model,(rp_eepromWpData_t*)buff, want_bits);
-        }else{
-            print_eepromUni((rp_eepromUniData_t*)buff,want_bits);
+        if (buff[0] < RP_HW_PACK_ID_V5) {
+            print_eeprom(model, (rp_eepromWpData_t*)buff, want_bits);
+        } else {
+            print_eepromUni((rp_eepromUniData_t*)buff, want_bits);
         }
     }
 
-
     if (want_bits & WANT_TO_OLD) {
-        uint8_t *buff = NULL;
+        uint8_t* buff = NULL;
         uint16_t size = 0;
 
-        int ret = rp_CalibGetEEPROM(&buff,&size,false);
+        int ret = rp_CalibGetEEPROM(&buff, &size, false);
 
         if (ret) {
             fprintf(stderr, "ERROR: Read failed!\n");
@@ -391,7 +389,7 @@ int main(int argc, char **argv)
         }
 
         rp_calib_params_t calib;
-        ret =  rp_CalibConvertEEPROM(buff,size,&calib);
+        ret = rp_CalibConvertEEPROM(buff, size, &calib);
         if (ret) {
             fprintf(stderr, "ERROR: Convert data failed!\n");
             return ret;
@@ -399,10 +397,10 @@ int main(int argc, char **argv)
 
         ret = rp_CalibConvertToOld(&calib);
         if (ret) {
-            fprintf(stderr, "ERROR: Can't convert data to the old version! (%d)\n",ret);
+            fprintf(stderr, "ERROR: Can't convert data to the old version! (%d)\n", ret);
             return ret;
         }
-        ret = rp_CalibrationWriteParamsEx(calib,false);
+        ret = rp_CalibrationWriteParamsEx(calib, false);
         if (ret) {
             fprintf(stderr, "ERROR: Write failed!\n");
             return ret;

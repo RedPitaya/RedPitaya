@@ -54,11 +54,13 @@ bool convertV1(rp_calib_params_t *param,rp_calib_params_v1_t *out);
 bool convertV2(rp_calib_params_t *param,rp_calib_params_v2_t *out);
 bool convertV3(rp_calib_params_t *param,rp_calib_params_v3_t *out);
 bool convertV4(rp_calib_params_t *param,rp_calib_params_v1_t *out);
+bool convertGen2(rp_calib_params_t *param,rp_calib_params_v1_t *out);
 
 rp_calib_params_t convertV1toCommon(rp_calib_params_v1_t *param, bool adjust);
 rp_calib_params_t convertV2toCommon(rp_calib_params_v2_t *param, bool adjust);
 rp_calib_params_t convertV3toCommon(rp_calib_params_v3_t *param, bool adjust);
 rp_calib_params_t convertV4toCommon(rp_calib_params_v1_t *param, bool adjust);
+rp_calib_params_t convertGen2toCommon(rp_calib_params_v1_t *param, bool adjust);
 
 rp_calib_params_t getDefault(rp_HPeModels_t model, bool setFilterZero);
 
@@ -71,5 +73,7 @@ rp_calib_error adjustingBaseScaleEx(float *baseScale,int32_t *offset,bool adjust
 rp_calib_error adjustingBaseScale(channel_calib_t * calib,bool adjust);
 
 uint32_t calibBaseScaleFromVoltage(float voltageScale,bool uni_is_calib);
+
+bool isUniversalCalib(uint16_t dataStructureId);
 
 #endif //__CALIB_H

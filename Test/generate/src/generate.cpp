@@ -37,52 +37,20 @@ float fullScale() {
     return fs;
 }
 
-models_t getModel() {
-    rp_HPeModels_t c = STEM_125_14_v1_0;
-    if (rp_HPGetModel(&c) != RP_HP_OK) {
-        fprintf(stderr, "[Error] Can't get board model\n");
+bool getIsLoad50Ohm() {
+    bool c = 0;
+    if (rp_HPGetIsDAC50OhmMode(&c) != RP_HP_OK) {
+        fprintf(stderr, "[Error] Can't get fast DAC load mode\n");
     }
+    return c;
+}
 
-    switch (c) {
-        case STEM_125_10_v1_0:
-        case STEM_125_14_v1_0:
-        case STEM_125_14_v1_1:
-        case STEM_125_14_LN_v1_1:
-        case STEM_125_14_LN_BO_v1_1:
-        case STEM_125_14_LN_CE1_v1_1:
-        case STEM_125_14_LN_CE2_v1_1:
-        case STEM_125_14_Z7020_v1_0:
-        case STEM_125_14_Z7020_LN_v1_1:
-        case STEM_125_14_v2_0:
-        case STEM_125_14_Pro_v2_0:
-        case STEM_125_14_Z7020_Pro_v1_0:
-        case STEM_125_14_Z7020_Pro_v2_0:
-        case STEM_125_14_Z7020_Ind_v2_0:
-        case STEM_125_14_Z7020_LL_v1_1:
-        case STEM_65_16_Z7020_LL_v1_1:
-            return RP_125_14;
-
-        case STEM_122_16SDR_v1_0:
-        case STEM_122_16SDR_v1_1:
-            return RP_125_14;
-
-        case STEM_125_14_Z7020_4IN_v1_0:
-        case STEM_125_14_Z7020_4IN_v1_2:
-        case STEM_125_14_Z7020_4IN_v1_3:
-            return RP_125_14_4CH;
-
-        case STEM_250_12_v1_0:
-        case STEM_250_12_v1_1:
-        case STEM_250_12_v1_2:
-        case STEM_250_12_v1_2a:
-        case STEM_250_12_v1_2b:
-        case STEM_250_12_120:
-            return RP_250_12;
-        default:
-            fprintf(stderr, "[Error] Can't get board model\n");
-            exit(-1);
+bool getIsGainX5() {
+    bool c = 0;
+    if (rp_HPGetIsGainDACx5(&c) != RP_HP_OK) {
+        fprintf(stderr, "[Error] Can't get fast DAC gain\n");
     }
-    return RP_125_14;
+    return c;
 }
 
 auto loadARBList() -> void {

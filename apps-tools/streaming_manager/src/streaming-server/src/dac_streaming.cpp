@@ -66,7 +66,7 @@ auto startDACServer(bool verbMode, uint8_t activeChannels) -> void {
         if (use_calib) {
             for (uint8_t ch = 0; ch < channels_max; ++ch) {
                 rp_gen_gain_calib_t mode = dac_gain[ch].value == CStreamSettings::DACGain::X1 ? RP_GAIN_CALIB_1X : RP_GAIN_CALIB_5X;
-                if (rp_CalibGetFastDACCalibValue((rp_channel_calib_t)ch, mode, &ch_gain[ch], &ch_off[ch]) != RP_HW_CALIB_OK) {
+                if (rp_CalibGetFastDACCalibValue((rp_channel_calib_t)ch, mode, RP_CALIB_HIZ, &ch_gain[ch], &ch_off[ch]) != RP_HW_CALIB_OK) {
                     aprintf(stderr, "Error get calibration channel: %d\n", ch);
                 }
             }

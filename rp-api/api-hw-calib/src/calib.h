@@ -48,6 +48,6 @@ rp_calib_error calib_GetFastADCFilter_1_20(rp_channel_calib_t channel,channel_fi
 rp_calib_error calib_GetFastADCCalibValue(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, double *gain,int32_t *offset, uint_gain_calib_t *calib);
 rp_calib_error calib_GetFastADCCalibValue_1_20(rp_channel_calib_t channel,rp_acq_ac_dc_mode_calib_t mode, double *gain,int32_t *offset, uint_gain_calib_t *calib);
 
-rp_calib_error calib_GetFastDACCalibValue(rp_channel_calib_t channel,rp_gen_gain_calib_t mode, double *gain,int32_t *offset, uint_gain_calib_t *calib);
+rp_calib_error calib_GetFastDACCalibValue(rp_channel_calib_t channel,rp_gen_gain_calib_t gain_mode, rp_gen_load_calib_t mode, double *gain,int32_t *offset, uint_gain_calib_t *calib);
 
 #endif //__CALIB_H

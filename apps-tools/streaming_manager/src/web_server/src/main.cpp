@@ -1024,7 +1024,7 @@ auto startDACServer(__attribute__((unused)) bool testMode, uint8_t activeChannel
 
         for (uint8_t ch = 0; ch < max_channels && ch < 2; ++ch) {
             rp_gen_gain_calib_t mode = settings.getDACGain(ch + 1).value == CStreamSettings::DACGain::X1 ? RP_GAIN_CALIB_1X : RP_GAIN_CALIB_5X;
-            if (rp_CalibGetFastDACCalibValue((rp_channel_calib_t)ch, mode, &ch_gain[ch], &ch_off[ch]) != RP_HW_CALIB_OK) {
+            if (rp_CalibGetFastDACCalibValue((rp_channel_calib_t)ch, mode, RP_CALIB_HIZ, &ch_gain[ch], &ch_off[ch]) != RP_HW_CALIB_OK) {
                 ERROR_LOG("Error get calibration channel: %d", ch);
             }
         }

@@ -435,7 +435,7 @@ int generate_writeData(rp_channel_t channel, float* data, int32_t start, uint32_
     return RP_OK;
 }
 
-int generate_setAmplitude(rp_channel_t channel, rp_gen_gain_t gain, float amplitude) {
+int generate_setAmplitude(rp_channel_t channel, rp_gen_gain_t gain, rp_gen_load_mode_t mode, float amplitude) {
 
     float fsBase = 0;
     if (rp_HPGetHWDACFullScale(&fsBase) != RP_HP_OK) {
@@ -471,15 +471,29 @@ int generate_setAmplitude(rp_channel_t channel, rp_gen_gain_t gain, float amplit
         return RP_NOTS;
     }
 
+    rp_gen_load_calib_t l_mode = rp_gen_load_calib_t::RP_CALIB_HIZ;
+    switch (mode) {
+        case RP_GEN_50Ohm:
+            l_mode = rp_gen_load_calib_t::RP_CALIB_50Ohm;
+            break;
+        case RP_GEN_HI_Z:
+            l_mode = rp_gen_load_calib_t::RP_CALIB_HIZ;
+            break;
+        default:
+            ERROR_LOG("Unknown load mode: %d", mode);
+            return RP_EOOR;
+            break;
+    }
+
     double gain_calib;
     int32_t offset;
     int ret = 0;
     switch (gain) {
         case RP_GAIN_1X:
-            ret = rp_CalibGetFastDACCalibValue(convertCh(channel), RP_GAIN_CALIB_1X, &gain_calib, &offset);
+            ret = rp_CalibGetFastDACCalibValue(convertCh(channel), RP_GAIN_CALIB_1X, l_mode, &gain_calib, &offset);
             break;
         case RP_GAIN_5X:
-            ret = rp_CalibGetFastDACCalibValue(convertCh(channel), RP_GAIN_CALIB_5X, &gain_calib, &offset);
+            ret = rp_CalibGetFastDACCalibValue(convertCh(channel), RP_GAIN_CALIB_5X, l_mode, &gain_calib, &offset);
             break;
         default:
             ERROR_LOG("Unknown gain: %d", gain);
@@ -517,7 +531,7 @@ int generate_setAmplitude(rp_channel_t channel, rp_gen_gain_t gain, float amplit
     return RP_OK;
 }
 
-int generate_setDCOffset(rp_channel_t channel, rp_gen_gain_t gain, float offset) {
+int generate_setDCOffset(rp_channel_t channel, rp_gen_gain_t gain, rp_gen_load_mode_t mode, float offset) {
 
     float fsBase = 0;
     if (rp_HPGetHWDACFullScale(&fsBase) != RP_HP_OK) {
@@ -553,15 +567,29 @@ int generate_setDCOffset(rp_channel_t channel, rp_gen_gain_t gain, float offset)
         return RP_NOTS;
     }
 
+    rp_gen_load_calib_t l_mode = rp_gen_load_calib_t::RP_CALIB_HIZ;
+    switch (mode) {
+        case RP_GEN_50Ohm:
+            l_mode = rp_gen_load_calib_t::RP_CALIB_50Ohm;
+            break;
+        case RP_GEN_HI_Z:
+            l_mode = rp_gen_load_calib_t::RP_CALIB_HIZ;
+            break;
+        default:
+            ERROR_LOG("Unknown load mode: %d", mode);
+            return RP_EOOR;
+            break;
+    }
+
     double gain_calib;
     int32_t offset_calib;
     int ret = 0;
     switch (gain) {
         case RP_GAIN_1X:
-            ret = rp_CalibGetFastDACCalibValue(convertCh(channel), RP_GAIN_CALIB_1X, &gain_calib, &offset_calib);
+            ret = rp_CalibGetFastDACCalibValue(convertCh(channel), RP_GAIN_CALIB_1X, l_mode, &gain_calib, &offset_calib);
             break;
         case RP_GAIN_5X:
-            ret = rp_CalibGetFastDACCalibValue(convertCh(channel), RP_GAIN_CALIB_5X, &gain_calib, &offset_calib);
+            ret = rp_CalibGetFastDACCalibValue(convertCh(channel), RP_GAIN_CALIB_5X, l_mode, &gain_calib, &offset_calib);
             break;
         default:
             ERROR_LOG("Unknown gain: %d", gain);
@@ -595,7 +623,7 @@ int generate_setDCOffset(rp_channel_t channel, rp_gen_gain_t gain, float offset)
     return RP_OK;
 }
 
-int generate_setAmplitudeAndOffsetOrigin(rp_channel_t channel, rp_gen_gain_t gain) {
+int generate_setAmplitudeAndOffsetOrigin(rp_channel_t channel, rp_gen_gain_t gain, rp_gen_load_mode_t mode) {
 
     bool x5_gain = false;
     if (rp_HPGetIsGainDACx5(&x5_gain) != RP_HP_OK) {
@@ -608,15 +636,29 @@ int generate_setAmplitudeAndOffsetOrigin(rp_channel_t channel, rp_gen_gain_t gai
         return RP_NOTS;
     }
 
+    rp_gen_load_calib_t l_mode = rp_gen_load_calib_t::RP_CALIB_HIZ;
+    switch (mode) {
+        case RP_GEN_50Ohm:
+            l_mode = rp_gen_load_calib_t::RP_CALIB_50Ohm;
+            break;
+        case RP_GEN_HI_Z:
+            l_mode = rp_gen_load_calib_t::RP_CALIB_HIZ;
+            break;
+        default:
+            ERROR_LOG("Unknown load mode: %d", mode);
+            return RP_EOOR;
+            break;
+    }
+
     double gain_calib;
     int32_t offset;
     int ret = 0;
     switch (gain) {
         case RP_GAIN_1X:
-            ret = rp_CalibGetFastDACCalibValue(convertCh(channel), RP_GAIN_CALIB_1X, &gain_calib, &offset);
+            ret = rp_CalibGetFastDACCalibValue(convertCh(channel), RP_GAIN_CALIB_1X, l_mode, &gain_calib, &offset);
             break;
         case RP_GAIN_5X:
-            ret = rp_CalibGetFastDACCalibValue(convertCh(channel), RP_GAIN_CALIB_5X, &gain_calib, &offset);
+            ret = rp_CalibGetFastDACCalibValue(convertCh(channel), RP_GAIN_CALIB_5X, l_mode, &gain_calib, &offset);
             break;
         default:
             ERROR_LOG("Unknown gain: %d", gain);
@@ -695,7 +737,7 @@ int generate_getRuntimeTempAlarm(rp_channel_t channel, bool* state) {
     return RP_OK;
 }
 
-int generate_setBurstLastValue(rp_channel_t channel, rp_gen_gain_t gain, float amplitude) {
+int generate_setBurstLastValue(rp_channel_t channel, rp_gen_gain_t gain, rp_gen_load_mode_t mode, float amplitude) {
 
     float fullScaleAmp = 0;
     if (rp_HPGetFastDACOutFullScale((uint8_t)channel, &fullScaleAmp) != RP_HP_OK) {
@@ -740,7 +782,7 @@ int generate_setBurstLastValue(rp_channel_t channel, rp_gen_gain_t gain, float a
     return RP_OK;
 }
 
-int generate_setInitGenValue(rp_channel_t channel, rp_gen_gain_t gain, float amplitude) {
+int generate_setInitGenValue(rp_channel_t channel, rp_gen_gain_t gain, rp_gen_load_mode_t mode, float amplitude) {
 
     float fullScaleAmp = 0;
     if (rp_HPGetFastDACOutFullScale((uint8_t)channel, &fullScaleAmp) != RP_HP_OK) {

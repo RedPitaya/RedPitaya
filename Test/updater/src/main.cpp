@@ -255,6 +255,21 @@ int main(int argc, char* argv[]) {
             }
         }
         if (file != "") {
+            char buff[256];
+            sprintf(buff, "systemctl stop redpitaya_e3_controller.service");
+            auto ret = system(buff);
+            if (ret != 0) {
+                fprintf(stderr, "Error stop redpitaya_e3_controller.service");
+                return -1;
+            }
+
+            sprintf(buff, "systemctl stop redpitaya_nginx.service");
+            auto ret = system(buff);
+            if (ret != 0) {
+                fprintf(stderr, "Error stop redpitaya_nginx.service");
+                return -1;
+            }
+
             auto callback = new Callback();
             callback->reset();
             rp_UpdaterSetCallback(callback);

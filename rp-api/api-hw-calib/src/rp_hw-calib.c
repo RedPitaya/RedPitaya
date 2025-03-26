@@ -102,14 +102,14 @@ rp_calib_error rp_CalibGetFastADCCalibValue_1_20I(rp_channel_calib_t channel,rp_
     return calib_GetFastADCCalibValue_1_20(channel,mode,&gain,&calib->offset,calib);
 }
 
-rp_calib_error rp_CalibGetFastDACCalibValue(rp_channel_calib_t channel,rp_gen_gain_calib_t mode, double *gain,int32_t *offset){
+rp_calib_error rp_CalibGetFastDACCalibValue(rp_channel_calib_t channel,rp_gen_gain_calib_t gain_mode,  rp_gen_load_calib_t mode,  double *gain,int32_t *offset){
     uint_gain_calib_t c;
-    return calib_GetFastDACCalibValue(channel,mode,gain,offset,&c);
+    return calib_GetFastDACCalibValue(channel,gain_mode,mode ,gain,offset,&c);
 }
 
-rp_calib_error rp_CalibGetFastDACCalibValueI(rp_channel_calib_t channel,rp_gen_gain_calib_t mode, uint_gain_calib_t *calib){
+rp_calib_error rp_CalibGetFastDACCalibValueI(rp_channel_calib_t channel,rp_gen_gain_calib_t gain_mode, rp_gen_load_calib_t mode,  uint_gain_calib_t *calib){
     double gain;
-    return calib_GetFastDACCalibValue(channel,mode,&gain,&calib->offset,calib);
+    return calib_GetFastDACCalibValue(channel,gain_mode,mode,&gain,&calib->offset,calib);
 }
 
 rp_calib_error rp_GetNameOfUniversalId(uint16_t id, char** name){
