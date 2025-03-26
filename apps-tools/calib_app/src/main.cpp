@@ -20,8 +20,8 @@
 #include "rp-i2c-max7311.h"
 #include "rp-spi.h"
 
-#include "rp_hw-calib.h"
 #include "rp_hw-profiles.h"
+#include "rp_hw_calib.h"
 
 #include "filter_logic.h"
 #include "filter_logicNch.h"

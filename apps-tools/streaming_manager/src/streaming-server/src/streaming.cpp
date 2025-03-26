@@ -5,8 +5,8 @@
 #include "api250-12/rp-gpio-power.h"
 #include "api250-12/rp-i2c-max7311.h"
 #include "api250-12/rp-spi.h"
-#include "rp_hw-calib.h"
 #include "rp_hw-profiles.h"
+#include "rp_hw_calib.h"
 #endif
 
 #ifndef _WIN32

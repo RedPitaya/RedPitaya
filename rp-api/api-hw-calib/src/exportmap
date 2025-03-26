@@ -1,4 +1,4 @@
 {
-global: rp_*;
+global: _*rp_*;
 local: *;
 };

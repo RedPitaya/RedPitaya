@@ -22,7 +22,7 @@
 #include "common/version.h"
 #include "options.h"
 #include "rp.h"
-#include "rp_hw-calib.h"
+#include "rp_hw_calib.h"
 
 /** Program name */
 const char* g_argv0 = NULL;

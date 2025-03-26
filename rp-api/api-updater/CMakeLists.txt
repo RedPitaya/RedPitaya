@@ -98,8 +98,7 @@ if(BUILD_SHARED)
         include_directories(/usr/local/lib/python3.10/dist-packages/numpy/_core/include)
 
         set_property(SOURCE src/rp_updater.i PROPERTY CPLUSPLUS ON)
-        # SET_SOURCE_FILES_PROPERTIES(src/rp_dsp.i PROPERTIES SWIG_FLAGS "-includeall")
-
+ 
         SWIG_ADD_LIBRARY(rp_updater_py LANGUAGE python SOURCES src/rp_updater.i ${src})
         SWIG_LINK_LIBRARIES(rp_updater_py ${PYTHON_LIBRARIES} -lzip -lssl -lcrypto -lcurl -lm -lpthread)
      endif()

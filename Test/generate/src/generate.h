@@ -7,8 +7,8 @@
 #include "common/version.h"
 
 #include "rp.h"
-#include "rp_hw-calib.h"
 #include "rp_hw-profiles.h"
+#include "rp_hw_calib.h"
 
 typedef enum { RP_125_14, RP_250_12, RP_125_14_4CH } models_t;
 

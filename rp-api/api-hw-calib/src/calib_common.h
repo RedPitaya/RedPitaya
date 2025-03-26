@@ -15,11 +15,11 @@
 #ifndef __CALIB_COMMON_H
 #define __CALIB_COMMON_H
 
-#include <stdint.h>
 #include <stdbool.h>
-#include "rp_hw-profiles.h"
+#include <stdint.h>
 #include "calib_structs.h"
-#include "rp_hw-calib.h"
+#include "rp_hw-profiles.h"
+#include "rp_hw_calib.h"
 
 // Used for old board like 125-10 where missing HV calibaration
 #define CALIB_MAGIC 0xAABBCCDD
@@ -43,37 +43,37 @@
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 #define CHECK_VALID_GAIN_LIMIT(X) (X >= 0.5 && X <= 1.5)
 
-uint8_t* readFromEpprom(uint16_t *size);
-uint8_t* readFromFactoryEpprom(uint16_t *size);
-uint8_t* readHeader(uint16_t *size, bool use_factory_zone);
+uint8_t* readFromEpprom(uint16_t* size);
+uint8_t* readFromFactoryEpprom(uint16_t* size);
+uint8_t* readHeader(uint16_t* size, bool use_factory_zone);
 
-uint16_t writeToEpprom(uint8_t* buffer,uint16_t size);
-uint16_t writeToFactoryEpprom(uint8_t* buffer,uint16_t size);
+uint16_t writeToEpprom(uint8_t* buffer, uint16_t size);
+uint16_t writeToFactoryEpprom(uint8_t* buffer, uint16_t size);
 
-bool convertV1(rp_calib_params_t *param,rp_calib_params_v1_t *out);
-bool convertV2(rp_calib_params_t *param,rp_calib_params_v2_t *out);
-bool convertV3(rp_calib_params_t *param,rp_calib_params_v3_t *out);
-bool convertV4(rp_calib_params_t *param,rp_calib_params_v1_t *out);
-bool convertGen2(rp_calib_params_t *param,rp_calib_params_v1_t *out);
+bool convertV1(rp_calib_params_t* param, rp_calib_params_v1_t* out);
+bool convertV2(rp_calib_params_t* param, rp_calib_params_v2_t* out);
+bool convertV3(rp_calib_params_t* param, rp_calib_params_v3_t* out);
+bool convertV4(rp_calib_params_t* param, rp_calib_params_v1_t* out);
+bool convertGen2(rp_calib_params_t* param, rp_calib_params_v1_t* out);
 
-rp_calib_params_t convertV1toCommon(rp_calib_params_v1_t *param, bool adjust);
-rp_calib_params_t convertV2toCommon(rp_calib_params_v2_t *param, bool adjust);
-rp_calib_params_t convertV3toCommon(rp_calib_params_v3_t *param, bool adjust);
-rp_calib_params_t convertV4toCommon(rp_calib_params_v1_t *param, bool adjust);
-rp_calib_params_t convertGen2toCommon(rp_calib_params_v1_t *param, bool adjust);
+rp_calib_params_t convertV1toCommon(rp_calib_params_v1_t* param, bool adjust);
+rp_calib_params_t convertV2toCommon(rp_calib_params_v2_t* param, bool adjust);
+rp_calib_params_t convertV3toCommon(rp_calib_params_v3_t* param, bool adjust);
+rp_calib_params_t convertV4toCommon(rp_calib_params_v1_t* param, bool adjust);
+rp_calib_params_t convertGen2toCommon(rp_calib_params_v1_t* param, bool adjust);
 
 rp_calib_params_t getDefault(rp_HPeModels_t model, bool setFilterZero);
 
-uint_gain_calib_t convertFloatToInt(channel_calib_t *param,uint8_t precision);
+uint_gain_calib_t convertFloatToInt(channel_calib_t* param, uint8_t precision);
 
-bool recalculateGain(rp_calib_params_t *param);
-bool recalculateCalibValue(rp_calib_params_t *param);
+bool recalculateGain(rp_calib_params_t* param);
+bool recalculateCalibValue(rp_calib_params_t* param);
 
-rp_calib_error adjustingBaseScaleEx(float *baseScale,int32_t *offset,bool adjust,uint32_t *calibValue);
-rp_calib_error adjustingBaseScale(channel_calib_t * calib,bool adjust);
+rp_calib_error adjustingBaseScaleEx(float* baseScale, int32_t* offset, bool adjust, uint32_t* calibValue);
+rp_calib_error adjustingBaseScale(channel_calib_t* calib, bool adjust);
 
-uint32_t calibBaseScaleFromVoltage(float voltageScale,bool uni_is_calib);
+uint32_t calibBaseScaleFromVoltage(float voltageScale, bool uni_is_calib);
 
 bool isUniversalCalib(uint16_t dataStructureId);
 
-#endif //__CALIB_H
+#endif  //__CALIB_H

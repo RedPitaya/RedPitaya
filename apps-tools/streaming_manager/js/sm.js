@@ -136,7 +136,7 @@ function promptFile(contentType, multiple) {
 
             if (ss_status == 1) {
                 $('#ADC_STATUS_LED').attr("src","./img/green_led.png")
-                $('#ADC_STATUS').html("Status: Runned").css("color","#cdcccc")
+                $('#ADC_STATUS').html("Status: Running").css("color","#cdcccc")
             }
 
             if (ss_status == 2) {
@@ -194,7 +194,7 @@ function promptFile(contentType, multiple) {
 
             if (status == 1) {
                 $('#DAC_STATUS_LED').attr("src","./img/green_led.png")
-                $('#DAC_STATUS').html("Status: Runned").css("color","#cdcccc")
+                $('#DAC_STATUS').html("Status: Running").css("color","#cdcccc")
             }
 
             if (status == 2) {

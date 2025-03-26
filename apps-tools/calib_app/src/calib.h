@@ -4,7 +4,7 @@
 #include "acq.h"
 #include "common.h"
 #include "rp.h"
-#include "rp_hw-calib.h"
+#include "rp_hw_calib.h"
 
 class CCalib {
    public:

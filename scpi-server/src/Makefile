@@ -64,7 +64,7 @@ LDFLAGS=
 # Additional libraries which needs to be dynamically linked to the executable
 # -lm - System math library (used by cos(), sin(), sqrt(), ... functions)
 LIBPATH= -L ../scpi-parser/libscpi/dist -L $(INSTALL_DIR)/lib
-LIBS=   -Wl,-rpath,/opt/redpitaya/lib:/opt/redpitaya/lib/web -lrpapp_lcr -lrp-dsp -lm -lrp-hw-can -lrp-sweep -lrp -l:libscpi.a -lrp-hw  -lrp-hw-calib -lrp-hw-profiles -li2c -lpthread
+LIBS=   -Wl,-rpath,/opt/redpitaya/lib:/opt/redpitaya/lib/web -lrpapp_lcr -lrp-dsp -lm -lrp-hw-can -lrp-sweep -l:libscpi.a -lrp -lrp-hw -lrp-hw-calib -lrp-hw-profiles -li2c -lpthread
 LIBS += -lrp-gpio -lrp-i2c -lrp-spi -lsocketcan
 
 INC= -I../scpi-parser/libscpi/inc -I$(INSTALL_DIR)/include

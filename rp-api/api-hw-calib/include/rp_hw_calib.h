@@ -12,13 +12,10 @@
 #ifndef RP_HW_CALIB_H
 #define RP_HW_CALIB_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <string>
 #include "rp_hw-profiles.h"
 
 /**
@@ -307,10 +304,10 @@ rp_calib_error rp_CalibConvertToOld(rp_calib_params_t* _out_calib);
 /**
   * @brief Gets name of universal calibration parameter
   * @param id Parameter ID
-  * @param[out] _out_no_free Pointer to receive name string (don't free)
+  * @param[out] _name Receive name string
   * @return Status code (RP_HW_CALIB_OK on success)
   */
-rp_calib_error rp_GetNameOfUniversalId(uint16_t id, char** _out_no_free);
+rp_calib_error rp_GetNameOfUniversalId(uint16_t id, std::string* _name);
 
 /**
   * @brief Prints calibration information
@@ -397,9 +394,5 @@ rp_calib_error rp_CalibGetFastDACCalibValueI(rp_channel_calib_t channel, rp_gen_
                                              uint_gain_calib_t* _out_calib);
 
 /** @} */  // end of CalibAPI group
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif  // RP_HW_CALIB_H

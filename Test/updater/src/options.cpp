@@ -11,14 +11,10 @@
 #include "options.h"
 #include "rp_updater_common.h"
 
-static constexpr char optstring[] = "m:d:vn:li:";
-static struct option long_options[] = {{"md5", required_argument, 0, 'm'},
-                                       {"download", required_argument, 0, 'd'},
-                                       {"install", required_argument, 0, 'i'},
-                                       {"verbose", no_argument, 0, 'v'},
-                                       {"list", no_argument, 0, 'l'},
-                                       {"download_nb", required_argument, 0, 'n'},
-                                       {0, 0, 0, 0}};
+static constexpr char optstring[] = "m:d:vn:li:r";
+static struct option long_options[] = {
+    {"md5", required_argument, 0, 'm'}, {"download", required_argument, 0, 'd'}, {"install", required_argument, 0, 'i'},     {"verbose", no_argument, 0, 'v'},
+    {"list", no_argument, 0, 'l'},      {"list_nb", no_argument, 0, 'r'},        {"download_nb", required_argument, 0, 'n'}, {0, 0, 0, 0}};
 
 static constexpr char g_format[] =
     "\n"
@@ -29,6 +25,7 @@ static constexpr char g_format[] =
     "       %s -i FILE [-v]\n"
     "       %s -i NUMBER [-v]\n"
     "       %s -l\n"
+    "       %s -r\n"
     "\n"
     "  --md5=FILES           -m FILES     Calculates md5 for the specified files.\n"
     "  --download=URL        -d URL       Downloads a file to a directory: %s.\n"
@@ -37,6 +34,7 @@ static constexpr char g_format[] =
     "  --install=FILE        -i FILE      Installs the ecosystem by file name on the SD card.\n"
     "  --install=NUMBER      -i NUMBER    Installs the ecosystem by build number on the SD card.\n"
     "  --list                -l           List of loaded ecosystems.\n"
+    "  --list_nb             -r           List of ecosystems on the server in the NB folder.\n"
     "  --verbose             -v           Produce verbose output.\n"
     "\n";
 
@@ -74,7 +72,7 @@ auto usage(char const* progName) -> void {
     auto n = name.c_str();
 
     fprintf(stderr, "%s Version: %s-%s\n", n, VERSION_STR, REVISION_STR);
-    fprintf(stderr, (char*)g_format, n, n, n, n, n, n, n, ECOSYSTEM_DOWNLOAD_PATH);
+    fprintf(stderr, (char*)g_format, n, n, n, n, n, n, n, n, ECOSYSTEM_DOWNLOAD_PATH);
 }
 
 auto parse(int argc, char* argv[]) -> Options {
@@ -155,13 +153,18 @@ auto parse(int argc, char* argv[]) -> Options {
                 return opt;
             }
 
+            case 'r': {
+                opt.listOfNB = true;
+                return opt;
+            }
+
             case 'v': {
                 opt.verbose = true;
                 break;
             }
 
             default: {
-                fprintf(stderr, "[ERROR] Unknown parameter\n");
+                fprintf(stderr, "[ERROR] Unknown parameter %c\n", (char)ch);
                 exit(EXIT_FAILURE);
             }
         }

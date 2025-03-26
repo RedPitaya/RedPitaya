@@ -204,6 +204,13 @@ int main(int argc, char* argv[]) {
             printf("%s\t%s\n", f.c_str(), isValid ? "[OK]" : "[BROKEN]");
         }
 
+    } else if (option.listOfNB) {
+        std::vector<std::string> files;
+        rp_UpdaterGetNBAvailableFilesList(files);
+        for (auto& f : files) {
+            printf("%s\n", f.c_str());
+        }
+
     } else if (option.downloadNB) {
         if (option.nbFileName != "") {
             auto callback = new Callback();
@@ -264,7 +271,7 @@ int main(int argc, char* argv[]) {
             }
 
             sprintf(buff, "systemctl stop redpitaya_nginx.service");
-            auto ret = system(buff);
+            ret = system(buff);
             if (ret != 0) {
                 fprintf(stderr, "Error stop redpitaya_nginx.service");
                 return -1;
@@ -276,6 +283,10 @@ int main(int argc, char* argv[]) {
             g_returnValue = rp_UpdaterUpdateBoardEcosystem(file);
             rp_UpdaterRemoveCallback();
             delete callback;
+            if (g_returnValue == 0)
+                fprintf(stderr, "The board needs to be rebooted.");
+            else
+                fprintf(stderr, "Fatal error while updating the ecosystem.");
         } else {
             g_returnValue = -1;
         }

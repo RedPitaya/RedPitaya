@@ -15,8 +15,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
 set(CMAKE_CXX_STANDARD 17)
-set(C_STANDARD 11)
-
+set(C_STANDARD 17)
 
 if(NOT DEFINED INSTALL_DIR)
     message(FATAL_ERROR,"Installation path not set. Installation will be skipped")
@@ -131,14 +130,13 @@ if(BUILD_SHARED)
         set_property(SOURCE src/rp.i PROPERTY CPLUSPLUS ON)
 
         SWIG_ADD_LIBRARY(rp_py LANGUAGE python SOURCES src/rp.i ${src})
-        SWIG_LINK_LIBRARIES(rp_py ${PYTHON_LIBRARIES} -lm -lpthread rp-hw-calib rp-hw-profiles rp-i2c rp-spi rp-gpio rp-hw i2c)
+        SWIG_LINK_LIBRARIES(rp_py ${PYTHON_LIBRARIES} -lpthread rp-hw-calib rp-hw-profiles rp-i2c rp-spi rp-gpio rp-hw i2c -lm)
     endif()
 
     add_library(${PROJECT_NAME}-shared SHARED)
     set_property(TARGET ${PROJECT_NAME}-shared PROPERTY OUTPUT_NAME ${PROJECT_NAME})
     target_sources(${PROJECT_NAME}-shared PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-obj>)
-    target_link_libraries(${PROJECT_NAME}-shared -lm -lpthread)
-    target_link_libraries(${PROJECT_NAME}-shared rp-hw rp-hw-calib rp-hw-profiles rp-i2c rp-spi rp-gpio i2c)
+    target_link_libraries(${PROJECT_NAME}-shared rp-hw-calib  rp-hw rp-hw-profiles rp-i2c rp-spi rp-gpio i2c -lm -lpthread)
     if(IS_INSTALL)
         install(TARGETS ${PROJECT_NAME}-shared
             LIBRARY DESTINATION ${INSTALL_DIR}/lib

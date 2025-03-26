@@ -4,7 +4,7 @@
 #include "acq.h"
 #include "common.h"
 #include "rp.h"
-#include "rp_hw-calib.h"
+#include "rp_hw_calib.h"
 
 enum ClalibValue { ADC_CH_OFF, ADC_CH_GAIN, DAC_CH_OFF, DAC_CH_GAIN, F_AA_CH, F_BB_CH, F_PP_CH, F_KK_CH };
 

@@ -120,6 +120,18 @@ int gen(config_t& conf) {
             rp_GenWaveform(ch, RP_WAVEFORM_SQUARE);
         }
 
+        if (conf.type == RP_WAVEFORM_RAMP_UP) {
+            rp_GenWaveform(ch, RP_WAVEFORM_RAMP_UP);
+        }
+
+        if (conf.type == RP_WAVEFORM_RAMP_DOWN) {
+            rp_GenWaveform(ch, RP_WAVEFORM_RAMP_DOWN);
+        }
+
+        if (conf.type == RP_WAVEFORM_DC_NEG) {
+            rp_GenWaveform(ch, RP_WAVEFORM_DC_NEG);
+        }
+
         if (conf.type == RP_WAVEFORM_TRIANGLE) {
             rp_GenWaveform(ch, RP_WAVEFORM_TRIANGLE);
         }

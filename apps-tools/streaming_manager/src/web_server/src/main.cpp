@@ -5,8 +5,8 @@
 #include "api250-12/rp-spi.h"
 #include "common/version.h"
 #include "main.h"
-#include "rp_hw-calib.h"
 #include "rp_hw-profiles.h"
+#include "rp_hw_calib.h"
 #include "web/rp_client.h"
 
 #include "config_net_lib/server_net_config_manager.h"

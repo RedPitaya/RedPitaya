@@ -3,6 +3,7 @@
 %include <typemaps.i>
 %include <cstring.i>
 %include <carrays.i>
+%include <std_string.i>
 %include <cpointer.i>
 
 %apply unsigned int { rp_HPeModels_t }
@@ -19,6 +20,7 @@
 %apply unsigned int *OUTPUT { uint32_t *_out_value };
 
 %apply bool *OUTPUT { bool *_out_value };
+%apply std::string *OUTPUT { std::string *_name };
 %apply double *OUTPUT { double *_out_gain };
 %apply int *OUTPUT { int32_t *_out_offset };
 
@@ -45,7 +47,7 @@
 
 %{
 /* Includes the header in the wrapper code */
-#include "rp_hw-calib.h"
+#include "rp_hw_calib.h"
 
 %}
 
@@ -61,4 +63,4 @@
 
 
 /* Parse the header file to generate wrappers */
-%include "rp_hw-calib.h"
+%include "rp_hw_calib.h"

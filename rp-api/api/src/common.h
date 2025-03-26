@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include <cstddef>
 #include "rp.h"
-#include "rp_hw-calib.h"
+#include "rp_hw_calib.h"
 
 #define CHANNEL_ACTION(CHANNEL, CHANNEL_1_ACTION, CHANNEL_2_ACTION) \
     if ((CHANNEL) == RP_CH_1) {                                     \

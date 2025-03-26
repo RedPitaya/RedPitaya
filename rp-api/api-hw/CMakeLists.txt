@@ -13,8 +13,8 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
-set(CMAKE_CXX_STANDARD 11)
-set(C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 20)
+set(C_STANDARD 17)
 
 if(NOT DEFINED INSTALL_DIR)
     message(WARNING,"Installation path not set. Installation will be skipped")
@@ -63,7 +63,7 @@ file(GLOB PR_HW_SOURCES "src/*.c")
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
 add_compile_options($<$<CONFIG:Debug>:-DTRACE_ENABLE>)
-add_compile_options(-std=c11 -Wall -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+add_compile_options(-Wall -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 add_library(${PROJECT_NAME}-obj OBJECT ${PR_HW_SOURCES})
 
@@ -76,7 +76,7 @@ if(BUILD_SHARED)
         include_directories(${PYTHON_INCLUDE_PATH})
 
         set(CMAKE_SWIG_FLAGS "")
-        set(src/rp_hw.i PROPERTIES CPLUSPLUS ON)
+        set_property(SOURCE src/rp_hw.i PROPERTY CPLUSPLUS ON)
 
         SWIG_ADD_LIBRARY(rp_hw_py LANGUAGE python SOURCES src/rp_hw.i ${PR_HW_SOURCES})
         SWIG_LINK_LIBRARIES(rp_hw_py ${PYTHON_LIBRARIES} i2c)

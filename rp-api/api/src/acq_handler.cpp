@@ -27,6 +27,7 @@
 
 #include "rp-i2c-max7311-c.h"
 #include "rp-i2c-mcp47x6-c.h"
+#include "rp_hw_calib.h"
 
 #define CHECK_CHANNEL                                                                       \
     uint8_t channels_rp_HPGetFastADCChannelsCount = 0;                                      \

@@ -27,7 +27,7 @@
 #include "generate.h"
 #include "housekeeping.h"
 #include "oscilloscope.h"
-#include "rp_hw-calib.h"
+#include "rp_hw_calib.h"
 
 #include "rp-i2c-max7311-c.h"
 #include "rp-i2c-mcp47x6-c.h"
