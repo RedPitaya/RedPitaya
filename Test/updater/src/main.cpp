@@ -284,9 +284,9 @@ int main(int argc, char* argv[]) {
             rp_UpdaterRemoveCallback();
             delete callback;
             if (g_returnValue == 0)
-                fprintf(stderr, "The board needs to be rebooted.");
+                fprintf(stderr, "The board needs to be rebooted!!!!\n");
             else
-                fprintf(stderr, "Fatal error while updating the ecosystem.");
+                fprintf(stderr, "Fatal error while updating the ecosystem.\n");
         } else {
             g_returnValue = -1;
         }

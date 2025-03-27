@@ -64,10 +64,7 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE rp-updater)
-
-target_link_libraries(${PROJECT_NAME} PRIVATE pthread)
-
+target_link_libraries(${PROJECT_NAME} PRIVATE -l:librp-updater.a -lzip -lssl -lcrypto -lcurl -lm pthread)
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${INSTALL_DIR}/bin)
 
