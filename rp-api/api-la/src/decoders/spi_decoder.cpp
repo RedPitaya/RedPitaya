@@ -219,6 +219,7 @@ bool SPIDecoder::Impl::findClkEdge(bool data, bool clk, bool cs) {
     if (m_have_cs && m_oldcs != cs) {
         // Send all CS# pin value changes.
         m_oldcs = cs;
+        m_oldclk = clk;
         // Reset decoder state when CS# changes (and the CS# pin is used).
         resetDecoderState();
     }
