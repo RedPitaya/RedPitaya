@@ -364,6 +364,18 @@ int generate_Trigger(rp_channel_t channel) {
     return RP_EOOR;
 }
 
+int generate_TriggerBoth() {
+    uint32_t mask = 0x000F000F;
+    uint32_t curValue = 0;
+    if (cmn_GetValue((uint32_t*)generate, &curValue, mask) == RP_OK) {
+        cmn_Debug("cmn_UnsetBits((uint32_t *) generate) mask 0x000F000F <- 0x%X", curValue);
+        cmn_UnsetBits((uint32_t*)generate, curValue, mask);
+        cmn_Debug("cmn_SetBits((uint32_t *) generate) mask 0x000F000F <- 0x%X", curValue);
+        return cmn_SetBits((uint32_t*)generate, curValue, mask);
+    }
+    return RP_EOOR;
+}
+
 int generate_simultaneousTrigger() {
     bool enabled[2] = {false, false};
     generate_getOutputEnabled(RP_CH_1, &enabled[0]);

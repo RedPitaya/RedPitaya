@@ -242,6 +242,7 @@ int generate_getBurstRepetitions(rp_channel_t channel, uint32_t* repetitions);
 int generate_setBurstDelay(rp_channel_t channel, uint32_t delay);
 int generate_getBurstDelay(rp_channel_t channel, uint32_t* delay);
 int generate_Trigger(rp_channel_t channel);
+int generate_TriggerBoth();
 int generate_simultaneousTrigger();
 int generate_ResetSM();
 int generate_ResetChannelSM(rp_channel_t channel);

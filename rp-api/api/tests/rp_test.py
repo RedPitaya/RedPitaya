@@ -513,6 +513,10 @@ print("rp.rp_GenTriggerOnly(rp.RP_CH_1)")
 res = rp.rp_GenTriggerOnly(rp.RP_CH_1)
 print(res)
 
+print("rp.rp_GenTriggerOnlyBoth()")
+res = rp.rp_GenTriggerOnly()
+print(res)
+
 print("rp.rp_SetEnableTempProtection(rp.RP_CH_1,True)")
 res = rp.rp_SetEnableTempProtection(rp.RP_CH_1,True)
 print(res)

@@ -591,7 +591,7 @@ int main(int argc, char* argv[]) {
 
     // Handle close child events
     handleCloseChildEvents();
-
+    // rp_EnableDebugReg();
     int result = rp_Init();
     if (result != RP_OK) {
         rp_Log(nullptr, LOG_ERR, result, "Failed to initialize RP APP library: %s", rp_GetError(result));

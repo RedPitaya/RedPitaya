@@ -728,6 +728,32 @@ scpi_result_t RP_GenTriggerBoth(scpi_t* context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_GenTriggerOnly(scpi_t* context) {
+
+    rp_channel_t channel;
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK) {
+        return SCPI_RES_ERR;
+    }
+
+    auto result = rp_GenTriggerOnly(channel);
+    if (result != RP_OK) {
+        RP_LOG_CRIT("Failed to set trigger: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_GenTriggerOnlyBoth(scpi_t* context) {
+    auto result = rp_GenTriggerOnlyBoth();
+    if (result != RP_OK) {
+        RP_LOG_CRIT("Failed to set trigger: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_GenAmplitude(scpi_t* context) {
 
     rp_channel_t channel;

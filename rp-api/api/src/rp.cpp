@@ -2101,6 +2101,12 @@ int rp_GenTriggerOnly(rp_channel_t channel) {
     return gen_TriggerOnly(channel);
 }
 
+int rp_GenTriggerOnlyBoth() {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
+    return gen_TriggerOnlyBoth();
+}
+
 int rp_GenSynchronise() {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;

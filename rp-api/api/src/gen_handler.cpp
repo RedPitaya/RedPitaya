@@ -828,6 +828,10 @@ int gen_TriggerOnly(uint32_t channel) {
     }
 }
 
+int gen_TriggerOnlyBoth() {
+    return generate_TriggerBoth();
+}
+
 int gen_TriggerSync() {
     generate_ResetSM();
     return generate_simultaneousTrigger();

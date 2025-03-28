@@ -689,6 +689,10 @@ static const scpi_command_t scpi_commands[] = {
         .callback = RP_GenTriggerBoth,
     },
     {
+        .pattern = "SOUR:TRig:INT:ONLY",
+        .callback = RP_GenTriggerOnlyBoth,
+    },
+    {
         .pattern = "SOUR#:FREQ:FIX",
         .callback = RP_GenFrequency,
     },
@@ -889,7 +893,10 @@ static const scpi_command_t scpi_commands[] = {
         .pattern = "SOUR#:TRig:INT",
         .callback = RP_GenTrigger,
     },
-
+    {
+        .pattern = "SOUR#:TRig:INT:ONLY",
+        .callback = RP_GenTriggerOnly,
+    },
     {
         .pattern = "SOUR:TRig:EXT:DEBouncer[:US]",
         .callback = RP_GenExtTriggerDebouncerUs,
