@@ -11,10 +11,10 @@
 #include "options.h"
 #include "rp_updater_common.h"
 
-static constexpr char optstring[] = "m:d:vn:li:r";
-static struct option long_options[] = {
-    {"md5", required_argument, 0, 'm'}, {"download", required_argument, 0, 'd'}, {"install", required_argument, 0, 'i'},     {"verbose", no_argument, 0, 'v'},
-    {"list", no_argument, 0, 'l'},      {"list_nb", no_argument, 0, 'r'},        {"download_nb", required_argument, 0, 'n'}, {0, 0, 0, 0}};
+static constexpr char optstring[] = "m:d:vn:li:rs";
+static struct option long_options[] = {{"md5", required_argument, 0, 'm'}, {"download", required_argument, 0, 'd'},    {"install", required_argument, 0, 'i'},
+                                       {"verbose", no_argument, 0, 'v'},   {"short_verbose", no_argument, 0, 's'},     {"list", no_argument, 0, 'l'},
+                                       {"list_nb", no_argument, 0, 'r'},   {"download_nb", required_argument, 0, 'n'}, {0, 0, 0, 0}};
 
 static constexpr char g_format[] =
     "\n"
@@ -160,6 +160,11 @@ auto parse(int argc, char* argv[]) -> Options {
 
             case 'v': {
                 opt.verbose = true;
+                break;
+            }
+
+            case 's': {
+                opt.verbose_short = true;
                 break;
             }
 

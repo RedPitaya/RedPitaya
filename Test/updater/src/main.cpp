@@ -70,6 +70,7 @@ class Callback : public CUpdaterCallback {
     void reset() { m_needInit = true; }
 
     void downloadProgress(std::string fileName, uint64_t dnow, uint64_t dtotal, bool stop) override {
+        static double prev_value = 0;
         if (!g_option.verbose)
             return;
         if (m_needInit) {
@@ -82,6 +83,11 @@ class Callback : public CUpdaterCallback {
         auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - m_startTime).count() / 1000.0;
         auto speed = dnow / elapsedTime;
 
+        if (((int)prev_value == (int)(progress * 20.0)) && g_option.verbose_short)
+            return;
+
+        prev_value = progress * 20.0;
+
         if ((progress >= 1 || stop) && !m_printEnd) {
             m_printEnd = true;
             displayProgressBar(progress, speed);
@@ -92,7 +98,7 @@ class Callback : public CUpdaterCallback {
     };
 
     void progressFiles(const std::string& prefix, const std::string& fileName, uint64_t dnow, uint64_t dtotal) {
-
+        static double prev_value = 0;
         auto draw = [](const std::string& prefix, double progress, uint64_t dnow, uint64_t dtotal) {
             const int barWidth = 50;
             std::cout << "\033[2K";
@@ -118,6 +124,12 @@ class Callback : public CUpdaterCallback {
             return;
 
         double progress = static_cast<double>(dnow) / dtotal;
+
+        if (((int)prev_value == (int)(progress * 20.0)) && g_option.verbose_short)
+            return;
+
+        prev_value = progress * 20.0;
+
         draw(prefix, progress, dnow, dtotal);
         if (dnow == dtotal) {
             std::cout << std::endl;

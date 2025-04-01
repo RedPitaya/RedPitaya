@@ -38,6 +38,7 @@ struct Options {
     bool listOfNB = false;
 
     bool verbose = false;
+    bool verbose_short = false;
 };
 
 auto usage(char const* progName) -> void;
