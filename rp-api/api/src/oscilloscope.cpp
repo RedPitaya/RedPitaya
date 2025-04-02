@@ -1026,6 +1026,7 @@ int osc_GetWritePointer(rp_channel_t channel, uint32_t* pos) {
 }
 
 int osc_GetWritePointerAtTrig(rp_channel_t channel, uint32_t* pos) {
+
     switch (channel) {
         case RP_CH_1:
             return cmn_GetValue(&osc_reg->wr_ptr_trigger, pos, WRITE_POINTER_MASK);

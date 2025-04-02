@@ -497,15 +497,30 @@ int acq_GetTriggerDelayNsDirect(rp_channel_t channel, uint64_t* time_ns) {
 }
 
 int acq_GetPreTriggerCounter(rp_channel_t channel, uint32_t* value) {
-    return osc_GetPreTriggerCounter(channel, value);
+    bool is_split = false;
+    acq_GetSplitTriggerMode(&is_split);
+    if (is_split)
+        return osc_GetPreTriggerCounter(channel, value);
+    else
+        return osc_GetPreTriggerCounter(RP_CH_1, value);
 }
 
 int acq_GetWritePointer(rp_channel_t channel, uint32_t* pos) {
-    return osc_GetWritePointer(channel, pos);
+    bool is_split = false;
+    acq_GetSplitTriggerMode(&is_split);
+    if (is_split)
+        return osc_GetWritePointer(channel, pos);
+    else
+        return osc_GetWritePointer(RP_CH_1, pos);
 }
 
 int acq_GetWritePointerAtTrig(rp_channel_t channel, uint32_t* pos) {
-    return osc_GetWritePointerAtTrig(channel, pos);
+    bool is_split = false;
+    acq_GetSplitTriggerMode(&is_split);
+    if (is_split)
+        return osc_GetWritePointerAtTrig(channel, pos);
+    else
+        return osc_GetWritePointerAtTrig(RP_CH_1, pos);
 }
 
 int acq_SetTriggerLevel(rp_channel_trigger_t channel, float voltage) {

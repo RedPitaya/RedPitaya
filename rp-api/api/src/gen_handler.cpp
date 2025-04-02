@@ -1249,6 +1249,9 @@ int gen_axi_SetDecimation(rp_channel_t channel, uint32_t decimation) {
 
     CHECK_CHANNEL
 
+    if (decimation == 0 || decimation >= 65536)
+        return RP_EOOR;
+
     return generate_axi_SetDecimation(channel, decimation);
 }
 
