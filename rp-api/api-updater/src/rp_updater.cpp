@@ -236,7 +236,8 @@ int rp_UpdaterRemoveCallback() {
 int rp_UpdaterDownloadNBFile(uint32_t number) {
     CUCurl curl;
     std::string url = "";
-    auto links = curl.getListNB();
+    bool succes = false;
+    auto links = curl.getListNB(&succes);
     for (auto& link : links) {
         std::vector<std::string> seglist = split(link, ".-");
         if (seglist.size() > 3) {
@@ -245,6 +246,10 @@ int rp_UpdaterDownloadNBFile(uint32_t number) {
                 break;
             }
         }
+    }
+
+    if (succes == false) {
+        return RP_UP_ERR;
     }
 
     if (url == "") {
@@ -256,7 +261,8 @@ int rp_UpdaterDownloadNBFile(uint32_t number) {
 int rp_UpdaterDownloadNBFileAsync(uint32_t number) {
     CUCurl curl;
     std::string url = "";
-    auto links = curl.getListNB();
+    bool succes = false;
+    auto links = curl.getListNB(&succes);
     for (auto& link : links) {
         std::vector<std::string> seglist = split(link, ".-");
         if (seglist.size() > 3) {
@@ -265,6 +271,10 @@ int rp_UpdaterDownloadNBFileAsync(uint32_t number) {
                 break;
             }
         }
+    }
+
+    if (succes == false) {
+        return RP_UP_ERR;
     }
 
     if (url == "") {
@@ -277,9 +287,13 @@ int rp_UpdaterGetNBAvailableFilesList(std::vector<std::string>& files) {
     files.clear();
     CUCurl curl;
     std::string url = "";
-    auto links = curl.getListNB();
+    bool succes = false;
+    auto links = curl.getListNB(&succes);
     for (auto& link : links) {
         files.push_back(link);
+    }
+    if (succes == false) {
+        return RP_UP_ERR;
     }
     return RP_UP_OK;
 }

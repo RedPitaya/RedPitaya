@@ -45,6 +45,9 @@
 /** Error unzip file */
 #define RP_UP_EUF 8
 
+/** Remote request error. */
+#define RP_UP_ERR 9
+
 #define ECOSYSTEM_DOWNLOAD_PATH "/home/redpitaya/ecosystems"
 #define ECOSYSTEM_INSTALL_PATH "/opt/redpitaya"
 

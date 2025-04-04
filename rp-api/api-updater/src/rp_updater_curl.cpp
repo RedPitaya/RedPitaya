@@ -178,11 +178,11 @@ auto CUCurl::getFilenameFromUrl(const std::string& url) -> std::string {
     return "";
 }
 
-auto CUCurl::getListNB() -> std::vector<std::string> {
+auto CUCurl::getListNB(bool* succes) -> std::vector<std::string> {
     CURL* curl;
     CURLcode res;
     std::string html;
-
+    *succes = false;
     curl = curl_easy_init();
     if (curl) {
         curl_easy_setopt(curl, CURLOPT_URL, NB_LINK);
@@ -195,6 +195,7 @@ auto CUCurl::getListNB() -> std::vector<std::string> {
         if (res != CURLE_OK) {
             return {};
         }
+        *succes = true;
         return extractLinks(html);
     }
     return {};

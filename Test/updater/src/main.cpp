@@ -17,6 +17,8 @@
 #include <sys/param.h>
 #include <unistd.h>
 #include <chrono>
+#include <cmath>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <vector>
@@ -54,13 +56,15 @@ class Callback : public CUpdaterCallback {
 
         std::cout << std::fixed << std::setprecision(1) << (progress * 100.0) << "% ";
 
-        if (speed >= 0) {
-            if (speed < 1024) {
-                std::cout << "(" << speed << " B/s)";
-            } else if (speed < 1024 * 1024) {
-                std::cout << "(" << (speed / 1024) << " KB/s)";
-            } else {
-                std::cout << "(" << (speed / (1024 * 1024)) << " MB/s)";
+        if (!std::isinf(speed)) {
+            if (speed >= 0) {
+                if (speed < 1024) {
+                    std::cout << "(" << speed << " B/s)";
+                } else if (speed < 1024 * 1024) {
+                    std::cout << "(" << (speed / 1024) << " KB/s)";
+                } else {
+                    std::cout << "(" << (speed / (1024 * 1024)) << " MB/s)";
+                }
             }
         }
 
@@ -138,12 +142,11 @@ class Callback : public CUpdaterCallback {
 
     void downloadDone(std::string fileName, bool success) override {
         g_returnValue = success ? 0 : -1;
-        if (!g_option.verbose)
-            return;
-        if (success)
+        if (!success)
+            std::cerr << "Error download file: " << fileName.c_str() << std::endl;
+
+        if (success && g_option.verbose)
             std::cout << "File downloaded: " << fileName.c_str() << std::endl;
-        else
-            std::cout << "Error download file: " << fileName.c_str() << std::endl;
     };
 
     void unzipProgress(uint64_t current, uint64_t total, const char* fileName) override {
@@ -218,9 +221,14 @@ int main(int argc, char* argv[]) {
 
     } else if (option.listOfNB) {
         std::vector<std::string> files;
-        rp_UpdaterGetNBAvailableFilesList(files);
-        for (auto& f : files) {
-            printf("%s\n", f.c_str());
+        int ret = rp_UpdaterGetNBAvailableFilesList(files);
+        if (ret == RP_UP_ERR) {
+            fprintf(stderr, "Error getting file list from server\n");
+            g_returnValue = -1;
+        } else {
+            for (auto& f : files) {
+                printf("%s\n", f.c_str());
+            }
         }
 
     } else if (option.downloadNB) {
@@ -240,8 +248,19 @@ int main(int argc, char* argv[]) {
                 bn = std::stoi(option.nbBuildNumber);
             } catch (...) {}
             if (bn != 0) {
-                rp_UpdaterDownloadNBFileAsync(bn);
-                rp_UpdaterWaitDownloadFile();
+                int ret = rp_UpdaterDownloadNBFileAsync(bn);
+                if (ret == RP_UP_OK) {
+                    rp_UpdaterWaitDownloadFile();
+                } else if (ret == RP_UP_ERR || ret == RP_UP_EDF) {
+                    fprintf(stderr, "Error getting file list from server\n");
+                    g_returnValue = -1;
+                } else if (ret == RP_UP_EFL) {
+                    fprintf(stderr, "Error. The ecosystem was not found on the server.\n");
+                    g_returnValue = -1;
+                } else {
+                    fprintf(stderr, "Error. Unknown error %d.\n", ret);
+                    g_returnValue = -1;
+                }
             } else {
                 g_returnValue = -1;
             }
@@ -274,32 +293,47 @@ int main(int argc, char* argv[]) {
             }
         }
         if (file != "") {
+
+            std::ifstream file_version("/root/.version");
+            if (file_version.is_open()) {
+                std::string line;
+                std::getline(file_version, line);
+                file_version.close();
+                if (file.find(line) == std::string::npos) {
+                    fprintf(stderr, "Warning. The current OS version does not match the one being installed.\n");
+                }
+            } else {
+                fprintf(stderr, "Warning. Can't open file to check OS version\n");
+            }
+
             char buff[256];
             sprintf(buff, "systemctl stop redpitaya_e3_controller.service");
             auto ret = system(buff);
             if (ret != 0) {
                 fprintf(stderr, "Error stop redpitaya_e3_controller.service");
-                return -1;
+                g_returnValue = -1;
             }
 
             sprintf(buff, "systemctl stop redpitaya_nginx.service");
             ret = system(buff);
             if (ret != 0) {
                 fprintf(stderr, "Error stop redpitaya_nginx.service");
-                return -1;
+                g_returnValue = -1;
             }
-
-            auto callback = new Callback();
-            callback->reset();
-            rp_UpdaterSetCallback(callback);
-            g_returnValue = rp_UpdaterUpdateBoardEcosystem(file);
-            rp_UpdaterRemoveCallback();
-            delete callback;
+            if (g_returnValue == 0) {
+                auto callback = new Callback();
+                callback->reset();
+                rp_UpdaterSetCallback(callback);
+                g_returnValue = rp_UpdaterUpdateBoardEcosystem(file);
+                rp_UpdaterRemoveCallback();
+                delete callback;
+            }
             if (g_returnValue == 0)
                 fprintf(stderr, "The board needs to be rebooted!!!!\n");
             else
                 fprintf(stderr, "Fatal error while updating the ecosystem.\n");
         } else {
+            fprintf(stderr, "Error: No ecosystem found to install.\n");
             g_returnValue = -1;
         }
 

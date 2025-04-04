@@ -43,7 +43,7 @@ class CUCurl {
     auto setProgressCallback(func_progress_t func) -> void;
     auto setDoneCallback(func_done_t func) -> void;
 
-    auto getListNB() -> std::vector<std::string>;
+    auto getListNB(bool* succes) -> std::vector<std::string>;
 
     static auto getFilenameFromUrl(const std::string& url) -> std::string;
 
