@@ -15,6 +15,7 @@
 #ifndef __UPDATER_FS_API_H
 #define __UPDATER_FS_API_H
 
+#include <filesystem>
 #include <functional>
 #include <vector>
 #include "rp_updater_common.h"
@@ -31,5 +32,7 @@ auto readFileFromZip(const std::string& zip_path, const std::string& file_name) 
 auto readFileFromZipBytes(const std::string& zip_path, const std::string& file_name) -> std::vector<uint8_t>;
 auto unzip(const std::string& zip_path, const std::string& output_dir,
            std::function<void(uint64_t current, uint64_t total, const char* fileName)> progress) -> int;
+
+auto deleteEmptyFolders(const std::filesystem::path& dirPath) -> bool;
 
 #endif  // __UPDATER_FS_API_H

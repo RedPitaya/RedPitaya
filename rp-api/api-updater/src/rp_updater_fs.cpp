@@ -21,6 +21,8 @@
 #include <fstream>
 #include <iostream>
 
+namespace fs = std::filesystem;
+
 auto createDir(const std::string& dir) -> bool {
     mkdir(dir.c_str(), 0755);
     return true;
@@ -53,6 +55,37 @@ auto deleteFiles(std::vector<std::string>& files_for_delete) -> void {
     for (auto item : files_for_delete) {
         std::remove(item.c_str());
     }
+}
+
+bool deleteEmptyFolders(const fs::path& dirPath) {
+    if (!fs::exists(dirPath) || !fs::is_directory(dirPath)) {
+        return false;
+    }
+
+    bool hasNonEmptySubfolder = false;
+    std::vector<fs::path> emptyFolders;
+
+    for (const auto& entry : fs::directory_iterator(dirPath)) {
+        if (fs::is_directory(entry)) {
+            if (!deleteEmptyFolders(entry)) {
+                hasNonEmptySubfolder = true;
+            }
+        } else {
+            hasNonEmptySubfolder = true;
+        }
+    }
+
+    if (!hasNonEmptySubfolder) {
+        try {
+            fs::remove(dirPath);
+            return true;
+        } catch (const std::exception& e) {
+            std::cerr << "Error deleting " << dirPath << ": " << e.what() << std::endl;
+            return false;
+        }
+    }
+
+    return false;
 }
 
 auto removeDirectory(const std::string& path) -> bool {

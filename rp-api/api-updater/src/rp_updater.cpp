@@ -405,6 +405,7 @@ int rp_UpdaterUpdateBoardEcosystem(std::string fileName) {
     listdirForDelete(ECOSYSTEM_INSTALL_PATH, "", 0, g_files, g_files_for_delete);
     copyEcosystem();
     deleteFiles(g_files_for_delete);
+    deleteEmptyFolders("/opt/redpitaya");
 
     signal(SIGCHLD, signalHandlerDefault);
     signal(SIGHUP, signalHandlerDefault);
