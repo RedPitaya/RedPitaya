@@ -1,12 +1,16 @@
 #include "calib_man.h"
+#include "common.h"
+
 #include <ctime>
 #include <fstream>
+
+namespace rp_calib {
 
 CCalibMan::Ptr CCalibMan::Create(COscilloscope::Ptr _acq) {
     return std::make_shared<CCalibMan>(_acq);
 }
 
-CCalibMan::CCalibMan(COscilloscope::Ptr _acq) : m_acq(_acq), m_calibMode(0) {
+CCalibMan::CCalibMan(COscilloscope::Ptr _acq) : m_calibMode(0), m_acq(_acq) {
     m_currentGain = RP_LOW;
     m_currentAC_DC = RP_DC;
     m_currentGenGain = RP_GAIN_1X;
@@ -482,3 +486,5 @@ int CCalibMan::setDisableFilter(rp_channel_t _ch) {
 
     return 0;
 }
+
+}  // namespace rp_calib

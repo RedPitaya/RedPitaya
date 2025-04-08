@@ -26,7 +26,10 @@
 #include "filter_logic.h"
 #include "filter_logicNch.h"
 
+#include "common.h"
 #include "web/rp_client.h"
+
+using namespace rp_calib;
 
 CFilter_logic::Ptr g_filter_logic = nullptr;
 CFilter_logicNch::Ptr g_filter_logicNch = nullptr;
@@ -67,40 +70,40 @@ std::mutex g_mtx;
 CStringParameter redpitaya_model("RP_MODEL_STR", CBaseParameter::RO, getModelName(), 10);
 
 // Parameters for AUTO mode
-CFloatParameter ch_min[MAX_ADC_CHANNELS] = INIT("ch", "_min", CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
-CFloatParameter ch_max[MAX_ADC_CHANNELS] = INIT("ch", "_max", CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
-CFloatParameter ch_avg[MAX_ADC_CHANNELS] = INIT("ch", "_avg", CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
-CFloatParameter ch_p_p[MAX_ADC_CHANNELS] = INIT("ch", "_p_p", CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
-CFloatParameter ch_per_buff[MAX_ADC_CHANNELS] = INIT("ch", "_perBuff", CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
-CBooleanParameter ch_is_sine[MAX_ADC_CHANNELS] = INIT("ch", "_issine", CBaseParameter::ROSA, false, 0);
+CFloatParameter ch_min[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_min", CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
+CFloatParameter ch_max[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_max", CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
+CFloatParameter ch_avg[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_avg", CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
+CFloatParameter ch_p_p[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_p_p", CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
+CFloatParameter ch_per_buff[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_perBuff", CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
+CBooleanParameter ch_is_sine[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_issine", CBaseParameter::ROSA, false, 0);
 
-CIntParameter ch_calib_pass[MAX_ADC_CHANNELS] = INIT("ch", "_calib_pass", CBaseParameter::RW, 0, 0, -2147483647, 2147483647);
+CIntParameter ch_calib_pass[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_calib_pass", CBaseParameter::RW, 0, 0, -2147483647, 2147483647);
 
 CFloatParameter ref_volt("ref_volt", CBaseParameter::RW, 1, 0, 0.001, 20);
 CIntParameter ss_state("SS_STATE", CBaseParameter::RW, -1, 0, -1, 100);  // Current completed step
 CIntParameter ss_next_step("SS_NEXTSTEP", CBaseParameter::RW, -1, 0, -2, 100);
 
 // Parameters for MANUAL mode
-CFloatParameter ch_gain_dac[MAX_DAC_CHANNELS] = INIT2("ch", "_gain_dac", CBaseParameter::RW, 1.0, 0, 0.5, 1.5);
-CIntParameter ch_off_dac[MAX_DAC_CHANNELS] = INIT2("ch", "_off_dac", CBaseParameter::RW, 0, 0, -16382, 16382);
+CFloatParameter ch_gain_dac[RP_CALIB_MAX_DAC_CHANNELS] = INIT2("ch", "_gain_dac", CBaseParameter::RW, 1.0, 0, 0.5, 1.5);
+CIntParameter ch_off_dac[RP_CALIB_MAX_DAC_CHANNELS] = INIT2("ch", "_off_dac", CBaseParameter::RW, 0, 0, -16382, 16382);
 
-CFloatParameter ch_gain_adc[MAX_ADC_CHANNELS] = INIT("ch", "_gain_adc", CBaseParameter::RW, 1.0, 0, 0.5, 1.5);
-CIntParameter ch_off_adc[MAX_ADC_CHANNELS] = INIT("ch", "_off_adc", CBaseParameter::RW, 0, 0, -16382, 16382);
+CFloatParameter ch_gain_adc[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_gain_adc", CBaseParameter::RW, 1.0, 0, 0.5, 1.5);
+CIntParameter ch_off_adc[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_off_adc", CBaseParameter::RW, 0, 0, -16382, 16382);
 
-CFloatParameter ch_gain_dac_new[MAX_DAC_CHANNELS] = INIT2("ch", "_gain_dac_new", CBaseParameter::RW, 1.0, 0, 0.5, 1.5);
-CIntParameter ch_off_dac_new[MAX_DAC_CHANNELS] = INIT2("ch", "_off_dac_new", CBaseParameter::RW, 0, 0, -16382, 16382);
+CFloatParameter ch_gain_dac_new[RP_CALIB_MAX_DAC_CHANNELS] = INIT2("ch", "_gain_dac_new", CBaseParameter::RW, 1.0, 0, 0.5, 1.5);
+CIntParameter ch_off_dac_new[RP_CALIB_MAX_DAC_CHANNELS] = INIT2("ch", "_off_dac_new", CBaseParameter::RW, 0, 0, -16382, 16382);
 
-CFloatParameter ch_gain_adc_new[MAX_ADC_CHANNELS] = INIT("ch", "_gain_adc_new", CBaseParameter::RW, 1.0, 0, 0.5, 1.5);
-CIntParameter ch_off_adc_new[MAX_ADC_CHANNELS] = INIT("ch", "_off_adc_new", CBaseParameter::RW, 0, 0, -16382, 16382);
+CFloatParameter ch_gain_adc_new[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_gain_adc_new", CBaseParameter::RW, 1.0, 0, 0.5, 1.5);
+CIntParameter ch_off_adc_new[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_off_adc_new", CBaseParameter::RW, 0, 0, -16382, 16382);
 
 CIntParameter calib_sig("calib_sig", CBaseParameter::RW, 0, 0, -2147483647, 2147483647);
 CBooleanParameter hv_lv_mode("hv_lv_mode", CBaseParameter::RW, false, 0);
 
-CBooleanParameter gen_enable[MAX_DAC_CHANNELS] = INIT2("gen", "_enable", CBaseParameter::RW, false, 0);
-CIntParameter gen_type[MAX_DAC_CHANNELS] = INIT2("gen", "_type", CBaseParameter::RW, 0, 0, 0, 10);
-CFloatParameter gen_offset[MAX_DAC_CHANNELS] = INIT2("gen", "_offset", CBaseParameter::RW, 0, 0, -1, 1);
-CFloatParameter gen_amp[MAX_DAC_CHANNELS] = INIT2("gen", "_amp", CBaseParameter::RW, 0.9, 0, 0.001, 1);
-CIntParameter gen_freq[MAX_DAC_CHANNELS] = INIT2("gen", "_freq", CBaseParameter::RW, 1000, 0, 1, (int)(getDACRate() / DAC_DEVIDER));
+CBooleanParameter gen_enable[RP_CALIB_MAX_DAC_CHANNELS] = INIT2("gen", "_enable", CBaseParameter::RW, false, 0);
+CIntParameter gen_type[RP_CALIB_MAX_DAC_CHANNELS] = INIT2("gen", "_type", CBaseParameter::RW, 0, 0, 0, 10);
+CFloatParameter gen_offset[RP_CALIB_MAX_DAC_CHANNELS] = INIT2("gen", "_offset", CBaseParameter::RW, 0, 0, -1, 1);
+CFloatParameter gen_amp[RP_CALIB_MAX_DAC_CHANNELS] = INIT2("gen", "_amp", CBaseParameter::RW, 0.9, 0, 0.001, 1);
+CIntParameter gen_freq[RP_CALIB_MAX_DAC_CHANNELS] = INIT2("gen", "_freq", CBaseParameter::RW, 1000, 0, 1, (int)(getDACRate() / DAC_DEVIDER));
 
 CBooleanParameter gen_gain("gen_gain", CBaseParameter::RW, false, 0);
 CBooleanParameter ac_dc_mode("ac_dc_mode", CBaseParameter::RW, false, 0);
@@ -110,12 +113,12 @@ CBooleanParameter request_reset("request_reset_avg_filter", CBaseParameter::RW, 
 CIntParameter man_decimation("manual_decimation", CBaseParameter::RW, 64, 0, 1, 4096);
 
 CIntParameter adc_mode("adc_acquire_mode", CBaseParameter::RW, 0, 0, 0, 10);
-CFloatSignal waveSignal("wave", SCREEN_BUFF_SIZE, 0.0f);
+CFloatSignal waveSignal("wave", RP_CALIB_SCREEN_BUFF_SIZE, 0.0f);
 CFloatParameter cursor_x1("cursor_x1", CBaseParameter::RW, DEFAULT_CURSOR_1, 0, 0, 1);
 CFloatParameter cursor_x2("cursor_x2", CBaseParameter::RW, DEFAULT_CURSOR_2, 0, 0, 1);
 CBooleanParameter zoom_mode("zoom_mode", CBaseParameter::RW, false, 0);
 CIntParameter adc_decimation("adc_decimation", CBaseParameter::RW, 8, 0, 1, 65535);
-CIntParameter adc_channel("adc_channel", CBaseParameter::RW, 0, 0, 0, MAX_ADC_CHANNELS - 1);
+CIntParameter adc_channel("adc_channel", CBaseParameter::RW, 0, 0, 0, RP_CALIB_MAX_ADC_CHANNELS - 1);
 CBooleanParameter filter_hv_lv_mode("filter_hv_lv_mode", CBaseParameter::RW, false, 0);
 CFloatParameter adc_hyst("adc_hyst", CBaseParameter::RW, 0.05, 0, 0, 1);
 CBooleanParameter filt_gen1_enable("filt_gen1_enable", CBaseParameter::RW, false, 0);
@@ -138,13 +141,13 @@ CFloatParameter f_ref_volt("f_ref_volt", CBaseParameter::RW, 1, 0, 0.001, 20);
 CIntParameter f_ss_state("F_SS_STATE", CBaseParameter::RW, -1, 0, -1, 100);  // Current completed step
 CIntParameter f_ss_next_step("F_SS_NEXTSTEP", CBaseParameter::RW, -1, 0, -2, 100);
 
-CIntParameter fauto_aa_Ch[MAX_ADC_CHANNELS] = INIT("fauto_aa_Ch", "", CBaseParameter::RW, 0, 0, 0, 0x1FFFFFF);
-CIntParameter fauto_bb_Ch[MAX_ADC_CHANNELS] = INIT("fauto_bb_Ch", "", CBaseParameter::RW, 0, 0, 0, 0x1FFFFFF);
-CIntParameter fauto_pp_Ch[MAX_ADC_CHANNELS] = INIT("fauto_pp_Ch", "", CBaseParameter::RW, 0, 0, 0, 0x1FFFFFF);
-CIntParameter fauto_kk_Ch[MAX_ADC_CHANNELS] = INIT("fauto_kk_Ch", "", CBaseParameter::RW, 0, 0, 0, 0x1FFFFFF);
+CIntParameter fauto_aa_Ch[RP_CALIB_MAX_ADC_CHANNELS] = INIT("fauto_aa_Ch", "", CBaseParameter::RW, 0, 0, 0, 0x1FFFFFF);
+CIntParameter fauto_bb_Ch[RP_CALIB_MAX_ADC_CHANNELS] = INIT("fauto_bb_Ch", "", CBaseParameter::RW, 0, 0, 0, 0x1FFFFFF);
+CIntParameter fauto_pp_Ch[RP_CALIB_MAX_ADC_CHANNELS] = INIT("fauto_pp_Ch", "", CBaseParameter::RW, 0, 0, 0, 0x1FFFFFF);
+CIntParameter fauto_kk_Ch[RP_CALIB_MAX_ADC_CHANNELS] = INIT("fauto_kk_Ch", "", CBaseParameter::RW, 0, 0, 0, 0x1FFFFFF);
 
-CFloatParameter fauto_value_ch_before[MAX_ADC_CHANNELS] = INIT("fauto_value_ch", "_before", CBaseParameter::RW, 0, 0, -1e6f, +1e6f);
-CFloatParameter fauto_value_ch_after[MAX_ADC_CHANNELS] = INIT("fauto_value_ch", "_after", CBaseParameter::RW, 0, 0, -1e6f, +1e6f);
+CFloatParameter fauto_value_ch_before[RP_CALIB_MAX_ADC_CHANNELS] = INIT("fauto_value_ch", "_before", CBaseParameter::RW, 0, 0, -1e6f, +1e6f);
+CFloatParameter fauto_value_ch_after[RP_CALIB_MAX_ADC_CHANNELS] = INIT("fauto_value_ch", "_after", CBaseParameter::RW, 0, 0, -1e6f, +1e6f);
 CIntParameter fauto_calib_progress("fauto_calib_progress", CBaseParameter::RW, 0, 0, 0, 140);
 
 void sendFilterCalibValues(rp_channel_t _ch);

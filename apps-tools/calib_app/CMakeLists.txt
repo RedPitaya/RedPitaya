@@ -59,6 +59,7 @@ list(APPEND include_paths
     ${INSTALL_DIR}/include/api250-12
     ${INSTALL_DIR}/include/redpitaya
     ${INSTALL_DIR}/include/common
+    ${INSTALL_DIR}/include/calib
     ${INSTALL_DIR}/rp_sdk
     ${INSTALL_DIR}/rp_sdk/libjson
 )
@@ -79,6 +80,7 @@ list(APPEND rp_libs
     rp-dsp
     rp-sweep
     rp-formatter
+    rp-calib
     rp-hw-calib
     rp-hw-can
     rp-hw

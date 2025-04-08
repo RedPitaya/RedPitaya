@@ -2,14 +2,15 @@
 
 #include <memory>
 #include "acq.h"
-#include "common.h"
 #include "rp.h"
 #include "rp_hw_calib.h"
+
+namespace rp_calib {
 
 class CCalib {
    public:
     struct DataPass {
-        int32_t ch[MAX_ADC_CHANNELS];
+        int32_t ch[RP_CALIB_MAX_ADC_CHANNELS];
     };
 
     using Ptr = std::shared_ptr<CCalib>;
@@ -40,3 +41,5 @@ class CCalib {
     DataPass m_pass_data;
     uint8_t m_channels;
 };
+
+}  // namespace rp_calib

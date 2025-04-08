@@ -4,6 +4,8 @@
 #include <iostream>
 #include "rp.h"
 
+namespace rp_calib {
+
 // int16_t convertCnts(int16_t cnts)
 // {
 //     int16_t m;
@@ -57,7 +59,7 @@ int findLastMax(float* _buffer, int _size, int _cross) {
     auto f = filterBuffer(_buffer, _size);
     float eps = 0.002;
     int left_pos = _cross;
-    float delta_max = 1;
+    // float delta_max = 1;
     while (fabs(f[left_pos - 1] - f[left_pos]) > eps) {
         left_pos--;
         if (left_pos == 0) {
@@ -100,3 +102,5 @@ double calculate(float* _buffer, int _size, float _last_max, int _cross1, int _c
     _deviation /= 1000.0;
     return sum;
 }
+
+}  // namespace rp_calib

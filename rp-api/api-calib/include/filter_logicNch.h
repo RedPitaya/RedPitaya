@@ -5,6 +5,8 @@
 #include "filter_logic.h"
 #include "rp.h"
 
+namespace rp_calib {
+
 class CFilter_logicNch {
    public:
     using Ptr = std::shared_ptr<CFilter_logicNch>;
@@ -29,6 +31,8 @@ class CFilter_logicNch {
     auto setCalibMode(int _mode) -> void;
 
    private:
-    CFilter_logic::Ptr m_fl[MAX_ADC_CHANNELS];
+    CFilter_logic::Ptr m_fl[RP_CALIB_MAX_ADC_CHANNELS];
     CCalibMan::Ptr m_calib_man;
 };
+
+}  // namespace rp_calib

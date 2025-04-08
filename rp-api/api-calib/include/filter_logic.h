@@ -12,6 +12,8 @@
 #include "calib_man.h"
 #include "rp.h"
 
+namespace rp_calib {
+
 class CFilter_logic {
    public:
     struct GridItem {
@@ -62,3 +64,5 @@ class CFilter_logic {
     int m_calibMode;  // 0 - External, 1 - Internal
     float m_calibRef;
 };
+
+}  // namespace rp_calib

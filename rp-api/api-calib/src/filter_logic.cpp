@@ -25,6 +25,8 @@
 #define STEPS_AA 2
 #define STEPS_BB STEPS_AA
 
+namespace rp_calib {
+
 CFilter_logic::Ptr CFilter_logic::Create(CCalibMan::Ptr _calib_man) {
     return std::make_shared<CFilter_logic>(_calib_man);
 }
@@ -276,3 +278,5 @@ int CFilter_logic::calibPP(COscilloscope::DataPassAutoFilter item, float _nomina
     m_oldPP = item.f_pp;
     return 0;
 }
+
+}  // namespace rp_calib

@@ -46,6 +46,7 @@ LIBRP_HW_DIR    		= rp-api/api-hw
 LIBRP_HW_CAN_DIR  		= rp-api/api-hw-can
 LIBRP_HW_PROFILES_DIR	= rp-api/api-hw-profiles
 LIBRP_HW_CALIB_DIR		= rp-api/api-hw-calib
+LIBRP_CALIB_DIR		    = rp-api/api-calib
 # LIBRP2_DIR      		= rp-api/api2
 LIBRP250_12_DIR 		= rp-api/api-250-12
 LIBRP_DSP_DIR   		= rp-api/api-dsp
@@ -59,7 +60,7 @@ ECOSYSTEM_DIR   		= Applications/ecosystem
 
 .PHONY: api librp librp250_12 librp_hw librp_dsp librp_hw_profiles librp_hw_calibration librp_hw_can librparb librp_sweep librpapp librpla
 
-api: librp librp_hw librp_hw_can librp_dsp librpapp librp_formatter librparb librp_sweep librpla librpupdater
+api: librp librp_hw librp_hw_can librp_dsp librpapp librp_formatter librparb librp_sweep librpla librpupdater librp_calibration
 # api2: librp2
 
 librp: librp250_12 librp_hw_calibration librp_hw_profiles
@@ -77,6 +78,10 @@ librp_hw_can: librp
 librp_hw_calibration: librp_hw_profiles
 	cmake -B$(abspath $(LIBRP_HW_CALIB_DIR)/build) -S$(abspath $(LIBRP_HW_CALIB_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(LIBRP_HW_CALIB_DIR)/build install -j$(CPU_CORES)
+
+librp_calibration: librp
+	cmake -B$(abspath $(LIBRP_CALIB_DIR)/build) -S$(abspath $(LIBRP_CALIB_DIR)) $(CMAKEVAR)
+	$(MAKE) -C $(LIBRP_CALIB_DIR)/build install -j$(CPU_CORES)
 
 librp_hw_profiles:
 	cmake -B$(abspath $(LIBRP_HW_PROFILES_DIR)/build) -S$(abspath $(LIBRP_HW_PROFILES_DIR)) $(CMAKEVAR)
@@ -519,6 +524,7 @@ clean: nginx_clean scpi_clean
 	rm -rf $(abspath $(LIBRP_SWEEP_DIR)/build)
 	rm -rf $(abspath $(LIBRP_FORMATTER_DIR)/build)
 	rm -rf $(abspath $(LIBRP_HW_CALIB_DIR)/build)
+	rm -rf $(abspath $(LIBRP_CALIB_DIR)/build)
 	rm -rf $(abspath $(LIBRP_ARB_DIR)/build)
 	rm -rf $(abspath $(LIBRP_UPDATER_DIR)/build)
 

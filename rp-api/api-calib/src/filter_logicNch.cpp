@@ -2,6 +2,8 @@
 #include <iostream>
 #include "common.h"
 
+namespace rp_calib {
+
 CFilter_logicNch::Ptr CFilter_logicNch::Create(CCalibMan::Ptr _calib_man) {
     return std::make_shared<CFilter_logicNch>(_calib_man);
 }
@@ -121,3 +123,5 @@ void CFilter_logicNch::setCalibMode(int _mode) {
         m_fl[i]->setCalibMode(_mode);
     }
 }
+
+}  // namespace rp_calib

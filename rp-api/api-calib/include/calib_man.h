@@ -2,9 +2,10 @@
 
 #include <memory>
 #include "acq.h"
-#include "common.h"
 #include "rp.h"
 #include "rp_hw_calib.h"
+
+namespace rp_calib {
 
 enum ClalibValue { ADC_CH_OFF, ADC_CH_GAIN, DAC_CH_OFF, DAC_CH_GAIN, F_AA_CH, F_BB_CH, F_PP_CH, F_KK_CH };
 
@@ -56,3 +57,5 @@ class CCalibMan {
     rp_acq_ac_dc_mode_t m_currentAC_DC;
     rp_gen_gain_t m_currentGenGain;
 };
+
+}  // namespace rp_calib

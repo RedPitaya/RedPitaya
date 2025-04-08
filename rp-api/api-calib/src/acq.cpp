@@ -7,13 +7,21 @@
 #include <iostream>
 #include <vector>
 #include "acq_math.h"
+#include "common.h"
 #include "rp_log.h"
+
+#define TIME_ANIMATION 1000000.0
+#define INVALID_VALUE -999999
 
 // Use (void) to silent unused warnings.
 #define assertm(exp, msg) assert(((void)msg, exp))
 #define ACQ_COUNT 5
 
+using namespace std::chrono;
+
 const float g_adc_smpl_freq = getADCRate();
+
+namespace rp_calib {
 
 auto trapezoidalApprox(double* data, float T, int size) -> float {
     double result = 0;
@@ -41,11 +49,7 @@ COscilloscope::Ptr COscilloscope::Create(uint32_t _decimation) {
 }
 
 COscilloscope::COscilloscope(uint32_t _decimation)
-    : m_decimation(_decimation),
-      m_index(0),
-      m_mode(0),
-      m_channel(RP_CH_1),
-      m_mutex(),
+    : m_mutex(),
       m_funcSelector(),
       m_avgFilter(),
       m_cursor1(0),
@@ -56,6 +60,10 @@ COscilloscope::COscilloscope(uint32_t _decimation)
       m_avg_filter_size(30),
       m_avg_filter_cur(0),
       m_adc_sample_per(0) {
+    m_decimation = _decimation;
+    m_index = 0;
+    m_channel = RP_CH_1;
+    m_mode = 0;
     m_OscThreadRunState = false;
     m_zoomMode = false;
     m_curCursor1 = m_cursor1;
@@ -424,7 +432,7 @@ void COscilloscope::acquireSquare() {
     int16_t timeout = 1000;
     bool fillState = false;
     uint32_t acq_u_size = ADC_BUFFER_SIZE;
-    uint32_t acq_u_size_raw = ADC_BUFFER_SIZE;
+    // uint32_t acq_u_size_raw = ADC_BUFFER_SIZE;
     rp_acq_trig_state_t trig_state = RP_TRIG_STATE_TRIGGERED;
     rp_AcqSetDecimationFactor(m_decimationSq);
     rp_AcqSetTriggerDelay(ADC_BUFFER_SIZE / 4.0);
@@ -485,7 +493,7 @@ void COscilloscope::acquireSquare() {
         double min_dt = min_cursor;
         double max_dt = 1 - max_cursor;
 
-        auto time = duration_cast<microseconds>(system_clock::now().time_since_epoch());
+        auto time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch());
         auto time_diff = (time - m_lastTimeAni);
         double dt = static_cast<double>(time_diff.count()) / TIME_ANIMATION;
         min_dt *= dt;
@@ -529,7 +537,7 @@ COscilloscope::DataPassSq COscilloscope::selectRange(float* buffer, double _star
     localDP.cur_channel = m_channel;
     int startX = (double)ADC_BUFFER_SIZE * std::min(_start, _stop);
     int stopX = (double)ADC_BUFFER_SIZE * std::max(_start, _stop);
-    float core_size = (float)(stopX - startX) / (float)SCREEN_BUFF_SIZE;
+    float core_size = (float)(stopX - startX) / (float)RP_CALIB_SCREEN_BUFF_SIZE;
     //  int screenSize = core_size < 1 ? stopX - startX : SCREEN_BUFF_SIZE;
     if (core_size < 1) {
         localDP.wave_size = stopX - startX;
@@ -538,8 +546,8 @@ COscilloscope::DataPassSq COscilloscope::selectRange(float* buffer, double _star
             localDP.wave[j++] = buffer[i];
         }
     } else {
-        localDP.wave_size = SCREEN_BUFF_SIZE;
-        for (int i = 0; i < SCREEN_BUFF_SIZE; i++) {
+        localDP.wave_size = RP_CALIB_SCREEN_BUFF_SIZE;
+        for (int i = 0; i < RP_CALIB_SCREEN_BUFF_SIZE; i++) {
             float sum = 0;
             int ii = (float)i * core_size + startX;
             for (int j = 0; j < (int)core_size; j++) {
@@ -565,7 +573,7 @@ void COscilloscope::acquireAutoFilter() {
     bool fillState = false;
     uint32_t aa, bb, pp, kk;
     uint32_t acq_u_size = ADC_BUFFER_SIZE;
-    uint32_t acq_u_size_raw = ADC_BUFFER_SIZE;
+    // uint32_t acq_u_size_raw = ADC_BUFFER_SIZE;
     float m_acu_buffer[ADC_BUFFER_SIZE];
     float m_acu_buffer_raw[ADC_BUFFER_SIZE];
     memset(m_acu_buffer, 0, sizeof(float) * ADC_BUFFER_SIZE);
@@ -649,7 +657,7 @@ void COscilloscope::acquireAutoFilter() {
     auto cross = calcCountCrossZero(m_acu_buffer, acq_u_size);
     if (cross.size() >= 2) {
         auto last_max = findLastMax(m_acu_buffer, acq_u_size, cross[1]);
-        auto last_max_raw = findLastMax(m_acu_buffer_raw, acq_u_size, cross[1]);
+        // auto last_max_raw = findLastMax(m_acu_buffer_raw, acq_u_size, cross[1]);
         double value = calculate(m_acu_buffer, acq_u_size, m_acu_buffer[last_max], cross[0], cross[1], localDP.deviation);
         double value_raw = calculate(m_acu_buffer_raw, acq_u_size, m_acu_buffer_raw[last_max], cross[0], cross[1], localDP.deviation);
         localDP.is_valid = true;
@@ -675,13 +683,13 @@ void COscilloscope::acquireAutoFilterSync() {
     uint32_t timeout = 1000000;  // timeout 1 second
     int16_t repeat_count = 0;
     bool fillState = false;
-    uint32_t aa[MAX_ADC_CHANNELS], bb[MAX_ADC_CHANNELS], pp[MAX_ADC_CHANNELS], kk[MAX_ADC_CHANNELS];
+    uint32_t aa[RP_CALIB_MAX_ADC_CHANNELS], bb[RP_CALIB_MAX_ADC_CHANNELS], pp[RP_CALIB_MAX_ADC_CHANNELS], kk[RP_CALIB_MAX_ADC_CHANNELS];
     uint32_t acq_u_size = ADC_BUFFER_SIZE;
-    uint32_t acq_u_size_raw = ADC_BUFFER_SIZE;
-    float m_acu_buffer[MAX_ADC_CHANNELS][ADC_BUFFER_SIZE];
-    float m_acu_buffer_raw[MAX_ADC_CHANNELS][ADC_BUFFER_SIZE];
-    memset(m_acu_buffer, 0, sizeof(float) * ADC_BUFFER_SIZE * MAX_ADC_CHANNELS);
-    memset(m_acu_buffer_raw, 0, sizeof(float) * ADC_BUFFER_SIZE * MAX_ADC_CHANNELS);
+    // uint32_t acq_u_size_raw = ADC_BUFFER_SIZE;
+    float m_acu_buffer[RP_CALIB_MAX_ADC_CHANNELS][ADC_BUFFER_SIZE];
+    float m_acu_buffer_raw[RP_CALIB_MAX_ADC_CHANNELS][ADC_BUFFER_SIZE];
+    memset(m_acu_buffer, 0, sizeof(float) * ADC_BUFFER_SIZE * RP_CALIB_MAX_ADC_CHANNELS);
+    memset(m_acu_buffer_raw, 0, sizeof(float) * ADC_BUFFER_SIZE * RP_CALIB_MAX_ADC_CHANNELS);
     rp_acq_trig_state_t trig_state = RP_TRIG_STATE_TRIGGERED;
 
     for (auto i = 0u; i < m_channels; i++) {
@@ -1034,3 +1042,5 @@ void COscilloscope::updateGenCalib() {
     rp_GenGetOffset(RP_CH_2, &x);
     rp_GenOffset(RP_CH_2, x);
 }
+
+}  // namespace rp_calib

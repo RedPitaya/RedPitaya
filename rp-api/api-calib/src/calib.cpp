@@ -1,6 +1,9 @@
 #include "calib.h"
 #include <ctime>
 #include <fstream>
+#include "common.h"
+
+namespace rp_calib {
 
 CCalib::Ptr CCalib::Create(COscilloscope::Ptr _acq) {
     return std::make_shared<CCalib>(_acq);
@@ -612,3 +615,5 @@ int CCalib::calib_board_z20_250_12(uint16_t _step, float _refdc) {
     }
     return 0;
 }
+
+}  // namespace rp_calib
