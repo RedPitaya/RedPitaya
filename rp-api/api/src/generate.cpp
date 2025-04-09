@@ -183,7 +183,7 @@ int generate_setFrequency(rp_channel_t channel, float frequency, float baseFreq)
     if (channel == RP_CH_1) {
         cmn_Debug("[Ch%d] ch_properties->counterStep <- 0x%X", channel, value);
         generate->counterStep_ch1 = value;
-        value = (valuef - (float)value) * 0xFFFFFFFF;
+        value = (valuef - (double)value) * 0xFFFFFFFF;
         cmn_Debug("[Ch%d] ch_properties->counterStepLower <- 0x%X", channel, value);
         generate->counterStepLower_ch1 = value;
     }
@@ -191,7 +191,7 @@ int generate_setFrequency(rp_channel_t channel, float frequency, float baseFreq)
     if (channel == RP_CH_2) {
         cmn_Debug("[Ch%d] ch_properties->counterStep <- 0x%X", channel, value);
         generate->counterStep_ch2 = value;
-        value = (valuef - (float)value) * 0xFFFFFFFF;
+        value = (valuef - (double)value) * 0xFFFFFFFF;
         cmn_Debug("[Ch%d] ch_properties->counterStepLower <- 0x%X", channel, value);
         generate->counterStepLower_ch2 = value;
     }
