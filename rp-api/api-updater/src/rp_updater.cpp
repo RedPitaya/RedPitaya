@@ -15,6 +15,7 @@
 #include "rp_updater.h"
 
 #include <signal.h>
+#include <sys/stat.h>
 #include <filesystem>
 #include <fstream>
 #include <mutex>
@@ -351,6 +352,42 @@ int rp_UpdaterIsValidDownloadedFile(std::string fileName, bool* state) {
     return RP_UP_OK;
 }
 
+bool replace_self(std::string& new_executable_path) {
+    // Get current executable path
+    std::string self_path;
+    try {
+        self_path = fs::canonical("/proc/self/exe");
+    } catch (...) {
+        fprintf(stderr, "Error getting executable path\n");
+        return false;
+    }
+
+    // Create a temporary file in the same directory
+    std::string temp_path = self_path + ".tmp";
+
+    // Copy new executable to temporary file
+    try {
+        fs::copy_file(new_executable_path, temp_path, fs::copy_options::overwrite_existing);
+    } catch (...) {
+        fprintf(stderr, "Error copying new executable\n");
+        return false;
+    }
+
+    // Set permissions on the new file
+    if (chmod(temp_path.c_str(), 0755) != 0) {
+        fprintf(stderr, "Error setting permissions\n");
+        return false;
+    }
+
+    // Replace the old executable (atomic operation)
+    if (rename(temp_path.c_str(), self_path.c_str()) != 0) {
+        fprintf(stderr, "Error replacing executable\n");
+        return false;
+    }
+
+    return true;
+}
+
 int rp_UpdaterUpdateBoardEcosystem(std::string fileName) {
     bool valid = false;
     rp_UpdaterIsValidDownloadedFile(fileName, &valid);
@@ -404,6 +441,15 @@ int rp_UpdaterUpdateBoardEcosystem(std::string fileName) {
     listdir(out_dir, "", 0, g_dirs, g_files);
     listdirForDelete(ECOSYSTEM_INSTALL_PATH, "", 0, g_files, g_files_for_delete);
     copyEcosystem();
+
+    for (auto& path : g_files) {
+        std::size_t found = path.first.find("/bin/updater");
+        if (found != std::string::npos) {
+            replace_self(path.first);
+            break;
+        }
+    }
+
     deleteFiles(g_files_for_delete);
     deleteEmptyFolders("/opt/redpitaya");
 
