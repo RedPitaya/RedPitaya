@@ -167,6 +167,7 @@ int rp_UpdaterGetDownloadedFilesList(std::vector<std::string>& files) {
     for (auto& itm : g_downloadedFiles) {
         files.push_back(itm.second.name);
     }
+    std::sort(files.begin(), files.end());
     return RP_UP_OK;
 }
 

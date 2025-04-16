@@ -34,7 +34,7 @@ class CCalibMan {
     auto setModeLV_HV(rp_pinState_t _mode) -> void;
     auto getModeLV_HV() -> rp_pinState_t;
     auto setDefualtFilter(rp_channel_t _ch) -> int;
-    auto setDisableFilter(rp_channel_t _ch) -> int;
+    auto setDisableFilter(rp_channel_t _ch, uint32_t _initKK) -> int;
 
     auto enableGen(rp_channel_t _ch, bool _enable) -> int;
     auto setFreq(rp_channel_t _ch, int _freq) -> int;

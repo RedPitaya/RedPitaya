@@ -143,6 +143,9 @@
         OBJ.setFILTERMode(false);
         OBJ.setFAutoMode(false);
         OBJ.setMainMenu(true);
+
+        CLIENT.parametersCache["calib_sig"] = { value: 0 };
+        CLIENT.requestParameters();
     }
 
     OBJ.setModel = function(_value) {
@@ -356,11 +359,15 @@
                 $('#reset_cancel_btn').on('click', function() {
                     OBJ.filterCalibChange = false;
                     OBJ.adcCalibChange = false;
+                    CLIENT.parametersCache["calib_sig"] = { value: 0 };
+                    CLIENT.requestParameters();
                     OBJ.closeManualMode();
                 });
 
                 $("#dialog_reset").modal('show');
             } else {
+                CLIENT.parametersCache["calib_sig"] = { value: 0 };
+                CLIENT.requestParameters();
                 OBJ.closeManualMode();
             }
         });

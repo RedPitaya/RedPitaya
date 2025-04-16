@@ -51,6 +51,7 @@ class COscilloscope {
         double ampl;
         double calib_value;  // Calib value for AA and BB coff
         double calib_value_raw;
+        double rmsFilter;
         double deviation;
         uint32_t f_aa;
         uint32_t f_bb;
@@ -61,6 +62,7 @@ class COscilloscope {
         bool is_valid;
         DataPassAutoFilter() {
             ampl = 0;
+            rmsFilter = 0;
             calib_value = 0;
             calib_value_raw = 0;
             deviation = 0;

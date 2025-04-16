@@ -32,8 +32,7 @@ CFilter_logic::Ptr CFilter_logic::Create(CCalibMan::Ptr _calib_man) {
 }
 
 bool compare(CFilter_logic::GridItem i1, CFilter_logic::GridItem i2) {
-    return ((i1.value_raw * i1.value_raw + i1.deviationFromAVG * i1.deviationFromAVG) <
-            (i2.value_raw * i2.value_raw + i2.deviationFromAVG * i2.deviationFromAVG));
+    return ((i1.value_raw * i1.value_raw + i1.deviationFromAVG * i1.deviationFromAVG) < (i2.value_raw * i2.value_raw + i2.deviationFromAVG * i2.deviationFromAVG));
     //    return ((i1.value  * i1.value + i1.deviationFromAVG * i1.deviationFromAVG) < (i2.value  * i2.value + i2.deviationFromAVG * i2.deviationFromAVG));
 }
 
@@ -151,7 +150,7 @@ int CFilter_logic::setCalculatedValue(COscilloscope::DataPassAutoFilter item) {
                         m_grid[i].value_raw = item.calib_value_raw;
                         m_grid[i].calculate = true;
                         m_grid[i].deviationFromAVG = item.deviation;
-                        //                    std::cout  << "Cur step " << i <<  " aa = " << m_grid[i].aa << " bb = " << m_grid[i].bb << " VALUE " << m_grid[i].value <<  std::endl;
+                        std::cerr << "Cur step " << i << " aa = " << m_grid[i].aa << " bb = " << m_grid[i].bb << " VALUE " << m_grid[i].value << std::endl;
                         return i;
                     }
     }
@@ -216,7 +215,6 @@ int CFilter_logic::nextSetupCalibParameters() {
         new_grid.insert(new_grid.end(), split_grid.begin(), split_grid.end());
     }
     m_grid = new_grid;
-    std::cout << m_percent << std::endl;
     return m_percent < PERCENT_MIN ? -1 : 0;
 }
 

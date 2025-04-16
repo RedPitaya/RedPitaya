@@ -523,6 +523,7 @@ void COscilloscope::acquireSquare() {
                 m_curCursor2 = 1;
             }
         }
+
         DataPassSq localDP = selectRange(ch, m_curCursor1, m_curCursor2);
         pthread_mutex_lock(&m_mutex);
         m_crossDataSq = localDP;
@@ -583,7 +584,7 @@ void COscilloscope::acquireAutoFilter() {
     localDP.is_valid = false;
     rp_AcqGetFilterCalibValue(m_channel, &localDP.f_aa, &localDP.f_bb, &localDP.f_kk, &localDP.f_pp);
     while (repeat_count < ACQ_COUNT) {
-        timeout = 1000000;
+        timeout = 100000;
         fillState = false;
         trig_state = RP_TRIG_STATE_TRIGGERED;
         rp_AcqSetDecimationFactor(m_decimationSq);
@@ -663,6 +664,8 @@ void COscilloscope::acquireAutoFilter() {
         localDP.is_valid = true;
         localDP.calib_value = value;
         localDP.calib_value_raw = value_raw;
+        // localDP.rmsFilter = findRSM(m_acu_buffer, acq_u_size);
+        // localDP.ampl = (double)localDP.rmsFilter / 10000.0;
         localDP.ampl = m_acu_buffer[last_max];
         //  std::cout << m_acu_buffer[last_max] << std::endl;
     }
@@ -699,7 +702,7 @@ void COscilloscope::acquireAutoFilterSync() {
     }
 
     while (repeat_count < ACQ_COUNT) {
-        timeout = 1000000;
+        timeout = 100000;
         fillState = false;
         trig_state = RP_TRIG_STATE_TRIGGERED;
         rp_AcqSetDecimationFactor(m_decimationSq);
@@ -754,8 +757,7 @@ void COscilloscope::acquireAutoFilterSync() {
 
         bool exitFlag = true;
         for (auto i = 0u; i < m_channels; i++) {
-            exitFlag &=
-                (aa[i] != localDP.valueCH[i].f_aa || bb[i] != localDP.valueCH[i].f_bb || pp[i] != localDP.valueCH[i].f_pp || kk[i] != localDP.valueCH[i].f_kk);
+            exitFlag &= (aa[i] != localDP.valueCH[i].f_aa || bb[i] != localDP.valueCH[i].f_bb || pp[i] != localDP.valueCH[i].f_pp || kk[i] != localDP.valueCH[i].f_kk);
         }
         if (exitFlag)
             return;
@@ -785,11 +787,12 @@ void COscilloscope::acquireAutoFilterSync() {
             auto last_max1 = findLastMax(m_acu_buffer[j], acq_u_size, cross1[1]);
             auto last_max_raw1 = findLastMax(m_acu_buffer_raw[j], acq_u_size, cross1[1]);
             double value1 = calculate(m_acu_buffer[j], acq_u_size, m_acu_buffer[j][last_max1], cross1[0], cross1[1], localDP.valueCH[j].deviation);
-            double value_raw1 =
-                calculate(m_acu_buffer_raw[j], acq_u_size, m_acu_buffer_raw[j][last_max_raw1], cross1[0], cross1[1], localDP.valueCH[j].deviation);
+            double value_raw1 = calculate(m_acu_buffer_raw[j], acq_u_size, m_acu_buffer_raw[j][last_max_raw1], cross1[0], cross1[1], localDP.valueCH[j].deviation);
             localDP.valueCH[j].is_valid = true;
             localDP.valueCH[j].calib_value = value1;
             localDP.valueCH[j].calib_value_raw = value_raw1;
+            // localDP.valueCH[j].rmsFilter = findRSM(m_acu_buffer[j], acq_u_size);
+            // localDP.valueCH[j].ampl = (double)localDP.valueCH[j].rmsFilter / 10000.0;
             localDP.valueCH[j].ampl = m_acu_buffer[j][last_max1];
             // std::cout << "\n" << last_max1 << " - " << m_acu_buffer[0][last_max1] << std::endl;
             // std::cout << "\n" << last_max2 << " - " <<  m_acu_buffer[1][last_max2] << std::endl;
@@ -989,7 +992,7 @@ void COscilloscope::enableGen(rp_channel_t _ch, bool _enable) {
     }
     if (_enable) {
         rp_GenOutEnable(_ch);
-        rp_GenResetTrigger(_ch);
+        rp_GenSynchronise();
     } else {
         rp_GenOutDisable(_ch);
     }

@@ -13,9 +13,9 @@
 
     OBJ.F_STATES_125_14 = {
         0: { name: "Prepare", span: true },
-        1: { name: "LV mode", input: 0.9, low: true },
+        1: { name: "LV mode", input: 0.9, low: true, kk : 0x0dFFFFF },
         2: { name: "Prepare", span: true },
-        3: { name: "HV mode", input: 9 },
+        3: { name: "HV mode", input: 9 , kk : 0x0dFFFFF},
         4: { name: "Save calibration values", span: true },
         5: { name: "Calibration complete", span: true, end: true }
     };
@@ -248,9 +248,23 @@
                     $("#am_a_filt_dialog_img").attr("src", "./img/125/RP_125_GEN_AUTO_MODE.png");
                     $("#am_a_filt_dialog_text").text("Set jumpers to LV position and connect OUT1 to IN1 and IN2.");
                     $("#am_a_filt_dialog_input").hide();
+                    if (OBJ.famStates[OBJ.famCurrentTest].hasOwnProperty("kk")) {
+                        $("#SS_A_FILT_KK_VALUE").val(OBJ.famStates[OBJ.famCurrentTest].kk);
+                        CLIENT.parametersCache["f_init_kk_value"] = { value: OBJ.famStates[OBJ.famCurrentTest].kk };
+                        CLIENT.sendParameters();
+                    }
+
+
                 } else {
                     $("#am_a_filt_dialog_img").attr("src", "./img/125/RP_125_REF_FILTER.png");
                     $("#am_a_filt_dialog_text").text("Set jumpers to LV position and connect IN1 and IN2 to external signal generator 1kHz square signal.");
+
+                    if (OBJ.famStates[OBJ.famCurrentTest].hasOwnProperty("kk")) {
+                        $("#SS_A_FILT_KK_VALUE").val(OBJ.famStates[OBJ.famCurrentTest].kk);
+                        CLIENT.parametersCache["f_init_kk_value"] = { value: OBJ.famStates[OBJ.famCurrentTest].kk };
+                        CLIENT.sendParameters();
+                    }
+
                     if (OBJ.famStates[OBJ.famCurrentTest].hasOwnProperty("input")) {
                         $("#SS_A_FILT_REF_VOLT").val(OBJ.famStates[OBJ.famCurrentTest].input);
                         CLIENT.parametersCache["f_ref_volt"] = { value: OBJ.famStates[OBJ.famCurrentTest].input };
@@ -263,9 +277,23 @@
                     $("#am_a_filt_dialog_img").attr("src", "./img/125/RP_125_GEN_HV_AUTO_MODE.png");
                     $("#am_a_filt_dialog_text").text("Set jumpers to HV position and connect OUT1 to IN1 and IN2.");
                     $("#am_a_filt_dialog_input").hide();
+
+                    if (OBJ.famStates[OBJ.famCurrentTest].hasOwnProperty("kk")) {
+                        $("#SS_A_FILT_KK_VALUE").val(OBJ.famStates[OBJ.famCurrentTest].kk);
+                        CLIENT.parametersCache["f_init_kk_value"] = { value: OBJ.famStates[OBJ.famCurrentTest].kk };
+                        CLIENT.sendParameters();
+                    }
+
                 } else {
                     $("#am_a_filt_dialog_img").attr("src", "./img/125/RP_125_REF_HV_FILTER.png");
                     $("#am_a_filt_dialog_text").text("Set jumpers to HV position and connect IN1 and IN2 to external signal generator 1kHz square signal.");
+
+                    if (OBJ.famStates[OBJ.famCurrentTest].hasOwnProperty("kk")) {
+                        $("#SS_A_FILT_KK_VALUE").val(OBJ.famStates[OBJ.famCurrentTest].kk);
+                        CLIENT.parametersCache["f_init_kk_value"] = { value: OBJ.famStates[OBJ.famCurrentTest].kk };
+                        CLIENT.sendParameters();
+                    }
+
                     if (OBJ.famStates[OBJ.famCurrentTest].hasOwnProperty("input")) {
                         $("#SS_A_FILT_REF_VOLT").val(OBJ.famStates[OBJ.famCurrentTest].input);
                         CLIENT.parametersCache["f_ref_volt"] = { value: OBJ.famStates[OBJ.famCurrentTest].input };
@@ -283,6 +311,10 @@
     }
 
     OBJ.famClickOkDialog = function() {
+        if (checkIntParameters2("#SS_A_FILT_KK_VALUE", 0x001FFFFF, 0x00FFFFFF) === 0) {
+            return;
+        }
+
         if (OBJ.famLastState === false) return;
         OBJ.famRemoveStateObject();
         OBJ.famSetWait();

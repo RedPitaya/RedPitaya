@@ -33,7 +33,7 @@ std::vector<int> calcCountCrossZero(float* _buffer, int _size) {
     for (int i = 0; i < _size - 1; i++) {
         if ((_buffer[i] < 0 && _buffer[i + 1] > 0) || (_buffer[i] > 0 && _buffer[i + 1] < 0)) {
             cross.push_back(i);
-            //    std::cout <<  "\nI = " << i <<  " B[I] " << _buffer[i] << " B[i+1] " << _buffer[i+1] << std::endl;
+            // std::cerr << "\n calcCountCrossZero I = " << i << " B[I] " << _buffer[i] << " B[i+1] " << _buffer[i + 1] << std::endl;
         }
     }
     return cross;
@@ -69,6 +69,32 @@ int findLastMax(float* _buffer, int _size, int _cross) {
     }
     delete f;
     return left_pos;
+}
+
+uint64_t findRSM(float* _buffer, int _size) {
+    uint64_t ret = 0;
+    uint32_t c = 0;
+    for (int i = 0; i < _size; i++) {
+        if (_buffer[i] > 0) {
+            uint64_t x = (double)_buffer[i] * 10000.0;
+            c++;
+            ret += x * x;
+        }
+    }
+    ret = std::sqrt(ret / c);
+    return ret;
+}
+
+uint64_t findDT(float* _buffer, int _size, uint64_t _rms) {
+    uint64_t ret = 0;
+    for (int i = 0; i < _size; i++) {
+        if (_buffer[i] > 0) {
+            uint64_t x = (double)_buffer[i] * 10000.0;
+            auto diff = (x < _rms ? _rms - x : x - _rms);
+            ret += diff;
+        }
+    }
+    return ret;
 }
 
 double calculate(float* _buffer, int _size, float _last_max, int _cross1, int _cross2, double& _deviation) {

@@ -331,6 +331,7 @@ PROFILES_DIR       = Test/profiles
 ACQUIRE_DIR        = Test/acquire
 ACQUIRE_P_DIR      = Test/acquire_p
 CALIB_DIR          = Test/calib
+FILTER_CALIB_DIR   = Test/filter_calib
 GENERATOR_DIR	   = Test/generate
 SPECTRUM_DIR       = Test/spectrum
 LED_CONTROL_DIR    = Test/led_control
@@ -341,9 +342,9 @@ E3_LED_CON_DIR     = tools/e3_led_controller
 STARTUPSH          = $(INSTALL_DIR)/sbin/startup.sh
 
 .PHONY: examples fpgautils
-.PHONY: lcr bode monitor profiles generator acquire acquire_p calib spectrum led_control daisy_tool la e3_led_controller updater_tool
+.PHONY: lcr bode monitor profiles generator acquire acquire_p calib spectrum led_control daisy_tool la e3_led_controller updater_tool filter_calib
 
-examples: lcr bode monitor profiles calib spectrum acquire acquire_p generator led_control fpgautils daisy_tool la e3_led_controller updater_tool
+examples: lcr bode monitor profiles calib spectrum acquire acquire_p generator led_control fpgautils daisy_tool la e3_led_controller updater_tool filter_calib
 
 
 lcr: api
@@ -381,6 +382,10 @@ acquire_p: api
 calib: api
 	cmake -B$(abspath $(CALIB_DIR)/build) -S$(abspath $(CALIB_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(CALIB_DIR)/build install -j$(CPU_CORES)
+
+filter_calib: api
+	cmake -B$(abspath $(FILTER_CALIB_DIR)/build) -S$(abspath $(FILTER_CALIB_DIR)) $(CMAKEVAR)
+	$(MAKE) -C $(FILTER_CALIB_DIR)/build install -j$(CPU_CORES)
 
 daisy_tool: api
 	cmake -B$(abspath $(DAISY_TOOL_DIR)/build) -S$(abspath $(DAISY_TOOL_DIR)) $(CMAKEVAR)
@@ -524,6 +529,7 @@ clean: nginx_clean scpi_clean
 	rm -rf $(abspath $(LIBRP_SWEEP_DIR)/build)
 	rm -rf $(abspath $(LIBRP_FORMATTER_DIR)/build)
 	rm -rf $(abspath $(LIBRP_HW_CALIB_DIR)/build)
+	rm -rf $(abspath $(LIBRP_LA_DIR)/build)
 	rm -rf $(abspath $(LIBRP_CALIB_DIR)/build)
 	rm -rf $(abspath $(LIBRP_ARB_DIR)/build)
 	rm -rf $(abspath $(LIBRP_UPDATER_DIR)/build)
@@ -535,6 +541,7 @@ clean: nginx_clean scpi_clean
 	rm -rf $(abspath $(LCR_DIR)/build)
 	rm -rf $(abspath $(LA_DIR)/build)
 	rm -rf $(abspath $(CALIB_DIR)/build)
+	rm -rf $(abspath $(FILTER_CALIB_DIR)/build)
 	rm -rf $(abspath $(BODE_DIR)/build)
 	rm -rf $(abspath $(ACQUIRE_DIR)/build)
 	rm -rf $(abspath $(ACQUIRE_P_DIR)/build)

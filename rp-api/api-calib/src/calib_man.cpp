@@ -458,7 +458,7 @@ int CCalibMan::setDefualtFilter(rp_channel_t _ch) {
     return 0;
 }
 
-int CCalibMan::setDisableFilter(rp_channel_t _ch) {
+int CCalibMan::setDisableFilter(rp_channel_t _ch, uint32_t _initKK) {
 
     if (!rp_HPGetFastADCIsFilterPresentOrDefault()) {
         ERROR_LOG("Filter not present in board");
@@ -470,18 +470,22 @@ int CCalibMan::setDisableFilter(rp_channel_t _ch) {
         return -1;
     }
 
+    if (_initKK > 0x00FFFFFF) {
+        ERROR_LOG("The value of KK (0x%X) must be no greater than 0x00FFFFFF", _initKK)
+    }
+
     auto g = getModeLV_HV();
     if (g == RP_LOW) {
         setCalibValue(_ch, F_AA_CH, 0);
         setCalibValue(_ch, F_BB_CH, 0);
         setCalibValue(_ch, F_PP_CH, 0);
-        setCalibValue(_ch, F_KK_CH, 0x00FFFFFF);
+        setCalibValue(_ch, F_KK_CH, _initKK);
     }
     if (g == RP_HIGH) {
         setCalibValue(_ch, F_AA_CH, 0);
         setCalibValue(_ch, F_BB_CH, 0);
         setCalibValue(_ch, F_PP_CH, 0);
-        setCalibValue(_ch, F_KK_CH, 0x00FFFFFF);
+        setCalibValue(_ch, F_KK_CH, _initKK);
     }
 
     return 0;

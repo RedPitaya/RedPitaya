@@ -755,10 +755,10 @@ rp_calib_error calib_PrintEx(FILE* __restrict out, rp_calib_params_t* calib) {
         fprintf(out, "\t\t* calibValue: %d:\n", calib->fast_adc_1_1[i].calibValue);
         fprintf(out, "\t\t* offset: %d:\n", calib->fast_adc_1_1[i].offset);
         fprintf(out, "\t\t* gainCalc: %f:\n\n", calib->fast_adc_1_1[i].gainCalc);
-        fprintf(out, "\t\t* AA: %d:\n", calib->fast_adc_filter_1_1[i].aa);
-        fprintf(out, "\t\t* BB: %d:\n", calib->fast_adc_filter_1_1[i].bb);
-        fprintf(out, "\t\t* PP: %d:\n", calib->fast_adc_filter_1_1[i].pp);
-        fprintf(out, "\t\t* KK: %d:\n", calib->fast_adc_filter_1_1[i].kk);
+        fprintf(out, "\t\t* AA: %d (0x%X):\n", calib->fast_adc_filter_1_1[i].aa, calib->fast_adc_filter_1_1[i].aa);
+        fprintf(out, "\t\t* BB: %d (0x%X):\n", calib->fast_adc_filter_1_1[i].bb, calib->fast_adc_filter_1_1[i].bb);
+        fprintf(out, "\t\t* PP: %d (0x%X):\n", calib->fast_adc_filter_1_1[i].pp, calib->fast_adc_filter_1_1[i].pp);
+        fprintf(out, "\t\t* KK: %d (0x%X):\n", calib->fast_adc_filter_1_1[i].kk, calib->fast_adc_filter_1_1[i].kk);
     }
 
     fprintf(out, "fast_adc_count_1_20: %d\n\n", calib->fast_adc_count_1_1);
@@ -768,10 +768,10 @@ rp_calib_error calib_PrintEx(FILE* __restrict out, rp_calib_params_t* calib) {
         fprintf(out, "\t\t* calibValue: %d:\n", calib->fast_adc_1_20[i].calibValue);
         fprintf(out, "\t\t* offset: %d:\n", calib->fast_adc_1_20[i].offset);
         fprintf(out, "\t\t* gainCalc: %f:\n\n", calib->fast_adc_1_20[i].gainCalc);
-        fprintf(out, "\t\t* AA: %d:\n", calib->fast_adc_filter_1_20[i].aa);
-        fprintf(out, "\t\t* BB: %d:\n", calib->fast_adc_filter_1_20[i].bb);
-        fprintf(out, "\t\t* PP: %d:\n", calib->fast_adc_filter_1_20[i].pp);
-        fprintf(out, "\t\t* KK: %d:\n", calib->fast_adc_filter_1_20[i].kk);
+        fprintf(out, "\t\t* AA: %d (0x%X):\n", calib->fast_adc_filter_1_20[i].aa, calib->fast_adc_filter_1_20[i].aa);
+        fprintf(out, "\t\t* BB: %d (0x%X):\n", calib->fast_adc_filter_1_20[i].bb, calib->fast_adc_filter_1_20[i].bb);
+        fprintf(out, "\t\t* PP: %d (0x%X):\n", calib->fast_adc_filter_1_20[i].pp, calib->fast_adc_filter_1_20[i].pp);
+        fprintf(out, "\t\t* KK: %d (0x%X):\n", calib->fast_adc_filter_1_20[i].kk, calib->fast_adc_filter_1_20[i].kk);
     }
 
     fprintf(out, "fast_adc_count_1_1_ac: %d\n\n", calib->fast_adc_count_1_1_ac);
@@ -910,8 +910,7 @@ rp_calib_error calib_GetFastADCCalibValue(rp_channel_calib_t channel, rp_acq_ac_
     return RP_HW_CALIB_OK;
 }
 
-rp_calib_error calib_GetFastADCCalibValue_1_20(rp_channel_calib_t channel, rp_acq_ac_dc_mode_calib_t mode, double* gain, int32_t* offset,
-                                               uint_gain_calib_t* calib) {
+rp_calib_error calib_GetFastADCCalibValue_1_20(rp_channel_calib_t channel, rp_acq_ac_dc_mode_calib_t mode, double* gain, int32_t* offset, uint_gain_calib_t* calib) {
     if (!g_model_loaded) {
         auto res = calib_Init(false);
         if (res != RP_HP_OK) {

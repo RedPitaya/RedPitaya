@@ -138,6 +138,8 @@ CFloatParameter filt_calib_ref_amp("filt_calib_ref_amp", CBaseParameter::RW, 0.9
 // AUTO MODE FOR FILTER CALIB
 CBooleanParameter f_external_gen("f_external_gen", CBaseParameter::RW, false, 0);
 CFloatParameter f_ref_volt("f_ref_volt", CBaseParameter::RW, 1, 0, 0.001, 20);
+CIntParameter f_init_kk_value("f_init_kk_value", CBaseParameter::RW, 0x00dFFFFF, 0, 0x001FFFFF, 0x00FFFFFF);
+
 CIntParameter f_ss_state("F_SS_STATE", CBaseParameter::RW, -1, 0, -1, 100);  // Current completed step
 CIntParameter f_ss_next_step("F_SS_NEXTSTEP", CBaseParameter::RW, -1, 0, -2, 100);
 
@@ -442,12 +444,22 @@ void updateFilterModeParameter() {
         filt_calib_ref_amp.Update();
         g_filter_logic->setCalibRef(filt_calib_ref_amp.Value());
     }
+
+    if (f_init_kk_value.IsNewValue()) {
+        f_init_kk_value.Update();
+    }
 }
 
 void calibFilter() {
     if (!g_filter_logic || !g_calib_man)
         return;
 
+    /*
+        1 - Preparatory stage.
+        Starts the generator if possible.
+        The signal from the generator is required for calibration of AA and BB modes.
+        The amplitude requirements are not important.
+    */
     if (filt_calib_step.Value() == 1) {
         g_filter_logic->init((rp_channel_t)adc_channel.Value());
 
@@ -455,12 +467,14 @@ void calibFilter() {
             g_calib_man->setOffset(RP_CH_1, 0);
             g_calib_man->setFreq(RP_CH_1, 1000);
             g_calib_man->setAmp(RP_CH_1, 0.9);
-            g_calib_man->setOffset(RP_CH_2, 0);
-            g_calib_man->setFreq(RP_CH_2, 1000);
-            g_calib_man->setAmp(RP_CH_2, 0.9);
+            // g_calib_man->setOffset(RP_CH_2, 0);
+            // g_calib_man->setFreq(RP_CH_2, 1000);
+            // g_calib_man->setAmp(RP_CH_2, 0.9);
             g_calib_man->enableGen(RP_CH_1, true);
-            g_calib_man->enableGen(RP_CH_2, true);
+            // g_calib_man->enableGen(RP_CH_2, true);
         }
+
+        g_calib_man->setDisableFilter((rp_channel_t)adc_channel.Value(), f_init_kk_value.Value());  // Disable filter in calib manager
 
         g_acq->startAutoFilter(8);
         filt_calib_step.SendValue(2);
@@ -468,6 +482,7 @@ void calibFilter() {
         return;
     }
 
+    // Non-blockable AA and BB calibration.
     if (filt_calib_step.Value() == 2) {
         while (g_filter_logic->setCalibParameters() != -1) {
             auto dp = g_acq->getDataAutoFilter();
@@ -476,6 +491,7 @@ void calibFilter() {
             }
         }
         g_filter_logic->removeHalfCalib();
+        // If there is no longer any possibility to calibrate, then we proceed to the next step.
         if (g_filter_logic->nextSetupCalibParameters() == -1) {
             filt_calib_step.SendValue(3);
             return;
@@ -483,6 +499,7 @@ void calibFilter() {
         filt_calib_progress.SendValue(g_filter_logic->calcProgress());
     }
 
+    // Amplitude calibration stage
     if (filt_calib_step.Value() == 3) {
         g_filter_logic->setGoodCalibParameter();
         std::this_thread::sleep_for(std::chrono::microseconds(1000000));
@@ -490,6 +507,7 @@ void calibFilter() {
             auto d = g_acq->getDataAutoFilter();
             if (d.ampl > 0) {
                 float nominal = 0.9;
+                // Use external generator
                 if (filt_calib_auto_mode.Value() == 0) {
                     nominal = filt_calib_ref_amp.Value();
                 }
@@ -501,6 +519,7 @@ void calibFilter() {
         filt_calib_step.SendValue(4);
     }
 
+    // Sending values ​​to the web interface. Setting generator settings from the web interface.
     if (filt_calib_step.Value() == 4) {
         filt_calib_step.SendValue(100);
         sendFilterCalibValues((rp_channel_t)adc_channel.Value());
@@ -508,15 +527,15 @@ void calibFilter() {
         g_calib_man->changeDecimation(adc_decimation.Value());
         if (getDACChannels() >= 2) {
             g_calib_man->setGenType(RP_CH_1, (int)RP_WAVEFORM_SQUARE);
-            g_calib_man->setGenType(RP_CH_2, (int)RP_WAVEFORM_SQUARE);
-            g_calib_man->enableGen(RP_CH_1, filt_gen1_enable.Value());
-            g_calib_man->enableGen(RP_CH_2, filt_gen2_enable.Value());
+            // g_calib_man->setGenType(RP_CH_2, (int)RP_WAVEFORM_SQUARE);
+            // g_calib_man->enableGen(RP_CH_2, filt_gen2_enable.Value());
             g_calib_man->setOffset(RP_CH_1, filt_gen_offset.Value());
             g_calib_man->setFreq(RP_CH_1, filt_gen_freq.Value());
             g_calib_man->setAmp(RP_CH_1, filt_gen_amp.Value());
-            g_calib_man->setOffset(RP_CH_2, filt_gen_offset.Value());
-            g_calib_man->setFreq(RP_CH_2, filt_gen_freq.Value());
-            g_calib_man->setAmp(RP_CH_2, filt_gen_amp.Value());
+            g_calib_man->enableGen(RP_CH_1, filt_gen1_enable.Value());
+            // g_calib_man->setOffset(RP_CH_2, filt_gen_offset.Value());
+            // g_calib_man->setFreq(RP_CH_2, filt_gen_freq.Value());
+            // g_calib_man->setAmp(RP_CH_2, filt_gen_amp.Value());
         }
     }
 }
@@ -527,6 +546,10 @@ void calibAutoFilter() {
 
     if (f_ref_volt.IsNewValue()) {
         f_ref_volt.Update();
+    }
+
+    if (f_init_kk_value.IsNewValue()) {
+        f_init_kk_value.Update();
     }
 
     if (f_external_gen.IsNewValue()) {
@@ -545,18 +568,16 @@ void calibAutoFilter() {
             g_calib_man->setOffset(RP_CH_1, 0);
             g_calib_man->setFreq(RP_CH_1, 1000);
             g_calib_man->setAmp(RP_CH_1, 0.9);
-            g_calib_man->setOffset(RP_CH_2, 0);
-            g_calib_man->setFreq(RP_CH_2, 1000);
-            g_calib_man->setAmp(RP_CH_2, 0.9);
+            // g_calib_man->setOffset(RP_CH_2, 0);
+            // g_calib_man->setFreq(RP_CH_2, 1000);
+            // g_calib_man->setAmp(RP_CH_2, 0.9);
             g_calib_man->setGenType(RP_CH_1, (int)RP_WAVEFORM_SQUARE);
-            g_calib_man->setGenType(RP_CH_2, (int)RP_WAVEFORM_SQUARE);
+            // g_calib_man->setGenType(RP_CH_2, (int)RP_WAVEFORM_SQUARE);
             g_calib_man->enableGen(RP_CH_1, true);
-            g_calib_man->enableGen(RP_CH_2, true);
+            // g_calib_man->enableGen(RP_CH_2, true);
         }
+
         g_acq->startAutoFilterNCh(8);
-        for (int i = 0; i < getADCChannels(); i++) {
-            g_acq->updateAcqFilter((rp_channel_t)i);
-        }
         f_ss_state.SendValue(f_ss_next_step.Value());
         f_ss_next_step.SendValue(-1);
         return;
@@ -564,6 +585,14 @@ void calibAutoFilter() {
 
     if (f_ss_next_step.Value() == 1) {
         if (g_sub_progress == 0) {
+
+            WARNING("KK = %d", f_init_kk_value.Value());
+
+            for (int i = 0; i < getADCChannels(); i++) {
+                g_calib_man->setDisableFilter((rp_channel_t)i, f_init_kk_value.Value());
+                g_acq->updateAcqFilter((rp_channel_t)i);
+            }
+
             auto d = g_acq->getDataAutoFilterSync();
             for (int i = 0; i < getADCChannels(); i++) {
                 auto v = (d.valueCH[i].calib_value_raw + d.valueCH[i].deviation);
@@ -706,9 +735,6 @@ void calibAutoFilter() {
         }
 
         g_acq->startAutoFilterNCh(8);
-        for (int i = 0; i < getADCChannels(); i++) {
-            g_acq->updateAcqFilter((rp_channel_t)i);
-        }
         f_ss_state.SendValue(f_ss_next_step.Value());
         f_ss_next_step.SendValue(-1);
         return;
@@ -716,6 +742,14 @@ void calibAutoFilter() {
 
     if (f_ss_next_step.Value() == 3) {
         if (g_sub_progress == 0) {
+
+            WARNING("KK = %d", f_init_kk_value.Value());
+
+            for (int i = 0; i < getADCChannels(); i++) {
+                g_calib_man->setDisableFilter((rp_channel_t)i, f_init_kk_value.Value());
+                g_acq->updateAcqFilter((rp_channel_t)i);
+            }
+
             auto d = g_acq->getDataAutoFilterSync();
             for (int i = 0; i < getADCChannels(); i++) {
                 auto v = (d.valueCH[i].calib_value_raw + d.valueCH[i].deviation);
@@ -975,7 +1009,7 @@ void UpdateParams(void) {
                 }
 
                 if (sig == 7) {
-                    g_calib_man->setDisableFilter((rp_channel_t)adc_channel.Value());
+                    g_calib_man->setDisableFilter((rp_channel_t)adc_channel.Value(), 0x00FFFFFF);
                     g_calib_man->updateCalib();
                     g_calib_man->updateAcqFilter((rp_channel_t)adc_channel.Value());
                     sendFilterCalibValues((rp_channel_t)adc_channel.Value());

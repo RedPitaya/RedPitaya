@@ -9,5 +9,7 @@ auto calcCountCrossZero(float* _buffer, int _size) -> std::vector<int>;
 auto findLastMax(float* _buffer, int _size, int _cross) -> int;
 auto filterBuffer(float* _buffer, int _size) -> float*;
 auto calculate(float* _buffer, int _size, float _last_max, int _cross1, int _cross2, double& _deviation) -> double;
+uint64_t findRSM(float* _buffer, int _size);
+uint64_t findDT(float* _buffer, int _size, uint64_t _rms);
 
 }  // namespace rp_calib
