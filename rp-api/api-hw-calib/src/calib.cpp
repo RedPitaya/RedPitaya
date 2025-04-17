@@ -343,6 +343,21 @@ rp_calib_error calib_WriteParams(rp_HPeModels_t model, rp_calib_params_t* calib_
     return RP_HW_CALIB_OK;
 }
 
+rp_calib_error calib_GetVersion(uint8_t* version) {
+    if (!g_model_loaded) {
+        rp_HPeModels_t model = STEM_125_14_v1_1;  // Default model
+        int res = rp_HPGetModel(&model);
+        if (res != RP_HP_OK) {
+            ERROR_LOG("Can't load RP model version. Err: %d", res);
+            *version = 0;
+            return RP_HW_CALIB_ENI;
+        }
+    }
+
+    *version = g_calib.dataStructureId;
+    return RP_HW_CALIB_OK;
+}
+
 rp_calib_params_t calib_GetParams() {
     return g_calib;
 }
@@ -656,8 +671,8 @@ rp_calib_error calib_ConvertToOld(rp_calib_params_t* out) {
                 out->fast_adc_1_20[i].calibValue = calibBaseScaleFromVoltage(1.0, false) * (((out->fast_adc_1_1[i].gainCalc - 1.0) * 4.0) + 1.0);
                 out->fast_adc_1_20[i].offset = off;
 
-                out->fast_dac_x1_HiZ[i].baseScale = 1.0;
-                out->fast_dac_x1_HiZ[i].calibValue = calibBaseScaleFromVoltage(1.0, false) * (1.0 / out->fast_dac_x1_HiZ[i].gainCalc);
+                out->fast_dac_x1[i].baseScale = 1.0;
+                out->fast_dac_x1[i].calibValue = calibBaseScaleFromVoltage(1.0, false) * (1.0 / out->fast_dac_x1[i].gainCalc);
             }
             break;
         }
@@ -681,8 +696,8 @@ rp_calib_error calib_ConvertToOld(rp_calib_params_t* out) {
                 out->fast_adc_1_20[i].calibValue = calibBaseScaleFromVoltage(1.0, false) * (((out->fast_adc_1_1[i].gainCalc - 1.0) * 4.0) + 1.0);
                 out->fast_adc_1_20[i].offset = off;
 
-                out->fast_dac_x1_HiZ[i].baseScale = 1.0;
-                out->fast_dac_x1_HiZ[i].calibValue = calibBaseScaleFromVoltage(1.0, false) * (1.0 / out->fast_dac_x1_HiZ[i].gainCalc);
+                out->fast_dac_x1[i].baseScale = 1.0;
+                out->fast_dac_x1[i].calibValue = calibBaseScaleFromVoltage(1.0, false) * (1.0 / out->fast_dac_x1[i].gainCalc);
             }
             break;
         }
@@ -694,8 +709,8 @@ rp_calib_error calib_ConvertToOld(rp_calib_params_t* out) {
                 out->fast_adc_1_1[i].baseScale = 20.0;
                 out->fast_adc_1_1[i].calibValue = calibBaseScaleFromVoltage(20.0, false) * out->fast_adc_1_1[i].gainCalc;
 
-                out->fast_dac_x1_HiZ[i].baseScale = 1.0;
-                out->fast_dac_x1_HiZ[i].calibValue = calibBaseScaleFromVoltage(1.0, false) * out->fast_dac_x1_HiZ[i].gainCalc;
+                out->fast_dac_x1[i].baseScale = 1.0;
+                out->fast_dac_x1[i].calibValue = calibBaseScaleFromVoltage(1.0, false) * out->fast_dac_x1[i].gainCalc;
             }
             break;
         }
@@ -729,11 +744,11 @@ rp_calib_error calib_ConvertToOld(rp_calib_params_t* out) {
                 out->fast_adc_1_20[i].baseScale = 1.0;
                 out->fast_adc_1_20[i].calibValue = calibBaseScaleFromVoltage(1.0, false) * out->fast_adc_1_20[i].gainCalc;
 
-                out->fast_dac_x1_HiZ[i].baseScale = 1.0;
-                out->fast_dac_x1_HiZ[i].calibValue = calibBaseScaleFromVoltage(1.0, false) * out->fast_dac_x1_HiZ[i].gainCalc;
+                out->fast_dac_x1[i].baseScale = 1.0;
+                out->fast_dac_x1[i].calibValue = calibBaseScaleFromVoltage(1.0, false) * out->fast_dac_x1[i].gainCalc;
 
-                out->fast_dac_x5_HiZ[i].baseScale = 2.0;
-                out->fast_dac_x5_HiZ[i].calibValue = calibBaseScaleFromVoltage(2.0, false) * out->fast_dac_x5_HiZ[i].gainCalc;
+                out->fast_dac_x5[i].baseScale = 2.0;
+                out->fast_dac_x5[i].calibValue = calibBaseScaleFromVoltage(2.0, false) * out->fast_dac_x5[i].gainCalc;
             }
             break;
         }
@@ -792,41 +807,24 @@ rp_calib_error calib_PrintEx(FILE* __restrict out, rp_calib_params_t* calib) {
         fprintf(out, "\t\t* gainCalc: %f:\n\n", calib->fast_adc_1_20_ac[i].gainCalc);
     }
 
-    fprintf(out, "fast_dac_count_x1 (Hi-Z): %d\n\n", calib->fast_dac_count_x1_HiZ);
-    for (int i = 0; i < calib->fast_dac_count_x1_HiZ; ++i) {
-        fprintf(out, "\tChannel %d (Hi-Z):\n", i + 1);
-        fprintf(out, "\t\t* baseScale: %f:\n", calib->fast_dac_x1_HiZ[i].baseScale);
-        fprintf(out, "\t\t* calibValue: %d:\n", calib->fast_dac_x1_HiZ[i].calibValue);
-        fprintf(out, "\t\t* offset: %d:\n", calib->fast_dac_x1_HiZ[i].offset);
-        fprintf(out, "\t\t* gainCalc: %f:\n\n", calib->fast_dac_x1_HiZ[i].gainCalc);
+    fprintf(out, "fast_dac_count_x1 : %d\n\n", calib->fast_dac_count_x1);
+    for (int i = 0; i < calib->fast_dac_count_x1; ++i) {
+        fprintf(out, "\tChannel %d :\n", i + 1);
+        fprintf(out, "\t\t* baseScale: %f:\n", calib->fast_dac_x1[i].baseScale);
+        fprintf(out, "\t\t* calibValue: %d:\n", calib->fast_dac_x1[i].calibValue);
+        fprintf(out, "\t\t* offset: %d:\n", calib->fast_dac_x1[i].offset);
+        fprintf(out, "\t\t* gainCalc: %f:\n\n", calib->fast_dac_x1[i].gainCalc);
     }
 
-    fprintf(out, "fast_dac_count_x1 (50Ohm): %d\n\n", calib->fast_dac_count_x1_50Ohm);
-    for (int i = 0; i < calib->fast_dac_count_x1_50Ohm; ++i) {
-        fprintf(out, "\tChannel %d (50Ohm):\n", i + 1);
-        fprintf(out, "\t\t* baseScale: %f:\n", calib->fast_dac_x1_50Ohm[i].baseScale);
-        fprintf(out, "\t\t* calibValue: %d:\n", calib->fast_dac_x1_50Ohm[i].calibValue);
-        fprintf(out, "\t\t* offset: %d:\n", calib->fast_dac_x1_50Ohm[i].offset);
-        fprintf(out, "\t\t* gainCalc: %f:\n\n", calib->fast_dac_x1_50Ohm[i].gainCalc);
+    fprintf(out, "fast_dac_count_x5 : %d\n\n", calib->fast_dac_count_x5);
+    for (int i = 0; i < calib->fast_dac_count_x5; ++i) {
+        fprintf(out, "\tChannel %d :\n", i + 1);
+        fprintf(out, "\t\t* baseScale: %f:\n", calib->fast_dac_x5[i].baseScale);
+        fprintf(out, "\t\t* calibValue: %d:\n", calib->fast_dac_x5[i].calibValue);
+        fprintf(out, "\t\t* offset: %d:\n", calib->fast_dac_x5[i].offset);
+        fprintf(out, "\t\t* gainCalc: %f:\n\n", calib->fast_dac_x5[i].gainCalc);
     }
 
-    fprintf(out, "fast_dac_count_x5 (Hi-Z): %d\n\n", calib->fast_dac_count_x5_HiZ);
-    for (int i = 0; i < calib->fast_dac_count_x5_HiZ; ++i) {
-        fprintf(out, "\tChannel %d (Hi-Z):\n", i + 1);
-        fprintf(out, "\t\t* baseScale: %f:\n", calib->fast_dac_x5_HiZ[i].baseScale);
-        fprintf(out, "\t\t* calibValue: %d:\n", calib->fast_dac_x5_HiZ[i].calibValue);
-        fprintf(out, "\t\t* offset: %d:\n", calib->fast_dac_x5_HiZ[i].offset);
-        fprintf(out, "\t\t* gainCalc: %f:\n\n", calib->fast_dac_x5_HiZ[i].gainCalc);
-    }
-
-    fprintf(out, "fast_dac_count_x5 (50Ohm): %d\n\n", calib->fast_dac_count_x5_50Ohm);
-    for (int i = 0; i < calib->fast_dac_count_x5_50Ohm; ++i) {
-        fprintf(out, "\tChannel %d (50Ohm):\n", i + 1);
-        fprintf(out, "\t\t* baseScale: %f:\n", calib->fast_dac_x5_50Ohm[i].baseScale);
-        fprintf(out, "\t\t* calibValue: %d:\n", calib->fast_dac_x5_50Ohm[i].calibValue);
-        fprintf(out, "\t\t* offset: %d:\n", calib->fast_dac_x5_50Ohm[i].offset);
-        fprintf(out, "\t\t* gainCalc: %f:\n\n", calib->fast_dac_x5_50Ohm[i].gainCalc);
-    }
     return RP_HW_CALIB_OK;
 }
 
@@ -950,8 +948,7 @@ rp_calib_error calib_GetFastADCCalibValue_1_20(rp_channel_calib_t channel, rp_ac
     return RP_HW_CALIB_OK;
 }
 
-rp_calib_error calib_GetFastDACCalibValue(rp_channel_calib_t channel, rp_gen_gain_calib_t gain_mode, rp_gen_load_calib_t mode, double* gain, int32_t* offset,
-                                          uint_gain_calib_t* calib) {
+rp_calib_error calib_GetFastDACCalibValue(rp_channel_calib_t channel, rp_gen_gain_calib_t gain_mode, double* gain, int32_t* offset, uint_gain_calib_t* calib) {
     if (!g_model_loaded) {
         auto res = calib_Init(false);
         if (res != RP_HP_OK) {
@@ -960,60 +957,28 @@ rp_calib_error calib_GetFastDACCalibValue(rp_channel_calib_t channel, rp_gen_gai
         }
     }
 
-    if (g_calib.fast_dac_count_x1_HiZ <= channel && gain_mode == RP_GAIN_CALIB_1X && mode == RP_CALIB_HIZ) {
-        ERROR_LOG("Wrong channel: %d in x1 mode Hi-Z", channel);
+    if (g_calib.fast_dac_count_x1 <= channel && gain_mode == RP_GAIN_CALIB_1X) {
+        ERROR_LOG("Wrong channel: %d in x1 mode", channel);
         return RP_HW_CALIB_ECH;
     }
 
-    if (g_calib.fast_dac_count_x1_50Ohm <= channel && gain_mode == RP_GAIN_CALIB_1X && mode == RP_CALIB_50Ohm) {
-        ERROR_LOG("Wrong channel: %d in x1 mode 50Ohm", channel);
-        return RP_HW_CALIB_ECH;
-    }
-
-    if (g_calib.fast_dac_count_x5_HiZ <= channel && gain_mode == RP_GAIN_CALIB_5X && mode == RP_CALIB_HIZ) {
-        ERROR_LOG("Wrong channel: %d in x5 mode Hi-Z", channel);
-        return RP_HW_CALIB_ECH;
-    }
-
-    if (g_calib.fast_dac_count_x5_50Ohm <= channel && gain_mode == RP_GAIN_CALIB_5X && mode == RP_CALIB_50Ohm) {
-        ERROR_LOG("Wrong channel: %d in x5 mode 50Ohm", channel);
+    if (g_calib.fast_dac_count_x5 <= channel && gain_mode == RP_GAIN_CALIB_5X) {
+        ERROR_LOG("Wrong channel: %d in x5 mode", channel);
         return RP_HW_CALIB_ECH;
     }
 
     switch (gain_mode) {
         case RP_GAIN_CALIB_1X: {
-            switch (mode) {
-                case RP_CALIB_HIZ:
-                    *gain = g_calib.fast_dac_x1_HiZ[channel].gainCalc;
-                    *offset = g_calib.fast_dac_x1_HiZ[channel].offset;
-                    *calib = convertFloatToInt(&g_calib.fast_dac_x1_HiZ[channel], 15);
-                    break;
-                case RP_CALIB_50Ohm:
-                    *gain = g_calib.fast_dac_x1_50Ohm[channel].gainCalc;
-                    *offset = g_calib.fast_dac_x1_50Ohm[channel].offset;
-                    *calib = convertFloatToInt(&g_calib.fast_dac_x1_50Ohm[channel], 15);
-                    break;
-                default:
-                    return RP_HW_CALIB_EIP;
-            }
+            *gain = g_calib.fast_dac_x1[channel].gainCalc;
+            *offset = g_calib.fast_dac_x1[channel].offset;
+            *calib = convertFloatToInt(&g_calib.fast_dac_x1[channel], 15);
             break;
         }
 
         case RP_GAIN_CALIB_5X: {
-            switch (mode) {
-                case RP_CALIB_HIZ:
-                    *gain = g_calib.fast_dac_x5_HiZ[channel].gainCalc;
-                    *offset = g_calib.fast_dac_x5_HiZ[channel].offset;
-                    *calib = convertFloatToInt(&g_calib.fast_dac_x5_HiZ[channel], 15);
-                    break;
-                case RP_CALIB_50Ohm:
-                    *gain = g_calib.fast_dac_x5_50Ohm[channel].gainCalc;
-                    *offset = g_calib.fast_dac_x5_50Ohm[channel].offset;
-                    *calib = convertFloatToInt(&g_calib.fast_dac_x5_50Ohm[channel], 15);
-                    break;
-                default:
-                    return RP_HW_CALIB_EIP;
-            }
+            *gain = g_calib.fast_dac_x5[channel].gainCalc;
+            *offset = g_calib.fast_dac_x5[channel].offset;
+            *calib = convertFloatToInt(&g_calib.fast_dac_x5[channel], 15);
             break;
         }
 

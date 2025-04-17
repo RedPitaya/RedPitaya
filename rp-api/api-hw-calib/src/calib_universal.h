@@ -107,19 +107,7 @@ typedef enum {
     UC_ADC_CH4_AA_1_20 = 61,
     UC_ADC_CH4_BB_1_20 = 62,
     UC_ADC_CH4_PP_1_20 = 63,
-    UC_ADC_CH4_KK_1_20 = 64,
-
-    UC_DAC_CH1_GAIN_50Ohm = 65,
-    UC_DAC_CH1_OFFSET_50Ohm = 66,
-
-    UC_DAC_CH2_GAIN_50Ohm = 67,
-    UC_DAC_CH2_OFFSET_50Ohm = 68,
-
-    UC_DAC_CH1_GAIN_X5_50Ohm = 69,
-    UC_DAC_CH1_OFFSET_X5_50Ohm = 70,
-
-    UC_DAC_CH2_GAIN_X5_50Ohm = 71,
-    UC_DAC_CH2_OFFSET_X5_50Ohm = 72
+    UC_ADC_CH4_KK_1_20 = 64
 
 } rp_calib_universal_id_t;
 

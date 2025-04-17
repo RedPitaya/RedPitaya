@@ -249,17 +249,17 @@ int generate_ResetChannelSM(rp_channel_t channel);
 
 int generate_writeData(rp_channel_t channel, float* data, int32_t start, uint32_t length);
 
-int generate_setAmplitude(rp_channel_t channel, rp_gen_gain_t gain, rp_gen_load_mode_t mode, float amplitude);
-int generate_setDCOffset(rp_channel_t channel, rp_gen_gain_t gain, rp_gen_load_mode_t mode, float offset);
-int generate_setAmplitudeAndOffsetOrigin(rp_channel_t channel, rp_gen_gain_t gain, rp_gen_load_mode_t mode);
+int generate_setAmplitude(rp_channel_t channel, rp_gen_gain_t gain, float amplitude);
+int generate_setDCOffset(rp_channel_t channel, rp_gen_gain_t gain, float offset);
+int generate_setAmplitudeAndOffsetOrigin(rp_channel_t channel, rp_gen_gain_t gain);
 int generate_getEnableTempProtection(rp_channel_t channel, bool* enable);
 int generate_setEnableTempProtection(rp_channel_t channel, bool enable);
 int generate_getLatchTempAlarm(rp_channel_t channel, bool* state);
 int generate_setLatchTempAlarm(rp_channel_t channel, bool state);
 int generate_getRuntimeTempAlarm(rp_channel_t channel, bool* state);
 
-int generate_setBurstLastValue(rp_channel_t channel, rp_gen_gain_t gain, rp_gen_load_mode_t mode, float amplitude);
-int generate_setInitGenValue(rp_channel_t channel, rp_gen_gain_t gain, rp_gen_load_mode_t mode, float amplitude);
+int generate_setBurstLastValue(rp_channel_t channel, rp_gen_gain_t gain, float amplitude);
+int generate_setInitGenValue(rp_channel_t channel, rp_gen_gain_t gain, float amplitude);
 
 int generate_SetTriggerDebouncer(uint32_t value);
 int generate_GetTriggerDebouncer(uint32_t* value);

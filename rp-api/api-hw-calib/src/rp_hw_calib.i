@@ -16,6 +16,7 @@
 
 %apply float *OUTPUT { float *_out_value };
 %apply unsigned char *OUTPUT { uint8_t *_out_value };
+%apply unsigned char *OUTPUT { uint8_t *version };
 %apply unsigned short *OUTPUT { uint16_t *_out_size };
 %apply unsigned int *OUTPUT { uint32_t *_out_value };
 

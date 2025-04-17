@@ -163,23 +163,6 @@ std::string getNameOfUniversalId(uint16_t id) {
             return "ADC Ch4 PP 1/20";
         case UC_ADC_CH4_KK_1_20:
             return "ADC Ch4 KK 1/20";
-
-        case UC_DAC_CH1_GAIN_50Ohm:
-            return "DAC Ch1 Gain (50Ohm)";
-        case UC_DAC_CH1_OFFSET_50Ohm:
-            return "DAC Ch1 Offset (50Ohm)";
-        case UC_DAC_CH2_GAIN_50Ohm:
-            return "DAC Ch2 Gain (50Ohm)";
-        case UC_DAC_CH2_OFFSET_50Ohm:
-            return "DAC Ch2 Offset (50Ohm)";
-        case UC_DAC_CH1_GAIN_X5_50Ohm:
-            return "DAC Ch1 Gain x5 (50Ohm)";
-        case UC_DAC_CH1_OFFSET_X5_50Ohm:
-            return "DAC Ch1 Offset x5 (50Ohm)";
-        case UC_DAC_CH2_GAIN_X5_50Ohm:
-            return "DAC Ch2 Gain x5 (50Ohm)";
-        case UC_DAC_CH2_OFFSET_X5_50Ohm:
-            return "DAC Ch2 Offset x5 (50Ohm)";
     }
     return "";
 }
@@ -220,7 +203,7 @@ rp_calib_params_t convertUniversaltoCommon(rp_HPeModels_t model, rp_calib_params
         {
             calib.fast_adc_count_1_1 = 2;
             calib.fast_adc_count_1_20 = 2;
-            calib.fast_dac_count_x1_HiZ = 2;
+            calib.fast_dac_count_x1 = 2;
 
             calib.fast_adc_1_1[0].baseScale = 1.0;
             GET_PARAMETER(calib.fast_adc_1_1[0].calibValue, UC_ADC_CH1_GAIN_1_1, param)
@@ -258,13 +241,13 @@ rp_calib_params_t convertUniversaltoCommon(rp_HPeModels_t model, rp_calib_params
             GET_PARAMETER(calib.fast_adc_filter_1_20[1].pp, UC_ADC_CH2_PP_1_20, param)
             GET_PARAMETER(calib.fast_adc_filter_1_20[1].kk, UC_ADC_CH2_KK_1_20, param)
 
-            calib.fast_dac_x1_HiZ[0].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_dac_x1_HiZ[0].calibValue, UC_DAC_CH1_GAIN, param)
-            GET_PARAMETER(calib.fast_dac_x1_HiZ[0].offset, UC_DAC_CH1_OFFSET, param)
+            calib.fast_dac_x1[0].baseScale = 1.0;
+            GET_PARAMETER(calib.fast_dac_x1[0].calibValue, UC_DAC_CH1_GAIN, param)
+            GET_PARAMETER(calib.fast_dac_x1[0].offset, UC_DAC_CH1_OFFSET, param)
 
-            calib.fast_dac_x1_HiZ[1].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_dac_x1_HiZ[1].calibValue, UC_DAC_CH2_GAIN, param)
-            GET_PARAMETER(calib.fast_dac_x1_HiZ[1].offset, UC_DAC_CH2_OFFSET, param)
+            calib.fast_dac_x1[1].baseScale = 1.0;
+            GET_PARAMETER(calib.fast_dac_x1[1].calibValue, UC_DAC_CH2_GAIN, param)
+            GET_PARAMETER(calib.fast_dac_x1[1].offset, UC_DAC_CH2_OFFSET, param)
 
             break;
         }
@@ -278,8 +261,7 @@ rp_calib_params_t convertUniversaltoCommon(rp_HPeModels_t model, rp_calib_params
         case STEM_65_16_Z7020_LL_v1_1: {
             calib.fast_adc_count_1_1 = 2;
             calib.fast_adc_count_1_20 = 2;
-            calib.fast_dac_count_x1_HiZ = 2;
-            calib.fast_dac_count_x1_50Ohm = 2;
+            calib.fast_dac_count_x1 = 2;
 
             calib.fast_adc_1_1[0].baseScale = 1.0;
             GET_PARAMETER(calib.fast_adc_1_1[0].calibValue, UC_ADC_CH1_GAIN_1_1, param)
@@ -317,28 +299,13 @@ rp_calib_params_t convertUniversaltoCommon(rp_HPeModels_t model, rp_calib_params
             GET_PARAMETER(calib.fast_adc_filter_1_20[1].pp, UC_ADC_CH2_PP_1_20, param)
             GET_PARAMETER(calib.fast_adc_filter_1_20[1].kk, UC_ADC_CH2_KK_1_20, param)
 
-            calib.fast_dac_x1_HiZ[0].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_dac_x1_HiZ[0].calibValue, UC_DAC_CH1_GAIN, param)
-            GET_PARAMETER(calib.fast_dac_x1_HiZ[0].offset, UC_DAC_CH1_OFFSET, param)
+            calib.fast_dac_x1[0].baseScale = 1.0;
+            GET_PARAMETER(calib.fast_dac_x1[0].calibValue, UC_DAC_CH1_GAIN, param)
+            GET_PARAMETER(calib.fast_dac_x1[0].offset, UC_DAC_CH1_OFFSET, param)
 
-            calib.fast_dac_x1_HiZ[1].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_dac_x1_HiZ[1].calibValue, UC_DAC_CH2_GAIN, param)
-            GET_PARAMETER(calib.fast_dac_x1_HiZ[1].offset, UC_DAC_CH2_OFFSET, param)
-
-            if (calib.dataStructureId == RP_HW_PACK_ID_V5) {
-                calib.fast_dac_x1_50Ohm[0] = calib.fast_dac_x1_HiZ[0];
-                calib.fast_dac_x1_50Ohm[1] = calib.fast_dac_x1_HiZ[1];
-            } else if (calib.dataStructureId == RP_HW_PACK_ID_V6) {
-                calib.fast_dac_x1_50Ohm[0].baseScale = 1.0;
-                GET_PARAMETER(calib.fast_dac_x1_50Ohm[0].calibValue, UC_DAC_CH1_GAIN_50Ohm, param)
-                GET_PARAMETER(calib.fast_dac_x1_50Ohm[0].offset, UC_DAC_CH1_OFFSET_50Ohm, param)
-
-                calib.fast_dac_x1_50Ohm[1].baseScale = 1.0;
-                GET_PARAMETER(calib.fast_dac_x1_50Ohm[1].calibValue, UC_DAC_CH2_GAIN_50Ohm, param)
-                GET_PARAMETER(calib.fast_dac_x1_50Ohm[1].offset, UC_DAC_CH2_OFFSET_50Ohm, param)
-            } else {
-                FATAL("Invalid calibration reading mode")
-            }
+            calib.fast_dac_x1[1].baseScale = 1.0;
+            GET_PARAMETER(calib.fast_dac_x1[1].calibValue, UC_DAC_CH2_GAIN, param)
+            GET_PARAMETER(calib.fast_dac_x1[1].offset, UC_DAC_CH2_OFFSET, param)
 
             break;
         }
@@ -346,7 +313,7 @@ rp_calib_params_t convertUniversaltoCommon(rp_HPeModels_t model, rp_calib_params
         case STEM_122_16SDR_v1_0:
         case STEM_122_16SDR_v1_1: {
             calib.fast_adc_count_1_1 = 2;
-            calib.fast_dac_count_x1_HiZ = 2;
+            calib.fast_dac_count_x1 = 2;
 
             calib.fast_adc_1_1[0].baseScale = 1.0;
             GET_PARAMETER(calib.fast_adc_1_1[0].calibValue, UC_ADC_CH1_GAIN_1_1, param)
@@ -356,13 +323,13 @@ rp_calib_params_t convertUniversaltoCommon(rp_HPeModels_t model, rp_calib_params
             GET_PARAMETER(calib.fast_adc_1_1[1].calibValue, UC_ADC_CH2_GAIN_1_1, param)
             GET_PARAMETER(calib.fast_adc_1_1[1].offset, UC_ADC_CH2_OFFSET_1_1, param)
 
-            calib.fast_dac_x1_HiZ[0].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_dac_x1_HiZ[0].calibValue, UC_DAC_CH1_GAIN, param)
-            GET_PARAMETER(calib.fast_dac_x1_HiZ[0].offset, UC_DAC_CH1_OFFSET, param)
+            calib.fast_dac_x1[0].baseScale = 1.0;
+            GET_PARAMETER(calib.fast_dac_x1[0].calibValue, UC_DAC_CH1_GAIN, param)
+            GET_PARAMETER(calib.fast_dac_x1[0].offset, UC_DAC_CH1_OFFSET, param)
 
-            calib.fast_dac_x1_HiZ[1].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_dac_x1_HiZ[1].calibValue, UC_DAC_CH2_GAIN, param)
-            GET_PARAMETER(calib.fast_dac_x1_HiZ[1].offset, UC_DAC_CH2_OFFSET, param)
+            calib.fast_dac_x1[1].baseScale = 1.0;
+            GET_PARAMETER(calib.fast_dac_x1[1].calibValue, UC_DAC_CH2_GAIN, param)
+            GET_PARAMETER(calib.fast_dac_x1[1].offset, UC_DAC_CH2_OFFSET, param)
             break;
         }
 
@@ -456,10 +423,8 @@ rp_calib_params_t convertUniversaltoCommon(rp_HPeModels_t model, rp_calib_params
             calib.fast_adc_count_1_20 = 2;
             calib.fast_adc_count_1_1_ac = 2;
             calib.fast_adc_count_1_20_ac = 2;
-            calib.fast_dac_count_x1_HiZ = 2;
-            calib.fast_dac_count_x5_HiZ = 2;
-            calib.fast_dac_count_x1_50Ohm = 2;
-            calib.fast_dac_count_x5_50Ohm = 2;
+            calib.fast_dac_count_x1 = 2;
+            calib.fast_dac_count_x5 = 2;
 
             calib.fast_adc_1_1[0].baseScale = 1.0;
             GET_PARAMETER(calib.fast_adc_1_1[0].calibValue, UC_ADC_CH1_GAIN_1_1, param)
@@ -513,47 +478,21 @@ rp_calib_params_t convertUniversaltoCommon(rp_HPeModels_t model, rp_calib_params
             GET_PARAMETER(calib.fast_adc_1_20_ac[1].calibValue, UC_ADC_CH2_GAIN_1_20_AC, param)
             GET_PARAMETER(calib.fast_adc_1_20_ac[1].offset, UC_ADC_CH2_OFFSET_1_20_AC, param)
 
-            calib.fast_dac_x1_HiZ[0].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_dac_x1_HiZ[0].calibValue, UC_DAC_CH1_GAIN, param)
-            GET_PARAMETER(calib.fast_dac_x1_HiZ[0].offset, UC_DAC_CH1_OFFSET, param)
+            calib.fast_dac_x1[0].baseScale = 1.0;
+            GET_PARAMETER(calib.fast_dac_x1[0].calibValue, UC_DAC_CH1_GAIN, param)
+            GET_PARAMETER(calib.fast_dac_x1[0].offset, UC_DAC_CH1_OFFSET, param)
 
-            calib.fast_dac_x1_HiZ[1].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_dac_x1_HiZ[1].calibValue, UC_DAC_CH2_GAIN, param)
-            GET_PARAMETER(calib.fast_dac_x1_HiZ[1].offset, UC_DAC_CH2_OFFSET, param)
+            calib.fast_dac_x1[1].baseScale = 1.0;
+            GET_PARAMETER(calib.fast_dac_x1[1].calibValue, UC_DAC_CH2_GAIN, param)
+            GET_PARAMETER(calib.fast_dac_x1[1].offset, UC_DAC_CH2_OFFSET, param)
 
-            calib.fast_dac_x5_HiZ[0].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_dac_x5_HiZ[0].calibValue, UC_DAC_CH1_GAIN_X5, param)
-            GET_PARAMETER(calib.fast_dac_x5_HiZ[0].offset, UC_DAC_CH1_OFFSET_X5, param)
+            calib.fast_dac_x5[0].baseScale = 1.0;
+            GET_PARAMETER(calib.fast_dac_x5[0].calibValue, UC_DAC_CH1_GAIN_X5, param)
+            GET_PARAMETER(calib.fast_dac_x5[0].offset, UC_DAC_CH1_OFFSET_X5, param)
 
-            calib.fast_dac_x5_HiZ[1].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_dac_x5_HiZ[1].calibValue, UC_DAC_CH2_GAIN_X5, param)
-            GET_PARAMETER(calib.fast_dac_x5_HiZ[1].offset, UC_DAC_CH2_OFFSET_X5, param)
-
-            if (calib.dataStructureId == RP_HW_PACK_ID_V5) {
-                calib.fast_dac_x1_50Ohm[0] = calib.fast_dac_x1_HiZ[0];
-                calib.fast_dac_x1_50Ohm[1] = calib.fast_dac_x1_HiZ[1];
-                calib.fast_dac_x5_50Ohm[0] = calib.fast_dac_x5_HiZ[0];
-                calib.fast_dac_x5_50Ohm[1] = calib.fast_dac_x5_HiZ[1];
-            } else if (calib.dataStructureId == RP_HW_PACK_ID_V6) {
-                calib.fast_dac_x1_50Ohm[0].baseScale = 1.0;
-                GET_PARAMETER(calib.fast_dac_x1_50Ohm[0].calibValue, UC_DAC_CH1_GAIN_50Ohm, param)
-                GET_PARAMETER(calib.fast_dac_x1_50Ohm[0].offset, UC_DAC_CH1_OFFSET_50Ohm, param)
-
-                calib.fast_dac_x1_50Ohm[1].baseScale = 1.0;
-                GET_PARAMETER(calib.fast_dac_x1_50Ohm[1].calibValue, UC_DAC_CH2_GAIN_50Ohm, param)
-                GET_PARAMETER(calib.fast_dac_x1_50Ohm[1].offset, UC_DAC_CH2_OFFSET_50Ohm, param)
-
-                calib.fast_dac_x5_50Ohm[0].baseScale = 1.0;
-                GET_PARAMETER(calib.fast_dac_x5_50Ohm[0].calibValue, UC_DAC_CH1_GAIN_X5_50Ohm, param)
-                GET_PARAMETER(calib.fast_dac_x5_50Ohm[0].offset, UC_DAC_CH1_OFFSET_X5_50Ohm, param)
-
-                calib.fast_dac_x5_50Ohm[1].baseScale = 1.0;
-                GET_PARAMETER(calib.fast_dac_x5_50Ohm[1].calibValue, UC_DAC_CH2_GAIN_X5_50Ohm, param)
-                GET_PARAMETER(calib.fast_dac_x5_50Ohm[1].offset, UC_DAC_CH2_OFFSET_X5_50Ohm, param)
-            } else {
-                FATAL("Invalid calibration reading mode")
-            }
-
+            calib.fast_dac_x5[1].baseScale = 1.0;
+            GET_PARAMETER(calib.fast_dac_x5[1].calibValue, UC_DAC_CH2_GAIN_X5, param)
+            GET_PARAMETER(calib.fast_dac_x5[1].offset, UC_DAC_CH2_OFFSET_X5, param)
             break;
         }
 
@@ -597,26 +536,18 @@ bool convertUniversal(rp_HPeModels_t model, rp_calib_params_t* param, rp_calib_p
                 return false;
             }
 
-            if (param->fast_dac_count_x1_HiZ != 2) {
+            if (param->fast_dac_count_x1 != 2) {
                 return false;
             }
 
-            if (param->fast_dac_count_x1_50Ohm != 0) {
+            if (param->fast_dac_count_x5 != 0) {
                 return false;
             }
 
-            if (param->fast_dac_count_x5_HiZ != 0) {
-                return false;
-            }
-
-            if (param->fast_dac_count_x5_50Ohm != 0) {
-                return false;
-            }
-
-            SET_PARAMETER(UC_DAC_CH1_GAIN, param->fast_dac_x1_HiZ[0].calibValue)
-            SET_PARAMETER(UC_DAC_CH1_OFFSET, param->fast_dac_x1_HiZ[0].offset)
-            SET_PARAMETER(UC_DAC_CH2_GAIN, param->fast_dac_x1_HiZ[1].calibValue)
-            SET_PARAMETER(UC_DAC_CH2_OFFSET, param->fast_dac_x1_HiZ[1].offset)
+            SET_PARAMETER(UC_DAC_CH1_GAIN, param->fast_dac_x1[0].calibValue)
+            SET_PARAMETER(UC_DAC_CH1_OFFSET, param->fast_dac_x1[0].offset)
+            SET_PARAMETER(UC_DAC_CH2_GAIN, param->fast_dac_x1[1].calibValue)
+            SET_PARAMETER(UC_DAC_CH2_OFFSET, param->fast_dac_x1[1].offset)
 
             SET_PARAMETER(UC_ADC_CH1_GAIN_1_1, param->fast_adc_1_1[0].calibValue)
             SET_PARAMETER(UC_ADC_CH1_OFFSET_1_1, param->fast_adc_1_1[0].offset)
@@ -674,26 +605,18 @@ bool convertUniversal(rp_HPeModels_t model, rp_calib_params_t* param, rp_calib_p
                 return false;
             }
 
-            if (param->fast_dac_count_x1_HiZ != 2) {
+            if (param->fast_dac_count_x1 != 2) {
                 return false;
             }
 
-            if (param->fast_dac_count_x1_50Ohm != 2) {
+            if (param->fast_dac_count_x5 != 0) {
                 return false;
             }
 
-            if (param->fast_dac_count_x5_HiZ != 0) {
-                return false;
-            }
-
-            if (param->fast_dac_count_x5_50Ohm != 0) {
-                return false;
-            }
-
-            SET_PARAMETER(UC_DAC_CH1_GAIN, param->fast_dac_x1_HiZ[0].calibValue)
-            SET_PARAMETER(UC_DAC_CH1_OFFSET, param->fast_dac_x1_HiZ[0].offset)
-            SET_PARAMETER(UC_DAC_CH2_GAIN, param->fast_dac_x1_HiZ[1].calibValue)
-            SET_PARAMETER(UC_DAC_CH2_OFFSET, param->fast_dac_x1_HiZ[1].offset)
+            SET_PARAMETER(UC_DAC_CH1_GAIN, param->fast_dac_x1[0].calibValue)
+            SET_PARAMETER(UC_DAC_CH1_OFFSET, param->fast_dac_x1[0].offset)
+            SET_PARAMETER(UC_DAC_CH2_GAIN, param->fast_dac_x1[1].calibValue)
+            SET_PARAMETER(UC_DAC_CH2_OFFSET, param->fast_dac_x1[1].offset)
 
             SET_PARAMETER(UC_ADC_CH1_GAIN_1_1, param->fast_adc_1_1[0].calibValue)
             SET_PARAMETER(UC_ADC_CH1_OFFSET_1_1, param->fast_adc_1_1[0].offset)
@@ -725,11 +648,6 @@ bool convertUniversal(rp_HPeModels_t model, rp_calib_params_t* param, rp_calib_p
             SET_PARAMETER(UC_ADC_CH2_PP_1_20, param->fast_adc_filter_1_20[1].pp)
             SET_PARAMETER(UC_ADC_CH2_KK_1_20, param->fast_adc_filter_1_20[1].kk)
 
-            SET_PARAMETER(UC_DAC_CH1_GAIN_50Ohm, param->fast_dac_x1_50Ohm[0].calibValue)
-            SET_PARAMETER(UC_DAC_CH1_OFFSET_50Ohm, param->fast_dac_x1_50Ohm[0].offset)
-            SET_PARAMETER(UC_DAC_CH2_GAIN_50Ohm, param->fast_dac_x1_50Ohm[1].calibValue)
-            SET_PARAMETER(UC_DAC_CH2_OFFSET_50Ohm, param->fast_dac_x1_50Ohm[1].offset)
-
             break;
         }
 
@@ -751,26 +669,18 @@ bool convertUniversal(rp_HPeModels_t model, rp_calib_params_t* param, rp_calib_p
                 return false;
             }
 
-            if (param->fast_dac_count_x1_HiZ != 2) {
+            if (param->fast_dac_count_x1 != 2) {
                 return false;
             }
 
-            if (param->fast_dac_count_x1_50Ohm != 0) {
+            if (param->fast_dac_count_x5 != 0) {
                 return false;
             }
 
-            if (param->fast_dac_count_x5_HiZ != 0) {
-                return false;
-            }
-
-            if (param->fast_dac_count_x5_50Ohm != 0) {
-                return false;
-            }
-
-            SET_PARAMETER(UC_DAC_CH1_GAIN, param->fast_dac_x1_HiZ[0].calibValue)
-            SET_PARAMETER(UC_DAC_CH1_OFFSET, param->fast_dac_x1_HiZ[0].offset)
-            SET_PARAMETER(UC_DAC_CH2_GAIN, param->fast_dac_x1_HiZ[1].calibValue)
-            SET_PARAMETER(UC_DAC_CH2_OFFSET, param->fast_dac_x1_HiZ[1].offset)
+            SET_PARAMETER(UC_DAC_CH1_GAIN, param->fast_dac_x1[0].calibValue)
+            SET_PARAMETER(UC_DAC_CH1_OFFSET, param->fast_dac_x1[0].offset)
+            SET_PARAMETER(UC_DAC_CH2_GAIN, param->fast_dac_x1[1].calibValue)
+            SET_PARAMETER(UC_DAC_CH2_OFFSET, param->fast_dac_x1[1].offset)
 
             SET_PARAMETER(UC_ADC_CH1_GAIN_1_1, param->fast_adc_1_1[0].calibValue)
             SET_PARAMETER(UC_ADC_CH1_OFFSET_1_1, param->fast_adc_1_1[0].offset)
@@ -799,19 +709,11 @@ bool convertUniversal(rp_HPeModels_t model, rp_calib_params_t* param, rp_calib_p
                 return false;
             }
 
-            if (param->fast_dac_count_x1_HiZ != 0) {
+            if (param->fast_dac_count_x1 != 0) {
                 return false;
             }
 
-            if (param->fast_dac_count_x1_50Ohm != 0) {
-                return false;
-            }
-
-            if (param->fast_dac_count_x5_HiZ != 0) {
-                return false;
-            }
-
-            if (param->fast_dac_count_x5_50Ohm != 0) {
+            if (param->fast_dac_count_x5 != 0) {
                 return false;
             }
 
@@ -904,31 +806,23 @@ bool convertUniversal(rp_HPeModels_t model, rp_calib_params_t* param, rp_calib_p
                 return false;
             }
 
-            if (param->fast_dac_count_x1_HiZ != 2) {
+            if (param->fast_dac_count_x1 != 2) {
                 return false;
             }
 
-            if (param->fast_dac_count_x1_50Ohm != 2) {
+            if (param->fast_dac_count_x5 != 2) {
                 return false;
             }
 
-            if (param->fast_dac_count_x5_HiZ != 2) {
-                return false;
-            }
+            SET_PARAMETER(UC_DAC_CH1_GAIN, param->fast_dac_x1[0].calibValue)
+            SET_PARAMETER(UC_DAC_CH1_OFFSET, param->fast_dac_x1[0].offset)
+            SET_PARAMETER(UC_DAC_CH2_GAIN, param->fast_dac_x1[1].calibValue)
+            SET_PARAMETER(UC_DAC_CH2_OFFSET, param->fast_dac_x1[1].offset)
 
-            if (param->fast_dac_count_x5_50Ohm != 2) {
-                return false;
-            }
-
-            SET_PARAMETER(UC_DAC_CH1_GAIN, param->fast_dac_x1_HiZ[0].calibValue)
-            SET_PARAMETER(UC_DAC_CH1_OFFSET, param->fast_dac_x1_HiZ[0].offset)
-            SET_PARAMETER(UC_DAC_CH2_GAIN, param->fast_dac_x1_HiZ[1].calibValue)
-            SET_PARAMETER(UC_DAC_CH2_OFFSET, param->fast_dac_x1_HiZ[1].offset)
-
-            SET_PARAMETER(UC_DAC_CH1_GAIN_X5, param->fast_dac_x5_HiZ[0].calibValue)
-            SET_PARAMETER(UC_DAC_CH1_OFFSET_X5, param->fast_dac_x5_HiZ[0].offset)
-            SET_PARAMETER(UC_DAC_CH2_GAIN_X5, param->fast_dac_x5_HiZ[1].calibValue)
-            SET_PARAMETER(UC_DAC_CH2_OFFSET_X5, param->fast_dac_x5_HiZ[1].offset)
+            SET_PARAMETER(UC_DAC_CH1_GAIN_X5, param->fast_dac_x5[0].calibValue)
+            SET_PARAMETER(UC_DAC_CH1_OFFSET_X5, param->fast_dac_x5[0].offset)
+            SET_PARAMETER(UC_DAC_CH2_GAIN_X5, param->fast_dac_x5[1].calibValue)
+            SET_PARAMETER(UC_DAC_CH2_OFFSET_X5, param->fast_dac_x5[1].offset)
 
             SET_PARAMETER(UC_ADC_CH1_GAIN_1_1, param->fast_adc_1_1[0].calibValue)
             SET_PARAMETER(UC_ADC_CH1_OFFSET_1_1, param->fast_adc_1_1[0].offset)
@@ -970,16 +864,6 @@ bool convertUniversal(rp_HPeModels_t model, rp_calib_params_t* param, rp_calib_p
             SET_PARAMETER(UC_ADC_CH2_GAIN_1_20_AC, param->fast_adc_1_20_ac[1].calibValue)
             SET_PARAMETER(UC_ADC_CH2_OFFSET_1_20_AC, param->fast_adc_1_20_ac[1].offset)
 
-            SET_PARAMETER(UC_DAC_CH1_GAIN_50Ohm, param->fast_dac_x1_50Ohm[0].calibValue)
-            SET_PARAMETER(UC_DAC_CH1_OFFSET_50Ohm, param->fast_dac_x1_50Ohm[0].offset)
-            SET_PARAMETER(UC_DAC_CH2_GAIN_50Ohm, param->fast_dac_x1_50Ohm[1].calibValue)
-            SET_PARAMETER(UC_DAC_CH2_OFFSET_50Ohm, param->fast_dac_x1_50Ohm[1].offset)
-
-            SET_PARAMETER(UC_DAC_CH1_GAIN_X5_50Ohm, param->fast_dac_x5_50Ohm[0].calibValue)
-            SET_PARAMETER(UC_DAC_CH1_OFFSET_X5_50Ohm, param->fast_dac_x5_50Ohm[0].offset)
-            SET_PARAMETER(UC_DAC_CH2_GAIN_X5_50Ohm, param->fast_dac_x5_50Ohm[1].calibValue)
-            SET_PARAMETER(UC_DAC_CH2_OFFSET_X5_50Ohm, param->fast_dac_x5_50Ohm[1].offset)
-
             break;
         }
 
@@ -1017,7 +901,7 @@ rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model, bool setFilterZero) 
 
             calib.fast_adc_count_1_1 = 2;
             calib.fast_adc_count_1_20 = 2;
-            calib.fast_dac_count_x1_HiZ = 2;
+            calib.fast_dac_count_x1 = 2;
             calib.dataStructureId = RP_HW_PACK_ID_V6;
 
             for (int i = 0; i < 2; ++i) {
@@ -1041,10 +925,10 @@ rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model, bool setFilterZero) 
                 calib.fast_adc_filter_1_20[i].kk = kk20;
                 calib.fast_adc_filter_1_20[i].pp = pp20;
 
-                calib.fast_dac_x1_HiZ[i].calibValue = calibBaseScaleFromVoltage(1.0, true);
-                calib.fast_dac_x1_HiZ[i].offset = 0;
-                calib.fast_dac_x1_HiZ[i].baseScale = 1.0;
-                calib.fast_dac_x1_HiZ[i].gainCalc = 1.0;
+                calib.fast_dac_x1[i].calibValue = calibBaseScaleFromVoltage(1.0, true);
+                calib.fast_dac_x1[i].offset = 0;
+                calib.fast_dac_x1[i].baseScale = 1.0;
+                calib.fast_dac_x1[i].gainCalc = 1.0;
             }
 
             break;
@@ -1060,8 +944,7 @@ rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model, bool setFilterZero) 
 
             calib.fast_adc_count_1_1 = 2;
             calib.fast_adc_count_1_20 = 2;
-            calib.fast_dac_count_x1_HiZ = 2;
-            calib.fast_dac_count_x1_50Ohm = 2;
+            calib.fast_dac_count_x1 = 2;
             calib.dataStructureId = RP_HW_PACK_ID_V6;
 
             for (int i = 0; i < 2; ++i) {
@@ -1085,15 +968,10 @@ rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model, bool setFilterZero) 
                 calib.fast_adc_filter_1_20[i].kk = kk20;
                 calib.fast_adc_filter_1_20[i].pp = pp20;
 
-                calib.fast_dac_x1_HiZ[i].calibValue = calibBaseScaleFromVoltage(1.0, true);
-                calib.fast_dac_x1_HiZ[i].offset = 0;
-                calib.fast_dac_x1_HiZ[i].baseScale = 1.0;
-                calib.fast_dac_x1_HiZ[i].gainCalc = 1.0;
-
-                calib.fast_dac_x1_50Ohm[i].calibValue = calibBaseScaleFromVoltage(1.0, true);
-                calib.fast_dac_x1_50Ohm[i].offset = 0;
-                calib.fast_dac_x1_50Ohm[i].baseScale = 1.0;
-                calib.fast_dac_x1_50Ohm[i].gainCalc = 1.0;
+                calib.fast_dac_x1[i].calibValue = calibBaseScaleFromVoltage(1.0, true);
+                calib.fast_dac_x1[i].offset = 0;
+                calib.fast_dac_x1[i].baseScale = 1.0;
+                calib.fast_dac_x1[i].gainCalc = 1.0;
             }
 
             break;
@@ -1101,7 +979,7 @@ rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model, bool setFilterZero) 
         case STEM_122_16SDR_v1_0:
         case STEM_122_16SDR_v1_1:
             calib.fast_adc_count_1_1 = 2;
-            calib.fast_dac_count_x1_HiZ = 2;
+            calib.fast_dac_count_x1 = 2;
             calib.dataStructureId = RP_HW_PACK_ID_V6;
 
             for (int i = 0; i < 2; ++i) {
@@ -1110,10 +988,10 @@ rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model, bool setFilterZero) 
                 calib.fast_adc_1_1[i].baseScale = 1.0;
                 calib.fast_adc_1_1[i].gainCalc = 1.0;
 
-                calib.fast_dac_x1_HiZ[i].calibValue = calibBaseScaleFromVoltage(1.0, true);
-                calib.fast_dac_x1_HiZ[i].offset = 0;
-                calib.fast_dac_x1_HiZ[i].baseScale = 1.0;
-                calib.fast_dac_x1_HiZ[i].gainCalc = 1.0;
+                calib.fast_dac_x1[i].calibValue = calibBaseScaleFromVoltage(1.0, true);
+                calib.fast_dac_x1[i].offset = 0;
+                calib.fast_dac_x1[i].baseScale = 1.0;
+                calib.fast_dac_x1[i].gainCalc = 1.0;
 
                 calib.fast_adc_filter_1_1[i].aa = aa;
                 calib.fast_adc_filter_1_1[i].bb = bb;
@@ -1162,10 +1040,8 @@ rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model, bool setFilterZero) 
             calib.fast_adc_count_1_20 = 2;
             calib.fast_adc_count_1_1_ac = 2;
             calib.fast_adc_count_1_20_ac = 2;
-            calib.fast_dac_count_x1_HiZ = 2;
-            calib.fast_dac_count_x1_50Ohm = 2;
-            calib.fast_dac_count_x5_HiZ = 2;
-            calib.fast_dac_count_x5_50Ohm = 2;
+            calib.fast_dac_count_x1 = 2;
+            calib.fast_dac_count_x5 = 2;
             calib.dataStructureId = RP_HW_PACK_ID_V6;
 
             for (int i = 0; i < 2; ++i) {
@@ -1189,25 +1065,15 @@ rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model, bool setFilterZero) 
                 calib.fast_adc_1_20_ac[i].baseScale = 1.0;
                 calib.fast_adc_1_20_ac[i].gainCalc = 1.0;
 
-                calib.fast_dac_x1_HiZ[i].calibValue = calibBaseScaleFromVoltage(1.0, true);
-                calib.fast_dac_x1_HiZ[i].offset = 0;
-                calib.fast_dac_x1_HiZ[i].baseScale = 1.0;
-                calib.fast_dac_x1_HiZ[i].gainCalc = 1.0;
+                calib.fast_dac_x1[i].calibValue = calibBaseScaleFromVoltage(1.0, true);
+                calib.fast_dac_x1[i].offset = 0;
+                calib.fast_dac_x1[i].baseScale = 1.0;
+                calib.fast_dac_x1[i].gainCalc = 1.0;
 
-                calib.fast_dac_x5_HiZ[i].calibValue = calibBaseScaleFromVoltage(1.0, true);
-                calib.fast_dac_x5_HiZ[i].offset = 0;
-                calib.fast_dac_x5_HiZ[i].baseScale = 1.0;
-                calib.fast_dac_x5_HiZ[i].gainCalc = 1.0;
-
-                calib.fast_dac_x1_50Ohm[i].calibValue = calibBaseScaleFromVoltage(1.0, true);
-                calib.fast_dac_x1_50Ohm[i].offset = 0;
-                calib.fast_dac_x1_50Ohm[i].baseScale = 1.0;
-                calib.fast_dac_x1_50Ohm[i].gainCalc = 1.0;
-
-                calib.fast_dac_x5_50Ohm[i].calibValue = calibBaseScaleFromVoltage(1.0, true);
-                calib.fast_dac_x5_50Ohm[i].offset = 0;
-                calib.fast_dac_x5_50Ohm[i].baseScale = 1.0;
-                calib.fast_dac_x5_50Ohm[i].gainCalc = 1.0;
+                calib.fast_dac_x5[i].calibValue = calibBaseScaleFromVoltage(1.0, true);
+                calib.fast_dac_x5[i].offset = 0;
+                calib.fast_dac_x5[i].baseScale = 1.0;
+                calib.fast_dac_x5[i].gainCalc = 1.0;
 
                 calib.fast_adc_filter_1_1[i].aa = aa;
                 calib.fast_adc_filter_1_1[i].bb = bb;
@@ -1249,24 +1115,14 @@ int recalculateToUniversal(rp_calib_params_t* param) {
         param->fast_adc_1_20_ac[i].baseScale = 1.0;
     }
 
-    for (int i = 0; i < param->fast_dac_count_x1_HiZ; i++) {
-        param->fast_dac_x1_HiZ[i].calibValue = calibBaseScaleFromVoltage(1.0, true) * param->fast_dac_x1_HiZ[i].gainCalc;
-        param->fast_dac_x1_HiZ[i].baseScale = 1.0;
+    for (int i = 0; i < param->fast_dac_count_x1; i++) {
+        param->fast_dac_x1[i].calibValue = calibBaseScaleFromVoltage(1.0, true) * param->fast_dac_x1[i].gainCalc;
+        param->fast_dac_x1[i].baseScale = 1.0;
     }
 
-    for (int i = 0; i < param->fast_dac_count_x1_50Ohm; i++) {
-        param->fast_dac_x1_50Ohm[i].calibValue = calibBaseScaleFromVoltage(1.0, true) * param->fast_dac_x1_50Ohm[i].gainCalc;
-        param->fast_dac_x1_50Ohm[i].baseScale = 1.0;
-    }
-
-    for (int i = 0; i < param->fast_dac_count_x5_HiZ; i++) {
-        param->fast_dac_x5_HiZ[i].calibValue = calibBaseScaleFromVoltage(1.0, true) * param->fast_dac_x5_HiZ[i].gainCalc;
-        param->fast_dac_x5_HiZ[i].baseScale = 1.0;
-    }
-
-    for (int i = 0; i < param->fast_dac_count_x5_50Ohm; i++) {
-        param->fast_dac_x5_50Ohm[i].calibValue = calibBaseScaleFromVoltage(1.0, true) * param->fast_dac_x5_50Ohm[i].gainCalc;
-        param->fast_dac_x5_50Ohm[i].baseScale = 1.0;
+    for (int i = 0; i < param->fast_dac_count_x5; i++) {
+        param->fast_dac_x5[i].calibValue = calibBaseScaleFromVoltage(1.0, true) * param->fast_dac_x5[i].gainCalc;
+        param->fast_dac_x5[i].baseScale = 1.0;
     }
     return RP_HW_CALIB_OK;
 }

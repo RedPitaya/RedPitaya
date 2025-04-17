@@ -162,7 +162,7 @@ double CCalibMan::getCalibValue(rp_channel_t ch, ClalibValue _type) {
                 FATAL("Wrong channel");
                 exit(-1);
             }
-            return (gen_g == RP_GAIN_1X) ? m_calib_parameters.fast_dac_x1_HiZ[ch].offset : m_calib_parameters.fast_dac_x5_HiZ[ch].offset;
+            return (gen_g == RP_GAIN_1X) ? m_calib_parameters.fast_dac_x1[ch].offset : m_calib_parameters.fast_dac_x5[ch].offset;
         }
 
         case ADC_CH_GAIN: {
@@ -182,7 +182,7 @@ double CCalibMan::getCalibValue(rp_channel_t ch, ClalibValue _type) {
                 FATAL("Wrong channel");
                 exit(-1);
             }
-            return (gen_g == RP_GAIN_1X) ? m_calib_parameters.fast_dac_x1_HiZ[ch].gainCalc : m_calib_parameters.fast_dac_x5_HiZ[ch].gainCalc;
+            return (gen_g == RP_GAIN_1X) ? m_calib_parameters.fast_dac_x1[ch].gainCalc : m_calib_parameters.fast_dac_x5[ch].gainCalc;
         }
 
         case F_AA_CH: {
@@ -299,7 +299,7 @@ int CCalibMan::setCalibValue(rp_channel_t ch, ClalibValue _type, double _value) 
                 FATAL("Wrong channel");
                 exit(-1);
             }
-            return (gen_g == RP_GAIN_1X) ? m_calib_parameters.fast_dac_x1_HiZ[ch].offset = _value : m_calib_parameters.fast_dac_x5_HiZ[ch].offset = _value;
+            return (gen_g == RP_GAIN_1X) ? m_calib_parameters.fast_dac_x1[ch].offset = _value : m_calib_parameters.fast_dac_x5[ch].offset = _value;
         }
 
         case DAC_CH_GAIN: {
@@ -307,7 +307,7 @@ int CCalibMan::setCalibValue(rp_channel_t ch, ClalibValue _type, double _value) 
                 FATAL("Wrong channel");
                 exit(-1);
             }
-            return (gen_g == RP_GAIN_1X) ? m_calib_parameters.fast_dac_x1_HiZ[ch].gainCalc = _value : m_calib_parameters.fast_dac_x5_HiZ[ch].gainCalc = _value;
+            return (gen_g == RP_GAIN_1X) ? m_calib_parameters.fast_dac_x1[ch].gainCalc = _value : m_calib_parameters.fast_dac_x5[ch].gainCalc = _value;
         }
 
         case F_AA_CH: {

@@ -28,6 +28,8 @@ rp_calib_params_t calib_GetParams();
 rp_calib_params_t calib_GetDefaultCalib(bool setFilterZero);
 rp_calib_params_t calib_GetUniversalDefaultCalib(bool setFilterZero);
 
+rp_calib_error calib_GetVersion(uint8_t* version);
+
 rp_calib_error calib_WriteParams(rp_HPeModels_t model, rp_calib_params_t* calib_params, bool use_factory_zone, bool skip_recalculate);
 rp_calib_error calib_SetParams(rp_calib_params_t* calib_params);
 rp_calib_error calib_WriteDirectlyParams(rp_calib_params_t* calib_params, bool use_factory_zone, bool skip_recalculate);
@@ -46,10 +48,8 @@ rp_calib_error calib_GetFastADCFilter(rp_channel_calib_t channel, channel_filter
 rp_calib_error calib_GetFastADCFilter_1_20(rp_channel_calib_t channel, channel_filter_t* out);
 
 rp_calib_error calib_GetFastADCCalibValue(rp_channel_calib_t channel, rp_acq_ac_dc_mode_calib_t mode, double* gain, int32_t* offset, uint_gain_calib_t* calib);
-rp_calib_error calib_GetFastADCCalibValue_1_20(rp_channel_calib_t channel, rp_acq_ac_dc_mode_calib_t mode, double* gain, int32_t* offset,
-                                               uint_gain_calib_t* calib);
+rp_calib_error calib_GetFastADCCalibValue_1_20(rp_channel_calib_t channel, rp_acq_ac_dc_mode_calib_t mode, double* gain, int32_t* offset, uint_gain_calib_t* calib);
 
-rp_calib_error calib_GetFastDACCalibValue(rp_channel_calib_t channel, rp_gen_gain_calib_t gain_mode, rp_gen_load_calib_t mode, double* gain, int32_t* offset,
-                                          uint_gain_calib_t* calib);
+rp_calib_error calib_GetFastDACCalibValue(rp_channel_calib_t channel, rp_gen_gain_calib_t mode, double* gain, int32_t* offset, uint_gain_calib_t* calib);
 
 #endif  //__CALIB_H

@@ -53,7 +53,7 @@ typedef enum {
 #define RP_HW_PACK_ID_V3 3  ///< 125-14 4Ch board version
 #define RP_HW_PACK_ID_V4 4  ///< 122-16 board version
 #define RP_HW_PACK_ID_V5 5  ///< Universal calibration
-#define RP_HW_PACK_ID_V6 6  ///< Universal calibration. Added 50Ohm for DAC.
+#define RP_HW_PACK_ID_V6 6  ///< Universal calibration. Calibration using FPGA.
 
 #define MAX_UNIVERSAL_ITEMS_COUNT 512  ///< Maximum universal calibration items
 
@@ -84,15 +84,6 @@ typedef enum {
     RP_GAIN_CALIB_1X = 0,  ///< x1 gain mode
     RP_GAIN_CALIB_5X = 1   ///< x5 gain mode
 } rp_gen_gain_calib_t;
-
-/**
-  * @enum rp_gen_mode_t
-  * @brief Generator impedance modes
-  */
-typedef enum {
-    RP_CALIB_HIZ = 0,   ///< High impedance mode
-    RP_CALIB_50Ohm = 1  ///< 50 Ohm mode
-} rp_gen_load_calib_t;
 
 /**
   * @enum rp_acq_ac_dc_mode_calib_t
@@ -157,15 +148,11 @@ typedef struct {
     uint8_t fast_adc_count_1_20_ac;       ///< ADC count for AC mode (1:20)
     channel_calib_t fast_adc_1_20_ac[4];  ///< ADC calibration AC mode (1:20)
 
-    uint8_t fast_dac_count_x1_HiZ;         ///< DAC count for x1 gain HiZ
-    channel_calib_t fast_dac_x1_HiZ[2];    ///< DAC calibration (x1, HiZ)
-    uint8_t fast_dac_count_x1_50Ohm;       ///< DAC count for x1 gain 50Ohm
-    channel_calib_t fast_dac_x1_50Ohm[2];  ///< DAC calibration (x1, 50Ohm)
+    uint8_t fast_dac_count_x1;
+    channel_calib_t fast_dac_x1[2];
 
-    uint8_t fast_dac_count_x5_HiZ;         ///< DAC count for x5 gain HiZ
-    channel_calib_t fast_dac_x5_HiZ[2];    ///< DAC calibration (x5, HiZ)
-    uint8_t fast_dac_count_x5_50Ohm;       ///< DAC count for x5 gain 50Ohm
-    channel_calib_t fast_dac_x5_50Ohm[2];  ///< DAC calibration (x5, 50Ohm)
+    uint8_t fast_dac_count_x5;  // For 250-12
+    channel_calib_t fast_dac_x5[2];
 } rp_calib_params_t;
 
 /**
@@ -222,6 +209,13 @@ rp_calib_error rp_CalibInit();
   * @return Status code (RP_HW_CALIB_OK on success)
   */
 rp_calib_error rp_CalibInitSpecific(rp_HPeModels_t model);
+
+/**
+  * @brief Gets current calibration version
+  * @param version Returns the version of the loaded calibration
+  * @return Status code (RP_HW_CALIB_OK on success)
+  */
+rp_calib_error rp_GetCalibrationVersion(uint8_t* version);
 
 /**
   * @brief Gets current calibration settings
@@ -379,8 +373,7 @@ rp_calib_error rp_CalibGetFastADCCalibValue_1_20I(rp_channel_calib_t channel, rp
   * @param[out] _out_offset Offset value
   * @return Status code (RP_HW_CALIB_OK on success)
   */
-rp_calib_error rp_CalibGetFastDACCalibValue(rp_channel_calib_t channel, rp_gen_gain_calib_t gain_mode, rp_gen_load_calib_t mode, double* _out_gain,
-                                            int32_t* _out_offset);
+rp_calib_error rp_CalibGetFastDACCalibValue(rp_channel_calib_t channel, rp_gen_gain_calib_t gain_mode, double* _out_gain, int32_t* _out_offset);
 
 /**
   * @brief Gets DAC calibration values (integer)
@@ -390,8 +383,7 @@ rp_calib_error rp_CalibGetFastDACCalibValue(rp_channel_calib_t channel, rp_gen_g
   * @param[out] _out_calib Calibration structure
   * @return Status code (RP_HW_CALIB_OK on success)
   */
-rp_calib_error rp_CalibGetFastDACCalibValueI(rp_channel_calib_t channel, rp_gen_gain_calib_t gain_mode, rp_gen_load_calib_t mode,
-                                             uint_gain_calib_t* _out_calib);
+rp_calib_error rp_CalibGetFastDACCalibValueI(rp_channel_calib_t channel, rp_gen_gain_calib_t gain_mode, uint_gain_calib_t* _out_calib);
 
 /** @} */  // end of CalibAPI group
 

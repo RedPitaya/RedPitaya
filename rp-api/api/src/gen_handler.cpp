@@ -176,7 +176,7 @@ int gen_setAmplitudeAndOffsetOrigin(rp_channel_t channel) {
 
     CHECK_CHANNEL
 
-    return generate_setAmplitudeAndOffsetOrigin(channel, ch_gain[channel], ch_load_mode[channel]);
+    return generate_setAmplitudeAndOffsetOrigin(channel, ch_gain[channel]);
 }
 
 int gen_setAmplitude(rp_channel_t channel, float amplitude) {
@@ -190,7 +190,7 @@ int gen_setAmplitude(rp_channel_t channel, float amplitude) {
     }
 
     ch_amplitude[channel] = amplitude;
-    return generate_setAmplitude(channel, ch_gain[channel], ch_load_mode[channel], amplitude * koff);
+    return generate_setAmplitude(channel, ch_gain[channel], amplitude * koff);
 }
 
 int gen_getAmplitude(rp_channel_t channel, float* amplitude) {
@@ -214,7 +214,7 @@ int gen_setOffset(rp_channel_t channel, float offset) {
 
     ch_offset[channel] = offset;
 
-    return generate_setDCOffset(channel, ch_gain[channel], ch_load_mode[channel], offset * koff);
+    return generate_setDCOffset(channel, ch_gain[channel], offset * koff);
 }
 
 int gen_getOffset(rp_channel_t channel, float* offset) {
@@ -654,7 +654,7 @@ int gen_setBurstLastValue(rp_channel_t channel, float amplitude) {
 
     CHECK_CHANNEL
 
-    int ret = generate_setBurstLastValue(channel, ch_gain[channel], ch_load_mode[channel], amplitude);
+    int ret = generate_setBurstLastValue(channel, ch_gain[channel], amplitude);
     if (ret == RP_OK) {
         ch_burstLastValue[channel] = amplitude;
     }
@@ -673,7 +673,7 @@ int gen_setInitGenValue(rp_channel_t channel, float amplitude) {
 
     CHECK_CHANNEL
 
-    int ret = generate_setInitGenValue(channel, ch_gain[channel], ch_load_mode[channel], amplitude);
+    int ret = generate_setInitGenValue(channel, ch_gain[channel], amplitude);
     if (ret == RP_OK) {
         ch_initValue[channel] = amplitude;
     }
@@ -1029,8 +1029,8 @@ int synthesis_square_Z20_250(float scale, float frequency, float* data_out, uint
     return RP_OK;
 }
 
-int synthesis_sweep(float scale, float frequency, float frequency_start, float frequency_end, float phaseRad, rp_gen_sweep_mode_t mode, rp_gen_sweep_dir_t dir,
-                    float* data_out, uint16_t buffSize) {
+int synthesis_sweep(float scale, float frequency, float frequency_start, float frequency_end, float phaseRad, rp_gen_sweep_mode_t mode, rp_gen_sweep_dir_t dir, float* data_out,
+                    uint16_t buffSize) {
 
     bool inverDir = false;
     float sign = 1;
