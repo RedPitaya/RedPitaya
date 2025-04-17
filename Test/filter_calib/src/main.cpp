@@ -31,11 +31,12 @@ using namespace options;
 
 std::atomic_bool g_stopApp = false;
 
-static const char app_params[] = {""};
+static const char app_params[] = {"-a | -e | -h [-i KK_VALUE] [-g GAIN] [-w]"};
 static const std::vector<options::ParamConfig> params = {
     {"auto", "auto", 'a', RP_OPT_PARAM_MISSING, RP_OPT_INT, {0, 0}, 0, "Automatic filter calibration using internal generator."},
     {"auto_ext", "auto_ext", 'e', RP_OPT_PARAM_MISSING, RP_OPT_INT, {0, 0}, 0, "Automatic filter calibration using external generator (PWM signal of 1kHz 1.8 Vpp)."},
     {"initK", "initK", 'i', RP_OPT_PARAM_REQUIRED, RP_OPT_INT, {0x001FFFFF, 0x00FFFFFF}, 0x00dFFFFF, "Sets the value for the KK parameter. The default value is 0xdFFFFF."},
+    {"gain", "gain", 'g', RP_OPT_PARAM_REQUIRED, RR_OPT_STRING, {"", ""}, "LV", "Use gain setting X [LV, HV] (default: LV)."},
     {"write", "write", 'w', RP_OPT_PARAM_MISSING, RP_OPT_INT, {0, 0}, 0, "Write new parameters to eeprom."},
     {"help", "help", 'h', RP_OPT_PARAM_MISSING, RP_OPT_INT, {0, 0}, 0, "Print this message."}};
 
@@ -87,8 +88,8 @@ int main(int argc, char* argv[]) {
         return -1;
     }
     auto option = parse(params, argc, argv);
-
     if (option.error) {
+        fprintf(stderr, "Error parsing parameters\n");
         options::usage(argv[0], app_params);
         options::printParams(params);
         return -1;
@@ -102,6 +103,25 @@ int main(int argc, char* argv[]) {
 
     installTermSignalHandler();
 
+    rp_pinState_t gain = RP_LOW;
+
+    if (option.isParam("gain")) {
+        auto str = option.getString("gain");
+        if (str) {
+            if (*str == "HV") {
+                gain = RP_HIGH;
+            } else if (*str == "LV") {
+                gain = RP_LOW;
+            } else {
+                fprintf(stderr, "Could not determine the gain parameter\n");
+                return -1;
+            }
+        } else {
+            ERROR_LOG("Can't get gain value")
+            return -1;
+        }
+    }
+
     auto isAutoInt = option.isParam("auto");
     if (isAutoInt || option.isParam("auto_ext")) {
         std::string info_msg = "";
@@ -111,7 +131,7 @@ int main(int argc, char* argv[]) {
         auto filter_logicNch = rp_calib::CFilter_logicNch::Create(calib_man);
         acq->start();
         calib_man->initSq(8);
-        calib_man->setModeLV_HV(RP_LOW);
+        calib_man->setModeLV_HV(gain);
         filter_logicNch->init();
         if (isAutoInt) {
             printf("Start internal generator\n");
@@ -134,6 +154,7 @@ int main(int argc, char* argv[]) {
                     filter_logicNch = nullptr;
                     acq->stop();
                     rp_Release();
+                    return -1;
                 }
             }
         } else {

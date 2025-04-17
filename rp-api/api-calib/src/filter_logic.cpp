@@ -150,7 +150,7 @@ int CFilter_logic::setCalculatedValue(COscilloscope::DataPassAutoFilter item) {
                         m_grid[i].value_raw = item.calib_value_raw;
                         m_grid[i].calculate = true;
                         m_grid[i].deviationFromAVG = item.deviation;
-                        std::cerr << "Cur step " << i << " aa = " << m_grid[i].aa << " bb = " << m_grid[i].bb << " VALUE " << m_grid[i].value << std::endl;
+                        //std::cerr << "Cur step " << i << " aa = " << m_grid[i].aa << " bb = " << m_grid[i].bb << " VALUE " << m_grid[i].value << std::endl;
                         return i;
                     }
     }

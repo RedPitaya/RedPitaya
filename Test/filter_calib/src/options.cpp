@@ -14,52 +14,6 @@
 
 using namespace options;
 
-// static constexpr char optstring_125_14[64] = "esbx1:2:vht:l:ockag";
-// static struct option long_options_125_14[32] = {
-//     /* These options set a flag. */
-//     {"equalization", no_argument, 0, 'e'},
-//     {"shaping", no_argument, 0, 's'},
-//     {"bypass", no_argument, 0, 'b'},
-//     {"gain1", required_argument, 0, '1'},
-//     {"gain2", required_argument, 0, '2'},
-//     {"tr_ch", required_argument, 0, 't'},
-//     {"tr_level", required_argument, 0, 'l'},
-//     {"version", no_argument, 0, 'v'},
-//     {"help", no_argument, 0, 'h'},
-//     {"hex", no_argument, 0, 'x'},
-//     {"volt", no_argument, 0, 'o'},
-//     {"calib", no_argument, 0, 'c'},
-//     {"hk", no_argument, 0, 'k'},
-//     {"axi", no_argument, 0, 'a'},
-//     {"debug", no_argument, 0, 'g'},
-//     {"offset", required_argument, 0, 0},
-//     {0, 0, 0, 0}};
-
-// static constexpr char g_format_125_14[2048] =
-//     "\n"
-//     "Usage: %s [OPTION]... SIZE <DEC>\n"
-//     "\n"
-//     "  --equalization  -e    Use equalization filter in FPGA (default: disabled).\n"
-//     "  --shaping       -s    Use shaping filter in FPGA (default: disabled).\n"
-//     "  --bypass        -b    Bypass shaping filter in FPGA.\n"
-//     "  --gain1=g       -1 g  Use Channel 1 gain setting g [lv, hv] (default: lv).\n"
-//     "  --gain2=g       -2 g  Use Channel 2 gain setting g [lv, hv] (default: lv).\n"
-//     "  --tr_ch=c       -t c  Enable trigger by channel. Setting c use for channels [1P, 1N, 2P, 2N, EP (external channel), EN (external channel)].\n"
-//     "                        P - positive edge, N -negative edge. By default trigger no set\n"
-//     "  --tr_level=c    -l c  Set trigger level (default: 0).\n"
-//     "  --version       -v    Print version info.\n"
-//     "  --help          -h    Print this message.\n"
-//     "  --hex           -x    Print value in hex.\n"
-//     "  --volt          -o    Print value in volt.\n"
-//     "  --calib         -c    Disable calibration parameters\n"
-//     "  --hk            -k    Reset houskeeping (Reset state for GPIO). Default: disabled\n"
-//     "  --axi           -a    Enable AXI interface. Also enable housekeeping reset. Default: disabled\n"
-//     "  --debug         -g    Debug registers. Default: disabled\n"
-//     "  --offset              Offset relative to the trigger pointer [-16384 .. 16384]\n"
-//     "    SIZE                Number of samples to acquire [0 - %u].\n"
-//     "    DEC                 Decimation [%u,%u,%u,%u,%u,...] (default: 1). Valid values are from 1 to 65536\n"
-//     "\n";
-
 std::vector<std::string> split(const std::string& s, char seperator) {
     std::vector<std::string> output;
     std::string::size_type prev_pos = 0, pos = 0;
@@ -187,7 +141,7 @@ auto options::usage(char const* progName, const char* info) -> void {
 
     auto n = name.c_str();
 
-    fprintf(stderr, "%s Version: %s-%s\n%s\n", n, VERSION_STR, REVISION_STR, info);
+    fprintf(stderr, "Version: %s-%s\n%s %s\n", VERSION_STR, REVISION_STR, n, info);
 }
 
 auto options::printParams(const std::vector<ParamConfig>& opts) -> void {
