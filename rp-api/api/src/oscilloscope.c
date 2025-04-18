@@ -966,7 +966,7 @@ int osc_axi_map(size_t size, size_t offset, void** mapped, uint32_t *mapped_size
     *mapped = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, mem_fd, offset);
 
     if (*mapped == MAP_FAILED) {
-        ERROR("Error osc_axi_map: %d\n",errno);
+        ERROR("Error osc_axi_map: %s\n",strerror(errno));
         return RP_EMMD;
     }
 

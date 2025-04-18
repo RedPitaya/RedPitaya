@@ -194,7 +194,7 @@ int uart_read(unsigned char *_buffer,int *size){
                      continue;
                  /* Error differs */
                  }else{
-                    ERROR("Error read from UART. Errno: %d", errno);
+                    ERROR("Error read from UART: %s", strerror(errno));
                     return RP_HW_ERU;
                 }
 
