@@ -12,7 +12,7 @@ int sens_GetValueFromFile(const char* file, uint32_t *value){
 		return -1;
 	}
     int rv = 0;
-    int r = !fscanf (fp, "%d", &rv);
+    int r = fscanf (fp, "%d", &rv) != 1;
     *value = rv;
     fclose(fp);
     return r;
@@ -25,7 +25,7 @@ int sens_GetFValueFromFile(const char* file, float *value){
 		ERROR_LOG("Can't open %s",file);
 		return -1;
 	}
-    float r = !fscanf (fp, "%f", value);
+    float r = fscanf (fp, "%f", value) != 1;
     fclose(fp);
     return r;
 }
@@ -70,7 +70,7 @@ int AI4pinGetValueRaw(uint32_t* value) {
         ERROR_LOG("Can't open %s","/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_voltage12_raw");
         return -1;
     }
-    int r = !fscanf (fp, "%u", value);
+    int r = fscanf (fp, "%u", value)  != 1;
     fclose(fp);
     return r;
 }

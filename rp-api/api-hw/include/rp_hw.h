@@ -670,8 +670,8 @@ int rp_I2C_IOCTL_WriteBuffer(uint8_t *buffer, int len);
 
 /**
  * Returns the current CPU temperature
- * @return If the function is successful, the return non
- * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
+ * @return If the function is successful, return the CPU temperature.
+ * If the function is unsuccessful, return (float) -1.
  */
 float rp_GetCPUTemperature(uint32_t *raw);
 
