@@ -6,8 +6,6 @@
     RP_CLIENT.config.socket_url = 'ws://' + (RP_CLIENT.config.server_ip.length ? RP_CLIENT.config.server_ip : window.location.hostname) + ':9092';
     RP_CLIENT.config.debug = true
 
-    RP_CLIENT.total = undefined
-
     RP_CLIENT.ws = null;
 
 
@@ -19,8 +17,7 @@
     }
 
     // Creates a WebSocket connection with the web server
-    RP_CLIENT.connectWebSocket = function() {
-        RP_CLIENT.total = undefined
+    RP_CLIENT.connectWebSocket = function(onOpen,onClose,onError,onMessage) {
         if (window.WebSocket) {
             RP_CLIENT.ws = new WebSocket(RP_CLIENT.config.socket_url);
             RP_CLIENT.ws.binaryType = "arraybuffer";
@@ -35,16 +32,22 @@
         if (RP_CLIENT.ws) {
             RP_CLIENT.ws.onopen = function() {
                 RP_CLIENT.client_log('Socket opened');
-                RP_CLIENT.ws.send(JSON.stringify({ "request": {"type":"int", value:1} }));
+                if (onOpen != undefined)
+                    onOpen()
+                // RP_CLIENT.ws.send(JSON.stringify({ "request": {"type":"int", value:1} }));
 
             };
 
             RP_CLIENT.ws.onclose = function() {
                 RP_CLIENT.client_log('Socket closed');
+                if (onClose != undefined)
+                    onClose()
             };
 
             RP_CLIENT.ws.onerror = function(ev) {
                 RP_CLIENT.client_log('Websocket error: ', ev);
+                if (onError != undefined)
+                    onError()
             };
 
             RP_CLIENT.ws.onmessage = function(ev) {
@@ -56,29 +59,38 @@
                     }
                     var receive = JSON.parse(text);
                     RP_CLIENT.client_log(receive)
+                    if (onMessage != undefined)
+                        onMessage(receive)
+                    // if (receive.total_files){
+                    //     RP_CLIENT.total = receive.total_files.value;
+                    //     $('#percent_copy').text("0%");
+                    //     $('#percent_copy').show();
+                    // }
 
-                    if (receive.total_files){
-                        RP_CLIENT.total = receive.total_files.value;
-                        $('#percent_copy').text("0%");
-                        $('#percent_copy').show();
-                    }
+                    // if (receive.copy_index){
+                    //     $('#percent_copy').text("0%");
+                    //     var percent = 0
+                    //     if (RP_CLIENT.total) percent = ((receive.copy_index.value / RP_CLIENT.total) * 100).toFixed(2);
+                    //     $('#percent_copy').text(percent + "%");
 
-                    if (receive.copy_index){
-                        $('#percent_copy').text("0%");
-                        var percent = 0
-                        if (RP_CLIENT.total) percent = ((receive.copy_index.value / RP_CLIENT.total) * 100).toFixed(2);
-                        $('#percent_copy').text(percent + "%");
+                    // }
 
-                    }
+                    // if (receive.reboot){
+                    //     $('#percent_copy').hide()
+                    //     UPD.showReboot();
+                    // }
 
-                    if (receive.reboot){
-                        $('#percent_copy').hide()
-                        UPD.showReboot();
-                    }
+
                 } catch (e) {
                     console.log(e);
                 }
             };
+        }
+    };
+
+    RP_CLIENT.closeWS = function() {
+        if (RP_CLIENT.ws) {
+            RP_CLIENT.ws.close()
         }
     };
 
@@ -88,6 +100,6 @@
 // Page onload event handler
 $(function() {
     $(window).on('beforeunload', function() {
-        RP_CLIENT.ws.close();
+        RP_CLIENT.closeWS()
     });
 })

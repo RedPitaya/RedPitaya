@@ -49,40 +49,40 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations -Wno-psabi
 
 set(ZIP_FILE ../../../${APP}-${VERSION}-${REVISION}.zip)
 
-list(APPEND r_paths
-    /opt/redpitaya/lib
-    /opt/redpitaya/lib/web
-)
+# list(APPEND r_paths
+#     /opt/redpitaya/lib
+#     /opt/redpitaya/lib/web
+# )
 
-list(APPEND include_paths
-    ${INSTALL_DIR}/include
-    ${INSTALL_DIR}/include/api2
-    ${INSTALL_DIR}/include/apiApp
-    ${INSTALL_DIR}/include/redpitaya
-)
+# list(APPEND include_paths
+#     ${INSTALL_DIR}/include
+#     ${INSTALL_DIR}/include/api2
+#     ${INSTALL_DIR}/include/apiApp
+#     ${INSTALL_DIR}/include/redpitaya
+# )
 
-list(APPEND libs_paths
-    ${INSTALL_DIR}/lib
-    ${INSTALL_DIR}/lib/web
-)
+# list(APPEND libs_paths
+#     ${INSTALL_DIR}/lib
+#     ${INSTALL_DIR}/lib/web
+# )
 
-set(CMAKE_INSTALL_RPATH ${r_paths})
-set(CMAKE_BUILD_RPATH ${r_paths})
-include_directories(${include_paths})
-link_directories(${libs_paths})
+# set(CMAKE_INSTALL_RPATH ${r_paths})
+# set(CMAKE_BUILD_RPATH ${r_paths})
+# include_directories(${include_paths})
+# link_directories(${libs_paths})
 
-file(GLOB SOURCES "src/*.cpp")
+# file(GLOB SOURCES "src/*.cpp")
 
-add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
-add_compile_definitions(ARCH_ARM)
-add_compile_options(-Wall -Wno-unused-result -Wno-reorder -Wno-cpp -Wextra $<$<CONFIG:Release>:-Wno-unused-parameter> $<$<CONFIG:Release>:-Wno-unused-variable>)
-add_compile_options($<$<CONFIG:Debug>:-DTRACE_ENABLE>)
-add_compile_options(-DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os>  -ffunction-sections -fdata-sections)
+# add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
+# add_compile_definitions(ARCH_ARM)
+# add_compile_options(-Wall -Wno-unused-result -Wno-reorder -Wno-cpp -Wextra $<$<CONFIG:Release>:-Wno-unused-parameter> $<$<CONFIG:Release>:-Wno-unused-variable>)
+# add_compile_options($<$<CONFIG:Debug>:-DTRACE_ENABLE>)
+# add_compile_options(-DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os>  -ffunction-sections -fdata-sections)
 
 
-add_executable(${PROJECT_NAME} ${SOURCES})
-target_link_libraries(${PROJECT_NAME} PRIVATE  librp-websocket.a pthread)
-set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")
+# add_executable(${PROJECT_NAME} ${SOURCES})
+# target_link_libraries(${PROJECT_NAME} PRIVATE  librp-websocket.a pthread)
+# set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")
 
 
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/css DESTINATION ${BUILD_PATH})
@@ -93,7 +93,7 @@ install(DIRECTORY ${CMAKE_SOURCE_DIR}/scripts DESTINATION ${BUILD_PATH})
 
 file(GLOB HTML "*.html")
 install(FILES ${HTML} DESTINATION ${BUILD_PATH})
-install(FILES nginx.conf nginx2.conf fpga.conf DESTINATION ${BUILD_PATH})
+install(FILES nginx.conf fpga.conf DESTINATION ${BUILD_PATH})
 
 install(CODE "execute_process(COMMAND sed -i ${BUILD_PATH}/info/info.json -e \"s/REVISION/${REVISION}/\")")
 install(CODE "execute_process(COMMAND sed -i ${BUILD_PATH}/info/info.json -e \"s/VERSION/${VERSION}/\")")

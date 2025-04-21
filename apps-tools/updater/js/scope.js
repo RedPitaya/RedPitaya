@@ -45,10 +45,10 @@
                 UPD.applyChanges();
                 break;
             case 6:
-                UPD.prepareToRun();
+             //   UPD.prepareToRun();
                 break;
             case 7:
-                UPD.closeUpdate();
+             //   UPD.closeUpdate();
                 break;
         }
     }
@@ -184,7 +184,7 @@
                     }
                     var distro_desc = es_distro_vers.vers_as_str + '-' + es_distro_vers.build + '(' + es_distro_size + ')';
                     var distro_desc_short = es_distro_vers.vers_as_str + '-' + es_distro_vers.build;
-                    if (UPD.compareVersions(distro_desc_short,UPD.currentVer) >= 0) {
+                    if (UPD.compareVersions(distro_desc_short,UPD.currentVer) < 0){ //>= 0) {
                         $('#used_last_version').show();
                         $('#select_ver').hide();
                         $('#step_4').hide();
@@ -234,63 +234,119 @@
             return;
         }
 
+        var dwCur = 0;
+        var dwTotal = 0;
+
         console.log("Check download");
         $('#step_' + UPD.currentStep).find('.step_icon').find('img').hide();
 
-
-
         $.ajax({
-            url: '/update_download?ecosystem=' + UPD.type + '/' + UPD.ecosystems[UPD.chosen_eco],
+            url: '/run_updater',
             type: 'GET',
         }).done(function(res) {
             console.log(res);
             $('#percent').text("0%");
-
-            UPD.timerCheck = setInterval(function() {
-                var url_arr = window.location.href.split("/");;
-                var url = url_arr[0] + '//' + url_arr[2];
-                $.ajax({
-                    url:  url + ':81/update_check',
-                    type: 'GET',
-                }).done(function(msg) {
-                    if (msg.includes("NONE")) {
-                        $('#percent').text("0%");
-                        $('#percent').show();
-                        return;
+        
+            setTimeout(function(){
+                RP_CLIENT.connectWebSocket(function onOpen(){
+                    console.log("Open");
+                    if (RP_CLIENT.ws)
+                        var js_req = JSON.stringify({ "download": {"type":"string", value: "https://downloads.redpitaya.com/downloads/" + UPD.type + '/' + UPD.ecosystems[UPD.chosen_eco]} });
+                        RP_CLIENT.ws.send(js_req);
+                    
+                },
+                function onClose(){
+                    console.log("Close");
+                },
+                function onError(){
+                    console.log("Error");
+                    $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                    $('#step_' + UPD.currentStep).find('.error_msg').show();
+                },
+                function onMessage(receive){
+                    console.log("Message");
+                    if (receive.download_done && receive.download_done.value == true){
+                        $('#percent').hide()
+                        UPD.nextStep();
+                        var js_req = JSON.stringify({ "stop": {"type":"int", value: 0 } });
+                        RP_CLIENT.ws.send(js_req);
                     }
-                    var res = msg;
-                    var s = res.split(" ")[0];
-                    var size = parseInt(s) * 1;
-                    if (isNaN(size)) {
-                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
-                        $('#step_' + UPD.currentStep).find('.error_msg').show();
-                        clearInterval(UPD.timerCheck);
-                    } else {
-                        var percent = ((size / UPD.ecosystems_sizes[UPD.chosen_eco]) * 100).toFixed(2);
+
+                    if (receive.download_progress_now){
+                        dwCur = receive.download_progress_now.value
+                    }
+
+                    if (receive.download_progress_total){
+                        dwTotal = receive.download_progress_total.value
+                    }
+                    
+                    if (dwTotal !== 0){
+                        var percent = ((dwCur / dwTotal) * 100).toFixed(2);
                         $('#percent').text(percent + "%");
                         $('#percent').show();
                     }
-
-                    if (msg.includes("OK")){
-                        clearInterval(UPD.timerCheck);
-                        $('#percent').hide();
-                       UPD.nextStep();
-                    }
-
-                    if (msg.includes("FAIL")){
-                        clearInterval(UPD.timerCheck);
-                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
-                        $('#step_' + UPD.currentStep).find('.error_msg').show();
-                    }
-                });
-            }, 1000);
-
+                }
+                )
+            },1000);
 
         }).fail(function(msg) {
             $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
             $('#step_' + UPD.currentStep).find('.error_msg').show();
-            clearInterval(UPD.timerCheck);
         });
+
+
+        // $.ajax({
+        //     url: '/update_download?ecosystem=' + UPD.type + '/' + UPD.ecosystems[UPD.chosen_eco],
+        //     type: 'GET',
+        // }).done(function(res) {
+        //     console.log(res);
+        //     $('#percent').text("0%");
+
+        //     UPD.timerCheck = setInterval(function() {
+        //         var url_arr = window.location.href.split("/");;
+        //         var url = url_arr[0] + '//' + url_arr[2];
+        //         $.ajax({
+        //             url:  url + ':81/update_check',
+        //             type: 'GET',
+        //         }).done(function(msg) {
+        //             if (msg.includes("NONE")) {
+        //                 $('#percent').text("0%");
+        //                 $('#percent').show();
+        //                 return;
+        //             }
+        //             var res = msg;
+        //             var s = res.split(" ")[0];
+        //             var size = parseInt(s) * 1;
+        //             if (isNaN(size)) {
+        //                 $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+        //                 $('#step_' + UPD.currentStep).find('.error_msg').show();
+        //                 clearInterval(UPD.timerCheck);
+        //             } else {
+        //                 var percent = ((size / UPD.ecosystems_sizes[UPD.chosen_eco]) * 100).toFixed(2);
+        //                 $('#percent').text(percent + "%");
+        //                 $('#percent').show();
+        //             }
+
+        //             if (msg.includes("OK")){
+        //                 clearInterval(UPD.timerCheck);
+        //                 $('#percent').hide();
+        //                UPD.nextStep();
+        //             }
+
+        //             if (msg.includes("FAIL")){
+        //                 clearInterval(UPD.timerCheck);
+        //                 $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+        //                 $('#step_' + UPD.currentStep).find('.error_msg').show();
+        //             }
+        //         });
+        //     }, 1000);
+
+
+        // }).fail(function(msg) {
+        //     $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+        //     $('#step_' + UPD.currentStep).find('.error_msg').show();
+        //     clearInterval(UPD.timerCheck);
+        // });
 
     }
 

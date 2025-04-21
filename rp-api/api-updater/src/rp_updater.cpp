@@ -465,5 +465,9 @@ int rp_UpdaterUpdateBoardEcosystem(std::string fileName) {
     signal(SIGUSR1, signalHandlerDefault);
     signal(SIGUSR2, signalHandlerDefault);
 
+    if (g_callbacks) {
+        g_callbacks->installDone(fileName, true);
+    }
+
     return ret;
 }

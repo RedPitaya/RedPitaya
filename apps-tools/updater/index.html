@@ -11,7 +11,8 @@
 <html lang="en">
 
 <head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"></meta>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    </meta>
     <meta http-equiv="cache-control" content="max-age=0" />
     <meta http-equiv="cache-control" content="no-cache" />
     <meta http-equiv="expires" content="0" />
@@ -56,7 +57,8 @@
             <div class="navbar navbar-inverse" role="navigation">
                 <div class="container">
                     <div class="navbar-header">
-                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                        <button type="button" class="navbar-toggle" data-toggle="collapse"
+                            data-target=".navbar-collapse">
                             <span class="sr-only">T</span>
                             <span class="icon-bar"></span>
                             <span class="icon-bar"></span>
@@ -79,12 +81,16 @@
                             <table class="main_table">
                                 <tr id="step_1" class="step">
                                     <td class="step_desc">Step 1. Checking download server availability
-                                        <p class="error_msg">Your Red Pitaya is currently offline. Please follow <a style="color: #FFFF33" href="https://redpitaya.readthedocs.io/en/latest/quickStart/quickStart.html" target="_blank">the quick-start instructions</a> to put it online.</p>
+                                        <p class="error_msg">Your Red Pitaya is currently offline. Please follow <a
+                                                style="color: #FFFF33"
+                                                href="https://redpitaya.readthedocs.io/en/latest/quickStart/quickStart.html"
+                                                target="_blank">the quick-start instructions</a> to put it online.</p>
                                     </td>
                                     <td class="step_icon"><img style="display: none" src=""></td>
                                 </tr>
                                 <tr id="step_2" class="step">
-                                    <td class="step_desc">Step 2. Checking current OS version: <span id="step_2_version"></span>
+                                    <td class="step_desc">Step 2. Checking current OS version: <span
+                                            id="step_2_version"></span>
                                     </td>
                                     <td class="step_icon"><img style="display: none" src=""></td>
                                 </tr>
@@ -100,43 +106,57 @@
                                                     <td id="distro_dsc"></td>
                                                     <td><span id="and_click"><button id="apply">Apply</button></td>
                                                 </tr>
-											    <tr>
-                                                    <td><a id="change_log_link" target="_blank" href="https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md">Release notes</a></td>
+                                                <tr>
+                                                    <td><a id="change_log_link" target="_blank"
+                                                            href="https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md">Release
+                                                            notes</a></td>
                                                 </tr>
                                             </table>
                                         </div>
-                                        <div id="not_supported_linux" style="display:none;color: red;font-size: medium;">
+                                        <div id="not_supported_linux"
+                                            style="display:none;color: red;font-size: medium;">
                                             <p>The latest Ecosystem is not supported by the current Linux version,</p>
-                                            <p>please re-install the SD card image <a id="change_log_link" target="_blank" href="https://redpitaya.readthedocs.io/en/latest/quickStart/SDcard/SDcard.html">manually</a>.</p>
+                                            <p>please re-install the SD card image <a id="change_log_link"
+                                                    target="_blank"
+                                                    href="https://redpitaya.readthedocs.io/en/latest/quickStart/SDcard/SDcard.html">manually</a>.
+                                            </p>
 
                                         </div>
-                                        <p class="error_msg">Unable to connect to update server. Please check your internet connection or try again later.<button id="retry">Retry</button></p>
+                                        <p class="error_msg">Unable to connect to update server. Please check your
+                                            internet connection or try again later.<button id="retry">Retry</button></p>
                                     </td>
                                     <td class="step_icon"><img style="display: none" src=""></td>
                                 </tr>
                                 <tr id="step_4" class="step">
                                     <td class="step_desc">Step 4. Downloading OS update
-                                        <p class="error_msg">Download problem has occured. Please check your RedPitaya power supply and Internet connection</p>
+                                        <p class="error_msg">Download problem has occured. Please check your RedPitaya
+                                            power supply and Internet connection</p>
                                     </td>
                                     <td class="step_icon">
-                                        <p id="percent" style="display: none;">0%</p><img style="display: none" src=""></td>
+                                        <p id="percent" style="display: none;">0%</p><img style="display: none" src="">
+                                    </td>
                                 </tr>
                                 <tr id="step_5" class="step">
-                                    <td class="step_desc">Step 5. Extract files
-                                        <p class="error_msg">Can not extract file. Check your SD-card empty space or try to redownload it</p>
+                                    <td class="step_desc">Step 5. Install files
+                                        <p class="error_msg">Versions mismatch</p>
+                                        <p class="warn_msg">Patience... This may take up to 5 minutes!</p>
+                                        <p class="reboot_msg">Reboot</p>
                                     </td>
-                                    <td class="step_icon"><img style="display: none" src=""></td>
+                                    <td class="step_icon">
+                                        <p id="percent_copy" style="display: none;">0%</p><img style="display: none"
+                                            src="">
+                                    </td>
                                 </tr>
-                                <tr id="step_6" class="step">
+                                <!-- <tr id="step_6" class="step">
                                     <td class="step_desc">Step 6. Copy files
                                         <p class="error_msg">Versions mismatch</p>
                                         <p class="warn_msg">Patience... This may take up to 5 minutes!</p>
                                         <p class="reboot_msg">Reboot</p>
                                     </td>
                                     <td class="step_icon"><p id="percent_copy" style="display: none;">0%</p><img style="display: none" src=""></td>
-                                </tr>
-                                <tr id="step_7" class="step">
-                                    <td class="step_desc">Step 7. Done</td>
+                                </tr> -->
+                                <tr id="step_6" class="step">
+                                    <td class="step_desc">Step 6. Done</td>
                                     <td class="step_icon"><img style="display: none" src=""></td>
                                 </tr>
                             </table>
@@ -151,12 +171,12 @@
             <div class="modal-content">
                 <div class="modal-body">
                     <div id="changelog_text">
-          			</div>
-					<button type="button" class="btn" data-dismiss="modal">OK</button>
+                    </div>
+                    <button type="button" class="btn" data-dismiss="modal">OK</button>
                 </div>
-           </div>
+            </div>
         </div>
-	</div>
+    </div>
 </body>
 
 </html>

@@ -30,6 +30,8 @@ class CUpdaterCallback {
     virtual void unzipProgress(uint64_t current, uint64_t total, const char* fileName) {};
 
     virtual void installProgress(uint64_t current, uint64_t total, const char* fileName) {};
+
+    virtual void installDone(std::string fileName, bool success) {}
 };
 
 int rp_UpdaterInit();

@@ -39,6 +39,8 @@ struct Options {
 
     bool verbose = false;
     bool verbose_short = false;
+
+    bool webcontrol = false;
 };
 
 auto usage(char const* progName) -> void;

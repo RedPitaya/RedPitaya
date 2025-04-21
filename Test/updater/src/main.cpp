@@ -16,6 +16,7 @@
 #include <string.h>
 #include <sys/param.h>
 #include <unistd.h>
+#include <atomic>
 #include <chrono>
 #include <cmath>
 #include <fstream>
@@ -26,10 +27,18 @@
 #include "options.h"
 #include "rp_updater.h"
 
+#include "web/rp_websocket.h"
+
+#define WEBPORT 9092
+
 /** Program name */
 const char* g_argv0 = NULL;
 Options g_option;
 int g_returnValue = 0;
+
+std::atomic_bool g_stopWC = false;
+
+rp_websocket::CWEBServer::Ptr g_server = nullptr;
 
 class Callback : public CUpdaterCallback {
    public:
@@ -166,8 +175,46 @@ class Callback : public CUpdaterCallback {
     std::chrono::_V2::steady_clock::time_point m_startTime;
 };
 
+class CallbackWC : public CUpdaterCallback {
+   public:
+    void downloadProgress(std::string fileName, uint64_t dnow, uint64_t dtotal, bool stop) override {
+        if (g_server) {
+            g_server->send("download_progress_now", static_cast<uint32_t>(dnow));
+            g_server->send("download_progress_total", static_cast<uint32_t>(dtotal));
+            g_server->send("download_progress_stop", stop);
+        }
+    };
+
+    void downloadDone(std::string fileName, bool success) override {
+        if (g_server) {
+            g_server->send("download_done", success);
+        }
+    };
+
+    void unzipProgress(uint64_t current, uint64_t total, const char* fileName) override {
+        if (g_server) {
+            g_server->send("unzip_progress_current", static_cast<uint32_t>(current));
+            g_server->send("unzip_progress_total", static_cast<uint32_t>(total));
+        }
+    };
+
+    void installProgress(uint64_t current, uint64_t total, const char* fileName) override {
+        if (g_server) {
+            g_server->send("install_progress_current", static_cast<uint32_t>(current));
+            g_server->send("install_progress_total", static_cast<uint32_t>(total));
+        }
+    };
+
+    void installDone(std::string fileName, bool success) override {
+        if (g_server) {
+            g_server->send("install_done", success);
+        }
+    };
+};
+
 static void termSignalHandler(int) {
     rp_UpdaterStopDownloadFile();
+    g_stopWC = true;
 }
 
 static void installTermSignalHandler() {
@@ -337,6 +384,39 @@ int main(int argc, char* argv[]) {
             g_returnValue = -1;
         }
 
+    } else if (option.webcontrol) {
+        auto callback = new CallbackWC();
+        rp_UpdaterSetCallback(callback);
+        g_server = std::make_shared<rp_websocket::CWEBServer>();
+        g_server->startServer(WEBPORT);
+        g_server->receiveInt.connect([](auto key, auto command) {
+            if (key == "stop") {
+                g_stopWC = true;
+            }
+            if (key == "reboot") {
+                system("reboot");
+                g_stopWC = true;
+            }
+        });
+
+        g_server->receiveStr.connect([](auto key, auto value) {
+            if (key == "download") {
+                auto ret = rp_UpdaterDownloadFileAsync(std::string(value));
+                g_server->send("download", ret);
+            }
+
+            if (key == "install") {
+                system("systemctl stop redpitaya_e3_controller.service");
+                system("systemctl stop redpitaya_nginx.service");
+                auto ret = rp_UpdaterUpdateBoardEcosystem(std::string(value));
+                g_server->send("install", ret);
+            }
+        });
+
+        while (!g_stopWC) {
+            usleep(10000);
+        }
+        rp_UpdaterRemoveCallback();
     } else {
         usage(g_argv0);
     }

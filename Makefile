@@ -407,7 +407,7 @@ e3_led_controller: api
 	cmake -B$(abspath $(E3_LED_CON_DIR)/build) -S$(abspath $(E3_LED_CON_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(E3_LED_CON_DIR)/build install -j$(CPU_CORES)
 
-updater_tool: librpupdater
+updater_tool: librpupdater librpwebsocket
 	cmake -B$(abspath $(UPDATER_DIR)/build) -S$(abspath $(UPDATER_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(UPDATER_DIR)/build install -j$(CPU_CORES)
 
