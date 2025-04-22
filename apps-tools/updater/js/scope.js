@@ -45,10 +45,7 @@
                 UPD.applyChanges();
                 break;
             case 6:
-             //   UPD.prepareToRun();
-                break;
-            case 7:
-             //   UPD.closeUpdate();
+                UPD.closeUpdate();
                 break;
         }
     }
@@ -250,9 +247,12 @@
             setTimeout(function(){
                 RP_CLIENT.connectWebSocket(function onOpen(){
                     console.log("Open");
-                    if (RP_CLIENT.ws)
-                        var js_req = JSON.stringify({ "download": {"type":"string", value: "https://downloads.redpitaya.com/downloads/" + UPD.type + '/' + UPD.ecosystems[UPD.chosen_eco]} });
+                    if (RP_CLIENT.ws){
+                        // var url = "https://downloads.redpitaya.com/downloads/Unify/nightly_builds/ecosystem-2.07-524-5a1947976.zip"
+                        var url = "https://downloads.redpitaya.com/downloads/" + UPD.type + '/' + UPD.ecosystems[UPD.chosen_eco]
+                        var js_req = JSON.stringify({ "download": {"type":"string", value: url } });
                         RP_CLIENT.ws.send(js_req);
+                    }
                     
                 },
                 function onClose(){
@@ -264,12 +264,10 @@
                     $('#step_' + UPD.currentStep).find('.error_msg').show();
                 },
                 function onMessage(receive){
-                    console.log("Message");
                     if (receive.download_done && receive.download_done.value == true){
                         $('#percent').hide()
                         UPD.nextStep();
-                        var js_req = JSON.stringify({ "stop": {"type":"int", value: 0 } });
-                        RP_CLIENT.ws.send(js_req);
+                        return
                     }
 
                     if (receive.download_progress_now){
@@ -278,16 +276,16 @@
 
                     if (receive.download_progress_total){
                         dwTotal = receive.download_progress_total.value
+                        $('#percent').show();
                     }
                     
                     if (dwTotal !== 0){
                         var percent = ((dwCur / dwTotal) * 100).toFixed(2);
                         $('#percent').text(percent + "%");
-                        $('#percent').show();
                     }
                 }
                 )
-            },1000);
+            },3000);
 
         }).fail(function(msg) {
             $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
@@ -295,77 +293,143 @@
         });
 
 
-        // $.ajax({
-        //     url: '/update_download?ecosystem=' + UPD.type + '/' + UPD.ecosystems[UPD.chosen_eco],
-        //     type: 'GET',
-        // }).done(function(res) {
-        //     console.log(res);
-        //     $('#percent').text("0%");
-
-        //     UPD.timerCheck = setInterval(function() {
-        //         var url_arr = window.location.href.split("/");;
-        //         var url = url_arr[0] + '//' + url_arr[2];
-        //         $.ajax({
-        //             url:  url + ':81/update_check',
-        //             type: 'GET',
-        //         }).done(function(msg) {
-        //             if (msg.includes("NONE")) {
-        //                 $('#percent').text("0%");
-        //                 $('#percent').show();
-        //                 return;
-        //             }
-        //             var res = msg;
-        //             var s = res.split(" ")[0];
-        //             var size = parseInt(s) * 1;
-        //             if (isNaN(size)) {
-        //                 $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
-        //                 $('#step_' + UPD.currentStep).find('.error_msg').show();
-        //                 clearInterval(UPD.timerCheck);
-        //             } else {
-        //                 var percent = ((size / UPD.ecosystems_sizes[UPD.chosen_eco]) * 100).toFixed(2);
-        //                 $('#percent').text(percent + "%");
-        //                 $('#percent').show();
-        //             }
-
-        //             if (msg.includes("OK")){
-        //                 clearInterval(UPD.timerCheck);
-        //                 $('#percent').hide();
-        //                UPD.nextStep();
-        //             }
-
-        //             if (msg.includes("FAIL")){
-        //                 clearInterval(UPD.timerCheck);
-        //                 $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
-        //                 $('#step_' + UPD.currentStep).find('.error_msg').show();
-        //             }
-        //         });
-        //     }, 1000);
-
-
-        // }).fail(function(msg) {
-        //     $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
-        //     $('#step_' + UPD.currentStep).find('.error_msg').show();
-        //     clearInterval(UPD.timerCheck);
-        // });
-
     }
 
     UPD.applyChanges = function() {
-        setTimeout(function() {
-            $.ajax({
-                    url: '/update_extract',
-                    type: 'GET',
-                })
-                .done(function(msg) {
-                    var text = msg;
-                    if (text.startsWith("OK"))
-                        UPD.nextStep();
-                    else {
-                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
-                        $('#step_' + UPD.currentStep).find('.error_msg').show();
+        // setTimeout(function() {
+        //     $.ajax({
+        //             url: '/update_extract',
+        //             type: 'GET',
+        //         })
+        //         .done(function(msg) {
+        //             var text = msg;
+        //             if (text.startsWith("OK"))
+        //                 UPD.nextStep();
+        //             else {
+        //                 $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+        //                 $('#step_' + UPD.currentStep).find('.error_msg').show();
+        //             }
+        //         })
+        // }, 500);
+
+        var uzCur = 0;
+        var uzTotal = 0;
+        var iCur = 0;
+        var iTotal = 0;
+
+        $('#percent_install').text("0%");
+
+        setTimeout(function(){
+            RP_CLIENT.connectWebSocket(function onOpen(){
+                console.log("Open");
+                if (RP_CLIENT.ws){
+                    // var js_req = JSON.stringify({ "install": {"type":"string", value: "ecosystem-2.07-524-5a1947976.zip"} });
+                    var js_req = JSON.stringify({ "install": {"type":"string", value: UPD.ecosystems[UPD.chosen_eco]} });
+                    RP_CLIENT.ws.send(js_req);
+                }
+            },
+            function onClose(){
+                console.log("Close");
+            },
+            function onError(){
+                console.log("Error");
+                $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                $('#step_' + UPD.currentStep).find('.step_icon').find('img').show()
+                $('#step_' + UPD.currentStep).find('.error_msg').show();
+                $('#step_' + UPD.currentStep).find('.error_msg').text("Error connecting to server")
+            },
+            function onMessage(receive){
+                if (receive.install) {
+
+                    if (receive.install.value == 0){
+                        $('#step_' + UPD.currentStep).find('.info_msg').show();
+                        $('#step_' + UPD.currentStep).find('.info_msg').text("Success");
+                        RP_CLIENT.ws.send(JSON.stringify({ "reboot": {"type":"int", value: 0} }));
+                        return;
                     }
-                })
-        }, 500);
+
+                    if (receive.install.value == 4){
+                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').show()
+                        $('#step_' + UPD.currentStep).find('.error_msg').show();
+                        $('#step_' + UPD.currentStep).find('.error_msg').text("Error open file")
+                        return;
+                    }
+
+                    if (receive.install.value == 6){
+                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').show()
+                        $('#step_' + UPD.currentStep).find('.error_msg').show();
+                        $('#step_' + UPD.currentStep).find('.error_msg').text("Error calculate md5")
+                        return;
+                    }
+
+                    if (receive.install.value == 7){
+                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').show()
+                        $('#step_' + UPD.currentStep).find('.error_msg').show();
+                        $('#step_' + UPD.currentStep).find('.error_msg').text("Error create directory")
+                        return;
+                    }
+
+                    if (receive.install.value == 8){
+                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').show()
+                        $('#step_' + UPD.currentStep).find('.error_msg').show();
+                        $('#step_' + UPD.currentStep).find('.error_msg').text("Error unzip file")
+                        return;
+                    }
+
+                    $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                    $('#step_' + UPD.currentStep).find('.step_icon').find('img').show()
+                    $('#step_' + UPD.currentStep).find('.error_msg').show();
+                    $('#step_' + UPD.currentStep).find('.error_msg').text("Error. Undefined error")
+                }
+
+                if (receive.install_done && receive.install_done.value == true){
+                    $('#percent_install').hide()
+                    UPD.showReboot()
+                }
+
+                if (receive.unzip_progress_current){
+                    uzCur = receive.unzip_progress_current.value
+                    $('#percent_install').show();
+                    $('#step_' + UPD.currentStep).find('.step_icon').find('img').hide()
+                    if (uzTotal !== 0){
+                        var percent = ((uzCur / uzTotal) * 100).toFixed(2);
+                        $('#percent_install').text(percent + "%");
+                        $('#step_' + UPD.currentStep).find('.info_msg').show();
+                        $('#step_' + UPD.currentStep).find('.info_msg').text("Unzip: " + uzCur + "/" + uzTotal);
+                    }
+                }
+
+                if (receive.unzip_progress_total){
+                    uzTotal = receive.unzip_progress_total.value
+                    $('#percent_install').show();
+                    $('#step_' + UPD.currentStep).find('.step_icon').find('img').hide()
+                }
+
+                if (receive.install_progress_current){
+                    iCur = receive.install_progress_current.value
+                    $('#percent_install').show();
+                    $('#step_' + UPD.currentStep).find('.step_icon').find('img').hide()
+                    if (iTotal !== 0){
+                        var percent = ((iCur / iTotal) * 100).toFixed(2);
+                        $('#percent_install').text(percent + "%");
+                        $('#step_' + UPD.currentStep).find('.info_msg').show();
+                        $('#step_' + UPD.currentStep).find('.info_msg').text("Install: " + iCur + "/" + iTotal);
+                    }
+                }
+
+                if (receive.install_progress_total){
+                    iTotal = receive.install_progress_total.value
+                    $('#percent_install').show();
+                    $('#step_' + UPD.currentStep).find('.step_icon').find('img').hide()
+                }
+
+            }
+            )
+        },3000);
 
     }
 
@@ -383,11 +447,14 @@
                             var eco = UPD.ecosystems[UPD.chosen_eco];
                             var arr = eco.split('-');
                             var ver = arr[1] + '-' + arr[2];
+                            // var ver = "2.07-524"
                             if (msg['version'] == ver) {
                                 UPD.nextStep();
                                 $('#step_' + UPD.currentStep).find('.warn_msg').hide();
+                                $('#step_' + UPD.currentStep).find('.info_msg').hide();
                                 clearInterval(prepare_check);
                             } else {
+                                $('#step_' + UPD.currentStep).find('.info_msg').hide();
                                 $('#step_' + UPD.currentStep).find('.step_icon').find('img').show()
                                 $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
                                 $('#step_' + UPD.currentStep).find('.error_msg').show();

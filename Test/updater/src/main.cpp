@@ -22,6 +22,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <thread>
 #include <vector>
 
 #include "options.h"
@@ -37,8 +38,11 @@ Options g_option;
 int g_returnValue = 0;
 
 std::atomic_bool g_stopWC = false;
+std::atomic_bool g_needReboot = false;
 
 rp_websocket::CWEBServer::Ptr g_server = nullptr;
+
+std::thread* g_installThread = nullptr;
 
 class Callback : public CUpdaterCallback {
    public:
@@ -222,6 +226,20 @@ static void installTermSignalHandler() {
     signal(SIGTERM, termSignalHandler);
 }
 
+void startDaemon() {
+    pid_t pid;
+    pid = fork();
+    if (pid < 0)
+        exit(EXIT_FAILURE);
+    if (pid > 0)
+        exit(EXIT_SUCCESS);
+    if (setsid() < 0)
+        exit(EXIT_FAILURE);
+    int x;
+    for (x = sysconf(_SC_OPEN_MAX); x > 0; x--)
+        close(x);
+}
+
 /** Acquire utility main */
 int main(int argc, char* argv[]) {
 
@@ -371,7 +389,7 @@ int main(int argc, char* argv[]) {
                 auto callback = new Callback();
                 callback->reset();
                 rp_UpdaterSetCallback(callback);
-                g_returnValue = rp_UpdaterUpdateBoardEcosystem(file);
+                g_returnValue = rp_UpdaterUpdateBoardEcosystem(file, false);
                 rp_UpdaterRemoveCallback();
                 delete callback;
             }
@@ -385,7 +403,9 @@ int main(int argc, char* argv[]) {
         }
 
     } else if (option.webcontrol) {
+
         auto callback = new CallbackWC();
+
         rp_UpdaterSetCallback(callback);
         g_server = std::make_shared<rp_websocket::CWEBServer>();
         g_server->startServer(WEBPORT);
@@ -394,8 +414,8 @@ int main(int argc, char* argv[]) {
                 g_stopWC = true;
             }
             if (key == "reboot") {
-                system("reboot");
                 g_stopWC = true;
+                g_needReboot = true;
             }
         });
 
@@ -406,17 +426,36 @@ int main(int argc, char* argv[]) {
             }
 
             if (key == "install") {
-                system("systemctl stop redpitaya_e3_controller.service");
-                system("systemctl stop redpitaya_nginx.service");
-                auto ret = rp_UpdaterUpdateBoardEcosystem(std::string(value));
-                g_server->send("install", ret);
+
+                if (g_installThread && g_installThread->joinable()) {
+                    g_installThread->join();
+                    delete g_installThread;
+                    g_installThread = nullptr;
+                }
+
+                if (g_installThread == nullptr) {
+                    auto fileName = std::string(value);
+                    g_installThread = new std::thread([fileName]() {
+                        system("systemctl stop redpitaya_e3_controller.service");
+                        system("systemctl stop redpitaya_nginx.service");
+                        sleep(1);
+                        auto ret = rp_UpdaterUpdateBoardEcosystem(std::string(fileName), false);
+                        g_server->send("install", ret);
+                    });
+                }
             }
         });
 
         while (!g_stopWC) {
             usleep(10000);
         }
+        if (g_installThread && g_installThread->joinable()) {
+            g_installThread->join();
+        }
         rp_UpdaterRemoveCallback();
+        if (g_needReboot) {
+            system("reboot");
+        }
     } else {
         usage(g_argv0);
     }

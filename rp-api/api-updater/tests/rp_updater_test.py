@@ -92,8 +92,8 @@ print("rp_UpdaterGetNBAvailableFilesList()")
 res = rp_UpdaterGetNBAvailableFilesList()
 print(res)
 
-print("rp_UpdaterUpdateBoardEcosystem('ecosystem-2.06-490-dcd31a4e9.zip')")
-res = rp_UpdaterUpdateBoardEcosystem('ecosystem-2.06-490-dcd31a4e9.zip')
+print("rp_UpdaterUpdateBoardEcosystem('ecosystem-2.06-490-dcd31a4e9.zip,false')")
+res = rp_UpdaterUpdateBoardEcosystem('ecosystem-2.06-490-dcd31a4e9.zip,false')
 print(res)
 
 print("rp_UpdaterRelease()")

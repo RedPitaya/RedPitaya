@@ -48,6 +48,9 @@
 /** Remote request error. */
 #define RP_UP_ERR 9
 
+/** Error remount fs. */
+#define RP_UP_ERM 10
+
 #define ECOSYSTEM_DOWNLOAD_PATH "/home/redpitaya/ecosystems"
 #define ECOSYSTEM_INSTALL_PATH "/opt/redpitaya"
 

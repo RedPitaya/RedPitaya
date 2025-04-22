@@ -58,6 +58,6 @@ int rp_UpdaterGetNBAvailableFilesList(std::vector<std::string>& files);
 int rp_UpdaterDownloadNBFile(uint32_t number);
 int rp_UpdaterDownloadNBFileAsync(uint32_t number);
 
-int rp_UpdaterUpdateBoardEcosystem(std::string fileName);
+int rp_UpdaterUpdateBoardEcosystem(std::string fileName, bool stopServices);
 
 #endif  // __UPDATER_API_H

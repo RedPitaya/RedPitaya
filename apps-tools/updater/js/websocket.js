@@ -79,8 +79,6 @@
                     //     $('#percent_copy').hide()
                     //     UPD.showReboot();
                     // }
-
-
                 } catch (e) {
                     console.log(e);
                 }

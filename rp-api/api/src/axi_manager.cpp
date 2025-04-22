@@ -66,7 +66,7 @@ int osc_axi_map(size_t size, size_t offset, void** mapped) {
     }
     if (offset % sysconf(_SC_PAGESIZE) != 0) {
         ERROR_LOG("Error size. offset %% sysconf(_SC_PAGESIZE) = %ld  must be zero. sysconf(_SC_PAGESIZE) = %ld\nOffset %ld must be a multiple of sysconf(_SC_PAGESIZE) = %ld\n",
-                  offset, offset % sysconf(_SC_PAGESIZE), sysconf(_SC_PAGESIZE), offset, sysconf(_SC_PAGESIZE));
+                  offset % sysconf(_SC_PAGESIZE), sysconf(_SC_PAGESIZE), (long int)offset, sysconf(_SC_PAGESIZE));
         return RP_EMMD;
     }
     *mapped = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, g_mem_fd, offset);
