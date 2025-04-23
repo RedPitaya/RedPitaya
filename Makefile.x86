@@ -62,7 +62,7 @@ $(INSTALL_DIR):
 # X86 build (Vivado FPGA synthesis, FSBL, devicetree, U-Boot, Linux kernel)
 ################################################################################
 
-UBOOT_TAG      = redpitaya-v2022.2
+UBOOT_TAG      = redpitaya-v2022.3
 LINUX_TAG      = branch-redpitaya-v2024.1
 DTREE_TAG      = xilinx_v2022.1
 DTREE_PATH_TAG = xilinx-v2022.1
