@@ -17,8 +17,7 @@
     UPD.currentVer = undefined;
     UPD.EcosystemLinuxVer = undefined;
     UPD.SdLinuxVer = undefined;
-    UPD.type = 'stemlab';
-    UPD.path_fw = '';
+    UPD.type = '';
     UPD.timerCheck = undefined;
 
 
@@ -181,7 +180,7 @@
                     }
                     var distro_desc = es_distro_vers.vers_as_str + '-' + es_distro_vers.build + '(' + es_distro_size + ')';
                     var distro_desc_short = es_distro_vers.vers_as_str + '-' + es_distro_vers.build;
-                    if (UPD.compareVersions(distro_desc_short,UPD.currentVer) < 0){ //>= 0) {
+                    if (UPD.compareVersions(distro_desc_short,UPD.currentVer) >= 0) {
                         $('#used_last_version').show();
                         $('#select_ver').hide();
                         $('#step_4').hide();
@@ -189,7 +188,6 @@
                         $('#step_6').hide();
                         $('#step_7').hide();
                         UPD.setIcon();
-
                     } else {
                         $('#distro_dsc').text(distro_desc);
                         $('#ecosystem_ver').removeAttr('disabled');
@@ -237,18 +235,18 @@
         console.log("Check download");
         $('#step_' + UPD.currentStep).find('.step_icon').find('img').hide();
 
+
+
         $.ajax({
             url: '/run_updater',
             type: 'GET',
         }).done(function(res) {
             console.log(res);
             $('#percent').text("0%");
-        
             setTimeout(function(){
                 RP_CLIENT.connectWebSocket(function onOpen(){
                     console.log("Open");
                     if (RP_CLIENT.ws){
-                        // var url = "https://downloads.redpitaya.com/downloads/Unify/nightly_builds/ecosystem-2.07-524-5a1947976.zip"
                         var url = "https://downloads.redpitaya.com/downloads/" + UPD.type + '/' + UPD.ecosystems[UPD.chosen_eco]
                         var js_req = JSON.stringify({ "download": {"type":"string", value: url } });
                         RP_CLIENT.ws.send(js_req);
@@ -296,21 +294,6 @@
     }
 
     UPD.applyChanges = function() {
-        // setTimeout(function() {
-        //     $.ajax({
-        //             url: '/update_extract',
-        //             type: 'GET',
-        //         })
-        //         .done(function(msg) {
-        //             var text = msg;
-        //             if (text.startsWith("OK"))
-        //                 UPD.nextStep();
-        //             else {
-        //                 $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
-        //                 $('#step_' + UPD.currentStep).find('.error_msg').show();
-        //             }
-        //         })
-        // }, 500);
 
         var uzCur = 0;
         var uzTotal = 0;
@@ -323,7 +306,6 @@
             RP_CLIENT.connectWebSocket(function onOpen(){
                 console.log("Open");
                 if (RP_CLIENT.ws){
-                    // var js_req = JSON.stringify({ "install": {"type":"string", value: "ecosystem-2.07-524-5a1947976.zip"} });
                     var js_req = JSON.stringify({ "install": {"type":"string", value: UPD.ecosystems[UPD.chosen_eco]} });
                     RP_CLIENT.ws.send(js_req);
                 }
@@ -447,7 +429,6 @@
                             var eco = UPD.ecosystems[UPD.chosen_eco];
                             var arr = eco.split('-');
                             var ver = arr[1] + '-' + arr[2];
-                            // var ver = "2.07-524"
                             if (msg['version'] == ver) {
                                 UPD.nextStep();
                                 $('#step_' + UPD.currentStep).find('.warn_msg').hide();
@@ -559,29 +540,18 @@ $(document).ready(function() {
         .done(function(result) {
             stem_ver = result['stem_ver'];
             UPD.type = "Unify/ecosystems";
-            UPD.path_fw = "Unify";
             $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md");
         });
 
-    $('#ecosystem_type').change(function() {
-        /*
-        Reason: exist one branch with fixed name for download distros with latest OS version
-		if ($(this).val() == '1') {
-			$('#warn').hide();
-			UPD.type = '0.97';
-		} else if ($(this).val() == '2') {
-			$('#warn').hide();
-			UPD.type = '0.96';
-		} else if ($(this).val() == '3') {
-			$('#warn').show();
-			UPD.type = 'beta_0.97';
-		} else if ($(this).val() == '4') {
-			$('#warn').show();
-			UPD.type = 'dev';
-		}
-        */
-        UPD.checkUpdates(UPD.type);
-    });
+    // $('#ecosystem_type').change(function() {
+    //     // Reason: exist one branch with fixed name for download distros with latest OS version
+	// 	if ($(this).val() == '1') {
+	// 		UPD.type = 'Unify/ecosystems';
+	// 	} else if ($(this).val() == '2') {
+	// 		UPD.type = 'Unify/nightly_builds';
+	// 	}
+    //     UPD.checkUpdates(UPD.type);
+    // });
 
     $('#ecosystem_ver').change(function() {
         var cur = $('#ecosystem_ver option:selected').text().split(' ')[0];

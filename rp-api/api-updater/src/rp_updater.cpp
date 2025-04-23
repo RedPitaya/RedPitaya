@@ -419,11 +419,6 @@ int rp_UpdaterUpdateBoardEcosystem(std::string fileName, bool stopServices) {
     signal(SIGUSR1, signalHandlerStrong);
     signal(SIGUSR2, signalHandlerStrong);
 
-    if (stopServices) {
-        system("systemctl stop redpitaya_e3_controller.service");
-        system("systemctl stop redpitaya_nginx.service");
-    }
-
     char buff[256];
     sprintf(buff, "mount -o rw,remount  %s", ECOSYSTEM_INSTALL_PATH);
     ret = system(buff);
@@ -440,6 +435,12 @@ int rp_UpdaterUpdateBoardEcosystem(std::string fileName, bool stopServices) {
         signal(SIGUSR2, signalHandlerDefault);
         fprintf(stderr, "Error re-mount %d\n", ret);
         return RP_UP_ERM;
+    }
+
+    if (stopServices) {
+        system("systemctl stop redpitaya_e3_controller.service");
+        system("systemctl stop redpitaya_nginx.service");
+        sleep(1);
     }
 
     createDirTree(ECOSYSTEM_INSTALL_PATH);

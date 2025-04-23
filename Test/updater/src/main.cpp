@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/param.h>
+#include <syslog.h>
 #include <unistd.h>
 #include <atomic>
 #include <chrono>
@@ -404,6 +405,8 @@ int main(int argc, char* argv[]) {
 
     } else if (option.webcontrol) {
 
+        openlog("updater", LOG_PID, LOG_USER);
+
         auto callback = new CallbackWC();
 
         rp_UpdaterSetCallback(callback);
@@ -436,10 +439,7 @@ int main(int argc, char* argv[]) {
                 if (g_installThread == nullptr) {
                     auto fileName = std::string(value);
                     g_installThread = new std::thread([fileName]() {
-                        system("systemctl stop redpitaya_e3_controller.service");
-                        system("systemctl stop redpitaya_nginx.service");
-                        sleep(1);
-                        auto ret = rp_UpdaterUpdateBoardEcosystem(std::string(fileName), false);
+                        auto ret = rp_UpdaterUpdateBoardEcosystem(std::string(fileName), true);
                         g_server->send("install", ret);
                     });
                 }
@@ -454,8 +454,10 @@ int main(int argc, char* argv[]) {
         }
         rp_UpdaterRemoveCallback();
         if (g_needReboot) {
-            system("reboot");
+            syslog(LOG_NOTICE, "Start reboot");
+            system("systemd-run --on-active=5s --unit=shutdown5s systemctl reboot");
         }
+        closelog();
     } else {
         usage(g_argv0);
     }
