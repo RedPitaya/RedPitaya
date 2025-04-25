@@ -2,13 +2,17 @@ cmake_minimum_required(VERSION 3.14)
 
 set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
-set(CMAKE_CXX_STANDARD 20)
-set(C_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
+set(APP jupyter_manager)
+set(BUILD_PATH ${CMAKE_BINARY_DIR}/${APP})
 
-project(filter_calib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${BUILD_PATH})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${BUILD_PATH})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BUILD_PATH})
+
+project(controllerhf)
 
 if(NOT DEFINED INSTALL_DIR)
     message(FATAL_ERROR,"Installation path not set.")
@@ -42,33 +46,14 @@ message(STATUS "Compiler C++ ID: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "Compiler C++version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
-list(APPEND r_paths
-    /opt/redpitaya/lib
-    /opt/redpitaya/lib/web
-)
+set(ZIP_FILE ../../../${APP}-${VERSION}-${REVISION}.zip)
 
-set(CMAKE_INSTALL_RPATH ${r_paths})
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/info DESTINATION ${BUILD_PATH})
 
-include_directories(${INSTALL_DIR}/include)
+install(FILES nginx.conf DESTINATION ${BUILD_PATH})
 
-file(GLOB SOURCES "src/*.cpp")
-file(GLOB RP_HEADERS "src/*.h")
+install(CODE "execute_process(COMMAND sed -i ${BUILD_PATH}/info/info.json -e \"s/REVISION/${REVISION}/\")")
+install(CODE "execute_process(COMMAND sed -i ${BUILD_PATH}/info/info.json -e \"s/VERSION/${VERSION}/\")")
 
-add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
-add_compile_definitions(ARCH_ARM)
-add_compile_options($<$<CONFIG:Debug>:-DTRACE_ENABLE>)
-add_compile_options(-Wall -pedantic -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os>  -ffunction-sections -fdata-sections)
-
-
-add_executable(${PROJECT_NAME} ${SOURCES})
-
-target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib)
-
-target_link_libraries(${PROJECT_NAME} PRIVATE rp rp-calib rp-hw-profiles)
-
-target_link_libraries(${PROJECT_NAME} PRIVATE pthread)
-
-
-install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${INSTALL_DIR}/bin)
-
-unset(INSTALL_DIR CACHE)
+install(CODE "file(ARCHIVE_CREATE OUTPUT ${ZIP_FILE} FORMAT zip PATHS ${BUILD_PATH})")
+install(CODE "file(ARCHIVE_EXTRACT INPUT ${ZIP_FILE} DESTINATION ${INSTALL_DIR}/www/apps)")

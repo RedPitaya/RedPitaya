@@ -17,6 +17,7 @@ message(STATUS "Install path ${INSTALL_DIR}")
 message(STATUS "VERSION=${VERSION}")
 message(STATUS "REVISION=${REVISION}")
 message(STATUS "BUILD_NUMBER=${BUILD_NUMBER}")
+message(STATUS "LINUX_VER=${LINUX_VER}")
 
 message(STATUS "Compiler С path: ${CMAKE_C_COMPILER}")
 message(STATUS "Compiler С ID: ${CMAKE_C_COMPILER_ID}")

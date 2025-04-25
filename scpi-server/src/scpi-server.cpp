@@ -74,7 +74,7 @@ static void handleCloseChildEvents() {
     sigaction(SIGCHLD, &sigchld_action, NULL);
 }
 
-static void termSignalHandler(int signum) {
+static void termSignalHandler(int) {
     app_exit = true;
     syslog(LOG_NOTICE, "Received terminate signal. Exiting...");
 }
@@ -95,14 +95,14 @@ static void installTermSignalHandler() {
  */
 static size_t getNextCommand(const char* buffer, size_t bufferLen) {
     size_t delimiterLen = sizeof(delimiter) - 1;  // dont count last null char.
-    size_t i = 0;
-    for (i = 0; i < bufferLen; i++) {
+    ssize_t i = 0;
+    for (i = 0; i < (ssize_t)bufferLen; i++) {
 
         // Find match for end of delimiter
         if (buffer[i] == delimiter[delimiterLen - 1]) {
 
             // Now go back checking if all delimiter character matches
-            size_t dist = 0;
+            ssize_t dist = 0;
             while (i - dist >= 0 && delimiterLen - dist > 0) {
                 if (buffer[i - dist] != delimiter[delimiterLen - dist - 1]) {
                     break;
@@ -221,8 +221,7 @@ std::thread* threadConnection(int connId, bool isArduino) {
             return;
         }
 
-        SCPI_Init(ctx, ctx->cmdlist, ctx->interface, ctx->units, id0, id1, id2, id3, ctx->buffer.data, ctx->buffer.length, scpi_error_queue_data,
-                  SCPI_ERROR_QUEUE_SIZE);
+        SCPI_Init(ctx, ctx->cmdlist, ctx->interface, ctx->units, id0, id1, id2, id3, ctx->buffer.data, ctx->buffer.length, scpi_error_queue_data, SCPI_ERROR_QUEUE_SIZE);
 
         uc.fd = sockId;
         if (isArduino) {
@@ -360,8 +359,7 @@ auto startUART() -> int {
         return (EXIT_FAILURE);
     }
 
-    SCPI_Init(ctx, ctx->cmdlist, ctx->interface, ctx->units, id0, id1, id2, id3, ctx->buffer.data, ctx->buffer.length, scpi_error_queue_data,
-              SCPI_ERROR_QUEUE_SIZE);
+    SCPI_Init(ctx, ctx->cmdlist, ctx->interface, ctx->units, id0, id1, id2, id3, ctx->buffer.data, ctx->buffer.length, scpi_error_queue_data, SCPI_ERROR_QUEUE_SIZE);
     uc.fd = uart_fd;
     ctx->user_context = &uc;
 
@@ -466,8 +464,7 @@ auto startArduinoApi() -> int {
         return (EXIT_FAILURE);
     }
 
-    SCPI_Init(ctx, ctx->cmdlist, ctx->interface, ctx->units, id0, id1, id2, id3, ctx->buffer.data, ctx->buffer.length, scpi_error_queue_data,
-              SCPI_ERROR_QUEUE_SIZE);
+    SCPI_Init(ctx, ctx->cmdlist, ctx->interface, ctx->units, id0, id1, id2, id3, ctx->buffer.data, ctx->buffer.length, scpi_error_queue_data, SCPI_ERROR_QUEUE_SIZE);
     uc.fd = uart_fd;
     uc.binary_format = false;
     ctx->user_context = &uc;

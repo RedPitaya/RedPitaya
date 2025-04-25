@@ -21,7 +21,7 @@ export VERSION
 export LINUX_VER
 BUILD_MODE ?= Release
 VERBOSE = OFF
-CMAKEVAR=-DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)  -DVERSION=$(VERSION) -DBUILD_NUMBER=$(BUILD_NUMBER) -DREVISION=$(REVISION) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
+CMAKEVAR=-DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)  -DVERSION=$(VERSION) -DLINUX_VER=$(LINUX_VER) -DBUILD_NUMBER=$(BUILD_NUMBER) -DREVISION=$(REVISION) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
 ################################################################################
 #
 ################################################################################
@@ -297,14 +297,14 @@ $(SCPI_PARSER_DIR): $(SCPI_PARSER_TAR)
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
 
-scpi: api $(INSTALL_DIR) $(SCPI_PARSER_DIR)
-	$(MAKE) -i -C $(SCPI_SERVER_DIR) clean
-	$(MAKE) -C $(SCPI_SERVER_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+scpi:  $(INSTALL_DIR) $(SCPI_PARSER_DIR) api
+	cmake -B$(abspath $(SCPI_SERVER_DIR)/build) -S$(abspath $(SCPI_SERVER_DIR)) $(CMAKEVAR)
+	$(MAKE) -C $(SCPI_SERVER_DIR)/build install -j$(CPU_CORES)
 
 scpi_clean:
 	rm -rf $(SCPI_PARSER_TAR)
-	$(MAKE) -i -C $(SCPI_SERVER_DIR) clean
+	rm -rf $(abspath $(SCPI_SERVER_DIR)/build)
+	rm -rf $(abspath $(SCPI_PARSER_DIR))
 
 ################################################################################
 # SDR
@@ -436,8 +436,8 @@ apps-tools: ecosystem updater network_manager scpi_manager streaming_manager jup
 
 
 ecosystem:
-	$(MAKE) -C $(APP_ECOSYSTEM_DIR) clean
-	$(MAKE) -C $(APP_ECOSYSTEM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	cmake -B$(abspath $(APP_ECOSYSTEM_DIR)/build) -S$(abspath $(APP_ECOSYSTEM_DIR)) $(CMAKEVAR)
+	$(MAKE) -C $(APP_ECOSYSTEM_DIR)/build install -j$(CPU_CORES)
 
 updater: web-api
 	cmake -B$(abspath $(APP_UPDATER_DIR)/build) -S$(abspath $(APP_UPDATER_DIR)) $(CMAKEVAR)
@@ -451,7 +451,7 @@ arb_manager: ecosystem web-api api $(NGINX)
 	cmake -B$(abspath $(APP_ARB_MANAGER_DIR)/build) -S$(abspath $(APP_ARB_MANAGER_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(APP_ARB_MANAGER_DIR)/build install -j$(CPU_CORES)
 
-scpi_manager: ecosystem web-api api $(NGINX)
+scpi_manager:
 	cmake -B$(abspath $(APP_SCPIMANAGER_DIR)/build) -S$(abspath $(APP_SCPIMANAGER_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(APP_SCPIMANAGER_DIR)/build install -j$(CPU_CORES)
 
@@ -469,7 +469,8 @@ network_manager: ecosystem
 	$(MAKE) -C $(APP_NETWORKMANAGER_DIR)/build install -j$(CPU_CORES)
 
 jupyter_manager:
-	$(MAKE) -C $(APP_JUPYTERMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	cmake -B$(abspath $(APP_JUPYTERMANAGER_DIR)/build) -S$(abspath $(APP_JUPYTERMANAGER_DIR)) $(CMAKEVAR)
+	$(MAKE) -C $(APP_JUPYTERMANAGER_DIR)/build install -j$(CPU_CORES)
 
 
 ################################################################################
@@ -556,6 +557,7 @@ clean: nginx_clean scpi_clean
 	rm -rf $(abspath $(E3_LED_CON_DIR)/build)
 
 
+	rm -rf $(abspath $(APP_ECOSYSTEM_DIR)/build)
 	rm -rf $(abspath $(APP_ARB_MANAGER_DIR)/build)
 	rm -rf $(abspath $(APP_BA_PRO_DIR)/build)
 	rm -rf $(abspath $(APP_CALIB_DIR)/build)
@@ -568,11 +570,11 @@ clean: nginx_clean scpi_clean
 	rm -rf $(abspath $(APP_SCPIMANAGER_DIR)/build)
 	rm -rf $(abspath $(APP_SPECTRUMPRO_DIR)/build)
 	rm -rf $(abspath $(APP_UPDATER_DIR)/build)
+	rm -rf $(abspath $(APP_JUPYTERMANAGER_DIR)/build)
+
 
 	$(MAKE) -C $(NGINX_DIR) clean
-	$(MAKE) -C $(SCPI_SERVER_DIR) clean
 	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) clean
-	$(MAKE) -C $(IDGEN_DIR) clean
 
 	rm -rf $(DL)
 

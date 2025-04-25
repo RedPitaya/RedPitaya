@@ -5,7 +5,7 @@ set(CMAKE_CXX_COMPILER "g++")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 
-set(APP network_manager)
+set(APP ecosystem)
 set(BUILD_PATH ${CMAKE_BINARY_DIR}/${APP})
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${BUILD_PATH})
@@ -30,11 +30,15 @@ if(NOT DEFINED BUILD_NUMBER)
   set(BUILD_NUMBER devbuild)
 endif()
 
+if(NOT DEFINED LINUX_VER)
+  set(LINUX_VER dev)
+endif()
+
 message(STATUS "Install path ${INSTALL_DIR}")
 message(STATUS "VERSION=${VERSION}")
 message(STATUS "REVISION=${REVISION}")
-message(STATUS "BUILD_NUMBER=${BUILD_NUMBER}")
 message(STATUS "LINUX_VER=${LINUX_VER}")
+message(STATUS "BUILD_NUMBER=${BUILD_NUMBER}")
 
 message(STATUS "Compiler C path: ${CMAKE_C_COMPILER}")
 message(STATUS "Compiler C ID: ${CMAKE_C_COMPILER_ID}")
@@ -48,18 +52,19 @@ message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
 set(ZIP_FILE ../../../${APP}-${VERSION}-${REVISION}.zip)
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/css DESTINATION ${BUILD_PATH})
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/img DESTINATION ${BUILD_PATH})
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/../assets DESTINATION ${BUILD_PATH})
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/images DESTINATION ${BUILD_PATH})
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/info DESTINATION ${BUILD_PATH})
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/js DESTINATION ${BUILD_PATH})
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/scripts DESTINATION ${BUILD_PATH})
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/ui DESTINATION ${BUILD_PATH})
 
 file(GLOB HTML "*.html")
 install(FILES ${HTML} DESTINATION ${BUILD_PATH})
-install(FILES nginx.conf fpga.conf DESTINATION ${BUILD_PATH})
+install(FILES favicon.ico style.css DESTINATION ${BUILD_PATH})
 
 install(CODE "execute_process(COMMAND sed -i ${BUILD_PATH}/info/info.json -e \"s/REVISION/${REVISION}/\")")
 install(CODE "execute_process(COMMAND sed -i ${BUILD_PATH}/info/info.json -e \"s/VERSION/${VERSION}/\")")
+install(CODE "execute_process(COMMAND sed -i ${BUILD_PATH}/info/info.json -e \"s/LINUX_VER/${LINUX_VER}/\")")
+install(CODE "execute_process(COMMAND sed -i ${BUILD_PATH}/info/info.json -e \"s/BUILD_NUMBER/${BUILD_NUMBER}/\")")
 
 install(CODE "file(ARCHIVE_CREATE OUTPUT ${ZIP_FILE} FORMAT zip PATHS ${BUILD_PATH})")
 install(CODE "file(ARCHIVE_EXTRACT INPUT ${ZIP_FILE} DESTINATION ${INSTALL_DIR}/www/apps)")

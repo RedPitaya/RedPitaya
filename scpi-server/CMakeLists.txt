@@ -4,22 +4,21 @@ set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
 set(CMAKE_CXX_STANDARD 20)
 set(C_STANDARD 20)
-set(CMAKE_VERBOSE_MAKEFILE OFF)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 
-project(filter_calib)
+project(scpi-server)
 
 if(NOT DEFINED INSTALL_DIR)
     message(FATAL_ERROR,"Installation path not set.")
 endif()
 
 if(NOT DEFINED VERSION)
-  set(VERSION dev)
+    set(VERSION dev)
 endif()
 
 if(NOT DEFINED REVISION)
-  set(REVISION devbuild)
+    set(REVISION devbuild)
 endif()
 
 if(NOT DEFINED BUILD_NUMBER)
@@ -42,32 +41,30 @@ message(STATUS "Compiler C++ ID: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "Compiler C++version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
-list(APPEND r_paths
-    /opt/redpitaya/lib
-    /opt/redpitaya/lib/web
-)
+# list(APPEND r_paths
+#     /opt/redpitaya/lib
+#     /opt/redpitaya/lib/web
+# )
 
-set(CMAKE_INSTALL_RPATH ${r_paths})
+# set(CMAKE_INSTALL_RPATH ${r_paths})
 
 include_directories(${INSTALL_DIR}/include)
+include_directories(scpi-parser/libscpi/inc)
 
 file(GLOB SOURCES "src/*.cpp")
 file(GLOB RP_HEADERS "src/*.h")
+file(GLOB SOURCES_PARSER "scpi-parser/libscpi/src/*.c")
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
 add_compile_options($<$<CONFIG:Debug>:-DTRACE_ENABLE>)
-add_compile_options(-Wall -pedantic -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os>  -ffunction-sections -fdata-sections)
+add_compile_options(-Wall -Wno-pointer-arith -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
-
-add_executable(${PROJECT_NAME} ${SOURCES})
+add_executable(${PROJECT_NAME} ${SOURCES} ${SOURCES_PARSER})
 
 target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE rp rp-calib rp-hw-profiles)
-
-target_link_libraries(${PROJECT_NAME} PRIVATE pthread)
-
+target_link_libraries(${PROJECT_NAME} PRIVATE -static rpapp_lcr rp-sweep rp-dsp rp rp-hw-calib rp-hw-can rp-hw-profiles rp-i2c rp-spi rp-gpio rp-hw i2c socketcan)
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${INSTALL_DIR}/bin)
 

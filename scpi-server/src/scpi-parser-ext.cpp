@@ -47,7 +47,7 @@ size_t SCPI_Write(scpi_t* context, const char* data, size_t len) {
         user_context_t* uc = (user_context_t*)context->user_context;
         int fd = uc->fd;
         while (len > 0) {
-            size_t written = write(fd, data, len);
+            ssize_t written = write(fd, data, len);
             if (written < 0) {
                 RP_LOG_INFO("Failed to write. Should send %zu bytes. Could send only %zu bytes", len, written);
                 return total;
@@ -100,7 +100,7 @@ size_t writeDelimiterEx(scpi_t* context, bool* error) {
     return 0;
 }
 
-scpi_result_t SCPI_Flush(scpi_t* context) {
+scpi_result_t SCPI_Flush(scpi_t*) {
     return SCPI_RES_OK;
 }
 
@@ -109,7 +109,7 @@ int SCPI_Error(scpi_t* context, int_fast16_t err) {
     return 0;
 }
 
-scpi_result_t SCPI_Control(scpi_t* context, scpi_ctrl_name_t ctrl, scpi_reg_val_t val) {
+scpi_result_t SCPI_Control(scpi_t* context, scpi_ctrl_name_t ctrl, scpi_reg_val_t) {
     if (SCPI_CTRL_SRQ == ctrl) {
         RP_LOG_INFO("**SRQ not implemented");
     } else {
