@@ -6,7 +6,7 @@
 
 APP=$(notdir $(CURDIR:%/=%))
 
-QT_DIR ?= /srv/Qt5.15.2
+QT_DIR ?= /srv/Qt6.7.0
 # Versioning system
 BUILD_NUMBER ?= 0
 REVISION ?= devbuild
