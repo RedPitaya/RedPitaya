@@ -66,5 +66,7 @@ install(CODE "execute_process(COMMAND sed -i ${BUILD_PATH}/info/info.json -e \"s
 install(CODE "execute_process(COMMAND sed -i ${BUILD_PATH}/info/info.json -e \"s/LINUX_VER/${LINUX_VER}/\")")
 install(CODE "execute_process(COMMAND sed -i ${BUILD_PATH}/info/info.json -e \"s/BUILD_NUMBER/${BUILD_NUMBER}/\")")
 
+file(GLOB FOR_COPY ${BUILD_PATH}/*)
+install(CODE "file(INSTALL ${FOR_COPY} DESTINATION ${INSTALL_DIR}/www/apps)")
+
 install(CODE "file(ARCHIVE_CREATE OUTPUT ${ZIP_FILE} FORMAT zip PATHS ${BUILD_PATH})")
-install(CODE "file(ARCHIVE_EXTRACT INPUT ${ZIP_FILE} DESTINATION ${INSTALL_DIR}/www/apps)")
