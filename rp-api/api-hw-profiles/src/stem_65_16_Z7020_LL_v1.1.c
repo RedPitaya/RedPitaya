@@ -106,7 +106,9 @@ profiles_t stem_65_16_Z7020_LL_v1_1 = {
     .is_E3_high_speed_gpio = false,
     .is_E3_mcc_qspi = false,
     .E3_high_speed_gpio_rate = 0,
-    .is_E3_present = false
+    .is_E3_present = false,
+
+    .is_calib_in_fpga = false
 
 };
 

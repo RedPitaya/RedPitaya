@@ -2,19 +2,18 @@
 #define __VIEW_CONTROLLER_H
 
 #include <stdint.h>
-#include <mutex>
 #include <atomic>
-#include <vector>
 #include <chrono>
+#include <mutex>
+#include <vector>
 
-#include "rpApp.h"
 #include "constants.h"
+#include "rpApp.h"
 
-class CViewController{
+class CViewController {
 
-public:
-
-    struct OscillogramInfo{
+   public:
+    struct OscillogramInfo {
         float m_min = 0;
         float m_max = 0;
         float m_mean = 0;
@@ -28,8 +27,7 @@ public:
         bool m_dataHasTrigger;
     };
 
-    struct Oscillogram
-    {
+    struct Oscillogram {
         buffers_t* m_data;
         std::mutex m_viewMutex;
         uint32_t m_decimation;
@@ -40,20 +38,16 @@ public:
         uint32_t m_validAfterTrigger;
         Oscillogram();
         ~Oscillogram();
-        Oscillogram(Oscillogram &&) = delete;
+        Oscillogram(Oscillogram&&) = delete;
     };
 
-
-    enum EViewMode{
-        NORMAL = 0,
-        ROLL   = 1
-    };
+    enum EViewMode { NORMAL = 0, ROLL = 1 };
 
     CViewController();
     ~CViewController();
 
-    CViewController(CViewController &) = delete;
-    CViewController(CViewController &&) = delete;
+    CViewController(CViewController&) = delete;
+    CViewController(CViewController&&) = delete;
 
     auto getGridXCount() const -> uint16_t;
     auto getGridYCount() const -> uint16_t;
@@ -109,7 +103,7 @@ public:
     auto setTimeOffset(float _offset) -> int;
     auto getTimeOffset() -> float;
 
-    auto calculateDecimation(float _scale,uint32_t *_decimation,bool _continuesMode) -> int;
+    auto calculateDecimation(float _scale, uint32_t* _decimation, bool _continuesMode) -> int;
     auto getCurrentDecimation(bool _continuesMode) -> uint32_t;
 
     // auto clearView() -> void;
@@ -133,20 +127,18 @@ public:
     auto getOscPerSec() -> uint32_t;
     auto bufferSelectNext() -> void;
     auto bufferSelectPrev() -> void;
-    auto bufferCurrent(int32_t *current) -> void;
+    auto bufferCurrent(int32_t* current) -> void;
 
     // auto setCapturedDecimation(uint32_t _dec) -> void;
     // auto getCapturedDecimation() -> uint32_t;
 
-
-private:
-
+   private:
     auto initView() -> bool;
     auto releaseView() -> void;
 
     uint16_t m_viewGridXCount;
     uint16_t m_viewGridYCount;
-    vsize_t  m_viewSizeInPoints;
+    vsize_t m_viewSizeInPoints;
 
     std::vector<float> m_view[MAX_VIEW_CHANNELS];
     std::vector<float> m_viewRaw[MAX_VIEW_CHANNELS];
@@ -179,7 +171,6 @@ private:
     std::chrono::time_point<std::chrono::system_clock> m_lastTimeCapture;
     uint32_t m_oscPerSec;
     uint32_t m_oscPerSecCounter;
-
 };
 
-#endif // __VIEW_CONTROLLER_H
+#endif  // __VIEW_CONTROLLER_H

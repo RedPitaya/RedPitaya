@@ -14,6 +14,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <math.h>
 #include <sys/mman.h>
 #include <unistd.h>
 
@@ -97,7 +98,9 @@ int osc_Release() {
 
 int osc_printRegset() {
 
-    auto print = [](volatile osc_control_t* reg, int baseOffset, int baseCh, int channels) {
+    auto is_calib_fpga = rp_HPGetIsCalibInFPGAOrDefault();
+
+    auto print = [is_calib_fpga](volatile osc_control_t* reg, int baseOffset, int baseCh, int channels) {
         auto strWithCh = [](const char* fmt, int ch) -> std::string {
             char buff[255];
             sprintf(buff, fmt, ch);
@@ -126,20 +129,14 @@ int osc_printRegset() {
         }
 
         printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d threshold", baseCh).c_str(), baseOffset + offsetof(osc_control_t, cha_thr), reg->cha_thr);
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d threshold", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, chb_thr),
-                 reg->chb_thr);
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d trigger delay", baseCh).c_str(), baseOffset + offsetof(osc_control_t, trigger_delay),
-                 reg->trigger_delay);
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d decimation", baseCh).c_str(), baseOffset + offsetof(osc_control_t, data_dec),
-                 reg->data_dec);
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d current write pointer", baseCh).c_str(), baseOffset + offsetof(osc_control_t, wr_ptr_cur),
-                 reg->wr_ptr_cur);
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d trigger write pointer", baseCh).c_str(),
-                 baseOffset + offsetof(osc_control_t, wr_ptr_trigger), reg->wr_ptr_trigger);
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d hysteresis", baseCh).c_str(), baseOffset + offsetof(osc_control_t, cha_hystersis),
-                 reg->cha_hystersis);
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d hysteresis", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, chb_hystersis),
-                 reg->chb_hystersis);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d threshold", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, chb_thr), reg->chb_thr);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d trigger delay", baseCh).c_str(), baseOffset + offsetof(osc_control_t, trigger_delay), reg->trigger_delay);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d decimation", baseCh).c_str(), baseOffset + offsetof(osc_control_t, data_dec), reg->data_dec);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d current write pointer", baseCh).c_str(), baseOffset + offsetof(osc_control_t, wr_ptr_cur), reg->wr_ptr_cur);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d trigger write pointer", baseCh).c_str(), baseOffset + offsetof(osc_control_t, wr_ptr_trigger),
+                 reg->wr_ptr_trigger);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d hysteresis", baseCh).c_str(), baseOffset + offsetof(osc_control_t, cha_hystersis), reg->cha_hystersis);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d hysteresis", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, chb_hystersis), reg->chb_hystersis);
 
         if (baseCh == 1) {
             trig_average_u_t conf;
@@ -151,62 +148,51 @@ int osc_printRegset() {
             }
         }
 
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d Pre Trigger counter", baseCh).c_str(),
-                 baseOffset + offsetof(osc_control_t, pre_trigger_counter), reg->pre_trigger_counter);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d Pre Trigger counter", baseCh).c_str(), baseOffset + offsetof(osc_control_t, pre_trigger_counter),
+                 reg->pre_trigger_counter);
 
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AA filter", baseCh).c_str(), baseOffset + offsetof(osc_control_t, cha_filt_aa),
-                 reg->cha_filt_aa);
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d BB filter", baseCh).c_str(), baseOffset + offsetof(osc_control_t, cha_filt_bb),
-                 reg->cha_filt_bb);
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d KK filter", baseCh).c_str(), baseOffset + offsetof(osc_control_t, cha_filt_kk),
-                 reg->cha_filt_kk);
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d PP filter", baseCh).c_str(), baseOffset + offsetof(osc_control_t, cha_filt_pp),
-                 reg->cha_filt_pp);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AA filter", baseCh).c_str(), baseOffset + offsetof(osc_control_t, cha_filt_aa), reg->cha_filt_aa);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d BB filter", baseCh).c_str(), baseOffset + offsetof(osc_control_t, cha_filt_bb), reg->cha_filt_bb);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d KK filter", baseCh).c_str(), baseOffset + offsetof(osc_control_t, cha_filt_kk), reg->cha_filt_kk);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d PP filter", baseCh).c_str(), baseOffset + offsetof(osc_control_t, cha_filt_pp), reg->cha_filt_pp);
 
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AA filter", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, chb_filt_aa),
-                 reg->chb_filt_aa);
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d BB filter", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, chb_filt_bb),
-                 reg->chb_filt_bb);
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d KK filter", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, chb_filt_kk),
-                 reg->chb_filt_kk);
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d PP filter", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, chb_filt_pp),
-                 reg->chb_filt_pp);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AA filter", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, chb_filt_aa), reg->chb_filt_aa);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d BB filter", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, chb_filt_bb), reg->chb_filt_bb);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d KK filter", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, chb_filt_kk), reg->chb_filt_kk);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d PP filter", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, chb_filt_pp), reg->chb_filt_pp);
 
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI lower address", baseCh).c_str(),
-                 baseOffset + offsetof(osc_control_t, cha_axi_addr_low), reg->cha_axi_addr_low);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI lower address", baseCh).c_str(), baseOffset + offsetof(osc_control_t, cha_axi_addr_low),
+                 reg->cha_axi_addr_low);
 
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI upper address", baseCh).c_str(),
-                 baseOffset + offsetof(osc_control_t, cha_axi_addr_high), reg->cha_axi_addr_high);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI upper address", baseCh).c_str(), baseOffset + offsetof(osc_control_t, cha_axi_addr_high),
+                 reg->cha_axi_addr_high);
 
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI trigger delay", baseCh).c_str(), baseOffset + offsetof(osc_control_t, cha_axi_delay),
-                 reg->cha_axi_delay);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI trigger delay", baseCh).c_str(), baseOffset + offsetof(osc_control_t, cha_axi_delay), reg->cha_axi_delay);
 
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI enable", baseCh).c_str(), baseOffset + offsetof(osc_control_t, cha_axi_enable),
-                 reg->cha_axi_enable);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI enable", baseCh).c_str(), baseOffset + offsetof(osc_control_t, cha_axi_enable), reg->cha_axi_enable);
 
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI WP trigger", baseCh).c_str(),
-                 baseOffset + offsetof(osc_control_t, cha_axi_wr_ptr_trigger), reg->cha_axi_wr_ptr_trigger);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI WP trigger", baseCh).c_str(), baseOffset + offsetof(osc_control_t, cha_axi_wr_ptr_trigger),
+                 reg->cha_axi_wr_ptr_trigger);
 
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI WP current", baseCh).c_str(),
-                 baseOffset + offsetof(osc_control_t, cha_axi_wr_ptr_cur), reg->cha_axi_wr_ptr_cur);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI WP current", baseCh).c_str(), baseOffset + offsetof(osc_control_t, cha_axi_wr_ptr_cur),
+                 reg->cha_axi_wr_ptr_cur);
 
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI lower address", baseCh + 1).c_str(),
-                 baseOffset + offsetof(osc_control_t, chb_axi_addr_low), reg->chb_axi_addr_low);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI lower address", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, chb_axi_addr_low),
+                 reg->chb_axi_addr_low);
 
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI upper address", baseCh + 1).c_str(),
-                 baseOffset + offsetof(osc_control_t, chb_axi_addr_high), reg->chb_axi_addr_high);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI upper address", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, chb_axi_addr_high),
+                 reg->chb_axi_addr_high);
 
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI trigger delay", baseCh + 1).c_str(),
-                 baseOffset + offsetof(osc_control_t, chb_axi_delay), reg->chb_axi_delay);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI trigger delay", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, chb_axi_delay),
+                 reg->chb_axi_delay);
 
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI enable", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, chb_axi_enable),
-                 reg->chb_axi_enable);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI enable", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, chb_axi_enable), reg->chb_axi_enable);
 
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI WP trigger", baseCh + 1).c_str(),
-                 baseOffset + offsetof(osc_control_t, chb_axi_wr_ptr_trigger), reg->chb_axi_wr_ptr_trigger);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI WP trigger", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, chb_axi_wr_ptr_trigger),
+                 reg->chb_axi_wr_ptr_trigger);
 
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI WP current", baseCh + 1).c_str(),
-                 baseOffset + offsetof(osc_control_t, chb_axi_wr_ptr_cur), reg->chb_axi_wr_ptr_cur);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI WP current", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, chb_axi_wr_ptr_cur),
+                 reg->chb_axi_wr_ptr_cur);
 
         printReg("%-25s\t0x%X = 0x%08X (%d)\n", "AXI state", baseOffset + offsetof(osc_control_t, axi_state), reg->axi_state);
         axi_state_u_t axi_state;
@@ -233,16 +219,29 @@ int osc_printRegset() {
         printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Filter bypass", baseOffset + offsetof(osc_control_t, filter_bypass), reg->filter_bypass);
         rec_filter.reg.print();
 
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d trigger delay", baseCh + 1).c_str(),
-                 baseOffset + offsetof(osc_control_t, trigger_delay_ch2), reg->trigger_delay_ch2);
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d decimation", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, data_dec_ch2),
-                 reg->data_dec_ch2);
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d current write pointer", baseCh + 1).c_str(),
-                 baseOffset + offsetof(osc_control_t, wr_ptr_cur_ch2), reg->wr_ptr_cur_ch2);
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d trigger write pointer", baseCh + 1).c_str(),
-                 baseOffset + offsetof(osc_control_t, wr_ptr_trigger_ch2), reg->wr_ptr_trigger_ch2);
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d Pre Trigger counter", baseCh + 1).c_str(),
-                 baseOffset + offsetof(osc_control_t, pre_trigger_counter_ch2), reg->pre_trigger_counter_ch2);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d trigger delay", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, trigger_delay_ch2),
+                 reg->trigger_delay_ch2);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d decimation", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, data_dec_ch2), reg->data_dec_ch2);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d current write pointer", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, wr_ptr_cur_ch2),
+                 reg->wr_ptr_cur_ch2);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d trigger write pointer", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, wr_ptr_trigger_ch2),
+                 reg->wr_ptr_trigger_ch2);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d Pre Trigger counter", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, pre_trigger_counter_ch2),
+                 reg->pre_trigger_counter_ch2);
+
+        if (is_calib_fpga) {
+            printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d Calibration offset", baseCh).c_str(), baseOffset + offsetof(osc_control_t, calib_offset_ch1),
+                     reg->calib_offset_ch1);
+
+            printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d Calibration gain", baseCh).c_str(), baseOffset + offsetof(osc_control_t, calib_gain_ch1),
+                     reg->calib_gain_ch1);
+
+            printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d Calibration offset", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, calib_offset_ch2),
+                     reg->calib_offset_ch2);
+
+            printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d Calibration gain", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, calib_gain_ch2),
+                     reg->calib_gain_ch2);
+        }
     };
 
     auto channels = rp_HPGetFastADCChannelsCountOrDefault();
@@ -767,6 +766,7 @@ int osc_GetHysteresisChA(uint32_t* hysteresis) {
 
 int osc_SetHysteresisChB(uint32_t hysteresis) {
     uint32_t currentValue = 0;
+    cmn_Debug("cmn_SetValue(&osc_reg->chb_hystersis) mask 0x3FFF <- 0x%X", hysteresis);
     return cmn_SetValue(&osc_reg->chb_hystersis, hysteresis, HYSTERESIS_MASK, &currentValue);
 }
 
@@ -808,17 +808,20 @@ int osc_SetEqFilterBypass(rp_channel_t channel, bool enable) {
         case RP_CH_1:
             bypass.reg_full = osc_reg->filter_bypass;
             bypass.reg.bypass_ch1 = enable;
+            cmn_Debug("cmn_SetValue(osc_reg->filter_bypass) <- 0x%X", bypass.reg_full);
             osc_reg->filter_bypass = bypass.reg_full;
             return RP_OK;
         case RP_CH_2:
             bypass.reg_full = osc_reg->filter_bypass;
             bypass.reg.bypass_ch2 = enable;
+            cmn_Debug("cmn_SetValue(osc_reg->filter_bypass) <- 0x%X", bypass.reg_full);
             osc_reg->filter_bypass = bypass.reg_full;
             return RP_OK;
         case RP_CH_3:
             if (osc_reg_4ch) {
                 bypass.reg_full = osc_reg_4ch->filter_bypass;
                 bypass.reg.bypass_ch1 = enable;
+                cmn_Debug("cmn_SetValue(osc_reg_4ch->filter_bypass) <- 0x%X", bypass.reg_full);
                 osc_reg_4ch->filter_bypass = bypass.reg_full;
                 return RP_OK;
             } else {
@@ -830,6 +833,7 @@ int osc_SetEqFilterBypass(rp_channel_t channel, bool enable) {
             if (osc_reg_4ch) {
                 bypass.reg_full = osc_reg_4ch->filter_bypass;
                 bypass.reg.bypass_ch2 = enable;
+                cmn_Debug("cmn_SetValue(osc_reg_4ch->filter_bypass) <- 0x%X", bypass.reg_full);
                 osc_reg_4ch->filter_bypass = bypass.reg_full;
                 return RP_OK;
             } else {
@@ -869,6 +873,170 @@ int osc_GetEqFilterBypass(rp_channel_t channel, bool* enable) {
             if (osc_reg_4ch) {
                 bypass.reg_full = osc_reg_4ch->filter_bypass;
                 *enable = bypass.reg.bypass_ch2;
+                return RP_OK;
+            } else {
+                ERROR_LOG("Registers for channels 3 and 4 are not initialized")
+                return RP_NOTS;
+            }
+            break;
+        default:
+            ERROR_LOG("Wrong channel %d", channel)
+            break;
+    }
+    return RP_EOOR;
+}
+
+int osc_SetCalibOffsetInFPGA(rp_channel_t channel, uint8_t bits, int32_t offset) {
+
+    if (bits > 16) {
+        FATAL("The number of bits for ADC is greater than the allowed limit.")
+        return RP_EOOR;
+    }
+
+    int16_t offsetCalc = offset * -(pow(2, 16 - bits));
+
+    uint32_t currentValue = 0;
+    switch (channel) {
+        case RP_CH_1:
+            cmn_Debug("cmn_SetValue(&osc_reg->calib_offset_ch1) mask 0xFFFF <- 0x%X", offsetCalc);
+            return cmn_SetValue(&osc_reg->calib_offset_ch1, offsetCalc, CALIB_MASK, &currentValue);
+        case RP_CH_2:
+            cmn_Debug("cmn_SetValue(&osc_reg->calib_offset_ch2) mask 0xFFFF <- 0x%X", offsetCalc);
+            return cmn_SetValue(&osc_reg->calib_offset_ch2, offsetCalc, CALIB_MASK, &currentValue);
+        case RP_CH_3:
+            if (osc_reg_4ch) {
+                cmn_Debug("cmn_SetValue(&osc_reg_4ch->calib_offset_ch1) mask 0xFFFF <- 0x%X", offsetCalc);
+                return cmn_SetValue(&osc_reg_4ch->calib_offset_ch1, offsetCalc, CALIB_MASK, &currentValue);
+            } else {
+                ERROR_LOG("Registers for channels 3 and 4 are not initialized")
+                return RP_NOTS;
+            }
+            break;
+        case RP_CH_4:
+            if (osc_reg_4ch) {
+                cmn_Debug("cmn_SetValue(&osc_reg_4ch->calib_offset_ch2) mask 0xFFFF <- 0x%X", offsetCalc);
+                return cmn_SetValue(&osc_reg_4ch->calib_offset_ch2, offsetCalc, CALIB_MASK, &currentValue);
+            } else {
+                ERROR_LOG("Registers for channels 3 and 4 are not initialized")
+                return RP_NOTS;
+            }
+            break;
+        default:
+            ERROR_LOG("Wrong channel %d", channel)
+            break;
+    }
+    return RP_EOOR;
+}
+
+int osc_SetCalibGainInFPGA(rp_channel_t channel, double gain) {
+    if (gain >= 2) {
+        ERROR_LOG("The gain for channel %d is very large %f. Will be limited to 1.999999", channel + 1, gain)
+        gain = 1.999999;
+    }
+
+    if (gain < 0) {
+        ERROR_LOG("The gain for channel %d should not be negative.", channel + 1)
+        gain = 0;
+    }
+
+    uint16_t gainCalc = gain * 32768;
+
+    uint32_t currentValue = 0;
+    switch (channel) {
+        case RP_CH_1:
+            cmn_Debug("cmn_SetValue(&osc_reg->calib_gain_ch1) mask 0xFFFF <- 0x%X", gainCalc);
+            return cmn_SetValue(&osc_reg->calib_gain_ch1, gainCalc, CALIB_MASK, &currentValue);
+        case RP_CH_2:
+            cmn_Debug("cmn_SetValue(&osc_reg->calib_gain_ch2) mask 0xFFFF <- 0x%X", gainCalc);
+            return cmn_SetValue(&osc_reg->calib_gain_ch2, gainCalc, CALIB_MASK, &currentValue);
+        case RP_CH_3:
+            if (osc_reg_4ch) {
+                cmn_Debug("cmn_SetValue(&osc_reg_4ch->calib_gain_ch1) mask 0xFFFF <- 0x%X", gainCalc);
+                return cmn_SetValue(&osc_reg_4ch->calib_gain_ch1, gainCalc, CALIB_MASK, &currentValue);
+            } else {
+                ERROR_LOG("Registers for channels 3 and 4 are not initialized")
+                return RP_NOTS;
+            }
+            break;
+        case RP_CH_4:
+            if (osc_reg_4ch) {
+                cmn_Debug("cmn_SetValue(&osc_reg_4ch->calib_gain_ch2) mask 0xFFFF <- 0x%X", gainCalc);
+                return cmn_SetValue(&osc_reg_4ch->calib_gain_ch2, gainCalc, CALIB_MASK, &currentValue);
+            } else {
+                ERROR_LOG("Registers for channels 3 and 4 are not initialized")
+                return RP_NOTS;
+            }
+            break;
+        default:
+            ERROR_LOG("Wrong channel %d", channel)
+            break;
+    }
+    return RP_EOOR;
+}
+
+int osc_GetCalibOffsetInFPGA(rp_channel_t channel, uint8_t bits, int32_t* offset) {
+    uint32_t offset_fpga = 0;
+    int32_t devider = -(pow(2, 16 - bits));
+    switch (channel) {
+        case RP_CH_1: {
+            auto ret = cmn_GetValue(&osc_reg->calib_offset_ch1, &offset_fpga, CALIB_MASK);
+            *offset = (int16_t)offset_fpga / devider;
+            return ret;
+        }
+        case RP_CH_2: {
+            auto ret = cmn_GetValue(&osc_reg->calib_offset_ch2, &offset_fpga, CALIB_MASK);
+            *offset = (int16_t)offset_fpga / devider;
+            return ret;
+        }
+        case RP_CH_3: {
+            if (osc_reg_4ch) {
+                auto ret = cmn_GetValue(&osc_reg_4ch->calib_offset_ch1, &offset_fpga, CALIB_MASK);
+                *offset = (int16_t)offset_fpga / devider;
+                return ret;
+            } else {
+                ERROR_LOG("Registers for channels 3 and 4 are not initialized")
+                return RP_NOTS;
+            }
+            break;
+        }
+        case RP_CH_4: {
+            if (osc_reg_4ch) {
+                auto ret = cmn_GetValue(&osc_reg_4ch->calib_offset_ch2, &offset_fpga, CALIB_MASK);
+                *offset = (int16_t)offset_fpga / devider;
+                return ret;
+            } else {
+                ERROR_LOG("Registers for channels 3 and 4 are not initialized")
+                return RP_NOTS;
+            }
+            break;
+        }
+        default:
+            ERROR_LOG("Wrong channel %d", channel)
+            break;
+    }
+    return RP_EOOR;
+}
+
+int osc_GetCalibGainInFPGA(rp_channel_t channel, double* gain) {
+    switch (channel) {
+        case RP_CH_1:
+            *gain = (double)osc_reg->calib_gain_ch1 / 32768.0;
+            return RP_OK;
+        case RP_CH_2:
+            *gain = (double)osc_reg->calib_gain_ch2 / 32768.0;
+            return RP_OK;
+        case RP_CH_3:
+            if (osc_reg_4ch) {
+                *gain = (double)osc_reg_4ch->calib_gain_ch1 / 32768.0;
+                return RP_OK;
+            } else {
+                ERROR_LOG("Registers for channels 3 and 4 are not initialized")
+                return RP_NOTS;
+            }
+            break;
+        case RP_CH_4:
+            if (osc_reg_4ch) {
+                *gain = (double)osc_reg_4ch->calib_gain_ch2 / 32768.0;
                 return RP_OK;
             } else {
                 ERROR_LOG("Registers for channels 3 and 4 are not initialized")

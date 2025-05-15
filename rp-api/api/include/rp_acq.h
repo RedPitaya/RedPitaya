@@ -1008,6 +1008,7 @@ int rp_AcqGetBypassFilter(rp_channel_t channel, bool* enable);
 
 /**
 * Sets the current calibration values from temporary memory to the FPGA filter
+* @param channel Channel A or B.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
@@ -1015,7 +1016,7 @@ int rp_AcqUpdateAcqFilter(rp_channel_t channel);
 
 /**
 * Sets the current calibration values from temporary memory to the FPGA filter
-* @param channel Channel A or B for which we want to retrieve the ADC buffer.
+* @param channel Channel A or B.
 * @param coef_aa Return AA coefficient.
 * @param coef_bb Return BB coefficient.
 * @param coef_kk Return KK coefficient.
@@ -1024,6 +1025,14 @@ int rp_AcqUpdateAcqFilter(rp_channel_t channel);
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_AcqGetFilterCalibValue(rp_channel_t channel, uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
+
+/**
+* Sets the current calibration values from temporary memory to the FPGA
+* @param channel Channel A or B.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_AcqSetCalibInFPGA(rp_channel_t channel);
 
 /**
  * Sets ext. trigger debouncer for acquisition in Us (Value must be positive).

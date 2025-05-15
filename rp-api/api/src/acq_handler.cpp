@@ -48,6 +48,8 @@ static const int32_t TRIG_DELAY_ZERO_OFFSET = ADC_BUFFER_SIZE / 2;
 /* @brief Currently set Gain state */
 static rp_pinState_t gain_ch[4] = {RP_LOW, RP_LOW, RP_LOW, RP_LOW};
 
+static bool is_calib_fpga_ch[4] = {false, false, false, false};
+
 /* @brief Currently set AC/DC state */
 static rp_acq_ac_dc_mode_t power_mode_ch[4] = {RP_DC, RP_DC, RP_DC, RP_DC};
 
@@ -157,6 +159,98 @@ static int setEqFilters(rp_channel_t channel) {
 
     if (channel == RP_CH_4) {
         return osc_SetEqFiltersChD(filter.aa, filter.bb, filter.kk, filter.pp);
+    }
+
+    return RP_EOOR;
+}
+
+static int setCalibInFPGA(rp_channel_t channel) {
+
+    auto setState = [channel](bool state) {
+        switch (channel) {
+            case RP_CH_1: {
+                is_calib_fpga_ch[0] = state;
+                return RP_OK;
+            }
+
+            case RP_CH_2: {
+                is_calib_fpga_ch[1] = state;
+                return RP_OK;
+            }
+
+            case RP_CH_3: {
+                is_calib_fpga_ch[2] = state;
+                return RP_OK;
+            }
+
+            case RP_CH_4: {
+                is_calib_fpga_ch[3] = state;
+                return RP_OK;
+            }
+
+            default:
+                break;
+        }
+        return RP_EOOR;
+    };
+
+    bool is_fpga = false;
+    if (rp_HPGetIsCalibInFPGA(&is_fpga) != RP_HP_OK) {
+        return RP_EOOR;
+    }
+
+    uint8_t calib_id = 0;
+    if (rp_GetCalibrationVersion(&calib_id) != RP_HW_CALIB_OK) {
+        return RP_EOOR;
+    }
+
+    if (is_fpga && calib_id >= RP_HW_PACK_ID_V6) {
+        rp_pinState_t mode;
+        rp_acq_ac_dc_mode_t power_mode;
+        uint8_t bits = 0;
+        double gain = 1;
+        int32_t offset = 0;
+
+        if (acq_GetGain(channel, &mode) != RP_OK) {
+            return RP_EOOR;
+        }
+        if (acq_GetAC_DC(channel, &power_mode) != RP_OK) {
+            return RP_EOOR;
+        }
+
+        int ret = rp_HPGetFastADCBits(&bits);
+
+        switch (mode) {
+            case RP_LOW:
+                ret |= rp_CalibGetFastADCCalibValue(convertCh(channel), convertPower(power_mode), &gain, &offset);
+                break;
+
+            case RP_HIGH:
+                ret |= rp_CalibGetFastADCCalibValue_1_20(convertCh(channel), convertPower(power_mode), &gain, &offset);
+                break;
+
+            default:
+                ERROR_LOG("Unknown mode: %d", mode);
+                return RP_EOOR;
+                break;
+        }
+
+        if (ret != RP_HW_CALIB_OK) {
+            ERROR_LOG("Get calibaration: %d", ret);
+            return RP_EOOR;
+        }
+
+        ret |= osc_SetCalibGainInFPGA(channel, gain);
+        ret |= osc_SetCalibOffsetInFPGA(channel, bits, offset);
+        if (ret == RP_OK) {
+            ret |= setState(true);
+        } else {
+            ret |= setState(false);
+        }
+        return ret;
+
+    } else {
+        return setState(false);
     }
 
     return RP_EOOR;
@@ -595,19 +689,21 @@ int acq_SetChannelThreshold(rp_channel_t channel, float voltage) {
     ret |= rp_HPGetFastADCBits(&bits);
     ret |= rp_HPGetFastADCIsSigned(&is_sign);
 
-    switch (mode) {
-        case RP_LOW:
-            ret = rp_CalibGetFastADCCalibValue(convertCh(channel), convertPower(power_mode), &gain, &offset);
-            break;
+    if (is_calib_fpga_ch[channel] == false) {
+        switch (mode) {
+            case RP_LOW:
+                ret = rp_CalibGetFastADCCalibValue(convertCh(channel), convertPower(power_mode), &gain, &offset);
+                break;
 
-        case RP_HIGH:
-            ret = rp_CalibGetFastADCCalibValue_1_20(convertCh(channel), convertPower(power_mode), &gain, &offset);
-            break;
+            case RP_HIGH:
+                ret = rp_CalibGetFastADCCalibValue_1_20(convertCh(channel), convertPower(power_mode), &gain, &offset);
+                break;
 
-        default:
-            ERROR_LOG("Unknown mode: %d", mode);
-            return RP_EOOR;
-            break;
+            default:
+                ERROR_LOG("Unknown mode: %d", mode);
+                return RP_EOOR;
+                break;
+        }
     }
 
     if (ret != RP_HW_CALIB_OK) {
@@ -719,19 +815,21 @@ int acq_SetChannelThresholdHyst(rp_channel_t channel, float voltage) {
     int ret = rp_HPGetFastADCBits(&bits);
     ret |= rp_HPGetFastADCIsSigned(&is_sign);
 
-    switch (mode) {
-        case RP_LOW:
-            ret = rp_CalibGetFastADCCalibValue(convertCh(channel), convertPower(power_mode), &gain, &offset);
-            break;
+    if (is_calib_fpga_ch[channel] == false) {
+        switch (mode) {
+            case RP_LOW:
+                ret = rp_CalibGetFastADCCalibValue(convertCh(channel), convertPower(power_mode), &gain, &offset);
+                break;
 
-        case RP_HIGH:
-            ret = rp_CalibGetFastADCCalibValue_1_20(convertCh(channel), convertPower(power_mode), &gain, &offset);
-            break;
+            case RP_HIGH:
+                ret = rp_CalibGetFastADCCalibValue_1_20(convertCh(channel), convertPower(power_mode), &gain, &offset);
+                break;
 
-        default:
-            ERROR_LOG("Unknown mode: %d", mode);
-            return RP_EOOR;
-            break;
+            default:
+                ERROR_LOG("Unknown mode: %d", mode);
+                return RP_EOOR;
+                break;
+        }
     }
 
     if (ret != RP_HW_CALIB_OK) {
@@ -872,19 +970,45 @@ int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* 
     int ret = rp_HPGetFastADCBits(&bits);
     ret |= rp_HPGetFastADCIsSigned(&is_sign);
 
-    switch (mode) {
-        case RP_LOW:
-            ret |= rp_CalibGetFastADCCalibValueI(convertCh(channel), convertPower(power_mode), &calib);
-            break;
+    if (is_calib_fpga_ch[channel] == false) {
+        switch (mode) {
+            case RP_LOW:
+                ret |= rp_CalibGetFastADCCalibValueI(convertCh(channel), convertPower(power_mode), &calib);
+                break;
 
-        case RP_HIGH:
-            ret |= rp_CalibGetFastADCCalibValue_1_20I(convertCh(channel), convertPower(power_mode), &calib);
-            break;
+            case RP_HIGH:
+                ret |= rp_CalibGetFastADCCalibValue_1_20I(convertCh(channel), convertPower(power_mode), &calib);
+                break;
 
-        default:
-            ERROR_LOG("Unknown mode: %d", mode);
-            return RP_EOOR;
-            break;
+            default:
+                ERROR_LOG("Unknown mode: %d", mode);
+                return RP_EOOR;
+                break;
+        }
+    } else {
+        calib.base = 1;
+        calib.gain = 1;
+        calib.offset = 0;
+
+        if (use_calib == false) {
+            double fpga_gain = 0;
+            int32_t fpga_offset = 0;
+
+            if (osc_GetCalibGainInFPGA(channel, &fpga_gain) != RP_OK) {
+                ERROR_LOG("Get calibaration: %d", ret);
+                return RP_EOOR;
+            };
+
+            if (osc_GetCalibOffsetInFPGA(channel, bits, &fpga_offset) != RP_OK) {
+                ERROR_LOG("Get calibaration: %d", ret);
+                return RP_EOOR;
+            }
+
+            if (fpga_gain != 1 || fpga_offset != 0) {
+                ERROR_LOG("This mode is not supported. For this mode need reset calib to Zero in api.");
+                return RP_NOTS;
+            }
+        }
     }
 
     if (ret != RP_HW_CALIB_OK) {
@@ -947,6 +1071,10 @@ int acq_GetDataInBuffer(rp_channel_t channel, uint32_t pos, uint32_t* size, int3
         return RP_EOOR;
     }
 
+    bool is_need_raw = out->ch_i[channel] != NULL;
+    bool is_need_vold_f = out->ch_f[channel] != NULL;
+    bool is_need_vold_d = out->ch_d[channel] != NULL;
+
     uint_gain_calib_t calib;
     uint8_t bits = 0;
 
@@ -954,19 +1082,45 @@ int acq_GetDataInBuffer(rp_channel_t channel, uint32_t pos, uint32_t* size, int3
     int ret = rp_HPGetFastADCBits(&bits);
     ret |= rp_HPGetFastADCIsSigned(&is_sign);
 
-    switch (mode) {
-        case RP_LOW:
-            ret |= rp_CalibGetFastADCCalibValueI(convertCh(channel), convertPower(power_mode), &calib);
-            break;
+    if (is_calib_fpga_ch[channel] == false) {
+        switch (mode) {
+            case RP_LOW:
+                ret |= rp_CalibGetFastADCCalibValueI(convertCh(channel), convertPower(power_mode), &calib);
+                break;
 
-        case RP_HIGH:
-            ret |= rp_CalibGetFastADCCalibValue_1_20I(convertCh(channel), convertPower(power_mode), &calib);
-            break;
+            case RP_HIGH:
+                ret |= rp_CalibGetFastADCCalibValue_1_20I(convertCh(channel), convertPower(power_mode), &calib);
+                break;
 
-        default:
-            ERROR_LOG("Unknown mode: %d", mode);
-            return RP_EOOR;
-            break;
+            default:
+                ERROR_LOG("Unknown mode: %d", mode);
+                return RP_EOOR;
+                break;
+        }
+    } else {
+        calib.base = 1;
+        calib.gain = 1;
+        calib.offset = 0;
+
+        if (((out->use_calib_for_raw == false) && is_need_raw) || ((out->use_calib_for_volts == false) && (is_need_vold_f || is_need_vold_d))) {
+            double fpga_gain = 0;
+            int32_t fpga_offset = 0;
+
+            if (osc_GetCalibGainInFPGA(channel, &fpga_gain) != RP_OK) {
+                ERROR_LOG("Get calibaration: %d", ret);
+                return RP_EOOR;
+            };
+
+            if (osc_GetCalibOffsetInFPGA(channel, bits, &fpga_offset) != RP_OK) {
+                ERROR_LOG("Get calibaration: %d", ret);
+                return RP_EOOR;
+            }
+
+            if (fpga_gain != 1 || fpga_offset != 0) {
+                ERROR_LOG("This mode is not supported. For this mode need reset calib to Zero in api.");
+                return RP_NOTS;
+            }
+        }
     }
 
     if (ret != RP_HW_CALIB_OK) {
@@ -984,9 +1138,6 @@ int acq_GetDataInBuffer(rp_channel_t channel, uint32_t pos, uint32_t* size, int3
 
     uint32_t mask = ((uint64_t)1 << bits) - 1;
 
-    bool is_need_raw = out->ch_i[channel] != NULL;
-    bool is_need_vold_f = out->ch_f[channel] != NULL;
-    bool is_need_vold_d = out->ch_d[channel] != NULL;
     int16_t* iPtr = out->ch_i[channel];
     float* fPtr = out->ch_f[channel];
     double* dPtr = out->ch_d[channel];
@@ -1207,19 +1358,25 @@ int acq_GetDataVEx(rp_channel_t channel, uint32_t pos, uint32_t* size, void* in_
     int ret = rp_HPGetFastADCBits(&bits);
     ret |= rp_HPGetFastADCIsSigned(&is_sign);
 
-    switch (mode) {
-        case RP_LOW:
-            ret |= rp_CalibGetFastADCCalibValueI(convertCh(channel), convertPower(power_mode), &calib);
-            break;
+    if (is_calib_fpga_ch[channel] == false) {
+        switch (mode) {
+            case RP_LOW:
+                ret |= rp_CalibGetFastADCCalibValueI(convertCh(channel), convertPower(power_mode), &calib);
+                break;
 
-        case RP_HIGH:
-            ret |= rp_CalibGetFastADCCalibValue_1_20I(convertCh(channel), convertPower(power_mode), &calib);
-            break;
+            case RP_HIGH:
+                ret |= rp_CalibGetFastADCCalibValue_1_20I(convertCh(channel), convertPower(power_mode), &calib);
+                break;
 
-        default:
-            ERROR_LOG("Unknown mode: %d", mode);
-            return RP_EOOR;
-            break;
+            default:
+                ERROR_LOG("Unknown mode: %d", mode);
+                return RP_EOOR;
+                break;
+        }
+    } else {
+        calib.base = 1;
+        calib.gain = 1;
+        calib.offset = 0;
     }
 
     if (ret != RP_HW_CALIB_OK) {
@@ -1232,7 +1389,6 @@ int acq_GetDataVEx(rp_channel_t channel, uint32_t pos, uint32_t* size, void* in_
     uint32_t cnts;
 
     uint32_t mask = ((uint64_t)1 << bits) - 1;
-
     for (uint32_t i = 0; i < (*size); ++i) {
         cnts = raw_buffer[(pos + i) % ADC_BUFFER_SIZE] & mask;
         float value = cmn_convertToVoltSigned(cnts, bits, fullScale, calib.gain, calib.base, calib.offset) * gainValue + offset;
@@ -1312,6 +1468,8 @@ int acq_SetDefault(rp_channel_t channel) {
 
     uint32_t start, size;
     axi_getOSReservedRegion(&start, &size);
+
+    acq_SetCalibInFPGA(channel);
 
     acq_SetAveraging(channel, true);
     acq_SetTriggerSrc(channel, RP_TRIG_SRC_DISABLED);
@@ -1414,6 +1572,13 @@ int acq_GetFilterCalibValue(rp_channel_t channel, uint32_t* coef_aa, uint32_t* c
         return osc_GetEqFiltersChD(coef_aa, coef_bb, coef_kk, coef_pp);
     }
     return RP_EOOR;
+}
+
+int acq_SetCalibInFPGA(rp_channel_t channel) {
+
+    CHECK_CHANNEL
+
+    return setCalibInFPGA(channel);
 }
 
 int acq_SetExtTriggerDebouncerUs(double value) {
@@ -1840,19 +2005,25 @@ int acq_axi_GetDataVEx(rp_channel_t channel, uint32_t pos, uint32_t* size, void*
     int ret = rp_HPGetFastADCBits(&bits);
     ret |= rp_HPGetFastADCIsSigned(&is_sign);
 
-    switch (mode) {
-        case RP_LOW:
-            ret |= rp_CalibGetFastADCCalibValueI(convertCh(channel), convertPower(power_mode), &calib);
-            break;
+    if (is_calib_fpga_ch[channel] == false) {
+        switch (mode) {
+            case RP_LOW:
+                ret |= rp_CalibGetFastADCCalibValueI(convertCh(channel), convertPower(power_mode), &calib);
+                break;
 
-        case RP_HIGH:
-            ret |= rp_CalibGetFastADCCalibValue_1_20I(convertCh(channel), convertPower(power_mode), &calib);
-            break;
+            case RP_HIGH:
+                ret |= rp_CalibGetFastADCCalibValue_1_20I(convertCh(channel), convertPower(power_mode), &calib);
+                break;
 
-        default:
-            ERROR_LOG("Unknown mode: %d", mode);
-            return RP_EOOR;
-            break;
+            default:
+                ERROR_LOG("Unknown mode: %d", mode);
+                return RP_EOOR;
+                break;
+        }
+    } else {
+        calib.base = 1;
+        calib.gain = 1;
+        calib.offset = 0;
     }
 
     if (ret != RP_HW_CALIB_OK) {
@@ -1899,8 +2070,7 @@ int acq_axi_SetBufferSamples(rp_channel_t channel, uint32_t address, uint32_t _s
     }
 
     if (address + (_samples - 4) * 2 > start + res_size) {
-        ERROR_LOG("The specified buffer size is greater than the reserved memory - 8 bytes. End address: 0x%X End reserved 0x%X", address + _samples * 2,
-                  start + res_size);
+        ERROR_LOG("The specified buffer size is greater than the reserved memory - 8 bytes. End address: 0x%X End reserved 0x%X", address + _samples * 2, start + res_size);
         return RP_EOOR;
     }
 

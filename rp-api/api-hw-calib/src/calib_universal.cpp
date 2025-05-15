@@ -877,14 +877,14 @@ bool convertUniversal(rp_HPeModels_t model, rp_calib_params_t* param, rp_calib_p
 
 rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model, bool setFilterZero) {
 
-    uint32_t aa = setFilterZero ? DISABLE_FILT_AA : DEFAULT_1_1_FILT_AA;
-    uint32_t bb = setFilterZero ? DISABLE_FILT_BB : DEFAULT_1_1_FILT_BB;
-    uint32_t kk = setFilterZero ? DISABLE_FILT_KK : DEFAULT_1_1_FILT_KK;
-    uint32_t pp = setFilterZero ? DISABLE_FILT_PP : DEFAULT_1_1_FILT_PP;
-    uint32_t aa20 = setFilterZero ? DISABLE_FILT_AA : DEFAULT_1_20_FILT_AA;
-    uint32_t bb20 = setFilterZero ? DISABLE_FILT_BB : DEFAULT_1_20_FILT_BB;
-    uint32_t kk20 = setFilterZero ? DISABLE_FILT_KK : DEFAULT_1_20_FILT_KK;
-    uint32_t pp20 = setFilterZero ? DISABLE_FILT_PP : DEFAULT_1_20_FILT_PP;
+    uint32_t aa = setFilterZero ? DISABLE_FILT_AA : DEFAULT_FILT_AA_NEW;
+    uint32_t bb = setFilterZero ? DISABLE_FILT_BB : DEFAULT_FILT_BB_NEW;
+    uint32_t kk = setFilterZero ? DISABLE_FILT_KK : DEFAULT_FILT_KK_NEW;
+    uint32_t pp = setFilterZero ? DISABLE_FILT_PP : DEFAULT_FILT_PP_NEW;
+    uint32_t aa20 = setFilterZero ? DISABLE_FILT_AA : DEFAULT_FILT_AA_NEW;
+    uint32_t bb20 = setFilterZero ? DISABLE_FILT_BB : DEFAULT_FILT_BB_NEW;
+    uint32_t kk20 = setFilterZero ? DISABLE_FILT_KK : DEFAULT_FILT_KK_NEW;
+    uint32_t pp20 = setFilterZero ? DISABLE_FILT_PP : DEFAULT_FILT_PP_NEW;
 
     rp_calib_params_t calib;
     memset(&calib, 0, sizeof(rp_calib_params_t));

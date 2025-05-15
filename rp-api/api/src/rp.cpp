@@ -1801,6 +1801,12 @@ int rp_AcqGetFilterCalibValue(rp_channel_t channel, uint32_t* coef_aa, uint32_t*
     return acq_GetFilterCalibValue(channel, coef_aa, coef_bb, coef_kk, coef_pp);
 }
 
+int rp_AcqSetCalibInFPGA(rp_channel_t channel) {
+    if (!rp_HPGetIsCalibInFPGAOrDefault())
+        return RP_NOTS;
+    return acq_SetCalibInFPGA(channel);
+}
+
 /**
 * Generate methods
 */
@@ -2294,7 +2300,7 @@ buffers_t* rp_createBuffer(uint8_t maxChannels, uint32_t length, bool initInt16,
         return NULL;
     b->channels = maxChannels;
     b->size = length;
-    b->use_calib_for_raw = false;
+    b->use_calib_for_raw = true;
     b->use_calib_for_volts = true;
 
     bool NeedFree = false;

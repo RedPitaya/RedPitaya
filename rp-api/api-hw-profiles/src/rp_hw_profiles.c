@@ -874,6 +874,21 @@ bool rp_HPGetIsE3PresentOrDefault(){
     return p->is_E3_present;
 }
 
+int rp_HPGetIsCalibInFPGA(bool* value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->is_calib_in_fpga;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+bool rp_HPGetIsCalibInFPGAOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->is_calib_in_fpga;
+}
+
 int rp_HPGetFPGAVersion(char **_no_free_value){
     rp_HPeModels_t model;
     int ret = rp_HPGetModel(&model);

@@ -26,7 +26,7 @@ class CCalibMan {
     auto changeChannel(rp_channel_t _ch) -> void;
     auto readCalib() -> int;
     auto readCalibEpprom() -> int;
-    auto updateCalib() -> void;
+    auto updateCalib(rp_channel_t _ch) -> void;
     auto writeCalib() -> void;
     auto getCalibValue(rp_channel_t _ch, ClalibValue _type) -> double;
     auto updateAcqFilter(rp_channel_t _ch) -> void;

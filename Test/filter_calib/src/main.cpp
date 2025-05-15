@@ -162,8 +162,8 @@ int main(int argc, char* argv[]) {
                 calib_man->setDisableFilter((rp_channel_t)i, 0x00dFFFFF);  // Disable filter in calib manager
             }
         }
-        calib_man->updateCalib();
         for (int i = 0; i < g_adcChannes; i++) {
+            calib_man->updateCalib((rp_channel_t)i);
             acq->updateAcqFilter((rp_channel_t)i);  // Set filter in FPGA
         }
         printf(" [OK]\n");

@@ -607,6 +607,10 @@ print("rp.rp_AcqGetBypassFilter(rp.RP_CH_1)")
 res = rp.rp_AcqGetBypassFilter(rp.RP_CH_1)
 print(res)
 
+print("rp.rp_AcqSetCalibInFPGA(rp.RP_CH_1)")
+res = rp.rp_AcqSetCalibInFPGA(rp.RP_CH_1)
+print(res)
+
 print("rp.rp_AcqSetTriggerSrc(rp.RP_TRIG_SRC_DISABLED)")
 res = rp.rp_AcqSetTriggerSrc(rp.RP_TRIG_SRC_DISABLED)
 print(res)

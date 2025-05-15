@@ -110,7 +110,7 @@ int CFilter_logic::setCalibParameters() {
         if (m_grid[i].calculate == false) {
             m_calib_man->setCalibValue(m_grid[i].ch, F_AA_CH, m_grid[i].aa);
             m_calib_man->setCalibValue(m_grid[i].ch, F_BB_CH, m_grid[i].bb);
-            m_calib_man->updateCalib();
+            m_calib_man->updateCalib(m_grid[i].ch);
             m_calib_man->updateAcqFilter(m_grid[i].ch);
             //            std::cout  << "Cur step " << i <<  " aa = " << m_grid[i].aa << " bb = " << m_grid[i].bb << std::endl;
             return i;
@@ -123,7 +123,7 @@ void CFilter_logic::setGoodCalibParameter() {
     sort();
     m_calib_man->setCalibValue(m_lastGood.ch, F_AA_CH, m_lastGood.aa);
     m_calib_man->setCalibValue(m_lastGood.ch, F_BB_CH, m_lastGood.bb);
-    m_calib_man->updateCalib();
+    m_calib_man->updateCalib(m_lastGood.ch);
     m_calib_man->updateAcqFilter(m_lastGood.ch);
 }
 
@@ -267,7 +267,7 @@ int CFilter_logic::calibPP(COscilloscope::DataPassAutoFilter item, float _nomina
         m_calib_man->setCalibValue(item.cur_channel, F_BB_CH, item.f_bb);
         m_calib_man->setCalibValue(item.cur_channel, F_PP_CH, item.f_pp);
         m_calib_man->setCalibValue(item.cur_channel, F_KK_CH, item.f_kk);
-        m_calib_man->updateCalib();
+        m_calib_man->updateCalib(item.cur_channel);
         m_calib_man->updateAcqFilter(item.cur_channel);
         if (m_calibAmpl == 0)
             return -2;

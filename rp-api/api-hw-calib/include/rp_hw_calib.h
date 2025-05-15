@@ -232,6 +232,13 @@ rp_calib_params_t rp_GetCalibrationSettings();
 rp_calib_params_t rp_GetDefaultCalibrationSettings();
 
 /**
+  * @brief Gets default calibration settings in new format
+  * @note Settings are cached after first read from EEPROM
+  * @return Default calibration parameters structure
+  */
+rp_calib_params_t rp_GetDefaultUniCalibrationSettings();
+
+/**
   * @brief Resets calibration to default values
   * @param use_factory_zone Use factory calibration zone
   * @param is_new_format Use new format calibration

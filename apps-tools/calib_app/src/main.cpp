@@ -286,7 +286,10 @@ void getNewCalib() {
     }
 
     if (update) {
-        g_calib_man->updateCalib();
+        for (auto i = 0u; i < getADCChannels(); i++) {
+            g_calib_man->updateCalib((rp_channel_t)i);
+        }
+
         if (getDACChannels() > 0)
             g_calib_man->updateGen();
 
@@ -353,7 +356,7 @@ void getNewFilterCalib() {
     }
 
     if (update) {
-        g_calib_man->updateCalib();
+        g_calib_man->updateCalib((rp_channel_t)adc_channel.Value());
         g_calib_man->updateAcqFilter((rp_channel_t)adc_channel.Value());
         sendFilterCalibValues((rp_channel_t)adc_channel.Value());
     }
@@ -467,6 +470,7 @@ void calibFilter() {
             g_calib_man->setOffset(RP_CH_1, 0);
             g_calib_man->setFreq(RP_CH_1, 1000);
             g_calib_man->setAmp(RP_CH_1, 0.9);
+            g_calib_man->setGenType(RP_CH_1, RP_WAVEFORM_SQUARE);
             // g_calib_man->setOffset(RP_CH_2, 0);
             // g_calib_man->setFreq(RP_CH_2, 1000);
             // g_calib_man->setAmp(RP_CH_2, 0.9);
@@ -540,9 +544,9 @@ void calibFilter() {
     }
 }
 
-void calibAutoFilter() {
+int calibAutoFilter() {
     if (!g_filter_logicNch || !g_calib_man || !g_acq)
-        return;
+        return 0;
 
     if (f_ref_volt.IsNewValue()) {
         f_ref_volt.Update();
@@ -562,25 +566,20 @@ void calibAutoFilter() {
             fauto_value_ch_after[i].Value() = 0;
         }
         g_sub_progress = 0;
-        g_calib_man->setModeLV_HV(RP_LOW);
+        g_calib_man->initSq(8);
         g_filter_logicNch->init();
         if (getDACChannels() >= 2) {
             g_calib_man->setOffset(RP_CH_1, 0);
             g_calib_man->setFreq(RP_CH_1, 1000);
             g_calib_man->setAmp(RP_CH_1, 0.9);
-            // g_calib_man->setOffset(RP_CH_2, 0);
-            // g_calib_man->setFreq(RP_CH_2, 1000);
-            // g_calib_man->setAmp(RP_CH_2, 0.9);
             g_calib_man->setGenType(RP_CH_1, (int)RP_WAVEFORM_SQUARE);
-            // g_calib_man->setGenType(RP_CH_2, (int)RP_WAVEFORM_SQUARE);
             g_calib_man->enableGen(RP_CH_1, true);
-            // g_calib_man->enableGen(RP_CH_2, true);
         }
-
+        g_acq->setFilterBypass(false);
         g_acq->startAutoFilterNCh(8);
         f_ss_state.SendValue(f_ss_next_step.Value());
         f_ss_next_step.SendValue(-1);
-        return;
+        return 1;
     }
 
     if (f_ss_next_step.Value() == 1) {
@@ -590,13 +589,16 @@ void calibAutoFilter() {
 
             for (int i = 0; i < getADCChannels(); i++) {
                 g_calib_man->setDisableFilter((rp_channel_t)i, f_init_kk_value.Value());
+                g_calib_man->updateCalib((rp_channel_t)i);
                 g_acq->updateAcqFilter((rp_channel_t)i);
             }
+
+            std::this_thread::sleep_for(std::chrono::microseconds(1000000));
 
             auto d = g_acq->getDataAutoFilterSync();
             for (int i = 0; i < getADCChannels(); i++) {
                 auto v = (d.valueCH[i].calib_value_raw + d.valueCH[i].deviation);
-
+                WARNING("Channel %d = %f [AA=0x%X BB=0x%X PP=0x%X KK=0x%X]", i, v, d.valueCH[i].f_aa, d.valueCH[i].f_bb, d.valueCH[i].f_pp, d.valueCH[i].f_kk)
                 fauto_value_ch_before[i].SendValue(v);
                 fauto_aa_Ch[i].SendValue(0);
                 fauto_bb_Ch[i].SendValue(0);
@@ -604,7 +606,7 @@ void calibAutoFilter() {
                 fauto_kk_Ch[i].SendValue(0);
             }
             g_sub_progress = 1;
-            return;
+            return 1;
         }
 
         if (g_sub_progress == 1) {
@@ -615,9 +617,10 @@ void calibAutoFilter() {
             g_filter_logicNch->removeHalfCalib();
             if (g_filter_logicNch->nextSetupCalibParameters() == -1) {
                 g_sub_progress = 2;
-                return;
+                return 1;
             }
             fauto_calib_progress.SendValue(g_filter_logicNch->calcProgress());
+            return 1;
         }
 
         if (g_sub_progress == 2) {
@@ -634,7 +637,7 @@ void calibAutoFilter() {
             }
             fauto_calib_progress.SendValue(110);
             g_sub_progress = 3;
-            return;
+            return 1;
         }
 
         if (g_sub_progress == 3) {
@@ -656,7 +659,7 @@ void calibAutoFilter() {
                 g_sub_progress = 6;
             }
 
-            return;
+            return 1;
         }
 
         if (g_sub_progress == 4) {
@@ -673,7 +676,7 @@ void calibAutoFilter() {
             }
             fauto_calib_progress.SendValue(130);
             g_sub_progress = 5;
-            return;
+            return 1;
         }
 
         if (g_sub_progress == 5) {
@@ -690,7 +693,7 @@ void calibAutoFilter() {
             }
             fauto_calib_progress.SendValue(140);
             g_sub_progress = 6;
-            return;
+            return 1;
         }
 
         if (g_sub_progress == 6) {
@@ -708,7 +711,7 @@ void calibAutoFilter() {
             g_sub_progress = 0;
             f_ss_state.SendValue(f_ss_next_step.Value());
             f_ss_next_step.SendValue(-1);
-            return;
+            return 1;
         }
     }
 
@@ -737,7 +740,7 @@ void calibAutoFilter() {
         g_acq->startAutoFilterNCh(8);
         f_ss_state.SendValue(f_ss_next_step.Value());
         f_ss_next_step.SendValue(-1);
-        return;
+        return 1;
     }
 
     if (f_ss_next_step.Value() == 3) {
@@ -761,7 +764,7 @@ void calibAutoFilter() {
                 fauto_kk_Ch[i].SendValue(0);
             }
             g_sub_progress = 1;
-            return;
+            return 1;
         }
 
         if (g_sub_progress == 1) {
@@ -772,7 +775,7 @@ void calibAutoFilter() {
             g_filter_logicNch->removeHalfCalib();
             if (g_filter_logicNch->nextSetupCalibParameters() == -1) {
                 g_sub_progress = 2;
-                return;
+                return 1;
             }
             fauto_calib_progress.SendValue(g_filter_logicNch->calcProgress());
         }
@@ -791,7 +794,7 @@ void calibAutoFilter() {
             }
             fauto_calib_progress.SendValue(110);
             g_sub_progress = 3;
-            return;
+            return 1;
         }
 
         if (g_sub_progress == 3) {
@@ -812,7 +815,7 @@ void calibAutoFilter() {
             if (getADCChannels() == 2) {
                 g_sub_progress = 6;
             }
-            return;
+            return 1;
         }
 
         if (g_sub_progress == 4) {
@@ -829,7 +832,7 @@ void calibAutoFilter() {
             }
             fauto_calib_progress.SendValue(120);
             g_sub_progress = 5;
-            return;
+            return 1;
         }
 
         if (g_sub_progress == 5) {
@@ -846,7 +849,7 @@ void calibAutoFilter() {
             }
             fauto_calib_progress.SendValue(120);
             g_sub_progress = 6;
-            return;
+            return 1;
         }
 
         if (g_sub_progress == 6) {
@@ -865,7 +868,7 @@ void calibAutoFilter() {
             g_sub_progress = 0;
             f_ss_state.SendValue(f_ss_next_step.Value());
             f_ss_next_step.SendValue(-1);
-            return;
+            return 1;
         }
     }
 
@@ -882,8 +885,10 @@ void calibAutoFilter() {
 
         f_ss_state.SendValue(f_ss_next_step.Value());
         f_ss_next_step.SendValue(-1);
-        return;
+        return 1;
     }
+
+    return 0;
 }
 
 void sendFilterCalibValues(rp_channel_t _ch) {
@@ -937,7 +942,9 @@ void UpdateParams(void) {
                 f_ss_next_step.Update();
             }
 
-            calibAutoFilter();
+            if (calibAutoFilter()) {
+                return;
+            }
         }
 
         // MANUAL MODE
@@ -947,6 +954,7 @@ void UpdateParams(void) {
             calib_sig.Value() = 0;  // reset signal
             g_acq->resetAvgFilter();
             if (sig == 1) {
+                g_acq->setFilterBypass(true);
                 g_calib_man->init();
                 if (getDACChannels() >= 2) {
                     if (getModelName() == "Z20") {
@@ -998,27 +1006,33 @@ void UpdateParams(void) {
                 g_calib_man->writeCalib();
             }
 
-            // FREQ CALIB
+            // FILTER MANUAL CALIB
             if (rp_HPGetFastADCIsFilterPresentOrDefault()) {
 
                 if (sig == 6) {
                     g_calib_man->setDefualtFilter((rp_channel_t)adc_channel.Value());
-                    g_calib_man->updateCalib();
+                    g_calib_man->updateCalib((rp_channel_t)adc_channel.Value());
                     g_calib_man->updateAcqFilter((rp_channel_t)adc_channel.Value());
                     sendFilterCalibValues((rp_channel_t)adc_channel.Value());
                 }
 
                 if (sig == 7) {
                     g_calib_man->setDisableFilter((rp_channel_t)adc_channel.Value(), 0x00FFFFFF);
-                    g_calib_man->updateCalib();
+                    g_calib_man->updateCalib((rp_channel_t)adc_channel.Value());
                     g_calib_man->updateAcqFilter((rp_channel_t)adc_channel.Value());
                     sendFilterCalibValues((rp_channel_t)adc_channel.Value());
                 }
 
-                if (sig == 100) {
-                    g_calib_man->initSq(adc_decimation.Value());
+                if (sig == 100) {  // Init after start filter manual mode
+                    g_acq->setFilterBypass(false);
+                    //  g_calib_man->initSq(adc_decimation.Value());
                     adc_decimation.SendValue(adc_decimation.Value());
+                    g_calib_man->setModeLV_HV(RP_LOW);
                     g_calib_man->readCalibEpprom();
+                    for (uint8_t i = 0; i < getADCChannels(); i++) {
+                        g_calib_man->updateCalib((rp_channel_t)i);
+                        g_calib_man->updateAcqFilter((rp_channel_t)i);
+                    }
                     cursor_x1.SendValue(DEFAULT_CURSOR_1);
                     cursor_x2.SendValue(DEFAULT_CURSOR_2);
                     zoom_mode.SendValue(false);
@@ -1029,14 +1043,17 @@ void UpdateParams(void) {
                         g_calib_man->setOffset(RP_CH_1, filt_gen_offset.Value());
                         g_calib_man->setFreq(RP_CH_1, filt_gen_freq.Value());
                         g_calib_man->setAmp(RP_CH_1, filt_gen_amp.Value());
+                        g_calib_man->setGenType(RP_CH_1, RP_WAVEFORM_SQUARE);
                         g_calib_man->setOffset(RP_CH_2, filt_gen_offset.Value());
                         g_calib_man->setFreq(RP_CH_2, filt_gen_freq.Value());
                         g_calib_man->setAmp(RP_CH_2, filt_gen_amp.Value());
+                        g_calib_man->setGenType(RP_CH_2, RP_WAVEFORM_SQUARE);
                         filt_gen_freq.SendValue(filt_gen_freq.Value());
                         filt_gen_amp.SendValue(filt_gen_amp.Value());
                         filt_gen_offset.SendValue(filt_gen_offset.Value());
                     }
                     sendFilterCalibValues((rp_channel_t)adc_channel.Value());
+                    g_acq->startSquare(adc_decimation.Value());
                 }
             }
         }

@@ -39,6 +39,10 @@ rp_calib_params_t rp_GetDefaultCalibrationSettings() {
     return calib_GetDefaultCalib(false);
 }
 
+rp_calib_params_t rp_GetDefaultUniCalibrationSettings() {
+    return calib_GetUniversalDefaultCalib(false);
+}
+
 rp_calib_error rp_CalibrationReset(bool use_factory_zone, bool is_new_format, bool setFilterZero) {
     return calib_Reset(use_factory_zone, is_new_format, setFilterZero);
 }

@@ -184,7 +184,7 @@ void lcr_MainThread() {
     auto buffer = rp_createBuffer(2, ADC_BUFFER_SIZE, false, false, true);
     initFFT(ADC_BUFFER_SIZE, g_adc_rate);
     buffer->use_calib_for_raw = false;
-    buffer->use_calib_for_volts = false;
+    buffer->use_calib_for_volts = true;
     if (buffer == NULL) {
         FATAL("Unable to allocate memory for data buffer")
         return;

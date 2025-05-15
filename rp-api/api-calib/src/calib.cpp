@@ -43,6 +43,13 @@ int CCalib::calib(uint16_t _step, float _refdc) {
         case STEM_125_14_LN_CE2_v1_1:
         case STEM_125_14_Z7020_v1_0:
         case STEM_125_14_Z7020_LN_v1_1:
+        case STEM_125_14_v2_0:
+        case STEM_125_14_Pro_v2_0:
+        case STEM_125_14_Z7020_Pro_v2_0:
+        case STEM_125_14_Z7020_Ind_v2_0:
+        case STEM_125_14_Z7020_Pro_v1_0:
+        case STEM_125_14_Z7020_LL_v1_1:
+        case STEM_65_16_Z7020_LL_v1_1:
             return calib_board_z10(_step, _refdc);
 
         case STEM_122_16SDR_v1_0:
@@ -91,6 +98,7 @@ int CCalib::calib_board_z10(uint16_t _step, float _refdc) {
     m_current_step = _step;
     switch (_step) {
         case 0: {
+            m_acq->setFilterBypass(true);
             m_acq->startNormal();
             m_calib_parameters_old = rp_GetCalibrationSettings();
             resetCalibToZero();
@@ -209,6 +217,7 @@ int CCalib::calib_board_z20_4ch(uint16_t _step, float _refdc) {
     m_current_step = _step;
     switch (_step) {
         case 0: {
+            m_acq->setFilterBypass(true);
             m_acq->startNormal();
             m_calib_parameters_old = rp_GetCalibrationSettings();
             resetCalibToZero();
@@ -291,6 +300,7 @@ int CCalib::calib_board_z20_250_12(uint16_t _step, float _refdc) {
     m_current_step = _step;
     switch (_step) {
         case 0: {
+            m_acq->setFilterBypass(true);
             m_calib_parameters_old = rp_GetCalibrationSettings();
             resetCalibToZero();
             m_calib_parameters = rp_GetCalibrationSettings();

@@ -112,7 +112,7 @@ int main(int argc, char* argv[]) {
     if (!option.disableCalibration) {
         calib = rp_GetCalibrationSettings();
     } else {
-        calib = rp_GetDefaultCalibrationSettings();
+        calib = rp_GetDefaultUniCalibrationSettings();
     }
     if (rp_HPGetFastADCIsFilterPresentOrDefault()) {
         if (!option.enableEqualization) {
@@ -148,6 +148,10 @@ int main(int argc, char* argv[]) {
     rp_CalibrationSetParams(calib);
 
     for (int i = 0; i < channels; i++) {
+        if (rp_HPGetIsCalibInFPGAOrDefault()) {
+            rp_AcqSetCalibInFPGA((rp_channel_t)i);
+        }
+
         if (rp_HPGetFastADCIsAC_DCOrDefault()) {
             rp_AcqSetAC_DC((rp_channel_t)i, option.ac_dc_mode[i]);
         }

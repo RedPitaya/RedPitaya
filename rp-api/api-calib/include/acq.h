@@ -106,6 +106,8 @@ class COscilloscope {
     auto setDeciamtion(uint32_t _decimation) -> void;
     auto getDecimation() -> uint32_t;
 
+    auto setFilterBypass(bool enable) -> void;
+
     auto setDC() -> void;
     auto setAC() -> void;
     auto setGenGainx1() -> void;

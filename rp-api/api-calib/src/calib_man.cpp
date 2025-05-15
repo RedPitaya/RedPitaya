@@ -78,8 +78,9 @@ int CCalibMan::readCalibEpprom() {
     return 0;
 }
 
-void CCalibMan::updateCalib() {
+void CCalibMan::updateCalib(rp_channel_t _ch) {
     rp_CalibrationSetParams(m_calib_parameters);
+    rp_AcqSetCalibInFPGA(_ch);
 }
 
 void CCalibMan::writeCalib() {
@@ -441,7 +442,7 @@ int CCalibMan::setDefualtFilter(rp_channel_t _ch) {
     }
 
     auto g = getModeLV_HV();
-    auto x = rp_GetDefaultCalibrationSettings();
+    auto x = rp_GetDefaultUniCalibrationSettings();
     if (g == RP_LOW) {
         setCalibValue(_ch, F_AA_CH, x.fast_adc_filter_1_1[_ch].aa);
         setCalibValue(_ch, F_BB_CH, x.fast_adc_filter_1_1[_ch].bb);

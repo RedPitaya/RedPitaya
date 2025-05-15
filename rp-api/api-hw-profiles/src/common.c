@@ -511,6 +511,8 @@ int hp_cmn_Print(profiles_t *p){
 	fprintf(stdout,"E3 High speed GPIO rate: %u\n", p->E3_high_speed_gpio_rate);
 	fprintf(stdout,"E3 QSPI for eMMC support: %d\n", p->is_E3_high_speed_gpio);
 
+	fprintf(stdout,"Support for calibration on FPGA: %d\n", p->is_calib_in_fpga);
+
 	fprintf(stdout,"***********************************************************************\n");
 	return RP_HP_OK;
 }

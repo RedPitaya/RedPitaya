@@ -87,6 +87,8 @@ typedef struct {
     uint32_t            E3_high_speed_gpio_rate;
     bool                is_E3_present;
 
+    bool                is_calib_in_fpga;
+
 } profiles_t;
 
 

@@ -126,7 +126,7 @@ int main(int argc, char* argv[]) {
     if (!option.disableCalibration) {
         calib = rp_GetCalibrationSettings();
     } else {
-        calib = rp_GetDefaultCalibrationSettings();
+        calib = rp_GetDefaultUniCalibrationSettings();
     }
 
     if (rp_HPGetFastADCIsFilterPresentOrDefault()) {
@@ -159,16 +159,18 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < channels; i++) {
         rp_AcqSetBypassFilter((rp_channel_t)i, option.bypassFilter);
     }
-
     rp_CalibrationSetParams(calib);
 
-    if (rp_HPGetFastADCIsAC_DCOrDefault()) {
-        for (int i = 0; i < channels; i++)
-            rp_AcqSetAC_DC((rp_channel_t)i, option.ac_dc_mode[i]);
-    }
+    for (int i = 0; i < channels; i++) {
+        if (rp_HPGetIsCalibInFPGAOrDefault()) {
+            rp_AcqSetCalibInFPGA((rp_channel_t)i);
+        }
 
-    for (int i = 0; i < channels; i++)
+        if (rp_HPGetFastADCIsAC_DCOrDefault()) {
+            rp_AcqSetAC_DC((rp_channel_t)i, option.ac_dc_mode[i]);
+        }
         rp_AcqSetGain((rp_channel_t)i, option.attenuator_mode[i]);
+    }
 
     rp_channel_t axi_trig_ch = (rp_channel_t)getTrigChByTrigSource(option.trigger_mode);
 

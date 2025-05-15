@@ -481,7 +481,7 @@ typedef struct osc_control_s {
 
     /** @brief Offset 0x110 - After trigger delay register
      *
-     * After trigger delay register (offset 0x10)
+     * After trigger delay register (offset 0x110)
      * bits [31: 0] - trigger delay
      * 32 bit number - how many decimated samples should be stored into a buffer.
      * (max 16k samples)
@@ -490,7 +490,7 @@ typedef struct osc_control_s {
 
     /** @brief Offset 0x114 - Data decimation register
      *
-     * Data decimation register (offset 0x14):
+     * Data decimation register (offset 0x114):
      * bits [16: 0] - decimation factor, legal values:
      * 1, 8, 64, 1024, 8192 65536
      * If other values are written data is undefined
@@ -500,7 +500,7 @@ typedef struct osc_control_s {
 
     /** @brief Offset 0x118 - Current write pointer register
      *
-     * Current write pointer register (offset 0x18), read only:
+     * Current write pointer register (offset 0x118), read only:
      * bits [13: 0] - current write pointer
      * bits [31:14] - reserved
      */
@@ -514,18 +514,50 @@ typedef struct osc_control_s {
      */
     uint32_t wr_ptr_trigger_ch2;
 
-    /** @brief Offset 0x120 - reserved
+    /** @brief Calibration offset CH1 0x120
+     *
+     * Trigger write pointer register (offset 0x120):
+     * bits [15: 0] - Offset R/W
+     * bits [31:16] - reserved
      */
-    uint32_t reserved_120[3];
+    uint32_t calib_offset_ch1;
+
+    /** @brief Calibration gain CH1 0x124
+     *
+     * Trigger write pointer register (offset 0x124):
+     * bits [15: 0] - Gain R/W
+     * bits [31:16] - reserved
+     */
+    uint32_t calib_gain_ch1;
+
+    /** @brief Offset 0x128 - reserved
+     */
+    uint32_t reserved_128[1];
 
     /** @brief Offset 0x12C - Pre Trigger counter
      *
-     * Pre Trigger counter (offset 0x2C)
+     * Pre Trigger counter (offset 0x12C)
      * bits [31: 0] - Pre Trigger counter
      * 32 bit number - how many decimated samples have been stored into a buffer
      * before trigger arrived.
      */
     uint32_t pre_trigger_counter_ch2;
+
+    /** @brief Calibration offset CH2 0x130
+     *
+     * Trigger write pointer register (offset 0x130):
+     * bits [15: 0] - Offset R/W
+     * bits [31:16] - reserved
+     */
+    uint32_t calib_offset_ch2;
+
+    /** @brief Calibration gain CH2 0x134
+     *
+     * Trigger write pointer register (offset 0x134):
+     * bits [15: 0] - Gain R/W
+     * bits [31:16] - reserved
+     */
+    uint32_t calib_gain_ch2;
 
     /* ChA & ChB data - 14 LSB bits valid starts from 0x10000 and
      * 0x20000 and are each 16k samples long */
@@ -554,6 +586,8 @@ static const uint32_t AXI_CHB_FILL_STATE = 0x100000;  // (1 bit)
 static const uint32_t FULL_MASK = 0xFFFFFFFF;         // (32 bit)
 
 static const uint32_t DEBAUNCER_MASK = 0xFFFFF;  // (20 bit)
+
+static const uint32_t CALIB_MASK = 0xFFFF;  // (16 bit)
 
 int osc_Init(int channels);
 int osc_Release();
@@ -607,6 +641,11 @@ int osc_SetEqFiltersChC(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, ui
 int osc_GetEqFiltersChC(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
 int osc_SetEqFiltersChD(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp);
 int osc_GetEqFiltersChD(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
+
+int osc_SetCalibOffsetInFPGA(rp_channel_t channel, uint8_t bits, int32_t offset);
+int osc_SetCalibGainInFPGA(rp_channel_t channel, double gain);
+int osc_GetCalibOffsetInFPGA(rp_channel_t channel, uint8_t bits, int32_t* offset);
+int osc_GetCalibGainInFPGA(rp_channel_t channel, double* gain);
 
 int osc_SetExtTriggerDebouncer(uint32_t value);
 int osc_GetExtTriggerDebouncer(uint32_t* value);
