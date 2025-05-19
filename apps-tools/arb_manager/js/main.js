@@ -49,6 +49,7 @@
         FILE_RENAME_DONE: 6,
         FILE_ERR_CANT_CHANGE_COLOR: 7,
         FILE_CHANGE_COLOR_DONE: 8,
+        FILE_ERR_PARS_COE_ERR: 9,
     };
 
     // App state
@@ -371,6 +372,11 @@
 
         if (SM.status.FILE_ERR_PARS_ERR === value){
             $('#info_dialog_label').text("Error parsing file. The data must be in one column in the format ±X.XXX");
+            $('#info_dialog').modal('show');
+        }
+
+        if (SM.status.FILE_ERR_PARS_COE_ERR === value){
+            $('#info_dialog_label').text("Error parsing file. Data must be in BIN or DEC or HEX format and no larger than the ADC bit depth");
             $('#info_dialog').modal('show');
         }
 

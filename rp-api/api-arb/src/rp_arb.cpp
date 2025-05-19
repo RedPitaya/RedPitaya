@@ -21,6 +21,7 @@
 #include <fstream>
 #include <map>
 #include <vector>
+#include "rp_coe.h"
 #include "rp_hw-profiles.h"
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
@@ -100,7 +101,7 @@ int rp_ARBInit() {
     return rp_ARBLoadFiles();
 }
 
-int rp_ARBGenFile(std::string _filename) {
+int rp_ARBGenFileCSV(std::string _filename) {
     if (_filename == "") {
         return RP_ARB_FILE_ERR;
     }
@@ -137,6 +138,53 @@ int rp_ARBGenFile(std::string _filename) {
     }
     fs::remove(filePath);
     s.size = size;
+    int nameIndex = 1;
+    std::string sigName = "ARB";
+    while (!checkFreeName(sigName + "_" + std::to_string(nameIndex))) {
+        nameIndex++;
+    }
+    std::string fn = sigName + "_" + std::to_string(nameIndex);
+    strncpy(s.sigName, fn.c_str(), 10);
+    std::ofstream fileOut(filePath + ".bin", std::ios::binary | std::ios::trunc);
+    fileOut.write((char*)&s, sizeof(s));
+    fileOut.flush();
+    fileOut.close();
+    return RP_ARB_FILE_OK;
+}
+
+int rp_ARBGenFileCOE(std::string _filename) {
+    if (_filename == "") {
+        return RP_ARB_FILE_ERR;
+    }
+
+    binFile_t s;
+    memset(s.sigName, 0, sizeof(s.sigName));
+    memset(s.values, 0, sizeof(s.values));
+    s.version = 1;
+    s.color = 0xFFC2BC14;
+    auto filePath = trim(FILE_PATH + "/" + _filename);
+
+    CoeData data;
+
+    auto ret = rp_ARBParseCoeFile(filePath, &data);
+
+    if (ret != RP_ARB_FILE_OK) {
+        fs::remove(filePath);
+        return ret;
+    }
+
+    if (data.data.size() > DAC_BUFFER_SIZE) {
+        fs::remove(filePath);
+        return RP_ARB_FILE_TO_LONG;
+    }
+
+    fs::remove(filePath);
+
+    s.size = data.data.size();
+    for (size_t i = 0; i < data.data.size(); i++) {
+        s.values[i] = data.data[i];
+    }
+
     int nameIndex = 1;
     std::string sigName = "ARB";
     while (!checkFreeName(sigName + "_" + std::to_string(nameIndex))) {

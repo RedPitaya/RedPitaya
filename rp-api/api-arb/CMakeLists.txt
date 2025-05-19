@@ -70,6 +70,7 @@ link_directories(${INSTALL_DIR}/lib)
 
 list(APPEND src
             ${CMAKE_SOURCE_DIR}/src/rp_arb.cpp
+            ${CMAKE_SOURCE_DIR}/src/rp_coe.cpp
         )
 
 list(APPEND header

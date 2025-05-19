@@ -32,10 +32,12 @@ enum req_status_e {
     FILE_ERR_CANT_RENAME = 5,
     FILE_RENAME_DONE = 6,
     FILE_ERR_CANT_CHANGE_COLOR = 7,
-    FILE_CHANGE_COLOR_DONE = 8
+    FILE_CHANGE_COLOR_DONE = 8,
+    FILE_ERR_PARS_COU_ERR = 9,
 };
 
 CStringParameter req_check_file("RP_REQ_CHECK_FILE", CBaseParameter::RW, "", 0);
+CStringParameter req_check_file_coe("RP_REQ_CHECK_FILE_COE", CBaseParameter::RW, "", 0);
 CIntParameter req_status("RP_REQ_STATUS", CBaseParameter::RW, 0, 0, 0, 100);
 CStringParameter req_files_list("RP_FILES_LIST", CBaseParameter::RW, "", 0);
 CStringParameter req_rename_file("RP_RENAME_FILE", CBaseParameter::RW, "", 0);
@@ -183,6 +185,7 @@ std::vector<std::string> split(std::string s, std::string delimiter) {
 
 void UpdateParams(void) {
     req_check_file.Update();
+    req_check_file_coe.Update();
     req_files_list.Update();
 }
 
@@ -194,7 +197,7 @@ void OnNewParams(void) {
     if (req_check_file.IsNewValue()) {
         req_check_file.Update();
         TRACE_SHORT("Request create file")
-        int res = rp_ARBGenFile(req_check_file.Value());
+        int res = rp_ARBGenFileCSV(req_check_file.Value());
         req_check_file.Value() = "";
         switch (res) {
             case RP_ARB_FILE_ERR:
@@ -205,6 +208,27 @@ void OnNewParams(void) {
                 break;
             case RP_ARB_FILE_PARSE_ERR:
                 req_status.SendValue(FILE_ERR_PARS_ERR);
+                break;
+            default:
+                req_status.SendValue(REQ_UPDATE);
+                break;
+        }
+    }
+
+    if (req_check_file_coe.IsNewValue()) {
+        req_check_file_coe.Update();
+        TRACE_SHORT("Request create coe file")
+        int res = rp_ARBGenFileCOE(req_check_file_coe.Value());
+        req_check_file_coe.Value() = "";
+        switch (res) {
+            case RP_ARB_FILE_ERR:
+                req_status.SendValue(FILE_ERR);
+                break;
+            case RP_ARB_FILE_TO_LONG:
+                req_status.SendValue(FILE_ERR_TO_LONG);
+                break;
+            case RP_ARB_FILE_PARSE_ERR:
+                req_status.SendValue(FILE_ERR_PARS_COU_ERR);
                 break;
             default:
                 req_status.SendValue(REQ_UPDATE);
