@@ -131,20 +131,26 @@
     }
 
     LA.setWinX = function(new_params){
-        LA.subWindowHandler.style.left = new_params['LA_WIN_X'].value + 'px';
+        if (LA.isDragging == false)
+            LA.subWindowHandler.style.left = new_params['LA_WIN_X'].value + 'px';
     }
 
     LA.setWinY = function(new_params){
-        LA.subWindowHandler.style.top = new_params['LA_WIN_Y'].value + 'px';
+        if (LA.isDragging == false)
+            LA.subWindowHandler.style.top = new_params['LA_WIN_Y'].value + 'px';
     }
 
     LA.setWinW = function(new_params){
-        LA.subWindowHandler.style.width = new_params['LA_WIN_W'].value + 'px';
-        LOGGER.loadDecoderValues()
+        if (LA.isResizing == false){
+            LA.subWindowHandler.style.width = new_params['LA_WIN_W'].value + 'px';
+            LOGGER.loadDecoderValues()
+        }
     }
 
     LA.setWinH = function(new_params){
-        LA.subWindowHandler.style.height = new_params['LA_WIN_H'].value + 'px';
+        if (LA.isResizing == false){
+            LA.subWindowHandler.style.height = new_params['LA_WIN_H'].value + 'px';
+        }
     }
 
     LA.checkSubWindowPosition = function(){
