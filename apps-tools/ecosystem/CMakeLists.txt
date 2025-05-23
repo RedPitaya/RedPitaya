@@ -53,20 +53,30 @@ message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 set(ZIP_FILE ../../../${APP}-${VERSION}-${REVISION}.zip)
 
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/../assets DESTINATION ${BUILD_PATH})
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/../assets DESTINATION ${INSTALL_DIR}/www/apps)
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/images DESTINATION ${BUILD_PATH})
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/images DESTINATION ${INSTALL_DIR}/www/apps)
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/info DESTINATION ${BUILD_PATH})
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/info DESTINATION ${INSTALL_DIR}/www/apps)
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/ui DESTINATION ${BUILD_PATH})
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/ui DESTINATION ${INSTALL_DIR}/www/apps)
 
 file(GLOB HTML "*.html")
 install(FILES ${HTML} DESTINATION ${BUILD_PATH})
 install(FILES favicon.ico style.css DESTINATION ${BUILD_PATH})
+
+install(FILES ${HTML} DESTINATION  ${INSTALL_DIR}/www/apps)
+install(FILES favicon.ico style.css DESTINATION  ${INSTALL_DIR}/www/apps)
 
 install(CODE "execute_process(COMMAND sed -i ${BUILD_PATH}/info/info.json -e \"s/REVISION/${REVISION}/\")")
 install(CODE "execute_process(COMMAND sed -i ${BUILD_PATH}/info/info.json -e \"s/VERSION/${VERSION}/\")")
 install(CODE "execute_process(COMMAND sed -i ${BUILD_PATH}/info/info.json -e \"s/LINUX_VER/${LINUX_VER}/\")")
 install(CODE "execute_process(COMMAND sed -i ${BUILD_PATH}/info/info.json -e \"s/BUILD_NUMBER/${BUILD_NUMBER}/\")")
 
-file(GLOB FOR_COPY ${BUILD_PATH}/*)
-install(CODE "file(INSTALL ${FOR_COPY} DESTINATION ${INSTALL_DIR}/www/apps)")
+install(CODE "execute_process(COMMAND sed -i ${INSTALL_DIR}/www/apps/info/info.json -e \"s/REVISION/${REVISION}/\")")
+install(CODE "execute_process(COMMAND sed -i ${INSTALL_DIR}/www/apps/info/info.json -e \"s/VERSION/${VERSION}/\")")
+install(CODE "execute_process(COMMAND sed -i ${INSTALL_DIR}/www/apps/info/info.json -e \"s/LINUX_VER/${LINUX_VER}/\")")
+install(CODE "execute_process(COMMAND sed -i ${INSTALL_DIR}/www/apps/info/info.json -e \"s/BUILD_NUMBER/${BUILD_NUMBER}/\")")
+
 
 install(CODE "file(ARCHIVE_CREATE OUTPUT ${ZIP_FILE} FORMAT zip PATHS ${BUILD_PATH})")
