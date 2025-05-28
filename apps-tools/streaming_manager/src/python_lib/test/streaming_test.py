@@ -51,7 +51,7 @@ class Callback(streaming.ADCCallback):
         print("Control client error",host, "code" , code)
 
     def configErrorTimeout(self,client,host):
-        print("Control client error",host, ". Сonnection timeout")
+        print("Control client error",host, ". Connection timeout")
 
 
 print("streaming.ADCStreamClient()")
