@@ -36,6 +36,7 @@ void usage(char** argv) {
 
     fprintf(stderr,
             "\t\tKeys:\n"
+            "\t\t\tosc_rate\t: OSC base rate\n"
             "\t\t\tgpio_n\t: Number of GPIO channels N\n"
             "\t\t\tgpio_p\t: Number of GPIO channels P\n"
             "\t\t\te3\t: Availability of e3 connector\n");
@@ -92,6 +93,17 @@ int main(int argc, char** argv) {
             usage(argv);
         } else {
             std::string key = argv[2];
+            if (key == "osc_rate") {
+                uint32_t value;
+                auto ret = rp_HPGetBaseSpeedHz(&value);
+                if (ret == RP_HP_OK) {
+                    printf("%d", value);
+                } else {
+                    printf("[Error]");
+                    return EXIT_FAILURE;
+                }
+                return EXIT_SUCCESS;
+            }
             if (key == "gpio_p") {
                 uint8_t value;
                 auto ret = rp_HPGetGPIO_P_Count(&value);
