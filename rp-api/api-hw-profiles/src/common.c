@@ -327,6 +327,14 @@ void hp_checkModel(char *model,char *eth_mac){
 		return;
 	}
 
+	if (strcmp(model,"stem_125-14_z7020_ll_v1.2") == 0){ // STEM_125-14_Z7020_LL_v1.2
+		g_profile = getProfile_STEM_125_14_Z7020_LL_v1_2();
+		strcpy(g_profile->boardModelEEPROM,modelOrig);
+		if (eth_mac)
+			strcpy(g_profile->boardETH_MAC,eth_mac);
+		return;
+	}
+
 	if (strcmp(model,"stem_65-16_ll_v1.1") == 0){ // STEM_65-16_LL_v1.1
 		g_profile = getProfile_STEM_65_16_Z7020_LL_v1_1();
 		strcpy(g_profile->boardModelEEPROM,modelOrig);

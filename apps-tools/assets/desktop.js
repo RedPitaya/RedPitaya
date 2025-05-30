@@ -465,6 +465,7 @@
                         if (modelUp.startsWith('STEM_125-14_Z7020_PRO_V2.0')) model = 'STEMlab 125-14-Z7020 Pro v2.0';
                         if (modelUp.startsWith('STEM_125-14_IND_V2.0')) model = 'STEMlab 125-14 Ind v2.0';
                         if (modelUp.startsWith('STEM_125-14_Z7020_LL_v1.1')) model = 'STEMlab 125-14 LL v1.1';
+                        if (modelUp.startsWith('STEM_125-14_Z7020_LL_v1.2')) model = 'STEMlab 125-14 LL v1.2';
                         if (modelUp.startsWith('STEM_65-16_LL_v1.1')) model = 'STEMlab 65-16 LL v1.1';
 
                         if (modelUp.includes('SLAVE')) model += " / Streaming Slave";
