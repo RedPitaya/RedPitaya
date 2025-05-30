@@ -174,7 +174,10 @@ auto generate(rp_channel_t channel, float tscale) -> void {
             float data[DAC_BUFFER_SIZE];
             uint32_t size;
             if (!rp_ARBGetSignalByName(signame, data, &size)) {
-                synthesis_arb(signal, data, size, frequency, amplitude, offset, showOff, tscale);
+                if (gen_mode == RP_GEN_MODE_CONTINUOUS)
+                    synthesis_arb(signal, data, size, frequency, amplitude, offset, showOff, tscale);
+                else
+                    synthesis_arb_burst(signal, data, size, frequency, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale);
             }
         }
     } else {
@@ -601,10 +604,15 @@ auto updateGeneratorParameters(bool force) -> void {
                     if (!rp_ARBGetSignalByName(signame, data, &size)) {
                         rp_GenArbWaveform(ch, data, size);
                         rp_GenWaveform(ch, RP_WAVEFORM_ARBITRARY);
+                        // Set init value
+                        rp_GenSetInitGenValue(ch, data[0]);
+                        rp_GenBurstLastValue(ch, data[size - 1]);
                         outWaveform[i].Update();
                     } else {
                         outWaveform[i].Update();
                         rp_GenWaveform(ch, RP_WAVEFORM_SINE);
+                        rp_GenSetInitGenValue(ch, 0);
+                        rp_GenBurstLastValue(ch, 0);
                         outWaveform[i].Value() = "0";
                     }
 
@@ -612,9 +620,13 @@ auto updateGeneratorParameters(bool force) -> void {
                     try {
                         rp_waveform_t w = (rp_waveform_t)stoi(wf);
                         rp_GenWaveform(ch, w);
+                        rp_GenSetInitGenValue(ch, 0);
+                        rp_GenBurstLastValue(ch, 0);
                         outWaveform[i].Update();
                     } catch (const std::exception&) {
                         rp_GenWaveform(ch, RP_WAVEFORM_SINE);
+                        rp_GenSetInitGenValue(ch, 0);
+                        rp_GenBurstLastValue(ch, 0);
                         outWaveform[i].Update();
                         outWaveform[i].Value() = "0";
                     }
