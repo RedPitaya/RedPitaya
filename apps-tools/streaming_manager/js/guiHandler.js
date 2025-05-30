@@ -123,27 +123,27 @@ var acdcChange = function(event) {
     SM.updateLimits();
 }
 
-var formatСhange = function(event) {
+var formatChange = function(event) {
     CLIENT.parametersCache["SS_FORMAT"] = { value: $("#SS_FORMAT option:selected").val() };
     CLIENT.sendParameters();
 }
 
-var dacFormatСhange = function(event) {
+var dacFormatChange = function(event) {
     CLIENT.parametersCache["SS_DAC_FILE_TYPE"] = { value: $("#SS_DAC_FILE_TYPE option:selected").val() };
     CLIENT.sendParameters();
 }
 
-var dacFileСhange = function(event) {
+var dacFileChange = function(event) {
     CLIENT.parametersCache["SS_DAC_FILE"] = { value: $("#SS_DAC_FILE option:selected").val() };
     CLIENT.sendParameters();
 }
 
-var dacRepeatModeСhange = function(event) {
+var dacRepeatModeChange = function(event) {
     CLIENT.parametersCache["SS_DAC_REPEAT"] = { value: $("#SS_DAC_REPEAT option:selected").val() };
     CLIENT.sendParameters();
 }
 
-var dacRepeatCountСhange = function(event) {
+var dacRepeatCountChange = function(event) {
     var samples = $("#SS_DAC_REPEAT_COUNT").val()
     var max_val = parseInt($("#SS_DAC_REPEAT_COUNT").attr('max'))
     var min_val = parseInt($("#SS_DAC_REPEAT_COUNT").attr('min'))
@@ -167,7 +167,7 @@ var dacRepeatCountСhange = function(event) {
     CLIENT.sendParameters();
 }
 
-var dacRateСhange = function(event) {
+var dacRateChange = function(event) {
     if (ValidateSamples($("#SS_DAC_HZ").val()) == false) {
         $("#SS_DAC_HZ").val($("#SS_DAC_HZ").attr('max'));
         $('#SS_DAC_HZ').fI();
@@ -183,7 +183,7 @@ var dacRateСhange = function(event) {
     CLIENT.sendParameters();
 }
 
-var memBlockСhange = function(event) {
+var memBlockChange = function(event) {
     CLIENT.parametersCache["MM_BLOCK_SIZE"] = { value: $("#MM_BLOCK_SIZE option:selected").val() };
     CLIENT.sendParameters();
 }
@@ -336,14 +336,14 @@ var changeCallbacks = {}
 
 changeCallbacks["SS_PORT_NUMBER"] = portNumberChange;
 changeCallbacks["SS_IP_ADDR"] = ipAddressChange;
-changeCallbacks["SS_FORMAT"] = formatСhange;
-changeCallbacks["SS_DAC_FILE_TYPE"] = dacFormatСhange;
-changeCallbacks["SS_DAC_FILE"] = dacFileСhange;
-changeCallbacks["SS_DAC_HZ"] = dacRateСhange;
+changeCallbacks["SS_FORMAT"] = formatChange;
+changeCallbacks["SS_DAC_FILE_TYPE"] = dacFormatChange;
+changeCallbacks["SS_DAC_FILE"] = dacFileChange;
+changeCallbacks["SS_DAC_HZ"] = dacRateChange;
 changeCallbacks["SS_SAMPLES"] = samplesNumberChange;
-changeCallbacks["MM_BLOCK_SIZE"] = memBlockСhange;
-changeCallbacks["SS_DAC_REPEAT"] = dacRepeatModeСhange;
-changeCallbacks["SS_DAC_REPEAT_COUNT"] = dacRepeatCountСhange;
+changeCallbacks["MM_BLOCK_SIZE"] = memBlockChange;
+changeCallbacks["SS_DAC_REPEAT"] = dacRepeatModeChange;
+changeCallbacks["SS_DAC_REPEAT_COUNT"] = dacRepeatCountChange;
 
 
 var clickCallbacks = {}

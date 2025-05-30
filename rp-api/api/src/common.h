@@ -50,8 +50,16 @@
             WARNING(__VA_ARGS__)    \
     }
 
-#define printReg(X, Y, W, Z) printf(X, Y, 0x40000000 + W, Z, Z);
-#define printRegBit(X, Y, Z) printf(X, Y, Z, Z);
+#define printReg(X, Y, W, Z)                    \
+    {                                           \
+        auto tmp = Z;                           \
+        printf(X, Y, 0x40000000 + W, tmp, tmp); \
+    }
+#define printRegBit(X, Y, Z)    \
+    {                           \
+        auto tmp = Z;           \
+        printf(X, Y, tmp, tmp); \
+    }
 
 // unmasked IO read/write (p - pointer, v - value)
 #define ioread32(p) (*(volatile uint32_t*)(p))

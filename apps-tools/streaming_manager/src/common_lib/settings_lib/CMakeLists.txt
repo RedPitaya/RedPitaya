@@ -12,15 +12,15 @@ message(STATUS "REVISION=${REVISION}")
 message(STATUS "BUILD_NUMBER=${BUILD_NUMBER}")
 message(STATUS "LINUX_VER=${LINUX_VER}")
 
-message(STATUS "Compiler С path: ${CMAKE_C_COMPILER}")
-message(STATUS "Compiler С ID: ${CMAKE_C_COMPILER_ID}")
-message(STATUS "Compiler С version: ${CMAKE_C_COMPILER_VERSION}")
-message(STATUS "Compiler С is part: ${CMAKE_COMPILER_IS_GNUC}")
+message(STATUS "Compiler C path: ${CMAKE_C_COMPILER}")
+message(STATUS "Compiler C ID: ${CMAKE_C_COMPILER_ID}")
+message(STATUS "Compiler C version: ${CMAKE_C_COMPILER_VERSION}")
+message(STATUS "Compiler C is part: ${CMAKE_COMPILER_IS_GNUC}")
 
-message(STATUS "Compiler С++ path: ${CMAKE_CXX_COMPILER}")
-message(STATUS "Compiler С++ ID: ${CMAKE_CXX_COMPILER_ID}")
-message(STATUS "Compiler С++version: ${CMAKE_CXX_COMPILER_VERSION}")
-message(STATUS "Compiler С++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
+message(STATUS "Compiler C++ path: ${CMAKE_CXX_COMPILER}")
+message(STATUS "Compiler C++ ID: ${CMAKE_CXX_COMPILER_ID}")
+message(STATUS "Compiler C++version: ${CMAKE_CXX_COMPILER_VERSION}")
+message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
 include(FetchContent)
 

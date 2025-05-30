@@ -749,7 +749,7 @@ int gen_setBurstPeriod(rp_channel_t channel, uint32_t period) {
     int sigLen = (((double)samplesCount) / freq) * burstCount * MICRO;
     // period = signal_time * burst_count + delay_time
     if ((int)period - sigLen <= 0) {
-        period = sigLen + 1;
+        period = sigLen;
     }
 
     delay = period - sigLen;

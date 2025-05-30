@@ -22,6 +22,15 @@
     MAIN.freeSD = undefined;
     MAIN.cpuLoad = undefined;
 
+    MAIN.cpuTemp = undefined;
+    MAIN.VCC1 = undefined;
+    MAIN.VCC2 = undefined;
+    MAIN.VCC3 = undefined;
+    MAIN.VCC4 = undefined;
+    MAIN.VCC5 = undefined;
+    MAIN.VCC6 = undefined;
+    MAIN.VCC6nominal = undefined;
+
 
     MAIN.processSignals = function(SIG){
     }
@@ -107,51 +116,58 @@
     }
 
     MAIN.processTemp= function(new_params) {
-        MAIN.cpuLoad = new_params['RP_SYSTEM_TEMPERATURE'].value
-        if (MAIN.cpuLoad != undefined){
-            $('#TEMP_ID').text(MAIN.cpuLoad.toFixed() + " °C");
+        MAIN.cpuTemp = new_params['RP_SYSTEM_TEMPERATURE'].value
+        if (MAIN.cpuTemp != undefined){
+            $('#TEMP_ID').text(MAIN.cpuTemp.toFixed() + " °C");
         }
     }
 
     MAIN.processVCC1= function(new_params) {
-        MAIN.cpuLoad = new_params['RP_SYSTEM_VCC_PINT'].value
-        if (MAIN.cpuLoad != undefined){
-            $('#VCCPINT_ID').text(MAIN.cpuLoad.toFixed(3) + " V");
+        MAIN.VCC1 = new_params['RP_SYSTEM_VCC_PINT'].value
+        if (MAIN.VCC1 != undefined){
+            $('#VCCPINT_ID').text(MAIN.VCC1.toFixed(3) + " V");
         }
     }
 
     MAIN.processVCC2= function(new_params) {
-        MAIN.cpuLoad = new_params['RP_SYSTEM_VCC_PAUX'].value
-        if (MAIN.cpuLoad != undefined){
-            $('#VCCPAUX_ID').text(MAIN.cpuLoad.toFixed(3) + " V");
+        MAIN.VCC2 = new_params['RP_SYSTEM_VCC_PAUX'].value
+        if (MAIN.VCC2 != undefined){
+            $('#VCCPAUX_ID').text(MAIN.VCC2.toFixed(3) + " V");
         }
     }
 
     MAIN.processVCC3= function(new_params) {
-        MAIN.cpuLoad = new_params['RP_SYSTEM_VCC_BRAM'].value
-        if (MAIN.cpuLoad != undefined){
-            $('#VCCBRAM_ID').text(MAIN.cpuLoad.toFixed(3) + " V");
+        MAIN.VCC3 = new_params['RP_SYSTEM_VCC_BRAM'].value
+        if (MAIN.VCC3 != undefined){
+            $('#VCCBRAM_ID').text(MAIN.VCC3.toFixed(3) + " V");
         }
     }
 
     MAIN.processVCC4= function(new_params) {
-        MAIN.cpuLoad = new_params['RP_SYSTEM_VCC_INT'].value
-        if (MAIN.cpuLoad != undefined){
-            $('#VCCINT_ID').text(MAIN.cpuLoad.toFixed(3) + " V");
+        MAIN.VCC4 = new_params['RP_SYSTEM_VCC_INT'].value
+        if (MAIN.VCC4 != undefined){
+            $('#VCCINT_ID').text(MAIN.VCC4.toFixed(3) + " V");
         }
     }
 
     MAIN.processVCC5= function(new_params) {
-        MAIN.cpuLoad = new_params['RP_SYSTEM_VCC_AUX'].value
-        if (MAIN.cpuLoad != undefined){
-            $('#VCCAUX_ID').text(MAIN.cpuLoad.toFixed(3) + " V");
+        MAIN.VCC5 = new_params['RP_SYSTEM_VCC_AUX'].value
+        if (MAIN.VCC5 != undefined){
+            $('#VCCAUX_ID').text(MAIN.VCC5.toFixed(3) + " V");
         }
     }
 
     MAIN.processVCC6= function(new_params) {
-        MAIN.cpuLoad = new_params['RP_SYSTEM_VCC_DDR'].value
-        if (MAIN.cpuLoad != undefined){
-            $('#VCCDDR_ID').text(MAIN.cpuLoad.toFixed(3) + " V");
+        if (new_params['RP_SYSTEM_VCC_DDR'] !== undefined)
+            MAIN.VCC6 = new_params['RP_SYSTEM_VCC_DDR'].value
+        if (new_params['RP_SYSTEM_VCC_DDR_NOMINAL'] !== undefined)
+            MAIN.VCC6nominal = new_params['RP_SYSTEM_VCC_DDR_NOMINAL'].value
+        if (MAIN.VCC6 != undefined){
+            $('#VCCDDR_ID').text(MAIN.VCC6.toFixed(3) + " V");
+        }
+
+        if (MAIN.VCC6nominal != undefined){
+            $('#VCCDDR_LAB_ID').text("VCC DDR (1." + MAIN.VCC6nominal + "V):");
         }
     }
 
@@ -172,6 +188,7 @@
     MAIN.param_callbacks["RP_SYSTEM_VCC_INT"] = MAIN.processVCC4;
     MAIN.param_callbacks["RP_SYSTEM_VCC_AUX"] = MAIN.processVCC5;
     MAIN.param_callbacks["RP_SYSTEM_VCC_DDR"] = MAIN.processVCC6;
+    MAIN.param_callbacks["RP_SYSTEM_VCC_DDR_NOMINAL"] = MAIN.processVCC6;
 
 }(window.MAIN = window.MAIN || {}, jQuery));
 

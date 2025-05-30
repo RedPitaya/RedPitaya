@@ -61,7 +61,7 @@ CBooleanParameter outBurstState[MAX_DAC_CHANNELS] = INIT2("SOUR", "_BURST_STATE"
 CIntParameter outBurstCount[MAX_DAC_CHANNELS] = INIT2("SOUR", "_BURST_COUNT", CBaseParameter::RW, 1, 0, 1, 50000, CONFIG_VAR);
 CIntParameter outBurstRepetitions[MAX_DAC_CHANNELS] = INIT2("SOUR", "_BURST_REP", CBaseParameter::RW, 1, 0, 1, 50000, CONFIG_VAR);
 CBooleanParameter outBurstRepInf[MAX_DAC_CHANNELS] = INIT2("SOUR", "_BURST_INF", CBaseParameter::RW, false, 0, CONFIG_VAR);
-CIntParameter outBurstDelay[MAX_DAC_CHANNELS] = INIT2("SOUR", "_BURST_DELAY", CBaseParameter::RW, 1, 0, 1, 2000000000, CONFIG_VAR);
+CIntParameter outBurstDelay[MAX_DAC_CHANNELS] = INIT2("SOUR", "_BURST_DELAY", CBaseParameter::RW, 1, 0, 0, 2000000000, CONFIG_VAR);
 CBooleanParameter outGenSyncReset("SYNC_GEN", CBaseParameter::RW, false, 0);
 
 CFloatParameter outExtTrigDeb("SOUR_DEB", CBaseParameter::RW, 500, 0, 0.008, 8338, CONFIG_VAR);
@@ -174,7 +174,10 @@ auto generate(rp_channel_t channel, float tscale) -> void {
             float data[DAC_BUFFER_SIZE];
             uint32_t size;
             if (!rp_ARBGetSignalByName(signame, data, &size)) {
-                synthesis_arb(signal, data, size, frequency, amplitude, offset, showOff, tscale);
+                if (gen_mode == RP_GEN_MODE_CONTINUOUS)
+                    synthesis_arb(signal, data, size, frequency, amplitude, offset, showOff, tscale);
+                else
+                    synthesis_arb_burst(signal, data, size, frequency, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale);
             }
         }
     } else {
@@ -200,8 +203,7 @@ auto generate(rp_channel_t channel, float tscale) -> void {
                 if (gen_mode == RP_GEN_MODE_CONTINUOUS)
                     synthesis_square(signal, frequency, phase, amplitude, offset, showOff, tscale, riseTime, fallTime);
                 else
-                    synthesis_square_burst(signal, frequency, phase, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale, riseTime,
-                                           fallTime);
+                    synthesis_square_burst(signal, frequency, phase, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale, riseTime, fallTime);
                 break;
             case RP_WAVEFORM_RAMP_UP:
                 if (gen_mode == RP_GEN_MODE_CONTINUOUS)
@@ -326,8 +328,8 @@ auto setSweepParameters(bool force) -> void {
 
     for (int i = 0; i < g_dac_channels; i++) {
         auto ch = (rp_channel_t)i;
-        if ((IS_NEW(outSweepStartFrequancy[i])) || (IS_NEW(outSweepEndFrequancy[i])) || (IS_NEW(outSweepMode[i])) || (IS_NEW(outSweepDir[i])) ||
-            (IS_NEW(outSweepTime[i])) || (IS_NEW(outSweepState[i])) || force) {
+        if ((IS_NEW(outSweepStartFrequancy[i])) || (IS_NEW(outSweepEndFrequancy[i])) || (IS_NEW(outSweepMode[i])) || (IS_NEW(outSweepDir[i])) || (IS_NEW(outSweepTime[i])) ||
+            (IS_NEW(outSweepState[i])) || force) {
 
             outSweepStartFrequancy[i].Update();
             outSweepEndFrequancy[i].Update();
@@ -602,10 +604,15 @@ auto updateGeneratorParameters(bool force) -> void {
                     if (!rp_ARBGetSignalByName(signame, data, &size)) {
                         rp_GenArbWaveform(ch, data, size);
                         rp_GenWaveform(ch, RP_WAVEFORM_ARBITRARY);
+                        // Set init value
+                        rp_GenSetInitGenValue(ch, data[0]);
+                        rp_GenBurstLastValue(ch, data[size - 1]);
                         outWaveform[i].Update();
                     } else {
                         outWaveform[i].Update();
                         rp_GenWaveform(ch, RP_WAVEFORM_SINE);
+                        rp_GenSetInitGenValue(ch, 0);
+                        rp_GenBurstLastValue(ch, 0);
                         outWaveform[i].Value() = "0";
                     }
 
@@ -613,9 +620,13 @@ auto updateGeneratorParameters(bool force) -> void {
                     try {
                         rp_waveform_t w = (rp_waveform_t)stoi(wf);
                         rp_GenWaveform(ch, w);
+                        rp_GenSetInitGenValue(ch, 0);
+                        rp_GenBurstLastValue(ch, 0);
                         outWaveform[i].Update();
                     } catch (const std::exception&) {
                         rp_GenWaveform(ch, RP_WAVEFORM_SINE);
+                        rp_GenSetInitGenValue(ch, 0);
+                        rp_GenBurstLastValue(ch, 0);
                         outWaveform[i].Update();
                         outWaveform[i].Value() = "0";
                     }
