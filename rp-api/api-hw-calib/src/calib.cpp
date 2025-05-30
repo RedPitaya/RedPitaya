@@ -345,15 +345,12 @@ rp_calib_error calib_WriteParams(rp_HPeModels_t model, rp_calib_params_t* calib_
 
 rp_calib_error calib_GetVersion(uint8_t* version) {
     if (!g_model_loaded) {
-        rp_HPeModels_t model = STEM_125_14_v1_1;  // Default model
-        int res = rp_HPGetModel(&model);
-        if (res != RP_HP_OK) {
-            ERROR_LOG("Can't load RP model version. Err: %d", res);
+        auto ret = calib_Init(false);
+        if (ret != RP_HW_CALIB_OK) {
             *version = 0;
-            return RP_HW_CALIB_ENI;
+            return ret;
         }
     }
-
     *version = g_calib.dataStructureId;
     return RP_HW_CALIB_OK;
 }
