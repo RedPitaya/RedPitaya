@@ -68,7 +68,8 @@
                 STEM_125_14_Z7020_Pro_v1_0  = 24,
 
                 STEM_125_14_Z7020_LL_v1_1   = 25,
-                STEM_65_16_Z7020_LL_v1_1    = 26
+                STEM_65_16_Z7020_LL_v1_1    = 26,
+                STEM_125_14_Z7020_LL_v1_2   = 27
             }  rp_HPeModels_t;
         */
         if (model == 0){
@@ -150,6 +151,9 @@
             return "STEM 14-Z20-LL"
         }
         if (model == 26){
+            return "STEM 16-Z20-LL"
+        }
+        if (model == 27){
             return "STEM 16-Z20-LL"
         }
 

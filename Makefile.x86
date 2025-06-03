@@ -306,19 +306,6 @@ ifeq ($(MODEL),Z20_LL)
 
 endif
 
-ifeq ($(MODEL),Z20_LL_V2)
-
-	# Used in board: v0.94 barebones
-
-	FPGA_0_94_LL	= $(FPGA_COMMIT)
-	FPGA_BAREBONE = $(FPGA_COMMIT)
-
-	FPGA_MODEL = Z20_ll
-	FPGA_VERSION = z20_125_ll_v2
-
-endif
-
-
 .PHONY: fpga $(INSTALL_DIR)/fpga
 
 fpga: dtc_compiler $(INSTALL_DIR)/fpga

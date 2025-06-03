@@ -57,6 +57,7 @@ hk_version_t house_getHKVersion() {
             return HK_V3;
 
         case STEM_125_14_Z7020_LL_v1_1:
+        case STEM_125_14_Z7020_LL_v1_2:
         case STEM_65_16_Z7020_LL_v1_1:
             return HK_V4;
         default:
@@ -120,8 +121,7 @@ int hk_printRegset() {
             hk_v1->can_control.reg.print();
 
             printReg("%-25s\t0x%X = 0x%08X (%d)\n", "FPGA ready", offsetof(housekeeping_control_v1_t, fpga_ready), hk_v1->fpga_ready);
-            printReg("%-25s\t0x%X = 0x%08X (%d)\n", "ADC clock frequency meter", offsetof(housekeeping_control_v1_t, acq_clock_counter),
-                     hk_v1->acq_clock_counter);
+            printReg("%-25s\t0x%X = 0x%08X (%d)\n", "ADC clock frequency meter", offsetof(housekeeping_control_v1_t, acq_clock_counter), hk_v1->acq_clock_counter);
             printReg("%-25s\t0x%X = 0x%08X (%d)\n", "External trigger", offsetof(housekeeping_control_v1_t, ext_trigger), hk_v1->ext_trigger.reg_full);
             hk_v1->ext_trigger.reg.print();
 
@@ -158,8 +158,7 @@ int hk_printRegset() {
             printReg("%-25s\t0x%X = 0x%08X (%d)\n", "IDELAY CHD", offsetof(housekeeping_control_v2_t, idelay_chd), hk_v2->idelay_chd);
 
             printReg("%-25s\t0x%X = 0x%08X (%d)\n", "FPGA ready", offsetof(housekeeping_control_v2_t, fpga_ready), hk_v2->fpga_ready);
-            printReg("%-25s\t0x%X = 0x%08X (%d)\n", "ADC clock frequency meter", offsetof(housekeeping_control_v2_t, acq_clock_counter),
-                     hk_v2->acq_clock_counter);
+            printReg("%-25s\t0x%X = 0x%08X (%d)\n", "ADC clock frequency meter", offsetof(housekeeping_control_v2_t, acq_clock_counter), hk_v2->acq_clock_counter);
             printReg("%-25s\t0x%X = 0x%08X (%d)\n", "External trigger", offsetof(housekeeping_control_v2_t, ext_trigger), hk_v2->ext_trigger.reg_full);
             hk_v2->ext_trigger.reg.print();
 
@@ -202,8 +201,7 @@ int hk_printRegset() {
             printReg("%-25s\t0x%X = 0x%08X (%d)\n", "DAC SPI Read data / Transfer busy", offsetof(housekeeping_control_v3_t, dac_spi_rd), hk_v3->dac_spi_rd);
 
             printReg("%-25s\t0x%X = 0x%08X (%d)\n", "FPGA ready", offsetof(housekeeping_control_v3_t, fpga_ready), hk_v3->fpga_ready);
-            printReg("%-25s\t0x%X = 0x%08X (%d)\n", "ADC clock frequency meter", offsetof(housekeeping_control_v3_t, acq_clock_counter),
-                     hk_v3->acq_clock_counter);
+            printReg("%-25s\t0x%X = 0x%08X (%d)\n", "ADC clock frequency meter", offsetof(housekeeping_control_v3_t, acq_clock_counter), hk_v3->acq_clock_counter);
             printReg("%-25s\t0x%X = 0x%08X (%d)\n", "External trigger", offsetof(housekeeping_control_v3_t, ext_trigger), hk_v3->ext_trigger.reg_full);
             hk_v3->ext_trigger.reg.print();
 
@@ -237,8 +235,7 @@ int hk_printRegset() {
             printReg("%-25s\t0x%X = 0x%08X (%d)\n", "ADC SPI Read data / Transfer busy", offsetof(housekeeping_control_v4_t, adc_spi_rd), hk_v4->adc_spi_rd);
 
             printReg("%-25s\t0x%X = 0x%08X (%d)\n", "FPGA ready", offsetof(housekeeping_control_v4_t, fpga_ready), hk_v4->fpga_ready);
-            printReg("%-25s\t0x%X = 0x%08X (%d)\n", "ADC clock frequency meter", offsetof(housekeeping_control_v4_t, acq_clock_counter),
-                     hk_v4->acq_clock_counter);
+            printReg("%-25s\t0x%X = 0x%08X (%d)\n", "ADC clock frequency meter", offsetof(housekeeping_control_v4_t, acq_clock_counter), hk_v4->acq_clock_counter);
 
             break;
         }

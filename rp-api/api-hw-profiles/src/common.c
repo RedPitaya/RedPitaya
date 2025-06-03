@@ -55,6 +55,7 @@
 
 #include "stem_125_14_Z7020_LL_v1.1.h"
 #include "stem_65_16_Z7020_LL_v1.1.h"
+#include "stem_125_14_Z7020_LL_v1.2.h"
 
 #define LINE_LENGTH 0x400
 
@@ -94,6 +95,7 @@ profiles_t *g_profile = NULL;
 // Low latency
 // "STEM_125-14_Z7020_LL_v1.1"
 // "STEM_65-16_LL_v1.1"
+// "STEM_125-14_Z7020_LL_v1.2"
 
 
 void convertToLowerCase(char *buff){
