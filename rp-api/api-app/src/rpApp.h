@@ -16,10 +16,6 @@
 #ifndef __RP_APP_H
 #define __RP_APP_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "math/rp_dsp.h"
 #include "rp.h"
 
@@ -754,9 +750,5 @@ int rpApp_SpecGetFpgaFreq(float* freq);
 int rpApp_OscMeasureMaxValue(rpApp_osc_source source, float* Max);
 
 int rpApp_OscMeasureMinValue(rpApp_osc_source source, float* Min);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif  //__RP_H

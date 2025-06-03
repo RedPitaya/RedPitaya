@@ -1680,6 +1680,12 @@ int rp_AcqAxiGetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int1
     return acq_axi_GetDataRaw(channel, pos, size, buffer);
 }
 
+int rp_AcqAxiGetDataRawDirect(rp_channel_t channel, uint32_t pos, uint32_t size, std::vector<std::span<int16_t>>* data) {
+    if (!rp_HPGetIsDMAinv0_94OrDefault())
+        return RP_NOTS;
+    return acq_axi_GetDataRawDirect(channel, pos, size, data);
+}
+
 int rp_AcqAxiGetDataRawNP(rp_channel_t channel, uint32_t pos, int16_t* np_buffer, int size) {
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;

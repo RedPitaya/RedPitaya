@@ -21,6 +21,9 @@
 #include <unistd.h>
 #include "rp.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wvolatile"
+
 int fd = -1;
 
 bool g_DebugReg = false;
@@ -276,3 +279,5 @@ int cmn_GetReservedMemory(uint32_t* _startAddress, uint32_t* _size) {
     }
     return RP_OK;
 }
+
+#pragma GCC diagnostic pop

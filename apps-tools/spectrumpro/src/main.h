@@ -7,10 +7,8 @@
 #include <limits>
 #include <mutex>
 
-extern "C" {
 #include "common/version.h"
 #include "rpApp.h"
-}
 
 /* Parameters description structure - must be the same for all RP controllers */
 typedef struct rp_app_params_s {

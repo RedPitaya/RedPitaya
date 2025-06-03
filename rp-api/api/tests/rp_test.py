@@ -514,7 +514,7 @@ res = rp.rp_GenTriggerOnly(rp.RP_CH_1)
 print(res)
 
 print("rp.rp_GenTriggerOnlyBoth()")
-res = rp.rp_GenTriggerOnly()
+res = rp.rp_GenTriggerOnlyBoth()
 print(res)
 
 print("rp.rp_SetEnableTempProtection(rp.RP_CH_1,True)")
@@ -997,6 +997,18 @@ print(arr_i16)
 print("rp.rp_AcqAxiGetDataVNP(rp.RP_CH_1,0,arr_f)")
 res = rp.rp_AcqAxiGetDataVNP(rp.RP_CH_1,0,arr_f)
 print(arr_f)
+
+print("rp.rp_AcqAxiGetDataRawDirect(rp.RP_CH_1,trig,128)")
+res = rp.rp_AcqAxiGetDataRawDirect(rp.RP_CH_1,trig, 128)
+print(res)
+
+arrays = []
+for span in res[1]:
+    arr = np.frombuffer(span, dtype=np.int16)
+    arrays.append(arr)
+
+for i, arr in enumerate(arrays):
+    print(arr)
 
 print("End testing numpy")
 

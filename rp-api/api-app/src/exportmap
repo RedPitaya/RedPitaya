@@ -1,4 +1,4 @@
 {
-global: rpApp_*;RP_APP_*;
+global: *rpApp_*;RP_APP_*;
 local: *;
 };

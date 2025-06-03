@@ -13,8 +13,8 @@ option(IS_INSTALL "Install library" ON)
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
-set(CMAKE_CXX_STANDARD 11)
-set(C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 20)
+set(C_STANDARD 20)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
@@ -185,10 +185,10 @@ endif()
 
 if(BUILD_TOOL)
     add_executable(rp_i2c_tool ${CMAKE_SOURCE_DIR}/src/tool/main.cpp)
-    target_link_libraries(rp_i2c_tool PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-xml> $<TARGET_OBJECTS:${PROJECT_NAME}-i2c> -li2c)
+    target_link_libraries(rp_i2c_tool PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-xml> $<TARGET_OBJECTS:${PROJECT_NAME}-i2c> -li2c -lrp-hw)
 
     add_executable(rp_power_on ${CMAKE_SOURCE_DIR}/src/power_on/main.cpp)
-    target_link_libraries(rp_power_on PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-xml> $<TARGET_OBJECTS:${PROJECT_NAME}-spi> $<TARGET_OBJECTS:${PROJECT_NAME}-gpio> $<TARGET_OBJECTS:${PROJECT_NAME}-i2c> -li2c)
+    target_link_libraries(rp_power_on PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-xml> $<TARGET_OBJECTS:${PROJECT_NAME}-spi> $<TARGET_OBJECTS:${PROJECT_NAME}-gpio> $<TARGET_OBJECTS:${PROJECT_NAME}-i2c>)
 
     if(IS_INSTALL)
         install(TARGETS rp_i2c_tool

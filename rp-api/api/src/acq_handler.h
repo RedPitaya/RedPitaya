@@ -17,6 +17,8 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <span>
+#include <vector>
 #include "rp.h"
 
 //#define ADC_SAMPLE_PERIOD_DEF ((double)1e9/(double)ADC_SAMPLE_RATE)
@@ -124,5 +126,6 @@ int acq_axi_SetBufferSamples(rp_channel_t channel, uint32_t address, uint32_t _s
 int acq_axi_SetBufferBytes(rp_channel_t channel, uint32_t address, uint32_t _size);
 int acq_axi_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* buffer);
 int acq_axi_GetDataV(rp_channel_t channel, uint32_t pos, uint32_t* size, float* buffer);
+int acq_axi_GetDataRawDirect(rp_channel_t channel, uint32_t pos, uint32_t size, std::vector<std::span<int16_t>>* data);
 
 #endif /* SRC_ACQ_HANDLER_H_ */

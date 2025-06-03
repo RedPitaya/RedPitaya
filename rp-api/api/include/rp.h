@@ -16,10 +16,6 @@
 #ifndef __RP_H
 #define __RP_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdbool.h>
 #include <stdint.h>
 #include "common/rp_log.h"
@@ -579,9 +575,5 @@ int rp_SetExternalTriggerLevel(float value);
 int rp_GetExternalTriggerLevel(float* value);
 
 ///@}
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif  //__RP_H

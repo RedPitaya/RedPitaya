@@ -1916,11 +1916,11 @@ int acq_axi_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16
         return RP_EOOR;
     }
 
-    rp_pinState_t mode;
+    // rp_pinState_t mode;
 
-    if (acq_GetGain(channel, &mode) != RP_OK) {
-        return RP_EOOR;
-    }
+    // if (acq_GetGain(channel, &mode) != RP_OK) {
+    //     return RP_EOOR;
+    // }
 
     uint8_t bits = 0;
     bool is_sign = false;
@@ -1940,6 +1940,49 @@ int acq_axi_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16
             buffer[i] = cmn_CalibCntsSigned(cnts, bits, 1, 1, 0);
         else
             buffer[i] = cmn_CalibCntsUnsigned(cnts, bits, 1, 1, 0);
+    }
+
+    return RP_OK;
+}
+
+int acq_axi_GetDataRawDirect(rp_channel_t channel, uint32_t pos, uint32_t size, std::vector<std::span<int16_t>>* data) {
+
+    CHECK_CHANNEL
+
+    auto raw_buffer = getAxiRawBuffer(channel);
+    uint32_t buffer_size = 0;
+    switch (channel) {
+        case RP_CH_1:
+            buffer_size = axi_ch_buffer_size_in_samples[0];
+            break;
+        case RP_CH_2:
+            buffer_size = axi_ch_buffer_size_in_samples[1];
+            break;
+        case RP_CH_3:
+            buffer_size = axi_ch_buffer_size_in_samples[2];
+            break;
+        case RP_CH_4:
+            buffer_size = axi_ch_buffer_size_in_samples[3];
+            break;
+        default:
+            return RP_EIPV;
+    }
+
+    if (!raw_buffer) {
+        return RP_EOOR;
+    }
+
+    if (data == NULL) {
+        return RP_EOOR;
+    }
+
+    data->clear();
+    for (uint32_t i = 0; i < size;) {
+        auto index = (pos + i) % buffer_size;
+        auto size_sub_buff = buffer_size - index;
+        size_sub_buff = std::min(size_sub_buff, size - i);
+        data->push_back({(int16_t*)&raw_buffer[index], (size_t)size_sub_buff});
+        i += size_sub_buff;
     }
 
     return RP_OK;

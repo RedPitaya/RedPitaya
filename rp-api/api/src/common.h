@@ -15,6 +15,9 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wvolatile"
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -115,5 +118,7 @@ rp_channel_calib_t convertCh(rp_channel_t ch);
 rp_channel_t convertChFromIndex(uint8_t index);
 rp_channel_calib_t convertPINCh(rp_apin_t pin);
 rp_acq_ac_dc_mode_calib_t convertPower(rp_acq_ac_dc_mode_t ch);
+
+#pragma GCC diagnostic pop
 
 #endif /* COMMON_H_ */
