@@ -25,8 +25,8 @@ class FileQueueManager : public Queue {
     auto openFile(std::string FileName, bool append) -> void;
     auto startWrite(CStreamSettings::DataFormat _fileType) -> void;
     auto stopWrite(bool waitAllWrite) -> void;
-    auto updateWavFile(int _size) -> void;
-    auto writeToFile() -> int;
+	auto updateWavFile(uint32_t _size) -> void;
+	auto writeToFile() -> int;
     auto deleteFile() -> void;
     auto getWritedSize() -> uint64_t;
 

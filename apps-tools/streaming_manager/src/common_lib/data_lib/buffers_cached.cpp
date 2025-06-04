@@ -158,9 +158,9 @@ auto CBuffersCached::writeBuffer(bool timeout) -> DataLib::CDataBuffersPackDMA::
         ts.tv_sec += 1;
         auto res = sem_timedwait(&m_spacesem, &ts);
         if (res != 0) {
-            return nullptr;
-        }
-    } else {
+			return nullptr;
+		}
+	} else {
         if (sem_wait(&m_spacesem) != 0) {
             return nullptr;
         }

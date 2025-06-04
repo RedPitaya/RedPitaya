@@ -252,11 +252,11 @@ auto CBoard::createStreaming() -> void {
                 m_stat.flost += flost;
                 m_stat.broken_b = 0;
                 obj->passBuffers(pack);
-                Q_EMIT updateStatistic();
-
-                ChartDataHolder::instance()->addBuffer(pack, packId, m_ip, !m_chartEnable);
-            }
-        }
+				Q_EMIT updateStatistic();
+				ChartDataHolder::instance()->addBuffer(pack, packId, m_ip, !m_chartEnable);
+				obj2->unlockBufferRead();
+			}
+		}
     });
 
     m_asionet->clientConnectNotify.connect([=](std::string host) {
