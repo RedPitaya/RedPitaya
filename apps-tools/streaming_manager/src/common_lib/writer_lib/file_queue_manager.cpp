@@ -182,17 +182,18 @@ auto FileQueueManager::outSpaceNotifyThread() -> void {
     } catch (std::exception& e) {}
 }
 
-auto FileQueueManager::updateWavFile(int _size) -> void {
-    int offset1 = 4;
+auto FileQueueManager::updateWavFile(uint32_t _size) -> void
+{
+	int offset1 = 4;
     int offset2 = 40;
 
     auto cur_p = fs.tellp();
     auto cur_g = fs.tellg();
 
-    int32_t size1 = 0;
-    int32_t size2 = 0;
-    fs.seekg(offset1, fs.beg);
-    fs.read((char*)&size1, sizeof(size1));
+	uint32_t size1 = 0;
+	uint32_t size2 = 0;
+	fs.seekg(offset1, fs.beg);
+	fs.read((char*)&size1, sizeof(size1));
     size1 += _size;
     fs.seekp(offset1, fs.beg);
     fs.write((char*)&size1, sizeof(size1));
