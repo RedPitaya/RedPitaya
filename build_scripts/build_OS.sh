@@ -182,6 +182,7 @@ make -f Makefile.x86 fpga MODEL=Z20_250_12a STREAMING=MASTER
 make -f Makefile.x86 fpga MODEL=Z10_V2 STREAMING=MASTER
 make -f Makefile.x86 fpga MODEL=Z10_PRO_V2 STREAMING=MASTER
 make -f Makefile.x86 fpga MODEL=Z20_125_V2 STREAMING=MASTER
+make -f Makefile.x86 fpga MODEL=Z20_LL STREAMING=MASTER
 
 make -f Makefile.x86
 

@@ -96,7 +96,7 @@ profiles_t stem_125_14_Z7020_LL_v1_1 = {
 
     .is_dma_mode_v0_94 = true,
     .is_DAC_50_Ohm_mode = true,
-    .is_split_osc_triggers = false,
+    .is_split_osc_triggers = true,
 
     .gpio_N_count = 8,
     .gpio_P_count = 8,

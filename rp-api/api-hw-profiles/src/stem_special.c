@@ -96,7 +96,7 @@ profiles_t stem_special = {
 
     .is_dma_mode_v0_94 = false,
     .is_DAC_50_Ohm_mode = false,
-    .is_split_osc_triggers = false,
+    .is_split_osc_triggers = true,
 
     .gpio_N_count = 8,
     .gpio_P_count = 8,
