@@ -514,25 +514,9 @@ typedef struct osc_control_s {
      */
     uint32_t wr_ptr_trigger_ch2;
 
-    /** @brief Calibration offset CH1 0x120
-     *
-     * Trigger write pointer register (offset 0x120):
-     * bits [15: 0] - Offset R/W
-     * bits [31:16] - reserved
+    /** @brief Offset 0x120 - reserved
      */
-    uint32_t calib_offset_ch1;
-
-    /** @brief Calibration gain CH1 0x124
-     *
-     * Trigger write pointer register (offset 0x124):
-     * bits [15: 0] - Gain R/W
-     * bits [31:16] - reserved
-     */
-    uint32_t calib_gain_ch1;
-
-    /** @brief Offset 0x128 - reserved
-     */
-    uint32_t reserved_128[1];
+    uint32_t reserved_120[3];
 
     /** @brief Offset 0x12C - Pre Trigger counter
      *
@@ -543,17 +527,37 @@ typedef struct osc_control_s {
      */
     uint32_t pre_trigger_counter_ch2;
 
-    /** @brief Calibration offset CH2 0x130
+    /** @brief Offset 0x130 - reserved
+     */
+    uint32_t reserved_130[52];
+
+    /** @brief Calibration offset CH1 0x200
      *
-     * Trigger write pointer register (offset 0x130):
+     * Trigger write pointer register (offset 0x200):
+     * bits [15: 0] - Offset R/W
+     * bits [31:16] - reserved
+     */
+    uint32_t calib_offset_ch1;
+
+    /** @brief Calibration gain CH1 0x204
+     *
+     * Trigger write pointer register (offset 0x204):
+     * bits [15: 0] - Gain R/W
+     * bits [31:16] - reserved
+     */
+    uint32_t calib_gain_ch1;
+
+    /** @brief Calibration offset CH2 0x208
+     *
+     * Trigger write pointer register (offset 0x208):
      * bits [15: 0] - Offset R/W
      * bits [31:16] - reserved
      */
     uint32_t calib_offset_ch2;
 
-    /** @brief Calibration gain CH2 0x134
+    /** @brief Calibration gain CH2 0x20C
      *
-     * Trigger write pointer register (offset 0x134):
+     * Trigger write pointer register (offset 0x20C):
      * bits [15: 0] - Gain R/W
      * bits [31:16] - reserved
      */

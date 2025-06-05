@@ -241,6 +241,7 @@ auto updateOscParametersToWEB() -> void {
     float value;
     rpApp_OscGetTimeOffset(&value);
     if (inTimeOffset.Value() != value) {
+        WARNING("Time offset %f", value)
         inTimeOffset.SendValue(value);
         inTimeScale.Update();
         viewPortion.Update();
@@ -518,6 +519,7 @@ auto updateOscParams(bool force) -> void {
 
     if (inTimeOffset.Value() != inTimeOffset.NewValue() || force) {
         if (rpApp_OscSetTimeOffset(inTimeOffset.NewValue()) == RP_OK) {
+            WARNING("Set %f", inTimeOffset.NewValue())
             inTimeOffset.Update();
             requestSendForTimeCursor = true;
         }

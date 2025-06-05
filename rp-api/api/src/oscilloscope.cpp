@@ -893,7 +893,7 @@ int osc_SetCalibOffsetInFPGA(rp_channel_t channel, uint8_t bits, int32_t offset)
         return RP_EOOR;
     }
 
-    int16_t offsetCalc = offset * -(pow(2, 16 - bits));
+    int16_t offsetCalc = offset * -1;  //-(pow(2, 16 - bits));
 
     uint32_t currentValue = 0;
     switch (channel) {
@@ -976,7 +976,8 @@ int osc_SetCalibGainInFPGA(rp_channel_t channel, double gain) {
 
 int osc_GetCalibOffsetInFPGA(rp_channel_t channel, uint8_t bits, int32_t* offset) {
     uint32_t offset_fpga = 0;
-    int32_t devider = -(pow(2, 16 - bits));
+    // int32_t devider = -(pow(2, 16 - bits));
+    int32_t devider = -1;
     switch (channel) {
         case RP_CH_1: {
             auto ret = cmn_GetValue(&osc_reg->calib_offset_ch1, &offset_fpga, CALIB_MASK);
