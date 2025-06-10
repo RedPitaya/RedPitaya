@@ -249,15 +249,14 @@ auto rp_app_init(void) -> int {
                     WARNING("Check master/slave");
                     auto osc = uio_lib::COscilloscope::create(uio, 1, true, getADCRate(), false, getADCBits(), getADCChannels());
                     g_isMaster = osc->isMaster();
-                    WARNING("Detected %s mode",
-                            g_isMaster == uio_lib::BoardMode::MASTER ? "Master" : (g_isMaster == uio_lib::BoardMode::SLAVE ? "Slave" : "Unknown"));
+                    WARNING("Detected %s mode", g_isMaster == uio_lib::BoardMode::MASTER ? "Master" : (g_isMaster == uio_lib::BoardMode::SLAVE ? "Slave" : "Unknown"));
                     break;
                 }
             }
             TRACE("ss_ip_addr %s", ss_ip_addr.Value().c_str());
             g_serverNetConfig = std::make_shared<ServerNetConfigManager>(
-                config_file, g_isMaster != uio_lib::BoardMode::SLAVE ? broadcast_lib::EMode::AB_SERVER_MASTER : broadcast_lib::EMode::AB_SERVER_SLAVE,
-                ss_ip_addr.Value(), NET_CONFIG_PORT);
+                config_file, g_isMaster != uio_lib::BoardMode::SLAVE ? broadcast_lib::EMode::AB_SERVER_MASTER : broadcast_lib::EMode::AB_SERVER_SLAVE, ss_ip_addr.Value(),
+                NET_CONFIG_PORT);
             g_serverNetConfig->getNewSettingsNofiy.connect([]() { updateUI(); });
 
             g_serverNetConfig->startStreamingNofiy.connect([]() { startServer(false); });
@@ -493,8 +492,7 @@ void setConfig(bool _force) {
             ss_attenuator.Update();
             int value = ss_attenuator.Value();
             for (int i = 1; i <= 4; i++) {
-                g_serverNetConfig->getSettingsRef().setADCAttenuator(
-                    i, (value & (1 << (i - 1))) ? CStreamSettings::Attenuator::A_1_20 : CStreamSettings::Attenuator::A_1_1);
+                g_serverNetConfig->getSettingsRef().setADCAttenuator(i, (value & (1 << (i - 1))) ? CStreamSettings::Attenuator::A_1_20 : CStreamSettings::Attenuator::A_1_1);
             }
             needUpdate = true;
         }
@@ -733,10 +731,8 @@ bool startServer(bool testMode) {
         }
 
         if (rp_HPGetIsAttenuatorControllerPresentOrDefault()) {
-            rp_max7311::rp_setAttenuator(RP_MAX7311_IN1,
-                                         settings.getADCAttenuator(1).value == CStreamSettings::Attenuator::A_1_20 ? RP_ATTENUATOR_1_20 : RP_ATTENUATOR_1_1);
-            rp_max7311::rp_setAttenuator(RP_MAX7311_IN2,
-                                         settings.getADCAttenuator(2).value == CStreamSettings::Attenuator::A_1_20 ? RP_ATTENUATOR_1_20 : RP_ATTENUATOR_1_1);
+            rp_max7311::rp_setAttenuator(RP_MAX7311_IN1, settings.getADCAttenuator(1).value == CStreamSettings::Attenuator::A_1_20 ? RP_ATTENUATOR_1_20 : RP_ATTENUATOR_1_1);
+            rp_max7311::rp_setAttenuator(RP_MAX7311_IN2, settings.getADCAttenuator(2).value == CStreamSettings::Attenuator::A_1_20 ? RP_ATTENUATOR_1_20 : RP_ATTENUATOR_1_1);
         }
 
         if (rp_HPGetFastADCIsAC_DCOrDefault()) {
@@ -757,8 +753,7 @@ bool startServer(bool testMode) {
                 auto blocks = memmanager->getRegions(uio_lib::MM_ADC_RESERVE_SKIP);
 
                 TRACE("COscilloscope::Create rate %d", rate);
-                g_osc =
-                    uio_lib::COscilloscope::create(uio, rate, g_isMaster != uio_lib::BoardMode::SLAVE, getADCRate(), !filterBypass, getADCBits(), max_channels);
+                g_osc = uio_lib::COscilloscope::create(uio, rate, g_isMaster != uio_lib::BoardMode::SLAVE, getADCRate(), !filterBypass, getADCBits(), max_channels);
                 for (uint8_t ch = 0; ch < max_channels; ++ch) {
                     g_osc->setCalibration(ch, ch_off[ch], ch_gain[ch]);
                     g_osc->setFilterCalibration(ch, aa_ch[ch], bb_ch[ch], kk_ch[ch], pp_ch[ch]);
@@ -821,9 +816,9 @@ bool startServer(bool testMode) {
         uint8_t channelsActive = 0;
         for (int i = 0; i < max_channels; i++) {
             if (settings.getADCChannels(i + 1).value == CStreamSettings::State::ON) {
-                g_s_buffer->addChannel((DataLib::EDataBuffersPackChannel)i, bits,
-                                       settings.getADCAttenuator(i + 1).value == CStreamSettings::Attenuator::A_1_20 ? DataLib::CDataBufferDMA::ATT_1_20
-                                                                                                                     : DataLib::CDataBufferDMA::ATT_1_1);
+                g_s_buffer->addChannel(
+                    (DataLib::EDataBuffersPackChannel)i, bits,
+                    settings.getADCAttenuator(i + 1).value == CStreamSettings::Attenuator::A_1_20 ? DataLib::CDataBufferDMA::ATT_1_20 : DataLib::CDataBufferDMA::ATT_1_1);
                 channelsActive++;
             }
         }
@@ -838,9 +833,8 @@ bool startServer(bool testMode) {
         }
         auto freeblocks = ramSize / mbSize;
         if (testMode)
-            freeblocks =
-                std::min(freeblocks,
-                         100u);  // We reduce the number of allocated blocks for test mode. It is necessary that there is no waste of initialization time
+            freeblocks = std::min(freeblocks,
+                                  100u);  // We reduce the number of allocated blocks for test mode. It is necessary that there is no waste of initialization time
         auto reservedBlocks = memmanager->reserveMemory(uio_lib::MM_ADC, freeblocks, channelsActive);
 
         if (channelsActive == 0) {
@@ -1064,13 +1058,12 @@ auto startDACServer(__attribute__((unused)) bool testMode, uint8_t activeChannel
             auto dacRepeatMode = settings.getDACRepeat();
             auto dacRepeatCount = settings.getDACRepeatCount();
             if (format.value == CStreamSettings::DataFormat::WAV) {
-                g_dac_manger = dac_streaming_lib::CDACStreamingManager::Create(dac_streaming_lib::CDACStreamingManager::WAV_TYPE,
-                                                                               CStreamSettings::getDACDirPath() + "/" + filePath, dacRepeatMode, dacRepeatCount,
-                                                                               settings.getMemoryBlockSize(), false);
+                g_dac_manger = dac_streaming_lib::CDACStreamingManager::Create(dac_streaming_lib::CDACStreamingManager::WAV_TYPE, CStreamSettings::getDACDirPath() + "/" + filePath,
+                                                                               dacRepeatMode, dacRepeatCount, settings.getMemoryBlockSize(), false);
             } else if (format.value == CStreamSettings::DataFormat::TDMS) {
-                g_dac_manger = dac_streaming_lib::CDACStreamingManager::Create(dac_streaming_lib::CDACStreamingManager::TDMS_TYPE,
-                                                                               CStreamSettings::getDACDirPath() + "/" + filePath, dacRepeatMode, dacRepeatCount,
-                                                                               settings.getMemoryBlockSize(), false);
+                g_dac_manger =
+                    dac_streaming_lib::CDACStreamingManager::Create(dac_streaming_lib::CDACStreamingManager::TDMS_TYPE, CStreamSettings::getDACDirPath() + "/" + filePath,
+                                                                    dacRepeatMode, dacRepeatCount, settings.getMemoryBlockSize(), false);
             } else {
                 stopDACNonBlocking(dac_streaming_lib::CDACStreamingManager::NR_BROKEN);
                 return false;
@@ -1113,7 +1106,7 @@ auto startDACServer(__attribute__((unused)) bool testMode, uint8_t activeChannel
 
         g_dac_app = std::make_shared<dac_streaming_lib::CDACStreamingApplication>(g_dac_manger, g_gen);
 
-        g_dac_manger->getBufferManager()->generateBuffersEmpty(max_channels, memmanager->getRegions(uio_lib::MM_DAC), DataLib::sizeHeader());
+        g_dac_manger->getBufferManager()->generateBuffersEmpty(activeChannels, memmanager->getRegions(uio_lib::MM_DAC), DataLib::sizeHeader());
 
         g_dac_app->runNonBlock();
         if (g_dac_manger->isLocalMode()) {

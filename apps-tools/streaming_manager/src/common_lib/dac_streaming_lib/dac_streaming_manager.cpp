@@ -7,13 +7,13 @@
 
 using namespace dac_streaming_lib;
 
-CDACStreamingManager::Ptr CDACStreamingManager::Create(DACStream_FileType _fileType, std::string _filePath, CStreamSettings::DACRepeat _repeat,
-                                                       int32_t _rep_count, uint32_t blockSize, bool verbose) {
+CDACStreamingManager::Ptr CDACStreamingManager::Create(DACStream_FileType _fileType, std::string _filePath, CStreamSettings::DACRepeat _repeat, int32_t _rep_count,
+                                                       uint32_t blockSize, bool verbose) {
     return std::make_shared<CDACStreamingManager>(_fileType, _filePath, _repeat, _rep_count, blockSize, verbose);
 }
 
-CDACStreamingManager::CDACStreamingManager(DACStream_FileType _fileType, std::string _filePath, CStreamSettings::DACRepeat _repeat, int32_t _rep_count,
-                                           uint32_t blockSize, bool verbose)
+CDACStreamingManager::CDACStreamingManager(DACStream_FileType _fileType, std::string _filePath, CStreamSettings::DACRepeat _repeat, int32_t _rep_count, uint32_t blockSize,
+                                           bool verbose)
     : m_use_local_file(true),
       m_fileType(_fileType),
       m_host(""),
@@ -25,7 +25,8 @@ CDACStreamingManager::CDACStreamingManager(DACStream_FileType _fileType, std::st
       m_buffer(DataLib::CBuffersCached::create()),
       m_isRun(false),
       m_verbose(verbose),
-      m_blockSize(blockSize) {
+      m_blockSize(blockSize),
+      m_remoteClientMode(false) {
     auto type = CStreamSettings::DataFormat::TDMS;
     switch (m_fileType) {
         case DACStream_FileType::TDMS_TYPE:
@@ -55,15 +56,16 @@ CDACStreamingManager::CDACStreamingManager(std::string _host, bool verbose)
       m_readerController(nullptr),
       m_buffer(DataLib::CBuffersCached::create()),
       m_isRun(false),
-      m_verbose(verbose) {}
+      m_verbose(verbose),
+      m_remoteClientMode(false) {}
 
-CDACStreamingManager::Ptr CDACStreamingManager::Create(uint8_t* ch[2], uint64_t size[2], uint8_t bytesPerSamp, CStreamSettings::DACRepeat _repeat,
-                                                       int32_t _rep_count, uint32_t blockSize, bool verbose) {
+CDACStreamingManager::Ptr CDACStreamingManager::Create(uint8_t* ch[2], uint64_t size[2], uint8_t bytesPerSamp, CStreamSettings::DACRepeat _repeat, int32_t _rep_count,
+                                                       uint32_t blockSize, bool verbose) {
     return std::make_shared<CDACStreamingManager>(ch, size, bytesPerSamp, _repeat, _rep_count, blockSize, verbose);
 }
 
-CDACStreamingManager::CDACStreamingManager(uint8_t* ch[2], uint64_t size[2], uint8_t bytesPerSamp, CStreamSettings::DACRepeat _repeat, int32_t _rep_count,
-                                           uint32_t blockSize, bool verbose)
+CDACStreamingManager::CDACStreamingManager(uint8_t* ch[2], uint64_t size[2], uint8_t bytesPerSamp, CStreamSettings::DACRepeat _repeat, int32_t _rep_count, uint32_t blockSize,
+                                           bool verbose)
     : m_use_local_file(true),
       m_fileType(),
       m_host(""),
@@ -75,7 +77,8 @@ CDACStreamingManager::CDACStreamingManager(uint8_t* ch[2], uint64_t size[2], uin
       m_buffer(DataLib::CBuffersCached::create()),
       m_isRun(false),
       m_verbose(verbose),
-      m_blockSize(blockSize) {
+      m_blockSize(blockSize),
+      m_remoteClientMode(false) {
     CReaderController::DataIn* data = new CReaderController::DataIn();
     data->ch[0] = ch[0];
     data->ch[1] = ch[1];
@@ -173,10 +176,20 @@ auto CDACStreamingManager::threadFunc() -> void {
     try {
         m_isThreadRun = true;
         bool onePackMode = false;
-        int64_t repeatCount = m_repeat.value == CStreamSettings::DACRepeat::DAC_REP_INF ? -1 : 1;
-        if (repeatCount != -1) {
-            repeatCount = m_rep_count;
+        int64_t repeatCount = 0;
+
+        switch (m_repeat.value) {
+            case CStreamSettings::DACRepeat::DAC_REP_INF:
+                repeatCount = -1;
+                break;
+            case CStreamSettings::DACRepeat::DAC_REP_OFF:
+                repeatCount = 1;
+                break;
+            case CStreamSettings::DACRepeat::DAC_REP_ON:
+                repeatCount = m_rep_count;
+                break;
         }
+
         if (m_readerController) {
             size_t chSizes[2] = {0, 0};
             m_readerController->getChannelsSize(&chSizes[0], &chSizes[1]);
@@ -230,14 +243,16 @@ auto CDACStreamingManager::threadFunc() -> void {
                             case CReaderController::BR_EMPTY:
                                 sendRes = CDACStreamingManager::NR_EMPTY;
                                 break;
-                            case CReaderController::BR_ENDED:
-                                sendRes = CDACStreamingManager::NR_ENDED;
-                                break;
                             default:
                                 break;
                         }
-
-                        notifyStop(sendRes);
+                        if (res != CReaderController::BR_ENDED)  // Send end notify from dac streaming application
+                            notifyStop(sendRes);
+                        else {
+                            if (m_remoteClientMode) {
+                                notifyStop(CDACStreamingManager::NR_ENDED);
+                            }
+                        }
                         m_isThreadRun = false;
                     }
                 }
@@ -254,4 +269,8 @@ auto CDACStreamingManager::isRunned() -> bool {
 
 auto CDACStreamingManager::isLocalMode() -> bool {
     return m_use_local_file;
+}
+
+auto CDACStreamingManager::setRemoteClientMode(bool mode) -> void {
+    m_remoteClientMode = mode;
 }

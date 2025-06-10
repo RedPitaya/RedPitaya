@@ -16,9 +16,8 @@ void* MmapNumberGen(int _fd, size_t _size, size_t _number) {
     return mmap(nullptr, _size, PROT_READ | PROT_WRITE, MAP_SHARED, _fd, offset);
 }
 
-inline void setRegister(__attribute__((unused)) volatile GeneratorMapT* baseOsc_addr, volatile uint32_t* reg, int32_t value,
-                        __attribute__((unused)) const char* info = nullptr) {
-    //    acprintf(stderr, PColor::RED, "\tSet register 0x%X <- 0x%X %s\n",(uint32_t)reg-(uint32_t)baseOsc_addr,value,info ? info : "");
+inline void setRegister(__attribute__((unused)) volatile GeneratorMapT* baseOsc_addr, volatile uint32_t* reg, int32_t value, __attribute__((unused)) const char* info = nullptr) {
+    // acprintf(stderr, PColor::RED, "\tSet register 0x%X <- 0x%X %s\n", (uint32_t)reg - (uint32_t)baseOsc_addr, value, info ? info : "");
     *reg = value;
 }
 

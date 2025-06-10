@@ -91,6 +91,7 @@ auto dac_runClient(DACSettingsClient conf, uint32_t blockSize) -> void {
     int dac_rep = conf.dac_repeat >= 0 ? conf.dac_repeat : 0;
 
     g_dac_manger[conf.host] = CDACStreamingManager::Create(file_type, conf.dac_file, rep_mode, dac_rep, blockSize, conf.verbous);
+    g_dac_manger[conf.host]->setRemoteClientMode(true);
 
     bool chActive[2] = {false, false};
     if (!g_dac_manger[conf.host]->getChannels(&chActive[0], &chActive[1])) {
@@ -220,8 +221,8 @@ auto dac_runClient(DACSettingsClient conf, uint32_t blockSize) -> void {
                     bw = g_dac_BytesCount[conf.host] / (1024 * 1024 * 5);
                     pref = " Mi";
                 }
-                aprintf(stdout, "%s\tHOST IP: %s: Bandwidth:\t%d %sB/s \tData count ch1:\t%d\tch2:\t%d\n", getTS(": ").c_str(), conf.host.c_str(), bw,
-                        pref.c_str(), g_dac_packCounter_ch1[conf.host], g_dac_packCounter_ch2[conf.host]);
+                aprintf(stdout, "%s\tHOST IP: %s: Bandwidth:\t%d %sB/s \tData count ch1:\t%d\tch2:\t%d\n", getTS(": ").c_str(), conf.host.c_str(), bw, pref.c_str(),
+                        g_dac_packCounter_ch1[conf.host], g_dac_packCounter_ch2[conf.host]);
                 g_dac_BytesCount[conf.host] = 0;
                 g_dac_timeBegin[conf.host] = value.count();
             }

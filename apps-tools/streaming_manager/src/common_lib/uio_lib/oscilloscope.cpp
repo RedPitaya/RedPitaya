@@ -52,12 +52,11 @@ auto COscilloscope::create(const UioT& _uio, uint32_t _dec_factor, bool _isMaste
         return COscilloscope::Ptr();
     }
 
-    return std::make_shared<COscilloscope>(fd, regset, _uio.mapList[0].size, _dec_factor, _isMaster, _adcMaxSpeed, _isADCFilterPresent, _fpgaBits,
-                                           _maxChannels);
+    return std::make_shared<COscilloscope>(fd, regset, _uio.mapList[0].size, _dec_factor, _isMaster, _adcMaxSpeed, _isADCFilterPresent, _fpgaBits, _maxChannels);
 }
 
-COscilloscope::COscilloscope(int _fd, void* _regset, size_t _regsetSize, uint32_t _dec_factor, bool _isMaster, uint32_t _adcMaxSpeed, bool _isADCFilterPresent,
-                             uint8_t _fpgaBits, uint8_t _maxChannels)
+COscilloscope::COscilloscope(int _fd, void* _regset, size_t _regsetSize, uint32_t _dec_factor, bool _isMaster, uint32_t _adcMaxSpeed, bool _isADCFilterPresent, uint8_t _fpgaBits,
+                             uint8_t _maxChannels)
     : m_Fd(_fd),
       m_Regset(_regset),
       m_RegsetSize(_regsetSize),

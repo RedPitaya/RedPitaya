@@ -174,8 +174,7 @@ auto CDataBuffersPackDMA::verifyPack() -> void {
     for (auto& item : m_buffers) {
         auto header = reinterpret_cast<NetworkPackHeader*>(item.second->getMappedMemory());
         if (header->bufferSize != item.second->getBufferFullLenght()) {
-            FATAL("The buffer is not the correct size. Header size %" PRIu64 ". Pack lenght %u", header->bufferSize,
-                  (uint32_t)item.second->getBufferFullLenght())
+            FATAL("The buffer is not the correct size. Header size %" PRIu64 ". Pack lenght %u", header->bufferSize, (uint32_t)item.second->getBufferFullLenght())
         }
     }
 }

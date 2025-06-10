@@ -21,18 +21,14 @@ class CDACStreamingManager {
 
     using Ptr = std::shared_ptr<CDACStreamingManager>;
 
-    static Ptr Create(DACStream_FileType _fileType, std::string _filePath, CStreamSettings::DACRepeat _repeat, int32_t _rep_count, uint32_t blockSize,
-                      bool verbose);
-    CDACStreamingManager(DACStream_FileType _fileType, std::string _filePath, CStreamSettings::DACRepeat _repeat, int32_t _rep_count, uint32_t blockSize,
-                         bool verbose);
+    static Ptr Create(DACStream_FileType _fileType, std::string _filePath, CStreamSettings::DACRepeat _repeat, int32_t _rep_count, uint32_t blockSize, bool verbose);
+    CDACStreamingManager(DACStream_FileType _fileType, std::string _filePath, CStreamSettings::DACRepeat _repeat, int32_t _rep_count, uint32_t blockSize, bool verbose);
 
     static Ptr Create(std::string _host, bool verbose);
     CDACStreamingManager(std::string _host, bool verbose);
 
-    static Ptr Create(uint8_t* ch[2], uint64_t size[2], uint8_t bytesPerSamp, CStreamSettings::DACRepeat _repeat, int32_t _rep_count, uint32_t blockSize,
-                      bool verbose);
-    CDACStreamingManager(uint8_t* ch[2], uint64_t size[2], uint8_t bytesPerSamp, CStreamSettings::DACRepeat _repeat, int32_t _rep_count, uint32_t blockSize,
-                         bool verbose);
+    static Ptr Create(uint8_t* ch[2], uint64_t size[2], uint8_t bytesPerSamp, CStreamSettings::DACRepeat _repeat, int32_t _rep_count, uint32_t blockSize, bool verbose);
+    CDACStreamingManager(uint8_t* ch[2], uint64_t size[2], uint8_t bytesPerSamp, CStreamSettings::DACRepeat _repeat, int32_t _rep_count, uint32_t blockSize, bool verbose);
 
     ~CDACStreamingManager();
     CDACStreamingManager(const CDACStreamingManager&) = delete;
@@ -41,6 +37,8 @@ class CDACStreamingManager {
     auto run() -> void;
     auto stop() -> void;
     auto isLocalMode() -> bool;
+
+    auto setRemoteClientMode(bool mode) -> void;
 
     auto getBufferManager() -> DataLib::CBuffersCached::Ptr;
     auto getBuffer() -> const DataLib::CDataBuffersPackDMA::Ptr;
@@ -74,6 +72,7 @@ class CDACStreamingManager {
     std::mutex m_mtx;
     bool m_verbose;
     uint32_t m_blockSize;
+    bool m_remoteClientMode;
 };
 
 }  // namespace dac_streaming_lib

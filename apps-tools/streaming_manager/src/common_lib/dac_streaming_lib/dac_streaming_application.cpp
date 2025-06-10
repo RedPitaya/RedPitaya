@@ -62,9 +62,8 @@ void CDACStreamingApplication::genWorker() {
         while (m_GenThreadRun) {
             int64_t repeatInOpenPackMode = 0;
             bool one_pack_inf_mode = false;
-            buffer = !onePackMode || buffer == nullptr ? m_streamingManager->getBuffer() : buffer;
+            buffer = (!onePackMode || buffer == nullptr) ? m_streamingManager->getBuffer() : buffer;
             if (buffer) {
-
                 auto ch1 = buffer->getBuffer(DataLib::EDataBuffersPackChannel::CH1);
                 auto ch2 = buffer->getBuffer(DataLib::EDataBuffersPackChannel::CH2);
                 uint32_t ch1Address = 0;
@@ -72,7 +71,7 @@ void CDACStreamingApplication::genWorker() {
                 uint32_t chSize = 0;
                 bool ch18Bit = false;
                 bool ch28Bit = false;
-                if (ch1) {
+                if (ch1 && ch1->getDACChannelSize()) {
                     ch1Address = ch1->getDataAddress();
                     if (ch1->getDACOnePackMode()) {
                         chSize = std::max(ch1->getDACChannelSize(), chSize);
@@ -82,11 +81,11 @@ void CDACStreamingApplication::genWorker() {
                         ch18Bit = ch1->getDACBits() == 8;
                         onePackMode = true;
                     } else {
-                        chSize = std::max((uint32_t)ch1->getDataLenght(), chSize);
+                        chSize = std::max((uint32_t)ch1->getDACChannelSize(), chSize);
                     }
                 }
 
-                if (ch2) {
+                if (ch2 && ch2->getDACChannelSize()) {
                     ch2Address = ch2->getDataAddress();
                     if (ch2->getDACOnePackMode()) {
                         chSize = std::max(ch2->getDACChannelSize(), chSize);
@@ -96,7 +95,7 @@ void CDACStreamingApplication::genWorker() {
                         ch28Bit = ch2->getDACBits() == 8;
                         onePackMode = true;
                     } else {
-                        chSize = std::max((uint32_t)ch2->getDataLenght(), chSize);
+                        chSize = std::max((uint32_t)ch2->getDACChannelSize(), chSize);
                     }
                 }
 
@@ -106,6 +105,7 @@ void CDACStreamingApplication::genWorker() {
                 // buffer->debugPackDAC();
                 bool ret = false;
                 do {
+                    // We are waiting for the free conveyor to be freed up in FPGA
                     ret = m_gen->setDataAddress(indexForWrite, ch1Address, ch2Address, chSize);
                     if (notRun) {
                         m_gen->setDataBits(ch18Bit, ch28Bit);
@@ -115,7 +115,6 @@ void CDACStreamingApplication::genWorker() {
                     if (!m_GenThreadRun)
                         break;
                 } while (!ret);
-
                 indexForWrite = indexForWrite == 0 ? 1 : 0;
 
                 if (!onePackMode) {
@@ -130,6 +129,8 @@ void CDACStreamingApplication::genWorker() {
         ERROR_LOG("%s", e.what())
     }
     m_gen->stop();
+    if (!m_streamingManager->isRunned())  // Send notification that generation is complete at application level
+        m_streamingManager->notifyStop(CDACStreamingManager::NR_ENDED);
     m_isRun = false;
 }
 
