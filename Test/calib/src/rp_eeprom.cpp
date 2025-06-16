@@ -93,7 +93,9 @@ int getCalibSize(rp_HPeModels_t model) {
         case STEM_125_14_Z7020_Ind_v2_0:
         case STEM_125_14_Z7020_LL_v1_1:
         case STEM_125_14_Z7020_LL_v1_2:
+        case STEM_125_14_Z7020_TI_v1_3:
         case STEM_65_16_Z7020_LL_v1_1:
+        case STEM_65_16_Z7020_TI_v1_3:
             return eCalParEnd_v1;
         case STEM_122_16SDR_v1_0:
         case STEM_122_16SDR_v1_1:
@@ -137,7 +139,9 @@ void RpPrintEepromCalData(rp_HPeModels_t model, rp_eepromWpData_t* _eepromData, 
         case STEM_125_14_Z7020_Ind_v2_0:
         case STEM_125_14_Z7020_LL_v1_1:
         case STEM_125_14_Z7020_LL_v1_2:
+        case STEM_125_14_Z7020_TI_v1_3:
         case STEM_65_16_Z7020_LL_v1_1:
+        case STEM_65_16_Z7020_TI_v1_3:
         case STEM_122_16SDR_v1_0:
         case STEM_122_16SDR_v1_1: {
             size = eCalParEnd_v1;
@@ -242,7 +246,9 @@ void print_eeprom(rp_HPeModels_t model, rp_eepromWpData_t* data, int mode) {
                 case STEM_125_14_Z7020_Ind_v2_0:
                 case STEM_125_14_Z7020_LL_v1_1:
                 case STEM_125_14_Z7020_LL_v1_2:
+                case STEM_125_14_Z7020_TI_v1_3:
                 case STEM_65_16_Z7020_LL_v1_1:
+                case STEM_65_16_Z7020_TI_v1_3:
                 case STEM_122_16SDR_v1_0:
                 case STEM_122_16SDR_v1_1: {
                     fprintf(stdout, "%20d %20d %20d %20d %20d %20d %20d %20d %20d %20d %20d %20d\n", data->feCalPar[eCalPar_FE_CH1_DC_offs], data->feCalPar[eCalPar_FE_CH2_DC_offs],

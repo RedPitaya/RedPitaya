@@ -56,6 +56,8 @@
 #include "stem_125_14_Z7020_LL_v1.1.h"
 #include "stem_65_16_Z7020_LL_v1.1.h"
 #include "stem_125_14_Z7020_LL_v1.2.h"
+#include "stem_125_14_Z7020_TI_v1.3.h"
+#include "stem_65_16_Z7020_TI_v1.3.h"
 
 #define LINE_LENGTH 0x400
 
@@ -96,7 +98,8 @@ profiles_t *g_profile = NULL;
 // "STEM_125-14_Z7020_LL_v1.1"
 // "STEM_65-16_LL_v1.1"
 // "STEM_125-14_Z7020_LL_v1.2"
-
+// "STEM_125-14_Z7020_TI_v1.3"
+// "STEM_65-16_TI_v1.3"
 
 void convertToLowerCase(char *buff){
 	int size = strlen(buff);
@@ -345,6 +348,21 @@ void hp_checkModel(char *model,char *eth_mac){
 		return;
 	}
 
+	if (strcmp(model,"stem_65-16_ti_v1.3") == 0){ // STEM_65-16_TI_v1.3
+		g_profile = getProfile_STEM_65_16_Z7020_TI_v1_3();
+		strcpy(g_profile->boardModelEEPROM,modelOrig);
+		if (eth_mac)
+			strcpy(g_profile->boardETH_MAC,eth_mac);
+		return;
+	}
+
+	if (strcmp(model,"stem_125-14_z7020_ti_v1.3") == 0){ // STEM_125-14_Z7020_TI_v1.3
+		g_profile = getProfile_STEM_125_14_Z7020_TI_v1_3();
+		strcpy(g_profile->boardModelEEPROM,modelOrig);
+		if (eth_mac)
+			strcpy(g_profile->boardETH_MAC,eth_mac);
+		return;
+	}
 
 	fprintf(stderr,"[Fatal error] Unknown model \"%s\"",model);
 }

@@ -51,6 +51,8 @@ int CCalib::calib(uint16_t _step, float _refdc) {
         case STEM_125_14_Z7020_LL_v1_1:
         case STEM_125_14_Z7020_LL_v1_2:
         case STEM_65_16_Z7020_LL_v1_1:
+        case STEM_65_16_Z7020_TI_v1_3:
+        case STEM_125_14_Z7020_TI_v1_3:
             return calib_board_z10(_step, _refdc);
 
         case STEM_122_16SDR_v1_0:

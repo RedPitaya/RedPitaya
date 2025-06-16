@@ -28,6 +28,8 @@
 #include "stem_125_14_Z7020_LL_v1.1.h"
 #include "stem_65_16_Z7020_LL_v1.1.h"
 #include "stem_125_14_Z7020_LL_v1.2.h"
+#include "stem_125_14_Z7020_TI_v1.3.h"
+#include "stem_65_16_Z7020_TI_v1.3.h"
 
 profiles_t* getProfile(int *state){
     profiles_t *p = hp_cmn_GetLoadedProfile();
@@ -93,6 +95,8 @@ int rp_HPPrintAll(){
     hp_cmn_Print(getProfile_STEM_125_14_Z7020_LL_v1_1());
     hp_cmn_Print(getProfile_STEM_125_14_Z7020_LL_v1_2());
     hp_cmn_Print(getProfile_STEM_65_16_Z7020_LL_v1_1());
+    hp_cmn_Print(getProfile_STEM_125_14_Z7020_TI_v1_3());
+    hp_cmn_Print(getProfile_STEM_65_16_Z7020_TI_v1_3());
     return RP_HP_OK;
 }
 

@@ -208,7 +208,7 @@ then
   mw.l 0xF800070C 0x00000600
 # Lock registers
   mw 0XF8000004 0x767B
-  
+
   setenv bootargs ${bootargs} mem=512M
   setenv high     0x20000000
   setenv dts_path z20_250
@@ -285,6 +285,14 @@ then
   setenv zynq z7020
 fi
 
+if test ${hw_rev} == 'STEM_125-14_Z7020_TI_v1.3'
+then
+  setenv bootargs ${bootargs} mem=512M
+  setenv high     0x20000000
+  setenv dts_path z20_125_ll
+  setenv zynq z7020
+fi
+
 if test ${hw_rev} == 'STEM_65-16_LL_v1.1'
 then
   setenv bootargs ${bootargs} mem=512M
@@ -293,6 +301,13 @@ then
   setenv zynq z7020
 fi
 
+if test ${hw_rev} == 'STEM_65-16_TI_v1.3'
+then
+  setenv bootargs ${bootargs} mem=512M
+  setenv high     0x20000000
+  setenv dts_path z20_65_ll
+  setenv zynq z7020
+fi
 
 if test ${zynq} != '0'
 then

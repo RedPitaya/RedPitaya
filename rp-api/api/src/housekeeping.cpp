@@ -59,6 +59,8 @@ hk_version_t house_getHKVersion() {
         case STEM_125_14_Z7020_LL_v1_1:
         case STEM_125_14_Z7020_LL_v1_2:
         case STEM_65_16_Z7020_LL_v1_1:
+        case STEM_65_16_Z7020_TI_v1_3:
+        case STEM_125_14_Z7020_TI_v1_3:
             return HK_V4;
         default:
             ERROR_LOG("Can't get board model");

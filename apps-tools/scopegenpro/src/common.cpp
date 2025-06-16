@@ -78,6 +78,8 @@ auto outAmpDef() -> float {
         case STEM_125_14_Z7020_LL_v1_1:
         case STEM_125_14_Z7020_LL_v1_2:
         case STEM_65_16_Z7020_LL_v1_1:
+        case STEM_65_16_Z7020_TI_v1_3:
+        case STEM_125_14_Z7020_TI_v1_3:
             return 0.9;
         case STEM_122_16SDR_v1_0:
         case STEM_122_16SDR_v1_1:
@@ -122,6 +124,8 @@ auto outAmpMax() -> float {
         case STEM_125_14_Z7020_LL_v1_1:
         case STEM_125_14_Z7020_LL_v1_2:
         case STEM_65_16_Z7020_LL_v1_1:
+        case STEM_65_16_Z7020_TI_v1_3:
+        case STEM_125_14_Z7020_TI_v1_3:
             return 2;
         case STEM_122_16SDR_v1_0:
         case STEM_122_16SDR_v1_1:
@@ -164,6 +168,7 @@ auto getModelName() -> std::string {
         case STEM_125_14_Z7020_Ind_v2_0:
         case STEM_125_14_Z7020_LL_v1_1:
         case STEM_125_14_Z7020_LL_v1_2:
+        case STEM_125_14_Z7020_TI_v1_3:
             return "Z20_125";
         case STEM_122_16SDR_v1_0:
         case STEM_122_16SDR_v1_1:
@@ -181,6 +186,7 @@ auto getModelName() -> std::string {
         case STEM_250_12_120:
             return "Z20_250_12_120";
         case STEM_65_16_Z7020_LL_v1_1:
+        case STEM_65_16_Z7020_TI_v1_3:
             return "Z20_65";
         default: {
             ERROR_LOG("Unknown model: %d.", model);

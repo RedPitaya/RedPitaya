@@ -529,7 +529,9 @@ rp_calib_params_t getDefault(rp_HPeModels_t model, bool setFilterZero) {
 
         case STEM_125_14_Z7020_LL_v1_1:
         case STEM_125_14_Z7020_LL_v1_2:
+        case STEM_125_14_Z7020_TI_v1_3:
         case STEM_65_16_Z7020_LL_v1_1:
+        case STEM_65_16_Z7020_TI_v1_3:
 
             calib.fast_adc_count_1_1 = 2;
             calib.fast_adc_count_1_20 = 2;

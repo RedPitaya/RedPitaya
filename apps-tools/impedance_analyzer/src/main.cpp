@@ -134,6 +134,8 @@ auto getModelS() -> std::string {
         case STEM_125_14_Z7020_LL_v1_1:
         case STEM_125_14_Z7020_LL_v1_2:
         case STEM_65_16_Z7020_LL_v1_1:
+        case STEM_125_14_Z7020_TI_v1_3:
+        case STEM_65_16_Z7020_TI_v1_3:
             return "Z10";
 
         case STEM_122_16SDR_v1_0:
@@ -185,6 +187,7 @@ auto getMaxADC() -> uint32_t {
         case STEM_125_14_Z7020_Ind_v2_0:
         case STEM_125_14_Z7020_LL_v1_1:
         case STEM_125_14_Z7020_LL_v1_2:
+        case STEM_125_14_Z7020_TI_v1_3:
             dev = 2;
             break;
 
@@ -210,6 +213,7 @@ auto getMaxADC() -> uint32_t {
             dev = 4;
             break;
         case STEM_65_16_Z7020_LL_v1_1:
+        case STEM_65_16_Z7020_TI_v1_3:
             dev = 1;
             break;
         default:
