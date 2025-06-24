@@ -58,8 +58,8 @@ CIntParameter outTemperatureLatched[MAX_DAC_CHANNELS] = INIT2("SOUR", "_TEMP_LAT
 CIntParameter outImp[MAX_DAC_CHANNELS] = INIT2("SOUR", "_IMPEDANCE", CBaseParameter::RW, 0, 0, 0, 1, is_z_present ? CONFIG_VAR : 0);
 
 CBooleanParameter outBurstState[MAX_DAC_CHANNELS] = INIT2("SOUR", "_BURST_STATE", CBaseParameter::RW, false, 0, CONFIG_VAR);
-CIntParameter outBurstCount[MAX_DAC_CHANNELS] = INIT2("SOUR", "_BURST_COUNT", CBaseParameter::RW, 1, 0, 1, 50000, CONFIG_VAR);
-CIntParameter outBurstRepetitions[MAX_DAC_CHANNELS] = INIT2("SOUR", "_BURST_REP", CBaseParameter::RW, 1, 0, 1, 50000, CONFIG_VAR);
+CIntParameter outBurstCount[MAX_DAC_CHANNELS] = INIT2("SOUR", "_BURST_COUNT", CBaseParameter::RW, 1, 0, 1, 65535, CONFIG_VAR);
+CIntParameter outBurstRepetitions[MAX_DAC_CHANNELS] = INIT2("SOUR", "_BURST_REP", CBaseParameter::RW, 1, 0, 1, 65535, CONFIG_VAR);
 CBooleanParameter outBurstRepInf[MAX_DAC_CHANNELS] = INIT2("SOUR", "_BURST_INF", CBaseParameter::RW, false, 0, CONFIG_VAR);
 CIntParameter outBurstDelay[MAX_DAC_CHANNELS] = INIT2("SOUR", "_BURST_DELAY", CBaseParameter::RW, 1, 0, 0, 2000000000, CONFIG_VAR);
 CBooleanParameter outGenSyncReset("SYNC_GEN", CBaseParameter::RW, false, 0);
