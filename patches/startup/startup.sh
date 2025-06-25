@@ -14,23 +14,66 @@ then
 
     # Turns on the power to the ADC and DAC
 
-    MODEL=$(/opt/redpitaya/bin/monitor -f)
+    MODEL=$(/opt/redpitaya/bin/profiles -i)
 
-    if [ "$MODEL" = "z20_250_1_0" ]; then
+    # STEM_250_12_v1_0
+    if [ "$MODEL" = "11" ]; then
     /opt/redpitaya/bin/rp_power_on -P
     /opt/redpitaya/bin/rp_power_on -C
     fi
 
-    if [ "$MODEL" = "z20_250" ]; then
+    # STEM_250_12_v1_1
+    if [ "$MODEL" = "12" ]; then
     /opt/redpitaya/bin/rp_power_on -P
     /opt/redpitaya/bin/rp_power_on -C
     fi
 
-    if [ "$MODEL" = "z20_125_ll" ]; then
+    # STEM_250_12_v1_2
+    if [ "$MODEL" = "13" ]; then
+    /opt/redpitaya/bin/rp_power_on -P
+    /opt/redpitaya/bin/rp_power_on -C
+    fi
+
+    # STEM_250_12_120
+    if [ "$MODEL" = "14" ]; then
+    /opt/redpitaya/bin/rp_power_on -P
+    /opt/redpitaya/bin/rp_power_on -C
+    fi
+
+    # STEM_250_12_v1_2a
+    if [ "$MODEL" = "15" ]; then
+    /opt/redpitaya/bin/rp_power_on -P
+    /opt/redpitaya/bin/rp_power_on -C
+    fi
+
+    # STEM_250_12_v1_2b
+    if [ "$MODEL" = "16" ]; then
+    /opt/redpitaya/bin/rp_power_on -P
+    /opt/redpitaya/bin/rp_power_on -C
+    fi
+
+    # STEM_125_14_Z7020_LL_v1_1
+    if [ "$MODEL" = "25" ]; then
     /opt/redpitaya/bin/rp_power_on -C1
     fi
 
-    if [ "$MODEL" = "z20_65_ll" ]; then
+    # STEM_65_16_Z7020_LL_v1_1
+    if [ "$MODEL" = "26" ]; then
+    /opt/redpitaya/bin/rp_power_on -C2
+    fi
+
+    # STEM_125_14_Z7020_LL_v1_2
+    if [ "$MODEL" = "27" ]; then
+    /opt/redpitaya/bin/rp_power_on -C1
+    fi
+
+    # STEM_125_14_Z7020_TI_v1_3
+    if [ "$MODEL" = "28" ]; then
+    /opt/redpitaya/bin/rp_power_on -C1
+    fi
+
+    # STEM_65_16_Z7020_TI_v1_3
+    if [ "$MODEL" = "29" ]; then
     /opt/redpitaya/bin/rp_power_on -C2
     fi
 

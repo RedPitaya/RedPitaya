@@ -983,9 +983,15 @@ int rp_HPGetFPGAVersion(char **_no_free_value){
             *_no_free_value = "z20_125_ll";
             break;
         case STEM_65_16_Z7020_LL_v1_1:
-            *_no_free_value = "z20_65_ll";
+            *_no_free_value = "z20_125_ll";
             break;
         case STEM_125_14_Z7020_LL_v1_2:
+            *_no_free_value = "z20_125_ll";
+            break;
+        case STEM_65_16_Z7020_TI_v1_3:
+            *_no_free_value = "z20_125_ll";
+            break;
+        case STEM_125_14_Z7020_TI_v1_3:
             *_no_free_value = "z20_125_ll";
             break;
         default:
