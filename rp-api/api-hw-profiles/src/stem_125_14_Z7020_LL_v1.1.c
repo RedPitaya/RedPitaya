@@ -3,7 +3,7 @@
 
 profiles_t stem_125_14_Z7020_LL_v1_1 = {
     .boardModel = STEM_125_14_Z7020_LL_v1_1,
-    .boardName = "STEMlab 125-14-Z7020 LL v1.1",
+    .boardName = "STEMlab 125-14 LL v1.1",
     .boardModelEEPROM = "",
     .boardETH_MAC =  "",
     .zynqCPUModel = Z7020,

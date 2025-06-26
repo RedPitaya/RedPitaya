@@ -3,7 +3,7 @@
 
 profiles_t stem_250_12_120 = {
     .boardModel = STEM_250_12_120,
-    .boardName = "SIGNALlab 250-12 LF120",
+    .boardName = "SIGNALlab 250-12/120",
     .boardModelEEPROM = "",
     .boardETH_MAC =  "",
     .zynqCPUModel = Z7020,
