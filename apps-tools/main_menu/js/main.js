@@ -31,6 +31,8 @@
     MAIN.VCC6 = undefined;
     MAIN.VCC6nominal = undefined;
 
+    MAIN.lastRelease = undefined;
+
 
     MAIN.processSignals = function(SIG){
     }
@@ -171,6 +173,13 @@
         }
     }
 
+    MAIN.setLastRelease= function(new_params) {
+        MAIN.lastRelease = new_params['RP_LAST_RELEASE'].value
+        if (MAIN.lastRelease != undefined){
+            RedPitayaOS.getInfo(MAIN.lastRelease)
+        }
+    }
+
     MAIN.param_callbacks["RP_SYSTEM_TOTAL_RAM"] = MAIN.processTRam;
     MAIN.param_callbacks["RP_SYSTEM_FREE_RAM"] = MAIN.processFRam;
     MAIN.param_callbacks["RP_SYSTEM_DMA_RAM"] = MAIN.processDMARam;
@@ -189,6 +198,8 @@
     MAIN.param_callbacks["RP_SYSTEM_VCC_AUX"] = MAIN.processVCC5;
     MAIN.param_callbacks["RP_SYSTEM_VCC_DDR"] = MAIN.processVCC6;
     MAIN.param_callbacks["RP_SYSTEM_VCC_DDR_NOMINAL"] = MAIN.processVCC6;
+
+    MAIN.param_callbacks["RP_LAST_RELEASE"] = MAIN.setLastRelease;
 
 }(window.MAIN = window.MAIN || {}, jQuery));
 

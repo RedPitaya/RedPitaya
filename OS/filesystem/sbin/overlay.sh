@@ -4,22 +4,26 @@ CUSTOMDEVICETREE=/opt/$1/fpga.dtbo
 CUSTOMFPGA=/opt/$1/fpga.bit.bin
 
 FPGAS=/opt/redpitaya/fpga
-MODEL=$(/opt/redpitaya/bin/monitor -f)
+MODEL=$(/opt/redpitaya/bin/profiles -f)
 
 if [ "$?" = "0" ]
 then
-sleep 0.5s
+#sleep 0.5s
 
 FPGA_REGION=Full
 if [ "$#" -gt "3" ]
 then
     FPGA_REGION=$4
-    rmdir /configfs/device-tree/overlays/$FPGA_REGION 2> /dev/null
+    if [ "$FPGA_REGION" != "Led" ]; then
+        rmdir /configfs/device-tree/overlays/$FPGA_REGION 2> /dev/null
+    else
+        echo "The overlay cannot use the name Led. This name is reserved for ecosystem purposes."
+        exit 1
+    fi
 else
     for f in /configfs/device-tree/overlays/*; do
-        # remove all existing overlay regions
-        if [ -d "$f" ]
-        then
+        # remove all existing overlay regions except for the Led directory, which is used by the system.
+        if [ -d "$f" ] && [ "$(basename "$f")" != "Led" ]; then
             rmdir $f 2> /dev/null
         fi
     done
@@ -28,7 +32,7 @@ fi
 rm -f /tmp/update_fpga.txt 2> /dev/null
 rm -f /tmp/loaded_fpga.inf 2> /dev/null
 
-sleep 0.5s
+#sleep 0.5s
 FPGA_INF=$1
 DEVICETREETOINSTALL=$FPGAS/$MODEL/$1/fpga.dtbo
 FPGATOINSTALL=$FPGAS/$MODEL/$1/fpga.bit.bin

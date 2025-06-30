@@ -23,6 +23,7 @@
 #include "rp_updater_common.h"
 
 #define NB_LINK "https://downloads.redpitaya.com/downloads/Unify/nightly_builds/"
+#define RELEASE_LINK "https://downloads.redpitaya.com/downloads/Unify/ecosystems/"
 
 class CUCurl {
     typedef std::function<void(uint64_t now, uint64_t total, bool stop)> func_progress_t;
@@ -44,6 +45,7 @@ class CUCurl {
     auto setDoneCallback(func_done_t func) -> void;
 
     auto getListNB(bool* succes) -> std::vector<std::string>;
+    auto getListRelease(bool* succes) -> std::vector<std::string>;
 
     static auto getFilenameFromUrl(const std::string& url) -> std::string;
 

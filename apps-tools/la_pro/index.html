@@ -11,7 +11,8 @@
 <html lang="en">
 
 <head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"></meta>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    </meta>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <meta http-equiv="cache-control" content="max-age=0" />
     <meta http-equiv="cache-control" content="no-cache" />
@@ -40,6 +41,7 @@
     <script src="../assets/browsercheck.js?1" onerror="location.reload()"></script>
     <script src="../assets/pako.js?1" onerror="location.reload()"></script>
     <script src="../assets/popupstack.js?1" onerror="location.reload()"></script>
+    <script src="../assets/imageLoader.js?1" onerror="location.reload()"></script>
     <script src="js/html2canvas.min.js?1" onerror="location.reload()"></script>
     <script src="js/baseConverter.js?3" onerror="location.reload()"></script>
     <script src="js/FileSaver.min.js?1" onerror="location.reload()"></script>
@@ -74,7 +76,9 @@
         <div id="loader"></div>
     </div>
     <div id="header">
-        <div id="ext_con_but"><img src="../assets/images/ext_conections_w.png" style="padding-top: 0px;width: 36px;height: 20px;padding-left: 0px;margin-left: 2px;margin-top: 2px;"></div>
+        <div id="ext_con_but"><img src="../assets/images/ext_conections_w.png"
+                style="padding-top: 0px;width: 36px;height: 20px;padding-left: 0px;margin-left: 2px;margin-top: 2px;">
+        </div>
         <div id="connection_meter" title="It seems like your connection is ok"></div>
     </div>
 
@@ -83,7 +87,8 @@
             <div class="navbar navbar-inverse" role="navigation">
                 <div class="container">
                     <div class="navbar-header">
-                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                        <button type="button" class="navbar-toggle" data-toggle="collapse"
+                            data-target=".navbar-collapse">
                             <span class="sr-only">T</span>
                             <span class="icon-bar"></span>
                             <span class="icon-bar"></span>
@@ -97,29 +102,40 @@
                     <div class="collapse navbar-collapse">
                         <ul class="nav navbar-nav">
                             <li style="width: 60px">
-                                <a href="https://redpitaya.readthedocs.io/en/latest/appsFeatures/applications/logic/logic.html" target="_blank" style="padding-left: 0; padding-right: 0;">
+                                <a href="https://redpitaya.readthedocs.io/en/latest/appsFeatures/applications/logic/logic.html"
+                                    target="_blank" style="padding-left: 0; padding-right: 0;">
                                     <img src="../assets/images/help.png" width=20px>
                                 </a>
                             </li>
                             <li class="dropdown">
-                                <a class="btn btn-default dropdown-toggle" type="button" id="dd_menu" data-toggle="dropdown" style="padding-left: 20px;">EXPORT<span class="caret"></span></a>
-                                <ul class="dropdown-menu" role="menu" aria-labelledby="menu1" style="background: #cdcccc; min-width: 0px;">
+                                <a class="btn btn-default dropdown-toggle" type="button" id="dd_menu"
+                                    data-toggle="dropdown" style="padding-left: 20px;">EXPORT<span
+                                        class="caret"></span></a>
+                                <ul class="dropdown-menu" role="menu" aria-labelledby="menu1"
+                                    style="background: #cdcccc; min-width: 0px;">
                                     <li><a id="downl_graph" href="#">Graph</a></li>
-                                    <li><a id="downl_rle" href="./files/rle_logic_data.bin" target="_blank" rel="noopener noreferrer">RLE</a></li>
+                                    <li><a id="downl_rle" href="./files/rle_logic_data.bin" target="_blank"
+                                            rel="noopener noreferrer">RLE</a></li>
                                     <li><a id="downl_lines" href="#">Lines</a></li>
                                     <li><a id="downl_data" href="#">Data</a></li>
                                 </ul>
                             </li>
                             <li class="dropdown">
-                                <a class="btn btn-default dropdown-toggle" type="button" id="menu1" data-toggle="dropdown">SETTINGS<span class="caret"></span></a>
-                                <ul id="settings_dropdown" class="dropdown-menu" role="menu" aria-labelledby="menu1" style="background: #cdcccc; min-width: 0px;">
-                                    <li><a id="save_settings" href="#" data-toggle="modal" data-target="#areusure">SAVE</a></li>
-                                    <li><a id="reset_settings" href="#" data-toggle="modal" data-target="#areusure">RESET</a></li>
+                                <a class="btn btn-default dropdown-toggle" type="button" id="menu1"
+                                    data-toggle="dropdown">SETTINGS<span class="caret"></span></a>
+                                <ul id="settings_dropdown" class="dropdown-menu" role="menu" aria-labelledby="menu1"
+                                    style="background: #cdcccc; min-width: 0px;">
+                                    <li><a id="save_settings" href="#" data-toggle="modal"
+                                            data-target="#areusure">SAVE</a></li>
+                                    <li><a id="reset_settings" href="#" data-toggle="modal"
+                                            data-target="#areusure">RESET</a></li>
                                 </ul>
                             </li>
                             <li class="dropdown">
-                                <a class="btn btn-default dropdown-toggle" type="button" id="menu1" data-toggle="dropdown">MENU<span class="caret"></span></a>
-                                <ul class="dropdown-menu" role="menu" aria-labelledby="menu1" style="background: #cdcccc; min-width: 0px;">
+                                <a class="btn btn-default dropdown-toggle" type="button" id="menu1"
+                                    data-toggle="dropdown">MENU<span class="caret"></span></a>
+                                <ul class="dropdown-menu" role="menu" aria-labelledby="menu1"
+                                    style="background: #cdcccc; min-width: 0px;">
                                     <li><a id="upload_rle">Upload RLE</a></li>
                                     <li><a id="sys_info" href="#">SYS INFO</a></li>
                                     <li><a id="select_mode" href="#">Ext. module</a></li>
@@ -139,15 +155,19 @@
                         <div id="right_menu" class="row right-menu-cont">
                             <div class="col-xs-6 option-content">
                                 <div class="right-menu-option">
-                                    <button type="button" class="btn menu-btn ch1 dbl" data-signal="ch1" data-toggle="button" aria-pressed="false" autocomplete="off" disabled>DIGITAL</button>
+                                    <button type="button" class="btn menu-btn ch1 dbl" data-signal="ch1"
+                                        data-toggle="button" aria-pressed="false" autocomplete="off"
+                                        disabled>DIGITAL</button>
                                 </div>
                             </div>
                             <div class="col-xs-6 option-content">
-                                <div id="in1" class="right-menu-option edit-mode" data-signal="ch1"><img src="img/gear.png"></div>
+                                <div id="in1" class="right-menu-option edit-mode" data-signal="ch1"><img
+                                        src="img/gear.png"></div>
                             </div>
                             <div class="col-xs-6 option-content">
                                 <div class="right-menu-option">
-                                    <button type="button" class="btn menu-btn trig not-signal dbl" data-toggle="button" aria-pressed="false" autocomplete="off" disabled>TRIG</button>
+                                    <button type="button" class="btn menu-btn trig not-signal dbl" data-toggle="button"
+                                        aria-pressed="false" autocomplete="off" disabled>TRIG</button>
                                 </div>
                             </div>
                             <div class="col-xs-6 option-content">
@@ -157,7 +177,8 @@
                                 <div id="cursor" class="right-menu-option edit-mode">CURSOR</div>
                             </div>
                             <div class="col-xs-12 option-content">
-                                <button id="LA_WIN_SHOW" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">DATA</button>
+                                <button id="LA_WIN_SHOW" type="button" class="btn" data-toggle="button"
+                                    aria-pressed="false" autocomplete="off">DATA</button>
                             </div>
                         </div>
                         <div id="in1_dialog" class="dialog row right-menu-cont">
@@ -170,16 +191,20 @@
                                 <div class="right-menu-option">
                                     <div class="btn-group btn-group-justified" data-toggle="buttons">
                                         <label class="btn btn-less active">
-                                            <input type="radio" value="0" class="decoder-tab-btn" name="OSC_TRIG_SOURCE" data-attr="#lines_tab" autocomplete="off">LINES
+                                            <input type="radio" value="0" class="decoder-tab-btn" name="OSC_TRIG_SOURCE"
+                                                data-attr="#lines_tab" autocomplete="off">LINES
                                         </label>
                                         <label class="btn btn-less">
-                                            <input type="radio" value="1" class="decoder-tab-btn" name="OSC_TRIG_SOURCE" data-attr="#bus_tab" autocomplete="off">BUS
+                                            <input type="radio" value="1" class="decoder-tab-btn" name="OSC_TRIG_SOURCE"
+                                                data-attr="#bus_tab" autocomplete="off">BUS
                                         </label>
                                         <label class="btn btn-less">
-                                            <input type="radio" value="2" class="decoder-tab-btn" name="OSC_TRIG_SOURCE" data-attr="#data_tab" autocomplete="off">DATA
+                                            <input type="radio" value="2" class="decoder-tab-btn" name="OSC_TRIG_SOURCE"
+                                                data-attr="#data_tab" autocomplete="off">DATA
                                         </label>
                                         <label class="btn btn-less">
-                                            <input type="radio" value="2" class="decoder-tab-btn" name="OSC_TRIG_SOURCE" data-attr="#acq_tab" autocomplete="off">ACQ
+                                            <input type="radio" value="2" class="decoder-tab-btn" name="OSC_TRIG_SOURCE"
+                                                data-attr="#acq_tab" autocomplete="off">ACQ
                                         </label>
                                     </div>
                                 </div>
@@ -187,81 +212,105 @@
                             <div id="lines_tab" class="decoder-tab">
                                 <div class="col-xs-12 option-content">
                                     <div class="col-xs-3 option-content no-lr-padding">
-                                        <div class="right-menu-option enable-ch" id="CH1_ENABLED"><img src="img/check.png" /></div>
+                                        <div class="right-menu-option enable-ch" id="CH1_ENABLED"><img
+                                                src="img/check.png" /></div>
                                     </div>
                                     <div class="col-xs-9 option-content no-lr-padding">
                                         <div class="right-menu-option">
-                                            <input type="text" class="ch-name-inp form-control no-up-down dropdown-menu-decoder" maxlength="4" placeholder="DIN0" id="CH1_NAME" />
+                                            <input type="text"
+                                                class="ch-name-inp form-control no-up-down dropdown-menu-decoder"
+                                                maxlength="4" placeholder="DIN0" id="CH1_NAME" />
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-xs-12 option-content">
                                     <div class="col-xs-3 option-content no-lr-padding">
-                                        <div class="right-menu-option enable-ch" id="CH2_ENABLED"><img src="img/check.png" /></div>
+                                        <div class="right-menu-option enable-ch" id="CH2_ENABLED"><img
+                                                src="img/check.png" /></div>
                                     </div>
                                     <div class="col-xs-9 option-content no-lr-padding">
                                         <div class="right-menu-option">
-                                            <input type="text" class="ch-name-inp form-control no-up-down dropdown-menu-decoder" maxlength="4" placeholder="DIN1" id="CH2_NAME" />
+                                            <input type="text"
+                                                class="ch-name-inp form-control no-up-down dropdown-menu-decoder"
+                                                maxlength="4" placeholder="DIN1" id="CH2_NAME" />
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-xs-12 option-content">
                                     <div class="col-xs-3 option-content no-lr-padding">
-                                        <div class="right-menu-option enable-ch" id="CH3_ENABLED"><img src="img/check.png" /></div>
+                                        <div class="right-menu-option enable-ch" id="CH3_ENABLED"><img
+                                                src="img/check.png" /></div>
                                     </div>
                                     <div class="col-xs-9 option-content no-lr-padding">
                                         <div class="right-menu-option">
-                                            <input type="text" class="ch-name-inp form-control no-up-down dropdown-menu-decoder" maxlength="4" placeholder="DIN2" id="CH3_NAME" />
+                                            <input type="text"
+                                                class="ch-name-inp form-control no-up-down dropdown-menu-decoder"
+                                                maxlength="4" placeholder="DIN2" id="CH3_NAME" />
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-xs-12 option-content">
                                     <div class="col-xs-3 option-content no-lr-padding">
-                                        <div class="right-menu-option enable-ch" id="CH4_ENABLED"><img src="img/check.png" /></div>
+                                        <div class="right-menu-option enable-ch" id="CH4_ENABLED"><img
+                                                src="img/check.png" /></div>
                                     </div>
                                     <div class="col-xs-9 option-content no-lr-padding">
                                         <div class="right-menu-option">
-                                            <input type="text" class="ch-name-inp form-control no-up-down dropdown-menu-decoder" maxlength="4" placeholder="DIN3" id="CH4_NAME" />
+                                            <input type="text"
+                                                class="ch-name-inp form-control no-up-down dropdown-menu-decoder"
+                                                maxlength="4" placeholder="DIN3" id="CH4_NAME" />
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-xs-12 option-content">
                                     <div class="col-xs-3 option-content no-lr-padding">
-                                        <div class="right-menu-option enable-ch" id="CH5_ENABLED"><img src="img/check.png" /></div>
+                                        <div class="right-menu-option enable-ch" id="CH5_ENABLED"><img
+                                                src="img/check.png" /></div>
                                     </div>
                                     <div class="col-xs-9 option-content no-lr-padding">
                                         <div class="right-menu-option">
-                                            <input type="text" class="ch-name-inp form-control no-up-down dropdown-menu-decoder" maxlength="4" placeholder="DIN4" id="CH5_NAME" />
+                                            <input type="text"
+                                                class="ch-name-inp form-control no-up-down dropdown-menu-decoder"
+                                                maxlength="4" placeholder="DIN4" id="CH5_NAME" />
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-xs-12 option-content">
                                     <div class="col-xs-3 option-content no-lr-padding">
-                                        <div class="right-menu-option enable-ch" id="CH6_ENABLED"><img src="img/check.png" /></div>
+                                        <div class="right-menu-option enable-ch" id="CH6_ENABLED"><img
+                                                src="img/check.png" /></div>
                                     </div>
                                     <div class="col-xs-9 option-content no-lr-padding">
                                         <div class="right-menu-option">
-                                            <input type="text" class="ch-name-inp form-control no-up-down dropdown-menu-decoder" maxlength="4" placeholder="DIN5" id="CH6_NAME" />
+                                            <input type="text"
+                                                class="ch-name-inp form-control no-up-down dropdown-menu-decoder"
+                                                maxlength="4" placeholder="DIN5" id="CH6_NAME" />
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-xs-12 option-content">
                                     <div class="col-xs-3 option-content no-lr-padding">
-                                        <div class="right-menu-option enable-ch" id="CH7_ENABLED"><img src="img/check.png" /></div>
+                                        <div class="right-menu-option enable-ch" id="CH7_ENABLED"><img
+                                                src="img/check.png" /></div>
                                     </div>
                                     <div class="col-xs-9 option-content no-lr-padding">
                                         <div class="right-menu-option">
-                                            <input type="text" class="ch-name-inp form-control no-up-down dropdown-menu-decoder" maxlength="4" placeholder="DIN6" id="CH7_NAME" />
+                                            <input type="text"
+                                                class="ch-name-inp form-control no-up-down dropdown-menu-decoder"
+                                                maxlength="4" placeholder="DIN6" id="CH7_NAME" />
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-xs-12 option-content">
                                     <div class="col-xs-3 option-content no-lr-padding">
-                                        <div class="right-menu-option enable-ch" id="CH8_ENABLED"><img src="img/check.png" /></div>
+                                        <div class="right-menu-option enable-ch" id="CH8_ENABLED"><img
+                                                src="img/check.png" /></div>
                                     </div>
                                     <div class="col-xs-9 option-content no-lr-padding">
                                         <div class="right-menu-option">
-                                            <input type="text" class="ch-name-inp form-control no-up-down dropdown-menu-decoder" maxlength="4" placeholder="DIN7" id="CH8_NAME" />
+                                            <input type="text"
+                                                class="ch-name-inp form-control no-up-down dropdown-menu-decoder"
+                                                maxlength="4" placeholder="DIN7" id="CH8_NAME" />
                                         </div>
                                     </div>
                                 </div>
@@ -270,51 +319,60 @@
                                 <div class="col-xs-12 option-content">
                                     <div class="col-info" style="margin-top: -11px;">Data samplerate, Hz</div>
                                     <div class="right-menu-option" style="margin-top: 10px;">
-                                        <input id="LA_CUR_FREQ" class="setfield input-number" type="text" value="1" step="1" min="1" max="2000000000">
+                                        <input id="LA_CUR_FREQ" class="setfield input-number" type="text" value="1"
+                                            step="1" min="1" max="2000000000">
                                     </div>
                                 </div>
                                 <div class="col-xs-12 option-content">
                                     <div class="col-xs-3 option-content no-lr-padding">
-                                        <div class="right-menu-option enable-ch-bus" id="BUS1_ENABLED"><img style="display:none" src="img/check.png" /></div>
+                                        <div class="right-menu-option enable-ch-bus" id="BUS1_ENABLED"><img
+                                                style="display:none" src="img/check.png" /></div>
                                     </div>
                                     <div class="col-xs-6 no-lr-padding">
                                         <div class="right-menu-option" id="BUS1_NAME">BUS0</div>
                                     </div>
                                     <div class="col-xs-3 option-content no-lr-padding">
-                                        <div class="right-menu-option bus-settings-btn" id="BUS1_SETTINGS"><img src="img/gear.png" /></div>
+                                        <div class="right-menu-option bus-settings-btn" id="BUS1_SETTINGS"><img
+                                                src="img/gear.png" /></div>
                                     </div>
                                 </div>
                                 <div class="col-xs-12 option-content">
                                     <div class="col-xs-3 option-content no-lr-padding">
-                                        <div class="right-menu-option enable-ch-bus" id="BUS2_ENABLED"><img style="display:none" src="img/check.png" /></div>
+                                        <div class="right-menu-option enable-ch-bus" id="BUS2_ENABLED"><img
+                                                style="display:none" src="img/check.png" /></div>
                                     </div>
                                     <div class="col-xs-6 no-lr-padding">
                                         <div class="right-menu-option" id="BUS2_NAME">BUS1</div>
                                     </div>
                                     <div class="col-xs-3 option-content no-lr-padding">
-                                        <div class="right-menu-option bus-settings-btn" id="BUS2_SETTINGS"><img src="img/gear.png" /></div>
+                                        <div class="right-menu-option bus-settings-btn" id="BUS2_SETTINGS"><img
+                                                src="img/gear.png" /></div>
                                     </div>
                                 </div>
                                 <div class="col-xs-12 option-content">
                                     <div class="col-xs-3 option-content no-lr-padding">
-                                        <div class="right-menu-option enable-ch-bus" id="BUS3_ENABLED"><img style="display:none" src="img/check.png" /></div>
+                                        <div class="right-menu-option enable-ch-bus" id="BUS3_ENABLED"><img
+                                                style="display:none" src="img/check.png" /></div>
                                     </div>
                                     <div class="col-xs-6 no-lr-padding">
                                         <div class="right-menu-option" id="BUS3_NAME">BUS2</div>
                                     </div>
                                     <div class="col-xs-3 option-content no-lr-padding">
-                                        <div class="right-menu-option bus-settings-btn" id="BUS3_SETTINGS"><img src="img/gear.png" /></div>
+                                        <div class="right-menu-option bus-settings-btn" id="BUS3_SETTINGS"><img
+                                                src="img/gear.png" /></div>
                                     </div>
                                 </div>
                                 <div class="col-xs-12 option-content">
                                     <div class="col-xs-3 option-content no-lr-padding">
-                                        <div class="right-menu-option enable-ch-bus" id="BUS4_ENABLED"><img style="display:none" src="img/check.png" /></div>
+                                        <div class="right-menu-option enable-ch-bus" id="BUS4_ENABLED"><img
+                                                style="display:none" src="img/check.png" /></div>
                                     </div>
                                     <div class="col-xs-6 no-lr-padding">
                                         <div class="right-menu-option" id="BUS4_NAME">BUS3</div>
                                     </div>
                                     <div class="col-xs-3 option-content no-lr-padding">
-                                        <div class="right-menu-option bus-settings-btn" id="BUS4_SETTINGS"><img src="img/gear.png" /></div>
+                                        <div class="right-menu-option bus-settings-btn" id="BUS4_SETTINGS"><img
+                                                src="img/gear.png" /></div>
                                     </div>
                                 </div>
                                 <div class="col-xs-12 option-content">
@@ -333,22 +391,26 @@
                             <div id="data_tab" class="decoder-tab" style="display:none">
                                 <div class="col-xs-3 option-content no-lr-padding">
                                     <div class="right-menu-option no-lr-padding">
-                                        <button id="DATA_BUS0" type="button" class="btn no-lr-padding font12 data-bus" data-toggle="button" aria-pressed="false" autocomplete="off">BUS0</button>
+                                        <button id="DATA_BUS0" type="button" class="btn no-lr-padding font12 data-bus"
+                                            data-toggle="button" aria-pressed="false" autocomplete="off">BUS0</button>
                                     </div>
                                 </div>
                                 <div class="col-xs-3 option-content no-lr-padding">
                                     <div class="right-menu-option no-lr-padding">
-                                        <button id="DATA_BUS1" type="button" class="btn no-lr-padding font12 data-bus" data-toggle="button" aria-pressed="false" autocomplete="off">BUS1</button>
+                                        <button id="DATA_BUS1" type="button" class="btn no-lr-padding font12 data-bus"
+                                            data-toggle="button" aria-pressed="false" autocomplete="off">BUS1</button>
                                     </div>
                                 </div>
                                 <div class="col-xs-3 option-content no-lr-padding">
                                     <div class="right-menu-option no-lr-padding">
-                                        <button id="DATA_BUS2" type="button" class="btn no-lr-padding font12 data-bus" data-toggle="button" aria-pressed="false" autocomplete="off">BUS2</button>
+                                        <button id="DATA_BUS2" type="button" class="btn no-lr-padding font12 data-bus"
+                                            data-toggle="button" aria-pressed="false" autocomplete="off">BUS2</button>
                                     </div>
                                 </div>
                                 <div class="col-xs-3 option-content no-lr-padding">
                                     <div class="right-menu-option no-lr-padding">
-                                        <button id="DATA_BUS3" type="button" class="btn no-lr-padding font12 data-bus" data-toggle="button" aria-pressed="false" autocomplete="off">BUS3</button>
+                                        <button id="DATA_BUS3" type="button" class="btn no-lr-padding font12 data-bus"
+                                            data-toggle="button" aria-pressed="false" autocomplete="off">BUS3</button>
                                     </div>
                                 </div>
                                 <div class="col-xs-12 option-content log-container" id="log-container">
@@ -385,13 +447,15 @@
                                 <div class="col-xs-12 option-content">
                                     <div class="col-info" style="margin-top: -11px;">Pre-trigger buffer, mS</div>
                                     <div class="right-menu-option" style="margin-top: 10px;">
-                                        <input id="LA_PRE_TRIGGER_BUFFER_MS" class="setfield input-number" type="text" value="1" step="1" min="1" max="360000">
+                                        <input id="LA_PRE_TRIGGER_BUFFER_MS" class="setfield input-number" type="text"
+                                            value="1" step="1" min="1" max="360000">
                                     </div>
                                 </div>
                                 <div class="col-xs-12 option-content">
                                     <div class="col-info" style="margin-top: -11px;">Post-trigger buffer, mS</div>
                                     <div class="right-menu-option" style="margin-top: 10px;">
-                                        <input id="LA_POST_TRIGGER_BUFFER_MS" class="setfield input-number" type="text" value="1" step="1" min="1" max="360000">
+                                        <input id="LA_POST_TRIGGER_BUFFER_MS" class="setfield input-number" type="text"
+                                            value="1" step="1" min="1" max="360000">
                                     </div>
                                 </div>
                             </div>
@@ -411,7 +475,8 @@
                                 </div>
                                 <div class="col-xs-8 option-content no-lr-padding">
                                     <div class="right-menu-option">
-                                        <select id="" name="din0" class="form-control styled-select no-lr-padding trigger_type">
+                                        <select id="" name="din0"
+                                            class="form-control styled-select no-lr-padding trigger_type">
                                             <option value="0">X - Ignore</option>
                                             <option value="1">0 - Low</option>
                                             <option value="2">1 - High</option>
@@ -429,7 +494,8 @@
                                 </div>
                                 <div class="col-xs-8 option-content no-lr-padding">
                                     <div class="right-menu-option">
-                                        <select id="" name="din1" class="form-control styled-select no-lr-padding trigger_type">
+                                        <select id="" name="din1"
+                                            class="form-control styled-select no-lr-padding trigger_type">
                                             <option value="0">X - Ignore</option>
                                             <option value="1">0 - Low</option>
                                             <option value="2">1 - High</option>
@@ -447,7 +513,8 @@
                                 </div>
                                 <div class="col-xs-8 option-content no-lr-padding">
                                     <div class="right-menu-option">
-                                        <select id="" name="din2" class="form-control styled-select no-lr-padding trigger_type">
+                                        <select id="" name="din2"
+                                            class="form-control styled-select no-lr-padding trigger_type">
                                             <option value="0">X - Ignore</option>
                                             <option value="1">0 - Low</option>
                                             <option value="2">1 - High</option>
@@ -465,7 +532,8 @@
                                 </div>
                                 <div class="col-xs-8 option-content no-lr-padding">
                                     <div class="right-menu-option">
-                                        <select id="" name="din3" class="form-control styled-select no-lr-padding trigger_type">
+                                        <select id="" name="din3"
+                                            class="form-control styled-select no-lr-padding trigger_type">
                                             <option value="0">X - Ignore</option>
                                             <option value="1">0 - Low</option>
                                             <option value="2">1 - High</option>
@@ -483,7 +551,8 @@
                                 </div>
                                 <div class="col-xs-8 option-content no-lr-padding">
                                     <div class="right-menu-option">
-                                        <select id="" name="din4" class="form-control styled-select no-lr-padding trigger_type">
+                                        <select id="" name="din4"
+                                            class="form-control styled-select no-lr-padding trigger_type">
                                             <option value="0">X - Ignore</option>
                                             <option value="1">0 - Low</option>
                                             <option value="2">1 - High</option>
@@ -501,7 +570,8 @@
                                 </div>
                                 <div class="col-xs-8 option-content no-lr-padding">
                                     <div class="right-menu-option">
-                                        <select id="" name="din5" class="form-control styled-select no-lr-padding trigger_type">
+                                        <select id="" name="din5"
+                                            class="form-control styled-select no-lr-padding trigger_type">
                                             <option value="0">X - Ignore</option>
                                             <option value="1">0 - Low</option>
                                             <option value="2">1 - High</option>
@@ -519,7 +589,8 @@
                                 </div>
                                 <div class="col-xs-8 option-content no-lr-padding">
                                     <div class="right-menu-option">
-                                        <select id="" name="din6" class="form-control styled-select no-lr-padding trigger_type">
+                                        <select id="" name="din6"
+                                            class="form-control styled-select no-lr-padding trigger_type">
                                             <option value="0">X - Ignore</option>
                                             <option value="1">0 - Low</option>
                                             <option value="2">1 - High</option>
@@ -537,7 +608,8 @@
                                 </div>
                                 <div class="col-xs-8 option-content no-lr-padding">
                                     <div class="right-menu-option">
-                                        <select id="" name="din7" class="form-control styled-select no-lr-padding trigger_type">
+                                        <select id="" name="din7"
+                                            class="form-control styled-select no-lr-padding trigger_type">
                                             <option value="0">X - Ignore</option>
                                             <option value="1">0 - Low</option>
                                             <option value="2">1 - High</option>
@@ -557,12 +629,14 @@
                             </div>
                             <div class="col-xs-6 option-content">
                                 <div class="right-menu-option">
-                                    <button id="LA_CURSOR_X1" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">X1</button>
+                                    <button id="LA_CURSOR_X1" type="button" class="btn" data-toggle="button"
+                                        aria-pressed="false" autocomplete="off">X1</button>
                                 </div>
                             </div>
                             <div class="col-xs-6 option-content">
                                 <div class="right-menu-option">
-                                    <button id="LA_CURSOR_X2" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">X2</button>
+                                    <button id="LA_CURSOR_X2" type="button" class="btn" data-toggle="button"
+                                        aria-pressed="false" autocomplete="off">X2</button>
                                 </div>
                             </div>
                         </div>
@@ -585,24 +659,46 @@
                                 <div id="cur_x2_info" class="cur_info"></div>
                                 <div id="cur_x_diff"></div>
                                 <div id="cur_x_diff_info" class="cur_info"></div>
-                                <div id="ch8_offset_arrow" class="y-offset-arrow" index="8"><img class="ch_arrow" src="img/ch8-offset-arrow.png"><span class="ch_name" id="CH8_LABEL">DIN7</span><img id="img_info_arrow8" class="ch_info_arrow" src="img/ch8-offset-arrow2.png"
-                                        style="display: none;"><span id="ch8_info" class="ch_name ch_info" style="text-align: left;"></span></div>
-                                <div id="ch7_offset_arrow" class="y-offset-arrow" index="7"><img class="ch_arrow" src="img/ch7-offset-arrow.png"><span class="ch_name" id="CH7_LABEL">DIN6</span><img id="img_info_arrow7" class="ch_info_arrow" src="img/ch7-offset-arrow2.png"
-                                        style="display: none;"><span id="ch7_info" class="ch_name ch_info" style="text-align: left;"></span></div>
-                                <div id="ch6_offset_arrow" class="y-offset-arrow" index="6"><img class="ch_arrow" src="img/ch6-offset-arrow.png"><span class="ch_name" id="CH6_LABEL">DIN5</span><img id="img_info_arrow6" class="ch_info_arrow" src="img/ch6-offset-arrow2.png"
-                                        style="display: none;"><span id="ch6_info" class="ch_name ch_info" style="text-align: left;"></span></div>
-                                <div id="ch5_offset_arrow" class="y-offset-arrow" index="5"><img class="ch_arrow" src="img/ch5-offset-arrow.png"><span class="ch_name" id="CH5_LABEL">DIN4</span><img id="img_info_arrow5" class="ch_info_arrow" src="img/ch5-offset-arrow2.png"
-                                        style="display: none;"><span id="ch5_info" class="ch_name ch_info" style="text-align: left;"></span></div>
-                                <div id="ch4_offset_arrow" class="y-offset-arrow" index="4"><img class="ch_arrow" src="img/ch4-offset-arrow.png"><span class="ch_name" id="CH4_LABEL">DIN3</span><img id="img_info_arrow4" class="ch_info_arrow" src="img/ch4-offset-arrow2.png"
-                                        style="display: none;"><span id="ch4_info" class="ch_name ch_info" style="text-align: left;"></span></div>
-                                <div id="ch3_offset_arrow" class="y-offset-arrow" index="3"><img class="ch_arrow" src="img/ch3-offset-arrow.png"><span class="ch_name" id="CH3_LABEL">DIN2</span><img id="img_info_arrow3" class="ch_info_arrow" src="img/ch3-offset-arrow2.png"
-                                        style="display: none;"><span id="ch3_info" class="ch_name ch_info" style="text-align: left;"></span></div>
-                                <div id="ch2_offset_arrow" class="y-offset-arrow" index="2"><img class="ch_arrow" src="img/ch2-offset-arrow.png"><span class="ch_name" id="CH2_LABEL">DIN1</span><img id="img_info_arrow2" class="ch_info_arrow" src="img/ch2-offset-arrow2.png"
-                                        style="display: none;"><span id="ch2_info" class="ch_name ch_info" style="text-align: left;"></span></div>
+                                <div id="ch8_offset_arrow" class="y-offset-arrow" index="8"><img class="ch_arrow"
+                                        src="img/ch8-offset-arrow.png"><span class="ch_name"
+                                        id="CH8_LABEL">DIN7</span><img id="img_info_arrow8" class="ch_info_arrow"
+                                        src="img/ch8-offset-arrow2.png" style="display: none;"><span id="ch8_info"
+                                        class="ch_name ch_info" style="text-align: left;"></span></div>
+                                <div id="ch7_offset_arrow" class="y-offset-arrow" index="7"><img class="ch_arrow"
+                                        src="img/ch7-offset-arrow.png"><span class="ch_name"
+                                        id="CH7_LABEL">DIN6</span><img id="img_info_arrow7" class="ch_info_arrow"
+                                        src="img/ch7-offset-arrow2.png" style="display: none;"><span id="ch7_info"
+                                        class="ch_name ch_info" style="text-align: left;"></span></div>
+                                <div id="ch6_offset_arrow" class="y-offset-arrow" index="6"><img class="ch_arrow"
+                                        src="img/ch6-offset-arrow.png"><span class="ch_name"
+                                        id="CH6_LABEL">DIN5</span><img id="img_info_arrow6" class="ch_info_arrow"
+                                        src="img/ch6-offset-arrow2.png" style="display: none;"><span id="ch6_info"
+                                        class="ch_name ch_info" style="text-align: left;"></span></div>
+                                <div id="ch5_offset_arrow" class="y-offset-arrow" index="5"><img class="ch_arrow"
+                                        src="img/ch5-offset-arrow.png"><span class="ch_name"
+                                        id="CH5_LABEL">DIN4</span><img id="img_info_arrow5" class="ch_info_arrow"
+                                        src="img/ch5-offset-arrow2.png" style="display: none;"><span id="ch5_info"
+                                        class="ch_name ch_info" style="text-align: left;"></span></div>
+                                <div id="ch4_offset_arrow" class="y-offset-arrow" index="4"><img class="ch_arrow"
+                                        src="img/ch4-offset-arrow.png"><span class="ch_name"
+                                        id="CH4_LABEL">DIN3</span><img id="img_info_arrow4" class="ch_info_arrow"
+                                        src="img/ch4-offset-arrow2.png" style="display: none;"><span id="ch4_info"
+                                        class="ch_name ch_info" style="text-align: left;"></span></div>
+                                <div id="ch3_offset_arrow" class="y-offset-arrow" index="3"><img class="ch_arrow"
+                                        src="img/ch3-offset-arrow.png"><span class="ch_name"
+                                        id="CH3_LABEL">DIN2</span><img id="img_info_arrow3" class="ch_info_arrow"
+                                        src="img/ch3-offset-arrow2.png" style="display: none;"><span id="ch3_info"
+                                        class="ch_name ch_info" style="text-align: left;"></span></div>
+                                <div id="ch2_offset_arrow" class="y-offset-arrow" index="2"><img class="ch_arrow"
+                                        src="img/ch2-offset-arrow.png"><span class="ch_name"
+                                        id="CH2_LABEL">DIN1</span><img id="img_info_arrow2" class="ch_info_arrow"
+                                        src="img/ch2-offset-arrow2.png" style="display: none;"><span id="ch2_info"
+                                        class="ch_name ch_info" style="text-align: left;"></span></div>
                                 <div id="ch1_offset_arrow" class="y-offset-arrow" index="1">
                                     <img class="ch_arrow" src="img/ch1-offset-arrow.png">
                                     <span class="ch_name" id="CH1_LABEL">DIN0</span>
-                                    <img id="img_info_arrow1" class="ch_info_arrow" src="img/ch1-offset-arrow2.png" style="display: none;">
+                                    <img id="img_info_arrow1" class="ch_info_arrow" src="img/ch1-offset-arrow2.png"
+                                        style="display: none;">
                                     <span id="ch1_info" class="ch_name ch_info" style="text-align: left;"></span>
                                 </div>
                             </div>
@@ -628,10 +724,14 @@
                         <img id="jtk_fine" src="img/fine.png" />
                         <img id="jtk_btns" src="img/navigation.png" usemap="#jtk_btns_map" />
                         <map name="jtk_btns_map">
-                            <area id="jtk_left" shape="poly" coords="19,28,37,45,32,56,28,69,29,84,36,101,30,112,18,122,11,114,8,104,4,91,1,77,3,59,9,41,19,27" />
-                            <area id="jtk_up" shape="poly" coords="27,17,42,7,61,3,78,3,89,4,102,7,116,13,124,20,105,37,87,29,64,29,56,33,46,37" />
-                            <area id="jtk_right" shape="poly" coords="111,44,132,27,143,42,147,56,149,76,148,93,141,107,132,123,112,104,119,94,122,76,119,58" />
-                            <area id="jtk_down" shape="poly" coords="46,112,27,130,38,141,51,145,72,148,92,148,106,142,126,132,104,111,90,118,79,120,71,121,62,119,57,117" />
+                            <area id="jtk_left" shape="poly"
+                                coords="19,28,37,45,32,56,28,69,29,84,36,101,30,112,18,122,11,114,8,104,4,91,1,77,3,59,9,41,19,27" />
+                            <area id="jtk_up" shape="poly"
+                                coords="27,17,42,7,61,3,78,3,89,4,102,7,116,13,124,20,105,37,87,29,64,29,56,33,46,37" />
+                            <area id="jtk_right" shape="poly"
+                                coords="111,44,132,27,143,42,147,56,149,76,148,93,141,107,132,123,112,104,119,94,122,76,119,58" />
+                            <area id="jtk_down" shape="poly"
+                                coords="46,112,27,130,38,141,51,145,72,148,92,148,106,142,126,132,104,111,90,118,79,120,71,121,62,119,57,117" />
                         </map>
                     </div>
                     <div id="stem" style="color:green;"></div>
@@ -639,11 +739,13 @@
             </div>
         </div>
     </div>
-    <div class="modal" id="decoder_dialog" tabindex="-1" role="dialog" aria-labelledby="spi_dialogLabel" aria-hidden="true">
+    <div class="modal" id="decoder_dialog" tabindex="-1" role="dialog" aria-labelledby="spi_dialogLabel"
+        aria-hidden="true">
         <div class="modal-dialog" style="width: 570px;">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
                     <h4 class="modal-title" id="spi_dialogLabel">Encoder settings</h4>
                 </div>
                 <div id="decSetDiv" class="modal-body">
@@ -846,7 +948,8 @@
                         <div class="row">
                             <div class="col-sm-3 padding-top-5">Baudrate</div>
                             <div class="col-sm-9  decoder-drop">
-                                <input id="uart_baudrate" class="setstyle-decoder setfield input-number-decoder" list="baudrates"  type="text" value="1" step="1" min="1" max="921600">
+                                <input id="uart_baudrate" class="setstyle-decoder setfield input-number-decoder"
+                                    list="baudrates" type="text" value="1" step="1" min="1" max="921600">
                                 <datalist id="baudrates">
                                     <option value="110">110</option>
                                     <option value="150">150</option>
@@ -949,7 +1052,8 @@
                         <div class="row">
                             <div class="col-sm-3 padding-top-5">Nominal bitrate</div>
                             <div class="col-sm-9  decoder-drop">
-                                <input id="can_nom_bitrate" class="setstyle-decoder setfield input-number-decoder" list="bitrates"  type="text" value="1" step="1" min="1">
+                                <input id="can_nom_bitrate" class="setstyle-decoder setfield input-number-decoder"
+                                    list="bitrates" type="text" value="1" step="1" min="1">
                                 <datalist id="bitrates">
                                     <option value="110">110</option>
                                     <option value="150">150</option>
@@ -973,7 +1077,8 @@
                         <div class="row">
                             <div class="col-sm-3 padding-top-5">Fast bitrate</div>
                             <div class="col-sm-9  decoder-drop">
-                                <input id="can_fast_bitrate" class="setstyle-decoder setfield input-number-decoder" list="fbitrates"  type="text" value="1" step="1" min="1">
+                                <input id="can_fast_bitrate" class="setstyle-decoder setfield input-number-decoder"
+                                    list="fbitrates" type="text" value="1" step="1" min="1">
                                 <datalist id="fbitrates">
                                     <option value="110">110</option>
                                     <option value="150">150</option>
@@ -1000,7 +1105,8 @@
                             <div class="row">
                                 <div class="col-sm-3 padding-top-5">Sample point</div>
                                 <div class="col-sm-9  decoder-drop">
-                                    <input id="sample_point" class="setstyle-decoder setfield input-number-decoder" list="s_points"  type="text" value="1" step="0.01" min="0.01" max="99.99">
+                                    <input id="sample_point" class="setstyle-decoder setfield input-number-decoder"
+                                        list="s_points" type="text" value="1" step="0.01" min="0.01" max="99.99">
                                     <datalist id="s_points">
                                         <option value="0">0</option>
                                         <option value="10">10</option>
@@ -1052,11 +1158,13 @@
         </div>
     </div>
     <!-- Modal -->
-    <div class="modal" id="decodehelp_dialog" tabindex="-1" role="dialog" aria-labelledby="spi_dialogLabel" aria-hidden="true">
+    <div class="modal" id="decodehelp_dialog" tabindex="-1" role="dialog" aria-labelledby="spi_dialogLabel"
+        aria-hidden="true">
         <div class="modal-dialog" style="width: 570px;">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
                     <h4 class="modal-title" id="spi_dialogLabel">Decode help</h4>
                 </div>
                 <div id="decSetDiv" class="modal-body">
@@ -1066,20 +1174,20 @@
                             <br>
                             <br> 1. </a>Download file with your logic data;
                             <br>
-                            <div id="help_buttons">
-                                <div class="decoder-button">
-                                    <button type="button" class="btn" id="download_logicdata">Download</button>
-                                </div>
+                        <div id="help_buttons">
+                            <div class="decoder-button">
+                                <button type="button" class="btn" id="download_logicdata">Download</button>
                             </div>
-                            <br>
-                            <a id="hidden_link_logicdata" href="logicData.bin" style="display: none;"></a>
-                            2. Attach this file to auto-generated E-mail.
-                            <br>
-                            <div id="help_buttons">
-                                <div class="decoder-button">
-                                    <button type="button" class="btn" id="generate_help_email">Generate</button>
-                                </div>
+                        </div>
+                        <br>
+                        <a id="hidden_link_logicdata" href="logicData.bin" style="display: none;"></a>
+                        2. Attach this file to auto-generated E-mail.
+                        <br>
+                        <div id="help_buttons">
+                            <div class="decoder-button">
+                                <button type="button" class="btn" id="generate_help_email">Generate</button>
                             </div>
+                        </div>
                         </p>
                     </div>
                 </div>
@@ -1096,17 +1204,20 @@
     <div>
         <div id="sys_info_view" class="sys-info-box">
             CPU Load:<span id="cpu_load">0</span> CPU °C:<span id="cpu_temp">0</span>
-            <br/> Memory total:<span id="totalmem_view">0</span> Free:<span id="freemem_view">0</span> Usage:<span id="usagemem_view">0</span>
+            <br /> Memory total:<span id="totalmem_view">0</span> Free:<span id="freemem_view">0</span> Usage:<span
+                id="usagemem_view">0</span>
         </div>
         <div id="weak_conn_msg" class="perfomance-problem-box">
             <span id="delay">Performance problem has occurred</span>
         </div>
     </div>
-    <div id="save_settings_dialog" class="modal fade" role="dialog" tabindex="-1" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+    <div id="save_settings_dialog" class="modal fade" role="dialog" tabindex="-1" aria-labelledby="bazaar_naLabel"
+        aria-hidden="true">
         <div class="modal-dialog" style="width: 650px;">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
                     <h4 class="modal-title" id="bazaar_naLabel">Save current settings</h4>
                 </div>
                 <div class="modal-body" style="display: flex;">
@@ -1117,7 +1228,8 @@
                             <tr style="height:60px;">
                                 <td>Name:</td>
                                 <td>
-                                    <input id="SETTINGS_NEW_NAME" maxlength="11" class="input_name" style="border: 1px solid #ddd; background: #333;">
+                                    <input id="SETTINGS_NEW_NAME" maxlength="11" class="input_name"
+                                        style="border: 1px solid #ddd; background: #333;">
                                 </td>
                             </tr>
                         </table>
@@ -1125,17 +1237,20 @@
                 </div>
                 <div class="modal-footer">
                     <div class="bazaar-link">
-                        <a id="LA_REQ_SAVE_SETTINGS" href="#" data-dismiss="modal" class="list-group-item exp_but">SAVE</a>
+                        <a id="LA_REQ_SAVE_SETTINGS" href="#" data-dismiss="modal"
+                            class="list-group-item exp_but">SAVE</a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="modal fade" id="feedback_error" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+    <div class="modal fade" id="feedback_error" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
                     <h4 class="modal-title" id="oops_label">Oops, something went wrong</h4>
                 </div>
                 <div class="modal-body" style="text-align: center; font-size: 18px;">
@@ -1143,28 +1258,33 @@
                 </div>
                 <div class="modal-footer">
                     <div class="bazaar-link" style="float: left; width: 50%;">
-                        <a href="#" style="border: 1px solid;  width: 100%" id="send_report_btn" data-dismiss="modal" class="list-group-item btn">Send report</a>
+                        <a href="#" style="border: 1px solid;  width: 100%" id="send_report_btn" data-dismiss="modal"
+                            class="list-group-item btn">Send report</a>
                     </div>
                     <div class="bazaar-link" style="float: left; width: 50%;">
-                        <a href="#" style="border: 1px solid;  width: 100%" id="restart_app_btn" data-dismiss="modal" class="list-group-item btn">Restart Application</a>
+                        <a href="#" style="border: 1px solid;  width: 100%" id="restart_app_btn" data-dismiss="modal"
+                            class="list-group-item btn">Restart Application</a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="modal fade" id="ext_connections_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+    <div class="modal fade" id="ext_connections_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel"
+        aria-hidden="true">
         <div class="modal-dialog" style="width: 700px;">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
                     <h4 class="modal-title" id="bazaar_naLabel">External Connections</h4>
                 </div>
-                <div class="modal-body" style="display: flex;">
-                    <img src="../assets/images/red_pitaya_pinout.png" style="width: 100%;">
+                <div class="modal-body" style="width:640px;display: flex;padding: 0;">
+                    <img path="../assets/images/pack/red_pitaya_pinout" sizes="640;1280;2560" style="width: 100%;">
                 </div>
                 <div class="modal-footer">
                     <div class="bazaar-link">
-                        <a href="#" data-dismiss="modal" id="disable_analytics" class="list-group-item exp_btn">Close</a>
+                        <a href="#" data-dismiss="modal" id="disable_analytics"
+                            class="list-group-item exp_btn">Close</a>
                     </div>
                 </div>
             </div>
@@ -1184,8 +1304,9 @@
             </table>
         </div>
         <div class="resize-handle bottom-right">
-            <img src="img/resize.svg" class="resize-handle"/>
+            <img src="img/resize.svg" class="resize-handle" />
         </div>
-      </div>
+    </div>
 </body>
+
 </html>

@@ -8,18 +8,21 @@
 
     var applications = [];
     var sys_info_obj = undefined;
+    Desktop.sys_info_obj = undefined;
 
     var base_ram = "512"
 
     var groups = [{
         name: "System",
         description: "System tools for configuring your Red Pitaya",
-        image: "../assets/images/system.png",
+        image_path: "../assets/images/pack/system",
+        image_sizes: "128;256;512",
         applications: ["updater", "wifi", "licmngr", "calib_app"]
     }, {
         name: "Development",
         description: "Documentation, tutorials and a lot of interesting stuff",
-        image: "../assets/images/development.png",
+        image_path: "../assets/images/pack/development",
+        image_sizes: "128;256;512",
         applications: ["visualprogramming", "scpi", "tutorials", "fpga", "apis", "capps", "cmd", "hardwaredoc", "instructions", "github", "activelearning", "jupyter","web_ssh"]
     }];
     var currentGroup = undefined;
@@ -35,146 +38,24 @@
         return currentGroup;
     }
 
-    Desktop.convertModel = function(model){
-        /*
-         List of board models
-
-            typedef enum {
-                STEM_125_10_v1_0            = 0,
-                STEM_125_14_v1_0            = 1,
-                STEM_125_14_v1_1            = 2,
-                STEM_122_16SDR_v1_0         = 3,
-                STEM_122_16SDR_v1_1         = 4,
-                STEM_125_14_LN_v1_1         = 5,
-                STEM_125_14_Z7020_v1_0      = 6,
-                STEM_125_14_Z7020_LN_v1_1   = 7,
-                STEM_125_14_Z7020_4IN_v1_0  = 8,
-                STEM_125_14_Z7020_4IN_v1_2  = 9,
-                STEM_125_14_Z7020_4IN_v1_3  = 10,
-                STEM_250_12_v1_0            = 11,
-                STEM_250_12_v1_1            = 12,
-                STEM_250_12_v1_2            = 13,
-                STEM_250_12_120             = 14,
-                STEM_250_12_v1_2a           = 15,
-                STEM_250_12_v1_2b           = 16,
-                STEM_125_14_LN_BO_v1_1      = 17,
-                STEM_125_14_LN_CE1_v1_1     = 18,
-                STEM_125_14_LN_CE2_v1_1     = 19,
-
-                STEM_125_14_v2_0            = 20,
-                STEM_125_14_Pro_v2_0        = 21,
-                STEM_125_14_Z7020_Pro_v2_0  = 22,
-                STEM_125_14_Z7020_Ind_v2_0  = 23,
-                STEM_125_14_Z7020_Pro_v1_0  = 24,
-
-                STEM_125_14_Z7020_LL_v1_1   = 25,
-                STEM_65_16_Z7020_LL_v1_1    = 26,
-                STEM_125_14_Z7020_LL_v1_2   = 27,
-                STEM_125_14_Z7020_TI_v1_3   = 28,
-                STEM_65_16_Z7020_TI_v1_3    = 29,
-            }  rp_HPeModels_t;
-        */
-        if (model == 0){
-            return "STEM 10"
-        }
-        if (model == 1){
-            return "STEM 14"
-        }
-        if (model == 2){
-            return "STEM 14"
-        }
-        if (model == 3){
-            return "STEM 16"
-        }
-        if (model == 4){
-            return "STEM 16"
-        }
-        if (model == 5){
-            return "STEM 14"
-        }
-        if (model == 6){
-            return "STEM 14-Z20"
-        }
-        if (model == 7){
-            return "STEM 14-Z20"
-        }
-        if (model == 8){
-            return "STEM 14-Z20-4CH"
-        }
-        if (model == 9){
-            return "STEM 14-Z20-4CH"
-        }
-        if (model == 10){
-            return "STEM 14-Z20-4CH"
-        }
-        if (model == 11){
-            return "STEM 250 12"
-        }
-        if (model == 12){
-            return "STEM 250 12"
-        }
-        if (model == 13){
-            return "STEM 250 12"
-        }
-        if (model == 14){
-            return "STEM 250 12"
-        }
-        if (model == 15){
-            return "STEM 250 12"
-        }
-        if (model == 16){
-            return "STEM 250 12"
-        }
-        if (model == 17){
-            return "STEM 14"
-        }
-        if (model == 18){
-            return "STEM 14"
-        }
-        if (model == 19){
-            return "STEM 14"
-        }
-        if (model == 20){
-            return "STEM 14-G2"
-        }
-        if (model == 21){
-            return "STEM 14-G2"
-        }
-        if (model == 22){
-            return "STEM 14-Z20-G2"
-        }
-        if (model == 23){
-            return "STEM 14-Z20-G2"
-        }
-        if (model == 24){
-            return "STEM 14-Z20-G2"
-        }
-        if (model == 25){
-            return "STEM 14-Z20-LL"
-        }
-        if (model == 26){
-            return "STEM 16-Z20-LL"
-        }
-        if (model == 27){
-            return "STEM 14-Z20-LL"
-        }
-        if (model == 28){
-            return "STEM 14-Z20-TI"
-        }
-        if (model == 29){
-            return "STEM 16-Z20-TI"
-        }
-
-        console.log("[FATAL ERROR] Unknown model: " + model)
-        return ""
-    }
-
     Desktop.setApplications = function(listOfapplications) {
         $.ajax({
                 method: "GET",
-                url: '/get_info'
+                url: '/get_sysinfo'
             })
             .done(function(result) {
+                result = JSON.parse(result);
+                Desktop.sys_info_obj = result;
+                setTimeout(RedPitayaOS.printRpVersion(result),2000);
+                var linux_path = "LinuxOS";
+                if (parseFloat(result["ecosystem"]["linux_ver"]) !== parseFloat(result["linux"])) {
+                    $("#CUR_VER").text(result["linux"]);
+                    $("#REQ_VER").text(result["ecosystem"]["linux_ver"]);
+                    $("#NEED_UPDATE_LINUX_ID").attr("hidden", false);
+                    var _href = $("#NEW_FIRMWARE_LINK_ID").attr("href");
+                    $("#NEW_FIRMWARE_LINK_ID").attr("href", _href + linux_path);
+                }
+
                 applications = [];
                 $.extend(true, applications, listOfapplications);
                 var url_arr = window.location.href.split("/");
@@ -193,7 +74,7 @@
                     applications[i].is_group = false;
                 }
 
-                applications = Desktop.filterApps(applications,Desktop.convertModel(result['stem_ver']));
+                applications = Desktop.filterApps(applications,result['stem_ver']);
 
                 for (var i = 0; i < groups.length; i++) {
                     var gr = {
@@ -201,7 +82,8 @@
                         name: groups[i].name,
                         description: groups[i].description,
                         url: "#",
-                        image: groups[i].image,
+                        image_path: groups[i].image_path,
+                        image_sizes: groups[i].image_sizes,
                         check_online: false,
                         licensable: false,
                         callback: openGroup,
@@ -261,7 +143,7 @@
         for (var i = 0; i < applications.length; i++) {
             if ((currentGroup === undefined && (applications[i].group == "" || applications[i].group === undefined)) || applications[i].group == currentGroup || i == 0) {
                 var txt = '<li class="app-item" key="' + i + '" group="' + applications[i].group + '" style="display: none;">';
-                txt += '<a href="#" class="app-link"><div class="img-container"><img class="app-icon" src="' + applications[i]['image'] + '"></div><span class="app-name">' + applications[i]['name'] + '</span></a>';
+                txt += '<a href="#" class="app-link"><div class="img-container"><img class="app-icon" path="' + applications[i]['image_path'] + '" sizes="' + applications[i]['image_sizes'] + '"></div><span class="app-name">' + applications[i]['name'] + '</span></a>';
                 txt += '</li>';
                 $('#list-container').append(txt);
             }
@@ -270,6 +152,7 @@
         $('.app-item').click(clickApp);
         $('.app-item').mouseenter(overApp);
         $('.app-item').mouseleave(leaveApp);
+        initImageLoaders();
     }
 
     Desktop.selectGroup = function(group) {
@@ -338,20 +221,90 @@
     }
 
     var default_applications = [
-        { id: "github", name: "Sources", description: "Access to open source code and programming instructions", url: "https://github.com/redpitaya", image: "../assets/images/github.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "applicationstore", name: "Red Pitaya Store", description: "Access to Red Pitaya official store", url: "https://redpitaya.com/shop", image: "../assets/images/shop.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "marketplace", name: "Application marketplace", description: "Access to open source and contributed applications", url: "http://bazaar.redpitaya.com/", image: "images/download_icon.png", check_online: true, licensable: false, callback: undefined, type: 'run' },
-        { id: "feedback", name: "Feedback", description: "Tell us what you like or dislike and what you would like to see improved", url: "", image: "../assets/images/feedback.png", check_online: true, licensable: false, callback: showFeedBack, type: 'run' },
-        { id: "instructions", name: "Documentation", description: "Quick start instructions, user manuals, specifications, examples & more.", url: "http://redpitaya.readthedocs.io/en/latest/index.html", image: "../assets/images/instr.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "tutorials", name: "Create own WEB application", description: "RedPitaya tutorials.", url: "https://redpitaya.readthedocs.io/en/latest/developerGuide/software/build/webapp/webApps.html", image: "../assets/images/tutors.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "wifi", name: "Network manager", description: "Simple way to establish wireless connection with the Red Pitaya", url: "/network_manager/", image: "../network_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "scpi", name: "SCPI server", description: "Remote access to all Red Pitaya inputs/outputs from MATLAB/LabVIEW/Scilab/Python", url: "/scpi_manager/", image: "../scpi_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "updater", name: "Red Pitaya OS Update", description: "Red Pitaya ecosystem updater", url: "/updater/", image: "../assets/images/updater.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "activelearning", name: "Teaching materials", description: "Teaching materials for Red Pitaya", url: "https://redpitaya-knowledge-base.readthedocs.io/en/latest/learn_fpga/fpga_learn.html", image: "../assets/images/active-learning.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "warranty_ext", name: "Unlock new benefits", description: "Keep your Red Pitaya fresh for longer", url: "https://go.redpitaya.com/refresh", image: "../assets/images/WarrantyExt.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "jupyter", name: "Python programming", description: "Jupyter notebook server for running Python applications in a browser tab", url: "/jlab/lab/tree/RedPitaya/welcome.ipynb", image: "../jupyter_manager/info/icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "web_ssh", name: "Web Console", description: "SSH console based on the shellinabox", url: "http://" + window.location.hostname + ":4200", image: "../assets/images/ssh_icon.png", check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "pyrpl", name: "PyRPL", description: "PyRPL turns your RedPitaya into a powerful DSP device", url: "https://redpitaya.readthedocs.io/en/latest/appsFeatures/applications/pyrpl/pyrpl.html", image: "../assets/images/pyrpl.png", check_online: false, licensable: false, callback: undefined, type: 'run' }
+        { id: "github", name: "Sources", 
+            description: "Access to open source code and programming instructions", 
+            url: "https://github.com/redpitaya", 
+            image_path: "../assets/images/pack/github",
+            image_sizes: "128;256;512",
+            check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "applicationstore", name: "Red Pitaya Store", 
+            description: "Access to Red Pitaya official store", 
+            url: "https://redpitaya.com/shop", 
+            image_path: "../assets/images/pack/shop",
+            image_sizes: "128;256;512",
+            check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "marketplace", name: "Application marketplace", 
+            description: "Access to open source and contributed applications", 
+            url: "http://bazaar.redpitaya.com/", 
+            image_path: "images/pack/download_icon",
+            image_sizes: "128;256;512",
+            check_online: true, licensable: false, callback: undefined, type: 'run' },
+        { id: "feedback", name: "Feedback", 
+            description: "Tell us what you like or dislike and what you would like to see improved", 
+            url: "", 
+            image_path: "../assets/images/pack/feedback",
+            image_sizes: "128;256;512",
+            check_online: true, licensable: false, callback: showFeedBack, type: 'run' },
+        { id: "instructions", name: "Documentation", 
+            description: "Quick start instructions, user manuals, specifications, examples & more.", 
+            url: "http://redpitaya.readthedocs.io/en/latest/index.html", 
+            image_path: "../assets/images/pack/instr",
+            image_sizes: "128;256;512",
+            check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "tutorials", name: "Create own WEB application", 
+            description: "RedPitaya tutorials.", 
+            url: "https://redpitaya.readthedocs.io/en/latest/developerGuide/software/build/webapp/webApps.html", 
+            image_path: "../assets/images/pack/tutors",
+            image_sizes: "128;256;512",
+            check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "wifi", name: "Network manager", 
+            description: "Simple way to establish wireless connection with the Red Pitaya", 
+            url: "/network_manager/", 
+            image_path: "../network_manager/info/icon",
+            image_sizes: "128;256;512",
+            check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "scpi", name: "SCPI server", 
+            description: "Remote access to all Red Pitaya inputs/outputs from MATLAB/LabVIEW/Scilab/Python", 
+            url: "/scpi_manager/", 
+            image_path: "../scpi_manager/info/icon",
+            image_sizes: "128;256;512",
+            check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "updater", name: "Red Pitaya OS Update", 
+            description: "Red Pitaya ecosystem updater", 
+            url: "/updater/", 
+            image_path: "../updater/info/icon",
+            image_sizes: "128;256;512",
+            check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "activelearning", name: "Teaching materials", 
+            description: "Teaching materials for Red Pitaya", 
+            url: "https://redpitaya-knowledge-base.readthedocs.io/en/latest/learn_fpga/fpga_learn.html", 
+            image_path: "../assets/images/pack/active-learning",
+            image_sizes: "128;256;512",
+            check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "warranty_ext", name: "Unlock new benefits", 
+            description: "Keep your Red Pitaya fresh for longer", 
+            url: "https://go.redpitaya.com/refresh", 
+            image_path: "../assets/images/pack/WarrantyExt",
+            image_sizes: "128;256;512",
+            check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "jupyter", name: "Python programming", 
+            description: "Jupyter notebook server for running Python applications in a browser tab", 
+            url: "/jlab/lab/tree/RedPitaya/welcome.ipynb", 
+            image_path: "../jupyter_manager/info/icon",
+            image_sizes: "128;256;512",
+            check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "web_ssh", name: "Web Console", 
+            description: "SSH console based on the shellinabox", 
+            url: "http://" + window.location.hostname + ":4200",
+            image_path: "../assets/images/pack/ssh_icon",
+            image_sizes: "128;256;512",
+            check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "pyrpl", name: "PyRPL", 
+            description: "PyRPL turns your RedPitaya into a powerful DSP device", 
+            url: "https://redpitaya.readthedocs.io/en/latest/appsFeatures/applications/pyrpl/pyrpl.html", 
+            image_path: "../assets/images/pack/pyrpl",
+            image_sizes: "128;256;512",
+            check_online: false, licensable: false, callback: undefined, type: 'run' }
     ];
 
     var backButton = {
@@ -359,14 +312,14 @@
         name: "Back",
         description: "Return to the desktop",
         url: "#",
-        image: "../assets/images/back_button.png",
+        image_path: "../assets/images/pack/back_button",
+        image_sizes: "128;256;512",
         check_online: false,
         licensable: false,
         callback: onBackButton,
         type: 'run',
         group: "",
         is_group: false
-
     };
 
 
@@ -449,40 +402,9 @@
                     try {
                         const obj = JSON.parse(result);
                         var model = obj['model'];
-                        var modelUp = obj['model'].toUpperCase()
-                        if (modelUp.startsWith('STEM_125-10_V1.0')) {model = 'STEMlab 125-10 v1.0'; base_ram = "256"; }
-                        if (modelUp.startsWith('STEM_14_B_V1.0')) model = 'STEMlab 125-14 v1.0';
-                        if (modelUp.startsWith('STEM_125-14_V1.0')) model = 'STEMlab 125-14 v1.0';
-                        if (modelUp.startsWith('STEM_125-14_V1.1')) model = 'STEMlab 125-14 v1.1';
-                        if (modelUp.startsWith('STEM_125-14_LN_V1.1')) model = 'STEMlab 125-14 LN v1.1';
-                        if (modelUp.startsWith('STEM_125-14_LN_BO_V1.1')) model = 'STEMlab 125-14 LN BO v1.1';
-                        if (modelUp.startsWith('STEM_125-14_LN_CE1_V1.1')) model = 'STEMlab 125-14 LN CE1 v1.1';
-                        if (modelUp.startsWith('STEM_125-14_LN_CE2_V1.1')) model = 'STEMlab 125-14 LN CE2 v1.1';
-                        if (modelUp.startsWith('STEM_125-14_Z7020_V1.0')) model = 'STEMlab 125-14-Z7020 v1.0';
-                        if (modelUp.startsWith('STEM_125-14_Z7020_LN_V1.1')) model = 'STEMlab 125-14-Z7020 LN v1.1';
-                        if (modelUp.startsWith('STEM_250-12_V1.0')) model = 'SIGNALlab 250-12 v1.0';
-                        if (modelUp.startsWith('STEM_250-12_V1.1')) model = 'SIGNALlab 250-12 v1.1';
-                        if (modelUp.startsWith('STEM_250-12_V1.2')) model = 'SIGNALlab 250-12 v1.2';
-                        if (modelUp.startsWith('STEM_250-12_V1.2a')) model = 'SIGNALlab 250-12 v1.2a';
-                        if (modelUp.startsWith('STEM_250-12_V1.2b')) model = 'SIGNALlab 250-12 v1.2b';
-                        if (modelUp.startsWith('STEM_250-12_120')) model = 'SIGNALlab 250-12/120';
-                        if (modelUp.startsWith('STEM_122-16SDR_V1.0')) model = 'SDRlab 122-16 v1.0';
-                        if (modelUp.startsWith('STEM_122-16SDR_V1.1')) model = 'SDRlab 122-16 v1.1';
-                        if (modelUp.startsWith('STEM_125-14_Z7020_4IN_V1.0')) model = 'STEMlab 125-14 4-Input v1.0';
-                        if (modelUp.startsWith('STEM_125-14_Z7020_4IN_V1.2')) model = 'STEMlab 125-14 4-Input v1.2';
-                        if (modelUp.startsWith('STEM_125-14_Z7020_4IN_V1.3')) model = 'STEMlab 125-14 4-Input v1.3';
-                        if (modelUp.startsWith('STEM_125-14_V2.0')) model = 'STEMlab 125-14 v2.0';
-                        if (modelUp.startsWith('STEM_125-14_PRO_V2.0')) model = 'STEMlab 125-14 Pro v2.0';
-                        if (modelUp.startsWith('STEM_125-14_Z7020_PRO_V1.0')) model = 'STEMlab 125-14-Z7020 Pro v1.0';
-                        if (modelUp.startsWith('STEM_125-14_Z7020_PRO_V2.0')) model = 'STEMlab 125-14-Z7020 Pro v2.0';
-                        if (modelUp.startsWith('STEM_125-14_IND_V2.0')) model = 'STEMlab 125-14 Ind v2.0';
-                        if (modelUp.startsWith('STEM_125-14_Z7020_LL_v1.1')) model = 'STEMlab 125-14 LL v1.1';
-                        if (modelUp.startsWith('STEM_125-14_Z7020_LL_v1.2')) model = 'STEMlab 125-14 LL v1.2';
-                        if (modelUp.startsWith('STEM_65-16_LL_v1.1')) model = 'STEMlab 65-16 LL v1.1';
-                        if (modelUp.startsWith('STEM_125-14_Z7020_TI_v1.3')) model = 'STEMlab 125-14 TI v1.3';
-                        if (modelUp.startsWith('STEM_65-16_TI_v1.3')) model = 'STEMlab 65-16 TI v1.3';
-
-                        if (modelUp.includes('SLAVE')) model += " / Streaming Slave";
+                        var is_slave = obj['is_slave'];
+                        if (model.startsWith('STEMlab 125-10 v1.0')) { base_ram = "256"; }
+                        if (is_slave.includes('slave mode')) model += " / Streaming Slave";
                         $('#SI_B_MODEL').text(model);
                         $('#SI_MAC').text(obj['mac']);
                         $('#SI_DNA').text(obj['dna']);
@@ -580,47 +502,36 @@
             }
         });
 
-        $.ajax({
-                method: "GET",
-                url: '/get_sysinfo'
-            })
-            .done(function(result) {
-                const obj = JSON.parse(result);
-                Desktop.sys_info_obj = obj;
-            })
-            .fail(function() {
-                Desktop.sys_info_obj = undefined;
-            });
 
-            $('#fsck_chbox').click(function(event){
-                var chkBox = document.getElementById('fsck_chbox');
-                if (chkBox.checked){
-                    $.ajax({
-                        method: "GET",
-                        url: '/set_fsck?enable=true'
-                    });
-                }else{
-                    $.ajax({
-                        method: "GET",
-                        url: '/set_fsck?enable=false'
-                    });
-                }
-            });
+        $('#fsck_chbox').click(function(event){
+            var chkBox = document.getElementById('fsck_chbox');
+            if (chkBox.checked){
+                $.ajax({
+                    method: "GET",
+                    url: '/set_fsck?enable=true'
+                });
+            }else{
+                $.ajax({
+                    method: "GET",
+                    url: '/set_fsck?enable=false'
+                });
+            }
+        });
 
-            $('#led_chbox').click(function(event){
-                var chkBox = document.getElementById('led_chbox');
-                if (chkBox.checked){
-                    $.ajax({
-                        method: "GET",
-                        url: '/set_led_status?enable=true'
-                    });
-                }else{
-                    $.ajax({
-                        method: "GET",
-                        url: '/set_led_status?enable=false'
-                    });
-                }
-            });
+        $('#led_chbox').click(function(event){
+            var chkBox = document.getElementById('led_chbox');
+            if (chkBox.checked){
+                $.ajax({
+                    method: "GET",
+                    url: '/set_led_status?enable=true'
+                });
+            }else{
+                $.ajax({
+                    method: "GET",
+                    url: '/set_led_status?enable=false'
+                });
+            }
+        });
     });
 
 })(window.Desktop = window.Desktop || {}, jQuery);

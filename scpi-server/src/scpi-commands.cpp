@@ -276,6 +276,12 @@ static const scpi_command_t scpi_commands[] = {
      .tag = 0
 #endif
     },
+    {.pattern = "RP:RET_ON_ERROR",
+     .callback = RP_SetRetOnError,
+#if USE_COMMAND_TAGS
+     .tag = 0
+#endif
+    },
 
     {.pattern = "RP:PLL:ENable",
      .callback = RP_PLL,

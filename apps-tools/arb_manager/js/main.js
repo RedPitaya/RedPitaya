@@ -235,7 +235,7 @@
                 SM.files[fname]["values"] = sigValF;
             }
         });
-        console.log(SM.files)
+
         SM.charts = []
 
         for (const [key, value] of Object.entries(SM.files)) {

@@ -297,6 +297,23 @@ int rp_UpdaterGetNBAvailableFilesList(std::vector<std::string>& files) {
     if (succes == false) {
         return RP_UP_ERR;
     }
+    rp_sortEcosystemFiles(files);
+    return RP_UP_OK;
+}
+
+int rp_UpdaterGetReleaseAvailableFilesList(std::vector<std::string>& files) {
+    files.clear();
+    CUCurl curl;
+    std::string url = "";
+    bool succes = false;
+    auto links = curl.getListRelease(&succes);
+    for (auto& link : links) {
+        files.push_back(link);
+    }
+    if (succes == false) {
+        return RP_UP_ERR;
+    }
+    rp_sortEcosystemFiles(files);
     return RP_UP_OK;
 }
 

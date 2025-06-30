@@ -15,6 +15,7 @@
 #include "rp_updater_common.h"
 #include <openssl/evp.h>
 #include <openssl/md5.h>
+#include <algorithm>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -74,4 +75,47 @@ int rp_UpdaterGetMD5(const std::vector<uint8_t>& data, std::string* hash) {
 
     *hash = hexStream.str();
     return RP_UP_OK;
+}
+
+int rp_sortEcosystemFiles(std::vector<std::string>& files) {
+    auto compareVersionStrings = [](const std::string& a, const std::string& b) {
+        size_t start1 = a.find('-');
+        size_t start2 = b.find('-');
+
+        if (start1 == std::string::npos || start2 == std::string::npos) {
+            return a < b;
+        }
+
+        size_t end1 = a.find('-', start1 + 1);
+        size_t end2 = b.find('-', start2 + 1);
+
+        std::string num1Str = a.substr(start1 + 1, end1 - (start1 + 1));
+        std::string num2Str = b.substr(start2 + 1, end2 - (start2 + 1));
+
+        double num1 = stod(num1Str);
+        double num2 = stod(num2Str);
+
+        if (num1 != num2) {
+            return num1 < num2;
+        }
+
+        if (end1 == std::string::npos || end2 == std::string::npos) {
+            return a < b;
+        }
+
+        size_t end3 = a.find('-', end1 + 1);
+        size_t end4 = b.find('-', end2 + 1);
+
+        std::string num3Str = a.substr(end1 + 1, end3 - (end1 + 1));
+        std::string num4Str = b.substr(end2 + 1, end4 - (end2 + 1));
+
+        int num3 = stoi(num3Str);
+        int num4 = stoi(num4Str);
+
+        return num3 < num4;
+    };
+
+    sort(files.begin(), files.end(), compareVersionStrings);
+
+    return 0;
 }

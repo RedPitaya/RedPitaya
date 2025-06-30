@@ -365,7 +365,7 @@
                 $("#back_button").attr("href", OSC.previousPageUrl)
                 OSC.rp_model = _value.value;
                 console.log( "Load was performed." );
-
+                initImageLoaders();
                 const ob = new ResizeObserver(function(entries) {
                     OSC.updateJoystickPosition();
                 });

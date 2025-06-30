@@ -158,7 +158,7 @@
                     $("#back_button").attr("href", SPEC.previousPageUrl)
 
                     console.log( "Load was performed." );
-
+                    initImageLoaders();
                     const ob = new ResizeObserver(function(entries) {
                         SPEC.updateJoystickPosition();
                     });

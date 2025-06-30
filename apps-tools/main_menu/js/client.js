@@ -204,5 +204,5 @@ $(function() {
             async: false
         });
     });
-    setTimeout(CLIENT.startApp,2000)
+    setTimeout(CLIENT.startApp, 3000)
 });

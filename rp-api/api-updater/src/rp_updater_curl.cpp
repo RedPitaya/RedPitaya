@@ -200,3 +200,26 @@ auto CUCurl::getListNB(bool* succes) -> std::vector<std::string> {
     }
     return {};
 }
+
+auto CUCurl::getListRelease(bool* succes) -> std::vector<std::string> {
+    CURL* curl;
+    CURLcode res;
+    std::string html;
+    *succes = false;
+    curl = curl_easy_init();
+    if (curl) {
+        curl_easy_setopt(curl, CURLOPT_URL, RELEASE_LINK);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_html_data);
+        curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &html);
+        res = curl_easy_perform(curl);
+        curl_easy_cleanup(curl);
+
+        if (res != CURLE_OK) {
+            return {};
+        }
+        *succes = true;
+        return extractLinks(html);
+    }
+    return {};
+}

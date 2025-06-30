@@ -27,6 +27,7 @@
     <script src="../assets/ecosystem.js?1" onerror="location.reload()"></script>
     <script src="../assets/popupstack.js?1" onerror="location.reload()"></script>
     <script src="../assets/jquery.browser.js?1" onerror="location.reload()"></script>
+    <script src="../assets/imageLoader.js?1" onerror="location.reload()"></script>
     <script src="../main_menu/js/rp_client.js?1" onerror="location.reload()"></script>
     <script src="../main_menu/js/client.js?1" onerror="location.reload()"></script>
     <script src="../main_menu/js/main.js?1" onerror="location.reload()"></script>
@@ -58,7 +59,11 @@
                     style="padding-top: 0px;width: 36px;height: 20px;padding-left: 0px;margin-left: 2px;margin-top: 2px;">
             </div>
             <div id="description"></div>
-            <div id="reboot"><img src="../assets/images/power.png"></div>
+            <div id="reboot">
+                <div style="width: 25px;height: 25px;float: right;">
+                    <img path="../assets/images/pack/power" sizes="25;50">
+                </div>
+            </div>
         </div>
         <div class="" id="main-container">
             <ul class="paging" id="list-container">
@@ -334,15 +339,15 @@
     </div>
     <div class="modal fade" id="ext_connections_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel"
         aria-hidden="true">
-        <div class="modal-dialog" style="width: 700px;">
+        <div class="modal-dialog" style="width:680px;">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
                             aria-hidden="true">&times;</span></button>
                     <h4 class="modal-title" id="bazaar_naLabel">External Connections</h4>
                 </div>
-                <div class="modal-body" style="display: flex;">
-                    <img src="../assets/images/red_pitaya_pinout.png" style="width: 100%;">
+                <div class="modal-body" style="width:640px;display: flex;padding: 0;">
+                    <img path="../assets/images/pack/red_pitaya_pinout" sizes="640;1280;2560" style="width: 100%;">
                 </div>
                 <div class="modal-footer">
                     <div class="bazaar-link">

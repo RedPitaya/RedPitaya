@@ -86,6 +86,7 @@ list(APPEND rp_libs
     rp-i2c
     rp-spi
     rp-gpio
+    rp-updater
     i2c
 )
 

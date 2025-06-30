@@ -56,5 +56,6 @@
 
 int rp_UpdaterGetMD5(std::string fileName, std::string* hash);
 int rp_UpdaterGetMD5(const std::vector<uint8_t>& data, std::string* hash);
+int rp_sortEcosystemFiles(std::vector<std::string>& files);
 
 #endif  // __UPDATER_COMMON_API_H
