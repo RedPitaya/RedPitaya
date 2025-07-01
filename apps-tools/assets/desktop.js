@@ -401,7 +401,7 @@
                 .done(function(result) {
                     try {
                         const obj = JSON.parse(result);
-                        var model = obj['model'];
+                        var model = obj['name'];
                         var is_slave = obj['is_slave'];
                         if (model.startsWith('STEMlab 125-10 v1.0')) { base_ram = "256"; }
                         if (is_slave.includes('slave mode')) model += " / Streaming Slave";

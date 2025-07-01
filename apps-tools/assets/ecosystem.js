@@ -110,7 +110,7 @@
         var info = msg;
         version = info['ecosystem']['version'];
         revision = info['ecosystem']['revision'];
-        stem_ver = info['model'];
+        stem_ver = info['name'];
         $('#ecosystem_info').html("<a style='color: #666;' href='/updater/'>" + 'Red Pitaya OS ' + version + " / " + stem_ver + " <img id=\"NEW_FIRMWARE_ID\"src=\"../assets/images/warning.png\" hidden></a><img id=\"NEED_UPDATE_LINUX_ID\"src=\"../assets/images/warning.png\" hidden>");
         $("#NEED_UPDATE_LINUX_ID").click(function(event) {
             $('#firmware_dialog').modal("show");
