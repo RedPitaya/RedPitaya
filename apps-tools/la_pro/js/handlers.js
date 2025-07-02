@@ -117,7 +117,7 @@
             }
         });
 
-        $(document).on('mousemove', '.plot', function(ev) {
+        $(document).on('mousemove', '#plot_main', function(ev) {
             ev.preventDefault();
             // ev.stopPropagation();
             if (!LA.move_mode) {
@@ -156,7 +156,15 @@
             CLIENT.sendParameters()
         });
 
-        $(document).on('mouseup', function(ev) {
+        $(document).on('mouseout', '#plot_main', function(ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            LA.move_mode = undefined;
+            CLIENT.parametersCache['LA_VIEW_PORT_POS'] = {value: CLIENT.getValue('LA_VIEW_PORT_POS')}
+            CLIENT.sendParameters()
+        });
+
+        $(document).on('mouseup', '.buffer_view_region_class', function(ev) {
             ev.preventDefault();
             ev.stopPropagation();
             LA.move_mode = undefined;

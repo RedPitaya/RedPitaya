@@ -350,7 +350,12 @@
         var viewWidth = $('#buffer_time_region').width()
         var totalWidth = $('#graphs_buffer').width()
         var moveDelta = (viewWidth / ((LA.state.fine == false) ? 2 : 8)) / totalWidth * (dir == '+' ? 1 : -1)
-        CLIENT.params.orig['LA_VIEW_PORT_POS'] = {value: pos + moveDelta}
+        const clamp = (value, min, max) => {
+            if (value < min) return min;
+            if (value > max) return max;
+            return value;
+        }
+        CLIENT.params.orig['LA_VIEW_PORT_POS'] = {value: clamp(pos + moveDelta,0,1)}
         LA.updatePositionBufferViewport()
     }
 
