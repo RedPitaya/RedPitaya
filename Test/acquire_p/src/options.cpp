@@ -14,6 +14,7 @@ static constexpr uint32_t g_dec[DEC_MAX] = {1, 2, 4, 8, 16};
 
 static constexpr char g_format_common[] =
     "\n"
+    "Application for capturing data in split trigger mode.\n"
     "Usage: acquire_p [OPTION]... SIZE <DEC>\n"
     "    SIZE                Number of samples to acquire [1 - 16384].\n"
     "    DEC                 Decimation [1,2,4,8,16,17,18...65536] (default: 1). Valid values are from 1 to 65536\n"
@@ -79,9 +80,8 @@ static constexpr char optstring_settings[] = "esbvxockgh";
 
 static struct std::vector<option> long_options_settings = {
     /* These options set a flag. */
-    {"equalization", no_argument, 0, 'e'}, {"shaping", no_argument, 0, 's'}, {"bypass", no_argument, 0, 'b'}, {"version", no_argument, 0, 'v'},
-        {"help", no_argument, 0, 'h'}, {"hex", no_argument, 0, 'x'}, {"volt", no_argument, 0, 'o'}, {"calib", no_argument, 0, 'c'}, {"hk", no_argument, 0, 'k'},
-        {"debug", no_argument, 0, 'g'}, {
+    {"equalization", no_argument, 0, 'e'}, {"shaping", no_argument, 0, 's'}, {"bypass", no_argument, 0, 'b'}, {"version", no_argument, 0, 'v'}, {"help", no_argument, 0, 'h'},
+        {"hex", no_argument, 0, 'x'}, {"volt", no_argument, 0, 'o'}, {"calib", no_argument, 0, 'c'}, {"hk", no_argument, 0, 'k'}, {"debug", no_argument, 0, 'g'}, {
         "offset", required_argument, 0, 0
     }
 };

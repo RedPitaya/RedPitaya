@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
 
     if (!rp_HPGetFastADCIsSplitTriggerOrDefault()) {
         fprintf(stderr, "Split trigger mode not supported\n");
-        exit(0);
+        exit(1);
     }
 
     g_argv0 = argv[0];
@@ -106,6 +106,16 @@ int main(int argc, char* argv[]) {
     if (rp_HPGetFastADCChannelsCount(&channels) != RP_HP_OK) {
         fprintf(stderr, "[Error:getRawBuffer] Can't get fast ADC channels count\n");
         return -1;
+    }
+    bool trig_enable = false;
+    for (int i = 0; i < channels; i++) {
+        if (option.trigger_mode[i] != RP_TRIG_SRC_DISABLED)
+            trig_enable = true;
+    }
+
+    if (!trig_enable) {
+        fprintf(stderr, "To capture data, you need to configure at least one trigger.\n");
+        exit(-1);
     }
 
     rp_calib_params_t calib;
