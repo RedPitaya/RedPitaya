@@ -734,6 +734,14 @@
                                 coords="46,112,27,130,38,141,51,145,72,148,92,148,106,142,126,132,104,111,90,118,79,120,71,121,62,119,57,117" />
                         </map>
                     </div>
+                    <div id="to_trigger">
+                        <div class="col-xs-12 option-content" style="border: 1px solid #999;">
+                            <div class="right-menu-option">
+                                <button id="LA_TO_TRIGGER" type="button" class="btn" aria-pressed="false"
+                                    autocomplete="off"><img path="img/pack/to_trigger" sizes="64"></button>
+                            </div>
+                        </div>
+                    </div>
                     <div id="stem" style="color:green;"></div>
                 </div>
             </div>
@@ -809,8 +817,8 @@
                             <div class="col-sm-9 decoder-drop">
                                 <div class="dropdown decoder-option-dropdown ">
                                     <select class="form-control" id="spi_order">
-                                        <option value="0">Most significant bit first (standard)</option>
-                                        <option value="1">Least significant bit first</option>
+                                        <option value="MsbFirst">Most significant bit first (standard)</option>
+                                        <option value="LsbFirst">Least significant bit first</option>
                                     </select>
                                 </div>
                             </div>
@@ -854,8 +862,8 @@
                             <div class="col-sm-9 decoder-drop">
                                 <div class="dropdown decoder-option-dropdown ">
                                     <select class="form-control" id="spi_state">
-                                        <option value="0">Enable line is Active Low</option>
-                                        <option value="1">Enable line is Active High</option>
+                                        <option value="ActiveLow">Enable line is Active Low</option>
+                                        <option value="ActiveHigh">Enable line is Active High</option>
                                     </select>
                                 </div>
                             </div>
@@ -865,8 +873,8 @@
                             <div class="col-sm-9 decoder-drop">
                                 <div class="dropdown decoder-option-dropdown ">
                                     <select class="form-control" id="spi_invert">
-                                        <option value="0">Non inverted (standard)</option>
-                                        <option value="1">Inverted</option>
+                                        <option value="No">Non inverted (standard)</option>
+                                        <option value="Yes">Inverted</option>
                                     </select>
                                 </div>
                             </div>
@@ -902,8 +910,8 @@
                             <div class="col-sm-9 decoder-drop">
                                 <div class="dropdown decoder-option-dropdown ">
                                     <select class="form-control" id="i2c_addr">
-                                        <option value="0">Shifted</option>
-                                        <option value="1">Unshifted</option>
+                                        <option value="Shifted">Shifted</option>
+                                        <option value="Unshifted">Unshifted</option>
                                     </select>
                                 </div>
                             </div>
@@ -913,8 +921,8 @@
                             <div class="col-sm-9 decoder-drop">
                                 <div class="dropdown decoder-option-dropdown ">
                                     <select class="form-control" id="i2c_invert">
-                                        <option value="0">Non inverted (standard)</option>
-                                        <option value="1">Inverted</option>
+                                        <option value="No">Non inverted (standard)</option>
+                                        <option value="Yes">Inverted</option>
                                     </select>
                                 </div>
                             </div>
@@ -973,11 +981,11 @@
                             <div class="col-sm-9 decoder-drop">
                                 <div class="dropdown decoder-option-dropdown ">
                                     <select class="form-control" id="uart_data_length">
-                                        <option value="5">5 bits per transfer</option>
-                                        <option value="6">6 bits per transfer</option>
-                                        <option value="7">7 bits per transfer</option>
-                                        <option value="8" selected>8 bits per transfer (standard)</option>
-                                        <option value="9">9 bits per transfer</option>
+                                        <option value="Bits5">5 bits per transfer</option>
+                                        <option value="Bits6">6 bits per transfer</option>
+                                        <option value="Bits7">7 bits per transfer</option>
+                                        <option value="Bits8" selected>8 bits per transfer (standard)</option>
+                                        <option value="Bits9">9 bits per transfer</option>
                                     </select>
                                 </div>
                             </div>
@@ -987,11 +995,11 @@
                             <div class="col-sm-9 decoder-drop">
                                 <div class="dropdown decoder-option-dropdown ">
                                     <select class="form-control" id="uart_stop_bits">
-                                        <option value="0">No stop bits</option>
-                                        <option value="1">0.5 stop bits</option>
-                                        <option value="2" selected>1 stop bit (standard)</option>
-                                        <option value="3">1.5 stop bits</option>
-                                        <option value="4">2 stop bits</option>
+                                        <option value="Stop_Bit_No">No stop bits</option>
+                                        <option value="Stop_Bit_05">0.5 stop bits</option>
+                                        <option value="Stop_Bit_10" selected>1 stop bit (standard)</option>
+                                        <option value="Stop_Bit_15">1.5 stop bits</option>
+                                        <option value="Stop_Bit_20">2 stop bits</option>
                                     </select>
                                 </div>
                             </div>
@@ -1001,11 +1009,11 @@
                             <div class="col-sm-9 decoder-drop">
                                 <div class="dropdown decoder-option-dropdown ">
                                     <select class="form-control" id="uart_parity">
-                                        <option value="0" selected>No parity check</option>
-                                        <option value="1">Even</option>
-                                        <option value="2">Odd</option>
-                                        <option value="3">Always 0</option>
-                                        <option value="4">Always 1</option>
+                                        <option value="None" selected>No parity check</option>
+                                        <option value="Even">Even</option>
+                                        <option value="Odd">Odd</option>
+                                        <option value="Always_0">Always 0</option>
+                                        <option value="Always_1">Always 1</option>
                                     </select>
                                 </div>
                             </div>
@@ -1015,8 +1023,9 @@
                             <div class="col-sm-9 decoder-drop">
                                 <div class="dropdown decoder-option-dropdown ">
                                     <select class="form-control" id="uart_order">
-                                        <option value="0" selected>Least significant bit first (standard)</option>
-                                        <option value="1">Most significant bit first</option>
+                                        <option value="LsbFirst" selected>Least significant bit first (standard)
+                                        </option>
+                                        <option value="MsbFirst">Most significant bit first</option>
                                     </select>
                                 </div>
                             </div>
@@ -1026,8 +1035,8 @@
                             <div class="col-sm-9 decoder-drop">
                                 <div class="dropdown decoder-option-dropdown ">
                                     <select class="form-control" id="uart_invert">
-                                        <option value="0">Non inverted (standard)</option>
-                                        <option value="1">Inverted</option>
+                                        <option value="No">Non inverted (standard)</option>
+                                        <option value="Yes">Inverted</option>
                                     </select>
                                 </div>
                             </div>
@@ -1129,8 +1138,8 @@
                             <div class="col-sm-9 decoder-drop">
                                 <div class="dropdown decoder-option-dropdown ">
                                     <select class="form-control" id="can_invert">
-                                        <option value="0">Non inverted (standard)</option>
-                                        <option value="1">Inverted</option>
+                                        <option value="No">Non inverted (standard)</option>
+                                        <option value="Yes">Inverted</option>
                                     </select>
                                 </div>
                             </div>
@@ -1296,6 +1305,11 @@
                 <div>Decoded data</div>
                 <span class="close-button" onclick="LA.closeSubWindow()">&times;</span>
             </div>
+            <div class="subwindow-search" style="display: flex;padding-bottom: 14px;">
+                <div style="height: 30px;padding-top: 4px;">Filter:</div>
+                <input type="text" class="form-control-filter " style="height: 30px;margin-left: 30px;"
+                    id="LA_DATA_FILTER" />
+            </div>
             <table id="decoded_table" class="decoded_table">
                 <thead id="decoded_header">
                 </thead>
@@ -1305,6 +1319,27 @@
         </div>
         <div class="resize-handle bottom-right">
             <img src="img/resize.svg" class="resize-handle" />
+        </div>
+    </div>
+    <div class="modal fade" id="info_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="oops_label">Logic Analyzer</h4>
+                </div>
+                <div class="modal-body" style="text-align: center; font-size: 18px;">
+                    <p id="info_dialog_label"></p>
+                </div>
+                <div class="modal-footer">
+                    <div class="bazaar-link" style="float: center; width: 100%;">
+                        <a href="#" style="border: 1px solid; width: 100%" id="ok_app_btn" data-dismiss="modal"
+                            class="list-group-item btn">Ok</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </body>

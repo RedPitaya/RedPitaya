@@ -171,7 +171,7 @@
                 return;
             }
 
-            if (rx == 0 && tx == 0) {
+            if (rx === "None" && tx === "None") {
                 $('#warn-message').text("Please specify channel for decoding");
                 $('#warning-dialog').show();
                 return;
@@ -183,27 +183,27 @@
                 return;
             }
 
-            if (LA.isChannelInUse(rx, LA.state.bus_editing) != -1) {
+            if (LA.isChannelInUse(parseInt(rx.replace("DIN",""))+1 , LA.state.bus_editing) != -1) {
                 $('#warn-message').text($('#uart_serial option:selected').text() + " is already in use");
                 $('#warning-dialog').show();
                 return;
             }
 
-            if (LA.isChannelInUse(tx, LA.state.bus_editing) != -1) {
+            if (LA.isChannelInUse(parseInt(tx.replace("DIN",""))+1 , LA.state.bus_editing) != -1) {
                 $('#warn-message').text($('#uart_serial option:selected').text() + " is already in use");
                 $('#warning-dialog').show();
                 return;
             }
 
-            LA.buses[bus].config.rx = parseInt(rx);
-            LA.buses[bus].config.tx = parseInt(tx);
+            LA.buses[bus].config.rx = rx;
+            LA.buses[bus].config.tx = tx;
 
             LA.buses[bus].config.baudrate = parseInt(baudrate);
-            LA.buses[bus].config.num_data_bits = parseInt($('#uart_data_length').val())
-            LA.buses[bus].config.num_stop_bits = parseInt($('#uart_stop_bits').val())
-            LA.buses[bus].config.parity = parseInt($('#uart_parity').val())
-            LA.buses[bus].config.bitOrder = parseInt($('#uart_order').val())
-            LA.buses[bus].config.invert = parseInt($('#uart_invert').val())
+            LA.buses[bus].config.num_data_bits = ($('#uart_data_length').val())
+            LA.buses[bus].config.num_stop_bits = ($('#uart_stop_bits').val())
+            LA.buses[bus].config.parity = ($('#uart_parity').val())
+            LA.buses[bus].config.bitOrder = ($('#uart_order').val())
+            LA.buses[bus].config.invert = ($('#uart_invert').val())
             // LA.buses[bus].config.acq_speed = parseInt(uart_speed)
 
             CLIENT.parametersCache['DECODER_' + LA.state.bus_editing] = {value:JSON.stringify(LA.buses[bus])}
@@ -220,13 +220,13 @@
             var invert_bit = $('#spi_invert').val();
             // var spi_speed = $('#spi_adc_speed').val();
 
-            if (miso == 0 && mosi == 0) {
+            if (miso === "None" && mosi === "None") {
                 $('#warn-message').text("You have to specify MISO or MOSI for decoding");
                 $('#warning-dialog').show();
                 return;
             }
 
-            if (clk == 0) {
+            if (clk === "None") {
                 $('#warn-message').text("You have to specify CLK line");
                 $('#warning-dialog').show();
                 return;
@@ -246,41 +246,41 @@
                 return;
             }
 
-            if (LA.isChannelInUse(miso, LA.state.bus_editing) != -1) {
+            if (LA.isChannelInUse(parseInt(miso.replace("DIN",""))+1 , LA.state.bus_editing) != -1) {
                 $('#warn-message').text($('#spi_data option:selected').text() + " is already in use");
                 $('#warning-dialog').show();
                 return;
             }
 
-            if (LA.isChannelInUse(mosi, LA.state.bus_editing) != -1) {
+            if (LA.isChannelInUse(parseInt(mosi.replace("DIN",""))+1 , LA.state.bus_editing) != -1) {
                 $('#warn-message').text($('#spi_data option:selected').text() + " is already in use");
                 $('#warning-dialog').show();
                 return;
             }
 
-            if (LA.isChannelInUse(clk, LA.state.bus_editing) != -1) {
+            if (LA.isChannelInUse(parseInt(clk.replace("DIN",""))+1 , LA.state.bus_editing) != -1) {
                 $('#warn-message').text($('#spi_clk option:selected').text() + " is already in use");
                 $('#warning-dialog').show();
                 return;
             }
 
-            if (LA.isChannelInUse(cs, LA.state.bus_editing) != -1) {
+            if (LA.isChannelInUse(parseInt(cs.replace("DIN",""))+1 , LA.state.bus_editing) != -1) {
                 $('#warn-message').text($('#spi_cs option:selected').text() + " is already in use");
                 $('#warning-dialog').show();
                 return;
             }
 
-            LA.buses[bus].config.clk = parseInt(clk)
-            LA.buses[bus].config.miso = parseInt(miso)
-            LA.buses[bus].config.mosi = parseInt(mosi)
-            LA.buses[bus].config.cs = parseInt(cs)
-            LA.buses[bus].config.invert_bit = parseInt(invert_bit)
+            LA.buses[bus].config.clk = clk
+            LA.buses[bus].config.miso = miso
+            LA.buses[bus].config.mosi = mosi
+            LA.buses[bus].config.cs = cs
+            LA.buses[bus].config.invert_bit = invert_bit
 
-            LA.buses[bus].config.bit_order = parseInt($('#spi_order').val())
+            LA.buses[bus].config.bit_order = $('#spi_order').val()
             LA.buses[bus].config.word_size = parseInt($('#spi_length').val())
             LA.buses[bus].config.cpol = parseInt($('#spi_cpol').val())
             LA.buses[bus].config.cpha = parseInt($('#spi_cpha').val())
-            LA.buses[bus].config.cs_polarity = parseInt($('#spi_state').val())
+            LA.buses[bus].config.cs_polarity = $('#spi_state').val()
             // LA.buses[bus].config.acq_speed = parseInt(spi_speed)
 
             CLIENT.parametersCache['DECODER_' + LA.state.bus_editing] = {value:JSON.stringify(LA.buses[bus])}
@@ -301,7 +301,7 @@
             // }
 
 
-            if (scl == 0 || sda == 0) {
+            if (scl === "None" || sda === "None") {
                 $('#warn-message').text("You have to specify both lines for decoding");
                 $('#warning-dialog').show();
                 return;
@@ -313,23 +313,23 @@
                 return;
             }
 
-            if (LA.isChannelInUse(scl, LA.state.bus_editing) != -1) {
+            if (LA.isChannelInUse(parseInt(scl.replace("DIN",""))+1 , LA.state.bus_editing) != -1) {
                 $('#warn-message').text($('#i2c_scl option:selected').text() + " is already in use");
                 $('#warning-dialog').show();
                 return;
             }
 
-            if (LA.isChannelInUse(sda, LA.state.bus_editing) != -1) {
+            if (LA.isChannelInUse(parseInt(sda.replace("DIN",""))+1 , LA.state.bus_editing) != -1) {
                 $('#warn-message').text($('#i2c_sda option:selected').text() + " is already in use");
                 $('#warning-dialog').show();
                 return;
             }
 
-            LA.buses[bus].config.scl = parseInt(scl)
-            LA.buses[bus].config.sda = parseInt(sda)
-            LA.buses[bus].config.address_format = parseInt($('#i2c_addr').val())
+            LA.buses[bus].config.scl = scl
+            LA.buses[bus].config.sda = sda
+            LA.buses[bus].config.address_format = $('#i2c_addr').val()
             // LA.buses[bus].config.acq_speed = parseInt(i2c_speed)
-            LA.buses[bus].config.invert_bit = parseInt(invert_bit)
+            LA.buses[bus].config.invert_bit = invert_bit
 
             CLIENT.parametersCache['DECODER_' + LA.state.bus_editing] = {value:JSON.stringify(LA.buses[bus])}
             CLIENT.parametersCache['DECODER_ENABLED_' + LA.state.bus_editing] = {value: true}
@@ -374,24 +374,24 @@
                 return;
             }
 
-            if (can_rx == 0) {
+            if (can_rx === "None") {
                 $('#warn-message').text("You have to specify line for decoding");
                 $('#warning-dialog').show();
                 return;
             }
-
-            if (LA.isChannelInUse(can_rx, LA.state.bus_editing) != -1) {
+            var can_rx_num = parseInt(can_rx.replace("DIN",""))+1
+            if (LA.isChannelInUse(can_rx_num, LA.state.bus_editing) != -1) {
                 $('#warn-message').text($('#can_rx option:selected').text() + " is already in use");
                 $('#warning-dialog').show();
                 return;
             }
 
-            LA.buses[bus].config.rx = parseInt(can_rx)
+            LA.buses[bus].config.rx = can_rx
             LA.buses[bus].config.nominal_bitrate = parseInt(nom_bitrate)
             LA.buses[bus].config.fast_bitrate = parseInt(fast_bitrate)
             LA.buses[bus].config.sample_point = parseFloat(sample_point)
             // LA.buses[bus].config.acq_speed = parseInt(can_speed)
-            LA.buses[bus].config.invert_bit = parseInt(invert_bit)
+            LA.buses[bus].config.invert_bit = invert_bit
 
             CLIENT.parametersCache['DECODER_' + LA.state.bus_editing] = {value:JSON.stringify(LA.buses[bus])}
             CLIENT.parametersCache['DECODER_ENABLED_' + LA.state.bus_editing] = {value: true}
@@ -482,7 +482,7 @@
 
         if (name === 'CAN'){
             $(protocol).show()
-            $('#can_rx option[value=' + (parseInt(LA.buses[bus].config.rx)) + ']').attr('selected', 'selected');
+            $('#can_rx option[value=' + ((LA.buses[bus].config.rx)) + ']').attr('selected', 'selected');
             $('#can_nom_bitrate').val(LA.buses[bus].config.nominal_bitrate);
             $('#can_fast_bitrate').val(LA.buses[bus].config.fast_bitrate);
             $('#sample_point').val(LA.buses[bus].config.sample_point);
@@ -494,8 +494,8 @@
         if (name === 'I2C'){
             $(protocol).show()
 
-            $('#i2c_sda option[value=' + (parseInt(LA.buses[bus].config.sda)) + ']').attr('selected', 'selected');
-            $('#i2c_scl option[value=' + (parseInt(LA.buses[bus].config.scl)) + ']').attr('selected', 'selected');
+            $('#i2c_sda option[value=' + (LA.buses[bus].config.sda) + ']').attr('selected', 'selected');
+            $('#i2c_scl option[value=' + (LA.buses[bus].config.scl) + ']').attr('selected', 'selected');
             $('#i2c_addr option[value=' + LA.buses[bus].config.address_format + ']').attr('selected', 'selected');
             $('#i2c_invert option[value=' + LA.buses[bus].config.invert_bit + ']').attr('selected', 'selected');
             // $('#i2c_adc_speed').val(LA.buses[bus].config.acq_speed);
@@ -521,11 +521,11 @@
             LA.state.bus_editing = bn;
             var bus = 'bus'+bn
             $('.channels_selector').empty();
-            $('.channels_selector').append('<option value="0">-</option>');
+            $('.channels_selector').append('<option value="None">-</option>');
 
             // Replace default name with DIN name
             for (var i = 1; i < 9; i++) {
-                $('.channels_selector').append('<option value="' + (i) + '">' + (($('#CH' + i + '_NAME').val() != "") ? $('#CH' + i + '_NAME').val() : $('#CH' + i + '_NAME').attr('placeholder')) + '</option>');
+                $('.channels_selector').append('<option value="DIN' + (i-1) + '">' + (($('#CH' + i + '_NAME').val() != "") ? $('#CH' + i + '_NAME').val() : $('#CH' + i + '_NAME').attr('placeholder')) + '</option>');
             }
 
             if (LA.buses[bus].name !== undefined){

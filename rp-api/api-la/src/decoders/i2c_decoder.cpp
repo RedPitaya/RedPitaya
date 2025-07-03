@@ -349,7 +349,7 @@ bool I2CDecoder::Impl::foundAddressOrData(bool scl, bool sda) {
     if (m_state == FIND_ADDRESS) {
         // The READ/WRITE bit is only in address bytes, not data bytes.
         m_wr = (m_dataByte & 1) ? 0 : 1;
-        if (m_options.m_address_format == Shifted)
+        if (m_options.m_address_format.value == AddressFormat::Shifted)
             m_dataByte >>= 1;
     }
 

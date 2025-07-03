@@ -26,13 +26,18 @@
     align-items: center;
 }
 
-.subwindow-header div{
+.subwindow-header div {
     font-size: 16px;
     font-weight: 800;
 }
 
+.subwindow-search div {
+    font-size: 14px;
+    padding-bottom: 4px;
+}
+
 .close-button {
-cursor: pointer;
+    cursor: pointer;
     font-size: 1.5em;
 }
 
@@ -50,10 +55,11 @@ cursor: pointer;
     position: absolute;
     width: 10px;
     height: 10px;
-    cursor: nwse-resize; /* Default cursor */
+    cursor: nwse-resize;
+    /* Default cursor */
 }
 
-.resize-handle.bottom-right{
+.resize-handle.bottom-right {
     bottom: 0;
     right: 0;
     cursor: se-resize;
@@ -83,9 +89,15 @@ cursor: pointer;
     table-layout: auto;
 }
 
-.decoded_table thead,.decoded_table  tbody,.decoded_table  tr,.decoded_table  td,.decoded_table  th { display: block; }
+.decoded_table thead,
+.decoded_table tbody,
+.decoded_table tr,
+.decoded_table td,
+.decoded_table th {
+    display: block;
+}
 
-.decoded_table  tr:after {
+.decoded_table tr:after {
     content: ' ';
     display: block;
     visibility: hidden;
@@ -105,21 +117,54 @@ cursor: pointer;
 
 
 
-.decoded_table tbody td, thead th {
+.decoded_table tbody td,
+thead th {
     float: left;
-    white-space:nowrap;
+    white-space: nowrap;
 }
 
 
-.decoded_table  tbody td {
+.decoded_table tbody td {
     font-size: 12px;
     border: solid 1px #6464647d;
     padding-left: 5px;
 }
 
-.decoded_table tbody tr:hover {background-color: #9191917d;}
+.decoded_table tbody tr:hover {
+    background-color: #9191917d;
+}
 
 .text-clip {
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.form-control-filter {
+    color: #fff;
+    background-color: #343433;
+    background-image: none;
+    border: 0px none;
+    box-shadow: none;
+    border-radius: 0px;
+    height: 30px;
+    width: 100%;
+    cursor: pointer;
+}
+
+.form-control-filter:hover {
+    color: #fff;
+    background-color: #444;
+}
+
+.subwindow-search input[type=text] {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #555;
+    -webkit-transition: 0.5s;
+    transition: 0.5s;
+    outline: none;
+}
+
+.subwindow-search input[type=text]:focus {
+    border: 1px solid #ccc;
 }

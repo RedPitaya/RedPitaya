@@ -203,19 +203,19 @@ area:hover {
     text-align: center;
 }
 
-.nav > li > a {
+.nav>li>a {
     position: relative;
     display: block;
     padding: 10px 30px;
     border-left: 1px solid #999;
 }
 
-.navbar-inverse .navbar-nav > li > a {
+.navbar-inverse .navbar-nav>li>a {
     color: #cdcccc;
     outline: none;
 }
 
-. .nav > li > a:hover {
+. .nav>li>a:hover {
     background-color: #444 !important;
     color: #E5D5D5;
 }
@@ -319,7 +319,7 @@ area:hover {
 
 .menu-content-left {
     width: 190px;
-    float:left;
+    float: left;
 }
 
 .right-menu-option {
@@ -366,8 +366,8 @@ area:hover {
     width: 90px;
 }
 
-.info-title > div,
-.info-value > div {
+.info-title>div,
+.info-value>div {
     display: none;
 }
 
@@ -510,7 +510,16 @@ area:hover {
     position: absolute;
     margin-left: 8px;
     right: 10px;
-    bottom: 40px;
+    bottom: 100px;
+    width: 150px;
+    height: auto;
+}
+
+#to_trigger {
+    position: absolute;
+    margin-left: 8px;
+    right: 10px;
+    bottom: 50px;
     width: 150px;
     height: auto;
 }
@@ -930,27 +939,27 @@ body.modal-open .full-content {
     background-color: #323232;
     font-family: sans-serif;
     color: blue;
-  }
+}
 
-  a.list-group-item {
+a.list-group-item {
     color: silver;
-  }
+}
 
-  a.list-group-item:hover:visited {
+a.list-group-item:hover:visited {
     color: black;
-  }
+}
 
-  .list-group-item.more {
+.list-group-item.more {
     font-size: 18px;
-  }
+}
 
-  .list-group-item.exp_btn {
+.list-group-item.exp_btn {
     font-weight: bold;
     text-align: center;
     border: 1px solid #ddd;
-  }
+}
 
-  .exp_btn {
+.exp_btn {
     background-image: none;
     border: 0 solid transparent;
     white-space: nowrap;
@@ -960,25 +969,27 @@ body.modal-open .full-content {
     width: 100%;
     background-color: transparent;
     text-shadow: 0px 0px;
-   /*  box-shadow: 0 0 0 1px #777; */
-    color:#cdcccc !important;
-  }
+    /*  box-shadow: 0 0 0 1px #777; */
+    color: #cdcccc !important;
+}
 
-  .exp_btn:hover, btn:active {
+.exp_btn:hover,
+btn:active {
     color: #555 !important;
     background-image: none;
-  }
+}
 
-  .exp_btn.focus {
+.exp_btn.focus {
     color: #777;
     border: 0px solid transparent;
-  }
+}
 
-  .exp_btn:active, .exp_btn.active {
+.exp_btn:active,
+.exp_btn.active {
     background-image: none;
     background-color: #999;
     color: #111 !important;
-  }
+}
 
 .saved_settings {
     display: flex;
@@ -997,7 +1008,7 @@ body.modal-open .full-content {
     width: 14px;
     height: 14px;
     margin: 3px;
-    float:right;
+    float: right;
 }
 
 .saved_settings>a>img:hover {

@@ -5,17 +5,17 @@
 using namespace can;
 
 CANParameters::CANParameters() {
-    m_can_rx = 0;  // 0...8, 	0 if is not set
+    m_can_rx = Lines::None;  // 0...8, 	0 if is not set
     m_nominal_bitrate = 1000000;
     m_fast_bitrate = 2000000;
     m_sample_point = 87.5;
-    m_invert_bit = 0;
+    m_invert_bit = InvertBit::No;
     m_acq_speed = 125e6;
 }
 
 auto CANParameters::setDecoderSettingsUInt(std::string& key, uint32_t value) -> bool {
     if (key == "rx") {
-        m_can_rx = value;
+        m_can_rx = Lines::from_int(value);
         return true;
     }
 
@@ -40,7 +40,7 @@ auto CANParameters::setDecoderSettingsUInt(std::string& key, uint32_t value) -> 
     }
 
     if (key == "invert_bit") {
-        m_invert_bit = value;
+        m_invert_bit = InvertBit::from_int(value);
         return true;
     }
     return false;
@@ -98,13 +98,12 @@ auto CANParameters::getDecoderSettingsFloat(std::string& key, float* value) -> b
 auto CANParameters::toJson() -> std::string {
     Json::Value root;
 
-    root["rx"] = m_can_rx;
+    root["rx"] = m_can_rx.name();
     root["nominal_bitrate"] = m_nominal_bitrate;
     root["fast_bitrate"] = m_fast_bitrate;
     root["sample_point"] = m_sample_point;
-    root["invert_bit"] = m_invert_bit;
+    root["invert_bit"] = m_invert_bit.name();
     root["acq_speed"] = m_acq_speed;
-
     Json::StreamWriterBuilder builder;
     const std::string json = Json::writeString(builder, root);
     return json;
@@ -144,8 +143,8 @@ auto CANParameters::fromJson(const std::string& json) -> bool {
             return true;
         };
 
-        if (!parseUInt32(m_can_rx, "rx"))
-            return false;
+        if (root.isMember("rx"))
+            m_can_rx = Lines::from_string(root["rx"].asString());
         if (!parseUInt32(m_nominal_bitrate, "nominal_bitrate"))
             return false;
         if (!parseUInt32(m_fast_bitrate, "fast_bitrate"))
@@ -154,8 +153,8 @@ auto CANParameters::fromJson(const std::string& json) -> bool {
             return false;
         if (!parseUInt32(m_acq_speed, "acq_speed"))
             return false;
-        if (!parseUInt32(m_invert_bit, "invert_bit"))
-            return false;
+        if (root.isMember("invert_bit"))
+            m_invert_bit = InvertBit::from_string(root["invert_bit"].asString());
 
         return true;
     } catch (...) {

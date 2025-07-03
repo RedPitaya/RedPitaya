@@ -255,10 +255,10 @@ void UARTDecoder::Impl::getDataBits(bit_decoder::Bit& bit) {
         m_initStartFirst = true;
     }
 
-    if (m_options.m_bitOrder == MSB_FIRST) {
+    if (m_options.m_bitOrder.value == UartBitOrder::MsbFirst) {
         m_dataByte <<= 1;
         m_dataByte |= (bit.bitValue << 0);
-    } else if (m_options.m_bitOrder == LSB_FIRST) {
+    } else if (m_options.m_bitOrder.value == UartBitOrder::LsbFirst) {
         m_dataByte >>= 1;
         m_dataByte |= (bit.bitValue << (m_options.m_num_data_bits - 1));
     }
@@ -272,10 +272,10 @@ void UARTDecoder::Impl::getDataBits(bit_decoder::Bit& bit) {
 
     m_result.push_back({m_line, DATA, m_dataByte, (float)m_curDataBit + 1, m_startDataBit.bitSampleStart, bit.bitSampleEnd - m_startDataBit.bitSampleStart});
 
-    if (m_options.m_parity == NONE) {
+    if (m_options.m_parity.value == Parity::None) {
         m_state = GET_STOP_BITS;
         m_curStopBit = 0;
-        if (m_options.m_num_stop_bits == STOP_BITS_05 || m_options.m_num_stop_bits == STOP_BITS_15) {
+        if (m_options.m_num_stop_bits.value == NumStopBits::Stop_Bit_05 || m_options.m_num_stop_bits.value == NumStopBits::Stop_Bit_15) {
             m_bitdecoder.setBoundRate(m_options.m_baudrate * 2);
         } else {
             m_bitdecoder.setBoundRate(m_options.m_baudrate);
@@ -297,7 +297,7 @@ void UARTDecoder::Impl::getParityBit(bit_decoder::Bit& bit) {
     m_bitAccumulate = 0;
     m_state = GET_STOP_BITS;
     m_curStopBit = 0;
-    if (m_options.m_num_stop_bits == STOP_BITS_05 || m_options.m_num_stop_bits == STOP_BITS_15) {
+    if (m_options.m_num_stop_bits.value == NumStopBits::Stop_Bit_05 || m_options.m_num_stop_bits.value == NumStopBits::Stop_Bit_15) {
         m_bitdecoder.setBoundRate(m_options.m_baudrate * 2);
     } else {
         m_bitdecoder.setBoundRate(m_options.m_baudrate);
@@ -316,28 +316,28 @@ void UARTDecoder::Impl::getStopBits(bit_decoder::Bit& bit) {
     float bitWait = 1;
     uint8_t bits = 0;
 
-    switch (m_options.m_num_stop_bits) {
-        case STOP_BITS_05:
+    switch (m_options.m_num_stop_bits.value) {
+        case NumStopBits::Stop_Bit_05:
             bitWait = 0.5;
             bits = 1;
             break;
 
-        case STOP_BITS_10:
+        case NumStopBits::Stop_Bit_10:
             bitWait = 1;
             bits = 1;
             break;
 
-        case STOP_BITS_15:
+        case NumStopBits::Stop_Bit_15:
             bitWait = 1.5;
             bits = 3;  // 3 * 0.5
             break;
 
-        case STOP_BITS_20:
+        case NumStopBits::Stop_Bit_20:
             bitWait = 2;
             bits = 2;  // 2 * 1
             break;
 
-        case STOP_BITS_NO:
+        case NumStopBits::Stop_Bit_No:
             m_state = GET_START_BIT;
             m_bitdecoder.setBoundRate(m_options.m_baudrate);
             m_bitdecoder.setIdle();
@@ -345,7 +345,7 @@ void UARTDecoder::Impl::getStopBits(bit_decoder::Bit& bit) {
             return;
 
         default:
-            FATAL("Unknown mode %d", m_options.m_num_stop_bits)
+            FATAL("Unknown mode %s", m_options.m_num_stop_bits.name())
     }
 
     if (bit.bitValue == false) {
@@ -377,17 +377,17 @@ bool UARTDecoder::Impl::parityOk() {
 
     sumOfBits += m_parityBit;
 
-    switch (m_options.m_parity) {
-        case ODD:
+    switch (m_options.m_parity.value) {
+        case Parity::Odd:
             return (sumOfBits % 2) == 1;
-        case EVEN:
+        case Parity::Even:
             return (sumOfBits % 2) == 0;
-        case ALWAYS_0:
+        case Parity::Always_0:
             return m_parityBit == 0;
-        case ALWAYS_1:
+        case Parity::Always_1:
             return m_parityBit == 1;
         default:
-            ERROR_LOG("Unknown mode parity %d", m_options.m_parity)
+            ERROR_LOG("Unknown mode parity %s", m_options.m_parity.name())
             break;
     }
     return false;

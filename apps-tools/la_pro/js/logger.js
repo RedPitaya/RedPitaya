@@ -317,6 +317,7 @@
 
     LOGGER.buildDecoderData = function(){
         const tw = $('#decoded_table').width() - 20
+        const filter = $('#LA_DATA_FILTER').val()
         const radix = CLIENT.getValue('LA_LOGGER_RADIX')
         const ts = CLIENT.getValue('LA_PRE_TRIGGER_SAMPLES')
         const total_samp = CLIENT.getValue('LA_TOTAL_SAMPLES')
@@ -338,19 +339,19 @@
 
             var tr = document.createElement("tr");
             tr.setAttribute("pos",item.s / total_samp)
-            body.appendChild(tr);
             tr.onmouseup = LOGGER.onClickRow
-
+            var is_found = filter === "";
             if (LOGGER.log_header.includes(LOGGER.COLUMNS.TIME_OFFSET)){
                 var td = document.createElement("td");
                 td.classList.add("column_"+LOGGER.COLUMNS.TIME_OFFSET);
                 td.classList.add("text-clip")
                 if (samplerate !== undefined){
                     var t = 1.0 / samplerate * (item.s - ts)
-                    td.innerText = COMMON.convertTimeFromSec(t)
+                    td.innerText = COMMON.convertTimeFromSec(t)                
                 }else{
                     td.innerText = "ERROR"
                 }
+                if (filter !== "" && td.innerText.includes(filter)) is_found = true;
                 tr.appendChild(td)
             }
 
@@ -364,6 +365,7 @@
                 }else{
                     td.innerText = "ERROR"
                 }
+                if (filter !== "" && td.innerText.includes(filter)) is_found = true;
                 tr.appendChild(td)
             }
 
@@ -373,6 +375,7 @@
                 td.classList.add("column_"+LOGGER.COLUMNS.LINE_NAME);
                 td.classList.add("text-clip")
                 td.innerText = x
+                if (filter !== "" && td.innerText.includes(filter)) is_found = true;
                 tr.appendChild(td)
             }
 
@@ -395,6 +398,7 @@
                     x = I2C.getValue(item,radix).replace(/(\r\n|\r|\n)/g, '');
                 }
                 td.innerText = x
+                if (filter !== "" && td.innerText.includes(filter)) is_found = true;
                 tr.appendChild(td)
             }
 
@@ -418,6 +422,7 @@
                 }
 
                 td.innerText = x
+                if (filter !== "" && td.innerText.includes(filter)) is_found = true;
                 tr.appendChild(td)
             }
 
@@ -426,6 +431,7 @@
                 td.classList.add("column_"+LOGGER.COLUMNS.DATA);
                 td.classList.add("text-clip")
                 td.innerText = COMMON.formatData(item.d, "", "", radix)[0].replace(/(\r\n|\r|\n)/g, '');
+                if (filter !== "" && td.innerText.includes(filter)) is_found = true;
                 tr.appendChild(td)
             }
 
@@ -434,6 +440,7 @@
                 td.classList.add("column_"+LOGGER.COLUMNS.SAMPLES_START);
                 td.classList.add("text-clip")
                 td.innerText = item.s
+                if (filter !== "" && td.innerText.includes(filter)) is_found = true;
                 tr.appendChild(td)
             }
 
@@ -442,9 +449,14 @@
                 td.classList.add("column_"+LOGGER.COLUMNS.SAMPLES_LEN);
                 td.classList.add("text-clip")
                 td.innerText = item.l
+                if (filter !== "" && td.innerText.includes(filter)) is_found = true;
                 tr.appendChild(td)
             }
+            if (is_found == true)
+                body.appendChild(tr);
+
         }
+
         LOGGER.setDecodedSize()
     }
 

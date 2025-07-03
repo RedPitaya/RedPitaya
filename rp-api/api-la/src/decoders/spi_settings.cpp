@@ -6,59 +6,35 @@
 
 using namespace spi;
 
-constexpr const std::array<uint32_t, 2> g_eCsPolArray{ActiveLow, ActiveHigh};
-constexpr const std::array<uint32_t, 2> g_eBitOrderArray{MsbFirst, LsbFirst};
-
-#define IS(X, Y) (std::find(std::begin(X), std::end(X), Y) != std::end(X))
-#define CHECK_ENUM(X, Y)                                                              \
-    if (!IS(X, Y)) {                                                                  \
-        ERROR_LOG("Invalid value: %d. Valid parameters: %s", Y, getValues(X).c_str()) \
-        return false;                                                                 \
-    }
-
-template <typename X>
-auto getValues(X array) -> std::string {
-    std::string values = "";
-    bool skip = true;
-    for (size_t i = 0; i < array.size(); i++) {
-        if (!skip) {
-            values += ",";
-        }
-        values += std::to_string(array[i]);
-        skip = false;
-    }
-    return values;
-}
-
 SPIParameters::SPIParameters() {
-    m_clk = 0;   // 0...8, 	0 if is not set
-    m_miso = 0;  // 0...8,	0 if is not set
-    m_mosi = 0;  // 0...8,	0 if is not set
-    m_cs = 0;    // 0...8, 	0 if is not set
-    m_cpol = 0;  // 0...1
-    m_cpha = 0;  // 0...1
+    m_clk = Lines::None;   // 0...8, 	0 if is not set
+    m_miso = Lines::None;  // 0...8,	0 if is not set
+    m_mosi = Lines::None;  // 0...8,	0 if is not set
+    m_cs = Lines::None;    // 0...8, 	0 if is not set
+    m_cpol = 0;            // 0...1
+    m_cpha = 0;            // 0...1
     m_word_size = 8;
     m_acq_speed = 0;
-    m_cs_polarity = ActiveLow;
-    m_bit_order = MsbFirst;
-    m_invert_bit = 0;
+    m_cs_polarity = CsPolartiy::ActiveLow;
+    m_bit_order = BitOrder::MsbFirst;
+    m_invert_bit = InvertBit::No;
 }
 
 auto SPIParameters::setDecoderSettingsUInt(std::string& key, uint32_t value) -> bool {
     if (key == "clk") {
-        m_clk = value;
+        m_clk = Lines::from_int(value);
         return true;
     }
     if (key == "miso") {
-        m_miso = value;
+        m_miso = Lines::from_int(value);
         return true;
     }
     if (key == "mosi") {
-        m_mosi = value;
+        m_mosi = Lines::from_int(value);
         return true;
     }
     if (key == "cs") {
-        m_cs = value;
+        m_cs = Lines::from_int(value);
         return true;
     }
     if (key == "cpol") {
@@ -78,17 +54,15 @@ auto SPIParameters::setDecoderSettingsUInt(std::string& key, uint32_t value) -> 
         return true;
     }
     if (key == "cs_polarity") {
-        CHECK_ENUM(g_eCsPolArray, value)
-        m_cs_polarity = (CsPolartiy)value;
+        m_cs_polarity = CsPolartiy::from_int(value);
         return true;
     }
     if (key == "bit_order") {
-        CHECK_ENUM(g_eBitOrderArray, value)
-        m_bit_order = (BitOrder)value;
+        m_bit_order = BitOrder::from_int(value);
         return true;
     }
     if (key == "invert_bit") {
-        m_invert_bit = value;
+        m_invert_bit = InvertBit::from_int(value);
         return true;
     }
     return false;
@@ -145,17 +119,17 @@ auto SPIParameters::getDecoderSettingsUInt(std::string& key, uint32_t* value) ->
 auto SPIParameters::toJson() -> std::string {
     Json::Value root;
 
-    root["clk"] = m_clk;
-    root["miso"] = m_miso;
-    root["mosi"] = m_mosi;
-    root["cs"] = m_cs;
+    root["clk"] = m_clk.name();
+    root["miso"] = m_miso.name();
+    root["mosi"] = m_mosi.name();
+    root["cs"] = m_cs.name();
     root["cpol"] = m_cpol;
     root["cpha"] = m_cpha;
     root["word_size"] = m_word_size;
     root["acq_speed"] = m_acq_speed;
-    root["cs_polarity"] = m_cs_polarity;
-    root["bit_order"] = m_bit_order;
-    root["invert_bit"] = m_invert_bit;
+    root["cs_polarity"] = m_cs_polarity.name();
+    root["bit_order"] = m_bit_order.name();
+    root["invert_bit"] = m_invert_bit.name();
 
     Json::StreamWriterBuilder builder;
     const std::string json = Json::writeString(builder, root);
@@ -186,14 +160,14 @@ auto SPIParameters::fromJson(const std::string& json) -> bool {
             return true;
         };
 
-        if (!parseUInt32(m_clk, "clk"))
-            return false;
-        if (!parseUInt32(m_miso, "miso"))
-            return false;
-        if (!parseUInt32(m_mosi, "mosi"))
-            return false;
-        if (!parseUInt32(m_cs, "cs"))
-            return false;
+        if (root.isMember("clk"))
+            m_clk = Lines::from_string(root["clk"].asString());
+        if (root.isMember("miso"))
+            m_miso = Lines::from_string(root["miso"].asString());
+        if (root.isMember("mosi"))
+            m_mosi = Lines::from_string(root["mosi"].asString());
+        if (root.isMember("cs"))
+            m_cs = Lines::from_string(root["cs"].asString());
 
         if (!parseUInt32(m_cpol, "cpol"))
             return false;
@@ -204,19 +178,14 @@ auto SPIParameters::fromJson(const std::string& json) -> bool {
         if (!parseUInt32(m_acq_speed, "acq_speed"))
             return false;
 
-        uint32_t x;
-        if (!parseUInt32(x, "cs_polarity"))
-            return false;
-        CHECK_ENUM(g_eCsPolArray, x)
-        m_cs_polarity = (CsPolartiy)x;
+        if (root.isMember("cs_polarity"))
+            m_cs_polarity = CsPolartiy::from_string(root["cs_polarity"].asString());
 
-        if (!parseUInt32(x, "bit_order"))
-            return false;
-        CHECK_ENUM(g_eBitOrderArray, x)
-        m_bit_order = (BitOrder)x;
+        if (root.isMember("bit_order"))
+            m_bit_order = BitOrder::from_string(root["bit_order"].asString());
 
-        if (!parseUInt32(m_invert_bit, "invert_bit"))
-            return false;
+        if (root.isMember("invert_bit"))
+            m_invert_bit = InvertBit::from_string(root["invert_bit"].asString());
 
         return true;
     } catch (...) {

@@ -263,10 +263,10 @@ void SPIDecoder::Impl::handleBit(bool data, bool clk, bool cs) {
     // Receive MISO bit into our shift register.
     assert((m_options.m_word_size - 1 - m_bitcount) <= CHAR_BIT && "long shift");
 
-    if (m_options.m_bit_order == MsbFirst) {
+    if (m_options.m_bit_order.value == BitOrder::MsbFirst) {
         m_data <<= 1;
         m_data |= (data << 0);
-    } else if (m_options.m_bit_order == LsbFirst) {
+    } else if (m_options.m_bit_order.value == BitOrder::LsbFirst) {
         m_data >>= 1;
         m_data |= (data << (m_options.m_word_size - 1));
     }
@@ -285,7 +285,7 @@ void SPIDecoder::Impl::handleBit(bool data, bool clk, bool cs) {
 }
 
 bool SPIDecoder::Impl::csAsserted(bool cs) {
-    return m_options.m_cs_polarity == ActiveLow ? (cs == 0) : (cs == 1);
+    return m_options.m_cs_polarity.value == CsPolartiy::ActiveLow ? (cs == 0) : (cs == 1);
 }
 
 void SPIDecoder::Impl::resetDecoderState() {

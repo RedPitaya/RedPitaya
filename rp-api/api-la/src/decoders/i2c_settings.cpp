@@ -6,44 +6,21 @@
 
 using namespace i2c;
 
-constexpr const std::array<uint32_t, 2> g_eAddressArray{Shifted, Unshifted};
-
-#define IS(X, Y) (std::find(std::begin(X), std::end(X), Y) != std::end(X))
-#define CHECK_ENUM(X, Y)                                                              \
-    if (!IS(X, Y)) {                                                                  \
-        ERROR_LOG("Invalid value: %d. Valid parameters: %s", Y, getValues(X).c_str()) \
-        return false;                                                                 \
-    }
-
-template <typename X>
-auto getValues(X array) -> std::string {
-    std::string values = "";
-    bool skip = true;
-    for (size_t i = 0; i < array.size(); i++) {
-        if (!skip) {
-            values += ",";
-        }
-        values += std::to_string(array[i]);
-        skip = false;
-    }
-    return values;
-}
-
 I2CParameters::I2CParameters() {
-    m_scl = 0;  // 0...8, 	0 if is not set
-    m_sda = 0;  // 0...8, 	0 if is not set
+    m_scl = Lines::None;  // 0...8, 	0 if is not set
+    m_sda = Lines::None;  // 0...8, 	0 if is not set
     m_acq_speed = 0;
-    m_address_format = Shifted;
-    m_invert_bit = 0;
+    m_address_format = AddressFormat::Shifted;
+    m_invert_bit = InvertBit::No;
 }
 
 auto I2CParameters::setDecoderSettingsUInt(std::string& key, uint32_t value) -> bool {
     if (key == "scl") {
-        m_scl = value;
+        m_scl = Lines::from_int(value);
         return true;
     }
     if (key == "sda") {
-        m_sda = value;
+        m_sda = Lines::from_int(value);
         return true;
     }
     if (key == "acq_speed") {
@@ -51,12 +28,11 @@ auto I2CParameters::setDecoderSettingsUInt(std::string& key, uint32_t value) -> 
         return true;
     }
     if (key == "address_format") {
-        CHECK_ENUM(g_eAddressArray, value)
-        m_address_format = (AddressFormat)value;
+        m_address_format = AddressFormat::from_int(value);
         return true;
     }
     if (key == "invert_bit") {
-        m_invert_bit = value;
+        m_invert_bit = InvertBit::from_int(value);
         return true;
     }
     return false;
@@ -89,11 +65,11 @@ auto I2CParameters::getDecoderSettingsUInt(std::string& key, uint32_t* value) ->
 auto I2CParameters::toJson() -> std::string {
     Json::Value root;
 
-    root["scl"] = m_scl;
-    root["sda"] = m_sda;
+    root["scl"] = m_scl.name();
+    root["sda"] = m_sda.name();
     root["acq_speed"] = m_acq_speed;
-    root["address_format"] = m_address_format;
-    root["invert_bit"] = m_invert_bit;
+    root["address_format"] = m_address_format.name();
+    root["invert_bit"] = m_invert_bit.name();
 
     Json::StreamWriterBuilder builder;
     const std::string json = Json::writeString(builder, root);
@@ -124,19 +100,16 @@ auto I2CParameters::fromJson(const std::string& json) -> bool {
             return true;
         };
 
-        if (!parseUInt32(m_scl, "scl"))
-            return false;
-        if (!parseUInt32(m_sda, "sda"))
-            return false;
+        if (root.isMember("scl"))
+            m_scl = Lines::from_string(root["scl"].asString());
+        if (root.isMember("sda"))
+            m_sda = Lines::from_string(root["sda"].asString());
         if (!parseUInt32(m_acq_speed, "acq_speed"))
             return false;
-        uint32_t x;
-        if (!parseUInt32(x, "address_format"))
-            return false;
-        CHECK_ENUM(g_eAddressArray, x)
-        m_address_format = (AddressFormat)x;
-        if (!parseUInt32(m_invert_bit, "invert_bit"))
-            return false;
+        if (root.isMember("address_format"))
+            m_address_format = AddressFormat::from_string(root["address_format"].asString());
+        if (root.isMember("invert_bit"))
+            m_invert_bit = InvertBit::from_string(root["invert_bit"].asString());
         return true;
     } catch (...) {
         ERROR_LOG("Error parse json. Invalid data")

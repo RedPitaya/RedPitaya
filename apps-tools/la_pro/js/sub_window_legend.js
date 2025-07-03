@@ -111,6 +111,10 @@
             LOGGER.setDecodedSize()
         });
 
+        $('#LA_DATA_FILTER').on('input', function(){ 
+            LOGGER.buildDecoderData()
+        })
+
     }
 
 

@@ -90,6 +90,17 @@
             LA.disableCursor('2');
         });
 
+        $('#LA_TO_TRIGGER').click(function() {
+            var s = CLIENT.getValue('LA_TOTAL_SAMPLES')
+            var pre = CLIENT.getValue('LA_PRE_TRIGGER_SAMPLES')
+            if (s !== undefined && pre !== undefined){
+                CLIENT.parametersCache['LA_VIEW_PORT_POS'] = {value: pre / s}
+                CLIENT.sendParameters()
+            }
+        });
+
+
+        
         $('#select_mode').click(function() {
             var curVal = CLIENT.getValue("LA_MEASURE_MODE")
             if (curVal !== undefined){
@@ -409,6 +420,12 @@
                 if(file){
                     const fileReader = new FileReader(); // initialize the object
                     fileReader.readAsArrayBuffer(file); // read file as array buffer
+                    const fsize = file.size
+                    if (fsize > 1024 * 1024 * 3){
+                        $('#info_dialog_label').text("The file is very large. The size is limited to 3MB.");
+                        $('#info_dialog').modal('show');
+                        return
+                    }
                     fileReader.onload = (event) => {
                         console.log('Complete File read successfully!')
                         $.ajax({
@@ -416,20 +433,39 @@
                             type: 'POST',
                             //Ajax events
                             //beforeSend: beforeSendHandler,
-                            success: function(e) {
-                                console.log("Upload done " + e);
+                            success: function() {
+                                console.log("Upload done");
+                                if (fsize > 1024 * 1024){
+                                    $('#info_dialog_label').text("The file is quite large. File processing time may take from 30 seconds.");
+                                    $('#info_dialog').modal('show');
+                                }
                                 setTimeout(() => {
                                     CLIENT.parametersCache["LA_RUN"] = { value: 3 };
                                     CLIENT.sendParameters();
                                 }, 1000);
                             },
-                            error: function(e) { console.log(e); },
+                            error: function(e) { 
+                                alert("Error upload file")
+                                console.log(e);
+                            },
                             // Form data
                             data: event.target.result,
                             //Options to tell jQuery not to process data or worry about content-type.
                             cache: false,
                             contentType: false,
-                            processData: false
+                            processData: false,
+                            timeout: 60000,
+                            xhr: function() {
+                                var xhr = new XMLHttpRequest();
+                                xhr.upload.addEventListener('progress', function(e) {
+                                    if (e.lengthComputable) {
+                                        var percent = Math.round((e.loaded / e.total) * 100);
+                                        console.log(percent + '% uploaded');
+                                    }
+                                }, false);
+                                
+                                return xhr;
+                            }
                         });
                     }
                 }

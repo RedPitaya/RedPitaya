@@ -1,11 +1,15 @@
 #pragma once
 
 #include <string_view>
+#include "common/enums.h"
 #include "decoder.h"
 
 namespace can {
 
 // this enum for Control byte in output structure
+
+ENUM(InvertBit, No = 0, "No", Yes = 1, "Yes")
+ENUM(Lines, None = 0, "None", DIN0 = 1, "DIN0", DIN1 = 2, "DIN1", DIN2 = 3, "DIN2", DIN3 = 4, "DIN3", DIN4 = 5, "DIN4", DIN5 = 6, "DIN5", DIN6 = 7, "DIN6", DIN7 = 8, "DIN7")
 
 enum FrameFormat { None, Standart, Extended };
 
@@ -44,12 +48,12 @@ enum CANAnnotations {
 
 class CANParameters : public DecoderParameters {
    public:
-    uint32_t m_can_rx;           // 1...8
-    uint32_t m_nominal_bitrate;  // default value  1000000 (bits/s)
-    uint32_t m_fast_bitrate;     // default value  2000000 (bits/s)
-    float m_sample_point;        // default value  70.0 (%)
+    Lines m_can_rx = Lines::None;  // 1...8
+    uint32_t m_nominal_bitrate;    // default value  1000000 (bits/s)
+    uint32_t m_fast_bitrate;       // default value  2000000 (bits/s)
+    float m_sample_point;          // default value  70.0 (%)
     uint32_t m_acq_speed;
-    uint32_t m_invert_bit;
+    InvertBit m_invert_bit = InvertBit::No;
 
     CANParameters();
 
