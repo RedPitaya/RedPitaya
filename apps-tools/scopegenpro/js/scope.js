@@ -668,6 +668,12 @@
     OSC.param_callbacks["SOUR1_SWEEP_MODE"] = OSC.updateGenSweepMode;
     OSC.param_callbacks["SOUR2_SWEEP_MODE"] = OSC.updateGenSweepMode;
 
+    OSC.param_callbacks["SOUR1_SWEEP_REP"] = OSC.updateGenSweepRep;
+    OSC.param_callbacks["SOUR2_SWEEP_REP"] = OSC.updateGenSweepRep;
+
+    OSC.param_callbacks["SOUR1_SWEEP_INF"] = OSC.updateGenSweepInf;
+    OSC.param_callbacks["SOUR2_SWEEP_INF"] = OSC.updateGenSweepInf;
+
     OSC.param_callbacks["SOUR1_SWEEP_DIR"] = OSC.updateGenSweepMode;
     OSC.param_callbacks["SOUR2_SWEEP_DIR"] = OSC.updateGenSweepMode;
 
@@ -682,9 +688,6 @@
 
     OSC.param_callbacks["SOUR1_BURST_REP"] = OSC.updateGenBurstRep;
     OSC.param_callbacks["SOUR2_BURST_REP"] = OSC.updateGenBurstRep;
-
-    OSC.param_callbacks["SOUR1_BURST_INF"] = OSC.updateGenBurstInf;
-    OSC.param_callbacks["SOUR2_BURST_INF"] = OSC.updateGenBurstInf;
 
     OSC.param_callbacks["SOUR1_BURST_INF"] = OSC.updateGenBurstInf;
     OSC.param_callbacks["SOUR2_BURST_INF"] = OSC.updateGenBurstInf;

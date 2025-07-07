@@ -35,10 +35,10 @@ CFloatParameter outAmplitudeMax("SOUR_VOLT_MAX", CBaseParameter::RO, LEVEL_AMPS_
 /// SWEEP VARIABLES /////////
 CFloatParameter outSweepStartFrequancy[2] = INIT2("SOUR", "_SWEEP_FREQ_START", CBaseParameter::RW, 1000, 0, 1, MAX_DAC_FREQ, CONFIG_VAR);
 CFloatParameter outSweepEndFrequancy[2] = INIT2("SOUR", "_SWEEP_FREQ_END", CBaseParameter::RW, 10000, 0, 1, MAX_DAC_FREQ, CONFIG_VAR);
-CIntParameter outSweepMode[2] =
-    INIT2("SOUR", "_SWEEP_MODE", CBaseParameter::RW, RP_GEN_SWEEP_MODE_LINEAR, 0, RP_GEN_SWEEP_MODE_LINEAR, RP_GEN_SWEEP_MODE_LOG, CONFIG_VAR);
-CIntParameter outSweepDir[2] =
-    INIT2("SOUR", "_SWEEP_DIR", CBaseParameter::RW, RP_GEN_SWEEP_DIR_NORMAL, 0, RP_GEN_SWEEP_DIR_NORMAL, RP_GEN_SWEEP_DIR_UP_DOWN, CONFIG_VAR);
+CIntParameter outSweepMode[2] = INIT2("SOUR", "_SWEEP_MODE", CBaseParameter::RW, RP_GEN_SWEEP_MODE_LINEAR, 0, RP_GEN_SWEEP_MODE_LINEAR, RP_GEN_SWEEP_MODE_LOG, CONFIG_VAR);
+CIntParameter outSweepRepetitions[2] = INIT2("SOUR", "_SWEEP_REP", CBaseParameter::RW, 1, 0, 1, 2147483647, CONFIG_VAR);
+CBooleanParameter outSweepRepInf[2] = INIT2("SOUR", "_SWEEP_INF", CBaseParameter::RW, false, 0, CONFIG_VAR);
+CIntParameter outSweepDir[2] = INIT2("SOUR", "_SWEEP_DIR", CBaseParameter::RW, RP_GEN_SWEEP_DIR_NORMAL, 0, RP_GEN_SWEEP_DIR_NORMAL, RP_GEN_SWEEP_DIR_UP_DOWN, CONFIG_VAR);
 CIntParameter outSweepTime[2] = INIT2("SOUR", "_SWEEP_TIME", CBaseParameter::RW, 1000000, 0, 1, 2000000000, CONFIG_VAR);  // In microseconds
 CBooleanParameter outSweepState[2] = INIT2("SOUR", "_SWEEP_STATE", CBaseParameter::RW, false, 0, CONFIG_VAR);
 
@@ -312,8 +312,8 @@ void UpdateGeneratorParameters(bool force) {
 
     bool needUpdate = force | outSweepReset.IsNewValue();
     for (auto ch = 0u; ch < g_dac_count; ch++) {
-        needUpdate |= outSweepStartFrequancy[ch].IsNewValue() | outSweepEndFrequancy[ch].IsNewValue() | outSweepMode[ch].IsNewValue() |
-                      outSweepDir[ch].IsNewValue() | outSweepTime[ch].IsNewValue() | outSweepState[ch].IsNewValue();
+        needUpdate |= outSweepStartFrequancy[ch].IsNewValue() | outSweepEndFrequancy[ch].IsNewValue() | outSweepMode[ch].IsNewValue() | outSweepRepetitions[ch].IsNewValue() |
+                      outSweepRepInf[ch].IsNewValue() | outSweepDir[ch].IsNewValue() | outSweepTime[ch].IsNewValue() | outSweepState[ch].IsNewValue();
     }
 
     if (needUpdate) {
@@ -324,6 +324,8 @@ void UpdateGeneratorParameters(bool force) {
             outSweepDir[ch].Update();
             outSweepTime[ch].Update();
             outSweepState[ch].Update();
+            outSweepRepInf[ch].Update();
+            outSweepRepetitions[ch].Update();
 
             g_sweepController->setStartFreq((rp_channel_t)ch, outSweepStartFrequancy[ch].Value());
             g_sweepController->setStopFreq((rp_channel_t)ch, outSweepEndFrequancy[ch].Value());
@@ -331,6 +333,7 @@ void UpdateGeneratorParameters(bool force) {
             g_sweepController->setDir((rp_channel_t)ch, (rp_gen_sweep_dir_t)outSweepDir[ch].Value());
             g_sweepController->setTime((rp_channel_t)ch, outSweepTime[ch].Value());
             g_sweepController->genSweep((rp_channel_t)ch, outSweepState[ch].Value());
+            g_sweepController->setNumberOfRepetitions((rp_channel_t)ch, outSweepRepInf[ch].Value(), outSweepRepetitions[ch].Value());
         }
 
         if (outSweepReset.NewValue()) {

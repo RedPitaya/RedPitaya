@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
         count++;
     if (mode4)
         count++;
-    if (count > 1) {
+    if (count > 1 || count == 0) {
         UsingArgs();
     }
 

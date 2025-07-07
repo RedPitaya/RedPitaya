@@ -270,6 +270,22 @@ OSC.updateGenSweepMode= function(new_params,param_name){
     }
 }
 
+OSC.updateGenSweepInf = function(new_params,param_name){
+    var state = OSC.params.orig[param_name].value;
+    var field = $('#' + param_name);
+    if (field.is('button')) {
+        field[state === true? 'addClass' : 'removeClass']('active');
+    }
+}
+
+OSC.updateGenSweepRep= function(new_params,param_name){
+    var state = OSC.params.orig[param_name].value;
+    var field = $('#' + param_name);
+    if (field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
+        field.val(new_params[param_name].value);
+    }
+}
+
 OSC.updateGenFunc= function(new_params,param_name){
     var state = OSC.params.orig[param_name].value;
     var field = $('#' + param_name);

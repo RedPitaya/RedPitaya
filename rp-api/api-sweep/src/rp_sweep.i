@@ -9,11 +9,10 @@
 %apply int { rp_gen_sweep_mode_t }
 %apply int { rp_gen_sweep_dir_t }
 
-%apply bool *OUTPUT { bool *state };
-%apply float *OUTPUT { float *_freq };
-%apply int *OUTPUT { int *_us };
-%apply float *OUTPUT { float *freq };
-%apply int *OUTPUT { int *us };
+%apply bool *OUTPUT { bool * };
+%apply float *OUTPUT { float * };
+%apply int *OUTPUT { int * };
+%apply uint64_t *OUTPUT { uint64_t * };
 %apply int *OUTPUT { rp_gen_sweep_mode_t *_mode };
 %apply int *OUTPUT { rp_gen_sweep_dir_t *_dir };
 %apply int *OUTPUT { rp_gen_sweep_mode_t *mode };

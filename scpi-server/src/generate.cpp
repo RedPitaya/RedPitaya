@@ -39,6 +39,8 @@ const scpi_choice_def_t scpi_RpGenMode[] = {{"CONTINUOUS", 0}, {"BURST", 1}, {"S
 
 const scpi_choice_def_t scpi_RpGenLoad[] = {{"INF", 0}, {"L50", 1}, SCPI_CHOICE_LIST_END};
 
+const scpi_choice_def_t scpi_RpGenBool[] = {{"OFF", 0}, {"ON", 1}, SCPI_CHOICE_LIST_END};
+
 scpi_result_t RP_GenReset(scpi_t* context) {
     RP_GenSweepDefault(context);
     auto result = rp_GenReset();
@@ -103,6 +105,7 @@ scpi_result_t RP_GenState(scpi_t* context) {
 }
 
 scpi_result_t RP_GenStateQ(scpi_t* context) {
+    const char* _name = nullptr;
     bool enabled = false;
     rp_channel_t channel = RP_CH_1;
     if (RP_ParseChArgvDAC(context, &channel) != RP_OK) {
@@ -117,7 +120,13 @@ scpi_result_t RP_GenStateQ(scpi_t* context) {
             requestSendNewLine(context);
         return SCPI_RES_ERR;
     }
-    SCPI_ResultBool(context, enabled);
+    if (!SCPI_ChoiceToName(scpi_RpGenBool, (int32_t)enabled, &_name)) {
+        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to parse state.")
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+    SCPI_ResultMnemonic(context, _name);
     RP_LOG_INFO("%s", rp_GetError(result))
     return SCPI_RES_OK;
 }

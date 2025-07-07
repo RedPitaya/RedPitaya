@@ -1225,6 +1225,18 @@ static const scpi_command_t scpi_commands[] = {
      .tag = 0
 #endif
     },
+    {.pattern = "SOUR#:SWeep:REP",
+     .callback = RP_GenSweepRep,
+#if USE_COMMAND_TAGS
+     .tag = 0
+#endif
+    },
+    {.pattern = "SOUR#:SWeep:REP?",
+     .callback = RP_GenSweepRepQ,
+#if USE_COMMAND_TAGS
+     .tag = 0
+#endif
+    },
     {.pattern = "SOUR#:SWeep:DIR",
      .callback = RP_GenSweepDir,
 #if USE_COMMAND_TAGS

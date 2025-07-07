@@ -32,7 +32,7 @@ const scpi_choice_def_t scpi_sweep_mode[] = {{"LINEAR", 0}, {"LOG", 1}, SCPI_CHO
 
 const scpi_choice_def_t scpi_sweep_dir[] = {{"NORMAL", 0}, {"UP_DOWN", 1}, SCPI_CHOICE_LIST_END};
 
-const scpi_choice_def_t scpi_SWEEP_Bool[] = {{"OFF", 0}, {"ON", 1}, SCPI_CHOICE_LIST_END};
+const scpi_choice_def_t scpi_sweep_Bool[] = {{"OFF", 0}, {"ON", 1}, SCPI_CHOICE_LIST_END};
 
 scpi_result_t RP_GenSweepDefault(scpi_t* context) {
     rp_SWSetDefault();
@@ -103,7 +103,7 @@ scpi_result_t RP_GenSweepStateQ(scpi_t* context) {
             requestSendNewLine(context);
         return SCPI_RES_ERR;
     }
-    if (!SCPI_ChoiceToName(scpi_SWEEP_Bool, (int32_t)enabled, &_name)) {
+    if (!SCPI_ChoiceToName(scpi_sweep_Bool, (int32_t)enabled, &_name)) {
         SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to parse state.")
         if (getRetOnError())
             requestSendNewLine(context);
@@ -278,6 +278,61 @@ scpi_result_t RP_GenSweepModeQ(scpi_t* context) {
     }
     /* Return result to client */
     SCPI_ResultMnemonic(context, name);
+    RP_LOG_INFO("%s", rp_GetError(RP_OK))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_GenSweepRep(scpi_t* context) {
+    auto result = 0;
+    rp_channel_t channel = RP_CH_1;
+    bool state_c = false;
+    scpi_number_t count;
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK) {
+        return SCPI_RES_ERR;
+    }
+    /* Parse first, inf argument */
+    if (!SCPI_ParamBool(context, &state_c, true)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+    /* Parse second, count parameter */
+    if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &count, true)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing second parameter.");
+        return SCPI_RES_ERR;
+    }
+    result = rp_SWSetNumberOfRepetitions(channel, state_c, count.content.value);
+    if (result != RP_OK) {
+        RP_LOG_CRIT("Failed to set sweep repetitions: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_GenSweepRepQ(scpi_t* context) {
+    rp_channel_t channel = RP_CH_1;
+    const char* _name = nullptr;
+    bool inf = false;
+    uint64_t count = 0;
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK) {
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+    if (rp_SWGetNumberOfRepetitions(channel, &inf, &count) != RP_OK) {
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+    if (!SCPI_ChoiceToName(scpi_sweep_Bool, (int32_t)inf, &_name)) {
+        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to parse state.")
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+    /* Return result to client */
+    SCPI_ResultMnemonic(context, _name);
+    SCPI_ResultUInt64(context, count);
     RP_LOG_INFO("%s", rp_GetError(RP_OK))
     return SCPI_RES_OK;
 }
