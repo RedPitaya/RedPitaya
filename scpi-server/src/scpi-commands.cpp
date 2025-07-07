@@ -1225,14 +1225,26 @@ static const scpi_command_t scpi_commands[] = {
      .tag = 0
 #endif
     },
-    {.pattern = "SOUR#:SWeep:REP",
-     .callback = RP_GenSweepRep,
+    {.pattern = "SOUR#:SWeep:REP:INF",
+     .callback = RP_GenSweepRepInf,
 #if USE_COMMAND_TAGS
      .tag = 0
 #endif
     },
-    {.pattern = "SOUR#:SWeep:REP?",
-     .callback = RP_GenSweepRepQ,
+    {.pattern = "SOUR#:SWeep:REP:INF?",
+     .callback = RP_GenSweepRepInfQ,
+#if USE_COMMAND_TAGS
+     .tag = 0
+#endif
+    },
+    {.pattern = "SOUR#:SWeep:REP:COUNT",
+     .callback = RP_GenSweepRepCount,
+#if USE_COMMAND_TAGS
+     .tag = 0
+#endif
+    },
+    {.pattern = "SOUR#:SWeep:REP:COUNT?",
+     .callback = RP_GenSweepRepCountQ,
 #if USE_COMMAND_TAGS
      .tag = 0
 #endif

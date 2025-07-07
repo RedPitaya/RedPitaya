@@ -282,11 +282,10 @@ scpi_result_t RP_GenSweepModeQ(scpi_t* context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_GenSweepRep(scpi_t* context) {
+scpi_result_t RP_GenSweepRepInf(scpi_t* context) {
     auto result = 0;
     rp_channel_t channel = RP_CH_1;
     bool state_c = false;
-    scpi_number_t count;
     if (RP_ParseChArgvDAC(context, &channel) != RP_OK) {
         return SCPI_RES_ERR;
     }
@@ -295,12 +294,15 @@ scpi_result_t RP_GenSweepRep(scpi_t* context) {
         SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing first parameter.");
         return SCPI_RES_ERR;
     }
-    /* Parse second, count parameter */
-    if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &count, true)) {
-        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing second parameter.");
+    bool tmp = false;
+    uint64_t count = 0;
+    result = rp_SWGetNumberOfRepetitions(channel, &tmp, &count);
+    if (result != RP_OK) {
+        RP_LOG_CRIT("Failed to get sweep repetitions: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
-    result = rp_SWSetNumberOfRepetitions(channel, state_c, count.content.value);
+
+    result = rp_SWSetNumberOfRepetitions(channel, state_c, count);
     if (result != RP_OK) {
         RP_LOG_CRIT("Failed to set sweep repetitions: %s", rp_GetError(result));
         return SCPI_RES_ERR;
@@ -309,7 +311,7 @@ scpi_result_t RP_GenSweepRep(scpi_t* context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t RP_GenSweepRepQ(scpi_t* context) {
+scpi_result_t RP_GenSweepRepInfQ(scpi_t* context) {
     rp_channel_t channel = RP_CH_1;
     const char* _name = nullptr;
     bool inf = false;
@@ -332,6 +334,53 @@ scpi_result_t RP_GenSweepRepQ(scpi_t* context) {
     }
     /* Return result to client */
     SCPI_ResultMnemonic(context, _name);
+    RP_LOG_INFO("%s", rp_GetError(RP_OK))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_GenSweepRepCount(scpi_t* context) {
+    auto result = 0;
+    rp_channel_t channel = RP_CH_1;
+    scpi_number_t count;
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK) {
+        return SCPI_RES_ERR;
+    }
+    /* Parse first, count parameter */
+    if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &count, true)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+    bool inf = false;
+    uint64_t tmp = 0;
+    result = rp_SWGetNumberOfRepetitions(channel, &inf, &tmp);
+    if (result != RP_OK) {
+        RP_LOG_CRIT("Failed to get sweep repetitions: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    result = rp_SWSetNumberOfRepetitions(channel, inf, count.content.value);
+    if (result != RP_OK) {
+        RP_LOG_CRIT("Failed to set sweep repetitions: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_GenSweepRepCountQ(scpi_t* context) {
+    rp_channel_t channel = RP_CH_1;
+    uint64_t count = 0;
+    bool inf = false;
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK) {
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+    if (rp_SWGetNumberOfRepetitions(channel, &inf, &count) != RP_OK) {
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+    /* Return result to client */
     SCPI_ResultUInt64(context, count);
     RP_LOG_INFO("%s", rp_GetError(RP_OK))
     return SCPI_RES_OK;

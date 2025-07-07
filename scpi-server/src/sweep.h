@@ -27,8 +27,10 @@ scpi_result_t RP_GenSweepTime(scpi_t* context);
 scpi_result_t RP_GenSweepTimeQ(scpi_t* context);
 scpi_result_t RP_GenSweepMode(scpi_t* context);
 scpi_result_t RP_GenSweepModeQ(scpi_t* context);
-scpi_result_t RP_GenSweepRep(scpi_t* context);
-scpi_result_t RP_GenSweepRepQ(scpi_t* context);
+scpi_result_t RP_GenSweepRepInf(scpi_t* context);
+scpi_result_t RP_GenSweepRepInfQ(scpi_t* context);
+scpi_result_t RP_GenSweepRepCount(scpi_t* context);
+scpi_result_t RP_GenSweepRepCountQ(scpi_t* context);
 scpi_result_t RP_GenSweepDir(scpi_t* context);
 scpi_result_t RP_GenSweepDirQ(scpi_t* context);
 
