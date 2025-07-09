@@ -99,7 +99,7 @@ librp_formatter: librp
 	cmake -B$(abspath $(LIBRP_FORMATTER_DIR)/build) -S$(abspath $(LIBRP_FORMATTER_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(LIBRP_FORMATTER_DIR)/build install -j$(CPU_CORES)
 
-librp250_12: librp_hw
+librp250_12: librp_hw librp_hw_profiles
 	cmake -B$(LIBRP250_12_DIR)/build -S$(LIBRP250_12_DIR) $(CMAKEVAR)
 	$(MAKE) -C $(LIBRP250_12_DIR)/build install -j$(CPU_CORES)
 
