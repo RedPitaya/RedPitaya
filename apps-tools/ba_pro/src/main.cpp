@@ -99,6 +99,14 @@ bool g_request_show;
 
 void threadLoop();
 
+auto getModel() -> rp_HPeModels_t {
+    rp_HPeModels_t c = STEM_125_14_v1_0;
+    if (rp_HPGetModel(&c) != RP_HP_OK) {
+        ERROR_LOG("Can't get board model");
+    }
+    return c;
+}
+
 auto getModelS() -> std::string {
     rp_HPeModels_t c = STEM_125_14_v1_0;
     if (rp_HPGetModel(&c) != RP_HP_OK) {
@@ -146,8 +154,7 @@ auto getModelS() -> std::string {
             return "Z20_250_12_120";
 
         default:
-            ERROR_LOG("Can't get board model");
-            exit(-1);
+            FATAL("Can't get board model");
     }
     return "Z10";
 }
@@ -210,8 +217,7 @@ auto getMaxADC() -> uint32_t {
             break;
 
         default:
-            ERROR_LOG("Can't get board model");
-            exit(-1);
+            FATAL("Can't get board model");
     }
     uint32_t adc = rpApp_BaGetADCSpeed();
     return adc / dev;
@@ -400,7 +406,7 @@ void OnNewParams(void) {
     if (ba_status.IsNewValue()) {
         if (ba_status.NewValue() == BA_RESET_CONFIG_SETTINGS) {
             TRACE_SHORT("Delete config");
-            deleteConfig(getHomeDirectory() + "/.config/redpitaya/apps/ba_pro/config.json");
+            deleteConfig(getHomeDirectory() + "/.config/redpitaya/apps/ba_pro_" + std::to_string((int)getModel()) + "/config.json");
             ba_status.Update();
             ba_status.SendValue(BA_RESET_CONFIG_SETTINGS_DONE);
             return;
@@ -418,7 +424,7 @@ void OnNewParams(void) {
     }
 
     if (config_changed) {
-        configSet(getHomeDirectory() + "/.config/redpitaya/apps/ba_pro", "config.json");
+        configSet(getHomeDirectory() + "/.config/redpitaya/apps/ba_pro_" + std::to_string((int)getModel()), "config.json");
     }
 }
 
@@ -427,7 +433,7 @@ void OnNewSignals(void) {
 }
 
 void updateParametersByConfig() {
-    configGet(getHomeDirectory() + "/.config/redpitaya/apps/ba_pro/config.json");
+    configGet(getHomeDirectory() + "/.config/redpitaya/apps/ba_pro_" + std::to_string((int)getModel()) + "/config.json");
     CDataManager::GetInstance()->SendAllParams();
 }
 

@@ -1,16 +1,9 @@
 (function(SPEC, $, undefined) {
     SPEC.updateInterfaceFor250 = function(model) {
         if (model !== undefined) {
-                if (model != "Z20_250_12" && model != "Z20_250_12_120") {
-                    var nodes = document.getElementsByClassName("250_12_block");
-                    [...nodes].forEach((element, index, array) => {
-                        element.parentNode.removeChild(element);
-                    });
-                } else {
+                if (model === "Z20_250_12" || model === "Z20_250_12_120") {
                     SPEC.rp_model = model;
                     SPEC.config.xmax = SPEC.rp_model === "Z20_250_12_120" ? 120 : 60;
-                    $("#SOUR1_FREQ_FIX").attr("max", SPEC.rp_model === "Z20_250_12_120" ? 120e6 : 60e6);
-                    $("#SOUR2_FREQ_FIX").attr("max", SPEC.rp_model === "Z20_250_12_120" ? 120e6 : 60e6);
                     $(".gain_low").text("1:1");
                     $(".gain_high").text("1:20");
                     var nodes = document.getElementsByName("AMPLITUDE_NODE");

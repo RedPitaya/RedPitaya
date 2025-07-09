@@ -51,6 +51,9 @@ auto outAmpDef() -> float;
 auto outAmpMax() -> float;
 auto loadARBList() -> std::string;
 
+auto outFreqMin() -> int;
+auto outFreqMax() -> int;
+
 auto getClock() -> int64_t;
 
 #endif

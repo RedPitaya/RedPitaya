@@ -48,7 +48,7 @@ void updateParametersByConfig() {
     initExtTriggerLimits();
     initGenBeforeLoadConfig();
     initOscBeforeLoadConfig();
-    setHomeSettingsPath("/.config/redpitaya/apps/scopegenpro/");
+    setHomeSettingsPath("/.config/redpitaya/apps/scopegenpro_" + std::to_string((int)getModel()) + "/");
     listFileSettings.Value() = getListOfSettingsInStore();
     configGet();
 

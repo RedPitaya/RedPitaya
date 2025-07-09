@@ -916,6 +916,44 @@
 
             }
         }
+
+        if (params['OSC_IS_FILTER'] !== undefined){
+            if (params['OSC_IS_FILTER'].value == false){
+                var nodes = document.getElementsByClassName("filter_block");
+                [...nodes].forEach((element, index, array) => {
+                                        element.parentNode.removeChild(element);
+                                    });
+
+            }
+        }
+
+        if (params['OSC_IS_AC_DC'] !== undefined){
+            if (params['OSC_IS_AC_DC'].value == false){
+                var nodes = document.getElementsByClassName("ac_dc_block");
+                [...nodes].forEach((element, index, array) => {
+                                        element.parentNode.removeChild(element);
+                                    });
+
+            }
+        }
+
+        if (params['OSC_IS_HV_LV'] !== undefined){
+            if (params['OSC_IS_HV_LV'].value == false){
+                var nodes = document.getElementsByClassName("hv_lv_block");
+                [...nodes].forEach((element, index, array) => {
+                                        element.parentNode.removeChild(element);
+                                    });
+
+            }
+        }
+
+        if (params['SOUR1_FREQ_FIX'] !== undefined){
+            $("#SOUR1_FREQ_FIX").attr("max", params['SOUR1_FREQ_FIX'].max).attr("min", params['SOUR1_FREQ_FIX'].min);
+        }
+
+        if (params['SOUR2_FREQ_FIX'] !== undefined){
+            $("#SOUR2_FREQ_FIX").attr("max", params['SOUR2_FREQ_FIX'].max).attr("min", params['SOUR2_FREQ_FIX'].min);
+        }
     };    
 
 }(window.OSC = window.OSC || {}, jQuery));

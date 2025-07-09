@@ -90,7 +90,7 @@ profiles_t stem_122_16SDR_v1_1 = {
     .fast_adc_spectrum_resolution = 61440000,
 
     .fast_adc_full_scale = 1,
-    .fast_dac_full_scale = 0.5,
+    .fast_dac_full_scale = 1,
 
     .is_daisy_chain_clock_sync = false,
 

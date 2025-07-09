@@ -115,7 +115,7 @@ static int setEqFilters(rp_channel_t channel) {
     }
 
     if (is_filter == false) {
-        return RP_EOOR;
+        return RP_EUF;
     }
 
     rp_pinState_t gain;
@@ -345,6 +345,9 @@ int acq_SetGain(rp_channel_t channel, rp_pinState_t state) {
         }
     } else {
         status = setEqFilters(channel);
+        if (status == RP_EUF) {
+            return RP_OK;
+        }
     }
     return status;
 }

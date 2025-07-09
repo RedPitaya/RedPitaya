@@ -26,7 +26,7 @@ CBooleanParameter outShow[MAX_DAC_CHANNELS] = INIT2("OUTPUT", "_SHOW", CBasePara
 CBooleanParameter outState[MAX_DAC_CHANNELS] = INIT2("OUTPUT", "_STATE", CBaseParameter::RW, false, 0, CONFIG_VAR);
 CFloatParameter outAmplitude[MAX_DAC_CHANNELS] = INIT2("SOUR", "_VOLT", CBaseParameter::RW, LEVEL_AMPS_DEF, 0, 0, LEVEL_AMPS_MAX, CONFIG_VAR);
 CFloatParameter outOffset[MAX_DAC_CHANNELS] = INIT2("SOUR", "_VOLT_OFFS", CBaseParameter::RW, 0, 0, -LEVEL_AMPS_MAX, LEVEL_AMPS_MAX, CONFIG_VAR);
-CIntParameter outFrequancy[MAX_DAC_CHANNELS] = INIT2("SOUR", "_FREQ_FIX", CBaseParameter::RW, 1000, 0, 1, (int)getDACRate(), CONFIG_VAR);
+CIntParameter outFrequancy[MAX_DAC_CHANNELS] = INIT2("SOUR", "_FREQ_FIX", CBaseParameter::RW, 1000, 0, outFreqMin(), outFreqMax(), CONFIG_VAR);
 
 CFloatParameter outShowOffset[MAX_DAC_CHANNELS] = INIT2("GPOS_OFFSET_OUTPUT", "", CBaseParameter::RW, 0, 0, -5000, 5000, CONFIG_VAR);
 CFloatParameter outScale[MAX_DAC_CHANNELS] = INIT2("GPOS_SCALE_OUTPUT", "", CBaseParameter::RW, 1, 0, 0.00005, 1000, CONFIG_VAR);
@@ -409,13 +409,6 @@ auto initGenBeforeLoadConfig() -> void {
     for (int i = 0; i < g_dac_channels; i++) {
         auto ch = (rp_channel_t)i;
         outName[ch].Value() = std::string("OUT") + std::to_string(i + 1);
-    }
-
-    if (getModelName() == "Z20") {
-        for (int i = 0; i < g_dac_channels; i++) {
-            auto ch = (rp_channel_t)i;
-            outFrequancy[ch].SetMin(300000);
-        }
     }
 }
 

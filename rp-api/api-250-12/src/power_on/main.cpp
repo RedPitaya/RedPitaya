@@ -38,8 +38,8 @@ void UsingArgs() {
     printf("Usage with file: [-P]|[-C]|[-C1]|[-C2]\n");
     printf("\t-P Power on ADC and DAC. Initialization MAX7311.\n");
     printf("\t-C Load configuration of ADC and DAC. \n");
-    printf("\t-C1 Load configuration of ADC for 125-14 LL v1.1. \n");
-    printf("\t-C2 Load configuration of ADC for 65-16 LL v1.1. \n");
+    printf("\t-C1 Load configuration of ADC for 125-14 LL/TI. \n");
+    printf("\t-C2 Load configuration of ADC for 65-16 LL/TI. \n");
     printf("\tDo not use flags together");
 
     exit(-1);

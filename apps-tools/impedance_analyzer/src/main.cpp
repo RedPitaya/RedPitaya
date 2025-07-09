@@ -110,6 +110,14 @@ double g_lastCheckExt = 0;
 
 void threadLoop();
 
+auto getModel() -> rp_HPeModels_t {
+    rp_HPeModels_t c = STEM_125_14_v1_0;
+    if (rp_HPGetModel(&c) != RP_HP_OK) {
+        ERROR_LOG("Can't get board model");
+    }
+    return c;
+}
+
 auto getModelS() -> std::string {
     rp_HPeModels_t c = STEM_125_14_v1_0;
     if (rp_HPGetModel(&c) != RP_HP_OK) {
@@ -430,7 +438,7 @@ void OnNewParams(void) {
     if (ia_status.IsNewValue()) {
         if (ia_status.NewValue() == IA_RESET_CONFIG_SETTINGS) {
             TRACE("Delete config");
-            deleteConfig(getHomeDirectory() + "/.config/redpitaya/apps/impedance_analyzer/config.json");
+            deleteConfig(getHomeDirectory() + "/.config/redpitaya/apps/impedance_analyzer_" + std::to_string((int)getModel()) + "/config.json");
             ia_status.Update();
             ia_status.SendValue(IA_RESET_CONFIG_SETTINGS_DONE);
             return;
@@ -443,7 +451,7 @@ void OnNewParams(void) {
     UpdateParams();
 
     if (config_changed) {
-        configSet(getHomeDirectory() + "/.config/redpitaya/apps/impedance_analyzer", "config.json");
+        configSet(getHomeDirectory() + "/.config/redpitaya/apps/impedance_analyzer_" + std::to_string((int)getModel()), "config.json");
     }
 }
 
@@ -452,7 +460,7 @@ void OnNewSignals(void) {
 }
 
 void updateParametersByConfig() {
-    configGet(getHomeDirectory() + "/.config/redpitaya/apps/impedance_analyzer/config.json");
+    configGet(getHomeDirectory() + "/.config/redpitaya/apps/impedance_analyzer_" + std::to_string((int)getModel()) + "/config.json");
     CDataManager::GetInstance()->SendAllParams();
 }
 

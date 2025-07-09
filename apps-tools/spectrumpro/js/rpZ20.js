@@ -4,18 +4,12 @@
                 if (model === "Z20_122_16") {
                     SPEC.rp_model = model;
                     SPEC.config.xmax = 122/2;
-                    $("#SOUR1_FREQ_FIX").attr("max", 122.880e6/2);
-                    $("#SOUR2_FREQ_FIX").attr("max", 122.880e6/2);
-                    $("#SOUR1_FREQ_FIX").attr("min", 300000);
-                    $("#SOUR2_FREQ_FIX").attr("min", 300000);
 
                     var nodes = document.getElementsByClassName("122_16_block_remove");
                     [...nodes].forEach((element, index, array) => {
                             element.parentNode.removeChild(element);
                         });
 
-                    // $(".122_16_gen_sel").prop( "disabled", true );
-                    // $(".122_16_gen_sel").css({ "-webkit-appearance": "none","-moz-appearance": "none", "appearance": "none" });
                     $(".out_phase").switchClass("col-xs-6", "col-xs-12");
                 }
         }

@@ -20,6 +20,8 @@ auto getModelName() -> std::string;
 
 auto outAmpDef() -> float;
 auto outAmpMax() -> float;
+auto outFreqMin() -> int;
+auto outFreqMax() -> int;
 
 auto getMeasureValue(int measure) -> float;
 

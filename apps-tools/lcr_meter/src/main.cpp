@@ -97,6 +97,14 @@ uint16_t g_save_counter = 0;  // By default, a save check every 40 ticks. One ti
 
 void updateFromFront(bool force);
 
+auto getModel() -> rp_HPeModels_t {
+    rp_HPeModels_t c = STEM_125_14_v1_0;
+    if (rp_HPGetModel(&c) != RP_HP_OK) {
+        ERROR_LOG("Can't get board model");
+    }
+    return c;
+}
+
 const char* rp_app_desc(void) {
     return (const char*)"Red Pitaya Lcr meter application.\n";
 }
@@ -109,7 +117,7 @@ void updateParametersByConfig() {
 int rp_app_init(void) {
     fprintf(stderr, "Loading lcr meter version %s-%s.\n", VERSION_STR, REVISION_STR);
 
-    setHomeSettingsPath("/.config/redpitaya/apps/lcr_meter/");
+    setHomeSettingsPath("/.config/redpitaya/apps/lcr_meter_" + std::to_string((int)getModel()) + "");
     CDataManager::GetInstance()->SetParamInterval(20);
 
     rp_WC_Init();

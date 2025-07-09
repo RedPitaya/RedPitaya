@@ -1,23 +1,14 @@
 (function(OSC, $, undefined) {
     OSC.updateInterfaceFor250 = function(model) {
         if (model !== undefined) {
-            if (model != "Z20_250_12" && model != "Z20_250_12_120") {
-                var nodes = document.getElementsByClassName("250_12_block");
-                [...nodes].forEach((element, index, array) => {
-                                        element.parentNode.removeChild(element);
-                                    });
-            } else {
+            if (model === "Z20_250_12" || model === "Z20_250_12_120")  {
                 OSC.rp_model = model;
-
                 OSC.voltage_steps = [
                     // Millivolts
                     1 / 1000, 2 / 1000, 5 / 1000, 10 / 1000, 20 / 1000, 50 / 1000, 100 / 1000, 200 / 1000, 500 / 1000,
                     // Volts
                     1, 2, 5, 10, 20, 50
                 ];
-                $("#SOUR1_FREQ_FIX").attr("max", 250e6/2);
-                $("#SOUR2_FREQ_FIX").attr("max", 250e6/2);
-
                 $("#OSC_CH1_IN_GAIN_L").text("1:1");
                 $("#OSC_CH1_IN_GAIN2_L").text("1:20");
                 $("#OSC_CH2_IN_GAIN_L").text("1:1");
@@ -45,8 +36,6 @@
     }
 
     
-
-
 
     function blink_fire1() {
         $("#OUTPUT1_STATE_ON").fadeOut(500);

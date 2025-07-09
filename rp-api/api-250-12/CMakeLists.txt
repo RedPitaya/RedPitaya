@@ -75,7 +75,7 @@ add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
 add_compile_options($<$<CONFIG:Debug>:-DTRACE_ENABLE>)
 add_compile_options(-Wall -pedantic -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
-link_libraries(-L${INSTALL_DIR}/lib -lrp-hw)
+link_libraries(-L${INSTALL_DIR}/lib -lrp-hw -lrp-hw-profiles)
 
 add_library(${PROJECT_NAME}-xml OBJECT ${PR_XML_SOURCES})
 add_library(${PROJECT_NAME}-i2c OBJECT ${PR_I2C_SOURCES})

@@ -196,6 +196,99 @@ auto getModelName() -> std::string {
     return "";
 }
 
+auto outFreqMin() -> int {
+    auto model = getModel();
+    switch (model) {
+        case STEM_125_10_v1_0:
+        case STEM_125_14_v1_0:
+        case STEM_125_14_v1_1:
+        case STEM_125_14_LN_v1_1:
+        case STEM_125_14_LN_BO_v1_1:
+        case STEM_125_14_LN_CE1_v1_1:
+        case STEM_125_14_LN_CE2_v1_1:
+        case STEM_125_14_v2_0:
+        case STEM_125_14_Pro_v2_0:
+        case STEM_125_14_Z7020_v1_0:
+        case STEM_125_14_Z7020_LN_v1_1:
+        case STEM_125_14_Z7020_Pro_v1_0:
+        case STEM_125_14_Z7020_Pro_v2_0:
+        case STEM_125_14_Z7020_Ind_v2_0:
+        case STEM_125_14_Z7020_LL_v1_1:
+        case STEM_125_14_Z7020_LL_v1_2:
+        case STEM_125_14_Z7020_TI_v1_3:
+            return 1;
+        case STEM_122_16SDR_v1_0:
+        case STEM_122_16SDR_v1_1:
+            return 300e3;
+        case STEM_125_14_Z7020_4IN_v1_0:
+        case STEM_125_14_Z7020_4IN_v1_2:
+        case STEM_125_14_Z7020_4IN_v1_3:
+            return 1;
+        case STEM_250_12_v1_0:
+        case STEM_250_12_v1_1:
+        case STEM_250_12_v1_2:
+        case STEM_250_12_v1_2a:
+        case STEM_250_12_v1_2b:
+        case STEM_250_12_120:
+            return 1;
+        case STEM_65_16_Z7020_LL_v1_1:
+        case STEM_65_16_Z7020_TI_v1_3:
+            return 1;
+        default: {
+            ERROR_LOG("Unknown model: %d.", model);
+            return 1;
+        }
+    }
+    return 1;
+}
+
+auto outFreqMax() -> int {
+    auto model = getModel();
+    switch (model) {
+        case STEM_125_10_v1_0:
+        case STEM_125_14_v1_0:
+        case STEM_125_14_v1_1:
+        case STEM_125_14_LN_v1_1:
+        case STEM_125_14_LN_BO_v1_1:
+        case STEM_125_14_LN_CE1_v1_1:
+        case STEM_125_14_LN_CE2_v1_1:
+        case STEM_125_14_v2_0:
+        case STEM_125_14_Pro_v2_0:
+        case STEM_125_14_Z7020_v1_0:
+        case STEM_125_14_Z7020_LN_v1_1:
+        case STEM_125_14_Z7020_Pro_v1_0:
+        case STEM_125_14_Z7020_Pro_v2_0:
+        case STEM_125_14_Z7020_Ind_v2_0:
+        case STEM_125_14_Z7020_LL_v1_1:
+        case STEM_125_14_Z7020_LL_v1_2:
+        case STEM_125_14_Z7020_TI_v1_3:
+            return 50e6;
+        case STEM_122_16SDR_v1_0:
+        case STEM_122_16SDR_v1_1:
+            return 122.880e6 / 2;
+        case STEM_125_14_Z7020_4IN_v1_0:
+        case STEM_125_14_Z7020_4IN_v1_2:
+        case STEM_125_14_Z7020_4IN_v1_3:
+            return 1;
+        case STEM_250_12_v1_0:
+        case STEM_250_12_v1_1:
+        case STEM_250_12_v1_2:
+        case STEM_250_12_v1_2a:
+        case STEM_250_12_v1_2b:
+            return 250e6 / 2;
+        case STEM_250_12_120:
+            return 120e6 / 2;
+        case STEM_65_16_Z7020_LL_v1_1:
+        case STEM_65_16_Z7020_TI_v1_3:
+            return 65e6 / 2;
+        default: {
+            ERROR_LOG("Unknown model: %d.", model);
+            return 1;
+        }
+    }
+    return 1;
+}
+
 auto getMeasureValue(int measure) -> float {
     int mode = measure / 10;
     int channel = measure % 10;

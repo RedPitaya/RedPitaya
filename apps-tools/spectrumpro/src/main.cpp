@@ -18,6 +18,10 @@ enum controlSettings { NONE = 0, REQUEST_RESET = 1, RESET_DONE = 2, REQUEST_LIST
 CStringParameter redpitaya_model("RP_MODEL_STR", CBaseParameter::RO, getModelName(), 0);
 CIntParameter redpitaya_adc_count("ADC_COUNT", CBaseParameter::RO, getADCChannels(), 0, 0, 4);
 
+CBooleanParameter isFilter("SPEC_IS_FILTER", CBaseParameter::RO, rp_HPGetFastADCIsFilterPresentOrDefault(), 0);
+CBooleanParameter isAC_DC("SPEC_IS_AC_DC", CBaseParameter::RO, rp_HPGetFastADCIsAC_DCOrDefault(), 0);
+CBooleanParameter isHV_LV("SPEC_IS_HV_LV", CBaseParameter::RO, rp_HPGetFastADCIsLV_HVOrDefault(), 0);
+
 CIntSignal signal_mode("signal_mode", 1, 0.0f);
 CFloatBase64Signal s_xaxis("ch_xaxis", CH_SIGNAL_DATA, 0.0f);
 CFloatBase64Signal s_xaxis_full("ch_xaxis_full", CH_SIGNAL_DATA, 0.0f);
@@ -775,7 +779,7 @@ extern "C" int rp_app_init(void) {
 
     g_indexArray.reserve(CH_SIGNAL_DATA);
 
-    setHomeSettingsPath("/.config/redpitaya/apps/spectrumpro/");
+    setHomeSettingsPath("/.config/redpitaya/apps/spectrumpro_" + std::to_string((int)getModel()) + "/");
 
     appGenInit();
     rp_WC_Init();

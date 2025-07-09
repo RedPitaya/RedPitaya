@@ -18,6 +18,12 @@ static const uint8_t g_adc_channels = getADCChannels();
 bool g_need_update_sig_gen = false;
 std::mutex g_need_update_sig_gen_mtx;
 
+// Config
+
+CBooleanParameter isFilter("OSC_IS_FILTER", CBaseParameter::RO, rp_HPGetFastADCIsFilterPresentOrDefault(), 0);
+CBooleanParameter isAC_DC("OSC_IS_AC_DC", CBaseParameter::RO, rp_HPGetFastADCIsAC_DCOrDefault(), 0);
+CBooleanParameter isHV_LV("OSC_IS_HV_LV", CBaseParameter::RO, rp_HPGetFastADCIsLV_HVOrDefault(), 0);
+
 CFloatParameter inTimeOffset("OSC_TIME_OFFSET", CBaseParameter::RW, 0, 0, -100000, 100000, CONFIG_VAR);
 CDoubleParameter inTimeScale("OSC_TIME_SCALE", CBaseParameter::RW, 1, 0, 0, 100000000, CONFIG_VAR);
 CIntParameter inViewStartPos("OSC_VIEW_START_POS", CBaseParameter::RO, 0, 0, 0, 16384, CONFIG_VAR);

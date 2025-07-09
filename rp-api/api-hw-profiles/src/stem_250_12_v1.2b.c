@@ -77,7 +77,7 @@ profiles_t stem_250_12_v1_2b = {
 
     .is_pll_control_present = true,
 
-    .is_fast_adc_filter_present = true,
+    .is_fast_adc_filter_present = false,
 
     .is_fast_dac_temp_protection = true,
 
