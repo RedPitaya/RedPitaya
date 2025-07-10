@@ -288,6 +288,16 @@
             }
         }
 
+        if (params['SOUR_X5_GAIN'] !== undefined){
+            if (params['SOUR_X5_GAIN'].value == false){
+                var nodes = document.getElementsByClassName("x5_block");
+                [...nodes].forEach((element, index, array) => {
+                                        element.parentNode.removeChild(element);
+                                    });
+
+            }
+        }
+
         if (params['SOUR1_FREQ_FIX'] !== undefined){
             $("#SOUR1_FREQ_FIX").attr("max", params['SOUR1_FREQ_FIX'].max).attr("min", params['SOUR1_FREQ_FIX'].min);
         }

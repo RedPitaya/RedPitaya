@@ -15,6 +15,7 @@
 const float LEVEL_AMPS_MAX = outAmpMax();
 const float LEVEL_AMPS_DEF = outAmpDef();
 const bool is_z_present = isZModePresent();
+const bool isX5Gain = rp_HPGetIsGainDACx5OrDefault();
 
 bool g_updateOutWaveFormCh[MAX_DAC_CHANNELS] = {true, true};
 float g_tscale_last = 0;
@@ -74,6 +75,8 @@ CFloatParameter outAmplitudeMax("SOUR_VOLT_MAX", CBaseParameter::RO, LEVEL_AMPS_
 
 CIntParameter outGain[MAX_DAC_CHANNELS] = INIT2("OSC_CH", "_OUT_GAIN", CBaseParameter::RW, RP_GAIN_1X, 0, 0, 1, CONFIG_VAR);
 CStringParameter outARBList = CStringParameter("ARB_LIST", CBaseParameter::RW, loadARBList(), 0);
+
+CBooleanParameter outX5Gain("SOUR_X5_GAIN", CBaseParameter::RO, isX5Gain, 0);
 
 static const uint8_t g_dac_channels = getDACChannels();
 

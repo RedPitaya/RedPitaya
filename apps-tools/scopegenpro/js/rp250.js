@@ -19,6 +19,11 @@
                     element.classList.remove('col-xs-12');
                     element.classList.add('col-xs-6');
                 });
+            }else{
+                var nodes = document.getElementsByClassName("ext_clock_250");
+                [...nodes].forEach((element, index, array) => {
+                                    element.parentNode.removeChild(element);
+                                });
             }
         }
     };

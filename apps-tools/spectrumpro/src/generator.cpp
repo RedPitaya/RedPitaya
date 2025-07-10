@@ -10,12 +10,13 @@
 
 static uint8_t g_dac_count = getDACChannels();
 const bool is_z_present = isZModePresent();
+const bool isX5Gain = rp_HPGetIsGainDACx5OrDefault();
 
 // Generator
 CBooleanParameter outState[MAX_DAC_CHANNELS] = INIT2("OUTPUT", "_STATE", CBaseParameter::RW, false, 0, CONFIG_VAR);
 CFloatParameter outAmplitude[MAX_DAC_CHANNELS] = INIT2("SOUR", "_VOLT", CBaseParameter::RW, LEVEL_AMPS_DEF, 0, 0, LEVEL_AMPS_MAX, CONFIG_VAR);
 CFloatParameter outOffset[MAX_DAC_CHANNELS] = INIT2("SOUR", "_VOLT_OFFS", CBaseParameter::RW, 0, 0, -LEVEL_AMPS_MAX, LEVEL_AMPS_MAX, CONFIG_VAR);
-CFloatParameter outFrequancy[MAX_DAC_CHANNELS] = INIT2("SOUR", "_FREQ_FIX", CBaseParameter::RW, 1000, 0, (int)outFreqMin(), (int)outFreqMax(), CONFIG_VAR);
+CFloatParameter outFrequancy[MAX_DAC_CHANNELS] = INIT2("SOUR", "_FREQ_FIX", CBaseParameter::RW, 1000, 0, (float)outFreqMin(), (float)outFreqMax(), CONFIG_VAR);
 CFloatParameter outPhase[MAX_DAC_CHANNELS] = INIT2("SOUR", "_PHAS", CBaseParameter::RW, 0, 0, -360, 360, CONFIG_VAR);
 CFloatParameter outDCYC[MAX_DAC_CHANNELS] = INIT2("SOUR", "_DCYC", CBaseParameter::RW, 50, 0, 0, 100, CONFIG_VAR);
 CFloatParameter outRiseTime[MAX_DAC_CHANNELS] = INIT2("SOUR", "_RISE", CBaseParameter::RW, 1, 0, 0.1, 1000, CONFIG_VAR);
@@ -43,6 +44,8 @@ CIntParameter outSweepTime[2] = INIT2("SOUR", "_SWEEP_TIME", CBaseParameter::RW,
 CBooleanParameter outSweepState[2] = INIT2("SOUR", "_SWEEP_STATE", CBaseParameter::RW, false, 0, CONFIG_VAR);
 
 CBooleanParameter outSweepReset("SWEEP_RESET", CBaseParameter::RW, false, 0);
+
+CBooleanParameter outX5Gain("SOUR_X5_GAIN", CBaseParameter::RO, isX5Gain, 0);
 
 rp_sweep_api::CSweepController* g_sweepController;
 
