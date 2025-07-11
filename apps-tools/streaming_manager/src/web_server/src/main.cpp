@@ -70,6 +70,7 @@ CIntParameter ss_acd_max("SS_ACD_MAX", CBaseParameter::RO, getADCRate(), 0, getA
 CIntParameter ss_attenuator("SS_ATTENUATOR", CBaseParameter::RW, 0, 0, 0, 256);
 CIntParameter ss_ac_dc("SS_AC_DC", CBaseParameter::RW, 0, 0, 0, 256);
 
+CBooleanParameter ss_dac_is_enable("SS_DAC_IS_ENABLE", CBaseParameter::RO, isDACAviable(), 0);
 CStringParameter ss_dac_file("SS_DAC_FILE", CBaseParameter::RW, "", 0);
 CIntParameter ss_dac_file_ctr("SS_DAC_FILE_CTR", CBaseParameter::RW, 0, 0, 0, 100);
 CIntParameter ss_dac_status("SS_DAC_STATUS", CBaseParameter::RW, 1, 0, 0, 100);
@@ -120,6 +121,16 @@ uio_lib::BoardMode g_isMaster = uio_lib::BoardMode::UNKNOWN;
 
 std::atomic_bool g_serverRun(false);
 std::atomic_bool g_dac_serverRun(false);
+
+auto isDACAviable() -> bool {
+    auto uioList = uio_lib::GetUioList();
+    for (auto uio : uioList) {
+        if (uio.nodeName == "rp_dac") {
+            return true;
+        }
+    }
+    return false;
+}
 
 auto getADCChannels() -> uint8_t {
     uint8_t c = 0;

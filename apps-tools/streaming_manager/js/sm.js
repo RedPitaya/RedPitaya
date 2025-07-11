@@ -737,6 +737,16 @@ function promptFile(contentType, multiple) {
         }
     }
 
+    SM.setDACIsEnable = function(param) {
+        var value = param["SS_DAC_IS_ENABLE"].value;
+        if (value == false){
+            var nodes = document.getElementsByClassName("dac_mode");
+                [...nodes].forEach((element, index, array) => {
+                                        element.parentNode.removeChild(element);
+                                    });
+        }
+    }
+
     SM.setDACSize = function(param) {
         var value = param["MM_DAC_SIZE"].value;
         var max = param["MM_DAC_SIZE"].max;
@@ -752,12 +762,14 @@ function promptFile(contentType, multiple) {
         $("#SS_DAC_FILE").empty();
         if (itm.length > 1){
             var list = itm[1].trim().split("\n")
-            list.forEach(element => {
-                var new_row = document.createElement('option');
-                new_row.setAttribute("value",element)
-                new_row.innerText = element
-                document.getElementById('SS_DAC_FILE').appendChild(new_row);
-            });
+            if (document.getElementById('SS_DAC_FILE') !== null){
+                list.forEach(element => {
+                    var new_row = document.createElement('option');
+                    new_row.setAttribute("value",element)
+                    new_row.innerText = element
+                    document.getElementById('SS_DAC_FILE').appendChild(new_row);
+                });
+            }
             if (itm[0] == "" && list.length > 0){
                 if (list[0] !== ""){
                     CLIENT.parametersCache["SS_DAC_FILE"] = { value: list[0] };
@@ -859,6 +871,7 @@ function promptFile(contentType, multiple) {
     SM.param_callbacks["SS_PASS_SAMPLES"] = SM.setSamplesCount;
     SM.param_callbacks["SS_WRITED_SIZE"] = SM.setWritedSize;
 
+    SM.param_callbacks["SS_DAC_IS_ENABLE"] = SM.setDACIsEnable;
     SM.param_callbacks["SS_DAC_MODE"] = SM.setDACMode;
     SM.param_callbacks["SS_DAC_FILE_TYPE"] = SM.setDACFileType;
     SM.param_callbacks["SS_DAC_FILE"] = SM.setDACFile;
