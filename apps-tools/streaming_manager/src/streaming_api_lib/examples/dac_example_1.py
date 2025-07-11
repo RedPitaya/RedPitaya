@@ -2,7 +2,8 @@
 
 import streaming
 import numpy as np
-from scipy.io.wavfile import write
+import wave
+import struct
 
 class Callback(streaming.DACCallback):
     counter = 0
@@ -61,6 +62,17 @@ class Callback(streaming.DACCallback):
         print("Control client error",host, ". Connection timeout")
         client.notifyStop()
 
+def create_wav_file(filename, data, sample_rate):
+    """Create a WAV file using Python's built-in wave module"""
+    with wave.open(filename, 'w') as wav_file:
+        # Set the parameters: 1 channel, 2 bytes per sample, sample rate, etc.
+        wav_file.setnchannels(1)  # mono
+        wav_file.setsampwidth(2)  # 2 bytes per sample (16-bit)
+        wav_file.setframerate(sample_rate)
+
+        # Convert numpy array to bytes
+        data_bytes = struct.pack('<' + 'h' * len(data), *data)
+        wav_file.writeframes(data_bytes)
 
 # Creating a streaming client
 obj = streaming.DACStreamClient()
@@ -83,7 +95,7 @@ print("Current rate",dac_rate)
 
 
 # Setting up network mode
-obj.sendConfig('dac_pass_mode','NET')
+obj.sendConfig('dac_pass_mode','DAC_NET')
 
 # Setting up a new decimation setting
 obj.sendConfig('dac_rate','125000000')
@@ -95,11 +107,13 @@ obj.sendConfig('block_size','16384')
 obj.sendConfig('adc_size','1638400')
 
 frequency = 1
-sampling_rate = 1024*4
+sampling_rate = 1024 * 4
 t = np.linspace(0., 1., sampling_rate)
 amplitude = np.iinfo(np.int16).max
-data = amplitude * np.sin(2. * np.pi * frequency * t)
-write("sin.wav", sampling_rate, data.astype(np.int16))
+data = (amplitude * np.sin(2. * np.pi * frequency * t)).astype(np.int16)
+
+# Create WAV file using wave module
+create_wav_file("sin.wav", data, sampling_rate)
 
 obj.setRepeatInf(False)
 obj.setRepeatCount(2)

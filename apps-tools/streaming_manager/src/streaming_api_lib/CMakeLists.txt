@@ -163,6 +163,20 @@ if(IS_INSTALL)
     install(FILES src/adc_streaming.h src/dac_streaming.h src/callbacks.h
             DESTINATION ${INSTALL_DIR}/streaming/${CPP_PROJ} PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
             GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_WRITE WORLD_EXECUTE)
+    install(FILES examples/adc_example_1.cpp examples/adc_example_2.cpp examples/dac_example_1.cpp examples/dac_example_2.cpp examples/dac_example_3.cpp
+            DESTINATION ${INSTALL_DIR}/streaming/${CPP_PROJ} PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+            GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_WRITE WORLD_EXECUTE)
+
+    if(WIN32)
+        install(FILES examples/Makefile-mingw
+                DESTINATION ${INSTALL_DIR}/streaming/${CPP_PROJ} PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+                GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_WRITE WORLD_EXECUTE RENAME Makefile)
+    else()
+        install(FILES examples/Makefile
+                DESTINATION ${INSTALL_DIR}/streaming/${CPP_PROJ} PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+                GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_WRITE WORLD_EXECUTE)
+    endif()
+
     install(CODE "
             execute_process(
                 COMMAND zip -ur rpsa_client-${VERSION}-${REVISION}${WIN_SUFFIX}${CLIENT_SUFFIX}.zip ${CPP_PROJ}

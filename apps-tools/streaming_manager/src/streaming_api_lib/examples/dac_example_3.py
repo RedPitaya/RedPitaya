@@ -2,7 +2,6 @@
 
 import streaming
 import numpy as np
-from scipy.io.wavfile import write
 
 class Callback(streaming.DACCallback):
     counter = 0
@@ -82,7 +81,7 @@ print("Current rate",dac_rate)
 
 
 # Setting up network mode
-obj.sendConfig('dac_pass_mode','NET')
+obj.sendConfig('dac_pass_mode','DAC_NET')
 
 # Setting up a new decimation setting
 obj.sendConfig('dac_rate','125000000')

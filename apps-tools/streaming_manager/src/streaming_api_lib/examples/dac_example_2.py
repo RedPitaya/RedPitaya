@@ -2,7 +2,8 @@
 
 import streaming
 import numpy as np
-from scipy.io.wavfile import write
+import wave
+import struct
 
 class Callback(streaming.DACCallback):
     counter = 0
@@ -61,6 +62,21 @@ class Callback(streaming.DACCallback):
         print("Control client error",host, ". Connection timeout")
         client.notifyStop()
 
+def create_stereo_wav(filename, left_channel, right_channel, sample_rate):
+    """Create a stereo WAV file using Python's built-in wave module"""
+    with wave.open(filename, 'w') as wav_file:
+        # Set parameters: 2 channels, 1 byte per sample (8-bit), sample rate
+        wav_file.setnchannels(2)  # stereo
+        wav_file.setsampwidth(1)  # 1 byte per sample (8-bit)
+        wav_file.setframerate(sample_rate)
+
+        # Interleave left and right channels
+        stereo_data = np.empty((left_channel.size + right_channel.size,), dtype=np.uint8)
+        stereo_data[0::2] = left_channel
+        stereo_data[1::2] = right_channel
+
+        # Convert to bytes and write
+        wav_file.writeframes(stereo_data.tobytes())
 
 # Creating a streaming client
 obj = streaming.DACStreamClient()
@@ -83,7 +99,7 @@ print("Current rate",dac_rate)
 
 
 # Setting up network mode
-obj.sendConfig('dac_pass_mode','NET')
+obj.sendConfig('dac_pass_mode','DAC_NET')
 
 # Setting up a new decimation setting
 obj.sendConfig('dac_rate','125000000')
@@ -94,15 +110,19 @@ obj.sendConfig('block_size','262144')
 # Setting the size of reserved memory for DAC streaming
 obj.sendConfig('adc_size','2621440')
 
+# Generate sine wave data (8-bit)
 frequency = 1
 sampling_rate = 1024 * 256
 t = np.linspace(0., 1., sampling_rate)
 amplitude = np.iinfo(np.int8).max
-data = amplitude * np.sin(2. * np.pi * frequency * t)
-stereo=np.vstack((data.astype(np.uint8), data.astype(np.uint8)))
-stereo=stereo.transpose()
+data = (amplitude * np.sin(2. * np.pi * frequency * t)).astype(np.int8)
 
-write("sin.wav", sampling_rate, stereo)
+# Create stereo data (same signal on both channels)
+stereo_left = data
+stereo_right = data
+
+# Create WAV file using wave module
+create_stereo_wav("sin.wav", stereo_left, stereo_right, sampling_rate)
 
 obj.setRepeatInf(True)
 

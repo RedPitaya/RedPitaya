@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
-#include "logger_lib/file_logger.h"
 
 struct ADCChannel {
     uint32_t samples = 0;
