@@ -152,6 +152,8 @@ CFloatParameter fauto_value_ch_before[RP_CALIB_MAX_ADC_CHANNELS] = INIT("fauto_v
 CFloatParameter fauto_value_ch_after[RP_CALIB_MAX_ADC_CHANNELS] = INIT("fauto_value_ch", "_after", CBaseParameter::RW, 0, 0, -1e6f, +1e6f);
 CIntParameter fauto_calib_progress("fauto_calib_progress", CBaseParameter::RW, 0, 0, 0, 140);
 
+CBooleanParameter isFilter("IS_FILTER", CBaseParameter::RO, rp_HPGetFastADCIsFilterPresentOrDefault(), 0);
+
 void sendFilterCalibValues(rp_channel_t _ch);
 
 //Application description

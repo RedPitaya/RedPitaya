@@ -10,6 +10,7 @@
 (function(OBJ, $, undefined) {
 
     OBJ.model = undefined;
+    OBJ.is_filter = undefined;
     OBJ.maxGenFreq = 62500000;
 
     OBJ.setMainMenu = function(_visible) {
@@ -148,6 +149,17 @@
         CLIENT.requestParameters();
     }
 
+    OBJ.isFilter = function(_value) {
+        OBJ.is_filter = _value.value;
+        if (OBJ.is_filter){
+            if ($("#filter_calib_button") !== undefined) $("#filter_calib_button").show();
+            if ($("#afilter_calib_button") !== undefined) $("#afilter_calib_button").show();
+        }else{
+            if ($("#filter_calib_button") !== undefined) $("#filter_calib_button").remove();
+            if ($("#afilter_calib_button") !== undefined) $("#afilter_calib_button").remove();
+        }
+    }
+
     OBJ.setModel = function(_value) {
         if (OBJ.model === undefined) {
             console.log("Model",_value.value)
@@ -165,15 +177,15 @@
                     $("#b_auto_menu").text("AUTO AC/DC");
                     $("#b_manual_menu").text("MANUAL AC/DC");
                 }
-                if (OBJ.model !== "Z10" && OBJ.model !== "Z20_125" && OBJ.model !== "Z20_125_4CH") {
-                    $("#filter_calib_button").remove();
-                    $("#afilter_calib_button").remove();
+
+                if (OBJ.is_filter){
+                    if ($("#filter_calib_button") !== undefined) $("#filter_calib_button").show();
+                    if ($("#afilter_calib_button") !== undefined) $("#afilter_calib_button").show();
+                }else{
+                    if ($("#filter_calib_button") !== undefined) $("#filter_calib_button").remove();
+                    if ($("#afilter_calib_button") !== undefined) $("#afilter_calib_button").remove();
                 }
 
-                if (OBJ.model === "Z10" || OBJ.model === "Z20_125" || OBJ.model === "Z20_125_4CH") {
-                    $("#filter_calib_button").show();
-                    $("#afilter_calib_button").show();
-                }
 
                 if (OBJ.model == "Z20"){
                     $('#a_mode').remove();
@@ -415,4 +427,5 @@
 // Page onload event handler
 $(function() {
     SM.param_callbacks["RP_MODEL_STR"] = OBJ.setModel;
+    SM.param_callbacks["IS_FILTER"] = OBJ.isFilter;
 });
