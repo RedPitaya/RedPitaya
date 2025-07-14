@@ -127,9 +127,9 @@ int main(int argc, char** argv) {
         char* modelFPGA = NULL;
         auto ret = rp_HPGetFPGAVersion(&modelFPGA);
         if (ret == RP_HP_OK) {
-            printf("%s", modelFPGA);
+            printf("%s\n", modelFPGA);
         } else {
-            printf("undefined");
+            printf("undefined\n");
         }
         return ret;
     }
@@ -138,9 +138,9 @@ int main(int argc, char** argv) {
         char* model_name = nullptr;
         auto ret = rp_HPGetModelName(&model_name);
         if (ret == RP_HP_OK) {
-            printf("%s", model_name);
+            printf("%s\n", model_name);
         } else {
-            printf("[Error]");
+            printf("[Error]\n");
         }
         return ret;
     }
@@ -149,9 +149,9 @@ int main(int argc, char** argv) {
         rp_HPeModels_t model;
         auto ret = rp_HPGetModel(&model);
         if (ret == RP_HP_OK) {
-            printf("%d", model);
+            printf("%d\n", model);
         } else {
-            printf("-1");
+            printf("-1\n");
         }
         return ret;
     }
