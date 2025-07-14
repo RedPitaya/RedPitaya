@@ -95,6 +95,13 @@ auto getModelName() -> std::string {
             return "Z20_250_12";
         case STEM_250_12_120:
             return "Z20_250_12_120";
+        case STEM_65_16_Z7020_LL_v1_1:
+        case STEM_65_16_Z7020_TI_v1_3:
+            return "Z20_125_LL";
+        case STEM_125_14_Z7020_LL_v1_1:
+        case STEM_125_14_Z7020_LL_v1_2:
+        case STEM_125_14_Z7020_TI_v1_3:
+            return "Z20_65_LL";
         default: {
             ERROR_LOG("Unknown model: %d.", model);
             return "";
