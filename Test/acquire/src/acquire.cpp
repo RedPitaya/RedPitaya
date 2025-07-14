@@ -82,6 +82,18 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    if (model == RP_125_LL) {
+        if (!option.disableReset) {
+            rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/ADC3664-125.xml");
+        }
+    }
+
+    if (model == RP_65_LL) {
+        if (!option.disableReset) {
+            rp_spi_fpga::rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/ADC3663-65.xml");
+        }
+    }
+
     if (option.enableDebug) {
         rp_EnableDebugReg();
     }

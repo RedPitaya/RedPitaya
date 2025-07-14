@@ -4,7 +4,7 @@
 #include "rp.h"
 #include "rp_hw-profiles.h"
 
-typedef enum { RP_125_14, RP_250_12, RP_125_14_4CH } models_t;
+typedef enum { RP_125_14, RP_250_12, RP_125_14_4CH, RP_125_LL, RP_65_LL } models_t;
 
 models_t getModel();
 uint8_t getChannels();
