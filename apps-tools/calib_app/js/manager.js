@@ -47,18 +47,6 @@
 
     OBJ.setADCMode = function(_visible) {
         if (OBJ.model !== undefined) {
-            if (OBJ.model === "Z10" || OBJ.model === "Z20_125") {
-
-            }
-
-            if (OBJ.model === "Z20_250_12") {
-
-            }
-
-            if (OBJ.model === "Z20_250_12_120") {
-
-            }
-
             if (_visible) {
                 $("#adc_mode_body").show();
                 $("#B_APPLY_CONT").show();
@@ -72,18 +60,6 @@
 
     OBJ.setFILTERMode = function(_visible) {
         if (OBJ.model !== undefined) {
-            if (OBJ.model === "Z10" || OBJ.model === "Z20_125") {
-
-            }
-
-            if (OBJ.model === "Z20_250_12") {
-
-            }
-
-            if (OBJ.model === "Z20_250_12_120") {
-
-            }
-
             if (_visible) {
                 $("#filter_mode_body").show();
                 $("#B_APPLY_CONT").show();

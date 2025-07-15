@@ -33,7 +33,11 @@
     OBJ.famSetModel = function(_model) {
         if (OBJ.famModel === undefined) {
             OBJ.famModel = _model.value;
-            if (OBJ.famModel === "Z10" || OBJ.famModel === "Z20_125" || OBJ.famModel === "Z20_125_4CH") OBJ.famStates = OBJ.F_STATES_125_14;
+            if (OBJ.famModel === "Z10") OBJ.famStates = OBJ.F_STATES_125_14;
+            if (OBJ.famModel === "Z20_125") OBJ.famStates = OBJ.F_STATES_125_14;
+            if (OBJ.famModel === "Z20_125_4CH") OBJ.famStates = OBJ.F_STATES_125_14;
+            if (OBJ.famModel === "Z20_125_LL") OBJ.famStates = OBJ.F_STATES_125_14;
+            if (OBJ.famModel === "Z20_65_LL") OBJ.famStates = OBJ.F_STATES_125_14;
 
             $('#am_a_filt_external_btn').on('click', function() { OBJ.famClickOkDialog() });
 
