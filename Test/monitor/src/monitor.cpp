@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
         rp_InitReset(false);
         uint32_t val = 0;
         auto ret = rp_GetFreqCounter(&val);
-        printf("%d", val);
+        printf("%d\n", val);
         rp_Release();
         return ret;
     }
