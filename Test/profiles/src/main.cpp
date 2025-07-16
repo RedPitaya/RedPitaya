@@ -23,7 +23,7 @@
 #include "rp_hw-profiles.h"
 
 void usage(char** argv) {
-    fprintf(stderr,
+    fprintf(stdout,
             "%s version %s-%s\n"
             "\nUsage:\n"
             "\t-p\t: Show current profile\n"
@@ -34,12 +34,17 @@ void usage(char** argv) {
             "\t-v KEY\t: Print value from profile by key\n",
             argv[0], VERSION_STR, REVISION_STR);
 
-    fprintf(stderr,
+    fprintf(stdout,
             "\t\tKeys:\n"
             "\t\t\tosc_rate\t: OSC base rate\n"
             "\t\t\tgpio_n\t: Number of GPIO channels N\n"
             "\t\t\tgpio_p\t: Number of GPIO channels P\n"
             "\t\t\te3\t: Availability of e3 connector\n");
+
+    fprintf(stdout,
+            "\t-t <key>,<key>,...: Print pivot table\n"
+            "\t\tKeys:\n");
+    rp_HPPrintKeys();
 }
 
 int main(int argc, char** argv) {
@@ -53,6 +58,15 @@ int main(int argc, char** argv) {
 
     if (strncmp(argv[1], "-p", 2) == 0) {
         return rp_HPPrint();
+    }
+
+    if (strncmp(argv[1], "-t", 2) == 0) {
+        if (argc > 2) {
+            return rp_HPPrintPivotTable(argv[2]);
+        } else {
+            usage(argv);
+            return EXIT_FAILURE;
+        }
     }
 
     if (strncmp(argv[1], "-f", 2) == 0) {

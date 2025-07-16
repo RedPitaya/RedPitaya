@@ -104,7 +104,7 @@ profiles_t stem_125_14_Z7020_Pro_v2_0 = {
     .ramMB = 1024,
 
     .is_E3_high_speed_gpio = true,
-    .is_E3_mcc_qspi = true,
+    .is_E3_mmc_qspi = true,
     .E3_high_speed_gpio_rate = 1000000000,
     .is_E3_present = true,
 

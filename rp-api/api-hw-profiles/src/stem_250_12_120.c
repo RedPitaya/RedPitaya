@@ -104,7 +104,7 @@ profiles_t stem_250_12_120 = {
     .ramMB = 1024,
 
     .is_E3_high_speed_gpio = false,
-    .is_E3_mcc_qspi = false,
+    .is_E3_mmc_qspi = false,
     .E3_high_speed_gpio_rate = 0,
     .is_E3_present = false,
 

@@ -854,7 +854,7 @@ int rp_HPGetIsE3QSPIeMMC(bool *value){
     int state;
     profiles_t* p = getProfile(&state);
     if (p){
-        *value = p->is_E3_mcc_qspi;
+        *value = p->is_E3_mmc_qspi;
         return RP_HP_OK;
     }
     return state;
@@ -862,7 +862,7 @@ int rp_HPGetIsE3QSPIeMMC(bool *value){
 
 bool rp_HPGetIsE3QSPIeMMCOrDefault(){
     profiles_t* p = getProfileDefualt();
-    return p->is_E3_mcc_qspi;
+    return p->is_E3_mmc_qspi;
 }
 
 int rp_HPGetIsE3Present(bool *value){
@@ -999,5 +999,15 @@ int rp_HPGetFPGAVersion(char **_no_free_value){
             return RP_HP_EMU;
             break;
     }
+    return RP_HP_OK;
+}
+
+int rp_HPPrintKeys(){
+    hp_cmn_PrintKeyHelp();
+    return RP_HP_OK;
+}
+
+int rp_HPPrintPivotTable(char* keys){
+    hp_cmn_PrintPivotTable(keys);
     return RP_HP_OK;
 }

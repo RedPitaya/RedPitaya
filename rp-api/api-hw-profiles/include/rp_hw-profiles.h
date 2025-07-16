@@ -569,6 +569,16 @@ int rp_HPPrint();
  */
 int rp_HPPrintAll();
 
+/**
+ * Prints available keys for a pivot table
+ */
+int rp_HPPrintKeys();
+
+/**
+ * Prints a pivot table
+ */
+int rp_HPPrintPivotTable(char* keys);
+
 #ifdef __cplusplus
 }
 #endif

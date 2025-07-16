@@ -19,6 +19,14 @@
 #ifndef RP_HW_PROFILES_STEM_65_16_Z7020_TI_v1_3_H
 #define RP_HW_PROFILES_STEM_65_16_Z7020_TI_v1_3_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 profiles_t* getProfile_STEM_65_16_Z7020_TI_v1_3();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
