@@ -20,11 +20,11 @@ CCalib::CCalib(COscilloscope::Ptr _acq) : m_acq(_acq), m_current_step(-1), m_cha
 CCalib::~CCalib() {}
 
 int CCalib::resetCalibToZero() {
-    return rp_CalibrationReset(false, true, false);
+    return rp_CalibrationReset(false, true, false, RP_HW_PACK_ID_V6);
 }
 
 int CCalib::resetCalibToFactory() {
-    return rp_CalibrationFactoryReset(true);
+    return rp_CalibrationFactoryReset(true, RP_HW_PACK_ID_V6);
 }
 
 void CCalib::restoreCalib() {

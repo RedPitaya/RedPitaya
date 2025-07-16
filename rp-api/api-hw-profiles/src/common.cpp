@@ -1017,8 +1017,13 @@ std::string padString(const std::string& input, size_t total_length) {
 
     return result;
 }
+bool containsCaseInsensitive(const std::string& str, const std::string& substr) {
+    auto it = std::search(str.begin(), str.end(), substr.begin(), substr.end(), [](char ch1, char ch2) { return std::toupper(ch1) == std::toupper(ch2); });
+    return it != str.end();
+}
 
 void hp_cmn_PrintPivotTable(char* _keys) {
+
     auto keys = splitStringByComma(_keys);
     if (std::find(keys.begin(), keys.end(), "all") != keys.end()) {
         keys.clear();
@@ -1029,6 +1034,20 @@ void hp_cmn_PrintPivotTable(char* _keys) {
             keys.push_back(key);
         }
     }
+    std::vector<std::string> new_keys;
+    for (auto& par : keys) {
+        std::vector<std::string> find_keys;
+        uint32_t index = 2;
+        while (table_keys_help[index] != NULL) {
+            const char* key = table_keys_help[index++];
+            index++;
+            if (containsCaseInsensitive(key, par)) {
+                find_keys.push_back(key);
+            }
+        }
+        new_keys.insert(new_keys.end(), find_keys.begin(), find_keys.end());
+    }
+    keys = new_keys;
     std::map<std::string, std::map<rp_HPeModels_t, std::string>> values;
     std::map<std::string, uint32_t> values_max_len;
     std::vector<std::string> cols;

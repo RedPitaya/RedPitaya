@@ -29,12 +29,12 @@ print("rp_hw_calib.rp_GetDefaultUniCalibrationSettings()")
 res = rp_hw_calib.rp_GetDefaultUniCalibrationSettings()
 print(res.fast_adc_count_1_1)
 
-print("rp_hw_calib.rp_CalibrationReset(False,False,False)")
-res = rp_hw_calib.rp_CalibrationReset(False,False,False)
+print("rp_hw_calib.rp_CalibrationReset(False,False,False,5)")
+res = rp_hw_calib.rp_CalibrationReset(False,False,False,5)
 print(res)
 
-print("rp_hw_calib.rp_CalibrationFactoryReset()")
-res = rp_hw_calib.rp_CalibrationFactoryReset(False)
+print("rp_hw_calib.rp_CalibrationFactoryReset(False,5)")
+res = rp_hw_calib.rp_CalibrationFactoryReset(False,5)
 print(res)
 
 print("rp_hw_calib.rp_GetCalibrationSettings()")

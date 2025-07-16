@@ -377,16 +377,19 @@ rp_calib_params_t calib_GetDefaultCalib(bool setFilterZero) {
     return getDefault(g_model, setFilterZero);
 }
 
-rp_calib_params_t calib_GetUniversalDefaultCalib(bool setFilterZero) {
+rp_calib_params_t calib_GetUniversalDefaultCalib(bool setFilterZero, uint8_t version) {
+    if (version < RP_HW_PACK_ID_V5) {
+        FATAL("Incorrect version of calibration parameters.  %d", version);
+    }
     if (!g_model_loaded) {
         rp_HPeModels_t model = STEM_125_14_v1_1;  // Default model
         int res = rp_HPGetModel(&model);
         if (res != RP_HP_OK) {
             ERROR_LOG("Can't load RP model version. Err: %d", res);
         }
-        return getDefaultUniversal(model, setFilterZero);
+        return getDefaultUniversal(model, setFilterZero, version);
     }
-    return getDefaultUniversal(g_model, setFilterZero);
+    return getDefaultUniversal(g_model, setFilterZero, version);
 }
 
 rp_calib_error calib_WriteDirectlyParams(rp_calib_params_t* calib_params, bool use_factory_zone, bool skip_recalculate) {
@@ -404,17 +407,17 @@ rp_calib_error calib_WriteDirectlyParams(rp_calib_params_t* calib_params, bool u
     return calib_WriteParams(model, calib_params, use_factory_zone, skip_recalculate);
 }
 
-void calib_SetToZero(bool is_new_format, bool setFilterZero) {
+void calib_SetToZero(bool is_new_format, bool setFilterZero, uint8_t version) {
     if (is_new_format)
-        g_calib = calib_GetUniversalDefaultCalib(setFilterZero);
+        g_calib = calib_GetUniversalDefaultCalib(setFilterZero, version);
     else
         g_calib = calib_GetDefaultCalib(setFilterZero);
 }
 
-rp_calib_error calib_Reset(bool use_factory_zone, bool is_new_format, bool setFilterZero) {
+rp_calib_error calib_Reset(bool use_factory_zone, bool is_new_format, bool setFilterZero, uint8_t version) {
     if (g_model_loaded) {
         rp_calib_params_t calib = g_calib;
-        calib_SetToZero(is_new_format, setFilterZero);
+        calib_SetToZero(is_new_format, setFilterZero, version);
         auto res = calib_WriteParams(g_model, &g_calib, use_factory_zone, false);
         if (res != RP_HW_CALIB_OK) {
             g_calib = calib;
@@ -426,7 +429,7 @@ rp_calib_error calib_Reset(bool use_factory_zone, bool is_new_format, bool setFi
     }
 }
 
-rp_calib_error calib_LoadFromFactoryZone(bool convert_to_new) {
+rp_calib_error calib_LoadFromFactoryZone(bool convert_to_new, uint8_t version) {
 
     rp_HPeModels_t model = STEM_125_14_v1_1;  // Default model
     if (!g_model_loaded) {
@@ -445,10 +448,15 @@ rp_calib_error calib_LoadFromFactoryZone(bool convert_to_new) {
         return ret;
     }
     if (convert_to_new) {
-        if (!isUniversalCalib(calib.dataStructureId)) {
-            recalculateToUniversal(&calib);
+        if (version >= RP_HW_PACK_ID_V5) {
+            if (!isUniversalCalib(calib.dataStructureId)) {
+                recalculateToUniversal(&calib);
+            }
+            calib.dataStructureId = version;
+        } else {
+            ERROR_LOG("Invalid version: %d", version);
+            return RP_HW_CALIB_EIP;
         }
-        calib.dataStructureId = RP_HW_PACK_ID_V6;
     }
     return calib_WriteParams(model, &calib, false, false);
 }

@@ -60,28 +60,43 @@ void usage() {
         "Usage: %s [OPTION]...\n"
         "\n"
         "OPTIONS:\n"
-        " -r    Read calibration values from eeprom (to stdout).\n"
-        "       The -n flag has no effect. The system automatically determines the type of stored data.\n"
+        "\t-r    Read calibration values from eeprom (to stdout).\n"
+        "\t      The -n flag has no effect. The system automatically determines the type of stored data.\n"
+        "\t      Examples: -r, -rf, -rv, -rvf, -rx, -rfx, -rvx, -rvfx.\n"
+
         "\n"
-        " -w    Write calibration values to eeprom (from stdin).\n"
-        "       Possible combination of flags: -wn, -wf, -wfn, -wmn, -wfmn\n"
+        "\t-w    Write calibration values to eeprom (from stdin).\n"
+        "\t      Examples: -w, -wf, -wn, -wfn, -wmn, -wfmn\n"
         "\n"
-        " -f    Use factory address space.\n"
-        " -d    Reset calibration values in eeprom from factory zone. WARNING: Saves automatic to a new format\n"
+        "\t-d    Reset calibration values in eeprom from factory zone. (-n flag converts to new version 6 format)\n"
+        "\t      Examples: -d, -dn, -dn5, -dn6\n"
         "\n"
-        " -i    Reset calibration values in eeprom by default\n"
-        "       Possible combination of flags: -in , -inf.\n"
+        "\t-i    Reset calibration values in eeprom by default\n"
+        "\t      Examples: -i, -if, -in, -inf, -in5, -inf5, -in6, -inf6, -ie, -ief, -ine, -inef, -ine5, -inef5, -ine6, -inef6.\n"
         "\n"
-        " -o    Converts the calibration from the user zone to the old calibration format. For ecosystem version 0.98\n"
+        "\t-o    Converts the calibration from the user zone to the old calibration format. For ecosystem version 0.98\n"
         "\n"
-        " -v    Produce verbose output.\n"
-        " -h    Print this info.\n"
-        " -x    Print in hex.\n"
-        " -u    Print stored calibration in unified format.\n"
+        "Modifiers for output:\n"
+        "\t-v    Produce verbose output.\n"
+        "\t-h    Print this info.\n"
+        "\t-x    Print in hex.\n"
+        "\t-u    Print stored calibration in unified format.\n"
         "\n"
-        " -m    Modify specific parameter in universal calibration\n"
-        " -n    Flag for working with the new calibration storage format.\n"
-        " -e    Disables the ADC filter completely in the FPGA when the calibration is reset to default.\n"
+        "Modifiers for input:\n"
+        "\t-f    Use factory address space.\n"
+        "\t-m    Modify specific parameter in universal calibration\n"
+        "\t-n    Flag for working with the new calibration storage format.\n"
+        "\t-e    Disables the ADC filter completely in the FPGA when the calibration is reset to default.\n"
+        "\t-5    Using version 5 of the parameters.\n"
+        "\t-6    Using version 6 of the parameters.\n"
+        "\n\n"
+        "Calibration parameter versions:\n"
+        "\t1 - Old version for boards: 125-14\n"
+        "\t2 - Old version for boards: 250-12\n"
+        "\t3 - Old version for boards: 125-14 4 channel\n"
+        "\t4 - Old version for boards: 122-16\n"
+        "\t5 - Universal calibration parameters. Used in all board versions. Calibration occurs in the API.\n"
+        "\t6 - Universal calibration parameters. Used in all board versions. Calibration occurs in the FPGA.\n"
         "\n";
 
     fprintf(stderr, format, g_argv0, VERSION_STR, REVISION_STR, g_argv0);
@@ -219,8 +234,9 @@ int main(int argc, char** argv) {
     }
 
     /* Parse options */
-    const char* optstring = "rwfdvhzxiunmoe";
+    const char* optstring = "rwfdvhzxiunmoe56";
     unsigned int want_bits = 0;
+    uint8_t calib_ver = RP_HW_PACK_ID_V6;
     bool factory = false;
 
     int ch = -1;
@@ -237,6 +253,14 @@ int main(int argc, char** argv) {
 
             case 'd':
                 want_bits |= WANT_DEFAULTS;
+                break;
+
+            case '5':
+                calib_ver = RP_HW_PACK_ID_V5;
+                break;
+
+            case '6':
+                calib_ver = RP_HW_PACK_ID_V6;
                 break;
 
             case 'i':
@@ -321,7 +345,10 @@ int main(int argc, char** argv) {
 
     /* Reset to factory defaults */
     if (want_bits & WANT_DEFAULTS) {
-        ret = rp_CalibrationFactoryReset(want_bits & WANT_NEW_FORMAT);
+        printf("Ver %d\n", calib_ver);
+        return 0;
+
+        ret = rp_CalibrationFactoryReset(want_bits & WANT_NEW_FORMAT, calib_ver);
         if (ret) {
             fprintf(stderr, "ERROR: Factory reset failed!\n");
             return ret;
@@ -352,7 +379,7 @@ int main(int argc, char** argv) {
             fprintf(stderr, "ERROR: Init failed!\n");
             return ret;
         }
-        ret = rp_CalibrationReset(factory, want_bits & WANT_NEW_FORMAT, want_bits & WANT_FILTER_ZERO);
+        ret = rp_CalibrationReset(factory, want_bits & WANT_NEW_FORMAT, want_bits & WANT_FILTER_ZERO, calib_ver);
         if (ret) {
             fprintf(stderr, "ERROR: Reset failed!\n");
             return ret;

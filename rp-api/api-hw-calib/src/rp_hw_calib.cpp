@@ -40,15 +40,15 @@ rp_calib_params_t rp_GetDefaultCalibrationSettings() {
 }
 
 rp_calib_params_t rp_GetDefaultUniCalibrationSettings() {
-    return calib_GetUniversalDefaultCalib(false);
+    return calib_GetUniversalDefaultCalib(false, RP_HW_PACK_ID_V6);
 }
 
-rp_calib_error rp_CalibrationReset(bool use_factory_zone, bool is_new_format, bool setFilterZero) {
-    return calib_Reset(use_factory_zone, is_new_format, setFilterZero);
+rp_calib_error rp_CalibrationReset(bool use_factory_zone, bool is_new_format, bool setFilterZero, uint8_t version) {
+    return calib_Reset(use_factory_zone, is_new_format, setFilterZero, version);
 }
 
-rp_calib_error rp_CalibrationFactoryReset(bool convert_to_new) {
-    return calib_LoadFromFactoryZone(convert_to_new);
+rp_calib_error rp_CalibrationFactoryReset(bool convert_to_new, uint8_t version) {
+    return calib_LoadFromFactoryZone(convert_to_new, version);
 }
 
 rp_calib_error rp_CalibrationWriteParams(rp_calib_params_t calib_params, bool use_factory_zone) {

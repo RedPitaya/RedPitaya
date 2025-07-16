@@ -243,16 +243,18 @@ rp_calib_params_t rp_GetDefaultUniCalibrationSettings();
   * @param use_factory_zone Use factory calibration zone
   * @param is_new_format Use new format calibration
   * @param setFilterZero Set filter coefficients to zero
+  * @param version New format version. Versions RP_HW_PACK_ID_V5 and RP_HW_PACK_ID_V6 and higher are available
   * @return Status code (RP_HW_CALIB_OK on success)
   */
-rp_calib_error rp_CalibrationReset(bool use_factory_zone, bool is_new_format, bool setFilterZero);
+rp_calib_error rp_CalibrationReset(bool use_factory_zone, bool is_new_format, bool setFilterZero, uint8_t version);
 
 /**
   * @brief Copies factory calibration to user EEPROM
   * @param convert_to_new Convert to new format
+  * @param version New format version. Versions RP_HW_PACK_ID_V5 and RP_HW_PACK_ID_V6 and higher are available
   * @return Status code (RP_HW_CALIB_OK on success)
   */
-rp_calib_error rp_CalibrationFactoryReset(bool convert_to_new);
+rp_calib_error rp_CalibrationFactoryReset(bool convert_to_new, uint8_t version);
 
 /**
   * @brief Writes calibration parameters to EEPROM

@@ -3,7 +3,7 @@
 
 profiles_t stem_125_14_LN_v1_1 = {
     .boardModel = STEM_125_14_LN_v1_1,
-    .boardName = "STEMlab 125-14-Z7020 LN v1.1",
+    .boardName = "STEMlab 125-14 LN v1.1",
     .boardModelEEPROM = "",
     .boardETH_MAC =  "",
     .zynqCPUModel = Z7010,
@@ -108,7 +108,7 @@ profiles_t stem_125_14_LN_v1_1 = {
     .E3_high_speed_gpio_rate = 0,
     .is_E3_present = false,
 
-    .is_calib_in_fpga = false
+    .is_calib_in_fpga = true
 
 };
 

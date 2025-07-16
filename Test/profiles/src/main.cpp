@@ -43,6 +43,7 @@ void usage(char** argv) {
 
     fprintf(stdout,
             "\t-t <key>,<key>,...: Print pivot table\n"
+            "\t\t<key> - Can be an exact value or as a substring.\n"
             "\t\tKeys:\n");
     rp_HPPrintKeys();
 }

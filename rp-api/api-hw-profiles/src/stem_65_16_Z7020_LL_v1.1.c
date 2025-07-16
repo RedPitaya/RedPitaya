@@ -98,8 +98,8 @@ profiles_t stem_65_16_Z7020_LL_v1_1 = {
     .is_DAC_50_Ohm_mode = true,
     .is_split_osc_triggers = true,
 
-    .gpio_N_count = 8,
-    .gpio_P_count = 8,
+    .gpio_N_count = 11,
+    .gpio_P_count = 11,
 
     .ramMB = 512,
 
@@ -108,7 +108,7 @@ profiles_t stem_65_16_Z7020_LL_v1_1 = {
     .E3_high_speed_gpio_rate = 0,
     .is_E3_present = false,
 
-    .is_calib_in_fpga = false
+    .is_calib_in_fpga = true
 
 };
 

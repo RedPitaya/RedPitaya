@@ -881,7 +881,7 @@ bool convertUniversal(rp_HPeModels_t model, rp_calib_params_t* param, rp_calib_p
     return true;
 }
 
-rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model, bool setFilterZero) {
+rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model, bool setFilterZero, uint8_t version) {
 
     uint32_t aa = setFilterZero ? DISABLE_FILT_AA : DEFAULT_FILT_AA_NEW;
     uint32_t bb = setFilterZero ? DISABLE_FILT_BB : DEFAULT_FILT_BB_NEW;
@@ -908,7 +908,7 @@ rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model, bool setFilterZero) 
             calib.fast_adc_count_1_1 = 2;
             calib.fast_adc_count_1_20 = 2;
             calib.fast_dac_count_x1 = 2;
-            calib.dataStructureId = RP_HW_PACK_ID_V6;
+            calib.dataStructureId = version;
 
             for (int i = 0; i < 2; ++i) {
                 calib.fast_adc_1_1[i].calibValue = calibBaseScaleFromVoltage(1.0, true);
@@ -954,7 +954,7 @@ rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model, bool setFilterZero) 
             calib.fast_adc_count_1_1 = 2;
             calib.fast_adc_count_1_20 = 2;
             calib.fast_dac_count_x1 = 2;
-            calib.dataStructureId = RP_HW_PACK_ID_V6;
+            calib.dataStructureId = version;
 
             for (int i = 0; i < 2; ++i) {
                 calib.fast_adc_1_1[i].calibValue = calibBaseScaleFromVoltage(1.0, true);
@@ -989,7 +989,7 @@ rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model, bool setFilterZero) 
         case STEM_122_16SDR_v1_1:
             calib.fast_adc_count_1_1 = 2;
             calib.fast_dac_count_x1 = 2;
-            calib.dataStructureId = RP_HW_PACK_ID_V6;
+            calib.dataStructureId = version;
 
             for (int i = 0; i < 2; ++i) {
                 calib.fast_adc_1_1[i].calibValue = calibBaseScaleFromVoltage(1.0, true);
@@ -1014,7 +1014,7 @@ rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model, bool setFilterZero) 
         case STEM_125_14_Z7020_4IN_v1_3:
             calib.fast_adc_count_1_1 = 4;
             calib.fast_adc_count_1_20 = 4;
-            calib.dataStructureId = RP_HW_PACK_ID_V6;
+            calib.dataStructureId = version;
 
             for (int i = 0; i < 4; ++i) {
                 calib.fast_adc_1_1[i].calibValue = calibBaseScaleFromVoltage(1.0, true);
@@ -1051,7 +1051,7 @@ rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model, bool setFilterZero) 
             calib.fast_adc_count_1_20_ac = 2;
             calib.fast_dac_count_x1 = 2;
             calib.fast_dac_count_x5 = 2;
-            calib.dataStructureId = RP_HW_PACK_ID_V6;
+            calib.dataStructureId = version;
 
             for (int i = 0; i < 2; ++i) {
                 calib.fast_adc_1_1[i].calibValue = calibBaseScaleFromVoltage(1.0, true);
