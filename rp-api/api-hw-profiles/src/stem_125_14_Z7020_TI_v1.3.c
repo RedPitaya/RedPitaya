@@ -12,7 +12,7 @@ profiles_t stem_125_14_Z7020_TI_v1_3 = {
     .fast_adc_rate = 125000000,
     .fast_adc_count_channels = 2,
     .fast_adc_is_sign = true,
-    .fast_adc_bits = 14,
+    .fast_adc_bits = 16,
 
     .fast_adc_gain[RP_HP_ADC_GAIN_NORMAL][0] = 1,
     .fast_adc_gain[RP_HP_ADC_GAIN_NORMAL][1] = 1,
