@@ -37,7 +37,7 @@ size_t curl_write_html_data(void* contents, size_t size, size_t nmemb, std::stri
 int CUCurl::progressCallback(void* clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow) {
     if (clientp != NULL) {
         auto ptr = static_cast<CUCurl*>(clientp);
-        if (dltotal > 0) {
+        if (dltotal > 204) {
             if (ptr->m_delegate != nullptr) {
                 ptr->m_delegate(dlnow, dltotal, ptr->stop_download);
             }
@@ -93,7 +93,7 @@ auto CUCurl::wait() -> void {
     }
 }
 
-auto CUCurl::downloadFile(const std::string& url, const std::string& output_file) -> int {
+auto CUCurl::downloadFile(const std::string& url, const std::string& output_file, const std::string& username, const std::string& password) -> int {
     CURL* curl = NULL;
     FILE* fp;
     CURLcode res;
@@ -108,23 +108,30 @@ auto CUCurl::downloadFile(const std::string& url, const std::string& output_file
         curl_easy_setopt(curl, CURLOPT_XFERINFODATA, this);
         curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, CUCurl::progressCallback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
+        if (!username.empty() || !password.empty()) {
+            curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+            curl_easy_setopt(curl, CURLOPT_USERNAME, username.c_str());
+            curl_easy_setopt(curl, CURLOPT_PASSWORD, password.c_str());
+        }
         res = curl_easy_perform(curl);
+        long http_code = 0;
+        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
         curl_easy_cleanup(curl);
         fclose(fp);
 
-        if (res == CURLE_OK) {
+        if (res == CURLE_OK && http_code == 200) {
             return RP_UP_OK;
         }
     }
     return RP_UP_EDF;
 }
 
-auto CUCurl::downloadFileAsync(const std::string& url, const std::string& output_file) -> int {
+auto CUCurl::downloadFileAsync(const std::string& url, const std::string& output_file, const std::string& username, const std::string& password) -> int {
     stopDownloadFile();
     wait();
     stop_download = false;
     m_downloadTh = new std::thread(
-        [](CUCurl* holder, const std::string url, const std::string output_file) {
+        [username, password](CUCurl* holder, const std::string url, const std::string output_file) {
             CURL* curl = NULL;
             FILE* fp;
             CURLcode res;
@@ -139,11 +146,18 @@ auto CUCurl::downloadFileAsync(const std::string& url, const std::string& output
                 curl_easy_setopt(curl, CURLOPT_XFERINFODATA, holder);
                 curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, CUCurl::progressCallback);
                 curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
+                if (!username.empty() || !password.empty()) {
+                    curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+                    curl_easy_setopt(curl, CURLOPT_USERNAME, username.c_str());
+                    curl_easy_setopt(curl, CURLOPT_PASSWORD, password.c_str());
+                }
                 res = curl_easy_perform(curl);
+                long http_code = 0;
+                curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
                 curl_easy_cleanup(curl);
                 fclose(fp);
 
-                if (res == CURLE_OK) {
+                if (res == CURLE_OK && http_code == 200) {
                     if (holder->m_done) {
                         holder->m_done(true);
                     }
@@ -220,6 +234,43 @@ auto CUCurl::getListRelease(bool* succes) -> std::vector<std::string> {
         }
         *succes = true;
         return extractLinks(html);
+    }
+    return {};
+}
+
+auto CUCurl::getListProduction(bool* success, const std::string& username, const std::string& password) -> std::vector<std::string> {
+    CURL* curl;
+    CURLcode res;
+    std::string html;
+    *success = false;
+    curl = curl_easy_init();
+    if (curl) {
+        curl_easy_setopt(curl, CURLOPT_URL, PRODUCTION_LINK);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_html_data);
+        curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &html);
+        if (!username.empty() || !password.empty()) {
+            curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+            curl_easy_setopt(curl, CURLOPT_USERNAME, username.c_str());
+            curl_easy_setopt(curl, CURLOPT_PASSWORD, password.c_str());
+        }
+        res = curl_easy_perform(curl);
+        long http_code = 0;
+        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+        curl_easy_cleanup(curl);
+        if (res == CURLE_OK) {
+            if (http_code == 200) {
+                *success = true;
+                return extractLinks(html);
+            } else if (http_code == 401) {
+                std::cerr << "Authorization failed (HTTP 401)" << std::endl;
+            } else {
+                std::cerr << "HTTP error: " << http_code << std::endl;
+            }
+        } else {
+            std::cerr << "CURL error: " << curl_easy_strerror(res) << std::endl;
+        }
+        return {};
     }
     return {};
 }

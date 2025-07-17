@@ -20,6 +20,7 @@
 #include <atomic>
 #include <chrono>
 #include <cmath>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -33,6 +34,8 @@
 
 #define WEBPORT 9092
 
+namespace fs = std::filesystem;
+
 /** Program name */
 const char* g_argv0 = NULL;
 Options g_option;
@@ -45,6 +48,21 @@ rp_websocket::CWEBServer::Ptr g_server = nullptr;
 
 std::thread* g_installThread = nullptr;
 
+std::string formatFileSize(uintmax_t size) {
+    const char* units[] = {"B", "KB", "MB", "GB", "TB"};
+    if (size == 0)
+        return "0 B";
+
+    int unit_index = static_cast<int>(log2(size) / 10);
+    unit_index = unit_index > 4 ? 4 : unit_index;
+
+    double size_in_unit = size / pow(1024, unit_index);
+    char buffer[32];
+    snprintf(buffer, sizeof(buffer), "%.2f %s", size_in_unit, units[unit_index]);
+
+    return buffer;
+}
+
 class Callback : public CUpdaterCallback {
    public:
     void clearLine() {
@@ -52,7 +70,7 @@ class Callback : public CUpdaterCallback {
         std::cout << "\r";
     }
 
-    void displayProgressBar(double progress, double speed) {
+    void displayProgressBar(double progress, uint64_t downloaded, uint64_t total, double speed) {
         const int barWidth = 50;
         clearLine();
 
@@ -70,16 +88,10 @@ class Callback : public CUpdaterCallback {
 
         std::cout << std::fixed << std::setprecision(1) << (progress * 100.0) << "% ";
 
-        if (!std::isinf(speed)) {
-            if (speed >= 0) {
-                if (speed < 1024) {
-                    std::cout << "(" << speed << " B/s)";
-                } else if (speed < 1024 * 1024) {
-                    std::cout << "(" << (speed / 1024) << " KB/s)";
-                } else {
-                    std::cout << "(" << (speed / (1024 * 1024)) << " MB/s)";
-                }
-            }
+        std::cout << "(" << formatFileSize(downloaded) << " / " << formatFileSize(total) << ") ";
+
+        if (!std::isinf(speed) && speed >= 0) {
+            std::cout << "[" << formatFileSize(static_cast<uint64_t>(speed)) << "/s]";
         }
 
         std::cout.flush();
@@ -108,10 +120,10 @@ class Callback : public CUpdaterCallback {
 
         if ((progress >= 1 || stop) && !m_printEnd) {
             m_printEnd = true;
-            displayProgressBar(progress, speed);
+            displayProgressBar(progress, dnow, dtotal, speed);
             std::cout << std::endl;
         } else if (progress < 1) {
-            displayProgressBar(progress, speed);
+            displayProgressBar(progress, dnow, dtotal, speed);
         }
     };
 
@@ -241,6 +253,20 @@ void startDaemon() {
         close(x);
 }
 
+std::vector<std::string> readFile(const std::string& filename) {
+    std::vector<std::string> lines;
+    std::ifstream file(filename);
+    if (!file)
+        return lines;
+
+    std::string line;
+    while (std::getline(file, line)) {
+        lines.push_back(line);
+    }
+
+    return lines;
+}
+
 /** Acquire utility main */
 int main(int argc, char* argv[]) {
 
@@ -258,7 +284,7 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    if (option.calcMD5) {
+    if (option.mode == MD5) {
         for (auto& file : option.filesForMD5) {
             std::string hash;
             if (rp_UpdaterGetMD5(file, &hash) == RP_UP_OK) {
@@ -267,7 +293,7 @@ int main(int argc, char* argv[]) {
                     printf("%s %s\n", f.back().c_str(), hash.c_str());
             }
         }
-    } else if (option.downloadURL) {
+    } else if (option.mode == DOWNLOAD) {
         installTermSignalHandler();
         auto callback = new Callback();
         callback->reset();
@@ -276,16 +302,22 @@ int main(int argc, char* argv[]) {
         rp_UpdaterWaitDownloadFile();
         rp_UpdaterRemoveCallback();
         delete callback;
-    } else if (option.listOflocal) {
+    } else if (option.mode == LIST_LOCAL) {
         std::vector<std::string> files;
         rp_UpdaterGetDownloadedFilesList(files);
         for (auto& f : files) {
             bool isValid = false;
             rp_UpdaterIsValidDownloadedFile(f, &isValid);
-            printf("%s\t%s\n", f.c_str(), isValid ? "[OK]" : "[BROKEN]");
+            try {
+                auto file_size = fs::file_size(std::string("/home/redpitaya/ecosystems/") + f);
+                std::string formatted_size = formatFileSize(file_size);
+                printf("%-50s %10s\t%s\n", f.c_str(), formatted_size.c_str(), isValid ? "[OK]" : "[BROKEN]");
+            } catch (const fs::filesystem_error& e) {
+                printf("%-50s %10s\t%s\n", f.c_str(), "N/A", isValid ? "[OK]" : "[BROKEN]");
+            }
         }
 
-    } else if (option.listOfNB) {
+    } else if (option.mode == LIST_NB) {
         std::vector<std::string> files;
         int ret = rp_UpdaterGetNBAvailableFilesList(files);
         if (ret == RP_UP_ERR) {
@@ -297,7 +329,26 @@ int main(int argc, char* argv[]) {
             }
         }
 
-    } else if (option.downloadNB) {
+    } else if (option.mode == LIST_PROD) {
+        std::vector<std::string> files;
+        if (option.user.empty() && option.password.empty()) {
+            auto cred = readFile(CRED_PATH);
+            if (cred.size() == 2) {
+                option.user = cred[0];
+                option.password = cred[1];
+            }
+        }
+        int ret = rp_UpdaterGetProductionAvailableFilesList(files, option.user, option.password);
+        if (ret == RP_UP_ERR) {
+            fprintf(stderr, "Error getting file list from server\n");
+            g_returnValue = -1;
+        } else {
+            for (auto& f : files) {
+                printf("%s\n", f.c_str());
+            }
+        }
+
+    } else if (option.mode == DOWNLOAD_NB) {
         if (option.nbFileName != "") {
             auto callback = new Callback();
             callback->reset();
@@ -333,7 +384,50 @@ int main(int argc, char* argv[]) {
             rp_UpdaterRemoveCallback();
             delete callback;
         }
-    } else if (option.install) {
+    } else if (option.mode == DOWNLOAD_PROD) {
+        if (option.user.empty() && option.password.empty()) {
+            auto cred = readFile(CRED_PATH);
+            if (cred.size() == 2) {
+                option.user = cred[0];
+                option.password = cred[1];
+            }
+        }
+        if (option.nbFileName != "") {
+            auto callback = new Callback();
+            callback->reset();
+            rp_UpdaterSetCallback(callback);
+            rp_UpdaterDownloadFileAsync(std::string("https://downloads.redpitaya.com/production/ecosystem/") + option.nbFileName, option.user, option.password);
+            rp_UpdaterWaitDownloadFile();
+            delete callback;
+        } else {
+            auto callback = new Callback();
+            callback->reset();
+            rp_UpdaterSetCallback(callback);
+            int bn = 0;
+            try {
+                bn = std::stoi(option.nbBuildNumber);
+            } catch (...) {}
+            if (bn != 0) {
+                int ret = rp_UpdaterDownloadProductionFileAsync(bn, option.user, option.password);
+                if (ret == RP_UP_OK) {
+                    rp_UpdaterWaitDownloadFile();
+                } else if (ret == RP_UP_ERR || ret == RP_UP_EDF) {
+                    fprintf(stderr, "Error getting file list from server\n");
+                    g_returnValue = -1;
+                } else if (ret == RP_UP_EFL) {
+                    fprintf(stderr, "Error. The ecosystem was not found on the server.\n");
+                    g_returnValue = -1;
+                } else {
+                    fprintf(stderr, "Error. Unknown error %d.\n", ret);
+                    g_returnValue = -1;
+                }
+            } else {
+                g_returnValue = -1;
+            }
+            rp_UpdaterRemoveCallback();
+            delete callback;
+        }
+    } else if (option.mode == INSTALL) {
         std::string file = option.installFileName;
         if (file == "") {
             int bn = 0;

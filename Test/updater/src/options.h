@@ -19,28 +19,29 @@
 #define REVISION_STR XSTR(REVISION)
 #endif
 
+#define CRED_PATH "/opt/redpitaya/bin/prod_cred.txt"
+
+enum Mode { NONE = 0, MD5 = 1, DOWNLOAD = 2, DOWNLOAD_NB = 3, INSTALL = 4, LIST_LOCAL = 5, LIST_NB = 6, LIST_PROD = 7, DOWNLOAD_PROD = 8 };
+
 struct Options {
+    Mode mode = NONE;
     bool error = false;
-    bool calcMD5 = false;
     std::vector<std::string> filesForMD5;
-    bool downloadURL = false;
     std::string url = "";
 
-    bool downloadNB = false;
     std::string nbFileName = "";
     std::string nbBuildNumber = "";
 
-    bool install = false;
     std::string installFileName = "";
     std::string installNumber = "";
-
-    bool listOflocal = false;
-    bool listOfNB = false;
 
     bool verbose = false;
     bool verbose_short = false;
 
     bool webcontrol = false;
+
+    std::string user = "";
+    std::string password = "";
 };
 
 auto usage(char const* progName) -> void;

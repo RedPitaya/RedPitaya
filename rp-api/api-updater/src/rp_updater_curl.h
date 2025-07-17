@@ -24,6 +24,7 @@
 
 #define NB_LINK "https://downloads.redpitaya.com/downloads/Unify/nightly_builds/"
 #define RELEASE_LINK "https://downloads.redpitaya.com/downloads/Unify/ecosystems/"
+#define PRODUCTION_LINK "https://downloads.redpitaya.com/production/ecosystem/"
 
 class CUCurl {
     typedef std::function<void(uint64_t now, uint64_t total, bool stop)> func_progress_t;
@@ -36,8 +37,8 @@ class CUCurl {
     CUCurl(CUCurl&) = delete;
     CUCurl(CUCurl&&) = delete;
 
-    auto downloadFile(const std::string& url, const std::string& output_file) -> int;
-    auto downloadFileAsync(const std::string& url, const std::string& output_file) -> int;
+    auto downloadFile(const std::string& url, const std::string& output_file, const std::string& username = "", const std::string& password = "") -> int;
+    auto downloadFileAsync(const std::string& url, const std::string& output_file, const std::string& username = "", const std::string& password = "") -> int;
     auto stopDownloadFile() -> bool;
     auto wait() -> void;
 
@@ -46,6 +47,7 @@ class CUCurl {
 
     auto getListNB(bool* succes) -> std::vector<std::string>;
     auto getListRelease(bool* succes) -> std::vector<std::string>;
+    auto getListProduction(bool* succes, const std::string& username = "", const std::string& password = "") -> std::vector<std::string>;
 
     static auto getFilenameFromUrl(const std::string& url) -> std::string;
 

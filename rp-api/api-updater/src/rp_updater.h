@@ -44,8 +44,8 @@ int rp_UpdaterGetDownloadedFile(uint32_t _index, std::string* name, uint32_t* bu
 int rp_UpdaterGetDownloadedFilesList(std::vector<std::string>& files);
 int rp_UpdaterIsValidDownloadedFile(std::string fileName, bool* state);
 
-int rp_UpdaterDownloadFile(std::string url);
-int rp_UpdaterDownloadFileAsync(std::string url);
+int rp_UpdaterDownloadFile(std::string url, const std::string& username = "", const std::string& password = "");
+int rp_UpdaterDownloadFileAsync(std::string url, const std::string& username = "", const std::string& password = "");
 
 int rp_UpdaterWaitDownloadFile();
 int rp_UpdaterStopDownloadFile();
@@ -57,6 +57,11 @@ int rp_UpdaterRemoveCallback();
 int rp_UpdaterGetNBAvailableFilesList(std::vector<std::string>& files);
 int rp_UpdaterDownloadNBFile(uint32_t number);
 int rp_UpdaterDownloadNBFileAsync(uint32_t number);
+
+// Production build functions
+int rp_UpdaterGetProductionAvailableFilesList(std::vector<std::string>& files, const std::string& username, const std::string& password);
+int rp_UpdaterDownloadProductionFile(uint32_t number, const std::string& username, const std::string& password);
+int rp_UpdaterDownloadProductionFileAsync(uint32_t number, const std::string& username, const std::string& password);
 
 // Release build functions
 int rp_UpdaterGetReleaseAvailableFilesList(std::vector<std::string>& files);

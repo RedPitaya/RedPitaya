@@ -171,7 +171,7 @@ int rp_UpdaterGetDownloadedFilesList(std::vector<std::string>& files) {
     return RP_UP_OK;
 }
 
-int rp_UpdaterDownloadFile(std::string url) {
+int rp_UpdaterDownloadFile(std::string url, const std::string& username, const std::string& password) {
     CUCurl curl;
     auto fileName = CUCurl::getFilenameFromUrl(url);
     curl.setDoneCallback([fileName](bool success) {
@@ -186,10 +186,10 @@ int rp_UpdaterDownloadFile(std::string url) {
             g_callbacks->downloadProgress(fileName, now, total, stop);
         }
     });
-    return curl.downloadFile(url, std::string(ECOSYSTEM_DOWNLOAD_PATH) + "/" + fileName);
+    return curl.downloadFile(url, std::string(ECOSYSTEM_DOWNLOAD_PATH) + "/" + fileName, username, password);
 }
 
-int rp_UpdaterDownloadFileAsync(std::string url) {
+int rp_UpdaterDownloadFileAsync(std::string url, const std::string& username, const std::string& password) {
     std::lock_guard lock(g_curlMutex);
     delete g_curl;
     g_curl = new CUCurl();
@@ -206,7 +206,7 @@ int rp_UpdaterDownloadFileAsync(std::string url) {
             g_callbacks->downloadProgress(fileName, now, total, stop);
         }
     });
-    return g_curl->downloadFileAsync(url, std::string(ECOSYSTEM_DOWNLOAD_PATH) + "/" + fileName);
+    return g_curl->downloadFileAsync(url, std::string(ECOSYSTEM_DOWNLOAD_PATH) + "/" + fileName, username, password);
 }
 int rp_UpdaterWaitDownloadFile() {
     std::lock_guard lock(g_curlMutex);
@@ -299,6 +299,71 @@ int rp_UpdaterGetNBAvailableFilesList(std::vector<std::string>& files) {
     }
     rp_sortEcosystemFiles(files);
     return RP_UP_OK;
+}
+
+int rp_UpdaterGetProductionAvailableFilesList(std::vector<std::string>& files, const std::string& username, const std::string& password) {
+    files.clear();
+    CUCurl curl;
+    std::string url = "";
+    bool succes = false;
+    auto links = curl.getListProduction(&succes, username, password);
+    for (auto& link : links) {
+        files.push_back(link);
+    }
+    if (succes == false) {
+        return RP_UP_ERR;
+    }
+    rp_sortEcosystemFiles(files);
+    return RP_UP_OK;
+}
+int rp_UpdaterDownloadProductionFile(uint32_t number, const std::string& username, const std::string& password) {
+    CUCurl curl;
+    std::string url = "";
+    bool succes = false;
+    auto links = curl.getListProduction(&succes, username, password);
+    for (auto& link : links) {
+        std::vector<std::string> seglist = split(link, ".-");
+        if (seglist.size() > 3) {
+            if ((uint32_t)std::stoi(seglist[3]) == number) {
+                url = link;
+                break;
+            }
+        }
+    }
+
+    if (succes == false) {
+        return RP_UP_ERR;
+    }
+
+    if (url == "") {
+        return RP_UP_EFL;
+    }
+    return rp_UpdaterDownloadFile(std::string(NB_LINK) + url, username, password);
+}
+
+int rp_UpdaterDownloadProductionFileAsync(uint32_t number, const std::string& username, const std::string& password) {
+    CUCurl curl;
+    std::string url = "";
+    bool succes = false;
+    auto links = curl.getListProduction(&succes, username, password);
+    for (auto& link : links) {
+        std::vector<std::string> seglist = split(link, ".-");
+        if (seglist.size() > 3) {
+            if ((uint32_t)std::stoi(seglist[3]) == number) {
+                url = link;
+                break;
+            }
+        }
+    }
+
+    if (succes == false) {
+        return RP_UP_ERR;
+    }
+
+    if (url == "") {
+        return RP_UP_EFL;
+    }
+    return rp_UpdaterDownloadFileAsync(std::string(PRODUCTION_LINK) + url, username, password);
 }
 
 int rp_UpdaterGetReleaseAvailableFilesList(std::vector<std::string>& files) {

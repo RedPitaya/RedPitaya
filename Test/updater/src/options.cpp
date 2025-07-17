@@ -11,12 +11,20 @@
 #include "options.h"
 #include "rp_updater_common.h"
 
-static constexpr char optstring[] = "m:d:vn:li:rsw";
-static struct option long_options[] = {{"md5", required_argument, 0, 'm'},     {"download", required_argument, 0, 'd'},
-                                       {"install", required_argument, 0, 'i'}, {"verbose", no_argument, 0, 'v'},
-                                       {"short_verbose", no_argument, 0, 's'}, {"list", no_argument, 0, 'l'},
-                                       {"list_nb", no_argument, 0, 'r'},       {"download_nb", required_argument, 0, 'n'},
-                                       {"webcontrol", no_argument, 0, 'w'},    {0, 0, 0, 0}};
+static constexpr char optstring[] = "m:d:vn:li:rswpa:t:";
+static struct option long_options[] = {{"md5", required_argument, 0, 'm'},
+                                       {"download", required_argument, 0, 'd'},
+                                       {"install", required_argument, 0, 'i'},
+                                       {"verbose", no_argument, 0, 'v'},
+                                       {"short_verbose", no_argument, 0, 's'},
+                                       {"list", no_argument, 0, 'l'},
+                                       {"list_nb", no_argument, 0, 'r'},
+                                       {"list_prod", no_argument, 0, 'p'},
+                                       {"download_nb", required_argument, 0, 'n'},
+                                       {"download_prod", required_argument, 0, 't'},
+                                       {"auth", required_argument, 0, 'a'},
+                                       {"webcontrol", no_argument, 0, 'w'},
+                                       {0, 0, 0, 0}};
 
 static constexpr char g_format[] =
     "\n"
@@ -27,19 +35,25 @@ static constexpr char g_format[] =
     "       %s -i FILE [-v]\n"
     "       %s -i NUMBER [-v]\n"
     "       %s -l\n"
+    "       %s -p\n"
+    "       %s -a USER:PASSWORD\n"
     "       %s -r\n"
     "       %s -w\n"
     "\n"
-    "  --md5=FILES           -m FILES     Calculates md5 for the specified files.\n"
-    "  --download=URL        -d URL       Downloads a file to a directory: %s.\n"
-    "  --download_nb=FILE    -n FILE      Download ecosystem by file name from NB server.\n"
-    "  --download_nb=NUMBER  -n NUMBER    Download ecosystem by build number from NB server.\n"
-    "  --install=FILE        -i FILE      Installs the ecosystem by file name on the SD card.\n"
-    "  --install=NUMBER      -i NUMBER    Installs the ecosystem by build number on the SD card.\n"
-    "  --list                -l           List of loaded ecosystems.\n"
-    "  --list_nb             -r           List of ecosystems on the server in the NB folder.\n"
-    "  --verbose             -v           Produce verbose output.\n"
-    "  --webcontrol          -w           Starts websocket control mode.\n"
+    "  --md5=FILES              -m FILES           Calculates md5 for the specified files.\n"
+    "  --download=URL           -d URL             Downloads a file to a directory: %s.\n"
+    "  --download_nb=FILE       -n FILE            Download ecosystem by file name from NB server.\n"
+    "  --download_nb=NUMBER     -n NUMBER          Download ecosystem by build number from NB server.\n"
+    "  --download_prod=FILE     -t FILE            Download ecosystem by file name from Prod server.\n"
+    "  --download_prod=NUMBER   -t NUMBER          Download ecosystem by build number from Prod server.\n"
+    "  --install=FILE           -i FILE            Installs the ecosystem by file name on the SD card.\n"
+    "  --install=NUMBER         -i NUMBER          Installs the ecosystem by build number on the SD card.\n"
+    "  --list                   -l                 List of loaded ecosystems.\n"
+    "  --list_nb                -r                 List of ecosystems on the server in the NB folder.\n"
+    "  --list_prod              -p                 List of ecosystems on the server in the Production folder.\n"
+    "  --auth                   -a USER:PASSWORD   Login and password.\n"
+    "  --verbose                -v                 Produce verbose output.\n"
+    "  --webcontrol             -w                 Starts websocket control mode.\n"
     "\n";
 
 std::vector<std::string> split(const std::string& s, char seperator) {
@@ -76,7 +90,7 @@ auto usage(char const* progName) -> void {
     auto n = name.c_str();
 
     fprintf(stderr, "%s Version: %s-%s\n", n, VERSION_STR, REVISION_STR);
-    fprintf(stderr, (char*)g_format, n, n, n, n, n, n, n, n, n, ECOSYSTEM_DOWNLOAD_PATH);
+    fprintf(stderr, (char*)g_format, n, n, n, n, n, n, n, n, n, n, n, ECOSYSTEM_DOWNLOAD_PATH);
 }
 
 auto parse(int argc, char* argv[]) -> Options {
@@ -96,7 +110,12 @@ auto parse(int argc, char* argv[]) -> Options {
 
                 if (files.size()) {
                     opt.filesForMD5 = files;
-                    opt.calcMD5 = true;
+                    if (opt.mode == NONE) {
+                        opt.mode = MD5;
+                    } else {
+                        fprintf(stderr, "Key combination error.\n");
+                        opt.error = true;
+                    }
                     return opt;
                 }
 
@@ -108,8 +127,14 @@ auto parse(int argc, char* argv[]) -> Options {
             case 'd': {
 
                 if (isValidURL(optarg)) {
-                    opt.downloadURL = true;
                     opt.url = optarg;
+                    if (opt.mode == NONE) {
+                        opt.mode = DOWNLOAD;
+                    } else {
+                        fprintf(stderr, "Key combination error.\n");
+                        opt.error = true;
+                        return opt;
+                    }
                     break;
                 }
 
@@ -121,12 +146,53 @@ auto parse(int argc, char* argv[]) -> Options {
             case 'n': {
 
                 if (isValidFileName(optarg)) {
-                    opt.downloadNB = true;
                     opt.nbFileName = optarg;
+                    if (opt.mode == NONE) {
+                        opt.mode = DOWNLOAD_NB;
+                    } else {
+                        fprintf(stderr, "Key combination error.\n");
+                        opt.error = true;
+                        return opt;
+                    }
                     break;
                 } else if (std::string(optarg) != "") {
-                    opt.downloadNB = true;
                     opt.nbBuildNumber = optarg;
+                    if (opt.mode == NONE) {
+                        opt.mode = DOWNLOAD_NB;
+                    } else {
+                        fprintf(stderr, "Key combination error.\n");
+                        opt.error = true;
+                        return opt;
+                    }
+                    break;
+                }
+
+                fprintf(stderr, "Error key --get: %s\n", optarg);
+                opt.error = true;
+                return opt;
+            }
+
+            case 't': {
+
+                if (isValidFileName(optarg)) {
+                    opt.nbFileName = optarg;
+                    if (opt.mode == NONE) {
+                        opt.mode = DOWNLOAD_PROD;
+                    } else {
+                        fprintf(stderr, "Key combination error.\n");
+                        opt.error = true;
+                        return opt;
+                    }
+                    break;
+                } else if (std::string(optarg) != "") {
+                    opt.nbBuildNumber = optarg;
+                    if (opt.mode == NONE) {
+                        opt.mode = DOWNLOAD_PROD;
+                    } else {
+                        fprintf(stderr, "Key combination error.\n");
+                        opt.error = true;
+                        return opt;
+                    }
                     break;
                 }
 
@@ -138,12 +204,37 @@ auto parse(int argc, char* argv[]) -> Options {
             case 'i': {
 
                 if (isValidFileName(optarg)) {
-                    opt.install = true;
                     opt.installFileName = optarg;
+                    if (opt.mode == NONE) {
+                        opt.mode = INSTALL;
+                    } else {
+                        fprintf(stderr, "Key combination error.\n");
+                        opt.error = true;
+                        return opt;
+                    }
                     break;
                 } else if (std::string(optarg) != "") {
-                    opt.install = true;
                     opt.installNumber = optarg;
+                    if (opt.mode == NONE) {
+                        opt.mode = INSTALL;
+                    } else {
+                        fprintf(stderr, "Key combination error.\n");
+                        opt.error = true;
+                        return opt;
+                    }
+                    break;
+                }
+
+                fprintf(stderr, "Error key --get: %s\n", optarg);
+                opt.error = true;
+                return opt;
+            }
+
+            case 'a': {
+                auto i = split(optarg, ':');
+                if (i.size() == 2) {
+                    opt.user = i[0];
+                    opt.password = i[1];
                     break;
                 }
 
@@ -153,13 +244,36 @@ auto parse(int argc, char* argv[]) -> Options {
             }
 
             case 'l': {
-                opt.listOflocal = true;
-                return opt;
+                if (opt.mode == NONE) {
+                    opt.mode = LIST_LOCAL;
+                } else {
+                    fprintf(stderr, "Key combination error.\n");
+                    opt.error = true;
+                    return opt;
+                }
+                break;
             }
 
             case 'r': {
-                opt.listOfNB = true;
-                return opt;
+                if (opt.mode == NONE) {
+                    opt.mode = LIST_NB;
+                } else {
+                    fprintf(stderr, "Key combination error.\n");
+                    opt.error = true;
+                    return opt;
+                }
+                break;
+            }
+
+            case 'p': {
+                if (opt.mode == NONE) {
+                    opt.mode = LIST_PROD;
+                } else {
+                    fprintf(stderr, "Key combination error.\n");
+                    opt.error = true;
+                    return opt;
+                }
+                break;
             }
 
             case 'v': {
