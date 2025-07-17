@@ -7,7 +7,7 @@ profiles_t stem_65_16_Z7020_LL_v1_1 = {
     .boardModelEEPROM = "",
     .boardETH_MAC =  "",
     .zynqCPUModel = Z7020,
-    .oscillator_rate = 125000000,
+    .oscillator_rate = 62500000,
 
     .fast_adc_rate = 62500000,
     .fast_adc_count_channels = 2,
@@ -25,7 +25,7 @@ profiles_t stem_65_16_Z7020_LL_v1_1 = {
     .fast_adc_gain[RP_HP_ADC_GAIN_HIGH][3] = 0,
 
     .is_dac_present = true,
-    .fast_dac_rate = 125000000,
+    .fast_dac_rate = 62500000,
     .fast_dac_count_channels = 2,
     .fast_dac_is_sign = true,
     .fast_dac_bits = 14,
@@ -87,7 +87,7 @@ profiles_t stem_65_16_Z7020_LL_v1_1 = {
     .external_trigger_full_scale = 0,
     .is_ext_trigger_signed = false,
 
-    .fast_adc_spectrum_resolution = 62500000,
+    .fast_adc_spectrum_resolution = 31250000,
 
     .fast_adc_full_scale = 1,
     .fast_dac_full_scale = 2,
