@@ -19,7 +19,7 @@
 #define REVISION_STR XSTR(REVISION)
 #endif
 
-#define CRED_PATH "/opt/redpitaya/bin/prod_cred.txt"
+#define CRED_PATH "/opt/redpitaya/prod_cred.txt"
 
 enum Mode { NONE = 0, MD5 = 1, DOWNLOAD = 2, DOWNLOAD_NB = 3, INSTALL = 4, LIST_LOCAL = 5, LIST_NB = 6, LIST_PROD = 7, DOWNLOAD_PROD = 8 };
 
