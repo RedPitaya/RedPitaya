@@ -19,6 +19,9 @@
     UPD.SdLinuxVer = undefined;
     UPD.type = '';
     UPD.timerCheck = undefined;
+    UPD.lastRelease = undefined;
+    
+    UPD.param_callbacks = {};
 
 
     UPD.startStep = function(step) {
@@ -115,111 +118,110 @@
 
     UPD.checkUpdates = function(type) {
         $('#select_ver').hide();
-        setTimeout(function() {
+
+        if (UPD.lastRelease == undefined || UPD.lastRelease == ""){
+            setTimeout(function() {
+                UPD.checkUpdates(type);
+            }, 500);
+            return;
+        }
+
+        var resp = UPD.lastRelease;
+        var arr = resp.split('\n');
+
+        $('#retry').click(function(event) {
+            $('#step_' + UPD.currentStep).find('.error_msg').hide();
+            UPD.restartStep();
+        });
+
+        // Request resending. Reasons:
+        // - no available distributives for selected type
+        // - invalid response format
+        if (arr.length == 0) {
+            $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+            $('#step_' + UPD.currentStep).find('.error_msg').show();
+            return;
+        }
+        var list = [];
+        UPD.ecosystems = [];
+        UPD.ecosystems_sizes = [];
+
+        for (var i = 0; i < arr.length; i ++) {
+            if (arr[i] != "" && arr[i].startsWith("ecosystem")) {
+                UPD.ecosystems.push(arr[i]);
+                list.push(arr[i]);
+            }
+        }
+
+        if (list.length == 0) {
+            $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+            $('#step_' + UPD.currentStep).find('.error_msg').show();
+            return;
+        } else {
+            $('#step_' + UPD.currentStep).find('.error_msg').hide();
+        }
+        list.sort();
+        $('#ecosystem_ver').empty();
+        var es_distro_vers = { vers_as_str: '0.0', build: 0, ver_full: '' };
+        // example of list entry: ecosystem-0.97-13-f9094af.zip-12.23M
+        for (var i = list.length - 1; i >= 0; i--) {
+            var item = list[i].split('-');
+            var ver = item[1];
+            var build = item[2];
+            // select latest version according to common version and build
+            if (UPD.compareVersions(ver + "." + build, es_distro_vers.vers_as_str + "." + es_distro_vers.build) === -1) {
+                //                        if (ver > es_distro_vers.vers_as_str || (ver === es_distro_vers.vers_as_str && build > es_distro_vers.build)) {
+                es_distro_vers.vers_as_str = ver;
+                es_distro_vers.build = build;
+                es_distro_vers.ver_full = item.slice(0, 4).join('-');
+            }
+        }
+        var distro_desc = es_distro_vers.vers_as_str + '-' + es_distro_vers.build;
+        var distro_desc_short = es_distro_vers.vers_as_str + '-' + es_distro_vers.build;
+        if (UPD.compareVersions(distro_desc_short,UPD.currentVer) >= 0) {
+            $('#used_last_version').show();
+            $('#select_ver').hide();
+            $('#step_4').hide();
+            $('#step_5').hide();
+            $('#step_6').hide();
+            $('#step_7').hide();
+            UPD.setIcon();
+            if (UPD.SdLinuxVer.toFixed(2) !== UPD.EcosystemLinuxVer.trim()){
+                $("#not_supported_linux").show();
+            }
+        } else {
+            $('#distro_dsc').text(distro_desc);
+            $('#ecosystem_ver').removeAttr('disabled');
+            $('#select_ver').show();
+            $('#apply').click(function(event) {
+                if (UPD.isApply)
+                    return; // FIXME
+                $('.select_ver').hide();
+                UPD.isApply = true;
+                var val = es_distro_vers.ver_full;
+                UPD.chosen_eco = UPD.ecosystems.indexOf(val);
+                if (UPD.chosen_eco != -1) {
+                    UPD.nextStep();
+                    $('#apply').hide();
+                    $('#and_click').hide();
+                    $('#ecosystem_ver').attr('disabled', 'disabled');
+                }
+            });
+            $('#ecosystem_ver').change();
             $.ajax({
-                    url: '/update_list?type=' + type,
-                    type: 'GET',
-                })
-                .done(function(msg) {
-                    var resp = msg;
-                    var arr = resp.split('\n');
+                url: '/check_linux_os?type=' + type+"&ecosystem="+es_distro_vers.ver_full,
+                type: 'GET',
+            })
+            .done(function(msg) {
+                console.log(msg)
+                if (msg.trim() !== "" && msg.trim() !== UPD.EcosystemLinuxVer.trim()){
+                    $("#not_supported_linux").show();
+                }
+            });
+        }
+        
 
-                    $('#retry').click(function(event) {
-                        $('#step_' + UPD.currentStep).find('.error_msg').hide();
-                        UPD.restartStep();
-                    });
-
-                    // Request resending. Reasons:
-                    // - no available distributives for selected type
-                    // - invalid response format
-                    if (arr.length == 0 || arr.length % 2 != 0) {
-                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
-                        $('#step_' + UPD.currentStep).find('.error_msg').show();
-                        return;
-                    }
-                    var list = [];
-                    UPD.ecosystems = [];
-                    UPD.ecosystems_sizes = [];
-                    // example - distro  as array entry: ecosystem-0.97-13-f9094af.zip
-                    // example - version as array entry: 12933621
-                    for (var i = 0; i < arr.length; i += 2) {
-                        if (arr[i] != "" && arr[i].startsWith("ecosystem")) {
-                            var size = parseInt(arr[i + 1]) * 1;
-                            var sizeM = size / (1024 * 1024);
-                            UPD.ecosystems_sizes.push(size);
-                            UPD.ecosystems.push(arr[i]);
-                            list.push(arr[i] + "-" + sizeM.toFixed(2) + "M");
-                        }
-                    }
-
-                    if (list.length == 0) {
-                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
-                        $('#step_' + UPD.currentStep).find('.error_msg').show();
-                        return;
-                    } else {
-                        $('#step_' + UPD.currentStep).find('.error_msg').hide();
-                    }
-                    list.sort();
-                    $('#ecosystem_ver').empty();
-                    var es_distro_size = 0;
-                    var es_distro_vers = { vers_as_str: '0.0', build: 0, ver_full: '' };
-                    // example of list entry: ecosystem-0.97-13-f9094af.zip-12.23M
-                    for (var i = list.length - 1; i >= 0; i--) {
-                        var item = list[i].split('-');
-                        var ver = item[1];
-                        var build = item[2];
-                        var size = item[4];
-                        // select latest version according to common version and build
-                        if (UPD.compareVersions(ver + "." + build, es_distro_vers.vers_as_str + "." + es_distro_vers.build) === -1) {
-                            //                        if (ver > es_distro_vers.vers_as_str || (ver === es_distro_vers.vers_as_str && build > es_distro_vers.build)) {
-                            es_distro_vers.vers_as_str = ver;
-                            es_distro_vers.build = build;
-                            es_distro_size = size;
-                            es_distro_vers.ver_full = item.slice(0, 4).join('-');
-                        }
-                    }
-                    var distro_desc = es_distro_vers.vers_as_str + '-' + es_distro_vers.build + '(' + es_distro_size + ')';
-                    var distro_desc_short = es_distro_vers.vers_as_str + '-' + es_distro_vers.build;
-                    if (UPD.compareVersions(distro_desc_short,UPD.currentVer) >= 0) {
-                        $('#used_last_version').show();
-                        $('#select_ver').hide();
-                        $('#step_4').hide();
-                        $('#step_5').hide();
-                        $('#step_6').hide();
-                        $('#step_7').hide();
-                        UPD.setIcon();
-                    } else {
-                        $('#distro_dsc').text(distro_desc);
-                        $('#ecosystem_ver').removeAttr('disabled');
-                        $('#select_ver').show();
-                        $('#apply').click(function(event) {
-                            if (UPD.isApply)
-                                return; // FIXME
-                            $('.select_ver').hide();
-                            UPD.isApply = true;
-                            var val = es_distro_vers.ver_full;
-                            UPD.chosen_eco = UPD.ecosystems.indexOf(val);
-                            if (UPD.chosen_eco != -1) {
-                                UPD.nextStep();
-                                $('#apply').hide();
-                                $('#and_click').hide();
-                                $('#ecosystem_ver').attr('disabled', 'disabled');
-                            }
-                        });
-                        $('#ecosystem_ver').change();
-                    }
-                    $.ajax({
-                        url: '/check_linux_os?type=' + type+"&ecosystem="+es_distro_vers.ver_full,
-                        type: 'GET',
-                    })
-                    .done(function(msg) {
-                        console.log(msg)
-                        if (msg.trim() !== "" && msg.trim() !== UPD.EcosystemLinuxVer.trim()){
-                            $("#not_supported_linux").show();
-                        }
-                    });
-                });
-        }, 500);
+       
     }
 
 
@@ -474,9 +476,14 @@
         }, 3500);
     }
 
-}(window.UPD = window.UPD || {}, jQuery));
+    UPD.setLastRelease= function(new_params) {
+        UPD.lastRelease = new_params['RP_LAST_RELEASE'].value
+    }
 
-UPD.getChangelog = function(ecosystem) {
+
+    UPD.param_callbacks["RP_LAST_RELEASE"] = UPD.setLastRelease;
+
+    UPD.getChangelog = function(ecosystem) {
     $.ajax({
             url: '/update_changelog?id=' + ecosystem,
             type: 'GET',
@@ -486,7 +493,11 @@ UPD.getChangelog = function(ecosystem) {
                 msg = "Changelog is empty";
             $('#changelog_text').html(msg);
         })
-}
+    }
+
+}(window.UPD = window.UPD || {}, jQuery));
+
+
 
 function checkDev() {
     $.ajax({
@@ -497,6 +508,8 @@ function checkDev() {
             $('#ecosystem_type').append($('<option>', { value: '4', text: 'Dev' }));
     });
 }
+
+
 
 // Page onload event handler
 $(document).ready(function() {

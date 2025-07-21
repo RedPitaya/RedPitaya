@@ -75,7 +75,7 @@ int rp_app_init(void) {
                 sleep_time = SLEEP_TIME;
                 lastTime = curTime;
             }
-	    usleep(300000);
+            usleep(300000);
             if (g_stop) {
                 break;
             }

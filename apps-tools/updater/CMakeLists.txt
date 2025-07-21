@@ -12,7 +12,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${BUILD_PATH})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${BUILD_PATH})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BUILD_PATH})
 
-project(daemon)
+project(controllerhf)
 
 if(NOT DEFINED INSTALL_DIR)
     message(FATAL_ERROR,"Installation path not set.")
@@ -50,40 +50,66 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations -Wno-psabi
 
 set(ZIP_FILE ../../../${APP}-${VERSION}-${REVISION}.zip)
 
-# list(APPEND r_paths
-#     /opt/redpitaya/lib
-#     /opt/redpitaya/lib/web
-# )
+list(APPEND r_paths
+    /opt/redpitaya/lib
+    /opt/redpitaya/lib/web
+)
 
-# list(APPEND include_paths
-#     ${INSTALL_DIR}/include
-#     ${INSTALL_DIR}/include/api2
-#     ${INSTALL_DIR}/include/apiApp
-#     ${INSTALL_DIR}/include/redpitaya
-# )
+list(APPEND include_paths
+    ${INSTALL_DIR}/include
+    ${INSTALL_DIR}/include/api2
+    ${INSTALL_DIR}/include/apiApp
+    ${INSTALL_DIR}/include/redpitaya
+    ${INSTALL_DIR}/rp_sdk
+    ${INSTALL_DIR}/rp_sdk/libjson
+)
 
-# list(APPEND libs_paths
-#     ${INSTALL_DIR}/lib
-#     ${INSTALL_DIR}/lib/web
-# )
+list(APPEND libs_paths
+    ${INSTALL_DIR}/lib
+    ${INSTALL_DIR}/lib/web
+    ${INSTALL_DIR}/rp_sdk
+)
 
-# set(CMAKE_INSTALL_RPATH ${r_paths})
-# set(CMAKE_BUILD_RPATH ${r_paths})
-# include_directories(${include_paths})
-# link_directories(${libs_paths})
+list(APPEND rp_libs
+    rp-system
+    rp-client
+    rp-websocket
+    rpapp
+    rpapp_lcr
+    rp
+    rp-arb
+    rp-dsp
+    rp-sweep
+    rp-formatter
+    rp-hw-calib
+    rp-hw-can
+    rp-hw-profiles
+    rp-hw
+    rp-i2c
+    rp-spi
+    rp-gpio
+    rp-updater
+    i2c
+)
 
-# file(GLOB SOURCES "src/*.cpp")
+set(CMAKE_INSTALL_RPATH ${r_paths})
+set(CMAKE_BUILD_RPATH ${r_paths})
 
-# add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
-# add_compile_definitions(ARCH_ARM)
-# add_compile_options(-Wall -Wno-unused-result -Wno-reorder -Wno-cpp -Wextra $<$<CONFIG:Release>:-Wno-unused-parameter> $<$<CONFIG:Release>:-Wno-unused-variable>)
-# add_compile_options($<$<CONFIG:Debug>:-DTRACE_ENABLE>)
-# add_compile_options(-DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os>  -ffunction-sections -fdata-sections)
+include_directories(${include_paths})
+link_directories(${libs_paths})
+
+file(GLOB SOURCES "src/*.cpp")
+
+add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
+add_compile_definitions(ARCH_ARM)
+add_compile_options(-Wall -Wno-reorder -Wno-cpp -Wextra $<$<CONFIG:Release>:-Wno-unused-parameter> $<$<CONFIG:Release>:-Wno-unused-variable>)
+add_compile_options($<$<CONFIG:Debug>:-DTRACE_ENABLE>)
+add_compile_options(-DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os>  -ffunction-sections -fdata-sections)
 
 
-# add_executable(${PROJECT_NAME} ${SOURCES})
-# target_link_libraries(${PROJECT_NAME} PRIVATE  librp-websocket.a pthread)
-# set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
+target_link_libraries(${PROJECT_NAME} PRIVATE cryptopp rp_sdk ${rp_libs} pthread)
+set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")
 
 
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/css DESTINATION ${BUILD_PATH})

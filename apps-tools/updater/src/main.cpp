@@ -1,236 +1,91 @@
+#include <CustomParameters.h>
+#include <DataManager.h>
 
-#include <string>
-#include <memory>
 #include <unistd.h>
-#include <stdio.h>
-#include <cstring>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <sys/time.h>
-#include <sys/stat.h>
-#include <net/if.h>
-#include <unistd.h>
-#include <signal.h>
-#include <sys/types.h>
-#include <dirent.h>
-#include <iostream>
-#include <fstream>
-#include <cstdio>
-#include <list>
+#include <atomic>
+#include <chrono>
+#include <thread>
 
-#include "web/rp_websocket.h"
+#include "common/rp_updater.h"
+#include "common/version.h"
+#include "main.h"
 
-#define WEBPORT 9092
+// 5 min
+#define SLEEP_TIME 1000 * 5
 
-const char* SRC_ROOT = "/tmp/build";
-const char* DST_ROOT = "/opt/redpitaya";
+using namespace std::chrono;
 
-rp_websocket::CWEBServer::Ptr g_server = nullptr;
+std::atomic_bool g_stop = false;
+std::thread* g_updaterReqThread = nullptr;
 
-void signalHandlerStrong( int signum )
-{
+CStringParameter g_last_release("RP_LAST_RELEASE", CBaseParameter::RO, "", 250);
+
+const char* rp_app_desc(void) {
+    return (const char*)"Red Pitaya update manager.\n";
 }
 
-void signalHandlerDefault( int signum )
-{
-    exit(0);
-}
+int rp_app_init(void) {
+    fprintf(stderr, "Loading updater %s-%s.\n", VERSION_STR, REVISION_STR);
+    // Need for reset fpga by default
+    CDataManager::GetInstance()->SetParamInterval(1000);
+    CDataManager::GetInstance()->SetSignalInterval(1000);
 
-void copyFile(const char* _src, const char* _dst)
-{
-    using namespace std;
-    ifstream source(_src, ios::binary);
-    ofstream dest(_dst, ios::binary);
-
-    dest << source.rdbuf();
-
-    source.close();
-    dest.close();
-}
-
-void createDir(const char* dir)
-{
-    struct stat st;
-    memset(&st,0,sizeof(st));
-    if (stat(dir, &st) == -1) {
-        mkdir(dir, 0777);
-    }
-}
-
-std::vector<std::string> dirs;
-std::vector<std::pair<std::string,std::string>> files;
-std::vector<std::string> files_for_delete;
-
-
-void listdir(const char *root, const char *d_name, int level) {
-    DIR *dir;
-    struct dirent *entry;
-
-    char name[1024];
-    int len = snprintf(name, sizeof(name)-1, "%s%s", root, d_name);
-    name[len] = 0;
-
-    if (!(dir = opendir(name)))
-        return;
-    if (!(entry = readdir(dir)))
-        return;
-
-    do {
-        if (entry->d_type == DT_DIR) {
-            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
-                continue;
-
-            char path[1024];
-            int len = snprintf(path, sizeof(path)-1, "%s/%s", d_name, entry->d_name);
-            path[len] = 0;
-            std::string dir(DST_ROOT);
-            dir = dir + path;
-            dirs.push_back(dir);
-            listdir(root, path, level + 1);
-        }
-        else
-        {
-            std::string from(name);
-            from = from + "/"+ entry->d_name;
-            std::string to(DST_ROOT);
-            to = to + d_name + "/" + entry->d_name;
-            files.push_back({from,to});
-        }
-    } while ((entry = readdir(dir)));
-
-    closedir(dir);
-}
-
-void listdirForDelete(const char *root, const char *d_name, int level) {
-    DIR *dir;
-    struct dirent *entry;
-
-    char name[1024];
-    int len = snprintf(name, sizeof(name)-1, "%s%s", root, d_name);
-    name[len] = 0;
-
-    if (!(dir = opendir(name)))
-        return;
-    if (!(entry = readdir(dir)))
-        return;
-
-    do {
-        if (entry->d_type == DT_DIR) {
-            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
-                continue;
-
-            char path[1024];
-            int len = snprintf(path, sizeof(path)-1, "%s/%s", d_name, entry->d_name);
-            path[len] = 0;
-            listdirForDelete(root, path, level + 1);
-        }
-        else
-        {
-            std::string from(name);
-            from = from + "/"+ entry->d_name;
-            bool add = true;
-            for(size_t i = 0; i < files.size(); i++){
-                if (files[i].second == from){
-                    add = false;
-                    break;
+    g_updaterReqThread = new std::thread([]() {
+        g_stop = false;
+        auto now = system_clock::now();
+        auto curTime = time_point_cast<milliseconds>(now);
+        auto lastTime = curTime;
+        int64_t sleep_time = 0;
+        while (true) {
+            curTime = time_point_cast<milliseconds>(system_clock::now());
+            if ((curTime - lastTime).count() > sleep_time) {
+                std::vector<std::string> files;
+                if (rp_UpdaterGetReleaseAvailableFilesList(files) == RP_UP_OK) {
+                    if (files.size()) {
+                        g_last_release.SendValue(files.back());
+                    }
                 }
+                sleep_time = SLEEP_TIME;
+                lastTime = curTime;
             }
-            if (add) files_for_delete.push_back(from);
-
-        }
-    } while ((entry = readdir(dir)));
-
-    closedir(dir);
-}
-
-void copy() {
-    for(auto item:dirs){
-        createDir(item.c_str());
-    }
-    g_server->send("total_files",(int)files.size());
-    for(size_t i = 0; i < files.size(); i++){
-        copyFile(files[i].first.c_str(), files[i].second.c_str());
-        g_server->send("copy_index",(int)i);
-        usleep(1000);
-    }
-}
-
-void deleteFiles() {
-    for(auto item:files_for_delete){
-        std::remove(item.c_str());
-    }
-}
-
-void StartDaemon()
-{
-    pid_t pid;
-    pid = fork();
-    if (pid < 0)
-        exit(EXIT_FAILURE);
-    if (pid > 0)
-        exit(EXIT_SUCCESS);
-    if (setsid() < 0)
-        exit(EXIT_FAILURE);
-    int x;
-    for (x = sysconf(_SC_OPEN_MAX); x>0; x--)
-        close (x);
-}
-
-int main(int argc, char *argv[])
-{
-
-    StartDaemon();
-
-    g_server = std::make_shared<rp_websocket::CWEBServer>();
-    g_server->startServer(WEBPORT);
-    g_server->receiveInt.connect([](auto key,auto command){
-        if (key == "request" && command == 1){
-            g_server->send("total_files",(int)files.size());
+            usleep(300000);
+            if (g_stop) {
+                break;
+            }
         }
     });
-    sleep(1);
-    // We will catch all signals and don't let them close us
-    signal(SIGCHLD, signalHandlerStrong);
-    signal(SIGHUP, signalHandlerStrong);
-    signal(SIGABRT, signalHandlerStrong);
-    signal(SIGFPE, signalHandlerStrong);
-    signal(SIGILL, signalHandlerStrong);
-    signal(SIGINT, signalHandlerStrong);
-    signal(SIGSEGV, signalHandlerStrong);
-    signal(SIGTERM, signalHandlerStrong);
-    signal(SIGUSR1, signalHandlerStrong);
-    signal(SIGUSR2, signalHandlerStrong);
-
-    system("killall nginx");
-    system("mount -o rw,remount /opt/redpitaya");
-    system("killall hostapd");
-
-    // If you will use /bin/cp -fr /tmp/build/* /opt/redpitaya
-    // These may cause accidental close of cp because it will receive signals
-	createDir(DST_ROOT);
-    dirs.clear();
-    files.clear();
-    listdir(SRC_ROOT, "",0);
-    listdirForDelete(DST_ROOT,"",0);
-    copy();
-    deleteFiles();
-
-    system("nohup reboot & disown");
-    g_server->send("reboot","start");
-    system("reboot");
-
-    // Ok, now we free
-    signal(SIGCHLD, signalHandlerDefault);
-    signal(SIGHUP, signalHandlerDefault);
-    signal(SIGABRT, signalHandlerDefault);
-    signal(SIGFPE, signalHandlerDefault);
-    signal(SIGILL, signalHandlerDefault);
-    signal(SIGINT, signalHandlerDefault);
-    signal(SIGSEGV, signalHandlerDefault);
-    signal(SIGTERM, signalHandlerDefault);
-    signal(SIGUSR1, signalHandlerDefault);
-    signal(SIGUSR2, signalHandlerDefault);
-    system("nohup reboot & disown");
-
     return 0;
 }
+
+int rp_app_exit(void) {
+    if (g_updaterReqThread) {
+        if (g_updaterReqThread->joinable()) {
+            g_stop = true;
+            g_updaterReqThread->join();
+        }
+    }
+    fprintf(stderr, "Unloading updater %s-%s.\n", VERSION_STR, REVISION_STR);
+    return 0;
+}
+
+int rp_set_params(rp_app_params_t*, int) {
+    return 0;
+}
+
+int rp_get_params(rp_app_params_t**) {
+    return 0;
+}
+
+int rp_get_signals(float***, int*, int*) {
+    return 0;
+}
+
+void UpdateParams(void) {}
+
+void PostUpdateSignals(void) {}
+
+void UpdateSignals(void) {}
+
+void OnNewParams(void) {}
+
+void OnNewSignals(void) {}
