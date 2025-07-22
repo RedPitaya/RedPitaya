@@ -108,7 +108,7 @@ profiles_t stem_250_12_v1_2a = {
     .E3_high_speed_gpio_rate = 0,
     .is_E3_present = false,
 
-    .is_calib_in_fpga = false
+    .is_calib_in_fpga = true
 
 };
 
