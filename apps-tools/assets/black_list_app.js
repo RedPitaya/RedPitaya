@@ -74,6 +74,7 @@
                     listOfapplications[i]["id"] === 'ba_pro' ||
                     listOfapplications[i]["id"] === 'lcr_meter' ||
                     listOfapplications[i]["id"] === 'pyrpl' ||
+                    listOfapplications[i]["id"] === 'calib_app' ||
                     listOfapplications[i]["id"] === 'impedance_analyzer' ||
                     listOfapplications[i]["id"] === 'fpgaexamples' ||
                     listOfapplications[i]["id"] === 'activelearning' ||
