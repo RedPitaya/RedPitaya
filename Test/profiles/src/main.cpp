@@ -71,7 +71,7 @@ int main(int argc, char** argv) {
     }
 
     if (strncmp(argv[1], "-f", 2) == 0) {
-        char* modelFPGA = NULL;
+        const char* modelFPGA = NULL;
         auto ret = rp_HPGetFPGAVersion(&modelFPGA);
         if (ret == RP_HP_OK) {
             printf("%s\n", modelFPGA);

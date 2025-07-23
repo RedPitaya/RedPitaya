@@ -70,6 +70,8 @@ const char* table_keys_help[] = {"all",
                                  "All parameters",
                                  "model",
                                  "ID of board",
+                                 "fpga_path",
+                                 "Path to FPGA bitstream",
                                  "zynq",
                                  "Zynq CPU type 0 - 7010,1 - 7020",
                                  "osc_rate",
@@ -741,6 +743,106 @@ std::string float_to_string_trim(float num) {
     return s;
 }
 
+int hp_cmn_GetFPGAVersion(rp_HPeModels_t model, const char** _no_free_value) {
+    switch (model) {
+        case STEM_125_10_v1_0:
+            *_no_free_value = "z10_125";
+            break;
+        case STEM_125_14_v1_0:
+            *_no_free_value = "z10_125";
+            break;
+        case STEM_125_14_v1_1:
+            *_no_free_value = "z10_125";
+            break;
+        case STEM_125_14_LN_v1_1:
+            *_no_free_value = "z10_125";
+            break;
+        case STEM_125_14_LN_BO_v1_1:
+            *_no_free_value = "z10_125";
+            break;
+        case STEM_125_14_LN_CE1_v1_1:
+            *_no_free_value = "z10_125";
+            break;
+        case STEM_125_14_LN_CE2_v1_1:
+            *_no_free_value = "z10_125";
+            break;
+        case STEM_122_16SDR_v1_0:
+            *_no_free_value = "z20_122";
+            break;
+        case STEM_122_16SDR_v1_1:
+            *_no_free_value = "z20_122";
+            break;
+        case STEM_125_14_Z7020_v1_0:
+            *_no_free_value = "z20_125";
+            break;
+        case STEM_125_14_Z7020_LN_v1_1:
+            *_no_free_value = "z20_125";
+            break;
+        case STEM_125_14_Z7020_4IN_v1_0:
+            *_no_free_value = "z20_125_4ch";
+            break;
+        case STEM_125_14_Z7020_4IN_v1_2:
+            *_no_free_value = "z20_125_4ch";
+            break;
+        case STEM_125_14_Z7020_4IN_v1_3:
+            *_no_free_value = "z20_125_4ch";
+            break;
+        case STEM_250_12_v1_0:
+            *_no_free_value = "z20_250_1_0";
+            break;
+        case STEM_250_12_v1_1:
+            *_no_free_value = "z20_250";
+            break;
+        case STEM_250_12_v1_2:
+            *_no_free_value = "z20_250";
+            break;
+        case STEM_250_12_v1_2a:
+            *_no_free_value = "z20_250";
+            break;
+        case STEM_250_12_v1_2b:
+            *_no_free_value = "z20_250";
+            break;
+        case STEM_250_12_120:
+            *_no_free_value = "z20_250";
+            break;
+        case STEM_125_14_v2_0:
+            *_no_free_value = "z10_125_v2";
+            break;
+        case STEM_125_14_Pro_v2_0:
+            *_no_free_value = "z10_125_pro_v2";
+            break;
+        case STEM_125_14_Z7020_Pro_v1_0:
+            *_no_free_value = "z20_125_v2";
+            break;
+        case STEM_125_14_Z7020_Pro_v2_0:
+            *_no_free_value = "z20_125_v2";
+            break;
+        case STEM_125_14_Z7020_Ind_v2_0:
+            *_no_free_value = "z20_125_v2";
+            break;
+        case STEM_125_14_Z7020_LL_v1_1:
+            *_no_free_value = "z20_125_ll";
+            break;
+        case STEM_65_16_Z7020_LL_v1_1:
+            *_no_free_value = "z20_125_ll";
+            break;
+        case STEM_125_14_Z7020_LL_v1_2:
+            *_no_free_value = "z20_125_ll";
+            break;
+        case STEM_65_16_Z7020_TI_v1_3:
+            *_no_free_value = "z20_125_ll";
+            break;
+        case STEM_125_14_Z7020_TI_v1_3:
+            *_no_free_value = "z20_125_ll";
+            break;
+        default:
+            *_no_free_value = "";
+            return RP_HP_EMU;
+            break;
+    }
+    return RP_HP_OK;
+}
+
 std::string getValueForKey(rp_HPeModels_t model, std::string key) {
     auto p = hp_cmn_getProfile(model);
     if (p == NULL) {
@@ -754,6 +856,12 @@ std::string getValueForKey(rp_HPeModels_t model, std::string key) {
 
     if (key == "model") {
         return std::to_string(p->boardModel);
+    }
+
+    if (key == "fpga_path") {
+        const char* modelFPGA = NULL;
+        hp_cmn_GetFPGAVersion(model, &modelFPGA);
+        return std::string(modelFPGA);
     }
 
     if (key == "zynq") {

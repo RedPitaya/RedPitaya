@@ -70,7 +70,7 @@ void removeOverlay() {
 std::string getPathToOverlay() {
     std::string path = "/opt/redpitaya/fpga/";
     std::string path_suff = "/barebones/dts_rp/led-system.dtbo";
-    char* modelFPGA = NULL;
+    const char* modelFPGA = NULL;
     auto ret = rp_HPGetFPGAVersion(&modelFPGA);
     if (ret == RP_HP_OK) {
         path = path + modelFPGA + path_suff;

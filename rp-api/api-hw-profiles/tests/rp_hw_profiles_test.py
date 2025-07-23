@@ -420,8 +420,12 @@ print("rp_hw_profiles.rp_HPGetIsCalibInFPGA()")
 res = rp_hw_profiles.rp_HPGetIsCalibInFPGA()
 print(res)
 
-print("rp_hw_profiles.rp_HPGetIsCalibInFPGAOrDefault()")
-res = rp_hw_profiles.rp_HPGetIsCalibInFPGAOrDefault()
+print("rp_hw_profiles.rp_HPGetIsCalibInFPGA()")
+res = rp_hw_profiles.rp_HPGetIsCalibInFPGA()
+print(res)
+
+print("rp_hw_profiles.rp_HPGetFPGAVersion()")
+res = rp_hw_profiles.rp_HPGetFPGAVersion()
 print(res)
 
 print("rp_hw_profiles.rp_HPPrint()")

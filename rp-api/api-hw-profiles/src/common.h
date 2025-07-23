@@ -100,6 +100,7 @@ int hp_cmn_Print(profiles_t* p);
 
 void hp_cmn_PrintKeyHelp();
 void hp_cmn_PrintPivotTable(char* keys);
+int hp_cmn_GetFPGAVersion(rp_HPeModels_t model, const char** _no_free_value);
 
 #ifdef __cplusplus
 }

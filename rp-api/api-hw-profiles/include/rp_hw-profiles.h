@@ -557,7 +557,7 @@ bool rp_HPGetIsCalibInFPGAOrDefault();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
-int rp_HPGetFPGAVersion(char** _no_free_value);
+int rp_HPGetFPGAVersion(const char** _no_free_value);
 
 /**
  * Print all parameters for current profile
