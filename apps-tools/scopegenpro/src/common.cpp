@@ -280,7 +280,7 @@ auto outFreqMax() -> int {
             return 120e6 / 2;
         case STEM_65_16_Z7020_LL_v1_1:
         case STEM_65_16_Z7020_TI_v1_3:
-            return 65e6 / 2;
+            return 50e6;
         default: {
             ERROR_LOG("Unknown model: %d.", model);
             return 1;

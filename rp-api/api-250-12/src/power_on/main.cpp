@@ -40,7 +40,7 @@ void UsingArgs() {
     printf("\t-C Load configuration of ADC and DAC. \n");
     printf("\t-C1 Load configuration of ADC for 125-14 LL/TI. \n");
     printf("\t-C2 Load configuration of ADC for 65-16 LL/TI. \n");
-    printf("\tDo not use flags together");
+    printf("\tDo not use flags together\n");
 
     exit(-1);
 }
