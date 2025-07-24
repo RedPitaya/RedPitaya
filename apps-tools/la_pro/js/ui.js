@@ -482,4 +482,14 @@
         })
     }
 
+    LA.updateJoystickPosition = function(){
+        let height = $(".menu-content").height();
+        let g_height = $("#graphs").height() - 100;
+        let limit = Math.min(g_height,400)
+        height = Math.max(height,g_height);
+        height = height > limit ? height : limit;
+        $("#joystick").css('top',height + 16);
+        $("#to_trigger").css('top',height + 23 + 160);
+    };
+
 }(window.LA = window.LA || {}, jQuery));

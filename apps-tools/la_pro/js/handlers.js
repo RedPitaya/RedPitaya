@@ -334,7 +334,7 @@
             LA.updateChannels()
             LA.checkSubWindowPosition()
             LA.setCurrentFreq()
-
+            LA.updateJoystickPosition();
         }).resize();
 
         $("#ext_con_but").click(function(event) {
@@ -397,6 +397,7 @@
         // Close parameters dialog on close button click
         $('.close-dialog').on('click', function() {
             LA.exitEditing();
+            LA.updateJoystickPosition();
         });
 
         $(".data-bus").click(function() {
@@ -520,6 +521,7 @@
             LA.state.editing = true;
             $('#right_menu').hide();
             $('#' + $(this).attr('id') + '_dialog').show();
+            LA.updateJoystickPosition();
         });
 
         $('.btn-less').click(function() {
@@ -528,6 +530,9 @@
             $(inp.attr('data-attr')).show();
         });
 
+        LA.resizeObserver = new ResizeObserver(function(entries) {
+            LA.updateJoystickPosition();
+        });
     }
 
 }(window.LA = window.LA || {}, jQuery));
