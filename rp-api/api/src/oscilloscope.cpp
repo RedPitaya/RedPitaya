@@ -895,18 +895,21 @@ int osc_SetCalibOffsetInFPGA(rp_channel_t channel, uint8_t bits, int32_t offset)
 
     int16_t offsetCalc = offset * -1;  //-(pow(2, 16 - bits));
 
-    uint32_t currentValue = 0;
+    int16_t currentValue = 0;
     switch (channel) {
         case RP_CH_1:
-            cmn_Debug("cmn_SetValue(&osc_reg->calib_offset_ch1) mask 0xFFFF <- 0x%X", offsetCalc);
-            return cmn_SetValue(&osc_reg->calib_offset_ch1, offsetCalc, CALIB_MASK, &currentValue);
+            cmn_Debug("osc_reg->calib_offset_ch1 <- 0x%X", offsetCalc);
+            osc_reg->calib_offset_ch1 = offsetCalc;
+            return RP_OK;
         case RP_CH_2:
-            cmn_Debug("cmn_SetValue(&osc_reg->calib_offset_ch2) mask 0xFFFF <- 0x%X", offsetCalc);
-            return cmn_SetValue(&osc_reg->calib_offset_ch2, offsetCalc, CALIB_MASK, &currentValue);
+            cmn_Debug("osc_reg->calib_offset_ch2 <- 0x%X", offsetCalc);
+            osc_reg->calib_offset_ch2 = offsetCalc;
+            return RP_OK;
         case RP_CH_3:
             if (osc_reg_4ch) {
-                cmn_Debug("cmn_SetValue(&osc_reg_4ch->calib_offset_ch1) mask 0xFFFF <- 0x%X", offsetCalc);
-                return cmn_SetValue(&osc_reg_4ch->calib_offset_ch1, offsetCalc, CALIB_MASK, &currentValue);
+                cmn_Debug("osc_reg_4ch->calib_offset_ch1 <- 0x%X", offsetCalc);
+                osc_reg_4ch->calib_offset_ch1 = offsetCalc;
+                return RP_OK;
             } else {
                 ERROR_LOG("Registers for channels 3 and 4 are not initialized")
                 return RP_NOTS;
@@ -914,8 +917,9 @@ int osc_SetCalibOffsetInFPGA(rp_channel_t channel, uint8_t bits, int32_t offset)
             break;
         case RP_CH_4:
             if (osc_reg_4ch) {
-                cmn_Debug("cmn_SetValue(&osc_reg_4ch->calib_offset_ch2) mask 0xFFFF <- 0x%X", offsetCalc);
-                return cmn_SetValue(&osc_reg_4ch->calib_offset_ch2, offsetCalc, CALIB_MASK, &currentValue);
+                cmn_Debug("osc_reg_4ch->calib_offset_ch2 <- 0x%X", offsetCalc);
+                osc_reg->calib_offset_ch2 = offsetCalc;
+                return RP_OK;
             } else {
                 ERROR_LOG("Registers for channels 3 and 4 are not initialized")
                 return RP_NOTS;
