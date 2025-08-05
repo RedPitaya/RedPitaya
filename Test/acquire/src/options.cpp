@@ -33,6 +33,7 @@ static struct option long_options_250_12[32] = {
     {"hk", no_argument, 0, 'k'},
     {"axi", no_argument, 0, 'a'},
     {"debug", no_argument, 0, 'g'},
+    {"avg", no_argument, 0, 0},
     {"offset", required_argument, 0, 0},
     {0, 0, 0, 0}};
 
@@ -54,6 +55,7 @@ static constexpr char g_format_250_12[2048] =
     "  --help          -h    Print this message.\n"
     "  --hex           -x    Print value in hex.\n"
     "  --volt          -o    Print value in volt.\n"
+    "  --avg                 Outputs the average value for the values in the buffer.\n"
     "  --no_reg        -r    Disable load registers config (XML) for DAC and ADC.\n"
     "  --calib         -c    Disable calibration parameters\n"
     "  --hk            -k    Reset houskeeping (Reset state for GPIO). Default: disabled\n"
@@ -82,6 +84,7 @@ static struct option long_options_125_14[32] = {
     {"hk", no_argument, 0, 'k'},
     {"axi", no_argument, 0, 'a'},
     {"debug", no_argument, 0, 'g'},
+    {"avg", no_argument, 0, 0},
     {"offset", required_argument, 0, 0},
     {0, 0, 0, 0}};
 
@@ -101,6 +104,7 @@ static constexpr char g_format_125_14[2048] =
     "  --help          -h    Print this message.\n"
     "  --hex           -x    Print value in hex.\n"
     "  --volt          -o    Print value in volt.\n"
+    "  --avg                 Outputs the average value for the values in the buffer.\n"    
     "  --calib         -c    Disable calibration parameters\n"
     "  --hk            -k    Reset houskeeping (Reset state for GPIO). Default: disabled\n"
     "  --axi           -a    Enable AXI interface. Also enable housekeeping reset. Default: disabled\n"
@@ -118,7 +122,7 @@ static struct option long_options_125_14_4ch[32] = {
     {"gain4", required_argument, 0, '4'},  {"tr_ch", required_argument, 0, 't'}, {"tr_level", required_argument, 0, 'l'},
     {"version", no_argument, 0, 'v'},      {"help", no_argument, 0, 'h'},        {"hex", no_argument, 0, 'x'},
     {"volt", no_argument, 0, 'o'},         {"calib", no_argument, 0, 'c'},       {"hk", no_argument, 0, 'k'},
-    {"debug", no_argument, 0, 'g'},        {"offset", required_argument, 0, 0},  {0, 0, 0, 0}};
+    {"debug", no_argument, 0, 'g'},        {"avg", no_argument, 0, 0},           {"offset", required_argument, 0, 0},  {0, 0, 0, 0}};
 
 static constexpr char g_format_125_14_4ch[2048] =
     "\n"
@@ -139,6 +143,7 @@ static constexpr char g_format_125_14_4ch[2048] =
     "  --help          -h    Print this message.\n"
     "  --hex           -x    Print value in hex.\n"
     "  --volt          -o    Print value in volt.\n"
+    "  --avg                 Outputs the average value for the values in the buffer.\n"    
     "  --calib         -c    Disable calibration parameters\n"
     "  --hk            -k    Reset houskeeping (Reset state for GPIO). Default: disabled\n"
     "  --debug         -g    Debug registers. Default: disabled\n"
@@ -254,6 +259,10 @@ auto parse(int argc, char* argv[]) -> Options {
                         return opt;
                     }
                     opt.offset = offset;
+                    break;
+                }
+                if (strcmp((*long_options)[option_index].name, "avg") == 0) {
+                    opt.avg = true;
                     break;
                 }
                 fprintf(stderr, "Error --%s: %s\n", long_options[option_index]->name, optarg);
@@ -598,10 +607,10 @@ models_t getModel() {
         case STEM_125_14_Z7020_LL_v1_1:
         case STEM_125_14_Z7020_LL_v1_2:
         case STEM_125_14_Z7020_TI_v1_3:
-            return RP_125_LL;
+            return RP_125_14;
         case STEM_65_16_Z7020_LL_v1_1:
         case STEM_65_16_Z7020_TI_v1_3:
-            return RP_65_LL;
+            return RP_125_14;
         default:
             fprintf(stderr, "[Error] Can't get board model\n");
             exit(-1);

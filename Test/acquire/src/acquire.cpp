@@ -253,16 +253,34 @@ int main(int argc, char* argv[]) {
                 rp_AcqGetDataV(ch, pos, &acq_u_size, buffers[i].data());
             }
         }
-        for (uint32_t i = 0; i < option.dataSize; i++) {
+        if (option.avg){
+            float avg[4] = {0,0,0,0};
+            for (uint32_t i = 0; i < option.dataSize; i++) {
+                for (auto j = start_ch; j <= end_ch; j++) {
+                    avg[j] += buffers[j][i];
+                }
+            }
             bool printSeparator = false;
             for (auto j = start_ch; j <= end_ch; j++) {
                 if (printSeparator) {
                     fprintf(stdout, " ");
                 }
-                fprintf(stdout, "%f", buffers[j][i]);
+                fprintf(stdout, "%f", avg[j] / (float)option.dataSize);
                 printSeparator = true;
             }
             fprintf(stdout, "\n");
+        }else{
+            for (uint32_t i = 0; i < option.dataSize; i++) {
+                bool printSeparator = false;
+                for (auto j = start_ch; j <= end_ch; j++) {
+                    if (printSeparator) {
+                        fprintf(stdout, " ");
+                    }
+                    fprintf(stdout, "%f", buffers[j][i]);
+                    printSeparator = true;
+                }
+                fprintf(stdout, "\n");
+            }
         }
 
     } else {
@@ -281,16 +299,34 @@ int main(int argc, char* argv[]) {
         }
 
         const char* format_str = (option.showInHex == false) ? "%7d" : "0x%08X";
-        for (uint32_t i = 0; i < option.dataSize; i++) {
+        if (option.avg){
+            int64_t avg[4] = {0,0,0,0};
+            for (uint32_t i = 0; i < option.dataSize; i++) {
+                for (auto j = start_ch; j <= end_ch; j++) {
+                    avg[j] += buffers[j][i];
+                }
+            }
             bool printSeparator = false;
             for (auto j = start_ch; j <= end_ch; j++) {
                 if (printSeparator) {
                     fprintf(stdout, " ");
                 }
-                fprintf(stdout, format_str, buffers[j][i]);
+                fprintf(stdout, format_str, (int32_t)(avg[j] / (int64_t)option.dataSize));
                 printSeparator = true;
             }
             fprintf(stdout, "\n");
+        }else{
+            for (uint32_t i = 0; i < option.dataSize; i++) {
+                bool printSeparator = false;
+                for (auto j = start_ch; j <= end_ch; j++) {
+                    if (printSeparator) {
+                        fprintf(stdout, " ");
+                    }
+                    fprintf(stdout, format_str, buffers[j][i]);
+                    printSeparator = true;
+                }
+                fprintf(stdout, "\n");
+            }
         }
     }
 

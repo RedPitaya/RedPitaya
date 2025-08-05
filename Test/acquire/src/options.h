@@ -35,7 +35,8 @@ struct Options {
     bool enableDebug = false;
     bool bypassFilter = false;
     int offset = 0;
-
+    bool avg = false;
+    
     Options() {
         dataSize = ADC_BUFFER_SIZE;
         decimation = RP_DEC_1;
