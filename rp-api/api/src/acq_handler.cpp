@@ -239,7 +239,6 @@ static int setCalibInFPGA(rp_channel_t channel) {
             ERROR_LOG("Get calibaration: %d", ret);
             return RP_EOOR;
         }
-
         ret |= osc_SetCalibGainInFPGA(channel, gain);
         ret |= osc_SetCalibOffsetInFPGA(channel, bits, offset);
         if (ret == RP_OK) {
@@ -349,6 +348,7 @@ int acq_SetGain(rp_channel_t channel, rp_pinState_t state) {
             return RP_OK;
         }
     }
+    acq_SetCalibInFPGA(channel);
     return status;
 }
 
@@ -1525,7 +1525,7 @@ int acq_SetAC_DC(rp_channel_t channel, rp_acq_ac_dc_mode_t mode) {
     }
 
     *power_mode = status == RP_OK ? mode : RP_DC;
-
+    acq_SetCalibInFPGA(channel);
     return status;
 }
 
