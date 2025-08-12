@@ -61,6 +61,7 @@ CFloatParameter ba_gain_max("BA_GAIN_MAX", CBaseParameter::RW, 10, 0, -100, 100,
 CFloatParameter ba_phase_min("BA_PHASE_MIN", CBaseParameter::RW, -90, 0, -90, 90, CONFIG_VAR);
 CFloatParameter ba_phase_max("BA_PHASE_MAX", CBaseParameter::RW, 90, 0, -90, 90, CONFIG_VAR);
 CBooleanParameter ba_scale("BA_SCALE", CBaseParameter::RW, true, 0, CONFIG_VAR);
+CIntParameter ba_x_scale("BA_X_SCALE", CBaseParameter::RW, 0, 0, 0, 3, CONFIG_VAR);
 CBooleanParameter ba_auto_scale("BA_AUTO_SCALE", CBaseParameter::RW, true, 0, CONFIG_VAR);
 CFloatParameter ba_input_threshold("BA_INPUT_THRESHOLD", CBaseParameter::RW, 0.001, 0, 0, 1, CONFIG_VAR);
 CBooleanParameter ba_show_all("BA_SHOW_ALL", CBaseParameter::RW, true, 0, CONFIG_VAR);
@@ -357,6 +358,10 @@ void UpdateParams(void) {
         ba_scale.Update();
     }
 
+    if (ba_x_scale.IsNewValue()) {
+        ba_x_scale.Update();
+    }
+
     if (ba_logic_mode.IsNewValue()) {
         ba_logic_mode.Update();
     }
@@ -524,8 +529,9 @@ void threadLoop() {
                     rpApp_BaSafeThreadAcqPrepare();
                     auto ret = rpApp_BaGetAmplPhase(logic_mode, gen_ampl, dc_bias, per_number, buffer, &ampl_step, &phase_step, current_freq, probe, threshold);
                     if (ret == RP_EOOR) {  // isnan && isinf
-                        cur_step++;
-                        return;
+                        low_signal = true;
+                        ampl_step = 0;
+                        phase_step = 0;
                     }
                     if (ret == RP_EIPV) {
                         low_signal = true;
@@ -601,7 +607,7 @@ void threadLoop() {
                 g_request_show = true;
             }
 
-            if (cur_step < steps) {
+            if (cur_step < (int)steps) {
 
                 float amplitude = 0, phase_out = 0;
                 float current_freq = 0.;
@@ -630,9 +636,11 @@ void threadLoop() {
                     rpApp_BaSafeThreadAcqPrepare();
                     auto ret = rpApp_BaGetAmplPhase(logic_mode, gen_ampl, dc_bias, per_number, buffer, &ampl_step, &phase_step, current_freq, probe, threshold);
                     if (ret == RP_EOOR) {  // isnan && isinf
-                        cur_step++;
-                        return;
+                        low_signal = true;
+                        ampl_step = 0;
+                        phase_step = 0;
                     }
+
                     if (ret == RP_EIPV) {
                         low_signal = true;
                     }

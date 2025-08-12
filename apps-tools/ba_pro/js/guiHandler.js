@@ -106,6 +106,11 @@ var probeChange = function(event){
 	CLIENT.sendParameters();
 }
 
+var xaxisChange = function(event){
+	CLIENT.parametersCache["BA_X_SCALE"] = { value: $("#BA_X_SCALE").val() };
+	CLIENT.sendParameters();
+}
+
 //Min gain changed
 var gainMinChange = function(event){
 	CLIENT.parametersCache["BA_GAIN_MIN"] = { value: $("#BA_GAIN_MIN").val() };
@@ -150,7 +155,6 @@ var phaseMaxChange = function(event){
 var scale0Click = function(event){
 	CLIENT.parametersCache["BA_SCALE"] = { value: false };
 	CLIENT.sendParameters();
-	BA.scale = false;
 }
 
 
@@ -158,7 +162,6 @@ var scale0Click = function(event){
 var scale1Click = function(event){
 	CLIENT.parametersCache["BA_SCALE"] = { value: true };
 	CLIENT.sendParameters();
-	BA.scale = true;
 }
 
 //Logic button 0 set
@@ -209,7 +212,7 @@ var calibrateClick = function(event){
     $('#calibration_dialog').modal('hide');
     $('#calibration').show();
     $('body').removeClass('loaded');
-    BA.curGraphScale = BA.scale;
+    BA.curGraphScale = CLIENT.getValue("BA_SCALE");
     BA.calibrating = true;
     CLIENT.parametersCache["BA_STATUS"] = { value: 2 };
     CLIENT.sendParameters();
@@ -242,6 +245,7 @@ changeCallbacks["BA_GAIN_MAX"] = gainMaxChange;
 changeCallbacks["BA_PHASE_MIN"] = phaseMinChange;
 changeCallbacks["BA_PHASE_MAX"] = phaseMaxChange;
 changeCallbacks["BA_PROBE"] = probeChange;
+changeCallbacks["BA_X_SCALE"] = xaxisChange;
 
 
 var clickCallbacks={}
