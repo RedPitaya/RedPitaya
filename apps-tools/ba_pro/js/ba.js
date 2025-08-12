@@ -322,7 +322,8 @@
         const startDecade = Math.floor(Math.log10(min));
         const endDecade = Math.floor(Math.log10(max));
         
-        const multipliers = [1, 2, 3, 4 , 5, 6 , 7 , 8 ,9 ];
+        // const multipliers = [1, 2, 3, 4 , 5, 6 , 7 , 8 ,9 ];
+        const multipliers = [1, 2, 3,  5,  7 , 8.5 ];
         
         for (let decade = startDecade; decade <= endDecade; decade++) {
             for (const mult of multipliers) {
