@@ -202,7 +202,7 @@
         for (var param_name in new_params) {
             CLIENT.params.orig[param_name] = new_params[param_name];
             if (BA.param_callbacks[param_name] !== undefined)
-                BA.param_callbacks[param_name](new_params);
+                BA.param_callbacks[param_name](new_params, param_name);
         }
         // Resize double-headed arrows showing the difference between cursors
     };

@@ -845,6 +845,94 @@
         }
     }
 
+    BA.setCurEnable = function(new_params, name){
+        if (name === "BA_CURSOR_X1"){
+            if (new_params[name].value === true){
+                BA.enableCursor('x1');
+            }else{
+                BA.disableCursor('x1');
+            }
+        }
+
+        if (name === "BA_CURSOR_X2"){
+            if (new_params[name].value === true){
+                BA.enableCursor('x2');
+            }else{
+                BA.disableCursor('x2');
+            }
+        }
+
+        if (name === "BA_CURSOR_Y1"){
+            if (new_params[name].value === true){
+                BA.enableCursor('y1');
+            }else{
+                BA.disableCursor('y1');
+            }
+        }
+
+        if (name === "BA_CURSOR_Y2"){
+            if (new_params[name].value === true){
+                BA.enableCursor('y2');
+            }else{
+                BA.disableCursor('y2');
+            }
+        }
+
+        if (name === "BA_CURSOR_Z1"){
+            if (new_params[name].value === true){
+                BA.enableCursor('z1');
+            }else{
+                BA.disableCursor('z1');
+            }
+        }
+
+        if (name === "BA_CURSOR_Z2"){
+            if (new_params[name].value === true){
+                BA.enableCursor('z2');
+            }else{
+                BA.disableCursor('z2');
+            }
+        }
+    }
+
+    BA.setCurPos = function(new_params, name){
+        if (name === "BA_CURSOR_X1_POS"){
+            BA.cursorsRelative.x1 = new_params[name].value
+            BA.updateXLinesPosition()
+            BA.updateXLinesAndArrows()
+        }
+
+        if (name === "BA_CURSOR_X2_POS"){
+            BA.cursorsRelative.x2 = new_params[name].value
+            BA.updateXLinesPosition()
+            BA.updateXLinesAndArrows()
+        }
+
+        if (name === "BA_CURSOR_Y1_POS"){
+            BA.cursorsRelative.y1 = new_params[name].value
+            BA.updateYLinesPosition()
+            BA.updateYLinesAndArrows()
+        }
+
+        if (name === "BA_CURSOR_Y2_POS"){
+            BA.cursorsRelative.y2 = new_params[name].value
+            BA.updateYLinesPosition()
+            BA.updateYLinesAndArrows()
+        }
+
+        if (name === "BA_CURSOR_Z1_POS"){
+            BA.cursorsRelative.z1 = new_params[name].value
+            BA.updateZLinesPosition()
+            BA.updateZLinesAndArrows()
+        }
+
+        if (name === "BA_CURSOR_Z2_POS"){
+            BA.cursorsRelative.z2 = new_params[name].value
+            BA.updateZLinesPosition()
+            BA.updateZLinesAndArrows()
+        }
+    }
+
     BA.param_callbacks["BA_STATUS"] = BA.processStatus;
 
     // BA.param_callbacks["BA_MEASURE_START"] = BA.process_run;
@@ -879,6 +967,20 @@
     BA.param_callbacks["BA_IN_GAIN"] = BA.setGain;
     BA.param_callbacks["BA_IN_AC_DC"] = BA.setACDC;
     BA.param_callbacks["BA_PROBE"] = BA.setProbe;
+
+    BA.param_callbacks["BA_CURSOR_X1"] = BA.setCurEnable;
+    BA.param_callbacks["BA_CURSOR_X2"] = BA.setCurEnable;
+    BA.param_callbacks["BA_CURSOR_Y1"] = BA.setCurEnable;
+    BA.param_callbacks["BA_CURSOR_Y2"] = BA.setCurEnable;
+    BA.param_callbacks["BA_CURSOR_Z1"] = BA.setCurEnable;
+    BA.param_callbacks["BA_CURSOR_Z2"] = BA.setCurEnable;
+
+    BA.param_callbacks["BA_CURSOR_X1_POS"] = BA.setCurPos;
+    BA.param_callbacks["BA_CURSOR_X2_POS"] = BA.setCurPos;
+    BA.param_callbacks["BA_CURSOR_Y1_POS"] = BA.setCurPos;
+    BA.param_callbacks["BA_CURSOR_Y2_POS"] = BA.setCurPos;
+    BA.param_callbacks["BA_CURSOR_Z1_POS"] = BA.setCurPos;
+    BA.param_callbacks["BA_CURSOR_Z2_POS"] = BA.setCurPos;
 
 
 }(window.BA = window.BA || {}, jQuery));

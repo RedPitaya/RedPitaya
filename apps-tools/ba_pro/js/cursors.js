@@ -12,14 +12,14 @@
 
 
     BA.enableX = function(cursor_name, new_params) {
-        var old_params = $.extend(true, {}, CLIENT.params.old);
         if (!BA.state.cursor_dragging && !BA.state.mouseover) {
             var x = (cursor_name == 'BA_CURSOR_X1' ? 'x1' : 'x2');
-
-            if (new_params[cursor_name].value) {
+            if (new_params) {
                 $('#cur_' + x + '_arrow, #cur_' + x + ', #cur_' + x + '_info').show();
+                $('#'+cursor_name).addClass('active');
             } else {
                 $('#cur_' + x + '_arrow, #cur_' + x + ', #cur_' + x + '_info').hide();
+                $('#'+cursor_name).removeClass('active');
             }
             BA.updateXLinesAndArrows();
         }
@@ -47,14 +47,15 @@
     }
 
     BA.enableY = function(cursor_name, new_params) {
-        var old_params = $.extend(true, {}, CLIENT.params.old);
         if (!BA.state.cursor_dragging && !BA.state.mouseover) {
             var y = (cursor_name == 'BA_CURSOR_Y1' ? 'y1' : 'y2');
 
-            if (new_params[cursor_name].value) {
+            if (new_params) {
                 $('#cur_' + y + '_arrow, #cur_' + y + ', #cur_' + y + '_info').show();
+                $('#'+cursor_name).addClass('active');
             } else {
                 $('#cur_' + y + '_arrow, #cur_' + y + ', #cur_' + y + '_info').hide();
+                $('#'+cursor_name).removeClass('active');               
             }
             BA.updateYLinesAndArrows();
         }
@@ -82,14 +83,15 @@
     }
 
     BA.enableZ = function(cursor_name, new_params) {
-        var old_params = $.extend(true, {}, CLIENT.params.old);
         if (!BA.state.cursor_dragging && !BA.state.mouseover) {
             var z = (cursor_name == 'BA_CURSOR_Z1' ? 'z1' : 'z2');
 
-            if (new_params[cursor_name].value) {
+            if (new_params) {
                 $('#cur_' + z + '_arrow, #cur_' + z + ', #cur_' + z + '_info').show();
+                $('#'+cursor_name).addClass('active');                
             } else {
                 $('#cur_' + z + '_arrow, #cur_' + z + ', #cur_' + z + '_info').hide();
+                $('#'+cursor_name).removeClass('active');                
             }
             BA.updateZLinesAndArrows();
         }
@@ -128,24 +130,17 @@
             $('cur_' + x[0] + '_diff_info').show();
         }
 
-        CLIENT.params.local['BA_CURSOR_' + x[0].toUpperCase() + '1'] = { value: 1 };
-        CLIENT.params.local['BA_CURSOR_' + x[0].toUpperCase() + '2'] = { value: 1 };
-
-        CLIENT.params.local['BA_CUR1_T'] = { value: 1 };
-        CLIENT.params.local['BA_CUR2_T'] = { value: 1 };
-
         if (x[0] == 'x') {
-            BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
-            BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
+            BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, true);
+            BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, true);
         } else if (x[0] == 'y') {
-            BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
-            BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
+            BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, true);
+            BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, true);
         } else if (x[0] == 'z') {
-            BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
-            BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
+            BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, true);
+            BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, true);
         }
 
-        CLIENT.params.local = {};
     };
 
     BA.disableCursor = function(x) {
@@ -157,21 +152,16 @@
         $('cur_' + x[0] + '_diff').hide();
         $('cur_' + x[0] + '_diff_info').hide();
 
-        CLIENT.params.local['BA_CURSOR_' + x[0].toUpperCase() + '1'] = { value: 0 };
-        CLIENT.params.local['BA_CURSOR_' + x[0].toUpperCase() + '2'] = { value: 0 };
-
         if (x[0] == 'x') {
-            BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
-            BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
+            BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, false);
+            BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, false);
         } else if (x[0] == 'y') {
-            BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
-            BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
+            BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, false);
+            BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, false);
         } else if (x[0] == 'z') {
-            BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
-            BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
+            BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, false);
+            BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, false);
         }
-
-        CLIENT.params.local = {};
     };
 
     BA.updateXLinesPosition = function() {
@@ -417,22 +407,9 @@
             return;
         var plot = BA.graphCache.plot;
         var offset = plot.getPlotOffset();
-        var left = offset.left + 1 + 'px';
-        var right = offset.right + 1 + 'px';
-        var top = offset.top + 1 + 'px';
-        var bottom = offset.bottom + 9 + 'px';
-
-        //update arrows positions
         var diff_left = offset.left + 2 + 'px';
         var diff_top = offset.top - 2 + 'px';
-        var margin_left = offset.left - 7 - 2 + 'px';
-        var margin_top = -7 + offset.top - 2 + 'px';
-        var margin_bottom = -2 + offset.bottom + 'px';
-        var line_margin_left = offset.left - 2 + 'px';
-        var line_margin_top = offset.top - 2 + 'px';
-        var line_margin_bottom = offset.bottom - 2 + 'px';
 
-        // $('.varrow').css('margin-left', margin_left);
         $('.harrow').css('margin-top', -7);
         $('.harrow').css('margin-bottom', -7);
 
@@ -475,6 +452,9 @@ $(function() {
             BA.moveX(ui);
             BA.state.line_moving = false;
             BA.state.cursor_dragging = false;
+            CLIENT.parametersCache["BA_CURSOR_X1_POS"] = { value: BA.cursorsRelative.x1 };
+            CLIENT.parametersCache["BA_CURSOR_X2_POS"] = { value: BA.cursorsRelative.x2 };
+            CLIENT.sendParameters();
         }
     });
 
@@ -492,6 +472,9 @@ $(function() {
         stop: function(ev, ui) {
             BA.moveY(ui);
             BA.state.cursor_dragging = false;
+            CLIENT.parametersCache["BA_CURSOR_Y1_POS"] = { value: BA.cursorsRelative.y1 };
+            CLIENT.parametersCache["BA_CURSOR_Y2_POS"] = { value: BA.cursorsRelative.y2 };
+            CLIENT.sendParameters();
         }
     });
 
@@ -509,62 +492,41 @@ $(function() {
         stop: function(ev, ui) {
             BA.moveZ(ui);
             BA.state.cursor_dragging = false;
+            CLIENT.parametersCache["BA_CURSOR_Z1_POS"] = { value: BA.cursorsRelative.z1 };
+            CLIENT.parametersCache["BA_CURSOR_Z2_POS"] = { value: BA.cursorsRelative.z2 };
+            CLIENT.sendParameters();            
         }
     });
 
 
     $('#BA_CURSOR_X1').click(function() {
-        var btn = $(this);
-        if (!btn.hasClass('active'))
-            BA.enableCursor('x1');
-        else
-            BA.disableCursor('x1');
-        BA.updateLinesAndArrows();
+        CLIENT.parametersCache["BA_CURSOR_X1"] = { value: !$(this).hasClass('active') };
+        CLIENT.sendParameters();
     });
 
     $('#BA_CURSOR_X2').click(function() {
-        var btn = $(this);
-        if (!btn.hasClass('active'))
-            BA.enableCursor('x2');
-        else
-            BA.disableCursor('x2');
-        BA.updateLinesAndArrows();
+        CLIENT.parametersCache["BA_CURSOR_X2"] = { value: !$(this).hasClass('active') };
+        CLIENT.sendParameters();
     });
 
     $('#BA_CURSOR_Y1').click(function() {
-        var btn = $(this);
-        if (!btn.hasClass('active'))
-            BA.enableCursor('y1');
-        else
-            BA.disableCursor('y1');
-        BA.updateLinesAndArrows();
+        CLIENT.parametersCache["BA_CURSOR_Y1"] = { value: !$(this).hasClass('active') };
+        CLIENT.sendParameters();
     });
 
     $('#BA_CURSOR_Y2').click(function() {
-        var btn = $(this);
-        if (!btn.hasClass('active'))
-            BA.enableCursor('y2');
-        else
-            BA.disableCursor('y2');
-        BA.updateLinesAndArrows();
+        CLIENT.parametersCache["BA_CURSOR_Y2"] = { value: !$(this).hasClass('active') };
+        CLIENT.sendParameters();
     });
 
     $('#BA_CURSOR_Z1').click(function() {
-        var btn = $(this);
-        if (!btn.hasClass('active'))
-            BA.enableCursor('z1');
-        else
-            BA.disableCursor('z1');
-        BA.updateLinesAndArrows();
+        CLIENT.parametersCache["BA_CURSOR_Z1"] = { value: !$(this).hasClass('active') };
+        CLIENT.sendParameters();
     });
 
     $('#BA_CURSOR_Z2').click(function() {
-        var btn = $(this);
-        if (!btn.hasClass('active'))
-            BA.enableCursor('z2');
-        else
-            BA.disableCursor('z2');
-        BA.updateLinesAndArrows();
+        CLIENT.parametersCache["BA_CURSOR_Z2"] = { value: !$(this).hasClass('active') };
+        CLIENT.sendParameters();
     });
 
 });

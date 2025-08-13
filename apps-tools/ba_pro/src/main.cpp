@@ -83,6 +83,24 @@ CFloatBase64Signal ba_signal_1("BA_SIGNAL_1", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
 CFloatBase64Signal ba_signal_2("BA_SIGNAL_2", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
 CIntBase64Signal ba_signal_parameters("BA_SIGNAL_PARAMETERS", 4, 0);
 
+CBooleanParameter ba_cur_x1("BA_CURSOR_X1", CBaseParameter::RW, false, 0, CONFIG_VAR);
+CBooleanParameter ba_cur_x2("BA_CURSOR_X2", CBaseParameter::RW, false, 0, CONFIG_VAR);
+
+CBooleanParameter ba_cur_y1("BA_CURSOR_Y1", CBaseParameter::RW, false, 0, CONFIG_VAR);
+CBooleanParameter ba_cur_y2("BA_CURSOR_Y2", CBaseParameter::RW, false, 0, CONFIG_VAR);
+
+CBooleanParameter ba_cur_z1("BA_CURSOR_Z1", CBaseParameter::RW, false, 0, CONFIG_VAR);
+CBooleanParameter ba_cur_z2("BA_CURSOR_Z2", CBaseParameter::RW, false, 0, CONFIG_VAR);
+
+CFloatParameter ba_cur_x1_pos("BA_CURSOR_X1_POS", CBaseParameter::RW, 0.333, 0, 0, 1, CONFIG_VAR);
+CFloatParameter ba_cur_x2_pos("BA_CURSOR_X2_POS", CBaseParameter::RW, 0.666, 0, 0, 1, CONFIG_VAR);
+
+CFloatParameter ba_cur_y1_pos("BA_CURSOR_Y1_POS", CBaseParameter::RW, 0.333, 0, 0, 1, CONFIG_VAR);
+CFloatParameter ba_cur_y2_pos("BA_CURSOR_Y2_POS", CBaseParameter::RW, 0.666, 0, 0, 1, CONFIG_VAR);
+
+CFloatParameter ba_cur_z1_pos("BA_CURSOR_Z1_POS", CBaseParameter::RW, 0.333, 0, 0, 1, CONFIG_VAR);
+CFloatParameter ba_cur_z2_pos("BA_CURSOR_Z2_POS", CBaseParameter::RW, 0.666, 0, 0, 1, CONFIG_VAR);
+
 static std::vector<float> signal;
 static std::vector<float> phase;
 static std::vector<int> bad_signal;
@@ -394,6 +412,54 @@ void UpdateParams(void) {
     auto is_calib = rpApp_BaGetCalibStatus();
     if (ba_calibrate_enable.Value() != is_calib) {
         ba_calibrate_enable.SendValue(is_calib);
+    }
+
+    if (IS_NEW(ba_cur_x1)) {
+        ba_cur_x1.Update();
+    }
+
+    if (IS_NEW(ba_cur_x2)) {
+        ba_cur_x2.Update();
+    }
+
+    if (IS_NEW(ba_cur_y1)) {
+        ba_cur_y1.Update();
+    }
+
+    if (IS_NEW(ba_cur_y2)) {
+        ba_cur_y2.Update();
+    }
+
+    if (IS_NEW(ba_cur_z1)) {
+        ba_cur_z1.Update();
+    }
+
+    if (IS_NEW(ba_cur_z2)) {
+        ba_cur_z2.Update();
+    }
+
+    if (IS_NEW(ba_cur_x1_pos)) {
+        ba_cur_x1_pos.Update();
+    }
+
+    if (IS_NEW(ba_cur_x2_pos)) {
+        ba_cur_x2_pos.Update();
+    }
+
+    if (IS_NEW(ba_cur_y1_pos)) {
+        ba_cur_y1_pos.Update();
+    }
+
+    if (IS_NEW(ba_cur_y2_pos)) {
+        ba_cur_y2_pos.Update();
+    }
+
+    if (IS_NEW(ba_cur_z1_pos)) {
+        ba_cur_z1_pos.Update();
+    }
+
+    if (IS_NEW(ba_cur_z2_pos)) {
+        ba_cur_z2_pos.Update();
     }
 }
 
