@@ -39,6 +39,7 @@ void usage(char** argv) {
             "\t\t\tosc_rate\t: OSC base rate\n"
             "\t\t\tfast_adc_bits\t: HW ADC bits\n"
             "\t\t\tfast_adc_fs\t: HW ADC full scale\n"
+            "\t\t\tis_dac_50ohm\t: Support 50 ohm load mode for DAC\n"
             "\t\t\tgpio_n\t: Number of GPIO channels N\n"
             "\t\t\tgpio_p\t: Number of GPIO channels P\n"
             "\t\t\te3\t: Availability of e3 connector\n");
@@ -146,6 +147,17 @@ int main(int argc, char** argv) {
             if (key == "fast_adc_bits") {
                 uint8_t value;
                 auto ret = rp_HPGetFastADCBits(&value);
+                if (ret == RP_HP_OK) {
+                    printf("%d\n", value);
+                } else {
+                    printf("[Error]\n");
+                    return EXIT_FAILURE;
+                }
+                return EXIT_SUCCESS;
+            }
+            if (key == "is_dac_50ohm") {
+                bool value;
+                auto ret = rp_HPGetIsDAC50OhmMode(&value);
                 if (ret == RP_HP_OK) {
                     printf("%d\n", value);
                 } else {
