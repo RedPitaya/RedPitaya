@@ -43,7 +43,9 @@ void usage(char** argv) {
             "\t\t\tis_daisy_clock_sync\t: Synchronization via daisy chain\n"
             "\t\t\tgpio_n\t: Number of GPIO channels N\n"
             "\t\t\tgpio_p\t: Number of GPIO channels P\n"
-            "\t\t\te3\t: Availability of e3 connector\n");
+            "\t\t\te3\t: Availability of E3 connector\n"
+            "\t\t\te3_gpio\t: Availability of E3 GPIO\n"
+            "\t\t\te3_qspi\t: Availability of E3 QSPI\n");
 
     fprintf(stdout,
             "\t-t <key>,<key>,...: Print pivot table\n"
@@ -192,6 +194,28 @@ int main(int argc, char** argv) {
             if (key == "e3") {
                 bool value;
                 auto ret = rp_HPGetIsE3Present(&value);
+                if (ret == RP_HP_OK) {
+                    printf("%d\n", value);
+                } else {
+                    printf("[Error]\n");
+                    return EXIT_FAILURE;
+                }
+                return EXIT_SUCCESS;
+            }
+            if (key == "e3_gpio") {
+                bool value;
+                auto ret = rp_HPGetIsE3HighSpeedGPIO(&value);
+                if (ret == RP_HP_OK) {
+                    printf("%d\n", value);
+                } else {
+                    printf("[Error]\n");
+                    return EXIT_FAILURE;
+                }
+                return EXIT_SUCCESS;
+            }
+            if (key == "e3_qspi") {
+                bool value;
+                auto ret = rp_HPGetIsE3QSPIeMMC(&value);
                 if (ret == RP_HP_OK) {
                     printf("%d\n", value);
                 } else {

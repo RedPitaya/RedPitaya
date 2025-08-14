@@ -106,7 +106,7 @@ profiles_t stem_125_14_v2_0 = {
     .is_E3_high_speed_gpio = false,
     .is_E3_mmc_qspi = false,
     .E3_high_speed_gpio_rate = 0,
-    .is_E3_present = true,
+    .is_E3_present = false,
 
     .is_calib_in_fpga = true
 
