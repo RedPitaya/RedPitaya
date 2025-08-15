@@ -882,6 +882,7 @@ int acq_Stop(rp_channel_t channel) {
 }
 
 int acq_Reset(rp_channel_t channel) {
+    acq_SetSplitTriggerMode(false);
     acq_SetDefault(channel);
     return osc_ResetWriteStateMachine(channel);
 }
