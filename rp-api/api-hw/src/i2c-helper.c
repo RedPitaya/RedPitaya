@@ -306,9 +306,11 @@ int i2c_IOCTL_read_buffer(const char* i2c_dev_node_path,uint8_t i2c_dev_address,
 
 	if (ioctl(i2c_dev_node, I2C_RDWR, &data) < 0){
 		ERROR_LOG("I2C Read operation failed - %d.",errno);
+		close(i2c_dev_node);
 		pthread_mutex_unlock(&i2c_mutex);
 		return RP_HW_ERIIC;
 	}
+	close(i2c_dev_node);
 	pthread_mutex_unlock(&i2c_mutex);
 	return RP_HW_OK;
 }
@@ -348,9 +350,11 @@ int i2c_IOCTL_write_buffer(const char* i2c_dev_node_path,uint8_t i2c_dev_address
 
 	if (ioctl(i2c_dev_node, I2C_RDWR, &data) < 0){
 		ERROR_LOG("I2C Write operation failed - %d.",errno);
+		close(i2c_dev_node);
 		pthread_mutex_unlock(&i2c_mutex);
 		return RP_HW_EWIIC;
 	}
+	close(i2c_dev_node);
 	pthread_mutex_unlock(&i2c_mutex);
 	return RP_HW_OK;
 }

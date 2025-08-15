@@ -296,7 +296,7 @@ static size_t resultBufferFloatBin(scpi_t* context, const float* data, size_t si
     for (size_t j = 0; j < size; j += pack_size) {
         size_t send_size = (size - j) < pack_size ? (size - j) : pack_size;
         for (i = 0; i < send_size; i++) {
-            new_buff[i] = hton_f((uint8_t)data[i + j]);
+            new_buff[i] = hton_f(data[i + j]);
         }
         result += writeDataEx(context, (char*)new_buff, sizeof(float) * send_size, error);
         CHECK_ERROR_PTR
