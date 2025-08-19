@@ -145,6 +145,11 @@ int lcr_GenStop() {
     return g_generator.stop();
 }
 
+int lcr_GenSetSettings() {
+    std::lock_guard lock(g_lcr_mutex);
+    return g_generator.setSettings();
+}
+
 /* Main call function */
 int lcr_Run() {
     std::lock_guard lock(g_lcr_mutex);

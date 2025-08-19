@@ -667,13 +667,9 @@ btn:active {
 
 .flot-x-axis .flot-tick-label {
     -moz-transform: rotate(-40deg);
-    /* Для Firefox */
     -ms-transform: rotate(-40deg);
-    /* Для IE */
     -webkit-transform: rotate(-40deg);
-    /* Для Safari, Chrome, iOS */
     -o-transform: rotate(-40deg);
-    /* Для Opera */
     transform: rotate(-40deg);
     margin-top: 10px;
 }

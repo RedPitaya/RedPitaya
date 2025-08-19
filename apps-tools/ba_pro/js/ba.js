@@ -512,8 +512,11 @@
         if (update == true) {
             lastsig1 = BA.lastSignals["BA_SIGNAL_1"];
             lastsig2 = BA.lastSignals["BA_SIGNAL_2"];
-           lastsig1_bad = BA.lastSignals["BA_SIGNAL_1_BAD"];
-           lastsig2_bad = BA.lastSignals["BA_SIGNAL_2_BAD"];
+            lastsig1_bad = BA.lastSignals["BA_SIGNAL_1_BAD"];
+            lastsig2_bad = BA.lastSignals["BA_SIGNAL_2_BAD"];
+        }else{
+            lastsig1.push([$("#BA_START_FREQ").val(),undefined])
+            lastsig1.push([$("#BA_END_FREQ").val(),undefined])
         }
         var data_points = [{ data: lastsig1, color: '#f3ec1a', label: "Amplitude" }, { data: lastsig2, color: '#31b44b', label: "Phase", yaxis: 2 }];
         if ($('#BA_SHOWALL_BTN').hasClass('active')) {

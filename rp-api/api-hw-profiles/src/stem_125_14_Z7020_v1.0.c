@@ -92,7 +92,7 @@ profiles_t stem_125_14_Z7020_v1_0 = {
     .fast_adc_full_scale = 1,
     .fast_dac_full_scale = 1,
 
-    .is_daisy_chain_clock_sync = false,
+    .is_daisy_chain_clock_sync = true,
 
     .is_dma_mode_v0_94 = true,
     .is_DAC_50_Ohm_mode = false,

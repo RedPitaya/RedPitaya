@@ -132,13 +132,13 @@
 
         if (x[0] == 'x') {
             BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, true);
-            BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, true);
+            // BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, true);
         } else if (x[0] == 'y') {
             BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, true);
-            BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, true);
+            // BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, true);
         } else if (x[0] == 'z') {
             BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, true);
-            BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, true);
+            // BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, true);
         }
 
     };
@@ -154,18 +154,18 @@
 
         if (x[0] == 'x') {
             BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, false);
-            BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, false);
+            // BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, false);
         } else if (x[0] == 'y') {
             BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, false);
-            BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, false);
+            // BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, false);
         } else if (x[0] == 'z') {
             BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, false);
-            BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, false);
+            // BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, false);
         }
     };
 
     BA.updateXLinesPosition = function() {
-        const w = $('#cursors_holder').width();
+        const w = $('#cursors_holder').width() - 2;
         const h = $('#cursors_holder').height();
         $('#cur_x1_arrow').css({
             left: w * BA.cursorsRelative.x1,
@@ -183,7 +183,7 @@
 
     BA.updateYLinesPosition = function() {
         const w = $('#cursors_holder').width();
-        const h = $('#cursors_holder').height();
+        const h = $('#cursors_holder').height() - 2;
         $('#cur_y1_arrow').css({
             left: w - 27 ,
             top: h * BA.cursorsRelative.y1
@@ -200,7 +200,7 @@
 
      BA.updateZLinesPosition = function() {
         const w = $('#cursors_holder').width();
-        const h = $('#cursors_holder').height();
+        const h = $('#cursors_holder').height() - 2;
         $('#cur_z1_arrow').css({
             left: 0 ,
             top: h * BA.cursorsRelative.z1

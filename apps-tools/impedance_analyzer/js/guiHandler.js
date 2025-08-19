@@ -310,21 +310,6 @@ var scale1Click = function(event){
 	CLIENT.sendParameters();
 }
 
-//Scale button 0 set
-var scalePlot0Click = function(event){
-	CLIENT.parametersCache["IA_SCALE_PLOT"] = { value: false };
-	CLIENT.sendParameters();
-	CLIENT.scale = false;
-}
-
-
-//Scale button 1 set
-var scalePlot1Click = function(event){
-	CLIENT.parametersCache["IA_SCALE_PLOT"] = { value: true };
-	CLIENT.sendParameters();
-	CLIENT.scale = true;
-}
-
 var lcrShuntChange = function(event){
     CLIENT.parametersCache["IA_LCR_SHUNT"] = { value: $("#IA_LCR_SHUNT").val() };
     CLIENT.sendParameters();
@@ -340,6 +325,11 @@ var yAxisChange = function(event){
     CLIENT.sendParameters();
 }
 
+var xAxisChange = function(event){
+	CLIENT.parametersCache["IA_X_SCALE"] = { value: $("#IA_X_SCALE").val() };
+	CLIENT.sendParameters();
+}
+
 //Create callback
 var changeCallbacks={}
 
@@ -352,13 +342,12 @@ changeCallbacks["IA_DC_BIAS"] = biasDCChange;
 changeCallbacks["IA_LCR_SHUNT"] = lcrShuntChange;
 changeCallbacks["IA_SHUNT"] = shuntChange;
 changeCallbacks["IA_Y_AXIS"] = yAxisChange;
+changeCallbacks["IA_X_SCALE"] = xAxisChange;
 
 var clickCallbacks={}
 
 clickCallbacks["IA_SCALE0"] = scale0Click;
 clickCallbacks["IA_SCALE1"] = scale1Click;
-clickCallbacks["IA_SCALE_PLOT0"] = scalePlot0Click;
-clickCallbacks["IA_SCALE_PLOT1"] = scalePlot1Click;
 
 
 

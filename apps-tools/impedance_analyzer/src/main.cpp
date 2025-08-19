@@ -26,6 +26,7 @@
 #include "rp_hw_calib.h"
 #include "settings.h"
 
+#include "common/profiler.h"
 #include "web/rp_client.h"
 
 #define NAN_VALUE std::numeric_limits<float>::min()
@@ -57,7 +58,7 @@ enum {
 } ia_signal_t;
 
 // Control parameters
-CIntParameter ia_status("IA_STATUS", CBaseParameter::RW, 0, 0, 0, 100);
+CIntParameter ia_status("IA_STATUS", CBaseParameter::RW, IA_NONE, 0, 0, 100);
 
 //Parameters
 CIntParameter ia_start_freq("IA_START_FREQ", CBaseParameter::RW, 1000, 0, 1, getMaxADC(), CONFIG_VAR);
@@ -72,7 +73,7 @@ CFloatParameter ia_amplitude("IA_AMPLITUDE", CBaseParameter::RW, 0.5, 0, 0, 1, C
 CFloatParameter ia_dc_bias("IA_DC_BIAS", CBaseParameter::RW, 0, 0, -1, 1, CONFIG_VAR);
 CIntParameter ia_y_axis("IA_Y_AXIS", CBaseParameter::RW, IA_Z, 0, IA_Z, IA_D, CONFIG_VAR);
 CBooleanParameter ia_scale("IA_SCALE", CBaseParameter::RW, false, 0, CONFIG_VAR);
-CBooleanParameter ia_scale_plot("IA_SCALE_PLOT", CBaseParameter::RW, false, 0, CONFIG_VAR);
+CIntParameter ia_scale_plot("IA_X_SCALE", CBaseParameter::RW, 0, 0, 0, 3, CONFIG_VAR);
 
 // Status parameters
 CIntParameter max_adc("RP_MAX_ADC", CBaseParameter::RO, getMaxADC(), 0, getMaxADC(), getMaxADC());
@@ -323,11 +324,6 @@ void UpdateSignals(void) {
 
 //Update parameters
 void UpdateParams(void) {
-    //Measure start update
-    if (ia_status.IsNewValue()) {
-        ia_status.Update();
-    }
-
     //Start frequency update
     if (ia_start_freq.IsNewValue()) {
         ia_start_freq.Update();
@@ -383,6 +379,11 @@ void UpdateParams(void) {
         } else {
             ia_lcr_shunt.SendValue(curValue);
         }
+    }
+
+    //Measure start update
+    if (ia_status.IsNewValue()) {
+        ia_status.Update();
     }
 
     if (cur_x1.IsNewValue()) {
@@ -465,13 +466,14 @@ void updateParametersByConfig() {
 }
 
 void threadLoop() {
+    profiler::resetAll();
     g_exit_flag = false;
 
     int cur_step = 0;
     int avaraging = 0;
     float start_freq = 0;
     float end_freq = 0;
-    float steps = 0;
+    int steps = 0;
     float gen_ampl = 0;
     float dc_bias = 0;
 
@@ -502,12 +504,12 @@ void threadLoop() {
                     lcrApp_LcrSetShuntMode(RP_LCR_S_CUSTOM);
                     lcrApp_LcrSetCustomShunt(ia_shunt.Value());
                 }
-
+                lcrApp_GenRun();
                 ia_status.SendValue(IA_START_PROCESS);
             }
 
             if (cur_step < steps) {
-
+                profiler::resetAll();
                 uint32_t current_freq = 0.;
                 float freq_step = 0;
                 // float next_freq = 0.;
@@ -516,23 +518,22 @@ void threadLoop() {
                     // Log
                     auto a = log10f(start_freq);
                     auto b = log10f(end_freq);
-                    auto c = (b - a) / (steps - 1);
+                    auto c = (b - a) / ((float)steps - 1);
 
                     current_freq = pow(10.f, c * cur_step + a);
                     // next_freq = pow(10.f, c * (cur_step + 1) + a);
                 } else {
                     // Linear
-                    freq_step = (end_freq - start_freq) / (steps - 1);
+                    freq_step = (end_freq - start_freq) / ((float)steps - 1);
                     current_freq = start_freq + freq_step * cur_step;
                     // next_freq = start_freq + freq_step * (cur_step - 1);
                 }
                 lcrApp_LcrSetPause(true);
-                lcrApp_GenStop();
                 // lcrApp_Set
                 lcrApp_LcrSetFrequency(current_freq);
                 lcrApp_LcrSetAmplitude(gen_ampl);
                 lcrApp_LcrSetOffset(dc_bias);
-                lcrApp_GenRun();
+                lcrApp_GenSetSettings();
                 usleep(1000);
                 lcrApp_LcrSetPause(false);
                 lcr_main_data_t data;
@@ -546,6 +547,7 @@ void threadLoop() {
                 for (int i = 0; i < avaraging; ++i) {
 
                     do {
+                        usleep(1000);
                         lcrApp_LcrCopyParams(&data);
                         if (g_exit_flag) {
                             return;
@@ -562,7 +564,6 @@ void threadLoop() {
                 for (int z = 1; z <= maxParam; z++) {
                     res_arr[z] = NAN_INF(res_arr[z]) ? NAN_VALUE : ((res_arr[z] * 1000000000000.0) / (double)avaraging);
                 }
-
                 cur_step++;
                 ia_current_step.SendValue(cur_step);
                 ia_current_freq.SendValue(current_freq);

@@ -19,109 +19,112 @@
 #include "utils.h"
 
 /* Resource managment functions */
-int lcrApp_lcrInit(){
-	return lcr_Init();
+int lcrApp_lcrInit() {
+    return lcr_Init();
 }
 
-int lcrApp_LcrRelease(){
-	return lcr_Release();
+int lcrApp_LcrRelease() {
+    return lcr_Release();
 }
 
-int lcrApp_LcrReset(){
-	return lcr_Reset();
+int lcrApp_LcrReset() {
+    return lcr_Reset();
 }
 
-int lcrApp_LcrRun(){
-	return lcr_Run();
+int lcrApp_LcrRun() {
+    return lcr_Run();
 }
 
-int lcrApp_LcrStop(){
+int lcrApp_LcrStop() {
     return lcr_Stop();
 }
 
-int lcrApp_LcrSetPause(bool pause){
+int lcrApp_LcrSetPause(bool pause) {
     return lcr_SetPause(pause);
 }
 
-int lcrApp_GenRun(){
-	return lcr_GenRun();
+int lcrApp_GenRun() {
+    return lcr_GenRun();
 }
 
-int lcrApp_GenStop(){
-	return lcr_GenStop();
+int lcrApp_GenStop() {
+    return lcr_GenStop();
 }
 
-int lcrApp_LcrCopyParams(lcr_main_data_t *data){
-	return lcr_CopyParams(data);
+int lcrApp_GenSetSettings() {
+    return lcr_GenSetSettings();
+}
+
+int lcrApp_LcrCopyParams(lcr_main_data_t* data) {
+    return lcr_CopyParams(data);
 }
 
 // int lcrApp_LcrStartCorrection(){
 // 	return lcr_Correction();
 // }
 
-int lcrApp_LcrSetFrequency(float frequency){
-	return lcr_SetFrequency(frequency);
+int lcrApp_LcrSetFrequency(float frequency) {
+    return lcr_SetFrequency(frequency);
 }
 
-int lcrApp_LcrGetFrequency(float *frequency){
-	return lcr_GetFrequency(frequency);
+int lcrApp_LcrGetFrequency(float* frequency) {
+    return lcr_GetFrequency(frequency);
 }
 
-int lcrApp_LcrSetAmplitude(float volt){
-	return lcr_SetAmplitude(volt);
+int lcrApp_LcrSetAmplitude(float volt) {
+    return lcr_SetAmplitude(volt);
 }
 
-int lcrApp_LcrGetAmplitude(float *volt){
-	return lcr_GetAmplitude(volt);
+int lcrApp_LcrGetAmplitude(float* volt) {
+    return lcr_GetAmplitude(volt);
 }
 
-int lcrApp_LcrSetOffset(float offset){
-	return lcr_SetOffset(offset);
+int lcrApp_LcrSetOffset(float offset) {
+    return lcr_SetOffset(offset);
 }
 
-int lcrApp_LcrGetOffset(float *offset){
-	return lcr_GetOffset(offset);
+int lcrApp_LcrGetOffset(float* offset) {
+    return lcr_GetOffset(offset);
 }
 
-int lcrApp_LcrSetShunt(lcr_shunt_t shunt){
-        return lcr_setRShunt(shunt);
+int lcrApp_LcrSetShunt(lcr_shunt_t shunt) {
+    return lcr_setRShunt(shunt);
 }
 
-int lcrApp_LcrGetShunt(lcr_shunt_t *shunt){
-        return lcr_getRShunt(shunt);
+int lcrApp_LcrGetShunt(lcr_shunt_t* shunt) {
+    return lcr_getRShunt(shunt);
 }
 
-int lcrApp_LcrSetShuntIsAuto(bool isShuntAuto){
+int lcrApp_LcrSetShuntIsAuto(bool isShuntAuto) {
     return lcr_setRShuntIsAuto(isShuntAuto);
 }
 
-int lcrApp_LcrSetCalibMode(calib_t calib_mode){
-	return lcr_SetCalibMode(calib_mode);
+int lcrApp_LcrSetCalibMode(calib_t calib_mode) {
+    return lcr_SetCalibMode(calib_mode);
 }
 
-int lcrApp_LcrGetCalibMode(calib_t *calib_mode){
-	return lcr_GetCalibMode(calib_mode);
+int lcrApp_LcrGetCalibMode(calib_t* calib_mode) {
+    return lcr_GetCalibMode(calib_mode);
 }
 
-int lcrApp_LcrSetMeasSeries(bool series){
-	return lcr_SetMeasSeries(series);
+int lcrApp_LcrSetMeasSeries(bool series) {
+    return lcr_SetMeasSeries(series);
 }
 
-int lcrApp_LcrGetMeasSeries(bool *series){
-	return lcr_GetMeasSeries(series);
+int lcrApp_LcrGetMeasSeries(bool* series) {
+    return lcr_GetMeasSeries(series);
 }
 
 int lcrApp_LcrCheckExtensionModuleConnection(bool _muteWarnings) {
     return lcr_CheckModuleConnection(_muteWarnings);
 }
 
-int lcrApp_LcrIsModuleConnected(bool *state){
+int lcrApp_LcrIsModuleConnected(bool* state) {
     return lcr_IsModuleConnected(state);
 }
 
-const char* lcrApp_LcrGetError(lcr_error_t errorCode){
-    switch (errorCode)
-    {
+const char* lcrApp_LcrGetError(lcr_error_t errorCode) {
+    switch (errorCode) {
         case RP_LCR_OK:
             return "OK";
         case RP_LCR_HW_CANT_OPEN:
@@ -144,18 +147,18 @@ const char* lcrApp_LcrGetError(lcr_error_t errorCode){
     return "Undefined error";
 }
 
-int lcrApp_LcrSetCustomShunt(int shunt){
+int lcrApp_LcrSetCustomShunt(int shunt) {
     return lcr_SetCustomShunt(shunt);
 }
 
-int lcrApp_LcrGetCustomShunt(int *shunt){
+int lcrApp_LcrGetCustomShunt(int* shunt) {
     return lcr_GetCustomShunt(shunt);
 }
 
-int lcrApp_LcrSetShuntMode(lcr_shunt_mode_t shunt_mode){
+int lcrApp_LcrSetShuntMode(lcr_shunt_mode_t shunt_mode) {
     return lcr_SetShuntMode(shunt_mode);
 }
 
-int lcrApp_LcrGetShuntMode(lcr_shunt_mode_t *shunt_mode){
+int lcrApp_LcrGetShuntMode(lcr_shunt_mode_t* shunt_mode) {
     return lcr_GetShuntMode(shunt_mode);
 }

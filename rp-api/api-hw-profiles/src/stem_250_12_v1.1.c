@@ -93,7 +93,7 @@ profiles_t stem_250_12_v1_1 = {
     .fast_adc_full_scale = 1,
     .fast_dac_full_scale = 2,
 
-    .is_daisy_chain_clock_sync = false,
+    .is_daisy_chain_clock_sync = true,
 
     .is_dma_mode_v0_94 = true,
     .is_DAC_50_Ohm_mode = true,

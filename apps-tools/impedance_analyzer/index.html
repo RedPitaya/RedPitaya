@@ -300,18 +300,14 @@
                             </div>
                         </div>
                         <div class="col-xs-12 option-content">
-                            <span class="col-info">Scale</span>
+                            <span class="col-info" style="margin-top: -11px;">X-axis scale</span>
                             <div class="right-menu-option" style="margin-top: 10px;">
-                                <div class="btn-group btn-group-justified" data-toggle="buttons">
-                                    <label id="IA_SCALE_PLOT0" class="btn">
-                                        <input type="radio" value="0" name="IA_SCALE_PLOT" id="IA_SCALE_PLOT"
-                                            autocomplete="off">Lin
-                                    </label>
-                                    <label id="IA_SCALE_PLOT1" class="btn active">
-                                        <input type="radio" value="1" name="IA_SCALE_PLOT" id="IA_SCALE_PLOT1"
-                                            autocomplete="off">Log
-                                    </label>
-                                </div>
+                                <select id="IA_X_SCALE" class="form-control styled-select">
+                                    <option value="0">LINEAR</option>
+                                    <option value="1">LOGARITHMIC</option>
+                                    <option value="2">LOGARITHMIC-p2</option>
+                                    <option value="3">LOGARITHMIC-p10</option>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -349,9 +345,10 @@
                     <!-- Measurement loader -->
                     <div id="measuring-status">
                         <div id="measuring-loader">
-
                         </div>
-                        Measuring...
+                        <div style="padding-top: 180px;">
+                            Measuring...
+                        </div>
                     </div>
                 </div>
 
@@ -363,26 +360,25 @@
                         <div style="clear: both; position: relative; padding: 0px; margin: 0px;">
                             <div id="graph_bode" class="graphs">
                                 <canvas id="graph_bode_grid" class="graph_grid"></canvas>
-                                <img id="cur_x1_arrow" class="varrow" src="img/cursor-arrow-up.png">
-                                <div id="cur_x1" class="vline"></div>
-                                <div id="cur_x1_info" class="cur_info"></div>
-                                <img id="cur_x2_arrow" class="varrow" src="img/cursor-arrow-up.png">
-                                <div id="cur_x2" class="vline"></div>
-                                <div id="cur_x2_info" class="cur_info"></div>
-                                <div id="cur_x_diff"></div>
-                                <div id="cur_x_diff_info" class="cur_info"></div>
+                                <div id="cursors_holder">
+                                    <img id="cur_x1_arrow" class="varrow" src="img/cursor-arrow-up.png">
+                                    <div id="cur_x1" class="vline"></div>
+                                    <div id="cur_x1_info" class="cur_info"></div>
+                                    <img id="cur_x2_arrow" class="varrow" src="img/cursor-arrow-up.png">
+                                    <div id="cur_x2" class="vline"></div>
+                                    <div id="cur_x2_info" class="cur_info"></div>
+                                    <div id="cur_x_diff"></div>
+                                    <div id="cur_x_diff_info" class="cur_info"></div>
 
-                                <img id="cur_y1_arrow" class="harrow" src="img/cursor-arrow-left.png">
-                                <div id="cur_y1" class="hline"></div>
-                                <div id="cur_y1_info" class="cur_info"></div>
-                                <img id="cur_y2_arrow" class="harrow" src="img/cursor-arrow-left.png">
-                                <div id="cur_y2" class="hline"></div>
-                                <div id="cur_y2_info" class="cur_info"></div>
-                                <div id="cur_y_diff"></div>
-                                <div id="cur_y_diff_info" class="cur_info"></div>
-
-                                <!-- <div id="cur_rectangle" style="position: fixed;border: 2px solid;"></div> -->
-
+                                    <img id="cur_y1_arrow" class="harrow" src="img/cursor-arrow-left.png">
+                                    <div id="cur_y1" class="hline"></div>
+                                    <div id="cur_y1_info" class="cur_info"></div>
+                                    <img id="cur_y2_arrow" class="harrow" src="img/cursor-arrow-left.png">
+                                    <div id="cur_y2" class="hline"></div>
+                                    <div id="cur_y2_info" class="cur_info"></div>
+                                    <div id="cur_y_diff"></div>
+                                    <div id="cur_y_diff_info" class="cur_info"></div>
+                                </div>
                             </div>
 
                             <div class="clear info-graph">

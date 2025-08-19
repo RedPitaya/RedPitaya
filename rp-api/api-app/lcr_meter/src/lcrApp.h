@@ -80,6 +80,7 @@ int lcrApp_LcrReset();
 
 int lcrApp_GenRun();
 int lcrApp_GenStop();
+int lcrApp_GenSetSettings();
 // int lcrApp_LcrStartCorrection();
 int lcrApp_LcrCopyParams(lcr_main_data_t* data);
 
