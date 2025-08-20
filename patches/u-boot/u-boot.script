@@ -334,5 +334,6 @@ fatload mmc 0 ${addr_dtb}   dts/${dts_path}/devicetree.dtb
 
 echo Booting Linux kernel with ramdisk and devicetree
 setenv sdboot bootm ${addr_linux} - ${addr_dtb}
+setenv qspiboot bootm ${addr_linux} - ${addr_dtb}
 setenv bootdelay 0
 bootd
