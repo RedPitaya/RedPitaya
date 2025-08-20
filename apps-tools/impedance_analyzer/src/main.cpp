@@ -569,23 +569,24 @@ void threadLoop() {
                 ia_current_freq.SendValue(current_freq);
 
                 std::lock_guard<std::mutex> lock(g_signalMutex);
-
-                signals_array[IA_FREQ].push_back(res.lcr_freq);
-                signals_array[IA_Z].push_back(res.lcr_amplitude);
-                signals_array[IA_PHASE].push_back(res.lcr_phase);
-                signals_array[IA_Y_s].push_back(res.lcr_Y_abs);
-                signals_array[IA_NEG_PHASE].push_back(res.lcr_Phase_Y);
-                signals_array[IA_R_s].push_back(res.lcr_R_s);
-                signals_array[IA_R_p].push_back(res.lcr_R_p);
-                signals_array[IA_X_s].push_back(res.lcr_X_s);
-                signals_array[IA_G_p].push_back(res.lcr_G_p);
-                signals_array[IA_B_p].push_back(res.lcr_B_p);
-                signals_array[IA_C_s].push_back(res.lcr_C_s);
-                signals_array[IA_C_p].push_back(res.lcr_C_p);
-                signals_array[IA_L_s].push_back(res.lcr_L_s);
-                signals_array[IA_L_p].push_back(res.lcr_L_p);
-                signals_array[IA_Q].push_back(res.lcr_Q);
-                signals_array[IA_D].push_back(res.lcr_D);
+                if (std::find(begin(signals_array[IA_FREQ]), end(signals_array[IA_FREQ]), res.lcr_freq) == end(signals_array[IA_FREQ])) {
+                    signals_array[IA_FREQ].push_back(res.lcr_freq);
+                    signals_array[IA_Z].push_back(res.lcr_amplitude);
+                    signals_array[IA_PHASE].push_back(res.lcr_phase);
+                    signals_array[IA_Y_s].push_back(res.lcr_Y_abs);
+                    signals_array[IA_NEG_PHASE].push_back(res.lcr_Phase_Y);
+                    signals_array[IA_R_s].push_back(res.lcr_R_s);
+                    signals_array[IA_R_p].push_back(res.lcr_R_p);
+                    signals_array[IA_X_s].push_back(res.lcr_X_s);
+                    signals_array[IA_G_p].push_back(res.lcr_G_p);
+                    signals_array[IA_B_p].push_back(res.lcr_B_p);
+                    signals_array[IA_C_s].push_back(res.lcr_C_s);
+                    signals_array[IA_C_p].push_back(res.lcr_C_p);
+                    signals_array[IA_L_s].push_back(res.lcr_L_s);
+                    signals_array[IA_L_p].push_back(res.lcr_L_p);
+                    signals_array[IA_Q].push_back(res.lcr_Q);
+                    signals_array[IA_D].push_back(res.lcr_D);
+                }
             } else {
                 ia_status.SendValue(IA_START_DONE);
             }
