@@ -16,6 +16,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <new>
+#include <span>
+#include <vector>
 
 #include "acquire.h"
 #include "common.h"
@@ -326,16 +328,9 @@ scpi_result_t RP_AcqAxiDataQ(scpi_t* context) {
             return SCPI_RES_ERR;
         }
     } else {
-        int16_t* buffer = nullptr;
-        try {
-            buffer = new int16_t[size];
-        } catch (const std::bad_alloc&) {
-            SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed allocate buffer");
-            if (getRetOnError())
-                requestSendNewLine(context);
-            return SCPI_RES_ERR;
-        };
-        result = rp_AcqAxiGetDataRaw(channel, start, &size, buffer);
+        std::vector<std::span<int16_t>> buffer;
+        result = rp_AcqAxiGetDataRawDirect(channel, start, size, &buffer);
+        // result = rp_AcqAxiGetDataRaw(channel, start, &size, buffer);
         if (result != RP_OK) {
             RP_LOG_CRIT("Failed to get raw data: %s", rp_GetError(result));
             if (getRetOnError())
@@ -343,8 +338,7 @@ scpi_result_t RP_AcqAxiDataQ(scpi_t* context) {
             return SCPI_RES_ERR;
         }
 
-        SCPI_ResultBufferInt16(context, buffer, size, &error);
-        delete[] buffer;
+        SCPI_ResultBufferSpanInt16(context, &buffer, &error);
         if (error) {
             SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
             if (getRetOnError())

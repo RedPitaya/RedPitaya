@@ -214,6 +214,8 @@ std::thread* threadConnection(int connId, bool isArduino) {
     auto func = [isArduino](int connId) {
         int sockId = connId;
         user_context_t uc;
+        uc.buffer.reserve(ADC_BUFFER_SIZE * sizeof(float));
+
         scpi_error_t scpi_error_queue_data[SCPI_ERROR_QUEUE_SIZE];
         auto ctx = initContext(isArduino);
         if (ctx == NULL) {
@@ -326,6 +328,7 @@ auto startUART() -> int {
     int read_size;
     struct termios g_settings;
     user_context_t uc;
+    uc.buffer.reserve(ADC_BUFFER_SIZE * sizeof(float));
 
     size_t message_len = MAX_BUFF_SIZE;
 
@@ -430,6 +433,7 @@ auto startArduinoApi() -> int {
     int read_size;
     struct termios g_settings;
     user_context_t uc;
+    uc.buffer.reserve(ADC_BUFFER_SIZE * sizeof(float));
 
     size_t message_len = MAX_BUFF_SIZE;
 

@@ -197,19 +197,69 @@ size_t writeBinHeader(scpi_t* context, uint32_t numElems, size_t sizeOfElem, boo
 static size_t resultBufferInt16Bin(scpi_t* context, const int16_t* data, size_t size, bool* error) {
     size_t result = 0;
 
+    user_context_t* uc = (user_context_t*)context->user_context;
+
     result += writeBinHeader(context, size, sizeof(int16_t), error);
     CHECK_ERROR_PTR
 
-    static const size_t pack_size = 0x20000;
-    size_t i;
-    uint16_t new_buff[pack_size];
-    for (size_t j = 0; j < size; j += pack_size) {
-        size_t send_size = (size - j) < pack_size ? (size - j) : pack_size;
-        for (i = 0; i < send_size; i++) {
-            new_buff[i] = htons((uint16_t)data[i + j]);
-        }
-        result += writeDataEx(context, (char*)new_buff, sizeof(int16_t) * send_size, error);
+    if (uc->little_endian) {
+        result += writeDataEx(context, (char*)data, sizeof(int16_t) * size, error);
         CHECK_ERROR_PTR
+    } else {
+        static const size_t pack_size = 0x20000;
+        size_t i;
+        uint16_t new_buff[pack_size];
+        for (size_t j = 0; j < size; j += pack_size) {
+            size_t send_size = (size - j) < pack_size ? (size - j) : pack_size;
+            for (i = 0; i < send_size; i++) {
+                new_buff[i] = htons((uint16_t)data[i + j]);
+            }
+            result += writeDataEx(context, (char*)new_buff, sizeof(int16_t) * send_size, error);
+            CHECK_ERROR_PTR
+        }
+    }
+    return result;
+}
+
+static size_t resultBufferSpanInt16Bin(scpi_t* context, const std::vector<std::span<int16_t>>* data, bool* error) {
+    size_t result = 0;
+    size_t total_bytes = 0;
+
+    for (const auto& span : *data) {
+        if (!span.empty()) {
+            total_bytes += span.size();
+        }
+    }
+
+    user_context_t* uc = (user_context_t*)context->user_context;
+
+    result += writeBinHeader(context, total_bytes, sizeof(int16_t), error);
+    CHECK_ERROR_PTR
+
+    if (uc->little_endian) {
+        for (const auto& span : *data) {
+            if (!span.empty()) {
+                result += writeDataEx(context, (char*)span.data(), sizeof(int16_t) * span.size(), error);
+                CHECK_ERROR_PTR
+            }
+        }
+    } else {
+        static const size_t pack_size = 0x20000;
+        size_t i;
+        uint16_t new_buff[pack_size];
+
+        for (const auto& span : *data) {
+            if (!span.empty()) {
+                for (size_t j = 0; j < span.size(); j += pack_size) {
+                    size_t send_size = (span.size() - j) < pack_size ? (span.size() - j) : pack_size;
+                    for (i = 0; i < send_size; i++) {
+                        new_buff[i] = htons((uint16_t)span.data()[i + j]);
+                    }
+                    result += writeDataEx(context, (char*)new_buff, sizeof(int16_t) * send_size, error);
+                    CHECK_ERROR_PTR
+                }
+            }
+        }
     }
     return result;
 }
@@ -235,6 +285,31 @@ static size_t resultBufferInt16Ascii(scpi_t* context, const int16_t* data, size_
         auto len = strlen(buffer);
         result += writeDataEx(context, buffer, len, error);
         CHECK_ERROR_PTR
+    }
+
+    result += writeDataEx(context, "}", 1, error);
+    CHECK_ERROR_PTR
+
+    context->output_count++;
+    return result;
+}
+
+static size_t resultBufferSpanInt16Ascii(scpi_t* context, const std::vector<std::span<int16_t>>* data, bool* error) {
+    size_t result = 0;
+
+    result += writeDataEx(context, "{", 1, error);
+    CHECK_ERROR_PTR
+
+    char buffer[20];
+    for (const auto& span : *data) {
+        if (!span.empty()) {
+            for (size_t i = 0; i < span.size(); i++) {
+                snprintf(buffer, sizeof(buffer), "%" PRIi16 "%s", span.data()[i], (i < span.size() - 1 ? "," : ""));
+                auto len = strlen(buffer);
+                result += writeDataEx(context, buffer, len, error);
+                CHECK_ERROR_PTR
+            }
+        }
     }
 
     result += writeDataEx(context, "}", 1, error);
@@ -274,6 +349,15 @@ size_t SCPI_ResultBufferInt16(scpi_t* context, const int16_t* data, size_t size,
     }
 }
 
+size_t SCPI_ResultBufferSpanInt16(scpi_t* context, const std::vector<std::span<int16_t>>* data, bool* error) {
+    user_context_t* uc = (user_context_t*)context->user_context;
+    if (uc->binary_format == true) {
+        return resultBufferSpanInt16Bin(context, data, error);
+    } else {
+        return resultBufferSpanInt16Ascii(context, data, error);
+    }
+}
+
 size_t SCPI_ResultBufferUInt8(scpi_t* context, const uint8_t* data, size_t size, bool* error) {
     user_context_t* uc = (user_context_t*)context->user_context;
 
@@ -287,19 +371,26 @@ size_t SCPI_ResultBufferUInt8(scpi_t* context, const uint8_t* data, size_t size,
 static size_t resultBufferFloatBin(scpi_t* context, const float* data, size_t size, bool* error) {
     size_t result = 0;
 
+    user_context_t* uc = (user_context_t*)context->user_context;
+
     result += writeBinHeader(context, size, sizeof(float), error);
     CHECK_ERROR_PTR
 
-    static const size_t pack_size = 0x20000;
-    size_t i;
-    float new_buff[pack_size];
-    for (size_t j = 0; j < size; j += pack_size) {
-        size_t send_size = (size - j) < pack_size ? (size - j) : pack_size;
-        for (i = 0; i < send_size; i++) {
-            new_buff[i] = hton_f(data[i + j]);
-        }
-        result += writeDataEx(context, (char*)new_buff, sizeof(float) * send_size, error);
+    if (uc->little_endian) {
+        result += writeDataEx(context, (char*)data, sizeof(float) * size, error);
         CHECK_ERROR_PTR
+    } else {
+        static const size_t pack_size = 0x20000;
+        size_t i;
+        float new_buff[pack_size];
+        for (size_t j = 0; j < size; j += pack_size) {
+            size_t send_size = (size - j) < pack_size ? (size - j) : pack_size;
+            for (i = 0; i < send_size; i++) {
+                new_buff[i] = hton_f(data[i + j]);
+            }
+            result += writeDataEx(context, (char*)new_buff, sizeof(float) * send_size, error);
+            CHECK_ERROR_PTR
+        }
     }
     return result;
 }

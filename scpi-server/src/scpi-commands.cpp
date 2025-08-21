@@ -755,6 +755,18 @@ static const scpi_command_t scpi_commands[] = {
      .tag = 0
 #endif
     },
+    {.pattern = "ACQ:DATA:BYTE:ORDER",
+     .callback = RP_AcqDataEndian,
+#if USE_COMMAND_TAGS
+     .tag = 0
+#endif
+    },
+    {.pattern = "ACQ:DATA:BYTE:ORDER?",
+     .callback = RP_AcqDataEndianQ,
+#if USE_COMMAND_TAGS
+     .tag = 0
+#endif
+    },
     {.pattern = "ACQ:SOUR#:DATA:STArt:End?",
      .callback = RP_AcqDataPosQ,
 #if USE_COMMAND_TAGS

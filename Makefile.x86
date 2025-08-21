@@ -16,7 +16,7 @@ export BUILD_NUMBER
 export REVISION
 export VERSION
 
-SUBMODULE_UBT = "redpitaya-v2022.1"
+SUBMODULE_UBT = "redpitaya-v2022.3"
 SUBMODULE_LIN = "branch-redpitaya-v2024.1"
 SUBMODULE_APP = ""
 

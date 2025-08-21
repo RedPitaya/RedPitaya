@@ -92,6 +92,38 @@ scpi_result_t RP_AcqDataFormatQ(scpi_t* context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_AcqDataEndian(scpi_t* context) {
+    const char* param = nullptr;
+    size_t param_len = 0;
+    if (!SCPI_ParamCharacters(context, &param, &param_len, true)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+    if (strncasecmp(param, "LEND", param_len) == 0) {
+        user_context_t* uc = (user_context_t*)context->user_context;
+        uc->little_endian = true;
+        RP_LOG_INFO("Set to LEND");
+    } else if (strncasecmp(param, "BEND", param_len) == 0) {
+        user_context_t* uc = (user_context_t*)context->user_context;
+        uc->little_endian = false;
+        RP_LOG_INFO("Set to BEND");
+    } else {
+        RP_LOG_INFO("Wrong argument value");
+        return SCPI_RES_ERR;
+    }
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqDataEndianQ(scpi_t* context) {
+    user_context_t* uc = (user_context_t*)context->user_context;
+    if (uc->little_endian) {
+        SCPI_ResultMnemonic(context, "LEND");
+    } else {
+        SCPI_ResultMnemonic(context, "BEND");
+    }
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_AcqStart(scpi_t* context) {
     auto result = rp_AcqStart();
     if (RP_OK != result) {
@@ -1041,6 +1073,7 @@ scpi_result_t RP_AcqScpiDataUnitsQ(scpi_t* context) {
 }
 
 scpi_result_t RP_AcqDataPosQ(scpi_t* context) {
+    user_context_t* uc = (user_context_t*)context->user_context;
     uint32_t start = 0, end = 0;
     auto result = 0;
     rp_channel_t channel = RP_CH_1;
@@ -1063,25 +1096,17 @@ scpi_result_t RP_AcqDataPosQ(scpi_t* context) {
     rp_AcqGetBufSize(&size_buff);
     uint32_t size = ((end + size_buff) - start) % size_buff + 1;
     if (unit == RP_SCPI_VOLTS) {
-        float* buffer = nullptr;
-        try {
-            buffer = new float[size];
-        } catch (const std::bad_alloc&) {
-            SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed allocate buffer")
-            if (getRetOnError())
-                requestSendNewLine(context);
-            return SCPI_RES_ERR;
-        };
-        result = rp_AcqGetDataPosV(channel, start, end, buffer, &size);
+        if (uc->buffer.size() < sizeof(float) * ADC_BUFFER_SIZE) {
+            uc->buffer.resize(sizeof(float) * ADC_BUFFER_SIZE);
+        }
+        result = rp_AcqGetDataPosV(channel, start, end, reinterpret_cast<float*>(uc->buffer.data()), &size);
         if (result != RP_OK) {
             RP_LOG_CRIT("Failed to get data in volts: %s", rp_GetError(result));
-            delete[] buffer;
             if (getRetOnError())
                 requestSendNewLine(context);
             return SCPI_RES_ERR;
         }
-        SCPI_ResultBufferFloat(context, buffer, size, &error);
-        delete[] buffer;
+        SCPI_ResultBufferFloat(context, reinterpret_cast<float*>(uc->buffer.data()), size, &error);
         if (error) {
             SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
             if (getRetOnError())
@@ -1089,25 +1114,17 @@ scpi_result_t RP_AcqDataPosQ(scpi_t* context) {
             return SCPI_RES_ERR;
         }
     } else {
-        int16_t* buffer = nullptr;
-        try {
-            buffer = new int16_t[size];
-        } catch (const std::bad_alloc&) {
-            SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed allocate buffer")
-            if (getRetOnError())
-                requestSendNewLine(context);
-            return SCPI_RES_ERR;
-        };
-        result = rp_AcqGetDataPosRaw(channel, start, end, buffer, &size);
+        if (uc->buffer.size() < sizeof(int16_t) * ADC_BUFFER_SIZE) {
+            uc->buffer.resize(sizeof(int16_t) * ADC_BUFFER_SIZE);
+        }
+        result = rp_AcqGetDataPosRaw(channel, start, end, reinterpret_cast<int16_t*>(uc->buffer.data()), &size);
         if (result != RP_OK) {
             RP_LOG_CRIT("Failed to get raw data: %s", rp_GetError(result));
-            delete[] buffer;
             if (getRetOnError())
                 requestSendNewLine(context);
             return SCPI_RES_ERR;
         }
-        SCPI_ResultBufferInt16(context, buffer, size, &error);
-        delete[] buffer;
+        SCPI_ResultBufferInt16(context, reinterpret_cast<int16_t*>(uc->buffer.data()), size, &error);
         if (error) {
             SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
             if (getRetOnError())
@@ -1120,6 +1137,7 @@ scpi_result_t RP_AcqDataPosQ(scpi_t* context) {
 }
 
 scpi_result_t RP_AcqDataQ(scpi_t* context) {
+    user_context_t* uc = (user_context_t*)context->user_context;
     uint32_t start = 0, size = 0;
     int result = 0;
     rp_channel_t channel = RP_CH_1;
@@ -1144,25 +1162,17 @@ scpi_result_t RP_AcqDataQ(scpi_t* context) {
     bool error = false;
     rp_AcqGetBufSize(&size_buff);
     if (unit == RP_SCPI_VOLTS) {
-        float* buffer = nullptr;
-        try {
-            buffer = new float[size];
-        } catch (std::bad_alloc&) {
-            SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed allocate buffer")
-            if (getRetOnError())
-                requestSendNewLine(context);
-            return SCPI_RES_ERR;
-        };
-        result = rp_AcqGetDataV(channel, start, &size, buffer);
+        if (uc->buffer.size() < sizeof(float) * ADC_BUFFER_SIZE) {
+            uc->buffer.resize(sizeof(float) * ADC_BUFFER_SIZE);
+        }
+        result = rp_AcqGetDataV(channel, start, &size, reinterpret_cast<float*>(uc->buffer.data()));
         if (result != RP_OK) {
             RP_LOG_CRIT("Failed to get data in volts: %s", rp_GetError(result));
-            delete[] buffer;
             if (getRetOnError())
                 requestSendNewLine(context);
             return SCPI_RES_ERR;
         }
-        SCPI_ResultBufferFloat(context, buffer, size, &error);
-        delete[] buffer;
+        SCPI_ResultBufferFloat(context, reinterpret_cast<float*>(uc->buffer.data()), size, &error);
         if (error) {
             SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
             if (getRetOnError())
@@ -1170,25 +1180,17 @@ scpi_result_t RP_AcqDataQ(scpi_t* context) {
             return SCPI_RES_ERR;
         }
     } else {
-        int16_t* buffer = nullptr;
-        try {
-            buffer = new int16_t[size];
-        } catch (std::bad_alloc&) {
-            SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed allocate buffer")
-            if (getRetOnError())
-                requestSendNewLine(context);
-            return SCPI_RES_ERR;
-        };
-        result = rp_AcqGetDataRaw(channel, start, &size, buffer);
+        if (uc->buffer.size() < sizeof(int16_t) * ADC_BUFFER_SIZE) {
+            uc->buffer.resize(sizeof(int16_t) * ADC_BUFFER_SIZE);
+        }
+        result = rp_AcqGetDataRaw(channel, start, &size, reinterpret_cast<int16_t*>(uc->buffer.data()));
         if (result != RP_OK) {
             RP_LOG_CRIT("Failed to get raw data: %s", rp_GetError(result));
-            delete[] buffer;
             if (getRetOnError())
                 requestSendNewLine(context);
             return SCPI_RES_ERR;
         }
-        SCPI_ResultBufferInt16(context, buffer, size, &error);
-        delete[] buffer;
+        SCPI_ResultBufferInt16(context, reinterpret_cast<int16_t*>(uc->buffer.data()), size, &error);
         if (error) {
             SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
             if (getRetOnError())
@@ -1201,6 +1203,7 @@ scpi_result_t RP_AcqDataQ(scpi_t* context) {
 }
 
 scpi_result_t RP_AcqDataOldestAllQ(scpi_t* context) {
+    user_context_t* uc = (user_context_t*)context->user_context;
     uint32_t size = 0;
     bool error = false;
     auto result = 0;
@@ -1212,15 +1215,17 @@ scpi_result_t RP_AcqDataOldestAllQ(scpi_t* context) {
     }
     rp_AcqGetBufSize(&size);
     if (unit == RP_SCPI_VOLTS) {
-        float buffer[size];
-        result = rp_AcqGetOldestDataV(channel, &size, buffer);
+        if (uc->buffer.size() < sizeof(float) * ADC_BUFFER_SIZE) {
+            uc->buffer.resize(sizeof(float) * ADC_BUFFER_SIZE);
+        }
+        result = rp_AcqGetOldestDataV(channel, &size, reinterpret_cast<float*>(uc->buffer.data()));
         if (result != RP_OK) {
             RP_LOG_CRIT("Failed to get data in volt: %s", rp_GetError(result));
             if (getRetOnError())
                 requestSendNewLine(context);
             return SCPI_RES_ERR;
         }
-        SCPI_ResultBufferFloat(context, buffer, size, &error);
+        SCPI_ResultBufferFloat(context, reinterpret_cast<float*>(uc->buffer.data()), size, &error);
         if (error) {
             SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
             if (getRetOnError())
@@ -1228,15 +1233,17 @@ scpi_result_t RP_AcqDataOldestAllQ(scpi_t* context) {
             return SCPI_RES_ERR;
         }
     } else {
-        int16_t buffer[size];
-        result = rp_AcqGetOldestDataRaw(channel, &size, buffer);
+        if (uc->buffer.size() < sizeof(int16_t) * ADC_BUFFER_SIZE) {
+            uc->buffer.resize(sizeof(int16_t) * ADC_BUFFER_SIZE);
+        }
+        result = rp_AcqGetOldestDataRaw(channel, &size, reinterpret_cast<int16_t*>(uc->buffer.data()));
         if (result != RP_OK) {
             RP_LOG_CRIT("Failed to get raw data: %s", rp_GetError(result));
             if (getRetOnError())
                 requestSendNewLine(context);
             return SCPI_RES_ERR;
         }
-        SCPI_ResultBufferInt16(context, buffer, size, &error);
+        SCPI_ResultBufferInt16(context, reinterpret_cast<int16_t*>(uc->buffer.data()), size, &error);
         if (error) {
             SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
             if (getRetOnError())
@@ -1249,6 +1256,7 @@ scpi_result_t RP_AcqDataOldestAllQ(scpi_t* context) {
 }
 
 scpi_result_t RP_AcqOldestDataQ(scpi_t* context) {
+    user_context_t* uc = (user_context_t*)context->user_context;
     uint32_t size = 0;
     bool error = false;
     auto result = 0;
@@ -1265,15 +1273,17 @@ scpi_result_t RP_AcqOldestDataQ(scpi_t* context) {
         return SCPI_RES_ERR;
     }
     if (unit == RP_SCPI_VOLTS) {
-        float buffer[size];
-        result = rp_AcqGetOldestDataV(channel, &size, buffer);
+        if (uc->buffer.size() < sizeof(float) * ADC_BUFFER_SIZE) {
+            uc->buffer.resize(sizeof(float) * ADC_BUFFER_SIZE);
+        }
+        result = rp_AcqGetOldestDataV(channel, &size, reinterpret_cast<float*>(uc->buffer.data()));
         if (result != RP_OK) {
             RP_LOG_CRIT("Failed to get data in volt: %s", rp_GetError(result));
             if (getRetOnError())
                 requestSendNewLine(context);
             return SCPI_RES_ERR;
         }
-        SCPI_ResultBufferFloat(context, buffer, size, &error);
+        SCPI_ResultBufferFloat(context, reinterpret_cast<float*>(uc->buffer.data()), size, &error);
         if (error) {
             SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
             if (getRetOnError())
@@ -1281,15 +1291,17 @@ scpi_result_t RP_AcqOldestDataQ(scpi_t* context) {
             return SCPI_RES_ERR;
         }
     } else {
-        int16_t buffer[size];
-        result = rp_AcqGetOldestDataRaw(channel, &size, buffer);
+        if (uc->buffer.size() < sizeof(int16_t) * ADC_BUFFER_SIZE) {
+            uc->buffer.resize(sizeof(int16_t) * ADC_BUFFER_SIZE);
+        }
+        result = rp_AcqGetOldestDataRaw(channel, &size, reinterpret_cast<int16_t*>(uc->buffer.data()));
         if (result != RP_OK) {
             RP_LOG_CRIT("Failed to get raw data: %s", rp_GetError(result));
             if (getRetOnError())
                 requestSendNewLine(context);
             return SCPI_RES_ERR;
         }
-        SCPI_ResultBufferInt16(context, buffer, size, &error);
+        SCPI_ResultBufferInt16(context, reinterpret_cast<int16_t*>(uc->buffer.data()), size, &error);
         if (error) {
             SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
             if (getRetOnError())
@@ -1302,6 +1314,7 @@ scpi_result_t RP_AcqOldestDataQ(scpi_t* context) {
 }
 
 scpi_result_t RP_AcqLatestDataQ(scpi_t* context) {
+    user_context_t* uc = (user_context_t*)context->user_context;
     uint32_t size = 0;
     auto result = 0;
     bool error = false;
@@ -1318,15 +1331,17 @@ scpi_result_t RP_AcqLatestDataQ(scpi_t* context) {
         return SCPI_RES_ERR;
     }
     if (unit == RP_SCPI_VOLTS) {
-        float buffer[size];
-        result = rp_AcqGetLatestDataV(channel, &size, buffer);
+        if (uc->buffer.size() < sizeof(float) * ADC_BUFFER_SIZE) {
+            uc->buffer.resize(sizeof(float) * ADC_BUFFER_SIZE);
+        }
+        result = rp_AcqGetLatestDataV(channel, &size, reinterpret_cast<float*>(uc->buffer.data()));
         if (result != RP_OK) {
             RP_LOG_CRIT("Failed to get data in volt: %s", rp_GetError(result));
             if (getRetOnError())
                 requestSendNewLine(context);
             return SCPI_RES_ERR;
         }
-        SCPI_ResultBufferFloat(context, buffer, size, &error);
+        SCPI_ResultBufferFloat(context, reinterpret_cast<float*>(uc->buffer.data()), size, &error);
         if (error) {
             SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
             if (getRetOnError())
@@ -1334,15 +1349,17 @@ scpi_result_t RP_AcqLatestDataQ(scpi_t* context) {
             return SCPI_RES_ERR;
         }
     } else {
-        int16_t buffer[size];
-        result = rp_AcqGetLatestDataRaw(channel, &size, buffer);
+        if (uc->buffer.size() < sizeof(int16_t) * ADC_BUFFER_SIZE) {
+            uc->buffer.resize(sizeof(int16_t) * ADC_BUFFER_SIZE);
+        }
+        result = rp_AcqGetLatestDataRaw(channel, &size, reinterpret_cast<int16_t*>(uc->buffer.data()));
         if (result != RP_OK) {
             RP_LOG_CRIT("Failed to get raw data: %s", rp_GetError(result));
             if (getRetOnError())
                 requestSendNewLine(context);
             return SCPI_RES_ERR;
         }
-        SCPI_ResultBufferInt16(context, buffer, size, &error);
+        SCPI_ResultBufferInt16(context, reinterpret_cast<int16_t*>(uc->buffer.data()), size, &error);
         if (error) {
             SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
             if (getRetOnError())
@@ -1355,6 +1372,7 @@ scpi_result_t RP_AcqLatestDataQ(scpi_t* context) {
 }
 
 scpi_result_t RP_AcqTriggerDataQ(scpi_t* context) {
+    user_context_t* uc = (user_context_t*)context->user_context;
     uint32_t count = 0;
     int result = 0;
     rp_channel_t channel = RP_CH_1;
@@ -1414,25 +1432,17 @@ scpi_result_t RP_AcqTriggerDataQ(scpi_t* context) {
             return SCPI_RES_ERR;
     }
     if (unit == RP_SCPI_VOLTS) {
-        float* buffer = nullptr;
-        try {
-            buffer = new float[data_size];
-        } catch (std::bad_alloc&) {
-            SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed allocate buffer")
-            if (getRetOnError())
-                requestSendNewLine(context);
-            return SCPI_RES_ERR;
-        };
-        result = rp_AcqGetDataV(channel, data_start, &data_size, buffer);
+        if (uc->buffer.size() < sizeof(float) * ADC_BUFFER_SIZE) {
+            uc->buffer.resize(sizeof(float) * ADC_BUFFER_SIZE);
+        }
+        result = rp_AcqGetDataV(channel, data_start, &data_size, reinterpret_cast<float*>(uc->buffer.data()));
         if (result != RP_OK) {
             RP_LOG_CRIT("Failed to get data in volts: %s", rp_GetError(result));
-            delete[] buffer;
             if (getRetOnError())
                 requestSendNewLine(context);
             return SCPI_RES_ERR;
         }
-        SCPI_ResultBufferFloat(context, buffer, data_size, &error);
-        delete[] buffer;
+        SCPI_ResultBufferFloat(context, reinterpret_cast<float*>(uc->buffer.data()), data_size, &error);
         if (error) {
             SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
             if (getRetOnError())
@@ -1440,25 +1450,17 @@ scpi_result_t RP_AcqTriggerDataQ(scpi_t* context) {
             return SCPI_RES_ERR;
         }
     } else {
-        int16_t* buffer = nullptr;
-        try {
-            buffer = new int16_t[data_size];
-        } catch (std::bad_alloc&) {
-            SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed allocate buffer")
-            if (getRetOnError())
-                requestSendNewLine(context);
-            return SCPI_RES_ERR;
-        };
-        result = rp_AcqGetDataRaw(channel, data_start, &data_size, buffer);
+        if (uc->buffer.size() < sizeof(int16_t) * ADC_BUFFER_SIZE) {
+            uc->buffer.resize(sizeof(int16_t) * ADC_BUFFER_SIZE);
+        }
+        result = rp_AcqGetDataRaw(channel, data_start, &data_size, reinterpret_cast<int16_t*>(uc->buffer.data()));
         if (result != RP_OK) {
             RP_LOG_CRIT("Failed to get raw data: %s", rp_GetError(result));
-            delete[] buffer;
             if (getRetOnError())
                 requestSendNewLine(context);
             return SCPI_RES_ERR;
         }
-        SCPI_ResultBufferInt16(context, buffer, data_size, &error);
-        delete[] buffer;
+        SCPI_ResultBufferInt16(context, reinterpret_cast<int16_t*>(uc->buffer.data()), data_size, &error);
         if (error) {
             SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to send data");
             if (getRetOnError())

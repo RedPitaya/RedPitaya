@@ -23,6 +23,8 @@ scpi_result_t RP_AcqSplitTriggerQ(scpi_t* context);
 
 scpi_result_t RP_AcqDataFormat(scpi_t* context);
 scpi_result_t RP_AcqDataFormatQ(scpi_t* context);
+scpi_result_t RP_AcqDataEndian(scpi_t* context);
+scpi_result_t RP_AcqDataEndianQ(scpi_t* context);
 scpi_result_t RP_AcqStart(scpi_t* context);
 scpi_result_t RP_AcqStartCh(scpi_t* context);
 scpi_result_t RP_AcqStop(scpi_t* context);
@@ -82,7 +84,7 @@ scpi_result_t RP_AcqLatestDataQ(scpi_t* context);
 scpi_result_t RP_AcqTriggerDataQ(scpi_t* context);
 scpi_result_t RP_AcqBufferSizeQ(scpi_t* context);
 
-scpi_result_t RP_AcqGetLatestData(rp_channel_t channel, scpi_t* context);
+// scpi_result_t RP_AcqGetLatestData(rp_channel_t channel, scpi_t* context);
 
 scpi_result_t RP_AcqAC_DC(scpi_t* context);
 scpi_result_t RP_AcqAC_DCQ(scpi_t* context);

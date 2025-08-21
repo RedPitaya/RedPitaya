@@ -12,6 +12,8 @@
 #ifndef SCPI_PARSER_EXT_H_
 #define SCPI_PARSER_EXT_H_
 
+#include <span>
+#include <vector>
 #include "scpi/scpi.h"
 #include "uart_protocol.h"
 
@@ -26,6 +28,8 @@
 struct user_context_t {
     int fd = -1;
     bool binary_format = false;
+    bool little_endian = false;
+    std::vector<uint8_t> buffer;
 };
 
 int SCPI_Error(scpi_t* context, int_fast16_t err);
@@ -47,6 +51,7 @@ scpi_bool_t SCPI_ParamBufferFloat(scpi_t* context, float* data, uint32_t* size, 
 scpi_bool_t SCPI_ParamBufferUInt8(scpi_t* context, uint8_t* data, uint32_t* size, scpi_bool_t mandatory);
 
 size_t SCPI_ResultBufferInt16(scpi_t* context, const int16_t* data, size_t size, bool* error);
+size_t SCPI_ResultBufferSpanInt16(scpi_t* context, const std::vector<std::span<int16_t>>* data, bool* error);
 size_t SCPI_ResultBufferUInt8(scpi_t* context, const uint8_t* data, size_t size, bool* error);
 size_t SCPI_ResultBufferFloat(scpi_t* context, const float* data, uint32_t size, bool* error);
 
