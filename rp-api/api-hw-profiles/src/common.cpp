@@ -39,6 +39,7 @@
 #include "stem_125_14_LN_CE2_v1.1.h"
 #include "stem_125_14_LN_v1.1.h"
 #include "stem_125_14_Pro_v2.0.h"
+#include "stem_125_14_Z7020_4IN_BO_v1.3.h"
 #include "stem_125_14_Z7020_4IN_v1.0.h"
 #include "stem_125_14_Z7020_4IN_v1.2.h"
 #include "stem_125_14_Z7020_4IN_v1.3.h"
@@ -189,6 +190,7 @@ profiles_t* g_profile = NULL;
 // "STEM_125-14_Z7020_4IN_v1.0"
 // "STEM_125-14_Z7020_4IN_v1.2"
 // "STEM_125-14_Z7020_4IN_v1.3"
+// "STEM_125-14_Z7020_4IN_BO_v1.3"
 // "STEM_250-12_v1.1"
 // "STEM_250-12_v1.2"
 // "STEM_250-12_v1.2a"
@@ -319,6 +321,14 @@ void hp_checkModel(char* model, char* eth_mac) {
 
     if (strcmp(model, "stem_125-14_z7020_4in_v1.3") == 0) {
         g_profile = getProfile_STEM_125_14_Z7020_4IN_v1_3();
+        strcpy(g_profile->boardModelEEPROM, modelOrig);
+        if (eth_mac)
+            strcpy(g_profile->boardETH_MAC, eth_mac);
+        return;
+    }
+
+    if (strcmp(model, "stem_125-14_z7020_4in_bo_v1.3") == 0) {
+        g_profile = getProfile_STEM_125_14_Z7020_4IN_BO_v1_3();
         strcpy(g_profile->boardModelEEPROM, modelOrig);
         if (eth_mac)
             strcpy(g_profile->boardETH_MAC, eth_mac);
@@ -692,6 +702,8 @@ profiles_t* hp_cmn_getProfile(rp_HPeModels_t model) {
             return getProfile_STEM_125_14_Z7020_4IN_v1_2();
         case STEM_125_14_Z7020_4IN_v1_3:
             return getProfile_STEM_125_14_Z7020_4IN_v1_3();
+        case STEM_125_14_Z7020_4IN_BO_v1_3:
+            return getProfile_STEM_125_14_Z7020_4IN_BO_v1_3();
         case STEM_250_12_v1_0:
             return getProfile_STEM_250_12_v1_0();
         case STEM_250_12_v1_1:
@@ -785,6 +797,9 @@ int hp_cmn_GetFPGAVersion(rp_HPeModels_t model, const char** _no_free_value) {
             *_no_free_value = "z20_125_4ch";
             break;
         case STEM_125_14_Z7020_4IN_v1_3:
+            *_no_free_value = "z20_125_4ch";
+            break;
+        case STEM_125_14_Z7020_4IN_BO_v1_3:
             *_no_free_value = "z20_125_4ch";
             break;
         case STEM_250_12_v1_0:

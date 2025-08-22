@@ -3,7 +3,7 @@
  *
  * @brief Red Pitaya Hardware Profiles.
  *
- * Profile for boards STEM 125-1. No DAC and 4 IN channels. Based on Z7020 chip;
+ * Profile for boards STEM 125-14. No DAC and 4 IN channels. Based on Z7020 chip;
  *
  * @Author Red Pitaya
  *

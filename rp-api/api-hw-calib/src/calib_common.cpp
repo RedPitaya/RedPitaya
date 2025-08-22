@@ -594,6 +594,7 @@ rp_calib_params_t getDefault(rp_HPeModels_t model, bool setFilterZero) {
         case STEM_125_14_Z7020_4IN_v1_0:
         case STEM_125_14_Z7020_4IN_v1_2:
         case STEM_125_14_Z7020_4IN_v1_3:
+        case STEM_125_14_Z7020_4IN_BO_v1_3:
             calib.fast_adc_count_1_1 = 4;
             calib.fast_adc_count_1_20 = 4;
             calib.dataStructureId = RP_HW_PACK_ID_V3;

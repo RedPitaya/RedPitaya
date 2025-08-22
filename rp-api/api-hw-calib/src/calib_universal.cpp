@@ -338,7 +338,8 @@ rp_calib_params_t convertUniversaltoCommon(rp_HPeModels_t model, rp_calib_params
 
         case STEM_125_14_Z7020_4IN_v1_0:
         case STEM_125_14_Z7020_4IN_v1_2:
-        case STEM_125_14_Z7020_4IN_v1_3: {
+        case STEM_125_14_Z7020_4IN_v1_3:
+        case STEM_125_14_Z7020_4IN_BO_v1_3: {
             calib.fast_adc_count_1_1 = 4;
             calib.fast_adc_count_1_20 = 4;
 
@@ -698,7 +699,8 @@ bool convertUniversal(rp_HPeModels_t model, rp_calib_params_t* param, rp_calib_p
 
         case STEM_125_14_Z7020_4IN_v1_0:
         case STEM_125_14_Z7020_4IN_v1_2:
-        case STEM_125_14_Z7020_4IN_v1_3: {
+        case STEM_125_14_Z7020_4IN_v1_3:
+        case STEM_125_14_Z7020_4IN_BO_v1_3: {
             if (param->fast_adc_count_1_1 != 4) {
                 return false;
             }
@@ -1012,6 +1014,7 @@ rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model, bool setFilterZero, 
         case STEM_125_14_Z7020_4IN_v1_0:
         case STEM_125_14_Z7020_4IN_v1_2:
         case STEM_125_14_Z7020_4IN_v1_3:
+        case STEM_125_14_Z7020_4IN_BO_v1_3:
             calib.fast_adc_count_1_1 = 4;
             calib.fast_adc_count_1_20 = 4;
             calib.dataStructureId = version;

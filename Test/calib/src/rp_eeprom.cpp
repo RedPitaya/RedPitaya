@@ -103,6 +103,7 @@ int getCalibSize(rp_HPeModels_t model) {
         case STEM_125_14_Z7020_4IN_v1_0:
         case STEM_125_14_Z7020_4IN_v1_2:
         case STEM_125_14_Z7020_4IN_v1_3:
+        case STEM_125_14_Z7020_4IN_BO_v1_3:
             return eCalParEnd_v2;
 
         case STEM_250_12_v1_0:
@@ -161,7 +162,8 @@ void RpPrintEepromCalData(rp_HPeModels_t model, rp_eepromWpData_t* _eepromData, 
 
         case STEM_125_14_Z7020_4IN_v1_0:
         case STEM_125_14_Z7020_4IN_v1_2:
-        case STEM_125_14_Z7020_4IN_v1_3: {
+        case STEM_125_14_Z7020_4IN_v1_3:
+        case STEM_125_14_Z7020_4IN_BO_v1_3: {
             size = eCalParEnd_v2;
             if (verb) {
                 printf(hex ? "dataStructureId = 0x%X\n" : "dataStructureId = %d\n", _eepromData->dataStructureId);
@@ -261,6 +263,7 @@ void print_eeprom(rp_HPeModels_t model, rp_eepromWpData_t* data, int mode) {
                 case STEM_125_14_Z7020_4IN_v1_0:
                 case STEM_125_14_Z7020_4IN_v1_2:
                 case STEM_125_14_Z7020_4IN_v1_3:
+                case STEM_125_14_Z7020_4IN_BO_v1_3:
                 case STEM_250_12_v1_0:
                 case STEM_250_12_v1_1:
                 case STEM_250_12_v1_2:

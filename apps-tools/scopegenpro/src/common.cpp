@@ -87,6 +87,7 @@ auto outAmpDef() -> float {
         case STEM_125_14_Z7020_4IN_v1_0:
         case STEM_125_14_Z7020_4IN_v1_2:
         case STEM_125_14_Z7020_4IN_v1_3:
+        case STEM_125_14_Z7020_4IN_BO_v1_3:
             return 0.9;
         case STEM_250_12_v1_0:
         case STEM_250_12_v1_1:
@@ -133,6 +134,7 @@ auto outAmpMax() -> float {
         case STEM_125_14_Z7020_4IN_v1_0:
         case STEM_125_14_Z7020_4IN_v1_2:
         case STEM_125_14_Z7020_4IN_v1_3:
+        case STEM_125_14_Z7020_4IN_BO_v1_3:
             return 1;
         case STEM_250_12_v1_0:
         case STEM_250_12_v1_1:
@@ -176,6 +178,7 @@ auto getModelName() -> std::string {
         case STEM_125_14_Z7020_4IN_v1_0:
         case STEM_125_14_Z7020_4IN_v1_2:
         case STEM_125_14_Z7020_4IN_v1_3:
+        case STEM_125_14_Z7020_4IN_BO_v1_3:
             return "Z20_125_4CH";
         case STEM_250_12_v1_0:
         case STEM_250_12_v1_1:
@@ -223,6 +226,7 @@ auto outFreqMin() -> int {
         case STEM_125_14_Z7020_4IN_v1_0:
         case STEM_125_14_Z7020_4IN_v1_2:
         case STEM_125_14_Z7020_4IN_v1_3:
+        case STEM_125_14_Z7020_4IN_BO_v1_3:
             return 1;
         case STEM_250_12_v1_0:
         case STEM_250_12_v1_1:
@@ -269,6 +273,7 @@ auto outFreqMax() -> int {
         case STEM_125_14_Z7020_4IN_v1_0:
         case STEM_125_14_Z7020_4IN_v1_2:
         case STEM_125_14_Z7020_4IN_v1_3:
+        case STEM_125_14_Z7020_4IN_BO_v1_3:
             return 1;
         case STEM_250_12_v1_0:
         case STEM_250_12_v1_1:
