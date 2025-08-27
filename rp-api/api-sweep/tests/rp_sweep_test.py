@@ -56,6 +56,14 @@ print("obj.getMode(rp.RP_CH_1)")
 res = obj.getMode(rp.RP_CH_1)
 print(res)
 
+print("obj.setNumberOfRepetitions(rp.RP_CH_1,False,10)")
+res = obj.setNumberOfRepetitions(rp.RP_CH_1,False,10)
+print(res)
+
+print("obj.getNumberOfRepetitions(rp.RP_CH_1)")
+res = obj.getNumberOfRepetitions(rp.RP_CH_1)
+print(res)
+
 print("obj.setDir(rp.RP_CH_1,rp.RP_GEN_SWEEP_DIR_UP_DOWN)")
 res = obj.setDir(rp.RP_CH_1,rp.RP_GEN_SWEEP_DIR_UP_DOWN)
 print(res)

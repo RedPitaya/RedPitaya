@@ -1,0 +1,11 @@
+{
+	"acq_speed" : 1000000,
+	"baudrate" : 115200,
+	"bitOrder" : 0,
+	"invert" : 0,
+	"num_data_bits" : 7,
+	"num_stop_bits" : 2,
+	"parity" : 2,
+	"rx" : 1,
+	"tx" : 0
+}

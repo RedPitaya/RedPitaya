@@ -1,0 +1,12 @@
+Samplerate: 16000000
+Channels: 8
+- 0: logic
+- 1: logic
+- MOSI: logic
+- MISO: logic
+- CLK: logic
+- CS#: logic
+- 6: logic
+- 7: logic
+Logic unitsize: 1
+Logic sample count: 1000

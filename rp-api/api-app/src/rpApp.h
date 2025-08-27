@@ -16,12 +16,8 @@
 #ifndef __RP_APP_H
 #define __RP_APP_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include "rp.h"
 #include "math/rp_dsp.h"
+#include "rp.h"
 
 /** @name Error codes
 *  Various error codes returned by the API.
@@ -29,13 +25,13 @@ extern "C" {
 ///@{
 
 /** Failed to Start a Thread */
-#define RP_APP_EST  100
+#define RP_APP_EST 100
 /** No signal found */
-#define RP_APP_ENS  101
+#define RP_APP_ENS 101
 /** Failed to allocate array */
-#define RP_EAA      102
+#define RP_EAA 102
 /** Failed to calculate period */
-#define RP_APP_ECP   103
+#define RP_APP_ECP 103
 
 ///@}
 
@@ -43,74 +39,66 @@ extern "C" {
 * Type representing input gain.
 */
 typedef enum {
-    RPAPP_OSC_IN_GAIN_LV,       //!< Input gain LV
-    RPAPP_OSC_IN_GAIN_HV,       //!< Input gain HV
+    RPAPP_OSC_IN_GAIN_LV,  //!< Input gain LV
+    RPAPP_OSC_IN_GAIN_HV,  //!< Input gain HV
 } rpApp_osc_in_gain_t;
 
 /**
 * Type representing trigger source.
 */
 typedef enum {
-    RPAPP_OSC_TRIG_SRC_CH1,     //!< Trigger source channel 1
-    RPAPP_OSC_TRIG_SRC_CH2,     //!< Trigger source channel 2
-    RPAPP_OSC_TRIG_SRC_CH3,     //!< Trigger source channel 3
-    RPAPP_OSC_TRIG_SRC_CH4,     //!< Trigger source channel 4
-    RPAPP_OSC_TRIG_SRC_EXTERNAL //!< Trigger source external
+    RPAPP_OSC_TRIG_SRC_CH1,      //!< Trigger source channel 1
+    RPAPP_OSC_TRIG_SRC_CH2,      //!< Trigger source channel 2
+    RPAPP_OSC_TRIG_SRC_CH3,      //!< Trigger source channel 3
+    RPAPP_OSC_TRIG_SRC_CH4,      //!< Trigger source channel 4
+    RPAPP_OSC_TRIG_SRC_EXTERNAL  //!< Trigger source external
 } rpApp_osc_trig_source_t;
 
 /**
 * Type representing trigger slope.
 */
 typedef enum {
-    RPAPP_OSC_TRIG_SLOPE_NE,    //!< Trigger source slope negative
-    RPAPP_OSC_TRIG_SLOPE_PE     //!< Trigger source slope positive
+    RPAPP_OSC_TRIG_SLOPE_NE,  //!< Trigger source slope negative
+    RPAPP_OSC_TRIG_SLOPE_PE   //!< Trigger source slope positive
 } rpApp_osc_trig_slope_t;
 
 /**
 * Type representing trigger mode.
 */
 typedef enum {
-    RPAPP_OSC_TRIG_AUTO,        //!< Trigger sweep auto
-    RPAPP_OSC_TRIG_NORMAL,      //!< Trigger sweep normal
-    RPAPP_OSC_TRIG_SINGLE       //!< Trigger sweep single
+    RPAPP_OSC_TRIG_AUTO,    //!< Trigger sweep auto
+    RPAPP_OSC_TRIG_NORMAL,  //!< Trigger sweep normal
+    RPAPP_OSC_TRIG_SINGLE   //!< Trigger sweep single
 } rpApp_osc_trig_sweep_t;
 
 /**
 * Type representing oscilloscope math and measure source
 */
 typedef enum {
-    RPAPP_OSC_SOUR_CH1  =   0,         //!< Trigger source channel 1
-    RPAPP_OSC_SOUR_CH2  =   1,         //!< Trigger source channel 2
-    RPAPP_OSC_SOUR_CH3  =   2,         //!< Trigger source channel 3
-    RPAPP_OSC_SOUR_CH4  =   3,         //!< Trigger source channel 4
-    RPAPP_OSC_SOUR_MATH =   4          //!< Trigger source math
+    RPAPP_OSC_SOUR_CH1 = 0,  //!< Trigger source channel 1
+    RPAPP_OSC_SOUR_CH2 = 1,  //!< Trigger source channel 2
+    RPAPP_OSC_SOUR_CH3 = 2,  //!< Trigger source channel 3
+    RPAPP_OSC_SOUR_CH4 = 3,  //!< Trigger source channel 4
+    RPAPP_OSC_SOUR_MATH = 4  //!< Trigger source math
 } rpApp_osc_source;
 
 /**
 * Type representing math operations.
 */
 typedef enum {
-    RPAPP_OSC_MATH_NONE,        //!< Math operation add
-    RPAPP_OSC_MATH_ADD,         //!< Math operation add
-    RPAPP_OSC_MATH_SUB,         //!< Math operation subtract
-    RPAPP_OSC_MATH_MUL,         //!< Math operation mltiply
-    RPAPP_OSC_MATH_DIV,         //!< Math operation divide
-    RPAPP_OSC_MATH_ABS,         //!< Math operation absolute
-    RPAPP_OSC_MATH_DER,         //!< Math operation derivative
-    RPAPP_OSC_MATH_INT,         //!< Math operation integrate
+    RPAPP_OSC_MATH_NONE,  //!< Math operation add
+    RPAPP_OSC_MATH_ADD,   //!< Math operation add
+    RPAPP_OSC_MATH_SUB,   //!< Math operation subtract
+    RPAPP_OSC_MATH_MUL,   //!< Math operation mltiply
+    RPAPP_OSC_MATH_DIV,   //!< Math operation divide
+    RPAPP_OSC_MATH_ABS,   //!< Math operation absolute
+    RPAPP_OSC_MATH_DER,   //!< Math operation derivative
+    RPAPP_OSC_MATH_INT,   //!< Math operation integrate
 } rpApp_osc_math_oper_t;
 
-typedef enum{
-    DISABLED    = 0,
-    BSPLINE     = 1,
-    CATMULLROM  = 2,
-    LANCZOS     = 3
-} rpApp_osc_interpolationMode;
+typedef enum { DISABLED = 0, BSPLINE = 1, CATMULLROM = 2, LANCZOS = 3 } rpApp_osc_interpolationMode;
 
-typedef enum{
-    RPAPP_RAW_EXPORT = 0,
-    RPAPP_VIEW_EXPORT = 1
-} rpApp_osc_exportMode;
+typedef enum { RPAPP_RAW_EXPORT = 0, RPAPP_VIEW_EXPORT = 1 } rpApp_osc_exportMode;
 
 /** @name General
 */
@@ -206,7 +194,7 @@ int rpApp_OscAutoScale();
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscGetAutoScale(bool *_state);
+int rpApp_OscGetAutoScale(bool* _state);
 
 /**
  * Gets oscilloscope state. If running is true then oscilloscope is acquiring new data else data is not refreshed.
@@ -214,8 +202,7 @@ int rpApp_OscGetAutoScale(bool *_state);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rpApp_OscIsRunning(bool *running);
-
+int rpApp_OscIsRunning(bool* running);
 
 int rpApp_OscIsTriggered();
 
@@ -235,7 +222,7 @@ int rpApp_OscSetShowInvalid(rp_channel_t _channel, bool state);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscGetShowInvalid(rp_channel_t _channel, bool *state);
+int rpApp_OscGetShowInvalid(rp_channel_t _channel, bool* state);
 
 /**
 * Sets amplitude offset in volts.
@@ -253,7 +240,7 @@ int rpApp_OscSetAmplitudeOffset(rpApp_osc_source source, double offset);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscGetAmplitudeOffset(rpApp_osc_source source, double *offset);
+int rpApp_OscGetAmplitudeOffset(rpApp_osc_source source, double* offset);
 
 /**
 * Sets amplitude scale in volts per division.
@@ -271,7 +258,7 @@ int rpApp_OscSetAmplitudeScale(rpApp_osc_source source, double scale);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscGetAmplitudeScale(rpApp_osc_source source, double *scale);
+int rpApp_OscGetAmplitudeScale(rpApp_osc_source source, double* scale);
 
 /**
 * Sets probe attenuation ratio.
@@ -289,7 +276,7 @@ int rpApp_OscSetProbeAtt(rp_channel_t channel, float att);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscGetProbeAtt(rp_channel_t channel, float *att);
+int rpApp_OscGetProbeAtt(rp_channel_t channel, float* att);
 
 /**
 * Sets input gain. This must be set the same as the jumpers on Red Pitaya board.
@@ -307,7 +294,7 @@ int rpApp_OscSetInputGain(rp_channel_t channel, rpApp_osc_in_gain_t gain);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscGetInputGain(rp_channel_t channel, rpApp_osc_in_gain_t *gain);
+int rpApp_OscGetInputGain(rp_channel_t channel, rpApp_osc_in_gain_t* gain);
 
 /**
 * Sets time delay in milliseconds.
@@ -323,7 +310,7 @@ int rpApp_OscSetTimeOffset(float offset);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscGetTimeOffset(float *offset);
+int rpApp_OscGetTimeOffset(float* offset);
 
 /**
 * Sets time scale.
@@ -339,7 +326,7 @@ int rpApp_OscSetTimeScale(float scale);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscGetTimeScale(float *scale);
+int rpApp_OscGetTimeScale(float* scale);
 
 /**
 * Sets trigger Mode.
@@ -355,7 +342,7 @@ int rpApp_OscSetTriggerSweep(rpApp_osc_trig_sweep_t mode);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscGetTriggerSweep(rpApp_osc_trig_sweep_t *mode);
+int rpApp_OscGetTriggerSweep(rpApp_osc_trig_sweep_t* mode);
 
 /**
 * Sets trigger source.
@@ -371,7 +358,7 @@ int rpApp_OscSetTriggerSource(rpApp_osc_trig_source_t triggerSource);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscGetTriggerSource(rpApp_osc_trig_source_t *triggerSource);
+int rpApp_OscGetTriggerSource(rpApp_osc_trig_source_t* triggerSource);
 
 /**
 * Sets trigger slope.
@@ -387,7 +374,7 @@ int rpApp_OscSetTriggerSlope(rpApp_osc_trig_slope_t slope);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscGetTriggerSlope(rpApp_osc_trig_slope_t *slope);
+int rpApp_OscGetTriggerSlope(rpApp_osc_trig_slope_t* slope);
 
 /**
 * Sets trigger level.
@@ -403,7 +390,7 @@ int rpApp_OscSetTriggerLevel(float level);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscGetTriggerLevel(float *level);
+int rpApp_OscGetTriggerLevel(float* level);
 
 /**
 * Sets external trigger level.
@@ -419,7 +406,7 @@ int rpApp_OscSetExtTriggerLevel(float level);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscGetExtTriggerLevel(float *level);
+int rpApp_OscGetExtTriggerLevel(float* level);
 
 /**
 * Sets source signal inverted.
@@ -435,7 +422,7 @@ int rpApp_OscSetInverted(rpApp_osc_source source, bool inverted);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscIsInverted(rpApp_osc_source source, bool *inverted);
+int rpApp_OscIsInverted(rpApp_osc_source source, bool* inverted);
 
 /**
 * Gets view size ratio position proportional to ADC buffer size.
@@ -443,7 +430,7 @@ int rpApp_OscIsInverted(rpApp_osc_source source, bool *inverted);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscGetViewPart(float *ratio);
+int rpApp_OscGetViewPart(float* ratio);
 
 /**
 * Gets source peak-to-peak voltage.
@@ -452,7 +439,7 @@ int rpApp_OscGetViewPart(float *ratio);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscMeasureVpp(rpApp_osc_source source, float *Vpp);
+int rpApp_OscMeasureVpp(rpApp_osc_source source, float* Vpp);
 
 /**
 * Gets source mean voltage.
@@ -461,7 +448,7 @@ int rpApp_OscMeasureVpp(rpApp_osc_source source, float *Vpp);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscMeasureMeanVoltage(rpApp_osc_source source, float *meanVoltage);
+int rpApp_OscMeasureMeanVoltage(rpApp_osc_source source, float* meanVoltage);
 
 /**
 * Gets source max voltage.
@@ -470,7 +457,7 @@ int rpApp_OscMeasureMeanVoltage(rpApp_osc_source source, float *meanVoltage);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscMeasureAmplitudeMax(rpApp_osc_source source, float *Vmax);
+int rpApp_OscMeasureAmplitudeMax(rpApp_osc_source source, float* Vmax);
 
 /**
 * Gets source min voltage.
@@ -479,7 +466,7 @@ int rpApp_OscMeasureAmplitudeMax(rpApp_osc_source source, float *Vmax);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscMeasureAmplitudeMin(rpApp_osc_source source, float *Vmin);
+int rpApp_OscMeasureAmplitudeMin(rpApp_osc_source source, float* Vmin);
 
 /**
 * Gets source frequency.
@@ -488,7 +475,7 @@ int rpApp_OscMeasureAmplitudeMin(rpApp_osc_source source, float *Vmin);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscMeasureFrequency(rpApp_osc_source source, float *frequency);
+int rpApp_OscMeasureFrequency(rpApp_osc_source source, float* frequency);
 
 /**
 * Gets source period.
@@ -497,7 +484,7 @@ int rpApp_OscMeasureFrequency(rpApp_osc_source source, float *frequency);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscMeasurePeriod(rpApp_osc_source source, float *period);
+int rpApp_OscMeasurePeriod(rpApp_osc_source source, float* period);
 
 /**
 * Gets source duty cycle. The returned value represents ratio between high time and all time.
@@ -506,7 +493,7 @@ int rpApp_OscMeasurePeriod(rpApp_osc_source source, float *period);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscMeasureDutyCycle(rpApp_osc_source source, float *dutyCycle);
+int rpApp_OscMeasureDutyCycle(rpApp_osc_source source, float* dutyCycle);
 
 /**
 * Gets source root mean square of the signal.
@@ -515,7 +502,7 @@ int rpApp_OscMeasureDutyCycle(rpApp_osc_source source, float *dutyCycle);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscMeasureRootMeanSquare(rpApp_osc_source source, float *rms);
+int rpApp_OscMeasureRootMeanSquare(rpApp_osc_source source, float* rms);
 
 /**
 * Gets voltage at cursor position.
@@ -525,7 +512,7 @@ int rpApp_OscMeasureRootMeanSquare(rpApp_osc_source source, float *rms);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscGetCursorVoltage(rpApp_osc_source source, uint32_t cursor, float *value);
+int rpApp_OscGetCursorVoltage(rpApp_osc_source source, uint32_t cursor, float* value);
 
 /**
 * Gets voltage time in milliseconds at cursor position.
@@ -534,7 +521,7 @@ int rpApp_OscGetCursorVoltage(rpApp_osc_source source, uint32_t cursor, float *v
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscGetCursorTime(uint32_t cursor, float *value);
+int rpApp_OscGetCursorTime(uint32_t cursor, float* value);
 
 /**
 * Gets time in milliseconds between cursors.
@@ -544,7 +531,7 @@ int rpApp_OscGetCursorTime(uint32_t cursor, float *value);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscGetCursorDeltaTime(uint32_t cursor1, uint32_t cursor2, float *value);
+int rpApp_OscGetCursorDeltaTime(uint32_t cursor1, uint32_t cursor2, float* value);
 
 /**
 * Gets amplitude difference between cursors.
@@ -555,7 +542,7 @@ int rpApp_OscGetCursorDeltaTime(uint32_t cursor1, uint32_t cursor2, float *value
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscGetCursorDeltaAmplitude(rpApp_osc_source source, uint32_t cursor1, uint32_t cursor2, float *value);
+int rpApp_OscGetCursorDeltaAmplitude(rpApp_osc_source source, uint32_t cursor1, uint32_t cursor2, float* value);
 
 /**
 * Gets frequency between cursors. This is equal to 1/(time difference).
@@ -565,7 +552,7 @@ int rpApp_OscGetCursorDeltaAmplitude(rpApp_osc_source source, uint32_t cursor1, 
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscGetCursorDeltaFrequency(uint32_t cursor1, uint32_t cursor2, float *value);
+int rpApp_OscGetCursorDeltaFrequency(uint32_t cursor1, uint32_t cursor2, float* value);
 
 /**
 * Sets math operation.
@@ -581,7 +568,7 @@ int rpApp_OscSetMathOperation(rpApp_osc_math_oper_t operation);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rpApp_OscGetMathOperation(rpApp_osc_math_oper_t *operation);
+int rpApp_OscGetMathOperation(rpApp_osc_math_oper_t* operation);
 
 /**
 * Sets math sources.
@@ -599,7 +586,7 @@ int rpApp_OscSetMathSources(rp_channel_t source1, rp_channel_t source2);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rpApp_OscGetMathSources(rp_channel_t *source1, rp_channel_t *source2);
+int rpApp_OscGetMathSources(rp_channel_t* source1, rp_channel_t* source2);
 
 /**
 * Gets source data.
@@ -609,7 +596,7 @@ int rpApp_OscGetMathSources(rp_channel_t *source1, rp_channel_t *source2);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscGetViewData(rpApp_osc_source source, float *data, uint32_t size);
+int rpApp_OscGetViewData(rpApp_osc_source source, float* data, uint32_t size);
 
 /**
 * Gets data for export.
@@ -621,17 +608,17 @@ int rpApp_OscGetViewData(rpApp_osc_source source, float *data, uint32_t size);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscGetExportedData(rpApp_osc_source source, rpApp_osc_exportMode mode, bool normalize, float *data, uint32_t *size);
+int rpApp_OscGetExportedData(rpApp_osc_source source, rpApp_osc_exportMode mode, bool normalize, float* data, uint32_t* size);
 
-/**
-* Gets raw data.
-* @param source Source ch1, ch2.
-* @param data buffer.
-* @param size Number of values to be returned.
-* @return If the function is successful, the return value is RP_OK.
-* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
-*/
-int rpApp_OscGetRawData(rp_channel_t source, uint16_t *data, uint32_t size);
+// /**
+// * Gets raw data.
+// * @param source Source ch1, ch2.
+// * @param data buffer.
+// * @param size Number of values to be returned.
+// * @return If the function is successful, the return value is RP_OK.
+// * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+// */
+// int rpApp_OscGetRawData(rp_channel_t source, uint16_t *data, uint32_t size);
 
 /**
 * Sets view buffer size.
@@ -647,7 +634,7 @@ int rpApp_OscSetViewSize(uint32_t size);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscGetViewSize(uint32_t *size);
+int rpApp_OscGetViewSize(uint32_t* size);
 
 /**
 * Gets start end positions of the valid data in the view buffer.
@@ -674,33 +661,33 @@ int rpApp_OscRefreshViewData();
 
 int rpApp_OscSetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode _mode);
 
-int rpApp_OscGetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode *_mode);
+int rpApp_OscGetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode* _mode);
 
 int rpApp_OscSetEnableXY(bool _state);
 
-int rpApp_OscGetEnableXY(bool *_state);
+int rpApp_OscGetEnableXY(bool* _state);
 
-int rpApp_OscGetViewDataXY(float *dataX, float *dataY, uint32_t size);
+int rpApp_OscGetViewDataXY(float* dataX, float* dataY, uint32_t size);
 
 int rpApp_OscSetSrcXAxis(rpApp_osc_source channel);
 
-int rpApp_OscGetSrcXAxis(rpApp_osc_source *channel);
+int rpApp_OscGetSrcXAxis(rpApp_osc_source* channel);
 
 int rpApp_OscSetSrcYAxis(rpApp_osc_source channel);
 
-int rpApp_OscGetSrcYAxis(rpApp_osc_source *channel);
+int rpApp_OscGetSrcYAxis(rpApp_osc_source* channel);
 
 int rpApp_OscPrepareOscillogramBuffer(uint32_t count);
 
-int rpApp_OscGetOscillogramBufferCount(uint32_t *count);
+int rpApp_OscGetOscillogramBufferCount(uint32_t* count);
 
-int rpApp_OscGetOscPerSec(uint32_t *count);
+int rpApp_OscGetOscPerSec(uint32_t* count);
 
 int rpApp_OscBufferSelectNext();
 
 int rpApp_OscBufferSelectPrev();
 
-int rpApp_OscBufferCurrent(int32_t *current);
+int rpApp_OscBufferCurrent(int32_t* current);
 
 ///@}
 
@@ -714,7 +701,7 @@ int rpApp_SpecRunning();
 
 int rpApp_SpecReset();
 
-int rpApp_SpecGetViewData(float **signals, size_t size);
+int rpApp_SpecGetViewData(float** signals, size_t size);
 
 int rpApp_SpecGetViewSize(size_t* size);
 
@@ -726,7 +713,7 @@ int rpApp_SpecSetFreqRange(float _freq_min, float freq);
 
 int rpApp_SpecSetWindow(rp_dsp_api::window_mode_t mode);
 
-int rpApp_SpecGetWindow(rp_dsp_api::window_mode_t *mode);
+int rpApp_SpecGetWindow(rp_dsp_api::window_mode_t* mode);
 
 int rpApp_SpecSetRemoveDC(int state);
 
@@ -734,17 +721,17 @@ int rpApp_SpecGetRemoveDC();
 
 int rpApp_SpecGetADCFreq();
 
-int rpApp_SpecGetMode(rp_dsp_api::mode_t *mode);
+int rpApp_SpecGetMode(rp_dsp_api::mode_t* mode);
 
 int rpApp_SpecSetMode(rp_dsp_api::mode_t mode);
 
-int rpApp_SpecGetProbe(rp_channel_t channel, uint32_t *probe);
+int rpApp_SpecGetProbe(rp_channel_t channel, uint32_t* probe);
 
 int rpApp_SpecSetProbe(rp_channel_t channel, uint32_t probe);
 
 int rpApp_SpecSetImpedance(double value);
 
-int rpApp_SpecGetImpedance(double *value);
+int rpApp_SpecGetImpedance(double* value);
 
 int rpApp_SpecSetADCBufferSize(int size);
 
@@ -760,12 +747,8 @@ int rpApp_SpecSetFreqMax(float freq);
 
 int rpApp_SpecGetFpgaFreq(float* freq);
 
-int rpApp_OscMeasureMaxValue(rpApp_osc_source source, float *Max);
+int rpApp_OscMeasureMaxValue(rpApp_osc_source source, float* Max);
 
-int rpApp_OscMeasureMinValue(rpApp_osc_source source, float *Min);
+int rpApp_OscMeasureMinValue(rpApp_osc_source source, float* Min);
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif //__RP_H
+#endif  //__RP_H

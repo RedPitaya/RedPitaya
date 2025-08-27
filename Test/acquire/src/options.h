@@ -4,48 +4,45 @@
 #include "rp.h"
 #include "rp_hw-profiles.h"
 
-typedef enum {
-    RP_125_14,
-    RP_250_12,
-    RP_125_14_4CH
-} models_t;
+typedef enum { RP_125_14, RP_250_12, RP_125_14_4CH, RP_125_LL, RP_65_LL } models_t;
 
 models_t getModel();
 uint8_t getChannels();
 
 struct Options {
 
-    uint32_t      dataSize;
-    uint32_t      decimation;
+    uint32_t dataSize;
+    uint32_t decimation;
 
     rp_pinState_t attenuator_mode[4];
 
     rp_acq_ac_dc_mode_t ac_dc_mode[4];
 
     float trigger_level;
-    rp_acq_trig_src_t    trigger_mode;
+    rp_acq_trig_src_t trigger_mode;
 
-    bool                 showVersion;
-    bool                 showHelp;
-    bool                 showInHex;
-    bool                 showInVolt;
-    bool                 disableReset;
-    bool                 disableCalibration;
-    bool                 enableEqualization;
-    bool                 enableShaping;
-    bool                 error;
-    bool                 reset_hk;
-    bool                 enableAXI;
-    bool                 enableDebug = false;
-    int                  offset = 0;
-
-
-    Options(){
+    bool showVersion;
+    bool showHelp;
+    bool showInHex;
+    bool showInVolt;
+    bool disableReset;
+    bool disableCalibration;
+    bool enableEqualization;
+    bool enableShaping;
+    bool error;
+    bool reset_hk;
+    bool enableAXI;
+    bool enableDebug = false;
+    bool bypassFilter = false;
+    int offset = 0;
+    bool avg = false;
+    
+    Options() {
         dataSize = ADC_BUFFER_SIZE;
         decimation = RP_DEC_1;
         enableDebug = false;
         offset = 0;
-        for(int i = 0; i < getChannels(); i++){
+        for (int i = 0; i < getChannels(); i++) {
             attenuator_mode[i] = RP_LOW;
             ac_dc_mode[i] = RP_AC;
         }
@@ -64,11 +61,11 @@ struct Options {
         error = true;
         reset_hk = false;
         enableAXI = false;
+        bypassFilter = false;
     };
 };
 
-auto usage(char const *progName) -> void;
+auto usage(char const* progName) -> void;
 auto parse(int argc, char* argv[]) -> Options;
-
 
 #endif

@@ -113,7 +113,7 @@ auto createArray(uint32_t count,uint32_t signalLen) -> T** {
         }
         return arr;
     }catch (const std::bad_alloc& e) {
-        ERROR("Can not allocate memory");
+        ERROR_LOG("Can not allocate memory");
         return nullptr;
     }
 }
@@ -166,7 +166,7 @@ int rp_spectr_worker_init()
                        rp_spectr_worker_thread, NULL);
     if(ret_val != 0) {
         clearAll();
-        ERROR("pthread_create() failed: %s\n",strerror(errno));
+        ERROR_LOG("pthread_create() failed: %s\n",strerror(errno));
         return -1;
     }
     return 0;
@@ -201,7 +201,7 @@ int rp_spectr_worker_exit(void)
         rp_spectr_thread_handler = NULL;
     }
     if(ret_val != 0) {
-        ERROR("pthread_join() failed: %s\n",
+        ERROR_LOG("pthread_join() failed: %s\n",
                 strerror(errno));
     }
     rp_spectr_worker_clean();
@@ -436,7 +436,7 @@ void rp_cleanup_signals(float ***a_signals)
 int spec_run()
 {
     if(rp_spectr_worker_init() < 0) {
-	    ERROR("rp_spectr_worker_init failed");
+	    ERROR_LOG("rp_spectr_worker_init failed");
         return -1;
     }
     auto adc_rate = getADCRate();
@@ -589,7 +589,7 @@ int spec_setADCBufferSize(size_t size){
     if (!g_dsp) return -1;
 
     if (g_dsp->setSignalLength(size) != 0){
-        ERROR("Wrong size %d",size);
+        ERROR_LOG("Wrong size %d",size);
     }
 
     if(g_dsp->window_init(g_dsp->getCurrentWindowMode()) < 0) {

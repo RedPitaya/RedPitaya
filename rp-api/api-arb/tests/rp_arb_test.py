@@ -11,8 +11,12 @@ print("rp_ARBLoadFiles()")
 res = rp_ARBLoadFiles()
 print(res)
 
-print("rp_ARBGenFile('')")
-res = rp_ARBGenFile('')
+print("rp_ARBGenFileCSV('')")
+res = rp_ARBGenFileCSV('')
+print(res)
+
+print("rp_ARBGenFileCOE('')")
+res = rp_ARBGenFileCOE('')
 print(res)
 
 print("rp_ARBGetCount()")

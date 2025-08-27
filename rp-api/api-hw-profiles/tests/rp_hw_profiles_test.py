@@ -26,6 +26,10 @@ print("rp_hw_profiles.rp_HPGetZynqModelOrDefault()")
 res = rp_hw_profiles.rp_HPGetZynqModelOrDefault()
 print(res)
 
+print("rp_hw_profiles.rp_HPGetDDRSize()")
+res = rp_hw_profiles.rp_HPGetDDRSize()
+print(res)
+
 print("rp_hw_profiles.rp_HPGetBaseSpeedHz()")
 res = rp_hw_profiles.rp_HPGetBaseSpeedHz()
 print(res)
@@ -159,12 +163,12 @@ res = rp_hw_profiles.rp_HPGetFastDACBitsOrDefault()
 print(res)
 
 
-print("rp_hw_profiles.rp_HPGetFastDACGain(0)")
-res = rp_hw_profiles.rp_HPGetFastDACGain(0)
+print("rp_hw_profiles.rp_HPGetFastDACOutFullScale(0)")
+res = rp_hw_profiles.rp_HPGetFastDACOutFullScale(0)
 print(res)
 
-print("rp_hw_profiles.rp_HPGetFastDACGainOrDefault(0)")
-res = rp_hw_profiles.rp_HPGetFastDACGainOrDefault(0)
+print("rp_hw_profiles.rp_HPGetFastDACOutFullScaleOrDefault(0)")
+res = rp_hw_profiles.rp_HPGetFastDACOutFullScaleOrDefault(0)
 print(res)
 
 
@@ -380,6 +384,49 @@ print("rp_hw_profiles.rp_HPGetGPIO_P_CountOrDefault()")
 res = rp_hw_profiles.rp_HPGetGPIO_P_CountOrDefault()
 print(res)
 
+print("rp_hw_profiles.rp_HPGetIsE3HighSpeedGPIO()")
+res = rp_hw_profiles.rp_HPGetIsE3HighSpeedGPIO()
+print(res)
+
+print("rp_hw_profiles.rp_HPGetIsE3HighSpeedGPIOOrDefault()")
+res = rp_hw_profiles.rp_HPGetIsE3HighSpeedGPIOOrDefault()
+print(res)
+
+print("rp_hw_profiles.rp_HPGetIsE3HighSpeedGPIORate()")
+res = rp_hw_profiles.rp_HPGetIsE3HighSpeedGPIORate()
+print(res)
+
+print("rp_hw_profiles.rp_HPGetIsE3HighSpeedGPIORateOrDefault()")
+res = rp_hw_profiles.rp_HPGetIsE3HighSpeedGPIORateOrDefault()
+print(res)
+
+print("rp_hw_profiles.rp_HPGetIsE3QSPIeMMC()")
+res = rp_hw_profiles.rp_HPGetIsE3QSPIeMMC()
+print(res)
+
+print("rp_hw_profiles.rp_HPGetIsE3QSPIeMMCOrDefault()")
+res = rp_hw_profiles.rp_HPGetIsE3QSPIeMMCOrDefault()
+print(res)
+
+print("rp_hw_profiles.rp_HPGetIsE3Present()")
+res = rp_hw_profiles.rp_HPGetIsE3Present()
+print(res)
+
+print("rp_hw_profiles.rp_HPGetIsE3PresentOrDefault()")
+res = rp_hw_profiles.rp_HPGetIsE3PresentOrDefault()
+print(res)
+
+print("rp_hw_profiles.rp_HPGetIsCalibInFPGA()")
+res = rp_hw_profiles.rp_HPGetIsCalibInFPGA()
+print(res)
+
+print("rp_hw_profiles.rp_HPGetIsCalibInFPGA()")
+res = rp_hw_profiles.rp_HPGetIsCalibInFPGA()
+print(res)
+
+print("rp_hw_profiles.rp_HPGetFPGAVersion()")
+res = rp_hw_profiles.rp_HPGetFPGAVersion()
+print(res)
 
 print("rp_hw_profiles.rp_HPPrint()")
 rp_hw_profiles.rp_HPPrint()

@@ -512,7 +512,7 @@ $(function() {
         }
 
         if (_mode == "CH3_ADC_GAIN") {
-            CLIENT.parametersCache["ch3_gain_adc_new"] = { value: parseInt($("#CH3_GAIN").val()) + _new_val };
+            CLIENT.parametersCache["ch3_gain_adc_new"] = { value: parseFloat($("#CH3_GAIN").val()) + _new_val };
             CLIENT.sendParameters();
             OBJ.adcCalibChange = true;
         }

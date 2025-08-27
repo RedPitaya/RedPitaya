@@ -1,6 +1,7 @@
 %module rp
 
 %include <stdint.i>
+%include <std_vector.i>
 %include <typemaps.i>
 %include <cstring.i>
 %include <carrays.i>
@@ -111,6 +112,23 @@
 #include "rp.h"
 %}
 
+%typemap(in, numinputs=0) std::vector<std::span<int16_t>>* data (std::vector<std::span<int16_t>> temp) {
+  $1 = &temp;
+}
+
+%typemap(argout) std::vector<std::span<int16_t>>* data {
+  PyObject* pyList = PyList_New($1->size());
+  for (size_t i = 0; i < $1->size(); ++i) {
+    auto& span = (*$1)[i];
+    PyObject* memview = PyMemoryView_FromMemory(
+      reinterpret_cast<char*>(span.data()),
+      span.size() * sizeof(int16_t),
+      PyBUF_READ);
+    PyList_SET_ITEM(pyList, i, memview);
+  }
+  $result = SWIG_Python_AppendOutput($result, pyList);
+}
+
 %include "numpy.i"
 
 %init %{
@@ -131,3 +149,4 @@ import_array();
 %include "rp_gen.h"
 %include "rp_acq.h"
 %include "rp_acq_axi.h"
+%include "rp_asg_axi.h"

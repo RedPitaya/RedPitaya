@@ -29,10 +29,10 @@ profiles_t stem_250_12_v1_2 = {
     .fast_dac_count_channels = 2,
     .fast_dac_is_sign = true,
     .fast_dac_bits = 14,
-    .fast_dac_gain[0] = 2,
-    .fast_dac_gain[1] = 2,
-    .fast_dac_gain[2] = 0,
-    .fast_dac_gain[3] = 0,
+    .fast_dac_out_full_scale[0] = 2,
+    .fast_dac_out_full_scale[1] = 2,
+    .fast_dac_out_full_scale[2] = 0,
+    .fast_dac_out_full_scale[3] = 0,
 
     .is_LV_HV_mode = true,
     .is_AC_DC_mode = true,
@@ -77,7 +77,7 @@ profiles_t stem_250_12_v1_2 = {
 
     .is_pll_control_present = true,
 
-    .is_fast_adc_filter_present = true,
+    .is_fast_adc_filter_present = false,
 
     .is_fast_dac_temp_protection = true,
 
@@ -92,14 +92,24 @@ profiles_t stem_250_12_v1_2 = {
     .fast_adc_full_scale = 1,
     .fast_dac_full_scale = 2,
 
-    .is_daisy_chain_clock_sync = false,
+    .is_daisy_chain_clock_sync = true,
 
     .is_dma_mode_v0_94 = true,
     .is_DAC_50_Ohm_mode = true,
-    .is_split_osc_triggers = false,
+    .is_split_osc_triggers = true,
 
     .gpio_N_count = 9,
-    .gpio_P_count = 10
+    .gpio_P_count = 10,
+
+    .ramMB = 1024,
+
+    .is_E3_high_speed_gpio = false,
+    .is_E3_mmc_qspi = false,
+    .E3_high_speed_gpio_rate = 0,
+    .is_E3_present = false,
+
+    .is_calib_in_fpga = true
+
 };
 
 profiles_t* getProfile_STEM_250_12_v1_2(){

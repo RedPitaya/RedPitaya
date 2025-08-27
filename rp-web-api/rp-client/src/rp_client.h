@@ -12,6 +12,7 @@
 #define __RP_CLIENT_H__
 
 #include <stdint.h>
+#define WEB_CLIENT_PORT 9091
 
 typedef enum {
     RP_WC_NONE          = 0,
@@ -22,9 +23,7 @@ typedef enum {
 
 void rp_WC_Init();
 void rp_WC_SetPingInterval(uint32_t ms);
-void rp_WC_UpdateParameters(bool force);
 void rp_WC_PauseSend(bool state);
-void rp_WC_OnNewParam();
 
 #endif
 

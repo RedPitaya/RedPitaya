@@ -48,7 +48,7 @@
     //Graph cache
     MAIN.graphCache = undefined;
 
-    MAIN.running = true;
+    MAIN.running = false;
     MAIN.calibrating = false;
     MAIN.unexpectedClose = false;
 
@@ -158,21 +158,6 @@
     }
 
 
-    // Draws grid on the lowest canvas layer
-    MAIN.drawGrid = function() {
-        var canvas_width = $('#graph_bode').width() - 2;
-        var canvas_height = Math.round(canvas_width / 2);
-
-        //Draw grid
-        var ctx = $('#graph_bode_grid')[0].getContext('2d');
-
-        // Set canvas size
-        ctx.canvas.width = canvas_width;
-        ctx.canvas.height = canvas_height;
-
-        return;
-    };
-
     MAIN.getCurrentSignalSettings = function() {
         return MAIN.getCurrentSignalSettingsVal(MAIN.currentYAxis)
     }
@@ -239,6 +224,152 @@
             return (val / 1000000).toFixed(2) + "M";
     }
 
+    MAIN.resizeCursorsHolder = function(){
+        if (MAIN.graphCache !== undefined){
+            const offset = MAIN.graphCache.plot.getPlotOffset()
+            const w = MAIN.graphCache.plot.width()
+            const h = MAIN.graphCache.plot.height()
+            var ch = $('#cursors_holder');
+            ch.css('top', offset.top - 2)
+            ch.css('left', offset.left - 2)
+            ch.css('width', w + 4)
+            ch.css('height', h + 4)   
+            ch.show()
+        }
+    }
+
+    MAIN.updateXAxisScale = function(){
+        if (MAIN.graphCache !== undefined) {
+            MAIN.graphCache.plot.resize();
+            MAIN.graphCache.plot.setupGrid();
+            MAIN.graphCache.plot.draw();
+            MAIN.resizeCursorsHolder()
+            CURSORS.updateCursors()
+            CURSORS.updateLinesAndArrows();
+        }
+    }
+
+    function generateLogarithmicTicks(min, max, minTicks, maxTicks) {
+        const ticks = [];
+        const startDecade = Math.floor(Math.log10(min));
+        const endDecade = Math.floor(Math.log10(max));
+        
+        // const multipliers = [1, 2, 3, 4 , 5, 6 , 7 , 8 ,9 ];
+        const multipliers = [1, 2, 3,  5,  7 , 8.5 ];
+        
+        for (let decade = startDecade; decade <= endDecade; decade++) {
+            for (const mult of multipliers) {
+                const freq = mult * Math.pow(10, decade);
+                if (freq >= min && freq <= max) {
+                    ticks.push(Math.round(freq));
+                }
+            }
+        }
+        
+        if (!ticks.includes(Math.round((max)))) {
+            ticks.push(Math.round(max));
+        }
+        
+        return ticks.sort((a, b) => a - b);
+    }
+
+    function generateLogarithmicPower2Ticks(min, max) {
+        const result = [];
+        
+        let current = Math.pow(2, Math.ceil(Math.log2(min)));
+        if (current / 2 >= min) {
+            current = current / 2;
+        }
+        
+        while (current <= max) {
+            if (current >= min) {
+                result.push(Math.round(current));
+            }
+            current *= 2
+        }
+        
+        if (result[0] !== min) result.unshift(Math.round(min));
+        if (result[result.length - 1] !== max) result.push(Math.round(max));
+        
+        return result;
+    }
+
+    function generatePowerOf10Scale(min, max) {
+        const result = [];
+        
+        let current = Math.pow(10, Math.ceil(Math.log10(min)));
+        if (current / 10 >= min) {
+            current = current / 10;
+        }
+        
+        while (current <= max) {
+            if (current >= min) {
+                result.push(Math.round(current));
+            }
+            current *= 2.5
+        }
+        
+        if (result[0] !== min) result.unshift(Math.round(min));
+        if (result[result.length - 1] !== max) result.push(Math.round(max));
+        
+        return result;
+    }
+
+    function generateRoundedLinearScale(min, max, targetSteps = 10) {
+        if (min >= max) throw new Error("The minimum value must be less than the maximum");
+
+        const range = max - min;
+        let roughStep = range / targetSteps;
+        
+        const magnitude = Math.pow(10, Math.floor(Math.log10(roughStep)));
+        const normalizedStep = roughStep / magnitude;
+        
+        let stepMultiplier;
+        if (normalizedStep <= 1.5) {
+            stepMultiplier = 1;
+        } else if (normalizedStep <= 3) {
+            stepMultiplier = 2;
+        } else {
+            stepMultiplier = 5;
+        }
+        
+        const step = stepMultiplier * magnitude;
+        
+        const start = Math.floor(min / step) * step;
+        const end = Math.ceil(max / step) * step;
+        
+        const result = [];
+        for (let value = start; value <= end + Number.EPSILON; value += step) {
+            if (value >= min - Number.EPSILON && value <= max + Number.EPSILON) {
+                result.push(Math.round(value));
+            }
+        }
+        
+        if (result.length === 0 || result[0] > min) result.unshift(Math.round(min));
+        if (result[result.length - 1] < max) result.push(Math.round(max));
+        
+        return result;
+    }
+
+    function getXAxisScale() {
+        var xMin = CLIENT.getValue("IA_START_FREQ")
+        var xMax = CLIENT.getValue("IA_END_FREQ")
+        var t = [];
+        const xscale = CLIENT.getValue("IA_X_SCALE")
+        if (xscale !== undefined && xMin !== undefined && xMax !== undefined){
+            t = generateRoundedLinearScale(xMin,xMax)
+            if (xscale === 1){
+                t = generateLogarithmicTicks(xMin,xMax)
+            }
+            if (xscale === 2){
+                t = generateLogarithmicPower2Ticks(xMin,xMax)
+            }
+            if (xscale === 3){
+                t = generatePowerOf10Scale(xMin,xMax)
+            }
+        }
+        return t
+    }
 
     MAIN.getPlot = function() {
 
@@ -261,12 +392,6 @@
         MAIN.graphCache = {};
         MAIN.graphCache.elem = $('<div id="bode_plot" class="plot" />').css($('#graph_bode_grid').css(['height', 'width'])).appendTo('#graph_bode');
 
-        var t = [];
-        if (MAIN.scale)
-            t = [1, 10, 100, 200, 400, 600, 800, 1000, 2000, 4000, 6000, 8000, 10000, 20000, 40000, 60000, 80000, 100000, 200000, 400000, 600000, 800000, 1000000, 2000000, 4000000, 6000000, 8000000, 10000000, , 20000000, 40000000, 60000000, 80000000, 100000000];
-        else
-            t = null;
-
         var options = {
             series: {
                 shadowSize: 0
@@ -282,10 +407,10 @@
             xaxis: {
                 color: '#aaaaaa',
                 tickColor: '#aaaaaa',
-                ticks: t,
+                ticks: getXAxisScale,
                 transform: function(v) {
                     if (MAIN.scale)
-                        return Math.log(v + 0.0001); // move away from zero
+                        return Math.log(v);
                     else
                         return v;
                 },
@@ -305,19 +430,21 @@
             }
         };
 
-
-        if ($("#IA_SCALE_PLOT0").hasClass("active")) {
-            options.xaxis.transform = null;
-        }
-
         var lastsig1 = [];
-        if (update !== true) {
-            lastsig1.push([$("#IA_START_FREQ").val(),undefined])
-            lastsig1.push([$("#IA_END_FREQ").val(),undefined])
-        }
+        lastsig1.push([1000,undefined])
+        lastsig1.push([1000000,undefined])
+
         var data_points = [{ data: lastsig1, color: '#f3ec1a'}];
         MAIN.graphCache.plot = $.plot(MAIN.graphCache.elem, data_points, options);
         $('.flot-text').css('color', '#aaaaaa');
+        MAIN.graphCache.plot.setData(data_points);
+        MAIN.graphCache.elem.show();
+        MAIN.graphCache.plot.resize();
+        MAIN.graphCache.plot.setupGrid();
+        MAIN.graphCache.plot.draw();
+
+        MAIN.resizeCursorsHolder()
+        CURSORS.updateCursors()
     }
 
 
@@ -325,60 +452,65 @@
     MAIN.drawSignals = function(SIG) {
         // console.log(SIG)
         MAIN.lastSignals = SIG;
-        MAIN.updatePlot();
+        MAIN.updatePlot(false);
     };
 
-    MAIN.updatePlot = function(){
+    MAIN.updatePlot = function(force){
 
-        // If there is graph on screen
-        if (MAIN.graphCache == undefined) {
-            MAIN.initPlot(false);
-        }
-
-        var lastsig1 = [];
-        var curSig = MAIN.getCurrentSignalSettings();
-        var freqSig = MAIN.lastSignals["IA_SIGNAL_FREQ"];
-        var sigVal = MAIN.lastSignals[curSig.name];
-        var min_y = 0;
-        var max_y = 0;
-        var suff = undefined;
-        if (freqSig !== undefined && sigVal !== undefined && freqSig.size > 0){
-            min_y = Math.min(...sigVal.value)
-            max_y = Math.max(...sigVal.value)
-            if (curSig.scale)
-                suff = getSuffix(Math.abs((max_y - min_y) / 2.0 + min_y))
-            else{
-                suff = getSuffix(Math.pow(10,14))
+        if (MAIN.running || force){
+            if (MAIN.graphCache == undefined) {
+                MAIN.initPlot(false);
             }
-            for(var i = 0; i < freqSig.size; i++){
-                lastsig1.push([freqSig.value[i], sigVal.value[i] / suff.coff])
+
+            var lastsig1 = [];
+            var curSig = MAIN.getCurrentSignalSettings();
+            var freqSig = MAIN.lastSignals["IA_SIGNAL_FREQ"];
+            var sigVal = MAIN.lastSignals[curSig.name];
+            var min_y = 0;
+            var max_y = 0;
+            var suff = undefined;
+            
+            if (freqSig !== undefined && sigVal !== undefined && freqSig.size > 0){
+                min_y = Math.min(...sigVal.value)
+                max_y = Math.max(...sigVal.value)
+                if (curSig.scale)
+                    suff = getSuffix(Math.abs((max_y - min_y) / 2.0 + min_y))
+                else{
+                    suff = getSuffix(Math.pow(10,14))
+                }
+                for(var i = 0; i < freqSig.size; i++){
+                    lastsig1.push([freqSig.value[i], sigVal.value[i] / suff.coff])
+                }
+                min_y = min_y / suff.coff
+                max_y = max_y / suff.coff
+                var lab = curSig.label
+                lab += curSig.nominal !== "" ? " [" + suff.name + curSig.nominal + "] " + suff.value :  " " + suff.value
+                $("#amplitude-info").text(lab)
+                MAIN.yAxisSuffix = suff
+            
+                var data_points = [{ data: lastsig1, color: '#f3ec1a' }];
+
+                MAIN.graphCache.plot.setData(data_points);
+                MAIN.graphCache.elem.show();
+                MAIN.graphCache.plot.resize();
+                MAIN.graphCache.plot.setupGrid();
+                MAIN.graphCache.plot.draw();
+
+                var yaxis = MAIN.graphCache.plot.getAxes().yaxis;
+                var size = (max_y - min_y) * 0.2;
+                yaxis.options.max = max_y + size;
+                yaxis.options.min = min_y - size;
+                
+                MAIN.graphCache.elem.show();
+                MAIN.graphCache.plot.resize();
+                MAIN.graphCache.plot.setupGrid();
+                MAIN.graphCache.plot.draw();
+
+                MAIN.resizeCursorsHolder()
+                CURSORS.updateCursors()
+                CURSORS.updateLinesAndArrows();
             }
-            min_y = min_y / suff.coff
-            max_y = max_y / suff.coff
-            var lab = curSig.label
-            lab += curSig.nominal !== "" ? " [" + suff.name + curSig.nominal + "] " + suff.value :  " " + suff.value
-            $("#amplitude-info").text(lab)
-            MAIN.yAxisSuffix = suff
-
-        }else{
-            lastsig1.push([$("#IA_START_FREQ").val(),undefined])
-            lastsig1.push([$("#IA_END_FREQ").val(),undefined])
         }
-
-        MAIN.graphCache.elem.show();
-        MAIN.graphCache.plot.resize();
-        MAIN.graphCache.plot.setupGrid();
-        var data_points = [{ data: lastsig1, color: '#f3ec1a' }];
-        MAIN.graphCache.plot.setData(data_points);
-        MAIN.graphCache.plot.draw();
-        var yaxis = MAIN.graphCache.plot.getAxes().yaxis;
-
-        var size = (max_y - min_y) * 0.2;
-        // if (size < 5) size = 5
-        yaxis.options.max = max_y + size;
-        yaxis.options.min = min_y - size;
-
-        MAIN.updateLinesAndArrows();
     };
 
     MAIN.processSignals = function(SIG){
@@ -394,6 +526,17 @@
             $('body').addClass('loaded');
             $('#measuring-status').hide();
             MAIN.running = false;
+            const scale = CLIENT.getValue("IA_SCALE")
+            const xscale = CLIENT.getValue("IA_X_SCALE")
+            if (scale !== undefined && xscale !== undefined){
+                if (scale == false && xscale > 0){
+                    CLIENT.parametersCache["IA_X_SCALE"] = { value:  0 };
+                }
+                if (scale == true && xscale === 0){
+                    CLIENT.parametersCache["IA_X_SCALE"] = { value:  1 };
+                }
+            }           	
+
             CLIENT.parametersCache["IA_STATUS"] = { value: 0 };
             CLIENT.sendParameters();
         }
@@ -410,7 +553,6 @@
 
 
     MAIN.change_cur_freq = function(new_params) {
-
         var val = new_params['IA_CURRENT_FREQ'].value;
         MAIN.cur_freq = val;
         var result = "";
@@ -467,15 +609,6 @@
         radios.eq([+new_params[param_name].value]).prop('checked', true).parent().addClass('active');
     }
 
-    MAIN.setScalePlot = function(new_params) {
-        var param_name = "IA_SCALE_PLOT"
-        var radios = $('input[name="' + param_name + '"]');
-        radios.closest('.btn-group').children('.btn.active').removeClass('active');
-        radios.eq([+new_params[param_name].value]).prop('checked', true).parent().addClass('active');
-        MAIN.scale = new_params[param_name].value
-        MAIN.initPlot(true);
-    }
-
     MAIN.setAverage = function(new_params) {
         var param_name = "IA_AVERAGING"
         MAIN.setValue(param_name,new_params)
@@ -505,9 +638,7 @@
         var param_name = "IA_Y_AXIS"
         $("#"+param_name).val(new_params[param_name].value);
         MAIN.currentYAxis = new_params[param_name].value;
-        MAIN.updatePlot();
-        var c = MAIN.getCurrentSignalSettings()
-        $("#amplitude-info").text(c.label)
+        MAIN.updatePlot(true);
     }
 
     MAIN.setShunt = function(new_params) {
@@ -531,6 +662,16 @@
         }
     }
 
+    MAIN.setXaxisScale = function(new_params){
+        var param_name = 'IA_X_SCALE'
+        var field = $('#' + param_name);
+        if (field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
+            field.val(new_params[param_name].value);
+            CLIENT.params.orig[param_name] = new_params[param_name];
+            MAIN.updateXAxisScale()
+            CURSORS.updateLinesAndArrows()
+        }
+    }
 
     MAIN.updateLinesAndArrows = function() {
         CURSORS.updateXLinesAndArrows();
@@ -558,7 +699,7 @@
     MAIN.param_callbacks["IA_END_FREQ"] = MAIN.endFreq;
     MAIN.param_callbacks["IA_STEPS"] = MAIN.setSteps;
     MAIN.param_callbacks["IA_SCALE"] = MAIN.setScale;
-    MAIN.param_callbacks["IA_SCALE_PLOT"] = MAIN.setScalePlot;
+    MAIN.param_callbacks["IA_X_SCALE"] = MAIN.setXaxisScale;
     MAIN.param_callbacks["IA_Y_AXIS"] = MAIN.setYAxis;
 
     MAIN.param_callbacks["IA_LCR_SHUNT"] = MAIN.setLcrShunt;
@@ -610,15 +751,13 @@ $(function() {
     // Process clicks on top menu buttons
     //Run button
     $('#IA_RUN').on('click', function(ev) {
-
-        MAIN.initPlot(false);
-
-        ev.preventDefault();
-        //$('#BA_RUN').hide();
-        //$('#BA_STOP').css('display', 'block');
-        //$('#measuring-status').show();
+        CLIENT.parametersCache["IA_START_FREQ"] = { value: $("#IA_START_FREQ").val() };
+        CLIENT.parametersCache["IA_END_FREQ"] = { value: $('#IA_END_FREQ').val() };
+        CLIENT.parametersCache["IA_STEPS"] = { value: $('#IA_STEPS').val() };
         CLIENT.parametersCache["IA_STATUS"] = { value: 1 };
+        MAIN.scale = CLIENT.getValue("IA_SCALE");
         CLIENT.sendParameters();
+        ev.preventDefault();
     });
 
     //Stop button
@@ -658,48 +797,40 @@ $(function() {
     });
 
 
-    //Draw graph
-    MAIN.drawGrid();
+    // Draws grid on the lowest canvas layer
+    MAIN.setCanvasSize = function() {
+        var canvas_width = $('#main').width() - 110;
+        var canvas_height = $('#main').height() - 22;// Math.round(canvas_width / 2);
+
+        //Draw grid
+        var ctx = $('#graph_bode_grid')[0].getContext('2d');
+
+        // Set canvas size
+        ctx.canvas.width = canvas_width;
+        ctx.canvas.height = canvas_height;
+
+        return;
+    };
 
 
     // Bind to the window resize event to redraw the graph; trigger that event to do the first drawing
     $(window).resize(function() {
-        var divider = 1.6;
+
+        if ($('#global_container').length === 0) return
+        if ($('#main').length === 0) return
+
         var window_width = window.innerWidth;
         var window_height = window.innerHeight;
 
-        if (window_width > 768 && window_height > 580) {
-            var global_width = window_width - 30,
-                global_height = global_width / divider;
-            if (window_height < global_height) {
-                global_height = window_height - 70 * divider;
-                global_width = global_height * divider;
-            }
-
-            $('#global_container').css('width', global_width);
-            $('#global_container').css('height', global_height);
+        var global_width = window_width - 30,
+            global_height = window_height - 200;
 
 
-            MAIN.drawGrid();
-            var main_width = $('#main').outerWidth(true);
-            var main_height = $('#main').outerHeight(true);
-            $('#global_container').css('width', main_width);
-            $('#global_container').css('height', main_height);
+        $('#global_container').css('width', global_width);
+        $('#global_container').css('height', global_height);
 
-            MAIN.drawGrid();
-            main_width = $('#main').outerWidth(true);
-            main_height = $('#main').outerHeight(true);
-            window_width = window.innerWidth;
-            window_height = window.innerHeight;
-            if (main_height > (window_height - 80)) {
-                $('#global_container').css('height', window_height - 80);
-                $('#global_container').css('width', divider * (window_height - 80));
-                MAIN.drawGrid();
-                $('#global_container').css('width', $('#main').outerWidth(true) - 2);
-                $('#global_container').css('height', $('#main').outerHeight(true) - 2);
-                MAIN.drawGrid();
-            }
-        }
+        $('#main').css('width', (global_width - 170));
+        $('#main').css('height', global_height);
 
         $('#global_container').offset({ left: (window_width - $('#global_container').width()) / 2 });
 
@@ -709,34 +840,19 @@ $(function() {
         // Hide all graphs, they will be shown next time signal data is received
         $('#graph_bode .plot').hide();
 
-        if (MAIN.ws) {
-            MAIN.sendParameters();
-        }
-
-        // Set the resized flag
-        MAIN.state.resized = true;
-
+        MAIN.setCanvasSize()
         MAIN.initPlot(true);
+        MAIN.updatePlot(true)
         MAIN.updateLinesAndArrows();
 
+        MAIN.state.resized = true;
+
+        
     }).resize();
 
     //Crash buttons
     $('#send_report_btn').on('click', function() { MAIN.formEmail() });
     $('#restart_app_btn').on('click', function() { location.reload() });
-
-    $('#BA_AUTOSCALE_BTN').click(function() {
-        if ($(this).hasClass('active')){
-            $(this).removeClass('active');
-            CLIENT.parametersCache["BA_AUTO_SCALE"] = { value: false };
-            CLIENT.sendParameters();
-        }
-        else{
-            $(this).addClass('active');
-            CLIENT.parametersCache["BA_AUTO_SCALE"] = { value: true };
-            CLIENT.sendParameters();
-        }
-    });
 
     MAIN.previousPageUrl = document.referrer;
     console.log(`Previously visited page URL: ${MAIN.previousPageUrl}`);

@@ -1,6 +1,6 @@
 <!-- $Id$
  *
- * Red Pitaya Oscilloscope client
+ * Red Pitaya Bode pro
  *
  * Author: Dakus <info@eskala.eu>
  *
@@ -11,7 +11,8 @@
 <html lang="en">
 
 <head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"></meta>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    </meta>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <meta http-equiv="cache-control" content="max-age=0" />
     <meta http-equiv="cache-control" content="no-cache" />
@@ -46,8 +47,10 @@
     <script src="../assets/help-system/help-system.js"></script>
     <script src="js/html2canvas.min.js?1" onerror="location.reload()"></script>
     <script src="js/help-ba.js?1" onerror="location.reload()"></script>
+    <script src="js/cursors.js?1" onerror="location.reload()"></script>
     <script src="js/ba.js?1" onerror="location.reload()"></script>
     <script src="js/guiHandler.js?1" onerror="location.reload()"></script>
+    <script src="js/rp_client.js?2" onerror="location.reload()"></script>
     <script src="js/client.js?2" onerror="location.reload()"></script>
 </head>
 
@@ -75,7 +78,8 @@
             <div class="navbar navbar-inverse" role="navigation">
                 <div class="container">
                     <div class="navbar-header">
-                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                        <button type="button" class="navbar-toggle" data-toggle="collapse"
+                            data-target=".navbar-collapse">
                             <span class="sr-only">T</span>
                             <span class="icon-bar"></span>
                             <span class="icon-bar"></span>
@@ -92,19 +96,24 @@
                     <div class="collapse navbar-collapse">
                         <ul class="nav navbar-nav">
                             <li style="width: 60px">
-                                <a href="https://redpitaya.readthedocs.io/en/latest/appsFeatures/applications/bode/bode.html" target="_blank" style="padding-left: 0; padding-right: 0;">
+                                <a href="https://redpitaya.readthedocs.io/en/latest/appsFeatures/applications/bode/bode.html"
+                                    target="_blank" style="padding-left: 0; padding-right: 0;">
                                     <img src="../assets/images/help.png" width=20px>
                                 </a>
                             </li>
                             <li class="dropdown">
-                                <a class="btn btn-default dropdown-toggle" type="button" id="dd_menu" data-toggle="dropdown" style="padding-left: 20px;">MENU<span class="caret"></span></a>
-                                <ul class="dropdown-menu" role="menu" aria-labelledby="menu1" style="background: #cdcccc; min-width: 0px;">
+                                <a class="btn btn-default dropdown-toggle" type="button" id="dd_menu"
+                                    data-toggle="dropdown" style="padding-left: 20px;">MENU<span
+                                        class="caret"></span></a>
+                                <ul class="dropdown-menu" role="menu" aria-labelledby="menu1"
+                                    style="background: #cdcccc; min-width: 0px;">
                                     <li><a id="downl_graph" href="#">Export Graph</a></li>
                                     <li><a id="downl_csv" href="#">Export in CSV</a></li>
                                     <li><a id="reset_settings" href="#">RESET</a></li>
                                 </ul>
                             </li>
-                            <li><a id="BA_CALIBRATE" href="#" style="padding-left: 23px; white-space: nowrap;">CALIBRATE</a></li>
+                            <li><a id="BA_CALIBRATE" href="#"
+                                    style="padding-left: 23px; white-space: nowrap;">CALIBRATE</a></li>
                             <li>
                                 <a id="BA_RUN" href="#" style="">RUN</a>
                                 <a id="BA_STOP" href="#" style="display:none;">STOP</a>
@@ -118,7 +127,8 @@
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                            <button type="button" class="close" data-dismiss="modal"><span
+                                    aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
                             <h4 class="modal-title">Export</h4>
                         </div>
                         <div class="modal-body">
@@ -132,7 +142,8 @@
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                            <button type="button" class="close" data-dismiss="modal"><span
+                                    aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
                             <h4 class="modal-title">Settings</h4>
                         </div>
                         <div class="modal-body">
@@ -173,7 +184,8 @@
                         </div>
                         <div class="col-xs-12 option-content">
                             <div class="right-menu-option">
-                                <img id="BA_CALIB_STATE" src="img/green_led.png" style="width: 20px;height: 20px;">CALIBRATION
+                                <img id="BA_CALIB_STATE" src="img/green_led.png"
+                                    style="width: 20px;height: 20px;">CALIBRATION
                             </div>
                         </div>
                     </div>
@@ -187,30 +199,35 @@
                         <div class="col-xs-12 option-content">
                             <span class="col-info">Start frequency [Hz]</span>
                             <div class="right-menu-option" style="margin-top: 10px;">
-                                <input id="BA_START_FREQ" class="setfield input-number" type="text" value="1000" step="1" min="0" max="62500000">
+                                <input id="BA_START_FREQ" class="setfield input-number" type="text" value="1000"
+                                    step="1" min="0" max="62500000">
                             </div>
                         </div>
                         <div class="col-xs-12 option-content">
                             <span class="col-info">End frequency [Hz]</span>
                             <div class="right-menu-option" style="margin-top: 10px;">
-                                <input id="BA_END_FREQ" class="setfield input-number" type="text" value="10000" step="1" min="1" max="62500000">
+                                <input id="BA_END_FREQ" class="setfield input-number" type="text" value="10000" step="1"
+                                    min="1" max="62500000">
                             </div>
                         </div>
                         <div class="col-xs-12 option-content">
                             <span class="col-info">Steps</span>
                             <div class="right-menu-option" style="margin-top: 10px;">
-                                <input id="BA_STEPS" class="setfield input-number" type="text" value="25" step="1" min="1" max="62500000">
+                                <input id="BA_STEPS" class="setfield input-number" type="text" value="25" step="1"
+                                    min="1" max="62500000">
                             </div>
                         </div>
                         <div class="col-xs-12 option-content">
-                            <span class="col-info">Scale</span>
+                            <span class="col-info">Analysis scale</span>
                             <div class="right-menu-option" style="margin-top: 10px;">
                                 <div class="btn-group btn-group-justified" data-toggle="buttons">
                                     <label id="BA_SCALE0" class="btn">
-                                        <input type="radio" value="0" name="BA_SCALE" id="BA_SCALE" autocomplete="off">Lin
+                                        <input type="radio" value="0" name="BA_SCALE" id="BA_SCALE"
+                                            autocomplete="off">Lin
                                     </label>
                                     <label id="BA_SCALE1" class="btn active">
-                                        <input type="radio" value="1" name="BA_SCALE" id="BA_SCALE1" autocomplete="off">Log
+                                        <input type="radio" value="1" name="BA_SCALE" id="BA_SCALE1"
+                                            autocomplete="off">Log
                                     </label>
                                 </div>
                             </div>
@@ -220,10 +237,12 @@
                             <div class="right-menu-option" style="margin-top: 10px;">
                                 <div class="btn-group btn-group-justified" data-toggle="buttons">
                                     <label id="BA_LOGIC_MODE0" class="btn">
-                                        <input type="radio" value="0" name="BA_LOGIC_MODE" id="BA_LOGIC_MODE" autocomplete="off">U/I
+                                        <input type="radio" value="0" name="BA_LOGIC_MODE" id="BA_LOGIC_MODE"
+                                            autocomplete="off">U/I
                                     </label>
                                     <label id="BA_LOGIC_MODE1" class="btn active">
-                                        <input type="radio" value="1" name="BA_LOGIC_MODE" id="BA_LOGIC_MODE1" autocomplete="off">FFT
+                                        <input type="radio" value="1" name="BA_LOGIC_MODE" id="BA_LOGIC_MODE1"
+                                            autocomplete="off">FFT
                                     </label>
                                 </div>
                             </div>
@@ -231,25 +250,29 @@
                         <div class="col-xs-6 option-content">
                             <span class="col-info">Periods number</span>
                             <div class="right-menu-option" style="margin-top: 10px;">
-                                <input id="BA_PERIODS_NUMBER" class="setfield input-number" type="text" value="8" step="1" min="1" max="8">
+                                <input id="BA_PERIODS_NUMBER" class="setfield input-number" type="text" value="8"
+                                    step="1" min="1" max="8">
                             </div>
                         </div>
                         <div class="col-xs-6 option-content">
                             <span class="col-info">Averaging</span>
                             <div class="right-menu-option" style="margin-top: 10px;">
-                                <input id="BA_AVERAGING" class="setfield input-number" type="text" value="1" step="1" min="1" max="10">
+                                <input id="BA_AVERAGING" class="setfield input-number" type="text" value="1" step="1"
+                                    min="1" max="10">
                             </div>
                         </div>
                         <div class="col-xs-6 option-content">
                             <span class="col-info">Amplitude [V]</span>
                             <div class="right-menu-option" style="margin-top: 10px;">
-                                <input id="BA_AMPLITUDE" class="setfield input-number" type="text" value="1" step="0.01" min="0" max="1">
+                                <input id="BA_AMPLITUDE" class="setfield input-number" type="text" value="1" step="0.01"
+                                    min="0" max="1">
                             </div>
                         </div>
                         <div class="col-xs-6 option-content">
                             <span class="col-info">DC bias [V]</span>
                             <div class="right-menu-option" style="margin-top: 10px;">
-                                <input id="BA_DC_BIAS" class="setfield input-number" type="text" value="0" step="0.01" min="-1" max="1">
+                                <input id="BA_DC_BIAS" class="setfield input-number" type="text" value="0" step="0.01"
+                                    min="-1" max="1">
                             </div>
                         </div>
                         <div class="col-xs-12 option-content">
@@ -268,13 +291,16 @@
                         <div class="col-xs-12 option-content 122_16_block_remove">
                             <div class="right-menu-option">
                                 <span class="col-info" style="margin-top: -21px;">Input attenuation</span>
-                                <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                <div class="btn-group btn-group-justified" data-toggle="buttons"
+                                    style="margin-top: 10px;">
                                     <label id="BA_IN_GAIN" class="btn">
-                                        <input type="radio" value="0" name="BA_IN_GAIN" id="BA_IN_GAIN" autocomplete="off">
+                                        <input type="radio" value="0" name="BA_IN_GAIN" id="BA_IN_GAIN"
+                                            autocomplete="off">
                                         <div id="BA_IN_GAIN_L">LV</div>
                                     </label>
                                     <label id="BA_IN_GAIN1" class="btn">
-                                        <input type="radio" value="1" name="BA_IN_GAIN" id="BA_IN_GAIN1" autocomplete="off">
+                                        <input type="radio" value="1" name="BA_IN_GAIN" id="BA_IN_GAIN1"
+                                            autocomplete="off">
                                         <div id="BA_IN_GAIN2_L">HV</div>
                                     </label>
                                 </div>
@@ -283,13 +309,16 @@
                         <div class="col-xs-12 option-content 250_12_block">
                             <div class="right-menu-option">
                                 <span class="col-info" style="margin-top: -21px;">Coupling</span>
-                                <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                <div class="btn-group btn-group-justified" data-toggle="buttons"
+                                    style="margin-top: 10px;">
                                     <label id="BA_IN_AC_DC" class="btn">
-                                        <input type="radio" value="0" name="BA_IN_AC_DC" id="BA_IN_AC_DC" autocomplete="off">
+                                        <input type="radio" value="0" name="BA_IN_AC_DC" id="BA_IN_AC_DC"
+                                            autocomplete="off">
                                         <div>AC</div>
                                     </label>
                                     <label id="BA_IN_AC_DC1" class="btn">
-                                        <input type="radio" value="1" name="BA_IN_AC_DC" id="BA_IN_AC_DC1" autocomplete="off">
+                                        <input type="radio" value="1" name="BA_IN_AC_DC" id="BA_IN_AC_DC1"
+                                            autocomplete="off">
                                         <div>DC</div>
                                     </label>
                                 </div>
@@ -305,7 +334,8 @@
                             <div class="right-menu-option" style="margin-top: 10px;">
                                 <div class="col-info" style="margin-top: -21px;">Analysis input threshold ppV</span>
                                 </div>
-                                <input class="setfield input-number" id="BA_INPUT_THRESHOLD" type="text" value="0.000" step="0.001" min="0" max="1">
+                                <input class="setfield input-number" id="BA_INPUT_THRESHOLD" type="text" value="0.000"
+                                    step="0.001" min="0" max="1">
                             </div>
                         </div>
                     </div>
@@ -319,25 +349,29 @@
                         <div class="col-xs-6 option-content">
                             <span class="col-info">Gain min [dB]</span>
                             <div class="right-menu-option" style="margin-top: 10px;">
-                                <input id="BA_GAIN_MIN" class="setfield input-number" type="text" value="-80" step="1" min="-1000" max="1000">
+                                <input id="BA_GAIN_MIN" class="setfield input-number" type="text" value="-80" step="1"
+                                    min="-1000" max="1000">
                             </div>
                         </div>
                         <div class="col-xs-6 option-content">
                             <span class="col-info">Gain max [dB]</span>
                             <div class="right-menu-option" style="margin-top: 10px;">
-                                <input id="BA_GAIN_MAX" class="setfield input-number" type="text" value="10" step="1" min="-1000" max="1000">
+                                <input id="BA_GAIN_MAX" class="setfield input-number" type="text" value="10" step="1"
+                                    min="-1000" max="1000">
                             </div>
                         </div>
                         <div class="col-xs-6 option-content">
                             <span class="col-info">Phase min [deg]</span>
                             <div class="right-menu-option" style="margin-top: 10px;">
-                                <input id="BA_PHASE_MIN" class="setfield input-number" type="text" value="-90" step="1" min="-1000" max="100">
+                                <input id="BA_PHASE_MIN" class="setfield input-number" type="text" value="-90" step="1"
+                                    min="-1000" max="100">
                             </div>
                         </div>
                         <div class="col-xs-6 option-content">
                             <span class="col-info">Phase max [deg]</span>
                             <div class="right-menu-option" style="margin-top: 10px;">
-                                <input id="BA_PHASE_MAX" class="setfield input-number" type="text" value="90" step="1" min="-1000" max="1000">
+                                <input id="BA_PHASE_MAX" class="setfield input-number" type="text" value="90" step="1"
+                                    min="-1000" max="1000">
                             </div>
                         </div>
                         <div class="col-xs-12 option-content">
@@ -345,6 +379,18 @@
                                 <a id="BA_AUTOSCALE_BTN" class="btn active">AUTOSCALE</a>
                             </div>
                         </div>
+                        <div class="col-xs-12 option-content">
+                            <span class="col-info" style="margin-top: -11px;">X-axis scale</span>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <select id="BA_X_SCALE" class="form-control styled-select">
+                                    <option value="0">LINEAR</option>
+                                    <option value="1">LOGARITHMIC</option>
+                                    <option value="2">LOGARITHMIC-p2</option>
+                                    <option value="3">LOGARITHMIC-p10</option>
+                                </select>
+                            </div>
+                        </div>
+
                     </div>
                     <div id="cursor_dialog" class="dialog row right-menu-cont">
                         <div class="col-xs-12 option-content close-dialog">
@@ -354,32 +400,38 @@
                         </div>
                         <div class="col-xs-6 option-content">
                             <div class="right-menu-option">
-                                <button id="BA_CURSOR_X1" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">F1</button>
+                                <button id="BA_CURSOR_X1" type="button" class="btn" data-toggle="button"
+                                    aria-pressed="false" autocomplete="off">F1</button>
                             </div>
                         </div>
                         <div class="col-xs-6 option-content">
                             <div class="right-menu-option">
-                                <button id="BA_CURSOR_X2" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">F2</button>
+                                <button id="BA_CURSOR_X2" type="button" class="btn" data-toggle="button"
+                                    aria-pressed="false" autocomplete="off">F2</button>
                             </div>
                         </div>
                         <div class="col-xs-6 option-content">
                             <div class="right-menu-option">
-                                <button id="BA_CURSOR_Y1" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">G1</button>
+                                <button id="BA_CURSOR_Y1" type="button" class="btn" data-toggle="button"
+                                    aria-pressed="false" autocomplete="off">G1</button>
                             </div>
                         </div>
                         <div class="col-xs-6 option-content">
                             <div class="right-menu-option">
-                                <button id="BA_CURSOR_Y2" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">G2</button>
+                                <button id="BA_CURSOR_Y2" type="button" class="btn" data-toggle="button"
+                                    aria-pressed="false" autocomplete="off">G2</button>
                             </div>
                         </div>
                         <div class="col-xs-6 option-content">
                             <div class="right-menu-option">
-                                <button id="BA_CURSOR_Z1" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">P1</button>
+                                <button id="BA_CURSOR_Z1" type="button" class="btn" data-toggle="button"
+                                    aria-pressed="false" autocomplete="off">P1</button>
                             </div>
                         </div>
                         <div class="col-xs-6 option-content">
                             <div class="right-menu-option">
-                                <button id="BA_CURSOR_Z2" type="button" class="btn" data-toggle="button" aria-pressed="false" autocomplete="off">P2</button>
+                                <button id="BA_CURSOR_Z2" type="button" class="btn" data-toggle="button"
+                                    aria-pressed="false" autocomplete="off">P2</button>
                             </div>
                         </div>
                     </div>
@@ -395,37 +447,40 @@
                 <!-- Main container -->
                 <div id="main">
                     <div id="graphs_holder">
-                        <div id="BA_CUR_INFO">Current step: <span id="BA_CUR_STEP" style="margin-right: 40px">1</span>Current freq: <span id="BA_CUR_FREQ">1Hz</span></div>
-                        <img id="cur_x1_arrow" class="varrow" src="img/cursor-arrow-up.png">
-                        <div id="cur_x1" class="vline"></div>
-                        <div id="cur_x1_info" class="cur_info"></div>
-                        <img id="cur_x2_arrow" class="varrow" src="img/cursor-arrow-up.png">
-                        <div id="cur_x2" class="vline"></div>
-                        <div id="cur_x2_info" class="cur_info"></div>
-                        <div id="cur_x_diff"></div>
-                        <div id="cur_x_diff_info" class="cur_info"></div>
+                        <div id="BA_CUR_INFO">Current step: <span id="BA_CUR_STEP"
+                                style="margin-right: 40px">1</span>Current freq: <span id="BA_CUR_FREQ">1Hz</span></div>
+
                         <div style="clear: both; position: relative; padding: 0px; margin: 0px;">
                             <div id="graph_bode" class="graphs">
-
-                                <img id="cur_y1_arrow" class="harrow" src="img/cursor-arrow-left.png">
-                                <div id="cur_y1" class="hline"></div>
-                                <div id="cur_y1_info" class="cur_info"></div>
-                                <img id="cur_y2_arrow" class="harrow" src="img/cursor-arrow-left.png">
-                                <div id="cur_y2" class="hline"></div>
-                                <div id="cur_y2_info" class="cur_info"></div>
-                                <div id="cur_y_diff"></div>
-                                <div id="cur_y_diff_info" class="cur_info"></div>
-
-                                <img id="cur_z1_arrow" class="harrow" src="img/cursor-arrow-right.png">
-                                <div id="cur_z1" class="hline"></div>
-                                <div id="cur_z1_info" class="cur_info"></div>
-                                <img id="cur_z2_arrow" class="harrow" src="img/cursor-arrow-right.png">
-                                <div id="cur_z2" class="hline"></div>
-                                <div id="cur_z2_info" class="cur_info"></div>
-                                <div id="cur_z_diff"></div>
-                                <div id="cur_z_diff_info" class="cur_info"></div>
-
                                 <canvas id="graph_bode_grid" class="graph_grid"></canvas>
+                                <div id="cursors_holder">
+                                    <img id="cur_x1_arrow" class="varrow" src="img/cursor-arrow-up.png">
+                                    <div id="cur_x1" class="vline"></div>
+                                    <div id="cur_x1_info" class="cur_info"></div>
+                                    <img id="cur_x2_arrow" class="varrow" src="img/cursor-arrow-up.png">
+                                    <div id="cur_x2" class="vline"></div>
+                                    <div id="cur_x2_info" class="cur_info"></div>
+                                    <div id="cur_x_diff"></div>
+                                    <div id="cur_x_diff_info" class="cur_info"></div>
+
+                                    <img id="cur_y1_arrow" class="harrow" src="img/cursor-arrow-left.png">
+                                    <div id="cur_y1" class="hline"></div>
+                                    <div id="cur_y1_info" class="cur_info"></div>
+                                    <img id="cur_y2_arrow" class="harrow" src="img/cursor-arrow-left.png">
+                                    <div id="cur_y2" class="hline"></div>
+                                    <div id="cur_y2_info" class="cur_info"></div>
+                                    <div id="cur_y_diff"></div>
+                                    <div id="cur_y_diff_info" class="cur_info"></div>
+
+                                    <img id="cur_z1_arrow" class="harrow" src="img/cursor-arrow-right.png">
+                                    <div id="cur_z1" class="hline"></div>
+                                    <div id="cur_z1_info" class="cur_info"></div>
+                                    <img id="cur_z2_arrow" class="harrow" src="img/cursor-arrow-right.png">
+                                    <div id="cur_z2" class="hline"></div>
+                                    <div id="cur_z2_info" class="cur_info"></div>
+                                    <div id="cur_z_diff"></div>
+                                    <div id="cur_z_diff_info" class="cur_info"></div>
+                                </div>
                             </div>
 
                             <div class="clear info-graph">
@@ -439,11 +494,13 @@
             </div>
         </div>
     </div>
-    <div class="modal fade" id="calibration_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+    <div class="modal fade" id="calibration_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
                     <h4 class="modal-title" id="bazaar_naLabel">Calibration</h4>
                 </div>
                 <div class="modal-body" style="text-align: center; font-size: 18px;">
@@ -452,42 +509,51 @@
                 </div>
                 <div class="modal-footer">
                     <div class="bazaar-link" style="float: right; width: 50%;" id="calib_btn">
-                        <div href="#" style="border: 1px solid;" class="list-group-item btn" id="calibration-button">Calibrate</div>
+                        <div href="#" style="border: 1px solid;" class="list-group-item btn" id="calibration-button">
+                            Calibrate</div>
                     </div>
                     <div class="bazaar-link" style="float: right; width: 50%;" id="calib_reset_btn">
-                        <div href="#" style="border: 1px solid;" class="list-group-item btn" id="reset-calibration-button">Reset Calibration</div>
+                        <div href="#" style="border: 1px solid;" class="list-group-item btn"
+                            id="reset-calibration-button">Reset Calibration</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="modal fade" id="get_lic" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+    <div class="modal fade" id="get_lic" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
                     <h4 class="modal-title" id="bazaar_naLabel">Licence missing</h4>
                 </div>
                 <div class="modal-body" style="text-align: center; font-size: 18px;">
                     <p id="lic_failed">Application is running in demo mode! </p>
-                    <p> Please visit <a style="color: #dd0020" href="http://store.redpitaya.com/scopegenpro.html" target="_blank">Red Pitaya store</a> to get the licence.
+                    <p> Please visit <a style="color: #dd0020" href="http://store.redpitaya.com/scopegenpro.html"
+                            target="_blank">Red Pitaya store</a> to get the licence.
                 </div>
                 <div class="modal-footer">
                     <div class="bazaar-link" style="float: left; width: 50%;">
-                        <a href="#" style="border: 1px solid;" id="get_license" class="list-group-item btn">Get licence</a>
+                        <a href="#" style="border: 1px solid;" id="get_license" class="list-group-item btn">Get
+                            licence</a>
                     </div>
                     <div class="bazaar-link" style="float: left; width: 50%;">
-                        <a href="#" style="border: 1px solid;" data-dismiss="modal" class="list-group-item btn">Close</a>
+                        <a href="#" style="border: 1px solid;" data-dismiss="modal"
+                            class="list-group-item btn">Close</a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="modal fade" id="feedback_error" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+    <div class="modal fade" id="feedback_error" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
                     <h4 class="modal-title" id="oops_label">Oops, something went wrong</h4>
                 </div>
                 <div class="modal-body" style="text-align: center; font-size: 18px;">
@@ -496,42 +562,49 @@
                 </div>
                 <div class="modal-footer">
                     <div class="bazaar-link" style="float: left; width: 50%;">
-                        <a href="#" style="border: 1px solid;  width: 100%" id="send_report_btn" data-dismiss="modal" class="list-group-item btn">Send report</a>
+                        <a href="#" style="border: 1px solid;  width: 100%" id="send_report_btn" data-dismiss="modal"
+                            class="list-group-item btn">Send report</a>
                     </div>
                     <div class="bazaar-link" style="float: left; width: 50%;">
-                        <a href="#" style="border: 1px solid;  width: 100%" id="restart_app_btn" data-dismiss="modal" class="list-group-item btn">Restart Application</a>
+                        <a href="#" style="border: 1px solid;  width: 100%" id="restart_app_btn" data-dismiss="modal"
+                            class="list-group-item btn">Restart Application</a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     <div>
-        <div id="sys_info_view" style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white; ">
-            FPS:<span id="fps_view">0</span> Throughput:<span id="throughput_view">0</span> CPU Load:<span id="cpu_load">0</span>
-            <br/> Memory total:<span id="totalmem_view">0</span> Free:<span id="freemem_view">0</span> Usage:<span id="usagemem_view">0</span>
+        <div id="sys_info_view"
+            style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white; ">
+            FPS:<span id="fps_view">0</span> Throughput:<span id="throughput_view">0</span> CPU Load:<span
+                id="cpu_load">0</span>
+            <br /> Memory total:<span id="totalmem_view">0</span> Free:<span id="freemem_view">0</span> Usage:<span
+                id="usagemem_view">0</span>
         </div>
-        <div id="weak_conn_msg" style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(34, 34, 34, 1); text-align:center; padding: 10px; font-size:18px; color:white; ">
+        <div id="weak_conn_msg"
+            style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(34, 34, 34, 1); text-align:center; padding: 10px; font-size:18px; color:white; ">
             <span id="delay">Performance problem has occurred</span>
         </div>
-        <div id="demo_label" style="display:none; position:fixed; bottom:0; right: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white; cursor: pointer; ">
+        <div id="demo_label"
+            style="display:none; position:fixed; bottom:0; right: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white; cursor: pointer; ">
             You are working in demo mode. Click here to see details.
         </div>
     </div>
 </body>
 <script type="text/javascript">
-    $('#demo_label').click(function() {
+    $('#demo_label').click(function () {
         $('#get_lic').modal('show');
     });
-    $('#get_license').click(function() {
+    $('#get_license').click(function () {
         window.open('http://store.redpitaya.com/scopegenpro.html', '_blank');
         $('#get_lic').modal('hide');
     });
-    $('#BA_CALIBRATE').click(function() {
+    $('#BA_CALIBRATE').click(function () {
         $('#calibration_dialog').modal('show');
     });
 </script>
 <script language="javascript" type="text/javascript">
-    $(".limits").change(function() {
+    $(".limits").change(function () {
         if (['SOUR1_PHAS', 'SOUR1_DCYC', 'SOUR2_PHAS', 'SOUR2_DCYC'].indexOf($(this).attr('id')) != -1) {
             var min = 0;
             var max = $(this).attr('id').indexOf('DCYC') > 0 ? 100 : 180;
@@ -550,7 +623,7 @@
         }
     }).change();
 
-    $('#calib-input').change(function() {
+    $('#calib-input').change(function () {
         if (isNaN($(this).val()))
             $(this).val($(this).attr('min'));
         else if ($(this).val() > +$(this).attr('max'))
@@ -561,16 +634,16 @@
 </script>
 <script language="javascript" type="text/javascript">
     ;
-    (function($) {
+    (function ($) {
 
-        $.fn.iLightInputNumber = function(options) {
+        $.fn.iLightInputNumber = function (options) {
 
             var inBox = '.input-number-box',
                 newInput = '.input-number',
                 moreVal = '.input-number-more',
                 lessVal = '.input-number-less';
 
-            this.each(function() {
+            this.each(function () {
 
                 var el = $(this);
                 $('<div class="' + inBox.substr(1) + '"></div>').insertAfter(el);
@@ -598,30 +671,30 @@
                 console.log(input);
             }
 
-            $('body').on('mousedown', moreVal, function() {
+            $('body').on('mousedown', moreVal, function () {
                 var el = $(this);
                 var input = el.siblings(newInput);
                 moreValFn(input);
-                timeout = setTimeout(function() {
-                    interval = setInterval(function() {
+                timeout = setTimeout(function () {
+                    interval = setInterval(function () {
                         moreValFn(input);
                     }, 50);
                 }, 200);
 
             });
 
-            $('body').on('mousedown', lessVal, function() {
+            $('body').on('mousedown', lessVal, function () {
                 var el = $(this);
                 var input = el.siblings(newInput);
                 lessValFn(input);
-                timeout = setTimeout(function() {
-                    interval = setInterval(function() {
+                timeout = setTimeout(function () {
+                    interval = setInterval(function () {
                         lessValFn(input);
                     }, 50);
                 }, 200);
             });
 
-            $(moreVal + ', ' + lessVal).on("mouseup mouseout", function() {
+            $(moreVal + ', ' + lessVal).on("mouseup mouseout", function () {
                 clearTimeout(timeout);
                 clearInterval(interval);
             });
@@ -741,7 +814,7 @@
                 }
             }
 
-            $(newInput).change(function() {
+            $(newInput).change(function () {
 
                 var input = $(this);
 
@@ -765,7 +838,7 @@
                 input.val(value);
             });
 
-            $(newInput).keydown(function(e) {
+            $(newInput).keydown(function (e) {
                 var input = $(this);
                 var k = e.keyCode;
                 if (k == 38) {
@@ -781,7 +854,7 @@
         mobile: false
     });
 
-    $('#sys_info').click(function() {
+    $('#sys_info').click(function () {
         var elem = $(this);
         if (elem.text() == 'SYS INFO') {
             elem.html('&check; SYS INFO');

@@ -9,12 +9,13 @@
  *
  */
 
-
 #ifndef APIN_H_
 #define APIN_H_
 
-scpi_result_t RP_AnalogPinReset(scpi_t * context);
-scpi_result_t RP_AnalogPinValueQ(scpi_t * context);
-scpi_result_t RP_AnalogPinValue(scpi_t * context);
+#include "scpi/types.h"
+
+scpi_result_t RP_AnalogPinReset(scpi_t* context);
+scpi_result_t RP_AnalogPinValueQ(scpi_t* context);
+scpi_result_t RP_AnalogPinValue(scpi_t* context);
 
 #endif /* APIN_H_ */

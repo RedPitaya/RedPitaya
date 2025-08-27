@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.18)
 project(common_lib)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(COMMON_LIB_DIR ${PROJECT_SOURCE_DIR})
 
 add_subdirectory(tdms_lib)
@@ -25,11 +25,12 @@ add_custom_command(TARGET asio PRE_BUILD
    COMMAND ${CMAKE_COMMAND} -E tar xzf ${PROJECT_SOURCE_DIR}/asio.zip
 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 DEPENDS ${PROJECT_SOURCE_DIR}/asio.zip
-COMMENT "Unpacking abc.zip"
+COMMENT "Unpacking asio.zip"
 VERBATIM)
 
 add_dependencies(broadcast_lib asio)
 add_dependencies(net_lib asio)
 add_dependencies(streaming_lib net_lib)
+add_dependencies(data_lib uio_lib logger_lib)
 
 add_custom_target(${PROJECT_NAME})

@@ -1,9 +1,9 @@
-#include "stem_125_14_Z7020_4IN_v1.2.h"
+#include "stem_125_14_Z7020_4IN_v1.3.h"
 
 
 profiles_t stem_125_14_Z7020_4IN_v1_3 = {
     .boardModel = STEM_125_14_Z7020_4IN_v1_3,
-    .boardName = "STEMlab 125-14 4-Inputs v1.3",
+    .boardName = "STEMlab 125-14 4-Input v1.3",
     .boardModelEEPROM = "",
     .boardETH_MAC =  "",
     .zynqCPUModel = Z7020,
@@ -29,10 +29,10 @@ profiles_t stem_125_14_Z7020_4IN_v1_3 = {
     .fast_dac_count_channels = 0,
     .fast_dac_is_sign = true,
     .fast_dac_bits = 0,
-    .fast_dac_gain[0] = 0,
-    .fast_dac_gain[1] = 0,
-    .fast_dac_gain[2] = 0,
-    .fast_dac_gain[3] = 0,
+    .fast_dac_out_full_scale[0] = 0,
+    .fast_dac_out_full_scale[1] = 0,
+    .fast_dac_out_full_scale[2] = 0,
+    .fast_dac_out_full_scale[3] = 0,
 
     .is_LV_HV_mode = true,
     .is_AC_DC_mode = false,
@@ -99,7 +99,17 @@ profiles_t stem_125_14_Z7020_4IN_v1_3 = {
     .is_split_osc_triggers = true,
 
     .gpio_N_count = 11,
-    .gpio_P_count = 11
+    .gpio_P_count = 11,
+
+    .ramMB = 512,
+
+    .is_E3_high_speed_gpio = false,
+    .is_E3_mmc_qspi = false,
+    .E3_high_speed_gpio_rate = 0,
+    .is_E3_present = false,
+
+    .is_calib_in_fpga = true
+
 };
 
 profiles_t* getProfile_STEM_125_14_Z7020_4IN_v1_3(){

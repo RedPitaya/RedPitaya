@@ -5,34 +5,15 @@
 #include <memory>
 #include <typeinfo>
 
-#ifndef CLI
 #include "DataManager.h"
 #include "CustomParameters.h"
-#endif
+#include "rp_la.h"
 
-struct OutputPacket
-{
-    uint8_t control; // 0 when data, elsewise represents specific state
-					 // anyway control byte specifies meaning of the “data” byte
-    uint32_t data;
-	uint16_t length; // RLE, how many counts takes this byte
-	
-};
+using namespace rp_la;
 
-class Decoder
-{
-public:
-    virtual void Decode(const uint8_t* _input, uint32_t _size) = 0;
-    virtual ~Decoder() {}
-    virtual bool IsParametersChanged() = 0;
-    virtual void UpdateParameters() = 0;
-    virtual void UpdateSignals() = 0;
-};
-
-#ifndef CLI
 //template for signals
 template <>
-class CCustomSignal<OutputPacket> : public CParameter<OutputPacket, std::vector<OutputPacket> >
+class CCustomSignal<OutputPacket> : public CParameter<OutputPacket, std::vector<OutputPacket>>
 {
 public:
 	CCustomSignal(std::string _name, int _size, OutputPacket _def_value)
@@ -60,9 +41,12 @@ public:
 			OutputPacket res = this->m_Value.value.at(i);
 
 			JSONNode node(JSON_NODE);
-			node.push_back(JSONNode("control", res.control));
-			node.push_back(JSONNode("data", res.data));
-			node.push_back(JSONNode("length", res.length));
+			node.push_back(JSONNode("c", res.control));
+			node.push_back(JSONNode("d", res.data));
+			node.push_back(JSONNode("ln", res.line_name));
+			node.push_back(JSONNode("b", res.bitsInPack));
+			node.push_back(JSONNode("s", std::to_string(res.sampleStart)));
+			node.push_back(JSONNode("l", std::to_string(res.length)));
 
 			child.push_back(node);
 		}
@@ -107,6 +91,13 @@ public:
 	{
 		return m_Dirty;
 	}
+
+	bool ForceSend()
+	{
+		m_Dirty = true;
+		return true;
+	}
+
 protected:
 	bool m_Dirty;
 };
@@ -133,10 +124,12 @@ public:
 			OutputPacket res = this->m_Value.value.at(i);
 
 			JSONNode node(JSON_NODE);
-			node.push_back(JSONNode("control", res.control));
-			node.push_back(JSONNode("data", res.data));
-			node.push_back(JSONNode("length", res.length));
-
+			node.push_back(JSONNode("c", res.control));
+			node.push_back(JSONNode("d", res.data));
+			node.push_back(JSONNode("ln", res.line_name));
+			node.push_back(JSONNode("b", res.bitsInPack));
+			node.push_back(JSONNode("s", std::to_string(res.sampleStart)));
+			node.push_back(JSONNode("l", std::to_string(res.length)));
 			child.push_back(node);
 		}
 		n.push_back(child);
@@ -159,13 +152,14 @@ inline std::vector<OutputPacket> GetValueFromJSON<std::vector<OutputPacket> >(JS
 	std::vector<OutputPacket> res;
 	for (auto i = n.begin(); i != n.end(); ++i)
 	{
-		uint8_t control = i->at("control").as_int();
-		uint8_t data = i->at("data").as_int();
-		uint16_t length = i->at("length").as_int();
-
-		res.push_back(OutputPacket{control, data, length});
+		uint8_t control = i->at("c").as_int();
+		uint32_t data = i->at("d").as_int();
+		std::string line_name = i->at("ln").as_string();
+		float bits = i->at("b").as_float();
+		double sampleStart = i->at("s").as_float();
+		double length = i->at("l").as_float();
+		res.push_back(OutputPacket{line_name , control, data, bits, sampleStart, length});
 	}
 
 	return res;
 }
-#endif

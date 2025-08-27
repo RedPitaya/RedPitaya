@@ -35,7 +35,7 @@ input,
 #info div,
 #info span,
 .selectable,
-.info-graph{
+.info-graph {
     -webkit-touch-callout: text;
     -webkit-user-select: text;
     -khtml-user-select: text;
@@ -133,7 +133,7 @@ area:hover {
 }
 
 #cur_y_diff_info.cur_info {
-    left: 59px;
+    left: 89px;
 }
 
 #cur_z_diff {
@@ -143,8 +143,6 @@ area:hover {
     height: 100px;
     width: 7px;
     position: absolute;
-    left: 50px;
-    top: 0;
     display: none;
     z-index: 13;
 }
@@ -205,19 +203,19 @@ area:hover {
     text-align: center;
 }
 
-.nav > li > a {
+.nav>li>a {
     position: relative;
     display: block;
     padding: 10px 30px;
     border-left: 1px solid #999;
 }
 
-.navbar-inverse .navbar-nav > li > a {
+.navbar-inverse .navbar-nav>li>a {
     color: #cdcccc;
     outline: none;
 }
 
-.nav > li > a:hover {
+.nav>li>a:hover {
     background-color: #444 !important;
     color: #E5D5D5;
 }
@@ -411,8 +409,8 @@ area:hover {
     width: 90px;
 }
 
-.info-title > div,
-.info-value > div {
+.info-title>div,
+.info-value>div {
     display: none;
 }
 
@@ -668,10 +666,10 @@ btn:active {
 }
 
 .flot-x-axis .flot-tick-label {
-    -moz-transform: rotate(-40deg); /* Для Firefox */
-    -ms-transform: rotate(-40deg); /* Для IE */
-    -webkit-transform: rotate(-40deg); /* Для Safari, Chrome, iOS */
-    -o-transform: rotate(-40deg); /* Для Opera */
+    -moz-transform: rotate(-40deg);
+    -ms-transform: rotate(-40deg);
+    -webkit-transform: rotate(-40deg);
+    -o-transform: rotate(-40deg);
     transform: rotate(-40deg);
     margin-top: 10px;
 }
@@ -699,9 +697,6 @@ btn:active {
     height: 2px;
     border-top: 2px dashed #ccc;
     position: absolute;
-    left: 35px;
-    right: 1px;
-    top: 0;
     opacity: 0.8;
     display: none;
     z-index: 9;
@@ -711,9 +706,6 @@ btn:active {
     width: 2px;
     border-right: 2px dashed #ccc;
     position: absolute;
-    top: 28px;
-    bottom: 9px;
-    left: 0;
     opacity: 0.8;
     display: none;
     z-index: 9;
@@ -731,7 +723,7 @@ btn:active {
     margin-top: -7px;
     display: none;
     z-index: 12;
-	left: 94.9%;
+    left: 94.9%;
 }
 
 .varrow {
@@ -742,7 +734,7 @@ btn:active {
     margin-right: -7px;
     display: none;
     z-index: 12;
-	top: 90.5%;
+    top: 90.5%;
 }
 
 .cur_info {
@@ -900,7 +892,7 @@ btn:active {
     margin-right: 15px;
 }
 
-#calibration{
+#calibration {
     display: none;
     position: relative;
     width: 150px;
@@ -911,7 +903,7 @@ btn:active {
     text-align: center;
 }
 
-#measuring-status{
+#measuring-status {
     display: none;
     overflow: hidden;
     position: relative;
@@ -922,7 +914,7 @@ btn:active {
     font-size: 16px;
 }
 
-#measuring-loader{
+#measuring-loader {
     display: block;
     position: relative;
     width: 170px;
@@ -963,3 +955,10 @@ btn:active {
     animation: spin 1.5s linear infinite;
 }
 
+#cursors_holder {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100px;
+    height: 100px;
+}

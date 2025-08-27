@@ -10,7 +10,7 @@
 function promptFile(contentType, multiple) {
     var input = document.createElement("input");
     input.type = "file";
-    input.accept = '.csv';
+    input.accept = '.csv,.coe';
     return new Promise(function(resolve) {
       document.activeElement.onfocus = function() {
         document.activeElement.onfocus = null;
@@ -83,16 +83,20 @@ $(document).ready(function() {
                 const fileReader = new FileReader(); // initialize the object
                 fileReader.readAsArrayBuffer(file); // read file as array buffer
                 fileReader.onload = (event) => {
-                    console.log('Complete File read successfully!')
+                    console.log('Complete File read successfully! ' + file.name)
                     $.ajax({
                         url: '/upload_arb_file', //Server script to process data
                         type: 'POST',
                         //Ajax events
                         //beforeSend: beforeSendHandler,
                         success: function(e) {
+                            var ext = file.name.split('.').pop();
                             console.log("Upload done " + e);
                             setTimeout(() => {
-                                CLIENT.parametersCache["RP_REQ_CHECK_FILE"] = { value: e };
+                                if (ext === "csv")
+                                    CLIENT.parametersCache["RP_REQ_CHECK_FILE"] = { value: e };
+                                if (ext === "coe")
+                                    CLIENT.parametersCache["RP_REQ_CHECK_FILE_COE"] = { value: e };
                                 CLIENT.sendParameters();
                             }, 1000);
                         },

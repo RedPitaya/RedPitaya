@@ -1,6 +1,6 @@
 {
     "name": "Calibration",
-    "version": "2.00-BUILD_NUMBER",
+    "version": "VERSION",
     "revision": "REVISION",
     "description": "Board Calibration Application"
 }

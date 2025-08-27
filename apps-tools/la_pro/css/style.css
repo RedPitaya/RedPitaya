@@ -2,6 +2,8 @@ body {
     color: #cdcccc;
     overflow: auto;
     padding-right: 0 !important;
+    min-height: 100vh;
+    width: 100%;
 }
 
 * {
@@ -21,12 +23,6 @@ body {
 
 .clear:after {
     clear: both;
-}
-
-.calib-button {
-    display: inline-block;
-    border: 1px solid gray;
-    margin: 0 29px;
 }
 
 .decoder-button {
@@ -67,10 +63,26 @@ input {
     position: relative;
 }
 
+.input-number-box-decoder {
+    display: inline-block;
+    position: relative;
+    width: 100%;
+}
+
 .input-number {
     line-height: 35px;
     height: 35px;
     padding-right: 25px;
+}
+
+.input-number-decoder {
+    line-height: 35px;
+    height: 35px;
+    padding-right: 25px;
+}
+
+.input-number-decoder::-webkit-calendar-picker-indicator {
+    display: none !important;
 }
 
 .centerer {
@@ -97,11 +109,6 @@ input {
     text-align: left;
 }
 
-#throughput_view2 {
-    text-align: right;
-    width: 150px;
-}
-
 .input-number-more,
 .input-number-less {
     position: absolute;
@@ -121,8 +128,23 @@ input {
     border-color: gray transparent transparent transparent;
 }
 
-#myModal {
-    text-align: center;
+.input-number-more-decoder,
+.input-number-less-decoder {
+    position: absolute;
+    right: 8px;
+    border-width: 7px;
+    border-style: solid;
+    cursor: pointer;
+}
+
+.input-number-more-decoder {
+    top: 0px;
+    border-color: transparent transparent gray transparent;
+}
+
+.input-number-less-decoder {
+    bottom: 0px;
+    border-color: gray transparent transparent transparent;
 }
 
 #triginfo {
@@ -149,6 +171,7 @@ area:hover {
     /*min-width: 1024px;*/
     margin: 0 auto;
     position: relative;
+    height: 100%;
 }
 
 .container-fluid {
@@ -180,32 +203,21 @@ area:hover {
     text-align: center;
 }
 
-.nav > li > a {
+.nav>li>a {
     position: relative;
     display: block;
     padding: 10px 30px;
     border-left: 1px solid #999;
 }
 
-.navbar-inverse .navbar-nav > li > a {
+.navbar-inverse .navbar-nav>li>a {
     color: #cdcccc;
     outline: none;
 }
 
-. .nav > li > a:hover {
+. .nav>li>a:hover {
     background-color: #444 !important;
     color: #E5D5D5;
-}
-
-#OSC_RUN,
-#OSC_RUN:hover {
-    color: #31b44b;
-}
-
-#OSC_STOP,
-#OSC_STOP:hover {
-    display: none;
-    color: #ee3739;
 }
 
 .navbar {
@@ -252,46 +264,22 @@ area:hover {
 
 #main {
     margin-right: 188px;
+    height: 100%;
 }
 
 #buffer {
     border: 1px solid #999;
     position: relative;
-    height: 14px;
+    height: 100px;
     overflow: hidden;
 }
 
-.buf-main-line {
-    margin: 5px 1px 5px 1px;
-    background-color: #cdcccc;
-    height: 2px;
-}
-
-.buf-red-line-holder {
-    height: 12px;
+#buffer_time_region {
+    position: absolute;
+    top: 0;
     border-left: 1px solid #999;
     border-right: 1px solid #999;
-    position: absolute;
-    top: 0;
-    left: 100px;
-}
-
-.buf-red-line {
-    width: 100px;
-    height: 2px;
-    background-color: #ce3234;
-    margin-top: 5px;
-    display: none;
-}
-
-#buf_time_offset {
-    height: 12px;
-    width: 8px;
-    position: absolute;
-    top: 0;
-    left: 0;
-    background-color: #75cede;
-    display: none;
+    background-color: #99999925;
 }
 
 .right-menu-cont {
@@ -327,6 +315,11 @@ area:hover {
 .menu-content {
     width: 170px;
     float: right;
+}
+
+.menu-content-left {
+    width: 190px;
+    float: left;
 }
 
 .right-menu-option {
@@ -373,8 +366,8 @@ area:hover {
     width: 90px;
 }
 
-.info-title > div,
-.info-value > div {
+.info-title>div,
+.info-value>div {
     display: none;
 }
 
@@ -383,51 +376,6 @@ area:hover {
     float: left;
     max-height: 82px;
     overflow: hidden;
-}
-
-.ch1,
-.btn.ch1,
-.ch1.focus {
-    color: #f3ec1a !important;
-}
-
-.ch2,
-.btn.ch2,
-.ch2.focus {
-    color: #31b44b !important;
-}
-
-.output1,
-.btn.output1,
-.output1.focus {
-    color: #9595ca !important;
-}
-
-.output2,
-.btn.output2,
-.output2.focus {
-    color: #ee3739 !important;
-}
-
-.math,
-.btn.math,
-.math.focus {
-    color: #ab4d9d !important;
-}
-
-.trig,
-.btn.trig,
-.trig.focus {
-    color: #75cede !important;
-}
-
-.ch1.active,
-.ch2.active,
-.output1.active,
-.output2.active,
-.math.active,
-.trig.active {
-    color: #111 !important;
 }
 
 .menu-btn:disabled {
@@ -528,33 +476,6 @@ area:hover {
     background-image: none;
 }
 
-.math-radio-btn:disabled,
-.math-radio-btn.disabled {
-    background-image: none;
-    background-color: transparent;
-    color: #cdcccc !important;
-}
-
-#meas_list {
-    margin-top: 10px;
-    /* margin-bottom: 2px; */
-    min-height: 30px;
-    max-height: 128px;
-    overflow: hidden;
-}
-
-.meas-item {
-    margin: 0px 1px 1px 1px;
-    height: 31px;
-    border: 1px solid #999;
-    cursor: pointer;
-}
-
-.meas-item:hover {
-    background-color: #444;
-    color: #fff;
-}
-
 .setfield {
     color: #999;
     background-color: transparent;
@@ -589,9 +510,27 @@ area:hover {
     position: absolute;
     margin-left: 8px;
     right: 10px;
-    bottom: 10px;
+    bottom: 100px;
     width: 150px;
     height: auto;
+}
+
+#to_trigger {
+    position: absolute;
+    margin-left: 8px;
+    right: 10px;
+    bottom: 50px;
+    width: 150px;
+    height: auto;
+}
+
+#stem {
+    position: absolute;
+    margin-left: 8px;
+    right: 10px;
+    bottom: 10px;
+    width: 150px;
+    height: 20px;
 }
 
 #jtk_btns {
@@ -619,6 +558,17 @@ area:hover {
 }
 
 #graph_grid {
+    border: 1px solid #5d5d5c;
+    margin-bottom: 2px;
+}
+
+#graphs_buffer {
+    position: relative;
+    overflow: hidden;
+    height: 100px;
+}
+
+#graph_grid_buffer {
     border: 1px solid #5d5d5c;
     margin-bottom: 2px;
 }
@@ -688,7 +638,7 @@ area:hover {
 .varrow {
     position: absolute;
     left: 0;
-    bottom: 8px;
+    bottom: 0px;
     margin-left: -7px;
     margin-right: -7px;
     display: none;
@@ -707,15 +657,6 @@ area:hover {
     white-space: nowrap;
     display: none;
     z-index: 14;
-}
-
-#kostyl_footer {
-    position: absolute;
-    bottom: -4px;
-    width: 100%;
-    background: #343433;
-    height: 10px;
-    z-index: 15;
 }
 
 #cur_x1_info.cur_info,
@@ -873,6 +814,7 @@ body.modal-open .full-content {
 
 .log-container {
     overflow-y: scroll;
+    scrollbar-color: #888888 #3f3f3f;
     height: 180px;
     text-align: left !important;
     font-size: 10px !important;
@@ -895,7 +837,7 @@ body.modal-open .full-content {
     left: 1px;
     font-size: 10px;
     color: #000;
-    cursor: move;
+    cursor: auto;
 }
 
 .alert-warning {
@@ -997,27 +939,27 @@ body.modal-open .full-content {
     background-color: #323232;
     font-family: sans-serif;
     color: blue;
-  }
+}
 
-  a.list-group-item {
+a.list-group-item {
     color: silver;
-  }
+}
 
-  a.list-group-item:hover:visited {
+a.list-group-item:hover:visited {
     color: black;
-  }
+}
 
-  .list-group-item.more {
+.list-group-item.more {
     font-size: 18px;
-  }
+}
 
-  .list-group-item.exp_btn {
+.list-group-item.exp_btn {
     font-weight: bold;
     text-align: center;
     border: 1px solid #ddd;
-  }
+}
 
-  .exp_btn {
+.exp_btn {
     background-image: none;
     border: 0 solid transparent;
     white-space: nowrap;
@@ -1027,22 +969,67 @@ body.modal-open .full-content {
     width: 100%;
     background-color: transparent;
     text-shadow: 0px 0px;
-   /*  box-shadow: 0 0 0 1px #777; */
-    color:#cdcccc !important;
-  }
+    /*  box-shadow: 0 0 0 1px #777; */
+    color: #cdcccc !important;
+}
 
-  .exp_btn:hover, btn:active {
+.exp_btn:hover,
+btn:active {
     color: #555 !important;
     background-image: none;
-  }
+}
 
-  .exp_btn.focus {
+.exp_btn.focus {
     color: #777;
     border: 0px solid transparent;
-  }
+}
 
-  .exp_btn:active, .exp_btn.active {
+.exp_btn:active,
+.exp_btn.active {
     background-image: none;
     background-color: #999;
     color: #111 !important;
-  }
+}
+
+.saved_settings {
+    display: flex;
+}
+
+.saved_settings>a {
+    padding-left: 10px;
+    padding-right: 10px;
+    text-align: left;
+    width: 100%;
+    /* max-width: 100px; */
+    /* min-width: 100px; */
+}
+
+.saved_settings>a>img {
+    width: 14px;
+    height: 14px;
+    margin: 3px;
+    float: right;
+}
+
+.saved_settings>a>img:hover {
+    transform: scale(1.3);
+}
+
+
+.ch1,
+.btn.ch1,
+.ch1.focus {
+    color: #f3ec1a !important;
+}
+
+.trig,
+.btn.trig,
+.trig.focus {
+    color: #75cede !important;
+}
+
+.setstyle-decoder {
+    text-align: left;
+    color: #fff;
+    padding-left: 13px;
+}

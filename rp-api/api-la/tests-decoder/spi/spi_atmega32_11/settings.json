@@ -1,0 +1,13 @@
+{
+	"acq_speed" : 0,
+	"bit_order" : 0,
+	"clk" : 3,
+	"cpha" : 1,
+	"cpol" : 0,
+	"cs" : 1,
+	"cs_polarity" : 0,
+	"invert_bit" : 0,
+	"miso" : 0,
+	"mosi" : 2,
+	"word_size" : 8
+}

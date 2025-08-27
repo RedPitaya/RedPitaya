@@ -2,58 +2,57 @@
 #define DATA_LIB_BUFFER_PACK_H
 
 #include <stdint.h>
-#include <memory>
 #include <map>
-#include <mutex>
+#include <memory>
 #include "buffer.h"
 
 namespace DataLib {
 
-enum EDataBuffersPackChannel{
-    CH1 = 0,
-    CH2 = 1,
-    CH3 = 2,
-    CH4 = 3
-};
+enum EDataBuffersPackChannel { CH1 = 0, CH2 = 1, CH3 = 2, CH4 = 3 };
 
-class CDataBuffersPack final{
+class CDataBuffersPackDMA final {
+   public:
+    using Ptr = std::shared_ptr<DataLib::CDataBuffersPackDMA>;
 
-public:
+    static auto Create() -> CDataBuffersPackDMA::Ptr;
 
-    using Ptr = std::shared_ptr<DataLib::CDataBuffersPack>;
+    CDataBuffersPackDMA();
+    ~CDataBuffersPackDMA();
 
-    static auto Create() -> CDataBuffersPack::Ptr;
-
-    CDataBuffersPack();
-    ~CDataBuffersPack();
-
-    auto addBuffer(EDataBuffersPackChannel channel,DataLib::CDataBuffer::Ptr buffer) -> void;
-    auto getBuffer(EDataBuffersPackChannel channel) const -> DataLib::CDataBuffer::Ptr;
+    auto addBuffer(EDataBuffersPackChannel channel, DataLib::CDataBufferDMA::Ptr buffer) -> void;
+    auto getBuffer(EDataBuffersPackChannel channel) const -> DataLib::CDataBufferDMA::Ptr;
+    auto getBufferDataAddress(EDataBuffersPackChannel channel) -> uint32_t;
 
     auto setOSCRate(uint64_t rate) -> void;
-    auto getOSCRate() -> uint64_t;
     auto setADCBits(uint8_t bits) -> void;
-    auto getADCBits() -> uint8_t;
 
-    auto checkBuffersEqual() -> bool;
-    auto getBuffersLenght() -> size_t;
+    auto checkDataBuffersEqual() -> bool;
+    auto getDataBuffersLenght() -> size_t;
     auto getBuffersSamples() -> size_t;
-    auto getLenghtAllBuffers() -> uint64_t;
-    auto getLostAllBuffers() -> uint64_t;
+    auto getLenghtBuffers() -> uint64_t;
+    auto getLenghtDataBuffers() -> uint64_t;
+    auto getLostAll() -> uint64_t;
     auto isChannelPresent(EDataBuffersPackChannel channel) -> bool;
 
-private:
+    auto debugPackADC() -> void;
+    auto debugPackDAC() -> void;
+    auto verifyPack() -> void;
+    auto getInfoFromHeaderADC() -> void;
+    auto getInfoFromHeaderDAC() -> void;
 
-    CDataBuffersPack(const CDataBuffersPack &) = delete;
-    CDataBuffersPack(CDataBuffersPack &&) = delete;
-    CDataBuffersPack& operator=(const CDataBuffersPack&) =delete;
-    CDataBuffersPack& operator=(const CDataBuffersPack&&) =delete;
+    auto resetWriteSizeAll() -> void;
+    auto getNextDMABufferForWrite() -> CDataBufferDMA::Ptr;
+    auto isAllDataWrite() -> bool;
 
-    std::map<EDataBuffersPackChannel,CDataBuffer::Ptr> m_buffers;
-    uint64_t m_oscRate; // Decimation
-    uint8_t  m_adc_bits;
+   private:
+    CDataBuffersPackDMA(const CDataBuffersPackDMA&) = delete;
+    CDataBuffersPackDMA(CDataBuffersPackDMA&&) = delete;
+    CDataBuffersPackDMA& operator=(const CDataBuffersPackDMA&) = delete;
+    CDataBuffersPackDMA& operator=(const CDataBuffersPackDMA&&) = delete;
+
+    std::map<EDataBuffersPackChannel, CDataBufferDMA::Ptr> m_buffers;
 };
 
-}
+}  // namespace DataLib
 
 #endif

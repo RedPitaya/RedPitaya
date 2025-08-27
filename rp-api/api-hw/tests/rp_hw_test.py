@@ -140,7 +140,7 @@ print(res)
 
 
 print("rp_hw.rp_SPI_InitDevice()")
-res = rp_hw.rp_SPI_InitDevice("/dev/spidev1.0")
+res = rp_hw.rp_SPI_InitDevice("/dev/spidev2.0")
 print(res)
 
 print("rp_hw.rp_SPI_SetDefaultSettings()")

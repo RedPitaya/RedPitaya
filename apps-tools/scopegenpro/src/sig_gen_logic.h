@@ -4,7 +4,7 @@
 
 auto initGenBeforeLoadConfig() -> void;
 auto generateOutSignalForWeb(float tscale) -> void;
-auto generate(rp_channel_t channel,float tscale) -> void;
+auto generate(rp_channel_t channel, float tscale) -> void;
 
 auto checkBurstDelayChanged(rp_channel_t ch) -> void;
 

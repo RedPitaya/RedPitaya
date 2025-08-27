@@ -19,6 +19,14 @@
 #ifndef RP_HW_PROFILES_STEM_250_12_120_H
 #define RP_HW_PROFILES_STEM_250_12_120_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 profiles_t* getProfile_STEM_250_12_120();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

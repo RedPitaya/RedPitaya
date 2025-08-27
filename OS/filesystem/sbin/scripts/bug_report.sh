@@ -33,9 +33,11 @@ mkdir -p $TEST_TMP_DIR/fpga
 mkdir -p $TEST_TMP_DIR/ecosystem
 mkdir -p $TEST_TMP_DIR/logs
 
-/opt/redpitaya/sbin/scripts/reg_house.sh > $TEST_TMP_DIR/fpga/reg_house.log
-/opt/redpitaya/sbin/scripts/reg_osc.sh > $TEST_TMP_DIR/fpga/reg_osc.log
-/opt/redpitaya/sbin/scripts/reg_sig_gen.sh > $TEST_TMP_DIR/fpga/reg_sig_gen.log
+echo $(monitor -ph)> $TEST_TMP_DIR/fpga/reg_house.log
+echo $(monitor -posc) > $TEST_TMP_DIR/fpga/reg_osc.log
+echo $(monitor -pasg)  > $TEST_TMP_DIR/fpga/reg_sig_gen.log
+echo $(monitor -pams)  > $TEST_TMP_DIR/fpga/reg_ams.log
+echo $(monitor -pdaisy)  > $TEST_TMP_DIR/fpga/reg_daisy.log
 
 
 
@@ -54,7 +56,7 @@ calib -rvf > $TEST_TMP_DIR/ecosystem/calib_rvf.log
 calib -rvx > $TEST_TMP_DIR/ecosystem/calib_rvx.log
 calib -u > $TEST_TMP_DIR/ecosystem/calib_u.log
 
-monitor -p > $TEST_TMP_DIR/ecosystem/monitor_p.log
+profiles -p > $TEST_TMP_DIR/ecosystem/profiles_p.log
 monitor -ams > $TEST_TMP_DIR/ecosystem/monitor_ams.log
 echo $(monitor -f) > $TEST_TMP_DIR/ecosystem/monitor.log
 echo $(monitor -i) >> $TEST_TMP_DIR/ecosystem/monitor.log

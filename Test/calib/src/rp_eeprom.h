@@ -17,24 +17,25 @@
 #define __RP_EEPROM_H
 
 #include <stdbool.h>
-#include "rp_hw-calib.h"
 #include "rp.h"
+#include "rp_hw_calib.h"
 
 #define CALIB_MAGIC 0xAABBCCDD
 
 /** Bit flags to represent options on the command-line. */
 typedef enum {
-	WANT_READ       = 0x01,
-	WANT_WRITE      = 0x02,
-	WANT_DEFAULTS   = 0x04,
-	WANT_VERBOSE    = 0x08,
-	WANT_Z_MODE     = 0x10,
-    WANT_HEX        = 0x20,
-    WANT_INIT       = 0x40,
-    WANT_PRINT      = 0x80,
+    WANT_READ = 0x01,
+    WANT_WRITE = 0x02,
+    WANT_DEFAULTS = 0x04,
+    WANT_VERBOSE = 0x08,
+    WANT_Z_MODE = 0x10,
+    WANT_HEX = 0x20,
+    WANT_INIT = 0x40,
+    WANT_PRINT = 0x80,
     WANT_NEW_FORMAT = 0x100,
-    WANT_MODIFY     = 0x200,
-    WANT_TO_OLD     = 0x400
+    WANT_MODIFY = 0x200,
+    WANT_TO_OLD = 0x400,
+    WANT_FILTER_ZERO = 0x800
 
 } WANT_FLAGS;
 
@@ -49,7 +50,7 @@ typedef enum {
     eCalPar_BE_CH2_FS,
     eCalPar_BE_CH1_DC_offs,
     eCalPar_BE_CH2_DC_offs,
-    eCalParMagic,   // needed for compatibility with a very old version of calibration parameters
+    eCalParMagic,  // needed for compatibility with a very old version of calibration parameters
     eCalPar_FE_CH1_DC_offs_HI,
     eCalPar_FE_CH2_DC_offs_HI,
     eCalPar_F_LOW_AA_CH1,
@@ -157,8 +158,8 @@ typedef enum {
     eCalParEnd_v3
 } calPar_v3_t;
 
-void print_eeprom(rp_HPeModels_t model, rp_eepromWpData_t *data,int mode);
-void print_eepromUni(rp_eepromUniData_t *data,int mode);
+void print_eeprom(rp_HPeModels_t model, rp_eepromWpData_t* data, int mode);
+void print_eepromUni(rp_eepromUniData_t* data, int mode);
 int getCalibSize(rp_HPeModels_t model);
 
 #endif

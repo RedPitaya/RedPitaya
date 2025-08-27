@@ -117,8 +117,8 @@ a:visited {
 }
 
 .app-item {
-    width: 120px;
-    height: 160px;
+    width: 150px;
+    /* height: 160px; */
     padding: 10px;
     /*background-color: #F00;*/
     display: inline-block;
@@ -205,6 +205,7 @@ a:visited {
     #main-container {
         margin: 10px 15%;
     }
+
     .simplePagerNav {
         width: 70%;
         /* It's connected with #main-container width*/
@@ -215,6 +216,7 @@ a:visited {
     #main-container {
         margin: 10px 10%;
     }
+
     .simplePagerNav {
         width: 80%;
         /* It's connected with #main-container width*/
@@ -225,6 +227,7 @@ a:visited {
     #main-container {
         margin: 10px auto;
     }
+
     .simplePagerNav {
         width: 100%;
     }

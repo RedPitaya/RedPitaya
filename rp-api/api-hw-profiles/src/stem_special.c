@@ -29,10 +29,10 @@ profiles_t stem_special = {
     .fast_dac_count_channels = 0,
     .fast_dac_is_sign = true,
     .fast_dac_bits = 0,
-    .fast_dac_gain[0] = 0,
-    .fast_dac_gain[1] = 0,
-    .fast_dac_gain[2] = 0,
-    .fast_dac_gain[3] = 0,
+    .fast_dac_out_full_scale[0] = 0,
+    .fast_dac_out_full_scale[1] = 0,
+    .fast_dac_out_full_scale[2] = 0,
+    .fast_dac_out_full_scale[3] = 0,
 
     .is_LV_HV_mode = false,
     .is_AC_DC_mode = false,
@@ -96,10 +96,20 @@ profiles_t stem_special = {
 
     .is_dma_mode_v0_94 = false,
     .is_DAC_50_Ohm_mode = false,
-    .is_split_osc_triggers = false,
+    .is_split_osc_triggers = true,
 
     .gpio_N_count = 8,
-    .gpio_P_count = 8
+    .gpio_P_count = 8,
+
+    .ramMB = 512,
+
+    .is_E3_high_speed_gpio = false,
+    .is_E3_mmc_qspi = false,
+    .E3_high_speed_gpio_rate = 0,
+    .is_E3_present = false,
+
+    .is_calib_in_fpga = true
+
 };
 
 profiles_t* getProfile_STEM_SPECIAL(){

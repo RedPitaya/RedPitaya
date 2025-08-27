@@ -2,28 +2,28 @@
 # versioning system
 ################################################################################
 
-VER := $(shell cat apps-tools/ecosystem/info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
-BUILD_NUMBER ?= 0
-
+BUILD_NUMBER ?= dev
+# Required OS version
+LINUX_VER ?= 2.07
 GIT_MODE ?= GITHUB
 GITLAB_TOKEN ?= NONE
 
 CPU_CORES = $(shell ./get_cpu_ram.sh)
 
 REVISION ?= $(shell git rev-parse --short HEAD)
-VERSION = $(VER)-$(BUILD_NUMBER)
+VERSION = $(LINUX_VER)-$(BUILD_NUMBER)
 export BUILD_NUMBER
 export REVISION
 export VERSION
 
-SUBMODULE_UBT = "redpitaya-v2022.1"
+SUBMODULE_UBT = "redpitaya-v2022.3"
 SUBMODULE_LIN = "branch-redpitaya-v2024.1"
 SUBMODULE_APP = ""
 
 define GREET_MSG
 ##############################################################################
 # Red Pitaya GNU/Linux Ecosystem
-# Version: $(VER)-$(REVISION)
+# Version: $(LINUX_VER)-$(REVISION)
 # Build: $(BUILD_NUMBER)
 # Branch: $(GIT_LOCAL_BRANCH)
 # Commit: $(GIT_COMMIT)
@@ -62,7 +62,7 @@ $(INSTALL_DIR):
 # X86 build (Vivado FPGA synthesis, FSBL, devicetree, U-Boot, Linux kernel)
 ################################################################################
 
-UBOOT_TAG      = redpitaya-v2022.2
+UBOOT_TAG      = redpitaya-v2022.3
 LINUX_TAG      = branch-redpitaya-v2024.1
 DTREE_TAG      = xilinx_v2022.1
 DTREE_PATH_TAG = xilinx-v2022.1
@@ -92,7 +92,7 @@ KERNEL_HEADERS ?= YES
 
 # HWID=v1r0 - this value for 250-12 rev 1.0. In all other cases, this parameter is empty.
 
-FPGA_COMMIT ?= Release-2024.3
+FPGA_COMMIT ?= Release-2025.1
 
 HWID ?=
 DEF_PARAM ?=
@@ -144,13 +144,15 @@ ifeq ($(MODEL),Z10)
 	# Used in board: stream_app classic logic v0.94 mercury axi4lite barebones
 
 	FPGA_STREAM_APP = $(FPGA_COMMIT)
-	FPGA_CLASSIC 	= $(FPGA_COMMIT)
 	FPGA_LOGIC	= $(FPGA_COMMIT)
 	FPGA_0_94	= $(FPGA_COMMIT)
-	FPGA_MERCURY	= $(FPGA_COMMIT)
-	FPGA_AXI4LITE	= $(FPGA_COMMIT)
 	FPGA_BAREBONE = $(FPGA_COMMIT)
 	FPGA_PYRPL = $(FPGA_COMMIT)
+
+#   Removed
+#	FPGA_MERCURY	= $(FPGA_COMMIT)
+#	FPGA_AXI4LITE	= $(FPGA_COMMIT)
+#	FPGA_CLASSIC 	= $(FPGA_COMMIT)
 
 	FPGA_MODEL = Z10
 	FPGA_VERSION = z10_125
@@ -175,13 +177,15 @@ ifeq ($(MODEL),Z20_125)
 	# Used in board: stream_app classic logic v0.94 mercury axi4lite
 
 	FPGA_STREAM_APP = $(FPGA_COMMIT)
-	FPGA_CLASSIC 	= $(FPGA_COMMIT)
 	FPGA_LOGIC	= $(FPGA_COMMIT)
 	FPGA_0_94	= $(FPGA_COMMIT)
-	FPGA_MERCURY	= $(FPGA_COMMIT)
-	FPGA_AXI4LITE	= $(FPGA_COMMIT)
 	FPGA_BAREBONE = $(FPGA_COMMIT)
 	FPGA_PYRPL = $(FPGA_COMMIT)
+
+#   Removed
+#	FPGA_MERCURY	= $(FPGA_COMMIT)
+#	FPGA_AXI4LITE	= $(FPGA_COMMIT)
+#	FPGA_CLASSIC 	= $(FPGA_COMMIT)
 
 	FPGA_MODEL = Z20_14
 	FPGA_VERSION = z20_125
@@ -256,6 +260,52 @@ ifeq ($(MODEL),Z20_250_12a)
 endif
 
 
+ifeq ($(MODEL),Z10_V2)
+
+	# Used in board: v0.94 barebones
+
+	FPGA_0_94	= $(FPGA_COMMIT)
+	FPGA_BAREBONE = $(FPGA_COMMIT)
+	
+	FPGA_MODEL = Z10
+	FPGA_VERSION = z10_125_v2
+endif
+
+ifeq ($(MODEL),Z10_PRO_V2)
+
+	# Used in board: v0.94 barebones
+
+	FPGA_0_94	= $(FPGA_COMMIT)
+	FPGA_BAREBONE = $(FPGA_COMMIT)
+
+	FPGA_MODEL = Z10
+	FPGA_VERSION = z10_125_pro_v2
+endif
+
+ifeq ($(MODEL),Z20_125_V2)
+
+	# Used in board: v0.94 barebones
+
+	FPGA_0_94	= $(FPGA_COMMIT)
+	FPGA_BAREBONE = $(FPGA_COMMIT)
+
+	FPGA_MODEL = Z20_G2
+	FPGA_VERSION = z20_125_v2
+
+endif
+
+ifeq ($(MODEL),Z20_LL)
+
+	# Used in board: v0.94 barebones
+
+	FPGA_0_94_LL	= $(FPGA_COMMIT)
+	FPGA_BAREBONE = $(FPGA_COMMIT)
+
+	FPGA_MODEL = Z20_ll
+	FPGA_VERSION = z20_125_ll
+
+endif
+
 .PHONY: fpga $(INSTALL_DIR)/fpga
 
 fpga: dtc_compiler $(INSTALL_DIR)/fpga
@@ -294,6 +344,10 @@ ifneq "$(FPGA_BAREBONE)" ""
 	$(call build_fpga,barebones,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_BAREBONE))
 	mkdir -p $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
 	cp -r fpga/$(FPGA_VERSION)/barebones/dts/*  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
+
+# Build overlay for barebone
+	$(TMP)/dtc $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/led-system.dtso -I dts -O dtb -o $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/led-system.dtbo
+
 endif
 
 ifneq "$(FPGA_PYRPL)" ""
@@ -307,6 +361,10 @@ ifneq "$(FPGA_BAREBONE_250)" ""
 	mv $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones_250 $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones
 	mkdir -p $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
 	cp -r fpga/$(FPGA_VERSION)/barebones_250/dts_250/*  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
+
+# Build overlay for barebone
+	$(TMP)/dtc $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/led-system.dtso -I dts -O dtb -o $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/led-system.dtbo
+
 endif
 
 ifneq "$(FPGA_BAREBONE_250_A)" ""
@@ -314,6 +372,10 @@ ifneq "$(FPGA_BAREBONE_250_A)" ""
 	mv $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones_250 $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones
 	mkdir -p $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
 	cp -r fpga/$(FPGA_VERSION)/barebones_250/dts_250a/*  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
+
+# Build overlay for barebone
+	$(TMP)/dtc $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/led-system.dtso -I dts -O dtb -o $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/led-system.dtbo
+
 endif
 
 ifneq "$(FPGA_STREAM_APP)" ""
@@ -359,6 +421,13 @@ ifneq "$(FPGA_0_94)" ""
 	$(call build_fpga,v0.94,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_0_94))
 	mkdir -p $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/v0.94/dts_rp/
 	cp -r fpga/$(FPGA_VERSION)/v0.94/dts/*  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/v0.94/dts_rp/
+endif
+
+ifneq "$(FPGA_0_94_LL)" ""
+	$(call build_fpga,v0.94_ll,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_0_94_LL))
+	mv $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/v0.94_ll $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/v0.94
+	mkdir -p $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/v0.94/dts_rp/
+	cp -r fpga/$(FPGA_VERSION)/v0.94_ll/dts/*  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/v0.94/dts_rp/
 endif
 
 ifneq "$(FPGA_0_94_250)" ""
@@ -452,6 +521,7 @@ $(FSBL): $(DEVICETREE_UB)
 	echo $@
 	make -C fpga/uboot PRJ=fsbl MODEL=Z10 DEFINES= HWID= DTS_VER=2022.1
 	cp  fpga/uboot/prj/fsbl/sdk/fsbl/executable.elf $@
+
 
 ################################################################################
 # FSBL for uboot 1Gb RAM processing
@@ -587,6 +657,7 @@ $(ZIPFILE):
 	# create version file
 	@echo "$$GREET_MSG" >  $(INSTALL_DIR)/version.txt
 	# build zip file
+	cd $(INSTALL_DIR); md5sum boot.bin u-boot.scr uImage >  md5.txt
 	cd $(INSTALL_DIR); zip -r ../$(ZIPFILE) *
 
 zip_fpga: $(ZIP_FPGA_FILE)

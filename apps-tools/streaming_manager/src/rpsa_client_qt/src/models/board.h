@@ -1,23 +1,21 @@
 #ifndef BOARD_H
 #define BOARD_H
 
-#include <QObject>
-#include <QTimer>
 #include <QDateTime>
+#include <QObject>
 #include <QThread>
+#include <QTimer>
 #include <memory>
 
 #include "broadcast_lib/asio_broadcast_socket.h"
 #include "config_net_lib/client_net_config_manager.h"
+#include "net_lib/asio_net.h"
 #include "src/models/consolemodel.h"
 #include "streaming_lib/streaming_file.h"
-#include "streaming_lib/streaming_net_buffer.h"
-#include "net_lib/asio_net.h"
 
 using namespace streaming_lib;
 
-class CBoard : public QObject
-{
+class CBoard : public QObject {
     Q_OBJECT
 
     Q_PROPERTY(bool isOnline MEMBER m_IsOnline NOTIFY isOnlineChanged)
@@ -30,8 +28,7 @@ class CBoard : public QObject
     Q_PROPERTY(bool isACDC MEMBER m_IsACDC NOTIFY modelChanged)
     Q_PROPERTY(bool isAttenuator MEMBER m_IsAttenuator NOTIFY modelChanged)
 
-
-public:
+   public:
     using Ptr = std::shared_ptr<CBoard>;
 
     CBoard(QString ip);
@@ -52,39 +49,35 @@ public:
     Q_INVOKABLE void sendConfig();
     Q_INVOKABLE void getConfig();
 
-
-    Q_INVOKABLE int  getSaveType();
+    Q_INVOKABLE int getSaveType();
     Q_INVOKABLE void setSaveType(int);
 
-    Q_INVOKABLE int  getProtocol();
-    Q_INVOKABLE void setProtocol(int);
-
-    Q_INVOKABLE int  getDecimation();
+    Q_INVOKABLE int getDecimation();
     Q_INVOKABLE void setDecimation(int);
 
-    Q_INVOKABLE int  getSampleLimit();
+    Q_INVOKABLE int getSampleLimit();
     Q_INVOKABLE void setSampleLimit(int);
 
-    Q_INVOKABLE int  getResolution();
+    Q_INVOKABLE int getResolution();
     Q_INVOKABLE void setResolution(int);
 
-    Q_INVOKABLE int  getAttenuator();
-    Q_INVOKABLE void setAttenuator(int);
+    Q_INVOKABLE int getAttenuator(int channel);
+    Q_INVOKABLE void setAttenuator(int channel, int);
 
-    Q_INVOKABLE int  getCalibration();
+    Q_INVOKABLE int getCalibration();
     Q_INVOKABLE void setCalibration(int);
 
-    Q_INVOKABLE int  getChannels();
-    Q_INVOKABLE void setChannels(int);
+    Q_INVOKABLE int getChannels(int channel);
+    Q_INVOKABLE void setChannels(int channel, int);
 
-    Q_INVOKABLE int  getDataFormat();
+    Q_INVOKABLE int getDataFormat();
     Q_INVOKABLE void setDataFormat(int);
 
-    Q_INVOKABLE int  getSaveMode();
-    Q_INVOKABLE void setSaveMode(int);
+    Q_INVOKABLE int getType();
+    Q_INVOKABLE void setType(int);
 
-    Q_INVOKABLE int  getCoupling();
-    Q_INVOKABLE void setCoupling(int);
+    Q_INVOKABLE int getCoupling(int channel);
+    Q_INVOKABLE void setCoupling(int channel, int);
 
     Q_INVOKABLE void startStreaming(QDateTime time = QDateTime::currentDateTime());
     Q_INVOKABLE void stopStreaming();
@@ -104,7 +97,7 @@ public:
     Q_INVOKABLE bool getTestMode();
     Q_INVOKABLE void setTestMode(bool mode);
 
-signals:
+   signals:
     void isOnlineChanged();
     void isMasterChanged();
     void modelChanged();
@@ -114,11 +107,10 @@ signals:
     void updateStatistic();
     void updateSaveFileName();
 
-private:
-
-    struct SStat{
+   private:
+    struct SStat {
         uint64_t bytes = 0;
-        std::string  bw = "";
+        std::string bw = "";
         uint64_t samples1 = 0;
         uint64_t samples2 = 0;
         uint64_t samples3 = 0;
@@ -130,35 +122,38 @@ private:
 
     auto updateOffline() -> void;
     auto configManagerConnected(std::string host) -> void;
-    auto configMangerError(ClientNetConfigManager::Errors errors,std::string host,error_code err) -> void;
+    auto configMangerError(ClientNetConfigManager::Errors errors, std::string host, error_code err) -> void;
     auto getNewSettings(std::string host) -> void;
     auto sendSettings(std::string host) -> void;
     auto addLog(QString msg) -> void;
-    auto createStreaming(net_lib::EProtocol protocol) -> void;
+    auto createStreaming() -> void;
+    auto startADCFPGAStreaming() -> void;
     auto chartPackThread() -> void;
 
-    QTimer *m_offlineTimer;
-    bool    m_IsOnline;
+    QTimer* m_offlineTimer;
+    bool m_IsOnline;
     QString m_ip;
-    qint64  m_lastOnline;
-    broadcast_lib::EMode  m_mode;
+    qint64 m_lastOnline;
+    broadcast_lib::EMode m_mode;
     broadcast_lib::EModel m_model;
-    ClientNetConfigManager *m_configManager;
+    ClientNetConfigManager* m_configManager;
     bool m_chartEnable;
     ConsoleModel m_consoleModel;
     bool m_isADCStarted;
     QDateTime m_streamingDT;
 
     CStreamingFile::Ptr m_file_manager;
-    CStreamingNetBuffer::Ptr m_net_buffer;
     net_lib::CAsioNet::Ptr m_asionet;
 
     SStat m_stat;
 
     bool m_testMode;
     uint8_t m_adcChannels;
-    bool   m_IsACDC;
+    bool m_IsACDC;
     bool m_IsAttenuator;
+    uint8_t m_activeChannels;
+    uint32_t m_blockSize;
+    DataLib::CBuffersCached::Ptr m_buffer;
 };
 
-#endif // BOARD_H
+#endif  // BOARD_H

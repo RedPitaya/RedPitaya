@@ -13,8 +13,6 @@ auto getADCChannels() -> uint8_t;
 auto getDACChannels() -> uint8_t;
 auto getDACRate() -> uint32_t;
 auto getADCRate() -> uint32_t;
-auto getMaxFreqRate() -> float;
-auto getMaxTriggerLevel() -> float;
 
 auto getModel() -> rp_HPeModels_t;
 auto isZModePresent() -> bool;
@@ -22,6 +20,8 @@ auto getModelName() -> std::string;
 
 auto outAmpDef() -> float;
 auto outAmpMax() -> float;
+auto outFreqMin() -> int;
+auto outFreqMax() -> int;
 
 auto getMeasureValue(int measure) -> float;
 

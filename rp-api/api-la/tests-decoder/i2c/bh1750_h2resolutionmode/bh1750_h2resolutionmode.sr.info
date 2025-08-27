@@ -1,0 +1,12 @@
+Samplerate: 500000
+Channels: 8
+- SCL: logic
+- SDA: logic
+- 2: logic
+- 3: logic
+- 4: logic
+- 5: logic
+- 6: logic
+- 7: logic
+Logic unitsize: 1
+Logic sample count: 500000

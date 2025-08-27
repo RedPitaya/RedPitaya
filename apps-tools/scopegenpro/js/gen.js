@@ -270,6 +270,22 @@ OSC.updateGenSweepMode= function(new_params,param_name){
     }
 }
 
+OSC.updateGenSweepInf = function(new_params,param_name){
+    var state = OSC.params.orig[param_name].value;
+    var field = $('#' + param_name);
+    if (field.is('button')) {
+        field[state === true? 'addClass' : 'removeClass']('active');
+    }
+}
+
+OSC.updateGenSweepRep= function(new_params,param_name){
+    var state = OSC.params.orig[param_name].value;
+    var field = $('#' + param_name);
+    if (field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
+        field.val(new_params[param_name].value);
+    }
+}
+
 OSC.updateGenFunc= function(new_params,param_name){
     var state = OSC.params.orig[param_name].value;
     var field = $('#' + param_name);
@@ -331,6 +347,62 @@ OSC.updateGenBurstInf = function(new_params,param_name){
     var field = $('#' + param_name);
     if (field.is('button')) {
         field[state === true? 'addClass' : 'removeClass']('active');
+    }
+}
+
+OSC.updateMaxLimitOnLoadHandler = function(new_params , param_name) {
+    if (param_name === "SOUR1_IMPEDANCE"){
+        OSC.updateMaxLimitOnLoad("CH1",new_params['SOUR1_IMPEDANCE'].value);
+    }
+
+    if (param_name === "SOUR2_IMPEDANCE"){
+        OSC.updateMaxLimitOnLoad("CH2",new_params['SOUR2_IMPEDANCE'].value);
+    }
+    var field = $('#' + param_name);
+    if (field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
+        field.val(new_params[param_name].value);
+    }
+}
+
+OSC.updateMaxLimitOnLoad = function(ch, value) {
+    if (OSC.high_z_mode == true) {
+        var max_amp = OSC.gen_max_amp;
+        if (ch == "CH1") {
+            if (value == 0) {
+                // Hi-Z mode
+                $("#SOUR1_VOLT").attr("max", max_amp);
+                $("#SOUR1_VOLT_OFFS").attr("max", max_amp);
+                $("#SOUR1_VOLT_OFFS").attr("min", -1 * max_amp);
+            }else{
+                // 50 omh mode
+                $("#SOUR1_VOLT").attr("max", max_amp/ 2.0);
+                $("#SOUR1_VOLT_OFFS").attr("max", max_amp / 2.0);
+                $("#SOUR1_VOLT_OFFS").attr("min", -1 * max_amp / 2.0);
+            }
+        }
+
+        if (ch == "CH2") {
+            if (value == 0) {
+               // Hi-Z mode
+               $("#SOUR2_VOLT").attr("max", max_amp);
+                $("#SOUR2_VOLT_OFFS").attr("max", max_amp);
+                $("#SOUR2_VOLT_OFFS").attr("min", -1 * max_amp);
+            }else{
+                // 50 omh mode
+                $("#SOUR2_VOLT").attr("max", max_amp / 2.0);
+                $("#SOUR2_VOLT_OFFS").attr("max", max_amp / 2.0);
+                $("#SOUR2_VOLT_OFFS").attr("min", -1 * max_amp / 2.0);
+            }
+
+        }
+    }else{
+        var max_amp = OSC.gen_max_amp;
+        $("#SOUR1_VOLT").attr("max", max_amp);
+        $("#SOUR1_VOLT_OFFS").attr("max", max_amp);
+        $("#SOUR1_VOLT_OFFS").attr("min", -1 * max_amp);
+        $("#SOUR2_VOLT").attr("max", max_amp);
+        $("#SOUR2_VOLT_OFFS").attr("max", max_amp);
+        $("#SOUR2_VOLT_OFFS").attr("min", -1 * max_amp);
     }
 }
 

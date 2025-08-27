@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.14)
 
 set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 
 set(APP la_pro)
@@ -19,17 +19,22 @@ if(NOT DEFINED INSTALL_DIR)
 endif()
 
 if(NOT DEFINED VERSION)
-  set(VERSION 0)
+    set(VERSION dev)
 endif()
 
 if(NOT DEFINED REVISION)
-  set(REVISION devbuild)
+    set(REVISION devbuild)
 endif()
 
+if(NOT DEFINED BUILD_NUMBER)
+  set(BUILD_NUMBER devbuild)
+endif()
 
 message(STATUS "Install path ${INSTALL_DIR}")
 message(STATUS "VERSION=${VERSION}")
 message(STATUS "REVISION=${REVISION}")
+message(STATUS "BUILD_NUMBER=${BUILD_NUMBER}")
+message(STATUS "LINUX_VER=${LINUX_VER}")
 
 message(STATUS "Compiler C path: ${CMAKE_C_COMPILER}")
 message(STATUS "Compiler C ID: ${CMAKE_C_COMPILER_ID}")
@@ -41,7 +46,7 @@ message(STATUS "Compiler C++ ID: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "Compiler C++version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
-set(ZIP_FILE ../../../${APP}-${VERSION}-${BUILD_NUMBER}-${REVISION}.zip)
+set(ZIP_FILE ../../../${APP}-${VERSION}-${REVISION}.zip)
 
 list(APPEND r_paths
     /opt/redpitaya/lib
@@ -54,6 +59,7 @@ list(APPEND include_paths
     ${INSTALL_DIR}/include/apiApp
     ${INSTALL_DIR}/include/redpitaya
     ${INSTALL_DIR}/include/common
+    ${INSTALL_DIR}/include/la
     ${INSTALL_DIR}/rp_sdk
     ${INSTALL_DIR}/rp_sdk/libjson
 )
@@ -65,24 +71,11 @@ list(APPEND libs_paths
 )
 
 list(APPEND rp_libs
+    rp-la
     rp-system
     rp-client
-    rpapp
-    rpapp_lcr
     rp
-    rp2
-    rp-arb
-    rp-dsp
-    rp-sweep
-    rp-formatter
-    rp-hw-calib
-    rp-hw-can
     rp-hw-profiles
-    rp-hw
-    rp-i2c
-    rp-spi
-    rp-gpio
-    i2c
 )
 
 set(CMAKE_INSTALL_RPATH ${r_paths})
@@ -94,7 +87,8 @@ file(GLOB SOURCES "src/*.cpp")
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
-add_compile_options(-Wall -Wno-reorder -Wno-cpp -Wextra $<$<CONFIG:Release>:-Wno-unused-parameter> $<$<CONFIG:Release>:-Wno-unused-variable>)
+add_compile_options(-Wall -Wno-unused-parameter -Wno-reorder -Wno-cpp -Wextra $<$<CONFIG:Release>:-Wno-unused-parameter> $<$<CONFIG:Release>:-Wno-unused-variable>)
+add_compile_options($<$<CONFIG:Debug>:-DTRACE_ENABLE>)
 add_compile_options(-DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os>  -ffunction-sections -fdata-sections)
 
 
@@ -111,10 +105,10 @@ install(DIRECTORY ${CMAKE_SOURCE_DIR}/fonts DESTINATION ${BUILD_PATH})
 
 file(GLOB HTML "*.html")
 install(FILES ${HTML} DESTINATION ${BUILD_PATH})
-install(FILES demo_data nginx.conf fpga.conf fpga.sh DESTINATION ${BUILD_PATH})
+install(FILES nginx.conf fpga.conf fpga.sh DESTINATION ${BUILD_PATH})
 
 install(CODE "execute_process(COMMAND sed -i ${BUILD_PATH}/info/info.json -e \"s/REVISION/${REVISION}/\")")
-install(CODE "execute_process(COMMAND sed -i ${BUILD_PATH}/info/info.json -e \"s/BUILD_NUMBER/${BUILD_NUMBER}/\")")
+install(CODE "execute_process(COMMAND sed -i ${BUILD_PATH}/info/info.json -e \"s/VERSION/${VERSION}/\")")
 
 install(CODE "file(ARCHIVE_CREATE OUTPUT ${ZIP_FILE} FORMAT zip PATHS ${BUILD_PATH})")
 install(CODE "file(ARCHIVE_EXTRACT INPUT ${ZIP_FILE} DESTINATION ${INSTALL_DIR}/www/apps)")

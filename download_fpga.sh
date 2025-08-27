@@ -38,3 +38,18 @@ then
     echo "$LOG" >> git_info.txt
     cd ../..
 fi
+
+if [[ "$MODE" == "LOCAL" ]]
+then
+    rm -rf fpga/$P
+    mkdir -p fpga/$P
+    echo "Clone from local working $VERSION/$PRJ"
+    cd fpga/$P
+    git clone ~/projects/redpitaya2/redpitaya-fpga .
+    git checkout $COMMIT
+    BRANCH=$(git name-rev $COMMIT)
+    LOG=$(git log -n 1)
+    echo "$BRANCH" > git_info.txt
+    echo "$LOG" >> git_info.txt
+    cd ../..
+fi

@@ -2,50 +2,39 @@
 #define STREAMING_ROOT_DACSAPP_H
 
 #include <atomic>
-#include <condition_variable>
 #include <mutex>
 #include <thread>
-#include <vector>
 
-#include "uio_lib/generator.h"
 #include "dac_streaming_manager.h"
+#include "uio_lib/generator.h"
 
 namespace dac_streaming_lib {
 
-class CDACStreamingApplication
-{
-
-public:
-
+class CDACStreamingApplication {
+   public:
     using Ptr = std::shared_ptr<CDACStreamingApplication>;
 
     CDACStreamingApplication(CDACStreamingManager::Ptr _streamingManager, uio_lib::CGenerator::Ptr _gen);
     ~CDACStreamingApplication();
     auto run() -> void;
     auto runNonBlock() -> void;
-    auto stop(bool wait = true) -> bool;
-    auto isRun() -> bool {return m_isRun;}
-    auto setTestMode(bool mode) -> void;
-    auto setVerbousMode(bool mode) -> void;
+    auto stop() -> bool;
+    auto isRun() -> bool { return m_isRun; }
 
-private:
+   private:
+    void genWorker();
+    void signalHandler(const std::error_code& _error, int _signalNumber);
+
     int m_PerformanceCounterPeriod = 10;
-
-     uio_lib::CGenerator::Ptr m_gen;
+    uio_lib::CGenerator::Ptr m_gen;
     CDACStreamingManager::Ptr m_streamingManager;
     std::thread m_Thread;
     std::mutex mtx;
-    std::atomic_flag m_GenThreadRun = ATOMIC_FLAG_INIT;
-    std::atomic_int  m_ReadyToPass;
+    std::atomic_bool m_GenThreadRun;
+    std::atomic_int m_ReadyToPass;
     std::atomic_bool m_isRun;
     std::atomic_bool m_isRunNonBloking;
-    static_assert(ATOMIC_INT_LOCK_FREE == 2,"this implementation does not guarantee that std::atomic<int> is always lock free.");
-    bool             m_testMode;
-    bool             m_verbMode;
-    
-    void genWorker();
-    void signalHandler(const std::error_code &_error, int _signalNumber);
 };
 
-}
+}  // namespace dac_streaming_lib
 #endif

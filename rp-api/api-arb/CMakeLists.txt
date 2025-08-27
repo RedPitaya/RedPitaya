@@ -35,9 +35,14 @@ if(NOT DEFINED REVISION)
   set(REVISION devbuild)
 endif()
 
+if(NOT DEFINED BUILD_NUMBER)
+  set(BUILD_NUMBER devbuild)
+endif()
 
 message(STATUS "VERSION=${VERSION}")
 message(STATUS "REVISION=${REVISION}")
+message(STATUS "BUILD_NUMBER=${BUILD_NUMBER}")
+message(STATUS "LINUX_VER=${LINUX_VER}")
 message(STATUS "Install path ${INSTALL_DIR}")
 
 message(STATUS "Compiler C path: ${CMAKE_C_COMPILER}")
@@ -65,6 +70,7 @@ link_directories(${INSTALL_DIR}/lib)
 
 list(APPEND src
             ${CMAKE_SOURCE_DIR}/src/rp_arb.cpp
+            ${CMAKE_SOURCE_DIR}/src/rp_coe.cpp
         )
 
 list(APPEND header
@@ -73,7 +79,8 @@ list(APPEND header
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
-add_compile_options(-Wall -pedantic -Wextra -Wno-unused-parameter -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+add_compile_options($<$<CONFIG:Debug>:-DTRACE_ENABLE>)
+add_compile_options(-Wall -Wno-psabi -pedantic -Wextra -Wno-unused-parameter -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 add_library(${PROJECT_NAME}-obj OBJECT ${src})
 
@@ -86,6 +93,7 @@ if(BUILD_SHARED)
 
         find_package(PythonLibs)
         include_directories(${PYTHON_INCLUDE_PATH})
+        include_directories(/usr/local/lib/python3.10/dist-packages/numpy/_core/include)
 
         set_property(SOURCE src/rp_arb.i PROPERTY CPLUSPLUS ON)
         # SET_SOURCE_FILES_PROPERTIES(src/rp_dsp.i PROPERTIES SWIG_FLAGS "-includeall")

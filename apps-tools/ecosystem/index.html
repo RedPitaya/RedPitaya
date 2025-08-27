@@ -6,8 +6,11 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <link href="../assets/bootstrap-3.0.0/css/bootstrap.css?1" rel="stylesheet" type="text/css" onerror="location.reload()" />
+    <link href="../assets/bootstrap-3.0.0/css/bootstrap.css?1" rel="stylesheet" type="text/css"
+        onerror="location.reload()" />
     <link href="../assets/style.css?6" rel="stylesheet" type="text/css" onerror="location.reload()" />
+    <link href="../assets/lpulse.css?1" rel="stylesheet" type="text/css">
+    <link href="../assets/usermis.css?1" rel="stylesheet" type="text/css">
     <link href="../assets/loader.css?1" rel="stylesheet" type="text/css" onerror="location.reload()" />
     <link href="./style.css?1" rel="stylesheet" type="text/css" onerror="location.reload()" />
     <script src="../assets/bootstrap-3.0.0/js/jquery.js?1" onerror="location.reload()"></script>
@@ -24,6 +27,8 @@
     <script src="../assets/ecosystem.js?1" onerror="location.reload()"></script>
     <script src="../assets/popupstack.js?1" onerror="location.reload()"></script>
     <script src="../assets/jquery.browser.js?1" onerror="location.reload()"></script>
+    <script src="../assets/imageLoader.js?1" onerror="location.reload()"></script>
+    <script src="../main_menu/js/rp_client.js?1" onerror="location.reload()"></script>
     <script src="../main_menu/js/client.js?1" onerror="location.reload()"></script>
     <script src="../main_menu/js/main.js?1" onerror="location.reload()"></script>
     <link href="./assets/popupstack.css?1" rel="stylesheet" type="text/css" onerror="location.reload()" />
@@ -32,41 +37,64 @@
     <title>My Red Pitaya</title>
 </head>
 
-<body class="demo">
+<body class="user_lost connection_lost">
     <div id="loader-wrapper">
         <div id="loader"></div>
         <div id="loader-desc">Getting the list of applications</div>
     </div>
+    <div id="user-wrapper">
+        <div id="user"></div>
+        <div id="user-desc">Device is already in use by another user.</div>
+    </div>
+    <div id="pulse-wrapper">
+        <div id="pulse"></div>
+        <div id="pulse-desc">Connection with device is lost.</div>
+    </div>
     <div id="main_content">
         <div id="header">
-            <div id="info" style="width: 40px;"><img src="../assets/images/info.png" style="padding-top: 0px;width: 20px;height: 20px;padding-left: 0px;margin-left: 2px;margin-top: 2px;"></div>
-            <div id="ext_con_but"><img src="../assets/images/ext_conections_w.png" style="padding-top: 0px;width: 36px;height: 20px;padding-left: 0px;margin-left: 2px;margin-top: 2px;"></div>
+            <div id="info" style="width: 40px;"><img src="../assets/images/info.png"
+                    style="padding-top: 0px;width: 20px;height: 20px;padding-left: 0px;margin-left: 2px;margin-top: 2px;">
+            </div>
+            <div id="ext_con_but"><img src="../assets/images/ext_conections_w.png"
+                    style="padding-top: 0px;width: 36px;height: 20px;padding-left: 0px;margin-left: 2px;margin-top: 2px;">
+            </div>
             <div id="description"></div>
-            <div id="reboot"><img src="../assets/images/power.png"></div>
+            <div id="reboot">
+                <div style="width: 25px;height: 25px;float: right;">
+                    <img path="../assets/images/pack/power" sizes="25;50">
+                </div>
+            </div>
         </div>
         <div class="" id="main-container">
             <ul class="paging" id="list-container">
             </ul>
         </div>
         <div id="footer">
-            <div id="bug_report"><img src="../assets/images/bug_report.png" style="padding-top: 0px;width: 20px;height: 20px;padding-left: 0px;margin-left: 2px;margin-top: 2px;" download></div>
+            <div id="bug_report"><img src="../assets/images/bug_report.png"
+                    style="padding-top: 0px;width: 20px;height: 20px;padding-left: 0px;margin-left: 2px;margin-top: 2px;"
+                    download></div>
             <div id="ecosystem_info"></div>
         </div>
     </div>
-    <div class="modal fade" id="ic_missing" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+    <div class="modal fade" id="ic_missing" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
                     <h4 class="modal-title" id="bazaar_naLabel">Connection problem</h4>
                 </div>
                 <div class="modal-body">
                     <p id="lic_failed">Licence verification failed! </p>
-                    <p>RedPitaya is offline and cannot access the server! </p> Please follow <a style="color: #dd0020" href="http://redpitaya.com/quick-start/" target="_blank">quick start instructions</a> to put it online.
+                    <p>RedPitaya is offline and cannot access the server! </p> Please follow <a style="color: #dd0020"
+                        href="http://redpitaya.com/quick-start/" target="_blank">quick start instructions</a> to put it
+                    online.
                 </div>
                 <div class="modal-footer">
                     <div class="bazaar-link" style="float: left; width: 50%;">
-                        <a href="http://redpitaya.com/quick-start/" target="_blank" id="quick_start" class="list-group-item btn">Open instructions</a>
+                        <a href="http://redpitaya.com/quick-start/" target="_blank" id="quick_start"
+                            class="list-group-item btn">Open instructions</a>
                     </div>
                     <div class="bazaar-link" style="float: left; width: 50%;">
                         <a id="ignore_link" href="#" data-dismiss="modal" class="list-group-item btn">Ignore</a>
@@ -75,11 +103,13 @@
             </div>
         </div>
     </div>
-    <div class="modal fade" id="reboot_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+    <div class="modal fade" id="reboot_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
                     <h4 class="modal-title" id="bazaar_naLabel">Reboot</h4>
                 </div>
                 <div class="modal-body">
@@ -99,11 +129,13 @@
             </div>
         </div>
     </div>
-    <div class="modal fade" id="firmware_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+    <div class="modal fade" id="firmware_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
                     <h4 class="modal-title" id="bazaar_naLabel">OS upgrade notification</h4>
                 </div>
                 <div class="modal-body">
@@ -112,7 +144,9 @@
                         <p>Current system version: <a id="CUR_VER">1.0</a></p>
                         <p>Required version: <a id="REQ_VER">1.0</a></p>
                     </div>
-                    <p>Matching Linux version can be downloaded from this <a href="http://downloads.redpitaya.com/downloads/" target="_blank" id="NEW_FIRMWARE_LINK_ID" style="color: red;">link</a></p>
+                    <p>Matching Linux version can be downloaded from this <a
+                            href="http://downloads.redpitaya.com/downloads/" target="_blank" id="NEW_FIRMWARE_LINK_ID"
+                            style="color: red;">link</a></p>
                 </div>
                 <div class="modal-footer">
                     <div class="bazaar-link">
@@ -122,11 +156,13 @@
             </div>
         </div>
     </div>
-    <div class="modal fade" id="sysinfo_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+    <div class="modal fade" id="sysinfo_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel"
+        aria-hidden="true">
         <div class="modal-dialog" style="width: 1280px;">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
                     <h4 class="modal-title" id="bazaar_naLabel">System Info</h4>
                 </div>
                 <div class="modal-body" style="display: flex;">
@@ -161,6 +197,10 @@
                             <tr style="height:40px;">
                                 <td>RAM size:</td>
                                 <td><a id="RAM_SIZE_ID">-</a></td>
+                            </tr>
+                            <tr style="height:40px;">
+                                <td>DMA RAM:</td>
+                                <td><a id="DMA_RAM_SIZE_ID">-</a></td>
                             </tr>
                             <tr style="height:40px;">
                                 <td>Temperature:</td>
@@ -203,7 +243,7 @@
                                 <td><a id="VCCAUX_ID">-</a></td>
                             </tr>
                             <tr style="height:40px;">
-                                <td>VCC DDR (1.5V):</td>
+                                <td id="VCCDDR_LAB_ID">VCC DDR (1.5V):</td>
                                 <td><a id="VCCDDR_ID">-</a></td>
                             </tr>
                         </table>
@@ -236,7 +276,8 @@
                             <tr style="height:60px;">
                                 <td>Enable File System Consistency Check after boot:</td>
                                 <td>
-                                    <label class="control control-checkbox">Enable<input id="fsck_chbox" type="checkbox" checked="checked" style=" margin-left: 10px; " />
+                                    <label class="control control-checkbox">Enable<input id="fsck_chbox" type="checkbox"
+                                            checked="checked" style=" margin-left: 10px; " />
                                         <div class="control_indicator"></div>
                                     </label>
                                 </td>
@@ -244,9 +285,23 @@
                             <tr style="height:60px;">
                                 <td>Turn on LED:</td>
                                 <td>
-                                    <label  class="control control-checkbox">Enable<input id="led_chbox" type="checkbox" checked="checked" style=" margin-left: 10px; " />
+                                    <label class="control control-checkbox">Enable<input id="led_chbox" type="checkbox"
+                                            checked="checked" style=" margin-left: 10px; " />
                                         <div class="control_indicator"></div>
                                     </label>
+                                </td>
+                            </tr>
+                            <tr style="height:60px;">
+                                <td>Reserved memory size for DMA mode. (Requires reboot):</td>
+                                <td>
+                                    <select id="RP_DMA_RAM" style="width: 100%;height: 42px;color: silver;"
+                                        class="list-group-item btn">
+                                        <option value="32">32 MB</option>
+                                        <option value="64">64 MB</option>
+                                        <option value="128" class="ram256">128 MB</option>
+                                        <option value="256" class="ram256">256 MB</option>
+                                        <option value="512" class="ram512">512 MB</option>
+                                    </select>
                                 </td>
                             </tr>
                         </table>
@@ -256,7 +311,7 @@
                             <col width="250px">
                             <col width="200px">
                             <tr style="height:60px;">
-                                <td id ="UBOOT_MODE_ID">-</td>
+                                <td id="UBOOT_MODE_ID">-</td>
                                 <td>
                                     <div id="up_boot_id" class="bazaar-link">
                                         <a class="list-group-item btn" style="margin-left: 25px;">Up to 1Gb</a>
@@ -266,9 +321,9 @@
                             <tr style="height:60px;">
                                 <td>Remove stored settings for Web Apps:</td>
                                 <td>
-                                        <div id="delete_settings_id" class="bazaar-link">
-                                            <a class="list-group-item btn" style="margin-left: 25px;">DELETE</a>
-                                        </div>
+                                    <div id="delete_settings_id" class="bazaar-link">
+                                        <a class="list-group-item btn" style="margin-left: 25px;">DELETE</a>
+                                    </div>
                                 </td>
                             </tr>
                         </table>
@@ -282,15 +337,17 @@
             </div>
         </div>
     </div>
-    <div class="modal fade" id="ext_connections_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
-        <div class="modal-dialog" style="width: 700px;">
+    <div class="modal fade" id="ext_connections_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" style="width:680px;">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
                     <h4 class="modal-title" id="bazaar_naLabel">External Connections</h4>
                 </div>
-                <div class="modal-body" style="display: flex;">
-                    <img src="../assets/images/red_pitaya_pinout.png" style="width: 100%;">
+                <div class="modal-body" style="width:640px;display: flex;padding: 0;">
+                    <img path="../assets/images/pack/red_pitaya_pinout" sizes="640;1280;2560" style="width: 100%;">
                 </div>
                 <div class="modal-footer">
                     <div class="bazaar-link">
@@ -301,4 +358,5 @@
         </div>
     </div>
 </body>
+
 </html>

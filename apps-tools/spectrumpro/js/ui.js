@@ -68,28 +68,6 @@
             }, 200);
         });
 
-        $("#ext_con_but").click(function(event) {
-            $('#ext_connections_dialog').modal("show");
-        });
-
-        $('#save_settings').click(function() {
-            $('#save_settings_dialog').modal("show");
-        });
-
-        $('#reset_settings').click(function() {
-            CLIENT.params.local['CONTROL_CONFIG_SETTINGS'] = { value: 1 }; // REQUEST_RESET
-            SPEC.sendParams();
-        });
-
-        $('#OSC_REQ_SAVE_SETTINGS').on('click', function() {
-            var name = $("#SETTINGS_NEW_NAME").val().trim()
-            if (name !== ""){
-                CLIENT.params.local['FILE_SATTINGS'] = { value: name };
-                CLIENT.params.local['CONTROL_CONFIG_SETTINGS'] = { value: 4 }; // SAVE
-                SPEC.sendParams();
-            }
-        });
-
         $(moreVal + ', ' + lessVal).on("mouseup mouseout", function() {
             clearTimeout(timeout);
             clearInterval(interval);
@@ -202,6 +180,28 @@
         $('input[type=text]:not([readonly]):not(.no-arrows)[step]').iLightInputNumber({
             mobile: false
         });
+
+        $("#ext_con_but").click(function(event) {
+            $('#ext_connections_dialog').modal("show");
+        });
+
+        $('#save_settings').click(function() {
+            $('#save_settings_dialog').modal("show");
+        });
+
+        $('#reset_settings').click(function() {
+            CLIENT.params.local['CONTROL_CONFIG_SETTINGS'] = { value: 1 }; // REQUEST_RESET
+            SPEC.sendParams();
+        });
+
+        $('#OSC_REQ_SAVE_SETTINGS').on('click', function() {
+            var name = $("#SETTINGS_NEW_NAME").val().trim()
+            if (name !== ""){
+                CLIENT.params.local['FILE_SATTINGS'] = { value: name };
+                CLIENT.params.local['CONTROL_CONFIG_SETTINGS'] = { value: 4 }; // SAVE
+                SPEC.sendParams();
+            }
+        });
     }
 
     UI.uintToColor = function(uint) {
@@ -245,6 +245,108 @@
                     r2.appendChild(opt2);
             }
         });
+    }
+
+    UI.initUIItems = function(params) {
+        if (params['SOUR_IMPEDANCE_Z_MODE'] !== undefined){
+            if (params['SOUR_IMPEDANCE_Z_MODE'].value == false){
+                var nodes = document.getElementsByClassName("hi-z-mode");
+                [...nodes].forEach((element, index, array) => {
+                                        element.parentNode.removeChild(element);
+                                    });
+
+            }
+        }
+
+        if (params['SPEC_IS_FILTER'] !== undefined){
+            if (params['SPEC_IS_FILTER'].value == false){
+                var nodes = document.getElementsByClassName("filter_block");
+                [...nodes].forEach((element, index, array) => {
+                                        element.parentNode.removeChild(element);
+                                    });
+
+            }
+        }
+
+        if (params['SPEC_IS_AC_DC'] !== undefined){
+            if (params['SPEC_IS_AC_DC'].value == false){
+                var nodes = document.getElementsByClassName("ac_dc_block");
+                [...nodes].forEach((element, index, array) => {
+                                        element.parentNode.removeChild(element);
+                                    });
+
+            }
+        }
+
+        if (params['SPEC_IS_HV_LV'] !== undefined){
+            if (params['SPEC_IS_HV_LV'].value == false){
+                var nodes = document.getElementsByClassName("hv_lv_block");
+                [...nodes].forEach((element, index, array) => {
+                                        element.parentNode.removeChild(element);
+                                    });
+
+            }
+        }
+
+        if (params['SOUR_X5_GAIN'] !== undefined){
+            if (params['SOUR_X5_GAIN'].value == false){
+                var nodes = document.getElementsByClassName("x5_block");
+                [...nodes].forEach((element, index, array) => {
+                                        element.parentNode.removeChild(element);
+                                    });
+
+            }
+        }
+
+        if (params['SOUR1_FREQ_FIX'] !== undefined){
+            $("#SOUR1_FREQ_FIX").attr("max", params['SOUR1_FREQ_FIX'].max).attr("min", params['SOUR1_FREQ_FIX'].min);
+        }
+
+        if (params['SOUR2_FREQ_FIX'] !== undefined){
+            $("#SOUR2_FREQ_FIX").attr("max", params['SOUR2_FREQ_FIX'].max).attr("min", params['SOUR2_FREQ_FIX'].min);
+        }
+    };
+
+    UI.updateMaxLimitOnLoad = function(ch, value) {
+        if (SPEC.hi_z_mode == true) {
+            var max_amp = SPEC.gen_max_amp;
+            if (ch == "CH1") {
+                if (value == 0) {
+                    // Hi-Z mode
+                    $("#SOUR1_VOLT").attr("max", max_amp);
+                    $("#SOUR1_VOLT_OFFS").attr("max", max_amp);
+                    $("#SOUR1_VOLT_OFFS").attr("min", -1 * max_amp);
+                }else{
+                    // 50 omh mode
+                    $("#SOUR1_VOLT").attr("max", max_amp/ 2.0);
+                    $("#SOUR1_VOLT_OFFS").attr("max", max_amp / 2.0);
+                    $("#SOUR1_VOLT_OFFS").attr("min", -1 * max_amp / 2.0);
+                }
+            }
+    
+            if (ch == "CH2") {
+                if (value == 0) {
+                   // Hi-Z mode
+                    $("#SOUR2_VOLT").attr("max", max_amp);
+                    $("#SOUR2_VOLT_OFFS").attr("max", max_amp);
+                    $("#SOUR2_VOLT_OFFS").attr("min", -1 * max_amp);
+                }else{
+                    // 50 omh mode
+                    $("#SOUR2_VOLT").attr("max", max_amp / 2.0);
+                    $("#SOUR2_VOLT_OFFS").attr("max", max_amp / 2.0);
+                    $("#SOUR2_VOLT_OFFS").attr("min", -1 * max_amp / 2.0);
+                }
+    
+            }
+        }else{
+            var max_amp = SPEC.gen_max_amp;
+            $("#SOUR1_VOLT").attr("max", max_amp);
+            $("#SOUR1_VOLT_OFFS").attr("max", max_amp);
+            $("#SOUR1_VOLT_OFFS").attr("min", -1 * max_amp);
+            $("#SOUR2_VOLT").attr("max", max_amp);
+            $("#SOUR2_VOLT_OFFS").attr("max", max_amp);
+            $("#SOUR2_VOLT_OFFS").attr("min", -1 * max_amp);
+        }
     }
 
 }(window.UI = window.UI || {}, jQuery));

@@ -7,6 +7,22 @@
  *
  */
 
+function promptFile(contentType, multiple) {
+    var input = document.createElement("input");
+    input.type = "file";
+    input.accept = '.wav,.tdms';
+    return new Promise(function(resolve) {
+      document.activeElement.onfocus = function() {
+        document.activeElement.onfocus = null;
+        setTimeout(resolve, 500);
+      };
+      input.onchange = function() {
+        var files = Array.from(input.files);
+        resolve(files[0]);
+      };
+      input.click();
+    });
+}
 
 (function() {
     var originalAddClassMethod = jQuery.fn.addClass;
@@ -21,12 +37,15 @@
         $(this).trigger('activeChanged', 'remove');
         return result;
     }
+
 })();
 
 
 (function(SM, $, undefined) {
 
     SM.ss_status_last = -1;
+    SM.ss_dac_status_last = -1;
+    SM.ss_gpio_status_last = -1;
     SM.ss_full_rate = undefined;
     SM.ss_rate = -1;
     SM.ss_max_rate = -1;
@@ -37,6 +56,8 @@
     SM.adc_channels = undefined;
     SM.dac_channels = undefined;
     SM.is_acdc = undefined;
+    SM.is_dac_gain = undefined;
+
 
     // App state
     SM.state = {
@@ -108,42 +129,133 @@
     SM.change_status = function(new_params) {
         ss_status = new_params['SS_STATUS'].value;
         if (SM.ss_status_last != ss_status) {
-            if (ss_status == 2) {
-                $('#svg-is-runnung').attr("src","./img/red_led.png")
-                $('#info_dialog_label').text("Out of free disk space");
-                $('#info_dialog').modal('show');
-                CLIENT.parametersCache["SS_STATUS"] = { value: 0 };
-                CLIENT.sendParameters();
-                SM.refreshFiles();
-            }
-
-            if (ss_status == 3) {
-                $('#svg-is-runnung').attr("src","./img/red_led.png")
-                $('#info_dialog_label').text("Data recording completed");
-                $('#info_dialog').modal('show');
-                CLIENT.parametersCache["SS_STATUS"] = { value: 0 };
-                CLIENT.sendParameters();
-                SM.refreshFiles();
+            if (ss_status == 0) {
+                $('#ADC_STATUS_LED').attr("src","./img/red_led.png")
+                $('#ADC_STATUS').html("Status: Stopped").css("color","#cdcccc")
             }
 
             if (ss_status == 1) {
-
-                $('#svg-is-runnung').attr("src","./img/green_led.png")
+                $('#ADC_STATUS_LED').attr("src","./img/green_led.png")
+                $('#ADC_STATUS').html("Status: Running").css("color","#cdcccc")
             }
 
-            if (ss_status == 0) {
-                $('#svg-is-runnung').attr("src","./img/red_led.png")
-                SM.refreshFiles();
+            if (ss_status == 2) {
+                $('#ADC_STATUS_LED').attr("src","./img/red_led.png")
+                $('#ADC_STATUS').html("Status: Out of free disk space").css("color","#FF0000")
+                // $('#info_dialog_label').text("Out of free disk space");
+                // $('#info_dialog').modal('show');
+                CLIENT.parametersCache["SS_STATUS"] = { value: 0 };
+                CLIENT.sendParameters();
+            }
+
+            if (ss_status == 3) {
+                $('#ADC_STATUS_LED').attr("src","./img/red_led.png")
+                $('#ADC_STATUS').html("Status: Data recording completed").css("color","#cdcccc")
+
+                // $('#info_dialog_label').text("Data recording completed");
+                // $('#info_dialog').modal('show');
+                CLIENT.parametersCache["SS_STATUS"] = { value: 0 };
+                CLIENT.sendParameters();
+            }
+
+            if (ss_status == 4) {
+                $('#ADC_STATUS_LED').attr("src","./img/red_led.png")
+                $('#ADC_STATUS').html("Status: Not enough memory").css("color","#FF0000")
+                // $('#info_dialog_label').text("Out of free disk space");
+                // $('#info_dialog').modal('show');
+                CLIENT.parametersCache["SS_STATUS"] = { value: 0 };
+                CLIENT.sendParameters();
+            }
+
+            if (ss_status == 5) { // Mem modify status
+                $('#ADC_STATUS_LED').attr("src","./img/red_led.png")
+                $('#ADC_STATUS').html("Status: Stopped").css("color","#cdcccc")
+                CLIENT.parametersCache["SS_STATUS"] = { value: 0 };
+                CLIENT.sendParameters();
+            }
+
+            if (ss_status == 6) { // No channels
+                $('#ADC_STATUS_LED').attr("src","./img/red_led.png")
+                $('#ADC_STATUS').html("Status: No active channels").css("color","#cdcccc")
+                CLIENT.parametersCache["SS_STATUS"] = { value: 0 };
+                CLIENT.sendParameters();
             }
         }
         SM.ss_status_last = ss_status;
     }
 
+    SM.change_dac_status = function(new_params) {
+        var status = new_params['SS_DAC_STATUS'].value;
+        if (SM.ss_dac_status_last != status) {
+            if (status == 0) {
+                $('#DAC_STATUS_LED').attr("src","./img/red_led.png")
+                $('#DAC_STATUS').html("Status: Stopped").css("color","#cdcccc")
+            }
+
+            if (status == 1) {
+                $('#DAC_STATUS_LED').attr("src","./img/green_led.png")
+                $('#DAC_STATUS').html("Status: Running").css("color","#cdcccc")
+            }
+
+            if (status == 2) {
+                $('#DAC_STATUS_LED').attr("src","./img/red_led.png")
+                $('#DAC_STATUS').html("Status: Done").css("color","#008000")
+                CLIENT.parametersCache["SS_DAC_STATUS"] = { value: 0 };
+                CLIENT.sendParameters();
+            }
+
+            if (status == 3) {
+                $('#DAC_STATUS_LED').attr("src","./img/red_led.png")
+                $('#DAC_STATUS').html("Status: File is empty").css("color","#FF0000")
+                CLIENT.parametersCache["SS_DAC_STATUS"] = { value: 0 };
+                CLIENT.sendParameters();
+            }
+
+            if (status == 4) {
+                $('#DAC_STATUS_LED').attr("src","./img/red_led.png")
+                $('#DAC_STATUS').html("Status: File is broken").css("color","#FF0000")
+                CLIENT.parametersCache["SS_DAC_STATUS"] = { value: 0 };
+                CLIENT.sendParameters();
+            }
+
+            if (status == 5) {
+                $('#DAC_STATUS_LED').attr("src","./img/red_led.png")
+                $('#DAC_STATUS').html("Status: File is missing").css("color","#FF0000")
+                CLIENT.parametersCache["SS_DAC_STATUS"] = { value: 0 };
+                CLIENT.sendParameters();
+            }
+
+            if (status == 6) {
+                $('#DAC_STATUS_LED').attr("src","./img/red_led.png")
+                $('#DAC_STATUS').html("Status: Not enough memory").css("color","#FF0000")
+                CLIENT.parametersCache["SS_DAC_STATUS"] = { value: 0 };
+                CLIENT.sendParameters();
+            }
+
+            if (status == 7) { // Mem modify status
+                $('#DAC_STATUS_LED').attr("src","./img/red_led.png")
+                $('#DAC_STATUS').html("Status: Stopped").css("color","#cdcccc")
+                CLIENT.parametersCache["SS_DAC_STATUS"] = { value: 0 };
+                CLIENT.sendParameters();
+            }
+        }
+        SM.ss_dac_status_last = status;
+    }
+
     SM.change_adc_data_pass = function(new_params) {
         if (new_params['SS_ADC_DATA_PASS'].value == 1) {
-            $('#svg-is-data-pass').show();
+            $('#ADC_DATA_PASS').show();
         }else{
-            $('#svg-is-data-pass').hide();
+            $('#ADC_DATA_PASS').hide();
+            SM.refreshFiles();
+        }
+    }
+
+    SM.change_dac_data_pass = function(new_params) {
+        if (new_params['SS_DAC_DATA_PASS'].value == 1) {
+            $('#DAC_DATA_PASS').show();
+        }else{
+            $('#DAC_DATA_PASS').hide();
         }
     }
 
@@ -167,8 +279,6 @@
         }
         rateFocusOutValue();
     };
-
-
 
     SM.calcRateHz = function(val) {
         if (val <= 1)
@@ -296,14 +406,14 @@
 
     SM.calcSize = function(x) {
         if (x  < 1024) {
-            return x + " b"
+            return x + " B"
         }
 
         if (x  < 1024 * 1024) {
-            return (x / 1024).toFixed(3)  + " kb"
+            return (x / 1024).toFixed(3)  + " kB"
         }
 
-        return (x / (1024 * 1024)).toFixed(3)  + " Mb"
+        return (x / (1024 * 1024)).toFixed(3)  + " MB"
     }
 
     SM.refreshFiles = function() {
@@ -392,8 +502,10 @@
                     item4.append(li)
                     var a = document.createElement('a');
                     a.innerText = "LOG"
-                    a.setAttribute('href', "/streaming_manager/upload/" + key + "." + value["format"] + ".log.txt");
+                    a.setAttribute('href', "/streaming_manager/upload/adc/" + key + "." + value["format"] + ".log.txt");
                     a.setAttribute("download", "");
+                    a.setAttribute("target","_blank")
+                    a.setAttribute("rel","noopener noreferrer")
                     li.append(a)
                 }
 
@@ -403,8 +515,10 @@
                     item4.append(li)
                     var a = document.createElement('a');
                     a.innerText = "LOST"
-                    a.setAttribute('href',"/streaming_manager/upload/" + key + "." + value["format"] + ".log.lost.txt");
+                    a.setAttribute('href',"/streaming_manager/upload/adc/" + key + "." + value["format"] + ".log.lost.txt");
                     a.setAttribute("download", "");
+                    a.setAttribute("target","_blank")
+                    a.setAttribute("rel","noopener noreferrer")
                     li.append(a)
 
                 }
@@ -414,8 +528,10 @@
                 item4.append(li)
                 var a = document.createElement('a');
                 a.innerText = "🡇"
-                a.setAttribute('href', "/streaming_manager/upload/" + key + "." + value["format"]);
+                a.setAttribute('href', "/streaming_manager/upload/adc/" + key + "." + value["format"]);
                 a.setAttribute("download", "");
+                a.setAttribute("target","_blank")
+                a.setAttribute("rel","noopener noreferrer")
                 li.append(a)
                 document.getElementById('files_table').appendChild(new_row);
 
@@ -448,11 +564,6 @@
         rateFocusOutValue();
     }
 
-    SM.setProtocol = function(param) {
-        var value = param["SS_PROTOCOL"].value;
-        $("#SS_PROTOCOL").prop('checked', value);
-    }
-
     SM.setSaveMode = function(param) {
         var value = param["SS_SAVE_MODE"].value;
         $("#SS_SAVE_MODE").prop('checked', value);
@@ -479,14 +590,13 @@
         }
     }
 
-    SM.setPort = function(param) {
-        var value = param["SS_PORT_NUMBER"].value;
-        $("#SS_PORT_NUMBER").val(value)
-    }
-
     SM.setSamples = function(param) {
         var value = param["SS_SAMPLES"].value;
-        $("#SS_SAMPLES").val(value)
+        if (value == 0){
+            $("#SS_SAMPLES").val("ALL");
+        }else{
+            $("#SS_SAMPLES").val(value)
+        }
     }
 
 
@@ -574,15 +684,181 @@
         }
     }
 
+    SM.setBlockSize = function(param) {
+        var value = param["MM_BLOCK_SIZE"].value;
+        var max = param["MM_BLOCK_SIZE"].max;
+        $('#MM_BLOCK_SIZE option').each(function() {
+            var v = $(this).val()
+            if ( v > max ) {
+                $(this).remove();
+            }
+        });
+        $("#MM_BLOCK_SIZE").val(value)
+    }
+
+    SM.setADCSize = function(param) {
+        var value = param["MM_ADC_SIZE"].value;
+        var max = param["MM_ADC_SIZE"].max;
+
+        $("#ADC_SIZE_TITLE").html("ADC: " + SM.calcSize(value))
+        $("#MM_ADC_SIZE").prop('max',max)
+        $("#MM_ADC_SIZE").prop('value',value)
+    }
+
+    SM.setADCValid = function(param) {
+        var value = param["MM_ADC_VALID"].value;
+        if (value == false)
+            $("#ADC_SIZE_TITLE").addClass('red')
+        else
+            $("#ADC_SIZE_TITLE").removeClass('red')
+    }
+
+
+    SM.setDACSize = function(param) {
+        var value = param["MM_DAC_SIZE"].value;
+        var max = param["MM_DAC_SIZE"].max;
+
+        $("#DAC_SIZE_TITLE").html("DAC: " + SM.calcSize(value))
+        $("#MM_DAC_SIZE").prop('max',max)
+        $("#MM_DAC_SIZE").prop('value',value)
+    }
+
+    SM.setDACMode = function(param) {
+        var value = param["SS_DAC_MODE"].value;
+        $("#SS_DAC_MODE").prop('checked', value);
+        if (value){
+            $(".dac_file_use").show();
+        //     $("#SS_PASS_SAMPLES").show();
+        //     $("#SS_WRITED_SIZE").show();
+        }else{
+            $(".dac_file_use").hide();
+        //     $("#SS_PASS_SAMPLES").hide();
+        //     $("#SS_WRITED_SIZE").hide();
+        }
+    }
+
+    SM.setDACIsEnable = function(param) {
+        var value = param["SS_DAC_IS_ENABLE"].value;
+        if (value == false){
+            var nodes = document.getElementsByClassName("dac_mode");
+                [...nodes].forEach((element, index, array) => {
+                                        element.parentNode.removeChild(element);
+                                    });
+        }
+    }
+
+    SM.setDACSize = function(param) {
+        var value = param["MM_DAC_SIZE"].value;
+        var max = param["MM_DAC_SIZE"].max;
+
+        $("#DAC_SIZE_TITLE").html("DAC: " + SM.calcSize(value))
+        $("#MM_DAC_SIZE").prop('max',max)
+        $("#MM_DAC_SIZE").prop('value',value)
+    }
+
+    SM.setDACFile = function(param) {
+        var value = param["SS_DAC_FILE"].value;
+        var itm = value.split("*")
+        $("#SS_DAC_FILE").empty();
+        if (itm.length > 1){
+            var list = itm[1].trim().split("\n")
+            if (document.getElementById('SS_DAC_FILE') !== null){
+                list.forEach(element => {
+                    var new_row = document.createElement('option');
+                    new_row.setAttribute("value",element)
+                    new_row.innerText = element
+                    document.getElementById('SS_DAC_FILE').appendChild(new_row);
+                });
+            }
+            if (itm[0] == "" && list.length > 0){
+                if (list[0] !== ""){
+                    CLIENT.parametersCache["SS_DAC_FILE"] = { value: list[0] };
+                    CLIENT.sendParameters();
+                    return;
+                }
+            }
+
+            $("#SS_DAC_FILE").val(itm[0])
+        }
+        else{
+            $("#SS_DAC_FILE").val("")
+        }
+    }
+
+    SM.setDACFileType = function(param) {
+        var value = param["SS_DAC_FILE_TYPE"].value;
+        $("#SS_DAC_FILE_TYPE").val(value)
+    }
+
+    SM.setDACRepeatMode = function(param) {
+        var value = param["SS_DAC_REPEAT"].value;
+        $("#SS_DAC_REPEAT").val(value)
+    }
+
+    SM.setDACRepeatCount = function(param) {
+        var value = param["SS_DAC_REPEAT_COUNT"].value;
+        $("#SS_DAC_REPEAT_COUNT").val(value)
+    }
+
+    SM.setDACHz = function(param) {
+        var value = param["SS_DAC_HZ"].value;
+        var min = param["SS_DAC_HZ"].min;
+        var max = param["SS_DAC_HZ"].max;
+        $("#SS_DAC_HZ").prop('min',min)
+        $("#SS_DAC_HZ").prop('max',max)
+        $("#SS_DAC_HZ").prop('value',value)
+    }
+
+    SM.setISDACGain = function(param) {
+        var value = param["SS_IS_DAC_GAIN"].value;
+        if (SM.is_dac_gain == undefined){
+            SM.is_dac_gain = value;
+            if (!value)
+                $(".dac_gain").hide();
+        }
+    }
+
+    SM.setDACGain = function(param) {
+        var value = param["SS_DAC_GAIN"].value;
+        $("#SS_CH1_DAC_GAIN").prop('checked', value & 0x1);
+        $("#SS_CH2_DAC_GAIN").prop('checked', value & 0x2);
+    }
+
+    SM.setDACValid = function(param) {
+        var value = param["MM_DAC_VALID"].value;
+        if (value == false)
+            $("#DAC_SIZE_TITLE").addClass('red')
+        else
+            $("#DAC_SIZE_TITLE").removeClass('red')
+    }
+
+    SM.setGPIOSize = function(param) {
+        var value = param["MM_GPIO_SIZE"].value;
+        var max = param["MM_GPIO_SIZE"].max;
+
+        $("#GPIO_SIZE_TITLE").html("GPIO: " + SM.calcSize(value))
+        $("#MM_GPIO_SIZE").prop('max',max)
+        $("#MM_GPIO_SIZE").prop('value',value)
+    }
+
+    SM.setGPIOValid = function(param) {
+        var value = param["MM_GPIO_VALID"].value;
+        if (value == false)
+            $("#GPIO_SIZE_TITLE").addClass('red')
+        else
+            $("#GPIO_SIZE_TITLE").removeClass('red')
+    }
+
     SM.param_callbacks["SS_STATUS"] = SM.change_status;
+    SM.param_callbacks["SS_DAC_STATUS"] = SM.change_dac_status;
+    SM.param_callbacks["SS_GPIO_STATUS"] = SM.change_gpio_status;
     SM.param_callbacks["SS_ADC_DATA_PASS"] = SM.change_adc_data_pass;
+    SM.param_callbacks["SS_DAC_DATA_PASS"] = SM.change_dac_data_pass;
     SM.param_callbacks["SS_IS_MASTER"] = SM.setBoardMode;
     SM.param_callbacks["SS_RATE"] = SM.setRate;
-    SM.param_callbacks["SS_PROTOCOL"] = SM.setProtocol;
     SM.param_callbacks["SS_SAVE_MODE"] = SM.setSaveMode;
     SM.param_callbacks["SS_USE_CALIB"] = SM.setCalibration;
     SM.param_callbacks["SS_USE_FILE"] = SM.setMode;
-    SM.param_callbacks["SS_PORT_NUMBER"] = SM.setPort;
     SM.param_callbacks["SS_SAMPLES"] = SM.setSamples;
     SM.param_callbacks["SS_FORMAT"] = SM.setFormat;
     SM.param_callbacks["SS_CHANNEL"] = SM.setChannel;
@@ -595,6 +871,27 @@
     SM.param_callbacks["SS_PASS_SAMPLES"] = SM.setSamplesCount;
     SM.param_callbacks["SS_WRITED_SIZE"] = SM.setWritedSize;
 
+    SM.param_callbacks["SS_DAC_IS_ENABLE"] = SM.setDACIsEnable;
+    SM.param_callbacks["SS_DAC_MODE"] = SM.setDACMode;
+    SM.param_callbacks["SS_DAC_FILE_TYPE"] = SM.setDACFileType;
+    SM.param_callbacks["SS_DAC_FILE"] = SM.setDACFile;
+    SM.param_callbacks["SS_DAC_GAIN"] = SM.setDACGain;
+    SM.param_callbacks["SS_DAC_REPEAT"] = SM.setDACRepeatMode;
+    SM.param_callbacks["SS_DAC_REPEAT_COUNT"] = SM.setDACRepeatCount;
+
+
+    SM.param_callbacks["SS_DAC_HZ"] = SM.setDACHz;
+    SM.param_callbacks["SS_IS_DAC_GAIN"] = SM.setISDACGain;
+
+
+    SM.param_callbacks["MM_BLOCK_SIZE"] = SM.setBlockSize;
+    SM.param_callbacks["MM_ADC_SIZE"] = SM.setADCSize;
+    SM.param_callbacks["MM_ADC_VALID"] = SM.setADCValid;
+    SM.param_callbacks["MM_DAC_SIZE"] = SM.setDACSize;
+    SM.param_callbacks["MM_DAC_VALID"] = SM.setDACValid;
+    SM.param_callbacks["MM_GPIO_SIZE"] = SM.setGPIOSize;
+    SM.param_callbacks["MM_GPIO_VALID"] = SM.setGPIOValid;
+
 
 
 }(window.SM = window.SM || {}, jQuery));
@@ -604,6 +901,7 @@
 
 // Page onload event handler
 $(function() {
+
 
     var reloaded = $.cookie("SM_forced_reload");
     if (reloaded == undefined || reloaded == "false") {
@@ -624,6 +922,73 @@ $(function() {
     $('#SM_STOP').on('click', function(ev) {
         ev.preventDefault();
         CLIENT.parametersCache["SS_START"] = { value: false };
+        CLIENT.sendParameters();
+    });
+
+    //Run button
+    $('#SM_DAC_RUN').on('click', function(ev) {
+        CLIENT.parametersCache["SS_DAC_START"] = { value: true };
+        CLIENT.sendParameters();
+        SM.ss_dac_status_last = 0;
+    });
+
+    //Stop button
+    $('#SM_DAC_STOP').on('click', function(ev) {
+        ev.preventDefault();
+        CLIENT.parametersCache["SS_DAC_START"] = { value: false };
+        CLIENT.sendParameters();
+    });
+
+    //Run button
+    $('#SM_GPIO_RUN').on('click', function(ev) {
+        CLIENT.parametersCache["SS_GPIO_START"] = { value: true };
+        CLIENT.sendParameters();
+        SM.ss_gpio_status_last = 0;
+    });
+
+    //Stop button
+    $('#SM_GPIO_STOP').on('click', function(ev) {
+        ev.preventDefault();
+        CLIENT.parametersCache["SS_GPIO_START"] = { value: false };
+        CLIENT.sendParameters();
+    });
+
+    $('#SM_DAC_LOAD').click(function() {
+        promptFile().then(function(file) {
+            if(file){
+                const fileReader = new FileReader(); // initialize the object
+                fileReader.readAsArrayBuffer(file); // read file as array buffer
+                fileReader.onload = (event) => {
+                    console.log('Complete File read successfully!')
+                    $.ajax({
+                        url: '/upload_dac_file' + '?file=' + file.name, //Server script to process data
+                        type: 'POST',
+                        //Ajax events
+                        //beforeSend: beforeSendHandler,
+                        success: function(e) {
+                            console.log("Upload done " + file.name);
+                            setTimeout(() => {
+                                CLIENT.parametersCache["SS_DAC_FILE_CTR"] = { value: 1 };
+                                CLIENT.sendParameters();
+                            }, 1000);
+                        },
+                        error: function(e) { console.log(e); },
+                        // Form data
+                        data: event.target.result,
+                        //Options to tell jQuery not to process data or worry about content-type.
+                        cache: false,
+                        contentType: false,
+                        processData: false
+                    });
+                }
+            }
+            else
+                console.log("no file selected")
+        });
+    });
+
+    $('#SM_DAC_DELETE').click(function() {
+        CLIENT.parametersCache["SS_DAC_FILE_CTR"] = { value: 2 };
         CLIENT.sendParameters();
     });
 

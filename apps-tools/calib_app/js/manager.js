@@ -10,6 +10,7 @@
 (function(OBJ, $, undefined) {
 
     OBJ.model = undefined;
+    OBJ.is_filter = undefined;
     OBJ.maxGenFreq = 62500000;
 
     OBJ.setMainMenu = function(_visible) {
@@ -18,6 +19,7 @@
             $("#B_APPLY_CONT").hide();
             $("#B_CLOSE_CONT").hide();
             $("#B_DEFAULT_CONT").hide();
+            $("#B_DISABLE_CONT").hide();
             $("#B_AUTO_CLOSE_CONT").hide();
             $("#B_RESET_CONT").hide();
         } else {
@@ -45,18 +47,6 @@
 
     OBJ.setADCMode = function(_visible) {
         if (OBJ.model !== undefined) {
-            if (OBJ.model === "Z10" || OBJ.model === "Z20_125") {
-
-            }
-
-            if (OBJ.model === "Z20_250_12") {
-
-            }
-
-            if (OBJ.model === "Z20_250_12_120") {
-
-            }
-
             if (_visible) {
                 $("#adc_mode_body").show();
                 $("#B_APPLY_CONT").show();
@@ -70,23 +60,12 @@
 
     OBJ.setFILTERMode = function(_visible) {
         if (OBJ.model !== undefined) {
-            if (OBJ.model === "Z10" || OBJ.model === "Z20_125") {
-
-            }
-
-            if (OBJ.model === "Z20_250_12") {
-
-            }
-
-            if (OBJ.model === "Z20_250_12_120") {
-
-            }
-
             if (_visible) {
                 $("#filter_mode_body").show();
                 $("#B_APPLY_CONT").show();
                 $("#B_CLOSE_CONT").show();
                 $("#B_DEFAULT_CONT").show();
+                $("#B_DISABLE_CONT").show();
             } else {
                 $("#filter_mode_body").hide();
             }
@@ -141,6 +120,20 @@
         OBJ.setFILTERMode(false);
         OBJ.setFAutoMode(false);
         OBJ.setMainMenu(true);
+
+        CLIENT.parametersCache["calib_sig"] = { value: 0 };
+        CLIENT.requestParameters();
+    }
+
+    OBJ.isFilter = function(_value) {
+        OBJ.is_filter = _value.value;
+        if (OBJ.is_filter){
+            if ($("#filter_calib_button") !== undefined) $("#filter_calib_button").show();
+            if ($("#afilter_calib_button") !== undefined) $("#afilter_calib_button").show();
+        }else{
+            if ($("#filter_calib_button") !== undefined) $("#filter_calib_button").remove();
+            if ($("#afilter_calib_button") !== undefined) $("#afilter_calib_button").remove();
+        }
     }
 
     OBJ.setModel = function(_value) {
@@ -160,15 +153,15 @@
                     $("#b_auto_menu").text("AUTO AC/DC");
                     $("#b_manual_menu").text("MANUAL AC/DC");
                 }
-                if (OBJ.model !== "Z10" && OBJ.model !== "Z20_125" && OBJ.model !== "Z20_125_4CH") {
-                    $("#filter_calib_button").remove();
-                    $("#afilter_calib_button").remove();
+
+                if (OBJ.is_filter){
+                    if ($("#filter_calib_button") !== undefined) $("#filter_calib_button").show();
+                    if ($("#afilter_calib_button") !== undefined) $("#afilter_calib_button").show();
+                }else{
+                    if ($("#filter_calib_button") !== undefined) $("#filter_calib_button").remove();
+                    if ($("#afilter_calib_button") !== undefined) $("#afilter_calib_button").remove();
                 }
 
-                if (OBJ.model === "Z10" || OBJ.model === "Z20_125" || OBJ.model === "Z20_125_4CH") {
-                    $("#filter_calib_button").show();
-                    $("#afilter_calib_button").show();
-                }
 
                 if (OBJ.model == "Z20"){
                     $('#a_mode').remove();
@@ -354,11 +347,15 @@
                 $('#reset_cancel_btn').on('click', function() {
                     OBJ.filterCalibChange = false;
                     OBJ.adcCalibChange = false;
+                    CLIENT.parametersCache["calib_sig"] = { value: 0 };
+                    CLIENT.requestParameters();
                     OBJ.closeManualMode();
                 });
 
                 $("#dialog_reset").modal('show');
             } else {
+                CLIENT.parametersCache["calib_sig"] = { value: 0 };
+                CLIENT.requestParameters();
                 OBJ.closeManualMode();
             }
         });
@@ -370,6 +367,20 @@
             $('#reset_cancel_btn').off('click');
             $('#reset_ok_btn').on('click', function() {
                 CLIENT.parametersCache["calib_sig"] = { value: 6 };
+                CLIENT.requestParameters();
+            });
+
+            $('#reset_cancel_btn').on('click', function() {});
+            $("#dialog_reset").modal('show');
+        });
+
+        $('#B_DISABLE').on('click', function(ev) {
+
+            $("#dialog_reset_text").text("Set parameters that turn off the filter?");
+            $("#reset_ok_btn").off('click');
+            $('#reset_cancel_btn').off('click');
+            $('#reset_ok_btn').on('click', function() {
+                CLIENT.parametersCache["calib_sig"] = { value: 7 };
                 CLIENT.requestParameters();
             });
 
@@ -392,4 +403,5 @@
 // Page onload event handler
 $(function() {
     SM.param_callbacks["RP_MODEL_STR"] = OBJ.setModel;
+    SM.param_callbacks["IS_FILTER"] = OBJ.isFilter;
 });

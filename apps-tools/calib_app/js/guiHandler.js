@@ -469,6 +469,25 @@ var afilterCalibAmpChange = function(event) {
     }
 }
 
+var filterCalibKKChange = function(event) {
+
+    if (checkIntParameters3("#SS_FILT_KK_VALUE", 0x001FFFFF, 0x00FFFFFF) !== 0) {
+        var x = parseInt($("#SS_FILT_KK_VALUE").val());
+        if (x !== OBJ.filtAutoModeKKDef) {
+            CLIENT.parametersCache["f_init_kk_value"] = { value: x };
+            CLIENT.sendParameters();
+        }
+    }
+}
+
+var afilterCalibKKChange = function(event) {
+    if (checkIntParameters2("#SS_A_FILT_KK_VALUE", 0x001FFFFF, 0x00FFFFFF) !== 0) {
+        var x = parseInt($("#SS_A_FILT_KK_VALUE").val());
+            CLIENT.parametersCache["f_init_kk_value"] = { value: x };
+            CLIENT.sendParameters();
+    }
+}
+
 //Create callback
 var changeCallbacks = {}
 
@@ -512,7 +531,9 @@ changeCallbacks["FILTER_BB"] = filterBBChange;
 changeCallbacks["FILTER_PP"] = filterPPChange;
 changeCallbacks["FILTER_KK"] = filterKKChange;
 changeCallbacks["SS_FILT_REF_VOLT"] = filterCalibAmpChange;
+changeCallbacks["SS_FILT_KK_VALUE"] = filterCalibKKChange;
 changeCallbacks["SS_A_FILT_REF_VOLT"] = afilterCalibAmpChange;
+changeCallbacks["SS_A_FILT_KK_VALUE"] = afilterCalibKKChange;
 
 var clickCallbacks = {}
 

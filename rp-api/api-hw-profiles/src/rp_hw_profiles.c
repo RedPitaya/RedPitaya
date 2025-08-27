@@ -11,6 +11,7 @@
 #include "stem_125_14_Z7020_4IN_v1.0.h"
 #include "stem_125_14_Z7020_4IN_v1.2.h"
 #include "stem_125_14_Z7020_4IN_v1.3.h"
+#include "stem_125_14_Z7020_4IN_BO_v1.3.h"
 #include "stem_250_12_v1.0.h"
 #include "stem_250_12_v1.1.h"
 #include "stem_250_12_v1.2.h"
@@ -20,6 +21,16 @@
 #include "stem_125_14_LN_BO_v1.1.h"
 #include "stem_125_14_LN_CE1_v1.1.h"
 #include "stem_125_14_LN_CE2_v1.1.h"
+#include "stem_125_14_v2.0.h"
+#include "stem_125_14_Pro_v2.0.h"
+#include "stem_125_14_Z7020_Pro_v1.0.h"
+#include "stem_125_14_Z7020_Pro_v2.0.h"
+#include "stem_125_14_Z7020_Ind_v2.0.h"
+#include "stem_125_14_Z7020_LL_v1.1.h"
+#include "stem_65_16_Z7020_LL_v1.1.h"
+#include "stem_125_14_Z7020_LL_v1.2.h"
+#include "stem_125_14_Z7020_TI_v1.3.h"
+#include "stem_65_16_Z7020_TI_v1.3.h"
 
 profiles_t* getProfile(int *state){
     profiles_t *p = hp_cmn_GetLoadedProfile();
@@ -68,6 +79,7 @@ int rp_HPPrintAll(){
     hp_cmn_Print(getProfile_STEM_125_14_Z7020_4IN_v1_0());
     hp_cmn_Print(getProfile_STEM_125_14_Z7020_4IN_v1_2());
     hp_cmn_Print(getProfile_STEM_125_14_Z7020_4IN_v1_3());
+    hp_cmn_Print(getProfile_STEM_125_14_Z7020_4IN_BO_v1_3());
     hp_cmn_Print(getProfile_STEM_250_12_v1_0());
     hp_cmn_Print(getProfile_STEM_250_12_v1_1());
     hp_cmn_Print(getProfile_STEM_250_12_v1_2());
@@ -77,6 +89,16 @@ int rp_HPPrintAll(){
     hp_cmn_Print(getProfile_STEM_125_14_LN_BO_v1_1());
     hp_cmn_Print(getProfile_STEM_125_14_LN_CE1_v1_1());
     hp_cmn_Print(getProfile_STEM_125_14_LN_CE2_v1_1());
+    hp_cmn_Print(getProfile_STEM_125_14_v2_0());
+    hp_cmn_Print(getProfile_STEM_125_14_Pro_v2_0());
+    hp_cmn_Print(getProfile_STEM_125_14_Z7020_Pro_v1_0());
+    hp_cmn_Print(getProfile_STEM_125_14_Z7020_Pro_v2_0());
+    hp_cmn_Print(getProfile_STEM_125_14_Z7020_Ind_v2_0());
+    hp_cmn_Print(getProfile_STEM_125_14_Z7020_LL_v1_1());
+    hp_cmn_Print(getProfile_STEM_125_14_Z7020_LL_v1_2());
+    hp_cmn_Print(getProfile_STEM_65_16_Z7020_LL_v1_1());
+    hp_cmn_Print(getProfile_STEM_125_14_Z7020_TI_v1_3());
+    hp_cmn_Print(getProfile_STEM_65_16_Z7020_TI_v1_3());
     return RP_HP_OK;
 }
 
@@ -133,6 +155,21 @@ int rp_HPGetZynqModel(rp_HPeZynqModels_t *value){
 rp_HPeZynqModels_t rp_HPGetZynqModelOrDefault(){
     profiles_t* p = getProfileDefualt();
     return p->zynqCPUModel;
+}
+
+int rp_HPGetDDRSize(uint32_t *value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->ramMB;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+uint32_t rp_HPGetDDRSizeOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->ramMB;
 }
 
 int rp_HPGetBaseSpeedHz(uint32_t *value){
@@ -368,25 +405,25 @@ uint8_t rp_HPGetFastDACBitsOrDefault(){
     return p->fast_dac_bits;
 }
 
-int rp_HPGetFastDACGain(uint8_t channel,float *value){
+int rp_HPGetFastDACOutFullScale(uint8_t channel,float *value){
     int state;
     profiles_t* p = getProfile(&state);
     if (p){
         if (p->fast_dac_count_channels < channel || channel >= MAX_CHANNELS){
             return RP_HP_ECI;
         }
-        *value = p->fast_dac_gain[channel];
+        *value = p->fast_dac_out_full_scale[channel];
         return RP_HP_OK;
     }
     return state;
 }
 
-float rp_HPGetFastDACGainOrDefault(uint8_t channel){
+float rp_HPGetFastDACOutFullScaleOrDefault(uint8_t channel){
     profiles_t* p = getProfileDefualt();
     if (p->fast_dac_count_channels < channel || channel >= MAX_CHANNELS){
         return 0;
     }
-    return p->fast_dac_gain[channel];
+    return p->fast_dac_out_full_scale[channel];
 }
 
 int rp_HPGetFastADCIsLV_HV(bool *value){
@@ -783,4 +820,99 @@ int rp_HPGetGPIO_P_Count(uint8_t *value){
 uint8_t rp_HPGetGPIO_P_CountOrDefault(){
     profiles_t* p = getProfileDefualt();
     return p->gpio_P_count;
+}
+
+int rp_HPGetIsE3HighSpeedGPIO(bool *value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->is_E3_high_speed_gpio;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+bool rp_HPGetIsE3HighSpeedGPIOOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->is_E3_high_speed_gpio;
+}
+
+int rp_HPGetIsE3HighSpeedGPIORate(uint32_t *value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->E3_high_speed_gpio_rate;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+uint32_t rp_HPGetIsE3HighSpeedGPIORateOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->E3_high_speed_gpio_rate;
+}
+
+int rp_HPGetIsE3QSPIeMMC(bool *value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->is_E3_mmc_qspi;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+bool rp_HPGetIsE3QSPIeMMCOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->is_E3_mmc_qspi;
+}
+
+int rp_HPGetIsE3Present(bool *value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->is_E3_present;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+bool rp_HPGetIsE3PresentOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->is_E3_present;
+}
+
+int rp_HPGetIsCalibInFPGA(bool* value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->is_calib_in_fpga;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+bool rp_HPGetIsCalibInFPGAOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->is_calib_in_fpga;
+}
+
+int rp_HPGetFPGAVersion(const char **_no_free_value){
+    rp_HPeModels_t model;
+    int ret = rp_HPGetModel(&model);
+    if (ret != RP_HP_OK){
+        *_no_free_value = "";
+        return RP_HP_EMU;
+    }
+    return hp_cmn_GetFPGAVersion(model,_no_free_value);
+}
+
+int rp_HPPrintKeys(){
+    hp_cmn_PrintKeyHelp();
+    return RP_HP_OK;
+}
+
+int rp_HPPrintPivotTable(char* keys){
+    hp_cmn_PrintPivotTable(keys);
+    return RP_HP_OK;
 }

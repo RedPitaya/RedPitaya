@@ -49,6 +49,10 @@ res = rp.rp_IdGetDNA()
 print(res)
 
 
+print("rp.rp_GetFreqCounter()")
+res = rp.rp_GetFreqCounter()
+print(res)
+
 print("rp.rp_LEDGetState()")
 res = rp.rp_LEDGetState()
 print(res)
@@ -151,6 +155,26 @@ print("rp.rp_EnableDebugReg()")
 res = rp.rp_EnableDebugReg()
 print(res)
 
+
+print("rp.rp_PrintHouseRegset()")
+res = rp.rp_PrintHouseRegset()
+print(res)
+
+print("rp.rp_PrintOscRegset()")
+res = rp.rp_PrintOscRegset()
+print(res)
+
+print("rp.rp_PrintAsgRegset()")
+res = rp.rp_PrintAsgRegset()
+print(res)
+
+print("rp.rp_PrintAmsRegset()")
+res = rp.rp_PrintAmsRegset()
+print(res)
+
+print("rp.rp_PrintDaisyRegset()")
+res = rp.rp_PrintDaisyRegset()
+print(res)
 
 
 print("rp.rp_ApinReset()")
@@ -256,6 +280,10 @@ print(res)
 
 print("rp.rp_GenOutIsEnabled(rp.RP_CH_1)")
 res = rp.rp_GenOutIsEnabled(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_GenSetAmplitudeAndOffsetOrigin(rp.RP_CH_1)")
+res = rp.rp_GenSetAmplitudeAndOffsetOrigin(rp.RP_CH_1)
 print(res)
 
 print("rp.rp_GenAmp(rp.RP_CH_1,0.5)")
@@ -485,6 +513,10 @@ print("rp.rp_GenTriggerOnly(rp.RP_CH_1)")
 res = rp.rp_GenTriggerOnly(rp.RP_CH_1)
 print(res)
 
+print("rp.rp_GenTriggerOnlyBoth()")
+res = rp.rp_GenTriggerOnlyBoth()
+print(res)
+
 print("rp.rp_SetEnableTempProtection(rp.RP_CH_1,True)")
 res = rp.rp_SetEnableTempProtection(rp.RP_CH_1,True)
 print(res)
@@ -565,6 +597,18 @@ print(res)
 
 print("rp.rp_AcqGetAveraging()")
 res = rp.rp_AcqGetAveraging()
+print(res)
+
+print("rp.rp_AcqSetBypassFilter(rp.RP_CH_1,False)")
+res = rp.rp_AcqSetBypassFilter(rp.RP_CH_1,False)
+print(res)
+
+print("rp.rp_AcqGetBypassFilter(rp.RP_CH_1)")
+res = rp.rp_AcqGetBypassFilter(rp.RP_CH_1)
+print(res)
+
+print("rp.rp_AcqSetCalibInFPGA(rp.RP_CH_1)")
+res = rp.rp_AcqSetCalibInFPGA(rp.RP_CH_1)
 print(res)
 
 print("rp.rp_AcqSetTriggerSrc(rp.RP_TRIG_SRC_DISABLED)")
@@ -953,6 +997,18 @@ print(arr_i16)
 print("rp.rp_AcqAxiGetDataVNP(rp.RP_CH_1,0,arr_f)")
 res = rp.rp_AcqAxiGetDataVNP(rp.RP_CH_1,0,arr_f)
 print(arr_f)
+
+print("rp.rp_AcqAxiGetDataRawDirect(rp.RP_CH_1,trig,128)")
+res = rp.rp_AcqAxiGetDataRawDirect(rp.RP_CH_1,trig, 128)
+print(res)
+
+arrays = []
+for span in res[1]:
+    arr = np.frombuffer(span, dtype=np.int16)
+    arrays.append(arr)
+
+for i, arr in enumerate(arrays):
+    print(arr)
 
 print("End testing numpy")
 

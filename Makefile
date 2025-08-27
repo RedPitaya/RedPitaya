@@ -10,25 +10,25 @@ CPU_CORES = $(shell ./get_cpu_ram.sh)
 # versioning system
 ################################################################################
 
-VER := $(shell cat apps-tools/ecosystem/info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
-BUILD_NUMBER ?= 0
+# Required OS version
+LINUX_VER = 2.07
+BUILD_NUMBER ?= dev
 REVISION ?= $(shell git rev-parse --short HEAD)
-VERSION = $(VER)-$(BUILD_NUMBER)
-LINUX_VER = 2.05
+VERSION = $(LINUX_VER)-$(BUILD_NUMBER)
 export BUILD_NUMBER
 export REVISION
 export VERSION
 export LINUX_VER
 BUILD_MODE ?= Release
 VERBOSE = OFF
-CMAKEVAR=-DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)  -DVERSION=$(VERSION) -DREVISION=$(REVISION) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
+CMAKEVAR=-DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE)  -DVERSION=$(VERSION) -DLINUX_VER=$(LINUX_VER) -DBUILD_NUMBER=$(BUILD_NUMBER) -DREVISION=$(REVISION) -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(VERBOSE)
 ################################################################################
 #
 ################################################################################
 
 CUR_DIR = $(PWD)
 
-all: api nginx examples  apps-tools apps-pro startupsh scpi rp_communication sdr
+all: api nginx examples  apps-tools apps-pro startupsh scpi sdr
 
 
 $(DL):
@@ -46,20 +46,22 @@ LIBRP_HW_DIR    		= rp-api/api-hw
 LIBRP_HW_CAN_DIR  		= rp-api/api-hw-can
 LIBRP_HW_PROFILES_DIR	= rp-api/api-hw-profiles
 LIBRP_HW_CALIB_DIR		= rp-api/api-hw-calib
-LIBRP2_DIR      		= rp-api/api2
+LIBRP_CALIB_DIR		    = rp-api/api-calib
+# LIBRP2_DIR      		= rp-api/api2
 LIBRP250_12_DIR 		= rp-api/api-250-12
 LIBRP_DSP_DIR   		= rp-api/api-dsp
 LIBRP_SWEEP_DIR  		= rp-api/api-sweep
 LIBRPAPP_DIR    		= rp-api/api-app
 LIBRP_FORMATTER_DIR   	= rp-api/api-formatter
 LIBRP_ARB_DIR		   	= rp-api/api-arb
+LIBRP_UPDATER_DIR		= rp-api/api-updater
+LIBRP_LA_DIR		   	= rp-api/api-la
 ECOSYSTEM_DIR   		= Applications/ecosystem
 
-.PHONY: api api2 librp librp250_12 librp_hw librp_dsp librp_hw_profiles librp_hw_calibration librp_hw_can librparb librp_sweep librpapp
+.PHONY: api librp librp250_12 librp_hw librp_dsp librp_hw_profiles librp_hw_calibration librp_hw_can librparb librp_sweep librpapp librpla
 
-api: librp librp_hw librp_hw_can librp_dsp librpapp librp_formatter librparb librp_sweep
-
-api2: librp2
+api: librp librp_hw librp_hw_can librp_dsp librpapp librp_formatter librparb librp_sweep librpla librpupdater librp_calibration
+# api2: librp2
 
 librp: librp250_12 librp_hw_calibration librp_hw_profiles
 	cmake -B$(abspath $(LIBRP_DIR)/build) -S$(abspath $(LIBRP_DIR)) $(CMAKEVAR)
@@ -77,6 +79,10 @@ librp_hw_calibration: librp_hw_profiles
 	cmake -B$(abspath $(LIBRP_HW_CALIB_DIR)/build) -S$(abspath $(LIBRP_HW_CALIB_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(LIBRP_HW_CALIB_DIR)/build install -j$(CPU_CORES)
 
+librp_calibration: librp
+	cmake -B$(abspath $(LIBRP_CALIB_DIR)/build) -S$(abspath $(LIBRP_CALIB_DIR)) $(CMAKEVAR)
+	$(MAKE) -C $(LIBRP_CALIB_DIR)/build install -j$(CPU_CORES)
+
 librp_hw_profiles:
 	cmake -B$(abspath $(LIBRP_HW_PROFILES_DIR)/build) -S$(abspath $(LIBRP_HW_PROFILES_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(LIBRP_HW_PROFILES_DIR)/build install -j$(CPU_CORES)
@@ -93,11 +99,7 @@ librp_formatter: librp
 	cmake -B$(abspath $(LIBRP_FORMATTER_DIR)/build) -S$(abspath $(LIBRP_FORMATTER_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(LIBRP_FORMATTER_DIR)/build install -j$(CPU_CORES)
 
-librp2:
-	cmake -B$(abspath $(LIBRP2_DIR)/build) -S$(abspath $(LIBRP2_DIR)) $(CMAKEVAR)
-	$(MAKE) -C $(LIBRP2_DIR)/build install -j$(CPU_CORES)
-
-librp250_12: librp_hw
+librp250_12: librp_hw librp_hw_profiles
 	cmake -B$(LIBRP250_12_DIR)/build -S$(LIBRP250_12_DIR) $(CMAKEVAR)
 	$(MAKE) -C $(LIBRP250_12_DIR)/build install -j$(CPU_CORES)
 
@@ -109,6 +111,14 @@ librparb: librp
 	cmake -B$(abspath $(LIBRP_ARB_DIR)/build) -S$(abspath $(LIBRP_ARB_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(LIBRP_ARB_DIR)/build install -j$(CPU_CORES)
 
+librpupdater:
+	cmake -B$(abspath $(LIBRP_UPDATER_DIR)/build) -S$(abspath $(LIBRP_UPDATER_DIR)) $(CMAKEVAR)
+	$(MAKE) -C $(LIBRP_UPDATER_DIR)/build install -j$(CPU_CORES)
+
+librpla:  librp
+	cmake -B$(abspath $(LIBRP_LA_DIR)/build) -S$(abspath $(LIBRP_LA_DIR)) $(CMAKEVAR)
+	$(MAKE) -C $(LIBRP_LA_DIR)/build install -j$(CPU_CORES)
+
 
 ################################################################################
 # Web API libraries
@@ -116,18 +126,26 @@ librparb: librp
 
 LIBRP_SYSTEM_DIR	= rp-web-api/rp-system
 LIBRP_CLIENT_DIR	= rp-web-api/rp-client
+LIBRP_WEBSOCKET_DIR	= rp-web-api/rp-websocket
 
-.PHONY: librpsystem librpclient
 
-web-api: librpsystem librpclient
+.PHONY: librpsystem librpclient librpwebsocket
+
+web-api: librpsystem librpclient librpwebsocket
 
 librpsystem: api nginx
 	cmake -B$(abspath $(LIBRP_SYSTEM_DIR)/build) -S$(abspath $(LIBRP_SYSTEM_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(LIBRP_SYSTEM_DIR)/build install -j$(CPU_CORES)
 
-librpclient: api nginx
+librpclient: librpwebsocket api
 	cmake -B$(abspath $(LIBRP_CLIENT_DIR)/build) -S$(abspath $(LIBRP_CLIENT_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(LIBRP_CLIENT_DIR)/build install -j$(CPU_CORES)
+
+librpwebsocket: api
+# Release build mode is enabled because there is not enough RAM when building on RP
+	cmake -B$(abspath $(LIBRP_WEBSOCKET_DIR)/build) -S$(abspath $(LIBRP_WEBSOCKET_DIR)) $(CMAKEVAR) -DCMAKE_BUILD_TYPE=Release
+	$(MAKE) -C $(LIBRP_WEBSOCKET_DIR)/build install
+
 
 ################################################################################
 # Red Pitaya ecosystem
@@ -263,7 +281,7 @@ nginx_clean:
 # SCPI server
 ################################################################################
 
-SCPI_PARSER_TAG = redpitaya
+SCPI_PARSER_TAG = master
 
 SCPI_PARSER_URL = https://github.com/RedPitaya/scpi-parser/archive/$(SCPI_PARSER_TAG).tar.gz
 SCPI_PARSER_TAR = $(DL)/scpi-parser-$(SCPI_PARSER_TAG).tar.gz
@@ -279,60 +297,63 @@ $(SCPI_PARSER_DIR): $(SCPI_PARSER_TAR)
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
 
-scpi: api $(INSTALL_DIR) $(SCPI_PARSER_DIR)
-	$(MAKE) -i -C $(SCPI_SERVER_DIR) clean
-	$(MAKE) -C $(SCPI_SERVER_DIR) MODEL=$(MODEL) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(SCPI_SERVER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+scpi:  $(INSTALL_DIR) $(SCPI_PARSER_DIR) api
+	cmake -B$(abspath $(SCPI_SERVER_DIR)/build) -S$(abspath $(SCPI_SERVER_DIR)) $(CMAKEVAR)
+	$(MAKE) -C $(SCPI_SERVER_DIR)/build install -j$(CPU_CORES)
 
 scpi_clean:
 	rm -rf $(SCPI_PARSER_TAR)
-	$(MAKE) -i -C $(SCPI_SERVER_DIR) clean
+	rm -rf $(abspath $(SCPI_SERVER_DIR)/build)
+	rm -rf $(abspath $(SCPI_PARSER_DIR))
 
 ################################################################################
 # SDR
 ################################################################################
 
-.PHONY: sdr
 
-SDR_ZIP = SDR-bundle-59-1ba76002.zip
+SDR_ZIP = SDR-bundle-60-d3d93652.zip
 SDR_URL = https://downloads.redpitaya.com/hamlab/sdr-bundle/$(SDR_ZIP)
 
 sdr: | $(DL)
-ifeq ($(MODEL),$(filter $(MODEL),Z10))
 	wget $(SDR_URL) -O $(DL)/$(SDR_ZIP) --show-progress
 	mkdir -p $(INSTALL_DIR)/www/apps
 	unzip -o $(DL)/$(SDR_ZIP) -d $(INSTALL_DIR)/www/apps
-endif
 
 ################################################################################
 # Red Pitaya tools
 ################################################################################
 
+LA_DIR             = Test/la
 LCR_DIR            = Test/lcr
 BODE_DIR           = Test/bode
 MONITOR_DIR        = Test/monitor
+PROFILES_DIR       = Test/profiles
 ACQUIRE_DIR        = Test/acquire
 ACQUIRE_P_DIR      = Test/acquire_p
 CALIB_DIR          = Test/calib
+FILTER_CALIB_DIR   = Test/filter_calib
 GENERATOR_DIR	   = Test/generate
 SPECTRUM_DIR       = Test/spectrum
 LED_CONTROL_DIR    = Test/led_control
-COMM_DIR           = Examples/Communication/C
 XADC_DIR           = Test/xadc
-LA_TEST_DIR        = rp-api/api2/test
+UPDATER_DIR        = Test/updater
 DAISY_TOOL_DIR     = Test/daisy_tool
-FPGA_TESTS_DIR     = Examples/Tests
+E3_LED_CON_DIR     = tools/e3_led_controller
 STARTUPSH          = $(INSTALL_DIR)/sbin/startup.sh
 
-.PHONY: examples rp_communication fpgautils
-.PHONY: lcr bode monitor generator acquire acquire_p calib laboardtest spectrum led_control daisy_tool fpga_tests
+.PHONY: examples fpgautils
+.PHONY: lcr bode monitor profiles generator acquire acquire_p calib spectrum led_control daisy_tool la e3_led_controller updater_tool filter_calib
 
-examples: lcr bode monitor calib spectrum acquire acquire_p generator led_control fpgautils daisy_tool fpga_tests
+examples: lcr bode monitor profiles calib spectrum acquire acquire_p generator led_control fpgautils daisy_tool la e3_led_controller updater_tool filter_calib
 
 
 lcr: api
 	cmake -B$(abspath $(LCR_DIR)/build) -S$(abspath $(LCR_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(LCR_DIR)/build install -j$(CPU_CORES)
+
+la: api
+	cmake -B$(abspath $(LA_DIR)/build) -S$(abspath $(LA_DIR)) $(CMAKEVAR)
+	$(MAKE) -C $(LA_DIR)/build install -j$(CPU_CORES)
 
 bode: api
 	cmake -B$(abspath $(BODE_DIR)/build) -S$(abspath $(BODE_DIR)) $(CMAKEVAR)
@@ -341,6 +362,10 @@ bode: api
 monitor: api
 	cmake -B$(abspath $(MONITOR_DIR)/build) -S$(abspath $(MONITOR_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(MONITOR_DIR)/build install -j$(CPU_CORES)
+
+profiles: api
+	cmake -B$(abspath $(PROFILES_DIR)/build) -S$(abspath $(PROFILES_DIR)) $(CMAKEVAR)
+	$(MAKE) -C $(PROFILES_DIR)/build install -j$(CPU_CORES)
 
 generator: api
 	cmake -B$(abspath $(GENERATOR_DIR)/build) -S$(abspath $(GENERATOR_DIR)) $(CMAKEVAR)
@@ -358,6 +383,10 @@ calib: api
 	cmake -B$(abspath $(CALIB_DIR)/build) -S$(abspath $(CALIB_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(CALIB_DIR)/build install -j$(CPU_CORES)
 
+filter_calib: api
+	cmake -B$(abspath $(FILTER_CALIB_DIR)/build) -S$(abspath $(FILTER_CALIB_DIR)) $(CMAKEVAR)
+	$(MAKE) -C $(FILTER_CALIB_DIR)/build install -j$(CPU_CORES)
+
 daisy_tool: api
 	cmake -B$(abspath $(DAISY_TOOL_DIR)/build) -S$(abspath $(DAISY_TOOL_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(DAISY_TOOL_DIR)/build install -j$(CPU_CORES)
@@ -370,24 +399,17 @@ led_control: api
 	cmake -B$(abspath $(LED_CONTROL_DIR)/build) -S$(abspath $(LED_CONTROL_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(LED_CONTROL_DIR)/build install -j$(CPU_CORES)
 
-laboardtest: api2
-	$(MAKE) -C $(LA_TEST_DIR) clean
-	$(MAKE) -C $(LA_TEST_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	mkdir -p $(abspath $(INSTALL_DIR))/bin
-	cp rp-api/api2/test/laboardtest $(abspath $(INSTALL_DIR))/bin/laboardtest
-	cp rp-api/api2/test/install.sh $(abspath $(INSTALL_DIR))/install.sh
-
-rp_communication:
-	make -C $(COMM_DIR)
-
 fpgautils:
 	mkdir -p $(abspath $(INSTALL_DIR))/bin
 	$(CC) tools/fpgautils/fpgautil.c -o $(abspath $(INSTALL_DIR))/bin/fpgautil
 
-fpga_tests: api
-	$(MAKE) -C $(FPGA_TESTS_DIR) clean
-	$(MAKE) -C $(FPGA_TESTS_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(FPGA_TESTS_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+e3_led_controller: api
+	cmake -B$(abspath $(E3_LED_CON_DIR)/build) -S$(abspath $(E3_LED_CON_DIR)) $(CMAKEVAR)
+	$(MAKE) -C $(E3_LED_CON_DIR)/build install -j$(CPU_CORES)
+
+updater_tool: librpupdater librpwebsocket
+	cmake -B$(abspath $(UPDATER_DIR)/build) -S$(abspath $(UPDATER_DIR)) $(CMAKEVAR)
+	$(MAKE) -C $(UPDATER_DIR)/build install -j$(CPU_CORES)
 
 startupsh:
 	cp -f patches/startup/startup.sh $(STARTUPSH)
@@ -414,10 +436,10 @@ apps-tools: ecosystem updater network_manager scpi_manager streaming_manager jup
 
 
 ecosystem:
-	$(MAKE) -C $(APP_ECOSYSTEM_DIR) clean
-	$(MAKE) -C $(APP_ECOSYSTEM_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	cmake -B$(abspath $(APP_ECOSYSTEM_DIR)/build) -S$(abspath $(APP_ECOSYSTEM_DIR)) $(CMAKEVAR)
+	$(MAKE) -C $(APP_ECOSYSTEM_DIR)/build install -j$(CPU_CORES)
 
-updater: ecosystem web-api $(NGINX)
+updater: web-api
 	cmake -B$(abspath $(APP_UPDATER_DIR)/build) -S$(abspath $(APP_UPDATER_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(APP_UPDATER_DIR)/build install -j$(CPU_CORES)
 
@@ -429,14 +451,14 @@ arb_manager: ecosystem web-api api $(NGINX)
 	cmake -B$(abspath $(APP_ARB_MANAGER_DIR)/build) -S$(abspath $(APP_ARB_MANAGER_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(APP_ARB_MANAGER_DIR)/build install -j$(CPU_CORES)
 
-scpi_manager: ecosystem web-api api $(NGINX)
+scpi_manager:
 	cmake -B$(abspath $(APP_SCPIMANAGER_DIR)/build) -S$(abspath $(APP_SCPIMANAGER_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(APP_SCPIMANAGER_DIR)/build install -j$(CPU_CORES)
 
 streaming_manager: web-api api $(NGINX)
 	$(MAKE) -i -C $(APP_STREAMINGMANAGER_DIR) clean
-	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) BUILD_NUMBER=$(BUILD_NUMBER)
+	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR)) BUILD_NUMBER=$(BUILD_NUMBER)
 
 calib_app: web-api api  $(NGINX)
 	cmake -B$(abspath $(APP_CALIB_DIR)/build) -S$(abspath $(APP_CALIB_DIR)) $(CMAKEVAR)
@@ -447,32 +469,9 @@ network_manager: ecosystem
 	$(MAKE) -C $(APP_NETWORKMANAGER_DIR)/build install -j$(CPU_CORES)
 
 jupyter_manager:
-	$(MAKE) -C $(APP_JUPYTERMANAGER_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
+	cmake -B$(abspath $(APP_JUPYTERMANAGER_DIR)/build) -S$(abspath $(APP_JUPYTERMANAGER_DIR)) $(CMAKEVAR)
+	$(MAKE) -C $(APP_JUPYTERMANAGER_DIR)/build install -j$(CPU_CORES)
 
-################################################################################
-# Red Pitaya ecosystem and free applications
-################################################################################
-
-APPS_FREE_DIR = apps-free
-VNA_DIR = $(APPS_FREE_DIR)/stemlab_vna
-
-.PHONY: apps-free
-
-apps-free: lcr bode
-	$(MAKE) -C $(APPS_FREE_DIR) clean
-	$(MAKE) -C $(APPS_FREE_DIR) all INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(APPS_FREE_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
-
-apps-free-vna: api2
-ifeq ($(MODEL),$(filter $(MODEL),Z10))
-	$(MAKE) -C $(VNA_DIR) clean
-	$(MAKE) -C $(VNA_DIR) all INSTALL_DIR=$(abspath $(INSTALL_DIR))
-	$(MAKE) -C $(VNA_DIR) install INSTALL_DIR=$(abspath $(INSTALL_DIR))
-endif
-
-apps-free-clean:
-	$(MAKE) -i -C $(APPS_FREE_DIR) clean
-	$(MAKE) -i -C $(VNA_DIR) clean
 
 ################################################################################
 # Red Pitaya applications
@@ -501,7 +500,7 @@ lcr_meter: web-api api $(NGINX)
 	cmake -B$(abspath $(APP_LCRMETER_DIR)/build) -S$(abspath $(APP_LCRMETER_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(APP_LCRMETER_DIR)/build install -j$(CPU_CORES)
 
-la_pro: web-api api api2 $(NGINX)
+la_pro: web-api api $(NGINX)
 	cmake -B$(abspath $(APP_LA_PRO_DIR)/build) -S$(abspath $(APP_LA_PRO_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(APP_LA_PRO_DIR)/build install -j$(CPU_CORES)
 
@@ -522,7 +521,7 @@ impedance_analyzer: web-api api $(NGINX)
 clean: nginx_clean scpi_clean
 
 	rm -rf $(abspath $(LIBRP_DIR)/build)
-	rm -rf $(abspath $(LIBRP2_DIR)/build)
+#	rm -rf $(abspath $(LIBRP2_DIR)/build)
 	rm -rf $(abspath $(LIBRP_HW_DIR)/build)
 	rm -rf $(abspath $(LIBRP_HW_CAN_DIR)/build)
 	rm -rf $(abspath $(LIBRP_HW_PROFILES_DIR)/build)
@@ -531,23 +530,34 @@ clean: nginx_clean scpi_clean
 	rm -rf $(abspath $(LIBRP_SWEEP_DIR)/build)
 	rm -rf $(abspath $(LIBRP_FORMATTER_DIR)/build)
 	rm -rf $(abspath $(LIBRP_HW_CALIB_DIR)/build)
+	rm -rf $(abspath $(LIBRP_LA_DIR)/build)
+	rm -rf $(abspath $(LIBRP_CALIB_DIR)/build)
 	rm -rf $(abspath $(LIBRP_ARB_DIR)/build)
+	rm -rf $(abspath $(LIBRP_UPDATER_DIR)/build)
 
 	rm -rf $(abspath $(LIBRP_SYSTEM_DIR)/build)
 	rm -rf $(abspath $(LIBRP_CLIENT_DIR)/build)
+	rm -rf $(abspath $(LIBRP_WEBSOCKET_DIR)/build)
 
 	rm -rf $(abspath $(LCR_DIR)/build)
+	rm -rf $(abspath $(LA_DIR)/build)
 	rm -rf $(abspath $(CALIB_DIR)/build)
+	rm -rf $(abspath $(FILTER_CALIB_DIR)/build)
 	rm -rf $(abspath $(BODE_DIR)/build)
 	rm -rf $(abspath $(ACQUIRE_DIR)/build)
 	rm -rf $(abspath $(ACQUIRE_P_DIR)/build)
 	rm -rf $(abspath $(DAISY_TOOL_DIR)/build)
 	rm -rf $(abspath $(GENERATOR_DIR)/build)
 	rm -rf $(abspath $(LED_CONTROL_DIR)/build)
+	rm -rf $(abspath $(UPDATER_DIR)/build)
 	rm -rf $(abspath $(MONITOR_DIR)/build)
+	rm -rf $(abspath $(PROFILES_DIR)/build)
 	rm -rf $(abspath $(SPECTRUM_DIR)/build)
 	rm -rf $(abspath $(LIBRPAPP_DIR)/build)
+	rm -rf $(abspath $(E3_LED_CON_DIR)/build)
 
+
+	rm -rf $(abspath $(APP_ECOSYSTEM_DIR)/build)
 	rm -rf $(abspath $(APP_ARB_MANAGER_DIR)/build)
 	rm -rf $(abspath $(APP_BA_PRO_DIR)/build)
 	rm -rf $(abspath $(APP_CALIB_DIR)/build)
@@ -560,13 +570,11 @@ clean: nginx_clean scpi_clean
 	rm -rf $(abspath $(APP_SCPIMANAGER_DIR)/build)
 	rm -rf $(abspath $(APP_SPECTRUMPRO_DIR)/build)
 	rm -rf $(abspath $(APP_UPDATER_DIR)/build)
+	rm -rf $(abspath $(APP_JUPYTERMANAGER_DIR)/build)
+
 
 	$(MAKE) -C $(NGINX_DIR) clean
-	$(MAKE) -C $(SCPI_SERVER_DIR) clean
-	$(MAKE) -C $(COMM_DIR) clean
 	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) clean
-	$(MAKE) -C $(IDGEN_DIR) clean
-	$(MAKE) -C $(FPGA_TESTS_DIR) clean
 
 	rm -rf $(DL)
 

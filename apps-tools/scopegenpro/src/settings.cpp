@@ -1,20 +1,20 @@
 #include "settings.h"
 
-#include <vector>
-#include <string>
-#include <fstream>
-#include <sstream>
 #include <algorithm>
+#include <cstdio>
+#include <fstream>
+#include <iostream>
 #include <istream>
 #include <iterator>
-#include <iostream>
-#include <cstdio>
 #include <mutex>
+#include <sstream>
+#include <string>
+#include <vector>
 
-#include <sys/sysinfo.h>
-#include <unistd.h>
 #include <pwd.h>
 #include <sys/stat.h>
+#include <sys/sysinfo.h>
+#include <unistd.h>
 #include <filesystem>
 
 bool g_disableSaveSettings = false;
@@ -24,7 +24,7 @@ std::string g_workDirectory = "";
 const std::string default_config_name = "config.json";
 
 // Check the path is a directory.
-auto isDirectory(const std::string &_path) -> bool {
+auto isDirectory(const std::string& _path) -> bool {
     struct stat st;
 
     if (stat(_path.c_str(), &st) == 0) {
@@ -35,11 +35,11 @@ auto isDirectory(const std::string &_path) -> bool {
 }
 
 // Creates the directory and subdirectories if needed.
-auto createDirectory(const std::string &_path) -> bool {
+auto createDirectory(const std::string& _path) -> bool {
     size_t pos = 0;
 
     for (;;) {
-        pos =  _path.find('/', pos);
+        pos = _path.find('/', pos);
 
         if (pos == std::string::npos) {
             // Create the last directory
@@ -71,20 +71,20 @@ auto createDirectory(const std::string &_path) -> bool {
     return false;
 }
 
-auto deleteConfig() -> bool{
+auto deleteConfig() -> bool {
     std::lock_guard lock(g_mutex);
     g_disableSaveSettings = true;
     std::string path = getHomeDirectory() + g_workDirectory + default_config_name;
     return std::remove(path.c_str()) == 0;
 }
 
-auto deleteStoredConfig(const std::string &fileName) -> bool{
+auto deleteStoredConfig(const std::string& fileName) -> bool {
     std::lock_guard lock(g_mutex);
-    std::string path = getHomeDirectory() + g_workDirectory + "saved/" +  fileName;
+    std::string path = getHomeDirectory() + g_workDirectory + "saved/" + fileName;
     return std::remove(path.c_str()) == 0;
 }
 
-auto setHomeSettingsPath(std::string _path) -> void{
+auto setHomeSettingsPath(std::string _path) -> void {
     g_workDirectory = _path;
 }
 
@@ -92,7 +92,7 @@ auto getHomeDirectory() -> std::string {
     // Use getpwuid
     char buf[1024];
     passwd pw;
-    passwd *ppw = nullptr;
+    passwd* ppw = nullptr;
 
     if (getpwuid_r(getuid(), &pw, buf, sizeof(buf), &ppw) == 0) {
         return pw.pw_dir;
@@ -113,33 +113,33 @@ auto configGet() -> void {
         try {
             JSONNode root_node = libjson::parse(buffer.str());
 
-            for (const JSONNode &node : root_node) {
+            for (const JSONNode& node : root_node) {
                 switch (node.type()) {
-                    case JSON_STRING:{
+                    case JSON_STRING: {
                         auto par = CDataManager::GetInstance()->GetByName<CStringParameter>(node.name());
-                        if (par!=nullptr){
+                        if (par != nullptr) {
                             par->Set(node.as_string());
                         }
                         break;
                     }
-                    case JSON_BOOL:{
+                    case JSON_BOOL: {
                         auto par = CDataManager::GetInstance()->GetByName<CBooleanParameter>(node.name());
-                        if (par!=nullptr){
+                        if (par != nullptr) {
                             par->SendValue(node.as_bool());
                         }
                         break;
                     }
-                    case JSON_NUMBER:{
+                    case JSON_NUMBER: {
                         auto par = CDataManager::GetInstance()->GetByName<CIntParameter>(node.name());
-                        if (par!=nullptr){
+                        if (par != nullptr) {
                             par->SendValue(node.as_int());
                         }
                         auto parF = CDataManager::GetInstance()->GetByName<CFloatParameter>(node.name());
-                        if (parF!=nullptr){
+                        if (parF != nullptr) {
                             parF->SendValue(node.as_float());
                         }
                         auto parD = CDataManager::GetInstance()->GetByName<CDoubleParameter>(node.name());
-                        if (parD!=nullptr){
+                        if (parD != nullptr) {
                             parD->SendValue((double)node.as_float());
                         }
                         break;
@@ -148,19 +148,20 @@ auto configGet() -> void {
                         break;
                 }
             }
-        } catch (std::invalid_argument &) {
+        } catch (std::invalid_argument&) {
             // Parse error
-            ERROR("JSON parse error");
+            ERROR_LOG("JSON parse error");
         }
     } else {
-        ERROR("Can not open \"%s\"", path.c_str());
+        ERROR_LOG("Can not open \"%s\"", path.c_str());
     }
 }
 
-auto configSetWithList(const std::vector<std::string> &_parameters) -> bool {
+auto configSetWithList(const std::vector<std::string>& _parameters) -> bool {
 
     std::lock_guard lock(g_mutex);
-    if (g_disableSaveSettings) return false;
+    if (g_disableSaveSettings)
+        return false;
     std::string directory = getHomeDirectory() + g_workDirectory;
     if (createDirectory(directory)) {
         std::ofstream stream(directory + "/" + default_config_name, std::ios_base::out | std::ios_base::trunc | std::ios_base::binary);
@@ -174,29 +175,30 @@ auto configSetWithList(const std::vector<std::string> &_parameters) -> bool {
             // float out2A = NO_INIT;
 
             auto x = CDataManager::GetInstance()->GetParametersList();
-            for(CBaseParameter* i : *x){
-                if (!(std::find(_parameters.begin(), _parameters.end(), i->GetName()) != _parameters.end())) continue;
+            for (CBaseParameter* i : *x) {
+                if (!(std::find(_parameters.begin(), _parameters.end(), i->GetName()) != _parameters.end()))
+                    continue;
 
                 CIntParameter* intPar = dynamic_cast<CIntParameter*>(i);
-                if (intPar != nullptr && intPar->Tag() == CONFIG_VAR){
+                if (intPar != nullptr && intPar->Tag() == CONFIG_VAR) {
                     root_node.push_back(JSONNode(i->GetName(), intPar->Value()));
                 }
                 CFloatParameter* intParF = dynamic_cast<CFloatParameter*>(i);
-                if (intParF != nullptr  && intParF->Tag() == CONFIG_VAR){
+                if (intParF != nullptr && intParF->Tag() == CONFIG_VAR) {
                     root_node.push_back(JSONNode(i->GetName(), intParF->Value()));
                 }
 
                 CDoubleParameter* intParD = dynamic_cast<CDoubleParameter*>(i);
-                if (intParD != nullptr  && intParD->Tag() == CONFIG_VAR){
+                if (intParD != nullptr && intParD->Tag() == CONFIG_VAR) {
                     root_node.push_back(JSONNode(i->GetName(), (float)intParD->Value()));
                 }
 
                 CBooleanParameter* intParB = dynamic_cast<CBooleanParameter*>(i);
-                if (intParB != nullptr  && intParB->Tag() == CONFIG_VAR){
+                if (intParB != nullptr && intParB->Tag() == CONFIG_VAR) {
                     root_node.push_back(JSONNode(i->GetName(), intParB->Value()));
                 }
                 CStringParameter* intParS = dynamic_cast<CStringParameter*>(i);
-                if (intParS != nullptr  && intParS->Tag() == CONFIG_VAR){
+                if (intParS != nullptr && intParS->Tag() == CONFIG_VAR) {
                     root_node.push_back(JSONNode(i->GetName(), intParS->Value()));
                 }
             }
@@ -209,11 +211,11 @@ auto configSetWithList(const std::vector<std::string> &_parameters) -> bool {
     return false;
 }
 
-
 // Writes the configuration file
 auto configSet() -> bool {
     std::lock_guard lock(g_mutex);
-    if (g_disableSaveSettings) return false;
+    if (g_disableSaveSettings)
+        return false;
     std::string directory = getHomeDirectory() + g_workDirectory;
     if (createDirectory(directory)) {
         std::ofstream stream(directory + "/" + default_config_name, std::ios_base::out | std::ios_base::trunc | std::ios_base::binary);
@@ -227,29 +229,29 @@ auto configSet() -> bool {
             // float out2A = NO_INIT;
 
             auto x = CDataManager::GetInstance()->GetParametersList();
-            for(CBaseParameter* i : *x){
-                    CIntParameter* intPar = dynamic_cast<CIntParameter*>(i);
-                    if (intPar != nullptr && intPar->Tag() == CONFIG_VAR){
-                        root_node.push_back(JSONNode(i->GetName(), intPar->Value()));
-                    }
-                    CFloatParameter* intParF = dynamic_cast<CFloatParameter*>(i);
-                    if (intParF != nullptr  && intParF->Tag() == CONFIG_VAR){
-                        root_node.push_back(JSONNode(i->GetName(), intParF->Value()));
-                    }
+            for (CBaseParameter* i : *x) {
+                CIntParameter* intPar = dynamic_cast<CIntParameter*>(i);
+                if (intPar != nullptr && intPar->Tag() == CONFIG_VAR) {
+                    root_node.push_back(JSONNode(i->GetName(), intPar->Value()));
+                }
+                CFloatParameter* intParF = dynamic_cast<CFloatParameter*>(i);
+                if (intParF != nullptr && intParF->Tag() == CONFIG_VAR) {
+                    root_node.push_back(JSONNode(i->GetName(), intParF->Value()));
+                }
 
-                    CDoubleParameter* intParD = dynamic_cast<CDoubleParameter*>(i);
-                    if (intParD != nullptr  && intParD->Tag() == CONFIG_VAR){
-                        root_node.push_back(JSONNode(i->GetName(), (float)intParD->Value()));
-                    }
+                CDoubleParameter* intParD = dynamic_cast<CDoubleParameter*>(i);
+                if (intParD != nullptr && intParD->Tag() == CONFIG_VAR) {
+                    root_node.push_back(JSONNode(i->GetName(), (float)intParD->Value()));
+                }
 
-                    CBooleanParameter* intParB = dynamic_cast<CBooleanParameter*>(i);
-                    if (intParB != nullptr  && intParB->Tag() == CONFIG_VAR){
-                        root_node.push_back(JSONNode(i->GetName(), intParB->Value()));
-                    }
-                    CStringParameter* intParS = dynamic_cast<CStringParameter*>(i);
-                    if (intParS != nullptr  && intParS->Tag() == CONFIG_VAR){
-                        root_node.push_back(JSONNode(i->GetName(), intParS->Value()));
-                    }
+                CBooleanParameter* intParB = dynamic_cast<CBooleanParameter*>(i);
+                if (intParB != nullptr && intParB->Tag() == CONFIG_VAR) {
+                    root_node.push_back(JSONNode(i->GetName(), intParB->Value()));
+                }
+                CStringParameter* intParS = dynamic_cast<CStringParameter*>(i);
+                if (intParS != nullptr && intParS->Tag() == CONFIG_VAR) {
+                    root_node.push_back(JSONNode(i->GetName(), intParS->Value()));
+                }
             }
 
             stream << root_node.write_formatted();
@@ -262,51 +264,50 @@ auto configSet() -> bool {
 
 auto isChanged() -> bool {
     auto x = CDataManager::GetInstance()->GetParametersList();
-    for(CBaseParameter* i : *x){
+    for (CBaseParameter* i : *x) {
         CIntParameter* intPar = dynamic_cast<CIntParameter*>(i);
-        if (intPar != nullptr && intPar->Tag() == CONFIG_VAR && intPar->IsNewValue()){
+        if (intPar != nullptr && intPar->Tag() == CONFIG_VAR && intPar->IsNewValue()) {
             return true;
         }
         CFloatParameter* intParF = dynamic_cast<CFloatParameter*>(i);
-        if (intParF != nullptr  && intParF->Tag() == CONFIG_VAR && intParF->IsNewValue()){
+        if (intParF != nullptr && intParF->Tag() == CONFIG_VAR && intParF->IsNewValue()) {
             return true;
         }
         CDoubleParameter* intParD = dynamic_cast<CDoubleParameter*>(i);
-        if (intParD != nullptr  && intParD->Tag() == CONFIG_VAR && intParD->IsNewValue()){
+        if (intParD != nullptr && intParD->Tag() == CONFIG_VAR && intParD->IsNewValue()) {
             return true;
         }
         CBooleanParameter* intParB = dynamic_cast<CBooleanParameter*>(i);
-        if (intParB != nullptr  && intParB->Tag() == CONFIG_VAR && intParB->IsNewValue()){
+        if (intParB != nullptr && intParB->Tag() == CONFIG_VAR && intParB->IsNewValue()) {
             return true;
         }
         CStringParameter* intParS = dynamic_cast<CStringParameter*>(i);
-        if (intParS != nullptr  && intParS->Tag() == CONFIG_VAR && intParS->IsNewValue()){
+        if (intParS != nullptr && intParS->Tag() == CONFIG_VAR && intParS->IsNewValue()) {
             return true;
         }
     }
     return false;
 }
 
-auto loadSettingsFromStore(const std::string &_fileName)  -> bool{
+auto loadSettingsFromStore(const std::string& _fileName) -> bool {
     std::string directory = getHomeDirectory() + g_workDirectory;
     std::string directoryForSave = getHomeDirectory() + g_workDirectory + "saved/";
     if (createDirectory(directoryForSave)) {
-        return std::filesystem::copy_file(directoryForSave + _fileName, directory + default_config_name,std::filesystem::copy_options::overwrite_existing);
+        return std::filesystem::copy_file(directoryForSave + _fileName, directory + default_config_name, std::filesystem::copy_options::overwrite_existing);
     }
     return false;
 }
 
-
-auto saveCurrentSettingToStore(const std::string &_newFileName) -> bool{
+auto saveCurrentSettingToStore(const std::string& _newFileName) -> bool {
     std::string directory = getHomeDirectory() + g_workDirectory;
     std::string directoryForSave = getHomeDirectory() + g_workDirectory + "saved/";
     if (createDirectory(directoryForSave)) {
-        return std::filesystem::copy_file(directory + default_config_name,directoryForSave + _newFileName,std::filesystem::copy_options::overwrite_existing);
+        return std::filesystem::copy_file(directory + default_config_name, directoryForSave + _newFileName, std::filesystem::copy_options::overwrite_existing);
     }
     return false;
 }
 
-auto deleteSettingInStore(const std::string &_newFileName) -> bool{
+auto deleteSettingInStore(const std::string& _newFileName) -> bool {
     std::string directoryForSave = getHomeDirectory() + g_workDirectory + "saved/";
     if (createDirectory(directoryForSave)) {
         return std::filesystem::remove(directoryForSave + _newFileName);
@@ -314,12 +315,12 @@ auto deleteSettingInStore(const std::string &_newFileName) -> bool{
     return false;
 }
 
-auto getListOfSettingsInStore() -> std::string{
+auto getListOfSettingsInStore() -> std::string {
     std::string list;
     std::string directoryForSave = getHomeDirectory() + g_workDirectory + "saved/";
     if (createDirectory(directoryForSave)) {
-        for (auto const& dir_entry : std::filesystem::directory_iterator{directoryForSave}){
-            if (dir_entry.is_regular_file()){
+        for (auto const& dir_entry : std::filesystem::directory_iterator{directoryForSave}) {
+            if (dir_entry.is_regular_file()) {
                 list += dir_entry.path().filename().c_str();
                 list += "\n";
             }
@@ -327,4 +328,3 @@ auto getListOfSettingsInStore() -> std::string{
     }
     return list;
 }
-

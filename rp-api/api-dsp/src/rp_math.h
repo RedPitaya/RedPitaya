@@ -10,23 +10,13 @@
  * for more details on the language used herein.
  */
 
-
 #ifndef __RP_MATH_H__
 #define __RP_MATH_H__
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 float log10f_neon(float x);
 float sqrtf_neon(float x);
 
-void memcpy_neon(volatile void *dst, volatile const void *src, size_t n);
-void memcpy_stride_8bit_neon(volatile void *dst, volatile const void *src, size_t n);
-
-#ifdef __cplusplus
-}
-#endif
+void memcpy_neon(volatile void* dst, volatile const void* src, size_t n);
+void memcpy_stride_8bit_neon(volatile void* dst, volatile const void* src, size_t n);
 
 #endif
-

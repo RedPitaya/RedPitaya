@@ -37,6 +37,18 @@ print(rp_sweep.rp_SWSetMode(rp.RP_CH_1,rp.RP_GEN_SWEEP_MODE_LOG))
 print("rp_sweep.rp_SWGetMode(rp.RP_CH_1)")
 print(rp_sweep.rp_SWGetMode(rp.RP_CH_1))
 
+print("rp_sweep.rp_SWSetMode(rp.RP_CH_1,rp.RP_GEN_SWEEP_MODE_LOG)")
+print(rp_sweep.rp_SWSetMode(rp.RP_CH_1,rp.RP_GEN_SWEEP_MODE_LOG))
+
+print("rp_sweep.rp_SWGetMode(rp.RP_CH_1)")
+print(rp_sweep.rp_SWGetMode(rp.RP_CH_1))
+
+print("rp_sweep.rp_SWSetNumberOfRepetitions(rp.RP_CH_1,False,10)")
+print(rp_sweep.rp_SWSetNumberOfRepetitions(rp.RP_CH_1,False,10))
+
+print("rp_sweep.rp_SWGetNumberOfRepetitions(rp.RP_CH_1)")
+print(rp_sweep.rp_SWGetNumberOfRepetitions(rp.RP_CH_1))
+
 print("rp_sweep.rp_SWSetDir(rp.RP_CH_1,rp.RP_GEN_SWEEP_DIR_UP_DOWN)")
 print(rp_sweep.rp_SWSetDir(rp.RP_CH_1,rp.RP_GEN_SWEEP_DIR_UP_DOWN))
 

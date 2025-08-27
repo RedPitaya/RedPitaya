@@ -1,0 +1,8 @@
+{
+	"acq_speed" : 4000000,
+	"fast_bitrate" : 250000,
+	"invert_bit" : 0,
+	"nominal_bitrate" : 125000,
+	"rx" : 3,
+	"sample_point" : 80
+}

@@ -2,8 +2,7 @@ cmake_minimum_required(VERSION 3.14)
 
 set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
-set(CMAKE_CXX_STANDARD 11)
-set(C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 
 project(calib)
@@ -13,17 +12,22 @@ if(NOT DEFINED INSTALL_DIR)
 endif()
 
 if(NOT DEFINED VERSION)
-  set(VERSION 0)
+    set(VERSION dev)
 endif()
 
 if(NOT DEFINED REVISION)
-  set(REVISION devbuild)
+    set(REVISION devbuild)
 endif()
 
+if(NOT DEFINED BUILD_NUMBER)
+  set(BUILD_NUMBER devbuild)
+endif()
 
 message(STATUS "Install path ${INSTALL_DIR}")
 message(STATUS "VERSION=${VERSION}")
 message(STATUS "REVISION=${REVISION}")
+message(STATUS "BUILD_NUMBER=${BUILD_NUMBER}")
+message(STATUS "LINUX_VER=${LINUX_VER}")
 
 message(STATUS "Compiler C path: ${CMAKE_C_COMPILER}")
 message(STATUS "Compiler C ID: ${CMAKE_C_COMPILER_ID}")
@@ -40,22 +44,23 @@ list(APPEND r_paths
     /opt/redpitaya/lib/web
 )
 
-set(CMAKE_INSTALL_RPATH ${r_paths})
+# set(CMAKE_INSTALL_RPATH ${r_paths})
 
 include_directories(${INSTALL_DIR}/include)
 
-file(GLOB SOURCES "src/*.c")
+file(GLOB SOURCES "src/*.cpp")
 file(GLOB RP_HEADERS "src/*.h")
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
+add_compile_options($<$<CONFIG:Debug>:-DTRACE_ENABLE>)
 add_compile_options(-Wall -pedantic -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os>)
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 
 target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib)
-target_link_libraries(${PROJECT_NAME} PRIVATE rp-hw-calib rp-hw-profiles m)
+target_link_libraries(${PROJECT_NAME} PRIVATE -static rp-hw-calib rp-hw-profiles m)
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${INSTALL_DIR}/bin)
 

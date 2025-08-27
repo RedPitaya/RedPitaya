@@ -20,10 +20,9 @@ SDKOBJDIR=$(OBJDIR)/rp_sdk
 
 CRYPTO_DIR=../../../../tools/cryptopp
 CRYPTO_INSTALL_DIR=../../../../tools/build
-DECODERS_DIR=../../../../../Applications/la_pro/src/
 
 CXX=$(CROSS_COMPILE)g++
-CXXFLAGS=-c -s -Wall -Wno-reorder -Wno-cpp -Os -static -std=c++17 -fPIC -I$(LIBJSON_DIR) -DNDEBUG -I../../../../tools -I$(DECODERS_DIR) -I.
+CXXFLAGS=-c -s -Wall -Wno-reorder -Wno-cpp -Os -static -std=c++17 -fPIC -I$(LIBJSON_DIR) -DNDEBUG -I../../../../tools -I.
 
 ifeq ($(DIGITAL_LOOP),true)
 CXXFLAGS+=-DIGITAL_LOOP
