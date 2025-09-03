@@ -291,7 +291,7 @@ then
   setenv zynq z7020
 fi
 
-if test ${hw_rev} == 'STEM_125-14_Z7020_TI_v1.3'
+if test ${hw_rev} == 'STEM_125-14_TI_v1.3'
 then
   setenv bootargs ${bootargs} mem=512M
   setenv high     0x20000000
