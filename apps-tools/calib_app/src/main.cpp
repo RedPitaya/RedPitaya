@@ -29,6 +29,8 @@
 #include "common.h"
 #include "web/rp_client.h"
 
+#include "eeprom_window.h"
+
 using namespace rp_calib;
 
 CFilter_logic::Ptr g_filter_logic = nullptr;
@@ -69,19 +71,23 @@ std::mutex g_mtx;
 
 CStringParameter redpitaya_model("RP_MODEL_STR", CBaseParameter::RO, getModelName(), 10);
 
-// Parameters for AUTO mode
+// Parameters for AUTO and MANUAL mode
 CFloatParameter ch_min[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_min", CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
 CFloatParameter ch_max[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_max", CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
 CFloatParameter ch_avg[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_avg", CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
+CFloatParameter ch_mean[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_mean", CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
 CFloatParameter ch_p_p[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_p_p", CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
 CFloatParameter ch_per_buff[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_perBuff", CBaseParameter::ROSA, 0, 0, -1e6f, +1e6f);
 CBooleanParameter ch_is_sine[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_issine", CBaseParameter::ROSA, false, 0);
+CBooleanParameter ch_is_fpga[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_is_fpga", CBaseParameter::ROSA, false, 0);
 
 CIntParameter ch_calib_pass[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_calib_pass", CBaseParameter::RW, 0, 0, -2147483647, 2147483647);
+CFloatParameter ch_calib_pass_float[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_calib_pass_f", CBaseParameter::RW, 1, 0, 0.001, 20);
 
 CFloatParameter ref_volt("ref_volt", CBaseParameter::RW, 1, 0, 0.001, 20);
-CIntParameter ss_state("SS_STATE", CBaseParameter::RW, -1, 0, -1, 100);  // Current completed step
-CIntParameter ss_next_step("SS_NEXTSTEP", CBaseParameter::RW, -1, 0, -2, 100);
+
+CStringParameter ss_state("SS_STATE", CBaseParameter::RW, "", 0);  // Current completed step
+CStringParameter ss_next_step("SS_NEXTSTEP", CBaseParameter::RW, "", 0);
 
 // Parameters for MANUAL mode
 CFloatParameter ch_gain_dac[RP_CALIB_MAX_DAC_CHANNELS] = INIT2("ch", "_gain_dac", CBaseParameter::RW, 1.0, 0, 0.5, 1.5);
@@ -95,6 +101,8 @@ CIntParameter ch_off_dac_new[RP_CALIB_MAX_DAC_CHANNELS] = INIT2("ch", "_off_dac_
 
 CFloatParameter ch_gain_adc_new[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_gain_adc_new", CBaseParameter::RW, 1.0, 0, 0.5, 1.5);
 CIntParameter ch_off_adc_new[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_off_adc_new", CBaseParameter::RW, 0, 0, -16382, 16382);
+
+CBooleanParameter adc_man_filter_bypass("adc_man_filter_bypass", CBaseParameter::RW, true, 0);
 
 CIntParameter calib_sig("calib_sig", CBaseParameter::RW, 0, 0, -2147483647, 2147483647);
 CBooleanParameter hv_lv_mode("hv_lv_mode", CBaseParameter::RW, false, 0);
@@ -143,10 +151,10 @@ CIntParameter f_init_kk_value("f_init_kk_value", CBaseParameter::RW, 0x00dFFFFF,
 CIntParameter f_ss_state("F_SS_STATE", CBaseParameter::RW, -1, 0, -1, 100);  // Current completed step
 CIntParameter f_ss_next_step("F_SS_NEXTSTEP", CBaseParameter::RW, -1, 0, -2, 100);
 
-CIntParameter fauto_aa_Ch[RP_CALIB_MAX_ADC_CHANNELS] = INIT("fauto_aa_Ch", "", CBaseParameter::RW, 0, 0, 0, 0x1FFFFFF);
-CIntParameter fauto_bb_Ch[RP_CALIB_MAX_ADC_CHANNELS] = INIT("fauto_bb_Ch", "", CBaseParameter::RW, 0, 0, 0, 0x1FFFFFF);
-CIntParameter fauto_pp_Ch[RP_CALIB_MAX_ADC_CHANNELS] = INIT("fauto_pp_Ch", "", CBaseParameter::RW, 0, 0, 0, 0x1FFFFFF);
-CIntParameter fauto_kk_Ch[RP_CALIB_MAX_ADC_CHANNELS] = INIT("fauto_kk_Ch", "", CBaseParameter::RW, 0, 0, 0, 0x1FFFFFF);
+CIntParameter fauto_aa_Ch[RP_CALIB_MAX_ADC_CHANNELS] = INIT("fauto_aa_Ch", "", CBaseParameter::RW, -1, 0, -1, 0x1FFFFFF);
+CIntParameter fauto_bb_Ch[RP_CALIB_MAX_ADC_CHANNELS] = INIT("fauto_bb_Ch", "", CBaseParameter::RW, -1, 0, -1, 0x1FFFFFF);
+CIntParameter fauto_pp_Ch[RP_CALIB_MAX_ADC_CHANNELS] = INIT("fauto_pp_Ch", "", CBaseParameter::RW, -1, 0, -1, 0x1FFFFFF);
+CIntParameter fauto_kk_Ch[RP_CALIB_MAX_ADC_CHANNELS] = INIT("fauto_kk_Ch", "", CBaseParameter::RW, -1, 0, -1, 0x1FFFFFF);
 
 CFloatParameter fauto_value_ch_before[RP_CALIB_MAX_ADC_CHANNELS] = INIT("fauto_value_ch", "_before", CBaseParameter::RW, 0, 0, -1e6f, +1e6f);
 CFloatParameter fauto_value_ch_after[RP_CALIB_MAX_ADC_CHANNELS] = INIT("fauto_value_ch", "_after", CBaseParameter::RW, 0, 0, -1e6f, +1e6f);
@@ -195,17 +203,17 @@ int rp_app_exit(void) {
 }
 
 //Set parameters
-int rp_set_params(rp_app_params_t* p, int len) {
+int rp_set_params(rp_app_params_t*, int) {
     return 0;
 }
 
 //Get parameters
-int rp_get_params(rp_app_params_t** p) {
+int rp_get_params(rp_app_params_t**) {
     return 0;
 }
 
 //Get signals
-int rp_get_signals(float*** s, int* sig_num, int* sig_len) {
+int rp_get_signals(float***, int*, int*) {
     return 0;
 }
 
@@ -602,10 +610,10 @@ int calibAutoFilter() {
                 auto v = (d.valueCH[i].calib_value_raw + d.valueCH[i].deviation);
                 WARNING("Channel %d = %f [AA=0x%X BB=0x%X PP=0x%X KK=0x%X]", i, v, d.valueCH[i].f_aa, d.valueCH[i].f_bb, d.valueCH[i].f_pp, d.valueCH[i].f_kk)
                 fauto_value_ch_before[i].SendValue(v);
-                fauto_aa_Ch[i].SendValue(0);
-                fauto_bb_Ch[i].SendValue(0);
-                fauto_pp_Ch[i].SendValue(0);
-                fauto_kk_Ch[i].SendValue(0);
+                fauto_aa_Ch[i].SendValue(-1);
+                fauto_bb_Ch[i].SendValue(-1);
+                fauto_pp_Ch[i].SendValue(-1);
+                fauto_kk_Ch[i].SendValue(-1);
             }
             g_sub_progress = 1;
             return 1;
@@ -760,10 +768,10 @@ int calibAutoFilter() {
                 auto v = (d.valueCH[i].calib_value_raw + d.valueCH[i].deviation);
 
                 fauto_value_ch_before[i].SendValue(v);
-                fauto_aa_Ch[i].SendValue(0);
-                fauto_bb_Ch[i].SendValue(0);
-                fauto_pp_Ch[i].SendValue(0);
-                fauto_kk_Ch[i].SendValue(0);
+                fauto_aa_Ch[i].SendValue(-1);
+                fauto_bb_Ch[i].SendValue(-1);
+                fauto_pp_Ch[i].SendValue(-1);
+                fauto_kk_Ch[i].SendValue(-1);
             }
             g_sub_progress = 1;
             return 1;
@@ -908,9 +916,14 @@ void updateAcqData() {
         ch_max[i].Value() = x.ch_max[i];
         ch_min[i].Value() = x.ch_min[i];
         ch_avg[i].Value() = x.ch_avg[i];
+        ch_mean[i].Value() = x.ch_mean[i];
         ch_p_p[i].Value() = x.ch_p_p[i];
         ch_per_buff[i].Value() = x.periodsByBuffer[i];
         ch_is_sine[i].Value() = x.isSineSignal[i];
+        bool is_fpga = false;
+        if (rp_AcqGetCalibInFPGA((rp_channel_t)i, &is_fpga) == RP_OK) {
+            ch_is_fpga[i].Value() = is_fpga;
+        }
     }
 }
 
@@ -919,44 +932,48 @@ void UpdateParams(void) {
     if (!g_calib || !g_acq || !g_calib_man)
         return;
     try {
-        updateAcqData();
 
         // AUTO MODE
-        if (ss_next_step.IsNewValue() && ref_volt.IsNewValue()) {
+        if (ss_next_step.IsNewValue() || ref_volt.IsNewValue()) {
             ss_next_step.Update();
             ref_volt.Update();
-            if (ss_next_step.Value() != -2) {
+            if (ss_next_step.Value() != "") {
                 if (g_calib->calib(ss_next_step.Value(), ref_volt.Value()) == RP_OK) {
                     auto x = g_calib->getCalibData();
                     for (int i = 0; i < getADCChannels(); i++) {
                         ch_calib_pass[i].SendValue(x.ch[i]);
+                        ch_calib_pass_float[i].SendValue(x.ch_gain[i]);
                     }
                     ss_state.SendValue(ss_next_step.Value());
                 }
-            } else {
+            }
+
+            if (ss_next_step.Value() == "RESET_CALIB") {
                 g_calib->restoreCalib();
+                ss_state.SendValue("-1");
             }
         }
 
+        // FILTER AUTO MODE
         if (rp_HPGetFastADCIsFilterPresentOrDefault()) {
-            // FILTER AUTO MODE
             if (f_ss_next_step.IsNewValue()) {
                 f_ss_next_step.Update();
             }
-
             if (calibAutoFilter()) {
                 return;
             }
         }
 
-        // MANUAL MODE
         if (calib_sig.IsNewValue()) {
             calib_sig.Update();
             int sig = calib_sig.Value();
             calib_sig.Value() = 0;  // reset signal
+            g_acq->setAvgFilter(false);
             g_acq->resetAvgFilter();
+            // MANUAL MODE
             if (sig == 1) {
-                g_acq->setFilterBypass(true);
+                // Initializes the default settings for manual calibration mode.
+                g_calib_man->readCalibEpprom();
                 g_calib_man->init();
                 if (getDACChannels() >= 2) {
                     if (getModelName() == "Z20") {
@@ -983,8 +1000,6 @@ void UpdateParams(void) {
                         gen_amp[1].SendValue(0.9);
                     }
                 }
-
-                g_calib_man->readCalibEpprom();
                 sendCalibInManualMode(true);
             }
 
@@ -1050,6 +1065,8 @@ void UpdateParams(void) {
                         g_calib_man->setFreq(RP_CH_2, filt_gen_freq.Value());
                         g_calib_man->setAmp(RP_CH_2, filt_gen_amp.Value());
                         g_calib_man->setGenType(RP_CH_2, RP_WAVEFORM_SQUARE);
+                        g_calib_man->enableGen(RP_CH_1, false);
+                        g_calib_man->enableGen(RP_CH_2, false);
                         filt_gen_freq.SendValue(filt_gen_freq.Value());
                         filt_gen_amp.SendValue(filt_gen_amp.Value());
                         filt_gen_offset.SendValue(filt_gen_offset.Value());
@@ -1057,6 +1074,10 @@ void UpdateParams(void) {
                     sendFilterCalibValues((rp_channel_t)adc_channel.Value());
                     g_acq->startSquare(adc_decimation.Value());
                 }
+            }
+
+            if (sig == 8) {
+                updateEepromWindow();
             }
         }
 
@@ -1079,6 +1100,12 @@ void UpdateParams(void) {
             g_acq->setAvgFilter(avg_last_mode.Value());
             g_acq->resetAvgFilter();
             avg_last_mode.SendValue(g_acq->getAvgFilter());
+        }
+
+        if (adc_man_filter_bypass.IsNewValue()) {
+            adc_man_filter_bypass.Update();
+            g_acq->setFilterBypass(!adc_man_filter_bypass.Value());
+            g_acq->resetAvgFilter();
         }
 
         if (request_reset.IsNewValue()) {
@@ -1115,6 +1142,10 @@ void UpdateParams(void) {
             updateFilterModeParameter();
             getNewFilterCalib();
         }
+
+        // Update data from ADC for AUTO and MANUAL
+        updateAcqData();
+
     } catch (std::exception& e) {
         ERROR_LOG("UpdateParams() %s", e.what());
     }

@@ -2,7 +2,7 @@
  *
  * Red Pitaya Calibration app
  *
- * Author: Nikolay <n.danilyuk@integrasources.eu>
+ * Author: Nikolay <n.danilyuk@integrasources.com>
  *
  * (c) Red Pitaya  http://www.redpitaya.com
  *
@@ -11,7 +11,8 @@
 <html lang="en">
 
 <head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"></meta>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    </meta>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -23,6 +24,9 @@
     <link href="../assets/loader.css?1" rel="stylesheet" type="text/css" onerror="location.reload()" />
     <link rel="stylesheet" href="css/style.css?1" onerror="location.reload()" />
     <link rel="stylesheet" href="css/table.css?1" onerror="location.reload()" />
+    <link rel="stylesheet" href="css/adc_m.css?1" onerror="location.reload()" />
+    <link rel="stylesheet" href="css/tooltip.css?1" onerror="location.reload()" />
+    <link rel="stylesheet" href="css/subwindow.css?2" onerror="location.reload()" />
     <link rel="stylesheet" href="../assets/lpulse.css?1" type="text/css">
     <link rel="stylesheet" href="../assets/usermis.css" type="text/css">
     <script src="../assets/jquery/jquery-2.1.3.min.js?1" onerror="location.reload()"></script>
@@ -45,25 +49,11 @@
     <script src="js/manager_filter_mode.js?1" onerror="location.reload()"></script>
     <script src="js/rp_client.js?2" onerror="location.reload()"></script>
     <script src="js/client.js?2" onerror="location.reload()"></script>
+    <script src="js/sub_window_eeprom.js?2" onerror="location.reload()"></script>
+
 </head>
 
 <body id="BODY" class="user_lost connection_lost">
-    <div id="loader-wrapper">
-        <div style="width: 100%;height: 60%;">
-            <div id="loader" style="top:70%"></div>
-        </div>
-        <div align="center" style="font-size: 18pt;color: lightgray;padding-right: 20%;padding-left: 20%;padding-top: 5px;">
-            LOADING...
-        </div>
-    </div>
-    <div id="user-wrapper">
-        <div id="user"></div>
-        <div id="user-desc">Device is already in use by another user.</div>
-    </div>
-    <div id="pulse-wrapper">
-        <div id="pulse"></div>
-        <div id="pulse-desc">Connection with device is lost.</div>
-    </div>
 </body>
 
 </html>

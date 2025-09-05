@@ -1,0 +1,21 @@
+#adc_mode_body>div {
+    --scale-factor: 1;
+}
+
+@media (max-height: 700px) {
+    #adc_mode_body>div {
+        --scale-factor: 0.9;
+    }
+}
+
+@media (max-height: 650px) {
+    #adc_mode_body>div {
+        --scale-factor: 0.8;
+    }
+}
+
+@media (max-height: 600px) {
+    #adc_mode_body>div {
+        --scale-factor: 0.7;
+    }
+}

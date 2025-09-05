@@ -94,6 +94,15 @@
                         </li>
                     </ul>
                 </div>
+                <div class="collapse navbar-collapse">
+                    <ul class="nav navbar-nav">
+                        <ul class="nav navbar-nav">
+                            <li id="B_EEPROM_SHOW_CONT" style="display: none">
+                                <a id="B_EEPROM_SHOW" href="#" style="color:#cdcccc">EEPROM</a>
+                            </li>
+                        </ul>
+                    </ul>
+                </div>
                 <div align="center"
                     style="font-size: 18pt;color: lightgray;padding-right: 20%;padding-left: 20%;padding-top: 5px;">
                     Calibration application
@@ -224,652 +233,722 @@
             </div>
             <div id="adc_mode_body" style="display: none;">
                 <div align="center">
-                    <div
-                        style="width:1300px;height: 610px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295);display: inline-block;margin-top: 10px;">
-                        <div class="container_inline">
-                            <label style="font-size: 18pt; color: lightgray;">ADC</label>
-                        </div>
-                        <div class="container_inline"
-                            style="display: inline-block; margin-right: 10px; width: 300px;vertical-align: bottom;">
-                            <div
-                                style="width:300px;height: 500px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
-                                <label>CH 1</label>
-                                <div>
-                                    <div style="display: flex;">
-                                        <div class="container_inline">
-                                            <div class="label-text-size"
-                                                style="width: 40px;text-align: right;margin-top: 5px;color:#f3ec1a">
-                                                MEAN:</div>
-                                            <div style="width: 90px;margin-top: 5px;">
-                                                <input id="CH1_AVG" type="text" size="5"
-                                                    style="width: 75px;margin-left: 10px;" value="" readonly>
-                                            </div>
-                                        </div>
-                                        <div class="container_inline">
-                                            <div class="label-text-size"
-                                                style="width: 40px;text-align: right;margin-top: 5px;color:#b3b3b3">P-P:
-                                            </div>
-                                            <div style="width: 90px;margin-top: 5px;">
-                                                <input id="CH1_P_P" type="text" size="5"
-                                                    style="width: 75px;margin-left: 10px;" value="" readonly>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div style="display: flex;">
-                                        <div class="container_inline">
-                                            <div class="label-text-size"
-                                                style="width: 40px;text-align: right;margin-top: 5px;color:#0F0">MIN:
-                                            </div>
-                                            <div style="width: 90px;margin-top: 5px;">
-                                                <input id="CH1_MIN" type="text" size="5"
-                                                    style="width: 75px;margin-left: 10px;" value="" readonly>
-                                            </div>
-                                        </div>
-                                        <div class="container_inline">
-                                            <div class="label-text-size"
-                                                style="width: 40px;text-align: right;margin-top: 5px;color:#F00">MAX:
-                                            </div>
-                                            <div style="width: 90px;margin-top: 5px;">
-                                                <input id="CH1_MAX" type="text" size="5"
-                                                    style="width: 75px;margin-left: 10px;" value="" readonly>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="container_inline"
-                                    style="width:280px;height: 110px;padding: 0px;  border: 1px solid rgba(153, 153, 153, 0.295)">
-                                    <div id="graphs_holder" class="graphs_holder"
-                                        style="width: 100%;margin-top: 0px;height: 80px;">
-                                        <div
-                                            style="clear: both; position: relative; padding: 0px; width: 100%;margin-top: 0px;height: 80px;">
-                                            <div id="graph_bode_ch1" class="graphs"
-                                                style="width: 100%;margin-top: 0px;height: 100%;">
-                                                <canvas id="graph_bode_grid_ch1" class="graph_grid"
-                                                    style="width: 100%;height: 100%;"></canvas>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div style="display: flex;justify-self: start;margin: 0;">
-                                        <img id="CH1_IS_SINE" src="img/SIN_R.png" alt="-"
-                                            style="display: block;width: 20px;height: 10px;margin: 2px;margin-left: 15px;" />
-                                        <div id="CH1_PER_COUNT"
-                                            style="height: 15px;font-size: 10px;margin: 0;margin-left: 5px;">
-                                        </div>
-                                    </div>
-                                </div>
+                    <div style="transform-origin: top center;
+            transform: scale(var(--scale-factor));">
+                        <div
+                            style="width:1500px;height: 610px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295);display: inline-block;margin-top: 10px;">
+                            <div class="container_inline">
+                                <label style="font-size: 18pt; color: lightgray;">ADC</label>
+                            </div>
+                            <div class="container_inline"
+                                style="display: inline-block; margin-right: 10px; width: 350px;vertical-align: bottom;">
                                 <div
-                                    style="width:280px;height: 210px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
-                                    <label>Calib parameters</label>
-                                    <div class="ch_setting">
-                                        <div class="container_inline">
-                                            <div style="width: 50px;text-align: right;margin-top: 5px;">Offset:</div>
-                                            <div style="width: 200px;margin-top: 5px;">
-                                                <input id="CH1_OFFSET" type="text" size="5"
-                                                    style="width: 185px;margin-left: 10px;" value="0">
+                                    style="width:350px;height: 500px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
+                                    <label>CH 1</label>
+                                    <div style="margin-top: 17px;padding-left: 25px;padding-right: 25px;">
+                                        <div style="display: flex;">
+                                            <div class="container_inline">
+                                                <div class="label-text-size"
+                                                    style="width: 40px;text-align: right;margin-top: 5px;color:#f3ec1a">
+                                                    MEAN:</div>
+                                                <div style="width: 90px;margin-top: 5px;">
+                                                    <input id="CH1_AVG" type="text" size="5"
+                                                        style="width: 75px;margin-left: 10px;" value="" readonly>
+                                                </div>
+                                            </div>
+                                            <div class="container_inline">
+                                                <div class="label-text-size"
+                                                    style="width: 40px;text-align: right;margin-top: 5px;color:#b3b3b3">
+                                                    P-P:
+                                                </div>
+                                                <div style="width: 90px;margin-top: 5px;">
+                                                    <input id="CH1_P_P" type="text" size="5"
+                                                        style="width: 75px;margin-left: 10px;" value="" readonly>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="container_inline" style="margin-top: 5px;">
-                                            <div style="margin-top: 0px;display: flex;justify-content: space-around;">
-                                                <div
-                                                    style="width: 20px;height: 20px; border: 1px solid white;margin-top: 5px;border-radius: 50%;margin-left: 70px; ">
-                                                    <li class="run_buttons" id="B_CH1_SUB_OFF"
-                                                        style="width: 100%;height: 100%;border-radius: 50%;">
-                                                        <img src="img/minus.svg" alt="-"
-                                                            style="display: block;width: 78%;height: 80%;margin: 2px;" />
-                                                    </li>
+                                        <div style="display: flex;">
+                                            <div class="container_inline">
+                                                <div class="label-text-size"
+                                                    style="width: 40px;text-align: right;margin-top: 5px;color:#0F0">
+                                                    MIN:
                                                 </div>
-                                                <div style="width: 120px;margin-top: 5px;">
-                                                    <select id="B_CH1_VALUE_OFF" class="protocol" name="rate"
-                                                        style="width: 110px;margin-left: 0px;">
-                                                        <option value="1">1</option>
-                                                        <option value="10">10</option>
-                                                        <option value="100">100</option>
-                                                        <option value="1000">1000</option>
-                                                        <option value="10000">10000</option>
-                                                    </select>
+                                                <div style="width: 90px;margin-top: 5px;">
+                                                    <input id="CH1_MIN" type="text" size="5"
+                                                        style="width: 75px;margin-left: 10px;" value="" readonly>
                                                 </div>
-                                                <div
-                                                    style="width: 20px;height: 20px; border: 1px solid white;margin-right: 10px;margin-top: 5px;border-radius: 50%;">
-                                                    <li class="run_buttons" id="B_CH1_ADD_OFF"
-                                                        style="width: 100%;height: 100%;border-radius: 50%;">
-                                                        <img src="img/plus.svg" alt="+"
-                                                            style="display: block;width: 78%;height: 80%;margin: 2px;" />
-                                                    </li>
+                                            </div>
+                                            <div class="container_inline">
+                                                <div class="label-text-size"
+                                                    style="width: 40px;text-align: right;margin-top: 5px;color:#F00">
+                                                    MAX:
+                                                </div>
+                                                <div style="width: 90px;margin-top: 5px;">
+                                                    <input id="CH1_MAX" type="text" size="5"
+                                                        style="width: 75px;margin-left: 10px;" value="" readonly>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="ch_setting">
-                                        <div class="container_inline">
-                                            <div style="width: 50px;text-align: right;margin-top: 5px;">Gain:</div>
-                                            <div style="width: 200px;margin-top: 5px;">
-                                                <input id="CH1_GAIN" type="text" size="5"
-                                                    style="width: 185px;margin-left: 10px;" value="0">
+                                    <div class="container_inline"
+                                        style="width:320px;height: 110px;padding: 0px;  border: 1px solid rgba(153, 153, 153, 0.295)">
+                                        <div id="graphs_holder" class="graphs_holder"
+                                            style="width: 100%;margin-top: 0px;height: 80px;">
+                                            <div
+                                                style="clear: both; position: relative; padding: 0px; width: 100%;margin-top: 0px;height: 80px;">
+                                                <div id="graph_bode_ch1" class="graphs"
+                                                    style="width: 100%;margin-top: 0px;height: 100%;">
+                                                    <canvas id="graph_bode_grid_ch1" class="graph_grid"
+                                                        style="width: 100%;height: 100%;"></canvas>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="container_inline" style="margin-top: 5px;">
-                                            <div style="margin-top: 0px;display: flex;justify-content: space-around;">
-                                                <div
-                                                    style="width: 20px;height: 20px; border: 1px solid white;margin-top: 5px;border-radius: 50%;margin-left: 70px; ">
-                                                    <li class="run_buttons" id="B_CH1_SUB_GAIN"
-                                                        style="width: 100%;height: 100%;border-radius: 50%;">
-                                                        <img src="img/minus.svg" alt="-"
-                                                            style="display: block;width: 78%;height: 80%;margin: 2px;" />
-                                                    </li>
+                                        <div style="display: flex;margin: 0;width: 100%;">
+                                            <div id="CH1_IS_SINE"
+                                                style="display: block;width: 20px;height: 15px;margin: 2px;margin-left: 15px;font-size: 12px;color: #F00;">
+                                                SIN
+                                            </div>
+                                            <div id="CH1_PER_COUNT"
+                                                style="height: 15px;font-size: 10px;margin: 3px;margin-left: 5px;">
+                                                x1
+                                            </div>
+                                            <div id="CH1_IS_FPGA"
+                                                style="display: block;height: 15px;margin: 2px;margin-right: 15px;font-size: 12px;margin-left: auto; color: #F00;"
+                                                class="adaptive-tooltip">
+                                                FPGA
+                                                <span class="tooltiptext top">Uses FPGA</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div
+                                        style="width:320px;height: 210px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
+                                        <label>Calib parameters</label>
+                                        <div class="ch_setting">
+                                            <div class="container_inline">
+                                                <div style="width: 50px;text-align: right;margin-top: 5px;">Offset:
                                                 </div>
-                                                <div style="width: 120px;margin-top: 5px;">
-                                                    <select id="B_CH1_VALUE_GAIN" class="protocol" name="rate"
-                                                        style="width: 110px;margin-left: 0px;">
-                                                        <option value="0.0001">0.0001</option>
-                                                        <option value="0.001">0.001</option>
-                                                        <option value="0.01">0.01</option>
-                                                        <option value="0.1">0.1</option>
-                                                    </select>
+                                                <div style="width: 200px;margin-top: 5px;">
+                                                    <input id="CH1_OFFSET" type="text" size="5"
+                                                        style="width: 185px;margin-left: 10px;" value="0">
                                                 </div>
+                                            </div>
+                                            <div class="container_inline" style="margin-top: 5px;">
                                                 <div
-                                                    style="width: 20px;height: 20px; border: 1px solid white;margin-right: 10px;margin-top: 5px;border-radius: 50%;">
-                                                    <li class="run_buttons" id="B_CH1_ADD_GAIN"
-                                                        style="width: 100%;height: 100%;border-radius: 50%;">
-                                                        <img src="img/plus.svg" alt="+"
-                                                            style="display: block;width: 78%;height: 80%;margin: 2px;" />
-                                                    </li>
+                                                    style="margin-top: 0px;display: flex;justify-content: space-around;">
+                                                    <div
+                                                        style="width: 20px;height: 20px; border: 1px solid white;margin-top: 5px;border-radius: 50%;margin-left: 70px; ">
+                                                        <li class="run_buttons" id="B_CH1_SUB_OFF"
+                                                            style="width: 100%;height: 100%;border-radius: 50%;">
+                                                            <img src="img/minus.svg" alt="-"
+                                                                style="display: block;width: 78%;height: 80%;margin: 2px;" />
+                                                        </li>
+                                                    </div>
+                                                    <div style="width: 120px;margin-top: 5px;">
+                                                        <select id="B_CH1_VALUE_OFF" class="protocol" name="rate"
+                                                            style="width: 110px;margin-left: 0px;">
+                                                            <option value="1">1</option>
+                                                            <option value="10">10</option>
+                                                            <option value="100">100</option>
+                                                            <option value="1000">1000</option>
+                                                            <option value="10000">10000</option>
+                                                        </select>
+                                                    </div>
+                                                    <div
+                                                        style="width: 20px;height: 20px; border: 1px solid white;margin-right: 10px;margin-top: 5px;border-radius: 50%;">
+                                                        <li class="run_buttons" id="B_CH1_ADD_OFF"
+                                                            style="width: 100%;height: 100%;border-radius: 50%;">
+                                                            <img src="img/plus.svg" alt="+"
+                                                                style="display: block;width: 78%;height: 80%;margin: 2px;" />
+                                                        </li>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="ch_setting">
+                                            <div class="container_inline">
+                                                <div style="width: 50px;text-align: right;margin-top: 5px;">Gain:</div>
+                                                <div style="width: 200px;margin-top: 5px;">
+                                                    <input id="CH1_GAIN" type="text" size="5"
+                                                        style="width: 185px;margin-left: 10px;" value="0">
+                                                </div>
+                                            </div>
+                                            <div class="container_inline" style="margin-top: 5px;">
+                                                <div
+                                                    style="margin-top: 0px;display: flex;justify-content: space-around;">
+                                                    <div
+                                                        style="width: 20px;height: 20px; border: 1px solid white;margin-top: 5px;border-radius: 50%;margin-left: 70px; ">
+                                                        <li class="run_buttons" id="B_CH1_SUB_GAIN"
+                                                            style="width: 100%;height: 100%;border-radius: 50%;">
+                                                            <img src="img/minus.svg" alt="-"
+                                                                style="display: block;width: 78%;height: 80%;margin: 2px;" />
+                                                        </li>
+                                                    </div>
+                                                    <div style="width: 120px;margin-top: 5px;">
+                                                        <select id="B_CH1_VALUE_GAIN" class="protocol" name="rate"
+                                                            style="width: 110px;margin-left: 0px;">
+                                                            <option value="0.0001">0.0001</option>
+                                                            <option value="0.001">0.001</option>
+                                                            <option value="0.01">0.01</option>
+                                                            <option value="0.1">0.1</option>
+                                                        </select>
+                                                    </div>
+                                                    <div
+                                                        style="width: 20px;height: 20px; border: 1px solid white;margin-right: 10px;margin-top: 5px;border-radius: 50%;">
+                                                        <li class="run_buttons" id="B_CH1_ADD_GAIN"
+                                                            style="width: 100%;height: 100%;border-radius: 50%;">
+                                                            <img src="img/plus.svg" alt="+"
+                                                                style="display: block;width: 78%;height: 80%;margin: 2px;" />
+                                                        </li>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="container_inline"
-                            style="display: inline-block; width: 300px;vertical-align: bottom;">
-                            <div
-                                style="width:300px;height: 500px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
-                                <label>CH 2</label>
-                                <div>
-                                    <div style="display: flex;">
-                                        <div class="container_inline">
-                                            <div class="label-text-size"
-                                                style="width: 40px;text-align: right;margin-top: 5px;color:#f3ec1a">
-                                                MEAN:</div>
-                                            <div style="width: 90px;margin-top: 5px;">
-                                                <input id="CH2_AVG" type="text" size="5"
-                                                    style="width: 75px;margin-left: 10px;" value="" readonly>
-                                            </div>
-                                        </div>
-                                        <div class="container_inline">
-                                            <div class="label-text-size"
-                                                style="width: 40px;text-align: right;margin-top: 5px;color:#b3b3b3">P-P:
-                                            </div>
-                                            <div style="width: 90px;margin-top: 5px;">
-                                                <input id="CH2_P_P" type="text" size="5"
-                                                    style="width: 75px;margin-left: 10px;" value="" readonly>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div style="display: flex;">
-                                        <div class="container_inline">
-                                            <div class="label-text-size"
-                                                style="width: 40px;text-align: right;margin-top: 5px;color:#0F0">MIN:
-                                            </div>
-                                            <div style="width: 90px;margin-top: 5px;">
-                                                <input id="CH2_MIN" type="text" size="5"
-                                                    style="width: 75px;margin-left: 10px;" value="" readonly>
-                                            </div>
-                                        </div>
-                                        <div class="container_inline">
-                                            <div class="label-text-size"
-                                                style="width: 40px;text-align: right;margin-top: 5px;color:#F00">MAX:
-                                            </div>
-                                            <div style="width: 90px;margin-top: 5px;">
-                                                <input id="CH2_MAX" type="text" size="5"
-                                                    style="width: 75px;margin-left: 10px;" value="" readonly>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="container_inline"
-                                    style="width:280px;height: 110px;padding: 0px;  border: 1px solid rgba(153, 153, 153, 0.295)">
-                                    <div id="graphs_holder" class="graphs_holder"
-                                        style="width: 100%;margin-top: 0px;height: 80px;">
-                                        <div
-                                            style="clear: both; position: relative; padding: 0px; width: 100%;margin-top: 0px;height: 80px;">
-                                            <div id="graph_bode_ch2" class="graphs"
-                                                style="width: 100%;margin-top: 0px;height: 100%;">
-                                                <canvas id="graph_bode_grid_ch2" class="graph_grid"
-                                                    style="width: 100%;height: 100%;"></canvas>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div style="display: flex;justify-self: start;margin: 0;">
-                                        <img id="CH2_IS_SINE" src="img/SIN_R.png" alt="-"
-                                            style="display: block;width: 20px;height: 10px;margin: 2px;margin-left: 15px;" />
-                                        <div id="CH2_PER_COUNT"
-                                            style="height: 15px;font-size: 10px;margin: 0;margin-left: 5px;">
-                                        </div>
-                                    </div>
-                                </div>
+                            <div class="container_inline"
+                                style="display: inline-block; width: 350px;vertical-align: bottom;">
                                 <div
-                                    style="width:280px;height: 210px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
-                                    <label>Calib parameters</label>
-                                    <div class="ch_setting">
-                                        <div class="container_inline">
-                                            <div style="width: 50px;text-align: right;margin-top: 5px;">Offset:</div>
-                                            <div style="width: 200px;margin-top: 5px;">
-                                                <input id="CH2_OFFSET" type="text" size="5"
-                                                    style="width: 185px;margin-left: 10px;" value="0">
+                                    style="width:350px;height: 500px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
+                                    <label>CH 2</label>
+                                    <div style="margin-top: 17px;padding-left: 25px;padding-right: 25px;">
+                                        <div style="display: flex;">
+                                            <div class="container_inline">
+                                                <div class="label-text-size"
+                                                    style="width: 40px;text-align: right;margin-top: 5px;color:#f3ec1a">
+                                                    MEAN:</div>
+                                                <div style="width: 90px;margin-top: 5px;">
+                                                    <input id="CH2_AVG" type="text" size="5"
+                                                        style="width: 75px;margin-left: 10px;" value="" readonly>
+                                                </div>
+                                            </div>
+                                            <div class="container_inline">
+                                                <div class="label-text-size"
+                                                    style="width: 40px;text-align: right;margin-top: 5px;color:#b3b3b3">
+                                                    P-P:
+                                                </div>
+                                                <div style="width: 90px;margin-top: 5px;">
+                                                    <input id="CH2_P_P" type="text" size="5"
+                                                        style="width: 75px;margin-left: 10px;" value="" readonly>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="container_inline" style="margin-top: 5px;">
-                                            <div style="margin-top: 0px;display: flex;justify-content: space-around;">
-                                                <div
-                                                    style="width: 20px;height: 20px; border: 1px solid white;margin-top: 5px;border-radius: 50%;margin-left: 70px; ">
-                                                    <li class="run_buttons" id="B_CH2_SUB_OFF"
-                                                        style="width: 100%;height: 100%;border-radius: 50%;">
-                                                        <img src="img/minus.svg" alt="-"
-                                                            style="display: block;width: 78%;height: 80%;margin: 2px;" />
-                                                    </li>
+                                        <div style="display: flex;">
+                                            <div class="container_inline">
+                                                <div class="label-text-size"
+                                                    style="width: 40px;text-align: right;margin-top: 5px;color:#0F0">
+                                                    MIN:
                                                 </div>
-                                                <div style="width: 120px;margin-top: 5px;">
-                                                    <select id="B_CH2_VALUE_OFF" class="protocol" name="rate"
-                                                        style="width: 110px;margin-left: 0px;">
-                                                        <option value="1">1</option>
-                                                        <option value="10">10</option>
-                                                        <option value="100">100</option>
-                                                        <option value="1000">1000</option>
-                                                        <option value="10000">10000</option>
-                                                    </select>
+                                                <div style="width: 90px;margin-top: 5px;">
+                                                    <input id="CH2_MIN" type="text" size="5"
+                                                        style="width: 75px;margin-left: 10px;" value="" readonly>
                                                 </div>
-                                                <div
-                                                    style="width: 20px;height: 20px; border: 1px solid white;margin-right: 10px;margin-top: 5px;border-radius: 50%;">
-                                                    <li class="run_buttons" id="B_CH2_ADD_OFF"
-                                                        style="width: 100%;height: 100%;border-radius: 50%;">
-                                                        <img src="img/plus.svg" alt="+"
-                                                            style="display: block;width: 78%;height: 80%;margin: 2px;" />
-                                                    </li>
+                                            </div>
+                                            <div class="container_inline">
+                                                <div class="label-text-size"
+                                                    style="width: 40px;text-align: right;margin-top: 5px;color:#F00">
+                                                    MAX:
+                                                </div>
+                                                <div style="width: 90px;margin-top: 5px;">
+                                                    <input id="CH2_MAX" type="text" size="5"
+                                                        style="width: 75px;margin-left: 10px;" value="" readonly>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="ch_setting">
-                                        <div class="container_inline">
-                                            <div style="width: 50px;text-align: right;margin-top: 5px;">Gain:</div>
-                                            <div style="width: 200px;margin-top: 5px;">
-                                                <input id="CH2_GAIN" type="text" size="5"
-                                                    style="width: 185px;margin-left: 10px;" value="0">
+                                    <div class="container_inline"
+                                        style="width:320px;height: 110px;padding: 0px;  border: 1px solid rgba(153, 153, 153, 0.295)">
+                                        <div id="graphs_holder" class="graphs_holder"
+                                            style="width: 100%;margin-top: 0px;height: 80px;">
+                                            <div
+                                                style="clear: both; position: relative; padding: 0px; width: 100%;margin-top: 0px;height: 80px;">
+                                                <div id="graph_bode_ch2" class="graphs"
+                                                    style="width: 100%;margin-top: 0px;height: 100%;">
+                                                    <canvas id="graph_bode_grid_ch2" class="graph_grid"
+                                                        style="width: 100%;height: 100%;"></canvas>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="container_inline" style="margin-top: 5px;">
-                                            <div style="margin-top: 0px;display: flex;justify-content: space-around;">
-                                                <div
-                                                    style="width: 20px;height: 20px; border: 1px solid white;margin-top: 5px;border-radius: 50%;margin-left: 70px; ">
-                                                    <li class="run_buttons" id="B_CH2_SUB_GAIN"
-                                                        style="width: 100%;height: 100%;border-radius: 50%;">
-                                                        <img src="img/minus.svg" alt="-"
-                                                            style="display: block;width: 78%;height: 80%;margin: 2px;" />
-                                                    </li>
+                                        <div style="display: flex;margin: 0;width: 100%;">
+                                            <div id="CH2_IS_SINE"
+                                                style="display: block;width: 20px;height: 15px;margin: 2px;margin-left: 15px;font-size: 12px;color: #F00;">
+                                                SIN
+                                            </div>
+                                            <div id="CH2_PER_COUNT"
+                                                style="height: 15px;font-size: 10px;margin: 3px;margin-left: 5px;">
+                                                x1
+                                            </div>
+                                            <div id="CH2_IS_FPGA"
+                                                style="display: block;height: 15px;margin: 2px;margin-right: 15px;font-size: 12px;margin-left: auto; color: #F00;"
+                                                class="adaptive-tooltip">
+                                                FPGA
+                                                <span class="tooltiptext top">Uses FPGA</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div
+                                        style="width:320px;height: 210px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
+                                        <label>Calib parameters</label>
+                                        <div class="ch_setting">
+                                            <div class="container_inline">
+                                                <div style="width: 50px;text-align: right;margin-top: 5px;">Offset:
                                                 </div>
-                                                <div style="width: 120px;margin-top: 5px;">
-                                                    <select id="B_CH2_VALUE_GAIN" class="protocol" name="rate"
-                                                        style="width: 110px;margin-left: 0px;">
-                                                        <option value="0.0001">0.0001</option>
-                                                        <option value="0.001">0.001</option>
-                                                        <option value="0.01">0.01</option>
-                                                        <option value="0.1">0.1</option>
-                                                    </select>
+                                                <div style="width: 200px;margin-top: 5px;">
+                                                    <input id="CH2_OFFSET" type="text" size="5"
+                                                        style="width: 185px;margin-left: 10px;" value="0">
                                                 </div>
+                                            </div>
+                                            <div class="container_inline" style="margin-top: 5px;">
                                                 <div
-                                                    style="width: 20px;height: 20px; border: 1px solid white;margin-right: 10px;margin-top: 5px;border-radius: 50%;">
-                                                    <li class="run_buttons" id="B_CH2_ADD_GAIN"
-                                                        style="width: 100%;height: 100%;border-radius: 50%;">
-                                                        <img src="img/plus.svg" alt="+"
-                                                            style="display: block;width: 78%;height: 80%;margin: 2px;" />
-                                                    </li>
+                                                    style="margin-top: 0px;display: flex;justify-content: space-around;">
+                                                    <div
+                                                        style="width: 20px;height: 20px; border: 1px solid white;margin-top: 5px;border-radius: 50%;margin-left: 70px; ">
+                                                        <li class="run_buttons" id="B_CH2_SUB_OFF"
+                                                            style="width: 100%;height: 100%;border-radius: 50%;">
+                                                            <img src="img/minus.svg" alt="-"
+                                                                style="display: block;width: 78%;height: 80%;margin: 2px;" />
+                                                        </li>
+                                                    </div>
+                                                    <div style="width: 120px;margin-top: 5px;">
+                                                        <select id="B_CH2_VALUE_OFF" class="protocol" name="rate"
+                                                            style="width: 110px;margin-left: 0px;">
+                                                            <option value="1">1</option>
+                                                            <option value="10">10</option>
+                                                            <option value="100">100</option>
+                                                            <option value="1000">1000</option>
+                                                            <option value="10000">10000</option>
+                                                        </select>
+                                                    </div>
+                                                    <div
+                                                        style="width: 20px;height: 20px; border: 1px solid white;margin-right: 10px;margin-top: 5px;border-radius: 50%;">
+                                                        <li class="run_buttons" id="B_CH2_ADD_OFF"
+                                                            style="width: 100%;height: 100%;border-radius: 50%;">
+                                                            <img src="img/plus.svg" alt="+"
+                                                                style="display: block;width: 78%;height: 80%;margin: 2px;" />
+                                                        </li>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="ch_setting">
+                                            <div class="container_inline">
+                                                <div style="width: 50px;text-align: right;margin-top: 5px;">Gain:</div>
+                                                <div style="width: 200px;margin-top: 5px;">
+                                                    <input id="CH2_GAIN" type="text" size="5"
+                                                        style="width: 185px;margin-left: 10px;" value="0">
+                                                </div>
+                                            </div>
+                                            <div class="container_inline" style="margin-top: 5px;">
+                                                <div
+                                                    style="margin-top: 0px;display: flex;justify-content: space-around;">
+                                                    <div
+                                                        style="width: 20px;height: 20px; border: 1px solid white;margin-top: 5px;border-radius: 50%;margin-left: 70px; ">
+                                                        <li class="run_buttons" id="B_CH2_SUB_GAIN"
+                                                            style="width: 100%;height: 100%;border-radius: 50%;">
+                                                            <img src="img/minus.svg" alt="-"
+                                                                style="display: block;width: 78%;height: 80%;margin: 2px;" />
+                                                        </li>
+                                                    </div>
+                                                    <div style="width: 120px;margin-top: 5px;">
+                                                        <select id="B_CH2_VALUE_GAIN" class="protocol" name="rate"
+                                                            style="width: 110px;margin-left: 0px;">
+                                                            <option value="0.0001">0.0001</option>
+                                                            <option value="0.001">0.001</option>
+                                                            <option value="0.01">0.01</option>
+                                                            <option value="0.1">0.1</option>
+                                                        </select>
+                                                    </div>
+                                                    <div
+                                                        style="width: 20px;height: 20px; border: 1px solid white;margin-right: 10px;margin-top: 5px;border-radius: 50%;">
+                                                        <li class="run_buttons" id="B_CH2_ADD_GAIN"
+                                                            style="width: 100%;height: 100%;border-radius: 50%;">
+                                                            <img src="img/plus.svg" alt="+"
+                                                                style="display: block;width: 78%;height: 80%;margin: 2px;" />
+                                                        </li>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="container_inline"
-                            style="display: inline-block; width: 300px;vertical-align: bottom;">
-                            <div
-                                style="width:300px;height: 500px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
-                                <label>CH 3</label>
-                                <div>
-                                    <div style="display: flex;">
-                                        <div class="container_inline">
-                                            <div class="label-text-size"
-                                                style="width: 40px;text-align: right;margin-top: 5px;color:#f3ec1a">
-                                                MEAN:</div>
-                                            <div style="width: 90px;margin-top: 5px;">
-                                                <input id="CH3_AVG" type="text" size="5"
-                                                    style="width: 75px;margin-left: 10px;" value="" readonly>
-                                            </div>
-                                        </div>
-                                        <div class="container_inline">
-                                            <div class="label-text-size"
-                                                style="width: 40px;text-align: right;margin-top: 5px;color:#b3b3b3">P-P:
-                                            </div>
-                                            <div style="width: 90px;margin-top: 5px;">
-                                                <input id="CH3_P_P" type="text" size="5"
-                                                    style="width: 75px;margin-left: 10px;" value="" readonly>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div style="display: flex;">
-                                        <div class="container_inline">
-                                            <div class="label-text-size"
-                                                style="width: 40px;text-align: right;margin-top: 5px;color:#0F0">MIN:
-                                            </div>
-                                            <div style="width: 90px;margin-top: 5px;">
-                                                <input id="CH3_MIN" type="text" size="5"
-                                                    style="width: 75px;margin-left: 10px;" value="" readonly>
-                                            </div>
-                                        </div>
-                                        <div class="container_inline">
-                                            <div class="label-text-size"
-                                                style="width: 40px;text-align: right;margin-top: 5px;color:#F00">MAX:
-                                            </div>
-                                            <div style="width: 90px;margin-top: 5px;">
-                                                <input id="CH3_MAX" type="text" size="5"
-                                                    style="width: 75px;margin-left: 10px;" value="" readonly>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="container_inline"
-                                    style="width:280px;height: 110px;padding: 0px;  border: 1px solid rgba(153, 153, 153, 0.295)">
-                                    <div id="graphs_holder" class="graphs_holder"
-                                        style="width: 100%;margin-top: 0px;height: 80px;">
-                                        <div
-                                            style="clear: both; position: relative; padding: 0px; width: 100%;margin-top: 0px;height: 80px;">
-                                            <div id="graph_bode_ch3" class="graphs"
-                                                style="width: 100%;margin-top: 0px;height: 100%;">
-                                                <canvas id="graph_bode_grid_ch3" class="graph_grid"
-                                                    style="width: 100%;height: 100%;"></canvas>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div style="display: flex;justify-self: start;margin: 0;">
-                                        <img id="CH3_IS_SINE" src="img/SIN_R.png" alt="-"
-                                            style="display: block;width: 20px;height: 10px;margin: 2px;margin-left: 15px;" />
-                                        <div id="CH3_PER_COUNT"
-                                            style="height: 15px;font-size: 10px;margin: 0;margin-left: 5px;">
-                                        </div>
-                                    </div>
-                                </div>
+                            <div class="container_inline"
+                                style="display: inline-block; width: 350px;vertical-align: bottom;">
                                 <div
-                                    style="width:280px;height: 210px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
-                                    <label>Calib parameters</label>
-                                    <div class="ch_setting">
-                                        <div class="container_inline">
-                                            <div style="width: 50px;text-align: right;margin-top: 5px;">Offset:</div>
-                                            <div style="width: 200px;margin-top: 5px;">
-                                                <input id="CH3_OFFSET" type="text" size="5"
-                                                    style="width: 185px;margin-left: 10px;" value="0">
+                                    style="width:350px;height: 500px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
+                                    <label>CH 3</label>
+                                    <div style="margin-top: 17px;padding-left: 25px;padding-right: 25px;">
+                                        <div style="display: flex;">
+                                            <div class="container_inline">
+                                                <div class="label-text-size"
+                                                    style="width: 40px;text-align: right;margin-top: 5px;color:#f3ec1a">
+                                                    MEAN:</div>
+                                                <div style="width: 90px;margin-top: 5px;">
+                                                    <input id="CH3_AVG" type="text" size="5"
+                                                        style="width: 75px;margin-left: 10px;" value="" readonly>
+                                                </div>
+                                            </div>
+                                            <div class="container_inline">
+                                                <div class="label-text-size"
+                                                    style="width: 40px;text-align: right;margin-top: 5px;color:#b3b3b3">
+                                                    P-P:
+                                                </div>
+                                                <div style="width: 90px;margin-top: 5px;">
+                                                    <input id="CH3_P_P" type="text" size="5"
+                                                        style="width: 75px;margin-left: 10px;" value="" readonly>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="container_inline" style="margin-top: 5px;">
-                                            <div style="margin-top: 0px;display: flex;justify-content: space-around;">
-                                                <div
-                                                    style="width: 20px;height: 20px; border: 1px solid white;margin-top: 5px;border-radius: 50%;margin-left: 70px; ">
-                                                    <li class="run_buttons" id="B_CH3_SUB_OFF"
-                                                        style="width: 100%;height: 100%;border-radius: 50%;">
-                                                        <img src="img/minus.svg" alt="-"
-                                                            style="display: block;width: 78%;height: 80%;margin: 2px;" />
-                                                    </li>
+                                        <div style="display: flex;">
+                                            <div class="container_inline">
+                                                <div class="label-text-size"
+                                                    style="width: 40px;text-align: right;margin-top: 5px;color:#0F0">
+                                                    MIN:
                                                 </div>
-                                                <div style="width: 120px;margin-top: 5px;">
-                                                    <select id="B_CH3_VALUE_OFF" class="protocol" name="rate"
-                                                        style="width: 110px;margin-left: 0px;">
-                                                        <option value="1">1</option>
-                                                        <option value="10">10</option>
-                                                        <option value="100">100</option>
-                                                        <option value="1000">1000</option>
-                                                        <option value="10000">10000</option>
-                                                    </select>
+                                                <div style="width: 90px;margin-top: 5px;">
+                                                    <input id="CH3_MIN" type="text" size="5"
+                                                        style="width: 75px;margin-left: 10px;" value="" readonly>
                                                 </div>
-                                                <div
-                                                    style="width: 20px;height: 20px; border: 1px solid white;margin-right: 10px;margin-top: 5px;border-radius: 50%;">
-                                                    <li class="run_buttons" id="B_CH3_ADD_OFF"
-                                                        style="width: 100%;height: 100%;border-radius: 50%;">
-                                                        <img src="img/plus.svg" alt="+"
-                                                            style="display: block;width: 78%;height: 80%;margin: 2px;" />
-                                                    </li>
+                                            </div>
+                                            <div class="container_inline">
+                                                <div class="label-text-size"
+                                                    style="width: 40px;text-align: right;margin-top: 5px;color:#F00">
+                                                    MAX:
+                                                </div>
+                                                <div style="width: 90px;margin-top: 5px;">
+                                                    <input id="CH3_MAX" type="text" size="5"
+                                                        style="width: 75px;margin-left: 10px;" value="" readonly>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="ch_setting">
-                                        <div class="container_inline">
-                                            <div style="width: 50px;text-align: right;margin-top: 5px;">Gain:</div>
-                                            <div style="width: 200px;margin-top: 5px;">
-                                                <input id="CH3_GAIN" type="text" size="5"
-                                                    style="width: 185px;margin-left: 10px;" value="0">
+                                    <div class="container_inline"
+                                        style="width:320px;height: 110px;padding: 0px;  border: 1px solid rgba(153, 153, 153, 0.295)">
+                                        <div id="graphs_holder" class="graphs_holder"
+                                            style="width: 100%;margin-top: 0px;height: 80px;">
+                                            <div
+                                                style="clear: both; position: relative; padding: 0px; width: 100%;margin-top: 0px;height: 80px;">
+                                                <div id="graph_bode_ch3" class="graphs"
+                                                    style="width: 100%;margin-top: 0px;height: 100%;">
+                                                    <canvas id="graph_bode_grid_ch3" class="graph_grid"
+                                                        style="width: 100%;height: 100%;"></canvas>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="container_inline" style="margin-top: 5px;">
-                                            <div style="margin-top: 0px;display: flex;justify-content: space-around;">
-                                                <div
-                                                    style="width: 20px;height: 20px; border: 1px solid white;margin-top: 5px;border-radius: 50%;margin-left: 70px; ">
-                                                    <li class="run_buttons" id="B_CH3_SUB_GAIN"
-                                                        style="width: 100%;height: 100%;border-radius: 50%;">
-                                                        <img src="img/minus.svg" alt="-"
-                                                            style="display: block;width: 78%;height: 80%;margin: 2px;" />
-                                                    </li>
+                                        <div style="display: flex;margin: 0;width: 100%;">
+                                            <div id="CH3_IS_SINE"
+                                                style="display: block;width: 20px;height: 15px;margin: 2px;margin-left: 15px;font-size: 12px;color: #F00;">
+                                                SIN
+                                            </div>
+                                            <div id="CH3_PER_COUNT"
+                                                style="height: 15px;font-size: 10px;margin: 3px;margin-left: 5px;">
+                                                x1
+                                            </div>
+                                            <div id="CH3_IS_FPGA"
+                                                style="display: block;height: 15px;margin: 2px;margin-right: 15px;font-size: 12px;margin-left: auto; color: #F00;"
+                                                class="adaptive-tooltip">
+                                                FPGA
+                                                <span class="tooltiptext top">Uses FPGA</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div
+                                        style="width:320px;height: 210px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
+                                        <label>Calib parameters</label>
+                                        <div class="ch_setting">
+                                            <div class="container_inline">
+                                                <div style="width: 50px;text-align: right;margin-top: 5px;">Offset:
                                                 </div>
-                                                <div style="width: 120px;margin-top: 5px;">
-                                                    <select id="B_CH3_VALUE_GAIN" class="protocol" name="rate"
-                                                        style="width: 110px;margin-left: 0px;">
-                                                        <option value="0.0001">0.0001</option>
-                                                        <option value="0.001">0.001</option>
-                                                        <option value="0.01">0.01</option>
-                                                        <option value="0.1">0.1</option>
-                                                    </select>
+                                                <div style="width: 200px;margin-top: 5px;">
+                                                    <input id="CH3_OFFSET" type="text" size="5"
+                                                        style="width: 185px;margin-left: 10px;" value="0">
                                                 </div>
+                                            </div>
+                                            <div class="container_inline" style="margin-top: 5px;">
                                                 <div
-                                                    style="width: 20px;height: 20px; border: 1px solid white;margin-right: 10px;margin-top: 5px;border-radius: 50%;">
-                                                    <li class="run_buttons" id="B_CH3_ADD_GAIN"
-                                                        style="width: 100%;height: 100%;border-radius: 50%;">
-                                                        <img src="img/plus.svg" alt="+"
-                                                            style="display: block;width: 78%;height: 80%;margin: 2px;" />
-                                                    </li>
+                                                    style="margin-top: 0px;display: flex;justify-content: space-around;">
+                                                    <div
+                                                        style="width: 20px;height: 20px; border: 1px solid white;margin-top: 5px;border-radius: 50%;margin-left: 70px; ">
+                                                        <li class="run_buttons" id="B_CH3_SUB_OFF"
+                                                            style="width: 100%;height: 100%;border-radius: 50%;">
+                                                            <img src="img/minus.svg" alt="-"
+                                                                style="display: block;width: 78%;height: 80%;margin: 2px;" />
+                                                        </li>
+                                                    </div>
+                                                    <div style="width: 120px;margin-top: 5px;">
+                                                        <select id="B_CH3_VALUE_OFF" class="protocol" name="rate"
+                                                            style="width: 110px;margin-left: 0px;">
+                                                            <option value="1">1</option>
+                                                            <option value="10">10</option>
+                                                            <option value="100">100</option>
+                                                            <option value="1000">1000</option>
+                                                            <option value="10000">10000</option>
+                                                        </select>
+                                                    </div>
+                                                    <div
+                                                        style="width: 20px;height: 20px; border: 1px solid white;margin-right: 10px;margin-top: 5px;border-radius: 50%;">
+                                                        <li class="run_buttons" id="B_CH3_ADD_OFF"
+                                                            style="width: 100%;height: 100%;border-radius: 50%;">
+                                                            <img src="img/plus.svg" alt="+"
+                                                                style="display: block;width: 78%;height: 80%;margin: 2px;" />
+                                                        </li>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="ch_setting">
+                                            <div class="container_inline">
+                                                <div style="width: 50px;text-align: right;margin-top: 5px;">Gain:</div>
+                                                <div style="width: 200px;margin-top: 5px;">
+                                                    <input id="CH3_GAIN" type="text" size="5"
+                                                        style="width: 185px;margin-left: 10px;" value="0">
+                                                </div>
+                                            </div>
+                                            <div class="container_inline" style="margin-top: 5px;">
+                                                <div
+                                                    style="margin-top: 0px;display: flex;justify-content: space-around;">
+                                                    <div
+                                                        style="width: 20px;height: 20px; border: 1px solid white;margin-top: 5px;border-radius: 50%;margin-left: 70px; ">
+                                                        <li class="run_buttons" id="B_CH3_SUB_GAIN"
+                                                            style="width: 100%;height: 100%;border-radius: 50%;">
+                                                            <img src="img/minus.svg" alt="-"
+                                                                style="display: block;width: 78%;height: 80%;margin: 2px;" />
+                                                        </li>
+                                                    </div>
+                                                    <div style="width: 120px;margin-top: 5px;">
+                                                        <select id="B_CH3_VALUE_GAIN" class="protocol" name="rate"
+                                                            style="width: 110px;margin-left: 0px;">
+                                                            <option value="0.0001">0.0001</option>
+                                                            <option value="0.001">0.001</option>
+                                                            <option value="0.01">0.01</option>
+                                                            <option value="0.1">0.1</option>
+                                                        </select>
+                                                    </div>
+                                                    <div
+                                                        style="width: 20px;height: 20px; border: 1px solid white;margin-right: 10px;margin-top: 5px;border-radius: 50%;">
+                                                        <li class="run_buttons" id="B_CH3_ADD_GAIN"
+                                                            style="width: 100%;height: 100%;border-radius: 50%;">
+                                                            <img src="img/plus.svg" alt="+"
+                                                                style="display: block;width: 78%;height: 80%;margin: 2px;" />
+                                                        </li>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="container_inline"
-                            style="display: inline-block; width: 300px;vertical-align: bottom;">
-                            <div
-                                style="width:300px;height: 500px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
-                                <label>CH 4</label>
-                                <div>
-                                    <div style="display: flex;">
-                                        <div class="container_inline">
-                                            <div class="label-text-size"
-                                                style="width: 40px;text-align: right;margin-top: 5px;color:#f3ec1a">
-                                                MEAN:</div>
-                                            <div style="width: 90px;margin-top: 5px;">
-                                                <input id="CH4_AVG" type="text" size="5"
-                                                    style="width: 75px;margin-left: 10px;" value="" readonly>
-                                            </div>
-                                        </div>
-                                        <div class="container_inline">
-                                            <div class="label-text-size"
-                                                style="width: 40px;text-align: right;margin-top: 5px;color:#b3b3b3">P-P:
-                                            </div>
-                                            <div style="width: 90px;margin-top: 5px;">
-                                                <input id="CH4_P_P" type="text" size="5"
-                                                    style="width: 75px;margin-left: 10px;" value="" readonly>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div style="display: flex;">
-                                        <div class="container_inline">
-                                            <div class="label-text-size"
-                                                style="width: 40px;text-align: right;margin-top: 5px;color:#0F0">MIN:
-                                            </div>
-                                            <div style="width: 90px;margin-top: 5px;">
-                                                <input id="CH4_MIN" type="text" size="5"
-                                                    style="width: 75px;margin-left: 10px;" value="" readonly>
-                                            </div>
-                                        </div>
-                                        <div class="container_inline">
-                                            <div class="label-text-size"
-                                                style="width: 40px;text-align: right;margin-top: 5px;color:#F00">MAX:
-                                            </div>
-                                            <div style="width: 90px;margin-top: 5px;">
-                                                <input id="CH4_MAX" type="text" size="5"
-                                                    style="width: 75px;margin-left: 10px;" value="" readonly>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="container_inline"
-                                    style="width:280px;height: 110px;padding: 0px;  border: 1px solid rgba(153, 153, 153, 0.295)">
-                                    <div id="graphs_holder" class="graphs_holder"
-                                        style="width: 100%;margin-top: 0px;height: 80px;">
-                                        <div
-                                            style="clear: both; position: relative; padding: 0px; width: 100%;margin-top: 0px;height: 80px;">
-                                            <div id="graph_bode_ch4" class="graphs"
-                                                style="width: 100%;margin-top: 0px;height: 100%;">
-                                                <canvas id="graph_bode_grid_ch4" class="graph_grid"
-                                                    style="width: 100%;height: 100%;"></canvas>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div style="display: flex;justify-self: start;margin: 0;">
-                                        <img id="CH4_IS_SINE" src="img/SIN_R.png" alt="-"
-                                            style="display: block;width: 20px;height: 10px;margin: 2px;margin-left: 15px;" />
-                                        <div id="CH4_PER_COUNT"
-                                            style="height: 15px;font-size: 10px;margin: 0;margin-left: 5px;">
-                                        </div>
-                                    </div>
-                                </div>
+                            <div class="container_inline"
+                                style="display: inline-block; width: 350px;vertical-align: bottom;">
                                 <div
-                                    style="width:280px;height: 210px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
-                                    <label>Calib parameters</label>
-                                    <div class="ch_setting">
-                                        <div class="container_inline">
-                                            <div style="width: 50px;text-align: right;margin-top: 5px;">Offset:</div>
-                                            <div style="width: 200px;margin-top: 5px;">
-                                                <input id="CH4_OFFSET" type="text" size="5"
-                                                    style="width: 185px;margin-left: 10px;" value="0">
+                                    style="width:350px;height: 500px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
+                                    <label>CH 4</label>
+                                    <div style="margin-top: 17px;padding-left: 25px;padding-right: 25px;">
+                                        <div style="display: flex;">
+                                            <div class="container_inline">
+                                                <div class="label-text-size"
+                                                    style="width: 40px;text-align: right;margin-top: 5px;color:#f3ec1a">
+                                                    MEAN:</div>
+                                                <div style="width: 90px;margin-top: 5px;">
+                                                    <input id="CH4_AVG" type="text" size="5"
+                                                        style="width: 75px;margin-left: 10px;" value="" readonly>
+                                                </div>
+                                            </div>
+                                            <div class="container_inline">
+                                                <div class="label-text-size"
+                                                    style="width: 40px;text-align: right;margin-top: 5px;color:#b3b3b3">
+                                                    P-P:
+                                                </div>
+                                                <div style="width: 90px;margin-top: 5px;">
+                                                    <input id="CH4_P_P" type="text" size="5"
+                                                        style="width: 75px;margin-left: 10px;" value="" readonly>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="container_inline" style="margin-top: 5px;">
-                                            <div style="margin-top: 0px;display: flex;justify-content: space-around;">
-                                                <div
-                                                    style="width: 20px;height: 20px; border: 1px solid white;margin-top: 5px;border-radius: 50%;margin-left: 70px; ">
-                                                    <li class="run_buttons" id="B_CH4_SUB_OFF"
-                                                        style="width: 100%;height: 100%;border-radius: 50%;">
-                                                        <img src="img/minus.svg" alt="-"
-                                                            style="display: block;width: 78%;height: 80%;margin: 2px;" />
-                                                    </li>
+                                        <div style="display: flex;">
+                                            <div class="container_inline">
+                                                <div class="label-text-size"
+                                                    style="width: 40px;text-align: right;margin-top: 5px;color:#0F0">
+                                                    MIN:
                                                 </div>
-                                                <div style="width: 120px;margin-top: 5px;">
-                                                    <select id="B_CH4_VALUE_OFF" class="protocol" name="rate"
-                                                        style="width: 110px;margin-left: 0px;">
-                                                        <option value="1">1</option>
-                                                        <option value="10">10</option>
-                                                        <option value="100">100</option>
-                                                        <option value="1000">1000</option>
-                                                        <option value="10000">10000</option>
-                                                    </select>
+                                                <div style="width: 90px;margin-top: 5px;">
+                                                    <input id="CH4_MIN" type="text" size="5"
+                                                        style="width: 75px;margin-left: 10px;" value="" readonly>
                                                 </div>
-                                                <div
-                                                    style="width: 20px;height: 20px; border: 1px solid white;margin-right: 10px;margin-top: 5px;border-radius: 50%;">
-                                                    <li class="run_buttons" id="B_CH4_ADD_OFF"
-                                                        style="width: 100%;height: 100%;border-radius: 50%;">
-                                                        <img src="img/plus.svg" alt="+"
-                                                            style="display: block;width: 78%;height: 80%;margin: 2px;" />
-                                                    </li>
+                                            </div>
+                                            <div class="container_inline">
+                                                <div class="label-text-size"
+                                                    style="width: 40px;text-align: right;margin-top: 5px;color:#F00">
+                                                    MAX:
+                                                </div>
+                                                <div style="width: 90px;margin-top: 5px;">
+                                                    <input id="CH4_MAX" type="text" size="5"
+                                                        style="width: 75px;margin-left: 10px;" value="" readonly>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="ch_setting">
-                                        <div class="container_inline">
-                                            <div style="width: 50px;text-align: right;margin-top: 5px;">Gain:</div>
-                                            <div style="width: 200px;margin-top: 5px;">
-                                                <input id="CH4_GAIN" type="text" size="5"
-                                                    style="width: 185px;margin-left: 10px;" value="0">
+                                    <div class="container_inline"
+                                        style="width:320px;height: 110px;padding: 0px;  border: 1px solid rgba(153, 153, 153, 0.295)">
+                                        <div id="graphs_holder" class="graphs_holder"
+                                            style="width: 100%;margin-top: 0px;height: 80px;">
+                                            <div
+                                                style="clear: both; position: relative; padding: 0px; width: 100%;margin-top: 0px;height: 80px;">
+                                                <div id="graph_bode_ch4" class="graphs"
+                                                    style="width: 100%;margin-top: 0px;height: 100%;">
+                                                    <canvas id="graph_bode_grid_ch4" class="graph_grid"
+                                                        style="width: 100%;height: 100%;"></canvas>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="container_inline" style="margin-top: 5px;">
-                                            <div style="margin-top: 0px;display: flex;justify-content: space-around;">
-                                                <div
-                                                    style="width: 20px;height: 20px; border: 1px solid white;margin-top: 5px;border-radius: 50%;margin-left: 70px; ">
-                                                    <li class="run_buttons" id="B_CH4_SUB_GAIN"
-                                                        style="width: 100%;height: 100%;border-radius: 50%;">
-                                                        <img src="img/minus.svg" alt="-"
-                                                            style="display: block;width: 78%;height: 80%;margin: 2px;" />
-                                                    </li>
+                                        <div style="display: flex;margin: 0;width: 100%;">
+                                            <div id="CH4_IS_SINE"
+                                                style="display: block;width: 20px;height: 15px;margin: 2px;margin-left: 15px;font-size: 12px;color: #F00;">
+                                                SIN
+                                            </div>
+                                            <div id="CH4_PER_COUNT"
+                                                style="height: 15px;font-size: 10px;margin: 3px;margin-left: 5px;">
+                                                x1
+                                            </div>
+                                            <div id="CH4_IS_FPGA"
+                                                style="display: block;height: 15px;margin: 2px;margin-right: 15px;font-size: 12px;margin-left: auto; color: #F00;"
+                                                class="adaptive-tooltip">
+                                                FPGA
+                                                <span class="tooltiptext top">Uses FPGA</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div
+                                        style="width:320px;height: 210px;padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
+                                        <label>Calib parameters</label>
+                                        <div class="ch_setting">
+                                            <div class="container_inline">
+                                                <div style="width: 50px;text-align: right;margin-top: 5px;">Offset:
                                                 </div>
-                                                <div style="width: 120px;margin-top: 5px;">
-                                                    <select id="B_CH4_VALUE_GAIN" class="protocol" name="rate"
-                                                        style="width: 110px;margin-left: 0px;">
-                                                        <option value="0.0001">0.0001</option>
-                                                        <option value="0.001">0.001</option>
-                                                        <option value="0.01">0.01</option>
-                                                        <option value="0.1">0.1</option>
-                                                    </select>
+                                                <div style="width: 200px;margin-top: 5px;">
+                                                    <input id="CH4_OFFSET" type="text" size="5"
+                                                        style="width: 185px;margin-left: 10px;" value="0">
                                                 </div>
+                                            </div>
+                                            <div class="container_inline" style="margin-top: 5px;">
                                                 <div
-                                                    style="width: 20px;height: 20px; border: 1px solid white;margin-right: 10px;margin-top: 5px;border-radius: 50%;">
-                                                    <li class="run_buttons" id="B_CH4_ADD_GAIN"
-                                                        style="width: 100%;height: 100%;border-radius: 50%;">
-                                                        <img src="img/plus.svg" alt="+"
-                                                            style="display: block;width: 78%;height: 80%;margin: 2px;" />
-                                                    </li>
+                                                    style="margin-top: 0px;display: flex;justify-content: space-around;">
+                                                    <div
+                                                        style="width: 20px;height: 20px; border: 1px solid white;margin-top: 5px;border-radius: 50%;margin-left: 70px; ">
+                                                        <li class="run_buttons" id="B_CH4_SUB_OFF"
+                                                            style="width: 100%;height: 100%;border-radius: 50%;">
+                                                            <img src="img/minus.svg" alt="-"
+                                                                style="display: block;width: 78%;height: 80%;margin: 2px;" />
+                                                        </li>
+                                                    </div>
+                                                    <div style="width: 120px;margin-top: 5px;">
+                                                        <select id="B_CH4_VALUE_OFF" class="protocol" name="rate"
+                                                            style="width: 110px;margin-left: 0px;">
+                                                            <option value="1">1</option>
+                                                            <option value="10">10</option>
+                                                            <option value="100">100</option>
+                                                            <option value="1000">1000</option>
+                                                            <option value="10000">10000</option>
+                                                        </select>
+                                                    </div>
+                                                    <div
+                                                        style="width: 20px;height: 20px; border: 1px solid white;margin-right: 10px;margin-top: 5px;border-radius: 50%;">
+                                                        <li class="run_buttons" id="B_CH4_ADD_OFF"
+                                                            style="width: 100%;height: 100%;border-radius: 50%;">
+                                                            <img src="img/plus.svg" alt="+"
+                                                                style="display: block;width: 78%;height: 80%;margin: 2px;" />
+                                                        </li>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="ch_setting">
+                                            <div class="container_inline">
+                                                <div style="width: 50px;text-align: right;margin-top: 5px;">Gain:</div>
+                                                <div style="width: 200px;margin-top: 5px;">
+                                                    <input id="CH4_GAIN" type="text" size="5"
+                                                        style="width: 185px;margin-left: 10px;" value="0">
+                                                </div>
+                                            </div>
+                                            <div class="container_inline" style="margin-top: 5px;">
+                                                <div
+                                                    style="margin-top: 0px;display: flex;justify-content: space-around;">
+                                                    <div
+                                                        style="width: 20px;height: 20px; border: 1px solid white;margin-top: 5px;border-radius: 50%;margin-left: 70px; ">
+                                                        <li class="run_buttons" id="B_CH4_SUB_GAIN"
+                                                            style="width: 100%;height: 100%;border-radius: 50%;">
+                                                            <img src="img/minus.svg" alt="-"
+                                                                style="display: block;width: 78%;height: 80%;margin: 2px;" />
+                                                        </li>
+                                                    </div>
+                                                    <div style="width: 120px;margin-top: 5px;">
+                                                        <select id="B_CH4_VALUE_GAIN" class="protocol" name="rate"
+                                                            style="width: 110px;margin-left: 0px;">
+                                                            <option value="0.0001">0.0001</option>
+                                                            <option value="0.001">0.001</option>
+                                                            <option value="0.01">0.01</option>
+                                                            <option value="0.1">0.1</option>
+                                                        </select>
+                                                    </div>
+                                                    <div
+                                                        style="width: 20px;height: 20px; border: 1px solid white;margin-right: 10px;margin-top: 5px;border-radius: 50%;">
+                                                        <li class="run_buttons" id="B_CH4_ADD_GAIN"
+                                                            style="width: 100%;height: 100%;border-radius: 50%;">
+                                                            <img src="img/plus.svg" alt="+"
+                                                                style="display: block;width: 78%;height: 80%;margin: 2px;" />
+                                                        </li>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="container_inline" style="display: flex; justify-content: space-evenly;">
-                            <div id="manual_lv_hv_mode" class="flipswitch_div">
-                                <input id="HV_LV_MODE" type="checkbox" class="man_flipswitch flipswitch" data-on="HV"
-                                    data-off="LV" />
-                            </div>
-                            <div id="manual_ac_dc_mode" class="flipswitch_div">
-                                <input id="AC_DC_MODE" type="checkbox" class="man_flipswitch flipswitch" data-on="AC"
-                                    data-off="DC" />
-                            </div>
-                            <div id="manual_avg_mode" class="flipswitch_div">
-                                <input id="AVG_LAST_MODE" type="checkbox" class="man_flipswitch flipswitch"
-                                    data-on="AVG" data-off="LAST" value="true" />
-                            </div>
-                            <div id="manual_dec_mode">
-                                <div class="label-text-size" style="width: 60px;text-align: right;margin-top: 10px;">
-                                    Decimation:</div>
-                                <div style="width: 70px;margin-top: 10px;">
-                                    <select id="B_DEC_SELECTOR" class="protocol" style="width: 60px;margin-left: 0px;">
-                                        <option value="1">1</option>
-                                        <option value="2">2</option>
-                                        <option value="4">4</option>
-                                        <option value="8">8</option>
-                                        <option value="16">16</option>
-                                        <option value="32">32</option>
-                                        <option value="64">64</option>
-                                        <option value="128">128</option>
-                                        <option value="256">256</option>
-                                        <option value="512">512</option>
-                                        <option value="1024">1024</option>
-                                        <option value="2048">2048</option>
-                                        <option value="4096">4096</option>
-                                    </select>
+                            <div class="container_inline" style="display: flex; justify-content: space-evenly;">
+                                <div id="manual_lv_hv_mode" class="flipswitch_div">
+                                    <input id="HV_LV_MODE" type="checkbox" class="man_flipswitch flipswitch"
+                                        data-on="HV" data-off="LV" />
+                                </div>
+                                <div id="manual_ac_dc_mode" class="flipswitch_div">
+                                    <input id="AC_DC_MODE" type="checkbox" class="man_flipswitch flipswitch"
+                                        data-on="AC" data-off="DC" />
+                                </div>
+                                <div id="manual_avg_mode" class="flipswitch_div adaptive-tooltip">
+                                    <span class="tooltiptext top">Value measurement mode</span>
+                                    <input id="AVG_LAST_MODE" type="checkbox" class="man_flipswitch flipswitch"
+                                        data-on="AVG" data-off="LAST" value="true" />
+                                </div>
+                                <div id="manual_filter_mode" class="flipswitch_div adaptive-tooltip">
+                                    <span class="tooltiptext top">Filter in FPGA</span>
+                                    <input id="BYPASS_FILTER_MODE" type="checkbox" class="man_flipswitch flipswitch"
+                                        data-on="F. ON" data-off="F. OFF" value="false" />
+                                </div>
+                                <div id="manual_dec_mode">
+                                    <div class="label-text-size"
+                                        style="width: 60px;text-align: right;margin-top: 10px;">
+                                        Decimation:</div>
+                                    <div style="width: 70px;margin-top: 10px;">
+                                        <select id="B_DEC_SELECTOR" class="protocol"
+                                            style="width: 60px;margin-left: 0px;">
+                                            <option value="1">1</option>
+                                            <option value="2">2</option>
+                                            <option value="4">4</option>
+                                            <option value="8">8</option>
+                                            <option value="16">16</option>
+                                            <option value="32">32</option>
+                                            <option value="64">64</option>
+                                            <option value="128">128</option>
+                                            <option value="256">256</option>
+                                            <option value="512">512</option>
+                                            <option value="1024">1024</option>
+                                            <option value="2048">2048</option>
+                                            <option value="4096">4096</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
             <div id="filter_mode_body" style="display: none;">
@@ -1187,6 +1266,102 @@
                 <div class="bazaar-link" style="float: right; width: 45%;">
                     <a style="border: 1px solid; width: 100%" id="reset_cancel_btn" data-dismiss="modal"
                         class="btn">Cancel</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="subWindow" class="subwindow hidden" style="box-shadow: 0px 0px 3px 3px rgba(61, 61, 61, 0.726);">
+    <div class="subwindow-content">
+        <div class="subwindow-header">
+            <div>EEPROM Info</div>
+            <span class="close-button" onclick="SW.closeSubWindow()">&times;</span>
+        </div>
+        <div class="container_inline" style="display: inline-block; margin-right: 10px; vertical-align: bottom;">
+            <div style="padding-top: 5px;border: 1px solid rgba(153, 153, 153, 0.295)">
+                <label style="width: 100%;text-align: center;">Factory zone</label>
+                <div style="padding-left: 25px;padding-right: 25px;width: 100%;margin-top: 0px;">
+                    <div style="display: flex;margin-top: 0;">
+                        <div class="container_inline" style="margin-top:0">
+                            <div class="label-text-size"
+                                style="width: 100px;text-align: right;margin-top: 0px;font-weight: 500;">
+                                Version:</div>
+                            <div id="SW_F_VER" style="margin-top: 0px;">
+                                -
+                            </div>
+                        </div>
+                        <div class="container_inline" style="margin-top:0">
+                            <div class="label-text-size"
+                                style="width: 100px;text-align: right;margin-top: 0px;font-weight: 500">
+                                Write counter:</div>
+                            <div id="SW_F_COUNT" style="margin-top: 0px;">
+                                -
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <label style="width: 100%;text-align: center;margin-top: 10px;">User zone</label>
+                <div style="padding-left: 25px;padding-right: 25px;width: 100%;margin-top: 0;">
+                    <div style="display: flex;margin-top: 0">
+                        <div class="container_inline" style="margin-top:0">
+                            <div class="label-text-size"
+                                style="width: 100px;text-align: right;margin-top: 0px;font-weight: 500">
+                                Version:</div>
+                            <div id="SW_U_VER" style="margin-top: 0px;">
+                                -
+                            </div>
+                        </div>
+                        <div class="container_inline" style="margin-top:0">
+                            <div class="label-text-size"
+                                style="width: 100px;text-align: right;margin-top: 0px;font-weight: 500">
+                                Write counter:</div>
+                            <div id="SW_U_COUNT" style="margin-top: 0px;">
+                                -
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="container_inline" style="margin-bottom: 15px;display: flex;justify-content: space-evenly;">
+                    <div style="width: 140px;">
+                        <li class="run_buttons" id="B_F_BACKUP" style="width: 100%;font-size: 12px;padding: 2px;">
+                            <a id="B_F_BACKUP_A">FACTORY BACKUP</a>
+                        </li>
+                    </div>
+                    <div style="width: 140px;">
+                        <li class="run_buttons" id="B_U_BACKUP" style="width: 100%;font-size: 12px;padding: 2px;">
+                            <a id="B_U_BACKUP_A">USER BACKUP</a>
+                        </li>
+                    </div>
+                    <div style="width: 140px;">
+                        <li class="run_buttons" id="B_U_RESTORE" style="width: 100%;font-size: 12px;padding: 2px;">
+                            <a id="B_U_RESTORE_A">USER RESTORE</a>
+                        </li>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- <div class="resize-handle bottom-right">
+        <img src="img/resize.svg" class="resize-handle" />
+    </div> -->
+</div>
+<div class="modal fade" id="info_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="oops_label">Calibration application</h4>
+            </div>
+            <div class="modal-body" style="text-align: center; font-size: 18px;">
+                <p id="info_dialog_label">ERROR</p>
+            </div>
+            <div class="modal-footer">
+                <div class="bazaar-link" style="float: center; width: 100%;">
+                    <a href="#" style="border: 1px solid; width: 100%" id="ok_app_btn" data-dismiss="modal"
+                        class="list-group-item btn ok_button_dialog">Ok</a>
                 </div>
             </div>
         </div>

@@ -79,8 +79,10 @@ COscilloscope::COscilloscope(uint32_t _decimation)
         m_avg_filter_buffer_max[ch] = new float[m_avg_filter_size];
         m_avg_filter_buffer_min[ch] = new float[m_avg_filter_size];
         m_avg_filter_buffer_mean[ch] = new float[m_avg_filter_size];
+        m_avg_filter_buffer_avg[ch] = new float[m_avg_filter_size];
         m_avg_filter_buffer_p_p[ch] = new float[m_avg_filter_size];
     }
+    setFilterBypass(false);
     resetAvgFilter();
 }
 
@@ -92,6 +94,7 @@ COscilloscope::~COscilloscope() {
         delete[] m_avg_filter_buffer_max[ch];
         delete[] m_avg_filter_buffer_min[ch];
         delete[] m_avg_filter_buffer_mean[ch];
+        delete[] m_avg_filter_buffer_avg[ch];
         delete[] m_avg_filter_buffer_p_p[ch];
     }
 }
@@ -183,6 +186,17 @@ auto COscilloscope::getAvgFilter() -> bool {
     return m_avg_filter;
 }
 
+auto COscilloscope::setFilterBypass(bool bypass) -> void {
+    m_filter_bypass = bypass;
+    for (uint8_t ch = 0; ch < m_channels; ch++) {
+        rp_AcqSetBypassFilter((rp_channel_t)ch, bypass);
+    }
+}
+
+auto COscilloscope::getFilterBypass() -> bool {
+    return m_filter_bypass;
+}
+
 auto COscilloscope::resetAvgFilter() -> void {
     pthread_mutex_lock(&m_avgFilter);
     m_avg_filter_cur = 0;
@@ -192,6 +206,7 @@ auto COscilloscope::resetAvgFilter() -> void {
             m_avg_filter_buffer_min[ch][i] = INVALID_VALUE;
             m_avg_filter_buffer_p_p[ch][i] = INVALID_VALUE;
             m_avg_filter_buffer_mean[ch][i] = INVALID_VALUE;
+            m_avg_filter_buffer_avg[ch][i] = INVALID_VALUE;
         }
     }
     pthread_mutex_unlock(&m_avgFilter);
@@ -349,9 +364,11 @@ void COscilloscope::acquire() {
         pthread_mutex_lock(&m_avgFilter);
         for (auto i = 0u; i < m_channels; i++) {
             localDP.ch_avg[i] = 0;
+            localDP.ch_mean[i] = 0;
             localDP.ch_max[i] = m_buffer.ch_f[i][0];
             localDP.ch_min[i] = m_buffer.ch_f[i][0];
             localDP.ch_avg_raw[i] = 0;
+            localDP.ch_mean_raw[i] = 0;
             localDP.ch_min_raw[i] = m_buffer.ch_i[i][0];
             localDP.ch_max_raw[i] = m_buffer.ch_i[i][0];
 
@@ -360,9 +377,11 @@ void COscilloscope::acquire() {
                     localDP.ch_max[i] = m_buffer.ch_f[i][j];
                 if (localDP.ch_min[i] > m_buffer.ch_f[i][j])
                     localDP.ch_min[i] = m_buffer.ch_f[i][j];
+                localDP.ch_avg[i] += m_buffer.ch_f[i][j];
             }
             localDP.ch_p_p[i] = localDP.ch_max[i] - localDP.ch_min[i];
-            localDP.ch_avg[i] = (localDP.ch_max[i] + localDP.ch_min[i]) / 2.0;
+            localDP.ch_mean[i] = (localDP.ch_max[i] + localDP.ch_min[i]) / 2.0;
+            localDP.ch_avg[i] /= acq_u_size;
 
             for (auto j = 0u; j < acq_u_size_raw; ++j) {
                 auto ch = m_buffer.ch_i[i][j];
@@ -372,13 +391,16 @@ void COscilloscope::acquire() {
                     localDP.ch_min_raw[i] = ch;
                 localDP.ch_avg_raw[i] += ch;
             }
-            localDP.ch_avg_raw[i] = (localDP.ch_max_raw[i] + localDP.ch_min_raw[i]) / 2.0;
+
+            localDP.ch_avg_raw[i] /= (int32_t)acq_u_size_raw;
+            localDP.ch_mean_raw[i] = (localDP.ch_max_raw[i] + localDP.ch_min_raw[i]) / 2.0;
 
             if (m_avg_filter) {
                 m_avg_filter_buffer_max[i][m_avg_filter_cur] = localDP.ch_max[i];
                 m_avg_filter_buffer_min[i][m_avg_filter_cur] = localDP.ch_min[i];
                 m_avg_filter_buffer_p_p[i][m_avg_filter_cur] = localDP.ch_p_p[i];
-                m_avg_filter_buffer_mean[i][m_avg_filter_cur] = localDP.ch_avg[i];
+                m_avg_filter_buffer_mean[i][m_avg_filter_cur] = localDP.ch_mean[i];
+                m_avg_filter_buffer_avg[i][m_avg_filter_cur] = localDP.ch_avg[i];
             }
         }
         if (m_avg_filter) {
@@ -392,6 +414,8 @@ void COscilloscope::acquire() {
                 float sum_p_p = 0;
                 float real_data_count_mean = 0;
                 float sum_mean = 0;
+                float real_data_count_avg = 0;
+                float sum_avg = 0;
 
                 for (auto i = 0u; i < m_avg_filter_size; i++) {
                     if (m_avg_filter_buffer_max[ch][i] != INVALID_VALUE) {
@@ -406,6 +430,10 @@ void COscilloscope::acquire() {
                         real_data_count_mean++;
                         sum_mean += m_avg_filter_buffer_mean[ch][i];
                     }
+                    if (m_avg_filter_buffer_avg[ch][i] != INVALID_VALUE) {
+                        real_data_count_avg++;
+                        sum_avg += m_avg_filter_buffer_avg[ch][i];
+                    }
                     if (m_avg_filter_buffer_p_p[ch][i] != INVALID_VALUE) {
                         real_data_count_p_p++;
                         sum_p_p += m_avg_filter_buffer_p_p[ch][i];
@@ -414,7 +442,8 @@ void COscilloscope::acquire() {
                 localDP.ch_max[ch] = sum_max / real_data_count_max;
                 localDP.ch_min[ch] = sum_min / real_data_count_min;
                 localDP.ch_p_p[ch] = sum_p_p / real_data_count_p_p;
-                localDP.ch_avg[ch] = sum_mean / real_data_count_mean;
+                localDP.ch_mean[ch] = sum_mean / real_data_count_mean;
+                localDP.ch_avg[ch] = sum_avg / real_data_count_avg;
             }
             if (m_avg_filter_cur > m_avg_filter_size) {
                 m_avg_filter_cur = 0;
@@ -905,6 +934,116 @@ void COscilloscope::setGEN0_5() {
     rp_GenSynchronise();
 }
 
+void COscilloscope::setGEN0_5_NEG() {
+    if (getDACChannels() < 2) {
+        FATAL("Fast DAC not present on board");
+        exit(-1);
+    }
+    rp_GenAmp(RP_CH_1, 0.5);
+    rp_GenAmp(RP_CH_2, 0.5);
+    rp_GenOffset(RP_CH_1, 0);
+    rp_GenOffset(RP_CH_2, 0);
+    rp_GenWaveform(RP_CH_1, RP_WAVEFORM_DC_NEG);
+    rp_GenWaveform(RP_CH_2, RP_WAVEFORM_DC_NEG);
+    rp_GenFreq(RP_CH_1, 100);
+    rp_GenFreq(RP_CH_2, 100);
+    rp_GenRiseTime(RP_CH_1, 0);
+    rp_GenRiseTime(RP_CH_2, 0);
+    rp_GenFallTime(RP_CH_1, 0);
+    rp_GenFallTime(RP_CH_2, 0);
+    rp_GenOutEnable(RP_CH_1);
+    rp_GenOutEnable(RP_CH_2);
+    rp_GenSynchronise();
+}
+
+void COscilloscope::setGEN0_15() {
+    if (getDACChannels() < 2) {
+        FATAL("Fast DAC not present on board");
+        exit(-1);
+    }
+    rp_GenAmp(RP_CH_1, 0.15);
+    rp_GenAmp(RP_CH_2, 0.15);
+    rp_GenOffset(RP_CH_1, 0);
+    rp_GenOffset(RP_CH_2, 0);
+    rp_GenWaveform(RP_CH_1, RP_WAVEFORM_DC);
+    rp_GenWaveform(RP_CH_2, RP_WAVEFORM_DC);
+    rp_GenFreq(RP_CH_1, 100);
+    rp_GenFreq(RP_CH_2, 100);
+    rp_GenRiseTime(RP_CH_1, 0);
+    rp_GenRiseTime(RP_CH_2, 0);
+    rp_GenFallTime(RP_CH_1, 0);
+    rp_GenFallTime(RP_CH_2, 0);
+    rp_GenOutEnable(RP_CH_1);
+    rp_GenOutEnable(RP_CH_2);
+    rp_GenSynchronise();
+}
+
+void COscilloscope::setGEN0_15_NEG() {
+    if (getDACChannels() < 2) {
+        FATAL("Fast DAC not present on board");
+        exit(-1);
+    }
+    rp_GenAmp(RP_CH_1, 0.15);
+    rp_GenAmp(RP_CH_2, 0.15);
+    rp_GenOffset(RP_CH_1, 0);
+    rp_GenOffset(RP_CH_2, 0);
+    rp_GenWaveform(RP_CH_1, RP_WAVEFORM_DC_NEG);
+    rp_GenWaveform(RP_CH_2, RP_WAVEFORM_DC_NEG);
+    rp_GenFreq(RP_CH_1, 100);
+    rp_GenFreq(RP_CH_2, 100);
+    rp_GenRiseTime(RP_CH_1, 0);
+    rp_GenRiseTime(RP_CH_2, 0);
+    rp_GenFallTime(RP_CH_1, 0);
+    rp_GenFallTime(RP_CH_2, 0);
+    rp_GenOutEnable(RP_CH_1);
+    rp_GenOutEnable(RP_CH_2);
+    rp_GenSynchronise();
+}
+
+void COscilloscope::setGEN0_9() {
+    if (getDACChannels() < 2) {
+        FATAL("Fast DAC not present on board");
+        exit(-1);
+    }
+    rp_GenAmp(RP_CH_1, 0.9);
+    rp_GenAmp(RP_CH_2, 0.9);
+    rp_GenOffset(RP_CH_1, 0);
+    rp_GenOffset(RP_CH_2, 0);
+    rp_GenWaveform(RP_CH_1, RP_WAVEFORM_DC);
+    rp_GenWaveform(RP_CH_2, RP_WAVEFORM_DC);
+    rp_GenFreq(RP_CH_1, 100);
+    rp_GenFreq(RP_CH_2, 100);
+    rp_GenRiseTime(RP_CH_1, 0);
+    rp_GenRiseTime(RP_CH_2, 0);
+    rp_GenFallTime(RP_CH_1, 0);
+    rp_GenFallTime(RP_CH_2, 0);
+    rp_GenOutEnable(RP_CH_1);
+    rp_GenOutEnable(RP_CH_2);
+    rp_GenSynchronise();
+}
+
+void COscilloscope::setGEN0_9_NEG() {
+    if (getDACChannels() < 2) {
+        FATAL("Fast DAC not present on board");
+        exit(-1);
+    }
+    rp_GenAmp(RP_CH_1, 0.9);
+    rp_GenAmp(RP_CH_2, 0.9);
+    rp_GenOffset(RP_CH_1, 0);
+    rp_GenOffset(RP_CH_2, 0);
+    rp_GenWaveform(RP_CH_1, RP_WAVEFORM_DC_NEG);
+    rp_GenWaveform(RP_CH_2, RP_WAVEFORM_DC_NEG);
+    rp_GenFreq(RP_CH_1, 100);
+    rp_GenFreq(RP_CH_2, 100);
+    rp_GenRiseTime(RP_CH_1, 0);
+    rp_GenRiseTime(RP_CH_2, 0);
+    rp_GenFallTime(RP_CH_1, 0);
+    rp_GenFallTime(RP_CH_2, 0);
+    rp_GenOutEnable(RP_CH_1);
+    rp_GenOutEnable(RP_CH_2);
+    rp_GenSynchronise();
+}
+
 void COscilloscope::setGEN0_5_SINE() {
     if (getDACChannels() < 2) {
         FATAL("Fast DAC not present on board");
@@ -916,8 +1055,30 @@ void COscilloscope::setGEN0_5_SINE() {
     rp_GenOffset(RP_CH_2, 0);
     rp_GenWaveform(RP_CH_1, RP_WAVEFORM_SINE);
     rp_GenWaveform(RP_CH_2, RP_WAVEFORM_SINE);
-    rp_GenFreq(RP_CH_1, 2500);
-    rp_GenFreq(RP_CH_2, 2500);
+    rp_GenFreq(RP_CH_1, 250);
+    rp_GenFreq(RP_CH_2, 250);
+    rp_GenRiseTime(RP_CH_1, 0);
+    rp_GenRiseTime(RP_CH_2, 0);
+    rp_GenFallTime(RP_CH_1, 0);
+    rp_GenFallTime(RP_CH_2, 0);
+    rp_GenOutEnable(RP_CH_1);
+    rp_GenOutEnable(RP_CH_2);
+    rp_GenSynchronise();
+}
+
+void COscilloscope::setGEN0_9_SINE() {
+    if (getDACChannels() < 2) {
+        FATAL("Fast DAC not present on board");
+        exit(-1);
+    }
+    rp_GenAmp(RP_CH_1, 0.9);
+    rp_GenAmp(RP_CH_2, 0.9);
+    rp_GenOffset(RP_CH_1, 0);
+    rp_GenOffset(RP_CH_2, 0);
+    rp_GenWaveform(RP_CH_1, RP_WAVEFORM_SINE);
+    rp_GenWaveform(RP_CH_2, RP_WAVEFORM_SINE);
+    rp_GenFreq(RP_CH_1, 250);
+    rp_GenFreq(RP_CH_2, 250);
     rp_GenRiseTime(RP_CH_1, 0);
     rp_GenRiseTime(RP_CH_2, 0);
     rp_GenFallTime(RP_CH_1, 0);
@@ -1044,13 +1205,6 @@ void COscilloscope::updateGenCalib() {
     rp_GenOffset(RP_CH_1, x);
     rp_GenGetOffset(RP_CH_2, &x);
     rp_GenOffset(RP_CH_2, x);
-}
-
-auto COscilloscope::setFilterBypass(bool enable) -> void {
-    auto c = getADCChannels();
-    for (uint8_t i = 0; i < c; i++) {
-        rp_AcqSetBypassFilter((rp_channel_t)i, enable);
-    }
 }
 
 }  // namespace rp_calib

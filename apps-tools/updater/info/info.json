@@ -1,6 +1,6 @@
 {
-    "name": "Remote control",
+    "name": "Red Pitaya OS Update",
     "version": "VERSION",
     "revision": "REVISION",
-    "description": "Remote access to all Red Pitaya inputs/outputs from MATLAB/LabVIEW/Scilab/Python"
+    "description": "Red Pitaya ecosystem updater"
 }

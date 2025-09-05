@@ -1813,6 +1813,12 @@ int rp_AcqSetCalibInFPGA(rp_channel_t channel) {
     return acq_SetCalibInFPGA(channel);
 }
 
+int rp_AcqGetCalibInFPGA(rp_channel_t channel, bool* state) {
+    if (!rp_HPGetIsCalibInFPGAOrDefault())
+        return RP_NOTS;
+    return acq_GetCalibInFPGA(channel, state);
+}
+
 /**
 * Generate methods
 */

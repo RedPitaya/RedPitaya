@@ -345,7 +345,7 @@ int acq_SetGain(rp_channel_t channel, rp_pinState_t state) {
     } else {
         status = setEqFilters(channel);
         if (status == RP_EUF) {
-            return RP_OK;
+            status = RP_OK;
         }
     }
     acq_SetCalibInFPGA(channel);
@@ -1583,6 +1583,15 @@ int acq_SetCalibInFPGA(rp_channel_t channel) {
     CHECK_CHANNEL
 
     return setCalibInFPGA(channel);
+}
+
+int acq_GetCalibInFPGA(rp_channel_t channel, bool* state) {
+
+    CHECK_CHANNEL
+
+    *state = is_calib_fpga_ch[channel];
+
+    return RP_OK;
 }
 
 int acq_SetExtTriggerDebouncerUs(double value) {

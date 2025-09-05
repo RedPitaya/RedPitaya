@@ -33,8 +33,8 @@ print("rp_hw_calib.rp_CalibrationReset(False,False,False,5)")
 res = rp_hw_calib.rp_CalibrationReset(False,False,False,5)
 print(res)
 
-print("rp_hw_calib.rp_CalibrationFactoryReset(False,5)")
-res = rp_hw_calib.rp_CalibrationFactoryReset(False,5)
+print("rp_hw_calib.rp_CalibrationFactoryReset(False)")
+res = rp_hw_calib.rp_CalibrationFactoryReset(False)
 print(res)
 
 print("rp_hw_calib.rp_GetCalibrationSettings()")

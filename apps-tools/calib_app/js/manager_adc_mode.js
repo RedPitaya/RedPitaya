@@ -87,11 +87,19 @@ $(function() {
 
     OBJ.adcSetCH1IsSin = function(_value) {
         if (_value.value){
-            $("#CH1_IS_SINE").attr("src","img/SIN_G.png");
+            $("#CH1_IS_SINE").css('color', '#0F0');
             $("#CH1_PER_COUNT").text('x'+OBJ.adcPPerBufLastValue.get(1));
         }else{
-            $("#CH1_IS_SINE").attr("src","img/SIN_R.png");
+            $("#CH1_IS_SINE").css('color', 'red');
             $("#CH1_PER_COUNT").text('');
+        }
+    }
+
+    OBJ.adcSetCH1IsFpga = function(_value) {
+        if (_value.value){
+            $("#CH1_IS_FPGA").css('color', '#0F0');
+        }else{
+            $("#CH1_IS_FPGA").css('color', 'red');
         }
     }
 
@@ -120,11 +128,20 @@ $(function() {
 
     OBJ.adcSetCH2IsSin = function(_value) {
         if (_value.value){
-            $("#CH2_IS_SINE").attr("src","img/SIN_G.png");
+            $("#CH2_IS_SINE").css('color', '#0F0');
             $("#CH2_PER_COUNT").text('x'+OBJ.adcPPerBufLastValue.get(2));
         }else{
-            $("#CH2_IS_SINE").attr("src","img/SIN_R.png");
+            $("#CH2_IS_SINE").css('color', 'red');
             $("#CH2_PER_COUNT").text('');
+        }
+    }
+
+
+    OBJ.adcSetCH2IsFpga = function(_value) {
+        if (_value.value){
+            $("#CH2_IS_FPGA").css('color', '#0F0');
+        }else{
+            $("#CH2_IS_FPGA").css('color', 'red');
         }
     }
 
@@ -153,11 +170,20 @@ $(function() {
 
     OBJ.adcSetCH3IsSin = function(_value) {
         if (_value.value){
-            $("#CH3_IS_SINE").attr("src","img/SIN_G.png");
+            $("#CH3_IS_SINE").css('color', '#0F0');
             $("#CH3_PER_COUNT").text('x'+ OBJ.adcPPerBufLastValue.get(3));
         }else{
-            $("#CH3_IS_SINE").attr("src","img/SIN_R.png");
+            $("#CH3_IS_SINE").css('color', 'red');
             $("#CH3_PER_COUNT").text('');
+        }
+    }
+
+
+    OBJ.adcSetCH3IsFpga = function(_value) {
+        if (_value.value){
+            $("#CH3_IS_FPGA").css('color', '#0F0');
+        }else{
+            $("#CH3_IS_FPGA").css('color', 'red');
         }
     }
 
@@ -186,11 +212,20 @@ $(function() {
 
     OBJ.adcSetCH4IsSin = function(_value) {
         if (_value.value){
-            $("#CH4_IS_SINE").attr("src","img/SIN_G.png");
+            $("#CH4_IS_SINE").css('color', '#0F0');
             $("#CH4_PER_COUNT").text('x'+OBJ.adcPPerBufLastValue.get(4));
         }else{
-            $("#CH4_IS_SINE").attr("src","img/SIN_R.png");
+            $("#CH4_IS_SINE").css('color', 'red');
             $("#CH4_PER_COUNT").text('');
+        }
+    }
+
+
+    OBJ.adcSetCH4IsFpga = function(_value) {
+        if (_value.value){
+            $("#CH4_IS_FPGA").css('color', '#0F0');
+        }else{
+            $("#CH4_IS_FPGA").css('color', 'red');
         }
     }
 
@@ -281,7 +316,7 @@ $(function() {
 
 
         OBJ.adcGraphCacheCh[ch] = {};
-        OBJ.adcGraphCacheCh[ch].elem = $('<div id="bode_plot_ch'+ch+'" class="plot" style="width:278px;height:78px;position: absolute;margin-top: auto;left: 0px;"/>').appendTo('#graph_bode_ch'+ch);
+        OBJ.adcGraphCacheCh[ch].elem = $('<div id="bode_plot_ch'+ch+'" class="plot" style="width:318px;height:78px;position: absolute;margin-top: auto;left: 0px;"/>').appendTo('#graph_bode_ch'+ch);
 
         var t = null;
         var options = {
@@ -455,6 +490,12 @@ $(function() {
         }
         if (_mode == "HV_LV_MODE") {
             CLIENT.parametersCache["hv_lv_mode"] = { value: _state };
+            CLIENT.parametersCache["request_reset_avg_filter"] = {value: true};
+            CLIENT.sendParameters();
+            setTimeout(OBJ.adcInitData, 1000);
+        }
+        if (_mode == "BYPASS_FILTER_MODE") {
+            CLIENT.parametersCache["adc_man_filter_bypass"] = { value: _state };
             CLIENT.parametersCache["request_reset_avg_filter"] = {value: true};
             CLIENT.sendParameters();
             setTimeout(OBJ.adcInitData, 1000);
