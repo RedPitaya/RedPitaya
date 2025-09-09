@@ -26,8 +26,8 @@ CStringParameter outWaveform[MAX_DAC_CHANNELS] = INIT2("SOUR", "_FUNC", CBasePar
 CStringParameter outARBList = CStringParameter("ARB_LIST", CBaseParameter::RW, loadARBList(), 0);
 
 CIntParameter outGain[MAX_DAC_CHANNELS] = INIT2("CH", "_OUT_GAIN", CBaseParameter::RW, 0, 0, 0, 1);
-CIntParameter outTemperatureRuntime[MAX_DAC_CHANNELS] = INIT2("SOUR", "_TEMP_RUNTIME", CBaseParameter::RWSA, 0, 0, 0, 1);
-CIntParameter outTemperatureLatched[MAX_DAC_CHANNELS] = INIT2("SOUR", "_TEMP_LATCHED", CBaseParameter::RWSA, 0, 0, 0, 1);
+CIntParameter outTemperatureRuntime[MAX_DAC_CHANNELS] = INIT2("SOUR", "_TEMP_RUNTIME", CBaseParameter::RO, 0, 0, 0, 1);
+CIntParameter outTemperatureLatched[MAX_DAC_CHANNELS] = INIT2("SOUR", "_TEMP_LATCHED", CBaseParameter::RO, 0, 0, 0, 1);
 CIntParameter outImp[MAX_DAC_CHANNELS] = INIT2("SOUR", "_IMPEDANCE", CBaseParameter::RW, 0, 0, 0, 1, isZModePresent() ? CONFIG_VAR : 0);
 
 CBooleanParameter outImpZmode("SOUR_IMPEDANCE_Z_MODE", CBaseParameter::RO, is_z_present, 0);
@@ -295,14 +295,14 @@ void UpdateGeneratorParameters(bool force) {
         for (auto ch = 0u; ch < g_dac_count; ch++) {
             bool temperature_runtime = false;
             if (rp_GetRuntimeTempAlarm((rp_channel_t)ch, &temperature_runtime) == RP_OK) {
-                outTemperatureRuntime[ch].Value() = temperature_runtime;
-                outTemperatureRuntime[ch].Update();
+                if (outTemperatureRuntime[ch].Value() != temperature_runtime)
+                    outTemperatureRuntime[ch].SendValue(temperature_runtime);
             }
 
             bool temperature_latched = false;
             if (rp_GetLatchTempAlarm((rp_channel_t)ch, &temperature_latched) == RP_OK) {
-                outTemperatureLatched[ch].Value() = temperature_latched;
-                outTemperatureLatched[ch].Update();
+                if (outTemperatureLatched[ch].Value() != temperature_latched)
+                    outTemperatureLatched[ch].SendValue(temperature_latched);
             }
         }
     }

@@ -177,8 +177,10 @@
                     SPEC.initHandlers();
                     SPEC.waterfalls[0] = $.createWaterfall($("#waterfall_ch1"), $('#waterfall-holder_ch1').width(), 60);
                     SPEC.waterfalls[1] = $.createWaterfall($("#waterfall_ch2"), $('#waterfall-holder_ch2').width(), 60);
-                    SPEC.waterfalls[2] = $.createWaterfall($("#waterfall_ch3"), $('#waterfall-holder_ch2').width(), 60);
-                    SPEC.waterfalls[3] = $.createWaterfall($("#waterfall_ch4"), $('#waterfall-holder_ch2').width(), 60);
+                    if (SPEC.rp_model === "Z20_125_4CH"){
+                        SPEC.waterfalls[2] = $.createWaterfall($("#waterfall_ch3"), $('#waterfall-holder_ch3').width(), 60);
+                        SPEC.waterfalls[3] = $.createWaterfall($("#waterfall_ch4"), $('#waterfall-holder_ch4').width(), 60);
+                    }
                     SPEC.updateInterfaceFor250(SPEC.rp_model);
                     SPEC.updateInterfaceForZ20(SPEC.rp_model);
                     SPEC.requestParameters();
@@ -884,7 +886,7 @@
 
                     if (sig_name == 'ch4_view') {
                         SPEC.waterfalls[3].setSize($('.waterfall-graph').width(), 60);
-                        if (!$('#CH3_FREEZE').hasClass('active')) {
+                        if (!$('#CH4_FREEZE').hasClass('active')) {
                             SPEC.waterfalls[3].addData2(water_fall_point);
                         }
                         SPEC.waterfalls[3].draw();
@@ -898,7 +900,7 @@
 
             UI_GRAPH.unlockUpdateYLimit();
             if (bufferDataset.length > 0) {
-
+                SPEC.latest_signal = new_signals
                 if (SPEC.graphs && SPEC.graphs.elem) {
 
                     SPEC.graphs.elem.show();
@@ -962,8 +964,17 @@
                             }
                         });
 
-                        $('.x1Axis').bind("DOMSubtreeModified", function() {
-                            SPEC.updateWaterfallLabels();
+                        const observer = new MutationObserver(function(mutations) {
+                            mutations.forEach(function(mutation) {
+                                if (mutation.addedNodes.length || mutation.removedNodes.length) {
+                                    SPEC.updateWaterfallLabels();
+                                }
+                            });
+                        });
+
+                        observer.observe(document.getElementsByClassName('x1Axis')[0], {
+                            childList: true,
+                            subtree: true
                         });
 
                         UI_GRAPH.updateZoom();
@@ -1145,13 +1156,8 @@
             return false;
         }
 
-        if (!CLIENT.state.socket_opened) {
-            console.log('ERROR: Cannot save changes, socket not opened');
-            return false;
-        }
-        console.log(CLIENT.params.local);
-        CLIENT.ws.send(JSON.stringify({ parameters: CLIENT.params.local }));
-        CLIENT.params.local = {};
+        CLIENT.parametersCache  = CLIENT.params.local
+        CLIENT.sendParameters()
         return true;
     };
 
@@ -1322,20 +1328,6 @@
     };
 
 
-    // SPEC.handleCodePoints = function(array) {
-    //     var CHUNK_SIZE = 0x8000; // arbitrary number here, not too small, not too big
-    //     var index = 0;
-    //     var length = array.length;
-    //     var result = '';
-    //     var slice;
-    //     while (index < length) {
-    //         slice = array.slice(index, Math.min(index + CHUNK_SIZE, length)); // `Math.min` is not really necessary here I think
-    //         result += String.fromCharCode.apply(null, slice);
-    //         index += CHUNK_SIZE;
-    //     }
-    //     return result;
-    // }
-
     SPEC.getLocalDecimalSeparator = function() {
         var n = 1.1;
         return n.toLocaleString().substring(1, 2);
@@ -1486,7 +1478,7 @@ $(function() {
 
     // Bind to the window resize event to redraw the graph; trigger that event to do the first drawing
     $(window).resize(function() {
-        SPEC.updateWaterfallWidth(false);
+        $('#main_block').css('visibility', 'hidden');
 
         var root_plot = $('#root_plot');
         var graph_grid = $('#graph_grid');
@@ -1499,20 +1491,18 @@ $(function() {
             if (plot){
                 var css = root_plot.css(['width', 'height']);
                 $('.plot').css(css);
+                SPEC.updateWaterfallWidth(false);
                 var offset = plot.getPlotOffset();
                 SPEC.sendParameters({ 'view_port_width': $('.plot').width()- offset.left - offset.right});
             }
-
-
-            $('#main_block').css('visibility', 'hidden');
 
             SPEC.drawGraphGrid();
             SPEC.initCursors();
 
             // // Set the resized flag
-            SPEC.state.resized = true;
-            SPEC.updateJoystickPosition();
-
+            SPEC.state.resized = true
+            SPEC.updateJoystickPosition()
+            SPEC.processSignals(SPEC.latest_signal)
         }
     }).resize();
 

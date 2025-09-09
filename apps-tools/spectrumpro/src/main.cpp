@@ -39,11 +39,11 @@ CIntParameter view_port_width("view_port_width", CBaseParameter::RW, 256, 0, 256
 CFloatParameter view_port_start("view_port_start", CBaseParameter::RW, 0, 0, 0, MAX_FREQ);
 CFloatParameter view_port_end("view_port_end", CBaseParameter::RW, MAX_FREQ, 0, 0, MAX_FREQ);
 
-CIntParameter freq_unit("freq_unit", CBaseParameter::RWSA, 2, 0, 0, 2, CONFIG_VAR);
+CIntParameter freq_unit("freq_unit", CBaseParameter::RW, 2, 0, 0, 2, CONFIG_VAR);
 CIntParameter y_axis_mode("y_axis_mode", CBaseParameter::RW, 0, 0, 0, 6,
                           CONFIG_VAR);  // 0 -dBm mode ; 1 - Volt mode ; 2 -dBu mode; 3 -dBV mode; 4 -dBuV mode; 5 - mW; 6 - dBW
-CIntParameter adc_freq("ADC_FREQ", CBaseParameter::RWSA, 0, 0, 0, getADCRate());
-CIntParameter rbw("RBW", CBaseParameter::RWSA, 0, 0, 0, MAX_FREQ);
+CIntParameter adc_freq("ADC_FREQ", CBaseParameter::RO, 0, 0, 0, getADCRate());
+CIntParameter rbw("RBW", CBaseParameter::RO, 0, 0, 0, MAX_FREQ);
 CFloatParameter impedance("DBU_IMP_FUNC", CBaseParameter::RW, 50, 0, 0.1, 1000, CONFIG_VAR);
 
 CFloatParameter xmin("xmin", CBaseParameter::RW, 0, 0, 0, MAX_FREQ, CONFIG_VAR);
@@ -69,8 +69,8 @@ CIntParameter inGain[MAX_ADC_CHANNELS] = INIT("CH", "_IN_GAIN", CBaseParameter::
 CIntParameter inProbe[MAX_ADC_CHANNELS] = INIT("CH", "_PROBE", CBaseParameter::RW, 1, 0, 1, 1000, CONFIG_VAR);
 CIntParameter inFilter[MAX_ADC_CHANNELS] = INIT("CH", "_IN_FILTER", CBaseParameter::RW, 1, 0, 0, 1, CONFIG_VAR);
 CIntParameter inAC_DC[MAX_ADC_CHANNELS] = INIT("CH", "_IN_AC_DC", CBaseParameter::RW, 0, 0, 0, 1, CONFIG_VAR);
-CFloatParameter peak_freq[MAX_ADC_CHANNELS] = INIT("peak", "_freq", CBaseParameter::ROSA, -1, 0, -1, +1e6f);
-CFloatParameter peak_power[MAX_ADC_CHANNELS] = INIT("peak", "_power", CBaseParameter::ROSA, 0, 0, -10000000, +10000000);
+CFloatParameter peak_freq[MAX_ADC_CHANNELS] = INIT("peak", "_freq", CBaseParameter::RW, -1, 0, -1, 1e10f);
+CFloatParameter peak_power[MAX_ADC_CHANNELS] = INIT("peak", "_power", CBaseParameter::RW, 0, 0, -10000000, +10000000);
 
 /* --------------------------------  CURSORS  ------------------------------ */
 CBooleanParameter cursorx[CURSORS_COUNT] = INIT2("SPEC_CURSOR_X", "", CBaseParameter::RW, false, 0, CONFIG_VAR);
@@ -80,7 +80,7 @@ CFloatParameter cursorV[CURSORS_COUNT] = INIT2("SPEC_CUR", "_V", CBaseParameter:
 CFloatParameter cursorT[CURSORS_COUNT] = INIT2("SPEC_CUR", "_T", CBaseParameter::RW, 0.25, 0, 0, 1, CONFIG_VAR);
 
 CBooleanParameter pllControlEnable("EXT_CLOCK_ENABLE", CBaseParameter::RW, 0, 0, CONFIG_VAR);
-CIntParameter pllControlLocked("EXT_CLOCK_LOCKED", CBaseParameter::ROSA, 0, 0, 0, 1);
+CIntParameter pllControlLocked("EXT_CLOCK_LOCKED", CBaseParameter::RW, 0, 0, 0, 1);
 
 /////////////////////////////
 
@@ -114,16 +114,32 @@ void UpdateParams(void) {
 
     auto adc = rpApp_SpecGetADCFreq();
     auto buf = rpApp_SpecGetADCBufferSize();
-    adc_freq.SendValue(adc);
-    rbw.SendValue(adc / buf);
+    if (adc_freq.Value() != adc)
+        adc_freq.SendValue(adc);
 
-    for (auto i = 0u; i < g_adc_count; i++) {
-        if (inShow[i].Value()) {
-            rpApp_SpecGetPeakFreq((rp_channel_t)i, &peak_freq[i].Value());
-            rpApp_SpecGetPeakPower((rp_channel_t)i, &peak_power[i].Value());
-        } else {
-            peak_freq[i].Value() = -1;
-            peak_power[i].Value() = -200;
+    if (adc / buf != rbw.Value())
+        rbw.SendValue(adc / buf);
+
+    if (inRun.Value()) {
+        for (auto i = 0u; i < g_adc_count; i++) {
+            if (inShow[i].Value()) {
+                float value = 0;
+                rpApp_SpecGetPeakFreq((rp_channel_t)i, &value);
+                if (peak_freq[i].Value() != value) {
+                    peak_freq[i].SendValue(value);
+                }
+                rpApp_SpecGetPeakPower((rp_channel_t)i, &value);
+                if (peak_power[i].Value() != value) {
+                    peak_power[i].SendValue(value);
+                }
+            } else {
+                if (peak_freq[i].Value() != -1) {
+                    peak_freq[i].SendValue(-1);
+                }
+                if (peak_power[i].Value() != -200) {
+                    peak_power[i].SendValue(-200);
+                }
+            }
         }
     }
 
@@ -742,6 +758,12 @@ void OnNewParams(void) {
                 RESEND(pllControlEnable)
             }
         }
+
+        bool pll_control_locked = false;
+        if (rp_GetPllControlLocked(&pll_control_locked) == RP_OK) {
+            if (pllControlLocked.Value() != pll_control_locked)
+                pllControlLocked.SendValue(pll_control_locked);
+        }
     }
 
     if (rp_HPGetFastADCIsLV_HVOrDefault()) {
@@ -803,9 +825,6 @@ extern "C" int rp_app_init(void) {
         }
     }
 
-    if (rp_HPGetIsPLLControlEnableOrDefault())
-        rp_SetPllControlEnable(false);
-
     listFileSettings.Value() = getListOfSettingsInStore();
     updateParametersByConfig();
 
@@ -854,16 +873,6 @@ void updateParametersByConfig() {
         }
     }
 
-    if (rp_HPGetIsPLLControlEnableOrDefault()) {
-        rp_SetPllControlEnable(pllControlEnable.Value());
-
-        bool pll_control_locked = false;
-        if (rp_GetPllControlLocked(&pll_control_locked) == RP_OK) {
-            pllControlLocked.Value() = pll_control_locked;
-            pllControlLocked.Update();
-        }
-    }
-
     if (rp_HPGetFastADCIsLV_HVOrDefault()) {
         for (auto ch = 0u; ch < g_adc_count; ch++) {
             rp_AcqSetGain((rp_channel_t)ch, inGain[ch].Value() == 0 ? RP_LOW : RP_HIGH);
@@ -876,6 +885,10 @@ void updateParametersByConfig() {
 
     if (rp_HPIsFastDAC_PresentOrDefault()) {
         UpdateGeneratorParameters(true);
+    }
+
+    if (rp_HPGetIsPLLControlEnableOrDefault()) {
+        rp_SetPllControlEnable(pllControlEnable.Value());
     }
 
     rpApp_SpecSetImpedance(impedance.Value());
