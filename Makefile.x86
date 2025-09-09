@@ -700,7 +700,7 @@ gen_report_eco:
 ################################################################################
 
 APP_STREAMINGMANAGER_DIR = apps-tools/streaming_manager
-streaming:  streaming_client streaming_client_win
+streaming:  streaming_client streaming_client_win streaming_client_arm64
 
 streaming_client:
 	$(MAKE) -i -C $(APP_STREAMINGMANAGER_DIR) clean
@@ -709,6 +709,10 @@ streaming_client:
 streaming_client_win:
 	$(MAKE) -i -C $(APP_STREAMINGMANAGER_DIR) clean
 	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) install_client_win
+
+streaming_client_arm64:
+	$(MAKE) -i -C $(APP_STREAMINGMANAGER_DIR) clean
+	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) install_client_arm64
 
 streaming_client_qt:
 	$(MAKE) -i -C $(APP_STREAMINGMANAGER_DIR) clean
