@@ -654,11 +654,13 @@
                 lcr_state.attr("src", "img/red_led.png");
             $("#LCR_SHUNT_BOX").hide()
             $("#SHUNT_BOX").show()
+            $("#INFO_DIALOG_IMG").attr('src','img/IA_shunt_connection.png')
         } else {
             if (lcr_state.attr('src') !== "img/green_led.png")
                 lcr_state.attr("src", "img/green_led.png");
             $("#LCR_SHUNT_BOX").show()
             $("#SHUNT_BOX").hide()
+            $("#INFO_DIALOG_IMG").attr('src','img/E_module_connection.png')
         }
     }
 
@@ -778,7 +780,9 @@ $(function() {
         }
     });
 
-
+    $('#IA_INFO').click(function () {
+        $('#info_dialog').modal('show');
+    });
 
     // Open changing parameters dialogs
     $('.edit-mode').on('click', function() {
