@@ -52,6 +52,7 @@ typedef struct data_e {
     double lcr_B_p;
     double lcr_Y_abs;
     double lcr_Phase_Y;
+    double lcr_P_p_amp;
 
 } lcr_main_data_t;
 

@@ -54,7 +54,8 @@ enum {
     IA_L_s = 12,
     IA_L_p = 13,
     IA_Q = 14,
-    IA_D = 15
+    IA_D = 15,
+    IA_P_P = 16
 } ia_signal_t;
 
 // Control parameters
@@ -71,7 +72,7 @@ CIntParameter ia_lcr_shunt("IA_LCR_SHUNT", CBaseParameter::RW, RP_LCR_S_10, 0, R
 
 CFloatParameter ia_amplitude("IA_AMPLITUDE", CBaseParameter::RW, 0.5, 0, 0, 1, CONFIG_VAR);
 CFloatParameter ia_dc_bias("IA_DC_BIAS", CBaseParameter::RW, 0, 0, -1, 1, CONFIG_VAR);
-CIntParameter ia_y_axis("IA_Y_AXIS", CBaseParameter::RW, IA_Z, 0, IA_Z, IA_D, CONFIG_VAR);
+CIntParameter ia_y_axis("IA_Y_AXIS", CBaseParameter::RW, IA_Z, 0, IA_Z, IA_P_P, CONFIG_VAR);
 CBooleanParameter ia_scale("IA_SCALE", CBaseParameter::RW, false, 0, CONFIG_VAR);
 CIntParameter ia_scale_plot("IA_X_SCALE", CBaseParameter::RW, 0, 0, 0, 3, CONFIG_VAR);
 
@@ -94,15 +95,15 @@ CFloatParameter cur_y1("IA_CURSOR_Y1", CBaseParameter::RW, 0.25, 0, 0, 1, CONFIG
 CFloatParameter cur_y2("IA_CURSOR_Y2", CBaseParameter::RW, 0.75, 0, 0, 1, CONFIG_VAR);
 
 //Singals
-CFloatSignal ia_signal[IA_D + 1] = {
+CFloatSignal ia_signal[IA_P_P + 1] = {
     {"IA_SIGNAL_FREQ", CH_SIGNAL_SIZE_DEFAULT, 0.0f}, {"IA_SIGNAL_Z", CH_SIGNAL_SIZE_DEFAULT, 0.0f},         {"IA_SIGNAL_PHASE", CH_SIGNAL_SIZE_DEFAULT, 0.0f},
     {"IA_SIGNAL_Y", CH_SIGNAL_SIZE_DEFAULT, 0.0f},    {"IA_SIGNAL_NEG_PHASE", CH_SIGNAL_SIZE_DEFAULT, 0.0f}, {"IA_SIGNAL_R_s", CH_SIGNAL_SIZE_DEFAULT, 0.0f},
     {"IA_SIGNAL_R_p", CH_SIGNAL_SIZE_DEFAULT, 0.0f},  {"IA_SIGNAL_X_s", CH_SIGNAL_SIZE_DEFAULT, 0.0f},       {"IA_SIGNAL_G_p", CH_SIGNAL_SIZE_DEFAULT, 0.0f},
     {"IA_SIGNAL_B_p", CH_SIGNAL_SIZE_DEFAULT, 0.0f},  {"IA_SIGNAL_C_s", CH_SIGNAL_SIZE_DEFAULT, 0.0f},       {"IA_SIGNAL_C_p", CH_SIGNAL_SIZE_DEFAULT, 0.0f},
     {"IA_SIGNAL_L_s", CH_SIGNAL_SIZE_DEFAULT, 0.0f},  {"IA_SIGNAL_L_p", CH_SIGNAL_SIZE_DEFAULT, 0.0f},       {"IA_SIGNAL_Q", CH_SIGNAL_SIZE_DEFAULT, 0.0f},
-    {"IA_SIGNAL_D", CH_SIGNAL_SIZE_DEFAULT, 0.0f}};
+    {"IA_SIGNAL_D", CH_SIGNAL_SIZE_DEFAULT, 0.0f},    {"IA_SIGNAL_P_p", CH_SIGNAL_SIZE_DEFAULT, 0.0f}};
 
-std::vector<float> signals_array[IA_D + 1];
+std::vector<float> signals_array[IA_P_P + 1];
 
 std::thread* g_thread = NULL;
 std::mutex g_signalMutex;
@@ -281,7 +282,7 @@ int rp_app_init(void) {
         lcr_ext.SendValue(false);
     }
 
-    for (int i = 0; i <= IA_D; i++) {
+    for (int i = 0; i <= IA_P_P; i++) {
         signals_array[i].reserve(MAX_STEPS);
     }
 
@@ -302,24 +303,24 @@ int rp_app_exit(void) {
 }
 
 //Set parameters
-int rp_set_params(rp_app_params_t* p, int len) {
+int rp_set_params(rp_app_params_t*, int) {
     return 0;
 }
 
 //Get parameters
-int rp_get_params(rp_app_params_t** p) {
+int rp_get_params(rp_app_params_t**) {
     return 0;
 }
 
 //Get signals
-int rp_get_signals(float*** s, int* sig_num, int* sig_len) {
+int rp_get_signals(float***, int*, int*) {
     return 0;
 }
 
 //Update signals
 void UpdateSignals(void) {
     std::lock_guard<std::mutex> lock(g_signalMutex);
-    for (int i = 0; i <= IA_D; i++) {
+    for (int i = 0; i <= IA_P_P; i++) {
         ia_signal[i].Set(signals_array[i]);
     }
 }
@@ -487,7 +488,7 @@ void threadLoop() {
         if (status == IA_START || status == IA_START_PROCESS) {
             if (status == IA_START) {
                 std::lock_guard<std::mutex> lock(g_signalMutex);
-                for (int i = IA_FREQ; i <= IA_D; i++) {
+                for (int i = IA_FREQ; i <= IA_P_P; i++) {
                     signals_array[i].clear();
                 }
                 cur_step = 0;
@@ -542,7 +543,7 @@ void threadLoop() {
                 lcr_main_data_t res;
                 memset(&data, 0, sizeof(lcr_main_data_t));
                 memset(&res, 0, sizeof(lcr_main_data_t));
-                int maxParam = 23;
+                int maxParam = 24;
                 double* res_arr = reinterpret_cast<double*>(&res);
                 double* data_arr = reinterpret_cast<double*>(&data);
 
@@ -557,6 +558,7 @@ void threadLoop() {
                     } while ((uint32_t)data.lcr_freq != current_freq);
 
                     res.lcr_freq = data.lcr_freq;
+                    res.lcr_P_p_amp = data.lcr_P_p_amp;
 
                     for (int z = 1; z <= maxParam; z++) {
                         res_arr[z] = NAN_INF(data_arr[z]) ? data_arr[z] : res_arr[z] + data_arr[z];
@@ -588,6 +590,7 @@ void threadLoop() {
                     signals_array[IA_L_p].push_back(res.lcr_L_p);
                     signals_array[IA_Q].push_back(res.lcr_Q);
                     signals_array[IA_D].push_back(res.lcr_D);
+                    signals_array[IA_P_P].push_back(res.lcr_P_p_amp);
                 }
             } else {
                 ia_status.SendValue(IA_START_DONE);

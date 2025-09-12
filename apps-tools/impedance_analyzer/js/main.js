@@ -117,7 +117,7 @@
         var row_delim = '\n';
         var delim = ',';
         var coff = {};
-        for (var i = 1 ; i <= 15; i++){
+        for (var i = 1 ; i <= 16; i++){
             var hs = MAIN.getCurrentSignalSettingsVal(i);
             var sigVal = MAIN.lastSignals[hs.name];
             var min_y = Math.min(...sigVal.value)
@@ -129,7 +129,7 @@
             }
             coff[i] = suff;
         }
-        for (var i = 1 ; i <= 15; i++){
+        for (var i = 1 ; i <= 16; i++){
             var hs = MAIN.getCurrentSignalSettingsVal(i);
             var suff = coff[i]
             header += delim + hs.label
@@ -142,7 +142,7 @@
         var freq = MAIN.lastSignals["IA_SIGNAL_FREQ"];
         for (var i = 0 ; i < freq.size; i++){
             strings += freq.value[i];
-            for (var z = 1 ; z <= 15; z++){
+            for (var z = 1 ; z <= 16; z++){
                 var hs = MAIN.getCurrentSignalSettingsVal(z);
                 var sigVal = MAIN.lastSignals[hs.name];
                 var suff = coff[z];
@@ -194,6 +194,8 @@
                 return {name: "IA_SIGNAL_Q", label: "Q", nominal: "" , scale: true}
             case 15:
                 return {name: "IA_SIGNAL_D", label: "D", nominal: "", scale: true}
+            case 16:
+                return {name: "IA_SIGNAL_P_p", label: "IN2/p2p", nominal: "V", scale: false}
         }
         return {name: "", label: "undefined", nominal: ""}
     }
