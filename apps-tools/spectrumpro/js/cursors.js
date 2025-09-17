@@ -41,6 +41,7 @@
     };
 
     SPEC.updateYInfo = function(){
+        if ($('#cur_y1_arrow').position() === undefined) return
         SPEC.updateYCursorElemsTop('y1',$('#cur_y1_arrow').position().top,false);
         SPEC.updateYCursorElemsTop('y2',$('#cur_y2_arrow').position().top,false);
     }
@@ -131,6 +132,7 @@
     };
 
     SPEC.updateXInfo = function(){
+        if ($('#cur_x1_arrow').position() === undefined) return
         SPEC.updateXCursorElemsTop('x1',$('#cur_x1_arrow').position().left,false);
         SPEC.updateXCursorElemsTop('x2',$('#cur_x2_arrow').position().left,false);
     }
@@ -185,6 +187,7 @@
 
         $('#cur_' + x + ', #cur_' + x + '_info').css('left', left);
 
+        if (CLIENT.params.orig['freq_unit'] == undefined) return
         var unit = SPEC.freq_unit[CLIENT.params.orig['freq_unit'].value];
         if (UI_GRAPH.x_axis_mode === 1){
             new_value = UI_GRAPH.convertLog(new_value);
@@ -214,11 +217,12 @@
         if (x1.is(':visible') && x2.is(':visible') && diff_px > 30) {
             var left = Math.min(x1_left, x2_left);
             var value = parseFloat($('#cur_x1_info').html()) - parseFloat($('#cur_x2_info').html());
+            if (CLIENT.params.orig['freq_unit'] == undefined) return
             var unit = SPEC.freq_unit[CLIENT.params.orig['freq_unit'].value];
             var plot = SPEC.getPlot();
             var axes = plot.getAxes();
             var tickDec = axes.xaxis.tickDecimals + 1;
-
+            value = Math.abs(value)
             $('#cur_x_diff')
                 .css('left', left + 1)
                 .width(diff_px)

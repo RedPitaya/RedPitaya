@@ -366,4 +366,120 @@ $(document).ready(function(){
     $('input[type=text]').iLightInputNumber({
         mobile: false
     });
+
+    $('#jtk_up').on('mousedown', function() { $('#jtk_btns').attr('src', 'img/node_up.png'); });
+    $('#jtk_left').on('mousedown', function() { $('#jtk_btns').attr('src', 'img/node_left.png'); });
+    $('#jtk_right').on('mousedown', function() { $('#jtk_btns').attr('src', 'img/node_right.png'); });
+    $('#jtk_down').on('mousedown', function() { $('#jtk_btns').attr('src', 'img/node_down.png'); });
+    $('#jtk_fine').on('mousedown', function() { $('#jtk_fine').attr('src', 'img/reset_active.png'); });
+
+
+    $(document).on('mouseup', function() {
+        $('#jtk_btns').attr('src', 'img/node_fine.png');
+        $('#jtk_fine').attr('src', 'img/reset.png');
+    });
+
+    $('#jtk_fine').on('click', function(ev) {
+        if (MAIN.running == true) return;
+        MAIN.resetZoom();
+    });
+
+    $('#jtk_up, #jtk_down').on('click', function(ev) {
+        MAIN.changeYZoom(ev.target.id == 'jtk_down' ? '-' : '+');
+    });
+
+    $('#jtk_left, #jtk_right').on('click', function(ev) {
+        MAIN.changeXZoom(ev.target.id == 'jtk_left' ? '-' : '+');
+    });
+
+     $(document).on('mousedown', '.plot', function(ev) {
+        ev.preventDefault();
+        if (MAIN.running == true) return;
+        if (!MAIN.zoom_used_x && !MAIN.zoom_used_y){
+            var rect = MAIN.getPoltRect()
+            var newPos = MAIN.boundCursor(rect,{ x: ev.clientX, y: ev.clientY })
+            console.log(newPos)
+            MAIN.rect_mode = newPos;
+            MAIN.rect_mode_last  = newPos;
+            return;
+        }
+
+        if (!MAIN.move_mode) {
+            var rect = MAIN.getPoltRect()
+            var newPos = MAIN.boundCursor(rect,{ x: ev.clientX, y: ev.clientY })
+            MAIN.move_mode = newPos;
+        }
+    });
+
+
+     $(document).on('mousemove', '.plot', function(ev) {
+        ev.preventDefault();
+        if (MAIN.running == true) return;
+        if (!MAIN.move_mode) return;
+
+        var rect = MAIN.getPoltRect()
+        var newPos = MAIN.boundCursor(rect,{ x: ev.clientX, y: ev.clientY })
+
+        var x = MAIN.move_mode.x - newPos.x;
+        var y = MAIN.move_mode.y - newPos.y;
+        var plot = MAIN.getPlot();
+        if (plot === undefined) return
+        var options = plot.getOptions();
+        var range_x   = options.xaxes[0].max - options.xaxes[0].min;
+        var range_y   = options.yaxes[0].max - options.yaxes[0].min;
+        MAIN.move_mode  = newPos;
+        MAIN.changeX(x * range_x / $(this).width(),x, $(this).width());
+        MAIN.changeY(y * range_y / $(this).height());
+    });
+
+    $(document).on('mousemove',  function(ev) {
+        ev.preventDefault();
+
+        if (MAIN.running == true) return;
+
+        var rect = MAIN.getPoltRect()
+        var newPos = MAIN.boundCursor(rect,{ x: ev.clientX, y: ev.clientY })
+
+        if (!MAIN.zoom_used_x && !MAIN.zoom_used_y && MAIN.rect_mode != undefined){
+
+            var x = Math.min(MAIN.rect_mode.x,newPos.x);
+            var y = Math.min(MAIN.rect_mode.y,newPos.y);
+            var w = Math.max(MAIN.rect_mode.x,newPos.x) - x;
+            var h = Math.max(MAIN.rect_mode.y,newPos.y) - y;
+
+            MAIN.rect_mode_last  = newPos;
+
+            $("#cur_rectangle").show();
+            $("#cur_rectangle").css("left",x)
+            $("#cur_rectangle").css("top",y)
+            $("#cur_rectangle").css("width",w)
+            $("#cur_rectangle").css("height",h)
+            return;
+        }
+    });
+
+    $(document).on('mouseup', '.plot', function(ev) {
+        ev.preventDefault();
+
+        if (MAIN.running == true) return;
+
+        MAIN.move_mode = undefined;
+        if (MAIN.rect_mode && MAIN.rect_mode_last){
+            var rect = MAIN.getPoltRect()
+            var p1 =  {x:MAIN.rect_mode.x - rect.l,y:MAIN.rect_mode.y - rect.t}
+            var p2 =  {x:MAIN.rect_mode_last.x - rect.l,y:MAIN.rect_mode_last.y - rect.t}
+            MAIN.setMouseZoom(p1,p2,rect)
+        }
+        MAIN.rect_mode_last = undefined;
+        MAIN.rect_mode = undefined;
+        $("#cur_rectangle").hide();
+    });
+
+    $(document).on('mouseup', function(ev) {
+        console.log("mouseup")
+        ev.preventDefault();
+        MAIN.rect_mode_last = undefined;
+        MAIN.rect_mode = undefined;
+        $("#cur_rectangle").hide();
+    });
 })

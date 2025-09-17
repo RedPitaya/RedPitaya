@@ -53,6 +53,8 @@
 </head>
 
 <body class="user_lost connection_lost">
+    <div id="root_window" style="position: absolute; width: 100%;height: 100%;min-height: 800px;min-width: 1024px;">
+    </div>
     <div id="user-wrapper">
         <div id="user"></div>
         <div id="user-desc">Device is already in use by another user.</div>
@@ -353,6 +355,20 @@
                             Measuring...
                         </div>
                     </div>
+                    <div id="joystick">
+                        <img id="jtk_fine" src="img/reset.png" />
+                        <img id="jtk_btns" src="img/node_fine.png" usemap="#jtk_btns_map" />
+                        <map name="jtk_btns_map">
+                            <area id="jtk_left" shape="poly"
+                                coords="19,28,37,45,32,56,28,69,29,84,36,101,30,112,18,122,11,114,8,104,4,91,1,77,3,59,9,41,19,27" />
+                            <area id="jtk_up" shape="poly"
+                                coords="27,17,42,7,61,3,78,3,89,4,102,7,116,13,124,20,105,37,87,29,64,29,56,33,46,37" />
+                            <area id="jtk_right" shape="poly"
+                                coords="111,44,132,27,143,42,147,56,149,76,148,93,141,107,132,123,112,104,119,94,122,76,119,58" />
+                            <area id="jtk_down" shape="poly"
+                                coords="46,112,27,130,38,141,51,145,72,148,92,148,106,142,126,132,104,111,90,118,79,120,71,121,62,119,57,117" />
+                        </map>
+                    </div>
                 </div>
 
                 <!-- Main container -->
@@ -381,6 +397,8 @@
                                     <div id="cur_y2_info" class="cur_info"></div>
                                     <div id="cur_y_diff"></div>
                                     <div id="cur_y_diff_info" class="cur_info"></div>
+                                    <div id="cur_rectangle" style="position: fixed;border: 2px solid;display: none;">
+                                    </div>
                                 </div>
                             </div>
 

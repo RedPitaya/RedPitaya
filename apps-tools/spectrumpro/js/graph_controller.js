@@ -65,7 +65,7 @@
     }
 
      // Touch events
-     $(document).on('mousedown', '.plot', function(ev) {
+    $(document).on('mousedown', '.plot', function(ev) {
         ev.preventDefault();
         if (!UI_GRAPH.zoom_used_x && !UI_GRAPH.zoom_used_y){
             var rect = UI_GRAPH.getPoltRect()
@@ -99,7 +99,7 @@
         var range_x   = options.xaxes[0].max - options.xaxes[0].min;
         var range_y   = options.yaxes[0].max - options.yaxes[0].min;
         UI_GRAPH.move_mode  = newPos;
-        UI_GRAPH.changeX(x * range_x / $(this).width());
+        UI_GRAPH.changeX(x * range_x / $(this).width(), x , $(this).width());
         UI_GRAPH.changeY(y * range_y / $(this).height());
     });
 
@@ -201,6 +201,7 @@
             return null;
 
         if (UI_GRAPH.y_axis_mode === 1) return;
+        if (direction == undefined) return;
 
         var plot_elem = SPEC.graphs.elem;
 
@@ -287,6 +288,7 @@
         }
     };
 
+
     // Changes X zoom/scale for all signals
     UI_GRAPH.changeXZoom = function(direction) {
         if (!(SPEC.graphs && SPEC.graphs.elem))
@@ -343,7 +345,6 @@
         SPEC.updateWaterfallWidth();
         SPEC.updateYInfo();
         SPEC.updateXInfo();
-        SPEC.update
         UI_GRAPH.zoom_used_x = false;
         UI_GRAPH.zoom_used_y = false;
         if (UI_GRAPH.minMaxChange !== undefined){
@@ -538,12 +539,24 @@
     }
 
     UI_GRAPH.setXAxisMode = function(mode){
+        UI_GRAPH.x_axis_mode = mode;
         if (!(SPEC.graphs && SPEC.graphs.elem))
             return ;
-        UI_GRAPH.x_axis_mode = mode;
         UI_GRAPH.resetZoom();
         SPEC.graphs.plot.setupGrid();
     }
 
+    UI_GRAPH.getLogValue = function(minVal, maxVal, steps, stepIndex) {
+        if (minVal <= 0 || maxVal <= 0) {
+            throw new Error("Error values");
+        }
+
+        const logMin = Math.log10(minVal);
+        const logMax = Math.log10(maxVal);
+        const stepSize = (logMax - logMin) / steps;
+
+        const logVal = logMin + stepIndex * stepSize;
+        return Math.pow(10, logVal);
+    }
 
 }(window.UI_GRAPH = window.UI_GRAPH || {}, jQuery));

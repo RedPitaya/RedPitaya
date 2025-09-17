@@ -56,6 +56,25 @@
     MAIN.input_threshold = 0;
     MAIN.currentYAxis = 1;
     MAIN.yAxisSuffix = undefined;
+    MAIN.plotSize = {
+        x_min: undefined,
+        x_max: undefined,
+        y_min: undefined,
+        y_max: undefined,
+    }
+
+    MAIN.move_mode = undefined;
+    MAIN.rect_mode = undefined;
+    MAIN.rect_mode_last = undefined;
+    MAIN.x_axis_mode = 0;
+    MAIN.y_axis_mode = 0;
+    MAIN.x_axis_min = undefined;
+    MAIN.x_axis_max = undefined;
+    MAIN.x_axis_min_full = undefined;
+    MAIN.x_axis_max_full = undefined;
+    MAIN.zoom_used_x = false;
+    MAIN.zoom_used_y = false;
+
 
 
     //Write email
@@ -235,7 +254,7 @@
             ch.css('top', offset.top - 2)
             ch.css('left', offset.left - 2)
             ch.css('width', w + 4)
-            ch.css('height', h + 4)   
+            ch.css('height', h + 4)
             ch.show()
         }
     }
@@ -255,10 +274,10 @@
         const ticks = [];
         const startDecade = Math.floor(Math.log10(min));
         const endDecade = Math.floor(Math.log10(max));
-        
+
         // const multipliers = [1, 2, 3, 4 , 5, 6 , 7 , 8 ,9 ];
         const multipliers = [1, 2, 3,  5,  7 , 8.5 ];
-        
+
         for (let decade = startDecade; decade <= endDecade; decade++) {
             for (const mult of multipliers) {
                 const freq = mult * Math.pow(10, decade);
@@ -267,53 +286,53 @@
                 }
             }
         }
-        
+
         if (!ticks.includes(Math.round((max)))) {
             ticks.push(Math.round(max));
         }
-        
+
         return ticks.sort((a, b) => a - b);
     }
 
     function generateLogarithmicPower2Ticks(min, max) {
         const result = [];
-        
+
         let current = Math.pow(2, Math.ceil(Math.log2(min)));
         if (current / 2 >= min) {
             current = current / 2;
         }
-        
+
         while (current <= max) {
             if (current >= min) {
                 result.push(Math.round(current));
             }
             current *= 2
         }
-        
+
         if (result[0] !== min) result.unshift(Math.round(min));
         if (result[result.length - 1] !== max) result.push(Math.round(max));
-        
+
         return result;
     }
 
     function generatePowerOf10Scale(min, max) {
         const result = [];
-        
+
         let current = Math.pow(10, Math.ceil(Math.log10(min)));
         if (current / 10 >= min) {
             current = current / 10;
         }
-        
+
         while (current <= max) {
             if (current >= min) {
                 result.push(Math.round(current));
             }
             current *= 2.5
         }
-        
+
         if (result[0] !== min) result.unshift(Math.round(min));
         if (result[result.length - 1] !== max) result.push(Math.round(max));
-        
+
         return result;
     }
 
@@ -322,10 +341,10 @@
 
         const range = max - min;
         let roughStep = range / targetSteps;
-        
+
         const magnitude = Math.pow(10, Math.floor(Math.log10(roughStep)));
         const normalizedStep = roughStep / magnitude;
-        
+
         let stepMultiplier;
         if (normalizedStep <= 1.5) {
             stepMultiplier = 1;
@@ -334,22 +353,22 @@
         } else {
             stepMultiplier = 5;
         }
-        
+
         const step = stepMultiplier * magnitude;
-        
+
         const start = Math.floor(min / step) * step;
         const end = Math.ceil(max / step) * step;
-        
+
         const result = [];
         for (let value = start; value <= end + Number.EPSILON; value += step) {
             if (value >= min - Number.EPSILON && value <= max + Number.EPSILON) {
                 result.push(Math.round(value));
             }
         }
-        
+
         if (result.length === 0 || result[0] > min) result.unshift(Math.round(min));
         if (result[result.length - 1] < max) result.push(Math.round(max));
-        
+
         return result;
     }
 
@@ -382,14 +401,306 @@
         return undefined;
     };
 
+    MAIN.updatePlotSize = function() {
+        const p = MAIN.getPlot()
+        if (p != undefined){
+            MAIN.plotSize.x_min = p.getAxes().xaxis.min
+            MAIN.plotSize.x_max = p.getAxes().xaxis.max
+            MAIN.plotSize.y_min = p.getAxes().yaxis.options.min
+            MAIN.plotSize.y_max = p.getAxes().yaxis.options.max
+            console.log(MAIN.plotSize)
+        }
+    }
+
+     MAIN.getPoltRect = function(){
+        var plot = MAIN.getPlot();
+        if (!plot) {
+            return {l:0,t:0,w:0,h:0};
+        }
+        var gPosition = $('#graph_bode_grid').offset();
+        var gLeft = gPosition.left;
+        var gTop = gPosition.top;
+        var gWidth = $('#graph_bode_grid').width();
+        var gHeight = $('#graph_bode_grid').height();
+        var plotOffset = plot.getPlotOffset();
+
+        gLeft += plotOffset.left
+        gTop += plotOffset.top
+        gWidth = gWidth - plotOffset.left - plotOffset.right
+        gHeight = gHeight - plotOffset.top - plotOffset.bottom
+        return {l:gLeft,t:gTop,w:gWidth,h:gHeight}
+    }
+
+    MAIN.boundCursor = function(rect,pos){
+        if (pos.x < rect.l){
+            pos.x = rect.l
+        }
+        if (pos.x > (rect.l + rect.w)){
+            pos.x = (rect.l + rect.w)
+        }
+        if (pos.y < rect.t){
+            pos.y = rect.t
+        }
+        if (pos.y > (rect.t + rect.h)){
+            pos.y = (rect.t + rect.h)
+        }
+        return pos
+    }
+
+    MAIN.convertLog = function(v){
+        if (MAIN.x_axis_min === 0) return v;
+         var plot = MAIN.getPlot();
+        if (!plot) {
+            return v;
+        }
+        var options = plot.getAxes();
+        var a = options.xaxis.datamin;
+        var b = options.xaxis.datamax;
+        v = v > b ? b : v
+        var x = Math.log10(b/a)/(b-a);
+        var y = b / Math.pow(10,x * b);
+        v =  y * Math.pow(10, x * v);
+        return v;
+    }
+
+
+    MAIN.convertLogMinMax = function(v,min,max){
+        var a = min;
+        var b = max;
+        v = v > b ? b : v
+        var x = Math.log10(b/a)/(b-a);
+        var y = b / Math.pow(10,x * b);
+        v =  y * Math.pow(10, x * v);
+        return v;
+    }
+
+    MAIN.getLogValue = function(minVal, maxVal, steps, stepIndex) {
+        if (minVal <= 0 || maxVal <= 0) {
+            throw new Error("Error values");
+        }
+
+        const logMin = Math.log10(minVal);
+        const logMax = Math.log10(maxVal);
+        const stepSize = (logMax - logMin) / steps;
+
+        const logVal = logMin + stepIndex * stepSize;
+        return Math.pow(10, logVal);
+    }
+
+
+    MAIN.setMouseZoom = function(p1,p2,rect) {
+        var plot = MAIN.getPlot();
+        if (!plot) {
+            return;
+        }
+        console.log(p1,p2)
+        var min_x = Math.min(p1.x,p2.x);
+        var max_x = Math.max(p1.x,p2.x);
+        var min_y = Math.min(p1.y,p2.y);
+        var max_y = Math.max(p1.y,p2.y);
+        var options = plot.getAxes();
+        var range_x   = options.xaxis.max - options.xaxis.min;
+        var range_y   = options.yaxis.max - options.yaxis.min;
+
+        var new_y_axis_min = (1 - min_y / rect.h) * range_y + options.yaxis.min;
+        var new_y_axis_max = (1 - max_y / rect.h) * range_y + options.yaxis.min;
+        var new_x_axis_min = min_x / rect.w * range_x + options.xaxis.min;
+        var new_x_axis_max = max_x / rect.w * range_x + options.xaxis.min;
+        if (MAIN.scale) {
+            new_x_axis_min = MAIN.convertLog(new_x_axis_min);
+            new_x_axis_max = MAIN.convertLog(new_x_axis_max);
+        }
+        console.log("new_y_axis_min " + new_y_axis_min + " new_y_axis_max " +new_y_axis_max )
+        console.log("new_x_axis_min " + new_x_axis_min + " new_x_axis_max " +new_x_axis_max )
+
+        var curr_options = plot.getOptions();
+        curr_options.xaxes[0].min = new_x_axis_min;
+        curr_options.xaxes[0].max = new_x_axis_max;
+        curr_options.yaxes[0].min = new_y_axis_max;
+        curr_options.yaxes[0].max = new_y_axis_min;
+
+        MAIN.zoom_used_x = true;
+        MAIN.zoom_used_y = true;
+        plot.setupGrid();
+        plot.draw();
+        CURSORS.updateLinesAndArrows()
+    }
+
+    MAIN.changeY = function(value) {
+        var plot = MAIN.getPlot();
+        if (!plot) {
+            return;
+        }
+
+        var options = plot.getOptions();
+        var yaxis = plot.getAxes().yaxis;
+
+        var y_val_min = yaxis.options.min - value
+        var y_val_max = yaxis.options.max - value
+
+        if (y_val_min < MAIN.plotSize.y_min) {
+            y_val_min = MAIN.plotSize.y_min
+            y_val_max = yaxis.options.max
+        }
+
+        if (y_val_max > MAIN.plotSize.y_max) {
+            y_val_min = yaxis.options.min
+            y_val_max = MAIN.plotSize.y_max
+        }
+
+
+        options.yaxes[0].min = y_val_min;
+        options.yaxes[0].max = y_val_max;
+
+        plot.setupGrid();
+        plot.draw();
+        CURSORS.updateLinesAndArrows()
+    };
+
+    MAIN.changeYZoom = function(direction) {
+        var plot = MAIN.getPlot();
+        if (!plot) {
+            return;
+        }
+
+        if (direction == undefined) return;
+
+        var options = plot.getOptions();
+        var yaxis = plot.getAxes().yaxis;
+
+        var size = (yaxis.options.max - yaxis.options.min)
+        if (isNaN(size)) return
+
+        size = size * (direction == "+" ? 0.8 : 1.2) - size
+
+        var y_val_min = yaxis.options.min - size
+        var y_val_max = yaxis.options.max + size
+
+        if (y_val_min < MAIN.plotSize.y_min) {
+            y_val_min = MAIN.plotSize.y_min
+        }
+
+        if (y_val_max > MAIN.plotSize.y_max) {
+            y_val_max = MAIN.plotSize.y_max
+        }
+
+        MAIN.zoom_used_y = true
+        if (y_val_min == MAIN.plotSize.y_min && y_val_max == MAIN.plotSize.y_max)
+            MAIN.zoom_used_y = false
+
+        options.yaxes[0].min = y_val_min;
+        options.yaxes[0].max = y_val_max;
+
+        plot.setupGrid();
+        plot.draw();
+        CURSORS.updateLinesAndArrows()
+    };
+
+    MAIN.changeX = function(value,x , steps) {
+        var plot = MAIN.getPlot();
+        if (!plot) {
+            return;
+        }
+        var xaxis = plot.getAxes().xaxis;
+        var curr_options = plot.getOptions();
+
+        var x_val_min = xaxis.options.min + value
+        var x_val_max = xaxis.options.max + value
+
+        if (MAIN.scale){
+            x_val_min = MAIN.getLogValue (curr_options.xaxes[0].min,curr_options.xaxes[0].max, steps , x)
+            x_val_max = MAIN.getLogValue (curr_options.xaxes[0].min,curr_options.xaxes[0].max, steps, x + steps)
+        }
+
+        if ( x_val_min < xaxis.datamin) {
+            x_val_min = xaxis.datamin
+            x_val_max = xaxis.options.max
+        }
+
+        if ( x_val_max > xaxis.datamax) {
+            x_val_min = xaxis.options.min
+            x_val_max = xaxis.datamax
+        }
+
+        curr_options.xaxes[0].min = x_val_min;
+        curr_options.xaxes[0].max = x_val_max;
+        plot.setupGrid();
+        plot.draw();
+        CURSORS.updateLinesAndArrows()
+    };
+
+
+    MAIN.changeXZoom = function(direction) {
+        var plot = MAIN.getPlot();
+        if (!plot) {
+            return;
+        }
+
+        if (direction == undefined) return;
+
+        var options = plot.getOptions();
+        var xaxis = plot.getAxes().xaxis;
+
+        var size = (xaxis.options.max - xaxis.options.min)
+        if (isNaN(size)) return
+        var koff = (direction == "+" ? 0.8 : 1.2)
+
+        var x_val_min = xaxis.options.min -  (size * koff - size)
+        var x_val_max = xaxis.options.max +  (size * koff - size)
+
+        if (MAIN.scale){
+            x_val_min = MAIN.getLogValue (options.xaxes[0].min,options.xaxes[0].max, size, size - size * koff)
+            x_val_max = MAIN.getLogValue (options.xaxes[0].min,options.xaxes[0].max, size, size * koff)
+        }
+
+        if (x_val_min < MAIN.plotSize.x_min) {
+            x_val_min = MAIN.plotSize.x_min
+        }
+
+        if (x_val_max > MAIN.plotSize.x_max) {
+            x_val_max = MAIN.plotSize.x_max
+        }
+
+        MAIN.zoom_used_x = true
+        if (x_val_min == MAIN.plotSize.x_min && x_val_max == MAIN.plotSize.x_max)
+            MAIN.zoom_used_x = false
+
+        options.xaxes[0].min = x_val_min;
+        options.xaxes[0].max = x_val_max;
+
+        plot.setupGrid();
+        plot.draw();
+        CURSORS.updateLinesAndArrows()
+    };
+
+    MAIN.resetZoom = function() {
+        if (MAIN.plotSize.x_min == undefined) return;
+        if (MAIN.plotSize.x_max == undefined) return;
+
+        var plot = MAIN.getPlot();
+        if (plot === undefined) return;
+        var curr_options = plot.getOptions();
+
+        var xaxis = MAIN.graphCache.plot.getAxes().xaxis;
+        var yaxis = MAIN.graphCache.plot.getAxes().yaxis;
+        var size = (yaxis.datamax - yaxis.datamin) * 0.2;
+
+        curr_options.xaxes[0].min = xaxis.datamin;
+        curr_options.xaxes[0].max = xaxis.datamax;
+        curr_options.yaxes[0].min = yaxis.datamin - size;
+        curr_options.yaxes[0].max = yaxis.datamax + size;
+
+        plot.setupGrid();
+        plot.draw();
+        MAIN.zoom_used_x = false;
+        MAIN.zoom_used_y = false;
+    };
 
     MAIN.initPlot = function(update) {
         delete MAIN.graphCache;
         $('#bode_plot').remove();
 
 
-        var yMin1 = -5;
-        var yMax1 = 5;
 
         MAIN.graphCache = {};
         MAIN.graphCache.elem = $('<div id="bode_plot" class="plot" />').css($('#graph_bode_grid').css(['height', 'width'])).appendTo('#graph_bode');
@@ -399,11 +710,19 @@
                 shadowSize: 0
             },
             yaxes: [{
-                    min: yMin1,
-                    max: yMax1,
+                    min: undefined,
+                    max: undefined,
                     labelWidth: 30,
                     alignTicksWithAxis: 1,
-                    position: "left"
+                    position: "left",
+                    tickFormatter: function(num, decimals = 3){
+                        const rounded = Math.round(num * 1000) / 1000;
+                        const difference = Math.abs(num - rounded);
+                        if (difference < 1e-3) {
+                            return rounded;
+                        }
+                        return num;
+                    }
                 }
             ],
             xaxis: {
@@ -470,11 +789,15 @@
             var sigVal = MAIN.lastSignals[curSig.name];
             var min_y = 0;
             var max_y = 0;
+            var min_x = 0;
+            var max_x = 0;
             var suff = undefined;
-            
+
             if (freqSig !== undefined && sigVal !== undefined && freqSig.size > 0){
                 min_y = Math.min(...sigVal.value)
                 max_y = Math.max(...sigVal.value)
+                min_x = Math.min(...freqSig.value)
+                max_x = Math.max(...freqSig.value)
                 if (curSig.scale)
                     suff = getSuffix(Math.abs((max_y - min_y) / 2.0 + min_y))
                 else{
@@ -489,7 +812,7 @@
                 lab += curSig.nominal !== "" ? " [" + suff.name + curSig.nominal + "] " + suff.value :  " " + suff.value
                 $("#amplitude-info").text(lab)
                 MAIN.yAxisSuffix = suff
-            
+
                 var data_points = [{ data: lastsig1, color: '#f3ec1a' }];
 
                 MAIN.graphCache.plot.setData(data_points);
@@ -498,11 +821,15 @@
                 MAIN.graphCache.plot.setupGrid();
                 MAIN.graphCache.plot.draw();
 
+                var xaxis = MAIN.graphCache.plot.getAxes().xaxis;
                 var yaxis = MAIN.graphCache.plot.getAxes().yaxis;
                 var size = (max_y - min_y) * 0.2;
                 yaxis.options.max = max_y + size;
                 yaxis.options.min = min_y - size;
-                
+
+                xaxis.options.min = min_x
+                xaxis.options.max = max_x
+
                 MAIN.graphCache.elem.show();
                 MAIN.graphCache.plot.resize();
                 MAIN.graphCache.plot.setupGrid();
@@ -511,6 +838,7 @@
                 MAIN.resizeCursorsHolder()
                 CURSORS.updateCursors()
                 CURSORS.updateLinesAndArrows();
+                MAIN.updatePlotSize()
             }
         }
     };
@@ -537,7 +865,7 @@
                 if (scale == true && xscale === 0){
                     CLIENT.parametersCache["IA_X_SCALE"] = { value:  1 };
                 }
-            }           	
+            }
 
             CLIENT.parametersCache["IA_STATUS"] = { value: 0 };
             CLIENT.sendParameters();
@@ -760,8 +1088,19 @@ $(function() {
         CLIENT.parametersCache["IA_STEPS"] = { value: $('#IA_STEPS').val() };
         CLIENT.parametersCache["IA_STATUS"] = { value: 1 };
         MAIN.scale = CLIENT.getValue("IA_SCALE");
+        const xscale = CLIENT.getValue("IA_X_SCALE")
+        if (MAIN.scale !== undefined && xscale !== undefined){
+            if (MAIN.scale == false && xscale > 0){
+                CLIENT.parametersCache["IA_X_SCALE"] = { value:  0 };
+            }
+            if (MAIN.scale == true && xscale === 0){
+                CLIENT.parametersCache["IA_X_SCALE"] = { value:  1 };
+            }
+        }
+
         CLIENT.sendParameters();
         ev.preventDefault();
+        MAIN.resetZoom()
     });
 
     //Stop button
@@ -825,8 +1164,9 @@ $(function() {
         if ($('#global_container').length === 0) return
         if ($('#main').length === 0) return
 
-        var window_width = window.innerWidth;
-        var window_height = window.innerHeight;
+
+        var window_width = $('#root_window').width()
+        var window_height = $('#root_window').height()
 
         var global_width = window_width - 30,
             global_height = window_height - 200;
@@ -853,7 +1193,7 @@ $(function() {
 
         MAIN.state.resized = true;
 
-        
+
     }).resize();
 
     //Crash buttons
