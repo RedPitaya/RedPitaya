@@ -267,6 +267,7 @@
             MAIN.resizeCursorsHolder()
             CURSORS.updateCursors()
             CURSORS.updateLinesAndArrows();
+            MAIN.drawInfoValues()
         }
     }
 
@@ -408,7 +409,6 @@
             MAIN.plotSize.x_max = p.getAxes().xaxis.max
             MAIN.plotSize.y_min = p.getAxes().yaxis.options.min
             MAIN.plotSize.y_max = p.getAxes().yaxis.options.max
-            console.log(MAIN.plotSize)
         }
     }
 
@@ -493,7 +493,6 @@
         if (!plot) {
             return;
         }
-        console.log(p1,p2)
         var min_x = Math.min(p1.x,p2.x);
         var max_x = Math.max(p1.x,p2.x);
         var min_y = Math.min(p1.y,p2.y);
@@ -524,6 +523,7 @@
         plot.setupGrid();
         plot.draw();
         CURSORS.updateLinesAndArrows()
+        MAIN.drawInfoValues()
     }
 
     MAIN.changeY = function(value) {
@@ -555,6 +555,7 @@
         plot.setupGrid();
         plot.draw();
         CURSORS.updateLinesAndArrows()
+        MAIN.drawInfoValues()
     };
 
     MAIN.changeYZoom = function(direction) {
@@ -594,6 +595,7 @@
         plot.setupGrid();
         plot.draw();
         CURSORS.updateLinesAndArrows()
+        MAIN.drawInfoValues()
     };
 
     MAIN.changeX = function(value,x , steps) {
@@ -627,6 +629,7 @@
         plot.setupGrid();
         plot.draw();
         CURSORS.updateLinesAndArrows()
+        MAIN.drawInfoValues()
     };
 
 
@@ -671,6 +674,7 @@
         plot.setupGrid();
         plot.draw();
         CURSORS.updateLinesAndArrows()
+        MAIN.drawInfoValues()
     };
 
     MAIN.resetZoom = function() {
@@ -692,6 +696,7 @@
 
         plot.setupGrid();
         plot.draw();
+        MAIN.drawInfoValues()
         MAIN.zoom_used_x = false;
         MAIN.zoom_used_y = false;
     };
@@ -792,6 +797,7 @@
             var min_x = 0;
             var max_x = 0;
             var suff = undefined;
+            var yRecalc = []
 
             if (freqSig !== undefined && sigVal !== undefined && freqSig.size > 0){
                 min_y = Math.min(...sigVal.value)
@@ -805,6 +811,7 @@
                 }
                 for(var i = 0; i < freqSig.size; i++){
                     lastsig1.push([freqSig.value[i], sigVal.value[i] / suff.coff])
+                    yRecalc.push(sigVal.value[i] / suff.coff)
                 }
                 min_y = min_y / suff.coff
                 max_y = max_y / suff.coff
@@ -816,10 +823,6 @@
                 var data_points = [{ data: lastsig1, color: '#f3ec1a' }];
 
                 MAIN.graphCache.plot.setData(data_points);
-                MAIN.graphCache.elem.show();
-                MAIN.graphCache.plot.resize();
-                MAIN.graphCache.plot.setupGrid();
-                MAIN.graphCache.plot.draw();
 
                 var xaxis = MAIN.graphCache.plot.getAxes().xaxis;
                 var yaxis = MAIN.graphCache.plot.getAxes().yaxis;
@@ -839,9 +842,21 @@
                 CURSORS.updateCursors()
                 CURSORS.updateLinesAndArrows();
                 MAIN.updatePlotSize()
+                if (force){
+                    var ext = RP_MATH.findAllExtremes(freqSig.value, yRecalc)
+                    ext.scale = ""
+                    RP_PLOT_INFO.setInfo(MAIN.graphCache.plot,MAIN.graphCache.plot.getCanvas().getContext("2d"),ext)
+                    MAIN.drawInfoValues()
+                }
             }
         }
     };
+
+    MAIN.drawInfoValues = function(){
+        if (MAIN.graphCache !== undefined) {
+            RP_PLOT_INFO.draw(MAIN.graphCache.plot,MAIN.graphCache.plot.getCanvas().getContext("2d"))
+        }
+    }
 
     MAIN.processSignals = function(SIG){
         MAIN.drawSignals(SIG);
@@ -869,6 +884,7 @@
 
             CLIENT.parametersCache["IA_STATUS"] = { value: 0 };
             CLIENT.sendParameters();
+            MAIN.updatePlot(true)
         }
 
         // Runned
@@ -969,6 +985,8 @@
         $("#"+param_name).val(new_params[param_name].value);
         MAIN.currentYAxis = new_params[param_name].value;
         MAIN.updatePlot(true);
+        MAIN.zoom_used_x = false;
+        MAIN.zoom_used_y = false;
     }
 
     MAIN.setShunt = function(new_params) {

@@ -398,7 +398,6 @@ $(document).ready(function(){
         if (!MAIN.zoom_used_x && !MAIN.zoom_used_y){
             var rect = MAIN.getPoltRect()
             var newPos = MAIN.boundCursor(rect,{ x: ev.clientX, y: ev.clientY })
-            console.log(newPos)
             MAIN.rect_mode = newPos;
             MAIN.rect_mode_last  = newPos;
             return;
