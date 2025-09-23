@@ -255,7 +255,7 @@ int osc_printRegset() {
         return ret;
     }
     if (channels == 4) {
-        ret = cmn_InitMap(OSC_BASE_SIZE, OSC_BASE_ADDR, (void**)&osc_reg_4ch, &fd2);
+        ret = cmn_InitMap(OSC_BASE_SIZE, OSC_BASE_ADDR_4CH, (void**)&osc_reg_4ch, &fd2);
         if (ret != RP_OK) {
             cmn_ReleaseClose(fd1, OSC_BASE_SIZE, (void**)&osc_reg);
             return ret;
