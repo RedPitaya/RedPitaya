@@ -125,43 +125,37 @@
                 CLIENT.parametersCache['SW_WIN_W'] = {value: newWidth}
                 CLIENT.parametersCache['SW_WIN_H'] = {value: newHeight}
                 CLIENT.sendParameters()
-                // LOGGER.buildDecodedHeader()
-                // LOGGER.clearDecoderValues()
-                // LOGGER.setDecodedSize()
             }
         });
 
         document.addEventListener('mouseup', () => {
             SW.isDragging = false;
             SW.isResizing = false;
-            // LOGGER.buildDecodedHeader()
-            // LOGGER.buildDecoderData()
-            // LOGGER.setDecodedSize()
         });
 
         SW.calibVerStr = function(value){
             if (value == 1){
-                return value + "/ver. 125-14"
+                return value + " / Ver. 125-14"
             }
 
             if (value == 2){
-                return value + "/ver. 250-12"
+                return value + " / Ver. 250-12"
             }
 
             if (value == 3){
-                return value + "/ver. 125-14 4Ch"
+                return value + " / Ver. 125-14 4Ch"
             }
 
             if (value == 4){
-                return value + "/ver. 122-16"
+                return value +  "/ Ver. 122-16"
             }
 
             if (value == 5){
-                return value + "/Universal (API)"
+                return value + " / Universal (API)"
             }
 
             if (value == 6){
-                return value + "/Universal (FPGA)"
+                return value + " / Universal (FPGA)"
             }
 
             return value + " (No Info)"
@@ -195,7 +189,7 @@
                 $("#SW_U_COUNT").text("ERROR")
             }
         };
-       
+
         $('#B_F_BACKUP_A').on('click', function(ev) {
             $.ajax({
                 url: "/calib_app_create_backup?factory=1",
@@ -256,7 +250,7 @@
                                     console.log(res);
                                 }
                             },
-                            error: function(e) { 
+                            error: function(e) {
                                 $('#info_dialog_label').text("Error upload backup");
                                 $('#info_dialog').modal('show');
                                 console.log(e);
@@ -276,7 +270,7 @@
                                         console.log(percent + '% uploaded');
                                     }
                                 }, false);
-                                
+
                                 return xhr;
                             }
                         });
@@ -322,7 +316,6 @@
     SW.setWinW = function(new_params){
         if (SW.isResizing == false){
             SW.subWindowHandler.style.width = new_params.value + 'px';
-            // LOGGER.loadDecoderValues()   
         }
     }
 
