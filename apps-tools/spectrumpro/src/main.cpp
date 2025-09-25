@@ -15,7 +15,8 @@ enum { CH_SIGNAL_DATA = (8 * 1024) };
 
 enum controlSettings { NONE = 0, REQUEST_RESET = 1, RESET_DONE = 2, REQUEST_LIST = 3, SAVE = 4, DELETE = 5, LOAD = 6, LOAD_DONE = 7 };
 
-CStringParameter redpitaya_model("RP_MODEL_STR", CBaseParameter::RO, getModelName(), 0);
+CStringParameter redpitaya_model_str("RP_MODEL_STR", CBaseParameter::RO, getModelName(), 0);
+CIntParameter redpitaya_model("RP_MODEL", CBaseParameter::RO, (int)getModel(), 0, 0, 300);
 CIntParameter redpitaya_adc_count("ADC_COUNT", CBaseParameter::RO, getADCChannels(), 0, 0, 4);
 
 CBooleanParameter isFilter("SPEC_IS_FILTER", CBaseParameter::RO, rp_HPGetFastADCIsFilterPresentOrDefault(), 0);

@@ -148,6 +148,12 @@
         }
     }
 
+    LA.setRPModel = function(new_params) {
+        var model = new_params["LA_RP_MODEL"].value;
+        setBoardPinOut(model)
+    }
+
+    LA.param_callbacks["LA_RP_MODEL"] = LA.setRPModel;
 
     LA.param_callbacks["LA_RUN"] = LA.processRun;
 

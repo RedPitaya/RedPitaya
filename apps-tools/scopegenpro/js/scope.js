@@ -79,6 +79,7 @@
     OSC.config.stop_app_url = window.location.origin + '/bazaar?stop=' + OSC.config.app_id;
     OSC.config.socket_url = 'ws://' + window.location.host + '/wss';
     OSC.rp_model = "";
+    OSC.rp_model_id = undefined;
     OSC.adc_channes = 2;
     OSC.adc_max_rate = 0;
     OSC.high_z_mode = false;
@@ -872,6 +873,10 @@
             }
         }
 
+        if (new_params['RP_MODEL']){
+            OSC.rp_model_id = new_params['RP_MODEL'].value
+            setBoardPinOut(OSC.rp_model_id)
+        }
 
         if (new_params['RP_MODEL_STR']){
             if (!OSC.setModel(new_params['RP_MODEL_STR'],new_params))
@@ -1158,7 +1163,7 @@
             if (id.startsWith("OSC_CH"+i+"_IN_GAIN")){
                 id = "OSC_CH"+i+"_IN_GAIN"
             }
-            
+
             if (id.startsWith("OSC_CH"+i+"_IN_FILTER")){
                 id = "OSC_CH"+i+"_IN_FILTER"
             }
@@ -1719,6 +1724,7 @@
 
     OSC.resize = function() {
         OSC.resizeEx(true)
+        setBoardPinOut(OSC.rp_model_id)
     }
 
     OSC.resizeEx = function(requestAll) {

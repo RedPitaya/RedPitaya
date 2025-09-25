@@ -21,6 +21,8 @@
 #define FILE_NAME "/tmp/logic/rle_logic_data.bin"
 #define FILE_NAME_TRIGGER "/tmp/logic/trig.bin"
 
+CIntParameter rp_model("LA_RP_MODEL", CBaseParameter::RO, (int)getModel(), 0, 0, 300);
+
 CIntParameter inRun("LA_RUN", CBaseParameter::RW, 0, 0, 0, 3);
 CIntParameter measureState("LA_MEASURE_STATE", CBaseParameter::RW, 1, 0, 1, 4);
 CIntParameter measureSelect("LA_MEASURE_MODE", CBaseParameter::RW, 1, 0, 1, 2, CONFIG_VAR);

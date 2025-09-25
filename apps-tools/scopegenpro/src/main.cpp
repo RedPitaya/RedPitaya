@@ -26,7 +26,8 @@
 
 enum controlSettings { NONE = 0, REQUEST_RESET = 1, RESET_DONE = 2, REQUEST_LIST = 3, SAVE = 4, DELETE = 5, LOAD = 6, LOAD_DONE = 7 };
 
-CStringParameter redpitaya_model("RP_MODEL_STR", CBaseParameter::RO, getModelName(), 0);
+CStringParameter redpitaya_model_str("RP_MODEL_STR", CBaseParameter::RO, getModelName(), 0);
+CIntParameter redpitaya_model("RP_MODEL", CBaseParameter::RO, (int)getModel(), 0, 0, 300);
 
 CIntParameter controlSettings("CONTROL_CONFIG_SETTINGS", CBaseParameter::RW, 0, 0, 0, 10);
 CStringParameter fileSettings("FILE_SATTINGS", CBaseParameter::RW, "", 0);

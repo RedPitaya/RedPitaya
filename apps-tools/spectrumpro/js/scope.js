@@ -92,6 +92,7 @@
         SPEC.latest_signal = {};
         SPEC.clear = false;
         SPEC.rp_model = undefined;
+        SPEC.rp_model_id = undefined;
         SPEC.client_id = undefined;
         SPEC.lastUpdate = 0;
 
@@ -412,7 +413,7 @@
             }
         }
 
-        
+
 
         SPEC.sweepTime = function(new_params) {
             if ('SOUR1_SWEEP_TIME' in new_params){
@@ -563,7 +564,7 @@
         SPEC.param_callbacks["SOUR3_VOLT_OFFS"] = SPEC.src3VoltOffset;
         SPEC.param_callbacks["SOUR4_VOLT_OFFS"] = SPEC.src4VoltOffset;
         SPEC.param_callbacks["xAxisLogMode"] = SPEC.setXAxisMode;
-        SPEC.param_callbacks["EXT_CLOCK_ENABLE"] = SPEC.setPllMode;       
+        SPEC.param_callbacks["EXT_CLOCK_ENABLE"] = SPEC.setPllMode;
         SPEC.param_callbacks["SOUR1_IMPEDANCE"] = GEN.sour1Imp;
         SPEC.param_callbacks["SOUR2_IMPEDANCE"] = GEN.sour2Imp;
         SPEC.param_callbacks["SOUR1_SWEEP_STATE"] = GEN.sweepResetButton;
@@ -658,6 +659,11 @@
                 $('#BDM_DBU_FUNC').val(z);
                 UI_GRAPH.changeYAxisMode(z);
                 UI_GRAPH.updateYAxis();
+            }
+
+            if (new_params['RP_MODEL']){
+                SPEC.rp_model_id = new_params['RP_MODEL'].value
+                setBoardPinOut(SPEC.rp_model_id)
             }
 
             if (!new_params['RP_MODEL_STR']){
@@ -1504,6 +1510,7 @@ $(function() {
             SPEC.updateJoystickPosition()
             SPEC.processSignals(SPEC.latest_signal)
         }
+        setBoardPinOut(SPEC.rp_model_id)
     }).resize();
 
 
