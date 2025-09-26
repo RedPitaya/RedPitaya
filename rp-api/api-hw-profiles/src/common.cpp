@@ -18,6 +18,7 @@
 #include <errno.h>
 #include <getopt.h>
 #include <mtd/mtd-user.h>
+#include <pwd.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -26,6 +27,7 @@
 #include <sys/queue.h>
 #include <unistd.h>
 #include <algorithm>
+#include <fstream>
 #include <map>
 #include <sstream>
 #include <string>
@@ -176,6 +178,9 @@ const char* table_keys_help[] = {"all",
                                  "Fast ADC Calibration on FPGA",
                                  NULL};
 
+#define ADC_BASE_RATE_PATH hp_cmn_GetHomeDirectory() + "/.config/redpitaya/adc_base_rate_"
+#define DAC_BASE_RATE_PATH hp_cmn_GetHomeDirectory() + "/.config/redpitaya/dac_base_rate_"
+
 profiles_t* g_profile = NULL;
 
 // "STEM_125-10_v1.0"
@@ -215,6 +220,18 @@ profiles_t* g_profile = NULL;
 // "STEM_125-14_Z7020_LL_v1.2"
 // "STEM_125-14_TI_v1.3"
 // "STEM_65-16_TI_v1.3"
+
+std::string hp_cmn_GetHomeDirectory() {
+    // Use getpwuid
+    char buf[1024];
+    passwd pw;
+    passwd* ppw = nullptr;
+
+    if (getpwuid_r(getuid(), &pw, buf, sizeof(buf), &ppw) == 0) {
+        return pw.pw_dir;
+    }
+    return "";
+}
 
 void convertToLowerCase(char* buff) {
     int size = strlen(buff);
@@ -1235,4 +1252,24 @@ void hp_cmn_PrintPivotTable(char* _keys) {
         printf("\n");
         // printf("%s\n", row_split.c_str());
     }
+}
+
+int hp_cmn_GetADCBaseRateFromConfig(rp_HPeModels_t model) {
+    std::ifstream file(ADC_BASE_RATE_PATH + std::to_string((int)model) + ".conf");
+    int value = 0;
+    if (file.is_open()) {
+        file >> value;
+        file.close();
+    }
+    return value;
+}
+
+int hp_cmn_GetDACBaseRateFromConfig(rp_HPeModels_t model) {
+    std::ifstream file(DAC_BASE_RATE_PATH + std::to_string((int)model) + ".conf");
+    int value = 0;
+    if (file.is_open()) {
+        file >> value;
+        file.close();
+    }
+    return value;
 }

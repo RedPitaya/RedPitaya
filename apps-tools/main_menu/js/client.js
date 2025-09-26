@@ -147,6 +147,17 @@
         return true;
     };
 
+    CLIENT.requestParameters = function() {
+        if (!CLIENT.state.socket_opened) {
+            console.log('ERROR: Cannot save changes, socket not opened');
+            return false;
+        }
+        CLIENT.parametersCache["in_command"] = { value: "send_all_params" };
+        CLIENT.ws.send(JSON.stringify({ parameters: CLIENT.parametersCache }));
+        CLIENT.client_log("SEND: ", CLIENT.parametersCache )
+        CLIENT.parametersCache = {};
+        return true;
+    };
 
     //Handlers
     var signalsHandler = function() {
