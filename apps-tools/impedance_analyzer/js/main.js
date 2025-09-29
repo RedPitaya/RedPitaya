@@ -229,8 +229,9 @@
         if (value < Math.pow(10,15)) return {name: "" , value : "" , coff: Math.pow(10,12)}
         if (value < Math.pow(10,18)) return {name: "k" , value : "10³", coff: Math.pow(10,15)}
         if (value < Math.pow(10,21)) return {name: "M" , value : "10⁶" , coff: Math.pow(10,18)}
-        if (value < Math.pow(10,23)) return {name: "G" , value : "10⁹" , coff: Math.pow(10,21)}
-        return {name: "" , value : ""}
+        if (value < Math.pow(10,24)) return {name: "G" , value : "10⁹" , coff: Math.pow(10,21)}
+        if (value < Math.pow(10,27)) return {name: "T" , value : "10¹²", coff: Math.pow(10,24)}
+        return {name: "P" , value : "10¹⁵", coff: Math.pow(10,27)}
     }
 
 
