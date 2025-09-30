@@ -351,7 +351,6 @@ auto setSweepParameters(bool force) -> void {
             g_sweepController->setDir(ch, (rp_gen_sweep_dir_t)outSweepDir[ch].Value());
             g_sweepController->setTime(ch, outSweepTime[ch].Value());
             g_sweepController->genSweep(ch, outSweepState[ch].Value());
-            WARNING("%d", outSweepRepetitions[ch].Value())
             g_sweepController->setNumberOfRepetitions(ch, outSweepRepInf[ch].Value(), outSweepRepetitions[ch].Value());
 
             if (outSweepState[ch].Value()) {

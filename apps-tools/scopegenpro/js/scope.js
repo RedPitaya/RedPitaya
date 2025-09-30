@@ -1004,6 +1004,10 @@
 
             var points = [];
             var color = OSC.config.graph_colors[sig_name];
+            var show_lines = true
+            if (OSC.params.orig['OSC_' + sig_name.toUpperCase() + '_SMOOTH'] && OSC.params.orig['OSC_' + sig_name.toUpperCase() + '_SMOOTH'].value == 0) {
+                show_lines = false
+            }
 
             if (OSC.params.orig['OSC_VIEW_START_POS'] && OSC.params.orig['OSC_VIEW_END_POS']) {
                 if ((((sig_name == 'output1') || (sig_name == 'output2')) && OSC.params.orig['OSC_VIEW_END_POS'].value != 0)) {
@@ -1020,13 +1024,15 @@
                 }
             }
 
+
+
             OSC.lastSignals[sig_name] = new_signals[sig_name];
 
             if (!OSC.loaderShow) {
                 $('body').addClass('loaded');
             }
 
-            pointArr.push(points);
+            pointArr.push({data: points, points: { show: !show_lines } , lines: { show: show_lines } });
             colorsArr.push(color);
 
             // By default first signal is selected
@@ -1050,6 +1056,8 @@
             OSC.graphs["ch1"].plot = $.plot(OSC.graphs["ch1"].elem, [pointArr], {
                 name: "ch1",
                 series: {
+                    lines: { show: true },
+                    points: { show: true, radius: 1 },
                     shadowSize: 0, // Drawing is faster without shadows
                 },
                 yaxis: {

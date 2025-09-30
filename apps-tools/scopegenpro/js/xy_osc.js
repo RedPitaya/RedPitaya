@@ -57,17 +57,36 @@
         var points = []
         var sig_name = 'xy'
         var color = OSC.config.graph_colors[sig_name];
+        var show_lines = true
+
 
         if (OSC.params.orig['OSC_VIEW_START_POS'] && OSC.params.orig['OSC_VIEW_END_POS']) {
-            for (var i = OSC.params.orig['OSC_VIEW_START_POS'].value; i < OSC.params.orig['OSC_VIEW_END_POS'].value; i++)
-                points.push([signals['X_AXIS_VALUES'].value[i], signals['Y_AXIS_VALUES'].value[i]]);
+            for (var i = OSC.params.orig['OSC_VIEW_START_POS'].value; i < OSC.params.orig['OSC_VIEW_END_POS'].value; i++){
+                var x = signals['X_AXIS_VALUES'].value[i];
+                var y = signals['Y_AXIS_VALUES'].value[i];
+
+                if (Number.isNaN(x) || Number.isNaN(y)) {
+                    show_lines = false
+                }
+
+                points.push([x,y]);
+            }
         } else {
             for (var i = 0; i < new_signals[sig_name].size; i++) {
-                points.push([signals['X_AXIS_VALUES'].value[i], signals['Y_AXIS_VALUES'].value[i]]);
+                var x = signals['X_AXIS_VALUES'].value[i];
+                var y = signals['Y_AXIS_VALUES'].value[i];
+
+                if (Number.isNaN(x) || Number.isNaN(y)) {
+                    show_lines = false
+                }
+
+                points.push([x,y]);
             }
         }
 
-        pointArr.push(points);
+
+
+        pointArr.push({data: points, points: { show: !show_lines } , lines: { show: show_lines } });
         colorsArr.push(color);
 
         if (OSC.graphs["xy"]) {
@@ -83,6 +102,8 @@
             OSC.graphs["xy"].plot = $.plot(OSC.graphs["xy"].elem, [pointArr], {
                 name: "xy",
                 series: {
+                    lines: { show: true },
+                    points: { show: true, radius: 1 },
                     shadowSize: 0, // Drawing is faster without shadows
                 },
                 yaxis: {

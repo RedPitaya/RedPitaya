@@ -30,7 +30,7 @@ CIntParameter inViewStartPos("OSC_VIEW_START_POS", CBaseParameter::RO, 0, 0, 0, 
 CIntParameter inViewEndPos("OSC_VIEW_END_POS", CBaseParameter::RO, 0, 0, 0, 16384, CONFIG_VAR);
 CIntParameter adc_count("ADC_COUNT", CBaseParameter::RO, getADCChannels(), 0, 0, 4, 0);
 CIntParameter adc_rate("ADC_RATE", CBaseParameter::RO, getADCRate(), 0, getADCRate(), getADCRate(), 0);
-CIntParameter osc_per_sec("OSC_PER_SEC", CBaseParameter::RW, 0, 0, 0, 1000000, 0);
+CIntParameter osc_per_sec("OSC_PER_SEC", CBaseParameter::RW, 0, 0, 0, 100000000, 0);
 
 /***************************************************************************************
 *                                     OSCILLOSCOPE                                     *
@@ -69,7 +69,7 @@ CIntParameter inGain[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_IN_GAIN", CBaseParamet
 CIntParameter inFilter[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_IN_FILTER", CBaseParameter::RW, 1, 0, 0, 1, CONFIG_VAR);
 CIntParameter inAC_DC[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_IN_AC_DC", CBaseParameter::RW, RP_DC, 0, 0, 1, CONFIG_VAR);
 
-CIntParameter inSmoothMode[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_SMOOTH", CBaseParameter::RW, RP_DC, 0, 0, 3, CONFIG_VAR);
+CIntParameter inSmoothMode[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_SMOOTH", CBaseParameter::RW, rpApp_osc_interpolationMode::DISABLED, 0, 0, 4, CONFIG_VAR);
 
 /* --------------------------------  TRIGGER PARAMETERS --------------------------- */
 CFloatParameter inTriggLevel("OSC_TRIG_LEVEL", CBaseParameter::RW, 0, 0, -20, 20, CONFIG_VAR);
@@ -525,7 +525,6 @@ auto updateOscParams(bool force) -> void {
 
     if (inTimeOffset.Value() != inTimeOffset.NewValue() || force) {
         if (rpApp_OscSetTimeOffset(inTimeOffset.NewValue()) == RP_OK) {
-            WARNING("Set %f", inTimeOffset.NewValue())
             inTimeOffset.Update();
             requestSendForTimeCursor = true;
         }

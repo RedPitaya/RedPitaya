@@ -96,7 +96,7 @@ typedef enum {
     RPAPP_OSC_MATH_INT,   //!< Math operation integrate
 } rpApp_osc_math_oper_t;
 
-typedef enum { DISABLED = 0, BSPLINE = 1, CATMULLROM = 2, LANCZOS = 3 } rpApp_osc_interpolationMode;
+typedef enum { DISABLED = 0, LINEAR = 1, BSPLINE = 2, CATMULLROM = 3, LANCZOS = 4 } rpApp_osc_interpolationMode;
 
 typedef enum { RPAPP_RAW_EXPORT = 0, RPAPP_VIEW_EXPORT = 1 } rpApp_osc_exportMode;
 
