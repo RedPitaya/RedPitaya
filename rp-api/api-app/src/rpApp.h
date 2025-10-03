@@ -16,6 +16,7 @@
 #ifndef __RP_APP_H
 #define __RP_APP_H
 
+#include <functional>
 #include "math/rp_dsp.h"
 #include "rp.h"
 
@@ -99,6 +100,8 @@ typedef enum {
 typedef enum { DISABLED = 0, LINEAR = 1, BSPLINE = 2, CATMULLROM = 3, LANCZOS = 4 } rpApp_osc_interpolationMode;
 
 typedef enum { RPAPP_RAW_EXPORT = 0, RPAPP_VIEW_EXPORT = 1 } rpApp_osc_exportMode;
+
+typedef std::function<void(rp_channel_t channel, const std::vector<float>& data)> rpApp_osc_updateViewCallback_t;
 
 /** @name General
 */
@@ -662,6 +665,12 @@ int rpApp_OscRefreshViewData();
 int rpApp_OscSetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode _mode);
 
 int rpApp_OscGetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode* _mode);
+
+int rpApp_OscSetForceUpdateView(bool enable);
+
+int rpApp_OscGetForceUpdateView(bool* enable);
+
+int rpApp_OscSetUpdateViewCallback(rpApp_osc_updateViewCallback_t callback);
 
 int rpApp_OscSetEnableXY(bool _state);
 

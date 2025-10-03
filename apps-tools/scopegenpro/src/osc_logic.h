@@ -7,6 +7,7 @@
 auto initOscBeforeLoadConfig() -> void;
 auto initExtTriggerLimits() -> void;
 auto initOscAfterLoad() -> void;
+auto releaseOsc() -> void;
 auto updateOscParametersToWEB() -> void;
 auto getOscRunState() -> bool;
 auto isAutoScale() -> bool;
@@ -15,3 +16,4 @@ auto updateOscParams(bool force) -> void;
 auto getOSCTimeScale() -> float;
 auto getNeedUpdateSigGen() -> bool;
 auto updateTriggerLimit(bool force) -> void;
+auto updateViewCallback(rp_channel_t channel, const std::vector<float>& view) -> void;

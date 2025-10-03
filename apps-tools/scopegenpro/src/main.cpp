@@ -95,7 +95,7 @@ int rp_app_init(void) {
     fprintf(stderr, "Loading scope version %s-%s.\n", VERSION_STR, REVISION_STR);
 
     CDataManager::GetInstance()->SetParamInterval(50);
-    CDataManager::GetInstance()->SetSignalInterval(20);
+    CDataManager::GetInstance()->SetSignalInterval(5);
 
     rp_WS_Init();
     rp_WS_SetInterval(RP_WS_RAM, 5000);
@@ -117,11 +117,9 @@ int rp_app_init(void) {
 
 int rp_app_exit(void) {
     fprintf(stderr, "Unloading scope version %s-%s.\n", VERSION_STR, REVISION_STR);
-
     deleteSweepController();
-
+    releaseOsc();
     rpApp_Release();
-
     return 0;
 }
 

@@ -331,6 +331,18 @@ int rpApp_OscGetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode* _
     return osc_GetSmoothMode(_channel, _mode);
 }
 
+int rpApp_OscSetForceUpdateView(bool enable) {
+    return osc_SetForceUpdateView(enable);
+}
+
+int rpApp_OscGetForceUpdateView(bool* enable) {
+    return osc_GetForceUpdateView(enable);
+}
+
+int rpApp_OscSetUpdateViewCallback(rpApp_osc_updateViewCallback_t callback) {
+    return osc_SetUpdateViewCallback(callback);
+}
+
 int rpApp_OscPrepareOscillogramBuffer(uint32_t count) {
     return osc_prepareOscillogramBuffer(count);
 }

@@ -293,8 +293,6 @@
                 RP_PLOT_INFO.blocks.push(x)
             }
         }
-
-        console.log(RP_PLOT_INFO.blocks)
     }
 
     RP_PLOT_INFO.draw = function(plot,ctx){

@@ -85,7 +85,7 @@ void usage() {
         "\t-o    Converts the calibration from the user zone to the old calibration format. For ecosystem version 0.98\n"
         "\n"
         "\t-b    Binary input and output mode. Works only with the -r and -w flags.\n"
-        "\t      (Example: calib -rb > bakcup.bin, cat backup.bin | calib -wb).\n"
+        "\t      (Example: calib -rb > backup.bin, cat backup.bin | calib -wb).\n"
 
         "\n"
         "Modifiers for output:\n"

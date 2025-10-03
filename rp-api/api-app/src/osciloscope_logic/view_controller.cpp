@@ -16,12 +16,15 @@ CViewController::CViewController()
       m_triggerState(false),
       m_ViewMode(NORMAL),
       m_oscPerSec(0),
-      m_oscPerSecCounter(0) {
+      m_oscPerSecCounter(0),
+      m_processBuffersPerSec(0),
+      m_processBuffersPerSecCounter(0) {
     initView();
     prepareOscillogramBuffer(DEFAULT_OSCILOGRAMM_BUFFERS);
     setViewSize(VIEW_SIZE_DEFAULT);
     m_currentBuffer = 0;
     m_lastTimeCapture = std::chrono::system_clock::now();
+    m_lastTimeProcess = m_lastTimeCapture;
 }
 
 CViewController::~CViewController() {
@@ -371,6 +374,7 @@ auto CViewController::addOscCounter() -> void {
         m_lastTimeCapture = curTime;
         m_oscPerSec = m_oscPerSecCounter;
         m_oscPerSecCounter = 0;
+        TRACE_SHORT("Capture %d", m_oscPerSec)
 
     } else {
         m_oscPerSecCounter++;
@@ -379,4 +383,23 @@ auto CViewController::addOscCounter() -> void {
 
 auto CViewController::getOscPerSec() -> uint32_t {
     return m_oscPerSec;
+}
+
+auto CViewController::addProcessCounter() -> void {
+    auto now = std::chrono::system_clock::now();
+    auto curTime = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
+    auto lastTime = std::chrono::time_point_cast<std::chrono::milliseconds>(m_lastTimeProcess);
+    if ((curTime - lastTime).count() > 1000) {
+        m_lastTimeProcess = curTime;
+        m_processBuffersPerSec = m_processBuffersPerSecCounter;
+        m_processBuffersPerSecCounter = 0;
+        TRACE_SHORT("Process %d", m_processBuffersPerSec)
+
+    } else {
+        m_processBuffersPerSecCounter++;
+    }
+}
+
+auto CViewController::getProcessPerSec() -> uint32_t {
+    return m_processBuffersPerSec;
 }

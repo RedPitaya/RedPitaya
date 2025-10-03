@@ -12,6 +12,10 @@
 #include "common/rp_formatter.h"
 #include "math_logic.h"
 
+#include "web/rp_websocket.h"
+
+#define DATA_TCP_PORT 9900
+
 enum request_mode { NONE = 0x0, WAV = 0x1, TDMS = 0x2, CSV = 0x3 };
 
 static const uint8_t g_adc_channels = getADCChannels();
@@ -96,6 +100,8 @@ CFloatParameter ext_trigger_level("OSC_EXT_TRIG_LEVEL", CBaseParameter::RW, 0, 0
 CIntParameter bufferRequest("OSC_BUFFER_REQUEST", CBaseParameter::RW, 0, 0, -1, 1);
 CIntParameter bufferSelected("OSC_BUFFER_CURRENT", CBaseParameter::RW, 0, 0, (MAX_BUFFERS - 1) * -1, 0);
 
+rp_websocket::CWEBServer data_server;
+
 auto initExtTriggerLimits() -> void {
     if (rp_HPGetIsExternalTriggerLevelPresentOrDefault()) {
         auto level = rp_HPGetIsExternalTriggerFullScalePresentOrDefault();
@@ -128,6 +134,9 @@ auto initOscAfterLoad() -> void {
             inName[ch].Value() = std::string("IN") + std::to_string(i + 1);
         }
     }
+
+    rpApp_OscSetUpdateViewCallback(updateViewCallback);
+    data_server.startServerBinaray(DATA_TCP_PORT);
 }
 
 auto initOscBeforeLoadConfig() -> void {
@@ -135,6 +144,10 @@ auto initOscBeforeLoadConfig() -> void {
         auto ch = (rp_channel_t)i;
         inName[ch].Value() = std::string("IN") + std::to_string(i + 1);
     }
+}
+
+auto releaseOsc() -> void {
+    rpApp_OscSetUpdateViewCallback(nullptr);
 }
 
 auto updateTriggerLimit(bool force) -> void {
@@ -698,4 +711,14 @@ auto updateOscParams(bool force) -> void {
 auto getOSCTimeScale() -> float {
     float tscale = inTimeScale.Value() / 1000;
     return tscale;
+}
+
+auto updateViewCallback(rp_channel_t channel, const std::vector<float>& view) -> void {
+    bool running;
+    rpApp_OscIsRunning(&running);
+    if (running) {
+        uint32_t header[4] = {0xAABBCCDD, view.size() * sizeof(float), view.size(), channel};
+        data_server.sendInBinarayMode((char*)header, 4 * sizeof(uint32_t));
+        data_server.sendInBinarayMode((char*)view.data(), view.size() * sizeof(float));
+    }
 }

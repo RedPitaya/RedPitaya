@@ -245,6 +245,7 @@
                 try {
                     OSC.connectWebSocket();
                     RP_CLIENT.connectWebSocket();
+                    RP_DATA_STREAM.connectWebSocket();
                 } catch (e) {
                     setTimeout(OSC.startApp, 2000);
                 }
@@ -296,12 +297,10 @@
                 OSC.processSignals(signal);
             }
             // console.log(OSC.signalStack.length,OSC.signalStack[0]);
-            OSC.signalStack.splice(0, 1);
+            OSC.signalStack = []
             OSC.refresh_times.push("tick");
             // console.log("Drawing: " + (performance.now() - p));
         }
-        if (OSC.signalStack.length > 2)
-            OSC.signalStack.length = [];
     }
 
     var parametersHandler = function() {
@@ -343,6 +342,7 @@
 
         OSC.compressed_data = 0;
         OSC.decompressed_data = 0;
+
 
         if (OSC.refresh_times.length < 3)
             OSC.bad_connection[g_counter] = true;
@@ -1005,9 +1005,6 @@
             var points = [];
             var color = OSC.config.graph_colors[sig_name];
             var show_lines = true
-            if (OSC.params.orig['OSC_' + sig_name.toUpperCase() + '_SMOOTH'] && OSC.params.orig['OSC_' + sig_name.toUpperCase() + '_SMOOTH'].value == 0) {
-                show_lines = false
-            }
 
             if (OSC.params.orig['OSC_VIEW_START_POS'] && OSC.params.orig['OSC_VIEW_END_POS']) {
                 if ((((sig_name == 'output1') || (sig_name == 'output2')) && OSC.params.orig['OSC_VIEW_END_POS'].value != 0)) {
@@ -1015,8 +1012,11 @@
                         points.push([i, new_signals[sig_name].value[i]]);
                     }
                 } else {
-                    for (var i = OSC.params.orig['OSC_VIEW_START_POS'].value; i < OSC.params.orig['OSC_VIEW_END_POS'].value; i++)
-                        points.push([i, new_signals[sig_name].value[i]]);
+                    for (var i = OSC.params.orig['OSC_VIEW_START_POS'].value; i < OSC.params.orig['OSC_VIEW_END_POS'].value; i++){
+                        var y = new_signals[sig_name].value[i]
+                        if (isNaN(y)) show_lines = false
+                        points.push([i, y]);
+                    }
                 }
             } else {
                 for (var i = 0; i < new_signals[sig_name].size; i++) {
@@ -1032,7 +1032,7 @@
                 $('body').addClass('loaded');
             }
 
-            pointArr.push({data: points, points: { show: !show_lines } , lines: { show: show_lines } });
+            pointArr.push({data: points, points: { show: !show_lines } , lines: { show: show_lines }, channel: sig_name.toUpperCase() });
             colorsArr.push(color);
 
             // By default first signal is selected
@@ -1079,6 +1079,11 @@
                 },
                 grid: {
                     show: false
+                },
+                hooks: {
+                    drawSeries: function(plot, ctx, series) {
+                        TA_MODE.draw(plot, ctx, series)
+                    }
                 },
                 colors: [
                     '#FF2A68', '#FF9500', '#FFDB4C', '#87FC70', '#22EDC7', '#1AD6FD', '#C644FC', '#52EDC7', '#EF4DB6'

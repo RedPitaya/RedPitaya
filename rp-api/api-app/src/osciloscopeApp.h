@@ -116,6 +116,10 @@ int osc_getShowInvalid(rp_channel_t _channel, bool* _state);
 int osc_SetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode _mode);
 int osc_GetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode* _mode);
 
+int osc_SetForceUpdateView(bool enable);
+int osc_GetForceUpdateView(bool* enable);
+int osc_SetUpdateViewCallback(rpApp_osc_updateViewCallback_t callback);
+
 int threadSafe_acqStart();
 int threadSafe_acqStop();
 double scaleAmplitude(double volts, double ampScale, double probeAtt, double ampOffset, double invertFactor);
