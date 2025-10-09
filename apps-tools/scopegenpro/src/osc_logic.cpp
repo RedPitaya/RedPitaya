@@ -276,7 +276,7 @@ auto updateOscParametersToWEB() -> void {
     float value;
     rpApp_OscGetTimeOffset(&value);
     if (inTimeOffset.Value() != value) {
-        WARNING("Time offset %f", value)
+        TRACE("Time offset %f", value)
         inTimeOffset.SendValue(value);
         inTimeScale.Update();
         viewPortion.Update();
@@ -798,4 +798,8 @@ void updateTraceModeParams(bool force) {
         trace_mode_fast_enable.Update();
         rpApp_OscSetForceUpdateView(trace_mode_fast_enable.Value());
     }
+}
+
+auto getOSCTimeOffset() -> float {
+    return inTimeOffset.Value();
 }

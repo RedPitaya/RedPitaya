@@ -15,6 +15,7 @@ auto updateOscSignal() -> void;
 auto updateOscParams(bool force) -> void;
 auto updateTraceModeParams(bool force) -> void;
 auto getOSCTimeScale() -> float;
+auto getOSCTimeOffset() -> float;
 auto getNeedUpdateSigGen() -> bool;
 auto updateTriggerLimit(bool force) -> void;
 auto updateViewCallback(rp_channel_t channel, uint32_t decimation, float timeScale, const std::vector<float>& view) -> void;
