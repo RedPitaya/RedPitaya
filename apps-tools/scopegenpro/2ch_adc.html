@@ -330,6 +330,35 @@
                             </select>
                         </div>
                     </div>
+                    <div class="col-xs-12 option-content trace_block">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Trace mode</span>
+                            <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                <label id="ch1_trace_mode_btn1" class="btn">
+                                    <input type="radio" value="0" name="CH1_SHOW_TRACE" id="CH1_SHOW_TRACE"
+                                        autocomplete="off">
+                                    <div id="CH1_SHOW_TRACE_B">OFF</div>
+                                </label>
+                                <label id="ch1_trace_mode_btn2" class="btn">
+                                    <input type="radio" value="1" name="CH1_SHOW_TRACE" id="CH1_SHOW_TRACE1"
+                                        autocomplete="off">
+                                    <div id="CH1_SHOW_TRACE2_B">ON</div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content trace_block">
+                        <div class="right-menu-option">
+                            <div id="CH1_TRACE_SETTINGS" class="right-menu-option trace_reset">TRACE
+                                RESET</div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content trace_block">
+                        <div class="right-menu-option">
+                            <div id="CH1_SHOW_TRACE_SETTINGS" class="right-menu-option show_trace_settings">TRACE
+                                SETTINGS</div>
+                        </div>
+                    </div>
                 </div>
                 <div id="in2_dialog" class="dialog row right-menu-cont">
                     <div class="col-xs-12 option-content">
@@ -446,6 +475,35 @@
                                 <option value="3">CATMULL-ROM</option>
                                 <option value="4">LANCZOS</option>
                             </select>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content trace_block">
+                        <div class="right-menu-option">
+                            <span class="col-info" style="margin-top: -21px;">Trace mode</span>
+                            <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                <label id="ch2_trace_mode_btn1" class="btn">
+                                    <input type="radio" value="0" name="CH2_SHOW_TRACE" id="CH2_SHOW_TRACE"
+                                        autocomplete="off">
+                                    <div id="CH2_SHOW_TRACE_B">OFF</div>
+                                </label>
+                                <label id="ch2_trace_mode_btn2" class="btn">
+                                    <input type="radio" value="1" name="CH2_SHOW_TRACE" id="CH2_SHOW_TRACE1"
+                                        autocomplete="off">
+                                    <div id="CH2_SHOW_TRACE2_B">ON</div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content trace_block">
+                        <div class="right-menu-option">
+                            <div id="CH2_TRACE_SETTINGS" class="right-menu-option trace_reset">TRACE
+                                RESET</div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 option-content trace_block">
+                        <div class="right-menu-option">
+                            <div id="CH2_SHOW_TRACE_SETTINGS" class="right-menu-option show_trace_settings">TRACE
+                                SETTINGS</div>
                         </div>
                     </div>
                 </div>
@@ -1518,10 +1576,10 @@
                         <img id="xy_cur_x2_arrow" class="xy_varrow" src="img/cursor-arrow-up-x2.png">
                         <div id="xy_cur_x2" class="vline"></div>
                         <div id="xy_cur_x2_info" class="cur_info"></div>
-                        <img id="xy_cur_y1_arrow" class="xy_harrow" src="img/cursor-arrow-left.png">
+                        <img id="xy_cur_y1_arrow" class="xy_harrow" src="img/cursor-arrow-left-y1.png">
                         <div id="xy_cur_y1" class="hline"></div>
                         <div id="xy_cur_y1_info" class="cur_info"></div>
-                        <img id="xy_cur_y2_arrow" class="xy_harrow" src="img/cursor-arrow-left.png">
+                        <img id="xy_cur_y2_arrow" class="xy_harrow" src="img/cursor-arrow-left-y2.png">
                         <div id="xy_cur_y2" class="hline"></div>
                         <div id="xy_cur_y2_info" class="cur_info"></div>
                         <div id="xy_cur_y_diff"></div>
@@ -1725,4 +1783,90 @@
             </div>
         </div>
     </div>
+</div>
+
+
+<div id="subWindow" class="subwindow hidden">
+    <div class="subwindow-content">
+        <div class="subwindow-header">
+            <div id="SW_TM_TITLE">Trace Mode</div>
+            <span class="close-button" onclick="SW_TM.closeSubWindow()">&times;</span>
+        </div>
+        <div style="text-align: left;margin-left: 5%;">
+            <table>
+                <col width="100px">
+                <col width="60px">
+                <col width="60px">
+                <col width="60px">
+                <col width="60px">
+                <col width="60px">
+                <tr style="height:36px;">
+                    <td><a id="SW_TM_RESET" class="list-group-item add_value_button"
+                            style="padding: 0;text-align: center;">RESET</a></td>
+                    <td>
+                </tr>
+            </table>
+            <table>
+                <col width="400px">
+                <col width="200px">
+                <tr style="height:36px;">
+                    <td>Enable:</td>
+                    <td>
+                        <span id="SW_TM_TRACE_ENABLE" class="checkbox_export" style="margin-left: 0px;" />
+                    </td>
+                </tr>
+                <tr style="height:36px;">
+                    <td>Fast mode:</td>
+                    <td>
+                        <span id="SW_TM_FAST_MODE" class="checkbox_export" style="margin-left: 0px;" />
+                    </td>
+                </tr>
+                <tr style="height:36px;">
+                    <td>Inverted (opacity):</td>
+                    <td>
+                        <span id="SW_TM_INVERTED" class="checkbox_export" style="margin-left: 0px;" />
+                    </td>
+                </tr>
+                <tr style="height:40px;">
+                    <td>Color 1:</td>
+                    <td>
+                        <div id="SW_TM_COLOR1" class="color-picker-wrapper" style="border: 1px solid #ddd;">
+                            <input id="SW_TM_COLOR1_INPUT" class="selected-color" type="color" value="#e60a0a10"
+                                style="width: 100%;" alpha>
+                        </div>
+                    </td>
+                </tr>
+                <tr style="height:40px;">
+                    <td>Color 2:</td>
+                    <td>
+                        <div id="SW_TM_COLOR2" class="color-picker-wrapper" style="border: 1px solid #ddd;">
+                            <input id="SW_TM_COLOR2_INPUT" class="selected-color" type="color" value="#e60a0a10"
+                                style="width: 100%;" alpha>
+                        </div>
+                    </td>
+                </tr>
+                <tr style="height:40px;">
+                    <td>Color 3:</td>
+                    <td>
+                        <div id="SW_TM_COLOR3" class="color-picker-wrapper" style="border: 1px solid #ddd;">
+                            <input id="SW_TM_COLOR3_INPUT" class="selected-color" type="color" value="#e60a0a10"
+                                style="width: 100%;" alpha>
+                        </div>
+                    </td>
+                </tr>
+                <tr style="height:40px;">
+                    <td>Color 4:</td>
+                    <td>
+                        <div id="SW_TM_COLOR4" class="color-picker-wrapper" style="border: 1px solid #ddd;">
+                            <input id="SW_TM_COLOR4_INPUT" class="selected-color" type="color" value="#e60a0a10"
+                                style="width: 100%;" alpha>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <!-- <div class="resize-handle bottom-right">
+        <img src="img/resize.svg" class="resize-handle" />
+    </div> -->
 </div>

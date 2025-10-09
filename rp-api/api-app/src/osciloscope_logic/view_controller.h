@@ -125,6 +125,8 @@ class CViewController {
 
     auto addOscCounter() -> void;
     auto getOscPerSec() -> uint32_t;
+    auto addProcessCounter() -> void;
+    auto getProcessPerSec() -> uint32_t;
     auto bufferSelectNext() -> void;
     auto bufferSelectPrev() -> void;
     auto bufferCurrent(int32_t* current) -> void;
@@ -171,6 +173,10 @@ class CViewController {
     std::chrono::time_point<std::chrono::system_clock> m_lastTimeCapture;
     uint32_t m_oscPerSec;
     uint32_t m_oscPerSecCounter;
+
+    std::chrono::time_point<std::chrono::system_clock> m_lastTimeProcess;
+    uint32_t m_processBuffersPerSec;
+    uint32_t m_processBuffersPerSecCounter;
 };
 
 #endif  // __VIEW_CONTROLLER_H

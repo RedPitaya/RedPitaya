@@ -55,7 +55,7 @@ class CDataDecimator {
 
     auto decimate(rp_channel_t _channel, const float* _data, vsize_t _dataSize, int _triggerPointPos) -> bool;
     auto decimate(rp_channel_t _channel, const float* _data, vsize_t _dataSize, int _triggerPointPos, std::vector<float>* _view, std::vector<float>* _originalData,
-                  DataInfo* _viewInfo, DataInfo* _viewRawInfo, ValidRange range) -> bool;
+                  DataInfo* _viewInfo, DataInfo* _viewRawInfo, ValidRange range, std::vector<float>* _unscaledView) -> bool;
 
    private:
     float m_decimationFactor;

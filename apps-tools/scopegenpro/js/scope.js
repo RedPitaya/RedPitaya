@@ -199,6 +199,7 @@
     OSC.signalStack = [];
 
     OSC.lastSignals = [];
+    OSC.lastSignalsCSV = [];
 
 
     var g_counter = 0;
@@ -245,6 +246,7 @@
                 try {
                     OSC.connectWebSocket();
                     RP_CLIENT.connectWebSocket();
+                    RP_DATA_STREAM.connectWebSocket();
                 } catch (e) {
                     setTimeout(OSC.startApp, 2000);
                 }
@@ -296,12 +298,10 @@
                 OSC.processSignals(signal);
             }
             // console.log(OSC.signalStack.length,OSC.signalStack[0]);
-            OSC.signalStack.splice(0, 1);
+            OSC.signalStack = []
             OSC.refresh_times.push("tick");
             // console.log("Drawing: " + (performance.now() - p));
         }
-        if (OSC.signalStack.length > 2)
-            OSC.signalStack.length = [];
     }
 
     var parametersHandler = function() {
@@ -343,6 +343,7 @@
 
         OSC.compressed_data = 0;
         OSC.decompressed_data = 0;
+
 
         if (OSC.refresh_times.length < 3)
             OSC.bad_connection[g_counter] = true;
@@ -387,6 +388,7 @@
                 OSC.requestAllParam();
                 OSC.createAxisTicks();
                 OSC.createAxisTicksXY();
+                SW_TM.initSubWindow()
                 OSC.resize();
                 OSC.is_webpage_loaded = true;
             });
@@ -824,6 +826,40 @@
 
     OSC.param_callbacks["OSC_BUFFER_CURRENT"] = OSC.setCurrentBuffer;
 
+    OSC.param_callbacks["CH1_SHOW_TRACE"] = OSC.ch1SetTraceMode;
+    OSC.param_callbacks["CH2_SHOW_TRACE"] = OSC.ch2SetTraceMode;
+    OSC.param_callbacks["CH3_SHOW_TRACE"] = OSC.ch3SetTraceMode;
+    OSC.param_callbacks["CH4_SHOW_TRACE"] = OSC.ch4SetTraceMode;
+
+    OSC.param_callbacks["OSC_SW_TM_WIN_SHOW"] = SW_TM.setWinShow;
+    OSC.param_callbacks["OSC_SW_TM_WIN_X"] = SW_TM.setWinX;
+    OSC.param_callbacks["OSC_SW_TM_WIN_Y"] = SW_TM.setWinY;
+    OSC.param_callbacks["OSC_SW_TM_WIN_W"] = SW_TM.setWinW;
+    OSC.param_callbacks["OSC_SW_TM_WIN_H"] = SW_TM.setWinH;
+    OSC.param_callbacks["OSC_SW_TM_CH_ACTIVE"] = SW_TM.setActiveChannel;
+    OSC.param_callbacks["OSC_SW_TM_FAST_MODE"] = SW_TM.setFastMode;
+
+    OSC.param_callbacks["CH1_TRACE_INVERTED"] = SW_TM.setTraceInverted;
+    OSC.param_callbacks["CH2_TRACE_INVERTED"] = SW_TM.setTraceInverted;
+    OSC.param_callbacks["CH3_TRACE_INVERTED"] = SW_TM.setTraceInverted;
+    OSC.param_callbacks["CH4_TRACE_INVERTED"] = SW_TM.setTraceInverted;
+
+    OSC.param_callbacks["CH1_TRACE_COLOR1"] = SW_TM.setTraceColor;
+    OSC.param_callbacks["CH1_TRACE_COLOR2"] = SW_TM.setTraceColor;
+    OSC.param_callbacks["CH1_TRACE_COLOR3"] = SW_TM.setTraceColor;
+    OSC.param_callbacks["CH1_TRACE_COLOR4"] = SW_TM.setTraceColor;
+    OSC.param_callbacks["CH2_TRACE_COLOR1"] = SW_TM.setTraceColor;
+    OSC.param_callbacks["CH2_TRACE_COLOR2"] = SW_TM.setTraceColor;
+    OSC.param_callbacks["CH2_TRACE_COLOR3"] = SW_TM.setTraceColor;
+    OSC.param_callbacks["CH2_TRACE_COLOR4"] = SW_TM.setTraceColor;
+    OSC.param_callbacks["CH3_TRACE_COLOR1"] = SW_TM.setTraceColor;
+    OSC.param_callbacks["CH3_TRACE_COLOR2"] = SW_TM.setTraceColor;
+    OSC.param_callbacks["CH3_TRACE_COLOR3"] = SW_TM.setTraceColor;
+    OSC.param_callbacks["CH3_TRACE_COLOR4"] = SW_TM.setTraceColor;
+    OSC.param_callbacks["CH4_TRACE_COLOR1"] = SW_TM.setTraceColor;
+    OSC.param_callbacks["CH4_TRACE_COLOR2"] = SW_TM.setTraceColor;
+    OSC.param_callbacks["CH4_TRACE_COLOR3"] = SW_TM.setTraceColor;
+    OSC.param_callbacks["CH4_TRACE_COLOR4"] = SW_TM.setTraceColor;
 
     // Processes newly received values for parameters
     OSC.processParameters = function(new_params) {
@@ -884,6 +920,7 @@
         }else{
             if (OSC.rp_model === ""){
                 OSC.requestAllParam();
+                OSC.requestAllSignals();
                 return;
             }
         }
@@ -982,12 +1019,14 @@
         var pointArr = [];
         var colorsArr = [];
         $('#right_menu .menu-btn').not('.not-signal').prop('disabled', true);
+
         // (Re)Draw every signal
         for (sig_name in new_signals) {
 
             // Ignore empty signals
-            if (new_signals[sig_name].size == 0)
+            if (new_signals[sig_name].size == 0){
                 continue;
+            }
 
 
             var sig_btn = $('#right_menu .menu-btn.' + sig_name);
@@ -995,8 +1034,9 @@
             if (OSC.params.orig[sig_name.toUpperCase() + '_SHOW'] && OSC.params.orig[sig_name.toUpperCase() + '_SHOW'].value == false) {
                 sig_btn.not('.not-signal').prop('disabled', true);
                 continue;
-            } else
+            } else{
                 sig_btn.not('.not-signal').prop('disabled', false);
+            }
 
             // Ignore math signal if no operator defined
             if (sig_name == 'math' && (!OSC.params.orig['MATH_SHOW'] || OSC.params.orig['MATH_SHOW'].value == false))
@@ -1005,9 +1045,6 @@
             var points = [];
             var color = OSC.config.graph_colors[sig_name];
             var show_lines = true
-            if (OSC.params.orig['OSC_' + sig_name.toUpperCase() + '_SMOOTH'] && OSC.params.orig['OSC_' + sig_name.toUpperCase() + '_SMOOTH'].value == 0) {
-                show_lines = false
-            }
 
             if (OSC.params.orig['OSC_VIEW_START_POS'] && OSC.params.orig['OSC_VIEW_END_POS']) {
                 if ((((sig_name == 'output1') || (sig_name == 'output2')) && OSC.params.orig['OSC_VIEW_END_POS'].value != 0)) {
@@ -1015,8 +1052,11 @@
                         points.push([i, new_signals[sig_name].value[i]]);
                     }
                 } else {
-                    for (var i = OSC.params.orig['OSC_VIEW_START_POS'].value; i < OSC.params.orig['OSC_VIEW_END_POS'].value; i++)
-                        points.push([i, new_signals[sig_name].value[i]]);
+                    for (var i = OSC.params.orig['OSC_VIEW_START_POS'].value; i < OSC.params.orig['OSC_VIEW_END_POS'].value; i++){
+                        var y = new_signals[sig_name].value[i]
+                        points.push([i, y]);
+                    }
+                    show_lines = OSC.isPointModeBySignal(sig_name)
                 }
             } else {
                 for (var i = 0; i < new_signals[sig_name].size; i++) {
@@ -1027,12 +1067,13 @@
 
 
             OSC.lastSignals[sig_name] = new_signals[sig_name];
+            OSC.lastSignalsCSV[sig_name] = new_signals[sig_name];
 
             if (!OSC.loaderShow) {
                 $('body').addClass('loaded');
             }
 
-            pointArr.push({data: points, points: { show: !show_lines } , lines: { show: show_lines } });
+            pointArr.push({data: points, points: { show: !show_lines } , lines: { show: show_lines }, channel: sig_name.toUpperCase() });
             colorsArr.push(color);
 
             // By default first signal is selected
@@ -1041,15 +1082,18 @@
             }
         }
 
-       // var x_ticks = [ -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5];
+        // var x_ticks = [ -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5];
 
         if (OSC.graphs["ch1"]) {
             OSC.graphs["ch1"].elem.show();
             OSC.graphs["ch1"].plot.setColors(colorsArr);
             OSC.graphs["ch1"].plot.resize();
+            var canvas = OSC.graphs["ch1"].plot.getCanvas()
+            TA_MODE.setNewSizeWGL(canvas.width,canvas.height)
             OSC.graphs["ch1"].plot.setupGrid();
             OSC.graphs["ch1"].plot.setData(pointArr);
             OSC.graphs["ch1"].plot.draw();
+            TA_MODE.resetData()
         } else {
             OSC.graphs["ch1"] = {};
             OSC.graphs["ch1"].elem = $('<div class="plot" />').css($('#graph_grid').css(['height', 'width'])).appendTo('#graphs');
@@ -1066,6 +1110,7 @@
                 },
                 xaxis: {
                     min: 0,
+                    max: 1023,
                     tickColor: '#aaaaaa',
                  //   ticks: x_ticks,
                     transform: function(v) {
@@ -1080,6 +1125,11 @@
                 grid: {
                     show: false
                 },
+                hooks: {
+                    drawSeries: function(plot, ctx, series) {
+                        TA_MODE.draw(plot, ctx, series)
+                    }
+                },
                 colors: [
                     '#FF2A68', '#FF9500', '#FFDB4C', '#87FC70', '#22EDC7', '#1AD6FD', '#C644FC', '#52EDC7', '#EF4DB6'
                 ]
@@ -1087,6 +1137,17 @@
             // If page not full loaded
             if (OSC.graphs["ch1"].elem === undefined){
                 OSC.graphs = {};
+            }
+
+            TA_MODE.init(OSC.adc_channes)
+            if (TA_MODE.isInit){
+                var canvas = OSC.graphs["ch1"].plot.getCanvas()
+                TA_MODE.setNewSizeWGL(canvas.width,canvas.height)
+            } else{
+                var nodes = document.getElementsByClassName("trace_block");
+                [...nodes].forEach((element, index, array) => {
+                        element.parentNode.removeChild(element);
+                    });
             }
         }
 
@@ -1174,6 +1235,10 @@
 
             if (id.startsWith("OSC_CH"+i+"_IN_FILTER")){
                 id = "OSC_CH"+i+"_IN_FILTER"
+            }
+
+            if (id.startsWith("CH"+i+"_SHOW_TRACE")){
+                id = "CH"+i+"_SHOW_TRACE"
             }
 
             if (id.startsWith("OSC_CH"+i+"_IN_AC_DC")){
@@ -1376,7 +1441,7 @@
         return true;
     };
 
-    OSC.requestAllParam = function(disable_defCur = false) {
+    OSC.requestAllParam = function() {
         if (!OSC.state.socket_opened) {
             console.log('ERROR: Cannot save changes, socket not opened');
             return false;
@@ -1390,6 +1455,23 @@
         console.log("requestAllParam")
         return true;
     };
+
+    OSC.requestAllSignals = function() {
+        if (!OSC.state.socket_opened) {
+            console.log('ERROR: Cannot save changes, socket not opened');
+            return false;
+        }
+        if (OSC.ws.readyState !== WebSocket.OPEN){
+            window.location.reload(true);
+        }
+        OSC.params.local['in_command'] = { value: 'send_all_signals' };
+        OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));
+        OSC.params.local = {};
+        console.log("requestAllSignals")
+        return true;
+    };
+
+
 
     // Draws the grid on the lowest canvas layer
     OSC.drawGraphGrid = function() {
@@ -1733,6 +1815,7 @@
     OSC.resize = function() {
         OSC.resizeEx(true)
         setBoardPinOut(OSC.rp_model_id)
+        SW_TM.checkSubWindowPosition()
     }
 
     OSC.resizeEx = function(requestAll) {
@@ -1798,8 +1881,10 @@
 
         // Hide offset arrows, trigger level line and arrow
         $('.y-offset-arrow, #time_offset_arrow, #buf_time_offset, #trig_level_arrow, #trigger_level').hide();
-        if (requestAll)
+        if (requestAll){
             OSC.requestAllParam();
+            OSC.requestAllSignals();
+        }
 
         // Reset left position for trigger level arrow, it is added by jQ UI draggable
         $('#trig_level_arrow').css('left', '');

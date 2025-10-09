@@ -308,6 +308,33 @@
         OSC.setBypassFilter("OSC_CH4_IN_FILTER")
     }
 
+
+    OSC.setTraceMode = function(param_name){
+        var radios = $('input[name="' + param_name + '"]');
+        radios.closest('.btn-group').children('.btn.active').removeClass('active');
+        radios.eq([+OSC.params.orig[param_name].value]).prop('checked', true).parent().addClass('active');
+    }
+
+    OSC.ch1SetTraceMode = function(new_params){
+        OSC.setTraceMode("CH1_SHOW_TRACE")
+        SW_TM.setTraceEnable(1,new_params["CH1_SHOW_TRACE"].value)
+    }
+
+    OSC.ch2SetTraceMode = function(new_params){
+        OSC.setTraceMode("CH2_SHOW_TRACE")
+        SW_TM.setTraceEnable(2,new_params["CH2_SHOW_TRACE"].value)
+    }
+
+    OSC.ch3SetTraceMode = function(new_params){
+        OSC.setTraceMode("CH3_SHOW_TRACE")
+        SW_TM.setTraceEnable(3,new_params["CH3_SHOW_TRACE"].value)
+    }
+
+    OSC.ch4SetTraceMode = function(new_params){
+        OSC.setTraceMode("CH4_SHOW_TRACE")
+        SW_TM.setTraceEnable(4,new_params["CH4_SHOW_TRACE"].value)
+    }
+
     OSC.setACDC = function(param_name){
         var radios = $('input[name="' + param_name + '"]');
         radios.closest('.btn-group').children('.btn.active').removeClass('active');
@@ -498,6 +525,55 @@
             }else{
                 $('#OSC_PREV_BUFFER').prop('disabled', false);
             }
+        }
+    }
+
+
+    OSC.isPointModeBySignal = function(sig_name){
+        if (sig_name == 'ch1'){
+            const v = OSC.params.orig['OSC_CH1_SMOOTH']
+            if (v) return v.value != 0
+            return false
+        }
+
+        if (sig_name == 'ch2'){
+            const v = OSC.params.orig['OSC_CH2_SMOOTH']
+            if (v) return v.value != 0
+            return false
+        }
+
+        if (sig_name == 'ch3'){
+            const v = OSC.params.orig['OSC_CH3_SMOOTH']
+            if (v) return v.value != 0
+            return false
+        }
+
+        if (sig_name == 'ch4'){
+            const v = OSC.params.orig['OSC_CH4_SMOOTH']
+            if (v) return v.value != 0
+            return false
+        }
+
+        if (sig_name == 'math'){
+            const v1 = OSC.params.orig['OSC_MATH_SRC1']
+            const v2 = OSC.params.orig['OSC_MATH_SRC2']
+            const v3 = OSC.params.orig['OSC_MATH_OP']
+            if (v1 && v2 && v3) {
+                if (v3.value == 5 || v3.value == 6 || v3.value == 7){
+                    var src = v1.value + 1
+                    const v = OSC.params.orig['OSC_CH'+src+'_SMOOTH']
+                    if (v) return v.value != 0
+                    return false
+                }else{
+                    var src1 = v1.value + 1
+                    var src2 = v2.value + 1
+                    const p1 = OSC.params.orig['OSC_CH'+src1+'_SMOOTH']
+                    const p2 = OSC.params.orig['OSC_CH'+src2+'_SMOOTH']
+                    if (p1 && p2) return p1.value != 0 && p2.value != 0
+                    return false
+                }
+            }
+            return false
         }
     }
 

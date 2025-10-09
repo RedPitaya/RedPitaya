@@ -38,6 +38,7 @@
 #define FLOAT_EPS 0.00001f
 
 std::atomic_bool g_threadRun = false;
+std::atomic_bool g_forceUpdate = false;
 
 volatile double ch_ampOffset[MAX_ADC_CHANNELS], math_ampOffset;
 volatile double ch_ampScale[MAX_ADC_CHANNELS], math_ampScale = 1;
@@ -58,6 +59,8 @@ CViewController g_viewController;
 CMeasureController g_measureController;
 CADCController g_adcController;
 CXYController g_xyController;
+
+rpApp_osc_updateViewCallback_t g_updateViewCallback = nullptr;
 
 void mainThreadFun();
 void mainViewThreadFun();
@@ -468,6 +471,22 @@ int osc_SetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode _mode) 
 
 int osc_GetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode* _mode) {
     *_mode = g_decimator.getInterpolationMode(_channel);
+    return RP_OK;
+}
+
+int osc_SetUpdateViewCallback(rpApp_osc_updateViewCallback_t callback) {
+    std::lock_guard lock(g_mutex);
+    g_updateViewCallback = callback;
+    return RP_OK;
+}
+
+int osc_SetForceUpdateView(bool enable) {
+    g_forceUpdate = enable;
+    return RP_OK;
+}
+
+int osc_GetForceUpdateView(bool* enable) {
+    *enable = g_forceUpdate;
     return RP_OK;
 }
 
@@ -1576,7 +1595,8 @@ void mainThreadFun() {
             }
 
             g_viewController.updateViewFromADCDone();
-            // g_viewController.requestUpdateView();
+            if (g_forceUpdate)
+                g_viewController.requestUpdateView();
 
             if (trigSweep == RPAPP_OSC_TRIG_SINGLE) {
                 osc_stop();
@@ -1590,6 +1610,7 @@ void mainViewThreadFun() {
     auto adc_channels = getADCChannels();
     double speed = getADCRate();
 
+    std::vector<float> buffers[MAX_ADC_CHANNELS];
     while (g_threadRun) {
         if (g_viewController.isNeedUpdateView()) {
             g_mutex.lock();
@@ -1625,6 +1646,8 @@ void mainViewThreadFun() {
                 if (viewMode == CViewController::ROLL && contMode) {
                     posInPoints = -viewSize / 2.0;
                 }
+                if (buffers[channel].capacity() < viewSize)
+                    buffers[channel].reserve(viewSize);
                 CDataDecimator::DataInfo viewDecInfo;
                 CDataDecimator::DataInfo viewDecRawInfo;
                 CDataDecimator::ValidRange range;
@@ -1632,7 +1655,8 @@ void mainViewThreadFun() {
                     range.m_validBeforeTrigger = buff->m_validBeforeTrigger;
                     range.m_validAfterTrigger = buff->m_validAfterTrigger;
                 }
-                g_decimator.decimate((rp_channel_t)channel, buff->m_data->ch_f[channel], ADC_BUFFER_SIZE, posInPoints, view, orignalData, &viewDecInfo, &viewDecRawInfo, range);
+                g_decimator.decimate((rp_channel_t)channel, buff->m_data->ch_f[channel], ADC_BUFFER_SIZE, posInPoints, view, orignalData, &viewDecInfo, &viewDecRawInfo, range,
+                                     &buffers[channel]);
                 viewInfo->m_dataHasTrigger = buff->m_dataHasTrigger;
                 viewInfo->m_decimatoion = buff->m_decimation;
                 viewInfo->m_max = viewDecInfo.m_max;
@@ -1644,6 +1668,9 @@ void mainViewThreadFun() {
                 viewInfo->m_maxRaw = viewDecRawInfo.m_maxUnscale;
                 viewInfo->m_minRaw = viewDecRawInfo.m_minUnscale;
                 viewInfo->m_meanRaw = viewDecRawInfo.m_meanUnscale;
+                if (g_updateViewCallback) {
+                    g_updateViewCallback((rp_channel_t)channel, buff->m_decimation, tScale, *view);
+                }
             }
             buff->m_viewMutex.unlock();
             g_viewController.unlockScreenView();
@@ -1652,6 +1679,7 @@ void mainViewThreadFun() {
             xyThreadFunction();
             g_mutex.unlock();
             g_viewController.updateViewDone();
+            g_viewController.addProcessCounter();
             checkAutoscale(true);
         }
     }

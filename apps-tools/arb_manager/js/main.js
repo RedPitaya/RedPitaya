@@ -293,6 +293,7 @@
             span1.append(item4)
             var li = document.createElement('li');
             li.className = "run_buttons2"
+            li.style.paddingTop = "2px"
             var a = document.createElement('a');
             a.innerText = '\u274C';
             li.append(a)

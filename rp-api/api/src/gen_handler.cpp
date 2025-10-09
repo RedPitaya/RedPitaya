@@ -865,7 +865,7 @@ int synthesize_signal(rp_channel_t channel) {
     float phaseRad = ch_phase[channel] / 180.0 * M_PI;
 
     uint16_t buf_size = DAC_BUFFER_SIZE;
-    if (waveform == RP_WAVEFORM_SWEEP)
+    if (waveform == RP_WAVEFORM_SWEEP || waveform == RP_WAVEFORM_ARBITRARY)
         phase = 0;
 
     float scale = 1;

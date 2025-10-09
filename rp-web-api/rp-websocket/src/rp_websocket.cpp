@@ -89,6 +89,11 @@ auto CWEBServer::startServer(uint16_t port) -> void {
     m_pimpl->m_server->start(port);
 }
 
+auto CWEBServer::startServerBinaray(uint16_t port) -> void {
+    m_pimpl->m_server = std::make_shared<websocket_server>();
+    m_pimpl->m_server->start(port);
+}
+
 auto CWEBServer::send(std::string_view key, bool value) -> bool {
     if (m_pimpl->m_server) {
         Json::Value root;
@@ -155,6 +160,13 @@ auto CWEBServer::send(std::string_view key, std::string_view value) -> bool {
         Json::StreamWriterBuilder builder;
         std::string json = Json::writeString(builder, root);
         return m_pimpl->m_server->send(json.c_str(), json.length());
+    }
+    return false;
+}
+
+auto CWEBServer::sendInBinarayMode(const char* data, size_t size) -> bool {
+    if (m_pimpl->m_server) {
+        return m_pimpl->m_server->send(data, size);
     }
     return false;
 }

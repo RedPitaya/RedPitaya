@@ -23,6 +23,7 @@
 #include "axi_manager.h"
 #include "common.h"
 #include "convert.hpp"
+#include "convert_neon.hpp"
 #include "oscilloscope.h"
 
 #include "rp-i2c-max7311-c.h"
