@@ -34,12 +34,14 @@
 
             switch (this.state) {
                 case 'waitingForHeader':
-                    if (binaryData.byteLength === 16) {
+                    if (binaryData.byteLength === 24) {
                         const header = {
                             magic: dataView.getUint32(0, true),
                             dataSize: dataView.getUint32(4, true),
                             elementCount: dataView.getUint32(8, true),
-                            channel: dataView.getUint32(12, true)
+                            channel: dataView.getUint32(12, true),
+                            decimation: dataView.getUint32(16, true),
+                            tScale: dataView.getFloat32(20,true)
                         };
 
                         if (header.magic !== 0xAABBCCDD) {
@@ -63,7 +65,9 @@
                             header: this.currentHeader,
                             data: floatData,
                             channel: this.currentHeader.channel,
-                            timestamp: Date.now()
+                            timestamp: Date.now(),
+                            decimation: this.currentHeader.decimation,
+                            tScale: this.currentHeader.tScale
                         };
 
                         this.completePackets.push(completePacket);
@@ -133,7 +137,7 @@
 
                     while (bufferedParser.hasCompletePackets()) {
                         const packet = bufferedParser.getNextPacket();
-                        TA_MODE.setPoints(packet.channel,packet.data,packet.timestamp)
+                        TA_MODE.setPoints(packet.channel,packet.data,packet.timestamp,packet.decimation,packet.tScale)
                     }
 
                 } catch (e) {

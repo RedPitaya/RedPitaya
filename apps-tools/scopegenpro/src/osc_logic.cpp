@@ -100,6 +100,22 @@ CFloatParameter ext_trigger_level("OSC_EXT_TRIG_LEVEL", CBaseParameter::RW, 0, 0
 CIntParameter bufferRequest("OSC_BUFFER_REQUEST", CBaseParameter::RW, 0, 0, -1, 1);
 CIntParameter bufferSelected("OSC_BUFFER_CURRENT", CBaseParameter::RW, 0, 0, (MAX_BUFFERS - 1) * -1, 0);
 
+/* ----------------------------------- TRACE MODE ---------------------------------------*/
+CIntParameter inShowTrace[MAX_ADC_CHANNELS] = INIT("CH", "_SHOW_TRACE", CBaseParameter::RW, 0, 0, 0, 1, CONFIG_VAR);
+CBooleanParameter trace_mode_fast_enable("OSC_SW_TM_FAST_MODE", CBaseParameter::RW, false, 0, CONFIG_VAR);
+CBooleanParameter trace_mode_window_show("OSC_SW_TM_WIN_SHOW", CBaseParameter::RW, false, 0, CONFIG_VAR);
+CIntParameter trace_mode_window_x("OSC_SW_TM_WIN_X", CBaseParameter::RW, 300, 0, 0, 65536, CONFIG_VAR);
+CIntParameter trace_mode_window_y("OSC_SW_TM_WIN_Y", CBaseParameter::RW, 300, 0, 0, 65536, CONFIG_VAR);
+CIntParameter trace_mode_window_w("OSC_SW_TM_WIN_W", CBaseParameter::RW, 560, 0, 0, 65536, CONFIG_VAR);
+CIntParameter trace_mode_window_h("OSC_SW_TM_WIN_H", CBaseParameter::RW, 360, 0, 0, 65536, CONFIG_VAR);
+CIntParameter trace_mode_channel_active("OSC_SW_TM_CH_ACTIVE", CBaseParameter::RW, 1, 0, 1, 4, CONFIG_VAR);
+
+CIntParameter inInvertedTrace[MAX_ADC_CHANNELS] = INIT("CH", "_TRACE_INVERTED", CBaseParameter::RW, 0, 0, 0, 1, CONFIG_VAR);
+CStringParameter trace_mode_color1[MAX_ADC_CHANNELS] = INIT("CH", "_TRACE_COLOR1", CBaseParameter::RW, "#3F00FF", 0, CONFIG_VAR);
+CStringParameter trace_mode_color2[MAX_ADC_CHANNELS] = INIT("CH", "_TRACE_COLOR2", CBaseParameter::RW, "#0000FF", 0, CONFIG_VAR);
+CStringParameter trace_mode_color3[MAX_ADC_CHANNELS] = INIT("CH", "_TRACE_COLOR3", CBaseParameter::RW, "#00FF00", 0, CONFIG_VAR);
+CStringParameter trace_mode_color4[MAX_ADC_CHANNELS] = INIT("CH", "_TRACE_COLOR4", CBaseParameter::RW, "#FF0000", 0, CONFIG_VAR);
+
 rp_websocket::CWEBServer data_server;
 
 auto initExtTriggerLimits() -> void {
@@ -706,6 +722,8 @@ auto updateOscParams(bool force) -> void {
             inScale[i].SendValue(inScale[i].Value());
         }
     }
+
+    updateTraceModeParams(force);
 }
 
 auto getOSCTimeScale() -> float {
@@ -713,12 +731,71 @@ auto getOSCTimeScale() -> float {
     return tscale;
 }
 
-auto updateViewCallback(rp_channel_t channel, const std::vector<float>& view) -> void {
+auto updateViewCallback(rp_channel_t channel, uint32_t decimation, float timeScale, const std::vector<float>& view) -> void {
     bool running;
     rpApp_OscIsRunning(&running);
-    if (running) {
-        uint32_t header[4] = {0xAABBCCDD, view.size() * sizeof(float), view.size(), channel};
-        data_server.sendInBinarayMode((char*)header, 4 * sizeof(uint32_t));
+    if (running && inShowTrace[channel].Value()) {
+        uint32_t header[6] = {0xAABBCCDD, view.size() * sizeof(float), view.size(), channel, decimation, 0};
+        ((float*)header)[5] = timeScale;
+        data_server.sendInBinarayMode((char*)header, 6 * sizeof(uint32_t));
         data_server.sendInBinarayMode((char*)view.data(), view.size() * sizeof(float));
+    }
+}
+
+void updateTraceModeParams(bool force) {
+    if (IS_NEW(trace_mode_window_show) || force) {
+        trace_mode_window_show.Update();
+    }
+
+    if (IS_NEW(trace_mode_window_x) || force) {
+        trace_mode_window_x.Update();
+    }
+
+    if (IS_NEW(trace_mode_window_y) || force) {
+        trace_mode_window_y.Update();
+    }
+
+    if (IS_NEW(trace_mode_window_h) || force) {
+        trace_mode_window_h.Update();
+    }
+
+    if (IS_NEW(trace_mode_window_w) || force) {
+        trace_mode_window_w.Update();
+    }
+
+    if (IS_NEW(trace_mode_channel_active) || force) {
+        trace_mode_channel_active.Update();
+    }
+
+    for (int i = 0; i < g_adc_channels; i++) {
+
+        if (IS_NEW(inShowTrace[i]) || force) {
+            inShowTrace[i].Update();
+        }
+
+        if (IS_NEW(inInvertedTrace[i]) || force) {
+            inInvertedTrace[i].Update();
+        }
+
+        if (IS_NEW(trace_mode_color1[i]) || force) {
+            trace_mode_color1[i].Update();
+        }
+
+        if (IS_NEW(trace_mode_color2[i]) || force) {
+            trace_mode_color2[i].Update();
+        }
+
+        if (IS_NEW(trace_mode_color3[i]) || force) {
+            trace_mode_color3[i].Update();
+        }
+
+        if (IS_NEW(trace_mode_color4[i]) || force) {
+            trace_mode_color4[i].Update();
+        }
+    }
+
+    if (IS_NEW(trace_mode_fast_enable) || force) {
+        trace_mode_fast_enable.Update();
+        rpApp_OscSetForceUpdateView(trace_mode_fast_enable.Value());
     }
 }

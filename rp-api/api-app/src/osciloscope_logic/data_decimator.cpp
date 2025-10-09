@@ -104,11 +104,11 @@ auto CDataDecimator::resetOffest() -> void {
 auto CDataDecimator::decimate(rp_channel_t _channel, const float* _data, vsize_t _dataSize, int _triggerPointPos) -> bool {
     DataInfo view;
     DataInfo viewRaw;
-    return decimate(_channel, _data, _dataSize, _triggerPointPos, &m_decimatedData, &m_originalData, &view, &viewRaw, ValidRange());
+    return decimate(_channel, _data, _dataSize, _triggerPointPos, &m_decimatedData, &m_originalData, &view, &viewRaw, ValidRange(), nullptr);
 }
 
 auto CDataDecimator::decimate(rp_channel_t _channel, const float* _data, vsize_t _dataSize, int _triggerPointPos, std::vector<float>* _view, std::vector<float>* _originalData,
-                              DataInfo* _viewInfo, DataInfo* _viewRawInfo, ValidRange range) -> bool {
+                              DataInfo* _viewInfo, DataInfo* _viewRawInfo, ValidRange range, std::vector<float>* _unscaledView) -> bool {
     std::lock_guard lock(m_settingsMutex);
 
     if (m_scaleFunc == NULL)
@@ -247,11 +247,14 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float* _data, vsize_t
                 count++;
             } else {
                 scaledValue = std::numeric_limits<float>::signaling_NaN();
+                y = std::numeric_limits<float>::signaling_NaN();
             }
             // ECHECK_APP_NO_RET(m_scaleFunc((rpApp_osc_source)_channel,y,&scaledValue))
             // x -> y
             // scaledValue = idx / 16384;
             (*_view)[iView] = scaledValue;
+            if (_unscaledView)
+                (*_unscaledView)[iView] = y;
         }
         _viewInfo->m_mean /= count ? count : 1;
         _viewInfo->m_meanUnscale /= count ? count : 1;

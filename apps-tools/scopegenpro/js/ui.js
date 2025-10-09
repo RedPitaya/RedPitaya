@@ -403,6 +403,49 @@
             OSC.sendParams();
         });
 
+        $(".show_trace_settings").on('click',function(ev) {
+            var ch = 0
+            if (ev.target.id.includes('CH1')){
+                ch = 1
+            }
+
+            if (ev.target.id.includes('CH2')){
+                ch = 2
+            }
+
+            if (ev.target.id.includes('CH3')){
+                ch = 3
+            }
+
+            if (ev.target.id.includes('CH4')){
+                ch = 4
+            }
+
+            if (ch != 0){
+                OSC.params.local['OSC_SW_TM_WIN_SHOW'] = { value: true };
+                OSC.params.local['OSC_SW_TM_CH_ACTIVE'] = { value: ch };
+                OSC.sendParams();
+            }
+        });
+
+
+        $(".trace_reset").on('click',function(ev) {
+            if (ev.target.id.includes('CH1')){
+                TA_MODE.clearBuffers('CH1')
+            }
+
+            if (ev.target.id.includes('CH2')){
+                TA_MODE.clearBuffers('CH2')
+            }
+
+            if (ev.target.id.includes('CH3')){
+                TA_MODE.clearBuffers('CH3')
+            }
+
+            if (ev.target.id.includes('CH4')){
+                TA_MODE.clearBuffers('CH4')
+            }
+        });
 
         // Time offset arrow dragging
         $('#time_offset_arrow').draggable({
@@ -964,6 +1007,6 @@
         if (params['SOUR2_FREQ_FIX'] !== undefined){
             $("#SOUR2_FREQ_FIX").attr("max", params['SOUR2_FREQ_FIX'].max).attr("min", params['SOUR2_FREQ_FIX'].min);
         }
-    };    
+    };
 
 }(window.OSC = window.OSC || {}, jQuery));

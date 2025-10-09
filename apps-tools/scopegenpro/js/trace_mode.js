@@ -1,7 +1,7 @@
 (function(TA_MODE, $, undefined) {
 
-    TA_MODE.width = undefined
-    TA_MODE.height = undefined
+    TA_MODE.width = {}
+    TA_MODE.height = {}
 
     TA_MODE.buffer_accumulate_canvas = {}
     TA_MODE.buffer_accumulate_canvas_gl_ctx = {}
@@ -13,9 +13,16 @@
     TA_MODE.buffer_draw_canvas_program = {}
     TA_MODE.buffer_draw_canvas_program_info = {}
 
-    TA_MODE.gl_texture = undefined
-
     TA_MODE.data_points = {}
+    TA_MODE.data_points_array = {}
+
+    TA_MODE.isInit = false
+
+    TA_MODE.color1 = {CH1 : "#3F00FF", CH2 : "#3F00FF", CH3 : "#3F00FF", CH4 : "#3F00FF"}
+    TA_MODE.color2 = {CH1 : "#0000FF", CH2 : "#0000FF", CH3 : "#0000FF", CH4 : "#0000FF"}
+    TA_MODE.color3 = {CH1 : "#00FF00", CH2 : "#00FF00", CH3 : "#00FF00", CH4 : "#00FF00"}
+    TA_MODE.color4 = {CH1 : "#FF0000", CH2 : "#FF0000", CH3 : "#FF0000", CH4 : "#FF0000"}
+    TA_MODE.inverted = {CH1 : 0, CH2 : 0, CH3 : 0, CH4 : 0}
 
     TA_MODE.vs = `
         attribute vec2 a_position;
@@ -37,6 +44,7 @@
         uniform vec3 u_colorB;
         uniform vec3 u_colorC;
         uniform vec3 u_colorD;
+        uniform int inverted;
 
         uniform sampler2D u_canvas1;
         varying vec2 v_texCoord;
@@ -59,7 +67,8 @@
                 float factor = (gradientPos - 0.66) * 3.0;
                 gradientColor = mix(u_colorC, u_colorD, factor);
             }
-            gl_FragColor = vec4(gradientColor, color1.a);
+            float a = 0.7 * (inverted == 1 ? (1.0 - color1.a) : color1.a);
+            gl_FragColor = vec4(gradientColor, 0.3 + a);
         }
     `;
 
@@ -157,6 +166,7 @@
         program_info.u_colorC = gl.getUniformLocation(program, "u_colorC")
         program_info.u_colorD = gl.getUniformLocation(program, "u_colorD")
         program_info.u_canvas1 = gl.getUniformLocation(program, "u_canvas1");
+        program_info.inverted = gl.getUniformLocation(program, "inverted");
         TA_MODE.buffer_draw_canvas_program_info[channel] = program_info
 
 
@@ -168,16 +178,32 @@
 
         TA_MODE.buffer_accumulate_canvas_gl_ctx[channel].enable(TA_MODE.buffer_accumulate_canvas_gl_ctx[channel].BLEND);
         TA_MODE.buffer_accumulate_canvas_gl_ctx[channel].blendFunc(TA_MODE.buffer_accumulate_canvas_gl_ctx[channel].ONE, TA_MODE.buffer_accumulate_canvas_gl_ctx[channel].ONE);
-        TA_MODE.buffer_accumulate_canvas_gl_ctx[channel].clearColor(0, 0, 0, 0);
-        TA_MODE.buffer_accumulate_canvas_gl_ctx[channel].clear(TA_MODE.buffer_accumulate_canvas_gl_ctx[channel].COLOR_BUFFER_BIT);
-
-        TA_MODE.buffer_draw_canvas_gl_ctx[channel].clearColor(0, 0, 0, 0);
-        TA_MODE.buffer_draw_canvas_gl_ctx[channel].clear(TA_MODE.buffer_draw_canvas_gl_ctx[channel].COLOR_BUFFER_BIT);
 
         TA_MODE.buffer_draw_canvas_gl_ctx[channel].enable(TA_MODE.buffer_draw_canvas_gl_ctx[channel].BLEND);
         TA_MODE.buffer_draw_canvas_gl_ctx[channel].blendFunc(TA_MODE.buffer_draw_canvas_gl_ctx[channel].SRC_ALPHA, TA_MODE.buffer_draw_canvas_gl_ctx[channel].ONE_MINUS_SRC_ALPHA);
 
+        TA_MODE.clearBuffers(channel)
+
         return true
+    }
+
+    TA_MODE.init = function(channels) {
+        var f = true
+        for(var i = 1; i <= channels; i++){
+            f = TA_MODE.initWGL('CH'+i)
+            if (f == false)
+                break
+        }
+
+        if (f == false){
+            TA_MODE.isInit = false
+            for(var i = 1; i <= channels; i++){
+                TA_MODE.releaseWGL('CH'+i)
+            }
+            return
+        }
+
+        TA_MODE.isInit = true
     }
 
     TA_MODE.releaseWGL = function(channel){
@@ -228,36 +254,72 @@
     TA_MODE.setSizeWGL = function(channel, w,h){
 
         // init GL canvas size
+        if (TA_MODE.width[channel] != w || TA_MODE.height[channel] != h) {
 
+            TA_MODE.width[channel] = w
+            TA_MODE.height[channel] = h
 
-        if (TA_MODE.buffer_accumulate_canvas[channel]){
-            TA_MODE.buffer_accumulate_canvas[channel].width =  w
-            TA_MODE.buffer_accumulate_canvas[channel].height = h
+            if (TA_MODE.buffer_accumulate_canvas[channel]){
+                TA_MODE.buffer_accumulate_canvas[channel].width =  w
+                TA_MODE.buffer_accumulate_canvas[channel].height = h
+            }
+
+            if (TA_MODE.buffer_draw_canvas[channel]){
+                TA_MODE.buffer_draw_canvas[channel].width =  w
+                TA_MODE.buffer_draw_canvas[channel].height = h
+            }
+
+            var gl = TA_MODE.buffer_draw_canvas_gl_ctx[channel]
+            var pi = TA_MODE.buffer_draw_canvas_program_info[channel]
+            if (gl && pi) {
+                gl.uniform2f(pi.u_resolution, w, h);
+                gl.viewport(0, 0, w, h);
+            }
+
+            var agl = TA_MODE.buffer_accumulate_canvas_gl_ctx[channel]
+            var api = TA_MODE.buffer_accumulate_program_info[channel]
+            if (agl && api) {
+                agl.uniform2f(api.u_resolution, w, h);
+                agl.viewport(0, 0, w, h);
+            }
+            return true
         }
-
-        if (TA_MODE.buffer_draw_canvas[channel]){
-            TA_MODE.buffer_draw_canvas[channel].width =  w
-            TA_MODE.buffer_draw_canvas[channel].height = h
-        }
-
-        var gl = TA_MODE.buffer_draw_canvas_gl_ctx[channel]
-        var pi = TA_MODE.buffer_draw_canvas_program_info[channel]
-        if (gl && pi) {
-            gl.uniform2f(pi.u_resolution, w, h);
-            gl.viewport(0, 0, w, h);
-        }
-
-        var agl = TA_MODE.buffer_accumulate_canvas_gl_ctx[channel]
-        var api = TA_MODE.buffer_accumulate_program_info[channel]
-        if (agl && api) {
-            agl.uniform2f(api.u_resolution, w, h);
-            agl.viewport(0, 0, w, h);
-        }
+        return false
 
     }
 
+    TA_MODE.clearBuffers = function(channel) {
+        if (TA_MODE.buffer_accumulate_canvas_gl_ctx[channel]){
+            TA_MODE.buffer_accumulate_canvas_gl_ctx[channel].clearColor(0, 0, 0, 0);
+            TA_MODE.buffer_accumulate_canvas_gl_ctx[channel].clear(TA_MODE.buffer_accumulate_canvas_gl_ctx[channel].COLOR_BUFFER_BIT);
+        }
+        if (TA_MODE.buffer_draw_canvas_gl_ctx[channel]){
+            TA_MODE.buffer_draw_canvas_gl_ctx[channel].clearColor(0, 0, 0, 0);
+            TA_MODE.buffer_draw_canvas_gl_ctx[channel].clear(TA_MODE.buffer_accumulate_canvas_gl_ctx[channel].COLOR_BUFFER_BIT);
+        }
+    }
 
-    TA_MODE.setupGLTexture = function (gl, canvas, pi, gradientParams) {
+    TA_MODE.setNewSizeWGL = function(w,h){
+        for(var ch in TA_MODE.buffer_draw_canvas){
+            var ret = TA_MODE.setSizeWGL(ch, w,h)
+            if (ret){
+                TA_MODE.clearBuffers(ch)
+            }
+        }
+    }
+
+
+    TA_MODE.setupGLTexture = function (gl, canvas, pi, gradientParams,inverted) {
+
+        const hexToFloatArray = function (hex) {
+            hex = hex.replace('#', '');
+
+            const r = parseInt(hex.substring(0, 2), 16) / 255;
+            const g = parseInt(hex.substring(2, 4), 16) / 255;
+            const b = parseInt(hex.substring(4, 6), 16) / 255;
+
+            return [r, g, b];
+        }
 
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, pi.gl_texture);
@@ -271,10 +333,12 @@
 
         gl.uniform1i(pi.u_canvas1, 0);
 
-        gl.uniform3fv(pi.u_colorA, gradientParams.colorA);
-        gl.uniform3fv(pi.u_colorB, gradientParams.colorB);
-        gl.uniform3fv(pi.u_colorC, gradientParams.colorC);
-        gl.uniform3fv(pi.u_colorD, gradientParams.colorD);
+        gl.uniform3fv(pi.u_colorA, hexToFloatArray(gradientParams.colorA));
+        gl.uniform3fv(pi.u_colorB, hexToFloatArray(gradientParams.colorB));
+        gl.uniform3fv(pi.u_colorC, hexToFloatArray(gradientParams.colorC));
+        gl.uniform3fv(pi.u_colorD, hexToFloatArray(gradientParams.colorD));
+
+        gl.uniform1i(pi.inverted, inverted);
 
     }
 
@@ -298,7 +362,7 @@
 
         gl.enableVertexAttribArray(programInfo.a_position);
         gl.vertexAttribPointer(programInfo.a_position, 2, gl.FLOAT, false, 0, 0);
-        gl.uniform4f(programInfo.u_color, 0.0, 0.0, 0.0, 0.005);
+        gl.uniform4f(programInfo.u_color, 0.0, 0.0, 0.0, 0.01);
         gl.drawArrays(gl.POINTS, 0, positions.length / 2);
         gl.deleteBuffer(buffer);
     };
@@ -326,7 +390,7 @@
         gl.enableVertexAttribArray(programInfo.a_position);
         gl.vertexAttribPointer(programInfo.a_position, 2, gl.FLOAT, false, 0, 0);
 
-        gl.uniform4f(programInfo.u_color, 0.0, 0.0, 0.0, 0.005);
+        gl.uniform4f(programInfo.u_color, 0.0, 0.0, 0.0, 0.01);
         gl.lineWidth(2.0);
         gl.drawArrays(gl.LINES, 0, positions.length / 2);
         gl.deleteBuffer(buffer);
@@ -334,13 +398,12 @@
 
 
     TA_MODE.draw = function(plot,ctx, series) {
-        var canvas = plot.getCanvas()
-        TA_MODE.width = canvas.width
-        TA_MODE.height = canvas.height
-        if (TA_MODE.buffer_accumulate_canvas[series.channel] === undefined && series.channel){
-            TA_MODE.initWGL(series.channel)
-            TA_MODE.setSizeWGL(series.channel,TA_MODE.width, TA_MODE.height)
+
+        if (TA_MODE.isInit == false) {
+            return
         }
+
+        const canvas = plot.getCanvas()
 
         var ac = TA_MODE.buffer_accumulate_canvas[series.channel]
         var agl = TA_MODE.buffer_accumulate_canvas_gl_ctx[series.channel]
@@ -361,12 +424,15 @@
                     TA_MODE.drawSeriesPoints(agl, api, series, data[i].points);
                 }
             }
+            //  ctx.drawImage(ac,0,0)
         }
 
-        TA_MODE.data_points = {}
+        TA_MODE.data_points[series.channel] = []
 
         if (agl && dpi && dgl && ac){
 
+            dgl.clearColor(0, 0, 0, 0);
+            dgl.clear(dgl.COLOR_BUFFER_BIT);
             dgl.enableVertexAttribArray(dpi.a_position);
             dgl.bindBuffer(dgl.ARRAY_BUFFER, dpi.buf_position);
             TA_MODE.setGLRectangle(dgl,0,0,canvas.width,canvas.height)
@@ -374,11 +440,12 @@
 
             TA_MODE.setupGLTexture(dgl, ac, dpi,
                 {
-                    colorA: [0.5, 0.0, 1.0],
-                    colorB: [0.0, 0.0, 1.0],
-                    colorC: [0.0, 1.0, 0.0],
-                    colorD: [1.0, 0.0, 0.0]
-                }
+                    colorA: TA_MODE.color1[series.channel],
+                    colorB: TA_MODE.color2[series.channel],
+                    colorC: TA_MODE.color3[series.channel],
+                    colorD: TA_MODE.color4[series.channel]
+                },
+                TA_MODE.inverted[series.channel]
             );
 
             dgl.drawArrays(dgl.TRIANGLES, 0, 6);
@@ -386,17 +453,43 @@
         }
     }
 
-    TA_MODE.reset = function() {
-        TA_MODE.buffer = undefined
+    TA_MODE.resetData = function() {
         TA_MODE.data_points = {}
     }
 
-    TA_MODE.setPoints = function(channel, points, ts){
-        channel = channel + 1
-        if (TA_MODE.data_points['CH'+channel] == undefined){
-            TA_MODE.data_points['CH'+channel] = []
+    TA_MODE.setPoints = function(channel, points, ts, decimation, tScale){
+        var ch = 'CH' + (channel + 1)
+        console.log('Data',ch, decimation, tScale)
+        if (TA_MODE.decimation != decimation || TA_MODE.tScale != tScale){
+            TA_MODE.data_points[ch] = []
+            TA_MODE.clearBuffers(ch)
+            TA_MODE.decimation = decimation
+            TA_MODE.tScale = tScale
+            console.log('Data reset',ch, decimation, tScale)
         }
-        TA_MODE.data_points['CH'+channel].push({ts: ts, points, points})
+        if (TA_MODE.data_points[ch] == undefined){
+            TA_MODE.data_points[ch] = []
+        }
+        TA_MODE.data_points[ch].push({ts: ts, points, points})
+    }
+
+    TA_MODE.setColor = function(ch,colnum,color) {
+        if (colnum == 1){
+            TA_MODE.color1[ch] = color
+        }
+        if (colnum == 2){
+            TA_MODE.color2[ch] = color
+        }
+        if (colnum == 3){
+            TA_MODE.color3[ch] = color
+        }
+        if (colnum == 4){
+            TA_MODE.color4[ch] = color
+        }
+    }
+
+    TA_MODE.setInverted = function(ch,state) {
+        TA_MODE.inverted[ch] = state
     }
 
 

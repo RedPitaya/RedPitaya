@@ -17,10 +17,6 @@ const float LEVEL_AMPS_DEF = outAmpDef();
 const bool is_z_present = isZModePresent();
 const bool isX5Gain = rp_HPGetIsGainDACx5OrDefault();
 
-bool g_updateOutWaveFormCh[MAX_DAC_CHANNELS] = {true, true};
-float g_tscale_last = 0;
-std::mutex g_updateOutWaveFormCh_mtx;
-
 CFloatBase64Signal outSignal[MAX_DAC_CHANNELS] = INIT2("output", "", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
 
 CBooleanParameter outShow[MAX_DAC_CHANNELS] = INIT2("OUTPUT", "_SHOW", CBaseParameter::RW, true, 0, CONFIG_VAR);
@@ -94,17 +90,12 @@ auto deleteSweepController() -> void {
 auto generateOutSignalForWeb(float tscale) -> void {
     /* ------ UPDATE OUT SIGNALS ------*/
     if (rp_HPIsFastDAC_PresentOrDefault()) {
-        auto need_upate = g_tscale_last != tscale;
         for (int i = 0; i < g_dac_channels; i++) {
             if (outShow[i].Value() && outState[i].Value()) {
                 if (outSignal[i].GetSize() != CH_SIGNAL_SIZE_DEFAULT) {
                     outSignal[i].Resize(CH_SIGNAL_SIZE_DEFAULT);
                 }
-                std::lock_guard<std::mutex> lock(g_updateOutWaveFormCh_mtx);
-                if (g_updateOutWaveFormCh[i] || need_upate) {
-                    generate((rp_channel_t)i, tscale);
-                    g_updateOutWaveFormCh[i] = false;
-                }
+                generate((rp_channel_t)i, tscale);
                 outSignal[i].ForceSend();
             } else {
                 outSignal[i].Resize(0);
@@ -400,13 +391,6 @@ auto initGenAfterLoad() -> void {
     }
 }
 
-auto setNeedUpdateGenSignal() -> void {
-    std::lock_guard<std::mutex> lock(g_updateOutWaveFormCh_mtx);
-    for (int i = 0; i < g_dac_channels; i++) {
-        g_updateOutWaveFormCh[i] = true;
-    }
-}
-
 auto initGenBeforeLoadConfig() -> void {
     for (int i = 0; i < g_dac_channels; i++) {
         auto ch = (rp_channel_t)i;
@@ -574,7 +558,6 @@ auto updateGeneratorParameters(bool force) -> void {
                     }
                 }
                 requestSendScale = true;
-                g_updateOutWaveFormCh[ch] = true;
             }
 
             if (IS_NEW(outPhase[i]) || force) {
@@ -645,8 +628,6 @@ auto updateGeneratorParameters(bool force) -> void {
 
         if (IS_NEW(outScale[i]) || force) {
             outScale[i].Update();
-            std::lock_guard lock(g_updateOutWaveFormCh_mtx);
-            g_updateOutWaveFormCh[i] = true;
         }
 
         if (IS_NEW(outFrequancy[i]) || force) {
@@ -674,8 +655,13 @@ auto updateGeneratorParameters(bool force) -> void {
             }
         }
 
-        outShow[i].Update();
-        outShowOffset[i].Update();
+        if (IS_NEW(outShow[i]) || force) {
+            outShow[i].Update();
+        }
+
+        if (IS_NEW(outShowOffset[i]) || force) {
+            outShowOffset[i].Update();
+        }
 
         if (requestSendScale) {
             outScale[i].SendValue(outScale[i].Value());
@@ -718,8 +704,6 @@ auto sendFreqInSweepMode() -> void {
             rp_GenGetFreq((rp_channel_t)i, &freq);
             if ((int)freq != outFrequancy[i].Value()) {
                 outFrequancy[i].SendValue((int)freq);
-                std::lock_guard lock(g_updateOutWaveFormCh_mtx);
-                g_updateOutWaveFormCh[i] = true;
             }
         }
     }

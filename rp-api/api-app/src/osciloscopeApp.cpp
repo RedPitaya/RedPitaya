@@ -38,7 +38,7 @@
 #define FLOAT_EPS 0.00001f
 
 std::atomic_bool g_threadRun = false;
-std::atomic_bool g_forceUpdate = true;
+std::atomic_bool g_forceUpdate = false;
 
 volatile double ch_ampOffset[MAX_ADC_CHANNELS], math_ampOffset;
 volatile double ch_ampScale[MAX_ADC_CHANNELS], math_ampScale = 1;
@@ -1610,6 +1610,7 @@ void mainViewThreadFun() {
     auto adc_channels = getADCChannels();
     double speed = getADCRate();
 
+    std::vector<float> buffers[MAX_ADC_CHANNELS];
     while (g_threadRun) {
         if (g_viewController.isNeedUpdateView()) {
             g_mutex.lock();
@@ -1645,6 +1646,8 @@ void mainViewThreadFun() {
                 if (viewMode == CViewController::ROLL && contMode) {
                     posInPoints = -viewSize / 2.0;
                 }
+                if (buffers[channel].capacity() < viewSize)
+                    buffers[channel].reserve(viewSize);
                 CDataDecimator::DataInfo viewDecInfo;
                 CDataDecimator::DataInfo viewDecRawInfo;
                 CDataDecimator::ValidRange range;
@@ -1652,7 +1655,8 @@ void mainViewThreadFun() {
                     range.m_validBeforeTrigger = buff->m_validBeforeTrigger;
                     range.m_validAfterTrigger = buff->m_validAfterTrigger;
                 }
-                g_decimator.decimate((rp_channel_t)channel, buff->m_data->ch_f[channel], ADC_BUFFER_SIZE, posInPoints, view, orignalData, &viewDecInfo, &viewDecRawInfo, range);
+                g_decimator.decimate((rp_channel_t)channel, buff->m_data->ch_f[channel], ADC_BUFFER_SIZE, posInPoints, view, orignalData, &viewDecInfo, &viewDecRawInfo, range,
+                                     &buffers[channel]);
                 viewInfo->m_dataHasTrigger = buff->m_dataHasTrigger;
                 viewInfo->m_decimatoion = buff->m_decimation;
                 viewInfo->m_max = viewDecInfo.m_max;
@@ -1665,7 +1669,7 @@ void mainViewThreadFun() {
                 viewInfo->m_minRaw = viewDecRawInfo.m_minUnscale;
                 viewInfo->m_meanRaw = viewDecRawInfo.m_meanUnscale;
                 if (g_updateViewCallback) {
-                    g_updateViewCallback((rp_channel_t)channel, *view);
+                    g_updateViewCallback((rp_channel_t)channel, buff->m_decimation, tScale, *view);
                 }
             }
             buff->m_viewMutex.unlock();

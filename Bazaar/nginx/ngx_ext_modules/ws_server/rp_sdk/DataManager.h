@@ -22,6 +22,7 @@ class CDataManager {
     int m_param_interval;   //parameters send time interval in milliseconds
     int m_signal_interval;  //signals send time interval in milliseconds
     bool m_send_all_params;
+    bool m_send_all_signals;
 
    public:
     static CDataManager* GetInstance();
@@ -61,7 +62,7 @@ class CDataManager {
     void SetSignalInterval(int _interval);
 
     void SendAllParams();
-
+    void SendAllSignals();
     // DEPRECATED
     std::map<std::string, bool> GetFeatures(const std::string& app_id);
 };
