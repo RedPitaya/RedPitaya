@@ -957,116 +957,141 @@ int unattenuateAmplitudeChannel(rpApp_osc_source _source, float _value, float* _
     return RP_OK;
 }
 
-void calculateIntegral(rp_channel_t _channel, float _scale, float _offset, float _invertFactor) {
+void calculateIntegral(rp_channel_t _channel, float _scale, float _offset, float _invertFactor, std::vector<float>* buffers) {
     auto timeScale = g_viewController.getTimeScale();
     auto samplesPerDivision = g_viewController.getSamplesPerDivision();
 
     auto dt = timeScale / samplesPerDivision;
-    auto v = 0.0f;
 
     bool invert = ch_inverted[(int)_channel];
     float ch_sign = invert ? -1.f : 1.f;
 
     g_viewController.lockScreenView();
-    auto view = g_viewController.getView((rpApp_osc_source)_channel);
+    auto view = buffers[_channel];
     auto viewMath = g_viewController.getView(RPAPP_OSC_SOUR_MATH);
     auto viewInfo = g_viewController.getViewInfo(RPAPP_OSC_SOUR_MATH);
     auto viewSize = g_viewController.getViewSize();
-    ECHECK_APP_NO_RET(unscaleAmplitudeChannel((rpApp_osc_source)_channel, (*view)[0], &v));
-    ECHECK_APP_NO_RET(attenuateAmplitudeChannel((rpApp_osc_source)_channel, v, &v));
+
     viewInfo->m_max = std::numeric_limits<float>::lowest();
     viewInfo->m_min = std::numeric_limits<float>::max();
     viewInfo->m_mean = 0;
     viewInfo->m_maxUnscale = std::numeric_limits<float>::lowest();
     viewInfo->m_minUnscale = std::numeric_limits<float>::max();
     viewInfo->m_meanUnscale = 0;
-    (*viewMath)[0] = ch_sign * v * dt;
-    float unCoff[2] = {0, 0};
-    ECHECK_APP_NO_RET(unscaleAmplitudeCoffChannel((rpApp_osc_source)_channel, unCoff[0], unCoff[1]));
-    for (int i = 1; i < viewSize; ++i) {
-        // ECHECK_APP_NO_RET(unscaleAmplitudeChannel((rpApp_osc_source) _channel, (*view)[i], &v));
-        v = unscaleAmplitude<float>((*view)[i], unCoff[0], unCoff[1]);
-        ECHECK_APP_NO_RET(attenuateAmplitudeChannel((rpApp_osc_source)_channel, v, &v));
-        (*viewMath)[i] = (*viewMath)[i - 1] + (ch_sign * v * dt);
-        auto y = (*viewMath)[i - 1];
-        if (viewInfo->m_maxUnscale < y)
-            viewInfo->m_maxUnscale = y;
-        if (viewInfo->m_minUnscale > y)
-            viewInfo->m_minUnscale = y;
-        viewInfo->m_meanUnscale += y;
-        (*viewMath)[i - 1] = scaleAmplitude<float>(y, _scale, 1, _offset, _invertFactor);
-        y = (*viewMath)[i - 1];
-        if (viewInfo->m_max < y)
-            viewInfo->m_max = y;
-        if (viewInfo->m_min > y)
-            viewInfo->m_min = y;
-        viewInfo->m_mean += y;
+
+    if (viewSize == 0) {
+        g_viewController.unlockScreenView();
+        return;
     }
-    auto y = (*viewMath)[viewSize - 1];
-    if (viewInfo->m_maxUnscale < y)
-        viewInfo->m_maxUnscale = y;
-    if (viewInfo->m_minUnscale > y)
-        viewInfo->m_minUnscale = y;
-    viewInfo->m_meanUnscale += y;
-    (*viewMath)[viewSize - 1] = scaleAmplitude<float>((*viewMath)[viewSize - 1], _scale, 1, _offset, _invertFactor);
-    y = (*viewMath)[viewSize - 1];
-    if (viewInfo->m_max < y)
-        viewInfo->m_max = y;
-    if (viewInfo->m_min > y)
-        viewInfo->m_min = y;
-    viewInfo->m_mean += y;
-    viewInfo->m_mean /= viewSize ? viewSize : 1;
-    viewInfo->m_meanUnscale /= viewSize ? viewSize : 1;
+
+    float integral = 0.0f;
+
+    for (int i = 0; i < viewSize; ++i) {
+        float v = view[i];
+        ECHECK_APP_NO_RET(attenuateAmplitudeChannel((rpApp_osc_source)_channel, v, &v));
+
+        integral += ch_sign * v * dt;
+
+        float unscaled = integral;
+
+        float scaled = scaleAmplitude<float>(unscaled, _scale, 1, _offset, _invertFactor);
+
+        (*viewMath)[i] = scaled;
+
+        if (viewInfo->m_maxUnscale < unscaled)
+            viewInfo->m_maxUnscale = unscaled;
+        if (viewInfo->m_minUnscale > unscaled)
+            viewInfo->m_minUnscale = unscaled;
+        viewInfo->m_meanUnscale += unscaled;
+
+        if (viewInfo->m_max < scaled)
+            viewInfo->m_max = scaled;
+        if (viewInfo->m_min > scaled)
+            viewInfo->m_min = scaled;
+        viewInfo->m_mean += scaled;
+    }
+
+    viewInfo->m_mean /= viewSize;
+    viewInfo->m_meanUnscale /= viewSize;
+
     g_viewController.unlockScreenView();
 }
 
-void calculateDevivative(rp_channel_t _channel, float _scale, float _offset, float _invertFactor) {
+void calculateDevivative(rp_channel_t _channel, float _scale, float _offset, float _invertFactor, std::vector<float>* buffers) {
     auto timeScale = g_viewController.getTimeScale();
     auto samplesPerDivision = g_viewController.getSamplesPerDivision();
 
-    float dt2 = 2.0f * timeScale / 1000.0f / samplesPerDivision;
-    float v1, v2;
+    float dt = timeScale / samplesPerDivision;
+    if (dt <= 0)
+        return;
 
     bool invert = ch_inverted[(int)_channel];
     float ch_sign = invert ? -1.f : 1.f;
 
     g_viewController.lockScreenView();
-    auto view = g_viewController.getView((rpApp_osc_source)_channel);
+    auto view = buffers[_channel];
     auto viewMath = g_viewController.getView(RPAPP_OSC_SOUR_MATH);
     auto viewInfo = g_viewController.getViewInfo(RPAPP_OSC_SOUR_MATH);
     auto viewSize = g_viewController.getViewSize();
+
     viewInfo->m_max = std::numeric_limits<float>::lowest();
     viewInfo->m_min = std::numeric_limits<float>::max();
     viewInfo->m_mean = 0;
     viewInfo->m_maxUnscale = std::numeric_limits<float>::lowest();
     viewInfo->m_minUnscale = std::numeric_limits<float>::max();
     viewInfo->m_meanUnscale = 0;
-    ECHECK_APP_NO_RET(unscaleAmplitudeChannel((rpApp_osc_source)_channel, (*view)[0], &v2));
-    ECHECK_APP_NO_RET(attenuateAmplitudeChannel((rpApp_osc_source)_channel, v2, &v2));
-    float unCoff[2] = {0, 0};
-    ECHECK_APP_NO_RET(unscaleAmplitudeCoffChannel((rpApp_osc_source)_channel, unCoff[0], unCoff[1]));
+
     for (int i = 0; i < viewSize - 1; ++i) {
-        v1 = v2;
-        // ECHECK_APP_NO_RET(unscaleAmplitudeChannel((rpApp_osc_source) _channel, (*view)[i + 1], &v2));
-        v2 = unscaleAmplitude<float>((*view)[i + 1], unCoff[0], unCoff[1]);
+        float v1 = view[i];
+        float v2 = view[i + 1];
+
+        ECHECK_APP_NO_RET(attenuateAmplitudeChannel((rpApp_osc_source)_channel, v1, &v1));
         ECHECK_APP_NO_RET(attenuateAmplitudeChannel((rpApp_osc_source)_channel, v2, &v2));
-        auto y = ch_sign * (v2 - v1) / dt2;
-        if (viewInfo->m_maxUnscale < y)
-            viewInfo->m_maxUnscale = y;
-        if (viewInfo->m_minUnscale > y)
-            viewInfo->m_minUnscale = y;
-        viewInfo->m_meanUnscale += y;
-        (*viewMath)[i] = scaleAmplitude<float>(y, _scale, 1, _offset, _invertFactor);
-        y = (*viewMath)[i];
-        if (viewInfo->m_max < y)
-            viewInfo->m_max = y;
-        if (viewInfo->m_min > y)
-            viewInfo->m_min = y;
-        viewInfo->m_mean += y;
+
+        float derivative = ch_sign * (v2 - v1) / dt;
+        float unscaled = derivative;
+
+        if (viewInfo->m_maxUnscale < unscaled)
+            viewInfo->m_maxUnscale = unscaled;
+        if (viewInfo->m_minUnscale > unscaled)
+            viewInfo->m_minUnscale = unscaled;
+        viewInfo->m_meanUnscale += unscaled;
+
+        float scaled = scaleAmplitude<float>(unscaled, _scale, 1, _offset, _invertFactor);
+        (*viewMath)[i] = scaled;
+
+        if (viewInfo->m_max < scaled)
+            viewInfo->m_max = scaled;
+        if (viewInfo->m_min > scaled)
+            viewInfo->m_min = scaled;
+        viewInfo->m_mean += scaled;
     }
-    (*viewMath)[viewSize - 1] = (*viewMath)[viewSize - 2];
-    viewInfo->m_mean /= viewSize ? viewSize : 1;
-    viewInfo->m_meanUnscale /= viewSize ? viewSize : 1;
+
+    float v_last = view[viewSize - 1];
+    float v_prev = view[viewSize - 2];
+    ECHECK_APP_NO_RET(attenuateAmplitudeChannel((rpApp_osc_source)_channel, v_last, &v_last));
+    ECHECK_APP_NO_RET(attenuateAmplitudeChannel((rpApp_osc_source)_channel, v_prev, &v_prev));
+
+    float derivative_last = ch_sign * (v_last - v_prev) / dt;
+    float unscaled_last = derivative_last;
+    float scaled_last = scaleAmplitude<float>(unscaled_last, _scale, 1, _offset, _invertFactor);
+
+    (*viewMath)[viewSize - 1] = scaled_last;
+
+    if (viewInfo->m_maxUnscale < unscaled_last)
+        viewInfo->m_maxUnscale = unscaled_last;
+    if (viewInfo->m_minUnscale > unscaled_last)
+        viewInfo->m_minUnscale = unscaled_last;
+    viewInfo->m_meanUnscale += unscaled_last;
+
+    if (viewInfo->m_max < scaled_last)
+        viewInfo->m_max = scaled_last;
+    if (viewInfo->m_min > scaled_last)
+        viewInfo->m_min = scaled_last;
+    viewInfo->m_mean += scaled_last;
+    viewInfo->m_mean /= viewSize;
+    viewInfo->m_meanUnscale /= viewSize;
+
     g_viewController.unlockScreenView();
 }
 
@@ -1273,17 +1298,18 @@ int osc_scaleMath() {
     return RP_OK;
 }
 
-void mathThreadFunction() {
+void mathThreadFunction(std::vector<float>* buffers) {
+    static std::vector<float> temp;
     if (operation != RPAPP_OSC_MATH_NONE) {
         bool invert;
         ECHECK_APP_NO_RET(osc_isInverted(RPAPP_OSC_SOUR_MATH, &invert))
         float invertFactor = invert ? -1 : 1;
         if (operation == RPAPP_OSC_MATH_DER) {
-            calculateDevivative(mathSource1, math_ampScale, math_ampOffset, invertFactor);
+            calculateDevivative(mathSource1, math_ampScale, math_ampOffset, invertFactor, buffers);
         } else if (operation == RPAPP_OSC_MATH_INT) {
-            calculateIntegral(mathSource1, math_ampScale, math_ampOffset, invertFactor);
+            calculateIntegral(mathSource1, math_ampScale, math_ampOffset, invertFactor, buffers);
         } else {
-            float v1, v2;
+            // float v1, v2;
             bool invert1 = ch_inverted[mathSource1];
             bool invert2 = ch_inverted[mathSource2];
             float sign1 = invert1 ? -1.f : 1.f;
@@ -1291,28 +1317,68 @@ void mathThreadFunction() {
 
             g_viewController.lockScreenView();
             auto viewSize = g_viewController.getViewSize();
-            auto viewS1 = g_viewController.getView((rpApp_osc_source)mathSource1);
-            auto viewS2 = g_viewController.getView((rpApp_osc_source)mathSource2);
+            auto viewS1 = buffers[(rpApp_osc_source)mathSource1];
+            auto viewS2 = buffers[(rpApp_osc_source)mathSource2];
+            if (viewS1.size() == 0 || viewS2.size() == 0) {
+                g_viewController.unlockScreenView();
+                return;
+            }
             auto viewMath = g_viewController.getView(RPAPP_OSC_SOUR_MATH);
             auto viewInfo = g_viewController.getViewInfo(RPAPP_OSC_SOUR_MATH);
-            float unCoffCh1[2] = {0, 0};
-            float unCoffCh2[2] = {0, 0};
-            ECHECK_APP_NO_RET(unscaleAmplitudeCoffChannel((rpApp_osc_source)mathSource1, unCoffCh1[0], unCoffCh1[1]));
-            ECHECK_APP_NO_RET(unscaleAmplitudeCoffChannel((rpApp_osc_source)mathSource2, unCoffCh2[0], unCoffCh2[1]));
             viewInfo->m_max = std::numeric_limits<float>::lowest();
             viewInfo->m_min = std::numeric_limits<float>::max();
             viewInfo->m_mean = 0;
             viewInfo->m_maxUnscale = std::numeric_limits<float>::lowest();
             viewInfo->m_minUnscale = std::numeric_limits<float>::max();
             viewInfo->m_meanUnscale = 0;
+
+            if (viewSize != viewMath->size()) {
+                viewMath->resize(viewSize);
+            }
+
+            float probeAtt = 1.f;
+            osc_getProbeAtt((rp_channel_t)mathSource1, &probeAtt);
+            if (probeAtt != 1.f)
+                multiply_array_by_scalar_float_neon(viewS1.data(), viewS1.data(), sign1 * probeAtt, viewS1.size());
+            osc_getProbeAtt((rp_channel_t)mathSource2, &probeAtt);
+            if (probeAtt != 1.f)
+                multiply_array_by_scalar_float_neon(viewS2.data(), viewS2.data(), sign2 * probeAtt, viewS2.size());
+
+            switch (operation) {
+                case RPAPP_OSC_MATH_ADD:
+                    add_arrays_neon(viewMath->data(), viewS1.data(), viewS2.data(), viewMath->size());
+                    break;
+                case RPAPP_OSC_MATH_SUB:
+                    subtract_arrays_neon(viewMath->data(), viewS1.data(), viewS2.data(), viewMath->size());
+                    break;
+                case RPAPP_OSC_MATH_MUL:
+                    multiply_arrays_neon(viewMath->data(), viewS1.data(), viewS2.data(), viewMath->size());
+                    break;
+                case RPAPP_OSC_MATH_DIV:
+                    divide_arrays_neon_Ex(viewMath->data(), viewS1.data(), viewS2.data(), viewMath->size(), FLT_MAX * 0.9);
+                    break;
+                case RPAPP_OSC_MATH_ABS:
+                    for (vsize_t i = 0; i < viewSize; i++) {
+                        (*viewMath)[i] = std::abs(viewS1[i]);
+                    }
+                    break;
+                default: {
+                    FATAL("Unknown mode %d", operation)
+                }
+            }
+            if (temp.size() != viewSize) {
+                temp.resize(viewSize);
+            }
+
+            memcpy(temp.data(), viewMath->data(), viewMath->size() * sizeof(float));
+            auto z = invertFactor / math_ampScale;
+            auto z1 = math_ampOffset / math_ampScale;
+            multiply_array_by_scalar_float_neon(viewMath->data(), viewMath->data(), z, viewMath->size());
+            add_scalar_to_array_float_neon(viewMath->data(), viewMath->data(), z1, viewMath->size());
+
             for (vsize_t i = 0; i < viewSize; ++i) {
-                v1 = unscaleAmplitude<float>((*viewS1)[i], unCoffCh1[0], unCoffCh1[1]);
-                v2 = unscaleAmplitude<float>((*viewS2)[i], unCoffCh2[0], unCoffCh2[1]);
-                ECHECK_APP_NO_RET(attenuateAmplitudeChannel((rpApp_osc_source)mathSource1, v1, &v1));
-                ECHECK_APP_NO_RET(attenuateAmplitudeChannel((rpApp_osc_source)mathSource2, v2, &v2));
-                auto y = calculateMath(sign1 * v1, sign2 * v2, operation);
-                auto v = scaleAmplitude<float>(y, math_ampScale, 1, math_ampOffset, invertFactor);
-                (*viewMath)[i] = v;
+                auto y = temp[i];
+                auto v = (*viewMath)[i];
 
                 if (viewInfo->m_maxUnscale < y)
                     viewInfo->m_maxUnscale = y;
@@ -1349,10 +1415,14 @@ void xyThreadFunction() {
         float coff[2];
         unOffsetAmplitudeCoffChannel(srcX, coff[0]);
         unOffsetAmplitudeCoffChannel(srcY, coff[1]);
-        for (vsize_t i = 0; i < viewSize; ++i) {
-            (*x_axis)[i] = unOffsetAmplitude<float>((*viewS1)[i], coff[0]);
-            (*y_axis)[i] = unOffsetAmplitude<float>((*viewS2)[i], coff[1]);
-        }
+        memcpy_neon(x_axis->data(), (*viewS1).data(), (*viewS1).size() * sizeof(float));
+        memcpy_neon(y_axis->data(), (*viewS2).data(), (*viewS2).size() * sizeof(float));
+        subtract_scalar_from_array_float_neon(x_axis->data(), x_axis->data(), coff[0], x_axis->size());
+        subtract_scalar_from_array_float_neon(y_axis->data(), y_axis->data(), coff[1], x_axis->size());
+        // for (vsize_t i = 0; i < viewSize; ++i) {
+        //     (*x_axis)[i] = unOffsetAmplitude<float>((*viewS1)[i], coff[0]);
+        //     (*y_axis)[i] = unOffsetAmplitude<float>((*viewS2)[i], coff[1]);
+        // }
         g_xyController.unlockView();
         g_viewController.unlockScreenView();
     }
@@ -1610,7 +1680,7 @@ void mainViewThreadFun() {
     auto adc_channels = getADCChannels();
     double speed = getADCRate();
 
-    std::vector<float> buffers[MAX_ADC_CHANNELS];
+    std::vector<float> buffers[MAX_ADC_CHANNELS];  // Unscaled values
     while (g_threadRun) {
         if (g_viewController.isNeedUpdateView()) {
             g_mutex.lock();
@@ -1646,8 +1716,10 @@ void mainViewThreadFun() {
                 if (viewMode == CViewController::ROLL && contMode) {
                     posInPoints = -viewSize / 2.0;
                 }
-                if (buffers[channel].capacity() < viewSize)
-                    buffers[channel].reserve(viewSize);
+                if (buffers[channel].size() != viewSize) {
+                    WARNING("REsize")
+                    buffers[channel].resize(viewSize);
+                }
                 CDataDecimator::DataInfo viewDecInfo;
                 CDataDecimator::DataInfo viewDecRawInfo;
                 CDataDecimator::ValidRange range;
@@ -1675,7 +1747,7 @@ void mainViewThreadFun() {
             buff->m_viewMutex.unlock();
             g_viewController.unlockScreenView();
             g_viewController.unlockControllerView();
-            mathThreadFunction();
+            mathThreadFunction(buffers);
             xyThreadFunction();
             g_mutex.unlock();
             g_viewController.updateViewDone();
