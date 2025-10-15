@@ -46,8 +46,8 @@ CBooleanParameter outSweepReset("SWEEP_RESET", CBaseParameter::RW, false, 0);
 
 CIntParameter outPhase[MAX_DAC_CHANNELS] = INIT2("SOUR", "_PHAS", CBaseParameter::RW, 0, 0, -360, 360, CONFIG_VAR);
 CFloatParameter outDCYC[MAX_DAC_CHANNELS] = INIT2("SOUR", "_DCYC", CBaseParameter::RW, 50, 0, 0, 100, CONFIG_VAR);
-CFloatParameter outRiseTime[MAX_DAC_CHANNELS] = INIT2("SOUR", "_RISE", CBaseParameter::RW, 1, 0, 0.1, 1000, CONFIG_VAR);
-CFloatParameter outFallTime[MAX_DAC_CHANNELS] = INIT2("SOUR", "_FALL", CBaseParameter::RW, 1, 0, 0.1, 1000, CONFIG_VAR);
+CFloatParameter outRiseTime[MAX_DAC_CHANNELS] = INIT2("SOUR", "_RISE", CBaseParameter::RW, 1, 0, 0, 1000000, CONFIG_VAR);
+CFloatParameter outFallTime[MAX_DAC_CHANNELS] = INIT2("SOUR", "_FALL", CBaseParameter::RW, 1, 0, 0, 1000000, CONFIG_VAR);
 
 CStringParameter outWaveform[MAX_DAC_CHANNELS] = INIT2("SOUR", "_FUNC", CBaseParameter::RW, "0", 0, CONFIG_VAR);
 CStringParameter outName[MAX_DAC_CHANNELS] = INIT2("OUT", "_CHANNEL_NAME_INPUT", CBaseParameter::RW, "", 0, CONFIG_VAR);

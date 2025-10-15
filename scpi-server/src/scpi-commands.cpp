@@ -1086,6 +1086,30 @@ static const scpi_command_t scpi_commands[] = {
      .tag = 0
 #endif
     },
+    {.pattern = "SOUR#:RISE:TIME",
+     .callback = RP_GenRiseTime,
+#if USE_COMMAND_TAGS
+     .tag = 0
+#endif
+    },
+    {.pattern = "SOUR#:RISE:TIME?",
+     .callback = RP_GenRiseTimeQ,
+#if USE_COMMAND_TAGS
+     .tag = 0
+#endif
+    },
+    {.pattern = "SOUR#:FALL:TIME",
+     .callback = RP_GenFallTime,
+#if USE_COMMAND_TAGS
+     .tag = 0
+#endif
+    },
+    {.pattern = "SOUR#:FALL:TIME?",
+     .callback = RP_GenFallTimeQ,
+#if USE_COMMAND_TAGS
+     .tag = 0
+#endif
+    },
     {.pattern = "SOUR#:LOAD",
      .callback = RP_GenLoad,
 #if USE_COMMAND_TAGS
