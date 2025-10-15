@@ -763,7 +763,11 @@
         $("#graphs").mousewheel(function(event) {
             if (OSC.mouseWheelEventFired)
                 return;
-            OSC.changeXZoom(event.deltaY > 0 ? '+' : '-');
+            if (event.shiftKey){
+                OSC.changeYZoom(event.deltaY < 0 ? '+' : '-', undefined, undefined, false);
+            }else{
+                OSC.changeXZoom(event.deltaY > 0 ? '+' : '-');
+            }
             OSC.mouseWheelEventFired = true;
             setTimeout(function() { OSC.mouseWheelEventFired = false; }, 300);
         });

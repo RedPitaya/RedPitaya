@@ -290,6 +290,8 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float* _data, vsize_t
                 scaledValue = std::numeric_limits<float>::signaling_NaN();
             }
             (*_view)[iView] = scaledValue;
+            if (_unscaledView)
+                (*_unscaledView)[iView] = _data[dataIndex];
         }
         _viewInfo->m_mean /= count ? count : 1;
         _viewInfo->m_meanUnscale /= count ? count : 1;

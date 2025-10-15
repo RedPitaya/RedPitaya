@@ -78,7 +78,6 @@ list(APPEND src
             ${CMAKE_SOURCE_DIR}/src/housekeeping.cpp
             ${CMAKE_SOURCE_DIR}/src/daisy.cpp
             ${CMAKE_SOURCE_DIR}/src/convert.hpp
-            ${CMAKE_SOURCE_DIR}/src/convert_neon.hpp
             ${CMAKE_SOURCE_DIR}/src/profiler.cpp
 )
 

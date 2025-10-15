@@ -133,8 +133,8 @@ int unattenuateAmplitudeChannel(rpApp_osc_source source, float value, float* res
 double roundUpTo125(double data);
 double roundUpTo25(double data);
 
-void calculateIntegral(rp_channel_t channel, float scale, float offset, float invertFactor);
-void calculateDevivative(rp_channel_t channel, float scale, float offset, float invertFactor);
+void calculateIntegral(rp_channel_t channel, float scale, float offset, float invertFactor, std::vector<float>* buffers);
+void calculateDevivative(rp_channel_t channel, float scale, float offset, float invertFactor, std::vector<float>* buffers);
 float calculateMath(float v1, float v2, rpApp_osc_math_oper_t op);
 double unOffsetAmplitude(double value, double ampScale, double ampOffset);
 int unscaleAmplitudeChannel(rpApp_osc_source source, float value, float* res);

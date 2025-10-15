@@ -1629,7 +1629,7 @@
     };
 
     // Changes Y zoom/scale for the selected signal
-    OSC.changeYZoom = function(direction, curr_scale, send_changes) {
+    OSC.changeYZoom = function(direction, curr_scale, send_changes , fine) {
 
         if ($.inArray(OSC.state.sel_sig_name, ['ch1', 'ch2','ch3', 'ch4', 'math', 'output1', 'output2']) < 0) {
             return;
@@ -1720,7 +1720,7 @@
             step = scale_list[base_index]
         }
 
-        if (OSC.state.fine){
+        if (OSC.state.fine || fine){
             new_scale = scale_value + (step / fine_tune_dev) * sign
         }else{
             var new_base_index = base_index + sign

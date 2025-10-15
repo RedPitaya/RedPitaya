@@ -1,11 +1,10 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wall"
 
-#include <math.h>
-#include <cstring>
-#include <iostream>
-
 #include "rp_math.h"
+#include <math.h>
+#include <cstdint>
+#include <iostream>
 
 const float __log10f_rng = 0.3010299957f;
 
@@ -179,8 +178,8 @@ void add_arrays_neon(volatile float* dst, volatile const float* src1, volatile c
         return;
     }
 
-    size_t main_count = n & ~0xF;
-    size_t remainder = n & 0xF;
+    size_t main_count = n & ~0xF;  // Round down to multiple of 16
+    size_t remainder = n & 0xF;    // Remainder (0-15 elements)
 
     if (main_count > 0) {
         volatile float* dst_main = dst;
@@ -190,18 +189,30 @@ void add_arrays_neon(volatile float* dst, volatile const float* src1, volatile c
 
         asm volatile(
             "NEONAddPLD%=:\n"
-            "    PLD [%[src1], #0xC0]\n"
-            "    PLD [%[src2], #0xC0]\n"
-            "    VLDM %[src1]!, {d0-d3}\n"  // 8 float из src1 (d0-d3 = q0,q1)
-            "    VLDM %[src2]!, {d4-d7}\n"  // 8 float из src2 (d4-d7 = q2,q3)
-            "    VADD.F32 q0, q0, q2\n"     // Sum 4 float (q0 + q2)
-            "    VADD.F32 q1, q1, q3\n"     // Sum 4 float (q1 + q3)
-            "    VSTM %[dst]!, {d0-d3}\n"   // Store result (8 floats)
-            "    SUBS %[n], %[n], #16\n"    // Decrement counter by 16 elements
-            "    BGT NEONAddPLD%=\n"
+            "    PLD [%[src1], #0xC0]\n"  // Preload 192 bytes (48 floats)
+            "    PLD [%[src2], #0xC0]\n"  // Preload 192 bytes (48 floats)
+
+            // Load 16 floats from src1 (q0-q3 = d0-d7)
+            "VLDM %[src1]!, {d0-d7}\n"  // 16 floats from src1 (q0,q1,q2,q3)
+
+            // Load 16 floats from src2 (q4-q7 = d8-d15)
+            "VLDM %[src2]!, {d8-d15}\n"  // 16 floats from src2 (q4,q5,q6,q7)
+
+            // Add 16 floats
+            "VADD.F32 q0, q0, q4\n"  // q0 = q0 + q4 (4 floats)
+            "VADD.F32 q1, q1, q5\n"  // q1 = q1 + q5 (4 floats)
+            "VADD.F32 q2, q2, q6\n"  // q2 = q2 + q6 (4 floats)
+            "VADD.F32 q3, q3, q7\n"  // q3 = q3 + q7 (4 floats)
+
+            // Store 16 results
+            "VSTM %[dst]!, {d0-d7}\n"  // Store 16 floats (q0-q3)
+
+            "SUBS %[n], %[n], #16\n"  // Decrement counter by 16 elements
+            "BGT NEONAddPLD%=\n"      // Branch if more data
+
             : [dst] "+r"(dst_main), [src1] "+r"(src1_main), [src2] "+r"(src2_main), [n] "+r"(n_main)
             :
-            : "d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7", "cc", "memory");
+            : "d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8", "d9", "d10", "d11", "d12", "d13", "d14", "d15", "q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7", "cc", "memory");
     }
 
     if (remainder > 0) {
@@ -293,7 +304,7 @@ void multiply_arrays_neon(volatile float* dst, volatile const float* src1, volat
             "    VMUL.F32 q0, q0, q2\n"     // Multiply first 4 floats (q0 * q2)
             "    VMUL.F32 q1, q1, q3\n"     // Multiply next 4 floats (q1 * q3)
             "    VSTM %[dst]!, {d0-d3}\n"   // Store result (8 floats)
-            "    SUBS %[n], %[n], #16\n"    // Decrement counter by 16 elements
+            "    SUBS %[n], %[n], #8\n"     // Decrement counter by 16 elements
             "    BGT NEONMulPLD%=\n"        // Branch if more elements to process
             : [dst] "+r"(dst_main), [src1] "+r"(src1_main), [src2] "+r"(src2_main), [n] "+r"(n_main)
             :
@@ -372,6 +383,107 @@ void divide_arrays_neon(volatile float* dst, volatile const float* src1, volatil
         dst[i] = src1[i] / src2[i];
     }
 #endif  // ARCH_ARM
+}
+
+void divide_arrays_neon_Ex(volatile float* dst, volatile const float* src1, volatile const float* src2, size_t n, float limit) {
+#ifdef ARCH_ARM
+    if (n < 8) {
+        for (size_t i = 0; i < n; ++i) {
+            float _v1 = src1[i];
+            float _v2 = src2[i];
+            float ret;
+            if (_v2 != 0)
+                ret = _v1 / _v2;
+            else
+                ret = _v1 > 0 ? limit : -limit;
+            dst[i] = ret;
+        }
+        return;
+    }
+
+    size_t main_count = n & ~0x7;
+    size_t remainder = n & 0x7;
+
+    if (main_count > 0) {
+        volatile float* dst_main = dst;
+        volatile const float* src1_main = src1;
+        volatile const float* src2_main = src2;
+        size_t n_main = main_count;
+
+        // Prepare constants for NEON
+        float max_val = limit;
+        float min_val = -limit;
+        float zero_val = 0.0f;
+
+        asm volatile(
+            "    VDUP.32 q8, %[max_val]\n"    // q8 = max_val (replicated)
+            "    VDUP.32 q9, %[min_val]\n"    // q9 = min_val (replicated)
+            "    VDUP.32 q10, %[zero_val]\n"  // q10 = 0.0f (replicated)
+
+            "NEONDivPLD%=:\n"
+            "    PLD [%[src1], #0x80]\n"    // Preload data cache for src1
+            "    PLD [%[src2], #0x80]\n"    // Preload data cache for src2
+            "    VLDM %[src1]!, {d0-d3}\n"  // Load 8 floats from src1 (q0,q1)
+            "    VLDM %[src2]!, {d4-d7}\n"  // Load 8 floats from src2 (q2,q3)
+
+            // Check for division by zero
+            "    VCEQ.F32 q11, q2, q10\n"  // q11 = mask (q2 == 0)
+            "    VCEQ.F32 q12, q3, q10\n"  // q12 = mask (q3 == 0)
+
+            // Calculate reciprocal with Newton-Raphson
+            "    VRECPE.F32 q4, q2\n"      // Reciprocal approximation for first 4 floats
+            "    VRECPE.F32 q5, q3\n"      // Reciprocal approximation for next 4 floats
+            "    VRECPS.F32 q6, q4, q2\n"  // Newton-Raphson step 1 for first 4
+            "    VRECPS.F32 q7, q5, q3\n"  // Newton-Raphson step 1 for next 4
+            "    VMUL.F32 q4, q4, q6\n"    // Newton-Raphson step 2 for first 4
+            "    VMUL.F32 q5, q5, q7\n"    // Newton-Raphson step 2 for next 4
+
+            // Multiply src1 by reciprocal (division)
+            "    VMUL.F32 q0, q0, q4\n"  // q0 = q0 * 1/q2
+            "    VMUL.F32 q1, q1, q5\n"  // q1 = q1 * 1/q3
+
+            // Handle division by zero cases
+            "    VCGT.F32 q6, q0, q10\n"  // q6 = mask (q0 > 0)
+            "    VCGT.F32 q7, q1, q10\n"  // q7 = mask (q1 > 0)
+            "    VBSL q11, q8, q9\n"      // q11 = if zero_mask then max_val else min_val
+            "    VBSL q12, q8, q9\n"      // q12 = if zero_mask then max_val else min_val
+            "    VBSL q11, q11, q0\n"     // q0 = if zero_mask then max/min_val else division result
+            "    VBSL q12, q12, q1\n"     // q1 = if zero_mask then max/min_val else division result
+
+            // Store result
+            "    VSTM %[dst]!, {d0-d3}\n"  // Store 8 floats (q0,q1)
+            "    SUBS %[n], %[n], #8\n"    // Decrement counter by 8 elements
+            "    BGT NEONDivPLD%=\n"       // Branch if more elements to process
+            : [dst] "+r"(dst_main), [src1] "+r"(src1_main), [src2] "+r"(src2_main), [n] "+r"(n_main)
+            : [max_val] "r"(max_val), [min_val] "r"(min_val), [zero_val] "r"(zero_val)
+            : "d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7", "d16", "d17", "d18", "d19", "d20", "d21", "d22", "d23", "d24", "d25", "q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7",
+              "q8", "q9", "q10", "q11", "q12", "cc", "memory");
+    }
+
+    if (remainder > 0) {
+        for (size_t i = main_count; i < n; ++i) {
+            float _v1 = src1[i];
+            float _v2 = src2[i];
+            float ret;
+            if (_v2 != 0)
+                ret = _v1 / _v2;
+            else
+                ret = _v1 > 0 ? limit : -limit;
+            dst[i] = ret;
+        }
+    }
+#else
+    for (size_t i = 0; i < n; ++i) {
+        float _v1 = src1[i];
+        float _v2 = src2[i];
+        float ret;
+        if (_v2 != 0)
+            ret = _v1 / _v2;
+        else
+            ret = _v1 > 0 ? limit : -limit;
+        dst[i] = ret;
+    }
+#endif
 }
 
 void add_arrays_int_neon(volatile int* dst, volatile const int* src1, volatile const int* src2, size_t n) {
@@ -902,18 +1014,28 @@ void add_scalar_to_array_float_neon(volatile float* dst, volatile const float* s
         size_t n_main = main_count;
 
         asm volatile(
-            "    VDUP.32 q4, %[scalar]\n"  // Duplicate scalar to all lanes of q4
+            "    VDUP.32 q4, %[scalar]\n"  // Duplicate scalar to all lanes of q4 (d8,d9)
+            "    VDUP.32 q5, %[scalar]\n"  // Duplicate scalar to all lanes of q5 (d10,d11)
             "NEONAddScalarFloatPLD%=:\n"
-            "    PLD [%[src], #0xC0]\n"          // Preload data cache for src
-            "    VLDM %[src]!, {d0-d3}\n"        // Load 8 floats from src (q0, q1)
-            "    VADD.F32 q0, q0, q4\n"          // Add scalar to first 4 floats
-            "    VADD.F32 q1, q1, q4\n"          // Add scalar to next 4 floats
-            "    VSTM %[dst]!, {d0-d3}\n"        // Store result (8 floats)
+            "    PLD [%[src], #0x100]\n"  // Preload 256 bytes (64 floats)
+
+            // Load 16 floats from src (q0-q3 = d0-d7)
+            "    VLDM %[src]!, {d0-d7}\n"  // Load 16 floats from src (q0,q1,q2,q3)
+
+            // Add scalar to all 16 floats
+            "    VADD.F32 q0, q0, q4\n"  // Add scalar to first 4 floats
+            "    VADD.F32 q1, q1, q4\n"  // Add scalar to next 4 floats
+            "    VADD.F32 q2, q2, q5\n"  // Add scalar to next 4 floats
+            "    VADD.F32 q3, q3, q5\n"  // Add scalar to last 4 floats
+
+            // Store 16 results
+            "    VSTM %[dst]!, {d0-d7}\n"  // Store result (16 floats)
+
             "    SUBS %[n], %[n], #16\n"         // Decrement counter by 16 elements
             "    BGT NEONAddScalarFloatPLD%=\n"  // Branch if more elements to process
             : [dst] "+r"(dst_main), [src] "+r"(src_main), [n] "+r"(n_main)
             : [scalar] "r"(scalar)
-            : "d0", "d1", "d2", "d3", "d8", "d9", "cc", "memory");
+            : "d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8", "d9", "d10", "d11", "q0", "q1", "q2", "q3", "q4", "q5", "cc", "memory");
     }
 
     // Process remainder using scalar operations
@@ -950,18 +1072,28 @@ void subtract_scalar_from_array_float_neon(volatile float* dst, volatile const f
         size_t n_main = main_count;
 
         asm volatile(
-            "    VDUP.32 q4, %[scalar]\n"  // Duplicate scalar to all lanes of q4
+            "    VDUP.32 q4, %[scalar]\n"  // Duplicate scalar to all lanes of q4 (d8,d9)
+            "    VDUP.32 q5, %[scalar]\n"  // Duplicate scalar to all lanes of q5 (d10,d11)
             "NEONSubScalarFloatPLD%=:\n"
-            "    PLD [%[src], #0xC0]\n"          // Preload data cache for src
-            "    VLDM %[src]!, {d0-d3}\n"        // Load 8 floats from src (q0, q1)
-            "    VSUB.F32 q0, q0, q4\n"          // Subtract scalar from first 4 floats
-            "    VSUB.F32 q1, q1, q4\n"          // Subtract scalar from next 4 floats
-            "    VSTM %[dst]!, {d0-d3}\n"        // Store result (8 floats)
+            "    PLD [%[src], #0x100]\n"  // Preload 256 bytes (64 floats)
+
+            // Load 16 floats from src (q0-q3 = d0-d7)
+            "    VLDM %[src]!, {d0-d7}\n"  // Load 16 floats from src (q0,q1,q2,q3)
+
+            // Subtract scalar from all 16 floats
+            "    VSUB.F32 q0, q0, q4\n"  // Subtract scalar from first 4 floats
+            "    VSUB.F32 q1, q1, q4\n"  // Subtract scalar from next 4 floats
+            "    VSUB.F32 q2, q2, q5\n"  // Subtract scalar from next 4 floats
+            "    VSUB.F32 q3, q3, q5\n"  // Subtract scalar from last 4 floats
+
+            // Store 16 results
+            "    VSTM %[dst]!, {d0-d7}\n"  // Store result (16 floats)
+
             "    SUBS %[n], %[n], #16\n"         // Decrement counter by 16 elements
             "    BGT NEONSubScalarFloatPLD%=\n"  // Branch if more elements to process
             : [dst] "+r"(dst_main), [src] "+r"(src_main), [n] "+r"(n_main)
             : [scalar] "r"(scalar)
-            : "d0", "d1", "d2", "d3", "d8", "d9", "cc", "memory");
+            : "d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8", "d9", "d10", "d11", "q0", "q1", "q2", "q3", "q4", "q5", "cc", "memory");
     }
 
     // Process remainder using scalar operations
@@ -998,18 +1130,28 @@ void multiply_array_by_scalar_float_neon(volatile float* dst, volatile const flo
         size_t n_main = main_count;
 
         asm volatile(
-            "    VDUP.32 q4, %[scalar]\n"  // Duplicate scalar to all lanes of q4
+            "    VDUP.32 q4, %[scalar]\n"  // Duplicate scalar to all lanes of q4 (d8,d9)
+            "    VDUP.32 q5, %[scalar]\n"  // Duplicate scalar to all lanes of q5 (d10,d11)
             "NEONMulScalarFloatPLD%=:\n"
-            "    PLD [%[src], #0xC0]\n"          // Preload data cache for src
-            "    VLDM %[src]!, {d0-d3}\n"        // Load 8 floats from src (q0, q1)
-            "    VMUL.F32 q0, q0, q4\n"          // Multiply first 4 floats by scalar
-            "    VMUL.F32 q1, q1, q4\n"          // Multiply next 4 floats by scalar
-            "    VSTM %[dst]!, {d0-d3}\n"        // Store result (8 floats)
+            "    PLD [%[src], #0x100]\n"  // Preload 256 bytes (64 floats)
+
+            // Load 16 floats from src (q0-q3 = d0-d7)
+            "    VLDM %[src]!, {d0-d7}\n"  // Load 16 floats from src (q0,q1,q2,q3)
+
+            // Multiply all 16 floats by scalar
+            "    VMUL.F32 q0, q0, q4\n"  // Multiply first 4 floats by scalar
+            "    VMUL.F32 q1, q1, q4\n"  // Multiply next 4 floats by scalar
+            "    VMUL.F32 q2, q2, q5\n"  // Multiply next 4 floats by scalar
+            "    VMUL.F32 q3, q3, q5\n"  // Multiply last 4 floats by scalar
+
+            // Store 16 results
+            "    VSTM %[dst]!, {d0-d7}\n"  // Store result (16 floats)
+
             "    SUBS %[n], %[n], #16\n"         // Decrement counter by 16 elements
             "    BGT NEONMulScalarFloatPLD%=\n"  // Branch if more elements to process
             : [dst] "+r"(dst_main), [src] "+r"(src_main), [n] "+r"(n_main)
             : [scalar] "r"(scalar)
-            : "d0", "d1", "d2", "d3", "d8", "d9", "cc", "memory");
+            : "d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8", "d9", "d10", "d11", "q0", "q1", "q2", "q3", "q4", "q5", "cc", "memory");
     }
 
     // Process remainder using scalar operations
@@ -1025,56 +1167,51 @@ void multiply_array_by_scalar_float_neon(volatile float* dst, volatile const flo
     }
 #endif  // ARCH_ARM
 }
-
 void divide_array_by_scalar_float_neon(volatile float* dst, volatile const float* src, const float scalar, size_t n) {
 #ifdef ARCH_ARM
-    if (n < 16) {
-        // Process small arrays with scalar operations
+    if (n < 8) {
         for (size_t i = 0; i < n; ++i) {
             dst[i] = src[i] / scalar;
         }
         return;
     }
 
-    size_t main_count = n & ~0xF;  // Round down to multiple of 16
-    size_t remainder = n & 0xF;    // Remainder (0-15 elements)
+    size_t main_count = n & ~0x7;
+    size_t remainder = n & 0x7;
 
-    // Process main portion using NEON
     if (main_count > 0) {
         volatile float* dst_main = dst;
         volatile const float* src_main = src;
         size_t n_main = main_count;
 
         asm volatile(
-            "    VDUP.32 q4, %[scalar]\n"  // Duplicate scalar to all lanes of q4
-            "    VRECPE.F32 q5, q4\n"      // Reciprocal approximation
-            "    VRECPS.F32 q6, q5, q4\n"  // Newton-Raphson refinement step
-            "    VMUL.F32 q5, q5, q6\n"    // Improved reciprocal
+            "    VDUP.32 q4, %[scalar]\n"
+            "    VRECPE.F32 q5, q4\n"
+            "    VRECPS.F32 q6, q5, q4\n"
+            "    VMUL.F32 q5, q5, q6\n"
             "NEONDivScalarFloatPLD%=:\n"
-            "    PLD [%[src], #0xC0]\n"          // Preload data cache for src
-            "    VLDM %[src]!, {d0-d3}\n"        // Load 8 floats from src (q0, q1)
-            "    VMUL.F32 q0, q0, q5\n"          // Multiply first 4 floats by reciprocal (division)
-            "    VMUL.F32 q1, q1, q5\n"          // Multiply next 4 floats by reciprocal (division)
-            "    VSTM %[dst]!, {d0-d3}\n"        // Store result (8 floats)
-            "    SUBS %[n], %[n], #16\n"         // Decrement counter by 16 elements
-            "    BGT NEONDivScalarFloatPLD%=\n"  // Branch if more elements to process
+            "    PLD [%[src], #0x80]\n"
+            "    VLDM %[src]!, {d0-d3}\n"
+            "    VMUL.F32 q0, q0, q5\n"
+            "    VMUL.F32 q1, q1, q5\n"
+            "    VSTM %[dst]!, {d0-d3}\n"
+            "    SUBS %[n], %[n], #8\n"
+            "    BGT NEONDivScalarFloatPLD%=\n"
             : [dst] "+r"(dst_main), [src] "+r"(src_main), [n] "+r"(n_main)
             : [scalar] "r"(scalar)
-            : "d0", "d1", "d2", "d3", "d8", "d9", "d10", "d11", "d12", "d13", "cc", "memory");
+            : "d0", "d1", "d2", "d3", "d8", "d9", "d10", "d11", "d12", "d13", "q0", "q1", "q4", "q5", "q6", "cc", "memory");
     }
 
-    // Process remainder using scalar operations
     if (remainder > 0) {
         for (size_t i = main_count; i < n; ++i) {
             dst[i] = src[i] / scalar;
         }
     }
 #else
-    // Scalar version for other architectures
     for (size_t i = 0; i < n; ++i) {
         dst[i] = src[i] / scalar;
     }
-#endif  // ARCH_ARM
+#endif
 }
 
 void add_scalar_to_array_double_neon(volatile double* dst, volatile const double* src, const double scalar, size_t n) {

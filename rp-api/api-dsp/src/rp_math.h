@@ -13,6 +13,9 @@
 #ifndef __RP_MATH_H__
 #define __RP_MATH_H__
 
+#include <cstdint>
+#include <cstring>
+
 float log10f_neon(float x);
 float sqrtf_neon(float x);
 
@@ -23,6 +26,7 @@ void add_arrays_neon(volatile float* dst, volatile const float* src1, volatile c
 void subtract_arrays_neon(volatile float* dst, volatile const float* src1, volatile const float* src2, size_t n);
 void multiply_arrays_neon(volatile float* dst, volatile const float* src1, volatile const float* src2, size_t n);
 void divide_arrays_neon(volatile float* dst, volatile const float* src1, volatile const float* src2, size_t n);
+void divide_arrays_neon_Ex(volatile float* dst, volatile const float* src1, volatile const float* src2, size_t n, float limit);
 
 void add_arrays_double_neon(volatile double* dst, volatile const double* src1, volatile const double* src2, size_t n);
 void subtract_arrays_double_neon(volatile double* dst, volatile const double* src1, volatile const double* src2, size_t n);
