@@ -357,12 +357,12 @@ void synthesis_square_burst(CFloatBase64Signal* signal, float freq, float phase,
                 // First half period - positive pulse
                 float pulse_time = normalized_time * 2.0f;  // 0 to 1 within positive half
 
-                if (pulse_time < (float)risePoints * point_time / square_period * 2.0f) {
+                if (pulse_time < (float)risePoints * point_time / square_period) {
                     // Rise edge
-                    value = pulse_time / ((float)risePoints * point_time / square_period * 2.0f);
-                } else if (pulse_time > 1.0f - (float)fallPoints * point_time / square_period * 2.0f) {
+                    value = pulse_time / ((float)risePoints * point_time / square_period);
+                } else if (pulse_time > 1.0f - (float)fallPoints * point_time / square_period) {
                     // Fall edge
-                    value = 1.0f - (pulse_time - (1.0f - (float)fallPoints * point_time / square_period * 2.0f)) / ((float)fallPoints * point_time / square_period * 2.0f);
+                    value = 1.0f - (pulse_time - (1.0f - (float)fallPoints * point_time / square_period)) / ((float)fallPoints * point_time / square_period);
                 } else {
                     // Flat top
                     value = 1.0f;
@@ -371,12 +371,12 @@ void synthesis_square_burst(CFloatBase64Signal* signal, float freq, float phase,
                 // Second half period - negative pulse
                 float pulse_time = (normalized_time - 0.5f) * 2.0f;  // 0 to 1 within negative half
 
-                if (pulse_time < (float)fallPoints * point_time / square_period * 2.0f) {
+                if (pulse_time < (float)fallPoints * point_time / square_period) {
                     // Fall edge (from 0 to -1)
-                    value = -pulse_time / ((float)fallPoints * point_time / square_period * 2.0f);
-                } else if (pulse_time > 1.0f - (float)risePoints * point_time / square_period * 2.0f) {
+                    value = -pulse_time / ((float)fallPoints * point_time / square_period);
+                } else if (pulse_time > 1.0f - (float)risePoints * point_time / square_period) {
                     // Rise edge (from -1 to 0)
-                    value = -1.0f + (pulse_time - (1.0f - (float)risePoints * point_time / square_period * 2.0f)) / ((float)risePoints * point_time / square_period * 2.0f);
+                    value = -1.0f + (pulse_time - (1.0f - (float)risePoints * point_time / square_period)) / ((float)risePoints * point_time / square_period);
                 } else {
                     // Flat bottom
                     value = -1.0f;
