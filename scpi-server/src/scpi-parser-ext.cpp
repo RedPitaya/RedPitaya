@@ -1,7 +1,7 @@
 /**
  * $Id: $
  *
- * @brief Red Pitaya Scpi server SCPI 
+ * @brief Red Pitaya Scpi server SCPI
  *
  * @Author Red Pitaya
  *
@@ -282,8 +282,7 @@ static size_t resultBufferInt16Ascii(scpi_t* context, const int16_t* data, size_
     char buffer[20];
     for (size_t i = 0; i < size; i++) {
         snprintf(buffer, sizeof(buffer), "%" PRIi16 "%s", data[i], (i < size - 1 ? "," : ""));
-        auto len = strlen(buffer);
-        result += writeDataEx(context, buffer, len, error);
+        result += writeDataEx(context, buffer, strlen(buffer), error);
         CHECK_ERROR_PTR
     }
 
@@ -301,14 +300,19 @@ static size_t resultBufferSpanInt16Ascii(scpi_t* context, const std::vector<std:
     CHECK_ERROR_PTR
 
     char buffer[20];
+    bool firstSpan = true;
     for (const auto& span : *data) {
         if (!span.empty()) {
-            for (size_t i = 0; i < span.size(); i++) {
-                snprintf(buffer, sizeof(buffer), "%" PRIi16 "%s", span.data()[i], (i < span.size() - 1 ? "," : ""));
-                auto len = strlen(buffer);
-                result += writeDataEx(context, buffer, len, error);
+            if (!firstSpan) {
+                result += writeDataEx(context, ",", 1, error);
                 CHECK_ERROR_PTR
             }
+            for (size_t i = 0; i < span.size(); i++) {
+                snprintf(buffer, sizeof(buffer), "%" PRIi16 "%s", span.data()[i], (i < span.size() - 1 ? "," : ""));
+                result += writeDataEx(context, buffer, strlen(buffer), error);
+                CHECK_ERROR_PTR
+            }
+            firstSpan = false;
         }
     }
 
