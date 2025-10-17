@@ -289,7 +289,7 @@ static const scpi_command_t scpi_commands[] = {
     SCPI_CMD("SOUR#:AXI:DEC", RP_GenAxiSetDecimationFactor),
     SCPI_CMD("SOUR#:AXI:DEC?", RP_GenAxiGetDecimationFactor),
     SCPI_CMD("SOUR#:AXI:SET:CALIB", RP_GenSetAmplitudeAndOffsetOrigin),
-    SCPI_CMD("SOUR#:AXI:OFFSET#:DATA#:", RP_GenAxiWriteWaveform),
+    SCPI_CMD("SOUR#:AXI:OFFSET#:DATA#", RP_GenAxiWriteWaveform),
 
     /* Sweep for Generate */
     SCPI_CMD("SOUR:SWeep:PAUSE", RP_GenSweepPause),

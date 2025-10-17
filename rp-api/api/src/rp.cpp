@@ -2488,7 +2488,7 @@ int rp_GenAxiWriteWaveform(rp_channel_t channel, float* np_buffer, int size) {
     return gen_axi_WriteWaveform(channel, np_buffer, size);
 }
 
-int rp_GenAxiWriteWaveform(rp_channel_t channel, uint32_t offset, float* np_buffer, int size) {
+int rp_GenAxiWriteWaveformOffset(rp_channel_t channel, uint32_t offset, float* np_buffer, int size) {
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
     return gen_axi_WriteWaveform(channel, offset, np_buffer, size);

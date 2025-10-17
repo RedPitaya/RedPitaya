@@ -248,7 +248,7 @@ scpi_result_t RP_GenAxiWriteWaveform(scpi_t* context) {
         return SCPI_RES_ERR;
     }
 
-    auto result = rp_GenAxiWriteWaveform(channel, offset, buffer, size);
+    auto result = rp_GenAxiWriteWaveformOffset(channel, offset, buffer, size);
     if (result != RP_OK) {
         RP_LOG_CRIT("Failed to set AXI gen waveform data: %s", rp_GetError(result));
         return SCPI_RES_ERR;

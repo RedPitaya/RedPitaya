@@ -107,7 +107,7 @@ int rp_GenAxiWriteWaveform(rp_channel_t channel, float* np_buffer, int size);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_GenAxiWriteWaveform(rp_channel_t channel, uint32_t offset, float* np_buffer, int size);
+int rp_GenAxiWriteWaveformOffset(rp_channel_t channel, uint32_t offset, float* np_buffer, int size);
 
 ///@}
 
