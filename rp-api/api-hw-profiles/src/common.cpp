@@ -222,13 +222,9 @@ profiles_t* g_profile = NULL;
 // "STEM_65-16_TI_v1.3"
 
 std::string hp_cmn_GetHomeDirectory() {
-    // Use getpwuid
-    char buf[1024];
-    passwd pw;
-    passwd* ppw = nullptr;
-
-    if (getpwuid_r(getuid(), &pw, buf, sizeof(buf), &ppw) == 0) {
-        return pw.pw_dir;
+    struct passwd* pw = getpwuid(getuid());
+    if (pw && pw->pw_dir) {
+        return std::string(pw->pw_dir);
     }
     return "";
 }

@@ -27,6 +27,7 @@
 #include "dpin.h"
 #include "error.h"
 #include "generate.h"
+#include "generate_axi.h"
 #include "i2c.h"
 #include "lcr.h"
 #include "led.h"
@@ -276,6 +277,21 @@ static const scpi_command_t scpi_commands[] = {
     SCPI_CMD("SOUR#:BURS:INT:PER", RP_GenBurstPeriod),
     SCPI_CMD("SOUR#:BURS:INT:PER?", RP_GenBurstPeriodQ),
 
+    /* DMA mode for Generate */
+    SCPI_CMD("GEN:AXI:START?", RP_GenAxiStartQ),
+    SCPI_CMD("GEN:AXI:SIZE?", RP_GenAxiEndQ),
+
+    SCPI_CMD("SOUR#:AXI:RESERVE", RP_GenAxiReserveMemory),
+    SCPI_CMD("SOUR#:AXI:RELEASE", RP_GenAxiReleaseMemory),
+
+    SCPI_CMD("SOUR#:AXI:ENable", RP_GenAxiSetEnable),
+    SCPI_CMD("SOUR#:AXI:ENable?", RP_GenAxiGetEnable),
+    SCPI_CMD("SOUR#:AXI:DEC", RP_GenAxiSetDecimationFactor),
+    SCPI_CMD("SOUR#:AXI:DEC?", RP_GenAxiGetDecimationFactor),
+    SCPI_CMD("SOUR#:AXI:SET:CALIB", RP_GenSetAmplitudeAndOffsetOrigin),
+    SCPI_CMD("SOUR#:AXI:OFFSET#:DATA#:", RP_GenAxiWriteWaveform),
+
+    /* Sweep for Generate */
     SCPI_CMD("SOUR:SWeep:PAUSE", RP_GenSweepPause),
     SCPI_CMD("SOUR:SWeep:DEFault", RP_GenSweepDefault),
     SCPI_CMD("SOUR:SWeep:RESET", RP_GenSweepReset),

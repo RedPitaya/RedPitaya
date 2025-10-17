@@ -85,6 +85,12 @@ int gen_SetDefaultValues() {
         return RP_NOTS;
     }
 
+    bool isAxi = false;
+    if (rp_HPGetIsDMAinv0_94(&isAxi) != RP_HP_OK) {
+        ERROR_LOG("Can't get fast DAC AXI mode");
+        return RP_NOTS;
+    }
+
     for (int ch_i = 0; ch_i < channels; ch_i++) {
         rp_channel_t ch = convertChFromIndex(ch_i);
         gen_axi_SetEnable(ch, false);
@@ -121,6 +127,8 @@ int gen_SetDefaultValues() {
         gen_setInitGenValue(ch, 0);
         if (x5_gain)
             gen_setGainOut(ch, RP_GAIN_1X);
+        if (isAxi)
+            gen_axi_SetDecimation(ch, 1);
     }
 
     generate_ResetSM();
@@ -1227,7 +1235,7 @@ int gen_axi_ReserveMemory(rp_channel_t channel, uint32_t start, uint32_t end) {
         return RP_EOOR;
     }
 
-    uint64_t index;
+    uint64_t index = 0;
     ECHECK(axi_reserveMemory(start, end - start, &index))
     asg_axi_mem_reserved_index[channel] = index;
     asg_axi_reserved_samples_count[channel] = size / 2;
@@ -1306,6 +1314,55 @@ int gen_axi_WriteWaveform(rp_channel_t channel, float* data, uint32_t length) {
                 return RP_ENN;
             }
             buffer[i] = cmn_convertToCnt(data[i], bits, 1.0, is_sign, 1, 0);
+        }
+
+        return RP_OK;
+    } else {
+        ERROR_LOG("Error getting memory region.");
+    }
+    return RP_EOOR;
+}
+
+int gen_axi_WriteWaveform(rp_channel_t channel, uint32_t offset, float* data, uint32_t length) {
+    CHECK_CHANNEL
+
+    if (asg_axi_mem_reserved_index[channel] == 0) {
+        ERROR_LOG("Memory not reserved.")
+        return RP_EOOR;
+    }
+
+    float fs = 0;
+    if (rp_HPGetFastDACOutFullScale(channel, &fs) != RP_HP_OK) {
+        ERROR_LOG("Can't get fast DAC out full scale");
+        return RP_NOTS;
+    }
+
+    bool is_sign = false;
+    if (rp_HPGetFastDACIsSigned(&is_sign) != RP_HP_OK) {
+        ERROR_LOG("Can't get fast DAC sign value");
+        return RP_NOTS;
+    }
+
+    uint8_t bits = 0;
+    if (rp_HPGetFastDACBits(&bits) != RP_HP_OK) {
+        ERROR_LOG("Can't get fast DAC bits");
+        return RP_NOTS;
+    }
+
+    uint16_t* buffer = NULL;
+    uint32_t size = 0;
+    if (axi_getMapped(asg_axi_mem_reserved_index[channel], &buffer, &size) == RP_OK) {
+        if (size / 2 < offset + length) {
+            ERROR_LOG("The input buffer + offset is larger than the reserved memory.")
+            return RP_EOOR;
+        }
+
+        for (uint32_t x = 0; x < length; x++) {
+            if (data[x] < (is_sign ? -fs : 0) || data[x] > fs) {
+                ERROR_LOG("The signal is greater than acceptable. Min %f Max %f", (is_sign ? -fs : 0), fs);
+                return RP_ENN;
+            }
+            buffer[x + offset] = cmn_convertToCnt(data[x], bits, 1.0, is_sign, 1, 0);
         }
 
         return RP_OK;

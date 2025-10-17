@@ -71,52 +71,48 @@ int generate_printRegset() {
 
     asg_ch_amp_scale_u_t prop;
     prop.reg_full = generate->ampAndScale_ch1;
-    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch1 Amplitude scale & offset", GENERATE_BASE_ADDR + offsetof(generate_control_t, ampAndScale_ch1),
-             generate->ampAndScale_ch1);
+    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch1 Amplitude scale & offset", GENERATE_BASE_ADDR + offsetof(generate_control_t, ampAndScale_ch1), generate->ampAndScale_ch1);
     prop.reg.print();
     printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch1 Counter Wrap", GENERATE_BASE_ADDR + offsetof(generate_control_t, counterWrap_ch1), generate->counterWrap_ch1);
     printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch1 Start offset", GENERATE_BASE_ADDR + offsetof(generate_control_t, startOffset_ch1), generate->startOffset_ch1);
     printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch1 Counter step", GENERATE_BASE_ADDR + offsetof(generate_control_t, counterStep_ch1), generate->counterStep_ch1);
-    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch1 Counter step lower", GENERATE_BASE_ADDR + offsetof(generate_control_t, counterStepLower_ch1),
-             generate->counterStepLower_ch1);
-    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch1 Cycles In One Burst", GENERATE_BASE_ADDR + offsetof(generate_control_t, cyclesInOneBurst_ch1),
-             generate->cyclesInOneBurst_ch1);
-    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch1 Burst Repetitions", GENERATE_BASE_ADDR + offsetof(generate_control_t, burstRepetitions_ch1),
-             generate->burstRepetitions_ch1);
-    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch1 Delay Burst Repetitions", GENERATE_BASE_ADDR + offsetof(generate_control_t, delayBetweenBurstRepetitions_ch1),
+    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch1 Counter step lower", GENERATE_BASE_ADDR + offsetof(generate_control_t, counterStepLower_ch1), generate->counterStepLower_ch1);
+    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch1 Cycles In One Burst", GENERATE_BASE_ADDR + offsetof(generate_control_t, cyclesInOneBurst_ch1), generate->cyclesInOneBurst_ch1);
+    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch1 Burst Repetitions", GENERATE_BASE_ADDR + offsetof(generate_control_t, burstRepetitions_ch1), generate->burstRepetitions_ch1);
+    printReg("%-25s\t0x%X = 0x%08X (%d)\n",
+             "Ch1 Delay Burst Repetitions",
+             GENERATE_BASE_ADDR + offsetof(generate_control_t, delayBetweenBurstRepetitions_ch1),
              generate->delayBetweenBurstRepetitions_ch1);
 
     prop.reg_full = generate->ampAndScale_ch2;
-    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch2 Amplitude scale & offset", GENERATE_BASE_ADDR + offsetof(generate_control_t, ampAndScale_ch2),
-             generate->ampAndScale_ch2);
+    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch2 Amplitude scale & offset", GENERATE_BASE_ADDR + offsetof(generate_control_t, ampAndScale_ch2), generate->ampAndScale_ch2);
     prop.reg.print();
     printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch2 Counter Wrap", GENERATE_BASE_ADDR + offsetof(generate_control_t, counterWrap_ch2), generate->counterWrap_ch2);
     printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch2 Start offset", GENERATE_BASE_ADDR + offsetof(generate_control_t, startOffset_ch2), generate->startOffset_ch2);
     printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch2 Counter step", GENERATE_BASE_ADDR + offsetof(generate_control_t, counterStep_ch2), generate->counterStep_ch2);
-    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch2 Counter step lower", GENERATE_BASE_ADDR + offsetof(generate_control_t, counterStepLower_ch2),
-             generate->counterStepLower_ch2);
-    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch2 Cycles In One Burst", GENERATE_BASE_ADDR + offsetof(generate_control_t, cyclesInOneBurst_ch2),
-             generate->cyclesInOneBurst_ch2);
-    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch2 Burst Repetitions", GENERATE_BASE_ADDR + offsetof(generate_control_t, burstRepetitions_ch2),
-             generate->burstRepetitions_ch2);
-    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch2 Delay Burst Repetitions", GENERATE_BASE_ADDR + offsetof(generate_control_t, delayBetweenBurstRepetitions_ch2),
+    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch2 Counter step lower", GENERATE_BASE_ADDR + offsetof(generate_control_t, counterStepLower_ch2), generate->counterStepLower_ch2);
+    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch2 Cycles In One Burst", GENERATE_BASE_ADDR + offsetof(generate_control_t, cyclesInOneBurst_ch2), generate->cyclesInOneBurst_ch2);
+    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch2 Burst Repetitions", GENERATE_BASE_ADDR + offsetof(generate_control_t, burstRepetitions_ch2), generate->burstRepetitions_ch2);
+    printReg("%-25s\t0x%X = 0x%08X (%d)\n",
+             "Ch2 Delay Burst Repetitions",
+             GENERATE_BASE_ADDR + offsetof(generate_control_t, delayBetweenBurstRepetitions_ch2),
              generate->delayBetweenBurstRepetitions_ch2);
 
-    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch1 Burst Final Value", GENERATE_BASE_ADDR + offsetof(generate_control_t, BurstFinalValue_ch1),
-             generate->BurstFinalValue_ch1);
-    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch2 Burst Final Value", GENERATE_BASE_ADDR + offsetof(generate_control_t, BurstFinalValue_ch2),
-             generate->BurstFinalValue_ch2);
+    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch1 Burst Final Value", GENERATE_BASE_ADDR + offsetof(generate_control_t, BurstFinalValue_ch1), generate->BurstFinalValue_ch1);
+    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch2 Burst Final Value", GENERATE_BASE_ADDR + offsetof(generate_control_t, BurstFinalValue_ch2), generate->BurstFinalValue_ch2);
 
     printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Trigger debuncer", GENERATE_BASE_ADDR + offsetof(generate_control_t, trig_dbc), generate->trig_dbc);
 
-    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch1 Init Gen Value", GENERATE_BASE_ADDR + offsetof(generate_control_t, initGenValue_ch1),
-             generate->initGenValue_ch1);
-    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch2 Init Gen Value", GENERATE_BASE_ADDR + offsetof(generate_control_t, initGenValue_ch2),
-             generate->initGenValue_ch2);
+    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch1 Init Gen Value", GENERATE_BASE_ADDR + offsetof(generate_control_t, initGenValue_ch1), generate->initGenValue_ch1);
+    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch2 Init Gen Value", GENERATE_BASE_ADDR + offsetof(generate_control_t, initGenValue_ch2), generate->initGenValue_ch2);
 
-    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch1 Length Last Value State", GENERATE_BASE_ADDR + offsetof(generate_control_t, lengthLastValueState_ch1),
+    printReg("%-25s\t0x%X = 0x%08X (%d)\n",
+             "Ch1 Length Last Value State",
+             GENERATE_BASE_ADDR + offsetof(generate_control_t, lengthLastValueState_ch1),
              generate->lengthLastValueState_ch1);
-    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch2 Length Last Value State", GENERATE_BASE_ADDR + offsetof(generate_control_t, lengthLastValueState_ch2),
+    printReg("%-25s\t0x%X = 0x%08X (%d)\n",
+             "Ch2 Length Last Value State",
+             GENERATE_BASE_ADDR + offsetof(generate_control_t, lengthLastValueState_ch2),
              generate->lengthLastValueState_ch2);
 
     printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch1 Random Seed", GENERATE_BASE_ADDR + offsetof(generate_control_t, randomSeed_ch1), generate->randomSeed_ch1);
@@ -131,31 +127,23 @@ int generate_printRegset() {
     asg_axi_state.reg.print();
 
     printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch1 Enable AXI", GENERATE_BASE_ADDR + offsetof(generate_control_t, enableAXI_Ch1), generate->enableAXI_Ch1);
-    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch1 Axi Start Address", GENERATE_BASE_ADDR + offsetof(generate_control_t, axi_start_address_Ch1),
-             generate->axi_start_address_Ch1);
-    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch1 Axi End Address", GENERATE_BASE_ADDR + offsetof(generate_control_t, axi_end_address_Ch1),
-             generate->axi_end_address_Ch1);
+    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch1 Axi Start Address", GENERATE_BASE_ADDR + offsetof(generate_control_t, axi_start_address_Ch1), generate->axi_start_address_Ch1);
+    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch1 Axi End Address", GENERATE_BASE_ADDR + offsetof(generate_control_t, axi_end_address_Ch1), generate->axi_end_address_Ch1);
 
     printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch2 Enable AXI", GENERATE_BASE_ADDR + offsetof(generate_control_t, enableAXI_Ch2), generate->enableAXI_Ch2);
-    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch2 Axi Start Address", GENERATE_BASE_ADDR + offsetof(generate_control_t, axi_start_address_Ch2),
-             generate->axi_start_address_Ch2);
-    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch2 Axi End Address", GENERATE_BASE_ADDR + offsetof(generate_control_t, axi_end_address_Ch2),
-             generate->axi_end_address_Ch2);
+    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch2 Axi Start Address", GENERATE_BASE_ADDR + offsetof(generate_control_t, axi_start_address_Ch2), generate->axi_start_address_Ch2);
+    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch2 Axi End Address", GENERATE_BASE_ADDR + offsetof(generate_control_t, axi_end_address_Ch2), generate->axi_end_address_Ch2);
 
-    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch1 Axi Error Read Count", GENERATE_BASE_ADDR + offsetof(generate_control_t, axi_error_read_count_Ch1),
-             generate->axi_error_read_count_Ch1);
-    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch1 Axi Transfer Count", GENERATE_BASE_ADDR + offsetof(generate_control_t, axi_transfer_count_Ch1),
-             generate->axi_transfer_count_Ch1);
+    printReg(
+        "%-25s\t0x%X = 0x%08X (%d)\n", "Ch1 Axi Error Read Count", GENERATE_BASE_ADDR + offsetof(generate_control_t, axi_error_read_count_Ch1), generate->axi_error_read_count_Ch1);
+    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch1 Axi Transfer Count", GENERATE_BASE_ADDR + offsetof(generate_control_t, axi_transfer_count_Ch1), generate->axi_transfer_count_Ch1);
 
-    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch2 Axi Error Read Count", GENERATE_BASE_ADDR + offsetof(generate_control_t, axi_error_read_count_Ch2),
-             generate->axi_error_read_count_Ch2);
-    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch2 Axi Transfer Count", GENERATE_BASE_ADDR + offsetof(generate_control_t, axi_transfer_count_Ch2),
-             generate->axi_transfer_count_Ch2);
+    printReg(
+        "%-25s\t0x%X = 0x%08X (%d)\n", "Ch2 Axi Error Read Count", GENERATE_BASE_ADDR + offsetof(generate_control_t, axi_error_read_count_Ch2), generate->axi_error_read_count_Ch2);
+    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch2 Axi Transfer Count", GENERATE_BASE_ADDR + offsetof(generate_control_t, axi_transfer_count_Ch2), generate->axi_transfer_count_Ch2);
 
-    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch1 Axi Decimation", GENERATE_BASE_ADDR + offsetof(generate_control_t, axi_decimation_Ch1),
-             generate->axi_decimation_Ch1);
-    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch2 Axi Decimation", GENERATE_BASE_ADDR + offsetof(generate_control_t, axi_decimation_Ch2),
-             generate->axi_decimation_Ch2);
+    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch1 Axi Decimation", GENERATE_BASE_ADDR + offsetof(generate_control_t, axi_decimation_Ch1), generate->axi_decimation_Ch1);
+    printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Ch2 Axi Decimation", GENERATE_BASE_ADDR + offsetof(generate_control_t, axi_decimation_Ch2), generate->axi_decimation_Ch2);
 
     return cmn_ReleaseClose(fd1, GENERATE_BASE_SIZE, (void**)&generate);
 }
@@ -872,7 +860,7 @@ int generate_axi_SetDecimation(rp_channel_t channel, uint32_t decimation) {
 }
 
 int generate_axi_GetDecimation(rp_channel_t channel, uint32_t* decimation) {
-    bool value;
+    uint32_t value;
     CHANNEL_ACTION(channel, value = generate->axi_decimation_Ch1, value = generate->axi_decimation_Ch2)
     *decimation = value;
     return RP_OK;
