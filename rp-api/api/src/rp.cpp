@@ -2440,6 +2440,12 @@ int rp_AcqAxiGetOffset(rp_channel_t channel, float* value) {
     return acq_axi_GetOffset(channel, value);
 }
 
+int rp_GenAxiGetMemoryRegion(uint32_t* _start, uint32_t* _size) {
+    if (!rp_HPGetIsDMAinv0_94OrDefault())
+        return RP_NOTS;
+    return acq_axi_GetMemoryRegion(_start, _size);
+}
+
 int rp_GenAxiSetEnable(rp_channel_t channel, bool state) {
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;

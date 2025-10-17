@@ -28,7 +28,7 @@
 
 scpi_result_t RP_GenAxiStartQ(scpi_t* context) {
     uint32_t start = 0, size = 0;
-    int result = rp_AcqAxiGetMemoryRegion(&start, &size);
+    int result = rp_GenAxiGetMemoryRegion(&start, &size);
     if (RP_OK != result) {
         RP_LOG_CRIT("Failed to get decimation: %s", rp_GetError(result));
         if (getRetOnError())
@@ -42,7 +42,7 @@ scpi_result_t RP_GenAxiStartQ(scpi_t* context) {
 
 scpi_result_t RP_GenAxiEndQ(scpi_t* context) {
     uint32_t start = 0, size = 0;
-    auto result = rp_AcqAxiGetMemoryRegion(&start, &size);
+    auto result = rp_GenAxiGetMemoryRegion(&start, &size);
     if (RP_OK != result) {
         RP_LOG_CRIT("Failed to get decimation: %s", rp_GetError(result));
         if (getRetOnError())

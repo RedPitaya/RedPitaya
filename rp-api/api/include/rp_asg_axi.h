@@ -25,6 +25,15 @@
 ///@{
 
 /**
+ * Get reserved memory for DMA mode
+ * @param channel Channel index
+ * @param enable Enable state
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_GenAxiGetMemoryRegion(uint32_t* _start, uint32_t* _size);
+
+/**
  * Enables AXI mode for the selected channel.
  * @param channel Channel index
  * @param state Set enable
