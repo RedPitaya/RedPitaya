@@ -82,7 +82,7 @@ void usage() {
         "\t-i    Reset calibration values in eeprom by default\n"
         "\t      Examples: -i, -if, -in, -inf, -in5, -inf5, -in6, -inf6, -ie, -ief, -ine, -inef, -ine5, -inef5, -ine6, -inef6.\n"
         "\n"
-        "\t-o    Converts the calibration from the user zone to the old calibration format. For ecosystem version 0.98\n"
+        "\t-o    Converts the calibration from the user zone to the old calibration format. For ecosystem versions 0.98 to 1.04.\n"
         "\n"
         "\t-b    Binary input and output mode. Works only with the -r and -w flags.\n"
         "\t      (Example: calib -rb > backup.bin, cat backup.bin | calib -wb).\n"
