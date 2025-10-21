@@ -137,7 +137,9 @@
 
                     while (bufferedParser.hasCompletePackets()) {
                         const packet = bufferedParser.getNextPacket();
-                        TA_MODE.setPoints(packet.channel,packet.data,packet.timestamp,packet.decimation,packet.tScale)
+                        let c = "CH" + (packet.channel + 1)
+                        if (OSC.taMode[c])
+                            OSC.taMode[c].setPoints(packet.data,packet.decimation,packet.tScale)
                     }
 
                 } catch (e) {

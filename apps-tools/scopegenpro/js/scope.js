@@ -91,6 +91,8 @@
     OSC.is_ext_trig_level_present = false;
     OSC.is_webpage_loaded = false;
 
+    OSC.taMode = {};
+
     OSC.config.graph_colors = {
         'ch1': '#f3ec1a',
         'ch2': '#31b44b',
@@ -1043,24 +1045,37 @@
                 continue;
 
             var points = [];
+            var points_gl = [];
             var color = OSC.config.graph_colors[sig_name];
             var show_lines = true
 
             if (OSC.params.orig['OSC_VIEW_START_POS'] && OSC.params.orig['OSC_VIEW_END_POS']) {
                 if ((((sig_name == 'output1') || (sig_name == 'output2')) && OSC.params.orig['OSC_VIEW_END_POS'].value != 0)) {
-                    for (var i = 0; i < new_signals[sig_name].size; i++) {
-                        points.push([i, new_signals[sig_name].value[i]]);
+                    if (OSC.glMode && !OSC.glMode.isInit){
+                        for (var i = 0; i < new_signals[sig_name].size; i++) {
+                            points.push([i, new_signals[sig_name].value[i]]);
+                        }
+                    }else{
+                        points_gl = new_signals[sig_name].value
                     }
                 } else {
-                    for (var i = OSC.params.orig['OSC_VIEW_START_POS'].value; i < OSC.params.orig['OSC_VIEW_END_POS'].value; i++){
-                        var y = new_signals[sig_name].value[i]
-                        points.push([i, y]);
+                    if (OSC.glMode && !OSC.glMode.isInit){
+                        for (var i = OSC.params.orig['OSC_VIEW_START_POS'].value; i < OSC.params.orig['OSC_VIEW_END_POS'].value; i++){
+                            var y = new_signals[sig_name].value[i]
+                            points.push([i, y]);
+                        }
+                    }else{
+                        points_gl = new_signals[sig_name].value
                     }
                     show_lines = OSC.isPointModeBySignal(sig_name)
                 }
             } else {
-                for (var i = 0; i < new_signals[sig_name].size; i++) {
-                    points.push([i, new_signals[sig_name].value[i]]);
+                if (OSC.glMode && !OSC.glMode.isInit){
+                    for (var i = 0; i < new_signals[sig_name].size; i++) {
+                        points.push([i, new_signals[sig_name].value[i]]);
+                    }
+                }else{
+                    points_gl = new_signals[sig_name].value
                 }
             }
 
@@ -1073,7 +1088,17 @@
                 $('body').addClass('loaded');
             }
 
-            pointArr.push({data: points, points: { show: !show_lines } , lines: { show: show_lines }, channel: sig_name.toUpperCase() });
+            var show_lines_canvas = show_lines
+            var show_lines_opengl = false
+            var show_points_canvas = !show_lines
+            var show_points_opengl = false
+            if (OSC.glMode && OSC.glMode.isInit){
+                show_lines_opengl = show_lines_canvas
+                show_lines_canvas = false
+                show_points_opengl = show_points_canvas
+                show_points_canvas = false
+            }
+            pointArr.push({data: points, data_gl: points_gl, points: { show: show_points_canvas, show_gl :show_points_opengl  } , lines: { show: show_lines_canvas, show_gl:show_lines_opengl }, channel: sig_name.toUpperCase() , color : color });
             colorsArr.push(color);
 
             // By default first signal is selected
@@ -1089,11 +1114,19 @@
             OSC.graphs["ch1"].plot.setColors(colorsArr);
             OSC.graphs["ch1"].plot.resize();
             var canvas = OSC.graphs["ch1"].plot.getCanvas()
-            TA_MODE.setNewSizeWGL(canvas.width,canvas.height)
+            for(let i = 1; i <= OSC.adc_channes; i++){
+                if (OSC.taMode["CH"+i])
+                    OSC.taMode["CH"+i].setNewSizeWGL(canvas.width,canvas.height)
+            }
+            if (OSC.glMode && OSC.glMode.isInit)
+                OSC.glMode.setNewSizeWGL(canvas.width,canvas.height)
             OSC.graphs["ch1"].plot.setupGrid();
             OSC.graphs["ch1"].plot.setData(pointArr);
             OSC.graphs["ch1"].plot.draw();
-            TA_MODE.resetData()
+            for(let i = 1; i <= OSC.adc_channes; i++){
+                if (OSC.taMode["CH"+i])
+                    OSC.taMode["CH"+i].resetData()
+            }
         } else {
             OSC.graphs["ch1"] = {};
             OSC.graphs["ch1"].elem = $('<div class="plot" />').css($('#graph_grid').css(['height', 'width'])).appendTo('#graphs');
@@ -1127,7 +1160,10 @@
                 },
                 hooks: {
                     drawSeries: function(plot, ctx, series) {
-                        TA_MODE.draw(plot, ctx, series)
+                        if (OSC.taMode[series.channel])
+                            OSC.taMode[series.channel].draw(plot, ctx, series)
+                        if (OSC.glMode && OSC.glMode.isInit)
+                            OSC.glMode.draw(ctx, series)
                     }
                 },
                 colors: [
@@ -1139,15 +1175,30 @@
                 OSC.graphs = {};
             }
 
-            TA_MODE.init(OSC.adc_channes)
-            if (TA_MODE.isInit){
-                var canvas = OSC.graphs["ch1"].plot.getCanvas()
-                TA_MODE.setNewSizeWGL(canvas.width,canvas.height)
-            } else{
+            let isInit = true
+            for(let i = 1; i <= OSC.adc_channes; i++){
+                OSC.taMode["CH"+i] = new TAMode()
+                OSC.taMode["CH"+i].init()
+                if (OSC.taMode["CH"+i].isInit){
+                    var canvas = OSC.graphs["ch1"].plot.getCanvas()
+                    OSC.taMode["CH"+i].setNewSizeWGL(canvas.width,canvas.height)
+                } else{
+                    isInit = false
+                }
+            }
+
+            if (!isInit){
                 var nodes = document.getElementsByClassName("trace_block");
                 [...nodes].forEach((element, index, array) => {
                         element.parentNode.removeChild(element);
                     });
+            }
+
+            OSC.glMode = new GLMode()
+            OSC.glMode.init()
+            if (OSC.glMode.isInit){
+                var canvas = OSC.graphs["ch1"].plot.getCanvas()
+                OSC.glMode.setNewSizeWGL(canvas.width,canvas.height)
             }
         }
 

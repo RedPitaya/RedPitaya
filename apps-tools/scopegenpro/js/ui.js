@@ -431,19 +431,23 @@
 
         $(".trace_reset").on('click',function(ev) {
             if (ev.target.id.includes('CH1')){
-                TA_MODE.clearBuffers('CH1')
+                if (OSC.taMode['CH1'])
+                    OSC.taMode['CH1'].clearBuffers()
             }
 
             if (ev.target.id.includes('CH2')){
-                TA_MODE.clearBuffers('CH2')
+                if (OSC.taMode['CH2'])
+                    OSC.taMode['CH2'].clearBuffers()
             }
 
             if (ev.target.id.includes('CH3')){
-                TA_MODE.clearBuffers('CH3')
+                if (OSC.taMode['CH3'])
+                    OSC.taMode['CH3'].clearBuffers()
             }
 
             if (ev.target.id.includes('CH4')){
-                TA_MODE.clearBuffers('CH4')
+                if (OSC.taMode['CH4'])
+                    OSC.taMode['CH4'].clearBuffers()
             }
         });
 

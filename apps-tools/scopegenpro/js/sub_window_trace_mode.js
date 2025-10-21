@@ -115,7 +115,8 @@
 
         $('#SW_TM_RESET').on('click', function() {
             if (SW_TM.activeChannel){
-                TA_MODE.clearBuffers('CH' + SW_TM.activeChannel)
+                if (OSC.taMode['CH' + SW_TM.activeChannel])
+                    OSC.taMode['CH' + SW_TM.activeChannel].clearBuffers()
             }
         });
 
@@ -296,7 +297,8 @@
                 chkBox.setAttribute('data-checked', param[param_name].value == 1);
             }
         }
-        TA_MODE.setInverted("CH"+ch,param[param_name].value)
+        if (OSC.taMode['CH' + SW_TM.activeChannel])
+            OSC.taMode['CH' + SW_TM.activeChannel].setInverted(param[param_name].value)
     }
 
     SW_TM.setTraceColor = function(param,param_name){
@@ -318,8 +320,8 @@
 
             $("#SW_TM_COLOR"+colnum+"_INPUT").val(param[param_name].value);
         }
-
-        TA_MODE.setColor("CH"+ch,colnum,param[param_name].value)
+        if (OSC.taMode['CH' + SW_TM.activeChannel])
+            OSC.taMode['CH' + SW_TM.activeChannel].setColor(colnum,param[param_name].value)
     }
 
 
