@@ -700,6 +700,12 @@
     OSC.param_callbacks["SOUR1_BURST_DELAY"] = OSC.updateGenBurstDelay;
     OSC.param_callbacks["SOUR2_BURST_DELAY"] = OSC.updateGenBurstDelay;
 
+    OSC.param_callbacks["SOUR1_B_INIT_VOLT"] = OSC.updateGenBurstInit;
+    OSC.param_callbacks["SOUR2_B_INIT_VOLT"] = OSC.updateGenBurstInit;
+
+    OSC.param_callbacks["SOUR1_B_LAST_VOLT"] = OSC.updateGenBurstLast;
+    OSC.param_callbacks["SOUR2_B_LAST_VOLT"] = OSC.updateGenBurstLast;
+
     OSC.param_callbacks["SOUR1_TEMP_RUNTIME"] = OSC.updateOverheatBlockHandler;
     OSC.param_callbacks["SOUR2_TEMP_RUNTIME"] = OSC.updateOverheatBlockHandler;
 

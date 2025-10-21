@@ -24,7 +24,7 @@ void synthesis_arb(CFloatBase64Signal* signal, const float* data, uint32_t _size
 }
 
 void synthesis_arb_burst(CFloatBase64Signal* signal, const float* data, uint32_t _size, float freq, float amp, float off, float showOff, int burstCount, int periodBrust, int reps,
-                         float tscale, float timeOffset) {
+                         float tscale, float timeOffset, float initV, float lastV) {
     auto sigSize = (*signal).GetSize();
     if (sigSize == 0)
         return;
@@ -47,7 +47,7 @@ void synthesis_arb_burst(CFloatBase64Signal* signal, const float* data, uint32_t
 
     // Fill beginning with offset + showOff
     for (int i = 0; i < position; i++) {
-        (*signal)[i] = off + showOff;
+        (*signal)[i] = initV + off + showOff;
     }
 
     float current_time = 0;
@@ -71,7 +71,7 @@ void synthesis_arb_burst(CFloatBase64Signal* signal, const float* data, uint32_t
         } else if (current_time <= period_duration) {
             // In pause - fill with last value
             in_burst = false;
-            (*signal)[i] = data[_size - 1] * amp + off + showOff;
+            (*signal)[i] = lastV + off + showOff;
         } else {
             // Period completed - move to next repetition
             rep++;
@@ -80,7 +80,7 @@ void synthesis_arb_burst(CFloatBase64Signal* signal, const float* data, uint32_t
                 i--;  // Reprocess this point in the next burst
                 continue;
             } else {
-                (*signal)[i] = data[_size - 1] * amp + off + showOff;
+                (*signal)[i] = lastV + off + showOff;
             }
         }
 
@@ -100,7 +100,7 @@ void synthesis_sin(CFloatBase64Signal* signal, float freq, float phase, float am
 }
 
 void synthesis_sin_burst(CFloatBase64Signal* signal, float freq, float phase, float amp, float off, float showOff, int burstCount, int period, int reps, float tscale,
-                         float timeOffset) {
+                         float timeOffset, float initV, float lastV) {
     auto sigSize = (*signal).GetSize();
     if (sigSize == 0)
         return;
@@ -136,18 +136,18 @@ void synthesis_sin_burst(CFloatBase64Signal* signal, float freq, float phase, fl
     bool pause = false;
 
     for (int i = 0; i < position; i++) {
-        (*signal)[i] = off + showOff;
+        (*signal)[i] = initV + off + showOff;
     }
 
     for (int i = position; i < sigSize; i++) {
         if (current_time <= burst_duration) {
             (*signal)[i] = sin(current_phase) * amp + off + showOff;
         } else if (current_time <= period_duration) {
-            (*signal)[i] = off + showOff;
+            (*signal)[i] = lastV + off + showOff;
             pause = true;
         } else {
             if (rep >= reps - 1) {
-                (*signal)[i] = off + showOff;
+                (*signal)[i] = lastV + off + showOff;
             } else {
                 rep++;
                 if (pause) {
@@ -179,7 +179,7 @@ void synthesis_triangle(CFloatBase64Signal* signal, float freq, float phase, flo
 }
 
 void synthesis_triangle_burst(CFloatBase64Signal* signal, float freq, float phase, float amp, float off, float showOff, int burstCount, int period, int reps, float tscale,
-                              float timeOffset) {
+                              float timeOffset, float initV, float lastV) {
     auto sigSize = (*signal).GetSize();
     if (sigSize == 0)
         return;
@@ -215,18 +215,18 @@ void synthesis_triangle_burst(CFloatBase64Signal* signal, float freq, float phas
     bool pause = false;
 
     for (int i = 0; i < position; i++) {
-        (*signal)[i] = off + showOff;
+        (*signal)[i] = initV + off + showOff;
     }
 
     for (int i = position; i < sigSize; i++) {
         if (current_time <= burst_duration) {
             (*signal)[i] = (asin(sin(current_phase))) / M_PI * 2 * amp + off + showOff;
         } else if (current_time <= period_duration) {
-            (*signal)[i] = off + showOff;
+            (*signal)[i] = lastV + off + showOff;
             pause = true;
         } else {
             if (rep >= reps - 1) {
-                (*signal)[i] = off + showOff;
+                (*signal)[i] = lastV + off + showOff;
             } else {
                 rep++;
                 if (pause) {
@@ -287,7 +287,7 @@ void synthesis_square(CFloatBase64Signal* signal, float freq, float phase, float
 }
 
 void synthesis_square_burst(CFloatBase64Signal* signal, float freq, float phase, float amp, float off, float showOff, int burstCount, int period, int reps, float tscale,
-                            float riseTime, float fallTime, float timeOffset) {
+                            float riseTime, float fallTime, float timeOffset, float initV, float lastV) {
     auto sigSize = (*signal).GetSize();
     if (sigSize == 0)
         return;
@@ -320,7 +320,7 @@ void synthesis_square_burst(CFloatBase64Signal* signal, float freq, float phase,
 
     // Fill beginning with offset + showOff
     for (int i = 0; i < position; i++) {
-        (*signal)[i] = off + showOff;
+        (*signal)[i] = initV + off + showOff;
     }
 
     float current_time = 0;
@@ -330,7 +330,7 @@ void synthesis_square_burst(CFloatBase64Signal* signal, float freq, float phase,
     for (int i = position; i < sigSize; i++) {
         if (rep >= reps) {
             // All repetitions done - fill with offset
-            (*signal)[i] = off + showOff;
+            (*signal)[i] = lastV + off + showOff;
             continue;
         }
 
@@ -388,7 +388,7 @@ void synthesis_square_burst(CFloatBase64Signal* signal, float freq, float phase,
         } else if (current_time <= period_duration) {
             // In pause - fill with offset
             in_burst = false;
-            (*signal)[i] = off + showOff;
+            (*signal)[i] = lastV + off + showOff;
         } else {
             // Period completed - move to next repetition
             rep++;
@@ -397,7 +397,7 @@ void synthesis_square_burst(CFloatBase64Signal* signal, float freq, float phase,
                 i--;  // Reprocess this point in the next burst
                 continue;
             } else {
-                (*signal)[i] = off + showOff;
+                (*signal)[i] = lastV + off + showOff;
             }
         }
 
@@ -422,7 +422,7 @@ int synthesis_rampUp(CFloatBase64Signal* signal, float freq, float phase, float 
     return RP_OK;
 }
 void synthesis_rampUp_burst(CFloatBase64Signal* signal, float freq, float phase, float amp, float off, float showOff, int burstCount, int period, int reps, float tscale,
-                            float timeOffset) {
+                            float timeOffset, float initV, float lastV) {
     auto sigSize = (*signal).GetSize();
     if (sigSize == 0)
         return;
@@ -445,7 +445,7 @@ void synthesis_rampUp_burst(CFloatBase64Signal* signal, float freq, float phase,
     }
 
     for (int i = 0; i < position; i++) {
-        (*signal)[i] = off + showOff;
+        (*signal)[i] = initV + off + showOff;
     }
 
     float current_time = 0;
@@ -455,7 +455,7 @@ void synthesis_rampUp_burst(CFloatBase64Signal* signal, float freq, float phase,
     for (int i = position; i < sigSize; i++) {
         if (rep >= reps) {
             // All repetitions done - fill with offset
-            (*signal)[i] = off + showOff;
+            (*signal)[i] = lastV + off + showOff;
             continue;
         }
 
@@ -477,7 +477,7 @@ void synthesis_rampUp_burst(CFloatBase64Signal* signal, float freq, float phase,
 
         } else if (current_time <= period_duration) {
             // In pause - fill with offset
-            (*signal)[i] = off + showOff;
+            (*signal)[i] = lastV + off + showOff;
         } else {
             // Period completed - move to next repetition
             global_phase_offset += burst_duration;
@@ -487,7 +487,7 @@ void synthesis_rampUp_burst(CFloatBase64Signal* signal, float freq, float phase,
                 i--;  // Reprocess this point in the next burst
                 continue;
             } else {
-                (*signal)[i] = off + showOff;
+                (*signal)[i] = lastV + off + showOff;
             }
         }
 
@@ -513,7 +513,7 @@ int synthesis_rampDown(CFloatBase64Signal* signal, float freq, float phase, floa
 }
 
 void synthesis_rampDown_burst(CFloatBase64Signal* signal, float freq, float phase, float amp, float off, float showOff, int burstCount, int period, int reps, float tscale,
-                              float timeOffset) {
+                              float timeOffset, float initV, float lastV) {
     auto sigSize = (*signal).GetSize();
     if (sigSize == 0)
         return;
@@ -538,7 +538,7 @@ void synthesis_rampDown_burst(CFloatBase64Signal* signal, float freq, float phas
 
     // Fill beginning with offset + showOff
     for (int i = 0; i < position; i++) {
-        (*signal)[i] = off + showOff;
+        (*signal)[i] = initV + off + showOff;
     }
 
     float current_time = 0;
@@ -548,7 +548,7 @@ void synthesis_rampDown_burst(CFloatBase64Signal* signal, float freq, float phas
     for (int i = position; i < sigSize; i++) {
         if (rep >= reps) {
             // All repetitions done - fill with offset
-            (*signal)[i] = off + showOff;
+            (*signal)[i] = lastV + off + showOff;
             continue;
         }
 
@@ -570,7 +570,7 @@ void synthesis_rampDown_burst(CFloatBase64Signal* signal, float freq, float phas
 
         } else if (current_time <= period_duration) {
             // In pause - fill with offset
-            (*signal)[i] = off + showOff;
+            (*signal)[i] = lastV + off + showOff;
         } else {
             // Period completed - move to next repetition
             global_phase_offset += burst_duration;
@@ -580,7 +580,7 @@ void synthesis_rampDown_burst(CFloatBase64Signal* signal, float freq, float phas
                 i--;  // Reprocess this point in the next burst
                 continue;
             } else {
-                (*signal)[i] = off + showOff;
+                (*signal)[i] = lastV + off + showOff;
             }
         }
 
@@ -599,7 +599,7 @@ int synthesis_DC(CFloatBase64Signal* signal, float freq, float phase, float amp,
 }
 
 void synthesis_DC_burst(CFloatBase64Signal* signal, float freq, float phase, float amp, float off, float showOff, int burstCount, int period, int reps, float tscale,
-                        float timeOffset) {
+                        float timeOffset, float initV, float lastV) {
     auto sigSize = (*signal).GetSize();
     if (sigSize == 0)
         return;
@@ -622,7 +622,7 @@ void synthesis_DC_burst(CFloatBase64Signal* signal, float freq, float phase, flo
 
     // Fill beginning with offset + showOff
     for (int i = 0; i < position; i++) {
-        (*signal)[i] = off + showOff;
+        (*signal)[i] = initV + off + showOff;
     }
 
     float current_time = 0;
@@ -631,7 +631,7 @@ void synthesis_DC_burst(CFloatBase64Signal* signal, float freq, float phase, flo
     for (int i = position; i < sigSize; i++) {
         if (rep >= reps) {
             // All repetitions done - fill with offset
-            (*signal)[i] = off + showOff;
+            (*signal)[i] = lastV + off + showOff;
             continue;
         }
 
@@ -640,7 +640,7 @@ void synthesis_DC_burst(CFloatBase64Signal* signal, float freq, float phase, flo
             (*signal)[i] = amp + off + showOff;
         } else if (current_time <= period_duration) {
             // In pause - fill with offset
-            (*signal)[i] = off + showOff;
+            (*signal)[i] = lastV + off + showOff;
         } else {
             // Period completed - move to next repetition
             rep++;
@@ -649,7 +649,7 @@ void synthesis_DC_burst(CFloatBase64Signal* signal, float freq, float phase, flo
                 i--;  // Reprocess this point in the next burst
                 continue;
             } else {
-                (*signal)[i] = off + showOff;
+                (*signal)[i] = lastV + off + showOff;
             }
         }
 
@@ -668,7 +668,7 @@ int synthesis_DC_NEG(CFloatBase64Signal* signal, float freq, float phase, float 
 }
 
 void synthesis_DC_NEG_burst(CFloatBase64Signal* signal, float freq, float phase, float amp, float off, float showOff, int burstCount, int period, int reps, float tscale,
-                            float timeOffset) {
+                            float timeOffset, float initV, float lastV) {
     auto sigSize = (*signal).GetSize();
     if (sigSize == 0)
         return;
@@ -691,7 +691,7 @@ void synthesis_DC_NEG_burst(CFloatBase64Signal* signal, float freq, float phase,
 
     // Fill beginning with offset + showOff
     for (int i = 0; i < position; i++) {
-        (*signal)[i] = off + showOff;
+        (*signal)[i] = initV + off + showOff;
     }
 
     float current_time = 0;
@@ -700,7 +700,7 @@ void synthesis_DC_NEG_burst(CFloatBase64Signal* signal, float freq, float phase,
     for (int i = position; i < sigSize; i++) {
         if (rep >= reps) {
             // All repetitions done - fill with offset
-            (*signal)[i] = off + showOff;
+            (*signal)[i] = lastV + off + showOff;
             continue;
         }
 
@@ -709,7 +709,7 @@ void synthesis_DC_NEG_burst(CFloatBase64Signal* signal, float freq, float phase,
             (*signal)[i] = -1.0 * amp + off + showOff;
         } else if (current_time <= period_duration) {
             // In pause - fill with offset
-            (*signal)[i] = off + showOff;
+            (*signal)[i] = lastV + off + showOff;
         } else {
             // Period completed - move to next repetition
             rep++;
@@ -718,7 +718,7 @@ void synthesis_DC_NEG_burst(CFloatBase64Signal* signal, float freq, float phase,
                 i--;  // Reprocess this point in the next burst
                 continue;
             } else {
-                (*signal)[i] = off + showOff;
+                (*signal)[i] = lastV + off + showOff;
             }
         }
 
@@ -748,7 +748,7 @@ int synthesis_PWM(CFloatBase64Signal* signal, float freq, float phase, float amp
 }
 
 void synthesis_PWM_burst(CFloatBase64Signal* signal, float freq, float phase, float amp, float off, float showOff, float ratio, int burstCount, int burst_period, int reps,
-                         float tscale, float timeOffset) {
+                         float tscale, float timeOffset, float initV, float lastV) {
     auto sigSize = (*signal).GetSize();
     if (sigSize == 0)
         return;
@@ -783,7 +783,7 @@ void synthesis_PWM_burst(CFloatBase64Signal* signal, float freq, float phase, fl
 
     // Fill beginning
     for (int i = 0; i < position; i++) {
-        (*signal)[i] = pause_value;
+        (*signal)[i] = initV + pause_value;
     }
 
     float current_time = 0;
@@ -792,7 +792,7 @@ void synthesis_PWM_burst(CFloatBase64Signal* signal, float freq, float phase, fl
 
     for (int i = position; i < sigSize; i++) {
         if (rep >= reps) {
-            (*signal)[i] = pause_value;
+            (*signal)[i] = lastV + pause_value;
         } else if (current_time < burst_duration) {
             float absolute_point = current_time / point_time;  // Absolute point from burst start
             float point_in_period = std::fmod(absolute_point + phase_points + accumulated_phase, pwm_period_points);
@@ -810,7 +810,7 @@ void synthesis_PWM_burst(CFloatBase64Signal* signal, float freq, float phase, fl
             }
 
         } else if (current_time < period_duration) {
-            (*signal)[i] = pause_value;
+            (*signal)[i] = lastV + pause_value;
         } else {
             accumulated_phase = std::fmod((burst_duration + phase / (2 * M_PI * freq)) / point_time, pwm_period_points);
             rep++;
