@@ -173,6 +173,11 @@ const char* rp_app_desc(void) {
 int rp_app_init(void) {
     std::lock_guard<std::mutex> lock(g_mtx);
     fprintf(stderr, "Loading calibraton app version %s-%s.\n", VERSION_STR, REVISION_STR);
+#ifdef ZIP_DISABLED
+    CDataManager::GetInstance()->SetEnableParamsGZip(false);
+    CDataManager::GetInstance()->SetEnableSignalsGZip(false);
+    CDataManager::GetInstance()->SetEnableBinarySignalsGZip(false);
+#endif
     rp_WC_Init();
     CDataManager::GetInstance()->SetParamInterval(100);
     rp_Init();
@@ -202,21 +207,6 @@ int rp_app_exit(void) {
     return 0;
 }
 
-//Set parameters
-int rp_set_params(rp_app_params_t*, int) {
-    return 0;
-}
-
-//Get parameters
-int rp_get_params(rp_app_params_t**) {
-    return 0;
-}
-
-//Get signals
-int rp_get_signals(float***, int*, int*) {
-    return 0;
-}
-
 //Update signals
 void UpdateSignals(void) {
     static uint64_t m_old_index = 0;
@@ -230,7 +220,8 @@ void UpdateSignals(void) {
                     waveSignal[i] = y.wave[i];
                 m_old_index = y.index;
             } else {
-                waveSignal.Resize(0);
+                if (waveSignal.GetSize() != 0)
+                    waveSignal.Resize(0);
             }
         }
     } catch (std::exception& e) {

@@ -100,18 +100,6 @@ void set_measure_mode(MEASURE_MODE mode) {
     }
 }
 
-int rp_set_params(rp_app_params_t*, int) {
-    return 0;
-}
-
-int rp_get_params(rp_app_params_t**) {
-    return 0;
-}
-
-int rp_get_signals(float***, int*, int*) {
-    return 0;
-}
-
 const char* rp_app_desc(void) {
     return (const char*)"Red Pitaya Logic analizer application.\n";
 }
@@ -203,14 +191,21 @@ int rp_app_init(void) {
     decoder_anno_spi.SendValue(annoToJSON(g_la_controller->getAnnotationList(LA_DECODER_SPI)));
     decoder_anno_i2c.SendValue(annoToJSON(g_la_controller->getAnnotationList(LA_DECODER_I2C)));
 
+#ifdef ZIP_DISABLED
+    CDataManager::GetInstance()->SetEnableParamsGZip(false);
+    CDataManager::GetInstance()->SetEnableSignalsGZip(false);
+    CDataManager::GetInstance()->SetEnableBinarySignalsGZip(false);
+#endif
+    CDataManager::GetInstance()->SetParamInterval(DEBUG_PARAM_PERIOD);
+    CDataManager::GetInstance()->SetSignalInterval(DEBUG_SIGNAL_PERIOD);
+
     rp_WC_Init();
     rp_WS_Init();
     rp_WS_SetInterval(RP_WS_CPU, 1000);
     rp_WS_SetInterval(RP_WS_RAM, 1000);
     rp_WS_SetMode((rp_system_mode_t)(RP_WS_CPU | RP_WS_RAM | RP_WS_TEMPERATURE));
     rp_WS_UpdateParameters(true);
-    CDataManager::GetInstance()->SetParamInterval(DEBUG_PARAM_PERIOD);
-    CDataManager::GetInstance()->SetSignalInterval(DEBUG_SIGNAL_PERIOD);
+
     updateParametersByConfig();
     uint64_t preSamples = 0;
     FILE* f = fopen(FILE_NAME_TRIGGER, "rb");

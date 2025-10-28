@@ -710,6 +710,10 @@ int rpApp_SpecRunning();
 
 int rpApp_SpecReset();
 
+int rpApp_SpecSetEnable(rp_channel_t channel, bool state);
+
+int rpApp_SpecGetEnable(rp_channel_t channel, bool* state);
+
 int rpApp_SpecGetViewData(float** signals, size_t size);
 
 int rpApp_SpecGetViewSize(size_t* size);

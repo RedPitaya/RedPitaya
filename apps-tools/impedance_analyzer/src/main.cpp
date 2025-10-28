@@ -95,13 +95,23 @@ CFloatParameter cur_y1("IA_CURSOR_Y1", CBaseParameter::RW, 0.25, 0, 0, 1, CONFIG
 CFloatParameter cur_y2("IA_CURSOR_Y2", CBaseParameter::RW, 0.75, 0, 0, 1, CONFIG_VAR);
 
 //Singals
-CFloatSignal ia_signal[IA_P_P + 1] = {
-    {"IA_SIGNAL_FREQ", CH_SIGNAL_SIZE_DEFAULT, 0.0f}, {"IA_SIGNAL_Z", CH_SIGNAL_SIZE_DEFAULT, 0.0f},         {"IA_SIGNAL_PHASE", CH_SIGNAL_SIZE_DEFAULT, 0.0f},
-    {"IA_SIGNAL_Y", CH_SIGNAL_SIZE_DEFAULT, 0.0f},    {"IA_SIGNAL_NEG_PHASE", CH_SIGNAL_SIZE_DEFAULT, 0.0f}, {"IA_SIGNAL_R_s", CH_SIGNAL_SIZE_DEFAULT, 0.0f},
-    {"IA_SIGNAL_R_p", CH_SIGNAL_SIZE_DEFAULT, 0.0f},  {"IA_SIGNAL_X_s", CH_SIGNAL_SIZE_DEFAULT, 0.0f},       {"IA_SIGNAL_G_p", CH_SIGNAL_SIZE_DEFAULT, 0.0f},
-    {"IA_SIGNAL_B_p", CH_SIGNAL_SIZE_DEFAULT, 0.0f},  {"IA_SIGNAL_C_s", CH_SIGNAL_SIZE_DEFAULT, 0.0f},       {"IA_SIGNAL_C_p", CH_SIGNAL_SIZE_DEFAULT, 0.0f},
-    {"IA_SIGNAL_L_s", CH_SIGNAL_SIZE_DEFAULT, 0.0f},  {"IA_SIGNAL_L_p", CH_SIGNAL_SIZE_DEFAULT, 0.0f},       {"IA_SIGNAL_Q", CH_SIGNAL_SIZE_DEFAULT, 0.0f},
-    {"IA_SIGNAL_D", CH_SIGNAL_SIZE_DEFAULT, 0.0f},    {"IA_SIGNAL_P_p", CH_SIGNAL_SIZE_DEFAULT, 0.0f}};
+CFloatSignal ia_signal[IA_P_P + 1] = {{"IA_SIGNAL_FREQ", CH_SIGNAL_SIZE_DEFAULT, 0.0f},
+                                      {"IA_SIGNAL_Z", CH_SIGNAL_SIZE_DEFAULT, 0.0f},
+                                      {"IA_SIGNAL_PHASE", CH_SIGNAL_SIZE_DEFAULT, 0.0f},
+                                      {"IA_SIGNAL_Y", CH_SIGNAL_SIZE_DEFAULT, 0.0f},
+                                      {"IA_SIGNAL_NEG_PHASE", CH_SIGNAL_SIZE_DEFAULT, 0.0f},
+                                      {"IA_SIGNAL_R_s", CH_SIGNAL_SIZE_DEFAULT, 0.0f},
+                                      {"IA_SIGNAL_R_p", CH_SIGNAL_SIZE_DEFAULT, 0.0f},
+                                      {"IA_SIGNAL_X_s", CH_SIGNAL_SIZE_DEFAULT, 0.0f},
+                                      {"IA_SIGNAL_G_p", CH_SIGNAL_SIZE_DEFAULT, 0.0f},
+                                      {"IA_SIGNAL_B_p", CH_SIGNAL_SIZE_DEFAULT, 0.0f},
+                                      {"IA_SIGNAL_C_s", CH_SIGNAL_SIZE_DEFAULT, 0.0f},
+                                      {"IA_SIGNAL_C_p", CH_SIGNAL_SIZE_DEFAULT, 0.0f},
+                                      {"IA_SIGNAL_L_s", CH_SIGNAL_SIZE_DEFAULT, 0.0f},
+                                      {"IA_SIGNAL_L_p", CH_SIGNAL_SIZE_DEFAULT, 0.0f},
+                                      {"IA_SIGNAL_Q", CH_SIGNAL_SIZE_DEFAULT, 0.0f},
+                                      {"IA_SIGNAL_D", CH_SIGNAL_SIZE_DEFAULT, 0.0f},
+                                      {"IA_SIGNAL_P_p", CH_SIGNAL_SIZE_DEFAULT, 0.0f}};
 
 std::vector<float> signals_array[IA_P_P + 1];
 
@@ -263,6 +273,11 @@ const char* rp_app_desc(void) {
 //Application init
 int rp_app_init(void) {
     fprintf(stderr, "Loading impedance analyser version %s-%s.\n", VERSION_STR, REVISION_STR);
+#ifdef ZIP_DISABLED
+    CDataManager::GetInstance()->SetEnableParamsGZip(false);
+    CDataManager::GetInstance()->SetEnableSignalsGZip(false);
+    CDataManager::GetInstance()->SetEnableBinarySignalsGZip(false);
+#endif
     CDataManager::GetInstance()->SetParamInterval(100);
     CDataManager::GetInstance()->SetSignalInterval(100);
 
@@ -299,21 +314,6 @@ int rp_app_exit(void) {
     }
     lcrApp_LcrRelease();
     fprintf(stderr, "Unloading bode analyser version %s-%s.\n", VERSION_STR, REVISION_STR);
-    return 0;
-}
-
-//Set parameters
-int rp_set_params(rp_app_params_t*, int) {
-    return 0;
-}
-
-//Get parameters
-int rp_get_params(rp_app_params_t**) {
-    return 0;
-}
-
-//Get signals
-int rp_get_signals(float***, int*, int*) {
     return 0;
 }
 

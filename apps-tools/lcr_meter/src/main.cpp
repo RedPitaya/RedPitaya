@@ -118,17 +118,18 @@ int rp_app_init(void) {
     fprintf(stderr, "Loading lcr meter version %s-%s.\n", VERSION_STR, REVISION_STR);
 
     setHomeSettingsPath("/.config/redpitaya/apps/lcr_meter_" + std::to_string((int)getModel()) + "");
-    CDataManager::GetInstance()->SetParamInterval(20);
-
+#ifdef ZIP_DISABLED
+    CDataManager::GetInstance()->SetEnableParamsGZip(false);
+    CDataManager::GetInstance()->SetEnableSignalsGZip(false);
+    CDataManager::GetInstance()->SetEnableBinarySignalsGZip(false);
+#endif
+    CDataManager::GetInstance()->SetParamInterval(50);
     rp_WC_Init();
-
     lcrApp_lcrInit();
-
     if (rp_HPGetFastADCIsAC_DCOrDefault()) {
         rp_AcqSetAC_DC(RP_CH_1, RP_DC);
         rp_AcqSetAC_DC(RP_CH_2, RP_DC);
     }
-
     lcrApp_LcrRun();
     updateParametersByConfig();
     return 0;
@@ -139,20 +140,6 @@ int rp_app_exit(void) {
     fprintf(stderr, "Unloading lcr meter version %s-%s.\n", VERSION_STR, REVISION_STR);
     return 0;
 }
-
-int rp_set_params(rp_app_params_t* p, int len) {
-    return 0;
-}
-
-int rp_get_params(rp_app_params_t** p) {
-    return 0;
-}
-
-int rp_get_signals(float*** s, int* sig_num, int* sig_len) {
-    return 0;
-}
-
-void UpdateSignals(void) {}
 
 // Send values to frontend
 void UpdateParams(void) {
@@ -420,7 +407,3 @@ void OnNewParams(void) {
         g_config_changed = isChanged();
     updateFromFront(false);
 }
-
-void OnNewSignals(void) {}
-
-void PostUpdateSignals(void) {}

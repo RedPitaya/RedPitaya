@@ -385,6 +385,14 @@ int rpApp_SpecReset() {
     return spec_reset();
 }
 
+int rpApp_SpecSetEnable(rp_channel_t channel, bool state) {
+    return spec_SetEnable(channel, state);
+}
+
+int rpApp_SpecGetEnable(rp_channel_t channel, bool* state) {
+    return spec_GetEnable(channel, state);
+}
+
 int rpApp_SpecGetViewData(float** signals, size_t size) {
     return spec_getViewData(signals, size);
 }

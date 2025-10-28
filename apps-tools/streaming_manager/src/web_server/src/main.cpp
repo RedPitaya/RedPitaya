@@ -266,9 +266,11 @@ auto rp_app_init(void) -> int {
                 }
             }
             TRACE("ss_ip_addr %s", ss_ip_addr.Value().c_str());
-            g_serverNetConfig = std::make_shared<ServerNetConfigManager>(
-                config_file, g_isMaster != uio_lib::BoardMode::SLAVE ? broadcast_lib::EMode::AB_SERVER_MASTER : broadcast_lib::EMode::AB_SERVER_SLAVE, ss_ip_addr.Value(),
-                NET_CONFIG_PORT);
+            g_serverNetConfig =
+                std::make_shared<ServerNetConfigManager>(config_file,
+                                                         g_isMaster != uio_lib::BoardMode::SLAVE ? broadcast_lib::EMode::AB_SERVER_MASTER : broadcast_lib::EMode::AB_SERVER_SLAVE,
+                                                         ss_ip_addr.Value(),
+                                                         NET_CONFIG_PORT);
             g_serverNetConfig->getNewSettingsNofiy.connect([]() { updateUI(); });
 
             g_serverNetConfig->startStreamingNofiy.connect([]() { startServer(false); });
@@ -330,24 +332,6 @@ auto rp_app_exit(void) -> int {
     aprintf(stderr, "Unloading stream server version %s-%s.\n", VERSION_STR, REVISION_STR);
     return 0;
 }
-
-//Set parameters
-auto rp_set_params(rp_app_params_t*, int) -> int {
-    return 0;
-}
-
-//Get parameters
-auto rp_get_params(rp_app_params_t**) -> int {
-    return 0;
-}
-
-//Get signals
-auto rp_get_signals(float***, int*, int*) -> int {
-    return 0;
-}
-
-//Update signals
-auto UpdateSignals(void) -> void {}
 
 auto saveConfigInFile() -> void {
     if (!g_serverNetConfig->getSettingsRef().writeToFile(config_file)) {
@@ -655,15 +639,9 @@ void UpdateParams(void) {
     }
 }
 
-void PostUpdateSignals() {}
-
 void OnNewParams(void) {
     //Update parameters
     UpdateParams();
-}
-
-void OnNewSignals(void) {
-    UpdateSignals();
 }
 
 bool startServer(bool testMode) {
@@ -829,7 +807,8 @@ bool startServer(bool testMode) {
         for (int i = 0; i < max_channels; i++) {
             if (settings.getADCChannels(i + 1).value == CStreamSettings::State::ON) {
                 g_s_buffer->addChannel(
-                    (DataLib::EDataBuffersPackChannel)i, bits,
+                    (DataLib::EDataBuffersPackChannel)i,
+                    bits,
                     settings.getADCAttenuator(i + 1).value == CStreamSettings::Attenuator::A_1_20 ? DataLib::CDataBufferDMA::ATT_1_20 : DataLib::CDataBufferDMA::ATT_1_1);
                 channelsActive++;
             }
@@ -1070,12 +1049,19 @@ auto startDACServer(__attribute__((unused)) bool testMode, uint8_t activeChannel
             auto dacRepeatMode = settings.getDACRepeat();
             auto dacRepeatCount = settings.getDACRepeatCount();
             if (format.value == CStreamSettings::DataFormat::WAV) {
-                g_dac_manger = dac_streaming_lib::CDACStreamingManager::Create(dac_streaming_lib::CDACStreamingManager::WAV_TYPE, CStreamSettings::getDACDirPath() + "/" + filePath,
-                                                                               dacRepeatMode, dacRepeatCount, settings.getMemoryBlockSize(), false);
+                g_dac_manger = dac_streaming_lib::CDACStreamingManager::Create(dac_streaming_lib::CDACStreamingManager::WAV_TYPE,
+                                                                               CStreamSettings::getDACDirPath() + "/" + filePath,
+                                                                               dacRepeatMode,
+                                                                               dacRepeatCount,
+                                                                               settings.getMemoryBlockSize(),
+                                                                               false);
             } else if (format.value == CStreamSettings::DataFormat::TDMS) {
-                g_dac_manger =
-                    dac_streaming_lib::CDACStreamingManager::Create(dac_streaming_lib::CDACStreamingManager::TDMS_TYPE, CStreamSettings::getDACDirPath() + "/" + filePath,
-                                                                    dacRepeatMode, dacRepeatCount, settings.getMemoryBlockSize(), false);
+                g_dac_manger = dac_streaming_lib::CDACStreamingManager::Create(dac_streaming_lib::CDACStreamingManager::TDMS_TYPE,
+                                                                               CStreamSettings::getDACDirPath() + "/" + filePath,
+                                                                               dacRepeatMode,
+                                                                               dacRepeatCount,
+                                                                               settings.getMemoryBlockSize(),
+                                                                               false);
             } else {
                 stopDACNonBlocking(dac_streaming_lib::CDACStreamingManager::NR_BROKEN);
                 return false;

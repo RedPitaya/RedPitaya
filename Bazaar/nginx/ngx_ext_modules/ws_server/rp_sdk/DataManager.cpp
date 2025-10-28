@@ -1,5 +1,6 @@
 #include "DataManager.h"
 #include <stdio.h>
+#include <sys/stat.h>
 #include <cstring>
 #include <map>
 #include "CustomParameters.h"
@@ -10,14 +11,72 @@
 CStringParameter InCommandParam("in_command", CBaseParameter::WO, "", 1);
 CStringParameter OutCommandParam("out_command", CBaseParameter::RO, "", 1);
 
-int dbg_printf(const char* format, ...) {
-    static FILE* log = fopen("/var/log/redpitaya_nginx/rp_sdk.log", "wt");
-    if (log) {
-        va_list va;
-        va_start(va, format);
-        vfprintf(log, format, va);
-        va_end(va);
-        fflush(log);
+struct BinarySignal {
+    std::string name = {};
+    CBaseParameter::BinarySignalType type = CBaseParameter::UNDEFINED;
+    size_t byteSize = 0;
+    const void* data_vector = NULL;
+};
+
+int CDataManager::dbg_printf(const char* format, ...) {
+
+    // Creates the directory and subdirectories if needed.
+    auto createDirectory = [](const std::string& _path) -> bool {
+        auto isDirectory = [](const std::string& _path) -> bool {
+            struct stat st;
+
+            if (stat(_path.c_str(), &st) == 0) {
+                return st.st_mode & S_IFDIR;
+            }
+
+            return false;
+        };
+
+        size_t pos = 0;
+
+        for (;;) {
+            pos = _path.find('/', pos);
+
+            if (pos == std::string::npos) {
+                // Create the last directory
+                if (!isDirectory(_path.c_str())) {
+                    int mkdir_err = mkdir(_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+                    return (mkdir_err == 0) || (mkdir_err == EEXIST);
+                } else {
+                    return true;
+                }
+            } else {
+                ++pos;
+                std::string sub_path = _path.substr(0, pos);
+
+                // Create subdirectory
+                if (!isDirectory(sub_path.c_str())) {
+                    int mkdir_err = mkdir(sub_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+
+                    if (!((mkdir_err == 0) || (mkdir_err == EEXIST))) {
+                        return false;
+                    }
+                }
+
+                if (pos >= _path.size()) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    };
+
+    if (m_logEnable) {
+        createDirectory("/var/log/redpitaya_nginx");
+        static FILE* log = fopen("/var/log/redpitaya_nginx/rp_sdk.log", "wt");
+        if (log) {
+            va_list va;
+            va_start(va, format);
+            vfprintf(log, format, va);
+            va_end(va);
+            fflush(log);
+        }
     }
 
     return 0;
@@ -29,7 +88,18 @@ inline bool CDataManager::NeedSend(const CBaseParameter& param) const {
            (mode == CBaseParameter::AccessMode::RWSA || param.NeedSend());
 }
 
-CDataManager::CDataManager() : m_params(), m_signals(), m_param_interval(20), m_signal_interval(20), m_send_all_params(true), m_send_all_signals(true) {}
+CDataManager::CDataManager()
+    : m_params(),
+      m_signals(),
+      m_param_interval(20),
+      m_signal_interval(20),
+      m_send_all_params(true),
+      m_send_all_signals(true),
+      m_send_all_bin_signals(true),
+      m_isGzip(true),
+      m_isSignalsGzip(true),
+      m_isBinarySignalsGzip(false),
+      m_logEnable(false) {}
 
 CDataManager* CDataManager::GetInstance() {
     static CDataManager instance;
@@ -81,44 +151,98 @@ void CDataManager::UpdateAllSignals() {
 }
 
 std::string CDataManager::GetParamsJson() {
-    UpdateParams();
-    JSONNode params(JSON_NODE);
-    params.set_name("parameters");
-    for (size_t i = 0; i < m_params.size(); i++) {
-        if (NeedSend(*m_params[i])) {
-            JSONNode n(JSON_NODE);
-            n = m_params[i]->GetJSONObject();
-            m_params[i]->NeedSend(true);  // no need
-            params.push_back(n);
+    std::string data = "";
+    if (m_params.size()) {
+        bool needSend = false;
+        UpdateParams();
+        JSONNode params(JSON_NODE);
+        params.set_name("parameters");
+        for (size_t i = 0; i < m_params.size(); i++) {
+            if (NeedSend(*m_params[i])) {
+                JSONNode n(JSON_NODE);
+                n = m_params[i]->GetJSONObject();
+                m_params[i]->NeedSend(true);  // no need
+                params.push_back(n);
+                needSend = true;
+            }
         }
-    }
 
-    JSONNode data_node(JSON_NODE);
-    data_node.set_name("data");
-    data_node.push_back(params);
-    m_send_all_params = false;
-    return data_node.write();
+        JSONNode data_node(JSON_NODE);
+        data_node.set_name("data");
+        data_node.push_back(params);
+        m_send_all_params = false;
+        if (needSend)
+            return data_node.write();
+    }
+    return "";
 }
 
 std::string CDataManager::GetSignalsJson() {
-    UpdateSignals();
-    JSONNode signals(JSON_NODE);
-    signals.set_name("signals");
-    for (size_t i = 0; i < m_signals.size(); i++) {
-        if ((m_signals[i]->IsValueChanged()) || m_send_all_signals) {
-            JSONNode n(JSON_NODE);
-            n = m_signals[i]->GetJSONObject();
-            signals.push_back(n);
-            m_signals[i]->Update();
+    auto f = [](const auto& signal) {
+        return signal->GetParameterType() == CBaseParameter::SIGNAL;
+    };
+    if (m_signals.size() && std::any_of(m_signals.begin(), m_signals.end(), f)) {
+        bool needSend = false;
+        UpdateSignals();
+        std::string data = "";
+        JSONNode signals(JSON_NODE);
+        signals.set_name("signals");
+        for (size_t i = 0; i < m_signals.size(); i++) {
+            if (m_signals[i]->GetParameterType() == CBaseParameter::SIGNAL) {
+                if ((m_signals[i]->IsValueChanged()) || m_send_all_signals) {
+                    JSONNode n(JSON_NODE);
+                    n = m_signals[i]->GetJSONObject();
+                    signals.push_back(n);
+                    m_signals[i]->Update();
+                    needSend = true;
+                }
+            }
         }
-    }
 
-    JSONNode data_node(JSON_NODE);
-    data_node.set_name("data");
-    data_node.push_back(signals);
-    m_send_all_signals = false;
-    PostUpdateSignals();
-    return data_node.write();
+        JSONNode data_node(JSON_NODE);
+        data_node.set_name("data");
+        data_node.push_back(signals);
+        data = data_node.write();
+
+        m_send_all_signals = false;
+        PostUpdateSignals();
+        if (needSend)
+            return data;
+    }
+    return "";
+}
+
+const void* CDataManager::GetBinarySignals() {
+    auto f = [](const auto& signal) {
+        return signal->GetParameterType() == CBaseParameter::BIN_SIGNAL;
+    };
+    if (m_signals.size() && std::any_of(m_signals.begin(), m_signals.end(), f)) {
+        bool needSend = false;
+        UpdateBinarySignals();
+        static std::vector<BinarySignal> buffers;
+        buffers.clear();
+
+        for (size_t i = 0; i < m_signals.size(); i++) {
+            if (m_signals[i]->GetParameterType() == CBaseParameter::BIN_SIGNAL) {
+                if ((m_signals[i]->IsValueChanged()) || m_send_all_bin_signals) {
+                    BinarySignal bs;
+                    bs.name = m_signals[i]->GetName();
+                    bs.type = m_signals[i]->GetDataType();
+                    bs.byteSize = m_signals[i]->GetSizeInBytes();
+                    bs.data_vector = m_signals[i]->GetDataVoidPtr();
+                    buffers.push_back(bs);
+                    m_signals[i]->Update();
+                    needSend = true;
+                }
+            }
+        }
+
+        m_send_all_bin_signals = false;
+        PostUpdateBinarySignals();
+        if (needSend)
+            return &buffers;
+    }
+    return NULL;
 }
 
 void CDataManager::OnNewParams(std::string _params) {
@@ -145,6 +269,19 @@ void CDataManager::OnNewParams(std::string _params) {
     if (InCommandParam.IsNewValue()) {
         m_send_all_params |= InCommandParam.NewValue() == "send_all_params";
         m_send_all_signals |= InCommandParam.NewValue() == "send_all_signals";
+        m_send_all_bin_signals |= InCommandParam.NewValue() == "send_all_bin_signals";
+        if (InCommandParam.NewValue() == "enable_zip_params")
+            SetEnableParamsGZip(true);
+        if (InCommandParam.NewValue() == "disable_zip_params")
+            SetEnableParamsGZip(false);
+        if (InCommandParam.NewValue() == "enable_zip_signals")
+            SetEnableSignalsGZip(true);
+        if (InCommandParam.NewValue() == "disable_zip_signals")
+            SetEnableSignalsGZip(false);
+        if (InCommandParam.NewValue() == "enable_zip_bin_signals")
+            SetEnableBinarySignalsGZip(true);
+        if (InCommandParam.NewValue() == "disable_zip_bin_signals")
+            SetEnableBinarySignalsGZip(false);
     }
 
     ::OnNewParams();
@@ -191,6 +328,30 @@ void CDataManager::SetSignalInterval(int _interval) {
     m_signal_interval = _interval;
 }
 
+void CDataManager::SetEnableParamsGZip(bool _state) {
+    m_isGzip = _state;
+}
+
+bool CDataManager::IsParamsGZip() {
+    return m_isGzip;
+}
+
+void CDataManager::SetEnableSignalsGZip(bool _state) {
+    m_isSignalsGzip = _state;
+}
+
+bool CDataManager::IsSignalsGZip() {
+    return m_isSignalsGzip;
+}
+
+void CDataManager::SetEnableBinarySignalsGZip(bool _state) {
+    m_isBinarySignalsGzip = _state;
+}
+
+bool CDataManager::IsBinarySignalsGZip() {
+    return m_isBinarySignalsGzip;
+}
+
 void CDataManager::SendAllParams() {
     m_send_all_params = true;
 }
@@ -199,23 +360,17 @@ void CDataManager::SendAllSignals() {
     m_send_all_signals = true;
 }
 
-// DEPRECATED
-std::map<std::string, bool> CDataManager::GetFeatures(const std::string& app_id) {
-    std::map<std::string, bool> res;
-    res["app"] = true;
-    res["pro"] = true;
-    res["stem14"] = true;
-    return res;
+void CDataManager::SendAllBinSignals() {
+    m_send_all_bin_signals = true;
 }
 
 extern "C" int ws_set_params(const char* _params) {
     CDataManager* man = CDataManager::GetInstance();
     if (man) {
         man->OnNewParams(_params);
-        dbg_printf("Set params\n");
+        man->dbg_printf("Set params\n");
         return 1;
     }
-    dbg_printf("Params were not set\n");
     return 0;
 }
 
@@ -233,11 +388,9 @@ extern "C" int ws_set_signals(const char* _signals) {
     CDataManager* man = CDataManager::GetInstance();
     if (man) {
         man->OnNewSignals(_signals);
-        dbg_printf("Set signals\n");
+        man->dbg_printf("Set signals\n");
         return 1;
     }
-
-    dbg_printf("Signals were not set\n");
     return 0;
 }
 
@@ -251,17 +404,24 @@ extern "C" const char* ws_get_signals(void) {
     return res.c_str();
 }
 
+extern "C" const void* ws_get_bin_signals(void) {
+    CDataManager* man = CDataManager::GetInstance();
+    if (man) {
+        return man->GetBinarySignals();
+    }
+    return NULL;
+}
+
 extern "C" void ws_set_params_interval(int _interval) {
     CDataManager* man = CDataManager::GetInstance();
     if (man) {
         man->SetParamInterval(_interval);
-        dbg_printf("Set params send interval\n");
+        man->dbg_printf("Set params send interval\n");
     }
 }
 
 extern "C" int ws_get_params_interval(void) {
     CDataManager* man = CDataManager::GetInstance();
-
     if (man) {
         int res = man->GetParamInterval();
         return res;
@@ -273,7 +433,7 @@ extern "C" void ws_set_signals_interval(int _interval) {
     CDataManager* man = CDataManager::GetInstance();
     if (man) {
         man->SetSignalInterval(_interval);
-        dbg_printf("Set signals send interval\n");
+        man->dbg_printf("Set signals send interval\n");
     }
 }
 
@@ -286,9 +446,33 @@ extern "C" int ws_get_signals_interval(void) {
     return 0;
 }
 
-extern "C" void ws_gzip(const char* _in, void* _out, size_t* _size) {
-    std::string out;
-    Gziping(_in, out);
-    memcpy(_out, out.data(), out.size());
-    *_size = out.size();
+extern "C" int ws_gzip(int type, const void* _in, void* _out, size_t* _size) {
+    CDataManager* man = CDataManager::GetInstance();
+    auto buff = static_cast<std::vector<uint8_t>*>(_out);
+    if (man) {
+        std::string out;
+        bool isZip = false;
+        if (type == 0) {
+            isZip = man->IsParamsGZip();
+        }
+        if (type == 1) {
+            isZip = man->IsSignalsGZip();
+        }
+        if (type == 2) {
+            isZip = man->IsBinarySignalsGZip();
+        }
+        if (isZip) {
+            if (type == 0 || type == 1)
+                Gziping((const char*)_in, *buff);
+            if (type == 2) {
+                GzipingBin((const byte*)_in, *_size, *buff);
+            }
+            *_size = buff->size();
+            return 0;
+
+        } else {
+            return 1;
+        }
+    }
+    return 1;
 }

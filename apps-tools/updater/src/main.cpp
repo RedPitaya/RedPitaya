@@ -26,7 +26,11 @@ const char* rp_app_desc(void) {
 
 int rp_app_init(void) {
     fprintf(stderr, "Loading updater %s-%s.\n", VERSION_STR, REVISION_STR);
-    // Need for reset fpga by default
+#ifdef ZIP_DISABLED
+    CDataManager::GetInstance()->SetEnableParamsGZip(false);
+    CDataManager::GetInstance()->SetEnableSignalsGZip(false);
+    CDataManager::GetInstance()->SetEnableBinarySignalsGZip(false);
+#endif
     CDataManager::GetInstance()->SetParamInterval(1000);
     CDataManager::GetInstance()->SetSignalInterval(1000);
 
@@ -68,23 +72,7 @@ int rp_app_exit(void) {
     return 0;
 }
 
-int rp_set_params(rp_app_params_t*, int) {
-    return 0;
-}
-
-int rp_get_params(rp_app_params_t**) {
-    return 0;
-}
-
-int rp_get_signals(float***, int*, int*) {
-    return 0;
-}
-
 void UpdateParams(void) {}
-
-void PostUpdateSignals(void) {}
-
-void UpdateSignals(void) {}
 
 void OnNewParams(void) {}
 

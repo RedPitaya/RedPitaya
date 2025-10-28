@@ -30,11 +30,8 @@
 const char *c_rp_app_init_str     = "rp_app_init";
 const char *c_rp_app_exit_str     = "rp_app_exit";
 const char *c_rp_app_desc_str     = "rp_app_desc";
-const char *c_rp_params_desc_str  = "rp_params_desc";
-const char *c_rp_signals_desc_str = "rp_signals_desc";
 const char *c_rp_set_params_str   = "rp_set_params";
 const char *c_rp_get_params_str   = "rp_get_params";
-const char *c_rp_set_signals_str  = "rp_set_signals";
 const char *c_rp_get_signals_str  = "rp_get_signals";
 
 //start web socket function str
@@ -47,6 +44,7 @@ const char *c_ws_set_params_str   = "ws_set_params";
 const char *c_ws_get_params_str   = "ws_get_params";
 const char *c_ws_set_signals_str  = "ws_set_signals";
 const char *c_ws_get_signals_str  = "ws_get_signals";
+const char *c_ws_get_bin_signals_str  = "ws_get_bin_signals";
 const char* c_ws_gzip_str = "ws_gzip";
 // end web socket function str
 
@@ -389,17 +387,10 @@ int rp_bazaar_app_load_module(const char *app_file, rp_bazaar_app_t *app)
     if(!app->desc_func)
         return -4;
 
+    // Not required
     app->set_params_func  = dlsym(app->handle, c_rp_set_params_str);
-    if(!app->set_params_func)
-        return -5;
-
     app->get_params_func = dlsym(app->handle, c_rp_get_params_str);
-    if(!app->get_params_func)
-        return -6;
-
     app->get_signals_func = dlsym(app->handle, c_rp_get_signals_str);
-    if(!app->get_signals_func)
-        return -7;
 
     // start web socket functionality
     app->ws_api_supported = 1;
@@ -457,6 +448,13 @@ int rp_bazaar_app_load_module(const char *app_file, rp_bazaar_app_t *app)
     {
        	app->ws_api_supported = 0;
         fprintf(stderr, "Cannot resolve '%s' function.\n", c_ws_get_signals_str);
+    }
+
+    app->ws_get_bin_signals_func = dlsym(app->handle, c_ws_get_bin_signals_str);
+    if(!app->ws_get_bin_signals_func)
+    {
+       	app->ws_api_supported = 0;
+        fprintf(stderr, "Cannot resolve '%s' function.\n", c_ws_get_bin_signals_str);
     }
 
     app->ws_gzip_func = dlsym(app->handle, c_ws_gzip_str);

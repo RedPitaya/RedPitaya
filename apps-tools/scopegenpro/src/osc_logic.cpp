@@ -42,7 +42,7 @@ CIntParameter osc_per_sec("OSC_PER_SEC", CBaseParameter::RW, 0, 0, 0, 100000000,
 
 /* --------------------------------  OUT SIGNALS  ------------------------------ */
 
-CFloatBase64Signal outCh[MAX_ADC_CHANNELS] = INIT("ch", "", 0, 0.0f);
+CFloatBinarySignal outCh[MAX_ADC_CHANNELS] = INIT("ch", "", 0, 0.0f);
 
 /* ------------------------------- DATA PARAMETERS ------------------------------ */
 // CIntParameter       dataSize("OSC_DATA_SIZE", CBaseParameter::RW, CH_SIGNAL_SIZE_DEFAULT, 0, 1, 16*1024);

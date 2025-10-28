@@ -11,7 +11,8 @@
 <html lang="en">
 
 <head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"></meta>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    </meta>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <meta http-equiv="cache-control" content="max-age=0" />
     <meta http-equiv="cache-control" content="no-cache" />
@@ -38,6 +39,7 @@
     <script src="../assets/pako.js?1" onerror="location.reload()"></script>
     <script src="../assets/popupstack.js?1" onerror="location.reload()"></script>
     <script src="../assets/help-system/help-system.js?1" onerror="location.reload()"></script>
+    <script src="../assets/js/rpDataParser.js?1" onerror="location.reload()"></script>
     <script src="js/table2CSV.js?1" type="text/javascript" onerror="location.reload()"></script>
     <script src="js/help-lcr.js?1" onerror="location.reload()"></script>
     <script src="js/lcr.js?1" onerror="location.reload()"></script>
@@ -73,7 +75,8 @@
                 <div class="container">
                     <!-- Navigation bar -->
                     <div class="navbar-header">
-                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                        <button type="button" class="navbar-toggle" data-toggle="collapse"
+                            data-target=".navbar-collapse">
                             <span class="sr-only">T</span>
                             <span class="icon-bar"></span>
                             <span class="icon-bar"></span>
@@ -88,19 +91,25 @@
                         <ul class="nav navbar-nav">
                             <!--<li><a id="LCR_CALIBRATE" href="#" style="padding-left: 23px; white-space: nowrap;">CALIBRATE</a></li>-->
                             <li style="width: 60px">
-                                <a href="https://redpitaya.readthedocs.io/en/latest/appsFeatures/applications/lcr_meter/lcr_meter.html" target="_blank" style="padding-left: 0; padding-right: 0;">
+                                <a href="https://redpitaya.readthedocs.io/en/latest/appsFeatures/applications/lcr_meter/lcr_meter.html"
+                                    target="_blank" style="padding-left: 0; padding-right: 0;">
                                     <img src="../assets/images/help.png" width=20px>
                                 </a>
                             </li>
                             <li class="dropdown">
-                                <a class="dropdown-toggle" type="button" id="menu1" data-toggle="dropdown"  style="padding-left: 23px; white-space: nowrap;">SETTINGS<span class="caret"></span></a>
-                                <ul id="settings_dropdown" class="dropdown-menu" role="menu" aria-labelledby="menu1" style="background: #cdcccc; min-width: 0px;">
+                                <a class="dropdown-toggle" type="button" id="menu1" data-toggle="dropdown"
+                                    style="padding-left: 23px; white-space: nowrap;">SETTINGS<span
+                                        class="caret"></span></a>
+                                <ul id="settings_dropdown" class="dropdown-menu" role="menu" aria-labelledby="menu1"
+                                    style="background: #cdcccc; min-width: 0px;">
                                     <li><a id="reset_settings" href="#">RESET</a></li>
                                 </ul>
                             </li>
                             <li>
-                                <a id="LCR_LOG" href="#" style="padding-left: 23px; white-space: nowrap;" value="0">LOG DATA</a>
-                                <a id="LCR_LOG_STOP" href="#" style="padding-left: 23px; white-space: nowrap; display:none;" value="0">STOP</a>
+                                <a id="LCR_LOG" href="#" style="padding-left: 23px; white-space: nowrap;" value="0">LOG
+                                    DATA</a>
+                                <a id="LCR_LOG_STOP" href="#"
+                                    style="padding-left: 23px; white-space: nowrap; display:none;" value="0">STOP</a>
                             </li>
                             <li>
                                 <a id="LCR_HOLD" href="#" style="display:block;">HOLD</a>
@@ -126,11 +135,13 @@
                             </div>
                             <div class="meas_data" style="float: left">
                                 <label class="col-xs-5" for="lb_mes_min" style="color: #000000">MODE: </label>
-                                <label class="col-xs-6" id="meas_mode_d" for="lb_mes_min" style="color: #000000">AUTO</label>
+                                <label class="col-xs-6" id="meas_mode_d" for="lb_mes_min"
+                                    style="color: #000000">AUTO</label>
                             </div>
                             <div class="meas_data" style="float: left">
                                 <label class="col-xs-5" for="lb_mes_max" style="color: #000000">FREQ.: </label>
-                                <label class="col-xs-6" id="meas_freq_d" for="lb_mes_max" style="color: #000000">100Hz</label>
+                                <label class="col-xs-6" id="meas_freq_d" for="lb_mes_max"
+                                    style="color: #000000">100Hz</label>
                             </div>
                             <div class="meas_data" style="float: left">
                                 <label class="col-xs-5" for="lb_mes_avg" style="color: #000000">SHUNT: </label>
@@ -138,15 +149,18 @@
                             </div>
                             <div class="meas_data" style="float: left">
                                 <label class="col-xs-5" for="lb_mes_avg" style="color: #000000">MIN: </label>
-                                <label class="col-xs-6" id="meas_min_d" for="lb_mes_avg" style="color: #000000">-</label>
+                                <label class="col-xs-6" id="meas_min_d" for="lb_mes_avg"
+                                    style="color: #000000">-</label>
                             </div>
                             <div class="meas_data" style="float: left">
                                 <label class="col-xs-5" for="lb_mes_avg" style="color: #000000">MAX: </label>
-                                <label class="col-xs-6" id="meas_max_d" for="lb_mes_avg" style="color: #000000">-</label>
+                                <label class="col-xs-6" id="meas_max_d" for="lb_mes_avg"
+                                    style="color: #000000">-</label>
                             </div>
                             <div class="meas_data" style="float: left">
                                 <label class="col-xs-5" for="lb_mes_avg" style="color: #000000">AVG: </label>
-                                <label class="col-xs-6" id="meas_avg_d" for="lb_mes_avg" style="color: #000000">-</label>
+                                <label class="col-xs-6" id="meas_avg_d" for="lb_mes_avg"
+                                    style="color: #000000">-</label>
                                 <div style="padding-bottom: 5px;">
                                     <img id="CLEAR_MIN_MAX" src="img/reset2.png" style="width: 16px;">
                                 </div>
@@ -154,12 +168,16 @@
                         </div>
                         <div id="display">
                             <div id="sec_displ">
-                                <label id="lb_sec_displ" class="col-xs-8 displ_text" for="lb_sec_dspl" style="color: #000000">0</label>
-                                <label id="lb_sec_displ_units" class="col-xs-4" for="lb_sec_dspl_range" style="color: #000000">--</label>
+                                <label id="lb_sec_displ" class="col-xs-8 displ_text" for="lb_sec_dspl"
+                                    style="color: #000000">0</label>
+                                <label id="lb_sec_displ_units" class="col-xs-4" for="lb_sec_dspl_range"
+                                    style="color: #000000">--</label>
                             </div>
                             <div id="prim_displ">
-                                <label id="lb_prim_displ" class="col-xs-8 displ_text" for="lb_prim_dspl" style="color: #000000">0</label>
-                                <label id="lb_prim_displ_units" class="col-xs-4" for="lb_prim_dspl_range" style="color: #000000">--</label>
+                                <label id="lb_prim_displ" class="col-xs-8 displ_text" for="lb_prim_dspl"
+                                    style="color: #000000">0</label>
+                                <label id="lb_prim_displ_units" class="col-xs-4" for="lb_prim_dspl_range"
+                                    style="color: #000000">--</label>
                             </div>
                             <div id="tol_rel_displ">
                                 <div>
@@ -186,16 +204,22 @@
                             <form class="form-horizontal" role="form">
                                 <div>
                                     <div style="float:left;width: 50%">
-                                        <label for="lb_pdi_primary" style="margin-bottom: 0px; margin-top:6px;float: right;">Primary Display:</label>
+                                        <label for="lb_pdi_primary"
+                                            style="margin-bottom: 0px; margin-top:6px;float: right;">Primary
+                                            Display:</label>
                                     </div>
                                     <div id="prim_displ_choice">
-                                        <input style="display:none;" type="checkbox" id="LCR_R" name="LCR_R" class="bt_check" index="3" value="Ω" />
+                                        <input style="display:none;" type="checkbox" id="LCR_R" name="LCR_R"
+                                            class="bt_check" index="3" value="Ω" />
                                         <label for="LCR_R">R</label>
-                                        <input style="display:none;" type="checkbox" id="LCR_C" name="LCR_C" class="bt_check" index="2" value="F" />
+                                        <input style="display:none;" type="checkbox" id="LCR_C" name="LCR_C"
+                                            class="bt_check" index="2" value="F" />
                                         <label for="LCR_C">C</label>
-                                        <input style="display:none;" type="checkbox" id="LCR_L" name="LCR_L" class="bt_check" index="1" value="H" />
+                                        <input style="display:none;" type="checkbox" id="LCR_L" name="LCR_L"
+                                            class="bt_check" index="1" value="H" />
                                         <label for="LCR_L">L</label>
-                                        <input style="display:none;" type="checkbox" id="LCR_Z" name="LCR_Z" class="bt_check" index="0" value="Ω" />
+                                        <input style="display:none;" type="checkbox" id="LCR_Z" name="LCR_Z"
+                                            class="bt_check" index="0" value="Ω" />
                                         <label for="LCR_Z">Z</label>
                                     </div>
                                 </div>
@@ -205,16 +229,22 @@
                             <form class="form-horizontal" role="form">
                                 <div>
                                     <div style="float:left;width: 50%;">
-                                        <label for="lb_pdi_primary" style="margin-bottom: 0px; margin-top:6px;float: right;">Secondary Display:</label>
+                                        <label for="lb_pdi_primary"
+                                            style="margin-bottom: 0px; margin-top:6px;float: right;">Secondary
+                                            Display:</label>
                                     </div>
                                     <div id="sec_displ_choice">
-                                        <input style="display:none;" type="checkbox" id="LCR_ESR" name="LCR_ESR" class="bt_check" index="3" value="Ω" />
+                                        <input style="display:none;" type="checkbox" id="LCR_ESR" name="LCR_ESR"
+                                            class="bt_check" index="3" value="Ω" />
                                         <label for="LCR_ESR">E</label>
-                                        <input style="display:none;" type="checkbox" id="LCR_Q" name="LCR_Q" class="bt_check" index="2" value="" />
+                                        <input style="display:none;" type="checkbox" id="LCR_Q" name="LCR_Q"
+                                            class="bt_check" index="2" value="" />
                                         <label for="LCR_Q">Q</label>
-                                        <input style="display:none;" type="checkbox" id="LCR_D" name="LCR_D" class="bt_check" index="1" value="" />
+                                        <input style="display:none;" type="checkbox" id="LCR_D" name="LCR_D"
+                                            class="bt_check" index="1" value="" />
                                         <label for="LCR_D">D</label>
-                                        <input style="display:none;" type="checkbox" id="LCR_P" name="LCR_P" class="bt_check" index="0" value="deg" />
+                                        <input style="display:none;" type="checkbox" id="LCR_P" name="LCR_P"
+                                            class="bt_check" index="0" value="deg" />
                                         <label for="LCR_P">P</label>
                                     </div>
                                 </div>
@@ -231,7 +261,8 @@
                             <form class="form-horizontal" role="form">
                                 <div>
                                     <div style="float:left">
-                                        <label for="lb_freq" style="margin-bottom: 0px; margin-top:5px;">Select Frequency: </label>
+                                        <label for="lb_freq" style="margin-bottom: 0px; margin-top:5px;">Select
+                                            Frequency: </label>
                                     </div>
                                     <div class="col-xs-7" style="float: right">
                                         <select id="LCR_FREQUENCY" class="form-control">
@@ -250,18 +281,19 @@
                             <form class="form-horizontal" role="form">
                                 <div>
                                     <div style="float:left">
-                                        <label for="lb_freq" style="margin-bottom: 0px; margin-top:5px;">Select Shunt: </label>
+                                        <label for="lb_freq" style="margin-bottom: 0px; margin-top:5px;">Select Shunt:
+                                        </label>
                                     </div>
                                     <div class="col-xs-7" style="float: right">
                                         <select id="LCR_SHUNT_MODE" class="form-control">
-                                        <option value="-1">AUTO</option>
-                                        <option value="0">10 Ohm</option>
-                                        <option value="1">100 Ohm</option>
-                                        <option value="2">1 kOhm</option>
-                                        <option value="3">10 kOhm</option>
-                                        <option value="4">100 kOhm</option>
-                                        <option value="5">1 MOhm</option>
-                                    </select>
+                                            <option value="-1">AUTO</option>
+                                            <option value="0">10 Ohm</option>
+                                            <option value="1">100 Ohm</option>
+                                            <option value="2">1 kOhm</option>
+                                            <option value="3">10 kOhm</option>
+                                            <option value="4">100 kOhm</option>
+                                            <option value="5">1 MOhm</option>
+                                        </select>
                                     </div>
                                 </div>
                             </form>
@@ -271,9 +303,11 @@
                             <form class="form-horizontal" role="form">
                                 <div>
                                     <div id="parl_ser" style="float: right" class="col-xs-12">
-                                        <input style="display:none;" type="checkbox" id="cb_ser" name="cb_ser"  index="1" class="bt_check" />
+                                        <input style="display:none;" type="checkbox" id="cb_ser" name="cb_ser" index="1"
+                                            class="bt_check" />
                                         <label for="cb_ser" style="width: 50%">Series</label>
-                                        <input style="display:none;" type="checkbox" id="cb_paralel" name="cb_paralel" index="0" class="bt_check" />
+                                        <input style="display:none;" type="checkbox" id="cb_paralel" name="cb_paralel"
+                                            index="0" class="bt_check" />
                                         <label for="cb_paralel" style="width: 50%">Parallel</label>
                                     </div>
                                 </div>
@@ -290,12 +324,15 @@
                             <form class="form-horizontal" role="form">
                                 <div>
                                     <div style="float:left">
-                                        <label for="lb_pdi_primary" style="margin-bottom: 0px; margin-top:5px;">Select Mode:</label>
+                                        <label for="lb_pdi_primary" style="margin-bottom: 0px; margin-top:5px;">Select
+                                            Mode:</label>
                                     </div>
                                     <div id="sel_mode" style="float: right" class="col-xs-8">
-                                        <input style="display:none;" type="checkbox" id="cb_manual" name="cb_manual" index="1" class="bt_check" />
+                                        <input style="display:none;" type="checkbox" id="cb_manual" name="cb_manual"
+                                            index="1" class="bt_check" />
                                         <label for="cb_manual" style="width: 50%">Manual</label>
-                                        <input style="display:none;" type="checkbox" id="cb_auto" name="cb_auto" index="0" class="bt_check" checked="checked" />
+                                        <input style="display:none;" type="checkbox" id="cb_auto" name="cb_auto"
+                                            index="0" class="bt_check" checked="checked" />
                                         <label for="cb_auto" style="width: 50%">Auto</label>
                                     </div>
                                 </div>
@@ -305,7 +342,8 @@
                             <form class="form-horizontal" role="form">
                                 <div>
                                     <div style="float:left">
-                                        <label for="lb_range" style="margin-bottom: 0px; margin-top:5px;">Select Range: </label>
+                                        <label for="lb_range" style="margin-bottom: 0px; margin-top:5px;">Select Range:
+                                        </label>
                                     </div>
                                     <div style="float: right;width: 25%;padding-right: 15px;">
                                         <select id="sel_range_u" class="form-control">
@@ -333,9 +371,11 @@
                             <form class="form-horizontal" role="form">
                                 <div>
                                     <div id="rel_tol" style="float: right" class="col-xs-12">
-                                        <input style="display:none;" type="checkbox" id="cb_rel" name="cb_rel" class="bt_check radio" />
+                                        <input style="display:none;" type="checkbox" id="cb_rel" name="cb_rel"
+                                            class="bt_check radio" />
                                         <label for="cb_rel" style="width: 50%">Relative</label>
-                                        <input style="display:none;" type="checkbox" id="cb_tol" name="cb_tol" class="bt_check radio" />
+                                        <input style="display:none;" type="checkbox" id="cb_tol" name="cb_tol"
+                                            class="bt_check radio" />
                                         <label for="cb_tol" style="width: 50%">Tolerance</label>
                                     </div>
                                 </div>
@@ -364,11 +404,14 @@
                     </div>
                     <div id="table_cmd">
                         <button id="btn_export" type="button" class="btn" onclick="export_table()">Export Table</button>
-                        <div class="menu_wrapper col-xs-4" style="width: 25%;margin-top: 2px; max-width: 250px;min-width: 250px;">
+                        <div class="menu_wrapper col-xs-4"
+                            style="width: 25%;margin-top: 2px; max-width: 250px;min-width: 250px;">
                             <form class="form-horizontal" role="form">
                                 <div>
                                     <div style="float:left">
-                                        <label for="lb_freq" style="margin-bottom: 0px; margin-top:5px;max-width: 60px;">Interval: </label>
+                                        <label for="lb_freq"
+                                            style="margin-bottom: 0px; margin-top:5px;max-width: 60px;">Interval:
+                                        </label>
                                     </div>
                                     <div class="col-xs-7" style="float: right;min-width: 130px;">
                                         <select id="LOG_INTERVAL" class="form-control">
@@ -385,7 +428,8 @@
                             </form>
                         </div>
                         <button id="btn_clear" type="button" class="btn" onclick="clearRowTable()">Clear</button>
-                        <button id="btn_clear_all" type="button" class="btn" onclick="clearTableAll()">Clear All</button>
+                        <button id="btn_clear_all" type="button" class="btn" onclick="clearTableAll()">Clear
+                            All</button>
                     </div>
                 </div>
                 <!-- Open calib modal -->
@@ -400,7 +444,8 @@
                             <div class="modal-body" style="padding: 15px 0 15px 0px">
                                 <div class="modal-body">
                                     <div class="progress">
-                                        <div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100" style="width:10%">
+                                        <div class="progress-bar progress-bar-danger" role="progressbar"
+                                            aria-valuenow="10" aria-valuemin="0" aria-valuemax="100" style="width:10%">
                                             10% Complete
                                         </div>
                                     </div>
@@ -409,7 +454,8 @@
                                     </div>
                                 </div>
                                 <div class="modal-footer" style="width: 100%">
-                                    <button id="bt_calib_start" type="button" class="btn btn-default" style="width: 25%">Start</button>
+                                    <button id="bt_calib_start" type="button" class="btn btn-default"
+                                        style="width: 25%">Start</button>
                                 </div>
                             </div>
                         </div>
@@ -427,7 +473,8 @@
                             <div class="modal-body" style="padding: 15px 0 15px 0px">
                                 <div class="modal-body">
                                     <div class="progress">
-                                        <div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width:50%">
+                                        <div class="progress-bar progress-bar-danger" role="progressbar"
+                                            aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width:50%">
                                             50%
                                         </div>
                                     </div>
@@ -436,7 +483,8 @@
                                     </div>
                                 </div>
                                 <div class="modal-footer" style="width: 100%">
-                                    <button id="bt_calib_open" type="button" class="btn btn-default" style="width: 25%">Next</button>
+                                    <button id="bt_calib_open" type="button" class="btn btn-default"
+                                        style="width: 25%">Next</button>
                                 </div>
                             </div>
                         </div>
@@ -454,7 +502,8 @@
                             <div class="modal-body" style="padding: 15px 0 15px 0px">
                                 <div class="modal-body">
                                     <div class="progress">
-                                        <div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100" style="width:100%">
+                                        <div class="progress-bar progress-bar-danger" role="progressbar"
+                                            aria-valuenow="70" aria-valuemin="0" aria-valuemax="100" style="width:100%">
                                             100%
                                         </div>
                                     </div>
@@ -463,7 +512,8 @@
                                     </div>
                                 </div>
                                 <div class="modal-footer" style="width: 100%">
-                                    <button id="bt_calib_short" type="button" class="btn btn-default" style="width: 25%" data-dismiss="modal">Finish</button>
+                                    <button id="bt_calib_short" type="button" class="btn btn-default" style="width: 25%"
+                                        data-dismiss="modal">Finish</button>
                                 </div>
                             </div>
                         </div>
@@ -485,7 +535,8 @@
                                     </div>
                                 </div>
                                 <div class="modal-footer" style="width: 100%">
-                                    <button id="bt_app_reload" type="button" class="btn btn-primary btn-app-restart" style="width: 50%" data-dismiss="modal">Reload</button>
+                                    <button id="bt_app_reload" type="button" class="btn btn-primary btn-app-restart"
+                                        style="width: 50%" data-dismiss="modal">Reload</button>
                                 </div>
                             </div>
                         </div>
@@ -507,7 +558,8 @@
                                     </div>
                                 </div>
                                 <div class="modal-footer" style="width: 100%">
-                                    <button id="bt_app_reload" type="button" class="btn btn-primary btn-app-restart" style="width: 50%" data-dismiss="modal">Reload</button>
+                                    <button id="bt_app_reload" type="button" class="btn btn-primary btn-app-restart"
+                                        style="width: 50%" data-dismiss="modal">Reload</button>
                                 </div>
                             </div>
                         </div>
@@ -530,7 +582,8 @@
                                 </div>
                                 <div class="modal-footer" style="width: 100%">
                                     <!-- <button id="bt_close_app" type="button" class="btn btn-primary" style="width: 50%" data-dismiss="modal">Close</button> -->
-                                    <a style="border: 1px solid;  width: 40%" id="bt_close_app2" class="list-group-item btn">Close</a>
+                                    <a style="border: 1px solid;  width: 40%" id="bt_close_app2"
+                                        class="list-group-item btn">Close</a>
                                 </div>
                             </div>
                         </div>
@@ -558,7 +611,8 @@
                                         <a href="#" style="border: 1px solid;  width: 100%" id="bt_install_i2c" data-dismiss="modal" class="list-group-item btn">Install</a>
                                     </div> -->
                                     <div class="bazaar-link" style="float: left; width: 50%;">
-                                        <a href="/" style="border: 1px solid;  width: 100%" id="bt_close_app1" data-dismiss="modal" class="list-group-item btn">Close</a>
+                                        <a href="/" style="border: 1px solid;  width: 100%" id="bt_close_app1"
+                                            data-dismiss="modal" class="list-group-item btn">Close</a>
                                     </div>
                                 </div>
                             </div>
@@ -572,10 +626,11 @@
 <script language="javascript" type="text/javascript">
     //Set only one measurment parent().find('.checkbox')
 
-    $('#content_wrapper input:checkbox:not(.radio)').on('change', function() {
+    $('#content_wrapper input:checkbox:not(.radio)').on('change', function () {
         var parent = $(this).parent().closest('div').attr('id');
         $('#' + parent).find('input[index=checkbox]').prop('checked', false);
         $(this).prop('checked', true);
     });
 </script>
+
 </html>

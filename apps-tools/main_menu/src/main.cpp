@@ -161,25 +161,9 @@ int rp_app_exit(void) {
     return 0;
 }
 
-int rp_set_params(rp_app_params_t*, int) {
-    return 0;
-}
-
-int rp_get_params(rp_app_params_t**) {
-    return 0;
-}
-
-int rp_get_signals(float***, int*, int*) {
-    return 0;
-}
-
 void UpdateParams(void) {
     rp_WS_UpdateParameters(false);
 }
-
-void PostUpdateSignals(void) {}
-
-void UpdateSignals(void) {}
 
 void OnNewParams(void) {
     auto adc_rate_path = ADC_BASE_RATE_PATH;
@@ -214,5 +198,3 @@ void OnNewParams(void) {
         dac_base_rate.SendValue(rp_HPGetBaseFastDACSpeedHzOrDefault());
     }
 }
-
-void OnNewSignals(void) {}

@@ -30,6 +30,7 @@
     ];
 
     UI_GRAPH.getPoltRect = function(){
+        if (!SPEC) return
         var plot = SPEC.getPlot();
         if (!plot) {
             return {l:0,t:0,w:0,h:0};

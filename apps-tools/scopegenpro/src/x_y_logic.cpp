@@ -7,8 +7,8 @@
 #include "rp_hw-profiles.h"
 #include "x_y_logic.h"
 
-CFloatBase64Signal x_axis("X_AXIS_VALUES", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
-CFloatBase64Signal y_axis("Y_AXIS_VALUES", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
+CFloatBinarySignal x_axis("X_AXIS_VALUES", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
+CFloatBinarySignal y_axis("Y_AXIS_VALUES", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
 
 CBooleanParameter xyShow("X_Y_SHOW", CBaseParameter::RW, false, 0, CONFIG_VAR);
 

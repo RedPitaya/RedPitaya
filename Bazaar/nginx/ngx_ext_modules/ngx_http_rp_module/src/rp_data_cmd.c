@@ -85,7 +85,7 @@ ngx_int_t rp_data_cmd_handler(ngx_http_request_t *r)
 
     if(!rp_module_ctx.app.handle) {
         rp_error(r->connection->log, "Application not loaded");
-        rp_module_cmd_error(&json_root, "Application not loaded", NULL, 
+        rp_module_cmd_error(&json_root, "Application not loaded", NULL,
                             r->pool);
         return rp_module_send_response(r, &json_root);
     }
@@ -96,7 +96,7 @@ ngx_int_t rp_data_cmd_handler(ngx_http_request_t *r)
     }
     cJSON_AddItemToObject(app_root, "id",
                           cJSON_CreateString(app_id, r->pool), r->pool);
-    
+
     if(r->method & NGX_HTTP_POST) {
         /* we continue with the answer in rp_data_post_read. the
          * json package into which the answer is stored is passed
@@ -225,18 +225,18 @@ void rp_data_post_read(ngx_http_request_t *r)
     ctx = ngx_http_get_module_ctx(r, ngx_http_rp_module);
 
     if(ctx == NULL) {
-        rp_error(r->connection->log, 
+        rp_error(r->connection->log,
                  "rp_data_post_read() JSON root structure not set");
         goto done;
     }
 
     /* check if request body is specified */
     if((r->request_body == NULL) || (r->request_body->bufs == NULL)) {
-        rp_error(r->connection->log, 
+        rp_error(r->connection->log,
                  "rp_data_post_read() body is empty");
         goto done;
     }
-    
+
     /* we do not support request body specified in a file */
     if(r->request_body->temp_file) {
         rp_error(r->connection->log, "rp_data_post_read() data in temp "
@@ -247,7 +247,7 @@ void rp_data_post_read(ngx_http_request_t *r)
     /* calculate the size of all buffers in the request body, since we have to
      * concatenate them in a single buffer */
     len=0;
-    for(chain_link = r->request_body->bufs; chain_link != NULL; 
+    for(chain_link = r->request_body->bufs; chain_link != NULL;
         chain_link = chain_link->next) {
         len += chain_link->buf->last - chain_link->buf->pos;
         buffers++;
@@ -350,7 +350,7 @@ int rp_data_parse_and_set_params(cJSON *params_root)
 
     /* call application specific function for handling POST requests */
     ret_val = 0;
-    if(rp_module_ctx.app.set_params_func(rp_params, rp_params_cnt) < 0) {
+    if(rp_module_ctx.app.set_params_func && rp_module_ctx.app.set_params_func(rp_params, rp_params_cnt) < 0) {
         ret_val = -1;
     }
 
@@ -374,36 +374,38 @@ int rp_data_get_params(ngx_http_request_t *r, cJSON **json_root)
     int rp_params_cnt;
     cJSON *j_params, *data_root;
     int i;
-    
+
     data_root = cJSON_GetObjectItem(*json_root, "datasets");
     if(data_root == NULL) {
-        return rp_module_cmd_error(json_root, 
-                                   "Can not find 'data'", NULL, 
+        return rp_module_cmd_error(json_root,
+                                   "Can not find 'data'", NULL,
                                    r->pool);
     }
 
     /* Now prepare the answer with set parameters */
-    rp_params_cnt = rp_module_ctx.app.get_params_func(&rp_params);
-    if(rp_params == NULL) {
-        return rp_module_cmd_error(json_root, "Can not retrieve parameters.",
-                                   NULL, r->pool);
-    }
+    if (rp_module_ctx.app.get_params_func){
+        rp_params_cnt = rp_module_ctx.app.get_params_func(&rp_params);
+        if(rp_params == NULL) {
+            return rp_module_cmd_error(json_root, "Can not retrieve parameters.",
+                                    NULL, r->pool);
+        }
 
-    cJSON_AddItemToObject(data_root, "params",
-                          j_params=cJSON_CreateObject(r->pool), r->pool);
+        cJSON_AddItemToObject(data_root, "params",
+                            j_params=cJSON_CreateObject(r->pool), r->pool);
 
-    for(i = 0; i < rp_params_cnt; i++) {
-        cJSON_AddItemToObject(j_params, rp_params[i].name,
-                              cJSON_CreateNumber(rp_params[i].value, r->pool), 
-                              r->pool);
-    }
+        for(i = 0; i < rp_params_cnt; i++) {
+            cJSON_AddItemToObject(j_params, rp_params[i].name,
+                                cJSON_CreateNumber(rp_params[i].value, r->pool),
+                                r->pool);
+        }
 
-    for(i = 0; i < rp_params_cnt; i++) {
-        if(rp_params[i].name)
-            free((char *)rp_params[i].name);
+        for(i = 0; i < rp_params_cnt; i++) {
+            if(rp_params[i].name)
+                free((char *)rp_params[i].name);
+        }
+        if(rp_params)
+            free(rp_params);
     }
-    if(rp_params)
-        free(rp_params);
 
     return 0;
 }
@@ -427,21 +429,22 @@ int rp_data_get_signals(ngx_http_request_t *r, cJSON **json_root)
 
     data_root = cJSON_GetObjectItem(*json_root, "datasets");
     if(data_root == NULL) {
-        return rp_module_cmd_error(json_root, 
-                                   "Can not find 'data'", NULL, 
+        return rp_module_cmd_error(json_root,
+                                   "Can not find 'data'", NULL,
                                    r->pool);
     }
-    
+    if (!rp_module_ctx.app.get_signals_func) return 0;
+
     ret_val =
-        rp_module_ctx.app.get_signals_func((float ***)&rp_signals, &rp_sig_num, 
+        rp_module_ctx.app.get_signals_func((float ***)&rp_signals, &rp_sig_num,
                                            &rp_sig_len);
 
     while(ret_val == -1) {
         ret_val =
-            rp_module_ctx.app.get_signals_func((float ***)&rp_signals, 
+            rp_module_ctx.app.get_signals_func((float ***)&rp_signals,
                                                &rp_sig_num, &rp_sig_len);
 
-        if(ret_val == -2) 
+        if(ret_val == -2)
             break;
         if(retries-- <= 0) {
             /* Use old signals */
@@ -459,13 +462,13 @@ int rp_data_get_signals(ngx_http_request_t *r, cJSON **json_root)
     cJSON_AddItemToObject(data_root, "g1",
                           g1=cJSON_CreateArray(r->pool), r->pool);
 
-    cJSON_AddItemToObject(g1, "g1", 
+    cJSON_AddItemToObject(g1, "g1",
                           sig_root=cJSON_CreateObject(r->pool), r->pool);
     cJSON_AddItemToObject(sig_root, "data",
                    d1=cJSON_Create2dFloatArray(&rp_signals[0][0], &rp_signals[1][0],
                                                rp_sig_len, r->pool),
                           r->pool);
-    cJSON_AddItemToObject(g1, "g1", 
+    cJSON_AddItemToObject(g1, "g1",
                           sig_root=cJSON_CreateObject(r->pool), r->pool);
     cJSON_AddItemToObject(sig_root, "data",
                    d2=cJSON_Create2dFloatArray(&rp_signals[0][0], &rp_signals[2][0],

@@ -101,7 +101,7 @@
         SPEC.config.xmin = 0;
         SPEC.config.xmax = 62500000;
         SPEC.config.unit = 2;
-        SPEC.config.updateDelay = 200;
+        SPEC.config.updateDelay = 1;
 
 
         SPEC.config.attenuator_ch = ["0","0","0","0"];
@@ -191,24 +191,8 @@
 
         };
 
-        function base64ToFloatArray(base64String) {
-            // Decode the base64 string to a byte array
-            const b64ToBuffer = (b64) => Uint8Array.from(atob(b64), c => c.charCodeAt(0)).buffer;
-            bytes = b64ToBuffer(base64String)
-            // Create a Float32Array from the byte array
-            const floatArray = new Float32Array(bytes.byteLength / 4);
-
-            // Convert the byte array to a Float32Array
-            for (let i = 0; i < floatArray.length; i++) {
-              const byteIndex = i * 4;
-              floatArray[i] = new DataView(bytes).getFloat32(byteIndex,true);
-            }
-
-            return floatArray;
-        }
 
         SPEC.guiHandler = function() {
-
             if (CLIENT.signalStack.length > 0) {
                 let p = performance.now();
                 if ((p - SPEC.lastUpdate) > SPEC.config.updateDelay){
@@ -218,32 +202,28 @@
                         signals = {};
                         SPEC.clear = false;
                     }
-                    for (const property in signals) {
-                        if (signals[property]['type']){
-                            if (signals[property]['type'] == 'f'){
-                                signals[property]['value'] = base64ToFloatArray(signals[property]['value'] )
-                            }
-                        }
-                    }
-                    // create ch3, ch4, ch5, ch6 signals for min/max values
-                    SPEC.processSignals(signals);
-                    CLIENT.signalStack.splice(0, 1);
-                    SPEC.peakUnit();
 
+                    SPEC.processSignals(signals);
+                    SPEC.peakUnit();
+                    CLIENT.fps += CLIENT.signalStack.length
                     SPEC.lastUpdate = p;
                 }
             }
-            if (CLIENT.signalStack.length > 2)
-                CLIENT.signalStack.length = [];
+            CLIENT.signalStack.length = [];
         }
 
         var performanceHandler = function() {
-            $('#throughput_view2').text((CLIENT.compressed_data / 1024).toFixed(2) + "kB/s");
+            let fps = ""
+            if (CLIENT.fps){
+                fps = " - FPS:" + CLIENT.fps
+            }
+            $('#throughput_view2').text((CLIENT.compressed_data / 1024).toFixed(2) + "kB/s" + fps);
             if ($('#connection_icon').attr('src') !== '../assets/images/good_net.png')
                 $('#connection_icon').attr('src', '../assets/images/good_net.png');
             $('#connection_meter').attr('title', 'It seems like your connection is ok');
             CLIENT.compressed_data = 0;
             CLIENT.decompressed_data = 0;
+            CLIENT.fps = 0
         }
 
         SPEC.updateJoystickPosition = function(){
@@ -958,15 +938,16 @@
                                 }
                             },
                             yaxes: [
-                                { font: { color: "#888888" } }
+                                { font: { color: "#ffffffff" } }
                             ],
                             xaxes: [
-                                { font: { color: "#888888" } }
+                                { font: { color: "#ffffffff" } }
                             ],
                             grid: {
                                 show: true,
                                 borderColor: '#888888',
                                 tickColor: '#888888',
+                                labelMargin:12
                             }
                         });
 
@@ -1297,7 +1278,9 @@
         $('.x1Axis').children().each(function () {
             if (this === undefined) return;
             var modifynode = $(this).clone();
-            modifynode.css("top","20px")
+            modifynode.css("top","22px")
+            let l = parseInt(modifynode.css("left")) - 9;
+            modifynode.css("left",l + "px")
             if (SPEC.channelsCount >= 1){
                 var newnode = $(modifynode).clone();
                 $("#waterfall-label_ch1").append(newnode);

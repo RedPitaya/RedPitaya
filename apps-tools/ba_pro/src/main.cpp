@@ -256,6 +256,15 @@ int rp_app_init(void) {
     phase.reserve(CH_SIGNAL_SIZE_DEFAULT);
     bad_signal.reserve(CH_SIGNAL_SIZE_DEFAULT);
     signal_parameters.reserve(CH_SIGNAL_SIZE_DEFAULT);
+
+#ifdef ZIP_DISABLED
+    CDataManager::GetInstance()->SetEnableParamsGZip(false);
+    CDataManager::GetInstance()->SetEnableSignalsGZip(false);
+    CDataManager::GetInstance()->SetEnableBinarySignalsGZip(false);
+#endif
+    CDataManager::GetInstance()->SetParamInterval(50);
+    CDataManager::GetInstance()->SetSignalInterval(50);
+
     rp_Init();
     rp_AcqSetAC_DC(RP_CH_1, RP_DC);
     rp_AcqSetAC_DC(RP_CH_2, RP_DC);
@@ -265,10 +274,6 @@ int rp_app_init(void) {
 
     rp_WC_Init();
     g_thread = new std::thread(threadLoop);
-
-    CDataManager::GetInstance()->SetParamInterval(50);
-    CDataManager::GetInstance()->SetSignalInterval(50);
-
     return 0;
 }
 
@@ -281,21 +286,6 @@ int rp_app_exit(void) {
     rp_Release();
     rpApp_BaRelease();
     fprintf(stderr, "Unloading bode analyser version %s-%s.\n", VERSION_STR, REVISION_STR);
-    return 0;
-}
-
-//Set parameters
-int rp_set_params(rp_app_params_t* p, int len) {
-    return 0;
-}
-
-//Get parameters
-int rp_get_params(rp_app_params_t** p) {
-    return 0;
-}
-
-//Get signals
-int rp_get_signals(float*** s, int* sig_num, int* sig_len) {
     return 0;
 }
 

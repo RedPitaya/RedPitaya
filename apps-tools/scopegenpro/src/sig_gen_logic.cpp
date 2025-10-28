@@ -18,7 +18,7 @@ const float LEVEL_AMPS_DEF = outAmpDef();
 const bool is_z_present = isZModePresent();
 const bool isX5Gain = rp_HPGetIsGainDACx5OrDefault();
 
-CFloatBase64Signal outSignal[MAX_DAC_CHANNELS] = INIT2("output", "", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
+CFloatBinarySignal outSignal[MAX_DAC_CHANNELS] = INIT2("output", "", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
 
 CBooleanParameter outShow[MAX_DAC_CHANNELS] = INIT2("OUTPUT", "_SHOW", CBaseParameter::RW, true, 0, CONFIG_VAR);
 CBooleanParameter outState[MAX_DAC_CHANNELS] = INIT2("OUTPUT", "_STATE", CBaseParameter::RW, false, 0, CONFIG_VAR);
@@ -134,7 +134,7 @@ auto generate(rp_channel_t channel, float tscale) -> void {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return;
 
-    CFloatBase64Signal* signal;
+    CFloatBinarySignal* signal;
     std::string waveform;
     rp_waveform_t waveform_api = RP_WAVEFORM_SINE;
     rp_gen_sweep_mode_t sweep_mode;

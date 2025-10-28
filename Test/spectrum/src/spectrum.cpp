@@ -8,6 +8,7 @@
 #include <locale>
 #include <vector>
 
+#include "common/profiler.h"
 #include "common/version.h"
 #include "math/rp_dsp.h"
 #include "rp.h"
@@ -149,9 +150,9 @@ static void spectrum_worker(cli_args_t args) {
             buff.size = buffer_size;
             buff.use_calib_for_volts = true;
             for (int i = 0; i < MAX_CHANNELS; i++) {
-                buff.ch_f[i] = NULL;
+                buff.ch_f[i] = data->m_in[i];
                 buff.ch_i[i] = NULL;
-                buff.ch_d[i] = data->m_in[i];
+                buff.ch_d[i] = NULL;
             }
 
             rp_AcqGetData(trig_pos, &buff);

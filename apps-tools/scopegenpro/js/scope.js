@@ -142,7 +142,7 @@
 
     OSC.compressed_data = 0;
     OSC.decompressed_data = 0;
-    OSC.refresh_times = [];
+    OSC.refresh_times = 0;
     OSC.counts_offset = 0;
 
     OSC.mouseWheelEventFired = false; // for MAC
@@ -269,39 +269,16 @@
         return dateFormat(this, mask, utc);
     };
 
-    function base64ToFloatArray(base64String) {
-        // Decode the base64 string to a byte array
-        const b64ToBuffer = (b64) => Uint8Array.from(atob(b64), c => c.charCodeAt(0)).buffer;
-        bytes = b64ToBuffer(base64String)
-        // Create a Float32Array from the byte array
-        const floatArray = new Float32Array(bytes.byteLength / 4);
-
-        // Convert the byte array to a Float32Array
-        for (let i = 0; i < floatArray.length; i++) {
-          const byteIndex = i * 4;
-          floatArray[i] = new DataView(bytes).getFloat32(byteIndex,true);
-        }
-
-        return floatArray;
-    }
 
     var guiHandler = function() {
         if (OSC.signalStack.length > 0) {
             var p = performance.now();
             if (OSC.is_webpage_loaded){
                 var signal = OSC.signalStack[0]
-                for (const property in signal) {
-                    if (signal[property]['type']){
-                        if (signal[property]['type'] == 'f'){
-                            signal[property]['value'] = base64ToFloatArray(signal[property]['value'] )
-                        }
-                    }
-                }
                 OSC.processSignals(signal);
             }
-            // console.log(OSC.signalStack.length,OSC.signalStack[0]);
+            OSC.refresh_times += OSC.signalStack.length;
             OSC.signalStack = []
-            OSC.refresh_times.push("tick");
             // console.log("Drawing: " + (performance.now() - p));
         }
     }
@@ -323,7 +300,7 @@
 
     var performanceHandler = function() {
 
-        $('#fps_view').text(OSC.refresh_times.length);
+        $('#fps_view').text(OSC.refresh_times);
         $('#ops_view').text(OSC.params.orig["OSC_PER_SEC"] ? OSC.params.orig["OSC_PER_SEC"].value :0);
 
         $('#throughput_view').text((OSC.compressed_data / 1024).toFixed(2) + "kB/s");
@@ -347,7 +324,7 @@
         OSC.decompressed_data = 0;
 
 
-        if (OSC.refresh_times.length < 3)
+        if (OSC.refresh_times < 3)
             OSC.bad_connection[g_counter] = true;
         else
             OSC.bad_connection[g_counter] = false;
@@ -355,7 +332,7 @@
         g_counter++;
         if (g_counter == 4) g_counter = 0;
 
-        OSC.refresh_times = [];
+        OSC.refresh_times = 0;
     }
 
     setInterval(performanceHandler, 1000);
@@ -411,6 +388,7 @@
 
     // Creates a WebSocket connection with the web server
     OSC.connectWebSocket = function() {
+        let binParser = new BinarySignalParser();
 
         if (window.WebSocket) {
             OSC.ws = new WebSocket(OSC.config.socket_url);
@@ -454,19 +432,9 @@
                 OSC.state.processing = true;
 
                 try {
-                    var data = new Uint8Array(ev.data);
-                    OSC.compressed_data += data.length;
-                    var inflate = pako.inflate(data);
-                    // var text = String.fromCharCode.apply(null, new Uint8Array(inflate));
-                    var bytes = new Uint8Array(inflate);
-                    var text = '';
-                    for(var i = 0; i < Math.ceil(bytes.length / 32768.0); i++) {
-                      text += String.fromCharCode.apply(null, bytes.slice(i * 32768, Math.min((i+1) * 32768, bytes.length)))
-                    }
-
-
-                    OSC.decompressed_data += text.length;
-                    var receive = JSON.parse(text);
+                    let receive = binParser.convert(ev.data)
+                    OSC.compressed_data += receive["compressed_data"];
+                    OSC.decompressed_data += receive["decompressed_data"];
 
                     if (receive.parameters) {
                         OSC.parameterStack.push(receive.parameters);
@@ -1018,11 +986,14 @@
         }
 
         var xysignals = [];
-        xysignals['X_AXIS_VALUES'] = new_signals['X_AXIS_VALUES']
-        xysignals['Y_AXIS_VALUES'] = new_signals['Y_AXIS_VALUES']
-
-        new_signals['X_AXIS_VALUES'].size = 0
-        new_signals['Y_AXIS_VALUES'].size = 0
+        if (new_signals['X_AXIS_VALUES']){
+            xysignals['X_AXIS_VALUES'] = new_signals['X_AXIS_VALUES']
+            new_signals['X_AXIS_VALUES'].size = 0
+        }
+        if (new_signals['Y_AXIS_VALUES']){
+            xysignals['Y_AXIS_VALUES'] = new_signals['Y_AXIS_VALUES']
+            new_signals['Y_AXIS_VALUES'].size = 0
+        }
 
         var pointArr = [];
         var colorsArr = [];

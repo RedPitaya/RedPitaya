@@ -15,20 +15,24 @@
 #ifndef __SPECTROMETERAPP_H
 #define __SPECTROMETERAPP_H
 
-#include "rpApp.h"
 #include "math/rp_dsp.h"
+#include "rpApp.h"
 
 int spec_run();
 
 int spec_stop();
 
-int spec_running(); // true/false
+int spec_running();  // true/false
 
 int spec_reset();
 
-int spec_getViewData(float **signals, size_t size);
+int spec_SetEnable(rp_channel_t channel, bool state);
 
-int spec_getViewSize(size_t *size);
+int spec_GetEnable(rp_channel_t channel, bool* state);
+
+int spec_getViewData(float** signals, size_t size);
+
+int spec_getViewSize(size_t* size);
 
 int spec_getPeakPower(rp_channel_t channel, float* power);
 
@@ -38,7 +42,7 @@ int spec_setFreqRange(float _freq_min, float freq);
 
 int spec_setWindow(rp_dsp_api::window_mode_t mode);
 
-int spec_getWindow(rp_dsp_api::window_mode_t *mode);
+int spec_getWindow(rp_dsp_api::window_mode_t* mode);
 
 int spec_setProbe(rp_channel_t channel, uint32_t probe);
 
@@ -60,14 +64,12 @@ int spec_getFreqMax(float* freq);
 
 int spec_getFreqMin(float* freq);
 
-int spec_getVoltMode(rp_dsp_api::mode_t *mode);
+int spec_getVoltMode(rp_dsp_api::mode_t* mode);
 
 int spec_setVoltMode(rp_dsp_api::mode_t mode);
 
 int spec_setImpedance(double value);
 
-int spec_getImpedance(double *value);
-
-
+int spec_getImpedance(double* value);
 
 #endif /* __SPECTROMETERAPP_H*/
