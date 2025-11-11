@@ -1145,8 +1145,10 @@ int acq_GetDataInBuffer(rp_channel_t channel, uint32_t pos, uint32_t* size, int3
     int16_t* iPtr = out->ch_i[channel];
     float* fPtr = out->ch_f[channel];
     double* dPtr = out->ch_d[channel];
-    for (uint32_t i = 0; i < (*size); ++i) {
+    if (iPtr == nullptr && fPtr == nullptr && dPtr == nullptr)
+        return RP_OK;
 
+    for (uint32_t i = 0; i < (*size); ++i) {
         uint32_t cnts = (raw_buffer[(pos + i + offset) % ADC_BUFFER_SIZE]) & mask;
         int32_t dataIndex = (i + offset + out->size) % out->size;
         if (is_need_raw) {

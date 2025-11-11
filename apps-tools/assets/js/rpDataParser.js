@@ -41,19 +41,20 @@ class BinarySignalParser {
             const dataType = dataView.getUint32(offset + 4, true);
             const nameSize = dataView.getUint32(offset + 8 , true);
             const dataSize = dataView.getUint32(offset + 12 , true);
-            const headerSize = dataView.getUint32(offset + 16 , true);
+            const dataSizeExtra = dataView.getUint32(offset + 16 , true);
+            const headerSize = dataView.getUint32(offset + 20 , true);
 
 
             // Check if name and data are available
             if (offset + headerSize + dataSize > buffer.byteLength) break;
 
             // Read signal name
-            const name = String.fromCharCode(...new Uint8Array(buffer, offset + 20, nameSize));
+            const name = String.fromCharCode(...new Uint8Array(buffer, offset + 24, nameSize));
 
             // Read raw data
             offset += headerSize;
             const rawData = new Uint8Array(buffer, offset, dataSize);
-            offset += dataSize;
+            offset += dataSize + dataSizeExtra;
 
             // Process data based on compression
             let data;
@@ -70,7 +71,7 @@ class BinarySignalParser {
             } else {
                 // Uncompressed data
                 dec_data += dataSize
-                data = this.createTypedArray(dataView, offset - dataSize, dataSize, dataType);
+                data = this.createTypedArray(dataView, offset - dataSize - dataSizeExtra, dataSize, dataType);
             }
 
             results[name] = {

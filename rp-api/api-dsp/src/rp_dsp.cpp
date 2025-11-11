@@ -22,6 +22,7 @@
 #include <map>
 #include <mutex>
 #include <new>
+#include <type_traits>
 #include <vector>
 
 #include "rp_dsp.h"
@@ -48,6 +49,7 @@
 /* Const - [W] -> [mW] */
 constexpr double g_w2mw = 1000;
 
+#define LOG_LIMIT 1.0e-15
 #define RP_SPECTR_HANN_AMP 0.8165  // Hann window power scaling (1/sqrt(sum(rcos.^2/N)))
 
 #define RP_BLACKMAN_A0 0.35875
@@ -62,30 +64,6 @@ constexpr double g_w2mw = 1000;
 #define RP_FLATTOP_A4 0.006947368
 
 using namespace rp_dsp_api;
-
-template <typename T>
-auto createArray(uint32_t count, uint32_t signalLen) -> T** {
-    try {
-        auto arr = new T*[count];
-        for (uint32_t i = 0; i < count; i++) {
-            arr[i] = new T[signalLen];
-        }
-        return arr;
-    } catch (const std::bad_alloc& e) {
-        ERROR_LOG("Can not allocate memory");
-        return nullptr;
-    }
-}
-
-template <typename T>
-auto deleteArray(uint32_t count, T** arr) -> void {
-    if (!arr)
-        return;
-    for (uint32_t i = 0; i < count; i++) {
-        delete[] arr[i];
-    }
-    delete[] arr;
-}
 
 auto __zeroethOrderBessel(double x) -> double {
     const double eps = 0.000001;
@@ -109,9 +87,8 @@ struct CDSP::Impl {
     double m_imp = 50;
     double m_window_sum = 1;
     window_mode_t m_window_mode = HANNING;
-    std::vector<double> m_window;
+    std::vector<cdsp_data_t> m_window;
     bool m_remove_DC = true;
-    mode_t m_mode = DBM;
     std::vector<kiss_fft_cpx>* m_kiss_fft_out = NULL;
     kiss_fftr_cfg m_kiss_fft_cfg = NULL;
     size_t m_kiss_fft_cfg_max_size = 0;
@@ -131,7 +108,6 @@ CDSP::CDSP(uint8_t max_channels, uint32_t max_adc_buffer, uint32_t adc_max_speed
     m_pimpl->m_window_sum = 1;
     m_pimpl->m_window_mode = HANNING;
     m_pimpl->m_remove_DC = true;
-    m_pimpl->m_mode = DBM;
     m_pimpl->m_kiss_fft_cfg = NULL;
     m_pimpl->m_kiss_fft_out = new std::vector<kiss_fft_cpx>[max_channels];
 
@@ -166,13 +142,16 @@ CDSP::~CDSP() {
         m_pimpl->m_kiss_fft_cfg = NULL;
     }
 
-    deleteData(m_pimpl->m_data);
     delete m_pimpl;
 }
 
 auto CDSP::setChannel(uint8_t ch, bool enable) -> void {
     std::lock_guard lock(m_pimpl->m_channelMutex);
     m_pimpl->m_channelState[ch] = enable;
+}
+
+auto CDSP::getChannel(uint8_t ch, bool* enable) -> void {
+    *enable = m_pimpl->m_channelState[ch];
 }
 
 auto CDSP::getStoredData() -> data_t* {
@@ -364,14 +343,6 @@ auto CDSP::getRemoveDC() -> bool {
     return m_pimpl->m_remove_DC;
 }
 
-auto CDSP::setMode(mode_t mode) -> void {
-    m_pimpl->m_mode = mode;
-}
-
-auto CDSP::getMode() -> mode_t {
-    return m_pimpl->m_mode;
-}
-
 auto CDSP::setProbe(uint8_t channel, uint32_t value) -> void {
     m_pimpl->m_channelProbe[channel] = value;
 }
@@ -381,7 +352,7 @@ auto CDSP::getProbe(uint8_t channel, uint32_t* value) -> void {
 }
 
 auto CDSP::prepareFreqVector(data_t* data, double f_s, float decimation) -> int {
-    if (!data || !data->m_freq_vector) {
+    if (!data) {
         ERROR_LOG("Data not initialized");
         return -1;
     }
@@ -391,13 +362,15 @@ auto CDSP::prepareFreqVector(data_t* data, double f_s, float decimation) -> int 
     // (float)spectr_fpga_cnv_freq_range_to_dec(freq_range);
     /* Divider to get to the right units - [MHz], [kHz] or [Hz] */
     //float unit_div = 1e6;
-
-    for (i = 0; i < getOutSignalLength(); i++) {
-        /* We use full FPGA signal length range for this calculation, eventhough
-         * the output vector is smaller. */
-        data->m_freq_vector[i] = (float)i / (float)getSignalLength() * freq_smpl;
+    if (data->m_converted.m_maxFreq != (uint32_t)freq_smpl || data->m_converted.m_data_size != getOutSignalLength()) {
+        for (i = 0; i < getOutSignalLength(); i++) {
+            /* We use full FPGA signal length range for this calculation, eventhough
+            * the output vector is smaller. */
+            data->m_converted.m_freq_vector[i] = (float)i / (float)getSignalLength() * freq_smpl;
+        }
     }
-
+    data->m_converted.m_maxFreq = freq_smpl;
+    data->m_converted.m_data_size = getOutSignalLength();
     return 0;
 }
 
@@ -406,15 +379,30 @@ auto CDSP::prepareFreqVector(data_t* data, float decimation) -> int {
 }
 
 auto CDSP::windowFilter(data_t* data) -> int {
-    uint32_t i, j;
-    if (!data || !data->m_in || !data->m_filtred) {
+    if (!data) {
         ERROR_LOG("Data not initialized");
         return -1;
     }
+    for (uint32_t j = 0; j < m_pimpl->m_max_channels; j++) {
+        if (!m_pimpl->m_channelState[j])
+            continue;
+        // for (i = 0; i < getSignalLength(); i++) {
+        //     data->m_filtred[j][i] = data->m_in[j][i] * m_pimpl->m_window[i] * m_pimpl->m_channelProbe[j];
+        // }
 
-    for (j = 0; j < m_pimpl->m_max_channels; j++) {
-        for (i = 0; i < getSignalLength(); i++) {
-            data->m_filtred[j][i] = data->m_in[j][i] * m_pimpl->m_window[i] * m_pimpl->m_channelProbe[j];
+        if constexpr (std::is_same_v<cdsp_data_t, float>) {
+            multiply_arrays_neon(data->m_filtred[j].data(), data->m_in[j].data(), m_pimpl->m_window.data(), getSignalLength());
+            multiply_array_by_scalar_float_neon(data->m_filtred[j].data(), data->m_filtred[j].data(), m_pimpl->m_channelProbe[j], getSignalLength());
+        } else if constexpr (std::is_same_v<cdsp_data_t, double>) {
+            // Cast to the expected type if your data structures can handle it
+            multiply_arrays_double_neon(reinterpret_cast<double*>(data->m_filtred[j].data()),
+                                        reinterpret_cast<const double*>(data->m_in[j].data()),
+                                        reinterpret_cast<const double*>(m_pimpl->m_window.data()),
+                                        getSignalLength());
+            multiply_array_by_scalar_double_neon(reinterpret_cast<double*>(data->m_filtred[j].data()),
+                                                 reinterpret_cast<double*>(data->m_filtred[j].data()),
+                                                 static_cast<double>(m_pimpl->m_channelProbe[j]),
+                                                 getSignalLength());
         }
     }
     data->m_is_data_filtred = true;
@@ -471,7 +459,7 @@ auto CDSP::fft(data_t* data) -> int {
     };
 #endif
 
-    if (!data || !data->m_in || !data->m_filtred || !data->m_fft) {
+    if (!data) {
         ERROR_LOG("Data not initialized");
         return -1;
     }
@@ -480,17 +468,17 @@ auto CDSP::fft(data_t* data) -> int {
         ERROR_LOG("rp_spect_fft not initialized");
         return -1;
     }
-    auto _in = data->m_is_data_filtred ? data->m_filtred : data->m_in;
+    auto& _in = data->m_is_data_filtred ? data->m_filtred : data->m_in;
     for (uint32_t j = 0; j < m_pimpl->m_max_channels; j++) {
         if (!m_pimpl->m_channelState[j])
             continue;
-        kiss_fftr(m_pimpl->m_kiss_fft_cfg, (kiss_fft_scalar*)_in[j], m_pimpl->m_kiss_fft_out[j].data());
+        kiss_fftr(m_pimpl->m_kiss_fft_cfg, (kiss_fft_scalar*)_in[j].data(), m_pimpl->m_kiss_fft_out[j].data());
     }
     for (uint32_t j = 0; j < m_pimpl->m_max_channels; j++) {
         if (!m_pimpl->m_channelState[j])
             continue;
 #ifdef ARCH_ARM
-        neonMagnitudeOptimized(getOutSignalLength(), m_pimpl->m_kiss_fft_out[j].data(), data->m_fft[j]);
+        neonMagnitudeOptimized(getOutSignalLength(), m_pimpl->m_kiss_fft_out[j].data(), data->m_fft[j].data());
 #else
         for (uint32_t i = 0; i < getOutSignalLength(); i++) {  // FFT limited to fs/2, specter of amplitudes
             auto x = m_pimpl->m_kiss_fft_out[j][i].r * m_pimpl->m_kiss_fft_out[j][i].r;
@@ -510,7 +498,7 @@ int CDSP::getAmpAndPhase(data_t* _data, double _freq, double* _amp1, double* _ph
     };
 
     for (uint32_t i = 0; i < getOutSignalLength(); i++) {
-        if (_data->m_freq_vector[i] >= _freq) {
+        if (_data->m_converted.m_freq_vector[i] >= _freq) {
             *_amp1 = amp(0, i);
             *_amp2 = amp(1, i);
             *_phase1 = atan2(m_pimpl->m_kiss_fft_out[0][i].i, m_pimpl->m_kiss_fft_out[0][i].r);
@@ -523,101 +511,279 @@ int CDSP::getAmpAndPhase(data_t* _data, double _freq, double* _amp1, double* _ph
 }
 
 auto CDSP::decimate(data_t* data, uint32_t in_len, uint32_t out_len) -> int {
-    std::lock_guard<std::mutex> lock(m_pimpl->m_channelMutex);
-    uint32_t step;
-    uint32_t i, j;
+    if (in_len != out_len) {
+        return decimate_ex(data, in_len, out_len);
+    } else {
+        return decimate_disabled(data, in_len);
+    }
+}
 
-    if (!data || !data->m_decimated || !data->m_fft) {
+auto CDSP::decimate_ex(data_t* data, uint32_t in_len, uint32_t out_len) -> int {
+    std::lock_guard lock(m_pimpl->m_channelMutex);
+
+    if (!data) {
         ERROR_LOG("Data not initialized");
         return -1;
     }
 
-    step = (uint32_t)round((float)in_len / (float)out_len);
-    if (step < 1)
-        step = 1;
+    const uint32_t step = std::max(1u, static_cast<uint32_t>(std::round(static_cast<float>(in_len) / out_len)));
+    const float wsumf = 2.0f / static_cast<float>(m_pimpl->m_window_sum);
+    const float imp_reciprocal = 1.0f / static_cast<float>(m_pimpl->m_imp);
+    const float step_f = static_cast<float>(step);
 
-    float wsumf = 1.0 / (float)m_pimpl->m_window_sum * 2.0;
-    auto mode = getMode();
+    const uint32_t max_j = (out_len - 1) * step;
+    if (max_j + step > in_len) {
+        ERROR_LOG("rp_spectr_decimate() index too high");
+        return -1;
+    }
 
     for (uint32_t c = 0; c < m_pimpl->m_max_channels; c++) {
         if (!m_pimpl->m_channelState[c])
             continue;
-        for (i = 0, j = 0; i < out_len; i++, j += step) {
-            uint32_t k = j;
+        auto& vec = data->m_dec_data_z[c];
+        std::fill(vec.begin(), vec.end(), 0.0f);
+        vec = data->m_dec_data_wsumf[c];
+        std::fill(vec.begin(), vec.end(), 0.0f);
+        vec = data->m_dec_data_scaled[c];
+        std::fill(vec.begin(), vec.end(), 0.0f);
+    }
 
-            if (j >= in_len) {
-                ERROR_LOG("rp_spectr_decimate() index too high");
-                return -1;
+    for (uint32_t c = 0; c < m_pimpl->m_max_channels; c++) {
+        if (!m_pimpl->m_channelState[c])
+            continue;
+
+        auto& fft_channel = data->m_fft[c];
+        auto& converted_z = data->m_dec_data_z[c];
+        auto& converted_wsumf = data->m_dec_data_wsumf[c];
+        auto& converted_scaled = data->m_dec_data_scaled[c];
+
+        for (uint32_t i = 0, j = 0; i < out_len; i++, j += step) {
+            float sum_z = 0.0f;
+            float sum_fft_wsumf = 0.0f;
+            float sum_fft_scaled = 0.0f;
+
+            for (uint32_t k = j; k < j + step; k++) {
+                const float fft_wsumf = fft_channel[k] * wsumf;
+                const float fft_scaled = fft_wsumf * 0.707106781f;
+
+                sum_fft_wsumf += fft_wsumf;
+                sum_fft_scaled += fft_scaled;
+                sum_z += (fft_scaled * fft_scaled) * imp_reciprocal;
             }
-            data->m_decimated[c][i] = 0;
+            converted_z[i] = sum_z / step_f;
+            converted_wsumf[i] = sum_fft_wsumf / step_f;
+            converted_scaled[i] = sum_fft_scaled / step_f;
 
-            for (k = j; k < j + step; k++) {
-
-                double ch_p = 0;
-                //dBm
-                if (mode == DBM) {
-                    /* Conversion to power (Watts) */
-                    // V -> RMS -> power
-                    auto x = (data->m_fft[c][k] * wsumf) / 1.414213562;
-                    ch_p = (x * x) / m_pimpl->m_imp;
-                }
-                // V
-                if (mode == VOLT) {
-                    ch_p = data->m_fft[c][k] * wsumf;
-                }
-                // dBu
-                if (mode == DBU) {
-                    ch_p = data->m_fft[c][k] * wsumf / 1.414213562;
-                }
-
-                // dBV
-                // V -> RMS
-                if (mode == DBV) {
-                    ch_p = data->m_fft[c][k] * wsumf / 1.414213562;
-                }
-
-                // dBuV
-                if (mode == DBuV) {
-                    ch_p = data->m_fft[c][k] * wsumf / 1.414213562;
-                }
-
-                // mW
-                if (mode == MW) {
-                    auto x = (data->m_fft[c][k] * wsumf) / 1.414213562;
-                    ch_p = (x * x) / m_pimpl->m_imp;
-                }
-
-                // dBW
-                if (mode == DBW) {
-                    auto x = (data->m_fft[c][k] * wsumf) / 1.414213562;
-                    ch_p = (x * x) / m_pimpl->m_imp;
-                }
-
-                data->m_decimated[c][i] += (double)ch_p;  // Summing the power expressed in Watts associated to each FFT bin
-            }
-            data->m_decimated[c][i] /= step;
+            // converted_dbm[i] = sum_z / step_f;
+            // converted_mw[i] = sum_z / step_f;
+            // converted_dbw[i] = sum_z / step_f;
+            // converted_volt[i] = sum_fft_wsumf / step_f;
+            // converted_dbu[i] = sum_fft_scaled / step_f;
+            // converted_dbv[i] = sum_fft_scaled / step_f;
+            // converted_dbuV[i] = sum_fft_scaled / step_f;
         }
     }
+
     return 0;
 }
 
-auto CDSP::cnvToDBM(data_t* data, uint32_t decimation) -> int {
-    std::lock_guard<std::mutex> lock(m_pimpl->m_channelMutex);
-    if (!data || !data->m_decimated || !data->m_converted || !data->m_peak_freq || !data->m_peak_power) {
+auto CDSP::decimate_disabled(data_t* data, uint32_t in_len) -> int {
+    std::lock_guard lock(m_pimpl->m_channelMutex);
+
+    if (!data) {
         ERROR_LOG("Data not initialized");
         return -1;
     }
 
-    double max_pw = 0;
-    int max_pw_idx = 0;
+    const float wsumf = 2.0f / static_cast<float>(m_pimpl->m_window_sum);
 
+    for (uint32_t c = 0; c < m_pimpl->m_max_channels; c++) {
+        if (!m_pimpl->m_channelState[c])
+            continue;
+
+        auto& fft_data = data->m_fft[c];
+        auto& converted_z = data->m_dec_data_z[c];
+        auto& converted_wsumf = data->m_dec_data_wsumf[c];
+        auto& converted_scaled = data->m_dec_data_scaled[c];
+
+        const float imp_reciprocal = 1.0f / m_pimpl->m_imp;
+
+        for (uint32_t i = 0; i < in_len; i++) {
+            const cdsp_data_t fft_wsumf = fft_data[i] * wsumf;
+            const cdsp_data_t fft_scaled = fft_wsumf * 0.707106781f;
+            const cdsp_data_t z = (fft_scaled * fft_scaled) * imp_reciprocal;
+            // dbm_vec[i] = z;
+            // mw_vec[i] = z;
+            // dbw_vec[i] = z;
+            // volt_vec[i] = fft_wsumf;
+            // dbu_vec[i] = fft_scaled;
+            // dbv_vec[i] = fft_scaled;
+            // dbuV_vec[i] = fft_scaled;
+
+            converted_z[i] = z;
+            converted_wsumf[i] = fft_wsumf;
+            converted_scaled[i] = fft_scaled;
+        }
+    }
+
+    return 0;
+}
+
+// auto CDSP::cnvToDBMMaxValueRanged(data_t* data, uint32_t decimation, uint32_t minFreq, uint32_t maxFreq) -> int {
+//     std::lock_guard lock(m_pimpl->m_channelMutex);
+//     if (!data) {
+//         ERROR_LOG("Data not initialized");
+//         return -1;
+//     }
+
+//     cdsp_data_t max_pw[COUNT_DSP_MODE];
+//     int max_pw_idx[COUNT_DSP_MODE];
+
+//     float freq_smpl = (float)m_pimpl->m_adc_max_speed / (float)decimation;
+//     float freq_const = freq_smpl / (2.0f * (float)getOutSignalLength());
+//     auto logLim_10 = 10 * log10f_neon(LOG_LIMIT);
+//     auto logLim_20 = 20 * log10f_neon(LOG_LIMIT);
+
+//     if (m_pimpl->m_remove_DC) {
+//         int8_t count = remoteDCCount();
+//         for (uint32_t c = 0; c < m_pimpl->m_max_channels; c++) {
+//             for (int8_t x = 0; x < count; x++) {
+//                 data->m_dec_data_z[c][x] = data->m_dec_data_z[c][count];
+//                 data->m_dec_data_wsumf[c][x] = data->m_dec_data_wsumf[c][count];
+//                 data->m_dec_data_scaled[c][x] = data->m_dec_data_scaled[c][count];
+//             }
+//         }
+//     }
+
+//     for (uint32_t c = 0; c < m_pimpl->m_max_channels; c++) {
+//         if (!m_pimpl->m_channelState[c])
+//             continue;
+
+//         for (int mode = MIN_DSP_MODE; mode < COUNT_DSP_MODE; mode++) {
+//             max_pw[mode] = std::numeric_limits<cdsp_data_t>::lowest();
+//             max_pw_idx[mode] = 0;
+//         }
+
+//         for (uint32_t i = 0; i < getOutSignalLength(); i++) {
+
+//             auto& converted_z = data->m_dec_data_z[c];
+//             auto& converted_wsumf = data->m_dec_data_wsumf[c];
+//             auto& converted_scaled = data->m_dec_data_scaled[c];
+
+//             auto& dbm_vec_c = data->m_converted.m_result[DBM][c];
+//             auto& mw_vec_c = data->m_converted.m_result[MW][c];
+//             auto& dbw_vec_c = data->m_converted.m_result[DBW][c];
+//             auto& volt_vec_c = data->m_converted.m_result[VOLT][c];
+//             auto& dbu_vec_c = data->m_converted.m_result[DBU][c];
+//             auto& dbv_vec_c = data->m_converted.m_result[DBV][c];
+//             auto& dbuV_vec_c = data->m_converted.m_result[DBuV][c];
+
+//             /* Conversion to power (Watts) */
+//             auto ch_p = converted_z[i] * g_w2mw;
+//             dbm_vec_c[i] = ch_p > LOG_LIMIT ? 10 * log10f_neon(ch_p) : logLim_10;  // W -> mW -> dBm
+
+//             volt_vec_c[i] = converted_wsumf[i];
+
+//             // ( 20*log10( 0.686 / .775 ))
+//             ch_p = converted_scaled[i] / 0.775;
+//             dbu_vec_c[i] = ch_p > LOG_LIMIT ? 20 * log10f_neon(ch_p) : logLim_20;  // W -> mW -> dBm
+
+//             // ( 20*log10( RMS / 1.0 ))
+//             ch_p = converted_scaled[i];
+//             dbv_vec_c[i] = ch_p > LOG_LIMIT ? 20 * log10f_neon(ch_p) : logLim_20;  // W -> mW -> dBm
+
+//             // ( 20*log10( RMS / 1.0 )) + 120
+//             ch_p = converted_scaled[i];
+//             dbuV_vec_c[i] = ch_p > LOG_LIMIT ? 20 * log10f_neon(ch_p) + 120 : logLim_20 + 120;  // W -> mW -> dBm
+
+//             // W -> mW
+//             ch_p = converted_z[i] * g_w2mw;
+//             mw_vec_c[i] = ch_p;
+
+//             ch_p = converted_z[i];
+//             dbw_vec_c[i] = ch_p > LOG_LIMIT ? 10 * log10f_neon(ch_p) : logLim_10;
+
+//             auto currentFreq = ((float)i * freq_const);
+//             if (currentFreq < minFreq || currentFreq > maxFreq)
+//                 continue;
+
+//             if (dbm_vec_c[i] >= max_pw[DBM]) {
+//                 max_pw[DBM] = dbm_vec_c[i];
+//                 max_pw_idx[DBM] = i;
+//             }
+
+//             if (volt_vec_c[i] >= max_pw[VOLT]) {
+//                 max_pw[VOLT] = volt_vec_c[i];
+//                 max_pw_idx[VOLT] = i;
+//             }
+
+//             if (dbu_vec_c[i] >= max_pw[DBU]) {
+//                 max_pw[DBU] = dbu_vec_c[i];
+//                 max_pw_idx[DBU] = i;
+//             }
+
+//             if (dbv_vec_c[i] >= max_pw[DBV]) {
+//                 max_pw[DBV] = dbv_vec_c[i];
+//                 max_pw_idx[DBV] = i;
+//             }
+
+//             if (dbuV_vec_c[i] >= max_pw[DBuV]) {
+//                 max_pw[DBuV] = dbuV_vec_c[i];
+//                 max_pw_idx[DBuV] = i;
+//             }
+
+//             if (mw_vec_c[i] >= max_pw[MW]) {
+//                 max_pw[MW] = mw_vec_c[i];
+//                 max_pw_idx[MW] = i;
+//             }
+
+//             if (dbw_vec_c[i] >= max_pw[DBW]) {
+//                 max_pw[DBW] = dbw_vec_c[i];
+//                 max_pw_idx[DBW] = i;
+//             }
+//         }
+//         for (int mode = MIN_DSP_MODE; mode < COUNT_DSP_MODE; mode++) {
+//             data->m_converted.m_peak_power[mode][c] = max_pw[mode];
+//             data->m_converted.m_peak_freq[mode][c] = ((float)max_pw_idx[mode] / (float)getOutSignalLength() * freq_smpl / 2);
+//         }
+//     }
+//     return 0;
+// }
+
+auto CDSP::cnvToMetric(data_t* data, uint32_t decimation, uint32_t minFreq, uint32_t maxFreq) -> int {
+    std::lock_guard lock(m_pimpl->m_channelMutex);
+    if (!data) {
+        ERROR_LOG("Data not initialized");
+        return -1;
+    }
+
+    bool skipPeakRange = minFreq == 0 && maxFreq == 0;
+
+    cdsp_data_t max_pw[COUNT_DSP_MODE];
+    int max_pw_idx[COUNT_DSP_MODE];
     float freq_smpl = (float)m_pimpl->m_adc_max_speed / (float)decimation;
+    float freq_const = freq_smpl / (2.0f * (float)getOutSignalLength());
+    static auto logLim_10 = 10.f * log10f(LOG_LIMIT);
+    static auto logLim_20 = 20.f * log10f(LOG_LIMIT);
+    static auto LOG_0775 = log10f(0.775);
+    static auto LOG_W2MW = log10f(g_w2mw);
+
+    auto isSkip = [skipPeakRange, freq_const, minFreq, maxFreq](uint32_t i) {
+        if (skipPeakRange)
+            return false;
+        auto currentFreq = ((float)i * freq_const);
+        if (currentFreq < minFreq || currentFreq > maxFreq)
+            return true;
+        return false;
+    };
 
     if (m_pimpl->m_remove_DC) {
         int8_t count = remoteDCCount();
         for (uint32_t c = 0; c < m_pimpl->m_max_channels; c++) {
             for (int8_t x = 0; x < count; x++) {
-                data->m_decimated[c][x] = data->m_decimated[c][count];
+                data->m_dec_data_z[c][x] = data->m_dec_data_z[c][count];
+                data->m_dec_data_wsumf[c][x] = data->m_dec_data_wsumf[c][count];
+                data->m_dec_data_scaled[c][x] = data->m_dec_data_scaled[c][count];
             }
         }
     }
@@ -625,218 +791,144 @@ auto CDSP::cnvToDBM(data_t* data, uint32_t decimation) -> int {
     for (uint32_t c = 0; c < m_pimpl->m_max_channels; c++) {
         if (!m_pimpl->m_channelState[c])
             continue;
-        max_pw = -1e5;
-        max_pw_idx = 0;
+
+        for (int mode = MIN_DSP_MODE; mode < COUNT_DSP_MODE; mode++) {
+            max_pw[mode] = std::numeric_limits<cdsp_data_t>::lowest();
+            max_pw_idx[mode] = 0;
+        }
+
         for (uint32_t i = 0; i < getOutSignalLength(); i++) {
 
+            auto& converted_z = data->m_dec_data_z[c];
+            auto& converted_wsumf = data->m_dec_data_wsumf[c];
+            auto& converted_scaled = data->m_dec_data_scaled[c];
+
+            auto& dbm_vec_c = data->m_converted.m_result[DBM][c];
+            auto& mw_vec_c = data->m_converted.m_result[MW][c];
+            auto& dbw_vec_c = data->m_converted.m_result[DBW][c];
+            auto& volt_vec_c = data->m_converted.m_result[VOLT][c];
+            auto& dbu_vec_c = data->m_converted.m_result[DBU][c];
+            auto& dbv_vec_c = data->m_converted.m_result[DBV][c];
+            auto& dbuV_vec_c = data->m_converted.m_result[DBuV][c];
+
+            auto log_scaled_10 = log10f_neon(converted_scaled[i]);
+            auto log_converted_10 = log10f_neon(converted_z[i]);
+            auto need_skip = isSkip(i);
             /* Conversion to power (Watts) */
+            auto ch_p = converted_z[i] * g_w2mw;
+            dbm_vec_c[i] = ch_p > LOG_LIMIT ? 10 * (log_converted_10 + LOG_W2MW) : logLim_10;  // W -> mW -> dBm
 
-            double ch_p = data->m_decimated[c][i];
+            if (dbm_vec_c[i] >= max_pw[DBM] && !need_skip) {
+                max_pw[DBM] = dbm_vec_c[i];
+                max_pw_idx[DBM] = i;
+            }
 
-            // Avoiding -Inf due to log10(0.0)
+            volt_vec_c[i] = converted_wsumf[i];
 
-            if (ch_p * g_w2mw > 1.0e-12)
-                data->m_converted[c][i] = 10 * log10f_neon(ch_p * g_w2mw);  // W -> mW -> dBm
-            else
-                data->m_converted[c][i] = 10 * log10f_neon(1.0e-12);
+            if (volt_vec_c[i] >= max_pw[VOLT] && !need_skip) {
+                max_pw[VOLT] = volt_vec_c[i];
+                max_pw_idx[VOLT] = i;
+            }
 
-            /* Find peaks */
-            if (data->m_converted[c][i] > max_pw) {
-                max_pw = data->m_converted[c][i];
-                max_pw_idx = i;
+            // ( 20*log10( 0.686 / .775 ))
+            ch_p = converted_scaled[i] / 0.775;
+            // dbu_vec_c[i] = ch_p > LOG_LIMIT ? 20 * log10f_neon(ch_p) : logLim_20;  // W -> mW -> dBm
+            dbu_vec_c[i] = ch_p > LOG_LIMIT ? 20 * (log_scaled_10 - LOG_0775) : logLim_20;
+
+            if (dbu_vec_c[i] >= max_pw[DBU] && !need_skip) {
+                max_pw[DBU] = dbu_vec_c[i];
+                max_pw_idx[DBU] = i;
+            }
+
+            // ( 20*log10( RMS / 1.0 ))
+            ch_p = converted_scaled[i];
+            //dbv_vec_c[i] = ch_p > LOG_LIMIT ? 20 * log10f_neon(ch_p) : logLim_20;  // W -> mW -> dBm
+            dbv_vec_c[i] = ch_p > LOG_LIMIT ? 20 * log_scaled_10 : logLim_20;
+
+            if (dbv_vec_c[i] >= max_pw[DBV] && !need_skip) {
+                max_pw[DBV] = dbv_vec_c[i];
+                max_pw_idx[DBV] = i;
+            }
+
+            // ( 20*log10( RMS / 1.0 )) + 120
+            // ch_p = converted_scaled[i];
+            // dbuV_vec_c[i] = ch_p > LOG_LIMIT ? 20 * log10f_neon(ch_p) + 120 : logLim_20 + 120;  // W -> mW -> dBm
+            dbuV_vec_c[i] = dbv_vec_c[i] + 120;
+            if (dbuV_vec_c[i] >= max_pw[DBuV] && !need_skip) {
+                max_pw[DBuV] = dbuV_vec_c[i];
+                max_pw_idx[DBuV] = i;
+            }
+
+            // W -> mW
+            ch_p = converted_z[i] * g_w2mw;
+            mw_vec_c[i] = ch_p;
+
+            if (mw_vec_c[i] >= max_pw[MW] && !need_skip) {
+                max_pw[MW] = mw_vec_c[i];
+                max_pw_idx[MW] = i;
+            }
+
+            ch_p = converted_z[i];
+            dbw_vec_c[i] = ch_p > LOG_LIMIT ? 10 * log_converted_10 : logLim_10;
+
+            if (dbw_vec_c[i] >= max_pw[DBW] && !need_skip) {
+                max_pw[DBW] = dbw_vec_c[i];
+                max_pw_idx[DBW] = i;
             }
         }
-        data->m_peak_power[c] = max_pw;
-        data->m_peak_freq[c] = ((float)max_pw_idx / (float)getOutSignalLength() * freq_smpl / 2);
-    }
-    return 0;
-}
-
-auto CDSP::cnvToDBMMaxValueRanged(data_t* data, uint32_t decimation, uint32_t minFreq, uint32_t maxFreq) -> int {
-    std::lock_guard<std::mutex> lock(m_pimpl->m_channelMutex);
-    if (!data || !data->m_decimated || !data->m_converted || !data->m_peak_freq || !data->m_peak_power) {
-        ERROR_LOG("Data not initialized");
-        return -1;
-    }
-
-    double max_pw = 0;
-    int max_pw_idx = 0;
-
-    float freq_smpl = (float)m_pimpl->m_adc_max_speed / (float)decimation;
-    if (m_pimpl->m_remove_DC) {
-        int8_t count = remoteDCCount();
-        for (uint32_t c = 0; c < m_pimpl->m_max_channels; c++) {
-            for (int8_t x = 0; x < count; x++) {
-                data->m_decimated[c][x] = data->m_decimated[c][count];
-            }
+        for (int mode = MIN_DSP_MODE; mode < COUNT_DSP_MODE; mode++) {
+            data->m_converted.m_peak_power[mode][c] = max_pw[mode];
+            data->m_converted.m_peak_freq[mode][c] = ((float)max_pw_idx[mode] / (float)getOutSignalLength() * freq_smpl / 2);
         }
-    }
-    for (uint32_t c = 0; c < m_pimpl->m_max_channels; c++) {
-        if (!m_pimpl->m_channelState[c])
-            continue;
-        max_pw = -1e5;
-        max_pw_idx = 0;
-        for (uint32_t i = 0; i < getOutSignalLength(); i++) {
-
-            /* Conversion to power (Watts) */
-
-            double ch_p = data->m_decimated[c][i];
-
-            // Avoiding -Inf due to log10(0.0)
-
-            if (ch_p * g_w2mw > 1.0e-12)
-                data->m_converted[c][i] = 10 * log10f_neon(ch_p * g_w2mw);  // W -> mW -> dBm
-            else
-                data->m_converted[c][i] = 10 * log10f_neon(1.0e-12);
-
-            auto currentFreq = ((float)i / (float)getOutSignalLength() * freq_smpl / 2);
-            if (currentFreq < minFreq || currentFreq > maxFreq)
-                continue;
-
-            /* Find peaks */
-            if (data->m_converted[c][i] > max_pw) {
-                max_pw = data->m_converted[c][i];
-                max_pw_idx = i;
-            }
-        }
-        data->m_peak_power[c] = max_pw;
-        data->m_peak_freq[c] = ((float)max_pw_idx / (float)getOutSignalLength() * freq_smpl / 2);
-    }
-    return 0;
-}
-
-auto CDSP::cnvToMetric(data_t* data, uint32_t decimation) -> int {
-    std::lock_guard<std::mutex> lock(m_pimpl->m_channelMutex);
-    if (!data || !data->m_decimated || !data->m_converted || !data->m_peak_freq || !data->m_peak_power) {
-        ERROR_LOG("Data not initialized");
-        return -1;
-    }
-    uint32_t i;
-
-    double max_pw = 0;
-    int max_pw_idx = 0;
-
-    float freq_smpl = (float)m_pimpl->m_adc_max_speed / (float)decimation;
-
-    if (m_pimpl->m_remove_DC) {
-        int8_t count = remoteDCCount();
-        for (uint32_t c = 0; c < m_pimpl->m_max_channels; c++) {
-            for (int8_t x = 0; x < count; x++) {
-                data->m_decimated[c][x] = data->m_decimated[c][count];
-            }
-        }
-    }
-    auto mode = getMode();
-    for (uint32_t c = 0; c < m_pimpl->m_max_channels; c++) {
-        if (!m_pimpl->m_channelState[c])
-            continue;
-        max_pw = -10000;
-        max_pw_idx = 0;
-        for (i = 0; i < getOutSignalLength(); i++) {
-
-            /* Conversion to power (Watts) */
-            if (mode == DBM) {
-                double ch_p = data->m_decimated[c][i];
-                if (ch_p * g_w2mw > 1.0e-12)
-                    data->m_converted[c][i] = 10 * log10f_neon(ch_p * g_w2mw);  // W -> mW -> dBm
-                else
-                    data->m_converted[c][i] = -120;
-            }
-
-            if (mode == VOLT) {
-                data->m_converted[c][i] = data->m_decimated[c][i];
-            }
-
-            if (mode == DBU) {
-                double ch_p = data->m_decimated[c][i];
-                // ( 20*log10( 0.686 / .775 ))
-                if (ch_p * g_w2mw > 1.0e-12)
-                    data->m_converted[c][i] = 20 * log10f_neon(ch_p / 0.775);
-                else
-                    data->m_converted[c][i] = -120;
-            }
-
-            if (mode == DBV) {
-                double ch_p = data->m_decimated[c][i];
-                // ( 20*log10( RMS / 1.0 ))
-                if (ch_p * g_w2mw > 1.0e-12)
-                    data->m_converted[c][i] = 20 * log10f_neon(ch_p);
-                else
-                    data->m_converted[c][i] = -120;
-            }
-
-            if (mode == DBuV) {
-                double ch_p = data->m_decimated[c][i];
-                // ( 20*log10( RMS / 1.0 )) + 120
-                if (ch_p * g_w2mw > 1.0e-12)
-                    data->m_converted[c][i] = 20 * log10f_neon(ch_p) + 120;
-                else
-                    data->m_converted[c][i] = -10;
-            }
-
-            if (mode == MW) {
-                double ch_p = data->m_decimated[c][i];
-                // W -> mW
-                if (ch_p * g_w2mw > 1.0e-12)
-                    data->m_converted[c][i] = ch_p * g_w2mw;
-                else
-                    data->m_converted[c][i] = 0;
-            }
-
-            if (mode == DBW) {
-                double ch_p = data->m_decimated[c][i];
-                if (ch_p > 1.0e-12)
-                    data->m_converted[c][i] = 10 * log10f_neon(ch_p);  // W -> dBW
-                else
-                    data->m_converted[c][i] = -120;
-            }
-
-            /* Find peaks */
-            if (data->m_converted[c][i] > max_pw) {
-                max_pw = data->m_converted[c][i];
-                max_pw_idx = i;
-            }
-        }
-
-        data->m_peak_power[c] = max_pw;
-        data->m_peak_freq[c] = ((float)max_pw_idx / (float)getOutSignalLength() * freq_smpl / 2);
     }
 
     return 0;
 }
 
 auto CDSP::createData() -> data_t* {
+    auto max_size = getSignalMaxLength();
+    auto max_out_size = getOutSignalMaxLength();
+    auto resize = [](uint32_t size, auto& data) {
+        data.resize(size);
+        if (data.size() != size)
+            throw std::exception();
+    };
+
     data_t* d = nullptr;
     try {
         d = new data_t();
-        d->m_in = createArray<cdsp_data_t>(m_pimpl->m_max_channels, getSignalMaxLength());
-        d->m_filtred = createArray<cdsp_data_t>(m_pimpl->m_max_channels, getSignalMaxLength());
-        d->m_fft = createArray<cdsp_data_t>(m_pimpl->m_max_channels, getSignalMaxLength());
-        d->m_decimated = createArray<float>(m_pimpl->m_max_channels, getOutSignalMaxLength());
-        d->m_converted = createArray<float>(m_pimpl->m_max_channels, getOutSignalMaxLength());
-        d->m_peak_power = new float[m_pimpl->m_max_channels];
-        d->m_peak_freq = new float[m_pimpl->m_max_channels];
-        d->m_freq_vector = new float[getOutSignalMaxLength()];
+        d->m_converted.m_channels = m_pimpl->m_max_channels;
+        d->m_in.resize(m_pimpl->m_max_channels);
+        d->m_filtred.resize(m_pimpl->m_max_channels);
+        d->m_fft.resize(m_pimpl->m_max_channels);
+        d->m_dec_data_z.resize(m_pimpl->m_max_channels);
+        d->m_dec_data_wsumf.resize(m_pimpl->m_max_channels);
+        d->m_dec_data_scaled.resize(m_pimpl->m_max_channels);
+
+        resize(max_out_size, d->m_converted.m_freq_vector);
+
+        for (uint8_t ch = 0; ch < m_pimpl->m_max_channels; ch++) {
+            resize(max_size, d->m_in[ch]);
+            resize(max_size, d->m_filtred[ch]);
+            resize(max_size, d->m_fft[ch]);
+            resize(max_out_size, d->m_dec_data_z[ch]);
+            resize(max_out_size, d->m_dec_data_wsumf[ch]);
+            resize(max_out_size, d->m_dec_data_scaled[ch]);
+        }
+
+        for (int mode = MIN_DSP_MODE; mode < COUNT_DSP_MODE; mode++) {
+            d->m_converted.m_peak_power[mode].resize(m_pimpl->m_max_channels);
+            d->m_converted.m_peak_freq[mode].resize(m_pimpl->m_max_channels);
+            d->m_converted.m_result[mode].resize(max_out_size);
+            for (uint8_t ch = 0; ch < m_pimpl->m_max_channels; ch++) {
+                resize(max_out_size, d->m_converted.m_result[mode][ch]);
+            }
+        }
         d->m_is_data_filtred = false;
-        d->m_channels = m_pimpl->m_max_channels;
         return d;
-    } catch (const std::bad_alloc& e) {
-        deleteData(d);
+    } catch (const std::exception& e) {
+        delete d;
         ERROR_LOG("Can not allocate memory");
         return nullptr;
     }
-}
-
-auto CDSP::deleteData(data_t* data) -> void {
-    if (!data)
-        return;
-    deleteArray(data->m_channels, data->m_in);
-    deleteArray(data->m_channels, data->m_fft);
-    deleteArray(data->m_channels, data->m_filtred);
-    deleteArray(data->m_channels, data->m_decimated);
-    deleteArray(data->m_channels, data->m_converted);
-    delete[] data->m_peak_freq;
-    delete[] data->m_peak_power;
-    delete[] data->m_freq_vector;
-    delete data;
 }

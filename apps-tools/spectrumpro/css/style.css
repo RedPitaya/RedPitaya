@@ -579,6 +579,14 @@ btn:active {
   cursor: pointer;
 }
 
+#auto_scale {
+  position: relative;
+  margin-left: 25px;
+  margin-top: 15px;
+  width: 150px;
+  height: auto;
+}
+
 .calib-button {
   position: absolute;
   height: auto;
@@ -637,11 +645,10 @@ btn:active {
 
 .waterfall-holder .waterfall-graph {
   display: block;
-  width: 101%;
+  width: 100%;
   height: auto;
   min-height: 60px;
   max-height: 60px;
-  margin-top: -40px;
 }
 
 .waterfall-holder span {
@@ -650,16 +657,19 @@ btn:active {
   top: 30px;
   left: 0px;
   margin-top: -40px;
-  /* Оформление текста */
   color: #FFF;
   font-family: Arial, Helvetica, sans-serif;
   font-size: 20px;
 
-  /* Фон */
   padding: 10px 30px;
   width: 100%;
   text-align: center;
   max-height: 60px;
+}
+
+.waterfall_canvas {
+  width: 100%;
+  height: 60px;
 }
 
 .wait {
@@ -695,7 +705,7 @@ btn:active {
 
 .waterfall_title {
   left: 0;
-  margin-top: -60px;
+  margin-top: -30px;
   position: absolute;
   top: 50%;
   transform: rotate(-90deg);
@@ -752,7 +762,7 @@ btn:active {
 .varrow {
   position: absolute;
   left: 0;
-  bottom: 20px;
+  bottom: 26px;
   margin-left: -7px;
   display: none;
   z-index: 12;
@@ -774,7 +784,7 @@ btn:active {
 
 #cur_x1_info.cur_info,
 #cur_x2_info.cur_info {
-  top: 2px;
+  top: 14px;
   margin-left: 3px;
 }
 
@@ -844,7 +854,7 @@ btn:active {
 }
 
 #cur_x_diff_info.cur_info {
-  top: 30px;
+  top: 28px;
 }
 
 #header {

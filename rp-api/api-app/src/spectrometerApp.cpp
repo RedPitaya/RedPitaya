@@ -18,7 +18,6 @@
 #include <dirent.h>
 #include <errno.h>
 #include <math.h>
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,7 +26,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <atomic>
+#include <memory>
 #include <mutex>
+#include <thread>
 
 #include "common.h"
 #include "common/profiler.h"
@@ -43,48 +44,19 @@ typedef enum rp_spectr_worker_state_e {
     NONEXISTS_STATE /* must be last */
 } rp_spectr_worker_state_t;
 
-/* Worker results (not signal but calculated peaks and jpeg index */
-typedef struct rp_spectr_worker_res_s {
-    float peak_pw_ch[MAX_ADC_CHANNELS];
-    float peak_pw_freq_ch[MAX_ADC_CHANNELS];
-} rp_spectr_worker_res_t;
-
 /* Output signals */
 // 0 - Xaxis; 1 - Ch 1; 2 - Ch 2; 3 - Ch 3; 4 - Ch 4
 #define SPECTR_OUT_SIG_NUM (MAX_ADC_CHANNELS + 1)
+#define NUM_SIGNAL_PERIODS 16
 
-int rp_spectr_get_signals_channel(float** signals, size_t size);
-int rp_spectr_get_params(rp_spectr_worker_res_t* result);
-
-/* Internal helper functions */
-int rp_create_signals(float*** a_signals);
-void rp_cleanup_signals(float*** a_signals);
 int rp_spectr_worker_init();
 int rp_spectr_worker_clean(void);
 int rp_spectr_worker_exit(void);
 int rp_spectr_worker_change_state(rp_spectr_worker_state_t new_state);
-/* Returns:
- *  0 - new signals (dirty signal) are copied to the output
- *  1 - no new signals available (dirty signal was not set - we need to wait)
- */
-int rp_spectr_get_signals(float*** signals, rp_spectr_worker_res_t* result);
 
-/* Fills the output signal structure from temp one after calculation is done
- * and marks it dirty
- */
-int rp_spectr_set_signals(float* source_freq, float** source, rp_spectr_worker_res_t result);
-
-pthread_t* rp_spectr_thread_handler = NULL;
-void* rp_spectr_worker_thread(void* args);
+std::thread* rp_spectr_thread_handler = NULL;
+void rp_spectr_worker_thread();
 void clearAll();
-
-/* Signals directly pointing at the FPGA mem space */
-//int                  *rp_fpga_cha_signal, *rp_fpga_chb_signal;
-
-double** rp_ch_in = NULL;
-double** rp_ch_fft = NULL;
-float** rp_spectr_signals = NULL;
-float** rp_tmp_signals = NULL;
 
 /* Parameters & signals communicating with 'external world' */
 std::mutex rp_spectr_ctrl_mutex;
@@ -94,51 +66,23 @@ int g_decimation = 1;
 std::mutex rp_spectr_sig_mutex;
 std::mutex rp_spectr_window_mutex;
 std::mutex rp_spectr_buf_size_mutex;
-rp_spectr_worker_res_t rp_spectr_result;
 int rp_spectr_signals_dirty = 0;
 
 rp_dsp_api::CDSP* g_dsp;
-rp_dsp_api::data_t* g_data;
+rp_dsp_api::data_t g_data;
 
-static float freq_min, freq_max, current_freq_range;
-
-template <typename T>
-auto createArray(uint32_t count, uint32_t signalLen) -> T** {
-    try {
-        auto arr = new T*[count];
-        for (uint32_t i = 0; i < count; i++) {
-            arr[i] = new T[signalLen];
-        }
-        return arr;
-    } catch (const std::bad_alloc& e) {
-        ERROR_LOG("Can not allocate memory");
-        return nullptr;
-    }
-}
-
-template <typename T>
-auto deleteArray(uint32_t count, T** arr) -> void {
-    if (!arr)
-        return;
-    for (uint32_t i = 0; i < count; i++) {
-        delete[] arr[i];
-    }
-    delete[] arr;
-}
+static float current_freq_range;
 
 int rp_spectr_worker_init() {
-    std::lock_guard<std::mutex> lock(rp_spectr_sig_mutex);
-    int ret_val;
+    std::lock_guard lock(rp_spectr_sig_mutex);
     rp_spectr_ctrl = IDLE_STATE;
 
     clearAll();
     auto adc_channels = getADCChannels();
     auto rate = getADCRate();
-    g_dsp = new rp_dsp_api::CDSP(adc_channels, ADC_BUFFER_SIZE, rate);
-    g_data = g_dsp->createData();
-    rp_spectr_signals = createArray<float>(SPECTR_OUT_SIG_NUM, g_dsp->getOutSignalMaxLength());
+    g_dsp = new rp_dsp_api::CDSP(adc_channels, ADC_BUFFER_SIZE, rate, true);
 
-    if (!g_data) {
+    if (!g_dsp->getStoredData()) {
         clearAll();
         return -1;
     }
@@ -153,33 +97,23 @@ int rp_spectr_worker_init() {
         return -1;
     }
 
-    rp_spectr_thread_handler = (pthread_t*)malloc(sizeof(pthread_t));
-    if (rp_spectr_thread_handler == NULL) {
+    try {
+        rp_spectr_thread_handler = new std::thread(rp_spectr_worker_thread);
+    } catch (const std::exception& e) {
         clearAll();
-        return -1;
-    }
-
-    ret_val = pthread_create(rp_spectr_thread_handler, NULL, rp_spectr_worker_thread, NULL);
-    if (ret_val != 0) {
-        clearAll();
-        ERROR_LOG("pthread_create() failed: %s\n", strerror(errno));
+        ERROR_LOG("Thread creation failed: %s\n", e.what());
         return -1;
     }
     return 0;
 }
 
 void clearAll() {
-    deleteArray<float>(SPECTR_OUT_SIG_NUM, rp_spectr_signals);
-    if (g_dsp) {
-        g_dsp->deleteData(g_data);
-        g_data = nullptr;
-    }
     delete g_dsp;
     g_dsp = nullptr;
 }
 
 int rp_spectr_worker_clean(void) {
-    std::lock_guard<std::mutex> lock(rp_spectr_sig_mutex);
+    std::lock_guard lock(rp_spectr_sig_mutex);
     clearAll();
     return 0;
 }
@@ -187,17 +121,19 @@ int rp_spectr_worker_clean(void) {
 int rp_spectr_worker_exit(void) {
     int ret_val = 0;
 
-    rp_spectr_worker_change_state(QUIT_STATE);
     if (rp_spectr_thread_handler) {
-        ret_val = pthread_join(*rp_spectr_thread_handler, NULL);
-        free(rp_spectr_thread_handler);
-        rp_spectr_thread_handler = NULL;
-    }
-    if (ret_val != 0) {
-        ERROR_LOG("pthread_join() failed: %s\n", strerror(errno));
+        if (rp_spectr_thread_handler->joinable()) {
+            try {
+                rp_spectr_thread_handler->join();
+            } catch (const std::system_error& e) {
+                ERROR_LOG("std::thread join failed: %s\n", e.what());
+                ret_val = -1;
+            }
+        }
+        delete rp_spectr_thread_handler;
     }
     rp_spectr_worker_clean();
-    return 0;
+    return ret_val;
 }
 
 int rp_spectr_worker_change_state(rp_spectr_worker_state_t new_state) {
@@ -208,55 +144,8 @@ int rp_spectr_worker_change_state(rp_spectr_worker_state_t new_state) {
     return 0;
 }
 
-int rp_spectr_get_signals_channel(float** signals, size_t size) {
-    std::lock_guard lock(rp_spectr_sig_mutex);
-    if (rp_spectr_signals_dirty == 0) {
-        return -1;
-    }
-
-    for (auto i = 0u; i < SPECTR_OUT_SIG_NUM; ++i)
-        memcpy_neon(signals[i], rp_spectr_signals[i], sizeof(float) * size);
-
-    rp_spectr_signals_dirty = 0;
-    return 0;
-}
-
-int rp_spectr_get_params(rp_spectr_worker_res_t* result) {
-    std::lock_guard lock(rp_spectr_sig_mutex);
-    auto adc_channels = getADCChannels();
-    for (auto ch = 0u; ch < adc_channels; ch++) {
-        result->peak_pw_ch[ch] = rp_spectr_result.peak_pw_ch[ch];
-        result->peak_pw_freq_ch[ch] = rp_spectr_result.peak_pw_freq_ch[ch];
-    }
-    return 0;
-}
-
-int rp_spectr_set_signals(float* source_freq, float** source, rp_spectr_worker_res_t result) {
-    std::lock_guard lock(rp_spectr_sig_mutex);
-    if (!g_dsp)
-        return -1;
-
-    memcpy_neon(rp_spectr_signals[0], source_freq, sizeof(float) * g_dsp->getOutSignalLength());
-
-    auto adc_channels = getADCChannels();
-
-    for (auto i = 0u; i < adc_channels; ++i) {
-        memcpy_neon(rp_spectr_signals[i + 1], source[i], sizeof(float) * g_dsp->getOutSignalLength());
-    }
-
-    rp_spectr_signals_dirty = 1;
-
-    for (auto ch = 0u; ch < adc_channels; ch++) {
-        rp_spectr_result.peak_pw_ch[ch] = result.peak_pw_ch[ch];
-        rp_spectr_result.peak_pw_freq_ch[ch] = result.peak_pw_freq_ch[ch];
-    }
-    return 0;
-}
-
-void* rp_spectr_worker_thread(void* args) {
+void rp_spectr_worker_thread() {
     rp_spectr_worker_state_t old_state;
-    int params_dirty = 1;
-    rp_spectr_worker_res_t tmp_result;
     int current_decimation = 1;
     uint32_t buffer_size = 0;
     auto adc_rate = getADCRate();
@@ -270,7 +159,7 @@ void* rp_spectr_worker_thread(void* args) {
 
         /* request to stop worker thread, we will shut down */
         if (rp_spectr_ctrl == QUIT_STATE) {
-            return 0;
+            return;
         }
         if (rp_spectr_ctrl == IDLE_STATE) {
             usleep(1000);
@@ -301,11 +190,11 @@ void* rp_spectr_worker_thread(void* args) {
             }
 
             if (rp_spectr_ctrl == QUIT_STATE) {
-                return 0;
+                return;
             }
 
             if (rp_AcqGetTriggerState(&stateTrig)) {
-                return 0;
+                return;
             }
 
             if (stateTrig == RP_TRIG_STATE_TRIGGERED) {
@@ -320,17 +209,16 @@ void* rp_spectr_worker_thread(void* args) {
             }
 
             if (rp_spectr_ctrl == QUIT_STATE) {
-                return 0;
+                return;
             }
         }
         rp_AcqStop();
 
-        if ((rp_spectr_ctrl != old_state) || params_dirty) {
+        if ((rp_spectr_ctrl != old_state)) {
             if (rp_spectr_ctrl == RESET_STATE) {
                 rp_AcqResetFpga();
                 rp_spectr_worker_change_state(AUTO_STATE);
             }
-            params_dirty = 0;
             continue;
         }
 
@@ -343,75 +231,34 @@ void* rp_spectr_worker_thread(void* args) {
             buffers_t buff_out;
             buff_out.size = buffer_size;
             buff_out.use_calib_for_volts = true;
+            auto data = g_dsp->getStoredData();
+            bool state = false;
             for (auto z = 0; z < adc_channels; z++) {
+                g_dsp->getChannel(z, &state);
                 buff_out.ch_d[z] = NULL;
-                buff_out.ch_f[z] = g_data->m_in[z];
+                buff_out.ch_f[z] = state ? data->m_in[z].data() : NULL;
                 buff_out.ch_i[z] = NULL;
             }
 
             rp_AcqGetDataWithCorrection(trig_pos, &buffer_size, 0, &buff_out);
 
-            /* retrieve data and process it*/
-
-            g_dsp->prepareFreqVector(g_data, adc_rate, g_decimation);
+            // profiler::resetAll();
+            // profiler::setTimePoint("1");
 
             rp_spectr_window_mutex.lock();
-            g_dsp->windowFilter(g_data);
+            g_dsp->prepareFreqVector(data, adc_rate, g_decimation);
+            // profiler::printuS("1", "prepareFreqVector");
+            g_dsp->windowFilter(data);
+            // profiler::printuS("1", "windowFilter");
             rp_spectr_window_mutex.unlock();
-            g_dsp->fft(g_data);
-            //float** start_y_data  = reinterpret_cast<float**>(&rp_tmp_signals[1]);
-            g_dsp->decimate(g_data, g_dsp->getOutSignalLength(), g_dsp->getOutSignalLength());
-            g_dsp->cnvToMetric(g_data, g_decimation);
-            /* Copy the result to the output part */
-            for (auto i = 0u; i < g_data->m_channels; i++) {
-                tmp_result.peak_pw_ch[i] = g_data->m_peak_power[i];
-                tmp_result.peak_pw_freq_ch[i] = g_data->m_peak_freq[i];
-            }
-
-            rp_spectr_set_signals(g_data->m_freq_vector, g_data->m_converted, tmp_result);
+            g_dsp->fft(data);
+            // profiler::printuS("1", "fft");
+            g_dsp->decimate(data, g_dsp->getOutSignalLength(), g_dsp->getOutSignalLength());
+            // profiler::printuS("1", "decimate");
+            g_dsp->cnvToMetric(data, g_decimation);
+            // profiler::printuS("1", "DSP");
         }
-        usleep(10000);
-    }
-
-    return 0;
-}
-
-int rp_create_signals(float*** a_signals) {
-    int i;
-    float** s;
-    s = (float**)malloc(SPECTR_OUT_SIG_NUM * sizeof(float*));
-    if (s == NULL) {
-        return -1;
-    }
-    for (i = 0; i < SPECTR_OUT_SIG_NUM; i++)
-        s[i] = NULL;
-
-    for (i = 0; i < SPECTR_OUT_SIG_NUM; i++) {
-        s[i] = (float*)malloc(g_dsp->getOutSignalMaxLength() * sizeof(float));
-        if (s[i] == NULL) {
-            rp_cleanup_signals(a_signals);
-            return -1;
-        }
-        memset(&s[i][0], 0, g_dsp->getOutSignalMaxLength() * sizeof(float));
-    }
-    *a_signals = s;
-
-    return 0;
-}
-
-void rp_cleanup_signals(float*** a_signals) {
-    int i;
-    float** s = *a_signals;
-
-    if (s) {
-        for (i = 0; i < SPECTR_OUT_SIG_NUM; i++) {
-            if (s[i]) {
-                free(s[i]);
-                s[i] = NULL;
-            }
-        }
-        free(s);
-        *a_signals = NULL;
+        usleep(100);
     }
 }
 
@@ -423,13 +270,23 @@ int spec_run() {
     auto adc_rate = getADCRate();
 
     rp_spectr_worker_change_state(AUTO_STATE);
-    spec_setFreqRange(0, adc_rate / 2.0);
+    spec_setFreqRange(adc_rate / 2.0);
     return 0;
 }
 
 int spec_running()  // true/false
 {
     return rp_spectr_ctrl == AUTO_STATE;
+}
+
+int spec_lockData() {
+    rp_spectr_buf_size_mutex.lock();
+    return 0;
+}
+
+int spec_unlockData() {
+    rp_spectr_buf_size_mutex.unlock();
+    return 0;
 }
 
 int spec_stop() {
@@ -486,15 +343,27 @@ int spec_reset() {
 }
 
 int spec_SetEnable(rp_channel_t channel, bool state) {
+    if (!g_dsp)
+        return -1;
+    g_dsp->setChannel(channel, state);
     return 0;
 }
 
 int spec_GetEnable(rp_channel_t channel, bool* state) {
+    if (!g_dsp)
+        return -1;
+    g_dsp->getChannel(channel, state);
     return 0;
 }
 
-int spec_getViewData(float** signals, size_t size) {
-    return rp_spectr_get_signals_channel(signals, size);
+int spec_getViewData(const rp_dsp_api::rp_dsp_result_t** data) {
+    *data = nullptr;
+    if (!g_dsp)
+        return -1;
+
+    auto d = g_dsp->getStoredData();
+    *data = &(d->m_converted);
+    return 0;
 }
 
 int spec_getViewSize(size_t* size) {
@@ -504,33 +373,9 @@ int spec_getViewSize(size_t* size) {
     return 0;
 }
 
-int spec_getPeakPower(rp_channel_t channel, float* power) {
-    rp_spectr_worker_res_t res;
-    int ret = rp_spectr_get_params(&res);
-    if (!ret) {
-        if ((int)channel >= getADCChannels())
-            return -1;
-        *power = res.peak_pw_ch[(int)channel];
-    }
-
-    return ret;
-}
-
-int spec_getPeakFreq(rp_channel_t channel, float* freq) {
-    rp_spectr_worker_res_t res;
-    int ret = rp_spectr_get_params(&res);
-    if (!ret) {
-        if ((int)channel >= getADCChannels())
-            return -1;
-        *freq = res.peak_pw_freq_ch[(int)channel];
-    }
-
-    return ret;
-}
-
-int spec_setFreqRange(float _freq_min, float freq) {
+int spec_setFreqRange(float max_freq) {
     auto adc_rate = getADCRate();
-    int decimation = adc_rate / (freq * 2);
+    int decimation = adc_rate / (max_freq * 2 * NUM_SIGNAL_PERIODS);
     if (decimation < 16) {
         if (decimation >= 8)
             decimation = 8;
@@ -546,8 +391,6 @@ int spec_setFreqRange(float _freq_min, float freq) {
     }
 
     current_freq_range = adc_rate / (decimation * 2);
-    freq_max = freq;
-    freq_min = _freq_min;
     g_decimation = decimation;
     rp_spectr_worker_change_state(RESET_STATE);
     return RP_OK;
@@ -556,16 +399,6 @@ int spec_setFreqRange(float _freq_min, float freq) {
 int spec_getFpgaFreq(float* freq) {
     *freq = current_freq_range;
 
-    return 0;
-}
-
-int spec_getFreqMax(float* freq) {
-    *freq = freq_max;
-    return 0;
-}
-
-int spec_getFreqMin(float* freq) {
-    *freq = freq_min;
     return 0;
 }
 
@@ -600,20 +433,6 @@ int spec_getADCBufferSize() {
 int spec_getGetADCFreq() {
     auto adc_rate = getADCRate();
     return adc_rate / g_decimation;
-}
-
-int spec_getVoltMode(rp_dsp_api::mode_t* mode) {
-    if (!g_dsp)
-        return -1;
-    *mode = g_dsp->getMode();
-    return 0;
-}
-
-int spec_setVoltMode(rp_dsp_api::mode_t mode) {
-    std::lock_guard lock(rp_spectr_buf_size_mutex);
-    g_dsp->setMode(mode);
-    rp_spectr_worker_change_state(RESET_STATE);
-    return RP_OK;
 }
 
 int spec_setImpedance(double value) {

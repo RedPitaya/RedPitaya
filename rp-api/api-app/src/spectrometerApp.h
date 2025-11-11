@@ -26,19 +26,17 @@ int spec_running();  // true/false
 
 int spec_reset();
 
+int spec_lockData();
+
+int spec_unlockData();
+
 int spec_SetEnable(rp_channel_t channel, bool state);
 
 int spec_GetEnable(rp_channel_t channel, bool* state);
 
-int spec_getViewData(float** signals, size_t size);
+int spec_getViewData(const rp_dsp_api::rp_dsp_result_t** data);
 
 int spec_getViewSize(size_t* size);
-
-int spec_getPeakPower(rp_channel_t channel, float* power);
-
-int spec_getPeakFreq(rp_channel_t channel, float* freq);
-
-int spec_setFreqRange(float _freq_min, float freq);
 
 int spec_setWindow(rp_dsp_api::window_mode_t mode);
 
@@ -47,6 +45,8 @@ int spec_getWindow(rp_dsp_api::window_mode_t* mode);
 int spec_setProbe(rp_channel_t channel, uint32_t probe);
 
 int spec_getProbe(rp_channel_t channel, uint32_t* probe);
+
+int spec_setFreqRange(float max_freq);
 
 int spec_setADCBufferSize(size_t size);
 
@@ -59,14 +59,6 @@ int spec_setRemoveDC(bool state);
 int spec_getRemoveDC();
 
 int spec_getFpgaFreq(float* freq);
-
-int spec_getFreqMax(float* freq);
-
-int spec_getFreqMin(float* freq);
-
-int spec_getVoltMode(rp_dsp_api::mode_t* mode);
-
-int spec_setVoltMode(rp_dsp_api::mode_t mode);
 
 int spec_setImpedance(double value);
 

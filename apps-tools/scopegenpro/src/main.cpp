@@ -14,8 +14,6 @@
 #include <unistd.h>
 #include "common/version.h"
 
-#include "neon_asm.h"
-
 #include "common.h"
 #include "math_logic.h"
 #include "osc_logic.h"

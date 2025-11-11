@@ -2,7 +2,6 @@
 #include "common.h"
 #include "common/rp_sweep.h"
 #include "math/rp_dsp.h"
-#include "neon_asm.h"
 #include "rp.h"
 #include "rp_math.h"
 #include "settings.h"
@@ -221,16 +220,16 @@ void UpdateGeneratorParameters(bool force) {
             RESEND(outAmplitude[ch])
         }
 
-        if (outFrequancy[ch].IsNewValue() || force) {
-            float period = 1000000.0 / outFrequancy[ch].NewValue();
+        if (IS_NEW(outFrequancy[ch]) || force) {
+            rp_GenFreq((rp_channel_t)ch, outFrequancy[ch].NewValue());
+            outFrequancy[ch].Update();
+            float period = 1000000.0 / outFrequancy[ch].Value();
             outRiseTime[ch].SetMin(period * RISE_FALL_MIN_RATIO);
             outRiseTime[ch].SetMax(period * RISE_FALL_MAX_RATIO);
             outRiseTime[ch].Update();
             outFallTime[ch].SetMin(period * RISE_FALL_MIN_RATIO);
             outFallTime[ch].SetMax(period * RISE_FALL_MAX_RATIO);
             outFallTime[ch].Update();
-            rp_GenFreq((rp_channel_t)ch, outFrequancy[ch].NewValue());
-            outFrequancy[ch].Update();
             rp_GenTriggerOnly((rp_channel_t)ch);
             RESEND(outFrequancy[ch])
             RESEND(outRiseTime[ch])

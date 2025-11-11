@@ -1,3 +1,11 @@
+/*
+ * Red Pitaya Spectrum Analizator client
+ *
+ *
+ * (c) Red Pitaya  http://www.redpitaya.com
+ *
+ */
+
 (function(UI, $, undefined) {
 
     UI.formatVals = function() {
@@ -39,6 +47,7 @@
         var step;
         var interval = null;
         var timeout = null;
+        let timeoutId = null;
 
         function ToggleValue(input) {
             input.val(parseInt(input.val(), 10) + d);
@@ -117,7 +126,12 @@
 
         function changeInputsVal(input, newValue) {
             input.val(newValue);
-            SPEC.exitEditing(true);
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+            timeoutId = setTimeout(() => {
+                SPEC.exitEditing(true, input[0].id);
+            }, 500);
         }
 
         function checkInputAttr(input) {
@@ -190,18 +204,71 @@
         });
 
         $('#reset_settings').click(function() {
-            CLIENT.params.local['CONTROL_CONFIG_SETTINGS'] = { value: 1 }; // REQUEST_RESET
-            SPEC.sendParams();
+            CLIENT.parametersCache['CONTROL_CONFIG_SETTINGS'] = { value: 1 }; // REQUEST_RESET
+            CLIENT.sendParameters();
         });
 
         $('#OSC_REQ_SAVE_SETTINGS').on('click', function() {
             var name = $("#SETTINGS_NEW_NAME").val().trim()
             if (name !== ""){
-                CLIENT.params.local['FILE_SATTINGS'] = { value: name };
-                CLIENT.params.local['CONTROL_CONFIG_SETTINGS'] = { value: 4 }; // SAVE
-                SPEC.sendParams();
+                CLIENT.parametersCache['FILE_SATTINGS'] = { value: name };
+                CLIENT.parametersCache['CONTROL_CONFIG_SETTINGS'] = { value: 4 }; // SAVE
+                CLIENT.sendParameters();
             }
         });
+
+        let xmin = $('#xmin')
+        let xmax = $('#xmax')
+        xmin.focusin(function(){
+            let x = $('#xmin').attr('raw_val')
+            $('#xmin').val(x)
+        })
+
+        xmax.focusin(function(){
+            let x = $('#xmax').attr('raw_val')
+            $('#xmax').val(x)
+        })
+
+        xmin.focusout(function(){
+            CLIENT.sendParametersEx({'xmin': {value:$('#xmin').val() }});
+        })
+
+        xmax.focusout(function(){
+            CLIENT.sendParametersEx({'xmax':{value: $('#xmax').val() }});
+        })
+
+        xmin.keydown(function(e){
+            if (e.keyCode == 13)
+                CLIENT.sendParametersEx({'xmin': {value:$('#xmin').val()}});
+        })
+
+        xmax.keydown(function(e){
+            if (e.keyCode == 13)
+                CLIENT.sendParametersEx({'xmax': {value: $('#xmax').val()}});
+        })
+
+        $('.freeze_btn').click(function(e) {
+            for(let ch=1; ch<=4; ch++){
+                if (e.target.id.includes(ch)){
+                    SPEC.freeze[ch-1]  = !$(this).hasClass("active")
+                }
+            }
+        })
+
+        $('.close-dialog').click(function(e){
+            $('.dialog:visible').hide();
+            $('#right_menu').show();
+        })
+
+        $('#Y_AUTO_SCALE').click(function(e){
+            UI_GRAPH.autoScale()
+        })
+
+        $('.reset_min_max').click(function(e){
+            let ch = $(this).attr('id').slice(-1)
+            SPEC.minMaxController.resetByChannel("ch" + ch + "_view")
+        })
+
     }
 
     UI.uintToColor = function(uint) {
@@ -323,7 +390,7 @@
                     $("#SOUR1_VOLT_OFFS").attr("min", -1 * max_amp / 2.0);
                 }
             }
-    
+
             if (ch == "CH2") {
                 if (value == 0) {
                    // Hi-Z mode
@@ -336,7 +403,7 @@
                     $("#SOUR2_VOLT_OFFS").attr("max", max_amp / 2.0);
                     $("#SOUR2_VOLT_OFFS").attr("min", -1 * max_amp / 2.0);
                 }
-    
+
             }
         }else{
             var max_amp = SPEC.gen_max_amp;

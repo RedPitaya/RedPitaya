@@ -21,6 +21,8 @@ using websocketpp::lib::thread;
 using websocketpp::lib::placeholders::_1;
 using websocketpp::lib::placeholders::_2;
 
+#define MAX_BUFFER_SIZE 1024 * 1024 * 32
+
 enum BinarySignalType { UNDEFINED = 0, INT8 = 1, INT16 = 2, INT32 = 3, UINT8 = 4, UINT16 = 5, UINT32 = 6, FLOAT = 7, DOUBLE = 8 };
 
 struct BinarySignal {
@@ -162,6 +164,14 @@ void rp_websocket_server::on_signal_timer(websocketpp::lib::error_code const& ec
         m_endpoint.get_alog().write(websocketpp::log::alevel::app, "Signal timer Error: " + ec.message());
         return;
     }
+    // If the client does not have time to receive all the data, then we skip the next send until the buffer is cleared.
+    for (con_list::iterator it = m_connections.begin(); it != m_connections.end(); ++it) {
+        server::connection_ptr con = m_endpoint.get_con_from_hdl(*it);
+        if (con->get_buffered_amount() > MAX_BUFFER_SIZE) {
+            set_signal_timer();
+            return;
+        }
+    }
 
     auto sendSignals = [&]() {
         con_list::iterator it;
@@ -194,11 +204,13 @@ void rp_websocket_server::on_signal_timer(websocketpp::lib::error_code const& ec
 
     auto sendBinarySignals = [&]() {
         // Header structure with prefix included and 64-byte alignment
+        static std::vector<uint8_t> zeroData(64, 0);
         struct BaseHeader {
             char prefix[4];  // Exactly 4 bytes for prefix, no null terminator
             uint32_t dataType = 0;
             uint32_t nameSize = 0;
             uint32_t dataSize = 0;
+            uint32_t dataSizeExtra = 0;
             uint32_t headerSize = 0;  // Actual total header size including name
         };
 
@@ -246,6 +258,7 @@ void rp_websocket_server::on_signal_timer(websocketpp::lib::error_code const& ec
                 baseHeader->dataType = item.type;
                 baseHeader->nameSize = static_cast<uint32_t>(nameLength);
                 baseHeader->dataSize = static_cast<uint32_t>(size);
+                baseHeader->dataSizeExtra = static_cast<uint32_t>(size % 64 ? 64 - size % 64 : 0);
                 baseHeader->headerSize = static_cast<uint32_t>(actualHeaderSize);
                 // Copy name directly after base header
                 if (nameLength > 0) {
@@ -255,10 +268,12 @@ void rp_websocket_server::on_signal_timer(websocketpp::lib::error_code const& ec
                 // Build message - header buffer (with prefix and name) and data
                 msg->append_payload(headerBuffer.data(), actualHeaderSize);
                 msg->append_payload(dataSend, size);
+                msg->append_payload(zeroData.data(), baseHeader->dataSizeExtra);
                 needSend = true;
             }
-            if (needSend)
+            if (needSend) {
                 m_endpoint.send(*it, msg);
+            }
         }
     };
 
@@ -273,6 +288,14 @@ void rp_websocket_server::on_param_timer(websocketpp::lib::error_code const& ec)
     if (ec) {
         m_endpoint.get_alog().write(websocketpp::log::alevel::app, "Param timer Error: " + ec.message());
         return;
+    }
+    // If the client does not have time to receive all the data, then we skip the next send until the buffer is cleared.
+    for (con_list::iterator it = m_connections.begin(); it != m_connections.end(); ++it) {
+        server::connection_ptr con = m_endpoint.get_con_from_hdl(*it);
+        if (con->get_buffered_amount() > MAX_BUFFER_SIZE) {
+            set_param_timer();
+            return;
+        }
     }
 
     con_list::iterator it;

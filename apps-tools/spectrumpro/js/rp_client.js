@@ -1,3 +1,11 @@
+/*
+ * Red Pitaya Spectrum Analizator client
+ *
+ *
+ * (c) Red Pitaya  http://www.redpitaya.com
+ *
+ */
+
 (function(RP_CLIENT, $, undefined) {
 
     // App configuration

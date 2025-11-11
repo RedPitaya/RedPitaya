@@ -96,6 +96,7 @@
                 <div id="cur_rectangle" style="position: fixed;border: 2px solid;display: none;"></div>
             </div>
             <div id="freq" class="text-center plot_legend" style="position: relative;top: 100%;">
+                Frequency
             </div>
             <div id="power" class="plot_legend">
                 <div class="left-info power-label">
@@ -103,7 +104,7 @@
                 </div>
             </div>
         </div>
-        <div id="root_waterfall" style="margin-top: 20px;margin-left: 50px;">
+        <div id="root_waterfall" style="margin-left: 50px;">
             <div id="waterfall-holder_ch1" class="waterfall-holder clearfix">
                 <div id="waterfall-label_ch1" style="position: absolute; inset: 0px; display: block;left: -35px">
                 </div>
@@ -198,8 +199,8 @@
                 </div>
                 <div class="col-xs-6 option-content">
                     <div class="right-menu-option">
-                        <button id="CH1_FREEZE" type="button" class="btn" data-toggle="button" aria-pressed="false"
-                            autocomplete="off">FREEZE</button>
+                        <button id="CH1_FREEZE" type="button" class="btn freeze_btn" data-toggle="button"
+                            aria-pressed="false" autocomplete="off">FREEZE</button>
                     </div>
                 </div>
                 <!-- MINMAX -->
@@ -260,6 +261,9 @@
                         </div>
                     </div>
                 </div>
+                <div class="col-xs-12 option-content">
+                    <div id="RESET_MIN_MAX_CH1" class="right-menu-option reset_min_max">RESET MIN/MAX</div>
+                </div>
             </div>
             <div id="in2_dialog" class="dialog row right-menu-cont">
                 <div class="col-xs-12 option-content">
@@ -275,8 +279,8 @@
                 </div>
                 <div class="col-xs-6 option-content">
                     <div class="right-menu-option">
-                        <button id="CH2_FREEZE" type="button" class="btn" data-toggle="button" aria-pressed="false"
-                            autocomplete="off">FREEZE</button>
+                        <button id="CH2_FREEZE" type="button" class="btn freeze_btn" data-toggle="button"
+                            aria-pressed="false" autocomplete="off">FREEZE</button>
                     </div>
                 </div>
                 <!-- MINMAX -->
@@ -337,6 +341,9 @@
                         </div>
                     </div>
                 </div>
+                <div class="col-xs-12 option-content">
+                    <div id="RESET_MIN_MAX_CH2" class="right-menu-option reset_min_max">RESET MIN/MAX</div>
+                </div>
             </div>
 
             <div id="in3_dialog" class="dialog row right-menu-cont">
@@ -353,8 +360,8 @@
                 </div>
                 <div class="col-xs-6 option-content">
                     <div class="right-menu-option">
-                        <button id="CH3_FREEZE" type="button" class="btn" data-toggle="button" aria-pressed="false"
-                            autocomplete="off">FREEZE</button>
+                        <button id="CH3_FREEZE" type="button" class="btn freeze_btn" data-toggle="button"
+                            aria-pressed="false" autocomplete="off">FREEZE</button>
                     </div>
                 </div>
                 <!-- MINMAX -->
@@ -415,6 +422,9 @@
                         </div>
                     </div>
                 </div>
+                <div class="col-xs-12 option-content">
+                    <div id="RESET_MIN_MAX_CH3" class="right-menu-option reset_min_max">RESET MIN/MAX</div>
+                </div>
             </div>
 
             <div id="in4_dialog" class="dialog row right-menu-cont">
@@ -431,8 +441,8 @@
                 </div>
                 <div class="col-xs-6 option-content">
                     <div class="right-menu-option">
-                        <button id="CH4_FREEZE" type="button" class="btn" data-toggle="button" aria-pressed="false"
-                            autocomplete="off">FREEZE</button>
+                        <button id="CH4_FREEZE" type="button" class="btn freeze_btn" data-toggle="button"
+                            aria-pressed="false" autocomplete="off">FREEZE</button>
                     </div>
                 </div>
                 <!-- MINMAX -->
@@ -493,22 +503,15 @@
                         </div>
                     </div>
                 </div>
+                <div class="col-xs-12 option-content">
+                    <div id="RESET_MIN_MAX_CH4" class="right-menu-option reset_min_max">RESET MIN/MAX</div>
+                </div>
             </div>
 
             <div id="ctrl_dialog" class="dialog row right-menu-cont">
-                <div class="col-xs-6 option-content close-dialog">
+                <div class="col-xs-12 option-content close-dialog">
                     <div class="right-menu-option">
                         <img src="../assets/images/navigation_arrow_left.png"> Range
-                    </div>
-                </div>
-                <div class="col-xs-6 option-content">
-                    <div class="right-menu-option">
-                        <span class="col-info">Freq. unit:</span>
-                        <select id="freq_unit" class="form-control styled-select">
-                            <option value="0">Hz</option>
-                            <option value="1">kHz</option>
-                            <option value="2">MHz</option>
-                        </select>
                     </div>
                 </div>
                 <div class="col-xs-6 option-content">
@@ -594,6 +597,8 @@
                         <select id="xAxisLogMode" class="form-control styled-select" style="margin-top: 10px;">
                             <option value="0">LINEAR</option>
                             <option value="1">LOGARITHMIC</option>
+                            <option value="2">LOGARITHMIC-p2</option>
+                            <option value="3">LOGARITHMIC-p10</option>
                         </select>
                     </div>
                 </div>
@@ -704,6 +709,14 @@
                 <area id="jtk_down" shape="poly"
                     coords="46,112,27,130,38,141,51,145,72,148,92,148,106,142,126,132,104,111,90,118,79,120,71,121,62,119,57,117" />
             </map>
+        </div>
+        <div id="auto_scale">
+            <div class="col-xs-12 option-content" style="border: 1px solid #999;">
+                <div>
+                    <button id="Y_AUTO_SCALE" type="button" class="btn" aria-pressed="false" autocomplete="off">AUTO
+                        SCALE</button>
+                </div>
+            </div>
         </div>
     </div>
 

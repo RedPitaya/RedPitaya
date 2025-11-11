@@ -1,9 +1,17 @@
+/*
+ * Red Pitaya Spectrum Analizator client
+ *
+ *
+ * (c) Red Pitaya  http://www.redpitaya.com
+ *
+ */
+
 (function(SPEC, $, undefined) {
     SPEC.updateInterfaceFor250 = function(model) {
         if (model !== undefined) {
                 if (model === "Z20_250_12" || model === "Z20_250_12_120") {
                     SPEC.rp_model = model;
-                    SPEC.config.xmax = SPEC.rp_model === "Z20_250_12_120" ? 120 : 60;
+                    // SPEC.config.xmax = SPEC.rp_model === "Z20_250_12_120" ? 120 : 60;
                     $(".gain_low").text("1:1");
                     $(".gain_high").text("1:20");
                     var nodes = document.getElementsByName("AMPLITUDE_NODE");
@@ -101,8 +109,8 @@
                 if (state == 1) {
                     $("#OUTPUT1_STATE").attr("class", "btn");
                     $("#OUTPUT1_STATE").attr("aria-pressed", false);
-                    SPEC.exitEditing(true);
                     $("#OUTPUT1_STATE").attr("disabled", true);
+                    CLIENT.sendParametersEx({'OUTPUT1_STATE': {value: false}})
                 } else {
                     $("#OUTPUT1_STATE").attr("disabled", false);
                 }
@@ -112,8 +120,8 @@
                 if (state == 1) {
                     $("#OUTPUT2_STATE").attr("class", "btn");
                     $("#OUTPUT2_STATE").attr("aria-pressed", false);
-                    SPEC.exitEditing(true);
                     $("#OUTPUT2_STATE").attr("disabled", true);
+                    CLIENT.sendParametersEx({'OUTPUT2_STATE': {value: false}})
                 } else {
                     $("#OUTPUT2_STATE").attr("disabled", false);
                 }
@@ -130,5 +138,15 @@
                 $("#EXT_CLOCK").attr("src", "img/red_led.png");
         }
     };
+
+    SPEC.setPllMode = function(new_params){
+        if (new_params['EXT_CLOCK_ENABLE'].value == true){
+            $('#EXT_CLOCK_ENABLE').html('&check; EXT. CLOCK');
+            $('#ext_clock_enable_view').show();
+        }else{
+            $('#EXT_CLOCK_ENABLE').html('EXT. CLOCK');
+            $('#ext_clock_enable_view').hide();
+        }
+    }
 
 }(window.SPEC = window.SPEC || {}, jQuery));

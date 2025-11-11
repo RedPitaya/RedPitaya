@@ -143,6 +143,9 @@
     OSC.compressed_data = 0;
     OSC.decompressed_data = 0;
     OSC.refresh_times = 0;
+    OSC.draw_all_packs = false
+    OSC.pack_per_sec_show = false
+
     OSC.counts_offset = 0;
 
     OSC.mouseWheelEventFired = false; // for MAC
@@ -271,19 +274,22 @@
 
 
     var guiHandler = function() {
+        OSC.draw_all_packs = OSC.signalStack.length < 10
         if (OSC.signalStack.length > 0) {
             var p = performance.now();
             if (OSC.is_webpage_loaded){
                 var signal = OSC.signalStack[0]
                 OSC.processSignals(signal);
             }
-            OSC.refresh_times += OSC.signalStack.length;
-            OSC.signalStack = []
-            // console.log("Drawing: " + (performance.now() - p));
+            OSC.signalStack.splice(0, 1);
+            OSC.refresh_times++
+            if (!OSC.draw_all_packs)
+                OSC.signalStack = []
         }
     }
 
     var parametersHandler = function() {
+
         if (OSC.parameterStack.length > 0) {
             var p = performance.now();
             var params = [...OSC.parameterStack]
@@ -300,7 +306,8 @@
 
     var performanceHandler = function() {
 
-        $('#fps_view').text(OSC.refresh_times);
+        let x = OSC.refresh_times + (OSC.pack_per_sec_show ? '/' + g_PacketsRecv : '')
+        $('#fps_view').text(x);
         $('#ops_view').text(OSC.params.orig["OSC_PER_SEC"] ? OSC.params.orig["OSC_PER_SEC"].value :0);
 
         $('#throughput_view').text((OSC.compressed_data / 1024).toFixed(2) + "kB/s");
@@ -336,7 +343,7 @@
     }
 
     setInterval(performanceHandler, 1000);
-    setInterval(guiHandler, 2);
+    setInterval(guiHandler, 10);
     setInterval(parametersHandler, 2);
 
     OSC.setModel = function(_value,params) {

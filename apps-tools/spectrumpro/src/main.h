@@ -9,3 +9,5 @@
 
 #include "common/version.h"
 #include "rpApp.h"
+
+void updateParametersByConfig();

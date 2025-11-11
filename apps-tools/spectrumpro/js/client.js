@@ -1,3 +1,11 @@
+/*
+ * Red Pitaya Spectrum Analizator client
+ *
+ *
+ * (c) Red Pitaya  http://www.redpitaya.com
+ *
+ */
+
 (function(CLIENT, $, undefined) {
 
     // Params cache
@@ -34,6 +42,7 @@
     CLIENT.compressed_data = 0;
     CLIENT.decompressed_data = 0;
     CLIENT.fps = 0
+    CLIENT.packs = 0
 
     CLIENT.client_log = function(...args) {
         if (CLIENT.config.debug){
@@ -115,12 +124,11 @@
                     if (receive.parameters) {
                         CLIENT.parameterStack.push(receive.parameters);
                     }
-
                     //Recieve signals
                     if (receive.signals) {
                         if (!jQuery.isEmptyObject(receive.signals)){
-                            SPEC.latest_signal = Object.assign({}, receive.signals);
-                            CLIENT.signalStack.push(SPEC.latest_signal);
+                            CLIENT.signalStack.push(receive.signals);
+                            CLIENT.packs++
                         }
                     }
                 } catch (e) {
@@ -133,11 +141,23 @@
 
 
     // Sends to server parameters
+    CLIENT.sendParametersEx = function(values) {
+        if (!CLIENT.state.socket_opened) {
+            console.log('ERROR: Cannot save changes, socket not opened');
+            return false;
+        }
+        CLIENT.ws.send(JSON.stringify({ parameters: values }));
+        CLIENT.client_log("SEND: ", values )
+        CLIENT.parametersCache = {};
+        return true;
+    };
+
     CLIENT.sendParameters = function() {
         if (!CLIENT.state.socket_opened) {
             console.log('ERROR: Cannot save changes, socket not opened');
             return false;
         }
+        if (Object.keys(CLIENT.parametersCache).length == 0) return false;
         CLIENT.ws.send(JSON.stringify({ parameters: CLIENT.parametersCache }));
         CLIENT.client_log("SEND: ", CLIENT.parametersCache )
         CLIENT.parametersCache = {};
@@ -184,6 +204,17 @@
         }
     }
 
+    CLIENT.getValue = function(name){
+        return CLIENT.params.orig[name] ? CLIENT.params.orig[name].value : undefined
+    }
+
+    CLIENT.getValueMin = function(name){
+        return CLIENT.params.orig[name] ? CLIENT.params.orig[name].min : undefined
+    }
+
+    CLIENT.getValueMax = function(name){
+        return CLIENT.params.orig[name] ? CLIENT.params.orig[name].max : undefined
+    }
 
     //Set handlers timers
     setInterval(signalsHandler, 5);

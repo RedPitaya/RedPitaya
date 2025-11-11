@@ -154,10 +154,12 @@ auto updateMathSignal() -> void {
     if (mathShow.Value()) {
         if (math.GetSize() != CH_SIGNAL_SIZE_DEFAULT)
             math.Resize(CH_SIGNAL_SIZE_DEFAULT);
-        rpApp_OscGetViewData(RPAPP_OSC_SOUR_MATH, &math[0], (uint32_t)CH_SIGNAL_SIZE_DEFAULT);
+        rpApp_OscGetViewData(RPAPP_OSC_SOUR_MATH, math.GetDataPtr()->data(), (uint32_t)CH_SIGNAL_SIZE_DEFAULT);
+        math.ForceSend();
 
     } else {
-        math.Resize(0);
+        if (math.GetSize())
+            math.Resize(0);
     }
 }
 

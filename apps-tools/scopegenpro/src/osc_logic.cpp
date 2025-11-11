@@ -377,7 +377,8 @@ auto updateOscSignal() -> void {
         if (inShow[i].Value()) {
             if (outCh[i].GetSize() != CH_SIGNAL_SIZE_DEFAULT)
                 outCh[i].Resize(CH_SIGNAL_SIZE_DEFAULT);
-            rpApp_OscGetViewData((rpApp_osc_source)i, &outCh[i][0], (uint32_t)CH_SIGNAL_SIZE_DEFAULT);
+            rpApp_OscGetViewData((rpApp_osc_source)i, outCh[i].GetDataPtr()->data(), (uint32_t)CH_SIGNAL_SIZE_DEFAULT);
+            outCh[i].ForceSend();
         } else {
             outCh[i].Resize(0);
         }

@@ -1,3 +1,11 @@
+/*
+ * Red Pitaya Spectrum Analizator client
+ *
+ *
+ * (c) Red Pitaya  http://www.redpitaya.com
+ *
+ */
+
 (function(SPEC, $, undefined) {
 
     SPEC.initCursors = function() {
@@ -20,24 +28,39 @@
         //update arrows positions
         var diff_left = offset.left + 2 + 'px';
         var diff_top = offset.top - 2 + 'px';
-        var margin_left = offset.left - 7 - 2 + 'px';
-        var margin_top = -7 + offset.top - 2 + 'px';
-        var margin_bottom = -2 + offset.bottom + 'px';
-        var line_margin_left = offset.left - 2 + 'px';
-        var line_margin_top = offset.top - 2 + 'px';
-        var line_margin_bottom = offset.bottom - 2 + 'px';
 
-        $('.varrow').css('margin-left', margin_left);
-        $('.harrow').css('margin-top', margin_top);
-        $('.harrow').css('margin-bottom', margin_bottom);
-        $('.vline').css('margin-left', line_margin_left);
-        $('.hline').css('margin-top', line_margin_top);
-        $('.hline').css('margin-bottom', line_margin_bottom);
+        // Y cursor arrows dragging
+        $('#cur_y1_arrow, #cur_y2_arrow').draggable({
+            axis: 'y',
+            containment: UI_GRAPH.getPlotLimits(),
+            start: function(ev, ui) {
+                SPEC.state.cursor_dragging = true;
+            },
+            drag: function(ev, ui) {
+                SPEC.updateYCursorElems(ui, false);
+            },
+            stop: function(ev, ui) {
+                SPEC.updateYCursorElems(ui, true);
+                SPEC.state.cursor_dragging = false;
+            }
+        });
 
-        $('#cur_x_diff').css('margin-left', diff_left);
-        $('#cur_y_diff').css('margin-top', diff_top);
-        $('#cur_x_diff_info').css('margin-left', diff_left);
-        $('#cur_y_diff_info').css('margin-top', diff_top);
+        // X cursor arrows dragging
+        $('#cur_x1_arrow, #cur_x2_arrow').draggable({
+            axis: 'x',
+            containment: UI_GRAPH.getPlotLimits(),
+            start: function(ev, ui) {
+                SPEC.state.cursor_dragging = true;
+            },
+            drag: function(ev, ui) {
+                SPEC.updateXCursorElems(ui, false);
+            },
+            stop: function(ev, ui) {
+                SPEC.updateXCursorElems(ui, true);
+                SPEC.state.cursor_dragging = false;
+            }
+        });
+
     };
 
     SPEC.updateYInfo = function(){
@@ -68,8 +91,10 @@
                 if (plot) {
                     var offset = plot.getPlotOffset();
                     var graph_height = $('#graph_grid').height() - offset.top - offset.bottom;
-                    var top = (graph_height + 7) * value;
+                    let left = $('#graph_grid').width() - offset.left - offset.right + 26;
+                    var top = graph_height * value + offset.top - 2;
                     $('#cur_' + y + '_arrow, #cur_' + y + ', #cur_' + y + '_info').css('top', top).show();
+                    $('#cur_' + y + '_arrow').css('left', left).show();
                     SPEC.updateYCursorElemsTop(y,top,false);
                 }
             } else {
@@ -88,26 +113,44 @@
         if (!(plot)) {
             return;
         }
+        let key = y == 'y1' ? 'SPEC_CUR1_V' : 'SPEC_CUR2_V'
+        let cur2 = y == 'y1' ? 'y2' : 'y1'
         var axes = plot.getAxes();
-
-        var volt_per_px = 1 / axes.yaxis.scale;
+        var offset = plot.getPlotOffset();
+        var graph_h = $('#graph_grid').height();
         var tickSize = axes.yaxis.tickSize;
-        var new_value = axes.yaxis.max - top * volt_per_px;
+        var new_value = axes.yaxis.c2p(top - offset.top + 2)
         var dBlabel = SPEC.y_axis_label();
 
-        $('#cur_' + y + ', #cur_' + y + '_info').css('top', top);
-        $('#cur_' + y + '_info').html((new_value.toFixed(Math.abs(tickSize) >= 0.1 ? 2 : 3)) + " " + dBlabel).css('margin-top', (top < 16 ? 3 : ''));
+        $('#cur_' + y).css('top', top + 1);
+        let v = (new_value.toFixed(Math.abs(tickSize) >= 0.1 ? 2 : 3)) + " " + dBlabel
+        $('#cur_' + y + '_info').attr('raw',new_value).html(v);
+        let oh = $('#cur_' + y + '_info').outerHeight()
+        let laboff = 0;
+        let cur2item = $('#cur_' + cur2)
+        let top2  =cur2item.css('top')
+        let vis = cur2item.is(":visible")
+        if (top > parseInt(top2) && vis){
+            laboff += oh + 8
+        }
+        $('#cur_' + y + '_info').css('top', top - 1 + laboff);
+        $('#cur_' + y + '_info').css('left', offset.left + 5);
 
         SPEC.updateYCursorDiff();
 
         if (save) {
-            new_value = 1.0 - (new_value  - axes.yaxis.min) / (axes.yaxis.max - axes.yaxis.min);
-            CLIENT.params.local[y == 'y1' ? 'SPEC_CUR1_V' : 'SPEC_CUR2_V'] = { value: new_value };
-            SPEC.sendParams();
+            new_value = (top - offset.top + 2) / (graph_h - offset.top  - offset.bottom);
+            CLIENT.parametersCache[key] = { value: new_value };
+            CLIENT.params.orig[key] = { value: new_value };
+            CLIENT.sendParameters()
         }
     };
 
     SPEC.updateYCursorDiff = function() {
+        var plot = SPEC.getPlot();
+        if (!(plot)) {
+            return;
+        }
         var y1 = $('#cur_y1');
         var y2 = $('#cur_y2');
         var y1_top = parseInt(y1.css('top'));
@@ -115,16 +158,19 @@
         var diff_px = Math.abs(y1_top - y2_top) - 6;
 
         if (y1.is(':visible') && y2.is(':visible') && diff_px > 12) {
+            var offset = plot.getPlotOffset();
             var top = Math.min(y1_top, y2_top);
             var value = parseFloat($('#cur_y1_info').html()) - parseFloat($('#cur_y2_info').html());
 
             $('#cur_y_diff')
                 .css('top', top + 5)
+                .css('left',offset.left + 15)
                 .height(diff_px)
                 .show();
             $('#cur_y_diff_info')
                 .html(Math.abs(+(value.toFixed(Math.abs(value) >= 0.1 ? 2 : 3))) + " " + SPEC.y_axis_diff_label())
                 .css('top', top + diff_px / 2 - 2)
+                .css('left',offset.left + 25)
                 .show();
         } else {
             $('#cur_y_diff, #cur_y_diff_info').hide();
@@ -154,10 +200,13 @@
 
                 var plot = SPEC.getPlot();
                 if (plot) {
+                    UI_GRAPH.getPlotLimits()
                     var offset = plot.getPlotOffset();
-                    var graph_width = $('#graph_grid').width() - offset.left - offset.right;
-                    var left = graph_width * value;
+                    var graph_width = $('#graph_grid').width() - offset.left  - offset.right
+                    var top = $('#graph_grid').height() - offset.top - offset.bottom - 18;
+                    var left = graph_width * value + offset.left - 2;
                     $('#cur_' + x + '_arrow, #cur_' + x + ', #cur_' + x + '_info').css('left', left).show();
+                    $('#cur_' + x + '_arrow').css('top', top)
                     SPEC.updateXCursorElemsTop(x,left,false);
                 }
             } else {
@@ -178,32 +227,29 @@
         }
         var axes = plot.getAxes();
         var offset = plot.getPlotOffset();
-        var tickDec = axes.xaxis.tickDecimals  + 1;
 
-        var graph_width = $('#graph_grid').width() - offset.left - offset.right;
-        var ms_per_px = 1 / axes.xaxis.scale;
-        var msg_width = $('#cur_' + x + '_info').outerWidth();
-        var new_value = axes.xaxis.min + left * ms_per_px;
+        var graph_width = $('#graph_grid').width();
+        var new_value = axes.xaxis.c2p(left - offset.left + 2)
 
-        $('#cur_' + x + ', #cur_' + x + '_info').css('left', left);
+        $('#cur_' + x).css('left', left);
 
-        if (CLIENT.params.orig['freq_unit'] == undefined) return
-        var unit = SPEC.freq_unit[CLIENT.params.orig['freq_unit'].value];
-        if (UI_GRAPH.x_axis_mode === 1){
-            new_value = UI_GRAPH.convertLog(new_value);
-        }
         $('#cur_' + x + '_info')
-
-            .html((new_value.toFixed(tickDec) + ' ' + unit))
-            .css('margin-left', (left + msg_width > graph_width - 2 ? -msg_width - 1 : ''));
+            .attr('raw',new_value)
+            .html(SPEC.convertFreqToText(new_value))
+        let left_orig = left
+        left += 2
+        var msg_width = $('#cur_' + x + '_info').outerWidth();
+        if (msg_width + left + 12 > graph_width) left = graph_width - msg_width - 12
+        $('#cur_' + x + '_info').css('left', left);
 
         SPEC.updateXCursorDiff();
 
         if (save) {
-            // new_value = (new_value  - axes.xaxis.min) / (axes.xaxis.max - axes.xaxis.min);
-            new_value = left / graph_width;
-            CLIENT.params.local[x == 'x1' ? 'SPEC_CUR1_T' : 'SPEC_CUR2_T'] = { value: new_value };
-            SPEC.sendParams();
+            new_value = (left_orig - offset.left + 2) / (graph_width - offset.left  - offset.right);
+            let key = x == 'x1' ? 'SPEC_CUR1_T' : 'SPEC_CUR2_T'
+            CLIENT.parametersCache[key] = { value: new_value };
+            CLIENT.params.orig[key] = { value: new_value };
+            CLIENT.sendParameters()
         }
     };
 
@@ -216,19 +262,14 @@
 
         if (x1.is(':visible') && x2.is(':visible') && diff_px > 30) {
             var left = Math.min(x1_left, x2_left);
-            var value = parseFloat($('#cur_x1_info').html()) - parseFloat($('#cur_x2_info').html());
-            if (CLIENT.params.orig['freq_unit'] == undefined) return
-            var unit = SPEC.freq_unit[CLIENT.params.orig['freq_unit'].value];
-            var plot = SPEC.getPlot();
-            var axes = plot.getAxes();
-            var tickDec = axes.xaxis.tickDecimals + 1;
+            var value = parseFloat($('#cur_x1_info').attr('raw')) - parseFloat($('#cur_x2_info').attr('raw'));
             value = Math.abs(value)
             $('#cur_x_diff')
                 .css('left', left + 1)
                 .width(diff_px)
                 .show();
             $('#cur_x_diff_info')
-                .html((value.toFixed(tickDec) + ' ' + unit))
+                .html(SPEC.convertFreqToText(value))
                 .show()
                 .css('left', left + diff_px / 2 - $('#cur_x_diff_info').width() / 2 + 3);
         } else {

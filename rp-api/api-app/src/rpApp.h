@@ -710,19 +710,21 @@ int rpApp_SpecRunning();
 
 int rpApp_SpecReset();
 
+int rpApp_SpecLockData();
+
+int rpApp_SpecUnlockData();
+
 int rpApp_SpecSetEnable(rp_channel_t channel, bool state);
 
 int rpApp_SpecGetEnable(rp_channel_t channel, bool* state);
 
-int rpApp_SpecGetViewData(float** signals, size_t size);
+int rpApp_SpecSetEnable(rp_channel_t channel, bool state);
+
+int rpApp_SpecGetEnable(rp_channel_t channel, bool* state);
+
+int rpApp_SpecGetViewData(const rp_dsp_api::rp_dsp_result_t** data);
 
 int rpApp_SpecGetViewSize(size_t* size);
-
-int rpApp_SpecGetPeakPower(rp_channel_t channel, float* power);
-
-int rpApp_SpecGetPeakFreq(rp_channel_t channel, float* freq);
-
-int rpApp_SpecSetFreqRange(float _freq_min, float freq);
 
 int rpApp_SpecSetWindow(rp_dsp_api::window_mode_t mode);
 
@@ -734,9 +736,7 @@ int rpApp_SpecGetRemoveDC();
 
 int rpApp_SpecGetADCFreq();
 
-int rpApp_SpecGetMode(rp_dsp_api::mode_t* mode);
-
-int rpApp_SpecSetMode(rp_dsp_api::mode_t mode);
+int rpApp_SpecSetFreqMax(float freq);
 
 int rpApp_SpecGetProbe(rp_channel_t channel, uint32_t* probe);
 
@@ -749,14 +749,6 @@ int rpApp_SpecGetImpedance(double* value);
 int rpApp_SpecSetADCBufferSize(int size);
 
 int rpApp_SpecGetADCBufferSize();
-
-int rpApp_SpecGetFreqMin(float* freq);
-
-int rpApp_SpecGetFreqMax(float* freq);
-
-int rpApp_SpecSetFreqMin(float freq);
-
-int rpApp_SpecSetFreqMax(float freq);
 
 int rpApp_SpecGetFpgaFreq(float* freq);
 

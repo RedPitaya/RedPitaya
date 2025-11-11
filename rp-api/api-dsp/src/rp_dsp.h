@@ -14,6 +14,8 @@
 #define __RP_DSP_H__
 
 #include <stdint.h>
+#include <array>
+#include <vector>
 
 namespace rp_dsp_api {
 
@@ -21,19 +23,36 @@ typedef enum { RECTANGULAR = 0, HANNING = 1, HAMMING = 2, BLACKMAN_HARRIS = 3, F
 
 typedef enum { DBM = 0, VOLT = 1, DBU = 2, DBV = 3, DBuV = 4, MW = 5, DBW = 6 } mode_t;
 
+#define MIN_DSP_MODE rp_dsp_api::DBM
+#define COUNT_DSP_MODE (rp_dsp_api::DBW + 1)
+
 typedef float cdsp_data_t;
+typedef std::vector<cdsp_data_t> cdsp_data_vec_t;
+typedef std::vector<std::vector<cdsp_data_t>> cdsp_data_ch_t;
+
+typedef struct rp_dsp_result {
+    cdsp_data_vec_t m_freq_vector;
+    std::array<cdsp_data_ch_t, COUNT_DSP_MODE> m_result;
+    std::array<cdsp_data_vec_t, COUNT_DSP_MODE> m_peak_power;
+    std::array<cdsp_data_vec_t, COUNT_DSP_MODE> m_peak_freq;
+    uint32_t m_maxFreq = 0;
+    uint8_t m_channels = 0;
+    size_t m_data_size = 0;
+} rp_dsp_result_t;
+
+typedef struct rp_dsp_dec_data {
+    cdsp_data_ch_t m_decimated;
+} rp_dsp_dec_data_t;
 
 typedef struct {
-    cdsp_data_t** m_in = nullptr;
-    cdsp_data_t** m_filtred = nullptr;
+    cdsp_data_ch_t m_in;
+    cdsp_data_ch_t m_filtred;
+    cdsp_data_ch_t m_fft;
+    cdsp_data_ch_t m_dec_data_z;
+    cdsp_data_ch_t m_dec_data_wsumf;
+    cdsp_data_ch_t m_dec_data_scaled;
+    rp_dsp_result_t m_converted;
     bool m_is_data_filtred = false;
-    cdsp_data_t** m_fft = nullptr;
-    float* m_freq_vector = nullptr;
-    float** m_decimated = nullptr;
-    float** m_converted = nullptr;
-    float* m_peak_power = nullptr;
-    float* m_peak_freq = nullptr;
-    uint8_t m_channels = 0;
     auto reset() -> void { m_is_data_filtred = false; }
 } data_t;
 
@@ -44,10 +63,10 @@ class CDSP {
     ~CDSP();
 
     data_t* createData();
-    void deleteData(data_t* data);
     data_t* getStoredData();
 
     void setChannel(uint8_t ch, bool enable);
+    void getChannel(uint8_t ch, bool* enable);
     int setSignalLength(uint32_t len);
     int setSignalLengthDiv2(uint32_t len);
     uint32_t getSignalLength();
@@ -64,9 +83,6 @@ class CDSP {
     void setRemoveDC(bool enable);
     bool getRemoveDC();
 
-    void setMode(mode_t mode);
-    mode_t getMode();
-
     void setProbe(uint8_t channel, uint32_t value);
     void getProbe(uint8_t channel, uint32_t* value);
 
@@ -79,9 +95,9 @@ class CDSP {
     int getAmpAndPhase(data_t* _data, double _freq, double* _amp1, double* _phase1, double* _amp2, double* _phase2);
 
     int decimate(data_t* data, uint32_t in_len, uint32_t out_len);
-    int cnvToDBM(data_t* data, uint32_t decimation);
-    int cnvToDBMMaxValueRanged(data_t* data, uint32_t decimation, uint32_t minFreq, uint32_t maxFreq);
-    int cnvToMetric(data_t* data, uint32_t decimation);
+    // int cnvToDBM(data_t* data, uint32_t decimation);
+    // int cnvToDBMMaxValueRanged(data_t* data, uint32_t decimation, uint32_t minFreq = 0, uint32_t maxFreq = 0);
+    int cnvToMetric(data_t* data, uint32_t decimation, uint32_t minFreq = 0, uint32_t maxFreq = 0);
     uint8_t remoteDCCount();
 
    private:
@@ -89,6 +105,9 @@ class CDSP {
     CDSP(CDSP&&) = delete;
     CDSP& operator=(const CDSP&) = delete;
     CDSP& operator=(const CDSP&&) = delete;
+
+    int decimate_ex(data_t* data, uint32_t in_len, uint32_t out_len);
+    int decimate_disabled(data_t* data, uint32_t len);
 
     struct Impl;
     // Pointer to the internal implementation
