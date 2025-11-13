@@ -343,6 +343,8 @@ int main(int argc, char** argv) {
                 all_data.insert(all_data.end(), buffer.begin(), buffer.begin() + bytes_read);
             }
         }
+        if (all_data.size() == 0)
+            exit(EXIT_FAILURE);
         std::string hash;
         std::vector<uint8_t> subvector(all_data.begin() + 32, all_data.end());
         if (rp_UpdaterGetMD5(subvector, &hash) != RP_UP_OK) {
