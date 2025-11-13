@@ -2,8 +2,8 @@
 
 #include <CustomParameters.h>
 #include <DataManager.h>
-
 #include <sys/syslog.h>  //Add custom RP_LCR LOG system
+#include <thread>
 #include "rp.h"
 
 #define CH_SIGNAL_SIZE_DEFAULT 1024

@@ -34,6 +34,7 @@
         $('body').addClass('loaded');
         $('body').addClass('connection_lost');
         $('body').addClass('user_lost');
+        $('#check-wrapper').hide()
     }
 
 
@@ -42,6 +43,7 @@
         $('body').addClass('loaded');
         $('body').addClass('connection_lost');
         $('body').removeClass('user_lost');
+        $('#check-wrapper').hide()
     }
 
     RP_CLIENT.setConnectionLost = function() {
@@ -49,6 +51,7 @@
         $('body').addClass('loaded');
         $('body').addClass('user_lost');
         $('body').removeClass('connection_lost');
+        $('#check-wrapper').hide()
     }
 
     RP_CLIENT.setLoading = function() {
@@ -56,6 +59,7 @@
         $('body').addClass('connection_lost');
         $('body').addClass('user_lost');
         $('body').removeClass('loaded');
+        $('#check-wrapper').hide()
     }
 
     RP_CLIENT.reloadPage = function() {

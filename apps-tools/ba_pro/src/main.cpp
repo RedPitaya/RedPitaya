@@ -300,9 +300,10 @@ void UpdateSignals(void) {
         g_request_show = false;
     }
 }
+void UpdateParams(void) {}
 
 //Update parameters
-void UpdateParams(void) {
+void UpdateParamsFromWeb(void) {
     //Measure start update
     if (ba_status.IsNewValue()) {
         ba_status.Update();
@@ -479,7 +480,7 @@ void OnNewParams(void) {
     bool config_changed = isChanged();
 
     //Update parameters
-    UpdateParams();
+    UpdateParamsFromWeb();
 
     if (ba_status.Value() == BA_RESET_CALIB) {
         bode_ResetCalib();

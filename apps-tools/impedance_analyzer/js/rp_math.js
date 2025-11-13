@@ -124,7 +124,7 @@
         const firstDerivative = RP_MATH.calculateFirstDerivative(x, y);
         const extremes = [];
         const dataRange = RP_MATH.calculateDataRange(x, y);
-
+        if (firstDerivative == undefined) return extremes
         for (let i = 1; i < firstDerivative.length; i++) {
             if (firstDerivative[i - 1] * firstDerivative[i] <= 0) {
                 let type;

@@ -261,8 +261,10 @@ auto setLCRExtState(bool state) -> void {
 // Return value in milliseconds 1.0 = 1ms
 auto getClock() -> double {
     struct timespec tp;
-    clock_gettime(CLOCK_REALTIME, &tp);
-    return ((double)tp.tv_sec * 1000.f) + ((double)tp.tv_nsec / 1000000.f);
+    if (clock_gettime(CLOCK_MONOTONIC, &tp) != 0) {
+        return -1.0;
+    }
+    return (static_cast<double>(tp.tv_sec) * 1000.0) + (static_cast<double>(tp.tv_nsec) / 1000000.0);
 }
 
 //Application description
@@ -325,8 +327,18 @@ void UpdateSignals(void) {
     }
 }
 
-//Update parameters
 void UpdateParams(void) {
+    auto curT = getClock();
+    if ((curT - g_lastCheckExt) > 2000) {
+        bool state = lcrApp_LcrCheckExtensionModuleConnection(true) == RP_LCR_OK;
+        setLCRExtState(state);
+        g_lastCheckExt = curT;
+    }
+}
+
+//Update parameters
+void UpdateParamsFromWeb(void) {
+
     //Start frequency update
     if (ia_start_freq.IsNewValue()) {
         ia_start_freq.Update();
@@ -428,12 +440,6 @@ void UpdateParams(void) {
         cur_y2_enable.Update();
         cur_y2_enable.SendValue(cur_y2_enable.Value());
     }
-    auto curT = getClock();
-    if ((curT - g_lastCheckExt) > 2000) {
-        auto state = lcrApp_LcrCheckExtensionModuleConnection(true) == 0;
-        g_lastCheckExt = curT;
-        setLCRExtState(state);
-    }
 }
 
 void PostUpdateSignals() {}
@@ -452,16 +458,14 @@ void OnNewParams(void) {
     bool config_changed = isChanged();
 
     //Update parameters
-    UpdateParams();
+    UpdateParamsFromWeb();
 
     if (config_changed) {
         configSet(getHomeDirectory() + "/.config/redpitaya/apps/impedance_analyzer_" + std::to_string((int)getModel()), "config.json");
     }
 }
 
-void OnNewSignals(void) {
-    UpdateSignals();
-}
+void OnNewSignals(void) {}
 
 void updateParametersByConfig() {
     configGet(getHomeDirectory() + "/.config/redpitaya/apps/impedance_analyzer_" + std::to_string((int)getModel()) + "/config.json");

@@ -60,11 +60,6 @@
         <div style="width: 100%;height: 60%;">
             <div id="loader" style="top:70%"></div>
         </div>
-        <div id="text_message" style="display: none;">
-            <p id="text_message" style="text-align: center;">
-                Extension module is not connected
-            </p>
-        </div>
     </div>
     <div id="header">
         <div id="description">&nbsp;</div>
@@ -96,7 +91,7 @@
                                     <img src="../assets/images/help.png" width=20px>
                                 </a>
                             </li>
-                            <li class="dropdown">
+                            <li class="dropdown hide_disconnected" style="display: none;">
                                 <a class="dropdown-toggle" type="button" id="menu1" data-toggle="dropdown"
                                     style="padding-left: 23px; white-space: nowrap;">SETTINGS<span
                                         class="caret"></span></a>
@@ -105,18 +100,28 @@
                                     <li><a id="reset_settings" href="#">RESET</a></li>
                                 </ul>
                             </li>
-                            <li>
+                            <li class="hide_disconnected" style="display: none;">
                                 <a id="LCR_LOG" href="#" style="padding-left: 23px; white-space: nowrap;" value="0">LOG
                                     DATA</a>
                                 <a id="LCR_LOG_STOP" href="#"
                                     style="padding-left: 23px; white-space: nowrap; display:none;" value="0">STOP</a>
                             </li>
-                            <li>
+                            <li class="hide_disconnected" style="display: none;">
                                 <a id="LCR_HOLD" href="#" style="display:block;">HOLD</a>
                                 <a id="LCR_START" href="#" style="display: none;">START</a>
                             </li>
                         </ul>
                     </div>
+                </div>
+            </div>
+            <div id="check-wrapper" style="display: none;">
+                <div style="width: 100%;height: 60%;">
+                    <div id="check-loader" style="top:70%"></div>
+                </div>
+                <div id="text_message" style="display: none;">
+                    <p id="text_message" style="text-align: center;">
+                        Extension module is not connected
+                    </p>
                 </div>
             </div>
             <div id="cont" style="display: none;">

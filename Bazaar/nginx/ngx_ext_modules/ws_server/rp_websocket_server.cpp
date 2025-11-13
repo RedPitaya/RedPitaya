@@ -300,8 +300,10 @@ void rp_websocket_server::on_param_timer(websocketpp::lib::error_code const& ec)
 
     con_list::iterator it;
     const char* params = m_params->get_params_func();
-    if (strlen(params) == 0)
+    if (strlen(params) == 0) {
+        set_param_timer();
         return;
+    }
     std::string js(params);
     static std::vector<uint8_t> buffer;
     buffer.clear();

@@ -100,9 +100,9 @@
             CLIENT.ws.onmessage = function(ev) {
                 try {
                     let receive = binParser.convert(ev.data)
-
                     //Recieving parameters
                     if (receive.parameters) {
+                        console.log(receive.parameters)
                         CLIENT.parameterStack.push(receive.parameters);
                     }
 
