@@ -93,6 +93,9 @@ int synthesis_DC(float scale, float* data_out, uint16_t buffSize);
 int synthesis_DC_NEG(float scale, float* data_out, uint16_t buffSize);
 int synthesis_PWM(float scale, float ratio, float* data_out, uint16_t buffSize);
 
+int gen_setUseLastSample(rp_channel_t channel, bool enable);
+int gen_getUseLastSample(rp_channel_t channel, bool* enable);
+
 int gen_setBurstLastValue(rp_channel_t channel, float amplitude);
 int gen_getBurstLastValue(rp_channel_t channel, float* amplitude);
 

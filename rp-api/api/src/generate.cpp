@@ -695,6 +695,15 @@ int generate_getRuntimeTempAlarm(rp_channel_t channel, bool* state) {
     return RP_OK;
 }
 
+int generate_setUseLastSampleAfter(rp_channel_t channel, bool enable) {
+    cmn_Debug("generate->config[%d]->lastSampleUse <- 0x%X", channel, enable ? 1 : 0);
+    asg_config_control_u_t conf;
+    conf.reg_full = generate->config;
+    conf.reg[channel].lastSampleUse = enable ? 1 : 0;
+    generate->config = conf.reg_full;
+    return RP_OK;
+}
+
 int generate_setBurstLastValue(rp_channel_t channel, rp_gen_gain_t gain, float amplitude) {
 
     float fullScaleAmp = 0;

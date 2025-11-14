@@ -1823,6 +1823,18 @@ int rp_AcqGetCalibInFPGA(rp_channel_t channel, bool* state) {
 * Generate methods
 */
 
+int rp_GenSetUseLastSample(rp_channel_t channel, bool enable) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
+    return gen_setUseLastSample(channel, enable);
+}
+
+int rp_GenGetUseLastSample(rp_channel_t channel, bool* enable) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
+    return gen_getUseLastSample(channel, enable);
+}
+
 int rp_GenBurstLastValue(rp_channel_t channel, float amlitude) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
