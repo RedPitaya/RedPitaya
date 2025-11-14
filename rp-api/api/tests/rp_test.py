@@ -460,6 +460,13 @@ print("rp.rp_GenGetBurstCount(rp.RP_CH_1)")
 res = rp.rp_GenGetBurstCount(rp.RP_CH_1)
 print(res)
 
+print("rp.rp_GenSetUseLastSample(rp.RP_CH_1,True)")
+res = rp.rp_GenSetUseLastSample(rp.RP_CH_1,True)
+print(res)
+
+print("rp.rp_GenGetUseLastSample(rp.RP_CH_1)")
+res = rp.rp_GenGetUseLastSample(rp.RP_CH_1)
+print(res)
 
 print("rp.rp_GenBurstLastValue(rp.RP_CH_1,0.4)")
 res = rp.rp_GenBurstLastValue(rp.RP_CH_1,0.4)
