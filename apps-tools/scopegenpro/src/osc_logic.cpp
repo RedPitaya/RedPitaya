@@ -12,6 +12,10 @@
 #include "common/rp_formatter.h"
 #include "math_logic.h"
 
+#include "web/rp_websocket.h"
+
+#define DATA_TCP_PORT 9900
+
 enum request_mode { NONE = 0x0, WAV = 0x1, TDMS = 0x2, CSV = 0x3 };
 
 static const uint8_t g_adc_channels = getADCChannels();
@@ -30,7 +34,7 @@ CIntParameter inViewStartPos("OSC_VIEW_START_POS", CBaseParameter::RO, 0, 0, 0, 
 CIntParameter inViewEndPos("OSC_VIEW_END_POS", CBaseParameter::RO, 0, 0, 0, 16384, CONFIG_VAR);
 CIntParameter adc_count("ADC_COUNT", CBaseParameter::RO, getADCChannels(), 0, 0, 4, 0);
 CIntParameter adc_rate("ADC_RATE", CBaseParameter::RO, getADCRate(), 0, getADCRate(), getADCRate(), 0);
-CIntParameter osc_per_sec("OSC_PER_SEC", CBaseParameter::RW, 0, 0, 0, 1000000, 0);
+CIntParameter osc_per_sec("OSC_PER_SEC", CBaseParameter::RW, 0, 0, 0, 100000000, 0);
 
 /***************************************************************************************
 *                                     OSCILLOSCOPE                                     *
@@ -38,7 +42,7 @@ CIntParameter osc_per_sec("OSC_PER_SEC", CBaseParameter::RW, 0, 0, 0, 1000000, 0
 
 /* --------------------------------  OUT SIGNALS  ------------------------------ */
 
-CFloatBase64Signal outCh[MAX_ADC_CHANNELS] = INIT("ch", "", 0, 0.0f);
+CFloatBinarySignal outCh[MAX_ADC_CHANNELS] = INIT("ch", "", 0, 0.0f);
 
 /* ------------------------------- DATA PARAMETERS ------------------------------ */
 // CIntParameter       dataSize("OSC_DATA_SIZE", CBaseParameter::RW, CH_SIGNAL_SIZE_DEFAULT, 0, 1, 16*1024);
@@ -69,7 +73,7 @@ CIntParameter inGain[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_IN_GAIN", CBaseParamet
 CIntParameter inFilter[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_IN_FILTER", CBaseParameter::RW, 1, 0, 0, 1, CONFIG_VAR);
 CIntParameter inAC_DC[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_IN_AC_DC", CBaseParameter::RW, RP_DC, 0, 0, 1, CONFIG_VAR);
 
-CIntParameter inSmoothMode[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_SMOOTH", CBaseParameter::RW, RP_DC, 0, 0, 3, CONFIG_VAR);
+CIntParameter inSmoothMode[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_SMOOTH", CBaseParameter::RW, rpApp_osc_interpolationMode::DISABLED, 0, 0, 4, CONFIG_VAR);
 
 /* --------------------------------  TRIGGER PARAMETERS --------------------------- */
 CFloatParameter inTriggLevel("OSC_TRIG_LEVEL", CBaseParameter::RW, 0, 0, -20, 20, CONFIG_VAR);
@@ -95,6 +99,24 @@ CFloatParameter ext_trigger_level("OSC_EXT_TRIG_LEVEL", CBaseParameter::RW, 0, 0
 
 CIntParameter bufferRequest("OSC_BUFFER_REQUEST", CBaseParameter::RW, 0, 0, -1, 1);
 CIntParameter bufferSelected("OSC_BUFFER_CURRENT", CBaseParameter::RW, 0, 0, (MAX_BUFFERS - 1) * -1, 0);
+
+/* ----------------------------------- TRACE MODE ---------------------------------------*/
+CIntParameter inShowTrace[MAX_ADC_CHANNELS] = INIT("CH", "_SHOW_TRACE", CBaseParameter::RW, 0, 0, 0, 1, CONFIG_VAR);
+CBooleanParameter trace_mode_fast_enable("OSC_SW_TM_FAST_MODE", CBaseParameter::RW, false, 0, CONFIG_VAR);
+CBooleanParameter trace_mode_window_show("OSC_SW_TM_WIN_SHOW", CBaseParameter::RW, false, 0, CONFIG_VAR);
+CIntParameter trace_mode_window_x("OSC_SW_TM_WIN_X", CBaseParameter::RW, 300, 0, 0, 65536, CONFIG_VAR);
+CIntParameter trace_mode_window_y("OSC_SW_TM_WIN_Y", CBaseParameter::RW, 300, 0, 0, 65536, CONFIG_VAR);
+CIntParameter trace_mode_window_w("OSC_SW_TM_WIN_W", CBaseParameter::RW, 560, 0, 0, 65536, CONFIG_VAR);
+CIntParameter trace_mode_window_h("OSC_SW_TM_WIN_H", CBaseParameter::RW, 360, 0, 0, 65536, CONFIG_VAR);
+CIntParameter trace_mode_channel_active("OSC_SW_TM_CH_ACTIVE", CBaseParameter::RW, 1, 0, 1, 4, CONFIG_VAR);
+
+CIntParameter inInvertedTrace[MAX_ADC_CHANNELS] = INIT("CH", "_TRACE_INVERTED", CBaseParameter::RW, 0, 0, 0, 1, CONFIG_VAR);
+CStringParameter trace_mode_color1[MAX_ADC_CHANNELS] = INIT("CH", "_TRACE_COLOR1", CBaseParameter::RW, "#3F00FF", 0, CONFIG_VAR);
+CStringParameter trace_mode_color2[MAX_ADC_CHANNELS] = INIT("CH", "_TRACE_COLOR2", CBaseParameter::RW, "#0000FF", 0, CONFIG_VAR);
+CStringParameter trace_mode_color3[MAX_ADC_CHANNELS] = INIT("CH", "_TRACE_COLOR3", CBaseParameter::RW, "#00FF00", 0, CONFIG_VAR);
+CStringParameter trace_mode_color4[MAX_ADC_CHANNELS] = INIT("CH", "_TRACE_COLOR4", CBaseParameter::RW, "#FF0000", 0, CONFIG_VAR);
+
+rp_websocket::CWEBServer data_server;
 
 auto initExtTriggerLimits() -> void {
     if (rp_HPGetIsExternalTriggerLevelPresentOrDefault()) {
@@ -128,6 +150,9 @@ auto initOscAfterLoad() -> void {
             inName[ch].Value() = std::string("IN") + std::to_string(i + 1);
         }
     }
+
+    rpApp_OscSetUpdateViewCallback(updateViewCallback);
+    data_server.startServerBinaray(DATA_TCP_PORT);
 }
 
 auto initOscBeforeLoadConfig() -> void {
@@ -135,6 +160,10 @@ auto initOscBeforeLoadConfig() -> void {
         auto ch = (rp_channel_t)i;
         inName[ch].Value() = std::string("IN") + std::to_string(i + 1);
     }
+}
+
+auto releaseOsc() -> void {
+    rpApp_OscSetUpdateViewCallback(nullptr);
 }
 
 auto updateTriggerLimit(bool force) -> void {
@@ -247,7 +276,7 @@ auto updateOscParametersToWEB() -> void {
     float value;
     rpApp_OscGetTimeOffset(&value);
     if (inTimeOffset.Value() != value) {
-        WARNING("Time offset %f", value)
+        TRACE("Time offset %f", value)
         inTimeOffset.SendValue(value);
         inTimeScale.Update();
         viewPortion.Update();
@@ -348,7 +377,8 @@ auto updateOscSignal() -> void {
         if (inShow[i].Value()) {
             if (outCh[i].GetSize() != CH_SIGNAL_SIZE_DEFAULT)
                 outCh[i].Resize(CH_SIGNAL_SIZE_DEFAULT);
-            rpApp_OscGetViewData((rpApp_osc_source)i, &outCh[i][0], (uint32_t)CH_SIGNAL_SIZE_DEFAULT);
+            rpApp_OscGetViewData((rpApp_osc_source)i, outCh[i].GetDataPtr()->data(), (uint32_t)CH_SIGNAL_SIZE_DEFAULT);
+            outCh[i].ForceSend();
         } else {
             outCh[i].Resize(0);
         }
@@ -525,7 +555,6 @@ auto updateOscParams(bool force) -> void {
 
     if (inTimeOffset.Value() != inTimeOffset.NewValue() || force) {
         if (rpApp_OscSetTimeOffset(inTimeOffset.NewValue()) == RP_OK) {
-            WARNING("Set %f", inTimeOffset.NewValue())
             inTimeOffset.Update();
             requestSendForTimeCursor = true;
         }
@@ -694,9 +723,84 @@ auto updateOscParams(bool force) -> void {
             inScale[i].SendValue(inScale[i].Value());
         }
     }
+
+    updateTraceModeParams(force);
 }
 
 auto getOSCTimeScale() -> float {
     float tscale = inTimeScale.Value() / 1000;
     return tscale;
+}
+
+auto updateViewCallback(rp_channel_t channel, uint32_t decimation, float timeScale, const std::vector<float>& view) -> void {
+    bool running;
+    rpApp_OscIsRunning(&running);
+    if (running && inShowTrace[channel].Value()) {
+        uint32_t header[6] = {0xAABBCCDD, view.size() * sizeof(float), view.size(), channel, decimation, 0};
+        ((float*)header)[5] = timeScale;
+        data_server.sendInBinarayMode((char*)header, 6 * sizeof(uint32_t));
+        data_server.sendInBinarayMode((char*)view.data(), view.size() * sizeof(float));
+    }
+}
+
+void updateTraceModeParams(bool force) {
+    if (IS_NEW(trace_mode_window_show) || force) {
+        trace_mode_window_show.Update();
+    }
+
+    if (IS_NEW(trace_mode_window_x) || force) {
+        trace_mode_window_x.Update();
+    }
+
+    if (IS_NEW(trace_mode_window_y) || force) {
+        trace_mode_window_y.Update();
+    }
+
+    if (IS_NEW(trace_mode_window_h) || force) {
+        trace_mode_window_h.Update();
+    }
+
+    if (IS_NEW(trace_mode_window_w) || force) {
+        trace_mode_window_w.Update();
+    }
+
+    if (IS_NEW(trace_mode_channel_active) || force) {
+        trace_mode_channel_active.Update();
+    }
+
+    for (int i = 0; i < g_adc_channels; i++) {
+
+        if (IS_NEW(inShowTrace[i]) || force) {
+            inShowTrace[i].Update();
+        }
+
+        if (IS_NEW(inInvertedTrace[i]) || force) {
+            inInvertedTrace[i].Update();
+        }
+
+        if (IS_NEW(trace_mode_color1[i]) || force) {
+            trace_mode_color1[i].Update();
+        }
+
+        if (IS_NEW(trace_mode_color2[i]) || force) {
+            trace_mode_color2[i].Update();
+        }
+
+        if (IS_NEW(trace_mode_color3[i]) || force) {
+            trace_mode_color3[i].Update();
+        }
+
+        if (IS_NEW(trace_mode_color4[i]) || force) {
+            trace_mode_color4[i].Update();
+        }
+    }
+
+    if (IS_NEW(trace_mode_fast_enable) || force) {
+        trace_mode_fast_enable.Update();
+        rpApp_OscSetForceUpdateView(trace_mode_fast_enable.Value());
+    }
+}
+
+auto getOSCTimeOffset() -> float {
+    return inTimeOffset.Value();
 }

@@ -210,4 +210,18 @@ $(function () {
     $("#ext_con_but").click(function (event) {
         $('#ext_connections_dialog').modal("show");
     });
+
+    $.ajax({
+        url: '/scpi_get_board_id',
+        type: 'GET',
+    }).fail(function (msg) {
+        console.log(msg)
+    }).done(function (msg) {
+        SCPI.rp_board_id = msg
+        setBoardPinOut(SCPI.rp_board_id)
+    });
+
+    $(window).resize(function() {
+        setBoardPinOut(SCPI.rp_board_id)
+    });
 });

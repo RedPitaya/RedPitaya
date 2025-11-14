@@ -61,7 +61,6 @@ if(NOT websocketpp_POPULATED)
     add_subdirectory(${websocketpp_SOURCE_DIR} ${websocketpp_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
-
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations -Wno-psabi")
 
 

@@ -320,6 +320,88 @@ scpi_result_t RP_GenDutyCycleQ(scpi_t* context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_GenRiseTime(scpi_t* context) {
+    rp_channel_t channel = RP_CH_1;
+    float value = 0;
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK) {
+        return SCPI_RES_ERR;
+    }
+    if (!SCPI_ParamFloat(context, &value, true)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+    auto result = rp_GenRiseTime(channel, value);
+    if (result != RP_OK) {
+        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to set generate rise time");
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_GenRiseTimeQ(scpi_t* context) {
+    rp_channel_t channel = RP_CH_1;
+    float value = 0;
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK) {
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+
+    auto result = rp_GenGetRiseTime(channel, &value);
+    if (result != RP_OK) {
+        RP_LOG_CRIT("Failed to get generate rise time: %s", rp_GetError(result));
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultFloat(context, value);
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_GenFallTime(scpi_t* context) {
+    rp_channel_t channel = RP_CH_1;
+    float value = 0;
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK) {
+        return SCPI_RES_ERR;
+    }
+    if (!SCPI_ParamFloat(context, &value, true)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+    auto result = rp_GenFallTime(channel, value);
+    if (result != RP_OK) {
+        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to set generate fall time");
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_GenFallTimeQ(scpi_t* context) {
+    rp_channel_t channel = RP_CH_1;
+    float value = 0;
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK) {
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+
+    auto result = rp_GenGetFallTime(channel, &value);
+    if (result != RP_OK) {
+        RP_LOG_CRIT("Failed to get generate fall time: %s", rp_GetError(result));
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultFloat(context, value);
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_GenArbitraryWaveForm(scpi_t* context) {
     rp_channel_t channel = RP_CH_1;
     float buffer[DAC_BUFFER_SIZE];

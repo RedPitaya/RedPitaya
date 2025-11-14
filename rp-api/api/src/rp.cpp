@@ -1813,9 +1813,27 @@ int rp_AcqSetCalibInFPGA(rp_channel_t channel) {
     return acq_SetCalibInFPGA(channel);
 }
 
+int rp_AcqGetCalibInFPGA(rp_channel_t channel, bool* state) {
+    if (!rp_HPGetIsCalibInFPGAOrDefault())
+        return RP_NOTS;
+    return acq_GetCalibInFPGA(channel, state);
+}
+
 /**
 * Generate methods
 */
+
+int rp_GenSetUseLastSample(rp_channel_t channel, bool enable) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
+    return gen_setUseLastSample(channel, enable);
+}
+
+int rp_GenGetUseLastSample(rp_channel_t channel, bool* enable) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
+    return gen_getUseLastSample(channel, enable);
+}
 
 int rp_GenBurstLastValue(rp_channel_t channel, float amlitude) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
@@ -2434,6 +2452,12 @@ int rp_AcqAxiGetOffset(rp_channel_t channel, float* value) {
     return acq_axi_GetOffset(channel, value);
 }
 
+int rp_GenAxiGetMemoryRegion(uint32_t* _start, uint32_t* _size) {
+    if (!rp_HPGetIsDMAinv0_94OrDefault())
+        return RP_NOTS;
+    return acq_axi_GetMemoryRegion(_start, _size);
+}
+
 int rp_GenAxiSetEnable(rp_channel_t channel, bool state) {
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
@@ -2474,4 +2498,10 @@ int rp_GenAxiWriteWaveform(rp_channel_t channel, float* np_buffer, int size) {
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
     return gen_axi_WriteWaveform(channel, np_buffer, size);
+}
+
+int rp_GenAxiWriteWaveformOffset(rp_channel_t channel, uint32_t offset, float* np_buffer, int size) {
+    if (!rp_HPGetIsDMAinv0_94OrDefault())
+        return RP_NOTS;
+    return gen_axi_WriteWaveform(channel, offset, np_buffer, size);
 }

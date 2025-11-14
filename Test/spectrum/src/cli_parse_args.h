@@ -1,8 +1,8 @@
 #pragma once
 
 #include <string>
-#include "rp_hw-profiles.h"
 #include "math/rp_dsp.h"
+#include "rp_hw-profiles.h"
 
 uint32_t getMaxFreqRate();
 
@@ -17,10 +17,11 @@ struct cli_args_t {
     bool csv_limit = false;
     bool help = false;
     bool test = false;
+    bool all_values = false;
     rp_dsp_api::window_mode_t wm = rp_dsp_api::HANNING;
 };
 
 std::string cli_help_string();
 
 // Returns false when the parser failure
-bool cli_parse_args(int argc, char * const argv[], cli_args_t &out_args);
+bool cli_parse_args(int argc, char* const argv[], cli_args_t& out_args);

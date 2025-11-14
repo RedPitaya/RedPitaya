@@ -22,6 +22,8 @@
             $("#B_DISABLE_CONT").hide();
             $("#B_AUTO_CLOSE_CONT").hide();
             $("#B_RESET_CONT").hide();
+            $("#B_EEPROM_SHOW_CONT").hide();
+            SW.setWinShow(false)    
         } else {
             $("#main_menu_body").hide();
         }
@@ -52,6 +54,7 @@
                 $("#B_APPLY_CONT").show();
                 $("#B_CLOSE_CONT").show();
                 $("#B_RESET_CONT").show();
+                $("#B_EEPROM_SHOW_CONT").show();
             } else {
                 $("#adc_mode_body").hide();
             }
@@ -130,9 +133,11 @@
         if (OBJ.is_filter){
             if ($("#filter_calib_button") !== undefined) $("#filter_calib_button").show();
             if ($("#afilter_calib_button") !== undefined) $("#afilter_calib_button").show();
+            if ($("#manual_filter_mode") !== undefined) $("#manual_filter_mode").show();
         }else{
             if ($("#filter_calib_button") !== undefined) $("#filter_calib_button").remove();
             if ($("#afilter_calib_button") !== undefined) $("#afilter_calib_button").remove();
+            if ($("#manual_filter_mode") !== undefined) $("#manual_filter_mode").remove();
         }
     }
 
@@ -157,36 +162,43 @@
                 if (OBJ.is_filter){
                     if ($("#filter_calib_button") !== undefined) $("#filter_calib_button").show();
                     if ($("#afilter_calib_button") !== undefined) $("#afilter_calib_button").show();
+                    if ($("#manual_filter_mode") !== undefined) $("#manual_filter_mode").show();
                 }else{
                     if ($("#filter_calib_button") !== undefined) $("#filter_calib_button").remove();
                     if ($("#afilter_calib_button") !== undefined) $("#afilter_calib_button").remove();
+                     if ($("#manual_filter_mode") !== undefined) $("#manual_filter_mode").remove();
                 }
 
 
                 if (OBJ.model == "Z20"){
                     $('#a_mode').remove();
                 }
-
+                SW.initSubWindow()
                 OBJ.amSetModel(_value);
                 OBJ.adcSetModel(_value);
                 OBJ.famSetModel(_value);
                 OBJ.filterSetModel(_value);
                 CLIENT.requestParameters();
+                scaleContainers()
             });
         }
 
     }
 
     OBJ.closeManualMode = function() {
+        SM.param_callbacks["ch1_mean"] = undefined;
         SM.param_callbacks["ch1_avg"] = undefined;
         SM.param_callbacks["ch1_max"] = undefined;
         SM.param_callbacks["ch1_min"] = undefined;
+        SM.param_callbacks["ch2_mean"] = undefined;
         SM.param_callbacks["ch2_avg"] = undefined;
         SM.param_callbacks["ch2_max"] = undefined;
         SM.param_callbacks["ch2_min"] = undefined;
+        SM.param_callbacks["ch3_mean"] = undefined;
         SM.param_callbacks["ch3_avg"] = undefined;
         SM.param_callbacks["ch3_max"] = undefined;
         SM.param_callbacks["ch3_min"] = undefined;
+        SM.param_callbacks["ch4_mean"] = undefined;
         SM.param_callbacks["ch4_avg"] = undefined;
         SM.param_callbacks["ch4_max"] = undefined;
         SM.param_callbacks["ch4_min"] = undefined;
@@ -214,33 +226,43 @@
         });
 
         $('#B_ADC_MODE').on('click', function(ev) {
-            SM.param_callbacks["ch1_avg"] = OBJ.adcSetCH1Avg;
+            SM.param_callbacks["ch1_mean"] = OBJ.adcSetCH1Avg;
             SM.param_callbacks["ch1_max"] = OBJ.adcSetCH1Max;
             SM.param_callbacks["ch1_min"] = OBJ.adcSetCH1Min;
             SM.param_callbacks["ch1_p_p"] = OBJ.adcSetCH1PP;
             SM.param_callbacks["ch1_issine"] = OBJ.adcSetCH1IsSin;
+            SM.param_callbacks["ch1_is_fpga"] = OBJ.adcSetCH1IsFpga;
             SM.param_callbacks["ch1_perBuff"] = OBJ.adcSetCH1PPerBuf;
 
-            SM.param_callbacks["ch2_avg"] = OBJ.adcSetCH2Avg;
+            SM.param_callbacks["ch2_mean"] = OBJ.adcSetCH2Avg;
             SM.param_callbacks["ch2_max"] = OBJ.adcSetCH2Max;
             SM.param_callbacks["ch2_min"] = OBJ.adcSetCH2Min;
             SM.param_callbacks["ch2_p_p"] = OBJ.adcSetCH2PP;
             SM.param_callbacks["ch2_issine"] = OBJ.adcSetCH2IsSin;
+            SM.param_callbacks["ch2_is_fpga"] = OBJ.adcSetCH2IsFpga;
             SM.param_callbacks["ch2_perBuff"] = OBJ.adcSetCH2PPerBuf;
 
-            SM.param_callbacks["ch3_avg"] = OBJ.adcSetCH3Avg;
+            SM.param_callbacks["ch3_mean"] = OBJ.adcSetCH3Avg;
             SM.param_callbacks["ch3_max"] = OBJ.adcSetCH3Max;
             SM.param_callbacks["ch3_min"] = OBJ.adcSetCH3Min;
             SM.param_callbacks["ch3_p_p"] = OBJ.adcSetCH3PP;
             SM.param_callbacks["ch3_issine"] = OBJ.adcSetCH3IsSin;
+            SM.param_callbacks["ch3_is_fpga"] = OBJ.adcSetCH3IsFpga;
             SM.param_callbacks["ch3_perBuff"] = OBJ.adcSetCH3PPerBuf;
 
-            SM.param_callbacks["ch4_avg"] = OBJ.adcSetCH4Avg;
+            SM.param_callbacks["ch4_mean"] = OBJ.adcSetCH4Avg;
             SM.param_callbacks["ch4_max"] = OBJ.adcSetCH4Max;
             SM.param_callbacks["ch4_min"] = OBJ.adcSetCH4Min;
             SM.param_callbacks["ch4_p_p"] = OBJ.adcSetCH4PP;
             SM.param_callbacks["ch4_issine"] = OBJ.adcSetCH4IsSin;
+            SM.param_callbacks["ch4_is_fpga"] = OBJ.adcSetCH4IsFpga;
             SM.param_callbacks["ch4_perBuff"] = OBJ.adcSetCH4PPerBuf;
+
+            SM.param_callbacks["SW_WIN_X"] = SW.setWinX;
+            SM.param_callbacks["SW_WIN_Y"] = SW.setWinY;
+            SM.param_callbacks["SW_WIN_W"] = SW.setWinW;
+            SM.param_callbacks["SW_WIN_H"] = SW.setWinH;
+
 
             OBJ.adcInitData();
             OBJ.adcInitRequest();
@@ -252,6 +274,7 @@
             }
             OBJ.setMainMenu(false);
             OBJ.setADCMode(true);
+            scaleContainers()
         });
 
         $('#B_AUTO_FILTER_MODE').on('click', function(ev) {
@@ -275,6 +298,8 @@
             $('#reset_ok_btn').on('click', function() {
                 CLIENT.parametersCache["calib_sig"] = { value: 5 };
                 CLIENT.requestParameters();
+                CLIENT.parametersCache["calib_sig"] = { value: 8 };
+                CLIENT.requestParameters();
                 OBJ.adcCalibChange = false;
                 OBJ.filterCalibChange = false;
             });
@@ -289,6 +314,8 @@
             $('#reset_ok_btn').on('click', function() {
                 CLIENT.parametersCache["calib_sig"] = { value: 3 };
                 CLIENT.requestParameters();
+                CLIENT.parametersCache["calib_sig"] = { value: 8 };
+                CLIENT.requestParameters();
                 OBJ.adcCalibChange = false;
             });
             $('#reset_cancel_btn').on('click', function() {});
@@ -302,33 +329,45 @@
             $('#reset_ok_btn').on('click', function() {
                 CLIENT.parametersCache["calib_sig"] = { value: 4 };
                 CLIENT.requestParameters();
+                CLIENT.parametersCache["calib_sig"] = { value: 8 };
+                CLIENT.requestParameters();
                 OBJ.adcCalibChange = false;
             });
             $('#reset_cancel_btn').on('click', function() {});
             $("#dialog_reset").modal('show');
         });
 
+        $('#B_EEPROM_SHOW').on('click', function(ev) {
+            SW.setWinShow(true)
+        });
+
+        
+
         $('#B_CANCEL_CALIB').on('click', function(ev) {
+            SM.param_callbacks["ch1_mean"] = undefined;
             SM.param_callbacks["ch1_avg"] = undefined;
             SM.param_callbacks["ch1_max"] = undefined;
             SM.param_callbacks["ch1_min"] = undefined;
 
+            
+            SM.param_callbacks["ch2_mean"] = undefined;
             SM.param_callbacks["ch2_avg"] = undefined;
             SM.param_callbacks["ch2_max"] = undefined;
             SM.param_callbacks["ch2_min"] = undefined;
 
+            SM.param_callbacks["ch3_mean"] = undefined;
             SM.param_callbacks["ch3_avg"] = undefined;
             SM.param_callbacks["ch3_max"] = undefined;
             SM.param_callbacks["ch3_min"] = undefined;
 
+            SM.param_callbacks["ch4_mean"] = undefined;
             SM.param_callbacks["ch4_avg"] = undefined;
             SM.param_callbacks["ch4_max"] = undefined;
             SM.param_callbacks["ch4_min"] = undefined;
 
             OBJ.showMainMenu();
-            CLIENT.parametersCache["SS_NEXTSTEP"] = { value: -2 };
+            CLIENT.parametersCache["SS_NEXTSTEP"] = { value: "RESET_CALIB" };
             CLIENT.parametersCache["F_SS_NEXTSTEP"] = { value: -2};
-            CLIENT.parametersCache["ref_volt"] = { value: 0 }; // SS_NEXTSTEP work only in pair ref_volt
             CLIENT.requestParameters();
         });
 

@@ -47,6 +47,7 @@
 #define MAX_BUFF_SIZE 1024
 #define UART_RATE 115200
 #define UART_ARDUINO_RATE 57600
+#define SIZE_ALIGMENT 64
 
 #define SCPI_ERROR_QUEUE_SIZE 16
 #define CONFIG_FILE_UART "/root/.scpi_uart"
@@ -139,10 +140,11 @@ void LogMessage(char* m, size_t len) {
 static int handleConnection(scpi_t* ctx, int connfd) {
     static std::mutex mtx;
     int read_size;
-
-    size_t message_len = MAX_BUFF_SIZE;
-    char* message_buff = (char*)malloc(message_len);
-    char buffer[MAX_BUFF_SIZE];
+    size_t message_len = MAX_BUFF_SIZE * 64;
+    std::vector<uint8_t> message_buff;
+    std::vector<uint8_t> buffer;
+    message_buff.resize(message_len);
+    buffer.resize(message_len);
     size_t msg_end = 0;
 
     // prctl(PR_SET_PDEATHSIG, SIGTERM);
@@ -157,24 +159,31 @@ static int handleConnection(scpi_t* ctx, int connfd) {
     if (setsockopt(connfd, SOL_SOCKET, SO_SNDBUF, &buf, sizeof(int)) == -1) {
         rp_Log(nullptr, LOG_ERR, 0, "Error setting socket opts: %s", strerror(errno));
     }
+
     //Receive a message from client
-    while ((read_size = recv(connfd, buffer, MAX_BUFF_SIZE, 0)) > 0) {
+    while ((read_size = recv(connfd, buffer.data(), buffer.size(), 0)) > 0) {
         if (app_exit) {
             break;
         }
 
         // First make sure that message buffer is large enough
-        while (msg_end + read_size >= message_len) {
-            message_len *= 2;
-            message_buff = (char*)realloc(message_buff, message_len);
+        auto new_message_size = msg_end + read_size;
+        if (new_message_size >= message_buff.size()) {
+            auto new_size = std::max<size_t>(message_buff.size() * 1.5, new_message_size);
+            new_size = (new_size + SIZE_ALIGMENT - 1) & ~(SIZE_ALIGMENT - 1);
+            message_buff.resize(new_size);
+            if (message_buff.size() != new_size) {
+                rp_Log(nullptr, LOG_ERR, 0, "Not enough memory for buffer.");
+                break;
+            }
         }
 
         // Copy read buffer into message buffer
-        memcpy(message_buff + msg_end, buffer, read_size);
+        memcpy(&(message_buff.data()[msg_end]), buffer.data(), read_size);
         msg_end += read_size;
 
         // Now try to parse each command out
-        char* m = message_buff;
+        char* m = (char*)(message_buff.data());
         size_t pos = 0;
         while ((pos = getNextCommand(m, msg_end)) != 0) {
             std::lock_guard<std::mutex> lock(mtx);
@@ -188,14 +197,16 @@ static int handleConnection(scpi_t* ctx, int connfd) {
         }
 
         // Move the rest of the message to the beginning of the buffer
-        if (message_buff != m && msg_end > 0) {
-            memmove(message_buff, m, msg_end);
+        if ((char*)message_buff.data() != m && msg_end > 0) {
+            memmove(message_buff.data(), m, msg_end);
+        } else {
+            if (message_buff.capacity() > message_len) {
+                message_buff.shrink_to_fit();
+            }
         }
 
-        rp_Log(nullptr, LOG_INFO, 0, "Waiting for next client request.");
+        rp_Log(nullptr, LOG_INFO, 0, "Waiting for next client request. (%d)", message_buff.size());
     }
-
-    free(message_buff);
 
     rp_Log(nullptr, LOG_INFO, 0, "Closing client connection...");
 
@@ -380,8 +391,10 @@ auto startUART() -> int {
         // First make sure that message buffer is large enough
         auto new_message_size = msg_end + read_size;
         if (new_message_size >= message_buff.size()) {
-            message_buff.resize(new_message_size);
-            if (message_buff.size() != new_message_size) {
+            auto new_size = std::max<size_t>(message_buff.size() * 1.5, new_message_size);
+            new_size = (new_size + SIZE_ALIGMENT - 1) & ~(SIZE_ALIGMENT - 1);
+            message_buff.resize(new_size);
+            if (message_buff.size() != new_size) {
                 rp_Log(nullptr, LOG_ERR, 0, "Not enough memory for buffer.");
                 break;
             }
@@ -408,7 +421,9 @@ auto startUART() -> int {
         if ((char*)message_buff.data() != m && msg_end > 0) {
             memmove(message_buff.data(), m, msg_end);
         }
-
+        if (message_buff.capacity() > MAX_BUFF_SIZE) {
+            message_buff.shrink_to_fit();
+        }
         rp_Log(nullptr, LOG_INFO, 0, "Waiting for next client request.");
     }
 
@@ -489,8 +504,10 @@ auto startArduinoApi() -> int {
         // First make sure that message buffer is large enough
         auto new_message_size = msg_end + read_size;
         if (new_message_size >= message_buff.size()) {
-            message_buff.resize(new_message_size);
-            if (message_buff.size() != new_message_size) {
+            auto new_size = std::max<size_t>(message_buff.size() * 1.5, new_message_size);
+            new_size = (new_size + SIZE_ALIGMENT - 1) & ~(SIZE_ALIGMENT - 1);
+            message_buff.resize(new_size);
+            if (message_buff.size() != new_size) {
                 rp_Log(nullptr, LOG_ERR, 0, "Not enough memory for buffer.");
                 break;
             }
@@ -516,7 +533,9 @@ auto startArduinoApi() -> int {
         if ((char*)message_buff.data() != m && msg_end > 0) {
             memmove(message_buff.data(), m, msg_end);
         }
-
+        if (message_buff.capacity() > MAX_BUFF_SIZE) {
+            message_buff.shrink_to_fit();
+        }
         rp_Log(nullptr, LOG_INFO, 0, "Waiting for next client request.");
     }
 

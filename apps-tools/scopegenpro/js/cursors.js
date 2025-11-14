@@ -42,6 +42,21 @@
                 $(ui.helper[0]).css('top','')
             }
         });
+
+        $('.channels_arrow_class').on('mousedown', function(e) {
+            const ch =  e.currentTarget.id.replace('_offset_arrow','')
+            if (ch == "output1" || ch == "output2"){
+                const CH = ch.toUpperCase();
+                if (OSC.params.orig[CH+"_STATE"] && !OSC.params.orig[CH+"_STATE"].value)
+                    return
+            }
+            var activeNode = $('#right_menu .menu-btn.' + ch)
+            activeNode.addClass('active');
+            $('#right_menu .menu-btn').not(activeNode).removeClass('active');
+            OSC.state.sel_sig_name = activeNode.data('signal');
+        });
+
+
     }
 
     OSC.cursorY = function() {

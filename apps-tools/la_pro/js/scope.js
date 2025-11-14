@@ -34,13 +34,6 @@
     LA.guiHandler = function() {
         if (CLIENT.signalStack.length > 0) {
             let signals = Object.assign({}, CLIENT.signalStack[0]);
-            for (const property in signals) {
-                if (signals[property]['type']){
-                    if (signals[property]['type'] == 'h'){
-                        signals[property]['value'] = CLIENT.base64ToByteArray(signals[property]['value'])
-                    }
-                }
-            }
             CLIENT.client_log(signals)
             var needRedraw = false
             if (signals['data_rle']){
@@ -148,6 +141,12 @@
         }
     }
 
+    LA.setRPModel = function(new_params) {
+        var model = new_params["LA_RP_MODEL"].value;
+        setBoardPinOut(model)
+    }
+
+    LA.param_callbacks["LA_RP_MODEL"] = LA.setRPModel;
 
     LA.param_callbacks["LA_RUN"] = LA.processRun;
 

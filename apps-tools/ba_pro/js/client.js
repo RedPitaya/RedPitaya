@@ -31,9 +31,6 @@
     CLIENT.parameterStack = [];
     CLIENT.signalStack = [];
 
-    CLIENT.compressed_data = 0;
-    CLIENT.decompressed_data = 0;
-
     CLIENT.client_log = function(...args) {
         if (CLIENT.config.debug){
             const d = new Date();
@@ -69,7 +66,7 @@
 
     // Creates a WebSocket connection with the web server
     CLIENT.connectWebSocket = function() {
-
+        let binParser = new BinarySignalParser();
         if (window.WebSocket) {
             CLIENT.ws = new WebSocket(CLIENT.config.socket_url);
             CLIENT.ws.binaryType = "arraybuffer";
@@ -106,18 +103,8 @@
 
             CLIENT.ws.onmessage = function(ev) {
                 try {
-                    var data = new Uint8Array(ev.data);
-                    CLIENT.compressed_data += data.length;
-                    var inflate = pako.inflate(data);
-                    // var text = String.fromCharCode.apply(null, new Uint8Array(inflate));
-                    var bytes = new Uint8Array(inflate);
-                    var text = '';
-                    for(var i = 0; i < Math.ceil(bytes.length / 32768.0); i++) {
-                      text += String.fromCharCode.apply(null, bytes.slice(i * 32768, Math.min((i+1) * 32768, bytes.length)))
-                    }
 
-                    CLIENT.decompressed_data += text.length;
-                    var receive = JSON.parse(text);
+                    var receive = binParser.convert(ev.data);
 
                     //Recieving parameters
                     if (receive.parameters) {
@@ -135,40 +122,6 @@
         }
     };
 
-
-    CLIENT.base64ToFloatArray =function(base64String) {
-        // Decode the base64 string to a byte array
-        if (base64String.length === 0) return new Float32Array(0)
-        const b64ToBuffer = (b64) => Uint8Array.from(atob(b64), c => c.charCodeAt(0)).buffer;
-        bytes = b64ToBuffer(base64String)
-        // Create a Float32Array from the byte array
-        const floatArray = new Float32Array(bytes.byteLength / 4);
-
-        // Convert the byte array to a Float32Array
-        for (let i = 0; i < floatArray.length; i++) {
-          const byteIndex = i * 4;
-          floatArray[i] = new DataView(bytes).getFloat32(byteIndex,true);
-        }
-
-        return floatArray;
-    }
-
-    CLIENT.base64ToIntArray =function(base64String) {
-        // Decode the base64 string to a byte array
-        if (base64String.length === 0) return new Int32Array(0)
-        const b64ToBuffer = (b64) => Uint8Array.from(atob(b64), c => c.charCodeAt(0)).buffer;
-        bytes = b64ToBuffer(base64String)
-        // Create a Float32Array from the byte array
-        const intArray = new Int32Array(bytes.byteLength / 4);
-
-        // Convert the byte array to a Float32Array
-        for (let i = 0; i < intArray.length; i++) {
-          const byteIndex = i * 4;
-          intArray[i] = new DataView(bytes).getInt32(byteIndex,true);
-        }
-
-        return intArray;
-    }
 
     // Sends to server parameters
     CLIENT.sendParameters = function() {

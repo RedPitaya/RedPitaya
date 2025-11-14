@@ -116,6 +116,10 @@ int osc_getShowInvalid(rp_channel_t _channel, bool* _state);
 int osc_SetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode _mode);
 int osc_GetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode* _mode);
 
+int osc_SetForceUpdateView(bool enable);
+int osc_GetForceUpdateView(bool* enable);
+int osc_SetUpdateViewCallback(rpApp_osc_updateViewCallback_t callback);
+
 int threadSafe_acqStart();
 int threadSafe_acqStop();
 double scaleAmplitude(double volts, double ampScale, double probeAtt, double ampOffset, double invertFactor);
@@ -129,8 +133,8 @@ int unattenuateAmplitudeChannel(rpApp_osc_source source, float value, float* res
 double roundUpTo125(double data);
 double roundUpTo25(double data);
 
-void calculateIntegral(rp_channel_t channel, float scale, float offset, float invertFactor);
-void calculateDevivative(rp_channel_t channel, float scale, float offset, float invertFactor);
+void calculateIntegral(rp_channel_t channel, float scale, float offset, float invertFactor, std::vector<float>* buffers);
+void calculateDevivative(rp_channel_t channel, float scale, float offset, float invertFactor, std::vector<float>* buffers);
 float calculateMath(float v1, float v2, rpApp_osc_math_oper_t op);
 double unOffsetAmplitude(double value, double ampScale, double ampOffset);
 int unscaleAmplitudeChannel(rpApp_osc_source source, float value, float* res);

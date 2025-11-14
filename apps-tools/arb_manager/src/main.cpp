@@ -80,29 +80,21 @@ int rp_app_init(void) {
     if (getOutFullScale(&gain)) {
         max_gain.Value() = gain;
     }
-    rp_ARBInit();
-    rp_WC_Init();
-
+#ifdef ZIP_DISABLED
+    CDataManager::GetInstance()->SetEnableParamsGZip(false);
+    CDataManager::GetInstance()->SetEnableSignalsGZip(false);
+    CDataManager::GetInstance()->SetEnableBinarySignalsGZip(false);
+#endif
     CDataManager::GetInstance()->SetParamInterval(50);
     CDataManager::GetInstance()->SetSignalInterval(50);
+    rp_ARBInit();
+    rp_WC_Init();
     sendFilesInfo();
     return 0;
 }
 
 int rp_app_exit(void) {
     fprintf(stderr, "Unloading arb manager %s-%s.\n", VERSION_STR, REVISION_STR);
-    return 0;
-}
-
-int rp_set_params(rp_app_params_t*, int) {
-    return 0;
-}
-
-int rp_get_params(rp_app_params_t**) {
-    return 0;
-}
-
-int rp_get_signals(float***, int*, int*) {
     return 0;
 }
 
@@ -188,10 +180,6 @@ void UpdateParams(void) {
     req_check_file_coe.Update();
     req_files_list.Update();
 }
-
-void PostUpdateSignals(void) {}
-
-void UpdateSignals(void) {}
 
 void OnNewParams(void) {
     if (req_check_file.IsNewValue()) {
@@ -302,5 +290,3 @@ void OnNewParams(void) {
         }
     }
 }
-
-void OnNewSignals(void) {}

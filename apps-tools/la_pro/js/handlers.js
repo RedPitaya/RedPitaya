@@ -100,7 +100,7 @@
         });
 
 
-        
+
         $('#select_mode').click(function() {
             var curVal = CLIENT.getValue("LA_MEASURE_MODE")
             if (curVal !== undefined){
@@ -335,6 +335,8 @@
             LA.checkSubWindowPosition()
             LA.setCurrentFreq()
             LA.updateJoystickPosition();
+            if (CLIENT.params.orig["LA_RP_MODEL"] !== undefined)
+                setBoardPinOut(CLIENT.params.orig["LA_RP_MODEL"].value)
         }).resize();
 
         $("#ext_con_but").click(function(event) {
@@ -445,7 +447,7 @@
                                     CLIENT.sendParameters();
                                 }, 1000);
                             },
-                            error: function(e) { 
+                            error: function(e) {
                                 alert("Error upload file")
                                 console.log(e);
                             },
@@ -464,7 +466,7 @@
                                         console.log(percent + '% uploaded');
                                     }
                                 }, false);
-                                
+
                                 return xhr;
                             }
                         });

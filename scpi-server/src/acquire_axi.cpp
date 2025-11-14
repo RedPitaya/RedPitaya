@@ -19,7 +19,7 @@
 #include <span>
 #include <vector>
 
-#include "acquire.h"
+#include "acquire_axi.h"
 #include "common.h"
 
 #include "scpi-parser-ext.h"

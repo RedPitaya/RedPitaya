@@ -104,6 +104,13 @@ typedef enum {
 ///@{
 
 /**
+* Initializes profile parameters for the current board.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error..
+*/
+int rp_HPInit();
+
+/**
 * Returns the model read from eeprom
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error..

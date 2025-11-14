@@ -461,19 +461,19 @@
         var status = CLIENT.getValue('LCR_EXTMODULE_STATUS')
         if (status !== undefined){
             if (status === false) {
-                $('body').removeClass('loaded');
+                $('#check-wrapper').show()
+                // $('body').removeClass('loaded');
                 $('#text_message').show();
                 $('#cont').hide();
-                LCR.module_disconnected = true;
+                $('.hide_disconnected').hide()
             } else {
-                if (LCR.module_disconnected == true) {
-                    CLIENT.startApp();
-                    LCR.module_disconnected = false;
-                    return;
-                }
+                $('#check-wrapper').hide()
+                // $('body').addClass('loaded');
                 $('#text_message').hide();
                 $('#cont').show();
+                $('.hide_disconnected').show()
             }
+            LCR.module_disconnected = !status;
         }
     }
 

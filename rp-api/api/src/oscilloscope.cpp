@@ -255,7 +255,7 @@ int osc_printRegset() {
         return ret;
     }
     if (channels == 4) {
-        ret = cmn_InitMap(OSC_BASE_SIZE, OSC_BASE_ADDR, (void**)&osc_reg_4ch, &fd2);
+        ret = cmn_InitMap(OSC_BASE_SIZE, OSC_BASE_ADDR_4CH, (void**)&osc_reg_4ch, &fd2);
         if (ret != RP_OK) {
             cmn_ReleaseClose(fd1, OSC_BASE_SIZE, (void**)&osc_reg);
             return ret;
@@ -895,7 +895,6 @@ int osc_SetCalibOffsetInFPGA(rp_channel_t channel, uint8_t bits, int32_t offset)
 
     int16_t offsetCalc = offset * -1;  //-(pow(2, 16 - bits));
 
-    int16_t currentValue = 0;
     switch (channel) {
         case RP_CH_1:
             cmn_Debug("osc_reg->calib_offset_ch1 <- 0x%X", offsetCalc);
@@ -918,7 +917,7 @@ int osc_SetCalibOffsetInFPGA(rp_channel_t channel, uint8_t bits, int32_t offset)
         case RP_CH_4:
             if (osc_reg_4ch) {
                 cmn_Debug("osc_reg_4ch->calib_offset_ch2 <- 0x%X", offsetCalc);
-                osc_reg->calib_offset_ch2 = offsetCalc;
+                osc_reg_4ch->calib_offset_ch2 = offsetCalc;
                 return RP_OK;
             } else {
                 ERROR_LOG("Registers for channels 3 and 4 are not initialized")

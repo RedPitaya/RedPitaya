@@ -39,6 +39,7 @@ void usage(char** argv) {
             "\t\t\tosc_rate\t: OSC base rate\n"
             "\t\t\tfast_adc_bits\t: HW ADC bits\n"
             "\t\t\tfast_adc_fs\t: HW ADC full scale\n"
+            "\t\t\tfast_dac_fs\t: HW DAC full scale\n"
             "\t\t\tis_dac_50ohm\t: Support 50 ohm load mode for DAC\n"
             "\t\t\tis_daisy_clock_sync\t: Synchronization via daisy chain\n"
             "\t\t\tgpio_n\t: Number of GPIO channels N\n"
@@ -183,6 +184,17 @@ int main(int argc, char** argv) {
             if (key == "fast_adc_fs") {
                 float value;
                 auto ret = rp_HPGetHWADCFullScale(&value);
+                if (ret == RP_HP_OK) {
+                    printf("%f\n", value);
+                } else {
+                    printf("[Error]\n");
+                    return EXIT_FAILURE;
+                }
+                return EXIT_SUCCESS;
+            }
+            if (key == "fast_dac_fs") {
+                float value;
+                auto ret = rp_HPGetHWDACFullScale(&value);
                 if (ret == RP_HP_OK) {
                     printf("%f\n", value);
                 } else {

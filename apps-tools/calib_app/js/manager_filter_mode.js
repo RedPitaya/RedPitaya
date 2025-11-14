@@ -121,7 +121,7 @@ $(function() {
         };
 
         var sig = [];
-        if (OBJ.filterSignal.value != undefined) {
+        if (OBJ.filterSignal != undefined && OBJ.filterSignal.value != undefined) {
             var copySignal = [...OBJ.filterSignal.value];
             for (var i = 0; i < copySignal.length; i++) {
                 sig.push([i, copySignal[i]]);
@@ -151,7 +151,7 @@ $(function() {
             return;
         }
         var sig = [];
-        if (OBJ.filterGraphCache != undefined && OBJ.filterSignal.value != undefined) {
+        if (OBJ.filterGraphCache != undefined && OBJ.filterSignal != undefined && OBJ.filterSignal.value != undefined) {
             var copySignal = [...OBJ.filterSignal.value];
 
             for (var i = 0; i < copySignal.length; i++) {

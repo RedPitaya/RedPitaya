@@ -12,11 +12,38 @@ constexpr float DEF_MAX_SCALE = 5.f;
 
 const std::vector<float> voltage_steps_math = {
     // Millivolts
-    1.0 / 1000.0, 2.0f / 1000, 5 / 1000, 10 / 1000, 20 / 1000, 50 / 1000, 100 / 1000, 200 / 1000, 500 / 1000,
+    1.0 / 1000.0,
+    2.0f / 1000,
+    5 / 1000,
+    10 / 1000,
+    20 / 1000,
+    50 / 1000,
+    100 / 1000,
+    200 / 1000,
+    500 / 1000,
     // Volts
-    1, 5, 25, 50, 100, 250, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000, 1000000, 10000000, 50000000, 100000000};
+    1,
+    5,
+    25,
+    50,
+    100,
+    250,
+    500,
+    1000,
+    2000,
+    5000,
+    10000,
+    20000,
+    50000,
+    100000,
+    200000,
+    500000,
+    1000000,
+    10000000,
+    50000000,
+    100000000};
 
-CFloatBase64Signal math("math", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
+CFloatBinarySignal math("math", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
 
 CBooleanParameter mathShow("MATH_SHOW", CBaseParameter::RW, false, 0, CONFIG_VAR);
 
@@ -127,10 +154,12 @@ auto updateMathSignal() -> void {
     if (mathShow.Value()) {
         if (math.GetSize() != CH_SIGNAL_SIZE_DEFAULT)
             math.Resize(CH_SIGNAL_SIZE_DEFAULT);
-        rpApp_OscGetViewData(RPAPP_OSC_SOUR_MATH, &math[0], (uint32_t)CH_SIGNAL_SIZE_DEFAULT);
+        rpApp_OscGetViewData(RPAPP_OSC_SOUR_MATH, math.GetDataPtr()->data(), (uint32_t)CH_SIGNAL_SIZE_DEFAULT);
+        math.ForceSend();
 
     } else {
-        math.Resize(0);
+        if (math.GetSize())
+            math.Resize(0);
     }
 }
 

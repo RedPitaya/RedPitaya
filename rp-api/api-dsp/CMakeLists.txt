@@ -68,8 +68,8 @@ include_directories("src/kiss_fft")
 include_directories(${INSTALL_DIR}/include/common)
 
 list(APPEND src
-    ${CMAKE_SOURCE_DIR}/src/kiss_fft/kiss_fft.c
-    ${CMAKE_SOURCE_DIR}/src/kiss_fft/kiss_fftr.c
+    ${CMAKE_SOURCE_DIR}/src/kiss_fft/kiss_fft.cpp
+    ${CMAKE_SOURCE_DIR}/src/kiss_fft/kiss_fftr.cpp
     ${CMAKE_SOURCE_DIR}/src/rp_math.cpp
     ${CMAKE_SOURCE_DIR}/src/rp_dsp.cpp
     ${CMAKE_SOURCE_DIR}/src/rp_algorithms.cpp
@@ -82,8 +82,8 @@ list(APPEND header
     ${CMAKE_SOURCE_DIR}/src/rp_interpolation.h
 )
 
-add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
+add_compile_options(-mcpu=cortex-a9 -O3 -mfpu=neon -mfloat-abi=hard)
 add_compile_options($<$<CONFIG:Debug>:-DTRACE_ENABLE>)
 add_compile_options(-Wall -pedantic -Wextra -Wno-unused-parameter -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 

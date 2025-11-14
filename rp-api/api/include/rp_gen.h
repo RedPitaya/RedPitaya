@@ -379,6 +379,30 @@ int rp_GenBurstCount(rp_channel_t channel, int num);
 int rp_GenGetBurstCount(rp_channel_t channel, int* num);
 
 /**
+* Enables or disables the use of the last sample value for signal generation.
+* When enabled, the generator will use the last generated sample value as the initial value
+* for the next waveform cycle or burst. This is useful for maintaining phase continuity
+* between consecutive waveforms or for creating seamless transitions in arbitrary waveforms.
+* @param channel Channel A or B for which to configure the last sample usage.
+* @param enable Boolean value to enable (true) or disable (false) the use of last sample.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenSetUseLastSample(rp_channel_t channel, bool enable);
+
+/**
+* Retrieves the current setting for using the last sample value in signal generation.
+* This function returns whether the generator is configured to use the last generated
+* sample value as the starting point for subsequent waveform cycles.
+* @param channel Channel A or B for which to get the last sample usage setting.
+* @param enable Pointer to a boolean variable where the current setting will be stored.
+*        The value will be true if last sample usage is enabled, false if disabled.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenGetUseLastSample(rp_channel_t channel, bool* enable);
+
+/**
 * Sets the value to be set at the end of the generated signal in burst mode.
 * @param channel Channel A or B for witch we want to set number of generated waveforms in a burst.
 * @param amplitude Amplitude level at the end of the signal (Volt).

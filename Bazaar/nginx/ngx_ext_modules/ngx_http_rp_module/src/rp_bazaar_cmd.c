@@ -399,13 +399,16 @@ int rp_bazaar_apps(ngx_http_request_t *r,
 int rp_bazaar_start(ngx_http_request_t *r,
                     cJSON **json_root, int argc, char **argv)
 {
+    bool enableWsServerLog = false;
+    if (strstr(argv[0], "ws_server_log=true")){
+        enableWsServerLog = true;
+    }
+    // Truncates a string to the file name.
     char* url = strstr(argv[0], "?type=demo");
-    if (url)
-    {
+    if (url){
         *url = '\0';
     }
-    else
-    {
+    else{
        url = strstr(argv[0], "?type=run");
        if(url)
             *url = '\0';
@@ -537,8 +540,10 @@ int rp_bazaar_start(ngx_http_request_t *r,
         params.get_params_func = rp_module_ctx.app.ws_get_params_func;
         params.set_params_func = rp_module_ctx.app.ws_set_params_func;
         params.get_signals_func = rp_module_ctx.app.ws_get_signals_func;
+        params.get_bin_signals_func = rp_module_ctx.app.ws_get_bin_signals_func;
         params.set_signals_func = rp_module_ctx.app.ws_set_signals_func;
         params.gzip_func = rp_module_ctx.app.ws_gzip_func;
+        params.enable_ws_log = enableWsServerLog;
         fprintf(stderr, "Starting WS-server\n");
 
         start_ws_server(&params);

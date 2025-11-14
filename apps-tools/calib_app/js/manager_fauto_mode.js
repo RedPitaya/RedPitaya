@@ -345,7 +345,7 @@
 
     OBJ.famSetCalibAACh1 = function(_value) {
         if (OBJ.famCheckEmptyVariables()) {
-            if (_value.value === 0) return;
+            if (_value.value < 0) return;
             var element_b = document.getElementById(OBJ.famCurrentRowID + "_aa_ch1");
             if (element_b != undefined) element_b.innerText = "0x" + _value.value.toString(16);
         }
@@ -353,7 +353,7 @@
 
     OBJ.famSetCalibAACh2 = function(_value) {
         if (OBJ.famCheckEmptyVariables()) {
-            if (_value.value === 0) return;
+            if (_value.value < 0) return;
             var element_b = document.getElementById(OBJ.famCurrentRowID + "_aa_ch2");
             if (element_b != undefined) element_b.innerText = "0x" + _value.value.toString(16);
         }
@@ -361,7 +361,7 @@
 
     OBJ.famSetCalibAACh3 = function(_value) {
         if (OBJ.famCheckEmptyVariables()) {
-            if (_value.value === 0) return;
+            if (_value.value <0) return;
             var element_b = document.getElementById(OBJ.famCurrentRowID + "_aa_ch3");
             if (element_b != undefined) element_b.innerText = "0x" + _value.value.toString(16);
         }
@@ -369,7 +369,7 @@
 
     OBJ.famSetCalibAACh4 = function(_value) {
         if (OBJ.famCheckEmptyVariables()) {
-            if (_value.value === 0) return;
+            if (_value.value < 0) return;
             var element_b = document.getElementById(OBJ.famCurrentRowID + "_aa_ch4");
             if (element_b != undefined) element_b.innerText = "0x" + _value.value.toString(16);
         }
@@ -377,7 +377,7 @@
 
     OBJ.famSetCalibBBCh1 = function(_value) {
         if (OBJ.famCheckEmptyVariables()) {
-            if (_value.value === 0) return;
+            if (_value.value <  0) return;
             var element_b = document.getElementById(OBJ.famCurrentRowID + "_bb_ch1");
             if (element_b != undefined) element_b.innerText = "0x" + _value.value.toString(16);
         }
@@ -385,7 +385,7 @@
 
     OBJ.famSetCalibBBCh2 = function(_value) {
         if (OBJ.famCheckEmptyVariables()) {
-            if (_value.value === 0) return;
+            if (_value.value < 0) return;
             var element_b = document.getElementById(OBJ.famCurrentRowID + "_bb_ch2");
             if (element_b != undefined) element_b.innerText = "0x" + _value.value.toString(16);
         }
@@ -393,7 +393,7 @@
 
     OBJ.famSetCalibBBCh3 = function(_value) {
         if (OBJ.famCheckEmptyVariables()) {
-            if (_value.value === 0) return;
+            if (_value.value < 0) return;
             var element_b = document.getElementById(OBJ.famCurrentRowID + "_bb_ch3");
             if (element_b != undefined) element_b.innerText = "0x" + _value.value.toString(16);
         }
@@ -401,7 +401,7 @@
 
     OBJ.famSetCalibBBCh4 = function(_value) {
         if (OBJ.famCheckEmptyVariables()) {
-            if (_value.value === 0) return;
+            if (_value.value < 0) return;
             var element_b = document.getElementById(OBJ.famCurrentRowID + "_bb_ch4");
             if (element_b != undefined) element_b.innerText = "0x" + _value.value.toString(16);
         }
@@ -409,7 +409,7 @@
 
     OBJ.famSetCalibPPCh1 = function(_value) {
         if (OBJ.famCheckEmptyVariables()) {
-            if (_value.value === 0) return;
+            if (_value.value < 0) return;
             var element_b = document.getElementById(OBJ.famCurrentRowID + "_pp_ch1");
             if (element_b != undefined) element_b.innerText = "0x" + _value.value.toString(16);
         }
@@ -417,7 +417,7 @@
 
     OBJ.famSetCalibPPCh2 = function(_value) {
         if (OBJ.famCheckEmptyVariables()) {
-            if (_value.value === 0) return;
+            if (_value.value < 0) return;
             var element_b = document.getElementById(OBJ.famCurrentRowID + "_pp_ch2");
             if (element_b != undefined) element_b.innerText = "0x" + _value.value.toString(16);
         }
@@ -425,7 +425,7 @@
 
     OBJ.famSetCalibPPCh3 = function(_value) {
         if (OBJ.famCheckEmptyVariables()) {
-            if (_value.value === 0) return;
+            if (_value.value < 0) return;
             var element_b = document.getElementById(OBJ.famCurrentRowID + "_pp_ch3");
             if (element_b != undefined) element_b.innerText = "0x" + _value.value.toString(16);
         }
@@ -433,7 +433,7 @@
 
     OBJ.famSetCalibPPCh4 = function(_value) {
         if (OBJ.famCheckEmptyVariables()) {
-            if (_value.value === 0) return;
+            if (_value.value < 0) return;
             var element_b = document.getElementById(OBJ.famCurrentRowID + "_pp_ch4");
             if (element_b != undefined) element_b.innerText = "0x" + _value.value.toString(16);
         }
@@ -441,7 +441,7 @@
 
     OBJ.famSetCalibKKCh1 = function(_value) {
         if (OBJ.famCheckEmptyVariables()) {
-            if (_value.value === 0) return;
+            if (_value.value < 0) return;
             var element_b = document.getElementById(OBJ.famCurrentRowID + "_kk_ch1");
             if (element_b != undefined) element_b.innerText = "0x" + _value.value.toString(16);
         }
@@ -449,7 +449,7 @@
 
     OBJ.famSetCalibKKCh2 = function(_value) {
         if (OBJ.famCheckEmptyVariables()) {
-            if (_value.value === 0) return;
+            if (_value.value < 0) return;
             var element_b = document.getElementById(OBJ.famCurrentRowID + "_kk_ch2");
             if (element_b != undefined) element_b.innerText = "0x" + _value.value.toString(16);
         }
@@ -457,7 +457,7 @@
 
     OBJ.famSetCalibKKCh3 = function(_value) {
         if (OBJ.famCheckEmptyVariables()) {
-            if (_value.value === 0) return;
+            if (_value.value < 0) return;
             var element_b = document.getElementById(OBJ.famCurrentRowID + "_kk_ch3");
             if (element_b != undefined) element_b.innerText = "0x" + _value.value.toString(16);
         }
@@ -465,7 +465,7 @@
 
     OBJ.famSetCalibKKCh4 = function(_value) {
         if (OBJ.famCheckEmptyVariables()) {
-            if (_value.value === 0) return;
+            if (_value.value < 0) return;
             var element_b = document.getElementById(OBJ.famCurrentRowID + "_kk_ch4");
             if (element_b != undefined) element_b.innerText = "0x" + _value.value.toString(16);
         }

@@ -656,6 +656,13 @@ btn:active {
     width: 150px;
 }
 
+#jtk_fine {
+    height: 64px;
+    position: absolute;
+    margin: 44px 0px 0px 42px;
+    cursor: pointer;
+}
+
 #graphs_holder {
     margin-top: 12px;
     padding-left: 50px;

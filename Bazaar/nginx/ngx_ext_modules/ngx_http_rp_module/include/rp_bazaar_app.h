@@ -61,9 +61,10 @@ typedef int		(*rp_ws_get_params_interval_func)(void);
 typedef int		(*rp_ws_get_signals_interval_func)(void);
 typedef const char     *(*rp_ws_get_params_func)(void);
 typedef const char     *(*rp_ws_get_signals_func)(void);
+typedef const void     *(*rp_ws_get_bin_signals_func)(void);
 typedef int		(*rp_ws_set_params_func)(const char *_params);
 typedef int		(*rp_ws_set_signals_func)(const char *_signals);
-typedef void	(*rp_ws_gzip_func)(const char *_in, void* _data, size_t* _size);
+typedef int 	(*rp_ws_gzip_func)(int type, const void *_in, void* _data, size_t* _size);
 
 typedef struct rp_bazaar_app_s {
     /* Initialization function - called when app. is loaded */
@@ -93,6 +94,7 @@ typedef struct rp_bazaar_app_s {
 	rp_ws_get_signals_interval_func ws_get_signals_interval_func;
 	rp_ws_get_params_func ws_get_params_func;
 	rp_ws_get_signals_func ws_get_signals_func;
+    rp_ws_get_bin_signals_func ws_get_bin_signals_func;
 	rp_ws_set_signals_func ws_set_signals_func;
 	rp_ws_set_params_func ws_set_params_func;
 	rp_ws_set_params_interval_func ws_set_params_demo_func;

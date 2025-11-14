@@ -15,20 +15,28 @@
 #include <stdlib.h>
 #include <sys/param.h>
 #include <unistd.h>
+#include <iostream>
 #include <set>
 #include <string>
 #include <vector>
 
+#include "common/rp_updater_common.h"
 #include "common/version.h"
 #include "rp.h"
 #include "rp_eeprom.h"
 #include "rp_hw-profiles.h"
+
 // #define DEBUG
 
 /** Minimal number of command line arguments */
 #define MINARGS 2
 
 using namespace std;
+
+std::string bytesToAsciiString(const std::vector<char>& data, size_t max_bytes = 16) {
+    size_t bytes_to_process = std::min(data.size(), max_bytes);
+    return std::string(data.begin(), data.begin() + bytes_to_process);
+}
 
 vector<string> split(const string& text, const vector<char>& delimiters) {
     vector<string> result;
@@ -74,7 +82,11 @@ void usage() {
         "\t-i    Reset calibration values in eeprom by default\n"
         "\t      Examples: -i, -if, -in, -inf, -in5, -inf5, -in6, -inf6, -ie, -ief, -ine, -inef, -ine5, -inef5, -ine6, -inef6.\n"
         "\n"
-        "\t-o    Converts the calibration from the user zone to the old calibration format. For ecosystem version 0.98\n"
+        "\t-o    Converts the calibration from the user zone to the old calibration format. For ecosystem versions 0.98 to 1.04.\n"
+        "\n"
+        "\t-b    Binary input and output mode. Works only with the -r and -w flags.\n"
+        "\t      (Example: calib -rb > backup.bin, cat backup.bin | calib -wb).\n"
+
         "\n"
         "Modifiers for output:\n"
         "\t-v    Produce verbose output.\n"
@@ -234,10 +246,11 @@ int main(int argc, char** argv) {
     }
 
     /* Parse options */
-    const char* optstring = "rwfdvhzxiunmoe56";
+    const char* optstring = "rwfdvhzxiunmoe56b";
     unsigned int want_bits = 0;
     uint8_t calib_ver = RP_HW_PACK_ID_V6;
     bool factory = false;
+    bool binary = false;
 
     int ch = -1;
     while ((ch = getopt(argc, argv, optstring)) != -1) {
@@ -269,6 +282,10 @@ int main(int argc, char** argv) {
 
             case 'f':
                 factory = true;
+                break;
+
+            case 'b':
+                binary = true;
                 break;
 
             case 'v':
@@ -315,6 +332,62 @@ int main(int argc, char** argv) {
         }
     }
 
+    if (want_bits & WANT_WRITE && binary) {
+        const size_t BUFFER_SIZE = 4096;
+        std::vector<char> buffer(BUFFER_SIZE);
+        std::vector<char> all_data;
+        while (std::cin) {
+            std::cin.read(buffer.data(), BUFFER_SIZE);
+            size_t bytes_read = std::cin.gcount();
+            if (bytes_read > 0) {
+                all_data.insert(all_data.end(), buffer.begin(), buffer.begin() + bytes_read);
+            }
+        }
+        if (all_data.size() == 0)
+            exit(EXIT_FAILURE);
+        std::string hash;
+        std::vector<uint8_t> subvector(all_data.begin() + 32, all_data.end());
+        if (rp_UpdaterGetMD5(subvector, &hash) != RP_UP_OK) {
+            fprintf(stderr, "ERROR: MD5 calculation error!\n");
+            exit(EXIT_FAILURE);
+        }
+        auto file_hash = bytesToAsciiString(all_data, 32);
+        if (file_hash != hash) {
+            fprintf(stderr, "ERROR: MD5 does not match the data!\n");
+            exit(EXIT_FAILURE);
+        }
+        rp_calib_params_t calib;
+        ret = rp_CalibConvertEEPROM(subvector.data(), subvector.size(), &calib);
+        if (ret) {
+            fprintf(stderr, "ERROR: Convert data failed!\n");
+            return ret;
+        }
+        ret = rp_CalibrationWriteParamsEx(calib, factory);
+        if (ret) {
+            fprintf(stderr, "ERROR: Write failed!\n");
+            return ret;
+        }
+        exit(EXIT_SUCCESS);
+    }
+
+    if (want_bits & WANT_READ && binary) {
+        uint8_t* buff = NULL;
+        uint16_t size = 0;
+        int ret = rp_CalibGetEEPROM(&buff, &size, factory);
+        if (ret) {
+            fprintf(stderr, "ERROR: Read failed!\n");
+            return ret;
+        }
+        std::string hash;
+        if (rp_UpdaterGetMD5(std::vector<uint8_t>(buff, buff + size), &hash) != RP_UP_OK) {
+            fprintf(stderr, "ERROR: MD5 error!\n");
+            exit(EXIT_FAILURE);
+        }
+        std::cout.write(hash.c_str(), hash.size());
+        std::cout.write(reinterpret_cast<const char*>(buff), size);
+        exit(EXIT_SUCCESS);
+    }
+
     /* Sanity check */
     if ((want_bits & WANT_WRITE) && (want_bits & WANT_DEFAULTS)) {
         fprintf(stderr, "Cannot do both: write and reset factory defaults.\n");
@@ -345,10 +418,7 @@ int main(int argc, char** argv) {
 
     /* Reset to factory defaults */
     if (want_bits & WANT_DEFAULTS) {
-        printf("Ver %d\n", calib_ver);
-        return 0;
-
-        ret = rp_CalibrationFactoryReset(want_bits & WANT_NEW_FORMAT, calib_ver);
+        ret = rp_CalibrationFactoryReset(want_bits & WANT_NEW_FORMAT);
         if (ret) {
             fprintf(stderr, "ERROR: Factory reset failed!\n");
             return ret;

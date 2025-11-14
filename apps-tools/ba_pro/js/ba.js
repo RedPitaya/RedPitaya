@@ -66,8 +66,6 @@
     BA.parameterStack = [];
     BA.signalStack = [];
 
-    BA.compressed_data = 0;
-    BA.decompressed_data = 0;
     BA.cur_freq = 0;
     BA.input_threshold = 0;
 
@@ -170,7 +168,7 @@
         return;
     };
 
-   
+
 
     function funcxTickFormat(val, axis) {
 
@@ -185,18 +183,6 @@
     //Draw one signal
     BA.prepareOneSignal = function(signal_name) {
         let signals = Object.assign({}, CLIENT.signalStack[0]);
-        for (const property in signals) {
-            if (signals[property]['type']){
-                if (signals[property]['type'] == 'f'){
-                    signals[property]['value'] = CLIENT.base64ToFloatArray(signals[property]['value'] )
-                    signals[property]['type'] = ''
-                }
-                if (signals[property]['type'] == 'i'){
-                    signals[property]['value'] = CLIENT.base64ToIntArray(signals[property]['value'] )
-                    signals[property]['type'] = ''
-                }
-            }
-        }
         var one_signal = signals[signal_name];
         var bad_signal = signals['BA_BAD_SIGNAL'];
         var signal_param = signals['BA_SIGNAL_PARAMETERS'];
@@ -312,7 +298,7 @@
             ch.css('top', offset.top - 2)
             ch.css('left', offset.left - 2)
             ch.css('width', w + 4)
-            ch.css('height', h + 4)   
+            ch.css('height', h + 4)
             ch.show()
         }
     }
@@ -321,10 +307,10 @@
         const ticks = [];
         const startDecade = Math.floor(Math.log10(min));
         const endDecade = Math.floor(Math.log10(max));
-        
+
         // const multipliers = [1, 2, 3, 4 , 5, 6 , 7 , 8 ,9 ];
         const multipliers = [1, 2, 3,  5,  7 , 8.5 ];
-        
+
         for (let decade = startDecade; decade <= endDecade; decade++) {
             for (const mult of multipliers) {
                 const freq = mult * Math.pow(10, decade);
@@ -333,53 +319,53 @@
                 }
             }
         }
-        
+
         if (!ticks.includes(Math.round((max)))) {
             ticks.push(Math.round(max));
         }
-        
+
         return ticks.sort((a, b) => a - b);
     }
 
     function generateLogarithmicPower2Ticks(min, max) {
         const result = [];
-        
+
         let current = Math.pow(2, Math.ceil(Math.log2(min)));
         if (current / 2 >= min) {
             current = current / 2;
         }
-        
+
         while (current <= max) {
             if (current >= min) {
                 result.push(Math.round(current));
             }
             current *= 2
         }
-        
+
         if (result[0] !== min) result.unshift(Math.round(min));
         if (result[result.length - 1] !== max) result.push(Math.round(max));
-        
+
         return result;
     }
 
     function generatePowerOf10Scale(min, max) {
         const result = [];
-        
+
         let current = Math.pow(10, Math.ceil(Math.log10(min)));
         if (current / 10 >= min) {
             current = current / 10;
         }
-        
+
         while (current <= max) {
             if (current >= min) {
                 result.push(Math.round(current));
             }
             current *= 2.5
         }
-        
+
         if (result[0] !== min) result.unshift(Math.round(min));
         if (result[result.length - 1] !== max) result.push(Math.round(max));
-        
+
         return result;
     }
 
@@ -388,10 +374,10 @@
 
         const range = max - min;
         let roughStep = range / targetSteps;
-        
+
         const magnitude = Math.pow(10, Math.floor(Math.log10(roughStep)));
         const normalizedStep = roughStep / magnitude;
-        
+
         let stepMultiplier;
         if (normalizedStep <= 1.5) {
             stepMultiplier = 1;
@@ -400,22 +386,22 @@
         } else {
             stepMultiplier = 5;
         }
-        
+
         const step = stepMultiplier * magnitude;
-        
+
         const start = Math.floor(min / step) * step;
         const end = Math.ceil(max / step) * step;
-        
+
         const result = [];
         for (let value = start; value <= end + Number.EPSILON; value += step) {
             if (value >= min - Number.EPSILON && value <= max + Number.EPSILON) {
                 result.push(Math.round(value));
             }
         }
-        
+
         if (result.length === 0 || result[0] > min) result.unshift(Math.round(min));
         if (result[result.length - 1] < max) result.push(Math.round(max));
-        
+
         return result;
     }
 
@@ -453,7 +439,7 @@
 
         BA.graphCache = {};
         BA.graphCache.elem = $('<div id="bode_plot" class="plot" />').css($('#graph_bode_grid').css(['height', 'width'])).appendTo('#graph_bode');
-     
+
         var options = {
             series: {
                 shadowSize: 0
@@ -575,7 +561,7 @@
             BA.graphCache.elem.show();
             BA.graphCache.plot.resize();
             BA.graphCache.plot.setupGrid();
-            BA.graphCache.plot.draw();            
+            BA.graphCache.plot.draw();
             BA.updateLinesAndArrows();
             // Reset resize flag
             BA.state.resized = false;
@@ -587,7 +573,7 @@
     };
 
 
-   
+
     BA.processStatus = function(new_params) {
         var status = new_params['BA_STATUS'].value
         if (status === 0 || status === 6 || status === 7) {
@@ -607,7 +593,7 @@
                 if (scale == true && xscale === 0){
                     CLIENT.parametersCache["BA_X_SCALE"] = { value:  1 };
                 }
-            }           	
+            }
             CLIENT.parametersCache["BA_STATUS"] = { value: 0 };
             CLIENT.sendParameters();
         }
@@ -792,8 +778,8 @@
         }
     }
 
-   
-   
+
+
     BA.modelProcess = function(value) {
         var model = value["RP_MODEL_STR"].value
         if (model === "Z20_250_12") {
@@ -1000,7 +986,7 @@ $(function() {
         window.location.reload(true);
     }
 
-   
+
     // Export
     $('#downl_graph').on('click', function() {
         setTimeout(BA.SaveGraphs, 30);
@@ -1108,12 +1094,12 @@ $(function() {
 
         // Hide all graphs, they will be shown next time signal data is received
         $('#graph_bode .plot').hide();
-        
+
         BA.setCanvasSize()
         const n_update = (BA.lastSignals['BA_SIGNAL_1'] != undefined) || (BA.lastSignals['BA_SIGNAL_2'] != undefined)
         BA.initPlot(n_update)
         BA.updateLinesAndArrows();
-        
+
         // Set the resized flag
         BA.state.resized = true;
 
@@ -1151,7 +1137,7 @@ $(function() {
         }
     });
 
-   
+
 
     // Init help
     Help.init(helpListBA);

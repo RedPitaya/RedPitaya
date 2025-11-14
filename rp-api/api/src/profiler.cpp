@@ -137,7 +137,7 @@ auto printnS(__attribute__((unused)) const std::string& name, __attribute__((unu
         va_end(args);
         auto diff = std::chrono::duration_cast<std::chrono::nanoseconds>(current - g_times[name]);
         std::string s = "[P] " + std::to_string(diff.count()) + " nS. Info: " + buffer;
-        printf("%s\n", s.c_str());
+        fprintf(stderr, "%s\n", s.c_str());
     } else {
         WARNING("Key not found %s", name.c_str())
     }
@@ -156,7 +156,7 @@ auto printuS(__attribute__((unused)) const std::string& name, __attribute__((unu
         va_end(args);
         auto diff = std::chrono::duration_cast<std::chrono::microseconds>(current - g_times[name]);
         std::string s = "[P] " + std::to_string(diff.count()) + " uS. Info: " + buffer;
-        printf("%s\n", s.c_str());
+        fprintf(stderr, "%s\n", s.c_str());
     } else {
         WARNING("Key not found %s", name.c_str())
     }
@@ -175,7 +175,7 @@ auto printmS(__attribute__((unused)) const std::string& name, __attribute__((unu
         va_end(args);
         auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(current - g_times[name]);
         std::string s = "[P] " + std::to_string(diff.count()) + " mS. Info: " + buffer;
-        printf("%s\n", s.c_str());
+        fprintf(stderr, "%s\n", s.c_str());
     } else {
         WARNING("Key not found %s", name.c_str())
     }

@@ -12,59 +12,89 @@
 
 
     OBJ.STATES_125_14 = {
-        0: { name: "Reset to default", span: true },
-        1: { name: "ADC offset (1:20)", img: "./img/125/RP_125_GND_HV.png", hint: "Please set HV mode and connect IN1 and IN2 to GND." },
-        2: { name: "ADC gain   (1:20)", img: "./img/125/RP_125_REF_HV.png", hint: "Please set HV mode and connect IN1 and IN2 to reference DC source.", input: 5 },
-        3: { name: "ADC offset (1:1)", img: "./img/125/RP_125_GND.png", hint: "Please set LV mode and connect IN1 and IN2 to GND." },
-        4: { name: "ADC gain   (1:1)", img: "./img/125/RP_125_REF.png", hint: "Please set LV mode and connect IN1 and IN2 to reference DC source.", input: 0.5 },
-        5: { name: "Start gen with DC 0V amp", span: true },
-        6: { name: "DAC offset", img: "./img/125/RP_125_GEN.png", hint: "Please set LV mode and connect OUT1 to IN1 and OUT2 to IN2." },
-        7: { name: "Enable DAC", span: true },
-        8: { name: "DAC gain", img: "./img/125/RP_125_GEN.png", hint: "Please set LV mode and connect OUT1 to IN1 and OUT2 to IN2." },
-        9: { name: "Calibration complete", span: true, end: true }
+        0: { name: "Reset to default", span: true, command:"RESET_DEFAULT" },
+        1: { name: "ADC set in HV", span: true, command:"INIT_ADC_HV" },
+        2: { name: "ADC offset (1:20)", img: "./img/125/RP_125_GND_HV.png", hint: "Please set HV mode and connect IN1 and IN2 to GND." , command:"CALIB_ADC_HV_OFFSET", show_adc : true},
+        3: { name: "ADC gain   (1:20)", img: "./img/125/RP_125_REF_HV.png", hint: "Please set HV mode and connect IN1 and IN2 to reference DC source.", input: 5 , command:"CALIB_ADC_HV_GAIN", show_adc : true, use_float: true},
+        4: { name: "ADC set in LV", span: true, command:"INIT_ADC_LV" },
+        5: { name: "ADC offset (1:1)", img: "./img/125/RP_125_GND.png", hint: "Please set LV mode and connect IN1 and IN2 to GND." , command:"CALIB_ADC_LV_OFFSET", show_adc : true},
+        6: { name: "ADC gain   (1:1)", img: "./img/125/RP_125_REF.png", hint: "Please set LV mode and connect IN1 and IN2 to reference DC source.", input: 0.5, command:"CALIB_ADC_LV_GAIN" , show_adc : true, use_float: true},
+        7: { name: "Enable DAC", span: true , command: "GEN_LV_0_5"},
+        8: { name: "DAC Gain First Stage", img: "./img/125/RP_125_GEN.png", hint: "Please set LV mode and connect OUT1 to IN1 and OUT2 to IN2." , command:"GEN_LV_CALIB_GAIN_F_STAGE", show_adc : true, use_float: true},
+        9: { name: "Disable DAC", span: true , command: "GEN_DISABLE"},
+        10: { name: "DAC Offset First Stage",img: "./img/125/RP_125_GEN.png", hint: "Please set LV mode and connect OUT1 to IN1 and OUT2 to IN2." , command:"GEN_LV_CALIB_OFFSET_F_STAGE", show_adc : true},
+        11: { name: "Enable DAC", span: true , command: "GEN_LV_0_5"},
+        12: { name: "DAC Gain Second Stage", img: "./img/125/RP_125_GEN.png", hint: "Please set LV mode and connect OUT1 to IN1 and OUT2 to IN2." , command:"GEN_LV_CALIB_GAIN_S_STAGE", show_adc : true, use_float: true},
+        13: { name: "Disable DAC", span: true , command: "GEN_DISABLE"},
+        14: { name: "DAC Offset Second Stage",img: "./img/125/RP_125_GEN.png", hint: "Please set LV mode and connect OUT1 to IN1 and OUT2 to IN2." , command:"GEN_LV_CALIB_OFFSET_S_STAGE", show_adc : true},
+        15: { name: "Enable DAC", span: true , command: "GEN_LV_0_5"},
+        16: { name: "DAC Gain Third Stage", img: "./img/125/RP_125_GEN.png", hint: "Please set LV mode and connect OUT1 to IN1 and OUT2 to IN2." , command:"GEN_LV_CALIB_GAIN_S_STAGE", show_adc : true, use_float: true},
+        17: { name: "Calibration complete", span: true, end: true , command:""}
     };
 
     OBJ.STATES_125_14_4CH = {
-        0: { name: "Reset to default", span: true },
-        1: { name: "ADC offset (1:20)", img: "./img/125_4CH/RP_125_GND_HV.png", hint: "Please set HV mode and connect IN1, IN2, IN3 and IN4 to GND." },
-        2: { name: "ADC gain   (1:20)", img: "./img/125_4CH/RP_125_REF_HV.png", hint: "Please set HV mode and connect IN1, IN2, IN3 and IN4 to reference DC source.", input: 5 },
-        3: { name: "ADC offset (1:1)", img: "./img/125_4CH/RP_125_GND.png", hint: "Please set LV mode and connect IN1, IN2, IN3 and IN4 to GND." },
-        4: { name: "ADC gain   (1:1)", img: "./img/125_4CH/RP_125_REF.png", hint: "Please set LV mode and connect IN1, IN2, IN3 and IN4 to reference DC source.", input: 0.5 },
-        5: { name: "Calibration complete", span: true, end: true }
+        0: { name: "Reset to default", span: true, command:"RESET_DEFAULT" },
+        1: { name: "ADC set in HV", span: true, command:"INIT_ADC_HV" },
+        2: { name: "ADC offset (1:20)", img: "./img/125_4CH/RP_125_GND_HV.png", hint: "Please set HV mode and connect IN1, IN2, IN3 and IN4 to GND." , command:"CALIB_ADC_HV_OFFSET", show_adc : true},
+        3: { name: "ADC gain   (1:20)", img: "./img/125_4CH/RP_125_REF_HV.png", hint: "Please set HV mode and connect IN1, IN2, IN3 and IN4 to reference DC source.", input: 5, command:"CALIB_ADC_HV_GAIN", show_adc : true, use_float: true },
+        4: { name: "ADC set in LV", span: true, command:"INIT_ADC_LV" },
+        5: { name: "ADC offset (1:1)", img: "./img/125_4CH/RP_125_GND.png", hint: "Please set LV mode and connect IN1, IN2, IN3 and IN4 to GND.", command:"CALIB_ADC_LV_OFFSET", show_adc : true },
+        6: { name: "ADC gain   (1:1)", img: "./img/125_4CH/RP_125_REF.png", hint: "Please set LV mode and connect IN1, IN2, IN3 and IN4 to reference DC source.", input: 0.5, command:"CALIB_ADC_LV_GAIN" , show_adc : true, use_float: true },
+        7: { name: "Calibration complete", span: true, end: true }
     };
 
     OBJ.STATES_250_12 = {
-        0: { name: "Reset to default", span: true },
-        1: { name: "Set 1:1 DC mode", span: true },
-        2: { name: "ADC offset DC (1:1)", img: "./img/250/RP_250_GND.png", hint: "Please connect IN1 and IN2 to GND." },
-        3: { name: "ADC gain DC   (1:1)", img: "./img/250/RP_250_REF.png", hint: "Please connect IN1 and IN2 to reference DC source.", input: 0.5 },
-        4: { name: "Set 1:20 DC mode", span: true },
-        5: { name: "ADC offset DC (1:20)", img: "./img/250/RP_250_GND.png", hint: "Please connect IN1 and IN2 to GND." },
-        6: { name: "ADC gain DC   (1:20)", img: "./img/250/RP_250_REF.png", hint: "Please connect IN1 and IN2 to reference DC source.", input: 1 },
-        7: { name: "Start gen with DC 0V amp", span: true },
-        8: { name: "DAC offset x1", img: "./img/250/RP_250_GEN.png", hint: "Please connect OUT1 to IN1 and OUT2 to IN2." },
-        9: { name: "Enable DAC", span: true },
-        10: { name: "DAC gain x1", img: "./img/250/RP_250_GEN.png", hint: "Please connect OUT1 to IN1 and OUT2 to IN2." },
-        11: { name: "Start gen with DC 0V amp", span: true },
-        12: { name: "DAC offset x5", img: "./img/250/RP_250_GEN.png", hint: "Please connect OUT1 to IN1 and OUT2 to IN2." },
-        13: { name: "Enable DAC", span: true },
-        14: { name: "DAC gain x5", img: "./img/250/RP_250_GEN.png", hint: "Please connect OUT1 to IN1 and OUT2 to IN2." },
-        15: { name: "Set 1:1 AC mode and disable dac", span: true },
-        16: { name: "ADC offset AC (1:1)", img: "./img/250/RP_250_GND.png", hint: "Please connect IN1 and IN2 to GND.", use_max: true },
-        17: { name: "Enable DAC", span: true },
-        18: { name: "ADC gain AC   (1:1)", img: "./img/250/RP_250_GEN.png", hint: "Please connect OUT1 to IN1 and OUT2 to IN2.", use_max: true },
-        19: { name: "Set 1:20 AC mode and disable dac", span: true },
-        20: { name: "ADC offset AC (1:20)", img: "./img/250/RP_250_GND.png", hint: "Please connect IN1 and IN2 to GND.", use_max: true },
-        21: { name: "Enable DAC", span: true },
-        22: { name: "ADC gain AC   (1:20)", img: "./img/250/RP_250_GEN.png", hint: "Please connect OUT1 to IN1 and OUT2 to IN2.", use_max: true },
-        23: { name: "Calibration complete", span: true, end: true }
+        0: { name: "Reset to default", span: true, command:"RESET_DEFAULT" },
+        1: { name: "Set 1:1 DC mode", span: true , command:"INIT_ADC_LV_AC"},
+        2: { name: "ADC offset DC (1:1)", img: "./img/250/RP_250_GND.png", hint: "Please connect IN1 and IN2 to GND." , command:"CALIB_ADC_LV_DC_OFFSET", show_adc : true },
+        3: { name: "ADC gain DC   (1:1)", img: "./img/250/RP_250_REF.png", hint: "Please connect IN1 and IN2 to reference DC source.", input: 0.5, command:"CALIB_ADC_LV_DC_GAIN" , show_adc : true, use_float: true },
+        4: { name: "Set 1:20 DC mode", span: true , span: true , command:"INIT_ADC_HV_DC"},
+        5: { name: "ADC offset DC (1:20)", img: "./img/250/RP_250_GND.png", hint: "Please connect IN1 and IN2 to GND." , command:"CALIB_ADC_HV_DC_OFFSET", show_adc : true},
+        6: { name: "ADC gain DC   (1:20)", img: "./img/250/RP_250_REF.png", hint: "Please connect IN1 and IN2 to reference DC source.", input: 1, command:"CALIB_ADC_HV_DC_GAIN" , show_adc : true, use_float: true  },
+        
+        7: { name: "Enable DAC (x1)", span: true , command: "GEN_LV_0_5_X1"},
+        8: { name: "DAC Gain First Stage (x1)", img: "./img/250/RP_250_GEN.png", hint: "Please connect OUT1 to IN1 and OUT2 to IN2." , command:"GEN_LV_CALIB_GAIN_F_STAGE_X1", show_adc : true, use_float: true},
+        9: { name: "Disable DAC (x1)", span: true , command: "GEN_DISABLE_X1"},
+        10: { name: "DAC Offset First Stage (x1)",img: "./img/250/RP_250_GEN.png", hint: "Please connect OUT1 to IN1 and OUT2 to IN2." , command:"GEN_LV_CALIB_OFFSET_F_STAGE_X1", show_adc : true},
+        11: { name: "Enable DAC (x1)", span: true , command: "GEN_LV_0_5_X1"},
+        12: { name: "DAC Gain Second Stage (x1)", img: "./img/250/RP_250_GEN.png", hint: "Please connect OUT1 to IN1 and OUT2 to IN2." , command:"GEN_LV_CALIB_GAIN_S_STAGE_X1", show_adc : true, use_float: true},
+        13: { name: "Disable DAC (x1)", span: true , command: "GEN_DISABLE_X1"},
+        14: { name: "DAC Offset Second Stage (x1)",img: "./img/250/RP_250_GEN.png", hint: "Please connect OUT1 to IN1 and OUT2 to IN2." , command:"GEN_LV_CALIB_OFFSET_S_STAGE_X1", show_adc : true},
+        15: { name: "Enable DAC (x1)", span: true , command: "GEN_LV_0_5_X1"},
+        16: { name: "DAC Gain Third Stage (x1)", img: "./img/250/RP_250_GEN.png", hint: "Please connect OUT1 to IN1 and OUT2 to IN2.." , command:"GEN_LV_CALIB_GAIN_S_STAGE_X1", show_adc : true, use_float: true},
+
+        17: { name: "Enable DAC (x5)", span: true , command: "GEN_HV_0_15_X5"},
+        18: { name: "DAC Gain First Stage (x5)", img: "./img/250/RP_250_GEN.png", hint: "Please connect OUT1 to IN1 and OUT2 to IN2." , command:"GEN_CALIB_GAIN_F_STAGE_X5", show_adc : true, use_float: true},
+        19: { name: "Disable DAC (x5)", span: true , command: "GEN_DISABLE_X5"},
+        20: { name: "DAC Offset First Stage (x5)",img: "./img/250/RP_250_GEN.png", hint: "Please connect OUT1 to IN1 and OUT2 to IN2." , command:"GEN_CALIB_OFFSET_F_STAGE_X5", show_adc : true},
+        21: { name: "Enable DAC (x5)", span: true , command: "GEN_HV_0_15_X5"},
+        22: { name: "DAC Gain Second Stage (x5)", img: "./img/250/RP_250_GEN.png", hint: "Please connect OUT1 to IN1 and OUT2 to IN2." , command:"GEN_CALIB_GAIN_S_STAGE_X5", show_adc : true, use_float: true},
+        23: { name: "Disable DAC (x5)", span: true , command: "GEN_DISABLE_X5"},
+        24: { name: "DAC Offset Second Stage (x5)",img: "./img/250/RP_250_GEN.png", hint: "Please connect OUT1 to IN1 and OUT2 to IN2." , command:"GEN_CALIB_OFFSET_S_STAGE_X5", show_adc : true},
+        25: { name: "Enable DAC (x5)", span: true , command: "GEN_HV_0_15_X5"},
+        26: { name: "DAC Gain Third Stage (x5)", img: "./img/250/RP_250_GEN.png", hint: "Please connect OUT1 to IN1 and OUT2 to IN2." , command:"GEN_CALIB_GAIN_S_STAGE_X5", show_adc : true, use_float: true},
+
+        27: { name: "ADC set in LV/AC", span: true, command:"INIT_ADC_LV_AC" },
+        28: { name: "ADC offset (1:1)/AC", img: "./img/250/RP_250_GND.png", hint: "Please connect IN1 and IN2 to GND.",  command:"CALIB_ADC_LV_AC_OFFSET", show_adc : true},
+        29: { name: "Enable DAC", span: true, command:"GEN_LV_0_5_SINE_X1"  },
+        30: { name: "ADC gain   (1:1)/AC", img: "./img/250/RP_250_GEN.png", hint: "Please connect OUT1 to IN1 and OUT2 to IN2.", use_max: true, command:"CALIB_ADC_LV_AC_GAIN" , show_adc : true, use_float: true  },
+
+        31: { name: "ADC set in HV/AC", span: true, command:"INIT_ADC_HV_AC" },
+        32: { name: "ADC offset (1:20)/AC", img: "./img/250/RP_250_GND.png", hint: "Please connect IN1 and IN2 to GND.", command:"CALIB_ADC_HV_AC_OFFSET", show_adc : true},
+        33: { name: "Enable DAC", span: true, command:"GEN_LV_0_9_SINE_X1"  },
+        34: { name: "ADC gain   (1:20)/AC", img: "./img/250/RP_250_GEN.png", hint: "Please connect OUT1 to IN1 and OUT2 to IN2.", use_max: true, command:"CALIB_ADC_HV_AC_GAIN" , show_adc : true, use_float: true  },
+        35: { name: "Calibration complete", span: true, end: true }
+
+
     };
 
     OBJ.amModel = undefined;
     OBJ.amStates = undefined;
     OBJ.amCurrentTest = undefined;
-    OBJ.amCurrentSuccesTest = undefined;
+    OBJ.amCurrentWaitTest = undefined;
     OBJ.amCurrentRowID = undefined;
+    OBJ.amFirstColumnUpdate = undefined;
+    OBJ.amSecondColumnUpdate = undefined;
     OBJ.amLastAVGCH1 = 0;
     OBJ.amLastAVGCH2 = 0;
     OBJ.amLastAVGCH3 = 0;
@@ -233,9 +263,10 @@
     OBJ.amStartButtonPress = function() {
         if (OBJ.amStates[OBJ.amCurrentTest] !== undefined) {
             if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("span")) {
+                OBJ.amFirstColumnUpdate = false;
                 OBJ.amRemoveStateObject();
                 OBJ.amSetWait();
-                OBJ.amSendState(OBJ.amCurrentTest, 0);
+                OBJ.amSendState(OBJ.amStates[OBJ.amCurrentTest].command, 0);
             } else {
                 OBJ.amShowDloag();
             }
@@ -244,6 +275,8 @@
 
     OBJ.amAddNextStepRow = function() {
         if (OBJ.amStates[OBJ.amCurrentTest] !== undefined) {
+            OBJ.amFirstColumnUpdate = false;
+            OBJ.amSecondColumnUpdate = false;
             if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("span")) {
                 OBJ.amCurrentRowID = OBJ.amAddNewRowSpan();
             } else {
@@ -251,14 +284,18 @@
             }
             OBJ.amSetName();
             OBJ.amSetStartButton();
+            OBJ.amFirstColumnUpdate = true;
+            OBJ.amSecondColumnUpdate = false;
         }
     }
 
     OBJ.amGetStatus = function(_state) {
-        if (_state.value === -1) return;
-        if (OBJ.amCurrentSuccesTest != _state.value) {
+        if (_state.value === "") return;
+        if (OBJ.amCurrentWaitTest == _state.value) {
+            OBJ.amCurrentWaitTest = "";
+            OBJ.amFirstColumnUpdate = false;
+            OBJ.amSecondColumnUpdate = true;
             console.log(_state);
-            OBJ.amCurrentSuccesTest = _state.value;
             setTimeout(function() {
                 OBJ.amRemoveStateObject();
                 OBJ.amSetOkState();
@@ -292,18 +329,22 @@
 
     OBJ.amClickOkDialog = function() {
         if (OBJ.amLastState === false) return;
+        OBJ.amFirstColumnUpdate = false;
         OBJ.amRemoveStateObject();
         OBJ.amSetWait();
         var ref = 0;
         if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("input")) {
             ref = $("#SS_REF_VOLT").val();
         }
-        OBJ.amSendState(OBJ.amCurrentTest, ref);
+        OBJ.amSendState(OBJ.amStates[OBJ.amCurrentTest].command, ref);
         $("#am_dialog_calib").modal('hide');
     }
 
     OBJ.amStartCalibration = function() {
+        OBJ.amCurrentSuccesTest = "-1"
         OBJ.amCurrentTest = 0;
+        OBJ.amFirstColumnUpdate = undefined;
+        OBJ.amSecondColumnUpdate = undefined;
         OBJ.amAddNextStepRow();
         // OBJ.amCurrentTest = 1;
         // OBJ.amCurrentRowID = OBJ.amAddNewRow();
@@ -317,11 +358,10 @@
     }
 
     OBJ.amSendState = function(_state, _ref_volt) {
+        OBJ.amCurrentWaitTest = _state;
         CLIENT.parametersCache["SS_NEXTSTEP"] = { value: _state };
-        CLIENT.parametersCache["SS_STATE"] = { value: _state - 1 };
-        OBJ.amCurrentSuccesTest = _state - 1;
         CLIENT.parametersCache["ref_volt"] = { value: _ref_volt };
-        CLIENT.requestParameters();
+        CLIENT.sendParameters();
     }
 
     OBJ.amCheckInputRef = function() {
@@ -343,15 +383,14 @@
     OBJ.amSetCH1Avg = function(_value) {
         if (OBJ.amCheckEmptyVariables()) {
             OBJ.amLastAVGCH1 = _value;
-            if (!OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_max")) {
+            if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("show_adc") && !OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_max")) {
                 _value = _value.toFixed(4);
                 var element_b = document.getElementById(OBJ.amCurrentRowID + "_ch1_befor");
                 var element_a = document.getElementById(OBJ.amCurrentRowID + "_ch1_after");
-                if (OBJ.amCurrentTest !== OBJ.amCurrentSuccesTest) {
-                    if (element_b != undefined) element_b.innerText = _value + " V";
-                } else {
-                    if (element_a != undefined) element_a.innerText = _value + " V";
-                }
+                if (element_b != undefined && OBJ.amFirstColumnUpdate == true) 
+                    element_b.innerText = _value + " V";
+                if (element_a != undefined && OBJ.amSecondColumnUpdate == true) 
+                    element_a.innerText = _value + " V";
             }
             if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("input")) {
                 OBJ.amCheckInputRef();
@@ -362,15 +401,14 @@
     OBJ.amSetCH2Avg = function(_value) {
         if (OBJ.amCheckEmptyVariables()) {
             OBJ.amLastAVGCH2 = _value;
-            if (!OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_max")) {
+            if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("show_adc") && !OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_max")) {
                 _value = _value.toFixed(4);
                 var element_b = document.getElementById(OBJ.amCurrentRowID + "_ch2_befor");
                 var element_a = document.getElementById(OBJ.amCurrentRowID + "_ch2_after");
-                if (OBJ.amCurrentTest !== OBJ.amCurrentSuccesTest) {
-                    if (element_b != undefined) element_b.innerText = _value + " V";
-                } else {
-                    if (element_a != undefined) element_a.innerText = _value + " V";
-                }
+                if (element_b != undefined && OBJ.amFirstColumnUpdate == true) 
+                    element_b.innerText = _value + " V";
+                if (element_a != undefined && OBJ.amSecondColumnUpdate == true) 
+                    element_a.innerText = _value + " V";
             }
             if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("input")) {
                 OBJ.amCheckInputRef();
@@ -381,15 +419,14 @@
     OBJ.amSetCH3Avg = function(_value) {
         if (OBJ.amCheckEmptyVariables()) {
             OBJ.amLastAVGCH3 = _value;
-            if (!OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_max")) {
+            if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("show_adc") && !OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_max")) {
                 _value = _value.toFixed(4);
                 var element_b = document.getElementById(OBJ.amCurrentRowID + "_ch3_befor");
                 var element_a = document.getElementById(OBJ.amCurrentRowID + "_ch3_after");
-                if (OBJ.amCurrentTest !== OBJ.amCurrentSuccesTest) {
-                    if (element_b != undefined) element_b.innerText = _value + " V";
-                } else {
-                    if (element_a != undefined) element_a.innerText = _value + " V";
-                }
+                if (element_b != undefined && OBJ.amFirstColumnUpdate == true) 
+                    element_b.innerText = _value + " V";
+                if (element_a != undefined && OBJ.amSecondColumnUpdate == true) 
+                    element_a.innerText = _value + " V";
             }
             if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("input")) {
                 OBJ.amCheckInputRef();
@@ -400,15 +437,14 @@
     OBJ.amSetCH4Avg = function(_value) {
         if (OBJ.amCheckEmptyVariables()) {
             OBJ.amLastAVGCH4 = _value;
-            if (!OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_max")) {
+            if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("show_adc") && !OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_max")) {
                 _value = _value.toFixed(4);
                 var element_b = document.getElementById(OBJ.amCurrentRowID + "_ch4_befor");
                 var element_a = document.getElementById(OBJ.amCurrentRowID + "_ch4_after");
-                if (OBJ.amCurrentTest !== OBJ.amCurrentSuccesTest) {
-                    if (element_b != undefined) element_b.innerText = _value + " V";
-                } else {
-                    if (element_a != undefined) element_a.innerText = _value + " V";
-                }
+                if (element_b != undefined && OBJ.amFirstColumnUpdate == true) 
+                    element_b.innerText = _value + " V";
+                if (element_a != undefined && OBJ.amSecondColumnUpdate == true) 
+                    element_a.innerText = _value + " V";
             }
             if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("input")) {
                 OBJ.amCheckInputRef();
@@ -417,90 +453,114 @@
     }
 
     OBJ.amSetCH1Max = function(_value) {
-        if (OBJ.amCheckEmptyVariables()) {
+        if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("show_adc") && OBJ.amCheckEmptyVariables()) {
             if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_max")) {
                 _value = _value.toFixed(4);
                 var element_b = document.getElementById(OBJ.amCurrentRowID + "_ch1_befor");
                 var element_a = document.getElementById(OBJ.amCurrentRowID + "_ch1_after");
-                if (OBJ.amCurrentTest !== OBJ.amCurrentSuccesTest) {
-                    if (element_b != undefined) element_b.innerText = _value + " V";
-                } else {
-                    if (element_a != undefined) element_a.innerText = _value + " V";
-                }
+                if (element_b != undefined && OBJ.amFirstColumnUpdate == true) 
+                    element_b.innerText = _value + " V";
+                if (element_a != undefined && OBJ.amSecondColumnUpdate == true) 
+                    element_a.innerText = _value + " V";
             }
         }
     }
 
     OBJ.amSetCH2Max = function(_value) {
         if (OBJ.amCheckEmptyVariables()) {
-            if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_max")) {
+            if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("show_adc") && OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_max")) {
                 _value = _value.toFixed(4);
                 var element_b = document.getElementById(OBJ.amCurrentRowID + "_ch2_befor");
                 var element_a = document.getElementById(OBJ.amCurrentRowID + "_ch2_after");
-                if (OBJ.amCurrentTest !== OBJ.amCurrentSuccesTest) {
-                    if (element_b != undefined) element_b.innerText = _value + " V";
-                } else {
-                    if (element_a != undefined) element_a.innerText = _value + " V";
-                }
+                if (element_b != undefined && OBJ.amFirstColumnUpdate == true) 
+                    element_b.innerText = _value + " V";
+                if (element_a != undefined && OBJ.amSecondColumnUpdate == true) 
+                    element_a.innerText = _value + " V";
             }
         }
     }
 
     OBJ.amSetCH3Max = function(_value) {
         if (OBJ.amCheckEmptyVariables()) {
-            if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_max")) {
+            if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("show_adc") && OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_max")) {
                 _value = _value.toFixed(4);
                 var element_b = document.getElementById(OBJ.amCurrentRowID + "_ch3_befor");
                 var element_a = document.getElementById(OBJ.amCurrentRowID + "_ch3_after");
-                if (OBJ.amCurrentTest !== OBJ.amCurrentSuccesTest) {
-                    if (element_b != undefined) element_b.innerText = _value + " V";
-                } else {
-                    if (element_a != undefined) element_a.innerText = _value + " V";
-                }
+                if (element_b != undefined && OBJ.amFirstColumnUpdate == true) 
+                    element_b.innerText = _value + " V";
+                if (element_a != undefined && OBJ.amSecondColumnUpdate == true) 
+                    element_a.innerText = _value + " V";
             }
         }
     }
 
     OBJ.amSetCH4Max = function(_value) {
-        if (OBJ.amCheckEmptyVariables()) {
+        if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("show_adc") && OBJ.amCheckEmptyVariables()) {
             if (OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_max")) {
                 _value = _value.toFixed(4);
                 var element_b = document.getElementById(OBJ.amCurrentRowID + "_ch4_befor");
                 var element_a = document.getElementById(OBJ.amCurrentRowID + "_ch4_after");
-                if (OBJ.amCurrentTest !== OBJ.amCurrentSuccesTest) {
-                    if (element_b != undefined) element_b.innerText = _value + " V";
-                } else {
-                    if (element_a != undefined) element_a.innerText = _value + " V";
-                }
+                if (element_b != undefined && OBJ.amFirstColumnUpdate == true) 
+                    element_b.innerText = _value + " V";
+                if (element_a != undefined && OBJ.amSecondColumnUpdate == true) 
+                    element_a.innerText = _value + " V";
             }
         }
     }
 
     OBJ.amSetCalibValueCh1 = function(_value) {
-        if (OBJ.amCheckEmptyVariables()) {
+        if (OBJ.amCheckEmptyVariables() && !OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_float")) {
             var element_b = document.getElementById(OBJ.amCurrentRowID + "_value_ch1");
             if (element_b != undefined) element_b.innerText = _value.value;
         }
     }
 
     OBJ.amSetCalibValueCh2 = function(_value) {
-        if (OBJ.amCheckEmptyVariables()) {
+        if (OBJ.amCheckEmptyVariables() && !OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_float")) {
             var element_b = document.getElementById(OBJ.amCurrentRowID + "_value_ch2");
             if (element_b != undefined) element_b.innerText = _value.value;
         }
     }
 
     OBJ.amSetCalibValueCh3 = function(_value) {
-        if (OBJ.amCheckEmptyVariables()) {
+        if (OBJ.amCheckEmptyVariables() && !OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_float")) {
             var element_b = document.getElementById(OBJ.amCurrentRowID + "_value_ch3");
             if (element_b != undefined) element_b.innerText = _value.value;
         }
     }
 
     OBJ.amSetCalibValueCh4 = function(_value) {
-        if (OBJ.amCheckEmptyVariables()) {
+        if (OBJ.amCheckEmptyVariables() && !OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_float")) {
             var element_b = document.getElementById(OBJ.amCurrentRowID + "_value_ch4");
             if (element_b != undefined) element_b.innerText = _value.value;
+        }
+    }
+
+    OBJ.amSetCalibValueFCh1 = function(_value) {
+        if (OBJ.amCheckEmptyVariables() && OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_float")) {
+            var element_b = document.getElementById(OBJ.amCurrentRowID + "_value_ch1");
+            if (element_b != undefined) element_b.innerText = _value.value.toFixed(4);
+        }
+    }
+
+    OBJ.amSetCalibValueFCh2 = function(_value) {
+        if (OBJ.amCheckEmptyVariables() && OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_float")) {
+            var element_b = document.getElementById(OBJ.amCurrentRowID + "_value_ch2");
+            if (element_b != undefined) element_b.innerText = _value.value.toFixed(4);
+        }
+    }
+
+    OBJ.amSetCalibValueFCh3 = function(_value) {
+        if (OBJ.amCheckEmptyVariables() && OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_float")) {
+            var element_b = document.getElementById(OBJ.amCurrentRowID + "_value_ch3");
+            if (element_b != undefined) element_b.innerText = _value.value.toFixed(4);
+        }
+    }
+
+    OBJ.amSetCalibValueFCh4 = function(_value) {
+        if (OBJ.amCheckEmptyVariables() && OBJ.amStates[OBJ.amCurrentTest].hasOwnProperty("use_float")) {
+            var element_b = document.getElementById(OBJ.amCurrentRowID + "_value_ch4");
+            if (element_b != undefined) element_b.innerText = _value.value.toFixed(4);
         }
     }
 
@@ -516,5 +576,9 @@ $(function() {
     SM.param_callbacks["ch2_calib_pass"] = OBJ.amSetCalibValueCh2;
     SM.param_callbacks["ch3_calib_pass"] = OBJ.amSetCalibValueCh3;
     SM.param_callbacks["ch4_calib_pass"] = OBJ.amSetCalibValueCh4;
+    SM.param_callbacks["ch1_calib_pass_f"] = OBJ.amSetCalibValueFCh1;
+    SM.param_callbacks["ch2_calib_pass_f"] = OBJ.amSetCalibValueFCh2;
+    SM.param_callbacks["ch3_calib_pass_f"] = OBJ.amSetCalibValueFCh3;
+    SM.param_callbacks["ch4_calib_pass_f"] = OBJ.amSetCalibValueFCh4;
 
 });

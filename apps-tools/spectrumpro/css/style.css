@@ -18,16 +18,20 @@ body {
   user-select: none;
 }
 
-.clear:before, .clear:after {
+.clear:before,
+.clear:after {
   content: "";
   display: table;
 }
 
-.clear:after  {
+.clear:after {
   clear: both;
 }
 
-input, #info div, #info span, .selectable {
+input,
+#info div,
+#info span,
+.selectable {
   -webkit-touch-callout: text;
   -webkit-user-select: text;
   -khtml-user-select: text;
@@ -71,7 +75,11 @@ input {
   border-color: gray transparent transparent transparent;
 }
 
-button:focus, button:active, select:focus, input:focus, option:focus {
+button:focus,
+button:active,
+select:focus,
+input:focus,
+option:focus {
   outline: 0 !important;
   -webkit-appearance: none !important;
 }
@@ -87,7 +95,7 @@ area:hover {
 }
 
 #main_block {
-  flex:1;
+  flex: 1;
   display: flex;
   flex-direction: column;
 }
@@ -125,9 +133,11 @@ area:hover {
   margin-left: 0px;
   margin-right: 0px;
 }
-.between{
-	min-height: 10px;
+
+.between {
+  min-height: 10px;
 }
+
 .navbar-collapse {
   padding-left: 0px;
   padding-right: 0px;
@@ -137,7 +147,7 @@ area:hover {
   float: right;
 }
 
-.navbar{
+.navbar {
   margin-left: 15px;
   margin-right: 15px;
   margin-top: 10px;
@@ -148,7 +158,7 @@ area:hover {
   text-align: center;
 }
 
-.nav > li > a {
+.nav>li>a {
   position: relative;
   display: block;
   padding: 10px 30px;
@@ -156,23 +166,23 @@ area:hover {
 
 }
 
-.navbar-inverse .navbar-nav > li > a  {
- color: #cdcccc;
- outline: none;
+.navbar-inverse .navbar-nav>li>a {
+  color: #cdcccc;
+  outline: none;
 }
 
-.nav > li > a:hover {
+.nav>li>a:hover {
   background-color: #444 !important;
   color: #E5D5D5;
 }
 
-#SPEC_RUN, #SPEC_RUN:hover
-{
+#SPEC_RUN,
+#SPEC_RUN:hover {
   color: #31b44b;
 }
 
-#SPEC_STOP, #SPEC_STOP:hover
-{
+#SPEC_STOP,
+#SPEC_STOP:hover {
   display: none;
   color: #ee3739;
 }
@@ -296,14 +306,15 @@ area:hover {
   height: 31px;
 }
 
-.right-menu-option:hover  {
+.right-menu-option:hover {
   background-color: #444;
   cursor: pointer;
   margin: 1px 1px 1px 1px;
   height: 32px;
 }
 
-.btn:active, .btn.active {
+.btn:active,
+.btn.active {
   background-image: none;
   background-color: #999;
   color: #111 !important;
@@ -322,6 +333,7 @@ area:hover {
 .left-info {
   width: 160px;
   float: left;
+  color: #FFF;
 }
 
 .info-title {
@@ -334,7 +346,8 @@ area:hover {
   width: 90px;
 }
 
-.info-title > div, .info-value > div {
+.info-title>div,
+.info-value>div {
   display: none;
 }
 
@@ -345,39 +358,60 @@ area:hover {
   overflow: hidden;
 }
 
-.ch1, .btn.ch1, .ch1.focus {
+.ch1,
+.btn.ch1,
+.ch1.focus {
   color: #f3ec1a !important;
 }
 
-.ch2, .btn.ch2, .ch2.focus {
+.ch2,
+.btn.ch2,
+.ch2.focus {
   color: #31b44b !important;
 }
 
-.ch3, .btn.ch3, .ch3.focus {
+.ch3,
+.btn.ch3,
+.ch3.focus {
   color: #ee3739 !important;
 }
 
-.ch4, .btn.ch4, .ch4.focus {
+.ch4,
+.btn.ch4,
+.ch4.focus {
   color: #3af7f7 !important;
 }
 
-.output1, .btn.output1, .output1.focus {
+.output1,
+.btn.output1,
+.output1.focus {
   color: #9595ca !important;
 }
 
-.output2, .btn.output2, .output2.focus {
+.output2,
+.btn.output2,
+.output2.focus {
   color: #ee3739 !important;
 }
 
-.math, .btn.math, .math.focus {
+.math,
+.btn.math,
+.math.focus {
   color: #ab4d9d !important;
 }
 
-.trig, .btn.trig, .trig.focus {
+.trig,
+.btn.trig,
+.trig.focus {
   color: #75cede !important;
 }
 
-.ch1.active, .ch2.active, .output1.active, .output2.active, .math.active, .trig.active {
+.ch1.active,
+.ch2.active,
+.output1.active,
+.output2.active,
+.math.active,
+.trig.active {
   color: #111 !important;
 }
 
@@ -423,7 +457,8 @@ area:hover {
   background-color: #444;
 }
 
-.close:hover, .close:focus {
+.close:hover,
+.close:focus {
   color: #fff !important;
   text-decoration: none;
   cursor: pointer;
@@ -459,11 +494,12 @@ area:hover {
   width: 100%;
   background-color: transparent;
   text-shadow: 0px 0px;
- /*  box-shadow: 0 0 0 1px #777; */
-  color:#cdcccc !important;
+  /*  box-shadow: 0 0 0 1px #777; */
+  color: #cdcccc !important;
 }
 
-.btn:hover, btn:active {
+.btn:hover,
+btn:active {
   color: #fff !important;
   background-image: none;
 }
@@ -484,7 +520,7 @@ area:hover {
 }
 
 .meas-item:hover {
-  background-color:#444;
+  background-color: #444;
   color: #fff;
 }
 
@@ -512,8 +548,9 @@ area:hover {
   cursor: pointer;
 }
 
-#meas:hover, #cursor:hover {
-  color:#fff;
+#meas:hover,
+#cursor:hover {
+  color: #fff;
 }
 
 .btn.focus {
@@ -542,6 +579,14 @@ area:hover {
   cursor: pointer;
 }
 
+#auto_scale {
+  position: relative;
+  margin-left: 25px;
+  margin-top: 15px;
+  width: 150px;
+  height: auto;
+}
+
 .calib-button {
   position: absolute;
   height: auto;
@@ -557,7 +602,8 @@ area:hover {
   position: absolute;
 }
 
-.y-offset-arrow, #time_offset_arrow {
+.y-offset-arrow,
+#time_offset_arrow {
   position: absolute;
   left: 0;
   top: 0;
@@ -572,11 +618,11 @@ area:hover {
 }
 
 #power {
-    position: relative;
-    top: 50%;
-    left: -30px;
-    transform: rotate(-90deg);
-    transform-origin: 0px 0px 0px;
+  position: relative;
+  top: 50%;
+  left: -30px;
+  transform: rotate(-90deg);
+  transform-origin: 0px 0px 0px;
 }
 
 #new_scale {
@@ -599,38 +645,40 @@ area:hover {
 
 .waterfall-holder .waterfall-graph {
   display: block;
-  width: 101%;
+  width: 100%;
   height: auto;
   min-height: 60px;
   max-height: 60px;
-  margin-top: -40px;
 }
 
 .waterfall-holder span {
-  display:inline-block;
-  position:absolute;
-  top:30px;
-  left:0px;
-     margin-top: -40px;
-    /* Оформление текста */
-  color:#FFF;
-  font-family:Arial, Helvetica, sans-serif;
-  font-size:20px;
+  display: inline-block;
+  position: absolute;
+  top: 30px;
+  left: 0px;
+  margin-top: -40px;
+  color: #FFF;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 20px;
 
-    /* Фон */
-  padding:10px 30px;
+  padding: 10px 30px;
   width: 100%;
   text-align: center;
   max-height: 60px;
 }
 
-.wait{
-  position:relative;
+.waterfall_canvas {
+  width: 100%;
+  height: 60px;
+}
+
+.wait {
+  position: relative;
   margin-top: -60px;
   max-height: 60px;
 }
 
-.wait img{
+.wait img {
   display: block;
   width: 101%;
   height: auto;
@@ -638,18 +686,18 @@ area:hover {
 }
 
 .wait span {
-  display:inline-block;
-  position:absolute;
-  top:30px;
-  left:0px;
+  display: inline-block;
+  position: absolute;
+  top: 30px;
+  left: 0px;
 
-    /* Оформление текста */
-  color:#FFF;
-  font-family:Arial, Helvetica, sans-serif;
-  font-size:20px;
+  /* Оформление текста */
+  color: #FFF;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 20px;
 
-    /* Фон */
-  padding:10px 30px;
+  /* Фон */
+  padding: 10px 30px;
   width: 100%;
   text-align: center;
   max-height: 60px;
@@ -657,20 +705,20 @@ area:hover {
 
 .waterfall_title {
   left: 0;
-  margin-top: -60px;
+  margin-top: -30px;
   position: absolute;
   top: 50%;
   transform: rotate(-90deg);
   -o-transform: rotate(-90deg);
   -ms-transform: rotate(-90deg);
   -moz-transform: rotate(-90deg);
-  -webkit-transform:  rotate(-90deg);
+  -webkit-transform: rotate(-90deg);
   transform-origin: 0 30px 0;
   -o-transform-origin: 0 30px 0;
   -ms-transform-origin: 0 30px 0;
   -moz-transform-origin: 0 30px 0;
   -webkit-transform-origin: 0 30px 0;
-   max-height: 60px;
+  max-height: 60px;
 }
 
 .pull-right {
@@ -714,7 +762,7 @@ area:hover {
 .varrow {
   position: absolute;
   left: 0;
-  bottom: 20px;
+  bottom: 26px;
   margin-left: -7px;
   display: none;
   z-index: 12;
@@ -734,12 +782,14 @@ area:hover {
   z-index: 14;
 }
 
-#cur_x1_info.cur_info, #cur_x2_info.cur_info {
-  top: 2px;
+#cur_x1_info.cur_info,
+#cur_x2_info.cur_info {
+  top: 14px;
   margin-left: 3px;
 }
 
-#cur_y1_info.cur_info, #cur_y2_info.cur_info {
+#cur_y1_info.cur_info,
+#cur_y2_info.cur_info {
   left: 2px;
   margin-top: -15px;
 }
@@ -804,30 +854,30 @@ area:hover {
 }
 
 #cur_x_diff_info.cur_info {
-  top: 30px;
+  top: 28px;
 }
 
 #header {
-    background-color: black;
-    color: #CCC;
-    text-align: center;
-    padding: 6px;
-    overflow: hidden;
-    height: 30px;
-    width: 100%;
-    white-space: nowrap;
+  background-color: black;
+  color: #CCC;
+  text-align: center;
+  padding: 6px;
+  overflow: hidden;
+  height: 30px;
+  width: 100%;
+  white-space: nowrap;
 }
 
 #connection_meter {
-    right: 100px;
-    width: 200px;
-    float: right;
-    text-align: left;
+  right: 100px;
+  width: 200px;
+  float: right;
+  text-align: left;
 }
 
 #throughput_view2 {
-    text-align: right;
-    width: 150px;
+  text-align: right;
+  width: 150px;
 }
 
 .close-sweep-dialog img {
@@ -869,12 +919,14 @@ a.list-group-item:hover:visited {
   border: 1px solid;
   cursor: pointer;
 }
+
 .checkbox_export:after {
   position: absolute;
   width: 100%;
   line-height: 100%;
   text-align: center;
 }
+
 .checkbox_export[data-checked="true"]:after {
   content: "✓";
 }
@@ -896,7 +948,7 @@ a.list-group-item:hover:visited {
   width: 14px;
   height: 14px;
   margin: 3px;
-  float:right;
+  float: right;
 }
 
 .saved_settings>a>img:hover {

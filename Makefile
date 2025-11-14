@@ -166,7 +166,7 @@ LUARESTY_L_TAG  = v0.13
 NGINX_TAG       = 1.19.10
 SOCKPROC_TAG    = master
 
-WEBSOCKETPP_URL = https://github.com/zaphoyd/websocketpp/archive/$(WEBSOCKETPP_TAG).tar.gz
+WEBSOCKETPP_URL = https://github.com/RedPitaya/websocketpp/archive/$(WEBSOCKETPP_TAG).tar.gz
 LIBJSON_URL     = https://github.com/RedPitaya/libjson/archive/refs/tags/7.6.3.tar.gz
 LUANGINX_URL    = https://codeload.github.com/openresty/lua-nginx-module/tar.gz/$(LUANGINX_TAG)
 LUARESTY_URL    = https://github.com/openresty/lua-resty-core/archive/refs/tags/$(LUARESTY_TAG).tar.gz

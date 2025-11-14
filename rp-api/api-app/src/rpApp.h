@@ -16,6 +16,7 @@
 #ifndef __RP_APP_H
 #define __RP_APP_H
 
+#include <functional>
 #include "math/rp_dsp.h"
 #include "rp.h"
 
@@ -86,19 +87,21 @@ typedef enum {
 * Type representing math operations.
 */
 typedef enum {
-    RPAPP_OSC_MATH_NONE,  //!< Math operation add
-    RPAPP_OSC_MATH_ADD,   //!< Math operation add
-    RPAPP_OSC_MATH_SUB,   //!< Math operation subtract
-    RPAPP_OSC_MATH_MUL,   //!< Math operation mltiply
-    RPAPP_OSC_MATH_DIV,   //!< Math operation divide
-    RPAPP_OSC_MATH_ABS,   //!< Math operation absolute
-    RPAPP_OSC_MATH_DER,   //!< Math operation derivative
-    RPAPP_OSC_MATH_INT,   //!< Math operation integrate
+    RPAPP_OSC_MATH_NONE = 0,  //!< Math operation none
+    RPAPP_OSC_MATH_ADD = 1,   //!< Math operation add
+    RPAPP_OSC_MATH_SUB = 2,   //!< Math operation subtract
+    RPAPP_OSC_MATH_MUL = 3,   //!< Math operation mltiply
+    RPAPP_OSC_MATH_DIV = 4,   //!< Math operation divide
+    RPAPP_OSC_MATH_ABS = 5,   //!< Math operation absolute
+    RPAPP_OSC_MATH_DER = 6,   //!< Math operation derivative
+    RPAPP_OSC_MATH_INT = 7    //!< Math operation integrate
 } rpApp_osc_math_oper_t;
 
-typedef enum { DISABLED = 0, BSPLINE = 1, CATMULLROM = 2, LANCZOS = 3 } rpApp_osc_interpolationMode;
+typedef enum { DISABLED = 0, LINEAR = 1, BSPLINE = 2, CATMULLROM = 3, LANCZOS = 4 } rpApp_osc_interpolationMode;
 
 typedef enum { RPAPP_RAW_EXPORT = 0, RPAPP_VIEW_EXPORT = 1 } rpApp_osc_exportMode;
+
+typedef std::function<void(rp_channel_t channel, uint32_t decimation, float timeScale, const std::vector<float>& data)> rpApp_osc_updateViewCallback_t;
 
 /** @name General
 */
@@ -663,6 +666,12 @@ int rpApp_OscSetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode _m
 
 int rpApp_OscGetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode* _mode);
 
+int rpApp_OscSetForceUpdateView(bool enable);
+
+int rpApp_OscGetForceUpdateView(bool* enable);
+
+int rpApp_OscSetUpdateViewCallback(rpApp_osc_updateViewCallback_t callback);
+
 int rpApp_OscSetEnableXY(bool _state);
 
 int rpApp_OscGetEnableXY(bool* _state);
@@ -701,15 +710,21 @@ int rpApp_SpecRunning();
 
 int rpApp_SpecReset();
 
-int rpApp_SpecGetViewData(float** signals, size_t size);
+int rpApp_SpecLockData();
+
+int rpApp_SpecUnlockData();
+
+int rpApp_SpecSetEnable(rp_channel_t channel, bool state);
+
+int rpApp_SpecGetEnable(rp_channel_t channel, bool* state);
+
+int rpApp_SpecSetEnable(rp_channel_t channel, bool state);
+
+int rpApp_SpecGetEnable(rp_channel_t channel, bool* state);
+
+int rpApp_SpecGetViewData(const rp_dsp_api::rp_dsp_result_t** data);
 
 int rpApp_SpecGetViewSize(size_t* size);
-
-int rpApp_SpecGetPeakPower(rp_channel_t channel, float* power);
-
-int rpApp_SpecGetPeakFreq(rp_channel_t channel, float* freq);
-
-int rpApp_SpecSetFreqRange(float _freq_min, float freq);
 
 int rpApp_SpecSetWindow(rp_dsp_api::window_mode_t mode);
 
@@ -721,9 +736,7 @@ int rpApp_SpecGetRemoveDC();
 
 int rpApp_SpecGetADCFreq();
 
-int rpApp_SpecGetMode(rp_dsp_api::mode_t* mode);
-
-int rpApp_SpecSetMode(rp_dsp_api::mode_t mode);
+int rpApp_SpecSetFreqMax(float freq);
 
 int rpApp_SpecGetProbe(rp_channel_t channel, uint32_t* probe);
 
@@ -736,14 +749,6 @@ int rpApp_SpecGetImpedance(double* value);
 int rpApp_SpecSetADCBufferSize(int size);
 
 int rpApp_SpecGetADCBufferSize();
-
-int rpApp_SpecGetFreqMin(float* freq);
-
-int rpApp_SpecGetFreqMax(float* freq);
-
-int rpApp_SpecSetFreqMin(float freq);
-
-int rpApp_SpecSetFreqMax(float freq);
 
 int rpApp_SpecGetFpgaFreq(float* freq);
 

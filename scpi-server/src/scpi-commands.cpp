@@ -27,6 +27,7 @@
 #include "dpin.h"
 #include "error.h"
 #include "generate.h"
+#include "generate_axi.h"
 #include "i2c.h"
 #include "lcr.h"
 #include "led.h"
@@ -42,6 +43,14 @@
 
 #include "scpi-commands.h"
 #include "scpi-parser-ext.h"
+
+#if USE_COMMAND_TAGS
+#define SCPI_CMD(p, c) \
+    { .pattern = p, .callback = c, .tag = 0 }
+#else
+#define SCPI_CMD(p, c) \
+    { .pattern = p, .callback = c }
+#endif
 
 scpi_result_t RP_EcosystemVersionQ(scpi_t* context) {
     SCPI_ResultMnemonic(context, rp_GetVersion());
@@ -68,2003 +77,388 @@ scpi_result_t RP_CommandsList(scpi_t* context) {
 
 static const scpi_command_t scpi_commands[] = {
     /* IEEE Mandated Commands (SCPI std V1999.0 4.1.1) */
-    {.pattern = "*CLS",
-     .callback = SCPI_CoreClsEx,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "*ESE",
-     .callback = SCPI_CoreEse,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "*ESE?",
-     .callback = SCPI_CoreEseQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "*ESR?",
-     .callback = SCPI_CoreEsrQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "*IDN?",
-     .callback = SCPI_CoreIdnQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "*OPC",
-     .callback = SCPI_CoreOpc,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "*OPC?",
-     .callback = SCPI_CoreOpcQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "*RST",
-     .callback = SCPI_CoreRst,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "*SRE",
-     .callback = SCPI_CoreSre,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "*SRE?",
-     .callback = SCPI_CoreSreQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "*STB?",
-     .callback = SCPI_CoreStbQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "*TST?",
-     .callback = SCPI_CoreTstQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "*WAI",
-     .callback = SCPI_CoreWai,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    SCPI_CMD("*CLS", SCPI_CoreClsEx),
+    SCPI_CMD("*ESE", SCPI_CoreEse),
+    SCPI_CMD("*ESE?", SCPI_CoreEseQ),
+    SCPI_CMD("*ESR?", SCPI_CoreEsrQ),
+    SCPI_CMD("*IDN?", SCPI_CoreIdnQ),
+    SCPI_CMD("*OPC", SCPI_CoreOpc),
+    SCPI_CMD("*OPC?", SCPI_CoreOpcQ),
+    SCPI_CMD("*RST", SCPI_CoreRst),
+    SCPI_CMD("*SRE", SCPI_CoreSre),
+    SCPI_CMD("*SRE?", SCPI_CoreSreQ),
+    SCPI_CMD("*STB?", SCPI_CoreStbQ),
+    SCPI_CMD("*TST?", SCPI_CoreTstQ),
+    SCPI_CMD("*WAI", SCPI_CoreWai),
 
     /* Required SCPI commands (SCPI std V1999.0 4.2.1) */
-    {.pattern = "SYSTem:ERRor[:NEXT]?",
-     .callback = SCPI_SystemErrorNextQEx,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SYSTem:ERRor:COUNt?",
-     .callback = SCPI_SystemErrorCountQEx,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SYSTem:VERSion?",
-     .callback = RP_EcosystemVersionQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SYSTem:BRD:ID?",
-     .callback = RP_BoardID,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SYSTem:BRD:Name?",
-     .callback = RP_BoardName,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SYSTem:Help?",
-     .callback = RP_CommandsList,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    SCPI_CMD("SYSTem:ERRor[:NEXT]?", SCPI_SystemErrorNextQEx),
+    SCPI_CMD("SYSTem:ERRor:COUNt?", SCPI_SystemErrorCountQEx),
+    SCPI_CMD("SYSTem:VERSion?", RP_EcosystemVersionQ),
+    SCPI_CMD("SYSTem:BRD:ID?", RP_BoardID),
+    SCPI_CMD("SYSTem:BRD:Name?", RP_BoardName),
+    SCPI_CMD("SYSTem:Help?", RP_CommandsList),
 
-    {.pattern = "STATus:QUEStionable[:EVENt]?",
-     .callback = SCPI_StatusQuestionableEventQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "STATus:QUEStionable:ENABle",
-     .callback = SCPI_StatusQuestionableEnable,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "STATus:QUEStionable:ENABle?",
-     .callback = SCPI_StatusQuestionableEnableQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "STATus:PRESet",
-     .callback = SCPI_StatusPreset,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    SCPI_CMD("STATus:QUEStionable[:EVENt]?", SCPI_StatusQuestionableEventQ),
+    SCPI_CMD("STATus:QUEStionable:ENABle", SCPI_StatusQuestionableEnable),
+    SCPI_CMD("STATus:QUEStionable:ENABle?", SCPI_StatusQuestionableEnableQ),
+    SCPI_CMD("STATus:PRESet", SCPI_StatusPreset),
 
-    {.pattern = "SYSTem:COMMunication:TCPIP:CONTROL?",
-     .callback = SCPI_SystemCommTcpipControlQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    SCPI_CMD("SYSTem:COMMunication:TCPIP:CONTROL?", SCPI_SystemCommTcpipControlQ),
 
     /* RedPitaya */
-
-    {.pattern = "SYSTem:TIME",
-     .callback = RP_Time,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SYSTem:TIME?",
-     .callback = RP_TimeQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-
-    {.pattern = "SYSTem:DATE",
-     .callback = RP_Date,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SYSTem:DATE?",
-     .callback = RP_DateQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    SCPI_CMD("SYSTem:TIME", RP_Time),
+    SCPI_CMD("SYSTem:TIME?", RP_TimeQ),
+    SCPI_CMD("SYSTem:DATE", RP_Date),
+    SCPI_CMD("SYSTem:DATE?", RP_DateQ),
 
     /* General commands */
-    {.pattern = "RP:INit",
-     .callback = RP_InitAll,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "RP:REset",
-     .callback = RP_ResetAll,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "RP:RELease",
-     .callback = RP_ReleaseAll,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "RP:DIg[:loop]",
-     .callback = RP_EnableDigLoop,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "RP:LOGmode",
-     .callback = RP_SetLogMode,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "RP:RET_ON_ERROR",
-     .callback = RP_SetRetOnError,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    SCPI_CMD("RP:INit", RP_InitAll),
+    SCPI_CMD("RP:REset", RP_ResetAll),
+    SCPI_CMD("RP:RELease", RP_ReleaseAll),
+    SCPI_CMD("RP:DIg[:loop]", RP_EnableDigLoop),
+    SCPI_CMD("RP:LOGmode", RP_SetLogMode),
+    SCPI_CMD("RP:RET_ON_ERROR", RP_SetRetOnError),
 
-    {.pattern = "RP:PLL:ENable",
-     .callback = RP_PLL,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "RP:PLL:ENable?",
-     .callback = RP_PLLQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "RP:PLL:STATE?",
-     .callback = RP_PLLStateQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    SCPI_CMD("RP:PLL:ENable", RP_PLL),
+    SCPI_CMD("RP:PLL:ENable?", RP_PLLQ),
+    SCPI_CMD("RP:PLL:STATE?", RP_PLLStateQ),
 
-    {.pattern = "DIG:RST",
-     .callback = RP_DigitalPinReset,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "DIG:PIN",
-     .callback = RP_DigitalPinState,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "DIG:PIN?",
-     .callback = RP_DigitalPinStateQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "DIG:PIN:DIR",
-     .callback = RP_DigitalPinDirection,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "DIG:PIN:DIR?",
-     .callback = RP_DigitalPinDirectionQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    SCPI_CMD("DIG:RST", RP_DigitalPinReset),
+    SCPI_CMD("DIG:PIN", RP_DigitalPinState),
+    SCPI_CMD("DIG:PIN?", RP_DigitalPinStateQ),
+    SCPI_CMD("DIG:PIN:DIR", RP_DigitalPinDirection),
+    SCPI_CMD("DIG:PIN:DIR?", RP_DigitalPinDirectionQ),
 
-    {.pattern = "ANALOG:RST",
-     .callback = RP_AnalogPinReset,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ANALOG:PIN",
-     .callback = RP_AnalogPinValue,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ANALOG:PIN?",
-     .callback = RP_AnalogPinValueQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    SCPI_CMD("ANALOG:RST", RP_AnalogPinReset),
+    SCPI_CMD("ANALOG:PIN", RP_AnalogPinValue),
+    SCPI_CMD("ANALOG:PIN?", RP_AnalogPinValueQ),
 
-    {.pattern = "DAISY:SYNC:TRig",
-     .callback = RP_EnableDaisyChainTrigSync,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "DAISY:SYNC:TRig?",
-     .callback = RP_EnableDaisyChainTrigSyncQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-
-    {.pattern = "DAISY:SYNC:CLK",
-     .callback = RP_EnableDaisyChainClockSync,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "DAISY:SYNC:CLK?",
-     .callback = RP_EnableDaisyChainClockSyncQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-
-    {.pattern = "DAISY:TRIG_O:ENable",
-     .callback = RP_DpinEnableTrigOutput,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },  // Depraceted need remove after update all examples
-    {.pattern = "DAISY:TRig:Out:ENable",
-     .callback = RP_DpinEnableTrigOutput,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "DAISY:TRIG_O:ENable?",
-     .callback = RP_DpinEnableTrigOutputQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },  // Depraceted need remove after update all examples
-    {.pattern = "DAISY:TRig:Out:ENable?",
-     .callback = RP_DpinEnableTrigOutputQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-
-    {.pattern = "DAISY:TRIG_O:SOUR",
-     .callback = RP_SourceTrigOutput,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },  // Depraceted need remove after update all examples
-    {.pattern = "DAISY:TRig:Out:SOUR",
-     .callback = RP_SourceTrigOutput,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "DAISY:TRIG_O:SOUR?",
-     .callback = RP_SourceTrigOutputQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },  // Depraceted need remove after update all examples
-    {.pattern = "DAISY:TRig:Out:SOUR?",
-     .callback = RP_SourceTrigOutputQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    SCPI_CMD("DAISY:SYNC:TRig", RP_EnableDaisyChainTrigSync),
+    SCPI_CMD("DAISY:SYNC:TRig?", RP_EnableDaisyChainTrigSyncQ),
+    SCPI_CMD("DAISY:SYNC:CLK", RP_EnableDaisyChainClockSync),
+    SCPI_CMD("DAISY:SYNC:CLK?", RP_EnableDaisyChainClockSyncQ),
+    SCPI_CMD("DAISY:TRig:Out:ENable", RP_DpinEnableTrigOutput),
+    SCPI_CMD("DAISY:TRig:Out:ENable?", RP_DpinEnableTrigOutputQ),
+    SCPI_CMD("DAISY:TRig:Out:SOUR", RP_SourceTrigOutput),
+    SCPI_CMD("DAISY:TRig:Out:SOUR?", RP_SourceTrigOutputQ),
 
     /* Acquire */
-    {.pattern = "ACQ:START",
-     .callback = RP_AcqStart,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:START:CH#",
-     .callback = RP_AcqStartCh,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:STOP",
-     .callback = RP_AcqStop,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:STOP:CH#",
-     .callback = rp_AcqStopCh,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:RST",
-     .callback = RP_AcqReset,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:RST:CH#",
-     .callback = RP_AcqResetCh,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:SPLIT:TRig",
-     .callback = RP_AcqSplitTrigger,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:SPLIT:TRig?",
-     .callback = RP_AcqSplitTriggerQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    SCPI_CMD("ACQ:START", RP_AcqStart),
+    SCPI_CMD("ACQ:START:CH#", RP_AcqStartCh),
+    SCPI_CMD("ACQ:STOP", RP_AcqStop),
+    SCPI_CMD("ACQ:STOP:CH#", rp_AcqStopCh),
+    SCPI_CMD("ACQ:RST", RP_AcqReset),
+    SCPI_CMD("ACQ:RST:CH#", RP_AcqResetCh),
+    SCPI_CMD("ACQ:SPLIT:TRig", RP_AcqSplitTrigger),
+    SCPI_CMD("ACQ:SPLIT:TRig?", RP_AcqSplitTriggerQ),
 
-    {.pattern = "ACQ:DEC",
-     .callback = RP_AcqDecimation,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:DEC:CH#",
-     .callback = RP_AcqDecimationCh,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:DEC?",
-     .callback = RP_AcqDecimationQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:DEC:CH#?",
-     .callback = RP_AcqDecimationChQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:DEC:Factor",
-     .callback = RP_AcqDecimationFactor,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:DEC:Factor:CH#",
-     .callback = RP_AcqDecimationFactorCh,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:DEC:Factor?",
-     .callback = RP_AcqDecimationFactorQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:DEC:Factor:CH#?",
-     .callback = RP_AcqDecimationFactorChQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    SCPI_CMD("ACQ:DEC", RP_AcqDecimation),
+    SCPI_CMD("ACQ:DEC:CH#", RP_AcqDecimationCh),
+    SCPI_CMD("ACQ:DEC?", RP_AcqDecimationQ),
+    SCPI_CMD("ACQ:DEC:CH#?", RP_AcqDecimationChQ),
+    SCPI_CMD("ACQ:DEC:Factor", RP_AcqDecimationFactor),
+    SCPI_CMD("ACQ:DEC:Factor:CH#", RP_AcqDecimationFactorCh),
+    SCPI_CMD("ACQ:DEC:Factor?", RP_AcqDecimationFactorQ),
+    SCPI_CMD("ACQ:DEC:Factor:CH#?", RP_AcqDecimationFactorChQ),
 
-    {.pattern = "ACQ:SRATe?",
-     .callback = RP_AcqSamplingRateHzQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:SRATe:CH#?",
-     .callback = RP_AcqSamplingRateHzChQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:AVG",
-     .callback = RP_AcqAveraging,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:AVG?",
-     .callback = RP_AcqAveragingQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:AVG:CH#",
-     .callback = RP_AcqAveragingCh,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:AVG:CH#?",
-     .callback = RP_AcqAveragingChQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:FILTER:BYPASS:CH#",
-     .callback = RP_AcqBypassFilterCh,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:FILTER:BYPASS:CH#?",
-     .callback = RP_AcqBypassFilterChQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:TRig",
-     .callback = RP_AcqTriggerSrc,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:TRig:CH#",
-     .callback = RP_AcqTriggerSrcCh,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:TRig:STAT?",
-     .callback = RP_AcqTriggerStateQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:TRig:STAT:CH#?",
-     .callback = RP_AcqTriggerStateChQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:TRig:DLY",
-     .callback = RP_AcqTriggerDelay,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:TRig:DLY?",
-     .callback = RP_AcqTriggerDelayQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:TRig:DLY:NS",
-     .callback = RP_AcqTriggerDelayNs,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:TRig:DLY:NS?",
-     .callback = RP_AcqTriggerDelayNsQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:TRig:DLY:CH#",
-     .callback = RP_AcqTriggerDelayCh,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:TRig:DLY:CH#?",
-     .callback = RP_AcqTriggerDelayChQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:TRig:DLY:NS:CH#",
-     .callback = RP_AcqTriggerDelayNsCh,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:TRig:DLY:NS:CH#?",
-     .callback = RP_AcqTriggerDelayNsChQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:TRig:HYST",
-     .callback = RP_AcqTriggerHyst,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:TRig:HYST?",
-     .callback = RP_AcqTriggerHystQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:TRig:FILL?",
-     .callback = RP_AcqTriggerFillQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:TRig:FILL:CH#?",
-     .callback = RP_AcqTriggerFillChQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:SOUR#:GAIN",
-     .callback = RP_AcqGain,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:SOUR#:GAIN?",
-     .callback = RP_AcqGainQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:TRig:LEV",
-     .callback = RP_AcqTriggerLevel,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:TRig:LEV?",
-     .callback = RP_AcqTriggerLevelQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:TRig:LEV:CH#",
-     .callback = RP_AcqTriggerLevelCh,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:TRig:LEV:CH#?",
-     .callback = RP_AcqTriggerLevelChQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:WPOS?",
-     .callback = RP_AcqWritePointerQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:TPOS?",
-     .callback = RP_AcqWritePointerAtTrigQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:WPOS:CH#?",
-     .callback = RP_AcqWritePointerChQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:TPOS:CH#?",
-     .callback = RP_AcqWritePointerAtTrigChQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:DATA:Units",
-     .callback = RP_AcqScpiDataUnits,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:DATA:Units?",
-     .callback = RP_AcqScpiDataUnitsQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:DATA:FORMAT",
-     .callback = RP_AcqDataFormat,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:DATA:FORMAT?",
-     .callback = RP_AcqDataFormatQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:DATA:BYTE:ORDER",
-     .callback = RP_AcqDataEndian,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:DATA:BYTE:ORDER?",
-     .callback = RP_AcqDataEndianQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:SOUR#:DATA:STArt:End?",
-     .callback = RP_AcqDataPosQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:SOUR#:DATA:Start:End?",
-     .callback = RP_AcqDataPosQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:SOUR#:DATA:STArt:N?",
-     .callback = RP_AcqDataQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:SOUR#:DATA:Start:N?",
-     .callback = RP_AcqDataQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:SOUR#:DATA:Old:N?",
-     .callback = RP_AcqOldestDataQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:SOUR#:DATA?",
-     .callback = RP_AcqDataOldestAllQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:SOUR#:DATA:LATest:N?",
-     .callback = RP_AcqLatestDataQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:SOUR#:DATA:TRig?",
-     .callback = RP_AcqTriggerDataQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:BUF:SIZE?",
-     .callback = RP_AcqBufferSizeQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    SCPI_CMD("ACQ:SRATe?", RP_AcqSamplingRateHzQ),
+    SCPI_CMD("ACQ:SRATe:CH#?", RP_AcqSamplingRateHzChQ),
+    SCPI_CMD("ACQ:AVG", RP_AcqAveraging),
+    SCPI_CMD("ACQ:AVG?", RP_AcqAveragingQ),
+    SCPI_CMD("ACQ:AVG:CH#", RP_AcqAveragingCh),
+    SCPI_CMD("ACQ:AVG:CH#?", RP_AcqAveragingChQ),
+    SCPI_CMD("ACQ:FILTER:BYPASS:CH#", RP_AcqBypassFilterCh),
+    SCPI_CMD("ACQ:FILTER:BYPASS:CH#?", RP_AcqBypassFilterChQ),
+    SCPI_CMD("ACQ:TRig", RP_AcqTriggerSrc),
+    SCPI_CMD("ACQ:TRig:CH#", RP_AcqTriggerSrcCh),
+    SCPI_CMD("ACQ:TRig:STAT?", RP_AcqTriggerStateQ),
+    SCPI_CMD("ACQ:TRig:STAT:CH#?", RP_AcqTriggerStateChQ),
+    SCPI_CMD("ACQ:TRig:DLY", RP_AcqTriggerDelay),
+    SCPI_CMD("ACQ:TRig:DLY?", RP_AcqTriggerDelayQ),
+    SCPI_CMD("ACQ:TRig:DLY:NS", RP_AcqTriggerDelayNs),
+    SCPI_CMD("ACQ:TRig:DLY:NS?", RP_AcqTriggerDelayNsQ),
+    SCPI_CMD("ACQ:TRig:DLY:CH#", RP_AcqTriggerDelayCh),
+    SCPI_CMD("ACQ:TRig:DLY:CH#?", RP_AcqTriggerDelayChQ),
+    SCPI_CMD("ACQ:TRig:DLY:NS:CH#", RP_AcqTriggerDelayNsCh),
+    SCPI_CMD("ACQ:TRig:DLY:NS:CH#?", RP_AcqTriggerDelayNsChQ),
+    SCPI_CMD("ACQ:TRig:HYST", RP_AcqTriggerHyst),
+    SCPI_CMD("ACQ:TRig:HYST?", RP_AcqTriggerHystQ),
+    SCPI_CMD("ACQ:TRig:FILL?", RP_AcqTriggerFillQ),
+    SCPI_CMD("ACQ:TRig:FILL:CH#?", RP_AcqTriggerFillChQ),
+    SCPI_CMD("ACQ:SOUR#:GAIN", RP_AcqGain),
+    SCPI_CMD("ACQ:SOUR#:GAIN?", RP_AcqGainQ),
+    SCPI_CMD("ACQ:TRig:LEV", RP_AcqTriggerLevel),
+    SCPI_CMD("ACQ:TRig:LEV?", RP_AcqTriggerLevelQ),
+    SCPI_CMD("ACQ:TRig:LEV:CH#", RP_AcqTriggerLevelCh),
+    SCPI_CMD("ACQ:TRig:LEV:CH#?", RP_AcqTriggerLevelChQ),
+    SCPI_CMD("ACQ:WPOS?", RP_AcqWritePointerQ),
+    SCPI_CMD("ACQ:TPOS?", RP_AcqWritePointerAtTrigQ),
+    SCPI_CMD("ACQ:WPOS:CH#?", RP_AcqWritePointerChQ),
+    SCPI_CMD("ACQ:TPOS:CH#?", RP_AcqWritePointerAtTrigChQ),
+    SCPI_CMD("ACQ:DATA:Units", RP_AcqScpiDataUnits),
+    SCPI_CMD("ACQ:DATA:Units?", RP_AcqScpiDataUnitsQ),
+    SCPI_CMD("ACQ:DATA:FORMAT", RP_AcqDataFormat),
+    SCPI_CMD("ACQ:DATA:FORMAT?", RP_AcqDataFormatQ),
+    SCPI_CMD("ACQ:DATA:BYTE:ORDER", RP_AcqDataEndian),
+    SCPI_CMD("ACQ:DATA:BYTE:ORDER?", RP_AcqDataEndianQ),
+    SCPI_CMD("ACQ:SOUR#:DATA:STArt:End?", RP_AcqDataPosQ),
+    SCPI_CMD("ACQ:SOUR#:DATA:Start:End?", RP_AcqDataPosQ),
+    SCPI_CMD("ACQ:SOUR#:DATA:STArt:N?", RP_AcqDataQ),
+    SCPI_CMD("ACQ:SOUR#:DATA:Start:N?", RP_AcqDataQ),
+    SCPI_CMD("ACQ:SOUR#:DATA:Old:N?", RP_AcqOldestDataQ),
+    SCPI_CMD("ACQ:SOUR#:DATA?", RP_AcqDataOldestAllQ),
+    SCPI_CMD("ACQ:SOUR#:DATA:LATest:N?", RP_AcqLatestDataQ),
+    SCPI_CMD("ACQ:SOUR#:DATA:TRig?", RP_AcqTriggerDataQ),
+    SCPI_CMD("ACQ:BUF:SIZE?", RP_AcqBufferSizeQ),
 
     // DMA mode for ACQ
-    {.pattern = "ACQ:AXI:DATA:Units",
-     .callback = RP_AcqAxiScpiDataUnits,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:AXI:DATA:Units?",
-     .callback = RP_AcqAxiScpiDataUnitsQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:AXI:DEC",
-     .callback = RP_AcqAxiDecimation,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:AXI:DEC?",
-     .callback = RP_AcqAxiDecimationQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:AXI:DEC:CH#",
-     .callback = RP_AcqAxiDecimationCh,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:AXI:DEC:CH#?",
-     .callback = RP_AcqAxiDecimationChQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:AXI:START?",
-     .callback = RP_AcqAxiStartQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:AXI:SIZE?",
-     .callback = RP_AcqAxiEndQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:AXI:SOUR#:Trig:Fill?",
-     .callback = RP_AcqAxiTriggerFillQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:AXI:SOUR#:Trig:Dly",
-     .callback = RP_AcqAxiTriggerDelay,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:AXI:SOUR#:Trig:Dly?",
-     .callback = RP_AcqAxiTriggerDelayQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:AXI:SOUR#:Write:Pos?",
-     .callback = RP_AcqAxiWritePointerQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:AXI:SOUR#:Trig:Pos?",
-     .callback = RP_AcqAxiWritePointerAtTrigQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:AXI:SOUR#:ENable",
-     .callback = RP_AcqAxiEnable,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:AXI:SOUR#:DATA:Start:N?",
-     .callback = RP_AcqAxiDataQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:AXI:SOUR#:DATA:STArt:N?",
-     .callback = RP_AcqAxiDataQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:AXI:SOUR#:SET:Buffer",
-     .callback = RP_AcqAxiSetAddres,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    SCPI_CMD("ACQ:AXI:DATA:Units", RP_AcqAxiScpiDataUnits),
+    SCPI_CMD("ACQ:AXI:DATA:Units?", RP_AcqAxiScpiDataUnitsQ),
+    SCPI_CMD("ACQ:AXI:DEC", RP_AcqAxiDecimation),
+    SCPI_CMD("ACQ:AXI:DEC?", RP_AcqAxiDecimationQ),
+    SCPI_CMD("ACQ:AXI:DEC:CH#", RP_AcqAxiDecimationCh),
+    SCPI_CMD("ACQ:AXI:DEC:CH#?", RP_AcqAxiDecimationChQ),
+    SCPI_CMD("ACQ:AXI:START?", RP_AcqAxiStartQ),
+    SCPI_CMD("ACQ:AXI:SIZE?", RP_AcqAxiEndQ),
+    SCPI_CMD("ACQ:AXI:SOUR#:Trig:Fill?", RP_AcqAxiTriggerFillQ),
+    SCPI_CMD("ACQ:AXI:SOUR#:Trig:Dly", RP_AcqAxiTriggerDelay),
+    SCPI_CMD("ACQ:AXI:SOUR#:Trig:Dly?", RP_AcqAxiTriggerDelayQ),
+    SCPI_CMD("ACQ:AXI:SOUR#:Write:Pos?", RP_AcqAxiWritePointerQ),
+    SCPI_CMD("ACQ:AXI:SOUR#:Trig:Pos?", RP_AcqAxiWritePointerAtTrigQ),
+    SCPI_CMD("ACQ:AXI:SOUR#:ENable", RP_AcqAxiEnable),
+    SCPI_CMD("ACQ:AXI:SOUR#:DATA:Start:N?", RP_AcqAxiDataQ),
+    SCPI_CMD("ACQ:AXI:SOUR#:DATA:STArt:N?", RP_AcqAxiDataQ),
+    SCPI_CMD("ACQ:AXI:SOUR#:SET:Buffer", RP_AcqAxiSetAddres),
 
-    {.pattern = "ACQ:SOUR#:COUP",
-     .callback = RP_AcqAC_DC,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:SOUR#:COUP?",
-     .callback = RP_AcqAC_DCQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    SCPI_CMD("ACQ:SOUR#:COUP", RP_AcqAC_DC),
+    SCPI_CMD("ACQ:SOUR#:COUP?", RP_AcqAC_DCQ),
 
-    {.pattern = "TRig:EXT:LEV",
-     .callback = RP_ExtTriggerLevel,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "TRig:EXT:LEV?",
-     .callback = RP_ExtTriggerLevelQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-
-    {.pattern = "ACQ:TRig:EXT:DEBouncer[:US]",
-     .callback = RP_ExtTriggerDebouncerUs,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "ACQ:TRig:EXT:DEBouncer[:US]?",
-     .callback = RP_ExtTriggerDebouncerUsQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    SCPI_CMD("TRig:EXT:LEV", RP_ExtTriggerLevel),
+    SCPI_CMD("TRig:EXT:LEV?", RP_ExtTriggerLevelQ),
+    SCPI_CMD("ACQ:TRig:EXT:DEBouncer[:US]", RP_ExtTriggerDebouncerUs),
+    SCPI_CMD("ACQ:TRig:EXT:DEBouncer[:US]?", RP_ExtTriggerDebouncerUsQ),
 
     /* Generate */
-    {.pattern = "GEN:RST",
-     .callback = RP_GenReset,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "PHAS:ALIGN",
-     .callback = RP_GenSync,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "OUTPUT:STATE",
-     .callback = RP_GenSyncState,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "OUTPUT#:STATE",
-     .callback = RP_GenState,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "OUTPUT#:STATE?",
-     .callback = RP_GenStateQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR:TRig:INT",
-     .callback = RP_GenTriggerBoth,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR:TRig:INT:ONLY",
-     .callback = RP_GenTriggerOnlyBoth,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:FREQ:FIX",
-     .callback = RP_GenFrequency,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:FREQ:FIX?",
-     .callback = RP_GenFrequencyQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:FREQ:FIX:Direct",
-     .callback = RP_GenFrequencyDirect,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:FUNC",
-     .callback = RP_GenWaveForm,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:FUNC?",
-     .callback = RP_GenWaveFormQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:VOLT",
-     .callback = RP_GenAmplitude,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:VOLT?",
-     .callback = RP_GenAmplitudeQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:VOLT:OFFS",
-     .callback = RP_GenOffset,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:VOLT:OFFS?",
-     .callback = RP_GenOffsetQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:PHAS",
-     .callback = RP_GenPhase,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:PHAS?",
-     .callback = RP_GenPhaseQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:DCYC",
-     .callback = RP_GenDutyCycle,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:DCYC?",
-     .callback = RP_GenDutyCycleQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:LOAD",
-     .callback = RP_GenLoad,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:LOAD?",
-     .callback = RP_GenLoadQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:TRAC:DATA:DATA",
-     .callback = RP_GenArbitraryWaveForm,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:TRAC:DATA:DATA?",
-     .callback = RP_GenArbitraryWaveFormQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:BURS:STAT",
-     .callback = RP_GenGenerateMode,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:BURS:STAT?",
-     .callback = RP_GenGenerateModeQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:BURS:NCYC",
-     .callback = RP_GenBurstCount,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:BURS:NCYC?",
-     .callback = RP_GenBurstCountQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:BURS:NOR",
-     .callback = RP_GenBurstRepetitions,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:BURS:NOR?",
-     .callback = RP_GenBurstRepetitionsQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:BURS:INT:PER",
-     .callback = RP_GenBurstPeriod,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:BURS:INT:PER?",
-     .callback = RP_GenBurstPeriodQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    SCPI_CMD("GEN:RST", RP_GenReset),
+    SCPI_CMD("PHAS:ALIGN", RP_GenSync),
+    SCPI_CMD("OUTPUT:STATE", RP_GenSyncState),
+    SCPI_CMD("OUTPUT#:STATE", RP_GenState),
+    SCPI_CMD("OUTPUT#:STATE?", RP_GenStateQ),
+    SCPI_CMD("SOUR:TRig:INT", RP_GenTriggerBoth),
+    SCPI_CMD("SOUR:TRig:INT:ONLY", RP_GenTriggerOnlyBoth),
+    SCPI_CMD("SOUR#:FREQ:FIX", RP_GenFrequency),
+    SCPI_CMD("SOUR#:FREQ:FIX?", RP_GenFrequencyQ),
+    SCPI_CMD("SOUR#:FREQ:FIX:Direct", RP_GenFrequencyDirect),
+    SCPI_CMD("SOUR#:FUNC", RP_GenWaveForm),
+    SCPI_CMD("SOUR#:FUNC?", RP_GenWaveFormQ),
+    SCPI_CMD("SOUR#:VOLT", RP_GenAmplitude),
+    SCPI_CMD("SOUR#:VOLT?", RP_GenAmplitudeQ),
+    SCPI_CMD("SOUR#:VOLT:OFFS", RP_GenOffset),
+    SCPI_CMD("SOUR#:VOLT:OFFS?", RP_GenOffsetQ),
+    SCPI_CMD("SOUR#:PHAS", RP_GenPhase),
+    SCPI_CMD("SOUR#:PHAS?", RP_GenPhaseQ),
+    SCPI_CMD("SOUR#:DCYC", RP_GenDutyCycle),
+    SCPI_CMD("SOUR#:DCYC?", RP_GenDutyCycleQ),
+    SCPI_CMD("SOUR#:RISE:TIME", RP_GenRiseTime),
+    SCPI_CMD("SOUR#:RISE:TIME?", RP_GenRiseTimeQ),
+    SCPI_CMD("SOUR#:FALL:TIME", RP_GenFallTime),
+    SCPI_CMD("SOUR#:FALL:TIME?", RP_GenFallTimeQ),
+    SCPI_CMD("SOUR#:LOAD", RP_GenLoad),
+    SCPI_CMD("SOUR#:LOAD?", RP_GenLoadQ),
+    SCPI_CMD("SOUR#:TRAC:DATA:DATA", RP_GenArbitraryWaveForm),
+    SCPI_CMD("SOUR#:TRAC:DATA:DATA?", RP_GenArbitraryWaveFormQ),
+    SCPI_CMD("SOUR#:BURS:STAT", RP_GenGenerateMode),
+    SCPI_CMD("SOUR#:BURS:STAT?", RP_GenGenerateModeQ),
+    SCPI_CMD("SOUR#:BURS:NCYC", RP_GenBurstCount),
+    SCPI_CMD("SOUR#:BURS:NCYC?", RP_GenBurstCountQ),
+    SCPI_CMD("SOUR#:BURS:NOR", RP_GenBurstRepetitions),
+    SCPI_CMD("SOUR#:BURS:NOR?", RP_GenBurstRepetitionsQ),
+    SCPI_CMD("SOUR#:BURS:INT:PER", RP_GenBurstPeriod),
+    SCPI_CMD("SOUR#:BURS:INT:PER?", RP_GenBurstPeriodQ),
 
-    {.pattern = "SOUR:SWeep:PAUSE",
-     .callback = RP_GenSweepPause,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR:SWeep:DEFault",
-     .callback = RP_GenSweepDefault,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR:SWeep:RESET",
-     .callback = RP_GenSweepReset,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:SWeep:STATE",
-     .callback = RP_GenSweepState,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:SWeep:STATE?",
-     .callback = RP_GenSweepStateQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:SWeep:FREQ:START",
-     .callback = RP_GenSweepFreqStart,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:SWeep:FREQ:START?",
-     .callback = RP_GenSweepFreqStartQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:SWeep:FREQ:STOP",
-     .callback = RP_GenSweepFreqStop,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:SWeep:FREQ:STOP?",
-     .callback = RP_GenSweepFreqStopQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:SWeep:TIME",
-     .callback = RP_GenSweepTime,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:SWeep:TIME?",
-     .callback = RP_GenSweepTimeQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:SWeep:MODE",
-     .callback = RP_GenSweepMode,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:SWeep:MODE?",
-     .callback = RP_GenSweepModeQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:SWeep:REP:INF",
-     .callback = RP_GenSweepRepInf,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:SWeep:REP:INF?",
-     .callback = RP_GenSweepRepInfQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:SWeep:REP:COUNT",
-     .callback = RP_GenSweepRepCount,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:SWeep:REP:COUNT?",
-     .callback = RP_GenSweepRepCountQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:SWeep:DIR",
-     .callback = RP_GenSweepDir,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:SWeep:DIR?",
-     .callback = RP_GenSweepDirQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    /* DMA mode for Generate */
+    SCPI_CMD("GEN:AXI:START?", RP_GenAxiStartQ),
+    SCPI_CMD("GEN:AXI:SIZE?", RP_GenAxiEndQ),
 
-    {.pattern = "SOUR#:BURS:INITValue",
-     .callback = RP_GenInitValue,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:BURS:INITValue?",
-     .callback = RP_GenInitValueQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    SCPI_CMD("SOUR#:AXI:RESERVE", RP_GenAxiReserveMemory),
+    SCPI_CMD("SOUR#:AXI:RELEASE", RP_GenAxiReleaseMemory),
 
-    {.pattern = "SOUR#:BURS:LASTValue",
-     .callback = RP_GenBurstLastValue,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:BURS:LASTValue?",
-     .callback = RP_GenBurstLastValueQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    SCPI_CMD("SOUR#:AXI:ENable", RP_GenAxiSetEnable),
+    SCPI_CMD("SOUR#:AXI:ENable?", RP_GenAxiGetEnable),
+    SCPI_CMD("SOUR#:AXI:DEC", RP_GenAxiSetDecimationFactor),
+    SCPI_CMD("SOUR#:AXI:DEC?", RP_GenAxiGetDecimationFactor),
+    SCPI_CMD("SOUR#:AXI:SET:CALIB", RP_GenSetAmplitudeAndOffsetOrigin),
+    SCPI_CMD("SOUR#:AXI:OFFSET#:DATA#", RP_GenAxiWriteWaveform),
 
-    {.pattern = "SOUR#:INITValue",
-     .callback = RP_GenInitValue,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:INITValue?",
-     .callback = RP_GenInitValueQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    /* Sweep for Generate */
+    SCPI_CMD("SOUR:SWeep:PAUSE", RP_GenSweepPause),
+    SCPI_CMD("SOUR:SWeep:DEFault", RP_GenSweepDefault),
+    SCPI_CMD("SOUR:SWeep:RESET", RP_GenSweepReset),
+    SCPI_CMD("SOUR#:SWeep:STATE", RP_GenSweepState),
+    SCPI_CMD("SOUR#:SWeep:STATE?", RP_GenSweepStateQ),
+    SCPI_CMD("SOUR#:SWeep:FREQ:START", RP_GenSweepFreqStart),
+    SCPI_CMD("SOUR#:SWeep:FREQ:START?", RP_GenSweepFreqStartQ),
+    SCPI_CMD("SOUR#:SWeep:FREQ:STOP", RP_GenSweepFreqStop),
+    SCPI_CMD("SOUR#:SWeep:FREQ:STOP?", RP_GenSweepFreqStopQ),
+    SCPI_CMD("SOUR#:SWeep:TIME", RP_GenSweepTime),
+    SCPI_CMD("SOUR#:SWeep:TIME?", RP_GenSweepTimeQ),
+    SCPI_CMD("SOUR#:SWeep:MODE", RP_GenSweepMode),
+    SCPI_CMD("SOUR#:SWeep:MODE?", RP_GenSweepModeQ),
+    SCPI_CMD("SOUR#:SWeep:REP:INF", RP_GenSweepRepInf),
+    SCPI_CMD("SOUR#:SWeep:REP:INF?", RP_GenSweepRepInfQ),
+    SCPI_CMD("SOUR#:SWeep:REP:COUNT", RP_GenSweepRepCount),
+    SCPI_CMD("SOUR#:SWeep:REP:COUNT?", RP_GenSweepRepCountQ),
+    SCPI_CMD("SOUR#:SWeep:DIR", RP_GenSweepDir),
+    SCPI_CMD("SOUR#:SWeep:DIR?", RP_GenSweepDirQ),
 
-    {.pattern = "SOUR#:TRig:SOUR",
-     .callback = RP_GenTriggerSource,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:TRig:SOUR?",
-     .callback = RP_GenTriggerSourceQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:TRig:INT",
-     .callback = RP_GenTrigger,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR#:TRig:INT:ONLY",
-     .callback = RP_GenTriggerOnly,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR:TRig:EXT:DEBouncer[:US]",
-     .callback = RP_GenExtTriggerDebouncerUs,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SOUR:TRig:EXT:DEBouncer[:US]?",
-     .callback = RP_GenExtTriggerDebouncerUsQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    SCPI_CMD("SOUR#:BURS:INITValue", RP_GenInitValue),
+    SCPI_CMD("SOUR#:BURS:INITValue?", RP_GenInitValueQ),
+    SCPI_CMD("SOUR#:BURS:LASTValue", RP_GenBurstLastValue),
+    SCPI_CMD("SOUR#:BURS:LASTValue?", RP_GenBurstLastValueQ),
+    SCPI_CMD("SOUR#:INITValue", RP_GenInitValue),
+    SCPI_CMD("SOUR#:INITValue?", RP_GenInitValueQ),
+
+    SCPI_CMD("SOUR#:TRig:SOUR", RP_GenTriggerSource),
+    SCPI_CMD("SOUR#:TRig:SOUR?", RP_GenTriggerSourceQ),
+    SCPI_CMD("SOUR#:TRig:INT", RP_GenTrigger),
+    SCPI_CMD("SOUR#:TRig:INT:ONLY", RP_GenTriggerOnly),
+    SCPI_CMD("SOUR:TRig:EXT:DEBouncer[:US]", RP_GenExtTriggerDebouncerUs),
+    SCPI_CMD("SOUR:TRig:EXT:DEBouncer[:US]?", RP_GenExtTriggerDebouncerUsQ),
 
     /* uart */
-    {.pattern = "UART:INIT",
-     .callback = RP_Uart_Init,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "UART:RELEASE",
-     .callback = RP_Uart_Release,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "UART:SETUP",
-     .callback = RP_Uart_SetSettings,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "UART:BITS",
-     .callback = RP_Uart_BIT_Size,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "UART:BITS?",
-     .callback = RP_Uart_BIT_SizeQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "UART:SPEED",
-     .callback = RP_Uart_Speed,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "UART:SPEED?",
-     .callback = RP_Uart_SpeedQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "UART:STOPB",
-     .callback = RP_Uart_STOP_Bit,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "UART:STOPB?",
-     .callback = RP_Uart_STOP_BitQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "UART:PARITY",
-     .callback = RP_Uart_PARITY,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "UART:PARITY?",
-     .callback = RP_Uart_PARITYQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "UART:TIMEOUT",
-     .callback = RP_Uart_Timeout,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "UART:TIMEOUT?",
-     .callback = RP_Uart_TimeoutQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "UART:WRITE#",
-     .callback = RP_Uart_SendBuffer,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "UART:READ#?",
-     .callback = RP_Uart_ReadBufferQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    SCPI_CMD("UART:INIT", RP_Uart_Init),
+    SCPI_CMD("UART:RELEASE", RP_Uart_Release),
+    SCPI_CMD("UART:SETUP", RP_Uart_SetSettings),
+    SCPI_CMD("UART:BITS", RP_Uart_BIT_Size),
+    SCPI_CMD("UART:BITS?", RP_Uart_BIT_SizeQ),
+    SCPI_CMD("UART:SPEED", RP_Uart_Speed),
+    SCPI_CMD("UART:SPEED?", RP_Uart_SpeedQ),
+    SCPI_CMD("UART:STOPB", RP_Uart_STOP_Bit),
+    SCPI_CMD("UART:STOPB?", RP_Uart_STOP_BitQ),
+    SCPI_CMD("UART:PARITY", RP_Uart_PARITY),
+    SCPI_CMD("UART:PARITY?", RP_Uart_PARITYQ),
+    SCPI_CMD("UART:TIMEOUT", RP_Uart_Timeout),
+    SCPI_CMD("UART:TIMEOUT?", RP_Uart_TimeoutQ),
+    SCPI_CMD("UART:WRITE#", RP_Uart_SendBuffer),
+    SCPI_CMD("UART:READ#?", RP_Uart_ReadBufferQ),
 
     /* led */
-    {.pattern = "LED:MMC",
-     .callback = RP_LED_MMC,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "LED:MMC?",
-     .callback = RP_LED_MMCQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "LED:HB",
-     .callback = RP_LED_HB,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "LED:HB?",
-     .callback = RP_LED_HBQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "LED:ETH",
-     .callback = RP_LED_ETH,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "LED:ETH?",
-     .callback = RP_LED_ETHQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    SCPI_CMD("LED:MMC", RP_LED_MMC),
+    SCPI_CMD("LED:MMC?", RP_LED_MMCQ),
+    SCPI_CMD("LED:HB", RP_LED_HB),
+    SCPI_CMD("LED:HB?", RP_LED_HBQ),
+    SCPI_CMD("LED:ETH", RP_LED_ETH),
+    SCPI_CMD("LED:ETH?", RP_LED_ETHQ),
 
     /* spi */
-    {.pattern = "SPI:INIT",
-     .callback = RP_SPI_Init,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SPI:INIT:DEV",
-     .callback = RP_SPI_InitDev,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SPI:RELEASE",
-     .callback = RP_SPI_Release,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SPI:SETtings:DEFault",
-     .callback = RP_SPI_SetDefault,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SPI:SETtings:SET",
-     .callback = RP_SPI_SetSettings,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SPI:SETtings:GET",
-     .callback = RP_SPI_GetSettings,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    SCPI_CMD("SPI:INIT", RP_SPI_Init),
+    SCPI_CMD("SPI:INIT:DEV", RP_SPI_InitDev),
+    SCPI_CMD("SPI:RELEASE", RP_SPI_Release),
+    SCPI_CMD("SPI:SETtings:DEFault", RP_SPI_SetDefault),
+    SCPI_CMD("SPI:SETtings:SET", RP_SPI_SetSettings),
+    SCPI_CMD("SPI:SETtings:GET", RP_SPI_GetSettings),
 
-    {.pattern = "SPI:SETtings:MODE",
-     .callback = RP_SPI_SetMode,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SPI:SETtings:MODE?",
-     .callback = RP_SPI_GetModeQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SPI:SETtings:CSMODE",
-     .callback = RP_SPI_SetCSMode,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SPI:SETtings:CSMODE?",
-     .callback = RP_SPI_GetCSModeQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SPI:SETtings:SPEED",
-     .callback = RP_SPI_SetSpeed,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SPI:SETtings:SPEED?",
-     .callback = RP_SPI_GetSpeedQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    SCPI_CMD("SPI:SETtings:MODE", RP_SPI_SetMode),
+    SCPI_CMD("SPI:SETtings:MODE?", RP_SPI_GetModeQ),
+    SCPI_CMD("SPI:SETtings:CSMODE", RP_SPI_SetCSMode),
+    SCPI_CMD("SPI:SETtings:CSMODE?", RP_SPI_GetCSModeQ),
+    SCPI_CMD("SPI:SETtings:SPEED", RP_SPI_SetSpeed),
+    SCPI_CMD("SPI:SETtings:SPEED?", RP_SPI_GetSpeedQ),
+    SCPI_CMD("SPI:SETtings:WORD", RP_SPI_SetWord),
+    SCPI_CMD("SPI:SETtings:WORD?", RP_SPI_GetWordQ),
 
-    {.pattern = "SPI:SETtings:WORD",
-     .callback = RP_SPI_SetWord,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SPI:SETtings:WORD?",
-     .callback = RP_SPI_GetWordQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    SCPI_CMD("SPI:MSG:CREATE", RP_SPI_CreateMessage),
+    SCPI_CMD("SPI:MSG:DEL", RP_SPI_DestroyMessage),
+    SCPI_CMD("SPI:MSG:SIZE?", RP_SPI_GetMessageLenQ),
 
-    {.pattern = "SPI:MSG:CREATE",
-     .callback = RP_SPI_CreateMessage,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SPI:MSG:DEL",
-     .callback = RP_SPI_DestroyMessage,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SPI:MSG:SIZE?",
-     .callback = RP_SPI_GetMessageLenQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    SCPI_CMD("SPI:MSG#:TX#", RP_SPI_SetTX),
+    SCPI_CMD("SPI:MSG#:TX#:RX", RP_SPI_SetTXRX),
+    SCPI_CMD("SPI:MSG#:RX#", RP_SPI_SetRX),
+    SCPI_CMD("SPI:MSG#:TX#:CS", RP_SPI_SetTXCS),
+    SCPI_CMD("SPI:MSG#:TX#:RX:CS", RP_SPI_SetTXRXCS),
+    SCPI_CMD("SPI:MSG#:RX#:CS", RP_SPI_SetRXCS),
+    SCPI_CMD("SPI:MSG#:RX?", RP_SPI_GetRXBufferQ),
+    SCPI_CMD("SPI:MSG#:TX?", RP_SPI_GetTXBufferQ),
+    SCPI_CMD("SPI:MSG#:CS?", RP_SPI_GetCSChangeStateQ),
 
-    {.pattern = "SPI:MSG#:TX#",
-     .callback = RP_SPI_SetTX,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SPI:MSG#:TX#:RX",
-     .callback = RP_SPI_SetTXRX,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SPI:MSG#:RX#",
-     .callback = RP_SPI_SetRX,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SPI:MSG#:TX#:CS",
-     .callback = RP_SPI_SetTXCS,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SPI:MSG#:TX#:RX:CS",
-     .callback = RP_SPI_SetTXRXCS,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SPI:MSG#:RX#:CS",
-     .callback = RP_SPI_SetRXCS,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SPI:MSG#:RX?",
-     .callback = RP_SPI_GetRXBufferQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SPI:MSG#:TX?",
-     .callback = RP_SPI_GetTXBufferQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "SPI:MSG#:CS?",
-     .callback = RP_SPI_GetCSChangeStateQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-
-    {.pattern = "SPI:PASS",
-     .callback = RP_SPI_Pass,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    SCPI_CMD("SPI:PASS", RP_SPI_Pass),
 
     /* i2c */
-    {.pattern = "I2C:DEV#",
-     .callback = RP_I2C_Dev,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "I2C:DEV?",
-     .callback = RP_I2C_DevQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "I2C:FMODE",
-     .callback = RP_I2C_ForceMode,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "I2C:FMODE?",
-     .callback = RP_I2C_ForceModeQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    SCPI_CMD("I2C:DEV#", RP_I2C_Dev),
+    SCPI_CMD("I2C:DEV?", RP_I2C_DevQ),
+    SCPI_CMD("I2C:FMODE", RP_I2C_ForceMode),
+    SCPI_CMD("I2C:FMODE?", RP_I2C_ForceModeQ),
 
-    {.pattern = "I2C:Smbus:Read#?",
-     .callback = RP_I2C_SMBUS_ReadQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "I2C:Smbus:Read#:Word?",
-     .callback = RP_I2C_SMBUS_ReadWordQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "I2C:Smbus:Read#:Buffer#?",
-     .callback = RP_I2C_SMBUS_ReadBufferQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "I2C:IOctl:Read:Buffer#?",
-     .callback = RP_I2C_IOCTL_ReadBufferQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    SCPI_CMD("I2C:Smbus:Read#?", RP_I2C_SMBUS_ReadQ),
+    SCPI_CMD("I2C:Smbus:Read#:Word?", RP_I2C_SMBUS_ReadWordQ),
+    SCPI_CMD("I2C:Smbus:Read#:Buffer#?", RP_I2C_SMBUS_ReadBufferQ),
+    SCPI_CMD("I2C:IOctl:Read:Buffer#?", RP_I2C_IOCTL_ReadBufferQ),
 
-    {.pattern = "I2C:Smbus:Write#",
-     .callback = RP_I2C_SMBUS_Write,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "I2C:Smbus:Write#:Word",
-     .callback = RP_I2C_SMBUS_WriteWord,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "I2C:Smbus:Write#:Buffer#",
-     .callback = RP_I2C_SMBUS_WriteBuffer,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "I2C:IOctl:Write:Buffer#",
-     .callback = RP_I2C_IOCTL_WriteBuffer,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    SCPI_CMD("I2C:Smbus:Write#", RP_I2C_SMBUS_Write),
+    SCPI_CMD("I2C:Smbus:Write#:Word", RP_I2C_SMBUS_WriteWord),
+    SCPI_CMD("I2C:Smbus:Write#:Buffer#", RP_I2C_SMBUS_WriteBuffer),
+    SCPI_CMD("I2C:IOctl:Write:Buffer#", RP_I2C_IOCTL_WriteBuffer),
 
     /* can */
-    {.pattern = "CAN:FPGA",
-     .callback = RP_CAN_FpgaEnable,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN:FPGA?",
-     .callback = RP_CAN_FpgaEnableQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:START",
-     .callback = RP_CAN_Start,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:STOP",
-     .callback = RP_CAN_Stop,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:RESTART",
-     .callback = RP_CAN_Restart,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:STATE?",
-     .callback = RP_CAN_StateQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:BITRate",
-     .callback = RP_CAN_Bitrate,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:BITRate:SP",
-     .callback = RP_CAN_BitrateSamplePoint,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:BITRate:SP?",
-     .callback = RP_CAN_BitrateSamplePointQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:BITTiming",
-     .callback = RP_CAN_BitTiming,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:BITTiming?",
-     .callback = RP_CAN_BitTimingQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:BITTiming:Limits?",
-     .callback = RP_CAN_BitTimingLimitsQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:CLOCK?",
-     .callback = RP_CAN_ClockFreqQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:BUS:ERROR?",
-     .callback = RP_CAN_BusErrorCountersQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:Restart:Time",
-     .callback = RP_CAN_RestartTime,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:Restart:Time?",
-     .callback = RP_CAN_RestartTimeQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:MODE",
-     .callback = RP_CAN_ControllerMode,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:MODE?",
-     .callback = RP_CAN_ControllerModeQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:OPEN",
-     .callback = RP_CAN_Open,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:CLOSE",
-     .callback = RP_CAN_Close,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:Send#",
-     .callback = RP_CAN_Send,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:Send#:Timeout#",
-     .callback = RP_CAN_Send,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:Send#:Ext",
-     .callback = RP_CAN_Send,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:Send#:Timeout#:Ext",
-     .callback = RP_CAN_Send,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:Send#:RTR",
-     .callback = RP_CAN_Send,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:Send#:Timeout#:RTR",
-     .callback = RP_CAN_Send,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:Send#:Ext:RTR",
-     .callback = RP_CAN_Send,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:Send#:Timeout#:Ext:RTR",
-     .callback = RP_CAN_Send,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:Read?",
-     .callback = RP_CAN_ReadQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:Read:Timeout#?",
-     .callback = RP_CAN_ReadQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:Filter:Add",
-     .callback = RP_CAN_AddFilter,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:Filter:Remove",
-     .callback = RP_CAN_RemoveFilter,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:Filter:Clear",
-     .callback = RP_CAN_ClearFilter,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:Filter:Set",
-     .callback = RP_CAN_SetFilter,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "CAN#:SHOW:ERROR",
-     .callback = RP_CAN_ShowErrorFrames,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    SCPI_CMD("CAN:FPGA", RP_CAN_FpgaEnable),
+    SCPI_CMD("CAN:FPGA?", RP_CAN_FpgaEnableQ),
+    SCPI_CMD("CAN#:START", RP_CAN_Start),
+    SCPI_CMD("CAN#:STOP", RP_CAN_Stop),
+    SCPI_CMD("CAN#:RESTART", RP_CAN_Restart),
+    SCPI_CMD("CAN#:STATE?", RP_CAN_StateQ),
+    SCPI_CMD("CAN#:BITRate", RP_CAN_Bitrate),
+    SCPI_CMD("CAN#:BITRate:SP", RP_CAN_BitrateSamplePoint),
+    SCPI_CMD("CAN#:BITRate:SP?", RP_CAN_BitrateSamplePointQ),
+    SCPI_CMD("CAN#:BITTiming", RP_CAN_BitTiming),
+    SCPI_CMD("CAN#:BITTiming?", RP_CAN_BitTimingQ),
+    SCPI_CMD("CAN#:BITTiming:Limits?", RP_CAN_BitTimingLimitsQ),
+    SCPI_CMD("CAN#:CLOCK?", RP_CAN_ClockFreqQ),
+    SCPI_CMD("CAN#:BUS:ERROR?", RP_CAN_BusErrorCountersQ),
+    SCPI_CMD("CAN#:Restart:Time", RP_CAN_RestartTime),
+    SCPI_CMD("CAN#:Restart:Time?", RP_CAN_RestartTimeQ),
+    SCPI_CMD("CAN#:MODE", RP_CAN_ControllerMode),
+    SCPI_CMD("CAN#:MODE?", RP_CAN_ControllerModeQ),
+    SCPI_CMD("CAN#:OPEN", RP_CAN_Open),
+    SCPI_CMD("CAN#:CLOSE", RP_CAN_Close),
+    SCPI_CMD("CAN#:Send#", RP_CAN_Send),
+    SCPI_CMD("CAN#:Send#:Timeout#", RP_CAN_Send),
+    SCPI_CMD("CAN#:Send#:Ext", RP_CAN_Send),
+    SCPI_CMD("CAN#:Send#:Timeout#:Ext", RP_CAN_Send),
+    SCPI_CMD("CAN#:Send#:RTR", RP_CAN_Send),
+    SCPI_CMD("CAN#:Send#:Timeout#:RTR", RP_CAN_Send),
+    SCPI_CMD("CAN#:Send#:Ext:RTR", RP_CAN_Send),
+    SCPI_CMD("CAN#:Send#:Timeout#:Ext:RTR", RP_CAN_Send),
+    SCPI_CMD("CAN#:Read?", RP_CAN_ReadQ),
+    SCPI_CMD("CAN#:Read:Timeout#?", RP_CAN_ReadQ),
+    SCPI_CMD("CAN#:Filter:Add", RP_CAN_AddFilter),
+    SCPI_CMD("CAN#:Filter:Remove", RP_CAN_RemoveFilter),
+    SCPI_CMD("CAN#:Filter:Clear", RP_CAN_ClearFilter),
+    SCPI_CMD("CAN#:Filter:Set", RP_CAN_SetFilter),
+    SCPI_CMD("CAN#:SHOW:ERROR", RP_CAN_ShowErrorFrames),
 
     /* LCR */
-
-    {.pattern = "LCR:START",
-     .callback = RP_LCRStart,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "LCR:START:GEN",
-     .callback = RP_LCRStartGen,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "LCR:STOP",
-     .callback = RP_LCRStop,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "LCR:RESET",
-     .callback = RP_LCRReset,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "LCR:MEASURE?",
-     .callback = RP_LCRMeasureQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "LCR:FREQ",
-     .callback = RP_LCRFrequency,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "LCR:FREQ?",
-     .callback = RP_LCRFrequencyQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "LCR:VOLT",
-     .callback = RP_LCRAmplitude,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "LCR:VOLT?",
-     .callback = RP_LCRAmplitudeQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "LCR:VOLT:OFFS",
-     .callback = RP_LCROffset,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "LCR:VOLT:OFFS?",
-     .callback = RP_LCROffsetQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "LCR:SHUNT",
-     .callback = RP_LCRShunt,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "LCR:SHUNT?",
-     .callback = RP_LCRShuntQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "LCR:SHUNT:CUSTOM",
-     .callback = RP_LCRCustomShunt,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "LCR:SHUNT:CUSTOM?",
-     .callback = RP_LCRCustomShuntQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "LCR:SHUNT:MODE",
-     .callback = RP_LCRShuntMode,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "LCR:SHUNT:MODE?",
-     .callback = RP_LCRShuntModeQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "LCR:SHUNT:AUTO",
-     .callback = RP_LCRShuntAuto,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "LCR:CIRCUIT",
-     .callback = RP_LCRMeasSeries,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "LCR:CIRCUIT?",
-     .callback = RP_LCRMeasSeriesQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
-    {.pattern = "LCR:EXT:MODULE?",
-     .callback = RP_LCRCheckExtensionModuleConnectioQ,
-#if USE_COMMAND_TAGS
-     .tag = 0
-#endif
-    },
+    SCPI_CMD("LCR:START", RP_LCRStart),
+    SCPI_CMD("LCR:START:GEN", RP_LCRStartGen),
+    SCPI_CMD("LCR:STOP", RP_LCRStop),
+    SCPI_CMD("LCR:RESET", RP_LCRReset),
+    SCPI_CMD("LCR:MEASURE?", RP_LCRMeasureQ),
+    SCPI_CMD("LCR:FREQ", RP_LCRFrequency),
+    SCPI_CMD("LCR:FREQ?", RP_LCRFrequencyQ),
+    SCPI_CMD("LCR:VOLT", RP_LCRAmplitude),
+    SCPI_CMD("LCR:VOLT?", RP_LCRAmplitudeQ),
+    SCPI_CMD("LCR:VOLT:OFFS", RP_LCROffset),
+    SCPI_CMD("LCR:VOLT:OFFS?", RP_LCROffsetQ),
+    SCPI_CMD("LCR:SHUNT", RP_LCRShunt),
+    SCPI_CMD("LCR:SHUNT?", RP_LCRShuntQ),
+    SCPI_CMD("LCR:SHUNT:CUSTOM", RP_LCRCustomShunt),
+    SCPI_CMD("LCR:SHUNT:CUSTOM?", RP_LCRCustomShuntQ),
+    SCPI_CMD("LCR:SHUNT:MODE", RP_LCRShuntMode),
+    SCPI_CMD("LCR:SHUNT:MODE?", RP_LCRShuntModeQ),
+    SCPI_CMD("LCR:SHUNT:AUTO", RP_LCRShuntAuto),
+    SCPI_CMD("LCR:CIRCUIT", RP_LCRMeasSeries),
+    SCPI_CMD("LCR:CIRCUIT?", RP_LCRMeasSeriesQ),
+    SCPI_CMD("LCR:EXT:MODULE?", RP_LCRCheckExtensionModuleConnectioQ),
 
     SCPI_CMD_LIST_END};
 

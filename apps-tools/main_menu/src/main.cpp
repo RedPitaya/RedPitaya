@@ -1,26 +1,16 @@
 #include <CustomParameters.h>
 #include <DataManager.h>
 
-// #include <dirent.h>
-// #include <net/if.h>
-// #include <signal.h>
-// #include <stdio.h>
-// #include <sys/ioctl.h>
-// #include <sys/socket.h>
-// #include <sys/stat.h>
-// #include <sys/time.h>
-// #include <sys/types.h>
-// #include <unistd.h>
-// #include <cstdio>
-// #include <cstring>
-// #include <fstream>
-// #include <iostream>
-// #include <memory>
-// #include <string>
-
 #include <atomic>
 #include <chrono>
 #include <thread>
+
+#include <pwd.h>
+#include <sys/stat.h>
+#include <sys/sysinfo.h>
+#include <unistd.h>
+#include <filesystem>
+#include <fstream>
 
 #include "common/rp_updater.h"
 #include "common/version.h"
@@ -32,12 +22,19 @@
 // 5 min
 #define SLEEP_TIME 60000 * 5
 
+#define BASE_RATE_PATH getHomeDirectory() + "/.config/redpitaya"
+#define ADC_BASE_RATE_PATH getHomeDirectory() + "/.config/redpitaya/adc_base_rate_" + std::to_string((int)getModel()) + ".conf"
+#define DAC_BASE_RATE_PATH getHomeDirectory() + "/.config/redpitaya/dac_base_rate_" + std::to_string((int)getModel()) + ".conf"
+
 using namespace std::chrono;
 
 std::atomic_bool g_stop = false;
 std::thread* g_updaterReqThread = nullptr;
 
 CStringParameter g_last_release("RP_LAST_RELEASE", CBaseParameter::RO, "", 250);
+
+CIntParameter adc_base_rate("RP_ADC_BASE_RATE", CBaseParameter::RW, 0, 0, 0, INT32_MAX);
+CIntParameter dac_base_rate("RP_DAC_BASE_RATE", CBaseParameter::RW, 0, 0, 0, INT32_MAX);
 
 const char* rp_app_desc(void) {
     return (const char*)"Red Pitaya main menu application.\n";
@@ -81,7 +78,75 @@ int rp_app_init(void) {
             }
         }
     });
+    adc_base_rate.SendValue(rp_HPGetBaseFastADCSpeedHzOrDefault());
+    dac_base_rate.SendValue(rp_HPGetBaseFastDACSpeedHzOrDefault());
     return 0;
+}
+
+auto isDirectory(const std::string& _path) -> bool {
+    struct stat st;
+
+    if (stat(_path.c_str(), &st) == 0) {
+        return st.st_mode & S_IFDIR;
+    }
+
+    return false;
+}
+
+auto createDirectory(const std::string& _path) -> bool {
+    size_t pos = 0;
+
+    for (;;) {
+        pos = _path.find('/', pos);
+
+        if (pos == std::string::npos) {
+            // Create the last directory
+            if (!isDirectory(_path.c_str())) {
+                int mkdir_err = mkdir(_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+                return (mkdir_err == 0) || (mkdir_err == EEXIST);
+            } else {
+                return true;
+            }
+        } else {
+            ++pos;
+            std::string sub_path = _path.substr(0, pos);
+
+            // Create subdirectory
+            if (!isDirectory(sub_path.c_str())) {
+                int mkdir_err = mkdir(sub_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+
+                if (!((mkdir_err == 0) || (mkdir_err == EEXIST))) {
+                    return false;
+                }
+            }
+
+            if (pos >= _path.size()) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+auto getModel() -> rp_HPeModels_t {
+    rp_HPeModels_t c = STEM_125_14_v1_0;
+    if (rp_HPGetModel(&c) != RP_HP_OK) {
+        ERROR_LOG("Can't get board model");
+    }
+    return c;
+}
+
+auto getHomeDirectory() -> std::string {
+    // Use getpwuid
+    char buf[1024];
+    passwd pw;
+    passwd* ppw = nullptr;
+
+    if (getpwuid_r(getuid(), &pw, buf, sizeof(buf), &ppw) == 0) {
+        return pw.pw_dir;
+    }
+    return "";
 }
 
 int rp_app_exit(void) {
@@ -96,26 +161,40 @@ int rp_app_exit(void) {
     return 0;
 }
 
-int rp_set_params(rp_app_params_t*, int) {
-    return 0;
-}
-
-int rp_get_params(rp_app_params_t**) {
-    return 0;
-}
-
-int rp_get_signals(float***, int*, int*) {
-    return 0;
-}
-
 void UpdateParams(void) {
     rp_WS_UpdateParameters(false);
 }
 
-void PostUpdateSignals(void) {}
+void OnNewParams(void) {
+    auto adc_rate_path = ADC_BASE_RATE_PATH;
+    auto dac_rate_path = DAC_BASE_RATE_PATH;
+    if (adc_base_rate.NewValue() != adc_base_rate.Value()) {
+        adc_base_rate.Update();
+        createDirectory(BASE_RATE_PATH);
+        if (adc_base_rate.Value() > 0) {
+            std::ofstream out;
+            out.open(adc_rate_path);
+            if (out.is_open()) {
+                out << adc_base_rate.Value();
+            }
+            out.close();
+        }
+        rp_HPInit();
+        adc_base_rate.SendValue(rp_HPGetBaseFastADCSpeedHzOrDefault());
+    }
 
-void UpdateSignals(void) {}
-
-void OnNewParams(void) {}
-
-void OnNewSignals(void) {}
+    if (dac_base_rate.NewValue() != dac_base_rate.Value()) {
+        dac_base_rate.Update();
+        createDirectory(BASE_RATE_PATH);
+        if (dac_base_rate.Value() > 0) {
+            std::ofstream out;
+            out.open(dac_rate_path);
+            if (out.is_open()) {
+                out << dac_base_rate.Value();
+            }
+            out.close();
+        }
+        rp_HPInit();
+        dac_base_rate.SendValue(rp_HPGetBaseFastDACSpeedHzOrDefault());
+    }
+}
