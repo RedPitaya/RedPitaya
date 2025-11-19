@@ -81,9 +81,9 @@ int rp_app_init(void) {
         max_gain.Value() = gain;
     }
 #ifdef ZIP_DISABLED
-    CDataManager::GetInstance()->SetEnableParamsGZip(false);
-    CDataManager::GetInstance()->SetEnableSignalsGZip(false);
-    CDataManager::GetInstance()->SetEnableBinarySignalsGZip(false);
+//    CDataManager::GetInstance()->SetEnableParamsGZip(false);
+//    CDataManager::GetInstance()->SetEnableSignalsGZip(false);
+//    CDataManager::GetInstance()->SetEnableBinarySignalsGZip(false);
 #endif
     CDataManager::GetInstance()->SetParamInterval(50);
     CDataManager::GetInstance()->SetSignalInterval(50);

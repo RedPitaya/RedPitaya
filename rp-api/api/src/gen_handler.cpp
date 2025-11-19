@@ -498,11 +498,7 @@ int gen_setArbWaveform(rp_channel_t channel, float* data, uint32_t length) {
 
     CHECK_CHANNEL
 
-    float fs = 0;
-    if (rp_HPGetFastDACOutFullScale(channel, &fs) != RP_HP_OK) {
-        ERROR_LOG("Can't get fast DAC out full scale");
-        return RP_NOTS;
-    }
+    float fs = 1;
 
     bool is_sign = false;
     if (rp_HPGetFastDACIsSigned(&is_sign) != RP_HP_OK) {

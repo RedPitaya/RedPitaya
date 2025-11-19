@@ -20,7 +20,6 @@
 #include "rp_hw-profiles.h"
 
 uint8_t bits = rp_HPGetFastDACBitsOrDefault();
-float fs = rp_HPGetHWDACFullScaleOrDefault();
 
 Radix rp_ARBParseRadix(const string& line) {
     string radixStr = line.substr(line.find('=') + 1);
@@ -74,7 +73,7 @@ uint32_t rp_ARBParseValue(const string& token, Radix radix, double* _value) {
             value = value | neg_mask;
         }
         int32_t valueI = (int32_t)value;
-        *_value = (double)valueI / (double)(signValue - 1) * fs;
+        *_value = (double)valueI / (double)(signValue - 1);
         return RP_ARB_FILE_OK;
     } catch (const exception& e) {
         ERROR_LOG("Error parsing value '%s': %s", token.c_str(), e.what())

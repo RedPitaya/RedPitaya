@@ -110,8 +110,8 @@
             },
             yaxes: [{
                 show: false,
-                min: SM.ss_max_gain * -1,
-                max: SM.ss_max_gain,
+                min: -1,
+                max: 1,
                 labelWidth: 5,
                 tickDecimals: 1,
                 //   alignTicksWithAxis: 1,
