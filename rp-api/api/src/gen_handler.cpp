@@ -506,28 +506,28 @@ int gen_setArbWaveform(rp_channel_t channel, float* data, uint32_t length) {
         return RP_NOTS;
     }
 
-    // Check if data is normalized
-    float min = FLT_MAX, max = -FLT_MAX;  // initial values
-    uint32_t i;
-    for (i = 0; i < length; i++) {
-        if (data[i] < min)
-            min = data[i];
-        if (data[i] > max)
-            max = data[i];
-    }
-    if (min < (is_sign ? -fs : 0) || max > fs) {
-        ERROR_LOG("The signal is greater than acceptable.");
-        return RP_ENN;
-    }
+    // // Check if data is normalized
+    // float min = FLT_MAX, max = -FLT_MAX;  // initial values
+    // uint32_t i;
+    // for (i = 0; i < length; i++) {
+    //     if (data[i] < min)
+    //         min = data[i];
+    //     if (data[i] > max)
+    //         max = data[i];
+    // }
+    // if (min < (is_sign ? -fs : 0) || max > fs) {
+    //     ERROR_LOG("The signal is greater than acceptable.");
+    //     return RP_ENN;
+    // }
 
     // Save data
     float* pointer = g_channels[channel].arbitraryData;
 
-    for (i = 0; i < length; i++) {
-        pointer[i] = data[i];
+    for (uint32_t i = 0; i < length; i++) {
+        pointer[i] = data[i] < -fs ? -fs : (data[i] > fs ? fs : data[i]);
     }
 
-    for (i = length; i < DAC_BUFFER_SIZE; i++) {  // clear the rest of the buffer
+    for (uint32_t i = length; i < DAC_BUFFER_SIZE; i++) {  // clear the rest of the buffer
         pointer[i] = 0;
     }
 
