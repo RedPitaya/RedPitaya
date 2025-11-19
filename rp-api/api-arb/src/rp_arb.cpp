@@ -78,22 +78,22 @@ auto getDACChannels() -> uint8_t {
     return c;
 }
 
-bool getOutFullScale(float* f) {
-    auto count = getDACChannels();
-    float z = -1;
-    for (int i = 0; i < count; i++) {
-        float g;
-        if (rp_HPGetFastDACOutFullScale(i, &g) != RP_HP_OK)
-            return false;
-        if (z == -1) {
-            z = g;
-        } else if (z != g) {
-            return false;
-        }
-    }
-    *f = z;
-    return true;
-}
+// bool getOutFullScale(float* f) {
+//     auto count = getDACChannels();
+//     float z = -1;
+//     for (int i = 0; i < count; i++) {
+//         float g;
+//         if (rp_HPGetFastDACOutFullScale(i, &g) != RP_HP_OK)
+//             return false;
+//         if (z == -1) {
+//             z = g;
+//         } else if (z != g) {
+//             return false;
+//         }
+//     }
+//     *f = z;
+//     return true;
+// }
 
 int rp_ARBInit() {
     fs::create_directories(FILE_PATH);
@@ -358,9 +358,9 @@ int rp_ARBLoadToFPGA(rp_channel_t _channel, std::string _sigName) {
 
 int rp_ARBIsValid(std::string _sigName, bool* _valid) {
 
-    float max_gain;
-    if (!getOutFullScale(&max_gain))
-        return RP_ARB_FILE_ERR;
+    float max_gain = 1;
+    // if (!getOutFullScale(&max_gain))
+    //     return RP_ARB_FILE_ERR;
 
     *_valid = false;
     for (uint32_t i = 0; i < g_files.size(); i++) {
