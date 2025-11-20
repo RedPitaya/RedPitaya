@@ -320,7 +320,8 @@ define build_fpga
 	mkdir -p fpga/$(FPGA_VERSION)/$(1)
 	mv fpga/build/* fpga/$(FPGA_VERSION)/$(1)
 
-	cp    fpga/$(FPGA_VERSION)/$(1)/prj/$(1)/out/red_pitaya.bit       $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/$(1)/fpga.bit
+	cp    fpga/$(FPGA_VERSION)/$(1)/prj/$(1)/out/red_pitaya.bin       $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/$(1)/red_pitaya.bin
+	cp    fpga/$(FPGA_VERSION)/$(1)/prj/$(1)/out/red_pitaya.bit       $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/$(1)/red_pitaya.bit
 	cp    fpga/$(FPGA_VERSION)/$(1)/prj/$(1)/sdk/fsbl/executable.elf  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/$(1)/fsbl.elf
 	cp -r fpga/$(FPGA_VERSION)/$(1)/prj/$(1)/sdk/dts                  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/$(1)
 	cp    fpga/$(FPGA_VERSION)/$(1)/prj/$(1)/dts/*                    $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/$(1)/dts/
@@ -329,12 +330,10 @@ define build_fpga
 #fix bug with #address-cells and #size-cells for overlay
 	sed -i 's/#address-cells/\/\/#address-cells/g' fpga/$(FPGA_VERSION)/$(1)/prj/$(1)/sdk/dts/pl.dtsi
 	sed -i 's/#size-cells/\/\/#size-cells/g' fpga/$(FPGA_VERSION)/$(1)/prj/$(1)/sdk/dts/pl.dtsi
-	sed -i 's/red_pitaya.bit.bin/fpga.bit.bin/g' fpga/$(FPGA_VERSION)/$(1)/prj/$(1)/sdk/dts/pl.dtsi
+	sed -i 's/red_pitaya.bin/fpga.bit.bin/g' fpga/$(FPGA_VERSION)/$(1)/prj/$(1)/sdk/dts/pl.dtsi
 	grep -qxF '/include/ "pl_patch.dtsi"' fpga/$(FPGA_VERSION)/$(1)/prj/$(1)/sdk/dts/pl.dtsi || echo '/include/ "pl_patch.dtsi"' >> fpga/$(FPGA_VERSION)/$(1)/prj/$(1)/sdk/dts/pl.dtsi
 
-	$(TMP)/dtc -@ -I dts -O dtb -o $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/$(1)/fpga.dtbo -i fpga/$(FPGA_VERSION)/$(1)/prj/$(1)/dts -i fpga/$(FPGA_VERSION)/$(1)/dts fpga/$(FPGA_VERSION)/$(1)/prj/$(1)/sdk/dts/pl.dtsi
-	echo -n "all:{ $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/$(1)/fpga.bit }" >  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/$(1)/fpga.bif
-	bootgen -image $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/$(1)/fpga.bif -arch zynq -process_bitstream bin -o $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/$(1)/red_pitaya.bit.bin -w
+	dtc -@ -I dts -O dtb -o $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/$(1)/fpga.dtbo -i fpga/$(FPGA_VERSION)/$(1)/prj/$(1)/dts -i fpga/$(FPGA_VERSION)/$(1)/dts fpga/$(FPGA_VERSION)/$(1)/prj/$(1)/sdk/dts/pl.dtsi
 endef
 
 $(INSTALL_DIR)/fpga: $(DTREE_DIR)
@@ -346,7 +345,7 @@ ifneq "$(FPGA_BAREBONE)" ""
 	cp -r fpga/$(FPGA_VERSION)/barebones/dts/*  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
 
 # Build overlay for barebone
-	$(TMP)/dtc $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/led-system.dtso -I dts -O dtb -o $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/led-system.dtbo
+	dtc $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/led-system.dtso -I dts -O dtb -o $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/led-system.dtbo
 
 endif
 
@@ -363,7 +362,7 @@ ifneq "$(FPGA_BAREBONE_250)" ""
 	cp -r fpga/$(FPGA_VERSION)/barebones_250/dts_250/*  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
 
 # Build overlay for barebone
-	$(TMP)/dtc $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/led-system.dtso -I dts -O dtb -o $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/led-system.dtbo
+	dtc $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/led-system.dtso -I dts -O dtb -o $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/led-system.dtbo
 
 endif
 
@@ -374,7 +373,7 @@ ifneq "$(FPGA_BAREBONE_250_A)" ""
 	cp -r fpga/$(FPGA_VERSION)/barebones_250/dts_250a/*  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
 
 # Build overlay for barebone
-	$(TMP)/dtc $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/led-system.dtso -I dts -O dtb -o $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/led-system.dtbo
+	dtc $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/led-system.dtso -I dts -O dtb -o $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/led-system.dtbo
 
 endif
 
@@ -478,8 +477,8 @@ $(FPGA_DIRECTORY): $(DTREE_DIR) $(TMP) $(INSTALL_DIR)
 	cat   $(TMP)/dts/$@/dts/system-top.dts > $(TMP)/dts/$@/build/system-top.dts
 	cat   $(TMP)/dts/$@/dts/fpga.dts >> $(TMP)/dts/$@/build/system-top.dts
 	gcc -I $(TMP)/dts/$@/dts -E -nostdinc -undef -D__DTS__ -x assembler-with-cpp -o $(TMP)/dts/$@/build/system-top.dts.tmp $(TMP)/dts/$@/build/system-top.dts
-	$(TMP)/dtc -@ -I dts -O dtb -o $(TMP)/dts/$@/build/$(DEVICETREE) -i $(TMP)/dts/$@/dts -i $(INSTALL_DIR)/fpga/$@/barebones/dts_rp $(TMP)/dts/$@/build/system-top.dts.tmp
-	$(TMP)/dtc -I dtb -O dts --sort -o $(TMP)/dts/$@/build/dtraw.dts $(TMP)/dts/$@/build/$(DEVICETREE)
+	dtc -@ -I dts -O dtb -o $(TMP)/dts/$@/build/$(DEVICETREE) -i $(TMP)/dts/$@/dts -i $(INSTALL_DIR)/fpga/$@/barebones/dts_rp $(TMP)/dts/$@/build/system-top.dts.tmp
+	dtc -I dtb -O dts --sort -o $(TMP)/dts/$@/build/dtraw.dts $(TMP)/dts/$@/build/$(DEVICETREE)
 	mkdir -p $(INSTALL_DIR)/dts/$@
 	cp -f $(TMP)/dts/$@/build/$(DEVICETREE)  $(INSTALL_DIR)/dts/$@
 	cp -f $(TMP)/dts/$@/build/dtraw.dts      $(INSTALL_DIR)/dts/$@
@@ -503,7 +502,7 @@ devicetree_ub_download:
 $(DEVICETREE_UB): devicetree_ub_download $(DTREE_DIR) $(TMP) $(INSTALL_DIR)
 	echo $@
 	gcc -E -nostdinc -undef -D__DTS__ -x assembler-with-cpp -o $(DEVICETREE_UB_PATH)/system-top.dts.tmp $(DEVICETREE_UB_PATH)/system-top.dts
-	$(TMP)/dtc -@ -I dts -O dtb -o $(DEVICETREE_UB) $(DEVICETREE_UB_PATH)/system-top.dts.tmp
+	dtc -@ -I dts -O dtb -o $(DEVICETREE_UB) $(DEVICETREE_UB_PATH)/system-top.dts.tmp
 
 
 
