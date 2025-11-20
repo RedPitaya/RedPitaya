@@ -38,7 +38,7 @@ export GREET_MSG
 # targets
 ################################################################################
 
-all: dtc_compiler devicetree u-boot linux boot
+all: devicetree u-boot linux boot
 
 ################################################################################
 #
@@ -266,7 +266,7 @@ ifeq ($(MODEL),Z10_V2)
 
 	FPGA_0_94	= $(FPGA_COMMIT)
 	FPGA_BAREBONE = $(FPGA_COMMIT)
-	
+
 	FPGA_MODEL = Z10
 	FPGA_VERSION = z10_125_v2
 endif
@@ -308,7 +308,7 @@ endif
 
 .PHONY: fpga $(INSTALL_DIR)/fpga
 
-fpga: dtc_compiler $(INSTALL_DIR)/fpga
+fpga: $(INSTALL_DIR)/fpga
 
 
 define build_fpga
@@ -458,7 +458,7 @@ FPGA_DIRECTORY = $(patsubst $(INSTALL_DIR)/fpga/%/,%, $(sort $(dir $(wildcard $(
 
 .PHONY: devicetree devicetree-install $(DEVICETREE)
 
-devicetree: devicetree-install dtc_compiler
+devicetree: devicetree-install
 
 $(DTREE_TAR): | $(DL)
 	curl -L $(DTREE_URL) -o $@
@@ -500,7 +500,7 @@ devicetree_ub: $(DEVICETREE_UB)
 devicetree_ub_download:
 	./download_fpga.sh all uboot $(GIT_MODE) $(FPGA_UBOOT) $(GITLAB_TOKEN) uboot
 
-$(DEVICETREE_UB): devicetree_ub_download $(DTREE_DIR) $(TMP) $(INSTALL_DIR) dtc_compiler
+$(DEVICETREE_UB): devicetree_ub_download $(DTREE_DIR) $(TMP) $(INSTALL_DIR)
 	echo $@
 	gcc -E -nostdinc -undef -D__DTS__ -x assembler-with-cpp -o $(DEVICETREE_UB_PATH)/system-top.dts.tmp $(DEVICETREE_UB_PATH)/system-top.dts
 	$(TMP)/dtc -@ -I dts -O dtb -o $(DEVICETREE_UB) $(DEVICETREE_UB_PATH)/system-top.dts.tmp
@@ -586,7 +586,7 @@ $(UBOOT_SCRIPT_1Gb_ram): $(UBOOT_SCRIPT_512Mb_ram)
 
 LINUX = $(LINUX_DIR)/arch/arm/boot/uImage
 
-.PHONY: linux linux_scripts $(LINUX) $(LINUX_DIR) dtc_compiler
+.PHONY: linux linux_scripts $(LINUX) $(LINUX_DIR)
 
 linux: $(LINUX)
 
@@ -613,8 +613,6 @@ ifeq ($(KERNEL_HEADERS),YES)
 endif
 	cp $(LINUX_DIR)/arch/arm/boot/uImage $(INSTALL_DIR)
 
-dtc_compiler: linux_scripts
-	cp -u $(LINUX_DIR)/scripts/dtc/dtc $(TMP)/dtc
 
 
 ################################################################################
