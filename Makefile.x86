@@ -64,8 +64,8 @@ $(INSTALL_DIR):
 
 UBOOT_TAG      = redpitaya-v2022.3
 LINUX_TAG      = branch-redpitaya-v2024.1
-DTREE_TAG      = xilinx_v2022.1
-DTREE_PATH_TAG = xilinx-v2022.1
+DTREE_TAG      = xilinx_v2025.1
+DTREE_PATH_TAG = xilinx-v2025.1
 
 UBOOT_DIR     = $(TMP)/u-boot-xlnx-$(UBOOT_TAG)
 LINUX_DIR     = $(TMP)/linux-xlnx-$(LINUX_TAG)
@@ -314,7 +314,7 @@ fpga: $(INSTALL_DIR)/fpga
 define build_fpga
 	./download_fpga.sh $(FPGA_VERSION) $(1) $(GIT_MODE) $(5) $(GITLAB_TOKEN) build
 	mkdir -p $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/$(1)
-	make -C fpga/build PRJ=$(1) MODEL=$(2) DEFINES=$(3) HWID=$(4) DTS_VER=2022.1
+	make -C fpga/build PRJ=$(1) MODEL=$(2) DEFINES=$(3) HWID=$(4) DTS_VER=2025.1
 
 	rm -rf fpga/$(FPGA_VERSION)/$(1)
 	mkdir -p fpga/$(FPGA_VERSION)/$(1)
