@@ -73,7 +73,7 @@ auto CDataDecimator::precalculateOffset(const float* _data, vsize_t _dataSize) -
     std::lock_guard lock(m_settingsMutex);
     if (_dataSize == 0)
         return -1;
-    if (m_decimationFactor < 1) {
+    if (m_decimationFactor < 1 && m_decimationFactor > 0) {
         double offset = 0;
         double xLen = 1.0 / m_decimationFactor;
         double d1 = _data[_dataSize - 1];  // Pre trigger
@@ -82,12 +82,12 @@ auto CDataDecimator::precalculateOffset(const float* _data, vsize_t _dataSize) -
         double w = d2 - d1;
         double v2 = xLen;
 
-        if (w != 0 && v2 != 0) {
+        if (w != 0 && v2 != 0 && v != 0) {
             double t2 = (v * m_triggerLevel - v * d1) / (w * v2);
-            double t = (v2 * t2) / v;
-            if (t >= 0 || t <= 1 || t2 >= 0 || t2 <= 1) {
-                offset = v2 * t2;
-            }
+            // double t = (v2 * t2) / v;
+            // if (t >= 0 && t <= 1 && t2 >= 0 && t2 <= 1) {
+            offset = v2 * t2;
+            // }
         }
         m_dataOffset = offset;
     } else {

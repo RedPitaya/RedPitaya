@@ -297,8 +297,8 @@
                 chkBox.setAttribute('data-checked', param[param_name].value == 1);
             }
         }
-        if (OSC.taMode['CH' + SW_TM.activeChannel])
-            OSC.taMode['CH' + SW_TM.activeChannel].setInverted(param[param_name].value)
+        if (OSC.taMode['CH' + ch])
+            OSC.taMode['CH' + ch].setInverted(param[param_name].value)
     }
 
     SW_TM.setTraceColor = function(param,param_name){
@@ -320,8 +320,8 @@
 
             $("#SW_TM_COLOR"+colnum+"_INPUT").val(param[param_name].value);
         }
-        if (OSC.taMode['CH' + SW_TM.activeChannel])
-            OSC.taMode['CH' + SW_TM.activeChannel].setColor(colnum,param[param_name].value)
+        if (OSC.taMode['CH' + ch])
+            OSC.taMode['CH' + ch].setColor(colnum,param[param_name].value)
     }
 
 
