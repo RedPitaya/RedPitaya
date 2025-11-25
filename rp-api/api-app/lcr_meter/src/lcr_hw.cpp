@@ -75,7 +75,7 @@ auto CLCRHardware::setI2CShunt(lcr_shunt_t _shunt) -> lcr_error_t {
     if (_shunt == RP_LCR_S_NOT_INIT)
         return RP_LCR_HW_ERROR;
     if (!is_connected) {
-        if (!isExtensionConnected()) {
+        if (!isExtensionConnected(true)) {
             return RP_LCR_HW_MISSING_DEVICE;
         }
     }
