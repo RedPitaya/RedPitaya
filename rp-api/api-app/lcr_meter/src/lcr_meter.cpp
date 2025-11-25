@@ -124,7 +124,10 @@ int lcr_SetPause(bool pause) {
 
 int lcr_SetDefaultValues() {
     if (main_params.shunt_mode == RP_LCR_S_EXTENSION) {
-        ECHECK_LCR_APP(lcr_setRShunt(RP_LCR_S_10));
+        if (lcr_setRShunt(RP_LCR_S_10) != RP_LCR_OK) {
+            main_params.shunt_mode = RP_LCR_S_CUSTOM;
+            lcr_SetCustomShunt(100);
+        }
     } else {
         lcr_SetCustomShunt(100);
     }
