@@ -1741,9 +1741,9 @@
         var base_index = undefined
         for (var i = 0; i < scale_list.length ; i++) {
             if (i < scale_list.length - 1 && scale_list[i] <= scale_value && scale_value <= scale_list[i+1]){
-                base_index = i;
+                base_index = i + (scale_list[i] < scale_value && scale_list[i+1] != undefined ? 1 :0)
             }else if (i == scale_list.length - 1 && scale_list[i] == scale_value){
-                base_index = i;
+                base_index = i + (scale_list[i] < scale_value  && scale_list[i+1] != undefined ? 1 :0)
             }
         }
         var fine_tune_dev = 100

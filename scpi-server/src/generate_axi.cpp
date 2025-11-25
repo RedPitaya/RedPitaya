@@ -223,7 +223,7 @@ scpi_result_t RP_GenAxiWriteWaveform(scpi_t* context) {
         SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Failed to get size of buffer.")
         return SCPI_RES_ERR;
     }
-    if (cmd[0] <= 0 || cmd[0] >= getDACChannels(context)) {
+    if (cmd[0] <= 0 || cmd[0] > getDACChannels(context)) {
         SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Failed to get channel.")
         return SCPI_RES_ERR;
     }
