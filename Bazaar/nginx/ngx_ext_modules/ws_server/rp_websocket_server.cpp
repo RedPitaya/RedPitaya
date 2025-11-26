@@ -10,6 +10,7 @@
 #include <math.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <chrono>
 #include <fstream>
 #include <future>
 #include <iostream>
@@ -95,6 +96,7 @@ rp_websocket_server::rp_websocket_server(struct server_parameters* params) : m_p
     using websocketpp::lib::placeholders::_1;
     m_endpoint.set_open_handler(bind(&rp_websocket_server::on_open, this, ::_1));
     m_endpoint.set_close_handler(bind(&rp_websocket_server::on_close, this, ::_1));
+    m_endpoint.set_fail_handler(bind(&rp_websocket_server::on_fail, this, ::_1));
     m_endpoint.set_http_handler(bind(&rp_websocket_server::on_http, this, ::_1));
     m_endpoint.set_message_handler(bind(&rp_websocket_server::on_message, this, ::_1, ::_2));
     if (params->enable_ws_log) {
@@ -289,6 +291,7 @@ void rp_websocket_server::on_param_timer(websocketpp::lib::error_code const& ec)
         m_endpoint.get_alog().write(websocketpp::log::alevel::app, "Param timer Error: " + ec.message());
         return;
     }
+    static auto lastTimeSend = std::chrono::system_clock::now();
     // If the client does not have time to receive all the data, then we skip the next send until the buffer is cleared.
     for (con_list::iterator it = m_connections.begin(); it != m_connections.end(); ++it) {
         server::connection_ptr con = m_endpoint.get_con_from_hdl(*it);
@@ -300,7 +303,9 @@ void rp_websocket_server::on_param_timer(websocketpp::lib::error_code const& ec)
 
     con_list::iterator it;
     const char* params = m_params->get_params_func();
-    if (strlen(params) == 0) {
+    // The check is necessary for sending an empty message, since without sending data the client breaks the connection after a minute.
+    auto lastSend = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - lastTimeSend).count();
+    if (strlen(params) == 0 && lastSend < 15) {
         set_param_timer();
         return;
     }
@@ -319,16 +324,16 @@ void rp_websocket_server::on_param_timer(websocketpp::lib::error_code const& ec)
         dataSend = buffer.data();
     }
 
-    if (size) {
-        for (it = m_connections.begin(); it != m_connections.end(); ++it) {
-            server::connection_ptr con = m_endpoint.get_con_from_hdl(*it);
-            auto msg = con->get_message(websocketpp::frame::opcode::binary, 0);
-            msg->set_payload("");
-            msg->append_payload(prefix);
-            msg->append_payload(dataSend, size);
-            m_endpoint.send(*it, msg);
-        }
+    for (it = m_connections.begin(); it != m_connections.end(); ++it) {
+        server::connection_ptr con = m_endpoint.get_con_from_hdl(*it);
+        auto msg = con->get_message(websocketpp::frame::opcode::binary, 0);
+        msg->set_payload("");
+        msg->append_payload(prefix);
+        msg->append_payload(dataSend, size);
+        m_endpoint.send(*it, msg);
     }
+    lastTimeSend = std::chrono::system_clock::now();
+
     // set timer for next check
     set_param_timer();
 }
@@ -376,15 +381,20 @@ void rp_websocket_server::on_http(connection_hdl hdl) {
 }
 
 void rp_websocket_server::on_open(connection_hdl hdl) {
-    m_endpoint.get_alog().write(websocketpp::log::alevel::app, "ws server on connection");
+    m_endpoint.get_alog().write(websocketpp::log::alevel::app, "[on_open] ws server on connection");
     m_connections.insert(hdl);
 }
 
+void rp_websocket_server::on_fail(connection_hdl hdl) {
+    m_endpoint.get_alog().write(websocketpp::log::alevel::app, "[on_fail] ws server fail state");
+}
+
 void rp_websocket_server::on_close(connection_hdl hdl) {
-    m_endpoint.get_alog().write(websocketpp::log::alevel::app, "ws server connection closed");
+    m_endpoint.get_alog().write(websocketpp::log::alevel::app, "[on_close] ws server connection closed");
     m_connections.erase(hdl);
 
     if (!m_OnClosed) {
+        m_endpoint.get_alog().write(websocketpp::log::alevel::app, "[on_close] exit(-1)");
         exit(-1);
         m_OnClosed = true;
     }

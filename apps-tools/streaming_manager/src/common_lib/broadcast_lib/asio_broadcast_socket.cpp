@@ -2,6 +2,7 @@
 
 #include "asio.hpp"
 #include "asio_broadcast_socket.h"
+#include "logger_lib/file_logger.h"
 
 #define SOCKET_BUFFER_SIZE 1024
 
@@ -58,8 +59,8 @@ auto CAsioBroadcastSocket::initServer(EMode mode, int sleep_time_ms) -> void {
         std::string model = std::to_string(static_cast<uint8_t>(m_model));
         assert(model.size() == 1);
         std::string buf = m_host + std::string((mode == EMode::AB_SERVER_MASTER ? "M" : "S")) + model;
-        m_pimpl->m_socket->async_send_to(asio::buffer(buf.c_str(), buf.size()), senderEndpoint,
-                                         std::bind(&CAsioBroadcastSocket::handlerSend, this, std::placeholders::_1, std::placeholders::_2));
+        m_pimpl->m_socket->async_send_to(
+            asio::buffer(buf.c_str(), buf.size()), senderEndpoint, std::bind(&CAsioBroadcastSocket::handlerSend, this, std::placeholders::_1, std::placeholders::_2));
     } else {
         errorNotify(error);
     }
@@ -99,6 +100,7 @@ auto CAsioBroadcastSocket::handlerReceive(const asio::error_code& error, size_t 
     } else {
         if (error.value() != 995)  // Mute "The I/O operation has been aborted because of either a thread exit or an application request"
             errorNotify(error);
+        TRACE_SHORT("Error %s (%d)", error.message().c_str(), error.value())
         closeSocket();
     }
 }
@@ -125,7 +127,7 @@ void CAsioBroadcastSocket::handlerSend(const asio::error_code& _error, size_t _b
         std::string model = std::to_string(static_cast<uint8_t>(m_model));
         assert(model.size() == 1);
         std::string buf = m_host + std::string((m_mode == EMode::AB_SERVER_MASTER ? "M" : "S")) + model;
-        m_pimpl->m_socket->async_send_to(asio::buffer(buf.c_str(), buf.size()), senderEndpoint,
-                                         std::bind(&CAsioBroadcastSocket::handlerSend, this, std::placeholders::_1, std::placeholders::_2));
+        m_pimpl->m_socket->async_send_to(
+            asio::buffer(buf.c_str(), buf.size()), senderEndpoint, std::bind(&CAsioBroadcastSocket::handlerSend, this, std::placeholders::_1, std::placeholders::_2));
     }
 }

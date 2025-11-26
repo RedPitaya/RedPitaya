@@ -33,6 +33,8 @@ set(CMAKE_BUILD_RPATH ${r_paths})
 
 FILE(GLOB_RECURSE INC_ALL "*.h")
 
+add_compile_options($<$<CONFIG:Debug>:-DZIP_DISABLED>)
+
 add_library(${PROJECT_NAME} SHARED ${INC_ALL})
 
 if (RP_PLATFORM)
