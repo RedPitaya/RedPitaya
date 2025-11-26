@@ -2,6 +2,7 @@
 #include <time.h>
 #include <cstdlib>
 #include "data_lib/neon_asm.h"
+#include "logger_lib/file_logger.h"
 
 #define HEADER_STR_STR 0xABCDEF
 #define HEADER_COMMAND 0xABCDED
@@ -168,6 +169,7 @@ auto CNetConfigManager::receiveHandler(std::error_code, uint8_t* _buff, size_t _
             m_buffers.removeAtStart(segment_size);
             receivedCommandNotify(command, key);
         } else {
+            TRACE_SHORT("Broken header")
             throw std::runtime_error("Broken header");
         }
     }

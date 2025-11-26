@@ -250,7 +250,11 @@ auto installTermSignalHandler() -> void {
 auto rp_app_init(void) -> int {
     fprintf(stderr, "Loading stream server version %s-%s.\n", VERSION_STR, REVISION_STR);
     installTermSignalHandler();
-
+#ifdef ZIP_DISABLED
+    CDataManager::GetInstance()->SetEnableParamsGZip(false);
+    CDataManager::GetInstance()->SetEnableSignalsGZip(false);
+    CDataManager::GetInstance()->SetEnableBinarySignalsGZip(false);
+#endif
     CDataManager::GetInstance()->SetParamInterval(100);
     g_serverRun = false;
     try {
@@ -597,7 +601,9 @@ void setConfig(bool _force) {
 }
 
 //Update parameters
-void UpdateParams(void) {
+void UpdateParams(void) {}
+
+void UpdateParamsFromWeb(void) {
     try {
         setConfig(false);
         if (ss_start.IsNewValue()) {
@@ -641,7 +647,7 @@ void UpdateParams(void) {
 
 void OnNewParams(void) {
     //Update parameters
-    UpdateParams();
+    UpdateParamsFromWeb();
 }
 
 bool startServer(bool testMode) {
