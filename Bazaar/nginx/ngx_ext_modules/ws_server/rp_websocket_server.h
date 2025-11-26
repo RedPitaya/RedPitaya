@@ -38,6 +38,7 @@ class rp_websocket_server {
     void on_param_timer(websocketpp::lib::error_code const& ec);
     void on_http(connection_hdl hdl);
     void on_open(connection_hdl hdl);
+    void on_fail(connection_hdl hdl);
     void on_close(connection_hdl hdl);
     void on_message(connection_hdl hdl, server::message_ptr msg);
 
