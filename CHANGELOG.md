@@ -1,26 +1,133 @@
-# Beta version (2.00-37)
+# Stable version (2.07-48)
+
+### **FPGA**
+
+*   **New Features:**
+    *   Added a new mode for seamless signal continuation between bursts.
+    *   The main differential is now a split trigger implementation for the 122-16 Z20 board.
+    *   Added support for setting ADC and DAC base frequency when using an external clock.
+    *   Introduced trace logic and improved tracing mode.
+    *   Added commands for mathematical operations on NEON and for querying signals in Nginx.
+
+*   **Fixes & Improvements:**
+    *   Fixed the DC level setting between bursts.
+    *   Resolved a critical bug in the burst mode.
+    *   Corrected an issue with the Nginx/RP-SDK integration.
+    *   Improved timing and synchronization logic.
+    *   Small changes and optimizations for the RP 4ADC project.
+
+### **Ecosystem (Applications & API)**
+
+*   **SCPI Server:**
+    *   **New Commands:** Added `SOUR#:RISE:TIME`, `SOUR#:FALL:TIME`, new DMA/GEN commands, and `rp_GenAxiGetMemoryRegion` function.
+    *   **Fixes:** Resolved a bug in AXI/ASCII mode and issues with BIN/VOLT mode and I2C communication.
+    *   **Improvements:** Enhanced the server for ACQ mode, adding byte order support and error checking.
+
+*   **Signal Generator (ScopegenPro):**
+    *   **New Features:** Added a point mode, initial and last value settings for bursts, and Zoom mode.
+    *   **Visual Overhaul:** Completely changed the graph display logic to use OpenGL for superior rendering.
+    *   **Changes:** Removed phase shift support for ARB signals. Changed the display mode for pulse signals.
+    *   **Fixes:** Resolved a critical bug in burst signal display for ARB signals and issues with Hi-Z mode.
+    *   **Performance:** Significant API performance improvements and UX refinements.
+
+*   **Spectrum Analyzer:**
+    *   **Complete Refactoring:** The entire application has been rebuilt.
+    *   **Performance:** Changed the graph display logic to OpenGL and fixed a bug on slow PCs, resulting in major performance gains.
+    *   **Fixes:** Resolved an issue with pause mode.
+
+*   **Impedance & LCR Analyzer:**
+    *   **New Features:** Added an information dialog, P2P measurement, Zoom mode, and markers to the Impedance Analyzer.
+    *   **Improvements:** Increased the permissible measurement range and enhanced the UI for both LCR and IA.
+    *   **Fixes:** Addressed minor bugs for the 250-12 boards.
+
+*   **Logic Analyzer (LA):**
+    *   **New Protocols:** Added Bit, UART, and CAN decoders, along with comprehensive tests.
+    *   **API & App Refactoring:** Completely refactored the LA API and web application for better performance and usability.
+    *   **UI Improvements:** Changed the settings logic and added a data window filter.
+
+*   **Streaming:**
+    *   **New Libraries:** Added a streaming API library for RPi4 (ARM64) and developed C++ and Python client libraries.
+    *   **New Features:** Introduced 8-bit DAC mode and two conversion modes (WAV, TDMS) in the convert_tool.
+    *   **Fixes:** Resolved critical bugs in DAC streaming, server restarts, and client freezes.
+
+*   **System & Core API:**
+    *   **Redesign:** Complete refactoring of the RP SDK library within NGINX. All web modules have been updated.
+    *   **Calibration:** Refactored the Calibration application and API. Added the ability to disable filters.
+    *   **New Tools & Apps:** Added a toolchain for building `rpsa_client` under ARM64, updated the Updater tool and API, and improved the Profiles tool.
+    *   **Platform Support:** Added support for new boards (125-14 LL v1.2, 4Ch BO, STEM_125-14_TI_v1.3) and enabled split trigger for all supported boards.
+    *   **Documentation:** Updated pinout images and Calib tool help.
+
+---
+
+# Stable version (2.07-43)
+
+### **FPGA**
+
+*   **New Platform Support:**
+    *   Added support for next-generation boards: **Gen2** and **Low Latency (LL)** families (e.g., Z20_250, Z20_125 G2, 65-16 LL).
+    *   Added Daisy chain support and I2C1 for LL boards.
+
+*   **New Features & Modules:**
+    *   Integrated **Frequency Meter** and **Logic Analyzer** into various projects.
+    *   Added calibration for ADC inputs on Z20 boards.
+    *   Implemented a reconstruction filter bypass.
+    *   Added basic functionality for an 8-bit DAC mode.
+    *   Expanded buffer size parameter to 24 bits and increased DMA memory to 32 MB.
+
+*   **Fixes & Core Improvements:**
+    *   Resolved issues with inter-cycle delay in burst mode and inconsistent first/last value implementation.
+    *   Fixed a bug in the read burst logic and improved FIFO timings with output registers.
+    *   Improved DAC bursts in AXI mode, DAC stream timing, and downsizer logic.
+    *   Addressed timing constraints and multi-slave synchronization handling.
+    *   Modified U-Boot and device tree for EMMC support, QSPI configuration, and new board configurations.
+
+### **Ecosystem (Applications & API)**
+
+*   **API & Libraries:**
+    *   **Major Refactoring:** Translated the core RP API to C++ and introduced a memory manager for AXI mode.
+    *   **New Features:** Added DAC-AXI mode, LA API, Clock Frequency Meter, and a new RP-WebSocket API.
+    *   **Python Support:** Released Python APIs for streaming, SCPI, and the Logic Analyzer.
+
+*   **Applications:**
+    *   **Streaming App:** Completely refactored, resulting in greatly increased system performance. Added DAC streaming mode to the web UI.
+    *   **Signal Generator (ScopegenPro):** Fixed bugs with valid buffer size in continuous mode, pre-trigger, and Hi-Z mode. Improved generate API.
+    *   **Oscilloscope & Spectrum:** Fixed X-axis positioning, added axis colors, and resolved issues with empty channel names and Hi-Z mode.
+    *   **LCR Meter:** Refactored with updated math logic and improved UI/UX.
+    *   **Bode Analyzer:** Fixed chart size and refactored cursor functionality with server-side saving.
+
+*   **System & Platform Management:**
+    *   **New OS:** Updated the Linux OS to version 2.06/2.07.
+    *   **New Tools:** Introduced `updater_tool`, `profiles_tool`, `e3_led_controller`, and `e3_i2c` tools.
+    *   **Build System:** Migrated from Makefiles to CMakeLists and upgraded to the C++20 standard.
+    *   **Calibration:** Enhanced the calibration tool and API, adding support for disabling filters and new board profiles.
+    *   **Board Support:** Added and improved support for a wide range of new boards (Gen2, LL, 250-12, 125-14, etc.), including updates to U-Boot scripts, device trees, and memory configurations.
+
+
+
+
+# Stable version (2.00-37)
 
 
 - **Lots of improvements done on WEB apps**
-- **Added new SCPI features like LCR meter** 
+- **Added new SCPI features like LCR meter**
 - **Impedance anlyzer app added to official OS**
 - **PyRPL now works with latest OS**
 
 
-APIs & SCPI Enhancements: 
+APIs & SCPI Enhancements:
 - Added LCR functionality
 - Fix trgger state SCPI commands
 - Output impedance & ext. trigger level setting added for SIGNALlab
 - Other improvements and bugfixes
- 
+
 WEB apps:
- 
+
 - Improved logic to test connection for WEB apps
 
 
 Oscilloscope:
 - XY mode added
-- Improved cursors 
+- Improved cursors
 - Fixed problem with trigger cursor in oscilloscope
 - Added captions to the grid on the X axis
 - Y-axis units
@@ -42,9 +149,9 @@ Impedance analyzer app
 - Will from now on be available in official OS release
 
 
-New Red Pitaya Beta OS can be downloaded for free from here. https://redpitaya.readthedocs.io/en/latest/quickStart/SDcard/SDcard.html     
-Notice that full SD card installation is required and it is recommended to clear browser cache after installation.  
-  
+New Red Pitaya Beta OS can be downloaded for free from here. https://redpitaya.readthedocs.io/en/latest/quickStart/SDcard/SDcard.html
+Notice that full SD card installation is required and it is recommended to clear browser cache after installation.
+
 # Stable version (2.00-35)
 
 - **New WEB Impedance Analyzer app**
@@ -54,11 +161,11 @@ Notice that full SD card installation is required and it is recommended to clear
 
 General
 
-- Support for SIGNALlab 250-12 1.2b 
+- Support for SIGNALlab 250-12 1.2b
 - General performance and stability improvements
 - Fixed a critical bug that prevented OS 2.0 from loading on some boards.
 
-  
+
 APIs & SCPI
 
 - Sweep generator support
@@ -70,13 +177,13 @@ APIs & SCPI
 - Changing freq. doesn’t restart generator anymore
 - Added DMA mode for STEMlab 125-14 4 Inputs
 
-  
+
 WEB apps
 
 - There is a new WEB Impedance Analyzer app available
 - System health status is now also available through WEB interface, it displays voltages and temperature
 - Fine button amplitude scaling button fixed for oscilloscope app
-- Missing ext. trigger level setting added for SIGNALlab 250-12 
+- Missing ext. trigger level setting added for SIGNALlab 250-12
 - Added SDR transceiver app
 - Improvements for AWG manager
 - Fixed 3&4 ch bug in oscilloscope app for STEMlab 125-14 4 Inputs
@@ -86,24 +193,24 @@ WEB apps
 # Stable version (2.00-30)
 
 - **Jupyter Lab is now supported on all Red Pitaya products using common Python API**
-- **Acquisition into DDR is now also supported for all Red Pitaya models** 
+- **Acquisition into DDR is now also supported for all Red Pitaya models**
 - **Streaming is now also supported for STEMlab 125-14 4 Input**
 
 
-General 
+General
 - Added possibility to convert from new calibration to old calibration using caliber tool.
-- External connector descriptions can be opened from the WEB interface 
- 
-APIs & SCPI 
+- External connector descriptions can be opened from the WEB interface
+
+APIs & SCPI
 - Added missing trigger states in SCPI for 4ch.
-- Support for the CAN interface 
+- Support for the CAN interface
 - SCPI server refactoring
 - SCPI server error handling improvement
 - New SCPI commands added like time, date
 - SCPI now supports more decimations
 - Added internal trigger debouncer in API
- 
-WEB apps 
+
+WEB apps
 - A new ARB manager app was implemented for importing custom waveforms for signal generator
 - Interpolation added to Oscilloscope and signal generator app
 - Improved data export for Oscilloscope and signal generator app
@@ -116,29 +223,29 @@ WEB apps
 - Fixed a bug where the buffers were not written to the file after stopping streaming
 
 # Stable version (2.00-23)
-General 
+General
 - Support for old board models
 
 
-APIs & SCPI 
+APIs & SCPI
 - Possibility to acquire >256MB of ADC data into DDR
-- Multi-channel acquisition/generation synchronization through SATA connectors or external triggers 
+- Multi-channel acquisition/generation synchronization through SATA connectors or external triggers
 - New SCPI commands added (SCPI time, board identifier, synchronization and DDR acquisition)
 - SCPI server updated to the latest version
 - Added python wrapper for RP API
-- Other bug fixes and general improvements 
+- Other bug fixes and general improvements
 
 
-WEB apps 
+WEB apps
 - 125-14 4 Input oscilloscope traces and trigger issues are fixed
 - Fixed waterfall and zoom mode in SA app
 - Refactoring UI of oscilloscope app
-- Released WEB apps source code 
+- Released WEB apps source code
 - Logic analyzer bug fixes
-- Other bug fixes and general improvements 
+- Other bug fixes and general improvements
 
 
-# Stable version (2.00-18)    
+# Stable version (2.00-18)
 - Added python wrapper for api (v0.94) (Not for all libs)
 - Updated streaming app for 4-ch boards (Streaming to 4 channels in beta. There are known bugs with calibration parameters.)
 - Fixed bug in calibration for 4-ch boards
@@ -191,7 +298,7 @@ Changes in Linux OS:
 - Burst generation mode added to WEB oscilloscope app
 - SCPI now supports commands to communicate over I2C, UART and SPI bus available on - Red Pitaya ext. connector
 - Added support for RTL8188EU chipset wifi dongles (e.g. Edimax EW-7811Un V2)
-- Other bug fixes and improvements 
+- Other bug fixes and improvements
     - SA cursors step issues fixed
     - burst mode issues fixed
     - SCPI examples and doc. updates
