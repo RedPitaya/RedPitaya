@@ -81,6 +81,8 @@
     OSC.rp_model = "";
     OSC.adc_channes = 2;
     OSC.adc_max_rate = 0;
+    OSC.high_z_mode = false;
+    OSC.gen_max_amp = 0;
     OSC.arb_list = undefined;
     OSC.previousPageUrl = undefined;
     OSC.config.debug = false
@@ -198,11 +200,6 @@
     OSC.lastSignals = [];
 
 
-    OSC.client_id = undefined;
-    OSC.ping = undefined;
-    OSC.nginx_live = false;
-    OSC.nginx_live_timer = undefined;
-
     var g_counter = 0;
     var g_PacketsRecv = 0;
     OSC.g_CpuLoad = 100.0;
@@ -212,10 +209,6 @@
 
     OSC.time_offset = 0;
     OSC.time_scale = 0;
-
-    OSC.checkStatusTimer = undefined;
-    OSC.changeStatusForRestart = false;
-    OSC.changeStatusStep = 0;
 
 
     $.preloadImages = function() {
@@ -241,32 +234,31 @@
         'ch4-offset-arrow.png'
     );
 
-    // Starts the oscilloscope application on server
     OSC.startApp = function() {
         $.ajax({
             url: OSC.config.start_app_url,
+            type: 'GET',
             timeout: 5000
-         }).done(function(dresult) {
-            if (dresult.status == 'OK') {
+        }).done(function(res) {
+            if (res.status == 'OK') {
                 try {
                     OSC.connectWebSocket();
+                    RP_CLIENT.connectWebSocket();
                 } catch (e) {
-                    setTimeout(OSC.startApp(), 2000);
+                    setTimeout(OSC.startApp, 2000);
                 }
-            } else if (dresult.status == 'ERROR') {
-                console.log(dresult.reason ? dresult.reason : 'Could not start the application (ERR1)');
-                setTimeout(OSC.startApp(), 2000);
+            } else if (res.status == 'ERROR') {
+                console.log(res.reason ? res.reason : 'Could not start the application (ERR1)');
+                setTimeout(OSC.startApp, 2000);
             } else {
                 console.log('Could not start the application (ERR2)');
-                setTimeout(OSC.startApp(), 2000);
+                setTimeout(OSC.startApp, 2000);
             }
-        })
-        .fail(function() {
+        }).fail(function(msg) {
             console.log('Could not start the application (ERR3)');
-                setTimeout(OSC.startApp(), 2000);
-        })
+            setTimeout(OSC.startApp, 2000);
+        });
     };
-
 
     Date.prototype.format = function(mask, utc) {
         return dateFormat(this, mask, utc);
@@ -314,7 +306,6 @@
     var parametersHandler = function() {
         if (OSC.parameterStack.length > 0) {
             var p = performance.now();
-            OSC.client_log(OSC.parameterStack.length)
             var params = [...OSC.parameterStack]
             var pack_params = []
             for( var i = 0 ; i < params.length; i++){
@@ -336,9 +327,9 @@
         $('#throughput_view2').text((OSC.compressed_data / 1024).toFixed(2) + "kB/s");
         $('#cpu_load').text(OSC.g_CpuLoad.toFixed(2) + "%");
         $('#cpu_temp').text(OSC.g_Temperature.toFixed(0));
-        $('#totalmem_view').text((OSC.g_TotalMemory / (1024 * 1024)).toFixed(2) + "Mb");
-        $('#freemem_view').text((OSC.g_FreeMemory / (1024 * 1024)).toFixed(2) + "Mb");
-        $('#usagemem_view').text(((OSC.g_TotalMemory - OSC.g_FreeMemory) / (1024 * 1024)).toFixed(2) + "Mb");
+        $('#totalmem_view').text((OSC.g_TotalMemory / (1024 * 1024)).toFixed(2) + "MB");
+        $('#freemem_view').text((OSC.g_FreeMemory / (1024 * 1024)).toFixed(2) + "MB");
+        $('#usagemem_view').text(((OSC.g_TotalMemory - OSC.g_FreeMemory) / (1024 * 1024)).toFixed(2) + "MB");
         if ($('#connection_icon').attr('src') !== '../assets/images/good_net.png')
             $('#connection_icon').attr('src', '../assets/images/good_net.png');
         $('#connection_meter').attr('title', 'It seems like your connection is ok');
@@ -363,112 +354,18 @@
         OSC.refresh_times = [];
     }
 
-
-    OSC.reloadPage = function() {
-        $.ajax({
-            method: "GET",
-            url: "/get_client_id",
-            timeout: 2000
-        }).done(function(msg) {
-            if (msg.trim() === OSC.client_id) {
-                OSC.client_log("Need reload")
-                location.reload();
-            } else {
-                OSC.client_log("Set user lost")
-                $('body').addClass('connection_lost');
-                $('body').removeClass('user_lost');
-                OSC.stopCheckStatus();
-            }
-        }).fail(function(msg) {
-            console.log(msg);
-            $('body').removeClass('connection_lost');
-        });
-    }
-
-    OSC.startCheckStatus = function() {
-        if (OSC.checkStatusTimer === undefined) {
-            OSC.changeStatusStep = 0;
-            OSC.client_log("Set status step 0 (Need check status)")
-            OSC.checkStatusTimer = setInterval(OSC.checkStatus, 5000);
-        }
-    }
-
-    OSC.stopCheckStatus = function() {
-        if (OSC.checkStatusTimer !== undefined) {
-            clearInterval(OSC.checkStatusTimer);
-            OSC.checkStatusTimer = undefined;
-        }
-    }
-
-    OSC.startCheckNginxStatus = function() {
-        if (OSC.nginx_live_timer === undefined) {
-            OSC.nginx_live_timer = setInterval(function(){
-                $.ajax({
-                    method: "GET",
-                    url: "/check_nginx_live",
-                    timeout: 2000
-                }).done(function(msg) {
-                    OSC.nginx_live = true
-                }).fail(function(msg) {
-                    OSC.nginx_live = false
-                });
-            }, 2000);
-        }
-    }
-
-    OSC.stopCheckNginxStatus = function() {
-        if (OSC.nginx_live_timer !== undefined) {
-            clearInterval(OSC.nginx_live_timer);
-            OSC.nginx_live_timer = undefined;
-        }
-    }
-
-    OSC.checkStatus = function() {
-        if (OSC.params.orig["RP_CLIENT_PING"] != undefined){
-            if (OSC.ping != OSC.params.orig["RP_CLIENT_PING"].value){
-                OSC.stopCheckNginxStatus()
-                switch (OSC.changeStatusStep) {
-                    case 0:
-                        OSC.changeStatusStep = 1;
-                        OSC.client_log("Set status step 1 (Client connected)")
-                        break;
-                }
-            }else{
-                OSC.startCheckNginxStatus()
-                $('body').removeClass('connection_lost');
-                switch (OSC.changeStatusStep) {
-                    case 0: // Do nothing, since after the timer started the data did not arrive.
-                        OSC.changeStatusStep = -1;
-                        OSC.client_log("Set status step -1 (Do nothing, since after the timer started the data did not arrive.)")
-                        break;
-                    case 1: // Go to the connection restoration check state.
-                        OSC.changeStatusStep = 2;
-                        OSC.client_log("Set status step 2 (Go to the connection restoration check state.)")
-                        break;
-                }
-            }
-            OSC.ping = OSC.params.orig["RP_CLIENT_PING"].value
-            OSC.client_log("Check RP status")
-        }
-
-        if (OSC.changeStatusStep == 2 && OSC.nginx_live){
-            OSC.reloadPage();
-        }
-        OSC.client_log("checkStatus")
-    }
-
     setInterval(performanceHandler, 1000);
     setInterval(guiHandler, 2);
     setInterval(parametersHandler, 2);
 
-    OSC.setModel = function(_value) {
+    OSC.setModel = function(_value,params) {
         if (OSC.rp_model === "") {
             console.log("Model",_value.value)
             $('#BODY').load((_value.value === "Z20_125_4CH" ? "4ch_adc.html" : "2ch_adc.html"), function() {
                 $("#back_button").attr("href", OSC.previousPageUrl)
                 OSC.rp_model = _value.value;
                 console.log( "Load was performed." );
-
+                initImageLoaders();
                 const ob = new ResizeObserver(function(entries) {
                     OSC.updateJoystickPosition();
                 });
@@ -479,6 +376,7 @@
                 if (OSC.arb_list !== undefined)
                     OSC.updateARBFunc(OSC.arb_list)
                 OSC.initUI();
+                OSC.initUIItems(params);
                 OSC.initCursors();
                 OSC.initCursorsXY();
                 OSC.initOSCHandlers();
@@ -526,10 +424,6 @@
                 OSC.state.socket_opened = true;
                 OSC.unexpectedClose = true;
                 OSC.startTime = performance.now();
-                $('body').addClass('loaded');
-                $('body').addClass('connection_lost');
-                $('body').addClass('user_lost');
-                OSC.startCheckStatus();
                 OSC.params.local['RP_SIGNAL_PERIOD'] = { value: 50 };
                 OSC.sendParams();
             };
@@ -538,15 +432,12 @@
                 OSC.state.socket_opened = false;
                 $('#graphs .plot').hide(); // Hide all graphs
                 OSC.client_log('Socket closed');
-                if (OSC.unexpectedClose == true) {
-                    setTimeout(OSC.reloadPage, 2000);
-                }
+                setTimeout(RP_CLIENT.reloadPage, 2000);
             };
 
             OSC.ws.onerror = function(ev) {
-                if (!OSC.state.socket_opened)
-                    setTimeout(OSC.startApp(), 2000);
-                OSC.client_log('Websocket error: ', ev);
+                OSC.client_log('Websocket error: ', ev)
+                setTimeout(RP_CLIENT.reloadPage, 2000);;
             };
 
             var last_time = undefined;
@@ -777,6 +668,12 @@
     OSC.param_callbacks["SOUR1_SWEEP_MODE"] = OSC.updateGenSweepMode;
     OSC.param_callbacks["SOUR2_SWEEP_MODE"] = OSC.updateGenSweepMode;
 
+    OSC.param_callbacks["SOUR1_SWEEP_REP"] = OSC.updateGenSweepRep;
+    OSC.param_callbacks["SOUR2_SWEEP_REP"] = OSC.updateGenSweepRep;
+
+    OSC.param_callbacks["SOUR1_SWEEP_INF"] = OSC.updateGenSweepInf;
+    OSC.param_callbacks["SOUR2_SWEEP_INF"] = OSC.updateGenSweepInf;
+
     OSC.param_callbacks["SOUR1_SWEEP_DIR"] = OSC.updateGenSweepMode;
     OSC.param_callbacks["SOUR2_SWEEP_DIR"] = OSC.updateGenSweepMode;
 
@@ -791,9 +688,6 @@
 
     OSC.param_callbacks["SOUR1_BURST_REP"] = OSC.updateGenBurstRep;
     OSC.param_callbacks["SOUR2_BURST_REP"] = OSC.updateGenBurstRep;
-
-    OSC.param_callbacks["SOUR1_BURST_INF"] = OSC.updateGenBurstInf;
-    OSC.param_callbacks["SOUR2_BURST_INF"] = OSC.updateGenBurstInf;
 
     OSC.param_callbacks["SOUR1_BURST_INF"] = OSC.updateGenBurstInf;
     OSC.param_callbacks["SOUR2_BURST_INF"] = OSC.updateGenBurstInf;
@@ -820,6 +714,11 @@
     OSC.param_callbacks["OSC_CH2_IN_GAIN"] = OSC.ch2SetGain;
     OSC.param_callbacks["OSC_CH3_IN_GAIN"] = OSC.ch3SetGain;
     OSC.param_callbacks["OSC_CH4_IN_GAIN"] = OSC.ch4SetGain;
+
+    OSC.param_callbacks["OSC_CH1_IN_FILTER"] = OSC.ch1SetBypassFilter;
+    OSC.param_callbacks["OSC_CH2_IN_FILTER"] = OSC.ch2SetBypassFilter;
+    OSC.param_callbacks["OSC_CH3_IN_FILTER"] = OSC.ch3SetBypassFilter;
+    OSC.param_callbacks["OSC_CH4_IN_FILTER"] = OSC.ch4SetBypassFilter;
 
     OSC.param_callbacks["OSC_CH1_IN_AC_DC"] = OSC.ch1SetACDC;
     OSC.param_callbacks["OSC_CH2_IN_AC_DC"] = OSC.ch2SetACDC;
@@ -940,6 +839,14 @@
             OSC.adc_max_rate = new_params['ADC_RATE'].value;
         }
 
+        if (new_params['SOUR_IMPEDANCE_Z_MODE']){
+            OSC.high_z_mode = new_params['SOUR_IMPEDANCE_Z_MODE'].value;
+        }
+
+        if (new_params['SOUR_VOLT_MAX']){
+            OSC.gen_max_amp = new_params['SOUR_VOLT_MAX'].value;
+        }
+
         if (new_params['ARB_LIST'] && OSC.arb_list === undefined){
             OSC.arb_list = new_params['ARB_LIST'].value;
             if (OSC.arb_list !== "")
@@ -967,7 +874,7 @@
 
 
         if (new_params['RP_MODEL_STR']){
-            if (!OSC.setModel(new_params['RP_MODEL_STR']))
+            if (!OSC.setModel(new_params['RP_MODEL_STR'],new_params))
                 return
         }else{
             if (OSC.rp_model === ""){
@@ -1251,6 +1158,11 @@
             if (id.startsWith("OSC_CH"+i+"_IN_GAIN")){
                 id = "OSC_CH"+i+"_IN_GAIN"
             }
+            
+            if (id.startsWith("OSC_CH"+i+"_IN_FILTER")){
+                id = "OSC_CH"+i+"_IN_FILTER"
+            }
+
             if (id.startsWith("OSC_CH"+i+"_IN_AC_DC")){
                 id = "OSC_CH"+i+"_IN_AC_DC"
             }
@@ -1895,28 +1807,6 @@ $(function() {
         window.location.reload(true);
     }
 
-
-    OSC.client_id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        var r = Math.random() * 16 | 0,
-            v = c == 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-
-    $.ajax({
-        url: '/set_client_id', //Server script to process data
-        type: 'POST',
-        //Ajax events
-        //beforeSend: beforeSendHandler,
-        success: function(e) { console.log(e); },
-        error: function(e) { console.log(e); },
-        // Form data
-        data: OSC.client_id,
-        //Options to tell jQuery not to process data or worry about content-type.
-        cache: false,
-        contentType: false,
-        processData: false
-    });
-
     $('#modal-warning').hide();
 
 
@@ -1938,13 +1828,12 @@ $(function() {
     Help.init(helpListScope);
     Help.setState("idle");
 
-    // Everything prepared, start application
-    OSC.startApp();
-
     OSC.previousPageUrl = document.referrer;
     console.log(`Previously visited page URL: ${OSC.previousPageUrl}`);
     const currentUrl = window.location.href;
     if (currentUrl === OSC.previousPageUrl || OSC.previousPageUrl === ''){
         OSC.previousPageUrl = '/'
     }
+
+    setTimeout(OSC.startApp,2000)
 });

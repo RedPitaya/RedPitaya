@@ -27,9 +27,7 @@
 //Bode analyser
 (function(BA, $, undefined) {
 
-
-    BA.scale = true;
-    BA.curGraphScale = true;
+    BA.curGraphScale = false;
     BA.param_callbacks = {};
 
     // App state
@@ -61,7 +59,7 @@
     // Other global variables
     BA.ws = null;
 
-    BA.running = true;
+    BA.running = false;
     BA.calibrating = false;
     BA.unexpectedClose = false;
 
@@ -83,15 +81,6 @@
         z1: 0.33,
         z2: 0.66
     };
-
-    BA.graphSize = {
-        left: 0,
-        right: 0,
-        top: 0,
-        bottom: 0,
-    };
-
-
 
     //Write email
     BA.formEmail = function() {
@@ -167,7 +156,7 @@
     }
 
     // Draws grid on the lowest canvas layer
-    BA.drawGrid = function() {
+    BA.setCanvasSize = function() {
         var canvas_width = $('#main').width() - 90;
         var canvas_height = $('#main').height() - 2;// Math.round(canvas_width / 2);
 
@@ -181,104 +170,7 @@
         return;
     };
 
-    BA.enableX = function(cursor_name, new_params) {
-        var old_params = $.extend(true, {}, CLIENT.params.old);
-        if (!BA.state.cursor_dragging && !BA.state.mouseover) {
-            var x = (cursor_name == 'BA_CURSOR_X1' ? 'x1' : 'x2');
-
-            if (new_params[cursor_name].value) {
-                $('#cur_' + x + '_arrow, #cur_' + x + ', #cur_' + x + '_info').show();
-            } else {
-                $('#cur_' + x + '_arrow, #cur_' + x + ', #cur_' + x + '_info').hide();
-            }
-            BA.updateXLinesAndArrows();
-        }
-    }
-
-    BA.moveX = function(ui) {
-
-        if (ui.helper[0].id == 'cur_x1_arrow') {
-            BA.cursorsRelative.x1 = ($("#cur_x1_arrow").offset().left - BA.graphSize.left) / (BA.graphSize.right - BA.graphSize.left);
-            if (BA.cursorsRelative.x1 < 0)
-                BA.cursorsRelative.x1 = 0;
-            if (BA.cursorsRelative.x1 > 1)
-                BA.cursorsRelative.x1 = 1;
-
-        } else if (ui.helper[0].id == 'cur_x2_arrow') {
-            BA.cursorsRelative.x2 = ($("#cur_x2_arrow").offset().left - BA.graphSize.left) / (BA.graphSize.right - BA.graphSize.left);
-            if (BA.cursorsRelative.x2 < 0)
-                BA.cursorsRelative.x2 = 0;
-            if (BA.cursorsRelative.x2 > 1)
-                BA.cursorsRelative.x2 = 1;
-        }
-        BA.updateXLinesAndArrows();
-    }
-
-    BA.enableY = function(cursor_name, new_params) {
-        var old_params = $.extend(true, {}, CLIENT.params.old);
-        if (!BA.state.cursor_dragging && !BA.state.mouseover) {
-            var y = (cursor_name == 'BA_CURSOR_Y1' ? 'y1' : 'y2');
-
-            if (new_params[cursor_name].value) {
-                $('#cur_' + y + '_arrow, #cur_' + y + ', #cur_' + y + '_info').show();
-            } else {
-                $('#cur_' + y + '_arrow, #cur_' + y + ', #cur_' + y + '_info').hide();
-            }
-            BA.updateYLinesAndArrows();
-        }
-    }
-
-    BA.moveY = function(ui) {
-
-        if (ui.helper[0].id == 'cur_y1_arrow') {
-            BA.cursorsRelative.y1 = ($("#cur_y1_arrow").offset().top - BA.graphSize.top) / (BA.graphSize.bottom - BA.graphSize.top);
-            if (BA.cursorsRelative.y1 < 0)
-                BA.cursorsRelative.y1 = 0;
-            if (BA.cursorsRelative.y1 > 1)
-                BA.cursorsRelative.y1 = 1;
-
-        } else if (ui.helper[0].id == 'cur_y2_arrow') {
-            BA.cursorsRelative.y2 = ($("#cur_y2_arrow").offset().top - BA.graphSize.top) / (BA.graphSize.bottom - BA.graphSize.top);
-            if (BA.cursorsRelative.y2 < 0)
-                BA.cursorsRelative.y2 = 0;
-            if (BA.cursorsRelative.y2 > 1)
-                BA.cursorsRelative.y2 = 1;
-        }
-        BA.updateYLinesAndArrows();
-    }
-
-    BA.enableZ = function(cursor_name, new_params) {
-        var old_params = $.extend(true, {}, CLIENT.params.old);
-        if (!BA.state.cursor_dragging && !BA.state.mouseover) {
-            var z = (cursor_name == 'BA_CURSOR_Z1' ? 'z1' : 'z2');
-
-            if (new_params[cursor_name].value) {
-                $('#cur_' + z + '_arrow, #cur_' + z + ', #cur_' + z + '_info').show();
-            } else {
-                $('#cur_' + z + '_arrow, #cur_' + z + ', #cur_' + z + '_info').hide();
-            }
-            BA.updateZLinesAndArrows();
-        }
-    }
-
-    BA.moveZ = function(ui) {
-
-        if (ui.helper[0].id == 'cur_z1_arrow') {
-            BA.cursorsRelative.z1 = ($("#cur_z1_arrow").offset().top - BA.graphSize.top) / (BA.graphSize.bottom - BA.graphSize.top);
-            if (BA.cursorsRelative.z1 < 0)
-                BA.cursorsRelative.z1 = 0;
-            if (BA.cursorsRelative.z1 > 1)
-                BA.cursorsRelative.z1 = 1;
-
-        } else if (ui.helper[0].id == 'cur_z2_arrow') {
-            BA.cursorsRelative.z2 = ($("#cur_z2_arrow").offset().top - BA.graphSize.top) / (BA.graphSize.bottom - BA.graphSize.top);
-            if (BA.cursorsRelative.z2 < 0)
-                BA.cursorsRelative.z2 = 0;
-            if (BA.cursorsRelative.z2 > 1)
-                BA.cursorsRelative.z2 = 1;
-        }
-        BA.updateZLinesAndArrows();
-    }
+   
 
     function funcxTickFormat(val, axis) {
 
@@ -334,7 +226,7 @@
         for (var i = 0; i < one_signal.size; i++) {
             var freq = startFreq + i * step;
             var samp_val = one_signal.value[i];
-            if (BA.scale) {
+            if (BA.curGraphScale) {
                 var a = Math.log10(startFreq);
                 var b = Math.log10(endFreq);
                 var c = (b - a) / (steps - 1);
@@ -411,27 +303,157 @@
         }
     }
 
+    BA.resizeCursorsHolder = function(){
+        if (BA.graphCache !== undefined){
+            const offset = BA.graphCache.plot.getPlotOffset()
+            const w = BA.graphCache.plot.width()
+            const h = BA.graphCache.plot.height()
+            var ch = $('#cursors_holder');
+            ch.css('top', offset.top - 2)
+            ch.css('left', offset.left - 2)
+            ch.css('width', w + 4)
+            ch.css('height', h + 4)   
+            ch.show()
+        }
+    }
+
+    function generateLogarithmicTicks(min, max, minTicks, maxTicks) {
+        const ticks = [];
+        const startDecade = Math.floor(Math.log10(min));
+        const endDecade = Math.floor(Math.log10(max));
+        
+        // const multipliers = [1, 2, 3, 4 , 5, 6 , 7 , 8 ,9 ];
+        const multipliers = [1, 2, 3,  5,  7 , 8.5 ];
+        
+        for (let decade = startDecade; decade <= endDecade; decade++) {
+            for (const mult of multipliers) {
+                const freq = mult * Math.pow(10, decade);
+                if (freq >= min && freq <= max) {
+                    ticks.push(Math.round(freq));
+                }
+            }
+        }
+        
+        if (!ticks.includes(Math.round((max)))) {
+            ticks.push(Math.round(max));
+        }
+        
+        return ticks.sort((a, b) => a - b);
+    }
+
+    function generateLogarithmicPower2Ticks(min, max) {
+        const result = [];
+        
+        let current = Math.pow(2, Math.ceil(Math.log2(min)));
+        if (current / 2 >= min) {
+            current = current / 2;
+        }
+        
+        while (current <= max) {
+            if (current >= min) {
+                result.push(Math.round(current));
+            }
+            current *= 2
+        }
+        
+        if (result[0] !== min) result.unshift(Math.round(min));
+        if (result[result.length - 1] !== max) result.push(Math.round(max));
+        
+        return result;
+    }
+
+    function generatePowerOf10Scale(min, max) {
+        const result = [];
+        
+        let current = Math.pow(10, Math.ceil(Math.log10(min)));
+        if (current / 10 >= min) {
+            current = current / 10;
+        }
+        
+        while (current <= max) {
+            if (current >= min) {
+                result.push(Math.round(current));
+            }
+            current *= 2.5
+        }
+        
+        if (result[0] !== min) result.unshift(Math.round(min));
+        if (result[result.length - 1] !== max) result.push(Math.round(max));
+        
+        return result;
+    }
+
+    function generateRoundedLinearScale(min, max, targetSteps = 10) {
+        if (min >= max) throw new Error("The minimum value must be less than the maximum");
+
+        const range = max - min;
+        let roughStep = range / targetSteps;
+        
+        const magnitude = Math.pow(10, Math.floor(Math.log10(roughStep)));
+        const normalizedStep = roughStep / magnitude;
+        
+        let stepMultiplier;
+        if (normalizedStep <= 1.5) {
+            stepMultiplier = 1;
+        } else if (normalizedStep <= 3) {
+            stepMultiplier = 2;
+        } else {
+            stepMultiplier = 5;
+        }
+        
+        const step = stepMultiplier * magnitude;
+        
+        const start = Math.floor(min / step) * step;
+        const end = Math.ceil(max / step) * step;
+        
+        const result = [];
+        for (let value = start; value <= end + Number.EPSILON; value += step) {
+            if (value >= min - Number.EPSILON && value <= max + Number.EPSILON) {
+                result.push(Math.round(value));
+            }
+        }
+        
+        if (result.length === 0 || result[0] > min) result.unshift(Math.round(min));
+        if (result[result.length - 1] < max) result.push(Math.round(max));
+        
+        return result;
+    }
+
+    function getXAxisScale() {
+        var xMin = CLIENT.getValue("BA_START_FREQ")
+        var xMax = CLIENT.getValue("BA_END_FREQ")
+        //var steps = CLIENT.getValue("BA_STEPS")
+        var t = [];
+        const xscale = CLIENT.getValue("BA_X_SCALE")
+        if (xscale !== undefined && xMin !== undefined && xMax !== undefined){
+            t = generateRoundedLinearScale(xMin,xMax)
+            if (xscale === 1){
+                t = generateLogarithmicTicks(xMin,xMax)
+            }
+            if (xscale === 2){
+                t = generateLogarithmicPower2Ticks(xMin,xMax)
+            }
+            if (xscale === 3){
+                t = generatePowerOf10Scale(xMin,xMax)
+            }
+        }
+        return t
+    }
 
     BA.initPlot = function(update) {
         delete BA.graphCache;
         $('#bode_plot').remove();
 
+        var yMin1 = CLIENT.getValue("BA_GAIN_MIN")
+        var yMax1 = CLIENT.getValue("BA_GAIN_MAX")
 
-        var yMin1 = parseFloat($('#BA_GAIN_MIN').val()) * 1;
-        var yMax1 = parseFloat($('#BA_GAIN_MAX').val()) * 1;
+        var yMin2 = CLIENT.getValue("BA_PHASE_MIN")
+        var yMax2 = CLIENT.getValue("BA_PHASE_MAX")
 
-        var yMin2 = parseFloat($('#BA_PHASE_MIN').val()) * 1;
-        var yMax2 = parseFloat($('#BA_PHASE_MAX').val()) * 1;
 
         BA.graphCache = {};
         BA.graphCache.elem = $('<div id="bode_plot" class="plot" />').css($('#graph_bode_grid').css(['height', 'width'])).appendTo('#graph_bode');
-
-        var t = [];
-        if ($("#BA_SCALE1").hasClass("active"))
-            t = [1, 10, 100, 200, 400, 600, 800, 1000, 2000, 4000, 6000, 8000, 10000, 20000, 40000, 60000, 80000, 100000, 200000, 400000, 600000, 800000, 1000000, 2000000, 4000000, 6000000, 8000000, 10000000, , 20000000, 40000000, 60000000, 80000000, 100000000];
-        else
-            t = null;
-
+     
         var options = {
             series: {
                 shadowSize: 0
@@ -454,10 +476,11 @@
             xaxis: {
                 color: '#aaaaaa',
                 tickColor: '#aaaaaa',
-                ticks: t,
+                ticks: getXAxisScale,
                 transform: function(v) {
-                    if (BA.scale)
-                        return Math.log(v + 0.0001); // move away from zero
+                    if (BA.curGraphScale){
+                        return Math.log(v); // move away from zero
+                    }
                     else
                         return v;
 
@@ -482,11 +505,6 @@
             }
         };
 
-
-        if ($("#BA_SCALE0").hasClass("active")) {
-            options.xaxis.transform = null;
-        }
-
         var lastsig1 = [];
         var lastsig2 = [];
         var lastsig1_bad = [];
@@ -494,8 +512,11 @@
         if (update == true) {
             lastsig1 = BA.lastSignals["BA_SIGNAL_1"];
             lastsig2 = BA.lastSignals["BA_SIGNAL_2"];
-           lastsig1_bad = BA.lastSignals["BA_SIGNAL_1_BAD"];
-           lastsig2_bad = BA.lastSignals["BA_SIGNAL_2_BAD"];
+            lastsig1_bad = BA.lastSignals["BA_SIGNAL_1_BAD"];
+            lastsig2_bad = BA.lastSignals["BA_SIGNAL_2_BAD"];
+        }else{
+            lastsig1.push([$("#BA_START_FREQ").val(),undefined])
+            lastsig1.push([$("#BA_END_FREQ").val(),undefined])
         }
         var data_points = [{ data: lastsig1, color: '#f3ec1a', label: "Amplitude" }, { data: lastsig2, color: '#31b44b', label: "Phase", yaxis: 2 }];
         if ($('#BA_SHOWALL_BTN').hasClass('active')) {
@@ -504,8 +525,22 @@
         }
         BA.graphCache.plot = $.plot(BA.graphCache.elem, data_points, options);
         $('.flot-text').css('color', '#aaaaaa');
+        BA.graphCache.plot.resize();
+        BA.graphCache.plot.setupGrid();
+        BA.resizeCursorsHolder()
+        BA.updateCursors()
     }
 
+    BA.updateXAxisScale = function(){
+        if (BA.graphCache !== undefined) {
+            BA.graphCache.plot.resize();
+            BA.graphCache.plot.setupGrid();
+            BA.graphCache.plot.draw();
+            BA.resizeCursorsHolder()
+            BA.updateCursors()
+            BA.updateLinesAndArrows();
+        }
+    }
 
     //Draw signals
     BA.drawSignals = function() {
@@ -522,7 +557,6 @@
                 BA.initPlot(false);
             }
 
-
             // Prepare every signal
             BA.prepareOneSignal('BA_SIGNAL_1');
             BA.prepareOneSignal('BA_SIGNAL_2');
@@ -532,83 +566,28 @@
             lastsig1_bad = BA.lastSignals["BA_SIGNAL_1_BAD"];
             lastsig2_bad = BA.lastSignals["BA_SIGNAL_2_BAD"];
 
-            BA.graphCache.elem.show();
-            BA.graphCache.plot.resize();
-            BA.graphCache.plot.setupGrid();
             var data_points = [{ data: lastsig1, color: '#f3ec1a', label: "Amplitude" }, { data: lastsig2, color: '#31b44b', label: "Phase", yaxis: 2 }];
             if ($('#BA_SHOWALL_BTN').hasClass('active')) {
                 data_points.push({ data: lastsig1_bad, color: '#d26500', label: "Invalid amplitude" });
                 data_points.push({ data: lastsig2_bad, color: '#685b00', label: "Invalid phase", yaxis: 2 });
             }
             BA.graphCache.plot.setData(data_points);
-            BA.graphCache.plot.draw();
+            BA.graphCache.elem.show();
+            BA.graphCache.plot.resize();
+            BA.graphCache.plot.setupGrid();
+            BA.graphCache.plot.draw();            
             BA.updateLinesAndArrows();
-
             // Reset resize flag
             BA.state.resized = false;
+        }else{
+            if (BA.graphCache == undefined) {
+                BA.initPlot(false);
+            }
         }
     };
 
 
-    BA.enableCursor = function(x) {
-        var x2 = (x[1] == '1') ? x[0] + '2' : x[0] + '1';
-        var d = (x[1] == '1') ? '1' : '2';
-        $('cur_' + x).show();
-        $('cur_' + x + '_info').show();
-        $('cur_' + x + '_arrow').show();
-
-        if ($('cur_' + x2).is(':visible')) {
-            $('cur_' + x[0] + '_diff').show();
-            $('cur_' + x[0] + '_diff_info').show();
-        }
-
-        CLIENT.params.local['BA_CURSOR_' + x[0].toUpperCase() + '1'] = { value: 1 };
-        CLIENT.params.local['BA_CURSOR_' + x[0].toUpperCase() + '2'] = { value: 1 };
-
-        CLIENT.params.local['BA_CUR1_T'] = { value: 1 };
-        CLIENT.params.local['BA_CUR2_T'] = { value: 1 };
-
-        if (x[0] == 'x') {
-            BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
-            BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
-        } else if (x[0] == 'y') {
-            BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
-            BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
-        } else if (x[0] == 'z') {
-            BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
-            BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
-        }
-
-        CLIENT.params.local = {};
-    };
-
-    BA.disableCursor = function(x) {
-        var d = (x[1] == '1') ? '1' : '2';
-
-        $('cur_' + x).hide();
-        $('cur_' + x + '_info').hide();
-        $('cur_' + x + '_arrow').hide();
-        $('cur_' + x[0] + '_diff').hide();
-        $('cur_' + x[0] + '_diff_info').hide();
-
-        CLIENT.params.local['BA_CURSOR_' + x[0].toUpperCase() + '1'] = { value: 0 };
-        CLIENT.params.local['BA_CURSOR_' + x[0].toUpperCase() + '2'] = { value: 0 };
-
-        if (x[0] == 'x') {
-            BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
-            BA.enableX('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
-        } else if (x[0] == 'y') {
-            BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
-            BA.enableY('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
-        } else if (x[0] == 'z') {
-            BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
-            BA.enableZ('BA_CURSOR_' + x[0].toUpperCase() + d, CLIENT.params.local);
-        }
-
-        CLIENT.params.local = {};
-    };
-
-
+   
     BA.processStatus = function(new_params) {
         var status = new_params['BA_STATUS'].value
         if (status === 0 || status === 6 || status === 7) {
@@ -619,6 +598,16 @@
             $('#measuring-status').hide();
             BA.calibrating = false;
             BA.running = false;
+            const scale = CLIENT.getValue("BA_SCALE")
+            const xscale = CLIENT.getValue("BA_X_SCALE")
+            if (scale !== undefined && xscale !== undefined){
+                if (scale == false && xscale > 0){
+                    CLIENT.parametersCache["BA_X_SCALE"] = { value:  0 };
+                }
+                if (scale == true && xscale === 0){
+                    CLIENT.parametersCache["BA_X_SCALE"] = { value:  1 };
+                }
+            }           	
             CLIENT.parametersCache["BA_STATUS"] = { value: 0 };
             CLIENT.sendParameters();
         }
@@ -685,13 +674,6 @@
         }
     }
 
-    BA.updateGraphSize = function() {
-        BA.graphSize.left = $("#graphs_holder").offset().left + 78;
-        BA.graphSize.right = BA.graphSize.left + $("#graphs_holder").width() - 81;
-        BA.graphSize.top = $("#graph_bode").offset().top - 1;
-        BA.graphSize.bottom = BA.graphSize.top + $("#graph_bode").height() - 37;
-    }
-
     BA.setValue = function(param_name,new_params) {
         // var old_params = CLIENT.params.orig;
         if ((!BA.state.editing)) {
@@ -719,7 +701,6 @@
 
     BA.setScale = function(new_params) {
         var param_name = "BA_SCALE"
-        var old_params = CLIENT.params.orig;
         if ((!BA.state.editing)) {
             var radios = $('input[name="' + param_name + '"]');
             radios.closest('.btn-group').children('.btn.active').removeClass('active');
@@ -811,246 +792,8 @@
         }
     }
 
-    // X-cursors
-    BA.updateXLinesAndArrows = function() {
-
-        var axes = BA.graphCache.plot.getAxes();
-        var diff_px = 0;
-        let unit = ' Hz';
-        let min = axes.xaxis.min;
-        let max = axes.xaxis.max;
-        let new_val = 0;
-
-        if (min < 1)
-            min = 1;
-
-
-        if (BA.curGraphScale) {
-            var a = Math.log10(min);
-            var b = Math.log10(max);
-            var c = (b - a) * BA.cursorsRelative.x1
-            new_val = Math.pow(10, a + c);
-        } else {
-            new_val = (max - min) * BA.cursorsRelative.x1 + min;
-        }
-
-        $('#cur_x1_arrow').offset({
-            left: BA.graphSize.left + ((BA.graphSize.right - BA.graphSize.left) * BA.cursorsRelative.x1),
-            top: BA.graphSize.bottom - 17
-        });
-        $('#cur_x1, #cur_x1_info').offset({
-            left: $('#cur_x1_arrow').offset().left + $('#cur_x1_arrow').width() / 2
-        });
-        $('#cur_x1_info').offset({ top: BA.graphSize.top + $('#cur_x1_info').outerHeight() + 30 });
-        $('#cur_x1_info').html(new_val.toFixed(2) + unit).data('cleanval', +new_val);
-        $('#cur_x1').height(BA.graphSize.bottom - BA.graphSize.top);
-
-
-        if (BA.curGraphScale) {
-            var a = Math.log10(min);
-            var b = Math.log10(max);
-            var c = (b - a) * BA.cursorsRelative.x2
-            new_val = Math.pow(10, a + c);
-
-        } else {
-            new_val = (max - min) * BA.cursorsRelative.x2 + min;
-        }
-
-        $('#cur_x2_arrow').offset({
-            left: BA.graphSize.left + ((BA.graphSize.right - BA.graphSize.left) * BA.cursorsRelative.x2),
-            top: BA.graphSize.bottom - 17
-        });
-        $('#cur_x2, #cur_x2_info').offset({
-            left: $('#cur_x2_arrow').offset().left + $('#cur_x2_arrow').width() / 2
-        });
-        $('#cur_x2_info').offset({ top: BA.graphSize.top + $('#cur_x2_info').outerHeight() + 30 });
-        $('#cur_x2_info').html(new_val.toFixed(2) + unit).data('cleanval', +new_val);
-        $('#cur_x2').height(BA.graphSize.bottom - BA.graphSize.top);
-
-
-        diff_px = Math.abs($('#cur_x1').offset().left - $('#cur_x2').offset().left) - 6;
-        if ($('#cur_x1').is(':visible') && $('#cur_x2').is(':visible') && diff_px > 12) {
-            var left = Math.min($('#cur_x1').offset().left, $('#cur_x2').offset().left) + 3;
-            var value = $('#cur_x1_info').data('cleanval') - $('#cur_x2_info').data('cleanval');
-
-            $('#cur_x_diff')
-                .offset({ left: left })
-                .width(diff_px)
-                .show();
-            $('#cur_x_diff_info')
-                .html(Math.abs(value).toFixed(2) + unit)
-                .offset({ left: left + diff_px / 2 - 2 - $('#cur_x_diff_info').outerWidth() / 2 })
-                .show();
-        } else {
-            $('#cur_x_diff, #cur_x_diff_info').hide();
-        }
-    }
-
-
-    // Y-cursors
-    BA.updateYLinesAndArrows = function() {
-        var diff_px = 0;
-        let unit = ' dB';
-        let min = parseFloat($('#BA_GAIN_MIN').val());
-        let max = parseFloat($('#BA_GAIN_MAX').val());
-        let new_val = 0;
-
-
-        new_val = (min - max) * BA.cursorsRelative.y1 + max;
-
-        $('#cur_y1_arrow').offset({
-            left: BA.graphSize.right - $('#cur_y1_arrow').width() / 2 - 2,
-            top: BA.graphSize.top + ((BA.graphSize.bottom - BA.graphSize.top) * BA.cursorsRelative.y1)
-        });
-
-        $('#cur_y1, #cur_y1_info').offset({
-            top: $('#cur_y1_arrow').offset().top + $('#cur_y1_arrow').height() / 2
-        });
-        $('#cur_y1_info').offset({ left: BA.graphSize.left + $('#cur_y1_info').outerWidth() });
-        $('#cur_y1_info').html(new_val.toFixed(2) + unit).data('cleanval', +new_val);
-        $('#cur_y1').width(BA.graphSize.right - BA.graphSize.left);
-
-
-        new_val = (min - max) * BA.cursorsRelative.y2 + max;
-
-        $('#cur_y2_arrow').offset({
-            left: BA.graphSize.right - $('#cur_y2_arrow').width() / 2 - 2,
-            top: BA.graphSize.top + ((BA.graphSize.bottom - BA.graphSize.top) * BA.cursorsRelative.y2)
-        });
-
-        $('#cur_y2, #cur_y2_info').offset({
-            top: $('#cur_y2_arrow').offset().top + $('#cur_y2_arrow').height() / 2
-        });
-        $('#cur_y2_info').offset({ left: BA.graphSize.left + $('#cur_y2_info').outerWidth() });
-        $('#cur_y2_info').html(new_val.toFixed(2) + unit).data('cleanval', +new_val);;
-        $('#cur_y2').width(BA.graphSize.right - BA.graphSize.left);
-
-
-        diff_px = Math.abs($('#cur_y1').offset().top - $('#cur_y2').offset().top) - 6;
-        if ($('#cur_y1').is(':visible') && $('#cur_y2').is(':visible') && diff_px > 12) {
-            var top = Math.min($('#cur_y1').offset().top, $('#cur_y2').offset().top) + 3;
-            var value = $('#cur_y1_info').data('cleanval') - $('#cur_y2_info').data('cleanval');
-
-            $('#cur_y_diff')
-                .offset({ left: BA.graphSize.left + 50, top: top })
-                .height(diff_px)
-                .show();
-            $('#cur_y_diff_info')
-                .html(Math.abs(value).toFixed(2) + unit)
-                .offset({ left: $('#cur_y_diff').offset().left, top: top + diff_px / 2 - 2 })
-                .show();
-        } else {
-            $('#cur_y_diff, #cur_y_diff_info').hide();
-        }
-    }
-
-
-    // Z-cursors
-    BA.updateZLinesAndArrows = function() {
-        var diff_px = 0;
-        let unit = ' deg';
-        let min = parseFloat($('#BA_PHASE_MIN').val());
-        let max = parseFloat($('#BA_PHASE_MAX').val());
-        let new_val = 0;
-
-
-        new_val = (min - max) * BA.cursorsRelative.z1 + max;
-
-        $('#cur_z1_arrow').offset({
-            left: BA.graphSize.left + $('#cur_z1_arrow').width() / 2 - 6,
-            top: BA.graphSize.top + ((BA.graphSize.bottom - BA.graphSize.top) * BA.cursorsRelative.z1)
-        });
-
-        $('#cur_z1, #cur_z1_info').offset({
-            top: $('#cur_z1_arrow').offset().top + $('#cur_z1_arrow').height() / 2
-        });
-        $('#cur_z1_info').offset({ left: BA.graphSize.right - $('#cur_z1_info').outerWidth() - 22 });
-        $('#cur_z1_info').html(new_val.toFixed(2) + unit).data('cleanval', +new_val);
-        $('#cur_z1').width(BA.graphSize.right - BA.graphSize.left);
-
-
-        new_val = (min - max) * BA.cursorsRelative.z2 + max;
-
-        $('#cur_z2_arrow').offset({
-            left: BA.graphSize.left + $('#cur_z2_arrow').width() / 2 - 6,
-            top: BA.graphSize.top + ((BA.graphSize.bottom - BA.graphSize.top) * BA.cursorsRelative.z2)
-        });
-
-        $('#cur_z2, #cur_z2_info').offset({
-            top: $('#cur_z2_arrow').offset().top + $('#cur_z2_arrow').height() / 2
-        });
-        $('#cur_z2_info').offset({ left: BA.graphSize.right - $('#cur_z2_info').outerWidth() - 22 });
-        $('#cur_z2_info').html(new_val.toFixed(2) + unit).data('cleanval', +new_val);;
-        $('#cur_z2').width(BA.graphSize.right - BA.graphSize.left);
-
-
-        diff_px = Math.abs($('#cur_z1').offset().top - $('#cur_z2').offset().top) - 6;
-        if ($('#cur_z1').is(':visible') && $('#cur_z2').is(':visible') && diff_px > 12) {
-            var top = Math.min($('#cur_z1').offset().top, $('#cur_z2').offset().top) + 3;
-            var value = $('#cur_z1_info').data('cleanval') - $('#cur_z2_info').data('cleanval');
-
-            $('#cur_z_diff')
-                .offset({ left: BA.graphSize.right - 50, top: top })
-                .height(diff_px)
-                .show();
-            $('#cur_z_diff_info')
-                .html(Math.abs(value).toFixed(2) + unit)
-                .offset({ left: $('#cur_z_diff').offset().left, top: top + diff_px / 2 - 2 })
-                .show();
-        } else {
-            $('#cur_z_diff, #cur_z_diff_info').hide();
-        }
-    }
-
-
-    BA.updateLinesAndArrows = function() {
-        BA.updateXLinesAndArrows();
-        BA.updateYLinesAndArrows();
-        BA.updateZLinesAndArrows();
-    }
-
-
-    BA.updateCursors = function() {
-        if (BA.graphCache === undefined)
-            return;
-        var plot = BA.graphCache.plot;
-        var offset = plot.getPlotOffset();
-        var left = offset.left + 1 + 'px';
-        var right = offset.right + 1 + 'px';
-        var top = offset.top + 1 + 'px';
-        var bottom = offset.bottom + 9 + 'px';
-
-        //update lines length
-        $('.hline').css('left', left);
-        $('.hline').css('right', right);
-        $('.vline').css('top', top);
-        $('.vline').css('bottom', bottom);
-
-        //update arrows positions
-        var diff_left = offset.left + 2 + 'px';
-        var diff_top = offset.top - 2 + 'px';
-        var margin_left = offset.left - 7 - 2 + 'px';
-        var margin_top = -7 + offset.top - 2 + 'px';
-        var margin_bottom = -2 + offset.bottom + 'px';
-        var line_margin_left = offset.left - 2 + 'px';
-        var line_margin_top = offset.top - 2 + 'px';
-        var line_margin_bottom = offset.bottom - 2 + 'px';
-
-        $('.varrow').css('margin-left', margin_left);
-        $('.harrow').css('margin-top', margin_top);
-        $('.harrow').css('margin-bottom', margin_bottom);
-        $('.vline').css('margin-left', line_margin_left);
-        $('.hline').css('margin-top', line_margin_top);
-        $('.hline').css('margin-bottom', line_margin_bottom);
-
-        $('#cur_x_diff').css('margin-left', diff_left);
-        $('#cur_y_diff').css('margin-top', diff_top);
-        $('#cur_z_diff').css('margin-top', diff_top);
-        $('#cur_x_diff_info').css('margin-left', diff_left);
-        $('#cur_y_diff_info').css('margin-top', diff_top);
-        $('#cur_z_diff_info').css('margin-top', diff_top);
-    };
-
+   
+   
     BA.modelProcess = function(value) {
         var model = value["RP_MODEL_STR"].value
         if (model === "Z20_250_12") {
@@ -1095,6 +838,104 @@
         }
     }
 
+    BA.setXaxisScale = function(new_params){
+        var param_name = 'BA_X_SCALE'
+        var field = $('#' + param_name);
+        if (field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
+            field.val(CLIENT.params.orig[param_name].value);
+            BA.updateXAxisScale()
+            BA.updateLinesAndArrows()
+        }
+    }
+
+    BA.setCurEnable = function(new_params, name){
+        if (name === "BA_CURSOR_X1"){
+            if (new_params[name].value === true){
+                BA.enableCursor('x1');
+            }else{
+                BA.disableCursor('x1');
+            }
+        }
+
+        if (name === "BA_CURSOR_X2"){
+            if (new_params[name].value === true){
+                BA.enableCursor('x2');
+            }else{
+                BA.disableCursor('x2');
+            }
+        }
+
+        if (name === "BA_CURSOR_Y1"){
+            if (new_params[name].value === true){
+                BA.enableCursor('y1');
+            }else{
+                BA.disableCursor('y1');
+            }
+        }
+
+        if (name === "BA_CURSOR_Y2"){
+            if (new_params[name].value === true){
+                BA.enableCursor('y2');
+            }else{
+                BA.disableCursor('y2');
+            }
+        }
+
+        if (name === "BA_CURSOR_Z1"){
+            if (new_params[name].value === true){
+                BA.enableCursor('z1');
+            }else{
+                BA.disableCursor('z1');
+            }
+        }
+
+        if (name === "BA_CURSOR_Z2"){
+            if (new_params[name].value === true){
+                BA.enableCursor('z2');
+            }else{
+                BA.disableCursor('z2');
+            }
+        }
+    }
+
+    BA.setCurPos = function(new_params, name){
+        if (name === "BA_CURSOR_X1_POS"){
+            BA.cursorsRelative.x1 = new_params[name].value
+            BA.updateXLinesPosition()
+            BA.updateXLinesAndArrows()
+        }
+
+        if (name === "BA_CURSOR_X2_POS"){
+            BA.cursorsRelative.x2 = new_params[name].value
+            BA.updateXLinesPosition()
+            BA.updateXLinesAndArrows()
+        }
+
+        if (name === "BA_CURSOR_Y1_POS"){
+            BA.cursorsRelative.y1 = new_params[name].value
+            BA.updateYLinesPosition()
+            BA.updateYLinesAndArrows()
+        }
+
+        if (name === "BA_CURSOR_Y2_POS"){
+            BA.cursorsRelative.y2 = new_params[name].value
+            BA.updateYLinesPosition()
+            BA.updateYLinesAndArrows()
+        }
+
+        if (name === "BA_CURSOR_Z1_POS"){
+            BA.cursorsRelative.z1 = new_params[name].value
+            BA.updateZLinesPosition()
+            BA.updateZLinesAndArrows()
+        }
+
+        if (name === "BA_CURSOR_Z2_POS"){
+            BA.cursorsRelative.z2 = new_params[name].value
+            BA.updateZLinesPosition()
+            BA.updateZLinesAndArrows()
+        }
+    }
+
     BA.param_callbacks["BA_STATUS"] = BA.processStatus;
 
     // BA.param_callbacks["BA_MEASURE_START"] = BA.process_run;
@@ -1109,6 +950,7 @@
     BA.param_callbacks["BA_END_FREQ"] = BA.endFreq;
     BA.param_callbacks["BA_STEPS"] = BA.setSteps;
     BA.param_callbacks["BA_SCALE"] = BA.setScale;
+    BA.param_callbacks["BA_X_SCALE"] = BA.setXaxisScale;
     BA.param_callbacks["BA_LOGIC_MODE"] = BA.setLogic;
 
     BA.param_callbacks["BA_PERIODS_NUMBER"] = BA.setPerNum;
@@ -1129,6 +971,20 @@
     BA.param_callbacks["BA_IN_AC_DC"] = BA.setACDC;
     BA.param_callbacks["BA_PROBE"] = BA.setProbe;
 
+    BA.param_callbacks["BA_CURSOR_X1"] = BA.setCurEnable;
+    BA.param_callbacks["BA_CURSOR_X2"] = BA.setCurEnable;
+    BA.param_callbacks["BA_CURSOR_Y1"] = BA.setCurEnable;
+    BA.param_callbacks["BA_CURSOR_Y2"] = BA.setCurEnable;
+    BA.param_callbacks["BA_CURSOR_Z1"] = BA.setCurEnable;
+    BA.param_callbacks["BA_CURSOR_Z2"] = BA.setCurEnable;
+
+    BA.param_callbacks["BA_CURSOR_X1_POS"] = BA.setCurPos;
+    BA.param_callbacks["BA_CURSOR_X2_POS"] = BA.setCurPos;
+    BA.param_callbacks["BA_CURSOR_Y1_POS"] = BA.setCurPos;
+    BA.param_callbacks["BA_CURSOR_Y2_POS"] = BA.setCurPos;
+    BA.param_callbacks["BA_CURSOR_Z1_POS"] = BA.setCurPos;
+    BA.param_callbacks["BA_CURSOR_Z2_POS"] = BA.setCurPos;
+
 
 }(window.BA = window.BA || {}, jQuery));
 
@@ -1144,58 +1000,7 @@ $(function() {
         window.location.reload(true);
     }
 
-    // X cursor arrows dragging
-    $('#cur_x1_arrow, #cur_x2_arrow').draggable({
-        axis: 'x',
-        containment: 'parent',
-        start: function(ev, ui) {
-            BA.state.line_moving = true;
-            BA.state.cursor_dragging = true;
-        },
-        drag: function(ev, ui) {
-            BA.moveX(ui);
-        },
-        stop: function(ev, ui) {
-            BA.moveX(ui);
-            BA.state.line_moving = false;
-            BA.state.cursor_dragging = false;
-        }
-    });
-
-
-    // Y cursor arrows dragging
-    $('#cur_y1_arrow, #cur_y2_arrow').draggable({
-        axis: 'y',
-        containment: 'parent',
-        start: function(ev, ui) {
-            BA.state.cursor_dragging = true;
-        },
-        drag: function(ev, ui) {
-            BA.moveY(ui);
-        },
-        stop: function(ev, ui) {
-            BA.moveY(ui);
-            BA.state.cursor_dragging = false;
-        }
-    });
-
-
-    // Z cursor arrows dragging
-    $('#cur_z1_arrow, #cur_z2_arrow').draggable({
-        axis: 'y',
-        containment: 'parent',
-        start: function(ev, ui) {
-            BA.state.cursor_dragging = true;
-        },
-        drag: function(ev, ui) {
-            BA.moveZ(ui);
-        },
-        stop: function(ev, ui) {
-            BA.moveZ(ui);
-            BA.state.cursor_dragging = false;
-        }
-    });
-
+   
     // Export
     $('#downl_graph').on('click', function() {
         setTimeout(BA.SaveGraphs, 30);
@@ -1223,22 +1028,19 @@ $(function() {
 
         }
 
-        BA.initPlot(false);
-        BA.firstValGot.BA_SIGNAL_1 = false;
-        BA.firstValGot.BA_SIGNAL_2 = false;
-        delete BA.lastSignals['BA_SIGNAL_1'];
-        delete BA.lastSignals['BA_SIGNAL_2'];
-        ev.preventDefault();
-        //$('#BA_RUN').hide();
-        //$('#BA_STOP').css('display', 'block');
-        //$('#measuring-status').show();
         CLIENT.parametersCache["BA_START_FREQ"] = { value: $("#BA_START_FREQ").val() };
         CLIENT.parametersCache["BA_END_FREQ"] = { value: $('#BA_END_FREQ').val() };
         CLIENT.parametersCache["BA_STEPS"] = { value: $('#BA_STEPS').val() };
         CLIENT.parametersCache["BA_STATUS"] = { value: 1 };
         CLIENT.sendParameters();
-        //BA.running = true;
-        BA.curGraphScale = BA.scale;
+        BA.curGraphScale = CLIENT.getValue("BA_SCALE");
+
+        BA.firstValGot.BA_SIGNAL_1 = false;
+        BA.firstValGot.BA_SIGNAL_2 = false;
+        delete BA.lastSignals['BA_SIGNAL_1'];
+        delete BA.lastSignals['BA_SIGNAL_2'];
+        ev.preventDefault();
+;
     });
 
     //Stop button
@@ -1280,65 +1082,24 @@ $(function() {
     });
 
 
-    //Draw graph
-    BA.drawGrid();
-
-
     // Bind to the window resize event to redraw the graph; trigger that event to do the first drawing
     $(window).resize(function() {
-        // var divider = 1.6;
-        // var window_width = window.innerWidth;
-        // var window_height = window.innerHeight;
 
-        // if (window_width > 768 && window_height > 580) {
-            // var global_width = window_width - 210,
-            //     global_height = global_width - 100;
-            // // if (window_height < global_height) {
-            // //     global_height = window_height - 70 * divider;
-            // //     global_width = global_height * divider;
-            // // }
+        if ($('#global_container').length === 0) return
+        if ($('#main').length === 0) return
 
-            // $('#global_container').css('width', global_width);
-            // $('#global_container').css('height', global_height);
+        var window_width = window.innerWidth;
+        var window_height = window.innerHeight;
+
+        var global_width = window_width - 30,
+            global_height = window_height - 200;
 
 
-            // BA.drawGrid();
-            // var main_width = $('#main').outerWidth(true);
-            // var main_height = $('#main').outerHeight(true);
-            // $('#global_container').css('width', main_width);
-            // $('#global_container').css('height', main_height);
+        $('#global_container').css('width', global_width);
+        $('#global_container').css('height', global_height);
 
-            if ($('#global_container').length === 0) return
-            if ($('#main').length === 0) return
-
-            var window_width = window.innerWidth;
-            var window_height = window.innerHeight;
-
-            var global_width = window_width - 30,
-                global_height = window_height - 200;
-
-
-            $('#global_container').css('width', global_width);
-            $('#global_container').css('height', global_height);
-
-            $('#main').css('width', (global_width - 170));
-            $('#main').css('height', global_height);
-
-
-            BA.drawGrid();
-        //     main_width = $('#main').outerWidth(true);
-        //     main_height = $('#main').outerHeight(true);
-        //     window_width = window.innerWidth;
-        //     window_height = window.innerHeight;
-        //     if (main_height > (window_height - 80)) {
-        //         $('#global_container').css('height', window_height - 80);
-        //         $('#global_container').css('width', divider * (window_height - 80));
-        //         BA.drawGrid();
-        //         $('#global_container').css('width', $('#main').outerWidth(true) - 2);
-        //         $('#global_container').css('height', $('#main').outerHeight(true) - 2);
-        //         BA.drawGrid();
-        //     }
-        // }
+        $('#main').css('width', (global_width - 170));
+        $('#main').css('height', global_height);
 
         $('#global_container').offset({ left: (window_width - $('#global_container').width()) / 2 });
 
@@ -1347,25 +1108,16 @@ $(function() {
 
         // Hide all graphs, they will be shown next time signal data is received
         $('#graph_bode .plot').hide();
-
-        if (BA.ws) {
-            CLIENT.sendParameters();
-        }
-
-        BA.updateGraphSize();
-
+        
+        BA.setCanvasSize()
+        const n_update = (BA.lastSignals['BA_SIGNAL_1'] != undefined) || (BA.lastSignals['BA_SIGNAL_2'] != undefined)
+        BA.initPlot(n_update)
+        BA.updateLinesAndArrows();
+        
         // Set the resized flag
         BA.state.resized = true;
 
-        if ((BA.lastSignals['BA_SIGNAL_1'] != undefined) || (BA.lastSignals['BA_SIGNAL_2'] != undefined)) {
-            BA.initPlot(true);
 
-            setTimeout(function() {
-                BA.updateLinesAndArrows();
-            }, 120);
-
-            BA.updateCursors();
-        }
     }).resize();
 
 
@@ -1399,60 +1151,7 @@ $(function() {
         }
     });
 
-    $('#BA_CURSOR_X1').click(function() {
-        var btn = $(this);
-        if (!btn.hasClass('active'))
-            BA.enableCursor('x1');
-        else
-            BA.disableCursor('x1');
-        BA.updateLinesAndArrows();
-    });
-
-    $('#BA_CURSOR_X2').click(function() {
-        var btn = $(this);
-        if (!btn.hasClass('active'))
-            BA.enableCursor('x2');
-        else
-            BA.disableCursor('x2');
-        BA.updateLinesAndArrows();
-    });
-
-    $('#BA_CURSOR_Y1').click(function() {
-        var btn = $(this);
-        if (!btn.hasClass('active'))
-            BA.enableCursor('y1');
-        else
-            BA.disableCursor('y1');
-        BA.updateLinesAndArrows();
-    });
-
-    $('#BA_CURSOR_Y2').click(function() {
-        var btn = $(this);
-        if (!btn.hasClass('active'))
-            BA.enableCursor('y2');
-        else
-            BA.disableCursor('y2');
-        BA.updateLinesAndArrows();
-    });
-
-    $('#BA_CURSOR_Z1').click(function() {
-        var btn = $(this);
-        if (!btn.hasClass('active'))
-            BA.enableCursor('z1');
-        else
-            BA.disableCursor('z1');
-        BA.updateLinesAndArrows();
-    });
-
-    $('#BA_CURSOR_Z2').click(function() {
-        var btn = $(this);
-        if (!btn.hasClass('active'))
-            BA.enableCursor('z2');
-        else
-            BA.disableCursor('z2');
-        BA.updateLinesAndArrows();
-    });
-
+   
 
     // Init help
     Help.init(helpListBA);

@@ -1,107 +1,112 @@
-#include <iostream>
 #include "buffers_pack.h"
-#include "neon_asm.h"
-#include "thread_cout.h"
+#include <inttypes.h>
+#include "logger_lib/file_logger.h"
+#include "network_header.h"
 
 using namespace DataLib;
 
-auto CDataBuffersPack::Create() -> CDataBuffersPack::Ptr{
-    return std::make_shared<CDataBuffersPack>();
+auto CDataBuffersPackDMA::Create() -> CDataBuffersPackDMA::Ptr {
+    return std::make_shared<CDataBuffersPackDMA>();
 }
 
-CDataBuffersPack::CDataBuffersPack():
-     m_buffers()
-    ,m_oscRate(0)
-    ,m_adc_bits(0)
-{
-}
+CDataBuffersPackDMA::CDataBuffersPackDMA() : m_buffers() {}
 
-CDataBuffersPack::~CDataBuffersPack(){
-}
+CDataBuffersPackDMA::~CDataBuffersPackDMA() {}
 
-auto CDataBuffersPack::addBuffer(EDataBuffersPackChannel channel,DataLib::CDataBuffer::Ptr buffer) -> void{
+auto CDataBuffersPackDMA::addBuffer(EDataBuffersPackChannel channel, DataLib::CDataBufferDMA::Ptr buffer) -> void {
     m_buffers[channel] = buffer;
 }
 
-auto CDataBuffersPack::getBuffer(EDataBuffersPackChannel channel) const -> DataLib::CDataBuffer::Ptr{
-    if (m_buffers.count(channel)){
+auto CDataBuffersPackDMA::getBuffer(EDataBuffersPackChannel channel) const -> DataLib::CDataBufferDMA::Ptr {
+    if (m_buffers.count(channel)) {
         return m_buffers.at(channel);
     }
     return nullptr;
 }
 
-auto CDataBuffersPack::isChannelPresent(EDataBuffersPackChannel channel) -> bool{
+auto CDataBuffersPackDMA::getBufferDataAddress(EDataBuffersPackChannel channel) -> uint32_t {
+    if (m_buffers.count(channel)) {
+        return m_buffers.at(channel)->getDataAddress();
+    }
+    return 0;
+}
+
+auto CDataBuffersPackDMA::isChannelPresent(EDataBuffersPackChannel channel) -> bool {
     return m_buffers.find(channel) != m_buffers.end();
 }
 
-auto CDataBuffersPack::setOSCRate(uint64_t rate) -> void{
-    m_oscRate = rate;
+auto CDataBuffersPackDMA::setOSCRate(uint64_t rate) -> void {
+    for (const auto& kv : m_buffers) {
+        kv.second->setADCBaseRate(rate);
+    }
 }
 
-auto CDataBuffersPack::getOSCRate() -> uint64_t{
-    return m_oscRate;
+auto CDataBuffersPackDMA::setADCBits(uint8_t bits) -> void {
+    for (const auto& kv : m_buffers) {
+        kv.second->setADCBaseBits(bits);
+    }
 }
 
-auto CDataBuffersPack::setADCBits(uint8_t bits) -> void{
-    m_adc_bits = bits;
-}
-
-auto CDataBuffersPack::getADCBits() -> uint8_t{
-    return m_adc_bits;
-}
-
-auto CDataBuffersPack::checkBuffersEqual() -> bool{
+auto CDataBuffersPackDMA::checkDataBuffersEqual() -> bool {
     size_t size = 0;
     uint8_t bits = 0;
     for (const auto& kv : m_buffers) {
-        auto buff_size = kv.second->getBufferLenght();
+        auto buff_size = kv.second->getDataLenght();
         auto buff_bit = kv.second->getBitBySample();
-        if (buff_size){
-               if (size != 0){
-                   if (size != buff_size){
-                       return false;
-                   }
-               }else{
-                   size = buff_size;
-               }
+        if (buff_size) {
+            if (size != 0) {
+                if (size != buff_size) {
+                    return false;
+                }
+            } else {
+                size = buff_size;
+            }
         }
-        if (buff_bit){
-               if (bits != 0){
-                   if (bits != buff_bit){
-                       return false;
-                   }
-               }else{
-                   bits = buff_bit;
-               }
+        if (buff_bit) {
+            if (bits != 0) {
+                if (bits != buff_bit) {
+                    return false;
+                }
+            } else {
+                bits = buff_bit;
+            }
         }
     }
     return true;
 }
 
-auto CDataBuffersPack::getBuffersLenght() -> size_t{
+auto CDataBuffersPackDMA::getDataBuffersLenght() -> size_t {
     size_t size = 0;
     for (const auto& kv : m_buffers) {
-        if (kv.second->getBufferLenght()){
-            if (size < kv.second->getBufferLenght()){
-                if (size > 0){
-                    aprintf(stderr,"[WARNING] The buffers are not the same length. The program may not work correctly.\n");
+        if (kv.second->getDataLenght()) {
+            if (size < kv.second->getDataLenght()) {
+                if (size > 0) {
+                    WARNING("The buffers are not the same length. The program may not work correctly.")
                 }
-                size = kv.second->getBufferLenght();
+                size = kv.second->getDataLenght();
             }
         }
     }
     return size;
 }
 
-auto CDataBuffersPack::getLenghtAllBuffers() -> uint64_t{
+auto CDataBuffersPackDMA::getLenghtBuffers() -> uint64_t {
     uint64_t size = 0;
     for (const auto& kv : m_buffers) {
-        size += kv.second->getBufferLenght();
+        size += kv.second->getBufferFullLenght();
     }
     return size;
 }
 
-auto CDataBuffersPack::getLostAllBuffers() -> uint64_t{
+auto CDataBuffersPackDMA::getLenghtDataBuffers() -> uint64_t {
+    uint64_t size = 0;
+    for (const auto& kv : m_buffers) {
+        size += kv.second->getDataLenght();
+    }
+    return size;
+}
+
+auto CDataBuffersPackDMA::getLostAll() -> uint64_t {
     uint64_t size = 0;
     for (const auto& kv : m_buffers) {
         size += kv.second->getLostSamplesInBytesLenght();
@@ -109,15 +114,117 @@ auto CDataBuffersPack::getLostAllBuffers() -> uint64_t{
     return size;
 }
 
-
-auto CDataBuffersPack::getBuffersSamples() -> size_t{
+auto CDataBuffersPackDMA::getBuffersSamples() -> size_t {
     size_t size = 0;
     for (const auto& kv : m_buffers) {
-        if (kv.second->getSamplesCount()){
-            if (size < kv.second->getSamplesCount()){
+        if (kv.second->getSamplesCount()) {
+            if (size < kv.second->getSamplesCount()) {
                 size = kv.second->getSamplesCount();
             }
         }
     }
     return size;
+}
+
+auto CDataBuffersPackDMA::debugPackADC() -> void {
+    printf("Channels %d\n", (uint32_t)m_buffers.size());
+
+    for (auto& item : m_buffers) {
+        printf("\tChannel %d\n", item.first);
+        printf("\t\tHeader %d\n", (uint32_t)item.second->getHeaderLenght());
+        printADCHeader((uint8_t*)item.second->getMappedMemory());
+        printf("\t\tData %d\n", (uint32_t)item.second->getDataLenght());
+        printf("\t\t\tMemory: ");
+        for (size_t i = 0; i < 100 && i < item.second->getBufferFullLenght(); i++) {
+            printf("%X,", ((uint8_t*)item.second->getMappedMemory())[i]);
+        }
+        printf("\n\t\t\tData: ");
+        for (size_t i = 0; i < 200 && i < item.second->getDataLenght(); i++) {
+            printf("%X,", ((uint8_t*)item.second->getMappedDataMemory())[i]);
+        }
+        printf("\n");
+    }
+}
+
+auto CDataBuffersPackDMA::debugPackDAC() -> void {
+    printf("Channels %d\n", (uint32_t)m_buffers.size());
+
+    for (auto& item : m_buffers) {
+        printf("\tChannel %d\n", item.first);
+        printf("\t\tHeader %d\n", (uint32_t)item.second->getHeaderLenght());
+        printDACHeader((uint8_t*)item.second->getMappedMemory());
+        printf("\t\tData %d\n", (uint32_t)item.second->getDataLenght());
+        printf("\t\t\tMemory: ");
+        for (size_t i = 0; i < 100 && i < item.second->getBufferFullLenght(); i++) {
+            printf("%X,", ((uint8_t*)item.second->getMappedMemory())[i]);
+        }
+        printf("\n\t\t\tData: ");
+        int dev = item.second->getDACBits() / 8;
+        for (size_t i = 0; i < 200 && i < item.second->getDataLenght() / dev; i++) {
+            if (dev == 2)
+                printf("%X,", ((uint16_t*)item.second->getMappedDataMemory())[i]);
+            if (dev == 1)
+                printf("%X,", ((uint8_t*)item.second->getMappedDataMemory())[i]);
+        }
+        printf("\n");
+    }
+}
+
+auto CDataBuffersPackDMA::verifyPack() -> void {
+    for (auto& item : m_buffers) {
+        auto header = reinterpret_cast<NetworkPackHeader*>(item.second->getMappedMemory());
+        if (header->bufferSize != item.second->getBufferFullLenght()) {
+            FATAL("The buffer is not the correct size. Header size %" PRIu64 ". Pack lenght %u", header->bufferSize, (uint32_t)item.second->getBufferFullLenght())
+        }
+    }
+}
+
+auto CDataBuffersPackDMA::getInfoFromHeaderADC() -> void {
+    for (auto& item : m_buffers) {
+        auto header = reinterpret_cast<NetworkPackHeader*>(item.second->getMappedMemory());
+        item.second->setADCBaseBits(header->adc.baseOSCBits);
+        item.second->setADCBaseRate(header->adc.baseRateOSC);
+        item.second->setLostSamples(EDataLost::FPGA, header->adc.lostFPGA);
+        item.second->setBitBySample(header->adc.bitBySample);
+        item.second->setADCPackId(header->packId);
+    }
+}
+
+auto CDataBuffersPackDMA::getInfoFromHeaderDAC() -> void {
+    for (auto& item : m_buffers) {
+        auto header = reinterpret_cast<NetworkPackHeader*>(item.second->getMappedMemory());
+        item.second->setDACOnePackMode(header->dac.onePackMode);
+        item.second->setDACRepeatCount(header->dac.repeatCount);
+        item.second->setDACChannelSize(header->dac.channelSize);
+        item.second->setDACInfMode(header->dac.infMode);
+        item.second->setDACBits(header->dac.bits);
+    }
+}
+
+auto CDataBuffersPackDMA::resetWriteSizeAll() -> void {
+    for (const auto& kv : m_buffers) {
+        kv.second->resetWriteSize();
+    }
+}
+
+auto CDataBuffersPackDMA::getNextDMABufferForWrite() -> CDataBufferDMA::Ptr {
+    for (auto i = (int)DataLib::EDataBuffersPackChannel::CH1; i <= (int)DataLib::EDataBuffersPackChannel::CH4; i++) {
+        auto buff = getBuffer((DataLib::EDataBuffersPackChannel)i);
+        if (buff != nullptr) {
+            if (buff->getWriteSizeLeft() > 0)
+                return buff;
+        }
+    }
+    return nullptr;
+}
+
+auto CDataBuffersPackDMA::isAllDataWrite() -> bool {
+    bool flag = true;
+    for (auto i = (int)DataLib::EDataBuffersPackChannel::CH1; i <= (int)DataLib::EDataBuffersPackChannel::CH4; i++) {
+        auto buff = getBuffer((DataLib::EDataBuffersPackChannel)i);
+        if (buff != nullptr) {
+            flag &= buff->getWriteSizeLeft() == 0;
+        }
+    }
+    return flag;
 }

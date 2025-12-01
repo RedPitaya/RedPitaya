@@ -1,0 +1,26 @@
+<!--
+    The "write" attribute is used to pass the value on the i2c bus. May take the following values:
+        - value
+        - default
+        - none
+-->
+<configuration>
+    <bus_name>/dev/mem</bus_name>
+    <fpga_base address="0x40000000"/>
+    <device_on_bus address="0x50"/> <!-- offset in register of fpga (0x40000060) -->
+    <reg_set>
+        <!-- Reset chip -->
+        <register address="0x00" value="0x1" write="value" default="0x0" decription="Reset"/>
+        <register address="0x00" value="0x0" write="value" default="0x0" decription="Reset"/>
+
+        <!-- Enable 2-wire/16 bit mode -->
+        <register address="0x07" value="0x4B" write="value"  default="0x0" decription="IF mapper"/>
+
+        <!-- Apply configuration after change -->
+        <register address="0x13" value="0x1" write="value"  default="0x0" decription="E-FUSE LD"/>
+        <register address="0x13" value="0x0" write="value"  default="0x0" decription="E-FUSE LD"/>
+
+        <register address="0x19" value="0x10" write="value"  default="0x0" decription="FCLK DIV"/>
+        <register address="0x1B" value="0x88" write="value"  default="0x0" decription="Bit mapper"/>
+    </reg_set>
+</configuration>

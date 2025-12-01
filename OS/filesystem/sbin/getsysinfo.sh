@@ -4,7 +4,9 @@ READ_HWREV=""
 DNA_1=""
 DNA_2=""
 C=10
-FPGA_VER=$(monitor -f)
+FPGA_VER=$(profiles -f)
+S_VER=$(profiles -i)
+NAME=$(profiles -n)
 IS_512_BOOT=$(cmp /opt/redpitaya/boot.bin /opt/redpitaya/uboot/boot_512Mb_ram.bin)
 SLAVE=$(cat /opt/redpitaya/bin/.streaming_mode 2> /dev/null)
 
@@ -21,7 +23,6 @@ then
         C=$[$C - 1]
         sleep 1
     done
-    READ_HWREV="$READ_HWREV SLAVE"
     DNA_1="-"
 else
     while [[ "$READ_MAC" == "" || "$READ_HWREV" == "" || "$DNA_1" == "" || "$DNA_2" == "" ]] && [[ $C -ge  0 ]]
@@ -37,13 +38,16 @@ fi
 
 echo { > /tmp/sysinfo.json
 echo \"model\": \"$READ_HWREV\", >> /tmp/sysinfo.json
+echo \"name\": \"$NAME\", >> /tmp/sysinfo.json
+echo \"is_slave\": \"$SLAVE\", >> /tmp/sysinfo.json
+echo \"stem_ver\": \"$S_VER\", >> /tmp/sysinfo.json
 echo \"mac\": \"$READ_MAC\", >> /tmp/sysinfo.json
 echo \"dna\": \"$DNA_1$DNA_2\", >> /tmp/sysinfo.json
 echo \"ecosystem\": $(cat /opt/redpitaya/www/apps/info/info.json ), >> /tmp/sysinfo.json
 echo \"linux\": \"$(cat /root/.version)\",  >> /tmp/sysinfo.json
 echo \"mem_size\":\"$(($(getconf _PHYS_PAGES) * $(getconf PAGE_SIZE) / (1024 * 1024)))\",  >> /tmp/sysinfo.json
 
-if [ "$FPGA_VER" == "z20_250" ]; then
+if [[ "$FPGA_VER" == "z20_250" || "$FPGA_VER" == "z20_125_v2" ]]; then
 echo \"mem_upgrade\":\"1\",  >> /tmp/sysinfo.json
 else
 echo \"mem_upgrade\":\"0\",  >> /tmp/sysinfo.json

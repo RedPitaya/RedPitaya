@@ -381,12 +381,12 @@
         var ts = OSC.params.orig['OSC_TIME_SCALE'] !== undefined ? OSC.params.orig['OSC_TIME_SCALE'].value : undefined
         var toff = OSC.params.orig['OSC_TIME_OFFSET'] !== undefined ? OSC.params.orig['OSC_TIME_OFFSET'].value : undefined
         var vp = OSC.params.orig['OSC_VIEV_PART'] !== undefined ? OSC.params.orig['OSC_VIEV_PART'].value : undefined
-
+        var tow = 16; // Fixed image size. When the image is hidden, the size is 0.  $('#time_offset_arrow').width()
         if (ts === undefined || vp === undefined || toff === undefined) return;
-
+        if ( tow === 0) return;
         var graph_width = $('#graph_grid').outerWidth();
         var ms_per_px = (ts * 10) / graph_width;
-        var px_offset = -(toff / ms_per_px + $('#time_offset_arrow').width() / 2 + 1);
+        var px_offset = -(toff / ms_per_px + tow / 2 + 1);
         var arrow_left = (graph_width + 2) / 2 + px_offset;
         var buf_width = graph_width + 2;
         var ratio = buf_width / (buf_width * vp);

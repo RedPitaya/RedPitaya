@@ -1,4 +1,4 @@
 {
-global: lcrApp_*;__LCR_APP_*;
+global: *lcrApp_*;__LCR_APP_*;
 local: *;
 };

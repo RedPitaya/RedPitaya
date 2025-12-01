@@ -13,6 +13,10 @@ print("rp_hw_calib.rp_CalibInit()")
 res = rp_hw_calib.rp_CalibInit()
 print(res)
 
+print("rp_hw_calib.rp_GetCalibrationVersion()")
+res = rp_hw_calib.rp_GetCalibrationVersion()
+print(res)
+
 print("rp_hw_calib.rp_GetCalibrationSettings()")
 current_settings = rp_hw_calib.rp_GetCalibrationSettings()
 print(current_settings.fast_adc_count_1_1)
@@ -21,12 +25,16 @@ print("rp_hw_calib.rp_GetDefaultCalibrationSettings()")
 res = rp_hw_calib.rp_GetDefaultCalibrationSettings()
 print(res.fast_adc_count_1_1)
 
-print("rp_hw_calib.rp_CalibrationReset()")
-res = rp_hw_calib.rp_CalibrationReset(False,False)
+print("rp_hw_calib.rp_GetDefaultUniCalibrationSettings()")
+res = rp_hw_calib.rp_GetDefaultUniCalibrationSettings()
+print(res.fast_adc_count_1_1)
+
+print("rp_hw_calib.rp_CalibrationReset(False,False,False,5)")
+res = rp_hw_calib.rp_CalibrationReset(False,False,False,5)
 print(res)
 
-print("rp_hw_calib.rp_CalibrationFactoryReset()")
-res = rp_hw_calib.rp_CalibrationFactoryReset(False)
+print("rp_hw_calib.rp_CalibrationFactoryReset(False,5)")
+res = rp_hw_calib.rp_CalibrationFactoryReset(False,5)
 print(res)
 
 print("rp_hw_calib.rp_GetCalibrationSettings()")

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.19)
+cmake_minimum_required(VERSION ${CMAKEVERS})
 
 project(rpsa_client_qt VERSION 0.1 LANGUAGES CXX)
 
@@ -9,22 +9,25 @@ if(NOT DEFINED RP_PLATFORM)
 endif()
 
 
-message(STATUS "Project=${PROJECT_NAME}")
+message(STATUS "${Yellow}Project=${PROJECT_NAME}${ColourReset}")
 message(STATUS "RedPitaya platform=${RP_PLATFORM}")
+message(STATUS "CPU ARCH=${CMAKE_SYSTEM_PROCESSOR}")
 message(STATUS "Is install ${IS_INSTALL}")
 message(STATUS "Install path ${INSTALL_DIR}")
 message(STATUS "VERSION=${VERSION}")
 message(STATUS "REVISION=${REVISION}")
+message(STATUS "BUILD_NUMBER=${BUILD_NUMBER}")
+message(STATUS "LINUX_VER=${LINUX_VER}")
 
-message(STATUS "Compiler С path: ${CMAKE_C_COMPILER}")
-message(STATUS "Compiler С ID: ${CMAKE_C_COMPILER_ID}")
-message(STATUS "Compiler С version: ${CMAKE_C_COMPILER_VERSION}")
-message(STATUS "Compiler С is part: ${CMAKE_COMPILER_IS_GNUC}")
+message(STATUS "Compiler C path: ${CMAKE_C_COMPILER}")
+message(STATUS "Compiler C ID: ${CMAKE_C_COMPILER_ID}")
+message(STATUS "Compiler C version: ${CMAKE_C_COMPILER_VERSION}")
+message(STATUS "Compiler C is part: ${CMAKE_COMPILER_IS_GNUC}")
 
-message(STATUS "Compiler С++ path: ${CMAKE_CXX_COMPILER}")
-message(STATUS "Compiler С++ ID: ${CMAKE_CXX_COMPILER_ID}")
-message(STATUS "Compiler С++version: ${CMAKE_CXX_COMPILER_VERSION}")
-message(STATUS "Compiler С++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
+message(STATUS "Compiler C++ path: ${CMAKE_CXX_COMPILER}")
+message(STATUS "Compiler C++ ID: ${CMAKE_CXX_COMPILER_ID}")
+message(STATUS "Compiler C++version: ${CMAKE_CXX_COMPILER_VERSION}")
+message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 message(STATUS "QT: ${QT}")
 message(STATUS "QT_DIR: ${QT_DIR}")
 message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
@@ -37,7 +40,6 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Quick Gui Qml REQUIRED PATHS ${QT_DIR} ${CMAKE_PREFIX_PATH}  NO_DEFAULT_PATH)
@@ -94,9 +96,6 @@ target_include_directories(${PROJECT_NAME}
             ${CMAKE_BINARY_DIR}/bin/include
             )
 
-target_compile_options(${PROJECT_NAME}
-            PRIVATE -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
-
 target_link_directories(${PROJECT_NAME}
             PRIVATE
             ${CMAKE_BINARY_DIR}/bin/
@@ -114,7 +113,7 @@ target_compile_definitions(rpsa_client_qt
 target_link_libraries(rpsa_client_qt
   PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Quick Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Charts Qt${QT_VERSION_MAJOR}::Qml  Qt${QT_VERSION_MAJOR}::Widgets)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE config_net_lib dac_streaming_lib converter_lib streaming_lib settings_lib)
+target_link_libraries(${PROJECT_NAME} PRIVATE config_net_lib dac_streaming_lib converter_lib streaming_lib data_lib settings_lib uio_lib logger_lib)
 
 if(NOT WIN32)
     target_link_libraries(${PROJECT_NAME} PRIVATE pthread stdc++ gcc)

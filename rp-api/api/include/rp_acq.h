@@ -16,8 +16,8 @@
 #ifndef __RP_ACQ_H
 #define __RP_ACQ_H
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include "rp_enums.h"
 
 /** @name Acquire
@@ -94,7 +94,6 @@ int rp_AcqSetArmKeepCh(rp_channel_t channel, bool enable);
  */
 int rp_AcqGetArmKeepCh(rp_channel_t channel, bool* state);
 
-
 /**
  * Indicates whether the ADC buffer was full of data. The length of the buffer is determined by the delay. By default, the delay is half the buffer.
  * @param state Returns status
@@ -164,7 +163,7 @@ int rp_AcqGetDecimationCh(rp_channel_t channel, rp_acq_decimation_t* decimation)
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqConvertFactorToDecimation(uint32_t factor,rp_acq_decimation_t* decimation);
+int rp_AcqConvertFactorToDecimation(uint32_t factor, rp_acq_decimation_t* decimation);
 
 /**
  * Sets the decimation used at acquiring signal.
@@ -249,7 +248,7 @@ int rp_AcqSetAveraging(bool enable);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetAveraging(bool *enable);
+int rp_AcqGetAveraging(bool* enable);
 
 /**
  * Adds a voltage offset when requesting data. Only affects float and double data types. Raw data remains unchanged.
@@ -267,7 +266,7 @@ int rp_AcqSetOffset(rp_channel_t channel, float value);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetOffset(rp_channel_t channel, float *value);
+int rp_AcqGetOffset(rp_channel_t channel, float* value);
 
 /**
  * Enables or disables averaging of data between samples.
@@ -291,7 +290,7 @@ int rp_AcqSetAveragingCh(rp_channel_t channel, bool enable);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetAveragingCh(rp_channel_t channel, bool *enable);
+int rp_AcqGetAveragingCh(rp_channel_t channel, bool* enable);
 
 /**
  * Sets the trigger source used at acquiring signal. When acquiring is started,
@@ -726,7 +725,7 @@ int rp_AcqUnlockTriggerCh(rp_channel_t channel);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetUnlockTrigger(bool *state);
+int rp_AcqGetUnlockTrigger(bool* state);
 
 /**
  * Returns the trigger's current blocking state..
@@ -736,7 +735,7 @@ int rp_AcqGetUnlockTrigger(bool *state);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetUnlockTriggerCh(rp_channel_t channel, bool *state);
+int rp_AcqGetUnlockTriggerCh(rp_channel_t channel, bool* state);
 
 /**
  * Normalizes the ADC buffer position. Returns the modulo operation of ADC buffer size...
@@ -756,7 +755,7 @@ uint32_t rp_AcqGetNormalizedDataPos(uint32_t pos);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetDataPosRaw(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, int16_t* buffer, uint32_t *buffer_size);
+int rp_AcqGetDataPosRaw(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, int16_t* buffer, uint32_t* buffer_size);
 
 /**
  * Returns the ADC buffer in raw units from start to end position.
@@ -782,7 +781,7 @@ int rp_AcqGetDataPosRawNP(rp_channel_t channel, uint32_t start_pos, uint32_t end
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetDataPosV(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, float* buffer, uint32_t *buffer_size);
+int rp_AcqGetDataPosV(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, float* buffer, uint32_t* buffer_size);
 
 /**
  * Returns the ADC buffer in Volt units from start to end position.
@@ -807,7 +806,7 @@ int rp_AcqGetDataPosVNP(rp_channel_t channel, uint32_t start_pos, uint32_t end_p
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_t* buffer);
+int rp_AcqGetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* buffer);
 
 /**
  * Returns the ADC buffer in raw units from specified position and desired size.
@@ -819,8 +818,7 @@ int rp_AcqGetDataRaw(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetDataRawNP(rp_channel_t channel,  uint32_t pos, int16_t* np_buffer, int size);
-
+int rp_AcqGetDataRawNP(rp_channel_t channel, uint32_t pos, int16_t* np_buffer, int size);
 
 /**
  * Returns the ADC buffer in calibrated raw units from specified position and desired size.
@@ -832,7 +830,7 @@ int rp_AcqGetDataRawNP(rp_channel_t channel,  uint32_t pos, int16_t* np_buffer, 
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetDataRawWithCalib(rp_channel_t channel,  uint32_t pos, uint32_t* size, int16_t* buffer);
+int rp_AcqGetDataRawWithCalib(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* buffer);
 
 /**
  * Returns the ADC buffer in calibrated raw units from specified position and desired size.
@@ -844,7 +842,7 @@ int rp_AcqGetDataRawWithCalib(rp_channel_t channel,  uint32_t pos, uint32_t* siz
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetDataRawWithCalibNP(rp_channel_t channel,  uint32_t pos, int16_t* np_buffer, int size);
+int rp_AcqGetDataRawWithCalibNP(rp_channel_t channel, uint32_t pos, int16_t* np_buffer, int size);
 
 /**
  * Returns the ADC buffer in raw units from the oldest sample to the newest one.
@@ -923,7 +921,7 @@ int rp_AcqGetDataVNP(rp_channel_t channel, uint32_t pos, float* np_buffer, int s
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetData(uint32_t pos, buffers_t *out);
+int rp_AcqGetData(uint32_t pos, buffers_t* out);
 
 /**
  * Returns the ADC buffers from specified position and desired size.
@@ -935,8 +933,7 @@ int rp_AcqGetData(uint32_t pos, buffers_t *out);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetDataWithCorrection(uint32_t pos, uint32_t* size, int32_t offset, buffers_t *out);
-
+int rp_AcqGetDataWithCorrection(uint32_t pos, uint32_t* size, int32_t offset, buffers_t* out);
 
 /**
  * Returns the ADC buffer in Volt units from the oldest sample to the newest one.
@@ -994,7 +991,24 @@ int rp_AcqGetLatestDataVNP(rp_channel_t channel, float* np_buffer, int size);
 int rp_AcqGetBufSize(uint32_t* size);
 
 /**
+* The function enables or disables the filter in the FPGA.
+* @param enabled When true, the bypass is enabled, otherwise it is disabled.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_AcqSetBypassFilter(rp_channel_t channel, bool enable);
+
+/**
+* Gets the current filter bypass from the FPGA
+* @param enable Returns the filter bypass
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_AcqGetBypassFilter(rp_channel_t channel, bool* enable);
+
+/**
 * Sets the current calibration values from temporary memory to the FPGA filter
+* @param channel Channel A or B.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
@@ -1002,7 +1016,7 @@ int rp_AcqUpdateAcqFilter(rp_channel_t channel);
 
 /**
 * Sets the current calibration values from temporary memory to the FPGA filter
-* @param channel Channel A or B for which we want to retrieve the ADC buffer.
+* @param channel Channel A or B.
 * @param coef_aa Return AA coefficient.
 * @param coef_bb Return BB coefficient.
 * @param coef_kk Return KK coefficient.
@@ -1010,7 +1024,15 @@ int rp_AcqUpdateAcqFilter(rp_channel_t channel);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_AcqGetFilterCalibValue(rp_channel_t channel,uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
+int rp_AcqGetFilterCalibValue(rp_channel_t channel, uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
+
+/**
+* Sets the current calibration values from temporary memory to the FPGA
+* @param channel Channel A or B.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_AcqSetCalibInFPGA(rp_channel_t channel);
 
 /**
  * Sets ext. trigger debouncer for acquisition in Us (Value must be positive).
@@ -1026,7 +1048,7 @@ int rp_AcqSetExtTriggerDebouncerUs(double value);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_AcqGetExtTriggerDebouncerUs(double *value);
+int rp_AcqGetExtTriggerDebouncerUs(double* value);
 
 /**
 * Sets the AC / DC modes for input.
@@ -1036,7 +1058,7 @@ int rp_AcqGetExtTriggerDebouncerUs(double *value);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_AcqSetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t mode);
+int rp_AcqSetAC_DC(rp_channel_t channel, rp_acq_ac_dc_mode_t mode);
 
 /**
 * Get the AC / DC modes for input.
@@ -1046,7 +1068,7 @@ int rp_AcqSetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t mode);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_AcqGetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t *status);
+int rp_AcqGetAC_DC(rp_channel_t channel, rp_acq_ac_dc_mode_t* status);
 
 /**
 * Initializes buffers to the specified length.
@@ -1057,14 +1079,14 @@ int rp_AcqGetAC_DC(rp_channel_t channel,rp_acq_ac_dc_mode_t *status);
 * @param initFloat Initializes a floating point buffer.
 * @return Returns null if memory allocation fails.
 */
-buffers_t* rp_createBuffer(uint8_t maxChannels,uint32_t length,bool initInt16, bool initDouble, bool initFloat);
+buffers_t* rp_createBuffer(uint8_t maxChannels, uint32_t length, bool initInt16, bool initDouble, bool initFloat);
 
 /**
 * Removes initialized buffers. The structure itself is not deleted. Only internal content.
 * @param _in_buffer Buffer pointer.
 */
-void rp_deleteBuffer(buffers_t *_in_buffer);
+void rp_deleteBuffer(buffers_t* _in_buffer);
 
 ///@}
 
-#endif //__RP_ACQ_H
+#endif  //__RP_ACQ_H

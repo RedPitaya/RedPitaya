@@ -1,54 +1,88 @@
-#include <DataManager.h>
 #include <CustomParameters.h>
+#include <DataManager.h>
+#include <fcntl.h>
+#include <inttypes.h>
 #include <rp_system.h>
-#include <map>
+#include <sys/statvfs.h>
+#include <sys/sysinfo.h>
+#include <unistd.h>
+#include <chrono>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <numeric>
-#include <unistd.h>
-#include <vector>
-#include <chrono>
 #include <sstream>
-#include <sys/sysinfo.h>
-#include <sys/statvfs.h>
-#include <unistd.h>
-#include <inttypes.h>
+#include <vector>
 #include "rp.h"
+#include "rp_hw-profiles.h"
 #include "rp_hw.h"
 
 using namespace std;
 using namespace std::chrono;
 
+uint32_t getReservedMemory();
+uint32_t getCurrentRAMSize();
+
+std::string getWSDDRNominalValue() {
+    rp_HPeModels_t model;
+    if (rp_HPGetModel(&model) == RP_HP_OK) {
+        switch (model) {
+            case STEM_250_12_v1_0:
+            case STEM_250_12_v1_1:
+            case STEM_250_12_v1_2:
+            case STEM_250_12_120:
+            case STEM_250_12_v1_2a:
+            case STEM_250_12_v1_2b:
+            case STEM_125_14_Z7020_Pro_v1_0:
+            case STEM_125_14_Z7020_Ind_v2_0:
+            case STEM_125_14_Z7020_Pro_v2_0:
+            case STEM_125_14_Z7020_LL_v1_1:
+            case STEM_65_16_Z7020_LL_v1_1:
+            case STEM_125_14_Z7020_LL_v1_2:
+            case STEM_125_14_Z7020_TI_v1_3:
+            case STEM_65_16_Z7020_TI_v1_3:
+                return "35";
+            default:
+                return "5";
+        }
+    }
+    return "";
+}
+
 CFloatParameter g_ws_cpuLoad("RP_SYSTEM_CPU_LOAD", CBaseParameter::RO, 0, 0, 0, 1000);
-CFloatParameter g_ws_memoryTotal("RP_SYSTEM_TOTAL_RAM", CBaseParameter::RO, 0, 0, 0, 1e15);
-CFloatParameter g_ws_memoryFree ("RP_SYSTEM_FREE_RAM", CBaseParameter::RO, 0, 0, 0, 1e15);
-CFloatParameter g_ws_temperature ("RP_SYSTEM_TEMPERATURE", CBaseParameter::RO, -100, 0, -100, 1000);
-CFloatParameter g_ws_slow_adc0 ("RP_SYSTEM_SLOW_ADC0", CBaseParameter::RO, 0, 0, -20, 20);
-CFloatParameter g_ws_slow_adc1 ("RP_SYSTEM_SLOW_ADC1", CBaseParameter::RO, 0, 0, -20, 20);
-CFloatParameter g_ws_slow_adc2 ("RP_SYSTEM_SLOW_ADC2", CBaseParameter::RO, 0, 0, -20, 20);
-CFloatParameter g_ws_slow_adc3 ("RP_SYSTEM_SLOW_ADC3", CBaseParameter::RO, 0, 0, -20, 20);
+CIntParameter g_ws_memoryTotal("RP_SYSTEM_TOTAL_RAM", CBaseParameter::RO, 0, 0, 0, 2147483647);
+CIntParameter g_ws_memoryFree("RP_SYSTEM_FREE_RAM", CBaseParameter::RO, 0, 0, 0, 2147483647);
+CIntParameter g_ws_memoryDMARam("RP_SYSTEM_DMA_RAM", CBaseParameter::RO, getReservedMemory(), 0, 0, 2147483647);
+CIntParameter g_ws_memoryMAXDDR("RP_SYSTEM_DDR_MAX", CBaseParameter::RO, getCurrentRAMSize(), 0, 0, 2147483647);
 
-CFloatParameter g_ws_vcc_pint ("RP_SYSTEM_VCC_PINT", CBaseParameter::RO, 0, 0, -20, 20);
-CFloatParameter g_ws_vcc_paux ("RP_SYSTEM_VCC_PAUX", CBaseParameter::RO, 0, 0, -20, 20);
-CFloatParameter g_ws_vcc_bram ("RP_SYSTEM_VCC_BRAM", CBaseParameter::RO, 0, 0, -20, 20);
+CFloatParameter g_ws_temperature("RP_SYSTEM_TEMPERATURE", CBaseParameter::RO, -100, 0, -100, 1000);
+CFloatParameter g_ws_slow_adc0("RP_SYSTEM_SLOW_ADC0", CBaseParameter::RO, 0, 0, -20, 20);
+CFloatParameter g_ws_slow_adc1("RP_SYSTEM_SLOW_ADC1", CBaseParameter::RO, 0, 0, -20, 20);
+CFloatParameter g_ws_slow_adc2("RP_SYSTEM_SLOW_ADC2", CBaseParameter::RO, 0, 0, -20, 20);
+CFloatParameter g_ws_slow_adc3("RP_SYSTEM_SLOW_ADC3", CBaseParameter::RO, 0, 0, -20, 20);
 
-CFloatParameter g_ws_vcc_int ("RP_SYSTEM_VCC_INT", CBaseParameter::RO, 0, 0, -20, 20);
-CFloatParameter g_ws_vcc_aux ("RP_SYSTEM_VCC_AUX", CBaseParameter::RO, 0, 0, -20, 20);
-CFloatParameter g_ws_vcc_ddr ("RP_SYSTEM_VCC_DDR", CBaseParameter::RO, 0, 0, -20, 20);
+CFloatParameter g_ws_vcc_pint("RP_SYSTEM_VCC_PINT", CBaseParameter::RO, 0, 0, -20, 20);
+CFloatParameter g_ws_vcc_paux("RP_SYSTEM_VCC_PAUX", CBaseParameter::RO, 0, 0, -20, 20);
+CFloatParameter g_ws_vcc_bram("RP_SYSTEM_VCC_BRAM", CBaseParameter::RO, 0, 0, -20, 20);
 
-CFloatParameter g_ws_totalSD ("RP_SYSTEM_TOTAL_SD", CBaseParameter::RO, 0, 0, 0, 1e15);
-CFloatParameter g_ws_freeSD ("RP_SYSTEM_FREE_SD", CBaseParameter::RO, 0, 0, 0, 1e15);
+CFloatParameter g_ws_vcc_int("RP_SYSTEM_VCC_INT", CBaseParameter::RO, 0, 0, -20, 20);
+CFloatParameter g_ws_vcc_aux("RP_SYSTEM_VCC_AUX", CBaseParameter::RO, 0, 0, -20, 20);
+CFloatParameter g_ws_vcc_ddr("RP_SYSTEM_VCC_DDR", CBaseParameter::RO, 0, 0, -20, 20);
+CStringParameter g_ws_vcc_ddr_nominal("RP_SYSTEM_VCC_DDR_NOMINAL", CBaseParameter::RO, getWSDDRNominalValue(), 10);
 
-map<rp_system_mode_t,uint32_t> g_intervals;
-map<rp_system_mode_t,time_point<system_clock>> g_lastUpdateTime;
+CFloatParameter g_ws_totalSD("RP_SYSTEM_TOTAL_SD", CBaseParameter::RO, 0, 0, 0, 1e15);
+CFloatParameter g_ws_freeSD("RP_SYSTEM_FREE_SD", CBaseParameter::RO, 0, 0, 0, 1e15);
+
+map<rp_system_mode_t, uint32_t> g_intervals;
+map<rp_system_mode_t, time_point<system_clock>> g_lastUpdateTime;
 
 uint32_t g_modes = RP_WS_NONE;
 uint64_t prev_cpu_time = 0;
 uint64_t prev_cpu_idle = 0;
-bool     g_pause = false;
+bool g_pause = false;
 
-bool get_cpu_usage(unsigned long long* total_cpu_time,
-                          unsigned long long* idle_cpu_time) {
+bool get_cpu_usage(unsigned long long* total_cpu_time, unsigned long long* idle_cpu_time) {
     std::ifstream proc_stat("/proc/stat");
     proc_stat.ignore(5);
     std::string cpu_time_str;
@@ -65,43 +99,86 @@ bool get_cpu_usage(unsigned long long* total_cpu_time,
     return true;
 }
 
-bool get_ram(float *_total, float *_freeram){
-    struct sysinfo memInfo;
-    int ret = sysinfo (&memInfo);
-    *_total = (float)memInfo.totalram;
-    *_freeram = (float)memInfo.freeram;
-    return !ret;
+bool get_ram(unsigned long* _total, unsigned long* _freeram) {
+    std::ifstream file("/proc/meminfo");
+    std::string line;
+    unsigned long totalRAM = 0;
+    unsigned long freeRAM = 0;
+
+    if (file.is_open()) {
+        while (std::getline(file, line)) {
+            std::istringstream iss(line);
+            std::string key;
+            long long value;
+            char unit;
+
+            if (!(iss >> key >> value >> unit))
+                continue;
+
+            if (key == "MemTotal:") {
+                totalRAM = value * 1024;
+            }
+
+            if (key == "MemAvailable:") {
+                freeRAM = value * 1024;
+            }
+        }
+
+        *_total = totalRAM;
+        *_freeram = freeRAM;
+        file.close();
+        return 1;
+    }
+    return 0;
 }
 
-auto availableSpace(std::string dst,  uint64_t* availableSize, uint64_t* fullSize) -> int {
-    int result = -1;
-    try {
-        struct statvfs devData;
-        memset(&devData, 0, sizeof (struct statvfs));
-        if ((statvfs(dst.c_str(), &devData)) >= 0) {
-            //I don't know if it's right, but I'll set availableSize only if the available size doesn't pass the ulong limit.
-            if (devData.f_bavail  > (std::numeric_limits<uint64_t>::max() / devData.f_bsize)) {
-                *availableSize = std::numeric_limits<uint64_t>::max();
-            } else {
-                *availableSize = (uint64_t)devData.f_bavail * (uint64_t)devData.f_bsize;
-            }
-
-            if (devData.f_blocks  > (std::numeric_limits<uint64_t>::max() / devData.f_bsize)) {
-                *fullSize = std::numeric_limits<uint64_t>::max();
-            } else {
-                *fullSize = (uint64_t)devData.f_blocks * (uint64_t)devData.f_bsize;
-            }
-            result = 0;
+uint32_t getCurrentRAMSize() {
+    auto ram = rp_HPGetDDRSizeOrDefault();
+    unsigned long total = 0, freeram = 0;
+    if (get_ram(&total, &freeram)) {
+        auto reserve = getReservedMemory();
+        // Fix for 250-12 where two modes of operation are possible with 512 and 1024 MB of memory
+        if (ram == 1024 && (reserve + total < (512 * 1024 * 1024))) {
+            ram = 512;
         }
     }
-    catch (std::exception& e)
-    {
-        WARNING("Error in AvailableSpace(): %s\n",e.what());
-    }
-    return result;
+    return ram;
 }
 
-void rp_WS_Init(){
+uint32_t getReservedMemory() {
+    int fd = 0;
+    if ((fd = open("/sys/firmware/devicetree/base/reserved-memory/buffer@1000000/reg", O_RDONLY)) == -1) {
+        fprintf(stderr, "[FATAL ERROR] Error open: /sys/firmware/devicetree/base/reserved-memory/buffer@1000000/reg\n");
+        return 0;
+    }
+    char data[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    int sz = read(fd, &data, 8);
+
+    if (close(fd) < 0) {
+        return 0;
+    }
+    if (sz == 8) {
+        return data[4] << 24 | data[5] << 16 | data[6] << 8 | data[7];
+    }
+    return 0;
+}
+
+auto availableSpace(std::string dst, uint64_t* availableSize, uint64_t* fullSize) -> int {
+    std::error_code ec;
+    const std::filesystem::space_info si = std::filesystem::space(dst, ec);
+    if (!ec) {
+        *fullSize = si.capacity;
+        *availableSize = si.available;
+        return 0;
+    } else {
+        WARNING("Error in AvailableSpace(): %s\n", ec.message().c_str());
+        *fullSize = 0;
+        *availableSize = 0;
+    }
+    return -1;
+}
+
+void rp_WS_Init() {
     g_modes = RP_WS_ALL;
     auto now = system_clock::now();
     auto defInterval = 1000;
@@ -118,32 +195,32 @@ void rp_WS_Init(){
     g_lastUpdateTime[RP_WS_SLOW_DAC] = now;
     g_lastUpdateTime[RP_WS_SENSOR_VOLT] = now;
     g_lastUpdateTime[RP_WS_DISK_SIZE] = now;
-
 }
 
-void rp_WS_PauseSend(bool state){
+void rp_WS_PauseSend(bool state) {
     g_pause = state;
 }
 
-void rp_WS_SetMode(rp_system_mode_t mode){
+void rp_WS_SetMode(rp_system_mode_t mode) {
     g_modes = mode;
 }
 
-void rp_WS_SetInterval(rp_system_mode_t mode,uint32_t ms){
+void rp_WS_SetInterval(rp_system_mode_t mode, uint32_t ms) {
     g_intervals[mode] = ms;
 }
 
-void rp_WS_UpdateParameters(bool force){
-    if (g_pause) return;
+void rp_WS_UpdateParameters(bool force) {
+    if (g_pause)
+        return;
     auto now = system_clock::now();
     auto curTime = time_point_cast<milliseconds>(now);
-    if (g_modes & RP_WS_CPU){
-        uint64_t idle_time=0, total_time =0;
-        if (get_cpu_usage(&total_time, &idle_time)){
+    if (g_modes & RP_WS_CPU) {
+        uint64_t idle_time = 0, total_time = 0;
+        if (get_cpu_usage(&total_time, &idle_time)) {
             auto lastUpdate = time_point_cast<milliseconds>(g_lastUpdateTime[RP_WS_CPU]);
             auto diff = curTime - lastUpdate;
-            if (diff.count() >= g_intervals[RP_WS_CPU] || force){
-                auto total_time2 =  total_time - prev_cpu_time;
+            if (diff.count() >= g_intervals[RP_WS_CPU] || force) {
+                auto total_time2 = total_time - prev_cpu_time;
                 prev_cpu_time = total_time;
                 auto idle_time2 = idle_time - prev_cpu_idle;
                 prev_cpu_idle = idle_time;
@@ -154,13 +231,13 @@ void rp_WS_UpdateParameters(bool force){
         }
     }
 
-    if (g_modes & RP_WS_RAM){
-        float total = 0, freeram = 0;
-        if (get_ram(&total, &freeram)){
+    if (g_modes & RP_WS_RAM) {
+        unsigned long total = 0, freeram = 0;
+        if (get_ram(&total, &freeram)) {
             auto lastUpdate = time_point_cast<milliseconds>(g_lastUpdateTime[RP_WS_RAM]);
             auto diff = curTime - lastUpdate;
 
-            if (diff.count() >= g_intervals[RP_WS_RAM] || force){
+            if (diff.count() >= g_intervals[RP_WS_RAM] || force) {
                 g_ws_memoryTotal.SendValue(total);
                 g_ws_memoryFree.SendValue(freeram);
                 g_lastUpdateTime[RP_WS_RAM] = curTime;
@@ -168,51 +245,51 @@ void rp_WS_UpdateParameters(bool force){
         }
     }
 
-    if (g_modes & RP_WS_TEMPERATURE){
+    if (g_modes & RP_WS_TEMPERATURE) {
         float temp = 0;
         uint32_t raw = 0;
         temp = rp_GetCPUTemperature(&raw);
-        if (temp != -1){
+        if (temp != -1) {
             auto lastUpdate = time_point_cast<milliseconds>(g_lastUpdateTime[RP_WS_TEMPERATURE]);
             auto diff = curTime - lastUpdate;
 
-            if (diff.count() >= g_intervals[RP_WS_TEMPERATURE] || force){
+            if (diff.count() >= g_intervals[RP_WS_TEMPERATURE] || force) {
                 g_ws_temperature.SendValue(temp);
                 g_lastUpdateTime[RP_WS_TEMPERATURE] = curTime;
             }
         }
     }
 
-    if (g_modes & RP_WS_DISK_SIZE){
+    if (g_modes & RP_WS_DISK_SIZE) {
         uint64_t freeSize = 0;
         uint64_t totalSize = 0;
-        int ret = availableSpace("/",&freeSize,&totalSize);
-        if (ret == 0){
+        int ret = availableSpace("/", &freeSize, &totalSize);
+        if (ret == 0) {
             auto lastUpdate = time_point_cast<milliseconds>(g_lastUpdateTime[RP_WS_DISK_SIZE]);
             auto diff = curTime - lastUpdate;
 
-            if (diff.count() >= g_intervals[RP_WS_DISK_SIZE] || force){
+            if (diff.count() >= g_intervals[RP_WS_DISK_SIZE] || force) {
                 g_ws_totalSD.SendValue(totalSize);
                 g_ws_freeSD.SendValue(freeSize);
                 g_lastUpdateTime[RP_WS_DISK_SIZE] = curTime;
             }
-        }else{
+        } else {
             WARNING("Error get free space")
         }
     }
 
-    if (g_modes & RP_WS_SLOW_DAC){
-        float value[4] = {0,0,0,0};
-        uint32_t raw[4] = {0,0,0,0};
-        auto ret = rp_ApinGetValue(RP_AIN0,&value[0],&raw[0]);
-        ret |= rp_ApinGetValue(RP_AIN1,&value[1],&raw[1]);
-        ret |= rp_ApinGetValue(RP_AIN2,&value[2],&raw[2]);
-        ret |= rp_ApinGetValue(RP_AIN3,&value[3],&raw[3]);
-        if (ret == RP_OK){
+    if (g_modes & RP_WS_SLOW_DAC) {
+        float value[4] = {0, 0, 0, 0};
+        uint32_t raw[4] = {0, 0, 0, 0};
+        auto ret = rp_ApinGetValue(RP_AIN0, &value[0], &raw[0]);
+        ret |= rp_ApinGetValue(RP_AIN1, &value[1], &raw[1]);
+        ret |= rp_ApinGetValue(RP_AIN2, &value[2], &raw[2]);
+        ret |= rp_ApinGetValue(RP_AIN3, &value[3], &raw[3]);
+        if (ret == RP_OK) {
             auto lastUpdate = time_point_cast<milliseconds>(g_lastUpdateTime[RP_WS_SLOW_DAC]);
             auto diff = curTime - lastUpdate;
 
-            if (diff.count() >= g_intervals[RP_WS_SLOW_DAC] || force){
+            if (diff.count() >= g_intervals[RP_WS_SLOW_DAC] || force) {
                 g_ws_slow_adc0.SendValue(value[0]);
                 g_ws_slow_adc1.SendValue(value[1]);
                 g_ws_slow_adc2.SendValue(value[2]);
@@ -222,21 +299,21 @@ void rp_WS_UpdateParameters(bool force){
         }
     }
 
-     if (g_modes & RP_WS_SENSOR_VOLT){
-        float value[6] = {0,0,0,0,0,0};
-        uint32_t raw[6] = {0,0,0,0,0,0};
-        auto ret = rp_GetPowerVCCPINT(&raw[0],&value[0]);
-        ret |= rp_GetPowerVCCPAUX(&raw[1],&value[1]);
-        ret |= rp_GetPowerVCCBRAM(&raw[2],&value[2]);
-        ret |= rp_GetPowerVCCINT(&raw[3],&value[3]);
-        ret |= rp_GetPowerVCCAUX(&raw[4],&value[4]);
-        ret |= rp_GetPowerVCCDDR(&raw[5],&value[5]);
+    if (g_modes & RP_WS_SENSOR_VOLT) {
+        float value[6] = {0, 0, 0, 0, 0, 0};
+        uint32_t raw[6] = {0, 0, 0, 0, 0, 0};
+        auto ret = rp_GetPowerVCCPINT(&raw[0], &value[0]);
+        ret |= rp_GetPowerVCCPAUX(&raw[1], &value[1]);
+        ret |= rp_GetPowerVCCBRAM(&raw[2], &value[2]);
+        ret |= rp_GetPowerVCCINT(&raw[3], &value[3]);
+        ret |= rp_GetPowerVCCAUX(&raw[4], &value[4]);
+        ret |= rp_GetPowerVCCDDR(&raw[5], &value[5]);
 
-        if (ret == RP_OK){
+        if (ret == RP_OK) {
             auto lastUpdate = time_point_cast<milliseconds>(g_lastUpdateTime[RP_WS_SENSOR_VOLT]);
             auto diff = curTime - lastUpdate;
 
-            if (diff.count() >= g_intervals[RP_WS_SENSOR_VOLT] || force){
+            if (diff.count() >= g_intervals[RP_WS_SENSOR_VOLT] || force) {
                 g_ws_vcc_pint.SendValue(value[0]);
                 g_ws_vcc_paux.SendValue(value[1]);
                 g_ws_vcc_bram.SendValue(value[2]);
@@ -247,5 +324,4 @@ void rp_WS_UpdateParameters(bool force){
             }
         }
     }
-
 }

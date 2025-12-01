@@ -1,34 +1,26 @@
 #ifndef NET_LIB_ASIO_SOCKET_SIMPLE_H
 #define NET_LIB_ASIO_SOCKET_SIMPLE_H
 
-#include <iostream>
-#include <sstream>
-#include <cstring>
-#include <string>
-#include <functional>
-#include <system_error>
-#include <cstdint>
-#include <memory>
-#include <deque>
+#include <map>
 
-#include "asio_common.h"
 #include "asio.hpp"
-#include "data_lib/signal.hpp"
-#include "data_lib/neon_asm.h"
+#include "asio_common.h"
 #include "asio_service.h"
+#include "data_lib/signal.hpp"
 
-namespace  net_lib {
+namespace net_lib {
 
 using namespace std;
 
 class CAsioSocketSimple {
-public:
-
+   public:
     using Ptr = std::shared_ptr<CAsioSocketSimple>;
+    typedef std::shared_ptr<asio::ip::tcp::socket> socket_ptr;
+    typedef std::shared_ptr<asio::ip::tcp::acceptor> acceptor_ptr;
 
-    static Ptr create(std::string host, std::string port);
+    static Ptr create(std::string host, uint16_t port);
 
-    CAsioSocketSimple(std::string host, std::string port);
+    CAsioSocketSimple(std::string host, uint16_t port);
     ~CAsioSocketSimple();
 
     auto initServer() -> void;
@@ -38,49 +30,46 @@ public:
 
     auto sendBuffer(bool async, net_lib::net_buffer _buffer, size_t _size) -> bool;
 
-    sigslot::signal<string&>    connectNotify;
-    sigslot::signal<string&>    disconnectNotify;
+    sigslot::signal<string&> connectNotify;
+    sigslot::signal<string&> disconnectNotify;
 
     sigslot::signal<error_code> errorNotify;
     sigslot::signal<error_code> connectTimeoutNotify;
 
-    sigslot::signal<error_code,size_t> sendNotify;
-    sigslot::signal<error_code,uint8_t*,size_t> recivedNotify;
+    sigslot::signal<error_code, size_t> sendNotify;
+    sigslot::signal<error_code, uint8_t*, size_t> recivedNotify;
 
-private:
+   private:
+    CAsioSocketSimple(const CAsioSocketSimple&) = delete;
+    CAsioSocketSimple(CAsioSocketSimple&&) = delete;
+    CAsioSocketSimple& operator=(const CAsioSocketSimple&) = delete;
+    CAsioSocketSimple& operator=(const CAsioSocketSimple&&) = delete;
 
-    CAsioSocketSimple(const CAsioSocketSimple &) = delete;
-    CAsioSocketSimple(CAsioSocketSimple &&) = delete;
-    CAsioSocketSimple& operator=(const CAsioSocketSimple&) =delete;
-    CAsioSocketSimple& operator=(const CAsioSocketSimple&&) =delete;
-
-    auto handlerReceive(const asio::error_code &error,size_t bytes_transferred) -> void;
-    auto handlerAccept(const asio::error_code &_error) -> void;
-    auto handlerConnect(const asio::error_code &_error, asio::ip::tcp::resolver::iterator endpoint_iterator) -> void;
-    auto handlerSend(const asio::error_code &_error, size_t _bytesTransferred) -> void;
-    auto handlerSend2(const asio::error_code &_error, size_t _bytesTransferred, uint64_t bufferId) -> void;
-    auto handlerReceiveFromServer(const asio::error_code &ErrorCode, size_t bytes_transferred) -> void;
+    auto handlerReceive(const asio::error_code& error, size_t bytes_transferred) -> void;
+    auto handlerAccept(const asio::error_code& _error, socket_ptr socket) -> void;
+    auto handlerConnect(const asio::error_code& ec) -> void;
+    auto handlerSend(const asio::error_code& _error, size_t _bytesTransferred) -> void;
+    auto handlerSend2(const asio::error_code& _error, size_t _bytesTransferred, uint64_t bufferId) -> void;
+    auto handlerReceiveFromServer(const asio::error_code& ErrorCode, size_t bytes_transferred) -> void;
 
     net_lib::EMode m_mode;
     std::string m_host;
-    std::string m_port;
+    uint16_t m_port;
 
-    std::shared_ptr<asio::ip::tcp::socket> m_tcp_socket;
-    std::shared_ptr<asio::ip::tcp::acceptor> m_tcp_acceptor;
+    socket_ptr m_tcp_socket = nullptr;
+    acceptor_ptr m_tcp_acceptor = nullptr;
     asio::ip::tcp::endpoint m_tcp_endpoint;
-    CAsioService *m_asio;
-    asio::steady_timer  m_timoutTimer;
-    uint8_t *m_SocketReadBuffer;
+    asio::ip::tcp::resolver::results_type m_endpoints;
+    CAsioService* m_asio;
+    asio::steady_timer m_timoutTimer;
+    uint8_t* m_SocketReadBuffer;
     bool m_disableRestartServer;
     std::mutex m_mtx;
 
     uint64_t m_sendbufersSSId = 0;
-    std::map<uint64_t,net_buffer> m_sendbuffersSS;
-
+    std::map<uint64_t, net_buffer> m_sendbuffersSS;
 };
 
-}
+}  // namespace net_lib
 
 #endif
-
-

@@ -10,7 +10,6 @@
  * for more details on the language used herein.
  */
 
-
 #ifndef __RP_MATH_H__
 #define __RP_MATH_H__
 
@@ -28,4 +27,3 @@ float __attribute__((optimize("O0"))) sqrtf_neon(float x);
 #endif
 
 #endif
-

@@ -14,9 +14,8 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
-set(CMAKE_CXX_STANDARD 11)
-set(C_STANDARD 11)
-
+set(CMAKE_CXX_STANDARD 20)
+set(C_STANDARD 20)
 
 if(NOT DEFINED INSTALL_DIR)
     message(FATAL_ERROR,"Installation path not set. Installation will be skipped")
@@ -35,10 +34,15 @@ if(NOT DEFINED REVISION)
   set(REVISION devbuild)
 endif()
 
+if(NOT DEFINED BUILD_NUMBER)
+  set(BUILD_NUMBER devbuild)
+endif()
 
 message(STATUS "VERSION=${VERSION}")
 message(STATUS "REVISION=${REVISION}")
 message(STATUS "Install path ${INSTALL_DIR}")
+message(STATUS "BUILD_NUMBER=${BUILD_NUMBER}")
+message(STATUS "LINUX_VER=${LINUX_VER}")
 
 message(STATUS "Compiler C path: ${CMAKE_C_COMPILER}")
 message(STATUS "Compiler C ID: ${CMAKE_C_COMPILER_ID}")
@@ -64,20 +68,25 @@ include_directories(${INSTALL_DIR}/include)
 
 
 list(APPEND src
-            ${CMAKE_SOURCE_DIR}/src/common.c
-            ${CMAKE_SOURCE_DIR}/src/oscilloscope.c
-            ${CMAKE_SOURCE_DIR}/src/acq_handler.c
-            ${CMAKE_SOURCE_DIR}/src/rp.c
-            ${CMAKE_SOURCE_DIR}/src/generate.c
-            ${CMAKE_SOURCE_DIR}/src/gen_handler.c
-            ${CMAKE_SOURCE_DIR}/src/daisy.c
-    )
+            ${CMAKE_SOURCE_DIR}/src/common.cpp
+            ${CMAKE_SOURCE_DIR}/src/oscilloscope.cpp
+            ${CMAKE_SOURCE_DIR}/src/acq_handler.cpp
+            ${CMAKE_SOURCE_DIR}/src/rp.cpp
+            ${CMAKE_SOURCE_DIR}/src/generate.cpp
+            ${CMAKE_SOURCE_DIR}/src/gen_handler.cpp
+            ${CMAKE_SOURCE_DIR}/src/axi_manager.cpp
+            ${CMAKE_SOURCE_DIR}/src/housekeeping.cpp
+            ${CMAKE_SOURCE_DIR}/src/daisy.cpp
+            ${CMAKE_SOURCE_DIR}/src/convert.hpp
+            ${CMAKE_SOURCE_DIR}/src/profiler.cpp
+)
 
 
 list(APPEND header_rp
     ${CMAKE_SOURCE_DIR}/include/rp.h
     ${CMAKE_SOURCE_DIR}/include/rp_acq.h
     ${CMAKE_SOURCE_DIR}/include/rp_acq_axi.h
+    ${CMAKE_SOURCE_DIR}/include/rp_asg_axi.h
     ${CMAKE_SOURCE_DIR}/include/rp_enums.h
     ${CMAKE_SOURCE_DIR}/include/rp_gen.h
 )
@@ -85,12 +94,13 @@ list(APPEND header_rp
 list(APPEND header_rp_common
     ${CMAKE_SOURCE_DIR}/include/common/version.h
     ${CMAKE_SOURCE_DIR}/include/common/rp_log.h
+    ${CMAKE_SOURCE_DIR}/include/common/profiler.h
 )
 
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
-add_compile_options(-Wall -Wextra -Wno-unused-parameter -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+add_compile_options(-Wall -Wno-psabi -Wextra -Wno-unused-parameter -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 if(DEBUG_REG)
 add_compile_options(-DDEBUG_REG)
@@ -116,19 +126,18 @@ if(BUILD_SHARED)
 
         find_package(PythonLibs)
         include_directories(${PYTHON_INCLUDE_PATH})
-
+        include_directories(/usr/local/lib/python3.10/dist-packages/numpy/_core/include)
         set(CMAKE_SWIG_FLAGS "")
         set_property(SOURCE src/rp.i PROPERTY CPLUSPLUS ON)
 
         SWIG_ADD_LIBRARY(rp_py LANGUAGE python SOURCES src/rp.i ${src})
-        SWIG_LINK_LIBRARIES(rp_py ${PYTHON_LIBRARIES} -lm -lpthread rp-hw-calib rp-hw-profiles rp-i2c rp-spi rp-gpio rp-hw i2c)
+        SWIG_LINK_LIBRARIES(rp_py ${PYTHON_LIBRARIES} -lpthread rp-hw-calib rp-hw-profiles rp-i2c rp-spi rp-gpio rp-hw i2c -lm)
     endif()
 
     add_library(${PROJECT_NAME}-shared SHARED)
     set_property(TARGET ${PROJECT_NAME}-shared PROPERTY OUTPUT_NAME ${PROJECT_NAME})
     target_sources(${PROJECT_NAME}-shared PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-obj>)
-    target_link_libraries(${PROJECT_NAME}-shared -lm -lpthread)
-    target_link_libraries(${PROJECT_NAME}-shared rp-hw rp-hw-calib rp-hw-profiles rp-i2c rp-spi rp-gpio i2c)
+    target_link_libraries(${PROJECT_NAME}-shared rp-hw-calib  rp-hw rp-hw-profiles rp-i2c rp-spi rp-gpio i2c -lm -lpthread)
     if(IS_INSTALL)
         install(TARGETS ${PROJECT_NAME}-shared
             LIBRARY DESTINATION ${INSTALL_DIR}/lib

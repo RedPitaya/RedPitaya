@@ -844,6 +844,13 @@ area:hover {
     display: none;
 }
 
+.reboot_msg
+{
+    font-size: 12px;
+    color: rgb(83, 255, 3);
+    display: none;
+}
+
 #warn
 {
     font-size: 12px;

@@ -108,6 +108,8 @@
         SPEC.config.gen_enable = undefined;
         SPEC.channelsCount = 2;
         SPEC.arb_list = undefined;
+        SPEC.hi_z_mode = false;
+        SPEC.gen_max_amp = 1;
 
 
         // SPEC.compressed_data = 0;
@@ -156,7 +158,7 @@
                     $("#back_button").attr("href", SPEC.previousPageUrl)
 
                     console.log( "Load was performed." );
-
+                    initImageLoaders();
                     const ob = new ResizeObserver(function(entries) {
                         SPEC.updateJoystickPosition();
                     });
@@ -171,6 +173,7 @@
                         UI.updateARBFunc(SPEC.arb_list)
 
                     UI.initHandlers();
+                    UI.initUIItems(_value);
                     SPEC.initHandlers();
                     SPEC.waterfalls[0] = $.createWaterfall($("#waterfall_ch1"), $('#waterfall-holder_ch1').width(), 60);
                     SPEC.waterfalls[1] = $.createWaterfall($("#waterfall_ch2"), $('#waterfall-holder_ch2').width(), 60);
@@ -249,102 +252,6 @@
 
         setInterval(performanceHandler, 1000);
 
-        // Creates a WebSocket connection with the web server
-        // SPEC.connectWebSocket = function() {
-
-        //     if (window.WebSocket) {
-        //         SPEC.ws = new WebSocket(SPEC.config.socket_url);
-        //         SPEC.ws.binaryType = "arraybuffer";
-        //     } else if (window.MozWebSocket) {
-        //         SPEC.ws = new MozWebSocket(SPEC.config.socket_url);
-        //         SPEC.ws.binaryType = "arraybuffer";
-        //     } else {
-        //         console.log('Browser does not support WebSocket');
-        //     }
-
-        //     // Define WebSocket event listeners
-        //     if (SPEC.ws) {
-
-        //         SPEC.ws.onopen = function() {
-        //             SPEC.state.socket_opened = true;
-        //             console.log('Socket opened');
-        //             SPEC.unexpectedClose = true;
-        //             $('body').addClass('loaded');
-        //             $('body').addClass('connection_lost');
-        //             $('body').addClass('user_lost');
-        //             SPEC.startCheckStatus();
-        //             SPEC.params.local['in_command'] = { value: 'send_all_params' };
-        //             SPEC.ws.send(JSON.stringify({ parameters: SPEC.params.local }));
-        //             SPEC.params.local = {};
-
-        //         };
-
-        //         SPEC.ws.onclose = function() {
-        //             SPEC.state.socket_opened = false;
-        //             $('#graphs .plot').hide(); // Hide all graphs
-        //             SPEC.hideCursors();
-        //             SPEC.hideInfo();
-        //             console.log('Socket closed. Trying to reopen in ' + SPEC.config.socket_reconnect_timeout / 1000 + ' sec...');
-        //             if (SPEC.unexpectedClose == true) {
-        //                 setTimeout(SPEC.reloadPage, '1000');
-        //             }
-        //         };
-
-        //         SPEC.ws.onerror = function(ev) {
-        //             console.log('Websocket error: ', ev);
-        //             if (!SPEC.state.socket_opened)
-        //                 SPEC.startApp();
-        //         };
-
-
-        //         SPEC.ws.onmessage = function(ev) {
-        //             if (SPEC.state.processing) {
-        //                 return;
-        //             }
-        //             SPEC.state.processing = true;
-
-        //             try {
-        //                 var data = new Uint8Array(ev.data);
-        //                 SPEC.compressed_data += data.length;
-        //                 var inflate = pako.inflate(data);
-        //                 // var text = SPEC.handleCodePoints(inflate);
-
-        //                 var bytes = new Uint8Array(inflate);
-        //                 var text = '';
-        //                 for(var i = 0; i < Math.ceil(bytes.length / 32768.0); i++) {
-        //                   text += String.fromCharCode.apply(null, bytes.slice(i * 32768, Math.min((i+1) * 32768, bytes.length)))
-        //                 }
-
-        //                 SPEC.decompressed_data += text.length;
-        //                 var receive = JSON.parse(text);
-
-        //                 if (receive.parameters) {
-        //                     //console.log(receive.parameters);
-        //                     SPEC.parameterStack.push(receive.parameters);
-        //                     if ((Object.keys(SPEC.params.orig).length == 0) && (Object.keys(receive.parameters).length == 0)) {
-        //                         SPEC.params.local['in_command'] = { value: 'send_all_params' };
-        //                         SPEC.ws.send(JSON.stringify({ parameters: SPEC.params.local }));
-        //                         SPEC.params.local = {};
-        //                     }
-        //                 }
-
-        //                 if (receive.signals) {
-        //                     //console.log(receive.signals);
-        //                     if (!jQuery.isEmptyObject(receive.signals)){
-        //                         SPEC.latest_signal = Object.assign({}, receive.signals);
-        //                         SPEC.signalStack.push(SPEC.latest_signal);
-        //                     }
-        //                 }
-        //                 SPEC.state.processing = false;
-        //             } catch (e) {
-        //                 SPEC.state.processing = false;
-        //                 console.log(e);
-        //             } finally {
-        //                 SPEC.state.processing = false;
-        //             }
-        //         };
-        //     }
-        // };
 
         // For firefox
 
@@ -503,19 +410,7 @@
             }
         }
 
-        SPEC.sweepResetButton = function(new_params) {
-            if ('SOUR1_SWEEP_STATE' in new_params){
-                SPEC.state.sweep_ch1 = new_params['SOUR1_SWEEP_STATE'].value
-            }
-            if ('SOUR2_SWEEP_STATE' in new_params){
-                SPEC.state.sweep_ch2 = new_params['SOUR2_SWEEP_STATE'].value
-            }
-            if (SPEC.state.sweep_ch1 || SPEC.state.sweep_ch2){
-                $(".sweep_button").show();
-            }else{
-                $(".sweep_button").hide();
-            }
-        }
+        
 
         SPEC.sweepTime = function(new_params) {
             if ('SOUR1_SWEEP_TIME' in new_params){
@@ -666,9 +561,11 @@
         SPEC.param_callbacks["SOUR3_VOLT_OFFS"] = SPEC.src3VoltOffset;
         SPEC.param_callbacks["SOUR4_VOLT_OFFS"] = SPEC.src4VoltOffset;
         SPEC.param_callbacks["xAxisLogMode"] = SPEC.setXAxisMode;
-        SPEC.param_callbacks["EXT_CLOCK_ENABLE"] = SPEC.setPllMode;
-        SPEC.param_callbacks["SOUR1_SWEEP_STATE"] = SPEC.sweepResetButton;
-        SPEC.param_callbacks["SOUR2_SWEEP_STATE"] = SPEC.sweepResetButton;
+        SPEC.param_callbacks["EXT_CLOCK_ENABLE"] = SPEC.setPllMode;       
+        SPEC.param_callbacks["SOUR1_IMPEDANCE"] = GEN.sour1Imp;
+        SPEC.param_callbacks["SOUR2_IMPEDANCE"] = GEN.sour2Imp;
+        SPEC.param_callbacks["SOUR1_SWEEP_STATE"] = GEN.sweepResetButton;
+        SPEC.param_callbacks["SOUR2_SWEEP_STATE"] = GEN.sweepResetButton;
         SPEC.param_callbacks["SOUR1_SWEEP_TIME"] = SPEC.sweepTime;
         SPEC.param_callbacks["SOUR2_SWEEP_TIME"] = SPEC.sweepTime;
         SPEC.param_callbacks["SOUR1_RISE"] = SPEC.riseFallTime;
@@ -714,6 +611,14 @@
         SPEC.processParameters = function(new_params) {
             var old_params = $.extend(true, {}, CLIENT.params.orig);
 
+            if (new_params['SOUR_VOLT_MAX']){
+                SPEC.gen_max_amp = new_params['SOUR_VOLT_MAX'].value
+            }
+
+            if (new_params['SOUR_IMPEDANCE_Z_MODE']){
+                SPEC.hi_z_mode = new_params['SOUR_IMPEDANCE_Z_MODE'].value
+            }
+
             if (new_params['ARB_LIST'] && SPEC.arb_list === undefined){
                 SPEC.arb_list = new_params['ARB_LIST'].value;
                 if (SPEC.arb_list !== "")
@@ -729,11 +634,11 @@
             }
 
             if (new_params['SOUR1_IMPEDANCE'] && new_params['SOUR1_IMPEDANCE'].value != undefined) {
-                SPEC.updateMaxLimitOnLoad("CH1", new_params['SOUR1_IMPEDANCE'].value);
+                UI.updateMaxLimitOnLoad("CH1", new_params['SOUR1_IMPEDANCE'].value);
             }
 
             if (new_params['SOUR2_IMPEDANCE'] && new_params['SOUR2_IMPEDANCE'].value != undefined) {
-                SPEC.updateMaxLimitOnLoad("CH2", new_params['SOUR2_IMPEDANCE'].value);
+                UI.updateMaxLimitOnLoad("CH2", new_params['SOUR2_IMPEDANCE'].value);
             }
 
             if (new_params['EXT_CLOCK_LOCKED'] && new_params['EXT_CLOCK_LOCKED'].value != undefined) {

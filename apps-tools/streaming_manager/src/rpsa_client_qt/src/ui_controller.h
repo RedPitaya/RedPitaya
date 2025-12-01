@@ -3,14 +3,12 @@
 
 #include <QObject>
 
-class ui_controller : public QObject
-{
+class ui_controller : public QObject {
     Q_OBJECT
-public:
+   public:
+    static ui_controller* instance();
 
-    static ui_controller *instance();
-
-    ui_controller(QObject *parent = nullptr);
+    ui_controller(QObject* parent = nullptr);
     ~ui_controller(){};
 
     Q_INVOKABLE QObject* getBoardsModel();
@@ -20,4 +18,4 @@ public:
     Q_INVOKABLE void openFolder();
 };
 
-#endif // UI_CONTROLLER_H
+#endif  // UI_CONTROLLER_H

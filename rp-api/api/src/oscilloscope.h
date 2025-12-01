@@ -12,12 +12,12 @@
  * for more details on the language used herein.
  */
 
-
 #ifndef SRC_OSCILLOSCOPE_H_
 #define SRC_OSCILLOSCOPE_H_
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
+#include "common.h"
 
 // Base Oscilloscope address
 static const int OSC_BASE_ADDR = 0x00100000;
@@ -31,13 +31,21 @@ static const int OSC_BASE_ADDR_4CH = 0x00200000;
 #define OSC_CHB_OFFSET 0x20000
 
 typedef struct {
-    uint8_t start_write            :1;  // (W) start write
-    uint8_t reset_state_machine    :1;  // (W) rst_wr_state_machine
-    uint8_t trigger_status         :1;  // (R) trigger_status
-    uint8_t arm_keep               :1;  // (W) arm_keep
-    uint8_t all_data_written       :1;  // (R) All data written to buffer
-    uint8_t enable_split_trigger   :1;  // Work only first channel
-    uint8_t                        :2;
+    uint8_t start_write : 1;           // (W) start write
+    uint8_t reset_state_machine : 1;   // (W) rst_wr_state_machine
+    uint8_t trigger_status : 1;        // (R) trigger_status
+    uint8_t arm_keep : 1;              // (W) arm_keep
+    uint8_t all_data_written : 1;      // (R) All data written to buffer
+    uint8_t enable_split_trigger : 1;  // Work only first channel
+    uint8_t : 2;
+    void print() volatile {
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "start_write", start_write);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "reset_state_machine", reset_state_machine);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "trigger_status", trigger_status);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "arm_keep", arm_keep);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "all_data_written", all_data_written);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "enable_split_trigger", enable_split_trigger);
+    };
 } config_ch_t;
 
 typedef struct {
@@ -47,12 +55,16 @@ typedef struct {
 typedef union {
     uint32_t reg_full;
     config_t reg;
-}config_u_t;
+} config_u_t;
 
 typedef struct {
-    uint8_t trig_source           :4;
-    uint8_t trig_lock             :1;
-    uint8_t                       :3;
+    uint8_t trig_source : 4;
+    uint8_t trig_lock : 1;
+    uint8_t : 3;
+    void print() volatile {
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "trig_source", trig_source);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "trig_lock", trig_lock);
+    };
 } trig_source_t;
 
 typedef union {
@@ -61,8 +73,9 @@ typedef union {
 } trig_source_u_t;
 
 typedef struct {
-    uint8_t trig_lock             :1;
-    uint8_t                       :7;
+    uint8_t trig_lock : 1;
+    uint8_t : 7;
+    void print() volatile { printRegBit(" - %-39s = 0x%08X (%d)\n", "trig_lock", trig_lock); };
 } trig_lock_control_t;
 
 typedef union {
@@ -70,16 +83,73 @@ typedef union {
     trig_lock_control_t reg[4];
 } trig_lock_control_u_t;
 
-
 typedef struct {
-    uint8_t average               :1;
-    uint8_t                       :7;
+    uint8_t average : 1;
+    uint8_t : 7;
+    void print() volatile { printRegBit(" - %-39s = 0x%08X (%d)\n", "average", average); };
 } trig_average_t;
 
 typedef union {
     uint32_t reg_full;
     trig_average_t reg[4];
 } trig_average_u_t;
+
+typedef struct {
+    uint32_t trig_armed_ch1 : 1;
+    uint32_t : 1;
+    uint32_t trig_has_arrived_ch1 : 1;
+    uint32_t trig_remines_armed_ch1 : 1;
+    uint32_t acq_delay_passed_ch1 : 1;
+    uint32_t : 11;
+    uint32_t trig_armed_ch2 : 1;
+    uint32_t : 1;
+    uint32_t trig_has_arrived_ch2 : 1;
+    uint32_t trig_remines_armed_ch2 : 1;
+    uint32_t acq_delay_passed_ch2 : 1;
+    uint32_t : 11;
+
+    void print() volatile {
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "trig_armed_ch1", trig_armed_ch1);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "trig_has_arrived_ch1", trig_has_arrived_ch1);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "trig_remines_armed_ch1", trig_remines_armed_ch1);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "acq_delay_passed_ch1", acq_delay_passed_ch1);
+
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "trig_armed_ch2", trig_armed_ch2);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "trig_has_arrived_ch2", trig_has_arrived_ch2);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "trig_remines_armed_ch2", trig_remines_armed_ch2);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "acq_delay_passed_ch2", acq_delay_passed_ch2);
+    };
+} axi_state_t;
+
+typedef union {
+    uint32_t reg_full;
+    axi_state_t reg;
+} axi_state_u_t;
+
+typedef struct {
+    uint32_t ext_trig_dbc : 20;
+    uint32_t : 12;
+    void print() volatile { printRegBit(" - %-39s = 0x%08X (%d)\n", "ext_trig_dbc", ext_trig_dbc); };
+} ext_trig_dbc_t;
+
+typedef union {
+    uint32_t reg_full;
+    ext_trig_dbc_t reg;
+} ext_trig_dbc_u_t;
+
+typedef struct {
+    uint32_t bypass_ch1 : 1;
+    uint32_t bypass_ch2 : 1;
+    void print() volatile {
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "bypass_ch1", bypass_ch1);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "bypass_ch2", bypass_ch2);
+    };
+} rec_filter_bypass_t;
+
+typedef union {
+    uint32_t reg_full;
+    rec_filter_bypass_t reg;
+} rec_filter_bypass_u_t;
 
 // Oscilloscope structure declaration
 typedef struct osc_control_s {
@@ -383,7 +453,7 @@ typedef struct osc_control_s {
     * reset value is decimal 62500
     * or equivalent to 0.5ms
     */
-    uint32_t ext_trig_dbc_t:20,:12; // 0x90
+    uint32_t ext_trig_dbc;  // 0x90
 
     /**@brief Offset 0x94 - Trigger lock control
      * bit[0] - (W) Write 1 for unlock trigger - ch1/common
@@ -395,15 +465,23 @@ typedef struct osc_control_s {
      * bit[24] - (W) Write 1 for unlock trigger - ch4
      * bit[31:25] - reserved
     */
-    uint32_t trigger_lock_ctr; // 0x94
+    uint32_t trigger_lock_ctr;
+
+    /**
+     * Offset 0x98 - Reconstruction filter bypass
+     * bit[0] - (R/W) Bypass ch1
+     * bit[1] - (R/W) Bypass ch2
+     * bit[31:2] - reserved
+    */
+    uint32_t filter_bypass;
 
     /** @brief Offset 0x98 - reserved
      */
-    uint32_t reserved_98[30];
+    uint32_t reserved_98[29];
 
     /** @brief Offset 0x110 - After trigger delay register
      *
-     * After trigger delay register (offset 0x10)
+     * After trigger delay register (offset 0x110)
      * bits [31: 0] - trigger delay
      * 32 bit number - how many decimated samples should be stored into a buffer.
      * (max 16k samples)
@@ -412,7 +490,7 @@ typedef struct osc_control_s {
 
     /** @brief Offset 0x114 - Data decimation register
      *
-     * Data decimation register (offset 0x14):
+     * Data decimation register (offset 0x114):
      * bits [16: 0] - decimation factor, legal values:
      * 1, 8, 64, 1024, 8192 65536
      * If other values are written data is undefined
@@ -422,7 +500,7 @@ typedef struct osc_control_s {
 
     /** @brief Offset 0x118 - Current write pointer register
      *
-     * Current write pointer register (offset 0x18), read only:
+     * Current write pointer register (offset 0x118), read only:
      * bits [13: 0] - current write pointer
      * bits [31:14] - reserved
      */
@@ -442,45 +520,83 @@ typedef struct osc_control_s {
 
     /** @brief Offset 0x12C - Pre Trigger counter
      *
-     * Pre Trigger counter (offset 0x2C)
+     * Pre Trigger counter (offset 0x12C)
      * bits [31: 0] - Pre Trigger counter
      * 32 bit number - how many decimated samples have been stored into a buffer
      * before trigger arrived.
      */
     uint32_t pre_trigger_counter_ch2;
 
+    /** @brief Offset 0x130 - reserved
+     */
+    uint32_t reserved_130[52];
+
+    /** @brief Calibration offset CH1 0x200
+     *
+     * Trigger write pointer register (offset 0x200):
+     * bits [15: 0] - Offset R/W
+     * bits [31:16] - reserved
+     */
+    uint32_t calib_offset_ch1;
+
+    /** @brief Calibration gain CH1 0x204
+     *
+     * Trigger write pointer register (offset 0x204):
+     * bits [15: 0] - Gain R/W
+     * bits [31:16] - reserved
+     */
+    uint32_t calib_gain_ch1;
+
+    /** @brief Calibration offset CH2 0x208
+     *
+     * Trigger write pointer register (offset 0x208):
+     * bits [15: 0] - Offset R/W
+     * bits [31:16] - reserved
+     */
+    uint32_t calib_offset_ch2;
+
+    /** @brief Calibration gain CH2 0x20C
+     *
+     * Trigger write pointer register (offset 0x20C):
+     * bits [15: 0] - Gain R/W
+     * bits [31:16] - reserved
+     */
+    uint32_t calib_gain_ch2;
+
     /* ChA & ChB data - 14 LSB bits valid starts from 0x10000 and
      * 0x20000 and are each 16k samples long */
 } osc_control_t;
 
+static const uint32_t DATA_DEC_MASK = 0x1FFFF;           // (17 bits)
+static const uint32_t DATA_AVG_MASK = 0x1;               // (1 bit)
+static const uint32_t TRIG_SRC_MASK = 0xF;               // (4 bits)
+static const uint32_t START_DATA_WRITE_MASK = 0x1;       // (1 bit)
+static const uint32_t THRESHOLD_MASK = 0xFFFF;           // (16 bits)
+static const uint32_t HYSTERESIS_MASK = 0xFFFF;          // (16 bits)
+static const uint32_t TRIG_DELAY_MASK = 0xFFFFFFFF;      // (32 bits)
+static const uint32_t WRITE_POINTER_MASK = 0x3FFF;       // (14 bits)
+static const uint32_t EQ_FILTER_AA = 0x3FFFF;            // (18 bits)
+static const uint32_t EQ_FILTER = 0x1FFFFFF;             // (25 bits)
+static const uint32_t RST_WR_ST_MCH_MASK = 0x2;          // (1st bit)
+static const uint32_t TRIG_ST_MCH_MASK = 0x4;            // (2nd bit)
+static const uint32_t PRE_TRIGGER_COUNTER = 0xFFFFFFFF;  // (32 bit)
+static const uint32_t ARM_KEEP_MASK = 0x8;               // (4 bit)
+static const uint32_t FILL_STATE_MASK = 0x10;            // (1 bit)
+static const uint32_t TRIG_UNLOCK_MASK = 0x10;           // (1 bit)
 
-static const uint32_t DATA_DEC_MASK         = 0x1FFFF;      // (17 bits)
-static const uint32_t DATA_AVG_MASK         = 0x1;          // (1 bit)
-static const uint32_t TRIG_SRC_MASK         = 0xF;          // (4 bits)
-static const uint32_t START_DATA_WRITE_MASK = 0x1;          // (1 bit)
-static const uint32_t THRESHOLD_MASK        = 0xFFFF;       // (16 bits)
-static const uint32_t HYSTERESIS_MASK       = 0xFFFF;       // (16 bits)
-static const uint32_t TRIG_DELAY_MASK       = 0xFFFFFFFF;   // (32 bits)
-static const uint32_t WRITE_POINTER_MASK    = 0x3FFF;       // (14 bits)
-static const uint32_t EQ_FILTER_AA          = 0x3FFFF;      // (18 bits)
-static const uint32_t EQ_FILTER             = 0x1FFFFFF;    // (25 bits)
-static const uint32_t RST_WR_ST_MCH_MASK    = 0x2;          // (1st bit)
-static const uint32_t TRIG_ST_MCH_MASK      = 0x4;          // (2nd bit)
-static const uint32_t PRE_TRIGGER_COUNTER   = 0xFFFFFFFF;   // (32 bit)
-static const uint32_t ARM_KEEP_MASK         = 0x8;          // (4 bit)
-static const uint32_t FILL_STATE_MASK       = 0x10;         // (1 bit)
-static const uint32_t TRIG_UNLOCK_MASK      = 0x10;         // (1 bit)
+static const uint32_t AXI_ENABLE_MASK = 0x1;          // (1 bit)
+static const uint32_t AXI_CHA_FILL_STATE = 0x10;      // (1 bit)
+static const uint32_t AXI_CHB_FILL_STATE = 0x100000;  // (1 bit)
+static const uint32_t FULL_MASK = 0xFFFFFFFF;         // (32 bit)
 
-static const uint32_t AXI_ENABLE_MASK       = 0x1;          // (1 bit)
-static const uint32_t AXI_CHA_FILL_STATE    = 0x10;         // (1 bit)
-static const uint32_t AXI_CHB_FILL_STATE    = 0x100000;     // (1 bit)
-static const uint32_t FULL_MASK             = 0xFFFFFFFF;   // (32 bit)
+static const uint32_t DEBAUNCER_MASK = 0xFFFFF;  // (20 bit)
 
-static const uint32_t DEBAUNCER_MASK        = 0xFFFFF;      // (20 bit)
-
+static const uint32_t CALIB_MASK = 0xFFFF;  // (16 bit)
 
 int osc_Init(int channels);
 int osc_Release();
+
+int osc_printRegset();
 
 int osc_SetDecimation(rp_channel_t channel, uint32_t decimation);
 int osc_GetDecimation(rp_channel_t channel, uint32_t* decimation);
@@ -491,14 +607,14 @@ int osc_GetTriggerSource(rp_channel_t channel, uint32_t* source);
 int osc_SetSplitTriggerMode(bool enable);
 int osc_GetSplitTriggerMode(bool* enable);
 int osc_SetUnlockTrigger(rp_channel_t channel);
-int osc_GetUnlockTrigger(rp_channel_t channel, bool *state);
+int osc_GetUnlockTrigger(rp_channel_t channel, bool* state);
 int osc_WriteDataIntoMemory(rp_channel_t channel, bool enable);
 int osc_ResetWriteStateMachine(rp_channel_t channel);
 int osc_SetArmKeep(rp_channel_t channel, bool enable);
-int osc_GetArmKeep(rp_channel_t channel, bool *state);
-int osc_GetBufferFillState(rp_channel_t channel, bool *state);
-int osc_GetTriggerState(rp_channel_t channel, bool *received);
-int osc_GetPreTriggerCounter(rp_channel_t channel, uint32_t *value);
+int osc_GetArmKeep(rp_channel_t channel, bool* state);
+int osc_GetBufferFillState(rp_channel_t channel, bool* state);
+int osc_GetTriggerState(rp_channel_t channel, bool* received);
+int osc_GetPreTriggerCounter(rp_channel_t channel, uint32_t* value);
 int osc_SetThresholdChA(uint32_t threshold);
 int osc_GetThresholdChA(uint32_t* threshold);
 int osc_SetThresholdChB(uint32_t threshold);
@@ -519,6 +635,8 @@ int osc_SetTriggerDelay(rp_channel_t channel, uint32_t decimated_data_num);
 int osc_GetTriggerDelay(rp_channel_t channel, uint32_t* decimated_data_num);
 int osc_GetWritePointer(rp_channel_t channel, uint32_t* pos);
 int osc_GetWritePointerAtTrig(rp_channel_t channel, uint32_t* pos);
+int osc_SetEqFilterBypass(rp_channel_t channel, bool enable);
+int osc_GetEqFilterBypass(rp_channel_t channel, bool* enable);
 int osc_SetEqFiltersChA(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp);
 int osc_GetEqFiltersChA(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
 int osc_SetEqFiltersChB(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp);
@@ -528,19 +646,24 @@ int osc_GetEqFiltersChC(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk,
 int osc_SetEqFiltersChD(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp);
 int osc_GetEqFiltersChD(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
 
+int osc_SetCalibOffsetInFPGA(rp_channel_t channel, uint8_t bits, int32_t offset);
+int osc_SetCalibGainInFPGA(rp_channel_t channel, double gain);
+int osc_GetCalibOffsetInFPGA(rp_channel_t channel, uint8_t bits, int32_t* offset);
+int osc_GetCalibGainInFPGA(rp_channel_t channel, double* gain);
+
 int osc_SetExtTriggerDebouncer(uint32_t value);
-int osc_GetExtTriggerDebouncer(uint32_t *value);
+int osc_GetExtTriggerDebouncer(uint32_t* value);
 
 const volatile uint32_t* osc_GetDataBufferChA();
 const volatile uint32_t* osc_GetDataBufferChB();
 const volatile uint32_t* osc_GetDataBufferChC();
 const volatile uint32_t* osc_GetDataBufferChD();
 
-int osc_axi_GetMemoryRegion(uint32_t *_start,uint32_t *_size);
 int osc_axi_EnableChA(bool enable);
 int osc_axi_EnableChB(bool enable);
 int osc_axi_EnableChC(bool enable);
 int osc_axi_EnableChD(bool enable);
+
 int osc_axi_SetAddressStartChA(uint32_t address);
 int osc_axi_SetAddressStartChB(uint32_t address);
 int osc_axi_SetAddressStartChC(uint32_t address);
@@ -550,19 +673,19 @@ int osc_axi_SetAddressEndChB(uint32_t address);
 int osc_axi_SetAddressEndChC(uint32_t address);
 int osc_axi_SetAddressEndChD(uint32_t address);
 
-int osc_axi_GetAddressStartChA(uint32_t *address);
-int osc_axi_GetAddressStartChB(uint32_t *address);
-int osc_axi_GetAddressStartChC(uint32_t *address);
-int osc_axi_GetAddressStartChD(uint32_t *address);
-int osc_axi_GetAddressEndChA(uint32_t *address);
-int osc_axi_GetAddressEndChB(uint32_t *address);
-int osc_axi_GetAddressEndChC(uint32_t *address);
-int osc_axi_GetAddressEndChD(uint32_t *address);
+int osc_axi_GetAddressStartChA(uint32_t* address);
+int osc_axi_GetAddressStartChB(uint32_t* address);
+int osc_axi_GetAddressStartChC(uint32_t* address);
+int osc_axi_GetAddressStartChD(uint32_t* address);
+int osc_axi_GetAddressEndChA(uint32_t* address);
+int osc_axi_GetAddressEndChB(uint32_t* address);
+int osc_axi_GetAddressEndChC(uint32_t* address);
+int osc_axi_GetAddressEndChD(uint32_t* address);
 
-int osc_axi_GetBufferFillStateChA(bool *state);
-int osc_axi_GetBufferFillStateChB(bool *state);
-int osc_axi_GetBufferFillStateChC(bool *state);
-int osc_axi_GetBufferFillStateChD(bool *state);
+int osc_axi_GetBufferFillStateChA(bool* state);
+int osc_axi_GetBufferFillStateChB(bool* state);
+int osc_axi_GetBufferFillStateChC(bool* state);
+int osc_axi_GetBufferFillStateChD(bool* state);
 
 int osc_axi_GetWritePointerChA(uint32_t* pos);
 int osc_axi_GetWritePointerChB(uint32_t* pos);
@@ -581,9 +704,6 @@ int osc_axi_GetTriggerDelayChB(uint32_t* decimated_data_num);
 int osc_axi_GetTriggerDelayChC(uint32_t* decimated_data_num);
 int osc_axi_GetTriggerDelayChD(uint32_t* decimated_data_num);
 
-const volatile uint16_t* osc_axi_GetDataBufferChA();
-const volatile uint16_t* osc_axi_GetDataBufferChB();
-const volatile uint16_t* osc_axi_GetDataBufferChC();
-const volatile uint16_t* osc_axi_GetDataBufferChD();
+const uint16_t* osc_axi_GetDataBufferCh(rp_channel_t channel);
 
 #endif /* SRC_OSCILLOSCOPE_H_ */

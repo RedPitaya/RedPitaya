@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.14)
 
 set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 
 set(APP arb_manager)
@@ -19,17 +19,23 @@ if(NOT DEFINED INSTALL_DIR)
 endif()
 
 if(NOT DEFINED VERSION)
-  set(VERSION 0)
+  set(VERSION dev)
 endif()
 
 if(NOT DEFINED REVISION)
   set(REVISION devbuild)
 endif()
 
+if(NOT DEFINED BUILD_NUMBER)
+  set(BUILD_NUMBER devbuild)
+endif()
+
 
 message(STATUS "Install path ${INSTALL_DIR}")
 message(STATUS "VERSION=${VERSION}")
 message(STATUS "REVISION=${REVISION}")
+message(STATUS "BUILD_NUMBER=${BUILD_NUMBER}")
+message(STATUS "LINUX_VER=${LINUX_VER}")
 
 message(STATUS "Compiler C path: ${CMAKE_C_COMPILER}")
 message(STATUS "Compiler C ID: ${CMAKE_C_COMPILER_ID}")
@@ -41,7 +47,7 @@ message(STATUS "Compiler C++ ID: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "Compiler C++version: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Compiler C++ is part: ${CMAKE_COMPILER_IS_GNUCXX}")
 
-set(ZIP_FILE ../../../${APP}-${VERSION}-${BUILD_NUMBER}-${REVISION}.zip)
+set(ZIP_FILE ../../../${APP}-${VERSION}-${REVISION}.zip)
 
 list(APPEND r_paths
     /opt/redpitaya/lib
@@ -112,7 +118,7 @@ install(FILES ${HTML} DESTINATION ${BUILD_PATH})
 install(FILES nginx.conf fpga.conf fpga.sh DESTINATION ${BUILD_PATH})
 
 install(CODE "execute_process(COMMAND sed -i ${BUILD_PATH}/info/info.json -e \"s/REVISION/${REVISION}/\")")
-install(CODE "execute_process(COMMAND sed -i ${BUILD_PATH}/info/info.json -e \"s/BUILD_NUMBER/${BUILD_NUMBER}/\")")
+install(CODE "execute_process(COMMAND sed -i ${BUILD_PATH}/info/info.json -e \"s/VERSION/${VERSION}/\")")
 
 install(CODE "file(ARCHIVE_CREATE OUTPUT ${ZIP_FILE} FORMAT zip PATHS ${BUILD_PATH})")
 install(CODE "file(ARCHIVE_EXTRACT INPUT ${ZIP_FILE} DESTINATION ${INSTALL_DIR}/www/apps)")

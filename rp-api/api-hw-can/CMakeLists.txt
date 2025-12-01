@@ -29,8 +29,14 @@ if(NOT DEFINED REVISION)
   set(REVISION devbuild)
 endif()
 
+if(NOT DEFINED BUILD_NUMBER)
+  set(BUILD_NUMBER devbuild)
+endif()
+
 message(STATUS "VERSION=${VERSION}")
 message(STATUS "REVISION=${REVISION}")
+message(STATUS "BUILD_NUMBER=${BUILD_NUMBER}")
+message(STATUS "LINUX_VER=${LINUX_VER}")
 message(STATUS "Install path ${INSTALL_DIR}")
 
 message(STATUS "Compiler C path: ${CMAKE_C_COMPILER}")
@@ -60,6 +66,7 @@ file(GLOB PR_HW_SOURCES "src/*.cpp")
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
+add_compile_options($<$<CONFIG:Debug>:-DTRACE_ENABLE>)
 add_compile_options(-Wall -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 add_library(${PROJECT_NAME}-obj OBJECT ${PR_HW_SOURCES})
@@ -71,9 +78,10 @@ if(BUILD_SHARED)
 
         find_package(PythonLibs)
         include_directories(${PYTHON_INCLUDE_PATH})
+        include_directories(/usr/local/lib/python3.10/dist-packages/numpy/_core/include)
 
         set(CMAKE_SWIG_FLAGS "")
-        set(src/rp_hw_can.i PROPERTIES CPLUSPLUS ON)
+        set_property(SOURCE src/rp_hw_can.i PROPERTY CPLUSPLUS ON)
 
         SWIG_ADD_LIBRARY(rp_hw_can_py LANGUAGE python SOURCES src/rp_hw_can.i ${PR_HW_SOURCES})
         SWIG_LINK_LIBRARIES(rp_hw_can_py ${PYTHON_LIBRARIES} rp rp-hw-calib rp-hw-profiles rp-i2c rp-spi rp-gpio rp-hw i2c socketcan)

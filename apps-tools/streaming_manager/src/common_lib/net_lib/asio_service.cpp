@@ -1,33 +1,24 @@
- #include <functional>
 #include "asio_service.h"
-#include "data_lib/thread_cout.h"
+#include <functional>
 
 using namespace net_lib;
 
-
-//auto CAsioService::instance() -> CAsioService*{
-//     static CAsioService inst;
-//     return &inst;
-//}
-
-CAsioService::CAsioService():
-    m_Ios(),
-    m_Work(m_Ios),
-    m_asio_th(nullptr){
-    auto func = std::bind(static_cast<size_t (asio::io_service::*)()>(&asio::io_service::run), &(m_Ios));
-    m_asio_th = new asio::thread(func);
+CAsioService::CAsioService() : m_Ios(), m_asio_th(nullptr) {
+    m_asio_th = new std::thread([this]() {
+        asio::executor_work_guard<asio::io_context::executor_type> m_work = asio::make_work_guard(this->m_Ios);
+        this->m_Ios.run();
+    });
 }
 
-CAsioService::~CAsioService(){
-    m_Ios.reset();
+CAsioService::~CAsioService() {
     m_Ios.stop();
-    if (m_asio_th){
+    if (m_asio_th) {
         m_asio_th->join();
-        delete  m_asio_th;
+        delete m_asio_th;
         m_asio_th = nullptr;
     }
 }
 
-auto CAsioService::getIO() -> asio::io_service&{
+auto CAsioService::getIO() -> asio::io_context& {
     return m_Ios;
 }

@@ -16,14 +16,13 @@
 #ifndef __RP_GEN_H
 #define __RP_GEN_H
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include "rp_enums.h"
 
 /** @name Generate
 */
 ///@{
-
 
 /**
 * Sets generate to default values.
@@ -60,7 +59,15 @@ int rp_GenOutDisable(rp_channel_t channel);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenOutIsEnabled(rp_channel_t channel, bool *value);
+int rp_GenOutIsEnabled(rp_channel_t channel, bool* value);
+
+/**
+* Sets the amplitude multiplier to 1 and the offset to 0, taking into account the calibration. This is necessary so that the signal from the buffer is fed to the generator without changes.
+* @param channel Channel A or B for witch we want to set amplitude
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_GenSetAmplitudeAndOffsetOrigin(rp_channel_t channel);
 
 /**
 * Sets channel signal peak to peak amplitude.
@@ -78,7 +85,7 @@ int rp_GenAmp(rp_channel_t channel, float amplitude);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetAmp(rp_channel_t channel, float *amplitude);
+int rp_GenGetAmp(rp_channel_t channel, float* amplitude);
 
 /**
 * Sets DC offset of the signal. signal = signal + DC_offset.
@@ -96,7 +103,7 @@ int rp_GenOffset(rp_channel_t channel, float offset);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetOffset(rp_channel_t channel, float *offset);
+int rp_GenGetOffset(rp_channel_t channel, float* offset);
 
 /**
 * Sets channel signal frequency.
@@ -123,8 +130,7 @@ int rp_GenFreqDirect(rp_channel_t channel, float frequency);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetFreq(rp_channel_t channel, float *frequency);
-
+int rp_GenGetFreq(rp_channel_t channel, float* frequency);
 
 /**
 * Sets channel sweep signal start frequency.
@@ -142,7 +148,7 @@ int rp_GenSweepStartFreq(rp_channel_t channel, float frequency);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetSweepStartFreq(rp_channel_t channel, float *frequency);
+int rp_GenGetSweepStartFreq(rp_channel_t channel, float* frequency);
 
 /**
 * Sets channel sweep signal end frequency.
@@ -160,7 +166,7 @@ int rp_GenSweepEndFreq(rp_channel_t channel, float frequency);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetSweepEndFreq(rp_channel_t channel, float *frequency);
+int rp_GenGetSweepEndFreq(rp_channel_t channel, float* frequency);
 
 /**
 * Sets channel signal phase. This shifts the signal in time.
@@ -178,7 +184,7 @@ int rp_GenPhase(rp_channel_t channel, float phase);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetPhase(rp_channel_t channel, float *phase);
+int rp_GenGetPhase(rp_channel_t channel, float* phase);
 
 /**
 * Sets channel signal waveform. This determines how the signal looks.
@@ -196,7 +202,7 @@ int rp_GenWaveform(rp_channel_t channel, rp_waveform_t type);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetWaveform(rp_channel_t channel, rp_waveform_t *type);
+int rp_GenGetWaveform(rp_channel_t channel, rp_waveform_t* type);
 
 /**
 * Sets the generation mode for the sweep signal.
@@ -214,8 +220,7 @@ int rp_GenSweepMode(rp_channel_t channel, rp_gen_sweep_mode_t mode);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetSweepMode(rp_channel_t channel, rp_gen_sweep_mode_t *mode);
-
+int rp_GenGetSweepMode(rp_channel_t channel, rp_gen_sweep_mode_t* mode);
 
 /**
 * Sets the direction of frequency change for sweep.
@@ -233,7 +238,7 @@ int rp_GenSweepDir(rp_channel_t channel, rp_gen_sweep_dir_t mode);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetSweepDir(rp_channel_t channel, rp_gen_sweep_dir_t *mode);
+int rp_GenGetSweepDir(rp_channel_t channel, rp_gen_sweep_dir_t* mode);
 
 /**
 * Sets user defined waveform.
@@ -243,7 +248,7 @@ int rp_GenGetSweepDir(rp_channel_t channel, rp_gen_sweep_dir_t *mode);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenArbWaveform(rp_channel_t channel, float *waveform, int size);
+int rp_GenArbWaveform(rp_channel_t channel, float* waveform, int size);
 
 /**
 * Sets user defined waveform.
@@ -253,7 +258,7 @@ int rp_GenArbWaveform(rp_channel_t channel, float *waveform, int size);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenArbWaveformNP(rp_channel_t channel, float *np_buffer, int size);
+int rp_GenArbWaveformNP(rp_channel_t channel, float* np_buffer, int size);
 
 /**
 * Gets user defined waveform.
@@ -265,7 +270,7 @@ int rp_GenArbWaveformNP(rp_channel_t channel, float *np_buffer, int size);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetArbWaveform(rp_channel_t channel, float *waveform, int size, uint32_t *size_out);
+int rp_GenGetArbWaveform(rp_channel_t channel, float* waveform, int size, uint32_t* size_out);
 
 /**
 * Gets user defined waveform.
@@ -277,7 +282,7 @@ int rp_GenGetArbWaveform(rp_channel_t channel, float *waveform, int size, uint32
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetArbWaveformNP(rp_channel_t channel, float *np_buffer, int size, uint32_t *size_out);
+int rp_GenGetArbWaveformNP(rp_channel_t channel, float* np_buffer, int size, uint32_t* size_out);
 
 /**
 * Sets duty cycle of PWM signal.
@@ -295,7 +300,7 @@ int rp_GenDutyCycle(rp_channel_t channel, float ratio);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetDutyCycle(rp_channel_t channel, float *ratio);
+int rp_GenGetDutyCycle(rp_channel_t channel, float* ratio);
 
 /**
 * Sets rise time of square signal.
@@ -315,7 +320,7 @@ int rp_GenRiseTime(rp_channel_t channel, float time);
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 
-int rp_GenGetRiseTime(rp_channel_t channel, float *time);
+int rp_GenGetRiseTime(rp_channel_t channel, float* time);
 
 /**
  * Sets fall time of square signal.
@@ -335,7 +340,7 @@ int rp_GenFallTime(rp_channel_t channel, float time);
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 
-int rp_GenGetFallTime(rp_channel_t channel, float *time);
+int rp_GenGetFallTime(rp_channel_t channel, float* time);
 
 /**
 * Sets generation mode.
@@ -353,7 +358,7 @@ int rp_GenMode(rp_channel_t channel, rp_gen_mode_t mode);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetMode(rp_channel_t channel, rp_gen_mode_t *mode);
+int rp_GenGetMode(rp_channel_t channel, rp_gen_mode_t* mode);
 
 /**
 * Sets number of generated waveforms in a burst.
@@ -371,7 +376,7 @@ int rp_GenBurstCount(rp_channel_t channel, int num);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetBurstCount(rp_channel_t channel, int *num);
+int rp_GenGetBurstCount(rp_channel_t channel, int* num);
 
 /**
 * Sets the value to be set at the end of the generated signal in burst mode.
@@ -389,7 +394,7 @@ int rp_GenBurstLastValue(rp_channel_t channel, float amplitude);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetBurstLastValue(rp_channel_t channel, float *amplitude);
+int rp_GenGetBurstLastValue(rp_channel_t channel, float* amplitude);
 
 /**
 * The level of which is set by the generator after the outputs are turned on before the signal is generated.
@@ -407,7 +412,7 @@ int rp_GenSetInitGenValue(rp_channel_t channel, float amplitude);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetInitGenValue(rp_channel_t channel, float *amplitude);
+int rp_GenGetInitGenValue(rp_channel_t channel, float* amplitude);
 
 /**
 * Sets number of burst repetitions. This determines how many bursts will be generated.
@@ -425,7 +430,7 @@ int rp_GenBurstRepetitions(rp_channel_t channel, int repetitions);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetBurstRepetitions(rp_channel_t channel, int *repetitions);
+int rp_GenGetBurstRepetitions(rp_channel_t channel, int* repetitions);
 
 /**
 * Sets the time/period of one burst in micro seconds. Period must be equal or greater then the time of one burst.
@@ -444,7 +449,7 @@ int rp_GenBurstPeriod(rp_channel_t channel, uint32_t period);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetBurstPeriod(rp_channel_t channel, uint32_t *period);
+int rp_GenGetBurstPeriod(rp_channel_t channel, uint32_t* period);
 
 /**
 * Sets trigger source.
@@ -462,7 +467,7 @@ int rp_GenTriggerSource(rp_channel_t channel, rp_trig_src_t src);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetTriggerSource(rp_channel_t channel, rp_trig_src_t *src);
+int rp_GenGetTriggerSource(rp_channel_t channel, rp_trig_src_t* src);
 
 /**
 * The generator is reset on both channels.
@@ -489,6 +494,14 @@ int rp_GenResetTrigger(rp_channel_t channel);
 int rp_GenTriggerOnly(rp_channel_t channel);
 
 /**
+* Emit trigger for both channels simultaneously
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+
+int rp_GenTriggerOnlyBoth();
+
+/**
 * Reset the state machine for the selected channel.
 * @param channel Channel A or B
 * @return If the function is successful, the return value is RP_OK.
@@ -512,7 +525,7 @@ int rp_SetEnableTempProtection(rp_channel_t channel, bool enable);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GetEnableTempProtection(rp_channel_t channel, bool *enable);
+int rp_GetEnableTempProtection(rp_channel_t channel, bool* enable);
 
 /**
 * Resets the flag indicating that the DAC is overheated. Only works with Redpitaya 250-12 otherwise returns RP_NOTS
@@ -530,7 +543,7 @@ int rp_SetLatchTempAlarm(rp_channel_t channel, bool status);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GetLatchTempAlarm(rp_channel_t channel, bool *status);
+int rp_GetLatchTempAlarm(rp_channel_t channel, bool* status);
 
 /**
 * Returns the current DAC overheat status in real time. Only works with Redpitaya 250-12 otherwise returns RP_NOTS
@@ -539,7 +552,7 @@ int rp_GetLatchTempAlarm(rp_channel_t channel, bool *status);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GetRuntimeTempAlarm(rp_channel_t channel, bool *status);
+int rp_GetRuntimeTempAlarm(rp_channel_t channel, bool* status);
 
 /**
 * Sets the gain modes for output.
@@ -549,7 +562,7 @@ int rp_GetRuntimeTempAlarm(rp_channel_t channel, bool *status);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenSetGainOut(rp_channel_t channel,rp_gen_gain_t mode);
+int rp_GenSetGainOut(rp_channel_t channel, rp_gen_gain_t mode);
 
 /**
 * Get the gain modes for output.
@@ -559,7 +572,7 @@ int rp_GenSetGainOut(rp_channel_t channel,rp_gen_gain_t mode);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetGainOut(rp_channel_t channel,rp_gen_gain_t *mode);
+int rp_GenGetGainOut(rp_channel_t channel, rp_gen_gain_t* mode);
 
 /**
  * Sets ext. trigger debouncer for generation in Us (Value must be positive).
@@ -575,7 +588,7 @@ int rp_GenSetExtTriggerDebouncerUs(double value);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_GenGetExtTriggerDebouncerUs(double *value);
+int rp_GenGetExtTriggerDebouncerUs(double* value);
 
 /**
  * Sets the load mode for the generator output. Only works with Redpitaya 250-12 otherwise returns RP_NOTS
@@ -591,8 +604,8 @@ int rp_GenSetLoadMode(rp_channel_t channel, rp_gen_load_mode_t mode);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_GenGetLoadMode(rp_channel_t channel, rp_gen_load_mode_t *mode);
+int rp_GenGetLoadMode(rp_channel_t channel, rp_gen_load_mode_t* mode);
 
 ///@}
 
-#endif //__RP_GEN_H
+#endif  //__RP_GEN_H

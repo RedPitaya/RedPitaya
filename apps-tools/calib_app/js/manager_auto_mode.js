@@ -74,7 +74,10 @@
     OBJ.amSetModel = function(_model) {
         if (OBJ.amModel === undefined) {
             OBJ.amModel = _model.value;
-            if (OBJ.amModel === "Z10" || OBJ.amModel === "Z20_125") OBJ.amStates = OBJ.STATES_125_14;
+            if (OBJ.amModel === "Z10") OBJ.amStates = OBJ.STATES_125_14;
+            if (OBJ.amModel === "Z20_125") OBJ.amStates = OBJ.STATES_125_14;
+            if (OBJ.amModel === "Z20_125_LL") OBJ.amStates = OBJ.STATES_125_14;
+            if (OBJ.amModel === "Z20_65_LL") OBJ.amStates = OBJ.STATES_125_14;
             if (OBJ.amModel === "Z20_125_4CH") OBJ.amStates = OBJ.STATES_125_14_4CH;
             if (OBJ.amModel === "Z20_250_12") OBJ.amStates = OBJ.STATES_250_12;
             if (OBJ.amModel === "Z20_250_12_120") OBJ.amStates = OBJ.STATES_250_12;
@@ -325,10 +328,10 @@
         var ref = parseFloat($("#SS_REF_VOLT").val());
         var state = true;
         if (isNaN(ref) === false) {
-            if ((ref * 0.75 > OBJ.amLastAVGCH1) || (OBJ.amLastAVGCH1 > ref * 1.25)) {
+            if ((ref * 0.4 > OBJ.amLastAVGCH1) || (OBJ.amLastAVGCH1 > ref * 1.6)) {
                 state = false;
             }
-            if ((ref * 0.75 > OBJ.amLastAVGCH2) || (OBJ.amLastAVGCH2 > ref * 1.25)) {
+            if ((ref * 0.4 > OBJ.amLastAVGCH2) || (OBJ.amLastAVGCH2 > ref * 1.6)) {
                 state = false;
             }
         } else {

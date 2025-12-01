@@ -1,0 +1,20 @@
+Samplerate: 100000000
+Channels: 16
+- CAN_L: logic
+- 1: logic
+- 2: logic
+- 3: logic
+- 4: logic
+- 5: logic
+- 6: logic
+- 7: logic
+- 8: logic
+- 9: logic
+- 10: logic
+- 11: logic
+- 12: logic
+- 13: logic
+- 14: logic
+- 15: logic
+Logic unitsize: 2
+Logic sample count: 100000

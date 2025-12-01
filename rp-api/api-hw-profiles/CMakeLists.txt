@@ -12,8 +12,8 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
-set(CMAKE_CXX_STANDARD 11)
-set(C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 20)
+set(C_STANDARD 17)
 
 
 if(NOT DEFINED INSTALL_DIR)
@@ -29,8 +29,14 @@ if(NOT DEFINED REVISION)
   set(REVISION devbuild)
 endif()
 
+if(NOT DEFINED BUILD_NUMBER)
+  set(BUILD_NUMBER devbuild)
+endif()
+
 message(STATUS "VERSION=${VERSION}")
 message(STATUS "REVISION=${REVISION}")
+message(STATUS "BUILD_NUMBER=${BUILD_NUMBER}")
+message(STATUS "LINUX_VER=${LINUX_VER}")
 message(STATUS "Install path ${INSTALL_DIR}")
 
 message(STATUS "Compiler C path: ${CMAKE_C_COMPILER}")
@@ -54,12 +60,14 @@ include_directories("include")
 include_directories("src")
 
 file(GLOB PR_HW_SOURCES "src/*.c")
+file(GLOB PR_HW_SOURCES_CPP "src/*.cpp")
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
-add_compile_options(-std=c11 -Wall -Werror -pedantic -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+add_compile_options($<$<CONFIG:Debug>:-DTRACE_ENABLE>)
+add_compile_options(-Wall -Werror -pedantic -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
-add_library(${PROJECT_NAME}-obj OBJECT ${PR_HW_SOURCES})
+add_library(${PROJECT_NAME}-obj OBJECT ${PR_HW_SOURCES} ${PR_HW_SOURCES_CPP})
 
 if(BUILD_SHARED)
 
@@ -71,9 +79,9 @@ if(BUILD_SHARED)
         include_directories(${PYTHON_INCLUDE_PATH})
 
         set(CMAKE_SWIG_FLAGS "")
-        set(src/rp_hw_profiles.i PROPERTIES CPLUSPLUS ON)
+        set_property(SOURCE src/rp_hw_profiles.i PROPERTY CPLUSPLUS ON)
 
-        SWIG_ADD_LIBRARY(rp_hw_profiles_py LANGUAGE python SOURCES src/rp_hw_profiles.i ${PR_HW_SOURCES})
+        SWIG_ADD_LIBRARY(rp_hw_profiles_py LANGUAGE python SOURCES src/rp_hw_profiles.i ${PR_HW_SOURCES} ${PR_HW_SOURCES_CPP})
         SWIG_LINK_LIBRARIES(rp_hw_profiles_py ${PYTHON_LIBRARIES} i2c)
     endif()
 

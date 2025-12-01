@@ -12,7 +12,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 
 if(NOT DEFINED INSTALL_DIR)
@@ -33,9 +33,14 @@ if(NOT DEFINED REVISION)
   set(REVISION devbuild)
 endif()
 
+if(NOT DEFINED BUILD_NUMBER)
+  set(BUILD_NUMBER devbuild)
+endif()
 
 message(STATUS "VERSION=${VERSION}")
 message(STATUS "REVISION=${REVISION}")
+message(STATUS "BUILD_NUMBER=${BUILD_NUMBER}")
+message(STATUS "LINUX_VER=${LINUX_VER}")
 message(STATUS "Is install ${IS_INSTALL}")
 message(STATUS "Install path ${INSTALL_DIR}")
 
@@ -85,6 +90,7 @@ if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
         PRIVATE ARCH_ARM)
 endif()
 
+add_compile_options($<$<CONFIG:Debug>:-DTRACE_ENABLE>)
 target_compile_options(${PROJECT_NAME}-obj PRIVATE -Wall -Wno-reorder -Wextra -Wno-unused-parameter -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 
@@ -93,8 +99,9 @@ if(BUILD_SHARED)
     add_library(${PROJECT_NAME}-shared SHARED)
     set_property(TARGET ${PROJECT_NAME}-shared PROPERTY OUTPUT_NAME ${PROJECT_NAME})
     target_sources(${PROJECT_NAME}-shared PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-obj>)
-    target_link_libraries(${PROJECT_NAME}-shared -lrp_sdk -lcryptopp -lm -lpthread)
+    target_link_libraries(${PROJECT_NAME}-shared -lrp-websocket -lm -lpthread)
     target_link_directories(${PROJECT_NAME}-shared PUBLIC ${INSTALL_DIR}/lib)
+    target_link_directories(${PROJECT_NAME}-shared PUBLIC ${INSTALL_DIR}/lib/web)
     target_link_directories(${PROJECT_NAME}-shared PUBLIC ${INSTALL_DIR}/rp_sdk)
 
     if(IS_INSTALL)
@@ -113,8 +120,9 @@ if(BUILD_STATIC)
     add_library(${PROJECT_NAME}-static STATIC)
     set_property(TARGET ${PROJECT_NAME}-static PROPERTY OUTPUT_NAME ${PROJECT_NAME})
     target_sources(${PROJECT_NAME}-static PRIVATE $<TARGET_OBJECTS:${PROJECT_NAME}-obj>)
-    target_link_libraries(${PROJECT_NAME}-static -lrp_sdk -lcryptopp -lm -lpthread)
+    target_link_libraries(${PROJECT_NAME}-static -lrp-websocket -lm -lpthread)
     target_link_directories(${PROJECT_NAME}-static PUBLIC ${INSTALL_DIR}/lib)
+    target_link_directories(${PROJECT_NAME}-static PUBLIC ${INSTALL_DIR}/lib/web)
     target_link_directories(${PROJECT_NAME}-static PUBLIC ${INSTALL_DIR}/rp_sdk)
 
     if(IS_INSTALL)

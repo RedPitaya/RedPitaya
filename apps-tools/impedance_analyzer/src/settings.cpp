@@ -128,10 +128,10 @@ auto configGet(const std::string &_path) -> void {
             }
         } catch (std::invalid_argument &) {
             // Parse error
-            ERROR("JSON parse error");
+            ERROR_LOG("JSON parse error");
         }
     } else {
-        ERROR("Can not open \"%s\"", _path.c_str());
+        ERROR_LOG("Can not open \"%s\"", _path.c_str());
     }
 }
 

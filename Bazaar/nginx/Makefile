@@ -12,8 +12,7 @@ export LUAJIT_INC=/usr/include/luajit-2.1
 # Versioning system
 BUILD_NUMBER ?= 0
 REVISION ?= devbuild
-VER:=$(shell cat ../../apps-tools/ecosystem/info/info.json | grep version | sed -e 's/.*:\ *\"//' | sed -e 's/-.*//')
-
+LINUX_VER ?= dev
 NGINX_DIR=nginx
 NGINX=$(NGINX_DIR)/objs/nginx
 
@@ -35,7 +34,7 @@ configuration += --with-ipv6
 configuration += --with-http_dav_module
 configuration += --with-ld-opt="-Wl,-rpath,/usr/lib/arm-linux-gnueabihf"
 
-VERSION=$(VER)-$(BUILD_NUMBER)
+VERSION=$(LINUX_VER)-$(BUILD_NUMBER)
 
 all: $(NGINX)
 

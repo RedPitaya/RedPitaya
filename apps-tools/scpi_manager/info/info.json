@@ -1,6 +1,6 @@
 {
     "name": "Remote control",
-    "version": "2.00-BUILD_NUMBER",
+    "version": "VERSION",
     "revision": "REVISION",
     "description": "Remote access to all Red Pitaya inputs/outputs from MATLAB/LabVIEW/Scilab/Python"
 }

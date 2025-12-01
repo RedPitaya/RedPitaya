@@ -345,6 +345,11 @@
                 error = true
             }
             if (error) return
+
+            if (DHCP_ADDRES.includes("/")){
+                var x = DHCP_ADDRES.split("/")
+                params.push('gateway=' + x[0]);
+            }
         }
 
         if (params.length !== 0) {

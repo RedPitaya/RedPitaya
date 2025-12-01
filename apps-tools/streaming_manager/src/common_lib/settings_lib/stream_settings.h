@@ -1,206 +1,139 @@
 #ifndef SETTINGS_LIB_STREAMSETTINGS_H
 #define SETTINGS_LIB_STREAMSETTINGS_H
 
-#include <string>
-#include <map>
 #include <stdint.h>
-
+#include <string>
+#include "data_lib/network_header.h"
+#include "enums.h"
 
 class CStreamSettings {
+   public:
+    ENUM(DataFormat, WAV = 0, "wav", TDMS = 1, "tdms", BIN = 2, "bin")
 
-public:
-    enum Protocol{
-        TCP = 0,
-        UDP = 1
-    };
+    ENUM(State, OFF = 0, "Off", ON = 1, "On")
 
-    enum DataFormat{
-        UNDEF = -1,
-        WAV   =  0,
-        TDMS  =  1,
-        BIN   =  2
-    };
+    ENUM(DataType, RAW = 0, "Raw", VOLT = 1, "Volt")
 
-    enum DataType{
-        RAW  = 0,
-        VOLT = 1
-    };
+    ENUM(Resolution, BIT_8 = 0, "8 Bit", BIT_16 = 1, "16 Bit")
 
-    enum Channel{
-        CH1  = 0x1,
-        CH2  = 0x2,
-        CH3  = 0x4,
-        CH4  = 0x8
-    };
+    ENUM(Attenuator, A_1_1 = 0, "1:1", A_1_20 = 1, "1:20")
 
-    enum Resolution{
-        BIT_8 = 0,
-        BIT_16 = 1
-    };
+    ENUM(AC_DC, AC = 0, "AC", DC = 1, "DC")
 
-    enum Attenuator{
-        A_1_1  = 0,
-        A_1_20 = 1
-    };
+    ENUM(PassMode, NET = 0, "Network", FILE = 1, "File")
 
-    enum AC_DC{
-        AC = 0,
-        DC = 1
-    };
+    ENUM(DACPassMode, DAC_NET = 0, "Network", DAC_FILE = 1, "File")
 
-    enum SaveType{
-        NET = 0,
-        FILE = 1
-    };
+    ENUM(DACRepeat, DAC_REP_OFF = -1, "Off", DAC_REP_INF = -2, "Infinity", DAC_REP_ON = 0, "On")
 
-    enum DACType{
-        DAC_NET = 0,
-        DAC_FILE = 1
-    };
-
-    enum DACRepeat{
-        DAC_REP_OFF = -1,
-        DAC_REP_INF = -2,
-        DAC_REP_ON  =  0
-    };
-
-    enum DACGain{
-        X1 = 0,
-        X5 = 1
-    };
-
-    enum LOOPBACKChannels{
-        ONE = 0,
-        TWO = 1
-    };
-
-    enum LOOPBACKMode{
-        DD  = 0
-    };
+    ENUM(DACGain, X1 = 0, "x1", X5 = 1, "x5")
 
     CStreamSettings();
     ~CStreamSettings();
-    CStreamSettings (const CStreamSettings&);
-    CStreamSettings& operator= (const CStreamSettings&);
+    CStreamSettings(const CStreamSettings&);
+    CStreamSettings& operator=(const CStreamSettings&);
+
+    static auto getHelp() -> std::string;
+
     auto resetDefault() -> void;
-    auto reset() -> void;
-    auto isSetted() -> bool;
-    auto copy(const CStreamSettings &) -> void;
-    auto setValue(std::string key,std::string value) -> bool;
-    auto setValue(std::string key,int64_t value) -> bool;
-    auto setValue(std::string key,double value) -> bool;
+    auto copy(const CStreamSettings&) -> void;
+    auto setValue(std::string key, std::string value) -> bool;
+    auto getValue(std::string key) -> std::string;
 
     auto writeToFile(std::string _filename) -> bool;
     auto readFromFile(std::string _filename) -> bool;
-    auto getJson()-> std::string;
-    auto String()-> std::string;
-    // auto StringStreaming()-> std::string;
 
-    auto setPort(std::string _port) -> void;
-    auto getPort() const -> std::string;
-    auto setProtocol(Protocol _port) -> void;
-    auto getProtocol() const -> Protocol;
-    auto setSamples(int32_t _samples) -> void;
-    auto getSamples() const -> int32_t;
-    auto setFormat(DataFormat _format) -> void;
-    auto getFormat() const -> DataFormat;
-    auto setType(DataType _type) -> void;
-    auto getType() const -> DataType;
-    auto setSaveType(SaveType _type) -> void;
-    auto getSaveType() const -> SaveType;
+    auto parseJson(const std::string& json) -> bool;
+    auto toJson() const -> std::string;
+    auto toString() const -> std::string;
 
-    auto setChannels(uint8_t _value) -> void;
-    auto setChannels(Channel _channel,bool _enable) -> void;
-    auto getChannels() const -> uint8_t;
-    auto getChannels(Channel _channel) const -> bool;
+    auto setADCSamples(uint64_t _samples) -> void;
+    auto getADCSamples() const -> uint64_t;
+    auto setADCFormat(DataFormat _format) -> void;
+    auto getADCFormat() const -> DataFormat;
+    auto setADCType(DataType _type) -> void;
+    auto getADCType() const -> DataType;
+    auto setADCPassMode(PassMode _mode) -> void;
+    auto getADCPassMode() const -> PassMode;
+    auto setADCChannels(uint8_t _channel, State _state) -> bool;
+    auto getADCChannels(uint8_t _channel) const -> State;
+    auto setADCResolution(Resolution _resolution) -> void;
+    auto getADCResolution() const -> Resolution;
+    auto setADCDecimation(uint32_t _decimation) -> bool;
+    auto getADCDecimation() const -> uint32_t;
+    auto setADCAttenuator(uint8_t _channel, Attenuator _attenuator) -> bool;
+    auto getADCAttenuator(uint8_t _channel) const -> Attenuator;
+    auto setADCAC_DC(uint8_t _channel, AC_DC _value) -> bool;
+    auto getADCAC_DC(uint8_t _channel) const -> AC_DC;
+    auto setADCCalibration(State _calibration) -> void;
+    auto getADCCalibration() const -> State;
 
-    auto setResolution(Resolution _resolution) -> void;
-    auto getResolution() const -> Resolution;
-
-    auto setDecimation(uint32_t _decimation) -> void;
-    auto getDecimation() const -> uint32_t;
-
-    auto setAttenuator(uint8_t _value) -> void;
-    auto setAttenuator(Channel _channel,Attenuator _attenuator) -> void;
-    auto getAttenuator() const -> uint8_t;
-    auto getAttenuator(Channel _channel) const -> Attenuator;
-
-    auto setCalibration(bool _calibration) -> void;
-    auto getCalibration() const -> bool;
-
-    auto setAC_DC(uint8_t _value) -> void;
-    auto setAC_DC(Channel _channel,AC_DC _value) -> void;
-    auto getAC_DC() const -> uint8_t;
-    auto getAC_DC(Channel _channel) const -> AC_DC;
-
+    auto setDACSpeed(uint32_t _value) -> bool;
+    auto getDACSpeed() const -> uint32_t;
     auto setDACFile(std::string _value) -> void;
     auto getDACFile() const -> std::string;
-    auto setDACFileType(DataFormat _value) -> void;
+    auto setDACFileType(DataFormat _value) -> bool;
     auto getDACFileType() const -> DataFormat;
-
-    auto setDACGain(uint8_t _value) -> void;
-    auto setDACGain(Channel _channel,DACGain _value) -> void;
-    auto getDACGain() const -> uint8_t;
-    auto getDACGain(Channel _channel) const -> DACGain;
-
-    auto setDACMode(DACType _value) -> void;
-    auto getDACMode() const -> DACType;
+    auto setDACGain(uint8_t _channel, DACGain _value) -> bool;
+    auto getDACGain(uint8_t _channel) const -> DACGain;
+    auto setDACPassMode(DACPassMode _value) -> void;
+    auto getDACPassMode() const -> DACPassMode;
     auto setDACRepeat(DACRepeat _value) -> void;
     auto getDACRepeat() const -> DACRepeat;
-    auto setDACHz(uint32_t _value) -> void;
-    auto getDACHz() const -> uint32_t;
     auto setDACRepeatCount(uint32_t _value) -> void;
     auto getDACRepeatCount() const -> uint32_t;
-    auto getDACPort() const -> std::string;
-    auto setDACPort(std::string _port) -> void;
-    auto getDACMemoryUsage() const -> int64_t;
-    auto setDACMemoryUsage(int64_t _value) -> void;
 
-    auto getLoopbackTimeout() const -> uint32_t;
-    auto setLoopbackTimeout(uint32_t value) -> void;
-    auto getLoopbackSpeed() const -> int32_t;
-    auto setLoopbackSpeed(int32_t value) -> void;
-    auto getLoopbackMode() const -> LOOPBACKMode;
-    auto setLoopbackMode(LOOPBACKMode mode) -> void;
-    auto getLoopbackChannels() const -> LOOPBACKChannels;
-    auto setLoopbackChannels(LOOPBACKChannels channels) -> void;
+    auto setMemoryBlockSize(uint32_t size) -> void;
+    auto getMemoryBlockSize() const -> uint32_t;
+    auto setADCSize(uint32_t size) -> void;
+    auto getADCSize() const -> uint32_t;
+    auto setDACSize(uint32_t size) -> void;
+    auto getDACSize() const -> uint32_t;
+    auto setGPIOSize(uint32_t size) -> void;
+    auto getGPIOSize() const -> uint32_t;
 
-    static auto checkChannel(uint32_t _value, uint32_t _channel_index) -> bool;
+    static auto setDACDirPath(std::string& _path) -> void;
+    static auto getDACDirPath() -> std::string;
+    static auto getDACFiles() -> std::string;
 
-private:
-
+   private:
     CStreamSettings(CStreamSettings&&) = delete;
     CStreamSettings& operator=(CStreamSettings&&) = delete;
 
-    std::string     m_port;
-    std::string     m_dac_file;
-    Protocol        m_protocol;
-    uint32_t        m_samples;
-    DataFormat      m_format;
-    DataType        m_type;
-    SaveType        m_saveType;
-    uint8_t         m_channels;
-    Resolution      m_res;
-    uint32_t        m_decimation;
-    uint8_t         m_attenuator;
-    bool            m_calib;
-    uint8_t         m_ac_dc;
+    struct ADCSettings {
+        PassMode m_passMode = PassMode::NET;
+        State m_channels[4] = {State::OFF, State::OFF, State::OFF, State::OFF};
+        uint64_t m_samples = 0;
+        DataFormat m_format = DataFormat::BIN;
+        DataType m_dataType = DataType::RAW;
+        Resolution m_resolution = Resolution::BIT_16;
+        uint32_t m_decimation = 1;
+        Attenuator m_attenuator[4] = {Attenuator::A_1_1, Attenuator::A_1_1, Attenuator::A_1_1, Attenuator::A_1_1};
+        State m_useCalib = State::ON;
+        AC_DC m_ac_dc[4] = {AC_DC::DC, AC_DC::DC, AC_DC::DC, AC_DC::DC};
+    };
 
-    uint8_t         m_dac_gain;
-    DataFormat      m_dac_file_type;
-    DACType         m_dac_mode;
-    DACRepeat       m_dac_repeat;
-    std::string     m_dac_port;
-    int64_t         m_dac_memoryUsage;
-    uint32_t        m_dac_repeatCount;
-    uint32_t        m_dac_speed_Hz;
+    struct MemorySettings {
+        uint32_t m_memoryBlock = 0x10000;  // data size 0x10000 + header size;
+        uint32_t m_ADCSize = (0x10000 + DataLib::sizeHeader()) * 12;
+        uint32_t m_DACSize = (0x10000 + DataLib::sizeHeader()) * 12;
+        uint32_t m_GPIOSize = (0x10000 + DataLib::sizeHeader()) * 12;
+    };
 
-    uint32_t         m_loopback_timeout;
-    int32_t          m_loopback_speed_Hz;
-    LOOPBACKMode     m_loopback_mode;
-    LOOPBACKChannels m_loopback_channels;
+    struct DACSettings {
+        std::string m_file = {""};
+        DACGain m_gain[2] = {DACGain::X1, DACGain::X1};
+        DataFormat m_file_type = DataFormat::WAV;
+        DACPassMode m_passMode = DACPassMode::DAC_NET;
+        DACRepeat m_repeat = DACRepeat::DAC_REP_OFF;
+        uint64_t m_memoryUsage = 1024 * 1024;
+        uint32_t m_repeatCount = 0;
+        uint32_t m_rate = 125000000;
+    };
 
-    std::map<std::string, bool> m_var_changed;
+    ADCSettings m_adcsettings;
+    MemorySettings m_memorysettings;
+    DACSettings m_dacsettings;
 };
 
 #endif

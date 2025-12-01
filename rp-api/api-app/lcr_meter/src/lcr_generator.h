@@ -14,25 +14,25 @@
 
 #ifndef __LCRGENERATOR_H
 #define __LCRGENERATOR_H
-#include <stdint.h>
 #include <stdbool.h>
-#include <string>
+#include <stdint.h>
 #include <mutex>
+#include <string>
 
-#include "rp.h"
 #include "lcrApp.h"
+#include "rp.h"
 
-class CLCRGenerator{
+class CLCRGenerator {
 
-public:
-
+   public:
     CLCRGenerator();
     ~CLCRGenerator();
 
-    CLCRGenerator(CLCRGenerator &) = delete;
-    CLCRGenerator(CLCRGenerator &&) = delete;
+    CLCRGenerator(CLCRGenerator&) = delete;
+    CLCRGenerator(CLCRGenerator&&) = delete;
 
     auto start() -> int;
+    auto setSettings() -> int;
     auto stop() -> int;
     auto setDefault() -> void;
     auto setFreq(uint32_t _freq) -> void;
@@ -42,11 +42,11 @@ public:
     auto setOffset(float _offset) -> void;
     auto getOffset() -> float;
 
-private:
+   private:
     std::mutex m_mutex;
-    uint32_t m_freq= 10;
+    uint32_t m_freq = 10;
     float m_amplitude = 0.5;
     float m_offset = 0;
 };
 
-#endif //__LCRGENERATOR_H
+#endif  //__LCRGENERATOR_H

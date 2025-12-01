@@ -322,16 +322,11 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
         cJSON *info = NULL;
         /* check if structure is correct, we need:
          *  <app_id>/info/info.json
-         *  <app_id>/info/icon.png
          *  <app_id>/controllerhf.so
-         *  <app_id>/fpga.conf
          * And we must be able to load the application and test mandatory
          * functions.
          */
-
-        if (!is_readable(dir, app_id, "info/icon.png"))
-            continue;
-        if (!is_readable(dir, app_id, "fpga.conf"))
+        if (!is_readable(dir, app_id, "info/info.json"))
             continue;
         if (!is_controller_ok(dir, app_id, "controllerhf.so"))
             continue;
@@ -369,6 +364,8 @@ int rp_bazaar_app_get_local_list(const char *dir, cJSON **json_root,
 
 int rp_bazaar_app_load_module(const char *app_file, rp_bazaar_app_t *app)
 {
+    fprintf(stderr, "rp_bazaar_app_load_module: '%s'\n", app_file);
+
     if(app->handle != NULL) {
         rp_bazaar_app_unload_module(app);
     }

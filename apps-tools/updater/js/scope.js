@@ -17,9 +17,11 @@
     UPD.currentVer = undefined;
     UPD.EcosystemLinuxVer = undefined;
     UPD.SdLinuxVer = undefined;
-    UPD.type = 'stemlab';
-    UPD.path_fw = '';
+    UPD.type = '';
     UPD.timerCheck = undefined;
+    UPD.lastRelease = undefined;
+    
+    UPD.param_callbacks = {};
 
 
     UPD.startStep = function(step) {
@@ -45,9 +47,6 @@
                 UPD.applyChanges();
                 break;
             case 6:
-                UPD.prepareToRun();
-                break;
-            case 7:
                 UPD.closeUpdate();
                 break;
         }
@@ -119,112 +118,110 @@
 
     UPD.checkUpdates = function(type) {
         $('#select_ver').hide();
-        setTimeout(function() {
+
+        if (UPD.lastRelease == undefined || UPD.lastRelease == ""){
+            setTimeout(function() {
+                UPD.checkUpdates(type);
+            }, 500);
+            return;
+        }
+
+        var resp = UPD.lastRelease;
+        var arr = resp.split('\n');
+
+        $('#retry').click(function(event) {
+            $('#step_' + UPD.currentStep).find('.error_msg').hide();
+            UPD.restartStep();
+        });
+
+        // Request resending. Reasons:
+        // - no available distributives for selected type
+        // - invalid response format
+        if (arr.length == 0) {
+            $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+            $('#step_' + UPD.currentStep).find('.error_msg').show();
+            return;
+        }
+        var list = [];
+        UPD.ecosystems = [];
+        UPD.ecosystems_sizes = [];
+
+        for (var i = 0; i < arr.length; i ++) {
+            if (arr[i] != "" && arr[i].startsWith("ecosystem")) {
+                UPD.ecosystems.push(arr[i]);
+                list.push(arr[i]);
+            }
+        }
+
+        if (list.length == 0) {
+            $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+            $('#step_' + UPD.currentStep).find('.error_msg').show();
+            return;
+        } else {
+            $('#step_' + UPD.currentStep).find('.error_msg').hide();
+        }
+        list.sort();
+        $('#ecosystem_ver').empty();
+        var es_distro_vers = { vers_as_str: '0.0', build: 0, ver_full: '' };
+        // example of list entry: ecosystem-0.97-13-f9094af.zip-12.23M
+        for (var i = list.length - 1; i >= 0; i--) {
+            var item = list[i].split('-');
+            var ver = item[1];
+            var build = item[2];
+            // select latest version according to common version and build
+            if (UPD.compareVersions(ver + "." + build, es_distro_vers.vers_as_str + "." + es_distro_vers.build) === -1) {
+                //                        if (ver > es_distro_vers.vers_as_str || (ver === es_distro_vers.vers_as_str && build > es_distro_vers.build)) {
+                es_distro_vers.vers_as_str = ver;
+                es_distro_vers.build = build;
+                es_distro_vers.ver_full = item.slice(0, 4).join('-');
+            }
+        }
+        var distro_desc = es_distro_vers.vers_as_str + '-' + es_distro_vers.build;
+        var distro_desc_short = es_distro_vers.vers_as_str + '-' + es_distro_vers.build;
+        if (UPD.compareVersions(distro_desc_short,UPD.currentVer) >= 0) {
+            $('#used_last_version').show();
+            $('#select_ver').hide();
+            $('#step_4').hide();
+            $('#step_5').hide();
+            $('#step_6').hide();
+            $('#step_7').hide();
+            UPD.setIcon();
+            if (UPD.SdLinuxVer.toFixed(2) !== UPD.EcosystemLinuxVer.trim()){
+                $("#not_supported_linux").show();
+            }
+        } else {
+            $('#distro_dsc').text(distro_desc);
+            $('#ecosystem_ver').removeAttr('disabled');
+            $('#select_ver').show();
+            $('#apply').click(function(event) {
+                if (UPD.isApply)
+                    return; // FIXME
+                $('.select_ver').hide();
+                UPD.isApply = true;
+                var val = es_distro_vers.ver_full;
+                UPD.chosen_eco = UPD.ecosystems.indexOf(val);
+                if (UPD.chosen_eco != -1) {
+                    UPD.nextStep();
+                    $('#apply').hide();
+                    $('#and_click').hide();
+                    $('#ecosystem_ver').attr('disabled', 'disabled');
+                }
+            });
+            $('#ecosystem_ver').change();
             $.ajax({
-                    url: '/update_list?type=' + type,
-                    type: 'GET',
-                })
-                .done(function(msg) {
-                    var resp = msg;
-                    var arr = resp.split('\n');
+                url: '/check_linux_os?type=' + type+"&ecosystem="+es_distro_vers.ver_full,
+                type: 'GET',
+            })
+            .done(function(msg) {
+                console.log(msg)
+                if (msg.trim() !== "" && msg.trim() !== UPD.EcosystemLinuxVer.trim()){
+                    $("#not_supported_linux").show();
+                }
+            });
+        }
+        
 
-                    $('#retry').click(function(event) {
-                        $('#step_' + UPD.currentStep).find('.error_msg').hide();
-                        UPD.restartStep();
-                    });
-
-                    // Request resending. Reasons:
-                    // - no available distributives for selected type
-                    // - invalid response format
-                    if (arr.length == 0 || arr.length % 2 != 0) {
-                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
-                        $('#step_' + UPD.currentStep).find('.error_msg').show();
-                        return;
-                    }
-                    var list = [];
-                    UPD.ecosystems = [];
-                    UPD.ecosystems_sizes = [];
-                    // example - distro  as array entry: ecosystem-0.97-13-f9094af.zip
-                    // example - version as array entry: 12933621
-                    for (var i = 0; i < arr.length; i += 2) {
-                        if (arr[i] != "" && arr[i].startsWith("ecosystem")) {
-                            var size = parseInt(arr[i + 1]) * 1;
-                            var sizeM = size / (1024 * 1024);
-                            UPD.ecosystems_sizes.push(size);
-                            UPD.ecosystems.push(arr[i]);
-                            list.push(arr[i] + "-" + sizeM.toFixed(2) + "M");
-                        }
-                    }
-
-                    if (list.length == 0) {
-                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
-                        $('#step_' + UPD.currentStep).find('.error_msg').show();
-                        return;
-                    } else {
-                        $('#step_' + UPD.currentStep).find('.error_msg').hide();
-                    }
-                    list.sort();
-                    $('#ecosystem_ver').empty();
-                    var es_distro_size = 0;
-                    var es_distro_vers = { vers_as_str: '0.0', build: 0, ver_full: '' };
-                    // example of list entry: ecosystem-0.97-13-f9094af.zip-12.23M
-                    for (var i = list.length - 1; i >= 0; i--) {
-                        var item = list[i].split('-');
-                        var ver = item[1];
-                        var build = item[2];
-                        var size = item[4];
-                        // select latest version according to common version and build
-                        if (UPD.compareVersions(ver + "." + build, es_distro_vers.vers_as_str + "." + es_distro_vers.build) === -1) {
-                            //                        if (ver > es_distro_vers.vers_as_str || (ver === es_distro_vers.vers_as_str && build > es_distro_vers.build)) {
-                            es_distro_vers.vers_as_str = ver;
-                            es_distro_vers.build = build;
-                            es_distro_size = size;
-                            es_distro_vers.ver_full = item.slice(0, 4).join('-');
-                        }
-                    }
-                    var distro_desc = es_distro_vers.vers_as_str + '-' + es_distro_vers.build + '(' + es_distro_size + ')';
-                    var distro_desc_short = es_distro_vers.vers_as_str + '-' + es_distro_vers.build;
-                    if (UPD.compareVersions(distro_desc_short,UPD.currentVer) === 1) {
-                        $('#used_last_version').show();
-                        $('#select_ver').hide();
-                        $('#step_4').hide();
-                        $('#step_5').hide();
-                        $('#step_6').hide();
-                        $('#step_7').hide();
-                        UPD.setIcon();
-
-                    } else {
-                        $('#distro_dsc').text(distro_desc);
-                        $('#ecosystem_ver').removeAttr('disabled');
-                        $('#select_ver').show();
-                        $('#apply').click(function(event) {
-                            if (UPD.isApply)
-                                return; // FIXME
-                            $('.select_ver').hide();
-                            UPD.isApply = true;
-                            var val = es_distro_vers.ver_full;
-                            UPD.chosen_eco = UPD.ecosystems.indexOf(val);
-                            if (UPD.chosen_eco != -1) {
-                                UPD.nextStep();
-                                $('#apply').hide();
-                                $('#and_click').hide();
-                                $('#ecosystem_ver').attr('disabled', 'disabled');
-                            }
-                        });
-                        $('#ecosystem_ver').change();
-                    }
-                    $.ajax({
-                        url: '/check_linux_os?type=' + type+"&ecosystem="+es_distro_vers.ver_full,
-                        type: 'GET',
-                    })
-                    .done(function(msg) {
-                        console.log(msg)
-                        if (msg.trim() !== "" && msg.trim() !== UPD.EcosystemLinuxVer.trim()){
-                            $("#not_supported_linux").show();
-                        }
-                    });
-                });
-        }, 500);
+       
     }
 
 
@@ -234,119 +231,239 @@
             return;
         }
 
+        var dwCur = 0;
+        var dwTotal = 0;
+
         console.log("Check download");
         $('#step_' + UPD.currentStep).find('.step_icon').find('img').hide();
 
 
 
         $.ajax({
-            url: '/update_download?ecosystem=' + UPD.type + '/' + UPD.ecosystems[UPD.chosen_eco],
+            url: '/run_updater',
             type: 'GET',
         }).done(function(res) {
             console.log(res);
             $('#percent').text("0%");
-
-            UPD.timerCheck = setInterval(function() {
-                var url_arr = window.location.href.split("/");;
-                var url = url_arr[0] + '//' + url_arr[2];
-                $.ajax({
-                    url:  url + ':81/update_check',
-                    type: 'GET',
-                }).done(function(msg) {
-                    if (msg.includes("NONE")) {
-                        $('#percent').text("0%");
-                        $('#percent').show();
-                        return;
+            setTimeout(function(){
+                RP_CLIENT.connectWebSocket(function onOpen(){
+                    console.log("Open");
+                    if (RP_CLIENT.ws){
+                        var url = "https://downloads.redpitaya.com/downloads/" + UPD.type + '/' + UPD.ecosystems[UPD.chosen_eco]
+                        var js_req = JSON.stringify({ "download": {"type":"string", value: url } });
+                        RP_CLIENT.ws.send(js_req);
                     }
-                    var res = msg;
-                    var s = res.split(" ")[0];
-                    var size = parseInt(s) * 1;
-                    if (isNaN(size)) {
-                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
-                        $('#step_' + UPD.currentStep).find('.error_msg').show();
-                        clearInterval(UPD.timerCheck);
-                    } else {
-                        var percent = ((size / UPD.ecosystems_sizes[UPD.chosen_eco]) * 100).toFixed(2);
+                    
+                },
+                function onClose(){
+                    console.log("Close");
+                },
+                function onError(){
+                    console.log("Error");
+                    $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                    $('#step_' + UPD.currentStep).find('.error_msg').show();
+                },
+                function onMessage(receive){
+                    if (receive.download_done && receive.download_done.value == true){
+                        $('#percent').hide()
+                        UPD.nextStep();
+                        return
+                    }
+
+                    if (receive.download_progress_now){
+                        dwCur = receive.download_progress_now.value
+                    }
+
+                    if (receive.download_progress_total){
+                        dwTotal = receive.download_progress_total.value
+                        $('#percent').show();
+                    }
+                    
+                    if (dwTotal !== 0){
+                        var percent = ((dwCur / dwTotal) * 100).toFixed(2);
                         $('#percent').text(percent + "%");
-                        $('#percent').show();
                     }
-
-                    if (msg.includes("OK")){
-                        clearInterval(UPD.timerCheck);
-                        $('#percent').hide();
-                       UPD.nextStep();
-                    }
-
-                    if (msg.includes("FAIL")){
-                        clearInterval(UPD.timerCheck);
-                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
-                        $('#step_' + UPD.currentStep).find('.error_msg').show();
-                    }
-                });
-            }, 1000);
-
+                }
+                )
+            },3000);
 
         }).fail(function(msg) {
             $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
             $('#step_' + UPD.currentStep).find('.error_msg').show();
-            clearInterval(UPD.timerCheck);
         });
+
 
     }
 
     UPD.applyChanges = function() {
-        setTimeout(function() {
-            $.ajax({
-                    url: '/update_extract',
-                    type: 'GET',
-                })
-                .done(function(msg) {
-                    var text = msg;
-                    if (text.startsWith("OK"))
-                        UPD.nextStep();
-                    else {
-                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
-                        $('#step_' + UPD.currentStep).find('.error_msg').show();
+
+        var uzCur = 0;
+        var uzTotal = 0;
+        var iCur = 0;
+        var iTotal = 0;
+
+        $('#percent_install').text("0%");
+
+        setTimeout(function(){
+            RP_CLIENT.connectWebSocket(function onOpen(){
+                console.log("Open");
+                if (RP_CLIENT.ws){
+                    var js_req = JSON.stringify({ "install": {"type":"string", value: UPD.ecosystems[UPD.chosen_eco]} });
+                    RP_CLIENT.ws.send(js_req);
+                }
+            },
+            function onClose(){
+                console.log("Close");
+            },
+            function onError(){
+                console.log("Error");
+                $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                $('#step_' + UPD.currentStep).find('.step_icon').find('img').show()
+                $('#step_' + UPD.currentStep).find('.error_msg').show();
+                $('#step_' + UPD.currentStep).find('.error_msg').text("Error connecting to server")
+            },
+            function onMessage(receive){
+                if (receive.install) {
+
+                    if (receive.install.value == 0){
+                        $('#step_' + UPD.currentStep).find('.info_msg').show();
+                        $('#step_' + UPD.currentStep).find('.info_msg').text("Success");
+                        RP_CLIENT.ws.send(JSON.stringify({ "reboot": {"type":"int", value: 0} }));
+                        return;
                     }
-                })
-        }, 500);
+
+                    if (receive.install.value == 4){
+                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').show()
+                        $('#step_' + UPD.currentStep).find('.error_msg').show();
+                        $('#step_' + UPD.currentStep).find('.error_msg').text("Error open file")
+                        return;
+                    }
+
+                    if (receive.install.value == 6){
+                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').show()
+                        $('#step_' + UPD.currentStep).find('.error_msg').show();
+                        $('#step_' + UPD.currentStep).find('.error_msg').text("Error calculate md5")
+                        return;
+                    }
+
+                    if (receive.install.value == 7){
+                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').show()
+                        $('#step_' + UPD.currentStep).find('.error_msg').show();
+                        $('#step_' + UPD.currentStep).find('.error_msg').text("Error create directory")
+                        return;
+                    }
+
+                    if (receive.install.value == 8){
+                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                        $('#step_' + UPD.currentStep).find('.step_icon').find('img').show()
+                        $('#step_' + UPD.currentStep).find('.error_msg').show();
+                        $('#step_' + UPD.currentStep).find('.error_msg').text("Error unzip file")
+                        return;
+                    }
+
+                    $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                    $('#step_' + UPD.currentStep).find('.step_icon').find('img').show()
+                    $('#step_' + UPD.currentStep).find('.error_msg').show();
+                    $('#step_' + UPD.currentStep).find('.error_msg').text("Error. Undefined error")
+                }
+
+                if (receive.install_done && receive.install_done.value == true){
+                    $('#percent_install').hide()
+                    UPD.showReboot()
+                }
+
+                if (receive.unzip_progress_current){
+                    uzCur = receive.unzip_progress_current.value
+                    $('#percent_install').show();
+                    $('#step_' + UPD.currentStep).find('.step_icon').find('img').hide()
+                    if (uzTotal !== 0){
+                        var percent = ((uzCur / uzTotal) * 100).toFixed(2);
+                        $('#percent_install').text(percent + "%");
+                        $('#step_' + UPD.currentStep).find('.info_msg').show();
+                        $('#step_' + UPD.currentStep).find('.info_msg').text("Unzip: " + uzCur + "/" + uzTotal);
+                    }
+                }
+
+                if (receive.unzip_progress_total){
+                    uzTotal = receive.unzip_progress_total.value
+                    $('#percent_install').show();
+                    $('#step_' + UPD.currentStep).find('.step_icon').find('img').hide()
+                }
+
+                if (receive.install_progress_current){
+                    iCur = receive.install_progress_current.value
+                    $('#percent_install').show();
+                    $('#step_' + UPD.currentStep).find('.step_icon').find('img').hide()
+                    if (iTotal !== 0){
+                        var percent = ((iCur / iTotal) * 100).toFixed(2);
+                        $('#percent_install').text(percent + "%");
+                        $('#step_' + UPD.currentStep).find('.info_msg').show();
+                        $('#step_' + UPD.currentStep).find('.info_msg').text("Install: " + iCur + "/" + iTotal);
+                    }
+                }
+
+                if (receive.install_progress_total){
+                    iTotal = receive.install_progress_total.value
+                    $('#percent_install').show();
+                    $('#step_' + UPD.currentStep).find('.step_icon').find('img').hide()
+                }
+
+            }
+            )
+        },3000);
 
     }
 
+    UPD.showReboot = function(){
+        $('#step_' + UPD.currentStep).find('.reboot_msg').show();
+        setTimeout(function() {
+            var prepare_check = setInterval(function() {
+                $.ajax({
+                        url: '/get_info',
+                        type: 'GET',
+                        timeout: 1500
+                    })
+                    .done(function(msg) {
+                        if (msg != undefined && msg['version'] !== undefined) {
+                            var eco = UPD.ecosystems[UPD.chosen_eco];
+                            var arr = eco.split('-');
+                            var ver = arr[1] + '-' + arr[2];
+                            if (msg['version'] == ver) {
+                                UPD.nextStep();
+                                $('#step_' + UPD.currentStep).find('.warn_msg').hide();
+                                $('#step_' + UPD.currentStep).find('.info_msg').hide();
+                                clearInterval(prepare_check);
+                            } else {
+                                $('#step_' + UPD.currentStep).find('.info_msg').hide();
+                                $('#step_' + UPD.currentStep).find('.step_icon').find('img').show()
+                                $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+                                $('#step_' + UPD.currentStep).find('.error_msg').show();
+                                $('#step_' + UPD.currentStep).find('.warn_msg').hide();
+                                clearInterval(prepare_check);
+                            }
+
+                        }
+                    })
+            }, 2500);
+        }, 15000);
+    }
 
     UPD.prepareToRun = function() {
         setTimeout(function() {
             $('#step_' + UPD.currentStep).find('.warn_msg').show();
+            $('#step_' + UPD.currentStep).find('.step_icon').find('img').hide()
             $.ajax({
                     url: '/update_ecosystem',
                     type: 'GET',
                 })
-                .always(function() {
-                    setTimeout(function() {
-                        var prepare_check = setInterval(function() {
-                            $.ajax({
-                                    url: '/get_info',
-                                    type: 'GET',
-                                    timeout: 1500
-                                })
-                                .done(function(msg) {
-                                    if (msg != undefined && msg['version'] !== undefined) {
-                                        var eco = UPD.ecosystems[UPD.chosen_eco];
-                                        var arr = eco.split('-');
-                                        var ver = arr[1] + '-' + arr[2];
-                                        if (msg['version'] == ver) {
-                                            UPD.nextStep();
-                                            clearInterval(prepare_check);
-                                        } else {
-                                            $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
-                                            $('#step_' + UPD.currentStep).find('.error_msg').show();
-                                            clearInterval(prepare_check);
-                                        }
-
-                                    }
-                                })
-                        }, 2500);
-                    }, 15000);
+                .done(function(msg) {
+                    RP_CLIENT.client_log(msg)
+                    setTimeout(function(){
+                        RP_CLIENT.connectWebSocket()
+                    },1000);
                 });
         }, 500);
     }
@@ -359,9 +476,14 @@
         }, 3500);
     }
 
-}(window.UPD = window.UPD || {}, jQuery));
+    UPD.setLastRelease= function(new_params) {
+        UPD.lastRelease = new_params['RP_LAST_RELEASE'].value
+    }
 
-UPD.getChangelog = function(ecosystem) {
+
+    UPD.param_callbacks["RP_LAST_RELEASE"] = UPD.setLastRelease;
+
+    UPD.getChangelog = function(ecosystem) {
     $.ajax({
             url: '/update_changelog?id=' + ecosystem,
             type: 'GET',
@@ -371,7 +493,11 @@ UPD.getChangelog = function(ecosystem) {
                 msg = "Changelog is empty";
             $('#changelog_text').html(msg);
         })
-}
+    }
+
+}(window.UPD = window.UPD || {}, jQuery));
+
+
 
 function checkDev() {
     $.ajax({
@@ -382,6 +508,8 @@ function checkDev() {
             $('#ecosystem_type').append($('<option>', { value: '4', text: 'Dev' }));
     });
 }
+
+
 
 // Page onload event handler
 $(document).ready(function() {
@@ -425,29 +553,18 @@ $(document).ready(function() {
         .done(function(result) {
             stem_ver = result['stem_ver'];
             UPD.type = "Unify/ecosystems";
-            UPD.path_fw = "Unify";
             $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md");
         });
 
-    $('#ecosystem_type').change(function() {
-        /*
-        Reason: exist one branch with fixed name for download distros with latest OS version
-		if ($(this).val() == '1') {
-			$('#warn').hide();
-			UPD.type = '0.97';
-		} else if ($(this).val() == '2') {
-			$('#warn').hide();
-			UPD.type = '0.96';
-		} else if ($(this).val() == '3') {
-			$('#warn').show();
-			UPD.type = 'beta_0.97';
-		} else if ($(this).val() == '4') {
-			$('#warn').show();
-			UPD.type = 'dev';
-		}
-        */
-        UPD.checkUpdates(UPD.type);
-    });
+    // $('#ecosystem_type').change(function() {
+    //     // Reason: exist one branch with fixed name for download distros with latest OS version
+	// 	if ($(this).val() == '1') {
+	// 		UPD.type = 'Unify/ecosystems';
+	// 	} else if ($(this).val() == '2') {
+	// 		UPD.type = 'Unify/nightly_builds';
+	// 	}
+    //     UPD.checkUpdates(UPD.type);
+    // });
 
     $('#ecosystem_ver').change(function() {
         var cur = $('#ecosystem_ver option:selected').text().split(' ')[0];

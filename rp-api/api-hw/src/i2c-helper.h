@@ -17,9 +17,6 @@
 
 #include "rp_hw.h"
 
-#ifdef  __cplusplus
-extern "C" {
-#endif
 
 int i2c_SBMUS_read_byte(const char* i2c_dev_node_path,uint8_t i2c_dev_address,uint8_t i2c_dev_reg_addr, uint8_t *value, bool force);
 
@@ -42,9 +39,6 @@ int i2c_IOCTL_read_buffer(const char* i2c_dev_node_path,uint8_t i2c_dev_address,
 int i2c_IOCTL_write_buffer(const char* i2c_dev_node_path,uint8_t i2c_dev_address,uint8_t *buffer, int len, bool force);
 
 
-#ifdef  __cplusplus
-}
-#endif
 
 #endif
 

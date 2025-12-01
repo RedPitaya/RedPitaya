@@ -49,6 +49,7 @@
         FILE_RENAME_DONE: 6,
         FILE_ERR_CANT_CHANGE_COLOR: 7,
         FILE_CHANGE_COLOR_DONE: 8,
+        FILE_ERR_PARS_COE_ERR: 9,
     };
 
     // App state
@@ -84,12 +85,12 @@
 
     SM.calcSize = function(x) {
         if (x  < 1024) {
-            return x + " b"
+            return x + " B"
         }
         if (x  < 1024 * 1024) {
-            return (x / 1024).toFixed(3)  + " kb"
+            return (x / 1024).toFixed(3)  + " kB"
         }
-        return (x / (1024 * 1024)).toFixed(3)  + " Mb"
+        return (x / (1024 * 1024)).toFixed(3)  + " MB"
     }
 
     SM.initPlot = function(item,values,color) {
@@ -234,7 +235,7 @@
                 SM.files[fname]["values"] = sigValF;
             }
         });
-        console.log(SM.files)
+
         SM.charts = []
 
         for (const [key, value] of Object.entries(SM.files)) {
@@ -371,6 +372,11 @@
 
         if (SM.status.FILE_ERR_PARS_ERR === value){
             $('#info_dialog_label').text("Error parsing file. The data must be in one column in the format ±X.XXX");
+            $('#info_dialog').modal('show');
+        }
+
+        if (SM.status.FILE_ERR_PARS_COE_ERR === value){
+            $('#info_dialog_label').text("Error parsing file. Data must be in BIN or DEC or HEX format and no larger than the ADC bit depth");
             $('#info_dialog').modal('show');
         }
 
