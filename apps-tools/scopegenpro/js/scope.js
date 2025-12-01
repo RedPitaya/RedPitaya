@@ -79,6 +79,7 @@
     OSC.config.stop_app_url = window.location.origin + '/bazaar?stop=' + OSC.config.app_id;
     OSC.config.socket_url = 'ws://' + window.location.host + '/wss';
     OSC.rp_model = "";
+    OSC.rp_model_id = undefined;
     OSC.adc_channes = 2;
     OSC.adc_max_rate = 0;
     OSC.high_z_mode = false;
@@ -89,6 +90,8 @@
 
     OSC.is_ext_trig_level_present = false;
     OSC.is_webpage_loaded = false;
+
+    OSC.taMode = {};
 
     OSC.config.graph_colors = {
         'ch1': '#f3ec1a',
@@ -139,7 +142,10 @@
 
     OSC.compressed_data = 0;
     OSC.decompressed_data = 0;
-    OSC.refresh_times = [];
+    OSC.refresh_times = 0;
+    OSC.draw_all_packs = false
+    OSC.pack_per_sec_show = false
+
     OSC.counts_offset = 0;
 
     OSC.mouseWheelEventFired = false; // for MAC
@@ -198,6 +204,7 @@
     OSC.signalStack = [];
 
     OSC.lastSignals = [];
+    OSC.lastSignalsCSV = [];
 
 
     var g_counter = 0;
@@ -244,6 +251,7 @@
                 try {
                     OSC.connectWebSocket();
                     RP_CLIENT.connectWebSocket();
+                    RP_DATA_STREAM.connectWebSocket();
                 } catch (e) {
                     setTimeout(OSC.startApp, 2000);
                 }
@@ -264,46 +272,24 @@
         return dateFormat(this, mask, utc);
     };
 
-    function base64ToFloatArray(base64String) {
-        // Decode the base64 string to a byte array
-        const b64ToBuffer = (b64) => Uint8Array.from(atob(b64), c => c.charCodeAt(0)).buffer;
-        bytes = b64ToBuffer(base64String)
-        // Create a Float32Array from the byte array
-        const floatArray = new Float32Array(bytes.byteLength / 4);
-
-        // Convert the byte array to a Float32Array
-        for (let i = 0; i < floatArray.length; i++) {
-          const byteIndex = i * 4;
-          floatArray[i] = new DataView(bytes).getFloat32(byteIndex,true);
-        }
-
-        return floatArray;
-    }
 
     var guiHandler = function() {
+        OSC.draw_all_packs = OSC.signalStack.length < 10
         if (OSC.signalStack.length > 0) {
             var p = performance.now();
             if (OSC.is_webpage_loaded){
                 var signal = OSC.signalStack[0]
-                for (const property in signal) {
-                    if (signal[property]['type']){
-                        if (signal[property]['type'] == 'f'){
-                            signal[property]['value'] = base64ToFloatArray(signal[property]['value'] )
-                        }
-                    }
-                }
                 OSC.processSignals(signal);
             }
-            // console.log(OSC.signalStack.length,OSC.signalStack[0]);
             OSC.signalStack.splice(0, 1);
-            OSC.refresh_times.push("tick");
-            // console.log("Drawing: " + (performance.now() - p));
+            OSC.refresh_times++
+            if (!OSC.draw_all_packs)
+                OSC.signalStack = []
         }
-        if (OSC.signalStack.length > 2)
-            OSC.signalStack.length = [];
     }
 
     var parametersHandler = function() {
+
         if (OSC.parameterStack.length > 0) {
             var p = performance.now();
             var params = [...OSC.parameterStack]
@@ -320,7 +306,8 @@
 
     var performanceHandler = function() {
 
-        $('#fps_view').text(OSC.refresh_times.length);
+        let x = OSC.refresh_times + (OSC.pack_per_sec_show ? '/' + g_PacketsRecv : '')
+        $('#fps_view').text(x);
         $('#ops_view').text(OSC.params.orig["OSC_PER_SEC"] ? OSC.params.orig["OSC_PER_SEC"].value :0);
 
         $('#throughput_view').text((OSC.compressed_data / 1024).toFixed(2) + "kB/s");
@@ -343,7 +330,8 @@
         OSC.compressed_data = 0;
         OSC.decompressed_data = 0;
 
-        if (OSC.refresh_times.length < 3)
+
+        if (OSC.refresh_times < 3)
             OSC.bad_connection[g_counter] = true;
         else
             OSC.bad_connection[g_counter] = false;
@@ -351,11 +339,11 @@
         g_counter++;
         if (g_counter == 4) g_counter = 0;
 
-        OSC.refresh_times = [];
+        OSC.refresh_times = 0;
     }
 
     setInterval(performanceHandler, 1000);
-    setInterval(guiHandler, 2);
+    setInterval(guiHandler, 10);
     setInterval(parametersHandler, 2);
 
     OSC.setModel = function(_value,params) {
@@ -386,6 +374,7 @@
                 OSC.requestAllParam();
                 OSC.createAxisTicks();
                 OSC.createAxisTicksXY();
+                SW_TM.initSubWindow()
                 OSC.resize();
                 OSC.is_webpage_loaded = true;
             });
@@ -406,6 +395,7 @@
 
     // Creates a WebSocket connection with the web server
     OSC.connectWebSocket = function() {
+        let binParser = new BinarySignalParser();
 
         if (window.WebSocket) {
             OSC.ws = new WebSocket(OSC.config.socket_url);
@@ -449,19 +439,9 @@
                 OSC.state.processing = true;
 
                 try {
-                    var data = new Uint8Array(ev.data);
-                    OSC.compressed_data += data.length;
-                    var inflate = pako.inflate(data);
-                    // var text = String.fromCharCode.apply(null, new Uint8Array(inflate));
-                    var bytes = new Uint8Array(inflate);
-                    var text = '';
-                    for(var i = 0; i < Math.ceil(bytes.length / 32768.0); i++) {
-                      text += String.fromCharCode.apply(null, bytes.slice(i * 32768, Math.min((i+1) * 32768, bytes.length)))
-                    }
-
-
-                    OSC.decompressed_data += text.length;
-                    var receive = JSON.parse(text);
+                    let receive = binParser.convert(ev.data)
+                    OSC.compressed_data += receive["compressed_data"];
+                    OSC.decompressed_data += receive["decompressed_data"];
 
                     if (receive.parameters) {
                         OSC.parameterStack.push(receive.parameters);
@@ -695,6 +675,12 @@
     OSC.param_callbacks["SOUR1_BURST_DELAY"] = OSC.updateGenBurstDelay;
     OSC.param_callbacks["SOUR2_BURST_DELAY"] = OSC.updateGenBurstDelay;
 
+    OSC.param_callbacks["SOUR1_B_INIT_VOLT"] = OSC.updateGenBurstInit;
+    OSC.param_callbacks["SOUR2_B_INIT_VOLT"] = OSC.updateGenBurstInit;
+
+    OSC.param_callbacks["SOUR1_B_LAST_VOLT"] = OSC.updateGenBurstLast;
+    OSC.param_callbacks["SOUR2_B_LAST_VOLT"] = OSC.updateGenBurstLast;
+
     OSC.param_callbacks["SOUR1_TEMP_RUNTIME"] = OSC.updateOverheatBlockHandler;
     OSC.param_callbacks["SOUR2_TEMP_RUNTIME"] = OSC.updateOverheatBlockHandler;
 
@@ -823,6 +809,40 @@
 
     OSC.param_callbacks["OSC_BUFFER_CURRENT"] = OSC.setCurrentBuffer;
 
+    OSC.param_callbacks["CH1_SHOW_TRACE"] = OSC.ch1SetTraceMode;
+    OSC.param_callbacks["CH2_SHOW_TRACE"] = OSC.ch2SetTraceMode;
+    OSC.param_callbacks["CH3_SHOW_TRACE"] = OSC.ch3SetTraceMode;
+    OSC.param_callbacks["CH4_SHOW_TRACE"] = OSC.ch4SetTraceMode;
+
+    OSC.param_callbacks["OSC_SW_TM_WIN_SHOW"] = SW_TM.setWinShow;
+    OSC.param_callbacks["OSC_SW_TM_WIN_X"] = SW_TM.setWinX;
+    OSC.param_callbacks["OSC_SW_TM_WIN_Y"] = SW_TM.setWinY;
+    OSC.param_callbacks["OSC_SW_TM_WIN_W"] = SW_TM.setWinW;
+    OSC.param_callbacks["OSC_SW_TM_WIN_H"] = SW_TM.setWinH;
+    OSC.param_callbacks["OSC_SW_TM_CH_ACTIVE"] = SW_TM.setActiveChannel;
+    OSC.param_callbacks["OSC_SW_TM_FAST_MODE"] = SW_TM.setFastMode;
+
+    OSC.param_callbacks["CH1_TRACE_INVERTED"] = SW_TM.setTraceInverted;
+    OSC.param_callbacks["CH2_TRACE_INVERTED"] = SW_TM.setTraceInverted;
+    OSC.param_callbacks["CH3_TRACE_INVERTED"] = SW_TM.setTraceInverted;
+    OSC.param_callbacks["CH4_TRACE_INVERTED"] = SW_TM.setTraceInverted;
+
+    OSC.param_callbacks["CH1_TRACE_COLOR1"] = SW_TM.setTraceColor;
+    OSC.param_callbacks["CH1_TRACE_COLOR2"] = SW_TM.setTraceColor;
+    OSC.param_callbacks["CH1_TRACE_COLOR3"] = SW_TM.setTraceColor;
+    OSC.param_callbacks["CH1_TRACE_COLOR4"] = SW_TM.setTraceColor;
+    OSC.param_callbacks["CH2_TRACE_COLOR1"] = SW_TM.setTraceColor;
+    OSC.param_callbacks["CH2_TRACE_COLOR2"] = SW_TM.setTraceColor;
+    OSC.param_callbacks["CH2_TRACE_COLOR3"] = SW_TM.setTraceColor;
+    OSC.param_callbacks["CH2_TRACE_COLOR4"] = SW_TM.setTraceColor;
+    OSC.param_callbacks["CH3_TRACE_COLOR1"] = SW_TM.setTraceColor;
+    OSC.param_callbacks["CH3_TRACE_COLOR2"] = SW_TM.setTraceColor;
+    OSC.param_callbacks["CH3_TRACE_COLOR3"] = SW_TM.setTraceColor;
+    OSC.param_callbacks["CH3_TRACE_COLOR4"] = SW_TM.setTraceColor;
+    OSC.param_callbacks["CH4_TRACE_COLOR1"] = SW_TM.setTraceColor;
+    OSC.param_callbacks["CH4_TRACE_COLOR2"] = SW_TM.setTraceColor;
+    OSC.param_callbacks["CH4_TRACE_COLOR3"] = SW_TM.setTraceColor;
+    OSC.param_callbacks["CH4_TRACE_COLOR4"] = SW_TM.setTraceColor;
 
     // Processes newly received values for parameters
     OSC.processParameters = function(new_params) {
@@ -872,6 +892,10 @@
             }
         }
 
+        if (new_params['RP_MODEL']){
+            OSC.rp_model_id = new_params['RP_MODEL'].value
+            setBoardPinOut(OSC.rp_model_id)
+        }
 
         if (new_params['RP_MODEL_STR']){
             if (!OSC.setModel(new_params['RP_MODEL_STR'],new_params))
@@ -879,6 +903,7 @@
         }else{
             if (OSC.rp_model === ""){
                 OSC.requestAllParam();
+                OSC.requestAllSignals();
                 return;
             }
         }
@@ -968,21 +993,26 @@
         }
 
         var xysignals = [];
-        xysignals['X_AXIS_VALUES'] = new_signals['X_AXIS_VALUES']
-        xysignals['Y_AXIS_VALUES'] = new_signals['Y_AXIS_VALUES']
-
-        new_signals['X_AXIS_VALUES'].size = 0
-        new_signals['Y_AXIS_VALUES'].size = 0
+        if (new_signals['X_AXIS_VALUES']){
+            xysignals['X_AXIS_VALUES'] = new_signals['X_AXIS_VALUES']
+            new_signals['X_AXIS_VALUES'].size = 0
+        }
+        if (new_signals['Y_AXIS_VALUES']){
+            xysignals['Y_AXIS_VALUES'] = new_signals['Y_AXIS_VALUES']
+            new_signals['Y_AXIS_VALUES'].size = 0
+        }
 
         var pointArr = [];
         var colorsArr = [];
         $('#right_menu .menu-btn').not('.not-signal').prop('disabled', true);
+
         // (Re)Draw every signal
         for (sig_name in new_signals) {
 
             // Ignore empty signals
-            if (new_signals[sig_name].size == 0)
+            if (new_signals[sig_name].size == 0){
                 continue;
+            }
 
 
             var sig_btn = $('#right_menu .menu-btn.' + sig_name);
@@ -990,38 +1020,69 @@
             if (OSC.params.orig[sig_name.toUpperCase() + '_SHOW'] && OSC.params.orig[sig_name.toUpperCase() + '_SHOW'].value == false) {
                 sig_btn.not('.not-signal').prop('disabled', true);
                 continue;
-            } else
+            } else{
                 sig_btn.not('.not-signal').prop('disabled', false);
+            }
 
             // Ignore math signal if no operator defined
             if (sig_name == 'math' && (!OSC.params.orig['MATH_SHOW'] || OSC.params.orig['MATH_SHOW'].value == false))
                 continue;
 
             var points = [];
+            var points_gl = [];
             var color = OSC.config.graph_colors[sig_name];
+            var show_lines = true
 
             if (OSC.params.orig['OSC_VIEW_START_POS'] && OSC.params.orig['OSC_VIEW_END_POS']) {
                 if ((((sig_name == 'output1') || (sig_name == 'output2')) && OSC.params.orig['OSC_VIEW_END_POS'].value != 0)) {
+                    if (OSC.glMode && !OSC.glMode.isInit){
+                        for (var i = 0; i < new_signals[sig_name].size; i++) {
+                            points.push([i, new_signals[sig_name].value[i]]);
+                        }
+                    }else{
+                        points_gl = new_signals[sig_name].value
+                    }
+                } else {
+                    if (OSC.glMode && !OSC.glMode.isInit){
+                        for (var i = OSC.params.orig['OSC_VIEW_START_POS'].value; i < OSC.params.orig['OSC_VIEW_END_POS'].value; i++){
+                            var y = new_signals[sig_name].value[i]
+                            points.push([i, y]);
+                        }
+                    }else{
+                        points_gl = new_signals[sig_name].value
+                    }
+                    show_lines = OSC.isPointModeBySignal(sig_name)
+                }
+            } else {
+                if (OSC.glMode && !OSC.glMode.isInit){
                     for (var i = 0; i < new_signals[sig_name].size; i++) {
                         points.push([i, new_signals[sig_name].value[i]]);
                     }
-                } else {
-                    for (var i = OSC.params.orig['OSC_VIEW_START_POS'].value; i < OSC.params.orig['OSC_VIEW_END_POS'].value; i++)
-                        points.push([i, new_signals[sig_name].value[i]]);
-                }
-            } else {
-                for (var i = 0; i < new_signals[sig_name].size; i++) {
-                    points.push([i, new_signals[sig_name].value[i]]);
+                }else{
+                    points_gl = new_signals[sig_name].value
                 }
             }
 
+
+
             OSC.lastSignals[sig_name] = new_signals[sig_name];
+            OSC.lastSignalsCSV[sig_name] = new_signals[sig_name];
 
             if (!OSC.loaderShow) {
                 $('body').addClass('loaded');
             }
 
-            pointArr.push(points);
+            var show_lines_canvas = show_lines
+            var show_lines_opengl = false
+            var show_points_canvas = !show_lines
+            var show_points_opengl = false
+            if (OSC.glMode && OSC.glMode.isInit){
+                show_lines_opengl = show_lines_canvas
+                show_lines_canvas = false
+                show_points_opengl = show_points_canvas
+                show_points_canvas = false
+            }
+            pointArr.push({data: points, data_gl: points_gl, points: { show: show_points_canvas, show_gl :show_points_opengl  } , lines: { show: show_lines_canvas, show_gl:show_lines_opengl }, channel: sig_name.toUpperCase() , color : color });
             colorsArr.push(color);
 
             // By default first signal is selected
@@ -1030,21 +1091,34 @@
             }
         }
 
-       // var x_ticks = [ -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5];
+        // var x_ticks = [ -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5];
 
         if (OSC.graphs["ch1"]) {
             OSC.graphs["ch1"].elem.show();
             OSC.graphs["ch1"].plot.setColors(colorsArr);
             OSC.graphs["ch1"].plot.resize();
+            var canvas = OSC.graphs["ch1"].plot.getCanvas()
+            for(let i = 1; i <= OSC.adc_channes; i++){
+                if (OSC.taMode["CH"+i])
+                    OSC.taMode["CH"+i].setNewSizeWGL(canvas.width,canvas.height)
+            }
+            if (OSC.glMode && OSC.glMode.isInit)
+                OSC.glMode.setNewSizeWGL(canvas.width,canvas.height)
             OSC.graphs["ch1"].plot.setupGrid();
             OSC.graphs["ch1"].plot.setData(pointArr);
             OSC.graphs["ch1"].plot.draw();
+            for(let i = 1; i <= OSC.adc_channes; i++){
+                if (OSC.taMode["CH"+i])
+                    OSC.taMode["CH"+i].resetData()
+            }
         } else {
             OSC.graphs["ch1"] = {};
             OSC.graphs["ch1"].elem = $('<div class="plot" />').css($('#graph_grid').css(['height', 'width'])).appendTo('#graphs');
             OSC.graphs["ch1"].plot = $.plot(OSC.graphs["ch1"].elem, [pointArr], {
                 name: "ch1",
                 series: {
+                    lines: { show: true },
+                    points: { show: true, radius: 1 },
                     shadowSize: 0, // Drawing is faster without shadows
                 },
                 yaxis: {
@@ -1053,6 +1127,7 @@
                 },
                 xaxis: {
                     min: 0,
+                    max: 1023,
                     tickColor: '#aaaaaa',
                  //   ticks: x_ticks,
                     transform: function(v) {
@@ -1067,6 +1142,14 @@
                 grid: {
                     show: false
                 },
+                hooks: {
+                    drawSeries: function(plot, ctx, series) {
+                        if (OSC.taMode[series.channel])
+                            OSC.taMode[series.channel].draw(plot, ctx, series)
+                        if (OSC.glMode && OSC.glMode.isInit)
+                            OSC.glMode.draw(ctx, series)
+                    }
+                },
                 colors: [
                     '#FF2A68', '#FF9500', '#FFDB4C', '#87FC70', '#22EDC7', '#1AD6FD', '#C644FC', '#52EDC7', '#EF4DB6'
                 ]
@@ -1074,6 +1157,32 @@
             // If page not full loaded
             if (OSC.graphs["ch1"].elem === undefined){
                 OSC.graphs = {};
+            }
+
+            let isInit = true
+            for(let i = 1; i <= OSC.adc_channes; i++){
+                OSC.taMode["CH"+i] = new TAMode()
+                OSC.taMode["CH"+i].init()
+                if (OSC.taMode["CH"+i].isInit){
+                    var canvas = OSC.graphs["ch1"].plot.getCanvas()
+                    OSC.taMode["CH"+i].setNewSizeWGL(canvas.width,canvas.height)
+                } else{
+                    isInit = false
+                }
+            }
+
+            if (!isInit){
+                var nodes = document.getElementsByClassName("trace_block");
+                [...nodes].forEach((element, index, array) => {
+                        element.parentNode.removeChild(element);
+                    });
+            }
+
+            OSC.glMode = new GLMode()
+            OSC.glMode.init()
+            if (OSC.glMode.isInit){
+                var canvas = OSC.graphs["ch1"].plot.getCanvas()
+                OSC.glMode.setNewSizeWGL(canvas.width,canvas.height)
             }
         }
 
@@ -1158,9 +1267,13 @@
             if (id.startsWith("OSC_CH"+i+"_IN_GAIN")){
                 id = "OSC_CH"+i+"_IN_GAIN"
             }
-            
+
             if (id.startsWith("OSC_CH"+i+"_IN_FILTER")){
                 id = "OSC_CH"+i+"_IN_FILTER"
+            }
+
+            if (id.startsWith("CH"+i+"_SHOW_TRACE")){
+                id = "CH"+i+"_SHOW_TRACE"
             }
 
             if (id.startsWith("OSC_CH"+i+"_IN_AC_DC")){
@@ -1363,7 +1476,7 @@
         return true;
     };
 
-    OSC.requestAllParam = function(disable_defCur = false) {
+    OSC.requestAllParam = function() {
         if (!OSC.state.socket_opened) {
             console.log('ERROR: Cannot save changes, socket not opened');
             return false;
@@ -1377,6 +1490,23 @@
         console.log("requestAllParam")
         return true;
     };
+
+    OSC.requestAllSignals = function() {
+        if (!OSC.state.socket_opened) {
+            console.log('ERROR: Cannot save changes, socket not opened');
+            return false;
+        }
+        if (OSC.ws.readyState !== WebSocket.OPEN){
+            window.location.reload(true);
+        }
+        OSC.params.local['in_command'] = { value: 'send_all_signals' };
+        OSC.ws.send(JSON.stringify({ parameters: OSC.params.local }));
+        OSC.params.local = {};
+        console.log("requestAllSignals")
+        return true;
+    };
+
+
 
     // Draws the grid on the lowest canvas layer
     OSC.drawGraphGrid = function() {
@@ -1534,7 +1664,7 @@
     };
 
     // Changes Y zoom/scale for the selected signal
-    OSC.changeYZoom = function(direction, curr_scale, send_changes) {
+    OSC.changeYZoom = function(direction, curr_scale, send_changes , fine) {
 
         if ($.inArray(OSC.state.sel_sig_name, ['ch1', 'ch2','ch3', 'ch4', 'math', 'output1', 'output2']) < 0) {
             return;
@@ -1611,9 +1741,9 @@
         var base_index = undefined
         for (var i = 0; i < scale_list.length ; i++) {
             if (i < scale_list.length - 1 && scale_list[i] <= scale_value && scale_value <= scale_list[i+1]){
-                base_index = i;
+                base_index = i + (scale_list[i] < scale_value && scale_list[i+1] != undefined ? 1 :0)
             }else if (i == scale_list.length - 1 && scale_list[i] == scale_value){
-                base_index = i;
+                base_index = i + (scale_list[i] < scale_value  && scale_list[i+1] != undefined ? 1 :0)
             }
         }
         var fine_tune_dev = 100
@@ -1625,7 +1755,7 @@
             step = scale_list[base_index]
         }
 
-        if (OSC.state.fine){
+        if (OSC.state.fine || fine){
             new_scale = scale_value + (step / fine_tune_dev) * sign
         }else{
             var new_base_index = base_index + sign
@@ -1719,6 +1849,8 @@
 
     OSC.resize = function() {
         OSC.resizeEx(true)
+        setBoardPinOut(OSC.rp_model_id)
+        SW_TM.checkSubWindowPosition()
     }
 
     OSC.resizeEx = function(requestAll) {
@@ -1784,8 +1916,10 @@
 
         // Hide offset arrows, trigger level line and arrow
         $('.y-offset-arrow, #time_offset_arrow, #buf_time_offset, #trig_level_arrow, #trigger_level').hide();
-        if (requestAll)
+        if (requestAll){
             OSC.requestAllParam();
+            OSC.requestAllSignals();
+        }
 
         // Reset left position for trigger level arrow, it is added by jQ UI draggable
         $('#trig_level_arrow').css('left', '');

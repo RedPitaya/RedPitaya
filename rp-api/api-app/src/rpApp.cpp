@@ -331,6 +331,18 @@ int rpApp_OscGetSmoothMode(rp_channel_t _channel, rpApp_osc_interpolationMode* _
     return osc_GetSmoothMode(_channel, _mode);
 }
 
+int rpApp_OscSetForceUpdateView(bool enable) {
+    return osc_SetForceUpdateView(enable);
+}
+
+int rpApp_OscGetForceUpdateView(bool* enable) {
+    return osc_GetForceUpdateView(enable);
+}
+
+int rpApp_OscSetUpdateViewCallback(rpApp_osc_updateViewCallback_t callback) {
+    return osc_SetUpdateViewCallback(callback);
+}
+
 int rpApp_OscPrepareOscillogramBuffer(uint32_t count) {
     return osc_prepareOscillogramBuffer(count);
 }
@@ -373,20 +385,24 @@ int rpApp_SpecReset() {
     return spec_reset();
 }
 
-int rpApp_SpecGetViewData(float** signals, size_t size) {
-    return spec_getViewData(signals, size);
+int rpApp_SpecLockData() {
+    return spec_lockData();
 }
 
-int rpApp_SpecGetPeakPower(rp_channel_t channel, float* power) {
-    return spec_getPeakPower(channel, power);
+int rpApp_SpecUnlockData() {
+    return spec_unlockData();
 }
 
-int rpApp_SpecGetPeakFreq(rp_channel_t channel, float* freq) {
-    return spec_getPeakFreq(channel, freq);
+int rpApp_SpecSetEnable(rp_channel_t channel, bool state) {
+    return spec_SetEnable(channel, state);
 }
 
-int rpApp_SpecSetFreqRange(float _freq_min, float freq) {
-    return spec_setFreqRange(_freq_min, freq);
+int rpApp_SpecGetEnable(rp_channel_t channel, bool* state) {
+    return spec_GetEnable(channel, state);
+}
+
+int rpApp_SpecGetViewData(const rp_dsp_api::rp_dsp_result_t** data) {
+    return spec_getViewData(data);
 }
 
 int rpApp_SpecGetADCFreq() {
@@ -398,20 +414,8 @@ int rpApp_SpecGetViewSize(size_t* size) {
     return RP_OK;
 }
 
-int rpApp_SpecGetFreqMin(float* freq) {
-    return spec_getFreqMin(freq);
-}
-
-int rpApp_SpecGetFreqMax(float* freq) {
-    return spec_getFreqMax(freq);
-}
-
-int rpApp_SpecSetFreqMin(float) {
-    return RP_OK;
-}
-
 int rpApp_SpecSetFreqMax(float freq) {
-    return spec_setFreqRange(0, freq);
+    return spec_setFreqRange(freq);
 }
 
 int rpApp_SpecGetFpgaFreq(float* freq) {
@@ -448,14 +452,6 @@ int rpApp_SpecSetRemoveDC(int state) {
 
 int rpApp_SpecGetRemoveDC() {
     return spec_getRemoveDC();
-}
-
-int rpApp_SpecGetMode(rp_dsp_api::mode_t* mode) {
-    return spec_getVoltMode(mode);
-}
-
-int rpApp_SpecSetMode(rp_dsp_api::mode_t mode) {
-    return spec_setVoltMode(mode);
 }
 
 int rpApp_SpecGetProbe(rp_channel_t channel, uint32_t* probe) {

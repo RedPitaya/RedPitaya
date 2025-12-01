@@ -35,6 +35,11 @@ void CCalibMan::init() {
         m_currentGenGain = RP_GAIN_1X;
         m_acq->setGenGainx1();
     }
+
+    if (rp_HPGetFastADCIsFilterPresentOrDefault()) {
+        m_acq->setFilterBypass(true);
+    }
+
     readCalib();
     m_calibMode = 0;
 }

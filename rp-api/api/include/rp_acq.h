@@ -1035,6 +1035,15 @@ int rp_AcqGetFilterCalibValue(rp_channel_t channel, uint32_t* coef_aa, uint32_t*
 int rp_AcqSetCalibInFPGA(rp_channel_t channel);
 
 /**
+* Returns whether the calibration on the FPGA was used.
+* @param channel Channel A or B.
+* @param state Return value
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+*/
+int rp_AcqGetCalibInFPGA(rp_channel_t channel, bool* state);
+
+/**
  * Sets ext. trigger debouncer for acquisition in Us (Value must be positive).
  * @param value Value in microseconds.
  * @return If the function is successful, the return value is RP_OK.

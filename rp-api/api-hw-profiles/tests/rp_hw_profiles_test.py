@@ -2,6 +2,11 @@
 
 import rp_hw_profiles
 
+
+print("rp_hw_profiles.rp_HPInit()")
+res = rp_hw_profiles.rp_HPInit()
+print(res)
+
 print("rp_hw_profiles.rp_HPGetModel()")
 res = rp_hw_profiles.rp_HPGetModel()
 print(res)

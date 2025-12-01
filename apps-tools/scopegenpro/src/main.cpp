@@ -14,8 +14,6 @@
 #include <unistd.h>
 #include "common/version.h"
 
-#include "neon_asm.h"
-
 #include "common.h"
 #include "math_logic.h"
 #include "osc_logic.h"
@@ -26,7 +24,8 @@
 
 enum controlSettings { NONE = 0, REQUEST_RESET = 1, RESET_DONE = 2, REQUEST_LIST = 3, SAVE = 4, DELETE = 5, LOAD = 6, LOAD_DONE = 7 };
 
-CStringParameter redpitaya_model("RP_MODEL_STR", CBaseParameter::RO, getModelName(), 0);
+CStringParameter redpitaya_model_str("RP_MODEL_STR", CBaseParameter::RO, getModelName(), 0);
+CIntParameter redpitaya_model("RP_MODEL", CBaseParameter::RO, (int)getModel(), 0, 0, 300);
 
 CIntParameter controlSettings("CONTROL_CONFIG_SETTINGS", CBaseParameter::RW, 0, 0, 0, 10);
 CStringParameter fileSettings("FILE_SATTINGS", CBaseParameter::RW, "", 0);
@@ -40,8 +39,8 @@ CFloatParameter slow_dac3("OSC_SLOW_OUT_4", CBaseParameter::RW, 0, 0, 0, rp_HPGe
 bool g_config_changed = false;
 uint16_t g_save_counter = 0;  // By default, a save check every 40 ticks. One tick 50 ms.
 
-const std::vector<std::string> g_savedParams = {"OSC_CH1_IN_GAIN",  "OSC_CH2_IN_GAIN",  "OSC_CH3_IN_GAIN",  "OSC_CH4_IN_GAIN",
-                                                "OSC_CH1_IN_AC_DC", "OSC_CH2_IN_AC_DC", "OSC_CH3_IN_AC_DC", "OSC_CH4_IN_AC_DC"};
+const std::vector<std::string> g_savedParams =
+    {"OSC_CH1_IN_GAIN", "OSC_CH2_IN_GAIN", "OSC_CH3_IN_GAIN", "OSC_CH4_IN_GAIN", "OSC_CH1_IN_AC_DC", "OSC_CH2_IN_AC_DC", "OSC_CH3_IN_AC_DC", "OSC_CH4_IN_AC_DC"};
 
 void updateParametersByConfig() {
 
@@ -92,9 +91,13 @@ const char* rp_app_desc(void) {
 
 int rp_app_init(void) {
     fprintf(stderr, "Loading scope version %s-%s.\n", VERSION_STR, REVISION_STR);
-
+#ifdef ZIP_DISABLED
+    CDataManager::GetInstance()->SetEnableParamsGZip(false);
+    CDataManager::GetInstance()->SetEnableSignalsGZip(false);
+    CDataManager::GetInstance()->SetEnableBinarySignalsGZip(false);
+#endif
     CDataManager::GetInstance()->SetParamInterval(50);
-    CDataManager::GetInstance()->SetSignalInterval(20);
+    CDataManager::GetInstance()->SetSignalInterval(15);
 
     rp_WS_Init();
     rp_WS_SetInterval(RP_WS_RAM, 5000);
@@ -116,23 +119,9 @@ int rp_app_init(void) {
 
 int rp_app_exit(void) {
     fprintf(stderr, "Unloading scope version %s-%s.\n", VERSION_STR, REVISION_STR);
-
     deleteSweepController();
-
+    releaseOsc();
     rpApp_Release();
-
-    return 0;
-}
-
-int rp_set_params(rp_app_params_t* p, int len) {
-    return 0;
-}
-
-int rp_get_params(rp_app_params_t** p) {
-    return 0;
-}
-
-int rp_get_signals(float*** s, int* sig_num, int* sig_len) {
     return 0;
 }
 
@@ -180,7 +169,7 @@ void updateSlowDAC(bool force) {
     }
 }
 
-void UpdateSignals(void) {
+void UpdateBinarySignals(void) {
     updateOscSignal();
     updateMathSignal();
     updateXYSignal();
@@ -235,4 +224,4 @@ void OnNewParams(void) {
 
 void OnNewSignals(void) {}
 
-void PostUpdateSignals(void) {}
+void PostUpdateBinarySignals(void) {}

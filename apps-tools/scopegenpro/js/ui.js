@@ -403,6 +403,53 @@
             OSC.sendParams();
         });
 
+        $(".show_trace_settings").on('click',function(ev) {
+            var ch = 0
+            if (ev.target.id.includes('CH1')){
+                ch = 1
+            }
+
+            if (ev.target.id.includes('CH2')){
+                ch = 2
+            }
+
+            if (ev.target.id.includes('CH3')){
+                ch = 3
+            }
+
+            if (ev.target.id.includes('CH4')){
+                ch = 4
+            }
+
+            if (ch != 0){
+                OSC.params.local['OSC_SW_TM_WIN_SHOW'] = { value: true };
+                OSC.params.local['OSC_SW_TM_CH_ACTIVE'] = { value: ch };
+                OSC.sendParams();
+            }
+        });
+
+
+        $(".trace_reset").on('click',function(ev) {
+            if (ev.target.id.includes('CH1')){
+                if (OSC.taMode['CH1'])
+                    OSC.taMode['CH1'].clearBuffers()
+            }
+
+            if (ev.target.id.includes('CH2')){
+                if (OSC.taMode['CH2'])
+                    OSC.taMode['CH2'].clearBuffers()
+            }
+
+            if (ev.target.id.includes('CH3')){
+                if (OSC.taMode['CH3'])
+                    OSC.taMode['CH3'].clearBuffers()
+            }
+
+            if (ev.target.id.includes('CH4')){
+                if (OSC.taMode['CH4'])
+                    OSC.taMode['CH4'].clearBuffers()
+            }
+        });
 
         // Time offset arrow dragging
         $('#time_offset_arrow').draggable({
@@ -720,7 +767,11 @@
         $("#graphs").mousewheel(function(event) {
             if (OSC.mouseWheelEventFired)
                 return;
-            OSC.changeXZoom(event.deltaY > 0 ? '+' : '-');
+            if (event.shiftKey){
+                OSC.changeYZoom(event.deltaY < 0 ? '+' : '-', undefined, undefined, false);
+            }else{
+                OSC.changeXZoom(event.deltaY > 0 ? '+' : '-');
+            }
             OSC.mouseWheelEventFired = true;
             setTimeout(function() { OSC.mouseWheelEventFired = false; }, 300);
         });
@@ -957,13 +1008,20 @@
             }
         }
 
-        if (params['SOUR1_FREQ_FIX'] !== undefined){
-            $("#SOUR1_FREQ_FIX").attr("max", params['SOUR1_FREQ_FIX'].max).attr("min", params['SOUR1_FREQ_FIX'].min);
+        for(let ch = 1; ch <= 2; ch++){
+            if (params['SOUR'+ch+'_FREQ_FIX'] !== undefined){
+                $('#SOUR'+ch+'_FREQ_FIX').attr("max", params['SOUR'+ch+'_FREQ_FIX'].max).attr("min", params['SOUR'+ch+'_FREQ_FIX'].min);
+            }
+            if (params['SOUR'+ch+'_B_INIT_VOLT'] !== undefined){
+                $('#SOUR'+ch+'_B_INIT_VOLT').attr("max", params['SOUR'+ch+'_B_INIT_VOLT'].max).attr("min", params['SOUR'+ch+'_B_INIT_VOLT'].min);
+            }
+            if (params['SOUR'+ch+'_B_LAST_VOLT'] !== undefined){
+                $('#SOUR'+ch+'_B_LAST_VOLT').attr("max", params['SOUR'+ch+'_B_LAST_VOLT'].max).attr("min", params['SOUR'+ch+'_B_LAST_VOLT'].min);
+            }
         }
 
-        if (params['SOUR2_FREQ_FIX'] !== undefined){
-            $("#SOUR2_FREQ_FIX").attr("max", params['SOUR2_FREQ_FIX'].max).attr("min", params['SOUR2_FREQ_FIX'].min);
-        }
-    };    
+
+
+    };
 
 }(window.OSC = window.OSC || {}, jQuery));

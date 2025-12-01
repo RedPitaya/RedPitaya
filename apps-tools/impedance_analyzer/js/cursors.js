@@ -51,7 +51,6 @@
         const w = $('#cursors_holder').width() - 2;
         if (ui.helper[0].id == 'cur_x1_arrow') {
             const l = $("#cur_x1_arrow").position().left
-            console.log(l)
             CURSORS.cursorsRelative.x1 = l / w;
             if (CURSORS.cursorsRelative.x1 < 0)
                 CURSORS.cursorsRelative.x1 = 0;
@@ -149,15 +148,15 @@
             });
 
             $('#cur_' + cur + '_info').html(new_val.toFixed(2) + unit).data('cleanval', +new_val);
-            var arr_left = $('#cur_' + cur + '_arrow').position().left + 10 
-            if (w - (arr_left + $('#cur_' + cur + '_info').width()) < 10) 
+            var arr_left = $('#cur_' + cur + '_arrow').position().left + 10
+            if (w - (arr_left + $('#cur_' + cur + '_info').width()) < 10)
                 arr_left = arr_left - $('#cur_' + cur + '_info').width() - 20
             $('#cur_' + cur + '_info').offset({left: cl + arr_left});
         };
 
         if (min < 1) min = 1;
-        
-        setCursor('x1',min,max,CURSORS.cursorsRelative.x1)       
+
+        setCursor('x1',min,max,CURSORS.cursorsRelative.x1)
         setCursor('x2',min,max,CURSORS.cursorsRelative.x2)
 
 
@@ -184,7 +183,7 @@
 
     // Y-cursors
     CURSORS.updateYLinesAndArrows = function() {
-        
+
         const ct = $('#cursors_holder').offset().top;
         const h = $('#cursors_holder').height();
 
@@ -208,15 +207,15 @@
             });
 
             $('#cur_' + cur + '_info').html(new_val.toFixed(2) + unit).data('cleanval', +new_val);
-            var arr_top = $('#cur_' + cur + '_arrow').position().top + 10 
-            if (h - (arr_top + $('#cur_' + cur + '_info').height()) < 10) 
+            var arr_top = $('#cur_' + cur + '_arrow').position().top + 10
+            if (h - (arr_top + $('#cur_' + cur + '_info').height()) < 10)
                 arr_top = arr_top - $('#cur_' + cur + '_info').height() - 20
             $('#cur_' + cur + '_info').offset({top: ct + arr_top});
         };
-        
-        setCursor('y1',min,max,CURSORS.cursorsRelative.y1)       
+
+        setCursor('y1',min,max,CURSORS.cursorsRelative.y1)
         setCursor('y2',min,max,CURSORS.cursorsRelative.y2)
-      
+
 
         diff_px = Math.abs($('#cur_y1').offset().top - $('#cur_y2').offset().top) - 6;
         if ($('#cur_y1').is(':visible') && $('#cur_y2').is(':visible') && diff_px > 12) {
@@ -224,7 +223,7 @@
             var value = $('#cur_y1_info').data('cleanval') - $('#cur_y2_info').data('cleanval');
             $('#cur_y_diff').show()
             $('#cur_y_diff_info').show()
-            
+
             $('#cur_y_diff')
                 .offset({top: top })
                 .height(diff_px)
@@ -254,7 +253,7 @@
             CURSORS.enableX('IA_CURSOR_' + x[0].toUpperCase() + d + '_ENABLE', true);
         } else if (x[0] == 'y') {
             CURSORS.enableY('IA_CURSOR_' + x[0].toUpperCase() + d + '_ENABLE', true);
-        } 
+        }
     };
 
     CURSORS.disableCursor = function(x) {

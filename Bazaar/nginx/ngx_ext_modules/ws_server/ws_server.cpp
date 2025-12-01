@@ -23,8 +23,10 @@ void start_ws_server(const struct server_parameters* _params) {
             loaded_params->get_params_func = _params->get_params_func;
             loaded_params->set_params_func = _params->set_params_func;
             loaded_params->get_signals_func = _params->get_signals_func;
+            loaded_params->get_bin_signals_func = _params->get_bin_signals_func;
             loaded_params->set_signals_func = _params->set_signals_func;
             loaded_params->gzip_func = _params->gzip_func;
+            loaded_params->enable_ws_log = _params->enable_ws_log;
         }
         if (_params != 0 && _params->port != 0)
             loaded_params->port = _params->port;

@@ -251,10 +251,9 @@ rp_calib_error rp_CalibrationReset(bool use_factory_zone, bool is_new_format, bo
 /**
   * @brief Copies factory calibration to user EEPROM
   * @param convert_to_new Convert to new format
-  * @param version New format version. Versions RP_HW_PACK_ID_V5 and RP_HW_PACK_ID_V6 and higher are available
   * @return Status code (RP_HW_CALIB_OK on success)
   */
-rp_calib_error rp_CalibrationFactoryReset(bool convert_to_new, uint8_t version);
+rp_calib_error rp_CalibrationFactoryReset(bool convert_to_new);
 
 /**
   * @brief Writes calibration parameters to EEPROM

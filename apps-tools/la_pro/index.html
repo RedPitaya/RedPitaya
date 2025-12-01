@@ -42,6 +42,7 @@
     <script src="../assets/pako.js?1" onerror="location.reload()"></script>
     <script src="../assets/popupstack.js?1" onerror="location.reload()"></script>
     <script src="../assets/imageLoader.js?1" onerror="location.reload()"></script>
+    <script src="../assets/js/rpDataParser.js?1" onerror="location.reload()"></script>
     <script src="js/html2canvas.min.js?1" onerror="location.reload()"></script>
     <script src="js/baseConverter.js?3" onerror="location.reload()"></script>
     <script src="js/FileSaver.min.js?1" onerror="location.reload()"></script>
@@ -1279,16 +1280,17 @@
         </div>
     </div>
     <div class="modal fade" id="ext_connections_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel"
-        aria-hidden="true">
-        <div class="modal-dialog" style="width: 700px;">
+        aria-hidden="true" style="overflow: hidden;">
+        <div class="modal-dialog" id="pinoutDialogId" style="width: 700px;">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
                             aria-hidden="true">&times;</span></button>
                     <h4 class="modal-title" id="bazaar_naLabel">External Connections</h4>
                 </div>
-                <div class="modal-body" style="width:640px;display: flex;padding: 0;">
-                    <img path="../assets/images/pack/red_pitaya_pinout" sizes="640;1280;2560" style="width: 100%;">
+                <div class="modal-body" style="display: flex;padding: 0;">
+                    <img id="pinoutId" path="../assets/images/pack/red_pitaya_pinout" sizes="640;1280;2560"
+                        style="width: 100%;padding: 20px;">
                 </div>
                 <div class="modal-footer">
                     <div class="bazaar-link">
@@ -1299,7 +1301,7 @@
             </div>
         </div>
     </div>
-    <div id="subWindow" class="subwindow hidden">
+    <div id="subWindow" class="subwindow hidden" style="box-shadow: 0px 0px 3px 3px rgba(61, 61, 61, 0.726);">
         <div class="subwindow-content">
             <div class="subwindow-header">
                 <div>Decoded data</div>

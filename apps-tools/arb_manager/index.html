@@ -11,7 +11,8 @@
 <html lang="en">
 
 <head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"></meta>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    </meta>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -36,6 +37,7 @@
     <script src="../assets/help-system/help-system.js?1" onerror="location.reload()"></script>
     <script src="../assets/pako.js?1" onerror="location.reload()"></script>
     <script src="../assets/jquery/jquery.flot.js?1" onerror="location.reload()"></script>
+    <script src="../assets/js/rpDataParser.js?1" onerror="location.reload()"></script>
     <script src="js/guiHandler.js?1" onerror="location.reload()"></script>
     <script src="js/manager.js?1" onerror="location.reload()"></script>
     <script src="js/main.js?1" onerror="location.reload()"></script>
@@ -63,7 +65,8 @@
             <div class="navbar navbar-inverse" role="navigation">
                 <div class="container">
                     <div class="navbar-header">
-                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                        <button type="button" class="navbar-toggle" data-toggle="collapse"
+                            data-target=".navbar-collapse">
                             <span class="sr-only">T</span>
                             <span class="icon-bar"></span>
                             <span class="icon-bar"></span>
@@ -81,7 +84,8 @@
                         <ul class="nav navbar-nav">
                         </ul>
                     </div>
-                    <div id="TITLE_ID" align="center" style="font-size: 18pt;color: lightgray;padding-right: 20%;padding-left: 20%;padding-top: 5px;">
+                    <div id="TITLE_ID" align="center"
+                        style="font-size: 18pt;color: lightgray;padding-right: 20%;padding-left: 20%;padding-top: 5px;">
                         ARB waveform generation manager
                     </div>
                 </div>
@@ -91,7 +95,8 @@
                     <div style="display: flex;">
                         <div class="panels" style="width: 100%;">
                             <div style="height: 100%;display: flex;flex-flow: column;">
-                                <div id="files_table" style="height: 100%;display: flex;flex-wrap: wrap;align-content: flex-start; overflow-x: auto;">
+                                <div id="files_table"
+                                    style="height: 100%;display: flex;flex-wrap: wrap;align-content: flex-start; overflow-x: auto;">
                                     <!-- <div class="filecell">
                                         <div>
                                             <span>
@@ -113,7 +118,8 @@
                                         </div>
                                     </div> -->
                                 </div>
-                                <div style="width: 100%;height: 40px;display: flex;padding-top: 5px;padding-bottom: 5px;justify-content: flex-end;">
+                                <div
+                                    style="width: 100%;height: 40px;display: flex;padding-top: 5px;padding-bottom: 5px;justify-content: flex-end;">
                                     <div style="width: 150px; margin-left: 10px">
                                         <li class="run_buttons2" id="B_UPLOAD" style="width: 100%">
                                             <a style="display: block;">Upload</a>
@@ -126,11 +132,13 @@
                 </div>
             </div>
         </div>
-        <div class="modal fade" id="feedback_error" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+        <div class="modal fade" id="feedback_error" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel"
+            aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
                         <h4 class="modal-title" id="oops_label">Oops, something went wrong</h4>
                     </div>
                     <div class="modal-body" style="text-align: center; font-size: 18px;">
@@ -139,20 +147,24 @@
                     </div>
                     <div class="modal-footer">
                         <div class="bazaar-link" style="float: left; width: 50%;">
-                            <a href="#" style="border: 1px solid; width: 100%" id="send_report_btn" data-dismiss="modal" class="list-group-item btn">Send report</a>
+                            <a href="#" style="border: 1px solid; width: 100%" id="send_report_btn" data-dismiss="modal"
+                                class="list-group-item btn">Send report</a>
                         </div>
                         <div class="bazaar-link" style="float: left; width: 50%;">
-                            <a href="#" style="border: 1px solid; width: 100%" id="restart_app_btn" data-dismiss="modal" class="list-group-item btn">Restart Application</a>
+                            <a href="#" style="border: 1px solid; width: 100%" id="restart_app_btn" data-dismiss="modal"
+                                class="list-group-item btn">Restart Application</a>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="modal fade" id="info_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+        <div class="modal fade" id="info_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel"
+            aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
                         <h4 class="modal-title" id="oops_label">Streaming Application</h4>
                     </div>
                     <div class="modal-body" style="text-align: center; font-size: 18px;">
@@ -160,7 +172,8 @@
                     </div>
                     <div class="modal-footer">
                         <div class="bazaar-link" style="float: center; width: 100%;">
-                            <a href="#" style="border: 1px solid; width: 100%" id="ok_app_btn" data-dismiss="modal" class="list-group-item btn">Ok</a>
+                            <a href="#" style="border: 1px solid; width: 100%" id="ok_app_btn" data-dismiss="modal"
+                                class="list-group-item btn">Ok</a>
                         </div>
                     </div>
                 </div>

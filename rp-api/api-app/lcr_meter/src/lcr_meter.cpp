@@ -44,6 +44,7 @@ typedef struct impendace_params {
     float frequency;
     float _Complex z_out;
     float phase_out;
+    double p_p_amp;
 } impendace_params_t;
 
 /* Thread variables */
@@ -123,7 +124,10 @@ int lcr_SetPause(bool pause) {
 
 int lcr_SetDefaultValues() {
     if (main_params.shunt_mode == RP_LCR_S_EXTENSION) {
-        ECHECK_LCR_APP(lcr_setRShunt(RP_LCR_S_10));
+        if (lcr_setRShunt(RP_LCR_S_10) != RP_LCR_OK) {
+            main_params.shunt_mode = RP_LCR_S_CUSTOM;
+            lcr_SetCustomShunt(100);
+        }
     } else {
         lcr_SetCustomShunt(100);
     }
@@ -177,10 +181,12 @@ int lcr_CopyParams(lcr_main_data_t* params) {
     std::lock_guard lock(g_lcr_mutex_data);
     if (!g_lcr_threadRun)
         return RP_LCR_NOT_STARTED;
+    params->lcr_P_p_amp = 0;
     if (lcr_CalculateData(g_th_params.z_out, g_th_params.phase_out, g_th_params.frequency) != RP_LCR_OK) {
         return RP_LCR_UERROR;
     }
     memcpy(params, &calc_data, sizeof(lcr_main_data_t));
+    params->lcr_P_p_amp = g_th_params.p_p_amp;
     return RP_LCR_OK;
 }
 
@@ -486,10 +492,13 @@ int lcr_data_analysis(buffers_t* data, lcr_shunt_t r_shunt, float sigFreq, int d
         r_RC = main_params.shunt;
 
     // WARNING("Shunt %d freq %f decimation %d",r_RC,sigFreq,decimation)
-
+    double min_a = data->ch_f[1][0];
+    double max_a = data->ch_f[1][0];
     for (uint32_t i = 0; i < data->size; i++) {
         u_dut[i] = data->ch_f[0][i] - data->ch_f[1][i];
         i_dut[i] = data->ch_f[1][i] / r_RC;
+        min_a = std::min(min_a, (double)data->ch_f[1][i]);
+        max_a = std::max(max_a, (double)data->ch_f[1][i]);
     }
 
     double z_ampl;
@@ -507,6 +516,7 @@ int lcr_data_analysis(buffers_t* data, lcr_shunt_t r_shunt, float sigFreq, int d
     auto phase_z_rad = phase_z_deg * M_PI / 180.0;
     g_th_params.z_out = (z_ampl * cosf(phase_z_rad)) + (z_ampl * sinf(phase_z_rad) * I);
     g_th_params.frequency = sigFreq;
+    g_th_params.p_p_amp = max_a - min_a;
     return RP_LCR_OK;
 }
 

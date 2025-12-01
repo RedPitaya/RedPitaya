@@ -11,7 +11,7 @@
     CLIENT.config.app_id = 'streaming_manager';
     CLIENT.config.server_ip = ''; // Leave empty on production, it is used for testing only
     CLIENT.config.search = "?type=run" //location.search
-    CLIENT.config.start_app_url = (CLIENT.config.server_ip.length ? 'http://' + CLIENT.config.server_ip : '') + '/bazaar?start=' + CLIENT.config.app_id + '?' + CLIENT.config.search.substr(1);
+    CLIENT.config.start_app_url = (CLIENT.config.server_ip.length ? 'http://' + CLIENT.config.server_ip : '') + '/bazaar?start=' + CLIENT.config.app_id + CLIENT.config.search;
     CLIENT.config.stop_app_url = (CLIENT.config.server_ip.length ? 'http://' + CLIENT.config.server_ip : '') + '/bazaar?stop=' + CLIENT.config.app_id;
     CLIENT.config.socket_url = 'ws://' + (CLIENT.config.server_ip.length ? CLIENT.config.server_ip : window.location.hostname) + '/wss'; // WebSocket server URI
     CLIENT.config.debug = true
@@ -35,9 +35,6 @@
 
     CLIENT.parameterStack = [];
     CLIENT.signalStack = [];
-
-    CLIENT.compressed_data = 0;
-    CLIENT.decompressed_data = 0;
 
     CLIENT.client_log = function(...args) {
         if (CLIENT.config.debug){
@@ -74,7 +71,7 @@
 
     // Creates a WebSocket connection with the web server
     CLIENT.connectWebSocket = function() {
-
+        let binParser = new BinarySignalParser();
         if (window.WebSocket) {
             CLIENT.ws = new WebSocket(CLIENT.config.socket_url);
             CLIENT.ws.binaryType = "arraybuffer";
@@ -115,18 +112,7 @@
 
             CLIENT.ws.onmessage = function(ev) {
                 try {
-                    var data = new Uint8Array(ev.data);
-                    CLIENT.compressed_data += data.length;
-                    var inflate = pako.inflate(data);
-                    // var text = String.fromCharCode.apply(null, new Uint8Array(inflate));
-                    var bytes = new Uint8Array(inflate);
-                    var text = '';
-                    for(var i = 0; i < Math.ceil(bytes.length / 32768.0); i++) {
-                      text += String.fromCharCode.apply(null, bytes.slice(i * 32768, Math.min((i+1) * 32768, bytes.length)))
-                    }
-
-                    CLIENT.decompressed_data += text.length;
-                    var receive = JSON.parse(text);
+                    var receive = binParser.convert(ev.data)
 
                     //Recieving parameters
                     if (receive.parameters) {

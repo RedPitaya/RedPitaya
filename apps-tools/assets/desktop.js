@@ -11,6 +11,7 @@
     Desktop.sys_info_obj = undefined;
 
     var base_ram = "512"
+    var board_ver = -1
 
     var groups = [{
         name: "System",
@@ -73,8 +74,9 @@
                     applications[i].group = checkApplicationInGroup(applications[i].id);
                     applications[i].is_group = false;
                 }
-
-                applications = Desktop.filterApps(applications,result['stem_ver']);
+                Desktop.board_ver = result['stem_ver']
+                setBoardPinOut(Desktop.board_ver)
+                applications = Desktop.filterApps(applications,Desktop.board_ver)
 
                 for (var i = 0; i < groups.length; i++) {
                     var gr = {
@@ -221,87 +223,81 @@
     }
 
     var default_applications = [
-        { id: "github", name: "Sources", 
-            description: "Access to open source code and programming instructions", 
-            url: "https://github.com/redpitaya", 
+        { id: "github", name: "Sources",
+            description: "Access to open source code and programming instructions",
+            url: "https://github.com/redpitaya",
             image_path: "../assets/images/pack/github",
             image_sizes: "128;256;512",
             check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "applicationstore", name: "Red Pitaya Store", 
-            description: "Access to Red Pitaya official store", 
-            url: "https://redpitaya.com/shop", 
+        { id: "applicationstore", name: "Red Pitaya Store",
+            description: "Access to Red Pitaya official store",
+            url: "https://redpitaya.com/shop",
             image_path: "../assets/images/pack/shop",
             image_sizes: "128;256;512",
             check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "marketplace", name: "Application marketplace", 
-            description: "Access to open source and contributed applications", 
-            url: "http://bazaar.redpitaya.com/", 
+        { id: "marketplace", name: "Application marketplace",
+            description: "Access to open source and contributed applications",
+            url: "http://bazaar.redpitaya.com/",
             image_path: "images/pack/download_icon",
             image_sizes: "128;256;512",
             check_online: true, licensable: false, callback: undefined, type: 'run' },
-        { id: "feedback", name: "Feedback", 
-            description: "Tell us what you like or dislike and what you would like to see improved", 
-            url: "", 
+        { id: "feedback", name: "Feedback",
+            description: "Tell us what you like or dislike and what you would like to see improved",
+            url: "",
             image_path: "../assets/images/pack/feedback",
             image_sizes: "128;256;512",
             check_online: true, licensable: false, callback: showFeedBack, type: 'run' },
-        { id: "instructions", name: "Documentation", 
-            description: "Quick start instructions, user manuals, specifications, examples & more.", 
-            url: "http://redpitaya.readthedocs.io/en/latest/index.html", 
+        { id: "instructions", name: "Documentation",
+            description: "Quick start instructions, user manuals, specifications, examples & more.",
+            url: "http://redpitaya.readthedocs.io/en/latest/index.html",
             image_path: "../assets/images/pack/instr",
             image_sizes: "128;256;512",
             check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "tutorials", name: "Create own WEB application", 
-            description: "RedPitaya tutorials.", 
-            url: "https://redpitaya.readthedocs.io/en/latest/developerGuide/software/build/webapp/webApps.html", 
+        { id: "tutorials", name: "Create own WEB application",
+            description: "RedPitaya tutorials.",
+            url: "https://redpitaya.readthedocs.io/en/latest/developerGuide/software/build/webapp/webApps.html",
             image_path: "../assets/images/pack/tutors",
             image_sizes: "128;256;512",
             check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "wifi", name: "Network manager", 
-            description: "Simple way to establish wireless connection with the Red Pitaya", 
-            url: "/network_manager/", 
+        { id: "wifi", name: "Network manager",
+            description: "Simple way to establish wireless connection with the Red Pitaya",
+            url: "/network_manager/",
             image_path: "../network_manager/info/icon",
             image_sizes: "128;256;512",
             check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "scpi", name: "SCPI server", 
-            description: "Remote access to all Red Pitaya inputs/outputs from MATLAB/LabVIEW/Scilab/Python", 
-            url: "/scpi_manager/", 
+        { id: "scpi", name: "SCPI server",
+            description: "Remote access to all Red Pitaya inputs/outputs from MATLAB/LabVIEW/Scilab/Python",
+            url: "/scpi_manager/",
             image_path: "../scpi_manager/info/icon",
             image_sizes: "128;256;512",
             check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "updater", name: "Red Pitaya OS Update", 
-            description: "Red Pitaya ecosystem updater", 
-            url: "/updater/", 
-            image_path: "../updater/info/icon",
-            image_sizes: "128;256;512",
-            check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "activelearning", name: "Teaching materials", 
-            description: "Teaching materials for Red Pitaya", 
-            url: "https://redpitaya-knowledge-base.readthedocs.io/en/latest/learn_fpga/fpga_learn.html", 
+        { id: "activelearning", name: "Teaching materials",
+            description: "Teaching materials for Red Pitaya",
+            url: "https://redpitaya-knowledge-base.readthedocs.io/en/latest/learn_fpga/fpga_learn.html",
             image_path: "../assets/images/pack/active-learning",
             image_sizes: "128;256;512",
             check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "warranty_ext", name: "Unlock new benefits", 
-            description: "Keep your Red Pitaya fresh for longer", 
-            url: "https://go.redpitaya.com/refresh", 
+        { id: "warranty_ext", name: "Unlock new benefits",
+            description: "Keep your Red Pitaya fresh for longer",
+            url: "https://go.redpitaya.com/refresh",
             image_path: "../assets/images/pack/WarrantyExt",
             image_sizes: "128;256;512",
             check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "jupyter", name: "Python programming", 
-            description: "Jupyter notebook server for running Python applications in a browser tab", 
-            url: "/jlab/lab/tree/RedPitaya/welcome.ipynb", 
+        { id: "jupyter", name: "Python programming",
+            description: "Jupyter notebook server for running Python applications in a browser tab",
+            url: "/jlab/lab/tree/RedPitaya/welcome.ipynb",
             image_path: "../jupyter_manager/info/icon",
             image_sizes: "128;256;512",
             check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "web_ssh", name: "Web Console", 
-            description: "SSH console based on the shellinabox", 
+        { id: "web_ssh", name: "Web Console",
+            description: "SSH console based on the shellinabox",
             url: "http://" + window.location.hostname + ":4200",
             image_path: "../assets/images/pack/ssh_icon",
             image_sizes: "128;256;512",
             check_online: false, licensable: false, callback: undefined, type: 'run' },
-        { id: "pyrpl", name: "PyRPL", 
-            description: "PyRPL turns your RedPitaya into a powerful DSP device", 
-            url: "https://redpitaya.readthedocs.io/en/latest/appsFeatures/applications/pyrpl/pyrpl.html", 
+        { id: "pyrpl", name: "PyRPL",
+            description: "PyRPL turns your RedPitaya into a powerful DSP device",
+            url: "https://redpitaya.readthedocs.io/en/latest/appsFeatures/applications/pyrpl/pyrpl.html",
             image_path: "../assets/images/pack/pyrpl",
             image_sizes: "128;256;512",
             check_online: false, licensable: false, callback: undefined, type: 'run' }
@@ -326,7 +322,7 @@
     $(window).resize(function($) {
         refillList();
         placeElements();
-
+        setBoardPinOut(Desktop.board_ver)
         Desktop.selectGroup();
     });
 

@@ -82,8 +82,8 @@ int triggerIfInternal(rp_channel_t channel);
 
 int synthesize_signal(rp_channel_t channel);
 int synthesis_sin(float scale, float* data_out, uint16_t buffSize);
-int synthesis_sweep(float scale, float frequency, float frequency_start, float frequency_end, float phaseRad, rp_gen_sweep_mode_t mode, rp_gen_sweep_dir_t dir,
-                    float* data_out, uint16_t buffSize);
+int synthesis_sweep(float scale, float frequency, float frequency_start, float frequency_end, float phaseRad, rp_gen_sweep_mode_t mode, rp_gen_sweep_dir_t dir, float* data_out,
+                    uint16_t buffSize);
 int synthesis_triangle(float scale, float* data_out, uint16_t buffSize);
 int synthesis_arbitrary(float scale, rp_channel_t channel, float* data_out, uint32_t* size);
 int synthesis_square(float scale, float frequency, float riseTime, float fallTime, float* data_out, uint16_t buffSize);
@@ -92,6 +92,9 @@ int synthesis_rampDown(float scale, float* data_out, uint16_t buffSize);
 int synthesis_DC(float scale, float* data_out, uint16_t buffSize);
 int synthesis_DC_NEG(float scale, float* data_out, uint16_t buffSize);
 int synthesis_PWM(float scale, float ratio, float* data_out, uint16_t buffSize);
+
+int gen_setUseLastSample(rp_channel_t channel, bool enable);
+int gen_getUseLastSample(rp_channel_t channel, bool* enable);
 
 int gen_setBurstLastValue(rp_channel_t channel, float amplitude);
 int gen_getBurstLastValue(rp_channel_t channel, float* amplitude);
@@ -117,5 +120,6 @@ int gen_axi_ReleaseMemory(rp_channel_t channel);
 int gen_axi_SetDecimation(rp_channel_t channel, uint32_t decimation);
 int gen_axi_GetDecimation(rp_channel_t channel, uint32_t* decimation);
 int gen_axi_WriteWaveform(rp_channel_t channel, float* data, uint32_t length);
+int gen_axi_WriteWaveform(rp_channel_t channel, uint32_t offset, float* data, uint32_t length);
 
 #endif

@@ -58,12 +58,11 @@ void usage() {
         "\n"
         "Usage:\t%s freq r_shunt [-v]\n"
         "\n"
-        "\tfreq               Signal frequency used for measurement Hz.\n"
-        "\tr_shunt            Shunt resistor value in Ohms [ 10, 100, 1000, 10000, 100000, 1000000 ]. If set to 0, Automatic ranging is used.\n"
+        "\tfreq               Signal frequency used for measurement in Hz.\n"
+        "\tr_shunt            Shunt resistor value in Ohms Ω [ 10, 100, 1000, 10000, 100000, 1000000 ]. If set to 0, Automatic ranging is used.\n"
         "\t-v                 Verbose mode\n"
-        "\t                   Automatic ranging demands Extenson module.\n"
         "\n"
-        "Output:\tFrequency [Hz], |Z| [Ohm], P [deg], Ls [H], Cs [F], Rs [Ohm], Lp [H], Cp [F], Rp [Ohm], Q, D, Xs [H], Gp [S], Bp [S], |Y| [S], -P [deg]\n";
+        "Output:\tFrequency [Hz], |Z|, Ohm [Ω], P [deg], Ls [H], Cs [F], Rs [Ω], Lp [H], Cp [F], Rp [Ω], Q, D, Xs [H], Gp [S], Bp [S], |Y| [S], -P [deg]\n";
 
     fprintf(stderr, format, VERSION_STR, __TIMESTAMP__, g_argv0);
 }
@@ -137,7 +136,7 @@ int main(int argc, char* argv[]) {
     }
 
     lcrApp_lcrInit();
-    auto Connected = lcrApp_LcrCheckExtensionModuleConnection(false) == RP_OK;
+    auto Connected = lcrApp_LcrCheckExtensionModuleConnection(true) == RP_OK;
 
     if (Connected) {
         if (rp_HPGetFastADCIsAC_DCOrDefault()) {
@@ -168,30 +167,31 @@ int main(int argc, char* argv[]) {
         float modify_value = 0;
         /*printf(" %.1f    %.3f    %.1f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f    %.10f\n",*/
         if (!verb_mode) {
-            printf(
-                " %.1f    %.3e    %.2f    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.2f\n",
+            printf(" %.1f    %.3e    %.2f    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.3e    %.2f\n",
 
-                /*"Output:\tFrequency [Hz], |Z| [Ohm], P [deg], Ls [H], Cs [F], Rs [Ohm], Lp [H], Cp [F], Rp [Ohm], Q, D, Xs [H], Gp [S], Bp [S], |Y| [S], -P [deg]\n";*/
+                   /*"Output:\tFrequency [Hz], |Z| [Ohm], P [deg], Ls [H], Cs [F], Rs [Ohm], Lp [H], Cp [F], Rp [Ohm], Q, D, Xs [H], Gp [S], Bp [S], |Y| [S], -P [deg]\n";*/
 
-                (float)freq, data->lcr_amplitude, data->lcr_phase,
-                data->lcr_L_s,     // L_s[ i ],
-                data->lcr_C_s,     // C_s[ i ],
-                data->lcr_R_s,     // R_s[ i ],
-                data->lcr_L_p,     // L_p[ i ],
-                data->lcr_C_p,     // C_p[ i ],
-                data->lcr_R_p,     // R_p[ i ],
-                data->lcr_Q_s,     // Q[ i ],
-                data->lcr_D_s,     // D[ i ],
-                data->lcr_X_s,     // X_s[ i ],
-                data->lcr_G_p,     // G_p[ i ],
-                data->lcr_B_p,     // B_p[ i ],
-                data->lcr_Y_abs,   // Y_abs[ i ],
-                data->lcr_Phase_Y  // PhaseY[ i ]
+                   (float)freq,
+                   data->lcr_amplitude,
+                   data->lcr_phase,
+                   data->lcr_L_s,     // L_s[ i ],
+                   data->lcr_C_s,     // C_s[ i ],
+                   data->lcr_R_s,     // R_s[ i ],
+                   data->lcr_L_p,     // L_p[ i ],
+                   data->lcr_C_p,     // C_p[ i ],
+                   data->lcr_R_p,     // R_p[ i ],
+                   data->lcr_Q_s,     // Q[ i ],
+                   data->lcr_D_s,     // D[ i ],
+                   data->lcr_X_s,     // X_s[ i ],
+                   data->lcr_G_p,     // G_p[ i ],
+                   data->lcr_B_p,     // B_p[ i ],
+                   data->lcr_Y_abs,   // Y_abs[ i ],
+                   data->lcr_Phase_Y  // PhaseY[ i ]
             );
         } else {
             printf("Frequency\t%d Hz\n", freq);
             pref = GetPrefix(data->lcr_amplitude, &modify_value);
-            printf("Z\t%lf %cOmh\n", modify_value, pref);
+            printf("Z\t%lf %cOhm Ω\n", modify_value, pref);
 
             printf("Phase\t%lf deg\n", data->lcr_phase);
 
@@ -202,7 +202,7 @@ int main(int argc, char* argv[]) {
             printf("C(s)\t%lf %cF\n", modify_value, pref);
 
             pref = GetPrefix(data->lcr_R_s, &modify_value);
-            printf("R(s)\t%lf %cOmh\n", modify_value, pref);
+            printf("R(s)\t%lf %cOmh Ω\n", modify_value, pref);
 
             pref = GetPrefix(data->lcr_L_p, &modify_value);
             printf("L(p)\t%lf %cH\n", modify_value, pref);
@@ -211,7 +211,7 @@ int main(int argc, char* argv[]) {
             printf("C(p)\t%lf %cF\n", modify_value, pref);
 
             pref = GetPrefix(data->lcr_R_p, &modify_value);
-            printf("R(p)\t%lf %cOmh\n", modify_value, pref);
+            printf("R(p)\t%lf %cOmh Ω\n", modify_value, pref);
 
             printf("Q\t%lf\n", data->lcr_Q_s);
             printf("D\t%lf\n", data->lcr_D_s);
@@ -225,7 +225,7 @@ int main(int argc, char* argv[]) {
         free(data);
 
     } else {
-        fprintf(stderr, "Extension module is not connected!\n\n");
+        fprintf(stderr, "Extension module is not connected!\n");
     }
 
     lcrApp_LcrRelease();

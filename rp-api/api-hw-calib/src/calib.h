@@ -35,7 +35,7 @@ rp_calib_error calib_SetParams(rp_calib_params_t* calib_params);
 rp_calib_error calib_WriteDirectlyParams(rp_calib_params_t* calib_params, bool use_factory_zone, bool skip_recalculate);
 
 void calib_SetToZero(bool is_new_format, bool setFilterZero, uint8_t version);
-rp_calib_error calib_LoadFromFactoryZone(bool convert_to_new, uint8_t version);
+rp_calib_error calib_LoadFromFactoryZone(bool convert_to_new);
 rp_calib_error calib_Reset(bool use_factory_zone, bool is_new_format, bool setFilterZero, uint8_t version);
 rp_calib_error calib_GetEEPROM(uint8_t** data, uint16_t* size, bool use_factory_zone);
 rp_calib_error calib_ConvertEEPROM(uint8_t* data, uint16_t size, rp_calib_params_t* out);

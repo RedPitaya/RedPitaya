@@ -85,16 +85,16 @@ print("obj.createData()")
 data = obj.createData()
 print(data)
 
-print("rp_dsp.arrpDouble.frompointer(data.m_in)")
-pdata_in = rp_dsp.arrpDouble.frompointer(data.m_in)
+print("rp_dsp.arrpFloat.frompointer(data.m_in)")
+pdata_in = rp_dsp.arrpFloat.frompointer(data.m_in)
 print(pdata_in)
 
-print("rp_dsp.arrDouble.frompointer(pdata_in[0])")
-data_in_ch1 = rp_dsp.arrDouble.frompointer(pdata_in[0])
+print("rp_dsp.arrFloat.frompointer(pdata_in[0])")
+data_in_ch1 = rp_dsp.arrFloat.frompointer(pdata_in[0])
 print(data_in_ch1)
 
-print("rp_dsp.arrDouble.frompointer(pdata_in[1])")
-data_in_ch2 = rp_dsp.arrDouble.frompointer(pdata_in[1])
+print("rp_dsp.arrpFloat.frompointer(pdata_in[1])")
+data_in_ch2 = rp_dsp.arrFloat.frompointer(pdata_in[1])
 print(data_in_ch2)
 
 data_in_ch1[0] = 0

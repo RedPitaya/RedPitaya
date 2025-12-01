@@ -57,6 +57,10 @@ profiles_t* getProfileDefualt(){
     return p;
 }
 
+int rp_HPInit(){
+    return hp_cmn_Init();
+}
+
 int rp_HPPrint(){
     int state;
     profiles_t* p = getProfile(&state);

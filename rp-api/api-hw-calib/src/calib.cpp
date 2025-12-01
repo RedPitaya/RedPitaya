@@ -430,7 +430,7 @@ rp_calib_error calib_Reset(bool use_factory_zone, bool is_new_format, bool setFi
     }
 }
 
-rp_calib_error calib_LoadFromFactoryZone(bool convert_to_new, uint8_t version) {
+rp_calib_error calib_LoadFromFactoryZone(bool convert_to_new) {
 
     rp_HPeModels_t model = STEM_125_14_v1_1;  // Default model
     if (!g_model_loaded) {
@@ -448,16 +448,11 @@ rp_calib_error calib_LoadFromFactoryZone(bool convert_to_new, uint8_t version) {
     if (ret != RP_HW_CALIB_OK) {
         return ret;
     }
-    if (convert_to_new) {
-        if (version >= RP_HW_PACK_ID_V5) {
-            if (!isUniversalCalib(calib.dataStructureId)) {
-                recalculateToUniversal(&calib);
-            }
-            calib.dataStructureId = version;
-        } else {
-            ERROR_LOG("Invalid version: %d", version);
-            return RP_HW_CALIB_EIP;
+    if (convert_to_new && calib.dataStructureId < RP_HW_PACK_ID_V5) {
+        if (!isUniversalCalib(calib.dataStructureId)) {
+            recalculateToUniversal(&calib);
         }
+        calib.dataStructureId = RP_HW_PACK_ID_V5;
     }
     return calib_WriteParams(model, &calib, false, false);
 }
@@ -933,12 +928,12 @@ rp_calib_error calib_GetFastADCCalibValue_1_20(rp_channel_calib_t channel, rp_ac
         }
     }
 
-    if (g_calib.fast_adc_count_1_1 <= channel && mode == RP_DC_CALIB) {
+    if (g_calib.fast_adc_count_1_20 <= channel && mode == RP_DC_CALIB) {
         ERROR_LOG("Wrong channel: %d in DC mode", channel);
         return RP_HW_CALIB_ECH;
     }
 
-    if (g_calib.fast_adc_count_1_1_ac <= channel && mode == RP_AC_CALIB) {
+    if (g_calib.fast_adc_count_1_20_ac <= channel && mode == RP_AC_CALIB) {
         ERROR_LOG("Wrong channel: %d in AC mode", channel);
         return RP_HW_CALIB_ECH;
     }

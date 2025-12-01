@@ -94,6 +94,8 @@ const std::vector<std::string> g_savedParams;
 
 bool g_config_changed = false;
 uint16_t g_save_counter = 0;  // By default, a save check every 40 ticks. One tick 50 ms.
+uint16_t g_check_counter = 0;
+const uint32_t paramInterval = 50;
 
 void updateFromFront(bool force);
 
@@ -118,17 +120,18 @@ int rp_app_init(void) {
     fprintf(stderr, "Loading lcr meter version %s-%s.\n", VERSION_STR, REVISION_STR);
 
     setHomeSettingsPath("/.config/redpitaya/apps/lcr_meter_" + std::to_string((int)getModel()) + "");
-    CDataManager::GetInstance()->SetParamInterval(20);
-
+#ifdef ZIP_DISABLED
+    CDataManager::GetInstance()->SetEnableParamsGZip(false);
+    CDataManager::GetInstance()->SetEnableSignalsGZip(false);
+    CDataManager::GetInstance()->SetEnableBinarySignalsGZip(false);
+#endif
+    CDataManager::GetInstance()->SetParamInterval(paramInterval);
     rp_WC_Init();
-
     lcrApp_lcrInit();
-
     if (rp_HPGetFastADCIsAC_DCOrDefault()) {
         rp_AcqSetAC_DC(RP_CH_1, RP_DC);
         rp_AcqSetAC_DC(RP_CH_2, RP_DC);
     }
-
     lcrApp_LcrRun();
     updateParametersByConfig();
     return 0;
@@ -140,26 +143,16 @@ int rp_app_exit(void) {
     return 0;
 }
 
-int rp_set_params(rp_app_params_t* p, int len) {
-    return 0;
-}
-
-int rp_get_params(rp_app_params_t** p) {
-    return 0;
-}
-
-int rp_get_signals(float*** s, int* sig_num, int* sig_len) {
-    return 0;
-}
-
-void UpdateSignals(void) {}
-
 // Send values to frontend
 void UpdateParams(void) {
-    bool moduleStatusFlag = lcrApp_LcrCheckExtensionModuleConnection(false) == RP_OK;
-    if (moduleStatus.Value() != moduleStatusFlag) {
-        moduleStatus.SendValue(moduleStatusFlag);
-        TRACE_SHORT("------------> Module Status sended %d", moduleStatusFlag);
+    // check in 1 sec
+    static bool connected = false;
+    if (g_check_counter++ % (1000 / paramInterval) == 0) {
+        connected = lcrApp_LcrCheckExtensionModuleConnection(false) == RP_OK;
+        if (moduleStatus.Value() != connected) {
+            moduleStatus.SendValue(connected);
+            TRACE_SHORT("------------> Module Status sended %d", connected);
+        }
     }
 
     lcr_shunt_t shuntValue;
@@ -282,12 +275,6 @@ void UpdateParams(void) {
             }
             relativeValue.SendValue(diff);
         }
-    }
-
-    if (g_config_changed && (g_save_counter++ % 40 == 0)) {
-        g_config_changed = false;
-        // Save the configuration file
-        configSet();
     }
 }
 
@@ -418,9 +405,13 @@ void OnNewParams(void) {
 
     if (!g_config_changed)
         g_config_changed = isChanged();
+
     updateFromFront(false);
+
+    if (g_config_changed) {
+        g_config_changed = false;
+        // Save the configuration file
+        configSet();
+        TRACE_SHORT("configSet")
+    }
 }
-
-void OnNewSignals(void) {}
-
-void PostUpdateSignals(void) {}

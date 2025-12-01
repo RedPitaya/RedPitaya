@@ -293,3 +293,54 @@ a.list-group-item:hover:visited {
 .list-group-item.btn {
     font-weight: bold;
 }
+
+.tab {
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+    height: 30px;
+    /* border: 1px solid #ccc;
+    background-color: #f1f1f1; */
+}
+
+.tab h4 {
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding-left: 10px;
+    padding-right: 10px;
+    transition: 0.3s;
+    opacity: 50%;
+    font-size: 16px;
+}
+
+.tab h4:hover {
+    opacity: 100%;
+}
+
+.tab h4.active {
+    font-weight: bold;
+    opacity: 100%;
+    font-size: 18px;
+}
+
+.tabcontent {
+    display: none;
+}
+
+.unselectable {
+    -webkit-touch-callout: none;
+    /* iOS Safari */
+    -webkit-user-select: none;
+    /* Chrome/Safari/Opera */
+    -khtml-user-select: none;
+    /* Konqueror */
+    -moz-user-select: none;
+    /* Firefox */
+    -ms-user-select: none;
+    /* Internet Explorer/Edge */
+    user-select: none;
+    /* Non-prefixed version, currently
+                                  not supported by any browser */
+}

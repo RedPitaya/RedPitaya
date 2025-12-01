@@ -5,7 +5,7 @@
 
 // The function removes incompatible applications
 (function(Desktop, $) {
-  
+
     Desktop.filterApps = function(listOfapplications,model) {
 //       STEM_125_10_v1_0            = 0,
         if (model == 0) {
@@ -97,6 +97,14 @@
 //  STEM_250_12_120             = 14,
 //  STEM_250_12_v1_2a           = 15,
 //  STEM_250_12_v1_2b           = 16,
+
+        if (model == 11 || model == 12) {
+            for (i = listOfapplications.length - 1; i >= 0; i -= 1) {
+                if (listOfapplications[i]["id"] === 'lcr_meter') {
+                    listOfapplications.splice(i, 1);
+                }
+            }
+        };
 
         if (model == 11 || model == 12 || model == 13 || model == 14 || model == 15 || model == 16) {
             for (i = listOfapplications.length - 1; i >= 0; i -= 1) {

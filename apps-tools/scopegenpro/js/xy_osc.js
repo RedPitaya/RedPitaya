@@ -57,23 +57,56 @@
         var points = []
         var sig_name = 'xy'
         var color = OSC.config.graph_colors[sig_name];
+        var show_lines = true
+
 
         if (OSC.params.orig['OSC_VIEW_START_POS'] && OSC.params.orig['OSC_VIEW_END_POS']) {
-            for (var i = OSC.params.orig['OSC_VIEW_START_POS'].value; i < OSC.params.orig['OSC_VIEW_END_POS'].value; i++)
-                points.push([signals['X_AXIS_VALUES'].value[i], signals['Y_AXIS_VALUES'].value[i]]);
+            for (var i = OSC.params.orig['OSC_VIEW_START_POS'].value; i < OSC.params.orig['OSC_VIEW_END_POS'].value; i++){
+                var x = signals['X_AXIS_VALUES'].value[i];
+                var y = signals['Y_AXIS_VALUES'].value[i];
+
+                if (Number.isNaN(x) || Number.isNaN(y)) {
+                    show_lines = false
+                }
+
+                points.push([x,y]);
+            }
         } else {
             for (var i = 0; i < new_signals[sig_name].size; i++) {
-                points.push([signals['X_AXIS_VALUES'].value[i], signals['Y_AXIS_VALUES'].value[i]]);
+                var x = signals['X_AXIS_VALUES'].value[i];
+                var y = signals['Y_AXIS_VALUES'].value[i];
+
+                if (Number.isNaN(x) || Number.isNaN(y)) {
+                    show_lines = false
+                }
+
+                points.push([x,y]);
             }
         }
 
-        pointArr.push(points);
+
+        var show_lines_canvas = show_lines
+        var show_lines_opengl = false
+        var show_points_canvas = !show_lines
+        var show_points_opengl = false
+        if (OSC.glMode && OSC.glMode.isInit){
+            show_lines_opengl = show_lines_canvas
+            show_lines_canvas = false
+            show_points_opengl = show_points_canvas
+            show_points_canvas = false
+        }
+
+        pointArr.push({data: points, data_gl: points, points: { show: show_points_canvas, show_gl :show_points_opengl  } , lines: { show: show_lines_canvas, show_gl:show_lines_opengl }, color : color });
         colorsArr.push(color);
 
         if (OSC.graphs["xy"]) {
             OSC.graphs["xy"].elem.show();
             OSC.graphs["xy"].plot.setColors(colorsArr);
             OSC.graphs["xy"].plot.resize();
+            if (OSC.glXYMode && OSC.glXYMode.isInit){
+                var canvas = OSC.graphs["xy"].plot.getCanvas()
+                OSC.glXYMode.setNewSizeWGL(canvas.width,canvas.height)
+            }
             OSC.graphs["xy"].plot.setupGrid();
             OSC.graphs["xy"].plot.setData(pointArr);
             OSC.graphs["xy"].plot.draw();
@@ -83,6 +116,8 @@
             OSC.graphs["xy"].plot = $.plot(OSC.graphs["xy"].elem, [pointArr], {
                 name: "xy",
                 series: {
+                    lines: { show: true },
+                    points: { show: true, radius: 1 },
                     shadowSize: 0, // Drawing is faster without shadows
                 },
                 yaxis: {
@@ -96,6 +131,12 @@
                 grid: {
                     show: false
                 },
+                hooks: {
+                    drawSeries: function(plot, ctx, series) {
+                        if (OSC.glXYMode && OSC.glXYMode.isInit)
+                            OSC.glXYMode.drawXY(ctx, series)
+                    }
+                },
                 colors: [
                     '#FF2A68', '#FF9500', '#FFDB4C', '#87FC70', '#22EDC7', '#1AD6FD', '#C644FC', '#52EDC7', '#EF4DB6'
                 ]
@@ -103,6 +144,13 @@
             // If page not full loaded
             if (OSC.graphs["xy"].elem === undefined){
                 OSC.graphs = {};
+            }
+
+            OSC.glXYMode = new GLMode()
+            OSC.glXYMode.init()
+            if (OSC.glXYMode.isInit){
+                var canvas = OSC.graphs["xy"].plot.getCanvas()
+                OSC.glXYMode.setNewSizeWGL(canvas.width,canvas.height)
             }
 
             $('.xy_plot').css($('#xy_graph_grid').css(['height', 'width']));

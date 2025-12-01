@@ -311,19 +311,19 @@
             strings += +((time_unit.multiplier * (right_x - time_step * i)).toFixed(3));
 
             if (in1)
-                strings += col_delim + OSC.lastSignals["ch1"].value[i];
+                strings += col_delim + OSC.lastSignalsCSV["ch1"].value[i];
             if (in2)
-                strings += col_delim + OSC.lastSignals["ch2"].value[i];
+                strings += col_delim + OSC.lastSignalsCSV["ch2"].value[i];
             if (in3)
-                strings += col_delim + OSC.lastSignals["ch3"].value[i];
+                strings += col_delim + OSC.lastSignalsCSV["ch3"].value[i];
             if (in4)
-                strings += col_delim + OSC.lastSignals["ch4"].value[i];
+                strings += col_delim + OSC.lastSignalsCSV["ch4"].value[i];
             if (out1)
-                strings += col_delim + OSC.lastSignals["output1"].value[i];
+                strings += col_delim + OSC.lastSignalsCSV["output1"].value[i];
             if (out2)
-                strings += col_delim + OSC.lastSignals["output2"].value[i];
+                strings += col_delim + OSC.lastSignalsCSV["output2"].value[i];
             if (math)
-                strings += col_delim + OSC.lastSignals["math"].value[i];
+                strings += col_delim + OSC.lastSignalsCSV["math"].value[i];
 
             strings += row_delim;
         };

@@ -64,7 +64,26 @@ add_executable(${PROJECT_NAME} ${SOURCES} ${SOURCES_PARSER})
 
 target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE -static rpapp_lcr rp-sweep rp-dsp rp rp-hw-calib rp-hw-can rp-hw-profiles rp-i2c rp-spi rp-gpio rp-hw i2c socketcan)
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    -Wl,-Bstatic
+    rpapp_lcr
+    rp-sweep
+    rp-dsp
+    rp
+    rp-hw-calib
+    rp-hw-can
+    rp-hw-profiles
+    rp-i2c
+    rp-spi
+    rp-gpio
+    rp-hw
+    -Wl,-Bdynamic
+    i2c
+    socketcan
+    pthread
+    dl
+    stdc++
+)
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${INSTALL_DIR}/bin)
 

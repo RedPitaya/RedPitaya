@@ -36,6 +36,10 @@
 #define LEVEL_AMPS_DEF outAmpDef()
 #define MAX_DAC_FREQ getMaxDacFreqRate()
 
+enum { CH_SIGNAL_DATA = (8 * 1024) };
+
+enum controlSettings { NONE = 0, REQUEST_RESET = 1, RESET_DONE = 2, REQUEST_LIST = 3, SAVE = 4, DELETE = 5, LOAD = 6, LOAD_DONE = 7 };
+
 auto getADCChannels() -> uint8_t;
 auto getDACChannels() -> uint8_t;
 auto getDACRate() -> uint32_t;

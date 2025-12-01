@@ -28,6 +28,7 @@
     <script src="../assets/popupstack.js?1" onerror="location.reload()"></script>
     <script src="../assets/jquery.browser.js?1" onerror="location.reload()"></script>
     <script src="../assets/imageLoader.js?1" onerror="location.reload()"></script>
+    <script src="../assets/js/rpDataParser.js?1" onerror="location.reload()"></script>
     <script src="../main_menu/js/rp_client.js?1" onerror="location.reload()"></script>
     <script src="../main_menu/js/client.js?1" onerror="location.reload()"></script>
     <script src="../main_menu/js/main.js?1" onerror="location.reload()"></script>
@@ -163,9 +164,18 @@
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
                             aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="bazaar_naLabel">System Info</h4>
+                    <div class="tab">
+                        <h4 id="sysInfoTabHeader" class="tablinks modal-title unselectable"
+                            onclick="openDialogTab(event, 'sysInfoTab')">
+                            System Info
+                        </h4>
+                        <h4 class="tablinks modal-title unselectable" onclick="openDialogTab(event, 'settingsTab')">
+                            System
+                            settings
+                        </h4>
+                    </div>
                 </div>
-                <div class="modal-body" style="display: flex;">
+                <div id="sysInfoTab" class="modal-body tabcontent" style="display: flex;">
                     <div style="text-align: left;margin-left: 5%;">
                         <table>
                             <col width="180px">
@@ -265,14 +275,18 @@
                         </table>
                     </div>
                 </div>
-                <div class="modal-header">
-                    <h4 class="modal-title" id="bazaar_naLabel">System settings</h4>
-                </div>
-                <div class="modal-body" style="display: flex;">
+                <div id="settingsTab" class="modal-body tabcontent" style="display: flex;">
                     <div style="text-align: left;margin-left: 5%;">
                         <table>
                             <col width="250px">
                             <col width="200px">
+                            <tr style="height:60px;">
+                                <td>ADC base clock frequency:</td>
+                                <td>
+                                    <input id="adc_base_rate" type="text" value="125000000" class="list-group-item btn"
+                                        style="color: silver;">
+                                </td>
+                            </tr>
                             <tr style="height:60px;">
                                 <td>Enable File System Consistency Check after boot:</td>
                                 <td>
@@ -311,6 +325,13 @@
                             <col width="250px">
                             <col width="200px">
                             <tr style="height:60px;">
+                                <td>DAC base clock frequency:</td>
+                                <td>
+                                    <input id="dac_base_rate" type="text" value="125000000" class="list-group-item btn"
+                                        style="color: silver;">
+                                </td>
+                            </tr>
+                            <tr style="height:60px;">
                                 <td id="UBOOT_MODE_ID">-</td>
                                 <td>
                                     <div id="up_boot_id" class="bazaar-link">
@@ -319,7 +340,7 @@
                                 </td>
                             </tr>
                             <tr style="height:60px;">
-                                <td>Remove stored settings for Web Apps:</td>
+                                <td>Remove stored settings:</td>
                                 <td>
                                     <div id="delete_settings_id" class="bazaar-link">
                                         <a class="list-group-item btn" style="margin-left: 25px;">DELETE</a>
@@ -329,25 +350,42 @@
                         </table>
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer" style="margin: 0;">
                     <div class="bazaar-link">
                         <a href="#" data-dismiss="modal" id="disable_analytics" class="list-group-item btn">Close</a>
                     </div>
                 </div>
+                <script>
+                    function openDialogTab(evt, cityName) {
+                        var i, tabcontent, tablinks;
+                        tabcontent = document.getElementsByClassName("tabcontent");
+                        for (i = 0; i < tabcontent.length; i++) {
+                            tabcontent[i].style.display = "none";
+                        }
+                        tablinks = document.getElementsByClassName("tablinks");
+                        for (i = 0; i < tablinks.length; i++) {
+                            tablinks[i].className = tablinks[i].className.replace(" active", "");
+                        }
+                        document.getElementById(cityName).style.display = "flex";
+                        evt.currentTarget.className += " active";
+                    }
+                    document.getElementById("sysInfoTabHeader").click();
+                </script>
             </div>
         </div>
     </div>
     <div class="modal fade" id="ext_connections_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel"
-        aria-hidden="true">
-        <div class="modal-dialog" style="width:680px;">
+        aria-hidden="true" style="overflow: hidden;">
+        <div class="modal-dialog" id="pinoutDialogId" style="width:680px;">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
                             aria-hidden="true">&times;</span></button>
                     <h4 class="modal-title" id="bazaar_naLabel">External Connections</h4>
                 </div>
-                <div class="modal-body" style="width:640px;display: flex;padding: 0;">
-                    <img path="../assets/images/pack/red_pitaya_pinout" sizes="640;1280;2560" style="width: 100%;">
+                <div class="modal-body" style="display: flex;padding: 0;">
+                    <img id="pinoutId" path="../assets/images/pack/red_pitaya_pinout" sizes="640;1280;2560"
+                        style="width: 100%;padding: 20px;">
                 </div>
                 <div class="modal-footer">
                     <div class="bazaar-link">

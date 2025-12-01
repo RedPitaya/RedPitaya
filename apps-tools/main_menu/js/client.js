@@ -31,9 +31,6 @@
     CLIENT.parameterStack = [];
     CLIENT.signalStack = [];
 
-    CLIENT.compressed_data = 0;
-    CLIENT.decompressed_data = 0;
-
     CLIENT.client_log = function(...args) {
         if (CLIENT.config.debug){
             const d = new Date();
@@ -70,6 +67,7 @@
     // Creates a WebSocket connection with the web server
     CLIENT.connectWebSocket = function() {
 
+        let binParser = new BinarySignalParser();
         if (window.WebSocket) {
             CLIENT.ws = new WebSocket(CLIENT.config.socket_url);
             CLIENT.ws.binaryType = "arraybuffer";
@@ -106,18 +104,8 @@
 
             CLIENT.ws.onmessage = function(ev) {
                 try {
-                    var data = new Uint8Array(ev.data);
-                    CLIENT.compressed_data += data.length;
-                    var inflate = pako.inflate(data);
-                    // var text = String.fromCharCode.apply(null, new Uint8Array(inflate));
-                    var bytes = new Uint8Array(inflate);
-                    var text = '';
-                    for(var i = 0; i < Math.ceil(bytes.length / 32768.0); i++) {
-                      text += String.fromCharCode.apply(null, bytes.slice(i * 32768, Math.min((i+1) * 32768, bytes.length)))
-                    }
 
-                    CLIENT.decompressed_data += text.length;
-                    var receive = JSON.parse(text);
+                    let receive = binParser.convert(ev.data)
 
                     //Recieving parameters
                     if (receive.parameters) {
@@ -126,6 +114,7 @@
 
                     //Recieve signals
                     if (receive.signals) {
+                        CLIENT.client_log(receive.signals)
                         CLIENT.signalStack.push(receive.signals);
                     }
                 } catch (e) {
@@ -147,6 +136,17 @@
         return true;
     };
 
+    CLIENT.requestParameters = function() {
+        if (!CLIENT.state.socket_opened) {
+            console.log('ERROR: Cannot save changes, socket not opened');
+            return false;
+        }
+        CLIENT.parametersCache["in_command"] = { value: "send_all_params" };
+        CLIENT.ws.send(JSON.stringify({ parameters: CLIENT.parametersCache }));
+        CLIENT.client_log("SEND: ", CLIENT.parametersCache )
+        CLIENT.parametersCache = {};
+        return true;
+    };
 
     //Handlers
     var signalsHandler = function() {
@@ -174,7 +174,6 @@
 
     var parametersHandler = function() {
         if (CLIENT.parameterStack.length > 0) {
-            CLIENT.client_log(CLIENT.parameterStack.length)
             var params = [...CLIENT.parameterStack]
             var pack_params = []
             for( var i = 0 ; i < params.length; i++){

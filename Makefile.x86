@@ -92,7 +92,7 @@ KERNEL_HEADERS ?= YES
 
 # HWID=v1r0 - this value for 250-12 rev 1.0. In all other cases, this parameter is empty.
 
-FPGA_COMMIT ?= Release-2025.1
+FPGA_COMMIT ?= Release-2025.2
 
 
 HWID ?=
@@ -701,7 +701,7 @@ gen_report_eco:
 ################################################################################
 
 APP_STREAMINGMANAGER_DIR = apps-tools/streaming_manager
-streaming:  streaming_client streaming_client_win
+streaming:  streaming_client streaming_client_win streaming_client_arm64
 
 streaming_client:
 	$(MAKE) -i -C $(APP_STREAMINGMANAGER_DIR) clean
@@ -710,6 +710,10 @@ streaming_client:
 streaming_client_win:
 	$(MAKE) -i -C $(APP_STREAMINGMANAGER_DIR) clean
 	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) install_client_win
+
+streaming_client_arm64:
+	$(MAKE) -i -C $(APP_STREAMINGMANAGER_DIR) clean
+	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) install_client_arm64
 
 streaming_client_qt:
 	$(MAKE) -i -C $(APP_STREAMINGMANAGER_DIR) clean

@@ -1,3 +1,11 @@
+/*
+ * Red Pitaya Spectrum Analizator client
+ *
+ *
+ * (c) Red Pitaya  http://www.redpitaya.com
+ *
+ */
+
 (function(CLIENT, $, undefined) {
 
     // Params cache
@@ -33,6 +41,8 @@
 
     CLIENT.compressed_data = 0;
     CLIENT.decompressed_data = 0;
+    CLIENT.fps = 0
+    CLIENT.packs = 0
 
     CLIENT.client_log = function(...args) {
         if (CLIENT.config.debug){
@@ -69,7 +79,7 @@
 
     // Creates a WebSocket connection with the web server
     CLIENT.connectWebSocket = function() {
-
+        let binParser = new BinarySignalParser();
         if (window.WebSocket) {
             CLIENT.ws = new WebSocket(CLIENT.config.socket_url);
             CLIENT.ws.binaryType = "arraybuffer";
@@ -106,29 +116,19 @@
 
             CLIENT.ws.onmessage = function(ev) {
                 try {
-                    var data = new Uint8Array(ev.data);
-                    CLIENT.compressed_data += data.length;
-                    var inflate = pako.inflate(data);
-                    // var text = String.fromCharCode.apply(null, new Uint8Array(inflate));
-                    var bytes = new Uint8Array(inflate);
-                    var text = '';
-                    for(var i = 0; i < Math.ceil(bytes.length / 32768.0); i++) {
-                      text += String.fromCharCode.apply(null, bytes.slice(i * 32768, Math.min((i+1) * 32768, bytes.length)))
-                    }
-
-                    CLIENT.decompressed_data += text.length;
-                    var receive = JSON.parse(text);
+                    var receive = binParser.convert(ev.data)
+                    CLIENT.compressed_data += receive["compressed_data"];
+                    CLIENT.decompressed_data += receive["decompressed_data"];
 
                     //Recieving parameters
                     if (receive.parameters) {
                         CLIENT.parameterStack.push(receive.parameters);
                     }
-
                     //Recieve signals
                     if (receive.signals) {
                         if (!jQuery.isEmptyObject(receive.signals)){
-                            SPEC.latest_signal = Object.assign({}, receive.signals);
-                            CLIENT.signalStack.push(SPEC.latest_signal);
+                            CLIENT.signalStack.push(receive.signals);
+                            CLIENT.packs++
                         }
                     }
                 } catch (e) {
@@ -141,11 +141,23 @@
 
 
     // Sends to server parameters
+    CLIENT.sendParametersEx = function(values) {
+        if (!CLIENT.state.socket_opened) {
+            console.log('ERROR: Cannot save changes, socket not opened');
+            return false;
+        }
+        CLIENT.ws.send(JSON.stringify({ parameters: values }));
+        CLIENT.client_log("SEND: ", values )
+        CLIENT.parametersCache = {};
+        return true;
+    };
+
     CLIENT.sendParameters = function() {
         if (!CLIENT.state.socket_opened) {
             console.log('ERROR: Cannot save changes, socket not opened');
             return false;
         }
+        if (Object.keys(CLIENT.parametersCache).length == 0) return false;
         CLIENT.ws.send(JSON.stringify({ parameters: CLIENT.parametersCache }));
         CLIENT.client_log("SEND: ", CLIENT.parametersCache )
         CLIENT.parametersCache = {};
@@ -192,9 +204,20 @@
         }
     }
 
+    CLIENT.getValue = function(name){
+        return CLIENT.params.orig[name] ? CLIENT.params.orig[name].value : undefined
+    }
+
+    CLIENT.getValueMin = function(name){
+        return CLIENT.params.orig[name] ? CLIENT.params.orig[name].min : undefined
+    }
+
+    CLIENT.getValueMax = function(name){
+        return CLIENT.params.orig[name] ? CLIENT.params.orig[name].max : undefined
+    }
 
     //Set handlers timers
-    setInterval(signalsHandler, 30);
+    setInterval(signalsHandler, 5);
     setInterval(parametersHandler, 40);
 
 }(window.CLIENT = window.CLIENT || {}, jQuery));

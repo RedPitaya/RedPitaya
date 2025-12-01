@@ -28,7 +28,8 @@ DEPENDS ${PROJECT_SOURCE_DIR}/asio.zip
 COMMENT "Unpacking asio.zip"
 VERBATIM)
 
-add_dependencies(broadcast_lib asio)
+add_dependencies(broadcast_lib asio data_lib)
+add_dependencies(config_net_lib asio data_lib)
 add_dependencies(net_lib asio)
 add_dependencies(streaming_lib net_lib)
 add_dependencies(data_lib uio_lib logger_lib)

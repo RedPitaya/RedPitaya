@@ -399,17 +399,32 @@ int rp_bazaar_apps(ngx_http_request_t *r,
 int rp_bazaar_start(ngx_http_request_t *r,
                     cJSON **json_root, int argc, char **argv)
 {
-    char* url = strstr(argv[0], "?type=demo");
-    if (url)
-    {
-        *url = '\0';
+    fprintf(stderr, "[rp_bazaar_start] URL=");
+    for(int i = 0; i < argc; i++){
+        fprintf(stderr, "%s ",argv[i]);
     }
-    else
-    {
-       url = strstr(argv[0], "?type=run");
-       if(url)
-            *url = '\0';
+    fprintf(stderr, "\n");
+    bool enableWsServerLog = false;
+    // Truncates a string to the file name.
+    if (argc > 0) {
+        char* url = NULL;
+        const char* types[] = {"?type=demo", "?type=debug", "&type=debug", "?type=run"};
+
+        for (int i = 0; i < 4; i++) {
+            url = strstr(argv[0], types[i]);
+            if (url) {
+                *url = '\0';
+                if (i == 1 || i == 2) { // debug type
+                    enableWsServerLog = true;
+                    fprintf(stderr, "[rp_bazaar_start] enableWsServerLog=true\n");
+                }
+                break;
+            }
+        }
+    }else{
+        return -1;
     }
+
 
     int unsigned len;
     ngx_http_rp_loc_conf_t *lc =
@@ -455,53 +470,62 @@ int rp_bazaar_start(ngx_http_request_t *r,
     }
 
     /* Get FPGA config file in <app_dir>/<app_id>/fpga.conf */
-    char *fpga_name = NULL;
+    // char *fpga_name = NULL;
     if (system("/opt/redpitaya/sbin/rmoverlay.sh"))
-        fprintf(stderr, "Problem running /opt/redpitaya/sbin/rmoverlay.sh\n");
-    if(get_fpga_path((const char *)argv[0], (const char *)lc->bazaar_dir.data, &fpga_name) == 0) { // FIXME !!!
-        /* Here we do not have application running anymore - load new FPGA */
-        fprintf(stderr, "Loading specific FPGA from: '%s'\n", fpga_name);
-        /* Try loading FPGA code
-         *    - Test if fpga loaded correctly
-         *    - Read/write permissions
-         *    - File exists/not exists */
-        // switch (rp_bazaar_app_load_fpga(fpga_name)) {
-        //     case FPGA_FIND_ERR:
-        //         if (fpga_name)  free(fpga_name);
-        //         return rp_module_cmd_error(json_root, "Cannot find fpga file.", NULL, r->pool);
-        //     case FPGA_READ_ERR:
-        //         if (fpga_name)  free(fpga_name);
-        //         return rp_module_cmd_error(json_root, "Unable to read FPGA file.", NULL, r->pool);
-        //     case FPGA_WRITE_ERR:
-        //         if (fpga_name)  free(fpga_name);
-        //         return rp_module_cmd_error(json_root, "Unable to write FPGA file into memory.", NULL, r->pool);
-        //     /* App is a new app and doesn't need custom fpga.bit */
-        //     case FPGA_NOT_REQ:
-        //         if (fpga_name)  free(fpga_name);
-        //         break;
-        //     case FPGA_OK:
-        //     {
-        //         if (fpga_name)  free(fpga_name);
-        //         len = strlen((char *)lc->bazaar_dir.data) + strlen(argv[0]) + strlen("/fpga.sh") + 2;
-        //         char dmaDrv[len];
-        //         sprintf(dmaDrv, "%s/%s/fpga.sh", lc->bazaar_dir.data, argv[0]);
-        //         if (system(dmaDrv))
-        //             fprintf(stderr, "Problem running %s\n", dmaDrv);
-        //         break;
-        //     }
-        //     default:
-        //         if (fpga_name)  free(fpga_name);
-        //         return rp_module_cmd_error(json_root, "Unknown error.", NULL, r->pool);
-        // }
-        if (fpga_name)  free(fpga_name);
-        len = strlen((char *)lc->bazaar_dir.data) + strlen(argv[0]) + strlen("/fpga.sh") + 2;
-        char dmaDrv[len];
-        sprintf(dmaDrv, "%s/%s/fpga.sh", lc->bazaar_dir.data, argv[0]);
-        if (system(dmaDrv))
-            fprintf(stderr, "Problem running %s\n", dmaDrv);
-    } else {
-        fprintf(stderr, "Not loading specific FPGA, since no fpga.conf file was found.\n");
-    }
+        fprintf(stderr, "[rp_bazaar_start] Problem running /opt/redpitaya/sbin/rmoverlay.sh\n");
+
+    len = strlen((char *)lc->bazaar_dir.data) + strlen(argv[0]) + strlen("/fpga.sh") + 2;
+    char dmaDrv[len];
+    sprintf(dmaDrv, "%s/%s/fpga.sh", lc->bazaar_dir.data, argv[0]);
+    if (system(dmaDrv))
+        fprintf(stderr, "[rp_bazaar_start] Problem running %s\n", dmaDrv);
+    else
+        fprintf(stderr, "[rp_bazaar_start] %s\n", dmaDrv);
+
+    // if(get_fpga_path((const char *)argv[0], (const char *)lc->bazaar_dir.data, &fpga_name) == 0) { // FIXME !!!
+    //     /* Here we do not have application running anymore - load new FPGA */
+    //     fprintf(stderr, "Loading specific FPGA from: '%s'\n", fpga_name);
+    //     /* Try loading FPGA code
+    //      *    - Test if fpga loaded correctly
+    //      *    - Read/write permissions
+    //      *    - File exists/not exists */
+    //     // switch (rp_bazaar_app_load_fpga(fpga_name)) {
+    //     //     case FPGA_FIND_ERR:
+    //     //         if (fpga_name)  free(fpga_name);
+    //     //         return rp_module_cmd_error(json_root, "Cannot find fpga file.", NULL, r->pool);
+    //     //     case FPGA_READ_ERR:
+    //     //         if (fpga_name)  free(fpga_name);
+    //     //         return rp_module_cmd_error(json_root, "Unable to read FPGA file.", NULL, r->pool);
+    //     //     case FPGA_WRITE_ERR:
+    //     //         if (fpga_name)  free(fpga_name);
+    //     //         return rp_module_cmd_error(json_root, "Unable to write FPGA file into memory.", NULL, r->pool);
+    //     //     /* App is a new app and doesn't need custom fpga.bit */
+    //     //     case FPGA_NOT_REQ:
+    //     //         if (fpga_name)  free(fpga_name);
+    //     //         break;
+    //     //     case FPGA_OK:
+    //     //     {
+    //     //         if (fpga_name)  free(fpga_name);
+    //     //         len = strlen((char *)lc->bazaar_dir.data) + strlen(argv[0]) + strlen("/fpga.sh") + 2;
+    //     //         char dmaDrv[len];
+    //     //         sprintf(dmaDrv, "%s/%s/fpga.sh", lc->bazaar_dir.data, argv[0]);
+    //     //         if (system(dmaDrv))
+    //     //             fprintf(stderr, "Problem running %s\n", dmaDrv);
+    //     //         break;
+    //     //     }
+    //     //     default:
+    //     //         if (fpga_name)  free(fpga_name);
+    //     //         return rp_module_cmd_error(json_root, "Unknown error.", NULL, r->pool);
+    //     // }
+    //     if (fpga_name)  free(fpga_name);
+    //     len = strlen((char *)lc->bazaar_dir.data) + strlen(argv[0]) + strlen("/fpga.sh") + 2;
+    //     char dmaDrv[len];
+    //     sprintf(dmaDrv, "%s/%s/fpga.sh", lc->bazaar_dir.data, argv[0]);
+    //     if (system(dmaDrv))
+    //         fprintf(stderr, "Problem running %s\n", dmaDrv);
+    // } else {
+    //     fprintf(stderr, "Not loading specific FPGA, since no fpga.conf file was found.\n");
+    // }
 
     /* Load new application. */
     fprintf(stderr, "Loading application: '%s'\n", app_name);
@@ -537,8 +561,10 @@ int rp_bazaar_start(ngx_http_request_t *r,
         params.get_params_func = rp_module_ctx.app.ws_get_params_func;
         params.set_params_func = rp_module_ctx.app.ws_set_params_func;
         params.get_signals_func = rp_module_ctx.app.ws_get_signals_func;
+        params.get_bin_signals_func = rp_module_ctx.app.ws_get_bin_signals_func;
         params.set_signals_func = rp_module_ctx.app.ws_set_signals_func;
         params.gzip_func = rp_module_ctx.app.ws_gzip_func;
+        params.enable_ws_log = enableWsServerLog;
         fprintf(stderr, "Starting WS-server\n");
 
         start_ws_server(&params);

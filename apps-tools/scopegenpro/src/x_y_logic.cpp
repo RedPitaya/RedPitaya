@@ -7,8 +7,8 @@
 #include "rp_hw-profiles.h"
 #include "x_y_logic.h"
 
-CFloatBase64Signal x_axis("X_AXIS_VALUES", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
-CFloatBase64Signal y_axis("Y_AXIS_VALUES", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
+CFloatBinarySignal x_axis("X_AXIS_VALUES", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
+CFloatBinarySignal y_axis("Y_AXIS_VALUES", CH_SIGNAL_SIZE_DEFAULT, 0.0f);
 
 CBooleanParameter xyShow("X_Y_SHOW", CBaseParameter::RW, false, 0, CONFIG_VAR);
 
@@ -44,10 +44,14 @@ auto updateXYSignal() -> void {
             x_axis.Resize(CH_SIGNAL_SIZE_DEFAULT);
         if (y_axis.GetSize() != CH_SIGNAL_SIZE_DEFAULT)
             y_axis.Resize(CH_SIGNAL_SIZE_DEFAULT);
-        rpApp_OscGetViewDataXY(&x_axis[0], &y_axis[0], (uint32_t)CH_SIGNAL_SIZE_DEFAULT);
+        rpApp_OscGetViewDataXY(x_axis.GetDataPtr()->data(), y_axis.GetDataPtr()->data(), (uint32_t)CH_SIGNAL_SIZE_DEFAULT);
+        x_axis.ForceSend();
+        y_axis.ForceSend();
     } else {
-        x_axis.Resize(0);
-        y_axis.Resize(0);
+        if (x_axis.GetSize())
+            x_axis.Resize(0);
+        if (y_axis.GetSize())
+            y_axis.Resize(0);
     }
 }
 

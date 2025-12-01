@@ -88,7 +88,7 @@ typedef union {
 typedef struct {
     uint16_t triggerSelector : 4;
     uint16_t SM_WrapPointer : 1;
-    uint16_t : 1;
+    uint16_t lastSampleUse : 1;
     uint16_t SM_reset : 1;
     uint16_t setOutputTo0 : 1;
     uint16_t gatedBursts : 1;
@@ -102,6 +102,7 @@ typedef struct {
         printRegBit(" - %-39s = 0x%08X (%d)\n", "triggerSelector", triggerSelector);
         printRegBit(" - %-39s = 0x%08X (%d)\n", "SM_WrapPointer", SM_WrapPointer);
         printRegBit(" - %-39s = 0x%08X (%d)\n", "SM_reset", SM_reset);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "lastSampleUse", lastSampleUse);
         printRegBit(" - %-39s = 0x%08X (%d)\n", "setOutputTo0", setOutputTo0);
         printRegBit(" - %-39s = 0x%08X (%d)\n", "gatedBursts", gatedBursts);
         printRegBit(" - %-39s = 0x%08X (%d)\n", "tempProtected", tempProtected);
@@ -258,6 +259,7 @@ int generate_getLatchTempAlarm(rp_channel_t channel, bool* state);
 int generate_setLatchTempAlarm(rp_channel_t channel, bool state);
 int generate_getRuntimeTempAlarm(rp_channel_t channel, bool* state);
 
+int generate_setUseLastSampleAfter(rp_channel_t channel, bool enable);
 int generate_setBurstLastValue(rp_channel_t channel, rp_gen_gain_t gain, float amplitude);
 int generate_setInitGenValue(rp_channel_t channel, rp_gen_gain_t gain, float amplitude);
 
