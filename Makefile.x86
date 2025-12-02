@@ -47,7 +47,7 @@ $(INSTALL_DIR):
 ################################################################################
 
 UBOOT_TAG      = redpitaya-v2026.1
-LINUX_TAG      = branch-redpitaya-v2024.1
+LINUX_TAG      = branch-redpitaya-v2026.1
 DTREE_TAG      = xilinx_v2025.1
 DTREE_PATH_TAG = xilinx-v2025.1
 
@@ -579,11 +579,11 @@ BOOT_1Gb_ram = $(INSTALL_DIR)/uboot/boot_1Gb_ram.bin
 boot: u-boot fsbl_ub fsbl_ub_1Gb_ram $(INSTALL_DIR)
 	mkdir -p $(INSTALL_DIR)/uboot
 
-	@echo the_ROM_image:{[bootloader] $(FSBL) $(UBOOT) } > boot_uboot_512Mb_ram.bif
-	bootgen -image boot_uboot_512Mb_ram.bif -arch zynq -o $(BOOT_512Mb_ram) -w on -log
+	@echo the_ROM_image:{[bootloader] $(FSBL) $(UBOOT) } > tmp/boot_uboot_512Mb_ram.bif
+	bootgen -image tmp/boot_uboot_512Mb_ram.bif -arch zynq -o $(BOOT_512Mb_ram) -w on -log
 
-	@echo the_ROM_image:{[bootloader] $(FSBL_1Gb_ram) $(UBOOT) } > boot_uboot_1Gb_ram.bif
-	bootgen -image boot_uboot_1Gb_ram.bif -arch zynq -o $(BOOT_1Gb_ram) -w on -log
+	@echo the_ROM_image:{[bootloader] $(FSBL_1Gb_ram) $(UBOOT) } > tmp/boot_uboot_1Gb_ram.bif
+	bootgen -image tmp/boot_uboot_1Gb_ram.bif -arch zynq -o $(BOOT_1Gb_ram) -w on -log
 	cp $(BOOT_512Mb_ram) $(BOOT)
 
 
