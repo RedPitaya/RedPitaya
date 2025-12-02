@@ -545,7 +545,15 @@
 
         if (data.values !== undefined && data.name !== undefined){
             for (var line in data.values) {
-                var enable_din = CLIENT.getValue('LA_DIN_' + line)
+                let sel_idx = -1
+                for(let ixd = 1; idx <= 8; idx++){
+                    if (CLIENT.getValue('LA_DIN_NAME_'+idx) == line){
+                        sel_idx = idx
+                        break
+                    }
+                }
+                if (sel_idx == -1) continue;
+                var enable_din = CLIENT.getValue('LA_DIN_' + sel_idx)
                 var offset = LA.calculateOffset(line)
                 if (offset == -1) continue;
                 if (enable_din != true) continue;
