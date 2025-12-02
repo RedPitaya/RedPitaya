@@ -553,7 +553,7 @@ int rp_HPGetIsE3QSPIeMMC(bool* _out_value);
 bool rp_HPGetIsE3QSPIeMMCOrDefault();
 
 /**
-* Returns the ability to calibrate values ​​on the FPGA.
+* Returns the ability to calibrate values on the FPGA.
 * Function rp_HPGetIsCalibInFPGAOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
