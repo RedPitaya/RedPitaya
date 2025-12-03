@@ -26,12 +26,13 @@ Once you connect to Red Pitaya from WEB browser it can be immediately used as:
 - Vector Network Analyzer
 - and more...
 There are also many other (contributed) applications available on RedPitaya marketplace.
-For more information about RedPitaya apps click [here](https://redpitaya.readthedocs.io/en/latest/appsFeatures/appsFeatures.html).
+For more information about RedPitaya apps click [here](https://redpitaya.readthedocs.io/en/latest/appsFeatures/applications/apps-featured.html).
+
 
 
 # How to start using Red Pitaya as SDR (software defined radio)?
 SDR support for RedPitaya is done and maintained by Pavel Demin. The best place to get the
-latest software for is [Pavel’s repository](http://pavel-demin.github.io/red-pitaya-notes/).
+latest software from is [Pavel’s repository](http://pavel-demin.github.io/red-pitaya-notes/).
 
 
 # How to start programming Red Pitaya or developing your own applications?
@@ -42,36 +43,33 @@ There are several ways to program / develop with Red Pitaya.
    Remote control can be done by using most popular rapid prototyping development tools
    MATLAB, LABview, SCILAB or Python remotely. There are [several examples](https://redpitaya.readthedocs.io/en/latest/appsFeatures/remoteControl/examples_top.html) available.
 
-2. Programing Red Pitaya directly from WEB browser / Python
+2. Programming Red Pitaya directly from WEB browser / Python
+   Red Pitaya can be programmed in Python directly from the WEB browser using [Jupyter](https://redpitaya.readthedocs.io/en/latest/appsFeatures/remoteControl/jupyter/Jupyter.html).
 
-Red Pitaya can be programmed in Python directly from the WEB browser using [Jupyter](https://redpitaya.readthedocs.io/en/latest/appsFeatures/remoteControl/jupyter/Jupyter.html?highlight=jupyter).
 
 3. C/C++ programming
 
 RedPitaya hardware features can be easily accessed through C APIs. Many starting examples are available at this [link](https://redpitaya.readthedocs.io/en/latest/appsFeatures/remoteControl/examples_top.html).
 
 4. FPGA programming
+   Information on how to compile Red Pitaya open source FPGA code is [here](https://redpitaya.readthedocs.io/en/latest/developerGuide/software/build/fpga/fpga.html).
 
-Information on how to compile Red Pitaya open source FPGA code is [here](https://redpitaya.readthedocs.io/en/latest/developerGuide/software/build/fpga/fpga.html).
+5. Creating own WEB applications
+   Instructions on how to create your own Red Pitaya WEB applications can be found [here](https://redpitaya.readthedocs.io/en/latest/developerGuide/software/build/webapp/webApps.html).
 
-5. Creating your own WEB applications
-
-Instructions on how to create your own Red Pitaya WEB applications can be found [here](https://redpitaya.readthedocs.io/en/latest/developerGuide/software/build/webapp/webApps.html).
 
 
 # How to interface Red Pitaya with other hardware or sensors?
-Beside fast analog inputs and outputs Red Pitaya comes with an extension connector that enables users to interface with other hardware devices or sensors over standard i2c, UART, SPI interfaces or additional slow analog inputs and outputs and digital GPIOs.
+Besides fast analog inputs and outputs Red Pitaya comes with an extension connector that enables users to interface with other hardware devices or sensors over standard i2c, UART, SPI interfaces or additional slow analog inputs and outputs and digital GPIOs.
 
 There are two main extension possibilities:
 
 1. Using already available sensor extension module by RedPitaya
+   Sensors extension module provides direct connection to GroveSensors (e.g. Temperature sensor, Motion sensor,Touch sensor, Button, Switch, Tilt, Potentiometer, Light sensor, Air quality sensor, Vibration sensor, Moisture sensor, Water sensor, Alcohol sensor, Barometer not supported at the moment, Sound sensor, UV sensor, Accelerometer, Relay). Sensor extension module also provide compatibility with Arduino extension modules. More examples and information can be found at this [link](https://redpitaya.readthedocs.io/en/latest/appsFeatures/remoteControl/jupyter/Jupyter.html#examples).
 
-Sensors extension module provides direct connection to GroveSensors (e.g. Temperature sensor, Motion sensor,Touch sensor, Button, Switch, Tilt, Potentiometer, Light sensor, Air quality sensor, Vibration sensor, Moisture sensor, Water sensor, Alcohol sensor, Barometer not supported at the moment, Sound sensor, UV sensor, Accelerometer, Relay). Sensor extension module also provide compatibility with Arduino extension modules. More examples and information can be found at this [link](https://redpitaya.readthedocs.io/en/latest/appsFeatures/remoteControl/jupyter/Jupyter.html?highlight=jupyter).
-
-2. Creating your own addon module that connects to the extension connector
-
-For more information about extension connector click [here](https://redpitaya.readthedocs.io/en/latest/developerGuide/hardware/ext_modules.html)
+2. Creating own add on module that connects to extension connector
+   For more information about extension connector click [here](https://redpitaya.readthedocs.io/en/latest/developerGuide/hardware/ext_modules.html#)
 
 # How to start teaching with RedPitaya?
-- [Teaching lectures / material](https://redpitaya.com/teaching-materials/)
-- [Red Pitaya Knowledge Base](https://redpitaya-knowledge-base.readthedocs.io/en/latest/index.html)
+[Teaching lectures / material](https://redpitaya.com/teaching-materials/).
+[Red Pitaya Knowledge Base](https://redpitaya-knowledge-base.readthedocs.io/en/latest/index.html)

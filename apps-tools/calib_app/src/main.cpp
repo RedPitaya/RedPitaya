@@ -524,7 +524,7 @@ void calibFilter() {
         filt_calib_step.SendValue(4);
     }
 
-    // Sending values ​​to the web interface. Setting generator settings from the web interface.
+    // Sending values to the web interface. Setting generator settings from the web interface.
     if (filt_calib_step.Value() == 4) {
         filt_calib_step.SendValue(100);
         sendFilterCalibValues((rp_channel_t)adc_channel.Value());

@@ -6,10 +6,6 @@
  * @Author Crt Valentincic <crt.valentincic@redpitaya.com>
  *
  * (c) Red Pitaya  http://www.redpitaya.com
- *
- * This part of code is written in C programming language.
- * Please visit http://en.wikipedia.org/wiki/C_(programming_language)
- * for more details on the language used herein.
  */
 
 #ifndef _GNU_SOURCE
@@ -57,7 +53,7 @@ int main(int argc, char** argv) {
                 "\twrite addr: address value\n"
                 "\tread analog mixed signals: -ams\n"
                 "\tset slow DAC: -sdac AO0 AO1 AO2 AO3 [V]\n"
-                "\tClock frequency meter: -с\n"
+                "\tClock frequency meter: -c\n"
                 "\tPrint fpga version: -f\n"
                 "\tPrint model name: -n\n"
                 "\tPrint model id: -i\n"

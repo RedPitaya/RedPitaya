@@ -4,10 +4,6 @@
  * @brief Red Pitaya data formatter.
  *
  * (c) Red Pitaya  http://www.redpitaya.com
- *
- * This part of code is written in C programming language.
- * Please visit http://en.wikipedia.org/wiki/C_(programming_language)
- * for more details on the language used herein.
  */
 
 #ifndef __RP_FORMATTER_H__
