@@ -13,7 +13,7 @@ then
     echo "Download from gitlab $VERSION/$PRJ"
 
     cd fpga/$P
-    git clone https://gitlab-ci-token:$TOKEN@gitlab.redpitaya.com/redpitaya-3.0/redpitaya-fpga.git .
+    git clone https://gitlab-ci-token:$TOKEN@gitlab.redpitaya.com/redpitaya-3.0/redpitaya-fpga.git . -b $COMMIT --depth 3
     git checkout $COMMIT
     BRANCH=$(git name-rev $COMMIT)
     LOG=$(git log -n 1)
