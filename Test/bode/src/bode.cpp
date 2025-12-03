@@ -16,10 +16,6 @@
  * Data analysis returns frequency, phase and amplitude.
  *
  * VERSION: VERSION defined in Makefile
- *
- * This part of code is written in C programming language.
- * Please visit http://en.wikipedia.org/wiki/C_(programming_language)
- * for more details on the language used herein.
  */
 
 #include <complex.h>
