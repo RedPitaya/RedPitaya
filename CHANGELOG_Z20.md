@@ -1,4 +1,14 @@
-# Beta version (1.04-10)
+# Beta version (1.04-15)
+
+- Burst generation mode added to WEB oscilloscope app
+- SCPI now supports commands to communicate over I2C, UART and SPI bus available on - Red Pitaya ext. connector
+- Added support for RTL8188EU chipset wifi dongles (e.g. Edimax EW-7811Un V2)
+- Other bug fixes and improvements
+    - SA cursors step issues fixed
+    - burst mode issues fixed
+    - SCPI examples and doc. updates
+
+# Stable version (1.04-10)
 
 - Spectrum analyzer got new features (improved spectrum resolution, added more windowing functions, units, scaling's and more)
 - SCPI server speed was improved
