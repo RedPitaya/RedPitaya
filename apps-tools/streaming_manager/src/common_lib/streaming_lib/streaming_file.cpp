@@ -171,7 +171,7 @@ auto CStreamingFile::convertBuffers(DataLib::CDataBuffersPackDMA::Ptr pack, Data
 
     if (!m_volt_mode) {
         auto lostSamples = src_buff->getLostSamplesAll();
-        if (m_rp_mode) {  // We cut off the lost values ​​if we save them to a memory card.
+        if (m_rp_mode) {  // We cut off the lost values if we save them to a memory card.
             lostSamples = std::min(lostSamples, (uint64_t)src_buff->getSamplesCount());
         }
         uint64_t lostSamplesInBytes = lostSamples * src_buff->getBitBySample() / 8;
@@ -197,7 +197,7 @@ auto CStreamingFile::convertBuffers(DataLib::CDataBuffersPackDMA::Ptr pack, Data
     } else {
         auto samples = src_buff->getSamplesCount();
         auto lostSamples = src_buff->getLostSamplesAll();
-        if (m_rp_mode) {  // We cut off the lost values ​​if we save them to a memory card.
+        if (m_rp_mode) {  // We cut off the lost values if we save them to a memory card.
             lostSamples = std::min(lostSamples, (uint64_t)src_buff->getSamplesCount());
         }
         auto bitBySamp = src_buff->getBitBySample();

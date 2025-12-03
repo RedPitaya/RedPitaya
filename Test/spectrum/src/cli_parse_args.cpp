@@ -13,7 +13,7 @@ std::string cli_help_string() {
            "-c, --count: iteration count (default: 1, negative: infinity)\n"
            "-a, --average: average the measurement from 10 times (default: enabled)\n"
            "-n, --no-average: disable average the measurement from 10 times\n"
-           "-v, --values: Display all values ​​for the signal.\n"
+           "-v, --values: Display all values for the signal.\n"
            "-C, --csv: print values by columns Frequency (Hz), ch0 (dB), ch1 (dB)\n"
            "-L, --csv-limit: print values by columns Frequency (Hz), ch0 min (dB), ch0 max (dB), ch1 min (dB), ch1 max (dB)\n"
            "-W, --window: window function. Available options: [rect, hanning, hamming, blackman_harris, flat_top, kaiser_4, kaiser_8] (default: hanning)\n"

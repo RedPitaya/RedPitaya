@@ -142,7 +142,7 @@ int rp_AcqAxiEnable(rp_channel_t channel, bool enable);
 int rp_AcqAxiGetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* buffer);
 
 /**
- * The function returns a list of memory areas containing ADC values ​​without copying the data.
+ * The function returns a list of memory areas containing ADC values without copying the data.
  * @param channel Channel A or B for which we want to retrieve the ADC buffer.
  * @param pos Starting position of the ADC buffer to retrieve.
  * @param size Length of the ADC buffer to retrieve.  The value may be larger than the buffer size. Then the data will be returned cyclically over the buffer.
