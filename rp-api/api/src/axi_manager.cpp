@@ -114,12 +114,12 @@ int axi_releaseManager() {
         osc_axi_unmap(it.size, (void**)&it.mapped);
     }
     g_reserved.clear();
-    if (g_mem_fd) {
+    if (g_mem_fd != -1) {
         if (close(g_mem_fd) < 0) {
             return RP_ECMD;
         }
+        g_mem_fd = -1;
     }
-    g_mem_fd = -1;
     return RP_OK;
 }
 
