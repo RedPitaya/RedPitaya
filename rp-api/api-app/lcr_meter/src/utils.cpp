@@ -6,6 +6,7 @@
  * @Author Luka Golinar, RedPitaya
  *
  * (c) Red Pitaya  http://www.redpitaya.com
+*/
 
 #include <fcntl.h>
 #include <stdio.h>
