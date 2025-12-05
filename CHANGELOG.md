@@ -1,3 +1,10 @@
+# Stable version (2.07-50)
+
+### **Ecosystem (Applications & API)**
+
+*   **Logic Analyzer (LA):**
+    *   Critical fix for a bug caused by a change in the settings format. This issue prevented decoder information from being displayed in the web interface.  
+
 # Stable version (2.07-48)
 
 ### **FPGA**
