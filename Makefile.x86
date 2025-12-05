@@ -22,7 +22,7 @@ export VERSION
 # targets
 ################################################################################
 
-all: devicetree u-boot linux boot
+all: u-boot linux boot
 
 ################################################################################
 #
@@ -43,21 +43,17 @@ $(INSTALL_DIR):
 	mkdir -p $@
 
 ################################################################################
-# X86 build (Vivado FPGA synthesis, FSBL, devicetree, U-Boot, Linux kernel)
+# X86 build (Vivado FPGA synthesis, FSBL, U-Boot, Linux kernel)
 ################################################################################
 
 UBOOT_TAG      = redpitaya-v2026.1
 LINUX_TAG      = branch-redpitaya-v2026.1
-DTREE_TAG      = xilinx_v2025.1
-DTREE_PATH_TAG = xilinx-v2025.1
 
 UBOOT_DIR     = $(TMP)/u-boot-xlnx-$(UBOOT_TAG)
 LINUX_DIR     = $(TMP)/linux-xlnx-$(LINUX_TAG)
-DTREE_DIR     = $(TMP)/device-tree-xlnx-$(DTREE_PATH_TAG)
 
 UBOOT_TAR     = $(DL)/u-boot-xlnx-$(UBOOT_TAG).tar.gz
 LINUX_TAR     = $(DL)/linux-xlnx-$(LINUX_TAG).tar.gz
-DTREE_TAR     = $(DL)/device-tree-xlnx-$(DTREE_TAG).tar.gz
 
 # it is possible to use an alternative download location (local) by setting environment variables
 UBOOT_URL     ?= https://github.com/RedPitaya/u-boot-xlnx/archive/$(UBOOT_TAG).tar.gz
@@ -88,7 +84,7 @@ endef
 export GREET_MSG
 
 ################################################################################
-# FPGA build provides: $(FSBL), $(FPGA), $(DEVICETREE).
+# FPGA build provides: $(FSBL), $(FPGA).
 ################################################################################
 
 # HWID=v1r0 - this value for 250-12 rev 1.0. In all other cases, this parameter is empty.
@@ -151,11 +147,6 @@ ifeq ($(MODEL),Z10)
 	FPGA_BAREBONE = $(FPGA_COMMIT)
 #	FPGA_PYRPL = $(FPGA_COMMIT)
 
-#   Removed
-#	FPGA_MERCURY	= $(FPGA_COMMIT)
-#	FPGA_AXI4LITE	= $(FPGA_COMMIT)
-#	FPGA_CLASSIC 	= $(FPGA_COMMIT)
-
 	FPGA_MODEL = Z10
 	FPGA_VERSION = z10_125
 endif
@@ -164,10 +155,10 @@ ifeq ($(MODEL),Z20)
 
 	# Used in board: v0.94 stream_app
 
-	FPGA_STREAM_APP = $(FPGA_COMMIT)
+#	FPGA_STREAM_APP = $(FPGA_COMMIT)
 	FPGA_0_94	= $(FPGA_COMMIT)
 	FPGA_BAREBONE = $(FPGA_COMMIT)
-	FPGA_LOGIC	= $(FPGA_COMMIT)
+#	FPGA_LOGIC	= $(FPGA_COMMIT)
 
 	FPGA_MODEL = Z20
 	FPGA_VERSION = z20_122
@@ -178,16 +169,11 @@ ifeq ($(MODEL),Z20_125)
 
 	# Used in board: stream_app classic logic v0.94 mercury axi4lite
 
-	FPGA_STREAM_APP = $(FPGA_COMMIT)
-	FPGA_LOGIC	= $(FPGA_COMMIT)
+#	FPGA_STREAM_APP = $(FPGA_COMMIT)
+#	FPGA_LOGIC	= $(FPGA_COMMIT)
 	FPGA_0_94	= $(FPGA_COMMIT)
 	FPGA_BAREBONE = $(FPGA_COMMIT)
-	FPGA_PYRPL = $(FPGA_COMMIT)
-
-#   Removed
-#	FPGA_MERCURY	= $(FPGA_COMMIT)
-#	FPGA_AXI4LITE	= $(FPGA_COMMIT)
-#	FPGA_CLASSIC 	= $(FPGA_COMMIT)
+#	FPGA_PYRPL = $(FPGA_COMMIT)
 
 	FPGA_MODEL = Z20_14
 	FPGA_VERSION = z20_125
@@ -200,8 +186,8 @@ ifeq ($(MODEL),Z20_125_4CH)
 
 	FPGA_0_94	= $(FPGA_COMMIT)
 	FPGA_BAREBONE = $(FPGA_COMMIT)
-	FPGA_LOGIC	= $(FPGA_COMMIT)
-	FPGA_STREAM_APP_4CH = $(FPGA_COMMIT)
+#	FPGA_LOGIC	= $(FPGA_COMMIT)
+#	FPGA_STREAM_APP_4CH = $(FPGA_COMMIT)
 
 	FPGA_MODEL = Z20_4
 	FPGA_VERSION = z20_125_4ch
@@ -224,10 +210,10 @@ ifeq ($(MODEL),Z20_250_12_1_0)
 
 	# Used in board: stream_app_250 v0.94_250 logic_250
 
-	FPGA_STREAM_APP_250 = $(FPGA_COMMIT)
-	FPGA_0_94_250	= $(FPGA_COMMIT)
-	FPGA_LOGIC_250	= $(FPGA_COMMIT)
-	FPGA_BAREBONE_250 = $(FPGA_COMMIT)
+#	FPGA_STREAM_APP_250 = $(FPGA_COMMIT)
+	FPGA_0_94	= $(FPGA_COMMIT)
+#	FPGA_LOGIC_250	= $(FPGA_COMMIT)
+	FPGA_BAREBONE = $(FPGA_COMMIT)
 
 	FPGA_MODEL = Z20_250
 	FPGA_VERSION = z20_250_1_0
@@ -239,10 +225,10 @@ ifeq ($(MODEL),Z20_250_12)
 
 	# Used in board: stream_app_250 v0.94_250 logic_250
 
-	FPGA_STREAM_APP_250 = $(FPGA_COMMIT)
-	FPGA_0_94_250	= $(FPGA_COMMIT)
-	FPGA_LOGIC_250	= $(FPGA_COMMIT)
-	FPGA_BAREBONE_250 = $(FPGA_COMMIT)
+#	FPGA_STREAM_APP_250 = $(FPGA_COMMIT)
+	FPGA_0_94	= $(FPGA_COMMIT)
+#	FPGA_LOGIC_250	= $(FPGA_COMMIT)
+	FPGA_BAREBONE = $(FPGA_COMMIT)
 
 	FPGA_MODEL = Z20_250
 	FPGA_VERSION = z20_250
@@ -300,7 +286,7 @@ ifeq ($(MODEL),Z20_LL)
 
 	# Used in board: v0.94 barebones
 
-	FPGA_0_94_LL	= $(FPGA_COMMIT)
+	FPGA_0_94	= $(FPGA_COMMIT)
 	FPGA_BAREBONE = $(FPGA_COMMIT)
 
 	FPGA_MODEL = Z20_ll
@@ -316,7 +302,7 @@ fpga: $(INSTALL_DIR)/fpga
 define build_fpga
 	./download_fpga.sh $(FPGA_VERSION) $(1) $(GIT_MODE) $(5) $(GITLAB_TOKEN) build
 	mkdir -p $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/$(1)
-	make -C fpga/build PRJ=$(1) MODEL=$(2) DEFINES=$(3) HWID=$(4) DTS_VER=2025.1
+	make -C fpga/build PRJ=$(1) MODEL=$(2) DEFINES=$(3) HWID=$(4) DTS_VER=2025.1 FPGA_VERSION=$(FPGA_VERSION)
 
 	rm -rf fpga/$(FPGA_VERSION)/$(1)
 	mkdir -p fpga/$(FPGA_VERSION)/$(1)
@@ -325,17 +311,7 @@ define build_fpga
 	cp    fpga/$(FPGA_VERSION)/$(1)/prj/$(1)/out/red_pitaya.bin       $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/$(1)/fpga.bin
 	cp    fpga/$(FPGA_VERSION)/$(1)/prj/$(1)/out/red_pitaya.bit       $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/$(1)/fpga.bit
     cp -f fpga/$(FPGA_VERSION)/$(1)/git_info.txt                      $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/$(1)/git_info.txt
-	PL_PATH=fpga/$(FPGA_VERSION)/$(1)/prj/$(1)/out/dts/out/dts/redpitaya_platform/ps7_cortexa9_0/device_tree_domain/bsp/pl.dtsi; \
-    echo "Path to pl.dtsi:  $$PL_PATH"; \
-	if [ -f "$$PL_PATH" ]; then \
-		cp    fpga/$(FPGA_VERSION)/$(1)/prj/$(1)/dts/pl_patch.dtsi $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/$(1)/; \
-		cp    $$PL_PATH $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/$(1)/; \
-		sed -i 's/.bin/fpga.bin/g' $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/$(1)/pl.dtsi; \
-		grep -qxF '/include/ "pl_patch.dtsi"' $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/$(1)/pl.dtsi || echo '/include/ "pl_patch.dtsi"' >> $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/$(1)/pl.dtsi; \
-		dtc -I dts -O dtb -o $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/$(1)/fpga.dtbo $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/$(1)/pl.dtsi; \
-    else \
-        echo "Missing pl.dtsi [SKIP]"; \
-    fi
+
 endef
 
 $(INSTALL_DIR)/fpga: $(DTREE_DIR)
@@ -343,46 +319,16 @@ $(INSTALL_DIR)/fpga: $(DTREE_DIR)
 
 ifneq "$(FPGA_BAREBONE)" ""
 	$(call build_fpga,barebones,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_BAREBONE))
-	mkdir -p $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
-	cp -r fpga/$(FPGA_VERSION)/barebones/dts/*  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
-
-# Build overlay for barebone
-	dtc $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/led-system.dtso -I dts -O dtb -o $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/led-system.dtbo
-
-	rm -rf $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
-
+	mkdir -p $(INSTALL_DIR)/dts/$(FPGA_VERSION)
+	cp -f fpga/$(FPGA_VERSION)/barebones/prj/barebones/out/dts/dtraw.dtb  $(INSTALL_DIR)/dts/$(FPGA_VERSION)/devicetree.dtb
+	cp -f fpga/$(FPGA_VERSION)/barebones/prj/barebones/out/dts/dtraw.dtbs  $(INSTALL_DIR)/dts/$(FPGA_VERSION)/dtraw.dts
+	cp -f fpga/$(FPGA_VERSION)/barebones/prj/barebones/out/dts/led-system.dtbo $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/led-system.dtbo
 endif
 
 ifneq "$(FPGA_PYRPL)" ""
 	$(call build_fpga,pyrpl,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_PYRPL))
 	mkdir -p $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/pyrpl/dts_rp/
 	cp -r fpga/$(FPGA_VERSION)/pyrpl/dts/*  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/pyrpl/dts_rp/
-endif
-
-ifneq "$(FPGA_BAREBONE_250)" ""
-	$(call build_fpga,barebones_250,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_BAREBONE_250))
-	mv $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones_250 $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones
-	mkdir -p $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
-	cp -r fpga/$(FPGA_VERSION)/barebones_250/dts_250/*  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
-
-# Build overlay for barebone
-	dtc $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/led-system.dtso -I dts -O dtb -o $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/led-system.dtbo
-
-	rm -rf $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
-
-endif
-
-ifneq "$(FPGA_BAREBONE_250_A)" ""
-	$(call build_fpga,barebones_250,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_BAREBONE_250_A))
-	mv $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones_250 $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones
-	mkdir -p $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
-	cp -r fpga/$(FPGA_VERSION)/barebones_250/dts_250a/*  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
-
-# Build overlay for barebone
-	dtc $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/led-system.dtso -I dts -O dtb -o $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/led-system.dtbo
-
-	rm -rf $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/barebones/dts_rp/
-
 endif
 
 ifneq "$(FPGA_STREAM_APP)" ""
@@ -405,12 +351,6 @@ ifneq "$(FPGA_STREAM_APP_250)" ""
 #	cp -r fpga/$(FPGA_VERSION)/stream_app_250/dts/*  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/stream_app/dts_rp/
 endif
 
-ifneq "$(FPGA_CLASSIC)" ""
-	$(call build_fpga,classic,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_CLASSIC))
-#	mkdir -p $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/classic/dts_rp/
-#	cp -r fpga/$(FPGA_VERSION)/classic/dts/*  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/classic/dts_rp/
-endif
-
 ifneq "$(FPGA_LOGIC)" ""
 	$(call build_fpga,logic,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_LOGIC))
 #	mkdir -p $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/logic/dts_rp/
@@ -426,72 +366,10 @@ endif
 
 ifneq "$(FPGA_0_94)" ""
 	$(call build_fpga,v0.94,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_0_94))
-#	mkdir -p $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/v0.94/dts_rp/
-#	cp -r fpga/$(FPGA_VERSION)/v0.94/dts/*  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/v0.94/dts_rp/
+	cp -f fpga/$(FPGA_VERSION)/v0.94/prj/v0.94/out/fpga.dtbo  $(INSTALL_DIR)/fpga/$(FPGA_MODEL)/v0.94/fpga.dtbo
+	cp -f fpga/$(FPGA_VERSION)/v0.94/prj/v0.94/out/fpga.dtbs  $(INSTALL_DIR)/fpga/$(FPGA_MODEL)/v0.94/fpga.dtbs
 endif
 
-ifneq "$(FPGA_0_94_LL)" ""
-	$(call build_fpga,v0.94_ll,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_0_94_LL))
-	mv $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/v0.94_ll $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/v0.94
-#	mkdir -p $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/v0.94/dts_rp/
-#	cp -r fpga/$(FPGA_VERSION)/v0.94_ll/dts/*  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/v0.94/dts_rp/
-endif
-
-ifneq "$(FPGA_0_94_250)" ""
-	$(call build_fpga,v0.94_250,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_0_94_250))
-	mv $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/v0.94_250 $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/v0.94
-#	mkdir -p $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/v0.94/dts_rp/
-#	cp -r fpga/$(FPGA_VERSION)/v0.94_250/dts/*  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/v0.94/dts_rp/
-endif
-
-ifneq "$(FPGA_MERCURY)" ""
-	$(call build_fpga,mercury,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_MERCURY))
-#	mkdir -p $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/mercury/dts_rp/
-#	cp -r fpga/$(FPGA_VERSION)/mercury/dts/*  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/mercury/dts_rp/
-endif
-
-ifneq "$(FPGA_AXI4LITE)" ""
-	$(call build_fpga,axi4lite,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_AXI4LITE))
-#	mkdir -p $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/axi4lite/dts_rp/
-#	cp -r fpga/$(FPGA_VERSION)/axi4lite/dts/*  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/axi4lite/dts_rp/
-endif
-
-################################################################################
-# device tree processing
-################################################################################
-
-DEVICETREE = devicetree.dtb
-FPGA_DIRECTORY = $(patsubst $(INSTALL_DIR)/fpga/%/,%, $(sort $(dir $(wildcard $(INSTALL_DIR)/fpga/*/))))
-
-.PHONY: devicetree devicetree-install $(DEVICETREE)
-
-devicetree: devicetree-install
-
-$(DTREE_TAR): | $(DL)
-	curl -L $(DTREE_URL) -o $@
-
-$(DTREE_DIR): $(DTREE_TAR)
-	mkdir -p $@
-	tar -zxf $< --strip-components=1 --directory=$@
-	mkdir -p fpga/tmp
-	cp -r $@ fpga/tmp
-
-$(FPGA_DIRECTORY): $(DTREE_DIR) $(TMP) $(INSTALL_DIR)
-	echo $@
-	rm -rf $(TMP)/dts/$@
-	mkdir -p $(TMP)/dts/$@
-	mkdir -p $(TMP)/dts/$@/build
-	cp -r $(INSTALL_DIR)/fpga/$@/barebones/dts $(TMP)/dts/$@
-	cat   $(TMP)/dts/$@/dts/system-top.dts > $(TMP)/dts/$@/build/system-top.dts
-	cat   $(TMP)/dts/$@/dts/fpga.dts >> $(TMP)/dts/$@/build/system-top.dts
-	gcc -I $(TMP)/dts/$@/dts -E -nostdinc -undef -D__DTS__ -x assembler-with-cpp -o $(TMP)/dts/$@/build/system-top.dts.tmp $(TMP)/dts/$@/build/system-top.dts
-	dtc -@ -I dts -O dtb -o $(TMP)/dts/$@/build/$(DEVICETREE) -i $(TMP)/dts/$@/dts -i $(INSTALL_DIR)/fpga/$@/barebones/dts_rp $(TMP)/dts/$@/build/system-top.dts.tmp
-	dtc -I dtb -O dts --sort -o $(TMP)/dts/$@/build/dtraw.dts $(TMP)/dts/$@/build/$(DEVICETREE)
-	mkdir -p $(INSTALL_DIR)/dts/$@
-	cp -f $(TMP)/dts/$@/build/$(DEVICETREE)  $(INSTALL_DIR)/dts/$@
-	cp -f $(TMP)/dts/$@/build/dtraw.dts      $(INSTALL_DIR)/dts/$@
-
-devicetree-install: $(FPGA_DIRECTORY)
 
 
 ################################################################################
