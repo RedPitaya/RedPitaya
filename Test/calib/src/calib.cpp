@@ -14,6 +14,7 @@
 #include <iostream>
 #include <set>
 #include <string>
+#include <algorithm>
 #include <vector>
 
 #include "common/rp_updater_common.h"
@@ -38,7 +39,7 @@ vector<string> split(const string& text, const vector<char>& delimiters) {
     vector<string> result;
     string current_token;
     for (char c : text) {
-        if (find(delimiters.begin(), delimiters.end(), c) != delimiters.end()) {
+        if (std::find(delimiters.begin(), delimiters.end(), c) != delimiters.end()) {
             if (!current_token.empty()) {
                 result.push_back(current_token);
                 current_token.clear();

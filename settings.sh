@@ -8,4 +8,4 @@
 # setup cross compiler toolchain
 ################################################################################
 
-export CROSS_COMPILE=arm-linux-gnueabi-
+export CROSS_COMPILE=arm-linux-gnueabihf-

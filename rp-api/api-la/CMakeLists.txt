@@ -127,15 +127,31 @@ if(BUILD_SHARED)
         find_package(SWIG REQUIRED)
         INCLUDE(${SWIG_USE_FILE})
 
-        find_package(PythonLibs)
-        include_directories(${PYTHON_INCLUDE_PATH})
-        include_directories(/usr/local/lib/python3.10/dist-packages/numpy/_core/include)
+        find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+                execute_process(
+            COMMAND ${Python3_EXECUTABLE} -c "import numpy; print(numpy.get_include())"
+            OUTPUT_VARIABLE NUMPY_INCLUDE_DIR
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            RESULT_VARIABLE NUMPY_FOUND
+        )
+
+        if(NOT NUMPY_FOUND EQUAL 0)
+            message(FATAL_ERROR "NumPy not found. Install with: pip3 install numpy")
+        endif()
+
+        message(STATUS "NumPy include directory: ${NUMPY_INCLUDE_DIR}")
+
+        include_directories(
+            ${Python3_INCLUDE_DIRS}
+            ${NUMPY_INCLUDE_DIR}
+        )
+#        include_directories(/usr/local/lib/python3.10/dist-packages/numpy/_core/include)
 
         set_property(SOURCE src/rp_la.i PROPERTY CPLUSPLUS ON)
         ## SET_SOURCE_FILES_PROPERTIES(src/rp_dsp.i PROPERTIES SWIG_FLAGS "-includeall")
 
         SWIG_ADD_LIBRARY(rp_la_py LANGUAGE python SOURCES src/rp_la.i ${src})
-        SWIG_LINK_LIBRARIES(rp_la_py ${PYTHON_LIBRARIES} rp rp-hw-calib rp-hw-profiles rp-i2c rp-spi rp-gpio rp-hw i2c -lm -lpthread)
+        SWIG_LINK_LIBRARIES(rp_la_py ${Python3_LIBRARIES} rp rp-hw-calib rp-hw-profiles rp-i2c rp-spi rp-gpio rp-hw i2c -lm -lpthread)
      endif()
 
     add_library(${PROJECT_NAME}-shared SHARED)

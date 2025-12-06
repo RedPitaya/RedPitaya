@@ -73,14 +73,16 @@ if(BUILD_SHARED)
         find_package(SWIG REQUIRED)
         INCLUDE(${SWIG_USE_FILE})
 
-        find_package(PythonLibs)
-        include_directories(${PYTHON_INCLUDE_PATH})
+        find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+        include_directories(${Python3_INCLUDE_DIRS})
+        #find_package(PythonLibs)
+        #include_directories(${PYTHON_INCLUDE_PATH})
 
         set(CMAKE_SWIG_FLAGS "")
         set_property(SOURCE src/rp_hw.i PROPERTY CPLUSPLUS ON)
 
         SWIG_ADD_LIBRARY(rp_hw_py LANGUAGE python SOURCES src/rp_hw.i ${PR_HW_SOURCES})
-        SWIG_LINK_LIBRARIES(rp_hw_py ${PYTHON_LIBRARIES} i2c)
+        SWIG_LINK_LIBRARIES(rp_hw_py ${Python3_LIBRARIES} i2c)
     endif()
 
     add_library(${PROJECT_NAME}-shared SHARED)

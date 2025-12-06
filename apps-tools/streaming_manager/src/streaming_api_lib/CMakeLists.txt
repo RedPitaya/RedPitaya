@@ -46,7 +46,7 @@ find_package(SWIG REQUIRED)
 INCLUDE(${SWIG_USE_FILE})
 
 if(NOT JENKINS_BUILD)
-find_package(PythonLibs)
+    find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
 endif()
 
 set(CMAKE_SWIG_FLAGS -threads -builtin -O)
@@ -83,7 +83,7 @@ SWIG_ADD_LIBRARY(${PY_PROJ}${PyVerName} LANGUAGE python SOURCES src/streaming.i 
 if(JENKINS_BUILD)
     target_include_directories(${PY_PROJ}${PyVerName} PRIVATE /opt/python/${OS_PATH}/include/python${PyVer})
 else()
-    target_include_directories(${PY_PROJ}${PyVerName} PRIVATE ${PYTHON_INCLUDE_PATH})
+    target_include_directories(${PY_PROJ}${PyVerName} PRIVATE ${Python3_INCLUDE_DIRS})
 endif()
 
 target_compile_options(${PY_PROJ}${PyVerName} PRIVATE -Wno-unused-parameter -Wno-unused-variable -Wno-missing-field-initializers)
@@ -97,7 +97,7 @@ if(JENKINS_BUILD)
     target_link_directories(${PY_PROJ}${PyVerName} PRIVATE /opt/python/${OS_PATH}/lib)
     SWIG_LINK_LIBRARIES(${PY_PROJ}${PyVerName} python${PyVer})
 else()
-    SWIG_LINK_LIBRARIES(${PY_PROJ}${PyVerName} ${PYTHON_LIBRARIES})
+    SWIG_LINK_LIBRARIES(${PY_PROJ}${PyVerName} ${Python3_LIBRARIES})
 endif()
 
 if(NOT WIN32)

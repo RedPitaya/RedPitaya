@@ -88,13 +88,13 @@ if(BUILD_SHARED)
         find_package(SWIG REQUIRED)
         INCLUDE(${SWIG_USE_FILE})
 
-        find_package(PythonLibs)
-        include_directories(${PYTHON_INCLUDE_PATH})
+        find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+        include_directories(${Python3_INCLUDE_DIRS})
 
         set_property(SOURCE src/rp_api_250.i PROPERTY CPLUSPLUS ON)
 
         SWIG_ADD_LIBRARY(rp_api_250_py LANGUAGE python SOURCES src/rp_api_250.i ${PR_XML_SOURCES} ${PR_I2C_SOURCES} ${PR_SPI_SOURCES} ${PR_GPIO_SOURCES})
-        SWIG_LINK_LIBRARIES(rp_api_250_py ${PYTHON_LIBRARIES} i2c)
+        SWIG_LINK_LIBRARIES(rp_api_250_py ${Python3_LIBRARIES} i2c)
     endif()
 
     add_library(${PROJECT_NAME}-i2c-shared SHARED)

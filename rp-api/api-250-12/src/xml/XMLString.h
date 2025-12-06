@@ -18,7 +18,7 @@ namespace XML
 		~XMLString();
         XMLString(XMLString &&v);
 		XMLString& operator=(XMLString&& v);
-        bool operator==(const XMLString& lhs){ return strncmp(lhs.text,this->text,this->lenght) == 0; }
+        bool operator==(const XMLString& lhs) const { return strncmp(lhs.text,this->text,this->lenght) == 0; }
 
 		const char* getText();
 		int         Lenght();

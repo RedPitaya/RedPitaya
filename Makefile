@@ -11,7 +11,7 @@ CPU_CORES = $(shell ./get_cpu_ram.sh)
 ################################################################################
 
 # Required OS version
-LINUX_VER = 2.07
+LINUX_VER = 3.00
 BUILD_NUMBER ?= dev
 REVISION ?= $(shell git rev-parse --short HEAD)
 VERSION = $(LINUX_VER)-$(BUILD_NUMBER)
