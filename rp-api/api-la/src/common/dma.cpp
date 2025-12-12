@@ -19,8 +19,8 @@ int dma_getReservedMemory(uint32_t* _startAddress, uint32_t* _size) {
     *_startAddress = 0;
     *_size = 0;
     int fd = 0;
-    if ((fd = open("/sys/firmware/devicetree/base/reserved-memory/buffer@1000000/reg", O_RDONLY)) == -1) {
-        FATAL("Error open: /sys/firmware/devicetree/base/reserved-memory/buffer@1000000/reg\n");
+    if ((fd = open("/sys/firmware/devicetree/base/reserved-memory/buffer@1000000_b/reg", O_RDONLY)) == -1) {
+        FATAL("Error open: /sys/firmware/devicetree/base/reserved-memory/buffer@1000000_b/reg\n");
         return RP_EOMD;
     }
     char data[8] = {0, 0, 0, 0, 0, 0, 0, 0};

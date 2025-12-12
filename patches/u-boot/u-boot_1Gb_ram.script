@@ -1,8 +1,9 @@
 # load extra enviroment form eeprom
-i2c dev 0
 # Offset 0x1800 + 0x4 (crc32)
 eeprom read 0 0x1804 0x400
+echo "Read eeprom [DONE]"
 env import -b 0 0x400 hw_rev serial ethaddr
+echo "env import -b 0 0x400 hw_rev serial ethaddr"
 
 # set main memory address table
 setenv addr_script 0x02000000
