@@ -1,7 +1,7 @@
 # load extra enviroment form eeprom
-# Offset 0x1800 + 0x4 (crc32)
-eeprom read 0 0x1804 0x400
-echo "Read eeprom [DONE]"
+# Offset 0x1800
+eeprom read 0 0x1800 0x400
+echo "Read eeprom [DONE] ret = $?"
 env import -b 0 0x400 hw_rev serial ethaddr
 echo "env import -b 0 0x400 hw_rev serial ethaddr"
 
