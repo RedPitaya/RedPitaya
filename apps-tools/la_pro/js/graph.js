@@ -554,7 +554,7 @@
                 }
                 if (sel_idx == -1) continue;
                 var enable_din = CLIENT.getValue('LA_DIN_' + sel_idx)
-                var offset = LA.calculateOffset(line)
+                var offset = LA.calculateOffset(sel_idx)
                 if (offset == -1) continue;
                 if (enable_din != true) continue;
                 if (data.name == 'CAN'){
