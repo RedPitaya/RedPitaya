@@ -28,7 +28,7 @@ std::mutex g_data_mtx;
  */
 int rp_OpenUnit() {
     std::lock_guard lock(g_open_mtx);
-    return rp_LaAcqOpen("/dev/uio/la", &g_la_acq_handle);
+    return rp_LaAcqOpen("/dev/uio/la@40300000", &g_la_acq_handle);
 }
 
 /**
