@@ -76,7 +76,7 @@ int rp_bazaar_get_dna(unsigned long long *dna)
     const long c_dna_fpga_base_size = 0x20;
     int fd = -1;
 
-    fd = open("/dev/uio/api", O_RDONLY | O_SYNC);
+    fd = open("/dev/uio/api@40000000", O_RDONLY | O_SYNC);
     if(fd < 0) {
         fprintf(stderr, "ERROR: failed open of UIO device: %s\n", strerror(errno));
         return -1;

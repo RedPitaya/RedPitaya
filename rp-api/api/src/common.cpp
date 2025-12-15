@@ -26,7 +26,7 @@ bool g_DebugReg = false;
 
 int cmn_Init() {
     if (fd == -1) {
-        if ((fd = open("/dev/uio/api", O_RDWR | O_SYNC)) == -1) {
+        if ((fd = open("/dev/uio/api@40000000", O_RDWR | O_SYNC)) == -1) {
             return RP_EOMD;
         }
     }
@@ -80,7 +80,7 @@ int cmn_Unmap(size_t size, void** mapped) {
 }
 
 int cmn_InitMap(size_t size, size_t offset, void** mapped, int* fd) {
-    if ((*fd = open("/dev/uio/api", O_RDWR | O_SYNC)) == -1) {
+    if ((*fd = open("/dev/uio/api@40000000", O_RDWR | O_SYNC)) == -1) {
         return RP_EOMD;
     }
 
