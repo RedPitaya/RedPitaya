@@ -83,7 +83,7 @@ list(APPEND header
 )
 
 add_compile_definitions(ARCH_ARM)
-add_compile_options(-mcpu=cortex-a9 -O3 -mfpu=neon -mfloat-abi=hard)
+add_compile_options(-mcpu=cortex-a9 -O3 -mfpu=neon -mfloat-abi=hard -fPIC)
 add_compile_options($<$<CONFIG:Debug>:-DTRACE_ENABLE>)
 add_compile_options(-Wall -pedantic -Wextra -Wno-unused-parameter -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
