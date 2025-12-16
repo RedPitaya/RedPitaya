@@ -244,7 +244,7 @@
             const $select = document.querySelector('#eth0_mode');
 
             if (!routingIsGot){
-                if (config.includes("DHCP=yes")){
+                if (config.includes("DHCP=ipv4")){
                     $select.value = "#eth0_dhcp_mode";
                 } else if (config.includes("DHCPServer=yes")){
                     $select.value = "#eth0_dhcp_server_mode";
