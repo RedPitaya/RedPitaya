@@ -343,4 +343,5 @@ echo Booting Linux kernel with ramdisk and devicetree
 setenv sdboot bootm ${addr_linux} - ${addr_dtb}
 setenv qspiboot bootm ${addr_linux} - ${addr_dtb}
 setenv bootdelay 0
+printenv
 bootd

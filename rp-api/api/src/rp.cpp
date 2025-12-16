@@ -45,7 +45,7 @@ int rp_InitAdresses() {
     pthread_mutex_lock(&rp_init_mutex);
     int ret = cmn_Init();
     if (ret != RP_OK) {
-        ERROR_LOG("Error open /dev/uio/api. Code:  %d", ret)
+        ERROR_LOG("Error open /dev/uio/api@40000000. Code:  %d", ret)
         pthread_mutex_unlock(&rp_init_mutex);
         rp_Release();
         return ret;
