@@ -1,6 +1,4 @@
 # load extra enviroment form eeprom
-i2c dev 0
-i2c speed 40000
 # Offset 0x1800
 eeprom read 0 0x1800 0x400
 echo "Read eeprom [DONE] ret = $?"

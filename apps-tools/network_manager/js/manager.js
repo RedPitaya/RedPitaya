@@ -238,7 +238,7 @@
             type: 'GET'
         }).success(function(msg) {
             var info = WIZARD.ParseAddress(msg);
-            var gateway = msg.split("gateway:")[1].split("\n")[0];
+            var gateway = msg.split("Gateway:")[1].split("\n")[0];
             var config = msg.split("config:")[1];
 
             const $select = document.querySelector('#eth0_mode');
