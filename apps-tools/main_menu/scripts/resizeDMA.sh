@@ -3,8 +3,8 @@
 
 FILENAME=/opt/redpitaya/dts/$(monitor -f)/dtraw.dts
 FILEDEST=/opt/redpitaya/dts/$(monitor -f)/devicetree.dtb
-SEARCH_STRING="buffer@1000000_b {"
-REPLACE_STRING="reg = <0x1000000 "$1">;"
+SEARCH_STRING="buffer@2000000_b {"
+REPLACE_STRING="reg = <0x2000000 "$1">;"
 
 LINE_NUMBER=$(grep -n "$SEARCH_STRING" "$FILENAME" | cut -d: -f1)
 
