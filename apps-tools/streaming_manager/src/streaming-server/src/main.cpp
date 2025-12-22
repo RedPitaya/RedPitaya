@@ -165,11 +165,11 @@ int main(int argc, char* argv[]) {
         }
         auto uioList = uio_lib::GetUioList();
         for (auto& uio : uioList) {
-            if (uio.nodeName == "rp_oscilloscope") {
+            if (uio.nodeName == "rp_oscilloscope@40000000") {
                 auto osc = uio_lib::COscilloscope::create(uio, 1, true, ClientOpt::getADCRate(), false, ClientOpt::getADCBits(), 2);
                 isMaster = osc->isMaster();
-                printWithLog(LOG_INFO, stdout, "Detected %s mode\n",
-                             isMaster == uio_lib::BoardMode::MASTER ? "Master" : (isMaster == uio_lib::BoardMode::SLAVE ? "Slave" : "Unknown"));
+                printWithLog(
+                    LOG_INFO, stdout, "Detected %s mode\n", isMaster == uio_lib::BoardMode::MASTER ? "Master" : (isMaster == uio_lib::BoardMode::SLAVE ? "Slave" : "Unknown"));
                 break;
             }
         }

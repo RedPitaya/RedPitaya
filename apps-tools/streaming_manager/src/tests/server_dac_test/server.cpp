@@ -1,23 +1,22 @@
 #include <iomanip>
 #include <iostream>
 
-#include "UioParser.h"
+#include "DACStreamingApplication.h"
+#include "DACStreamingManager.h"
 #include "Oscilloscope.h"
 #include "StreamingApplication.h"
 #include "StreamingManager.h"
-#include "DACStreamingApplication.h"
-#include "DACStreamingManager.h"
+#include "UioParser.h"
 
 #include "Generator.h"
 
 volatile int stop = 0;
 
-void sigHandler (int sigNum){
+void sigHandler(int sigNum) {
     stop = 1;
 }
 
-void installTermSignalHandler()
-{
+void installTermSignalHandler() {
 #ifdef _WIN32
     signal(SIGINT, sigHandler);
     signal(SIGTERM, sigHandler);
@@ -30,9 +29,7 @@ void installTermSignalHandler()
 #endif
 }
 
-
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
     installTermSignalHandler();
     std::vector<UioT> uioList = GetUioList();
 
@@ -42,19 +39,14 @@ int main(int argc, char* argv[])
 
     std::cout << std::hex << std::noshowbase << std::setfill('0');
 
-    for (const UioT &uio : uioList)
-    {
+    for (const UioT& uio : uioList) {
         std::cout << "name:\t" << uio.name << "\n"
                   << "node:\t" << uio.nodeName << "\n"
                   << "maps:" << std::endl;
 
-        for (const UioMapT &uioMap : uio.mapList)
-        {
-            std::cout << "\tname: " << uioMap.name
-                      << ", addr: 0x" << std::setw(8) << uioMap.addr
-                      << ", offset: 0x" << std::setw(8) << uioMap.offset
-                      << ", size: 0x" << std::setw(8) << uioMap.size
-                      << std::endl;
+        for (const UioMapT& uioMap : uio.mapList) {
+            std::cout << "\tname: " << uioMap.name << ", addr: 0x" << std::setw(8) << uioMap.addr << ", offset: 0x" << std::setw(8) << uioMap.offset << ", size: 0x" << std::setw(8)
+                      << uioMap.size << std::endl;
         }
     }
 
@@ -69,37 +61,29 @@ int main(int argc, char* argv[])
         dacSpeed = atoi(argv[1]);
     }
 
-    for (const UioT &uio : uioList)
-    {
+    for (const UioT& uio : uioList) {
 
-        if (uio.nodeName == "rp_dac")
-        {
-            gen = CGenerator::Create(uio, true , true, dacSpeed,125e6);
+        if (uio.nodeName == "rp_dac@40100000") {
+            gen = CGenerator::Create(uio, true, true, dacSpeed, 125e6);
             gen->setDacHz(dacSpeed);
         }
     }
 
-    if (!gen)
-    {
+    if (!gen) {
         std::cerr << "Error: create gen" << std::endl;
         return 1;
     }
 
-
-
-    CDACStreamingManager::Ptr dac_manager = CDACStreamingManager::Create(CDACStreamingManager::WAV_TYPE,"test.wav",CStreamSettings::DAC_REP_INF,1,10000000);
-    CDACStreamingApplication dac(dac_manager,gen);
+    CDACStreamingManager::Ptr dac_manager = CDACStreamingManager::Create(CDACStreamingManager::WAV_TYPE, "test.wav", CStreamSettings::DAC_REP_INF, 1, 10000000);
+    CDACStreamingApplication dac(dac_manager, gen);
 
     dac.runNonBlock();
-    while(stop == 0){
-//        sleep(5);
-//        gen->printReg();
-
+    while (stop == 0) {
+        //        sleep(5);
+        //        gen->printReg();
     }
     std::cout << "STOP\n";
     dac.stop();
 
     return 0;
 }
-
-

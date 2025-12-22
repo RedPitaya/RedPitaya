@@ -125,7 +125,7 @@ std::atomic_bool g_dac_serverRun(false);
 auto isDACAviable() -> bool {
     auto uioList = uio_lib::GetUioList();
     for (auto uio : uioList) {
-        if (uio.nodeName == "rp_dac") {
+        if (uio.nodeName == "rp_dac@40100000") {
             return true;
         }
     }
@@ -261,7 +261,7 @@ auto rp_app_init(void) -> int {
         try {
             auto uioList = uio_lib::GetUioList();
             for (auto& uio : uioList) {
-                if (uio.nodeName == "rp_oscilloscope") {
+                if (uio.nodeName == "rp_oscilloscope@40000000") {
                     WARNING("Check master/slave");
                     auto osc = uio_lib::COscilloscope::create(uio, 1, true, getADCRate(), false, getADCBits(), getADCChannels());
                     g_isMaster = osc->isMaster();
@@ -737,7 +737,7 @@ bool startServer(bool testMode) {
         }
 
         for (auto& uio : uioList) {
-            if (uio.nodeName == "rp_oscilloscope") {
+            if (uio.nodeName == "rp_oscilloscope@40000000") {
                 memmanager->releaseMemory(uio_lib::MM_ADC_RESERVE_SKIP);
                 auto reserved = memmanager->reserveMemory(uio_lib::MM_ADC_RESERVE_SKIP, 1, 1);
                 if (reserved != 1) {
@@ -1027,7 +1027,7 @@ auto startDACServer(__attribute__((unused)) bool testMode, uint8_t activeChannel
         }
 
         for (auto uio : uioList) {
-            if (uio.nodeName == "rp_dac") {
+            if (uio.nodeName == "rp_dac@40100000") {
                 g_gen = uio_lib::CGenerator::create(uio, true, true, dac_speed, getDACRate());
                 g_gen->setCalibration(ch_off[0], ch_gain[0], ch_off[1], ch_gain[1]);
                 if (!g_gen->setDacHz(dac_speed)) {
