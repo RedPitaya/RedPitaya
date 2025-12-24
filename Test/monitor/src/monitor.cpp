@@ -64,7 +64,9 @@ int main(int argc, char** argv) {
                 "\tPrint Daisy Chain regset: -pdaisy\n"
                 "\tReserved memory for DMA: -r\n",
 
-                argv[0], VERSION_STR, REVISION_STR);
+                argv[0],
+                VERSION_STR,
+                REVISION_STR);
         return EXIT_FAILURE;
     }
 
@@ -125,7 +127,7 @@ int main(int argc, char** argv) {
         if (ret == RP_HP_OK) {
             printf("%s\n", modelFPGA);
         } else {
-            printf("undefined\n");
+            printf(" undefined\n");
         }
         return ret;
     }
@@ -136,7 +138,7 @@ int main(int argc, char** argv) {
         if (ret == RP_HP_OK) {
             printf("%s\n", model_name);
         } else {
-            printf("[Error]\n");
+            printf(" [Error]\n");
         }
         return ret;
     }

@@ -178,6 +178,7 @@ const char* table_keys_help[] = {"all",
 #define DAC_BASE_RATE_PATH hp_cmn_GetHomeDirectory() + "/.config/redpitaya/dac_base_rate_"
 
 profiles_t* g_profile = NULL;
+bool g_is_valid = false;
 
 // "STEM_125-10_v1.0"
 // "STEM_14_B_v1.0"
@@ -233,12 +234,15 @@ void convertToLowerCase(char* buff) {
     }
 }
 
-void hp_checkModel(char* model, char* eth_mac) {
+void hp_checkModel(char* model, char* eth_mac, bool* is_valid) {
+    *is_valid = true;
     char modelOrig[255];
     strcpy(modelOrig, model);
     convertToLowerCase(model);
-    if (!model)
+    if (!model) {
+        *is_valid = false;
         return;
+    }
 
     if (strcmp(model, "stem_125-10_v1.0") == 0) {
         g_profile = getProfile_STEM_125_10_v1_0();
@@ -496,7 +500,11 @@ void hp_checkModel(char* model, char* eth_mac) {
         return;
     }
 
-    fprintf(stderr, "[Fatal error] Unknown model \"%s\"", model);
+    *is_valid = false;
+    g_profile = getProfile_STEM_125_14_v1_1();
+    strcpy(g_profile->boardModelEEPROM, modelOrig);
+    if (eth_mac)
+        strcpy(g_profile->boardETH_MAC, eth_mac);
 }
 
 int hp_cmn_Init() {
@@ -564,7 +572,7 @@ int hp_cmn_Init() {
             free(eth_mac);
         return RP_HP_ERM;
     }
-    hp_checkModel(model, eth_mac);
+    hp_checkModel(model, eth_mac, &g_is_valid);
     if (model)
         free(model);
     if (eth_mac)
@@ -574,6 +582,10 @@ int hp_cmn_Init() {
 
 profiles_t* hp_cmn_GetLoadedProfile() {
     return g_profile;
+}
+
+bool hp_cmn_isEppromValid() {
+    return g_is_valid;
 }
 
 const char* getGainName(rp_HPADCGainMode_t mode) {

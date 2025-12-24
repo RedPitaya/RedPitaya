@@ -16,12 +16,14 @@ setenv zynq        z7010
 # set default Linux kernel boot parameters
 setenv bootargs console=ttyPS0,115200 root=/dev/mmcblk0p2 ro rootfstype=ext4 earlyprintk rootwait uio_pdrv_genirq.of_id="generic-uio"
 
+# Load the board anyway as 125-14 1.0
+setenv dts_path z10_125
+setenv zynq z7010
+
 # first board start
 if test ${hw_rev} = '0'
 then
   setenv bootargs ${bootargs} mem=256M
-  setenv dts_path z10_125
-  setenv zynq '0'
   echo Set default board values
 fi
 
@@ -29,11 +31,8 @@ if test ${hw_rev} == 'STEM_125-10_v1.0'
 then
   setenv high     0x10000000
   setenv bootargs ${bootargs} mem=256M
-  setenv dts_path z10_125
-  setenv zynq z7010
 else
   setenv high     0x20000000
-  setenv zynq z7010
 fi
 
 if test ${hw_rev} == 'STEM_125-10_v1.0'

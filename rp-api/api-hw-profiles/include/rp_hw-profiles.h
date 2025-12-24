@@ -584,6 +584,13 @@ int rp_HPPrintKeys();
  */
 int rp_HPPrintPivotTable(char* keys);
 
+/**
+* Checks if the board model specified in the eeprom is valid.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
+*/
+int rp_HPGetIsValidEepromModel(bool* _out_value);
+
 #ifdef __cplusplus
 }
 #endif
