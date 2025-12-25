@@ -15,7 +15,7 @@ namespace dac_streaming_lib {
 
 class CDACStreamingManager {
    public:
-    enum NotifyResult { NR_ENDED, NR_BROKEN, NR_EMPTY, NR_MISSING_FILE, NR_STOP, NR_MEM_ERROR, NR_MEM_MODIFY, NR_SETTINGS_ERROR };
+    enum NotifyResult { NR_ENDED, NR_BROKEN, NR_EMPTY, NR_MISSING_FILE, NR_STOP, NR_MEM_ERROR, NR_MEM_MODIFY, NR_SETTINGS_ERROR, NR_NO_ACTIVE_CNAHHELS };
 
     enum DACStream_FileType { TDMS_TYPE, WAV_TYPE };
 

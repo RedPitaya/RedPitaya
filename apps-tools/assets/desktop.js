@@ -399,6 +399,7 @@
                         const obj = JSON.parse(result);
                         var model = obj['name'];
                         var is_slave = obj['is_slave'];
+                        var is_valid_model = obj['is_model_valid'];
                         if (model.startsWith('STEMlab 125-10 v1.0')) { base_ram = "256"; }
                         if (is_slave.includes('slave mode')) model += " / Streaming Slave";
                         $('#SI_B_MODEL').text(model);
@@ -407,6 +408,10 @@
                         $('#SI_ECOSYSTEM').text(obj['ecosystem']['version'] + '-' + obj['ecosystem']['revision']);
                         $('#SI_LINUX').text(obj['linux']);
                         $('#UBOOT_MODE_ID').text(obj['boot_512'] == "1" ? "BOOT mode: " + base_ram + "MB RAM" : "BOOT mode: 1GB RAM");
+
+                        if (is_valid_model == "0"){
+                            $("#IS_VALID_MODEL").removeAttr("style");
+                        }
 
                         if (obj['mem_upgrade'] == "1"){
                             $('#up_boot_id a').text(obj['boot_512'] == "1" ? "Up to 1GB RAM" : base_ram + "MB RAM")

@@ -238,6 +238,13 @@ function promptFile(contentType, multiple) {
                 CLIENT.parametersCache["SS_DAC_STATUS"] = { value: 0 };
                 CLIENT.sendParameters();
             }
+
+            if (status == 8) {
+                $('#DAC_STATUS_LED').attr("src","./img/red_led.png")
+                $('#DAC_STATUS').html("Status: No active channels").css("color","#cdcccc")
+                CLIENT.parametersCache["SS_DAC_STATUS"] = { value: 0 };
+                CLIENT.sendParameters();
+            }
         }
         SM.ss_dac_status_last = status;
     }

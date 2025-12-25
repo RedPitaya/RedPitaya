@@ -135,10 +135,8 @@ auto startServer(bool verbMode, bool testMode, bool is_master) -> void {
         }
 
         if (rp_HPGetIsAttenuatorControllerPresentOrDefault()) {
-            rp_max7311::rp_setAttenuator(RP_MAX7311_IN1,
-                                         settings.getADCAttenuator(1).value == CStreamSettings::Attenuator::A_1_20 ? RP_ATTENUATOR_1_20 : RP_ATTENUATOR_1_1);
-            rp_max7311::rp_setAttenuator(RP_MAX7311_IN2,
-                                         settings.getADCAttenuator(2).value == CStreamSettings::Attenuator::A_1_20 ? RP_ATTENUATOR_1_20 : RP_ATTENUATOR_1_1);
+            rp_max7311::rp_setAttenuator(RP_MAX7311_IN1, settings.getADCAttenuator(1).value == CStreamSettings::Attenuator::A_1_20 ? RP_ATTENUATOR_1_20 : RP_ATTENUATOR_1_1);
+            rp_max7311::rp_setAttenuator(RP_MAX7311_IN2, settings.getADCAttenuator(2).value == CStreamSettings::Attenuator::A_1_20 ? RP_ATTENUATOR_1_20 : RP_ATTENUATOR_1_1);
         }
 
         if (rp_HPGetFastADCIsAC_DCOrDefault()) {
@@ -149,7 +147,7 @@ auto startServer(bool verbMode, bool testMode, bool is_master) -> void {
         auto memmanager = uio_lib::CMemoryManager::instance();
 
         for (auto& uio : uioList) {
-            if (uio.nodeName == "rp_oscilloscope") {
+            if (uio.nodeName == "rp_oscilloscope@40000000") {
                 memmanager->releaseMemory(MM_ADC_RESERVE_SKIP);
                 if (memmanager->reserveMemory(MM_ADC_RESERVE_SKIP, 1, 1) != 1) {
                     printWithLog(LOG_ERR, stdout, "Can't reserve memory via memory manager") stopNonBlocking(ServerNetConfigManager::MEM_ERROR);
@@ -198,8 +196,7 @@ auto startServer(bool verbMode, bool testMode, bool is_master) -> void {
 
         if (use_file.value == CStreamSettings::PassMode::FILE) {
             auto f_path = std::string(FILE_PATH);
-            g_s_file =
-                streaming_lib::CStreamingFile::create(format, f_path, samples, data_type.value == CStreamSettings::DataType::VOLT, testMode, is_platform);
+            g_s_file = streaming_lib::CStreamingFile::create(format, f_path, samples, data_type.value == CStreamSettings::DataType::VOLT, testMode, is_platform);
             g_s_file->stopNotify.connect([](CStreamingFile::EStopReason r) {
                 switch (r) {
                     case CStreamingFile::EStopReason::NORMAL: {
@@ -226,9 +223,10 @@ auto startServer(bool verbMode, bool testMode, bool is_master) -> void {
         uint8_t channelsActive = 0;
         for (int i = 0; i < max_channels; i++) {
             if (settings.getADCChannels(i + 1).value == CStreamSettings::State::ON) {
-                g_s_buffer->addChannel((DataLib::EDataBuffersPackChannel)i, bits,
-                                       settings.getADCAttenuator(i + 1).value == CStreamSettings::Attenuator::A_1_20 ? DataLib::CDataBufferDMA::ATT_1_20
-                                                                                                                     : DataLib::CDataBufferDMA::ATT_1_1);
+                g_s_buffer->addChannel(
+                    (DataLib::EDataBuffersPackChannel)i,
+                    bits,
+                    settings.getADCAttenuator(i + 1).value == CStreamSettings::Attenuator::A_1_20 ? DataLib::CDataBufferDMA::ATT_1_20 : DataLib::CDataBufferDMA::ATT_1_1);
                 channelsActive++;
             }
         }
@@ -262,8 +260,7 @@ auto startServer(bool verbMode, bool testMode, bool is_master) -> void {
             printWithLog(LOG_INFO, stdout, "Reserved memory blocks: %d size: %d\n", reservedBlocks, reservedBlocks * memmanager->getMemoryBlockSize());
         }
 
-        g_s_buffer->generateBuffers(memmanager->getRegions(MM_ADC), (use_file.value == CStreamSettings::PassMode::NET ? DataLib::sizeHeader() : 0),
-                                    buffersTestMode);
+        g_s_buffer->generateBuffers(memmanager->getRegions(MM_ADC), (use_file.value == CStreamSettings::PassMode::NET ? DataLib::sizeHeader() : 0), buffersTestMode);
         g_s_buffer->setADCBits(ClientOpt::getADCBits());
         g_s_buffer->setOSCRate(ClientOpt::getADCRate() / rate);
         if (use_file.value == CStreamSettings::PassMode::NET)

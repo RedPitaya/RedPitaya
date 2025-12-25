@@ -91,6 +91,7 @@ typedef struct {
 
 int hp_cmn_Init();
 profiles_t* hp_cmn_GetLoadedProfile();
+bool hp_cmn_isEppromValid();
 profiles_t* hp_cmn_getProfile(rp_HPeModels_t model);
 int hp_cmn_Print(profiles_t* p);
 

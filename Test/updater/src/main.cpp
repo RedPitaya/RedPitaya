@@ -485,9 +485,9 @@ int main(int argc, char* argv[]) {
                 delete callback;
             }
             if (g_returnValue == 0)
-                fprintf(stderr, "The board needs to be rebooted!!!!\n");
+                fprintf(stderr, "\nThe board needs to be rebooted!!!!\n");
             else
-                fprintf(stderr, "Fatal error while updating the ecosystem.\n");
+                fprintf(stderr, "\nFatal error while updating the ecosystem.\n");
         } else {
             fprintf(stderr, "Error: No ecosystem found to install.\n");
             g_returnValue = -1;

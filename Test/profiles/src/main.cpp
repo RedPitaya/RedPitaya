@@ -27,8 +27,11 @@ void usage(char** argv) {
             "\t-f\t: Print fpga version\n"
             "\t-n\t: Print model name\n"
             "\t-i\t: Print model id\n"
+            "\t-c\t: Checking the validity of the model in EEPROM\n"
             "\t-v KEY\t: Print value from profile by key\n",
-            argv[0], VERSION_STR, REVISION_STR);
+            argv[0],
+            VERSION_STR,
+            REVISION_STR);
 
     fprintf(stdout,
             "\t\tKeys:\n"
@@ -73,6 +76,17 @@ int main(int argc, char** argv) {
         }
     }
 
+    if (strncmp(argv[1], "-c", 2) == 0) {
+        bool is_valid = false;
+        auto ret = rp_HPGetIsValidEepromModel(&is_valid);
+        if (ret == RP_HP_OK) {
+            printf("%d\n", is_valid);
+        } else {
+            printf("[ERROR] Error check mode\n");
+        }
+        return ret;
+    }
+
     if (strncmp(argv[1], "-f", 2) == 0) {
         const char* modelFPGA = NULL;
         auto ret = rp_HPGetFPGAVersion(&modelFPGA);
@@ -90,7 +104,7 @@ int main(int argc, char** argv) {
         if (ret == RP_HP_OK) {
             printf("%s\n", model_name);
         } else {
-            printf("[Error]\n");
+            printf(" [Error]\n");
         }
         return ret;
     }

@@ -24,8 +24,8 @@ int getReservedMemory(uint32_t* _startAddress, uint32_t* _size) {
     *_startAddress = 0;
     *_size = 0;
     int fd = 0;
-    if ((fd = open("/sys/firmware/devicetree/base/reserved-memory/buffer@1000000_b/reg", O_RDONLY)) == -1) {
-        fprintf(stderr, "[FATAL ERROR] Error open: /sys/firmware/devicetree/base/reserved-memory/buffer@1000000_b/reg\n");
+    if ((fd = open("/sys/firmware/devicetree/base/reserved-memory/buffer@2000000_b/reg", O_RDONLY)) == -1) {
+        fprintf(stderr, "[FATAL ERROR] Error open: /sys/firmware/devicetree/base/reserved-memory/buffer@2000000_b/reg\n");
         return -1;
     }
     char data[8] = {0, 0, 0, 0, 0, 0, 0, 0};

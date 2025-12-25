@@ -147,8 +147,8 @@ uint32_t getCurrentRAMSize() {
 
 uint32_t getReservedMemory() {
     int fd = 0;
-    if ((fd = open("/sys/firmware/devicetree/base/reserved-memory/buffer@1000000_b/reg", O_RDONLY)) == -1) {
-        fprintf(stderr, "[FATAL ERROR] Error open: /sys/firmware/devicetree/base/reserved-memory/buffer@1000000_b/reg\n");
+    if ((fd = open("/sys/firmware/devicetree/base/reserved-memory/buffer@2000000_b/reg", O_RDONLY)) == -1) {
+        fprintf(stderr, "[FATAL ERROR] Error open: /sys/firmware/devicetree/base/reserved-memory/buffer@2000000_b/reg\n");
         return 0;
     }
     char data[8] = {0, 0, 0, 0, 0, 0, 0, 0};

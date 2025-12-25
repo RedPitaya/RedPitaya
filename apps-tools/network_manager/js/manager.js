@@ -10,6 +10,7 @@
     WIZARD.connectedSSID = "";
     WIZARD.apSSID = '';
     WIZARD.r8188eu = false;
+    WIZARD.ap_mode = false;
 
     WIZARD.checkState = function() {
         $.ajax({
@@ -20,7 +21,9 @@
             .success(function(msg) {
                 msg = msg.trim()
                 dongle = msg[0];
-                code = msg[1];
+                ap_mode = msg[1];
+                code = msg[2];
+                WIZARD.ap_mode = ap_mode === '1';
                 WIZARD.r8188eu = dongle === '2';
 
                 if (dongle === '0') {
@@ -62,7 +65,7 @@
                         $('#wlan0_ap_mode').hide();
                         $('#wlan0_client_mode_link').hide();
                         $('#wlan0_ap_mode_work').hide();
-                        if (WIZARD.r8188eu){
+                        if (!WIZARD.ap_mode){
                             $('#wlan0_mode option:first').prop('selected', true);
                             $('#wlan0_mode').hide();
                         }else{

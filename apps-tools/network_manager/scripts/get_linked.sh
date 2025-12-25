@@ -5,6 +5,9 @@ RP_PATH=/opt/redpitaya/www/apps/network_manager/scripts
 $RP_PATH/get_connected_wifi.sh
 echo -n $?
 
+$RP_PATH/check_ap_mode.sh
+echo -n $?
+
 SSID=$($RP_PATH/get_ssid.sh)
 
 if [ "$SSID" != "" ]; then

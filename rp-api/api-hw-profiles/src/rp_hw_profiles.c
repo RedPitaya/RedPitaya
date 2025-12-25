@@ -71,6 +71,16 @@ int rp_HPPrint(){
     return state;
 }
 
+int rp_HPGetIsValidEepromModel(bool* _out_value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *_out_value = hp_cmn_isEppromValid();
+        return RP_HP_OK;
+    }
+    return state;
+}
+
 int rp_HPPrintAll(){
     hp_cmn_Print(getProfile_STEM_125_10_v1_0());
     hp_cmn_Print(getProfile_STEM_125_14_v1_0());

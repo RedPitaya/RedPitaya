@@ -78,7 +78,7 @@ auto startDACServer(bool verbMode, uint8_t activeChannels) -> void {
         }
 
         for (const UioT& uio : uioList) {
-            if (uio.nodeName == "rp_dac") {
+            if (uio.nodeName == "rp_dac@40100000") {
                 g_gen = CGenerator::create(uio, true, true, dac_speed, ClientOpt::getDACRate());
                 g_gen->setCalibration(ch_off[0], ch_gain[0], ch_off[1], ch_gain[1]);
                 if (!g_gen->setDacHz(dac_speed)) {
@@ -105,11 +105,11 @@ auto startDACServer(bool verbMode, uint8_t activeChannels) -> void {
             auto dacRepeatMode = settings.getDACRepeat();
             auto dacRepeatCount = settings.getDACRepeatCount();
             if (format.value == CStreamSettings::DataFormat::WAV) {
-                g_dac_manger = CDACStreamingManager::Create(CDACStreamingManager::WAV_TYPE, CStreamSettings::getDACDirPath() + "/" + filePath, dacRepeatMode,
-                                                            dacRepeatCount, settings.getMemoryBlockSize(), verbMode);
+                g_dac_manger = CDACStreamingManager::Create(
+                    CDACStreamingManager::WAV_TYPE, CStreamSettings::getDACDirPath() + "/" + filePath, dacRepeatMode, dacRepeatCount, settings.getMemoryBlockSize(), verbMode);
             } else if (format.value == CStreamSettings::DataFormat::TDMS) {
-                g_dac_manger = CDACStreamingManager::Create(CDACStreamingManager::TDMS_TYPE, CStreamSettings::getDACDirPath() + "/" + filePath, dacRepeatMode,
-                                                            dacRepeatCount, settings.getMemoryBlockSize(), verbMode);
+                g_dac_manger = CDACStreamingManager::Create(
+                    CDACStreamingManager::TDMS_TYPE, CStreamSettings::getDACDirPath() + "/" + filePath, dacRepeatMode, dacRepeatCount, settings.getMemoryBlockSize(), verbMode);
             } else {
                 g_serverDACNetConfig->sendDACServerStoppedSDBroken();
                 return;
