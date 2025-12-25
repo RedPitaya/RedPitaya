@@ -330,8 +330,8 @@ endif
 
 ifneq "$(FPGA_PYRPL)" ""
 	$(call build_fpga,pyrpl,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_PYRPL))
-	mkdir -p $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/pyrpl/dts_rp/
-	cp -r fpga/$(FPGA_VERSION)/pyrpl/dts/*  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/pyrpl/dts_rp/
+	cp -f fpga/$(FPGA_VERSION)/pyrpl/prj/pyrpl/out/fpga.dtbo  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/pyrpl/fpga.dtbo
+	cp -f fpga/$(FPGA_VERSION)/pyrpl/prj/pyrpl/out/fpga.dtso  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/pyrpl/fpga.dtso
 endif
 
 ifneq "$(FPGA_STREAM_APP)" ""
