@@ -56,11 +56,11 @@ install_client:
 	cd src; \
 	cmake -B build -DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(MODE)  -DVERSION=$(VERSION) -DBUILD_NUMBER=$(BUILD_NUMBER) -DREVISION=$(REVISION) -DJENKINS_BUILD=$(JENKINS_BUILD) -DCLIENT_SUFFIX=$(CLIENT_SUFFIX) -DBUILD_WEB_APP_SERVER=OFF -DBUILD_CONSOLE_SERVER=OFF -DBUILD_STREAMING_LIB=ON; \
 	make -C build -j $(JOBS) install
-	cd ${INSTALL_DIR}/streaming; \
-	unzip ${INSTALL_DIR}/streaming/rpsa_client-${VERSION}-${REVISION}.zip -d ./rpsa_client-${VERSION}-${REVISION}; \
-	cp -f ./rpsa_client-${VERSION}-${REVISION}/rpsa_client ${INSTALL_DIR}/bin/rpsa_client; \
-	cp -f ./rpsa_client-${VERSION}-${REVISION}/convert_tool ${INSTALL_DIR}/bin/convert_tool; \
-	rm -rf ./rpsa_client-${VERSION}-${REVISION}
+#	cd ${INSTALL_DIR}/streaming; \
+#	unzip ${INSTALL_DIR}/streaming/rpsa_client-${VERSION}-${REVISION}.zip -d ./rpsa_client-${VERSION}-${REVISION}; \
+#	cp -f ./rpsa_client-${VERSION}-${REVISION}/rpsa_client ${INSTALL_DIR}/bin/rpsa_client; \
+#	cp -f ./rpsa_client-${VERSION}-${REVISION}/convert_tool ${INSTALL_DIR}/bin/convert_tool; \
+#	rm -rf ./rpsa_client-${VERSION}-${REVISION}
 
 install_client_win:
 	cd src; \
