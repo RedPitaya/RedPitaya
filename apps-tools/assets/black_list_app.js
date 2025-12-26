@@ -167,9 +167,6 @@
         if (model == 20 || model == 21) {
             for (i = listOfapplications.length - 1; i >= 0; i -= 1) {
                 if (listOfapplications[i]["id"] === 'marketplace' ||
-                    listOfapplications[i]["id"] === 'streaming_manager' ||
-                    listOfapplications[i]["id"] === 'la_pro' ||
-                    listOfapplications[i]["id"] === 'pyrpl' ||
                     listOfapplications[i]["id"] === 'fpgaexamples' ||
                     listOfapplications[i]["id"] === 'activelearning' ||
                     listOfapplications[i]["id"] === 'sdr_receiver_hpsdr' ||
@@ -196,9 +193,6 @@
         if (model == 22 || model == 23 || model == 24) {
             for (i = listOfapplications.length - 1; i >= 0; i -= 1) {
                 if (listOfapplications[i]["id"] === 'marketplace' ||
-                    listOfapplications[i]["id"] === 'streaming_manager' ||
-                    listOfapplications[i]["id"] === 'la_pro' ||
-                    listOfapplications[i]["id"] === 'pyrpl' ||
                     listOfapplications[i]["id"] === 'fpgaexamples' ||
                     listOfapplications[i]["id"] === 'activelearning' ||
                     listOfapplications[i]["id"] === 'sdr_receiver_hpsdr' ||
