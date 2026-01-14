@@ -12,7 +12,7 @@ class ClientNetConfigManager : public CStreamSettings {
     struct BroadCastClients {
         std::string host;
         broadcast_lib::EMode mode;
-        broadcast_lib::EModel model;
+        uint8_t model;
         std::time_t ts;
     };
 

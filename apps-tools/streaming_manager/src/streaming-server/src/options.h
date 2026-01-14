@@ -49,7 +49,7 @@ auto getDACChannels() -> uint8_t;
 auto getDACRate() -> uint32_t;
 auto getADCRate() -> uint32_t;
 auto getModel() -> models_t;
-auto getBroadcastModel() -> broadcast_lib::EModel;
+auto getBroadcastModel() -> uint8_t;
 }  // namespace ClientOpt
 
 #endif

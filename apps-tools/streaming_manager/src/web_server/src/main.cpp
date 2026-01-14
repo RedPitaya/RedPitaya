@@ -32,7 +32,7 @@ auto getADCChannels() -> uint8_t;
 auto getDACChannels() -> uint8_t;
 auto getDACRate() -> uint32_t;
 auto getADCRate() -> uint32_t;
-auto getModel() -> broadcast_lib::EModel;
+auto getModel() -> uint8_t;
 auto getModelS() -> std::string;
 auto getAC_DC() -> bool;
 auto getIsDACGain() -> bool;
@@ -189,47 +189,12 @@ auto getADCBits() -> uint8_t {
     return c;
 }
 
-auto getModel() -> broadcast_lib::EModel {
+auto getModel() -> uint8_t {
     rp_HPeModels_t c = STEM_125_14_v1_0;
     if (rp_HPGetModel(&c) != RP_HP_OK) {
         ERROR_LOG("Can't get board model");
     }
-
-    switch (c) {
-        case STEM_125_10_v1_0:
-        case STEM_125_14_v1_0:
-        case STEM_125_14_v1_1:
-        case STEM_125_14_LN_v1_1:
-        case STEM_125_14_LN_BO_v1_1:
-        case STEM_125_14_LN_CE1_v1_1:
-        case STEM_125_14_LN_CE2_v1_1:
-            return broadcast_lib::EModel::RP_125_14;
-        case STEM_125_14_Z7020_v1_0:
-        case STEM_125_14_Z7020_LN_v1_1:
-            return broadcast_lib::EModel::RP_125_14_Z20;
-
-        case STEM_122_16SDR_v1_0:
-        case STEM_122_16SDR_v1_1:
-            return broadcast_lib::EModel::RP_122_16;
-
-        case STEM_125_14_Z7020_4IN_v1_0:
-        case STEM_125_14_Z7020_4IN_v1_2:
-        case STEM_125_14_Z7020_4IN_v1_3:
-        case STEM_125_14_Z7020_4IN_BO_v1_3:
-            return broadcast_lib::EModel::RP_125_4CH;
-
-        case STEM_250_12_v1_0:
-        case STEM_250_12_v1_1:
-        case STEM_250_12_v1_2:
-        case STEM_250_12_v1_2a:
-        case STEM_250_12_v1_2b:
-            return broadcast_lib::EModel::RP_250_12;
-        case STEM_250_12_120:
-            return broadcast_lib::EModel::RP_250_12;
-        default:
-            FATAL("Can't get board model");
-    }
-    return broadcast_lib::EModel::RP_125_14;
+    return (uint8_t)c;
 }
 
 //Application description

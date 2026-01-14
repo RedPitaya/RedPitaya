@@ -8,8 +8,6 @@
 
 namespace broadcast_lib {
 
-enum EModel { CLIENT = 0, RP_125_14 = 1, RP_125_14_Z20 = 2, RP_122_16 = 3, RP_250_12 = 4, RP_125_4CH = 5 };
-
 enum EMode { AB_SERVER_MASTER = 0, AB_SERVER_SLAVE = 1, AB_CLIENT = 2, AB_NONE = 3 };
 
 enum EEvents { AB_ERROR = 0, AB_SEND_DATA = 1, AB_RECIVED_DATA = 2 };
@@ -20,8 +18,8 @@ class CAsioBroadcastSocket {
 
     using Ptr = std::shared_ptr<CAsioBroadcastSocket>;
 
-    static auto create(EModel model, std::string host, uint16_t port) -> Ptr;
-    CAsioBroadcastSocket(EModel model, std::string host, uint16_t port);
+    static auto create(uint8_t model, std::string host, uint16_t port) -> Ptr;
+    CAsioBroadcastSocket(uint8_t model, std::string host, uint16_t port);
     ~CAsioBroadcastSocket();
 
     auto initServer(broadcast_lib::EMode mode, int sleep_time_ms = 1000) -> void;
@@ -49,8 +47,6 @@ class CAsioBroadcastSocket {
     uint16_t m_port;
 
     uint8_t* m_SocketReadBuffer;
-
-    EModel m_model;
 
     class Impl;
     std::unique_ptr<Impl> m_pimpl;

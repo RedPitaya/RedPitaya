@@ -169,16 +169,12 @@
                 if (listOfapplications[i]["id"] === 'marketplace' ||
                     listOfapplications[i]["id"] === 'fpgaexamples' ||
                     listOfapplications[i]["id"] === 'activelearning' ||
-                    listOfapplications[i]["id"] === 'sdr_receiver_hpsdr' ||
                     listOfapplications[i]["id"] === 'sdr_receiver_hpsdr_z20' ||
                     listOfapplications[i]["id"] === 'sdr_receiver_hpsdr_122_88' ||
-                    listOfapplications[i]["id"] === 'sdr_transceiver_hpsdr' ||
                     listOfapplications[i]["id"] === 'sdr_transceiver_hpsdr_z20' ||
                     listOfapplications[i]["id"] === 'sdr_transceiver_hpsdr_122_88' ||
-                    listOfapplications[i]["id"] === 'vna' ||
                     listOfapplications[i]["id"] === 'vna_z20' ||
                     listOfapplications[i]["id"] === 'vna_122_88' ||
-                    listOfapplications[i]["id"] === 'sdr_transceiver' ||
                     listOfapplications[i]["id"] === 'sdr_transceiver_z20' ||
                     listOfapplications[i]["id"] === 'sdr_transceiver_122_88') {
                     listOfapplications.splice(i, 1);
@@ -196,16 +192,12 @@
                     listOfapplications[i]["id"] === 'fpgaexamples' ||
                     listOfapplications[i]["id"] === 'activelearning' ||
                     listOfapplications[i]["id"] === 'sdr_receiver_hpsdr' ||
-                    listOfapplications[i]["id"] === 'sdr_receiver_hpsdr_z20' ||
                     listOfapplications[i]["id"] === 'sdr_receiver_hpsdr_122_88' ||
                     listOfapplications[i]["id"] === 'sdr_transceiver_hpsdr' ||
-                    listOfapplications[i]["id"] === 'sdr_transceiver_hpsdr_z20' ||
                     listOfapplications[i]["id"] === 'sdr_transceiver_hpsdr_122_88' ||
                     listOfapplications[i]["id"] === 'vna' ||
-                    listOfapplications[i]["id"] === 'vna_z20' ||
                     listOfapplications[i]["id"] === 'vna_122_88' ||
                     listOfapplications[i]["id"] === 'sdr_transceiver' ||
-                    listOfapplications[i]["id"] === 'sdr_transceiver_z20' ||
                     listOfapplications[i]["id"] === 'sdr_transceiver_122_88') {
                     listOfapplications.splice(i, 1);
                 }

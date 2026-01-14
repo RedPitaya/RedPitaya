@@ -37,7 +37,7 @@ class CBoard : public QObject {
     auto setOnline() -> void;
     auto getIP() -> QString;
     auto setMode(broadcast_lib::EMode mode) -> void;
-    auto setModel(broadcast_lib::EModel model) -> void;
+    auto setModel(uint8_t model) -> void;
     auto getModel() -> QString;
     auto getIsMaster() -> bool;
     auto getConfigManagerConnected() -> bool;
@@ -135,7 +135,7 @@ class CBoard : public QObject {
     QString m_ip;
     qint64 m_lastOnline;
     broadcast_lib::EMode m_mode;
-    broadcast_lib::EModel m_model;
+    uint8_t m_model;
     ClientNetConfigManager* m_configManager;
     bool m_chartEnable;
     ConsoleModel m_consoleModel;

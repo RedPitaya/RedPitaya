@@ -32,7 +32,7 @@ auto ServerNetConfigManager::startServer(std::string host, uint16_t port) -> voi
     m_pNetConfManager->startAsioNet(net_lib::M_SERVER, host, port);
 }
 
-auto ServerNetConfigManager::startBroadcast(broadcast_lib::EModel model, std::string host, uint16_t port) -> void {
+auto ServerNetConfigManager::startBroadcast(uint8_t model, std::string host, uint16_t port) -> void {
     m_pBroadcast = broadcast_lib::CAsioBroadcastSocket::create(model, host, port);
     m_pBroadcast->initServer(m_mode);
     m_pBroadcast->errorNotify.connect([=, this](std::error_code er) {
