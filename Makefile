@@ -342,9 +342,9 @@ E3_LED_CON_DIR     = tools/e3_led_controller
 STARTUPSH          = $(INSTALL_DIR)/sbin/startup.sh
 
 .PHONY: examples fpgautils
-.PHONY: lcr bode monitor profiles generator acquire acquire_p calib spectrum led_control daisy_tool la e3_led_controller updater_tool filter_calib
+.PHONY: lcr bode monitor profiles generator acquire acquire_p calib spectrum led_control daisy_tool la e3_led_controller updater_tool filter_calib phytool
 
-examples: lcr bode monitor profiles calib spectrum acquire acquire_p generator led_control fpgautils daisy_tool la e3_led_controller updater_tool filter_calib
+examples: lcr bode monitor profiles calib spectrum acquire acquire_p generator led_control fpgautils daisy_tool la e3_led_controller updater_tool filter_calib phytool
 
 
 lcr: api
@@ -402,6 +402,10 @@ led_control: api
 fpgautils:
 	mkdir -p $(abspath $(INSTALL_DIR))/bin
 	$(CC) tools/fpgautils/fpgautil.c -o $(abspath $(INSTALL_DIR))/bin/fpgautil
+
+phytool:
+	mkdir -p $(abspath $(INSTALL_DIR))/bin
+	cp -f tools/phytool/phytool $(abspath $(INSTALL_DIR))/bin/phytool
 
 e3_led_controller: api
 	cmake -B$(abspath $(E3_LED_CON_DIR)/build) -S$(abspath $(E3_LED_CON_DIR)) $(CMAKEVAR)
