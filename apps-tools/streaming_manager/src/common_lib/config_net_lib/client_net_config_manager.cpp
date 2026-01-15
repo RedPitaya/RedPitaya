@@ -67,7 +67,7 @@ auto ClientNetConfigManager::removeHadlers() -> void {
 }
 
 auto ClientNetConfigManager::startBroadcast(std::string host, uint16_t port) -> void {
-    m_pBroadcast = broadcast_lib::CAsioBroadcastSocket::create(0, host, port);
+    m_pBroadcast = broadcast_lib::CAsioBroadcastSocket::create(0, "", host, port);
     m_pBroadcast->initClient();
     m_pBroadcast->errorNotify.connect([=, this](std::error_code er) {
         ERROR_LOG("Broadcast client error: %s (%d)", er.message().c_str(), er.value());
@@ -96,22 +96,22 @@ auto ClientNetConfigManager::startBroadcast(std::string host, uint16_t port) -> 
                 }
             }
 
-            if (pointers.size() != 3) {
+            if (pointers.size() != 4) {
                 TRACE_SHORT("[FATAL ERROR] Broadcast parse error \'%s\'", s.c_str())
                 errorNofiy(Errors::BROADCAST_ERROR_PARSE, host, er);
             } else {
                 h = std::string(pointers[0]);
-                if (pointers[1][0] == 'M') {
+                if (pointers[2][0] == 'M') {
                     cl.mode = broadcast_lib::AB_SERVER_MASTER;
-                } else if (pointers[1][0] == 'S') {
+                } else if (pointers[2][0] == 'S') {
                     cl.mode = broadcast_lib::AB_SERVER_SLAVE;
                 } else {
                     cl.mode = broadcast_lib::AB_NONE;
                 }
-                cl.model = atoi(pointers[2]);
+                cl.model = atoi(pointers[3]);
             }
-
-            cl.host = h = s;
+            cl.mac = std::string(pointers[0]);
+            cl.host = h = std::string(pointers[1]);
             auto find = std::find_if(std::begin(m_broadcastClients), std::end(m_broadcastClients), [&cl](const BroadCastClients& c) { return c.host == cl.host; });
             if (find == std::end(m_broadcastClients)) {
                 m_broadcastClients.push_back(cl);

@@ -50,6 +50,7 @@ auto getDACRate() -> uint32_t;
 auto getADCRate() -> uint32_t;
 auto getModel() -> models_t;
 auto getBroadcastModel() -> uint8_t;
+auto getMACAddress() -> std::string;
 }  // namespace ClientOpt
 
 #endif

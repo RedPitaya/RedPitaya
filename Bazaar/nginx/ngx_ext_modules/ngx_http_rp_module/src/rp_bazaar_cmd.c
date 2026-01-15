@@ -195,7 +195,7 @@ ngx_int_t rp_bazaar_cmd_handler(ngx_http_request_t *r)
     char *host = (char *)r->headers_in.server.data;
     char mac[18];
     sprintf(mac, "00:00:00:00:00:00");
-    if (rp_bazaar_get_mac("/sys/class/net/eth0/address", mac)) {
+    if (rp_bazaar_get_mac("/sys/class/net/end0/address", mac)) {
         fprintf(stderr, "Cannot obtain MAC address.\n");
     }
 

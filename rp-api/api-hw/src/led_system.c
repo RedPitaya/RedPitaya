@@ -36,7 +36,7 @@ typedef struct {
         uint16_t reg;
 } device_t;
 
-const device_t eth = { { "eth0" }, 0x01 , 0x1b };
+const device_t eth = { { "end0" }, 0x01 , 0x1b };
 
 bool GetValueFromFile(char *file, char *value){
     FILE *fp;

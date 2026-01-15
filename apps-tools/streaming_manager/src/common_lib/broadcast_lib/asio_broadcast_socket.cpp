@@ -17,16 +17,48 @@ class CAsioBroadcastSocket::Impl {
     std::shared_ptr<asio::ip::udp::socket> m_socket;
     std::string m_strForSend = "";
     uint8_t m_model = 0;
+    broadcast_lib::EMode m_mode;
+    std::string m_mac = "";
+    std::string m_host;
+    uint16_t m_port;
+
+    auto genString() -> std::string {
+        std::string ret = "";
+        ret += m_mac + "\n";
+        ret += m_host + "\n";
+        switch (m_mode) {
+            case EMode::AB_SERVER_MASTER:
+                ret += "M\n";
+                break;
+            case EMode::AB_SERVER_SLAVE:
+                ret += "S\n";
+                break;
+            case EMode::AB_CLIENT:
+                ret += "C\n";
+                break;
+            case EMode::AB_NONE:
+                ret += "N\n";
+                break;
+            default:
+                ret += "E\n";
+                break;
+        }
+        ret += std::to_string(m_model) + "\n";
+        return ret;
+    };
 };
 
-auto CAsioBroadcastSocket::create(uint8_t model, std::string host, uint16_t port) -> CAsioBroadcastSocket::Ptr {
-    return std::make_shared<CAsioBroadcastSocket>(model, host, port);
+auto CAsioBroadcastSocket::create(uint8_t model, std::string mac, std::string host, uint16_t port) -> CAsioBroadcastSocket::Ptr {
+    return std::make_shared<CAsioBroadcastSocket>(model, mac, host, port);
 }
 
-CAsioBroadcastSocket::CAsioBroadcastSocket(uint8_t model, std::string host, uint16_t port)
-    : m_mode(EMode::AB_NONE), m_sleep_time_ms(1000), m_host(host), m_port(port), m_pimpl(new Impl()) {
+CAsioBroadcastSocket::CAsioBroadcastSocket(uint8_t model, std::string mac, std::string host, uint16_t port) : m_sleep_time_ms(1000), m_pimpl(new Impl()) {
     m_SocketReadBuffer = new uint8_t[SOCKET_BUFFER_SIZE];
     m_pimpl->m_model = model;
+    m_pimpl->m_mac = mac;
+    m_pimpl->m_host = host;
+    m_pimpl->m_port = port;
+    m_pimpl->m_mode = EMode::AB_NONE;
     m_pimpl->m_asio_th = new std::thread([this]() {
         asio::executor_work_guard<asio::io_context::executor_type> m_work = asio::make_work_guard(this->m_pimpl->m_Ios);
         this->m_pimpl->m_Ios.run();
@@ -54,12 +86,11 @@ auto CAsioBroadcastSocket::initServer(EMode mode, int sleep_time_ms) -> void {
     m_pimpl->m_socket = std::make_shared<asio::ip::udp::socket>(m_pimpl->m_Ios);
     m_pimpl->m_socket->open(asio::ip::udp::v4(), error);
     if (!error) {
-        m_mode = mode;
+        m_pimpl->m_mode = mode;
         m_pimpl->m_socket->set_option(asio::ip::udp::socket::reuse_address(true));
         m_pimpl->m_socket->set_option(asio::socket_base::broadcast(true));
-        asio::ip::udp::endpoint senderEndpoint(asio::ip::address_v4::broadcast(), m_port);
-        std::string model = std::to_string(m_pimpl->m_model);
-        m_pimpl->m_strForSend = m_host + "\n" + std::string((mode == EMode::AB_SERVER_MASTER ? "M" : "S")) + "\n" + model + "\n";
+        asio::ip::udp::endpoint senderEndpoint(asio::ip::address_v4::broadcast(), m_pimpl->m_port);
+        m_pimpl->m_strForSend = m_pimpl->genString();
         m_pimpl->m_socket->async_send_to(asio::buffer(m_pimpl->m_strForSend.c_str(), m_pimpl->m_strForSend.size()),
                                          senderEndpoint,
                                          std::bind(&CAsioBroadcastSocket::handlerSend, this, std::placeholders::_1, std::placeholders::_2));
@@ -70,9 +101,9 @@ auto CAsioBroadcastSocket::initServer(EMode mode, int sleep_time_ms) -> void {
 
 auto CAsioBroadcastSocket::initClient() -> void {
     std::error_code error;
-    asio::ip::udp::endpoint senderEndpoint(asio::ip::udp::v4(), m_port);
+    asio::ip::udp::endpoint senderEndpoint(asio::ip::udp::v4(), m_pimpl->m_port);
     m_pimpl->m_socket = std::make_shared<asio::ip::udp::socket>(m_pimpl->m_Ios, senderEndpoint);
-    m_mode = EMode::AB_CLIENT;
+    m_pimpl->m_mode = EMode::AB_CLIENT;
     m_pimpl->m_socket->set_option(asio::ip::udp::socket::reuse_address(true));
     m_pimpl->m_socket->set_option(asio::socket_base::broadcast(true));
     m_pimpl->m_socket->async_receive(asio::buffer(m_SocketReadBuffer, SOCKET_BUFFER_SIZE),
@@ -90,13 +121,14 @@ auto CAsioBroadcastSocket::closeSocket() -> void {
 }
 
 auto CAsioBroadcastSocket::setIPAddress(std::string host) -> void {
-    m_host = host;
+    m_pimpl->m_host = host;
+    m_pimpl->m_strForSend = m_pimpl->genString();
 }
 
 auto CAsioBroadcastSocket::handlerReceive(const asio::error_code& error, size_t bytes_transferred) -> void {
     if (!error) {
         receivedNotify(error, m_SocketReadBuffer, bytes_transferred);
-        asio::ip::udp::endpoint senderEndpoint(asio::ip::address_v4::any(), m_port);
+        asio::ip::udp::endpoint senderEndpoint(asio::ip::address_v4::any(), m_pimpl->m_port);
         m_pimpl->m_socket->async_receive(asio::buffer(m_SocketReadBuffer, SOCKET_BUFFER_SIZE),
                                          std::bind(&CAsioBroadcastSocket::handlerReceive, this, std::placeholders::_1, std::placeholders::_2));
     } else {
@@ -110,14 +142,14 @@ auto CAsioBroadcastSocket::handlerReceive(const asio::error_code& error, size_t 
 void CAsioBroadcastSocket::handlerSend(const asio::error_code& _error, size_t _bytesTransferred) {
     sendNotify(_error, _bytesTransferred);
     if (_error) {
-        if (m_mode == EMode::AB_SERVER_MASTER || m_mode == EMode::AB_SERVER_SLAVE) {
+        if (m_pimpl->m_mode == EMode::AB_SERVER_MASTER || m_pimpl->m_mode == EMode::AB_SERVER_SLAVE) {
             errorNotify(_error);
 #ifdef _WIN32
             Sleep(m_sleep_time_ms);
 #else
             usleep(m_sleep_time_ms * 1000);
 #endif
-            initServer(m_mode, m_sleep_time_ms);
+            initServer(m_pimpl->m_mode, m_sleep_time_ms);
         }
     } else {
 #ifdef _WIN32
@@ -125,7 +157,7 @@ void CAsioBroadcastSocket::handlerSend(const asio::error_code& _error, size_t _b
 #else
         usleep(m_sleep_time_ms * 1000);
 #endif
-        asio::ip::udp::endpoint senderEndpoint(asio::ip::address_v4::broadcast(), m_port);
+        asio::ip::udp::endpoint senderEndpoint(asio::ip::address_v4::broadcast(), m_pimpl->m_port);
         m_pimpl->m_socket->async_send_to(asio::buffer(m_pimpl->m_strForSend.c_str(), m_pimpl->m_strForSend.size()),
                                          senderEndpoint,
                                          std::bind(&CAsioBroadcastSocket::handlerSend, this, std::placeholders::_1, std::placeholders::_2));

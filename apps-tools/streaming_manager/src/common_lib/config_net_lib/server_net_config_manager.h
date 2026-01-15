@@ -26,7 +26,7 @@ class ServerNetConfigManager {
     ~ServerNetConfigManager();
 
     auto startServer(std::string host, uint16_t port) -> void;
-    auto startBroadcast(uint8_t model, std::string host, uint16_t port) -> void;
+    auto startBroadcast(uint8_t model, std::string mac, std::string host, uint16_t port) -> void;
     auto setBroadcastAddress(std::string host) -> void;
     auto setMode(broadcast_lib::EMode mode) -> void;
     auto stop() -> void;

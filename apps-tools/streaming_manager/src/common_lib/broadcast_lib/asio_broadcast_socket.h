@@ -18,8 +18,8 @@ class CAsioBroadcastSocket {
 
     using Ptr = std::shared_ptr<CAsioBroadcastSocket>;
 
-    static auto create(uint8_t model, std::string host, uint16_t port) -> Ptr;
-    CAsioBroadcastSocket(uint8_t model, std::string host, uint16_t port);
+    static auto create(uint8_t model, std::string mac, std::string host, uint16_t port) -> Ptr;
+    CAsioBroadcastSocket(uint8_t model, std::string mac, std::string host, uint16_t port);
     ~CAsioBroadcastSocket();
 
     auto initServer(broadcast_lib::EMode mode, int sleep_time_ms = 1000) -> void;
@@ -41,10 +41,7 @@ class CAsioBroadcastSocket {
     auto handlerSend2(const std::error_code& _error, size_t _bytesTransferred, uint8_t* buffer) -> void;
     auto handlerReceiveFromServer(const std::error_code& ErrorCode, size_t bytes_transferred) -> void;
 
-    broadcast_lib::EMode m_mode;
     int m_sleep_time_ms;
-    std::string m_host;
-    uint16_t m_port;
 
     uint8_t* m_SocketReadBuffer;
 

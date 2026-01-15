@@ -10,6 +10,7 @@
 class ClientNetConfigManager : public CStreamSettings {
    public:
     struct BroadCastClients {
+        std::string mac;
         std::string host;
         broadcast_lib::EMode mode;
         uint8_t model;

@@ -12,10 +12,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unordered_set>
 
 #include <sys/stat.h>
 #ifndef _WIN32
 #include <arpa/inet.h>
+#include <ifaddrs.h>
 #include <netinet/in.h>
 #include <sys/resource.h>
 #include <sys/time.h>
@@ -145,24 +147,47 @@ int main(int argc, char* argv[]) {
 #endif
 
     try {
+
+        std::string ip_cur = "127.0.0.1";
 #ifdef RP_PLATFORM
-        auto hosts = exec("ip addr show eth0 2> /dev/null");
-        auto whosts = exec("ip addr show wlan0 2> /dev/null");
-        std::regex pattern("[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}");
-        auto v_hosts = ClientOpt::split(hosts, '\n');
-        auto v_whosts = ClientOpt::split(whosts, '\n');
-        v_hosts.insert(std::end(v_hosts), std::begin(v_whosts), std::end(v_whosts));
-        std::string brchost;
-        for (auto h : v_hosts) {
-            std::smatch match;
-            if (std::regex_search(h, match, pattern)) {
-                if (match.size() > 0) {
-                    if (brchost != "")
-                        brchost += ";";
-                    brchost += match[match.size() - 1];
+
+        auto get_ipv4_addresses_filtered = [](const std::unordered_set<std::string>& target_interfaces) -> std::vector<std::pair<std::string, std::string>> {
+            std::vector<std::pair<std::string, std::string>> result;
+            struct ifaddrs *ifaddr, *ifa;
+
+            if (getifaddrs(&ifaddr) == -1) {
+                perror("getifaddrs");
+                return result;
+            }
+
+            for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+                if (ifa->ifa_addr == NULL)
+                    continue;
+
+                std::string interface_name(ifa->ifa_name);
+
+                if (target_interfaces.find(interface_name) == target_interfaces.end()) {
+                    continue;
+                }
+
+                if (ifa->ifa_addr->sa_family == AF_INET) {
+                    struct sockaddr_in* addr = (struct sockaddr_in*)ifa->ifa_addr;
+                    char ip[INET_ADDRSTRLEN];
+                    inet_ntop(AF_INET, &addr->sin_addr, ip, sizeof(ip));
+
+                    result.emplace_back(interface_name, std::string(ip));
                 }
             }
+
+            freeifaddrs(ifaddr);
+            return result;
+        };
+
+        auto result = get_ipv4_addresses_filtered({"end0", "wlan0"});
+        if (result.size() > 0) {
+            ip_cur = result[0].second;
         }
+
         auto uioList = uio_lib::GetUioList();
         for (auto& uio : uioList) {
             if (uio.nodeName == "rp_oscilloscope@40000000") {
@@ -173,8 +198,6 @@ int main(int argc, char* argv[]) {
                 break;
             }
         }
-#else
-        auto brchost = "127.0.0.1";
 #endif
         auto mode = isMaster != uio_lib::BoardMode::SLAVE ? broadcast_lib::EMode::AB_SERVER_MASTER : broadcast_lib::EMode::AB_SERVER_SLAVE;
         auto model = ClientOpt::getBroadcastModel();
@@ -184,7 +207,7 @@ int main(int argc, char* argv[]) {
         uio_lib::CMemoryManager::instance()->reallocateBlocks();
         setServer(con_server);
         setDACServer(con_server);
-        con_server->startBroadcast(model, brchost, NET_BROADCAST_PORT);
+        con_server->startBroadcast(model, ClientOpt::getMACAddress(), ip_cur, NET_BROADCAST_PORT);
         con_server->getNewSettingsNofiy.connect([verbMode]() {
             std::lock_guard lock(g_print_mtx);
             if (verbMode) {

@@ -197,6 +197,14 @@ auto getModel() -> uint8_t {
     return (uint8_t)c;
 }
 
+auto getMACAddress() -> std::string {
+    char* address = nullptr;
+    if (rp_HPGetModelETH_MAC_Address(&address) != RP_HP_OK) {
+        FATAL("Can't get MAC address")
+    }
+    return std::string(address);
+}
+
 //Application description
 const char* rp_app_desc(void) {
     return (const char*)"Red Pitaya Stream server application.\n";
@@ -263,7 +271,7 @@ auto rp_app_init(void) -> int {
             });
 
             g_serverNetConfig->getNewSettingsNofiy.connect([]() { WARNING("Info: Get new settigns from client\n"); });
-            g_serverNetConfig->startBroadcast(getModel(), ss_ip_addr.Value(), NET_BROADCAST_PORT);
+            g_serverNetConfig->startBroadcast(getModel(), getMACAddress(), ss_ip_addr.Value(), NET_BROADCAST_PORT);
         } catch (std::exception& e) {
             WARNING("Init ServerNetConfigManager() %s\n", e.what());
         }

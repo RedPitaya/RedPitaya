@@ -89,6 +89,18 @@ auto ClientOpt::getADCChannels() -> uint8_t {
     return c;
 }
 
+auto ClientOpt::getMACAddress() -> std::string {
+#ifdef RP_PLATFORM
+    char* address = nullptr;
+    if (rp_HPGetModelETH_MAC_Address(&address) != RP_HP_OK) {
+        FATAL("Can't get MAC address")
+    }
+    return std::string(address);
+#else
+    return "NONE";
+#endif
+}
+
 auto ClientOpt::getADCBits() -> uint8_t {
     uint8_t c = 0;
 #ifdef RP_PLATFORM
