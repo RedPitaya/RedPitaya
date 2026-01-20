@@ -49,7 +49,7 @@ class ADCCallback {
 class DACCallback {
    public:
     virtual ~DACCallback() {}
-    virtual void sendedPack(DACStreamClient*, uint32_t ch1_size, uint32_t ch2_size) {}
+    virtual void sentPack(DACStreamClient*, uint32_t ch1_size, uint32_t ch2_size) {}
     virtual void connected(DACStreamClient*, std::string) {}
     virtual void disconnected(DACStreamClient*, std::string) {}
     virtual void error(DACStreamClient*, std::string, int) {}

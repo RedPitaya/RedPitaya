@@ -8,7 +8,7 @@ import struct
 class Callback(streaming.DACCallback):
     counter = 0
 
-    def sendedPack(self,client, ch1_size, ch2_size):
+    def sentPack(self,client, ch1_size, ch2_size):
         #print("Data sent CH1",ch1_size,"CH2",ch2_size)
         self.counter = self.counter + 1
 

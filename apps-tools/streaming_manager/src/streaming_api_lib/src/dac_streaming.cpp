@@ -200,7 +200,7 @@ auto DACStreamClient::Impl::runClient(DACStreamClient* client, std::string host,
                 auto ch1 = pack->getBuffer(DataLib::EDataBuffersPackChannel::CH1);
                 auto ch2 = pack->getBuffer(DataLib::EDataBuffersPackChannel::CH2);
                 if (m_callback)
-                    m_callback->sendedPack(client, ch1 ? ch1->getDataLenght() : 0, ch2 ? ch2->getDataLenght() : 0);
+                    m_callback->sentPack(client, ch1 ? ch1->getDataLenght() : 0, ch2 ? ch2->getDataLenght() : 0);
                 m_dac_manger->unlockBuffer();
             }
 

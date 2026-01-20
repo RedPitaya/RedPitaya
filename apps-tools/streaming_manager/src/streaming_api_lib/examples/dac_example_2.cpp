@@ -32,7 +32,7 @@ class DACCallbackHandler : public DACCallback {
    public:
     int counter = 0;
 
-    void sendedPack(DACStreamClient* client, uint32_t ch1_size, uint32_t ch2_size) override { counter++; }
+    void sentPack(DACStreamClient* client, uint32_t ch1_size, uint32_t ch2_size) override { counter++; }
 
     void connected(DACStreamClient* client, std::string host) override { std::cout << "DAC client connected to " << host << std::endl; }
 
