@@ -75,6 +75,7 @@
                         $('#wlan0_mode_label').text("None");
                         $("#wlan0_ssid_label").text("None");
                         $('#wlan0_address_label').text("None");
+                        $('#wlan0_mask_label').text("None");
                         if ($('#wlan0_mode').val() == "#wlan0_client_mode") {
                             $('#wlan0_ap_mode').hide();
                             $('#wlan0_client_mode').show();
@@ -201,6 +202,8 @@
         return {ip: ip, mask: mask};
     };
 
+
+
     WIZARD.ParseAddress = function(text) {
         // inet ip/mask
         var infoRegexp = /inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/\d+/g;
@@ -211,9 +214,19 @@
         if (infoMatch !== null) {
             var info = WIZARD.GetFirstAddress(infoMatch);
             ip = info.ip;
-            mask = info.mask;
-        }
 
+            if (info.mask) {
+                var cidr = parseInt(info.mask, 10);
+                if (cidr >= 0 && cidr <= 32) {
+                    var maskValue = 0xffffffff << (32 - cidr);
+                    var octet1 = (maskValue >> 24) & 0xff;
+                    var octet2 = (maskValue >> 16) & 0xff;
+                    var octet3 = (maskValue >> 8) & 0xff;
+                    var octet4 = maskValue & 0xff;
+                    mask = octet1 + "." + octet2 + "." + octet3 + "." + octet4;
+                }
+            }
+        }
         return {ip: ip, mask: mask};
     };
 
@@ -225,9 +238,11 @@
         }).success(function(msg) {
             var info = WIZARD.ParseAddress(msg);
             if (info.ip != null) {
-                $('#wlan0_address_label').text("" + info.ip + " / " + info.mask);
+                $('#wlan0_address_label').text("" + info.ip);
+                $('#wlan0_mask_label').text("" + info.mask);
             }else{
                 $('#wlan0_address_label').text("None");
+                $('#wlan0_mask_label').text("None");
             }
 
         }).done(function(msg) {});
@@ -260,7 +275,8 @@
                 gateway = "None";
             }
 
-            $('#eth0_address_label').text((info.ip !== null && info.mask !== null) ? "" + info.ip + " / " + info.mask : "None");
+            $('#eth0_address_label').text((info.ip !== null) ? "" + info.ip : "None");
+            $('#eth0_mask_label').text((info.mask !== null) ? "" + info.mask : "None");
             $('#eth0_gateway_label').text(gateway);
 
         }).done(function(msg) {});
@@ -275,6 +291,37 @@
         return (false);
     }
 
+    WIZARD.ValidateNetmask = function(netmask) {
+        if (netmask == '')
+            return false;
+        if (!/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(netmask)) {
+            return false;
+        }
+        var parts = netmask.split('.');
+        var octets = parts.map(function(x) { return parseInt(x, 10); });
+
+        var validOctetValues = [0, 128, 192, 224, 240, 248, 252, 254, 255];
+
+        for (var i = 0; i < 4; i++) {
+            if (validOctetValues.indexOf(octets[i]) === -1) {
+                return false;
+            }
+        }
+        var binaryString = '';
+        for (var i = 0; i < 4; i++) {
+            binaryString += octets[i].toString(2).padStart(8, '0');
+        }
+        var foundZero = false;
+        for (var i = 0; i < binaryString.length; i++) {
+            if (binaryString[i] === '0') {
+                foundZero = true;
+            } else if (binaryString[i] === '1' && foundZero) {
+                return false;
+            }
+        }
+        return true;
+    };
+
     WIZARD.ValidateIPaddressPort = function(ipaddress) {
         if (ipaddress == '')
             return false;
@@ -285,11 +332,13 @@
     }
 
     WIZARD.ManualSetEth0 = function() {
-        var IPaddr = $('#ip_address_and_mask_input').val();
+        var IPaddr = $('#ip_address_input').val();
+        var addrMask = $('#ip_mask_input').val();
         var Gateway = $("#gateway_input").val();
         var DNS = $("#dns_address_input").val();
 
-        var DHCP_ADDRES = $("#ip_address_and_mask_input_dhcp").val();
+        var DHCP_ADDRES = $("#ip_address_input_dhcp").val();
+        var DHCP_MASK = $("#ip_mask_input_dhcp").val();
         var DHCP_DNS = $("#dns_address_input_dhcp").val();
 
         var dhcp_flag = ($('#eth0_mode').val() === "#eth0_dhcp_mode") ? true : false;
@@ -300,6 +349,8 @@
 
         if (IPaddr !== "")
             params.push('address=' + IPaddr);
+        if (addrMask !== "")
+            params.push('netmask=' + addrMask);
         if (Gateway !== "")
             params.push('gateway=' + Gateway);
         if (DNS !== "")
@@ -307,14 +358,21 @@
         if (DHCP_DNS !== "")
             params.push('dns=' + DHCP_DNS);
         if (DHCP_ADDRES !== "")
-            params.push('address=' + DHCP_ADDRES);
+            params.push('dhcp_address=' + DHCP_ADDRES);
+        if (DHCP_MASK !== "")
+            params.push('dhcp_mask=' + DHCP_MASK);
 
         var addr = ''
         if (static_flag) {
             addr = '/set_static_eth0';
             var error = false
-            if (WIZARD.ValidateIPaddressPort(IPaddr) == false) {
-                $('#ip_address_and_mask_input').fI();
+            if (WIZARD.ValidateIPaddress(IPaddr) == false) {
+                $('#ip_address_input').fI();
+                error = true
+            }
+
+            if (WIZARD.ValidateNetmask(addrMask) == false) {
+                $('#ip_mask_input').fI();
                 error = true
             }
 
@@ -337,8 +395,13 @@
         if (dhcp_server_flag) {
             addr = '/set_dhcp_server_eth0';
             var error = false
-            if (WIZARD.ValidateIPaddressPort(DHCP_ADDRES) == false) {
-                $('#ip_address_and_mask_input_dhcp').fI();
+            if (WIZARD.ValidateIPaddress(DHCP_ADDRES) == false) {
+                $('#ip_address_input_dhcp').fI();
+                error = true
+            }
+
+            if (WIZARD.ValidateNetmask(DHCP_MASK) == false) {
+                $('#ip_mask_input_dhcp').fI();
                 error = true
             }
 
@@ -348,10 +411,7 @@
             }
             if (error) return
 
-            if (DHCP_ADDRES.includes("/")){
-                var x = DHCP_ADDRES.split("/")
-                params.push('gateway=' + x[0]);
-            }
+            params.push('gateway=' + DHCP_ADDRES);
         }
 
         if (params.length !== 0) {
@@ -592,6 +652,7 @@ $(document).ready(function() {
     $('#ap_mode_stop').click(function() {
         WIZARD.dropAP();
         $('#wlan0_address_label').text('');
+        $('#wlan0_mask_label').text('');
     });
 
 
