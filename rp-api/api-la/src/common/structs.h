@@ -78,29 +78,10 @@ typedef struct {
 #define STATUS_BUSSY 2
 #define STATUS_ERROR 3
 
-#define SET_TX_SGMNT_CNT 14
-#define SET_TX_SGMNT_SIZE 13
+// Parameter index for ioctl
 #define SET_RX_SGMNT_CNT 16
 #define SET_RX_SGMNT_SIZE 15
-
-/*
- * SGMNT_CNT*SGMNT_SIZE should never be larger than second reg argument
- * in DT
- * dma_region: buffer@2000000 {
- *  	reg = <0x2000000 0x2000000>;
- * };
- * and SGMNT_SIZE should not be larger then 0x400000
- * */
-
-#define SGMNT_CNT 8
-#define SGMNT_SIZE 4 * 1024 * 1024
-#define RX_SGMNT_CNT SGMNT_CNT
-#define RX_SGMNT_SIZE SGMNT_SIZE
-#define TX_SGMNT_CNT 0
-#define TX_SGMNT_SIZE SGMNT_SIZE
-
-#define RP_SGMNT_CNT 8  // 240/RP_SGMNT_CNT must be int
-#define RP_SGMNT_SIZE (256 * 1024)
+// #define SET_DELAY_INT 17
 
 #define RP_TRG_LOA_PAT_MASK (1 << 1)  ///< logic analyzer pattern trigger
 #define RP_TRG_LOA_SWE_MASK (1 << 0)  ///< logic analyzer software trigger

@@ -22,13 +22,13 @@
 #include "rp.h"
 #include "rp_la_acq.h"
 
+#define SEG_SIZE (1024 * 1024 * 4)
+
 #define CHECK_REGSET                               \
     {                                              \
         if (handle->regset == NULL)                \
             FATAL("Registers are not initialized") \
     }
-
-#define LA_ACQ_BUF_SIZE 0x4000  // TODO: just for test..
 
 int rp_LaAcqOpen(const char* dev, rp_handle_uio_t* handle) {
     int status;
@@ -52,7 +52,19 @@ int rp_LaAcqOpen(const char* dev, rp_handle_uio_t* handle) {
         return status;
     }
 
-    status = rp_dmaOpen("/dev/axi:rprx@2", handle);
+    uint32_t start = 0, size = 0;
+    status = rp_dmaReservedMemory(&start, &size);
+    if (status != RP_OK) {
+        ERROR_LOG("Error getting reserved memory size.")
+        return -1;
+    }
+
+    if (SEG_SIZE > size) {
+        ERROR_LOG("The reserved memory size (0x%X) is less than the segment size (0x%X).", size, SEG_SIZE)
+        return -1;
+    }
+    // TODO Due to a problem in the xilinx_dma driver, we cannot set more than 1 segment.
+    status = rp_dmaOpen("/dev/axi:rprx@2", handle, SEG_SIZE, 1);
     if (status != RP_OK) {
         ERROR_LOG("Error open device /dev/axi:rprx@2")
         return status;
@@ -93,7 +105,7 @@ int rp_LaAcqDefaultSettings(rp_handle_uio_t* handle) {
 
     rp_la_cfg_regset_t cfg;
     cfg.pre = 0;
-    cfg.pst = LA_ACQ_BUF_SIZE;
+    cfg.pst = 0;
     rp_LaAcqSetCntConfig(handle, cfg);
 
     rp_la_trg_regset_t trg;
@@ -207,8 +219,7 @@ int rp_LaAcqSetCntConfig(rp_handle_uio_t* handle, rp_la_cfg_regset_t a_reg) {
     CHECK_REGSET
 
     rp_la_cfg_regset_t* regset = (rp_la_cfg_regset_t*)&(((rp_la_acq_regset_t*)handle->regset)->cfg);
-    if (!(inrangeUint32(a_reg.pre, RP_LA_ACQ_CFG_TRIG_MIN, RP_LA_ACQ_CFG_TRIG_MAX) &&
-          inrangeUint32(a_reg.pst, RP_LA_ACQ_CFG_TRIG_MIN, RP_LA_ACQ_CFG_TRIG_MAX))) {
+    if (!(inrangeUint32(a_reg.pre, RP_LA_ACQ_CFG_TRIG_MIN, RP_LA_ACQ_CFG_TRIG_MAX) && inrangeUint32(a_reg.pst, RP_LA_ACQ_CFG_TRIG_MIN, RP_LA_ACQ_CFG_TRIG_MAX))) {
         return RP_EOOR;
     }
     iowrite32(a_reg.pre, &regset->pre);
