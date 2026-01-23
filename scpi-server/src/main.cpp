@@ -50,12 +50,27 @@
 #define CONFIG_FILE_ARDUINO "/root/.scpi_arduino"
 #define CONFIG_FILE_ARDUINO_TCP "/root/.scpi_arduino_tcp"
 
+#define XSTR(s) STR(s)
+#define STR(s) #s
+
+#ifndef BUILD_DATE
+#define BUILD_DATE_XSTR "2025-01-01"
+#else
+#define BUILD_DATE_XSTR XSTR(BUILD_DATE)
+#endif
+
+#ifndef VERSION
+#define BUILD_COMMIT_XSTR "DEBUG"
+#else
+#define BUILD_COMMIT_XSTR XSTR(VERSION) "-" XSTR(REVISION)
+#endif
+
 enum START_MODE { TCP, UART, ARDUINO, ARDUINO_TCP };
 
 constexpr char id0[] = "REDPITAYA";
-constexpr char id1[] = "INSTR2025";
-constexpr char id2[] = "";
-constexpr char id3[] = "01-21";
+constexpr char id1[] = "INSTR";
+constexpr char id2[] = BUILD_DATE_XSTR;
+constexpr char id3[] = BUILD_COMMIT_XSTR;
 
 constexpr char device[] = "/dev/ttyPS1";
 

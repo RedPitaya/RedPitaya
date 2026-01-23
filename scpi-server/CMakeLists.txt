@@ -25,6 +25,8 @@ if(NOT DEFINED BUILD_NUMBER)
   set(BUILD_NUMBER devbuild)
 endif()
 
+string(TIMESTAMP BUILD_DATE "%Y-%m-%d")
+
 message(STATUS "Install path ${INSTALL_DIR}")
 message(STATUS "VERSION=${VERSION}")
 message(STATUS "REVISION=${REVISION}")
@@ -58,7 +60,7 @@ file(GLOB SOURCES_PARSER "scpi-parser/libscpi/src/*.c")
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
 add_compile_options($<$<CONFIG:Debug>:-DTRACE_ENABLE>)
-add_compile_options(-Wall -Wno-pointer-arith -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+add_compile_options(-Wall -Wno-pointer-arith -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} -DBUILD_DATE=${BUILD_DATE} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${SOURCES_PARSER})
 
