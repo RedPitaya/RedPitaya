@@ -129,7 +129,9 @@ int osc_printRegset() {
         printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d trigger delay", baseCh).c_str(), baseOffset + offsetof(osc_control_t, trigger_delay), reg->trigger_delay);
         printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d decimation", baseCh).c_str(), baseOffset + offsetof(osc_control_t, data_dec), reg->data_dec);
         printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d current write pointer", baseCh).c_str(), baseOffset + offsetof(osc_control_t, wr_ptr_cur), reg->wr_ptr_cur);
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d trigger write pointer", baseCh).c_str(), baseOffset + offsetof(osc_control_t, wr_ptr_trigger),
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n",
+                 strWithCh("Channel %d trigger write pointer", baseCh).c_str(),
+                 baseOffset + offsetof(osc_control_t, wr_ptr_trigger),
                  reg->wr_ptr_trigger);
         printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d hysteresis", baseCh).c_str(), baseOffset + offsetof(osc_control_t, cha_hystersis), reg->cha_hystersis);
         printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d hysteresis", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, chb_hystersis), reg->chb_hystersis);
@@ -144,7 +146,9 @@ int osc_printRegset() {
             }
         }
 
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d Pre Trigger counter", baseCh).c_str(), baseOffset + offsetof(osc_control_t, pre_trigger_counter),
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n",
+                 strWithCh("Channel %d Pre Trigger counter", baseCh).c_str(),
+                 baseOffset + offsetof(osc_control_t, pre_trigger_counter),
                  reg->pre_trigger_counter);
 
         printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AA filter", baseCh).c_str(), baseOffset + offsetof(osc_control_t, cha_filt_aa), reg->cha_filt_aa);
@@ -157,37 +161,53 @@ int osc_printRegset() {
         printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d KK filter", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, chb_filt_kk), reg->chb_filt_kk);
         printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d PP filter", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, chb_filt_pp), reg->chb_filt_pp);
 
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI lower address", baseCh).c_str(), baseOffset + offsetof(osc_control_t, cha_axi_addr_low),
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n",
+                 strWithCh("Channel %d AXI lower address", baseCh).c_str(),
+                 baseOffset + offsetof(osc_control_t, cha_axi_addr_low),
                  reg->cha_axi_addr_low);
 
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI upper address", baseCh).c_str(), baseOffset + offsetof(osc_control_t, cha_axi_addr_high),
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n",
+                 strWithCh("Channel %d AXI upper address", baseCh).c_str(),
+                 baseOffset + offsetof(osc_control_t, cha_axi_addr_high),
                  reg->cha_axi_addr_high);
 
         printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI trigger delay", baseCh).c_str(), baseOffset + offsetof(osc_control_t, cha_axi_delay), reg->cha_axi_delay);
 
         printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI enable", baseCh).c_str(), baseOffset + offsetof(osc_control_t, cha_axi_enable), reg->cha_axi_enable);
 
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI WP trigger", baseCh).c_str(), baseOffset + offsetof(osc_control_t, cha_axi_wr_ptr_trigger),
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n",
+                 strWithCh("Channel %d AXI WP trigger", baseCh).c_str(),
+                 baseOffset + offsetof(osc_control_t, cha_axi_wr_ptr_trigger),
                  reg->cha_axi_wr_ptr_trigger);
 
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI WP current", baseCh).c_str(), baseOffset + offsetof(osc_control_t, cha_axi_wr_ptr_cur),
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n",
+                 strWithCh("Channel %d AXI WP current", baseCh).c_str(),
+                 baseOffset + offsetof(osc_control_t, cha_axi_wr_ptr_cur),
                  reg->cha_axi_wr_ptr_cur);
 
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI lower address", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, chb_axi_addr_low),
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n",
+                 strWithCh("Channel %d AXI lower address", baseCh + 1).c_str(),
+                 baseOffset + offsetof(osc_control_t, chb_axi_addr_low),
                  reg->chb_axi_addr_low);
 
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI upper address", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, chb_axi_addr_high),
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n",
+                 strWithCh("Channel %d AXI upper address", baseCh + 1).c_str(),
+                 baseOffset + offsetof(osc_control_t, chb_axi_addr_high),
                  reg->chb_axi_addr_high);
 
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI trigger delay", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, chb_axi_delay),
-                 reg->chb_axi_delay);
+        printReg(
+            "%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI trigger delay", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, chb_axi_delay), reg->chb_axi_delay);
 
         printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI enable", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, chb_axi_enable), reg->chb_axi_enable);
 
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI WP trigger", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, chb_axi_wr_ptr_trigger),
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n",
+                 strWithCh("Channel %d AXI WP trigger", baseCh + 1).c_str(),
+                 baseOffset + offsetof(osc_control_t, chb_axi_wr_ptr_trigger),
                  reg->chb_axi_wr_ptr_trigger);
 
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d AXI WP current", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, chb_axi_wr_ptr_cur),
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n",
+                 strWithCh("Channel %d AXI WP current", baseCh + 1).c_str(),
+                 baseOffset + offsetof(osc_control_t, chb_axi_wr_ptr_cur),
                  reg->chb_axi_wr_ptr_cur);
 
         printReg("%-25s\t0x%X = 0x%08X (%d)\n", "AXI state", baseOffset + offsetof(osc_control_t, axi_state), reg->axi_state);
@@ -215,27 +235,41 @@ int osc_printRegset() {
         printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Filter bypass", baseOffset + offsetof(osc_control_t, filter_bypass), reg->filter_bypass);
         rec_filter.reg.print();
 
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d trigger delay", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, trigger_delay_ch2),
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n",
+                 strWithCh("Channel %d trigger delay", baseCh + 1).c_str(),
+                 baseOffset + offsetof(osc_control_t, trigger_delay_ch2),
                  reg->trigger_delay_ch2);
         printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d decimation", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, data_dec_ch2), reg->data_dec_ch2);
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d current write pointer", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, wr_ptr_cur_ch2),
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n",
+                 strWithCh("Channel %d current write pointer", baseCh + 1).c_str(),
+                 baseOffset + offsetof(osc_control_t, wr_ptr_cur_ch2),
                  reg->wr_ptr_cur_ch2);
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d trigger write pointer", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, wr_ptr_trigger_ch2),
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n",
+                 strWithCh("Channel %d trigger write pointer", baseCh + 1).c_str(),
+                 baseOffset + offsetof(osc_control_t, wr_ptr_trigger_ch2),
                  reg->wr_ptr_trigger_ch2);
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d Pre Trigger counter", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, pre_trigger_counter_ch2),
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n",
+                 strWithCh("Channel %d Pre Trigger counter", baseCh + 1).c_str(),
+                 baseOffset + offsetof(osc_control_t, pre_trigger_counter_ch2),
                  reg->pre_trigger_counter_ch2);
 
         if (is_calib_fpga) {
-            printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d Calibration offset", baseCh).c_str(), baseOffset + offsetof(osc_control_t, calib_offset_ch1),
+            printReg("%-25s\t0x%X = 0x%08X (%d)\n",
+                     strWithCh("Channel %d Calibration offset", baseCh).c_str(),
+                     baseOffset + offsetof(osc_control_t, calib_offset_ch1),
                      reg->calib_offset_ch1);
 
-            printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d Calibration gain", baseCh).c_str(), baseOffset + offsetof(osc_control_t, calib_gain_ch1),
-                     reg->calib_gain_ch1);
+            printReg(
+                "%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d Calibration gain", baseCh).c_str(), baseOffset + offsetof(osc_control_t, calib_gain_ch1), reg->calib_gain_ch1);
 
-            printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d Calibration offset", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, calib_offset_ch2),
+            printReg("%-25s\t0x%X = 0x%08X (%d)\n",
+                     strWithCh("Channel %d Calibration offset", baseCh + 1).c_str(),
+                     baseOffset + offsetof(osc_control_t, calib_offset_ch2),
                      reg->calib_offset_ch2);
 
-            printReg("%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d Calibration gain", baseCh + 1).c_str(), baseOffset + offsetof(osc_control_t, calib_gain_ch2),
+            printReg("%-25s\t0x%X = 0x%08X (%d)\n",
+                     strWithCh("Channel %d Calibration gain", baseCh + 1).c_str(),
+                     baseOffset + offsetof(osc_control_t, calib_gain_ch2),
                      reg->calib_gain_ch2);
         }
     };
@@ -889,7 +923,7 @@ int osc_SetCalibOffsetInFPGA(rp_channel_t channel, uint8_t bits, int32_t offset)
         return RP_EOOR;
     }
 
-    int16_t offsetCalc = offset * -1;  //-(pow(2, 16 - bits));
+    int16_t offsetCalc = offset;  //-(pow(2, 16 - bits));
 
     switch (channel) {
         case RP_CH_1:
