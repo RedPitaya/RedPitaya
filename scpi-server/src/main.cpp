@@ -566,6 +566,16 @@ auto startArduinoApi() -> int {
     return (EXIT_SUCCESS);
 }
 
+void showHelp() {
+    printf("Usage: scpi-server [OPTION]\n");
+    printf("Options:\n");
+    printf("  -u        Set mode to UART\n");
+    printf("  -a        Set mode to ARDUINO\n");
+    printf("  -at       Set mode to ARDUINO_TCP\n");
+    printf("  -d        Enable debug mode\n");
+    printf("  -h        Show this help message\n");
+}
+
 /**
  * Main daemon entrance point. Opens a socket and listens for any incoming connection.
  * When client connects, if forks the conversation into a new socket and the daemon (parent process)
@@ -577,7 +587,7 @@ auto startArduinoApi() -> int {
 int main(int argc, char* argv[]) {
 
     START_MODE mode = TCP;
-
+    bool enableDebug = false;
     if (argc > 1) {
         std::string param = argv[1];
         if (param == "-u") {
@@ -586,9 +596,15 @@ int main(int argc, char* argv[]) {
         if (param == "-a") {
             mode = ARDUINO;
         }
-
         if (param == "-at") {
             mode = ARDUINO_TCP;
+        }
+        if (param == "-d") {
+            enableDebug = true;
+        }
+        if (param == "-h") {
+            showHelp();
+            return 0;
         }
     }
 
@@ -622,7 +638,8 @@ int main(int argc, char* argv[]) {
 
     // Handle close child events
     handleCloseChildEvents();
-    // rp_EnableDebugReg();
+    if (enableDebug)
+        rp_EnableDebugReg();
     int result = rp_Init();
     if (result != RP_OK) {
         rp_Log(nullptr, LOG_ERR, result, "Failed to initialize RP APP library: %s", rp_GetError(result));

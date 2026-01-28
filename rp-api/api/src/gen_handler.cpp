@@ -80,6 +80,8 @@ typedef struct {
     uint64_t axi_mem_reserved_index = 0;      // Reserved memory index in AXI space
     uint32_t axi_reserved_samples_count = 0;  // Number of reserved samples in AXI memory
 
+    uint32_t waveform_sample_size = DAC_BUFFER_SIZE;
+
 } channel_config_t;
 
 /**
@@ -318,7 +320,7 @@ int gen_setFrequency(rp_channel_t channel, float frequency) {
     gen_setRiseFallMin(channel, 1000000.0 / frequency * RISE_FALL_MIN_RATIO);
     gen_setRiseFallMax(channel, 1000000.0 / frequency * RISE_FALL_MAX_RATIO);
 
-    generate_setFrequency(channel, frequency, base_freq);
+    generate_setFrequency(channel, frequency, base_freq, g_channels[channel].waveform_sample_size);
     return synthesize_signal(channel);
 }
 
@@ -341,22 +343,15 @@ int gen_setFrequencyDirect(rp_channel_t channel, float frequency) {
     gen_setRiseFallMin(channel, 1000000.0 / frequency * RISE_FALL_MIN_RATIO);
     gen_setRiseFallMax(channel, 1000000.0 / frequency * RISE_FALL_MAX_RATIO);
 
-    return generate_setFrequency(channel, frequency, base_freq);
+    return generate_setFrequency(channel, frequency, base_freq, g_channels[channel].waveform_sample_size);
 }
 
 int gen_getFrequency(rp_channel_t channel, float* frequency) {
 
     CHECK_CHANNEL
 
-    // uint32_t base_freq = 0;
-    // if (rp_HPGetBaseFastDACSpeedHz(&base_freq) != RP_HP_OK){
-    //     ERROR_LOG("Can't get fast ADC base rate");
-    //     return RP_NOTS;
-    // }
-
     *frequency = g_channels[channel].frequency;
     return RP_OK;
-    // return generate_getFrequency(channel, frequency,base_freq);
 }
 
 int gen_setSweepStartFrequency(rp_channel_t channel, float frequency) {
@@ -894,6 +889,12 @@ int synthesize_signal(rp_channel_t channel) {
 
     float data[DAC_BUFFER_SIZE];
 
+    uint32_t base_freq = 0;
+    if (rp_HPGetBaseFastDACSpeedHz(&base_freq) != RP_HP_OK) {
+        ERROR_LOG("Can't get fast ADC base rate");
+        return RP_NOTS;
+    }
+
     rp_waveform_t waveform = g_channels[channel].waveform;
     float dutyCycle = g_channels[channel].dutyCycle;
     float frequency = g_channels[channel].frequency;
@@ -949,6 +950,12 @@ int synthesize_signal(rp_channel_t channel) {
     }
     if (waveform != RP_WAVEFORM_ARBITRARY)
         size = buf_size;
+    if (g_channels[channel].waveform_sample_size != size) {
+        g_channels[channel].waveform_sample_size = size;
+        TRACE_SHORT("Set new waveworm size %d", g_channels[channel].waveform_sample_size)
+        generate_setFrequency(channel, frequency, base_freq, g_channels[channel].waveform_sample_size);
+        gen_TriggerOnly(channel);
+    }
     return generate_writeData(channel, data, phase, size);
 }
 

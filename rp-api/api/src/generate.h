@@ -225,8 +225,8 @@ int generate_setOutputDisable(rp_channel_t channel, bool disable);
 int generate_getOutputEnabled(rp_channel_t channel, bool* disabled);
 int generate_setOutputEnableSync(bool enable);
 
-int generate_setFrequency(rp_channel_t channel, float frequency, float baseFreq);
-int generate_getFrequency(rp_channel_t channel, float* frequency, float baseFreq);
+int generate_setFrequency(rp_channel_t channel, float frequency, float baseFreq, uint32_t buffer_size);
+int generate_getFrequency(rp_channel_t channel, float* frequency, float baseFreq, uint32_t buffer_size);
 int generate_setWrapCounter(rp_channel_t channel, uint32_t size);
 int generate_setTriggerSource(rp_channel_t channel, unsigned short value);
 int generate_getTriggerSource(rp_channel_t channel, uint32_t* value);

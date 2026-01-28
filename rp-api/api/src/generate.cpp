@@ -160,8 +160,8 @@ int generate_getOutputEnabled(rp_channel_t channel, bool* enabled) {
     return RP_OK;
 }
 
-int generate_setFrequency(rp_channel_t channel, float frequency, float baseFreq) {
-    double valuef = 65536.0 * (double)frequency / (double)baseFreq * (double)DAC_BUFFER_SIZE;
+int generate_setFrequency(rp_channel_t channel, float frequency, float baseFreq, uint32_t buffer_size) {
+    double valuef = 65536.0 * (double)frequency / (double)baseFreq * (double)buffer_size;
     uint32_t value = floor(valuef);
 
     if (channel == RP_CH_1) {
@@ -189,7 +189,7 @@ int generate_setFrequency(rp_channel_t channel, float frequency, float baseFreq)
     return RP_OK;
 }
 
-int generate_getFrequency(rp_channel_t channel, float* frequency, float baseFreq) {
+int generate_getFrequency(rp_channel_t channel, float* frequency, float baseFreq, uint32_t buffer_size) {
     uint32_t value = 0;
     if (channel == RP_CH_1) {
         value = generate->counterStep_ch1;
@@ -199,7 +199,7 @@ int generate_getFrequency(rp_channel_t channel, float* frequency, float baseFreq
         value = generate->counterStep_ch2;
     }
 
-    *frequency = (float)round((value * baseFreq) / (65536 * DAC_BUFFER_SIZE));
+    *frequency = (float)round((value * baseFreq) / (65536 * buffer_size));
     return RP_OK;
 }
 

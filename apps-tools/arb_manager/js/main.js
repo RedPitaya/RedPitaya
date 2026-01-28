@@ -212,14 +212,16 @@
                 var name = cols.length  > 1 ? cols[1].toString() : "";
                 var is_valid = cols.length  > 2 ? parseInt(cols[2]) : 0;
                 var color = cols.length  > 3 ? parseInt(cols[3]) : 0;
-                var size = cols.length  > 4 ? parseInt(cols[4]) : 0;
-                var values = cols.length  > 5 ? cols[5].toString() : "";
+                var count = cols.length  > 4 ? parseInt(cols[4]) : 0;
+                var size = cols.length  > 5 ? parseInt(cols[5]) : 0;
+                var values = cols.length  > 6 ? cols[6].toString() : "";
 
                 if (SM.files[fname] == undefined){
                     SM.files[fname] = {}
                 }
                 SM.files[fname]["name"] = name;
                 SM.files[fname]["size"] = size;
+                SM.files[fname]["count"] = count;
                 SM.files[fname]["color"] = SM.uintToColor(color);
                 SM.files[fname]["is_valid"] = is_valid;
                 var plot = document.createElement('plot');
@@ -305,6 +307,13 @@
             var can = document.createElement('canvas');
             value["plot"].append(can)
             can.className = "graph_grid";
+
+            var textField = document.createElement('span');
+            textField.innerText = 'S: ' + value.count;
+            textField.style.left = '15px';
+            textField.style.bottom = '10px';
+            textField.style.position = 'absolute';
+            value["plot"].append(textField);
 
             document.getElementById('files_table').appendChild(new_row);
             SM.initPlot(value["plot"],value["values"],value['color'])

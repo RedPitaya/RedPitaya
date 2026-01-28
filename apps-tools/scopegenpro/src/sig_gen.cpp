@@ -10,7 +10,7 @@ void synthesis_arb(CFloatBinarySignal* signal, const float* data, uint32_t _size
     auto sigSize = (*signal).GetSize();
     if (sigSize == 0)
         return;
-    float rate = (float)_size / (float)DAC_BUFFER_SIZE;
+    float rate = 1;  //(float)_size / (float)DAC_BUFFER_SIZE;
     int period = (int)sigSize * 1000 / (freq * tscale * 10) * rate;
     if (period == 0)
         period = 1;

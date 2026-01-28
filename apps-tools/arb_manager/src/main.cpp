@@ -147,7 +147,7 @@ void sendFilesInfo() {
             continue;
 
         decimateSignal(data, dataSize, dataOut, &dataSizeOut);
-        std::string sig = std::to_string(dataSizeOut) + "\t";
+        std::string sig = std::to_string(dataSize) + "\t" + std::to_string(dataSizeOut) + "\t";
         for (uint32_t j = 0; j < dataSizeOut; j++) {
             if (j != 0) {
                 sig += ";";
