@@ -276,4 +276,24 @@ int cmn_GetReservedMemory(uint32_t* _startAddress, uint32_t* _size) {
     return RP_OK;
 }
 
+int cmn_CalculateBitShiftFor16BitMode() {
+    uint8_t bits = 0;
+    if (rp_HPGetFastADCBits(&bits) != RP_HP_OK) {
+        ERROR_LOG("I can't get the Fast ADC bit depth.")
+        return 0;
+    }
+    bool is16Bit = false;
+
+    if (rp_HPGetIsFastADC16BitMode(&is16Bit) != RP_HP_OK) {
+        ERROR_LOG("I can't get the Fast ADC bit depth.")
+        return 0;
+    }
+
+    if (is16Bit) {
+        return 16 - bits;
+    }
+
+    return 0;
+}
+
 #pragma GCC diagnostic pop

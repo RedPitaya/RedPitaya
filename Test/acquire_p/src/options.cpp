@@ -29,6 +29,7 @@ static constexpr char g_format_common_settings[] =
     "  --hex           -x    Print value in hex.\n"
     "  --volt          -o    Print value in volt.\n"
     "  --calib         -c    Disable calibration parameters\n"
+    "  --16bit               Enables 16Bit mode\n"
     "  --hk            -k    Reset houskeeping (Reset state for GPIO). Default: disabled\n"
     "  --debug         -g    Debug registers. Default: disabled\n"
     "  --offset              Offset relative to the trigger pointer [-16384 .. 16384]\n"
@@ -81,7 +82,8 @@ static constexpr char optstring_settings[] = "esbvxockgh";
 static struct std::vector<option> long_options_settings = {
     /* These options set a flag. */
     {"equalization", no_argument, 0, 'e'}, {"shaping", no_argument, 0, 's'}, {"bypass", no_argument, 0, 'b'}, {"version", no_argument, 0, 'v'}, {"help", no_argument, 0, 'h'},
-        {"hex", no_argument, 0, 'x'}, {"volt", no_argument, 0, 'o'}, {"calib", no_argument, 0, 'c'}, {"hk", no_argument, 0, 'k'}, {"debug", no_argument, 0, 'g'}, {
+        {"hex", no_argument, 0, 'x'}, {"volt", no_argument, 0, 'o'}, {"calib", no_argument, 0, 'c'}, {"hk", no_argument, 0, 'k'}, {"debug", no_argument, 0, 'g'},
+        {"16bit", no_argument, 0, 0}, {
         "offset", required_argument, 0, 0
     }
 };
@@ -369,6 +371,16 @@ auto parse(int argc, char* argv[]) -> Options {
                         return opt;
                     }
                     opt.trigger_level_ext = trig_level;
+                    break;
+                }
+
+                if (strcmp(opt.options[option_index].name, "16bit") == 0) {
+                    if (!rp_HPGetIsFastADC16BitModeOrDefault()) {
+                        opt.error = true;
+                        fprintf(stderr, "[ERROR] 16bit mode not supported\n");
+                    } else {
+                        opt.enable16BitMode = true;
+                    }
                     break;
                 }
 

@@ -25,6 +25,8 @@ int acq_SetSplitTriggerMode(bool enable);
 int acq_GetSplitTriggerMode(bool* state);
 int acq_SetArmKeep(rp_channel_t channel, bool enable);
 int acq_GetArmKeep(rp_channel_t channel, bool* state);
+int acq_Set16BitMode(bool enable);
+int acq_Get16BitMode(bool* state);
 int acq_GetBufferFillState(rp_channel_t channel, bool* state);
 int acq_SetGain(rp_channel_t channel, rp_pinState_t state);
 int acq_GetGain(rp_channel_t channel, rp_pinState_t* state);

@@ -91,6 +91,22 @@ int rp_AcqSetArmKeepCh(rp_channel_t channel, bool enable);
 int rp_AcqGetArmKeepCh(rp_channel_t channel, bool* state);
 
 /**
+ * Enables a mode where all captured data is saved in 16-bit format. This increases the bit depth during decimation..
+ * @param enable True for enabling and false disabling
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqSet16BitMode(bool enable);
+
+/**
+ * Gets the mode status when all captured data is saved in 16-bit format..
+ * @param state Returns status
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGet16BitMode(bool* state);
+
+/**
  * Indicates whether the ADC buffer was full of data. The length of the buffer is determined by the delay. By default, the delay is half the buffer.
  * @param state Returns status
  * @return If the function is successful, the return value is RP_OK.

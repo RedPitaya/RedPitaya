@@ -69,7 +69,8 @@ profiles_t stem_122_16SDR_v1_1 = {
     .is_E3_mmc_qspi = false,
     .E3_high_speed_gpio_rate = 0,
     .is_E3_present = false,
-    .is_calib_in_fpga = false
+    .is_calib_in_fpga = false,
+    .is_fast_adc_16b_mode = false
 };
 
 profiles_t* getProfile_STEM_122_16SDR_v1_1(){

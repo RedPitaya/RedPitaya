@@ -119,6 +119,8 @@ int main(int argc, char* argv[]) {
         rp_AcqResetFpga();
     }
 
+    rp_AcqSet16BitMode(option.enable16BitMode);
+
     if (rp_CalibInit() != RP_HW_CALIB_OK) {
         fprintf(stderr, "Error init calibration\n");
         return -1;
@@ -249,8 +251,8 @@ int main(int argc, char* argv[]) {
                 rp_AcqGetDataV(ch, pos, &acq_u_size, buffers[i].data());
             }
         }
-        if (option.avg){
-            float avg[4] = {0,0,0,0};
+        if (option.avg) {
+            float avg[4] = {0, 0, 0, 0};
             for (uint32_t i = 0; i < option.dataSize; i++) {
                 for (auto j = start_ch; j <= end_ch; j++) {
                     avg[j] += buffers[j][i];
@@ -265,7 +267,7 @@ int main(int argc, char* argv[]) {
                 printSeparator = true;
             }
             fprintf(stdout, "\n");
-        }else{
+        } else {
             for (uint32_t i = 0; i < option.dataSize; i++) {
                 bool printSeparator = false;
                 for (auto j = start_ch; j <= end_ch; j++) {
@@ -295,8 +297,8 @@ int main(int argc, char* argv[]) {
         }
 
         const char* format_str = (option.showInHex == false) ? "%7d" : "0x%08X";
-        if (option.avg){
-            int64_t avg[4] = {0,0,0,0};
+        if (option.avg) {
+            int64_t avg[4] = {0, 0, 0, 0};
             for (uint32_t i = 0; i < option.dataSize; i++) {
                 for (auto j = start_ch; j <= end_ch; j++) {
                     avg[j] += buffers[j][i];
@@ -311,7 +313,7 @@ int main(int argc, char* argv[]) {
                 printSeparator = true;
             }
             fprintf(stdout, "\n");
-        }else{
+        } else {
             for (uint32_t i = 0; i < option.dataSize; i++) {
                 bool printSeparator = false;
                 for (auto j = start_ch; j <= end_ch; j++) {

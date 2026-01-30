@@ -172,6 +172,8 @@ const char* table_keys_help[] = {"all",
                                  "QSPI is present in E3",
                                  "is_fpga_calib",
                                  "Fast ADC Calibration on FPGA",
+                                 "is_fast_adc_16b_mode",
+                                 "Fast ADC 16-bit data mode on FPGA",
                                  NULL};
 
 #define ADC_BASE_RATE_PATH hp_cmn_GetHomeDirectory() + "/.config/redpitaya/adc_base_rate_"
@@ -685,6 +687,7 @@ int hp_cmn_Print(profiles_t* p) {
     fprintf(stdout, "E3 QSPI for eMMC support: %d\n", p->is_E3_high_speed_gpio);
 
     fprintf(stdout, "Support for calibration on FPGA: %d\n", p->is_calib_in_fpga);
+    fprintf(stdout, "Fast ADC 16-bit data mode support (v0.94): %d\n", p->is_fast_adc_16b_mode);
 
     fprintf(stdout, "***********************************************************************\n");
     return RP_HP_OK;
@@ -1123,6 +1126,10 @@ std::string getValueForKey(rp_HPeModels_t model, std::string key) {
 
     if (key == "is_fpga_calib") {
         return std::to_string(p->is_calib_in_fpga);
+    }
+
+    if (key == "is_fast_adc_16b_mode") {
+        return std::to_string(p->is_fast_adc_16b_mode);
     }
 
     return "";

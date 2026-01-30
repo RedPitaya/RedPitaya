@@ -45,6 +45,8 @@ scpi_result_t RP_AcqAveraging(scpi_t* context);
 scpi_result_t RP_AcqAveragingQ(scpi_t* context);
 scpi_result_t RP_AcqAveragingCh(scpi_t* context);
 scpi_result_t RP_AcqAveragingChQ(scpi_t* context);
+scpi_result_t RP_Acq16BitMode(scpi_t* context);
+scpi_result_t RP_Acq16BitModeQ(scpi_t* context);
 scpi_result_t RP_AcqBypassFilterCh(scpi_t* context);
 scpi_result_t RP_AcqBypassFilterChQ(scpi_t* context);
 scpi_result_t RP_AcqTriggerSrc(scpi_t* context);

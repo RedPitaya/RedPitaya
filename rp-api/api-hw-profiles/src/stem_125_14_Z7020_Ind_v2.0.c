@@ -69,7 +69,8 @@ profiles_t stem_125_14_Z7020_Ind_v2_0 = {
     .is_E3_mmc_qspi = true,
     .E3_high_speed_gpio_rate = 1000000000,
     .is_E3_present = true,
-    .is_calib_in_fpga = true
+    .is_calib_in_fpga = true,
+    .is_fast_adc_16b_mode = true
 };
 
 profiles_t* getProfile_STEM_125_14_Z7020_Ind_v2_0(){

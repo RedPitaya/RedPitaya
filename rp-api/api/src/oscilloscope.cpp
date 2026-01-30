@@ -577,6 +577,43 @@ int osc_GetArmKeep(rp_channel_t channel, bool* state) {
     return RP_EOOR;
 }
 
+int osc_Set16BitMode(rp_channel_t channel, bool enable) {
+    config_u_t config;
+    switch (channel) {
+        case RP_CH_1:
+        case RP_CH_2:
+        case RP_CH_3:
+        case RP_CH_4:
+            config.reg_full = osc_reg->config;
+            config.reg.config_ch[channel].enable_16b_mode = enable ? 0x1 : 0;
+            osc_reg->config = config.reg_full;
+            cmn_Debug("[Write] osc_reg->config <- 0x%X", config.reg_full);
+            return RP_OK;
+        default:
+            ERROR_LOG("Wrong channel %d", channel)
+            break;
+    }
+    return RP_EOOR;
+}
+
+int osc_Get16BitMode(rp_channel_t channel, bool* state) {
+    config_u_t config;
+    switch (channel) {
+        case RP_CH_1:
+        case RP_CH_2:
+        case RP_CH_3:
+        case RP_CH_4:
+            config.reg_full = osc_reg->config;
+            *state = config.reg.config_ch[channel].enable_16b_mode;
+            cmn_Debug("[Read] osc_reg->config -> 0x%X", config.reg_full);
+            return RP_OK;
+        default:
+            ERROR_LOG("Wrong channel %d", channel)
+            break;
+    }
+    return RP_EOOR;
+}
+
 int osc_axi_GetBufferFillStateChA(bool* state) {
     return cmn_AreBitsSet(osc_reg->axi_state, AXI_CHA_FILL_STATE, AXI_CHA_FILL_STATE, state);
 }
@@ -735,7 +772,7 @@ int osc_GetTriggerDelay(rp_channel_t channel, uint32_t* decimated_data_num) {
 
 int osc_SetThresholdChA(uint32_t threshold) {
     uint32_t currentValue = 0;
-    cmn_Debug("cmn_SetValue(&osc_reg->cha_thr) mask 0x3FFF <- 0x%X", threshold);
+    cmn_Debug("cmn_SetValue(&osc_reg->cha_thr) mask 0xFFFF <- 0x%X", threshold);
     return cmn_SetValue(&osc_reg->cha_thr, threshold, THRESHOLD_MASK, &currentValue);
 }
 
@@ -745,7 +782,7 @@ int osc_GetThresholdChA(uint32_t* threshold) {
 
 int osc_SetThresholdChB(uint32_t threshold) {
     uint32_t currentValue = 0;
-    cmn_Debug("cmn_SetValue(&osc_reg->chb_thr) mask 0x3FFF <- 0x%X", threshold);
+    cmn_Debug("cmn_SetValue(&osc_reg->chb_thr) mask 0xFFFF <- 0x%X", threshold);
     return cmn_SetValue(&osc_reg->chb_thr, threshold, THRESHOLD_MASK, &currentValue);
 }
 
@@ -757,7 +794,7 @@ int osc_SetThresholdChC(uint32_t threshold) {
     if (!osc_reg_4ch)
         return RP_NOTS;
     uint32_t currentValue = 0;
-    cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_thr) mask 0x3FFF <- 0x%X", threshold);
+    cmn_Debug("cmn_SetValue(&osc_reg_4ch->cha_thr) mask 0xFFFF <- 0x%X", threshold);
     return cmn_SetValue(&osc_reg_4ch->cha_thr, threshold, THRESHOLD_MASK, &currentValue);
 }
 
@@ -771,7 +808,7 @@ int osc_SetThresholdChD(uint32_t threshold) {
     if (!osc_reg_4ch)
         return RP_NOTS;
     uint32_t currentValue = 0;
-    cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_thr) mask 0x3FFF <- 0x%X", threshold);
+    cmn_Debug("cmn_SetValue(&osc_reg_4ch->chb_thr) mask 0xFFFF <- 0x%X", threshold);
     return cmn_SetValue(&osc_reg_4ch->chb_thr, threshold, THRESHOLD_MASK, &currentValue);
 }
 
@@ -916,14 +953,9 @@ int osc_GetEqFilterBypass(rp_channel_t channel, bool* enable) {
     return RP_EOOR;
 }
 
-int osc_SetCalibOffsetInFPGA(rp_channel_t channel, uint8_t bits, int32_t offset) {
+int osc_SetCalibOffsetInFPGA(rp_channel_t channel, int32_t offset) {
 
-    if (bits > 16) {
-        FATAL("The number of bits for ADC is greater than the allowed limit.")
-        return RP_EOOR;
-    }
-
-    int16_t offsetCalc = offset;  //-(pow(2, 16 - bits));
+    int16_t offsetCalc = offset;
 
     switch (channel) {
         case RP_CH_1:
@@ -1007,25 +1039,23 @@ int osc_SetCalibGainInFPGA(rp_channel_t channel, double gain) {
     return RP_EOOR;
 }
 
-int osc_GetCalibOffsetInFPGA(rp_channel_t channel, uint8_t bits, int32_t* offset) {
+int osc_GetCalibOffsetInFPGA(rp_channel_t channel, int32_t* offset) {
     uint32_t offset_fpga = 0;
-    // int32_t devider = -(pow(2, 16 - bits));
-    int32_t devider = -1;
     switch (channel) {
         case RP_CH_1: {
             auto ret = cmn_GetValue(&osc_reg->calib_offset_ch1, &offset_fpga, CALIB_MASK);
-            *offset = (int16_t)offset_fpga / devider;
+            *offset = (int16_t)offset_fpga;
             return ret;
         }
         case RP_CH_2: {
             auto ret = cmn_GetValue(&osc_reg->calib_offset_ch2, &offset_fpga, CALIB_MASK);
-            *offset = (int16_t)offset_fpga / devider;
+            *offset = (int16_t)offset_fpga;
             return ret;
         }
         case RP_CH_3: {
             if (osc_reg_4ch) {
                 auto ret = cmn_GetValue(&osc_reg_4ch->calib_offset_ch1, &offset_fpga, CALIB_MASK);
-                *offset = (int16_t)offset_fpga / devider;
+                *offset = (int16_t)offset_fpga;
                 return ret;
             } else {
                 ERROR_LOG("Registers for channels 3 and 4 are not initialized")
@@ -1036,7 +1066,7 @@ int osc_GetCalibOffsetInFPGA(rp_channel_t channel, uint8_t bits, int32_t* offset
         case RP_CH_4: {
             if (osc_reg_4ch) {
                 auto ret = cmn_GetValue(&osc_reg_4ch->calib_offset_ch2, &offset_fpga, CALIB_MASK);
-                *offset = (int16_t)offset_fpga / devider;
+                *offset = (int16_t)offset_fpga;
                 return ret;
             } else {
                 ERROR_LOG("Registers for channels 3 and 4 are not initialized")

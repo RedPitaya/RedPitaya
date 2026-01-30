@@ -1130,6 +1130,18 @@ int rp_AcqGetArmKeep(bool* state) {
     return acq_GetArmKeep(RP_CH_1, state);
 }
 
+int rp_AcqSet16BitMode(bool enable) {
+    if (!rp_HPGetIsFastADC16BitModeOrDefault())
+        return RP_NOTS;
+    return acq_Set16BitMode(enable);
+}
+
+int rp_AcqGet16BitMode(bool* state) {
+    if (!rp_HPGetIsFastADC16BitModeOrDefault())
+        return RP_NOTS;
+    return acq_Get16BitMode(state);
+}
+
 int rp_AcqSetArmKeepCh(rp_channel_t channel, bool enable) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
         return acq_SetArmKeep(channel, enable);
@@ -2182,7 +2194,6 @@ int rp_GetPllControlEnable(bool* enable) {
 }
 
 int rp_SetPllControlEnable(bool enable) {
-
     return house_SetPllControlEnable(enable);
 }
 
@@ -2207,7 +2218,6 @@ int rp_GetEnableDaisyChainTrigSync(bool* status) {
 }
 
 int rp_SetEnableDiasyChainClockSync(bool enable) {
-
     if (!rp_HPGetIsDaisyChainClockAvailableOrDefault())
         return RP_NOTS;
 
@@ -2226,7 +2236,6 @@ int rp_SetEnableDiasyChainClockSync(bool enable) {
 }
 
 int rp_GetEnableDiasyChainClockSync(bool* state) {
-
     if (!rp_HPGetIsDaisyChainClockAvailableOrDefault())
         return RP_NOTS;
 

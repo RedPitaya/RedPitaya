@@ -33,10 +33,11 @@ struct Options {
     bool reset_hk;
     bool enableAXI;
     bool enableDebug = false;
+    bool enable16BitMode = false;
     bool bypassFilter = false;
     int offset = 0;
     bool avg = false;
-    
+
     Options() {
         dataSize = ADC_BUFFER_SIZE;
         decimation = RP_DEC_1;
@@ -62,6 +63,7 @@ struct Options {
         reset_hk = false;
         enableAXI = false;
         bypassFilter = false;
+        enable16BitMode = false;
     };
 };
 

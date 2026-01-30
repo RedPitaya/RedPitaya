@@ -69,7 +69,8 @@ profiles_t stem_125_14_LN_CE1_v1_1 = {
     .is_E3_mmc_qspi = false,
     .E3_high_speed_gpio_rate = 0,
     .is_E3_present = false,
-    .is_calib_in_fpga = true
+    .is_calib_in_fpga = true,
+    .is_fast_adc_16b_mode = true
 };
 
 profiles_t* getProfile_STEM_125_14_LN_CE1_v1_1(){

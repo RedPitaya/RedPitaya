@@ -483,6 +483,38 @@ scpi_result_t RP_AcqAveragingChQ(scpi_t* context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_Acq16BitMode(scpi_t* context) {
+    scpi_bool_t value = FALSE;
+    // read first parameter AVERAGING (OFF,ON)
+    if (!SCPI_ParamBool(context, &value, false)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+    auto result = rp_AcqSet16BitMode(value);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to set 16bit mode: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_Acq16BitModeQ(scpi_t* context) {
+    // get averaging
+    bool value = false;
+    auto result = rp_AcqGet16BitMode(&value);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to get 16bit mode: %s", rp_GetError(result));
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultMnemonic(context, value ? "ON" : "OFF");
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_AcqBypassFilterCh(scpi_t* context) {
     rp_channel_t channel = RP_CH_1;
     if (RP_ParseChArgvADC(context, &channel) != RP_OK) {

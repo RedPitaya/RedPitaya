@@ -911,6 +911,21 @@ bool rp_HPGetIsCalibInFPGAOrDefault(){
     return p->is_calib_in_fpga;
 }
 
+int rp_HPGetIsFastADC16BitMode(bool* value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->is_fast_adc_16b_mode;
+        return RP_HP_OK;
+    }
+    return state;
+}
+
+bool rp_HPGetIsFastADC16BitModeOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->is_fast_adc_16b_mode;
+}
+
 int rp_HPGetFPGAVersion(const char **_no_free_value){
     rp_HPeModels_t model;
     int ret = rp_HPGetModel(&model);

@@ -85,6 +85,8 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
+    rp_AcqSet16BitMode(option.enable16BitMode);
+
     rp_AcqSetSplitTrigger(true);
 
     if (option.dataSize > ADC_BUFFER_SIZE) {

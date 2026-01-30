@@ -33,13 +33,44 @@
 #define MAP_SIZE 4096UL
 #define MAP_MASK (MAP_SIZE - 1)
 
-int parse_from_argv(int a_argc, char** a_argv, unsigned long* a_addr, int* a_type, unsigned long** a_values, ssize_t* a_len);
 uint32_t read_value(uint32_t a_addr);
-void write_values(unsigned long a_addr, int a_type, unsigned long* a_values, ssize_t a_len);
+void read_value(uint32_t a_addr, uint32_t count);
+void write_values(uint32_t a_addr, uint32_t a_values);
 void set_DAC(float* values, int count);
 void showAMS();
 
 void* map_base = (void*)(-1);
+
+struct CommandParams {
+    enum Type { SINGLE, RANGE, WRITE, NONE };
+    Type type = NONE;
+    uint32_t address = 0;
+    uint32_t count_or_value = 0;
+};
+
+CommandParams parse_args(int argc, char** argv) {
+    CommandParams params;
+    if (argc < 2)
+        return params;
+
+    std::string arg1 = argv[1];
+    size_t dash_pos = arg1.find('-');
+
+    if (dash_pos != std::string::npos) {
+        params.type = CommandParams::RANGE;
+        params.address = std::stoul(arg1.substr(0, dash_pos), nullptr, 0);
+        params.count_or_value = std::stoul(arg1.substr(dash_pos + 1), nullptr, 0);
+    } else if (argc == 3) {
+        params.type = CommandParams::WRITE;
+        params.address = std::stoul(arg1, nullptr, 0);
+        params.count_or_value = std::stoul(argv[2], nullptr, 0);
+    } else {
+        params.type = CommandParams::SINGLE;
+        params.address = std::stoul(arg1, nullptr, 0);
+    }
+
+    return params;
+}
 
 int main(int argc, char** argv) {
     int fd = -1;
@@ -50,6 +81,7 @@ int main(int argc, char** argv) {
                 "%s version %s-%s\n"
                 "\nUsage:\n"
                 "\tread addr: address\n"
+                "\tread addr: address-count\n"
                 "\twrite addr: address value\n"
                 "\tread analog mixed signals: -ams\n"
                 "\tset slow DAC: -sdac AO0 AO1 AO2 AO3 [V]\n"
@@ -177,23 +209,20 @@ int main(int argc, char** argv) {
     if ((fd = open("/dev/mem", O_RDWR | O_SYNC)) == -1)
         FATAL("Error open device");
 
-    /* Read from command line */
-    unsigned long addr;
-    unsigned long* val = NULL;
-    int access_type = 'w';
-    ssize_t val_count = 0;
-    parse_from_argv(argc, argv, &addr, &access_type, &val, &val_count);
+    auto info = parse_args(argc, argv);
 
     /* Map one page */
-    map_base = mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, addr & ~MAP_MASK);
+    map_base = mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, info.address & ~MAP_MASK);
     if (map_base == (void*)-1)
         FATAL("Error map memory");
 
-    if (addr != 0) {
-        if (val_count == 0) {
-            read_value(addr);
+    if (info.type != info.NONE) {
+        if (info.type == info.SINGLE) {
+            read_value(info.address);
+        } else if (info.type == info.RANGE) {
+            read_value(info.address, info.count_or_value);
         } else {
-            write_values(addr, access_type, val, val_count);
+            write_values(info.address, info.count_or_value);
         }
     }
     if (map_base != (void*)(-1)) {
@@ -222,41 +251,18 @@ uint32_t read_value(uint32_t a_addr) {
     return read_result;
 }
 
-void write_values(unsigned long a_addr, int a_type, unsigned long* a_values, ssize_t a_len) {
-    void* virt_addr = map_base + (a_addr & MAP_MASK);
-
-    for (ssize_t i = 0; i < a_len; ++i) {
-        switch (a_type) {
-            case 'b':
-                *((unsigned char*)virt_addr) = a_values[i];
-                break;
-            case 'h':
-                *((unsigned short*)virt_addr) = a_values[i];
-                break;
-            case 'w':
-                *((unsigned long*)virt_addr) = a_values[i];
-                break;
-        }
+void read_value(uint32_t a_addr, uint32_t count) {
+    for (uint32_t i = 0; i < count; i++) {
+        auto a = (a_addr + i * 0x4);
+        void* virt_addr = map_base + (a & MAP_MASK);
+        uint32_t read_result = 0;
+        read_result = *((uint32_t*)virt_addr);
+        printf("0x%08x 0x%08x\n", a, read_result);
     }
-
     fflush(stdout);
 }
 
-int parse_from_argv(int a_argc, char** a_argv, unsigned long* a_addr, int* a_type, unsigned long** a_values, ssize_t* a_len) {
-
-    int val_count = 0;
-
-    *a_addr = strtoul(a_argv[1], 0, 0);
-    *a_values = (long unsigned int*)calloc(4 * 1024, sizeof(unsigned long));
-
-    //if (a_argc > 2) {
-    *a_type = 'w';  //tolower(a_argv[2][0]);
-    //}
-
-    for (int i = 2; i < a_argc; ++i, ++val_count) {
-        (*a_values)[val_count] = strtoul(a_argv[i], 0, 0);
-    }
-
-    *a_len = val_count;
-    return 0;
+void write_values(uint32_t a_addr, uint32_t a_values) {
+    void* virt_addr = map_base + (a_addr & MAP_MASK);
+    *((unsigned long*)virt_addr) = a_values;
 }

@@ -43,6 +43,7 @@ struct Options {
     bool disableCalibration;
     bool enableEqualization;
     bool enableShaping;
+    bool enable16BitMode = false;
     bool error;
     bool reset_hk;
     bool enableAXI;
@@ -74,6 +75,7 @@ struct Options {
         reset_hk = false;
         enableAXI = false;
         bypassFilter = false;
+        enable16BitMode = false;
     };
 };
 

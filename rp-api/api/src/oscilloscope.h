@@ -33,7 +33,8 @@ typedef struct {
     uint8_t arm_keep : 1;              // (W) arm_keep
     uint8_t all_data_written : 1;      // (R) All data written to buffer
     uint8_t enable_split_trigger : 1;  // Work only first channel
-    uint8_t : 2;
+    uint8_t enable_16b_mode : 1;       // (R/W) Sets ADC mode to 16 Bit
+    uint8_t : 1;
     void print() volatile {
         printRegBit(" - %-39s = 0x%08X (%d)\n", "start_write", start_write);
         printRegBit(" - %-39s = 0x%08X (%d)\n", "reset_state_machine", reset_state_machine);
@@ -41,6 +42,7 @@ typedef struct {
         printRegBit(" - %-39s = 0x%08X (%d)\n", "arm_keep", arm_keep);
         printRegBit(" - %-39s = 0x%08X (%d)\n", "all_data_written", all_data_written);
         printRegBit(" - %-39s = 0x%08X (%d)\n", "enable_split_trigger", enable_split_trigger);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "enable_16b_mode", enable_16b_mode);
     };
 } config_ch_t;
 
@@ -608,6 +610,8 @@ int osc_WriteDataIntoMemory(rp_channel_t channel, bool enable);
 int osc_ResetWriteStateMachine(rp_channel_t channel);
 int osc_SetArmKeep(rp_channel_t channel, bool enable);
 int osc_GetArmKeep(rp_channel_t channel, bool* state);
+int osc_Set16BitMode(rp_channel_t channel, bool enable);
+int osc_Get16BitMode(rp_channel_t channel, bool* state);
 int osc_GetBufferFillState(rp_channel_t channel, bool* state);
 int osc_GetTriggerState(rp_channel_t channel, bool* received);
 int osc_GetPreTriggerCounter(rp_channel_t channel, uint32_t* value);
@@ -642,9 +646,9 @@ int osc_GetEqFiltersChC(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk,
 int osc_SetEqFiltersChD(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp);
 int osc_GetEqFiltersChD(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
 
-int osc_SetCalibOffsetInFPGA(rp_channel_t channel, uint8_t bits, int32_t offset);
+int osc_SetCalibOffsetInFPGA(rp_channel_t channel, int32_t offset);
 int osc_SetCalibGainInFPGA(rp_channel_t channel, double gain);
-int osc_GetCalibOffsetInFPGA(rp_channel_t channel, uint8_t bits, int32_t* offset);
+int osc_GetCalibOffsetInFPGA(rp_channel_t channel, int32_t* offset);
 int osc_GetCalibGainInFPGA(rp_channel_t channel, double* gain);
 
 int osc_SetExtTriggerDebouncer(uint32_t value);

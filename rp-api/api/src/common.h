@@ -106,6 +106,8 @@ int cmn_AreBitsSet(volatile uint32_t field, uint32_t bits, uint32_t mask, bool* 
 
 int cmn_GetReservedMemory(uint32_t* _startAddress, uint32_t* _size);
 
+int cmn_CalculateBitShiftFor16BitMode();
+
 // int intcmp(const void *a, const void *b);
 // int int16cmp(const void *aa, const void *bb);
 // int floatCmp(const void *a, const void *b);

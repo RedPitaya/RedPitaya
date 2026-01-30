@@ -87,6 +87,8 @@ typedef struct {
 
     bool is_calib_in_fpga;
 
+    bool is_fast_adc_16b_mode;
+
 } profiles_t;
 
 int hp_cmn_Init();
