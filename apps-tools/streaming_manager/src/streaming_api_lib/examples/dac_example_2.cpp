@@ -88,7 +88,7 @@ std::vector<int8_t> generate8bitSine(double freq, int sampleRate, double duratio
 int main() {
     DACStreamClient client;
     DACCallbackHandler* callback = new DACCallbackHandler();
-    client.setCallbackFunction(callback);
+    client.setCallback(callback);
     client.setVerbose(true);
 
     if (!client.connect()) {

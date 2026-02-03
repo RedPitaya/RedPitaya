@@ -79,7 +79,7 @@ obj = streaming.DACStreamClient()
 
 # Creating a callback handler. And also remove the owner, since the client itself will delete the handler.
 callback = Callback()
-obj.setCallbackFunction(callback.__disown__())
+obj.setCallback(callback.__disown__())
 
 # Disable client logs. They are disabled by default.
 obj.setVerbose(True)

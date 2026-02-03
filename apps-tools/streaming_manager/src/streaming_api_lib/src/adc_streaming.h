@@ -32,8 +32,8 @@ class ADCStreamClient {
 
     auto setVerbose(bool enable) -> void;
 
-    auto setReciveDataFunction(ADCCallback* callback) -> void;
-    auto removeReciveDataFunction() -> void;
+    auto setReceiveDataCallback(ADCCallback* callback) -> void;
+    auto removeReceiveDataCallback() -> void;
 
    private:
     struct Impl;

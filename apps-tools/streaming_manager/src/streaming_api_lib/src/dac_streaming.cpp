@@ -237,7 +237,7 @@ DACStreamClient::DACStreamClient() {
 
 DACStreamClient::~DACStreamClient() {
     stopStreaming();
-    removeCallbackFunction();
+    removeCallback();
     for (int i = 0; i < 2; i++) {
         delete[] m_pimpl->m_memChannels[i];
     }
@@ -299,13 +299,13 @@ auto DACStreamClient::connect(std::string host) -> bool {
     return !timeout && connected == 1;
 }
 
-auto DACStreamClient::setCallbackFunction(DACCallback* callback) -> void {
-    removeCallbackFunction();
+auto DACStreamClient::setCallback(DACCallback* callback) -> void {
+    removeCallback();
     const std::lock_guard lock(m_pimpl->m_smutex);
     m_pimpl->m_callback = callback;
 }
 
-auto DACStreamClient::removeCallbackFunction() -> void {
+auto DACStreamClient::removeCallback() -> void {
     const std::lock_guard lock(m_pimpl->m_smutex);
     delete m_pimpl->m_callback;
     m_pimpl->m_callback = nullptr;
@@ -348,9 +348,9 @@ auto DACStreamClient::startStreaming() -> bool {
 
     uint32_t ac_channels = m_pimpl->getActiveChannels();
     uint32_t blockSize = blockSizes[m_pimpl->m_host];
-    StateRunnedHosts runned_host;
+    StateRunningHosts runned_host;
     if (requestStartDACStreaming(m_pimpl->m_configClient, m_pimpl->m_host, ac_channels, &runned_host, m_pimpl->m_verbose)) {
-        if (runned_host == StateRunnedHosts::TCP && ac_channels > 0)
+        if (runned_host == StateRunningHosts::TCP && ac_channels > 0)
             m_pimpl->m_client = new std::thread(&DACStreamClient::Impl::runClient, m_pimpl, this, m_pimpl->m_host, blockSize, ac_channels);
 
         m_pimpl->m_configClient->errorNofiy.connect([&](ClientNetConfigManager::Errors errors, std::string host, error_code err) {

@@ -21,7 +21,7 @@ class Callback : public ADCCallback {
      * @param client Pointer to the ADCStreamClient instance
      * @param pack Reference to the received data packet
      */
-    void recievePack(ADCStreamClient* client, ADCPack& pack) override {
+    void receivePack(ADCStreamClient* client, ADCPack& pack) override {
         // Update sample counter for this host (sum of channel1 and channel2 samples)
         counter[pack.host] += pack.channel1.samples + pack.channel2.samples;
 
@@ -61,7 +61,7 @@ int main() {
     Callback* callback = new Callback();
 
     // Setup callback handler
-    obj.setReciveDataFunction(callback);
+    obj.setReceiveDataCallback(callback);
     obj.setVerbose(false);
 
     // Attempt connection to all hosts

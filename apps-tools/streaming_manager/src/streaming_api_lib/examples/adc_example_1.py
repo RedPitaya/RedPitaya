@@ -6,7 +6,7 @@ class Callback(streaming.ADCCallback):
     counter = 0
     fpgaLost = 0
 
-    def recievePack(self,client,n):
+    def receivePack(self,client,n):
         self.counter = self.counter + n.channel1.samples + n.channel2.samples
         self.fpgaLost = self.fpgaLost + max([n.channel1.fpgaLost, n.channel2.fpgaLost, n.channel3.fpgaLost, n.channel4.fpgaLost])
         # Count the number of samples received and stop streaming
@@ -55,7 +55,7 @@ obj = streaming.ADCStreamClient()
 
 # Creating a callback handler. And also remove the owner, since the client itself will delete the handler.
 callback = Callback()
-obj.setReciveDataFunction(callback.__disown__())
+obj.setReceiveDataCallback(callback.__disown__())
 
 # Disable client logs. They are disabled by default.
 obj.setVerbose(False)

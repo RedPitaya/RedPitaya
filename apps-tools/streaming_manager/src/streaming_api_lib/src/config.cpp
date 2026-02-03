@@ -7,22 +7,22 @@
 
 std::mutex g_smutex;
 
-auto sendConfigCommon(ClientNetConfigManager::Ptr cl, std::string key, std::string value, bool verb) -> bool {
+auto sendConfigCommon(ClientNetConfigManager::Ptr cl, std::string key, std::string value, bool verbose) -> bool {
     auto connected_hosts = cl->getHosts();
     if (connected_hosts.size() != 1) {
         const char* msg = connected_hosts.size() == 0 ? "The server is not connected" : "More than 1 server connected";
         aprintf(stderr, "%s %s\n", getTS(": ").c_str(), msg);
         return false;
     } else {
-        return sendConfigCommon(cl, connected_hosts.front(), key, value, verb);
+        return sendConfigCommon(cl, connected_hosts.front(), key, value, verbose);
     };
 }
 
-auto sendConfigCommon(ClientNetConfigManager::Ptr cl, std::string host, std::string key, std::string value, bool verb) -> bool {
+auto sendConfigCommon(ClientNetConfigManager::Ptr cl, std::string host, std::string key, std::string value, bool verbose) -> bool {
     std::atomic<int> set_counter;
     cl->successSendConfigNofiy.connect([&](std::string host) {
         const std::lock_guard lock(g_smutex);
-        if (verb) {
+        if (verbose) {
             aprintf(stdout, "%s SET: %s [OK]\n", getTS(": ").c_str(), host.c_str());
             aprintf(stdout, "%s Send configuration save command to: %s\n", getTS(": ").c_str(), host.c_str());
         }
@@ -31,21 +31,21 @@ auto sendConfigCommon(ClientNetConfigManager::Ptr cl, std::string host, std::str
 
     cl->failSendConfigNofiy.connect([&](std::string host) {
         const std::lock_guard lock(g_smutex);
-        if (verb)
+        if (verbose)
             aprintf(stdout, "%s SET: %s [FAIL]\n", getTS(": ").c_str(), host.c_str());
         set_counter--;
     });
 
     cl->successSaveConfigNofiy.connect([&](std::string host) {
         const std::lock_guard lock(g_smutex);
-        if (verb)
+        if (verbose)
             aprintf(stdout, "%s SAVE TO FILE: %s [OK]\n", getTS(": ").c_str(), host.c_str());
         set_counter--;
     });
 
     cl->failSaveConfigNofiy.connect([&](std::string host) {
         const std::lock_guard lock(g_smutex);
-        if (verb)
+        if (verbose)
             aprintf(stdout, "%s SAVE TO FILE: %s [FAIL]\n", getTS(": ").c_str(), host.c_str());
         set_counter--;
     });
@@ -58,14 +58,14 @@ auto sendConfigCommon(ClientNetConfigManager::Ptr cl, std::string host, std::str
         }
 
         if (errors == ClientNetConfigManager::Errors::ERROR_SEND_CONFIG) {
-            if (verb)
+            if (verbose)
                 aprintf(stderr, "%s Error send configuration: %s %s\n", getTS(": ").c_str(), host.c_str(), err.message().c_str());
             set_counter--;
         }
     });
 
     set_counter = 1;
-    if (verb)
+    if (verbose)
         aprintf(stdout, "%s Send configuration to: %s\n", getTS(": ").c_str(), host.c_str());
     if (!cl->sendConfigVariable(host, key, value)) {
         set_counter--;
@@ -81,23 +81,23 @@ auto sendConfigCommon(ClientNetConfigManager::Ptr cl, std::string host, std::str
     return !timeout;
 }
 
-auto getConfigCommon(ClientNetConfigManager::Ptr cl, std::string key, bool verb) -> std::string {
+auto getConfigCommon(ClientNetConfigManager::Ptr cl, std::string key, bool verbose) -> std::string {
     auto connected_hosts = cl->getHosts();
     if (connected_hosts.size() != 1) {
         const char* msg = connected_hosts.size() == 0 ? "The server is not connected" : "More than 1 server connected";
         aprintf(stderr, "%s %s\n", getTS(": ").c_str(), msg);
         return "";
     } else {
-        return getConfigCommon(cl, connected_hosts.front(), key, verb);
+        return getConfigCommon(cl, connected_hosts.front(), key, verbose);
     };
 }
 
-auto getConfigCommon(ClientNetConfigManager::Ptr cl, std::string host, std::string key, bool verb) -> std::string {
+auto getConfigCommon(ClientNetConfigManager::Ptr cl, std::string host, std::string key, bool verbose) -> std::string {
     std::string config;
     std::atomic<int> get_counter;
     cl->getNewSettingsItemNofiy.connect([&](std::string host) {
         const std::lock_guard lock(g_smutex);
-        if (verb)
+        if (verbose)
             aprintf(stdout, "%s Get settings from: %s\n", getTS(": ").c_str(), host.c_str());
         CStreamSettings* s = cl->getLocalSettingsOfHost(host);
         config = s->getValue(key);
@@ -112,14 +112,14 @@ auto getConfigCommon(ClientNetConfigManager::Ptr cl, std::string host, std::stri
         }
 
         if (errors == ClientNetConfigManager::Errors::CANNT_SET_DATA_TO_CONFIG) {
-            if (verb)
+            if (verbose)
                 aprintf(stderr, "%s Error get settings from: %s\n", getTS(": ").c_str(), host.c_str());
             get_counter--;
         }
     });
 
     get_counter = 1;
-    if (verb)
+    if (verbose)
         aprintf(stdout, "%s Send configuration request: %s\n", getTS(": ").c_str(), host.c_str());
     if (!cl->requestConfigVariable(host, key)) {
         get_counter--;
@@ -135,18 +135,18 @@ auto getConfigCommon(ClientNetConfigManager::Ptr cl, std::string host, std::stri
     return config;
 }
 
-auto sendFileConfigCommon(ClientNetConfigManager::Ptr cl, std::string config, bool verb) -> bool {
+auto sendFileConfigCommon(ClientNetConfigManager::Ptr cl, std::string config, bool verbose) -> bool {
     auto connected_hosts = cl->getHosts();
     if (connected_hosts.size() != 1) {
         const char* msg = connected_hosts.size() == 0 ? "The server is not connected" : "More than 1 server connected";
         aprintf(stderr, "%s %s\n", getTS(": ").c_str(), msg);
         return false;
     } else {
-        return sendFileConfigCommon(cl, connected_hosts.front(), config, verb);
+        return sendFileConfigCommon(cl, connected_hosts.front(), config, verbose);
     }
 }
 
-auto sendFileConfigCommon(ClientNetConfigManager::Ptr cl, std::string host, std::string config, bool verb) -> bool {
+auto sendFileConfigCommon(ClientNetConfigManager::Ptr cl, std::string host, std::string config, bool verbose) -> bool {
     if (!cl->parseJson(config)) {
         aprintf(stdout, "%s Error applying settings for host: %s\n", getTS(": ").c_str(), host.c_str());
         return false;
@@ -155,7 +155,7 @@ auto sendFileConfigCommon(ClientNetConfigManager::Ptr cl, std::string host, std:
     std::atomic<int> set_counter;
     cl->successSendConfigNofiy.connect([&](std::string host) {
         const std::lock_guard lock(g_smutex);
-        if (verb) {
+        if (verbose) {
             aprintf(stdout, "%s SET: %s [OK]\n", getTS(": ").c_str(), host.c_str());
             aprintf(stdout, "%s Send configuration save command to: %s\n", getTS(": ").c_str(), host.c_str());
         }
@@ -164,21 +164,21 @@ auto sendFileConfigCommon(ClientNetConfigManager::Ptr cl, std::string host, std:
 
     cl->failSendConfigNofiy.connect([&](std::string host) {
         const std::lock_guard lock(g_smutex);
-        if (verb)
+        if (verbose)
             aprintf(stdout, "%s SET: %s [FAIL]\n", getTS(": ").c_str(), host.c_str());
         set_counter--;
     });
 
     cl->successSaveConfigNofiy.connect([&](std::string host) {
         const std::lock_guard lock(g_smutex);
-        if (verb)
+        if (verbose)
             aprintf(stdout, "%s SAVE TO FILE: %s [OK]\n", getTS(": ").c_str(), host.c_str());
         set_counter--;
     });
 
     cl->failSaveConfigNofiy.connect([&](std::string host) {
         const std::lock_guard lock(g_smutex);
-        if (verb)
+        if (verbose)
             aprintf(stdout, "%s SAVE TO FILE: %s [FAIL]\n", getTS(": ").c_str(), host.c_str());
         set_counter--;
     });
@@ -191,14 +191,14 @@ auto sendFileConfigCommon(ClientNetConfigManager::Ptr cl, std::string host, std:
         }
 
         if (errors == ClientNetConfigManager::Errors::ERROR_SEND_CONFIG) {
-            if (verb)
+            if (verbose)
                 aprintf(stderr, "%s Error send configuration: %s %s\n", getTS(": ").c_str(), host.c_str(), err.message().c_str());
             set_counter--;
         }
     });
 
     set_counter = 1;
-    if (verb)
+    if (verbose)
         aprintf(stdout, "%s Send configuration to: %s\n", getTS(": ").c_str(), host.c_str());
     if (!cl->sendConfig(host)) {
         set_counter--;
@@ -214,23 +214,23 @@ auto sendFileConfigCommon(ClientNetConfigManager::Ptr cl, std::string host, std:
     return !timeout;
 }
 
-auto getFileConfigCommon(ClientNetConfigManager::Ptr cl, bool verb) -> std::string {
+auto getFileConfigCommon(ClientNetConfigManager::Ptr cl, bool verbose) -> std::string {
     auto connected_hosts = cl->getHosts();
     if (connected_hosts.size() != 1) {
         const char* msg = connected_hosts.size() == 0 ? "The server is not connected" : "More than 1 server connected";
         aprintf(stderr, "%s %s\n", getTS(": ").c_str(), msg);
         return "";
     } else {
-        return getFileConfigCommon(cl, connected_hosts.front(), verb);
+        return getFileConfigCommon(cl, connected_hosts.front(), verbose);
     }
 }
 
-auto getFileConfigCommon(ClientNetConfigManager::Ptr cl, std::string host, bool verb) -> std::string {
+auto getFileConfigCommon(ClientNetConfigManager::Ptr cl, std::string host, bool verbose) -> std::string {
     std::atomic<int> get_counter;
     std::string config = "";
     cl->getNewSettingsNofiy.connect([&](std::string host) {
         const std::lock_guard lock(g_smutex);
-        if (verb)
+        if (verbose)
             aprintf(stdout, "%s Get settings from: %s\n", getTS(": ").c_str(), host.c_str());
         CStreamSettings* s = cl->getLocalSettingsOfHost(host);
         config = s->toJson();
@@ -244,14 +244,14 @@ auto getFileConfigCommon(ClientNetConfigManager::Ptr cl, std::string host, bool 
             get_counter--;
         }
         if (errors == ClientNetConfigManager::Errors::CANNT_SET_DATA_TO_CONFIG) {
-            if (verb)
+            if (verbose)
                 aprintf(stderr, "%s Error get settings from: %s\n", getTS(": ").c_str(), host.c_str());
             get_counter--;
         }
     });
 
     get_counter = 1;
-    if (verb)
+    if (verbose)
         aprintf(stdout, "%s Send configuration request: %s\n", getTS(": ").c_str(), host.c_str());
     if (!cl->requestConfig(host)) {
         get_counter--;

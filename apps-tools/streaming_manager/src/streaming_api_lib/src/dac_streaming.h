@@ -40,8 +40,8 @@ class DACStreamClient {
 
     auto setVerbose(bool enable) -> void;
 
-    auto setCallbackFunction(DACCallback* callback) -> void;
-    auto removeCallbackFunction() -> void;
+    auto setCallback(DACCallback* callback) -> void;
+    auto removeCallback() -> void;
 
    private:
     auto startStreaming() -> bool;

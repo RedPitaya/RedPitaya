@@ -7,9 +7,9 @@
 
 struct ADCChannel {
     uint32_t samples = 0;
-    uint8_t bitsBySample = 0;
+    uint8_t bitsPerSample = 0;
     uint64_t fpgaLost = 0;
-    bool attenuator_1_20 = 0;
+    bool attenuator_1_20 = false;
     uint32_t baseRate = 0;
     uint8_t adcBaseBits = 0;
     uint64_t packId = 0;
@@ -30,7 +30,7 @@ class DACStreamClient;
 class ADCCallback {
    public:
     virtual ~ADCCallback() {}
-    virtual void recievePack(ADCStreamClient*, ADCPack& pack) {}
+    virtual void receivePack(ADCStreamClient*, ADCPack& pack) {}
     virtual void connected(ADCStreamClient*, std::string) {}
     virtual void disconnected(ADCStreamClient*, std::string) {}
     virtual void error(ADCStreamClient*, std::string, int) {}

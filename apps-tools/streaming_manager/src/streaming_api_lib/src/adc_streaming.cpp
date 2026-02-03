@@ -85,7 +85,7 @@ auto ADCStreamClient::Impl::runClient(ADCStreamClient* client, std::string host,
 
                     auto setChannelData = [](ADCChannel& channel, DataLib::CDataBufferDMA::Ptr buff) {
                         if (buff) {
-                            channel.bitsBySample = buff->getBitBySample();
+                            channel.bitsPerSample = buff->getBitBySample();
                             channel.fpgaLost = buff->getLostSamples(DataLib::FPGA);
                             channel.samples = buff->getSamplesCount();
                             channel.adcBaseBits = buff->getADCBaseBits();
@@ -93,14 +93,14 @@ auto ADCStreamClient::Impl::runClient(ADCStreamClient* client, std::string host,
                             channel.attenuator_1_20 = buff->getADCMode();
                             channel.packId = buff->getADCPackId();
                             channel.raw.reserve(channel.samples);
-                            if (channel.bitsBySample == 8) {
+                            if (channel.bitsPerSample == 8) {
                                 auto data = reinterpret_cast<int8_t*>(buff->getMappedDataMemory());
                                 for (size_t k = 0; k < channel.samples; k++) {
                                     channel.raw.push_back(data[k]);
                                 }
                             }
 
-                            if (channel.bitsBySample == 16) {
+                            if (channel.bitsPerSample == 16) {
                                 auto data = reinterpret_cast<int16_t*>(buff->getMappedDataMemory());
                                 for (size_t k = 0; k < channel.samples; k++) {
                                     channel.raw.push_back(data[k]);
@@ -114,7 +114,7 @@ auto ADCStreamClient::Impl::runClient(ADCStreamClient* client, std::string host,
                     setChannelData(pack_py.channel3, pack->getBuffer(DataLib::EDataBuffersPackChannel::CH3));
                     setChannelData(pack_py.channel4, pack->getBuffer(DataLib::EDataBuffersPackChannel::CH4));
 
-                    m_callback->recievePack(client, pack_py);
+                    m_callback->receivePack(client, pack_py);
                 }
                 obj->unlockBufferRead();
             }
@@ -141,7 +141,7 @@ ADCStreamClient::ADCStreamClient() {
 
 ADCStreamClient::~ADCStreamClient() {
     stopStreaming();
-    removeReciveDataFunction();
+    removeReceiveDataCallback();
     delete m_pimpl;
 }
 
@@ -199,13 +199,13 @@ auto ADCStreamClient::connect(std::vector<std::string> hosts) -> bool {
     return !timeout && connected == hosts.size();
 }
 
-auto ADCStreamClient::setReciveDataFunction(ADCCallback* callback) -> void {
-    removeReciveDataFunction();
+auto ADCStreamClient::setReceiveDataCallback(ADCCallback* callback) -> void {
+    removeReceiveDataCallback();
     const std::lock_guard lock(m_pimpl->m_smutex);
     m_pimpl->m_callback = callback;
 }
 
-auto ADCStreamClient::removeReciveDataFunction() -> void {
+auto ADCStreamClient::removeReceiveDataCallback() -> void {
     const std::lock_guard lock(m_pimpl->m_smutex);
     delete m_pimpl->m_callback;
     m_pimpl->m_callback = nullptr;
@@ -248,15 +248,14 @@ auto ADCStreamClient::startStreaming() -> bool {
         return false;
     }
 
-    std::map<string, StateRunnedHosts> runned_hosts;
+    std::map<string, StateRunningHosts> runned_hosts;
     stopStreaming();
 
     if (requestStartStreaming(m_pimpl->m_configClient, masterHosts, slaveHosts, &runned_hosts, m_pimpl->m_verbose)) {
         m_pimpl->m_runClientCounter = runned_hosts.size();
         for (auto kv : runned_hosts) {
-            if (kv.second == StateRunnedHosts::TCP && activeChannels[kv.first] > 0)
-                m_pimpl->clients.push_back(
-                    new std::thread(&ADCStreamClient::Impl::runClient, m_pimpl, this, kv.first, blockSizes[kv.first], activeChannels[kv.first]));
+            if (kv.second == StateRunningHosts::TCP && activeChannels[kv.first] > 0)
+                m_pimpl->clients.push_back(new std::thread(&ADCStreamClient::Impl::runClient, m_pimpl, this, kv.first, blockSizes[kv.first], activeChannels[kv.first]));
             else {
                 m_pimpl->m_runClientCounter--;
             }

@@ -9,7 +9,7 @@ class Callback : public ADCCallback {
     uint64_t counter = 0;
     uint64_t fpgaLost = 0;
 
-    void recievePack(ADCStreamClient* client, ADCPack& pack) override {
+    void receivePack(ADCStreamClient* client, ADCPack& pack) override {
         counter += pack.channel1.samples + pack.channel2.samples;
         fpgaLost += std::max({pack.channel1.fpgaLost, pack.channel2.fpgaLost, pack.channel3.fpgaLost, pack.channel4.fpgaLost});
 
@@ -49,7 +49,7 @@ int main() {
 
     // Creating a callback handler.And also remove the owner, since the client itself will delete the handler.
     Callback* callback = new Callback();
-    obj.setReciveDataFunction(callback);
+    obj.setReceiveDataCallback(callback);
 
     // Disable client logs
     obj.setVerbose(false);
