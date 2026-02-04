@@ -9,6 +9,8 @@
 
 (function(UPD, $, undefined) {
     UPD.currentStep = 1;
+    UPD.currentStepLocal = 1;
+    UPD.ecosystemUploaded = "";
     UPD.ecosystems = [];
     UPD.ecosystems_sizes = [];
     UPD.chosen_eco = -1;
@@ -20,7 +22,7 @@
     UPD.type = '';
     UPD.timerCheck = undefined;
     UPD.lastRelease = undefined;
-    
+
     UPD.param_callbacks = {};
 
 
@@ -52,6 +54,24 @@
         }
     }
 
+    UPD.startStepLocal = function(step) {
+        UPD.currentStepLocal = step;
+        $('#step_' + UPD.currentStepLocal + '_local').css("color", "#CCC");
+        $('#step_' + UPD.currentStepLocal + '_local').find('.step_icon').find('img').attr('src', 'img/loader.gif');
+        $('#step_' + UPD.currentStepLocal + '_local').find('.step_icon').find('img').show();
+        switch (UPD.currentStepLocal) {
+            case 1:
+                $('#step_' + UPD.currentStepLocal + '_local').find('.step_icon').find('img').hide();
+                break;
+            case 2:
+                UPD.applyChangesLocal();
+                break;
+            case 3:
+                UPD.closeUpdate();
+                break;
+        }
+    }
+
     UPD.restartStep = function() {
         UPD.startStep(UPD.currentStep);
     }
@@ -67,6 +87,26 @@
         $('#step_' + UPD.currentStep).find('.step_icon').find('img').show();
     }
 
+    UPD.nextStepLocal = function() {
+        $('#step_' + UPD.currentStepLocal + '_local').find('.step_icon').find('img').attr('src', 'img/success.png');
+        $('#step_' + UPD.currentStepLocal + '_local').find('.step_icon').find('img').show();
+        UPD.startStepLocal(UPD.currentStepLocal + 1);
+    }
+
+    UPD.setIconLocal = function() {
+        $('#step_' + UPD.currentStepLocal + '_local').find('.step_icon').find('img').attr('src', 'img/success.png');
+        $('#step_' + UPD.currentStepLocal + '_local').find('.step_icon').find('img').show();
+    }
+
+    UPD.resetLocalTable = function() {
+        for(var i = 1 ; i <= 3; i++){
+            $('#step_' + i + '_local').css("color", "#666");
+            $('#step_' + i + '_local').find('.step_icon').find('img').hide();
+            $('#step_' + i + '_local').find('.error_msg').hide();
+            $('#step_' + i + '_local').find('.warn_msg').hide();
+            $('#step_' + i + '_local').find('.reboot_msg').hide();
+        }
+    }
 
     UPD.checkConnection = function() {
         OnlineChecker.checkAsync(function() {
@@ -202,6 +242,7 @@
                 UPD.chosen_eco = UPD.ecosystems.indexOf(val);
                 if (UPD.chosen_eco != -1) {
                     UPD.nextStep();
+                    $('B_UPLOAD_CONT').hide();
                     $('#apply').hide();
                     $('#and_click').hide();
                     $('#ecosystem_ver').attr('disabled', 'disabled');
@@ -219,9 +260,9 @@
                 }
             });
         }
-        
 
-       
+
+
     }
 
 
@@ -253,7 +294,7 @@
                         var js_req = JSON.stringify({ "download": {"type":"string", value: url } });
                         RP_CLIENT.ws.send(js_req);
                     }
-                    
+
                 },
                 function onClose(){
                     console.log("Close");
@@ -278,7 +319,7 @@
                         dwTotal = receive.download_progress_total.value
                         $('#percent').show();
                     }
-                    
+
                     if (dwTotal !== 0){
                         var percent = ((dwCur / dwTotal) * 100).toFixed(2);
                         $('#percent').text(percent + "%");
@@ -417,6 +458,135 @@
 
     }
 
+    UPD.applyChangesLocal = function() {
+        $.ajax({
+            url: '/run_updater',
+            type: 'GET',
+        }).done(function(res) {
+
+            var uzCur = 0;
+            var uzTotal = 0;
+            var iCur = 0;
+            var iTotal = 0;
+
+            $('#percent_install_local').text("0%");
+            $('B_UPLOAD_CONT').hide();
+            setTimeout(function(){
+                RP_CLIENT.connectWebSocket(function onOpen(){
+                        console.log("Open");
+                        if (RP_CLIENT.ws){
+                            var js_req = JSON.stringify({ "install": {"type":"string", value: UPD.ecosystemUploaded} });
+                            RP_CLIENT.ws.send(js_req);
+                        }
+                    },
+                    function onClose(){
+                        console.log("Close");
+                    },
+                    function onError(){
+                        console.log("Error");
+                        $('#step_' + UPD.currentStepLocal + '_local').find('.step_icon').find('img').attr('src', 'img/fail.png');
+                        $('#step_' + UPD.currentStepLocal + '_local').find('.step_icon').find('img').show()
+                        $('#step_' + UPD.currentStepLocal + '_local').find('.error_msg').show();
+                        $('#step_' + UPD.currentStepLocal + '_local').find('.error_msg').text("Error connecting to server")
+                    },
+                    function onMessage(receive){
+                        if (receive.install) {
+
+                            if (receive.install.value == 0){
+                                $('#step_' + UPD.currentStepLocal + '_local').find('.info_msg').show();
+                                $('#step_' + UPD.currentStepLocal + '_local').find('.info_msg').text("Success");
+                                RP_CLIENT.ws.send(JSON.stringify({ "reboot": {"type":"int", value: 0} }));
+                                return;
+                            }
+
+                            if (receive.install.value == 4){
+                                $('#step_' + UPD.currentStepLocal + '_local').find('.step_icon').find('img').attr('src', 'img/fail.png');
+                                $('#step_' + UPD.currentStepLocal + '_local').find('.step_icon').find('img').show()
+                                $('#step_' + UPD.currentStepLocal + '_local').find('.error_msg').show();
+                                $('#step_' + UPD.currentStepLocal + '_local').find('.error_msg').text("Error open file")
+                                return;
+                            }
+
+                            if (receive.install.value == 6){
+                                $('#step_' + UPD.currentStepLocal + '_local').find('.step_icon').find('img').attr('src', 'img/fail.png');
+                                $('#step_' + UPD.currentStepLocal + '_local').find('.step_icon').find('img').show()
+                                $('#step_' + UPD.currentStepLocal + '_local').find('.error_msg').show();
+                                $('#step_' + UPD.currentStepLocal + '_local').find('.error_msg').text("Error calculate md5")
+                                return;
+                            }
+
+                            if (receive.install.value == 7){
+                                $('#step_' + UPD.currentStepLocal + '_local').find('.step_icon').find('img').attr('src', 'img/fail.png');
+                                $('#step_' + UPD.currentStepLocal + '_local').find('.step_icon').find('img').show()
+                                $('#step_' + UPD.currentStepLocal + '_local').find('.error_msg').show();
+                                $('#step_' + UPD.currentStepLocal + '_local').find('.error_msg').text("Error create directory")
+                                return;
+                            }
+
+                            if (receive.install.value == 8){
+                                $('#step_' + UPD.currentStepLocal + '_local').find('.step_icon').find('img').attr('src', 'img/fail.png');
+                                $('#step_' + UPD.currentStepLocal + '_local').find('.step_icon').find('img').show()
+                                $('#step_' + UPD.currentStepLocal + '_local').find('.error_msg').show();
+                                $('#step_' + UPD.currentStepLocal + '_local').find('.error_msg').text("Error unzip file")
+                                return;
+                            }
+
+                            $('#step_' + UPD.currentStepLocal + '_local').find('.step_icon').find('img').attr('src', 'img/fail.png');
+                            $('#step_' + UPD.currentStepLocal + '_local').find('.step_icon').find('img').show()
+                            $('#step_' + UPD.currentStepLocal + '_local').find('.error_msg').show();
+                            $('#step_' + UPD.currentStepLocal + '_local').find('.error_msg').text("Error. Undefined error")
+                        }
+
+                        if (receive.install_done && receive.install_done.value == true){
+                            $('#percent_install_local').hide()
+                            UPD.showRebootLocal()
+                        }
+
+                        if (receive.unzip_progress_current){
+                            uzCur = receive.unzip_progress_current.value
+                            $('#percent_install_local').show();
+                            $('#step_' + UPD.currentStepLocal + '_local').find('.step_icon').find('img').hide()
+                            if (uzTotal !== 0){
+                                var percent = ((uzCur / uzTotal) * 100).toFixed(2);
+                                $('#percent_install_local').text(percent + "%");
+                                $('#step_' + UPD.currentStepLocal + '_local').find('.info_msg').show();
+                                $('#step_' + UPD.currentStepLocal + '_local').find('.info_msg').text("Unzip: " + uzCur + "/" + uzTotal);
+                            }
+                        }
+
+                        if (receive.unzip_progress_total){
+                            uzTotal = receive.unzip_progress_total.value
+                            $('#percent_install_local').show();
+                            $('#step_' + UPD.currentStepLocal + '_local').find('.step_icon').find('img').hide()
+                        }
+
+                        if (receive.install_progress_current){
+                            iCur = receive.install_progress_current.value
+                            $('#percent_install_local').show();
+                            $('#step_' + UPD.currentStepLocal + '_local').find('.step_icon').find('img').hide()
+                            if (iTotal !== 0){
+                                var percent = ((iCur / iTotal) * 100).toFixed(2);
+                                $('#percent_install_local').text(percent + "%");
+                                $('#step_' + UPD.currentStepLocal + '_local').find('.info_msg').show();
+                                $('#step_' + UPD.currentStepLocal + '_local').find('.info_msg').text("Install: " + iCur + "/" + iTotal);
+                            }
+                        }
+
+                        if (receive.install_progress_total){
+                            iTotal = receive.install_progress_total.value
+                            $('#percent_install_local').show();
+                            $('#step_' + UPD.currentStepLocal + '_local').find('.step_icon').find('img').hide()
+                        }
+
+                    }
+                )
+            },3000);
+        }).fail(function(msg) {
+            $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
+            $('#step_' + UPD.currentStep).find('.error_msg').show();
+        });
+    }
+
     UPD.showReboot = function(){
         $('#step_' + UPD.currentStep).find('.reboot_msg').show();
         setTimeout(function() {
@@ -442,6 +612,40 @@
                                 $('#step_' + UPD.currentStep).find('.step_icon').find('img').attr('src', 'img/fail.png');
                                 $('#step_' + UPD.currentStep).find('.error_msg').show();
                                 $('#step_' + UPD.currentStep).find('.warn_msg').hide();
+                                clearInterval(prepare_check);
+                            }
+
+                        }
+                    })
+            }, 2500);
+        }, 15000);
+    }
+
+    UPD.showRebootLocal = function(){
+        $('#step_' + UPD.currentStepLocal + '_local').find('.reboot_msg').show();
+        setTimeout(function() {
+            var prepare_check = setInterval(function() {
+                $.ajax({
+                        url: '/get_info',
+                        type: 'GET',
+                        timeout: 1500
+                    })
+                    .done(function(msg) {
+                        if (msg != undefined && msg['version'] !== undefined) {
+                            var eco = UPD.ecosystemUploaded;
+                            var arr = eco.split('-');
+                            var ver = arr[1] + '-' + arr[2];
+                            if (msg['version'] == ver) {
+                                UPD.nextStepLocal();
+                                $('#step_' + UPD.currentStepLocal + '_local').find('.warn_msg').hide();
+                                $('#step_' + UPD.currentStepLocal + '_local').find('.info_msg').hide();
+                                clearInterval(prepare_check);
+                            } else {
+                                $('#step_' + UPD.currentStepLocal + '_local').find('.info_msg').hide();
+                                $('#step_' + UPD.currentStepLocal + '_local').find('.step_icon').find('img').show()
+                                $('#step_' + UPD.currentStepLocal + '_local').find('.step_icon').find('img').attr('src', 'img/fail.png');
+                                $('#step_' + UPD.currentStepLocal + '_local').find('.error_msg').show();
+                                $('#step_' + UPD.currentStepLocal + '_local').find('.warn_msg').hide();
                                 clearInterval(prepare_check);
                             }
 
@@ -484,7 +688,7 @@
     UPD.param_callbacks["RP_LAST_RELEASE"] = UPD.setLastRelease;
 
     UPD.getChangelog = function(ecosystem) {
-    $.ajax({
+        $.ajax({
             url: '/update_changelog?id=' + ecosystem,
             type: 'GET',
         })
@@ -493,6 +697,23 @@
                 msg = "Changelog is empty";
             $('#changelog_text').html(msg);
         })
+    }
+
+    UPD.promptFile = function(contentType, multiple) {
+        var input = document.createElement("input");
+        input.type = "file";
+        input.accept = '.zip';
+        return new Promise(function(resolve) {
+            document.activeElement.onfocus = function() {
+            document.activeElement.onfocus = null;
+                setTimeout(resolve, 500);
+            };
+            input.onchange = function() {
+                var files = Array.from(input.files);
+                resolve(files[0]);
+            };
+            input.click();
+        });
     }
 
 }(window.UPD = window.UPD || {}, jQuery));
@@ -547,14 +768,72 @@ $(document).ready(function() {
     });
 
     $.ajax({
-            method: "GET",
-            url: '/get_info'
-        })
-        .done(function(result) {
-            stem_ver = result['stem_ver'];
-            UPD.type = "Unify/ecosystems";
-            $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md");
+        method: "GET",
+        url: '/get_info'
+    })
+    .done(function(result) {
+        stem_ver = result['stem_ver'];
+        UPD.type = "Unify/ecosystems";
+        $("#change_log_link").attr("href", "https://github.com/RedPitaya/RedPitaya/blob/master/CHANGELOG.md");
+    });
+
+    $('#B_UPLOAD').click(function() {
+        UPD.promptFile().then(function(file) {
+            if(file){
+                console.log('Complete File read successfully!')
+                $('#main_table_id').hide()
+                $('#upload_table_id').show()
+                $('B_UPLOAD_CONT').hide();
+                UPD.resetLocalTable()
+                UPD.currentStepLocal = 1;
+                UPD.ecosystemUploaded = file.name;
+                UPD.startStepLocal(UPD.currentStepLocal);
+
+                $('#percent_local').show()
+                $('#percent_local').text("0 %");
+
+                $.ajax({
+                    url: '/updater_upload_ecosystem',
+                    type: 'POST',
+                    //Ajax events
+                    //beforeSend: beforeSendHandler,
+                    success: function() {
+                        console.log("Upload done");
+                        $('#percent_local').hide()
+                        $('#step_' + UPD.currentStepLocal + '_local').find('.error_msg').hide();
+                        UPD.nextStepLocal()
+                    },
+                    error: function(e) {
+                        $('#percent_local').hide()
+                        $('#step_' + UPD.currentStepLocal + '_local').find('.step_icon').find('img').attr('src', 'img/fail.png').show();
+                        $('#step_' + UPD.currentStepLocal + '_local').find('.error_msg').show();
+                        console.log(e);
+                    },
+                    data: file,
+                    cache: false,
+                    contentType: 'application/octet-stream',
+                    headers: {
+                        "X-File-Name": encodeURIComponent(file.name)
+                    },
+                    processData: false,
+                    timeout: 300000,
+                    xhr: function() {
+                        var xhr = new XMLHttpRequest();
+                        xhr.upload.addEventListener('progress', function(e) {
+                            if (e.lengthComputable) {
+                                var percent = ((e.loaded / e.total) * 100);
+                                $('#percent_local').text(percent.toFixed(1) + " %");
+                            }
+                        }, false);
+
+                        return xhr;
+                    }
+                });
+            }
+            else
+                console.log("No file selected")
         });
+    });
 
     // $('#ecosystem_type').change(function() {
     //     // Reason: exist one branch with fixed name for download distros with latest OS version

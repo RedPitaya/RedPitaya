@@ -72,6 +72,15 @@
                         </a>
                         <img class="logo" width=110 src="../assets/images/navigation_logo.png">
                     </div>
+                    <div class="collapse navbar-collapse">
+                        <ul class="nav navbar-nav">
+                            <ul class="nav navbar-nav">
+                                <li id="B_UPLOAD_CONT" style="display: block">
+                                    <a id="B_UPLOAD" href="#" style="font-weight: bold;">UPLOAD</a>
+                                </li>
+                            </ul>
+                        </ul>
+                    </div>
                     <div style="font-size: 14pt; color: white; text-align:center; padding-top: 7px;">
                         RedPitaya update manager
                     </div>
@@ -81,7 +90,7 @@
                 <div id="main">
                     <div class="left-scpi">
                         <div class="left-content-scpi" style="font-size: 18pt; color: white;">
-                            <table class="main_table">
+                            <table id="main_table_id" class="main_table">
                                 <tr id="step_1" class="step">
                                     <td class="step_desc">Step 1. Checking download server availability
                                         <p class="error_msg">Your Red Pitaya is currently offline. Please follow <a
@@ -153,6 +162,33 @@
                                 </tr>
                                 <tr id="step_6" class="step">
                                     <td class="step_desc">Step 6. Done</td>
+                                    <td class="step_icon"><img style="display: none" src=""></td>
+                                </tr>
+                            </table>
+                            <table id="upload_table_id" class="main_table" style="display: none;">
+                                <tr id="step_1_local" class="step">
+                                    <td class="step_desc">Step 1. Uploading OS
+                                        <p class="error_msg">There was a problem uploading</p>
+                                    </td>
+                                    <td class="step_icon">
+                                        <p id="percent_local" style="display: none;">0%</p><img style="display: none"
+                                            src="">
+                                    </td>
+                                </tr>
+                                <tr id="step_2_local" class="step">
+                                    <td class="step_desc">Step 2. Install files
+                                        <p class="info_msg"></p>
+                                        <p class="error_msg">Versions mismatch</p>
+                                        <p class="warn_msg">Patience... This may take up to 5 minutes!</p>
+                                        <p class="reboot_msg">Reboot</p>
+                                    </td>
+                                    <td class="step_icon">
+                                        <p id="percent_install_local" style="display: none;">0%</p><img
+                                            style="display: none" src="">
+                                    </td>
+                                </tr>
+                                <tr id="step_3_local" class="step">
+                                    <td class="step_desc">Step 3. Done</td>
                                     <td class="step_icon"><img style="display: none" src=""></td>
                                 </tr>
                             </table>

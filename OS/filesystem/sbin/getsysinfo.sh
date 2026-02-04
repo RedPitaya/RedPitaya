@@ -61,9 +61,6 @@ else
 echo \"boot_512\":\"0\",  >> /tmp/sysinfo.json
 fi
 
-
-echo \"linux\": \"$(cat /root/.version)\",  >> /tmp/sysinfo.json
-
 echo \"fpga\":{  >> /tmp/sysinfo.json
 
 FPGALIST_EX=0
