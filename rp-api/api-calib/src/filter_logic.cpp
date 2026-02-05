@@ -100,8 +100,14 @@ void CFilter_logic::setCalibMode(int _mode) {
 void CFilter_logic::print() {
     sort();
     for (size_t i = 0; i < m_grid.size(); i++) {
-        printf("%d {AA: %6x, BB: %6x, V: %2.6f, Vraw: %2.6f, D: %3.6f, index: %lld}\n", i, m_grid[i].aa, m_grid[i].bb, m_grid[i].value, m_grid[i].value_raw,
-               m_grid[i].deviationFromAVG, m_grid[i].index);
+        printf("%d {AA: %6x, BB: %6x, V: %2.6f, Vraw: %2.6f, D: %3.6f, index: %lld}\n",
+               i,
+               m_grid[i].aa,
+               m_grid[i].bb,
+               m_grid[i].value,
+               m_grid[i].value_raw,
+               m_grid[i].deviationFromAVG,
+               m_grid[i].index);
     }
 }
 
@@ -246,9 +252,12 @@ int CFilter_logic::calibPP(COscilloscope::DataPassAutoFilter item, float _nomina
     if (m_calibAmpl == 0)
         return -2;
     if (m_oldcalibAmpl != -1) {
+
         if (m_oldPP != item.f_pp)
             return 0;
+
         float dir = 1;
+
         if (item.ampl > _nominal)
             dir = -1;
 
@@ -256,13 +265,18 @@ int CFilter_logic::calibPP(COscilloscope::DataPassAutoFilter item, float _nomina
             dir *= -1;
             m_calibAmpl /= 2;
         }
-        //        std::cout <<  "A: " << item.ampl << " m_calibAmpl = " << m_calibAmpl << " dir = " << dir << " PP :" << item.f_pp << std::endl;
-        item.f_pp += m_calibAmpl * dir;
-        //        std::cout <<  "New PP :" << item.f_pp << std::endl;
-        if (item.f_pp == MIN_PP)
-            return -1;
+
+        // std::cout << "A: " << item.ampl << " m_calibAmpl = " << m_calibAmpl << " dir = " << dir << " PP :" << item.f_pp << " KK :" << item.f_kk << std::endl;
+        if (item.f_pp + m_calibAmpl * dir >= 0) {
+            item.f_pp += m_calibAmpl * dir;
+        } else {
+            item.f_kk *= 0.95;
+        }
+        // std::cout << "New PP :" << item.f_pp << " New KK :" << item.f_kk << std::endl;
+
         if (item.f_pp >= MAX_PP)
             return -1;
+
         m_calib_man->setCalibValue(item.cur_channel, F_AA_CH, item.f_aa);
         m_calib_man->setCalibValue(item.cur_channel, F_BB_CH, item.f_bb);
         m_calib_man->setCalibValue(item.cur_channel, F_PP_CH, item.f_pp);

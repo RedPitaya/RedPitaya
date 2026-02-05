@@ -58,8 +58,8 @@ auto resetStreamingCounter() -> void {
     g_brokenBuffer.clear();
 }
 
-auto addStatisticSteaming(std::string& host, uint64_t bytesCount, uint64_t samp_ch1, uint64_t samp_ch2, uint64_t samp_ch3, uint64_t samp_ch4, uint64_t lost,
-                          uint64_t fileLost, int64_t brokenBuff) -> void {
+auto addStatisticStreaming(std::string& host, uint64_t bytesCount, uint64_t samp_ch1, uint64_t samp_ch2, uint64_t samp_ch3, uint64_t samp_ch4, uint64_t lost, uint64_t fileLost,
+                           int64_t brokenBuff) -> void {
     const std::lock_guard lock(g_statMutex);
 
     if (g_timeHostBegin.count(host) == 0) {
@@ -156,8 +156,8 @@ auto printStatisitc(bool force) -> void {
     auto value = curTime.time_since_epoch();
     if ((value.count() - g_timeBegin) >= 5000 || force) {
         std::vector<std::string> keys;
-        std::transform(g_timeHostBegin.begin(), g_timeHostBegin.end(), std::back_inserter(keys),
-                       [](const std::map<std::string, long long int>::value_type& pair) { return pair.first; });
+        std::transform(
+            g_timeHostBegin.begin(), g_timeHostBegin.end(), std::back_inserter(keys), [](const std::map<std::string, long long int>::value_type& pair) { return pair.first; });
 
         if (keys.size() > 0) {
             std::stringstream ss;
@@ -219,8 +219,8 @@ auto printFinalStatisitc() -> void {
     auto curTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
     auto value = curTime.time_since_epoch();
     std::vector<std::string> keys;
-    std::transform(g_timeHostBegin.begin(), g_timeHostBegin.end(), std::back_inserter(keys),
-                   [](const std::map<std::string, long long int>::value_type& pair) { return pair.first; });
+    std::transform(
+        g_timeHostBegin.begin(), g_timeHostBegin.end(), std::back_inserter(keys), [](const std::map<std::string, long long int>::value_type& pair) { return pair.first; });
 
     if (keys.size() > 0) {
         std::stringstream ss;

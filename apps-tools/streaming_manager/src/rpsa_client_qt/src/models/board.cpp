@@ -466,11 +466,11 @@ auto CBoard::getModel() -> QString {
 
     switch (m_model) {
         case 0:
-            return "STEAMlab 125-10 v1.0";
+            return "STEMlab 125-10 v1.0";
         case 1:
-            return "STEAMlab 125-14 v1.0";
+            return "STEMlab 125-14 v1.0";
         case 2:
-            return "STEAMlab 125-14 v1.1";
+            return "STEMlab 125-14 v1.1";
         case 3:
             return "SDRlab 122-16 v1.0";
         case 4:

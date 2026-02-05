@@ -144,16 +144,8 @@ auto runClient(std::string host, StateRunnedHosts, uint32_t size, uint32_t activ
                     }
 
                     auto flost = obj->getFileLost();
-                    // int  brokenBuffer = -1;
-                    // if (g_soption.testStreamingMode == ClientOpt::TestSteamingMode::WITH_TEST_DATA){
-                    //     brokenBuffer = testBuffer(ch1 ? static_cast<uint8_t*>(ch1->getMappedDataMemory()) : nullptr,
-                    //                               ch2 ? static_cast<uint8_t*>(ch2->getMappedDataMemory()) : nullptr,
-                    //                               ch3 ? static_cast<uint8_t*>(ch3->getMappedDataMemory()) : nullptr,
-                    //                               ch4 ? static_cast<uint8_t*>(ch4->getMappedDataMemory()) : nullptr,
-                    //                               sizeCh1,sizeCh2,sizeCh3,sizeCh4) ? 0 : 1;
-                    // }
                     auto h = host;
-                    addStatisticSteaming(h, sizeCh1 + sizeCh2 + sizeCh3 + sizeCh4, sempCh1, sempCh2, sempCh3, sempCh4, lostRate, flost, -1);
+                    addStatisticStreaming(h, sizeCh1 + sizeCh2 + sizeCh3 + sizeCh4, sempCh1, sempCh2, sempCh3, sempCh4, lostRate, flost, -1);
                 }
                 obj->passBuffers(pack);
                 obj2->unlockBufferRead();
