@@ -11,10 +11,10 @@
 #include <stdlib.h>
 #include <sys/param.h>
 #include <unistd.h>
+#include <algorithm>
 #include <iostream>
 #include <set>
 #include <string>
-#include <algorithm>
 #include <vector>
 
 #include "common/rp_updater_common.h"
@@ -447,7 +447,8 @@ int main(int argc, char** argv) {
             fprintf(stderr, "ERROR: Init failed!\n");
             return ret;
         }
-        ret = rp_CalibrationReset(factory, want_bits & WANT_NEW_FORMAT, want_bits & WANT_FILTER_ZERO, calib_ver);
+        auto fmode = want_bits & WANT_FILTER_ZERO ? rp_calib_filter_mode::RP_HW_CFM_ZERO : rp_calib_filter_mode::RP_HW_CFM_DEFAULT;
+        ret = rp_CalibrationReset(factory, want_bits & WANT_NEW_FORMAT, fmode, calib_ver);
         if (ret) {
             fprintf(stderr, "ERROR: Reset failed!\n");
             return ret;

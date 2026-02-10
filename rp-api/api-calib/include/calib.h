@@ -23,15 +23,15 @@ class CCalib {
     CCalib(CCalib&&) = delete;
     ~CCalib();
 
-    auto resetCalibToZero() -> int;
+    auto resetCalibToZero(rp_calib_filter_mode mode) -> int;
     auto resetCalibToFactory() -> int;
-    auto calib(std::string& _step, float _refdc) -> int;
+    auto calib(std::string& _step, float _refdc, bool bypass, rp_calib_filter_mode mode) -> int;
     auto getCalibData() -> DataPass;
     auto restoreCalib() -> void;
 
    private:
-    auto calib_board_z10(std::string& _step, float _refdc) -> int;
-    auto calib_board_z20_4ch(std::string& _step, float _refdc) -> int;
+    auto calib_board_z10(std::string& _step, float _refdc, bool bypass, rp_calib_filter_mode mode) -> int;
+    auto calib_board_z20_4ch(std::string& _step, float _refdc, bool bypass, rp_calib_filter_mode mode) -> int;
     auto calib_board_z20_250_12(std::string& _step, float _refdc) -> int;
 
     auto getData(int skip_read) -> COscilloscope::DataPass;

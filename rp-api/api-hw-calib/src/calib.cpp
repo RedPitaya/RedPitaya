@@ -411,10 +411,13 @@ void calib_SetToZero(bool is_new_format, bool setFilterZero, uint8_t version) {
         g_calib = calib_GetDefaultCalib(setFilterZero);
 }
 
-rp_calib_error calib_Reset(bool use_factory_zone, bool is_new_format, bool setFilterZero, uint8_t version) {
+rp_calib_error calib_Reset(bool use_factory_zone, bool is_new_format, rp_calib_filter_mode mode, uint8_t version) {
     if (g_model_loaded) {
         rp_calib_params_t calib = g_calib;
-        calib_SetToZero(is_new_format, setFilterZero, version);
+        calib_SetToZero(is_new_format, mode == rp_calib_filter_mode::RP_HW_CFM_ZERO, version);
+        if (mode == rp_calib_filter_mode::RP_HW_CFM_KEEP) {
+            calib.copyFilter(g_calib);
+        }
         auto res = calib_WriteParams(g_model, &g_calib, use_factory_zone, false);
         if (res != RP_HW_CALIB_OK) {
             g_calib = calib;

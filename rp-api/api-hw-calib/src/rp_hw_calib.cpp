@@ -39,8 +39,8 @@ rp_calib_params_t rp_GetDefaultUniCalibrationSettings() {
     return calib_GetUniversalDefaultCalib(false, RP_HW_PACK_ID_V6);
 }
 
-rp_calib_error rp_CalibrationReset(bool use_factory_zone, bool is_new_format, bool setFilterZero, uint8_t version) {
-    return calib_Reset(use_factory_zone, is_new_format, setFilterZero, version);
+rp_calib_error rp_CalibrationReset(bool use_factory_zone, bool is_new_format, rp_calib_filter_mode mode, uint8_t version) {
+    return calib_Reset(use_factory_zone, is_new_format, mode, version);
 }
 
 rp_calib_error rp_CalibrationFactoryReset(bool convert_to_new) {
