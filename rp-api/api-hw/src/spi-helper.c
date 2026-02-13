@@ -5,6 +5,7 @@
 #include <sys/ioctl.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include "rp_log.h"
 #include "spi-helper.h"
 
@@ -48,6 +49,11 @@ int read_spi_configuration(int fd, spi_config_t *config)
 
 int write_spi_configuration(int fd, spi_config_t *config)
 {
+	if (!config) {
+        ERROR_LOG("NULL config pointer");
+        return RP_HW_ESMI;
+    }
+
 	uint8_t  u8;
 	uint32_t u32;
 	u8 = config->raw_value;
@@ -56,28 +62,31 @@ int write_spi_configuration(int fd, spi_config_t *config)
 	u8 = (u8 & ~SPI_CS_HIGH) | (config->cs_mode == RP_SPI_CS_HIGH ? SPI_CS_HIGH : 0);
 
 	if (ioctl(fd, SPI_IOC_WR_MODE, &u8) < 0) {
-		ERROR_LOG("Set SPI_IOC_WR_MODE");
+		ERROR_LOG("SPI_IOC_WR_MODE failed: %s", strerror(errno));
 		return RP_HW_ESSS;
 	}
 
 	u8 = (config->lsb_first == RP_SPI_ORDER_BIT_LSB ? SPI_LSB_FIRST : 0);
 	if (ioctl(fd, SPI_IOC_WR_LSB_FIRST, &u8) < 0) {
-		ERROR_LOG("Set SPI_IOC_WR_LSB_FIRST");
+		ERROR_LOG("SPI_IOC_WR_LSB_FIRST failed: %s", strerror(errno));
 		return RP_HW_ESSS;
 	}
 
 	u8 = config->bits_per_word;
 	if (ioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &u8) < 0) {
-		ERROR_LOG("Set SPI_IOC_WR_BITS_PER_WORD");
+		ERROR_LOG("SPI_IOC_WR_BITS_PER_WORD failed: %s", strerror(errno));
 		return RP_HW_ESSS;
 	}
 
 	u32 = config->spi_speed;
 	if (ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &u32) < 0) {
-		ERROR_LOG("Set SPI_IOC_WR_MAX_SPEED_HZ");
+		ERROR_LOG("SPI_IOC_WR_MAX_SPEED_HZ failed: %s", strerror(errno));
 		return RP_HW_ESSS;
 	}
 
+	config->raw_value = u8;
+	TRACE_SHORT("SPI config written: mode=%d, speed=%u Hz, bits=%d",
+              config->spi_mode, config->spi_speed, config->bits_per_word);
 	return RP_HW_OK;
 }
 
@@ -92,30 +101,37 @@ int read_write_spi_buffers(int fd, spi_data_t *data)
 	// 	.bits_per_word = 0,
 	// };
 
-	if (!data) {
-		ERROR_LOG("Message for SPI not init");
-		return RP_HW_ESMI;
-	}
+	if (!data || !data->messages || data->size == 0) {
+        ERROR_LOG("Invalid SPI message data");
+        return RP_HW_ESMI;
+    }
 
 	struct spi_ioc_transfer *messages = calloc(data->size, sizeof(struct spi_ioc_transfer));
 
-	if (!messages){
-		ERROR_LOG("Can't allocate memory for spi_ioc_transfer");
-		return RP_HW_EAL;
-	}
+	if (!messages) {
+        ERROR_LOG("Can't allocate memory for spi_ioc_transfer: %s", strerror(errno));
+        return RP_HW_EAL;
+    }
 
 	for(size_t i = 0; i < data->size; i++){
-		memset(&messages[i], 0, sizeof (struct spi_ioc_transfer));
-		messages[i].rx_buf = (unsigned long)data->messages[i].rx_buffer;
-		messages[i].tx_buf = (unsigned long)data->messages[i].tx_buffer;
+
+		messages[i].rx_buf = (__u64)(uintptr_t)data->messages[i].rx_buffer;
+        messages[i].tx_buf = (__u64)(uintptr_t)data->messages[i].tx_buffer;
 		messages[i].len = data->messages[i].size;
 		messages[i].cs_change = (data->messages[i].cs_change ? 1 : 0);
+
 	}
 
+	int ret = ioctl(fd, SPI_IOC_MESSAGE(data->size), messages);
 
-	if (ioctl(fd, SPI_IOC_MESSAGE(data->size), messages) < 0)
-		return RP_HW_EST;
+    int err = errno;
 
-	// printf("Read size %d\n",transfer.len);
+	free(messages);
+
+	if (ret < 0) {
+        ERROR_LOG("SPI_IOC_MESSAGE failed: %d (%s)", err, strerror(err));
+        return RP_HW_EST;
+    }
+
 	return RP_HW_OK;
 }

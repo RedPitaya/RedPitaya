@@ -22,6 +22,9 @@ pthread_mutex_t i2c_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 
 int openDevice(const char* i2c_dev_node_path,uint8_t i2c_dev_address, bool force,int *i2c_dev_node){
+	if (!i2c_dev_node_path || !i2c_dev_node) {
+        return RP_HW_EBIIC;
+    }
 	int ret_val = 0;
 	/* Open the device node for the I2C adapter of bus 4 */
 	*i2c_dev_node = open(i2c_dev_node_path, O_RDWR);
@@ -45,7 +48,7 @@ int openDevice(const char* i2c_dev_node_path,uint8_t i2c_dev_address, bool force
 }
 
 
-int i2c_SBMUS_write_byte(const char* i2c_dev_node_path,uint8_t i2c_dev_address,uint8_t i2c_dev_reg_addr, uint8_t i2c_val_to_write, bool force){
+int i2c_SMBUS_write_byte(const char* i2c_dev_node_path,uint8_t i2c_dev_address,uint8_t i2c_dev_reg_addr, uint8_t i2c_val_to_write, bool force){
 	pthread_mutex_lock(&i2c_mutex);
 	int i2c_dev_node = 0;
 	int ret_val = 0;
@@ -63,7 +66,8 @@ int i2c_SBMUS_write_byte(const char* i2c_dev_node_path,uint8_t i2c_dev_address,u
 					i2c_val_to_write);
 
 	if (ret_val < 0) {
-        ERROR_LOG("I2C Write Operation failed.");
+         ERROR_LOG("I2C Write Operation failed. Addr: 0x%02X, Reg: 0x%02X, Val: 0x%02X, Errno: %d",
+                  i2c_dev_address, i2c_dev_reg_addr, i2c_val_to_write, errno);
         close(i2c_dev_node);
 		pthread_mutex_unlock(&i2c_mutex);
         return RP_HW_EWIIC;
@@ -73,7 +77,7 @@ int i2c_SBMUS_write_byte(const char* i2c_dev_node_path,uint8_t i2c_dev_address,u
 	return RP_HW_OK;
 }
 
-int i2c_SBMUS_write_word(const char* i2c_dev_node_path,uint8_t i2c_dev_address,uint8_t i2c_dev_reg_addr, uint16_t i2c_val_to_write, bool force){
+int i2c_SMBUS_write_word(const char* i2c_dev_node_path,uint8_t i2c_dev_address,uint8_t i2c_dev_reg_addr, uint16_t i2c_val_to_write, bool force){
 	pthread_mutex_lock(&i2c_mutex);
     int i2c_dev_node = 0;
 	int ret_val = 0;
@@ -101,7 +105,7 @@ int i2c_SBMUS_write_word(const char* i2c_dev_node_path,uint8_t i2c_dev_address,u
 }
 
 
-int i2c_SBMUS_write_command(const char* i2c_dev_node_path,uint8_t i2c_dev_address,uint8_t i2c_dev_command, bool force){
+int i2c_SMBUS_write_command(const char* i2c_dev_node_path,uint8_t i2c_dev_address,uint8_t i2c_dev_command, bool force){
 	pthread_mutex_lock(&i2c_mutex);
     int i2c_dev_node = 0;
 	int ret_val = 0;
@@ -127,7 +131,7 @@ int i2c_SBMUS_write_command(const char* i2c_dev_node_path,uint8_t i2c_dev_addres
 	return RP_HW_OK;
 }
 
-int i2c_SBMUS_write_buffer(const char* i2c_dev_node_path,uint8_t i2c_dev_address,uint8_t i2c_dev_reg_addr,const uint8_t *buffer,int len, bool force){
+int i2c_SMBUS_write_buffer(const char* i2c_dev_node_path,uint8_t i2c_dev_address,uint8_t i2c_dev_reg_addr,const uint8_t *buffer,int len, bool force){
  	if (!buffer) {
 		return RP_HW_EBIIC;
 	}
@@ -156,7 +160,7 @@ int i2c_SBMUS_write_buffer(const char* i2c_dev_node_path,uint8_t i2c_dev_address
 }
 
 
-int i2c_SBMUS_read_byte(const char* i2c_dev_node_path,uint8_t i2c_dev_address,uint8_t i2c_dev_reg_addr, uint8_t *value, bool force){
+int i2c_SMBUS_read_byte(const char* i2c_dev_node_path,uint8_t i2c_dev_address,uint8_t i2c_dev_reg_addr, uint8_t *value, bool force){
 	pthread_mutex_lock(&i2c_mutex);
     int i2c_dev_node = 0;
 	int ret_val = 0;
@@ -183,7 +187,7 @@ int i2c_SBMUS_read_byte(const char* i2c_dev_node_path,uint8_t i2c_dev_address,ui
 	return RP_HW_OK;
 }
 
-int i2c_SBMUS_read_word(const char* i2c_dev_node_path,uint8_t i2c_dev_address,uint8_t i2c_dev_reg_addr, uint16_t *value, bool force){
+int i2c_SMBUS_read_word(const char* i2c_dev_node_path,uint8_t i2c_dev_address,uint8_t i2c_dev_reg_addr, uint16_t *value, bool force){
 	pthread_mutex_lock(&i2c_mutex);
     int i2c_dev_node = 0;
 	int ret_val = 0;
@@ -211,7 +215,7 @@ int i2c_SBMUS_read_word(const char* i2c_dev_node_path,uint8_t i2c_dev_address,ui
 }
 
 
-int i2c_SBMUS_read_command(const char* i2c_dev_node_path,uint8_t i2c_dev_address, uint8_t *value, bool force){
+int i2c_SMBUS_read_command(const char* i2c_dev_node_path,uint8_t i2c_dev_address, uint8_t *value, bool force){
 	pthread_mutex_lock(&i2c_mutex);
     int i2c_dev_node = 0;
 	int ret_val = 0;
@@ -233,15 +237,20 @@ int i2c_SBMUS_read_command(const char* i2c_dev_node_path,uint8_t i2c_dev_address
         return RP_HW_ERIIC;
 	}
 	close(i2c_dev_node);
-    *value = (char)read_value;
+    *value = (uint8_t)read_value;
 	pthread_mutex_unlock(&i2c_mutex);
 	return RP_HW_OK;
 }
 
-int i2c_SBMUS_read_buffer(const char* i2c_dev_node_path,uint8_t i2c_dev_address,uint8_t i2c_dev_reg_addr,uint8_t *buffer, int *len, bool force){
-	if (!buffer) {
-		return RP_HW_EBIIC;
-	}
+int i2c_SMBUS_read_buffer(const char* i2c_dev_node_path,uint8_t i2c_dev_address,uint8_t i2c_dev_reg_addr,uint8_t *buffer, int *len, bool force){
+	if (!buffer || !len || *len <= 0) {
+        return RP_HW_EBIIC;
+    }
+
+	if (*len > I2C_SMBUS_BLOCK_MAX) {
+		WARNING("The buffer length (%d) is very large, limited to %d", *len, I2C_SMBUS_BLOCK_MAX)
+        *len = I2C_SMBUS_BLOCK_MAX;
+    }
 
 	pthread_mutex_lock(&i2c_mutex);
     int i2c_dev_node = 0;

@@ -421,7 +421,7 @@ int rp_SPI_SetBufferForMessage(size_t msg, const uint8_t* tx_buffer, bool init_r
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
  */
-int rp_SPI_DestoryMessage();
+int rp_SPI_DestroyMessage();
 
 /**
 * Get mode of the SPI.

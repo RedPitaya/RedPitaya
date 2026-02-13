@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <errno.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -32,21 +33,29 @@ int spi_Init(){
 }
 
 int spi_InitDevice(const char *_device){
-    if(spi_fd != -1){
-        if (spi_Release() != RP_HW_OK){
+
+    if (!_device) {
+        ERROR_LOG("Device path is NULL");
+        return RP_HW_EIIIC;
+    }
+
+    if (spi_fd != -1) {
+        if (spi_Release() != RP_HW_OK) {
+            ERROR_LOG("Failed to release previous SPI instance");
             return RP_HW_EIS;
         }
     }
 
-    spi_DestoryMessage();
+    spi_DestroyMessage();
 
-    spi_fd = open(_device, O_RDONLY);
-
-    if(spi_fd == -1){
-        ERROR_LOG("Failed to open SPI dev: %s.",_device);
+    spi_fd = open(_device, O_RDWR);
+    if (spi_fd == -1) {
+        ERROR_LOG("Failed to open SPI dev '%s': %s", _device, strerror(errno));
         return RP_HW_EIS;
     }
-    return read_spi_configuration(spi_fd,&g_settings);
+
+    TRACE_SHORT("SPI device '%s' opened, fd=%d", _device, spi_fd);
+    return read_spi_configuration(spi_fd, &g_settings);
 }
 
 int spi_SetDefaultSettings(){
@@ -97,35 +106,49 @@ int spi_Release(){
         }
         spi_fd = -1;
     }
-    spi_DestoryMessage();
+    spi_DestroyMessage();
     return RP_HW_OK;
 }
 
 int spi_CreateMessage(size_t len){
-    spi_DestoryMessage();
+
+    if (len == 0) {
+        ERROR_LOG("Cannot create message with zero length");
+        return RP_HW_EIPV;
+    }
+
+    spi_DestroyMessage();
    	pthread_mutex_lock(&spi_mutex);
     g_spi_data = malloc(sizeof(spi_data_t));
 
     if (!g_spi_data){
 		ERROR_LOG("Can't allocate memory for spi_data_t");
+        pthread_mutex_unlock(&spi_mutex);
 		return RP_HW_EAL;
 	}
 
     g_spi_data->messages = calloc(len,sizeof(spi_message_t));
 
-    if (!g_spi_data){
+    if (!g_spi_data->messages){
 		ERROR_LOG("Can't allocate memory for spi_message_t");
         free(g_spi_data);
         g_spi_data = NULL;
+        pthread_mutex_unlock(&spi_mutex);
 		return RP_HW_EAL;
 	}
 
     g_spi_data->size = len;
+    for (size_t i = 0; i < len; i++) {
+        g_spi_data->messages[i].rx_buffer = NULL;
+        g_spi_data->messages[i].tx_buffer = NULL;
+        g_spi_data->messages[i].size = 0;
+        g_spi_data->messages[i].cs_change = false;
+    }
   	pthread_mutex_unlock(&spi_mutex);
     return RP_HW_OK;
 }
 
-int spi_DestoryMessage(){
+int spi_DestroyMessage(){
     pthread_mutex_lock(&spi_mutex);
     if (g_spi_data){
         if(g_spi_data->messages){
@@ -202,45 +225,71 @@ int spi_GetCSChangeState(size_t msg,bool *cs_change){
 }
 
 int spi_SetBufferForMessage(size_t msg,const uint8_t *tx_buffer,bool init_rx_buffer,size_t len, bool cs_change){
-    pthread_mutex_lock(&spi_mutex);
-    if (g_spi_data){
-        if (g_spi_data->size <= msg){
-            pthread_mutex_unlock(&spi_mutex);
-            return RP_HW_ESMO;
-        }
-        if (g_spi_data->messages[msg].rx_buffer){
-            free(g_spi_data->messages[msg].rx_buffer);
-        }
-        g_spi_data->messages[msg].rx_buffer = 0;
-        if (init_rx_buffer) {
-            g_spi_data->messages[msg].rx_buffer = malloc(len);
-            if (!g_spi_data->messages[msg].rx_buffer){
-		        ERROR_LOG("Can't allocate memory for rx_buffer");
-                pthread_mutex_unlock(&spi_mutex);
-	        	return RP_HW_EAL;
-    	    }
-            memset(g_spi_data->messages[msg].rx_buffer,0,len);
-        }
-        if (g_spi_data->messages[msg].tx_buffer){
-            free(g_spi_data->messages[msg].tx_buffer);
-        }
-        g_spi_data->messages[msg].tx_buffer = 0;
-        if (tx_buffer){
-            g_spi_data->messages[msg].tx_buffer = malloc(len);
-            if (!g_spi_data->messages[msg].tx_buffer){
-		        ERROR_LOG("Can't allocate memory for tx_buffer");
-                pthread_mutex_unlock(&spi_mutex);
-	        	return RP_HW_EAL;
-    	    }
-            memcpy(g_spi_data->messages[msg].tx_buffer,tx_buffer,len);
-        }
-        g_spi_data->messages[msg].size = len;
-        g_spi_data->messages[msg].cs_change = cs_change;
-    	pthread_mutex_unlock(&spi_mutex);
-        return RP_HW_OK;
+
+    if (len == 0) {
+        ERROR_LOG("Buffer length cannot be zero");
+        return RP_HW_EIPV;
     }
-   	pthread_mutex_unlock(&spi_mutex);
-    return RP_HW_ESMI;
+
+    pthread_mutex_lock(&spi_mutex);
+
+    if (!g_spi_data) {
+        pthread_mutex_unlock(&spi_mutex);
+        ERROR_LOG("SPI message not created");
+        return RP_HW_ESMI;
+    }
+
+    if (g_spi_data->size <= msg) {
+        pthread_mutex_unlock(&spi_mutex);
+        ERROR_LOG("Message index %zu out of range (max %zu)", msg, g_spi_data->size - 1);
+        return RP_HW_ESMO;
+    }
+
+    if (g_spi_data->messages[msg].rx_buffer) {
+        free(g_spi_data->messages[msg].rx_buffer);
+        g_spi_data->messages[msg].rx_buffer = NULL;
+    }
+
+    if (g_spi_data->messages[msg].tx_buffer) {
+        free(g_spi_data->messages[msg].tx_buffer);
+        g_spi_data->messages[msg].tx_buffer = NULL;
+    }
+
+    if (init_rx_buffer) {
+        g_spi_data->messages[msg].rx_buffer = malloc(len);
+        if (!g_spi_data->messages[msg].rx_buffer) {
+            ERROR_LOG("Can't allocate memory for rx_buffer (%zu bytes)", len);
+            pthread_mutex_unlock(&spi_mutex);
+            return RP_HW_EAL;
+        }
+        memset(g_spi_data->messages[msg].rx_buffer, 0, len);
+    }
+
+    if (tx_buffer) {
+        g_spi_data->messages[msg].tx_buffer = malloc(len);
+        if (!g_spi_data->messages[msg].tx_buffer) {
+            ERROR_LOG("Can't allocate memory for tx_buffer (%zu bytes)", len);
+            if (g_spi_data->messages[msg].rx_buffer) {
+                free(g_spi_data->messages[msg].rx_buffer);
+                g_spi_data->messages[msg].rx_buffer = NULL;
+            }
+            pthread_mutex_unlock(&spi_mutex);
+            return RP_HW_EAL;
+        }
+        memcpy(g_spi_data->messages[msg].tx_buffer, tx_buffer, len);
+    }
+
+    g_spi_data->messages[msg].size = len;
+    g_spi_data->messages[msg].cs_change = cs_change;
+
+    pthread_mutex_unlock(&spi_mutex);
+    TRACE_SHORT("Message %zu: len=%zu, rx=%s, tx=%s, cs_change=%d",
+              msg, len,
+              init_rx_buffer ? "yes" : "no",
+              tx_buffer ? "yes" : "no",
+              cs_change);
+
+    return RP_HW_OK;
 }
 
 
@@ -341,10 +390,12 @@ int spi_SetSpeed(int speed){
     }
 
     if (speed <= 0 && speed > 100000000){
+        ERROR_LOG("Invalid SPI speed: %d (must be 1-100000000 Hz)", speed);
         return RP_HW_EIPV;
     }
 
     g_settings.spi_speed = speed;
+    TRACE_SHORT("SPI speed set to %d Hz", speed);
     return RP_HW_OK;
 }
 

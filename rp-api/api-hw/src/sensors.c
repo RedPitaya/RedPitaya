@@ -1,36 +1,63 @@
 #include <stdio.h>
+#include <errno.h>
 #include "rp_hw.h"
 #include "sensors.h"
 #include "rp_log.h"
 
 
 int sens_GetValueFromFile(const char* file, uint32_t *value){
-    FILE *fp;
-    fp = fopen (file, "r");
-	if (fp==0) {
-		ERROR_LOG("Can't open %s",file);
-		return -1;
-	}
-    int rv = 0;
-    int r = fscanf (fp, "%d", &rv) != 1;
-    *value = rv;
+
+    if (!file || !value) {
+        ERROR_LOG("NULL pointer");
+        return -1;
+    }
+
+    FILE *fp = fopen (file, "r");
+	if (!fp) {
+        ERROR_LOG("Can't open %s: %s", file, strerror(errno));
+        return -1;
+    }
+    uint32_t rv;
+    int ret = fscanf(fp, "%u", &rv);
     fclose(fp);
-    return r;
+
+    if (ret != 1) {
+        ERROR_LOG("Failed to read value from %s", file);
+        return -1;
+    }
+
+    *value = rv;
+    return ret;
 }
 
 int sens_GetFValueFromFile(const char* file, float *value){
-    FILE *fp;
-    fp = fopen (file, "r");
-	if (fp==0) {
-		ERROR_LOG("Can't open %s",file);
-		return -1;
-	}
-    float r = fscanf (fp, "%f", value) != 1;
+    if (!file || !value) {
+        ERROR_LOG("NULL pointer");
+        return -1;
+    }
+
+    FILE *fp = fopen(file, "r");
+    if (!fp) {
+        ERROR_LOG("Can't open %s: %s", file, strerror(errno));
+        return -1;
+    }
+
+    int ret = fscanf(fp, "%f", value);
     fclose(fp);
-    return r;
+
+    if (ret != 1) {
+        ERROR_LOG("Failed to read float from %s", file);
+        return -1;
+    }
+
+    return 0;
 }
 
 int GetTempValueRaw( uint32_t* raw , float* value) {
+    if (!raw || !value) {
+        ERROR_LOG("NULL pointer");
+        return -1;
+    }
     uint32_t offset = 0;
     float scale = 0;
     if (sens_GetValueFromFile("/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_temp0_offset",&offset))
@@ -44,9 +71,13 @@ int GetTempValueRaw( uint32_t* raw , float* value) {
 }
 
 int GetValueRaw(const char* file, uint32_t* raw , float* value) {
+    if (!file || !raw || !value) {
+        ERROR_LOG("NULL pointer");
+        return -1;
+    }
     float scale = 0;
-    char s_raw[200];
-    char s_scale[200];
+    char s_raw[255];
+    char s_scale[255];
     sprintf(s_raw,"/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/%s_raw",file);
     sprintf(s_scale,"/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/%s_scale",file);
     if (sens_GetValueFromFile(s_raw , raw))
@@ -58,6 +89,10 @@ int GetValueRaw(const char* file, uint32_t* raw , float* value) {
 }
 
 float sens_GetCPUTemp(uint32_t *raw){
+    if (!raw) {
+        ERROR_LOG("NULL pointer");
+        return -1;
+    }
     float temp_val = 0;
     if (GetTempValueRaw(raw,&temp_val))
         return -1;

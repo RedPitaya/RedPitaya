@@ -259,8 +259,8 @@ int rp_SPI_SetBufferForMessage(size_t msg,const uint8_t *tx_buffer,bool init_rx_
     return spi_SetBufferForMessage(msg,tx_buffer,init_rx_buffer,len,cs_change);
 }
 
-int rp_SPI_DestoryMessage(){
-    return spi_DestoryMessage();
+int rp_SPI_DestroyMessage(){
+    return spi_DestroyMessage();
 }
 
 int rp_I2C_InitDevice(const char *_device,uint8_t addr){

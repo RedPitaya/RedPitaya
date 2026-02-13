@@ -183,7 +183,7 @@ int main(int argc, char* argv[]) {
             return result;
         };
 
-        auto result = get_ipv4_addresses_filtered({"end0", "wlan0"});
+        auto result = get_ipv4_addresses_filtered({"eth0", "wlan0"});
         if (result.size() > 0) {
             ip_cur = result[0].second;
         }

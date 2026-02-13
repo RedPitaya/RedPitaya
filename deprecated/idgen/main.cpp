@@ -5,18 +5,15 @@
 #include <string>
 #include "licmisc.h"
 
-
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
-
 #include <arpa/inet.h>
 #include <net/if.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
-
 
 #include <libjson.h>
 
@@ -24,7 +21,6 @@
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <sys/mman.h>
-
 
 using namespace std;
 
@@ -56,7 +52,7 @@ long GetMACAddressLinux(const char* nic, char* mac) {
 std::string GetMACAddress() {
     char result[18];
     sprintf(result, "00:00:00:00:00:00");
-    GetMACAddressLinux("/sys/class/net/end0/address", result);
+    GetMACAddressLinux("/sys/class/net/eth0/address", result);
     std::string mac_address(result);
     return mac_address;
 }

@@ -27,7 +27,7 @@ int spi_GetRxBuffer(size_t msg,const uint8_t **buffer,size_t *len);
 int spi_GetTxBuffer(size_t msg,const uint8_t **buffer,size_t *len);
 int spi_GetCSChangeState(size_t msg,bool *cs_change);
 int spi_SetBufferForMessage(size_t msg,const uint8_t *tx_buffer,bool init_rx_buffer,size_t len, bool cs_change);
-int spi_DestoryMessage();
+int spi_DestroyMessage();
 
 int spi_GetMode(rp_spi_mode_t *mode);
 int spi_SetMode(rp_spi_mode_t mode);

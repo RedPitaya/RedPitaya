@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <sys/ioctl.h>
 #include <sys/socket.h>
@@ -23,12 +24,15 @@
 #include <linux/mdio.h>
 #include <linux/sockios.h>
 
+#include <pthread.h>
+
 #include "led_system.h"
 #include "rp_log.h"
 
-const char mmc_Led[]="/sys/devices/platform/led-system/leds/led8";
-const char heartbeat_Led[]="/sys/devices/soc0/led-system-red/leds/led9";
-const int  MAX_LINE_LENGTH = 512;
+char mmc_Led_trigger[]="/sys/devices/platform/led-system/leds/led8/trigger";
+char heartbeat_Led_trigger[]="/sys/devices/soc0/led-system-red/leds/led9/trigger";
+
+static pthread_mutex_t phy_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 typedef struct {
         char     ifnam[16];
@@ -36,74 +40,88 @@ typedef struct {
         uint16_t reg;
 } device_t;
 
-const device_t eth = { { "end0" }, 0x01 , 0x1b };
+const device_t eth = { { "eth0" }, 0x01 , 0x1b };
 
-bool GetValueFromFile(char *file, char *value){
-    FILE *fp;
-    fp = fopen (file, "r");
-    if (fp == NULL) return false;
-    bool r = fgets(value, MAX_LINE_LENGTH, fp) != NULL;
+bool GetValueFromFile(char *file, char *value, size_t max_len){
+    if (!file || !value) return false;
+    FILE *fp = fopen(file, "r");
+    if (!fp) {
+        ERROR_LOG("Failed to open file: %s - %s", file, strerror(errno));
+        return false;
+    }
+
+    bool r = fgets(value, max_len, fp) != NULL;
     fclose(fp);
     return r;
 }
 
-bool SetValueToFile(char *file, char *value){
-    FILE *fp;
-    fp = fopen (file, "w");
-    if (fp == NULL) return false;
-    bool r = fputs(value, fp) >=0;
+bool SetValueToFile(char *file,const char *value){
+    if (!file || !value) return false;
+    FILE *fp = fopen(file, "w");
+    if (!fp) {
+        ERROR_LOG("Failed to open file: %s - %s", file, strerror(errno));
+        return false;
+    }
+
+    bool r = fputs(value, fp) >= 0;
     fclose(fp);
     return r;
 }
 
 
 int led_GetMMCState(bool *_enable){
-    char path[255];
-    char value[MAX_LINE_LENGTH];
-    sprintf(path,"%s/%s",mmc_Led,"trigger");
-    if (GetValueFromFile(path,value)){
+    if (!_enable) {
+        ERROR_LOG("NULL pointer provided");
+        return RP_HW_EBIIC;
+    }
+    char value[64];
+    if (GetValueFromFile(mmc_Led_trigger, value, sizeof(value))) {
         *_enable = strstr(value, "[mmc0]") != NULL;
         return RP_HW_OK;
     }
+
+    ERROR_LOG("Failed to read MMC LED state from %s", mmc_Led_trigger);
     return RP_HW_EUF;
 }
 
 int led_SetMMCState(bool _enable){
-    char path[255];
-    char value[10];
-    sprintf(value,"%s",_enable ? "mmc0" : "none");
-    sprintf(path,"%s/%s",mmc_Led,"trigger");
-    if (SetValueToFile(path,value)){
+    const char *value = _enable ? "mmc0" : "none";
+    if (SetValueToFile(mmc_Led_trigger, value)) {
+        TRACE("MMC LED set to %s", value);
         return RP_HW_OK;
     }
+
+    ERROR_LOG("Failed to set MMC LED state to %s", value);
     return RP_HW_EUF;
 }
 
 int led_GetHeartBeatState(bool *_enable){
-    char path[255];
-    char value[MAX_LINE_LENGTH];
-    sprintf(path,"%s/%s",heartbeat_Led,"trigger");
-    if (GetValueFromFile(path,value)){
+    if (!_enable) {
+        ERROR_LOG("NULL pointer provided");
+        return RP_HW_EBIIC;
+    }
+    char value[64];
+    if (GetValueFromFile(heartbeat_Led_trigger,value,sizeof(value))){
         *_enable = strstr(value, "[heartbeat]") != NULL;
         return RP_HW_OK;
     }
+    ERROR_LOG("Failed to read HB LED state from %s", heartbeat_Led_trigger);
     return RP_HW_EUF;
 }
 
 int led_SetHeartBeatState(bool _enable){
-    char path[255];
-    char value[10];
-    sprintf(value,"%s",_enable ? "heartbeat" : "none");
-    sprintf(path,"%s/%s",heartbeat_Led,"trigger");
-    if (SetValueToFile(path,value)){
+    const char *value = _enable ? "heartbeat" : "none";
+    if (SetValueToFile(heartbeat_Led_trigger,value)){
         return RP_HW_OK;
     }
+    ERROR_LOG("Failed to set HB LED state to %s", value);
     return RP_HW_EUF;
 }
 
 int __phy_op(const device_t *loc, uint16_t *val, int cmd)
 {
-	static int sd = -1;
+    pthread_mutex_lock(&phy_mutex);
+	int sd = -1;
 
 	struct ifreq ifr;
 	struct mii_ioctl_data* mii = (struct mii_ioctl_data *)(&ifr.ifr_data);
@@ -112,8 +130,11 @@ int __phy_op(const device_t *loc, uint16_t *val, int cmd)
 	if (sd < 0)
 		sd = socket(AF_INET, SOCK_DGRAM, 0);
 
-	if (sd < 0)
-		return sd;
+	if (sd < 0){
+        pthread_mutex_unlock(&phy_mutex);
+        ERROR_LOG("Failed to create socket: %d (%s)", errno, strerror(errno));
+        return -errno;
+    }
 
 	strncpy(ifr.ifr_name, loc->ifnam, sizeof(ifr.ifr_name));
 
@@ -123,10 +144,21 @@ int __phy_op(const device_t *loc, uint16_t *val, int cmd)
 	mii->val_out = 0;
 
 	err = ioctl(sd, cmd, &ifr);
-	if (err)
-		return -errno;
+	if (err){
+        if (sd >= 0) {
+            close(sd);
+            sd = -1;
+        }
+        pthread_mutex_unlock(&phy_mutex);
+        return -errno;
+    }
 
 	*val = mii->val_out;
+    if (sd >= 0) {
+        close(sd);
+        sd = -1;
+    }
+    pthread_mutex_unlock(&phy_mutex);
 	return 0;
 }
 
@@ -162,8 +194,12 @@ int led_GetEthState(bool *_state){
 
 int led_SetEthState(bool _state){
     uint16_t val = _state ? 0x0F00 : 0;
-    if (phy_write(val) == 0){
+    int ret = phy_write(val);
+    if (ret == 0) {
+        TRACE("Eth state set to %s", _state ? "ON" : "OFF");
         return RP_HW_OK;
+    } else {
+        TRACE("Failed to set eth state: %d", ret);
+        return RP_HW_EUF;
     }
-    return RP_HW_EUF;
 }

@@ -14,7 +14,7 @@ setenv addr_fpga   0x10000000
 setenv zynq        z7020
 
 # set default Linux kernel boot parameters
-setenv bootargs console=ttyPS0,115200 root=/dev/mmcblk0p2 ro rootfstype=ext4 earlyprintk rootwait uio_pdrv_genirq.of_id="generic-uio"
+setenv bootargs console=ttyPS0,115200 root=/dev/mmcblk0p2 ro rootfstype=ext4 earlyprintk rootwait uio_pdrv_genirq.of_id="generic-uio" net.ifnames=0 biosdevname=0
 
 # Worked only with 250 12 (1Gb Ram)
 

@@ -243,8 +243,8 @@ print(res)
 tmp = rp_hw.Buffer_frompointer(res[1])
 print("TxBuffer",tmp[0],tmp[1],tmp[2])
 
-print("rp_hw.rp_SPI_DestoryMessage()")
-res = rp_hw.rp_SPI_DestoryMessage()
+print("rp_hw.rp_SPI_DestroyMessage()")
+res = rp_hw.rp_SPI_DestroyMessage()
 print(res)
 
 

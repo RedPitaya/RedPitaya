@@ -113,7 +113,7 @@ scpi_result_t RP_SPI_CreateMessage(scpi_t* context) {
 }
 
 scpi_result_t RP_SPI_DestroyMessage(scpi_t* context) {
-    int result = rp_SPI_DestoryMessage();
+    int result = rp_SPI_DestroyMessage();
     if (RP_HW_OK != result) {
         RP_LOG_CRIT("Failed to delete message: %s", rp_HwGetError(result));
         return SCPI_RES_ERR;
