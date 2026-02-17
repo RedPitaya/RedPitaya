@@ -17,8 +17,7 @@ int sens_GetValueFromFile(const char* file, uint32_t *value){
         ERROR_LOG("Can't open %s: %s", file, strerror(errno));
         return -1;
     }
-    uint32_t rv;
-    int ret = fscanf(fp, "%u", &rv);
+    int ret = fscanf(fp, "%u", value);
     fclose(fp);
 
     if (ret != 1) {
@@ -26,8 +25,7 @@ int sens_GetValueFromFile(const char* file, uint32_t *value){
         return -1;
     }
 
-    *value = rv;
-    return ret;
+    return 0;
 }
 
 int sens_GetFValueFromFile(const char* file, float *value){

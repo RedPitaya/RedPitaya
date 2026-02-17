@@ -29,6 +29,8 @@
 #include "led_system.h"
 #include "rp_log.h"
 
+#define MAX_LINE_LENGTH 512
+
 char mmc_Led_trigger[]="/sys/devices/platform/led-system/leds/led8/trigger";
 char heartbeat_Led_trigger[]="/sys/devices/soc0/led-system-red/leds/led9/trigger";
 
@@ -74,7 +76,7 @@ int led_GetMMCState(bool *_enable){
         ERROR_LOG("NULL pointer provided");
         return RP_HW_EBIIC;
     }
-    char value[64];
+    char value[MAX_LINE_LENGTH];
     if (GetValueFromFile(mmc_Led_trigger, value, sizeof(value))) {
         *_enable = strstr(value, "[mmc0]") != NULL;
         return RP_HW_OK;
@@ -100,7 +102,7 @@ int led_GetHeartBeatState(bool *_enable){
         ERROR_LOG("NULL pointer provided");
         return RP_HW_EBIIC;
     }
-    char value[64];
+    char value[MAX_LINE_LENGTH];
     if (GetValueFromFile(heartbeat_Led_trigger,value,sizeof(value))){
         *_enable = strstr(value, "[heartbeat]") != NULL;
         return RP_HW_OK;
