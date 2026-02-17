@@ -193,6 +193,9 @@ int main(int argc, char* argv[]) {
             if (uio.nodeName == "rp_oscilloscope@40000000") {
                 auto osc = uio_lib::COscilloscope::create(uio, 1, true, ClientOpt::getADCRate(), false, ClientOpt::getADCBits(), 2);
                 isMaster = osc->isMaster();
+                // Disable x-streaming
+                if (ClientOpt::getIsXStreaming() == false)
+                    isMaster = uio_lib::BoardMode::MASTER;
                 printWithLog(
                     LOG_INFO, stdout, "Detected %s mode\n", isMaster == uio_lib::BoardMode::MASTER ? "Master" : (isMaster == uio_lib::BoardMode::SLAVE ? "Slave" : "Unknown"));
                 break;

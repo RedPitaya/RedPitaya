@@ -174,6 +174,10 @@ const char* table_keys_help[] = {"all",
                                  "Fast ADC Calibration on FPGA",
                                  "is_fast_adc_16b_mode",
                                  "Fast ADC 16-bit data mode on FPGA",
+
+                                 "is_xstreaming",
+                                 "X-Streaming mode",
+
                                  NULL};
 
 #define ADC_BASE_RATE_PATH hp_cmn_GetHomeDirectory() + "/.config/redpitaya/adc_base_rate_"
@@ -688,6 +692,7 @@ int hp_cmn_Print(profiles_t* p) {
 
     fprintf(stdout, "Support for calibration on FPGA: %d\n", p->is_calib_in_fpga);
     fprintf(stdout, "Fast ADC 16-bit data mode support (v0.94): %d\n", p->is_fast_adc_16b_mode);
+    fprintf(stdout, "X-Streaming mode (stream_app): %d\n", p->is_xstreaming);
 
     fprintf(stdout, "***********************************************************************\n");
     return RP_HP_OK;
@@ -1130,6 +1135,10 @@ std::string getValueForKey(rp_HPeModels_t model, std::string key) {
 
     if (key == "is_fast_adc_16b_mode") {
         return std::to_string(p->is_fast_adc_16b_mode);
+    }
+
+    if (key == "is_xstreaming") {
+        return std::to_string(p->is_xstreaming);
     }
 
     return "";

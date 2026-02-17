@@ -189,6 +189,14 @@ auto getADCBits() -> uint8_t {
     return c;
 }
 
+auto getIsXStreaming() -> bool {
+    bool c = false;
+    if (rp_HPGetIsXStreamingAvailable(&c) != RP_HP_OK) {
+        ERROR_LOG("Can't get xstreaming mode");
+    }
+    return c;
+}
+
 auto getModel() -> uint8_t {
     rp_HPeModels_t c = STEM_125_14_v1_0;
     if (rp_HPGetModel(&c) != RP_HP_OK) {
@@ -238,6 +246,9 @@ auto rp_app_init(void) -> int {
                     WARNING("Check master/slave");
                     auto osc = uio_lib::COscilloscope::create(uio, 1, true, getADCRate(), false, getADCBits(), getADCChannels());
                     g_isMaster = osc->isMaster();
+                    // Disable x-streaming
+                    if (getIsXStreaming() == false)
+                        g_isMaster = uio_lib::BoardMode::MASTER;
                     WARNING("Detected %s mode", g_isMaster == uio_lib::BoardMode::MASTER ? "Master" : (g_isMaster == uio_lib::BoardMode::SLAVE ? "Slave" : "Unknown"));
                     break;
                 }

@@ -71,7 +71,8 @@ profiles_t stem_65_16_Z7020_LL_v1_1 = {
     .E3_high_speed_gpio_rate = 0,
     .is_E3_present = false,
     .is_calib_in_fpga = true,
-    .is_fast_adc_16b_mode = false
+    .is_fast_adc_16b_mode = false,
+    .is_xstreaming = false
 };
 
 profiles_t* getProfile_STEM_65_16_Z7020_LL_v1_1(){

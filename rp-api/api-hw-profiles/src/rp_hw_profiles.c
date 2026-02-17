@@ -945,3 +945,19 @@ int rp_HPPrintPivotTable(char* keys){
     hp_cmn_PrintPivotTable(keys);
     return RP_HP_OK;
 }
+
+int rp_HPGetIsXStreamingAvailable(bool* value){
+    int state;
+    profiles_t* p = getProfile(&state);
+    if (p){
+        *value = p->is_xstreaming;
+        return RP_HP_OK;
+    }
+    return state;
+
+}
+
+bool rp_HPGetIsXStreamingAvailableOrDefault(){
+    profiles_t* p = getProfileDefualt();
+    return p->is_xstreaming;
+}

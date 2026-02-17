@@ -89,6 +89,8 @@ typedef struct {
 
     bool is_fast_adc_16b_mode;
 
+    bool is_xstreaming;
+
 } profiles_t;
 
 int hp_cmn_Init();

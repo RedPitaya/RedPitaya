@@ -155,6 +155,18 @@ auto ClientOpt::getADCRate() -> uint32_t {
     return c;
 }
 
+auto ClientOpt::getIsXStreaming() -> bool {
+    bool c = false;
+#ifdef RP_PLATFORM
+    if (rp_HPGetIsXStreamingAvailable(&c) != RP_HP_OK) {
+        ERROR_LOG("Can't get xstreaming mode");
+    }
+#else
+    c = false;
+#endif
+    return c;
+}
+
 auto ClientOpt::getModel() -> ClientOpt::models_t {
 #ifdef RP_PLATFORM
     rp_HPeModels_t c = STEM_125_14_v1_0;

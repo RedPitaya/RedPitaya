@@ -600,6 +600,15 @@ int rp_HPPrintPivotTable(char* keys);
 */
 int rp_HPGetIsValidEepromModel(bool* _out_value);
 
+/**
+* Returns information about whether the board supports X-Streaming.
+* Function rp_HPGetIsXStreamingAvailableOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
+*/
+int rp_HPGetIsXStreamingAvailable(bool* _out_value);
+bool rp_HPGetIsXStreamingAvailableOrDefault();
+
 #ifdef __cplusplus
 }
 #endif

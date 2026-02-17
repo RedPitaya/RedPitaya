@@ -433,6 +433,14 @@ print("rp_hw_profiles.rp_HPGetFPGAVersion()")
 res = rp_hw_profiles.rp_HPGetFPGAVersion()
 print(res)
 
+print("rp_hw_profiles.rp_HPGetIsXStreamingAvailable()")
+res = rp_hw_profiles.rp_HPGetIsXStreamingAvailable()
+print(res)
+
+print("rp_hw_profiles.rp_HPGetIsXStreamingAvailableOrDefault()")
+res = rp_hw_profiles.rp_HPGetIsXStreamingAvailableOrDefault()
+print(res)
+
 print("rp_hw_profiles.rp_HPPrint()")
 rp_hw_profiles.rp_HPPrint()
 

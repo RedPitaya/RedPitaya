@@ -70,7 +70,8 @@ profiles_t stem_125_10_v1_0 = {
     .E3_high_speed_gpio_rate = 0,
     .is_E3_present = false,
     .is_calib_in_fpga = true,
-    .is_fast_adc_16b_mode = true
+    .is_fast_adc_16b_mode = true,
+    .is_xstreaming = false
 };
 
 profiles_t* getProfile_STEM_125_10_v1_0(){
