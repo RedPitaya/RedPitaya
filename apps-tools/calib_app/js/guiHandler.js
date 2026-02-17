@@ -91,12 +91,12 @@ var checkGainParameters = function(_id) {
         $(_id).fI();
         return 0;
     }
-    if ($(_id).val() > 1.5) {
+    if ($(_id).val() > 1.9) {
         CLIENT.parametersCache["calib_sig"] = { value: 2 }; // request old parameters
         CLIENT.requestParameters();
         $(_id).fI();
         return 0;
-    } else if ($(_id).val() < 0.5) {
+    } else if ($(_id).val() < 0.1) {
         CLIENT.parametersCache["calib_sig"] = { value: 2 }; // request old parameters
         CLIENT.requestParameters();
         $(_id).fI();

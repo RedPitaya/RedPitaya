@@ -92,16 +92,16 @@ CStringParameter ss_state("SS_STATE", CBaseParameter::RW, "", 0);  // Current co
 CStringParameter ss_next_step("SS_NEXTSTEP", CBaseParameter::RW, "", 0);
 
 // Parameters for MANUAL mode
-CFloatParameter ch_gain_dac[RP_CALIB_MAX_DAC_CHANNELS] = INIT2("ch", "_gain_dac", CBaseParameter::RW, 1.0, 0, 0.5, 1.5);
+CFloatParameter ch_gain_dac[RP_CALIB_MAX_DAC_CHANNELS] = INIT2("ch", "_gain_dac", CBaseParameter::RW, 1.0, 0, 0.1, 1.9);
 CIntParameter ch_off_dac[RP_CALIB_MAX_DAC_CHANNELS] = INIT2("ch", "_off_dac", CBaseParameter::RW, 0, 0, -16382, 16382);
 
-CFloatParameter ch_gain_adc[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_gain_adc", CBaseParameter::RW, 1.0, 0, 0.5, 1.5);
+CFloatParameter ch_gain_adc[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_gain_adc", CBaseParameter::RW, 1.0, 0, 0.1, 1.9);
 CIntParameter ch_off_adc[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_off_adc", CBaseParameter::RW, 0, 0, -16382, 16382);
 
-CFloatParameter ch_gain_dac_new[RP_CALIB_MAX_DAC_CHANNELS] = INIT2("ch", "_gain_dac_new", CBaseParameter::RW, 1.0, 0, 0.5, 1.5);
+CFloatParameter ch_gain_dac_new[RP_CALIB_MAX_DAC_CHANNELS] = INIT2("ch", "_gain_dac_new", CBaseParameter::RW, 1.0, 0, 0.1, 1.9);
 CIntParameter ch_off_dac_new[RP_CALIB_MAX_DAC_CHANNELS] = INIT2("ch", "_off_dac_new", CBaseParameter::RW, 0, 0, -16382, 16382);
 
-CFloatParameter ch_gain_adc_new[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_gain_adc_new", CBaseParameter::RW, 1.0, 0, 0.5, 1.5);
+CFloatParameter ch_gain_adc_new[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_gain_adc_new", CBaseParameter::RW, 1.0, 0, 0.1, 1.9);
 CIntParameter ch_off_adc_new[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_off_adc_new", CBaseParameter::RW, 0, 0, -16382, 16382);
 
 CBooleanParameter adc_man_filter_bypass("adc_man_filter_bypass", CBaseParameter::RW, true, 0);
