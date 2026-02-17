@@ -311,7 +311,7 @@ scpi_clean:
 ################################################################################
 
 
-SDR_ZIP = SDR-bundle-70-b73ed5c0.zip
+SDR_ZIP = SDR-bundle-73-b0cca905.zip
 SDR_URL = https://downloads.redpitaya.com/hamlab/sdr-bundle/$(SDR_ZIP)
 
 sdr: | $(DL)
