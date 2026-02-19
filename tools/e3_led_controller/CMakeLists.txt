@@ -49,6 +49,12 @@ list(APPEND r_paths
     /opt/redpitaya/lib/web
 )
 
+find_library(GPIOD_LIB gpiod)
+
+if(NOT GPIOD_LIB)
+    message(FATAL_ERROR "libgpiod not found! Install with: sudo apt install libgpiod-dev")
+endif()
+
 set(CMAKE_INSTALL_RPATH ${r_paths})
 
 include_directories(${INSTALL_DIR}/include)
@@ -62,7 +68,7 @@ add_executable(${e3_led} "./src/e3_led_controller.cpp")
 add_executable(${e3_i2c} "./src/e3_i2c_controller.cpp")
 
 target_link_directories(${e3_led} PRIVATE ${INSTALL_DIR}/lib)
-target_link_libraries(${e3_led} PRIVATE rp-hw-profiles.a pthread)
+target_link_libraries(${e3_led} PRIVATE rp-hw-profiles.a pthread ${GPIOD_LIB})
 
 target_link_directories(${e3_i2c} PRIVATE ${INSTALL_DIR}/lib)
 target_link_libraries(${e3_i2c} PRIVATE rp-hw-profiles.a pthread)

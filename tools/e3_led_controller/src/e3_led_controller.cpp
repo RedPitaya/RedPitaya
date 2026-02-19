@@ -1,4 +1,5 @@
 #include <fcntl.h>
+#include <gpiod.h>
 #include <linux/i2c-dev.h>
 #include <linux/ioctl.h>
 #include <signal.h>
@@ -31,7 +32,8 @@ using namespace std;
 #define VALUE_MAX 40
 #define RP_GPIO_IN 0
 #define RP_GPIO_OUT 1
-#define YELLOW_LED8 906
+
+#define YELLOW_LED8 (906 - 906)
 
 std::atomic_bool g_run(true);
 
@@ -122,167 +124,136 @@ bool checkExtensionModuleConnection(bool _muteWarnings) {
 }
 
 int gpio_write(int pin, int value) {
-    char path[VALUE_MAX];
-    int fd;
+    struct gpiod_chip* chip;
+    struct gpiod_line* line;
+    char chip_path[32];
+    int ret = 0;
 
-    snprintf(path, VALUE_MAX, "/sys/class/gpio/gpio%d/value", pin);
-    // get pin value file descrptor
-    fd = open(path, O_WRONLY);
-    if (-1 == fd) {
-        printWithLog(LOG_ERR, stderr, "[gpio_write] Unable to to open sysfs pins value file %s for writing\n", path);
+    snprintf(chip_path, sizeof(chip_path), "/dev/gpiochip0");
+
+    chip = gpiod_chip_open(chip_path);
+    if (!chip) {
+        printWithLog(LOG_ERR, stderr, "[gpio_write] Unable to open GPIO chip %s\n", chip_path);
         return -1;
     }
+
+    line = gpiod_chip_get_line(chip, pin);
+    if (!line) {
+        printWithLog(LOG_ERR, stderr, "[gpio_write] Unable to get GPIO line %d\n", pin);
+        gpiod_chip_close(chip);
+        return -1;
+    }
+
+    ret = gpiod_line_request_output(line, "e3_led_controller", 0);
+    if (ret < 0) {
+        printWithLog(LOG_ERR, stderr, "[gpio_write] Unable to request GPIO %d as output\n", pin);
+        gpiod_line_release(line);
+        gpiod_chip_close(chip);
+        return -1;
+    }
+
     if (value == 0) {
-        //write low
-        if (1 != write(fd, "0", 1)) {
-            printWithLog(LOG_ERR, stderr, "[gpio_write] Unable to write value\n");
-            return -1;
+        ret = gpiod_line_set_value(line, 0);
+        if (ret < 0) {
+            printWithLog(LOG_ERR, stderr, "[gpio_write] Unable to set GPIO %d LOW\n", pin);
         }
     } else if (value == 1) {
-        //write high
-        if (1 != write(fd, "1", 1)) {
-            printWithLog(LOG_ERR, stderr, "[gpio_write] Unable to write value\n");
-            return -1;
+        ret = gpiod_line_set_value(line, 1);
+        if (ret < 0) {
+            printWithLog(LOG_ERR, stderr, "[gpio_write] Unable to set GPIO %d HIGH\n", pin);
         }
-    } else
+    } else {
         printWithLog(LOG_ERR, stderr, "[gpio_write] Nonvalid pin value requested\n");
+        ret = -1;
+    }
 
-    //close file
-    close(fd);
-    return 0;
+    gpiod_line_release(line);
+    gpiod_chip_close(chip);
+
+    return ret;
 }
 
 int gpio_read(int pin) {
+    struct gpiod_chip* chip;
+    struct gpiod_line* line;
+    int value;
+    int ret;
 
-    char path[VALUE_MAX];
-    char value_str[3];
-    int fd;
-
-    snprintf(path, VALUE_MAX, "/sys/class/gpio/gpio%d/value", pin);
-
-    // get pin file descriptor for reading its state
-    fd = open(path, O_RDONLY);
-    if (-1 == fd) {
-        printWithLog(LOG_ERR, stderr, "[gpio_read] Unable to open gpio sysfs pin value file %s for reading\n", path);
+    chip = gpiod_chip_open("/dev/gpiochip0");
+    if (!chip) {
+        printWithLog(LOG_ERR, stderr, "[gpio_read] Unable to open GPIO chip\n");
         return -1;
     }
 
-    // read value
-    if (-1 == read(fd, value_str, 3)) {
-        printWithLog(LOG_ERR, stderr, "[gpio_read] Unable to read value\n");
-        close(fd);
+    line = gpiod_chip_get_line(chip, pin);
+    if (!line) {
+        printWithLog(LOG_ERR, stderr, "[gpio_read] Unable to get GPIO line %d\n", pin);
+        gpiod_chip_close(chip);
         return -1;
     }
 
-    // close file
-    close(fd);
+    ret = gpiod_line_request_input(line, "e3_led_controller");
+    if (ret < 0) {
+        printWithLog(LOG_ERR, stderr, "[gpio_read] Unable to request GPIO %d as input\n", pin);
+        gpiod_line_release(line);
+        gpiod_chip_close(chip);
+        return -1;
+    }
 
-    // return integar value
-    return atoi(value_str);
+    value = gpiod_line_get_value(line);
+    if (value < 0) {
+        printWithLog(LOG_ERR, stderr, "[gpio_read] Unable to read value from GPIO %d\n", pin);
+        gpiod_line_release(line);
+        gpiod_chip_close(chip);
+        return -1;
+    }
+
+    gpiod_line_release(line);
+    gpiod_chip_close(chip);
+
+    return value;
 }
 
 int gpio_pin_direction(int pin, int value) {
-    char path[VALUE_MAX];
-    int fd;
+    struct gpiod_chip* chip;
+    struct gpiod_line* line;
+    char chip_path[32];
+    int ret = 0;
 
-    snprintf(path, VALUE_MAX, "/sys/class/gpio/gpio%d/direction", pin);
-    // get pin value file descrptor
-    fd = open(path, O_WRONLY);
-    if (-1 == fd) {
-        printWithLog(LOG_ERR, stderr, "[gpio_pin_direction] Unable to to open sysfs pins value file %s for writing direction\n", path);
+    snprintf(chip_path, sizeof(chip_path), "/dev/gpiochip0");
+
+    chip = gpiod_chip_open(chip_path);
+    if (!chip) {
+        printWithLog(LOG_ERR, stderr, "[gpio_pin_direction] Unable to open GPIO chip %s\n", chip_path);
         return -1;
     }
 
-    switch (value) {
-        case RP_GPIO_IN:
-            if (2 != write(fd, "in", 2)) {
-                printWithLog(LOG_ERR, stderr, "[gpio_pin_direction] Unable to write direction value\n");
-                close(fd);
-                return -1;
-            }
-            break;
-        case RP_GPIO_OUT:
-            if (3 != write(fd, "out", 3)) {
-                printWithLog(LOG_ERR, stderr, "[gpio_pin_direction] Unable to write direction value\n");
-                close(fd);
-                return -1;
-            }
-            break;
-        default:
-            printWithLog(LOG_ERR, stderr, "[gpio_pin_direction] Nonvalid pin direction requested\n");
-            break;
-    }
-
-    //close file
-    close(fd);
-    return 0;
-}
-
-int gpio_is_export(int pin, bool* value) {
-    char path[VALUE_MAX];
-    int fd;
-    snprintf(path, VALUE_MAX, "/sys/class/gpio/gpio%d/direction", pin);
-    // get pin value file descrptor
-    fd = open(path, O_WRONLY);
-    if (-1 == fd) {
-        *value = false;
-        return 0;
-    }
-    close(fd);
-    *value = true;
-    return 0;
-}
-
-int gpio_export(int pin) {
-    char path[VALUE_MAX];
-    int fd;
-    char buffer[10];
-
-    snprintf(path, VALUE_MAX, "/sys/class/gpio/export");
-    // get pin value file descrptor
-    fd = open(path, O_WRONLY);
-    if (-1 == fd) {
-        printWithLog(LOG_ERR, stderr, "[gpio_export] Unable to to open sysfs pins value file %s for export\n", path);
-        return -1;
-    }
-    sprintf(buffer, "%d", pin);
-    int str_len = strlen(buffer);
-    //write in
-    if (str_len != write(fd, buffer, str_len)) {
-        printWithLog(LOG_ERR, stderr, "[gpio_export] Unable to write export pin %s\n", buffer);
-        close(fd);
+    line = gpiod_chip_get_line(chip, pin);
+    if (!line) {
+        printWithLog(LOG_ERR, stderr, "[gpio_pin_direction] Unable to get GPIO line %d\n", pin);
+        gpiod_chip_close(chip);
         return -1;
     }
 
-    //close file
-    close(fd);
-    return 0;
-}
-
-int gpio_unexport(int pin) {
-    char path[VALUE_MAX];
-    int fd;
-    char buffer[10];
-
-    snprintf(path, VALUE_MAX, "/sys/class/gpio/unexport");
-    // get pin value file descrptor
-    fd = open(path, O_WRONLY);
-    if (-1 == fd) {
-        printWithLog(LOG_ERR, stderr, "[gpio_unexport] Unable to to open sysfs pins value file %s for unexport\n", path);
-        return -1;
-    }
-    sprintf(buffer, "%d", pin);
-    int str_len = strlen(buffer);
-    //write in
-    if (str_len != write(fd, buffer, str_len)) {
-        printWithLog(LOG_ERR, stderr, "[gpio_unexport] Unable to write unexport pin\n");
-        close(fd);
-        return -1;
+    if (value == RP_GPIO_IN) {
+        ret = gpiod_line_request_input(line, "e3_led_controller");
+        if (ret < 0) {
+            printWithLog(LOG_ERR, stderr, "[gpio_pin_direction] Unable to set GPIO %d as input\n", pin);
+        }
+    } else if (value == RP_GPIO_OUT) {
+        ret = gpiod_line_request_output(line, "e3_led_controller", 0);
+        if (ret < 0) {
+            printWithLog(LOG_ERR, stderr, "[gpio_pin_direction] Unable to set GPIO %d as output\n", pin);
+        }
+    } else {
+        printWithLog(LOG_ERR, stderr, "[gpio_pin_direction] Nonvalid pin direction requested\n");
+        ret = -1;
     }
 
-    //close file
-    close(fd);
-    return 0;
+    gpiod_line_release(line);
+    gpiod_chip_close(chip);
+
+    return ret;
 }
 
 int get_state_gpio(int* state, const char* str) {
@@ -393,18 +364,7 @@ int main(int argc, char** argv) {
             printWithLog(LOG_ERR, stderr, "[ERROR] Overlay loaded.\n");
             exit(EXIT_FAILURE);
         }
-        bool is_export = false;
-        gpio_is_export(YELLOW_LED8, &is_export);
-        int ret = 0;
-        if (!is_export) {
-            ret = gpio_export(YELLOW_LED8);
-            if (ret == -1)
-                exit(ret);
-        }
-        ret = gpio_pin_direction(YELLOW_LED8, RP_GPIO_OUT);
-        if (ret == -1)
-            exit(ret);
-        gpio_unexport(YELLOW_LED8);
+        int ret = gpio_pin_direction(YELLOW_LED8, RP_GPIO_OUT);
         if (ret == -1)
             exit(ret);
         exit(loadOverlay());
@@ -421,14 +381,6 @@ int main(int argc, char** argv) {
             printWithLog(LOG_ERR, stderr, "[ERROR] Overlay loaded. GPIO control is not possible\n");
             exit(EXIT_FAILURE);
         } else {
-            bool is_export = false;
-            gpio_is_export(YELLOW_LED8, &is_export);
-            if (!is_export) {
-                int ret = gpio_export(YELLOW_LED8);
-                if (ret != 0) {
-                    return ret;
-                }
-            }
             exit(gpio_pin_direction(YELLOW_LED8, set_gpio_dir));
         }
     }
@@ -438,22 +390,15 @@ int main(int argc, char** argv) {
             printWithLog(LOG_ERR, stderr, "[ERROR] Overlay loaded. GPIO control is not possible\n");
             exit(EXIT_FAILURE);
         } else {
-            bool is_export = false;
-            gpio_is_export(YELLOW_LED8, &is_export);
-            if (is_export) {
-                if (is_set_gpio_value) {
-                    exit(gpio_write(YELLOW_LED8, set_gpio_value));
-                } else {
-                    int ret = gpio_read(YELLOW_LED8);
-                    if (ret == -1) {
-                        return ret;
-                    }
-                    printf("%d", ret);
-                    exit(EXIT_SUCCESS);
-                }
+            if (is_set_gpio_value) {
+                exit(gpio_write(YELLOW_LED8, set_gpio_value));
             } else {
-                printWithLog(LOG_ERR, stderr, "[ERROR] GPIO Direction not set\n");
-                exit(EXIT_FAILURE);
+                int ret = gpio_read(YELLOW_LED8);
+                if (ret == -1) {
+                    return ret;
+                }
+                printf("%d", ret);
+                exit(EXIT_SUCCESS);
             }
         }
     }
@@ -491,21 +436,14 @@ int main(int argc, char** argv) {
                         removeOverlay();
                         printWithLog(LOG_INFO, stdout, "[INFO] Remove overlay.\n");
                     }
-                    bool is_export = false;
-                    gpio_is_export(YELLOW_LED8, &is_export);
-                    if (!is_export) {
-                        int ret = gpio_export(YELLOW_LED8);
-                        if (ret != 0) {
-                            printWithLog(LOG_ERR, stderr, "[ERROR] Can't export GPIO %d\n", YELLOW_LED8);
-                            continue;
-                        }
-                        ret = gpio_pin_direction(YELLOW_LED8, RP_GPIO_IN);
-                        if (ret != 0) {
-                            printWithLog(LOG_ERR, stderr, "[ERROR] Can't set IN mode for GPIO %d\n", YELLOW_LED8);
-                            continue;
-                        }
+
+                    int ret = gpio_pin_direction(YELLOW_LED8, RP_GPIO_IN);
+                    if (ret != 0) {
+                        printWithLog(LOG_ERR, stderr, "[ERROR] Can't set IN mode for GPIO %d\n", YELLOW_LED8);
+                        continue;
                     }
-                    int ret = gpio_read(YELLOW_LED8);
+
+                    ret = gpio_read(YELLOW_LED8);
                     if (ret == -1) {
                         printWithLog(LOG_ERR, stderr, "[ERROR] Can't read value for GPIO %d\n", YELLOW_LED8);
                         continue;
@@ -520,24 +458,9 @@ int main(int argc, char** argv) {
                     }
                 } else {
                     if (!isOverlayLoaded()) {
-                        bool is_export = false;
-                        gpio_is_export(YELLOW_LED8, &is_export);
-                        int ret = 0;
-                        if (!is_export) {
-                            ret = gpio_export(YELLOW_LED8);
-                            if (ret == -1) {
-                                printWithLog(LOG_ERR, stderr, "[ERROR] Can't export GPIO %d\n", YELLOW_LED8);
-                                continue;
-                            }
-                        }
-                        ret = gpio_pin_direction(YELLOW_LED8, RP_GPIO_IN);
+                        int ret = gpio_pin_direction(YELLOW_LED8, RP_GPIO_OUT);
                         if (ret != 0) {
                             printWithLog(LOG_ERR, stderr, "[ERROR] Can't set OUT mode for GPIO %d\n", YELLOW_LED8);
-                            continue;
-                        }
-                        ret = gpio_unexport(YELLOW_LED8);
-                        if (ret == -1) {
-                            printWithLog(LOG_ERR, stderr, "[ERROR] Can't unexport GPIO %d\n", YELLOW_LED8);
                             continue;
                         }
                         loadOverlay();
@@ -548,22 +471,9 @@ int main(int argc, char** argv) {
         }
     } else {
         if (!isOverlayLoaded()) {
-            bool is_export = false;
-            gpio_is_export(YELLOW_LED8, &is_export);
-            int ret = 0;
-            if (!is_export) {
-                ret = gpio_export(YELLOW_LED8);
-                if (ret == -1) {
-                    printWithLog(LOG_ERR, stderr, "[ERROR] Can't export GPIO %d\n", YELLOW_LED8);
-                }
-            }
-            ret = gpio_pin_direction(YELLOW_LED8, RP_GPIO_IN);
+            int ret = gpio_pin_direction(YELLOW_LED8, RP_GPIO_OUT);
             if (ret != 0) {
                 printWithLog(LOG_ERR, stderr, "[ERROR] Can't set OUT mode for GPIO %d\n", YELLOW_LED8);
-            }
-            ret = gpio_unexport(YELLOW_LED8);
-            if (ret == -1) {
-                printWithLog(LOG_ERR, stderr, "[ERROR] Can't unexport GPIO %d\n", YELLOW_LED8);
             }
             loadOverlay();
             printWithLog(LOG_INFO, stdout, "[INFO] Loaded overlay.\n");

@@ -47,6 +47,12 @@ list(APPEND r_paths
     /opt/redpitaya/lib/web
 )
 
+find_library(GPIOD_LIB gpiod)
+
+if(NOT GPIOD_LIB)
+    message(FATAL_ERROR "libgpiod not found! Install with: sudo apt install libgpiod-dev")
+endif()
+
 set(CMAKE_INSTALL_RPATH ${r_paths})
 
 include_directories("src/xml")
@@ -75,7 +81,7 @@ add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
 add_compile_options($<$<CONFIG:Debug>:-DTRACE_ENABLE>)
 add_compile_options(-Wall -pedantic -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
-link_libraries(-L${INSTALL_DIR}/lib -lrp-hw -lrp-hw-profiles)
+link_libraries(-L${INSTALL_DIR}/lib -lrp-hw -lrp-hw-profiles ${GPIOD_LIB})
 
 add_library(${PROJECT_NAME}-xml OBJECT ${PR_XML_SOURCES})
 add_library(${PROJECT_NAME}-i2c OBJECT ${PR_I2C_SOURCES})
