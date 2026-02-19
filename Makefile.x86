@@ -228,7 +228,7 @@ ifeq ($(MODEL),Z20_250_12a)
 	# Used FPGA bitstream from Z20_250_12 model
 	# need rebuild only barebone for new dts
 
-	FPGA_BAREBONE_250_A = $(FPGA_COMMIT)
+	FPGA_BAREBONE = $(FPGA_COMMIT)
 
 	FPGA_MODEL = Z20_250
 	FPGA_VERSION = z20_250a
