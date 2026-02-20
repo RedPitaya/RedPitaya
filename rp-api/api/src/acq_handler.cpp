@@ -283,7 +283,15 @@ int acq_GetArmKeep(rp_channel_t channel, bool* state) {
 }
 
 int acq_Set16BitMode(bool enable) {
-    return osc_Set16BitMode(RP_CH_1, enable);
+    uint8_t channels = 0;
+    if (rp_HPGetFastADCChannelsCount(&channels) != RP_HP_OK) {
+        ERROR_LOG("Can't get fast ADC channels count");
+        return RP_NOTS;
+    }
+    for (int i = 0; i < channels; i++) {
+        ECHECK(osc_Set16BitMode((rp_channel_t)i, enable))
+    }
+    return RP_OK;
 }
 
 int acq_Get16BitMode(bool* state) {

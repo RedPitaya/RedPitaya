@@ -33,7 +33,6 @@ typedef struct {
     uint8_t arm_keep : 1;              // (W) arm_keep
     uint8_t all_data_written : 1;      // (R) All data written to buffer
     uint8_t enable_split_trigger : 1;  // Work only first channel
-    uint8_t enable_16b_mode : 1;       // (R/W) Sets ADC mode to 16 Bit
     uint8_t : 1;
     void print() volatile {
         printRegBit(" - %-39s = 0x%08X (%d)\n", "start_write", start_write);
@@ -42,7 +41,6 @@ typedef struct {
         printRegBit(" - %-39s = 0x%08X (%d)\n", "arm_keep", arm_keep);
         printRegBit(" - %-39s = 0x%08X (%d)\n", "all_data_written", all_data_written);
         printRegBit(" - %-39s = 0x%08X (%d)\n", "enable_split_trigger", enable_split_trigger);
-        printRegBit(" - %-39s = 0x%08X (%d)\n", "enable_16b_mode", enable_16b_mode);
     };
 } config_ch_t;
 
@@ -83,8 +81,12 @@ typedef union {
 
 typedef struct {
     uint8_t average : 1;
-    uint8_t : 7;
-    void print() volatile { printRegBit(" - %-39s = 0x%08X (%d)\n", "average", average); };
+    uint8_t enable_16b_mode : 1;  // (R/W) Sets ADC mode to 16 Bit
+    uint8_t : 6;
+    void print() volatile {
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "average", average);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "enable_16b_mode", enable_16b_mode);
+    };
 } trig_average_t;
 
 typedef union {

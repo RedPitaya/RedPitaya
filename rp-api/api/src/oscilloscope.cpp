@@ -578,16 +578,16 @@ int osc_GetArmKeep(rp_channel_t channel, bool* state) {
 }
 
 int osc_Set16BitMode(rp_channel_t channel, bool enable) {
-    config_u_t config;
+    trig_average_u_t config;
     switch (channel) {
         case RP_CH_1:
         case RP_CH_2:
         case RP_CH_3:
         case RP_CH_4:
-            config.reg_full = osc_reg->config;
-            config.reg.config_ch[channel].enable_16b_mode = enable ? 0x1 : 0;
-            osc_reg->config = config.reg_full;
-            cmn_Debug("[Write] osc_reg->config <- 0x%X", config.reg_full);
+            config.reg_full = osc_reg->average;
+            config.reg[channel].enable_16b_mode = enable ? 0x1 : 0;
+            osc_reg->average = config.reg_full;
+            cmn_Debug("[Write] osc_reg->average <- 0x%X", config.reg_full);
             return RP_OK;
         default:
             ERROR_LOG("Wrong channel %d", channel)
@@ -597,15 +597,15 @@ int osc_Set16BitMode(rp_channel_t channel, bool enable) {
 }
 
 int osc_Get16BitMode(rp_channel_t channel, bool* state) {
-    config_u_t config;
+    trig_average_u_t config;
     switch (channel) {
         case RP_CH_1:
         case RP_CH_2:
         case RP_CH_3:
         case RP_CH_4:
-            config.reg_full = osc_reg->config;
-            *state = config.reg.config_ch[channel].enable_16b_mode;
-            cmn_Debug("[Read] osc_reg->config -> 0x%X", config.reg_full);
+            config.reg_full = osc_reg->average;
+            *state = config.reg[channel].enable_16b_mode;
+            cmn_Debug("[Read] osc_reg->average -> 0x%X", config.reg_full);
             return RP_OK;
         default:
             ERROR_LOG("Wrong channel %d", channel)
