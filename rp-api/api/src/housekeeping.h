@@ -191,6 +191,8 @@ typedef struct housekeeping_control_s_v4 {
     uint32_t reserved_9[41];      // 0x5C - 0x100
     uint32_t fpga_ready;          // 0x100 **FPGA ready**
     uint32_t acq_clock_counter;   // 0x104 **ADC clock frequency meter**
+    uint32_t reserved_10[958];    // 0x108 - 0x1000
+    ext_trigger_u_t ext_trigger;  // 0x1000 **External trigger override**
 } housekeeping_control_v4_t;
 
 static const uint32_t LED_CONTROL_MASK = 0xFF;
