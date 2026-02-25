@@ -67,7 +67,7 @@ CFloatParameter inScale[MAX_ADC_CHANNELS] = INIT("GPOS_SCALE_CH", "", CBaseParam
 CFloatParameter inOffsetZero[MAX_ADC_CHANNELS] = INIT("GPOS_OFFSET_ZERO_CH", "", CBaseParameter::RW, 0, 0, -250000, 250000, CONFIG_VAR);
 CBooleanParameter inInvShow[MAX_ADC_CHANNELS] = INIT("GPOS_INVERTED_CH", "", CBaseParameter::RW, false, 0, CONFIG_VAR);
 
-CFloatParameter inProbe[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_PROBE", CBaseParameter::RW, 1, 0, 0, 1000, CONFIG_VAR);
+CFloatParameter inProbe[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_PROBE", CBaseParameter::RW, 1, 0, 0, 2000, CONFIG_VAR);
 
 CIntParameter inGain[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_IN_GAIN", CBaseParameter::RW, RP_LOW, 0, 0, 1, CONFIG_VAR);
 CIntParameter inFilter[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_IN_FILTER", CBaseParameter::RW, 1, 0, 0, 1, CONFIG_VAR);

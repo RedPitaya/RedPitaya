@@ -86,7 +86,7 @@ auto updateMathParametersToWEB(bool is_auto_scale) -> void {
     //    WARNING("\t\ttinMathScale %f dvalue %f min %f max %f",inMathScale.Value(), dvalue ,inMathScale.GetMin() , inMathScale.GetMax())
 
     if (dvalue < inMathScale.GetMin() || dvalue > inMathScale.GetMax()) {
-        //        WARNING("inMathScale Rescale");
+        TRACE_SHORT("inMathScale Rescale");
         rpApp_OscScaleMath();
     } else {
         if (fabs(inMathScale.Value() - dvalue) > 0.0005) {

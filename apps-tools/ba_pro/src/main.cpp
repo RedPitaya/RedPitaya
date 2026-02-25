@@ -69,7 +69,7 @@ CIntParameter ba_logic_mode("BA_LOGIC_MODE", CBaseParameter::RW, 0, 0, 0, 10, CO
 
 CIntParameter inGain("BA_IN_GAIN", CBaseParameter::RW, RP_LOW, 0, 0, 1, CONFIG_VAR);
 CIntParameter inAC_DC("BA_IN_AC_DC", CBaseParameter::RW, RP_DC, 0, 0, 1, CONFIG_VAR);
-CIntParameter inProbe("BA_PROBE", CBaseParameter::RW, 1, 0, 0, 1000, CONFIG_VAR);
+CIntParameter inProbe("BA_PROBE", CBaseParameter::RW, 1, 0, 0, 2000, CONFIG_VAR);
 
 // Status parameters
 CStringParameter redpitaya_model("RP_MODEL_STR", CBaseParameter::RO, getModelS(), 0);

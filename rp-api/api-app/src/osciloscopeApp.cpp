@@ -382,7 +382,6 @@ int osc_getAmplitudeScale(rpApp_osc_source source, double* scale) {
 int osc_setAmplitudeOffset(rpApp_osc_source source, double offset) {
     std::lock_guard<std::mutex> lock(g_mutex);
     SOURCE_ACTION_4CH(source, ch_ampOffset[0] = offset, ch_ampOffset[1] = offset, ch_ampOffset[2] = offset, ch_ampOffset[3] = offset, math_ampOffset = offset)
-
     update_view();
     return RP_OK;
 }
@@ -1541,7 +1540,7 @@ void checkAutoscale(bool fromThread) {
 
             period_to_set = MAX(0.0001f, period_to_set);
             period_to_set = MIN(500.f, period_to_set);
-
+            vMean = 0;
             for (auto source = 0; source <= RPAPP_OSC_SOUR_MATH; ++source) {
                 if (source < channels || source == RPAPP_OSC_SOUR_MATH) {
 
@@ -1561,7 +1560,8 @@ void checkAutoscale(bool fromThread) {
                             }
                         }
                     }
-
+                    if (isnanf(vMean))
+                        vMean = 0;
                     ECHECK_APP_NO_RET(scaleChannel((rpApp_osc_source)source, vpp, vMean));
                 }
             }
@@ -1723,8 +1723,8 @@ void mainViewThreadFun() {
                     range.m_validBeforeTrigger = buff->m_validBeforeTrigger;
                     range.m_validAfterTrigger = buff->m_validAfterTrigger;
                 }
-                g_decimator.decimate((rp_channel_t)channel, buff->m_data->ch_f[channel], ADC_BUFFER_SIZE, posInPoints, view, orignalData, &viewDecInfo, &viewDecRawInfo, range,
-                                     &buffers[channel]);
+                g_decimator.decimate(
+                    (rp_channel_t)channel, buff->m_data->ch_f[channel], ADC_BUFFER_SIZE, posInPoints, view, orignalData, &viewDecInfo, &viewDecRawInfo, range, &buffers[channel]);
                 viewInfo->m_dataHasTrigger = buff->m_dataHasTrigger;
                 viewInfo->m_decimatoion = buff->m_decimation;
                 viewInfo->m_max = viewDecInfo.m_max;

@@ -51,7 +51,7 @@ CBooleanParameter inShow[MAX_ADC_CHANNELS] = INIT("CH", "_SHOW", CBaseParameter:
 CBooleanParameter inShowMin[MAX_ADC_CHANNELS] = INIT("CH", "_SHOW_MIN", CBaseParameter::RW, false, 0, CONFIG_VAR);
 CBooleanParameter inShowMax[MAX_ADC_CHANNELS] = INIT("CH", "_SHOW_MAX", CBaseParameter::RW, false, 0, CONFIG_VAR);
 CIntParameter inGain[MAX_ADC_CHANNELS] = INIT("CH", "_IN_GAIN", CBaseParameter::RW, 0, 0, 0, 1, CONFIG_VAR);
-CIntParameter inProbe[MAX_ADC_CHANNELS] = INIT("CH", "_PROBE", CBaseParameter::RW, 1, 0, 1, 1000, CONFIG_VAR);
+CIntParameter inProbe[MAX_ADC_CHANNELS] = INIT("CH", "_PROBE", CBaseParameter::RW, 1, 0, 1, 2000, CONFIG_VAR);
 CIntParameter inFilter[MAX_ADC_CHANNELS] = INIT("CH", "_IN_FILTER", CBaseParameter::RW, 1, 0, 0, 1, CONFIG_VAR);
 CIntParameter inAC_DC[MAX_ADC_CHANNELS] = INIT("CH", "_IN_AC_DC", CBaseParameter::RW, 0, 0, 0, 1, CONFIG_VAR);
 

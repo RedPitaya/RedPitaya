@@ -437,9 +437,9 @@
                     return;
                 }
                 OSC.state.processing = true;
-
+                let receive = undefined
                 try {
-                    let receive = binParser.convert(ev.data)
+                    receive = binParser.convert(ev.data)
                     OSC.compressed_data += receive["compressed_data"];
                     OSC.decompressed_data += receive["decompressed_data"];
 
