@@ -76,6 +76,8 @@ int acq_GetDataPosV(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, 
 int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* buffer, bool use_calib);
 int acq_GetOldestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer);
 int acq_GetLatestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer);
+int acq_GetOldestDataRawWithCalib(rp_channel_t channel, uint32_t* size, int16_t* buffer);
+int acq_GetLatestDataRawWithCalib(rp_channel_t channel, uint32_t* size, int16_t* buffer);
 int acq_GetDataV(rp_channel_t channel, uint32_t pos, uint32_t* size, float* buffer);
 int acq_GetOldestDataV(rp_channel_t channel, uint32_t* size, float* buffer);
 int acq_GetLatestDataV(rp_channel_t channel, uint32_t* size, float* buffer);

@@ -1330,6 +1330,18 @@ int acq_GetOldestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer) 
     return acq_GetDataRaw(channel, pos, size, buffer, false);
 }
 
+int acq_GetOldestDataRawWithCalib(rp_channel_t channel, uint32_t* size, int16_t* buffer) {
+
+    CHECK_CHANNEL
+
+    uint32_t pos;
+
+    acq_GetWritePointer(channel, &pos);
+    pos++;
+
+    return acq_GetDataRaw(channel, pos, size, buffer, true);
+}
+
 int acq_GetLatestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer) {
 
     CHECK_CHANNEL
@@ -1347,6 +1359,24 @@ int acq_GetLatestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer) 
     pos -= (*size);
 
     return acq_GetDataRaw(channel, pos, size, buffer, false);
+}
+
+int acq_GetLatestDataRawWithCalib(rp_channel_t channel, uint32_t* size, int16_t* buffer) {
+    CHECK_CHANNEL
+
+    *size = MIN(*size, ADC_BUFFER_SIZE);
+
+    uint32_t pos;
+    acq_GetWritePointer(channel, &pos);
+
+    pos++;
+
+    if ((*size) > pos) {
+        pos += ADC_BUFFER_SIZE;
+    }
+    pos -= (*size);
+
+    return acq_GetDataRaw(channel, pos, size, buffer, true);
 }
 
 int acq_GetDataVEx(rp_channel_t channel, uint32_t pos, uint32_t* size, void* in_buffer, bool is_float) {

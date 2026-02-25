@@ -816,6 +816,16 @@ print("rp.rp_AcqGetLatestDataRaw(rp.RP_CH_1,1024,ibuff.cast())")
 res = rp.rp_AcqGetLatestDataRaw(rp.RP_CH_1,1024,ibuff.cast())
 print(res,ibuff[0],ibuff[1],ibuff[2],ibuff[3],ibuff[4])
 
+ibuff = rp.i16Buffer(1024)
+print("rp.rp_AcqGetOldestDataRawWithCalib(rp.RP_CH_1,1024,ibuff.cast())")
+res = rp.rp_AcqGetOldestDataRawWithCalib(rp.RP_CH_1,1024,ibuff.cast())
+print(res,ibuff[0],ibuff[1],ibuff[2],ibuff[3],ibuff[4])
+
+ibuff = rp.i16Buffer(1024)
+print("rp.rp_AcqGetLatestDataRawWithCalib(rp.RP_CH_1,1024,ibuff.cast())")
+res = rp.rp_AcqGetLatestDataRawWithCalib(rp.RP_CH_1,1024,ibuff.cast())
+print(res,ibuff[0],ibuff[1],ibuff[2],ibuff[3],ibuff[4])
+
 fbuff = rp.fBuffer(1025)
 print("rp.rp_AcqGetDataV(rp.RP_CH_1,0,1024,fbuff)")
 res = rp.rp_AcqGetDataV(rp.RP_CH_1,0,1024,fbuff)
@@ -828,6 +838,14 @@ res = rp.rp_AcqGetOldestDataRawNP(rp.RP_CH_1,arr_i16)
 print(arr_i16)
 
 print("rp.rp_AcqGetLatestDataRawNP(rp.RP_CH_1,arr_i16)")
+res = rp.rp_AcqGetLatestDataRawNP(rp.RP_CH_1,arr_i16)
+print(arr_i16)
+
+print("rp.rp_AcqGetOldestDataRawWithCalibNP(rp.RP_CH_1,arr_i16)")
+res = rp.rp_AcqGetOldestDataRawNP(rp.RP_CH_1,arr_i16)
+print(arr_i16)
+
+print("rp.rp_AcqGetLatestDataRawWithCalibNP(rp.RP_CH_1,arr_i16)")
 res = rp.rp_AcqGetLatestDataRawNP(rp.RP_CH_1,arr_i16)
 print(arr_i16)
 

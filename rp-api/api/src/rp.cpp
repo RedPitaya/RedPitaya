@@ -1718,6 +1718,15 @@ int rp_AcqGetOldestDataRawNP(rp_channel_t channel, int16_t* buff, int size) {
     return acq_GetOldestDataRaw(channel, &usize, buff);
 }
 
+int rp_AcqGetOldestDataRawWithCalib(rp_channel_t channel, uint32_t* size, int16_t* buffer) {
+    return acq_GetOldestDataRawWithCalib(channel, size, buffer);
+}
+
+int rp_AcqGetOldestDataRawWithCalibNP(rp_channel_t channel, int16_t* buff, int size) {
+    uint32_t usize = size;
+    return acq_GetOldestDataRawWithCalib(channel, &usize, buff);
+}
+
 int rp_AcqGetLatestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer) {
     return acq_GetLatestDataRaw(channel, size, buffer);
 }
@@ -1725,6 +1734,15 @@ int rp_AcqGetLatestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer
 int rp_AcqGetLatestDataRawNP(rp_channel_t channel, int16_t* np_buffer, int size) {
     uint32_t usize = size;
     return acq_GetLatestDataRaw(channel, &usize, np_buffer);
+}
+
+int rp_AcqGetLatestDataRawWithCalib(rp_channel_t channel, uint32_t* size, int16_t* buffer) {
+    return acq_GetLatestDataRawWithCalib(channel, size, buffer);
+}
+
+int rp_AcqGetLatestDataRawWithCalibNP(rp_channel_t channel, int16_t* np_buffer, int size) {
+    uint32_t usize = size;
+    return acq_GetLatestDataRawWithCalib(channel, &usize, np_buffer);
 }
 
 int rp_AcqGetDataV(rp_channel_t channel, uint32_t pos, uint32_t* size, float* buffer) {

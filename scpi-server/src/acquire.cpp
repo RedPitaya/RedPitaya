@@ -1145,7 +1145,7 @@ scpi_result_t RP_AcqDataPosQ(scpi_t* context) {
         if (uc->buffer.size() < sizeof(int16_t) * ADC_BUFFER_SIZE) {
             uc->buffer.resize(sizeof(int16_t) * ADC_BUFFER_SIZE);
         }
-        result = rp_AcqGetDataPosRaw(channel, start, end, reinterpret_cast<int16_t*>(uc->buffer.data()), &size);
+        result = rp_AcqGetDataRawWithCalib(channel, start, &size, reinterpret_cast<int16_t*>(uc->buffer.data()));
         if (result != RP_OK) {
             RP_LOG_CRIT("Failed to get raw data: %s", rp_GetError(result));
             if (getRetOnError())
@@ -1211,7 +1211,7 @@ scpi_result_t RP_AcqDataQ(scpi_t* context) {
         if (uc->buffer.size() < sizeof(int16_t) * ADC_BUFFER_SIZE) {
             uc->buffer.resize(sizeof(int16_t) * ADC_BUFFER_SIZE);
         }
-        result = rp_AcqGetDataRaw(channel, start, &size, reinterpret_cast<int16_t*>(uc->buffer.data()));
+        result = rp_AcqGetDataRawWithCalib(channel, start, &size, reinterpret_cast<int16_t*>(uc->buffer.data()));
         if (result != RP_OK) {
             RP_LOG_CRIT("Failed to get raw data: %s", rp_GetError(result));
             if (getRetOnError())
@@ -1264,7 +1264,7 @@ scpi_result_t RP_AcqDataOldestAllQ(scpi_t* context) {
         if (uc->buffer.size() < sizeof(int16_t) * ADC_BUFFER_SIZE) {
             uc->buffer.resize(sizeof(int16_t) * ADC_BUFFER_SIZE);
         }
-        result = rp_AcqGetOldestDataRaw(channel, &size, reinterpret_cast<int16_t*>(uc->buffer.data()));
+        result = rp_AcqGetOldestDataRawWithCalib(channel, &size, reinterpret_cast<int16_t*>(uc->buffer.data()));
         if (result != RP_OK) {
             RP_LOG_CRIT("Failed to get raw data: %s", rp_GetError(result));
             if (getRetOnError())
@@ -1322,7 +1322,7 @@ scpi_result_t RP_AcqOldestDataQ(scpi_t* context) {
         if (uc->buffer.size() < sizeof(int16_t) * ADC_BUFFER_SIZE) {
             uc->buffer.resize(sizeof(int16_t) * ADC_BUFFER_SIZE);
         }
-        result = rp_AcqGetOldestDataRaw(channel, &size, reinterpret_cast<int16_t*>(uc->buffer.data()));
+        result = rp_AcqGetOldestDataRawWithCalib(channel, &size, reinterpret_cast<int16_t*>(uc->buffer.data()));
         if (result != RP_OK) {
             RP_LOG_CRIT("Failed to get raw data: %s", rp_GetError(result));
             if (getRetOnError())
@@ -1380,7 +1380,7 @@ scpi_result_t RP_AcqLatestDataQ(scpi_t* context) {
         if (uc->buffer.size() < sizeof(int16_t) * ADC_BUFFER_SIZE) {
             uc->buffer.resize(sizeof(int16_t) * ADC_BUFFER_SIZE);
         }
-        result = rp_AcqGetLatestDataRaw(channel, &size, reinterpret_cast<int16_t*>(uc->buffer.data()));
+        result = rp_AcqGetLatestDataRawWithCalib(channel, &size, reinterpret_cast<int16_t*>(uc->buffer.data()));
         if (result != RP_OK) {
             RP_LOG_CRIT("Failed to get raw data: %s", rp_GetError(result));
             if (getRetOnError())
@@ -1481,7 +1481,7 @@ scpi_result_t RP_AcqTriggerDataQ(scpi_t* context) {
         if (uc->buffer.size() < sizeof(int16_t) * ADC_BUFFER_SIZE) {
             uc->buffer.resize(sizeof(int16_t) * ADC_BUFFER_SIZE);
         }
-        result = rp_AcqGetDataRaw(channel, data_start, &data_size, reinterpret_cast<int16_t*>(uc->buffer.data()));
+        result = rp_AcqGetDataRawWithCalib(channel, data_start, &data_size, reinterpret_cast<int16_t*>(uc->buffer.data()));
         if (result != RP_OK) {
             RP_LOG_CRIT("Failed to get raw data: %s", rp_GetError(result));
             if (getRetOnError())
