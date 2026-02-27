@@ -75,11 +75,61 @@ inline void update_view() {
 }
 
 static inline int scaleChannel(rpApp_osc_source channel, float vpp, float vMean) {
-    float scale1 = (float)(vpp * AUTO_SCALE_AMP_SCA_FACTOR / (float)g_viewController.getGridYCount());
-    float scale2 = (float)((fabs(vpp) + (fabs(vMean) * 2.f)) * AUTO_SCALE_AMP_SCA_FACTOR / (float)g_viewController.getGridYCount());
-    float scale = MAX(MAX(scale1, scale2), 0.002);
-    ECHECK_APP(osc_setAmplitudeScale(channel, roundUpTo125(scale)));
-    ECHECK_APP(osc_setAmplitudeOffset(channel, -vMean));
+    double oldScale, oldOffset;
+    ECHECK_APP(osc_getAmplitudeScale(channel, &oldScale));
+    ECHECK_APP(osc_getAmplitudeOffset(channel, &oldOffset));
+
+    float gridYCount = (float)g_viewController.getGridYCount();
+
+    float oldPercentFromCenter = 0.0f;
+    if (oldScale > 0.001f) {
+        float oldHalfScreenVolts = (float)oldScale * gridYCount / 2.0f;
+        oldPercentFromCenter = ((float)(-oldOffset) / oldHalfScreenVolts) * 100.0f;
+    }
+
+    float baseScale = (float)(vpp * AUTO_SCALE_AMP_SCA_FACTOR / gridYCount);
+
+    float scaleWithPosition = baseScale;
+
+    if (oldScale > 0.001f) {
+        float halfScreenVolts = baseScale * gridYCount / 2.0f;
+        float desiredOffset = -(oldPercentFromCenter / 100.0f) * halfScreenVolts;
+
+        float signalTop = -vMean + (vpp / 2.0f);
+        float signalBottom = -vMean - (vpp / 2.0f);
+        float topWithOffset = desiredOffset + signalTop;
+        float bottomWithOffset = desiredOffset + signalBottom;
+
+        if (topWithOffset > halfScreenVolts || bottomWithOffset < -halfScreenVolts) {
+            float neededVoltageRange = 0;
+
+            if (topWithOffset > halfScreenVolts) {
+                float excessTop = topWithOffset - halfScreenVolts;
+                neededVoltageRange = (signalTop - signalBottom) + excessTop * 2;
+            } else if (bottomWithOffset < -halfScreenVolts) {
+                float excessBottom = -halfScreenVolts - bottomWithOffset;
+                neededVoltageRange = (signalTop - signalBottom) + excessBottom * 2;
+            }
+
+            float positionScale = neededVoltageRange * AUTO_SCALE_AMP_SCA_FACTOR / gridYCount;
+            scaleWithPosition = MAX(baseScale, positionScale);
+        }
+    }
+
+    float scale1 = baseScale;
+    float scale2 = (float)((fabs(vpp) + (fabs(vMean) * 2.f)) * AUTO_SCALE_AMP_SCA_FACTOR / gridYCount);
+    float scale = MAX(MAX(scale1, scale2), 0.002f);
+    scale = MAX(scale, scaleWithPosition);
+
+    float roundedScale = roundUpTo125(scale);
+
+    ECHECK_APP(osc_setAmplitudeScale(channel, roundedScale));
+
+    float newHalfScreenVolts = roundedScale * gridYCount / 2.0f;
+    float newOffsetVolts = -(oldPercentFromCenter / 100.0f) * newHalfScreenVolts;
+
+    ECHECK_APP(osc_setAmplitudeOffset(channel, newOffsetVolts));
+
     return RP_OK;
 }
 
@@ -369,6 +419,8 @@ int osc_setAmplitudeScale(rpApp_osc_source source, double scale) {
     }
     if (!isnan(offset)) {
         ECHECK_APP(osc_setAmplitudeOffset(source, offset));
+    } else {
+        WARNING("Offset is nan")
     }
     EXECUTE_ATOMICALLY(g_mutex, update_view());
     return RP_OK;
@@ -753,7 +805,7 @@ int osc_getExportedData(rpApp_osc_source _source, rpApp_osc_exportMode _mode, bo
         std::vector<float> data;
         data.reserve(*_size);
         for (auto i = 0u; i < *_size; ++i) {
-            if (!isnan(_data[i])) {
+            if (!isnanf(_data[i])) {
                 float d = _data[i];
                 unscaleAmplitudeChannel(_source, d, &d);
                 data.push_back(d);
@@ -1471,16 +1523,19 @@ void checkAutoscale(bool fromThread) {
         for (int source = RPAPP_OSC_SOUR_CH1; source <= RPAPP_OSC_SOUR_MATH; ++source) {
             if (source < channels || source == RPAPP_OSC_SOUR_MATH) {
                 ECHECK_APP_NO_RET(osc_measureVpp((rpApp_osc_source)source, &vpp));
-                ECHECK_APP_NO_RET(osc_measureMeanVoltage((rpApp_osc_source)source, &vMean));
+                float min, max;
+                ECHECK_APP_NO_RET(osc_measureMinVoltage((rpApp_osc_source)source, &min));
+                ECHECK_APP_NO_RET(osc_measureMaxVoltage((rpApp_osc_source)source, &max));
+                vMean = (max - min) / 2.0f;
                 if (fabs(vpp) > SIGNAL_EXISTENCE) {
                     ret = osc_measurePeriod((rpApp_osc_source)source, &period);
                     periods[source][timeScaleIdx] = (ret == RP_OK) ? period : 0.f;
                 } else {
                     periods[source][timeScaleIdx] = 0.f;
                 }
-
                 vpps[source][timeScaleIdx] = vpp;
                 vMeans[source][timeScaleIdx] = vMean;
+                TRACE("Src: %d TS: %f P: %f Vpp %f Mean %f", source, scales[timeScaleIdx], periods[source][timeScaleIdx], vpps[source][timeScaleIdx], vMeans[source][timeScaleIdx])
             }
         }
 
@@ -1694,7 +1749,7 @@ void mainViewThreadFun() {
             double td = ((double)speed / (double)buff->m_decimation) * tScale / 1000.0;
             auto _deltaSample = td / (double)spd;
             ECHECK_APP_NO_RET(g_adcController.getTriggerLevelRaw(&trigLevel));
-            TRACE_SHORT("_deltaSample %f timeToIndexD(tScale) %f", _deltaSample, td)
+            // TRACE_SHORT("_deltaSample %f timeToIndexD(tScale) %f", _deltaSample, td)
             g_decimator.setDecimationFactor(_deltaSample);
             g_decimator.setTriggerLevel(trigLevel);
             g_decimator.resetOffest();

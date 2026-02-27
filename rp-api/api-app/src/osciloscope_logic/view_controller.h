@@ -25,6 +25,10 @@ class CViewController {
         float m_meanRaw = 0;
         uint32_t m_decimatoion = 1;
         bool m_dataHasTrigger;
+        auto print() -> void {
+            WARNING("OscInfo (Min/Mean/Max) (%f/%f/%f) unscale (%f/%f/%f) raw (%f/%f/%f)", m_min, m_mean, m_max, m_minUnscale, m_meanUnscale, m_maxUnscale, m_minRaw, m_meanRaw,
+                    m_maxRaw)
+        };
     };
 
     struct Oscillogram {
