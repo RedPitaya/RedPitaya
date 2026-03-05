@@ -10,6 +10,7 @@ CViewController::CViewController()
       m_updateViewFromADCRequest(false),
       m_updateViewRequest(false),
       m_autoScale(false),
+      m_autoScaleState(OASS_NONE),
       m_timeScale(1),
       m_timeOffet(0),
       m_oscIsRunning(false),
@@ -70,6 +71,8 @@ auto CViewController::prepareOscillogramBuffer(size_t _maxBuffers) -> void {
         m_origialData[i]->m_index = i + 1;
     }
     resetCurrentBuffer();
+
+    m_autoScaleState = OASS_NONE;
 }
 
 auto CViewController::resetCurrentBuffer() -> void {
@@ -194,6 +197,14 @@ auto CViewController::setAutoScale(bool _state) -> void {
 
 auto CViewController::getAutoScale() -> bool {
     return m_autoScale;
+}
+
+auto CViewController::setAutoScaleState(AutoScaleState _state) -> void {
+    m_autoScaleState = _state;
+}
+
+auto CViewController::getAutoScaleState() -> AutoScaleState {
+    return m_autoScaleState;
 }
 
 auto CViewController::convertSamplesToTime(int32_t samples) -> double {

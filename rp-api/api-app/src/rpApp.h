@@ -44,11 +44,11 @@ typedef enum {
 * Type representing trigger source.
 */
 typedef enum {
-    RPAPP_OSC_TRIG_SRC_CH1,      //!< Trigger source channel 1
-    RPAPP_OSC_TRIG_SRC_CH2,      //!< Trigger source channel 2
-    RPAPP_OSC_TRIG_SRC_CH3,      //!< Trigger source channel 3
-    RPAPP_OSC_TRIG_SRC_CH4,      //!< Trigger source channel 4
-    RPAPP_OSC_TRIG_SRC_EXTERNAL  //!< Trigger source external
+    RPAPP_OSC_TRIG_SRC_CH1 = 0,      //!< Trigger source channel 1
+    RPAPP_OSC_TRIG_SRC_CH2 = 1,      //!< Trigger source channel 2
+    RPAPP_OSC_TRIG_SRC_CH3 = 2,      //!< Trigger source channel 3
+    RPAPP_OSC_TRIG_SRC_CH4 = 3,      //!< Trigger source channel 4
+    RPAPP_OSC_TRIG_SRC_EXTERNAL = 4  //!< Trigger source external
 } rpApp_osc_trig_source_t;
 
 /**

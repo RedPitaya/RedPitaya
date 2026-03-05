@@ -168,9 +168,22 @@ auto releaseOsc() -> void {
 
 auto updateTriggerLimit(bool force) -> void {
     // Checking trigger limitation
+    rpApp_osc_trig_source_t trSrc;
+    rpApp_OscGetTriggerSource(&trSrc);
+    if (trSrc != inTrigSource.Value()) {
+        inTrigSource.SendValue(trSrc);
+    }
+
+    rpApp_osc_trig_slope_t trSlope;
+    rpApp_OscGetTriggerSlope(&trSlope);
+    if (trSlope != inTrigSlope.Value()) {
+        inTrigSlope.SendValue(trSlope);
+    }
+
+    float trigg_level = 0;
     float trigg_limit = 0;
     bool is_signed = true;
-    auto t_channel = (rpApp_osc_trig_source_t)inTrigSource.Value();
+    auto t_channel = trSrc;
     switch (t_channel) {
         case RPAPP_OSC_TRIG_SRC_CH1:
             rp_AcqGetGainV(RP_CH_1, &trigg_limit);
@@ -202,20 +215,24 @@ auto updateTriggerLimit(bool force) -> void {
             trigg_limit = trigg_limit;
     }
 
+    auto trig_invert = false;
+    if (t_channel != RPAPP_OSC_TRIG_SRC_EXTERNAL) {
+        trig_invert = inInvShow[t_channel].Value();
+    }
+
+    rpApp_OscGetTriggerLevel(&trigg_level);
+    auto tl = trig_invert ? -trigg_level : trigg_level;
+    if (tl != inTriggLevel.Value()) {
+        force = true;
+    }
+
     if (trigg_limit != inTriggLimit.Value() || force) {
         inTriggLimit.SetMin(is_signed ? -trigg_limit : 0);
         inTriggLimit.SetMax(trigg_limit);
         inTriggLimit.SendValue(trigg_limit);
-        // Need update trigger value
-        float trigg_level;
-        auto trig_invert = false;
-        if (t_channel != RPAPP_OSC_TRIG_SRC_EXTERNAL) {
-            trig_invert = inInvShow[t_channel].Value();
-        }
-        rpApp_OscGetTriggerLevel(&trigg_level);
         inTriggLevel.SetMin(is_signed ? -trigg_limit : 0);
         inTriggLevel.SetMax(trigg_limit);
-        inTriggLevel.SendValue(trig_invert ? -trigg_level : trigg_level);
+        inTriggLevel.SendValue(tl);
     }
 }
 
@@ -674,12 +691,7 @@ auto updateOscParams(bool force) -> void {
     }
 
     if (trig_inversion_changed || IS_NEW(inTrigSlope) || force) {
-        rpApp_osc_trig_slope_t slope = static_cast<rpApp_osc_trig_slope_t>(inTrigSlope.NewValue());
-
-        if (trig_invert) {
-            slope = (slope == RPAPP_OSC_TRIG_SLOPE_PE) ? RPAPP_OSC_TRIG_SLOPE_NE : RPAPP_OSC_TRIG_SLOPE_PE;
-        }
-        if (rpApp_OscSetTriggerSlope(slope) == RP_OK) {
+        if (rpApp_OscSetTriggerSlope(static_cast<rpApp_osc_trig_slope_t>(inTrigSlope.NewValue())) == RP_OK) {
             inTrigSlope.Update();
         }
     }
@@ -701,11 +713,6 @@ auto updateOscParams(bool force) -> void {
         // Update the slope
         rpApp_osc_trig_slope_t slope = RPAPP_OSC_TRIG_SLOPE_PE;
         rpApp_OscGetTriggerSlope(&slope);
-
-        if (trig_invert) {
-            slope = (slope == RPAPP_OSC_TRIG_SLOPE_PE) ? RPAPP_OSC_TRIG_SLOPE_NE : RPAPP_OSC_TRIG_SLOPE_PE;
-        }
-
         inTrigSlope.Value() = slope;
         inTrigSlope.Update();
         requestSendTriggerLevel = true;

@@ -55,7 +55,7 @@ typedef struct {
 class CDSP {
 
    public:
-    CDSP(uint8_t max_channels, uint32_t adc_buffer, uint32_t adc_max_speed, bool createStoredData = false);
+    CDSP(uint8_t max_channels, uint32_t adc_buffer_size, uint32_t adc_max_speed, bool createStoredData = false);
     ~CDSP();
 
     data_t* createData();

@@ -1,6 +1,7 @@
 #include "measure_controller.h"
 #include <float.h>
 #include <math.h>
+#include <algorithm>
 #include "common.h"
 
 CMeasureController::CMeasureController() : m_unscaleFunc(NULL), m_scaleFunc(NULL), m_attAmplFunc(NULL) {
@@ -12,10 +13,108 @@ CMeasureController::CMeasureController() : m_unscaleFunc(NULL), m_scaleFunc(NULL
     if (rp_HPGetFastADCBits(&m_adc_bits) != RP_OK) {
         FATAL("Can't get a adc bits")
     }
+
+    createDSPforAutoScale(ADC_BUFFER_SIZE);
 }
 
 CMeasureController::~CMeasureController() {
     setUnScaleFunction(NULL);
+    for (auto idx = 0; idx < 2; idx++) {
+        delete m_cdsp[idx];
+        m_cdsp[idx] = nullptr;
+    }
+}
+
+auto CMeasureController::createDSPforAutoScale(uint32_t bufferSize) -> void {
+    uint8_t channels = 0;
+    if (rp_HPGetFastADCChannelsCount(&channels) != RP_OK) {
+        FATAL("Can't get channels count")
+    }
+    m_cdsp.resize(2);
+    m_cdspDec.push_back(RP_DEC_1);
+    m_cdspDec.push_back(RP_DEC_128);
+
+    for (auto idx = 0; idx < 2; idx++) {
+        m_cdsp[idx] = new rp_dsp_api::CDSP(channels, bufferSize, m_osc_fpga_smpl_freq, true);
+
+        if (m_cdsp[idx]->setSignalLengthDiv2(bufferSize)) {
+            ERROR_LOG("Can't set buffer size for FFT")
+        }
+
+        m_cdsp[idx]->fftInit();
+        m_cdsp[idx]->prepareFreqVector(m_cdsp[idx]->getStoredData(), m_cdspDec[idx]);
+
+        if (m_cdsp[idx]->window_init(rp_dsp_api::FLAT_TOP)) {
+            ERROR_LOG("Can't init window")
+        }
+    }
+}
+
+auto CMeasureController::getAutoScaleStoredData(uint32_t idx) -> rp_dsp_api::data_t* {
+    if (idx >= m_cdsp.size()) {
+        ERROR_LOG("The index is greater than the permissible value.")
+        return nullptr;
+    }
+    return m_cdsp[idx]->getStoredData();
+}
+
+auto CMeasureController::calculateAutoScaleFreq(uint32_t channels, AutoScaleInfo& info) -> void {
+
+    std::vector<std::vector<float>> vpp;
+    vpp.resize(m_cdsp.size());
+
+    for (auto idx = 0u; idx < m_cdsp.size(); idx++) {
+        auto data = m_cdsp[idx]->getStoredData();
+        m_cdsp[idx]->windowFilter(data);
+        m_cdsp[idx]->fft(data);
+        m_cdsp[idx]->decimate(data, m_cdsp[idx]->getOutSignalLength(), m_cdsp[idx]->getOutSignalLength());
+        m_cdsp[idx]->cnvToMetric(data, m_cdspDec[idx]);
+        vpp[idx].resize(data->m_in.size());
+        for (auto ch = 0u; ch < data->m_in.size(); ch++) {
+            auto min = std::numeric_limits<float>::max();
+            auto max = std::numeric_limits<float>::lowest();
+            for (auto i = 0u; i < data->m_in[ch].size(); i++) {
+                min = MIN(min, data->m_in[ch][i]);
+                max = MAX(max, data->m_in[ch][i]);
+            }
+            vpp[idx][ch] = max - min;
+        }
+    }
+    info.freqByChannels.resize(channels);
+    info.powerByChannels.resize(channels);
+    info.vppByChannels.resize(channels);
+    for (auto c = 0u; c < channels; c++) {
+        info.freqByChannels[c] = 0;
+        info.powerByChannels[c] = 0;
+        info.vppByChannels[c] = 0;
+    }
+
+    for (auto idx = 0u; idx < m_cdsp.size(); idx++) {
+        auto data = m_cdsp[idx]->getStoredData();
+        auto max_Freq = data->m_converted.m_maxFreq;
+        for (auto c = 0u; c < channels; c++) {
+            auto freq_p = data->m_converted.m_peak_freq[rp_dsp_api::VOLT][c];
+            auto volt_p = data->m_converted.m_peak_power[rp_dsp_api::VOLT][c];
+            TRACE("idx %d ch %d max freq %d freq %f volt %f", idx, c, max_Freq, freq_p, volt_p)
+            freq_p = volt_p < 0.0005 ? 0.f : freq_p;
+            if (info.freqByChannels[c] <= max_Freq && info.powerByChannels[c] <= volt_p) {
+                info.freqByChannels[c] = freq_p;
+                info.powerByChannels[c] = volt_p;
+                info.vppByChannels[c] = vpp[idx][c];
+            }
+        }
+    }
+    info.channel = -1;
+    auto power_limit = MAX(std::ranges::max(info.powerByChannels) * 0.1f, 0.01);
+    TRACE("power limit %f", power_limit)
+    for (auto ch = 0u; ch < info.powerByChannels.size(); ch++) {
+        if (info.powerByChannels[ch] >= power_limit) {
+            info.channel = ch;
+            info.freq = info.freqByChannels[ch];
+            info.power = info.powerByChannels[ch];
+            break;
+        }
+    }
 }
 
 auto CMeasureController::setUnScaleFunction(func_t _func) -> void {
@@ -66,6 +165,20 @@ auto CMeasureController::check(const void* _data, vsize_t _sizeView) -> int {
         return RP_EOOR;
     }
     return RP_OK;
+}
+
+auto CMeasureController::scaleValue(const rpApp_osc_source _channel, float _value) -> float {
+    std::lock_guard lock(m_settingsMutex);
+    float ret = 0;
+    ECHECK_APP(m_scaleFunc(_channel, _value, &ret));
+    return ret;
+}
+
+auto CMeasureController::unscaleValue(const rpApp_osc_source _channel, float _value) -> float {
+    std::lock_guard lock(m_settingsMutex);
+    float ret = 0;
+    ECHECK_APP(m_unscaleFunc(_channel, _value, &ret));
+    return ret;
 }
 
 auto CMeasureController::measureVpp(const rpApp_osc_source _channel, const std::vector<float>* _data, float* _Vpp) -> int {
