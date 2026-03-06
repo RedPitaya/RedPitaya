@@ -577,9 +577,9 @@
 
     OSC.param_callbacks["REQUEST_NORMALIZE"] = OSC.exportNormalize;
     OSC.param_callbacks["REQUEST_VIEW"] = OSC.exportViewMode;
-
-
     OSC.param_callbacks["DOWNLOAD_FILE"] = OSC.downloadFile;
+
+    OSC.param_callbacks["16_BIT_MODE"] = OSC.set16BitMode;
 
     OSC.param_callbacks["OSC_RUN"] = OSC.processRun;
     OSC.param_callbacks["OSC_VIEV_PART"] = OSC.processViewPart;

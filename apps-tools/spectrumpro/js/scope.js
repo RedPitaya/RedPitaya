@@ -479,6 +479,21 @@
             })
         }
 
+        SPEC.set16BitMode = function(new_params) {
+            let val = new_params['16_BIT_MODE'].value
+            var elem = $('#16bit_mode');
+            if (elem != undefined) {
+                if (val == true){
+                    elem.html('&check; ADC 16Bit');
+                }
+                else{
+                    elem.html('ADC 16Bit');
+                }
+            }
+        }
+
+        SPEC.param_callbacks["16_BIT_MODE"] = SPEC.set16BitMode;
+
         SPEC.param_callbacks["CH1_SHOW"] = SPEC.ch1Visile;
         SPEC.param_callbacks["CH2_SHOW"] = SPEC.ch2Visile;
         SPEC.param_callbacks["CH3_SHOW"] = SPEC.ch3Visile;

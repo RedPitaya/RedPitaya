@@ -896,6 +896,12 @@
             }
         });
 
+        $('#16bit_mode').click(function() {
+            let val = OSC.params.orig['16_BIT_MODE'].value
+            OSC.params.local['16_BIT_MODE'] = { value: val == true ? 0 : 1 }; // REQUEST_RESET
+            OSC.sendParams();
+        });
+
         $('#slow_adc_info').click(function() {
             var elem = $(this);
             if (elem.text() == 'IN/E2') {
@@ -1001,6 +1007,16 @@
         if (params['SOUR_X5_GAIN'] !== undefined){
             if (params['SOUR_X5_GAIN'].value == false){
                 var nodes = document.getElementsByClassName("x5_block");
+                [...nodes].forEach((element, index, array) => {
+                                        element.parentNode.removeChild(element);
+                                    });
+
+            }
+        }
+
+        if (params['OSC_IS_16_BIT_MODE'] !== undefined){
+            if (params['OSC_IS_16_BIT_MODE'].value == false){
+                var nodes = document.getElementsByClassName("hires_16bit");
                 [...nodes].forEach((element, index, array) => {
                                         element.parentNode.removeChild(element);
                                     });

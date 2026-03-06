@@ -27,6 +27,7 @@ std::mutex g_need_update_sig_gen_mtx;
 CBooleanParameter isFilter("OSC_IS_FILTER", CBaseParameter::RO, rp_HPGetFastADCIsFilterPresentOrDefault(), 0);
 CBooleanParameter isAC_DC("OSC_IS_AC_DC", CBaseParameter::RO, rp_HPGetFastADCIsAC_DCOrDefault(), 0);
 CBooleanParameter isHV_LV("OSC_IS_HV_LV", CBaseParameter::RO, rp_HPGetFastADCIsLV_HVOrDefault(), 0);
+CBooleanParameter isHIRes16BitMode("OSC_IS_16_BIT_MODE", CBaseParameter::RO, rp_HPGetIsFastADC16BitModeOrDefault(), 0);
 
 CFloatParameter inTimeOffset("OSC_TIME_OFFSET", CBaseParameter::RW, 0, 0, -100000, 100000, CONFIG_VAR);
 CDoubleParameter inTimeScale("OSC_TIME_SCALE", CBaseParameter::RW, 1, 0, 0, 100000000, CONFIG_VAR);
@@ -99,6 +100,8 @@ CFloatParameter ext_trigger_level("OSC_EXT_TRIG_LEVEL", CBaseParameter::RW, 0, 0
 
 CIntParameter bufferRequest("OSC_BUFFER_REQUEST", CBaseParameter::RW, 0, 0, -1, 1);
 CIntParameter bufferSelected("OSC_BUFFER_CURRENT", CBaseParameter::RW, 0, 0, (MAX_BUFFERS - 1) * -1, 0);
+
+CBooleanParameter hires_16bitmode("16_BIT_MODE", CBaseParameter::RW, false, 0, CONFIG_VAR);
 
 /* ----------------------------------- TRACE MODE ---------------------------------------*/
 CIntParameter inShowTrace[MAX_ADC_CHANNELS] = INIT("CH", "_SHOW_TRACE", CBaseParameter::RW, 0, 0, 0, 1, CONFIG_VAR);
@@ -543,6 +546,12 @@ auto updateOscParams(bool force) -> void {
             rpApp_OscBufferSelectPrev();
         }
         bufferRequest.Value() = 0;
+    }
+
+    if (IS_NEW(hires_16bitmode) || force) {
+        if (rp_AcqSet16BitMode(hires_16bitmode.NewValue()) == RP_OK) {
+            hires_16bitmode.Update();
+        }
     }
 
     inAutoscale.Update();

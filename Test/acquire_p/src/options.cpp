@@ -378,6 +378,7 @@ auto parse(int argc, char* argv[]) -> Options {
                     if (!rp_HPGetIsFastADC16BitModeOrDefault()) {
                         opt.error = true;
                         fprintf(stderr, "[ERROR] 16bit mode not supported\n");
+                        exit(1);
                     } else {
                         opt.enable16BitMode = true;
                     }

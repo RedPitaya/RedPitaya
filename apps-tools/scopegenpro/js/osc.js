@@ -1,6 +1,17 @@
 (function(OSC, $, undefined) {
 
-
+    OSC.set16BitMode = function(new_params) {
+        let val = new_params['16_BIT_MODE'].value
+        var elem = $('#16bit_mode');
+        if (elem != undefined) {
+            if (val == true){
+                elem.html('&check; ADC 16Bit');
+            }
+            else{
+                elem.html('ADC 16Bit');
+            }
+        }
+    }
 
     OSC.chShow = function(ch,new_params) {
         var param_name = ch+"_SHOW";
