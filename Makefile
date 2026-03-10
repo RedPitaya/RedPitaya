@@ -28,7 +28,7 @@ CMAKEVAR=-DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE
 
 CUR_DIR = $(PWD)
 
-all: api nginx examples  apps-tools apps-pro startupsh scpi sdr
+all: api nginx examples  apps-tools apps-pro startupsh scpi
 
 
 $(DL):
@@ -306,18 +306,6 @@ scpi_clean:
 	rm -rf $(abspath $(SCPI_SERVER_DIR)/build)
 	rm -rf $(abspath $(SCPI_PARSER_DIR))
 
-################################################################################
-# SDR
-################################################################################
-
-
-SDR_ZIP = SDR-bundle-82-cbecbdd4.zip
-SDR_URL = https://downloads.redpitaya.com/hamlab/sdr-bundle/$(SDR_ZIP)
-
-sdr: | $(DL)
-	wget $(SDR_URL) -O $(DL)/$(SDR_ZIP) --show-progress
-	mkdir -p $(INSTALL_DIR)/www/apps
-	unzip -o $(DL)/$(SDR_ZIP) -d $(INSTALL_DIR)/www/apps
 
 ################################################################################
 # Red Pitaya tools

@@ -9,6 +9,8 @@ LINUX_VER ?= 3.00
 GIT_MODE ?= GITHUB
 GITLAB_TOKEN ?= NONE
 
+SDR_ZIP ?= SDR-bundle-82-cbecbdd4.zip
+
 CPU_CORES = $(shell ./get_cpu_ram.sh)
 
 REVISION ?= $(shell git rev-parse --short HEAD)
@@ -79,6 +81,7 @@ define GREET_MSG
 # Commit: $(GIT_COMMIT)
 # U-Boot: $(UBOOT_TAG)
 # Linux Kernel: $(LINUX_TAG)
+# SDR bundle: $(SDR_ZIP)
 ##############################################################################
 endef
 export GREET_MSG
@@ -483,6 +486,17 @@ endif
 	cp $(LINUX_DIR)/arch/arm/boot/uImage $(INSTALL_DIR)
 
 
+################################################################################
+# SDR
+################################################################################
+
+
+SDR_URL = https://downloads.redpitaya.com/hamlab/sdr-bundle/$(SDR_ZIP)
+
+sdr: | $(DL)
+	wget $(SDR_URL) -O $(DL)/$(SDR_ZIP) --show-progress
+	mkdir -p $(INSTALL_DIR)/www/apps
+	unzip -o $(DL)/$(SDR_ZIP) -d $(INSTALL_DIR)/www/apps
 
 ################################################################################
 # tarball
@@ -493,7 +507,7 @@ ZIP_FPGA_FILE=fpga-$(MODEL)-$(STREAMING)-$(VERSION)-$(REVISION).zip
 
 zip: $(ZIPFILE)
 
-$(ZIPFILE):
+$(ZIPFILE): sdr
 	cp -r OS/filesystem/*  $(INSTALL_DIR)
 	# create version file
 	@echo "$$GREET_MSG" >  $(INSTALL_DIR)/version.txt
