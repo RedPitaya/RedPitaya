@@ -8,7 +8,8 @@ PRGS = adc_example_1.exe \
        adc_example_2.exe \
        dac_example_1.exe \
        dac_example_2.exe \
-       dac_example_3.exe
+       dac_example_3.exe \
+       dac_example_4.exe
 
 OBJS := $(patsubst %,%.o,$(basename $(PRGS)))
 SRC := $(patsubst %,%.cpp,$(basename $(PRGS)))

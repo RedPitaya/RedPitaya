@@ -19,6 +19,8 @@ class CDACStreamingManager {
 
     enum DACStream_FileType { TDMS_TYPE, WAV_TYPE };
 
+    enum DACStreamingChannels { DS_CH1 = 0x1, DS_CH2 = 0x2 };
+
     using Ptr = std::shared_ptr<CDACStreamingManager>;
 
     static Ptr Create(DACStream_FileType _fileType, std::string _filePath, CStreamSettings::DACRepeat _repeat, int32_t _rep_count, uint32_t blockSize, bool verbose);
@@ -29,6 +31,10 @@ class CDACStreamingManager {
 
     static Ptr Create(uint8_t* ch[2], uint64_t size[2], uint8_t bytesPerSamp, CStreamSettings::DACRepeat _repeat, int32_t _rep_count, uint32_t blockSize, bool verbose);
     CDACStreamingManager(uint8_t* ch[2], uint64_t size[2], uint8_t bytesPerSamp, CStreamSettings::DACRepeat _repeat, int32_t _rep_count, uint32_t blockSize, bool verbose);
+
+    static Ptr Create(CReaderController::dac_channels_t channels, uint8_t bytesPerSamp, uint32_t blockSize, bool verbose, CReaderController::MemoryStreamDataCallback_t callback);
+    CDACStreamingManager(CReaderController::dac_channels_t channels, uint8_t bytesPerSamp, uint32_t blockSize, bool verbose,
+                         CReaderController::MemoryStreamDataCallback_t callback);
 
     ~CDACStreamingManager();
     CDACStreamingManager(const CDACStreamingManager&) = delete;

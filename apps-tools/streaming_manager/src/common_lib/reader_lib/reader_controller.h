@@ -1,8 +1,11 @@
 #ifndef READER_CONTROLLER_H
 #define READER_CONTROLLER_H
 
+#include <array>
+#include <functional>
 #include <string>
 #include <vector>
+#include "settings_lib/channels.hpp"
 #include "settings_lib/stream_settings.h"
 #include "tdms_lib/file.h"
 #include "wav_lib/wav_reader.h"
@@ -16,18 +19,30 @@ using namespace std;
 
 class CReaderController {
    public:
+    static constexpr size_t MAX_CHANNES = 2;
+
     struct DataIn {
-        uint8_t* ch[2] = {nullptr, nullptr};
-        size_t size[2] = {0, 0};
+        uint8_t* ch[MAX_CHANNES] = {nullptr, nullptr};
+        size_t size[MAX_CHANNES] = {0, 0};
         uint8_t bits = {0};
         size_t readPosition = 0;
     };
 
     struct Data {
-        uint8_t* ch[2] = {nullptr, nullptr};
-        size_t size[2] = {0, 0};
-        size_t real_size[2] = {0, 0};
+        uint8_t* ch[MAX_CHANNES] = {nullptr, nullptr};
+        size_t size[MAX_CHANNES] = {0, 0};
+        size_t real_size[MAX_CHANNES] = {0, 0};
         uint8_t bits = {0};
+    };
+
+    typedef std::function<bool(uint8_t bitsBySample, std::array<uint8_t*, MAX_CHANNES>& buffers, const uint32_t bufferSize)> MemoryStreamDataCallback_t;
+
+    typedef Channels<DACChannels, MAX_CHANNES> dac_channels_t;
+
+    struct MemoryStreamSink {
+        uint8_t memoryStreamBits;
+        dac_channels_t channels;
+        MemoryStreamDataCallback_t callback = nullptr;
     };
 
     enum OpenResult { OR_OK = 0, OR_MISSING_CHANNELS = 1, OR_WRONG_DATA_TYPE = 2, OR_DATA_NOT_EQUAL = 3, OR_CLOSE = 4 };
@@ -42,6 +57,8 @@ class CReaderController {
     CReaderController(CStreamSettings::DataFormat _fileType, string _filePath, CStreamSettings::DACRepeat _repeat, uint32_t _rep_count, uint32_t blockSize);
 
     CReaderController(DataIn* dataIn, CStreamSettings::DACRepeat _repeat, uint32_t _rep_count, uint32_t blockSize);
+
+    CReaderController(MemoryStreamSink* sink, uint32_t blockSize);
 
     ~CReaderController();
 
@@ -97,14 +114,15 @@ class CReaderController {
     OpenResult m_result;
     bool m_channel1Present;
     bool m_channel2Present;
-    TemperaryBuffer m_tempBuffer[2];
+    TemperaryBuffer m_tempBuffer[MAX_CHANNES];
     bool m_checkEmptyFile;
     uint64_t m_memoryCacheSize;
     size_t m_channel1Size;
     size_t m_channel2Size;
     uint32_t m_blockSize;
-    uint8_t* m_dataBuffers[2];
+    uint8_t* m_dataBuffers[MAX_CHANNES];
     DataIn* m_genData;
+    MemoryStreamSink* m_memSink;
 };
 
 #endif

@@ -7,6 +7,8 @@
 
 class DACCallback;
 
+enum DACStreamBytes { DAC_8BIT = 1, DAC_16BIT = 2 };
+
 class DACStreamClient {
    public:
     DACStreamClient();
@@ -23,6 +25,7 @@ class DACStreamClient {
     auto startStreamingTDMS(std::string fileName) -> bool;
     auto startStreamingWAV(std::string fileName) -> bool;
     auto startStreamingFromMemory() -> bool;
+    auto startStreamingFromMemorySink(bool enableCh1, bool enableCh2, DACStreamBytes bytePerSample) -> bool;
     auto stopStreaming() -> void;
 
     auto wait() -> void;

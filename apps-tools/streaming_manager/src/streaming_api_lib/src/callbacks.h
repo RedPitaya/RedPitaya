@@ -64,5 +64,7 @@ class DACCallback {
     virtual void configConnected(DACStreamClient*, std::string) {}
     virtual void configError(DACStreamClient*, std::string, int) {}
     virtual void configErrorTimeout(DACStreamClient*, std::string) {}
+
+    virtual bool streamData(DACStreamClient*, uint8_t* ch1, uint8_t* ch2, size_t size) { return true; }
 };
 #endif

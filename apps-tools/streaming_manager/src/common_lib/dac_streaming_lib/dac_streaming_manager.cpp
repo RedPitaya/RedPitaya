@@ -89,6 +89,33 @@ CDACStreamingManager::CDACStreamingManager(uint8_t* ch[2], uint64_t size[2], uin
     m_readerController = new CReaderController(data, m_repeat, m_rep_count, blockSize);
 }
 
+CDACStreamingManager::Ptr CDACStreamingManager::Create(CReaderController::dac_channels_t channels, uint8_t bytesPerSamp, uint32_t blockSize, bool verbose,
+                                                       CReaderController::MemoryStreamDataCallback_t callback) {
+    return std::make_shared<CDACStreamingManager>(channels, bytesPerSamp, blockSize, verbose, callback);
+}
+
+CDACStreamingManager::CDACStreamingManager(CReaderController::dac_channels_t channels, uint8_t bytesPerSamp, uint32_t blockSize, bool verbose,
+                                           CReaderController::MemoryStreamDataCallback_t callback)
+    : m_use_local_file(true),
+      m_fileType(),
+      m_host(""),
+      m_filePath(""),
+      m_asionet(nullptr),
+      m_repeat(CStreamSettings::DACRepeat::DAC_REP_INF),
+      m_rep_count(0),
+      m_readerController(nullptr),
+      m_buffer(DataLib::CBuffersCached::create()),
+      m_isRun(false),
+      m_verbose(verbose),
+      m_blockSize(blockSize),
+      m_remoteClientMode(false) {
+    CReaderController::MemoryStreamSink* sink = new CReaderController::MemoryStreamSink();
+    sink->channels = channels;
+    sink->memoryStreamBits = bytesPerSamp * 8;
+    sink->callback = callback;
+    m_readerController = new CReaderController(sink, blockSize);
+}
+
 CDACStreamingManager::~CDACStreamingManager() {
     this->stop();
     this->stopServer();

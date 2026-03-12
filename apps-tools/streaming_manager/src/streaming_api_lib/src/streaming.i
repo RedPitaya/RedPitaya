@@ -32,6 +32,16 @@
     }
 %}
 
+// Handle ch1: Use the 'size' argument for the length
+%typemap(directorin) uint8_t* ch1 {
+    $input = PyMemoryView_FromMemory((char*)$1, size, PyBUF_WRITE);
+}
+
+// Handle ch2: Use the 'size' argument for the length
+%typemap(directorin) uint8_t* ch2 {
+    $input = PyMemoryView_FromMemory((char*)$1, size, PyBUF_WRITE);
+}
+
 /* Parse the header file to generate wrappers */
 %include "adc_streaming.h"
 %include "dac_streaming.h"

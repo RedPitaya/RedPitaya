@@ -17,7 +17,7 @@
 
 using namespace dac_streaming_lib;
 
-enum dataMode { WAV_MODE = 0, TDMS_MODE = 1, MEM_MODE = 2 };
+enum dataMode { WAV_MODE = 0, TDMS_MODE = 1, MEM_MODE = 2, MEM_STREAM_MODE = 3 };
 
 std::function<void(int)> dac_shutdown_handler;
 
@@ -44,14 +44,15 @@ struct DACStreamClient::Impl {
     uint8_t* m_memChannels[2] = {nullptr, nullptr};
     uint64_t m_memSize[2] = {0, 0};
     uint8_t m_memBytes[2] = {0, 0};
-    auto getActiveChannels() -> int;
+    CReaderController::dac_channels_t m_memSinkChannels;
+    auto getActiveChannels() -> CReaderController::dac_channels_t;
     std::thread* m_client;
-    auto runClient(DACStreamClient* client, std::string host, uint32_t size, uint32_t activeChannels) -> void;
+    auto runClient(DACStreamClient* client, std::string host, uint32_t size, CReaderController::dac_channels_t activeChannels) -> void;
 };
 
-auto DACStreamClient::Impl::getActiveChannels() -> int {
+auto DACStreamClient::Impl::getActiveChannels() -> CReaderController::dac_channels_t {
+    CReaderController::dac_channels_t channels;
     auto file_type = CDACStreamingManager::WAV_TYPE;
-
     switch (m_dataMode) {
         case dataMode::TDMS_MODE:
             file_type = CDACStreamingManager::TDMS_TYPE;
@@ -60,24 +61,31 @@ auto DACStreamClient::Impl::getActiveChannels() -> int {
             file_type = CDACStreamingManager::WAV_TYPE;
             break;
         case dataMode::MEM_MODE: {
-            int aCh = 0;
             for (int i = 0; i < 2; i++) {
-                aCh += (int)(m_memChannels[i] != nullptr);
+                if (m_memChannels[i] != nullptr)
+                    channels.enable((DACChannels)i);
             }
-            return aCh;
+            return channels;
+        }
+        case dataMode::MEM_STREAM_MODE: {
+            return m_memSinkChannels;
         }
         default:
-            return 0;
+            return channels;
     }
     auto x = CDACStreamingManager::Create(file_type, m_fileName, CStreamSettings::DACRepeat::DAC_REP_OFF, 0, 0, false);
     bool chActive[2] = {false, false};
     if (!x->getChannels(&chActive[0], &chActive[1])) {
-        return 0;
+        return channels;
     }
-    return (int)chActive[0] + (int)chActive[1];
+    for (int i = 0; i < 2; i++) {
+        if (chActive[i])
+            channels.enable((DACChannels)i);
+    }
+    return channels;
 }
 
-auto DACStreamClient::Impl::runClient(DACStreamClient* client, std::string host, uint32_t size, uint32_t activeChannels) -> void {
+auto DACStreamClient::Impl::runClient(DACStreamClient* client, std::string host, uint32_t size, CReaderController::dac_channels_t activeChannels) -> void {
     auto memoryManager = new uio_lib::CMemoryManager();
     memoryManager->setMemoryBlockSize(size);
     memoryManager->reallocateBlocks();
@@ -97,15 +105,32 @@ auto DACStreamClient::Impl::runClient(DACStreamClient* client, std::string host,
 
     m_repeatCount = m_repeatCount == 0 ? 1 : m_repeatCount;
     auto rep_mode = m_repeatInf ? CStreamSettings::DACRepeat::DAC_REP_INF : CStreamSettings::DACRepeat::DAC_REP_ON;
-    if (m_dataMode == MEM_MODE) {
-        m_dac_manger = CDACStreamingManager::Create(m_memChannels, m_memSize, std::max(m_memBytes[0], m_memBytes[1]), rep_mode, m_repeatCount, size, m_verbose);
-    } else {
-        m_dac_manger = CDACStreamingManager::Create(file_type, m_fileName, rep_mode, m_repeatCount, size, m_verbose);
+    switch (m_dataMode) {
+        case MEM_MODE: {
+            m_dac_manger = CDACStreamingManager::Create(m_memChannels, m_memSize, std::max(m_memBytes[0], m_memBytes[1]), rep_mode, m_repeatCount, size, m_verbose);
+            break;
+        }
+        case MEM_STREAM_MODE: {
+            m_dac_manger =
+                CDACStreamingManager::Create(activeChannels,
+                                             std::max(m_memBytes[0], m_memBytes[1]),
+                                             size,
+                                             m_verbose,
+                                             [&](uint8_t bitsBySample, std::array<uint8_t*, CReaderController::MAX_CHANNES>& buffers, const uint32_t bufferSize) -> bool {
+                                                 const std::lock_guard lock(m_smutex);
+                                                 if (m_callback)
+                                                     return m_callback->streamData(client, buffers[0], buffers[1], bufferSize);
+                                                 return true;  // Return end of stream
+                                             });
+            break;
+        }
+        default:
+            m_dac_manger = CDACStreamingManager::Create(file_type, m_fileName, rep_mode, m_repeatCount, size, m_verbose);
     }
 
-    auto reserved __attribute__((unused)) = memoryManager->reserveMemory(uio_lib::MM_DAC, blocks, activeChannels);
-    m_dac_manger->getBufferManager()->generateBuffersEmpty(activeChannels, memoryManager->getRegions(uio_lib::MM_DAC), DataLib::sizeHeader());
-    m_dac_manger->getBufferManager()->initHeadersDAC(activeChannels);
+    auto reserved __attribute__((unused)) = memoryManager->reserveMemory(uio_lib::MM_DAC, blocks, activeChannels.count());
+    m_dac_manger->getBufferManager()->generateBuffersEmpty(activeChannels.count(), memoryManager->getRegions(uio_lib::MM_DAC), DataLib::sizeHeader());
+    m_dac_manger->getBufferManager()->initHeadersDAC(activeChannels.count());
     TRACE_SHORT("Reserved blocks %d", reserved)
 
     m_dac_manger->notifyStop.connect([&](CDACStreamingManager::NotifyResult res) {
@@ -339,6 +364,17 @@ auto DACStreamClient::startStreamingFromMemory() -> bool {
     return startStreaming();
 }
 
+auto DACStreamClient::startStreamingFromMemorySink(bool enableCh1, bool enableCh2, DACStreamBytes bytePerSample) -> bool {
+    m_pimpl->m_dataMode = dataMode::MEM_STREAM_MODE;
+    CReaderController::dac_channels_t channels;
+    channels[DACChannels::DAC_CH1] = enableCh1;
+    channels[DACChannels::DAC_CH2] = enableCh2;
+    m_pimpl->m_memBytes[0] = (int)bytePerSample;
+    m_pimpl->m_memBytes[1] = (int)bytePerSample;
+    m_pimpl->m_memSinkChannels = channels;
+    return startStreaming();
+}
+
 auto DACStreamClient::startStreaming() -> bool {
     std::map<std::string, uint32_t> blockSizes;
     if (!requestMemoryBlockSize(m_pimpl->m_configClient, {m_pimpl->m_host}, &blockSizes, m_pimpl->m_verbose)) {
@@ -346,11 +382,11 @@ auto DACStreamClient::startStreaming() -> bool {
         return false;
     }
 
-    uint32_t ac_channels = m_pimpl->getActiveChannels();
+    auto ac_channels = m_pimpl->getActiveChannels();
     uint32_t blockSize = blockSizes[m_pimpl->m_host];
     StateRunningHosts runned_host;
-    if (requestStartDACStreaming(m_pimpl->m_configClient, m_pimpl->m_host, ac_channels, &runned_host, m_pimpl->m_verbose)) {
-        if (runned_host == StateRunningHosts::TCP && ac_channels > 0)
+    if (requestStartDACStreaming(m_pimpl->m_configClient, m_pimpl->m_host, ac_channels.count(), &runned_host, m_pimpl->m_verbose)) {
+        if (runned_host == StateRunningHosts::TCP && ac_channels.count() > 0)
             m_pimpl->m_client = new std::thread(&DACStreamClient::Impl::runClient, m_pimpl, this, m_pimpl->m_host, blockSize, ac_channels);
 
         m_pimpl->m_configClient->errorNofiy.connect([&](ClientNetConfigManager::Errors errors, std::string host, error_code err) {
@@ -435,7 +471,7 @@ auto DACStreamClient::setMemory8Bit(uint8_t channel, std::vector<int8_t> buffer)
     }
     delete[] m_pimpl->m_memChannels[channel - 1];
     m_pimpl->m_memChannels[channel - 1] = (uint8_t*)new int8_t[buffer.size()];
-    memcpy_neon(m_pimpl->m_memChannels[channel - 1], buffer.data(), buffer.size());
+    memcpy(m_pimpl->m_memChannels[channel - 1], buffer.data(), buffer.size());
     m_pimpl->m_memBytes[channel - 1] = 1;
     m_pimpl->m_memSize[channel - 1] = buffer.size();
     return true;
@@ -450,7 +486,7 @@ auto DACStreamClient::setMemory16Bit(uint8_t channel, std::vector<int16_t> buffe
     }
     delete[] m_pimpl->m_memChannels[channel - 1];
     m_pimpl->m_memChannels[channel - 1] = (uint8_t*)new int16_t[buffer.size()];
-    memcpy_neon(m_pimpl->m_memChannels[channel - 1], buffer.data(), buffer.size() * 2);
+    memcpy(m_pimpl->m_memChannels[channel - 1], buffer.data(), buffer.size() * 2);
     m_pimpl->m_memBytes[channel - 1] = 2;
     m_pimpl->m_memSize[channel - 1] = buffer.size() * 2;
     return true;

@@ -82,9 +82,7 @@ auto ClientNetConfigManager::startBroadcast(std::string host, uint16_t port) -> 
             BroadCastClients cl;
             cl.mode = broadcast_lib::AB_NONE;
             cl.ts = std::time(0);
-
             std::string s = std::string((char*)buf, size);
-
             std::vector<const char*> pointers;
             pointers.push_back((char*)buf);
             for (size_t idx = 0; idx < size; idx++) {
@@ -95,7 +93,6 @@ auto ClientNetConfigManager::startBroadcast(std::string host, uint16_t port) -> 
                     }
                 }
             }
-
             if (pointers.size() != 4) {
                 TRACE_SHORT("[FATAL ERROR] Broadcast parse error \'%s\'", s.c_str())
                 errorNofiy(Errors::BROADCAST_ERROR_PARSE, host, er);
@@ -109,15 +106,16 @@ auto ClientNetConfigManager::startBroadcast(std::string host, uint16_t port) -> 
                     cl.mode = broadcast_lib::AB_NONE;
                 }
                 cl.model = atoi(pointers[3]);
-            }
-            cl.mac = std::string(pointers[0]);
-            cl.host = h = std::string(pointers[1]);
-            auto find = std::find_if(std::begin(m_broadcastClients), std::end(m_broadcastClients), [&cl](const BroadCastClients& c) { return c.host == cl.host; });
-            if (find == std::end(m_broadcastClients)) {
-                m_broadcastClients.push_back(cl);
-                riseEmit = true;
-            } else {
-                find->ts = std::time(0);
+                cl.mac = std::string(pointers[0]);
+                cl.host = h = std::string(pointers[1]);
+
+                auto find = std::find_if(std::begin(m_broadcastClients), std::end(m_broadcastClients), [&cl](const BroadCastClients& c) { return c.host == cl.host; });
+                if (find == std::end(m_broadcastClients)) {
+                    m_broadcastClients.push_back(cl);
+                    riseEmit = true;
+                } else {
+                    find->ts = std::time(0);
+                }
             }
 
             m_broadcastClients.remove_if([](const BroadCastClients& c) { return (std::time(0) - c.ts > BROADCAST_TIMEOUT); });
