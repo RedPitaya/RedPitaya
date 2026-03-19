@@ -2,36 +2,7 @@
 
 import streaming
 
-class Callback(streaming.ADCCallback):
-    counter = {}
-    fpgaLost = {}
-
-    def receivePack(self,client,pack):
-        if pack.host in self.counter.keys():
-            self.counter[pack.host] += sum([pack.channel1.samples,pack.channel2.samples])
-        else:
-            self.counter[pack.host] = sum([pack.channel1.samples,pack.channel2.samples])
-
-        if pack.host in self.fpgaLost.keys():
-            self.fpgaLost[pack.host] += max([pack.channel1.fpgaLost,pack.channel2.fpgaLost])
-        else:
-            self.fpgaLost[pack.host] = max([pack.channel1.fpgaLost,pack.channel2.fpgaLost])
-
-        # Count the number of samples received and stop streaming
-        if (self.counter[pack.host]  > 5e7):
-            client.notifyStop(pack.host)
-
-    def connected(self,client,host):
-        print("Client connected",host)
-
-    def disconnected(self,client,host):
-        print("Client disconnected",host)
-
-    def error(self,client,host,code):
-        print("Client error",host, "code" , code)
-
-
-class ConfigCallbackImpl(streaming.ConfigCallback):
+class Callback(streaming.ConfigCallback):
 
     def configConnected(self, client, host: str):
         print(f"Config client connected to {host}")
@@ -93,65 +64,73 @@ class ConfigCallbackImpl(streaming.ConfigCallback):
     def adcServerStartedFPGA(self, client, host: str):
         print(f"ADC server started on {host} (FPGA)")
 
-    def sigInt(self):
-        obj.notifyStop()
+    def dacServerStartedTCP(self, client, host: str):
+        print(f"DAC server started on {host} (TCP mode)")
 
-# Master/Slave hosts
-hosts = ['200.0.0.15','200.0.0.17']
+    def dacServerStartedSD(self, client, host: str):
+        print(f"DAC server started on {host} (SD card mode)")
+
+    def dacServerStoppedMemError(self, client, host: str):
+        print(f"DAC server stopped on {host}: Memory error")
+
+    def dacServerStoppedMemModify(self, client, host: str):
+        print(f"DAC server stopped on {host}: Memory modified")
+
+    def dacServerStoppedConfigError(self, client, host: str):
+        print(f"DAC server stopped on {host}: Configuration error")
+
+    def dacServerStoppedFileMissed(self, client, host: str):
+        print(f"DAC server stopped on {host}: File missed")
+
+    def dacServerStoppedSDDone(self, client, host: str):
+        print(f"DAC server stopped on {host}: SD card operation completed")
+
+    def dacServerStoppedSDEmpty(self, client, host: str):
+        print(f"DAC server stopped on {host}: SD card is empty")
+
+    def dacServerStoppedSDBroken(self, client, host: str):
+        print(f"DAC server stopped on {host}: SD card is broken")
+
+    def dacServerStoppedSDMissing(self, client, host: str):
+        print(f"DAC server stopped on {host}: SD card is missing")
+
 
 # Creating a streaming client
-confObj = streaming.ConfigStreamClient()
-obj = streaming.ADCStreamClient(confObj)
+obj = streaming.ConfigStreamClient()
 
 # Creating a callback handler. And also remove the owner, since the client itself will delete the handler.
-confCallback = ConfigCallbackImpl()
-confObj.addCallback(confCallback)
-
 callback = Callback()
-obj.setCallback(callback)
+obj.addCallback(callback)
 
 # Enable client logs. They are disabled by default.
 obj.setVerbose(True)
-confObj.setVerbose(True)
 
 # Connect to the server. Do not specify the address. If there is only one server in the network, the client will find it itself.
-print("Try connect to:",hosts)
-if (confObj.connect(hosts) == False):
+if (obj.connect() == False):
     print("The client did not connect")
     exit(1)
 
-# Setting up the master board
+# Get the current decimation setting
+current_decimation = obj.getConfig('adc_decimation');
+print("Current decimation",current_decimation)
+
+first_host = obj.getHosts()[0]
+
+obj.requestMemoryBlockSize(first_host)
+obj.requestActiveChannels(first_host)
 
 # Setting up network mode
-confObj.sendConfig(hosts[0],'adc_pass_mode','NET')
+obj.sendConfig('adc_pass_mode','NET')
 
 # Setting up a new decimation setting
-confObj.sendConfig(hosts[0],'adc_decimation','64')
+obj.sendConfig('adc_decimation','64')
 
 # Setting the memory block size
-confObj.sendConfig(hosts[0],'block_size','16384')
+obj.sendConfig('block_size','16384')
 
 # Setting the size of reserved memory for ADC streaming
-confObj.sendConfig(hosts[0],'adc_size','1638400')
+obj.sendConfig('adc_size','1638400')
 
 # Turn on the first and second channels
-confObj.sendConfig(hosts[0],'channel_state_1','ON')
-confObj.sendConfig(hosts[0],'channel_state_2','ON')
-
-# Receive all settings from the master server
-full_config = confObj.getFileConfig(hosts[0])
-
-# Set the same settings for the slave server
-confObj.sendFileConfig(hosts[1],full_config)
-
-if (obj.startStreaming()):
-    print("Streaming is launched")
-else:
-    print("Error starting streaming")
-    exit(1)
-
-# Waiting for the streaming client to complete its work
-obj.wait()
-
-print("Received samples", callback.counter)
-print("Number of lost samples", callback.fpgaLost)
+obj.sendConfig('channel_state_1','ON')
+obj.sendConfig('channel_state_2','ON')

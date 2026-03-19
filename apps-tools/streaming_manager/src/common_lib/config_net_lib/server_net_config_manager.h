@@ -22,7 +22,7 @@ class ServerNetConfigManager {
 
     using Ptr = std::shared_ptr<ServerNetConfigManager>;
 
-    ServerNetConfigManager(std::string defualt_file_settings_path, broadcast_lib::EMode mode, std::string host, uint16_t port);
+    ServerNetConfigManager(std::string defualt_file_settings_path, broadcast_lib::EMode mode, std::string host, uint16_t port, uint8_t maxAdcChannels);
     ~ServerNetConfigManager();
 
     auto startServer(std::string host, uint16_t port) -> void;
@@ -101,6 +101,7 @@ class ServerNetConfigManager {
     std::string m_file_settings;
     broadcast_lib::EMode m_mode;
     CStreamSettings m_settings;
+    uint8_t m_maxADCChannels = 0;
 };
 
 #endif

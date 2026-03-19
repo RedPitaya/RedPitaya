@@ -205,7 +205,7 @@ int main(int argc, char* argv[]) {
         auto mode = isMaster != uio_lib::BoardMode::SLAVE ? broadcast_lib::EMode::AB_SERVER_MASTER : broadcast_lib::EMode::AB_SERVER_SLAVE;
         auto model = ClientOpt::getBroadcastModel();
 
-        con_server = std::make_shared<ServerNetConfigManager>(opt.conf_file, mode, "127.0.0.1", NET_CONFIG_PORT);
+        con_server = std::make_shared<ServerNetConfigManager>(opt.conf_file, mode, "127.0.0.1", NET_CONFIG_PORT, getADCChannels());
         uio_lib::CMemoryManager::instance()->setMemoryBlockSize(con_server->getSettings().getMemoryBlockSize());
         uio_lib::CMemoryManager::instance()->reallocateBlocks();
         setServer(con_server);

@@ -248,7 +248,7 @@ auto CDACStreamingManager::threadFunc() -> void {
                             if (ch1->getDataLenght() != data.size[0]) {
                                 FATAL("DMA CH1 buffer has diffrent size src: %zu dst: %zu", data.size[0], ch1->getDataLenght())
                             }
-                            memcpy_neon(ch1->getMappedDataMemory(), data.ch[0], data.size[0]);
+                            memcpy(ch1->getMappedDataMemory(), data.ch[0], data.size[0]);
                             DataLib::setHeaderDAC(ch1, 1, data.real_size[0], onePackMode, repeatCount == -1, repeatCount, data.bits);
                         }
                         if (data.size[1] != 0) {
@@ -256,7 +256,7 @@ auto CDACStreamingManager::threadFunc() -> void {
                             if (ch2->getDataLenght() != data.size[1]) {
                                 FATAL("DMA CH2 buffer has diffrent size src: %zu dst: %zu", data.size[1], ch2->getDataLenght())
                             }
-                            memcpy_neon(ch2->getMappedDataMemory(), data.ch[1], data.size[1]);
+                            memcpy(ch2->getMappedDataMemory(), data.ch[1], data.size[1]);
                             DataLib::setHeaderDAC(ch2, 2, data.real_size[1], onePackMode, repeatCount == -1, repeatCount, data.bits);
                         }
                         m_buffer->unlockBufferWrite();

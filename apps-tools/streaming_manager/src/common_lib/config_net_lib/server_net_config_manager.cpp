@@ -1,8 +1,8 @@
 #include "server_net_config_manager.h"
 #include "logger_lib/file_logger.h"
 
-ServerNetConfigManager::ServerNetConfigManager(std::string defualt_file_settings_path, broadcast_lib::EMode mode, std::string host, uint16_t port)
-    : m_pBroadcast(nullptr), m_pNetConfManager(nullptr), m_file_settings(defualt_file_settings_path), m_mode(mode) {
+ServerNetConfigManager::ServerNetConfigManager(std::string defualt_file_settings_path, broadcast_lib::EMode mode, std::string host, uint16_t port, uint8_t maxAdcChannels)
+    : m_pBroadcast(nullptr), m_pNetConfManager(nullptr), m_file_settings(defualt_file_settings_path), m_mode(mode), m_maxADCChannels(maxAdcChannels) {
     m_pNetConfManager = std::make_shared<CNetConfigManager>();
     m_pNetConfManager->receivedCommandNotify.connect(&ServerNetConfigManager::receiveCommand, this);
     m_pNetConfManager->receivedStringNotify.connect(&ServerNetConfigManager::receiveValueStr, this);
@@ -103,7 +103,7 @@ auto ServerNetConfigManager::receiveCommand(uint32_t command, std::string tag) -
 
     if (c == CNetConfigManager::ECommands::CS_REQUEST_SERVER_ACTIVE_CHANNELS) {
         uint8_t ac = 0;
-        for (int i = 1; i <= 4; i++) {
+        for (int i = 1; i <= 4 && i <= m_maxADCChannels; i++) {
             if (m_settings.getADCChannels(i).value == CStreamSettings::State::ON) {
                 ac++;
             }

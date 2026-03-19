@@ -258,7 +258,8 @@ auto rp_app_init(void) -> int {
                 std::make_shared<ServerNetConfigManager>(config_file,
                                                          g_isMaster != uio_lib::BoardMode::SLAVE ? broadcast_lib::EMode::AB_SERVER_MASTER : broadcast_lib::EMode::AB_SERVER_SLAVE,
                                                          ss_ip_addr.Value(),
-                                                         NET_CONFIG_PORT);
+                                                         NET_CONFIG_PORT,
+                                                         getADCChannels());
             g_serverNetConfig->getNewSettingsNofiy.connect([]() { updateUI(); });
 
             g_serverNetConfig->startStreamingNofiy.connect([]() { startServer(false); });

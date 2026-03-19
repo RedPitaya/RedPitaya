@@ -6,23 +6,32 @@
 %include <cstring.i>
 %include <std_string.i>
 %include <std_vector.i>
+%include <std_list.i>
 %include <carrays.i>
 %include <cpointer.i>
+%include <std_shared_ptr.i>
 
 %{
 #include "callbacks.h"
 #include "adc_streaming.h"
 #include "dac_streaming.h"
+#include "config_streaming.h"
 %}
 
 
 %feature("director") ADCCallback;
 %feature("director") DACCallback;
+%feature("director") ConfigCallback;
 
+%shared_ptr(ConfigCallback)
+%shared_ptr(DACCallback)
+%shared_ptr(ADCCallback)
+%shared_ptr(ConfigStreamClient)
 
 %template(StringVector) std::vector<std::string>;
 %template(Int16Vector) std::vector<int16_t>;
 %template(Int8Vector) std::vector<int8_t>;
+%template(StringList) std::list<std::string>;
 
 %typemap(out) std::vector<int16_t>* %{
     $result = PyList_New($1->size()); // Create outer Python list of correct size
@@ -33,16 +42,24 @@
 %}
 
 // Handle ch1: Use the 'size' argument for the length
-%typemap(directorin) uint8_t* ch1 {
+%typemap(directorin) int8_t* ch1_8Bit {
     $input = PyMemoryView_FromMemory((char*)$1, size, PyBUF_WRITE);
 }
 
-// Handle ch2: Use the 'size' argument for the length
-%typemap(directorin) uint8_t* ch2 {
+%typemap(directorin) int8_t* ch2_8Bit {
     $input = PyMemoryView_FromMemory((char*)$1, size, PyBUF_WRITE);
+}
+
+%typemap(directorin) int16_t* ch1_16Bit {
+    $input = PyMemoryView_FromMemory((char*)$1, size * sizeof(int16_t), PyBUF_WRITE);
+}
+
+%typemap(directorin) int16_t* ch2_16Bit {
+    $input = PyMemoryView_FromMemory((char*)$1, size * sizeof(int16_t), PyBUF_WRITE);
 }
 
 /* Parse the header file to generate wrappers */
 %include "adc_streaming.h"
 %include "dac_streaming.h"
+%include "config_streaming.h"
 %include "callbacks.h"

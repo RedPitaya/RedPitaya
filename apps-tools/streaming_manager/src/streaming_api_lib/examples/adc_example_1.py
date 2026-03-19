@@ -2,6 +2,7 @@
 
 import streaming
 
+
 class Callback(streaming.ADCCallback):
     counter = 0
     fpgaLost = 0
@@ -22,69 +23,113 @@ class Callback(streaming.ADCCallback):
     def error(self,client,host,code):
         print("Client error",host, "code" , code)
 
-    def stopped(self,client,host,code):
-        print("Server stopped",host)
 
-    def stoppedNoActiveChannels(self,client,host):
-        print("Server stopped",host,". No active channels.")
+class ConfigCallbackImpl(streaming.ConfigCallback):
 
-    def stoppedMemError(self,client,host):
-        print("Server stopped",host,". Memory error.")
+    def configConnected(self, client, host: str):
+        print(f"Config client connected to {host}")
 
-    def stoppedMemModify(self,client,host):
-        print("Server stopped",host,". Memory changed")
+    def configError(self, client, host: str, code: int):
+        print(f"Config client error on {host} code {code}")
 
-    def stoppedSDFull(self,client,host):
-        print("Server stopped",host,". SD is full")
+    def configErrorTimeout(self, client, host: str):
+        print(f"Config client timeout on {host}")
 
-    def stoppedSDDone(self,client,host):
-        print("Server stopped",host,". The data is written to the memory card.")
+    def configErrorFileMissed(self, client, host: str):
+        print(f"Config client error on {host}: File missed")
 
-    def configConnected(self,client,host):
-        print("Control client connected",host)
+    def configMemoryBlockSize(self, client, host: str, block_size: int):
+        print(f"Memory block size configured on {host}: {block_size} bytes")
 
-    def configError(self,client,host,code):
-        print("Control client error",host, "code" , code)
+    def configActiveChannels(self, client, host: str, channels: int):
+        print(f"Active channels configured on {host}: {channels}")
 
-    def configErrorTimeout(self,client,host):
-        print("Control client error",host, ". Connection timeout")
+    def configSuccessSend(self, client, host: str):
+        print(f"Configuration sent successfully to {host}")
+
+    def configFailSend(self, client, host: str):
+        print(f"Failed to send configuration to {host}")
+
+    def configSuccessSave(self, client, host: str):
+        print(f"Configuration saved successfully on {host}")
+
+    def configFailSave(self, client, host: str):
+        print(f"Failed to save configuration on {host}")
+
+    def configGetNewSettings(self, client, host: str):
+        print(f"Getting new settings from {host}")
+
+    def adcServerStopped(self, client, host: str):
+        print(f"ADC server stopped on {host}")
+
+    def adcServerStoppedNoActiveChannels(self, client, host: str):
+        print(f"ADC server stopped on {host}: No active channels")
+
+    def adcServerStoppedMemError(self, client, host: str):
+        print(f"ADC server stopped on {host}: Memory error")
+
+    def adcServerStoppedMemModify(self, client, host: str):
+        print(f"ADC server stopped on {host}: Memory modified")
+
+    def adcServerStoppedSDFull(self, client, host: str):
+        print(f"ADC server stopped on {host}: SD card is full")
+
+    def adcServerStoppedSDDone(self, client, host: str):
+        print(f"ADC server stopped on {host}: Data written to SD card")
+
+    def adcServerStartedTCP(self, client, host: str):
+        print(f"ADC server started on {host} (TCP mode)")
+
+    def adcServerStartedSD(self, client, host: str):
+        print(f"ADC server started on {host} (SD card mode)")
+
+    def adcServerStartedFPGA(self, client, host: str):
+        print(f"ADC server started on {host} (FPGA)")
+
+    def sigInt(self):
+        obj.notifyStop()
 
 
 # Creating a streaming client
-obj = streaming.ADCStreamClient()
+confObj = streaming.ConfigStreamClient()
+obj = streaming.ADCStreamClient(confObj)
 
 # Creating a callback handler. And also remove the owner, since the client itself will delete the handler.
-callback = Callback()
-obj.setReceiveDataCallback(callback.__disown__())
+confCallback = ConfigCallbackImpl()
+confObj.addCallback(confCallback)
 
-# Disable client logs. They are disabled by default.
-obj.setVerbose(False)
+callback = Callback()
+obj.setCallback(callback)
+
+# Enable client logs. They are disabled by default.
+confObj.setVerbose(True)
+obj.setVerbose(True)
 
 # Connect to the server. Do not specify the address. If there is only one server in the network, the client will find it itself.
-if (obj.connect() == False):
+if (confObj.connect() == False):
     print("The client did not connect")
     exit(1)
 
 # Get the current decimation setting
-current_decimation = obj.getConfig('adc_decimation');
+current_decimation = confObj.getConfig('adc_decimation');
 print("Current decimation",current_decimation)
 
 
 # Setting up network mode
-obj.sendConfig('adc_pass_mode','NET')
+confObj.sendConfig('adc_pass_mode','NET')
 
 # Setting up a new decimation setting
-obj.sendConfig('adc_decimation','64')
+confObj.sendConfig('adc_decimation','64')
 
 # Setting the memory block size
-obj.sendConfig('block_size','16384')
+confObj.sendConfig('block_size','16384')
 
 # Setting the size of reserved memory for ADC streaming
-obj.sendConfig('adc_size','1638400')
+confObj.sendConfig('adc_size','1638400')
 
 # Turn on the first and second channels
-obj.sendConfig('channel_state_1','ON')
-obj.sendConfig('channel_state_2','ON')
+confObj.sendConfig('channel_state_1','ON')
+confObj.sendConfig('channel_state_2','ON')
 
 
 if (obj.startStreaming()):

@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import streaming
+import signal
 import numpy as np
 import wave
 import struct
@@ -50,17 +51,10 @@ class Callback(streaming.DACCallback):
         print("DAC server stopped",host,". Missing file")
         client.notifyStop()
 
-    def configConnected(self,client,host):
-        print("Control client connected",host)
-        client.notifyStop()
+class ConfigCallbackImpl(streaming.ConfigCallback):
 
-    def configError(self,client,host,code):
-        print("Control client error",host, "code" , code)
-        client.notifyStop()
-
-    def configErrorTimeout(self,client,host):
-        print("Control client error",host, ". Connection timeout")
-        client.notifyStop()
+    def sigInt(self):
+        obj.notifyStop()
 
 def create_wav_file(filename, data, sample_rate):
     """Create a WAV file using Python's built-in wave module"""
@@ -75,36 +69,42 @@ def create_wav_file(filename, data, sample_rate):
         wav_file.writeframes(data_bytes)
 
 # Creating a streaming client
-obj = streaming.DACStreamClient()
+confObj = streaming.ConfigStreamClient()
+obj = streaming.DACStreamClient(confObj)
 
 # Creating a callback handler. And also remove the owner, since the client itself will delete the handler.
-callback = Callback()
-obj.setCallback(callback.__disown__())
 
-# Disable client logs. They are disabled by default.
+confCallback = ConfigCallbackImpl()
+confObj.addCallback(confCallback)
+
+callback = Callback()
+obj.setCallback(callback)
+
+# Enable client logs. They are disabled by default.
+confObj.setVerbose(True)
 obj.setVerbose(True)
 
 # Connect to the server. Do not specify the address. If there is only one server in the network, the client will find it itself.
-if (obj.connect() == False):
+if (confObj.connect() == False):
     print("The client did not connect")
     exit(1)
 
 # Get the current decimation setting
-dac_rate = obj.getConfig('dac_rate');
+dac_rate = confObj.getConfig('dac_rate');
 print("Current rate",dac_rate)
 
 
 # Setting up network mode
-obj.sendConfig('dac_pass_mode','DAC_NET')
+confObj.sendConfig('dac_pass_mode','DAC_NET')
 
 # Setting up a new decimation setting
-obj.sendConfig('dac_rate','125000000')
+confObj.sendConfig('dac_rate','125000000')
 
 # Setting the memory block size
-obj.sendConfig('block_size','16384')
+confObj.sendConfig('block_size','16384')
 
 # Setting the size of reserved memory for DAC streaming
-obj.sendConfig('adc_size','1638400')
+confObj.sendConfig('dac_size','1638400')
 
 frequency = 1
 sampling_rate = 1024 * 4
@@ -118,8 +118,9 @@ create_wav_file("sin.wav", data, sampling_rate)
 obj.setRepeatInf(False)
 obj.setRepeatCount(2)
 
+host = confObj.getHosts()[0]
 
-if (obj.startStreamingWAV("./sin.wav")):
+if (obj.startStreamingWAV(host,"./sin.wav")):
     print("Streaming is launched")
 else:
     print("Error starting streaming")

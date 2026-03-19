@@ -1,34 +1,8 @@
 #include <algorithm>
-#include <csignal>
 #include <iostream>
-#include <memory>
 #include <string>
-#include "adc_streaming.h"
 #include "callbacks.h"
 #include "config_streaming.h"
-
-std::shared_ptr<ADCStreamClient> obj = nullptr;
-
-class Callback : public ADCCallback {
-   public:
-    uint64_t counter = 0;
-    uint64_t fpgaLost = 0;
-
-    void receivePack(ADCStreamClient* client, ADCPack& pack) override {
-        counter += pack.channel1.samples + pack.channel2.samples;
-        fpgaLost += std::max({pack.channel1.fpgaLost, pack.channel2.fpgaLost, pack.channel3.fpgaLost, pack.channel4.fpgaLost});
-
-        if (counter > 50000000) {
-            client->notifyStop();
-        }
-    }
-
-    void connected(ADCStreamClient* client, std::string host) override { std::cout << "Client connected " << host << std::endl; }
-
-    void disconnected(ADCStreamClient* client, std::string host) override { std::cout << "Client disconnected " << host << std::endl; }
-
-    void error(ADCStreamClient* client, std::string host, int code) override { std::cout << "Client error " << host << " code " << code << std::endl; }
-};
 
 class ConfigCallbackImpl : public ConfigCallback {
    public:
@@ -80,65 +54,69 @@ class ConfigCallbackImpl : public ConfigCallback {
 
     void adcServerStartedFPGA(ConfigStreamClient* client, std::string host) override { std::cout << "ADC server started on " << host << " (FPGA)" << std::endl; }
 
-    void sigInt() override {
-        if (obj)
-            obj->notifyStop();
+    void dacServerStartedTCP(ConfigStreamClient* client, std::string host) override { std::cout << "DAC server started on " << host << " (TCP mode)" << std::endl; }
+
+    void dacServerStartedSD(ConfigStreamClient* client, std::string host) override { std::cout << "DAC server started on " << host << " (SD card mode)" << std::endl; }
+
+    void dacServerStoppedMemError(ConfigStreamClient* client, std::string host) override { std::cout << "DAC server stopped on " << host << ": Memory error" << std::endl; }
+
+    void dacServerStoppedMemModify(ConfigStreamClient* client, std::string host) override { std::cout << "DAC server stopped on " << host << ": Memory modified" << std::endl; }
+
+    void dacServerStoppedConfigError(ConfigStreamClient* client, std::string host) override {
+        std::cout << "DAC server stopped on " << host << ": Configuration error" << std::endl;
     }
+
+    void dacServerStoppedFileMissed(ConfigStreamClient* client, std::string host) override { std::cout << "DAC server stopped on " << host << ": File missed" << std::endl; }
+
+    void dacServerStoppedSDDone(ConfigStreamClient* client, std::string host) override {
+        std::cout << "DAC server stopped on " << host << ": SD card operation completed" << std::endl;
+    }
+
+    void dacServerStoppedSDEmpty(ConfigStreamClient* client, std::string host) override { std::cout << "DAC server stopped on " << host << ": SD card is empty" << std::endl; }
+
+    void dacServerStoppedSDBroken(ConfigStreamClient* client, std::string host) override { std::cout << "DAC server stopped on " << host << ": SD card is broken" << std::endl; }
+
+    void dacServerStoppedSDMissing(ConfigStreamClient* client, std::string host) override { std::cout << "DAC server stopped on " << host << ": SD card is missing" << std::endl; }
 };
 
 int main() {
     // Creating a streaming client
-    auto confClient = std::make_shared<ConfigStreamClient>();
-    auto confCallback = std::make_shared<ConfigCallbackImpl>();
-    confClient->addCallback(confCallback);
-    obj = std::make_shared<ADCStreamClient>(confClient);
+    ConfigStreamClient obj;
 
     // Creating a callback handler.And also remove the owner, since the client itself will delete the handler.
-    auto callback = std::make_shared<Callback>();
-    obj->setCallback(callback);
+    auto callback = std::make_shared<ConfigCallbackImpl>();
+    obj.addCallback(callback);
 
     // Enable client logs
-    confClient->setVerbose(true);
-    obj->setVerbose(true);
+    obj.setVerbose(true);
 
     // Connect to the server
-    if (!confClient->connect()) {
+    if (!obj.connect()) {
         std::cerr << "The client did not connect" << std::endl;
         return 1;
     }
 
     // Get the current decimation setting
-    std::string current_decimation = confClient->getConfig("adc_decimation");
+    std::string current_decimation = obj.getConfig("adc_decimation");
     std::cout << "Current decimation " << current_decimation << std::endl;
 
+    obj.requestMemoryBlockSize(obj.getHosts().front());
+    obj.requestActiveChannels(obj.getHosts().front());
     // Setting up network mode
-    confClient->sendConfig("adc_pass_mode", "NET");
+    obj.sendConfig("adc_pass_mode", "NET");
 
     // Setting up a new decimation setting
-    confClient->sendConfig("adc_decimation", "64");
+    obj.sendConfig("adc_decimation", "64");
 
     // Setting the memory block size
-    confClient->sendConfig("block_size", "16384");
+    obj.sendConfig("block_size", "16384");
 
     // Setting the size of reserved memory for ADC streaming
-    confClient->sendConfig("adc_size", "1638400");
+    obj.sendConfig("adc_size", "1638400");
 
     // Turn on the first and second channels
-    confClient->sendConfig("channel_state_1", "ON");
-    confClient->sendConfig("channel_state_2", "ON");
-
-    if (obj->startStreaming()) {
-        std::cout << "Streaming is launched" << std::endl;
-    } else {
-        std::cerr << "Error starting streaming" << std::endl;
-        return 1;
-    }
-
-    // Waiting for the streaming client to complete its work
-    obj->wait();
-
-    std::cout << "Received samples " << callback->counter << std::endl;
-    std::cout << "Number of lost samples " << callback->fpgaLost << std::endl;
+    obj.sendConfig("channel_state_1", "ON");
+    obj.sendConfig("channel_state_2", "ON");
 
     return 0;
 }

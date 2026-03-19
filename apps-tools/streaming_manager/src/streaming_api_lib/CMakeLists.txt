@@ -59,6 +59,7 @@ include_directories(
 list(APPEND src
         ${PROJECT_SOURCE_DIR}/src/adc_streaming.cpp
         ${PROJECT_SOURCE_DIR}/src/dac_streaming.cpp
+        ${PROJECT_SOURCE_DIR}/src/config_streaming.cpp
         ${PROJECT_SOURCE_DIR}/src/config.cpp
         ${PROJECT_SOURCE_DIR}/src/common.cpp
 )
@@ -122,7 +123,15 @@ if(IS_INSTALL)
         #     DESTINATION ${INSTALL_DIR}/streaming/${PY_PROJ}/python PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
         #     GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_WRITE WORLD_EXECUTE)
 
-        install(FILES examples/adc_example_1.py examples/adc_example_2.py examples/dac_example_1.py examples/dac_example_2.py examples/dac_example_3.py examples/dac_example_4.py
+        install(FILES examples/adc_example_1.py
+                      examples/adc_example_2.py
+                      examples/dac_example_1.py
+                      examples/dac_example_2.py
+                      examples/dac_example_3.py
+                      examples/dac_example_4.py
+                      examples/dac_example_5.py
+                      examples/adc_dac_example_1.py
+                      examples/config_example_1.py
             DESTINATION ${INSTALL_DIR}/streaming/${PY_PROJ} PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
             GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_WRITE WORLD_EXECUTE)
 
@@ -166,10 +175,18 @@ if(IS_INSTALL)
     install(TARGETS ${CPP_PROJ}
         RUNTIME DESTINATION ${INSTALL_DIR}/streaming/${CPP_PROJ}
         LIBRARY DESTINATION ${INSTALL_DIR}/streaming/${CPP_PROJ})
-    install(FILES src/adc_streaming.h src/dac_streaming.h src/callbacks.h
+    install(FILES src/adc_streaming.h src/dac_streaming.h src/config_streaming.h src/callbacks.h
             DESTINATION ${INSTALL_DIR}/streaming/${CPP_PROJ} PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
             GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_WRITE WORLD_EXECUTE)
-    install(FILES examples/adc_example_1.cpp examples/adc_example_2.cpp examples/dac_example_1.cpp examples/dac_example_2.cpp examples/dac_example_3.cpp examples/dac_example_4.cpp
+    install(FILES examples/adc_example_1.cpp
+                  examples/adc_example_2.cpp
+                  examples/dac_example_1.cpp
+                  examples/dac_example_2.cpp
+                  examples/dac_example_3.cpp
+                  examples/dac_example_4.cpp
+                  examples/dac_example_5.cpp
+                  examples/adc_dac_example_1.cpp
+                  examples/config_example_1.cpp
             DESTINATION ${INSTALL_DIR}/streaming/${CPP_PROJ} PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
             GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_WRITE WORLD_EXECUTE)
 

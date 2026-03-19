@@ -17,11 +17,11 @@ class DACCallbackHandler : public DACCallback {
    public:
     int counter = 0;
 
-    bool streamData8Bit(DACStreamClient*, int8_t* ch1, int8_t* ch2, size_t size) override {
+    bool streamData16Bit(DACStreamClient*, int16_t* ch1, int16_t* ch2, size_t size) override {
         for (size_t idx = 0; idx < size; idx++) {
             float sineValue = std::sin(2.0f * M_PI * idx / size);
 
-            int8_t sample = static_cast<int8_t>((sineValue * 128));
+            int16_t sample = static_cast<int16_t>((sineValue * 32767));
 
             if (ch1)
                 ch1[idx] = sample;
@@ -91,7 +91,7 @@ int main() {
     confClient->sendConfig("block_size", "16384");
     confClient->sendConfig("dac_size", "1638400");
     auto host = confClient->getHosts().front();
-    if (obj->startStreamingFromMemorySink(host, true, true, DACStreamBytes::DAC_8BIT)) {
+    if (obj->startStreamingFromMemorySink(host, true, true, DACStreamBytes::DAC_16BIT)) {
         std::cout << "Memory streaming started" << std::endl;
     } else {
         std::cerr << "Failed to start streaming" << std::endl;

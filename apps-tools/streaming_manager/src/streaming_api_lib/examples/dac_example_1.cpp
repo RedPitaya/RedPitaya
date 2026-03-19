@@ -1,9 +1,12 @@
 #include <cmath>
+#include <csignal>
 #include <cstdint>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <vector>
 #include "callbacks.h"
+#include "config_streaming.h"
 #include "dac_streaming.h"
 
 #ifndef M_PI
@@ -29,6 +32,8 @@ struct WAVHeader {
 };
 #pragma pack(pop)
 
+std::shared_ptr<DACStreamClient> obj = nullptr;
+
 class DACCallbackHandler : public DACCallback {
    public:
     int counter = 0;
@@ -43,6 +48,14 @@ class DACCallbackHandler : public DACCallback {
     }
 
     // Implement all other required callback methods...
+};
+
+class ConfigCallbackImpl : public ConfigCallback {
+   public:
+    void sigInt() override {
+        if (obj)
+            obj->notifyStop();
+    }
 };
 
 void writeWAV(const std::string& filename, int sampleRate, const std::vector<int16_t>& samples) {
@@ -78,38 +91,44 @@ std::vector<int16_t> generateSineWave(double freq, int sampleRate, double durati
 }
 
 int main() {
-    DACStreamClient client;
-    DACCallbackHandler* callback = new DACCallbackHandler();
-    client.setCallback(callback);
-    client.setVerbose(true);
+    auto confClient = std::make_shared<ConfigStreamClient>();
+    obj = std::make_shared<DACStreamClient>(confClient);
 
-    if (!client.connect()) {
+    auto confCallback = std::make_shared<ConfigCallbackImpl>();
+    confClient->addCallback(confCallback);
+
+    auto callback = std::make_shared<DACCallbackHandler>();
+    obj->setCallback(callback);
+    obj->setVerbose(true);
+    confClient->setVerbose(true);
+
+    if (!confClient->connect()) {
         std::cerr << "Connection failed" << std::endl;
         return 1;
     }
 
     // Configure DAC
-    client.sendConfig("dac_pass_mode", "DAC_NET");
-    client.sendConfig("dac_rate", "125000000");
-    client.sendConfig("block_size", "16384");
-    client.sendConfig("adc_size", "1638400");
+    confClient->sendConfig("dac_pass_mode", "DAC_NET");
+    confClient->sendConfig("dac_rate", "125000000");
+    confClient->sendConfig("block_size", "16384");
+    confClient->sendConfig("dac_size", "1638400");
 
     // Generate and save WAV
     auto samples = generateSineWave(1.0, 4096, 1.0);
     writeWAV("sin.wav", 4096, samples);
 
     // Setup streaming
-    client.setRepeatInf(false);
-    client.setRepeatCount(2);
-
-    if (client.startStreamingWAV("./sin.wav")) {
+    obj->setRepeatInf(false);
+    obj->setRepeatCount(2);
+    auto host = confClient->getHosts().front();
+    if (obj->startStreamingWAV(host, "./sin.wav")) {
         std::cout << "Streaming started" << std::endl;
     } else {
         std::cerr << "Failed to start streaming" << std::endl;
         return 1;
     }
 
-    client.wait();
+    obj->wait();
     std::cout << "Sent packets: " << callback->counter << std::endl;
 
     return 0;

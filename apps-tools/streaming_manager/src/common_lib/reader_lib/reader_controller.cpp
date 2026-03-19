@@ -281,6 +281,7 @@ auto CReaderController::getBufferPrepared(Data& data) -> BufferResult {
         for (auto ch : m_memSink->channels) {
             if (data.ch[ch] != nullptr) {
                 data.size[ch] = m_blockSize;
+                data.real_size[ch] = m_blockSize;
             }
         }
         std::array<uint8_t*, MAX_CHANNES> channels = {data.ch[0], data.ch[1]};

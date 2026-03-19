@@ -1,10 +1,38 @@
 #!/usr/bin/python3
 
 import streaming
+import math
 import numpy as np
 
 class Callback(streaming.DACCallback):
     counter = 0
+
+
+    def streamData16Bit(self, client, ch1, ch2, size):
+        try:
+            # 1. Create a time array from 0 to 2*PI
+            t = np.linspace(0, 2 * np.pi, size, endpoint=False, dtype=np.float32)
+
+            # 2. Calculate sine and scale to int16 (-127 to 127)
+            # We use .astype(np.int8) to ensure the data format matches C++
+            samples = (np.sin(t) * 32767).astype(np.int16)
+
+            # 3. Copy data to memoryviews
+            # memoryview handles slicing/assignment efficiently from numpy
+            if ch1 is not None:
+                ch1.cast('h')[:] = samples
+
+            if ch2 is not None:
+                ch2.cast('h')[:] = samples
+
+            print(f"streamData size {size}")
+
+            return False  # Return False if you want to CONTINUE streaming
+
+        except Exception as e:
+            print(f"NumPy Stream Error: {e}")
+            return True # Stop on error
+
 
     def sentPack(self,client, ch1_size, ch2_size):
         #print("Data sent CH1",ch1_size,"CH2",ch2_size)
@@ -73,7 +101,6 @@ if (confObj.connect() == False):
     print("The client did not connect")
     exit(1)
 
-
 # Get the current decimation setting
 dac_rate = confObj.getConfig('dac_rate');
 print("Current rate",dac_rate)
@@ -91,20 +118,8 @@ confObj.sendConfig('block_size','16384')
 # Setting the size of reserved memory for DAC streaming
 confObj.sendConfig('dac_size','1638400')
 
-frequency = 1
-sampling_rate = 1024*32
-t = np.linspace(0., 1., sampling_rate)
-amplitude = np.iinfo(np.int16).max
-data = amplitude * np.sin(2. * np.pi * frequency * t)
-
-# set channel 1
-obj.setMemory16Bit(1,data.astype(np.int16).tolist())
-# set channel 2
-obj.setMemory16Bit(2,data.astype(np.int16).tolist())
-
 host = confObj.getHosts()[0]
-
-if (obj.startStreamingFromMemory(host)):
+if (obj.startStreamingFromMemorySink(host,True,True,streaming.DAC_16BIT)):
     print("Streaming is launched")
 else:
     print("Error starting streaming")

@@ -19,24 +19,40 @@ static constexpr char optstring_broadcast[] = "dt:";
 
 static struct option long_options_config[] = {
     /* These options set a flag. */
-    {"config", no_argument, 0, 'c'},    {"hosts", required_argument, 0, 'h'}, {"get", required_argument, 0, 'g'},
-    {"set", required_argument, 0, 's'}, {0, required_argument, 0, 'i'},       {"config_file", required_argument, 0, 'f'},
-    {"verbose", no_argument, 0, 'v'},   {"write", required_argument, 0, 'w'}, {0, 0, 0, 0}};
+    {"config", no_argument, 0, 'c'},
+    {"hosts", required_argument, 0, 'h'},
+    {"get", required_argument, 0, 'g'},
+    {"set", required_argument, 0, 's'},
+    {0, required_argument, 0, 'i'},
+    {"config_file", required_argument, 0, 'f'},
+    {"verbose", no_argument, 0, 'v'},
+    {"write", required_argument, 0, 'w'},
+    {0, 0, 0, 0}};
 
 static constexpr char optstring_config[] = "ch:g:s:f:vwi:";
 
 static struct option long_options_remote[] = {
     /* These options set a flag. */
-    {"remote", no_argument, 0, 'r'},        {"hosts", required_argument, 0, 'h'}, {"mode", required_argument, 0, 'm'},
-    {"timeout", required_argument, 0, 't'}, {"verbose", no_argument, 0, 'v'},     {0, 0, 0, 0}};
+    {"remote", no_argument, 0, 'r'},
+    {"hosts", required_argument, 0, 'h'},
+    {"mode", required_argument, 0, 'm'},
+    {"timeout", required_argument, 0, 't'},
+    {"verbose", no_argument, 0, 'v'},
+    {0, 0, 0, 0}};
 
 static constexpr char optstring_remote[] = "rh:m:t:v";
 
 static struct option long_options_streaming[] = {
     /* These options set a flag. */
-    {"streaming", no_argument, 0, 's'},     {"hosts", required_argument, 0, 'h'}, {"format", required_argument, 0, 'f'},
-    {"dir", required_argument, 0, 'd'},     {"limit", required_argument, 0, 'l'}, {"mode", required_argument, 0, 'm'},
-    {"timeout", required_argument, 0, 't'}, {"verbose", no_argument, 0, 'v'},     {0, 0, 0, 0}};
+    {"streaming", no_argument, 0, 's'},
+    {"hosts", required_argument, 0, 'h'},
+    {"format", required_argument, 0, 'f'},
+    {"dir", required_argument, 0, 'd'},
+    {"limit", required_argument, 0, 'l'},
+    {"mode", required_argument, 0, 'm'},
+    {"timeout", required_argument, 0, 't'},
+    {"verbose", no_argument, 0, 'v'},
+    {0, 0, 0, 0}};
 
 static constexpr char optstring_streaming[] = "sh:c:f:d:l:m:t:v";
 
@@ -55,24 +71,21 @@ static constexpr char optstring_dac_streaming[] = "oh:c:f:d:r:v";
 auto getTS(std::string suffix) -> std::string {
     using namespace std;
     using namespace std::chrono;
-    system_clock::time_point timeNow = system_clock::now();
+
+    auto timeNow = system_clock::now();
     auto ttime_t = system_clock::to_time_t(timeNow);
-    auto tp_sec = system_clock::from_time_t(ttime_t);
-    milliseconds ms = duration_cast<milliseconds>(timeNow - tp_sec);
 
-    std::tm* ttm = localtime(&ttime_t);
+    auto ms = duration_cast<milliseconds>(timeNow.time_since_epoch()) % 1000;
 
-    char date_time_format[] = "%Y.%m.%d-%H.%M.%S";
+    std::tm* ttm = std::localtime(&ttime_t);
 
-    char time_str[] = "yyyy.mm.dd.HH-MM.SS.fff";
+    char time_buffer[32];
+    strftime(time_buffer, sizeof(time_buffer), "%Y.%m.%d-%H.%M.%S", ttm);
 
-    strftime(time_str, strlen(time_str), date_time_format, ttm);
+    char final_buffer[64];
+    snprintf(final_buffer, sizeof(final_buffer), "%s.%03lld%s", time_buffer, (long long)ms.count(), suffix.c_str());
 
-    string result(time_str);
-    result.append(".");
-    result.append(to_string(ms.count()));
-    result.append(suffix);
-    return result;
+    return std::string(final_buffer);
 }
 
 std::vector<std::string> split(const std::string& s, char seperator) {

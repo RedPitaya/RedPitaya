@@ -1,9 +1,12 @@
 #include <cmath>
+#include <csignal>
 #include <cstdint>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <vector>
 #include "callbacks.h"
+#include "config_streaming.h"
 #include "dac_streaming.h"
 
 #ifndef M_PI
@@ -28,6 +31,8 @@ struct WAVHeader {
 };
 #pragma pack(pop)
 
+std::shared_ptr<DACStreamClient> obj = nullptr;
+
 class DACCallbackHandler : public DACCallback {
    public:
     int counter = 0;
@@ -42,6 +47,14 @@ class DACCallbackHandler : public DACCallback {
     }
 
     // Implement all other required callback methods...
+};
+
+class ConfigCallbackImpl : public ConfigCallback {
+   public:
+    void sigInt() override {
+        if (obj)
+            obj->notifyStop();
+    }
 };
 
 void writeStereoWAV(const std::string& filename, int sampleRate, const std::vector<int8_t>& left, const std::vector<int8_t>& right) {
@@ -86,21 +99,27 @@ std::vector<int8_t> generate8bitSine(double freq, int sampleRate, double duratio
 }
 
 int main() {
-    DACStreamClient client;
-    DACCallbackHandler* callback = new DACCallbackHandler();
-    client.setCallback(callback);
-    client.setVerbose(true);
+    auto confClient = std::make_shared<ConfigStreamClient>();
+    obj = std::make_shared<DACStreamClient>(confClient);
 
-    if (!client.connect()) {
+    auto confCallback = std::make_shared<ConfigCallbackImpl>();
+    confClient->addCallback(confCallback);
+
+    auto callback = std::make_shared<DACCallbackHandler>();
+    obj->setCallback(callback);
+    obj->setVerbose(true);
+    confClient->setVerbose(true);
+
+    if (!confClient->connect()) {
         std::cerr << "Connection failed" << std::endl;
         return 1;
     }
 
     // Configure with larger buffers
-    client.sendConfig("dac_pass_mode", "DAC_NET");
-    client.sendConfig("dac_rate", "125000000");
-    client.sendConfig("block_size", "262144");
-    client.sendConfig("adc_size", "2621440");
+    confClient->sendConfig("dac_pass_mode", "DAC_NET");
+    confClient->sendConfig("dac_rate", "125000000");
+    confClient->sendConfig("block_size", "262144");
+    confClient->sendConfig("dac_size", "5242880");
 
     // Generate stereo WAV
     auto left = generate8bitSine(1.0, 262144, 1.0);
@@ -108,16 +127,16 @@ int main() {
     writeStereoWAV("sin.wav", 262144, left, right);
 
     // Infinite repeat
-    client.setRepeatInf(true);
-
-    if (client.startStreamingWAV("./sin.wav")) {
+    obj->setRepeatInf(true);
+    auto host = confClient->getHosts().front();
+    if (obj->startStreamingWAV(host, "./sin.wav")) {
         std::cout << "Stereo streaming started" << std::endl;
     } else {
         std::cerr << "Failed to start streaming" << std::endl;
         return 1;
     }
 
-    client.wait();
+    obj->wait();
     std::cout << "Sent packets: " << callback->counter << std::endl;
 
     return 0;

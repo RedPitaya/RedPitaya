@@ -19,19 +19,43 @@ using namespace dac_streaming_lib;
 
 enum dataMode { WAV_MODE = 0, TDMS_MODE = 1, MEM_MODE = 2, MEM_STREAM_MODE = 3 };
 
-std::function<void(int)> dac_shutdown_handler;
+class DACCb : public ConfigCallback {
 
-void dac_signal_handler(int signal) {
-    dac_shutdown_handler(signal);
-}
+    void configError(ConfigStreamClient* cl, std::string host, int error) override {
+        if (m_terminate)
+            *m_terminate = true;
+    }
+
+    void dacServerStoppedMemError(ConfigStreamClient*, std::string host) override {
+        if (m_terminate)
+            *m_terminate = true;
+    }
+    void dacServerStoppedMemModify(ConfigStreamClient*, std::string host) override {
+        if (m_terminate)
+            *m_terminate = true;
+    }
+    void dacServerStoppedConfigError(ConfigStreamClient*, std::string host) override {
+        if (m_terminate)
+            *m_terminate = true;
+    }
+    void configErrorFileMissed(ConfigStreamClient*, std::string host) override {
+        if (m_terminate)
+            *m_terminate = true;
+    }
+
+    bool* m_terminate = nullptr;
+
+   public:
+    explicit DACCb(bool* terminate) : m_terminate(terminate){};
+};
 
 struct DACStreamClient::Impl {
     std::string m_host = "";
     CDACStreamingManager::Ptr m_dac_manger;
     net_lib::CAsioNet::Ptr m_dac_asionet;
-    ClientNetConfigManager::Ptr m_configClient = nullptr;
+    std::shared_ptr<ConfigStreamClient> m_configClient = nullptr;
     bool m_verbose = false;
-    DACCallback* m_callback = nullptr;
+    std::shared_ptr<DACCallback> m_callback = nullptr;
     bool m_terminate;
     bool m_fileEnded;
     std::mutex m_smutex;
@@ -48,6 +72,7 @@ struct DACStreamClient::Impl {
     auto getActiveChannels() -> CReaderController::dac_channels_t;
     std::thread* m_client;
     auto runClient(DACStreamClient* client, std::string host, uint32_t size, CReaderController::dac_channels_t activeChannels) -> void;
+    std::shared_ptr<DACCb> m_configCallback;
 };
 
 auto DACStreamClient::Impl::getActiveChannels() -> CReaderController::dac_channels_t {
@@ -118,8 +143,15 @@ auto DACStreamClient::Impl::runClient(DACStreamClient* client, std::string host,
                                              m_verbose,
                                              [&](uint8_t bitsBySample, std::array<uint8_t*, CReaderController::MAX_CHANNES>& buffers, const uint32_t bufferSize) -> bool {
                                                  const std::lock_guard lock(m_smutex);
-                                                 if (m_callback)
-                                                     return m_callback->streamData(client, buffers[0], buffers[1], bufferSize);
+                                                 if (m_callback) {
+                                                     if (bitsBySample == 8) {
+                                                         return m_callback->streamData8Bit(client, (int8_t*)buffers[0], (int8_t*)buffers[1], bufferSize);
+                                                     } else if (bitsBySample == 16) {
+                                                         return m_callback->streamData16Bit(client, (int16_t*)buffers[0], (int16_t*)buffers[1], bufferSize / 2);
+                                                     } else {
+                                                         ERROR_LOG("Incorrect data type size")
+                                                     }
+                                                 }
                                                  return true;  // Return end of stream
                                              });
             break;
@@ -250,14 +282,11 @@ auto DACStreamClient::Impl::runClient(DACStreamClient* client, std::string host,
     delete memoryManager;
 }
 
-DACStreamClient::DACStreamClient() {
+DACStreamClient::DACStreamClient(std::shared_ptr<ConfigStreamClient> configClient) {
     m_pimpl = new Impl();
-    m_pimpl->m_configClient = std::make_shared<ClientNetConfigManager>("", false);
-    auto sigInt = [&](int) {
-        notifyStop();
-    };
-    dac_shutdown_handler = sigInt;
-    std::signal(SIGINT, dac_signal_handler);
+    m_pimpl->m_configClient = configClient;
+    m_pimpl->m_configCallback = std::make_shared<DACCb>(&m_pimpl->m_terminate);
+    m_pimpl->m_configClient->addCallback(m_pimpl->m_configCallback);
 }
 
 DACStreamClient::~DACStreamClient() {
@@ -269,62 +298,7 @@ DACStreamClient::~DACStreamClient() {
     delete m_pimpl;
 }
 
-auto DACStreamClient::connect() -> bool {
-    auto host = search();
-    if (host == "") {
-        aprintf(stdout, "%s Host not found\n", getTS(": ").c_str());
-    }
-    return connect(host);
-}
-
-auto DACStreamClient::connect(std::string host) -> bool {
-    std::atomic<int> connect_counter;
-    std::atomic<uint16_t> connected;
-
-    m_pimpl->m_configClient->serverConnectedNofiy.connect([&](std::string host) {
-        const std::lock_guard lock(m_pimpl->m_smutex);
-        if (m_pimpl->m_verbose)
-            aprintf(stderr, "%s Connected: %s\n", getTS(": ").c_str(), host.c_str());
-        if (m_pimpl->m_callback)
-            m_pimpl->m_callback->configConnected(this, host);
-        m_pimpl->m_host = host;
-        connect_counter--;
-        connected++;
-    });
-
-    m_pimpl->m_configClient->errorNofiy.connect([&](ClientNetConfigManager::Errors errors, std::string host, error_code err) {
-        const std::lock_guard lock(m_pimpl->m_smutex);
-        if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
-            aprintf(stderr, "%s Error: %s %s\n", getTS(": ").c_str(), host.c_str(), err.message().c_str());
-            if (m_pimpl->m_callback)
-                m_pimpl->m_callback->configError(this, host, err.value());
-            connect_counter--;
-        }
-
-        if (errors == ClientNetConfigManager::Errors::CONNECT_TIMEOUT) {
-            if (m_pimpl->m_verbose)
-                aprintf(stderr, "%s Connect timeout: %s\n", getTS(": ").c_str(), host.c_str());
-            if (m_pimpl->m_callback)
-                m_pimpl->m_callback->configErrorTimeout(this, host);
-            connect_counter--;
-        }
-    });
-
-    connect_counter = 1;
-    connected = 0;
-    m_pimpl->m_host = "";
-    m_pimpl->m_configClient->connectToServers({host}, NET_CONFIG_PORT);
-    auto beginTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count();
-    auto timeout = false;
-    while (!timeout && connect_counter > 0) {
-        sleepMs(100);
-        timeout = (std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count() - beginTime > 5000);
-    }
-    m_pimpl->m_configClient->removeHadlers();
-    return !timeout && connected == 1;
-}
-
-auto DACStreamClient::setCallback(DACCallback* callback) -> void {
+auto DACStreamClient::setCallback(std::shared_ptr<DACCallback> callback) -> void {
     removeCallback();
     const std::lock_guard lock(m_pimpl->m_smutex);
     m_pimpl->m_callback = callback;
@@ -332,25 +306,27 @@ auto DACStreamClient::setCallback(DACCallback* callback) -> void {
 
 auto DACStreamClient::removeCallback() -> void {
     const std::lock_guard lock(m_pimpl->m_smutex);
-    delete m_pimpl->m_callback;
     m_pimpl->m_callback = nullptr;
+    m_pimpl->m_configClient->removeCallback(m_pimpl->m_configCallback);
 }
 
-auto DACStreamClient::startStreamingTDMS(std::string fileName) -> bool {
+auto DACStreamClient::startStreamingTDMS(std::string host, std::string fileName) -> bool {
     m_pimpl->m_dataMode = dataMode::TDMS_MODE;
     m_pimpl->m_fileName = fileName;
+    m_pimpl->m_host = host;
     return startStreaming();
 }
 
-auto DACStreamClient::startStreamingWAV(std::string fileName) -> bool {
+auto DACStreamClient::startStreamingWAV(std::string host, std::string fileName) -> bool {
     m_pimpl->m_dataMode = dataMode::WAV_MODE;
     m_pimpl->m_fileName = fileName;
+    m_pimpl->m_host = host;
     return startStreaming();
 }
 
-auto DACStreamClient::startStreamingFromMemory() -> bool {
+auto DACStreamClient::startStreamingFromMemory(std::string host) -> bool {
     m_pimpl->m_dataMode = dataMode::MEM_MODE;
-
+    m_pimpl->m_host = host;
     if (m_pimpl->m_memChannels[0] && m_pimpl->m_memChannels[1]) {
         if (m_pimpl->m_memBytes[0] != m_pimpl->m_memBytes[1]) {
             WARNING("The data type of the first and second channels do not match")
@@ -364,7 +340,7 @@ auto DACStreamClient::startStreamingFromMemory() -> bool {
     return startStreaming();
 }
 
-auto DACStreamClient::startStreamingFromMemorySink(bool enableCh1, bool enableCh2, DACStreamBytes bytePerSample) -> bool {
+auto DACStreamClient::startStreamingFromMemorySink(std::string host, bool enableCh1, bool enableCh2, DACStreamBytes bytePerSample) -> bool {
     m_pimpl->m_dataMode = dataMode::MEM_STREAM_MODE;
     CReaderController::dac_channels_t channels;
     channels[DACChannels::DAC_CH1] = enableCh1;
@@ -372,12 +348,13 @@ auto DACStreamClient::startStreamingFromMemorySink(bool enableCh1, bool enableCh
     m_pimpl->m_memBytes[0] = (int)bytePerSample;
     m_pimpl->m_memBytes[1] = (int)bytePerSample;
     m_pimpl->m_memSinkChannels = channels;
+    m_pimpl->m_host = host;
     return startStreaming();
 }
 
 auto DACStreamClient::startStreaming() -> bool {
     std::map<std::string, uint32_t> blockSizes;
-    if (!requestMemoryBlockSize(m_pimpl->m_configClient, {m_pimpl->m_host}, &blockSizes, m_pimpl->m_verbose)) {
+    if (!requestMemoryBlockSizeCommon(m_pimpl->m_configClient, {m_pimpl->m_host}, &blockSizes, m_pimpl->m_verbose)) {
         aprintf(stdout, "%s Can't get block sizes\n", getTS(": ").c_str());
         return false;
     }
@@ -385,46 +362,9 @@ auto DACStreamClient::startStreaming() -> bool {
     auto ac_channels = m_pimpl->getActiveChannels();
     uint32_t blockSize = blockSizes[m_pimpl->m_host];
     StateRunningHosts runned_host;
-    if (requestStartDACStreaming(m_pimpl->m_configClient, m_pimpl->m_host, ac_channels.count(), &runned_host, m_pimpl->m_verbose)) {
+    if (requestStartDACStreamingCommon(m_pimpl->m_configClient, m_pimpl->m_host, ac_channels.count(), &runned_host, m_pimpl->m_verbose)) {
         if (runned_host == StateRunningHosts::TCP && ac_channels.count() > 0)
             m_pimpl->m_client = new std::thread(&DACStreamClient::Impl::runClient, m_pimpl, this, m_pimpl->m_host, blockSize, ac_channels);
-
-        m_pimpl->m_configClient->errorNofiy.connect([&](ClientNetConfigManager::Errors errors, std::string host, error_code err) {
-            if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
-                aprintf(stderr, "%s Error: %s %s\n", getTS(": ").c_str(), host.c_str(), err.message().c_str());
-                if (m_pimpl->m_callback)
-                    m_pimpl->m_callback->configError(this, host, err.value());
-                m_pimpl->m_terminate = true;
-            }
-        });
-
-        m_pimpl->m_configClient->serverDacStoppedMemErrorNofiy.connect([&](std::string host) {
-            if (m_pimpl->m_verbose)
-                aprintf(stdout, "%s DAC Streaming started: %s memory error [FAIL]\n", getTS(": ").c_str(), host.c_str());
-            if (m_pimpl->m_callback)
-                m_pimpl->m_callback->stoppedMemError(this, host);
-            m_pimpl->m_terminate = true;
-        });
-
-        m_pimpl->m_configClient->serverDacStoppedMemModifyNofiy.connect([&](std::string host) {
-            if (m_pimpl->m_verbose)
-                aprintf(stdout, "%s DAC Streaming started: %s memory modify [FAIL]\n", getTS(": ").c_str(), host.c_str());
-            if (m_pimpl->m_callback)
-                m_pimpl->m_callback->stoppedMemModify(this, host);
-            m_pimpl->m_terminate = true;
-        });
-
-        m_pimpl->m_configClient->serverDacStoppedConfigErrorNofiy.connect([&](std::string host) {
-            if (m_pimpl->m_verbose)
-                aprintf(stdout, "%s DAC Streaming started: %s config error [FAIL]\n", getTS(": ").c_str(), host.c_str());
-            m_pimpl->m_terminate = true;
-        });
-
-        m_pimpl->m_configClient->configFileMissedNotify.connect([&](std::string host) {
-            if (m_pimpl->m_verbose)
-                aprintf(stdout, "%s DAC Streaming started: %s config file is missed [FAIL]\n", getTS(": ").c_str(), host.c_str());
-            m_pimpl->m_terminate = true;
-        });
     }
     return true;
 }
@@ -490,36 +430,4 @@ auto DACStreamClient::setMemory16Bit(uint8_t channel, std::vector<int16_t> buffe
     m_pimpl->m_memBytes[channel - 1] = 2;
     m_pimpl->m_memSize[channel - 1] = buffer.size() * 2;
     return true;
-}
-
-auto DACStreamClient::sendConfig(std::string key, std::string value) -> bool {
-    return sendConfigCommon(m_pimpl->m_configClient, key, value, m_pimpl->m_verbose);
-}
-
-auto DACStreamClient::sendConfig(std::string host, std::string key, std::string value) -> bool {
-    return sendConfigCommon(m_pimpl->m_configClient, host, key, value, m_pimpl->m_verbose);
-}
-
-auto DACStreamClient::getConfig(std::string key) -> std::string {
-    return getConfigCommon(m_pimpl->m_configClient, key, m_pimpl->m_verbose);
-}
-
-auto DACStreamClient::getConfig(std::string host, std::string key) -> std::string {
-    return getConfigCommon(m_pimpl->m_configClient, host, key, m_pimpl->m_verbose);
-}
-
-auto DACStreamClient::sendFileConfig(std::string config) -> bool {
-    return sendFileConfigCommon(m_pimpl->m_configClient, config, m_pimpl->m_verbose);
-}
-
-auto DACStreamClient::sendFileConfig(std::string host, std::string config) -> bool {
-    return sendFileConfigCommon(m_pimpl->m_configClient, host, config, m_pimpl->m_verbose);
-}
-
-auto DACStreamClient::getFileConfig() -> std::string {
-    return getFileConfigCommon(m_pimpl->m_configClient, m_pimpl->m_verbose);
-}
-
-auto DACStreamClient::getFileConfig(std::string host) -> std::string {
-    return getFileConfigCommon(m_pimpl->m_configClient, host, m_pimpl->m_verbose);
 }

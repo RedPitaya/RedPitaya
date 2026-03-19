@@ -26,6 +26,49 @@ struct ADCPack {
 
 class ADCStreamClient;
 class DACStreamClient;
+class ConfigStreamClient;
+
+class ConfigCallback {
+   public:
+    virtual ~ConfigCallback() {}
+    virtual void configConnected(ConfigStreamClient*, std::string) {}
+    virtual void configError(ConfigStreamClient*, std::string, int) {}
+    virtual void configErrorTimeout(ConfigStreamClient*, std::string) {}
+    virtual void configErrorFileMissed(ConfigStreamClient*, std::string) {}
+    virtual void configMemoryBlockSize(ConfigStreamClient*, std::string, size_t) {}
+    virtual void configActiveChannels(ConfigStreamClient*, std::string, size_t) {}
+
+    virtual void configSuccessSend(ConfigStreamClient*, std::string) {}
+    virtual void configFailSend(ConfigStreamClient*, std::string) {}
+    virtual void configSuccessSave(ConfigStreamClient*, std::string) {}
+    virtual void configFailSave(ConfigStreamClient*, std::string) {}
+
+    virtual void configGetNewSettings(ConfigStreamClient*, std::string) {}
+    virtual void configGetNewSettingsItem(ConfigStreamClient*, std::string) {}
+
+    virtual void adcServerStopped(ConfigStreamClient*, std::string) {}
+    virtual void adcServerStoppedNoActiveChannels(ConfigStreamClient*, std::string) {}
+    virtual void adcServerStoppedMemError(ConfigStreamClient*, std::string) {}
+    virtual void adcServerStoppedMemModify(ConfigStreamClient*, std::string) {}
+    virtual void adcServerStoppedSDFull(ConfigStreamClient*, std::string) {}
+    virtual void adcServerStoppedSDDone(ConfigStreamClient*, std::string) {}
+    virtual void adcServerStartedTCP(ConfigStreamClient*, std::string) {}
+    virtual void adcServerStartedSD(ConfigStreamClient*, std::string) {}
+    virtual void adcServerStartedFPGA(ConfigStreamClient*, std::string) {}
+
+    virtual void dacServerStartedTCP(ConfigStreamClient*, std::string) {}
+    virtual void dacServerStartedSD(ConfigStreamClient*, std::string) {}
+    virtual void dacServerStoppedMemError(ConfigStreamClient*, std::string) {}
+    virtual void dacServerStoppedMemModify(ConfigStreamClient*, std::string) {}
+    virtual void dacServerStoppedConfigError(ConfigStreamClient*, std::string) {}
+    virtual void dacServerStoppedFileMissed(ConfigStreamClient*, std::string) {}
+    virtual void dacServerStoppedSDDone(ConfigStreamClient*, std::string) {}
+    virtual void dacServerStoppedSDEmpty(ConfigStreamClient*, std::string) {}
+    virtual void dacServerStoppedSDBroken(ConfigStreamClient*, std::string) {}
+    virtual void dacServerStoppedSDMissing(ConfigStreamClient*, std::string) {}
+
+    virtual void sigInt() {};
+};
 
 class ADCCallback {
    public:
@@ -34,16 +77,6 @@ class ADCCallback {
     virtual void connected(ADCStreamClient*, std::string) {}
     virtual void disconnected(ADCStreamClient*, std::string) {}
     virtual void error(ADCStreamClient*, std::string, int) {}
-    virtual void stopped(ADCStreamClient*, std::string) {}
-    virtual void stoppedNoActiveChannels(ADCStreamClient*, std::string) {}
-    virtual void stoppedMemError(ADCStreamClient*, std::string) {}
-    virtual void stoppedMemModify(ADCStreamClient*, std::string) {}
-    virtual void stoppedSDFull(ADCStreamClient*, std::string) {}
-    virtual void stoppedSDDone(ADCStreamClient*, std::string) {}
-
-    virtual void configConnected(ADCStreamClient*, std::string) {}
-    virtual void configError(ADCStreamClient*, std::string, int) {}
-    virtual void configErrorTimeout(ADCStreamClient*, std::string) {}
 };
 
 class DACCallback {
@@ -61,10 +94,7 @@ class DACCallback {
     virtual void stoppedMemError(DACStreamClient*, std::string) {}
     virtual void stoppedMemModify(DACStreamClient*, std::string) {}
 
-    virtual void configConnected(DACStreamClient*, std::string) {}
-    virtual void configError(DACStreamClient*, std::string, int) {}
-    virtual void configErrorTimeout(DACStreamClient*, std::string) {}
-
-    virtual bool streamData(DACStreamClient*, uint8_t* ch1, uint8_t* ch2, size_t size) { return true; }
+    virtual bool streamData8Bit(DACStreamClient*, int8_t* ch1_8Bit, int8_t* ch2_8Bit, size_t size) { return true; }
+    virtual bool streamData16Bit(DACStreamClient*, int16_t* ch1_16Bit, int16_t* ch2_16Bit, size_t size) { return true; }
 };
 #endif
