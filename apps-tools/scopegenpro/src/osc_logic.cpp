@@ -183,6 +183,12 @@ auto updateTriggerLimit(bool force) -> void {
         inTrigSlope.SendValue(trSlope);
     }
 
+    rpApp_osc_trig_sweep_t trSweep;
+    rpApp_OscGetTriggerSweep(&trSweep);
+    if (trSweep != inTrigSweep.Value()) {
+        inTrigSweep.SendValue(trSweep);
+    }
+
     float trigg_level = 0;
     float trigg_limit = 0;
     bool is_signed = true;
