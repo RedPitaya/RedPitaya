@@ -88,6 +88,7 @@ auto startServer(bool verbMode, bool testMode, bool is_master) -> void {
         int32_t ch_off[MAX_ADC_CHANNELS] __attribute__((unused)) = {0, 0, 0, 0};
         double ch_gain[MAX_ADC_CHANNELS] __attribute__((unused)) = {1, 1, 1, 1};
         bool filterBypass = true;
+        bool isNewCalib = false;
         uint32_t aa_ch[MAX_ADC_CHANNELS] __attribute__((unused)) = {0, 0, 0, 0};
         uint32_t bb_ch[MAX_ADC_CHANNELS] __attribute__((unused)) = {0, 0, 0, 0};
         uint32_t kk_ch[MAX_ADC_CHANNELS] __attribute__((unused)) = {0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF};
@@ -98,6 +99,12 @@ auto startServer(bool verbMode, bool testMode, bool is_master) -> void {
         is_platform = true;
         filterBypass = !rp_HPGetFastADCIsFilterPresentOrDefault();
         if (use_calib) {
+            uint8_t cver = 0;
+            if (rp_GetCalibrationVersion(&cver) != RP_HW_CALIB_OK) {
+                ERROR_LOG("Error get calibration version");
+            } else {
+                isNewCalib = cver >= RP_HW_PACK_ID_V6;
+            }
             for (uint8_t ch = 0; ch < max_channels; ++ch) {
                 rp_acq_ac_dc_mode_calib_t mode = (settings.getADCAC_DC(ch + 1).value == CStreamSettings::AC_DC::DC ? RP_DC_CALIB : RP_AC_CALIB);
                 if (settings.getADCAttenuator(ch + 1).value == CStreamSettings::Attenuator::A_1_1) {
@@ -157,7 +164,7 @@ auto startServer(bool verbMode, bool testMode, bool is_master) -> void {
 
                 g_osc = COscilloscope::create(uio, rate, is_master, ClientOpt::getADCRate(), !filterBypass, ClientOpt::getADCBits(), max_channels);
                 for (uint8_t ch = 0; ch < max_channels; ++ch) {
-                    g_osc->setCalibration(ch, ch_off[ch], ch_gain[ch]);
+                    g_osc->setCalibration(ch, ch_off[ch], ch_gain[ch], isNewCalib);
                     g_osc->setFilterCalibration(ch, aa_ch[ch], bb_ch[ch], kk_ch[ch], pp_ch[ch]);
                 }
                 g_osc->setFilterBypass(filterBypass);

@@ -45,7 +45,8 @@ struct OscilloscopeMapT {
     uint32_t calib_gain_ch1;         // 120 - offset 0x78
     uint32_t calib_offset_ch2;       // 124 - offset 0x7C
     uint32_t calib_gain_ch2;         // 128 - offset 0x80
-    uint32_t reserv2[6];
+    uint32_t calib_isLegacy;         // 132 - offset 0x84
+    uint32_t reserv2[5];
     uint32_t lost_samples_buf1_ch2;  // 156 - offset 0x9C
     uint32_t lost_samples_buf2_ch2;  // 160 - offset 0xA0
     uint32_t write_pointer_ch1;      // 164 - offset 0xA4
@@ -96,11 +97,10 @@ class COscilloscope {
    public:
     using Ptr = std::shared_ptr<COscilloscope>;
 
-    static Ptr create(const UioT& _uio, uint32_t _dec_factor, bool _isMaster, uint32_t _adcMaxSpeed, bool _isADCFilterPresent, uint8_t _fpgaBits,
-                      uint8_t _maxChannels);
+    static Ptr create(const UioT& _uio, uint32_t _dec_factor, bool _isMaster, uint32_t _adcMaxSpeed, bool _isADCFilterPresent, uint8_t _fpgaBits, uint8_t _maxChannels);
 
-    COscilloscope(int _fd, void* _regset, size_t _regsetSize, uint32_t _dec_factor, bool _isMaster, uint32_t _adcMaxSpeed, bool _isADCFilterPresent,
-                  uint8_t _fpgaBits, uint8_t _maxChannels);
+    COscilloscope(int _fd, void* _regset, size_t _regsetSize, uint32_t _dec_factor, bool _isMaster, uint32_t _adcMaxSpeed, bool _isADCFilterPresent, uint8_t _fpgaBits,
+                  uint8_t _maxChannels);
     ~COscilloscope();
 
     auto prepare() -> void;
@@ -108,7 +108,7 @@ class COscilloscope {
     auto setDataAddress(uint8_t index, uint32_t ch1, uint32_t ch2, uint32_t ch3, uint32_t ch4) -> void;
     auto setDataSize(uint32_t size) -> void;
     auto getFPGALost(uint8_t index, uint32_t& _overFlow) -> bool;
-    auto setCalibration(uint8_t ch, int32_t _offset, float _gain) -> void;
+    auto setCalibration(uint8_t ch, int32_t _offset, float _gain, bool isCalibV6) -> void;
     auto setFilterCalibration(uint8_t ch, int32_t _aa, int32_t _bb, int32_t _kk, int32_t _pp) -> void;
     auto setFilterBypass(bool _state) -> void;
     auto set8BitMode(bool mode) -> void;
@@ -137,6 +137,7 @@ class COscilloscope {
     std::mutex m_waitLock;
     int32_t m_calib_offset_ch[4];
     uint32_t m_calib_gain_ch[4];
+    bool m_isCalibV6;
     int32_t m_AA_ch[4];
     int32_t m_BB_ch[4];
     int32_t m_PP_ch[4];

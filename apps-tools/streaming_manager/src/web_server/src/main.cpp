@@ -667,6 +667,7 @@ bool startServer(bool testMode) {
         auto uioList = uio_lib::GetUioList();
         int32_t ch_off[4] = {0, 0, 0, 0};
         double ch_gain[4] = {1, 1, 1, 1};
+        bool isNewCalib = false;
         bool filterBypass = true;
         uint32_t aa_ch[4] = {0, 0, 0, 0};
         uint32_t bb_ch[4] = {0, 0, 0, 0};
@@ -675,6 +676,13 @@ bool startServer(bool testMode) {
 
         filterBypass = !rp_HPGetFastADCIsFilterPresentOrDefault();
         if (use_calib) {
+            uint8_t cver = 0;
+            if (rp_GetCalibrationVersion(&cver) != RP_HW_CALIB_OK) {
+                ERROR_LOG("Error get calibration version");
+            } else {
+                isNewCalib = cver >= RP_HW_PACK_ID_V6;
+            }
+
             for (uint8_t ch = 0; ch < max_channels; ++ch) {
                 rp_acq_ac_dc_mode_calib_t mode = (settings.getADCAC_DC(ch + 1).value == CStreamSettings::AC_DC::DC ? RP_DC_CALIB : RP_AC_CALIB);
                 if (settings.getADCAttenuator(ch + 1).value == CStreamSettings::Attenuator::A_1_1) {
@@ -736,7 +744,7 @@ bool startServer(bool testMode) {
                 TRACE("COscilloscope::Create rate %d", rate);
                 g_osc = uio_lib::COscilloscope::create(uio, rate, g_isMaster != uio_lib::BoardMode::SLAVE, getADCRate(), !filterBypass, getADCBits(), max_channels);
                 for (uint8_t ch = 0; ch < max_channels; ++ch) {
-                    g_osc->setCalibration(ch, ch_off[ch], ch_gain[ch]);
+                    g_osc->setCalibration(ch, ch_off[ch], ch_gain[ch], isNewCalib);
                     g_osc->setFilterCalibration(ch, aa_ch[ch], bb_ch[ch], kk_ch[ch], pp_ch[ch]);
                 }
                 g_osc->setFilterBypass(filterBypass);

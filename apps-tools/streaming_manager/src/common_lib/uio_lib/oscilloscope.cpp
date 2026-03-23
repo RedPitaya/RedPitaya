@@ -71,7 +71,7 @@ COscilloscope::COscilloscope(int _fd, void* _regset, size_t _regsetSize, uint32_
       m_maxChannels(_maxChannels),
       m_dataSize(0) {
     for (int i = 0; i < 4; i++) {
-        setCalibration(i, 0, 1.0);
+        setCalibration(i, 0, 1.0, true);
         setFilterCalibration(i, 0, 0, 0xFFFFFF, 0);
     }
 
@@ -184,6 +184,9 @@ auto COscilloscope::setReg(volatile OscilloscopeMapT* _OscMap) -> void {
 
     setRegister(_OscMap, &(_OscMap->calib_gain_ch2), m_calib_gain_ch[1]);
 
+    // set legacy calib mode. Calib version from V1 to V5
+    setRegister(_OscMap, &(_OscMap->calib_isLegacy), !m_isCalibV6 ? 0x00000001 : 0x0);
+
     setRegister(_OscMap, &(_OscMap->filt_coeff_aa_ch1), m_AA_ch[0]);
     setRegister(_OscMap, &(_OscMap->filt_coeff_bb_ch1), m_BB_ch[0]);
     setRegister(_OscMap, &(_OscMap->filt_coeff_kk_ch1), m_KK_ch[0]);
@@ -246,7 +249,7 @@ auto COscilloscope::prepare() -> void {
     }
 }
 
-auto COscilloscope::setCalibration(uint8_t ch, int32_t _offset, float _gain) -> void {
+auto COscilloscope::setCalibration(uint8_t ch, int32_t _offset, float _gain, bool isCalibV6) -> void {
     if (_gain >= 2)
         _gain = 1.999999;
     if (_gain < 0)
@@ -255,8 +258,9 @@ auto COscilloscope::setCalibration(uint8_t ch, int32_t _offset, float _gain) -> 
         fprintf(stderr, "[Fatal Error] ADC must be lower or equal 16 bit. Now: %d\n", m_fpgaBits);
         m_fpgaBits = 16;
     }
-    m_calib_offset_ch[ch] = _offset * -(pow(2, 16 - m_fpgaBits));
+    m_calib_offset_ch[ch] = _offset * (pow(2, 16 - m_fpgaBits));
     m_calib_gain_ch[ch] = _gain * 32768;
+    m_isCalibV6 = isCalibV6;
 }
 
 auto COscilloscope::getFPGALost(uint8_t index, uint32_t& _overFlow) -> bool {
