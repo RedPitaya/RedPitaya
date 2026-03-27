@@ -741,7 +741,7 @@ bool convertUniversal(rp_HPeModels_t model, rp_calib_params_t* param, rp_calib_p
             SET_PARAMETER(UC_ADC_CH1_OFFSET_1_20, param->fast_adc_1_20[0].offset)
 
             SET_PARAMETER(UC_ADC_CH2_GAIN_1_20, param->fast_adc_1_20[1].calibValue)
-            SET_PARAMETER(UC_ADC_CH2_OFFSET_1_20, param->fast_adc_1_20[2].offset)
+            SET_PARAMETER(UC_ADC_CH2_OFFSET_1_20, param->fast_adc_1_20[1].offset)
 
             SET_PARAMETER(UC_ADC_CH3_GAIN_1_20, param->fast_adc_1_20[2].calibValue)
             SET_PARAMETER(UC_ADC_CH3_OFFSET_1_20, param->fast_adc_1_20[2].offset)
