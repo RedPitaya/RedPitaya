@@ -107,7 +107,7 @@ class COscilloscope {
     auto setSkipDataAddress(uio_lib::MemoryRegionT block) -> void;
     auto setDataAddress(uint8_t index, uint32_t ch1, uint32_t ch2, uint32_t ch3, uint32_t ch4) -> void;
     auto setDataSize(uint32_t size) -> void;
-    auto getFPGALost(uint8_t index, uint32_t& _overFlow) -> bool;
+    auto getFPGAInfo(uint8_t index, uint32_t& _overFlow, int64_t& _time) -> bool;
     auto setCalibration(uint8_t ch, int32_t _offset, float _gain, bool isCalibV6) -> void;
     auto setFilterCalibration(uint8_t ch, int32_t _aa, int32_t _bb, int32_t _kk, int32_t _pp) -> void;
     auto setFilterBypass(bool _state) -> void;

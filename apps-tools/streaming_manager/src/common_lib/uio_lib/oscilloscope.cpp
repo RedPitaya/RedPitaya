@@ -12,6 +12,8 @@
 
 using namespace uio_lib;
 
+int64_t g_time;
+
 void* MmapNumber(int _fd, size_t _size, size_t _number) {
     const size_t offset = _number * getpagesize();
     return mmap(nullptr, _size, PROT_READ | PROT_WRITE, MAP_SHARED, _fd, offset);
@@ -241,6 +243,12 @@ auto COscilloscope::prepare() -> void {
         std::cerr << "Error: COscilloscope::prepare()  can't init first channel" << std::endl;
         exit(-1);
     }
+
+    auto now = std::chrono::system_clock::now();
+    auto duration = now.time_since_epoch();
+    auto nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
+    g_time = nanos;
+
     setRegister(m_OscMap, &(m_OscMap->dma_ctrl), UINT32_C(0x0000021E));
     setRegister(m_OscMap, &(m_OscMap->event_sts), UINT32_C(0x00000002));
 
@@ -263,9 +271,12 @@ auto COscilloscope::setCalibration(uint8_t ch, int32_t _offset, float _gain, boo
     m_isCalibV6 = isCalibV6;
 }
 
-auto COscilloscope::getFPGALost(uint8_t index, uint32_t& _overFlow) -> bool {
+auto COscilloscope::getFPGAInfo(uint8_t index, uint32_t& _overFlow, int64_t& _time) -> bool {
     // This fix for FPGA
     _overFlow = (index == 1 ? m_OscMap->lost_samples_buf1_ch1 : m_OscMap->lost_samples_buf2_ch1);
+    _time = g_time;
+    g_time += 10000000;
+    // _time = (index == 1 ? m_OscMap->lost_samples_buf1_ch1 : m_OscMap->lost_samples_buf2_ch1);
     return true;
 }
 

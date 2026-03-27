@@ -18,6 +18,7 @@ struct __attribute__((packed)) ADCHeader {
     uint8_t channel = {0};
     uint8_t bitBySample = {0};
     uint8_t adcMode = {0};
+    int64_t timeCapture = {0};
     ADCHeader(){};
 };
 

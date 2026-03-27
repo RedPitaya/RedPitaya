@@ -5,7 +5,6 @@
 #include "data_lib/buffer.h"
 #include "logger_lib/file_logger.h"
 #include "streaming_lib/streaming_file.h"
-#include "writer_lib/file_helper.h"
 
 using namespace converter_lib;
 using namespace streaming_lib;
@@ -37,11 +36,11 @@ void CConverter::stopWriteToTDMS() {
     m_stopWriteTDMS = true;
 }
 
-bool CConverter::convertToCSV(std::string _file_name, std::string _prefix) {
-    return convertToCSV(_file_name, -2, -2, _prefix);
+bool CConverter::convertToCSV(std::string _file_name, std::string _prefix, FH_CSVMode mode) {
+    return convertToCSV(_file_name, -2, -2, _prefix, mode);
 }
 
-bool CConverter::convertToCSV(std::string _file_name, int32_t start_seg, int32_t end_seg, std::string _prefix) {
+bool CConverter::convertToCSV(std::string _file_name, int32_t start_seg, int32_t end_seg, std::string _prefix, FH_CSVMode mode) {
     std::lock_guard lock(m_mtx);
     bool ret = true;
     m_stopWriteCSV = false;
@@ -84,7 +83,7 @@ bool CConverter::convertToCSV(std::string _file_name, int32_t start_seg, int32_t
                 }
                 curSegment++;
                 bool notSkip = (start_seg <= curSegment) && ((end_seg != -2 && end_seg >= curSegment) || end_seg == -2);
-                auto csv_seg = readCSV(&fs, &position, &channels, &samplePos, !notSkip);
+                auto csv_seg = readCSV(&fs, &position, &channels, &samplePos, !notSkip, (FH_CSVMode)mode);
                 if (end_seg == -2) {
                     if (position >= 0) {
                         aprintf(stdout, "\r%s PROGRESS: %d %", _prefix.c_str(), (position * 100) / Length);
@@ -209,6 +208,7 @@ bool CConverter::convertToWAV(std::string _file_name, int32_t start_seg, int32_t
                             buff->setADCBaseRate(binData->adcRate);
                             buff->setADCBaseBits(binData->ch_bits[ch] * 8);
                             buff->setLostSamples(DataLib::FPGA, binData->ch_lost[ch]);
+                            buff->setTimeCapture(binData->ch_timeCapture[ch]);
                             pack->addBuffer((DataLib::EDataBuffersPackChannel)ch, buff);
                             binData->ch[ch] = nullptr;
                         }
@@ -316,6 +316,7 @@ bool CConverter::convertToTDMS(std::string _file_name, int32_t start_seg, int32_
                             auto buff = DataLib::CDataBufferDMA::Create(binData->ch[ch], binData->ch_size[ch], binData->ch_bits[ch] * 8);
                             buff->setADCBaseRate(binData->adcRate);
                             buff->setADCBaseBits(binData->ch_bits[ch] * 8);
+                            buff->setTimeCapture(binData->ch_timeCapture[ch]);
                             buff->setLostSamples(DataLib::FPGA, binData->ch_lost[ch]);
                             pack->addBuffer((DataLib::EDataBuffersPackChannel)ch, buff);
                             binData->ch[ch] = nullptr;

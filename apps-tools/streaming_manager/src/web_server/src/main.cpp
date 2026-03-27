@@ -62,6 +62,7 @@ CIntParameter ss_channels("SS_CHANNEL", CBaseParameter::RW, 0, 0, 0, 256);
 CIntParameter ss_resolution("SS_RESOLUTION", CBaseParameter::RW, 0, 0, 0, 256);
 CIntParameter ss_calib("SS_USE_CALIB", CBaseParameter::RW, 1, 0, 0, 1);
 CIntParameter ss_save_mode("SS_SAVE_MODE", CBaseParameter::RW, 0, 0, 0, 1);
+CIntParameter ss_save_capture_time("SS_CAPTURE_TIME", CBaseParameter::RW, 0, 0, 0, 1);
 CIntParameter ss_rate("SS_RATE", CBaseParameter::RW, 4, 0, 1, 65536);
 CIntParameter ss_format("SS_FORMAT", CBaseParameter::RW, 0, 0, 0, 2);
 CIntParameter ss_status("SS_STATUS", CBaseParameter::RW, 1, 0, 0, 100);
@@ -348,6 +349,7 @@ void updateUI() {
     ss_channels.SendValue(ch);
     ss_resolution.SendValue(g_serverNetConfig->getSettingsRef().getADCResolution());
     ss_save_mode.SendValue(g_serverNetConfig->getSettingsRef().getADCType());  // RAW / VOLT
+    ss_save_capture_time.SendValue(g_serverNetConfig->getSettingsRef().getADCCaptureTime());
     ss_format.SendValue(g_serverNetConfig->getSettingsRef().getADCFormat());
     ss_attenuator.SendValue(att);
     ss_ac_dc.SendValue(ac_dc);
@@ -451,6 +453,12 @@ void setConfig(bool _force) {
     if (ss_save_mode.IsNewValue() || _force) {
         ss_save_mode.Update();
         g_serverNetConfig->getSettingsRef().setADCType((CStreamSettings::DataType::_enumerated)ss_save_mode.Value());
+        needUpdate = true;
+    }
+
+    if (ss_save_capture_time.IsNewValue() || _force) {
+        ss_save_capture_time.Update();
+        g_serverNetConfig->getSettingsRef().setADCCaptureTime((CStreamSettings::ADCCaptureTime::_enumerated)ss_save_capture_time.Value());
         needUpdate = true;
     }
 

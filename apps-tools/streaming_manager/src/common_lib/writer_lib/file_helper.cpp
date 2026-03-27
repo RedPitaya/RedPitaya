@@ -67,7 +67,7 @@ auto dirNameOf(const std::string& fname) -> std::string {
     return (std::string::npos == pos) ? "." : fname.substr(0, pos);
 }
 
-auto buildTDMSStream(std::map<DataLib::EDataBuffersPackChannel, SBuffPass> new_buffs) -> std::iostream* {
+auto buildTDMSStream(std::map<DataLib::EDataBuffersPackChannel, SBuffPass> new_buffs, std::shared_ptr<std::vector<int64_t>> time) -> std::iostream* {
     TDMS::File outFile;
     TDMS::WriterSegment segment;
     vector<shared_ptr<TDMS::Metadata>> data;
@@ -82,11 +82,19 @@ auto buildTDMSStream(std::map<DataLib::EDataBuffersPackChannel, SBuffPass> new_b
     data.push_back(root);
     auto group = segment.GenerateGroup("Group");
     data.push_back(group);
+    // new_buffs.at(DataLib::CH1)
 
     //    auto *time = TDMS::DataType::GetRawTimeValue(tim_sec + timezone);
     //    TDMS::DataType dataprop;
     //    dataprop.InitDataType(TDMS::DataType::TimeStamp,time);
     //    segment.AddProperties(root,"time_stamp_now",dataprop);
+
+    if (time != nullptr && time->size() != 0) {
+        auto channel = segment.GenerateChannel("Group", "time");
+        data.push_back(channel);
+        auto sh_time = std::shared_ptr<uint8_t[]>(time, reinterpret_cast<uint8_t*>(time->data()));
+        segment.AddRaw(channel, TDMS::TDMSType::Integer64, time->size(), sh_time);
+    }
 
     if (new_buffs.find(DataLib::CH1) != new_buffs.end()) {
         auto settings = new_buffs.at(DataLib::CH1);
@@ -181,6 +189,7 @@ auto buildBINStream(DataLib::CDataBuffersPackDMA::Ptr buff_pack, std::map<DataLi
             header.sampleCh[i] = ch_samp[i];
             header.lostCount[i] = ch[i]->getLostSamples(DataLib::FPGA);
             header.oscRate[i] = ch[i]->getADCBaseRate();
+            header.timeCapture[i] = ch[i]->getTimeCapture();
         }
     }
 
@@ -196,11 +205,12 @@ auto buildBINStream(DataLib::CDataBuffersPackDMA::Ptr buff_pack, std::map<DataLi
     return memory;
 }
 
-auto readCSV(std::iostream* buffer, int64_t* _position, int* _channels, uint64_t* samplePos, bool skipData) -> std::iostream* {
+auto readCSV(std::iostream* buffer, int64_t* _position, int* _channels, uint64_t* samplePos, bool skipData, FH_CSVMode mode) -> std::iostream* {
     uint32_t endSeg[] = {0, 0, 0};
     stringstream* memory = nullptr;
     buffer->seekg(*_position, std::ios::beg);
     CBinInfo::BinHeader header;
+    int64_t timeCapture = 0;
     buffer->read((char*)&header, sizeof(header));
     buffer->seekg(*_position + sizeof(CBinInfo::BinHeader) + header.sigmentLength, std::ios::beg);
     buffer->read((char*)endSeg, 12);
@@ -258,6 +268,12 @@ auto readCSV(std::iostream* buffer, int64_t* _position, int* _channels, uint64_t
                 buffer->read(buffer_ch4, size_ch4);
             }
 
+            for (auto ch = 0u; ch < 4; ch++) {
+                if (header.timeCapture[ch] > 0) {
+                    timeCapture = header.timeCapture[ch];
+                }
+            }
+
             auto max_size = sample_ch1 + lost_ch1;
             max_size = max_size < (sample_ch2 + lost_ch2) ? sample_ch2 + lost_ch2 : max_size;
             max_size = max_size < (sample_ch3 + lost_ch3) ? sample_ch3 + lost_ch3 : max_size;
@@ -277,9 +293,34 @@ auto readCSV(std::iostream* buffer, int64_t* _position, int* _channels, uint64_t
                 }
             };
 
+            double frequency_hz = header.oscRate[0];
+            double period_ns = (frequency_hz > 0) ? (1.0 / frequency_hz) * 1e9 : 0;
+
             for (auto i = 0u; i < max_size; i++) {
                 (*samplePos)++;
-                *memory << *samplePos << ",";
+                if (mode & FH_CSV_ADD_INDEX) {
+                    *memory << *samplePos << ",";
+                }
+
+                if (timeCapture != 0) {
+                    if ((mode & FH_CSV_ADD_TIME_COL) || (mode & FH_CSV_ADD_TIME_COL_NS) || ((mode & FH_CSV_ADD_TIME_COL_FOR_BLOCK) && i == 0)) {
+                        uint64_t time_sample_ns = timeCapture + (uint64_t)(period_ns * i);
+                        if (mode & FH_CSV_ADD_TIME_COL_NS) {
+                            *memory << time_sample_ns << ",";
+                        } else {
+                            auto ns = std::chrono::nanoseconds{time_sample_ns};
+                            std::chrono::system_clock::time_point tp{std::chrono::duration_cast<std::chrono::system_clock::duration>(ns)};
+                            std::time_t time_t_value = std::chrono::system_clock::to_time_t(tp);
+                            char time_buf[100];
+                            std::tm* tm_info = std::gmtime(&time_t_value);
+                            std::strftime(time_buf, sizeof(time_buf), "%Y-%m-%d %H:%M:%S", tm_info);
+                            *memory << time_buf << "." << std::setfill('0') << std::setw(9) << (ns.count() % 1000000000LL) << ",";
+                        }
+                    } else if (mode & FH_CSV_ADD_TIME_COL_FOR_BLOCK) {
+                        *memory << ",";
+                    }
+                }
+
                 bool needPrintComma = false;
                 if (i < sample_ch1) {
                     needPrintComma = true;
@@ -366,6 +407,7 @@ auto readBinData(std::iostream* buffer, int64_t* _position) -> SBinData* {
             data->ch_samples[i] = header.sampleCh[i];
             data->ch_lost[i] = header.lostCount[i];
             data->ch_bits[i] = header.dataFormatSize[i];
+            data->ch_timeCapture[i] = header.timeCapture[i];
             data->adcRate = max(header.oscRate[i], data->adcRate);
             if (data->ch_size[i] > 0) {
                 data->ch[i] = new uint8_t[data->ch_size[i]];
@@ -402,9 +444,18 @@ auto readBinInfo(std::iostream* buffer) -> CBinInfo {
             bi.size_ch[i] += header.sizeCh[i];
             if (header.dataFormatSize[i]) {
                 samplesCount += header.sizeCh[i] / header.dataFormatSize[i];
-                bi.samples_ch[i] = header.sizeCh[i] / header.dataFormatSize[i];
+                bi.samples_ch[i] += header.sizeCh[i] / header.dataFormatSize[i];
             }
-            bi.lostCount[i] = header.lostCount[i];
+            bi.lostCount[i] += header.lostCount[i];
+            if (bi.timeCapture[i] == 0 && header.timeCapture[i] != 0) {
+                bi.timeCapture[i] = header.timeCapture[i];
+            }
+            if (header.timeCapture[i] != 0) {
+                double frequency_hz = header.oscRate[i];
+                double period_ns = (1.0 / frequency_hz) * 1000000000.0;
+                // uint64_t period_ns = 1000000000 / frequency_hz;
+                bi.timeCaptureLast[i] = header.timeCapture[i] + period_ns * (header.sampleCh[i] + header.lostCount[i]);
+            }
         }
 
         if (bi.segSamplesCount == 0)

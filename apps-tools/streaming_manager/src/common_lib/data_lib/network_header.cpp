@@ -13,7 +13,7 @@ auto DataLib::initHeaderADC(DataLib::CDataBufferDMA::Ptr buffer, uint64_t oscRat
         FATAL("Header for network not init")
 
     NetworkPackHeader nph;
-    memcpy_neon(nph.ID_PACK, ID_PACK_ADC, sizeof(ID_PACK_ADC));
+    memcpy(nph.ID_PACK, ID_PACK_ADC, sizeof(ID_PACK_ADC));
     nph.bufferSize = buffer->getBufferFullLenght();
     nph.adc.adcMode = buffer->getADCMode();
     nph.adc.sizeOfAllChannels = buffersSize;
@@ -23,8 +23,9 @@ auto DataLib::initHeaderADC(DataLib::CDataBufferDMA::Ptr buffer, uint64_t oscRat
     nph.adc.bitBySample = buffer->getBitBySample();
     nph.adc.adcMode = buffer->getADCMode();
     nph.adc.lostFPGA = 0;
+    nph.adc.timeCapture = 0;
 
-    memcpy_neon(buffer->getMappedMemory(), &nph, sizeof(NetworkPackHeader));
+    memcpy(buffer->getMappedMemory(), &nph, sizeof(NetworkPackHeader));
 }
 
 auto DataLib::initHeaderDAC(CDataBufferDMA::Ptr buffer, uint64_t buffersSize, uint8_t channels) -> void {
@@ -32,7 +33,7 @@ auto DataLib::initHeaderDAC(CDataBufferDMA::Ptr buffer, uint64_t buffersSize, ui
         FATAL("Header for network not init")
 
     NetworkPackHeader nph;
-    memcpy_neon(nph.ID_PACK, ID_PACK_DAC, sizeof(ID_PACK_DAC));
+    memcpy(nph.ID_PACK, ID_PACK_DAC, sizeof(ID_PACK_DAC));
     nph.bufferSize = buffer->getBufferFullLenght();
     nph.dac.channels = channels;
     nph.dac.channel = 0;
@@ -41,17 +42,17 @@ auto DataLib::initHeaderDAC(CDataBufferDMA::Ptr buffer, uint64_t buffersSize, ui
     nph.dac.onePackMode = false;
     nph.dac.repeatCount = 0;
     nph.dac.bits = 0;
-    memcpy_neon(buffer->getMappedMemory(), &nph, sizeof(NetworkPackHeader));
+    memcpy(buffer->getMappedMemory(), &nph, sizeof(NetworkPackHeader));
 }
 
 auto DataLib::setHeaderADC(DataLib::CDataBufferDMA::Ptr buffer, uint64_t _id) -> void {
     auto header = reinterpret_cast<NetworkPackHeader*>(buffer->getMappedMemory());
     header->packId = _id;
     header->adc.lostFPGA = buffer->getLostSamples(DataLib::EDataLost::FPGA);
+    header->adc.timeCapture = buffer->getTimeCapture();
 }
 
-auto DataLib::setHeaderDAC(CDataBufferDMA::Ptr buffer, uint8_t channel, uint32_t channelSize, bool onePackMode, bool infMode, int64_t repeatCount,
-                           uint8_t bits) -> void {
+auto DataLib::setHeaderDAC(CDataBufferDMA::Ptr buffer, uint8_t channel, uint32_t channelSize, bool onePackMode, bool infMode, int64_t repeatCount, uint8_t bits) -> void {
     auto header = reinterpret_cast<NetworkPackHeader*>(buffer->getMappedMemory());
     header->dac.channel = channel;
     header->dac.channelSize = channelSize;
@@ -83,6 +84,7 @@ auto DataLib::printADCHeader(uint8_t* data) -> void {
     printf("adc.bitBySample: %d\n", nph.adc.bitBySample);
     printf("adc.adcMode: %d\n", nph.adc.adcMode);
     printf("adc.lostFPGA: %" PRIu64 "\n", nph.adc.lostFPGA);
+    printf("adc.timeCapture: %" PRIi64 "\n", nph.adc.timeCapture);
 }
 
 auto DataLib::printDACHeader(uint8_t* data) -> void {

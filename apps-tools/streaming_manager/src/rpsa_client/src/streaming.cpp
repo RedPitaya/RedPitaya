@@ -174,7 +174,7 @@ auto runClient(std::string host, StateRunnedHosts, uint32_t size, uint32_t activ
         const std::lock_guard lock(g_s_csv_mutex);
         auto fileName = g_file_manager->getCSVFileName();
         g_converter[host] = converter_lib::CConverter::create();
-        g_converter[host]->convertToCSV(fileName, host);
+        g_converter[host]->convertToCSV(fileName, host, FH_CSV_ADD_INDEX);
     }
     delete memoryManager;
 }

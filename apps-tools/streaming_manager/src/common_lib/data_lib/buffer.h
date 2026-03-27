@@ -66,6 +66,9 @@ class CDataBufferDMA final {
     auto setDACBits(uint8_t bits) -> void;
     auto getDACBits() -> uint8_t;
 
+    auto setTimeCapture(int64_t time) -> void;
+    auto getTimeCapture() -> int64_t;
+
     auto setLostSamples(EDataLost mode, uint64_t value) -> void;
     auto getLostSamples(EDataLost mode) const -> uint64_t;
     auto getLostSamplesAll() const -> uint64_t;
@@ -105,6 +108,7 @@ class CDataBufferDMA final {
     int64_t m_repeatCountDAC;
     uint32_t m_channelSizeDAC;
     uint8_t m_dacBits;
+    int64_t m_timeCapture;
 };
 
 }  // namespace DataLib

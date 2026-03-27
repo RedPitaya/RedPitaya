@@ -13,6 +13,7 @@ struct ADCChannel {
     uint32_t baseRate = 0;
     uint8_t adcBaseBits = 0;
     uint64_t packId = 0;
+    int64_t timeCapture = 0;
     std::vector<int16_t> raw;
 };
 

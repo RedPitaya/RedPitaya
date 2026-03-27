@@ -62,8 +62,7 @@ auto CStreamingFile::makeEmptyDir(const std::string& _filePath) -> void {
     createDirTree(_filePath);
 }
 
-auto CStreamingFile::create(CStreamSettings::DataFormat _fileType, std::string& _filePath, uint64_t _samples, bool _v_mode, bool testMode,
-                            bool _rp_mode) -> CStreamingFile::Ptr {
+auto CStreamingFile::create(CStreamSettings::DataFormat _fileType, std::string& _filePath, uint64_t _samples, bool _v_mode, bool testMode, bool _rp_mode) -> CStreamingFile::Ptr {
     return std::make_shared<CStreamingFile>(_fileType, _filePath, _samples, _v_mode, testMode, _rp_mode);
 }
 
@@ -304,7 +303,23 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPackDMA::Ptr pack) -> int 
                     m_passSizeSamples[ch] += map[ch].samplesCount;
                 }
             }
-            auto stream_data = buildTDMSStream(map);
+
+            uint64_t bufSamples = pack->getBuffersSamples();
+            auto time_cap = pack->getTimeCapture();
+
+            static std::shared_ptr<std::vector<int64_t>> time = std::make_shared<std::vector<int64_t>>();
+            if (time_cap != 0 && bufSamples != 0) {
+                time->resize(bufSamples);
+                double frequency_hz = pack->getOSCRate();
+                double period_ns = (frequency_hz > 0) ? (1.0 / frequency_hz) * 1e9 : 0;
+                for (auto idx = 0u; idx < bufSamples; idx++) {
+                    time->at(idx) = time_cap + (uint64_t)(period_ns * idx);
+                }
+            } else {
+                time->resize(0);
+            }
+
+            auto stream_data = buildTDMSStream(map, time);
             if (m_file_manager->isWork()) {
                 if (!m_file_manager->addBufferToWrite(stream_data)) {
                     m_fileLogger->addMetric(CFileLogger::EMetric::FILESYSTEM_RATE, 1);

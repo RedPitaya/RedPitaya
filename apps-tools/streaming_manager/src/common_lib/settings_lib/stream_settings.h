@@ -12,6 +12,8 @@ class CStreamSettings {
 
     ENUM(State, OFF = 0, "Off", ON = 1, "On")
 
+    ENUM(ADCCaptureTime, OFF = 0, "Off", ON = 1, "On")
+
     ENUM(DataType, RAW = 0, "Raw", VOLT = 1, "Volt")
 
     ENUM(Resolution, BIT_8 = 0, "8 Bit", BIT_16 = 1, "16 Bit")
@@ -53,6 +55,8 @@ class CStreamSettings {
     auto getADCFormat() const -> DataFormat;
     auto setADCType(DataType _type) -> void;
     auto getADCType() const -> DataType;
+    auto setADCCaptureTime(ADCCaptureTime _time) -> void;
+    auto getADCCaptureTime() const -> ADCCaptureTime;
     auto setADCPassMode(PassMode _mode) -> void;
     auto getADCPassMode() const -> PassMode;
     auto setADCChannels(uint8_t _channel, State _state) -> bool;
@@ -111,6 +115,7 @@ class CStreamSettings {
         Attenuator m_attenuator[4] = {Attenuator::A_1_1, Attenuator::A_1_1, Attenuator::A_1_1, Attenuator::A_1_1};
         State m_useCalib = State::ON;
         AC_DC m_ac_dc[4] = {AC_DC::DC, AC_DC::DC, AC_DC::DC, AC_DC::DC};
+        ADCCaptureTime m_captureTime = ADCCaptureTime::ON;
     };
 
     struct MemorySettings {

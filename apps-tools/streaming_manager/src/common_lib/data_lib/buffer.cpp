@@ -31,7 +31,8 @@ CDataBufferDMA::CDataBufferDMA(uint8_t bitsBySample)
       m_onePackModeDAC(false),
       m_infModeDAC(false),
       m_repeatCountDAC(0),
-      m_channelSizeDAC(0) {
+      m_channelSizeDAC(0),
+      m_timeCapture(0) {
     setLostSamples(EDataLost::FPGA, 0);
 }
 
@@ -51,7 +52,8 @@ CDataBufferDMA::CDataBufferDMA(uint32_t startAddress, size_t lenght, void* mappe
       m_onePackModeDAC(false),
       m_infModeDAC(false),
       m_repeatCountDAC(0),
-      m_channelSizeDAC(0) {
+      m_channelSizeDAC(0),
+      m_timeCapture(0) {
     setLostSamples(EDataLost::FPGA, 0);
 }
 
@@ -71,7 +73,8 @@ CDataBufferDMA::CDataBufferDMA(uint8_t* buffer, size_t lenght, uint8_t bits)
       m_onePackModeDAC(false),
       m_infModeDAC(false),
       m_repeatCountDAC(0),
-      m_channelSizeDAC(0) {
+      m_channelSizeDAC(0),
+      m_timeCapture(0) {
     setLostSamples(EDataLost::FPGA, 0);
 }
 
@@ -254,4 +257,12 @@ auto CDataBufferDMA::setDACBits(uint8_t bits) -> void {
 
 auto CDataBufferDMA::getDACBits() -> uint8_t {
     return m_dacBits;
+}
+
+auto CDataBufferDMA::setTimeCapture(int64_t time) -> void {
+    m_timeCapture = time;
+}
+
+auto CDataBufferDMA::getTimeCapture() -> int64_t {
+    return m_timeCapture;
 }

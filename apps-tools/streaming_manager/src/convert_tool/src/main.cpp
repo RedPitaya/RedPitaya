@@ -1,6 +1,9 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <algorithm>
+#include <ctime>
+#include <format>
+#include <iomanip>
 #include <iostream>
 #include <string>
 #include "converter_lib/converter.h"
@@ -37,12 +40,16 @@ bool CheckMissing(const char* val, const char* Message) {
 }
 
 void UsingArgs(char const* progName) {
-    std::cout << "Usage: " << progName << " file_name [-i][-s start][-e end][-f format][-t]\n";
+    std::cout << "Usage: " << progName << " file_name [-i][-s start][-e end][-f format][-t][-ci][-cb|-cs|-cn]\n";
     std::cout << "\t-i get info about file\n";
     std::cout << "\t-s Segment from which the conversion starts\n";
     std::cout << "\t-e Segment where the conversion will end\n";
     std::cout << "\t-f File format. [CSV|WAV|TDMS]. By default used CSV format\n";
     std::cout << "\t-t Creates test data files for DAC streaming\n";
+    std::cout << "\t-ci Adds an index column to the CSV file.\n";
+    std::cout << "\t-cb Adds a block time column to the CSV file.\n";
+    std::cout << "\t-cs Adds a sample time column to the CSV file.\n";
+    std::cout << "\t-cn Adds a sample time column in nanoseconds to the CSV file.\n";
 }
 
 void sigHandlerStopCSV(int) {
@@ -105,6 +112,21 @@ int main(int argc, char* argv[]) {
                 aprintf(stdout, "\tData format type:\t%s\n", dft.c_str());
                 aprintf(stdout, "\tSamples count:\t%llu\n", bi.samples_ch[i]);
                 aprintf(stdout, "\tLost samples count: %llu\n", bi.lostCount[i]);
+                if (bi.timeCapture[i] != 0) {
+                    auto ns = std::chrono::nanoseconds{bi.timeCapture[i]};
+                    std::chrono::system_clock::time_point tp{std::chrono::duration_cast<std::chrono::system_clock::duration>(ns)};
+                    std::time_t time_t_value = std::chrono::system_clock::to_time_t(tp);
+                    char buffer[100];
+                    std::tm* tm_info = std::gmtime(&time_t_value);
+                    std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", tm_info);
+                    auto nsEnd = std::chrono::nanoseconds{bi.timeCaptureLast[i]};
+                    std::chrono::system_clock::time_point tpEnd{std::chrono::duration_cast<std::chrono::system_clock::duration>(nsEnd)};
+                    std::time_t time_t_valueEnd = std::chrono::system_clock::to_time_t(tpEnd);
+                    char bufferEnd[100];
+                    std::tm* tm_infoEnd = std::gmtime(&time_t_valueEnd);
+                    std::strftime(bufferEnd, sizeof(bufferEnd), "%Y-%m-%d %H:%M:%S", tm_infoEnd);
+                    aprintf(stdout, "\tCapture time: %s - %s\n", buffer, bufferEnd);
+                }
             }
         }
         return 0;
@@ -147,8 +169,21 @@ int main(int argc, char* argv[]) {
     }
 
     if (format == "CSV") {
+        FH_CSVMode csv_mode = FH_CSV_NONE;
+        if (cmdOptionExists(argv, argv + argc, "-ci")) {
+            csv_mode = (FH_CSVMode)(csv_mode | FH_CSV_ADD_INDEX);
+        }
+        if (cmdOptionExists(argv, argv + argc, "-cb")) {
+            csv_mode = (FH_CSVMode)(csv_mode | FH_CSV_ADD_TIME_COL_FOR_BLOCK);
+        }
+        if (cmdOptionExists(argv, argv + argc, "-cs")) {
+            csv_mode = (FH_CSVMode)(csv_mode | FH_CSV_ADD_TIME_COL);
+        }
+        if (cmdOptionExists(argv, argv + argc, "-cn")) {
+            csv_mode = (FH_CSVMode)(csv_mode | FH_CSV_ADD_TIME_COL_NS);
+        }
         g_converter = converter_lib::CConverter::create();
-        g_converter->convertToCSV(file_name, s, e, "");
+        g_converter->convertToCSV(file_name, s, e, "", csv_mode);
     }
 
     if (format == "WAV") {

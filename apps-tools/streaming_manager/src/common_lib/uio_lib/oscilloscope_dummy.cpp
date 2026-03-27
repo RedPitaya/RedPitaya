@@ -43,7 +43,8 @@ auto COscilloscope::prepare() -> void {}
 
 auto COscilloscope::setCalibration(uint8_t, int32_t, float, bool) -> void {}
 
-auto COscilloscope::getFPGALost(uint8_t, uint32_t& _overFlow) -> bool {
+auto COscilloscope::getFPGAInfo(uint8_t, uint32_t& _overFlow, int64_t& _time) -> bool {
+    _time = 0;
     _overFlow = 0;
     return true;
 }

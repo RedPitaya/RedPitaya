@@ -24,11 +24,13 @@ class CDataBuffersPackDMA final {
     auto getBufferDataAddress(EDataBuffersPackChannel channel) -> uint32_t;
 
     auto setOSCRate(uint64_t rate) -> void;
+    auto getOSCRate() -> uint64_t;
     auto setADCBits(uint8_t bits) -> void;
 
     auto checkDataBuffersEqual() -> bool;
     auto getDataBuffersLenght() -> size_t;
     auto getBuffersSamples() -> size_t;
+    auto getTimeCapture() -> int64_t;
     auto getLenghtBuffers() -> uint64_t;
     auto getLenghtDataBuffers() -> uint64_t;
     auto getLostAll() -> uint64_t;

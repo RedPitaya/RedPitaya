@@ -126,6 +126,7 @@ auto ADCStreamClient::Impl::runClient(ADCStreamClient* client, std::string host,
                             channel.baseRate = buff->getADCBaseRate();
                             channel.attenuator_1_20 = buff->getADCMode();
                             channel.packId = buff->getADCPackId();
+                            channel.timeCapture = buff->getTimeCapture();
                             channel.raw.reserve(channel.samples);
                             if (channel.bitsPerSample == 8) {
                                 auto data = reinterpret_cast<int8_t*>(buff->getMappedDataMemory());
