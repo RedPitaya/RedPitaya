@@ -9,12 +9,12 @@
 
 using namespace streaming_lib;
 
-CStreamingFPGA::CStreamingFPGA(uio_lib::COscilloscope::Ptr _osc, uint8_t _adc_bits)
+CStreamingFPGA::CStreamingFPGA(uio_lib::COscilloscope::Ptr _osc, bool _saveCaptureTime)
     : m_Osc_ch(_osc),
       m_OscThread(),
       mtx(),
       m_isRun(false),
-      m_adc_bits(_adc_bits),
+      m_saveCaptureTime(_saveCaptureTime),
       m_BytesCount(0),
       m_testMode(false),
       m_verbMode(false),
@@ -197,6 +197,8 @@ auto CStreamingFPGA::passCh() -> DataLib::CDataBuffersPackDMA::Ptr {
     DataLib::CDataBuffersPackDMA::Ptr pack = nullptr;
     if (packNew) {
         overFlow += m_overFlowSumm;
+        if (!m_saveCaptureTime)
+            time = 0;
         pack = m_mappedBuffers[m_currentBuffer];
         auto bCh1 = pack->getBuffer(DataLib::CH1);
         if (bCh1) {

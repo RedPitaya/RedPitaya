@@ -71,6 +71,7 @@ auto startServer(bool verbMode, bool testMode, bool is_master) -> void {
         auto ip_addr_host = std::string("127.0.0.1");
         auto samples = settings.getADCSamples();
         auto data_type = settings.getADCType();
+        auto save_capture_time = settings.getADCCaptureTime();
 
         auto use_calib __attribute__((unused)) = settings.getADCCalibration();
         auto max_channels = ClientOpt::getADCChannels();
@@ -224,7 +225,7 @@ auto startServer(bool verbMode, bool testMode, bool is_master) -> void {
             });
         }
 
-        g_s_fpga = std::make_shared<streaming_lib::CStreamingFPGA>(g_osc, 16);
+        g_s_fpga = std::make_shared<streaming_lib::CStreamingFPGA>(g_osc, save_capture_time);
         uint8_t bits = (resolution.value == CStreamSettings::Resolution::BIT_8 ? 8 : 16);
 
         uint8_t channelsActive = 0;
