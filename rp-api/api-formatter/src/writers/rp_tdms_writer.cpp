@@ -2,20 +2,20 @@
  * $Id$
  *
  * @brief Red Pitaya data formatter.
- *         
+ *
  * (c) Red Pitaya  http://www.redpitaya.com
  *
  */
 
 #include <cassert>
-#include <sstream>
+#include <chrono>
+#include <ctime>
 #include <fstream>
-#include <vector>
+#include <iostream>
 #include <map>
 #include <memory>
-#include <ctime>
-#include <iostream>
-#include <chrono>
+#include <sstream>
+#include <vector>
 
 #include "rp_tdms_writer.h"
 #include "tdms/file.h"
@@ -26,16 +26,15 @@ using namespace std;
 
 struct CTDMSWriter::Impl {
     uint32_t m_OSCRate;
-    auto write(SBufferPack *_pack, std::iostream *_memory) -> bool;
+    auto write(SBufferPack* _pack, std::iostream* _memory) -> bool;
 };
 
-
-CTDMSWriter::CTDMSWriter(uint32_t _oscRate){
+CTDMSWriter::CTDMSWriter(uint32_t _oscRate) {
     m_pimpl = new Impl();
     m_pimpl->m_OSCRate = _oscRate;
 }
 
-CTDMSWriter::~CTDMSWriter(){
+CTDMSWriter::~CTDMSWriter() {
     delete m_pimpl;
 }
 
@@ -52,7 +51,7 @@ bool isLeapYear(int year) {
     return false;
 }
 
-auto CTDMSWriter::Impl::write(SBufferPack *_pack, std::iostream *_memory) -> bool {
+auto CTDMSWriter::Impl::write(SBufferPack* _pack, std::iostream* _memory) -> bool {
     TDMS::File outFile;
     TDMS::WriterSegment segment;
     vector<shared_ptr<TDMS::Metadata>> data;
@@ -66,8 +65,8 @@ auto CTDMSWriter::Impl::write(SBufferPack *_pack, std::iostream *_memory) -> boo
 
     auto now = std::chrono::system_clock::now();
     auto currentSeconds = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
-	uint64_t diffSeconds = 0;
-    for(int i = 1904; i < 1970; i++){
+    uint64_t diffSeconds = 0;
+    for (int i = 1904; i < 1970; i++) {
         diffSeconds += 24 * 60 * 60 * (isLeapYear(i) ? 366 : 365);
     }
     auto totalSeconds = currentSeconds + diffSeconds;
@@ -77,43 +76,52 @@ auto CTDMSWriter::Impl::write(SBufferPack *_pack, std::iostream *_memory) -> boo
     d[1] = totalSeconds;
 
     TDMS::DataType data_prop;
-    data_prop.InitDataType(TDMS::TDMSType::TimeStamp,d);
-    segment.AddProperties(group,"time",data_prop);
+    data_prop.InitDataType(TDMS::TDMSType::TimeStamp, d);
+    segment.AddProperties(group, "time", data_prop);
     TDMS::DataType osc_prop;
     auto osc = new uint64_t[1];
     osc[0] = m_OSCRate;
-    osc_prop.InitDataType(TDMS::TDMSType::UnsignedInteger64,osc);
-    segment.AddProperties(group,"osc_rate",osc_prop);
+    osc_prop.InitDataType(TDMS::TDMSType::UnsignedInteger64, osc);
+    segment.AddProperties(group, "osc_rate", osc_prop);
 
-    for (auto ch = RP_F_CH1; ch <= RP_F_CH10; ch = rp_channel_t(ch + 1)){
+    for (auto ch = RP_F_CH1; ch <= RP_F_INDEX; ch = rp_channel_t(ch + 1)) {
         if (_pack->m_buffer.count(ch)) {
             auto sCount = _pack->m_samplesCount[ch];
             auto bits = _pack->m_bits[ch];
             auto buffer = _pack->m_buffer[ch];
             auto name = _pack->m_name[ch];
 
-            string ch_name = (name == "" ? (std::string("Ch_") + std::to_string(ch + 1)) : name);
+            std::string ch_name = (name == "" ? SBufferPack::getChannelName((rp_channel_t)ch) : name);
 
             auto data_type = TDMS::TDMSType::Integer8;
-            if (bits == RP_F_8_Bit) data_type = TDMS::TDMSType::Integer8;
-            if (bits == RP_F_16_Bit) data_type = TDMS::TDMSType::Integer16;
-            if (bits == RP_F_32_Bit) data_type = TDMS::TDMSType::SingleFloat;
-            if (bits == RP_F_64_Bit) data_type = TDMS::TDMSType::DoubleFloat;
-       
+            if (bits == RP_F_ui8_Bit)
+                data_type = TDMS::TDMSType::Integer8;
+            if (bits == RP_F_ui16_Bit)
+                data_type = TDMS::TDMSType::Integer16;
+            if (bits == RP_F_ui32_Bit)
+                data_type = TDMS::TDMSType::UnsignedInteger32;
+            if (bits == RP_F_i32_Bit)
+                data_type = TDMS::TDMSType::Integer32;
+            if (bits == RP_F_ui64_Bit)
+                data_type = TDMS::TDMSType::UnsignedInteger64;
+            if (bits == RP_F_i64_Bit)
+                data_type = TDMS::TDMSType::Integer64;
+            if (bits == RP_F_f32_Bit)
+                data_type = TDMS::TDMSType::SingleFloat;
+            if (bits == RP_F_d64_Bit)
+                data_type = TDMS::TDMSType::DoubleFloat;
+
             auto channel = segment.GenerateChannel("Group", ch_name);
             data.push_back(channel);
-            segment.AddRaw(channel, data_type, sCount , reinterpret_cast<uint8_t*>(buffer));            
+            segment.AddRaw(channel, data_type, sCount, reinterpret_cast<uint8_t*>(buffer));
         }
     }
 
     segment.LoadMetadata(data);
-    outFile.WriteMemory(*_memory,segment);
+    outFile.WriteMemory(*_memory, segment);
     return true;
 }
 
-
-auto CTDMSWriter::writeToStream(SBufferPack *_pack, std::iostream *_memory) -> bool {
+auto CTDMSWriter::writeToStream(SBufferPack* _pack, std::iostream* _memory) -> bool {
     return m_pimpl->write(_pack, _memory);
 }
-
-

@@ -231,8 +231,8 @@ int rpApp_OscGetViewData(rpApp_osc_source source, float* data, uint32_t size) {
 //     return osc_getRawData(source, data, size);
 // }
 
-int rpApp_OscGetExportedData(rpApp_osc_source source, rpApp_osc_exportMode mode, bool normalize, float* data, uint32_t* size) {
-    return osc_getExportedData(source, mode, normalize, data, size);
+int rpApp_OscGetExportedData(rpApp_osc_source source, rpApp_osc_exportMode mode, bool normalize, std::vector<float>& data, std::vector<float>& time, uint32_t* decimation) {
+    return osc_getExportedData(source, mode, normalize, data, time, decimation);
 }
 
 int rpApp_OscSetViewSize(uint32_t size) {

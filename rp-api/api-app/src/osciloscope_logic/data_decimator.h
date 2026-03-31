@@ -19,6 +19,7 @@ class CDataDecimator {
         float m_min = 0;
         float m_max = 0;
         float m_mean = 0;
+        uint32_t m_trigPosition = 0;
     };
 
     struct ValidRange {

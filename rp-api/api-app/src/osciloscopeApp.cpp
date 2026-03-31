@@ -815,7 +815,7 @@ int osc_getDataXY(float* _dataX, float* _dataY, uint32_t _size) {
     return RP_OK;
 }
 
-int osc_getExportedData(rpApp_osc_source _source, rpApp_osc_exportMode _mode, bool _normalize, float* _data, uint32_t* _size) {
+int osc_getExportedData(rpApp_osc_source _source, rpApp_osc_exportMode _mode, bool _normalize, std::vector<float>& data, std::vector<float>& time, uint32_t* _decimation) {
 
     auto norma = [](float* data, uint32_t size) {
         if (size == 0)
@@ -839,27 +839,30 @@ int osc_getExportedData(rpApp_osc_source _source, rpApp_osc_exportMode _mode, bo
     };
 
     if (_mode == RPAPP_VIEW_EXPORT) {
-        uint32_t ret_size = *_size;
 
-        auto ret = osc_getData(_source, _data, ret_size);
-        if (ret != RP_OK) {
-            *_size = 0;
-            return ret;
-        }
-        std::vector<float> data;
-        data.reserve(*_size);
-        for (auto i = 0u; i < *_size; ++i) {
-            if (!isnanf(_data[i])) {
-                float d = _data[i];
+        g_viewController.lockScreenView();
+        auto view = *g_viewController.getView(_source);
+        auto viewInfo = *g_viewController.getViewInfo(_source);
+        int _trigPosition = viewInfo.m_trigPosition;
+        *_decimation = viewInfo.m_decimation;
+        g_viewController.unlockScreenView();
+
+        data.reserve(view.size());
+        time.reserve(view.size());
+        data.clear();
+        time.clear();
+
+        for (auto i = 0u; i < view.size(); ++i) {
+            auto idx_pos = (float)((int)i - _trigPosition) / (float)view.size();
+            if (!isnanf(view[i])) {
+                float d = view[i];
                 unscaleAmplitudeChannel(_source, d, &d);
                 data.push_back(d);
+                time.push_back(idx_pos);
             }
         }
-        ret_size = data.size();
-        *_size = data.size();
-        memcpy_neon(_data, data.data(), *_size * sizeof(float));
         if (_normalize) {
-            norma(_data, ret_size);
+            norma(data.data(), data.size());
         }
         return RP_OK;
     }
@@ -867,22 +870,28 @@ int osc_getExportedData(rpApp_osc_source _source, rpApp_osc_exportMode _mode, bo
     if (_mode == RPAPP_RAW_EXPORT) {
         if (_source != RPAPP_OSC_SOUR_MATH) {
             g_viewController.lockScreenView();
-            auto view = g_viewController.getOriginalData(_source);
-            if (view->size() > *_size) {
-                g_viewController.unlockScreenView();
-                WARNING("There's more data %d than required %d", view->size(), *_size)
-                *_size = 0;
-                return RP_EOOR;
-            }
-
-            memcpy_neon(_data, view->data(), view->size() * sizeof(float));
-
+            auto view = *g_viewController.getOriginalData(_source);
+            auto viewInfo = *g_viewController.getViewInfo(_source);
+            int _trigPosition = viewInfo.m_trigRawPosition;
+            *_decimation = viewInfo.m_decimation;
             g_viewController.unlockScreenView();
 
-            *_size = view->size();
+            data.reserve(view.size());
+            time.reserve(view.size());
+            data.clear();
+            time.clear();
+
+            for (auto i = 0u; i < view.size(); ++i) {
+                auto idx_pos = (float)((int)i - _trigPosition);
+                if (!isnanf(view[i])) {
+                    float d = view[i];
+                    data.push_back(d);
+                    time.push_back(idx_pos);
+                }
+            }
 
             if (_normalize) {
-                norma(_data, view->size());
+                norma(data.data(), data.size());
             }
             return RP_OK;
         }
@@ -1856,7 +1865,9 @@ void mainViewThreadFun() {
                 g_decimator.decimate(
                     (rp_channel_t)channel, buff->m_data->ch_f[channel], ADC_BUFFER_SIZE, posInPoints, view, orignalData, &viewDecInfo, &viewDecRawInfo, range, &buffers[channel]);
                 viewInfo->m_dataHasTrigger = buff->m_dataHasTrigger;
-                viewInfo->m_decimatoion = buff->m_decimation;
+                viewInfo->m_decimation = buff->m_decimation;
+                viewInfo->m_trigPosition = viewDecInfo.m_trigPosition;
+                viewInfo->m_trigRawPosition = viewDecRawInfo.m_trigPosition;
                 viewInfo->m_max = viewDecInfo.m_max;
                 viewInfo->m_min = viewDecInfo.m_min;
                 viewInfo->m_mean = viewDecInfo.m_mean;

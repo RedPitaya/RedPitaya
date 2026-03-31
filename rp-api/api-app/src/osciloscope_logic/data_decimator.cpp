@@ -149,7 +149,8 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float* _data, vsize_t
     };
     auto viewSize = _view->size();
     int centerView = viewSize / 2;
-    int trigPostInView = centerView - _triggerPointPos;
+    int trigPosInView = centerView - _triggerPointPos;
+    int trigPosInViewOrigin = trigPosInView;
 
     if (((float)viewSize * m_decimationFactor) > (_dataSize)) {
         //   TRACE("Buffer size is smaller than needed for display buffer size %d factor %f",_dataSize,m_decimationFactor)
@@ -174,9 +175,9 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float* _data, vsize_t
     float scaleFuncCof1 = 1, scaleFuncCof2 = 1;
     ECHECK_APP_NO_RET(m_scaleFunc((rpApp_osc_source)_channel, scaleFuncCof1, scaleFuncCof2))
     if (m_decimationFactor < 1) {
-        trigPostInView -= m_dataOffset;
-        startView = 0 - trigPostInView;
-        stopView = viewSize - trigPostInView;
+        trigPosInView -= m_dataOffset;
+        startView = 0 - trigPosInView;
+        stopView = viewSize - trigPosInView;
 
         float t = 0;
         float t_prev = 0;
@@ -258,9 +259,10 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float* _data, vsize_t
         }
         _viewInfo->m_mean /= count ? count : 1;
         _viewInfo->m_meanUnscale /= count ? count : 1;
+        _viewInfo->m_trigPosition = trigPosInViewOrigin;
     } else {
-        startView = 0 - trigPostInView;
-        stopView = viewSize - trigPostInView;
+        startView = 0 - trigPosInView;
+        stopView = viewSize - trigPosInView;
 
         float t = 0;
         float scaledValue = 0;
@@ -292,9 +294,14 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float* _data, vsize_t
             (*_view)[iView] = scaledValue;
             if (_unscaledView)
                 (*_unscaledView)[iView] = _data[dataIndex];
+
+            if (idx == 0) {
+                _viewInfo->m_trigPosition = iView;
+            }
         }
         _viewInfo->m_mean /= count ? count : 1;
         _viewInfo->m_meanUnscale /= count ? count : 1;
+        _viewInfo->m_trigPosition = trigPosInViewOrigin;
     }
 
     if (_originalData) {
@@ -313,7 +320,8 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float* _data, vsize_t
             x--;
         }
         uint32_t count = 0;
-        for (int idx = dataIndexStart; idx != dataIndexEnd; idx = (idx + 1) % ADC_BUFFER_SIZE) {
+        uint32_t trigId = 0;
+        for (int idx = dataIndexStart; idx != dataIndexEnd; idx = (idx + 1) % ADC_BUFFER_SIZE, trigId++) {
             auto y = _data[idx];
             _originalData->push_back(y);
             if (_viewRawInfo->m_maxUnscale < y)
@@ -322,6 +330,9 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float* _data, vsize_t
                 _viewRawInfo->m_minUnscale = y;
             _viewRawInfo->m_meanUnscale += y;
             count++;
+            if (idx == 0) {
+                _viewRawInfo->m_trigPosition = trigId - 1;
+            }
         }
         _originalData->push_back(_data[dataIndexEnd]);
         _viewRawInfo->m_meanUnscale /= count ? count : 1;

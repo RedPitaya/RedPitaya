@@ -2,6 +2,7 @@
 #include <DataManager.h>
 #include <math.h>
 #include <unistd.h>
+#include <list>
 #include <mutex>
 
 #include "common.h"
@@ -433,6 +434,8 @@ auto requestFile() -> void {
         request_data.Value() = false;
 
         request_mode mode = (request_mode)request_format.Value();
+        float timeScale = 0;
+        rpApp_OscGetTimeScale(&timeScale);
         rp_acq_decimation_t sampling_rate;
         rp_AcqGetDecimation(&sampling_rate);
         auto rate = getADCRate() / (uint32_t)sampling_rate;
@@ -459,33 +462,55 @@ auto requestFile() -> void {
 
         rp_formatter_api::CFormatter formatter(f_mode, rate);
 
-        float* buff[g_adc_channels + 1];
-
-        for (int i = 0; i <= g_adc_channels; i++) {
-            buff[i] = NULL;
-        }
-
+        std::list<std::vector<float>> buffs;
+        std::vector<uint32_t> index;
+        std::vector<float> time;
+        // uint32_t size = is_view ? CH_SIGNAL_SIZE_DEFAULT : ADC_BUFFER_SIZE;
         uint8_t allChannels = 0;
+
+        uint32_t trigPos = 0;
+        uint32_t decimation = 0;
 
         for (int i = 0; i < g_adc_channels; i++) {
             if (inShow[i].Value()) {
-                uint32_t size = is_view ? CH_SIGNAL_SIZE_DEFAULT : ADC_BUFFER_SIZE;
-                buff[i] = new float[size];
-                if (rpApp_OscGetExportedData((rpApp_osc_source)i, is_view, is_normal, buff[i], &size) == RP_OK) {
-                    formatter.setChannel((rp_formatter_api::rp_channel_t)i, buff[i], size, std::string("Channel_") + std::to_string(i + 1));
+                buffs.push_back({});
+                auto& buff = buffs.back();
+                if (rpApp_OscGetExportedData((rpApp_osc_source)i, is_view, is_normal, buff, time, &decimation) == RP_OK) {
+                    formatter.setChannel((rp_formatter_api::rp_channel_t)i, buff.data(), buff.size(), std::string("Channel_") + std::to_string(i + 1));
                     allChannels++;
                 }
             }
         }
 
         if (isMathShow()) {
-            uint32_t size = is_view ? CH_SIGNAL_SIZE_DEFAULT : ADC_BUFFER_SIZE;
-            buff[g_adc_channels] = new float[size];
-            if (rpApp_OscGetExportedData(RPAPP_OSC_SOUR_MATH, is_view, is_normal, buff[g_adc_channels], &size) == RP_OK) {
-                formatter.setChannel((rp_formatter_api::rp_channel_t)allChannels, buff[g_adc_channels], size, std::string("Math"));
+            [[maybe_unused]] uint32_t t, d;
+            buffs.push_back({});
+            std::vector<float> timeMath;
+            auto& buff = buffs.back();
+            if (rpApp_OscGetExportedData(RPAPP_OSC_SOUR_MATH, is_view, is_normal, buff, timeMath, &d) == RP_OK) {
+                float* b_ptr = buff.data();
+                formatter.setChannel((rp_formatter_api::rp_channel_t)allChannels, b_ptr, buff.size(), std::string("Math"));
                 allChannels++;
             }
         }
+        auto ch_size = formatter.getMaxSamples();
+        index.resize(ch_size);
+        for (auto idx = 0u; idx < ch_size; idx++) {
+            index[idx] = idx + 1;
+        }
+        formatter.setChannel(rp_formatter_api::rp_channel_t::RP_F_INDEX, index.data(), ch_size);
+
+        if (is_view) {
+            for (size_t idx = 0; idx < ch_size; idx++) {
+                time[idx] = time[idx] * timeScale * 10.0;
+            }
+        } else {
+            for (size_t idx = 0; idx < ch_size; idx++) {
+                time[idx] = time[idx] * 1000.f / (float)rate;
+            }
+        }
+
+        formatter.setChannel(rp_formatter_api::rp_channel_t::RP_F_TIME, time.data(), ch_size, "Time(uS)");
 
         std::string filename = std::string("scopegen_data") + suffix;
         formatter.openFile("/tmp/scopegenpro/" + filename);
@@ -496,10 +521,7 @@ auto requestFile() -> void {
         } else {
             download_file.Value() = std::string("error");
         }
-
-        for (int i = 0; i <= g_adc_channels; i++) {
-            delete[] buff[i];
-        }
+        buffs.clear();
     }
 }
 

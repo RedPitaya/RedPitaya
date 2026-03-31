@@ -13,6 +13,7 @@
 #define __RP_APP_H
 
 #include <functional>
+#include <vector>
 #include "math/rp_dsp.h"
 #include "rp.h"
 
@@ -603,11 +604,12 @@ int rpApp_OscGetViewData(rpApp_osc_source source, float* data, uint32_t size);
 * @param mode Export mode.
 * @param normalize Normalize data to 2V p-p.
 * @param data Buffer for values.
-* @param size Number of values to be returned.
+* @param time Time indices relative to samples relative to the trigger position.
+* @param decimation Decimation for returned data.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscGetExportedData(rpApp_osc_source source, rpApp_osc_exportMode mode, bool normalize, float* data, uint32_t* size);
+int rpApp_OscGetExportedData(rpApp_osc_source source, rpApp_osc_exportMode mode, bool normalize, std::vector<float>& data, std::vector<float>& time, uint32_t* decimation);
 
 // /**
 // * Gets raw data.

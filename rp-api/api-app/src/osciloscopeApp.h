@@ -88,7 +88,7 @@ int osc_GetCursorDeltaAmplitude(rpApp_osc_source source, uint32_t cursor1, uint3
 int osc_getCursorDeltaFrequency(uint32_t cursor1, uint32_t cursor2, float* value);
 int osc_getData(rpApp_osc_source source_t, float* data, uint32_t size);
 // int osc_getRawData(rp_channel_t source, uint16_t *data, uint32_t size);
-int osc_getExportedData(rpApp_osc_source source, rpApp_osc_exportMode mode, bool normalize, float* data, uint32_t* size);
+int osc_getExportedData(rpApp_osc_source source, rpApp_osc_exportMode mode, bool normalize, std::vector<float>& data, std::vector<float>& time, uint32_t* decimation);
 
 int osc_setMathOperation(rpApp_osc_math_oper_t op);
 int osc_getMathOperation(rpApp_osc_math_oper_t* op);

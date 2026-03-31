@@ -33,8 +33,10 @@ class CViewController {
         float m_minRaw = 0;
         float m_maxRaw = 0;
         float m_meanRaw = 0;
-        uint32_t m_decimatoion = 1;
+        uint32_t m_decimation = 1;
         bool m_dataHasTrigger;
+        uint32_t m_trigPosition = 0;
+        uint32_t m_trigRawPosition = 0;
         auto print() -> int {
             WARNING("OscInfo (Min/Mean/Max) (%f/%f/%f) unscale (%f/%f/%f) raw (%f/%f/%f)",
                     m_min,
