@@ -2,6 +2,7 @@
 #define WRITER_LIB_WBINARY_H
 
 #include <stdint.h>
+#include <vector>
 
 class CBinInfo {
    public:
@@ -28,6 +29,8 @@ class CBinInfo {
     uint64_t lostCount[4] = {0, 0, 0, 0};
     int64_t timeCapture[4] = {0, 0, 0, 0};
     int64_t timeCaptureLast[4] = {0, 0, 0, 0};
+
+    std::vector<BinHeader> segments;
 };
 
 #endif

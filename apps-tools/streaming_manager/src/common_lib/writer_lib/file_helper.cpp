@@ -438,6 +438,7 @@ auto readBinInfo(std::iostream* buffer) -> CBinInfo {
         buffer->read((char*)&header, sizeof(CBinInfo::BinHeader));
         buffer->seekg(position + sizeof(CBinInfo::BinHeader) + header.sigmentLength, std::ios::beg);
         buffer->read((char*)endSeg, 12);
+        bi.segments.push_back(header);
         uint64_t samplesCount = 0u;
         for (auto i = 0u; i < 4; i++) {
             bi.dataFormatSize[i] = header.dataFormatSize[i];

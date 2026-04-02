@@ -41,7 +41,8 @@ bool CheckMissing(const char* val, const char* Message) {
 
 void UsingArgs(char const* progName) {
     std::cout << "Usage: " << progName << " file_name [-i][-s start][-e end][-f format][-t][-ci][-cb|-cs|-cn]\n";
-    std::cout << "\t-i get info about file\n";
+    std::cout << "\t-i get info about BIN file\n";
+    std::cout << "\t-ia get info about BIN file. Including information on all segments.\n";
     std::cout << "\t-s Segment from which the conversion starts\n";
     std::cout << "\t-e Segment where the conversion will end\n";
     std::cout << "\t-f File format. [CSV|WAV|TDMS]. By default used CSV format\n";
@@ -80,6 +81,7 @@ int main(int argc, char* argv[]) {
     std::string format = "CSV";
     std::string file_name = argv[1];
     bool check_info = cmdOptionExists(argv, argv + argc, "-i");
+    bool check_info_all = cmdOptionExists(argv, argv + argc, "-ia");
     bool gen_test = cmdOptionExists(argv, argv + argc, "-t");
 
     if (gen_test) {
@@ -87,7 +89,7 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    if (check_info) {
+    if (check_info || check_info_all) {
         std::fstream fs;
         fs.open(file_name, std::ios::binary | std::ofstream::in | std::ofstream::out);
         if (fs.fail()) {
@@ -126,6 +128,20 @@ int main(int argc, char* argv[]) {
                     std::tm* tm_infoEnd = std::gmtime(&time_t_valueEnd);
                     std::strftime(bufferEnd, sizeof(bufferEnd), "%Y-%m-%d %H:%M:%S", tm_infoEnd);
                     aprintf(stdout, "\tCapture time: %s - %s\n", buffer, bufferEnd);
+                }
+            }
+
+            if (check_info_all) {
+                size_t idx = 1;
+                for (auto& seg : bi.segments) {
+                    aprintf(stdout, "Segment - %zu. Length: %u\n", idx++, seg.sigmentLength);
+                    aprintf(stdout, "\tSamples: CH1 - %u; CH2 - %u; CH3 - %u; CH4 - %u\n", seg.sampleCh[0], seg.sampleCh[1], seg.sampleCh[2], seg.sampleCh[3]);
+                    aprintf(stdout, "\tSize: CH1 - %u; CH2 - %u; CH3 - %u; CH4 - %u\n", seg.sizeCh[0], seg.sizeCh[1], seg.sizeCh[2], seg.sizeCh[3]);
+                    aprintf(stdout, "\tLost: CH1 - %llu; CH2 - %llu; CH3 - %llu; CH4 - %llu\n", seg.lostCount[0], seg.lostCount[1], seg.lostCount[2], seg.lostCount[3]);
+                    aprintf(
+                        stdout, "\tFormat: CH1 - %u; CH2 - %u; CH3 - %u; CH4 - %u\n", seg.dataFormatSize[0], seg.dataFormatSize[1], seg.dataFormatSize[2], seg.dataFormatSize[3]);
+                    aprintf(stdout, "\tRate: CH1 - %llu; CH2 - %llu; CH3 - %llu; CH4 - %llu\n", seg.oscRate[0], seg.oscRate[1], seg.oscRate[2], seg.oscRate[3]);
+                    aprintf(stdout, "\tTime: CH1 - %lld; CH2 - %lld; CH3 - %lld; CH4 - %lld\n", seg.timeCapture[0], seg.timeCapture[1], seg.timeCapture[2], seg.timeCapture[3]);
                 }
             }
         }

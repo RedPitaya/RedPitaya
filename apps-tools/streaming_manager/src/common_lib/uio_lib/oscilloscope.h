@@ -89,6 +89,15 @@ struct OscilloscopeMapT {
     uint32_t filt_coeff_bb_ch4;  // 468  - offset 0x1D4
     uint32_t filt_coeff_kk_ch4;  // 472  - offset 0x1D8
     uint32_t filt_coeff_pp_ch4;  // 476  - offset 0x1DC
+
+    uint32_t reserv8[8];
+
+    uint32_t captureTimeLo;  // 512 - offset 0x200
+    uint32_t captureTimeHi;  // 516 - offset 0x204
+    uint32_t buff1TimeLo;    // 520 - offset 0x208
+    uint32_t buff1TimeHi;    // 524 - offset 0x20C
+    uint32_t buff2TimeLo;    // 528 - offset 0x210
+    uint32_t buff2TimeHi;    // 532 - offset 0x214
 };
 
 enum BoardMode { UNKNOWN, MASTER, SLAVE };
@@ -150,6 +159,7 @@ class COscilloscope {
     uint8_t m_fpgaBits;
     uint8_t m_maxChannels;
     uint32_t m_dataSize;  // in bytes
+    double m_sampleLeninNS;
 };
 
 }  // namespace uio_lib

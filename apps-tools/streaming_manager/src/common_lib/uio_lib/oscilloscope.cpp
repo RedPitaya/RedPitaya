@@ -71,7 +71,8 @@ COscilloscope::COscilloscope(int _fd, void* _regset, size_t _regsetSize, uint32_
       m_isADCFilterPresent(_isADCFilterPresent),
       m_fpgaBits(_fpgaBits),
       m_maxChannels(_maxChannels),
-      m_dataSize(0) {
+      m_dataSize(0),
+      m_sampleLeninNS(0) {
     for (int i = 0; i < 4; i++) {
         setCalibration(i, 0, 1.0, true);
         setFilterCalibration(i, 0, 0, 0xFFFFFF, 0);
@@ -176,7 +177,8 @@ auto COscilloscope::setReg(volatile OscilloscopeMapT* _OscMap) -> void {
 
     // Decimate factor
     setRegister(_OscMap, &(_OscMap->dec_factor), m_dec_factor);
-    //_OscMap->dec_factor = m_dec_factor;
+
+    m_sampleLeninNS = 1000000000.0 / (double)m_adcMaxSpeed;
 
     setRegister(_OscMap, &(_OscMap->calib_offset_ch1), m_calib_offset_ch[0]);
 
@@ -244,6 +246,9 @@ auto COscilloscope::prepare() -> void {
         exit(-1);
     }
 
+    setRegister(m_OscMap, &(m_OscMap->captureTimeLo), 0);
+    setRegister(m_OscMap, &(m_OscMap->captureTimeHi), 0);
+
     auto now = std::chrono::system_clock::now();
     auto duration = now.time_since_epoch();
     auto nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
@@ -274,9 +279,10 @@ auto COscilloscope::setCalibration(uint8_t ch, int32_t _offset, float _gain, boo
 auto COscilloscope::getFPGAInfo(uint8_t index, uint32_t& _overFlow, int64_t& _time) -> bool {
     // This fix for FPGA
     _overFlow = (index == 1 ? m_OscMap->lost_samples_buf1_ch1 : m_OscMap->lost_samples_buf2_ch1);
-    _time = g_time;
-    g_time += 10000000;
-    // _time = (index == 1 ? m_OscMap->lost_samples_buf1_ch1 : m_OscMap->lost_samples_buf2_ch1);
+    _time = (index == 1 ? m_OscMap->buff2TimeHi : m_OscMap->buff1TimeHi);
+    _time = _time << 32;
+    _time |= (index == 1 ? m_OscMap->buff2TimeLo : m_OscMap->buff1TimeLo);
+    _time = g_time + _time * m_sampleLeninNS;
     return true;
 }
 
@@ -432,4 +438,11 @@ auto COscilloscope::printReg() -> void {
     fprintf(stderr, "0x1D4 filt_coeff_bb_ch4 = 0x%X\n", m_OscMap->filt_coeff_bb_ch4);
     fprintf(stderr, "0x1D8 filt_coeff_kk_ch4 = 0x%X\n", m_OscMap->filt_coeff_kk_ch4);
     fprintf(stderr, "0x1DC filt_coeff_pp_ch4 = 0x%X\n", m_OscMap->filt_coeff_pp_ch4);
+
+    fprintf(stderr, "0x200 captureTimeLo = 0x%X\n", m_OscMap->captureTimeLo);
+    fprintf(stderr, "0x204 captureTimeHi = 0x%X\n", m_OscMap->captureTimeHi);
+    fprintf(stderr, "0x208 buff1TimeLo = 0x%X\n", m_OscMap->buff1TimeLo);
+    fprintf(stderr, "0x20C buff1TimeHi = 0x%X\n", m_OscMap->buff1TimeHi);
+    fprintf(stderr, "0x210 buff2TimeLo = 0x%X\n", m_OscMap->buff2TimeLo);
+    fprintf(stderr, "0x214 buff2TimeHi = 0x%X\n", m_OscMap->buff2TimeHi);
 }
