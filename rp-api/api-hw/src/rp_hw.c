@@ -79,11 +79,11 @@ int rp_UartSetSettings(){
     return uart_SetSettings();
 }
 
-int rp_UartRead(unsigned char *buffer, int *size){
+int rp_UartRead(uint8_t *buffer, int *size){
     return uart_read(buffer,size);
 }
 
-int rp_UartWrite(unsigned char *buffer, int size){
+int rp_UartWrite(uint8_t *buffer, int size){
     return uart_write(buffer,size);
 }
 
@@ -255,7 +255,7 @@ int rp_SPI_GetCSChangeState(size_t msg,bool *cs_change){
     return spi_GetCSChangeState(msg,cs_change);
 }
 
-int rp_SPI_SetBufferForMessage(size_t msg,const uint8_t *tx_buffer,bool init_rx_buffer,size_t len, bool cs_change){
+int rp_SPI_SetBufferForMessage(size_t msg,const uint8_t *tx_buffer,size_t len,bool init_rx_buffer, bool cs_change){
     return spi_SetBufferForMessage(msg,tx_buffer,init_rx_buffer,len,cs_change);
 }
 

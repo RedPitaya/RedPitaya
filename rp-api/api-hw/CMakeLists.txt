@@ -74,7 +74,27 @@ if(BUILD_SHARED)
         INCLUDE(${SWIG_USE_FILE})
 
         find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
-        include_directories(${Python3_INCLUDE_DIRS})
+        execute_process(
+            COMMAND ${Python3_EXECUTABLE} -c "import numpy; print(numpy.get_include())"
+            OUTPUT_VARIABLE NUMPY_INCLUDE_DIR
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            RESULT_VARIABLE NUMPY_FOUND
+        )
+
+        if(NOT NUMPY_FOUND EQUAL 0)
+            message(FATAL_ERROR "NumPy not found. Install with: pip3 install numpy")
+        endif()
+
+        message(STATUS "NumPy include directory: ${NUMPY_INCLUDE_DIR}")
+
+        include_directories(
+            ${Python3_INCLUDE_DIRS}
+            ${NUMPY_INCLUDE_DIR}
+        )
+
+
+        # find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+        # include_directories(${Python3_INCLUDE_DIRS})
         #find_package(PythonLibs)
         #include_directories(${PYTHON_INCLUDE_PATH})
 

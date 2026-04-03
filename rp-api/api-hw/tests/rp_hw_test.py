@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-
+import numpy as np
 import rp_hw
 
 
@@ -64,31 +64,24 @@ res = rp_hw.rp_UartSetTimeout(0)
 print(res)
 
 
-buff = rp_hw.Buffer(10)
-buff_size = 10
+data = np.array([0x01, 0x02, 0x03], dtype=np.uint8)
 
-buff2 = rp_hw.Buffer(10)
-buff_size2 = 10
-
-buff[0] = 1
-buff[1] = 2
-buff[2] = 3
-
-
-print("rp_hw.rp_UartWrite(buff,buff_size)")
-res = rp_hw.rp_UartWrite(buff,buff_size)
+print("rp_hw.rp_UartWrite(data)")
+res = rp_hw.rp_UartWrite(data)
 print(res)
 
-print("rp_hw.rp_UartRead(buff,buff_size)")
-res = rp_hw.rp_UartRead(buff2,buff_size2)
-print("Result:",res[0],"Size:",res[1])
-print(buff2[0],buff2[1],buff2[2])
+buff_size = 10
+status, data = rp_hw.rp_UartRead(buff_size)
+
+print(f"Result: {status}")
+if status == 0:
+    print(f"Read data: {data}")
+    if len(data) >= 2:
+        print(f"Elements: {data[0]}, {data[1]}, {data[2]}")
 
 print("rp_hw.rp_UartRelease()")
 res = rp_hw.rp_UartRelease()
 print(res)
-
-
 
 print("rp_hw.rp_SetLEDMMCState(False)")
 res = rp_hw.rp_SetLEDMMCState(False)
@@ -218,13 +211,10 @@ print("rp_hw.rp_SPI_GetCSChangeState(0)")
 res = rp_hw.rp_SPI_GetCSChangeState(0)
 print(res)
 
-tx_buff = rp_hw.Buffer(10)
-tx_buff[0] = 1
-tx_buff[1] = 2
-tx_buff[2] = 3
+tx_data = np.array([0xAA, 0xBB, 0xCC], dtype=np.uint8)
 
-print("rp_hw.rp_SPI_SetBufferForMessage(0,tx_buff,True ,10, True)")
-res = rp_hw.rp_SPI_SetBufferForMessage(0,tx_buff,True ,10, True)
+print("rp_hw.rp_SPI_SetBufferForMessage(0, tx_data, True, True)")
+res = rp_hw.rp_SPI_SetBufferForMessage(0, tx_data, True, True)
 print(res)
 
 print("rp_hw.rp_SPI_ReadWrite()")
@@ -233,15 +223,11 @@ print(res)
 
 print("rp_hw.rp_SPI_GetRxBuffer(0)")
 res = rp_hw.rp_SPI_GetRxBuffer(0)
-print(res)
-tmp = rp_hw.Buffer_frompointer(res[1])
-print("RxBuffer",tmp[0],tmp[1],tmp[2])
+print(res[0],res[1])
 
 print("rp_hw.rp_SPI_GetTxBuffer(0)")
 res = rp_hw.rp_SPI_GetTxBuffer(0)
-print(res)
-tmp = rp_hw.Buffer_frompointer(res[1])
-print("TxBuffer",tmp[0],tmp[1],tmp[2])
+print(res[0],res[1])
 
 print("rp_hw.rp_SPI_DestroyMessage()")
 res = rp_hw.rp_SPI_DestroyMessage()
@@ -281,11 +267,18 @@ print("rp_hw.rp_I2C_SMBUS_ReadCommand()")
 res = rp_hw.rp_I2C_SMBUS_ReadCommand()
 print(res)
 
-rx_buff = rp_hw.Buffer(10)
-rx_len = 10
-print("rp_hw.rp_I2C_SMBUS_ReadBuffer(0, rx_buff,rx_len)")
-res = rp_hw.rp_I2C_SMBUS_ReadBuffer(0,rx_buff,rx_len)
-print(res)
+max_read_size = 10
+print("rp_hw.rp_I2C_SMBUS_ReadBuffer(0, max_read_size)")
+status, data = rp_hw.rp_I2C_SMBUS_ReadBuffer(0, max_read_size)
+
+if status == 0:
+    print(f"Successfully read {len(data)} bytes")
+    print("Data (hex):", [hex(x) for x in data])
+
+    if len(data) > 0:
+        first_byte = data[0]
+else:
+    print(f"I2C Read Error: {status}")
 
 print("rp_hw.rp_I2C_SMBUS_Write(0,0)")
 res = rp_hw.rp_I2C_SMBUS_Write(0,0)
@@ -299,16 +292,16 @@ print("rp_hw.rp_I2C_SMBUS_WriteCommand(0)")
 res = rp_hw.rp_I2C_SMBUS_WriteCommand(0)
 print(res)
 
-print("rp_hw.rp_I2C_SMBUS_WriteBuffer(0, rx_buff,rx_len)")
-res = rp_hw.rp_I2C_SMBUS_WriteBuffer(0,rx_buff,rx_len)
+print("rp_hw.rp_I2C_SMBUS_WriteBuffer(0, data)")
+res = rp_hw.rp_I2C_SMBUS_WriteBuffer(0, data)
 print(res)
 
 print("rp_hw.rp_I2C_IOCTL_ReadBuffer(rx_buff,rx_len)")
-res = rp_hw.rp_I2C_IOCTL_ReadBuffer(rx_buff,rx_len)
+res = rp_hw.rp_I2C_IOCTL_ReadBuffer(data)
 print(res)
 
 print("rp_hw.rp_I2C_IOCTL_WriteBuffer(rx_buff,rx_len)")
-res = rp_hw.rp_I2C_IOCTL_WriteBuffer(rx_buff,rx_len)
+res = rp_hw.rp_I2C_IOCTL_WriteBuffer(data)
 print(res)
 
 
