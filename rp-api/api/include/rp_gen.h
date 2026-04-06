@@ -460,7 +460,7 @@ int rp_GenGetBurstRepetitions(rp_channel_t channel, int* repetitions);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenBurstPeriod(rp_channel_t channel, uint32_t period);
+int rp_GenBurstPeriod(rp_channel_t channel, float period);
 
 /**
 * Gets the period of one burst in micro seconds.
@@ -469,7 +469,7 @@ int rp_GenBurstPeriod(rp_channel_t channel, uint32_t period);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rp_GenGetBurstPeriod(rp_channel_t channel, uint32_t* period);
+int rp_GenGetBurstPeriod(rp_channel_t channel, float* period);
 
 /**
 * Sets trigger source.

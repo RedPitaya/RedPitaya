@@ -23,8 +23,8 @@ void synthesis_arb(CFloatBinarySignal* signal, const float* data, uint32_t _size
     }
 }
 
-void synthesis_arb_burst(CFloatBinarySignal* signal, const float* data, uint32_t _size, float freq, float amp, float off, float showOff, int burstCount, int periodBrust, int reps,
-                         float tscale, float timeOffset, float initV, float lastV) {
+void synthesis_arb_burst(CFloatBinarySignal* signal, const float* data, uint32_t _size, float freq, float amp, float off, float showOff, int burstCount, float periodBrust,
+                         int reps, float tscale, float timeOffset, float initV, float lastV) {
     auto sigSize = (*signal).GetSize();
     if (sigSize == 0)
         return;
@@ -99,7 +99,7 @@ void synthesis_sin(CFloatBinarySignal* signal, float freq, float phase, float am
     }
 }
 
-void synthesis_sin_burst(CFloatBinarySignal* signal, float freq, float phase, float amp, float off, float showOff, int burstCount, int period, int reps, float tscale,
+void synthesis_sin_burst(CFloatBinarySignal* signal, float freq, float phase, float amp, float off, float showOff, int burstCount, float period, int reps, float tscale,
                          float timeOffset, float initV, float lastV) {
     auto sigSize = (*signal).GetSize();
     if (sigSize == 0)
@@ -178,7 +178,7 @@ void synthesis_triangle(CFloatBinarySignal* signal, float freq, float phase, flo
     }
 }
 
-void synthesis_triangle_burst(CFloatBinarySignal* signal, float freq, float phase, float amp, float off, float showOff, int burstCount, int period, int reps, float tscale,
+void synthesis_triangle_burst(CFloatBinarySignal* signal, float freq, float phase, float amp, float off, float showOff, int burstCount, float period, int reps, float tscale,
                               float timeOffset, float initV, float lastV) {
     auto sigSize = (*signal).GetSize();
     if (sigSize == 0)
@@ -286,7 +286,7 @@ void synthesis_square(CFloatBinarySignal* signal, float freq, float phase, float
     }
 }
 
-void synthesis_square_burst(CFloatBinarySignal* signal, float freq, float phase, float amp, float off, float showOff, int burstCount, int period, int reps, float tscale,
+void synthesis_square_burst(CFloatBinarySignal* signal, float freq, float phase, float amp, float off, float showOff, int burstCount, float period, int reps, float tscale,
                             float riseTime, float fallTime, float timeOffset, float initV, float lastV) {
     auto sigSize = (*signal).GetSize();
     if (sigSize == 0)
@@ -421,7 +421,7 @@ int synthesis_rampUp(CFloatBinarySignal* signal, float freq, float phase, float 
     }
     return RP_OK;
 }
-void synthesis_rampUp_burst(CFloatBinarySignal* signal, float freq, float phase, float amp, float off, float showOff, int burstCount, int period, int reps, float tscale,
+void synthesis_rampUp_burst(CFloatBinarySignal* signal, float freq, float phase, float amp, float off, float showOff, int burstCount, float period, int reps, float tscale,
                             float timeOffset, float initV, float lastV) {
     auto sigSize = (*signal).GetSize();
     if (sigSize == 0)
@@ -512,7 +512,7 @@ int synthesis_rampDown(CFloatBinarySignal* signal, float freq, float phase, floa
     return RP_OK;
 }
 
-void synthesis_rampDown_burst(CFloatBinarySignal* signal, float freq, float phase, float amp, float off, float showOff, int burstCount, int period, int reps, float tscale,
+void synthesis_rampDown_burst(CFloatBinarySignal* signal, float freq, float phase, float amp, float off, float showOff, int burstCount, float period, int reps, float tscale,
                               float timeOffset, float initV, float lastV) {
     auto sigSize = (*signal).GetSize();
     if (sigSize == 0)
@@ -598,7 +598,7 @@ int synthesis_DC(CFloatBinarySignal* signal, float freq, float phase, float amp,
     return RP_OK;
 }
 
-void synthesis_DC_burst(CFloatBinarySignal* signal, float freq, float phase, float amp, float off, float showOff, int burstCount, int period, int reps, float tscale,
+void synthesis_DC_burst(CFloatBinarySignal* signal, float freq, float phase, float amp, float off, float showOff, int burstCount, float period, int reps, float tscale,
                         float timeOffset, float initV, float lastV) {
     auto sigSize = (*signal).GetSize();
     if (sigSize == 0)
@@ -667,7 +667,7 @@ int synthesis_DC_NEG(CFloatBinarySignal* signal, float freq, float phase, float 
     return RP_OK;
 }
 
-void synthesis_DC_NEG_burst(CFloatBinarySignal* signal, float freq, float phase, float amp, float off, float showOff, int burstCount, int period, int reps, float tscale,
+void synthesis_DC_NEG_burst(CFloatBinarySignal* signal, float freq, float phase, float amp, float off, float showOff, int burstCount, float period, int reps, float tscale,
                             float timeOffset, float initV, float lastV) {
     auto sigSize = (*signal).GetSize();
     if (sigSize == 0)
@@ -747,7 +747,7 @@ int synthesis_PWM(CFloatBinarySignal* signal, float freq, float phase, float amp
     return RP_OK;
 }
 
-void synthesis_PWM_burst(CFloatBinarySignal* signal, float freq, float phase, float amp, float off, float showOff, float ratio, int burstCount, int burst_period, int reps,
+void synthesis_PWM_burst(CFloatBinarySignal* signal, float freq, float phase, float amp, float off, float showOff, float ratio, int burstCount, float burst_period, int reps,
                          float tscale, float timeOffset, float initV, float lastV) {
     auto sigSize = (*signal).GetSize();
     if (sigSize == 0)

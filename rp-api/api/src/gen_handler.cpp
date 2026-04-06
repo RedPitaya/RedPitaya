@@ -54,7 +54,7 @@ typedef struct {
     // Burst mode parameters
     int burstCount = 1;           // Number of cycles in burst mode
     int burstRepetition = 1;      // Number of burst repetitions
-    uint32_t burstPeriod = 0;     // Period between bursts in microseconds
+    float burstPeriod = 0;        // Period between bursts in microseconds
     float burstLastValue = 0;     // Last output value after burst
     float initValue = 0;          // Initial output value
     float useLastSample = false;  // Flag to use last sample value
@@ -123,7 +123,6 @@ int gen_SetDefaultValues() {
         gen_setSweepStartFrequency(ch, 1000);
         gen_setSweepEndFrequency(ch, 1000);
         gen_setBurstRepetitions(ch, 1);
-        gen_setBurstPeriod(ch, (uint32_t)(1 / 1000.0 * MICRO));  // period = 1/frequency in us
         gen_setWaveform(ch, RP_WAVEFORM_SINE);
         gen_setSweepMode(ch, RP_GEN_SWEEP_MODE_LINEAR);
         gen_setSweepDir(ch, RP_GEN_SWEEP_DIR_NORMAL);
@@ -139,7 +138,7 @@ int gen_SetDefaultValues() {
         gen_setAmplitude(ch, fs * 0.8);
         gen_setDutyCycle(ch, 0.5);
         gen_setBurstCount(ch, 1);
-        gen_setBurstPeriod(ch, 1);
+        gen_setBurstPeriod(ch, 1000);  // Set 1 uS
         gen_setBurstLastValue(ch, 0);
         gen_setTriggerSource(ch, RP_GEN_TRIG_SRC_INTERNAL);
         gen_setPhase(ch, 0.0);
@@ -752,9 +751,12 @@ int gen_getBurstRepetitions(rp_channel_t channel, int* repetitions) {
     return RP_OK;
 }
 
-int gen_setBurstPeriod(rp_channel_t channel, uint32_t period) {
+int gen_setBurstPeriod(rp_channel_t channel, float period) {
 
     CHECK_CHANNEL
+
+    static auto adc_rate = rp_HPGetBaseFastDACSpeedHzOrDefault();
+    static auto tick_time = 1000000000.0 / (double)adc_rate;
 
     bool axi_enable = false;
     uint32_t axi_decimation = 0;
@@ -763,7 +765,8 @@ int gen_setBurstPeriod(rp_channel_t channel, uint32_t period) {
 
     rp_gen_mode_t mode = g_channels[channel].mode;
 
-    if (period < BURST_PERIOD_MIN || period > BURST_PERIOD_MAX) {
+    // Max 4 second
+    if (period * 1000.f < tick_time || period * 1000.f > NANO * 4.0f) {
         return RP_EOOR;
     }
 
@@ -777,33 +780,34 @@ int gen_setBurstPeriod(rp_channel_t channel, uint32_t period) {
         return RP_EOOR;
     }
 
-    // For non-axi mode, the buffer length is taken as 1. Since the calculation is carried out through the frequency of the signal, which is generated in 1 time.
-    int samplesCount = axi_enable ? g_channels[channel].axi_reserved_samples_count : 1;
-    double freq = axi_enable ? rp_HPGetBaseFastDACSpeedHzOrDefault() / axi_decimation : g_channels[channel].frequency;
+    // // For non-axi mode, the buffer length is taken as 1. Since the calculation is carried out through the frequency of the signal, which is generated in 1 time.
+    // int samplesCount = axi_enable ? g_channels[channel].axi_reserved_samples_count : 1;
+    // double freq = axi_enable ? adc_rate / axi_decimation : g_channels[channel].frequency;
 
-    int burstCount = g_channels[channel].burstCount;
-    int delay = 0;
+    // uint32_t burstCount = g_channels[channel].burstCount;
+    // uint32_t delay = 0;
 
-    int sigLen = (((double)samplesCount) / freq) * burstCount * MICRO;
-    // period = signal_time * burst_count + delay_time
-    if ((int)period - sigLen <= 0) {
-        period = sigLen;
-    }
+    // uint32_t sigLen = (((double)samplesCount) / freq) * burstCount * NANO;
+    // // period = signal_time * burst_count + delay_time
+    // if (period < sigLen) {
+    //     period = sigLen;
+    // }
 
-    delay = period - sigLen;
+    // delay = period - sigLen;
 
-    TRACE("freq %f sigLen %d burstCount %d period %d delay %d", freq, sigLen, burstCount, period, delay)
+    // TRACE("freq %f sigLen %d burstCount %d period %d delay %d", freq, sigLen, burstCount, period, delay)
 
     g_channels[channel].burstPeriod = period;
 
     if (mode == RP_GEN_MODE_BURST) {
-        int ret = generate_setBurstDelay(channel, (uint32_t)delay);
+        uint32_t periodi32 = period * 1000.0 / tick_time;
+        int ret = generate_setBurstDelay(channel, periodi32);
         return ret;
     }
     return RP_OK;
 }
 
-int gen_getBurstPeriod(rp_channel_t channel, uint32_t* period) {
+int gen_getBurstPeriod(rp_channel_t channel, float* period) {
 
     CHECK_CHANNEL
 

@@ -62,7 +62,7 @@ CBooleanParameter outBurstState[MAX_DAC_CHANNELS] = INIT2("SOUR", "_BURST_STATE"
 CIntParameter outBurstCount[MAX_DAC_CHANNELS] = INIT2("SOUR", "_BURST_COUNT", CBaseParameter::RW, 1, 0, 1, 65535, CONFIG_VAR);
 CIntParameter outBurstRepetitions[MAX_DAC_CHANNELS] = INIT2("SOUR", "_BURST_REP", CBaseParameter::RW, 1, 0, 1, 65535, CONFIG_VAR);
 CBooleanParameter outBurstRepInf[MAX_DAC_CHANNELS] = INIT2("SOUR", "_BURST_INF", CBaseParameter::RW, false, 0, CONFIG_VAR);
-CIntParameter outBurstDelay[MAX_DAC_CHANNELS] = INIT2("SOUR", "_BURST_DELAY", CBaseParameter::RW, 1, 0, 0, 2000000000, CONFIG_VAR);
+CFloatParameter outBurstDelay[MAX_DAC_CHANNELS] = INIT2("SOUR", "_BURST_DELAY", CBaseParameter::RW, 1, 0, 0, 2000000, CONFIG_VAR);
 CBooleanParameter outGenSyncReset("SYNC_GEN", CBaseParameter::RW, false, 0);
 
 CFloatParameter outBurstInit[MAX_DAC_CHANNELS] = INIT2("SOUR", "_B_INIT_VOLT", CBaseParameter::RW, 0, 0, -LEVEL_AMPS_MAX, LEVEL_AMPS_MAX, CONFIG_VAR);
@@ -140,8 +140,8 @@ auto generate(rp_channel_t channel, float tscale) -> void {
     rp_gen_sweep_mode_t sweep_mode;
     rp_gen_sweep_dir_t sweep_dir;
     rp_gen_mode_t gen_mode;
-    float frequency, phase, amplitude, offset, showOff, duty_cycle, freqSweepStart, freqSweepEnd, riseTime, fallTime, timeOffset, lastValue, initValue;
-    int burstCount, burstPeriod, burstReps;
+    float frequency, phase, amplitude, offset, showOff, duty_cycle, freqSweepStart, freqSweepEnd, riseTime, fallTime, timeOffset, lastValue, initValue, burstPeriod;
+    int burstCount, burstReps;
     // std::vector<float> data;
 
     signal = &outSignal[channel];
@@ -257,7 +257,7 @@ auto checkBurstDelayChanged(rp_channel_t ch) -> void {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return;
 
-    uint32_t value = 0;
+    float value = 0.f;
     rp_GenGetBurstPeriod(ch, &value);
     if (value != outBurstDelay[ch].Value()) {
         outBurstDelay[ch].SendValue(value);

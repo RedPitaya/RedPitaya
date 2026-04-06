@@ -2127,13 +2127,13 @@ int rp_GenGetBurstRepetitions(rp_channel_t channel, int* repetitions) {
     return gen_getBurstRepetitions(channel, repetitions);
 }
 
-int rp_GenBurstPeriod(rp_channel_t channel, uint32_t period) {
+int rp_GenBurstPeriod(rp_channel_t channel, float period) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
     return gen_setBurstPeriod(channel, period);
 }
 
-int rp_GenGetBurstPeriod(rp_channel_t channel, uint32_t* period) {
+int rp_GenGetBurstPeriod(rp_channel_t channel, float* period) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
     return gen_getBurstPeriod(channel, period);
