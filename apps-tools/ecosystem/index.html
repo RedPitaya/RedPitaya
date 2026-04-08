@@ -33,6 +33,7 @@
     <script src="../main_menu/js/rp_client.js?1" onerror="location.reload()"></script>
     <script src="../main_menu/js/client.js?1" onerror="location.reload()"></script>
     <script src="../main_menu/js/main.js?1" onerror="location.reload()"></script>
+    <script src="../main_menu/js/websocket.js?1" onerror="location.reload()"></script>
     <link href="./assets/popupstack.css?1" rel="stylesheet" type="text/css" onerror="location.reload()" />
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
@@ -125,7 +126,7 @@
                         <a href="#" data-dismiss="modal" id="poweroff_confirm" class="list-group-item btn">Poweroff</a>
                     </div>
                     <div class="bazaar-link" style="float: left;width: 30%;margin-left: 5%;">
-                        <a href="#" data-dismiss="modal" id="disable_analytics" class="list-group-item btn">Cancel</a>
+                        <a href="#" data-dismiss="modal" class="list-group-item btn">Cancel</a>
                     </div>
                 </div>
             </div>
@@ -152,7 +153,7 @@
                 </div>
                 <div class="modal-footer">
                     <div class="bazaar-link">
-                        <a href="#" data-dismiss="modal" id="disable_analytics" class="list-group-item btn">Cancel</a>
+                        <a href="#" data-dismiss="modal" class="list-group-item btn">Cancel</a>
                     </div>
                 </div>
             </div>
@@ -361,7 +362,7 @@
                 </div>
                 <div class="modal-footer" style="margin: 0;">
                     <div class="bazaar-link">
-                        <a href="#" data-dismiss="modal" id="disable_analytics" class="list-group-item btn">Close</a>
+                        <a href="#" data-dismiss="modal" class="list-group-item btn">Close</a>
                     </div>
                 </div>
                 <script>
@@ -398,7 +399,30 @@
                 </div>
                 <div class="modal-footer">
                     <div class="bazaar-link">
-                        <a href="#" data-dismiss="modal" id="disable_analytics" class="list-group-item btn">Close</a>
+                        <a href="#" data-dismiss="modal" class="list-group-item btn">Close</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="build_log_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel"
+        aria-hidden="true" style="overflow: hidden;" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog" id="pinoutDialogId" style="width:380px;">
+            <div class="modal-content">
+                <!-- Updated Body: Label + Progress Bar -->
+                <div class="modal-body" style="padding: 30px;padding-bottom: 10px;">
+                    <div class="progress-label" style="margin-bottom: 10px;">
+                        <strong id="progress_status">Building report...</strong>
+                    </div>
+                    <div class="progress" style="margin-bottom: 0;background-color: #5b5b5b;">
+                        <div id="build_progress_bar" class="progress-bar progress-bar-striped active" role="progressbar"
+                            aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="bazaar-link">
+                        <a id="cancel_build_log_id" class="list-group-item btn">Cancel</a>
                     </div>
                 </div>
             </div>

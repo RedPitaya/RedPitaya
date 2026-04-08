@@ -479,31 +479,6 @@
             $('#ext_connections_dialog').modal("show");
         });
 
-        $("#bug_report").click(async function (event){
-
-            const blob =  await fetch('/get_bug_report', {
-                    method: 'POST'
-                })
-                .then(resp => resp.blob());
-
-            if( window.showSaveFilePicker ) {
-                const handle = await showSaveFilePicker({
-                    suggestedName: new Date().toJSON().slice(0,22) + ".zip" });
-                const writable = await handle.createWritable();
-                await writable.write( blob );
-                writable.close();
-            }
-            else {
-                const saveImg = document.createElement( "a" );
-                saveImg.href = URL.createObjectURL( blob );;
-                saveImg.download= new Date().toJSON().slice(0,22) + ".zip";
-                saveImg.click();
-                setTimeout(() => URL.revokeObjectURL( saveImg.href ), 60000 );
-                alert("The debug file has been generated. Check the downloads section.");
-            }
-        });
-
-
         $('#fsck_chbox').click(function(event){
             var chkBox = document.getElementById('fsck_chbox');
             if (chkBox.checked){
