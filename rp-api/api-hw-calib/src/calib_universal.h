@@ -103,12 +103,16 @@ typedef enum {
     UC_ADC_CH4_AA_1_20 = 61,
     UC_ADC_CH4_BB_1_20 = 62,
     UC_ADC_CH4_PP_1_20 = 63,
-    UC_ADC_CH4_KK_1_20 = 64
+    UC_ADC_CH4_KK_1_20 = 64,
+
+    UC_HASH_COMMIT_LOW = 100,
+    UC_HASH_COMMIT_HIGH = 101,
+    UC_TIME_STAMP = 102,
 
 } rp_calib_universal_id_t;
 
 std::string getNameOfUniversalId(uint16_t id);
-bool convertUniversal(rp_HPeModels_t model, rp_calib_params_t* param, rp_calib_params_universal_t* out);
+bool convertUniversal(rp_HPeModels_t model, rp_calib_params_t* param, rp_calib_params_universal_t* out, bool updateTSandHASH = false);
 rp_calib_params_t convertUniversaltoCommon(rp_HPeModels_t model, rp_calib_params_universal_t* param);
 rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model, bool setFilterZero, uint8_t version);
 int recalculateToUniversal(rp_calib_params_t* param);

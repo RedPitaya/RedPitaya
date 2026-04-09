@@ -15,6 +15,13 @@
         X = val;                                                                             \
     }
 
+#define GET_PARAMETER_NO_ERROR(X, Y, Z)         \
+    {                                           \
+        bool err = false;                       \
+        int32_t val = getParameter(Z, Y, &err); \
+        X = val;                                \
+    }
+
 #define SET_PARAMETER(X, Y)           \
     {                                 \
         out->item[count].id = X;      \
@@ -163,6 +170,13 @@ std::string getNameOfUniversalId(uint16_t id) {
             return "ADC Ch4 PP 1/20";
         case UC_ADC_CH4_KK_1_20:
             return "ADC Ch4 KK 1/20";
+
+        case UC_HASH_COMMIT_LOW:
+            return "HASH_COMMIT_LOW";
+        case UC_HASH_COMMIT_HIGH:
+            return "HASH_COMMIT_HIGH";
+        case UC_TIME_STAMP:
+            return "TIME_STAMP";
     }
     return "";
 }
@@ -189,6 +203,14 @@ rp_calib_params_t convertUniversaltoCommon(rp_HPeModels_t model, rp_calib_params
 
     calib.dataStructureId = param->dataStructureId;
     calib.wpCheck = param->wpCheck;
+
+    GET_PARAMETER_NO_ERROR(calib.timeStamp, UC_TIME_STAMP, param)
+
+    uint32_t hash_low, hash_high;
+    GET_PARAMETER_NO_ERROR(hash_low, UC_HASH_COMMIT_LOW, param)
+    GET_PARAMETER_NO_ERROR(hash_high, UC_HASH_COMMIT_HIGH, param)
+    calib.hash_commit = ((uint64_t)hash_high) << 32 | hash_low;
+
     switch (model) {
         case STEM_125_10_v1_0:
         case STEM_125_14_v1_0:
@@ -508,10 +530,23 @@ rp_calib_params_t convertUniversaltoCommon(rp_HPeModels_t model, rp_calib_params
     return calib;
 }
 
-bool convertUniversal(rp_HPeModels_t model, rp_calib_params_t* param, rp_calib_params_universal_t* out) {
+bool convertUniversal(rp_HPeModels_t model, rp_calib_params_t* param, rp_calib_params_universal_t* out, bool updateTSandHASH) {
     out->dataStructureId = param->dataStructureId;
     out->wpCheck = param->wpCheck;
+
     int count = 0;
+
+    if (!updateTSandHASH) {
+        SET_PARAMETER(UC_HASH_COMMIT_LOW, (uint32_t)param->hash_commit)
+        SET_PARAMETER(UC_HASH_COMMIT_HIGH, (uint32_t)(param->hash_commit >> 32))
+        SET_PARAMETER(UC_TIME_STAMP, param->timeStamp)
+    } else {
+        uint64_t hash = getHashCommit();
+        SET_PARAMETER(UC_HASH_COMMIT_LOW, (uint32_t)hash)
+        SET_PARAMETER(UC_HASH_COMMIT_HIGH, (uint32_t)(hash >> 32))
+        SET_PARAMETER(UC_TIME_STAMP, getCurrentTimeY2K())
+    }
+
     switch (model) {
         case STEM_125_10_v1_0:
         case STEM_125_14_v1_0:
@@ -896,6 +931,10 @@ rp_calib_params_t getDefaultUniversal(rp_HPeModels_t model, bool setFilterZero, 
 
     rp_calib_params_t calib;
     memset(&calib, 0, sizeof(rp_calib_params_t));
+
+    calib.timeStamp = getCurrentTimeY2K();
+    calib.hash_commit = getHashCommit();
+
     switch (model) {
         case STEM_125_10_v1_0:
         case STEM_125_14_v1_0:

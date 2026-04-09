@@ -4,11 +4,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <chrono>
 #include "rp_log.h"
+
+#define XSTR(s) STR(s)
+#define STR(s) #s
+
+#ifndef REVISION
+#define REVISION_STR "FFFFFFFF"
+#else
+#define REVISION_STR XSTR(REVISION)
+#endif
 
 static const char eeprom_device[] = "/sys/bus/i2c/devices/0-0050/eeprom";
 static const int eeprom_calib_off = 0x0000;
 static const int eeprom_calib_factory_off = 0x1c00;
+
+// Constant: Number of seconds between Unix Epoch (1970-01-01) and Y2K (2000-01-01)
+const uint64_t SECONDS_1970_TO_2000 = 946684800ULL;
 
 uint32_t calibBaseScaleFromVoltage(float voltageScale, bool uni_is_calib) {
     uint64_t baseCalib = uni_is_calib ? 0x10000000 : (uint64_t)1 << 32;
@@ -1271,4 +1284,65 @@ bool isUniversalCalib(uint16_t dataStructureId) {
     if (dataStructureId == RP_HW_PACK_ID_V6)
         return true;
     return false;
+}
+
+/**
+ * Compresses a 64-bit Unix timestamp into a 32-bit offset from the year 2000.
+ * This format supports dates up to February 2106.
+ */
+uint32_t compressToYear2000(uint64_t unixTimestamp) {
+    // If the date is before the year 2000, return 0 as a fallback
+    if (unixTimestamp < SECONDS_1970_TO_2000) {
+        return 0;
+    }
+
+    // Subtract the offset and cast to 32-bit (dropping milliseconds if they were present)
+    return static_cast<uint32_t>(unixTimestamp - SECONDS_1970_TO_2000);
+}
+
+uint32_t getCurrentTimeY2K() {
+    // 1. Get the current time point from the system clock
+    auto now = std::chrono::system_clock::now();
+
+    // 2. Convert the time point to a Unix timestamp (seconds since 1970)
+    auto duration = now.time_since_epoch();
+    uint64_t unixTimestamp = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
+
+    // 3. Apply the offset logic
+    if (unixTimestamp < SECONDS_1970_TO_2000) {
+        return 0;
+    }
+
+    return static_cast<uint32_t>(unixTimestamp - SECONDS_1970_TO_2000);
+}
+
+/**
+ * Converts a Y2K-offset uint32_t into a formatted string.
+ */
+std::string formatY2KTimestamp(uint32_t y2kTimestamp) {
+    // 1. Convert Y2K offset back to standard Unix Time (seconds since 1970)
+    std::time_t unixTime = static_cast<std::time_t>(y2kTimestamp + SECONDS_1970_TO_2000);
+
+    // 2. Convert to local time structure (or gmtime for UTC)
+    std::tm* timeInfo = std::localtime(&unixTime);
+
+    // 3. Format the string
+    char buffer[20];  // Buffer for "YYYY-MM-DD HH:MM:SS\0"
+    std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", timeInfo);
+
+    return std::string(buffer);
+}
+
+/**
+ * Expands a 32-bit Y2K-based timestamp back into a standard 64-bit Unix timestamp.
+ */
+uint64_t expandFromYear2000(uint32_t y2kTimestamp) {
+    // Add the offset back to the Y2K value and return as 64-bit to prevent overflow
+    return static_cast<uint64_t>(y2kTimestamp) + SECONDS_1970_TO_2000;
+}
+
+uint64_t getHashCommit() {
+    // We take the prefix of the commit hash and convert it to a 64-bit integer.
+    // std::strtoull parses the string as a hexadecimal number (base 16).
+    return std::strtoull(REVISION_STR, nullptr, 16);
 }

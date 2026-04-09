@@ -148,6 +148,9 @@ typedef struct rp_calib_params_t {
     char dataStructureId;  ///< Data structure identifier
     char wpCheck;          ///< Write protection check
 
+    uint32_t timeStamp;    /// Packed time in seconds since 01-01-2000 00:00:00
+    uint64_t hash_commit;  /// Commit hash
+
     uint8_t fast_adc_count_1_1;               ///< ADC count for 1:1 ratio
     channel_calib_t fast_adc_1_1[4];          ///< ADC calibration (1:1)
     channel_filter_t fast_adc_filter_1_1[4];  ///< ADC filters (1:1)

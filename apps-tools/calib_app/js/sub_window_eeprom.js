@@ -352,6 +352,23 @@
     }
 
     SW.setEppromValuesInDialog = function(new_params){
+
+        let  formatY2KTimestamp = function(y2kTimestamp) {
+            const SECONDS_1970_TO_2000 = 946684800;
+            const date = new Date((y2kTimestamp + SECONDS_1970_TO_2000) * 1000);
+
+            const pad = (n) => n.toString().padStart(2, '0');
+
+            const year = date.getUTCFullYear();
+            const month = pad(date.getUTCMonth() + 1);
+            const day = pad(date.getUTCDate());
+            const hours = pad(date.getUTCHours());
+            const minutes = pad(date.getUTCMinutes());
+            const seconds = pad(date.getUTCSeconds());
+
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }
+
         console.log(new_params.value)
         const table = document.getElementById('EEPROM_CALIB_TABLE');
         if (!table) return;
@@ -396,8 +413,13 @@
                         let hexValue = '';
                         try {
                             if (!isNaN(num)) {
-                                const intValue = new Uint32Array([num])[0];
-                                hexValue = '0x' + intValue.toString(16).toUpperCase().padStart(8, '0');
+                                if (columns[1] !== "102"){
+                                    const intValue = new Uint32Array([num])[0];
+                                    hexValue = '0x' + intValue.toString(16).toUpperCase().padStart(8, '0');
+                                }else{
+                                    const intValue = new Uint32Array([num])[0];
+                                    hexValue = formatY2KTimestamp(intValue)
+                                }
                             } else {
                                 hexValue = 'Invalid number';
                             }
