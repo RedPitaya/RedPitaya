@@ -208,7 +208,7 @@ int gen_setAmplitudeAndOffsetOrigin(rp_channel_t channel) {
     return generate_setAmplitudeAndOffsetOrigin(channel, g_channels[channel].gain);
 }
 
-int gen_setAmplitude(rp_channel_t channel, float amplitude) {
+int gen_setAmplitudeCheck(rp_channel_t channel, float amplitude) {
 
     CHECK_CHANNEL
 
@@ -217,6 +217,19 @@ int gen_setAmplitude(rp_channel_t channel, float amplitude) {
     if (gen_checkAmplitudeAndOffset(channel, amplitude * koff, g_channels[channel].offset * koff) != RP_OK) {
         return RP_EOOR;
     }
+
+    return RP_OK;
+}
+
+int gen_setAmplitude(rp_channel_t channel, float amplitude) {
+
+    CHECK_CHANNEL
+
+    float koff = g_channels[channel].load_mode == RP_GEN_50Ohm ? 2.0 : 1.0;
+
+    int ret = gen_setAmplitudeCheck(channel, amplitude);
+    if (ret != RP_OK)
+        return ret;
 
     g_channels[channel].amplitude = amplitude;
     return generate_setAmplitude(channel, g_channels[channel].gain, amplitude * koff);
@@ -231,7 +244,7 @@ int gen_getAmplitude(rp_channel_t channel, float* amplitude) {
     return RP_OK;
 }
 
-int gen_setOffset(rp_channel_t channel, float offset) {
+int gen_setOffsetCheck(rp_channel_t channel, float offset) {
 
     CHECK_CHANNEL
 
@@ -240,6 +253,19 @@ int gen_setOffset(rp_channel_t channel, float offset) {
     if (gen_checkAmplitudeAndOffset(channel, g_channels[channel].amplitude * koff, offset * koff) != RP_OK) {
         return RP_EOOR;
     }
+
+    return RP_OK;
+}
+
+int gen_setOffset(rp_channel_t channel, float offset) {
+
+    CHECK_CHANNEL
+
+    float koff = g_channels[channel].load_mode == RP_GEN_50Ohm ? 2.0 : 1.0;
+
+    int ret = gen_setOffsetCheck(channel, offset);
+    if (ret != RP_OK)
+        return ret;
 
     g_channels[channel].offset = offset;
 
@@ -495,20 +521,6 @@ int gen_setArbWaveform(rp_channel_t channel, float* data, uint32_t length) {
         ERROR_LOG("Can't get fast DAC sign value");
         return RP_NOTS;
     }
-
-    // // Check if data is normalized
-    // float min = FLT_MAX, max = -FLT_MAX;  // initial values
-    // uint32_t i;
-    // for (i = 0; i < length; i++) {
-    //     if (data[i] < min)
-    //         min = data[i];
-    //     if (data[i] > max)
-    //         max = data[i];
-    // }
-    // if (min < (is_sign ? -fs : 0) || max > fs) {
-    //     ERROR_LOG("The signal is greater than acceptable.");
-    //     return RP_ENN;
-    // }
 
     // Save data
     float* pointer = g_channels[channel].arbitraryData;
@@ -779,21 +791,6 @@ int gen_setBurstPeriod(rp_channel_t channel, float period) {
         ERROR_LOG("Memory size not set for AXI mode")
         return RP_EOOR;
     }
-
-    // // For non-axi mode, the buffer length is taken as 1. Since the calculation is carried out through the frequency of the signal, which is generated in 1 time.
-    // int samplesCount = axi_enable ? g_channels[channel].axi_reserved_samples_count : 1;
-    // double freq = axi_enable ? adc_rate / axi_decimation : g_channels[channel].frequency;
-
-    // uint32_t burstCount = g_channels[channel].burstCount;
-    // uint32_t delay = 0;
-
-    // uint32_t sigLen = (((double)samplesCount) / freq) * burstCount * NANO;
-    // // period = signal_time * burst_count + delay_time
-    // if (period < sigLen) {
-    //     period = sigLen;
-    // }
-
-    // delay = period - sigLen;
 
     // TRACE("freq %f sigLen %d burstCount %d period %d delay %d", freq, sigLen, burstCount, period, delay)
 
@@ -1192,11 +1189,37 @@ int gen_setGainOut(rp_channel_t channel, rp_gen_gain_t mode) {
     } else {
         return status;
     }
-    int ret = gen_setAmplitude(channel, g_channels[channel].amplitude);
+
+    // Checking values ​​before installation in FPGA
+    auto ret = gen_setAmplitudeCheck(channel, g_channels[channel].amplitude);
+    if (ret) {
+        return ret;
+    }
+
+    ret = gen_setOffsetCheck(channel, g_channels[channel].offset);
+    if (ret) {
+        return ret;
+    }
+
+    ret = gen_setAmplitude(channel, g_channels[channel].amplitude);
     if (ret != RP_OK) {
         return ret;
     }
-    return gen_setOffset(channel, g_channels[channel].offset);
+
+    ret = gen_setOffset(channel, g_channels[channel].offset);
+    if (ret != RP_OK) {
+        return ret;
+    }
+    ret = gen_setInitGenValue(channel, g_channels[channel].initValue);
+    if (ret != RP_OK) {
+        return ret;
+    }
+    ret = gen_setBurstLastValue(channel, g_channels[channel].burstLastValue);
+    if (ret != RP_OK) {
+        return ret;
+    }
+
+    return RP_OK;
 }
 
 int gen_getGainOut(rp_channel_t channel, rp_gen_gain_t* status) {

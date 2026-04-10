@@ -738,8 +738,40 @@ int generate_setBurstLastValue(rp_channel_t channel, rp_gen_gain_t gain, float a
         return RP_NOTS;
     }
 
+    bool x5_gain = false;
+    if (rp_HPGetIsGainDACx5(&x5_gain) != RP_HP_OK) {
+        ERROR_LOG("Can't get fast DAC x5 gain");
+        return RP_NOTS;
+    }
+
+    if (!x5_gain && gain == RP_GAIN_5X) {
+        ERROR_LOG("Can't set gain on unsupported board");
+        return RP_NOTS;
+    }
+
+    double gain_calib;
+    int32_t offset;
+    int ret = 0;
+    switch (gain) {
+        case RP_GAIN_1X:
+            ret = rp_CalibGetFastDACCalibValue(convertCh(channel), RP_GAIN_CALIB_1X, &gain_calib, &offset);
+            break;
+        case RP_GAIN_5X:
+            ret = rp_CalibGetFastDACCalibValue(convertCh(channel), RP_GAIN_CALIB_5X, &gain_calib, &offset);
+            break;
+        default:
+            ERROR_LOG("Unknown gain: %d", gain);
+            return RP_EOOR;
+            break;
+    }
+
+    if (ret != RP_HW_CALIB_OK) {
+        ERROR_LOG("Get calibaration: %d", ret);
+        return RP_EOOR;
+    }
+
     /// !!! No calibration required, calibration occurs at the FPGA level
-    uint32_t cnt = cmn_convertToCnt(amplitude, bits, fsBase, is_sign, 1.0, 0);
+    uint32_t cnt = cmn_convertToCnt(amplitude * gain_calib, bits, fsBase, is_sign, 1.0, 0);
     cmn_Debug("[Ch%d] generate->BurstFinalValue_ch <- 0x%X", channel, cnt);
     CHANNEL_ACTION(channel, generate->BurstFinalValue_ch1 = cnt, generate->BurstFinalValue_ch2 = cnt)
     return RP_OK;
@@ -783,8 +815,40 @@ int generate_setInitGenValue(rp_channel_t channel, rp_gen_gain_t gain, float amp
         return RP_NOTS;
     }
 
+    bool x5_gain = false;
+    if (rp_HPGetIsGainDACx5(&x5_gain) != RP_HP_OK) {
+        ERROR_LOG("Can't get fast DAC x5 gain");
+        return RP_NOTS;
+    }
+
+    if (!x5_gain && gain == RP_GAIN_5X) {
+        ERROR_LOG("Can't set gain on unsupported board");
+        return RP_NOTS;
+    }
+
+    double gain_calib;
+    int32_t offset;
+    int ret = 0;
+    switch (gain) {
+        case RP_GAIN_1X:
+            ret = rp_CalibGetFastDACCalibValue(convertCh(channel), RP_GAIN_CALIB_1X, &gain_calib, &offset);
+            break;
+        case RP_GAIN_5X:
+            ret = rp_CalibGetFastDACCalibValue(convertCh(channel), RP_GAIN_CALIB_5X, &gain_calib, &offset);
+            break;
+        default:
+            ERROR_LOG("Unknown gain: %d", gain);
+            return RP_EOOR;
+            break;
+    }
+
+    if (ret != RP_HW_CALIB_OK) {
+        ERROR_LOG("Get calibaration: %d", ret);
+        return RP_EOOR;
+    }
+
     /// !!! No calibration required, calibration occurs at the FPGA level
-    uint32_t cnt = cmn_convertToCnt(amplitude, bits, fsBase, is_sign, 1.0, 0);
+    uint32_t cnt = cmn_convertToCnt(amplitude * gain_calib, bits, fsBase, is_sign, 1.0, 0);
     cmn_Debug("[Ch%d] generate->initGenValue_ch <- 0x%X", channel, cnt);
     CHANNEL_ACTION(channel, generate->initGenValue_ch1 = cnt, generate->initGenValue_ch2 = cnt)
     return RP_OK;
