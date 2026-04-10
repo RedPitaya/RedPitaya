@@ -53,11 +53,11 @@ void synthesis_arb_burst(CFloatBinarySignal* signal, const float* data, uint32_t
     float current_time = 0;
     int rep = 0;
     bool in_burst = false;
-
-    for (int i = position; i < sigSize; i++) {
+    int i = 0;
+    for (i = position; i < sigSize; i++) {
         if (rep >= reps) {
             // All repetitions done - fill with last value
-            (*signal)[i] = data[_size - 1] * amp + off + showOff;
+            (*signal)[i] = lastV * amp + off + showOff;
             continue;
         }
 
