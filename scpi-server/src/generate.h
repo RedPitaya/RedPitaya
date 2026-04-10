@@ -48,6 +48,8 @@ scpi_result_t RP_GenBurstPeriod(scpi_t* context);
 scpi_result_t RP_GenBurstPeriodQ(scpi_t* context);
 scpi_result_t RP_GenBurstLastValue(scpi_t* context);
 scpi_result_t RP_GenBurstLastValueQ(scpi_t* context);
+scpi_result_t RP_GenUseLastSample(scpi_t* context);
+scpi_result_t RP_GenUseLastSampleQ(scpi_t* context);
 
 scpi_result_t RP_GenInitValue(scpi_t* context);
 scpi_result_t RP_GenInitValueQ(scpi_t* context);

@@ -649,6 +649,47 @@ scpi_result_t RP_GenBurstLastValueQ(scpi_t* context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_GenUseLastSample(scpi_t* context) {
+    rp_channel_t channel = RP_CH_1;
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK) {
+        return SCPI_RES_ERR;
+    }
+    scpi_bool_t value = FALSE;
+    // read first parameter (OFF,ON)
+    if (!SCPI_ParamBool(context, &value, false)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+    auto result = rp_GenSetUseLastSample(channel, value);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to set 'use last sample' mode: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_GenUseLastSampleQ(scpi_t* context) {
+    rp_channel_t channel = RP_CH_1;
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK) {
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+
+    bool value = false;
+    auto result = rp_GenGetUseLastSample(channel, &value);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to get 'use last sample' mode: %s", rp_GetError(result));
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+    SCPI_ResultMnemonic(context, value ? "ON" : "OFF");
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_GenInitValue(scpi_t* context) {
     rp_channel_t channel = RP_CH_1;
     float value = 0;

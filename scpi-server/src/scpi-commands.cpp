@@ -314,6 +314,8 @@ static const scpi_command_t scpi_commands[] = {
     SCPI_CMD("SOUR#:BURS:INITValue?", RP_GenInitValueQ),
     SCPI_CMD("SOUR#:BURS:LASTValue", RP_GenBurstLastValue),
     SCPI_CMD("SOUR#:BURS:LASTValue?", RP_GenBurstLastValueQ),
+    SCPI_CMD("SOUR#:BURS:USE:LASTSample", RP_GenUseLastSample),
+    SCPI_CMD("SOUR#:BURS:USE:LASTSample?", RP_GenUseLastSampleQ),
     SCPI_CMD("SOUR#:INITValue", RP_GenInitValue),
     SCPI_CMD("SOUR#:INITValue?", RP_GenInitValueQ),
 

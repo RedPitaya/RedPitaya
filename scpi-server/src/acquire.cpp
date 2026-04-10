@@ -485,7 +485,7 @@ scpi_result_t RP_AcqAveragingChQ(scpi_t* context) {
 
 scpi_result_t RP_Acq16BitMode(scpi_t* context) {
     scpi_bool_t value = FALSE;
-    // read first parameter AVERAGING (OFF,ON)
+    // read first parameter (OFF,ON)
     if (!SCPI_ParamBool(context, &value, false)) {
         SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing first parameter.");
         return SCPI_RES_ERR;
@@ -500,7 +500,6 @@ scpi_result_t RP_Acq16BitMode(scpi_t* context) {
 }
 
 scpi_result_t RP_Acq16BitModeQ(scpi_t* context) {
-    // get averaging
     bool value = false;
     auto result = rp_AcqGet16BitMode(&value);
     if (RP_OK != result) {
