@@ -365,7 +365,7 @@ void synthesis_square_burst(CFloatBinarySignal* signal, float freq, float phase,
                 (*signal)[i] = lastSample;
             } else {
                 // PAUSE BETWEEN BURSTS
-                lastSample = useLastSample ? 0 : finalValue;
+                lastSample = useLastSample ? baseLine : finalValue;
                 (*signal)[i] = lastSample;
             }
         } else {
@@ -416,7 +416,7 @@ void synthesis_rampUp_burst(CFloatBinarySignal* signal, float freq, float phase,
     } else if (position >= sigSize) {
         position = sigSize - 1;
     }
-
+    auto baseLine = off + showOff;
     for (int i = 0; i < position; i++) {
         (*signal)[i] = initV * 2.0 + off + showOff;
     }
@@ -429,7 +429,7 @@ void synthesis_rampUp_burst(CFloatBinarySignal* signal, float freq, float phase,
     for (int i = position; i < sigSize; i++) {
         if (rep >= reps) {
             // All repetitions done - fill with offset
-            (*signal)[i] = useLastSample ? 0 : lastV * 2.0 + off + showOff;
+            (*signal)[i] = useLastSample ? baseLine : lastV * 2.0 + off + showOff;
             continue;
         }
 
@@ -452,7 +452,7 @@ void synthesis_rampUp_burst(CFloatBinarySignal* signal, float freq, float phase,
 
         } else if (current_time <= period_duration) {
             // In pause - fill with offset
-            (*signal)[i] = useLastSample ? 0 : lastV * 2.0 + off + showOff;
+            (*signal)[i] = useLastSample ? baseLine : lastV * 2.0 + off + showOff;
         } else {
             // Period completed - move to next repetition
             global_phase_offset += burst_duration;
@@ -462,7 +462,7 @@ void synthesis_rampUp_burst(CFloatBinarySignal* signal, float freq, float phase,
                 i--;  // Reprocess this point in the next burst
                 continue;
             } else {
-                (*signal)[i] = useLastSample ? 0 : lastV * 2.0 + off + showOff;
+                (*signal)[i] = useLastSample ? baseLine : lastV * 2.0 + off + showOff;
             }
         }
 
