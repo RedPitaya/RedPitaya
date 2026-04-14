@@ -80,8 +80,9 @@
     OSC.config.socket_url = 'ws://' + window.location.host + '/wss';
     OSC.rp_model = "";
     OSC.rp_model_id = undefined;
-    OSC.adc_channes = 2;
+    OSC.adc_channels = 2;
     OSC.adc_max_rate = 0;
+    OSC.dac_channels = 2;
     OSC.high_z_mode = false;
     OSC.gen_max_amp = 0;
     OSC.arb_list = undefined;
@@ -681,6 +682,9 @@
     OSC.param_callbacks["SOUR1_B_LAST_VOLT"] = OSC.updateGenBurstLast;
     OSC.param_callbacks["SOUR2_B_LAST_VOLT"] = OSC.updateGenBurstLast;
 
+    OSC.param_callbacks["SOUR1_BURST_USE_LAST"] = OSC.updateGenUseLastSample;
+    OSC.param_callbacks["SOUR2_BURST_USE_LAST"] = OSC.updateGenUseLastSample;
+
     OSC.param_callbacks["SOUR1_TEMP_RUNTIME"] = OSC.updateOverheatBlockHandler;
     OSC.param_callbacks["SOUR2_TEMP_RUNTIME"] = OSC.updateOverheatBlockHandler;
 
@@ -852,7 +856,7 @@
         }
 
         if (new_params['ADC_COUNT']){
-            OSC.adc_channes = new_params['ADC_COUNT'].value;
+            OSC.adc_channels = new_params['ADC_COUNT'].value;
         }
 
         if (new_params['ADC_RATE']){
@@ -1098,7 +1102,7 @@
             OSC.graphs["ch1"].plot.setColors(colorsArr);
             OSC.graphs["ch1"].plot.resize();
             var canvas = OSC.graphs["ch1"].plot.getCanvas()
-            for(let i = 1; i <= OSC.adc_channes; i++){
+            for(let i = 1; i <= OSC.adc_channels; i++){
                 if (OSC.taMode["CH"+i])
                     OSC.taMode["CH"+i].setNewSizeWGL(canvas.width,canvas.height)
             }
@@ -1107,7 +1111,7 @@
             OSC.graphs["ch1"].plot.setupGrid();
             OSC.graphs["ch1"].plot.setData(pointArr);
             OSC.graphs["ch1"].plot.draw();
-            for(let i = 1; i <= OSC.adc_channes; i++){
+            for(let i = 1; i <= OSC.adc_channels; i++){
                 if (OSC.taMode["CH"+i])
                     OSC.taMode["CH"+i].resetData()
             }
@@ -1160,7 +1164,7 @@
             }
 
             let isInit = true
-            for(let i = 1; i <= OSC.adc_channes; i++){
+            for(let i = 1; i <= OSC.adc_channels; i++){
                 OSC.taMode["CH"+i] = new TAMode()
                 OSC.taMode["CH"+i].init()
                 if (OSC.taMode["CH"+i].isInit){
@@ -1263,7 +1267,7 @@
             id = "OSC_MATH_SRC2"
         }
 
-        for(var i = 1 ; i <= OSC.adc_channes; i++){
+        for(var i = 1 ; i <= OSC.adc_channels; i++){
             if (id.startsWith("OSC_CH"+i+"_IN_GAIN")){
                 id = "OSC_CH"+i+"_IN_GAIN"
             }
@@ -1278,6 +1282,12 @@
 
             if (id.startsWith("OSC_CH"+i+"_IN_AC_DC")){
                 id = "OSC_CH"+i+"_IN_AC_DC"
+            }
+        }
+
+        for(var i = 1 ; i <= OSC.dac_channels; i++){
+            if (id.startsWith("SOUR"+i+"_BURST_USE_LAST")){
+                id = "SOUR"+i+"_BURST_USE_LAST"
             }
         }
 
@@ -1312,7 +1322,7 @@
                 value = OSC.modifyForSendInOffsetZeroPlot("2",value)
             }
 
-            if (OSC.adc_channes > 2){
+            if (OSC.adc_channels > 2){
                 if (key == "GPOS_OFFSET_CH3") {
                     value = OSC.modifyForSendInOffsetPlot("3",value)
                 }
@@ -1322,7 +1332,7 @@
                 }
             }
 
-            if (OSC.adc_channes > 3){
+            if (OSC.adc_channels > 3){
                 if (key == "GPOS_OFFSET_CH4") {
                     value = OSC.modifyForSendInOffsetPlot("4",value)
                 }
@@ -1344,7 +1354,7 @@
                 value = OSC.convertMathUnitToValue(value);
             }
 
-            for(var i = 1 ; i <= OSC.adc_channes; i++){
+            for(var i = 1 ; i <= OSC.adc_channels; i++){
                 if (id == "OSC_CH"+i+"_IN_GAIN"){
 
                 }

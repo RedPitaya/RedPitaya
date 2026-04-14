@@ -364,6 +364,12 @@ OSC.updateMaxLimitOnLoadHandler = function(new_params , param_name) {
     }
 }
 
+OSC.updateGenUseLastSample = function(param_name,name){
+    var radios = $('input[name="' + name + '"]');
+    radios.closest('.btn-group').children('.btn.active').removeClass('active');
+    radios.eq([+OSC.params.orig[name].value]).prop('checked', true).parent().addClass('active');
+}
+
 OSC.updateMaxLimitOnLoad = function(ch, value) {
     if (OSC.high_z_mode == true) {
         var max_amp = OSC.gen_max_amp;

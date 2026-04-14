@@ -68,6 +68,8 @@ CBooleanParameter outGenSyncReset("SYNC_GEN", CBaseParameter::RW, false, 0);
 CFloatParameter outBurstInit[MAX_DAC_CHANNELS] = INIT2("SOUR", "_B_INIT_VOLT", CBaseParameter::RW, 0, 0, -LEVEL_AMPS_MAX, LEVEL_AMPS_MAX, CONFIG_VAR);
 CFloatParameter outBurstLast[MAX_DAC_CHANNELS] = INIT2("SOUR", "_B_LAST_VOLT", CBaseParameter::RW, 0, 0, -LEVEL_AMPS_MAX, LEVEL_AMPS_MAX, CONFIG_VAR);
 
+CIntParameter outBurstUseLastSample[MAX_DAC_CHANNELS] = INIT2("SOUR", "_BURST_USE_LAST", CBaseParameter::RW, 1, 0, 0, 1, CONFIG_VAR);
+
 CFloatParameter outExtTrigDeb("SOUR_DEB", CBaseParameter::RW, 500, 0, 0.008, 8338, CONFIG_VAR);
 
 CBooleanParameter outImpZmode("SOUR_IMPEDANCE_Z_MODE", CBaseParameter::RO, is_z_present, 0);
@@ -140,7 +142,7 @@ auto generate(rp_channel_t channel, float tscale) -> void {
     rp_gen_sweep_mode_t sweep_mode;
     rp_gen_sweep_dir_t sweep_dir;
     rp_gen_mode_t gen_mode;
-    float frequency, phase, amplitude, offset, showOff, duty_cycle, freqSweepStart, freqSweepEnd, riseTime, fallTime, timeOffset, lastValue, initValue, burstPeriod;
+    float frequency, phase, amplitude, offset, showOff, duty_cycle, freqSweepStart, freqSweepEnd, riseTime, fallTime, timeOffset, lastValue, initValue, burstPeriod, useLastSample;
     int burstCount, burstReps;
     // std::vector<float> data;
 
@@ -165,6 +167,7 @@ auto generate(rp_channel_t channel, float tscale) -> void {
     fallTime = outFallTime[channel].Value();
     initValue = outBurstInit[channel].Value();
     lastValue = outBurstLast[channel].Value();
+    useLastSample = outBurstUseLastSample[channel].Value();
     timeOffset = getOSCTimeOffset();
 
     // float tscale = atof(inTimeScale.Value().c_str());
@@ -181,7 +184,8 @@ auto generate(rp_channel_t channel, float tscale) -> void {
                 if (gen_mode == RP_GEN_MODE_CONTINUOUS)
                     synthesis_arb(signal, data, size, frequency, amplitude, offset, showOff, tscale);
                 else
-                    synthesis_arb_burst(signal, data, size, frequency, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale, timeOffset, initValue, lastValue);
+                    synthesis_arb_burst(
+                        signal, data, size, frequency, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale, timeOffset, initValue, lastValue, useLastSample);
             }
         }
     } else {
@@ -195,51 +199,84 @@ auto generate(rp_channel_t channel, float tscale) -> void {
                 if (gen_mode == RP_GEN_MODE_CONTINUOUS)
                     synthesis_sin(signal, frequency, phase, amplitude, offset, showOff, tscale);
                 else
-                    synthesis_sin_burst(signal, frequency, phase, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale, timeOffset, initValue, lastValue);
+                    synthesis_sin_burst(
+                        signal, frequency, phase, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale, timeOffset, initValue, lastValue, useLastSample);
                 break;
             case RP_WAVEFORM_TRIANGLE:
                 if (gen_mode == RP_GEN_MODE_CONTINUOUS)
                     synthesis_triangle(signal, frequency, phase, amplitude, offset, showOff, tscale);
                 else
-                    synthesis_triangle_burst(signal, frequency, phase, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale, timeOffset, initValue, lastValue);
+                    synthesis_triangle_burst(
+                        signal, frequency, phase, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale, timeOffset, initValue, lastValue, useLastSample);
                 break;
             case RP_WAVEFORM_SQUARE:
                 if (gen_mode == RP_GEN_MODE_CONTINUOUS)
                     synthesis_square(signal, frequency, phase, amplitude, offset, showOff, tscale, riseTime, fallTime);
                 else
-                    synthesis_square_burst(
-                        signal, frequency, phase, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale, riseTime, fallTime, timeOffset, initValue, lastValue);
+                    synthesis_square_burst(signal,
+                                           frequency,
+                                           phase,
+                                           amplitude,
+                                           offset,
+                                           showOff,
+                                           burstCount,
+                                           burstPeriod,
+                                           burstReps,
+                                           tscale,
+                                           riseTime,
+                                           fallTime,
+                                           timeOffset,
+                                           initValue,
+                                           lastValue,
+                                           useLastSample);
                 break;
             case RP_WAVEFORM_RAMP_UP:
                 if (gen_mode == RP_GEN_MODE_CONTINUOUS)
                     synthesis_rampUp(signal, frequency, phase, amplitude, offset, showOff, tscale);
                 else
-                    synthesis_rampUp_burst(signal, frequency, phase, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale, timeOffset, initValue, lastValue);
+                    synthesis_rampUp_burst(
+                        signal, frequency, phase, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale, timeOffset, initValue, lastValue, useLastSample);
                 break;
             case RP_WAVEFORM_RAMP_DOWN:
                 if (gen_mode == RP_GEN_MODE_CONTINUOUS)
                     synthesis_rampDown(signal, frequency, phase, amplitude, offset, showOff, tscale);
                 else
-                    synthesis_rampDown_burst(signal, frequency, phase, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale, timeOffset, initValue, lastValue);
+                    synthesis_rampDown_burst(
+                        signal, frequency, phase, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale, timeOffset, initValue, lastValue, useLastSample);
                 break;
             case RP_WAVEFORM_DC:
                 if (gen_mode == RP_GEN_MODE_CONTINUOUS)
                     synthesis_DC(signal, frequency, phase, amplitude, offset, showOff);
                 else
-                    synthesis_DC_burst(signal, frequency, phase, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale, timeOffset, initValue, lastValue);
+                    synthesis_DC_burst(
+                        signal, frequency, phase, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale, timeOffset, initValue, lastValue, useLastSample);
                 break;
             case RP_WAVEFORM_DC_NEG:
                 if (gen_mode == RP_GEN_MODE_CONTINUOUS)
                     synthesis_DC_NEG(signal, frequency, phase, amplitude, offset, showOff);
                 else
-                    synthesis_DC_NEG_burst(signal, frequency, phase, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale, timeOffset, initValue, lastValue);
+                    synthesis_DC_NEG_burst(
+                        signal, frequency, phase, amplitude, offset, showOff, burstCount, burstPeriod, burstReps, tscale, timeOffset, initValue, lastValue, useLastSample);
                 break;
             case RP_WAVEFORM_PWM:
                 if (gen_mode == RP_GEN_MODE_CONTINUOUS)
                     synthesis_PWM(signal, frequency, phase, amplitude, offset, showOff, duty_cycle, tscale);
                 else
-                    synthesis_PWM_burst(
-                        signal, frequency, phase, amplitude, offset, showOff, duty_cycle, burstCount, burstPeriod, burstReps, tscale, timeOffset, initValue, lastValue);
+                    synthesis_PWM_burst(signal,
+                                        frequency,
+                                        phase,
+                                        amplitude,
+                                        offset,
+                                        showOff,
+                                        duty_cycle,
+                                        burstCount,
+                                        burstPeriod,
+                                        burstReps,
+                                        tscale,
+                                        timeOffset,
+                                        initValue,
+                                        lastValue,
+                                        useLastSample);
                 break;
             case RP_WAVEFORM_SWEEP:
                 synthesis_sweep(signal, frequency, freqSweepStart, freqSweepEnd, sweep_mode, sweep_dir, phase, amplitude, offset, showOff, tscale);
@@ -309,6 +346,12 @@ auto setBurstParameters(bool force) -> void {
         if (IS_NEW(outBurstLast[ch]) || force) {
             if (rp_GenBurstLastValue(ch, outBurstLast[ch].NewValue()) == RP_OK) {
                 outBurstLast[ch].Update();
+            }
+        }
+
+        if (IS_NEW(outBurstUseLastSample[ch]) || force) {
+            if (rp_GenSetUseLastSample(ch, outBurstUseLastSample[ch].NewValue()) == RP_OK) {
+                outBurstUseLastSample[ch].Update();
             }
         }
 

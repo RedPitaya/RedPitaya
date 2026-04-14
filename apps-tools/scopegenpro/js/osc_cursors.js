@@ -134,7 +134,7 @@
 
         if (OSC.params.orig['OSC_TRIG_SOURCE'] !== undefined) {
 
-            if (OSC.params.orig['OSC_TRIG_SOURCE'].value < OSC.adc_channes) {
+            if (OSC.params.orig['OSC_TRIG_SOURCE'].value < OSC.adc_channels) {
                 var ots = OSC.params.orig['OSC_TRIG_SOURCE'].value + 1;
                 var ref_scale = "GPOS_SCALE_CH"+ots
                 var source_offset = OSC.params.orig['GPOS_OFFSET_CH'+ots].value;
@@ -246,7 +246,7 @@
         if (!OSC.state.trig_dragging && trig_sour !== undefined) {
 
             var show_in_channel = OSC.params.orig['CH'+(trig_sour+1)+'_SHOW'] === undefined ? undefined : OSC.params.orig['CH'+(trig_sour+1)+'_SHOW'].value;
-            if (trig_sour >= OSC.adc_channes){
+            if (trig_sour >= OSC.adc_channels){
                 show_in_channel = undefined
             }
 

@@ -1,5 +1,6 @@
 #include "sig_gen.h"
 #include <math.h>
+#include <algorithm>
 #include "rp_hw-profiles.h"
 
 /***************************************************************************************
@@ -24,7 +25,7 @@ void synthesis_arb(CFloatBinarySignal* signal, const float* data, uint32_t _size
 }
 
 void synthesis_arb_burst(CFloatBinarySignal* signal, const float* data, uint32_t _size, float freq, float amp, float off, float showOff, int burstCount, float periodBrust,
-                         int reps, float tscale, float timeOffset, float initV, float lastV) {
+                         int reps, float tscale, float timeOffset, float initV, float lastV, bool useLastSample) {
     auto sigSize = (*signal).GetSize();
     if (sigSize == 0)
         return;
@@ -35,6 +36,8 @@ void synthesis_arb_burst(CFloatBinarySignal* signal, const float* data, uint32_t
     float burst_duration = (float)burstCount / freq;
 
     float period_duration = (float)periodBrust / 1000000.0;
+
+    period_duration = std::max(burst_duration, period_duration);
 
     int offsetInPoints = std::round(-(timeOffset / 1000.0) / point_time);
     int position = sigSize / 2 + offsetInPoints;
@@ -47,7 +50,11 @@ void synthesis_arb_burst(CFloatBinarySignal* signal, const float* data, uint32_t
 
     // Fill beginning with offset + showOff
     for (int i = 0; i < position; i++) {
-        (*signal)[i] = initV + off + showOff;
+        (*signal)[i] = initV * 2.0 + off + showOff;
+    }
+
+    if (useLastSample) {
+        lastV = data[_size - 1];
     }
 
     float current_time = 0;
@@ -57,7 +64,7 @@ void synthesis_arb_burst(CFloatBinarySignal* signal, const float* data, uint32_t
     for (i = position; i < sigSize; i++) {
         if (rep >= reps) {
             // All repetitions done - fill with last value
-            (*signal)[i] = lastV * amp + off + showOff;
+            (*signal)[i] = lastV * 2.0 + off + showOff;
             continue;
         }
 
@@ -71,7 +78,7 @@ void synthesis_arb_burst(CFloatBinarySignal* signal, const float* data, uint32_t
         } else if (current_time <= period_duration) {
             // In pause - fill with last value
             in_burst = false;
-            (*signal)[i] = lastV + off + showOff;
+            (*signal)[i] = lastV * 2.0 + off + showOff;
         } else {
             // Period completed - move to next repetition
             rep++;
@@ -80,7 +87,7 @@ void synthesis_arb_burst(CFloatBinarySignal* signal, const float* data, uint32_t
                 i--;  // Reprocess this point in the next burst
                 continue;
             } else {
-                (*signal)[i] = lastV + off + showOff;
+                (*signal)[i] = lastV * 2.0 + off + showOff;
             }
         }
 
@@ -100,70 +107,62 @@ void synthesis_sin(CFloatBinarySignal* signal, float freq, float phase, float am
 }
 
 void synthesis_sin_burst(CFloatBinarySignal* signal, float freq, float phase, float amp, float off, float showOff, int burstCount, float period, int reps, float tscale,
-                         float timeOffset, float initV, float lastV) {
+                         float timeOffset, float initV, float lastV, bool useLastSample) {
     auto sigSize = (*signal).GetSize();
-    if (sigSize == 0)
+    if (sigSize <= 0)
         return;
 
-    phase *= -1;
+    phase *= -1.0f;
 
-    // Calculate time per point in seconds
-    float point_time = (tscale * 10.0) / (float)CH_SIGNAL_SIZE_DEFAULT / 1000.0;  // seconds
+    float point_time = (tscale * 10.0f) / (float)CH_SIGNAL_SIZE_DEFAULT / 1000.0f;
+    if (point_time <= 0)
+        return;
 
-    // Calculate phase increment per point
-    float delta_phase = 2 * M_PI * freq * point_time;
+    int pointsPerBurst = std::round((float)burstCount / freq / point_time);
+    int pointsPerPeriod = std::round((period / 1000000.0f) / point_time);
+    pointsPerPeriod = std::max(pointsPerBurst, pointsPerPeriod);
 
-    // Calculate exact number of points for burstCount sine periods
-    float burst_duration = (float)burstCount / freq;  // burst duration in seconds
+    int offsetInPoints = std::round(-(timeOffset / 1000.0f) / point_time);
+    int position = (sigSize / 2) + offsetInPoints;
+    position = std::clamp(position, 0, (int)sigSize);
 
-    // Calculate number of points for full period (burst + pause)
-    float period_duration = (float)period / 1000000.0;  // period duration in seconds
+    float delta_phase = 2.0f * (float)M_PI * freq * point_time;
+    float baseLine = off + showOff;  // The "zero" level of your signal
+    float lastSample = initV * 2.0f + baseLine;
 
-    int offsetInPoints = std::round(-(timeOffset / 1000.0) / point_time);
-
-    int position = sigSize / 2 + offsetInPoints;
-
-    if (position < 0) {
-        position = 0;
-    } else if (position >= sigSize) {
-        position = sigSize - 1;
-    }
-
-    float current_phase = phase;
-    float current_time = 0;
-    int x = 0;
-    int rep = 0;
-    bool pause = false;
-
+    // Fill initial buffer
     for (int i = 0; i < position; i++) {
-        (*signal)[i] = initV + off + showOff;
+        (*signal)[i] = lastSample;
     }
+
+    // Number of points to fade out to prevent clicks/offsets at the end of burst
+    // Usually 5-10 points is enough to smooth the transition
+    const int fadePoints = 5;
 
     for (int i = position; i < sigSize; i++) {
-        if (current_time <= burst_duration) {
-            (*signal)[i] = sin(current_phase) * amp + off + showOff;
-        } else if (current_time <= period_duration) {
-            (*signal)[i] = lastV + off + showOff;
-            pause = true;
-        } else {
-            if (rep >= reps - 1) {
-                (*signal)[i] = lastV + off + showOff;
-            } else {
-                rep++;
-                if (pause) {
-                    current_phase = phase;
-                    current_time -= period_duration;
-                    i--;
-                    continue;
-                } else {
-                    current_time -= burst_duration;
-                    i--;
-                    continue;
-                }
+        int relIdx = i - position;
+        int currentRep = relIdx / pointsPerPeriod;
+        int idxInPeriod = relIdx % pointsPerPeriod;
+
+        if (currentRep < reps && idxInPeriod < pointsPerBurst) {
+            float p = phase + (delta_phase * idxInPeriod);
+            float currentAmp = amp;
+
+            // Apply Fade Out at the very end of the burst active part
+            if (idxInPeriod > pointsPerBurst - fadePoints) {
+                float fadeFactor = (float)(pointsPerBurst - idxInPeriod) / (float)fadePoints;
+                currentAmp *= fadeFactor;
             }
+
+            lastSample = std::sin(p) * currentAmp + baseLine;
+            (*signal)[i] = lastSample;
+        } else {
+            // If not using last sample, smoothly return to lastV or baseLine
+            if (!useLastSample) {
+                lastSample = lastV * 2.0f + baseLine;
+            }
+            (*signal)[i] = lastSample;
         }
-        current_phase += delta_phase;
-        current_time += point_time;
     }
 }
 
@@ -179,7 +178,7 @@ void synthesis_triangle(CFloatBinarySignal* signal, float freq, float phase, flo
 }
 
 void synthesis_triangle_burst(CFloatBinarySignal* signal, float freq, float phase, float amp, float off, float showOff, int burstCount, float period, int reps, float tscale,
-                              float timeOffset, float initV, float lastV) {
+                              float timeOffset, float initV, float lastV, bool useLastSample) {
     auto sigSize = (*signal).GetSize();
     if (sigSize == 0)
         return;
@@ -198,6 +197,8 @@ void synthesis_triangle_burst(CFloatBinarySignal* signal, float freq, float phas
     // Calculate number of points for full period (burst + pause)
     float period_duration = (float)period / 1000000.0;  // period duration in seconds
 
+    period_duration = std::max(burst_duration, period_duration);
+
     int offsetInPoints = std::round(-(timeOffset / 1000.0) / point_time);
 
     int position = sigSize / 2 + offsetInPoints;
@@ -213,20 +214,22 @@ void synthesis_triangle_burst(CFloatBinarySignal* signal, float freq, float phas
     int x = 0;
     int rep = 0;
     bool pause = false;
+    float lastSample = 0;
 
     for (int i = 0; i < position; i++) {
-        (*signal)[i] = initV + off + showOff;
+        (*signal)[i] = initV * 2.0 + off + showOff;
     }
 
     for (int i = position; i < sigSize; i++) {
         if (current_time <= burst_duration) {
-            (*signal)[i] = (asin(sin(current_phase))) / M_PI * 2 * amp + off + showOff;
+            lastSample = (asin(sin(current_phase))) / M_PI * 2 * amp + off + showOff;
+            (*signal)[i] = lastSample;
         } else if (current_time <= period_duration) {
-            (*signal)[i] = lastV + off + showOff;
+            (*signal)[i] = useLastSample ? lastSample : lastV * 2.0 + off + showOff;
             pause = true;
         } else {
             if (rep >= reps - 1) {
-                (*signal)[i] = lastV + off + showOff;
+                (*signal)[i] = useLastSample ? lastSample : lastV * 2.0 + off + showOff;
             } else {
                 rep++;
                 if (pause) {
@@ -287,121 +290,89 @@ void synthesis_square(CFloatBinarySignal* signal, float freq, float phase, float
 }
 
 void synthesis_square_burst(CFloatBinarySignal* signal, float freq, float phase, float amp, float off, float showOff, int burstCount, float period, int reps, float tscale,
-                            float riseTime, float fallTime, float timeOffset, float initV, float lastV) {
+                            float riseTime, float fallTime, float timeOffset, float initV, float lastV, bool useLastSample) {
     auto sigSize = (*signal).GetSize();
-    if (sigSize == 0)
+    if (sigSize <= 0)
         return;
 
-    phase *= -1;
+    phase *= -1.0f;
 
-    float point_time = (tscale * 10.0) / (float)CH_SIGNAL_SIZE_DEFAULT / 1000.0;  // seconds
+    // 1. Time and Index Calculations
+    float point_time = (tscale * 10.0f) / (float)CH_SIGNAL_SIZE_DEFAULT / 1000.0f;
+    if (point_time <= 0)
+        return;
 
-    float burst_duration = (float)burstCount / freq;
+    int pointsPerBurst = std::round((float)burstCount / freq / point_time);
+    int pointsPerPeriod = std::round((period / 1000000.0f) / point_time);
+    pointsPerPeriod = std::max(pointsPerBurst, pointsPerPeriod);
 
-    float period_duration = (float)period / 1000000.0;
+    float pointsPerSquareCycle = 1.0f / freq / point_time;
+    int risePoints = std::max(1, (int)std::round(riseTime / 1000000.0f / point_time));
+    int fallPoints = std::max(1, (int)std::round(fallTime / 1000000.0f / point_time));
 
-    int offsetInPoints = std::round(-(timeOffset / 1000.0) / point_time);
-    int position = sigSize / 2 + offsetInPoints;
+    int offsetInPoints = std::round(-(timeOffset / 1000.0f) / point_time);
+    int position = std::clamp((int)(sigSize / 2 + offsetInPoints), 0, (int)sigSize);
 
-    if (position < 0) {
-        position = 0;
-    } else if (position >= sigSize) {
-        position = sigSize - 1;
-    }
+    float baseLine = off + showOff;
+    float finalValue = lastV * 2.0f + baseLine;  // Target value after signal ends
+    float lastSample = initV * 2.0f + baseLine;
 
-    // Calculate rise and fall times in points
-    int risePoints = std::round(riseTime / 1000000.0 / point_time);
-    int fallPoints = std::round(fallTime / 1000000.0 / point_time);
-
-    if (risePoints == 0)
-        risePoints = 1;
-    if (fallPoints == 0)
-        fallPoints = 1;
-
-    // Fill beginning with offset + showOff
+    // Initial fill
     for (int i = 0; i < position; i++) {
-        (*signal)[i] = initV + off + showOff;
+        (*signal)[i] = lastSample;
     }
 
-    float current_time = 0;
-    int rep = 0;
-    bool in_burst = false;
+    // 2. Generation Loop
+    for (int i = position; i < (int)sigSize; i++) {
+        int relIdx = i - position;
+        int currentRep = relIdx / pointsPerPeriod;
+        int idxInPeriod = relIdx % pointsPerPeriod;
 
-    for (int i = position; i < sigSize; i++) {
-        if (rep >= reps) {
-            // All repetitions done - fill with offset
-            (*signal)[i] = lastV + off + showOff;
-            continue;
-        }
+        // Check if we are still within the requested number of repetitions
+        if (currentRep < reps) {
+            if (idxInPeriod < pointsPerBurst) {
+                // ACTIVE BURST
+                float phaseOffsetPoints = (phase / (2.0f * (float)M_PI)) * pointsPerSquareCycle;
+                float localSquareIdx = std::fmod((float)idxInPeriod + phaseOffsetPoints, pointsPerSquareCycle);
+                if (localSquareIdx < 0)
+                    localSquareIdx += pointsPerSquareCycle;
 
-        if (current_time <= burst_duration) {
-            // In burst - generate square wave
-            in_burst = true;
+                float normTime = localSquareIdx / pointsPerSquareCycle;
+                float value = 0.0f;
 
-            // Calculate position within square wave period
-            float square_period = 1.0f / freq;
-            float time_in_period = std::fmod(current_time, square_period);
-            float normalized_time = time_in_period / square_period;
-
-            // Apply phase shift
-            normalized_time = std::fmod(normalized_time + phase / (2 * M_PI), 1.0f);
-
-            // Generate square wave with rise/fall times
-            float value = 0.0f;
-            if (normalized_time < 0)
-                normalized_time += 1;
-            if (normalized_time > 1)
-                normalized_time -= 1;
-
-            if (normalized_time < 0.5f) {
-                // First half period - positive pulse
-                float pulse_time = normalized_time * 2.0f;  // 0 to 1 within positive half
-
-                if (pulse_time < (float)risePoints * point_time / square_period) {
-                    // Rise edge
-                    value = pulse_time / ((float)risePoints * point_time / square_period);
-                } else if (pulse_time > 1.0f - (float)fallPoints * point_time / square_period) {
-                    // Fall edge
-                    value = 1.0f - (pulse_time - (1.0f - (float)fallPoints * point_time / square_period)) / ((float)fallPoints * point_time / square_period);
-                } else {
-                    // Flat top
-                    value = 1.0f;
+                if (normTime < 0.5f) {  // Positive half
+                    float hIdx = localSquareIdx;
+                    float hLimit = pointsPerSquareCycle * 0.5f;
+                    if (hIdx < (float)risePoints)
+                        value = hIdx / (float)risePoints;
+                    else if (hIdx > hLimit - (float)fallPoints)
+                        value = 1.0f - (hIdx - (hLimit - (float)fallPoints)) / (float)fallPoints;
+                    else
+                        value = 1.0f;
+                } else {  // Negative half
+                    float hIdx = localSquareIdx - (pointsPerSquareCycle * 0.5f);
+                    float hLimit = pointsPerSquareCycle * 0.5f;
+                    if (hIdx < (float)fallPoints)
+                        value = -hIdx / (float)fallPoints;
+                    else if (hIdx > hLimit - (float)risePoints)
+                        value = -1.0f + (hIdx - (hLimit - (float)risePoints)) / (float)risePoints;
+                    else
+                        value = -1.0f;
                 }
+
+                float currentAmp = amp;
+                lastSample = baseLine + currentAmp * value;
+                (*signal)[i] = lastSample;
             } else {
-                // Second half period - negative pulse
-                float pulse_time = (normalized_time - 0.5f) * 2.0f;  // 0 to 1 within negative half
-
-                if (pulse_time < (float)fallPoints * point_time / square_period) {
-                    // Fall edge (from 0 to -1)
-                    value = -pulse_time / ((float)fallPoints * point_time / square_period);
-                } else if (pulse_time > 1.0f - (float)risePoints * point_time / square_period) {
-                    // Rise edge (from -1 to 0)
-                    value = -1.0f + (pulse_time - (1.0f - (float)risePoints * point_time / square_period)) / ((float)risePoints * point_time / square_period);
-                } else {
-                    // Flat bottom
-                    value = -1.0f;
-                }
+                // PAUSE BETWEEN BURSTS
+                lastSample = useLastSample ? 0 : finalValue;
+                (*signal)[i] = lastSample;
             }
-
-            (*signal)[i] = off + showOff + amp * value;
-
-        } else if (current_time <= period_duration) {
-            // In pause - fill with offset
-            in_burst = false;
-            (*signal)[i] = lastV + off + showOff;
         } else {
-            // Period completed - move to next repetition
-            rep++;
-            if (rep < reps) {
-                current_time -= period_duration;
-                i--;  // Reprocess this point in the next burst
-                continue;
-            } else {
-                (*signal)[i] = lastV + off + showOff;
-            }
+            // AFTER ALL REPS (Signal Tail)
+            // Ensure the rest of the buffer is filled with the correct end level
+            (*signal)[i] = useLastSample ? lastSample : finalValue;
         }
-
-        current_time += point_time;
     }
 }
 
@@ -422,7 +393,7 @@ int synthesis_rampUp(CFloatBinarySignal* signal, float freq, float phase, float 
     return RP_OK;
 }
 void synthesis_rampUp_burst(CFloatBinarySignal* signal, float freq, float phase, float amp, float off, float showOff, int burstCount, float period, int reps, float tscale,
-                            float timeOffset, float initV, float lastV) {
+                            float timeOffset, float initV, float lastV, bool useLastSample) {
     auto sigSize = (*signal).GetSize();
     if (sigSize == 0)
         return;
@@ -435,6 +406,8 @@ void synthesis_rampUp_burst(CFloatBinarySignal* signal, float freq, float phase,
 
     float period_duration = (float)period / 1000000.0;
 
+    period_duration = std::max(burst_duration, period_duration);
+
     int offsetInPoints = std::round(-(timeOffset / 1000.0) / point_time);
     int position = sigSize / 2 + offsetInPoints;
 
@@ -445,17 +418,18 @@ void synthesis_rampUp_burst(CFloatBinarySignal* signal, float freq, float phase,
     }
 
     for (int i = 0; i < position; i++) {
-        (*signal)[i] = initV + off + showOff;
+        (*signal)[i] = initV * 2.0 + off + showOff;
     }
 
     float current_time = 0;
     int rep = 0;
     float global_phase_offset = 0;
+    float lastSample = 0;
 
     for (int i = position; i < sigSize; i++) {
         if (rep >= reps) {
             // All repetitions done - fill with offset
-            (*signal)[i] = lastV + off + showOff;
+            (*signal)[i] = useLastSample ? 0 : lastV * 2.0 + off + showOff;
             continue;
         }
 
@@ -473,11 +447,12 @@ void synthesis_rampUp_burst(CFloatBinarySignal* signal, float freq, float phase,
             float normalized_ramp = time_in_period / ramp_period;
             float value = normalized_ramp;  // Linear ramp from 0 to 1
 
-            (*signal)[i] = off + showOff + amp * value;
+            lastSample = off + showOff + amp * value;
+            (*signal)[i] = lastSample;
 
         } else if (current_time <= period_duration) {
             // In pause - fill with offset
-            (*signal)[i] = lastV + off + showOff;
+            (*signal)[i] = useLastSample ? 0 : lastV * 2.0 + off + showOff;
         } else {
             // Period completed - move to next repetition
             global_phase_offset += burst_duration;
@@ -487,7 +462,7 @@ void synthesis_rampUp_burst(CFloatBinarySignal* signal, float freq, float phase,
                 i--;  // Reprocess this point in the next burst
                 continue;
             } else {
-                (*signal)[i] = lastV + off + showOff;
+                (*signal)[i] = useLastSample ? 0 : lastV * 2.0 + off + showOff;
             }
         }
 
@@ -513,7 +488,7 @@ int synthesis_rampDown(CFloatBinarySignal* signal, float freq, float phase, floa
 }
 
 void synthesis_rampDown_burst(CFloatBinarySignal* signal, float freq, float phase, float amp, float off, float showOff, int burstCount, float period, int reps, float tscale,
-                              float timeOffset, float initV, float lastV) {
+                              float timeOffset, float initV, float lastV, bool useLastSample) {
     auto sigSize = (*signal).GetSize();
     if (sigSize == 0)
         return;
@@ -524,8 +499,9 @@ void synthesis_rampDown_burst(CFloatBinarySignal* signal, float freq, float phas
 
     // Calculate burst duration in seconds
     float burst_duration = (float)burstCount / freq;
-
     float period_duration = (float)period / 1000000.0;
+
+    period_duration = std::max(burst_duration, period_duration);
 
     int offsetInPoints = std::round(-(timeOffset / 1000.0) / point_time);
     int position = sigSize / 2 + offsetInPoints;
@@ -538,17 +514,18 @@ void synthesis_rampDown_burst(CFloatBinarySignal* signal, float freq, float phas
 
     // Fill beginning with offset + showOff
     for (int i = 0; i < position; i++) {
-        (*signal)[i] = initV + off + showOff;
+        (*signal)[i] = initV * 2.0 + off + showOff;
     }
 
     float current_time = 0;
     int rep = 0;
     float global_phase_offset = 0;
+    float lastSample = 0;
 
     for (int i = position; i < sigSize; i++) {
         if (rep >= reps) {
             // All repetitions done - fill with offset
-            (*signal)[i] = lastV + off + showOff;
+            (*signal)[i] = useLastSample ? lastSample : lastV * 2.0 + off + showOff;
             continue;
         }
 
@@ -566,11 +543,12 @@ void synthesis_rampDown_burst(CFloatBinarySignal* signal, float freq, float phas
             float normalized_ramp = time_in_period / ramp_period;
             float value = 1.0f - normalized_ramp;  // Linear ramp from 1 to 0
 
-            (*signal)[i] = off + showOff + amp * value;
+            lastSample = off + showOff + amp * value;
+            (*signal)[i] = lastSample;
 
         } else if (current_time <= period_duration) {
             // In pause - fill with offset
-            (*signal)[i] = lastV + off + showOff;
+            (*signal)[i] = useLastSample ? lastSample : lastV * 2.0 + off + showOff;
         } else {
             // Period completed - move to next repetition
             global_phase_offset += burst_duration;
@@ -580,7 +558,7 @@ void synthesis_rampDown_burst(CFloatBinarySignal* signal, float freq, float phas
                 i--;  // Reprocess this point in the next burst
                 continue;
             } else {
-                (*signal)[i] = lastV + off + showOff;
+                (*signal)[i] = useLastSample ? lastSample : lastV * 2.0 + off + showOff;
             }
         }
 
@@ -599,7 +577,7 @@ int synthesis_DC(CFloatBinarySignal* signal, float freq, float phase, float amp,
 }
 
 void synthesis_DC_burst(CFloatBinarySignal* signal, float freq, float phase, float amp, float off, float showOff, int burstCount, float period, int reps, float tscale,
-                        float timeOffset, float initV, float lastV) {
+                        float timeOffset, float initV, float lastV, bool useLastSample) {
     auto sigSize = (*signal).GetSize();
     if (sigSize == 0)
         return;
@@ -608,8 +586,9 @@ void synthesis_DC_burst(CFloatBinarySignal* signal, float freq, float phase, flo
 
     // Calculate burst duration in seconds
     float burst_duration = (float)burstCount / freq;
-
     float period_duration = (float)period / 1000000.0;
+
+    period_duration = std::max(burst_duration, period_duration);
 
     int offsetInPoints = std::round(-(timeOffset / 1000.0) / point_time);
     int position = sigSize / 2 + offsetInPoints;
@@ -622,25 +601,27 @@ void synthesis_DC_burst(CFloatBinarySignal* signal, float freq, float phase, flo
 
     // Fill beginning with offset + showOff
     for (int i = 0; i < position; i++) {
-        (*signal)[i] = initV + off + showOff;
+        (*signal)[i] = initV * 2.0 + off + showOff;
     }
 
     float current_time = 0;
     int rep = 0;
+    float lastSample = 0;
 
     for (int i = position; i < sigSize; i++) {
         if (rep >= reps) {
             // All repetitions done - fill with offset
-            (*signal)[i] = lastV + off + showOff;
+            (*signal)[i] = useLastSample ? lastSample : lastV * 2.0 + off + showOff;
             continue;
         }
 
         if (current_time <= burst_duration) {
             // In burst - generate DC signal (constant high level)
-            (*signal)[i] = amp + off + showOff;
+            lastSample = amp + off + showOff;
+            (*signal)[i] = lastSample;
         } else if (current_time <= period_duration) {
             // In pause - fill with offset
-            (*signal)[i] = lastV + off + showOff;
+            (*signal)[i] = useLastSample ? lastSample : lastV * 2.0 + off + showOff;
         } else {
             // Period completed - move to next repetition
             rep++;
@@ -649,7 +630,7 @@ void synthesis_DC_burst(CFloatBinarySignal* signal, float freq, float phase, flo
                 i--;  // Reprocess this point in the next burst
                 continue;
             } else {
-                (*signal)[i] = lastV + off + showOff;
+                (*signal)[i] = useLastSample ? lastSample : lastV * 2.0 + off + showOff;
             }
         }
 
@@ -668,7 +649,7 @@ int synthesis_DC_NEG(CFloatBinarySignal* signal, float freq, float phase, float 
 }
 
 void synthesis_DC_NEG_burst(CFloatBinarySignal* signal, float freq, float phase, float amp, float off, float showOff, int burstCount, float period, int reps, float tscale,
-                            float timeOffset, float initV, float lastV) {
+                            float timeOffset, float initV, float lastV, bool useLastSample) {
     auto sigSize = (*signal).GetSize();
     if (sigSize == 0)
         return;
@@ -677,8 +658,9 @@ void synthesis_DC_NEG_burst(CFloatBinarySignal* signal, float freq, float phase,
 
     // Calculate burst duration in seconds
     float burst_duration = (float)burstCount / freq;
-
     float period_duration = (float)period / 1000000.0;
+
+    period_duration = std::max(burst_duration, period_duration);
 
     int offsetInPoints = std::round(-(timeOffset / 1000.0) / point_time);
     int position = sigSize / 2 + offsetInPoints;
@@ -691,25 +673,27 @@ void synthesis_DC_NEG_burst(CFloatBinarySignal* signal, float freq, float phase,
 
     // Fill beginning with offset + showOff
     for (int i = 0; i < position; i++) {
-        (*signal)[i] = initV + off + showOff;
+        (*signal)[i] = initV * 2.0 + off + showOff;
     }
 
     float current_time = 0;
     int rep = 0;
+    float lastSample = 0;
 
     for (int i = position; i < sigSize; i++) {
         if (rep >= reps) {
             // All repetitions done - fill with offset
-            (*signal)[i] = lastV + off + showOff;
+            (*signal)[i] = useLastSample ? lastSample : lastV * 2.0 + off + showOff;
             continue;
         }
 
         if (current_time <= burst_duration) {
             // In burst - generate DC signal (constant high level)
-            (*signal)[i] = -1.0 * amp + off + showOff;
+            lastSample = -1.0 * amp + off + showOff;
+            (*signal)[i] = lastSample;
         } else if (current_time <= period_duration) {
             // In pause - fill with offset
-            (*signal)[i] = lastV + off + showOff;
+            (*signal)[i] = useLastSample ? lastSample : lastV * 2.0 + off + showOff;
         } else {
             // Period completed - move to next repetition
             rep++;
@@ -718,7 +702,7 @@ void synthesis_DC_NEG_burst(CFloatBinarySignal* signal, float freq, float phase,
                 i--;  // Reprocess this point in the next burst
                 continue;
             } else {
-                (*signal)[i] = lastV + off + showOff;
+                (*signal)[i] = useLastSample ? lastSample : lastV * 2.0 + off + showOff;
             }
         }
 
@@ -748,7 +732,7 @@ int synthesis_PWM(CFloatBinarySignal* signal, float freq, float phase, float amp
 }
 
 void synthesis_PWM_burst(CFloatBinarySignal* signal, float freq, float phase, float amp, float off, float showOff, float ratio, int burstCount, float burst_period, int reps,
-                         float tscale, float timeOffset, float initV, float lastV) {
+                         float tscale, float timeOffset, float initV, float lastV, bool useLastSample) {
     auto sigSize = (*signal).GetSize();
     if (sigSize == 0)
         return;
@@ -759,6 +743,8 @@ void synthesis_PWM_burst(CFloatBinarySignal* signal, float freq, float phase, fl
     float point_time = (tscale * 10.0) / (float)CH_SIGNAL_SIZE_DEFAULT / 1000.0;
     float burst_duration = (float)burstCount / freq;
     float period_duration = (float)burst_period / 1000000.0;
+
+    period_duration = std::max(burst_duration, period_duration);
 
     // Calculate PWM period in points
     float pwm_period_points = 1.0f / (freq * point_time);  // Period in points
@@ -783,16 +769,17 @@ void synthesis_PWM_burst(CFloatBinarySignal* signal, float freq, float phase, fl
 
     // Fill beginning
     for (int i = 0; i < position; i++) {
-        (*signal)[i] = initV + pause_value;
+        (*signal)[i] = initV * 2.0 + pause_value;
     }
 
     float current_time = 0;
     int rep = 0;
     float accumulated_phase = 0;
+    float lastSample = 0;
 
     for (int i = position; i < sigSize; i++) {
         if (rep >= reps) {
-            (*signal)[i] = lastV + pause_value;
+            (*signal)[i] = useLastSample ? lastSample : lastV * 2.0 + pause_value;
         } else if (current_time < burst_duration) {
             float absolute_point = current_time / point_time;  // Absolute point from burst start
             float point_in_period = std::fmod(absolute_point + phase_points + accumulated_phase, pwm_period_points);
@@ -804,13 +791,15 @@ void synthesis_PWM_burst(CFloatBinarySignal* signal, float freq, float phase, fl
 
             // PWM decision
             if (point_in_period <= duty_points) {
-                (*signal)[i] = high_value;
+                lastSample = high_value;
+                (*signal)[i] = lastSample;
             } else {
-                (*signal)[i] = low_value;
+                lastSample = low_value;
+                (*signal)[i] = lastSample;
             }
 
         } else if (current_time < period_duration) {
-            (*signal)[i] = lastV + pause_value;
+            (*signal)[i] = useLastSample ? lastSample : lastV * 2.0 + pause_value;
         } else {
             accumulated_phase = std::fmod((burst_duration + phase / (2 * M_PI * freq)) / point_time, pwm_period_points);
             rep++;

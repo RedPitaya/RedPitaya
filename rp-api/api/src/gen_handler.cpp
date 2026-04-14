@@ -983,7 +983,8 @@ int synthesis_rampUp(float scale, float* data_out, uint16_t buffSize) {
 }
 
 int synthesis_rampDown(float scale, float* data_out, uint16_t buffSize) {
-    for (int unsigned i = 0; i < DAC_BUFFER_SIZE; i++) {
+    data_out[DAC_BUFFER_SIZE - 1] = 0;
+    for (int unsigned i = 0; i < DAC_BUFFER_SIZE - 1; i++) {
         data_out[i] = (float)(-1.0 * (acos(cos(M_PI * (float)i / (float)buffSize)) / M_PI - 1)) * scale;
     }
     return RP_OK;
@@ -1041,7 +1042,7 @@ int synthesis_square(float scale, float frequency, float riseTime, float fallTim
     if (fallTimeSamples == 0)
         fallTimeSamples = 1;
 
-    for (int unsigned i = 0; i < DAC_BUFFER_SIZE; i++) {
+    for (int unsigned i = 0; i < DAC_BUFFER_SIZE - 1; i++) {
         int x = (i % buffSize);
         if (x < riseTimeSamples / 2) {
             data_out[i] = (float)x / ((float)riseTimeSamples / 2.0f);
@@ -1063,7 +1064,7 @@ int synthesis_square(float scale, float frequency, float riseTime, float fallTim
         }
         data_out[i] *= scale;
     }
-
+    data_out[DAC_BUFFER_SIZE - 1] = 0;
     return RP_OK;
 }
 
