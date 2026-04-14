@@ -144,6 +144,36 @@ int generate_printRegset() {
     return cmn_ReleaseClose(fd1, GENERATE_BASE_SIZE, (void**)&generate);
 }
 
+int generate_printChannelData(rp_channel_t channel) {
+    if (!rp_HPIsFastDAC_PresentOrDefault()) {
+        return RP_NOTS;
+    }
+
+    auto channels = rp_HPGetFastADCChannelsCountOrDefault();
+
+    if (channel >= channels) {
+        return RP_NOTS;
+    }
+
+    volatile generate_control_t* generate = NULL;
+
+    int fd1 = -1;
+    int ret = cmn_InitMap(GENERATE_BASE_SIZE, GENERATE_BASE_ADDR, (void**)&generate, &fd1);
+    if (ret != RP_OK) {
+        return ret;
+    }
+    int32_t* data_ch[2] = {NULL, NULL};
+    data_ch[0] = (int32_t*)((char*)generate + (CHA_DATA_OFFSET));
+    data_ch[1] = (int32_t*)((char*)generate + (CHB_DATA_OFFSET));
+    volatile int32_t* dataOut = data_ch[channel];
+    for (int i = 0; i < DAC_BUFFER_SIZE; i++) {
+        printf("%d\t0x%X\n", i, dataOut[i]);
+    }
+
+    return cmn_ReleaseClose(fd1, GENERATE_BASE_SIZE, (void**)&generate);
+    return RP_OK;
+}
+
 int generate_setOutputDisable(rp_channel_t channel, bool disable) {
     cmn_Debug("generate->config[%d]->setOutputTo0 <- 0x%X", channel, disable ? 1 : 0);
     asg_config_control_u_t conf;

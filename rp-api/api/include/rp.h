@@ -175,6 +175,13 @@ int rp_PrintOscRegset();
 int rp_PrintAsgRegset();
 
 /**
+ * Prints a channel data for Arbitrary Signal Generator.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_PrintAsgChannelData(rp_channel_t channel);
+
+/**
  * Prints a set of registers for Analog Mixed Signals (AMS).
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.

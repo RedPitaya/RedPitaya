@@ -219,6 +219,7 @@ int generate_Init();
 int generate_Release();
 
 int generate_printRegset();
+int generate_printChannelData(rp_channel_t channel);
 
 int generate_setOutputDisable(rp_channel_t channel, bool disable);
 int generate_getOutputEnabled(rp_channel_t channel, bool* disabled);

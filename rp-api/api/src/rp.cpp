@@ -242,6 +242,10 @@ int rp_PrintAsgRegset() {
     return generate_printRegset();
 }
 
+int rp_PrintAsgChannelData(rp_channel_t channel) {
+    return generate_printChannelData(channel);
+}
+
 int rp_PrintAmsRegset() {
     return ams_printRegset();
 }

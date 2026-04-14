@@ -92,6 +92,8 @@ int main(int argc, char** argv) {
                 "\tPrint Housekeeping regset: -ph\n"
                 "\tPrint Oscilloscope regset: -posc\n"
                 "\tPrint Arbitrary Signal Generator regset: -pasg\n"
+                "\tPrint Arbitrary Signal Generator signal from ch1: -pasg_ch1\n"
+                "\tPrint Arbitrary Signal Generator signal from ch2: -pasg_ch2\n"
                 "\tPrint Analog Mixed Signals regset: -pams\n"
                 "\tPrint Daisy Chain regset: -pdaisy\n"
                 "\tReserved memory for DMA: -r\n",
@@ -196,6 +198,14 @@ int main(int argc, char** argv) {
 
     if (key == "-pasg") {
         return rp_PrintAsgRegset();
+    }
+
+    if (key == "-pasg_ch1") {
+        return rp_PrintAsgChannelData(RP_CH_1);
+    }
+
+    if (key == "-pasg_ch2") {
+        return rp_PrintAsgChannelData(RP_CH_2);
     }
 
     if (key == "-pams") {
