@@ -2009,6 +2009,12 @@ int rp_GenGetWaveform(rp_channel_t channel, rp_waveform_t* type) {
     return gen_getWaveform(channel, type);
 }
 
+int rp_GetWaveformDataV(rp_channel_t channel, const std::vector<float>** data) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
+    return gen_getWaveformDataV(channel, data);
+}
+
 int rp_GenSweepMode(rp_channel_t channel, rp_gen_sweep_mode_t mode) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;

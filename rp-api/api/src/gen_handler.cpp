@@ -82,6 +82,8 @@ typedef struct {
 
     uint32_t waveform_sample_size = DAC_BUFFER_SIZE;
 
+    std::vector<float> genData;  // The signal sent to the FPGA is saved in this variable.
+
 } channel_config_t;
 
 /**
@@ -770,25 +772,10 @@ int gen_setBurstPeriod(rp_channel_t channel, float period) {
     static auto adc_rate = rp_HPGetBaseFastDACSpeedHzOrDefault();
     static auto tick_time = 1000000000.0 / (double)adc_rate;
 
-    bool axi_enable = false;
-    uint32_t axi_decimation = 0;
-    generate_axi_GetEnable(channel, &axi_enable);
-    generate_axi_GetDecimation(channel, &axi_decimation);
-
     rp_gen_mode_t mode = g_channels[channel].mode;
 
     // Max 4 second
     if (period * 1000.f < tick_time || period * 1000.f > NANO * 4.0f) {
-        return RP_EOOR;
-    }
-
-    if (axi_decimation == 0 && axi_enable) {
-        ERROR_LOG("Decimation is not set for AXI mode")
-        return RP_EOOR;
-    }
-
-    if (g_channels[channel].axi_reserved_samples_count == 0 && axi_enable) {
-        ERROR_LOG("Memory size not set for AXI mode")
         return RP_EOOR;
     }
 
@@ -884,10 +871,19 @@ int gen_SynchroniseSM() {
     return generate_ResetSM();
 }
 
+int gen_getWaveformDataV(rp_channel_t channel, const std::vector<float>** data) {
+
+    CHECK_CHANNEL
+
+    *data = &g_channels[channel].genData;
+    return RP_OK;
+}
+
 int synthesize_signal(rp_channel_t channel) {
 
     CHECK_CHANNEL
 
+    g_channels[channel].genData.resize(DAC_BUFFER_SIZE);
     float data[DAC_BUFFER_SIZE];
 
     uint32_t base_freq = 0;
@@ -957,7 +953,7 @@ int synthesize_signal(rp_channel_t channel) {
         generate_setFrequency(channel, frequency, base_freq, g_channels[channel].waveform_sample_size);
         gen_TriggerOnly(channel);
     }
-    return generate_writeData(channel, data, phase, size);
+    return generate_writeData(channel, data, phase, size, g_channels[channel].genData.data());
 }
 
 int synthesis_sin(float scale, float* data_out, uint16_t buffSize) {

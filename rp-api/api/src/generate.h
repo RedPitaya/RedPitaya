@@ -244,7 +244,7 @@ int generate_simultaneousTrigger();
 int generate_ResetSM();
 int generate_ResetChannelSM(rp_channel_t channel);
 
-int generate_writeData(rp_channel_t channel, float* data, int32_t start, uint32_t length);
+int generate_writeData(rp_channel_t channel, float* data, int32_t start, uint32_t length, float* dataInFPGA);
 
 int generate_setAmplitude(rp_channel_t channel, rp_gen_gain_t gain, float amplitude);
 int generate_setDCOffset(rp_channel_t channel, rp_gen_gain_t gain, float offset);

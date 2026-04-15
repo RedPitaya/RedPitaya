@@ -14,6 +14,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <vector>
 #include "rp_enums.h"
 
 /** @name Generate
@@ -199,6 +200,18 @@ int rp_GenWaveform(rp_channel_t channel, rp_waveform_t type);
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_GenGetWaveform(rp_channel_t channel, rp_waveform_t* type);
+
+/**
+ * @brief Gets a pointer to the raw waveform buffer.
+ *
+ * Provides access to the vector containing the voltage samples for the specified channel.
+ *
+ * @param channel Channel A or B for which we want to get the waveform data.
+ * @param data Pointer to a constant pointer that will be set to the internal vector of float samples.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_GetWaveformDataV(rp_channel_t channel, const std::vector<float>** data);
 
 /**
 * Sets the generation mode for the sweep signal.

@@ -155,6 +155,18 @@ int generate_printChannelData(rp_channel_t channel) {
         return RP_NOTS;
     }
 
+    uint8_t bits = 0;
+    if (rp_HPGetFastDACBits(&bits) != RP_HP_OK) {
+        ERROR_LOG("Can't get fast DAC bits\n");
+        return RP_NOTS;
+    }
+
+    bool is_sign = false;
+    if (rp_HPGetFastDACIsSigned(&is_sign) != RP_HP_OK) {
+        ERROR_LOG("Can't get fast DAC sign value\n");
+        return RP_NOTS;
+    }
+
     volatile generate_control_t* generate = NULL;
 
     int fd1 = -1;
@@ -167,7 +179,9 @@ int generate_printChannelData(rp_channel_t channel) {
     data_ch[1] = (int32_t*)((char*)generate + (CHB_DATA_OFFSET));
     volatile int32_t* dataOut = data_ch[channel];
     for (int i = 0; i < DAC_BUFFER_SIZE; i++) {
-        printf("%d\t0x%X\n", i, dataOut[i]);
+        auto raw = dataOut[i];
+        auto cnt = cmn_CalibCntsSigned(raw, bits, 1, 1, 0);
+        printf("%d\t0x%X\t%d\n", i, raw, cnt);
     }
 
     return cmn_ReleaseClose(fd1, GENERATE_BASE_SIZE, (void**)&generate);
@@ -435,7 +449,7 @@ int generate_ResetChannelSM(rp_channel_t channel) {
     return RP_OK;
 }
 
-int generate_writeData(rp_channel_t channel, float* data, int32_t start, uint32_t length) {
+int generate_writeData(rp_channel_t channel, float* data, int32_t start, uint32_t length, float* dataInFPGA) {
 
     uint8_t bits = 0;
     if (rp_HPGetFastDACBits(&bits) != RP_HP_OK) {
@@ -457,6 +471,7 @@ int generate_writeData(rp_channel_t channel, float* data, int32_t start, uint32_
         start += DAC_BUFFER_SIZE;
     for (int i = start; i < start + DAC_BUFFER_SIZE; i++) {
         dataOut[i % DAC_BUFFER_SIZE] = cmn_convertToCnt(data[i - start], bits, 1.0, is_sign, 1, 0);
+        dataInFPGA[i % DAC_BUFFER_SIZE] = data[i - start];
     }
     return RP_OK;
 }
