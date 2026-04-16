@@ -57,6 +57,7 @@ typedef struct {
     int burstRepetition = 1;      // Number of burst repetitions
     float burstPeriod = 0;        // Period between bursts in microseconds
     float burstLastValue = 0;     // Last output value after burst
+    float axiLastValue = 0;       // Last output value in axi buffer
     float initValue = 0;          // Initial output value
     float useLastSample = false;  // Flag to use last sample value
 
@@ -712,9 +713,15 @@ int gen_setBurstLastValue(rp_channel_t channel, float amplitude) {
     float a = amplitude;
 
     if (g_channels[channel].useLastSample) {
-        const std::vector<float>* data = nullptr;
-        gen_getWaveformDataV(channel, &data);
-        a = g_channels[channel].amplitude * data->at(data->size() - 1);
+        bool axiEnable = false;
+        gen_axi_GetEnable(channel, &axiEnable);
+        if (axiEnable) {
+            a = g_channels[channel].amplitude * g_channels[channel].axiLastValue;
+        } else {
+            const std::vector<float>* data = nullptr;
+            gen_getWaveformDataV(channel, &data);
+            a = g_channels[channel].amplitude * data->at(data->size() - 1);
+        }
     }
 
     int ret = generate_setBurstLastValue(channel, g_channels[channel].gain, a * koff);
@@ -1398,8 +1405,13 @@ int gen_axi_WriteWaveform(rp_channel_t channel, float* data, uint32_t length) {
                 return RP_ENN;
             }
             buffer[i] = cmn_convertToCnt(data[i], bits, 1.0, is_sign, 1, 0);
+            if (i + 1 == length) {
+                g_channels[channel].axiLastValue = data[i];
+            }
         }
-
+        if (g_channels[channel].useLastSample) {
+            gen_setBurstLastValue(channel, g_channels[channel].burstLastValue);
+        }
         return RP_OK;
     } else {
         ERROR_LOG("Error getting memory region.");
@@ -1447,8 +1459,13 @@ int gen_axi_WriteWaveform(rp_channel_t channel, uint32_t offset, float* data, ui
                 return RP_ENN;
             }
             buffer[x + offset] = cmn_convertToCnt(data[x], bits, 1.0, is_sign, 1, 0);
+            if (x + 1 == length) {
+                g_channels[channel].axiLastValue = data[x];
+            }
         }
-
+        if (g_channels[channel].useLastSample) {
+            gen_setBurstLastValue(channel, g_channels[channel].burstLastValue);
+        }
         return RP_OK;
     } else {
         ERROR_LOG("Error getting memory region.");
