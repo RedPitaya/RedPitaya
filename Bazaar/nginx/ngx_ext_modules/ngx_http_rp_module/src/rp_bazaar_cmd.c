@@ -22,6 +22,7 @@
 #include <ws_server.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 #include <sys/stat.h>
 
 /** The list of available Bazaar commands */
@@ -395,6 +396,7 @@ int rp_bazaar_apps(ngx_http_request_t *r,
 int rp_bazaar_start(ngx_http_request_t *r,
                     cJSON **json_root, int argc, char **argv)
 {
+    struct timespec start_profile, end_profile;
     fprintf(stderr, "[rp_bazaar_start] URL=");
     for(int i = 0; i < argc; i++){
         fprintf(stderr, "%s ",argv[i]);
@@ -533,14 +535,21 @@ int rp_bazaar_start(ngx_http_request_t *r,
         return rp_module_cmd_error(json_root, err,
                                    NULL, r->pool);
     }
-
-    if(rp_module_ctx.app.init_func() < 0) {
+    timespec_get(&start_profile, TIME_UTC);
+    int init_ret = rp_module_ctx.app.init_func();
+    timespec_get(&end_profile, TIME_UTC);
+    if( init_ret < 0) {
         rp_module_cmd_error(json_root,
                             "Application init failed, aborting",
                             NULL, r->pool);
         rp_bazaar_app_unload_module(&rp_module_ctx.app);
         return -1;
+    }else{
+        float microseconds = (float)(end_profile.tv_sec - start_profile.tv_sec) * 1000000.0f +
+                         (float)(end_profile.tv_nsec - start_profile.tv_nsec) / 1000.0f;
+        fprintf(stderr, "[ET: %.3f uS] Loading application: '%s' [DONE]\n",microseconds, app_name);
     }
+
     rp_module_ctx.app.initialized=1;
     fprintf(stderr, "Application loaded succesfully!\n");
 

@@ -135,6 +135,7 @@ int rp_bazaar_get_mac(const char* nic, char *mac);
 int rp_bazaar_get_dna(unsigned long long *dna);
 int get_info(cJSON **info, const char *dir, const char *app_id, ngx_pool_t *pool);
 int get_fpga_path(const char *app_id, const char *dir, char **fpga_file);
+int is_controller_ok(const char *dir, const char *app_id, const char *fname);
 fpga_stat_t rp_bazaar_app_load_fpga(const char *fpga_file);
 
 #endif /*__RP_BAZAAR_APP_H*/

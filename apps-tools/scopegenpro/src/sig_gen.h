@@ -89,21 +89,4 @@ struct GenChannelSettings {
 
 auto synthesis_arb(CFloatBinarySignal* signal, const float* data, const GenChannelSettings& settings) -> void;
 auto synthesis_arb_burst(CFloatBinarySignal* signal, const float* data, const GenChannelSettings& settings) -> void;
-auto synthesis_sin(CFloatBinarySignal* signal, const GenChannelSettings& settings) -> void;
-auto synthesis_sin_burst(CFloatBinarySignal* signal, const GenChannelSettings& settings) -> void;
-auto synthesis_triangle(CFloatBinarySignal* signal, const GenChannelSettings& settings) -> void;
-auto synthesis_triangle_burst(CFloatBinarySignal* signal, const GenChannelSettings& settings) -> void;
-auto synthesis_square(CFloatBinarySignal* signal, const GenChannelSettings& settings) -> void;
-auto synthesis_square_burst(CFloatBinarySignal* signal, const GenChannelSettings& settings) -> void;
-auto synthesis_rampUp(CFloatBinarySignal* signal, const GenChannelSettings& settings) -> int;
-auto synthesis_rampUp_burst(CFloatBinarySignal* signal, const GenChannelSettings& settings) -> void;
-auto synthesis_rampDown(CFloatBinarySignal* signal, const GenChannelSettings& settings) -> int;
-auto synthesis_rampDown_burst(CFloatBinarySignal* signal, const GenChannelSettings& settings) -> void;
-auto synthesis_DC(CFloatBinarySignal* signal, const GenChannelSettings& settings) -> int;
-auto synthesis_DC_burst(CFloatBinarySignal* signal, const GenChannelSettings& settings) -> void;
-auto synthesis_DC_NEG(CFloatBinarySignal* signal, const GenChannelSettings& settings) -> int;
-auto synthesis_DC_NEG_burst(CFloatBinarySignal* signal, const GenChannelSettings& settings) -> void;
-auto synthesis_PWM(CFloatBinarySignal* signal, const GenChannelSettings& settings) -> int;
-auto synthesis_PWM_burst(CFloatBinarySignal* signal, const GenChannelSettings& settings) -> void;
-auto synthesis_sweep(CFloatBinarySignal* signal, const GenChannelSettings& settings) -> int;
 auto synthesis_noise(CFloatBinarySignal* signal, const GenChannelSettings& settings) -> void;

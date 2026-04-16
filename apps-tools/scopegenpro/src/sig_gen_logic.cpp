@@ -173,6 +173,12 @@ auto generate(rp_channel_t channel, float tscale) -> void {
     if (tscale == 0)
         return;
 
+    try {
+        waveform_api = (rp_waveform_t)std::stoi(settings.waveform);
+    } catch (const std::exception&) {
+        waveform_api = RP_WAVEFORM_SINE;
+    }
+
     // WARNING("Gen signal")
     if (settings.waveform[0] == 'A') {
         auto sigSize = (*signal).GetSize();
@@ -194,86 +200,27 @@ auto generate(rp_channel_t channel, float tscale) -> void {
             }
         }
     } else {
-        const std::vector<float>* data = nullptr;
-        rp_GetWaveformDataV(channel, &data);
-        if (data != nullptr) {
-            settings.arb_size = data->size();
-            if (oldSettings != settings) {
-                if (settings.gen_mode == RP_GEN_MODE_CONTINUOUS) {
-                    synthesis_arb(signal, data->data(), settings);
-                    oldSettings = settings;
+        if (waveform_api != RP_WAVEFORM_NOISE) {
+            const std::vector<float>* data = nullptr;
+            rp_GetWaveformDataV(channel, &data);
+            if (data != nullptr) {
+                settings.arb_size = data->size();
+                if (oldSettings != settings) {
+                    if (settings.gen_mode == RP_GEN_MODE_CONTINUOUS) {
+                        synthesis_arb(signal, data->data(), settings);
+                        oldSettings = settings;
 
-                } else {
-                    synthesis_arb_burst(signal, data->data(), settings);
-                    oldSettings = settings;
+                    } else {
+                        synthesis_arb_burst(signal, data->data(), settings);
+                        oldSettings = settings;
+                    }
                 }
+            } else {
+                ERROR_LOG("Data is null")
             }
         } else {
-            ERROR_LOG("Data is null")
+            synthesis_noise(signal, settings);
         }
-        // try {
-        //     waveform_api = (rp_waveform_t)std::stoi(settings.waveform);
-        // } catch (const std::exception&) {
-        //     waveform_api = RP_WAVEFORM_SINE;
-        // }
-        // switch (waveform_api) {
-        //     case RP_WAVEFORM_SINE:
-        //         if (settings.gen_mode == RP_GEN_MODE_CONTINUOUS)
-        //             synthesis_sin(signal, settings);
-        //         else
-        //             synthesis_sin_burst(signal, settings);
-        //         break;
-        //     case RP_WAVEFORM_TRIANGLE:
-        //         if (settings.gen_mode == RP_GEN_MODE_CONTINUOUS)
-        //             synthesis_triangle(signal, settings);
-        //         else
-        //             synthesis_triangle_burst(signal, settings);
-        //         break;
-        //     case RP_WAVEFORM_SQUARE:
-        //         if (settings.gen_mode == RP_GEN_MODE_CONTINUOUS)
-        //             synthesis_square(signal, settings);
-        //         else
-        //             synthesis_square_burst(signal, settings);
-        //         break;
-        //     case RP_WAVEFORM_RAMP_UP:
-        //         if (settings.gen_mode == RP_GEN_MODE_CONTINUOUS)
-        //             synthesis_rampUp(signal, settings);
-        //         else
-        //             synthesis_rampUp_burst(signal, settings);
-        //         break;
-        //     case RP_WAVEFORM_RAMP_DOWN:
-        //         if (settings.gen_mode == RP_GEN_MODE_CONTINUOUS)
-        //             synthesis_rampDown(signal, settings);
-        //         else
-        //             synthesis_rampDown_burst(signal, settings);
-        //         break;
-        //     case RP_WAVEFORM_DC:
-        //         if (settings.gen_mode == RP_GEN_MODE_CONTINUOUS)
-        //             synthesis_DC(signal, settings);
-        //         else
-        //             synthesis_DC_burst(signal, settings);
-        //         break;
-        //     case RP_WAVEFORM_DC_NEG:
-        //         if (settings.gen_mode == RP_GEN_MODE_CONTINUOUS)
-        //             synthesis_DC_NEG(signal, settings);
-        //         else
-        //             synthesis_DC_NEG_burst(signal, settings);
-        //         break;
-        //     case RP_WAVEFORM_PWM:
-        //         if (settings.gen_mode == RP_GEN_MODE_CONTINUOUS)
-        //             synthesis_PWM(signal, settings);
-        //         else
-        //             synthesis_PWM_burst(signal, settings);
-        //         break;
-        //     case RP_WAVEFORM_SWEEP:
-        //         synthesis_sweep(signal, settings);
-        //         break;
-        //     case RP_WAVEFORM_NOISE:
-        //         synthesis_noise(signal, settings);
-        //         break;
-        //     default:
-        //         break;
-        // }
     }
 }
 
@@ -288,7 +235,7 @@ auto checkBurstDelayChanged(rp_channel_t ch) -> void {
     }
 }
 
-auto setBurstParameters(bool force) -> void {
+auto setBurstParameters(bool force, bool requestUpdateInitLast) -> void {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return;
 
@@ -324,21 +271,24 @@ auto setBurstParameters(bool force) -> void {
             }
         }
 
-        if (IS_NEW(outBurstInit[ch]) || force) {
-            if (rp_GenSetInitGenValue(ch, outBurstInit[ch].NewValue()) == RP_OK) {
+        if (IS_NEW(outBurstUseLastSample[ch]) || force) {
+            if (rp_GenSetUseLastSample(ch, outBurstUseLastSample[ch].NewValue()) == RP_OK) {
+                requestUpdateInitLast = true;
+                outBurstUseLastSample[ch].Update();
+            }
+        }
+
+        if (IS_NEW(outBurstInit[ch]) || force || requestUpdateInitLast) {
+            float Coff = outImp[ch].Value() == 1 ? 2.0 : 1.0;
+            if (rp_GenSetInitGenValue(ch, outBurstInit[ch].NewValue() * Coff) == RP_OK) {
                 outBurstInit[ch].Update();
             }
         }
 
-        if (IS_NEW(outBurstLast[ch]) || force) {
-            if (rp_GenBurstLastValue(ch, outBurstLast[ch].NewValue()) == RP_OK) {
+        if (IS_NEW(outBurstLast[ch]) || force || requestUpdateInitLast) {
+            float Coff = outImp[ch].Value() == 1 ? 2.0 : 1.0;
+            if (rp_GenBurstLastValue(ch, outBurstLast[ch].NewValue() * Coff) == RP_OK) {
                 outBurstLast[ch].Update();
-            }
-        }
-
-        if (IS_NEW(outBurstUseLastSample[ch]) || force) {
-            if (rp_GenSetUseLastSample(ch, outBurstUseLastSample[ch].NewValue()) == RP_OK) {
-                outBurstUseLastSample[ch].Update();
             }
         }
 
@@ -451,6 +401,7 @@ auto initGenBeforeLoadConfig() -> void {
 
 auto updateGeneratorParameters(bool force) -> void {
     auto requestSendScale = false;
+    auto requestUpdateInitLast = false;
 
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return;
@@ -519,8 +470,9 @@ auto updateGeneratorParameters(bool force) -> void {
 
                     if (res == RP_OK) {
                         if (IS_NEW(outImp[ch]) && !force) {
-                            float impCoff = outImp[ch].NewValue() == 1 ? 0.5 : 2.0;
+                            float impCoff = outImp[i].NewValue() == 1 ? 0.5 : 2.0;
                             outImp[i].Update();
+                            requestUpdateInitLast = true;
                             // auto resetValues = false;
                             if ((fabs(outAmplitude[ch].Value()) + fabs(outOffset[ch].Value())) <= outAmpMax() / 2.0) {
                                 impCoff = 1.0;
@@ -570,9 +522,10 @@ auto updateGeneratorParameters(bool force) -> void {
 
                         setAmpOff();
                         if (res == RP_OK) {
-                            if (IS_NEW(outImp[ch]) && !force) {
-                                float impCoff = outImp[ch].NewValue() == 1 ? 0.5 : 2.0;
+                            if (IS_NEW(outImp[i]) && !force) {
+                                float impCoff = outImp[i].NewValue() == 1 ? 0.5 : 2.0;
                                 outImp[i].Update();
+                                requestUpdateInitLast = true;
                                 if ((fabs(outAmplitude[ch].Value()) + fabs(outOffset[ch].Value())) <= outAmpMax() / 2.0) {
                                     impCoff = 1.0;
                                     setAmpOff();
@@ -715,7 +668,7 @@ auto updateGeneratorParameters(bool force) -> void {
         outExtTrigDeb.Update();
     }
 
-    setBurstParameters(force);
+    setBurstParameters(force, requestUpdateInitLast);
     setSweepParameters(force);
 }
 

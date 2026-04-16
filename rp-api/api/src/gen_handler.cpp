@@ -11,6 +11,7 @@
 #include "gen_handler.h"
 #include <float.h>
 #include <time.h>
+#include <vector>
 #include "axi_manager.h"
 #include "common.h"
 #include "convert.hpp"
@@ -686,11 +687,11 @@ int gen_setUseLastSample(rp_channel_t channel, bool enable) {
 
     CHECK_CHANNEL
 
-    int ret = generate_setUseLastSampleAfter(channel, enable);
-    if (ret == RP_OK) {
-        g_channels[channel].useLastSample = enable;
-    }
-    return ret;
+    g_channels[channel].useLastSample = enable;
+
+    gen_setBurstLastValue(channel, g_channels[channel].burstLastValue);
+
+    return RP_OK;
 }
 
 int gen_getUseLastSample(rp_channel_t channel, bool* enable) {
@@ -698,6 +699,7 @@ int gen_getUseLastSample(rp_channel_t channel, bool* enable) {
     CHECK_CHANNEL
 
     *enable = g_channels[channel].useLastSample;
+
     return RP_OK;
 }
 
@@ -705,7 +707,17 @@ int gen_setBurstLastValue(rp_channel_t channel, float amplitude) {
 
     CHECK_CHANNEL
 
-    int ret = generate_setBurstLastValue(channel, g_channels[channel].gain, amplitude);
+    float koff = g_channels[channel].load_mode == RP_GEN_50Ohm ? 2.0 : 1.0;
+
+    float a = amplitude;
+
+    if (g_channels[channel].useLastSample) {
+        const std::vector<float>* data = nullptr;
+        gen_getWaveformDataV(channel, &data);
+        a = g_channels[channel].amplitude * data->at(data->size() - 1);
+    }
+
+    int ret = generate_setBurstLastValue(channel, g_channels[channel].gain, a * koff);
     if (ret == RP_OK) {
         g_channels[channel].burstLastValue = amplitude;
     }
@@ -724,7 +736,9 @@ int gen_setInitGenValue(rp_channel_t channel, float amplitude) {
 
     CHECK_CHANNEL
 
-    int ret = generate_setInitGenValue(channel, g_channels[channel].gain, amplitude);
+    float koff = g_channels[channel].load_mode == RP_GEN_50Ohm ? 2.0 : 1.0;
+
+    int ret = generate_setInitGenValue(channel, g_channels[channel].gain, amplitude * koff);
     if (ret == RP_OK) {
         g_channels[channel].initValue = amplitude;
     }
@@ -953,7 +967,11 @@ int synthesize_signal(rp_channel_t channel) {
         generate_setFrequency(channel, frequency, base_freq, g_channels[channel].waveform_sample_size);
         gen_TriggerOnly(channel);
     }
-    return generate_writeData(channel, data, phase, size, g_channels[channel].genData.data());
+    auto ret = generate_writeData(channel, data, phase, size, g_channels[channel].genData.data());
+    if (ret == RP_OK && g_channels[channel].useLastSample) {
+        gen_setBurstLastValue(channel, g_channels[channel].burstLastValue);
+    }
+    return ret;
 }
 
 int synthesis_sin(float scale, float* data_out, uint16_t buffSize) {
