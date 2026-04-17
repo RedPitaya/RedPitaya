@@ -1,0 +1,87 @@
+#include "stem_125_14_Z7020_v1.0.h"
+#include "common.h"
+
+profiles_t stem_125_14_Z7020_v1_0 = {.boardModel = STEM_125_14_Z7020_v1_0,
+                                     .boardName = "STEMlab 125-14-Z7020 v1.0",
+                                     .boardModelEEPROM = "",
+                                     .boardETH_MAC = "",
+                                     .zynqCPUModel = Z7020,
+                                     .oscillator_rate = 125000000,
+
+                                     .fast_adc_full_scale = 1,
+                                     .fast_adc_rate = 125000000,
+                                     .fast_adc_is_sign = true,
+                                     .fast_adc_bits = 14,
+                                     .fast_adc_count_channels = 2,
+                                     .fast_adc_gain = {{1, 1, 0, 0}, {20, 20, 0, 0}},
+
+                                     .is_dac_present = true,
+                                     .fast_dac_full_scale = 1,
+                                     .fast_dac_rate = 125000000,
+                                     .fast_dac_is_sign = true,
+                                     .fast_dac_bits = 14,
+                                     .fast_dac_count_channels = 2,
+                                     .fast_dac_out_full_scale = {1, 1, 0, 0},
+
+                                     .is_LV_HV_mode = true,
+                                     .is_AC_DC_mode = false,
+
+                                     .slow_adc_count_channels = 4,
+                                     .slow_adc = {{false, 11, 3.5f}, {false, 11, 3.5f}, {false, 11, 3.5f}, {false, 11, 3.5f}},
+
+                                     .slow_dac_count_channels = 4,
+                                     .slow_dac = {{false, 8, 1.8f}, {false, 8, 1.8f}, {false, 8, 1.8f}, {false, 8, 1.8f}},
+
+                                     .is_DAC_gain_x5 = false,
+                                     .is_fast_calibration = true,
+                                     .is_pll_control_present = false,
+                                     .is_fast_adc_filter_present = true,
+                                     .is_fast_dac_temp_protection = false,
+                                     .is_attenuator_controller_present = false,
+                                     .is_ext_trigger_level_available = false,
+                                     .external_trigger_full_scale = 0,
+                                     .is_ext_trigger_signed = false,
+                                     .fast_adc_spectrum_resolution = 62500000,
+                                     .is_daisy_chain_clock_sync = true,
+                                     .is_dma_mode_v0_94 = true,
+                                     .is_DAC_50_Ohm_mode = false,
+                                     .is_split_osc_triggers = true,
+                                     .gpio_N_count = 11,
+                                     .gpio_P_count = 11,
+                                     .ramMB = 512,
+                                     .is_E3_high_speed_gpio = false,
+                                     .is_E3_mmc_qspi = false,
+                                     .E3_high_speed_gpio_rate = 0,
+                                     .is_E3_present = false,
+                                     .is_calib_in_fpga = true,
+                                     .is_fast_adc_16b_mode = true,
+                                     .is_xstreaming = true};
+
+profiles_t* getProfile_STEM_125_14_Z7020_v1_0() {
+
+    static uint32_t fast_adc_rate = 0;
+    static uint32_t fast_dac_rate = 0;
+
+    static bool initialized = false;
+    if (!initialized) {
+        fast_adc_rate = stem_125_14_Z7020_v1_0.fast_adc_rate;
+        fast_dac_rate = stem_125_14_Z7020_v1_0.fast_dac_rate;
+        initialized = true;
+    }
+
+    int rate = hp_cmn_GetADCBaseRateFromConfig(stem_125_14_Z7020_v1_0.boardModel);
+    if (rate != 0) {
+        stem_125_14_Z7020_v1_0.fast_adc_rate = rate;
+    } else {
+        stem_125_14_Z7020_v1_0.fast_adc_rate = fast_adc_rate;
+    }
+
+    rate = hp_cmn_GetDACBaseRateFromConfig(stem_125_14_Z7020_v1_0.boardModel);
+    if (rate != 0) {
+        stem_125_14_Z7020_v1_0.fast_dac_rate = rate;
+    } else {
+        stem_125_14_Z7020_v1_0.fast_dac_rate = fast_dac_rate;
+    }
+
+    return &stem_125_14_Z7020_v1_0;
+}

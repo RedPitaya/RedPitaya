@@ -182,6 +182,7 @@ const char* table_keys_help[] = {"all",
 
 #define ADC_BASE_RATE_PATH hp_cmn_GetHomeDirectory() + "/.config/redpitaya/adc_base_rate_"
 #define DAC_BASE_RATE_PATH hp_cmn_GetHomeDirectory() + "/.config/redpitaya/dac_base_rate_"
+#define SPEC_MAX_RATE_PATH hp_cmn_GetHomeDirectory() + "/.config/redpitaya/spec_max_rate_"
 
 profiles_t* g_profile = NULL;
 bool g_is_valid = false;
@@ -224,12 +225,15 @@ bool g_is_valid = false;
 // "STEM_125-14_TI_v1.3"
 // "STEM_65-16_TI_v1.3"
 
-std::string hp_cmn_GetHomeDirectory() {
-    struct passwd* pw = getpwuid(getuid());
-    if (pw && pw->pw_dir) {
-        return std::string(pw->pw_dir);
-    }
-    return "";
+const std::string& hp_cmn_GetHomeDirectory() {
+    static const std::string homeDir = []() -> std::string {
+        struct passwd* pw = getpwuid(getuid());
+        if (pw && pw->pw_dir) {
+            return std::string(pw->pw_dir);
+        }
+        return "";
+    }();
+    return homeDir;
 }
 
 void convertToLowerCase(char* buff) {
@@ -1286,6 +1290,16 @@ int hp_cmn_GetADCBaseRateFromConfig(rp_HPeModels_t model) {
 
 int hp_cmn_GetDACBaseRateFromConfig(rp_HPeModels_t model) {
     std::ifstream file(DAC_BASE_RATE_PATH + std::to_string((int)model) + ".conf");
+    int value = 0;
+    if (file.is_open()) {
+        file >> value;
+        file.close();
+    }
+    return value;
+}
+
+int hp_cmn_GetSpecMaxRateFromConfig(rp_HPeModels_t model) {
+    std::ifstream file(SPEC_MAX_RATE_PATH + std::to_string((int)model) + ".conf");
     int value = 0;
     if (file.is_open()) {
         file >> value;

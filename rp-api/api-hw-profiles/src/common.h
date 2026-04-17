@@ -105,6 +105,7 @@ int hp_cmn_GetFPGAVersion(rp_HPeModels_t model, const char** _no_free_value);
 
 int hp_cmn_GetADCBaseRateFromConfig(rp_HPeModels_t model);
 int hp_cmn_GetDACBaseRateFromConfig(rp_HPeModels_t model);
+int hp_cmn_GetSpecMaxRateFromConfig(rp_HPeModels_t model);
 
 #ifdef __cplusplus
 }
