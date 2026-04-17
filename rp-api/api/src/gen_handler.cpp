@@ -1298,7 +1298,15 @@ int gen_axi_SetEnable(rp_channel_t channel, bool enable) {
         }
     }
 
-    return generate_axi_SetEnable(channel, enable);
+    auto ret = generate_axi_SetEnable(channel, enable);
+
+    if (ret == RP_OK) {
+        if (g_channels[channel].useLastSample) {
+            gen_setBurstLastValue(channel, g_channels[channel].burstLastValue);
+        }
+    }
+
+    return ret;
 }
 
 int gen_axi_GetEnable(rp_channel_t channel, bool* enable) {
