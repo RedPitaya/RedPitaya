@@ -48,6 +48,17 @@ void usage(char** argv) {
             "\t\t\te3_qspi\t: Availability of E3 QSPI\n");
 
     fprintf(stdout,
+            "\t-w KEY VALUE\t: Writes a user-defined value for the current board revision.\n"
+            "\t\tKeys:\n"
+            "\t\t\tfast_adc_rate\n"
+            "\t\t\tfast_dac_rate\n"
+            "\t\t\tspec_max_rate\n"
+            "\t\t\tadc_low_pass\n"
+            "\t\t\tdac_low_pass\n"
+            "\t\t\tgen_min_speed\n"
+            "\t\t\tgen_max_speed\n");
+
+    fprintf(stdout,
             "\t-t <key>,<key>,...: Print pivot table\n"
             "\t\t<key> - Can be an exact value or as a substring.\n"
             "\t\tKeys:\n");
@@ -118,6 +129,20 @@ int main(int argc, char** argv) {
             printf("-1\n");
         }
         return ret;
+    }
+
+    if (strncmp(argv[1], "-w", 2) == 0) {
+        if (argc < 4) {
+            usage(argv);
+        } else {
+            std::string key = argv[2];
+            int i = std::stoi(argv[3]);
+            auto ret = rp_HPWriteUserDefinedValue(key.c_str(), i);
+            if (ret != RP_HP_OK) {
+                printf("Error write\n");
+            }
+            return ret;
+        }
     }
 
     if (strncmp(argv[1], "-v", 2) == 0) {

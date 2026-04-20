@@ -180,68 +180,14 @@ auto getModelS() -> std::string {
 }
 
 auto getMaxADC() -> uint32_t {
-    rp_HPeModels_t c = STEM_125_14_v1_0;
-    int dev = 0;
-    if (rp_HPGetModel(&c) != RP_HP_OK) {
-        ERROR_LOG("Can't get board model");
+    uint32_t max = 0;
+
+    if (rp_HPGetFastADCMaxLowPassFilterHz(&max) == RP_HP_OK) {
+        return max;
     }
 
-    switch (c) {
-        case STEM_125_10_v1_0:
-        case STEM_125_14_v1_0:
-        case STEM_125_14_v1_1:
-        case STEM_125_14_LN_v1_1:
-        case STEM_125_14_LN_BO_v1_1:
-        case STEM_125_14_LN_CE1_v1_1:
-        case STEM_125_14_LN_CE2_v1_1:
-        case STEM_125_14_Z7020_v1_0:
-        case STEM_125_14_Z7020_LN_v1_1:
-        case STEM_125_14_v2_0:
-        case STEM_125_14_Pro_v2_0:
-        case STEM_125_14_Z7020_Pro_v1_0:
-        case STEM_125_14_Z7020_Pro_v2_0:
-        case STEM_125_14_Z7020_Ind_v2_0:
-            dev = 2;
-            break;
-
-        case STEM_122_16SDR_v1_0:
-        case STEM_122_16SDR_v1_1:
-            dev = 2;
-            break;
-
-        case STEM_125_14_Z7020_4IN_v1_0:
-        case STEM_125_14_Z7020_4IN_v1_2:
-        case STEM_125_14_Z7020_4IN_v1_3:
-        case STEM_125_14_Z7020_4IN_BO_v1_3:
-            dev = 2;
-            break;
-
-        case STEM_250_12_v1_0:
-        case STEM_250_12_v1_1:
-        case STEM_250_12_v1_2:
-        case STEM_250_12_v1_2a:
-        case STEM_250_12_v1_2b:
-            dev = 4;
-            break;
-        case STEM_250_12_120:
-            dev = 4;
-            break;
-
-        case STEM_125_14_Z7020_LL_v1_1:
-        case STEM_125_14_Z7020_LL_v1_2:
-        case STEM_125_14_Z7020_TI_v1_3:
-            dev = 2;
-            break;
-        case STEM_65_16_Z7020_LL_v1_1:
-        case STEM_65_16_Z7020_TI_v1_3:
-            dev = 1;
-            break;
-
-        default:
-            FATAL("Can't get board model");
-    }
-    uint32_t adc = rpApp_BaGetADCSpeed();
-    return adc / dev;
+    ERROR_LOG("Can't get ADC low-pass filter value")
+    return 1;
 }
 
 //Application description

@@ -672,11 +672,13 @@
 
     BA.startFreq = function(new_params) {
         var param_name = "BA_START_FREQ"
+        $("#BA_START_FREQ").attr("max",new_params['BA_START_FREQ'].max);
         BA.setValue(param_name,new_params)
     }
 
     BA.endFreq = function(new_params) {
         var param_name = "BA_END_FREQ"
+        $("#BA_END_FREQ").attr("max",new_params['BA_END_FREQ'].max);
         BA.setValue(param_name,new_params)
     }
 

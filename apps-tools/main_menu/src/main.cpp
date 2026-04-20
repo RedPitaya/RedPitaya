@@ -24,10 +24,6 @@
 #define SLEEP_TIME 60000 * 5
 #define WEBPORT 9099
 
-#define BASE_RATE_PATH getHomeDirectory() + "/.config/redpitaya"
-#define ADC_BASE_RATE_PATH getHomeDirectory() + "/.config/redpitaya/adc_base_rate_" + std::to_string((int)getModel()) + ".conf"
-#define DAC_BASE_RATE_PATH getHomeDirectory() + "/.config/redpitaya/dac_base_rate_" + std::to_string((int)getModel()) + ".conf"
-
 using namespace std::chrono;
 
 enum RP_COMMDANS { RP_NONE = 0, RP_START_BUILD_LOG = 1, RP_STOP_BUILD_LOG = 2 };
@@ -88,8 +84,10 @@ int rp_app_init(void) {
             }
         }
     });
+
     adc_base_rate.SendValue(rp_HPGetBaseFastADCSpeedHzOrDefault());
     dac_base_rate.SendValue(rp_HPGetBaseFastDACSpeedHzOrDefault());
+
     g_server = std::make_shared<rp_websocket::CWEBServer>();
     g_server->startServer(WEBPORT);
 
@@ -180,36 +178,26 @@ void UpdateParams(void) {
 }
 
 void OnNewParams(void) {
-    auto adc_rate_path = ADC_BASE_RATE_PATH;
-    auto dac_rate_path = DAC_BASE_RATE_PATH;
     if (adc_base_rate.NewValue() != adc_base_rate.Value()) {
+        int old = adc_base_rate.Value();
         adc_base_rate.Update();
-        createDirectory(BASE_RATE_PATH);
         if (adc_base_rate.Value() > 0) {
-            std::ofstream out;
-            out.open(adc_rate_path);
-            if (out.is_open()) {
-                out << adc_base_rate.Value();
-            }
-            out.close();
+            rp_HPWriteUserDefinedValue("fast_adc_rate", adc_base_rate.Value());
         }
-        rp_HPInit();
-        adc_base_rate.SendValue(rp_HPGetBaseFastADCSpeedHzOrDefault());
+        if (adc_base_rate.Value() == 0) {
+            adc_base_rate.SendValue(old);
+        }
     }
 
     if (dac_base_rate.NewValue() != dac_base_rate.Value()) {
+        int old = dac_base_rate.Value();
         dac_base_rate.Update();
-        createDirectory(BASE_RATE_PATH);
         if (dac_base_rate.Value() > 0) {
-            std::ofstream out;
-            out.open(dac_rate_path);
-            if (out.is_open()) {
-                out << dac_base_rate.Value();
-            }
-            out.close();
+            rp_HPWriteUserDefinedValue("fast_dac_rate", dac_base_rate.Value());
         }
-        rp_HPInit();
-        dac_base_rate.SendValue(rp_HPGetBaseFastDACSpeedHzOrDefault());
+        if (dac_base_rate.Value() == 0) {
+            dac_base_rate.SendValue(old);
+        }
     }
 
     if (rp_command.IsNewValue()) {

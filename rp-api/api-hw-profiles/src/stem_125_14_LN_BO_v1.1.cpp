@@ -42,6 +42,8 @@ profiles_t stem_125_14_LN_BO_v1_1 = {.boardModel = STEM_125_14_LN_BO_v1_1,
                                      .external_trigger_full_scale = 0,
                                      .is_ext_trigger_signed = false,
                                      .fast_adc_spectrum_resolution = 62500000,
+                                     .fast_adc_low_pass_filter = 50000000,
+                                     .fast_dac_low_pass_filter = 50000000,
                                      .is_daisy_chain_clock_sync = false,
                                      .is_dma_mode_v0_94 = true,
                                      .is_DAC_50_Ohm_mode = false,
@@ -55,33 +57,30 @@ profiles_t stem_125_14_LN_BO_v1_1 = {.boardModel = STEM_125_14_LN_BO_v1_1,
                                      .is_E3_present = false,
                                      .is_calib_in_fpga = true,
                                      .is_fast_adc_16b_mode = true,
-                                     .is_xstreaming = true};
+                                     .is_xstreaming = true,
+                                     .gen_min_speed = 1,
+                                     .gen_max_speed = 50000000};
 
 profiles_t* getProfile_STEM_125_14_LN_BO_v1_1() {
+    profiles_t* profile = []() -> profiles_t* {
+        uint32_t orig_adc = stem_125_14_LN_BO_v1_1.fast_adc_rate;
+        uint32_t orig_dac = stem_125_14_LN_BO_v1_1.fast_dac_rate;
+        uint32_t orig_spec = stem_125_14_LN_BO_v1_1.fast_adc_spectrum_resolution;
+        uint32_t orig_adc_fp = stem_125_14_LN_BO_v1_1.fast_adc_low_pass_filter;
+        uint32_t orig_dac_fp = stem_125_14_LN_BO_v1_1.fast_dac_low_pass_filter;
+        uint32_t orig_gen_min_speed = stem_125_14_LN_BO_v1_1.gen_min_speed;
+        uint32_t orig_gen_max_speed = stem_125_14_LN_BO_v1_1.gen_max_speed;
 
-    static uint32_t fast_adc_rate = 0;
-    static uint32_t fast_dac_rate = 0;
+        applyRate(stem_125_14_LN_BO_v1_1.fast_adc_rate, orig_adc, ADC_BASE_RATE_PATH, stem_125_14_LN_BO_v1_1.boardModel);
+        applyRate(stem_125_14_LN_BO_v1_1.fast_dac_rate, orig_dac, DAC_BASE_RATE_PATH, stem_125_14_LN_BO_v1_1.boardModel);
+        applyRate(stem_125_14_LN_BO_v1_1.fast_adc_spectrum_resolution, orig_spec, SPEC_ADC_PATH, stem_125_14_LN_BO_v1_1.boardModel);
+        applyRate(stem_125_14_LN_BO_v1_1.fast_adc_low_pass_filter, orig_adc_fp, ADC_LP_FILTER_PATH, stem_125_14_LN_BO_v1_1.boardModel);
+        applyRate(stem_125_14_LN_BO_v1_1.fast_dac_low_pass_filter, orig_dac_fp, DAC_LP_FILTER_PATH, stem_125_14_LN_BO_v1_1.boardModel);
+        applyRate(stem_125_14_LN_BO_v1_1.gen_min_speed, orig_gen_min_speed, GEN_MIN_RATE_PATH, stem_125_14_LN_BO_v1_1.boardModel);
+        applyRate(stem_125_14_LN_BO_v1_1.gen_max_speed, orig_gen_max_speed, GEN_MAX_RATE_PATH, stem_125_14_LN_BO_v1_1.boardModel);
 
-    static bool initialized = false;
-    if (!initialized) {
-        fast_adc_rate = stem_125_14_LN_BO_v1_1.fast_adc_rate;
-        fast_dac_rate = stem_125_14_LN_BO_v1_1.fast_dac_rate;
-        initialized = true;
-    }
+        return &stem_125_14_LN_BO_v1_1;
+    }();
 
-    int rate = hp_cmn_GetADCBaseRateFromConfig(stem_125_14_LN_BO_v1_1.boardModel);
-    if (rate != 0) {
-        stem_125_14_LN_BO_v1_1.fast_adc_rate = rate;
-    } else {
-        stem_125_14_LN_BO_v1_1.fast_adc_rate = fast_adc_rate;
-    }
-
-    rate = hp_cmn_GetDACBaseRateFromConfig(stem_125_14_LN_BO_v1_1.boardModel);
-    if (rate != 0) {
-        stem_125_14_LN_BO_v1_1.fast_dac_rate = rate;
-    } else {
-        stem_125_14_LN_BO_v1_1.fast_dac_rate = fast_dac_rate;
-    }
-
-    return &stem_125_14_LN_BO_v1_1;
+    return profile;
 }

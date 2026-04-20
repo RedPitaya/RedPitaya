@@ -198,6 +198,42 @@ int rp_HPGetSpectrumFastADCSpeedHz(uint32_t* _out_value);
 uint32_t rp_HPGetSpectrumFastADCSpeedHzOrDefault();
 
 /**
+* Returns the maximum value of the low-pass filter at the Fast ADC input.
+* Function rp_HPGetFastADCMaxLowPassFilterHzOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
+*/
+int rp_HPGetFastADCMaxLowPassFilterHz(uint32_t* _out_value);
+uint32_t rp_HPGetFastADCMaxLowPassFilterHzOrDefault();
+
+/**
+* Returns the maximum value of the low-pass filter at the Fast DAC output.
+* Function rp_HPGetFastDACMaxLowPassFilterHzOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
+*/
+int rp_HPGetFastDACMaxLowPassFilterHz(uint32_t* _out_value);
+uint32_t rp_HPGetFastDACMaxLowPassFilterHzOrDefault();
+
+/**
+* Returns the minimum sample rate of the signal generator in Hz.
+* Function rp_HPGetGenMinSpeedHzOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
+*/
+int rp_HPGetGenMinSpeedHz(uint32_t* _out_value);
+uint32_t rp_HPGetGenMinSpeedHzOrDefault();
+
+/**
+* Returns the maximum sample rate of the signal generator in Hz.
+* Function rp_HPGetGenMaxSpeedHzOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
+*/
+int rp_HPGetGenMaxSpeedHz(uint32_t* _out_value);
+uint32_t rp_HPGetGenMaxSpeedHzOrDefault();
+
+/**
 * Returns the number of channels for ADC
 * Function rp_HPGetFastADCChannelsCountOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
 * @return If the function is successful, the return value is RP_OK.
@@ -608,6 +644,15 @@ int rp_HPGetIsValidEepromModel(bool* _out_value);
 */
 int rp_HPGetIsXStreamingAvailable(bool* _out_value);
 bool rp_HPGetIsXStreamingAvailableOrDefault();
+
+/**
+* Writes a user-defined key-value pair to the device.
+* @param key - The key identifier for the user-defined value.
+* @param value - The integer value to associate with the specified key.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
+*/
+int rp_HPWriteUserDefinedValue(const char* key, int value);
 
 #ifdef __cplusplus
 }
