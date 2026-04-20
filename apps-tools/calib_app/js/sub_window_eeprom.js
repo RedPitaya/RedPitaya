@@ -204,7 +204,7 @@
             $.ajax({
                 url: "/calib_app_create_backup?factory=1",
                 type: 'GET',
-                timeout: 5000
+                timeout: 10000
             }).done(function(res) {
                 console.log(res)
                 download("/calib_app/files/"+res.trim(),res.trim());
@@ -219,7 +219,7 @@
             $.ajax({
                 url: "/calib_app_create_backup?factory=0",
                 type: 'GET',
-                timeout: 5000
+                timeout: 10000
             }).done(function(res) {
                 console.log(res)
                 download("/calib_app/files/"+res.trim(),res.trim());
