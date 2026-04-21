@@ -9,18 +9,19 @@
 
 void synthesis_arb(CFloatBinarySignal* signal, const float* data, const GenChannelSettings& settings) {
     auto sigSize = (*signal).GetSize();
-    if (sigSize == 0)
+    if (sigSize == 0 || settings.arb_size <= 0)
         return;
-    float rate = 1;  //(float)_size / (float)DAC_BUFFER_SIZE;
-    int period = (int)sigSize * 1000 / (settings.frequency * settings.tscale * 10) * rate;
-    if (period == 0)
-        period = 1;
-    for (int i = 0; i < sigSize; ++i) {
-        auto x = i % period;
 
-        auto t = (float)x / (float)period;
-        int z = ((int)(t * settings.arb_size) % settings.arb_size);
+    double phaseStep = (double)settings.frequency * settings.tscale * 0.01 * settings.arb_size / sigSize;
+
+    double currentPhase = 0.0;
+
+    for (int i = 0; i < sigSize; ++i) {
+        int z = (int)currentPhase % settings.arb_size;
+
         (*signal)[i] = data[z] * settings.amplitude + settings.offset + settings.showOff;
+
+        currentPhase += phaseStep;
     }
 }
 
