@@ -192,20 +192,24 @@ int main(int argc, char* argv[]) {
 
     for (int i = 0; i < channels; i++) {
         if (option.trigger_mode[i] != RP_TRIG_SRC_DISABLED) {
-            bool fillState = false;
-            rp_acq_trig_state_t trig_state = RP_TRIG_STATE_WAITING;
-
-            while (1) {
-                rp_AcqGetTriggerStateCh((rp_channel_t)i, &trig_state);
-                if (trig_state == RP_TRIG_STATE_TRIGGERED) {
-                    break;
-                } else {
-                    usleep(1);
+            if (option.intMode) {
+                ECHECK(rp_AcqIntTriggerReadCh((rp_channel_t)i, -1))
+                ECHECK(rp_AcqIntFillReadCh((rp_channel_t)i, -1))
+            } else {
+                bool fillState = false;
+                rp_acq_trig_state_t trig_state = RP_TRIG_STATE_WAITING;
+                while (1) {
+                    rp_AcqGetTriggerStateCh((rp_channel_t)i, &trig_state);
+                    if (trig_state == RP_TRIG_STATE_TRIGGERED) {
+                        break;
+                    } else {
+                        usleep(1);
+                    }
                 }
-            }
 
-            while (!fillState) {
-                rp_AcqGetBufferFillStateCh((rp_channel_t)i, &fillState);
+                while (!fillState) {
+                    rp_AcqGetBufferFillStateCh((rp_channel_t)i, &fillState);
+                }
             }
             rp_AcqStopCh((rp_channel_t)i);
         }

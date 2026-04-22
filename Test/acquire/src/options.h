@@ -35,6 +35,7 @@ struct Options {
     bool enableDebug = false;
     bool enable16BitMode = false;
     bool bypassFilter = false;
+    bool intMode = false;
     int offset = 0;
     bool avg = false;
 
@@ -64,6 +65,7 @@ struct Options {
         enableAXI = false;
         bypassFilter = false;
         enable16BitMode = false;
+        intMode = false;
     };
 };
 

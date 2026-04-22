@@ -897,7 +897,7 @@ int acq_Stop(rp_channel_t channel) {
 }
 
 int acq_Reset(rp_channel_t channel) {
-    acq_SetSplitTriggerMode(false);
+    // acq_SetSplitTriggerMode(false); // ??
     acq_SetDefault(channel);
     return osc_ResetWriteStateMachine(channel);
 }
@@ -1527,6 +1527,7 @@ int acq_SetDefaultAll() {
         return RP_NOTS;
     }
     acq_Set16BitMode(false);
+    acq_SetSplitTriggerMode(false);
     for (int i = 0; i < channels; i++) {
         ECHECK(acq_SetDefault((rp_channel_t)i))
     }
@@ -1727,6 +1728,76 @@ int acq_GetOffset(rp_channel_t channel, float* voltage) {
             return RP_EIPV;
     }
     return RP_OK;
+}
+
+int acq_IntUnmask() {
+    return osc_IntUnmask();
+}
+
+int acq_IntUnmaskCh(rp_channel_t channel) {
+    CHECK_CHANNEL
+    return osc_IntUnmaskCh(channel);
+}
+
+int acq_IntTriggerRead(uint64_t timeout) {
+    auto ret = osc_IntTriggerRead(timeout);
+    if (ret == RP_OK) {
+        ret = osc_IntClearTrigger();
+    }
+    return ret;
+}
+
+int acq_IntFullRead(uint64_t timeout) {
+    auto ret = osc_IntFullRead(timeout);
+    if (ret == RP_OK) {
+        ret = osc_IntClearBufferFull();
+    }
+    return ret;
+}
+
+int acq_IntTriggerReadCh(rp_channel_t channel, uint64_t timeout) {
+    CHECK_CHANNEL
+    auto ret = osc_IntTriggerReadCh(channel, timeout);
+    if (ret == RP_OK) {
+        ret = osc_IntClearTriggerCh(channel);
+    }
+    return ret;
+}
+
+int acq_IntFullReadCh(rp_channel_t channel, uint64_t timeout) {
+    CHECK_CHANNEL
+    auto ret = osc_IntFullReadCh(channel, timeout);
+    if (ret == RP_OK) {
+        ret = osc_IntClearBufferFullCh(channel);
+    }
+    return ret;
+}
+
+int acq_IntClearTrigger() {
+    return osc_IntClearTrigger();
+}
+
+int acq_IntClearBufferFull() {
+    return osc_IntClearBufferFull();
+}
+
+int acq_IntClearAll() {
+    return osc_IntClearAll();
+}
+
+int acq_IntClearTriggerCh(rp_channel_t channel) {
+    CHECK_CHANNEL
+    return osc_IntClearTriggerCh(channel);
+}
+
+int acq_IntClearBufferFullCh(rp_channel_t channel) {
+    CHECK_CHANNEL
+    return osc_IntClearBufferFullCh(channel);
+}
+
+int acq_IntClearAllCh(rp_channel_t channel) {
+    CHECK_CHANNEL
+    return osc_IntClearAllCh(channel);
 }
 
 int acq_axi_SetOffset(rp_channel_t channel, float voltage) {

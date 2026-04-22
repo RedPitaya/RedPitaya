@@ -211,22 +211,27 @@ int main(int argc, char* argv[]) {
     bool fillState = false;
     rp_acq_trig_state_t trig_state = RP_TRIG_STATE_WAITING;
 
-    while (1) {
-        rp_AcqGetTriggerState(&trig_state);
-        if (trig_state == RP_TRIG_STATE_TRIGGERED) {
-            break;
-        } else {
-            usleep(1);
+    if (option.intMode) {
+        ECHECK(rp_AcqIntTriggerRead(-1))
+        ECHECK(rp_AcqIntFillRead(-1))
+    } else {
+        while (1) {
+            rp_AcqGetTriggerState(&trig_state);
+            if (trig_state == RP_TRIG_STATE_TRIGGERED) {
+                break;
+            } else {
+                usleep(1);
+            }
+        }
+        while (!fillState) {
+            if (option.enableAXI) {
+                rp_AcqAxiGetBufferFillState(axi_trig_ch, &fillState);
+            } else {
+                rp_AcqGetBufferFillState(&fillState);
+            }
         }
     }
 
-    while (!fillState) {
-        if (option.enableAXI) {
-            rp_AcqAxiGetBufferFillState(axi_trig_ch, &fillState);
-        } else {
-            rp_AcqGetBufferFillState(&fillState);
-        }
-    }
     rp_AcqStop();
 
     uint32_t pos = 0;

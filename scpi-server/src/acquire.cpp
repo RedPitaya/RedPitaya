@@ -553,6 +553,120 @@ scpi_result_t RP_AcqBypassFilterChQ(scpi_t* context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_AcqInterrupTriggerQ(scpi_t* context) {
+    int32_t timeout_ms = 0;
+    if (!SCPI_ParamInt32(context, &timeout_ms, false)) {
+        timeout_ms = 0;
+    }
+
+    const char* trig_name = nullptr;
+    // get trigger source
+    auto result = rp_AcqIntTriggerRead(timeout_ms);
+    if (RP_OK != result && RP_ETIM != result) {
+        RP_LOG_CRIT("Failed to get trigger interrput: %s", rp_GetError(result));
+        result = RP_EOP;
+    }
+    if (!SCPI_ChoiceToName(scpi_RpIntStat, result, &trig_name)) {
+        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to parse interrupt error.")
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+    // Return back result
+    SCPI_ResultMnemonic(context, trig_name);
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqInterrupTriggerChQ(scpi_t* context) {
+    rp_channel_t channel = RP_CH_1;
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK) {
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+
+    int32_t timeout_ms = 0;
+    if (!SCPI_ParamInt32(context, &timeout_ms, false)) {
+        timeout_ms = 0;
+    }
+
+    const char* trig_name = nullptr;
+    // get trigger source
+    auto result = rp_AcqIntTriggerReadCh(channel, timeout_ms);
+    if (RP_OK != result && RP_ETIM != result) {
+        RP_LOG_CRIT("Failed to get trigger interrput: %s", rp_GetError(result));
+        result = RP_EOP;
+    }
+    if (!SCPI_ChoiceToName(scpi_RpIntStat, result, &trig_name)) {
+        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to parse interrupt error.")
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+    // Return back result
+    SCPI_ResultMnemonic(context, trig_name);
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqInterrupFillQ(scpi_t* context) {
+    int32_t timeout_ms = 0;
+    if (!SCPI_ParamInt32(context, &timeout_ms, false)) {
+        timeout_ms = 0;
+    }
+
+    const char* trig_name = nullptr;
+    // get trigger source
+    auto result = rp_AcqIntFillRead(timeout_ms);
+    if (RP_OK != result && RP_ETIM != result) {
+        RP_LOG_CRIT("Failed to get fill interrupt: %s", rp_GetError(result));
+        result = RP_EOP;
+    }
+    if (!SCPI_ChoiceToName(scpi_RpIntStat, result, &trig_name)) {
+        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to parse interrupt error.")
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+    // Return back result
+    SCPI_ResultMnemonic(context, trig_name);
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqInterrupFillChQ(scpi_t* context) {
+    rp_channel_t channel = RP_CH_1;
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK) {
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+
+    int32_t timeout_ms = 0;
+    if (!SCPI_ParamInt32(context, &timeout_ms, false)) {
+        timeout_ms = 0;
+    }
+
+    const char* trig_name = nullptr;
+    // get trigger source
+    auto result = rp_AcqIntFillReadCh(channel, timeout_ms);
+    if (RP_OK != result && RP_ETIM != result) {
+        RP_LOG_CRIT("Failed to get fill interrput: %s", rp_GetError(result));
+        result = RP_EOP;
+    }
+    if (!SCPI_ChoiceToName(scpi_RpIntStat, result, &trig_name)) {
+        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to parse interrupt error.")
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+    // Return back result
+    SCPI_ResultMnemonic(context, trig_name);
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_AcqTriggerSrc(scpi_t* context) {
     int32_t trig_src = 0;
     /* Read TRIGGER SOURCE parameter */

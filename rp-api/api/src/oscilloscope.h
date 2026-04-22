@@ -151,6 +151,103 @@ typedef union {
     rec_filter_bypass_t reg;
 } rec_filter_bypass_u_t;
 
+/**
+ * @brief IRQ Mask Register (0xAC) with union for bitfield or full value access
+ */
+typedef union {
+    struct {
+        uint32_t trigger_en : 1;
+        uint32_t buffer_full_en : 1;
+        uint32_t reserved : 30;
+    } bits;
+    uint32_t value;
+    void print() volatile {
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "trigger_en", bits.trigger_en);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "buffer_full_en", bits.buffer_full_en);
+    };
+} acquisition_irq_mask_t;
+
+/**
+ * @brief IRQ Status/Clear Register (0xB0) with union for bitfield or full value access
+ */
+typedef union {
+    struct {
+        uint32_t trigger_pending : 1;
+        uint32_t buffer_full_pending : 1;
+        uint32_t reserved : 30;
+    } bits;
+    uint32_t value;
+    void print() volatile {
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "trigger_pending", bits.trigger_pending);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "buffer_full_pending", bits.buffer_full_pending);
+    };
+} acquisition_irq_status_t;
+
+/**
+ * @brief Split IRQ Mask Register (0xB4)
+ * @details Enable/disable per-channel interrupt sources
+ *
+ * Bits 0-3:   Trigger enable for channels 1-4
+ * Bits 4-7:   Buffer full enable for channels 1-4
+ */
+typedef union {
+    struct {
+        uint32_t trig_ch1_en : 1;  // bit0
+        uint32_t trig_ch2_en : 1;  // bit1
+        uint32_t trig_ch3_en : 1;  // bit2
+        uint32_t trig_ch4_en : 1;  // bit3
+        uint32_t fill_ch1_en : 1;  // bit4
+        uint32_t fill_ch2_en : 1;  // bit5
+        uint32_t fill_ch3_en : 1;  // bit6
+        uint32_t fill_ch4_en : 1;  // bit7
+        uint32_t reserved : 24;
+    } bits;
+    uint32_t value;
+    void print() volatile {
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "trig_ch1_en", bits.trig_ch1_en);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "trig_ch2_en", bits.trig_ch2_en);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "trig_ch3_en", bits.trig_ch3_en);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "trig_ch4_en", bits.trig_ch4_en);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "fill_ch1_en", bits.fill_ch1_en);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "fill_ch2_en", bits.fill_ch2_en);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "fill_ch3_en", bits.fill_ch3_en);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "fill_ch4_en", bits.fill_ch4_en);
+    };
+} split_irq_mask_t;
+
+/**
+ * @brief Split IRQ Status/Clear Register (0xB8)
+ * @details Read: Get per-channel interrupt status
+ *          Write: Clear pending interrupts (write 1 to clear)
+ *
+ * Bits 0-3:   Trigger pending for channels 1-4
+ * Bits 4-7:   Buffer full pending for channels 1-4
+ */
+typedef union {
+    struct {
+        uint32_t trig_ch1_pending : 1;  // bit0
+        uint32_t trig_ch2_pending : 1;  // bit1
+        uint32_t trig_ch3_pending : 1;  // bit2
+        uint32_t trig_ch4_pending : 1;  // bit3
+        uint32_t fill_ch1_pending : 1;  // bit4
+        uint32_t fill_ch2_pending : 1;  // bit5
+        uint32_t fill_ch3_pending : 1;  // bit6
+        uint32_t fill_ch4_pending : 1;  // bit7
+        uint32_t reserved : 24;
+    } bits;
+    uint32_t value;
+    void print() volatile {
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "trig_ch1_pending", bits.trig_ch1_pending);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "trig_ch2_pending", bits.trig_ch2_pending);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "trig_ch3_pending", bits.trig_ch3_pending);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "trig_ch4_pending", bits.trig_ch4_pending);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "fill_ch1_pending", bits.fill_ch1_pending);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "fill_ch2_pending", bits.fill_ch2_pending);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "fill_ch3_pending", bits.fill_ch3_pending);
+        printRegBit(" - %-39s = 0x%08X (%d)\n", "fill_ch4_pending", bits.fill_ch4_pending);
+    };
+} split_irq_status_t;
+
 // Oscilloscope structure declaration
 typedef struct osc_control_s {
 
@@ -475,9 +572,99 @@ typedef struct osc_control_s {
     */
     uint32_t filter_bypass;
 
-    /** @brief Offset 0x98 - reserved
+    /**
+     * @brief Offset 0x9С-0xA8 - Reserved area
+    * @note 11 reserved registers (0x98 to 0xA8 inclusive)
+    */
+    uint32_t reserved_9C[4];  // 0x9C - 0xA8
+
+    /**
+     * @brief 0xAC - IRQ Mask
+     * @details Enable interrupt sources
+     * Values: 0x1 (trigger), 0x2 (buffer full), 0x3 (both)
      */
-    uint32_t reserved_98[29];
+    uint32_t irq_mask;
+
+    /**
+     * @brief 0xB0 - IRQ Status/Clear
+     * @details Read: get latched IRQ status (bits: 0=trigger, 1=buffer full)
+     *          Write: clear pending IRQs (write 1 to corresponding bit)
+     */
+    uint32_t irq_status_clear;
+
+    /**
+     * @brief 0xB4 - Split IRQ Mask Register
+     * @details Enable/disable per-channel interrupt sources for independent trigger mode.
+     *          Used when indep_mode is enabled (each channel operates independently).
+     *
+     * Bit mapping:
+     * - Bits 0-3:   Trigger event enable for channels 1-4
+     * - Bits 4-7:   Buffer full / acquisition finished enable for channels 1-4
+     * - Bits 8-31:  Reserved (write 0, read undefined)
+     *
+     * Values per bit:
+     * - 0: Interrupt disabled
+     * - 1: Interrupt enabled
+     *
+     * Common mask values:
+     * - 0x01: Enable trigger only on channel 1
+     * - 0x02: Enable trigger only on channel 2
+     * - 0x04: Enable trigger only on channel 3
+     * - 0x08: Enable trigger only on channel 4
+     * - 0x10: Enable buffer full only on channel 1
+     * - 0x20: Enable buffer full only on channel 2
+     * - 0x30: Enable buffer full on channels 1 and 2
+     * - 0x0F: Enable trigger on all channels
+     * - 0xF0: Enable buffer full on all channels
+     * - 0xFF: Enable all events on all channels
+     *
+     * @note This register is only effective when indep_mode = 1
+     * @note For legacy combined mode, use irq_mask (0xAC) instead
+     *
+     * @example Enable trigger on channel 1 and buffer full on channel 2:
+     *         monitor 0x401000B4 0x21  (0x20 | 0x01)
+    **/
+    uint32_t irq_split_mask;
+
+    /**
+     * @brief 0xB8 - Split IRQ Status / Clear Register
+     * @details Read: Get latched per-channel interrupt status
+     *          Write: Clear pending interrupts (write 1 to corresponding bit)
+     *
+     * Bit mapping (same as mask register):
+     * - Bits 0-3:   Trigger event pending for channels 1-4
+     * - Bits 4-7:   Buffer full pending for channels 1-4
+     * - Bits 8-31:  Reserved (read as 0)
+     *
+     * Status values when reading:
+     * - 0x00: No pending interrupts on any channel
+     * - 0x01: Trigger pending on channel 1
+     * - 0x02: Trigger pending on channel 2
+     * - 0x04: Trigger pending on channel 3
+     * - 0x08: Trigger pending on channel 4
+     * - 0x10: Buffer full pending on channel 1
+     * - 0x20: Buffer full pending on channel 2
+     * - 0x30: Buffer full pending on channels 1 and 2
+     * - 0x0F: Trigger pending on all channels
+     * - 0xF0: Buffer full pending on all channels
+     * - 0xFF: All events pending on all channels
+     *
+     * Clearing interrupts (write):
+     * - Write 1 to a bit to clear the corresponding pending interrupt
+     * - Multiple bits can be cleared simultaneously
+     * - Write 0x0F to clear all trigger events
+     * - Write 0xF0 to clear all buffer full events
+     * - Write 0xFF to clear all events on all channels
+     *
+     * @note Interrupts are edge-triggered and latched until cleared
+     * @note Writing 0 has no effect
+     * @note After clearing, the bit returns to 0 if no new event occurred
+     *
+    **/
+    uint32_t irq_split_status_clear;
+
+    /** @brief Offset 0xBС to 0x10C */
+    uint32_t reserved_BC[21];
 
     /** @brief Offset 0x110 - After trigger delay register
      *
@@ -647,6 +834,19 @@ int osc_SetEqFiltersChC(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, ui
 int osc_GetEqFiltersChC(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
 int osc_SetEqFiltersChD(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp);
 int osc_GetEqFiltersChD(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
+
+int osc_IntUnmask();
+int osc_IntUnmaskCh(rp_channel_t channel);
+int osc_IntTriggerRead(int timeout);
+int osc_IntFullRead(int timeout);
+int osc_IntTriggerReadCh(rp_channel_t channel, int timeout);
+int osc_IntFullReadCh(rp_channel_t channel, int timeout);
+int osc_IntClearTrigger();
+int osc_IntClearBufferFull();
+int osc_IntClearAll();
+int osc_IntClearTriggerCh(rp_channel_t channel);
+int osc_IntClearBufferFullCh(rp_channel_t channel);
+int osc_IntClearAllCh(rp_channel_t channel);
 
 int osc_SetCalibOffsetInFPGA(rp_channel_t channel, int32_t offset);
 int osc_SetCalibGainInFPGA(rp_channel_t channel, double gain);

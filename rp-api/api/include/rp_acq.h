@@ -750,6 +750,44 @@ int rp_AcqGetUnlockTrigger(bool* state);
 int rp_AcqGetUnlockTriggerCh(rp_channel_t channel, bool* state);
 
 /**
+ * Waits for a trigger interrupt event on any channel of the acquisition module.
+ * This function blocks until a trigger condition is met on any channel or the specified timeout expires.
+ * @param timeout_ms Timeout value in milliseconds (mS). For disable timeout use: -1
+ * @return If the function is successful (trigger detected), the return value is RP_OK.
+ * If timeout expires, returns RP_ETIMEOUT. If unsuccessful, returns any of RP_E* values that indicate an error.
+ */
+int rp_AcqIntTriggerRead(int timeout_ms);
+
+/**
+ * Waits for a buffer fill interrupt event on any channel of the acquisition module.
+ * This function blocks until the acquisition buffer is fill on any channel or the specified timeout expires.
+ * @param timeout_ms Timeout value in milliseconds (mS). For disable timeout use: -1
+ * @return If the function is successful (buffer full detected), the return value is RP_OK.
+ * If timeout expires, returns RP_ETIMEOUT. If unsuccessful, returns any of RP_E* values that indicate an error.
+ */
+int rp_AcqIntFillRead(int timeout_ms);
+
+/**
+ * Waits for a trigger interrupt event on a specific channel of the acquisition module.
+ * This function blocks until a trigger condition is met on the specified channel or the timeout expires.
+ * @param channel The channel to monitor for trigger events (e.g., RP_CH_1, RP_CH_2).
+ * @param timeout_ms Timeout value in milliseconds (mS). For disable timeout use: -1
+ * @return If the function is successful (trigger detected), the return value is RP_OK.
+ * If timeout expires, returns RP_ETIMEOUT. If unsuccessful, returns any of RP_E* values that indicate an error.
+ */
+int rp_AcqIntTriggerReadCh(rp_channel_t channel, int timeout_ms);
+
+/**
+ * Waits for a buffer fill interrupt event on a specific channel of the acquisition module.
+ * This function blocks until the acquisition buffer is fill on the specified channel or the timeout expires.
+ * @param channel The channel to monitor for buffer fill events (e.g., RP_CH_1, RP_CH_2).
+ * @param timeout_ms Timeout value in milliseconds (mS). For disable timeout use: -1
+ * @return If the function is successful (buffer full detected), the return value is RP_OK.
+ * If timeout expires, returns RP_ETIMEOUT. If unsuccessful, returns any of RP_E* values that indicate an error.
+ */
+int rp_AcqIntFillReadCh(rp_channel_t channel, int timeout_ms);
+
+/**
  * Normalizes the ADC buffer position. Returns the modulo operation of ADC buffer size...
  * @param pos position to be normalized
  * @return Normalized position (pos % ADC_BUFFER_SIZE)

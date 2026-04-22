@@ -30,6 +30,7 @@ static constexpr char g_format_common_settings[] =
     "  --volt          -o    Print value in volt.\n"
     "  --calib         -c    Disable calibration parameters\n"
     "  --16bit               Enables 16Bit mode\n"
+    "  --int                 Interrupt-based operation mode.\n"
     "  --hk            -k    Reset houskeeping (Reset state for GPIO). Default: disabled\n"
     "  --debug         -g    Debug registers. Default: disabled\n"
     "  --offset              Offset relative to the trigger pointer [-16384 .. 16384]\n"
@@ -83,7 +84,7 @@ static struct std::vector<option> long_options_settings = {
     /* These options set a flag. */
     {"equalization", no_argument, 0, 'e'}, {"shaping", no_argument, 0, 's'}, {"bypass", no_argument, 0, 'b'}, {"version", no_argument, 0, 'v'}, {"help", no_argument, 0, 'h'},
         {"hex", no_argument, 0, 'x'}, {"volt", no_argument, 0, 'o'}, {"calib", no_argument, 0, 'c'}, {"hk", no_argument, 0, 'k'}, {"debug", no_argument, 0, 'g'},
-        {"16bit", no_argument, 0, 0}, {
+        {"16bit", no_argument, 0, 0}, {"int", no_argument, 0, 0}, {
         "offset", required_argument, 0, 0
     }
 };
@@ -382,6 +383,11 @@ auto parse(int argc, char* argv[]) -> Options {
                     } else {
                         opt.enable16BitMode = true;
                     }
+                    break;
+                }
+
+                if (strcmp(opt.options[option_index].name, "int") == 0) {
+                    opt.intMode = true;
                     break;
                 }
 

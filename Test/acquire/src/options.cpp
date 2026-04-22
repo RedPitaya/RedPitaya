@@ -16,27 +16,17 @@ static constexpr uint32_t g_dec[DEC_MAX] = {1, 2, 4, 8, 16};
 static constexpr char optstring_250_12[64] = "esbx1:2:d:vht:l:orckag";
 static struct option long_options_250_12[32] = {
     /* These options set a flag. */
-    {"equalization", no_argument, 0, 'e'},
-    {"shaping", no_argument, 0, 's'},
-    {"bypass", no_argument, 0, 'b'},
-    {"atten1", required_argument, 0, '1'},
-    {"atten2", required_argument, 0, '2'},
-    {"dc", required_argument, 0, 'd'},
-    {"tr_ch", required_argument, 0, 't'},
-    {"tr_level", required_argument, 0, 'l'},
-    {"version", no_argument, 0, 'v'},
-    {"help", no_argument, 0, 'h'},
-    {"hex", no_argument, 0, 'x'},
-    {"volt", no_argument, 0, 'o'},
-    {"no_reg", no_argument, 0, 'r'},
-    {"calib", no_argument, 0, 'c'},
-    {"hk", no_argument, 0, 'k'},
-    {"axi", no_argument, 0, 'a'},
-    {"debug", no_argument, 0, 'g'},
-    {"avg", no_argument, 0, 0},
-    {"16bit", no_argument, 0, 0},
-    {"offset", required_argument, 0, 0},
-    {0, 0, 0, 0}};
+    {"equalization", no_argument, 0, 'e'}, {"shaping", no_argument, 0, 's'},
+    {"bypass", no_argument, 0, 'b'},       {"atten1", required_argument, 0, '1'},
+    {"atten2", required_argument, 0, '2'}, {"dc", required_argument, 0, 'd'},
+    {"tr_ch", required_argument, 0, 't'},  {"tr_level", required_argument, 0, 'l'},
+    {"version", no_argument, 0, 'v'},      {"help", no_argument, 0, 'h'},
+    {"hex", no_argument, 0, 'x'},          {"volt", no_argument, 0, 'o'},
+    {"no_reg", no_argument, 0, 'r'},       {"calib", no_argument, 0, 'c'},
+    {"hk", no_argument, 0, 'k'},           {"axi", no_argument, 0, 'a'},
+    {"debug", no_argument, 0, 'g'},        {"avg", no_argument, 0, 0},
+    {"16bit", no_argument, 0, 0},          {"int", no_argument, 0, 0},
+    {"offset", required_argument, 0, 0},   {0, 0, 0, 0}};
 
 static constexpr char g_format_250_12[2048] =
     "\n"
@@ -54,6 +44,7 @@ static constexpr char g_format_250_12[2048] =
     "  --tr_level=c    -l c  Set trigger level (default: 0).\n"
     "  --hex           -x    Print value in hex.\n"
     "  --volt          -o    Print value in volt.\n"
+    "  --int                 Interrupt-based operation mode.\n"
     "  --avg                 Outputs the average value for the values in the buffer.\n"
     "  --no_reg        -r    Disable load registers config (XML) for DAC and ADC.\n"
     "  --calib         -c    Disable calibration parameters\n"
@@ -86,6 +77,7 @@ static struct option long_options_125_14[32] = {
     {"hk", no_argument, 0, 'k'},
     {"axi", no_argument, 0, 'a'},
     {"16bit", no_argument, 0, 0},
+    {"int", no_argument, 0, 0},
     {"debug", no_argument, 0, 'g'},
     {"avg", no_argument, 0, 0},
     {"offset", required_argument, 0, 0},
@@ -105,6 +97,7 @@ static constexpr char g_format_125_14[2048] =
     "  --tr_level=c    -l c  Set trigger level (default: 0).\n"
     "  --hex           -x    Print value in hex.\n"
     "  --volt          -o    Print value in volt.\n"
+    "  --int                 Interrupt-based operation mode.\n"
     "  --avg                 Outputs the average value for the values in the buffer.\n"
     "  --calib         -c    Disable calibration parameters\n"
     "  --16bit               Enables 16Bit mode\n"
@@ -139,6 +132,7 @@ static struct option long_options_125_14_4ch[32] = {
     {"debug", no_argument, 0, 'g'},
     {"avg", no_argument, 0, 0},
     {"16bit", no_argument, 0, 0},
+    {"int", no_argument, 0, 0},
     {"offset", required_argument, 0, 0},
     {0, 0, 0, 0}};
 
@@ -159,6 +153,7 @@ static constexpr char g_format_125_14_4ch[2048] =
     "  --tr_level=c    -l c  Set trigger level (default: 0).\n"
     "  --hex           -x    Print value in hex.\n"
     "  --volt          -o    Print value in volt.\n"
+    "  --int                 Interrupt-based operation mode.\n"
     "  --avg                 Outputs the average value for the values in the buffer.\n"
     "  --calib         -c    Disable calibration parameters\n"
     "  --16bit               Enables 16Bit mode\n"
@@ -292,6 +287,10 @@ auto parse(int argc, char* argv[]) -> Options {
                     } else {
                         opt.enable16BitMode = true;
                     }
+                    break;
+                }
+                if (strcmp((*long_options)[option_index].name, "int") == 0) {
+                    opt.intMode = true;
                     break;
                 }
                 fprintf(stderr, "Error --%s: %s\n", long_options[option_index]->name, optarg);

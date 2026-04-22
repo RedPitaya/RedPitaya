@@ -11,6 +11,8 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <math.h>
+#include <poll.h>
+
 #include <sys/mman.h>
 #include <unistd.h>
 
@@ -59,6 +61,9 @@ static volatile uint32_t* osc_chd = NULL;
 
 #define RESERV_DMA_BYTES 8
 
+int fd_osc_common = -1;
+int fd_osc[4] = {-1, -1, -1, -1};
+
 /**
  * general
  */
@@ -75,6 +80,24 @@ int osc_Init(int channels) {
         osc_chd = (uint32_t*)((char*)osc_reg_4ch + OSC_CHB_OFFSET);
     }
 
+    // Init commont uio device
+    if (fd_osc_common == -1) {
+        if ((fd_osc_common = open("/dev/uio/osc@05000000", O_RDWR | O_SYNC)) == -1) {
+            WARNING("Error opening UIO device: /dev/uio/osc@05000000 ")
+            fd_osc_common = -1;
+        }
+    }
+
+    for (auto i = 0u; i < (uint32_t)channels; i++) {
+        if (fd_osc[i] == -1) {
+            char path[255];
+            sprintf(path, "/dev/uio/osc_ch%d@0%d000000", i + 1, i + 1);
+            if ((fd_osc[i] = open(path, O_RDWR | O_SYNC)) == -1) {
+                WARNING("Error opening UIO device: %s", path)
+                fd_osc[i] = -1;
+            }
+        }
+    }
     return RP_OK;
 }
 
@@ -89,6 +112,23 @@ int osc_Release() {
     osc_chb = NULL;
     osc_chc = NULL;
     osc_chd = NULL;
+
+    if (fd_osc_common != -1) {
+        if (close(fd_osc_common) < 0) {
+            WARNING("Error close UIO device")
+            return RP_ECMD;
+        }
+    }
+    fd_osc_common = -1;
+
+    for (auto i = 0u; i < 4u; i++) {
+        if (fd_osc[i] != -1) {
+            if (close(fd_osc[i]) < 0) {
+                WARNING("Error close UIO device")
+                return RP_ECMD;
+            }
+        }
+    }
     return RP_OK;
 }
 
@@ -235,6 +275,26 @@ int osc_printRegset() {
         printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Filter bypass", baseOffset + offsetof(osc_control_t, filter_bypass), reg->filter_bypass);
         rec_filter.reg.print();
 
+        acquisition_irq_mask_t acq_irq_mask;
+        acq_irq_mask.value = reg->irq_mask;
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", "IRQ mask", baseOffset + offsetof(osc_control_t, irq_mask), reg->irq_mask);
+        acq_irq_mask.print();
+
+        acquisition_irq_status_t acq_irq_status;
+        acq_irq_status.value = reg->irq_status_clear;
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", "IRQ status clear", baseOffset + offsetof(osc_control_t, irq_status_clear), reg->irq_status_clear);
+        acq_irq_status.print();
+
+        split_irq_mask_t acq_irq_s_mask;
+        acq_irq_s_mask.value = reg->irq_split_mask;
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", "IRQ split mask", baseOffset + offsetof(osc_control_t, irq_split_mask), reg->irq_split_mask);
+        acq_irq_s_mask.print();
+
+        split_irq_status_t acq_irq_s_status;
+        acq_irq_s_status.value = reg->irq_split_status_clear;
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n", "IRQ split status clear", baseOffset + offsetof(osc_control_t, irq_split_status_clear), reg->irq_split_status_clear);
+        acq_irq_s_status.print();
+
         printReg("%-25s\t0x%X = 0x%08X (%d)\n",
                  strWithCh("Channel %d trigger delay", baseCh + 1).c_str(),
                  baseOffset + offsetof(osc_control_t, trigger_delay_ch2),
@@ -299,6 +359,201 @@ int osc_printRegset() {
     if (channels == 4) {
         cmn_ReleaseClose(fd2, OSC_BASE_SIZE, (void**)&osc_reg_4ch);
     }
+    return RP_OK;
+}
+
+int osc_WaitInterruptEvent(int fd, int timeout_ms, uint32_t event_mask) {
+    if (fd == -1) {
+        return RP_EANI;
+    }
+
+    int32_t cmd = 1;
+    if (write(fd, &cmd, sizeof(cmd)) != sizeof(cmd)) {
+        return RP_EOP;
+    }
+
+    struct pollfd pfd = {.fd = fd, .events = POLLIN, .revents = 0};
+
+    int rv = poll(&pfd, 1, timeout_ms);
+
+    if (rv > 0) {
+        uint32_t counter;
+        if (read(fd, &counter, sizeof(counter)) != sizeof(counter)) {
+            return RP_EOP;
+        }
+        return RP_OK;
+
+    } else if (rv == 0) {
+        return RP_ETIM;
+    }
+
+    return RP_EOP;
+}
+
+int osc_IntUnmask() {
+    acquisition_irq_mask_t config;
+    config.value = osc_reg->irq_mask;
+    config.bits.trigger_en = 0x1;
+    config.bits.buffer_full_en = 0x1;
+    osc_reg->irq_mask = config.value;
+    cmn_Debug("[Write] osc_reg->irq_mask <- 0x%X", config.value);
+    return RP_OK;
+}
+
+int osc_IntUnmaskCh(rp_channel_t channel) {
+    split_irq_mask_t config;
+    config.value = osc_reg->irq_split_mask;
+    if (channel == RP_CH_1) {
+        config.bits.trig_ch1_en = 0x1;
+        config.bits.fill_ch1_en = 0x1;
+    }
+
+    if (channel == RP_CH_2) {
+        config.bits.trig_ch2_en = 0x1;
+        config.bits.fill_ch2_en = 0x1;
+    }
+
+    if (channel == RP_CH_3) {
+        config.bits.trig_ch3_en = 0x1;
+        config.bits.fill_ch3_en = 0x1;
+    }
+
+    if (channel == RP_CH_4) {
+        config.bits.trig_ch4_en = 0x1;
+        config.bits.fill_ch4_en = 0x1;
+    }
+    osc_reg->irq_split_mask = config.value;
+    cmn_Debug("[Write] osc_reg->irq_split_mask <- 0x%X", config.value);
+    return RP_OK;
+}
+
+int osc_IntTriggerRead(int timeout) {
+    uint32_t mask = 0x1;
+    auto ret = osc_WaitInterruptEvent(fd_osc_common, timeout, mask);
+    if (ret == RP_OK) {
+        acquisition_irq_status_t status;
+        status.value = osc_reg->irq_status_clear;
+        if (status.value & mask) {
+            return RP_OK;
+        } else {
+            return RP_EOP;
+        }
+    }
+    return ret;
+}
+
+int osc_IntFullRead(int timeout) {
+    uint32_t mask = 0x1;
+    auto ret = osc_WaitInterruptEvent(fd_osc_common, timeout, mask);
+    if (ret == RP_OK) {
+        acquisition_irq_status_t status;
+        status.value = osc_reg->irq_status_clear;
+        if (status.value & mask) {
+            return RP_OK;
+        } else {
+            return RP_EOP;
+        }
+    }
+    return ret;
+}
+
+int osc_IntTriggerReadCh(rp_channel_t channel, int timeout) {
+    int fd = fd_osc[channel];
+    int mask = 0x1 << channel;
+    auto ret = osc_WaitInterruptEvent(fd, timeout, mask);
+    if (ret == RP_OK) {
+        split_irq_status_t status;
+        status.value = osc_reg->irq_status_clear;
+        if (status.value & mask) {
+            return RP_OK;
+        } else {
+            return RP_EOP;
+        }
+    }
+    return ret;
+}
+
+int osc_IntFullReadCh(rp_channel_t channel, int timeout) {
+    int fd = fd_osc[channel];
+    int mask = 0x10 << channel;
+    auto ret = osc_WaitInterruptEvent(fd, timeout, mask);
+    if (ret == RP_OK) {
+        split_irq_status_t status;
+        status.value = osc_reg->irq_status_clear;
+        if (status.value & mask) {
+            return RP_OK;
+        } else {
+            return RP_EOP;
+        }
+    }
+    return ret;
+}
+
+int osc_IntClearTrigger() {
+    acquisition_irq_status_t config;
+    config.value = 0x0;
+    config.bits.trigger_pending = 0x1;
+    osc_reg->irq_status_clear = config.value;
+    cmn_Debug("[Write] osc_reg->irq_status_clear <- 0x%X", config.value);
+    return RP_OK;
+}
+
+int osc_IntClearBufferFull() {
+    acquisition_irq_status_t config;
+    config.value = 0x0;
+    config.bits.buffer_full_pending = 0x1;
+    osc_reg->irq_status_clear = config.value;
+    cmn_Debug("[Write] osc_reg->irq_status_clear <- 0x%X", config.value);
+    return RP_OK;
+}
+
+int osc_IntClearAll() {
+    acquisition_irq_status_t config;
+    config.value = 0x0;
+    config.bits.trigger_pending = 0x1;
+    config.bits.buffer_full_pending = 0x1;
+    osc_reg->irq_status_clear = config.value;
+    cmn_Debug("[Write] osc_reg->irq_status_clear <- 0x%X", config.value);
+    return RP_OK;
+}
+
+int osc_IntClearTriggerCh(rp_channel_t channel) {
+    split_irq_status_t config;
+    config.value = 0x0;
+    config.bits.trig_ch1_pending = channel == RP_CH_1 ? 0x1 : 0;
+    config.bits.trig_ch2_pending = channel == RP_CH_2 ? 0x1 : 0;
+    config.bits.trig_ch3_pending = channel == RP_CH_3 ? 0x1 : 0;
+    config.bits.trig_ch4_pending = channel == RP_CH_4 ? 0x1 : 0;
+    osc_reg->irq_split_status_clear = config.value;
+    cmn_Debug("[Write] osc_reg->irq_split_status_clear <- 0x%X", config.value);
+    return RP_OK;
+}
+
+int osc_IntClearBufferFullCh(rp_channel_t channel) {
+    split_irq_status_t config;
+    config.value = 0x0;
+    config.bits.fill_ch1_pending = channel == RP_CH_1 ? 0x1 : 0;
+    config.bits.fill_ch2_pending = channel == RP_CH_2 ? 0x1 : 0;
+    config.bits.fill_ch3_pending = channel == RP_CH_3 ? 0x1 : 0;
+    config.bits.fill_ch4_pending = channel == RP_CH_4 ? 0x1 : 0;
+    osc_reg->irq_split_status_clear = config.value;
+    cmn_Debug("[Write] osc_reg->irq_split_status_clear <- 0x%X", config.value);
+    return RP_OK;
+}
+
+int osc_IntClearAllCh(rp_channel_t channel) {
+    split_irq_status_t config;
+    config.value = 0x0;
+    config.bits.trig_ch1_pending = channel == RP_CH_1 ? 0x1 : 0;
+    config.bits.fill_ch1_pending = channel == RP_CH_1 ? 0x1 : 0;
+    config.bits.trig_ch2_pending = channel == RP_CH_2 ? 0x1 : 0;
+    config.bits.fill_ch2_pending = channel == RP_CH_2 ? 0x1 : 0;
+    config.bits.trig_ch3_pending = channel == RP_CH_3 ? 0x1 : 0;
+    config.bits.fill_ch3_pending = channel == RP_CH_3 ? 0x1 : 0;
+    config.bits.trig_ch4_pending = channel == RP_CH_4 ? 0x1 : 0;
+    config.bits.fill_ch4_pending = channel == RP_CH_4 ? 0x1 : 0;
+    osc_reg->irq_split_status_clear = config.value;
+    cmn_Debug("[Write] osc_reg->irq_split_status_clear <- 0x%X", config.value);
     return RP_OK;
 }
 

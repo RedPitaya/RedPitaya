@@ -110,6 +110,19 @@ int acq_GetExtTriggerDebouncerUs(double* value);
 int acq_SetOffset(rp_channel_t channel, float voltage);
 int acq_GetOffset(rp_channel_t channel, float* voltage);
 
+int acq_IntUnmask();
+int acq_IntUnmaskCh(rp_channel_t channel);
+int acq_IntTriggerRead(uint64_t timeout);
+int acq_IntFullRead(uint64_t timeout);
+int acq_IntTriggerReadCh(rp_channel_t channel, uint64_t timeout);
+int acq_IntFullReadCh(rp_channel_t channel, uint64_t timeout);
+int acq_IntClearTrigger();
+int acq_IntClearBufferFull();
+int acq_IntClearAll();
+int acq_IntClearTriggerCh(rp_channel_t channel);
+int acq_IntClearBufferFullCh(rp_channel_t channel);
+int acq_IntClearAllCh(rp_channel_t channel);
+
 int acq_axi_Enable(rp_channel_t channel, bool enable);
 int acq_axi_GetMemoryRegion(uint32_t* _start, uint32_t* _size);
 int acq_axi_GetBufferFillState(rp_channel_t channel, bool* state);

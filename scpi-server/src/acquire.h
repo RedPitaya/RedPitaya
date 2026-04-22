@@ -65,6 +65,12 @@ scpi_result_t RP_AcqTriggerHyst(scpi_t* context);
 scpi_result_t RP_AcqTriggerHystQ(scpi_t* context);
 scpi_result_t RP_AcqTriggerFillQ(scpi_t* context);
 scpi_result_t RP_AcqTriggerFillChQ(scpi_t* context);
+
+scpi_result_t RP_AcqInterrupTriggerQ(scpi_t* context);
+scpi_result_t RP_AcqInterrupTriggerChQ(scpi_t* context);
+scpi_result_t RP_AcqInterrupFillQ(scpi_t* context);
+scpi_result_t RP_AcqInterrupFillChQ(scpi_t* context);
+
 scpi_result_t RP_AcqGain(scpi_t* context);
 scpi_result_t RP_AcqGainQ(scpi_t* context);
 scpi_result_t RP_AcqTriggerLevel(scpi_t* context);

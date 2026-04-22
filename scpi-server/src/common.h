@@ -45,10 +45,24 @@ const scpi_choice_def_t scpi_RpAC_DC[] = {{"DC", 0}, {"AC", 1}, SCPI_CHOICE_LIST
 //     SCPI_CHOICE_LIST_END
 // };
 
-const scpi_choice_def_t scpi_RpTrigSrc[] = {{"DISABLED", 0}, {"NOW", 1},    {"CH1_PE", 2},  {"CH1_NE", 3},  {"CH2_PE", 4},  {"CH2_NE", 5},  {"EXT_PE", 6},       {"EXT_NE", 7},
-                                            {"AWG_PE", 8},   {"AWG_NE", 9}, {"CH3_PE", 10}, {"CH3_NE", 11}, {"CH4_PE", 12}, {"CH4_NE", 13}, SCPI_CHOICE_LIST_END};
+const scpi_choice_def_t scpi_RpTrigSrc[] = {{"DISABLED", 0},
+                                            {"NOW", 1},
+                                            {"CH1_PE", 2},
+                                            {"CH1_NE", 3},
+                                            {"CH2_PE", 4},
+                                            {"CH2_NE", 5},
+                                            {"EXT_PE", 6},
+                                            {"EXT_NE", 7},
+                                            {"AWG_PE", 8},
+                                            {"AWG_NE", 9},
+                                            {"CH3_PE", 10},
+                                            {"CH3_NE", 11},
+                                            {"CH4_PE", 12},
+                                            {"CH4_NE", 13},
+                                            SCPI_CHOICE_LIST_END};
 
 const scpi_choice_def_t scpi_RpTrigStat[] = {{"TD", 0}, {"WAIT", 1}, SCPI_CHOICE_LIST_END};
+const scpi_choice_def_t scpi_RpIntStat[] = {{"OK", RP_OK}, {"TIMEOUT", RP_ETIM}, {"ERROR", RP_EOP}, SCPI_CHOICE_LIST_END};
 
 auto getCmdName(scpi_t* context) -> const char*;
 auto rp_Log(scpi_t* context, int mode, int rp_err_code, const char* format, ...) -> void;

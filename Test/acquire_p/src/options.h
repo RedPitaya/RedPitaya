@@ -48,6 +48,7 @@ struct Options {
     bool reset_hk;
     bool enableAXI;
     bool bypassFilter = false;
+    bool intMode = false;
 
     Options() {
 
@@ -76,6 +77,7 @@ struct Options {
         enableAXI = false;
         bypassFilter = false;
         enable16BitMode = false;
+        intMode = false;
     };
 };
 

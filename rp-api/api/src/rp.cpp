@@ -225,6 +225,8 @@ const char* rp_GetError(int errorCode) {
             return "Api not initialized";
         case RP_EOP:
             return "Execution error";
+        case RP_ETIM:
+            return "Interrupt wait timeout";
         default:
             return "Unknown error";
     }
@@ -1560,12 +1562,22 @@ int rp_AcqAxiGetWritePointerAtTrig(rp_channel_t channel, uint32_t* pos) {
 }
 
 int rp_AcqStart() {
-    return acq_Start(RP_CH_1);
+    auto ret = acq_Start(RP_CH_1);
+    if (ret == RP_OK) {
+        acq_IntClearAll();
+        acq_IntUnmask();
+    }
+    return ret;
 }
 
 int rp_AcqStartCh(rp_channel_t channel) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        return acq_Start(channel);
+        auto ret = acq_Start(channel);
+        if (ret == RP_OK) {
+            acq_IntClearAllCh(channel);
+            acq_IntUnmaskCh(channel);
+        }
+        return ret;
     } else if (g_split_trig_function_pass) {
         return rp_AcqStart();
     }
@@ -1631,6 +1643,32 @@ int rp_AcqGetUnlockTriggerCh(rp_channel_t channel, bool* state) {
         return rp_AcqGetUnlockTrigger(state);
     }
 
+    return RP_NOTS;
+}
+
+int rp_AcqIntTriggerRead(int timeout) {
+    return acq_IntTriggerRead(timeout);
+}
+
+int rp_AcqIntFillRead(int timeout) {
+    return acq_IntFullRead(timeout);
+}
+
+int rp_AcqIntTriggerReadCh(rp_channel_t channel, int timeout) {
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
+        return acq_IntTriggerReadCh(channel, timeout);
+    } else if (g_split_trig_function_pass) {
+        return rp_AcqIntTriggerRead(timeout);
+    }
+    return RP_NOTS;
+}
+
+int rp_AcqIntFillReadCh(rp_channel_t channel, int timeout) {
+    if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
+        return acq_IntFullReadCh(channel, timeout);
+    } else if (g_split_trig_function_pass) {
+        return rp_AcqIntFillRead(timeout);
+    }
     return RP_NOTS;
 }
 

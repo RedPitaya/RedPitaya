@@ -88,6 +88,8 @@
 #define RP_EANI 27
 /** Execution error */
 #define RP_EOP 28
+/** Interrupt wait timeout. */
+#define RP_ETIM 29
 
 #define SPECTR_OUT_SIG_LEN (2 * 1024)
 
