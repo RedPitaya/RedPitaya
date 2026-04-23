@@ -956,6 +956,28 @@ static uint32_t getSizeFromStartEndPos(uint32_t start_pos, uint32_t end_pos) {
     return end_pos - start_pos + 1;
 }
 
+int acq_SetInitTimestamp(uint64_t value) {
+    return osc_SetInitTimestamp(value);
+}
+
+int acq_GetTimestamp(rp_channel_t channel, uint64_t* value) {
+
+    CHECK_CHANNEL
+
+    if (value == nullptr) {
+        return RP_EIPV;
+    }
+    static double ts = cmn_GetSampleTimeNS();
+
+    auto ret = osc_GetTimestamp(channel, value);
+    if (ret == RP_OK) {
+        *value = ((double)*value) * ts;
+    } else {
+        *value = 0;
+    }
+    return ret;
+}
+
 uint32_t acq_GetNormalizedDataPos(uint32_t pos) {
     return (pos % ADC_BUFFER_SIZE);
 }

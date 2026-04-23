@@ -39,8 +39,8 @@ static constexpr char g_format_250_12[2048] =
     "  --atten2=a      -2 a  Use Channel 2 attenuator setting a [1, 20] (default: 1).\n"
     "  --dc=c          -d c  Enable DC mode. Setting c use for channels [1, 2, B(Both channels)].\n"
     "                        By default, AC mode is turned on.\n"
-    "  --tr_ch=c       -t c  Enable trigger by channel. Setting c use for channels [1P, 1N, 2P, 2N, EP (external channel), EN (external channel)].\n"
-    "                        P - positive edge, N -negative edge. By default trigger no set\n"
+    "  --tr_ch=c       -t c  Enable trigger by channel. Setting c use for channels [1P, 1N, 1A, 2P, 2N, 2A, EP (external channel), EN (external channel)].\n"
+    "                        P - positive edge, N -negative edge, A - any edge. By default trigger no set\n"
     "  --tr_level=c    -l c  Set trigger level (default: 0).\n"
     "  --hex           -x    Print value in hex.\n"
     "  --volt          -o    Print value in volt.\n"
@@ -92,8 +92,8 @@ static constexpr char g_format_125_14[2048] =
     "  --bypass        -b    Bypass shaping filter in FPGA.\n"
     "  --gain1=g       -1 g  Use Channel 1 gain setting g [lv, hv] (default: lv).\n"
     "  --gain2=g       -2 g  Use Channel 2 gain setting g [lv, hv] (default: lv).\n"
-    "  --tr_ch=c       -t c  Enable trigger by channel. Setting c use for channels [1P, 1N, 2P, 2N, EP (external channel), EN (external channel)].\n"
-    "                        P - positive edge, N -negative edge. By default trigger no set\n"
+    "  --tr_ch=c       -t c  Enable trigger by channel. Setting c use for channels [1P, 1N, 1A, 2P, 2N, 2A, EP (external channel), EN (external channel)].\n"
+    "                        P - positive edge, N -negative edge, A - any edge. By default trigger no set\n"
     "  --tr_level=c    -l c  Set trigger level (default: 0).\n"
     "  --hex           -x    Print value in hex.\n"
     "  --volt          -o    Print value in volt.\n"
@@ -147,9 +147,9 @@ static constexpr char g_format_125_14_4ch[2048] =
     "  --gain2=g       -2 g  Use Channel 2 gain setting g [lv, hv] (default: lv).\n"
     "  --gain3=g       -3 g  Use Channel 3 gain setting g [lv, hv] (default: lv).\n"
     "  --gain4=g       -4 g  Use Channel 4 gain setting g [lv, hv] (default: lv).\n"
-    "  --tr_ch=c       -t c  Enable trigger by channel. Setting c use for channels [1P, 1N, 2P, 2N, 3P, 3N, 4P, 4N, EP (external channel), EN (external "
+    "  --tr_ch=c       -t c  Enable trigger by channel. Setting c use for channels [1P, 1N, 1A, 2P, 2N, 2A, 3P, 3N, 3A, 4P, 4N, 4A, EP (ext. channel), EN (ext. "
     "channel)].\n"
-    "                        P - positive edge, N -negative edge. By default trigger no set\n"
+    "                        P - positive edge, N -negative edge, A - any edge. By default trigger no set\n"
     "  --tr_level=c    -l c  Set trigger level (default: 0).\n"
     "  --hex           -x    Print value in hex.\n"
     "  --volt          -o    Print value in volt.\n"
@@ -415,6 +415,11 @@ auto parse(int argc, char* argv[]) -> Options {
                     break;
                 }
 
+                if (strcmp(optarg, "1A") == 0) {
+                    opt.trigger_mode = RP_TRIG_SRC_CHA_AE;
+                    break;
+                }
+
                 if (strcmp(optarg, "2P") == 0) {
                     opt.trigger_mode = RP_TRIG_SRC_CHB_PE;
                     break;
@@ -422,6 +427,11 @@ auto parse(int argc, char* argv[]) -> Options {
 
                 if (strcmp(optarg, "2N") == 0) {
                     opt.trigger_mode = RP_TRIG_SRC_CHB_NE;
+                    break;
+                }
+
+                if (strcmp(optarg, "2A") == 0) {
+                    opt.trigger_mode = RP_TRIG_SRC_CHB_AE;
                     break;
                 }
 
@@ -446,6 +456,11 @@ auto parse(int argc, char* argv[]) -> Options {
                         break;
                     }
 
+                    if (strcmp(optarg, "3A") == 0) {
+                        opt.trigger_mode = RP_TRIG_SRC_CHC_AE;
+                        break;
+                    }
+
                     if (strcmp(optarg, "4P") == 0) {
                         opt.trigger_mode = RP_TRIG_SRC_CHD_PE;
                         break;
@@ -453,6 +468,11 @@ auto parse(int argc, char* argv[]) -> Options {
 
                     if (strcmp(optarg, "4N") == 0) {
                         opt.trigger_mode = RP_TRIG_SRC_CHD_NE;
+                        break;
+                    }
+
+                    if (strcmp(optarg, "4A") == 0) {
+                        opt.trigger_mode = RP_TRIG_SRC_CHD_AE;
                         break;
                     }
                 }

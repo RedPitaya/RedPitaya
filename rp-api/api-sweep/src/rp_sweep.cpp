@@ -68,7 +68,7 @@ CSweepController::CSweepController() {
     m_pimpl->m_Pause = false;
     setDefault();
     if (!rp_IsApiInit()) {
-        if (rp_InitAdresses() == RP_OK) {
+        if (rp_InitAdressess() == RP_OK) {
             m_pimpl->apiInit = true;
         }
     }

@@ -162,6 +162,8 @@ static const scpi_command_t scpi_commands[] = {
     SCPI_CMD("ACQ:SRATe:CH#?", RP_AcqSamplingRateHzChQ),
     SCPI_CMD("ACQ:M16BIT", RP_Acq16BitMode),
     SCPI_CMD("ACQ:M16BIT?", RP_Acq16BitModeQ),
+    SCPI_CMD("ACQ:TS", RP_AcqTimeStamp),
+    SCPI_CMD("ACQ:TS:CH#?", RP_AcqTimeStampQ),
     SCPI_CMD("ACQ:AVG", RP_AcqAveraging),
     SCPI_CMD("ACQ:AVG?", RP_AcqAveragingQ),
     SCPI_CMD("ACQ:AVG:CH#", RP_AcqAveragingCh),

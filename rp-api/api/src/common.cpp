@@ -296,4 +296,10 @@ int cmn_CalculateBitShiftFor16BitMode() {
     return 0;
 }
 
+double cmn_GetSampleTimeNS() {
+    static double adc_rate = rp_HPGetBaseFastADCSpeedHzOrDefault();
+    static double sample_time_ns = 1000000000.0 / adc_rate;
+    return sample_time_ns;
+}
+
 #pragma GCC diagnostic pop

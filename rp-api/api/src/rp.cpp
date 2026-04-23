@@ -39,7 +39,7 @@ pthread_mutex_t rp_init_mutex = PTHREAD_MUTEX_INITIALIZER;
  * Global methods
  */
 
-int rp_InitAdresses() {
+int rp_InitAdressess() {
     if (g_api_state)
         return RP_EOOR;
     pthread_mutex_lock(&rp_init_mutex);
@@ -99,7 +99,7 @@ int rp_InitAdresses() {
 
 int rp_Init() {
     if (!rp_IsApiInit()) {
-        ECHECK(rp_InitAdresses())
+        ECHECK(rp_InitAdressess())
     }
     int ret = rp_CalibInit();
     if (ret != RP_HP_OK) {
@@ -119,7 +119,7 @@ int rp_Init() {
 
 int rp_InitReset(bool reset) {
     if (!rp_IsApiInit()) {
-        ECHECK(rp_InitAdresses())
+        ECHECK(rp_InitAdressess())
     }
     if (reset) {
         int ret = rp_Reset();
@@ -1853,6 +1853,14 @@ int rp_AcqGetAC_DC(rp_channel_t channel, rp_acq_ac_dc_mode_t* status) {
     if (!rp_HPGetFastADCIsAC_DCOrDefault())
         return RP_NOTS;
     return acq_GetAC_DC(channel, status);
+}
+
+int rp_AcqSetInitTimestamp(uint64_t value) {
+    return acq_SetInitTimestamp(value);
+}
+
+int rp_AcqGetTimestamp(rp_channel_t channel, uint64_t* value) {
+    return acq_GetTimestamp(channel, value);
 }
 
 int rp_AcqSetBypassFilter(rp_channel_t channel, bool enable) {

@@ -1176,6 +1176,26 @@ int rp_AcqSetAC_DC(rp_channel_t channel, rp_acq_ac_dc_mode_t mode);
 int rp_AcqGetAC_DC(rp_channel_t channel, rp_acq_ac_dc_mode_t* status);
 
 /**
+ * Set initial timestamp value for acquisition.
+ * This timestamp is used as base reference for subsequent acquisitions.
+ *
+ * @param value Initial timestamp value in clock cycles.
+ * @return RP_OK on success, RP_E* error code on failure.
+ */
+int rp_AcqSetInitTimestamp(uint64_t value);
+
+/**
+ * Get acquisition timestamp for specified channel.
+ * Retrieves timestamp of the last acquired sample or current acquisition position.
+ * Timestamp value is measured in nS.
+ *
+ * @param channel Channel A or B (RP_CH_1 or RP_CH_2).
+ * @param value Pointer to variable where timestamp value (in clock cycles) will be stored.
+ * @return RP_OK on success, RP_E* error code on failure.
+ */
+int rp_AcqGetTimestamp(rp_channel_t channel, uint64_t* value);
+
+/**
 * Initializes buffers to the specified length.
 * @param maxChannels Number of channels.
 * @param length Buffer length.

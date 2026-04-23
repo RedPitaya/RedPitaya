@@ -71,6 +71,9 @@ scpi_result_t RP_AcqInterrupTriggerChQ(scpi_t* context);
 scpi_result_t RP_AcqInterrupFillQ(scpi_t* context);
 scpi_result_t RP_AcqInterrupFillChQ(scpi_t* context);
 
+scpi_result_t RP_AcqTimeStamp(scpi_t* context);
+scpi_result_t RP_AcqTimeStampQ(scpi_t* context);
+
 scpi_result_t RP_AcqGain(scpi_t* context);
 scpi_result_t RP_AcqGainQ(scpi_t* context);
 scpi_result_t RP_AcqTriggerLevel(scpi_t* context);
@@ -83,7 +86,6 @@ scpi_result_t RP_AcqWritePointerAtTrigQ(scpi_t* context);
 scpi_result_t RP_AcqWritePointerAtTrigChQ(scpi_t* context);
 scpi_result_t RP_AcqScpiDataUnits(scpi_t* context);
 scpi_result_t RP_AcqScpiDataUnitsQ(scpi_t* context);
-scpi_result_t RP_AcqScpiDataFormat(scpi_t* context);
 scpi_result_t RP_AcqDataPosQ(scpi_t* context);
 scpi_result_t RP_AcqDataQ(scpi_t* context);
 scpi_result_t RP_AcqDataOldestAllQ(scpi_t* context);

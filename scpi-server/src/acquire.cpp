@@ -198,6 +198,38 @@ scpi_result_t RP_AcqResetCh(scpi_t* context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_AcqTimeStamp(scpi_t* context) {
+    uint64_t value = 0;
+    if (!SCPI_ParamUInt64(context, &value, true)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+
+    auto result = rp_AcqSetInitTimestamp(value);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to set timestamp: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqTimeStampQ(scpi_t* context) {
+    rp_channel_t channel = RP_CH_1;
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK) {
+        return SCPI_RES_ERR;
+    }
+    uint64_t value = 0;
+    auto result = rp_AcqGetTimestamp(channel, &value);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to get timestamp: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    SCPI_ResultUInt64Base(context, value, 10);
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_AcqDecimation(scpi_t* context) {
     uint32_t value = 0;
     /* Read DECIMATION parameter */

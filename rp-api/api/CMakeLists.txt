@@ -170,7 +170,7 @@ if(BUILD_SHARED)
             install(TARGETS rp_py
                 LIBRARY DESTINATION ${INSTALL_DIR}/lib/python
                 ARCHIVE DESTINATION ${INSTALL_DIR}/lib/python)
-            install(FILES tests/rp_test.py
+            install(FILES tests/rp_test_acq_axi.py tests/rp_test_acq.py tests/rp_test_acq_split.py tests/rp_test_analog.py tests/rp_test_gen_axi.py tests/rp_test_gen.py tests/rp_test_hk.py
                 DESTINATION ${INSTALL_DIR}/lib/python PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
                 GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_WRITE WORLD_EXECUTE)
             install(FILES python/rp_overlay.py

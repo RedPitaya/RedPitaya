@@ -31,24 +31,30 @@ rp_channel_trigger_t getTrigChByTrigSource(rp_acq_trig_src_t src) {
 
         case RP_TRIG_SRC_CHA_PE:
         case RP_TRIG_SRC_CHA_NE:
+        case RP_TRIG_SRC_CHA_AE:
             return RP_T_CH_1;
 
         case RP_TRIG_SRC_CHB_PE:
         case RP_TRIG_SRC_CHB_NE:
+        case RP_TRIG_SRC_CHB_AE:
             return RP_T_CH_2;
 
         case RP_TRIG_SRC_CHC_PE:
         case RP_TRIG_SRC_CHC_NE:
+        case RP_TRIG_SRC_CHC_AE:
             return RP_T_CH_3;
 
         case RP_TRIG_SRC_CHD_PE:
         case RP_TRIG_SRC_CHD_NE:
+        case RP_TRIG_SRC_CHD_AE:
             return RP_T_CH_4;
 
         case RP_TRIG_SRC_EXT_PE:
         case RP_TRIG_SRC_EXT_NE:
+        case RP_TRIG_SRC_EXT_AE:
             return RP_T_CH_EXT;
         default:
+            WARNING("Unknown trigger")
             return RP_T_CH_1;
     }
 }

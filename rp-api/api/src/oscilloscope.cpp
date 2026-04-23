@@ -275,25 +275,27 @@ int osc_printRegset() {
         printReg("%-25s\t0x%X = 0x%08X (%d)\n", "Filter bypass", baseOffset + offsetof(osc_control_t, filter_bypass), reg->filter_bypass);
         rec_filter.reg.print();
 
-        acquisition_irq_mask_t acq_irq_mask;
-        acq_irq_mask.value = reg->irq_mask;
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", "IRQ mask", baseOffset + offsetof(osc_control_t, irq_mask), reg->irq_mask);
-        acq_irq_mask.print();
+        if (baseCh == 1) {
+            acquisition_irq_mask_t acq_irq_mask;
+            acq_irq_mask.value = reg->irq_mask;
+            printReg("%-25s\t0x%X = 0x%08X (%d)\n", "IRQ mask", baseOffset + offsetof(osc_control_t, irq_mask), reg->irq_mask);
+            acq_irq_mask.print();
 
-        acquisition_irq_status_t acq_irq_status;
-        acq_irq_status.value = reg->irq_status_clear;
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", "IRQ status clear", baseOffset + offsetof(osc_control_t, irq_status_clear), reg->irq_status_clear);
-        acq_irq_status.print();
+            acquisition_irq_status_t acq_irq_status;
+            acq_irq_status.value = reg->irq_status_clear;
+            printReg("%-25s\t0x%X = 0x%08X (%d)\n", "IRQ status clear", baseOffset + offsetof(osc_control_t, irq_status_clear), reg->irq_status_clear);
+            acq_irq_status.print();
 
-        split_irq_mask_t acq_irq_s_mask;
-        acq_irq_s_mask.value = reg->irq_split_mask;
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", "IRQ split mask", baseOffset + offsetof(osc_control_t, irq_split_mask), reg->irq_split_mask);
-        acq_irq_s_mask.print();
+            split_irq_mask_t acq_irq_s_mask;
+            acq_irq_s_mask.value = reg->irq_split_mask;
+            printReg("%-25s\t0x%X = 0x%08X (%d)\n", "IRQ split mask", baseOffset + offsetof(osc_control_t, irq_split_mask), reg->irq_split_mask);
+            acq_irq_s_mask.print();
 
-        split_irq_status_t acq_irq_s_status;
-        acq_irq_s_status.value = reg->irq_split_status_clear;
-        printReg("%-25s\t0x%X = 0x%08X (%d)\n", "IRQ split status clear", baseOffset + offsetof(osc_control_t, irq_split_status_clear), reg->irq_split_status_clear);
-        acq_irq_s_status.print();
+            split_irq_status_t acq_irq_s_status;
+            acq_irq_s_status.value = reg->irq_split_status_clear;
+            printReg("%-25s\t0x%X = 0x%08X (%d)\n", "IRQ split status clear", baseOffset + offsetof(osc_control_t, irq_split_status_clear), reg->irq_split_status_clear);
+            acq_irq_s_status.print();
+        }
 
         printReg("%-25s\t0x%X = 0x%08X (%d)\n",
                  strWithCh("Channel %d trigger delay", baseCh + 1).c_str(),
@@ -332,6 +334,28 @@ int osc_printRegset() {
                      baseOffset + offsetof(osc_control_t, calib_gain_ch2),
                      reg->calib_gain_ch2);
         }
+
+        printReg(
+            "%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d Init TS lo", baseCh).c_str(), baseOffset + offsetof(osc_control_t, timestamp_init_lo), reg->timestamp_init_lo);
+        printReg(
+            "%-25s\t0x%X = 0x%08X (%d)\n", strWithCh("Channel %d Init TS hi", baseCh).c_str(), baseOffset + offsetof(osc_control_t, timestamp_init_hi), reg->timestamp_init_hi);
+
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n",
+                 strWithCh("Channel %d Trigger TS lo", baseCh).c_str(),
+                 baseOffset + offsetof(osc_control_t, trig_timestamp_lo_ch1),
+                 reg->trig_timestamp_lo_ch1);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n",
+                 strWithCh("Channel %d Trigger TS hi", baseCh).c_str(),
+                 baseOffset + offsetof(osc_control_t, trig_timestamp_hi_ch1),
+                 reg->trig_timestamp_hi_ch1);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n",
+                 strWithCh("Channel %d Trigger TS lo", baseCh + 1).c_str(),
+                 baseOffset + offsetof(osc_control_t, trig_timestamp_lo_ch2),
+                 reg->trig_timestamp_lo_ch2);
+        printReg("%-25s\t0x%X = 0x%08X (%d)\n",
+                 strWithCh("Channel %d Trigger TS hi", baseCh + 1).c_str(),
+                 baseOffset + offsetof(osc_control_t, trig_timestamp_hi_ch2),
+                 reg->trig_timestamp_hi_ch2);
     };
 
     auto channels = rp_HPGetFastADCChannelsCountOrDefault();
@@ -1558,6 +1582,68 @@ int osc_SetExtTriggerDebouncer(uint32_t value) {
 int osc_GetExtTriggerDebouncer(uint32_t* value) {
     *value = osc_reg->ext_trig_dbc;
     return RP_OK;
+}
+
+int osc_SetInitTimestamp(uint64_t value) {
+    uint32_t hi = value >> 32;
+    uint32_t low = value;
+    cmn_Debug("[osc_SetInitTimestamp] osc_reg.timestamp_init_lo <- 0x%X", low);
+    osc_reg->timestamp_init_lo = low;
+
+    if (osc_reg_4ch) {
+        cmn_Debug("[osc_SetInitTimestamp] osc_reg_4ch.timestamp_init_lo <- 0x%X", low);
+        osc_reg_4ch->timestamp_init_lo = low;
+    }
+
+    if (osc_reg_4ch) {
+        cmn_Debug("[osc_SetInitTimestamp] osc_reg.timestamp_init_hi <- 0x%X", hi);
+        cmn_Debug("[osc_SetInitTimestamp] osc_reg_4ch.timestamp_init_hi <- 0x%X", hi);
+        osc_reg->timestamp_init_hi = hi;
+        osc_reg_4ch->timestamp_init_hi = hi;
+    } else {
+        cmn_Debug("[osc_SetInitTimestamp] osc_reg.timestamp_init_hi <- 0x%X", hi);
+        osc_reg->timestamp_init_hi = hi;
+    }
+    return RP_OK;
+}
+
+int osc_GetTimestamp(rp_channel_t channel, uint64_t* value) {
+    switch (channel) {
+        case RP_CH_1:
+            *value = osc_reg->trig_timestamp_hi_ch1;
+            *value = *value << 32;
+            *value |= osc_reg->trig_timestamp_lo_ch1;
+            return RP_OK;
+        case RP_CH_2:
+            *value = osc_reg->trig_timestamp_hi_ch2;
+            *value = *value << 32;
+            *value |= osc_reg->trig_timestamp_lo_ch2;
+            return RP_OK;
+        case RP_CH_3:
+            if (osc_reg_4ch) {
+                *value = osc_reg_4ch->trig_timestamp_hi_ch1;
+                *value = *value << 32;
+                *value |= osc_reg_4ch->trig_timestamp_lo_ch1;
+                return RP_OK;
+            } else {
+                ERROR_LOG("Registers for channels 3 and 4 are not initialized")
+            }
+            break;
+        case RP_CH_4:
+            if (osc_reg_4ch) {
+                *value = osc_reg_4ch->trig_timestamp_hi_ch2;
+                *value = *value << 32;
+                *value |= osc_reg_4ch->trig_timestamp_lo_ch2;
+                return RP_OK;
+            } else {
+                ERROR_LOG("Registers for channels 3 and 4 are not initialized")
+            }
+            break;
+        default:
+            ERROR_LOG("Wrong channel %d", channel)
+            break;
+    }
+    return RP_EOOR;
 }
 
 /**

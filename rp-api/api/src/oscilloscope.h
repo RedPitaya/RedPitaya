@@ -54,9 +54,9 @@ typedef union {
 } config_u_t;
 
 typedef struct {
-    uint8_t trig_source : 4;
+    uint8_t trig_source : 5;
     uint8_t trig_lock : 1;
-    uint8_t : 3;
+    uint8_t : 2;
     void print() volatile {
         printRegBit(" - %-39s = 0x%08X (%d)\n", "trig_source", trig_source);
         printRegBit(" - %-39s = 0x%08X (%d)\n", "trig_lock", trig_lock);
@@ -285,36 +285,53 @@ typedef struct osc_control_s {
      */
     uint32_t config;  // Can cast to config_u_t
 
-    /** @brief Offset 0x04 - trigger source register
+    /** @brief Offset 0x04 - Trigger Source Register
      *
-     * Trigger source register (offset 0x04):
-     * bits [3 : 0] - trigger source ch1/common:
-        Trigger source
-        1 - trig immediately
-        2 - ch A threshold positive edge
-        3 - ch A threshold negative edge
-        4 - ch B threshold positive edge
-        5 - ch B threshold negative edge
-        6 - external trigger positive edge - DIO0_P pin
-        7 - external trigger negative edge
-        8 - arbitrary wave generator application       positive edge
-        9 - arbitrary wave generator application
-        negative edge
-        10- ch C threshold positive edge
-        11- ch C threshold negative edge
-        12- ch D threshold positive edge
-        13- ch D threshold negative edge
-     * bits [4] - Trigger lock state
-     * bits [7 : 5] -reserved
-     * bits [11 : 8] - trigger source ch2:
-     * bits [12] - Trigger lock state
-     * bits [15 : 13] -reserved
-     * bits [19 : 16] - trigger source ch3:
-     * bits [20] - Trigger lock state
-     * bits [23 : 21] -reserved
-     * bits [27 : 24] - trigger source ch4:
-     * bits [28] - Trigger lock state
-     * bits [31 : 29] -reserved
+     * Each channel occupies an 8-bit (1-byte) slot.
+     * Common bits layout for each channel group:
+     *   bits [4 : 0] - Trigger source value (see table below)
+     *   bit  [5]     - Trigger lock state (1: Locked/Armed, 0: Waiting/Idle)
+     *   bits [7 : 6] - Reserved
+     *
+     * For 125 / 250 / lite / ll variants (2-channel):
+     *   bits [4 : 0]   - CH0 trigger source
+     *   bit  [5]       - CH0 trigger lock state
+     *   bits [12 : 8]  - CH1 trigger source
+     *   bit  [13]      - CH1 trigger lock state
+     *   bits [31 : 14] - Reserved
+     *
+     * For 125 4-Input variant (4-channel):
+     *   bits [4 : 0]   - CH0 trigger source
+     *   bit  [5]       - CH0 trigger lock state
+     *   bits [12 : 8]  - CH1 trigger source
+     *   bit  [13]      - CH1 trigger lock state
+     *   bits [20 : 16] - CH2 trigger source
+     *   bit  [21]      - CH2 trigger lock state
+     *   bits [28 : 24] - CH3 trigger source
+     *   bit  [29]      - CH3 trigger lock state
+     *   bits [31 : 30] - Reserved
+     *
+     * Trigger source values (for each channel):
+     *   0  - Disabled
+     *   1  - Trigger immediately
+     *   2  - Threshold positive edge (Self-trigger)
+     *   3  - Threshold negative edge (Self-trigger)
+     *   4  - Threshold positive edge (CH B for 2-ch, reserved for 4-ch)
+     *   5  - Threshold negative edge (CH B for 2-ch, reserved for 4-ch)
+     *   6  - External trigger positive edge (DIO0_P pin)
+     *   7  - External trigger negative edge
+     *   8  - AWG positive edge
+     *   9  - AWG negative edge
+     *   10 - Threshold positive edge (CH C for 4-ch)
+     *   11 - Threshold negative edge (CH C for 4-ch)
+     *   12 - Threshold positive edge (CH D for 4-ch)
+     *   13 - Threshold negative edge (CH D for 4-ch)
+     *   18 - Threshold any edge (Self-trigger)
+     *   20 - Threshold any edge (CH B for 2-ch, reserved for 4-ch)
+     *   22 - External trigger any edge
+     *   24 - AWG any edge
+     *   26 - Threshold any edge (CH C for 4-ch)
+     *   28 - Threshold any edge (CH D for 4-ch)
      */
     uint32_t trig_source;
 
@@ -750,6 +767,49 @@ typedef struct osc_control_s {
      */
     uint32_t calib_gain_ch2;
 
+    /** @brief Offset 0x210 - Reserved
+     */
+    uint32_t reserved_210[4];
+
+    /** @brief Offset 0x220 - Global Timestamp Counter LO
+     *
+     * Lower 32 bits of the global 64-bit timer.
+     * IMPORTANT: Reading this register latches (snapshots) the full 64-bit
+     * counter value into a temporary buffer. Always read LO first.
+     */
+    uint32_t timestamp_init_lo;
+
+    /** @brief Offset 0x224 - Global Timestamp Counter HI
+     *
+     * Upper 32 bits of the global 64-bit timer.
+     * Returns the upper 32 bits of the value latched when LO was read.
+     */
+    uint32_t timestamp_init_hi;
+
+    /** @brief Offset 0x228 - CH1 Trigger Timestamp LO
+     *
+     * Lower 32 bits of the timestamp captured at the last CH1 trigger event.
+     */
+    uint32_t trig_timestamp_lo_ch1;
+
+    /** @brief Offset 0x22C - CH1 Trigger Timestamp HI
+     *
+     * Upper 32 bits of the timestamp captured at the last CH1 trigger event.
+     */
+    uint32_t trig_timestamp_hi_ch1;
+
+    /** @brief Offset 0x230 - CH2 Trigger Timestamp LO
+     *
+     * Lower 32 bits of the timestamp captured at the last CH2 trigger event.
+     */
+    uint32_t trig_timestamp_lo_ch2;
+
+    /** @brief Offset 0x234 - CH2 Trigger Timestamp HI
+     *
+     * Upper 32 bits of the timestamp captured at the last CH2 trigger event.
+     */
+    uint32_t trig_timestamp_hi_ch2;
+
     /* ChA & ChB data - 14 LSB bits valid starts from 0x10000 and
      * 0x20000 and are each 16k samples long */
 } osc_control_t;
@@ -855,6 +915,9 @@ int osc_GetCalibGainInFPGA(rp_channel_t channel, double* gain);
 
 int osc_SetExtTriggerDebouncer(uint32_t value);
 int osc_GetExtTriggerDebouncer(uint32_t* value);
+
+int osc_SetInitTimestamp(uint64_t value);
+int osc_GetTimestamp(rp_channel_t channel, uint64_t* value);
 
 const volatile uint32_t* osc_GetDataBufferChA();
 const volatile uint32_t* osc_GetDataBufferChB();

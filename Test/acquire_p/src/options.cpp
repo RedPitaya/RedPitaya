@@ -49,20 +49,20 @@ static constexpr char g_format_common_settings_gain_4ch[] =
     "\n";
 
 static constexpr char g_format_common_settings_trig_2ch[] =
-    "  --tr_ch1=c      -1 c  Enable trigger for ch 1. Setting c use for channels [N (now), 1P, 1N, 2P, 2N, EP (ext channel), EN (ext channel)].\n"
-    "  --tr_ch2=c      -2 c  Enable trigger for ch 2. Setting c use for channels [N (now), 1P, 1N, 2P, 2N, EP (ext channel), EN (ext channel)].\n"
+    "  --tr_ch1=c      -1 c  Enable trigger for ch 1. Setting c use for channels [N (now), 1P, 1N, 1A, 2P, 2N, 2A, EP (ext channel), EN (ext channel)].\n"
+    "  --tr_ch2=c      -2 c  Enable trigger for ch 2. Setting c use for channels [N (now), 1P, 1N, 1A, 2P, 2N, 2A, EP (ext channel), EN (ext channel)].\n"
     "  --tr_lev1=c           Set trigger level for ch 1 (default: 0).\n"
     "  --tr_lev2=c           Set trigger level for ch 2 (default: 0).\n"
     "\n";
 
 static constexpr char g_format_common_settings_trig_4ch[] =
-    "  --tr_ch1=c      -1 c  Enable trigger for ch 1. Setting c use for channels [N (now), 1P, 1N, 2P, 2N, 3P, 3N, 4P, 4N, EP (ext channel), EN (ext "
+    "  --tr_ch1=c      -1 c  Enable trigger for ch 1. Setting c use for channels [N (now), 1P, 1N, 1A, 2P, 2N, 2A, 3P, 3N, 3A, 4P, 4N, 4A, EP (ext channel), EN (ext "
     "channel)].\n"
-    "  --tr_ch2=c      -2 c  Enable trigger for ch 2. Setting c use for channels [N (now), 1P, 1N, 2P, 2N, 3P, 3N, 4P, 4N, EP (ext channel), EN (ext "
+    "  --tr_ch2=c      -2 c  Enable trigger for ch 2. Setting c use for channels [N (now), 1P, 1N, 1A, 2P, 2N, 2A, 3P, 3N, 3A, 4P, 4N, 4A, EP (ext channel), EN (ext "
     "channel)].\n"
-    "  --tr_ch3=c      -3 c  Enable trigger for ch 3. Setting c use for channels [N (now), 1P, 1N, 2P, 2N, 3P, 3N, 4P, 4N, EP (ext channel), EN (ext "
+    "  --tr_ch3=c      -3 c  Enable trigger for ch 3. Setting c use for channels [N (now), 1P, 1N, 1A, 2P, 2N, 2A, 3P, 3N, 3A, 4P, 4N, 4A, EP (ext channel), EN (ext "
     "channel)].\n"
-    "  --tr_ch4=c      -4 c  Enable trigger for ch 4. Setting c use for channels [N (now), 1P, 1N, 2P, 2N, 3P, 3N, 4P, 4N, EP (ext channel), EN (ext "
+    "  --tr_ch4=c      -4 c  Enable trigger for ch 4. Setting c use for channels [N (now), 1P, 1N, 1A, 2P, 2N, 2A, 3P, 3N, 3A, 4P, 4N, 4A, EP (ext channel), EN (ext "
     "channel)].\n"
     "  --tr_lev1=c           Set trigger level for ch 1 (default: 0).\n"
     "  --tr_lev2=c           Set trigger level for ch 2 (default: 0).\n"
@@ -217,12 +217,20 @@ auto parseTrigger(char* value, int channels) -> int {
         return RP_TRIG_SRC_CHA_NE;
     }
 
+    if (strcmp(value, "1A") == 0) {
+        return RP_TRIG_SRC_CHA_AE;
+    }
+
     if (strcmp(value, "2P") == 0) {
         return RP_TRIG_SRC_CHB_PE;
     }
 
     if (strcmp(value, "2N") == 0) {
         return RP_TRIG_SRC_CHB_NE;
+    }
+
+    if (strcmp(value, "2A") == 0) {
+        return RP_TRIG_SRC_CHB_AE;
     }
 
     if (strcmp(value, "EP") == 0) {
@@ -242,12 +250,20 @@ auto parseTrigger(char* value, int channels) -> int {
             return RP_TRIG_SRC_CHC_NE;
         }
 
+        if (strcmp(value, "3A") == 0) {
+            return RP_TRIG_SRC_CHC_AE;
+        }
+
         if (strcmp(value, "4P") == 0) {
             return RP_TRIG_SRC_CHD_PE;
         }
 
         if (strcmp(value, "4N") == 0) {
             return RP_TRIG_SRC_CHD_NE;
+        }
+
+        if (strcmp(value, "4A") == 0) {
+            return RP_TRIG_SRC_CHD_AE;
         }
     }
     return -1;

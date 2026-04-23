@@ -87,6 +87,9 @@ int acq_GetBufferSize(uint32_t* size);
 int acq_SetDefaultAll();
 int acq_SetDefault(rp_channel_t channel);
 
+int acq_SetInitTimestamp(uint64_t value);
+int acq_GetTimestamp(rp_channel_t channel, uint64_t* value);
+
 uint32_t acq_GetNormalizedDataPos(uint32_t pos);
 
 int acq_GetData(uint32_t pos, buffers_t* out);
