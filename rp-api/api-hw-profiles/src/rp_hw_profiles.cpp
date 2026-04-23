@@ -1028,3 +1028,12 @@ int rp_HPWriteUserDefinedValue(const char* key, int value) {
     }
     return ret;
 }
+
+int rp_HPDeleteUserDefinedValue(const char* key) {
+    rp_HPeModels_t model;
+    auto ret = rp_HPGetModel(&model);
+    if (ret == RP_HP_OK) {
+        ret = hp_cmn_DeleteConfig(model, key);
+    }
+    return ret;
+}

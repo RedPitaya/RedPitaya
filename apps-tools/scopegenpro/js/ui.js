@@ -1028,6 +1028,12 @@
             if (params['SOUR'+ch+'_FREQ_FIX'] !== undefined){
                 $('#SOUR'+ch+'_FREQ_FIX').attr("max", params['SOUR'+ch+'_FREQ_FIX'].max).attr("min", params['SOUR'+ch+'_FREQ_FIX'].min);
             }
+            if (params['SOUR'+ch+'_SWEEP_FREQ_START'] !== undefined){
+                $('#SOUR'+ch+'_SWEEP_FREQ_START').attr("max", params['SOUR'+ch+'_SWEEP_FREQ_START'].max).attr("min", params['SOUR'+ch+'_SWEEP_FREQ_START'].min);
+            }
+            if (params['SOUR'+ch+'_SWEEP_FREQ_END'] !== undefined){
+                $('#SOUR'+ch+'_SWEEP_FREQ_END').attr("max", params['SOUR'+ch+'_SWEEP_FREQ_END'].max).attr("min", params['SOUR'+ch+'_SWEEP_FREQ_END'].min);
+            }
             if (params['SOUR'+ch+'_B_INIT_VOLT'] !== undefined){
                 $('#SOUR'+ch+'_B_INIT_VOLT').attr("max", params['SOUR'+ch+'_B_INIT_VOLT'].max).attr("min", params['SOUR'+ch+'_B_INIT_VOLT'].min);
             }

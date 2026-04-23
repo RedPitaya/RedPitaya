@@ -49,6 +49,7 @@ void usage(char** argv) {
 
     fprintf(stdout,
             "\t-w KEY VALUE\t: Writes a user-defined value for the current board revision.\n"
+            "\t-r KEY\t: Removes a user-defined setting.\n"
             "\t\tKeys:\n"
             "\t\t\tfast_adc_rate\n"
             "\t\t\tfast_dac_rate\n"
@@ -140,6 +141,19 @@ int main(int argc, char** argv) {
             auto ret = rp_HPWriteUserDefinedValue(key.c_str(), i);
             if (ret != RP_HP_OK) {
                 printf("Error write\n");
+            }
+            return ret;
+        }
+    }
+
+    if (strncmp(argv[1], "-r", 2) == 0) {
+        if (argc < 3) {
+            usage(argv);
+        } else {
+            std::string key = argv[2];
+            auto ret = rp_HPDeleteUserDefinedValue(key.c_str());
+            if (ret != RP_HP_OK) {
+                printf("Error remove\n");
             }
             return ret;
         }

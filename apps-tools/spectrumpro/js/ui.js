@@ -381,12 +381,16 @@
             }
         }
 
-        if (params['SOUR1_FREQ_FIX'] !== undefined){
-            $("#SOUR1_FREQ_FIX").attr("max", params['SOUR1_FREQ_FIX'].max).attr("min", params['SOUR1_FREQ_FIX'].min);
-        }
-
-        if (params['SOUR2_FREQ_FIX'] !== undefined){
-            $("#SOUR2_FREQ_FIX").attr("max", params['SOUR2_FREQ_FIX'].max).attr("min", params['SOUR2_FREQ_FIX'].min);
+        for(let ch = 1; ch <= 2; ch++){
+            if (params['SOUR'+ch+'_FREQ_FIX'] !== undefined){
+                $('#SOUR'+ch+'_FREQ_FIX').attr("max", params['SOUR'+ch+'_FREQ_FIX'].max).attr("min", params['SOUR'+ch+'_FREQ_FIX'].min);
+            }
+            if (params['SOUR'+ch+'_SWEEP_FREQ_START'] !== undefined){
+                $('#SOUR'+ch+'_SWEEP_FREQ_START').attr("max", params['SOUR'+ch+'_SWEEP_FREQ_START'].max).attr("min", params['SOUR'+ch+'_SWEEP_FREQ_START'].min);
+            }
+            if (params['SOUR'+ch+'_SWEEP_FREQ_END'] !== undefined){
+                $('#SOUR'+ch+'_SWEEP_FREQ_END').attr("max", params['SOUR'+ch+'_SWEEP_FREQ_END'].max).attr("min", params['SOUR'+ch+'_SWEEP_FREQ_END'].min);
+            }
         }
     };
 

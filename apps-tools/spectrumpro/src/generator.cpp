@@ -33,8 +33,8 @@ CBooleanParameter outImpZmode("SOUR_IMPEDANCE_Z_MODE", CBaseParameter::RO, is_z_
 CFloatParameter outAmplitudeMax("SOUR_VOLT_MAX", CBaseParameter::RO, LEVEL_AMPS_MAX, 0, LEVEL_AMPS_MAX, LEVEL_AMPS_MAX);
 
 /// SWEEP VARIABLES /////////
-CFloatParameter outSweepStartFrequancy[2] = INIT2("SOUR", "_SWEEP_FREQ_START", CBaseParameter::RW, 1000, 0, 1, MAX_DAC_FREQ, CONFIG_VAR);
-CFloatParameter outSweepEndFrequancy[2] = INIT2("SOUR", "_SWEEP_FREQ_END", CBaseParameter::RW, 10000, 0, 1, MAX_DAC_FREQ, CONFIG_VAR);
+CFloatParameter outSweepStartFrequancy[2] = INIT2("SOUR", "_SWEEP_FREQ_START", CBaseParameter::RW, 1000, 0, (float)outFreqMin(), (float)outFreqMax(), CONFIG_VAR);
+CFloatParameter outSweepEndFrequancy[2] = INIT2("SOUR", "_SWEEP_FREQ_END", CBaseParameter::RW, 10000, 0, (float)outFreqMin(), (float)outFreqMax(), CONFIG_VAR);
 CIntParameter outSweepMode[2] = INIT2("SOUR", "_SWEEP_MODE", CBaseParameter::RW, RP_GEN_SWEEP_MODE_LINEAR, 0, RP_GEN_SWEEP_MODE_LINEAR, RP_GEN_SWEEP_MODE_LOG, CONFIG_VAR);
 CIntParameter outSweepRepetitions[2] = INIT2("SOUR", "_SWEEP_REP", CBaseParameter::RW, 1, 0, 1, 2147483647, CONFIG_VAR);
 CBooleanParameter outSweepRepInf[2] = INIT2("SOUR", "_SWEEP_INF", CBaseParameter::RW, false, 0, CONFIG_VAR);

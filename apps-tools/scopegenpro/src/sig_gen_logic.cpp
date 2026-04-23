@@ -31,8 +31,8 @@ CFloatParameter outScale[MAX_DAC_CHANNELS] = INIT2("GPOS_SCALE_OUTPUT", "", CBas
 
 rp_sweep_api::CSweepController* g_sweepController = new rp_sweep_api::CSweepController();
 
-CIntParameter outSweepStartFrequancy[MAX_DAC_CHANNELS] = INIT2("SOUR", "_SWEEP_FREQ_START", CBaseParameter::RW, 1000, 0, 1, (int)getDACRate(), CONFIG_VAR);
-CIntParameter outSweepEndFrequancy[MAX_DAC_CHANNELS] = INIT2("SOUR", "_SWEEP_FREQ_END", CBaseParameter::RW, 10000, 0, 1, (int)getDACRate(), CONFIG_VAR);
+CIntParameter outSweepStartFrequancy[MAX_DAC_CHANNELS] = INIT2("SOUR", "_SWEEP_FREQ_START", CBaseParameter::RW, 1000, 0, outFreqMin(), outFreqMax(), CONFIG_VAR);
+CIntParameter outSweepEndFrequancy[MAX_DAC_CHANNELS] = INIT2("SOUR", "_SWEEP_FREQ_END", CBaseParameter::RW, 10000, 0, outFreqMin(), outFreqMax(), CONFIG_VAR);
 CIntParameter outSweepMode[MAX_DAC_CHANNELS] =
     INIT2("SOUR", "_SWEEP_MODE", CBaseParameter::RW, RP_GEN_SWEEP_MODE_LINEAR, 0, RP_GEN_SWEEP_MODE_LINEAR, RP_GEN_SWEEP_MODE_LOG, CONFIG_VAR);
 CIntParameter outSweepRepetitions[MAX_DAC_CHANNELS] = INIT2("SOUR", "_SWEEP_REP", CBaseParameter::RW, 1, 0, 1, 0x7FFFFFFF, CONFIG_VAR);

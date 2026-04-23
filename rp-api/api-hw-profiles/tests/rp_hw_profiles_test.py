@@ -35,6 +35,10 @@ print("rp_hw_profiles.rp_HPGetDDRSize()")
 res = rp_hw_profiles.rp_HPGetDDRSize()
 print(res)
 
+print("rp_hw_profiles.rp_HPGetDDRSizeOrDefault()")
+res = rp_hw_profiles.rp_HPGetDDRSizeOrDefault()
+print(res)
+
 print("rp_hw_profiles.rp_HPGetBaseSpeedHz()")
 res = rp_hw_profiles.rp_HPGetBaseSpeedHz()
 print(res)
@@ -79,6 +83,42 @@ res = rp_hw_profiles.rp_HPGetSpectrumFastADCSpeedHzOrDefault()
 print(res)
 
 
+print("rp_hw_profiles.rp_HPGetFastADCMaxLowPassFilterHz()")
+res = rp_hw_profiles.rp_HPGetFastADCMaxLowPassFilterHz()
+print(res)
+
+print("rp_hw_profiles.rp_HPGetFastADCMaxLowPassFilterHzOrDefault()")
+res = rp_hw_profiles.rp_HPGetFastADCMaxLowPassFilterHzOrDefault()
+print(res)
+
+
+print("rp_hw_profiles.rp_HPGetFastDACMaxLowPassFilterHz()")
+res = rp_hw_profiles.rp_HPGetFastDACMaxLowPassFilterHz()
+print(res)
+
+print("rp_hw_profiles.rp_HPGetFastDACMaxLowPassFilterHzOrDefault()")
+res = rp_hw_profiles.rp_HPGetFastDACMaxLowPassFilterHzOrDefault()
+print(res)
+
+
+print("rp_hw_profiles.rp_HPGetGenMinSpeedHz()")
+res = rp_hw_profiles.rp_HPGetGenMinSpeedHz()
+print(res)
+
+print("rp_hw_profiles.rp_HPGetGenMinSpeedHzOrDefault()")
+res = rp_hw_profiles.rp_HPGetGenMinSpeedHzOrDefault()
+print(res)
+
+
+print("rp_hw_profiles.rp_HPGetGenMaxSpeedHz()")
+res = rp_hw_profiles.rp_HPGetGenMaxSpeedHz()
+print(res)
+
+print("rp_hw_profiles.rp_HPGetGenMaxSpeedHzOrDefault()")
+res = rp_hw_profiles.rp_HPGetGenMaxSpeedHzOrDefault()
+print(res)
+
+
 print("rp_hw_profiles.rp_HPGetFastADCChannelsCount()")
 res = rp_hw_profiles.rp_HPGetFastADCChannelsCount()
 print(res)
@@ -106,11 +146,11 @@ print(res)
 
 
 print("rp_hw_profiles.rp_HPGetFastADCGain(0,rp_hw_profiles.RP_HP_ADC_GAIN_NORMAL)")
-res = rp_hw_profiles.rp_HPGetFastADCGain(0,rp_hw_profiles.RP_HP_ADC_GAIN_NORMAL)
+res = rp_hw_profiles.rp_HPGetFastADCGain(0, rp_hw_profiles.RP_HP_ADC_GAIN_NORMAL)
 print(res)
 
 print("rp_hw_profiles.rp_HPGetFastADCGainOrDefault(0,rp_hw_profiles.RP_HP_ADC_GAIN_NORMAL)")
-res = rp_hw_profiles.rp_HPGetFastADCGainOrDefault(0,rp_hw_profiles.RP_HP_ADC_GAIN_NORMAL)
+res = rp_hw_profiles.rp_HPGetFastADCGainOrDefault(0, rp_hw_profiles.RP_HP_ADC_GAIN_NORMAL)
 print(res)
 
 
@@ -425,12 +465,20 @@ print("rp_hw_profiles.rp_HPGetIsCalibInFPGA()")
 res = rp_hw_profiles.rp_HPGetIsCalibInFPGA()
 print(res)
 
-print("rp_hw_profiles.rp_HPGetIsCalibInFPGA()")
-res = rp_hw_profiles.rp_HPGetIsCalibInFPGA()
+print("rp_hw_profiles.rp_HPGetIsFastADC16BitMode()")
+res = rp_hw_profiles.rp_HPGetIsFastADC16BitMode()
+print(res)
+
+print("rp_hw_profiles.rp_HPGetIsFastADC16BitModeOrDefault()")
+res = rp_hw_profiles.rp_HPGetIsFastADC16BitModeOrDefault()
 print(res)
 
 print("rp_hw_profiles.rp_HPGetFPGAVersion()")
 res = rp_hw_profiles.rp_HPGetFPGAVersion()
+print(res)
+
+print("rp_hw_profiles.rp_HPGetIsValidEepromModel()")
+res = rp_hw_profiles.rp_HPGetIsValidEepromModel()
 print(res)
 
 print("rp_hw_profiles.rp_HPGetIsXStreamingAvailable()")
@@ -444,7 +492,19 @@ print(res)
 print("rp_hw_profiles.rp_HPPrint()")
 rp_hw_profiles.rp_HPPrint()
 
-
 print("rp_hw_profiles.rp_HPPrintAll()")
 rp_hw_profiles.rp_HPPrintAll()
 
+print("rp_hw_profiles.rp_HPPrintKeys()")
+rp_hw_profiles.rp_HPPrintKeys()
+
+print("rp_hw_profiles.rp_HPPrintPivotTable('model')")
+rp_hw_profiles.rp_HPPrintPivotTable('model')
+
+print("rp_hw_profiles.rp_HPWriteUserDefinedValue('test_key', 123)")
+res = rp_hw_profiles.rp_HPWriteUserDefinedValue('test_key', 123)
+print(res)
+
+print("rp_hw_profiles.rp_HPDeleteUserDefinedValue('test_key')")
+res = rp_hw_profiles.rp_HPDeleteUserDefinedValue('test_key')
+print(res)

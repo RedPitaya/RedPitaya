@@ -654,6 +654,15 @@ bool rp_HPGetIsXStreamingAvailableOrDefault();
 */
 int rp_HPWriteUserDefinedValue(const char* key, int value);
 
+/**
+* Deletes a user-defined key-value pair from the device.
+* This function removes the specified key and its associated value from the user-defined storage.
+* @param key - The key identifier of the user-defined value to delete.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful (e.g., the key does not exist), the return value is any of RP_HP_E* values that indicate an error.
+*/
+int rp_HPDeleteUserDefinedValue(const char* key);
+
 #ifdef __cplusplus
 }
 #endif

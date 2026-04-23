@@ -114,7 +114,8 @@ void hp_cmn_PrintPivotTable(char* keys);
 int hp_cmn_GetFPGAVersion(rp_HPeModels_t model, const char** _no_free_value);
 
 void applyRate(uint32_t& target, uint32_t original, const std::string& path, rp_HPeModels_t boardModel);
-int hp_cmn_GetFromConfig(rp_HPeModels_t model, const std::string& path);
+int hp_cmn_GetFromConfig(rp_HPeModels_t model, const std::string& path, bool& noerror);
 int hp_cmn_WriteConfig(rp_HPeModels_t model, const char* key, int value);
+int hp_cmn_DeleteConfig(rp_HPeModels_t model, const char* key);
 
 #endif

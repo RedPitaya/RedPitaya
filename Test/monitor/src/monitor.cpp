@@ -26,6 +26,7 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 
+#include <stdexcept>
 #include "common/version.h"
 #include "rp.h"
 #include "rp_hw-profiles.h"
@@ -50,23 +51,53 @@ struct CommandParams {
 
 CommandParams parse_args(int argc, char** argv) {
     CommandParams params;
-    if (argc < 2)
+
+    if (argc < 2) {
+        params.type = CommandParams::NONE;
         return params;
+    }
 
-    std::string arg1 = argv[1];
-    size_t dash_pos = arg1.find('-');
+    try {
+        std::string arg1 = argv[1];
 
-    if (dash_pos != std::string::npos) {
-        params.type = CommandParams::RANGE;
-        params.address = std::stoul(arg1.substr(0, dash_pos), nullptr, 0);
-        params.count_or_value = std::stoul(arg1.substr(dash_pos + 1), nullptr, 0);
-    } else if (argc == 3) {
-        params.type = CommandParams::WRITE;
-        params.address = std::stoul(arg1, nullptr, 0);
-        params.count_or_value = std::stoul(argv[2], nullptr, 0);
-    } else {
-        params.type = CommandParams::SINGLE;
-        params.address = std::stoul(arg1, nullptr, 0);
+        // Check if arg1 is empty
+        if (arg1.empty()) {
+            params.type = CommandParams::NONE;
+            return params;
+        }
+
+        size_t dash_pos = arg1.find('-');
+
+        if (dash_pos != std::string::npos) {
+            // RANGE format: "addr-count"
+            if (dash_pos == 0 || dash_pos == arg1.length() - 1) {
+                // Invalid range format (no address or no count)
+                params.type = CommandParams::NONE;
+                return params;
+            }
+
+            params.type = CommandParams::RANGE;
+            params.address = std::stoul(arg1.substr(0, dash_pos), nullptr, 0);
+            params.count_or_value = std::stoul(arg1.substr(dash_pos + 1), nullptr, 0);
+
+        } else if (argc == 3) {
+            // WRITE format: address value
+            params.type = CommandParams::WRITE;
+            params.address = std::stoul(arg1, nullptr, 0);
+            params.count_or_value = std::stoul(argv[2], nullptr, 0);
+
+        } else {
+            // SINGLE format: address
+            params.type = CommandParams::SINGLE;
+            params.address = std::stoul(arg1, nullptr, 0);
+        }
+
+    } catch (const std::invalid_argument& e) {
+        // Conversion failed due to invalid characters
+        params.type = CommandParams::NONE;
+    } catch (const std::out_of_range& e) {
+        // Number too large for unsigned long
+        params.type = CommandParams::NONE;
     }
 
     return params;

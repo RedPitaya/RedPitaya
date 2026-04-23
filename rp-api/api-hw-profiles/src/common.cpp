@@ -1141,6 +1141,37 @@ int hp_cmn_WriteConfig(rp_HPeModels_t model, const char* key, int value) {
     return RP_HP_EU;
 }
 
+int hp_cmn_DeleteConfig(rp_HPeModels_t model, const char* key) {
+    std::string path;
+
+    if (strcmp(key, "fast_adc_rate") == 0)
+        path = ADC_BASE_RATE_PATH;
+    if (strcmp(key, "fast_dac_rate") == 0)
+        path = DAC_BASE_RATE_PATH;
+    if (strcmp(key, "gen_min_speed") == 0)
+        path = GEN_MIN_RATE_PATH;
+    if (strcmp(key, "gen_max_speed") == 0)
+        path = GEN_MAX_RATE_PATH;
+    if (strcmp(key, "spec_max_rate") == 0)
+        path = SPEC_ADC_PATH;
+    if (strcmp(key, "adc_low_pass") == 0)
+        path = ADC_LP_FILTER_PATH;
+    if (strcmp(key, "dac_low_pass") == 0)
+        path = DAC_LP_FILTER_PATH;
+
+    if (path == "")
+        return RP_HP_EU;
+
+    static auto home_path = hp_cmn_GetHomeDirectory();
+    std::string full_path = home_path + path + std::to_string((int)model) + ".conf";
+
+    if (std::remove(full_path.c_str()) == 0) {
+        return RP_HP_OK;
+    }
+
+    return RP_HP_EU;
+}
+
 void applyRate(uint32_t& target, uint32_t original, const std::string& path, rp_HPeModels_t boardModel) {
     bool noerror = true;
     int rate = hp_cmn_GetFromConfig(boardModel, path, noerror);
