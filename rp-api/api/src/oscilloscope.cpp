@@ -467,7 +467,7 @@ int osc_IntTriggerRead(int timeout) {
 }
 
 int osc_IntFullRead(int timeout) {
-    uint32_t mask = 0x1;
+    uint32_t mask = 0x2;
     auto ret = osc_WaitInterruptEvent(fd_osc_common, timeout, mask);
     if (ret == RP_OK) {
         acquisition_irq_status_t status;
