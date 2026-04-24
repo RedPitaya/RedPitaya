@@ -1193,7 +1193,7 @@ int rp_AcqSetInitTimestamp(uint64_t value);
  * @param value Pointer to variable where timestamp value (in clock cycles) will be stored.
  * @return RP_OK on success, RP_E* error code on failure.
  */
-int rp_AcqGetTimestamp(rp_channel_t channel, uint64_t* value);
+int rp_AcqGetTimestamp(rp_channel_t channel, uint64_t* time_ns);
 
 /**
 * Initializes buffers to the specified length.

@@ -58,6 +58,7 @@ float ch_hyst[4] = {0.005, 0.005, 0.005, 0.005};
 float ch_trash[4] = {0.005, 0.005, 0.005, 0.005};
 float ch_offset_input[4] = {0, 0, 0, 0};
 float ch_offset_input_axi[4] = {0, 0, 0, 0};
+static bool g_split_mode = false;
 
 /*----------------------------------------------------------------------------*/
 /**
@@ -257,6 +258,7 @@ static int setCalibInFPGA(rp_channel_t channel) {
 /*----------------------------------------------------------------------------*/
 
 int acq_SetSplitTriggerMode(bool enable) {
+    g_split_mode = enable;
     return osc_SetSplitTriggerMode(enable);
 }
 
@@ -903,6 +905,11 @@ int acq_Reset(rp_channel_t channel) {
 }
 
 int acq_SetUnlockTrigger(rp_channel_t channel) {
+    if (!g_split_mode) {
+        acq_IntClearAll();
+    } else {
+        acq_IntClearAllCh(channel);
+    }
     return osc_SetUnlockTrigger(channel);
 }
 
@@ -1762,37 +1769,21 @@ int acq_IntUnmaskCh(rp_channel_t channel) {
 }
 
 int acq_IntTriggerRead(uint64_t timeout) {
-    auto ret = osc_IntTriggerRead(timeout);
-    if (ret == RP_OK) {
-        ret = osc_IntClearTrigger();
-    }
-    return ret;
+    return osc_IntTriggerRead(timeout);
 }
 
 int acq_IntFullRead(uint64_t timeout) {
-    auto ret = osc_IntFullRead(timeout);
-    if (ret == RP_OK) {
-        ret = osc_IntClearBufferFull();
-    }
-    return ret;
+    return osc_IntFullRead(timeout);
 }
 
 int acq_IntTriggerReadCh(rp_channel_t channel, uint64_t timeout) {
     CHECK_CHANNEL
-    auto ret = osc_IntTriggerReadCh(channel, timeout);
-    if (ret == RP_OK) {
-        ret = osc_IntClearTriggerCh(channel);
-    }
-    return ret;
+    return osc_IntTriggerReadCh(channel, timeout);
 }
 
 int acq_IntFullReadCh(rp_channel_t channel, uint64_t timeout) {
     CHECK_CHANNEL
-    auto ret = osc_IntFullReadCh(channel, timeout);
-    if (ret == RP_OK) {
-        ret = osc_IntClearBufferFullCh(channel);
-    }
-    return ret;
+    return osc_IntFullReadCh(channel, timeout);
 }
 
 int acq_IntClearTrigger() {

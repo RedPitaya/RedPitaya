@@ -1315,8 +1315,6 @@ int rp_AcqGetAveragingCh(rp_channel_t channel, bool* enabled) {
 }
 
 int rp_AcqSetTriggerSrc(rp_acq_trig_src_t source) {
-    acq_IntClearAll();
-    acq_IntUnmask();
     return acq_SetTriggerSrc(RP_CH_1, source);
 }
 
@@ -1326,8 +1324,6 @@ int rp_AcqGetTriggerSrc(rp_acq_trig_src_t* source) {
 
 int rp_AcqSetTriggerSrcCh(rp_channel_t channel, rp_acq_trig_src_t source) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        acq_IntClearAllCh(channel);
-        acq_IntUnmaskCh(channel);
         return acq_SetTriggerSrc(channel, source);
     } else if (g_split_trig_function_pass) {
         return rp_AcqSetTriggerSrc(source);
@@ -1567,6 +1563,9 @@ int rp_AcqAxiGetWritePointerAtTrig(rp_channel_t channel, uint32_t* pos) {
 
 int rp_AcqStart() {
     auto ret = acq_Start(RP_CH_1);
+    if (ret == RP_OK) {
+        acq_IntUnmask();
+    }
     return ret;
 }
 
@@ -1574,7 +1573,6 @@ int rp_AcqStartCh(rp_channel_t channel) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
         auto ret = acq_Start(channel);
         if (ret == RP_OK) {
-            acq_IntClearAllCh(channel);
             acq_IntUnmaskCh(channel);
         }
         return ret;

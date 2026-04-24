@@ -457,6 +457,7 @@ int osc_IntTriggerRead(int timeout) {
     if (ret == RP_OK) {
         acquisition_irq_status_t status;
         status.value = osc_reg->irq_status_clear;
+        cmn_Debug("[osc_IntTriggerRead] status %x mask %x", status.value, mask);
         if (status.value & mask) {
             return RP_OK;
         } else {
@@ -472,6 +473,7 @@ int osc_IntFullRead(int timeout) {
     if (ret == RP_OK) {
         acquisition_irq_status_t status;
         status.value = osc_reg->irq_status_clear;
+        cmn_Debug("[osc_IntFullRead] status %x mask %x", status.value, mask);
         if (status.value & mask) {
             return RP_OK;
         } else {
@@ -487,7 +489,8 @@ int osc_IntTriggerReadCh(rp_channel_t channel, int timeout) {
     auto ret = osc_WaitInterruptEvent(fd, timeout, mask);
     if (ret == RP_OK) {
         split_irq_status_t status;
-        status.value = osc_reg->irq_status_clear;
+        status.value = osc_reg->irq_split_status_clear;
+        cmn_Debug("[osc_IntTriggerReadCh] status %x mask %x", status.value, mask);
         if (status.value & mask) {
             return RP_OK;
         } else {
@@ -503,7 +506,8 @@ int osc_IntFullReadCh(rp_channel_t channel, int timeout) {
     auto ret = osc_WaitInterruptEvent(fd, timeout, mask);
     if (ret == RP_OK) {
         split_irq_status_t status;
-        status.value = osc_reg->irq_status_clear;
+        status.value = osc_reg->irq_split_status_clear;
+        cmn_Debug("[osc_IntFullReadCh] status %x mask %x", status.value, mask);
         if (status.value & mask) {
             return RP_OK;
         } else {
@@ -518,7 +522,7 @@ int osc_IntClearTrigger() {
     config.value = 0x0;
     config.bits.trigger_pending = 0x1;
     osc_reg->irq_status_clear = config.value;
-    cmn_Debug("[Write] osc_reg->irq_status_clear <- 0x%X", config.value);
+    cmn_Debug("[Write] osc_reg->irq_status_clear <- 0x%X in FPGA 0x%X", config.value, osc_reg->irq_status_clear);
     return RP_OK;
 }
 
@@ -527,7 +531,7 @@ int osc_IntClearBufferFull() {
     config.value = 0x0;
     config.bits.buffer_full_pending = 0x1;
     osc_reg->irq_status_clear = config.value;
-    cmn_Debug("[Write] osc_reg->irq_status_clear <- 0x%X", config.value);
+    cmn_Debug("[Write] osc_reg->irq_status_clear <- 0x%X in FPGA 0x%X", config.value, osc_reg->irq_status_clear);
     return RP_OK;
 }
 
@@ -537,7 +541,7 @@ int osc_IntClearAll() {
     config.bits.trigger_pending = 0x1;
     config.bits.buffer_full_pending = 0x1;
     osc_reg->irq_status_clear = config.value;
-    cmn_Debug("[Write] osc_reg->irq_status_clear <- 0x%X", config.value);
+    cmn_Debug("[Write] osc_reg->irq_status_clear <- 0x%X in FPGA 0x%X", config.value, osc_reg->irq_status_clear);
     return RP_OK;
 }
 

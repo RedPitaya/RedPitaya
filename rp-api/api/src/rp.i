@@ -97,6 +97,7 @@
 %apply int *OUTPUT { int * decimated_data_num };
 %apply unsigned int *OUTPUT { unsigned int * decimated_data_num };
 
+
 %array_class(float, arbBuffer);
 %array_class(int16_t, i16Buffer);
 %array_class(float, fBuffer);
