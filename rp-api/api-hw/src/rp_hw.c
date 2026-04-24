@@ -16,6 +16,7 @@
 #include "led_system.h"
 #include "i2c.h"
 #include "sensors.h"
+#include "rp_log.h"
 
 #define XSTR(s) STR(s)
 #define STR(s) #s
@@ -43,27 +44,42 @@ const char* rp_HwGetVersion()
 const char* rp_HwGetError(int errorCode) {
     switch (errorCode) {
         case RP_HW_OK:         return "OK";
-        case RP_HW_EAL:     return "Bad alloc.";
-        case RP_HW_EUTO:    return "Timeout read from uart.";
-        case RP_HW_EIPV:    return "Invalid parameter value.";
-        case RP_HW_EUF:     return "Unsupported Feature.";
-        case RP_HW_EIU:     return "Failed to init uart.";
-        case RP_HW_ERU:     return "Failed read from uart.";
-        case RP_HW_EWU:     return "Failed write to uart.";
-        case RP_HW_ESU:     return "Failed set settings to uart.";
-        case RP_HW_EGU:     return "Failed get settings from uart.";
-        case RP_HW_EIS:     return "Failed to init SPI.";
-        case RP_HW_ESGS:    return "Failed get settings from SPI.";
-        case RP_HW_ESSS:    return "Failed set settings to SPI.";
-        case RP_HW_EST:     return "Failed SPI read/write.";
-        case RP_HW_ESMI:    return "Failed SPI message not init.";
-        case RP_HW_ESMO:    return "Failed index SPI message out of range.";
-        case RP_HW_EIIIC:   return "Failed to init I2C.";
-        case RP_HW_ERIIC:   return "Failed to read from I2C.";
-        case RP_HW_EWIIC:  return " Failed to write to I2C.";
-        case RP_HW_ESIIC:  return "Failed to set slave mode for I2C.";
-        case RP_HW_EBIIC:  return "Failed I2C. Buffer is NULL.";
-        default:       return "Unknown error";
+        case RP_HW_EAL:        return "Bad alloc.";
+        case RP_HW_EUTO:       return "Timeout read from uart.";
+        case RP_HW_EIPV:       return "Invalid parameter value.";
+        case RP_HW_EUF:        return "Unsupported Feature.";
+        case RP_HW_EIU:        return "Failed to init uart.";
+        case RP_HW_ERU:        return "Failed read from uart.";
+        case RP_HW_EWU:        return "Failed write to uart.";
+        case RP_HW_ESU:        return "Failed set settings to uart.";
+        case RP_HW_EGU:        return "Failed get settings from uart.";
+        case RP_HW_EIS:        return "Failed to init SPI.";
+        case RP_HW_ESGS:       return "Failed get settings from SPI.";
+        case RP_HW_ESSS:       return "Failed set settings to SPI.";
+        case RP_HW_EST:        return "Failed SPI read/write.";
+        case RP_HW_ESMI:       return "Failed SPI message not init.";
+        case RP_HW_ESMO:       return "Failed index SPI message out of range.";
+        case RP_HW_EIIIC:      return "Failed to init I2C.";
+        case RP_HW_ERIIC:      return "Failed to read from I2C.";
+        case RP_HW_EWIIC:      return "Failed to write to I2C.";
+        case RP_HW_ESIIC:      return "Failed to set slave mode for I2C.";
+        case RP_HW_EBIIC:      return "Failed I2C. Buffer is NULL.";
+        case RP_HW_EINIIC:     return "I2C device not initialized. Call i2c_InitDevice() first.";
+        case RP_HW_EAORIIC:    return "I2C device address out of range [0x03-0x77].";
+        case RP_HW_EPTLIIC:    return "I2C device path too long.";
+        case RP_HW_EMLKIIC:    return "I2C mutex lock failed.";
+        case RP_HW_EMUKIIC:    return "I2C mutex unlock failed.";
+        case RP_HW_EIBLIIC:    return "I2C invalid buffer length. Must be > 0 and <= 32 for SMBUS.";
+        case RP_HW_ETOIIC:     return "I2C timeout occurred. Device did not respond in time.";
+        case RP_HW_ENACKIIC:   return "I2C NACK received. Device rejected the operation.";
+        case RP_HW_EBUSYIIC:   return "I2C bus is busy. Try again later.";
+        case RP_HW_EARBIIC:    return "I2C arbitration lost. Another master is using the bus.";
+        case RP_HW_EIRGIIC:    return "I2C invalid register address.";
+        case RP_HW_ENRSPIIC:   return "I2C device not responding. Check connection and address.";
+        case RP_HW_EISPIIC:    return "I2C invalid speed setting.";
+        case RP_HW_EISAIIC:    return "I2C invalid slave address.";
+
+        default:               return "Unknown error";
     }
 }
 
@@ -80,11 +96,11 @@ int rp_UartSetSettings(){
 }
 
 int rp_UartRead(uint8_t *buffer, int *size){
-    return uart_read(buffer,size);
+    return uart_read(buffer, size);
 }
 
 int rp_UartWrite(uint8_t *buffer, int size){
-    return uart_write(buffer,size);
+    return uart_write(buffer, size);
 }
 
 int rp_UartSetSpeed(int value){
@@ -92,8 +108,10 @@ int rp_UartSetSpeed(int value){
 }
 
 int rp_UartGetSpeed(int *value){
-    *value = uart_GetSpeed(value);
-    return RP_HW_OK;
+    if (value == NULL) {
+        return RP_HW_EBIIC;
+    }
+    return uart_GetSpeed(value);
 }
 
 int rp_UartSetBits(rp_uart_bits_size_t _size){
@@ -101,8 +119,10 @@ int rp_UartSetBits(rp_uart_bits_size_t _size){
 }
 
 int rp_UartGetBits(rp_uart_bits_size_t *value){
-    *value = uart_GetBits();
-    return RP_HW_OK;
+    if (value == NULL) {
+        return RP_HW_EBIIC;
+    }
+    return uart_GetBits(value);
 }
 
 int rp_UartSetStopBits(rp_uart_stop_bits_t _size){
@@ -110,8 +130,10 @@ int rp_UartSetStopBits(rp_uart_stop_bits_t _size){
 }
 
 int rp_UartGetStopBits(rp_uart_stop_bits_t *value){
-    *value = uart_GetStopBits();
-    return RP_HW_OK;
+    if (value == NULL) {
+        return RP_HW_EBIIC;
+    }
+    return uart_GetStopBits(value);
 }
 
 int rp_UartSetParityMode(rp_uart_parity_t mode){
@@ -119,22 +141,27 @@ int rp_UartSetParityMode(rp_uart_parity_t mode){
 }
 
 int rp_UartGetParityMode(rp_uart_parity_t *value){
-    *value = uart_GetParityMode();
-    return RP_HW_OK;
+    if (value == NULL) {
+        return RP_HW_EBIIC;
+    }
+    return uart_GetParityMode(value);
 }
 
 int rp_UartSetTimeout(uint8_t deca_sec){
-    return uart_Timeout(deca_sec);
+    return uart_SetTimeout(deca_sec);
 }
 
 int rp_UartGetTimeout(uint8_t *value){
-    *value = uart_GetTimeout();
-    return RP_HW_OK;
+    if (value == NULL) {
+        return RP_HW_EBIIC;
+    }
+    return uart_GetTimeout(value);
 }
 
-
-
 int rp_GetLEDMMCState(bool *_enable){
+    if (_enable == NULL) {
+        return RP_HW_EBIIC;
+    }
     return led_GetMMCState(_enable);
 }
 
@@ -143,6 +170,9 @@ int rp_SetLEDMMCState(bool _enable){
 }
 
 int rp_GetLEDHeartBeatState(bool *_enable){
+    if (_enable == NULL) {
+        return RP_HW_EBIIC;
+    }
     return led_GetHeartBeatState(_enable);
 }
 
@@ -151,6 +181,9 @@ int rp_SetLEDHeartBeatState(bool _enable){
 }
 
 int rp_GetLEDEthState(bool *_state){
+    if (_state == NULL) {
+        return RP_HW_EBIIC;
+    }
     return led_GetEthState(_state);
 }
 
@@ -158,12 +191,14 @@ int rp_SetLEDEthState(bool _state){
     return led_SetEthState(_state);
 }
 
-
 int rp_SPI_Init(){
     return spi_Init();
 }
 
 int rp_SPI_InitDevice(const char *_device){
+    if (_device == NULL) {
+        return RP_HW_EBIIC;
+    }
     return spi_InitDevice(_device);
 }
 
@@ -184,6 +219,9 @@ int rp_SPI_Release(){
 }
 
 int rp_SPI_GetMode(rp_spi_mode_t *mode){
+    if (mode == NULL) {
+        return RP_HW_EBIIC;
+    }
     return spi_GetMode(mode);
 }
 
@@ -192,6 +230,9 @@ int rp_SPI_SetMode(rp_spi_mode_t mode){
 }
 
 int rp_SPI_GetState(rp_spi_state_t *state){
+    if (state == NULL) {
+        return RP_HW_EBIIC;
+    }
     return spi_GetState(state);
 }
 
@@ -200,6 +241,9 @@ int rp_SPI_SetState(rp_spi_state_t state){
 }
 
 int rp_SPI_GetCSMode(rp_spi_cs_mode_t *mode){
+    if (mode == NULL) {
+        return RP_HW_EBIIC;
+    }
     return spi_GetCSMode(mode);
 }
 
@@ -208,6 +252,9 @@ int rp_SPI_SetCSMode(rp_spi_cs_mode_t mode){
 }
 
 int rp_SPI_GetOrderBit(rp_spi_order_bit_t *order){
+    if (order == NULL) {
+        return RP_HW_EBIIC;
+    }
     return spi_GetOrderBit(order);
 }
 
@@ -216,6 +263,9 @@ int rp_SPI_SetOrderBit(rp_spi_order_bit_t order){
 }
 
 int rp_SPI_GetSpeed(int *speed){
+    if (speed == NULL) {
+        return RP_HW_EBIIC;
+    }
     return spi_GetSpeed(speed);
 }
 
@@ -224,6 +274,9 @@ int rp_SPI_SetSpeed(int speed){
 }
 
 int rp_SPI_GetWordLen(int *len){
+    if (len == NULL) {
+        return RP_HW_EBIIC;
+    }
     return spi_GetWordLen(len);
 }
 
@@ -240,31 +293,47 @@ int rp_SPI_CreateMessage(size_t len){
 }
 
 int rp_SPI_GetMessageLen(size_t *len){
+    if (len == NULL) {
+        return RP_HW_EBIIC;
+    }
     return spi_GetMessageLen(len);
 }
 
-int rp_SPI_GetRxBuffer(size_t msg,const uint8_t **buffer,size_t *len){
-    return spi_GetRxBuffer(msg,buffer,len);
+int rp_SPI_GetRxBuffer(size_t msg, const uint8_t **buffer, size_t *len){
+    if (buffer == NULL || len == NULL) {
+        return RP_HW_EBIIC;
+    }
+    return spi_GetRxBuffer(msg, buffer, len);
 }
 
-int rp_SPI_GetTxBuffer(size_t msg,const uint8_t **buffer,size_t *len){
-    return spi_GetTxBuffer(msg,buffer,len);
+int rp_SPI_GetTxBuffer(size_t msg, const uint8_t **buffer, size_t *len){
+    if (buffer == NULL || len == NULL) {
+        return RP_HW_EBIIC;
+    }
+    return spi_GetTxBuffer(msg, buffer, len);
 }
 
-int rp_SPI_GetCSChangeState(size_t msg,bool *cs_change){
-    return spi_GetCSChangeState(msg,cs_change);
+int rp_SPI_GetCSChangeState(size_t msg, bool *cs_change){
+    if (cs_change == NULL) {
+        return RP_HW_EBIIC;
+    }
+    return spi_GetCSChangeState(msg, cs_change);
 }
 
-int rp_SPI_SetBufferForMessage(size_t msg,const uint8_t *tx_buffer,size_t len,bool init_rx_buffer, bool cs_change){
-    return spi_SetBufferForMessage(msg,tx_buffer,init_rx_buffer,len,cs_change);
+int rp_SPI_SetBufferForMessage(size_t msg, const uint8_t *tx_buffer, size_t len, bool init_rx_buffer, bool cs_change){
+    return spi_SetBufferForMessage(msg, tx_buffer, init_rx_buffer, len, cs_change);
 }
 
 int rp_SPI_DestroyMessage(){
     return spi_DestroyMessage();
 }
 
-int rp_I2C_InitDevice(const char *_device,uint8_t addr){
-    return i2c_InitDevice(_device,addr);
+
+int rp_I2C_InitDevice(const char *_device, uint8_t addr){
+    if (_device == NULL) {
+        return RP_HW_EBIIC;
+    }
+    return i2c_InitDevice(_device, addr);
 }
 
 int rp_I2C_setForceMode(bool force){
@@ -272,37 +341,55 @@ int rp_I2C_setForceMode(bool force){
 }
 
 int rp_I2C_getForceMode(bool *value){
-    *value = i2c_getForceMode();
-    return RP_HW_OK;
+    if (value == NULL) {
+        ERROR_LOG("Output parameter value is NULL");
+        return RP_HW_EBIIC;
+    }
+    return i2c_getForceMode(value);
 }
 
 int rp_I2C_getDevAddress(int *address){
-    *address = i2c_getDevAddress();
-    return RP_HW_OK;
+    if (address == NULL) {
+        ERROR_LOG("Output parameter address is NULL");
+        return RP_HW_EBIIC;
+    }
+    return i2c_getDevAddress(address);
 }
 
-int rp_I2C_SMBUS_Read(uint8_t reg,uint8_t *value){
-    return i2c_SMBUS_Read(reg,value);
+int rp_I2C_SMBUS_Read(uint8_t reg, uint8_t *value){
+    if (value == NULL) {
+        return RP_HW_EBIIC;
+    }
+    return i2c_SMBUS_Read(reg, value);
 }
 
-int rp_I2C_SMBUS_ReadWord(uint8_t reg,uint16_t *value){
-    return i2c_SMBUS_ReadWord(reg,value);
+int rp_I2C_SMBUS_ReadWord(uint8_t reg, uint16_t *value){
+    if (value == NULL) {
+        return RP_HW_EBIIC;
+    }
+    return i2c_SMBUS_ReadWord(reg, value);
 }
 
 int rp_I2C_SMBUS_ReadCommand(uint8_t *value){
+    if (value == NULL) {
+        return RP_HW_EBIIC;
+    }
     return i2c_SMBUS_ReadCommand(value);
 }
 
 int rp_I2C_SMBUS_ReadBuffer(uint8_t reg, uint8_t *buffer, int *len){
-    return i2c_SMBUS_ReadBuffer(reg,buffer,len);
+    if (buffer == NULL || len == NULL) {
+        return RP_HW_EBIIC;
+    }
+    return i2c_SMBUS_ReadBuffer(reg, buffer, len);
 }
 
-int rp_I2C_SMBUS_Write(uint8_t reg,uint8_t value){
-    return i2c_SMBUS_Write(reg,value);
+int rp_I2C_SMBUS_Write(uint8_t reg, uint8_t value){
+    return i2c_SMBUS_Write(reg, value);
 }
 
-int rp_I2C_SMBUS_WriteWord(uint8_t reg,uint16_t value){
-    return i2c_SMBUS_WriteWord(reg,value);
+int rp_I2C_SMBUS_WriteWord(uint8_t reg, uint16_t value){
+    return i2c_SMBUS_WriteWord(reg, value);
 }
 
 int rp_I2C_SMBUS_WriteCommand(uint8_t value){
@@ -310,45 +397,87 @@ int rp_I2C_SMBUS_WriteCommand(uint8_t value){
 }
 
 int rp_I2C_SMBUS_WriteBuffer(uint8_t reg, uint8_t *buffer, int len){
-    return i2c_SMBUS_WriteBuffer(reg,buffer,len);
+    if (buffer == NULL) {
+        return RP_HW_EBIIC;
+    }
+    if (len <= 0) {
+        return RP_HW_EIBLIIC;
+    }
+    return i2c_SMBUS_WriteBuffer(reg, buffer, len);
 }
 
 int rp_I2C_IOCTL_ReadBuffer(uint8_t *buffer, int len){
-    return i2c_IOCTL_ReadBuffer(buffer,len);
+    if (buffer == NULL) {
+        return RP_HW_EBIIC;
+    }
+    if (len <= 0) {
+        return RP_HW_EIBLIIC;
+    }
+    return i2c_IOCTL_ReadBuffer(buffer, len);
 }
 
 int rp_I2C_IOCTL_WriteBuffer(uint8_t *buffer, int len){
-    return i2c_IOCTL_WriteBuffer(buffer,len);
+    if (buffer == NULL) {
+        return RP_HW_EBIIC;
+    }
+    if (len <= 0) {
+        return RP_HW_EIBLIIC;
+    }
+    return i2c_IOCTL_WriteBuffer(buffer, len);
 }
 
 float rp_GetCPUTemperature(uint32_t *raw){
+    if (raw == NULL) {
+        return -1.0f;
+    }
     return sens_GetCPUTemp(raw);
 }
 
-int rp_GetPowerI4(uint32_t *raw,float* value){
-    return sens_GetPowerI4(raw,value);
+int rp_GetPowerI4(uint32_t *raw, float* value){
+    if (raw == NULL || value == NULL) {
+        return RP_HW_EBIIC;
+    }
+    return sens_GetPowerI4(raw, value);
 }
 
-int rp_GetPowerVCCPINT(uint32_t *raw,float* value){
-    return sens_GetPowerVCCPINT(raw,value);
+int rp_GetPowerVCCPINT(uint32_t *raw, float* value){
+    if (raw == NULL || value == NULL) {
+        return RP_HW_EBIIC;
+    }
+    return sens_GetPowerVCCPINT(raw, value);
 }
 
-int rp_GetPowerVCCPAUX(uint32_t *raw,float* value){
-    return sens_GetPowerVCCPAUX(raw,value);
+int rp_GetPowerVCCPAUX(uint32_t *raw, float* value){
+    if (raw == NULL || value == NULL) {
+        return RP_HW_EBIIC;
+    }
+    return sens_GetPowerVCCPAUX(raw, value);
 }
 
-int rp_GetPowerVCCBRAM(uint32_t *raw,float* value){
-    return sens_GetPowerVCCBRAM(raw,value);
+int rp_GetPowerVCCBRAM(uint32_t *raw, float* value){
+    if (raw == NULL || value == NULL) {
+        return RP_HW_EBIIC;
+    }
+    return sens_GetPowerVCCBRAM(raw, value);
 }
 
-int rp_GetPowerVCCINT(uint32_t *raw,float* value){
-    return sens_GetPowerVCCINT(raw,value);
+int rp_GetPowerVCCINT(uint32_t *raw, float* value){
+    if (raw == NULL || value == NULL) {
+        return RP_HW_EBIIC;
+    }
+    return sens_GetPowerVCCINT(raw, value);
 }
 
-int rp_GetPowerVCCAUX(uint32_t *raw,float* value){
-    return sens_GetPowerVCCAUX(raw,value);
+int rp_GetPowerVCCAUX(uint32_t *raw, float* value){
+    if (raw == NULL || value == NULL) {
+        return RP_HW_EBIIC;
+    }
+    return sens_GetPowerVCCAUX(raw, value);
 }
 
-int rp_GetPowerVCCDDR(uint32_t *raw,float* value){
-    return sens_GetPowerVCCDDR(raw,value);
+int rp_GetPowerVCCDDR(uint32_t *raw, float* value){
+    if (raw == NULL || value == NULL) {
+        return RP_HW_EBIIC;
+    }
+    return sens_GetPowerVCCDDR(raw, value);
 }

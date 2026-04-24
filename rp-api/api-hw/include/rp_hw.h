@@ -67,7 +67,34 @@ extern "C" {
 #define RP_HW_ESIIC 63
 /** Failed I2C. Buffer is NULL */
 #define RP_HW_EBIIC 64
-
+/** I2C device not initialized */
+#define RP_HW_EINIIC 65
+/** I2C device address out of range */
+#define RP_HW_EAORIIC 66
+/** I2C device path too long */
+#define RP_HW_EPTLIIC 67
+/** I2C mutex lock failed */
+#define RP_HW_EMLKIIC 68
+/** I2C mutex unlock failed */
+#define RP_HW_EMUKIIC 69
+/** I2C invalid buffer length */
+#define RP_HW_EIBLIIC 70
+/** I2C timeout occurred */
+#define RP_HW_ETOIIC 71
+/** I2C NACK received */
+#define RP_HW_ENACKIIC 72
+/** I2C bus busy */
+#define RP_HW_EBUSYIIC 73
+/** I2C arbitration lost */
+#define RP_HW_EARBIIC 74
+/** I2C invalid register address */
+#define RP_HW_EIRGIIC 75
+/** I2C device not responding */
+#define RP_HW_ENRSPIIC 76
+/** I2C invalid speed */
+#define RP_HW_EISPIIC 77
+/** I2C invalid slave address */
+#define RP_HW_EISAIIC 78
 ///@}
 
 /**

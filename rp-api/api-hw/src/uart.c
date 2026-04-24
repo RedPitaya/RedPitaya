@@ -74,15 +74,16 @@ int uart_InitDevice(char *_device)
     return uart_SetSettings();
 }
 
-int uart_Timeout(uint8_t deca_sec)
+int uart_SetTimeout(uint8_t deca_sec)
 {
     g_timeout = deca_sec;
     return RP_HW_OK;
 }
 
-uint8_t uart_GetTimeout()
+int uart_GetTimeout(uint8_t *value)
 {
-    return g_timeout;
+    *value = g_timeout;
+    return RP_HW_OK;
 }
 
 int uart_SetSettings()
