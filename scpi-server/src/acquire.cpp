@@ -123,7 +123,7 @@ scpi_result_t RP_AcqDataEndianQ(scpi_t* context) {
 scpi_result_t RP_AcqStart(scpi_t* context) {
     auto result = rp_AcqStart();
     if (RP_OK != result) {
-        RP_LOG_CRIT("Failed to start Red Pitaya acquire: %s", rp_GetError(result));
+        RP_LOG_CRIT("Failed to start acquire: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
     RP_LOG_INFO("%s", rp_GetError(result))
@@ -137,7 +137,7 @@ scpi_result_t RP_AcqStartCh(scpi_t* context) {
     }
     auto result = rp_AcqStartCh(channel);
     if (RP_OK != result) {
-        RP_LOG_CRIT("Failed to start Red Pitaya acquire: %s", rp_GetError(result));
+        RP_LOG_CRIT("Failed to start acquire: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
     RP_LOG_INFO("%s", rp_GetError(result))
@@ -147,21 +147,45 @@ scpi_result_t RP_AcqStartCh(scpi_t* context) {
 scpi_result_t RP_AcqStop(scpi_t* context) {
     auto result = rp_AcqStop();
     if (RP_OK != result) {
-        RP_LOG_CRIT("Failed to stop Red Pitaya acquisition: %s", rp_GetError(result));
+        RP_LOG_CRIT("Failed to stop acquisition: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
     RP_LOG_INFO("%s", rp_GetError(result))
     return SCPI_RES_OK;
 }
 
-scpi_result_t rp_AcqStopCh(scpi_t* context) {
+scpi_result_t RP_AcqStopCh(scpi_t* context) {
     rp_channel_t channel = RP_CH_1;
     if (RP_ParseChArgvADC(context, &channel) != RP_OK) {
         return SCPI_RES_ERR;
     }
     auto result = rp_AcqStopCh(channel);
     if (RP_OK != result) {
-        RP_LOG_CRIT("Failed to stop Red Pitaya acquisition: %s", rp_GetError(result));
+        RP_LOG_CRIT("Failed to stop acquisition: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqUnlock(scpi_t* context) {
+    auto result = rp_AcqUnlockTrigger();
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to unlock trigger: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqUnlockCh(scpi_t* context) {
+    rp_channel_t channel = RP_CH_1;
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK) {
+        return SCPI_RES_ERR;
+    }
+    auto result = rp_AcqUnlockTriggerCh(channel);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to unlock trigger: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
     RP_LOG_INFO("%s", rp_GetError(result))
@@ -171,7 +195,7 @@ scpi_result_t rp_AcqStopCh(scpi_t* context) {
 scpi_result_t RP_AcqReset(scpi_t* context) {
     auto result = rp_AcqReset();
     if (RP_OK != result) {
-        RP_LOG_CRIT("Failed to reset Red Pitaya acquire: %s", rp_GetError(result));
+        RP_LOG_CRIT("Failed to reset acquire: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
     unit = RP_SCPI_VOLTS;
@@ -188,7 +212,7 @@ scpi_result_t RP_AcqResetCh(scpi_t* context) {
     }
     auto result = rp_AcqResetCh(channel);
     if (RP_OK != result) {
-        RP_LOG_CRIT("Failed to reset Red Pitaya acquire: %s", rp_GetError(result));
+        RP_LOG_CRIT("Failed to reset acquire: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
     unit = RP_SCPI_VOLTS;
@@ -1088,6 +1112,47 @@ scpi_result_t RP_AcqGainQ(scpi_t* context) {
     }
     /* Return data to client */
     SCPI_ResultMnemonic(context, state == RP_HIGH ? "HV" : "LV");
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqOffset(scpi_t* context) {
+    rp_channel_t channel = RP_CH_1;
+    float offset = 0;
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK) {
+        return SCPI_RES_ERR;
+    }
+    if (!SCPI_ParamFloat(context, &offset, true)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+    auto result = rp_AcqSetOffset(channel, offset);
+    if (result != RP_OK) {
+        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to set offset %f", offset);
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqOffsetQ(scpi_t* context) {
+    rp_channel_t channel = RP_CH_1;
+    float offset = 0;
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK) {
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+
+    auto result = rp_AcqGetOffset(channel, &offset);
+    if (result != RP_OK) {
+        RP_LOG_CRIT("Failed to get offset: %s", rp_GetError(result));
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultFloat(context, offset);
     RP_LOG_INFO("%s", rp_GetError(result))
     return SCPI_RES_OK;
 }
