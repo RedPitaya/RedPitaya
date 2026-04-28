@@ -127,7 +127,7 @@ if(BUILD_SHARED)
 
         set_property(SOURCE src/rp_formatter.i PROPERTY CPLUSPLUS ON)
         # SET_SOURCE_FILES_PROPERTIES(src/rp_dsp.i PROPERTIES SWIG_FLAGS "-includeall")
-
+        set(CMAKE_SWIG_FLAGS -threads -O)
         SWIG_ADD_LIBRARY(rp_formatter_py LANGUAGE python SOURCES src/rp_formatter.i ${src})
         SWIG_LINK_LIBRARIES(rp_formatter_py ${Python3_LIBRARIES} -lm -lpthread)
         set_property(TARGET rp_formatter_py PROPERTY INCLUDE_DIRECTORIES ${PROJECT_SOURCE_DIR}/src ${Python3_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIR})

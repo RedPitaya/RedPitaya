@@ -121,6 +121,7 @@ target_link_libraries(${PROJECT_NAME}-obj rp-i2c)
 if(BUILD_SHARED)
 
     if (BUILD_PYTHON_MODULE)
+
         find_package(SWIG REQUIRED)
         INCLUDE(${SWIG_USE_FILE})
 
@@ -143,7 +144,7 @@ if(BUILD_SHARED)
             ${NUMPY_INCLUDE_DIR}
         )
 #        include_directories(/usr/local/lib/python3.10/dist-packages/numpy/_core/include)
-        set(CMAKE_SWIG_FLAGS "")
+        set(CMAKE_SWIG_FLAGS -threads -O)
         set_property(SOURCE src/rp.i PROPERTY CPLUSPLUS ON)
 
         SWIG_ADD_LIBRARY(rp_py LANGUAGE python SOURCES src/rp.i ${src})

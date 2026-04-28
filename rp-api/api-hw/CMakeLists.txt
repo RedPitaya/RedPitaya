@@ -98,7 +98,7 @@ if(BUILD_SHARED)
         #find_package(PythonLibs)
         #include_directories(${PYTHON_INCLUDE_PATH})
 
-        set(CMAKE_SWIG_FLAGS "")
+        set(CMAKE_SWIG_FLAGS -threads -O)
         set_property(SOURCE src/rp_hw.i PROPERTY CPLUSPLUS ON)
 
         SWIG_ADD_LIBRARY(rp_hw_py LANGUAGE python SOURCES src/rp_hw.i ${PR_HW_SOURCES})

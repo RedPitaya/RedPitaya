@@ -79,7 +79,7 @@ if(BUILD_SHARED)
         find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
         include_directories(${Python3_INCLUDE_DIRS})
 
-        set(CMAKE_SWIG_FLAGS "")
+        set(CMAKE_SWIG_FLAGS -threads -O)
         set_property(SOURCE src/rp_hw_profiles.i PROPERTY CPLUSPLUS ON)
 
         SWIG_ADD_LIBRARY(rp_hw_profiles_py LANGUAGE python SOURCES src/rp_hw_profiles.i ${PR_HW_SOURCES} ${PR_HW_SOURCES_CPP})

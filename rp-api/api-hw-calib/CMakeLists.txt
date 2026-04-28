@@ -81,6 +81,7 @@ if(BUILD_SHARED)
         include_directories(${Python3_INCLUDE_DIRS})
 
         set_property(SOURCE src/rp_hw_calib.i PROPERTY CPLUSPLUS ON)
+        set(CMAKE_SWIG_FLAGS -threads -O)
 
         SWIG_ADD_LIBRARY(rp_hw_calib_py LANGUAGE python SOURCES src/rp_hw_calib.i ${PR_HW_SOURCES})
         SWIG_LINK_LIBRARIES(rp_hw_calib_py ${Python3_LIBRARIES} rp-hw-profiles.a)

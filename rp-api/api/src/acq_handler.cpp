@@ -1760,11 +1760,13 @@ int acq_GetOffset(rp_channel_t channel, float* voltage) {
 }
 
 int acq_IntUnmask() {
+    osc_ClearInt();
     return osc_IntUnmask();
 }
 
 int acq_IntUnmaskCh(rp_channel_t channel) {
     CHECK_CHANNEL
+    osc_ClearInt(channel);
     return osc_IntUnmaskCh(channel);
 }
 

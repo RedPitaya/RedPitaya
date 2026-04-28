@@ -99,6 +99,8 @@ if(BUILD_SHARED)
 
         set_property(SOURCE src/rp_api_250.i PROPERTY CPLUSPLUS ON)
 
+        set(CMAKE_SWIG_FLAGS -threads -O)
+
         SWIG_ADD_LIBRARY(rp_api_250_py LANGUAGE python SOURCES src/rp_api_250.i ${PR_XML_SOURCES} ${PR_I2C_SOURCES} ${PR_SPI_SOURCES} ${PR_GPIO_SOURCES})
         SWIG_LINK_LIBRARIES(rp_api_250_py ${Python3_LIBRARIES} i2c)
     endif()

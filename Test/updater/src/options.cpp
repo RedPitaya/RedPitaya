@@ -11,7 +11,7 @@
 #include "options.h"
 #include "rp_updater_common.h"
 
-static constexpr char optstring[] = "m:d:vn:li:rswpa:t:";
+static constexpr char optstring[] = "m:d:vn:li:rswpa:t:e";
 static struct option long_options[] = {{"md5", required_argument, 0, 'm'},
                                        {"download", required_argument, 0, 'd'},
                                        {"install", required_argument, 0, 'i'},
@@ -24,6 +24,7 @@ static struct option long_options[] = {{"md5", required_argument, 0, 'm'},
                                        {"download_prod", required_argument, 0, 't'},
                                        {"auth", required_argument, 0, 'a'},
                                        {"webcontrol", no_argument, 0, 'w'},
+                                       {"last", no_argument, 0, 'e'},
                                        {0, 0, 0, 0}};
 
 static constexpr char g_format[] =
@@ -39,6 +40,7 @@ static constexpr char g_format[] =
     "       %s -a USER:PASSWORD\n"
     "       %s -r\n"
     "       %s -w\n"
+    "       %s -e\n"
     "\n"
     "  --md5=FILES              -m FILES           Calculates md5 for the specified files.\n"
     "  --download=URL           -d URL             Downloads a file to a directory: %s.\n"
@@ -54,6 +56,7 @@ static constexpr char g_format[] =
     "  --auth                   -a USER:PASSWORD   Login and password.\n"
     "  --verbose                -v                 Produce verbose output.\n"
     "  --webcontrol             -w                 Starts websocket control mode.\n"
+    "  --last                   -e                 Downloads and installs the latest version from NB.\n"
     "\n";
 
 std::vector<std::string> split(const std::string& s, char seperator) {
@@ -90,7 +93,7 @@ auto usage(char const* progName) -> void {
     auto n = name.c_str();
 
     fprintf(stderr, "%s Version: %s-%s\n", n, VERSION_STR, REVISION_STR);
-    fprintf(stderr, (char*)g_format, n, n, n, n, n, n, n, n, n, n, n, ECOSYSTEM_DOWNLOAD_PATH);
+    fprintf(stderr, (char*)g_format, n, n, n, n, n, n, n, n, n, n, n, n, ECOSYSTEM_DOWNLOAD_PATH);
 }
 
 auto parse(int argc, char* argv[]) -> Options {
@@ -278,6 +281,17 @@ auto parse(int argc, char* argv[]) -> Options {
 
             case 'v': {
                 opt.verbose = true;
+                break;
+            }
+
+            case 'e': {
+                if (opt.mode == NONE) {
+                    opt.mode = LAST_INSTALL;
+                } else {
+                    fprintf(stderr, "Key combination error.\n");
+                    opt.error = true;
+                    return opt;
+                }
                 break;
             }
 

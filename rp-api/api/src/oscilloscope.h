@@ -33,7 +33,7 @@ typedef struct {
     uint8_t arm_keep : 1;              // (W) arm_keep
     uint8_t all_data_written : 1;      // (R) All data written to buffer
     uint8_t enable_split_trigger : 1;  // Work only first channel
-    uint8_t : 1;
+    uint8_t : 2;
     void print() volatile {
         printRegBit(" - %-39s = 0x%08X (%d)\n", "start_write", start_write);
         printRegBit(" - %-39s = 0x%08X (%d)\n", "reset_state_machine", reset_state_machine);
@@ -897,6 +897,8 @@ int osc_GetEqFiltersChD(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk,
 
 int osc_IntUnmask();
 int osc_IntUnmaskCh(rp_channel_t channel);
+int osc_ClearInt();
+int osc_ClearInt(rp_channel_t channel);
 int osc_IntTriggerRead(int timeout);
 int osc_IntFullRead(int timeout);
 int osc_IntTriggerReadCh(rp_channel_t channel, int timeout);

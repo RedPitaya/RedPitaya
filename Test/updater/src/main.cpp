@@ -263,6 +263,78 @@ std::vector<std::string> readFile(const std::string& filename) {
     return lines;
 }
 
+int install(Options option) {
+    std::string file = option.installFileName;
+    if (file == "") {
+        int bn = 0;
+        try {
+            bn = std::stoi(option.installNumber);
+        } catch (...) {}
+        if (bn != 0) {
+            uint32_t count = 0;
+            rp_UpdaterGetDownloadedCount(&count);
+            for (uint32_t i = 0; i < count; i++) {
+                std::string name = {};
+                std::string commit = {};
+                uint32_t number = 0;
+                if (rp_UpdaterGetDownloadedFile(i, &name, &number, &commit) == RP_UP_OK) {
+                    if ((int)number == bn) {
+                        file = name;
+                        break;
+                    }
+                }
+            }
+        } else {
+            g_returnValue = -1;
+        }
+    }
+    if (file != "") {
+
+        std::ifstream file_version("/root/.version");
+        if (file_version.is_open()) {
+            std::string line;
+            std::getline(file_version, line);
+            file_version.close();
+            if (file.find(line) == std::string::npos) {
+                fprintf(stderr, "Warning. The current OS version does not match the one being installed.\n");
+            }
+        } else {
+            fprintf(stderr, "Warning. Can't open file to check OS version\n");
+        }
+
+        char buff[256];
+        sprintf(buff, "systemctl stop redpitaya_e3_controller.service");
+        auto ret = system(buff);
+        if (ret != 0) {
+            fprintf(stderr, "Error stop redpitaya_e3_controller.service");
+            g_returnValue = -1;
+        }
+
+        sprintf(buff, "systemctl stop redpitaya_nginx.service");
+        ret = system(buff);
+        if (ret != 0) {
+            fprintf(stderr, "Error stop redpitaya_nginx.service");
+            g_returnValue = -1;
+        }
+        if (g_returnValue == 0) {
+            auto callback = new Callback();
+            callback->reset();
+            rp_UpdaterSetCallback(callback);
+            g_returnValue = rp_UpdaterUpdateBoardEcosystem(file, false);
+            rp_UpdaterRemoveCallback();
+            delete callback;
+        }
+        if (g_returnValue == 0)
+            fprintf(stderr, "\nThe board needs to be rebooted!!!!\n");
+        else
+            fprintf(stderr, "\nFatal error while updating the ecosystem.\n");
+    } else {
+        fprintf(stderr, "Error: No ecosystem found to install.\n");
+        g_returnValue = -1;
+    }
+    return g_returnValue;
+}
+
 /** Acquire utility main */
 int main(int argc, char* argv[]) {
 
@@ -325,6 +397,34 @@ int main(int argc, char* argv[]) {
             }
         }
 
+    } else if (option.mode == LAST_INSTALL) {
+        std::vector<std::string> files;
+        int ret = rp_UpdaterGetNBAvailableFilesList(files);
+        if (ret == RP_UP_ERR) {
+            fprintf(stderr, "Error getting file list from server\n");
+            g_returnValue = -1;
+        } else {
+            auto last_nb = files.size() ? files[files.size() - 1] : "";
+            bool isValid = false;
+            rp_UpdaterIsValidDownloadedFile(last_nb, &isValid);
+            if (!isValid) {
+                auto callback = new Callback();
+                callback->reset();
+                rp_UpdaterSetCallback(callback);
+                rp_UpdaterDownloadFileAsync(std::string("https://downloads.redpitaya.com/downloads/Unify/nightly_builds/") + last_nb);
+                rp_UpdaterWaitDownloadFile();
+                delete callback;
+            }
+            rp_UpdaterIsValidDownloadedFile(last_nb, &isValid);
+            if (isValid) {
+                if (g_option.verbose)
+                    printf("Install %s\n", last_nb.c_str());
+                option.installFileName = last_nb;
+                install(option);
+            } else {
+                printf("%-50s \t%s\n", last_nb.c_str(), "[BROKEN]");
+            }
+        }
     } else if (option.mode == LIST_PROD) {
         std::vector<std::string> files;
         if (option.user.empty() && option.password.empty()) {
@@ -424,75 +524,7 @@ int main(int argc, char* argv[]) {
             delete callback;
         }
     } else if (option.mode == INSTALL) {
-        std::string file = option.installFileName;
-        if (file == "") {
-            int bn = 0;
-            try {
-                bn = std::stoi(option.installNumber);
-            } catch (...) {}
-            if (bn != 0) {
-                uint32_t count = 0;
-                rp_UpdaterGetDownloadedCount(&count);
-                for (uint32_t i = 0; i < count; i++) {
-                    std::string name = {};
-                    std::string commit = {};
-                    uint32_t number = 0;
-                    if (rp_UpdaterGetDownloadedFile(i, &name, &number, &commit) == RP_UP_OK) {
-                        if ((int)number == bn) {
-                            file = name;
-                            break;
-                        }
-                    }
-                }
-            } else {
-                g_returnValue = -1;
-            }
-        }
-        if (file != "") {
-
-            std::ifstream file_version("/root/.version");
-            if (file_version.is_open()) {
-                std::string line;
-                std::getline(file_version, line);
-                file_version.close();
-                if (file.find(line) == std::string::npos) {
-                    fprintf(stderr, "Warning. The current OS version does not match the one being installed.\n");
-                }
-            } else {
-                fprintf(stderr, "Warning. Can't open file to check OS version\n");
-            }
-
-            char buff[256];
-            sprintf(buff, "systemctl stop redpitaya_e3_controller.service");
-            auto ret = system(buff);
-            if (ret != 0) {
-                fprintf(stderr, "Error stop redpitaya_e3_controller.service");
-                g_returnValue = -1;
-            }
-
-            sprintf(buff, "systemctl stop redpitaya_nginx.service");
-            ret = system(buff);
-            if (ret != 0) {
-                fprintf(stderr, "Error stop redpitaya_nginx.service");
-                g_returnValue = -1;
-            }
-            if (g_returnValue == 0) {
-                auto callback = new Callback();
-                callback->reset();
-                rp_UpdaterSetCallback(callback);
-                g_returnValue = rp_UpdaterUpdateBoardEcosystem(file, false);
-                rp_UpdaterRemoveCallback();
-                delete callback;
-            }
-            if (g_returnValue == 0)
-                fprintf(stderr, "\nThe board needs to be rebooted!!!!\n");
-            else
-                fprintf(stderr, "\nFatal error while updating the ecosystem.\n");
-        } else {
-            fprintf(stderr, "Error: No ecosystem found to install.\n");
-            g_returnValue = -1;
-        }
-
+        install(option);
     } else if (option.webcontrol) {
 
         openlog("updater", LOG_PID, LOG_USER);

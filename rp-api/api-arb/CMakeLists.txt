@@ -110,10 +110,9 @@ if(BUILD_SHARED)
             ${NUMPY_INCLUDE_DIR}
         )
         #include_directories(/usr/local/lib/python3.10/dist-packages/numpy/_core/include)
-
+        set(CMAKE_SWIG_FLAGS -threads -O)
         set_property(SOURCE src/rp_arb.i PROPERTY CPLUSPLUS ON)
         # SET_SOURCE_FILES_PROPERTIES(src/rp_dsp.i PROPERTIES SWIG_FLAGS "-includeall")
-
         SWIG_ADD_LIBRARY(rp_arb_py LANGUAGE python SOURCES src/rp_arb.i ${src})
         SWIG_LINK_LIBRARIES(rp_arb_py ${Python3_LIBRARIES} rp rp-hw-calib rp-hw-profiles rp-i2c rp-spi rp-gpio rp-hw i2c -lm -lpthread)
      endif()

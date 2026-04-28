@@ -386,6 +386,17 @@ int osc_printRegset() {
     return RP_OK;
 }
 
+void osc_ClearInterrupts(int fd) {
+    int flags = fcntl(fd, F_GETFL, 0);
+    fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+    uint32_t info = 0;
+    int cleared_count = 0;
+    while (read(fd, &info, sizeof(info)) == sizeof(info)) {
+        cleared_count++;
+    }
+    fcntl(fd, F_SETFL, flags);
+}
+
 int osc_WaitInterruptEvent(int fd, int timeout_ms, uint32_t event_mask) {
     if (fd == -1) {
         return RP_EANI;
@@ -448,6 +459,17 @@ int osc_IntUnmaskCh(rp_channel_t channel) {
     }
     osc_reg->irq_split_mask = config.value;
     cmn_Debug("[Write] osc_reg->irq_split_mask <- 0x%X", config.value);
+    return RP_OK;
+}
+
+int osc_ClearInt() {
+    osc_ClearInterrupts(fd_osc_common);
+    return RP_OK;
+}
+
+int osc_ClearInt(rp_channel_t channel) {
+    int fd = fd_osc[channel];
+    osc_ClearInterrupts(fd);
     return RP_OK;
 }
 

@@ -101,7 +101,7 @@ if(BUILD_SHARED)
 
         set_property(SOURCE src/rp_dsp.i PROPERTY CPLUSPLUS ON)
         # SET_SOURCE_FILES_PROPERTIES(src/rp_dsp.i PROPERTIES SWIG_FLAGS "-includeall")
-
+        set(CMAKE_SWIG_FLAGS -threads -O)
         SWIG_ADD_LIBRARY(rp_dsp_py LANGUAGE python SOURCES src/rp_dsp.i ${src})
         SWIG_LINK_LIBRARIES(rp_dsp_py ${Python3_LIBRARIES} -lm -lpthread)
      endif()
