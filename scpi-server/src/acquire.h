@@ -80,6 +80,10 @@ scpi_result_t RP_AcqGain(scpi_t* context);
 scpi_result_t RP_AcqGainQ(scpi_t* context);
 scpi_result_t RP_AcqOffset(scpi_t* context);
 scpi_result_t RP_AcqOffsetQ(scpi_t* context);
+
+scpi_result_t RP_AcqPreTriggerCounterQ(scpi_t* context);
+scpi_result_t RP_AcqPreTriggerCounterChQ(scpi_t* context);
+
 scpi_result_t RP_AcqTriggerLevel(scpi_t* context);
 scpi_result_t RP_AcqTriggerLevelQ(scpi_t* context);
 scpi_result_t RP_AcqTriggerLevelCh(scpi_t* context);
@@ -102,8 +106,5 @@ scpi_result_t RP_AcqBufferSizeQ(scpi_t* context);
 
 scpi_result_t RP_AcqAC_DC(scpi_t* context);
 scpi_result_t RP_AcqAC_DCQ(scpi_t* context);
-
-scpi_result_t RP_ExtTriggerLevel(scpi_t* context);
-scpi_result_t RP_ExtTriggerLevelQ(scpi_t* context);
 
 #endif /* ACQUIRE_H_ */

@@ -143,4 +143,7 @@ void requestSendNewLine(scpi_t* context);
 
 void stopAllThreads(scpi_t* context);
 
+scpi_result_t RP_ExtTriggerLevel(scpi_t* context);
+scpi_result_t RP_ExtTriggerLevelQ(scpi_t* context);
+
 #endif /* COMMON_H_ */

@@ -1198,6 +1198,40 @@ scpi_result_t RP_AcqTriggerLevel(scpi_t* context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_AcqPreTriggerCounterQ(scpi_t* context) {
+    uint32_t value = 0;
+    auto result = rp_AcqGetPreTriggerCounter(&value);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to get pre trigger counter: %s", rp_GetError(result));
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+    // Return back result
+    SCPI_ResultUInt32(context, value);
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqPreTriggerCounterChQ(scpi_t* context) {
+    uint32_t value = 0;
+    rp_channel_t channel = RP_CH_1;
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK) {
+        return SCPI_RES_ERR;
+    }
+    auto result = rp_AcqGetPreTriggerCounterCh(channel, &value);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to get pre trigger counter: %s", rp_GetError(result));
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+    // Return back result
+    SCPI_ResultUInt32(context, value);
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_AcqTriggerLevelCh(scpi_t* context) {
     scpi_number_t value;
     rp_channel_t channel = RP_CH_1;

@@ -194,6 +194,8 @@ static const scpi_command_t scpi_commands[] = {
     SCPI_CMD("ACQ:TRig:INT#:FILL:CH#?", RP_AcqInterrupFillChQ),
     SCPI_CMD("ACQ:SOUR#:GAIN", RP_AcqGain),
     SCPI_CMD("ACQ:SOUR#:GAIN?", RP_AcqGainQ),
+    SCPI_CMD("ACQ:TRig:PRE:COUNTER?", RP_AcqPreTriggerCounterQ),
+    SCPI_CMD("ACQ:TRig:PRE:COUNTER:CH#?", RP_AcqPreTriggerCounterChQ),
     SCPI_CMD("ACQ:TRig:LEV", RP_AcqTriggerLevel),
     SCPI_CMD("ACQ:TRig:LEV?", RP_AcqTriggerLevelQ),
     SCPI_CMD("ACQ:TRig:LEV:CH#", RP_AcqTriggerLevelCh),
