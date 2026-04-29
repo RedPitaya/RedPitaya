@@ -20,6 +20,8 @@ int RP_AcqSetDefaultValues();
 
 scpi_result_t RP_AcqSplitTrigger(scpi_t* context);
 scpi_result_t RP_AcqSplitTriggerQ(scpi_t* context);
+scpi_result_t RP_AcqKeepArm(scpi_t* context);
+scpi_result_t RP_AcqKeepArmQ(scpi_t* context);
 
 scpi_result_t RP_AcqDataFormat(scpi_t* context);
 scpi_result_t RP_AcqDataFormatQ(scpi_t* context);

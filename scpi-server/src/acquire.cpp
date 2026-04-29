@@ -55,6 +55,37 @@ scpi_result_t RP_AcqSplitTriggerQ(scpi_t* context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_AcqKeepArm(scpi_t* context) {
+    bool state_c = false;
+    /* Parse first, STATE argument */
+    if (!SCPI_ParamBool(context, &state_c, true)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+    // Now set the decimation
+    auto result = rp_AcqSetArmKeep(state_c);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to set keep arm: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqKeepArmQ(scpi_t* context) {
+    bool enabled = false;
+    auto result = rp_AcqGetArmKeep(&enabled);
+    if (result != RP_OK) {
+        RP_LOG_CRIT("Failed to get keep arm: %s", rp_GetError(result));
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+    SCPI_ResultBool(context, enabled);
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_AcqDataFormat(scpi_t* context) {
     const char* param = nullptr;
     size_t param_len = 0;

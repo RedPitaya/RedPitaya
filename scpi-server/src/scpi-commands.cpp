@@ -150,6 +150,8 @@ static const scpi_command_t scpi_commands[] = {
     SCPI_CMD("ACQ:RST:CH#", RP_AcqResetCh),
     SCPI_CMD("ACQ:SPLIT:TRig", RP_AcqSplitTrigger),
     SCPI_CMD("ACQ:SPLIT:TRig?", RP_AcqSplitTriggerQ),
+    SCPI_CMD("ACQ:KEEP:ARM", RP_AcqKeepArm),
+    SCPI_CMD("ACQ:KEEP:ARM?", RP_AcqKeepArmQ),
 
     SCPI_CMD("ACQ:DEC", RP_AcqDecimation),
     SCPI_CMD("ACQ:DEC:CH#", RP_AcqDecimationCh),
