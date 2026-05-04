@@ -75,7 +75,7 @@ CFloatParameter outExtTrigDeb("SOUR_DEB", CBaseParameter::RW, 500, 0, 0.008, 833
 CBooleanParameter outImpZmode("SOUR_IMPEDANCE_Z_MODE", CBaseParameter::RO, is_z_present, 0);
 CFloatParameter outAmplitudeMax("SOUR_VOLT_MAX", CBaseParameter::RO, LEVEL_AMPS_MAX, 0, LEVEL_AMPS_MAX, LEVEL_AMPS_MAX);
 
-CIntParameter outGain[MAX_DAC_CHANNELS] = INIT2("OSC_CH", "_OUT_GAIN", CBaseParameter::RW, RP_GAIN_1X, 0, 0, 1, CONFIG_VAR);
+CIntParameter outGain[MAX_DAC_CHANNELS] = INIT2("OSC_CH", "_OUT_GAIN", CBaseParameter::RW, RP_GAIN_1X, 0, RP_GAIN_1X, RP_GAIN_5X, CONFIG_VAR);
 CStringParameter outARBList = CStringParameter("ARB_LIST", CBaseParameter::RW, loadARBList(), 0);
 
 CBooleanParameter outX5Gain("SOUR_X5_GAIN", CBaseParameter::RO, isX5Gain, 0);
@@ -164,8 +164,8 @@ auto generate(rp_channel_t channel, float tscale) -> void {
                                 outBurstRepetitions[channel].Value(),
                                 outRiseTime[channel].Value(),
                                 outFallTime[channel].Value(),
-                                outBurstInit[channel].Value(),
-                                outBurstLast[channel].Value(),
+                                outBurstInit[channel].Value() / outScale[channel].Value(),
+                                outBurstLast[channel].Value() / outScale[channel].Value(),
                                 outBurstUseLastSample[channel].Value(),
                                 getOSCTimeOffset(),
                                 tscale);
@@ -279,16 +279,50 @@ auto setBurstParameters(bool force, bool requestUpdateInitLast) -> void {
         }
 
         if (IS_NEW(outBurstInit[ch]) || force || requestUpdateInitLast) {
-            float Coff = outImp[ch].Value() == 1 ? 2.0 : 1.0;
-            if (rp_GenSetInitGenValue(ch, outBurstInit[ch].NewValue() * Coff) == RP_OK) {
+            float Coff = 1.0;
+            float gain = 1.0;
+            float maxAmp = outAmpMax();
+            if (rp_HPGetIsDAC50OhmModeOrDefault()) {
+                Coff = outImp[ch].Value() == 1 ? 2.0 : 1.0;
+                maxAmp /= Coff;
+            }
+            if (rp_HPGetIsGainDACx5OrDefault()) {
+                gain = outGain[ch].Value() == RP_GAIN_5X ? 5.0 : 1.0;
+                maxAmp /= (outGain[ch].Value() != RP_GAIN_5X ? 5.0 : 1.0);
+            }
+            float newInit = outBurstInit[ch].NewValue();
+            newInit = newInit > maxAmp ? maxAmp : newInit;
+            newInit = newInit < -maxAmp ? -maxAmp : newInit;
+            float newInitCalc = newInit * Coff / gain;
+            if (rp_GenSetInitGenValue(ch, newInitCalc) == RP_OK) {
                 outBurstInit[ch].Update();
+                if (outBurstInit[ch].Value() != newInit) {
+                    outBurstInit[ch].SendValue(newInit);
+                }
             }
         }
 
         if (IS_NEW(outBurstLast[ch]) || force || requestUpdateInitLast) {
-            float Coff = outImp[ch].Value() == 1 ? 2.0 : 1.0;
-            if (rp_GenBurstLastValue(ch, outBurstLast[ch].NewValue() * Coff) == RP_OK) {
+            float Coff = 1.0;
+            float gain = 1.0;
+            float maxAmp = outAmpMax();
+            if (rp_HPGetIsDAC50OhmModeOrDefault()) {
+                Coff = outImp[ch].Value() == 1 ? 2.0 : 1.0;
+                maxAmp /= Coff;
+            }
+            if (rp_HPGetIsGainDACx5OrDefault()) {
+                gain = outGain[ch].Value() == RP_GAIN_5X ? 5.0 : 1.0;
+                maxAmp /= (outGain[ch].Value() != RP_GAIN_5X ? 5.0 : 1.0);
+            }
+            float newLast = outBurstLast[ch].NewValue();
+            newLast = newLast > maxAmp ? maxAmp : newLast;
+            newLast = newLast < -maxAmp ? -maxAmp : newLast;
+            float newLastCalc = newLast * Coff / gain;
+            if (rp_GenBurstLastValue(ch, newLastCalc) == RP_OK) {
                 outBurstLast[ch].Update();
+                if (outBurstLast[ch].Value() != newLast) {
+                    outBurstLast[ch].SendValue(newLast);
+                }
             }
         }
 
@@ -459,6 +493,7 @@ auto updateGeneratorParameters(bool force) -> void {
                         prevGainAPI = curGenStatus;
                         if (curGenStatus != newFpgaGain && rp_GenSetGainOut((rp_channel_t)ch, newFpgaGain) == RP_OK) {
                             outGain[ch].SendValue(newFpgaGain);
+                            requestUpdateInitLast = true;
                         }
                         TRACE_SHORT("CH %d Coff %f Amp %f Off %f", ch, Coff, outAmplitude[ch].NewValue(), outOffset[ch].NewValue())
                     };

@@ -342,6 +342,22 @@ OSC.updateGenBurstDelay= function(new_params,param_name){
     }
 }
 
+OSC.updateGenBurstInit= function(new_params,param_name){
+    var state = OSC.params.orig[param_name].value;
+    var field = $('#' + param_name);
+    if (field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
+        field.val(new_params[param_name].value);
+    }
+}
+
+OSC.updateGenBurstLast= function(new_params,param_name){
+    var state = OSC.params.orig[param_name].value;
+    var field = $('#' + param_name);
+    if (field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
+        field.val(new_params[param_name].value);
+    }
+}
+
 OSC.updateGenBurstInf = function(new_params,param_name){
     var state = OSC.params.orig[param_name].value;
     var field = $('#' + param_name);

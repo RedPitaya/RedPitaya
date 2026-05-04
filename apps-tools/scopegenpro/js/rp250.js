@@ -34,14 +34,10 @@
             switch(param_name){
                 case 'OSC_CH1_OUT_GAIN':{
                     $("#OSC_CH1_OUT_GAIN_L").text(value === 0 ? "x1" : "x5")
-                    $("#SOUR1_B_INIT_VOLT_TITLE").text("Init / V" + (value === 0 ? " x1" : " x5"))
-                    $("#SOUR1_B_LAST_VOLT_TITLE").text("Last / V" + (value === 0 ? " x1" : " x5"))
                     break;
                 }
                 case 'OSC_CH2_OUT_GAIN':{
                     $("#OSC_CH2_OUT_GAIN_L").text(value === 0 ? "x1" : "x5");
-                    $("#SOUR2_B_INIT_VOLT_TITLE").text("Init / V" + (value === 0 ? " x1" : " x5"))
-                    $("#SOUR2_B_LAST_VOLT_TITLE").text("Last / V" + (value === 0 ? " x1" : " x5"))
                     break;
                 }
             }
