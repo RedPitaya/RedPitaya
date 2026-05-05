@@ -113,6 +113,11 @@ int acq_GetExtTriggerDebouncerUs(double* value);
 int acq_SetOffset(rp_channel_t channel, float voltage);
 int acq_GetOffset(rp_channel_t channel, float* voltage);
 
+int acq_SetIntMask(rp_int_mode_t mask, bool enable);
+int acq_GetIntMask(rp_int_mode_t mask, bool* enable);
+int acq_SetIntMaskCh(rp_channel_t channel, rp_int_mode_t mask, bool enable);
+int acq_GetIntMaskCh(rp_channel_t channel, rp_int_mode_t mask, bool* enable);
+
 int acq_IntUnmask();
 int acq_IntUnmaskCh(rp_channel_t channel);
 int acq_IntTriggerRead(uint64_t timeout);

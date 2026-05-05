@@ -750,6 +750,40 @@ int rp_AcqGetUnlockTrigger(bool* state);
 int rp_AcqGetUnlockTriggerCh(rp_channel_t channel, bool* state);
 
 /**
+ * @brief Sets the common interrupt mask for the acquisition module.
+ * @param mode   Interrupt mode (Trigger or Fill).
+ * @param enable True to enable, false to mask.
+ * @return RP_OK if successful, error code otherwise.
+ */
+int rp_AcqSetIntMask(rp_int_mode_t mode, bool enable);
+
+/**
+ * @brief Gets the common interrupt mask status.
+ * @param mode     Interrupt mode to check.
+ * @param[out] enable Current status (true if enabled).
+ * @return RP_OK if successful, error code otherwise.
+ */
+int rp_AcqGetIntMask(rp_int_mode_t mode, bool* enable);
+
+/**
+ * @brief Sets the interrupt mask for a specific channel.
+ * @param channel Target channel (e.g., RP_CH_1, RP_CH_2).
+ * @param mode    Interrupt mode (Trigger or Fill).
+ * @param enable  True to enable, false to mask.
+ * @return RP_OK if successful, error code otherwise.
+ */
+int rp_AcqSetIntMaskCh(rp_channel_t channel, rp_int_mode_t mode, bool enable);
+
+/**
+ * @brief Gets the interrupt mask status for a specific channel.
+ * @param channel Target channel.
+ * @param mode    Interrupt mode to check.
+ * @param[out] enable Current status (true if enabled).
+ * @return RP_OK if successful, error code otherwise.
+ */
+int rp_AcqGetIntMaskCh(rp_channel_t channel, rp_int_mode_t mode, bool* enable);
+
+/**
  * Waits for a trigger interrupt event on any channel of the acquisition module.
  * This function blocks until a trigger condition is met on any channel or the specified timeout expires.
  * @param timeout_ms Timeout value in milliseconds (mS). For disable timeout use: -1

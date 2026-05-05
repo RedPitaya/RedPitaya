@@ -90,6 +90,8 @@
 #define RP_EOP 28
 /** Interrupt wait timeout. */
 #define RP_ETIM 29
+/** Interrupt does not match interrupt status. */
+#define RP_EIS 30
 
 #define SPECTR_OUT_SIG_LEN (2 * 1024)
 

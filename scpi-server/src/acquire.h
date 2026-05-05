@@ -70,6 +70,11 @@ scpi_result_t RP_AcqTriggerHystQ(scpi_t* context);
 scpi_result_t RP_AcqTriggerFillQ(scpi_t* context);
 scpi_result_t RP_AcqTriggerFillChQ(scpi_t* context);
 
+scpi_result_t RP_AcqTriggerIntEnable(scpi_t* context);
+scpi_result_t RP_AcqTriggerIntEnableQ(scpi_t* context);
+scpi_result_t RP_AcqTriggerIntEnableCh(scpi_t* context);
+scpi_result_t RP_AcqTriggerIntEnableChQ(scpi_t* context);
+
 scpi_result_t RP_AcqInterrupTriggerQ(scpi_t* context);
 scpi_result_t RP_AcqInterrupTriggerChQ(scpi_t* context);
 scpi_result_t RP_AcqInterrupFillQ(scpi_t* context);

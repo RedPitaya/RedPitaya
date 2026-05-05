@@ -27,6 +27,11 @@ static const int OSC_BASE_ADDR_4CH = 0x00200000;
 #define OSC_CHB_OFFSET 0x20000
 
 typedef struct {
+    uint8_t common_mask = 0x03;
+    uint8_t split_mask = 0xFF;
+} int_mask_t;
+
+typedef struct {
     uint8_t start_write : 1;           // (W) start write
     uint8_t reset_state_machine : 1;   // (W) rst_wr_state_machine
     uint8_t trigger_status : 1;        // (R) trigger_status
@@ -894,6 +899,11 @@ int osc_SetEqFiltersChC(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, ui
 int osc_GetEqFiltersChC(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
 int osc_SetEqFiltersChD(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp);
 int osc_GetEqFiltersChD(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp);
+
+int osc_SetIntMask(rp_int_mode_t mode, bool enable);
+int osc_GetIntMask(rp_int_mode_t mode, bool* enable);
+int osc_SetIntMaskCh(rp_channel_t channel, rp_int_mode_t mode, bool enable);
+int osc_GetIntMaskCh(rp_channel_t channel, rp_int_mode_t mode, bool* enable);
 
 int osc_IntUnmask();
 int osc_IntUnmaskCh(rp_channel_t channel);

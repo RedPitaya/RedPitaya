@@ -23,6 +23,7 @@
 rp_scpi_acq_unit_t unit = RP_SCPI_VOLTS;  // default value
 
 const scpi_choice_def_t scpi_RpAcqTrigRequest[] = {{"PRE_TRIG", 1}, {"POST_TRIG", 2}, {"PRE_POST_TRIG", 3}, SCPI_CHOICE_LIST_END};
+const scpi_choice_def_t scpi_RpAcqIntMode[] = {{"TRIG", RP_INT_TRIGGER}, {"FILL", RP_INT_FILL}, SCPI_CHOICE_LIST_END};
 
 scpi_result_t RP_AcqSplitTrigger(scpi_t* context) {
     bool state_c = false;
@@ -714,6 +715,113 @@ scpi_result_t RP_AcqInterrupTriggerChQ(scpi_t* context) {
     }
     // Return back result
     SCPI_ResultMnemonic(context, trig_name);
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqTriggerIntEnable(scpi_t* context) {
+
+    int32_t trig_mode = 0;
+    /* Parse MODE parameter */
+    if (!SCPI_ParamChoice(context, scpi_RpAcqIntMode, &trig_mode, true)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing int mode parameter.");
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+
+    scpi_bool_t value = FALSE;
+    if (!SCPI_ParamBool(context, &value, false)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing second parameter.");
+        return SCPI_RES_ERR;
+    }
+
+    auto result = rp_AcqSetIntMask((rp_int_mode_t)trig_mode, value);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to set int mode: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqTriggerIntEnableQ(scpi_t* context) {
+    bool state = false;
+    int32_t trig_mode = 0;
+    /* Parse MODE parameter */
+    if (!SCPI_ParamChoice(context, scpi_RpAcqIntMode, &trig_mode, true)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing int mode parameter.");
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+
+    auto result = rp_AcqGetIntMask((rp_int_mode_t)trig_mode, &state);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to get int mode: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    SCPI_ResultBool(context, state);
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqTriggerIntEnableCh(scpi_t* context) {
+    rp_channel_t channel = RP_CH_1;
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK) {
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+
+    int32_t trig_mode = 0;
+    /* Parse MODE parameter */
+    if (!SCPI_ParamChoice(context, scpi_RpAcqIntMode, &trig_mode, true)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing int mode parameter.");
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+
+    scpi_bool_t value = FALSE;
+    if (!SCPI_ParamBool(context, &value, false)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing second parameter.");
+        return SCPI_RES_ERR;
+    }
+
+    auto result = rp_AcqSetIntMaskCh(channel, (rp_int_mode_t)trig_mode, value);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to set int mode: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqTriggerIntEnableChQ(scpi_t* context) {
+    rp_channel_t channel = RP_CH_1;
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK) {
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+
+    bool state = false;
+    int32_t trig_mode = 0;
+    /* Parse MODE parameter */
+    if (!SCPI_ParamChoice(context, scpi_RpAcqIntMode, &trig_mode, true)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing int mode parameter.");
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+
+    auto result = rp_AcqGetIntMaskCh(channel, (rp_int_mode_t)trig_mode, &state);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to get int mode: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    SCPI_ResultBool(context, state);
     RP_LOG_INFO("%s", rp_GetError(result))
     return SCPI_RES_OK;
 }

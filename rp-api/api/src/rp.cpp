@@ -227,6 +227,8 @@ const char* rp_GetError(int errorCode) {
             return "Execution error";
         case RP_ETIM:
             return "Interrupt wait timeout";
+        case RP_EIS:
+            return "Interrupt does not match interrupt status";
         default:
             return "Unknown error";
     }
@@ -1642,6 +1644,21 @@ int rp_AcqGetUnlockTriggerCh(rp_channel_t channel, bool* state) {
     }
 
     return RP_NOTS;
+}
+int rp_AcqSetIntMask(rp_int_mode_t mode, bool enable) {
+    return acq_SetIntMask(mode, enable);
+}
+
+int rp_AcqGetIntMask(rp_int_mode_t mode, bool* enable) {
+    return acq_GetIntMask(mode, enable);
+}
+
+int rp_AcqSetIntMaskCh(rp_channel_t channel, rp_int_mode_t mode, bool enable) {
+    return acq_SetIntMaskCh(channel, mode, enable);
+}
+
+int rp_AcqGetIntMaskCh(rp_channel_t channel, rp_int_mode_t mode, bool* enable) {
+    return acq_GetIntMaskCh(channel, mode, enable);
 }
 
 int rp_AcqIntTriggerRead(int timeout) {

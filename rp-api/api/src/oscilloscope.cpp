@@ -49,6 +49,8 @@ static volatile uint32_t* osc_chc = NULL;
 // The FPGA input signal buffer pointer for channel D
 static volatile uint32_t* osc_chd = NULL;
 
+static int_mask_t g_int_mask;
+
 // // The FPGA input signal buffer pointer for AXI channel C
 // static volatile uint16_t *osc_axi_chc = NULL;
 
@@ -425,11 +427,42 @@ int osc_WaitInterruptEvent(int fd, int timeout_ms, uint32_t event_mask) {
     return RP_EOP;
 }
 
+int osc_SetIntMask(rp_int_mode_t mode, bool enable) {
+    int mode_i = 1 << mode;
+    g_int_mask.common_mask = (g_int_mask.common_mask & ~mode_i) | (enable ? mode_i : 0);
+    return RP_OK;
+}
+
+int osc_GetIntMask(rp_int_mode_t mode, bool* enable) {
+    if (!enable)
+        return RP_EIPV;
+    *enable = g_int_mask.common_mask & (1 << mode);
+    return RP_OK;
+}
+
+int osc_SetIntMaskCh(rp_channel_t channel, rp_int_mode_t mode, bool enable) {
+    uint32_t shift = (mode * 4) + (uint32_t)channel;
+    if (enable) {
+        g_int_mask.split_mask |= (1 << shift);
+    } else {
+        g_int_mask.split_mask &= ~(1 << shift);
+    }
+    return RP_OK;
+}
+
+int osc_GetIntMaskCh(rp_channel_t channel, rp_int_mode_t mode, bool* enable) {
+    if (!enable)
+        return RP_EIPV;
+    uint32_t shift = (mode * 4) + (uint32_t)channel;
+    *enable = (g_int_mask.split_mask & (1 << shift)) != 0;
+    return RP_OK;
+}
+
 int osc_IntUnmask() {
     acquisition_irq_mask_t config;
     config.value = osc_reg->irq_mask;
-    config.bits.trigger_en = 0x1;
-    config.bits.buffer_full_en = 0x1;
+    config.bits.trigger_en = (g_int_mask.common_mask & 0x1) ? 1 : 0;
+    config.bits.buffer_full_en = (g_int_mask.common_mask & 0x2) ? 1 : 0;
     osc_reg->irq_mask = config.value;
     cmn_Debug("[Write] osc_reg->irq_mask <- 0x%X", config.value);
     return RP_OK;
@@ -457,7 +490,7 @@ int osc_IntUnmaskCh(rp_channel_t channel) {
         config.bits.trig_ch4_en = 0x1;
         config.bits.fill_ch4_en = 0x1;
     }
-    osc_reg->irq_split_mask = config.value;
+    osc_reg->irq_split_mask = config.value & g_int_mask.split_mask;
     cmn_Debug("[Write] osc_reg->irq_split_mask <- 0x%X", config.value);
     return RP_OK;
 }
@@ -483,7 +516,7 @@ int osc_IntTriggerRead(int timeout) {
         if (status.value & mask) {
             return RP_OK;
         } else {
-            return RP_EOP;
+            return RP_EIS;
         }
     }
     return ret;
@@ -499,7 +532,7 @@ int osc_IntFullRead(int timeout) {
         if (status.value & mask) {
             return RP_OK;
         } else {
-            return RP_EOP;
+            return RP_EIS;
         }
     }
     return ret;
@@ -512,11 +545,11 @@ int osc_IntTriggerReadCh(rp_channel_t channel, int timeout) {
     if (ret == RP_OK) {
         split_irq_status_t status;
         status.value = osc_reg->irq_split_status_clear;
-        cmn_Debug("[osc_IntTriggerReadCh] status %x mask %x", status.value, mask);
+        cmn_Debug("[osc_IntTriggerReadCh] channel %d status %x mask %x", channel, status.value, mask);
         if (status.value & mask) {
             return RP_OK;
         } else {
-            return RP_EOP;
+            return RP_EIS;
         }
     }
     return ret;
@@ -529,11 +562,11 @@ int osc_IntFullReadCh(rp_channel_t channel, int timeout) {
     if (ret == RP_OK) {
         split_irq_status_t status;
         status.value = osc_reg->irq_split_status_clear;
-        cmn_Debug("[osc_IntFullReadCh] status %x mask %x", status.value, mask);
+        cmn_Debug("[osc_IntFullReadCh] channel %d status %x mask %x", channel, status.value, mask);
         if (status.value & mask) {
             return RP_OK;
         } else {
-            return RP_EOP;
+            return RP_EIS;
         }
     }
     return ret;

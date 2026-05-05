@@ -1759,6 +1759,24 @@ int acq_GetOffset(rp_channel_t channel, float* voltage) {
     return RP_OK;
 }
 
+int acq_SetIntMask(rp_int_mode_t mask, bool enable) {
+    return osc_SetIntMask(mask, enable);
+}
+
+int acq_GetIntMask(rp_int_mode_t mask, bool* enable) {
+    return osc_GetIntMask(mask, enable);
+}
+
+int acq_SetIntMaskCh(rp_channel_t channel, rp_int_mode_t mask, bool enable) {
+    CHECK_CHANNEL
+    return osc_SetIntMaskCh(channel, mask, enable);
+}
+
+int acq_GetIntMaskCh(rp_channel_t channel, rp_int_mode_t mask, bool* enable) {
+    CHECK_CHANNEL
+    return osc_GetIntMaskCh(channel, mask, enable);
+}
+
 int acq_IntUnmask() {
     osc_ClearInt();
     return osc_IntUnmask();

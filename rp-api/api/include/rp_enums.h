@@ -173,6 +173,12 @@ typedef struct {
     float* ch_f[4];
 } buffers_t;
 
+/** @brief Interrupt event sources for signal acquisition. */
+typedef enum {
+    RP_INT_TRIGGER = 0x0, /**< Trigger condition met (edge, level, etc.). */
+    RP_INT_FILL = 0x1,    /**< Buffer full; data ready for processing. */
+} rp_int_mode_t;
+
 /**
  * Type representing decimation used at acquiring signal.
  */
