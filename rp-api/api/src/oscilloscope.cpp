@@ -50,6 +50,7 @@ static volatile uint32_t* osc_chc = NULL;
 static volatile uint32_t* osc_chd = NULL;
 
 static int_mask_t g_int_mask;
+static int_mask_t g_current_int_mask;
 
 // // The FPGA input signal buffer pointer for AXI channel C
 // static volatile uint16_t *osc_axi_chc = NULL;
@@ -464,6 +465,7 @@ int osc_IntUnmask() {
     config.bits.trigger_en = (g_int_mask.common_mask & 0x1) ? 1 : 0;
     config.bits.buffer_full_en = (g_int_mask.common_mask & 0x2) ? 1 : 0;
     osc_reg->irq_mask = config.value;
+    g_current_int_mask.common_mask = config.value;
     cmn_Debug("[Write] osc_reg->irq_mask <- 0x%X", config.value);
     return RP_OK;
 }
@@ -492,6 +494,7 @@ int osc_IntUnmaskCh(rp_channel_t channel) {
     }
     config.value = config.value & g_int_mask.split_mask;
     osc_reg->irq_split_mask = config.value;
+    g_current_int_mask.split_mask = config.value;
     cmn_Debug("[Write] osc_reg->irq_split_mask <- 0x%X", config.value);
     return RP_OK;
 }
@@ -509,13 +512,18 @@ int osc_ClearInt(rp_channel_t channel) {
 
 int osc_IntTriggerRead(int timeout) {
     uint32_t mask = 0x1;
+
+    if (!(g_current_int_mask.common_mask & mask)) {
+        return RP_EID;
+    }
+
     auto ret = osc_WaitInterruptEvent(fd_osc_common, timeout, mask);
     if (ret == RP_OK) {
         acquisition_irq_status_t status;
         status.value = osc_reg->irq_status_clear;
         cmn_Debug("[osc_IntTriggerRead] status %x mask %x", status.value, mask);
         if (status.value & mask) {
-            return RP_OK;
+            return osc_IntClearTrigger();
         } else {
             return RP_EIS;
         }
@@ -525,13 +533,18 @@ int osc_IntTriggerRead(int timeout) {
 
 int osc_IntFullRead(int timeout) {
     uint32_t mask = 0x2;
+
+    if (!(g_current_int_mask.common_mask & mask)) {
+        return RP_EID;
+    }
+
     auto ret = osc_WaitInterruptEvent(fd_osc_common, timeout, mask);
     if (ret == RP_OK) {
         acquisition_irq_status_t status;
         status.value = osc_reg->irq_status_clear;
         cmn_Debug("[osc_IntFullRead] status %x mask %x", status.value, mask);
         if (status.value & mask) {
-            return RP_OK;
+            return osc_IntClearBufferFull();
         } else {
             return RP_EIS;
         }
@@ -542,13 +555,18 @@ int osc_IntFullRead(int timeout) {
 int osc_IntTriggerReadCh(rp_channel_t channel, int timeout) {
     int fd = fd_osc[channel];
     int mask = 0x1 << channel;
+
+    if (!(g_current_int_mask.split_mask & mask)) {
+        return RP_EID;
+    }
+
     auto ret = osc_WaitInterruptEvent(fd, timeout, mask);
     if (ret == RP_OK) {
         split_irq_status_t status;
         status.value = osc_reg->irq_split_status_clear;
         cmn_Debug("[osc_IntTriggerReadCh] channel %d status %x mask %x", channel, status.value, mask);
         if (status.value & mask) {
-            return RP_OK;
+            return osc_IntClearTriggerCh(channel);
         } else {
             return RP_EIS;
         }
@@ -559,13 +577,18 @@ int osc_IntTriggerReadCh(rp_channel_t channel, int timeout) {
 int osc_IntFullReadCh(rp_channel_t channel, int timeout) {
     int fd = fd_osc[channel];
     int mask = 0x10 << channel;
+
+    if (!(g_current_int_mask.split_mask & mask)) {
+        return RP_EID;
+    }
+
     auto ret = osc_WaitInterruptEvent(fd, timeout, mask);
     if (ret == RP_OK) {
         split_irq_status_t status;
         status.value = osc_reg->irq_split_status_clear;
         cmn_Debug("[osc_IntFullReadCh] channel %d status %x mask %x", channel, status.value, mask);
         if (status.value & mask) {
-            return RP_OK;
+            return osc_IntClearBufferFullCh(channel);
         } else {
             return RP_EIS;
         }
@@ -786,11 +809,14 @@ int osc_GetTriggerSource(rp_channel_t channel, uint32_t* source) {
 }
 
 int osc_SetSplitTriggerMode(bool enable) {
-    uint32_t currentValue = 0;
-    uint32_t mask = 0x010 | 0x1000 | 0x10000 | 0x100000;  // bits 4, 12, 20, 28
-    uint32_t value = enable ? mask : 0;
-    cmn_SetValue(&osc_reg->config, mask, value, &currentValue);
-    cmn_Debug("[Write] osc_reg->config split_trigger <- %s", enable ? "ON" : "OFF");
+    config_u_t config;
+    config.reg_full = osc_reg->config;
+    config.reg.config_ch[0].enable_split_trigger = enable ? 0x1 : 0x0;
+    config.reg.config_ch[1].enable_split_trigger = enable ? 0x1 : 0x0;
+    config.reg.config_ch[2].enable_split_trigger = enable ? 0x1 : 0x0;
+    config.reg.config_ch[3].enable_split_trigger = enable ? 0x1 : 0x0;
+    osc_reg->config = config.reg_full;
+    cmn_Debug("[Write] osc_reg->config <- 0x%X", config.reg_full);
     return RP_OK;
 }
 
@@ -839,83 +865,60 @@ int osc_GetUnlockTrigger(rp_channel_t channel, bool* state) {
 }
 
 int osc_WriteDataIntoMemory(rp_channel_t channel, bool enable) {
-    uint32_t mask;
-    uint32_t value;
-    uint32_t currentValue = 0;
+    config_u_t config;
     switch (channel) {
         case RP_CH_1:
-            mask = 0x1;  // bit 0
-            value = enable ? 0x1 : 0x0;
-            break;
         case RP_CH_2:
-            mask = 0x100;  // bit 8
-            value = enable ? 0x100 : 0x0;
-            break;
         case RP_CH_3:
-            mask = 0x10000;  // bit 16
-            value = enable ? 0x10000 : 0x0;
-            break;
         case RP_CH_4:
-            mask = 0x1000000;  // bit 24
-            value = enable ? 0x1000000 : 0x0;
-            break;
+            config.reg_full = osc_reg->config;
+            config.reg.config_ch[channel].start_write = enable ? 0x1 : 0;
+            osc_reg->config = config.reg_full;
+            cmn_Debug("[Write] osc_reg->config <- 0x%X", config.reg_full);
+            return RP_OK;
         default:
-            return RP_EOOR;
+            ERROR_LOG("Wrong channel %d", channel)
+            break;
     }
-
-    cmn_SetValue(&osc_reg->config, mask, value, &currentValue);
-    cmn_Debug("[Write] osc_reg->config bit %s <- 0x%X", enable ? "set" : "clear", value);
-    return RP_OK;
+    return RP_EOOR;
 }
 
 int osc_ResetWriteStateMachine(rp_channel_t channel) {
-    uint32_t mask;
-    uint32_t currentValue = 0;
+    config_u_t config;
     switch (channel) {
         case RP_CH_1:
-            mask = 0x002;  // bit 1
-            break;
         case RP_CH_2:
-            mask = 0x200;  // bit 9
-            break;
         case RP_CH_3:
-            mask = 0x20000;  // bit 17
-            break;
         case RP_CH_4:
-            mask = 0x2000000;  // bit 25
-            break;
+            config.reg_full = osc_reg->config;
+            config.reg.config_ch[channel].reset_state_machine = 0x1;
+            osc_reg->config = config.reg_full;
+            cmn_Debug("[Write] osc_reg->config <- 0x%X", config.reg_full);
+            return RP_OK;
         default:
-            ERROR_LOG("Wrong channel %d", channel);
-            return RP_EOOR;
+            ERROR_LOG("Wrong channel %d", channel)
+            break;
     }
-    cmn_SetValue(&osc_reg->config, mask, mask, &currentValue);
-    cmn_Debug("[Write] osc_reg->config reset_state_machine ch%d mask 0x%X", channel, mask);
-    return RP_OK;
+    return RP_EOOR;
 }
 
 int osc_SetArmKeep(rp_channel_t channel, bool enable) {
-    uint32_t mask;
-    uint32_t currentValue = 0;
+    config_u_t config;
     switch (channel) {
         case RP_CH_1:
-            mask = 0x008;  // bit 3
-            break;
         case RP_CH_2:
-            mask = 0x800;  // bit 11
-            break;
         case RP_CH_3:
-            mask = 0x80000;  // bit 19
-            break;
         case RP_CH_4:
-            mask = 0x8000000;  // bit 27
-            break;
+            config.reg_full = osc_reg->config;
+            config.reg.config_ch[channel].arm_keep = enable ? 0x1 : 0;
+            osc_reg->config = config.reg_full;
+            cmn_Debug("[Write] osc_reg->config <- 0x%X", config.reg_full);
+            return RP_OK;
         default:
-            ERROR_LOG("Wrong channel %d", channel);
-            return RP_EOOR;
+            ERROR_LOG("Wrong channel %d", channel)
+            break;
     }
-    cmn_SetValue(&osc_reg->config, mask, enable ? mask : 0, &currentValue);
-    cmn_Debug("[Write] osc_reg->config arm_keep ch%d <- 0x%X", channel, enable ? mask : 0);
-    return RP_OK;
+    return RP_EOOR;
 }
 
 int osc_GetArmKeep(rp_channel_t channel, bool* state) {

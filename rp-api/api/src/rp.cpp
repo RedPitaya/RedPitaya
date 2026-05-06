@@ -229,6 +229,8 @@ const char* rp_GetError(int errorCode) {
             return "Interrupt wait timeout";
         case RP_EIS:
             return "Interrupt does not match interrupt status";
+        case RP_EID:
+            return "Interruptions are disabled in the settings";
         default:
             return "Unknown error";
     }

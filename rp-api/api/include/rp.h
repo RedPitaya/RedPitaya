@@ -92,6 +92,8 @@
 #define RP_ETIM 29
 /** Interrupt does not match interrupt status. */
 #define RP_EIS 30
+/** Interruptions are disabled in the settings. */
+#define RP_EID 31
 
 #define SPECTR_OUT_SIG_LEN (2 * 1024)
 
