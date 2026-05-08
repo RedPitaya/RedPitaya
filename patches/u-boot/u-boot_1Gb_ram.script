@@ -144,6 +144,10 @@ fatload mmc 0 ${addr_linux} uImage
 echo Load dts/${dts_path}/devicetree.dtb
 fatload mmc 0 ${addr_dtb}   dts/${dts_path}/devicetree.dtb
 
+# Set the size to 1GB
+fdt addr ${addr_dtb}
+fdt set /memory reg <0x00 ${high}>
+
 echo Booting Linux kernel with ramdisk and devicetree
 setenv sdboot bootm ${addr_linux} - ${addr_dtb}
 setenv bootdelay 0
