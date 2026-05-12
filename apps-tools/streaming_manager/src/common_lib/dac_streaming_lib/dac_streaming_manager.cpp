@@ -26,7 +26,8 @@ CDACStreamingManager::CDACStreamingManager(DACStream_FileType _fileType, std::st
       m_isRun(false),
       m_verbose(verbose),
       m_blockSize(blockSize),
-      m_remoteClientMode(false) {
+      m_remoteClientMode(false),
+      m_memoryStream(false) {
     auto type = CStreamSettings::DataFormat::TDMS;
     switch (m_fileType) {
         case DACStream_FileType::TDMS_TYPE:
@@ -57,7 +58,8 @@ CDACStreamingManager::CDACStreamingManager(std::string _host, bool verbose)
       m_buffer(DataLib::CBuffersCached::create()),
       m_isRun(false),
       m_verbose(verbose),
-      m_remoteClientMode(false) {}
+      m_remoteClientMode(false),
+      m_memoryStream(false) {}
 
 CDACStreamingManager::Ptr CDACStreamingManager::Create(uint8_t* ch[2], uint64_t size[2], uint8_t bytesPerSamp, CStreamSettings::DACRepeat _repeat, int32_t _rep_count,
                                                        uint32_t blockSize, bool verbose) {
@@ -78,7 +80,8 @@ CDACStreamingManager::CDACStreamingManager(uint8_t* ch[2], uint64_t size[2], uin
       m_isRun(false),
       m_verbose(verbose),
       m_blockSize(blockSize),
-      m_remoteClientMode(false) {
+      m_remoteClientMode(false),
+      m_memoryStream(false) {
     CReaderController::DataIn* data = new CReaderController::DataIn();
     data->ch[0] = ch[0];
     data->ch[1] = ch[1];
@@ -108,7 +111,8 @@ CDACStreamingManager::CDACStreamingManager(CReaderController::dac_channels_t cha
       m_isRun(false),
       m_verbose(verbose),
       m_blockSize(blockSize),
-      m_remoteClientMode(false) {
+      m_remoteClientMode(false),
+      m_memoryStream(true) {
     CReaderController::MemoryStreamSink* sink = new CReaderController::MemoryStreamSink();
     sink->channels = channels;
     sink->memoryStreamBits = bytesPerSamp * 8;
@@ -220,7 +224,7 @@ auto CDACStreamingManager::threadFunc() -> void {
         if (m_readerController) {
             size_t chSizes[2] = {0, 0};
             m_readerController->getChannelsSize(&chSizes[0], &chSizes[1]);
-            if (m_blockSize >= (chSizes[0] + chSizes[1])) {
+            if (m_blockSize >= (chSizes[0] + chSizes[1]) && !m_memoryStream) {
                 onePackMode = true;
                 m_readerController->disableRepeatMode();  // Disable for one pack mode
             }

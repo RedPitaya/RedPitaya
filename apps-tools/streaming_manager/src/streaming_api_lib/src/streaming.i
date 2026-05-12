@@ -34,29 +34,61 @@
 %template(StringList) std::list<std::string>;
 
 %typemap(out) std::vector<int16_t>* %{
-    $result = PyList_New($1->size()); // Create outer Python list of correct size
+    if (!$1) {
+        Py_RETURN_NONE;
+    }
+    $result = PyList_New($1->size());
+    if (!$result) {
+        return NULL;
+    }
     for(size_t i = 0; i < $1->size(); ++i)
     {
-        PyList_SET_ITEM($result,i,PyLong_FromLong((*$1)[i]));
+        PyObject* item = PyLong_FromLongLong((*$1)[i]);
+        if (!item) {
+            Py_DECREF($result);
+            return NULL;
+        }
+        PyList_SET_ITEM($result, i, item);
     }
 %}
 
 // Handle ch1: Use the 'size' argument for the length
 %typemap(directorin) int8_t* ch1_8Bit {
-    $input = PyMemoryView_FromMemory((char*)$1, size, PyBUF_WRITE);
+    if ($1 != NULL) {
+        $input = PyMemoryView_FromMemory((char*)$1, size, PyBUF_WRITE);
+    } else {
+        $input = Py_None;
+        Py_INCREF(Py_None);
+    }
 }
 
 %typemap(directorin) int8_t* ch2_8Bit {
-    $input = PyMemoryView_FromMemory((char*)$1, size, PyBUF_WRITE);
+    if ($1 != NULL) {
+        $input = PyMemoryView_FromMemory((char*)$1, size, PyBUF_WRITE);
+    } else {
+        $input = Py_None;
+        Py_INCREF(Py_None);
+    }
 }
 
 %typemap(directorin) int16_t* ch1_16Bit {
-    $input = PyMemoryView_FromMemory((char*)$1, size * sizeof(int16_t), PyBUF_WRITE);
+    if ($1 != NULL) {
+        $input = PyMemoryView_FromMemory((char*)$1, size * sizeof(int16_t), PyBUF_WRITE);
+    } else {
+        $input = Py_None;
+        Py_INCREF(Py_None);
+    }
 }
 
 %typemap(directorin) int16_t* ch2_16Bit {
-    $input = PyMemoryView_FromMemory((char*)$1, size * sizeof(int16_t), PyBUF_WRITE);
+    if ($1 != NULL) {
+        $input = PyMemoryView_FromMemory((char*)$1, size * sizeof(int16_t), PyBUF_WRITE);
+    } else {
+        $input = Py_None;
+        Py_INCREF(Py_None);
+    }
 }
+
 
 /* Parse the header file to generate wrappers */
 %include "adc_streaming.h"

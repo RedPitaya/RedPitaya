@@ -79,6 +79,7 @@ class CDACStreamingManager {
     bool m_verbose;
     uint32_t m_blockSize;
     bool m_remoteClientMode;
+    bool m_memoryStream;
 };
 
 }  // namespace dac_streaming_lib

@@ -30,7 +30,7 @@ auto getTS(std::string suffix) -> std::string {
 }
 
 auto sleepMs(int ms) -> void {
-    std::this_thread::sleep_for(std::chrono::microseconds(1000 * ms));
+    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
 }
 
 auto search() -> std::string {

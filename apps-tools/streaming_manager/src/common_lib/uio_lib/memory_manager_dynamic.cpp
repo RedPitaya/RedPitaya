@@ -1,6 +1,7 @@
 #include <fcntl.h>
 #include <stdint.h>
 #include <algorithm>
+#include <format>
 
 #ifndef _WIN32
 #include <sys/statvfs.h>
@@ -55,7 +56,12 @@ CMemoryManager::~CMemoryManager() {
 
 auto CMemoryManager::reallocateBlocks() -> bool {
     if (m_ramSize < getMinRequiredRAM()) {
-        WARNING("Not enough memory to split into blocks. DMA RAM size %d. Required RAM size %d", m_ramSize, getMinRequiredRAM())
+        std::string s = std::format(
+            "Not enough memory to split into blocks. RAM size {}. Required RAM size {}\n5% of RAM is allocated for operation."
+            " If your system doesn't have enough memory, reduce the block size.",
+            m_ramSize,
+            getMinRequiredRAM());
+        WARNING("%s", s.c_str())
         return false;
     }
 
