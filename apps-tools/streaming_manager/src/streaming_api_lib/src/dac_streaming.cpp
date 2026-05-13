@@ -113,6 +113,7 @@ auto DACStreamClient::Impl::getActiveChannels() -> CReaderController::dac_channe
 auto DACStreamClient::Impl::runClient(DACStreamClient* client, std::string host, uint32_t size, CReaderController::dac_channels_t activeChannels) -> void {
     auto memoryManager = new uio_lib::CMemoryManager();
     memoryManager->setMemoryBlockSize(size);
+    memoryManager->setDACMemoryStreamMode(m_dataMode == dataMode::MEM_STREAM_MODE);
     memoryManager->reallocateBlocks();
     auto blocks = memoryManager->getFreeBlockCount();
 

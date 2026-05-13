@@ -117,3 +117,11 @@ rp_calib_error rp_GetNameOfUniversalId(uint16_t id, std::string* name) {
     *name = getNameOfUniversalId(id);
     return ((*name != "") ? (rp_calib_error)RP_HP_OK : (rp_calib_error)RP_HW_CALIB_EIP);
 }
+
+uint32_t rp_CalibGetMaxSizeEepromData() {
+    return sizeof(rp_eepromWpData_t);
+}
+
+uint32_t rp_CalibGetMaxSizeEepromDataUnify() {
+    return sizeof(rp_calib_params_universal_t);
+}

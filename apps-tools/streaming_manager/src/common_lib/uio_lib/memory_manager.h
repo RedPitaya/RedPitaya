@@ -48,6 +48,8 @@ class CMemoryManager {
     auto getRAMSize() -> uint32_t;
     auto isValidSize(MemoryTAG _tag) -> bool;
 
+    auto setDACMemoryStreamMode(bool enable) -> void;
+
    private:
     CMemoryManager(const CMemoryManager&) = delete;
     CMemoryManager(CMemoryManager&&) = delete;
@@ -66,6 +68,7 @@ class CMemoryManager {
     uint32_t m_startRAMAddress;
     uint32_t m_ramSize;
     std::map<MemoryTAG, uint32_t> m_reservedMemory;
+    bool m_dacStreamMode;
 };
 
 }  // namespace uio_lib

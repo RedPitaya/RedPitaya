@@ -48,7 +48,8 @@ auto CMemoryManager::instance() -> Ptr {
     return s;
 }
 
-CMemoryManager::CMemoryManager() : m_lowReservedAddress(0), m_highReservedAddress(0), m_mem_fd(0), m_memory(MAP_FAILED), m_blockSize(MR_MEMORY_BLOCK_SIZE + DataLib::sizeHeader()) {
+CMemoryManager::CMemoryManager()
+    : m_lowReservedAddress(0), m_highReservedAddress(0), m_mem_fd(0), m_memory(MAP_FAILED), m_blockSize(MR_MEMORY_BLOCK_SIZE + DataLib::sizeHeader()), m_dacStreamMode(false) {
     if (getReservedMemory(&m_startRAMAddress, &m_ramSize)) {
         FATAL("Unable to get the reserved memory area.")
     }
@@ -194,6 +195,10 @@ auto CMemoryManager::getMemoryBlockSize() -> uint32_t {
 
 auto CMemoryManager::getMinRAMSize(MemoryTAG _tag) -> uint32_t {
     return getMinRAMSize(getMemoryBlockSize(), _tag);
+}
+
+auto CMemoryManager::setDACMemoryStreamMode(bool enable) -> void {
+    m_dacStreamMode = enable;
 }
 
 auto CMemoryManager::getMinRAMSize(uint32_t _blockSize, MemoryTAG _tag) -> uint32_t {

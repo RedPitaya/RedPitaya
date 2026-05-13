@@ -261,6 +261,18 @@ rp_calib_params_t rp_GetDefaultCalibrationSettings();
 rp_calib_params_t rp_GetDefaultUniCalibrationSettings();
 
 /**
+  * @brief Gets maximum size of calibration data stored in EEPROM
+  * @return Maximum size in bytes
+  */
+uint32_t rp_CalibGetMaxSizeEepromData();
+
+/**
+  * @brief Gets maximum size of calibration data stored in EEPROM using unified format
+  * @return Maximum size in bytes
+  */
+uint32_t rp_CalibGetMaxSizeEepromDataUnify();
+
+/**
   * @brief Resets calibration to default values
   * @param use_factory_zone Use factory calibration zone
   * @param is_new_format Use new format calibration
