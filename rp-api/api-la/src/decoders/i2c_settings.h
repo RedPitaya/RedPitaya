@@ -32,7 +32,10 @@ class I2CParameters : public DecoderParameters {
     static std::string getI2CAnnotationsString(I2CAnnotations value);
 
     auto setDecoderSettingsUInt(std::string& key, uint32_t value) -> bool override;
+    auto setDecoderSettingsString(std::string&, std::string&) -> bool override;
+
     auto getDecoderSettingsUInt(std::string& key, uint32_t* value) -> bool override;
+    auto getDecoderSettingsString(std::string&, std::string*) -> bool override;
 };
 
 }  // namespace i2c

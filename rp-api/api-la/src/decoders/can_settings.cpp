@@ -14,34 +14,33 @@ CANParameters::CANParameters() {
 }
 
 auto CANParameters::setDecoderSettingsUInt(std::string& key, uint32_t value) -> bool {
-    if (key == "rx") {
-        m_can_rx = Lines::from_int(value);
-        return true;
-    }
+    try {
+        if (key == "rx") {
+            m_can_rx = Lines::from_int(value);
+            return true;
+        }
 
-    if (key == "nominal_bitrate") {
-        m_nominal_bitrate = value;
-        return true;
-    }
+        if (key == "nominal_bitrate") {
+            m_nominal_bitrate = value;
+            return true;
+        }
 
-    if (key == "fast_bitrate") {
-        m_fast_bitrate = value;
-        return true;
-    }
+        if (key == "fast_bitrate") {
+            m_fast_bitrate = value;
+            return true;
+        }
 
-    if (key == "fast_bitrate") {
-        m_fast_bitrate = value;
-        return true;
-    }
+        if (key == "acq_speed") {
+            m_acq_speed = value;
+            return true;
+        }
 
-    if (key == "acq_speed") {
-        m_acq_speed = value;
-        return true;
-    }
-
-    if (key == "invert_bit") {
-        m_invert_bit = InvertBit::from_int(value);
-        return true;
+        if (key == "invert_bit") {
+            m_invert_bit = InvertBit::from_int(value);
+            return true;
+        }
+    } catch (...) {
+        ERROR_LOG("Value %u not found in enumeration.", value)
     }
     return false;
 }
@@ -54,7 +53,29 @@ auto CANParameters::setDecoderSettingsFloat(std::string& key, float value) -> bo
     return false;
 }
 
+auto CANParameters::setDecoderSettingsString(std::string& key, std::string& value) -> bool {
+    try {
+        if (key == "rx") {
+            m_can_rx = Lines::from_string(value);
+            return true;
+        }
+        if (key == "invert_bit") {
+            m_invert_bit = InvertBit::from_string(value);
+            return true;
+        }
+    } catch (...) {
+        ERROR_LOG("Value %s not found in enumeration.", value.c_str())
+    }
+    return false;
+}
+
 auto CANParameters::getDecoderSettingsUInt(std::string& key, uint32_t* value) -> bool {
+
+    if (value == nullptr) {
+        ERROR_LOG("Value is NULL")
+        return false;
+    }
+
     if (key == "rx") {
         *value = m_can_rx;
         return true;
@@ -62,11 +83,6 @@ auto CANParameters::getDecoderSettingsUInt(std::string& key, uint32_t* value) ->
 
     if (key == "nominal_bitrate") {
         *value = m_nominal_bitrate;
-        return true;
-    }
-
-    if (key == "fast_bitrate") {
-        *value = m_fast_bitrate;
         return true;
     }
 
@@ -88,8 +104,32 @@ auto CANParameters::getDecoderSettingsUInt(std::string& key, uint32_t* value) ->
 }
 
 auto CANParameters::getDecoderSettingsFloat(std::string& key, float* value) -> bool {
+
+    if (value == nullptr) {
+        ERROR_LOG("Value is NULL")
+        return false;
+    }
+
     if (key == "sample_point") {
         *value = m_sample_point;
+        return true;
+    }
+    return false;
+}
+
+auto CANParameters::getDecoderSettingsString(std::string& key, std::string* value) -> bool {
+
+    if (value == nullptr) {
+        ERROR_LOG("Value is NULL")
+        return false;
+    }
+
+    if (key == "rx") {
+        *value = m_can_rx.name();
+        return true;
+    }
+    if (key == "invert_bit") {
+        *value = m_invert_bit.name();
         return true;
     }
     return false;

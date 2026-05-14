@@ -37,8 +37,10 @@ class Decoder {
 
     virtual auto setDecoderSettingsUInt(std::string&, uint32_t) -> bool { return false; };
     virtual auto setDecoderSettingsFloat(std::string&, float) -> bool { return false; };
+    virtual auto setDecoderSettingsString(std::string&, std::string&) -> bool { return false; };
     virtual auto getDecoderSettingsUInt(std::string&, uint32_t*) -> bool { return false; };
     virtual auto getDecoderSettingsFloat(std::string&, float*) -> bool { return false; };
+    virtual auto getDecoderSettingsString(std::string&, std::string*) -> bool { return false; };
 
     auto name() -> std::string { return m_name; };
     auto getDecoderType() -> int { return m_decoderType; };
@@ -59,9 +61,11 @@ class DecoderParameters {
 
     virtual auto setDecoderSettingsUInt(std::string&, uint32_t) -> bool { return false; };
     virtual auto setDecoderSettingsFloat(std::string&, float) -> bool { return false; };
+    virtual auto setDecoderSettingsString(std::string&, std::string&) -> bool { return false; };
 
     virtual auto getDecoderSettingsUInt(std::string&, uint32_t*) -> bool { return false; };
     virtual auto getDecoderSettingsFloat(std::string&, float*) -> bool { return false; };
+    virtual auto getDecoderSettingsString(std::string&, std::string*) -> bool { return false; };
 };
 
 #endif  // __DECODER_API_H

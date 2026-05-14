@@ -22,7 +22,9 @@ class UARTDecoder : public Decoder {
     auto reset() -> void override;
 
     auto setDecoderSettingsUInt(std::string& key, uint32_t value) -> bool override;
+    auto setDecoderSettingsString(std::string& key, std::string& value) -> bool override;
     auto getDecoderSettingsUInt(std::string& key, uint32_t* value) -> bool override;
+    auto getDecoderSettingsString(std::string& key, std::string* value) -> bool override;
 
    private:
     Impl* m_impl_rx;

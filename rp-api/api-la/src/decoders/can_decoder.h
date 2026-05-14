@@ -23,8 +23,10 @@ class CANDecoder : public Decoder {
 
     auto setDecoderSettingsUInt(std::string& key, uint32_t value) -> bool override;
     auto setDecoderSettingsFloat(std::string& key, float value) -> bool override;
+    auto setDecoderSettingsString(std::string& key, std::string& value) -> bool override;
     auto getDecoderSettingsUInt(std::string& key, uint32_t* value) -> bool override;
     auto getDecoderSettingsFloat(std::string& key, float* value) -> bool override;
+    auto getDecoderSettingsString(std::string& key, std::string* value) -> bool override;
 
    private:
     Impl* m_impl;

@@ -21,54 +21,64 @@ SPIParameters::SPIParameters() {
 }
 
 auto SPIParameters::setDecoderSettingsUInt(std::string& key, uint32_t value) -> bool {
-    if (key == "clk") {
-        m_clk = Lines::from_int(value);
-        return true;
-    }
-    if (key == "miso") {
-        m_miso = Lines::from_int(value);
-        return true;
-    }
-    if (key == "mosi") {
-        m_mosi = Lines::from_int(value);
-        return true;
-    }
-    if (key == "cs") {
-        m_cs = Lines::from_int(value);
-        return true;
-    }
-    if (key == "cpol") {
-        m_cpol = value;
-        return true;
-    }
-    if (key == "cpha") {
-        m_cpha = value;
-        return true;
-    }
-    if (key == "word_size") {
-        m_word_size = value;
-        return true;
-    }
-    if (key == "acq_speed") {
-        m_acq_speed = value;
-        return true;
-    }
-    if (key == "cs_polarity") {
-        m_cs_polarity = CsPolartiy::from_int(value);
-        return true;
-    }
-    if (key == "bit_order") {
-        m_bit_order = BitOrder::from_int(value);
-        return true;
-    }
-    if (key == "invert_bit") {
-        m_invert_bit = InvertBit::from_int(value);
-        return true;
+    try {
+        if (key == "clk") {
+            m_clk = Lines::from_int(value);
+            return true;
+        }
+        if (key == "miso") {
+            m_miso = Lines::from_int(value);
+            return true;
+        }
+        if (key == "mosi") {
+            m_mosi = Lines::from_int(value);
+            return true;
+        }
+        if (key == "cs") {
+            m_cs = Lines::from_int(value);
+            return true;
+        }
+        if (key == "cpol") {
+            m_cpol = value;
+            return true;
+        }
+        if (key == "cpha") {
+            m_cpha = value;
+            return true;
+        }
+        if (key == "word_size") {
+            m_word_size = value;
+            return true;
+        }
+        if (key == "acq_speed") {
+            m_acq_speed = value;
+            return true;
+        }
+        if (key == "cs_polarity") {
+            m_cs_polarity = CsPolartiy::from_int(value);
+            return true;
+        }
+        if (key == "bit_order") {
+            m_bit_order = BitOrder::from_int(value);
+            return true;
+        }
+        if (key == "invert_bit") {
+            m_invert_bit = InvertBit::from_int(value);
+            return true;
+        }
+    } catch (...) {
+        ERROR_LOG("Value %u not found in enumeration.", value)
     }
     return false;
 }
 
 auto SPIParameters::getDecoderSettingsUInt(std::string& key, uint32_t* value) -> bool {
+
+    if (value == nullptr) {
+        ERROR_LOG("Value is NULL")
+        return false;
+    }
+
     if (key == "clk") {
         *value = m_clk;
         return true;
@@ -113,6 +123,81 @@ auto SPIParameters::getDecoderSettingsUInt(std::string& key, uint32_t* value) ->
         *value = m_invert_bit;
         return true;
     }
+    return false;
+}
+
+auto SPIParameters::setDecoderSettingsString(std::string& key, std::string& value) -> bool {
+    try {
+        if (key == "clk") {
+            m_clk = Lines::from_string(value);
+            return true;
+        }
+        if (key == "miso") {
+            m_miso = Lines::from_string(value);
+            return true;
+        }
+        if (key == "mosi") {
+            m_mosi = Lines::from_string(value);
+            return true;
+        }
+        if (key == "cs") {
+            m_cs = Lines::from_string(value);
+            return true;
+        }
+        if (key == "cs_polarity") {
+            m_cs_polarity = CsPolartiy::from_string(value);
+            return true;
+        }
+        if (key == "bit_order") {
+            m_bit_order = BitOrder::from_string(value);
+            return true;
+        }
+        if (key == "invert_bit") {
+            m_invert_bit = InvertBit::from_string(value);
+            return true;
+        }
+    } catch (...) {
+        ERROR_LOG("Value %s not found in enumeration.", value.c_str())
+    }
+    return false;
+}
+
+auto SPIParameters::getDecoderSettingsString(std::string& key, std::string* value) -> bool {
+
+    if (value == nullptr) {
+        ERROR_LOG("Value is NULL")
+        return false;
+    }
+
+    if (key == "clk") {
+        *value = m_clk.name();
+        return true;
+    }
+    if (key == "miso") {
+        *value = m_miso.name();
+        return true;
+    }
+    if (key == "mosi") {
+        *value = m_mosi.name();
+        return true;
+    }
+    if (key == "cs") {
+        *value = m_cs.name();
+        return true;
+    }
+    if (key == "cs_polarity") {
+        *value = m_cs_polarity.name();
+        return true;
+    }
+    if (key == "bit_order") {
+        *value = m_bit_order.name();
+        return true;
+    }
+    if (key == "invert_bit") {
+        *value = m_invert_bit.name();
+        return true;
+    }
+
     return false;
 }
 

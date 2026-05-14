@@ -15,30 +15,40 @@ I2CParameters::I2CParameters() {
 }
 
 auto I2CParameters::setDecoderSettingsUInt(std::string& key, uint32_t value) -> bool {
-    if (key == "scl") {
-        m_scl = Lines::from_int(value);
-        return true;
-    }
-    if (key == "sda") {
-        m_sda = Lines::from_int(value);
-        return true;
-    }
-    if (key == "acq_speed") {
-        m_acq_speed = value;
-        return true;
-    }
-    if (key == "address_format") {
-        m_address_format = AddressFormat::from_int(value);
-        return true;
-    }
-    if (key == "invert_bit") {
-        m_invert_bit = InvertBit::from_int(value);
-        return true;
+    try {
+        if (key == "scl") {
+            m_scl = Lines::from_int(value);
+            return true;
+        }
+        if (key == "sda") {
+            m_sda = Lines::from_int(value);
+            return true;
+        }
+        if (key == "acq_speed") {
+            m_acq_speed = value;
+            return true;
+        }
+        if (key == "address_format") {
+            m_address_format = AddressFormat::from_int(value);
+            return true;
+        }
+        if (key == "invert_bit") {
+            m_invert_bit = InvertBit::from_int(value);
+            return true;
+        }
+    } catch (...) {
+        ERROR_LOG("Value %u not found in enumeration.", value)
     }
     return false;
 }
 
 auto I2CParameters::getDecoderSettingsUInt(std::string& key, uint32_t* value) -> bool {
+
+    if (value == nullptr) {
+        ERROR_LOG("Value is NULL")
+        return false;
+    }
+
     if (key == "scl") {
         *value = m_scl;
         return true;
@@ -57,6 +67,56 @@ auto I2CParameters::getDecoderSettingsUInt(std::string& key, uint32_t* value) ->
     }
     if (key == "invert_bit") {
         *value = m_invert_bit;
+        return true;
+    }
+    return false;
+}
+
+auto I2CParameters::setDecoderSettingsString(std::string& key, std::string& value) -> bool {
+    try {
+        if (key == "scl") {
+            m_scl = Lines::from_string(value);
+            return true;
+        }
+        if (key == "sda") {
+            m_sda = Lines::from_string(value);
+            return true;
+        }
+        if (key == "address_format") {
+            m_address_format = AddressFormat::from_string(value);
+            return true;
+        }
+        if (key == "invert_bit") {
+            m_invert_bit = InvertBit::from_string(value);
+            return true;
+        }
+    } catch (...) {
+        ERROR_LOG("Value %s not found in enumeration.", value.c_str())
+    }
+    return false;
+}
+
+auto I2CParameters::getDecoderSettingsString(std::string& key, std::string* value) -> bool {
+
+    if (value == nullptr) {
+        ERROR_LOG("Value is NULL")
+        return false;
+    }
+
+    if (key == "scl") {
+        *value = m_scl.name();
+        return true;
+    }
+    if (key == "sda") {
+        *value = m_sda.name();
+        return true;
+    }
+    if (key == "address_format") {
+        *value = m_address_format.name();
+        return true;
+    }
+    if (key == "invert_bit") {
+        *value = m_invert_bit.name();
         return true;
     }
     return false;
