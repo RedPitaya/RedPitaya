@@ -430,6 +430,14 @@ area:hover {
   margin: 0px -2px 0px -22px;
 }
 
+.out_led {
+  height: 20px;
+  width: 20px;
+  position: absolute;
+  left: 10px;
+  top: 6px;
+}
+
 .form-control {
   color: #fff;
   background-color: #343433;

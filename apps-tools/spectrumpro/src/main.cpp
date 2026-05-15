@@ -26,8 +26,8 @@ CBooleanParameter isHIRes16BitMode("SPEC_IS_16_BIT_MODE", CBaseParameter::RO, rp
 
 CInt32BinarySignal data_settings("settings", 16, 0);
 CCustomBinarySignal<rp_dsp_api::cdsp_data_t> s_view[MAX_ADC_CHANNELS] = INIT("ch", "_view", 0, 0.0f);
-CCustomBinarySignal<rp_dsp_api::cdsp_data_t> peak_freq("peak_freq", MAX_ADC_CHANNELS* COUNT_DSP_MODE, 0.0f);
-CCustomBinarySignal<rp_dsp_api::cdsp_data_t> peak_power("peak_power", MAX_ADC_CHANNELS* COUNT_DSP_MODE, 0.0f);
+CCustomBinarySignal<rp_dsp_api::cdsp_data_t> peak_freq("peak_freq", MAX_ADC_CHANNELS* rp_dsp_api::COUNT_DSP_MODE, 0.0f);
+CCustomBinarySignal<rp_dsp_api::cdsp_data_t> peak_power("peak_power", MAX_ADC_CHANNELS* rp_dsp_api::COUNT_DSP_MODE, 0.0f);
 CCustomBinarySignal<rp_dsp_api::cdsp_data_t> s_xaxis("ch_xaxis", 0, 0.0f);
 
 // Parameters for the graph display window
@@ -144,9 +144,9 @@ void UpdateBinarySignals(void) {
     }
 
     for (auto ch = 0u; ch < g_adc_count; ch++) {
-        for (uint8_t mode = MIN_DSP_MODE; mode < COUNT_DSP_MODE; mode++) {
-            peak_freq[mode + ch * COUNT_DSP_MODE] = data->m_peak_freq[mode][ch];
-            peak_power[mode + ch * COUNT_DSP_MODE] = data->m_peak_power[mode][ch];
+        for (uint8_t mode = rp_dsp_api::MIN_DSP_MODE; mode < rp_dsp_api::COUNT_DSP_MODE; mode++) {
+            peak_freq[mode + ch * rp_dsp_api::COUNT_DSP_MODE] = data->m_peak_freq[mode][ch];
+            peak_power[mode + ch * rp_dsp_api::COUNT_DSP_MODE] = data->m_peak_power[mode][ch];
         }
     }
     peak_freq.NeedSend();

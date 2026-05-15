@@ -146,7 +146,7 @@ auto generate(rp_channel_t channel, float tscale) -> void {
     // int burstCount, burstReps;
 
     signal = &outSignal[channel];
-    GenChannelSettings oldSettings;
+    static GenChannelSettings oldSettings;
     GenChannelSettings settings(outWaveform[channel].Value(),
                                 outFrequancy[channel].Value(),
                                 (float)(outPhase[channel].Value() / 180.0f * M_PI),

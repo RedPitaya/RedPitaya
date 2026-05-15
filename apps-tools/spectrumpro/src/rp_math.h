@@ -6,17 +6,12 @@
  * (c) Red Pitaya  http://www.redpitaya.com
  */
 
-#ifndef __RP_MATH_H__
-#define __RP_MATH_H__
+#ifndef __RP_SPEC_MATH_H__
+#define __RP_SPEC_MATH_H__
 
 #include <CustomParameters.h>
 #include <math.h>
 #include <vector>
-
-float __attribute__((optimize("O0"))) log10f_neon(float x);
-float __attribute__((optimize("O0"))) sinf_neon(float x);
-float __attribute__((optimize("O0"))) cosf_neon(float x);
-float __attribute__((optimize("O0"))) sqrtf_neon(float x);
 
 // use in waterfall
 void decimateDataByMax(CFloatBinarySignal& dest, float* src, int start, int stop, int view_size);

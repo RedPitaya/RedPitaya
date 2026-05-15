@@ -1448,13 +1448,13 @@ void mathThreadFunction(std::vector<float>* buffers) {
 
             switch (operation) {
                 case RPAPP_OSC_MATH_ADD:
-                    add_arrays_neon(viewMath->data(), viewS1.data(), viewS2.data(), viewMath->size());
+                    add_arrays_float_neon(viewMath->data(), viewS1.data(), viewS2.data(), viewMath->size());
                     break;
                 case RPAPP_OSC_MATH_SUB:
-                    subtract_arrays_neon(viewMath->data(), viewS1.data(), viewS2.data(), viewMath->size());
+                    subtract_arrays_float_neon(viewMath->data(), viewS1.data(), viewS2.data(), viewMath->size());
                     break;
                 case RPAPP_OSC_MATH_MUL:
-                    multiply_arrays_neon(viewMath->data(), viewS1.data(), viewS2.data(), viewMath->size());
+                    multiply_arrays_float_neon(viewMath->data(), viewS1.data(), viewS2.data(), viewMath->size());
                     break;
                 case RPAPP_OSC_MATH_DIV:
                     divide_arrays_neon_Ex(viewMath->data(), viewS1.data(), viewS2.data(), viewMath->size(), FLT_MAX * 0.9);

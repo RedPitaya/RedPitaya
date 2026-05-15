@@ -19,8 +19,8 @@ typedef enum { RECTANGULAR = 0, HANNING = 1, HAMMING = 2, BLACKMAN_HARRIS = 3, F
 
 typedef enum { DBM = 0, VOLT = 1, DBU = 2, DBV = 3, DBuV = 4, MW = 5, DBW = 6 } mode_t;
 
-#define MIN_DSP_MODE rp_dsp_api::DBM
-#define COUNT_DSP_MODE (rp_dsp_api::DBW + 1)
+constexpr const int MIN_DSP_MODE = rp_dsp_api::DBM;
+constexpr const int COUNT_DSP_MODE = (rp_dsp_api::DBW + 1);
 
 typedef float cdsp_data_t;
 typedef std::vector<cdsp_data_t> cdsp_data_vec_t;

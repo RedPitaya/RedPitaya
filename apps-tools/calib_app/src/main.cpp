@@ -1030,7 +1030,7 @@ void UpdateParams(void) {
             }
 
             if (sig == 3) {
-                rp_calib_filter_mode fmode;
+                rp_calib_filter_mode fmode = rp_calib_filter_mode::RP_HW_CFM_KEEP;
                 if (reset_filter_mode.Value() == "keep") {
                     fmode = rp_calib_filter_mode::RP_HW_CFM_KEEP;
                 } else if (reset_filter_mode.Value() == "default") {

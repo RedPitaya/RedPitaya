@@ -15,9 +15,8 @@ void synthesis_arb(CFloatBinarySignal* signal, const float* data, const GenChann
     double phaseStep = (double)settings.frequency * settings.tscale * 0.01 * settings.arb_size / sigSize;
 
     double currentPhase = 0.0;
-
     for (int i = 0; i < sigSize; ++i) {
-        int z = (int)currentPhase % settings.arb_size;
+        int64_t z = (int64_t)currentPhase % (int64_t)settings.arb_size;
 
         (*signal)[i] = data[z] * settings.amplitude + settings.offset + settings.showOff;
 

@@ -119,11 +119,25 @@ OSC.sweepResetButton = function(new_params) {
     var field = $('#SOUR1_SWEEP_STATE');
     if (field.is('button')) {
         field[OSC.state.sweep_ch1 === true? 'addClass' : 'removeClass']('active');
+        if (OSC.state.sweep_ch1 == true) {
+            if ($("#OUTPUT1_SWEEP_LED").attr("src")!== "img/green_led.png")
+                $("#OUTPUT1_SWEEP_LED").attr("src","img/green_led.png");
+        } else {
+            if ($("#OUTPUT1_SWEEP_LED").attr("src")!== "img/red_led.png")
+                $("#OUTPUT1_SWEEP_LED").attr("src","img/red_led.png");
+        }
     }
 
     field = $('#SOUR2_SWEEP_STATE');
     if (field.is('button')) {
         field[OSC.state.sweep_ch2 === true? 'addClass' : 'removeClass']('active');
+        if (OSC.state.sweep_ch2 == true) {
+            if ($("#OUTPUT2_SWEEP_LED").attr("src")!== "img/green_led.png")
+                $("#OUTPUT2_SWEEP_LED").attr("src","img/green_led.png");
+        } else {
+            if ($("#OUTPUT2_SWEEP_LED").attr("src")!== "img/red_led.png")
+                $("#OUTPUT2_SWEEP_LED").attr("src","img/red_led.png");
+        }
     }
 }
 
@@ -138,11 +152,25 @@ OSC.burstResetButton = function(new_params) {
     var field = $('#SOUR1_BURST_STATE');
     if (field.is('button')) {
         field[OSC.state.burst_ch1 === true? 'addClass' : 'removeClass']('active');
+        if (OSC.state.burst_ch1 == true) {
+            if ($("#OUTPUT1_BURST_LED").attr("src")!== "img/green_led.png")
+                $("#OUTPUT1_BURST_LED").attr("src","img/green_led.png");
+        } else {
+            if ($("#OUTPUT1_BURST_LED").attr("src")!== "img/red_led.png")
+                $("#OUTPUT1_BURST_LED").attr("src","img/red_led.png");
+        }
     }
 
     field = $('#SOUR2_BURST_STATE');
     if (field.is('button')) {
         field[OSC.state.burst_ch2 === true? 'addClass' : 'removeClass']('active');
+        if (OSC.state.burst_ch2 == true) {
+            if ($("#OUTPUT2_BURST_LED").attr("src")!== "img/green_led.png")
+                $("#OUTPUT2_BURST_LED").attr("src","img/green_led.png");
+        } else {
+            if ($("#OUTPUT2_BURST_LED").attr("src")!== "img/red_led.png")
+                $("#OUTPUT2_BURST_LED").attr("src","img/red_led.png");
+        }
     }
 }
 
