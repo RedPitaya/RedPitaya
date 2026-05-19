@@ -66,6 +66,18 @@ CommandParams parse_args(int argc, char** argv) {
             return params;
         }
 
+        if (argc == 4 && std::string(argv[2]) == "w") {
+            if (arg1.find('-') != std::string::npos) {
+                params.type = CommandParams::NONE;
+                return params;
+            }
+
+            params.type = CommandParams::WRITE;
+            params.address = std::stoul(arg1, nullptr, 0);
+            params.count_or_value = std::stoul(argv[3], nullptr, 0);
+            return params;
+        }
+
         size_t dash_pos = arg1.find('-');
 
         if (dash_pos != std::string::npos) {
@@ -81,15 +93,23 @@ CommandParams parse_args(int argc, char** argv) {
             params.count_or_value = std::stoul(arg1.substr(dash_pos + 1), nullptr, 0);
 
         } else if (argc == 3) {
+            if (std::string(argv[2]) == "w") {
+                params.type = CommandParams::NONE;
+                return params;
+            }
+
             // WRITE format: address value
             params.type = CommandParams::WRITE;
             params.address = std::stoul(arg1, nullptr, 0);
             params.count_or_value = std::stoul(argv[2], nullptr, 0);
 
-        } else {
+        } else if (argc == 2) {
             // SINGLE format: address
             params.type = CommandParams::SINGLE;
             params.address = std::stoul(arg1, nullptr, 0);
+
+        } else {
+            params.type = CommandParams::NONE;
         }
 
     } catch (const std::invalid_argument& e) {
@@ -114,6 +134,7 @@ int main(int argc, char** argv) {
                 "\tread addr: address\n"
                 "\tread addr: address-count\n"
                 "\twrite addr: address value\n"
+                "\twrite addr: address w value\n"
                 "\tread analog mixed signals: -ams\n"
                 "\tset slow DAC: -sdac AO0 AO1 AO2 AO3 [V]\n"
                 "\tClock frequency meter: -c\n"
