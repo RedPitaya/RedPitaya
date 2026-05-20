@@ -28,7 +28,8 @@ static const int OSC_BASE_ADDR_4CH = 0x00200000;
 
 typedef struct {
     uint8_t common_mask = 0x03;
-    uint8_t split_mask = 0xFF;
+    uint8_t split_mask_ch1_2 = 0x33;
+    uint8_t split_mask_ch3_4 = 0x33;
 } int_mask_t;
 
 typedef struct {
@@ -192,31 +193,25 @@ typedef union {
  * @brief Split IRQ Mask Register (0xB4)
  * @details Enable/disable per-channel interrupt sources
  *
- * Bits 0-3:   Trigger enable for channels 1-4
- * Bits 4-7:   Buffer full enable for channels 1-4
+ * Bits 0-1:   Trigger enable for channels 1-2/3-4
+ * Bits 4-5:   Buffer full enable for channels 1-2/3-4
  */
 typedef union {
     struct {
         uint32_t trig_ch1_en : 1;  // bit0
         uint32_t trig_ch2_en : 1;  // bit1
-        uint32_t trig_ch3_en : 1;  // bit2
-        uint32_t trig_ch4_en : 1;  // bit3
+        uint32_t reserv1 : 2;      // bit2 + bit3
         uint32_t fill_ch1_en : 1;  // bit4
         uint32_t fill_ch2_en : 1;  // bit5
-        uint32_t fill_ch3_en : 1;  // bit6
-        uint32_t fill_ch4_en : 1;  // bit7
+        uint32_t reserv2 : 2;      // bit6 + bit7
         uint32_t reserved : 24;
     } bits;
     uint32_t value;
     void print() volatile {
         printRegBit(" - %-39s = 0x%08X (%d)\n", "trig_ch1_en", bits.trig_ch1_en);
         printRegBit(" - %-39s = 0x%08X (%d)\n", "trig_ch2_en", bits.trig_ch2_en);
-        printRegBit(" - %-39s = 0x%08X (%d)\n", "trig_ch3_en", bits.trig_ch3_en);
-        printRegBit(" - %-39s = 0x%08X (%d)\n", "trig_ch4_en", bits.trig_ch4_en);
         printRegBit(" - %-39s = 0x%08X (%d)\n", "fill_ch1_en", bits.fill_ch1_en);
         printRegBit(" - %-39s = 0x%08X (%d)\n", "fill_ch2_en", bits.fill_ch2_en);
-        printRegBit(" - %-39s = 0x%08X (%d)\n", "fill_ch3_en", bits.fill_ch3_en);
-        printRegBit(" - %-39s = 0x%08X (%d)\n", "fill_ch4_en", bits.fill_ch4_en);
     };
 } split_irq_mask_t;
 
@@ -225,31 +220,25 @@ typedef union {
  * @details Read: Get per-channel interrupt status
  *          Write: Clear pending interrupts (write 1 to clear)
  *
- * Bits 0-3:   Trigger pending for channels 1-4
- * Bits 4-7:   Buffer full pending for channels 1-4
+ * Bits 0-1:   Trigger pending for channels 1-2/3-4
+ * Bits 4-5:   Buffer full pending for channels 1-2/3-4
  */
 typedef union {
     struct {
         uint32_t trig_ch1_pending : 1;  // bit0
         uint32_t trig_ch2_pending : 1;  // bit1
-        uint32_t trig_ch3_pending : 1;  // bit2
-        uint32_t trig_ch4_pending : 1;  // bit3
+        uint32_t reserv1 : 2;           // bit2 + bit3
         uint32_t fill_ch1_pending : 1;  // bit4
         uint32_t fill_ch2_pending : 1;  // bit5
-        uint32_t fill_ch3_pending : 1;  // bit6
-        uint32_t fill_ch4_pending : 1;  // bit7
+        uint32_t reserv2 : 2;           // bit6 + bit7
         uint32_t reserved : 24;
     } bits;
     uint32_t value;
     void print() volatile {
         printRegBit(" - %-39s = 0x%08X (%d)\n", "trig_ch1_pending", bits.trig_ch1_pending);
         printRegBit(" - %-39s = 0x%08X (%d)\n", "trig_ch2_pending", bits.trig_ch2_pending);
-        printRegBit(" - %-39s = 0x%08X (%d)\n", "trig_ch3_pending", bits.trig_ch3_pending);
-        printRegBit(" - %-39s = 0x%08X (%d)\n", "trig_ch4_pending", bits.trig_ch4_pending);
         printRegBit(" - %-39s = 0x%08X (%d)\n", "fill_ch1_pending", bits.fill_ch1_pending);
         printRegBit(" - %-39s = 0x%08X (%d)\n", "fill_ch2_pending", bits.fill_ch2_pending);
-        printRegBit(" - %-39s = 0x%08X (%d)\n", "fill_ch3_pending", bits.fill_ch3_pending);
-        printRegBit(" - %-39s = 0x%08X (%d)\n", "fill_ch4_pending", bits.fill_ch4_pending);
     };
 } split_irq_status_t;
 
