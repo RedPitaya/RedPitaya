@@ -112,6 +112,7 @@ int hp_cmn_Print(profiles_t* p);
 void hp_cmn_PrintKeyHelp();
 void hp_cmn_PrintPivotTable(char* keys);
 int hp_cmn_GetFPGAVersion(rp_HPeModels_t model, const char** _no_free_value);
+int hp_cmn_GetDTSVersion(rp_HPeModels_t model, const char** _no_free_value);
 
 void applyRate(uint32_t& target, uint32_t original, const std::string& path, rp_HPeModels_t boardModel);
 int hp_cmn_GetFromConfig(rp_HPeModels_t model, const std::string& path, bool& noerror);

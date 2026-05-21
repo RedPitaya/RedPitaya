@@ -139,6 +139,7 @@ int main(int argc, char** argv) {
                 "\tset slow DAC: -sdac AO0 AO1 AO2 AO3 [V]\n"
                 "\tClock frequency meter: -c\n"
                 "\tPrint fpga version: -f\n"
+                "\tPrint DTS version: -d\n"
                 "\tPrint model name: -n\n"
                 "\tPrint model id: -i\n"
                 "\tPrint Housekeeping regset: -ph\n"
@@ -211,9 +212,20 @@ int main(int argc, char** argv) {
         const char* modelFPGA = NULL;
         auto ret = rp_HPGetFPGAVersion(&modelFPGA);
         if (ret == RP_HP_OK) {
-            printf("%s\n", modelFPGA);
+            printf("%s", modelFPGA);
         } else {
-            printf(" undefined\n");
+            printf("undefined");
+        }
+        return ret;
+    }
+
+    if (key == "-d") {
+        const char* modelDTS = NULL;
+        auto ret = rp_HPGetDTSVersion(&modelDTS);
+        if (ret == RP_HP_OK) {
+            printf("%s", modelDTS);
+        } else {
+            printf("undefined");
         }
         return ret;
     }
@@ -222,9 +234,9 @@ int main(int argc, char** argv) {
         char* model_name = nullptr;
         auto ret = rp_HPGetModelName(&model_name);
         if (ret == RP_HP_OK) {
-            printf("%s\n", model_name);
+            printf("%s", model_name);
         } else {
-            printf(" [Error]\n");
+            printf("[Error]");
         }
         return ret;
     }
@@ -233,9 +245,9 @@ int main(int argc, char** argv) {
         rp_HPeModels_t model;
         auto ret = rp_HPGetModel(&model);
         if (ret == RP_HP_OK) {
-            printf("%d\n", model);
+            printf("%d", model);
         } else {
-            printf("-1\n");
+            printf("-1");
         }
         return ret;
     }

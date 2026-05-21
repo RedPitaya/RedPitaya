@@ -986,6 +986,9 @@ bool rp_HPGetIsFastADC16BitModeOrDefault() {
 }
 
 int rp_HPGetFPGAVersion(const char** _no_free_value) {
+    if (_no_free_value == nullptr) {
+        return RP_HP_EU;
+    }
     rp_HPeModels_t model;
     int ret = rp_HPGetModel(&model);
     if (ret != RP_HP_OK) {
@@ -993,6 +996,19 @@ int rp_HPGetFPGAVersion(const char** _no_free_value) {
         return RP_HP_EMU;
     }
     return hp_cmn_GetFPGAVersion(model, _no_free_value);
+}
+
+int rp_HPGetDTSVersion(const char** _no_free_value) {
+    if (_no_free_value == nullptr) {
+        return RP_HP_EU;
+    }
+    rp_HPeModels_t model;
+    int ret = rp_HPGetModel(&model);
+    if (ret != RP_HP_OK) {
+        *_no_free_value = "";
+        return RP_HP_EMU;
+    }
+    return hp_cmn_GetDTSVersion(model, _no_free_value);
 }
 
 int rp_HPPrintKeys() {
