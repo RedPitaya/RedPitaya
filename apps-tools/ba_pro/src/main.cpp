@@ -143,9 +143,12 @@ auto getModelS() -> std::string {
         case STEM_125_14_Z7020_v1_0:
         case STEM_125_14_Z7020_LN_v1_1:
         case STEM_125_14_v2_0:
+        case STEM_125_14_BO_v2_0:
         case STEM_125_14_Pro_v2_0:
+        case STEM_125_14_Pro_BO_v2_0:
         case STEM_125_14_Z7020_Pro_v1_0:
         case STEM_125_14_Z7020_Pro_v2_0:
+        case STEM_125_14_Z7020_Pro_BO_v2_0:
         case STEM_125_14_Z7020_Ind_v2_0:
         case STEM_125_14_Z7020_LL_v1_1:
         case STEM_65_16_Z7020_LL_v1_1:

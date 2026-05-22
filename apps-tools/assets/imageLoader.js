@@ -142,8 +142,9 @@ const setBoardPinOut = function(model) {
     };
 
 //  STEM_125_14_v2_0            = 20,
+//  STEM_125_14_BO_v2_0         = 31,
 
-    if (model == 20) {
+    if (model == 20 || model == 31) {
         $('#pinoutId').attr('path','../assets/images/pack/pinout_125_14_v2_0')
         $('#pinoutId').attr('sizes','2560')
         var calcW = Math.min(document.body.clientHeight / 2.0 * 1.66, document.body.clientWidth * 0.8)
@@ -151,8 +152,9 @@ const setBoardPinOut = function(model) {
     };
 
 //  STEM_125_14_Pro_v2_0        = 21,
+//  STEM_125_14_Pro_BO_v2_0     = 32,
 
-    if (model == 21) {
+    if (model == 21 || model == 32) {
         $('#pinoutId').attr('path','../assets/images/pack/pinout_125_14_v2_0_pro')
         $('#pinoutId').attr('sizes','4000')
         var calcW = Math.min(document.body.clientHeight / 2.0 * 2.61, document.body.clientWidth * 0.8)
@@ -162,8 +164,9 @@ const setBoardPinOut = function(model) {
 //  STEM_125_14_Z7020_Pro_v2_0  = 22,
 //  STEM_125_14_Z7020_Ind_v2_0  = 23,
 //  STEM_125_14_Z7020_Pro_v1_0  = 24,
+//  STEM_125_14_Z7020_Pro_BO_v2_0  = 33,
 
-    if (model == 22 || model == 23 || model == 24) {
+    if (model == 22 || model == 23 || model == 24 || model == 33) {
         $('#pinoutId').attr('path','../assets/images/pack/pinout_125_14_v2_0_pro_Z7020')
         $('#pinoutId').attr('sizes','4000')
         var calcW = Math.min(document.body.clientHeight / 2.0 * 2.61, document.body.clientWidth * 0.8)

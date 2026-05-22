@@ -800,7 +800,7 @@ int rp_HPGetIsExternalTriggerFullScale(float* value) {
     return state;
 }
 
-float rp_HPGetIsExternalTriggerFullScalePresentOrDefault() {
+float rp_HPGetIsExternalTriggerFullScaleOrDefault() {
     profiles_t* p = getProfileDefualt();
     return p->external_trigger_full_scale;
 }

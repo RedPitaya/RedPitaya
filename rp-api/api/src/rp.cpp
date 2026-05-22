@@ -2470,7 +2470,7 @@ void rp_deleteBuffer(buffers_t* _in_buffer) {
 
 int rp_SetExternalTriggerLevel(float value) {
     if (rp_HPGetIsExternalTriggerLevelPresentOrDefault()) {
-        float fullScale = rp_HPGetIsExternalTriggerFullScalePresentOrDefault();
+        float fullScale = rp_HPGetIsExternalTriggerFullScaleOrDefault();
         bool is_signed = rp_HPGetIsExternalTriggerIsSignedOrDefault();
         float min = (is_signed ? -fullScale : 0);
         if (value < min || value > fullScale) {

@@ -374,8 +374,8 @@ print("rp_hw_profiles.rp_HPGetIsExternalTriggerFullScale()")
 res = rp_hw_profiles.rp_HPGetIsExternalTriggerFullScale()
 print(res)
 
-print("rp_hw_profiles.rp_HPGetIsExternalTriggerFullScalePresentOrDefault()")
-res = rp_hw_profiles.rp_HPGetIsExternalTriggerFullScalePresentOrDefault()
+print("rp_hw_profiles.rp_HPGetIsExternalTriggerFullScaleOrDefault()")
+res = rp_hw_profiles.rp_HPGetIsExternalTriggerFullScaleOrDefault()
 print(res)
 
 print("rp_hw_profiles.rp_HPGetIsExternalTriggerIsSigned()")

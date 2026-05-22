@@ -83,9 +83,12 @@ int getCalibSize(rp_HPeModels_t model) {
         case STEM_125_14_Z7020_v1_0:
         case STEM_125_14_Z7020_LN_v1_1:
         case STEM_125_14_v2_0:
+        case STEM_125_14_BO_v2_0:
         case STEM_125_14_Pro_v2_0:
+        case STEM_125_14_Pro_BO_v2_0:
         case STEM_125_14_Z7020_Pro_v1_0:
         case STEM_125_14_Z7020_Pro_v2_0:
+        case STEM_125_14_Z7020_Pro_BO_v2_0:
         case STEM_125_14_Z7020_Ind_v2_0:
         case STEM_125_14_Z7020_LL_v1_1:
         case STEM_125_14_Z7020_LL_v1_2:
@@ -130,9 +133,12 @@ void RpPrintEepromCalData(rp_HPeModels_t model, rp_eepromWpData_t* _eepromData, 
         case STEM_125_14_Z7020_v1_0:
         case STEM_125_14_Z7020_LN_v1_1:
         case STEM_125_14_v2_0:
+        case STEM_125_14_BO_v2_0:
         case STEM_125_14_Pro_v2_0:
+        case STEM_125_14_Pro_BO_v2_0:
         case STEM_125_14_Z7020_Pro_v1_0:
         case STEM_125_14_Z7020_Pro_v2_0:
+        case STEM_125_14_Z7020_Pro_BO_v2_0:
         case STEM_125_14_Z7020_Ind_v2_0:
         case STEM_125_14_Z7020_LL_v1_1:
         case STEM_125_14_Z7020_LL_v1_2:
@@ -238,9 +244,12 @@ void print_eeprom(rp_HPeModels_t model, rp_eepromWpData_t* data, int mode) {
                 case STEM_125_14_Z7020_v1_0:
                 case STEM_125_14_Z7020_LN_v1_1:
                 case STEM_125_14_v2_0:
+                case STEM_125_14_BO_v2_0:
                 case STEM_125_14_Pro_v2_0:
+                case STEM_125_14_Pro_BO_v2_0:
                 case STEM_125_14_Z7020_Pro_v1_0:
                 case STEM_125_14_Z7020_Pro_v2_0:
+                case STEM_125_14_Z7020_Pro_BO_v2_0:
                 case STEM_125_14_Z7020_Ind_v2_0:
                 case STEM_125_14_Z7020_LL_v1_1:
                 case STEM_125_14_Z7020_LL_v1_2:
@@ -249,10 +258,20 @@ void print_eeprom(rp_HPeModels_t model, rp_eepromWpData_t* data, int mode) {
                 case STEM_65_16_Z7020_TI_v1_3:
                 case STEM_122_16SDR_v1_0:
                 case STEM_122_16SDR_v1_1: {
-                    fprintf(stdout, "%20d %20d %20d %20d %20d %20d %20d %20d %20d %20d %20d %20d\n", data->feCalPar[eCalPar_FE_CH1_DC_offs], data->feCalPar[eCalPar_FE_CH2_DC_offs],
-                            data->feCalPar[eCalPar_FE_CH1_FS_G_LO], data->feCalPar[eCalPar_FE_CH2_FS_G_LO], data->feCalPar[eCalPar_FE_CH1_DC_offs_HI],
-                            data->feCalPar[eCalPar_FE_CH2_DC_offs_HI], data->feCalPar[eCalPar_FE_CH1_FS_G_HI], data->feCalPar[eCalPar_FE_CH2_FS_G_HI],
-                            data->feCalPar[eCalPar_BE_CH1_DC_offs], data->feCalPar[eCalPar_BE_CH2_DC_offs], data->feCalPar[eCalPar_BE_CH1_FS], data->feCalPar[eCalPar_BE_CH2_FS]);
+                    fprintf(stdout,
+                            "%20d %20d %20d %20d %20d %20d %20d %20d %20d %20d %20d %20d\n",
+                            data->feCalPar[eCalPar_FE_CH1_DC_offs],
+                            data->feCalPar[eCalPar_FE_CH2_DC_offs],
+                            data->feCalPar[eCalPar_FE_CH1_FS_G_LO],
+                            data->feCalPar[eCalPar_FE_CH2_FS_G_LO],
+                            data->feCalPar[eCalPar_FE_CH1_DC_offs_HI],
+                            data->feCalPar[eCalPar_FE_CH2_DC_offs_HI],
+                            data->feCalPar[eCalPar_FE_CH1_FS_G_HI],
+                            data->feCalPar[eCalPar_FE_CH2_FS_G_HI],
+                            data->feCalPar[eCalPar_BE_CH1_DC_offs],
+                            data->feCalPar[eCalPar_BE_CH2_DC_offs],
+                            data->feCalPar[eCalPar_BE_CH1_FS],
+                            data->feCalPar[eCalPar_BE_CH2_FS]);
                     break;
                 }
 

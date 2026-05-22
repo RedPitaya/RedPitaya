@@ -176,9 +176,11 @@
         };
 
 //  STEM_125_14_v2_0            = 20,
+//  STEM_125_14_BO_v2_0         = 31,
 //  STEM_125_14_Pro_v2_0        = 21,
+//  STEM_125_14_Pro_BO_v2_0     = 32,
 
-        if (model == 20 || model == 21) {
+        if (model == 20 || model == 21 || model == 31 || model == 32) {
             for (i = listOfapplications.length - 1; i >= 0; i -= 1) {
                 if (listOfapplications[i]["id"] === 'marketplace' ||
                     listOfapplications[i]["id"] === 'fpgaexamples' ||
@@ -201,8 +203,9 @@
 //  STEM_125_14_Z7020_Pro_v2_0  = 22,
 //  STEM_125_14_Z7020_Ind_v2_0  = 23,
 //  STEM_125_14_Z7020_Pro_v1_0  = 24,
+//  STEM_125_14_Z7020_Pro_BO_v2_0  = 33,
 
-        if (model == 22 || model == 23 || model == 24) {
+        if (model == 22 || model == 23 || model == 24 || model == 33) {
             for (i = listOfapplications.length - 1; i >= 0; i -= 1) {
                 if (listOfapplications[i]["id"] === 'marketplace' ||
                     listOfapplications[i]["id"] === 'fpgaexamples' ||

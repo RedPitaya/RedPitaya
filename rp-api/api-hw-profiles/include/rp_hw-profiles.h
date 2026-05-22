@@ -79,7 +79,12 @@ typedef enum {
     STEM_125_14_Z7020_TI_v1_3 = 28,
     STEM_65_16_Z7020_TI_v1_3 = 29,
 
-    STEM_125_14_Z7020_4IN_BO_v1_3 = 30
+    STEM_125_14_Z7020_4IN_BO_v1_3 = 30,
+
+    STEM_125_14_BO_v2_0 = 31,
+    STEM_125_14_Pro_BO_v2_0 = 32,
+    STEM_125_14_Z7020_Pro_BO_v2_0 = 33,
+    STEM_MODEL_COUNT  // Must be the last element
 } rp_HPeModels_t;
 
 /**
@@ -487,12 +492,12 @@ bool rp_HPGetIsExternalTriggerLevelPresentOrDefault();
 
 /**
 * Returns the full scale for external trigger
-* Function rp_HPGetIsExternalTriggerFullScalePresentOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* Function rp_HPGetIsExternalTriggerFullScaleOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
 int rp_HPGetIsExternalTriggerFullScale(float* _out_value);
-float rp_HPGetIsExternalTriggerFullScalePresentOrDefault();
+float rp_HPGetIsExternalTriggerFullScaleOrDefault();
 
 /**
 * Returns whether the external trigger has a signed value
@@ -505,7 +510,7 @@ bool rp_HPGetIsExternalTriggerIsSignedOrDefault();
 
 /**
 * Returns the availability clock synchronization through the daisy chain.
-* Function rp_HPGetIsDaisyChainAvailableOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* Function rp_HPGetIsDaisyChainClockAvailableOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
@@ -522,7 +527,7 @@ int rp_HPGetIsDMAinv0_94(bool* _out_value);
 bool rp_HPGetIsDMAinv0_94OrDefault();
 
 /**
-* Returns the ability to separate trigger logic for fast ADC for v0.94.
+* Returns the ability to separate trigger logic for fast ADC for FPGA prj v0.94.
 * Function rp_HPGetFastADCIsSplitTriggerOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.

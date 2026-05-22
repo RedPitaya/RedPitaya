@@ -69,9 +69,12 @@ rp_calib_error calib_InitModelEx(rp_HPeModels_t model, bool use_factory_zone, rp
             case STEM_125_14_Z7020_LN_v1_1:
 
             case STEM_125_14_v2_0:
+            case STEM_125_14_BO_v2_0:
             case STEM_125_14_Pro_v2_0:
+            case STEM_125_14_Pro_BO_v2_0:
             case STEM_125_14_Z7020_Pro_v1_0:
             case STEM_125_14_Z7020_Pro_v2_0:
+            case STEM_125_14_Z7020_Pro_BO_v2_0:
             case STEM_125_14_Z7020_Ind_v2_0:
             case STEM_125_14_Z7020_LL_v1_1:
             case STEM_125_14_Z7020_LL_v1_2:
@@ -242,9 +245,12 @@ rp_calib_error calib_WriteParams(rp_HPeModels_t model, rp_calib_params_t* calib_
             case STEM_125_14_Z7020_LN_v1_1:
 
             case STEM_125_14_v2_0:
+            case STEM_125_14_BO_v2_0:
             case STEM_125_14_Pro_v2_0:
+            case STEM_125_14_Pro_BO_v2_0:
             case STEM_125_14_Z7020_Pro_v1_0:
             case STEM_125_14_Z7020_Pro_v2_0:
+            case STEM_125_14_Z7020_Pro_BO_v2_0:
             case STEM_125_14_Z7020_Ind_v2_0:
             case STEM_125_14_Z7020_LL_v1_1:
             case STEM_125_14_Z7020_LL_v1_2:
@@ -706,9 +712,12 @@ rp_calib_error calib_ConvertToOld(rp_calib_params_t* out) {
         }
 
         case STEM_125_14_v2_0:
+        case STEM_125_14_BO_v2_0:
         case STEM_125_14_Pro_v2_0:
+        case STEM_125_14_Pro_BO_v2_0:
         case STEM_125_14_Z7020_Pro_v1_0:
         case STEM_125_14_Z7020_Pro_v2_0:
+        case STEM_125_14_Z7020_Pro_BO_v2_0:
         case STEM_125_14_Z7020_LL_v1_1:
         case STEM_125_14_Z7020_LL_v1_2:
         case STEM_125_14_Z7020_TI_v1_3:

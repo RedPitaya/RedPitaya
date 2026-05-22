@@ -10,20 +10,15 @@
 
 #include "common.h"
 #include <ctype.h>
-#include <dirent.h>
 #include <errno.h>
-#include <getopt.h>
-#include <mtd/mtd-user.h>
 #include <pwd.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/queue.h>
 #include <unistd.h>
 #include <algorithm>
-#include <cctype>
 #include <cstdio>
 #include <cstring>
 #include <fstream>
@@ -35,10 +30,12 @@
 #include "stem_122_16SDR_v1.0.h"
 #include "stem_122_16SDR_v1.1.h"
 #include "stem_125_10_v1.0.h"
+#include "stem_125_14_BO_v2.0.h"
 #include "stem_125_14_LN_BO_v1.1.h"
 #include "stem_125_14_LN_CE1_v1.1.h"
 #include "stem_125_14_LN_CE2_v1.1.h"
 #include "stem_125_14_LN_v1.1.h"
+#include "stem_125_14_Pro_BO_v2.0.h"
 #include "stem_125_14_Pro_v2.0.h"
 #include "stem_125_14_Z7020_4IN_BO_v1.3.h"
 #include "stem_125_14_Z7020_4IN_v1.0.h"
@@ -46,6 +43,7 @@
 #include "stem_125_14_Z7020_4IN_v1.3.h"
 #include "stem_125_14_Z7020_Ind_v2.0.h"
 #include "stem_125_14_Z7020_LN_v1.1.h"
+#include "stem_125_14_Z7020_Pro_BO_v2.0.h"
 #include "stem_125_14_Z7020_Pro_v1.0.h"
 #include "stem_125_14_Z7020_Pro_v2.0.h"
 #include "stem_125_14_Z7020_v1.0.h"
@@ -208,11 +206,11 @@ bool g_is_valid = false;
 // "STEM_125-14_Z7020_4IN_v1.2"
 // "STEM_125-14_Z7020_4IN_v1.3"
 // "STEM_125-14_Z7020_4IN_BO_v1.3"
+// "STEM_250-12_v1.0"
 // "STEM_250-12_v1.1"
 // "STEM_250-12_v1.2"
 // "STEM_250-12_v1.2a"
 // "STEM_250-12_v1.2b"
-// "STEM_250-12_v1.0"
 // "STEM_250-12_120"
 // "STEM_125-14_LN_BO_v1.1"
 // "STEM_125-14_LN_CE1_v1.1"
@@ -221,9 +219,12 @@ bool g_is_valid = false;
 // Gen2
 
 // "STEM_125-14_v2.0"
+// "STEM_125-14_BO_v2.0"
 // "STEM_125-14_Pro_v2.0"
+// "STEM_125-14_Pro_BO_v2.0"
 // "STEM_125-14_Z7020_Pro_v1.0"
 // "STEM_125-14_Z7020_Pro_v2.0"
+// "STEM_125-14_Z7020_Pro_BO_v2.0"
 // "STEM_125-14_Ind_v2.0"
 
 // Low latency
@@ -255,7 +256,7 @@ void hp_checkModel(std::string& model, std::string& eth_mac, bool* is_valid) {
         static const std::unordered_map<std::string, ProfileGetter> profileMap = {
             {"stem_125-10_v1.0", getProfile_STEM_125_10_v1_0},
             {"stem_125-14_v1.0", getProfile_STEM_125_14_v1_0},
-            {"stem_14_b_v1.0", getProfile_STEM_125_14_v1_0},
+            {"stem_14_b_v1.0", getProfile_STEM_125_14_v1_0},  // Legacy alias
             {"stem_125-14_v1.1", getProfile_STEM_125_14_v1_1},
             {"stem_122-16sdr_v1.0", getProfile_STEM_122_16SDR_v1_0},
             {"stem_122-16sdr_v1.1", getProfile_STEM_122_16SDR_v1_1},
@@ -276,9 +277,12 @@ void hp_checkModel(std::string& model, std::string& eth_mac, bool* is_valid) {
             {"stem_125-14_ln_ce1_v1.1", getProfile_STEM_125_14_LN_CE1_v1_1},
             {"stem_125-14_ln_ce2_v1.1", getProfile_STEM_125_14_LN_CE2_v1_1},
             {"stem_125-14_v2.0", getProfile_STEM_125_14_v2_0},
+            {"stem_125-14_bo_v2.0", getProfile_STEM_125_14_BO_v2_0},
             {"stem_125-14_pro_v2.0", getProfile_STEM_125_14_Pro_v2_0},
+            {"stem_125-14_pro_bo_v2.0", getProfile_STEM_125_14_Pro_BO_v2_0},
             {"stem_125-14_z7020_pro_v1.0", getProfile_STEM_125_14_Z7020_Pro_v1_0},
             {"stem_125-14_z7020_pro_v2.0", getProfile_STEM_125_14_Z7020_Pro_v2_0},
+            {"stem_125-14_z7020_pro_bo_v2.0", getProfile_STEM_125_14_Z7020_Pro_BO_v2_0},
             {"stem_125-14_ind_v2.0", getProfile_STEM_125_14_Z7020_Ind_v2_0},
             {"stem_125-14_z7020_ll_v1.1", getProfile_STEM_125_14_Z7020_LL_v1_1},
             {"stem_125-14_z7020_ll_v1.2", getProfile_STEM_125_14_Z7020_LL_v1_2},
@@ -402,8 +406,8 @@ const char* getGainName(rp_HPADCGainMode_t mode) {
             return "HIGH";
         default:
             return "ERROR GAIN MODE";
-            break;
     }
+    return "ERROR GAIN MODE";
 }
 
 int hp_cmn_Print(profiles_t* p) {
@@ -487,7 +491,7 @@ int hp_cmn_Print(profiles_t* p) {
     fprintf(stdout, "\nE3 Is present: %u\n", p->is_E3_present);
     fprintf(stdout, "E3 High speed GPIO support: %d\n", p->is_E3_high_speed_gpio);
     fprintf(stdout, "E3 High speed GPIO rate: %u\n", p->E3_high_speed_gpio_rate);
-    fprintf(stdout, "E3 QSPI for eMMC support: %d\n", p->is_E3_high_speed_gpio);
+    fprintf(stdout, "E3 QSPI for eMMC support: %d\n", p->is_E3_mmc_qspi);
 
     fprintf(stdout, "Support for calibration on FPGA: %d\n", p->is_calib_in_fpga);
     fprintf(stdout, "Fast ADC 16-bit data mode support (v0.94): %d\n", p->is_fast_adc_16b_mode);
@@ -514,73 +518,48 @@ void hp_cmn_PrintKeyHelp() {
 }
 
 profiles_t* hp_cmn_getProfile(rp_HPeModels_t model) {
-    switch (model) {
-        case STEM_125_10_v1_0:
-            return getProfile_STEM_125_10_v1_0();
-        case STEM_125_14_v1_0:
-            return getProfile_STEM_125_14_v1_0();
-        case STEM_125_14_v1_1:
-            return getProfile_STEM_125_14_v1_1();
-        case STEM_122_16SDR_v1_0:
-            return getProfile_STEM_122_16SDR_v1_0();
-        case STEM_122_16SDR_v1_1:
-            return getProfile_STEM_122_16SDR_v1_1();
-        case STEM_125_14_LN_v1_1:
-            return getProfile_STEM_125_14_LN_v1_1();
-        case STEM_125_14_Z7020_v1_0:
-            return getProfile_STEM_125_14_Z7020_v1_0();
-        case STEM_125_14_Z7020_LN_v1_1:
-            return getProfile_STEM_125_14_Z7020_LN_v1_1();
-        case STEM_125_14_Z7020_4IN_v1_0:
-            return getProfile_STEM_125_14_Z7020_4IN_v1_0();
-        case STEM_125_14_Z7020_4IN_v1_2:
-            return getProfile_STEM_125_14_Z7020_4IN_v1_2();
-        case STEM_125_14_Z7020_4IN_v1_3:
-            return getProfile_STEM_125_14_Z7020_4IN_v1_3();
-        case STEM_125_14_Z7020_4IN_BO_v1_3:
-            return getProfile_STEM_125_14_Z7020_4IN_BO_v1_3();
-        case STEM_250_12_v1_0:
-            return getProfile_STEM_250_12_v1_0();
-        case STEM_250_12_v1_1:
-            return getProfile_STEM_250_12_v1_1();
-        case STEM_250_12_v1_2:
-            return getProfile_STEM_250_12_v1_2();
-        case STEM_250_12_120:
-            return getProfile_STEM_250_12_v1_2a();
-        case STEM_250_12_v1_2a:
-            return getProfile_STEM_250_12_v1_2b();
-        case STEM_250_12_v1_2b:
-            return getProfile_STEM_250_12_120();
-        case STEM_125_14_LN_BO_v1_1:
-            return getProfile_STEM_125_14_LN_BO_v1_1();
-        case STEM_125_14_LN_CE1_v1_1:
-            return getProfile_STEM_125_14_LN_CE1_v1_1();
-        case STEM_125_14_LN_CE2_v1_1:
-            return getProfile_STEM_125_14_LN_CE2_v1_1();
-        case STEM_125_14_v2_0:
-            return getProfile_STEM_125_14_v2_0();
-        case STEM_125_14_Pro_v2_0:
-            return getProfile_STEM_125_14_Pro_v2_0();
-        case STEM_125_14_Z7020_Pro_v2_0:
-            return getProfile_STEM_125_14_Z7020_Pro_v1_0();
-        case STEM_125_14_Z7020_Ind_v2_0:
-            return getProfile_STEM_125_14_Z7020_Pro_v2_0();
-        case STEM_125_14_Z7020_Pro_v1_0:
-            return getProfile_STEM_125_14_Z7020_Ind_v2_0();
-        case STEM_125_14_Z7020_LL_v1_1:
-            return getProfile_STEM_125_14_Z7020_LL_v1_1();
-        case STEM_65_16_Z7020_LL_v1_1:
-            return getProfile_STEM_125_14_Z7020_LL_v1_2();
-        case STEM_125_14_Z7020_LL_v1_2:
-            return getProfile_STEM_65_16_Z7020_LL_v1_1();
-        case STEM_125_14_Z7020_TI_v1_3:
-            return getProfile_STEM_125_14_Z7020_TI_v1_3();
-        case STEM_65_16_Z7020_TI_v1_3:
-            return getProfile_STEM_65_16_Z7020_TI_v1_3();
-        default:
-            return NULL;
-    }
+    using Getter = profiles_t* (*)();
+    static const std::unordered_map<rp_HPeModels_t, Getter> map = {
+        {STEM_125_10_v1_0, getProfile_STEM_125_10_v1_0},
+        {STEM_125_14_v1_0, getProfile_STEM_125_14_v1_0},
+        {STEM_125_14_v1_1, getProfile_STEM_125_14_v1_1},
+        {STEM_122_16SDR_v1_0, getProfile_STEM_122_16SDR_v1_0},
+        {STEM_122_16SDR_v1_1, getProfile_STEM_122_16SDR_v1_1},
+        {STEM_125_14_LN_v1_1, getProfile_STEM_125_14_LN_v1_1},
+        {STEM_125_14_Z7020_v1_0, getProfile_STEM_125_14_Z7020_v1_0},
+        {STEM_125_14_Z7020_LN_v1_1, getProfile_STEM_125_14_Z7020_LN_v1_1},
+        {STEM_125_14_Z7020_4IN_v1_0, getProfile_STEM_125_14_Z7020_4IN_v1_0},
+        {STEM_125_14_Z7020_4IN_v1_2, getProfile_STEM_125_14_Z7020_4IN_v1_2},
+        {STEM_125_14_Z7020_4IN_v1_3, getProfile_STEM_125_14_Z7020_4IN_v1_3},
+        {STEM_250_12_v1_0, getProfile_STEM_250_12_v1_0},
+        {STEM_250_12_v1_1, getProfile_STEM_250_12_v1_1},
+        {STEM_250_12_v1_2, getProfile_STEM_250_12_v1_2},
+        {STEM_250_12_120, getProfile_STEM_250_12_120},
+        {STEM_250_12_v1_2a, getProfile_STEM_250_12_v1_2a},
+        {STEM_250_12_v1_2b, getProfile_STEM_250_12_v1_2b},
+        {STEM_125_14_LN_BO_v1_1, getProfile_STEM_125_14_LN_BO_v1_1},
+        {STEM_125_14_LN_CE1_v1_1, getProfile_STEM_125_14_LN_CE1_v1_1},
+        {STEM_125_14_LN_CE2_v1_1, getProfile_STEM_125_14_LN_CE2_v1_1},
+        {STEM_125_14_v2_0, getProfile_STEM_125_14_v2_0},
+        {STEM_125_14_Pro_v2_0, getProfile_STEM_125_14_Pro_v2_0},
+        {STEM_125_14_Z7020_Pro_v2_0, getProfile_STEM_125_14_Z7020_Pro_v2_0},
+        {STEM_125_14_Z7020_Ind_v2_0, getProfile_STEM_125_14_Z7020_Ind_v2_0},
+        {STEM_125_14_Z7020_Pro_v1_0, getProfile_STEM_125_14_Z7020_Pro_v1_0},
+        {STEM_125_14_Z7020_LL_v1_1, getProfile_STEM_125_14_Z7020_LL_v1_1},
+        {STEM_65_16_Z7020_LL_v1_1, getProfile_STEM_65_16_Z7020_LL_v1_1},
+        {STEM_125_14_Z7020_LL_v1_2, getProfile_STEM_125_14_Z7020_LL_v1_2},
+        {STEM_125_14_Z7020_TI_v1_3, getProfile_STEM_125_14_Z7020_TI_v1_3},
+        {STEM_65_16_Z7020_TI_v1_3, getProfile_STEM_65_16_Z7020_TI_v1_3},
+        {STEM_125_14_Z7020_4IN_BO_v1_3, getProfile_STEM_125_14_Z7020_4IN_BO_v1_3},
+        {STEM_125_14_BO_v2_0, getProfile_STEM_125_14_BO_v2_0},
+        {STEM_125_14_Pro_BO_v2_0, getProfile_STEM_125_14_Pro_BO_v2_0},
+        {STEM_125_14_Z7020_Pro_BO_v2_0, getProfile_STEM_125_14_Z7020_Pro_BO_v2_0},
+    };
+
+    auto it = map.find(model);
+    return (it != map.end()) ? it->second() : nullptr;
 }
+
 std::string float_to_string_trim(float num) {
     std::string s = std::to_string(num);
     s.erase(s.find_last_not_of('0') + 1, std::string::npos);
@@ -591,209 +570,97 @@ std::string float_to_string_trim(float num) {
 }
 
 int hp_cmn_GetFPGAVersion(rp_HPeModels_t model, const char** _no_free_value) {
-    switch (model) {
-        case STEM_125_10_v1_0:
-            *_no_free_value = "z10_125";
-            break;
-        case STEM_125_14_v1_0:
-            *_no_free_value = "z10_125";
-            break;
-        case STEM_125_14_v1_1:
-            *_no_free_value = "z10_125";
-            break;
-        case STEM_125_14_LN_v1_1:
-            *_no_free_value = "z10_125";
-            break;
-        case STEM_125_14_LN_BO_v1_1:
-            *_no_free_value = "z10_125";
-            break;
-        case STEM_125_14_LN_CE1_v1_1:
-            *_no_free_value = "z10_125";
-            break;
-        case STEM_125_14_LN_CE2_v1_1:
-            *_no_free_value = "z10_125";
-            break;
-        case STEM_122_16SDR_v1_0:
-            *_no_free_value = "z20_122";
-            break;
-        case STEM_122_16SDR_v1_1:
-            *_no_free_value = "z20_122";
-            break;
-        case STEM_125_14_Z7020_v1_0:
-            *_no_free_value = "z20_125";
-            break;
-        case STEM_125_14_Z7020_LN_v1_1:
-            *_no_free_value = "z20_125";
-            break;
-        case STEM_125_14_Z7020_4IN_v1_0:
-            *_no_free_value = "z20_125_4ch";
-            break;
-        case STEM_125_14_Z7020_4IN_v1_2:
-            *_no_free_value = "z20_125_4ch";
-            break;
-        case STEM_125_14_Z7020_4IN_v1_3:
-            *_no_free_value = "z20_125_4ch";
-            break;
-        case STEM_125_14_Z7020_4IN_BO_v1_3:
-            *_no_free_value = "z20_125_4ch";
-            break;
-        case STEM_250_12_v1_0:
-            *_no_free_value = "z20_250_1_0";
-            break;
-        case STEM_250_12_v1_1:
-            *_no_free_value = "z20_250";
-            break;
-        case STEM_250_12_v1_2:
-            *_no_free_value = "z20_250";
-            break;
-        case STEM_250_12_v1_2a:
-            *_no_free_value = "z20_250";
-            break;
-        case STEM_250_12_v1_2b:
-            *_no_free_value = "z20_250";
-            break;
-        case STEM_250_12_120:
-            *_no_free_value = "z20_250";
-            break;
-        case STEM_125_14_v2_0:
-            *_no_free_value = "z10_125_v2";
-            break;
-        case STEM_125_14_Pro_v2_0:
-            *_no_free_value = "z10_125_pro_v2";
-            break;
-        case STEM_125_14_Z7020_Pro_v1_0:
-            *_no_free_value = "z20_125_v2";
-            break;
-        case STEM_125_14_Z7020_Pro_v2_0:
-            *_no_free_value = "z20_125_v2";
-            break;
-        case STEM_125_14_Z7020_Ind_v2_0:
-            *_no_free_value = "z20_125_v2";
-            break;
-        case STEM_125_14_Z7020_LL_v1_1:
-            *_no_free_value = "z20_125_ll";
-            break;
-        case STEM_65_16_Z7020_LL_v1_1:
-            *_no_free_value = "z20_125_ll";
-            break;
-        case STEM_125_14_Z7020_LL_v1_2:
-            *_no_free_value = "z20_125_ll";
-            break;
-        case STEM_65_16_Z7020_TI_v1_3:
-            *_no_free_value = "z20_125_ll";
-            break;
-        case STEM_125_14_Z7020_TI_v1_3:
-            *_no_free_value = "z20_125_ll";
-            break;
-        default:
-            *_no_free_value = "";
-            return RP_HP_EMU;
-            break;
+    static const std::unordered_map<rp_HPeModels_t, const char*> map = {
+        {STEM_125_10_v1_0, "z10_125"},
+        {STEM_125_14_v1_0, "z10_125"},
+        {STEM_125_14_v1_1, "z10_125"},
+        {STEM_125_14_LN_v1_1, "z10_125"},
+        {STEM_125_14_LN_BO_v1_1, "z10_125"},
+        {STEM_125_14_LN_CE1_v1_1, "z10_125"},
+        {STEM_125_14_LN_CE2_v1_1, "z10_125"},
+        {STEM_122_16SDR_v1_0, "z20_122"},
+        {STEM_122_16SDR_v1_1, "z20_122"},
+        {STEM_125_14_Z7020_v1_0, "z20_125"},
+        {STEM_125_14_Z7020_LN_v1_1, "z20_125"},
+        {STEM_125_14_Z7020_4IN_v1_0, "z20_125_4ch"},
+        {STEM_125_14_Z7020_4IN_v1_2, "z20_125_4ch"},
+        {STEM_125_14_Z7020_4IN_v1_3, "z20_125_4ch"},
+        {STEM_125_14_Z7020_4IN_BO_v1_3, "z20_125_4ch"},
+        {STEM_250_12_v1_0, "z20_250_1_0"},
+        {STEM_250_12_v1_1, "z20_250"},
+        {STEM_250_12_v1_2, "z20_250"},
+        {STEM_250_12_v1_2a, "z20_250"},
+        {STEM_250_12_v1_2b, "z20_250"},
+        {STEM_250_12_120, "z20_250"},
+        {STEM_125_14_v2_0, "z10_125_v2"},
+        {STEM_125_14_BO_v2_0, "z10_125_v2"},
+        {STEM_125_14_Pro_v2_0, "z10_125_pro_v2"},
+        {STEM_125_14_Pro_BO_v2_0, "z10_125_pro_v2"},
+        {STEM_125_14_Z7020_Pro_v1_0, "z20_125_v2"},
+        {STEM_125_14_Z7020_Pro_v2_0, "z20_125_v2"},
+        {STEM_125_14_Z7020_Pro_BO_v2_0, "z20_125_v2"},
+        {STEM_125_14_Z7020_Ind_v2_0, "z20_125_v2"},
+        {STEM_125_14_Z7020_LL_v1_1, "z20_125_ll"},
+        {STEM_65_16_Z7020_LL_v1_1, "z20_125_ll"},
+        {STEM_125_14_Z7020_LL_v1_2, "z20_125_ll"},
+        {STEM_125_14_Z7020_TI_v1_3, "z20_125_ll"},
+        {STEM_65_16_Z7020_TI_v1_3, "z20_125_ll"},
+    };
+
+    auto it = map.find(model);
+    if (it != map.end()) {
+        *_no_free_value = it->second;
+        return RP_HP_OK;
     }
-    return RP_HP_OK;
+    *_no_free_value = "";
+    return RP_HP_EMU;
 }
 
 int hp_cmn_GetDTSVersion(rp_HPeModels_t model, const char** _no_free_value) {
-    switch (model) {
-        case STEM_125_10_v1_0:
-            *_no_free_value = "z10_125";
-            break;
-        case STEM_125_14_v1_0:
-            *_no_free_value = "z10_125";
-            break;
-        case STEM_125_14_v1_1:
-            *_no_free_value = "z10_125";
-            break;
-        case STEM_125_14_LN_v1_1:
-            *_no_free_value = "z10_125";
-            break;
-        case STEM_125_14_LN_BO_v1_1:
-            *_no_free_value = "z10_125";
-            break;
-        case STEM_125_14_LN_CE1_v1_1:
-            *_no_free_value = "z10_125";
-            break;
-        case STEM_125_14_LN_CE2_v1_1:
-            *_no_free_value = "z10_125";
-            break;
-        case STEM_122_16SDR_v1_0:
-            *_no_free_value = "z20_122";
-            break;
-        case STEM_122_16SDR_v1_1:
-            *_no_free_value = "z20_122";
-            break;
-        case STEM_125_14_Z7020_v1_0:
-            *_no_free_value = "z20_125";
-            break;
-        case STEM_125_14_Z7020_LN_v1_1:
-            *_no_free_value = "z20_125";
-            break;
-        case STEM_125_14_Z7020_4IN_v1_0:
-            *_no_free_value = "z20_125_4ch";
-            break;
-        case STEM_125_14_Z7020_4IN_v1_2:
-            *_no_free_value = "z20_125_4ch";
-            break;
-        case STEM_125_14_Z7020_4IN_v1_3:
-            *_no_free_value = "z20_125_4ch";
-            break;
-        case STEM_125_14_Z7020_4IN_BO_v1_3:
-            *_no_free_value = "z20_125_4ch";
-            break;
-        case STEM_250_12_v1_0:
-            *_no_free_value = "z20_250_1_0";
-            break;
-        case STEM_250_12_v1_1:
-            *_no_free_value = "z20_250";
-            break;
-        case STEM_250_12_v1_2:
-            *_no_free_value = "z20_250";
-            break;
-        case STEM_250_12_v1_2a:
-            *_no_free_value = "z20_250a";
-            break;
-        case STEM_250_12_v1_2b:
-            *_no_free_value = "z20_250";
-            break;
-        case STEM_250_12_120:
-            *_no_free_value = "z20_250";
-            break;
-        case STEM_125_14_v2_0:
-            *_no_free_value = "z10_125_v2";
-            break;
-        case STEM_125_14_Pro_v2_0:
-            *_no_free_value = "z10_125_pro_v2";
-            break;
-        case STEM_125_14_Z7020_Pro_v1_0:
-            *_no_free_value = "z20_125_v2";
-            break;
-        case STEM_125_14_Z7020_Pro_v2_0:
-            *_no_free_value = "z20_125_v2";
-            break;
-        case STEM_125_14_Z7020_Ind_v2_0:
-            *_no_free_value = "z20_125_v2";
-            break;
-        case STEM_125_14_Z7020_LL_v1_1:
-            *_no_free_value = "z20_125_ll";
-            break;
-        case STEM_65_16_Z7020_LL_v1_1:
-            *_no_free_value = "z20_125_ll";
-            break;
-        case STEM_125_14_Z7020_LL_v1_2:
-            *_no_free_value = "z20_125_ll";
-            break;
-        case STEM_65_16_Z7020_TI_v1_3:
-            *_no_free_value = "z20_125_ll";
-            break;
-        case STEM_125_14_Z7020_TI_v1_3:
-            *_no_free_value = "z20_125_ll";
-            break;
-        default:
-            *_no_free_value = "";
-            return RP_HP_EMU;
-            break;
+    static const std::unordered_map<rp_HPeModels_t, const char*> map = {
+        {STEM_125_10_v1_0, "z10_125"},
+        {STEM_125_14_v1_0, "z10_125"},
+        {STEM_125_14_v1_1, "z10_125"},
+        {STEM_125_14_LN_v1_1, "z10_125"},
+        {STEM_125_14_LN_BO_v1_1, "z10_125"},
+        {STEM_125_14_LN_CE1_v1_1, "z10_125"},
+        {STEM_125_14_LN_CE2_v1_1, "z10_125"},
+        {STEM_122_16SDR_v1_0, "z20_122"},
+        {STEM_122_16SDR_v1_1, "z20_122"},
+        {STEM_125_14_Z7020_v1_0, "z20_125"},
+        {STEM_125_14_Z7020_LN_v1_1, "z20_125"},
+        {STEM_125_14_Z7020_4IN_v1_0, "z20_125_4ch"},
+        {STEM_125_14_Z7020_4IN_v1_2, "z20_125_4ch"},
+        {STEM_125_14_Z7020_4IN_v1_3, "z20_125_4ch"},
+        {STEM_125_14_Z7020_4IN_BO_v1_3, "z20_125_4ch"},
+        {STEM_250_12_v1_0, "z20_250_1_0"},
+        {STEM_250_12_v1_1, "z20_250"},
+        {STEM_250_12_v1_2, "z20_250"},
+        {STEM_250_12_v1_2a, "z20_250a"},
+        {STEM_250_12_v1_2b, "z20_250"},
+        {STEM_250_12_120, "z20_250"},
+        {STEM_125_14_v2_0, "z10_125_v2"},
+        {STEM_125_14_BO_v2_0, "z10_125_v2"},
+        {STEM_125_14_Pro_v2_0, "z10_125_pro_v2"},
+        {STEM_125_14_Pro_BO_v2_0, "z10_125_pro_v2"},
+        {STEM_125_14_Z7020_Pro_v1_0, "z20_125_v2"},
+        {STEM_125_14_Z7020_Pro_v2_0, "z20_125_v2"},
+        {STEM_125_14_Z7020_Pro_BO_v2_0, "z20_125_v2"},
+        {STEM_125_14_Z7020_Ind_v2_0, "z20_125_v2"},
+        {STEM_125_14_Z7020_LL_v1_1, "z20_125_ll"},
+        {STEM_65_16_Z7020_LL_v1_1, "z20_125_ll"},
+        {STEM_125_14_Z7020_LL_v1_2, "z20_125_ll"},
+        {STEM_125_14_Z7020_TI_v1_3, "z20_125_ll"},
+        {STEM_65_16_Z7020_TI_v1_3, "z20_125_ll"},
+    };
+
+    auto it = map.find(model);
+    if (it != map.end()) {
+        *_no_free_value = it->second;
+        return RP_HP_OK;
     }
-    return RP_HP_OK;
+    *_no_free_value = "";
+    return RP_HP_EMU;
 }
 
 std::string getValueForKey(rp_HPeModels_t model, std::string key) {
@@ -1114,8 +981,8 @@ void hp_cmn_PrintPivotTable(char* _keys) {
         keys.clear();
         uint32_t index = 2;
         while (table_keys_help[index] != NULL) {
-            const char* key = table_keys_help[index++];
-            index++;
+            const char* key = table_keys_help[index];
+            index += 2;
             keys.push_back(key);
         }
     }
@@ -1143,7 +1010,7 @@ void hp_cmn_PrintPivotTable(char* _keys) {
         cols.push_back("name");
     }
 
-    for (int i = 0; i <= STEM_65_16_Z7020_TI_v1_3; i++) {
+    for (int i = 0; i < STEM_MODEL_COUNT; i++) {
         auto s = getValueForKey((rp_HPeModels_t)i, "name");
         values["name"][(rp_HPeModels_t)i] = s;
         if (values_max_len["name"] < s.length())
@@ -1156,7 +1023,7 @@ void hp_cmn_PrintPivotTable(char* _keys) {
             cols.push_back(key);
         }
 
-        for (int i = 0; i <= STEM_65_16_Z7020_TI_v1_3; i++) {
+        for (int i = 0; i < STEM_MODEL_COUNT; i++) {
             auto s = getValueForKey((rp_HPeModels_t)i, key);
             values[key][(rp_HPeModels_t)i] = s;
             if (values_max_len[key] < s.length())
@@ -1184,7 +1051,7 @@ void hp_cmn_PrintPivotTable(char* _keys) {
     printf("\n");
     printf("%s\n", tab_split.c_str());
 
-    for (int i = 0; i <= STEM_65_16_Z7020_TI_v1_3; i++) {
+    for (int i = 0; i < STEM_MODEL_COUNT; i++) {
         skip_first = false;
         for (const auto& col : cols) {
             if (skip_first) {

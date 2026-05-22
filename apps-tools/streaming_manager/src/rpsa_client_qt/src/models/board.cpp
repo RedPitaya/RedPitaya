@@ -354,7 +354,11 @@ auto CBoard::setModel(uint8_t model) -> void {
     //     STEM_125_14_Z7020_TI_v1_3 = 28,
     //     STEM_65_16_Z7020_TI_v1_3 = 29,
 
-    //     STEM_125_14_Z7020_4IN_BO_v1_3 = 30
+    //     STEM_125_14_Z7020_4IN_BO_v1_3 = 30,
+
+    //     STEM_125_14_BO_v2_0 = 31,
+    //     STEM_125_14_Pro_BO_v2_0 = 32,
+    //     STEM_125_14_Z7020_Pro_BO_v2_0 = 33,
     // } rp_HPeModels_t;
 
     switch (model) {
@@ -376,7 +380,10 @@ auto CBoard::setModel(uint8_t model) -> void {
         case 26:
         case 27:
         case 28:
-        case 29: {
+        case 29:
+        case 31:
+        case 32:
+        case 33: {
             m_adcChannels = 2;
             m_IsACDC = false;
             m_IsAttenuator = true;
@@ -461,7 +468,12 @@ auto CBoard::getModel() -> QString {
     //     STEM_125_14_Z7020_TI_v1_3 = 28,
     //     STEM_65_16_Z7020_TI_v1_3 = 29,
 
-    //     STEM_125_14_Z7020_4IN_BO_v1_3 = 30
+    //     STEM_125_14_Z7020_4IN_BO_v1_3 = 30,
+
+    //     STEM_125_14_BO_v2_0 = 31,
+    //     STEM_125_14_Pro_BO_v2_0 = 32,
+    //     STEM_125_14_Z7020_Pro_BO_v2_0 = 33,
+
     // } rp_HPeModels_t;
 
     switch (m_model) {
@@ -531,6 +543,12 @@ auto CBoard::getModel() -> QString {
             return "STEMlab 65-16 TI v1.3";
         case 30:
             return "STEMlab 125-14 4-Input BO v1.3";
+        case 31:
+            return "STEMlab 125-14 BO v2.0";
+        case 32:
+            return "STEMlab 125-14 Pro BO v2.0";
+        case 33:
+            return "STEMlab 125-14-Z7020 Pro BO v2.0";
         default:
             break;
     }
@@ -797,7 +815,12 @@ bool CBoard::getCouplingVisible() {
     //     STEM_125_14_Z7020_TI_v1_3 = 28,
     //     STEM_65_16_Z7020_TI_v1_3 = 29,
 
-    //     STEM_125_14_Z7020_4IN_BO_v1_3 = 30
+    //     STEM_125_14_Z7020_4IN_BO_v1_3 = 30,
+
+    //     STEM_125_14_BO_v2_0 = 31,
+    //     STEM_125_14_Pro_BO_v2_0 = 32,
+    //     STEM_125_14_Z7020_Pro_BO_v2_0 = 33,
+
     // } rp_HPeModels_t;
 
     switch (m_model) {

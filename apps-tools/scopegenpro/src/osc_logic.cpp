@@ -124,7 +124,7 @@ rp_websocket::CWEBServer data_server;
 
 auto initExtTriggerLimits() -> void {
     if (rp_HPGetIsExternalTriggerLevelPresentOrDefault()) {
-        auto level = rp_HPGetIsExternalTriggerFullScalePresentOrDefault();
+        auto level = rp_HPGetIsExternalTriggerFullScaleOrDefault();
         auto is_sign = rp_HPGetIsExternalTriggerIsSignedOrDefault();
         ext_trigger_level.SetMin(is_sign ? -level : 0);
         ext_trigger_level.SetMax(level);
@@ -216,7 +216,7 @@ auto updateTriggerLimit(bool force) -> void {
             }
             break;
         case RPAPP_OSC_TRIG_SRC_EXTERNAL:
-            trigg_limit = rp_HPGetIsExternalTriggerFullScalePresentOrDefault();
+            trigg_limit = rp_HPGetIsExternalTriggerFullScaleOrDefault();
             is_signed = rp_HPGetIsExternalTriggerIsSignedOrDefault();
             break;
         default:
