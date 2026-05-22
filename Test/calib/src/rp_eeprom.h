@@ -18,6 +18,14 @@
 
 #define CALIB_MAGIC 0xAABBCCDD
 
+// Backup data structure
+struct BackupHeader {
+    rp_HPeModels_t model_id;  // Board model identifier
+    char model_name[32];      // Board model name (null-terminated string)
+    uint8_t mac[6];           // Board MAC address
+    uint64_t timestamp;       // Unix timestamp of backup creation
+};
+
 /** Bit flags to represent options on the command-line. */
 typedef enum {
     WANT_READ = 0x01,
@@ -31,8 +39,8 @@ typedef enum {
     WANT_NEW_FORMAT = 0x100,
     WANT_MODIFY = 0x200,
     WANT_TO_OLD = 0x400,
-    WANT_FILTER_ZERO = 0x800
-
+    WANT_FILTER_ZERO = 0x800,
+    WANT_PRINT_INFO = 0x1000
 } WANT_FLAGS;
 
 typedef enum {
@@ -157,5 +165,15 @@ typedef enum {
 void print_eeprom(rp_HPeModels_t model, rp_eepromWpData_t* data, int mode);
 void print_eepromUni(rp_eepromUniData_t* data, int mode);
 int getCalibSize(rp_HPeModels_t model);
+
+bool readStdinToVector(std::vector<char>& out_data);
+bool getBoardModelName(std::string& model);
+bool getBoardModel(rp_HPeModels_t& model);
+bool getBoardMAC(uint8_t* mac);
+std::string formatMAC(const uint8_t* mac);
+
+std::string bytesToAsciiString(const std::vector<char>& data, size_t max_bytes = 16);
+std::vector<std::string> split(const std::string& text, const std::vector<char>& delimiters);
+void printBackupInfo(const char* filename, uint32_t want_bits);
 
 #endif

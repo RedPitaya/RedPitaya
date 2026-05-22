@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <algorithm>
 #include <iostream>
+#include <memory>
 #include <set>
 #include <string>
 #include <vector>
@@ -30,30 +31,6 @@
 
 using namespace std;
 
-std::string bytesToAsciiString(const std::vector<char>& data, size_t max_bytes = 16) {
-    size_t bytes_to_process = std::min(data.size(), max_bytes);
-    return std::string(data.begin(), data.begin() + bytes_to_process);
-}
-
-vector<string> split(const string& text, const vector<char>& delimiters) {
-    vector<string> result;
-    string current_token;
-    for (char c : text) {
-        if (std::find(delimiters.begin(), delimiters.end(), c) != delimiters.end()) {
-            if (!current_token.empty()) {
-                result.push_back(current_token);
-                current_token.clear();
-            }
-        } else {
-            current_token += c;
-        }
-    }
-    if (!current_token.empty()) {
-        result.push_back(current_token);
-    }
-    return result;
-}
-
 /** Program name */
 const char* g_argv0 = NULL;
 
@@ -65,25 +42,28 @@ void usage() {
         "Usage: %s [OPTION]...\n"
         "\n"
         "OPTIONS:\n"
-        "\t-r    Read calibration values from eeprom (to stdout).\n"
-        "\t      The -n flag has no effect. The system automatically determines the type of stored data.\n"
-        "\t      Examples: -r, -rf, -rv, -rvf, -rx, -rfx, -rvx, -rvfx.\n"
+        "\t-r               Read calibration values from eeprom (to stdout).\n"
+        "\t                 The -n flag has no effect. The system automatically determines the type of stored data.\n"
+        "\t                 Examples: -r, -rf, -rv, -rvf, -rx, -rfx, -rvx, -rvfx.\n"
 
         "\n"
-        "\t-w    Write calibration values to eeprom (from stdin).\n"
-        "\t      Examples: -w, -wf, -wn, -wfn, -wmn, -wfmn\n"
+        "\t-w               Write calibration values to eeprom (from stdin).\n"
+        "\t                 Examples: -w, -wf, -wn, -wfn, -wmn, -wfmn\n"
         "\n"
-        "\t-d    Reset calibration values in eeprom from factory zone. (-n flag converts to new version 5 format)\n"
-        "\t      Conversion to version 6 is impossible, as the calibration will not be valid. The only solution is recalibration and using the -in6 flag for version 6.\n"
-        "\t      Examples: -d, -dn\n"
+        "\t-d               Reset calibration values in eeprom from factory zone. (-n flag converts to new version 5 format)\n"
+        "\t                 Conversion to version 6 is impossible, as the calibration will not be valid. The only solution is recalibration and using the -in6 flag for version "
+        "6.\n"
+        "\t                 Examples: -d, -dn\n"
         "\n"
-        "\t-i    Reset calibration values in eeprom by default\n"
-        "\t      Examples: -i, -if, -in, -inf, -in5, -inf5, -in6, -inf6, -ie, -ief, -ine, -inef, -ine5, -inef5, -ine6, -inef6.\n"
+        "\t-i               Reset calibration values in eeprom by default\n"
+        "\t                 Examples: -i, -if, -in, -inf, -in5, -inf5, -in6, -inf6, -ie, -ief, -ine, -inef, -ine5, -inef5, -ine6, -inef6.\n"
         "\n"
-        "\t-o    Converts the calibration from the user zone to the old calibration format. For ecosystem versions 0.98 to 1.04.\n"
+        "\t-o               Converts the calibration from the user zone to the old calibration format. For ecosystem versions 0.98 to 1.04.\n"
         "\n"
-        "\t-b    Binary input and output mode. Works only with the -r and -w flags.\n"
-        "\t      (Example: calib -rb > backup.bin, cat backup.bin | calib -wb).\n"
+        "\t-b               Binary input and output mode. Works only with the -r and -w flags.\n"
+        "\t                 (Example: calib -rb > backup.bin, cat backup.bin | calib -wb).\n"
+        "\t-s [FILE_NAME]   Displays information about the backup.\n"
+        "\t                 (Example: calib -s backup.bin, calib -s -u backup.bin, calib -s -v backup.bin\n"
 
         "\n"
         "Modifiers for output:\n"
@@ -172,7 +152,6 @@ int WriteCalib(rp_HPeModels_t model, bool factory, bool is_new, bool is_modify) 
                 new_eeprom.item[j].id = stoi(in_params[i]);
                 i++;
                 new_eeprom.item[j].value = stoi(in_params[i]);
-                ;
             } else {
                 eeprom.feCalPar[j] = stoi(in_params[i]);
             }
@@ -234,6 +213,137 @@ int WriteCalib(rp_HPeModels_t model, bool factory, bool is_new, bool is_modify) 
     return ret;
 }
 
+void writeBackup(bool factory) {
+    std::vector<char> all_data;
+    if (!readStdinToVector(all_data) || all_data.empty()) {
+        exit(EXIT_FAILURE);
+    }
+
+    constexpr size_t MD5_SIZE = 32;
+    constexpr size_t HEADER_SIZE = sizeof(BackupHeader);
+    constexpr size_t FULL_HEADER_SIZE = MD5_SIZE + HEADER_SIZE;
+
+    if (all_data.size() <= FULL_HEADER_SIZE) {
+        fprintf(stderr, "ERROR: Input data too small!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    BackupHeader file_header;
+    memcpy(&file_header, all_data.data() + MD5_SIZE, HEADER_SIZE);
+
+    // Verify board model
+    rp_HPeModels_t board_model;
+    if (!getBoardModel(board_model)) {
+        exit(EXIT_FAILURE);
+    }
+
+    if (file_header.model_id != board_model) {
+        fprintf(stderr, "ERROR: Backup is from different board model!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Verify board MAC address
+    uint8_t board_mac[6];
+    if (!getBoardMAC(board_mac)) {
+        exit(EXIT_FAILURE);
+    }
+
+    if (memcmp(file_header.mac, board_mac, sizeof(board_mac)) != 0) {
+        fprintf(stderr, "ERROR: Backup is from different board (MAC mismatch)!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Calculate MD5 of data portion (excluding MD5 hash, including header and calibration)
+    std::string hash;
+    const auto data_span = std::span<const uint8_t>(reinterpret_cast<const uint8_t*>(all_data.data() + MD5_SIZE), all_data.size() - MD5_SIZE);
+
+    if (rp_UpdaterGetMD5(std::vector<uint8_t>(data_span.begin(), data_span.end()), &hash) != RP_UP_OK) {
+        fprintf(stderr, "ERROR: MD5 calculation error!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Verify hash matches
+    auto file_hash = bytesToAsciiString(all_data, MD5_SIZE);
+    if (file_hash != hash) {
+        fprintf(stderr, "ERROR: MD5 does not match the data!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Convert and write calibration data (after full header)
+    rp_calib_params_t calib;
+    int ret = rp_CalibConvertEEPROM(reinterpret_cast<uint8_t*>(all_data.data() + FULL_HEADER_SIZE), all_data.size() - FULL_HEADER_SIZE, &calib);
+    if (ret) {
+        fprintf(stderr, "ERROR: Convert data failed!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    ret = rp_CalibrationWriteParamsEx(calib, factory);
+    if (ret) {
+        fprintf(stderr, "ERROR: Write failed!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    exit(EXIT_SUCCESS);
+}
+
+void readBackup(bool factory) {
+    // Get board information
+    rp_HPeModels_t board_model;
+    if (!getBoardModel(board_model)) {
+        exit(EXIT_FAILURE);
+    }
+
+    std::string board_model_name;
+    if (!getBoardModelName(board_model_name)) {
+        exit(EXIT_FAILURE);
+    }
+
+    uint8_t board_mac[6];
+    if (!getBoardMAC(board_mac)) {
+        exit(EXIT_FAILURE);
+    }
+
+    uint64_t timestamp = static_cast<uint64_t>(time(nullptr));
+
+    // Retrieve calibration data from EEPROM
+    uint8_t* buff = nullptr;
+    uint16_t size = 0;
+    int ret = rp_CalibGetEEPROM(&buff, &size, factory);
+    if (ret) {
+        fprintf(stderr, "ERROR: Read failed!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Prepare backup header
+    BackupHeader header;
+    header.model_id = board_model;
+    memset(header.model_name, 0, sizeof(header.model_name));
+    strncpy(header.model_name, board_model_name.c_str(), sizeof(header.model_name) - 1);
+    header.model_name[sizeof(header.model_name) - 1] = '\0';
+    memcpy(header.mac, board_mac, sizeof(header.mac));
+    header.timestamp = timestamp;
+
+    // Build data for MD5: [BackupHeader][calibration data]
+    std::vector<uint8_t> data_for_hash;
+    data_for_hash.reserve(sizeof(BackupHeader) + size);
+    data_for_hash.insert(data_for_hash.end(), reinterpret_cast<const uint8_t*>(&header), reinterpret_cast<const uint8_t*>(&header) + sizeof(BackupHeader));
+    data_for_hash.insert(data_for_hash.end(), buff, buff + size);
+
+    // Calculate MD5 of header + calibration data
+    std::string hash;
+    if (rp_UpdaterGetMD5(data_for_hash, &hash) != RP_UP_OK) {
+        fprintf(stderr, "ERROR: MD5 error!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Output format: [32 bytes MD5][BackupHeader][calibration data]
+    std::cout.write(hash.c_str(), hash.size());
+    std::cout.write(reinterpret_cast<const char*>(&header), sizeof(BackupHeader));
+    std::cout.write(reinterpret_cast<const char*>(buff), size);
+
+    exit(EXIT_SUCCESS);
+}
+
 int main(int argc, char** argv) {
     g_argv0 = argv[0];
     int ret = 0;
@@ -244,7 +354,7 @@ int main(int argc, char** argv) {
     }
 
     /* Parse options */
-    const char* optstring = "rwfdvhzxiunmoe56b";
+    const char* optstring = "rwfdvhzxiunmoe56bs";
     unsigned int want_bits = 0;
     uint8_t calib_ver = RP_HW_PACK_ID_V6;
     bool factory = false;
@@ -319,6 +429,10 @@ int main(int argc, char** argv) {
                 want_bits |= WANT_FILTER_ZERO;
                 break;
 
+            case 's':
+                want_bits |= WANT_PRINT_INFO;
+                break;
+
             case 'h':
                 usage();
                 exit(EXIT_SUCCESS);
@@ -331,59 +445,20 @@ int main(int argc, char** argv) {
     }
 
     if (want_bits & WANT_WRITE && binary) {
-        const size_t BUFFER_SIZE = 4096;
-        std::vector<char> buffer(BUFFER_SIZE);
-        std::vector<char> all_data;
-        while (std::cin) {
-            std::cin.read(buffer.data(), BUFFER_SIZE);
-            size_t bytes_read = std::cin.gcount();
-            if (bytes_read > 0) {
-                all_data.insert(all_data.end(), buffer.begin(), buffer.begin() + bytes_read);
-            }
-        }
-        if (all_data.size() == 0)
-            exit(EXIT_FAILURE);
-        std::string hash;
-        std::vector<uint8_t> subvector(all_data.begin() + 32, all_data.end());
-        if (rp_UpdaterGetMD5(subvector, &hash) != RP_UP_OK) {
-            fprintf(stderr, "ERROR: MD5 calculation error!\n");
-            exit(EXIT_FAILURE);
-        }
-        auto file_hash = bytesToAsciiString(all_data, 32);
-        if (file_hash != hash) {
-            fprintf(stderr, "ERROR: MD5 does not match the data!\n");
-            exit(EXIT_FAILURE);
-        }
-        rp_calib_params_t calib;
-        ret = rp_CalibConvertEEPROM(subvector.data(), subvector.size(), &calib);
-        if (ret) {
-            fprintf(stderr, "ERROR: Convert data failed!\n");
-            return ret;
-        }
-        ret = rp_CalibrationWriteParamsEx(calib, factory);
-        if (ret) {
-            fprintf(stderr, "ERROR: Write failed!\n");
-            return ret;
-        }
-        exit(EXIT_SUCCESS);
+        writeBackup(factory);
     }
 
     if (want_bits & WANT_READ && binary) {
-        uint8_t* buff = NULL;
-        uint16_t size = 0;
-        int ret = rp_CalibGetEEPROM(&buff, &size, factory);
-        if (ret) {
-            fprintf(stderr, "ERROR: Read failed!\n");
-            return ret;
-        }
-        std::string hash;
-        if (rp_UpdaterGetMD5(std::vector<uint8_t>(buff, buff + size), &hash) != RP_UP_OK) {
-            fprintf(stderr, "ERROR: MD5 error!\n");
+        readBackup(factory);
+    }
+
+    if (want_bits & WANT_PRINT_INFO) {
+        if (argc > 2) {
+            auto file = argv[argc - 1];
+            printBackupInfo(file, want_bits);
+        } else {
             exit(EXIT_FAILURE);
         }
-        std::cout.write(hash.c_str(), hash.size());
-        std::cout.write(reinterpret_cast<const char*>(buff), size);
-        exit(EXIT_SUCCESS);
     }
 
     /* Sanity check */

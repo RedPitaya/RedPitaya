@@ -14,7 +14,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <algorithm>
+#include <fstream>
+#include <iostream>
 
+#include "common/rp_updater_common.h"
 #include "rp_eeprom.h"
 
 const char* c_wpCalParDesc_v1[eCalParEnd_v1][20] = {{"FE_CH1_FS_G_HI"},
@@ -300,4 +304,191 @@ void print_eeprom(rp_HPeModels_t model, rp_eepromWpData_t* data, int mode) {
 
 void print_eepromUni(rp_eepromUniData_t* data, int mode) {
     RpPrintEepromCalDataUni(data, mode & WANT_VERBOSE, mode & WANT_HEX);
+}
+
+// Helper function to read stdin efficiently
+bool readStdinToVector(std::vector<char>& out_data) {
+    constexpr size_t BUFFER_SIZE = 65536;
+    std::vector<char> buffer(BUFFER_SIZE);
+    out_data.clear();
+
+    while (std::cin) {
+        std::cin.read(buffer.data(), BUFFER_SIZE);
+        const size_t bytes_read = std::cin.gcount();
+        if (bytes_read > 0) {
+            out_data.insert(out_data.end(), buffer.data(), buffer.data() + bytes_read);
+        }
+        if (std::cin.eof())
+            break;
+        if (std::cin.fail() && !std::cin.eof())
+            return false;
+    }
+
+    return true;
+}
+
+// Helper function to get board MAC address
+bool getBoardMAC(uint8_t* mac) {
+    char* mac_str = nullptr;
+    if (rp_HPGetModelETH_MAC_Address(&mac_str) != RP_OK || mac_str == nullptr) {
+        fprintf(stderr, "ERROR: Failed to get board MAC address!\n");
+        return false;
+    }
+
+    // Parse MAC string "XX:XX:XX:XX:XX:XX" to bytes
+    unsigned int values[6];
+    if (sscanf(mac_str, "%x:%x:%x:%x:%x:%x", &values[0], &values[1], &values[2], &values[3], &values[4], &values[5]) != 6) {
+        fprintf(stderr, "ERROR: Failed to parse MAC address!\n");
+        return false;
+    }
+
+    for (int i = 0; i < 6; i++) {
+        mac[i] = static_cast<uint8_t>(values[i]);
+    }
+
+    return true;
+}
+
+std::string formatMAC(const uint8_t* mac) {
+    char buffer[18];
+    snprintf(buffer, sizeof(buffer), "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    return std::string(buffer);
+}
+
+// Helper function to get board model name
+bool getBoardModelName(std::string& model_name) {
+    char* name = nullptr;
+    if (rp_HPGetModelName(&name) != RP_OK || name == nullptr) {
+        fprintf(stderr, "ERROR: Failed to get board model name!\n");
+        return false;
+    }
+    model_name = name;
+    return true;
+}
+
+bool getBoardModel(rp_HPeModels_t& model) {
+    if (rp_HPGetModel(&model) != RP_OK) {
+        fprintf(stderr, "ERROR: Failed to get board model!\n");
+        return false;
+    }
+    return true;
+}
+
+std::string bytesToAsciiString(const std::vector<char>& data, size_t max_bytes) {
+    size_t bytes_to_process = std::min(data.size(), max_bytes);
+    return std::string(data.begin(), data.begin() + bytes_to_process);
+}
+
+std::vector<std::string> split(const std::string& text, const std::vector<char>& delimiters) {
+    std::vector<std::string> result;
+    std::string current_token;
+    for (char c : text) {
+        if (std::find(delimiters.begin(), delimiters.end(), c) != delimiters.end()) {
+            if (!current_token.empty()) {
+                result.push_back(current_token);
+                current_token.clear();
+            }
+        } else {
+            current_token += c;
+        }
+    }
+    if (!current_token.empty()) {
+        result.push_back(current_token);
+    }
+    return result;
+}
+
+void printBackupInfo(const char* filename, uint32_t want_bits) {
+    auto formatTimestamp = [](uint64_t timestamp) -> std::string {
+        char time_str[64];
+        time_t backup_time = static_cast<time_t>(timestamp);
+        struct tm* tm_info = localtime(&backup_time);
+        strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", tm_info);
+        return std::string(time_str);
+    };
+
+    // Read binary file
+    std::ifstream file(filename, std::ios::binary);
+    if (!file) {
+        fprintf(stderr, "ERROR: Failed to open file '%s'!\n", filename);
+        exit(EXIT_FAILURE);
+    }
+
+    // Get file size
+    file.seekg(0, std::ios::end);
+    size_t file_size = file.tellg();
+    file.seekg(0, std::ios::beg);
+
+    if (file_size == 0) {
+        fprintf(stderr, "ERROR: File is empty!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Read entire file
+    std::vector<char> all_data(file_size);
+    if (!file.read(all_data.data(), file_size)) {
+        fprintf(stderr, "ERROR: Failed to read file!\n");
+        exit(EXIT_FAILURE);
+    }
+    file.close();
+
+    constexpr size_t MD5_SIZE = 32;
+    constexpr size_t HEADER_SIZE = sizeof(BackupHeader);
+    constexpr size_t FULL_HEADER_SIZE = MD5_SIZE + HEADER_SIZE;
+
+    if (all_data.size() <= FULL_HEADER_SIZE) {
+        fprintf(stderr, "ERROR: Invalid backup data!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Extract MD5 hash
+    std::string file_hash = bytesToAsciiString(all_data, MD5_SIZE);
+
+    // Extract backup header
+    BackupHeader header;
+    memcpy(&header, all_data.data() + MD5_SIZE, HEADER_SIZE);
+
+    // Verify MD5
+    std::string calculated_hash;
+    const auto data_span = std::span<const uint8_t>(reinterpret_cast<const uint8_t*>(all_data.data() + MD5_SIZE), all_data.size() - MD5_SIZE);
+
+    bool hash_valid = false;
+    if (rp_UpdaterGetMD5(std::vector<uint8_t>(data_span.begin(), data_span.end()), &calculated_hash) == RP_UP_OK) {
+        hash_valid = (file_hash == calculated_hash);
+    }
+
+    // Print backup information
+    printf("=== Backup Information ===\n");
+    printf("File:          %s\n", filename);
+    printf("File size:     %zu bytes\n", all_data.size());
+    printf("MD5 hash:      %s\n", file_hash.c_str());
+    printf("Hash valid:    %s\n", hash_valid ? "YES" : "NO");
+    printf("\n");
+    printf("Board model:   %s (%d)\n", header.model_name, static_cast<int>(header.model_id));
+    printf("MAC address:   %s\n", formatMAC(header.mac).c_str());
+    printf("Created:       %s\n", formatTimestamp(header.timestamp).c_str());
+    printf("Calib. size:   %zu bytes\n", all_data.size() - FULL_HEADER_SIZE);
+    printf("\n");
+
+    // Print EEPROM data based on version
+    const uint8_t* calib_data = reinterpret_cast<const uint8_t*>(all_data.data() + FULL_HEADER_SIZE);
+    size_t calib_size = all_data.size() - FULL_HEADER_SIZE;
+    if (want_bits & WANT_VERBOSE) {
+        if (calib_size > 0 && calib_data[0] < RP_HW_PACK_ID_V5) {
+            print_eeprom(header.model_id, (rp_eepromWpData_t*)calib_data, want_bits);
+        } else if (calib_size > 0) {
+            print_eepromUni((rp_eepromUniData_t*)calib_data, want_bits);
+        }
+    }
+    if (want_bits & WANT_PRINT) {
+        rp_calib_params_t calib;
+        auto ret = rp_CalibConvertEEPROM(const_cast<uint8_t*>(calib_data), calib_size, &calib);
+        if (ret) {
+            fprintf(stderr, "ERROR: Convert data failed!\n");
+            exit(EXIT_FAILURE);
+        }
+        rp_CalibPrint(&calib);
+    }
+
+    exit(EXIT_SUCCESS);
 }

@@ -67,7 +67,7 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 
 
 target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib)
-target_link_libraries(${PROJECT_NAME} PRIVATE  rp-updater rp-hw-calib rp-hw-profiles m)
+target_link_libraries(${PROJECT_NAME} PRIVATE  rp rp-updater rp-hw-calib rp-hw-profiles m)
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${INSTALL_DIR}/bin)
 
