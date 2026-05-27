@@ -151,7 +151,7 @@ class CBoard : public QObject {
     uint8_t m_adcChannels;
     bool m_IsACDC;
     bool m_IsAttenuator;
-    uint8_t m_activeChannels;
+    adc_channels_t m_activeChannels;
     uint32_t m_blockSize;
     DataLib::CBuffersCached::Ptr m_buffer;
 };

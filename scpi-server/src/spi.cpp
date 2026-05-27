@@ -288,7 +288,7 @@ scpi_result_t RP_SPI_Set(scpi_t* context, bool cs_state, bool init_rx) {
         free(buffer);
         return SCPI_RES_ERR;
     }
-    auto result = rp_SPI_SetBufferForMessage(index, buffer, init_rx, buf_size, cs_state);
+    auto result = rp_SPI_SetBufferForMessage(index, buffer, buf_size, init_rx, cs_state);
     if (RP_OK != result) {
         RP_LOG_CRIT("Failed to set TX buffer: %s", rp_HwGetError(result));
         free(buffer);
@@ -333,7 +333,7 @@ scpi_result_t RP_SPI_SetRX2(scpi_t* context, bool cs_state) {
     }
     index = cmd[0];
     size = cmd[1];
-    auto result = rp_SPI_SetBufferForMessage(index, NULL, true, size, cs_state);
+    auto result = rp_SPI_SetBufferForMessage(index, NULL, size, true, cs_state);
     if (RP_OK != result) {
         RP_LOG_CRIT("Failed to set RX buffer: %s", rp_HwGetError(result));
         return SCPI_RES_ERR;

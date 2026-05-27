@@ -47,7 +47,6 @@ LIBRP_HW_CAN_DIR  		= rp-api/api-hw-can
 LIBRP_HW_PROFILES_DIR	= rp-api/api-hw-profiles
 LIBRP_HW_CALIB_DIR		= rp-api/api-hw-calib
 LIBRP_CALIB_DIR		    = rp-api/api-calib
-# LIBRP2_DIR      		= rp-api/api2
 LIBRP250_12_DIR 		= rp-api/api-250-12
 LIBRP_DSP_DIR   		= rp-api/api-dsp
 LIBRP_SWEEP_DIR  		= rp-api/api-sweep
@@ -61,7 +60,6 @@ ECOSYSTEM_DIR   		= Applications/ecosystem
 .PHONY: api librp librp250_12 librp_hw librp_dsp librp_hw_profiles librp_hw_calibration librp_hw_can librparb librp_sweep librpapp librpla
 
 api: librp librp_hw librp_hw_can librp_dsp librpapp librp_formatter librparb librp_sweep librpla librpupdater librp_calibration
-# api2: librp2
 
 librp: librp250_12 librp_hw_calibration librp_hw_profiles
 	cmake -B$(abspath $(LIBRP_DIR)/build) -S$(abspath $(LIBRP_DIR)) $(CMAKEVAR)
@@ -311,21 +309,21 @@ scpi_clean:
 # Red Pitaya tools
 ################################################################################
 
-LA_DIR             = Test/la
-LCR_DIR            = Test/lcr
-BODE_DIR           = Test/bode
-MONITOR_DIR        = Test/monitor
-PROFILES_DIR       = Test/profiles
-ACQUIRE_DIR        = Test/acquire
-ACQUIRE_P_DIR      = Test/acquire_p
-CALIB_DIR          = Test/calib
-FILTER_CALIB_DIR   = Test/filter_calib
-GENERATOR_DIR	   = Test/generate
-SPECTRUM_DIR       = Test/spectrum
-LED_CONTROL_DIR    = Test/led_control
-XADC_DIR           = Test/xadc
-UPDATER_DIR        = Test/updater
-DAISY_TOOL_DIR     = Test/daisy_tool
+LA_DIR             = tools/la
+LCR_DIR            = tools/lcr
+BODE_DIR           = tools/bode
+MONITOR_DIR        = tools/monitor
+PROFILES_DIR       = tools/profiles
+ACQUIRE_DIR        = tools/acquire
+ACQUIRE_P_DIR      = tools/acquire_p
+CALIB_DIR          = tools/calib
+FILTER_CALIB_DIR   = tools/filter_calib
+GENERATOR_DIR	   = tools/generate
+SPECTRUM_DIR       = tools/spectrum
+LED_CONTROL_DIR    = tools/led_control
+XADC_DIR           = tools/xadc
+UPDATER_DIR        = tools/updater
+DAISY_TOOL_DIR     = tools/daisy_tool
 E3_LED_CON_DIR     = tools/e3_led_controller
 STARTUPSH          = $(INSTALL_DIR)/sbin/startup.sh
 

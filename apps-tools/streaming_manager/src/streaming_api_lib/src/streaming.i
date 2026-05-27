@@ -5,6 +5,7 @@
 %include <typemaps.i>
 %include <cstring.i>
 %include <std_string.i>
+%include <std_array.i>
 %include <std_vector.i>
 %include <std_list.i>
 %include <carrays.i>
@@ -32,6 +33,7 @@
 %template(Int16Vector) std::vector<int16_t>;
 %template(Int8Vector) std::vector<int8_t>;
 %template(StringList) std::list<std::string>;
+%template(BoolArray4) std::array<bool, 4>;
 
 %typemap(out) std::vector<int16_t>* %{
     if (!$1) {

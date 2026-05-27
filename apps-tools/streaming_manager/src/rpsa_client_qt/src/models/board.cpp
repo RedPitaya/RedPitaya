@@ -131,8 +131,8 @@ CBoard::CBoard(QString ip)
     });
 
     m_configManager->getActiveChannelsNofiy.connect([=](auto host, auto channels) {
-        addLog(" Active channels " + QString::fromStdString(channels));
-        m_activeChannels = std::stoi(channels);
+        addLog(" Active channels " + QString::fromStdString(channels.format().c_str()));
+        m_activeChannels = channels;
         createStreaming();
         ChartDataHolder::instance()->regRP(ip);
         Q_EMIT updateSaveFileName();
@@ -286,8 +286,8 @@ auto CBoard::startADCFPGAStreaming() -> void {
     memoryManager->setMemoryBlockSize(m_blockSize);
     memoryManager->reallocateBlocks();
     auto blocks = memoryManager->getFreeBlockCount();
-    auto reserved __attribute__((unused)) = memoryManager->reserveMemory(uio_lib::MM_ADC, blocks, m_activeChannels);
-    m_buffer->generateBuffersEmpty(m_activeChannels, memoryManager->getRegions(uio_lib::MM_ADC), DataLib::sizeHeader());
+    auto reserved __attribute__((unused)) = memoryManager->reserveMemory(uio_lib::MM_ADC, blocks, m_activeChannels.count());
+    m_buffer->generateBuffersEmptyADC(m_activeChannels, memoryManager->getRegions(uio_lib::MM_ADC), DataLib::sizeHeader());
     TRACE_SHORT("Reserved blocks %d", reserved)
     m_configManager->sendADCFPGAStart(m_ip.toStdString());
 }
