@@ -225,12 +225,9 @@ int main(int argc, char* argv[]) {
 
         con_server->startStreamingNofiy.connect([verbMode, isMaster]() { startServer(verbMode, false, isMaster != uio_lib::BoardMode::SLAVE); });
 
-        con_server->startDacStreamingNofiy.connect([verbMode](auto activeChannels) {
-            uint8_t ac = stoi(activeChannels);
-            startDACServer(verbMode, ac);
-        });
+		con_server->startDacStreamingNofiy.connect([verbMode](auto activeChannels) { startDACServer(verbMode, activeChannels); });
 
-        con_server->stopStreamingNofiy.connect([]() { stopNonBlocking(ServerNetConfigManager::EStopReason::NORMAL); });
+		con_server->stopStreamingNofiy.connect([]() { stopNonBlocking(ServerNetConfigManager::EStopReason::NORMAL); });
 
         con_server->stopDacStreamingNofiy.connect([]() { stopDACNonBlocking(dac_streaming_lib::CDACStreamingManager::NR_STOP); });
 

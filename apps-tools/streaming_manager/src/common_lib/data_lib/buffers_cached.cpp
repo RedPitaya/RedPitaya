@@ -62,34 +62,88 @@ auto CBuffersCached::generateBuffers(std::vector<uio_lib::MemoryRegionT> blocks,
     sem_init(&m_spacesem, 0, m_ringSize);
 }
 
-auto CBuffersCached::generateBuffersEmpty(uint32_t channels, std::vector<uio_lib::MemoryRegionT> blocks, size_t headerSize) -> void {
-    if (channels == 0) {
-        ERROR_LOG("No channels")
-        return;
-    }
-    m_ringStart = 0;
-    m_ringEnd = 0;
-    m_ringSize = blocks.size() / channels;
-    profiler::setTimePoint("initBuffer");
-    size_t currentBlock = 0;
-    for (auto i = 0u; i < m_ringSize; i++) {
-        auto pack = DataLib::CDataBuffersPackDMA::Create();
-        for (auto i = 0u; i < channels; i++) {
-            auto bits = 8;
-            auto block = blocks[currentBlock++];
-            auto buff = DataLib::CDataBufferDMA::Create(block.start, block.size, block.startMemory, bits);
-            if (headerSize) {
-                buff->initHeaderAddress(headerSize);
-                memset(buff->getMappedMemory(), 0, headerSize);
-            }
-            pack->addBuffer((EDataBuffersPackChannel)i, buff);
-            m_dataSize = m_dataSize < buff->getDataLenght() ? buff->getDataLenght() : m_dataSize;
-        }
-        m_buffers.push_back(pack);
-    }
-    profiler::printuS("initBuffer", "Init buffer.");
-    sem_init(&m_countsem, 0, 0);
-    sem_init(&m_spacesem, 0, m_ringSize);
+constexpr auto toPackChannel = [](auto ch) -> EDataBuffersPackChannel {
+	using T = std::decay_t<decltype(ch)>;
+
+	if constexpr (std::is_same_v<T, DACChannels>) {
+		switch (ch) {
+			case DACChannels::DAC_CH1:
+				return EDataBuffersPackChannel::CH1;
+			case DACChannels::DAC_CH2:
+				return EDataBuffersPackChannel::CH2;
+			default:
+				FATAL("Unsupported DAC channel")
+		}
+	} else if constexpr (std::is_same_v<T, ADCChannels>) {
+		switch (ch) {
+			case ADCChannels::ADC_CH1:
+				return EDataBuffersPackChannel::CH1;
+			case ADCChannels::ADC_CH2:
+				return EDataBuffersPackChannel::CH2;
+			case ADCChannels::ADC_CH3:
+				return EDataBuffersPackChannel::CH3;
+			case ADCChannels::ADC_CH4:
+				return EDataBuffersPackChannel::CH4;
+			default:
+				FATAL("Unsupported ADC channel")
+		}
+	} else if constexpr (std::is_same_v<T, EDataBuffersPackChannel>) {
+		return ch;
+	} else {
+		static_assert(sizeof(T) == 0, "Unsupported channel type");
+		return EDataBuffersPackChannel::CH1;
+	}
+};
+
+template<typename ChannelsType>
+auto CBuffersCached::generateBuffersEmpty(ChannelsType channels, std::vector<uio_lib::MemoryRegionT> blocks, size_t headerSize) -> void
+{
+	using EnumType = typename ChannelsType::EnumType;
+
+	if (channels.count() == 0) {
+		ERROR_LOG("No channels")
+		return;
+	}
+
+	m_ringStart = 0;
+	m_ringEnd = 0;
+	m_ringSize = blocks.size() / channels.count();
+
+	profiler::setTimePoint("initBuffer");
+	size_t currentBlock = 0;
+
+	for (auto i = 0u; i < m_ringSize; i++) {
+		auto pack = DataLib::CDataBuffersPackDMA::Create();
+
+		for (auto ch : channels) {
+			auto block = blocks[currentBlock++];
+			auto buff = DataLib::CDataBufferDMA::Create(block.start, block.size, block.startMemory, 8);
+
+			if (headerSize) {
+				buff->initHeaderAddress(headerSize);
+				memset(buff->getMappedMemory(), 0, headerSize);
+			}
+			auto pack_ch = toPackChannel(static_cast<EnumType>(ch));
+			pack->addBuffer(pack_ch, buff);
+			m_dataSize = std::max<size_t>(m_dataSize, buff->getDataLenght());
+		}
+
+		m_buffers.push_back(pack);
+	}
+
+	profiler::printuS("initBuffer", "Init buffer.");
+	sem_init(&m_countsem, 0, 0);
+	sem_init(&m_spacesem, 0, m_ringSize);
+}
+
+auto CBuffersCached::generateBuffersEmptyDAC(dac_channels_t channels, std::vector<uio_lib::MemoryRegionT> blocks, size_t headerSize) -> void
+{
+	generateBuffersEmpty(channels, blocks, headerSize);
+}
+
+auto CBuffersCached::generateBuffersEmptyADC(adc_channels_t channels, std::vector<uio_lib::MemoryRegionT> blocks, size_t headerSize) -> void
+{
+	generateBuffersEmpty(channels, blocks, headerSize);
 }
 
 auto CBuffersCached::initHeadersADC() -> bool {
@@ -106,18 +160,20 @@ auto CBuffersCached::initHeadersADC() -> bool {
     return true;
 }
 
-auto CBuffersCached::initHeadersDAC(uint8_t channels) -> bool {
-    std::lock_guard lock(m_mtx);
-    for (size_t i = 0; i < m_buffers.size(); i++) {
-        auto pack = m_buffers[i];
-        for (auto ch = (int)DataLib::EDataBuffersPackChannel::CH1; ch <= (int)DataLib::EDataBuffersPackChannel::CH4; ch++) {
-            auto buff = pack->getBuffer((DataLib::EDataBuffersPackChannel)ch);
-            if (buff != NULL) {
-                DataLib::initHeaderDAC(buff, pack->getLenghtDataBuffers(), channels);
-            }
-        }
-    }
-    return true;
+auto CBuffersCached::initHeadersDAC(dac_channels_t channels) -> bool
+{
+	std::lock_guard lock(m_mtx);
+	for (size_t i = 0; i < m_buffers.size(); i++) {
+		auto pack = m_buffers[i];
+		for (auto ch : channels) {
+			auto pack_ch = toPackChannel(static_cast<DACChannels>(ch));
+			auto buff = pack->getBuffer(pack_ch);
+			if (buff != NULL) {
+				DataLib::initHeaderDAC(buff, pack->getLenghtDataBuffers(), channels.count());
+			}
+		}
+	}
+	return true;
 }
 
 auto CBuffersCached::notifyToDestory() -> bool {

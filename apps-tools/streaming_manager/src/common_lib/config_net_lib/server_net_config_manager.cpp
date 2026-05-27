@@ -81,10 +81,11 @@ auto ServerNetConfigManager::receiveCommand(uint32_t command, std::string tag) -
     }
 
     if (c == CNetConfigManager::ECommands::CS_REQUEST_DAC_SERVER_START) {
-        startDacStreamingNofiy(tag);
-    }
+		dac_channels_t ac = dac_channels_t::fromString(tag);
+		startDacStreamingNofiy(ac);
+	}
 
-    if (c == CNetConfigManager::ECommands::CS_REQUEST_DAC_SERVER_STOP) {
+	if (c == CNetConfigManager::ECommands::CS_REQUEST_DAC_SERVER_STOP) {
         stopDacStreamingNofiy();
     }
 
@@ -102,38 +103,38 @@ auto ServerNetConfigManager::receiveCommand(uint32_t command, std::string tag) -
     }
 
     if (c == CNetConfigManager::ECommands::CS_REQUEST_SERVER_ACTIVE_CHANNELS) {
-        uint8_t ac = 0;
-        for (int i = 1; i <= 4 && i <= m_maxADCChannels; i++) {
-            if (m_settings.getADCChannels(i).value == CStreamSettings::State::ON) {
-                ac++;
-            }
-        }
-        m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_ACTIVE_CHANNELS, std::to_string(ac));
-    }
+		adc_channels_t ac;
+		for (int i = 1; i <= 4 && i <= m_maxADCChannels; i++) {
+			if (m_settings.getADCChannels(i).value == CStreamSettings::State::ON) {
+				ac.enable((ADCChannels) (i - 1));
+			}
+		}
+		m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_ACTIVE_CHANNELS, ac.toString());
+	}
 
-    if (c == CNetConfigManager::ECommands::CS_REQUEST_LOAD_SETTING_FROM_FILE) {
-        if (m_settings.readFromFile(m_file_settings)) {
-            getNewSettingsNofiy();
-            memoryBlockSizeChangeNofiy();
+	if (c == CNetConfigManager::ECommands::CS_REQUEST_LOAD_SETTING_FROM_FILE) {
+		if (m_settings.readFromFile(m_file_settings)) {
+			getNewSettingsNofiy();
+			memoryBlockSizeChangeNofiy();
             m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_LOAD_SETTING_FROM_FILE_SUCCES);
-        } else {
-            m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_LOAD_SETTING_FROM_FILE_FAIL);
-        }
-    }
+		} else {
+			m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_LOAD_SETTING_FROM_FILE_FAIL);
+		}
+	}
 
-    if (c == CNetConfigManager::ECommands::CS_REQUEST_SAVE_SETTING_TO_FILE) {
-        if (m_settings.writeToFile(m_file_settings)) {
-            m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_SAVE_SETTING_TO_FILE_SUCCES);
-        } else {
-            m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_SAVE_SETTING_TO_FILE_FAIL);
-        }
-    }
+	if (c == CNetConfigManager::ECommands::CS_REQUEST_SAVE_SETTING_TO_FILE) {
+		if (m_settings.writeToFile(m_file_settings)) {
+			m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_SAVE_SETTING_TO_FILE_SUCCES);
+		} else {
+			m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_SAVE_SETTING_TO_FILE_FAIL);
+		}
+	}
 
-    if (c == CNetConfigManager::ECommands::CS_REQUEST_SERVER_SETTINGS) {
-        m_pNetConfManager->sendConfig(m_settings.toJson(), false);
-    }
+	if (c == CNetConfigManager::ECommands::CS_REQUEST_SERVER_SETTINGS) {
+		m_pNetConfManager->sendConfig(m_settings.toJson(), false);
+	}
 
-    if (c == CNetConfigManager::ECommands::CS_REQUEST_SERVER_SETTINGS_VARIABLE) {
+	if (c == CNetConfigManager::ECommands::CS_REQUEST_SERVER_SETTINGS_VARIABLE) {
         m_pNetConfManager->sendData(tag, m_settings.getValue(tag));
     }
 }

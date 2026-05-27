@@ -45,7 +45,7 @@ FetchContent_Declare(json
         )
 FetchContent_MakeAvailable(json)
 
-FILE(GLOB_RECURSE INC_ALL "*.h")
+FILE(GLOB_RECURSE INC_ALL "*.h*")
 
 add_library(${PROJECT_NAME} ${INC_ALL})
 

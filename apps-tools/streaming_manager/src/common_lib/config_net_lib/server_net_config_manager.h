@@ -4,6 +4,7 @@
 #include "broadcast_lib/asio_broadcast_socket.h"
 #include "data_lib/signal.hpp"
 #include "net_config_manager.h"
+#include "settings_lib/channels.hpp"
 #include "settings_lib/stream_settings.h"
 
 class ServerNetConfigManager {
@@ -72,8 +73,8 @@ class ServerNetConfigManager {
     sigslot::signal<> clientConnectedNofiy;
     sigslot::signal<> clientDisconnectedNofiy;
 
-    sigslot::signal<const std::string&> startDacStreamingNofiy;
-    sigslot::signal<> stopDacStreamingNofiy;
+	sigslot::signal<dac_channels_t> startDacStreamingNofiy;
+	sigslot::signal<> stopDacStreamingNofiy;
 
     sigslot::signal<> getServerModeNofiy;
 

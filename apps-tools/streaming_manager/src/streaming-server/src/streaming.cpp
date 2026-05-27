@@ -77,8 +77,9 @@ auto startServer(bool verbMode, bool testMode, bool is_master) -> void {
         auto max_channels = ClientOpt::getADCChannels();
         auto buffersTestMode = testMode;
 #ifdef RP_PLATFORM
-        use_calib = settings.getADCCalibration();
-        if (rp_CalibInit() != RP_HW_CALIB_OK) {
+		bool isNewCalib = false;
+		use_calib = settings.getADCCalibration();
+		if (rp_CalibInit() != RP_HW_CALIB_OK) {
             fprintf(stderr, "Error init calibration\n");
         }
 #else
@@ -89,7 +90,6 @@ auto startServer(bool verbMode, bool testMode, bool is_master) -> void {
         int32_t ch_off[MAX_ADC_CHANNELS] __attribute__((unused)) = {0, 0, 0, 0};
         double ch_gain[MAX_ADC_CHANNELS] __attribute__((unused)) = {1, 1, 1, 1};
         bool filterBypass = true;
-        bool isNewCalib = false;
         uint32_t aa_ch[MAX_ADC_CHANNELS] __attribute__((unused)) = {0, 0, 0, 0};
         uint32_t bb_ch[MAX_ADC_CHANNELS] __attribute__((unused)) = {0, 0, 0, 0};
         uint32_t kk_ch[MAX_ADC_CHANNELS] __attribute__((unused)) = {0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF};

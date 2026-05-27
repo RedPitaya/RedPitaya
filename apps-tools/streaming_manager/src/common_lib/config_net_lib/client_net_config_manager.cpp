@@ -287,10 +287,11 @@ auto ClientNetConfigManager::receiveCommand(uint32_t command, std::string tag, s
     }
 
     if (c == CNetConfigManager::ECommands::CS_RESPONSE_ACTIVE_CHANNELS) {
-        getActiveChannelsNofiy(sender->m_manager->getHost(), tag);
-    }
+		adc_channels_t ac = adc_channels_t::fromString(tag);
+		getActiveChannelsNofiy(sender->m_manager->getHost(), ac);
+	}
 
-    if (c == CNetConfigManager::ECommands::CS_RESPONSE_SERVER_MODE_TCP) {
+	if (c == CNetConfigManager::ECommands::CS_RESPONSE_SERVER_MODE_TCP) {
         serverModeSDNofiy(sender->m_manager->getHost());
     }
 
@@ -457,12 +458,16 @@ auto ClientNetConfigManager::sendADCServerStop(const std::string& host) -> bool 
     return false;
 }
 
-auto ClientNetConfigManager::sendDACServerStart(const std::string& host, const std::string activeChannels) -> bool {
-    auto it = std::find_if(std::begin(m_clients), std::end(m_clients), [&host](const std::shared_ptr<Clients> c) { return c->m_manager->getHost() == host; });
-    if (it != std::end(m_clients)) {
-        return it->operator->()->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_DAC_SERVER_START, activeChannels);
-    }
-    return false;
+auto ClientNetConfigManager::sendDACServerStart(const std::string &host, const dac_channels_t &activeChannels) -> bool
+{
+	auto it = std::find_if(std::begin(m_clients), std::end(m_clients), [&host](const std::shared_ptr<Clients> c) {
+		return c->m_manager->getHost() == host;
+	});
+	if (it != std::end(m_clients)) {
+		return it->operator->()->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_DAC_SERVER_START,
+														activeChannels.toString());
+	}
+	return false;
 }
 
 auto ClientNetConfigManager::sendDACServerStop(const std::string& host) -> bool {

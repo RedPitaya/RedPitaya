@@ -27,12 +27,12 @@ class ConfigStreamClient {
     auto requestADCServerStart(const std::string host) -> bool;
     auto requestADCServerStop(const std::string host) -> bool;
     auto requestADCServerFPGAStart(const std::string host) -> bool;
-    auto requestDACServerStart(const std::string host, uint8_t channels) -> bool;
+	auto requestDACServerStart(const std::string host, bool ch1Enable, bool ch2Enable) -> bool;
 
-    auto sendConfig(std::string key, std::string value) -> bool;
-    auto sendConfig(std::string host, std::string key, std::string value) -> bool;
-    auto getConfig(std::string key) -> std::string;
-    auto getConfig(std::string host, std::string key) -> std::string;
+	auto sendConfig(std::string key, std::string value) -> bool;
+	auto sendConfig(std::string host, std::string key, std::string value) -> bool;
+	auto getConfig(std::string key) -> std::string;
+	auto getConfig(std::string host, std::string key) -> std::string;
 
     auto sendFileConfig(std::string config) -> bool;
     auto sendFileConfig(std::string host, std::string config) -> bool;

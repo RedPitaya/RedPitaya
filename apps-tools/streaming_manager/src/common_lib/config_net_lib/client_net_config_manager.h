@@ -1,11 +1,12 @@
 #ifndef CONFIG_NET_LIB_CNCM_H
 #define CONFIG_NET_LIB_CNCM_H
 
-#include <ctime>
 #include "broadcast_lib/asio_broadcast_socket.h"
 #include "data_lib/signal.hpp"
 #include "net_config_manager.h"
+#include "settings_lib/channels.hpp"
 #include "settings_lib/stream_settings.h"
+#include <ctime>
 
 class ClientNetConfigManager : public CStreamSettings {
    public:
@@ -17,21 +18,29 @@ class ClientNetConfigManager : public CStreamSettings {
         std::time_t ts;
     };
 
-    enum class Errors { CANNT_SET_DATA_TO_CONFIG, ERROR_SEND_CONFIG, SERVER_INTERNAL, BROADCAST_ERROR, BROADCAST_ERROR_PARSE, CONNECT_TIMEOUT };
 
-    using Ptr = std::shared_ptr<ClientNetConfigManager>;
+	enum class Errors {
+		CANNT_SET_DATA_TO_CONFIG,
+		ERROR_SEND_CONFIG,
+		SERVER_INTERNAL,
+		BROADCAST_ERROR,
+		BROADCAST_ERROR_PARSE,
+		CONNECT_TIMEOUT
+	};
 
-    ClientNetConfigManager(std::string default_file_settings_path, bool loadConfig = true);
-    ~ClientNetConfigManager();
+	using Ptr = std::shared_ptr<ClientNetConfigManager>;
 
-    auto startBroadcast(std::string host, uint16_t port) -> void;
-    auto connectToServers(std::vector<std::string> _hosts, uint16_t port) -> void;
-    auto isServersConnected() -> bool;
-    auto diconnectAll() -> void;
+	ClientNetConfigManager(std::string default_file_settings_path, bool loadConfig = true);
+	~ClientNetConfigManager();
 
-    auto getBroadcastClients() -> const std::list<BroadCastClients>;
-    auto getHosts() -> std::list<std::string>;
-    auto getModeByHost(const std::string& host) -> broadcast_lib::EMode;
+	auto startBroadcast(std::string host, uint16_t port) -> void;
+	auto connectToServers(std::vector<std::string> _hosts, uint16_t port) -> void;
+	auto isServersConnected() -> bool;
+	auto diconnectAll() -> void;
+
+	auto getBroadcastClients() -> const std::list<BroadCastClients>;
+	auto getHosts() -> std::list<std::string>;
+	auto getModeByHost(const std::string& host) -> broadcast_lib::EMode;
     auto getLocalSettingsOfHost(const std::string& host) -> CStreamSettings*;
 
     auto sendConfigVariable(const std::string& host, const std::string key, const std::string value) -> bool;
@@ -39,10 +48,10 @@ class ClientNetConfigManager : public CStreamSettings {
     auto sendSaveToFile(const std::string& host) -> bool;
     auto sendADCServerStart(const std::string& host) -> bool;
     auto sendADCServerStop(const std::string& host) -> bool;
-    auto sendDACServerStart(const std::string& host, const std::string activeChannels) -> bool;
-    auto sendDACServerStop(const std::string& host) -> bool;
-    auto sendADCFPGAStart(const std::string& host) -> bool;
-    auto sendDACFPGAStart(const std::string& host) -> bool;
+	auto sendDACServerStart(const std::string &host, const dac_channels_t &activeChannels) -> bool;
+	auto sendDACServerStop(const std::string &host) -> bool;
+	auto sendADCFPGAStart(const std::string &host) -> bool;
+	auto sendDACFPGAStart(const std::string& host) -> bool;
     auto sendGetServerMode(const std::string& host) -> bool;
     auto sendActiveDACChannels(const std::string& host, std::string& count) -> bool;
 
@@ -91,8 +100,8 @@ class ClientNetConfigManager : public CStreamSettings {
     sigslot::signal<std::string&> configFileMissedNotify;
 
     sigslot::signal<std::string&, std::string> getMemBlockSizeNofiy;
-    sigslot::signal<std::string&, std::string> getActiveChannelsNofiy;
-    sigslot::signal<ClientNetConfigManager::Errors, std::string, error_code> errorNofiy;
+	sigslot::signal<std::string &, adc_channels_t> getActiveChannelsNofiy;
+	sigslot::signal<ClientNetConfigManager::Errors, std::string, error_code> errorNofiy;
 
    private:
     struct Clients {

@@ -33,9 +33,10 @@ auto setDACServer(ServerNetConfigManager::Ptr serverNetConfig) -> void {
     g_serverDACNetConfig = serverNetConfig;
 }
 
-auto startDACServer(bool verbMode, uint8_t activeChannels) -> void {
-    if (!g_serverDACNetConfig)
-        return;
+auto startDACServer(bool verbMode, dac_channels_t activeChannels) -> void
+{
+	if (!g_serverDACNetConfig)
+		return;
     g_gen = nullptr;
     g_dac_app = nullptr;
     g_dac_manger = nullptr;
@@ -115,43 +116,41 @@ auto startDACServer(bool verbMode, uint8_t activeChannels) -> void {
                 return;
             }
             g_dac_manger->notifyStop.connect([](CDACStreamingManager::NotifyResult status) { stopDACNonBlocking(status); });
-            bool chActive[2] = {false, false};
-            if (!g_dac_manger->getChannels(&chActive[0], &chActive[1])) {
-                printWithLog(LOG_ERR, stdout, "There are no channels in the file.\n");
-                stopDACNonBlocking(CDACStreamingManager::NR_EMPTY);
+			if (!g_dac_manger->getChannels(activeChannels)) {
+				printWithLog(LOG_ERR, stdout, "There are no channels in the file.\n");
+				stopDACNonBlocking(CDACStreamingManager::NR_EMPTY);
                 return;
-            }
-            activeChannels = (int)chActive[0] + (int)chActive[1];
-        }
+			}
+		}
 
-        memmanager->releaseMemory(MM_DAC);
-        memmanager->setReserverdMemory(uio_lib::MM_DAC, settings.getDACSize());
-        auto mbSize = memmanager->getMemoryBlockSize();
-        auto ramSize = memmanager->getReserverdMemory(MM_DAC);
+		memmanager->releaseMemory(MM_DAC);
+		memmanager->setReserverdMemory(uio_lib::MM_DAC, settings.getDACSize());
+		auto mbSize = memmanager->getMemoryBlockSize();
+		auto ramSize = memmanager->getReserverdMemory(MM_DAC);
         if (ramSize < memmanager->getMinRAMSize(MM_DAC)) {
             printWithLog(LOG_ERR, stdout, "Not enough memory for MM_DAC mode\n") stopDACNonBlocking(CDACStreamingManager::NR_MEM_ERROR);
             return;
         }
         auto freeblocks = ramSize / mbSize;
-        auto reservedBlocks = memmanager->reserveMemory(MM_DAC, freeblocks, activeChannels);
+		auto reservedBlocks = memmanager->reserveMemory(MM_DAC, freeblocks, activeChannels.count());
 
-        if (!g_gen) {
-            printWithLog(LOG_ERR, stderr, "[Streaming] Error init generator module\n");
+		if (!g_gen) {
+			printWithLog(LOG_ERR, stderr, "[Streaming] Error init generator module\n");
+			return;
+		}
+
+		if (reservedBlocks == 0) {
+			printWithLog(LOG_ERR, stdout, "Can't reserve memory via memory manager\n");
+			stopDACNonBlocking(CDACStreamingManager::NR_MEM_ERROR);
             return;
-        }
+		}
 
-        if (reservedBlocks == 0) {
-            printWithLog(LOG_ERR, stdout, "Can't reserve memory via memory manager\n");
-            stopDACNonBlocking(CDACStreamingManager::NR_MEM_ERROR);
-            return;
-        }
+		g_dac_manger->getBufferManager()->generateBuffersEmptyDAC(activeChannels, memmanager->getRegions(MM_DAC), DataLib::sizeHeader());
 
-        g_dac_manger->getBufferManager()->generateBuffersEmpty(activeChannels, memmanager->getRegions(MM_DAC), DataLib::sizeHeader());
+		g_dac_app = std::make_shared<CDACStreamingApplication>(g_dac_manger, g_gen);
+		g_gen->setDataSize(settings.getMemoryBlockSize());
 
-        g_dac_app = std::make_shared<CDACStreamingApplication>(g_dac_manger, g_gen);
-        g_gen->setDataSize(settings.getMemoryBlockSize());
-
-        g_dac_app->runNonBlock();
+		g_dac_app->runNonBlock();
         if (g_dac_manger->isLocalMode()) {
             g_serverDACNetConfig->sendDACServerStartedSD();
         } else {
@@ -206,8 +205,8 @@ auto stopDACServer(CDACStreamingManager::NotifyResult x) -> void {
                     g_serverDACNetConfig->sendDACServerMemoryErrorStopped();
                     break;
                 case CDACStreamingManager::NR_MEM_MODIFY:
-                    g_serverDACNetConfig->sendDACServerConfigErrorStopped();
-                    break;
+					g_serverDACNetConfig->sendDACServerMemoryModifyStopped();
+					break;
                 case CDACStreamingManager::NR_SETTINGS_ERROR:
                     g_serverDACNetConfig->sendDACServerConfigErrorStopped();
                     break;

@@ -1,6 +1,7 @@
 #ifndef CALLBACKS_H
 #define CALLBACKS_H
 
+#include <array>
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -37,10 +38,10 @@ class ConfigCallback {
     virtual void configErrorTimeout(ConfigStreamClient*, std::string) {}
     virtual void configErrorFileMissed(ConfigStreamClient*, std::string) {}
     virtual void configMemoryBlockSize(ConfigStreamClient*, std::string, size_t) {}
-    virtual void configActiveChannels(ConfigStreamClient*, std::string, size_t) {}
+	virtual void configActiveChannels(ConfigStreamClient *, std::string, std::array<bool, 4>) {}
 
-    virtual void configSuccessSend(ConfigStreamClient*, std::string) {}
-    virtual void configFailSend(ConfigStreamClient*, std::string) {}
+	virtual void configSuccessSend(ConfigStreamClient *, std::string) {}
+	virtual void configFailSend(ConfigStreamClient*, std::string) {}
     virtual void configSuccessSave(ConfigStreamClient*, std::string) {}
     virtual void configFailSave(ConfigStreamClient*, std::string) {}
 

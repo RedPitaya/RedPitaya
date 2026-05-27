@@ -97,33 +97,45 @@ auto requestMemoryBlockSizeCommon(std::shared_ptr<ConfigStreamClient> cl, const 
     return !timeout;
 }
 
-auto requestActiveChannelsCommon(std::shared_ptr<ConfigStreamClient> cl, const std::list<std::string>& hosts, std::map<std::string, uint32_t>* channels, bool verbose) -> bool {
-    std::atomic<int> rstart_counter;
+auto requestActiveChannelsCommon(std::shared_ptr<ConfigStreamClient> cl,
+								 const std::list<std::string> &hosts,
+								 std::map<std::string, adc_channels_t> *channels,
+								 bool verbose) -> bool
+{
+	std::atomic<int> rstart_counter;
 
-    class LocalCb : public ConfigCallback {
+	class LocalCb : public ConfigCallback
+	{
+		void configError(ConfigStreamClient *cl, std::string host, int error) override
+		{
+			const std::lock_guard<std::mutex> lock(g_rmutex);
+			(*rstart_counter)--;
+		}
 
-        void configError(ConfigStreamClient* cl, std::string host, int error) override {
-            const std::lock_guard<std::mutex> lock(g_rmutex);
-            (*rstart_counter)--;
-        }
+		void configActiveChannels(ConfigStreamClient *cl, std::string host, std::array<bool, 4> ch) override
+		{
+			const std::lock_guard<std::mutex> lock(g_rmutex);
+			(*rstart_counter)--;
+			if (channels) {
+				(*channels)[host][ADCChannels::ADC_CH1] = ch[0];
+				(*channels)[host][ADCChannels::ADC_CH2] = ch[1];
+				(*channels)[host][ADCChannels::ADC_CH3] = ch[2];
+				(*channels)[host][ADCChannels::ADC_CH4] = ch[3];
+			}
+		}
 
-        void configActiveChannels(ConfigStreamClient* cl, std::string host, size_t count) override {
-            const std::lock_guard<std::mutex> lock(g_rmutex);
-            (*rstart_counter)--;
-            if (channels)
-                (*channels)[host] = count;
-        }
+		std::atomic<int> *rstart_counter = nullptr;
+		std::map<std::string, adc_channels_t> *channels = nullptr;
 
-        std::atomic<int>* rstart_counter = nullptr;
-        std::map<std::string, uint32_t>* channels = nullptr;
+	public:
+		explicit LocalCb(std::atomic<int> *counter, std::map<std::string, adc_channels_t> *channels_ref)
+			: rstart_counter(counter)
+			, channels(channels_ref){};
+	};
+	auto cb = std::make_shared<LocalCb>(&rstart_counter, channels);
+	cl->addCallback(cb);
 
-       public:
-        explicit LocalCb(std::atomic<int>* counter, std::map<std::string, uint32_t>* channels_ref) : rstart_counter(counter), channels(channels_ref){};
-    };
-    auto cb = std::make_shared<LocalCb>(&rstart_counter, channels);
-    cl->addCallback(cb);
-
-    rstart_counter = hosts.size();
+	rstart_counter = hosts.size();
     for (auto& host : hosts) {
         if (verbose)
             aprintf(stdout, "%s Request for active channels sent : %s\n", getTS(": ").c_str(), host.c_str());
@@ -422,27 +434,32 @@ auto requestStartADCCommon(std::shared_ptr<ConfigStreamClient> cl, std::list<std
     return !timeout;
 }
 
-auto requestStartDACStreamingCommon(std::shared_ptr<ConfigStreamClient> cl, std::string host, uint8_t ac, StateRunningHosts* runned_host, bool verbose) -> bool {
-    std::atomic<int> rstart_counter;
+auto requestStartDACStreamingCommon(
+	std::shared_ptr<ConfigStreamClient> cl, std::string host, dac_channels_t ac, StateRunningHosts *runned_host, bool verbose) -> bool
+{
+	std::atomic<int> rstart_counter;
 
-    class LocalCb : public ConfigCallback {
+	class LocalCb : public ConfigCallback
+	{
+		void configError(ConfigStreamClient *cl, std::string host, int error) override
+		{
+			const std::lock_guard lock(g_rmutex);
+			(*m_rstart_counter)--;
+		}
 
-        void configError(ConfigStreamClient* cl, std::string host, int error) override {
-            const std::lock_guard lock(g_rmutex);
+		void dacServerStoppedMemError(ConfigStreamClient *cl, std::string host) override
+		{
+			const std::lock_guard<std::mutex> lock(g_rmutex);
+			(*m_rstart_counter)--;
+		}
+
+		void dacServerStoppedMemModify(ConfigStreamClient *cl, std::string host) override
+		{
+			const std::lock_guard<std::mutex> lock(g_rmutex);
             (*m_rstart_counter)--;
-        }
+		}
 
-        void dacServerStoppedMemError(ConfigStreamClient* cl, std::string host) override {
-            const std::lock_guard<std::mutex> lock(g_rmutex);
-            (*m_rstart_counter)--;
-        }
-
-        void dacServerStoppedMemModify(ConfigStreamClient* cl, std::string host) override {
-            const std::lock_guard<std::mutex> lock(g_rmutex);
-            (*m_rstart_counter)--;
-        }
-
-        void dacServerStoppedConfigError(ConfigStreamClient* cl, std::string host) override {
+		void dacServerStoppedConfigError(ConfigStreamClient* cl, std::string host) override {
             const std::lock_guard<std::mutex> lock(g_rmutex);
             (*m_rstart_counter)--;
         }
@@ -471,23 +488,24 @@ auto requestStartDACStreamingCommon(std::shared_ptr<ConfigStreamClient> cl, std:
 
        public:
         explicit LocalCb(std::atomic<int>* counter, StateRunningHosts* runned_hosts) : m_rstart_counter(counter), m_runned_hosts(runned_hosts){};
-    };
-    auto cb = std::make_shared<LocalCb>(&rstart_counter, runned_host);
-    cl->addCallback(cb);
+	};
+	auto cb = std::make_shared<LocalCb>(&rstart_counter, runned_host);
+	cl->addCallback(cb);
 
-    rstart_counter = 1;
-    if (verbose)
-        aprintf(stdout, "%s Send start command to master board: %s\n", getTS(": ").c_str(), host.c_str());
-    if (!cl->requestDACServerStart(host, ac)) {
-        rstart_counter--;
-    }
-    auto beginTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count();
-    auto timeout = false;
-    while (!timeout && rstart_counter > 0) {
-        sleepMs(100);
-        timeout = (std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count() - beginTime > 5000);
-    }
+	rstart_counter = 1;
+	if (verbose) {
+		aprintf(stdout, "%s Send start command to master board: %s\n", getTS(": ").c_str(), host.c_str());
+	}
+	if (!cl->requestDACServerStart(host, ac.isEnabled(DACChannels::DAC_CH1), ac.isEnabled(DACChannels::DAC_CH2))) {
+		rstart_counter--;
+	}
+	auto beginTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count();
+	auto timeout = false;
+	while (!timeout && rstart_counter > 0) {
+		sleepMs(100);
+		timeout = (std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count() - beginTime > 5000);
+	}
 
-    cl->removeCallback(cb);
+	cl->removeCallback(cb);
     return !timeout;
 }

@@ -9,7 +9,8 @@
 #include "data_lib/buffers_cached.h"
 #include "data_lib/signal.hpp"
 #include "net_lib/asio_net.h"
-#include "reader_lib/reader_controller.h"
+#include "reader_controller.h"
+#include "settings_lib/channels.hpp"
 
 namespace dac_streaming_lib {
 
@@ -32,15 +33,22 @@ class CDACStreamingManager {
     static Ptr Create(uint8_t* ch[2], uint64_t size[2], uint8_t bytesPerSamp, CStreamSettings::DACRepeat _repeat, int32_t _rep_count, uint32_t blockSize, bool verbose);
     CDACStreamingManager(uint8_t* ch[2], uint64_t size[2], uint8_t bytesPerSamp, CStreamSettings::DACRepeat _repeat, int32_t _rep_count, uint32_t blockSize, bool verbose);
 
-    static Ptr Create(CReaderController::dac_channels_t channels, uint8_t bytesPerSamp, uint32_t blockSize, bool verbose, CReaderController::MemoryStreamDataCallback_t callback);
-    CDACStreamingManager(CReaderController::dac_channels_t channels, uint8_t bytesPerSamp, uint32_t blockSize, bool verbose,
-                         CReaderController::MemoryStreamDataCallback_t callback);
+	static Ptr Create(dac_channels_t channels,
+					  uint8_t bytesPerSamp,
+					  uint32_t blockSize,
+					  bool verbose,
+					  CReaderController::MemoryStreamDataCallback_t callback);
+	CDACStreamingManager(dac_channels_t channels,
+						 uint8_t bytesPerSamp,
+						 uint32_t blockSize,
+						 bool verbose,
+						 CReaderController::MemoryStreamDataCallback_t callback);
 
-    ~CDACStreamingManager();
-    CDACStreamingManager(const CDACStreamingManager&) = delete;
-    CDACStreamingManager(CDACStreamingManager&&) = delete;
+	~CDACStreamingManager();
+	CDACStreamingManager(const CDACStreamingManager &) = delete;
+	CDACStreamingManager(CDACStreamingManager &&) = delete;
 
-    auto run() -> void;
+	auto run() -> void;
     auto stop() -> void;
     auto isLocalMode() -> bool;
 
@@ -52,9 +60,9 @@ class CDACStreamingManager {
     auto isEmptyBuffer() -> bool;
     auto isRunned() -> bool;
 
-    auto getChannels(bool* ch1Active, bool* ch2Active) -> bool;
+	auto getChannels(dac_channels_t &dac) -> bool;
 
-    sigslot::signal<NotifyResult> notifyStop;
+	sigslot::signal<NotifyResult> notifyStop;
 
    private:
     auto startServer() -> void;
