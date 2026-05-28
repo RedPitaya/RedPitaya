@@ -201,11 +201,12 @@ auto CBuffersCached::fullPercent() -> float {
 }
 
 auto CBuffersCached::writeBuffer(bool timeout) -> DataLib::CDataBuffersPackDMA::Ptr {
-    if (m_ringSize == 0) {
-        return nullptr;
-    }
+	TRACE_FUNC()
+	if (m_ringSize == 0) {
+		return nullptr;
+	}
 
-    if (timeout) {
+	if (timeout) {
         struct timespec ts;
         if (clock_gettime(CLOCK_REALTIME, &ts) == -1) {
             return nullptr;
@@ -240,12 +241,13 @@ auto CBuffersCached::unlockBufferRead() -> void {
 }
 
 auto CBuffersCached::readBuffer() -> DataLib::CDataBuffersPackDMA::Ptr {
-    if (m_ringSize == 0) {
-        return nullptr;
-    }
+	TRACE_FUNC()
+	if (m_ringSize == 0) {
+		return nullptr;
+	}
 
-    struct timespec ts;
-    if (clock_gettime(CLOCK_REALTIME, &ts) == -1) {
+	struct timespec ts;
+	if (clock_gettime(CLOCK_REALTIME, &ts) == -1) {
         return nullptr;
     }
 

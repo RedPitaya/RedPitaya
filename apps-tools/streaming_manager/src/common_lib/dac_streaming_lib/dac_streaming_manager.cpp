@@ -187,10 +187,10 @@ auto CDACStreamingManager::getChannels(dac_channels_t &dac) -> bool
 }
 
 auto CDACStreamingManager::getBuffer() -> const DataLib::CDataBuffersPackDMA::Ptr {
-    auto buffer = m_buffer->readBuffer();
-    if (buffer)
-        buffer->getInfoFromHeaderDAC();
-    return buffer;
+	auto buffer = m_buffer->readBuffer();
+	if (buffer)
+		buffer->getInfoFromHeaderDAC();
+	return buffer;
 }
 
 auto CDACStreamingManager::unlockBuffer() -> void {
