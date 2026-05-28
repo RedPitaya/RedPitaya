@@ -27,7 +27,7 @@ class CStreamingFPGA {
     auto stop() -> bool;
     auto isRun() -> bool;
     auto setTestMode(bool mode) -> void;
-    auto setVerbousMode(bool mode) -> void;
+    auto setVerboseMode(bool mode) -> void;
     auto setPrintDebugBuffer(bool mode) -> void;
 
     sigslot::signal<DataLib::CDataBuffersPackDMA::Ptr> oscNotify;

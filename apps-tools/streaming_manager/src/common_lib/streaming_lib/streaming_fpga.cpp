@@ -149,7 +149,7 @@ void CStreamingFPGA::oscWorker() {
                     value = curTime.time_since_epoch();
 
                     if ((value.count() - timeBegin) >= 5000) {
-                        aprintf(stdout, "Pass buffers: %d\n", m_passRate);
+                        aprintf(stdout, "[ADC] Pass buffers: %d\n", m_passRate);
                         m_passRate = 0;
                         timeBegin = value.count();
                     }
@@ -248,6 +248,6 @@ auto CStreamingFPGA::setTestMode(bool mode) -> void {
     m_testMode = mode;
 }
 
-auto CStreamingFPGA::setVerbousMode(bool mode) -> void {
+auto CStreamingFPGA::setVerboseMode(bool mode) -> void {
     m_verbMode = mode;
 }

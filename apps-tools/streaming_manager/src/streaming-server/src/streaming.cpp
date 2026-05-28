@@ -400,7 +400,7 @@ auto startServer(bool verbMode, bool testMode, bool is_master) -> void {
         // Create FPGA streaming
         g_s_fpga = std::make_shared<streaming_lib::CStreamingFPGA>(g_osc, save_capture_time);
         g_osc->setDataSize(g_s_buffer->getDataSize());
-        g_s_fpga->setVerbousMode(g_verbMode);
+        g_s_fpga->setVerboseMode(g_verbMode);
         g_s_fpga->setTestMode(testMode);
 
         // Setup callbacks
