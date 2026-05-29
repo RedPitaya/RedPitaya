@@ -59,7 +59,7 @@ auto isZModePresent() -> bool {
 }
 
 auto outAmpDef() -> float {
-    auto model = getModel();
+    static auto model = getModel();
     switch (model) {
         case STEM_125_10_v1_0:
         case STEM_125_14_v1_0:
@@ -106,8 +106,55 @@ auto outAmpDef() -> float {
     }
 }
 
+auto inFilterDef() -> int {
+    static auto model = getModel();
+    switch (model) {
+        case STEM_125_14_v2_0:
+        case STEM_125_14_BO_v2_0:
+        case STEM_125_14_Pro_v2_0:
+        case STEM_125_14_Pro_BO_v2_0:
+        case STEM_125_14_Z7020_Pro_v1_0:
+        case STEM_125_14_Z7020_Pro_v2_0:
+        case STEM_125_14_Z7020_Pro_BO_v2_0:
+        case STEM_125_14_Z7020_Ind_v2_0:
+        case STEM_125_14_Z7020_LL_v1_1:
+        case STEM_125_14_Z7020_LL_v1_2:
+        case STEM_65_16_Z7020_LL_v1_1:
+        case STEM_65_16_Z7020_TI_v1_3:
+        case STEM_125_14_Z7020_TI_v1_3:
+        case STEM_122_16SDR_v1_0:
+        case STEM_122_16SDR_v1_1:
+            return 0;
+        case STEM_125_10_v1_0:
+        case STEM_125_14_v1_0:
+        case STEM_125_14_v1_1:
+        case STEM_125_14_LN_v1_1:
+        case STEM_125_14_LN_BO_v1_1:
+        case STEM_125_14_LN_CE1_v1_1:
+        case STEM_125_14_LN_CE2_v1_1:
+        case STEM_125_14_Z7020_v1_0:
+        case STEM_125_14_Z7020_LN_v1_1:
+        case STEM_125_14_Z7020_4IN_v1_0:
+        case STEM_125_14_Z7020_4IN_v1_2:
+        case STEM_125_14_Z7020_4IN_v1_3:
+        case STEM_125_14_Z7020_4IN_BO_v1_3:
+            return 1;
+        case STEM_250_12_v1_0:
+        case STEM_250_12_v1_1:
+        case STEM_250_12_v1_2:
+        case STEM_250_12_v1_2a:
+        case STEM_250_12_v1_2b:
+        case STEM_250_12_120:
+            return 0;
+        default: {
+            ERROR_LOG("Unknown model: %d.", model);
+            return 0;
+        }
+    }
+}
+
 auto outAmpMax() -> float {
-    auto model = getModel();
+    static auto model = getModel();
     switch (model) {
         case STEM_125_10_v1_0:
         case STEM_125_14_v1_0:
@@ -157,7 +204,7 @@ auto outAmpMax() -> float {
 }
 
 auto getModelName() -> std::string {
-    auto model = getModel();
+    static auto model = getModel();
     switch (model) {
         case STEM_125_10_v1_0:
         case STEM_125_14_v1_0:

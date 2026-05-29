@@ -72,8 +72,8 @@ CBooleanParameter inInvShow[MAX_ADC_CHANNELS] = INIT("GPOS_INVERTED_CH", "", CBa
 CFloatParameter inProbe[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_PROBE", CBaseParameter::RW, 1, 0, 0, 2000, CONFIG_VAR);
 
 CIntParameter inGain[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_IN_GAIN", CBaseParameter::RW, RP_LOW, 0, 0, 1, CONFIG_VAR);
-CIntParameter inFilter[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_IN_FILTER", CBaseParameter::RW, 1, 0, 0, 1, CONFIG_VAR);
-CIntParameter inAC_DC[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_IN_AC_DC", CBaseParameter::RW, RP_DC, 0, 0, 1, CONFIG_VAR);
+CIntParameter inFilter[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_IN_FILTER", CBaseParameter::RW, inFilterDef(), 0, 0, 1, CONFIG_VAR);
+CIntParameter inAC_DC[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_IN_AC_DC", CBaseParameter::RW, RP_DC, 0, RP_DC, RP_AC, CONFIG_VAR);
 
 CIntParameter inSmoothMode[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_SMOOTH", CBaseParameter::RW, rpApp_osc_interpolationMode::DISABLED, 0, 0, 4, CONFIG_VAR);
 
@@ -134,7 +134,7 @@ auto initExtTriggerLimits() -> void {
 auto initOscAfterLoad() -> void {
     if (rp_HPGetFastADCIsAC_DCOrDefault()) {
         for (auto ch = 0u; ch < g_adc_channels; ch++) {
-            rp_AcqSetAC_DC((rp_channel_t)ch, inAC_DC[ch].Value() == 0 ? RP_AC : RP_DC);
+            rp_AcqSetAC_DC((rp_channel_t)ch, (rp_acq_ac_dc_mode_t)inAC_DC[ch].Value());
         }
     }
 
@@ -655,7 +655,7 @@ auto updateOscParams(bool force) -> void {
         IF_VALUE_CHANGED_FORCE(inSmoothMode[i], rpApp_OscSetSmoothMode((rp_channel_t)i, (rpApp_osc_interpolationMode)inSmoothMode[i].NewValue()), force)
 
         if (rp_HPGetFastADCIsAC_DCOrDefault()) {
-            IF_VALUE_CHANGED_FORCE(inAC_DC[i], rp_AcqSetAC_DC((rp_channel_t)i, inAC_DC[i].NewValue() == 0 ? RP_AC : RP_DC), force)
+            IF_VALUE_CHANGED_FORCE(inAC_DC[i], rp_AcqSetAC_DC((rp_channel_t)i, (rp_acq_ac_dc_mode_t)inAC_DC[i].NewValue()), force)
         }
 
         if (rp_HPGetFastADCIsFilterPresentOrDefault()) {

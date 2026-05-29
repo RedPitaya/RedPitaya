@@ -97,7 +97,11 @@ if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
 endif()
 
 add_compile_options($<$<CONFIG:Debug>:-DTRACE_ENABLE>)
-target_compile_options(${PROJECT_NAME}-obj PRIVATE -Wall -Wno-psabi -pedantic -Wextra -Wno-unused-parameter -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+target_compile_options(${PROJECT_NAME}-obj PRIVATE -Wall -Wno-psabi -Wpedantic -Wextra -Wno-unused-parameter -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}  -rdynamic -fno-omit-frame-pointer")
+endif()
 
 
 if(BUILD_SHARED)

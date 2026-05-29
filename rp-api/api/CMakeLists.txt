@@ -100,7 +100,7 @@ list(APPEND header_rp_common
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
-add_compile_options(-Wall -Wno-psabi -Wextra -Wno-unused-parameter -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+add_compile_options(-Wall  -Wno-psabi -Wextra -Wpedantic -Wno-unused-parameter -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 if(DEBUG_REG)
 add_compile_options(-DDEBUG_REG)
@@ -112,6 +112,11 @@ if(NOT DEFINED INSTALL_DIR)
     message(FATAL_ERROR "You must specify the path to the libraries api-250-12 api-hw-calib api-hw-profiles")
 endif()
 include_directories(${INSTALL_DIR}/include/api250-12)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}  -rdynamic -fno-omit-frame-pointer")
+endif()
+
 
 link_directories(${INSTALL_DIR}/lib)
 link_directories(${INSTALL_DIR}/lib/python)

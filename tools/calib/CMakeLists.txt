@@ -61,7 +61,7 @@ set(CMAKE_INSTALL_RPATH ${r_paths})
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
 add_compile_options($<$<CONFIG:Debug>:-DTRACE_ENABLE>)
-add_compile_options(-Wall -pedantic -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os>)
+add_compile_options(-Wall -Wpedantic -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os>)
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 

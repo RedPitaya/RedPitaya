@@ -18,11 +18,12 @@ auto getModel() -> rp_HPeModels_t;
 auto isZModePresent() -> bool;
 auto getModelName() -> std::string;
 
+auto inFilterDef() -> int;
+
 auto outAmpDef() -> float;
 auto outAmpMax() -> float;
 auto outFreqMin() -> int;
 auto outFreqMax() -> int;
 
 auto getMeasureValue(int measure) -> float;
-
 #endif

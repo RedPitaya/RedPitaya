@@ -111,7 +111,8 @@ int rp_UartGetSpeed(int *value){
     if (value == NULL) {
         return RP_HW_EBIIC;
     }
-    return uart_GetSpeed(value);
+    *value = uart_GetSpeed();
+    return *value != -1 ? RP_HW_OK : RP_HW_EGU;
 }
 
 int rp_UartSetBits(rp_uart_bits_size_t _size){
@@ -122,7 +123,8 @@ int rp_UartGetBits(rp_uart_bits_size_t *value){
     if (value == NULL) {
         return RP_HW_EBIIC;
     }
-    return uart_GetBits(value);
+    *value = uart_GetBits();
+    return RP_HW_OK;
 }
 
 int rp_UartSetStopBits(rp_uart_stop_bits_t _size){
@@ -133,7 +135,8 @@ int rp_UartGetStopBits(rp_uart_stop_bits_t *value){
     if (value == NULL) {
         return RP_HW_EBIIC;
     }
-    return uart_GetStopBits(value);
+    *value = uart_GetStopBits();
+    return RP_HW_OK;
 }
 
 int rp_UartSetParityMode(rp_uart_parity_t mode){
@@ -144,7 +147,8 @@ int rp_UartGetParityMode(rp_uart_parity_t *value){
     if (value == NULL) {
         return RP_HW_EBIIC;
     }
-    return uart_GetParityMode(value);
+    *value = uart_GetParityMode();
+    return RP_HW_OK;
 }
 
 int rp_UartSetTimeout(uint8_t deca_sec){

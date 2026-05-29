@@ -950,7 +950,7 @@ void UpdateParams(void) {
             ss_next_step.Update();
             ref_volt.Update();
             if (ss_next_step.Value() != "") {
-                rp_calib_filter_mode fmode;
+                rp_calib_filter_mode fmode = rp_calib_filter_mode::RP_HW_CFM_ZERO;
                 if (am_f_mode.Value() == "keep") {
                     fmode = rp_calib_filter_mode::RP_HW_CFM_KEEP;
                 } else if (am_f_mode.Value() == "default") {

@@ -80,7 +80,7 @@ file(GLOB RP_HEADERS "include/*.h")
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
 add_compile_options($<$<CONFIG:Debug>:-DTRACE_ENABLE>)
-add_compile_options(-Wall -pedantic -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+add_compile_options(-Wall -Wpedantic -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 link_libraries(-L${INSTALL_DIR}/lib -lrp-hw -lrp-hw-profiles ${GPIOD_LIB})
 
 add_library(${PROJECT_NAME}-xml OBJECT ${PR_XML_SOURCES})
