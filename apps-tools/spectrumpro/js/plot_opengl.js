@@ -74,7 +74,11 @@ class GLMode {
         this.buffer_draw_canvas = document.createElement('canvas');
 
         if (this.buffer_draw_canvas) {
-            this.buffer_draw_canvas_gl_ctx = this.buffer_draw_canvas.getContext("webgl");
+            this.buffer_draw_canvas_gl_ctx = this.buffer_draw_canvas.getContext("webgl", {
+                preserveDrawingBuffer: true,
+                alpha: true,
+                premultipliedAlpha: false
+            });
             if (!this.buffer_draw_canvas_gl_ctx) {
                 this.releaseWGL();
                 return false;
@@ -273,7 +277,6 @@ class GLMode {
                 if (series.points.show_gl) {
                     this.drawSeriesPoints(dgl, dpi, series, dpi.indices, series.data_gl);
                 }
-
                 ctx.drawImage(dc, 0, 0);
             }
         }
@@ -320,7 +323,7 @@ class GLMode {
                 if (series.data.lines.show_gl) {
                     this.drawSeriesLines(dgl, dpi, series, dpi.indices, dpi.y_values);
                 }
-
+                dgl.finish();
                 ctx.drawImage(dc, offset.left, offset.top);
             }
         }

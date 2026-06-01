@@ -289,7 +289,11 @@ class GLWaterfall {
         this.buffer_draw_canvas = document.createElement('canvas');
 
         if (this.buffer_draw_canvas) {
-            this.buffer_draw_canvas_gl_ctx = this.buffer_draw_canvas.getContext("webgl2");
+            this.buffer_draw_canvas_gl_ctx = this.buffer_draw_canvas.getContext("webgl2", {
+                preserveDrawingBuffer: true,
+                alpha: true,
+                premultipliedAlpha: false
+            });
             if (!this.buffer_draw_canvas_gl_ctx) {
                 this.releaseWGL();
                 return false;
@@ -508,6 +512,7 @@ class GLWaterfall {
 
             dgl.disableVertexAttribArray(dpi.a_index);
             dgl.disableVertexAttribArray(dpi.a_color);
+            dgl.finish();
         }
     }
 

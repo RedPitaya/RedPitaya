@@ -103,7 +103,11 @@ class TAMode {
         this.buffer_draw_canvas = document.createElement('canvas');
 
         if (this.buffer_accumulate_canvas) {
-            this.buffer_accumulate_canvas_gl_ctx = this.buffer_accumulate_canvas.getContext("webgl");
+            this.buffer_accumulate_canvas_gl_ctx = this.buffer_accumulate_canvas.getContext("webgl", {
+                preserveDrawingBuffer: true,
+                alpha: true,
+                premultipliedAlpha: false
+            });
             if (!this.buffer_accumulate_canvas_gl_ctx) {
                 this.releaseWGL();
                 return false;
@@ -114,7 +118,11 @@ class TAMode {
         }
 
         if (this.buffer_draw_canvas) {
-            this.buffer_draw_canvas_gl_ctx = this.buffer_draw_canvas.getContext("webgl");
+            this.buffer_draw_canvas_gl_ctx = this.buffer_draw_canvas.getContext("webgl", {
+                preserveDrawingBuffer: true,
+                alpha: true,
+                premultipliedAlpha: false
+            });
             if (!this.buffer_draw_canvas_gl_ctx) {
                 this.releaseWGL();
                 return false;
@@ -500,6 +508,7 @@ class TAMode {
             );
 
             dgl.drawArrays(dgl.TRIANGLES, 0, 6);
+            dgl.finish();
             ctx.drawImage(dc, 0, 0);
         }
     }
