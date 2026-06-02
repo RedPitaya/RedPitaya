@@ -218,27 +218,15 @@
         }
 
         if (param_name == 'OSC_TIME_OFFSET' || param_name == 'OSC_TIME_SCALE') {
+
             if (param_name == 'OSC_TIME_OFFSET')
                 OSC.time_offset = OSC.params.orig[param_name].value;
             else
                 OSC.time_scale = OSC.params.orig[param_name].value;
-            $('#time_offset_additional_label').val(parseFloat(OSC.time_offset));
-            $('#trig_out_right').remove();
-            $('#trig_out_left').remove();
 
-            if (OSC.time_offset > OSC.time_scale * 5) {
-                if ($('#trig_out_left').length == 0)
-                    $('.plot').append('<div id="trig_out_left" style="margin-top: 15px; float: left;"><img src="img/trig_out_left.png" /></div>');
-                $('#trig_out_right').remove();
-            } else if (OSC.time_offset < OSC.time_scale * -5) {
-                if ($('#trig_out_right').length == 0)
-                    $('.plot').append('<div id="trig_out_right" style="margin-top: 15px; float: right;"><img src="img/trig_out_right.png" /></div>');
-                $('#trig_out_left').remove();
-            } else {
-                $('#trig_out_right').remove();
-                $('#trig_out_left').remove();
-            }
+            $('#time_offset_additional_label').val(parseFloat(OSC.time_offset));
         }
+
 
         OSC.cursorX()
     }

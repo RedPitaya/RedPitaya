@@ -34,49 +34,24 @@
         });
     }
 
-    // OSC.chOffset = function(ch_name) {
-    //     // var params = $.extend(true, {}, OSC.orig.old);
-    //     var param_name = "OSC_"+ ch_name+"_OFFSET";
-    //     var scale = OSC.params.orig["OSC_"+ch_name+"_SCALE"] ? OSC.params.orig["OSC_"+ch_name+"_SCALE"].value : undefined;
-    //     var offset = OSC.params.orig['OSC_' + ch_name + '_OFFSET'].value;
-    //     var ch_name_l = ch_name.toLowerCase();
-    //     console.log("Set cursor",scale,offset)
-    //     if (scale !== undefined && offset !== undefined && OSC.state.cursor_dragging === false){
-    //         var graph_height = $('#graph_grid').outerHeight();
-    //         OSC.state.graph_grid_height = graph_height
-    //         var volt_per_px = (scale * 10) / graph_height
-    //         var px_offset = -(offset / volt_per_px - parseInt($('#' + ch_name_l + '_offset_arrow').css('margin-top')) / 2);
-    //         $('#' + ch_name_l + '_offset_arrow').css('top', (graph_height + 7) / 2 + px_offset);
-    //     }
+    OSC.isArrowVisibleInGraphs = function() {
+        const $arrow = $('#time_offset_arrow');
+        const $graphs = $('#graphs');
 
-    //     var field = $('#' + param_name);
-    //     var units;
-    //     if (scale != undefined) {
-    //         if (Math.abs(scale) >= 1) {
-    //             units = 'V';
-    //         } else if (Math.abs(scale) >= 0.001) {
-    //             units = 'mV';
-    //         }
-    //     } else
-    //         units = $('#' + param_name+'_UNIT').html();
-    //     if (offset){
-    //         var multiplier = units == "mV" ? 1000 : 1;
+        if ($arrow.length === 0 || $graphs.length === 0) return false;
+        if ($arrow.css('display') === 'none') return false;
 
-    //         var probeAttenuation = OSC.params.orig['OSC_' + ch_name + '_PROBE'] !== undefined ? OSC.params.orig['OSC_' + ch_name + '_PROBE'].value : 1;
-    //         var gain_mode = OSC.params.orig['OSC_' + ch_name + '_IN_GAIN'] !== undefined ? OSC.params.orig['OSC_' + ch_name + '_IN_GAIN'].value : 0;
+        const arrowLeft = $arrow.position().left;
+        const arrowWidth = $arrow.outerWidth() || parseFloat($arrow.css('width'));
+        const graphsWidth = $graphs.width();
 
-    //         field.val(OSC.formatInputValue(offset * multiplier, probeAttenuation, units == "mV", gain_mode !== 0));
-    //         field.attr("step",OSC.getStepValue(probeAttenuation, units == "mV", gain_mode !== 0));
+        if (!arrowWidth) return true;
 
-    //     }
-
-
-    //     OSC.triggerParam("")
-    //     if (!OSC.state.trig_dragging)
-    //         OSC.updateTriggerDragHandle()
-    //     OSC.cursorY();
-    // }
-
+        return !(
+            arrowLeft + arrowWidth <= 0 ||
+            arrowLeft >= graphsWidth
+        );
+    }
 
     OSC.ch1Offset = function(new_params) {
         OSC.setGposOffset("CH1");
@@ -140,9 +115,6 @@
                 var source_offset = OSC.params.orig['GPOS_OFFSET_CH'+ots].value;
                 var source_offset_zero = OSC.params.orig['GPOS_OFFSET_ZERO_CH'+ots].value;
                 var source_inverted = OSC.params.orig['GPOS_INVERTED_CH'+ots].value;
-
-                // var ref_scale = (OSC.params.orig['OSC_TRIG_SOURCE'].value == 0 ? 'OSC_CH1_SCALE' : 'OSC_CH2_SCALE');
-                // var source_offset = (OSC.params.orig['OSC_TRIG_SOURCE'].value == 0 ? OSC.params.orig['OSC_CH1_OFFSET'].value : OSC.params.orig['OSC_CH2_OFFSET'].value);
 
                 if (OSC.params.orig[ref_scale] !== undefined && source_inverted !== undefined && source_offset !== undefined && source_offset_zero !== undefined) {
                     var graph_height = $('#graph_grid').height();
@@ -358,6 +330,24 @@
 
         $('#info_box').html('Time offset ' + OSC.convertTime(new_value));
         $('#buf_time_offset').css('left', buf_width / 2 - buf_width * OSC.params.orig['OSC_VIEV_PART'].value / 2 + (new_left + 8) / ratio  - 5).show();
+
+        if (OSC.isArrowVisibleInGraphs()) {
+            $('#trig_out_left').hide();
+            $('#trig_out_right').hide();
+            return;
+        }
+
+        if ($('#trig_out_left').length == 0 || $('#trig_out_right').length == 0) {
+            return;
+        }
+
+        if (new_value > 0) {
+            $('#trig_out_left').show();
+            $('#trig_out_right').hide();
+        } else if (new_value < 0) {
+            $('#trig_out_left').hide();
+            $('#trig_out_right').show();
+        }
     }
 
     OSC.endTimeMove = function(new_left) {
@@ -393,6 +383,24 @@
         OSC.state.graph_grid_width = graph_width;
         $('#time_offset_arrow').css('left', arrow_left).show();
         $('#buf_time_offset').css('left', buf_width / 2 - buf_width * vp / 2 + (arrow_left + 8)/ ratio - 5).show();
+
+        if ($('#trig_out_left').length == 0 || $('#trig_out_right').length == 0) {
+            return;
+        }
+
+        if (OSC.isArrowVisibleInGraphs()) {
+            $('#trig_out_left').hide();
+            $('#trig_out_right').hide();
+            return;
+        }
+
+        if (toff > 0) {
+            $('#trig_out_left').show();
+            $('#trig_out_right').hide();
+        } else if (toff < 0) {
+            $('#trig_out_left').hide();
+            $('#trig_out_right').show();
+        }
     }
 
 }(window.OSC = window.OSC || {}, jQuery));

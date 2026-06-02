@@ -1162,6 +1162,14 @@
             if (OSC.graphs["ch1"].elem === undefined){
                 OSC.graphs = {};
             }
+            else{
+                if ($('#trig_out_left').length == 0) {
+                    $('.plot').append('<div id="trig_out_left" style="margin-top: 15px; float: left;"><img src="img/trig_out_left.png" /></div>');
+                }
+                if ($('#trig_out_right').length == 0) {
+                    $('.plot').append('<div id="trig_out_right" style="margin-top: 15px; float: right;"><img src="img/trig_out_right.png" /></div>');
+                }
+            }
 
             let isInit = true
             for(let i = 1; i <= OSC.adc_channels; i++){
@@ -1910,7 +1918,8 @@
             $('.plot').css($('#graph_grid').css(['height', 'width']));
 
             // Hide all graphs, they will be shown next time signal data is received
-            $('#graphs .plot').hide();
+            // $('#graphs .plot').hide();
+            $('#graphs').find('.plot').hide();
         }
 
         if ($('.xy_plot').length !== 0){
@@ -1921,7 +1930,8 @@
                 $('.xy_plot').css($('#xy_graph_grid').css(['height', 'width']));
 
             // Hide all graphs, they will be shown next time signal data is received
-            $('#xy_graphs .xy_plot').hide();
+            // $('#xy_graphs .xy_plot').hide();
+            $('#xy_graphs').find('.xy_plot').hide();
         }
 
         // Hide offset arrows, trigger level line and arrow

@@ -24,15 +24,15 @@ CBooleanParameter outShow[MAX_DAC_CHANNELS] = INIT2("OUTPUT", "_SHOW", CBasePara
 CBooleanParameter outState[MAX_DAC_CHANNELS] = INIT2("OUTPUT", "_STATE", CBaseParameter::RW, false, 0, CONFIG_VAR);
 CFloatParameter outAmplitude[MAX_DAC_CHANNELS] = INIT2("SOUR", "_VOLT", CBaseParameter::RW, LEVEL_AMPS_DEF, 0, 0, LEVEL_AMPS_MAX, CONFIG_VAR);
 CFloatParameter outOffset[MAX_DAC_CHANNELS] = INIT2("SOUR", "_VOLT_OFFS", CBaseParameter::RW, 0, 0, -LEVEL_AMPS_MAX, LEVEL_AMPS_MAX, CONFIG_VAR);
-CIntParameter outFrequancy[MAX_DAC_CHANNELS] = INIT2("SOUR", "_FREQ_FIX", CBaseParameter::RW, 1000, 0, outFreqMin(), outFreqMax(), CONFIG_VAR);
+CIntParameter outFrequancy[MAX_DAC_CHANNELS] = INIT2("SOUR", "_FREQ_FIX", CBaseParameter::RW, outFreqMin(), 0, outFreqMin(), outFreqMax(), CONFIG_VAR);
 
 CFloatParameter outShowOffset[MAX_DAC_CHANNELS] = INIT2("GPOS_OFFSET_OUTPUT", "", CBaseParameter::RW, 0, 0, -5000, 5000, CONFIG_VAR);
 CFloatParameter outScale[MAX_DAC_CHANNELS] = INIT2("GPOS_SCALE_OUTPUT", "", CBaseParameter::RW, 1, 0, 0.00005, 1000, CONFIG_VAR);
 
 rp_sweep_api::CSweepController* g_sweepController = new rp_sweep_api::CSweepController();
 
-CIntParameter outSweepStartFrequancy[MAX_DAC_CHANNELS] = INIT2("SOUR", "_SWEEP_FREQ_START", CBaseParameter::RW, 1000, 0, outFreqMin(), outFreqMax(), CONFIG_VAR);
-CIntParameter outSweepEndFrequancy[MAX_DAC_CHANNELS] = INIT2("SOUR", "_SWEEP_FREQ_END", CBaseParameter::RW, 10000, 0, outFreqMin(), outFreqMax(), CONFIG_VAR);
+CIntParameter outSweepStartFrequancy[MAX_DAC_CHANNELS] = INIT2("SOUR", "_SWEEP_FREQ_START", CBaseParameter::RW, outFreqMin(), 0, outFreqMin(), outFreqMax(), CONFIG_VAR);
+CIntParameter outSweepEndFrequancy[MAX_DAC_CHANNELS] = INIT2("SOUR", "_SWEEP_FREQ_END", CBaseParameter::RW, outFreqMax(), 0, outFreqMin(), outFreqMax(), CONFIG_VAR);
 CIntParameter outSweepMode[MAX_DAC_CHANNELS] =
     INIT2("SOUR", "_SWEEP_MODE", CBaseParameter::RW, RP_GEN_SWEEP_MODE_LINEAR, 0, RP_GEN_SWEEP_MODE_LINEAR, RP_GEN_SWEEP_MODE_LOG, CONFIG_VAR);
 CIntParameter outSweepRepetitions[MAX_DAC_CHANNELS] = INIT2("SOUR", "_SWEEP_REP", CBaseParameter::RW, 1, 0, 1, 0x7FFFFFFF, CONFIG_VAR);
