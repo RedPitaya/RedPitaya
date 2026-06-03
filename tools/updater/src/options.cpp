@@ -72,13 +72,14 @@ std::vector<std::string> split(const std::string& s, char seperator) {
 }
 
 bool isValidURL(const std::string& url) {
-    const std::regex pattern(R"(^(https?):\/\/([^\s\/$.?#].[^\s]*\.zip)$)", std::regex_constants::icase);
+    static const std::regex pattern(R"(^(https?):\/\/([^\s\/$.?#].[^\s]*\.zip)$)", std::regex_constants::icase);
     return std::regex_match(url, pattern);
 }
 
 bool isValidFileName(const std::string& url) {
-    const std::regex pattern(R"(^ecosystem-\d+\.\d{2}-\d+-[a-f0-9]{9}\.zip$)", std::regex_constants::icase);
-    return std::regex_match(url, pattern);
+    static const std::regex pattern(R"(^ecosystem-\d+\.\d{2}-\d+-[a-f0-9]{9}\.zip$)", std::regex_constants::icase);
+    static const std::regex pattern_prod(R"(^ecosystem-\d+\.\d{2}-\d+-[a-f0-9]{9}_[a-f0-9]{9}\.zip$)", std::regex_constants::icase);
+    return std::regex_match(url, pattern) || std::regex_match(url, pattern_prod);
 }
 
 /** Print usage information */
