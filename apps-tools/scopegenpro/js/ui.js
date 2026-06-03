@@ -240,19 +240,12 @@
         });
     }
 
-    OSC.updateLimits = function () {
-    }
-
-    OSC.formatVals =function () {
-    }
-
-
     OSC.initUI = function(){
 
 
         $('.btn.menu-btn').onClassChange(function(el, newClass) {
             OSC.getCurrentActiveChannel()
-            OSC.updateTitileYAxisTicks()
+            OSC.updateTitleYAxisTicks()
             OSC.cursorY()
         } );
 
@@ -519,7 +512,7 @@
                 $('.y-offset-arrow').css('z-index', 10);
                 $('#' + OSC.state.sel_sig_name + '_offset_arrow').css('z-index', 11);
             }
-            OSC.updateTitileYAxisTicks()
+            OSC.updateTitleYAxisTicks()
         });
 
         // Opening a dialog for changing parameters
@@ -805,7 +798,6 @@
             OSC.sendParams();
         });
 
-        OSC.formatVals();
     }
 
     OSC.initUIItems = function(params) {

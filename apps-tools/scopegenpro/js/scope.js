@@ -421,7 +421,7 @@
 
             OSC.ws.onclose = function() {
                 OSC.state.socket_opened = false;
-                $('#graphs .plot').hide(); // Hide all graphs
+                $('#graphs').find('.plot').hide();
                 OSC.client_log('Socket closed');
                 setTimeout(RP_CLIENT.reloadPage, 2000);
             };
@@ -1211,7 +1211,7 @@
         }
 
         // Hide plots without signal
-        $('#graphs .plot').not(visible_plots).hide();
+        $('#graphs').find('.plot').not(visible_plots).hide();
 
         OSC.drawSignalXY(xysignals)
         // Disable buttons related to inactive signals
@@ -1903,9 +1903,9 @@
         });
 
         OSC.moveTitileXAxisTicks()
-        OSC.moveTitileYAxisTicks()
+        OSC.moveTitleYAxisTicks()
         OSC.moveTitileXAxisTicksXY()
-        OSC.moveTitileYAxisTicksXY()
+        OSC.moveTitleYAxisTicksXY()
 
         $(window).on('blur', function() {
         });
@@ -1918,7 +1918,6 @@
             $('.plot').css($('#graph_grid').css(['height', 'width']));
 
             // Hide all graphs, they will be shown next time signal data is received
-            // $('#graphs .plot').hide();
             $('#graphs').find('.plot').hide();
         }
 
@@ -1930,7 +1929,6 @@
                 $('.xy_plot').css($('#xy_graph_grid').css(['height', 'width']));
 
             // Hide all graphs, they will be shown next time signal data is received
-            // $('#xy_graphs .xy_plot').hide();
             $('#xy_graphs').find('.xy_plot').hide();
         }
 

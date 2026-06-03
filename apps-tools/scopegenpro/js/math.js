@@ -123,7 +123,7 @@
         }
         OSC.setXYAxisScale()
         OSC.updateTitileXAxisTicksXY()
-        OSC.updateTitileYAxisTicksXY()
+        OSC.updateTitleYAxisTicksXY()
         OSC.setMathOffsetPlotChLimits()
     }
 
@@ -132,7 +132,7 @@
         OSC.setMathScale()
         OSC.chMathOffset()
         OSC.setMathOffsetPlotCh()
-        OSC.updateTitileYAxisTicks()
+        OSC.updateTitleYAxisTicks()
     }
 
     OSC.updateMathOp = function(new_params,param_name) {

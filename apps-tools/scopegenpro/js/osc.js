@@ -107,8 +107,8 @@
             OSC.updateTriggerDragHandle()
         OSC.setXYAxisScale()
         OSC.updateTitileXAxisTicksXY()
-        OSC.updateTitileYAxisTicksXY()
-        OSC.updateTitileYAxisTicks()
+        OSC.updateTitleYAxisTicksXY()
+        OSC.updateTitleYAxisTicks()
     }
 
 
@@ -478,26 +478,33 @@
             tick.innerText = i
             graphs.appendChild(tick)
         }
-        OSC.updateTitileYAxisTicks()
+        OSC.updateTitleYAxisTicks()
     }
 
-    OSC.updateTitileYAxisTicks = function(){
+    OSC.updateTitleYAxisTicks = function(){
         var itm = OSC.getSettingsActiveChannel()
         if (itm.channel !== ''){
             var color = OSC.config.graph_colors[itm.channel.toLowerCase()]
+            var offset = itm.offset || 0;
+            var scale = Math.abs(itm.scale) || 1;
+
             for(var i = -5; i <= 5; i++){
-                var v = OSC.convertVoltageForAxis(i * -itm.scale) + itm.suffix
+                var nearestTick = Math.round(offset / scale) * scale;
+                var value = i * scale + nearestTick;
+                var v = OSC.convertVoltageForAxis(-value) + itm.suffix
                 $("#yaxis_tick" + (i + 5)).html(v).css('color', color);
             }
-        }else{
+        } else {
             for(var i = -5; i <= 5; i++){
                 $("#yaxis_tick" + (i + 5)).html('')
             }
         }
-        OSC.moveTitileYAxisTicks()
+        OSC.moveTitleYAxisTicks()
     }
 
-    OSC.moveTitileYAxisTicks = function(){
+
+
+    OSC.moveTitleYAxisTicks = function(){
         var gh = $('#graphs').height() - 8
         for(var i = -5; i <= 5; i++){
             var ws = $("#yaxis_tick" + (i + 5)).height() / 2

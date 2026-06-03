@@ -91,7 +91,7 @@ OSC.setSourVolt = function(ch){
     if (scale !== undefined){
         $('#GPOS_SCALE_OUTPUT'+ch).html(OSC.convertVoltage(scale));
     }
-    OSC.updateTitileYAxisTicks()
+    OSC.updateTitleYAxisTicks()
 
 }
 
@@ -193,14 +193,14 @@ OSC.ch1SetGenScale = function(new_params){
     OSC.setSourVolt("1")
     OSC.out1ShowOffset(new_params)
     OSC.setOutOffsetPlotChLimits("1")
-    OSC.updateTitileYAxisTicks()
+    OSC.updateTitleYAxisTicks()
 }
 
 OSC.ch2SetGenScale = function(new_params){
     OSC.setSourVolt("2")
     OSC.out2ShowOffset(new_params)
     OSC.setOutOffsetPlotChLimits("2")
-    OSC.updateTitileYAxisTicks()
+    OSC.updateTitleYAxisTicks()
 }
 
 OSC.riseFallTime = function(new_params) {

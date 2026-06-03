@@ -22,11 +22,13 @@
 
                 OSC.updateYOffset(ui);
                 OSC.cursorY()
+                OSC.updateTitleYAxisTicks()
             },
             stop: function(ev, ui) {
                 if (!OSC.state.simulated_drag) {
                     OSC.updateYOffset(ui);
                     OSC.cursorY()
+                    OSC.updateTitleYAxisTicks()
                     $('#info_box').empty();
                 }
                 OSC.state.cursor_dragging = false;
