@@ -123,7 +123,7 @@
             $('#GPOS_OFFSET_MATH_UNIT').html(units[value_op]);
         }
         OSC.setXYAxisScale()
-        OSC.updateTitileXAxisTicksXY()
+        OSC.updateTitleXAxisTicksXY()
         OSC.updateTitleYAxisTicksXY()
         OSC.setMathOffsetPlotChLimits()
     }

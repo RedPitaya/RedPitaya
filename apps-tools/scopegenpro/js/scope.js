@@ -1902,9 +1902,9 @@
             OSC.drawGraphGridXY();
         });
 
-        OSC.moveTitileXAxisTicks()
+        OSC.moveTitleXAxisTicks()
         OSC.moveTitleYAxisTicks()
-        OSC.moveTitileXAxisTicksXY()
+        OSC.moveTitleXAxisTicksXY()
         OSC.moveTitleYAxisTicksXY()
 
         $(window).on('blur', function() {

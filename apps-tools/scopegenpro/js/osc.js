@@ -106,9 +106,10 @@
         if (!OSC.state.trig_dragging)
             OSC.updateTriggerDragHandle()
         OSC.setXYAxisScale()
-        OSC.updateTitileXAxisTicksXY()
+        OSC.updateTitleXAxisTicksXY()
         OSC.updateTitleYAxisTicksXY()
         OSC.updateTitleYAxisTicks()
+        OSC.clearTraceBuffers(ch)
     }
 
 
@@ -233,7 +234,8 @@
 
     OSC.setTimeScale = function(new_params){
         OSC.setTimeScaleOffset("OSC_TIME_SCALE")
-        OSC.updateTitileXAxisTicks()
+        OSC.updateTitleXAxisTicks()
+        OSC.clearTraceBuffers()
     }
 
     OSC.trigSlope = function(new_params) {
@@ -443,10 +445,10 @@
             tick.innerText = i;
             graphs.appendChild(tick)
         }
-        OSC.moveTitileXAxisTicks()
+        OSC.moveTitleXAxisTicks()
     }
 
-    OSC.updateTitileXAxisTicks = function(){
+    OSC.updateTitleXAxisTicks = function(){
         var scale = 0
         if (OSC.params.orig['OSC_TIME_SCALE']){
             scale = OSC.params.orig['OSC_TIME_SCALE'].value * -1
@@ -455,10 +457,10 @@
             var v = OSC.convertTime(i * scale)
             $("#xaxis_tick" + (i + 5)).html(v)
         }
-        OSC.moveTitileXAxisTicks()
+        OSC.moveTitleXAxisTicks()
     }
 
-    OSC.moveTitileXAxisTicks = function(){
+    OSC.moveTitleXAxisTicks = function(){
         var gh = $('#graphs_holder').height()
         var gw = $('#graphs_holder').width()
         for(var i = -5; i <= 5; i++){
@@ -501,7 +503,20 @@
         OSC.moveTitleYAxisTicks()
     }
 
-
+    OSC.clearTraceBuffers = function(channel) {
+        if (channel) {
+            if (OSC.taMode[channel]) {
+                OSC.taMode[channel].clearBuffers();
+            }
+        } else {
+            for (var i = 1; i <= 4; i++) {
+                var ch = 'CH' + i;
+                if (OSC.taMode[ch]) {
+                    OSC.taMode[ch].clearBuffers();
+                }
+            }
+        }
+    };
 
     OSC.moveTitleYAxisTicks = function(){
         var gh = $('#graphs').height() - 8

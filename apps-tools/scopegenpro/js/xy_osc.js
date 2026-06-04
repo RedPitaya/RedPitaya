@@ -36,7 +36,7 @@
             field.val(new_params[param_name].value);
         }
         OSC.setXYAxisScale()
-        OSC.updateTitileXAxisTicksXY()
+        OSC.updateTitleXAxisTicksXY()
     }
 
     OSC.updateXYSrcY = function(new_params,param_name) {
@@ -229,10 +229,10 @@
             tick.innerText = i;
             graphs.appendChild(tick)
         }
-        OSC.moveTitileXAxisTicksXY()
+        OSC.moveTitleXAxisTicksXY()
     }
 
-    OSC.updateTitileXAxisTicksXY = function(){
+    OSC.updateTitleXAxisTicksXY = function(){
         var scale = 0
         var srcName = ""
         var color = "#333"
@@ -247,10 +247,10 @@
         for(var i = -5; i <= 5; i++){
             $("#xy_xaxis_tick" + (i + 5)).html(OSC.convertVoltageForAxis(-i * scale)+(srcName == "MATH" ? OSC.mathSuffix() : "")).css('color', color);
         }
-        OSC.moveTitileXAxisTicksXY()
+        OSC.moveTitleXAxisTicksXY()
     }
 
-    OSC.moveTitileXAxisTicksXY = function(){
+    OSC.moveTitleXAxisTicksXY = function(){
         var gh = $('#xy_main').height()
         var gw = $('#xy_main').width()
         for(var i = -5; i <= 5; i++){
