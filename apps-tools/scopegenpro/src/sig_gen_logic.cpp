@@ -24,15 +24,16 @@ CBooleanParameter outShow[MAX_DAC_CHANNELS] = INIT2("OUTPUT", "_SHOW", CBasePara
 CBooleanParameter outState[MAX_DAC_CHANNELS] = INIT2("OUTPUT", "_STATE", CBaseParameter::RW, false, 0, CONFIG_VAR);
 CFloatParameter outAmplitude[MAX_DAC_CHANNELS] = INIT2("SOUR", "_VOLT", CBaseParameter::RW, LEVEL_AMPS_DEF, 0, 0, LEVEL_AMPS_MAX, CONFIG_VAR);
 CFloatParameter outOffset[MAX_DAC_CHANNELS] = INIT2("SOUR", "_VOLT_OFFS", CBaseParameter::RW, 0, 0, -LEVEL_AMPS_MAX, LEVEL_AMPS_MAX, CONFIG_VAR);
-CIntParameter outFrequancy[MAX_DAC_CHANNELS] = INIT2("SOUR", "_FREQ_FIX", CBaseParameter::RW, outFreqMin(), 0, outFreqMin(), outFreqMax(), CONFIG_VAR);
+CIntParameter outFrequency[MAX_DAC_CHANNELS] = INIT2("SOUR", "_FREQ_FIX", CBaseParameter::RW, std::max<int>(1000, outFreqMin()), 0, outFreqMin(), outFreqMax(), CONFIG_VAR);
 
 CFloatParameter outShowOffset[MAX_DAC_CHANNELS] = INIT2("GPOS_OFFSET_OUTPUT", "", CBaseParameter::RW, 0, 0, -5000, 5000, CONFIG_VAR);
 CFloatParameter outScale[MAX_DAC_CHANNELS] = INIT2("GPOS_SCALE_OUTPUT", "", CBaseParameter::RW, 1, 0, 0.00005, 1000, CONFIG_VAR);
 
 rp_sweep_api::CSweepController* g_sweepController = new rp_sweep_api::CSweepController();
 
-CIntParameter outSweepStartFrequancy[MAX_DAC_CHANNELS] = INIT2("SOUR", "_SWEEP_FREQ_START", CBaseParameter::RW, outFreqMin(), 0, outFreqMin(), outFreqMax(), CONFIG_VAR);
-CIntParameter outSweepEndFrequancy[MAX_DAC_CHANNELS] = INIT2("SOUR", "_SWEEP_FREQ_END", CBaseParameter::RW, outFreqMax(), 0, outFreqMin(), outFreqMax(), CONFIG_VAR);
+CIntParameter outSweepStartFrequency[MAX_DAC_CHANNELS] =
+    INIT2("SOUR", "_SWEEP_FREQ_START", CBaseParameter::RW, std::max<int>(1000, outFreqMin()), 0, outFreqMin(), outFreqMax(), CONFIG_VAR);
+CIntParameter outSweepEndFrequency[MAX_DAC_CHANNELS] = INIT2("SOUR", "_SWEEP_FREQ_END", CBaseParameter::RW, outFreqMax(), 0, outFreqMin(), outFreqMax(), CONFIG_VAR);
 CIntParameter outSweepMode[MAX_DAC_CHANNELS] =
     INIT2("SOUR", "_SWEEP_MODE", CBaseParameter::RW, RP_GEN_SWEEP_MODE_LINEAR, 0, RP_GEN_SWEEP_MODE_LINEAR, RP_GEN_SWEEP_MODE_LOG, CONFIG_VAR);
 CIntParameter outSweepRepetitions[MAX_DAC_CHANNELS] = INIT2("SOUR", "_SWEEP_REP", CBaseParameter::RW, 1, 0, 1, 0x7FFFFFFF, CONFIG_VAR);
@@ -148,14 +149,14 @@ auto generate(rp_channel_t channel, float tscale) -> void {
     signal = &outSignal[channel];
     static GenChannelSettings oldSettings;
     GenChannelSettings settings(outWaveform[channel].Value(),
-                                outFrequancy[channel].Value(),
+                                outFrequency[channel].Value(),
                                 (float)(outPhase[channel].Value() / 180.0f * M_PI),
                                 outAmplitude[channel].Value() / outScale[channel].Value(),
                                 outOffset[channel].Value() / outScale[channel].Value(),
                                 outShowOffset[channel].Value() / outScale[channel].Value(),
                                 outDCYC[channel].Value() / 100.0f,
-                                outSweepStartFrequancy[channel].Value(),
-                                outSweepEndFrequancy[channel].Value(),
+                                outSweepStartFrequency[channel].Value(),
+                                outSweepEndFrequency[channel].Value(),
                                 (rp_gen_sweep_mode_t)outSweepMode[channel].Value(),
                                 (rp_gen_sweep_dir_t)outSweepDir[channel].Value(),
                                 outBurstState[channel].Value() ? RP_GEN_MODE_BURST : RP_GEN_MODE_CONTINUOUS,
@@ -360,19 +361,19 @@ auto setSweepParameters(bool force) -> void {
 
     for (int i = 0; i < g_dac_channels; i++) {
         auto ch = (rp_channel_t)i;
-        if ((IS_NEW(outSweepStartFrequancy[i])) || (IS_NEW(outSweepEndFrequancy[i])) || (IS_NEW(outSweepMode[i])) || (IS_NEW(outSweepDir[i])) || (IS_NEW(outSweepTime[i])) ||
+        if ((IS_NEW(outSweepStartFrequency[i])) || (IS_NEW(outSweepEndFrequency[i])) || (IS_NEW(outSweepMode[i])) || (IS_NEW(outSweepDir[i])) || (IS_NEW(outSweepTime[i])) ||
             (IS_NEW(outSweepRepetitions[i])) || (IS_NEW(outSweepRepInf[i])) || (IS_NEW(outSweepState[i])) || force) {
 
-            outSweepStartFrequancy[i].Update();
-            outSweepEndFrequancy[i].Update();
+            outSweepStartFrequency[i].Update();
+            outSweepEndFrequency[i].Update();
             outSweepMode[i].Update();
             outSweepDir[i].Update();
             outSweepTime[i].Update();
             outSweepState[i].Update();
             outSweepRepInf[i].Update();
             outSweepRepetitions[i].Update();
-            g_sweepController->setStartFreq(ch, outSweepStartFrequancy[ch].Value());
-            g_sweepController->setStopFreq(ch, outSweepEndFrequancy[ch].Value());
+            g_sweepController->setStartFreq(ch, outSweepStartFrequency[ch].Value());
+            g_sweepController->setStopFreq(ch, outSweepEndFrequency[ch].Value());
             g_sweepController->setMode(ch, (rp_gen_sweep_mode_t)outSweepMode[ch].Value());
             g_sweepController->setDir(ch, (rp_gen_sweep_dir_t)outSweepDir[ch].Value());
             g_sweepController->setTime(ch, outSweepTime[ch].Value());
@@ -660,16 +661,16 @@ auto updateGeneratorParameters(bool force) -> void {
             outScale[i].Update();
         }
 
-        if (IS_NEW(outFrequancy[i]) || force) {
-            float period = 1000000.0 / outFrequancy[ch].NewValue();
+        if (IS_NEW(outFrequency[i]) || force) {
+            float period = 1000000.0 / outFrequency[ch].NewValue();
             outRiseTime[ch].SetMin(period * RISE_FALL_MIN_RATIO);
             outRiseTime[ch].SetMax(period * RISE_FALL_MAX_RATIO);
             outRiseTime[ch].Update();
             outFallTime[ch].SetMin(period * RISE_FALL_MIN_RATIO);
             outFallTime[ch].SetMax(period * RISE_FALL_MAX_RATIO);
             outFallTime[ch].Update();
-            rp_GenFreq(ch, outFrequancy[i].NewValue());
-            outFrequancy[i].Update();
+            rp_GenFreq(ch, outFrequency[i].NewValue());
+            outFrequency[i].Update();
             if (!force)
                 checkBurstDelayChanged(ch);
             rp_GenTriggerOnly(ch);
@@ -732,8 +733,8 @@ auto sendFreqInSweepMode() -> void {
         for (int i = 0; i < g_dac_channels; i++) {
             float freq = 0;
             rp_GenGetFreq((rp_channel_t)i, &freq);
-            if ((int)freq != outFrequancy[i].Value()) {
-                outFrequancy[i].SendValue((int)freq);
+            if ((int)freq != outFrequency[i].Value()) {
+                outFrequency[i].SendValue((int)freq);
             }
         }
     }
