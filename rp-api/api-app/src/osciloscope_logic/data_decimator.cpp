@@ -185,6 +185,8 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float* _data, vsize_t
         uint16_t iView = 0;
         uint32_t count = 0;
         for (int idx = startView; idx < stopView; idx++, iView++) {
+            if (_unscaledView)
+                (*_unscaledView)[iView] = std::numeric_limits<float>::quiet_NaN();
             int dataIndex1 = screenToBuffer(idx, m_decimationFactor, &t);
             y = 0;
             scaledValue = 0;
@@ -193,7 +195,7 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float* _data, vsize_t
                 switch (m_mode[_channel]) {
 
                     case DISABLED: {
-                        (*_view)[iView] = std::numeric_limits<float>::signaling_NaN();
+                        (*_view)[iView] = std::numeric_limits<float>::quiet_NaN();
                         if (t < t_prev) {
                             y = _data[dataIndex1];
                             t_prev = t;
@@ -247,8 +249,8 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float* _data, vsize_t
                 _viewInfo->m_mean += scaledValue;
                 count++;
             } else {
-                scaledValue = std::numeric_limits<float>::signaling_NaN();
-                y = std::numeric_limits<float>::signaling_NaN();
+                scaledValue = std::numeric_limits<float>::quiet_NaN();
+                y = std::numeric_limits<float>::quiet_NaN();
             }
             // ECHECK_APP_NO_RET(m_scaleFunc((rpApp_osc_source)_channel,y,&scaledValue))
             // x -> y
@@ -289,7 +291,7 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float* _data, vsize_t
                 _viewInfo->m_mean += scaledValue;
                 count++;
             } else {
-                scaledValue = std::numeric_limits<float>::signaling_NaN();
+                scaledValue = std::numeric_limits<float>::quiet_NaN();
             }
             (*_view)[iView] = scaledValue;
             if (_unscaledView)

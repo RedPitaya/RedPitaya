@@ -1475,6 +1475,7 @@ void mathThreadFunction(std::vector<float>* buffers) {
             memcpy(temp.data(), viewMath->data(), viewMath->size() * sizeof(float));
             auto z = invertFactor / math_ampScale;
             auto z1 = math_ampOffset / math_ampScale;
+
             multiply_array_by_scalar_float_neon(viewMath->data(), viewMath->data(), z, viewMath->size());
             add_scalar_to_array_float_neon(viewMath->data(), viewMath->data(), z1, viewMath->size());
 
@@ -1525,7 +1526,7 @@ void xyThreadFunction() {
         memcpy_neon(x_axis->data(), (*viewS1).data(), (*viewS1).size() * sizeof(float));
         memcpy_neon(y_axis->data(), (*viewS2).data(), (*viewS2).size() * sizeof(float));
         subtract_scalar_from_array_float_neon(x_axis->data(), x_axis->data(), coff[0], x_axis->size());
-        subtract_scalar_from_array_float_neon(y_axis->data(), y_axis->data(), coff[1], x_axis->size());
+        subtract_scalar_from_array_float_neon(y_axis->data(), y_axis->data(), coff[1], y_axis->size());
         // for (vsize_t i = 0; i < viewSize; ++i) {
         //     (*x_axis)[i] = unOffsetAmplitude<float>((*viewS1)[i], coff[0]);
         //     (*y_axis)[i] = unOffsetAmplitude<float>((*viewS2)[i], coff[1]);
