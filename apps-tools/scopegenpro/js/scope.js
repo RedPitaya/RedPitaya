@@ -1104,10 +1104,10 @@
             var canvas = OSC.graphs["ch1"].plot.getCanvas()
             for(let i = 1; i <= OSC.adc_channels; i++){
                 if (OSC.taMode["CH"+i])
-                    OSC.taMode["CH"+i].setNewSizeWGL(canvas.width,canvas.height)
+                    OSC.taMode["CH"+i].setNewSizeWGL(canvas.clientWidth,canvas.clientHeight)
             }
             if (OSC.glMode && OSC.glMode.isInit)
-                OSC.glMode.setNewSizeWGL(canvas.width,canvas.height)
+                OSC.glMode.setNewSizeWGL(canvas.clientWidth,canvas.clientHeight)
             OSC.graphs["ch1"].plot.setupGrid();
             OSC.graphs["ch1"].plot.setData(pointArr);
             OSC.graphs["ch1"].plot.draw();
@@ -1177,7 +1177,7 @@
                 OSC.taMode["CH"+i].init()
                 if (OSC.taMode["CH"+i].isInit){
                     var canvas = OSC.graphs["ch1"].plot.getCanvas()
-                    OSC.taMode["CH"+i].setNewSizeWGL(canvas.width,canvas.height)
+                    OSC.taMode["CH"+i].setNewSizeWGL(canvas.clientWidth,canvas.clientHeight)
                 } else{
                     isInit = false
                 }
@@ -1194,7 +1194,7 @@
             OSC.glMode.init()
             if (OSC.glMode.isInit){
                 var canvas = OSC.graphs["ch1"].plot.getCanvas()
-                OSC.glMode.setNewSizeWGL(canvas.width,canvas.height)
+                OSC.glMode.setNewSizeWGL(canvas.clientWidth,canvas.clientHeight)
             }
         }
 

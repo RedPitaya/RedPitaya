@@ -105,7 +105,7 @@
             OSC.graphs["xy"].plot.resize();
             if (OSC.glXYMode && OSC.glXYMode.isInit){
                 var canvas = OSC.graphs["xy"].plot.getCanvas()
-                OSC.glXYMode.setNewSizeWGL(canvas.width,canvas.height)
+                OSC.glXYMode.setNewSizeWGL(canvas.clientWidth,canvas.clientHeight)
             }
             OSC.graphs["xy"].plot.setupGrid();
             OSC.graphs["xy"].plot.setData(pointArr);
@@ -150,7 +150,7 @@
             OSC.glXYMode.init()
             if (OSC.glXYMode.isInit){
                 var canvas = OSC.graphs["xy"].plot.getCanvas()
-                OSC.glXYMode.setNewSizeWGL(canvas.width,canvas.height)
+                OSC.glXYMode.setNewSizeWGL(canvas.clientWidth,canvas.clientHeight)
             }
 
             $('.xy_plot').css($('#xy_graph_grid').css(['height', 'width']));
