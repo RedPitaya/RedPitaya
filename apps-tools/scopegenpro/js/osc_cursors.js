@@ -58,21 +58,25 @@
     OSC.ch1Offset = function(new_params) {
         OSC.setGposOffset("CH1");
         OSC.setInOffsetPlotCh("1")
+        OSC.updateTitleYAxisTicks()
     }
 
     OSC.ch2Offset = function(new_params) {
         OSC.setGposOffset("CH2");
         OSC.setInOffsetPlotCh("2")
+        OSC.updateTitleYAxisTicks()
     }
 
     OSC.ch3Offset = function(new_params) {
         OSC.setGposOffset("CH3");
         OSC.setInOffsetPlotCh("3")
+        OSC.updateTitleYAxisTicks()
     }
 
     OSC.ch4Offset = function(new_params) {
         OSC.setGposOffset("CH4");
         OSC.setInOffsetPlotCh("4")
+        OSC.updateTitleYAxisTicks()
     }
 
     OSC.ch1OffsetZero = function(new_params) {

@@ -489,9 +489,8 @@
             var scale = Math.abs(itm.scale) || 1;
 
             for(var i = -5; i <= 5; i++){
-                var nearestTick = Math.round(offset / scale) * scale;
-                var value = i * scale + nearestTick;
-                var v = OSC.convertVoltageForAxis(-value) + itm.suffix
+                var value = i * scale + offset;
+                var v = OSC.convertVoltageForAxisWithScale(-value,itm.scale) + itm.suffix
                 $("#yaxis_tick" + (i + 5)).html(v).css('color', color);
             }
         } else {

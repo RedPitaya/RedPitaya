@@ -19,11 +19,13 @@
     OSC.out1ShowOffset = function(new_params) {
         OSC.setOutOffsetPlotCh("1"); // Update value in input box
         OSC.setGposOffset("OUTPUT1", new_params);
+        OSC.updateTitleYAxisTicks()
     }
 
     OSC.out2ShowOffset = function(new_params) {
         OSC.setOutOffsetPlotCh("2"); // Update value in input box
         OSC.setGposOffset("OUTPUT2", new_params);
+        OSC.updateTitleYAxisTicks()
     }
 
 
@@ -53,17 +55,17 @@
 
 
         if ( id == 'ch1_offset_arrow' || id == "ch2_offset_arrow" || id == "ch3_offset_arrow" || id == "ch4_offset_arrow") {
-            $('#info_box').html('IN' + ch_n + ' center offset ' + OSC.convertVoltage(new_value));
+            $('#info_box').html('IN' + ch_n + ' vertical offset ' + OSC.convertVoltage(new_value));
             if ($('#in' + ch_n + '_dialog').is(':visible')) {
                 OSC.setInOffsetPlotCh(ch_n)
             }
         } else if (ui.helper[0].id == 'output1_offset_arrow' || ui.helper[0].id == 'output2_offset_arrow') {
-            $('#info_box').html('OUT' + ch_n + ' center offset ' + OSC.convertVoltage(new_value));
+            $('#info_box').html('OUT' + ch_n + ' vertical offset ' + OSC.convertVoltage(new_value));
             if ($('#out'+ch_n+'_dialog').is(':visible')){
                 OSC.setOutOffsetPlotCh(ch_n)
             }
         } else if (ui.helper[0].id == 'math_offset_arrow') {
-            $('#info_box').html('MATH center offset ' + OSC.convertVoltage(new_value));
+            $('#info_box').html('MATH vertical offset ' + OSC.convertVoltage(new_value));
             if ($('#math_dialog').is(':visible')){
                 OSC.convertValueToMathUnit(new_value);
             }

@@ -3,6 +3,7 @@
     OSC.chMathOffset = function(new_params) {
         OSC.setGposOffset("MATH")
         OSC.setMathOffsetPlotCh()
+        OSC.updateTitleYAxisTicks()
         // var params = $.extend(true, {}, OSC.orig.old);
         // var ch_name = "MATH"
         // var param_name = "OSC_"+ ch_name+"_OFFSET";

@@ -163,6 +163,34 @@
         return +(v.toFixed(2)) + ' ' + unit;
     };
 
+     OSC.convertVoltageForAxisWithScale = function(v,scale) {
+        var abs_v = Math.abs(v);
+        var unit = 'V';
+        var multiplier = 1;
+
+        if (abs_v >= 1000000) {
+            multiplier = 1000000;
+            unit = 'MV';
+        } else if (abs_v >= 1000) {
+            multiplier = 1000;
+            unit = 'kV';
+        } else if (abs_v >= 1) {
+            multiplier = 1;
+            unit = 'V';
+        } else if (abs_v >= 0.001) {
+            multiplier = 0.001;
+            unit = 'mV';
+        }
+
+        // Вычисляем точность как 1% от scale в текущих единицах
+        var scaledPrecision = (scale * 0.01) / multiplier;
+        var precision = Math.max(0, Math.ceil(-Math.log10(scaledPrecision)));
+
+        v = v / multiplier;
+
+        return +(v.toFixed(precision)) + ' ' + unit;
+    };
+
     OSC.mathSuffix = function(){
         var value_op = OSC.params.orig["OSC_MATH_OP"] ? OSC.params.orig["OSC_MATH_OP"].value : undefined;
         if (value_op !== undefined){
