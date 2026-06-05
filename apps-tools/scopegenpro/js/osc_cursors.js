@@ -330,6 +330,7 @@
         var new_value = +(((zero_pos - new_left - elem_width / 2 - 1) * ms_per_px).toFixed(6));
         var buf_width = graph_width + 2;
         var ratio = buf_width / (buf_width * OSC.params.orig['OSC_VIEV_PART'].value);
+        var ts = OSC.params.orig['OSC_TIME_SCALE'] !== undefined ? OSC.params.orig['OSC_TIME_SCALE'].value : undefined
 
         OSC.params.local['OSC_TIME_OFFSET'] = { value: (zero_pos - new_left - elem_width / 2 - 1) * ms_per_px };
         OSC.sendParams();
@@ -337,22 +338,18 @@
         $('#info_box').html('Time offset ' + OSC.convertTime(new_value));
         $('#buf_time_offset').css('left', buf_width / 2 - buf_width * OSC.params.orig['OSC_VIEV_PART'].value / 2 + (new_left + 8) / ratio  - 5).show();
 
-        if (OSC.isArrowVisibleInGraphs()) {
-            $('#trig_out_left').hide();
-            $('#trig_out_right').hide();
-            return;
-        }
-
-        if ($('#trig_out_left').length == 0 || $('#trig_out_right').length == 0) {
-            return;
-        }
-
-        if (new_value > 0) {
+        if (new_value > ts * 5.0) {
             $('#trig_out_left').show();
             $('#trig_out_right').hide();
-        } else if (new_value < 0) {
+            $('#time_offset_arrow').hide();
+        } else if (new_value < ts * -5.0) {
             $('#trig_out_left').hide();
             $('#trig_out_right').show();
+            $('#time_offset_arrow').hide();
+        } else {
+            $('#time_offset_arrow').show();
+            $('#trig_out_left').hide();
+            $('#trig_out_right').hide();
         }
     }
 
@@ -390,22 +387,18 @@
         $('#time_offset_arrow').css('left', arrow_left).show();
         $('#buf_time_offset').css('left', buf_width / 2 - buf_width * vp / 2 + (arrow_left + 8)/ ratio - 5).show();
 
-        if ($('#trig_out_left').length == 0 || $('#trig_out_right').length == 0) {
-            return;
-        }
-
-        if (OSC.isArrowVisibleInGraphs()) {
-            $('#trig_out_left').hide();
-            $('#trig_out_right').hide();
-            return;
-        }
-
-        if (toff > 0) {
+        if (toff > ts * 5.0) {
             $('#trig_out_left').show();
             $('#trig_out_right').hide();
-        } else if (toff < 0) {
+            $('#time_offset_arrow').hide();
+        } else if (toff < ts * -5.0) {
             $('#trig_out_left').hide();
             $('#trig_out_right').show();
+            $('#time_offset_arrow').hide();
+        } else {
+            $('#time_offset_arrow').show();
+            $('#trig_out_left').hide();
+            $('#trig_out_right').hide();
         }
     }
 

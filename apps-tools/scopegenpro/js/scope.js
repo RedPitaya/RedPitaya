@@ -1162,14 +1162,6 @@
             if (OSC.graphs["ch1"].elem === undefined){
                 OSC.graphs = {};
             }
-            else{
-                if ($('#trig_out_left').length == 0) {
-                    $('.plot').append('<div id="trig_out_left" style="margin-top: 15px; float: left;"><img src="img/trig_out_left.png" /></div>');
-                }
-                if ($('#trig_out_right').length == 0) {
-                    $('.plot').append('<div id="trig_out_right" style="margin-top: 15px; float: right;"><img src="img/trig_out_right.png" /></div>');
-                }
-            }
 
             let isInit = true
             for(let i = 1; i <= OSC.adc_channels; i++){
@@ -1933,7 +1925,7 @@
         }
 
         // Hide offset arrows, trigger level line and arrow
-        $('.y-offset-arrow, #time_offset_arrow, #buf_time_offset, #trig_level_arrow, #trigger_level').hide();
+        $('.y-offset-arrow, #time_offset_arrow, #buf_time_offset, #trig_level_arrow, #trigger_level, #trig_out_right, #trig_out_left').hide();
         if (requestAll){
             OSC.requestAllParam();
             OSC.requestAllSignals();

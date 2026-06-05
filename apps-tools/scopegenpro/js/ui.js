@@ -718,7 +718,7 @@
             }
         });
 
-        $('#time_offset_arrow, #time_offset_static_img').dblclick(function() {
+        $('#time_offset_arrow, #time_offset_static_img, #trig_out_left, #trig_out_right').dblclick(function() {
             OSC.params.local['OSC_TIME_OFFSET'] = { value: 0 };
             OSC.sendParams();
         });

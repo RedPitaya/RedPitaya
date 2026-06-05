@@ -203,6 +203,7 @@
     OSC.setTimeScaleOffset = function(param_name){
 
         if (param_name === 'OSC_TIME_SCALE'){
+            if (OSC.params.orig['OSC_TIME_SCALE'] == undefined) return;
             var scale = OSC.params.orig['OSC_TIME_SCALE'].value;
             var field = $('#' + param_name);
             if (field.is('span')) {
@@ -211,6 +212,7 @@
         }
 
         if (param_name === 'OSC_TIME_OFFSET'){
+            if (OSC.params.orig['OSC_TIME_OFFSET'] == undefined) return;
             var scale = OSC.params.orig['OSC_TIME_OFFSET'].value;
             var field = $('#' + param_name);
             if (field.is('span')) {
