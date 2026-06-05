@@ -148,6 +148,7 @@ class CViewController {
     auto setViewMode(EViewMode _mode) -> void;
 
     auto getSampledAfterTriggerInView() -> uint32_t;
+    auto getSampledBeforeTriggerInView() -> uint32_t;
     auto calcExtraPoints() -> uint32_t;
 
     auto addOscCounter() -> void;

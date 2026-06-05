@@ -361,12 +361,25 @@ auto CViewController::getSampledAfterTriggerInView() -> uint32_t {
     int posInPoints = ((m_timeOffet / m_timeScale) * getSamplesPerDivision());
     auto x = m_viewSizeInPoints / 2.0 + posInPoints;
     auto extraPoints = calcExtraPoints();
-    return MIN(x * decFactor + extraPoints, ADC_BUFFER_SIZE);
+    return MAX(MIN(x * decFactor + extraPoints, ADC_BUFFER_SIZE), 1);
+}
+
+// Samples needed BEFORE the trigger point (from left edge of view to trigger position)
+auto CViewController::getSampledBeforeTriggerInView() -> uint32_t {
+    auto decFactor = timeToIndexD(m_timeScale) / (double)getSamplesPerDivision();
+    // Invert sign: positive offset moves trigger right → more samples before trigger
+    int posInPoints = -((m_timeOffet / m_timeScale) * getSamplesPerDivision());
+    // Trigger position from left edge in points
+    auto triggerX = m_viewSizeInPoints / 2.0 + posInPoints;
+    auto extraPoints = calcExtraPoints();
+    // Samples from left edge to trigger position
+    return MIN(triggerX * decFactor + extraPoints, ADC_BUFFER_SIZE);
 }
 
 auto CViewController::calcExtraPoints() -> uint32_t {
-    auto decFactor = timeToIndexD(m_timeScale) / (double)getSamplesPerDivision();
-    return (floor((float)ADC_BUFFER_SIZE / (float)getViewSize())) * decFactor + 4.0;
+    auto decFactor = timeToIndexD(m_timeScale) / static_cast<double>(getSamplesPerDivision());
+    auto extra = floor(static_cast<double>(ADC_BUFFER_SIZE) / static_cast<double>(getViewSize())) * decFactor + 4.0;
+    return static_cast<uint32_t>(extra);
 }
 
 // auto CViewController::setCapturedDecimation(uint32_t _dec) -> void{

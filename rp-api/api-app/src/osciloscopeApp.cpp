@@ -1250,46 +1250,46 @@ int waitToFillPreTriggerBuffer(float _timescale, bool* _isresetted, uint32_t* pr
     auto contMode = g_adcController.getContinuousMode();
     auto trigSweep = g_adcController.getTriggerSweep();
 
-    // Full screen timeout / 2 -> *1.5. Half screen + 50%
+    // Timeout: half screen + 50% margin
     auto reqTimeout = g_viewController.calculateTimeOut(_timescale) * 0.75;
-    uint32_t triggerDelay;
-    auto viewSize = g_viewController.getViewSize();
-    auto samplesPerDivision = g_viewController.getSamplesPerDivision();
-    auto deltaSample = timeToIndexD(_timescale) / samplesPerDivision;
-    auto viewInSamples = viewSize * deltaSample;
-    auto extraPoints = g_viewController.calcExtraPoints() + 4;
-    auto exitByTimout = true;
-    auto exitByPreTrigger = false;
+
     g_viewController.setTriggerState(false);
     *_isresetted = false;
-    double lastTime = 0;
+
     auto timeOut = g_viewController.getClock() + reqTimeout;
     uint32_t prevPreTrigger = 0;
-    // auto startTime = g_viewController.getClock();
+    bool timedOut = false;
+    bool needMoreSamples = true;
+
     do {
         if (g_adcController.isNeedResetWaitTrigger()) {
             *_isresetted = true;
             break;
         }
-        ECHECK_APP(rp_AcqGetTriggerDelayDirect(&triggerDelay));
+
+        // Calculate required pre-trigger samples based on trigger position on screen
+        *needWaitSamples = g_viewController.getSampledBeforeTriggerInView();
+
         ECHECK_APP(rp_AcqGetPreTriggerCounter(preTriggerCount));
-        *needWaitSamples = viewInSamples - triggerDelay + extraPoints;
-        // Don't wait in continuos mode and get value for needWaitSamples
+
+        // Don't wait in continuous mode with auto trigger
         if (contMode && trigSweep == RPAPP_OSC_TRIG_AUTO) {
             return RP_OK;
         }
-        lastTime = g_viewController.getClock();
-        if (prevPreTrigger == *preTriggerCount && prevPreTrigger) {
-            exitByTimout = timeOut > lastTime;
-        } else {
-            timeOut = g_viewController.getClock() + reqTimeout;
+
+        auto now = g_viewController.getClock();
+
+        // Reset timeout if pre-trigger counter has changed
+        if (prevPreTrigger != *preTriggerCount) {
+            timeOut = now + reqTimeout;
         }
-        exitByPreTrigger = *preTriggerCount < *needWaitSamples;
+
+        timedOut = (now >= timeOut);
+        needMoreSamples = (*preTriggerCount < *needWaitSamples);
         prevPreTrigger = *preTriggerCount;
-    } while (exitByPreTrigger && exitByTimout);
-    // auto stopTime = g_viewController.getClock();
-    // if (!exitByTimout)
-    // WARNING("preTriggerCount %d exitByTimout %d needWaitSamples %d exitByPreTrigger %d reqTimeout %f %f %f while time %f",*preTriggerCount,exitByTimout,*needWaitSamples,exitByPreTrigger,reqTimeout,timeOut,lastTime, stopTime - startTime)
+
+    } while (needMoreSamples && !timedOut);
+    // WARNING("needWaitSamples %d - %d timedOut %d", *needWaitSamples, *preTriggerCount, timedOut)
     return RP_OK;
 }
 

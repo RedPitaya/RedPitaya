@@ -136,17 +136,19 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float* _data, vsize_t
             return INT32_MAX;
         if (x < -_dataSize / 2.0)
             return INT32_MAX;
-        if (range.m_validBeforeTrigger != -1 && -range.m_validBeforeTrigger > x)
+        // x is relative to trigger (trigger is at buffer index 0)
+        // validBeforeTrigger: how many samples before trigger are valid (negative x)
+        // validAfterTrigger: how many samples after trigger are valid (positive x)
+        if (range.m_validBeforeTrigger != -1 && x < -range.m_validBeforeTrigger)
             return INT32_MAX;
-        if (range.m_validAfterTrigger != -1 && range.m_validAfterTrigger < x)
+        if (range.m_validAfterTrigger != -1 && x > range.m_validAfterTrigger)
             return INT32_MAX;
-        if (x >= 0) {
-            return x;
-        } else {
+        if (x < 0) {
             x += _dataSize;
         }
         return x;
     };
+
     auto viewSize = _view->size();
     int centerView = viewSize / 2;
     int trigPosInView = centerView - _triggerPointPos;
