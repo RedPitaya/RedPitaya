@@ -147,7 +147,7 @@ auto generate(rp_channel_t channel, float tscale) -> void {
     // int burstCount, burstReps;
 
     signal = &outSignal[channel];
-    static GenChannelSettings oldSettings;
+    static GenChannelSettings oldSettings[MAX_DAC_CHANNELS];
     GenChannelSettings settings(outWaveform[channel].Value(),
                                 outFrequency[channel].Value(),
                                 (float)(outPhase[channel].Value() / 180.0f * M_PI),
@@ -189,13 +189,13 @@ auto generate(rp_channel_t channel, float tscale) -> void {
             uint32_t size;
             if (!rp_ARBGetSignalByName(signame, data, &size)) {
                 settings.arb_size = size;
-                if (oldSettings != settings) {
+                if (oldSettings[channel] != settings) {
                     if (settings.gen_mode == RP_GEN_MODE_CONTINUOUS) {
                         synthesis_arb(signal, data, settings);
-                        oldSettings = settings;
+                        oldSettings[channel] = settings;
                     } else {
                         synthesis_arb_burst(signal, data, settings);
-                        oldSettings = settings;
+                        oldSettings[channel] = settings;
                     }
                 }
             }
@@ -206,14 +206,14 @@ auto generate(rp_channel_t channel, float tscale) -> void {
             rp_GetWaveformDataV(channel, &data);
             if (data != nullptr) {
                 settings.arb_size = data->size();
-                if (oldSettings != settings) {
+                if (oldSettings[channel] != settings) {
                     if (settings.gen_mode == RP_GEN_MODE_CONTINUOUS) {
                         synthesis_arb(signal, data->data(), settings);
-                        oldSettings = settings;
+                        oldSettings[channel] = settings;
 
                     } else {
                         synthesis_arb_burst(signal, data->data(), settings);
-                        oldSettings = settings;
+                        oldSettings[channel] = settings;
                     }
                 }
             } else {
