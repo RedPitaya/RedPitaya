@@ -64,7 +64,8 @@
         }); //end each
 
         var value,
-            step;
+            step,
+            step_direct;
 
         var interval = null,
             timeout = null;
@@ -91,10 +92,6 @@
                     lessValFn(input);
                 }, 50);
             }, 200);
-        });
-
-        $("#ext_con_but").click(function(event) {
-            $('#ext_connections_dialog').modal("show");
         });
 
         $(moreVal + ', ' + lessVal).on("mouseup mouseout", function() {
@@ -161,7 +158,10 @@
                 step = parseFloat(input.attr('step'));
                 var signs = Math.log10(step)
                 value = parseFloat(value.toFixed(-signs));
-            } else {
+            } else if (input.attr('step_direct')) {
+                step = parseFloat(input.attr('step_direct'));
+            }
+            else{
                 step = 1;
             }
         }
@@ -241,6 +241,11 @@
     }
 
     OSC.initUI = function(){
+
+
+        $("#ext_con_but").click(function(event) {
+            $('#ext_connections_dialog').modal("show");
+        });
 
 
         $('.btn.menu-btn').onClassChange(function(el, newClass) {
@@ -373,15 +378,13 @@
                 $('#time_offset_arrow').css('left', (buf_width + 2) / 2 + px_offset);
             },
             stop: function(ev, ui) {
-                if (!OSC.state.simulated_drag) {
-                    var buf_width = $('#buffer').width();
-                    var zero_pos = (buf_width + 2) / 2;
-                    var ms_per_px = (OSC.params.orig['OSC_TIME_SCALE'].value * 10) / buf_width;
-                    var ratio = buf_width / (buf_width * OSC.params.orig['OSC_VIEV_PART'].value);
-                    OSC.params.local['OSC_TIME_OFFSET'] = { value: (zero_pos - ui.position.left - ui.helper.width() / 2 - 1) * ms_per_px * ratio };
-                    OSC.sendParams();
-                    $('#info_box').empty();
-                }
+                var buf_width = $('#buffer').width();
+                var zero_pos = (buf_width + 2) / 2;
+                var ms_per_px = (OSC.params.orig['OSC_TIME_SCALE'].value * 10) / buf_width;
+                var ratio = buf_width / (buf_width * OSC.params.orig['OSC_VIEV_PART'].value);
+                OSC.params.local['OSC_TIME_OFFSET'] = { value: (zero_pos - ui.position.left - ui.helper.width() / 2 - 1) * ms_per_px * ratio };
+                OSC.sendParams();
+                $('#info_box').empty();
                 $('#buf_time_offset').css('top',0)
             }
         });

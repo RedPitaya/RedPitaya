@@ -5,36 +5,69 @@
         // Voltage offset arrow dragging
         $('.y-offset-arrow').draggable({
             axis: 'y',
+            grid: [1, 20],
             containment: 'parent',
             start: function() {
                 OSC.state.cursor_dragging = true;
             },
             drag: function(ev, ui) {
-                var margin_top = parseInt(ui.helper.css('marginTop'));
-                var min_top = ((ui.helper.height() / 2) + margin_top) * -1;
-                var max_top = $('#graphs').height() - margin_top;
+                var grid = $(this).draggable('option', 'grid');
+                var step = grid[1];
+                var currentTop = ui.position.top;
+                var index = -Math.round(currentTop / step) + 50;
 
-                if (ui.position.top < min_top) {
-                    ui.position.top = min_top;
-                } else if (ui.position.top > max_top) {
-                    ui.position.top = max_top;
-                }
-
-                OSC.updateYOffset(ui);
+                OSC.updateYOffset(ui,index);
                 OSC.cursorY()
                 OSC.updateTitleYAxisTicks()
             },
             stop: function(ev, ui) {
-                if (!OSC.state.simulated_drag) {
-                    OSC.updateYOffset(ui);
-                    OSC.cursorY()
-                    OSC.updateTitleYAxisTicks()
-                    $('#info_box').empty();
-                }
+                var $arrow = $(this);
+                var grid = $arrow.draggable('option', 'grid');
+                var step = grid[1];
+                var currentTop = ui.position.top;
+                var index = -Math.round(currentTop / step) + 50;
+
+                OSC.updateYOffset(ui,index);
+                OSC.cursorY()
+                OSC.updateTitleYAxisTicks()
+                $('#info_box').empty();
                 OSC.state.cursor_dragging = false;
             }
         });
     }
+
+    OSC.calculateGridStep = function(scale, containerHeight,steps) {
+
+        var stepsPerDivision = steps || 10;
+        var totalDivisions = 10;
+
+        var voltageStep = scale / stepsPerDivision;
+
+        var totalScale = scale * totalDivisions;
+
+        var pixelsPerVolt = containerHeight / totalScale;
+
+        var stepPx = voltageStep * pixelsPerVolt;
+
+        return {
+            stepPx: stepPx,
+            voltageStep: voltageStep,
+            formattedStep: OSC.convertVoltageForAxisWithScale(voltageStep, 1),
+            totalSteps: totalDivisions * stepsPerDivision,
+            stepsPerDivision: stepsPerDivision,
+            divisionVoltage: scale
+        };
+    };
+
+    OSC.updateDraggableGrid = function() {
+        var itm = OSC.getSettingsActiveChannel()
+        var gridInfo = OSC.calculateGridStep(
+            itm.scale,
+            $('#graphs').height(),
+        );
+
+        $('.y-offset-arrow').draggable('option', 'grid', [1, gridInfo.stepPx]);
+    };
 
     OSC.isArrowVisibleInGraphs = function() {
         const $arrow = $('#time_offset_arrow');
@@ -354,7 +387,7 @@
     }
 
     OSC.endTimeMove = function(new_left) {
-        if (!OSC.state.simulated_drag && OSC.params.orig['OSC_TIME_SCALE'] !== undefined) {
+        if (OSC.params.orig['OSC_TIME_SCALE'] !== undefined) {
             var graph_width = $('#graph_grid').outerWidth();
             var elem_width = $('#time_offset_arrow').width();
             var zero_pos = (graph_width + 2) / 2;

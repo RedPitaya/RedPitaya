@@ -1,5 +1,38 @@
 (function(OSC, $, undefined) {
 
+    // OSC.setInOffsetPlotCh = function(ch){
+    //     var param_name_offset = "GPOS_OFFSET_CH" + ch
+    //     var scale = OSC.params.orig["GPOS_SCALE_CH" + ch] ? OSC.params.orig["GPOS_SCALE_CH" + ch].value : undefined;
+    //     var offset = OSC.getInOffsetPlot(ch);
+
+    //     var inp_field = $('#' + param_name_offset);
+    //     var inp_field_units = $('#' + param_name_offset+"_UNIT");
+    //     var probeAttenuation = OSC.params.orig['OSC_' + ch + '_PROBE'] !== undefined ? OSC.params.orig['OSC_' + ch + '_PROBE'].value : 1;
+    //     var gain_mode = OSC.params.orig['OSC_' + ch + '_IN_GAIN'] !== undefined ? OSC.params.orig['OSC_' + ch + '_IN_GAIN'].value : 0;
+
+    //     var units;
+    //     var step = 1;
+    //     if (scale !== undefined) {
+    //         if (Math.abs(scale) >= 1) {
+    //             units = 'V';
+    //         } else {
+    //             units = 'mV';
+    //         }
+    //         inp_field_units.text(units)
+    //         step = scale / 10;
+    //     } else {
+    //         units = inp_field_units.html();
+    //     }
+
+    //     if (offset !== undefined){
+    //         var multiplier = units == "mV" ? 1000 : 1;
+    //         inp_field.val(OSC.formatInputValue(offset * multiplier, probeAttenuation, units == "mV", gain_mode !== 0));
+    //         // inp_field.attr("step",OSC.getStepValue(probeAttenuation, units == "mV", gain_mode !== 0));
+    //         inp_field.attr("step_direct",step * multiplier);
+    //         OSC.setInOffsetPlotChLimits(ch)
+    //     }
+    // }
+
     OSC.setInOffsetPlotCh = function(ch){
         var param_name_offset = "GPOS_OFFSET_CH" + ch
         var scale = OSC.params.orig["GPOS_SCALE_CH" + ch] ? OSC.params.orig["GPOS_SCALE_CH" + ch].value : undefined;
@@ -11,6 +44,7 @@
         var gain_mode = OSC.params.orig['OSC_' + ch + '_IN_GAIN'] !== undefined ? OSC.params.orig['OSC_' + ch + '_IN_GAIN'].value : 0;
 
         var units;
+        var step = 1;
         if (scale !== undefined) {
             if (Math.abs(scale) >= 1) {
                 units = 'V';
@@ -18,14 +52,23 @@
                 units = 'mV';
             }
             inp_field_units.text(units)
+            step = scale / 10;
         } else {
             units = inp_field_units.html();
         }
 
         if (offset !== undefined){
             var multiplier = units == "mV" ? 1000 : 1;
-            inp_field.val(OSC.formatInputValue(offset * multiplier, probeAttenuation, units == "mV", gain_mode !== 0));
-            inp_field.attr("step",OSC.getStepValue(probeAttenuation, units == "mV", gain_mode !== 0));
+            var step_direct = step * multiplier;
+            var value = offset * multiplier;
+
+            var roundedValue = Math.round(value / step_direct) * step_direct;
+
+            var decimals = (step_direct.toString().split('.')[1] || '').length;
+            roundedValue = +roundedValue.toFixed(decimals);
+
+            inp_field.val(roundedValue);
+            inp_field.attr("step_direct", step_direct);
             OSC.setInOffsetPlotChLimits(ch)
         }
     }

@@ -177,12 +177,11 @@
         } else if (abs_v >= 1) {
             multiplier = 1;
             unit = 'V';
-        } else if (abs_v >= 0.001) {
+        } else {
             multiplier = 0.001;
             unit = 'mV';
         }
 
-        // Вычисляем точность как 1% от scale в текущих единицах
         var scaledPrecision = (scale * 0.01) / multiplier;
         var precision = Math.max(0, Math.ceil(-Math.log10(scaledPrecision)));
 

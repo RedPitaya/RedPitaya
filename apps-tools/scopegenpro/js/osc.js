@@ -503,6 +503,7 @@
             }
         }
         OSC.moveTitleYAxisTicks()
+        OSC.updateDraggableGrid()
     }
 
     OSC.clearTraceBuffers = function(channel) {

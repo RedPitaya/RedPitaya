@@ -1910,7 +1910,8 @@
             $('.plot').css($('#graph_grid').css(['height', 'width']));
 
             // Hide all graphs, they will be shown next time signal data is received
-            $('#graphs').find('.plot').hide();
+            // $('#graphs').find('.plot').hide();
+            $('#graphs .plot').hide();
         }
 
         if ($('.xy_plot').length !== 0){
@@ -1921,7 +1922,8 @@
                 $('.xy_plot').css($('#xy_graph_grid').css(['height', 'width']));
 
             // Hide all graphs, they will be shown next time signal data is received
-            $('#xy_graphs').find('.xy_plot').hide();
+            // $('#xy_graphs').find('.xy_plot').hide();
+            $('#xy_graphs .xy_plot').hide();
         }
 
         // Hide offset arrows, trigger level line and arrow
