@@ -31,14 +31,17 @@
 #include "rp.h"
 #include "rp_hw-profiles.h"
 
+#include "ams_monitor.h"
+#include "dac_control.h"
+#include "rp_session.h"
+#include "signal_handler.h"
+
 #define MAP_SIZE 4096UL
 #define MAP_MASK (MAP_SIZE - 1)
 
 uint32_t read_value(uint32_t a_addr);
 void read_value(uint32_t a_addr, uint32_t count);
 void write_values(uint32_t a_addr, uint32_t a_values);
-void set_DAC(float* values, int count);
-void showAMS();
 
 void* map_base = (void*)(-1);
 
@@ -136,6 +139,7 @@ int main(int argc, char** argv) {
                 "\twrite addr: address value\n"
                 "\twrite addr: address w value\n"
                 "\tread analog mixed signals: -ams\n"
+                "\tShowing graph of analog mixed signals: -ams_graph\n"
                 "\tset slow DAC: -sdac AO0 AO1 AO2 AO3 [V]\n"
                 "\tClock frequency meter: -c\n"
                 "\tPrint fpga version: -f\n"
@@ -180,6 +184,50 @@ int main(int argc, char** argv) {
 
     if (key == "-ams") {
         showAMS();
+        return 0;
+    }
+
+    if (key == "-ams_graph") {
+        // Configure monitor
+        AmsMonitorConfig monitorConfig;
+        monitorConfig.updateIntervalMs = 150;  // Update every 150ms
+
+        // Select ALL channels to display
+        int channels[] = {
+            static_cast<int>(AmsChannel::Temp),     // 0: Temperature
+            static_cast<int>(AmsChannel::AI0),      // 1: Analog input 0
+            static_cast<int>(AmsChannel::AI1),      // 2: Analog input 1
+            static_cast<int>(AmsChannel::AI2),      // 3: Analog input 2
+            static_cast<int>(AmsChannel::AI3),      // 4: Analog input 3
+            static_cast<int>(AmsChannel::AI4_5V),   // 5: Analog input 4 (5V)
+            static_cast<int>(AmsChannel::VCCPINT),  // 6: Core voltage 1V0
+            static_cast<int>(AmsChannel::VCCPAUX),  // 7: Aux voltage 1V8
+            static_cast<int>(AmsChannel::VCCBRAM),  // 8: BRAM voltage 1V0
+            static_cast<int>(AmsChannel::VCCINT),   // 9: Internal voltage 1V0
+            static_cast<int>(AmsChannel::VCCAUX),   // 10: Aux voltage 1V8
+            static_cast<int>(AmsChannel::VCCDDR),   // 11: DDR voltage
+        };
+
+        monitorConfig.numSelectedChannels = 12;  // All 16 channels
+        for (int i = 0; i < 12; ++i) {
+            monitorConfig.selectedChannels[i] = channels[i];
+        }
+
+        AmsMonitor monitor(monitorConfig);
+
+        SignalHandler::getInstance().registerCallback([&monitor]() { monitor.stop(); });
+
+        SignalHandler::getInstance().registerCallback([]() { cleanup(); });
+
+        monitor.start();
+
+        SignalHandler::getInstance().waitForShutdown();
+
+        // Ensure monitor is stopped (in case signal handler didn't catch it)
+        if (monitor.isRunning()) {
+            monitor.stop();
+        }
+
         return 0;
     }
 
@@ -312,7 +360,7 @@ int main(int argc, char** argv) {
     if (fd != -1) {
         close(fd);
     }
-
+    cleanup();
     return retval;
 }
 
