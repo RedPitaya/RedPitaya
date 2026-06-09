@@ -126,7 +126,7 @@ scpi_result_t RP_EnableDaisyChainClockSync(scpi_t* context) {
         SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing first parameter.")
         return SCPI_RES_ERR;
     }
-    auto result = rp_SetEnableDiasyChainClockSync((bool)value);
+    auto result = rp_SetEnableDaisyChainClockSync((bool)value);
     if (RP_OK != result) {
         RP_LOG_CRIT("Failed to enabled mode: %s", rp_GetError(result))
         return SCPI_RES_ERR;
@@ -138,7 +138,7 @@ scpi_result_t RP_EnableDaisyChainClockSync(scpi_t* context) {
 scpi_result_t RP_EnableDaisyChainClockSyncQ(scpi_t* context) {
     const char* _name = nullptr;
     bool value = false;
-    auto result = rp_GetEnableDiasyChainClockSync(&value);
+    auto result = rp_GetEnableDaisyChainClockSync(&value);
     if (RP_OK != result) {
         RP_LOG_CRIT("Failed get state: %s", rp_GetError(result))
         if (getRetOnError())

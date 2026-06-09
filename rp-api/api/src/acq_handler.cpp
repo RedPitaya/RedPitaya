@@ -202,7 +202,7 @@ static int setCalibInFPGA(rp_channel_t channel) {
     }
 
     bool is16BitMode = false;
-    rp_AcqGet16BitMode(&is16BitMode);  // Ignore return result
+    acq_Get16BitMode(&is16BitMode);  // Ignore return result
 
     if (is_fpga && calib_id >= RP_HW_PACK_ID_V6) {
         rp_pinState_t mode;
@@ -1013,7 +1013,7 @@ int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* 
     }
 
     bool is16BitEnable = false;
-    rp_AcqGet16BitMode(&is16BitEnable);
+    acq_Get16BitMode(&is16BitEnable);
     uint32_t bitOffset = is16BitEnable ? cmn_CalculateBitShiftFor16BitMode() : 0;
 
     uint_gain_calib_t calib;
@@ -1125,7 +1125,7 @@ int acq_GetDataInBuffer(rp_channel_t channel, uint32_t pos, uint32_t* size, int3
     }
 
     bool is16BitEnable = false;
-    rp_AcqGet16BitMode(&is16BitEnable);
+    acq_Get16BitMode(&is16BitEnable);
     uint32_t bitOffset = is16BitEnable ? cmn_CalculateBitShiftFor16BitMode() : 0;
 
     bool is_need_raw = out->ch_i[channel] != NULL;
@@ -1443,7 +1443,7 @@ int acq_GetDataVEx(rp_channel_t channel, uint32_t pos, uint32_t* size, void* in_
     }
 
     bool is16BitEnable = false;
-    rp_AcqGet16BitMode(&is16BitEnable);
+    acq_Get16BitMode(&is16BitEnable);
     uint32_t bitOffset = is16BitEnable ? cmn_CalculateBitShiftFor16BitMode() : 0;
 
     uint8_t bits = 0;
@@ -2106,7 +2106,7 @@ int acq_axi_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16
     // }
 
     bool is16BitEnable = false;
-    rp_AcqGet16BitMode(&is16BitEnable);
+    acq_Get16BitMode(&is16BitEnable);
 
     uint8_t bits = 0;
     bool is_sign = false;
@@ -2230,7 +2230,7 @@ int acq_axi_GetDataVEx(rp_channel_t channel, uint32_t pos, uint32_t* size, void*
     }
 
     bool is16BitEnable = false;
-    rp_AcqGet16BitMode(&is16BitEnable);
+    acq_Get16BitMode(&is16BitEnable);
     uint32_t bitOffset = is16BitEnable ? cmn_CalculateBitShiftFor16BitMode() : 0;
 
     uint8_t bits = 0;

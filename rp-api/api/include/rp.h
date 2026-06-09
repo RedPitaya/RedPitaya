@@ -392,7 +392,7 @@ int rp_GetSourceTrigOutput(rp_outTiggerMode_t* mode);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_SetEnableDiasyChainClockSync(bool enable);
+int rp_SetEnableDaisyChainClockSync(bool enable);
 
 /*
  * Returns the current state of the SATA daisy chain mode.
@@ -400,7 +400,7 @@ int rp_SetEnableDiasyChainClockSync(bool enable);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_GetEnableDiasyChainClockSync(bool* state);
+int rp_GetEnableDaisyChainClockSync(bool* state);
 
 ///@}
 

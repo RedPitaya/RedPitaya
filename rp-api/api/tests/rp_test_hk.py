@@ -148,12 +148,12 @@ def test_freq_sync():
     res = rp.rp_SetSourceTrigOutput(rp.OUT_TR_DAC)
     print(res)
 
-    print("rp.rp_GetEnableDiasyChainClockSync()")
-    res = rp.rp_GetEnableDiasyChainClockSync()
+    print("rp.rp_GetEnableDaisyChainClockSync()")
+    res = rp.rp_GetEnableDaisyChainClockSync()
     print(res)
 
-    print("rp.rp_SetEnableDiasyChainClockSync(False)")
-    res = rp.rp_SetEnableDiasyChainClockSync(False)
+    print("rp.rp_SetEnableDaisyChainClockSync(False)")
+    res = rp.rp_SetEnableDaisyChainClockSync(False)
     print(res)
 
     print("rp.rp_EnableDebugReg()")

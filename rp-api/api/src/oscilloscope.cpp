@@ -554,14 +554,16 @@ int osc_IntTriggerRead(int timeout) {
         status_ch1_2.value = osc_reg->irq_status_clear;
         status_ch3_4.value = 0;
         cmn_Debug("[osc_IntTriggerRead] status_ch1_2 %x mask %x", status_ch1_2.value, mask);
+        bool has_trig_ch1_2 = (status_ch1_2.value & mask) != 0;
         if (osc_reg_4ch != NULL) {
+            bool has_trig_ch3_4 = (status_ch3_4.value & mask) != 0;
             status_ch3_4.value = osc_reg_4ch->irq_status_clear;
             cmn_Debug("[osc_IntTriggerRead] status_ch3_4 %x mask %x", status_ch3_4.value, mask);
+            if (has_trig_ch1_2 && has_trig_ch3_4) {
+                return osc_IntClearTrigger();
+            }
         }
-        bool has_trig_ch1_2 = (status_ch1_2.value & mask) != 0;
-        bool has_trig_ch3_4 = (status_ch3_4.value & mask) != 0;
-
-        if (has_trig_ch1_2 && has_trig_ch3_4) {
+        if (has_trig_ch1_2) {
             return osc_IntClearTrigger();
         }
         return RP_EIS;
@@ -583,14 +585,16 @@ int osc_IntFullRead(int timeout) {
         status_ch1_2.value = osc_reg->irq_status_clear;
         status_ch3_4.value = 0;
         cmn_Debug("[osc_IntFullRead] status_ch1_2 %x mask %x", status_ch1_2.value, mask);
+        bool has_trig_ch1_2 = (status_ch1_2.value & mask) != 0;
         if (osc_reg_4ch != NULL) {
+            bool has_trig_ch3_4 = (status_ch3_4.value & mask) != 0;
             status_ch3_4.value = osc_reg_4ch->irq_status_clear;
             cmn_Debug("[osc_IntFullRead] status_ch3_4 %x mask %x", status_ch3_4.value, mask);
+            if (has_trig_ch1_2 && has_trig_ch3_4) {
+                return osc_IntClearBufferFull();
+            }
         }
-        bool has_trig_ch1_2 = (status_ch1_2.value & mask) != 0;
-        bool has_trig_ch3_4 = (status_ch3_4.value & mask) != 0;
-
-        if (has_trig_ch1_2 && has_trig_ch3_4) {
+        if (has_trig_ch1_2) {
             return osc_IntClearBufferFull();
         }
         return RP_EIS;
@@ -1166,6 +1170,10 @@ int osc_GetPreTriggerCounter(rp_channel_t channel, uint32_t* value) {
  */
 
 int osc_SetTriggerDelay(rp_channel_t channel, uint32_t decimated_data_num) {
+    if (decimated_data_num == 0) {
+        ERROR_LOG("The delay should not be equal to 0")
+        return RP_EOOR;
+    }
     uint32_t currentValue = 0;
     switch (channel) {
         case RP_CH_1:
