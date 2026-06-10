@@ -633,7 +633,7 @@ auto updateOscParams(bool force) -> void {
                 inScale[i].Update();
                 if (rp_HPGetIsAttenuatorControllerPresentOrDefault()) {
                     // AUTO select gain on autoscale
-                    int val = inScale[i].Value() > 0.1 ? RPAPP_OSC_IN_GAIN_HV : RPAPP_OSC_IN_GAIN_LV;
+                    int val = inScale[i].Value() > 1.0 ? RPAPP_OSC_IN_GAIN_HV : RPAPP_OSC_IN_GAIN_LV;
                     rpApp_osc_in_gain_t cur_val;
                     if (rpApp_OscGetInputGain((rp_channel_t)i, &cur_val) == RP_OK) {
                         if (val != cur_val && !force) {
