@@ -16,7 +16,7 @@ CBooleanParameter outState[MAX_DAC_CHANNELS] = INIT2("OUTPUT", "_STATE", CBasePa
 CFloatParameter outAmplitude[MAX_DAC_CHANNELS] = INIT2("SOUR", "_VOLT", CBaseParameter::RW, LEVEL_AMPS_DEF, 0, 0, LEVEL_AMPS_MAX, CONFIG_VAR);
 CFloatParameter outOffset[MAX_DAC_CHANNELS] = INIT2("SOUR", "_VOLT_OFFS", CBaseParameter::RW, 0, 0, -LEVEL_AMPS_MAX, LEVEL_AMPS_MAX, CONFIG_VAR);
 CFloatParameter outFrequency[MAX_DAC_CHANNELS] =
-    INIT2("SOUR", "_FREQ_FIX", CBaseParameter::RW, std::max<int>(1000, outFreqMin()), 0, (float)outFreqMin(), (float)outFreqMax(), CONFIG_VAR);
+    INIT2("SOUR", "_FREQ_FIX", CBaseParameter::RW, std::max<float>(1000, outFreqMin()), 0, (float)outFreqMin(), (float)outFreqMax(), CONFIG_VAR);
 CFloatParameter outPhase[MAX_DAC_CHANNELS] = INIT2("SOUR", "_PHAS", CBaseParameter::RW, 0, 0, -360, 360, CONFIG_VAR);
 CFloatParameter outDCYC[MAX_DAC_CHANNELS] = INIT2("SOUR", "_DCYC", CBaseParameter::RW, 50, 0, 0, 100, CONFIG_VAR);
 CFloatParameter outRiseTime[MAX_DAC_CHANNELS] = INIT2("SOUR", "_RISE", CBaseParameter::RW, 1, 0, 0.1, 1000, CONFIG_VAR);
@@ -35,7 +35,7 @@ CFloatParameter outAmplitudeMax("SOUR_VOLT_MAX", CBaseParameter::RO, LEVEL_AMPS_
 
 /// SWEEP VARIABLES /////////
 CFloatParameter outSweepStartFrequency[2] =
-    INIT2("SOUR", "_SWEEP_FREQ_START", CBaseParameter::RW, std::max<int>(1000, outFreqMin()), 0, (float)outFreqMin(), (float)outFreqMax(), CONFIG_VAR);
+    INIT2("SOUR", "_SWEEP_FREQ_START", CBaseParameter::RW, std::max<float>(1000, outFreqMin()), 0, (float)outFreqMin(), (float)outFreqMax(), CONFIG_VAR);
 CFloatParameter outSweepEndFrequency[2] = INIT2("SOUR", "_SWEEP_FREQ_END", CBaseParameter::RW, (float)outFreqMax(), 0, (float)outFreqMin(), (float)outFreqMax(), CONFIG_VAR);
 CIntParameter outSweepMode[2] = INIT2("SOUR", "_SWEEP_MODE", CBaseParameter::RW, RP_GEN_SWEEP_MODE_LINEAR, 0, RP_GEN_SWEEP_MODE_LINEAR, RP_GEN_SWEEP_MODE_LOG, CONFIG_VAR);
 CIntParameter outSweepRepetitions[2] = INIT2("SOUR", "_SWEEP_REP", CBaseParameter::RW, 1, 0, 1, 2147483647, CONFIG_VAR);

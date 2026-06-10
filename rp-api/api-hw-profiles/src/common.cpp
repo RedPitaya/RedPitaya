@@ -21,12 +21,14 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
+#include <filesystem>
 #include <fstream>
 #include <map>
 #include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
 #include "stem_122_16SDR_v1.0.h"
 #include "stem_122_16SDR_v1.1.h"
 #include "stem_125_10_v1.0.h"
@@ -1102,6 +1104,9 @@ int hp_cmn_WriteConfig(rp_HPeModels_t model, const char* key, int value) {
         return RP_HP_EU;
 
     static auto home_path = hp_cmn_GetHomeDirectory();
+    if (!createDirectory(home_path + SETTINGS_PATH)) {
+        return RP_HP_EU;
+    }
     std::ofstream file(home_path + path + std::to_string((int)model) + ".conf");
     if (file.is_open()) {
         file << value;
@@ -1146,4 +1151,10 @@ void applyRate(uint32_t& target, uint32_t original, const std::string& path, rp_
     bool noerror = true;
     int rate = hp_cmn_GetFromConfig(boardModel, path, noerror);
     target = (noerror) ? rate : original;
+}
+
+// Creates the directory and subdirectories if needed.
+auto createDirectory(const std::string& _path) -> bool {
+    std::error_code ec;
+    return std::filesystem::create_directories(_path, ec);
 }
