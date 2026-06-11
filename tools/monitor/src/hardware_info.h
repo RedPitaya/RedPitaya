@@ -11,18 +11,16 @@
 // ============================================================================
 class HardwareInfo {
    public:
-    // Returns "35" for 250-12 series, "5" for all others
     static const std::string& getDDRVoltage();
 
-    // Checks if the board belongs to the 250-12 family
-    static bool is250_12_series();
+    static bool isLowVRAM_series();
 
    private:
     // Lazily computed DDR voltage string
     static std::string queryDDRVoltage();
 
     // Reads the hardware model from the device
-    static bool queryIs250_12();
+    static bool queryIsLowVRAM();
 };
 
 #endif  // HARDWARE_INFO_H

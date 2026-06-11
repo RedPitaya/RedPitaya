@@ -34,6 +34,9 @@ std::string getWSDDRNominalValue() {
             case STEM_250_12_120:
             case STEM_250_12_v1_2a:
             case STEM_250_12_v1_2b:
+            case STEM_125_14_BO_v2_0:
+            case STEM_125_14_Pro_BO_v2_0:
+            case STEM_125_14_Z7020_Pro_BO_v2_0:
             case STEM_125_14_Z7020_Pro_v1_0:
             case STEM_125_14_Z7020_Ind_v2_0:
             case STEM_125_14_Z7020_Pro_v2_0:
@@ -42,6 +45,8 @@ std::string getWSDDRNominalValue() {
             case STEM_125_14_Z7020_LL_v1_2:
             case STEM_125_14_Z7020_TI_v1_3:
             case STEM_65_16_Z7020_TI_v1_3:
+            case STEM_125_14_Pro_v2_0:
+            case STEM_125_14_v2_0:
                 return "35";
             default:
                 return "5";

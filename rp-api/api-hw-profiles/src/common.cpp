@@ -1153,8 +1153,8 @@ void applyRate(uint32_t& target, uint32_t original, const std::string& path, rp_
     target = (noerror) ? rate : original;
 }
 
-// Creates the directory and subdirectories if needed.
 auto createDirectory(const std::string& _path) -> bool {
     std::error_code ec;
-    return std::filesystem::create_directories(_path, ec);
+    std::filesystem::create_directories(_path, ec);
+    return !ec;
 }

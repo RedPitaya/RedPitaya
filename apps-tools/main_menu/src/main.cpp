@@ -92,9 +92,11 @@ int rp_app_init(void) {
     return 0;
 }
 
+// Creates the directory and subdirectories if needed.
 auto createDirectory(const std::string& _path) -> bool {
     std::error_code ec;
-    return std::filesystem::create_directories(_path, ec);
+    std::filesystem::create_directories(_path, ec);
+    return !ec;
 }
 
 auto getModel() -> rp_HPeModels_t {
