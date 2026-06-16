@@ -1577,14 +1577,12 @@ int acq_SetDefault(rp_channel_t channel) {
 
     acq_SetDecimation(channel, RP_DEC_1);
     acq_SetTriggerDelay(channel, 0);
-    acq_SetTriggerDelayNs(channel, 0);
     acq_SetChannelThreshold(channel, 0.0);
     acq_SetChannelThresholdHyst(channel, 0.005);
     acq_SetGain(channel, RP_LOW);
     acq_axi_Enable(channel, false);
     acq_axi_SetBufferBytes(channel, start, 0);
-    acq_axi_SetTriggerDelay(channel, 0);
-    acq_axi_SetTriggerDelayNs(channel, 0);
+    acq_axi_SetTriggerDelay(channel, 1);
 
     if (rp_HPGetFastADCIsAC_DCOrDefault()) {
         acq_SetAC_DC(channel, RP_DC);
