@@ -181,7 +181,7 @@ auto buildBINStream(DataLib::CDataBuffersPackDMA::Ptr buff_pack, std::map<DataLi
 
     for (int i = 0; i < 4; i++) {
         if (ch[i].get()) {
-            ch_samp[i] = ch[i]->getSamplesCount() < _samples[DataLib::CH1] ? ch[i]->getSamplesCount() : _samples[DataLib::CH1];
+            ch_samp[i] = ch[i]->getSamplesCount() < _samples[(DataLib::EDataBuffersPackChannel)i] ? ch[i]->getSamplesCount() : _samples[(DataLib::EDataBuffersPackChannel)i];
             auto bytes = ch[i]->getBitBySample() / 8;
             ch_size[i] = ch_samp[i] * bytes > ch[i]->getDataLenght() ? ch[i]->getDataLenght() : ch_samp[i] * bytes;
             header.dataFormatSize[i] = ch[i]->getBitBySample() / 8;
