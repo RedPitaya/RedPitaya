@@ -268,7 +268,7 @@ auto outFreqMax() -> int {
 auto getMeasureValue(int measure) -> float {
     int mode = measure / 10;
     int channel = measure % 10;
-    float value;
+    float value = 0;
     switch (mode) {
         case 0:
             rpApp_OscMeasureVpp((rpApp_osc_source)channel, &value);

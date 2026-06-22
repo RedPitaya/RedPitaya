@@ -329,13 +329,21 @@ auto CMeasureController::measureRootMeanSquare(const rpApp_osc_source _channel, 
         return ret;
 
     double rmsValue = 0;
+    size_t count = 0;
     for (vsize_t i = 0; i < _data->size(); ++i) {
         auto z = (*_data)[i];
-        float tmp;
+        float tmp = 0;
         ECHECK_APP(m_unscaleFunc(_channel, z, &tmp));
-        rmsValue += tmp * tmp;
+        if (!isnan(tmp)) {
+            count++;
+            rmsValue += tmp * tmp;
+        }
     }
-    *_rms = (double)sqrt(rmsValue / (double)(_data->size()));
+    if (count == 0) {
+        *_rms = 0;
+    } else {
+        *_rms = (double)sqrt(rmsValue / (double)(count));
+    }
     ECHECK_APP(m_attAmplFunc(_channel, *_rms, _rms));
     return RP_OK;
 }
