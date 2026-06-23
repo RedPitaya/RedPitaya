@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <cinttypes>
 #include <mutex>
 
 #include "acq_handler.h"
@@ -1220,30 +1221,42 @@ int rp_ApinGetRange(rp_apin_t pin, float* min_val, float* max_val) {
  * Analog Inputs
  */
 
-int rp_AIpinGetValueRaw(int unsigned pin, uint32_t* value) {
-    FILE* fp;
+int rp_AIpinGetValueRaw(unsigned int pin, uint32_t* value) {
+    if (value == NULL)
+        return RP_EPN;
+
+    const char* path;
     switch (pin) {
         case 0:
-            fp = fopen("/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_voltage9_raw", "r");
+            path = "/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_voltage9_raw";
             break;
         case 1:
-            fp = fopen("/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_voltage11_raw", "r");
+            path = "/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_voltage11_raw";
             break;
         case 2:
-            fp = fopen("/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_voltage10_raw", "r");
+            path = "/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_voltage10_raw";
             break;
         case 3:
-            fp = fopen("/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_voltage8_raw", "r");
+            path = "/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_voltage8_raw";
             break;
         case 4:
-            fp = fopen("/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_voltage12_raw", "r");
+            path = "/sys/devices/soc0/axi/83c00000.xadc_wiz/iio:device1/in_voltage12_raw";
             break;
         default:
             return RP_EPN;
     }
-    int r = !fscanf(fp, "%u", value);
+
+    FILE* fp = fopen(path, "r");
+    if (fp == NULL)
+        return RP_EPN;
+
+    int ret = 0;
+
+    if (fscanf(fp, "%" SCNu32, value) != 1)
+        ret = RP_EPN;
+
     fclose(fp);
-    return r;
+    return ret;
 }
 
 int rp_AIpinGetValue(int unsigned pin, float* value, uint32_t* raw) {
