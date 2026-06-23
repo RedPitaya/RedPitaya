@@ -2,7 +2,6 @@
 
     // Init drag listeners for off cursors (IN,OUT,MATH)
     OSC.initOSCCursors = function() {
-        // Voltage offset arrow dragging
         $('.y-offset-arrow').draggable({
             axis: 'y',
             grid: [1, 20],
@@ -11,8 +10,23 @@
                 OSC.state.cursor_dragging = true;
             },
             drag: function(ev, ui) {
-                var grid = $(this).draggable('option', 'grid');
+                var $element = $(this);
+                var $parent = $element.parent();
+                var parentHeight = $parent.height();
+                var elementHeight = $element.height();
+                var maxTop = parentHeight - elementHeight;
+
+                var grid = $element.draggable('option', 'grid');
                 var step = grid[1];
+
+                var desiredTop = Math.round(ui.position.top / step) * step;
+
+                if (desiredTop < 8 || desiredTop > maxTop) {
+                    var currentTop = parseFloat($element.css('top'));
+                    ui.position.top = currentTop;
+                    $element.css({ top: currentTop });
+                    return;
+                }
                 var currentTop = ui.position.top;
                 var index = -Math.round(currentTop / step) + 50;
 
@@ -63,7 +77,7 @@
         var itm = OSC.getSettingsActiveChannel()
         var gridInfo = OSC.calculateGridStep(
             itm.scale,
-            $('#graphs').height(),
+            $('.plot').height(),
         );
 
         $('.y-offset-arrow').draggable('option', 'grid', [1, gridInfo.stepPx]);
