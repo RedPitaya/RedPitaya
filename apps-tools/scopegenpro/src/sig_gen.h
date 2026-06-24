@@ -27,7 +27,7 @@ struct GenChannelSettings {
     // Burst Mode Configuration
     rp_gen_mode_t gen_mode;  // Continuous or Burst generation mode
     int burstCount;          // Cycles per burst
-    float burstPeriod;       // Delay/Period between bursts
+    double burstPeriod;      // Delay/Period between bursts
     int burstReps;           // Number of burst repetitions
 
     // Waveform Transition & Sample Control
@@ -44,7 +44,7 @@ struct GenChannelSettings {
      * @brief Constructor that accepts direct values.
      */
     GenChannelSettings(std::string _waveform, float _frequency, float _phase, float _amplitude, float _offset, float _showOff, float _duty_cycle, float _freqSweepStart,
-                       float _freqSweepEnd, rp_gen_sweep_mode_t _sweep_mode, rp_gen_sweep_dir_t _sweep_dir, rp_gen_mode_t _gen_mode, int _burstCount, float _burstPeriod,
+                       float _freqSweepEnd, rp_gen_sweep_mode_t _sweep_mode, rp_gen_sweep_dir_t _sweep_dir, rp_gen_mode_t _gen_mode, int _burstCount, double _burstPeriod,
                        int _burstReps, float _riseTime, float _fallTime, float _initValue, float _lastValue, bool _useLastSample, float _timeOffset, float _tscale)
         : waveform(_waveform),
           frequency(_frequency),

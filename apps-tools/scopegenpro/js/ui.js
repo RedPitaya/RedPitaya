@@ -99,6 +99,22 @@
             clearInterval(interval);
         });
 
+        function getDecimalPlaces(step) {
+            if (step > 1) {
+                console.log("Error. Unsupported step")
+            }
+
+            let s = step;
+            let signs = 0;
+            while (Math.abs(s - Math.round(s)) > 1e-10 && signs < 20) {
+                s *= 10;
+                signs++;
+            }
+            return signs;
+        }
+
+// var signs = getDecimalPlaces(step);
+
         function moreValFn(input) {
             var max;
             var limits = getLimits(input);
@@ -106,8 +122,7 @@
             checkInputAttr(input);
 
             var newValue = value + step;
-            var parts = step.toString().split('.');
-            var signs = parts.length < 2 ? 0 : parts[1].length;
+            var signs =  getDecimalPlaces(step)
             newValue = parseFloat(newValue.toFixed(signs));
             if (newValue > max) {
                 newValue = max;
@@ -133,8 +148,7 @@
             checkInputAttr(input);
 
             var newValue = value - step;
-            var parts = step.toString().split('.');
-            var signs = parts.length < 2 ? 0 : parts[1].length;
+            var signs =  getDecimalPlaces(step)
             newValue = parseFloat(newValue.toFixed(signs));
             if (newValue < min) {
                 newValue = min;
@@ -156,8 +170,8 @@
 
             if (input.attr('step')) {
                 step = parseFloat(input.attr('step'));
-                var signs = Math.log10(step)
-                value = parseFloat(value.toFixed(-signs));
+                var signs =  getDecimalPlaces(step)
+                value = parseFloat(value.toFixed(signs));
             } else if (input.attr('step_direct')) {
                 step = parseFloat(input.attr('step_direct'));
             }

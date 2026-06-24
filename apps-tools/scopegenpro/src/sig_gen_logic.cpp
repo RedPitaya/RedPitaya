@@ -63,7 +63,7 @@ CBooleanParameter outBurstState[MAX_DAC_CHANNELS] = INIT2("SOUR", "_BURST_STATE"
 CIntParameter outBurstCount[MAX_DAC_CHANNELS] = INIT2("SOUR", "_BURST_COUNT", CBaseParameter::RW, 1, 0, 1, 65535, CONFIG_VAR);
 CIntParameter outBurstRepetitions[MAX_DAC_CHANNELS] = INIT2("SOUR", "_BURST_REP", CBaseParameter::RW, 1, 0, 1, 65535, CONFIG_VAR);
 CBooleanParameter outBurstRepInf[MAX_DAC_CHANNELS] = INIT2("SOUR", "_BURST_INF", CBaseParameter::RW, false, 0, CONFIG_VAR);
-CFloatParameter outBurstDelay[MAX_DAC_CHANNELS] = INIT2("SOUR", "_BURST_DELAY", CBaseParameter::RW, 1, 0, 0, 2000000, CONFIG_VAR);
+CDoubleParameter outBurstDelay[MAX_DAC_CHANNELS] = INIT2("SOUR", "_BURST_DELAY", CBaseParameter::RW, 1, 0, 0, 2000000, CONFIG_VAR);
 CBooleanParameter outGenSyncReset("SYNC_GEN", CBaseParameter::RW, false, 0);
 
 CFloatParameter outBurstInit[MAX_DAC_CHANNELS] = INIT2("SOUR", "_B_INIT_VOLT", CBaseParameter::RW, 0, 0, -LEVEL_AMPS_MAX, LEVEL_AMPS_MAX, CONFIG_VAR);
@@ -229,8 +229,8 @@ auto checkBurstDelayChanged(rp_channel_t ch) -> void {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return;
 
-    float value = 0.f;
-    rp_GenGetBurstPeriod(ch, &value);
+    double value = 0.f;
+    rp_GenGetBurstPeriodD(ch, &value);
     if (value != outBurstDelay[ch].Value()) {
         outBurstDelay[ch].SendValue(value);
     }
@@ -328,10 +328,11 @@ auto setBurstParameters(bool force, bool requestUpdateInitLast) -> void {
         }
 
         if (IS_NEW(outBurstDelay[ch]) || force) {
-            if (rp_GenBurstPeriod(ch, outBurstDelay[ch].NewValue()) == RP_OK) {
+            if (rp_GenBurstPeriodD(ch, outBurstDelay[ch].NewValue()) == RP_OK) {
                 outBurstDelay[ch].Update();
-                if (!force)
-                    checkBurstDelayChanged(ch);
+                checkBurstDelayChanged(ch);
+            } else {
+                checkBurstDelayChanged(ch);
             }
         }
 

@@ -13,6 +13,10 @@
                 $("#OSC_CH1_IN_GAIN2_L").text("1:20");
                 $("#OSC_CH2_IN_GAIN_L").text("1:1");
                 $("#OSC_CH2_IN_GAIN2_L").text("1:20");
+                $("#SOUR1_BURST_DELAY").attr("min","0.004");
+                $("#SOUR2_BURST_DELAY").attr("min","0.004");
+                $("#SOUR1_BURST_DELAY").attr("step","0.004");
+                $("#SOUR2_BURST_DELAY").attr("step","0.004");
                 OSC.trigger_limit = 10.0;
                 var nodes = document.getElementsByName("AMPLITUDE_NODE");
                 [...nodes].forEach((element, index, array) => {

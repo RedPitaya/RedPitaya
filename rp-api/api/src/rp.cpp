@@ -2926,6 +2926,38 @@ int rp_GenGetBurstPeriod(rp_channel_t channel, float* period) {
     return gen_getBurstPeriod(channel, period);
 }
 
+int rp_GenBurstPeriodD(rp_channel_t channel, double period) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
+    std::lock_guard lock(g_initMutex);
+    std::lock_guard lockGEN(g_genMutex);
+    return gen_setBurstPeriodD(channel, period);
+}
+
+int rp_GenGetBurstPeriodD(rp_channel_t channel, double* period) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
+    std::lock_guard lock(g_initMutex);
+    std::lock_guard lockGEN(g_genMutex);
+    return gen_getBurstPeriodD(channel, period);
+}
+
+int rp_GenBurstPeriodTicks(rp_channel_t channel, uint32_t ticks) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
+    std::lock_guard lock(g_initMutex);
+    std::lock_guard lockGEN(g_genMutex);
+    return gen_setBurstPeriodTicks(channel, ticks);
+}
+
+int rp_GenGetBurstPeriodTicks(rp_channel_t channel, uint32_t* ticks) {
+    if (!rp_HPIsFastDAC_PresentOrDefault())
+        return RP_NOTS;
+    std::lock_guard lock(g_initMutex);
+    std::lock_guard lockGEN(g_genMutex);
+    return gen_getBurstPeriodTicks(channel, ticks);
+}
+
 int rp_GenTriggerSource(rp_channel_t channel, rp_trig_src_t src) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;

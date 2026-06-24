@@ -55,7 +55,7 @@ typedef struct {
     // Burst mode parameters
     int burstCount = 1;           // Number of cycles in burst mode
     int burstRepetition = 1;      // Number of burst repetitions
-    float burstPeriod = 0;        // Period between bursts in microseconds
+    uint32_t burstPeriod = 0;     // Period between bursts in microseconds
     float burstLastValue = 0;     // Last output value after burst
     float axiLastValue = 0;       // Last output value in axi buffer
     float initValue = 0;          // Initial output value
@@ -345,7 +345,7 @@ int gen_setFrequency(rp_channel_t channel, float frequency) {
     }
 
     g_channels[channel].frequency = frequency;
-    gen_setBurstPeriod(channel, g_channels[channel].burstPeriod);
+    gen_setBurstPeriodTicks(channel, g_channels[channel].burstPeriod);
     gen_setRiseFallMin(channel, 1000000.0 / frequency * RISE_FALL_MIN_RATIO);
     gen_setRiseFallMax(channel, 1000000.0 / frequency * RISE_FALL_MAX_RATIO);
 
@@ -640,7 +640,7 @@ int gen_setGenMode(rp_channel_t channel, rp_gen_mode_t mode) {
     } else if (mode == RP_GEN_MODE_BURST) {
         gen_setBurstCount(channel, g_channels[channel].burstCount);
         gen_setBurstRepetitions(channel, g_channels[channel].burstRepetition);
-        gen_setBurstPeriod(channel, g_channels[channel].burstPeriod);
+        gen_setBurstPeriodTicks(channel, g_channels[channel].burstPeriod);
         return RP_OK;
     } else if (mode == RP_GEN_MODE_STREAM) {
         return RP_EUF;
@@ -668,7 +668,7 @@ int gen_setBurstCount(rp_channel_t channel, int num) {
     }
 
     g_channels[channel].burstCount = num;
-    gen_setBurstPeriod(channel, g_channels[channel].burstPeriod);
+    gen_setBurstPeriodTicks(channel, g_channels[channel].burstPeriod);
     if (mode == RP_GEN_MODE_BURST) {
         int ret = generate_setBurstCount(channel, (uint32_t)num);
         return ret;
@@ -790,33 +790,92 @@ int gen_setBurstPeriod(rp_channel_t channel, float period) {
 
     CHECK_CHANNEL
 
-    static auto adc_rate = rp_HPGetBaseFastDACSpeedHzOrDefault();
-    static auto tick_time = 1000000000.0 / (double)adc_rate;
-
-    rp_gen_mode_t mode = g_channels[channel].mode;
+    static float adc_rate = rp_HPGetBaseFastDACSpeedHzOrDefault();
+    static double tick_time_raw = 1000000000.0 / adc_rate;
+    static double tick_time = round(tick_time_raw * 1000.0) / 1000.0;
 
     // Max 4 second
-    if (period * 1000.f < tick_time || period * 1000.f > NANO * 4.0f) {
+    if (period == 0 || period * 1000.f > NANO * 4.0f) {
         return RP_EOOR;
     }
 
     // TRACE("freq %f sigLen %d burstCount %d period %d delay %d", freq, sigLen, burstCount, period, delay)
 
-    g_channels[channel].burstPeriod = period;
-
-    if (mode == RP_GEN_MODE_BURST) {
-        uint32_t periodi32 = period * 1000.0 / tick_time;
-        int ret = generate_setBurstDelay(channel, periodi32);
-        return ret;
-    }
-    return RP_OK;
+    uint32_t periodi32 = period * 1000.0f / tick_time + 0.5;
+    return gen_setBurstPeriodTicks(channel, periodi32);
 }
 
 int gen_getBurstPeriod(rp_channel_t channel, float* period) {
 
     CHECK_CHANNEL
 
-    *period = g_channels[channel].burstPeriod;
+    static double adc_rate = rp_HPGetBaseFastDACSpeedHzOrDefault();
+    static double tick_time = 1.0e9 / adc_rate;
+
+    uint32_t ticks = 0;
+    auto ret = gen_getBurstPeriodTicks(channel, &ticks);
+
+    double period_ns = (double)ticks * tick_time;
+    double period_us = round(period_ns * 1000.0) / 1000000.0;
+    *period = (float)period_us;
+
+    return ret;
+}
+
+int gen_setBurstPeriodD(rp_channel_t channel, double period) {
+
+    CHECK_CHANNEL
+
+    static float adc_rate = rp_HPGetBaseFastDACSpeedHzOrDefault();
+    static double tick_time_raw = 1000000000.0 / adc_rate;
+    static double tick_time = round(tick_time_raw * 1000.0) / 1000.0;
+
+    // Max 4 second
+    if (period == 0 || period * 1000.0 > NANO * 4.0) {
+        return RP_EOOR;
+    }
+
+    // TRACE("freq %f sigLen %d burstCount %d period %d delay %d", freq, sigLen, burstCount, period, delay)
+    uint32_t periodi32 = period * 1000.0 / tick_time + 0.5;
+    return gen_setBurstPeriodTicks(channel, periodi32);
+}
+
+int gen_getBurstPeriodD(rp_channel_t channel, double* period) {
+    CHECK_CHANNEL
+
+    static double adc_rate = rp_HPGetBaseFastDACSpeedHzOrDefault();
+    static double tick_time = 1.0e9 / adc_rate;
+
+    uint32_t ticks = 0;
+    auto ret = gen_getBurstPeriodTicks(channel, &ticks);
+
+    double period_ns = (double)ticks * tick_time;
+    double period_us = round(period_ns * 1000.0) / 1000000.0;
+    *period = period_us;
+
+    return ret;
+}
+
+int gen_setBurstPeriodTicks(rp_channel_t channel, uint32_t ticks) {
+
+    CHECK_CHANNEL
+
+    g_channels[channel].burstPeriod = ticks;
+
+    rp_gen_mode_t mode = g_channels[channel].mode;
+
+    if (mode == RP_GEN_MODE_BURST) {
+        uint32_t periodi32 = (uint32_t)round(ticks);
+        int ret = generate_setBurstDelay(channel, periodi32);
+        return ret;
+    }
+    return RP_OK;
+}
+
+int gen_getBurstPeriodTicks(rp_channel_t channel, uint32_t* ticks) {
+    CHECK_CHANNEL
+
+    *ticks = g_channels[channel].burstPeriod;
     return RP_OK;
 }
 

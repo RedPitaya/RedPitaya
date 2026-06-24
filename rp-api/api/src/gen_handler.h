@@ -62,6 +62,10 @@ int gen_setBurstRepetitions(rp_channel_t channel, int repetitions);
 int gen_getBurstRepetitions(rp_channel_t channel, int* repetitions);
 int gen_setBurstPeriod(rp_channel_t channel, float period);
 int gen_getBurstPeriod(rp_channel_t channel, float* period);
+int gen_setBurstPeriodD(rp_channel_t channel, double period);
+int gen_getBurstPeriodD(rp_channel_t channel, double* period);
+int gen_setBurstPeriodTicks(rp_channel_t channel, uint32_t ticks);
+int gen_getBurstPeriodTicks(rp_channel_t channel, uint32_t* ticks);
 
 int gen_setLoadMode(rp_channel_t channel, rp_gen_load_mode_t mode);
 int gen_getLoadMode(rp_channel_t channel, rp_gen_load_mode_t* mode);

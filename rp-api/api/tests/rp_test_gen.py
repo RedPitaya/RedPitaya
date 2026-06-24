@@ -239,6 +239,22 @@ def test_generator_init_values():
     res = rp.rp_GenGetBurstPeriod(rp.RP_CH_1)
     print(res)
 
+    print("rp.rp_GenBurstPeriodD(rp.RP_CH_1,1000000)")
+    res = rp.rp_GenBurstPeriodD(rp.RP_CH_1,1000000)
+    print(res)
+
+    print("rp.rp_GenGetBurstPeriodD(rp.RP_CH_1)")
+    res = rp.rp_GenGetBurstPeriodD(rp.RP_CH_1)
+    print(res)
+
+    print("rp.rp_GenBurstPeriodTicks(rp.RP_CH_1,1000000)")
+    res = rp.rp_GenBurstPeriodTicks(rp.RP_CH_1,1000000)
+    print(res)
+
+    print("rp.rp_GenGetBurstPeriodTicks(rp.RP_CH_1)")
+    res = rp.rp_GenGetBurstPeriodTicks(rp.RP_CH_1)
+    print(res)
+
 def test_generator_triggers():
     print("rp.rp_GenTriggerSource(rp.RP_CH_1,rp.RP_GEN_TRIG_SRC_INTERNAL)")
     res = rp.rp_GenTriggerSource(rp.RP_CH_1,rp.RP_GEN_TRIG_SRC_INTERNAL)
