@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <cinttypes>
 #include <mutex>
+#include <shared_mutex>
 
 #include "acq_handler.h"
 #include "analog_mixed_signals.h"
@@ -36,8 +37,9 @@ bool g_split_trig_function_pass = false;
 
 int rp_ReleaseUnsafe();
 
-std::mutex g_initMutex;
+std::shared_mutex g_initMutex;
 std::mutex g_acqMutex;
+std::mutex g_acqMutexCh[RP_CH_4 + 1];
 std::mutex g_genMutex;
 std::mutex g_hpMutex;
 std::mutex g_adioMutex;
@@ -47,7 +49,7 @@ std::mutex g_adioMutex;
  */
 
 int rp_InitAdressess() {
-    std::lock_guard lock(g_initMutex);
+    std::unique_lock lock(g_initMutex);
     if (g_api_state)
         return RP_EOOR;
     int ret = cmn_Init();
@@ -148,7 +150,7 @@ int rp_ReleaseUnsafe() {
 }
 
 int rp_Release() {
-    std::lock_guard lock(g_initMutex);
+    std::unique_lock lock(g_initMutex);
     return rp_ReleaseUnsafe();
 }
 
@@ -240,32 +242,32 @@ const char* rp_GetError(int errorCode) {
 }
 
 int rp_PrintHouseRegset() {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     return hk_printRegset();
 }
 
 int rp_PrintOscRegset() {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     return osc_printRegset();
 }
 
 int rp_PrintAsgRegset() {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     return generate_printRegset();
 }
 
 int rp_PrintAsgChannelData(rp_channel_t channel) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     return generate_printChannelData(channel);
 }
 
 int rp_PrintAmsRegset() {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     return ams_printRegset();
 }
 
 int rp_PrintDaisyRegset() {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     return daisy_printRegset();
 }
 
@@ -274,7 +276,7 @@ int rp_PrintDaisyRegset() {
  */
 
 int rp_IdGetID(uint32_t* id) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockHP(g_hpMutex);
     hk_version_t ver = house_getHKVersion();
     switch (ver) {
@@ -313,7 +315,7 @@ int rp_IdGetID(uint32_t* id) {
 }
 
 int rp_IdGetDNA(uint64_t* dna) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockHP(g_hpMutex);
     hk_version_t ver = house_getHKVersion();
     switch (ver) {
@@ -352,7 +354,7 @@ int rp_IdGetDNA(uint64_t* dna) {
 }
 
 int rp_GetFreqCounter(uint32_t* value) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockHP(g_hpMutex);
     hk_version_t ver = house_getHKVersion();
     switch (ver) {
@@ -395,7 +397,7 @@ int rp_GetFreqCounter(uint32_t* value) {
  */
 
 int rp_LEDSetState(uint32_t state) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockHP(g_hpMutex);
     hk_version_t ver = house_getHKVersion();
     switch (ver) {
@@ -434,7 +436,7 @@ int rp_LEDSetState(uint32_t state) {
 }
 
 int rp_LEDGetState(uint32_t* state) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockHP(g_hpMutex);
     hk_version_t ver = house_getHKVersion();
     switch (ver) {
@@ -477,7 +479,7 @@ int rp_LEDGetState(uint32_t* state) {
  */
 
 int rp_GPIOnSetDirection(uint32_t direction) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockHP(g_hpMutex);
     hk_version_t ver = house_getHKVersion();
     switch (ver) {
@@ -516,7 +518,7 @@ int rp_GPIOnSetDirection(uint32_t direction) {
 }
 
 int rp_GPIOnGetDirection(uint32_t* direction) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockHP(g_hpMutex);
     hk_version_t ver = house_getHKVersion();
     switch (ver) {
@@ -555,7 +557,7 @@ int rp_GPIOnGetDirection(uint32_t* direction) {
 }
 
 int rp_GPIOnSetState(uint32_t state) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockHP(g_hpMutex);
     hk_version_t ver = house_getHKVersion();
     switch (ver) {
@@ -594,7 +596,7 @@ int rp_GPIOnSetState(uint32_t state) {
 }
 
 int rp_GPIOnGetState(uint32_t* state) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockHP(g_hpMutex);
     hk_version_t ver = house_getHKVersion();
     switch (ver) {
@@ -633,7 +635,7 @@ int rp_GPIOnGetState(uint32_t* state) {
 }
 
 int rp_GPIOpSetDirection(uint32_t direction) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockHP(g_hpMutex);
     hk_version_t ver = house_getHKVersion();
     switch (ver) {
@@ -672,7 +674,7 @@ int rp_GPIOpSetDirection(uint32_t direction) {
 }
 
 int rp_GPIOpGetDirection(uint32_t* direction) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockHP(g_hpMutex);
     hk_version_t ver = house_getHKVersion();
     switch (ver) {
@@ -711,7 +713,7 @@ int rp_GPIOpGetDirection(uint32_t* direction) {
 }
 
 int rp_GPIOpSetState(uint32_t state) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockHP(g_hpMutex);
     hk_version_t ver = house_getHKVersion();
     switch (ver) {
@@ -750,7 +752,7 @@ int rp_GPIOpSetState(uint32_t state) {
 }
 
 int rp_GPIOpGetState(uint32_t* state) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockHP(g_hpMutex);
     hk_version_t ver = house_getHKVersion();
     switch (ver) {
@@ -793,7 +795,7 @@ int rp_GPIOpGetState(uint32_t* state) {
  */
 
 int rp_DpinReset() {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockHP(g_hpMutex);
     hk_version_t ver = house_getHKVersion();
     switch (ver) {
@@ -1011,7 +1013,7 @@ int rp_DpinGetState(rp_dpin_t _pin, rp_pinState_t* state) {
  */
 
 int rp_EnableDigitalLoop(bool enable) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockHP(g_hpMutex);
     hk_version_t ver = house_getHKVersion();
     switch (ver) {
@@ -1050,37 +1052,37 @@ int rp_EnableDigitalLoop(bool enable) {
 }
 
 int rp_GetPllControlEnable(bool* enable) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockHP(g_hpMutex);
     return house_GetPllControlEnable(enable);
 }
 
 int rp_SetPllControlEnable(bool enable) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockHP(g_hpMutex);
     return house_SetPllControlEnable(enable);
 }
 
 int rp_GetPllControlLocked(bool* status) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockHP(g_hpMutex);
     return house_GetPllControlLocked(status);
 }
 
 int rp_SetEnableDaisyChainTrigSync(bool enable) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockHP(g_hpMutex);
     return house_SetEnableDaisyChainSync(enable);
 }
 
 int rp_GetEnableDaisyChainTrigSync(bool* status) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockHP(g_hpMutex);
     return house_GetEnableDaisyChainSync(status);
 }
 
 int rp_SetEnableDaisyChainClockSync(bool enable) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockHP(g_hpMutex);
     if (!rp_HPGetIsDaisyChainClockAvailableOrDefault())
         return RP_NOTS;
@@ -1100,7 +1102,7 @@ int rp_SetEnableDaisyChainClockSync(bool enable) {
 }
 
 int rp_GetEnableDaisyChainClockSync(bool* state) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockHP(g_hpMutex);
     if (!rp_HPGetIsDaisyChainClockAvailableOrDefault())
         return RP_NOTS;
@@ -1124,37 +1126,37 @@ int rp_GetEnableDaisyChainClockSync(bool* state) {
 }
 
 int rp_SetDpinEnableTrigOutput(bool enable) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockHP(g_hpMutex);
     return house_SetDpinEnableTrigOutput(enable);
 }
 
 int rp_GetDpinEnableTrigOutput(bool* state) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockHP(g_hpMutex);
     return house_GetDpinEnableTrigOutput(state);
 }
 
 int rp_SetSourceTrigOutput(rp_outTiggerMode_t mode) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockHP(g_hpMutex);
     return house_SetSourceTrigOutput(mode);
 }
 
 int rp_GetSourceTrigOutput(rp_outTiggerMode_t* mode) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockHP(g_hpMutex);
     return house_GetSourceTrigOutput(mode);
 }
 
 int rp_SetCANModeEnable(bool _enable) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockHP(g_hpMutex);
     return house_SetCANModeEnable(_enable);
 }
 
 int rp_GetCANModeEnable(bool* _enable) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockHP(g_hpMutex);
     return house_GetCANModeEnable(_enable);
 }
@@ -1302,7 +1304,7 @@ int rp_AOpinReset() {
 }
 
 int rp_AOpinSetValueRaw(int unsigned pin, uint32_t value) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockHP(g_adioMutex);
 
     if (pin >= 4) {
@@ -1353,7 +1355,7 @@ int rp_AOpinSetValue(int unsigned pin, float value) {
 }
 
 int rp_AOpinGetValueRaw(int unsigned pin, uint32_t* value) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockHP(g_adioMutex);
     if (pin >= 4) {
         return RP_EPN;
@@ -1423,13 +1425,13 @@ int rp_AOpinGetRange(int unsigned pin, float* min_val, float* max_val) {
  */
 
 int rp_AcqSetArmKeep(bool enable) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_SetArmKeep(RP_CH_1, enable);
 }
 
 int rp_AcqGetArmKeep(bool* state) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_GetArmKeep(RP_CH_1, state);
 }
@@ -1437,7 +1439,7 @@ int rp_AcqGetArmKeep(bool* state) {
 int rp_AcqSet16BitMode(bool enable) {
     if (!rp_HPGetIsFastADC16BitModeOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_Set16BitMode(enable);
 }
@@ -1445,15 +1447,16 @@ int rp_AcqSet16BitMode(bool enable) {
 int rp_AcqGet16BitMode(bool* state) {
     if (!rp_HPGetIsFastADC16BitModeOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_Get16BitMode(state);
 }
 
 int rp_AcqSetArmKeepCh(rp_channel_t channel, bool enable) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
+        std::shared_lock lock(g_initMutex);
         std::lock_guard lockACQ(g_acqMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         return acq_SetArmKeep(channel, enable);
     } else if (g_split_trig_function_pass) {
         return rp_AcqSetArmKeep(enable);
@@ -1463,8 +1466,9 @@ int rp_AcqSetArmKeepCh(rp_channel_t channel, bool enable) {
 
 int rp_AcqGetArmKeepCh(rp_channel_t channel, bool* state) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
+        std::shared_lock lock(g_initMutex);
         std::lock_guard lockACQ(g_acqMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         return acq_GetArmKeep(channel, state);
     } else if (g_split_trig_function_pass) {
         return rp_AcqGetArmKeep(state);
@@ -1473,15 +1477,15 @@ int rp_AcqGetArmKeepCh(rp_channel_t channel, bool* state) {
 }
 
 int rp_AcqGetBufferFillState(bool* state) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_GetBufferFillState(RP_CH_1, state);
 }
 
 int rp_AcqGetBufferFillStateCh(rp_channel_t channel, bool* state) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
-        std::lock_guard lockACQ(g_acqMutex);
+        std::shared_lock lock(g_initMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         return acq_GetBufferFillState(channel, state);
     } else if (g_split_trig_function_pass) {
         return rp_AcqGetBufferFillState(state);
@@ -1492,27 +1496,28 @@ int rp_AcqGetBufferFillStateCh(rp_channel_t channel, bool* state) {
 int rp_AcqAxiGetBufferFillState(rp_channel_t channel, bool* state) {
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
-    std::lock_guard lockACQ(g_acqMutex);
+    std::shared_lock lock(g_initMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_axi_GetBufferFillState(channel, state);
 }
 
 int rp_AcqSetDecimation(rp_acq_decimation_t decimation) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_SetDecimation(RP_CH_1, decimation);
 }
 
 int rp_AcqGetDecimation(rp_acq_decimation_t* decimation) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_GetDecimation(RP_CH_1, decimation);
 }
 
 int rp_AcqSetDecimationCh(rp_channel_t channel, rp_acq_decimation_t decimation) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
+        std::shared_lock lock(g_initMutex);
         std::lock_guard lockACQ(g_acqMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         return acq_SetDecimation(channel, decimation);
     } else if (g_split_trig_function_pass) {
         return rp_AcqSetDecimation(decimation);
@@ -1522,8 +1527,9 @@ int rp_AcqSetDecimationCh(rp_channel_t channel, rp_acq_decimation_t decimation) 
 
 int rp_AcqGetDecimationCh(rp_channel_t channel, rp_acq_decimation_t* decimation) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
+        std::shared_lock lock(g_initMutex);
         std::lock_guard lockACQ(g_acqMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         return acq_GetDecimation(channel, decimation);
     } else if (g_split_trig_function_pass) {
         return rp_AcqGetDecimation(decimation);
@@ -1532,21 +1538,22 @@ int rp_AcqGetDecimationCh(rp_channel_t channel, rp_acq_decimation_t* decimation)
 }
 
 int rp_AcqSetDecimationFactor(uint32_t decimation) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_SetDecimationFactor(RP_CH_1, decimation);
 }
 
 int rp_AcqGetDecimationFactor(uint32_t* decimation) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_GetDecimationFactor(RP_CH_1, decimation);
 }
 
 int rp_AcqSetDecimationFactorCh(rp_channel_t channel, uint32_t decimation) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
+        std::shared_lock lock(g_initMutex);
         std::lock_guard lockACQ(g_acqMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         return acq_SetDecimationFactor(channel, decimation);
     } else if (g_split_trig_function_pass) {
         return rp_AcqSetDecimationFactor(decimation);
@@ -1556,8 +1563,9 @@ int rp_AcqSetDecimationFactorCh(rp_channel_t channel, uint32_t decimation) {
 
 int rp_AcqGetDecimationFactorCh(rp_channel_t channel, uint32_t* decimation) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
+        std::shared_lock lock(g_initMutex);
         std::lock_guard lockACQ(g_acqMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         return acq_GetDecimationFactor(channel, decimation);
     } else if (g_split_trig_function_pass) {
         return rp_AcqGetDecimationFactor(decimation);
@@ -1568,7 +1576,7 @@ int rp_AcqGetDecimationFactorCh(rp_channel_t channel, uint32_t* decimation) {
 int rp_AcqAxiSetDecimationFactor(uint32_t decimation) {
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_axi_SetDecimationFactor(RP_CH_1, decimation);
 }
@@ -1577,8 +1585,9 @@ int rp_AcqAxiSetDecimationFactorCh(rp_channel_t channel, uint32_t decimation) {
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
+        std::shared_lock lock(g_initMutex);
         std::lock_guard lockACQ(g_acqMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         return acq_axi_SetDecimationFactor(channel, decimation);
     } else if (g_split_trig_function_pass) {
         return rp_AcqAxiSetDecimationFactor(decimation);
@@ -1589,7 +1598,7 @@ int rp_AcqAxiSetDecimationFactorCh(rp_channel_t channel, uint32_t decimation) {
 int rp_AcqAxiGetDecimationFactor(uint32_t* decimation) {
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_axi_GetDecimationFactor(RP_CH_1, decimation);
 }
@@ -1598,8 +1607,9 @@ int rp_AcqAxiGetDecimationFactorCh(rp_channel_t channel, uint32_t* decimation) {
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
+        std::shared_lock lock(g_initMutex);
         std::lock_guard lockACQ(g_acqMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         return acq_axi_GetDecimationFactor(channel, decimation);
     } else if (g_split_trig_function_pass) {
         return rp_AcqAxiGetDecimationFactor(decimation);
@@ -1608,21 +1618,22 @@ int rp_AcqAxiGetDecimationFactorCh(rp_channel_t channel, uint32_t* decimation) {
 }
 
 int rp_AcqConvertFactorToDecimation(uint32_t factor, rp_acq_decimation_t* decimation) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_ConvertFactorToDecimation(factor, decimation);
 }
 
 int rp_AcqGetSamplingRateHz(float* sampling_rate) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_GetSamplingRateHz(RP_CH_1, sampling_rate);
 }
 
 int rp_AcqGetSamplingRateHzCh(rp_channel_t channel, float* sampling_rate) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
+        std::shared_lock lock(g_initMutex);
         std::lock_guard lockACQ(g_acqMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         return acq_GetSamplingRateHz(channel, sampling_rate);
     } else if (g_split_trig_function_pass) {
         return rp_AcqGetSamplingRateHz(sampling_rate);
@@ -1631,21 +1642,22 @@ int rp_AcqGetSamplingRateHzCh(rp_channel_t channel, float* sampling_rate) {
 }
 
 int rp_AcqSetAveraging(bool enabled) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_SetAveraging(RP_CH_1, enabled);
 }
 
 int rp_AcqGetAveraging(bool* enabled) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_GetAveraging(RP_CH_1, enabled);
 }
 
 int rp_AcqSetAveragingCh(rp_channel_t channel, bool enabled) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
+        std::shared_lock lock(g_initMutex);
         std::lock_guard lockACQ(g_acqMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         return acq_SetAveraging(channel, enabled);
     } else if (g_split_trig_function_pass) {
         return rp_AcqSetAveraging(enabled);
@@ -1655,8 +1667,9 @@ int rp_AcqSetAveragingCh(rp_channel_t channel, bool enabled) {
 
 int rp_AcqGetAveragingCh(rp_channel_t channel, bool* enabled) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
+        std::shared_lock lock(g_initMutex);
         std::lock_guard lockACQ(g_acqMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         return acq_GetAveraging(channel, enabled);
     } else if (g_split_trig_function_pass) {
         return rp_AcqGetAveraging(enabled);
@@ -1665,21 +1678,22 @@ int rp_AcqGetAveragingCh(rp_channel_t channel, bool* enabled) {
 }
 
 int rp_AcqSetTriggerSrc(rp_acq_trig_src_t source) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_SetTriggerSrc(RP_CH_1, source);
 }
 
 int rp_AcqGetTriggerSrc(rp_acq_trig_src_t* source) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_GetTriggerSrc(RP_CH_1, source);
 }
 
 int rp_AcqSetTriggerSrcCh(rp_channel_t channel, rp_acq_trig_src_t source) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
+        std::shared_lock lock(g_initMutex);
         std::lock_guard lockACQ(g_acqMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         return acq_SetTriggerSrc(channel, source);
     } else if (g_split_trig_function_pass) {
         return rp_AcqSetTriggerSrc(source);
@@ -1689,8 +1703,9 @@ int rp_AcqSetTriggerSrcCh(rp_channel_t channel, rp_acq_trig_src_t source) {
 
 int rp_AcqGetTriggerSrcCh(rp_channel_t channel, rp_acq_trig_src_t* source) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
+        std::shared_lock lock(g_initMutex);
         std::lock_guard lockACQ(g_acqMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         return acq_GetTriggerSrc(channel, source);
     } else if (g_split_trig_function_pass) {
         return rp_AcqGetTriggerSrc(source);
@@ -1699,15 +1714,15 @@ int rp_AcqGetTriggerSrcCh(rp_channel_t channel, rp_acq_trig_src_t* source) {
 }
 
 int rp_AcqGetTriggerState(rp_acq_trig_state_t* state) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_GetTriggerState(RP_CH_1, state);
 }
 
 int rp_AcqGetTriggerStateCh(rp_channel_t channel, rp_acq_trig_state_t* state) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
-        std::lock_guard lockACQ(g_acqMutex);
+        std::shared_lock lock(g_initMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         return acq_GetTriggerState(channel, state);
     } else if (g_split_trig_function_pass) {
         return rp_AcqGetTriggerState(state);
@@ -1716,15 +1731,16 @@ int rp_AcqGetTriggerStateCh(rp_channel_t channel, rp_acq_trig_state_t* state) {
 }
 
 int rp_AcqSetTriggerDelay(int32_t decimated_data_num) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_SetTriggerDelay(RP_CH_1, decimated_data_num);
 }
 
 int rp_AcqSetTriggerDelayCh(rp_channel_t channel, int32_t decimated_data_num) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
+        std::shared_lock lock(g_initMutex);
         std::lock_guard lockACQ(g_acqMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         return acq_SetTriggerDelay(channel, decimated_data_num);
     } else if (g_split_trig_function_pass) {
         return rp_AcqSetTriggerDelay(decimated_data_num);
@@ -1733,15 +1749,16 @@ int rp_AcqSetTriggerDelayCh(rp_channel_t channel, int32_t decimated_data_num) {
 }
 
 int rp_AcqSetTriggerDelayDirect(uint32_t decimated_data_num) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_SetTriggerDelayDirect(RP_CH_1, decimated_data_num);
 }
 
 int rp_AcqSetTriggerDelayDirectCh(rp_channel_t channel, uint32_t decimated_data_num) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
+        std::shared_lock lock(g_initMutex);
         std::lock_guard lockACQ(g_acqMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         return acq_SetTriggerDelayDirect(channel, decimated_data_num);
     } else if (g_split_trig_function_pass) {
         return rp_AcqSetTriggerDelayDirect(decimated_data_num);
@@ -1752,29 +1769,32 @@ int rp_AcqSetTriggerDelayDirectCh(rp_channel_t channel, uint32_t decimated_data_
 int rp_AcqAxiSetTriggerDelay(rp_channel_t channel, int32_t decimated_data_num) {
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_axi_SetTriggerDelay(channel, decimated_data_num);
 }
 
 int rp_AcqAxiGetTriggerDelay(rp_channel_t channel, int32_t* decimated_data_num) {
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_axi_GetTriggerDelay(channel, decimated_data_num);
 }
 
 int rp_AcqGetTriggerDelay(int32_t* decimated_data_num) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_GetTriggerDelay(RP_CH_1, decimated_data_num);
 }
 
 int rp_AcqGetTriggerDelayCh(rp_channel_t channel, int32_t* decimated_data_num) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
+        std::shared_lock lock(g_initMutex);
         std::lock_guard lockACQ(g_acqMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         return acq_GetTriggerDelay(channel, decimated_data_num);
     } else if (g_split_trig_function_pass) {
         return rp_AcqGetTriggerDelay(decimated_data_num);
@@ -1783,15 +1803,16 @@ int rp_AcqGetTriggerDelayCh(rp_channel_t channel, int32_t* decimated_data_num) {
 }
 
 int rp_AcqGetTriggerDelayDirect(uint32_t* decimated_data_num) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_GetTriggerDelayDirect(RP_CH_1, decimated_data_num);
 }
 
 int rp_AcqGetTriggerDelayDirectCh(rp_channel_t channel, uint32_t* decimated_data_num) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
+        std::shared_lock lock(g_initMutex);
         std::lock_guard lockACQ(g_acqMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         return acq_GetTriggerDelayDirect(channel, decimated_data_num);
     } else if (g_split_trig_function_pass) {
         return rp_AcqGetTriggerDelayDirect(decimated_data_num);
@@ -1800,15 +1821,16 @@ int rp_AcqGetTriggerDelayDirectCh(rp_channel_t channel, uint32_t* decimated_data
 }
 
 int rp_AcqSetTriggerDelayNs(int64_t time_ns) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_SetTriggerDelayNs(RP_CH_1, time_ns);
 }
 
 int rp_AcqSetTriggerDelayNsCh(rp_channel_t channel, int64_t time_ns) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
+        std::shared_lock lock(g_initMutex);
         std::lock_guard lockACQ(g_acqMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         return acq_SetTriggerDelayNs(channel, time_ns);
     } else if (g_split_trig_function_pass) {
         return rp_AcqSetTriggerDelayNs(time_ns);
@@ -1817,15 +1839,16 @@ int rp_AcqSetTriggerDelayNsCh(rp_channel_t channel, int64_t time_ns) {
 }
 
 int rp_AcqGetTriggerDelayNs(int64_t* time_ns) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_GetTriggerDelayNs(RP_CH_1, time_ns);
 }
 
 int rp_AcqGetTriggerDelayNsCh(rp_channel_t channel, int64_t* time_ns) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
+        std::shared_lock lock(g_initMutex);
         std::lock_guard lockACQ(g_acqMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         return acq_GetTriggerDelayNs(channel, time_ns);
     } else if (g_split_trig_function_pass) {
         return rp_AcqGetTriggerDelayNs(time_ns);
@@ -1834,15 +1857,16 @@ int rp_AcqGetTriggerDelayNsCh(rp_channel_t channel, int64_t* time_ns) {
 }
 
 int rp_AcqSetTriggerDelayNsDirect(uint64_t time_ns) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_SetTriggerDelayNsDirect(RP_CH_1, time_ns);
 }
 
 int rp_AcqSetTriggerDelayNsDirectCh(rp_channel_t channel, uint64_t time_ns) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
+        std::shared_lock lock(g_initMutex);
         std::lock_guard lockACQ(g_acqMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         return acq_SetTriggerDelayNsDirect(channel, time_ns);
     } else if (g_split_trig_function_pass) {
         return rp_AcqSetTriggerDelayNsDirect(time_ns);
@@ -1851,15 +1875,16 @@ int rp_AcqSetTriggerDelayNsDirectCh(rp_channel_t channel, uint64_t time_ns) {
 }
 
 int rp_AcqGetTriggerDelayNsDirect(uint64_t* time_ns) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_GetTriggerDelayNsDirect(RP_CH_1, time_ns);
 }
 
 int rp_AcqGetTriggerDelayNsDirectCh(rp_channel_t channel, uint64_t* time_ns) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
+        std::shared_lock lock(g_initMutex);
         std::lock_guard lockACQ(g_acqMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         return acq_GetTriggerDelayNsDirect(channel, time_ns);
     } else if (g_split_trig_function_pass) {
         return rp_AcqGetTriggerDelayNsDirect(time_ns);
@@ -1868,15 +1893,16 @@ int rp_AcqGetTriggerDelayNsDirectCh(rp_channel_t channel, uint64_t* time_ns) {
 }
 
 int rp_AcqGetPreTriggerCounter(uint32_t* value) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_GetPreTriggerCounter(RP_CH_1, value);
 }
 
 int rp_AcqGetPreTriggerCounterCh(rp_channel_t channel, uint32_t* value) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
+        std::shared_lock lock(g_initMutex);
         std::lock_guard lockACQ(g_acqMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         return acq_GetPreTriggerCounter(channel, value);
     } else if (g_split_trig_function_pass) {
         return rp_AcqGetPreTriggerCounter(value);
@@ -1885,60 +1911,64 @@ int rp_AcqGetPreTriggerCounterCh(rp_channel_t channel, uint32_t* value) {
 }
 
 int rp_AcqGetGain(rp_channel_t channel, rp_pinState_t* state) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_GetGain(channel, state);
 }
 
 int rp_AcqGetGainV(rp_channel_t channel, float* voltage) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_GetGainV(channel, voltage);
 }
 
 int rp_AcqSetGain(rp_channel_t channel, rp_pinState_t state) {
     if (rp_HPGetFastADCIsLV_HVOrDefault()) {
-        std::lock_guard lock(g_initMutex);
+        std::shared_lock lock(g_initMutex);
         std::lock_guard lockACQ(g_acqMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         return acq_SetGain(channel, state);
     }
     return RP_NOTS;
 }
 
 int rp_AcqGetTriggerLevel(rp_channel_trigger_t channel, float* voltage) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_GetTriggerLevel(channel, voltage);
 }
 
 int rp_AcqSetTriggerLevel(rp_channel_trigger_t channel, float voltage) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_SetTriggerLevel(channel, voltage);
 }
 
 int rp_AcqGetTriggerHyst(float* voltage) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_GetTriggerHyst(voltage);
 }
 
 int rp_AcqSetTriggerHyst(float voltage) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_SetTriggerHyst(voltage);
 }
 
 int rp_AcqGetWritePointer(uint32_t* pos) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_GetWritePointer(RP_CH_1, pos);
 }
 
 int rp_AcqGetWritePointerCh(rp_channel_t channel, uint32_t* pos) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
+        std::shared_lock lock(g_initMutex);
         std::lock_guard lockACQ(g_acqMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         return acq_GetWritePointer(channel, pos);
     } else if (g_split_trig_function_pass) {
         return rp_AcqGetWritePointer(pos);
@@ -1950,13 +1980,14 @@ int rp_AcqGetWritePointerCh(rp_channel_t channel, uint32_t* pos) {
 int rp_AcqAxiGetWritePointer(rp_channel_t channel, uint32_t* pos) {
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_axi_GetWritePointer(channel, pos);
 }
 
 int rp_AcqGetWritePointerAtTrig(uint32_t* pos) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_GetWritePointerAtTrig(RP_CH_1, pos);
 }
@@ -1969,8 +2000,9 @@ int rp_AcqGetWritePointerAtTrigCh(rp_channel_t channel, uint32_t* pos) {
             return ret;
         }
         if (state) {
-            std::lock_guard lock(g_initMutex);
+            std::shared_lock lock(g_initMutex);
             std::lock_guard lockACQ(g_acqMutex);
+            std::lock_guard lockACQCh(g_acqMutexCh[channel]);
             return acq_GetWritePointerAtTrig(channel, pos);
         } else
             return rp_AcqGetWritePointerAtTrig(pos);
@@ -1984,13 +2016,14 @@ int rp_AcqGetWritePointerAtTrigCh(rp_channel_t channel, uint32_t* pos) {
 int rp_AcqAxiGetWritePointerAtTrig(rp_channel_t channel, uint32_t* pos) {
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_axi_GetWritePointerAtTrig(channel, pos);
 }
 
 int rp_AcqStart() {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     auto ret = acq_Start(RP_CH_1);
     if (ret == RP_OK) {
@@ -2001,8 +2034,9 @@ int rp_AcqStart() {
 
 int rp_AcqStartCh(rp_channel_t channel) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
+        std::shared_lock lock(g_initMutex);
         std::lock_guard lockACQ(g_acqMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         auto ret = acq_Start(channel);
         if (ret == RP_OK) {
             acq_IntUnmaskCh(channel);
@@ -2016,15 +2050,16 @@ int rp_AcqStartCh(rp_channel_t channel) {
 }
 
 int rp_AcqStop() {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_Stop(RP_CH_1);
 }
 
 int rp_AcqStopCh(rp_channel_t channel) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
+        std::shared_lock lock(g_initMutex);
         std::lock_guard lockACQ(g_acqMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         return acq_Stop(channel);
     } else if (g_split_trig_function_pass) {
         return rp_AcqStop();
@@ -2034,7 +2069,7 @@ int rp_AcqStopCh(rp_channel_t channel) {
 }
 
 int rp_AcqReset() {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     ECHECK(acq_SetDefaultAll())
     return acq_ResetFpga();
@@ -2042,8 +2077,9 @@ int rp_AcqReset() {
 
 int rp_AcqResetCh(rp_channel_t channel) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
+        std::shared_lock lock(g_initMutex);
         std::lock_guard lockACQ(g_acqMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         return acq_Reset(channel);
     } else if (g_split_trig_function_pass) {
         return rp_AcqReset();
@@ -2053,21 +2089,22 @@ int rp_AcqResetCh(rp_channel_t channel) {
 }
 
 int rp_AcqResetFpga() {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_ResetFpga();
 }
 
 int rp_AcqUnlockTrigger() {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_SetUnlockTrigger(RP_CH_1);
 }
 
 int rp_AcqUnlockTriggerCh(rp_channel_t channel) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
+        std::shared_lock lock(g_initMutex);
         std::lock_guard lockACQ(g_acqMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         return acq_SetUnlockTrigger(channel);
     } else if (g_split_trig_function_pass) {
         return rp_AcqUnlockTrigger();
@@ -2076,15 +2113,16 @@ int rp_AcqUnlockTriggerCh(rp_channel_t channel) {
 }
 
 int rp_AcqGetUnlockTrigger(bool* state) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_GetUnlockTrigger(RP_CH_1, state);
 }
 
 int rp_AcqGetUnlockTriggerCh(rp_channel_t channel, bool* state) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
+        std::shared_lock lock(g_initMutex);
         std::lock_guard lockACQ(g_acqMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         return acq_GetUnlockTrigger(channel, state);
     } else if (g_split_trig_function_pass) {
         return rp_AcqGetUnlockTrigger(state);
@@ -2093,45 +2131,47 @@ int rp_AcqGetUnlockTriggerCh(rp_channel_t channel, bool* state) {
     return RP_NOTS;
 }
 int rp_AcqSetIntMask(rp_int_mode_t mode, bool enable) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_SetIntMask(mode, enable);
 }
 
 int rp_AcqGetIntMask(rp_int_mode_t mode, bool* enable) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_GetIntMask(mode, enable);
 }
 
 int rp_AcqSetIntMaskCh(rp_channel_t channel, rp_int_mode_t mode, bool enable) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_SetIntMaskCh(channel, mode, enable);
 }
 
 int rp_AcqGetIntMaskCh(rp_channel_t channel, rp_int_mode_t mode, bool* enable) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_GetIntMaskCh(channel, mode, enable);
 }
 
 int rp_AcqIntTriggerRead(int timeout) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_IntTriggerRead(timeout);
 }
 
 int rp_AcqIntFillRead(int timeout) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_IntFullRead(timeout);
 }
 
 int rp_AcqIntTriggerReadCh(rp_channel_t channel, int timeout) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
-        std::lock_guard lockACQ(g_acqMutex);
+        std::shared_lock lock(g_initMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         return acq_IntTriggerReadCh(channel, timeout);
     } else if (g_split_trig_function_pass) {
         return rp_AcqIntTriggerRead(timeout);
@@ -2141,8 +2181,8 @@ int rp_AcqIntTriggerReadCh(rp_channel_t channel, int timeout) {
 
 int rp_AcqIntFillReadCh(rp_channel_t channel, int timeout) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
-        std::lock_guard lockACQ(g_acqMutex);
+        std::shared_lock lock(g_initMutex);
+        std::lock_guard lockACQCh(g_acqMutexCh[channel]);
         return acq_IntFullReadCh(channel, timeout);
     } else if (g_split_trig_function_pass) {
         return rp_AcqIntFillRead(timeout);
@@ -2151,33 +2191,37 @@ int rp_AcqIntFillReadCh(rp_channel_t channel, int timeout) {
 }
 
 uint32_t rp_AcqGetNormalizedDataPos(uint32_t pos) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_GetNormalizedDataPos(pos);
 }
 
 int rp_AcqGetDataPosRaw(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, int16_t* buffer, uint32_t* buffer_size) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_GetDataPosRaw(channel, start_pos, end_pos, buffer, buffer_size);
 }
 
 int rp_AcqGetDataPosRawNP(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, int16_t* np_buffer, int buffer_size) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     uint32_t size = buffer_size;
     return acq_GetDataPosRaw(channel, start_pos, end_pos, np_buffer, &size);
 }
 
 int rp_AcqGetDataPosV(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, float* buffer, uint32_t* buffer_size) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_GetDataPosV(channel, start_pos, end_pos, buffer, buffer_size);
 }
 
 int rp_AcqGetDataPosVNP(rp_channel_t channel, uint32_t start_pos, uint32_t end_pos, float* np_buffer, int buffer_size) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     uint32_t size = buffer_size;
     return acq_GetDataPosV(channel, start_pos, end_pos, np_buffer, &size);
 }
@@ -2185,7 +2229,7 @@ int rp_AcqGetDataPosVNP(rp_channel_t channel, uint32_t start_pos, uint32_t end_p
 int rp_AcqAxiGetMemoryRegion(uint32_t* _start, uint32_t* _size) {
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_axi_GetMemoryRegion(_start, _size);
 }
@@ -2193,33 +2237,38 @@ int rp_AcqAxiGetMemoryRegion(uint32_t* _start, uint32_t* _size) {
 int rp_AcqAxiEnable(rp_channel_t channel, bool enable) {
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_axi_Enable(channel, enable);
 }
 
 int rp_AcqGetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* buffer) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_GetDataRaw(channel, pos, size, buffer, false);
 }
 
 int rp_AcqGetDataRawNP(rp_channel_t channel, uint32_t pos, int16_t* np_buffer, int size) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     uint32_t usize = size;
     return acq_GetDataRaw(channel, pos, &usize, np_buffer, false);
 }
 
 int rp_AcqGetDataRawWithCalib(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* buffer) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_GetDataRaw(channel, pos, size, buffer, true);
 }
 
 int rp_AcqGetDataRawWithCalibNP(rp_channel_t channel, uint32_t pos, int16_t* np_buffer, int buffer_size) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     uint32_t size = buffer_size;
     return acq_GetDataRaw(channel, pos, &size, np_buffer, true);
 }
@@ -2227,101 +2276,114 @@ int rp_AcqGetDataRawWithCalibNP(rp_channel_t channel, uint32_t pos, int16_t* np_
 int rp_AcqAxiGetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* buffer) {
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_axi_GetDataRaw(channel, pos, size, buffer);
 }
 
 int rp_AcqAxiGetDataRawDirect(rp_channel_t channel, uint32_t pos, uint32_t size, std::vector<std::span<int16_t>>* data) {
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_axi_GetDataRawDirect(channel, pos, size, data);
 }
 
 int rp_AcqAxiGetDataRawNP(rp_channel_t channel, uint32_t pos, int16_t* np_buffer, int size) {
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     uint32_t usize = size;
     return acq_axi_GetDataRaw(channel, pos, &usize, np_buffer);
 }
 
 int rp_AcqGetData(uint32_t pos, buffers_t* out) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_GetData(pos, out);
 }
 
 int rp_AcqGetDataWithCorrection(uint32_t pos, uint32_t* size, int32_t offset, buffers_t* out) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_GetDataWithCorrection(pos, size, offset, out);
 }
 
 int rp_AcqGetOldestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_GetOldestDataRaw(channel, size, buffer);
 }
 
 int rp_AcqGetOldestDataRawNP(rp_channel_t channel, int16_t* buff, int size) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     uint32_t usize = size;
     return acq_GetOldestDataRaw(channel, &usize, buff);
 }
 
 int rp_AcqGetOldestDataRawWithCalib(rp_channel_t channel, uint32_t* size, int16_t* buffer) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_GetOldestDataRawWithCalib(channel, size, buffer);
 }
 
 int rp_AcqGetOldestDataRawWithCalibNP(rp_channel_t channel, int16_t* buff, int size) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     uint32_t usize = size;
     return acq_GetOldestDataRawWithCalib(channel, &usize, buff);
 }
 
 int rp_AcqGetLatestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_GetLatestDataRaw(channel, size, buffer);
 }
 
 int rp_AcqGetLatestDataRawNP(rp_channel_t channel, int16_t* np_buffer, int size) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     uint32_t usize = size;
     return acq_GetLatestDataRaw(channel, &usize, np_buffer);
 }
 
 int rp_AcqGetLatestDataRawWithCalib(rp_channel_t channel, uint32_t* size, int16_t* buffer) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_GetLatestDataRawWithCalib(channel, size, buffer);
 }
 
 int rp_AcqGetLatestDataRawWithCalibNP(rp_channel_t channel, int16_t* np_buffer, int size) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     uint32_t usize = size;
     return acq_GetLatestDataRawWithCalib(channel, &usize, np_buffer);
 }
 
 int rp_AcqGetDataV(rp_channel_t channel, uint32_t pos, uint32_t* size, float* buffer) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_GetDataV(channel, pos, size, buffer);
 }
 
 int rp_AcqGetDataVNP(rp_channel_t channel, uint32_t pos, float* np_buffer, int size) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     uint32_t usize = size;
     return acq_GetDataV(channel, pos, &usize, np_buffer);
 }
@@ -2329,48 +2391,54 @@ int rp_AcqGetDataVNP(rp_channel_t channel, uint32_t pos, float* np_buffer, int s
 int rp_AcqAxiGetDataV(rp_channel_t channel, uint32_t pos, uint32_t* size, float* buffer) {
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_axi_GetDataV(channel, pos, size, buffer);
 }
 
 int rp_AcqAxiGetDataVNP(rp_channel_t channel, uint32_t pos, float* np_buffer, int size) {
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     uint32_t usize = size;
     return acq_axi_GetDataV(channel, pos, &usize, np_buffer);
 }
 
 int rp_AcqGetOldestDataV(rp_channel_t channel, uint32_t* size, float* buffer) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_GetOldestDataV(channel, size, buffer);
 }
 
 int rp_AcqGetOldestDataVNP(rp_channel_t channel, float* np_buffer, int size) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     uint32_t usize = size;
     return acq_GetOldestDataV(channel, &usize, np_buffer);
 }
 
 int rp_AcqGetLatestDataV(rp_channel_t channel, uint32_t* size, float* buffer) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_GetLatestDataV(channel, size, buffer);
 }
 
 int rp_AcqGetLatestDataVNP(rp_channel_t channel, float* np_buffer, int size) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     uint32_t usize = size;
     return acq_GetLatestDataV(channel, &usize, np_buffer);
 }
 
 int rp_AcqGetBufSize(uint32_t* size) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_GetBufferSize(size);
 }
@@ -2378,106 +2446,117 @@ int rp_AcqGetBufSize(uint32_t* size) {
 int rp_AcqAxiSetBufferSamples(rp_channel_t channel, uint32_t address, uint32_t samples) {
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_axi_SetBufferSamples(channel, address, samples);
 }
 
 int rp_AcqAxiSetBufferBytes(rp_channel_t channel, uint32_t address, uint32_t size) {
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_axi_SetBufferBytes(channel, address, size);
 }
 
 int rp_AcqSetAC_DC(rp_channel_t channel, rp_acq_ac_dc_mode_t mode) {
     if (!rp_HPGetFastADCIsAC_DCOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_SetAC_DC(channel, mode);
 }
 
 int rp_AcqGetAC_DC(rp_channel_t channel, rp_acq_ac_dc_mode_t* status) {
     if (!rp_HPGetFastADCIsAC_DCOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_GetAC_DC(channel, status);
 }
 
 int rp_AcqSetInitTimestamp(uint64_t value) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_SetInitTimestamp(value);
 }
 
 int rp_AcqGetTimestamp(rp_channel_t channel, uint64_t* value) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_GetTimestamp(channel, value);
 }
 
 int rp_AcqSetBypassFilter(rp_channel_t channel, bool enable) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_SetEqFilterBypass(channel, enable);
 }
 
 int rp_AcqGetBypassFilter(rp_channel_t channel, bool* enable) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_GetEqFilterBypass(channel, enable);
 }
 
 int rp_AcqUpdateAcqFilter(rp_channel_t channel) {
     if (!rp_HPGetFastADCIsFilterPresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_UpdateAcqFilter(channel);
 }
 
 int rp_AcqGetFilterCalibValue(rp_channel_t channel, uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp) {
     if (!rp_HPGetFastADCIsFilterPresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_GetFilterCalibValue(channel, coef_aa, coef_bb, coef_kk, coef_pp);
 }
 
 int rp_AcqSetCalibInFPGA(rp_channel_t channel) {
     if (!rp_HPGetIsCalibInFPGAOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_SetCalibInFPGA(channel);
 }
 
 int rp_AcqGetCalibInFPGA(rp_channel_t channel, bool* state) {
     if (!rp_HPGetIsCalibInFPGAOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_GetCalibInFPGA(channel, state);
 }
 
 int rp_AcqSetExtTriggerDebouncerUs(double value) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_SetExtTriggerDebouncerUs(value);
 }
 
 int rp_AcqGetExtTriggerDebouncerUs(double* value) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
     return acq_GetExtTriggerDebouncerUs(value);
 }
 
 int rp_AcqSetSplitTrigger(bool enable) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
+        std::shared_lock lock(g_initMutex);
         std::lock_guard lockACQ(g_acqMutex);
         return acq_SetSplitTriggerMode(enable);
     }
@@ -2486,7 +2565,7 @@ int rp_AcqSetSplitTrigger(bool enable) {
 
 int rp_AcqGetSplitTrigger(bool* state) {
     if (rp_HPGetFastADCIsSplitTriggerOrDefault()) {
-        std::lock_guard lock(g_initMutex);
+        std::shared_lock lock(g_initMutex);
         std::lock_guard lockACQ(g_acqMutex);
         return acq_GetSplitTriggerMode(state);
     }
@@ -2505,26 +2584,30 @@ int rp_AcqGetSplitTriggerPass(bool* state) {
 }
 
 int rp_AcqSetOffset(rp_channel_t channel, float value) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_SetOffset(channel, value);
 }
 
 int rp_AcqGetOffset(rp_channel_t channel, float* value) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_GetOffset(channel, value);
 }
 
 int rp_AcqAxiSetOffset(rp_channel_t channel, float value) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_axi_SetOffset(channel, value);
 }
 
 int rp_AcqAxiGetOffset(rp_channel_t channel, float* value) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockACQ(g_acqMutex);
+    std::lock_guard lockACQCh(g_acqMutexCh[channel]);
     return acq_axi_GetOffset(channel, value);
 }
 
@@ -2535,7 +2618,7 @@ int rp_AcqAxiGetOffset(rp_channel_t channel, float* value) {
 int rp_GenSetUseLastSample(rp_channel_t channel, bool enable) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_setUseLastSample(channel, enable);
 }
@@ -2543,7 +2626,7 @@ int rp_GenSetUseLastSample(rp_channel_t channel, bool enable) {
 int rp_GenGetUseLastSample(rp_channel_t channel, bool* enable) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_getUseLastSample(channel, enable);
 }
@@ -2551,7 +2634,7 @@ int rp_GenGetUseLastSample(rp_channel_t channel, bool* enable) {
 int rp_GenBurstLastValue(rp_channel_t channel, float amlitude) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_setBurstLastValue(channel, amlitude);
 }
@@ -2559,7 +2642,7 @@ int rp_GenBurstLastValue(rp_channel_t channel, float amlitude) {
 int rp_GenGetBurstLastValue(rp_channel_t channel, float* amlitude) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_getBurstLastValue(channel, amlitude);
 }
@@ -2567,7 +2650,7 @@ int rp_GenGetBurstLastValue(rp_channel_t channel, float* amlitude) {
 int rp_GenSetInitGenValue(rp_channel_t channel, float amlitude) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_setInitGenValue(channel, amlitude);
 }
@@ -2575,7 +2658,7 @@ int rp_GenSetInitGenValue(rp_channel_t channel, float amlitude) {
 int rp_GenGetInitGenValue(rp_channel_t channel, float* amlitude) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_getInitGenValue(channel, amlitude);
 }
@@ -2583,7 +2666,7 @@ int rp_GenGetInitGenValue(rp_channel_t channel, float* amlitude) {
 int rp_GenReset() {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_SetDefaultValues();
 }
@@ -2591,7 +2674,7 @@ int rp_GenReset() {
 int rp_GenOutDisable(rp_channel_t channel) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_Disable(channel);
 }
@@ -2599,7 +2682,7 @@ int rp_GenOutDisable(rp_channel_t channel) {
 int rp_GenOutEnable(rp_channel_t channel) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_Enable(channel);
 }
@@ -2607,7 +2690,7 @@ int rp_GenOutEnable(rp_channel_t channel) {
 int rp_GenOutIsEnabled(rp_channel_t channel, bool* value) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_IsEnable(channel, value);
 }
@@ -2615,7 +2698,7 @@ int rp_GenOutIsEnabled(rp_channel_t channel, bool* value) {
 int rp_GenSetAmplitudeAndOffsetOrigin(rp_channel_t channel) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_setAmplitudeAndOffsetOrigin(channel);
 }
@@ -2623,7 +2706,7 @@ int rp_GenSetAmplitudeAndOffsetOrigin(rp_channel_t channel) {
 int rp_GenAmp(rp_channel_t channel, float amplitude) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_setAmplitude(channel, amplitude);
 }
@@ -2631,7 +2714,7 @@ int rp_GenAmp(rp_channel_t channel, float amplitude) {
 int rp_GenGetAmp(rp_channel_t channel, float* amplitude) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_getAmplitude(channel, amplitude);
 }
@@ -2639,7 +2722,7 @@ int rp_GenGetAmp(rp_channel_t channel, float* amplitude) {
 int rp_GenOffset(rp_channel_t channel, float offset) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_setOffset(channel, offset);
 }
@@ -2647,7 +2730,7 @@ int rp_GenOffset(rp_channel_t channel, float offset) {
 int rp_GenGetOffset(rp_channel_t channel, float* offset) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_getOffset(channel, offset);
 }
@@ -2655,7 +2738,7 @@ int rp_GenGetOffset(rp_channel_t channel, float* offset) {
 int rp_GenFreq(rp_channel_t channel, float frequency) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_setFrequency(channel, frequency);
 }
@@ -2663,7 +2746,7 @@ int rp_GenFreq(rp_channel_t channel, float frequency) {
 int rp_GenFreqDirect(rp_channel_t channel, float frequency) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_setFrequencyDirect(channel, frequency);
 }
@@ -2671,7 +2754,7 @@ int rp_GenFreqDirect(rp_channel_t channel, float frequency) {
 int rp_GenGetFreq(rp_channel_t channel, float* frequency) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_getFrequency(channel, frequency);
 }
@@ -2679,7 +2762,7 @@ int rp_GenGetFreq(rp_channel_t channel, float* frequency) {
 int rp_GenSweepStartFreq(rp_channel_t channel, float frequency) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_setSweepStartFrequency(channel, frequency);
 }
@@ -2687,7 +2770,7 @@ int rp_GenSweepStartFreq(rp_channel_t channel, float frequency) {
 int rp_GenGetSweepStartFreq(rp_channel_t channel, float* frequency) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_getSweepStartFrequency(channel, frequency);
 }
@@ -2695,7 +2778,7 @@ int rp_GenGetSweepStartFreq(rp_channel_t channel, float* frequency) {
 int rp_GenSweepEndFreq(rp_channel_t channel, float frequency) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_setSweepEndFrequency(channel, frequency);
 }
@@ -2703,7 +2786,7 @@ int rp_GenSweepEndFreq(rp_channel_t channel, float frequency) {
 int rp_GenGetSweepEndFreq(rp_channel_t channel, float* frequency) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_getSweepEndFrequency(channel, frequency);
 }
@@ -2711,7 +2794,7 @@ int rp_GenGetSweepEndFreq(rp_channel_t channel, float* frequency) {
 int rp_GenPhase(rp_channel_t channel, float phase) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_setPhase(channel, phase);
 }
@@ -2719,7 +2802,7 @@ int rp_GenPhase(rp_channel_t channel, float phase) {
 int rp_GenGetPhase(rp_channel_t channel, float* phase) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_getPhase(channel, phase);
 }
@@ -2727,7 +2810,7 @@ int rp_GenGetPhase(rp_channel_t channel, float* phase) {
 int rp_GenWaveform(rp_channel_t channel, rp_waveform_t type) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_setWaveform(channel, type);
 }
@@ -2735,7 +2818,7 @@ int rp_GenWaveform(rp_channel_t channel, rp_waveform_t type) {
 int rp_GenGetWaveform(rp_channel_t channel, rp_waveform_t* type) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_getWaveform(channel, type);
 }
@@ -2743,7 +2826,7 @@ int rp_GenGetWaveform(rp_channel_t channel, rp_waveform_t* type) {
 int rp_GetWaveformDataV(rp_channel_t channel, const std::vector<float>** data) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_getWaveformDataV(channel, data);
 }
@@ -2751,7 +2834,7 @@ int rp_GetWaveformDataV(rp_channel_t channel, const std::vector<float>** data) {
 int rp_GenSweepMode(rp_channel_t channel, rp_gen_sweep_mode_t mode) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_setSweepMode(channel, mode);
 }
@@ -2759,7 +2842,7 @@ int rp_GenSweepMode(rp_channel_t channel, rp_gen_sweep_mode_t mode) {
 int rp_GenGetSweepMode(rp_channel_t channel, rp_gen_sweep_mode_t* mode) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_getSweepMode(channel, mode);
 }
@@ -2767,7 +2850,7 @@ int rp_GenGetSweepMode(rp_channel_t channel, rp_gen_sweep_mode_t* mode) {
 int rp_GenSweepDir(rp_channel_t channel, rp_gen_sweep_dir_t mode) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_setSweepDir(channel, mode);
 }
@@ -2775,7 +2858,7 @@ int rp_GenSweepDir(rp_channel_t channel, rp_gen_sweep_dir_t mode) {
 int rp_GenGetSweepDir(rp_channel_t channel, rp_gen_sweep_dir_t* mode) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_getSweepDir(channel, mode);
 }
@@ -2783,7 +2866,7 @@ int rp_GenGetSweepDir(rp_channel_t channel, rp_gen_sweep_dir_t* mode) {
 int rp_GenArbWaveform(rp_channel_t channel, float* waveform, int size) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_setArbWaveform(channel, waveform, (uint32_t)size);
 }
@@ -2791,7 +2874,7 @@ int rp_GenArbWaveform(rp_channel_t channel, float* waveform, int size) {
 int rp_GenArbWaveformNP(rp_channel_t channel, float* waveform, int size) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_setArbWaveform(channel, waveform, (uint32_t)size);
 }
@@ -2799,7 +2882,7 @@ int rp_GenArbWaveformNP(rp_channel_t channel, float* waveform, int size) {
 int rp_GenGetArbWaveform(rp_channel_t channel, float* waveform, int size, uint32_t* size_out) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     *size_out = size;
     return gen_getArbWaveform(channel, waveform, size_out);
@@ -2808,7 +2891,7 @@ int rp_GenGetArbWaveform(rp_channel_t channel, float* waveform, int size, uint32
 int rp_GenGetArbWaveformNP(rp_channel_t channel, float* waveform, int size, uint32_t* size_out) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     *size_out = size;
     return gen_getArbWaveform(channel, waveform, size_out);
@@ -2817,7 +2900,7 @@ int rp_GenGetArbWaveformNP(rp_channel_t channel, float* waveform, int size, uint
 int rp_GenDutyCycle(rp_channel_t channel, float ratio) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_setDutyCycle(channel, ratio);
 }
@@ -2825,7 +2908,7 @@ int rp_GenDutyCycle(rp_channel_t channel, float ratio) {
 int rp_GenRiseTime(rp_channel_t channel, float time) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_setRiseTime(channel, time);
 }
@@ -2833,7 +2916,7 @@ int rp_GenRiseTime(rp_channel_t channel, float time) {
 int rp_GenGetRiseTime(rp_channel_t channel, float* time) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_getRiseTime(channel, time);
 }
@@ -2841,7 +2924,7 @@ int rp_GenGetRiseTime(rp_channel_t channel, float* time) {
 int rp_GenFallTime(rp_channel_t channel, float time) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_setFallTime(channel, time);
 }
@@ -2849,7 +2932,7 @@ int rp_GenFallTime(rp_channel_t channel, float time) {
 int rp_GenGetFallTime(rp_channel_t channel, float* time) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_getFallTime(channel, time);
 }
@@ -2857,7 +2940,7 @@ int rp_GenGetFallTime(rp_channel_t channel, float* time) {
 int rp_GenGetDutyCycle(rp_channel_t channel, float* ratio) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_getDutyCycle(channel, ratio);
 }
@@ -2865,7 +2948,7 @@ int rp_GenGetDutyCycle(rp_channel_t channel, float* ratio) {
 int rp_GenMode(rp_channel_t channel, rp_gen_mode_t mode) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_setGenMode(channel, mode);
 }
@@ -2873,7 +2956,7 @@ int rp_GenMode(rp_channel_t channel, rp_gen_mode_t mode) {
 int rp_GenGetMode(rp_channel_t channel, rp_gen_mode_t* mode) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_getGenMode(channel, mode);
 }
@@ -2881,7 +2964,7 @@ int rp_GenGetMode(rp_channel_t channel, rp_gen_mode_t* mode) {
 int rp_GenBurstCount(rp_channel_t channel, int num) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_setBurstCount(channel, num);
 }
@@ -2889,7 +2972,7 @@ int rp_GenBurstCount(rp_channel_t channel, int num) {
 int rp_GenGetBurstCount(rp_channel_t channel, int* num) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_getBurstCount(channel, num);
 }
@@ -2897,7 +2980,7 @@ int rp_GenGetBurstCount(rp_channel_t channel, int* num) {
 int rp_GenBurstRepetitions(rp_channel_t channel, int repetitions) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_setBurstRepetitions(channel, repetitions);
 }
@@ -2905,7 +2988,7 @@ int rp_GenBurstRepetitions(rp_channel_t channel, int repetitions) {
 int rp_GenGetBurstRepetitions(rp_channel_t channel, int* repetitions) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_getBurstRepetitions(channel, repetitions);
 }
@@ -2913,7 +2996,7 @@ int rp_GenGetBurstRepetitions(rp_channel_t channel, int* repetitions) {
 int rp_GenBurstPeriod(rp_channel_t channel, float period) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_setBurstPeriod(channel, period);
 }
@@ -2921,7 +3004,7 @@ int rp_GenBurstPeriod(rp_channel_t channel, float period) {
 int rp_GenGetBurstPeriod(rp_channel_t channel, float* period) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_getBurstPeriod(channel, period);
 }
@@ -2929,7 +3012,7 @@ int rp_GenGetBurstPeriod(rp_channel_t channel, float* period) {
 int rp_GenBurstPeriodD(rp_channel_t channel, double period) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_setBurstPeriodD(channel, period);
 }
@@ -2937,7 +3020,7 @@ int rp_GenBurstPeriodD(rp_channel_t channel, double period) {
 int rp_GenGetBurstPeriodD(rp_channel_t channel, double* period) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_getBurstPeriodD(channel, period);
 }
@@ -2945,7 +3028,7 @@ int rp_GenGetBurstPeriodD(rp_channel_t channel, double* period) {
 int rp_GenBurstPeriodTicks(rp_channel_t channel, uint32_t ticks) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_setBurstPeriodTicks(channel, ticks);
 }
@@ -2953,7 +3036,7 @@ int rp_GenBurstPeriodTicks(rp_channel_t channel, uint32_t ticks) {
 int rp_GenGetBurstPeriodTicks(rp_channel_t channel, uint32_t* ticks) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_getBurstPeriodTicks(channel, ticks);
 }
@@ -2961,7 +3044,7 @@ int rp_GenGetBurstPeriodTicks(rp_channel_t channel, uint32_t* ticks) {
 int rp_GenTriggerSource(rp_channel_t channel, rp_trig_src_t src) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_setTriggerSource(channel, src);
 }
@@ -2969,7 +3052,7 @@ int rp_GenTriggerSource(rp_channel_t channel, rp_trig_src_t src) {
 int rp_GenGetTriggerSource(rp_channel_t channel, rp_trig_src_t* src) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_getTriggerSource(channel, src);
 }
@@ -2977,7 +3060,7 @@ int rp_GenGetTriggerSource(rp_channel_t channel, rp_trig_src_t* src) {
 int rp_GenTriggerOnly(rp_channel_t channel) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_TriggerOnly(channel);
 }
@@ -2985,7 +3068,7 @@ int rp_GenTriggerOnly(rp_channel_t channel) {
 int rp_GenTriggerOnlyBoth() {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_TriggerOnlyBoth();
 }
@@ -2993,7 +3076,7 @@ int rp_GenTriggerOnlyBoth() {
 int rp_GenSynchronise() {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_TriggerSync();
 }
@@ -3001,7 +3084,7 @@ int rp_GenSynchronise() {
 int rp_GenResetTrigger(rp_channel_t channel) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_Trigger(channel);
 }
@@ -3009,7 +3092,7 @@ int rp_GenResetTrigger(rp_channel_t channel) {
 int rp_GenResetChannelSM(rp_channel_t channel) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_ResetChannelSM(channel);
 }
@@ -3017,49 +3100,49 @@ int rp_GenResetChannelSM(rp_channel_t channel) {
 int rp_GenOutEnableSync(bool enable) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_EnableSync(enable);
 }
 
 int rp_SetEnableTempProtection(rp_channel_t channel, bool enable) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_setEnableTempProtection(channel, enable);
 }
 
 int rp_GetEnableTempProtection(rp_channel_t channel, bool* enable) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_getEnableTempProtection(channel, enable);
 }
 
 int rp_SetLatchTempAlarm(rp_channel_t channel, bool status) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_setLatchTempAlarm(channel, status);
 }
 
 int rp_GetLatchTempAlarm(rp_channel_t channel, bool* status) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_getLatchTempAlarm(channel, status);
 }
 
 int rp_GetRuntimeTempAlarm(rp_channel_t channel, bool* status) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_getRuntimeTempAlarm(channel, status);
 }
 
 int rp_GenSetGainOut(rp_channel_t channel, rp_gen_gain_t mode) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_setGainOut(channel, mode);
 }
 
 int rp_GenGetGainOut(rp_channel_t channel, rp_gen_gain_t* status) {
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_getGainOut(channel, status);
 }
@@ -3067,7 +3150,7 @@ int rp_GenGetGainOut(rp_channel_t channel, rp_gen_gain_t* status) {
 int rp_GenSetExtTriggerDebouncerUs(double value) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_SetExtTriggerDebouncerUs(value);
 }
@@ -3075,7 +3158,7 @@ int rp_GenSetExtTriggerDebouncerUs(double value) {
 int rp_GenGetExtTriggerDebouncerUs(double* value) {
     if (!rp_HPIsFastDAC_PresentOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_GetExtTriggerDebouncerUs(value);
 }
@@ -3083,7 +3166,7 @@ int rp_GenGetExtTriggerDebouncerUs(double* value) {
 int rp_GenSetLoadMode(rp_channel_t channel, rp_gen_load_mode_t mode) {
     if (!rp_HPGetIsDAC50OhmModeOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_setLoadMode(channel, mode);
 }
@@ -3091,7 +3174,7 @@ int rp_GenSetLoadMode(rp_channel_t channel, rp_gen_load_mode_t mode) {
 int rp_GenGetLoadMode(rp_channel_t channel, rp_gen_load_mode_t* mode) {
     if (!rp_HPGetIsDAC50OhmModeOrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_getLoadMode(channel, mode);
 }
@@ -3099,7 +3182,7 @@ int rp_GenGetLoadMode(rp_channel_t channel, rp_gen_load_mode_t* mode) {
 int rp_GenAxiGetMemoryRegion(uint32_t* _start, uint32_t* _size) {
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return acq_axi_GetMemoryRegion(_start, _size);
 }
@@ -3107,7 +3190,7 @@ int rp_GenAxiGetMemoryRegion(uint32_t* _start, uint32_t* _size) {
 int rp_GenAxiSetEnable(rp_channel_t channel, bool state) {
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_axi_SetEnable(channel, state);
 }
@@ -3115,7 +3198,7 @@ int rp_GenAxiSetEnable(rp_channel_t channel, bool state) {
 int rp_GenAxiGetEnable(rp_channel_t channel, bool* state) {
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_axi_GetEnable(channel, state);
 }
@@ -3123,7 +3206,7 @@ int rp_GenAxiGetEnable(rp_channel_t channel, bool* state) {
 int rp_GenAxiReserveMemory(rp_channel_t channel, uint32_t start, uint32_t end) {
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_axi_ReserveMemory(channel, start, end);
 }
@@ -3131,7 +3214,7 @@ int rp_GenAxiReserveMemory(rp_channel_t channel, uint32_t start, uint32_t end) {
 int rp_GenAxiReleaseMemory(rp_channel_t channel) {
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_axi_ReleaseMemory(channel);
 }
@@ -3139,7 +3222,7 @@ int rp_GenAxiReleaseMemory(rp_channel_t channel) {
 int rp_GenAxiSetDecimationFactor(rp_channel_t channel, uint32_t decimation) {
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_axi_SetDecimation(channel, decimation);
 }
@@ -3147,7 +3230,7 @@ int rp_GenAxiSetDecimationFactor(rp_channel_t channel, uint32_t decimation) {
 int rp_GenAxiGetDecimationFactor(rp_channel_t channel, uint32_t* decimation) {
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_axi_GetDecimation(channel, decimation);
 }
@@ -3155,7 +3238,7 @@ int rp_GenAxiGetDecimationFactor(rp_channel_t channel, uint32_t* decimation) {
 int rp_GenAxiWriteWaveform(rp_channel_t channel, float* np_buffer, int size) {
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_axi_WriteWaveform(channel, np_buffer, size);
 }
@@ -3163,7 +3246,7 @@ int rp_GenAxiWriteWaveform(rp_channel_t channel, float* np_buffer, int size) {
 int rp_GenAxiWriteWaveformOffset(rp_channel_t channel, uint32_t offset, float* np_buffer, int size) {
     if (!rp_HPGetIsDMAinv0_94OrDefault())
         return RP_NOTS;
-    std::lock_guard lock(g_initMutex);
+    std::shared_lock lock(g_initMutex);
     std::lock_guard lockGEN(g_genMutex);
     return gen_axi_WriteWaveform(channel, offset, np_buffer, size);
 }
