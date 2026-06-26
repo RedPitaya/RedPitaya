@@ -136,8 +136,8 @@ void CGenerator::setReg(volatile GeneratorMapT* _Map) {
     // Set step for pointer
     double coff = (double)m_dacSpeedHz / (double)m_maxDacSpeedHz;
     uint32_t step = (1 << 16) * coff;
-    setRegister(_Map, &(_Map->chA_counter_step), step * (m_is8Bit[0] ? 2 : 1), "Set step for pointer chA");
-    setRegister(_Map, &(_Map->chB_counter_step), step * (m_is8Bit[1] ? 2 : 1), "Set step for pointer chB");
+    setRegister(_Map, &(_Map->chA_counter_step), step, "Set step for pointer chA");
+    setRegister(_Map, &(_Map->chB_counter_step), step, "Set step for pointer chB");
 
     // Set streaming DMA, reset Buffers and flags
     setRegister(_Map, &(_Map->dma_control), 0x2222, "Set streaming DMA, reset Buffers and flags");
@@ -233,10 +233,6 @@ auto CGenerator::setDataBits(bool is8BitCh1, bool is8BitCh2) -> void {
     setRegisterVal(m_Map->config.use8Bit_chB, is8BitCh2 ? 0x1 : 0, "Set trig immediately chB");
     m_is8Bit[0] = is8BitCh1;
     m_is8Bit[1] = is8BitCh2;
-    double coff = (double)m_dacSpeedHz / (double)m_maxDacSpeedHz;
-    uint32_t step = (1 << 16) * coff;
-    setRegister(m_Map, &(m_Map->chA_counter_step), step * (m_is8Bit[0] ? 2 : 1), "Set step for pointer chA");
-    setRegister(m_Map, &(m_Map->chB_counter_step), step * (m_is8Bit[1] ? 2 : 1), "Set step for pointer chB");
 }
 
 auto CGenerator::setDataSize(uint32_t size) -> void {
