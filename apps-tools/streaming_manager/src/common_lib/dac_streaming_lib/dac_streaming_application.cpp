@@ -86,6 +86,7 @@ void CDACStreamingApplication::genWorker() {
                         ch18Bit = ch1->getDACBits() == 8;
                         onePackMode = true;
                     } else {
+                        ch18Bit = ch1->getDACBits() == 8;
                         chSize = std::max((uint32_t)ch1->getDACChannelSize(), chSize);
                     }
                 }
@@ -100,6 +101,7 @@ void CDACStreamingApplication::genWorker() {
                         ch28Bit = ch2->getDACBits() == 8;
                         onePackMode = true;
                     } else {
+                        ch28Bit = ch2->getDACBits() == 8;
                         chSize = std::max((uint32_t)ch2->getDACChannelSize(), chSize);
                     }
                 }
