@@ -130,6 +130,8 @@ if(IS_INSTALL)
                       examples/dac_example_3.py
                       examples/dac_example_4.py
                       examples/dac_example_5.py
+		      examples/dac_example_6_16bit_pulse.py
+		      examples/dac_example_6_8bit_pulse.py
                       examples/adc_dac_example_1.py
                       examples/config_example_1.py
             DESTINATION ${INSTALL_DIR}/streaming/${PY_PROJ} PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
