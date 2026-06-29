@@ -158,10 +158,10 @@ IDGEN           = $(INSTALL_DIR)/sbin/idgen
 SOCKPROC        = $(INSTALL_DIR)/sbin/sockproc
 
 WEBSOCKETPP_TAG = 0.8.2
-LUANGINX_TAG    = v0.10.21
-LUARESTY_TAG    = v0.1.23
-LUARESTY_L_TAG  = v0.13
-NGINX_TAG       = 1.19.10
+LUANGINX_TAG    = v0.10.32rc1
+LUARESTY_TAG    = v0.1.35rc1
+LUARESTY_L_TAG  = v0.15
+NGINX_TAG       = 1.31.2
 SOCKPROC_TAG    = master
 
 WEBSOCKETPP_URL = https://github.com/RedPitaya/websocketpp/archive/$(WEBSOCKETPP_TAG).tar.gz

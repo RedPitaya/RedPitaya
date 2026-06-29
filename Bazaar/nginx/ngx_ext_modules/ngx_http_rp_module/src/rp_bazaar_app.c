@@ -9,6 +9,9 @@
  * (c) Red Pitaya  http://www.redpitaya.com
  */
 
+#include "rp_bazaar_cmd.h"
+#include "rp_bazaar_app.h"
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -18,9 +21,6 @@
 #include <stdlib.h>
 #include <dlfcn.h>
 #include <errno.h>
-
-#include "rp_bazaar_cmd.h"
-#include "rp_bazaar_app.h"
 
 #include <ws_server.h>
 
