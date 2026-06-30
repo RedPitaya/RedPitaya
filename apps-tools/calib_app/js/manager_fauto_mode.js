@@ -30,10 +30,18 @@
     OBJ.famLastAVGCH2 = 0;
     OBJ.famLastState = false;
 
+    OBJ.famIsLoad = function(_model){
+        if (_model === "Z10") return true;
+        if (_model === "Z20_125") return true;
+        return false;
+    }
+
     OBJ.famSetModel = function(_model) {
         if (OBJ.famModel === undefined) {
             OBJ.famModel = _model.value;
             if (OBJ.famModel === "Z10") OBJ.famStates = OBJ.F_STATES_125_14;
+            if (OBJ.famModel === "Z10_G2") OBJ.famStates = OBJ.F_STATES_125_14;
+            if (OBJ.famModel === "Z20_125_G2") OBJ.famStates = OBJ.F_STATES_125_14;
             if (OBJ.famModel === "Z20_125") OBJ.famStates = OBJ.F_STATES_125_14;
             if (OBJ.famModel === "Z20_125_4CH") OBJ.famStates = OBJ.F_STATES_125_14;
             if (OBJ.famModel === "Z20_125_LL") OBJ.famStates = OBJ.F_STATES_125_14;
@@ -247,10 +255,11 @@
     OBJ.famShowDloag = function() {
         OBJ.famLastState = true;
         if (OBJ.famCheckEmptyVariables()) {
+            let load = OBJ.famIsLoad(OBJ.famModel) ? " (50 Ohm load)" : ""
             if (OBJ.famStates[OBJ.famCurrentTest].hasOwnProperty("low")) {
                 if ($("#am_a_filt_switch").is(':checked')) {
                     $("#am_a_filt_dialog_img").attr("src", "./img/125/RP_125_GEN_AUTO_MODE.png");
-                    $("#am_a_filt_dialog_text").text("Set jumpers to LV position and connect OUT1 to IN1 and IN2.");
+                    $("#am_a_filt_dialog_text").text("Set jumpers to LV position and connect OUT1 to IN1 and IN2"+load+".");
                     $("#am_a_filt_dialog_input").hide();
                     if (OBJ.famStates[OBJ.famCurrentTest].hasOwnProperty("kk")) {
                         $("#SS_A_FILT_KK_VALUE").val(OBJ.famStates[OBJ.famCurrentTest].kk);
@@ -261,7 +270,7 @@
 
                 } else {
                     $("#am_a_filt_dialog_img").attr("src", "./img/125/RP_125_REF_FILTER.png");
-                    $("#am_a_filt_dialog_text").text("Set jumpers to LV position and connect IN1 and IN2 to external signal generator 1kHz square signal.");
+                    $("#am_a_filt_dialog_text").text("Set jumpers to LV position and connect IN1 and IN2"+load+" to external signal generator 1kHz square signal.");
 
                     if (OBJ.famStates[OBJ.famCurrentTest].hasOwnProperty("kk")) {
                         $("#SS_A_FILT_KK_VALUE").val(OBJ.famStates[OBJ.famCurrentTest].kk);
@@ -279,7 +288,7 @@
             } else {
                 if ($("#am_a_filt_switch").is(':checked')) {
                     $("#am_a_filt_dialog_img").attr("src", "./img/125/RP_125_GEN_HV_AUTO_MODE.png");
-                    $("#am_a_filt_dialog_text").text("Set jumpers to HV position and connect OUT1 to IN1 and IN2.");
+                    $("#am_a_filt_dialog_text").text("Set jumpers to HV position and connect OUT1 to IN1 and IN2"+load+".");
                     $("#am_a_filt_dialog_input").hide();
 
                     if (OBJ.famStates[OBJ.famCurrentTest].hasOwnProperty("kk")) {
@@ -290,7 +299,7 @@
 
                 } else {
                     $("#am_a_filt_dialog_img").attr("src", "./img/125/RP_125_REF_HV_FILTER.png");
-                    $("#am_a_filt_dialog_text").text("Set jumpers to HV position and connect IN1 and IN2 to external signal generator 1kHz square signal.");
+                    $("#am_a_filt_dialog_text").text("Set jumpers to HV position and connect IN1 and IN2"+load+" to external signal generator 1kHz square signal.");
 
                     if (OBJ.famStates[OBJ.famCurrentTest].hasOwnProperty("kk")) {
                         $("#SS_A_FILT_KK_VALUE").val(OBJ.famStates[OBJ.famCurrentTest].kk);
@@ -542,6 +551,7 @@
     OBJ.aFilterSetMode = function(_mode, _state) {
         if (_mode == "am_a_filt_switch") {
             if (OBJ.famCheckEmptyVariables()) {
+                let load = OBJ.famIsLoad(OBJ.famModel) ? " (50 Ohm load)" : ""
                 if (OBJ.famStates[OBJ.famCurrentTest].hasOwnProperty("low")) {
                     if (_state) {
                         $("#am_a_filt_dialog_img").attr("src", "./img/125/RP_125_GEN_AUTO_MODE.png");
@@ -549,7 +559,7 @@
                         $("#am_a_filt_dialog_input").hide();
                     } else {
                         $("#am_a_filt_dialog_img").attr("src", "./img/125/RP_125_REF_FILTER.png");
-                        $("#am_a_filt_dialog_text").text("Set jumpers to LV position and connect IN1 and IN2 to external signal generator 1kHz square signal.");
+                        $("#am_a_filt_dialog_text").text("Set jumpers to LV position and connect IN1 and IN2"+load+" to external signal generator 1kHz square signal.");
                         if (OBJ.famStates[OBJ.famCurrentTest].hasOwnProperty("input")) {
                             $("#SS_A_FILT_REF_VOLT").val(OBJ.famStates[OBJ.famCurrentTest].input);
                         }
@@ -562,7 +572,7 @@
                         $("#am_a_filt_dialog_input").hide();
                     } else {
                         $("#am_a_filt_dialog_img").attr("src", "./img/125/RP_125_REF_HV_FILTER.png");
-                        $("#am_a_filt_dialog_text").text("Set jumpers to HV position and connect IN1 and IN2 to external signal generator 1kHz square signal.");
+                        $("#am_a_filt_dialog_text").text("Set jumpers to HV position and connect IN1 and IN2"+load+" to external signal generator 1kHz square signal.");
                         if (OBJ.famStates[OBJ.famCurrentTest].hasOwnProperty("input")) {
                             $("#SS_A_FILT_REF_VOLT").val(OBJ.famStates[OBJ.famCurrentTest].input);
                         }

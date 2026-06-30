@@ -14,6 +14,27 @@
     OBJ.STATES_125_14 = {
         0: { name: "Reset to default", span: true, command:"RESET_DEFAULT", show:true, filter_mode:true, hint: "Choose what to do with the filter" },
         1: { name: "ADC set in HV", span: true, command:"INIT_ADC_HV" },
+        2: { name: "ADC offset (1:20)", img: "./img/125/RP_125_GND_HV.png", hint: "Please set HV mode and connect IN1 and IN2 (50 Ohm load) to GND." , command:"CALIB_ADC_HV_OFFSET", show_adc : true},
+        3: { name: "ADC gain   (1:20)", img: "./img/125/RP_125_REF_HV.png", hint: "Please set HV mode and connect IN1 and IN2 (50 Ohm load) to reference DC source.", input: 5 , command:"CALIB_ADC_HV_GAIN", show_adc : true, use_float: true},
+        4: { name: "ADC set in LV", span: true, command:"INIT_ADC_LV" },
+        5: { name: "ADC offset (1:1)", img: "./img/125/RP_125_GND.png", hint: "Please set LV mode and connect IN1 and IN2 (50 Ohm load) to GND." , command:"CALIB_ADC_LV_OFFSET", show_adc : true},
+        6: { name: "ADC gain   (1:1)", img: "./img/125/RP_125_REF.png", hint: "Please set LV mode and connect IN1 and IN2 (50 Ohm load) to reference DC source.", input: 0.5, command:"CALIB_ADC_LV_GAIN" , show_adc : true, use_float: true},
+        7: { name: "Enable DAC", span: true , command: "GEN_LV_0_5"},
+        8: { name: "DAC Gain First Stage", img: "./img/125/RP_125_GEN.png", hint: "Please set LV mode and connect OUT1 to IN1 and OUT2 to IN2 (50 Ohm load)." , command:"GEN_LV_CALIB_GAIN_F_STAGE", show_adc : true, use_float: true},
+        9: { name: "Disable DAC", span: true , command: "GEN_DISABLE"},
+        10: { name: "DAC Offset First Stage",img: "./img/125/RP_125_GEN.png", hint: "Please set LV mode and connect OUT1 to IN1 and OUT2 to IN2 (50 Ohm load)." , command:"GEN_LV_CALIB_OFFSET_F_STAGE", show_adc : true},
+        11: { name: "Enable DAC", span: true , command: "GEN_LV_0_5"},
+        12: { name: "DAC Gain Second Stage", img: "./img/125/RP_125_GEN.png", hint: "Please set LV mode and connect OUT1 to IN1 and OUT2 to IN2 (50 Ohm load)." , command:"GEN_LV_CALIB_GAIN_S_STAGE", show_adc : true, use_float: true},
+        13: { name: "Disable DAC", span: true , command: "GEN_DISABLE"},
+        14: { name: "DAC Offset Second Stage",img: "./img/125/RP_125_GEN.png", hint: "Please set LV mode and connect OUT1 to IN1 and OUT2 to IN2 (50 Ohm load)." , command:"GEN_LV_CALIB_OFFSET_S_STAGE", show_adc : true},
+        15: { name: "Enable DAC", span: true , command: "GEN_LV_0_5"},
+        16: { name: "DAC Gain Third Stage", img: "./img/125/RP_125_GEN.png", hint: "Please set LV mode and connect OUT1 to IN1 and OUT2 to IN2 (50 Ohm load)." , command:"GEN_LV_CALIB_GAIN_S_STAGE", show_adc : true, use_float: true},
+        17: { name: "Calibration complete", span: true, end: true , command:""}
+    };
+
+    OBJ.STATES_125_14_WITHOUT_LOAD = {
+        0: { name: "Reset to default", span: true, command:"RESET_DEFAULT", show:true, filter_mode:true, hint: "Choose what to do with the filter" },
+        1: { name: "ADC set in HV", span: true, command:"INIT_ADC_HV" },
         2: { name: "ADC offset (1:20)", img: "./img/125/RP_125_GND_HV.png", hint: "Please set HV mode and connect IN1 and IN2 to GND." , command:"CALIB_ADC_HV_OFFSET", show_adc : true},
         3: { name: "ADC gain   (1:20)", img: "./img/125/RP_125_REF_HV.png", hint: "Please set HV mode and connect IN1 and IN2 to reference DC source.", input: 5 , command:"CALIB_ADC_HV_GAIN", show_adc : true, use_float: true},
         4: { name: "ADC set in LV", span: true, command:"INIT_ADC_LV" },
@@ -105,9 +126,11 @@
         if (OBJ.amModel === undefined) {
             OBJ.amModel = _model.value;
             if (OBJ.amModel === "Z10") OBJ.amStates = OBJ.STATES_125_14;
+            if (OBJ.amModel === "Z10_G2") OBJ.amStates = OBJ.STATES_125_14_WITHOUT_LOAD;
+            if (OBJ.amModel === "Z20_125_G2") OBJ.amStates = OBJ.STATES_125_14_WITHOUT_LOAD;
             if (OBJ.amModel === "Z20_125") OBJ.amStates = OBJ.STATES_125_14;
-            if (OBJ.amModel === "Z20_125_LL") OBJ.amStates = OBJ.STATES_125_14;
-            if (OBJ.amModel === "Z20_65_LL") OBJ.amStates = OBJ.STATES_125_14;
+            if (OBJ.amModel === "Z20_125_LL") OBJ.amStates = OBJ.STATES_125_14_WITHOUT_LOAD;
+            if (OBJ.amModel === "Z20_65_LL") OBJ.amStates = OBJ.STATES_125_14_WITHOUT_LOAD;
             if (OBJ.amModel === "Z20_125_4CH") OBJ.amStates = OBJ.STATES_125_14_4CH;
             if (OBJ.amModel === "Z20_250_12") OBJ.amStates = OBJ.STATES_250_12;
             if (OBJ.amModel === "Z20_250_12_120") OBJ.amStates = OBJ.STATES_250_12;
