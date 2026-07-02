@@ -233,6 +233,36 @@
     MAIN.setCommand = function(new_params) {
     }
 
+    MAIN.setClockState = function(new_params) {
+        MAIN.is_clock = new_params['RP_SYSTEM_CLOCK_STATE'].value
+        if (new_params['RP_SYSTEM_CLOCK_STATE'].value){
+            $('.info-icon img').removeClass('blinking');
+        }else{
+            $('.info-icon img').addClass('blinking');
+        }
+    }
+
+     MAIN.setClockRate = function(new_params) {
+        var val = new_params['RP_SYSTEM_CLOCK_RATE'].value
+        if (MAIN.is_clock){
+            if (val >= 1000000) {
+                val = val / 1000000;
+                result = val.toFixed(2) + " MHz";
+            } else if (val >= 1000) {
+                val = val / 1000;
+                result = val.toFixed(2) + " kHz";
+            } else {
+                result = val + " Hz";
+            }
+
+            $('#CLOCK_RATE_ID').text(result);
+            $('#CLOCK_RATE_ID').removeClass('blinking');
+        }else{
+            $('#CLOCK_RATE_ID').text("MISSING");
+            $('#CLOCK_RATE_ID').addClass('blinking');
+        }
+
+    }
 
 
     MAIN.param_callbacks["RP_SYSTEM_TOTAL_RAM"] = MAIN.processTRam;
@@ -260,6 +290,9 @@
     MAIN.param_callbacks["RP_DAC_BASE_RATE"] = MAIN.setDACBaseRate;
 
     MAIN.param_callbacks["RP_COMMAND"] = MAIN.setCommand;
+
+    MAIN.param_callbacks["RP_SYSTEM_CLOCK_STATE"] = MAIN.setClockState;
+    MAIN.param_callbacks["RP_SYSTEM_CLOCK_RATE"] = MAIN.setClockRate;
 
 }(window.MAIN = window.MAIN || {}, jQuery));
 

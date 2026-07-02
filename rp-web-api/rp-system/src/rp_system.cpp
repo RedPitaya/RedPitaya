@@ -79,6 +79,9 @@ CStringParameter g_ws_vcc_ddr_nominal("RP_SYSTEM_VCC_DDR_NOMINAL", CBaseParamete
 CFloatParameter g_ws_totalSD("RP_SYSTEM_TOTAL_SD", CBaseParameter::RO, 0, 0, 0, 1e15);
 CFloatParameter g_ws_freeSD("RP_SYSTEM_FREE_SD", CBaseParameter::RO, 0, 0, 0, 1e15);
 
+CBooleanParameter g_checkClock("RP_SYSTEM_CLOCK_STATE", CBaseParameter::RW, false, 0);
+CIntParameter g_clockRate("RP_SYSTEM_CLOCK_RATE", CBaseParameter::RO, 0, 0, 0, 2147483647);
+
 map<rp_system_mode_t, uint32_t> g_intervals;
 map<rp_system_mode_t, time_point<system_clock>> g_lastUpdateTime;
 
@@ -193,6 +196,7 @@ void rp_WS_Init() {
     g_intervals[RP_WS_SLOW_DAC] = defInterval;
     g_intervals[RP_WS_SENSOR_VOLT] = defInterval;
     g_intervals[RP_WS_DISK_SIZE] = defInterval;
+    g_intervals[RP_WS_CHECK_CLOCK] = defInterval;
 
     g_lastUpdateTime[RP_WS_CPU] = now;
     g_lastUpdateTime[RP_WS_RAM] = now;
@@ -200,6 +204,7 @@ void rp_WS_Init() {
     g_lastUpdateTime[RP_WS_SLOW_DAC] = now;
     g_lastUpdateTime[RP_WS_SENSOR_VOLT] = now;
     g_lastUpdateTime[RP_WS_DISK_SIZE] = now;
+    g_lastUpdateTime[RP_WS_CHECK_CLOCK] = now;
 }
 
 void rp_WS_PauseSend(bool state) {
@@ -326,6 +331,22 @@ void rp_WS_UpdateParameters(bool force) {
                 g_ws_vcc_aux.SendValue(value[4]);
                 g_ws_vcc_ddr.SendValue(value[5]);
                 g_lastUpdateTime[RP_WS_SENSOR_VOLT] = curTime;
+            }
+        }
+    }
+
+    if (g_modes & RP_WS_CHECK_CLOCK) {
+        float res = 0;
+        uint32_t count = 0;
+        res = rp_GetFreqCounter(&count);
+        if (res == RP_OK) {
+            auto lastUpdate = time_point_cast<milliseconds>(g_lastUpdateTime[RP_WS_CHECK_CLOCK]);
+            auto diff = curTime - lastUpdate;
+
+            if (diff.count() >= g_intervals[RP_WS_CHECK_CLOCK] || force) {
+                g_checkClock.SendValue(count != 0xDEADBEEF);
+                g_clockRate.SendValue(count);
+                g_lastUpdateTime[RP_WS_CHECK_CLOCK] = curTime;
             }
         }
     }
