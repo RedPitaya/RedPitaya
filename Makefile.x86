@@ -557,13 +557,14 @@ gen_report_eco:
 # ============================================
 # Docker configuration
 # ============================================
-DOCKER_IMAGE ?= rp-qt6120-x86-linux:36adb8dcb
+DOCKER_IMAGE_LINUX ?= rp-qt6120-x86-linux:36adb8dcb
+
 DOCKER_RUN = docker run --rm \
 	-e QT_DIR=$(QT_DIR) \
 	-e JENKINS_BUILD=$(JENKINS_BUILD) \
 	-v $(shell pwd):/workspace \
-	-w /workspace \
-	$(DOCKER_IMAGE)
+	-w /workspace
+
 
 APP_STREAMINGMANAGER_DIR = apps-tools/streaming_manager
 streaming:  streaming_client streaming_client_win streaming_client_arm64
@@ -587,14 +588,12 @@ streaming_client_qt:
 docker-streaming_client_qt:
 	@echo "========================================"
 	@echo "Building streaming_client_qt in Docker"
-	@echo "Docker image: $(DOCKER_IMAGE)"
-	@echo "QT_DIR: $(QT_DIR)"
+	@echo "Docker image: $(DOCKER_IMAGE_LINUX)"
 	@echo "JENKINS_BUILD: $(JENKINS_BUILD)"
 	@echo "========================================"
-	$(DOCKER_RUN) make -f Makefile.x86 streaming_client_qt QT_DIR=/opt/qt/6.12.0/gcc_64
+	$(DOCKER_RUN) $(DOCKER_IMAGE_LINUX) make -f Makefile.x86 streaming_client_qt QT_DIR=/opt/qt/6.12.0/gcc_64
 
 streaming_client_qt_win:
 	$(MAKE) -i -C $(APP_STREAMINGMANAGER_DIR) clean
 	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) install_client_qt_win
-
 
